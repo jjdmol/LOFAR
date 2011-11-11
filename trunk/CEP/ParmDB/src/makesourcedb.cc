@@ -115,8 +115,10 @@
 
 #include <lofar_config.h>
 #include <ParmDB/SourceDB.h>
+#include <ParmDB/Package__Version.h>
 #include <Common/StringUtil.h>
 #include <Common/StreamUtil.h>
+#include <Common/SystemUtil.h>
 #include <Common/Exception.h>
 #include <string>                //# for getline
 #include <iostream>
@@ -126,8 +128,6 @@
 #include <casa/Quanta/MVAngle.h>
 #include <casa/Inputs/Input.h>
 #include <casa/BasicSL/Constants.h>
-#include <unistd.h>
-#include <libgen.h>
 
 using namespace std;
 using namespace casa;
@@ -1070,9 +1070,8 @@ string readFormat (string file, const string& catFile)
 
 int main (int argc, char* argv[])
 {
-  // Not all versions of basename accept a const char.
-  const char* progName = basename(argv[0]);
-  INIT_LOGGER(progName);
+  TEST_SHOW_VERSION (argc, argv, ParmDB);
+  INIT_LOGGER(basename(string(argv[0])));
   try {
     // Get the inputs.
     Input inputs(1);

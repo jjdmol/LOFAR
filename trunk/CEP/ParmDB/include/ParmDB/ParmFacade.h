@@ -117,8 +117,6 @@ namespace LOFAR { namespace BBS {
     // The Record contains a map of parameter name to Array<double>.
     // If freqStep and timeStep are not given (or given as <=0), the
     // default freq and time step from the ParmDB will be used.
-    // Similar to getValuesGrid the resulting record also contains a subrecord
-    // "_grid" containing the grid of the parameter values.
     // <group>
     casa::Record getValues (const string& parmNamePattern,
                             double freqv1, double freqv2, double freqStep,
@@ -135,8 +133,6 @@ namespace LOFAR { namespace BBS {
     // Get the values of the given parameters on the given grid where v1/v2
     // represents center/width or start/end.
     // The Record contains a map of parameter name to Array<double>.
-    // Similar to getValuesGrid the resulting record also contains a subrecord
-    // "_grid" containing the grid of the parameter values.
     casa::Record getValues (const string& parmNamePattern,
                             const vector<double>& freqv1,
                             const vector<double>& freqv2,
@@ -147,11 +143,10 @@ namespace LOFAR { namespace BBS {
                                   timev1, timev2, asStartEnd); }
 
     // Get the values of the given parameters for the given domain.
-    // The Record contains a map of parameter name to Array<value>.
-    // Furthermore it contains a subrecord "_grid" containing the grid axes
-    // used for each parameters. Their names have the form parmname;xx
-    // where xx is freqs, freqwidths, times, and timewidths. Their values
-    // are the center and width of each cell.
+    // The Record contains a map of parameter name to subrecords.
+    // Each subrecord has the fields values, freqs, freqwidths, times, and
+    // timewidths giving the values and domains.
+    // The domain values are the center and width of each cell.
     casa::Record getValuesGrid (const string& parmNamePattern,
                                 double freqv1=-1e30, double freqv2=1e30,
                                 double timev1=-1e30, double timev2=1e30,
