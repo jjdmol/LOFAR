@@ -78,15 +78,15 @@ class SummaryPage : public Gtk::HBox {
 			
 			unsigned long totalRFICount = 0;
 			unsigned long totalCount = 0;
-			const unsigned polarizationCount = statistics.polarizationCount;
+			const unsigned polarizationCount = statistics.PolarizationCount();
 			double variance[polarizationCount];
 			double dVariance[polarizationCount];
 			for(unsigned p=0;p<polarizationCount;++p)
 			{
 				totalRFICount += statistics.rfiCount[p];
 				totalCount += statistics.rfiCount[p] + statistics.count[p];
-				variance[p] = StatisticsDerivator::GetVarianceAmplitude(statistics.count[p], statistics.mean[p], statistics.sumP2[p]);
-				dVariance[p] = StatisticsDerivator::GetVarianceAmplitude(statistics.dCount[p], statistics.dMean[p], statistics.dSumP2[p]);
+				variance[p] = StatisticsDerivator::VarianceAmplitude(statistics.count[p], statistics.sum[p], statistics.sumP2[p]);
+				dVariance[p] = StatisticsDerivator::VarianceAmplitude(statistics.dCount[p], statistics.dSum[p], statistics.dSumP2[p]);
 			}
 			
 			double rfiRatioValue = round(((double) totalRFICount * 10000.0 / (double) totalCount)) * 0.01;

@@ -244,6 +244,8 @@ class QualityTablesFormatter {
 		void QueryFrequencyStatistic(unsigned kindIndex, std::vector<std::pair<FrequencyPosition, class StatisticalValue> > &entries);
 		void QueryBaselineStatistic(unsigned kindIndex, std::vector<std::pair<BaselinePosition, class StatisticalValue> > &entries);
 		void QueryBaselineTimeStatistic(unsigned kindIndex, std::vector<std::pair<BaselineTimePosition, class StatisticalValue> > &entries);
+		
+		unsigned GetPolarizationCount();
 	private:
 		QualityTablesFormatter(const QualityTablesFormatter &) { } // don't allow copies
 		void operator=(const QualityTablesFormatter &) { } // don't allow assignment

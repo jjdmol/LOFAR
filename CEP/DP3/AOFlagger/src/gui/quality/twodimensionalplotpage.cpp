@@ -86,7 +86,7 @@ void TwoDimensionalPlotPage::updatePlot()
 }
 
 template<enum TwoDimensionalPlotPage::PhaseType Phase>
-double TwoDimensionalPlotPage::getValue(const std::complex<float> val)
+double TwoDimensionalPlotPage::getValue(const std::complex<long double> val)
 {
 	switch(Phase)
 	{
@@ -104,11 +104,11 @@ void TwoDimensionalPlotPage::plotPhase(QualityTablesFormatter::StatisticKind kin
 	s << "Polarization " << polarization;
 	StartLine(_plot, s.str());
 	StatisticsDerivator derivator(*_statCollection);
-	const std::map<double, Statistics> &statistics = GetStatistics();
-	for(std::map<double, Statistics>::const_iterator i=statistics.begin();i!=statistics.end();++i)
+	const std::map<double, DefaultStatistics> &statistics = GetStatistics();
+	for(std::map<double, DefaultStatistics>::const_iterator i=statistics.begin();i!=statistics.end();++i)
 	{
 		const double x = i->first;
-		const std::complex<float> val = derivator.GetComplexStatistic(kind, i->second, polarization);
+		const std::complex<long double> val = derivator.GetComplexStatistic(kind, i->second, polarization);
 		_plot.PushDataPoint(x, getValue<Phase>(val));
 	}
 }
@@ -120,13 +120,14 @@ void TwoDimensionalPlotPage::plotPhase(QualityTablesFormatter::StatisticKind kin
 	s << "Polarization " << polarizationA << " and " << polarizationB;
 	StartLine(_plot, s.str());
 	StatisticsDerivator derivator(*_statCollection);
-	const std::map<double, Statistics> &statistics = GetStatistics();
-	for(std::map<double, Statistics>::const_iterator i=statistics.begin();i!=statistics.end();++i)
+	const std::map<double, DefaultStatistics> &statistics = GetStatistics();
+	for(std::map<double, DefaultStatistics>::const_iterator i=statistics.begin();i!=statistics.end();++i)
 	{
 		const double x = i->first;
-		const std::complex<float> valA = derivator.GetComplexStatistic(kind, i->second, polarizationA);
-		const std::complex<float> valB = derivator.GetComplexStatistic(kind, i->second, polarizationB);
-		const std::complex<float> val = valA*0.5f + valB*0.5f;
+		const std::complex<long double>
+			valA = derivator.GetComplexStatistic(kind, i->second, polarizationA),
+			valB = derivator.GetComplexStatistic(kind, i->second, polarizationB),
+			val = valA*0.5l + valB*0.5l;
 		_plot.PushDataPoint(x, getValue<Phase>(val));
 	}
 }

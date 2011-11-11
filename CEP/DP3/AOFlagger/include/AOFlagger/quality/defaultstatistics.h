@@ -25,42 +25,140 @@
 class DefaultStatistics
 {
 	public:
-		DefaultStatistics(unsigned _polarizationCount) :
-			polarizationCount(_polarizationCount)
+		DefaultStatistics(unsigned polarizationCount) :
+			_polarizationCount(polarizationCount)
 		{
-			rfiCount = new unsigned long[polarizationCount];
-			count = new unsigned long[polarizationCount];
-			mean = new std::complex<float>[polarizationCount];
-			sumP2 = new std::complex<float>[polarizationCount];
-			dCount = new unsigned long[polarizationCount];
-			dMean = new std::complex<float>[polarizationCount];
-			dSumP2 = new std::complex<float>[polarizationCount];
+			initialize();
+			for(unsigned p=0;p<_polarizationCount;++p)
+			{
+				rfiCount[p] = 0;
+				count[p] = 0;
+				sum[p] = 0.0;
+				sumP2[p] = 0.0;
+				dCount[p] = 0;
+				dSum[p] = 0.0;
+				dSumP2[p] = 0.0;
+			}
 		}
 		
 		~DefaultStatistics()
 		{
-			delete[] rfiCount;
-			delete[] count;
-			delete[] mean;
-			delete[] sumP2;
-			delete[] dCount;
-			delete[] dMean;
-			delete[] dSumP2;
+			destruct();
+		}
+		
+		DefaultStatistics(const DefaultStatistics &other)
+		: _polarizationCount(other._polarizationCount)
+		{
+			initialize();
+			for(unsigned p=0;p<_polarizationCount;++p)
+			{
+				rfiCount[p] = other.rfiCount[p];
+				count[p] = other.count[p];
+				sum[p] = other.sum[p];
+				sumP2[p] = other.sumP2[p];
+				dCount[p] = other.dCount[p];
+				dSum[p] = other.dSum[p];
+				dSumP2[p] = other.dSumP2[p];
+			}
+		}
+		
+		DefaultStatistics &operator=(const DefaultStatistics &other)
+		{
+			if(other._polarizationCount != _polarizationCount)
+			{
+				destruct();
+				_polarizationCount = other._polarizationCount;
+				initialize();
+			}
+			for(unsigned p=0;p<_polarizationCount;++p)
+			{
+				rfiCount[p] = other.rfiCount[p];
+				count[p] = other.count[p];
+				sum[p] = other.sum[p];
+				sumP2[p] = other.sumP2[p];
+				dCount[p] = other.dCount[p];
+				dSum[p] = other.dSum[p];
+				dSumP2[p] = other.dSumP2[p];
+			}
+			return *this;
+		}
+		
+		DefaultStatistics &operator+=(const DefaultStatistics &other)
+		{
+			for(unsigned p=0;p<_polarizationCount;++p)
+			{
+				rfiCount[p] += other.rfiCount[p];
+				count[p] += other.count[p];
+				sum[p] += other.sum[p];
+				sumP2[p] += other.sumP2[p];
+				dCount[p] += other.dCount[p];
+				dSum[p] += other.dSum[p];
+				dSumP2[p] += other.dSumP2[p];
+			}
+			return *this;
+		}
+		
+		unsigned PolarizationCount() const
+		{
+			return _polarizationCount;
+		}
+		
+		template<typename T>
+		std::complex<T> Mean(unsigned polarization) const
+		{
+			return std::complex<T>(sum[polarization].real() / count[polarization], sum[polarization].imag() / count[polarization]);
+		}
+		
+		template<typename T>
+		std::complex<T> SumP2(unsigned polarization) const
+		{
+			return std::complex<T>(sumP2[polarization].real(), sumP2[polarization].imag());
+		}
+		
+		template<typename T>
+		std::complex<T> DMean(unsigned polarization) const
+		{
+			return std::complex<T>(dSum[polarization].real() / dCount[polarization], dSum[polarization].imag() / dCount[polarization]);
+		}
+		
+		template<typename T>
+		std::complex<T> DSumP2(unsigned polarization) const
+		{
+			return std::complex<T>(dSumP2[polarization].real(), dSumP2[polarization].imag());
 		}
 		
 		unsigned long *rfiCount;
 		unsigned long *count;
-		std::complex<float> *mean;
-		std::complex<float> *sumP2;
+		std::complex<long double> *sum;
+		std::complex<long double> *sumP2;
 		unsigned long *dCount;
-		std::complex<float> *dMean;
-		std::complex<float> *dSumP2;
-		
-		unsigned polarizationCount;
+		std::complex<long double> *dSum;
+		std::complex<long double> *dSumP2;
 		
 	private:
-		DefaultStatistics(const DefaultStatistics &other) { }
-		void operator=(const DefaultStatistics &other) { }
+		void initialize()
+		{
+			rfiCount = new unsigned long[_polarizationCount];
+			count = new unsigned long[_polarizationCount];
+			sum = new std::complex<long double>[_polarizationCount];
+			sumP2 = new std::complex<long double>[_polarizationCount];
+			dCount = new unsigned long[_polarizationCount];
+			dSum = new std::complex<long double>[_polarizationCount];
+			dSumP2 = new std::complex<long double>[_polarizationCount];
+		}
+		
+		void destruct()
+		{
+			delete[] rfiCount;
+			delete[] count;
+			delete[] sum;
+			delete[] sumP2;
+			delete[] dCount;
+			delete[] dSum;
+			delete[] dSumP2;
+		}
+		
+		unsigned _polarizationCount;
 };
 
 #endif

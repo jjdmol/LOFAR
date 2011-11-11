@@ -137,7 +137,7 @@ void actionCollect(const std::string &filename, bool useCorrectedData)
 	std::cout << "Done.\n";
 }
 
-void printStatistics(std::complex<float> *complexStat, unsigned count)
+void printStatistics(std::complex<long double> *complexStat, unsigned count)
 {
 	if(count != 1)
 		std::cout << '[';
@@ -168,19 +168,19 @@ void printStatistics(unsigned long *stat, unsigned count)
 void printStatistics(const DefaultStatistics &statistics)
 {
 	std::cout << "Count=";
-	printStatistics(statistics.count, statistics.polarizationCount);
-	std::cout << "\nMean=";
-	printStatistics(statistics.mean, statistics.polarizationCount);
+	printStatistics(statistics.count, statistics.PolarizationCount());
+	std::cout << "\nSum=";
+	printStatistics(statistics.sum, statistics.PolarizationCount());
 	std::cout << "\nSumP2=";
-	printStatistics(statistics.sumP2, statistics.polarizationCount);
+	printStatistics(statistics.sumP2, statistics.PolarizationCount());
 	std::cout << "\nDCount=";
-	printStatistics(statistics.dCount, statistics.polarizationCount);
-	std::cout << "\nDMean=";
-	printStatistics(statistics.dMean, statistics.polarizationCount);
+	printStatistics(statistics.dCount, statistics.PolarizationCount());
+	std::cout << "\nDSum=";
+	printStatistics(statistics.dSum, statistics.PolarizationCount());
 	std::cout << "\nDSumP2=";
-	printStatistics(statistics.dSumP2, statistics.polarizationCount);
+	printStatistics(statistics.dSumP2, statistics.PolarizationCount());
 	std::cout << "\nRFICount=";
-	printStatistics(statistics.rfiCount, statistics.polarizationCount);
+	printStatistics(statistics.rfiCount, statistics.PolarizationCount());
 	std::cout << '\n';
 }
 
@@ -208,7 +208,7 @@ void actionQueryBaselines(const std::string &kindName, const std::string &filena
 		std::cout << antenna1 << '\t' << antenna2;
 		for(unsigned p=0;p<polarizationCount;++p)
 		{
-			const std::complex<float> val = derivator.GetComplexBaselineStatistic(kind, antenna1, antenna2, p);
+			const std::complex<long double> val = derivator.GetComplexBaselineStatistic(kind, antenna1, antenna2, p);
 			std::cout << '\t' << val.real() << '\t' << val.imag();
 		}
 		std::cout << '\n';
@@ -226,20 +226,20 @@ void actionQueryTime(const std::string &kindName, const std::string &filename)
 	QualityTablesFormatter formatter(filename);
 	StatisticsCollection collection(polarizationCount);
 	collection.Load(formatter);
-	const std::map<double, Statistics> &timeStats = collection.TimeStatistics();
+	const std::map<double, DefaultStatistics> &timeStats = collection.TimeStatistics();
 	StatisticsDerivator derivator(collection);
 
 	std::cout << "TIME";
 	for(unsigned p=0;p<polarizationCount;++p)
 		std::cout << '\t' << kindName << "_POL" << p << "_R\t" << kindName << "_POL" << p << "_I" ;
 	std::cout << '\n';
-	for(std::map<double, Statistics>::const_iterator i=timeStats.begin();i!=timeStats.end();++i)
+	for(std::map<double, DefaultStatistics>::const_iterator i=timeStats.begin();i!=timeStats.end();++i)
 	{
 		const double time = i->first;
 		std::cout << time;
 		for(unsigned p=0;p<polarizationCount;++p)
 		{
-			const std::complex<float> val = derivator.GetComplexStatistic(kind, i->second, p);
+			const std::complex<long double> val = derivator.GetComplexStatistic(kind, i->second, p);
 			std::cout << '\t' << val.real() << '\t' << val.imag();
 		}
 		std::cout << '\n';

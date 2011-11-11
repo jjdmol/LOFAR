@@ -29,7 +29,7 @@
 */
 class TimePlotPage : public TwoDimensionalPlotPage {
 	protected:
-		virtual const std::map<double, class Statistics> &GetStatistics() const
+		virtual const std::map<double, class DefaultStatistics> &GetStatistics() const
 		{
 			return GetStatCollection()->TimeStatistics();
 		}

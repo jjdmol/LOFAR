@@ -24,7 +24,7 @@
 #include <map>
 #include <stdexcept>
 
-#include "statistics.h"
+#include "defaultstatistics.h"
 
 class BaselineStatisticsMap
 {
@@ -39,23 +39,23 @@ class BaselineStatisticsMap
 		{
 		}
 		
-		Statistics &GetStatistics(unsigned antenna1, unsigned antenna2)
+		DefaultStatistics &GetStatistics(unsigned antenna1, unsigned antenna2)
 		{
 			OuterMap::iterator antenna1Map = _map.insert(OuterPair(antenna1, InnerMap())).first;
 			InnerMap &innerMap = antenna1Map->second;
 			InnerMap::iterator antenna2Value = innerMap.find(antenna2);
-			Statistics *statistics;
+			DefaultStatistics *statistics;
 			if(antenna2Value == innerMap.end())
 			{
 				// The baseline does not exist yet, create empty statistics.
-				statistics = &(innerMap.insert(InnerPair(antenna2, Statistics(_polarizationCount))).first->second);
+				statistics = &(innerMap.insert(InnerPair(antenna2, DefaultStatistics(_polarizationCount))).first->second);
 			} else {
 				statistics = &antenna2Value->second;
 			}
 			return *statistics;
 		}
 		
-		const Statistics &GetStatistics(unsigned antenna1, unsigned antenna2) const
+		const DefaultStatistics &GetStatistics(unsigned antenna1, unsigned antenna2) const
 		{
 			OuterMap::const_iterator antenna1Map = _map.find(antenna1);
 			if(antenna1Map == _map.end())
@@ -116,8 +116,8 @@ class BaselineStatisticsMap
 	private:
 		void operator=(BaselineStatisticsMap &) { } // don't allow assignment
 		
-		typedef std::map<unsigned, Statistics> InnerMap;
-		typedef std::pair<unsigned, Statistics> InnerPair;
+		typedef std::map<unsigned, DefaultStatistics> InnerMap;
+		typedef std::pair<unsigned, DefaultStatistics> InnerPair;
 		typedef std::map<unsigned, InnerMap > OuterMap;
 		typedef std::pair<unsigned, InnerMap > OuterPair;
 		

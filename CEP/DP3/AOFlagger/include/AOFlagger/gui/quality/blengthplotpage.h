@@ -46,11 +46,11 @@ class BLengthPlotPage : public TwoDimensionalPlotPage {
 			for(vector<std::pair<unsigned, unsigned> >::const_iterator i=baselines.begin();i!=baselines.end();++i)
 			{
 				Baseline bline(antennas[i->first], antennas[i->second]);
-				_statistics.insert(std::pair<double, Statistics>(bline.Distance(), map.GetStatistics(i->first, i->second)));
+				_statistics.insert(std::pair<double, DefaultStatistics>(bline.Distance(), map.GetStatistics(i->first, i->second)));
 			}
 		}
 		
-		virtual const std::map<double, class Statistics> &GetStatistics() const
+		virtual const std::map<double, class DefaultStatistics> &GetStatistics() const
 		{
 			return _statistics;
 		}
@@ -61,7 +61,7 @@ class BLengthPlotPage : public TwoDimensionalPlotPage {
 		}
 		
 	private:
-		std::map<double, Statistics> _statistics;
+		std::map<double, DefaultStatistics> _statistics;
 };
 
 #endif

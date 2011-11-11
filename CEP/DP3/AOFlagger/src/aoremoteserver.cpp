@@ -1,6 +1,6 @@
 /***************************************************************************
- *   Copyright (C) 2008 by A.R. Offringa   *
- *   offringa@astro.rug.nl   *
+ *   Copyright (C) 2011 by A.R. Offringa                                   *
+ *   offringa@astro.rug.nl                                                 *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -17,27 +17,12 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef GUI_QUALITY__FREQUENCYPLOTPAGE_H
-#define GUI_QUALITY__FREQUENCYPLOTPAGE_H
 
-#include "twodimensionalplotpage.h"
+#include <iostream>
 
-#include <AOFlagger/quality/statisticscollection.h>
+#include <AOFlagger/remote/server.h>
 
-/**
-	@author A.R. Offringa <offringa@astro.rug.nl>
-*/
-class FrequencyPlotPage : public TwoDimensionalPlotPage {
-	public:
-		virtual const std::map<double, class DefaultStatistics> &GetStatistics() const
-		{
-			return GetStatCollection()->FrequencyStatistics();
-		}
-		
-		virtual void StartLine(Plot2D &plot, const std::string &name)
-		{
-			plot.StartLine(name, "Frequency (Hz)", "Value", false);
-		}
-};
-
-#endif
+int main(int argc, char *argv[])
+{
+	aoRemote::Server();
+}
