@@ -453,7 +453,7 @@ class StatisticsCollection
 		}
 		
 		template<bool AddStatistics>
-		void assignStatistic(Statistics &destination, const StatisticalValue &source, QualityTablesFormatter::StatisticKind kind)
+		void assignStatistic(DefaultStatistics &destination, const StatisticalValue &source, QualityTablesFormatter::StatisticKind kind)
 		{
 			if(AddStatistics)
 			{
@@ -462,25 +462,25 @@ class StatisticsCollection
 					switch(kind)
 					{
 						case QualityTablesFormatter::RFIRatioStatistic:
-							destination.rfiCount[p] += round((double) destination.statistics[p].Count() / ((1.0/source.Value(p).real())-1.0));
+							destination.rfiCount[p] += round((double) destination.count[p] / ((1.0/source.Value(p).real())-1.0));
 							break;
 						case QualityTablesFormatter::CountStatistic:
-							destination.statistics[p].AddCount((long unsigned) source.Value(p).real());
+							destination.count[p] += (long unsigned) source.Value(p).real();
 							break;
 						case QualityTablesFormatter::MeanStatistic:
-							destination.statistics[p].AddSum(source.Value(p) * (float) destination.statistics[p].Count());
+							destination.sum[p] += source.Value(p) * (float) destination.count[p];
 							break;
 						case QualityTablesFormatter::SumP2Statistic:
-							destination.statistics[p].AddSum2(source.Value(p));
+							destination.sumP2[p] += source.Value(p);
 							break;
 						case QualityTablesFormatter::DCountStatistic:
-							destination.differentialStatistics[p].AddCount((long unsigned) source.Value(p).real());
+							destination.dCount[p] += (long unsigned) source.Value(p).real();
 							break;
 						case QualityTablesFormatter::DMeanStatistic:
-							destination.differentialStatistics[p].AddSum(source.Value(p) * (float) destination.differentialStatistics[p].Count());
+							destination.dSum[p] += source.Value(p) * (float) destination.dCount[p];
 							break;
 						case QualityTablesFormatter::DSumP2Statistic:
-							destination.differentialStatistics[p].AddSum2(source.Value(p));
+							destination.dSumP2[p] += source.Value(p);
 							break;
 						default:
 							break;
@@ -493,25 +493,25 @@ class StatisticsCollection
 					switch(kind)
 					{
 						case QualityTablesFormatter::RFIRatioStatistic:
-							destination.rfiCount[p] = round((double) destination.statistics[p].Count() / ((1.0/source.Value(p).real())-1.0));
+							destination.rfiCount[p] = round((double) destination.count[p] / ((1.0/source.Value(p).real())-1.0));
 							break;
 						case QualityTablesFormatter::CountStatistic:
-							destination.statistics[p].SetCount((long unsigned) source.Value(p).real());
+							destination.count[p] = (long unsigned) source.Value(p).real();
 							break;
 						case QualityTablesFormatter::MeanStatistic:
-							destination.statistics[p].SetSum(source.Value(p) * (float) destination.statistics[p].Count());
+							destination.sum[p] = source.Value(p) * (float) destination.count[p];
 							break;
 						case QualityTablesFormatter::SumP2Statistic:
-							destination.statistics[p].SetSum2(source.Value(p));
+							destination.sumP2[p] = source.Value(p);
 							break;
 						case QualityTablesFormatter::DCountStatistic:
-							destination.differentialStatistics[p].SetCount((long unsigned) source.Value(p).real());
+							destination.dCount[p] = (long unsigned) source.Value(p).real();
 							break;
 						case QualityTablesFormatter::DMeanStatistic:
-							destination.differentialStatistics[p].SetSum(source.Value(p) * (float) destination.differentialStatistics[p].Count());
+							destination.dSum[p] = source.Value(p) * (float) destination.dCount[p];
 							break;
 						case QualityTablesFormatter::DSumP2Statistic:
-							destination.differentialStatistics[p].SetSum2(source.Value(p));
+							destination.dSumP2[p] = source.Value(p);
 							break;
 						default:
 							break;
@@ -687,7 +687,7 @@ class StatisticsCollection
 				for(DoubleStatMap::const_iterator j=map.begin();j!=map.end();++j)
 				{
 					const double time = j->first;
-					const Statistics &stat = j->second;
+					const DefaultStatistics &stat = j->second;
 					getTimeStatistic(time, frequency) += stat;
 				}
 			}
@@ -698,7 +698,7 @@ class StatisticsCollection
 			for(DoubleStatMap::const_iterator j=collection._frequencyStatistics.begin();j!=collection._frequencyStatistics.end();++j)
 			{
 				const double frequency = j->first;
-				const Statistics &stat = j->second;
+				const DefaultStatistics &stat = j->second;
 				getFrequencyStatistic(frequency) += stat;
 			}
 		}
@@ -715,7 +715,7 @@ class StatisticsCollection
 				{
 					const unsigned antenna1 = j->first;
 					const unsigned antenna2 = j->second;
-					const Statistics &stat = map.GetStatistics(antenna1, antenna2);
+					const DefaultStatistics &stat = map.GetStatistics(antenna1, antenna2);
 					getBaselineStatistic(antenna1, antenna2, frequency) += stat;
 				}
 			}
