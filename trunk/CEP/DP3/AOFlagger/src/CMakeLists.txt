@@ -172,11 +172,14 @@ set(UTIL_FILES
   util/statwriter.cpp
   util/stopwatch.cpp)
 
-if(HAVE_BOOST_ASIO_H)
-lofar_add_bin_program(aoremoteserver aoremoteserver.cpp
+if(BOOST_ASIO_H)
+lofar_add_bin_program(aoremoteclient aoremoteclient.cpp
+  remote/client.cpp
+  remote/clusteredobservation.cpp
   remote/server.cpp
+  remote/processcommander.cpp
   quality/qualitytablesformatter.cpp )
-endif(HAVE_BOOST_ASIO_H)
+endif(BOOST_ASIO_H)
 
 lofar_add_library(rfiengine
   Package__Version.cc

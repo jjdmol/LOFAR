@@ -18,35 +18,34 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef AOREMOTE__SERVER_H
-#define AOREMOTE__SERVER_H
+#ifndef AOREMOTE__PROCESS_COMMANDER_H
+#define AOREMOTE__PROCESS_COMMANDER_H
 
-#include <AOFlagger/remote/format.h>
+#include <map>
+#include <string>
+#include <vector>
 
-#include <boost/asio/io_service.hpp>
-#include <boost/asio/ip/tcp.hpp>
-
-class StatisticsCollection;
+#include "clusteredobservation.h"
+#include "remoteprocess.h"
+#include "server.h"
 
 namespace aoRemote {
 
-class Server
+class ProcessCommander
 {
 	public:
-		Server();
+		ProcessCommander(const ClusteredObservation &observation, const std::string &thisHostName);
+		~ProcessCommander();
 		
-		void Run();
-		
-		static unsigned PORT() { return 1892; }
-		
-		void StopClient();
-		void ReadQualityTables(const std::string &msFilename, class StatisticsCollection &collection);
-		
+		static std::string GetHostName();
 	private:
-		boost::asio::io_service _ioService;
-		boost::asio::ip::tcp::socket _socket;
+		void makeNodeMap(const ClusteredObservation &observation);
+		
+		Server _server;
+		std::map<std::string, std::vector<ClusteredObservationItem> > _nodeMap;
+		std::vector<RemoteProcess *> _processes;
 };
-	
+
 }
 
 #endif

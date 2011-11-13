@@ -18,35 +18,68 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef AOREMOTE__SERVER_H
-#define AOREMOTE__SERVER_H
+#ifndef AOREMOTE__CLUSTERED_OBSERVATION_H
+#define AOREMOTE__CLUSTERED_OBSERVATION_H
 
-#include <AOFlagger/remote/format.h>
+#include <string>
+#include <vector>
+#include <map>
 
-#include <boost/asio/io_service.hpp>
-#include <boost/asio/ip/tcp.hpp>
+namespace aoRemote
+{
 
-class StatisticsCollection;
-
-namespace aoRemote {
-
-class Server
+class ClusteredObservationItem
 {
 	public:
-		Server();
+		ClusteredObservationItem() :
+			_localPath(), _hostName()
+		{ }
+		ClusteredObservationItem(const std::string &localPath, const std::string &hostName) :
+			_localPath(localPath), _hostName(hostName)
+		{ }
+		ClusteredObservationItem(const ClusteredObservationItem &source) :
+			_localPath(source._localPath), _hostName(source._hostName)
+		{ }
+		ClusteredObservationItem &operator=(const ClusteredObservationItem &source)
+		{
+			_localPath = source._localPath;
+			_hostName = source._hostName;
+			return *this;
+		}
+		const std::string &LocalPath() const { return _localPath; }
+		const std::string &HostName() const { return _hostName; }
+	private:
+		std::string _localPath;
+		std::string _hostName;
+};
+
+class ClusteredObservation
+{
+	public:
+		ClusteredObservation();
 		
-		void Run();
+		static ClusteredObservation *LoadFromVds(const std::string &vdsFilename);
 		
-		static unsigned PORT() { return 1892; }
+		static ClusteredObservation *LoadFromRef(const std::string &refFilename)
+		{
+			return 0;
+		}
 		
-		void StopClient();
-		void ReadQualityTables(const std::string &msFilename, class StatisticsCollection &collection);
+		void AddItem(const ClusteredObservationItem &item)
+		{
+			_items.push_back(item);
+		}
+		
+		const std::vector<ClusteredObservationItem> &GetItems() const
+		{
+			return _items;
+		}
 		
 	private:
-		boost::asio::io_service _ioService;
-		boost::asio::ip::tcp::socket _socket;
+		std::vector<ClusteredObservationItem> _items;
 };
-	
+
+
 }
 
 #endif

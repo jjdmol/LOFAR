@@ -18,35 +18,51 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef AOREMOTE__SERVER_H
-#define AOREMOTE__SERVER_H
+#include <AOFlagger/remote/processcommander.h>
 
-#include <AOFlagger/remote/format.h>
-
-#include <boost/asio/io_service.hpp>
-#include <boost/asio/ip/tcp.hpp>
-
-class StatisticsCollection;
+#include <unistd.h> //gethostname
 
 namespace aoRemote {
 
-class Server
+ProcessCommander::ProcessCommander(const ClusteredObservation &observation, const std::string &thisHostName)
+: _server()
 {
-	public:
-		Server();
-		
-		void Run();
-		
-		static unsigned PORT() { return 1892; }
-		
-		void StopClient();
-		void ReadQualityTables(const std::string &msFilename, class StatisticsCollection &collection);
-		
-	private:
-		boost::asio::io_service _ioService;
-		boost::asio::ip::tcp::socket _socket;
-};
+	makeNodeMap(observation);
 	
+	//construct a process for each unique node name
+	for(std::map<std::string, std::vector<ClusteredObservationItem> >::const_iterator i=_nodeMap.begin();i!=_nodeMap.end();++i)
+	{
+		_processes.push_back(new RemoteProcess(i->first, thisHostName));
+	}
 }
 
-#endif
+ProcessCommander::~ProcessCommander()
+{
+	for(std::vector<RemoteProcess*>::iterator i=_processes.begin();i!=_processes.end();++i)
+	{
+		delete *i;
+	}
+}
+
+void ProcessCommander::makeNodeMap(const ClusteredObservation &observation)
+{
+	const std::vector<ClusteredObservationItem> &items = observation.GetItems();
+	for(std::vector<ClusteredObservationItem>::const_iterator i=items.begin();i!=items.end();++i)
+	{
+		_nodeMap[i->HostName()].push_back(*i);
+	}
+}
+
+std::string ProcessCommander::GetHostName()
+{
+	char name[HOST_NAME_MAX];
+	if(gethostname(name, HOST_NAME_MAX) == 0)
+	{
+		return std::string(name);
+	} else {
+		throw std::runtime_error("Error retrieving hostname");
+	}
+}
+
+
+}

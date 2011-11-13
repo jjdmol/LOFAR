@@ -18,35 +18,42 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef AOREMOTE__SERVER_H
-#define AOREMOTE__SERVER_H
+#include <AOFlagger/remote/clusteredobservation.h>
 
-#include <AOFlagger/remote/format.h>
+#include <stdexcept>
 
-#include <boost/asio/io_service.hpp>
-#include <boost/asio/ip/tcp.hpp>
+#include <LMWCommon/VdsDesc.h>
+#include <auto_ptr.h>
 
-class StatisticsCollection;
-
-namespace aoRemote {
-
-class Server
+namespace aoRemote
 {
-	public:
-		Server();
-		
-		void Run();
-		
-		static unsigned PORT() { return 1892; }
-		
-		void StopClient();
-		void ReadQualityTables(const std::string &msFilename, class StatisticsCollection &collection);
-		
-	private:
-		boost::asio::io_service _ioService;
-		boost::asio::ip::tcp::socket _socket;
-};
-	
+
+ClusteredObservation::ClusteredObservation()
+{
 }
 
-#endif
+ClusteredObservation *ClusteredObservation::LoadFromVds(const std::string &vdsFilename)
+{
+	LOFAR::CEP::VdsDesc vdsDesc(vdsFilename);
+	const std::vector<LOFAR::CEP::VdsPartDesc> &parts = vdsDesc.getParts();
+	
+	std::auto_ptr<ClusteredObservation> cObs(new ClusteredObservation());
+	
+	for(std::vector<LOFAR::CEP::VdsPartDesc>::const_iterator i=parts.begin();i!=parts.end();++i)
+	{
+		const std::string &filename = i->getFileName();
+		const std::string &filesystem = i->getFileSys();
+		
+		size_t separatorPos = filesystem.find(':');
+		if(separatorPos == std::string::npos || separatorPos == 0)
+			throw std::runtime_error("One of the file system descriptors in the VDS file has an unexpected format");
+		const std::string hostname = filesystem.substr(0, separatorPos);
+		
+		ClusteredObservationItem newItem(filename, hostname);
+		cObs->AddItem(newItem);
+	}
+	
+	return cObs.release();
+}
+
+}

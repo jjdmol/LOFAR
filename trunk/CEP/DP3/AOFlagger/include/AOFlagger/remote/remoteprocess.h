@@ -18,35 +18,63 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef AOREMOTE__SERVER_H
-#define AOREMOTE__SERVER_H
+#ifndef AOREMOTE__REMOTE_PROCESS_H
+#define AOREMOTE__REMOTE_PROCESS_H
 
-#include <AOFlagger/remote/format.h>
+#include <sstream>
 
-#include <boost/asio/io_service.hpp>
-#include <boost/asio/ip/tcp.hpp>
+#include <boost/thread/thread.hpp>
 
-class StatisticsCollection;
+#include "clusteredobservation.h"
 
-namespace aoRemote {
+namespace aoRemote
+{
 
-class Server
+class RemoteProcess
 {
 	public:
-		Server();
+		RemoteProcess(const std::string &clientHostName, const std::string &serverHostName)
+		: _clientHostName(clientHostName), _serverHostName(serverHostName), _thread(ThreadFunctor(*this)), _running(true)
+		{
+		}
 		
-		void Run();
+		~RemoteProcess()
+		{
+			Join();
+		}
 		
-		static unsigned PORT() { return 1892; }
-		
-		void StopClient();
-		void ReadQualityTables(const std::string &msFilename, class StatisticsCollection &collection);
-		
+		void Join()
+		{
+			if(_running)
+			{
+				_thread.join();
+				_running = false;
+			}
+		}
 	private:
-		boost::asio::io_service _ioService;
-		boost::asio::ip::tcp::socket _socket;
+		RemoteProcess(const RemoteProcess &source) { }
+		void operator=(const RemoteProcess &source) { }
+		
+		struct ThreadFunctor
+		{
+			ThreadFunctor(RemoteProcess &process) : _remoteProcess(process) { }
+			RemoteProcess &_remoteProcess;
+			void operator()()
+			{
+				std::ostringstream commandLine;
+				commandLine
+					<< "ssh " << _remoteProcess._clientHostName << " -C \"aoremoteserver connect "
+					<< _remoteProcess._serverHostName << "\"";
+				system(commandLine.str().c_str());
+			}
+		};
+		
+		const ClusteredObservationItem _item;
+		const std::string _clientHostName, _serverHostName;
+		boost::thread _thread;
+		bool _running;
 };
-	
+
 }
 
 #endif

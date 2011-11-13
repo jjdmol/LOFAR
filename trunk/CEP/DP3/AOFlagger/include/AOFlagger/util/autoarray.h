@@ -17,36 +17,34 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
+#ifndef AUTO_ARRAY_H
+#define AUTO_ARRAY_H
 
-#ifndef AOREMOTE__SERVER_H
-#define AOREMOTE__SERVER_H
-
-#include <AOFlagger/remote/format.h>
-
-#include <boost/asio/io_service.hpp>
-#include <boost/asio/ip/tcp.hpp>
-
-class StatisticsCollection;
-
-namespace aoRemote {
-
-class Server
+template<typename T>
+class AutoArray
 {
 	public:
-		Server();
+		AutoArray(T *arrayObject) :
+			_arr(arrayObject)
+		{
+		}
 		
-		void Run();
-		
-		static unsigned PORT() { return 1892; }
-		
-		void StopClient();
-		void ReadQualityTables(const std::string &msFilename, class StatisticsCollection &collection);
-		
-	private:
-		boost::asio::io_service _ioService;
-		boost::asio::ip::tcp::socket _socket;
-};
+		~AutoArray()
+		{
+			delete[] _arr;
+		}
 	
-}
+		T *operator->() const
+		{
+			return _arr;
+		}
+		
+		T &operator*() const
+		{
+			return *_arr;
+		}
+	private:
+		T *_arr;
+};
 
 #endif

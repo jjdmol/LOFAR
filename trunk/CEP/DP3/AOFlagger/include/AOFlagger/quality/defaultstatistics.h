@@ -23,7 +23,9 @@
 #include <complex>
 #include <stdint.h>
 
-class DefaultStatistics
+#include <AOFlagger/util/serializable.h>
+
+class DefaultStatistics : public Serializable
 {
 	public:
 		DefaultStatistics(unsigned polarizationCount) :
@@ -99,27 +101,41 @@ class DefaultStatistics
 			return *this;
 		}
 		
-		void Serialize(std::ostream &stream) const
+		virtual void Serialize(std::ostream &stream) const
 		{
-			const uint64_t polarizationCount = _polarizationCount;
-			stream.write(reinterpret_cast<const char*>(&polarizationCount), sizeof(polarizationCount));
+			SerializeToUInt32(stream, _polarizationCount);
 			
 			for(unsigned p=0;p<_polarizationCount;++p)
 			{
-				const uint64_t rfiCount_ = rfiCount[p];
-				stream.write(reinterpret_cast<const char*>(&rfiCount_), sizeof(rfiCount_));
-				
-				const uint64_t count_ = count[p];
-				stream.write(reinterpret_cast<const char*>(&count_), sizeof(count_));
-				
-				stream.write(reinterpret_cast<const char*>(&sum[p]), sizeof(sum[p]));
-				stream.write(reinterpret_cast<const char*>(&sumP2[p]), sizeof(sumP2[p]));
-				
-				const uint64_t dCount_ = count[p];
-				stream.write(reinterpret_cast<const char*>(&dCount_), sizeof(dCount_));
-				
-				stream.write(reinterpret_cast<const char*>(&dSum[p]), sizeof(dSum[p]));
-				stream.write(reinterpret_cast<const char*>(&dSumP2[p]), sizeof(dSumP2[p]));
+				SerializeToUInt64(stream, rfiCount[p]);
+				SerializeToUInt64(stream, count[p]);
+				SerializeToLDoubleC(stream, sum[p]);
+				SerializeToLDoubleC(stream, sumP2[p]);
+				SerializeToUInt64(stream, dCount[p]);
+				SerializeToLDoubleC(stream, dSum[p]);
+				SerializeToLDoubleC(stream, dSumP2[p]);
+			}
+		}
+		
+		virtual void Unserialize(std::istream &stream)
+		{
+			uint32_t pCount = UnserializeUInt32(stream);
+			if(pCount != _polarizationCount)
+			{
+				destruct();
+				_polarizationCount = pCount;
+				initialize();
+			}
+			
+			for(unsigned p=0;p<_polarizationCount;++p)
+			{
+				rfiCount[p] = UnserializeUInt64(stream);
+				count[p] = UnserializeUInt64(stream);
+				sum[p] = UnserializeLDoubleC(stream);
+				sumP2[p] = UnserializeLDoubleC(stream);
+				dCount[p] = UnserializeUInt64(stream);
+				dSum[p] = UnserializeLDoubleC(stream);
+				dSumP2[p] = UnserializeLDoubleC(stream);
 			}
 		}
 		

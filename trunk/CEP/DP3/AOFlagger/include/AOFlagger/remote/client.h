@@ -18,33 +18,28 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef AOREMOTE__SERVER_H
-#define AOREMOTE__SERVER_H
-
-#include <AOFlagger/remote/format.h>
+#ifndef AOREMOTE__CLIENT_H
+#define AOREMOTE__CLIENT_H
 
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/tcp.hpp>
 
-class StatisticsCollection;
-
 namespace aoRemote {
 
-class Server
+class Client
 {
 	public:
-		Server();
+		Client();
 		
-		void Run();
+		void Run(const std::string &serverHost);
 		
 		static unsigned PORT() { return 1892; }
-		
-		void StopClient();
-		void ReadQualityTables(const std::string &msFilename, class StatisticsCollection &collection);
 		
 	private:
 		boost::asio::io_service _ioService;
 		boost::asio::ip::tcp::socket _socket;
+		
+		void handleReadQualityTables(unsigned dataSize);
 };
 	
 }
