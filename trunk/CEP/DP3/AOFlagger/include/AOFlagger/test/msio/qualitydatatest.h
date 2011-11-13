@@ -26,18 +26,37 @@
 #include <AOFlagger/quality/qualitytablesformatter.h>
 #include <AOFlagger/quality/statisticalvalue.h>
 
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/tables/Tables/SetupNewTab.h>
+#include <casacore/tables/Tables/ScaColDesc.h>
+
 class QualityTablesFormatterTest : public UnitTest {
 	public:
     QualityTablesFormatterTest() : UnitTest("Quality data")
 		{
+			createTable();
 			AddTest(TestConstructor(), "Class constructor");
 			AddTest(TestTableExists(), "Query table existance");
 			AddTest(TestTableInitialization(), "Initialize tables");
 			AddTest(TestKindOperations(), "Statistic kind operations");
 			AddTest(TestStoreStatistics(), "Storing statistics");
 		}
-		
+    virtual ~QualityTablesFormatterTest()
+		{
+			removeTable();
+		}
 	private:
+		void createTable()
+		{
+			casa::TableDesc tableDesc("MAIN_TABLE", "1.0", casa::TableDesc::Scratch);
+			tableDesc.addColumn(casa::ScalarColumnDesc<int>("TEST"));
+			casa::SetupNewTable mainTableSetup("QualityTest.MS", tableDesc, casa::Table::New);
+			casa::Table mainOutputTable(mainTableSetup);
+		}
+		void removeTable()
+		{
+			casa::Table::deleteTable("QualityTest.MS");
+		}
 		struct TestConstructor : public Asserter
 		{
 			void operator()();

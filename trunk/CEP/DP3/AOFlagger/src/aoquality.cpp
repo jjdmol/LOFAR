@@ -284,7 +284,7 @@ void actionCombine(const std::string outFilename, const std::vector<std::string>
 		casa::Table templateSet(*inFilenames.begin());
 		casa::Table templateAntennaTable = templateSet.keywordSet().asTable("ANTENNA");
 		
-		casa::SetupNewTable mainTableSetup(outFilename, templateAntennaTable.tableDesc(), casa::Table::New);
+		casa::SetupNewTable mainTableSetup(outFilename, templateSet.tableDesc(), casa::Table::New);
 		casa::Table mainOutputTable(mainTableSetup);
 		
 		casa::SetupNewTable antennaTableSetup(outFilename + "/ANTENNA", templateAntennaTable.tableDesc(), casa::Table::New);
