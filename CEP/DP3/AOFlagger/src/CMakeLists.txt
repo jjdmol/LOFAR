@@ -177,6 +177,7 @@ lofar_add_bin_program(aoremoteclient aoremoteclient.cpp
   remote/client.cpp
   remote/clusteredobservation.cpp
   remote/server.cpp
+  remote/serverconnection.cpp
   remote/processcommander.cpp
   quality/qualitytablesformatter.cpp )
 endif(BOOST_ASIO_H)

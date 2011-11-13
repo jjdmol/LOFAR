@@ -26,8 +26,6 @@
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/tcp.hpp>
 
-class StatisticsCollection;
-
 namespace aoRemote {
 
 class Server
@@ -36,6 +34,7 @@ class Server
 		Server();
 		
 		void Run();
+		void Stop();
 		
 		static unsigned PORT() { return 1892; }
 		
@@ -43,8 +42,11 @@ class Server
 		void ReadQualityTables(const std::string &msFilename, class StatisticsCollection &collection);
 		
 	private:
+		void startAccept();
+		void handleAccept(class ServerConnection *connection, const boost::system::error_code &error);
+		
 		boost::asio::io_service _ioService;
-		boost::asio::ip::tcp::socket _socket;
+		boost::asio::ip::tcp::acceptor _acceptor;
 };
 	
 }
