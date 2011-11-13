@@ -34,7 +34,7 @@ namespace aoRemote {
 class ProcessCommander
 {
 	public:
-		ProcessCommander(const ClusteredObservation &observation, const std::string &thisHostName);
+		ProcessCommander(const ClusteredObservation &observation);
 		~ProcessCommander();
 		
 		static std::string GetHostName();

@@ -21,86 +21,48 @@
 #include <AOFlagger/remote/server.h>
 
 #include <vector>
+#include <boost/bind.hpp>
+#include <boost/asio/placeholders.hpp>
 
-#include <boost/asio/read.hpp>
-#include <boost/asio/write.hpp>
-
-#include <AOFlagger/quality/statisticscollection.h>
-
-#include <AOFlagger/util/autoarray.h>
+#include <AOFlagger/remote/serverconnection.h>
 
 namespace aoRemote
 {
 
 Server::Server()
-	: _socket(_ioService)
+	: _acceptor(_ioService, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), PORT()))
 {
-	boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::tcp::v4(), PORT());
-	boost::asio::ip::tcp::acceptor acceptor(_ioService, endpoint);
-	boost::asio::ip::tcp::socket socket(_ioService);
-	acceptor.accept(socket);
-	
-	InitialBlock initialBlock;
-	initialBlock.blockIdentifier = InitialId;
-	initialBlock.blockSize = sizeof(initialBlock);
-	initialBlock.options = 0;
-	initialBlock.protocolVersion = AO_REMOTE_PROTOCOL_VERSION;
-	
-	boost::asio::write(_socket, boost::asio::buffer(&initialBlock, sizeof(initialBlock)));
-	
-	InitialResponseBlock initialResponse;
-	boost::asio::read(_socket, boost::asio::buffer(&initialResponse, sizeof(initialResponse)));
-	if(initialResponse.blockIdentifier != InitialResponseId || initialResponse.blockSize != sizeof(initialResponse))
-		throw std::runtime_error("Bad response from server");
-	if(initialResponse.errorCode != NoError)
-		throw std::runtime_error("Error reported by server");
-	if(initialResponse.negotiatedProtocolVersion != AO_REMOTE_PROTOCOL_VERSION)
-		throw std::runtime_error("Server seems to run different protocol version");
 }
 
-void Server::StopClient()
+void Server::Run()
 {
-	RequestBlock requestBlock;
-	requestBlock.blockIdentifier = RequestId;
-	requestBlock.blockSize = sizeof(requestBlock);
-	requestBlock.dataSize = 0;
-	requestBlock.request = StopClientRequest;
-	boost::asio::write(_socket, boost::asio::buffer(&requestBlock, sizeof(requestBlock)));
+	startAccept();
+	_ioService.run();
 }
 
-void Server::ReadQualityTables(const std::string &msFilename, StatisticsCollection &collection)
+void Server::startAccept()
 {
-	std::stringstream reqBuffer;
+	ServerConnection *connection = new ServerConnection(_ioService);
 	
-	RequestBlock requestBlock;
-	ReadQualityTablesRequestOptions options;
-	
-	requestBlock.blockIdentifier = RequestId;
-	requestBlock.blockSize = sizeof(requestBlock);
-	requestBlock.dataSize = sizeof(options.flags) + msFilename.size();
-	requestBlock.request = ReadQualityTablesRequest;
-	reqBuffer.write(reinterpret_cast<char *>(&requestBlock), sizeof(requestBlock));
-	
-	options.flags = 0;
-	options.msFilename = msFilename;
-	reqBuffer.write(reinterpret_cast<char *>(&options.flags), sizeof(options.flags));
-	reqBuffer.write(reinterpret_cast<const char *>(options.msFilename.c_str()), options.msFilename.size());
-	
-	boost::asio::write(_socket, boost::asio::buffer(reqBuffer.str()));
-	
-	ReadQualityTablesResponseHeader responseHeader;
-	boost::asio::read(_socket, boost::asio::buffer(&responseHeader, sizeof(responseHeader)));
-	if(responseHeader.blockIdentifier != ReadQualityTablesResponseHeaderId || responseHeader.blockSize != sizeof(responseHeader))
-		throw std::runtime_error("Bad response from server upon read tables request");
-	if(responseHeader.errorCode != NoError)
-		throw std::runtime_error("Error reported by server upon read tables request");
-	
-	AutoArray<char> buffer(new char[responseHeader.dataSize]);
-	
-	std::istringstream stream;
-	stream.rdbuf()->pubsetbuf(&*buffer, responseHeader.dataSize);
-	boost::asio::read(_socket, boost::asio::buffer(&*buffer, responseHeader.dataSize));
-	collection.Unserialize(stream);
+	_acceptor.async_accept(connection->Socket(), boost::bind(&Server::handleAccept, this, connection, boost::asio::placeholders::error));
+}
+
+void Server::handleAccept(ServerConnection *connection, const boost::system::error_code &error)
+{
+	if (_acceptor.is_open())
+	{
+		if (!error)
+		{
+			connection->Start();
+		}
+
+		startAccept();
+	}
+}
+
+void Server::Stop()
+{
+	_acceptor.close();
 }
 
 
