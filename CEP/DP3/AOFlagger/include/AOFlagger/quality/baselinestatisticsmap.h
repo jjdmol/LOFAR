@@ -118,8 +118,15 @@ class BaselineStatisticsMap : public Serializable
 		
 		virtual void Serialize(std::ostream &stream) const
 		{
-			serializeToInt32(stream, _polarizationCount);
+			SerializeToUInt32(stream, _polarizationCount);
 			serializeOuterMap(stream, _map);
+		}
+		
+		virtual void Unserialize(std::istream &stream)
+		{
+			_map.clear();
+			_polarizationCount = UnserializeUInt32(stream);
+			unserializeOuterMap(stream, _map);
 		}
 		
 	private:
@@ -135,29 +142,56 @@ class BaselineStatisticsMap : public Serializable
 		
 		void serializeOuterMap(std::ostream &stream, const OuterMap &map) const
 		{
-			serializeToInt32(stream, map.size());
+			SerializeToUInt32(stream, map.size());
 			
 			for(OuterMap::const_iterator i=map.begin();i!=map.end();++i)
 			{
 				unsigned antenna1 = i->first;
-				serializeToInt32(stream, antenna1);
+				SerializeToUInt32(stream, antenna1);
 				
 				const InnerMap &innerMap = i->second;
 				serializeInnerMap(stream, innerMap);
 			}
 		}
 		
+		void unserializeOuterMap(std::istream &stream, OuterMap &map) const
+		{
+			size_t size = UnserializeUInt32(stream);
+			for(size_t i=0;i<size;++i)
+			{
+				unsigned antenna1 = UnserializeUInt32(stream);
+				
+				OuterMap::iterator i =
+					map.insert(std::pair<unsigned, InnerMap>(antenna1, InnerMap())).first;
+				unserializeInnerMap(stream, i->second);
+			}
+		}
+		
 		void serializeInnerMap(std::ostream &stream, const InnerMap &map) const
 		{
-			serializeToInt32(stream, map.size());
+			SerializeToUInt32(stream, map.size());
 			
 			for(InnerMap::const_iterator i=map.begin();i!=map.end();++i)
 			{
 				unsigned antenna2 = i->first;
-				serializeToInt32(stream, antenna2);
+				SerializeToUInt32(stream, antenna2);
 				
 				const DefaultStatistics &statistics = i->second;
 				statistics.Serialize(stream);
+			}
+		}
+		
+		void unserializeInnerMap(std::istream &stream, InnerMap &map) const
+		{
+			size_t size = UnserializeUInt32(stream);
+			for(size_t i=0;i<size;++i)
+			{
+				unsigned antenna2 = UnserializeUInt32(stream);
+				
+				InnerMap::iterator i =
+					map.insert(std::pair<unsigned, DefaultStatistics>(antenna2, DefaultStatistics(_polarizationCount))).first;
+				
+				i->second.Unserialize(stream);
 			}
 		}
 		

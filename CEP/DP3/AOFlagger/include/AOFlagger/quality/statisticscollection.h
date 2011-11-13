@@ -32,6 +32,10 @@
 class StatisticsCollection : public Serializable
 {
 	public:
+		StatisticsCollection() : _polarizationCount(0)
+		{
+		}
+		
 		StatisticsCollection(unsigned polarizationCount) : _polarizationCount(polarizationCount)
 		{
 		}
@@ -159,13 +163,25 @@ class StatisticsCollection : public Serializable
 			return _polarizationCount;
 		}
 		
+		void SetPolarizationCount(unsigned newCount)
+		{
+			_polarizationCount = newCount;
+		}
+		
 		virtual void Serialize(std::ostream &stream) const
 		{
-			uint64_t pCount = _polarizationCount;
-			stream.write(reinterpret_cast<char*>(&pCount), sizeof(pCount));
+			SerializeToUInt64(stream, _polarizationCount);
 			serializeTime(stream);
 			serializeFrequency(stream);
 			serializeBaselines(stream);
+		}
+		
+		virtual void Unserialize(std::istream &stream)
+		{
+			_polarizationCount = UnserializeUInt64(stream);
+			unserializeTime(stream);
+			unserializeFrequency(stream);
+			unserializeBaselines(stream);
 		}
 	private:
 		struct StatisticSaver
@@ -654,15 +670,29 @@ class StatisticsCollection : public Serializable
 		
 		void serializeTime(std::ostream &stream) const
 		{
-			serializeToInt64(stream, _timeStatistics.size());
+			SerializeToUInt64(stream, _timeStatistics.size());
 			
 			for(std::map<double, DoubleStatMap>::const_iterator i=_timeStatistics.begin();i!=_timeStatistics.end();++i)
 			{
 				const double frequency = i->first;
 				const DoubleStatMap &map = i->second;
 				
-				serializeToDouble(stream, frequency);
+				SerializeToDouble(stream, frequency);
 				serializeDoubleStatMap(stream, map);
+			}
+		}
+		
+		void unserializeTime(std::istream &stream)
+		{
+			_timeStatistics.clear();
+			size_t count = (size_t) UnserializeUInt64(stream);
+			
+			for(size_t i=0;i<count;++i)
+			{
+				double frequency = UnserializeDouble(stream);
+				std::map<double, DoubleStatMap>::iterator iterator =
+					_timeStatistics.insert(std::pair<double, DoubleStatMap>(frequency, DoubleStatMap())).first;
+				unserializeDoubleStatMap(stream, iterator->second);
 			}
 		}
 		
@@ -671,17 +701,37 @@ class StatisticsCollection : public Serializable
 			serializeDoubleStatMap(stream, _frequencyStatistics);
 		}
 		
+		void unserializeFrequency(std::istream &stream)
+		{
+			_frequencyStatistics.clear();
+			unserializeDoubleStatMap(stream, _frequencyStatistics);
+		}
+		
 		void serializeBaselines(std::ostream &stream) const
 		{
-			serializeToInt64(stream, _baselineStatistics.size());
+			SerializeToUInt64(stream, _baselineStatistics.size());
 			
 			for(std::map<double, BaselineStatisticsMap>::const_iterator i=_baselineStatistics.begin();i!=_baselineStatistics.end();++i)
 			{
 				const double frequency = i->first;
 				const BaselineStatisticsMap &map = i->second;
 				
-				serializeToDouble(stream, frequency);
+				SerializeToDouble(stream, frequency);
 				map.Serialize(stream);
+			}
+		}
+		
+		void unserializeBaselines(std::istream &stream)
+		{
+			_baselineStatistics.clear();
+			size_t count = (size_t) UnserializeUInt64(stream);
+			
+			for(size_t i=0;i<count;++i)
+			{
+				double frequency = UnserializeDouble(stream);
+				std::map<double, BaselineStatisticsMap>::iterator iterator =
+					_baselineStatistics.insert(std::pair<double, BaselineStatisticsMap>(frequency, BaselineStatisticsMap(_polarizationCount))).first;
+				iterator->second.Unserialize(stream);
 			}
 		}
 		
@@ -695,6 +745,19 @@ class StatisticsCollection : public Serializable
 				const DefaultStatistics &stat = i->second;
 				stream.write(reinterpret_cast<const char *>(&key), sizeof(key));
 				stat.Serialize(stream);
+			}
+		}
+		
+		void unserializeDoubleStatMap(std::istream &stream, DoubleStatMap &statMap) const
+		{
+			size_t count = (size_t) UnserializeUInt64(stream);
+			
+			for(size_t i=0;i<count;++i)
+			{
+				double key = UnserializeDouble(stream);
+				std::map<double, DefaultStatistics>::iterator iterator =
+					statMap.insert(std::pair<double, DefaultStatistics>(key, DefaultStatistics(_polarizationCount))).first;
+				iterator->second.Unserialize(stream);
 			}
 		}
 		

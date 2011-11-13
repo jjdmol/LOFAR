@@ -20,83 +20,88 @@
 
 #include <AOFlagger/remote/server.h>
 
+#include <vector>
+
 #include <boost/asio/read.hpp>
 #include <boost/asio/write.hpp>
 
-#include <AOFlagger/quality/qualitytablesformatter.h>
 #include <AOFlagger/quality/statisticscollection.h>
+
+#include <AOFlagger/util/autoarray.h>
 
 namespace aoRemote
 {
 
 Server::Server()
+	: _socket(_ioService)
 {
 	boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::tcp::v4(), PORT());
 	boost::asio::ip::tcp::acceptor acceptor(_ioService, endpoint);
 	boost::asio::ip::tcp::socket socket(_ioService);
 	acceptor.accept(socket);
 	
-	struct InitialBlock initialBlock;
-	boost::asio::read(socket, boost::asio::buffer(&initialBlock, sizeof(initialBlock)));
+	InitialBlock initialBlock;
+	initialBlock.blockIdentifier = InitialId;
+	initialBlock.blockSize = sizeof(initialBlock);
+	initialBlock.options = 0;
+	initialBlock.protocolVersion = AO_REMOTE_PROTOCOL_VERSION;
 	
-	struct InitialResponseBlock initialResponse;
-	initialResponse.blockIdentifier = InitialResponseId;
-	initialResponse.blockSize = sizeof(initialResponse);
-	initialResponse.negotiatedProtocolVersion = 1;
-	if(initialBlock.protocolVersion != 1 || initialBlock.blockSize != sizeof(initialResponse) || initialBlock.blockIdentifier != InitialId)
-	{
-		initialResponse.errorCode = ProtocolNotUnderstoodError;
-		boost::asio::write(socket, boost::asio::buffer(&initialResponse, sizeof(initialResponse)));
-		return;
-	}
-	initialResponse.errorCode = NoError;
-	boost::asio::write(socket, boost::asio::buffer(&initialResponse, sizeof(initialResponse)));
-
-	while(true)
-	{
-		struct RequestBlock requestBlock;
-		boost::asio::read(socket, boost::asio::buffer(&requestBlock, sizeof(requestBlock)));
-		
-		enum RequestType request = (enum RequestType) requestBlock.request;
-		switch(request)
-		{
-			case StopServer:
-				return;
-			case ReadQualityTables:
-				handleReadQualityTables(socket, requestBlock.dataSize);
-		}
-	}
+	boost::asio::write(_socket, boost::asio::buffer(&initialBlock, sizeof(initialBlock)));
+	
+	InitialResponseBlock initialResponse;
+	boost::asio::read(_socket, boost::asio::buffer(&initialResponse, sizeof(initialResponse)));
+	if(initialResponse.blockIdentifier != InitialResponseId || initialResponse.blockSize != sizeof(initialResponse))
+		throw std::runtime_error("Bad response from server");
+	if(initialResponse.errorCode != NoError)
+		throw std::runtime_error("Error reported by server");
+	if(initialResponse.negotiatedProtocolVersion != AO_REMOTE_PROTOCOL_VERSION)
+		throw std::runtime_error("Server seems to run different protocol version");
 }
 
-void Server::handleReadQualityTables(boost::asio::ip::tcp::socket &socket, unsigned dataSize)
+void Server::StopClient()
 {
-	try {
-		char data[dataSize+1];
-		boost::asio::read(socket, boost::asio::buffer(data, dataSize));
-		data[dataSize] = 0;
-		
-		const std::string filename(data);
-		QualityTablesFormatter formatter(filename);
-		StatisticsCollection collection(formatter.GetPolarizationCount());
-		collection.Load(formatter);
-		
-		ReadQualityTablesHeader header;
-		header.blockIdentifier = ReadQualityTablesHeaderId;
-		header.blockSize = sizeof(header);
-		header.errorCode = NoError;
-		std::stringstream s;
-		collection.Serialize(s);
-		
-		boost::asio::write(socket, boost::asio::buffer(&header, sizeof(header)));
-		boost::asio::write(socket, boost::asio::buffer(s.str()));
-	} catch(std::exception &e) {
-		ReadQualityTablesHeader header;
-		header.blockIdentifier = ReadQualityTablesHeaderId;
-		header.blockSize = sizeof(header);
-		header.errorCode = UnexpectedExceptionOccured;
-		boost::asio::write(socket, boost::asio::buffer(&header, sizeof(header)));
-	}
+	RequestBlock requestBlock;
+	requestBlock.blockIdentifier = RequestId;
+	requestBlock.blockSize = sizeof(requestBlock);
+	requestBlock.dataSize = 0;
+	requestBlock.request = StopClientRequest;
+	boost::asio::write(_socket, boost::asio::buffer(&requestBlock, sizeof(requestBlock)));
 }
 
-} // namespace
+void Server::ReadQualityTables(const std::string &msFilename, StatisticsCollection &collection)
+{
+	std::stringstream reqBuffer;
+	
+	RequestBlock requestBlock;
+	ReadQualityTablesRequestOptions options;
+	
+	requestBlock.blockIdentifier = RequestId;
+	requestBlock.blockSize = sizeof(requestBlock);
+	requestBlock.dataSize = sizeof(options.flags) + msFilename.size();
+	requestBlock.request = ReadQualityTablesRequest;
+	reqBuffer.write(reinterpret_cast<char *>(&requestBlock), sizeof(requestBlock));
+	
+	options.flags = 0;
+	options.msFilename = msFilename;
+	reqBuffer.write(reinterpret_cast<char *>(&options.flags), sizeof(options.flags));
+	reqBuffer.write(reinterpret_cast<const char *>(options.msFilename.c_str()), options.msFilename.size());
+	
+	boost::asio::write(_socket, boost::asio::buffer(reqBuffer.str()));
+	
+	ReadQualityTablesResponseHeader responseHeader;
+	boost::asio::read(_socket, boost::asio::buffer(&responseHeader, sizeof(responseHeader)));
+	if(responseHeader.blockIdentifier != ReadQualityTablesResponseHeaderId || responseHeader.blockSize != sizeof(responseHeader))
+		throw std::runtime_error("Bad response from server upon read tables request");
+	if(responseHeader.errorCode != NoError)
+		throw std::runtime_error("Error reported by server upon read tables request");
+	
+	AutoArray<char> buffer(new char[responseHeader.dataSize]);
+	
+	std::istringstream stream;
+	stream.rdbuf()->pubsetbuf(&*buffer, responseHeader.dataSize);
+	boost::asio::read(_socket, boost::asio::buffer(&*buffer, responseHeader.dataSize));
+	collection.Unserialize(stream);
+}
 
+
+}

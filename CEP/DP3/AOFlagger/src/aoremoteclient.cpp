@@ -1,6 +1,6 @@
 /***************************************************************************
- *   Copyright (C) 2008 by A.R. Offringa   *
- *   offringa@astro.rug.nl   *
+ *   Copyright (C) 2011 by A.R. Offringa                                   *
+ *   offringa@astro.rug.nl                                                 *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -18,35 +18,20 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef AOREMOTE__SERVER_H
-#define AOREMOTE__SERVER_H
+#include <iostream>
 
-#include <AOFlagger/remote/format.h>
+#include <AOFlagger/remote/client.h>
 
-#include <boost/asio/io_service.hpp>
-#include <boost/asio/ip/tcp.hpp>
+#include <AOFlagger/quality/statisticscollection.h>
 
-class StatisticsCollection;
-
-namespace aoRemote {
-
-class Server
+int main(int argc, char *argv[])
 {
-	public:
-		Server();
-		
-		void Run();
-		
-		static unsigned PORT() { return 1892; }
-		
-		void StopClient();
-		void ReadQualityTables(const std::string &msFilename, class StatisticsCollection &collection);
-		
-	private:
-		boost::asio::io_service _ioService;
-		boost::asio::ip::tcp::socket _socket;
-};
-	
+	if(argc == 3)
+	{
+		std::string serverHost = argv[2];
+		aoRemote::Client client;
+		client.Run(serverHost);
+	} else {
+		std::cerr << "Syntax: aoremoteclient connect <serverhost>\n";
+	}
 }
-
-#endif
