@@ -26,9 +26,9 @@
 #include <AOFlagger/quality/qualitytablesformatter.h>
 #include <AOFlagger/quality/statisticalvalue.h>
 
-#include <casacore/tables/Tables/Table.h>
-#include <casacore/tables/Tables/SetupNewTab.h>
-#include <casacore/tables/Tables/ScaColDesc.h>
+#include <tables/Tables/Table.h>
+#include <tables/Tables/SetupNewTab.h>
+#include <tables/Tables/ScaColDesc.h>
 
 class QualityTablesFormatterTest : public UnitTest {
 	public:
