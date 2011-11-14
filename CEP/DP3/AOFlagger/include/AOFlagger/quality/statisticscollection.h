@@ -36,7 +36,15 @@ class StatisticsCollection : public Serializable
 		{
 		}
 		
-		StatisticsCollection(unsigned polarizationCount) : _polarizationCount(polarizationCount)
+		explicit StatisticsCollection(unsigned polarizationCount) : _polarizationCount(polarizationCount)
+		{
+		}
+		
+		StatisticsCollection(const StatisticsCollection &source) :
+			_timeStatistics(source._timeStatistics),
+			_frequencyStatistics(source._frequencyStatistics),
+			_baselineStatistics(source._baselineStatistics),
+			_polarizationCount(source._polarizationCount)
 		{
 		}
 		
@@ -89,7 +97,7 @@ class StatisticsCollection : public Serializable
 			delete[] diffRFIFlags;
 		}
 		
-		void Save(QualityTablesFormatter &qualityData)
+		void Save(QualityTablesFormatter &qualityData) const
 		{
 			saveTime(qualityData);
 			saveFrequency(qualityData);
@@ -235,6 +243,11 @@ class StatisticsCollection : public Serializable
 				kindDSumP2 = qd.StoreOrQueryKindIndex(QualityTablesFormatter::DSumP2Statistic);
 			}
 		};
+		
+		StatisticsCollection & operator=(const StatisticsCollection &source) // don't allow assignment
+		{
+			return *this;
+		}
 
 		void addTimeAndBaseline(unsigned antenna1, unsigned antenna2, double time, double centralFrequency, int polarization, const std::vector<std::complex<float> > samples, const bool *isRFI, bool isDiff)
 		{

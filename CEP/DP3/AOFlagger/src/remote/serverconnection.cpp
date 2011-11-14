@@ -49,12 +49,22 @@ void ServerConnection::Start()
 	
 	InitialResponseBlock initialResponse;
 	boost::asio::read(_socket, boost::asio::buffer(&initialResponse, sizeof(initialResponse)));
+	enum ErrorCode errorCode = (enum ErrorCode) initialResponse.errorCode;
 	if(initialResponse.blockIdentifier != InitialResponseId || initialResponse.blockSize != sizeof(initialResponse))
-		throw std::runtime_error("Bad response from server");
-	if(initialResponse.errorCode != NoError)
-		throw std::runtime_error("Error reported by server");
+		throw std::runtime_error("Bad response from client during initial response");
+	if(errorCode != NoError)
+		throw std::runtime_error(std::string("Error reported by client during initial response: ") + GetErrorStr(errorCode));
 	if(initialResponse.negotiatedProtocolVersion != AO_REMOTE_PROTOCOL_VERSION)
-		throw std::runtime_error("Server seems to run different protocol version");
+		throw std::runtime_error("Client seems to run different protocol version");
+	if(initialResponse.hostNameSize == 0 || initialResponse.hostNameSize > 65536)
+		throw std::runtime_error("Client did not send proper hostname");
+	
+	char hostname[initialResponse.hostNameSize + 1];
+	boost::asio::read(_socket, boost::asio::buffer(hostname, initialResponse.hostNameSize));
+	hostname[initialResponse.hostNameSize] = 0;
+	_hostname = hostname;
+	
+	_onAwaitingCommand(*this);
 }
 
 void ServerConnection::StopClient()
@@ -90,18 +100,44 @@ void ServerConnection::ReadQualityTables(const std::string &msFilename, Statisti
 	ReadQualityTablesResponseHeader responseHeader;
 	boost::asio::read(_socket, boost::asio::buffer(&responseHeader, sizeof(responseHeader)));
 	if(responseHeader.blockIdentifier != ReadQualityTablesResponseHeaderId || responseHeader.blockSize != sizeof(responseHeader))
-		throw std::runtime_error("Bad response from server upon read tables request");
+		throw std::runtime_error("Bad response from client upon read tables request");
 	if(responseHeader.errorCode != NoError)
-		throw std::runtime_error("Error reported by server upon read tables request");
+		throw std::runtime_error("Error reported by client upon read tables request");
 	
 	AutoArray<char> buffer(new char[responseHeader.dataSize]);
 	
-	std::istringstream stream;
-	stream.rdbuf()->pubsetbuf(&*buffer, responseHeader.dataSize);
 	boost::asio::read(_socket, boost::asio::buffer(&*buffer, responseHeader.dataSize));
+	std::istringstream stream;
+	if(stream.rdbuf()->pubsetbuf(&*buffer, responseHeader.dataSize) == 0)
+	{
+		throw std::runtime_error("Could not set string buffer");
+	}
+	
+	std::cout << "Unserializing stream of size " << responseHeader.dataSize << "..." << std::endl;
+	
+	std::cout << "Stream pos before: " << stream.tellg() << std::endl;
 	collection.Unserialize(stream);
+	std::cout << "Stream pos after: " << stream.tellg() << std::endl;
+
+	_onFinishReadQualityTables(*this, collection);
+	_onAwaitingCommand(*this);
 }
 
+std::string ServerConnection::GetErrorStr(enum ErrorCode errorCode)
+{
+	switch(errorCode)
+	{
+		case NoError: return "No error";
+			break;
+		case UnexpectedExceptionOccured: return "Unexpected exception occured";
+			break;
+		case ProtocolNotUnderstoodError: return "Protocol not understood";
+			break;
+		default: return "Unknown error code";
+			break;
+	}
+	
+}
 
 
 }

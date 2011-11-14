@@ -23,11 +23,14 @@
 
 #include <map>
 #include <string>
+#include <deque>
 #include <vector>
 
 #include "clusteredobservation.h"
 #include "remoteprocess.h"
 #include "server.h"
+
+class StatisticsCollection;
 
 namespace aoRemote {
 
@@ -38,12 +41,18 @@ class ProcessCommander
 		~ProcessCommander();
 		
 		static std::string GetHostName();
+		const StatisticsCollection &Statistics() const { return *_collection; }
 	private:
 		void makeNodeMap(const ClusteredObservation &observation);
+		void onConnectionCreated(class ServerConnection &serverConnection, bool &acceptConnection);
+		void onConnectionAwaitingCommand(class ServerConnection &serverConnection);
+		void onConnectionFinishReadQualityTables(class ServerConnection &serverConnection, StatisticsCollection &collection);
 		
 		Server _server;
-		std::map<std::string, std::vector<ClusteredObservationItem> > _nodeMap;
+		typedef std::map<std::string, std::deque<ClusteredObservationItem> > NodeMap;
+		NodeMap _nodeMap;
 		std::vector<RemoteProcess *> _processes;
+		StatisticsCollection *_collection;
 };
 
 }

@@ -26,6 +26,8 @@
 
 #include <AOFlagger/remote/serverconnection.h>
 
+#include <iostream>
+
 namespace aoRemote
 {
 
@@ -49,11 +51,16 @@ void Server::startAccept()
 
 void Server::handleAccept(ServerConnection *connection, const boost::system::error_code &error)
 {
+	std::cout << "Connection accepted." << std::endl;
+	
 	if (_acceptor.is_open())
 	{
 		if (!error)
 		{
-			connection->Start();
+			bool acceptConnection = true;
+			_onConnectionCreated(*connection, acceptConnection);
+			if(acceptConnection)
+				connection->Start();
 		}
 
 		startAccept();
@@ -62,6 +69,7 @@ void Server::handleAccept(ServerConnection *connection, const boost::system::err
 
 void Server::Stop()
 {
+	std::cout << "Stopping server." << std::endl;
 	_acceptor.close();
 }
 

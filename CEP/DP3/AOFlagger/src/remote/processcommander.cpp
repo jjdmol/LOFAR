@@ -22,19 +22,28 @@
 
 #include <unistd.h> //gethostname
 
+#include <AOFlagger/remote/serverconnection.h>
+
+#include <AOFlagger/quality/statisticscollection.h>
+
 namespace aoRemote {
 
 ProcessCommander::ProcessCommander(const ClusteredObservation &observation)
 : _server()
 {
+	_collection = new StatisticsCollection();
+	
+	_server.SignalConnectionCreated().connect(sigc::mem_fun(*this, &ProcessCommander::onConnectionCreated));
+	
 	makeNodeMap(observation);
 	const std::string thisHostName = GetHostName();
 	
 	//construct a process for each unique node name
-	for(std::map<std::string, std::vector<ClusteredObservationItem> >::const_iterator i=_nodeMap.begin();i!=_nodeMap.end();++i)
+	for(std::map<std::string, std::deque<ClusteredObservationItem> >::const_iterator i=_nodeMap.begin();i!=_nodeMap.end();++i)
 	{
 		_processes.push_back(new RemoteProcess(i->first, thisHostName));
 	}
+	_server.Run();
 }
 
 ProcessCommander::~ProcessCommander()
@@ -43,6 +52,7 @@ ProcessCommander::~ProcessCommander()
 	{
 		delete *i;
 	}
+	delete _collection;
 }
 
 void ProcessCommander::makeNodeMap(const ClusteredObservation &observation)
@@ -63,6 +73,62 @@ std::string ProcessCommander::GetHostName()
 	} else {
 		throw std::runtime_error("Error retrieving hostname");
 	}
+}
+
+void ProcessCommander::onConnectionCreated(ServerConnection &serverConnection, bool &acceptConnection)
+{
+	serverConnection.SignalAwaitingCommand().connect(sigc::mem_fun(*this, &ProcessCommander::onConnectionAwaitingCommand));
+	serverConnection.SignalFinishReadQualityTables().connect(sigc::mem_fun(*this, &ProcessCommander::onConnectionFinishReadQualityTables));
+	acceptConnection = true;
+}
+
+void ProcessCommander::onConnectionAwaitingCommand(ServerConnection &serverConnection)
+{
+	const std::string &hostname = serverConnection.Hostname();
+	
+	std::cout << "Connection " << hostname << " awaiting commands..." << std::endl;
+	
+	NodeMap::iterator iter = _nodeMap.find(hostname);
+	if(iter == _nodeMap.end())
+	{
+		serverConnection.StopClient();
+		if(_nodeMap.empty())
+		{
+			_server.Stop();
+		}
+	}
+	else {
+		std::deque<ClusteredObservationItem> &items = iter->second;
+		if(items.empty())
+		{
+			serverConnection.StopClient();
+			_nodeMap.erase(iter);
+			if(_nodeMap.empty())
+				_server.Stop();
+		}
+		else
+		{
+			const std::string msFilename = items.front().LocalPath();
+			items.pop_front();
+			if(items.empty())
+				_nodeMap.erase(iter);
+			StatisticsCollection *collection = new StatisticsCollection();
+			serverConnection.ReadQualityTables(msFilename, *collection);
+		}
+	}
+}
+
+void ProcessCommander::onConnectionFinishReadQualityTables(class ServerConnection &serverConnection, StatisticsCollection &collection)
+{
+	if(collection.PolarizationCount() == 0)
+		throw std::runtime_error("Client sent StatisticsCollection with 0 polarizations.");
+	
+	// If the collection is still empty, we need to set its polarization count
+	if(_collection->PolarizationCount() == 0)
+	{
+		_collection->SetPolarizationCount(collection.PolarizationCount());
+	}
+	_collection->Add(collection);
 }
 
 

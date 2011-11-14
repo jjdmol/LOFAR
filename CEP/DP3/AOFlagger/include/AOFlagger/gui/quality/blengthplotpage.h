@@ -26,6 +26,8 @@
 
 #include <AOFlagger/msio/measurementset.h>
 
+#include <AOFlagger/remote/clusteredobservation.h>
+
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
 */
@@ -33,20 +35,25 @@ class BLengthPlotPage : public TwoDimensionalPlotPage {
 	protected:
 		virtual void processStatistics(class StatisticsCollection *statCollection, const std::string &filename)
 		{
-			const BaselineStatisticsMap &map = statCollection->BaselineStatistics();
+			_statistics.clear();
 			
-			MeasurementSet ms(filename);
-			unsigned antennaCount = ms.AntennaCount();
-			AntennaInfo antennas[antennaCount];
-			for(unsigned a=0;a<antennaCount;++a)
+			if(!aoRemote::ClusteredObservation::IsClusteredFilename(filename))
 			{
-				antennas[a] = ms.GetAntennaInfo(a);
-			}
-			vector<std::pair<unsigned, unsigned> > baselines = map.BaselineList();
-			for(vector<std::pair<unsigned, unsigned> >::const_iterator i=baselines.begin();i!=baselines.end();++i)
-			{
-				Baseline bline(antennas[i->first], antennas[i->second]);
-				_statistics.insert(std::pair<double, DefaultStatistics>(bline.Distance(), map.GetStatistics(i->first, i->second)));
+				const BaselineStatisticsMap &map = statCollection->BaselineStatistics();
+				
+				MeasurementSet ms(filename);
+				unsigned antennaCount = ms.AntennaCount();
+				AntennaInfo antennas[antennaCount];
+				for(unsigned a=0;a<antennaCount;++a)
+				{
+					antennas[a] = ms.GetAntennaInfo(a);
+				}
+				vector<std::pair<unsigned, unsigned> > baselines = map.BaselineList();
+				for(vector<std::pair<unsigned, unsigned> >::const_iterator i=baselines.begin();i!=baselines.end();++i)
+				{
+					Baseline bline(antennas[i->first], antennas[i->second]);
+					_statistics.insert(std::pair<double, DefaultStatistics>(bline.Distance(), map.GetStatistics(i->first, i->second)));
+				}
 			}
 		}
 		

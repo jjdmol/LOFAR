@@ -36,7 +36,7 @@ enum BlockId
 	ReadQualityTablesResponseHeaderId = 10
 };
 
-enum ErrorCodes { NoError = 0, UnexpectedExceptionOccured=1, ProtocolNotUnderstoodError = 10 } ;
+enum ErrorCode { NoError = 0, UnexpectedExceptionOccured=1, ProtocolNotUnderstoodError = 10 } ;
 
 enum RequestType { StopClientRequest = 0, ReadQualityTablesRequest = 1 };
 

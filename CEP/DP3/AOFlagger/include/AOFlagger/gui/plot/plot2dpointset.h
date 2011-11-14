@@ -108,10 +108,28 @@ class Plot2DPointSet{
 		{
 			std::sort(_points.begin(), _points.end());
 		}
-		double XRangeMin() const { return _points.begin()->x; }
-		double XRangeMax() const { return _points.rbegin()->x; }
-		double YRangeMin() const { return MinY(); }
-		double YRangeMax() const { return MaxY(); }
+		double XRangeMin() const
+		{
+			if(_points.empty())
+				return 0.0;
+			else
+				return _points.begin()->x;
+		}
+		double XRangeMax() const
+		{
+			if(_points.empty())
+				return 1.0;
+			else
+				return _points.rbegin()->x;
+		}
+		double YRangeMin() const
+		{
+			return MinY();
+		}
+		double YRangeMax() const
+		{
+			return MaxY();
+		}
 
 	private:
 		struct Point2D
