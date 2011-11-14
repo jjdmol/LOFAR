@@ -24,6 +24,7 @@
 // #include <Common/LofarLogger.h>
 // #include <Common/Exception.h>
 #include <Common/OpenMP.h>
+#include <omp.h>
 #include <msvis/MSVis/VisibilityIterator.h>
 #include <casa/Quanta/UnitMap.h>
 #include <casa/Quanta/UnitVal.h>
@@ -76,6 +77,7 @@
 #include <casa/Utilities/CompositeNumber.h>
 #include <casa/OS/PrecTimer.h>
 #include <casa/sstream.h>
+#include <casa/OS/HostInfo.h>
 #define DORES True
 
 
@@ -111,7 +113,8 @@ LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize,
                                Int maxsupport, Int oversample,
                                const String& imgName,
                                const Matrix<bool>& gridMuellerMask,
-                               const Matrix<bool>& degridMuellerMask)
+                               const Matrix<bool>& degridMuellerMask,
+			       Double RefFreq, Bool Use_Linear_Interp_Gridder, Bool Use_EJones)
   : FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize),
     tilesize(itilesize), gridder(0), isTiled(False), convType(iconvType),
     maxAbsData(0.0), centerLoc(IPosition(4,0)),
@@ -137,6 +140,21 @@ LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize,
   itsSumPB.resize (itsNThread);
   itsSumCFWeight.resize (itsNThread);
   itsSumWeight.resize (itsNThread);
+  itsRefFreq=RefFreq;
+  its_Use_Linear_Interp_Gridder=Use_Linear_Interp_Gridder;
+  its_Use_EJones=Use_EJones;
+  if(its_Use_Linear_Interp_Gridder){
+    cout<<"Gridding using oversampling of 1 only"<<endl;
+    itsOversample=1;
+  };
+  cout<<"FTMahin: itsRefFreq "<<itsRefFreq<<endl;
+
+  ROMSSpWindowColumns window(ms.spectralWindow());
+  itsListFreq.resize(window.nrow());
+  for(uInt i=0; i<window.nrow();++i){
+    itsListFreq[i]=window.refFrequency()(i);
+    cout<<itsListFreq[i]<<endl;
+  };
 }
 
 //LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize,
@@ -224,6 +242,13 @@ LofarFTMachine& LofarFTMachine::operator=(const LofarFTMachine& other)
     itsNWPlanes = other.itsNWPlanes;
     itsWMax = other.itsWMax;
     itsConvFunc = other.itsConvFunc;
+    //cyrr: mfs
+    itsRefFreq=other.itsRefFreq;
+    thisterm_p=other.thisterm_p;
+    its_Use_Linear_Interp_Gridder= other.its_Use_Linear_Interp_Gridder;
+    its_Use_EJones= other.its_Use_EJones;
+     //cyrr: mfs
+
     ConjCFMap_p = other.ConjCFMap_p;
     CFMap_p = other.CFMap_p;
     itsNThread = other.itsNThread;
@@ -336,7 +361,8 @@ void LofarFTMachine::init() {
                                              itsMS, itsNWPlanes, itsWMax,
                                              itsOversample, itsBeamPath,
 					     itsVerbose, itsMaxSupport,
-                                             itsImgName);
+                                             itsImgName+String::toString(thisterm_p),
+					     its_Use_EJones);
 
   // Set up image cache needed for gridding. For BOX-car convolution
   // we can use non-overlapped tiles. Otherwise we need to use
@@ -377,9 +403,11 @@ LofarFTMachine::~LofarFTMachine()
 
 const Matrix<Float>& LofarFTMachine::getAveragePB() const
 {
+  cout<<"return beam"<<endl;
   // Read average beam from disk if not present.
   if (itsAvgPB.empty()) {
-    PagedImage<Float> pim(itsImgName + ".avgpb");
+    cout<<"...read beam "<<itsImgName+String::toString(thisterm_p) + ".avgpb"<<endl;
+    PagedImage<Float> pim(itsImgName+String::toString(thisterm_p) + ".avgpb");
     Array<Float> arr = pim.get();
     itsAvgPB.reference (arr.nonDegenerate(2));
   }
@@ -495,15 +523,34 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
     Int offset_pad(floor(data.shape()[0]-lattice->shape()[0])/2.);
     
     //    cout<<"LofarFTMachine::initializeToVis lattice->shape() == "<<lattice->shape()<<endl;
+    String nameii(itsImgName+String::toString(thisterm_p) + ".spheroid_cut_im");
+    ostringstream nameiii(nameii);
+    PagedImage<Float> tmpi(nameiii.str().c_str());
+    Slicer slicei(IPosition(4,0,0,0,0), tmpi.shape(), IPosition(4,1,1,1,1));
+    Array<Float> datai;
+    tmpi.doGetSlice(datai, slicei);
 
     Complex ff;
     double I=100.;
     double Q=40.;
     double U=20.;
     double V=10.;
+
+    double maxPB(0.);
+    double minPB(1e10);
+    for(uInt i=0;i<lattice->shape()[0];++i){
+      for(uInt j=0;j<lattice->shape()[0];++j){
+	double pixel(data(i+offset_pad,j+offset_pad));
+	if(abs(pixel)>maxPB){maxPB=abs(pixel);};
+	if(abs(pixel)<minPB){minPB=abs(pixel);};
+      }
+    }
+    cout<<"lattice->shape()"<<" "<<lattice->shape()<<endl;
     for(Int k=0;k<lattice->shape()[2];++k){
       ff=0.;
+      cout<<"k="<<k<<endl;
       if(k==0){ff=I+Q;}
+      // if(k==1){ff=I-Q;}
       if(k==1){ff=Complex(U,0.)+Complex(0.,V);}
       if(k==2){ff=Complex(U,0.)-Complex(0.,V);}
       if(k==3){ff=I-Q;}
@@ -525,10 +572,10 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
 	  //   pixel*=Complex(fact);
 	  // }
 	  
-	  fact/=sqrt(data(pos2));
+	  fact*=sqrt(maxPB)/sqrt(data(pos2));
 	  pixel*=Complex(fact);
 	  
-	  lattice->putAt(pixel,pos);
+	  if(data(pos2)!=(minPB)){lattice->putAt(pixel,pos);};
 	}
       }
     }
@@ -632,7 +679,7 @@ void LofarFTMachine::finalizeToSky()
   IPosition shapecube(3,nx,nx,4);
   for (int ii=0; ii<itsNThread; ++ii) {
     Cube<Complex> tempimage(shapecube,0.);
-    for(Int k=0;k<4;++k){
+    for(Int k=0;k<itsGriddedData[0].shape()[2];++k){
       for(uInt i=0;i<nx;++i){
   	for(uInt j=0;j<nx;++j){
 	  IPosition pos(4,i,j,k,0);
@@ -653,7 +700,7 @@ void LofarFTMachine::finalizeToSky()
   }
 
   Cube<Complex> tempimage(shapecube,0.);
-  for(Int k=0;k<4;++k){
+  for(Int k=0;k<1;++k){
     for(uInt i=0;i<nx;++i){
       for(uInt j=0;j<nx;++j){
 	IPosition pos(4,i,j,k,0);
@@ -709,6 +756,12 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
     chanMap=multiChanMap_p[vb.spectralWindow()];
   }
 
+
+  
+  cout<<"... Gridding Spectral Window:    "<<vb.spectralWindow()<<", with Taylor Term: "<< thisterm_p<<endl;
+  
+  uInt spw(vb.spectralWindow());
+
   //No point in reading data if it's not matching in frequency
   if(max(chanMap)==-1) return;
 
@@ -737,10 +790,27 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
   // irrelevant for other cases.
   Matrix<Double> uvw(3, vb.uvw().nelements());  uvw=0.0;
   Vector<Double> dphase(vb.uvw().nelements());  dphase=0.0;
+
+
+  // // const Vector<Double>& times = vb.timeCentroid();
+  // // double time = 0.5 * (times[times.size()-1] + times[0]);
+  // const Vector<Double>& freq = vb.lsrFrequency();
+  // const Vector<Int>& obs = vb.observationId();
+  // Vector<Double> lsrFreq(0);
+  // Bool condoo=False;
+  // vb.lsrFrequency(0, lsrFreq, condoo);
+  // cout<<"mmm " <<lsrFreq<<" "<<condoo<<endl;
+  // vb.lsrFrequency(1, lsrFreq, condoo);
+  // cout<<"mmmmm " <<lsrFreq<<" "<<condoo<<endl;
+  //const Vector<Double>& timess = vb.timeCentroid();
+
   //NEGATING to correct for an image inversion problem
   for (Int i=startRow;i<=endRow;i++) {
     for (Int idim=0;idim<2;idim++) uvw(idim,i)=-vb.uvw()(i)(idim);
     uvw(2,i)=vb.uvw()(i)(2);
+    // cout << "freq  "<< freq[i]   << endl;
+    // cout << "obsid "<< obs[i]    << vb.dataDescriptionId() <<endl;
+    // cout << "times "<< timess[i] << endl;
   }
 
   rotateUVW(uvw, dphase, vb);
@@ -784,6 +854,7 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
 	  blEnd.push_back (i-1);
 	}
       }
+
       // Skip auto-correlations and high W-values.
       // All w values are close, so if first w is too high, skip baseline.
       usebl = false;
@@ -840,6 +911,17 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
   uInt Nchannels = vb.nChannel();
 
   itsTotalTimer.start();
+
+  vector< Bool> done;
+  done.resize(int(blStart.size()));
+  for(int i=0; i<int(blStart.size()); ++i) {done[i]=false;};
+
+  Bool all_done(false);
+  Int Max_Num_Threads(itsNThread);
+  omp_set_num_threads(Max_Num_Threads);
+
+  while(!all_done){
+
 #pragma omp parallel 
   {
     // Thread-private variables.
@@ -851,6 +933,9 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
     for (int i=0; i<int(blStart.size()); ++i) {
       Int ist  = blIndex[blStart[i]];
       Int iend = blIndex[blEnd[i]];
+      if(done[i]==true){continue;};
+
+      try{
 
       // compute average weight for baseline for CF averaging
       double average_weight(0.);
@@ -873,10 +958,10 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
       int threadNum = OpenMP::threadNum();
 
       // Get the convolution function.
-      if (itsVerbose > 1) {
+      //if (itsVerbose > 1) {
         cout.precision(20);
         cout<<"A1="<<ant1[ist]<<", A2="<<ant2[ist]<<", time="<<fixed<<time<<endl;
-      }
+      //}
       LofarCFStore cfStore;
       //#pragma omp critical(LofarFTMachine_makeConvolutionFunction)
       //{
@@ -887,17 +972,10 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
                                               itsGridMuellerMask, false,
                                               average_weight,
                                               itsSumPB[threadNum],
-                                              itsSumCFWeight[threadNum]);
+                                              itsSumCFWeight[threadNum],
+					      spw,thisterm_p,itsRefFreq
+					      );
       cfTimer.stop();
-      //};
-
-
-      //cout<<"DONE LOADING CF..."<<endl;
-      //Double or single precision gridding.
-      //	cout<<"============================================"<<endl;
-      //	cout<<"Antenna "<<ant1[ist]<<" and "<<ant2[ist]<<endl;
-      //#pragma omp critical(LofarFTMachine_makeConvolutionFunction)
-      //{
       if (useDoubleGrid_p) {
         visResamplers_p.lofarDataToGrid(itsGriddedData2[threadNum], vbs, blIndex,
                                         blStart[i], blEnd[i],
@@ -907,13 +985,29 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
           cout<<"  gridding"<<" thread="<<threadNum<<'('<<itsNThread<<"), A1="<<ant1[ist]<<", A2="<<ant2[ist]<<", time=" <<time<<endl;
         }
         gridTimer.start();
-        visResamplers_p.lofarDataToGrid
-          (itsGriddedData[threadNum], vbs, blIndex, blStart[i],
-           blEnd[i], itsSumWeight[threadNum], dopsf, cfStore);
-        gridTimer.stop();
+	if(!its_Use_Linear_Interp_Gridder){
+	  visResamplers_p.lofarDataToGrid
+	    (itsGriddedData[threadNum], vbs, blIndex, blStart[i],
+	     blEnd[i], itsSumWeight[threadNum], dopsf, cfStore);
+	} else{
+	  visResamplers_p.lofarDataToGrid_linear
+	    (itsGriddedData[threadNum], vbs, blIndex, blStart[i],
+	     blEnd[i], itsSumWeight[threadNum], dopsf, cfStore);
+	  
+	};
+	  gridTimer.stop();
       }
+      done[i]=true;
+      } catch (std::bad_alloc &)
+	{
+	  cout<<"-----------------------------------------"<<endl;
+	  cout<<"!!!!!!! GRIDDING: Skipping baseline: "<<ant1[ist]<<" | "<<ant2[ist]<<endl;
+	  cout<<"memoryUsed() "<< HostInfo::memoryUsed()<< ", Free: "<<HostInfo::memoryFree()<<endl;
+	  cout<<"-----------------------------------------"<<endl;
+	};
       // } // end omp critical
     } // end omp for
+
     double cftime = cfTimer.getReal();
 #pragma omp atomic
     itsCFTime += cftime;
@@ -921,6 +1015,22 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
 #pragma omp atomic
     itsGriddingTime += gtime;
   } // end omp parallel
+
+    all_done=true;
+    int number_missed(0);
+    for (int i=0; i<int(blStart.size()); ++i) {
+      if(done[i]==false){all_done=false;number_missed+=1;};
+    };
+    if(all_done==false){
+      cout<<"================================"<<endl;
+      cout<<"Memory exception returned by "<<number_missed<<" threads"<<endl;
+      cout<<"Reducing number of threads to: "<<int(omp_get_num_threads()/2.)<<endl;
+      cout<<"================================"<<endl;
+      omp_set_num_threads(int(omp_get_num_threads()/2.));
+    };
+    
+  }//end While loop
+  
   itsTotalTimer.stop();
 }
 
@@ -950,6 +1060,8 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
 
   //Check if ms has changed then cache new spw and chan selection
   if(vb.newMS())  matchAllSpwChans(vb);
+  uInt spw(vb.spectralWindow());
+  cout<<"... De-Gridding Spectral Window: "<<vb.spectralWindow()<<", with Taylor Term: "<< thisterm_p<<endl;
 
 
   //Channel matching for the actual spectral window of buffer
@@ -1067,6 +1179,20 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
   itsConvFunc->computeAterm (time);
 
   itsTotalTimer.start();
+
+  vector< Bool> done;
+  done.resize(int(blStart.size()));
+  for(int i=0; i<int(blStart.size()); ++i) {done[i]=false;};
+
+  Bool all_done(false);
+  Int Max_Num_Threads(itsNThread);
+  omp_set_num_threads(Max_Num_Threads);
+
+  while(!all_done){
+
+
+
+
 #pragma omp parallel
   {
     // Thread-private variables.
@@ -1080,11 +1206,13 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
       // {
       Int ist  = blIndex[blStart[i]];
       Int iend = blIndex[blEnd[i]];
+      if(done[i]==true){continue;};
+      try {
       int threadNum = OpenMP::threadNum();
       // Get the convolution function for degridding.
-      if (itsVerbose > 1) {
+      //if (itsVerbose > 1) {
 	cout<<"ANTENNA "<<ant1[ist]<<" "<<ant2[ist]<<endl;
-      }
+      //}
       cfTimer.start();
       LofarCFStore cfStore =
         itsConvFunc->makeConvolutionFunction (ant1[ist], ant2[ist], time,
@@ -1093,15 +1221,24 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
                                               true,
                                               0.0,
                                               itsSumPB[threadNum],
-                                              itsSumCFWeight[threadNum]);
+                                              itsSumCFWeight[threadNum]
+					      ,spw,thisterm_p,itsRefFreq);
       cfTimer.stop();
 
-      //Double or single precision gridding.
-      //      cout<<"GRID "<<ant1[ist]<<" "<<ant2[ist]<<endl;
       degridTimer.start();
       visResamplers_p.lofarGridToData(vbs, itsGriddedData[0],
                                       blIndex, blStart[i], blEnd[i], cfStore);
       degridTimer.stop();
+      done[i]=true;
+
+      } catch (std::bad_alloc &)
+	{
+	  cout<<"-----------------------------------------"<<endl;
+	  cout<<"!!!!!!! DE-GRIDDING: Skipping baseline: "<<ant1[ist]<<" | "<<ant2[ist]<<endl;
+	  cout<<"memoryUsed() "<< HostInfo::memoryUsed()<< ", Free: "<<HostInfo::memoryFree()<<endl;
+	  cout<<"-----------------------------------------"<<endl;
+	}
+
     } // end omp for
     double cftime = cfTimer.getReal();
 #pragma omp atomic
@@ -1110,6 +1247,24 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
 #pragma omp atomic
     itsGriddingTime += gtime;
   } // end omp parallel
+
+    all_done=true;
+    int number_missed(0);
+    for (int i=0; i<int(blStart.size()); ++i) {
+      cout<<"done: "<<i<<" "<<done[i]<<endl;
+      if(done[i]==false){all_done=false;number_missed+=1;};
+    };
+    if(all_done==false){
+      cout<<"================================"<<endl;
+      cout<<"Memory exception returned by "<<number_missed<<" threads"<<endl;
+      cout<<"Reducing number of threads to: "<<int(omp_get_num_threads()/2.)<<endl;
+      cout<<"================================"<<endl;
+      omp_set_num_threads(int(omp_get_num_threads()/2.));
+    };
+    
+  }//end While loop
+  
+
   itsTotalTimer.stop();
   interpolateFrequencyFromgrid(vb, data, FTMachine::MODEL);
 }
@@ -1267,6 +1422,14 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
     Cube<Complex> tempimage(IPosition(3,shapeout,shapeout,lattice->shape()[2]));
 
     pos[3]=0.;
+    double maxPB(0.);
+    for(uInt i=0;i<shapeout;++i){
+      for(uInt j=0;j<shapeout;++j){
+	double pixel(itsAvgPB(i+istart,j+istart));
+	if(abs(pixel)>maxPB){maxPB=abs(pixel);};
+      }
+    }
+    //maxPB=1.;
     for(Int k=0;k<lattice->shape()[2];++k){
       for(uInt i=0;i<shapeout;++i){
     	for(uInt j=0;j<shapeout;++j){
@@ -1274,26 +1437,37 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
     	  pos[1]=j+istart;
     	  pos[2]=k;
     	  Complex pixel(lattice->getAt(pos));
-    	  //cout<<"pixel value: "<<pixel<<", Primary beam: "<<avg_PB(i,j)<<endl;
-    	  pixel/=sqrt(itsAvgPB(i+istart,j+istart));//*sqrt(avg_PB(i+istart,j+istart));
-    	  //pixel*=(lattice->shape()[0]*lattice->shape()[0]);
+    	  
+    	  pixel*=sqrt(maxPB)/sqrt(itsAvgPB(i+istart,j+istart));
+    	  
+    	  
     	  lattice->putAt(pixel,pos);
-    	  //tempimage(i,j,k)=pixel/weights(0,0);
+    	  tempimage(i,j,k)=pixel;///weights(0,0);
     	}
       }
     }
-    // uInt count_cycle(0);
-    // Bool written(false);
+    uInt count_cycle(0);
+    Bool written(false);
 
     // while(!written){
+    //   Cube<Complex> tempimagePB(IPosition(3,shapeout,shapeout,lattice->shape()[2]));
+    //   for(Int k=0;k<lattice->shape()[2];++k){
+    // 	for(uInt i=0;i<shapeout;++i){
+    // 	  for(uInt j=0;j<shapeout;++j){
+    // 	    tempimagePB(i,j,k)=itsAvgPB(i,j);
+    // 	  };
+    // 	};
+    //   };
     //   cout<<"count_cycle ======================= "<<count_cycle<<" "<<normalize<<endl;
     //   File myFile("Cube_dirty.img"+String::toString(count_cycle));
     //   if(!myFile.exists()){
-    // 	written=true;
-    // 	store(tempimage,"Cube_dirty.img"+String::toString(count_cycle));
+    //   	written=true;
+    //   	store(tempimage,"Cube_dirty.img"+String::toString(count_cycle));
+    //   	store(tempimagePB,"Cube_dirty.img"+String::toString(count_cycle)+".pb");
+	
     //   }
     //   else{
-    // 	count_cycle++;
+    //   	count_cycle++;
     //   };
     // };
 
@@ -1555,6 +1729,8 @@ String LofarFTMachine::name(){
 
 void LofarFTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
 {
+
+  //cout<<"LofarFTMachine::ComputeResiduals "<<vb.corrType()<<endl;
   LofarVBStore vbs;
   vbs.nRow_p = vb.nRow();
   vbs.beginRow_p = 0;
@@ -1576,6 +1752,7 @@ void LofarFTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
 					 const ImageInterface<Complex>& imageTemplate,
 					 ImageInterface<Float>& sensitivityImage)
   {
+    cout<<"============================== makeSensitivityImage"<<endl;
     if (convFuncCtor_p->makeAverageResponse(vb, imageTemplate, sensitivityImage))
       cfCache_p->flush(sensitivityImage,sensitivityPatternQualifierStr_p);
   }
@@ -1928,6 +2105,7 @@ void LofarFTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
   {
     LogIO log_l(LogOrigin("LofarFTMachine", "findPointingOffsets"));
     Vector<Int> msStokes = vb.corrType();
+    //cout<<"LofarFTMachine findPointingOffsets "<< msStokes << " "<<locCfStokes<<endl;
     Int nPol = msStokes.nelements();
     polM.resize(polMap.shape());
     polM = -1;

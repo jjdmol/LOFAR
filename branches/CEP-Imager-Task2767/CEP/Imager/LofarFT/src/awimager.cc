@@ -1,4 +1,4 @@
-//# awzim.cc: Program to create and/or clean a LOFAR image
+//# awimager.cc: Program to create and/or clean a LOFAR image
 //# Copyright (C) 2011
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -39,6 +39,7 @@
 #include <casa/Utilities/Regex.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/OS/Directory.h>
+#include <casa/OS/File.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/OS/Timer.h>
 #include <casa/OS/PrecTimer.h>
@@ -128,7 +129,7 @@ void readFilter (const String& filter,
   }
 }
 
-Matrix<Bool> readMueller (const String& str)
+Matrix<Bool> readMueller (const String& str, String stokes, Bool grid)
 {
   Matrix<Bool> mat(4,4, True);
   String s(str);
@@ -147,6 +148,20 @@ Matrix<Bool> readMueller (const String& str)
       throw AipsError (str + " is an invalid Mueller specification");
     }
   }
+  if((stokes=="I")&&(grid)){
+    for(uInt i=0;i<4;++i){
+      mat(1,i)=0;
+      mat(2,i)=0;
+    };
+  }
+  if((stokes=="I")&&(!grid)){
+    for(uInt i=0;i<4;++i){
+      mat(1,i)=0;
+      mat(2,i)=0;
+      // mat(i,1)=0;
+      // mat(i,2)=0;
+    };
+  };
   return mat;
 }
 
@@ -163,6 +178,7 @@ void applyFactors (PagedImage<Float>& image, const Array<Float>& factors)
 {
   Array<Float> data;
   image.get (data);
+  ///  cout << "apply factor to " << data.data()[0] << ' ' << factors.data()[0]<<endl;
   // Loop over channels
   for (ArrayIterator<Float> iter1(data, 3); !iter1.pastEnd(); iter1.next()) {
     // Loop over Stokes.
@@ -173,10 +189,12 @@ void applyFactors (PagedImage<Float>& image, const Array<Float>& factors)
     }
   }
   image.put (data);
+  ///  cout << "applied factor to " << data.data()[0] << ' ' << factors.data()[0]<<endl;
 }
 
 void correctImages (const String& restoName, const String& modelName,
-                    const String& residName, const String& imgName)
+                    const String& residName, const String& imgName,
+                    LOFAR::LofarImager& imager)
 {
   // Copy the images to .corr ones.
   {
@@ -195,8 +213,8 @@ void correctImages (const String& restoName, const String& modelName,
                 restoredImage.shape() == modelImage.shape(), SynthesisError);
 
   // Get average primary beam and spheroidal.
-  Matrix<Float> avgPB = LOFAR::LofarConvolutionFunction::getAveragePB(imgName);
-  Matrix<Float> spheroidCut = LOFAR::LofarConvolutionFunction::getSpheroidCut(imgName);
+  Matrix<Float> avgPB = LOFAR::LofarConvolutionFunction::getAveragePB(imgName+"0");
+  Matrix<Float> spheroidCut = LOFAR::LofarConvolutionFunction::getSpheroidCut(imgName+"0");
   //  String nameii(imgName + ".spheroid_cut_im");
   //ostringstream nameiii(nameii);
   //PagedImage<Float> restoredImageiii(nameiii.str().c_str());
@@ -404,12 +422,29 @@ int main (Int argc, char** argv)
     inputs.create ("oversample", "8",
 		   "oversampling for convolution functions",
 		   "int");
+    inputs.create ("uvdist", "",
+		   "UV Range",
+		   "string");
+    inputs.create ("RefFreq", "",
+		   "Reference Frequency (Hz)",
+		   "Double");
+    inputs.create ("nterms", "1",
+		   "Number of Taylor terms",
+		   "int");
+    inputs.create ("UseLIG", "false",
+		   "Use gridder using linear interpolation",
+		   "bool");
+    inputs.create ("UseEJones", "true",
+		   "Use the beam for the calculation of the convolution function",
+		   "bool");
 
     // Fill the input structure from the command line.
     inputs.readArguments (argc, argv);
 
     // Get the input specification.
     Bool fixed          = inputs.getBool("fixed");
+    Bool UseLIG         = inputs.getBool("UseLIG");
+    Bool UseEJones      = inputs.getBool("UseEJones");
     Bool constrainFlux  = inputs.getBool("constrainflux");
     Bool preferVelocity = inputs.getBool("prefervelocity");
     Bool displayProgress= inputs.getBool("displayprogress");
@@ -430,6 +465,7 @@ int main (Int argc, char** argv)
     Int verbose      = inputs.getInt("verbose");
     Int maxsupport   = inputs.getInt("maxsupport");
     Int oversample   = inputs.getInt("oversample");
+    Int nterms   = inputs.getInt("nterms");
     Vector<Double> userScaleSizes(inputs.getDoubleVector("uservector"));
     Double padding   = inputs.getDouble("padding");
     Double gain      = inputs.getDouble("gain");
@@ -461,11 +497,13 @@ int main (Int argc, char** argv)
     String psfName   = inputs.getString("psf");
     String imageType = inputs.getString("data");
     String select    = inputs.getString("select");
+    String uvdist    = inputs.getString("uvdist");
     String maskName  = inputs.getString("mask");
     String mstrBlc   = inputs.getString("maskblc");
     String mstrTrc   = inputs.getString("masktrc");
-    Matrix<Bool> muelgrid   = readMueller (inputs.getString("muellergrid"));
-    Matrix<Bool> mueldegrid = readMueller (inputs.getString("muellerdegrid"));
+    Double RefFreq   = inputs.getDouble("RefFreq");
+    Matrix<Bool> muelgrid   = readMueller (inputs.getString("muellergrid"), stokes, true);
+    Matrix<Bool> mueldegrid = readMueller (inputs.getString("muellerdegrid"), stokes, false);
 
     // Check and interpret input values.
     Quantity qcellsize = readQuantity (cellsize);
@@ -534,7 +572,7 @@ int main (Int argc, char** argv)
       phaseCenter = readDirection (phasectr);
     }
     operation.downcase();
-    AlwaysAssertExit (operation=="empty" || operation=="image" || operation=="csclean");
+    AlwaysAssertExit (operation=="empty" || operation=="image" || operation=="csclean"|| operation=="msmfs");
     ///AlwaysAssertExit (operation=="empty" || operation=="image" || operation=="hogbom" || operation=="clark" || operation=="csclean" || operation=="multiscale" || operation =="entropy");
     IPosition maskBlc, maskTrc;
     Quantity threshold;
@@ -565,14 +603,21 @@ int main (Int argc, char** argv)
     params.define ("maxsupport", maxsupport);
     params.define ("oversample", oversample);
     params.define ("imagename", imgName);
+    params.define ("UseLIG", UseLIG);
+    params.define ("UseEJones", UseEJones);
     LOFAR::LofarImager imager(ms, params);
+
+    ROMSSpWindowColumns window(ms.spectralWindow());
+    Vector<Int> wind(window.nrow());
+    for(uInt iii=0;iii<window.nrow();++iii){wind(iii)=iii;};
+    cout<<"... Windows is shit"<<endl;
     imager.setdata (chanmode,                       // mode
 		    nchan,
 		    chanstart,
                     chanstep,
 		    MRadialVelocity(),              // mStart
 		    MRadialVelocity(),              // mStep
-		    spwid,
+		    wind,//spwid,
 		    Vector<Int>(1,fieldid),
 		    select,                         // msSelect
                     String(),                       // timerng
@@ -580,7 +625,7 @@ int main (Int argc, char** argv)
                     Vector<Int>(),                  // antIndex
                     String(),                       // antnames
                     String(),                       // spwstring
-                    String(),                       // uvdist
+                    uvdist,                       // uvdist
                     String(),                       // scan
                     True);                          // useModelCol
 
@@ -598,7 +643,7 @@ int main (Int argc, char** argv)
                         MFrequency(),               // mFreqstart
                         MRadialVelocity(),          // mStart
                         Quantity(1,"km/s"),         // qstep, Def=1 km/s
-                        spwid,                      // spectralwindowids
+			wind,//spwid,                      // spectralwindowids
                         nfacet);                    // facets
 
     // Create empty image?
@@ -707,7 +752,55 @@ int main (Int argc, char** argv)
                      Vector<String>(1, maskName),     // mask
                      Vector<String>(1, restoName),    // restored
                      Vector<String>(1, residName));   // residual
-        } else {
+        }
+        if (operation == "msmfs") {
+	  //uInt nterms(2);
+
+	  //imager.settaylorterms(nterms,5.95e+07);
+	  imager.settaylorterms(nterms,RefFreq);
+	  String scaleMethod;
+	  Vector<Float> userVector(1); userVector(0)=0;
+	  convertArray (userVector, userScaleSizes);
+	  if (userScaleSizes.size() > 1) {
+	    scaleMethod = "uservector";
+	  } else {
+	    scaleMethod = "nscales";
+	  }
+	  imager.setscales(scaleMethod, 1, userVector);
+	  cout<<imgName<<endl;
+	  makeEmpty (imager, imgName, 0);
+	  Directory filee(imgName);
+
+	  
+	  Vector<String> modelNames(nterms);
+	  for(uInt i=0;i<nterms;++i){
+	    modelNames(i)="test.img.model.tt"+String::toString(i);
+	    
+	    Directory filee0(modelNames(i));
+	    File file_model0(modelNames(i));
+	    if(file_model0.exists()){filee0.removeRecursive();};
+	    Path model0(modelNames(i)); 
+	    filee.copy(model0);
+	  };
+
+	  //	  assert(false);
+
+          imager.clean("msmfs",                     // algorithm,
+                       niter,                         // niter
+                       gain,                          // gain
+                       threshold,                     // threshold
+                       displayProgress,               // displayProgress
+                       //Vector<String>(1, modelName),  // model
+                       modelNames,
+                       Vector<Bool>(1, fixed),        // fixed
+                       "",                            // complist
+                       Vector<String>(1, maskName),   // mask
+                       Vector<String>(1, restoName),  // restored
+                       Vector<String>(1, residName),  // residual
+                       Vector<String>(1, psfName));   // psf
+	  
+	}
+	else {
           imager.clean(operation,                     // algorithm,
                        niter,                         // niter
                        gain,                          // gain
@@ -720,12 +813,13 @@ int main (Int argc, char** argv)
                        Vector<String>(1, restoName),  // restored
                        Vector<String>(1, residName),  // residual
                        Vector<String>(1, psfName));   // psf
+
         }
         // Do the final correction for primary beam and spheroidal.
-        correctImages (restoName, modelName, residName, imgName);
+        correctImages (restoName, modelName, residName, imgName, imager);
         precTimer.stop();
         timer.show ("clean");
-        ///imager.showTimings (cout, precTimer.getReal());
+	///        imager.showTimings (cout, precTimer.getReal());
         // Convert result to fits if needed.
         if (! fitsName.empty()) {
           String error;
@@ -744,6 +838,6 @@ int main (Int argc, char** argv)
     cout << x.getMesg() << endl;
     return 1;
   } 
-  cout << "awzim normally ended" << endl;
+  cout << "awimager normally ended" << endl;
   return 0;
 }

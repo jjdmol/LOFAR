@@ -257,13 +257,30 @@ void LofarCubeSkyEquation::init(FTMachine& ft){
      //     ift_=ft_;
      ftm_p[0]=ft_;
      iftm_p[0]=ift_;
-     if(nmod != (2 * sm_->numberOfTaylorTerms() - 1)) /* MFS */
-       throw(AipsError("No multifield with a-projection allowed"));
-     for (Int k=1; k < (nmod); ++k){ 
+     ftm_p[0]->setMiscInfo(0);
+     iftm_p[0]->setMiscInfo(0);
+     //if(nmod != (2 * sm_->numberOfTaylorTerms() - 1)) /* MFS */
+     //  throw(AipsError("No multifield with a-projection allowed"));
+     for (Int k=1; k < (nmod); ++k){
+       
       ftm_p[k]=new LOFAR::LofarFTMachine(static_cast<LOFAR::LofarFTMachine &>(*ft_));
       iftm_p[k]=new LOFAR::LofarFTMachine(static_cast<LOFAR::LofarFTMachine &>(*ift_));
+      // test MSMFT for LOFAR
+      ftm_p[k]->setMiscInfo(sm_->getTaylorIndex(k));
+      iftm_p[k]->setMiscInfo(sm_->getTaylorIndex(k));
+
+     }
+      // if(sm_->numberOfTaylorTerms()>1) 
+      // 	{
+      // 	  for (Int model=0; model < (sm_->numberOfModels()) ; ++model)
+      // 	    {
+      // 	      ftm_p[model]->setMiscInfo(sm_->getTaylorIndex(model));
+      // 	      iftm_p[model]->setMiscInfo(sm_->getTaylorIndex(model));
+	      
+      // 	    }
+      // 	}
       //      iftm_p[k]=ftm_p[k];
-    }
+     //}
   }
   else {
     ft_=new GridFT(static_cast<GridFT &>(ft));
@@ -482,6 +499,7 @@ void LofarCubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
 
   Int nmodels=psfs.nelements();
     LogIO os(LogOrigin("LofarCubeSkyEquation", "makeSimplePSF"));
+    cout<<"LofarCubeSkyEquation"<< "makeSimplePSF"<<endl;
     ft_->setNoPadding(noModelCol_p);
     isPSFWork_p= True; // avoid PB correction etc for PSF estimation
     Bool doPSF=True;
@@ -593,24 +611,29 @@ void LofarCubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
 	thisScreen.copyData(le);
       } 
          */
-        LatticeExprNode maxPSF=max(*psfs[model]);
-        Float maxpsf=maxPSF.getFloat();
-        if(abs(maxpsf-1.0) > 1e-3) {
-            os << "Maximum of approximate PSF for field " << model << " = "
-                    << maxpsf << " : renormalizing to unity" <<  LogIO::POST;
-        }
-        if(maxpsf > 0.0 ){
-            LatticeExpr<Float> len((*psfs[model])/maxpsf);
-            psfs[model]->copyData(len);
-        }
-        else{
-            if(sm_->numberOfTaylorTerms()>1) { /* MFS */
-                os << "PSF calculation resulted in a PSF with its peak being 0 or less. This is ok for MS-MFS." << LogIO::POST;
-            }
-            else{
-                throw(PSFZero("SkyEquation:: PSF calculation resulted in a PSF with its peak being 0 or less!"));
-            }
-        }
+
+	//===============================================
+	//Cyril: For MF cleaning, Itry take this of
+	//===============================================
+	// LatticeExprNode maxPSF=max(*psfs[model]);
+        // Float maxpsf=maxPSF.getFloat();
+        // if(abs(maxpsf-1.0) > 1e-3) {
+        //    os << "Maximum of approximate PSF for field " << model << " = "
+        //            << maxpsf << " : renormalizing to unity" <<  LogIO::POST;
+        // }
+        // if(maxpsf > 0.0 ){
+	//   LatticeExpr<Float> len((*psfs[model])/maxpsf);
+	//   psfs[model]->copyData(len);
+        // }
+        // else{
+        //     if(sm_->numberOfTaylorTerms()>1) { /* MFS */
+        //         os << "PSF calculation resulted in a PSF with its peak being 0 or less. This is ok for MS-MFS." << LogIO::POST;
+        //     }
+        //     else{
+        //         throw(PSFZero("SkyEquation:: PSF calculation resulted in a PSF with its peak being 0 or less!"));
+        //     }
+        // }
+	//===============================================
     }
 
     isPSFWork_p=False; // resetting this flag so that subsequent calculation uses
@@ -988,6 +1011,7 @@ LofarCubeSkyEquation::putSlice(VisBuffer & vb, Bool dopsf, FTMachine::Type col, 
             }
 
             for (Int model=0; model<sm_->numberOfModels(); ++model){
+	      //cout<<"model = "<<model<<endl;
                      iftm_p[model]->put(vb, row, dopsf, col);
             }
         }
@@ -1003,11 +1027,13 @@ LofarCubeSkyEquation::putSlice(VisBuffer & vb, Bool dopsf, FTMachine::Type col, 
         initializePutSlice(vb, cubeSlice, nCubeSlice);
         isBeginingOfSkyJonesCache_p=False;
         for (Int model=0; model<sm_->numberOfModels(); ++model){
+	  //cout<<"modelb = "<<model<<endl;
                  iftm_p[model]->put(vb, -1, dopsf, col);
         }
     }
     else {
         for (Int model=0; model<sm_->numberOfModels(); ++model){
+	  //  cout<<"modelc = "<<model<<endl;
                 iftm_p[model]->put(vb, -1, dopsf, col);
         }
     }
@@ -1227,6 +1253,7 @@ LofarCubeSkyEquation::finalizeGetSlice(){
   //      for (Int model=0; model < sm_->numberOfModels(); ++model)
   //        ftm_p[model]->finalizeToVis();
 }
+
 
 Bool
 LofarCubeSkyEquation::getFreqRange(ROVisibilityIterator& vi,

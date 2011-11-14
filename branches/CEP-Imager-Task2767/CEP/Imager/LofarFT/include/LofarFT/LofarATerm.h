@@ -262,8 +262,14 @@ namespace LOFAR
       const casa::Cube<casa::Double> &map,
       const casa::Vector<casa::Double> &freq) const;
 
+    vector< casa::Array < casa::DComplex > > evaluateStationAndElementBeam(const Station &station,
+      const Vector3 &refDelay,
+      const Vector3 &refTile,
+      const casa::Cube<casa::Double> &map,
+      const casa::Vector<casa::Double> &freq) const;
+
     casa::Cube<casa::DComplex> evaluateTileArrayFactor(const AntennaField &field,
-      const Vector3 &reference,
+						       const Vector3 &reference,
       const casa::Cube<casa::Double> &map,
       const casa::Vector<casa::Double> &freq) const;
 

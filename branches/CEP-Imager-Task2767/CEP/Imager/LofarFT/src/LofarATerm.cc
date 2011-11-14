@@ -109,6 +109,13 @@ namespace LOFAR
       evaluateStationBeam(m_instrument.station(station), refDelay, refTile,
         mapITRF, freq);
 
+    vector< Array<DComplex> > response_separated =
+      evaluateStationAndElementBeam(m_instrument.station(station), refDelay, refTile,
+        mapITRF, freq);
+    
+    response=response_separated[0];
+
+
     // DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
 //    MDirection world;
 //    Vector<double> refPixel = coordinates.referencePixel();
@@ -472,6 +479,10 @@ namespace LOFAR
 
             for(uint k = 0; k < nFreq; ++k)
             {
+	      // ===========================================
+	      // Added, works better, is that correct?
+	      shift0 = C::_2pi * freq[k] * delay0;
+	      // ===========================================
               double shift = C::_2pi * freq[k] * delay - shift0;
               phase(x, y, k) = DComplex(cos(shift), sin(shift));
             }
@@ -530,6 +541,191 @@ namespace LOFAR
 
     return E;
   }
+
+  vector< Array< DComplex > > LofarATerm::evaluateStationAndElementBeam(const Station &station,
+    const Vector3 &refDelay,
+    const Vector3 &refTile,
+    const Cube<Double> &map,
+    const Vector<Double> &freq) const
+  {
+    const uint nX = map.shape()[1];
+    const uint nY = map.shape()[2];
+    const uint nFreq = freq.shape()[0];
+
+    uint countX = 0, countY = 0;
+    vector< Array<DComplex> > EE;
+    Array<DComplex> E(IPosition(4, nX, nY, 4, nFreq), DComplex(0.0, 0.0));
+    for(uint i = 0; i < station.nField(); ++i)
+    {
+      const AntennaField &field = station.field(i);
+
+      // Compute element beam.
+      LOG_INFO("LofarATerm::computeStationBeam: Computing element beam...");
+      Array<DComplex> beam;
+      if(field.isHBA())
+      {
+        beam = evaluateElementBeam(m_coeffHBA, field, map, freq);
+      }
+      else
+      {
+        beam = evaluateElementBeam(m_coeffLBA, field, map, freq);
+      }
+
+      EE.push_back(beam.copy());
+
+      IPosition pos(4, nX, nY, 4, nFreq);
+      for(Int i=0; i<nX; ++i){
+	for(Int j=0; j<nY; ++j){
+	  for(Int ch=0; ch<nFreq; ++ch){
+	    pos[0]=i;
+	    pos[1]=j;
+	    pos[3]=ch;
+	    pos[2]=0.;
+	    beam(pos)=1.;
+	    pos[2]=1.;
+	    beam(pos)=0.;
+	    pos[2]=2.;
+	    beam(pos)=0.;
+	    pos[2]=3.;
+	    beam(pos)=1.;
+	  };
+	};
+      };
+
+      LOG_INFO("LofarATerm::computeStationBeam: Computing element beam... done.");
+
+      if(field.isHBA())
+      {
+        // Compute tile array factor.
+        LOG_INFO("LofarATerm::computeStationBeam: Computing tile array factor...");
+        Cube<DComplex> tileAF = evaluateTileArrayFactor(field, refTile, map,
+          freq);
+        LOG_INFO("LofarATerm::computeStationBeam: Computing tile array factor... done.");
+
+        Array<DComplex> tileAF4 = tileAF.reform(IPosition(4, nX, nY, 1, nFreq));
+
+        // Multiply the element beam by the tile array factor.
+        for(uint j = 0; j < 4; ++j)
+        {
+          IPosition start(4, 0, 0, j, 0);
+          IPosition end(4, nX - 1, nY - 1, j, nFreq - 1);
+
+          Array<DComplex> plane = beam(start, end);
+          plane *= tileAF4;
+        }
+      }
+
+      LOG_INFO("LofarATerm::computeStationBeam: Computing station array factor...");
+
+      // Account for the case where the delay reference position is not equal to
+      // the field center (only applies to core HBA fields).
+      const Vector3 &fieldCenter = field.position();
+      MVPosition delayCenter = station.position().getValue();
+      Vector3 offsetShift = {{fieldCenter[0] - delayCenter(0),
+                              fieldCenter[1] - delayCenter(1),
+                              fieldCenter[2] - delayCenter(2)}};
+
+      // Compute field array factors.
+      Cube<DComplex> fieldAFX(nX, nY, nFreq, DComplex(0.0, 0.0));
+      Cube<DComplex> fieldAFY(nX, nY, nFreq, DComplex(0.0, 0.0));
+      Cube<DComplex> phase(nX, nY, nFreq, DComplex(0.0, 0.0));
+
+      for(uint j = 0; j < field.nElement(); ++j)
+      {
+        const AntennaField::Element &element = field.element(j);
+        if(element.flag[0] && element.flag[1])
+        {
+          continue;
+        }
+
+        // Compute the offset relative to the delay center.
+        Vector3 offset = {{element.offset[0] + offsetShift[0],
+                           element.offset[1] + offsetShift[1],
+                           element.offset[2] + offsetShift[2]}};
+
+        // Compute the delay for a plane wave approaching from the delay
+        // reference direction with respect to the element position.
+        double delay0 = (refDelay[0] * offset[0] + refDelay[1] * offset[1]
+          + refDelay[2] * offset[2]) / casa::C::c;
+        double shift0 = C::_2pi * m_refFreq * delay0;
+
+        for(uint y = 0; y < nY; ++y)
+        {
+          for(uint x = 0; x < nX; ++x)
+          {
+            // Compute the delay for a plane wave approaching from the direction
+            // of interest with respect to the element position.
+            double delay = (map(0, x, y) * offset[0]
+                            + map(1, x, y) * offset[1]
+                            + map(2, x, y) * offset[2]) / casa::C::c;
+
+            for(uint k = 0; k < nFreq; ++k)
+            {
+	      // ===========================================
+	      // Added, works better, is that correct?
+	      shift0 = C::_2pi * freq[k] * delay0;
+	      // ===========================================
+              double shift = C::_2pi * freq[k] * delay - shift0;
+              phase(x, y, k) = DComplex(cos(shift), sin(shift));
+            }
+          }
+        }
+
+        if(!element.flag[0])
+        {
+          fieldAFX += phase;
+          ++countX;
+        }
+
+        if(!element.flag[1])
+        {
+          fieldAFY += phase;
+          ++countY;
+        }
+      }
+
+      LOG_INFO("LofarATerm::computeStationBeam: Computing station array factor... done.");
+      Array<DComplex> fieldAFX4 = fieldAFX.reform(IPosition(4, nX, nY, 1, nFreq));
+      for(uint k = 0; k < 2; ++k)
+      {
+        IPosition start(4, 0, 0, k, 0);
+        IPosition end(4, nX - 1, nY - 1, k, nFreq - 1);
+        Array<DComplex> plane = E(start, end);
+        plane += fieldAFX4 * beam(start, end);
+      }
+
+      Array<DComplex> fieldAFY4 = fieldAFY.reform(IPosition(4, nX, nY, 1, nFreq));
+      for(uint k = 2; k < 4; ++k)
+      {
+        IPosition start(4, 0, 0, k, 0);
+        IPosition end(4, nX - 1, nY - 1, k, nFreq - 1);
+        Array<DComplex> plane = E(start, end);
+        plane += fieldAFY4 * beam(start, end);
+      }
+    } // fields
+
+    // Normalize.
+    if(countX > 0)
+    {
+      IPosition start(4, 0, 0, 0, 0);
+      IPosition end(4, nX - 1, nY - 1, 1, nFreq - 1);
+      Array<DComplex> plane = E(start, end);
+      plane /= static_cast<Double>(countX);
+    }
+
+    if(countY > 0)
+    {
+      IPosition start(4, 0, 0, 2, 0);
+      IPosition end(4, nX - 1, nY - 1, 3, nFreq - 1);
+      Array<DComplex> plane = E(start, end);
+      plane /= static_cast<Double>(countY);
+    }
+
+    EE.push_back(E);
+
+    return EE;
+  }
+
 
   Cube<DComplex> LofarATerm::evaluateTileArrayFactor(const AntennaField &field,
     const Vector3 &reference,

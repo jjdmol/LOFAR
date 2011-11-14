@@ -71,7 +71,11 @@ namespace LOFAR
    const String& beamElementPath,
    Int verbose,
    Int maxsupport,
-   const String& imgName)
+   const String& imgName,
+   Bool Use_EJones)
+  // ,
+  //Int TaylorTerm,
+    //Double RefFreq
     : m_shape(shape),
       m_coordinates(coordinates),
       m_aTerm(ms, beamElementPath),
@@ -101,17 +105,27 @@ namespace LOFAR
 
     //    m_maxCFSupport=0; //need this parameter to stack all the CF for average PB estimate
 
-    m_wScale = WScale(m_maxW, m_nWPlanes);
+    //itsTaylorTerm=TaylorTerm;
+    //itsRefFreq=RefFreq;
+    //cout<<"itsTaylorTerm itsRefFreq "<<itsTaylorTerm<<" "<<itsRefFreq<<endl;
+      m_wScale = WScale(m_maxW, m_nWPlanes);
     MEpoch start = observationStartTime(ms, 0);
 
     m_refFrequency = observationReferenceFreq(ms, 0);
-
+    its_Use_EJones=Use_EJones;
+    //if(!its_Use_EJones){cout<<"Not using the beam in the calculation of the CFs...."<<endl;}
     if (m_oversampling%2 == 0) {
       // Make OverSampling an odd number
       m_oversampling++;
     }
 
-    list_freq   = Vector<Double>(1, m_refFrequency);
+    //list_freq   = Vector<Double>(1, m_refFrequency);
+    ROMSSpWindowColumns window(ms.spectralWindow());
+    list_freq.resize(window.nrow());
+    for(uInt i=0; i<window.nrow();++i){
+      list_freq[i]=window.refFrequency()(i);
+    };
+
     m_nChannel  = list_freq.size();
     ROMSAntennaColumns antenna(ms.antenna());
     m_nStations = antenna.nrow();
@@ -176,6 +190,7 @@ namespace LOFAR
         IPosition shape(2, nPixelsConv, nPixelsConv);
         //Careful with the sign of increment!!!! To check!!!!!!!
         Vector<Double> increment(2, wPixelAngSize);
+	// =============================================================================  To be changed !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         double wavelength(C::c / list_freq[0]);
         Matrix<Complex> wTerm = m_wTerm.evaluate(shape, increment,
                                                  w/wavelength);
@@ -253,24 +268,30 @@ namespace LOFAR
         //======================================
         // Disable the beam
         //======================================
-        //Cube<Complex> aterm_cube(IPosition(3,nPixels_Conv,nPixels_Conv,4),1.);
-        //for (uInt iiii=0;iiii<nPixels_Conv;++iiii) {
-        //  for (uInt iiiii=0;iiiii<nPixels_Conv;++iiiii) {
-        //    aterm_cube(iiii,iiiii,1)=0.;
-        //    aterm_cube(iiii,iiiii,2)=0.;
-        //  }
-        //}
-        //vector< Cube<Complex> > aTermA;
-        //aTermA.push_back(aterm_cube);
+	vector< Cube<Complex> > aTermA;
+	if(!its_Use_EJones){
+	  Cube<Complex> aterm_cube(IPosition(3,nPixelsConv,nPixelsConv,4),1.);
+	  for (Int iiii=0;iiii<nPixelsConv;++iiii) {
+	    for (Int iiiii=0;iiiii<nPixelsConv;++iiiii) {
+	      aterm_cube(iiii,iiiii,1)=0.;
+	      aterm_cube(iiii,iiiii,2)=0.;
+	    }
+	  }
+	  aTermA.push_back(aterm_cube);
+	}
+	else{
         //======================================
         // Enable the beam
         //======================================
-        MEpoch binEpoch;
-        binEpoch.set(Quantity(time, "s"));
-        vector< Cube<Complex> > aTermA = m_aTerm.evaluate(shape,
-                                                          coordinate,
-                                                          i, binEpoch,
-                                                          list_freq, true);
+	  MEpoch binEpoch;
+	  binEpoch.set(Quantity(time, "s"));
+	  aTermA = m_aTerm.evaluate(shape,
+							    coordinate,
+							    i, binEpoch,
+							    list_freq, true);
+	}
+
+	
         // Compute the fft on the beam
         for (uInt ch=0; ch<m_nChannel; ++ch) {
           for (uInt pol=0; pol<4; ++pol) {
@@ -309,7 +330,7 @@ namespace LOFAR
   (uInt stationA, uInt stationB, Double time, Double w,
    const Matrix<bool>& Mask_Mueller, bool degridding_step,
    double Append_average_PB_CF, Matrix<Complex>& Stack_PB_CF,
-   double& sum_weight_square)
+   double& sum_weight_square, uInt spw, Int TaylorTerm, double RefFreq)
   {
     // Initialize timers.
     PrecTimer timerFFT;
@@ -334,7 +355,8 @@ namespace LOFAR
     ///        if(m_AtermStore.find(time)==m_AtermStore.end()){computeAterm(time);}
 
     // Load the Wterm
-    uInt w_index = m_wScale.plane(w);
+    double ratio_freqs=list_freq[0]/list_freq[spw];
+    uInt w_index = m_wScale.plane(w*ratio_freqs);
     Matrix<Complex> wTerm;
     wTerm = m_WplanesStore[w_index];
     Int Npix_out = 0;
@@ -352,11 +374,50 @@ namespace LOFAR
     if (w > 0.) {
       wTerm.reference (conj(wTerm));
     }
-
-    for (uInt ch=0; ch<m_nChannel; ++ch) {
+    
+    uInt ch(spw);
+    //for (uInt ch=0; ch<m_nChannel; ++ch) {
       // Load the Aterm
-      const Cube<Complex>& aTermA(aterm[stationA][ch]);
+    Cube<Complex> aTermA(aterm[stationA][ch].copy());
+    
+    //cout<<aTermA<<endl;
+    
+    store (aTermA, "aTermA"+String::toString(stationA)+".img");
+    Cube<Complex> aTermA_paddedhh(zero_padding(aTermA, m_shape[0]));
+    Matrix<Complex> aTermA_paddedhhhh(aTermA_paddedhh.xyPlane(0));
+    normalized_fft (timerFFT, aTermA_paddedhhhh, false);
+    store (aTermA_paddedhhhh, "aTermAss"+String::toString(stationA)+".img");
+    
+    assert(false);
+
       const Cube<Complex>& aTermB(aterm[stationB][ch]);
+      //==============================
+      //==============================
+      // Cyr: MFS
+      //==============================
+      //==============================
+      if( TaylorTerm > 0 )
+	{
+	  Float freq=0.0,mulfactor=1.0;
+	  freq = list_freq[ch];
+	  mulfactor = ((freq-RefFreq)/RefFreq);
+	  //cout<<"mulfactor "<<mulfactor<<endl;
+	  Cube<Complex> slice(aTermA);
+	  slice *= pow(mulfactor,TaylorTerm);//mulfactor;
+	  // aTermA=slice;
+	  // double sum(0.);
+	  // for(uInt iii=0;iii<list_freq.size();++iii){
+	  //   freq = list_freq[iii];
+	  //   mulfactor=((freq-RefFreq)/RefFreq);
+	  //   sum+=pow(mulfactor,TaylorTerm);
+	  // };
+	  // cout<<"itsTaylorTerm<<sum "<<TaylorTerm<<" "<<sum/list_freq.size()<<endl;
+	  // //store(aTermA[ind_freq],"A1"+String::toString(ind_freq)+".img");
+	  
+	  // //assert(false);
+	}
+      //==============================
+      //==============================
       // Determine maximum support of A, W, and Spheroidal function for zero padding
       Npix_out = std::max(std::max(aTermA.shape()[0], aTermB.shape()[0]),
                           std::max(wTerm.shape()[0], Spheroid_cut.shape()[0]));
@@ -493,7 +554,12 @@ namespace LOFAR
       if (degridding_step) {
         for (uInt i=0; i<4; ++i) {
           for (uInt j=i; j<4; ++j) {
-            AlwaysAssert (Mask_Mueller(i,j) == Mask_Mueller(j,i), AipsError);
+            //AlwaysAssert (Mask_Mueller(i,j) == Mask_Mueller(j,i), AipsError);
+	    if ((Mask_Mueller(i,j)==false)&&(Mask_Mueller(j,i)==true)){
+	      Matrix<Complex> a(Kron_Product[i][j].copy());
+	      a=0.;
+	      Kron_Product[i][j]=a.copy();
+	    };
             if (Mask_Mueller(i,j)) {
               if (i!=j) {
                 Matrix<Complex> conj_product(conj(Kron_Product[i][j]));
@@ -523,7 +589,7 @@ namespace LOFAR
       if (Stack) {
         result_non_padded.push_back(Kron_Product_non_padded);
       }
-    }
+      //}
           
     // Stacks the weighted quadratic sum of the convolution function of
     // average PB estimate (!!!!! done for channel 0 only!!!)
@@ -615,17 +681,30 @@ namespace LOFAR
         cout<<"..... Compute average PB"<<endl;
       }
       Sum_Stack_PB_CF /= float(sum_weight_square);
-      //store(Stack_PB_CF,"Stack_PB_CF.img");
+      store(Sum_Stack_PB_CF,"Stack_PB_CF.img");
 
       normalized_fft(Sum_Stack_PB_CF, false);
-      //store(Im_Stack_PB_CF00,"Im_Stack_PB_CF00.img");
+      //store(Sum_Stack_PB_CF,"Im_Stack_PB_CF00.img");
+      store(Sum_Stack_PB_CF, itsImgName + ".before");
       Im_Stack_PB_CF0.resize (IPosition(2, m_shape[0], m_shape[1]));
 	
+      float maxPB(0.);
+      float maxPB_noabs(0.);
+      for(uInt i=0;i<m_shape[1];++i){
+	for(uInt j=0;j<m_shape[1];++j){
+	    Complex pixel(Sum_Stack_PB_CF(i,j));
+	    if(abs(pixel)>maxPB){
+	      maxPB=abs(pixel);
+	      //maxPB_noabs=pixel;
+	    };
+	}
+      }
       float threshold = 1.e-6;
       for (Int jj=0; jj<m_shape[1]; ++jj) {
         for (Int ii=0; ii<m_shape[0]; ++ii) {
           Float absVal = abs(Sum_Stack_PB_CF(ii,jj));
-          Im_Stack_PB_CF0(ii,jj) = std::max (absVal*absVal, threshold);
+          Im_Stack_PB_CF0(ii,jj) = std::max (absVal*absVal, threshold*maxPB);
+	  //Im_Stack_PB_CF0(ii,jj) = sqrt(Im_Stack_PB_CF0(ii,jj))*sign(maxPB_noabs);
         }
       }
       // Make it persistent.
@@ -873,7 +952,7 @@ namespace LOFAR
   {
     Double res_ini=abs(coordinates.increment()(0));                      // pixel size in image in radian
     Double diam_image=res_ini*shape(0);                                  // image diameter in radian
-    Double station_diam = 70.;                                           // station diameter in meters: To be adapted to the individual station size.
+    Double station_diam = 40.*70.;                                           // station diameter in meters: To be adapted to the individual station size.
     Double Res_beam_image= ((C::c/m_refFrequency)/station_diam)/2.;      // pixel size in A-term image in radian
     uInt Npix=floor(diam_image/Res_beam_image);                         // Number of pixel size in A-term image
     Res_beam_image=diam_image/Npix;

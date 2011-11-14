@@ -53,6 +53,8 @@ namespace LOFAR
   {
     CountedPtr<VisibilityResamplerBase> visResampler;
     Bool useDoublePrecGrid = False;
+    Double RefFreq((*sm_p).getReferenceFrequency());
+
     itsMachine = new LofarFTMachine(cache_p/2, tile_p,
                                     visResampler, gridfunction_p,
                                     *ms_p, wprojPlanes_p, mLocation_p,
@@ -64,7 +66,9 @@ namespace LOFAR
                                     itsParameters.asInt("oversample"),
                                     itsParameters.asString("imagename"),
                                     itsParameters.asArrayBool("mueller.grid"),
-                                    itsParameters.asArrayBool("mueller.degrid"));
+                                    itsParameters.asArrayBool("mueller.degrid"),
+				    RefFreq, itsParameters.asBool("UseLIG"), itsParameters.asBool("UseEJones"));
+    
     ft_p  = itsMachine;
     cft_p = new SimpleComponentFTMachine();
 
@@ -82,6 +86,7 @@ namespace LOFAR
 /*    os << LogIO::NORMAL
        << "vi.setRowBlocking(" << nrowBlock << ")"
        << LogIO::POST;*/
+    cout<<"sm_p.getReferenceFrequency() "<<(*sm_p).getReferenceFrequency()<<endl;
     return True;
   }
 

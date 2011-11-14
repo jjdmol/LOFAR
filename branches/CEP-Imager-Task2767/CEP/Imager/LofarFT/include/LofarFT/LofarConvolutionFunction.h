@@ -76,7 +76,11 @@ namespace LOFAR
                              const String& beamElementPath,
 			     Int verbose,
 			     Int maxsupport,
-                             const String& imgName);
+                             const String& imgName,
+			     Bool Use_EJones);
+    //,
+    //			     Int TaylorTerm,
+    //			     Double RefFreq);
 
 //      ~LofarConvolutionFunction ()
 //      {
@@ -118,7 +122,8 @@ namespace LOFAR
                                          bool degridding_step,
                                          double Append_average_PB_CF,
                                          Matrix<Complex>& Stack_PB_CF,
-                                         double& sum_weight_square);
+                                         double& sum_weight_square,
+					 uInt spw, Int TaylorTerm, double RefFreq);
 
     // Returns the average Primary Beam from the disk
     Matrix<float> Give_avg_pb();
@@ -226,6 +231,8 @@ namespace LOFAR
     Matrix<Float>       Im_Stack_PB_CF0;
     Int                 itsVerbose;
     Int                 itsMaxSupport;
+    //    Int                 itsTaylorTerm;
+    //Double              itsRefFreq;
     String              itsImgName;
     vector<FFTCMatrix>  itsFFTMachines;
     Double              itsTimeW;
@@ -240,6 +247,7 @@ namespace LOFAR
     Double              itsTimeCFpar;
     Double              itsTimeCFfft;
     unsigned long long  itsTimeCFcnt;
+    Bool its_Use_EJones;
   };
 
 

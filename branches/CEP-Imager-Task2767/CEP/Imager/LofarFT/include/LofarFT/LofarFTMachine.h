@@ -150,7 +150,10 @@ public:
                  Int oversample,
                  const String& imageName,
                  const Matrix<Bool>& gridMuellerMask,
-                 const Matrix<Bool>& degridMuellerMask);
+                 const Matrix<Bool>& degridMuellerMask,
+		 Double RefFreq,
+		 Bool Use_Linear_Interp_Gridder,
+		 Bool Use_EJones);
 //  LofarFTMachine(Long cachesize, Int tilesize,  CountedPtr<VisibilityResamplerBase>& visResampler,String convType,
 //	 MDirection mTangent, Float padding=1.0, Bool usezero=True,
 //	 Bool useDoublePrec=False);
@@ -205,6 +208,8 @@ public:
   void put(const VisBuffer& vb, Int row=-1, Bool dopsf=False,
            FTMachine::Type type=FTMachine::OBSERVED);
 
+  mutable Matrix<Float> itsAvgPB;
+  Bool its_Use_Linear_Interp_Gridder;
 
   // Make the entire image
   void makeImage(FTMachine::Type type,
@@ -217,7 +222,7 @@ public:
   ImageInterface<Complex>& getImage(Matrix<Float>&, Bool normalize=True);
 
   // Get the average primary beam.
-  const Matrix<Float>& getAveragePB() const;
+  virtual const Matrix<Float>& getAveragePB() const;
 
   // Get the spheroidal cut.
   const Matrix<Float>& getSpheroidCut() const
@@ -289,7 +294,10 @@ public:
   virtual void setNoPadding(Bool nopad){noPadding_p=nopad;};
 
   virtual String name();
-  virtual void setMiscInfo(const Int qualifier){(void)qualifier;};
+  //virtual void setMiscInfo(const Int qualifier){(void)qualifier;};
+
+  //Cyr: The FTMachine has got to know the order of the Taylor term
+  virtual void setMiscInfo(const Int qualifier){thisterm_p=qualifier;};
   virtual void ComputeResiduals(VisBuffer&vb, Bool useCorrected);
 
     void makeConjPolMap(const VisBuffer& vb, const Vector<Int> cfPolMap, Vector<Int>& conjPolMap);
@@ -300,6 +308,8 @@ public:
 protected:
   // Padding in FFT
   Float padding_p;
+  Int thisterm_p;
+  Double itsRefFreq;
 
   // Get the appropriate data pointer
   Array<Complex>* getDataPointer(const IPosition&, Bool);
@@ -352,7 +362,6 @@ protected:
   ///Array<DComplex> griddedData2;
   ///Matrix<Complex> itsSumPB;
   ///double itsSumWeight;
-  mutable Matrix<Float> itsAvgPB;
 
   Int priorCacheSize;
 
@@ -389,6 +398,7 @@ protected:
   Int itsNWPlanes;
   double itsWMax;
   int itsNThread;
+  Bool its_Use_EJones;
 
   CountedPtr<LofarConvolutionFunction> itsConvFunc;
   Vector<Int> ConjCFMap_p, CFMap_p;
@@ -396,6 +406,7 @@ protected:
   int itsVerbose;
   int itsMaxSupport;
   Int itsOversample;
+  Vector< Double >    itsListFreq;
   String itsImgName;
   Matrix<Bool> itsGridMuellerMask;
   Matrix<Bool> itsDegridMuellerMask;
