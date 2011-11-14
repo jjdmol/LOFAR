@@ -41,6 +41,11 @@
 
 #include <boost/lexical_cast.hpp>
 
+//# AI_NUMERICSERV is not defined on OS-X
+#ifndef AI_NUMERICSERV
+# define AI_NUMERICSERV 0
+#endif
+
 
 namespace LOFAR {
 
