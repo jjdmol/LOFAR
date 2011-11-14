@@ -27,6 +27,7 @@
 // Interface to the log4cplus logging package.
 
 //# Includes
+#include <Common/CasaLogSink.h>
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_sstream.h>
 #include <Common/lofar_string.h>
@@ -63,11 +64,13 @@ namespace LOFAR {
 #define INIT_LOGGER(filename)                   \
   do {                                          \
     ::LOFAR::initLog4Cplus(filename);           \
+    ::LOFAR::CasaLogSink::attach();             \
   } while(0)
 
 #define INIT_VAR_LOGGER(filename,logfile)                 \
   do {                                                    \
     ::LOFAR::initLog4Cplus(filename, logfile);            \
+    ::LOFAR::CasaLogSink::attach();                       \
   } while(0)
   
 // After initialisation a thread is started to monitor any changes in the
@@ -76,6 +79,7 @@ namespace LOFAR {
 # define INIT_LOGGER_AND_WATCH(filename,watchinterval)        \
   do {                                                        \
     ::LOFAR::initLog4CplusAndWatch(filename, watchinterval);  \
+    ::LOFAR::CasaLogSink::attach();                           \
   } while(0)
 #else
 # define INIT_LOGGER_AND_WATCH(filename,watchinterval) INIT_LOGGER(filename)

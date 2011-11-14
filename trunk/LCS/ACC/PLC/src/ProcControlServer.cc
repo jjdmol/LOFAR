@@ -99,7 +99,7 @@ bool ProcControlServer::handleMessage(DH_ProcControl*	theMsg)
 	int16	cmdType 	 = theMsg->getCommand();
 	string	options		 = theMsg->getOptions();
 	LOG_DEBUG_STR("handleMessage: calling " << PCCmdName(theMsg->getCommand()) <<
-				  "(" << options << ")" << endl);
+				  "(" << options << ")");
 
 	// setup control defaults
 	bool	sendAnswer = true;		// assume that answer must be send
