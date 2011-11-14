@@ -135,7 +135,7 @@ namespace LOFAR {
       .def ("isVector", &ParameterValue::isVector,
             "Test if the value contains a vector (if enclosed in [])")
       .def ("getVector", &ParameterValue::getVector,
-            "Split the vector into its part and return as a list.")
+            "Split the vector into its parts and return as a list.")
       .def ("getBool",   &ParameterValue::getBool,
             "Get the value as a boolean value.")
       .def ("getInt",    &ParameterValue::getInt,
