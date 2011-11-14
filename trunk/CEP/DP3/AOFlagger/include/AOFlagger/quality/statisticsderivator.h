@@ -94,8 +94,8 @@ class StatisticsDerivator
 					break;
 				case QualityTablesFormatter::DVarianceStatistic:
 					return deriveVariance(statistics.dCount[polarization],
-																statistics.sum[polarization],
-																statistics.sumP2[polarization]);
+																statistics.dSum[polarization],
+																statistics.dSumP2[polarization]);
 					break;
 				case QualityTablesFormatter::RFIRatioStatistic:
 					return std::complex<T>((double) statistics.rfiCount[polarization] / (statistics.count[polarization] + statistics.rfiCount[polarization]), 0.0f);
