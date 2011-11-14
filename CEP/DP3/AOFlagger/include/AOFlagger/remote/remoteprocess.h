@@ -22,6 +22,7 @@
 #define AOREMOTE__REMOTE_PROCESS_H
 
 #include <sstream>
+#include <iostream>
 
 #include <boost/thread/thread.hpp>
 
@@ -63,8 +64,9 @@ class RemoteProcess
 			{
 				std::ostringstream commandLine;
 				commandLine
-					<< "ssh " << _remoteProcess._clientHostName << " -C \"aoremoteclient connect "
-					<< _remoteProcess._serverHostName << "\"";
+					<< "ssh " << _remoteProcess._clientHostName << " -x \"bash --login -c \\\"aoremoteclient connect "
+					<< _remoteProcess._serverHostName << "\\\" \"";
+				std::cout << commandLine.str() << std::endl;
 				system(commandLine.str().c_str());
 			}
 		};
