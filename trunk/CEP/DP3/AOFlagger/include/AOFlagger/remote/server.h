@@ -26,6 +26,10 @@
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/tcp.hpp>
 
+#include <sigc++/signal.h>
+
+class StatisticsCollection;
+
 namespace aoRemote {
 
 class Server
@@ -38,15 +42,19 @@ class Server
 		
 		static unsigned PORT() { return 1892; }
 		
-		void StopClient();
 		void ReadQualityTables(const std::string &msFilename, class StatisticsCollection &collection);
 		
+		sigc::signal<void, class ServerConnection &, bool&> &SignalConnectionCreated()
+		{
+			return _onConnectionCreated;
+		}
 	private:
 		void startAccept();
 		void handleAccept(class ServerConnection *connection, const boost::system::error_code &error);
 		
 		boost::asio::io_service _ioService;
 		boost::asio::ip::tcp::acceptor _acceptor;
+		sigc::signal<void, class ServerConnection &, bool&> _onConnectionCreated;
 };
 	
 }

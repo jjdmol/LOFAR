@@ -4,6 +4,7 @@ lofar_package(AOFlagger 1.0 DEPENDS LofarStMan Common LMWCommon)
 
 find_package(PkgConfig)
 pkg_check_modules(GTKMM gtkmm-2.4)
+pkg_check_modules(SIGCXX sigc++-2.0)
 
 include(LofarFindPackage)
 lofar_find_package(LibXml2 REQUIRED)

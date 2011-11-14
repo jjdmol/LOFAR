@@ -252,8 +252,11 @@ void BaselinePlotPage::updateImage()
 			data = TimeFrequencyData(realImages[0], imagImages[0], realImages[1], imagImages[1], realImages[2], imagImages[2], realImages[3], imagImages[3]);
 			data.SetIndividualPolarisationMasks(mask[0], mask[1], mask[2], mask[3]);
 		}
-		else
-			throw std::runtime_error("Set has not 1, 2 or 4 polarizations (?!?)");
+		else {
+			std::stringstream s;
+			s << "Set has not 1, 2 or 4 polarizations (?!?) : StatisticsCollection.PolarizationCount() == " << polarizationCount;
+			throw std::runtime_error(s.str());
+		}
 		
 		setToSelectedPolarization(data);
 		

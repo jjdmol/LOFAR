@@ -22,8 +22,13 @@
 
 #include <stdexcept>
 
-#include <LMWCommon/VdsDesc.h>
 #include <auto_ptr.h>
+
+#include <LMWCommon/VdsDesc.h>
+
+#include <AOFlagger/ref/reffile.h>
+
+#include <AOFlagger/configuration.h>
 
 namespace aoRemote
 {
@@ -34,6 +39,8 @@ ClusteredObservation::ClusteredObservation()
 
 ClusteredObservation *ClusteredObservation::LoadFromVds(const std::string &vdsFilename)
 {
+	throwIfNotEnabled();
+	
 	LOFAR::CEP::VdsDesc vdsDesc(vdsFilename);
 	const std::vector<LOFAR::CEP::VdsPartDesc> &parts = vdsDesc.getParts();
 	
@@ -55,5 +62,63 @@ ClusteredObservation *ClusteredObservation::LoadFromVds(const std::string &vdsFi
 	
 	return cObs.release();
 }
+
+ClusteredObservation *ClusteredObservation::LoadFromRef(const std::string &refFilename)
+{
+	throwIfNotEnabled();
+	
+	AOTools::RefFile refFile(refFilename);
+	std::auto_ptr<ClusteredObservation> cObs(new ClusteredObservation());
+	for(AOTools::RefFile::const_iterator i=refFile.begin();i!=refFile.end();++i)
+	{
+		const AOTools::RefFileEntry &entry = *i;
+		cObs->AddItem(ClusteredObservationItem(entry.Path(), entry.Node()));
+	}
+	return cObs.release();
+}
+
+ClusteredObservation *ClusteredObservation::Load(const std::string &filename)
+{
+	if(IsVdsFilename(filename))
+		return LoadFromVds(filename);
+	else if(IsRefFilename(filename))
+		return LoadFromRef(filename);
+	else
+		throw std::runtime_error("Could not determine type of specified filename for loading as clustered observation");
+}
+
+bool ClusteredObservation::IsVdsFilename(const std::string &filename)
+{
+	return
+		(filename.size() > 4 && filename.substr(filename.size()-4) == ".vds")
+		||
+		(filename.size() > 4 && filename.substr(filename.size()-4) == ".gds");
+}
+
+bool ClusteredObservation::IsRefFilename(const std::string &filename)
+{
+	return
+		(filename.size() > 4 && filename.substr(filename.size()-4) == ".ref");
+}
+
+inline bool ClusteredObservation::IsRemoteModuleEnabled()
+{
+#ifdef BOOST_ASIO_H_FOUND
+	#ifdef SIGCXX_FOUND
+		return true;
+	#else
+		return false;
+	#endif
+#else
+	return false;
+#endif
+}
+
+void ClusteredObservation::throwIfNotEnabled()
+{
+	if(!IsRemoteModuleEnabled())
+		throw std::runtime_error("The remote module is not enabled: cannot open clustered observations (gds, vds or ref files). See the CMake output why it was disabled.");
+}
+
 
 }

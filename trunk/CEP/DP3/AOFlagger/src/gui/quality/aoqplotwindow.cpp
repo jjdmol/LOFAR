@@ -26,6 +26,9 @@
 
 #include <AOFlagger/quality/statisticscollection.h>
 
+#include <AOFlagger/remote/clusteredobservation.h>
+#include <AOFlagger/remote/processcommander.h>
+
 AOQPlotWindow::AOQPlotWindow() :
 	_isOpen(false)
 {
@@ -81,13 +84,24 @@ void AOQPlotWindow::close()
 
 void AOQPlotWindow::readStatistics()
 {
-	MeasurementSet *ms = new MeasurementSet(_filename);
-	const unsigned polarizationCount = ms->GetPolarizationCount();
-	delete ms;
+	close();
+	
+	if(aoRemote::ClusteredObservation::IsClusteredFilename(_filename))
+	{
+		aoRemote::ClusteredObservation *observation = aoRemote::ClusteredObservation::Load(_filename);
+		aoRemote::ProcessCommander commander(*observation);
+		_statCollection = new StatisticsCollection(commander.Statistics());
+		delete observation;
+	}
+	else {
+		MeasurementSet *ms = new MeasurementSet(_filename);
+		const unsigned polarizationCount = ms->GetPolarizationCount();
+		delete ms;
 
-	QualityTablesFormatter formatter(_filename);
-	_statCollection = new StatisticsCollection(polarizationCount);
-	_statCollection->Load(formatter);
+		QualityTablesFormatter formatter(_filename);
+		_statCollection = new StatisticsCollection(polarizationCount);
+		_statCollection->Load(formatter);
+	}
 	_isOpen = true;
 }
 

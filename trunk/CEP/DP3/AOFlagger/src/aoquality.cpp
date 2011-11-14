@@ -21,6 +21,7 @@
 #include <iostream>
 
 #include <tables/Tables/SetupNewTab.h>
+#include <tables/Tables/TableCopy.h>
 
 #include <AOFlagger/msio/measurementset.h>
 
@@ -28,6 +29,9 @@
 #include <AOFlagger/quality/qualitytablesformatter.h>
 #include <AOFlagger/quality/statisticscollection.h>
 #include <AOFlagger/quality/statisticsderivator.h>
+
+#include <AOFlagger/remote/clusteredobservation.h>
+#include <AOFlagger/remote/processcommander.h>
 
 void reportProgress(unsigned step, unsigned totalSteps)
 {
@@ -281,17 +285,39 @@ void actionCombine(const std::string outFilename, const std::vector<std::string>
 {
 	if(!inFilenames.empty())
 	{
-		casa::Table templateSet(*inFilenames.begin());
-		casa::Table templateAntennaTable = templateSet.keywordSet().asTable("ANTENNA");
+		const std::string &firstInFilename = *inFilenames.begin();
+		bool remote = aoRemote::ClusteredObservation::IsClusteredFilename(firstInFilename);
 		
-		casa::SetupNewTable mainTableSetup(outFilename, templateSet.tableDesc(), casa::Table::New);
-		casa::Table mainOutputTable(mainTableSetup);
+		if(remote && inFilenames.size() != 1)
+			throw std::runtime_error("Can only open one remote observation file at a time");
 		
-		casa::SetupNewTable antennaTableSetup(outFilename + "/ANTENNA", templateAntennaTable.tableDesc(), casa::Table::New);
-		casa::Table antennaOutputTable(antennaTableSetup);
-		mainOutputTable.rwKeywordSet().defineTable("ANTENNA", antennaOutputTable);
+		if(!casa::Table::isReadable(outFilename))
+		{
+			if(remote)
+			{
+				throw std::runtime_error("Can't yet create a new set with clustered observations -- make output filename yourself");
+			}
+			casa::Table templateSet(firstInFilename);
+			casa::Table templateAntennaTable = templateSet.keywordSet().asTable("ANTENNA");
+			
+			casa::SetupNewTable mainTableSetup(outFilename, templateSet.tableDesc(), casa::Table::New);
+			casa::Table mainOutputTable(mainTableSetup);
+			
+			casa::SetupNewTable antennaTableSetup(outFilename + "/ANTENNA", templateAntennaTable.tableDesc(), casa::Table::New);
+			casa::Table antennaOutputTable(antennaTableSetup);
+			mainOutputTable.rwKeywordSet().defineTable("ANTENNA", antennaOutputTable);
+			
+			casa::TableCopy::copyRows(antennaOutputTable, templateAntennaTable);
+		}
 		
-		//antennaOutputTable.
+		if(remote)
+		{
+			aoRemote::ClusteredObservation *observation = aoRemote::ClusteredObservation::Load(firstInFilename);
+			aoRemote::ProcessCommander commander(*observation);
+			QualityTablesFormatter formatter(outFilename);
+			commander.Statistics().Save(formatter);
+			delete observation;
+		}
 	}
 }
 

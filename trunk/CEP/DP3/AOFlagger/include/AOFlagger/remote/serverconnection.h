@@ -21,7 +21,13 @@
 #ifndef AOREMOTE__SERVER_CONNECTION_H
 #define AOREMOTE__SERVER_CONNECTION_H
 
+#include <string>
+
 #include <boost/asio/ip/tcp.hpp>
+
+#include <sigc++/signal.h>
+
+#include <AOFlagger/remote/format.h>
 
 class StatisticsCollection;
 
@@ -37,8 +43,19 @@ class ServerConnection
 		void Start();
 		
 		boost::asio::ip::tcp::socket &Socket() { return _socket; }
+		
+		sigc::signal<void, ServerConnection&> &SignalAwaitingCommand() { return _onAwaitingCommand; }
+		sigc::signal<void, ServerConnection&, StatisticsCollection&> &SignalFinishReadQualityTables() { return _onFinishReadQualityTables; }
+		
+		const std::string &Hostname() const { return _hostname; }
+		
+		static std::string GetErrorStr(enum ErrorCode errorCode);
 	private:
 		boost::asio::ip::tcp::socket _socket;
+		std::string _hostname;
+		
+		sigc::signal<void, ServerConnection&> _onAwaitingCommand;
+		sigc::signal<void, ServerConnection&, StatisticsCollection&> _onFinishReadQualityTables;
 };
 	
 }

@@ -63,7 +63,7 @@ class RemoteProcess
 			{
 				std::ostringstream commandLine;
 				commandLine
-					<< "ssh " << _remoteProcess._clientHostName << " -C \"aoremoteserver connect "
+					<< "ssh " << _remoteProcess._clientHostName << " -C \"aoremoteclient connect "
 					<< _remoteProcess._serverHostName << "\"";
 				system(commandLine.str().c_str());
 			}
