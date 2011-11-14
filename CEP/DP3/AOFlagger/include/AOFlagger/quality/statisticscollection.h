@@ -81,7 +81,7 @@ class StatisticsCollection : public Serializable
 			
 			for(std::vector<std::complex<float> >::const_iterator i=samples.begin();i+1!=samples.end();++i)
 			{
-				diffSamples.push_back(*(i+1) - *i);
+				diffSamples.push_back((*(i+1) - *i) * 0.5f);
 			}
 			bool *diffRFIFlags = new bool[samples.size()];
 			for(unsigned i=0;i<samples.size()-1;++i)

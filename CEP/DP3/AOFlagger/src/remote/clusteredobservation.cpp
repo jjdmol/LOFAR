@@ -101,23 +101,10 @@ bool ClusteredObservation::IsRefFilename(const std::string &filename)
 		(filename.size() > 4 && filename.substr(filename.size()-4) == ".ref");
 }
 
-inline bool ClusteredObservation::IsRemoteModuleEnabled()
-{
-#ifdef BOOST_ASIO_H_FOUND
-	#ifdef SIGCXX_FOUND
-		return true;
-	#else
-		return false;
-	#endif
-#else
-	return false;
-#endif
-}
-
 void ClusteredObservation::throwIfNotEnabled()
 {
-	if(!IsRemoteModuleEnabled())
-		throw std::runtime_error("The remote module is not enabled: cannot open clustered observations (gds, vds or ref files). See the CMake output why it was disabled.");
+	//if(!IsRemoteModuleEnabled())
+	//	throw std::runtime_error("The remote module is not enabled: cannot open clustered observations (gds, vds or ref files). See the CMake output why it was disabled.");
 }
 
 
