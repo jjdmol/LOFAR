@@ -47,15 +47,18 @@ ProcessCommander::~ProcessCommander()
 
 void ProcessCommander::Run()
 {
-	makeNodeMap(_observation);
-	const std::string thisHostName = GetHostName();
-	
-	//construct a process for each unique node name
-	for(std::map<std::string, std::deque<ClusteredObservationItem> >::const_iterator i=_nodeMap.begin();i!=_nodeMap.end();++i)
+	if(!_observation.GetItems().empty())
 	{
-		_processes.push_back(new RemoteProcess(i->first, thisHostName));
+		makeNodeMap(_observation);
+		const std::string thisHostName = GetHostName();
+		
+		//construct a process for each unique node name
+		for(std::map<std::string, std::deque<ClusteredObservationItem> >::const_iterator i=_nodeMap.begin();i!=_nodeMap.end();++i)
+		{
+			_processes.push_back(new RemoteProcess(i->first, thisHostName));
+		}
+		_server.Run();
 	}
-	_server.Run();
 }
 
 void ProcessCommander::makeNodeMap(const ClusteredObservation &observation)
@@ -95,10 +98,6 @@ void ProcessCommander::onConnectionAwaitingCommand(ServerConnection &serverConne
 	if(iter == _nodeMap.end())
 	{
 		serverConnection.StopClient();
-		if(_nodeMap.empty())
-		{
-			_server.Stop();
-		}
 	}
 	else {
 		std::deque<ClusteredObservationItem> &items = iter->second;

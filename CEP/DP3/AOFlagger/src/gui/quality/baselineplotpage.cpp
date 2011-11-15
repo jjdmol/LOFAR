@@ -284,7 +284,10 @@ void BaselinePlotPage::setToSelectedPolarization(TimeFrequencyData &data)
 	else if(_polYYButton.get_active())
 		newData = data.CreateTFData(YYPolarisation);
 	else if(_polXXandYYButton.get_active())
+	{
 		newData = data.CreateTFData(AutoDipolePolarisation);
+		newData->MultiplyImages(0.5);
+	}
 	else if(_polXYandYXButton.get_active())
 		newData = data.CreateTFData(CrossDipolePolarisation);
 	if(newData != 0)

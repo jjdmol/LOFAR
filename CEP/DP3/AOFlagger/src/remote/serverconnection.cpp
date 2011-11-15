@@ -117,13 +117,20 @@ void ServerConnection::onReceiveQualityTablesResponseHeader()
 {
 	ReadQualityTablesResponseHeader responseHeader = *reinterpret_cast<ReadQualityTablesResponseHeader*>(_buffer);
 	if(responseHeader.blockIdentifier != ReadQualityTablesResponseHeaderId || responseHeader.blockSize != sizeof(responseHeader))
-		throw std::runtime_error("Bad response from client upon read tables request");
-	if(responseHeader.errorCode != NoError)
-		throw std::runtime_error("Error reported by client upon read tables request");
-	
-	prepareBuffer(responseHeader.dataSize);
-	boost::asio::async_read(_socket, boost::asio::buffer(_buffer, responseHeader.dataSize),
-		boost::bind(&ServerConnection::onReceiveQualityTablesResponseData, boost::ref(*this), responseHeader.dataSize));
+	{
+		_onError("Bad response from client upon read tables request");
+		StopClient();
+	}
+	else if(responseHeader.errorCode != NoError)
+	{
+		_onError("Error reported by client upon read tables request");
+		_onAwaitingCommand(*this);
+	}
+	else {
+		prepareBuffer(responseHeader.dataSize);
+		boost::asio::async_read(_socket, boost::asio::buffer(_buffer, responseHeader.dataSize),
+			boost::bind(&ServerConnection::onReceiveQualityTablesResponseData, boost::ref(*this), responseHeader.dataSize));
+	}
 }
 
 void ServerConnection::onReceiveQualityTablesResponseData(size_t dataSize)

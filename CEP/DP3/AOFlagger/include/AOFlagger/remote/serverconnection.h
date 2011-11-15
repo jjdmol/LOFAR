@@ -57,6 +57,7 @@ class ServerConnection
 		
 		sigc::signal<void, ServerConnection&> _onAwaitingCommand;
 		sigc::signal<void, ServerConnection&, StatisticsCollection&> _onFinishReadQualityTables;
+		sigc::signal<void, const std::string &> _onError;
 		
 		char *_buffer;
 		
