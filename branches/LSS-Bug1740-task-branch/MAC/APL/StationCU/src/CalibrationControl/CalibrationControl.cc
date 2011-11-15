@@ -145,11 +145,11 @@ void    CalibrationControl::setState(CTState::CTstateNr     newState)
 //
 // convertFilterSelection(string) : uint8
 //
-int32 CalibrationControl::convertFilterSelection(const string&	filterselection, const string&	antennaSet) 
+int32 CalibrationControl::convertFilterSelection(const string&	filterselection, const string&	antennaSet, int nrForeignAnts) 
 {
 	// international stations don't have the LBL's connected, force them to use the LBH inputs.
 	string	tmpAntennaSet(antennaSet);	// modifyable copy
-	if ((stationTypeValue() == 2) && (tmpAntennaSet == "LBA_OUTER")) {
+	if ((nrForeignAnts == 0) && (stationTypeValue() == 2) && (tmpAntennaSet == "LBA_OUTER")) {
 		tmpAntennaSet = "LBA_INNER";
 		LOG_INFO("LBA_OUTER on an international station: forcing it to LBA_INNER");
 	}
@@ -647,7 +647,7 @@ bool	CalibrationControl::startCalibration()
 		calStartEvent.parent = AS->antennaField(itsObsPar->beams[i].antennaSet);
 		calStartEvent.rcumode().resize(1);
 		calStartEvent.rcumode()(0).setMode((RSP_Protocol::RCUSettings::Control::RCUMode)
-											convertFilterSelection(itsObsPar->filter, itsObsPar->beams[i].antennaSet));
+							convertFilterSelection(itsObsPar->filter, itsObsPar->beams[i].antennaSet, config.nrForeignAnts));
 		calStartEvent.subset = itsObsPar->getRCUbitset(0, 0, itsObsPar->beams[i].antennaSet) &
 								AS->RCUallocation(itsObsPar->beams[i].antennaSet);
 

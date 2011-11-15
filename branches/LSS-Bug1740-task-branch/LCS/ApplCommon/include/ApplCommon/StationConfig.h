@@ -63,6 +63,7 @@ public:
 	int		nrTBBs;
 	int		nrLBAs;
 	int		nrHBAs;
+	int		nrForeignAnts;
 	bool	hasSplitters;
 	bool	hasWideLBAs;
 };

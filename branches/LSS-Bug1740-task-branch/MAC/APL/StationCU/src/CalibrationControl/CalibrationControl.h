@@ -83,7 +83,7 @@ private:
 	void 				_showBeamAdmin();
 
 	void    setState          	  (CTState::CTstateNr     newState);
-	int32	convertFilterSelection(const string&	bandselection, const string&	antennaSet);
+	int32	convertFilterSelection(const string&	bandselection, const string&	antennaSet, int nrForeignAnts);
 	uint16	handleClaimEvent	  ();
 	uint16	handlePrepareEvent	  ();
 	bool	startCalibration  	  ();

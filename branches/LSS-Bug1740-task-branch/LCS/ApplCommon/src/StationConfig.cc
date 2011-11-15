@@ -57,6 +57,7 @@ StationConfig::StationConfig()
 	nrTBBs		 = StationInfo.getInt ("RS.N_TBBOARDS");
 	nrLBAs		 = StationInfo.getInt ("RS.N_LBAS");
 	nrHBAs		 = StationInfo.getInt ("RS.N_HBAS");
+	nrForeignAnts= StationInfo.getInt ("RS.N_FOREIGN_ANTENNAS",0);
 	hasSplitters = StationInfo.getBool("RS.HBA_SPLIT");
 	hasWideLBAs	 = StationInfo.getBool("RS.WIDE_LBAS");
 
