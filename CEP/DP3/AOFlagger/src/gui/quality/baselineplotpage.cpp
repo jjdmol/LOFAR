@@ -52,7 +52,8 @@ BaselinePlotPage::BaselinePlotPage() :
 	_rangeSpecified("Specified"),
 	_logarithmicScaleButton("Logarithmic"),
 	_selectStatisticKind(QualityTablesFormatter::VarianceStatistic),
-	_statCollection(0)
+	_statCollection(0),
+	_antennas(0)
 {
 	initStatisticKinds();
 	initPolarizations();
@@ -69,6 +70,9 @@ BaselinePlotPage::BaselinePlotPage() :
 	_imageWidget.SetYAxisDescription("Antenna 2 index");
 	_imageWidget.SetZAxisDescription("Statistical value");
 	_imageWidget.set_size_request(300, 300);
+	
+	_imageWidget.OnMouseMovedEvent().connect(sigc::mem_fun(*this, &BaselinePlotPage::onMouseMoved));
+	
 	pack_start(_imageWidget);
 	
 	show_all_children();
@@ -308,3 +312,24 @@ void BaselinePlotPage::setToSelectedPhase(TimeFrequencyData &data)
 	}
 }
 
+void BaselinePlotPage::onMouseMoved(size_t x, size_t y)
+{
+	std::stringstream text;
+	std::string antenna1Name, antenna2Name;
+	if(_antennas == 0)
+	{
+		std::stringstream a1, a2;
+		a1 << x;
+		a2 << y;
+		antenna1Name = a1.str();
+		antenna2Name = a2.str();
+	} else {
+		antenna1Name = _antennas[x].name;
+		antenna2Name = _antennas[y].name;
+	}
+	const QualityTablesFormatter::StatisticKind kind = GetSelectedStatisticKind();
+	const std::string &kindName = QualityTablesFormatter::KindToName(kind);
+	
+	text << "Correlation " << antenna1Name << " x " << antenna2Name << ", " << kindName << " = " << _imageWidget.Image()->Value(x, y);
+	_signalStatusChange(text.str());
+}

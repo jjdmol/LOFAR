@@ -34,6 +34,7 @@ AOQPlotWindow::AOQPlotWindow() :
 {
 	_notebook.append_page(_baselinePlotPage, "Baselines");
 	_baselinePlotPage.show();
+	_baselinePlotPage.SignalStatusChange().connect(sigc::mem_fun(*this, &AOQPlotWindow::onStatusChange));
 	
 	_notebook.append_page(_antennaePlotPage, "Antennae");
 	_antennaePlotPage.show();
@@ -50,15 +51,22 @@ AOQPlotWindow::AOQPlotWindow() :
 	_notebook.append_page(_summaryPage, "Summary");
 	_summaryPage.show();
 	
-	add(_notebook);
+	_vBox.pack_start(_notebook);
 	_notebook.show();
+	
+	_vBox.pack_end(_statusBar, Gtk::PACK_SHRINK);
+	_statusBar.push("This is the AO Quality Plot util. Author: André Offringa (offringa@astro.rug.nl)");
+	_statusBar.show();
+	
+	add(_vBox);
+	_vBox.show();
 }
 
 void AOQPlotWindow::Open(const std::string &filename)
 {
 	_filename = filename;
 	readStatistics();
-	_baselinePlotPage.SetStatistics(_statCollection);
+	_baselinePlotPage.SetStatistics(_statCollection, _antennas);
 	_antennaePlotPage.SetStatistics(_statCollection, filename);
 	_bLengthPlotPage.SetStatistics(_statCollection, filename);
 	_timePlotPage.SetStatistics(_statCollection, filename);
@@ -78,7 +86,9 @@ void AOQPlotWindow::close()
 		_frequencyPlotPage.CloseStatistics();
 		_summaryPage.CloseStatistics();
 		delete _statCollection;
+		delete[] _antennas;
 		_isOpen = false;
+		
 	}
 }
 
@@ -92,10 +102,16 @@ void AOQPlotWindow::readStatistics()
 		aoRemote::ProcessCommander commander(*observation);
 		_statCollection = new StatisticsCollection(commander.Statistics());
 		delete observation;
+		
+		_antennas = 0;
 	}
 	else {
 		MeasurementSet *ms = new MeasurementSet(_filename);
 		const unsigned polarizationCount = ms->GetPolarizationCount();
+		unsigned antennaCount = ms->AntennaCount();
+		_antennas = new AntennaInfo[antennaCount];
+		for(unsigned a=0;a<antennaCount;++a)
+			_antennas[a] = ms->GetAntennaInfo(a);
 		delete ms;
 
 		QualityTablesFormatter formatter(_filename);
@@ -103,5 +119,11 @@ void AOQPlotWindow::readStatistics()
 		_statCollection->Load(formatter);
 	}
 	_isOpen = true;
+}
+
+void AOQPlotWindow::onStatusChange(const std::string &newStatus)
+{
+	_statusBar.pop();
+	_statusBar.push(newStatus);
 }
 

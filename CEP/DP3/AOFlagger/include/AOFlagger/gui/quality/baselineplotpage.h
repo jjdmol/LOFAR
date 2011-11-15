@@ -42,19 +42,23 @@ class BaselinePlotPage : public Gtk::HBox {
 			return _selectStatisticKind;
 		}
 		
-		void SetStatistics(class StatisticsCollection *statCollection)
+		void SetStatistics(class StatisticsCollection *statCollection, const class AntennaInfo *antennas)
 		{
 			_statCollection = statCollection;
+			_antennas = antennas;
 			updateImage();
 		}
 		void CloseStatistics()
 		{
 			_statCollection = 0;
+			_antennas = 0;
 		}
 		bool HasStatistics() const
 		{
 			return _statCollection != 0;
 		}
+		
+		sigc::signal<void, const std::string &> SignalStatusChange() { return _signalStatusChange; }
 	private:
 		void initStatisticKinds();
 		void initPolarizations();
@@ -84,6 +88,8 @@ class BaselinePlotPage : public Gtk::HBox {
 		void setToSelectedPolarization(TimeFrequencyData &data);
 		void setToSelectedPhase(TimeFrequencyData &data);
 		
+		void onMouseMoved(size_t x, size_t y);
+		
 		Gtk::VBox _sideBox;
 		
 		Gtk::Frame _statisticKindFrame;
@@ -110,6 +116,9 @@ class BaselinePlotPage : public Gtk::HBox {
 		QualityTablesFormatter::StatisticKind _selectStatisticKind;
 		ImageWidget _imageWidget;
 		class StatisticsCollection *_statCollection;
+		const class AntennaInfo *_antennas;
+		
+		sigc::signal<void, const std::string &> _signalStatusChange;
 };
 
 #endif
