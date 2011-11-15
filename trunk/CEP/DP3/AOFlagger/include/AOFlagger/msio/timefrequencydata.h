@@ -428,6 +428,10 @@ class TimeFrequencyData
 						break;
 					case CrossDipolePolarisation:
 						data = new TimeFrequencyData(CrossDipolePolarisation, _images[2], _images[3], _images[4], _images[5]);
+						if(_flagCoverage == GlobalFlagCoverage)
+							data->SetGlobalMask(GetMask(polarisation));
+						else if(_flagCoverage == IndividualPolarisationFlagCoverage)
+							data->SetIndividualPolarisationMasks(_flagging[1], _flagging[2]);
 						break;
 					case SinglePolarisation:
 						throw BadUsageException("Single polarisation requested from dipole polarisation time frequency data: which single polarisation do you want?");

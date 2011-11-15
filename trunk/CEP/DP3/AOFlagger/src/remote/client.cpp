@@ -100,8 +100,6 @@ void Client::handleReadQualityTables(unsigned dataSize)
 		StatisticsCollection collection(formatter.GetPolarizationCount());
 		collection.Load(formatter);
 		
-		std::cerr << "Client: PolarizationCount() == " << collection.PolarizationCount() << std::endl;
-		
 		ReadQualityTablesResponseHeader header;
 		header.blockIdentifier = ReadQualityTablesResponseHeaderId;
 		header.blockSize = sizeof(header);
@@ -111,8 +109,6 @@ void Client::handleReadQualityTables(unsigned dataSize)
 		const std::string str = s.str();
 		header.dataSize = str.size();
 		
-		std::cerr << "Client: header.dataSize == " << header.dataSize << std::endl;
-
 		boost::asio::write(_socket, boost::asio::buffer(&header, sizeof(header)));
 		boost::asio::write(_socket, boost::asio::buffer(s.str()));
 	} catch(std::exception &e) {
