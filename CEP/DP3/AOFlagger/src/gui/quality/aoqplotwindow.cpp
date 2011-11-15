@@ -100,6 +100,7 @@ void AOQPlotWindow::readStatistics()
 	{
 		aoRemote::ClusteredObservation *observation = aoRemote::ClusteredObservation::Load(_filename);
 		aoRemote::ProcessCommander commander(*observation);
+		commander.Run();
 		_statCollection = new StatisticsCollection(commander.Statistics());
 		delete observation;
 		

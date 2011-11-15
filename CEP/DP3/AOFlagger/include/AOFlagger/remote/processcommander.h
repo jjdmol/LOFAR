@@ -40,6 +40,8 @@ class ProcessCommander
 		ProcessCommander(const ClusteredObservation &observation);
 		~ProcessCommander();
 		
+		void Run();
+		
 		static std::string GetHostName();
 		const StatisticsCollection &Statistics() const { return *_collection; }
 	private:
@@ -53,6 +55,7 @@ class ProcessCommander
 		NodeMap _nodeMap;
 		std::vector<RemoteProcess *> _processes;
 		StatisticsCollection *_collection;
+		const ClusteredObservation _observation;
 };
 
 }

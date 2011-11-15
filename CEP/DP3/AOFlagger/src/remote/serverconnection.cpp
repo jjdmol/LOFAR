@@ -22,6 +22,9 @@
 
 #include <boost/asio/read.hpp>
 #include <boost/asio/write.hpp>
+#include <boost/asio/placeholders.hpp>
+
+#include <boost/bind.hpp>
 
 #include <AOFlagger/remote/format.h>
 
@@ -33,8 +36,14 @@ namespace aoRemote
 {
 
 ServerConnection::ServerConnection(boost::asio::io_service &ioService) :
-	_socket(ioService)
+	_socket(ioService), _buffer(0)
 {
+}
+
+ServerConnection::~ServerConnection()
+{
+	if(_buffer != 0)
+		delete[] _buffer;
 }
 
 void ServerConnection::Start()
@@ -79,6 +88,8 @@ void ServerConnection::StopClient()
 
 void ServerConnection::ReadQualityTables(const std::string &msFilename, StatisticsCollection &collection)
 {
+	_collection = &collection;
+	
 	std::stringstream reqBuffer;
 	
 	RequestBlock requestBlock;
@@ -97,29 +108,36 @@ void ServerConnection::ReadQualityTables(const std::string &msFilename, Statisti
 	
 	boost::asio::write(_socket, boost::asio::buffer(reqBuffer.str()));
 	
-	ReadQualityTablesResponseHeader responseHeader;
-	boost::asio::read(_socket, boost::asio::buffer(&responseHeader, sizeof(responseHeader)));
+	prepareBuffer(sizeof(ReadQualityTablesResponseHeader));
+	boost::asio::async_read(_socket, boost::asio::buffer(_buffer, sizeof(ReadQualityTablesResponseHeader)),
+		boost::bind(&ServerConnection::onReceiveQualityTablesResponseHeader, boost::ref(*this)));
+}
+
+void ServerConnection::onReceiveQualityTablesResponseHeader()
+{
+	ReadQualityTablesResponseHeader responseHeader = *reinterpret_cast<ReadQualityTablesResponseHeader*>(_buffer);
 	if(responseHeader.blockIdentifier != ReadQualityTablesResponseHeaderId || responseHeader.blockSize != sizeof(responseHeader))
 		throw std::runtime_error("Bad response from client upon read tables request");
 	if(responseHeader.errorCode != NoError)
 		throw std::runtime_error("Error reported by client upon read tables request");
 	
-	AutoArray<char> buffer(new char[responseHeader.dataSize]);
-	
-	boost::asio::read(_socket, boost::asio::buffer(&*buffer, responseHeader.dataSize));
+	prepareBuffer(responseHeader.dataSize);
+	boost::asio::async_read(_socket, boost::asio::buffer(_buffer, responseHeader.dataSize),
+		boost::bind(&ServerConnection::onReceiveQualityTablesResponseData, boost::ref(*this), responseHeader.dataSize));
+}
+
+void ServerConnection::onReceiveQualityTablesResponseData(size_t dataSize)
+{
 	std::istringstream stream;
-	if(stream.rdbuf()->pubsetbuf(&*buffer, responseHeader.dataSize) == 0)
+	if(stream.rdbuf()->pubsetbuf(_buffer, dataSize) == 0)
 	{
 		throw std::runtime_error("Could not set string buffer");
 	}
 	
-	std::cout << "Unserializing stream of size " << responseHeader.dataSize << "..." << std::endl;
-	
-	std::cout << "Stream pos before: " << stream.tellg() << std::endl;
-	collection.Unserialize(stream);
-	std::cout << "Stream pos after: " << stream.tellg() << std::endl;
+	std::cout << "Unserializing stream of size " << dataSize << "..." << std::endl;
+	_collection->Unserialize(stream);
 
-	_onFinishReadQualityTables(*this, collection);
+	_onFinishReadQualityTables(*this, *_collection);
 	_onAwaitingCommand(*this);
 }
 

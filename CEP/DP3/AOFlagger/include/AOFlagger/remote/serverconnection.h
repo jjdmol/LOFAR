@@ -37,6 +37,7 @@ class ServerConnection
 {
 	public:
 		ServerConnection(boost::asio::io_service &ioService);
+		~ServerConnection();
 		
 		void StopClient();
 		void ReadQualityTables(const std::string &msFilename, class StatisticsCollection &collection);
@@ -56,6 +57,19 @@ class ServerConnection
 		
 		sigc::signal<void, ServerConnection&> _onAwaitingCommand;
 		sigc::signal<void, ServerConnection&, StatisticsCollection&> _onFinishReadQualityTables;
+		
+		char *_buffer;
+		
+		void onReceiveQualityTablesResponseHeader();
+		void onReceiveQualityTablesResponseData(size_t dataSize);
+		
+		void prepareBuffer(size_t size)
+		{
+			if(_buffer != 0) delete[] _buffer;
+			_buffer = new char[size];
+		}
+		
+		StatisticsCollection *_collection;
 };
 	
 }
