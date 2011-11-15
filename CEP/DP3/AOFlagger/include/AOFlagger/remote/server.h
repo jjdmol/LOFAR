@@ -42,8 +42,6 @@ class Server
 		
 		static unsigned PORT() { return 1892; }
 		
-		void ReadQualityTables(const std::string &msFilename, class StatisticsCollection &collection);
-		
 		sigc::signal<void, class ServerConnection &, bool&> &SignalConnectionCreated()
 		{
 			return _onConnectionCreated;

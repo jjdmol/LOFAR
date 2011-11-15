@@ -47,6 +47,7 @@ class ServerConnection
 		
 		sigc::signal<void, ServerConnection&> &SignalAwaitingCommand() { return _onAwaitingCommand; }
 		sigc::signal<void, ServerConnection&, StatisticsCollection&> &SignalFinishReadQualityTables() { return _onFinishReadQualityTables; }
+		sigc::signal<void, ServerConnection&, const std::string&> &SignalError() { return _onError; }
 		
 		const std::string &Hostname() const { return _hostname; }
 		
@@ -57,7 +58,7 @@ class ServerConnection
 		
 		sigc::signal<void, ServerConnection&> _onAwaitingCommand;
 		sigc::signal<void, ServerConnection&, StatisticsCollection&> _onFinishReadQualityTables;
-		sigc::signal<void, const std::string &> _onError;
+		sigc::signal<void, ServerConnection&, const std::string&> _onError;
 		
 		char *_buffer;
 		

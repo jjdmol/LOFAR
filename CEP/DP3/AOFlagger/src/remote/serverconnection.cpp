@@ -118,12 +118,12 @@ void ServerConnection::onReceiveQualityTablesResponseHeader()
 	ReadQualityTablesResponseHeader responseHeader = *reinterpret_cast<ReadQualityTablesResponseHeader*>(_buffer);
 	if(responseHeader.blockIdentifier != ReadQualityTablesResponseHeaderId || responseHeader.blockSize != sizeof(responseHeader))
 	{
-		_onError("Bad response from client upon read tables request");
+		_onError(*this, "Bad response from client upon read tables request");
 		StopClient();
 	}
 	else if(responseHeader.errorCode != NoError)
 	{
-		_onError("Error reported by client upon read tables request");
+		_onError(*this, "Error reported by client upon read tables request");
 		_onAwaitingCommand(*this);
 	}
 	else {
