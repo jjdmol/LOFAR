@@ -117,9 +117,9 @@ void Client::handleReadQualityTables(unsigned dataSize)
 		header.blockSize = sizeof(header);
 		header.errorCode = UnexpectedExceptionOccured;
 		header.dataSize = 0;
-		boost::asio::write(_socket, boost::asio::buffer(&header, sizeof(header)));
 		
-		throw;
+		// TODO the exception should be pushed as well
+		boost::asio::write(_socket, boost::asio::buffer(&header, sizeof(header)));
 	}
 }
 
