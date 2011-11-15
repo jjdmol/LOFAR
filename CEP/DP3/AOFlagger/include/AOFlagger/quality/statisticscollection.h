@@ -31,6 +31,8 @@
 
 class StatisticsCollection : public Serializable
 {
+	private:
+		typedef std::map<double, DefaultStatistics> DoubleStatMap;
 	public:
 		StatisticsCollection() : _polarizationCount(0)
 		{
@@ -194,7 +196,7 @@ class StatisticsCollection : public Serializable
 		
 		void IntegrateBaselinesToOneChannel()
 		{
-			size_t size = _baselineStatistics.size();
+			const size_t size = _baselineStatistics.size();
 			if(size > 1)
 			{
 				BaselineStatisticsMap fullMap(_polarizationCount);
@@ -208,6 +210,25 @@ class StatisticsCollection : public Serializable
 				
 				_baselineStatistics.clear();
 				_baselineStatistics.insert(std::pair<double, BaselineStatisticsMap>(frequencySum/size, fullMap));
+			}
+		}
+		
+		void IntegrateTimeToOneChannel()
+		{
+			const size_t size = _timeStatistics.size();
+			if(size > 1)
+			{
+				DoubleStatMap fullMap;
+				double frequencySum = 0.0;
+				
+				for(std::map<double, DoubleStatMap>::const_iterator i=_timeStatistics.begin();i!=_timeStatistics.end();++i)
+				{
+					frequencySum += i->first;
+					addToDoubleStatMap(fullMap, i->second);
+				}
+				
+				_timeStatistics.clear();
+				_timeStatistics.insert(std::pair<double, DoubleStatMap>(frequencySum/size, fullMap));
 			}
 		}
 	private:
@@ -449,7 +470,7 @@ class StatisticsCollection : public Serializable
 				for(std::vector<std::pair<unsigned, unsigned> >::const_iterator i=baselines.begin();i!=baselines.end();++i)
 				{
 					saver.antenna1 = i->first;
-					saver.antenna2 =  i->second;
+					saver.antenna2 = i->second;
 					
 					const DefaultStatistics &stat = map.GetStatistics(saver.antenna1, saver.antenna2);
 					
@@ -470,22 +491,22 @@ class StatisticsCollection : public Serializable
 			}
 			DoubleStatMap &selectedTimeStatistic = i->second;
 			
-			DoubleStatMap::iterator j = selectedTimeStatistic.find(time);
-			if(j == selectedTimeStatistic.end())
-			{
-				j = selectedTimeStatistic.insert(std::pair<double, DefaultStatistics>(time, DefaultStatistics(_polarizationCount))).first;
-			}
-			return j->second;
+			return getDoubleStatMapStatistic(selectedTimeStatistic, time);
 		}
 		
 		DefaultStatistics &getFrequencyStatistic(double frequency)
 		{
+			return getDoubleStatMapStatistic(_frequencyStatistics, frequency);
+		}
+		
+		DefaultStatistics &getDoubleStatMapStatistic(DoubleStatMap &map, double key)
+		{
 			// Use insert() only when not exist, as it is slower then find because a
 			// Statistic is created.
-			DoubleStatMap::iterator i = _frequencyStatistics.find(frequency);
-			if(i == _frequencyStatistics.end())
+			DoubleStatMap::iterator i = map.find(key);
+			if(i == map.end())
 			{
-				i = _frequencyStatistics.insert(std::pair<double, DefaultStatistics>(frequency, DefaultStatistics(_polarizationCount))).first;
+				i = map.insert(std::pair<double, DefaultStatistics>(key, DefaultStatistics(_polarizationCount))).first;
 			}
 			return i->second;
 		}
@@ -653,7 +674,6 @@ class StatisticsCollection : public Serializable
 			return (min + max) / 2.0;
 		}
 		
-		typedef std::map<double, DefaultStatistics> DoubleStatMap;
 		DefaultStatistics getGlobalStatistics(const DoubleStatMap &statMap) const
 		{
 			DefaultStatistics global(_polarizationCount);
@@ -664,6 +684,7 @@ class StatisticsCollection : public Serializable
 			}
 			return global;
 		}
+		
 		DefaultStatistics getGlobalStatistics(const std::map<double, DoubleStatMap> &statMap) const
 		{
 			DefaultStatistics global(_polarizationCount);
@@ -834,6 +855,17 @@ class StatisticsCollection : public Serializable
 					const DefaultStatistics &stat = map.GetStatistics(antenna1, antenna2);
 					getBaselineStatistic(antenna1, antenna2, frequency) += stat;
 				}
+			}
+		}
+		
+		void addToDoubleStatMap(DoubleStatMap &dest, const DoubleStatMap &source)
+		{
+			for(DoubleStatMap::const_iterator i=source.begin();i!=source.end();++i)
+			{
+				double key = i->first;
+				const DefaultStatistics &sourceStats = i->second;
+				
+				getDoubleStatMapStatistic(dest, key) += sourceStats;
 			}
 		}
 		

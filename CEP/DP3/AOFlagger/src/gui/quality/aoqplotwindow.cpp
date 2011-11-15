@@ -120,8 +120,11 @@ void AOQPlotWindow::readStatistics()
 		_statCollection->Load(formatter);
 	}
 	// TODO ofcourse we want multi dimensional stats at one point :D
+	std::cout << "Integrating baseline statistics to one channel..." << std::endl;
 	_statCollection->IntegrateBaselinesToOneChannel();
-	
+	std::cout << "Integrating time statistics to one channel..." << std::endl;
+	_statCollection->IntegrateTimeToOneChannel();
+
 	_isOpen = true;
 }
 
