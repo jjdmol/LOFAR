@@ -47,6 +47,8 @@ ProcessCommander::~ProcessCommander()
 
 void ProcessCommander::Run()
 {
+	_errors.clear();
+	
 	if(!_observation.GetItems().empty())
 	{
 		makeNodeMap(_observation);
@@ -85,6 +87,7 @@ void ProcessCommander::onConnectionCreated(ServerConnection &serverConnection, b
 {
 	serverConnection.SignalAwaitingCommand().connect(sigc::mem_fun(*this, &ProcessCommander::onConnectionAwaitingCommand));
 	serverConnection.SignalFinishReadQualityTables().connect(sigc::mem_fun(*this, &ProcessCommander::onConnectionFinishReadQualityTables));
+	serverConnection.SignalError().connect(sigc::mem_fun(*this, &ProcessCommander::onError));
 	acceptConnection = true;
 }
 
@@ -112,15 +115,13 @@ void ProcessCommander::onConnectionAwaitingCommand(ServerConnection &serverConne
 		{
 			const std::string msFilename = items.front().LocalPath();
 			items.pop_front();
-			if(items.empty())
-				_nodeMap.erase(iter);
 			StatisticsCollection *collection = new StatisticsCollection();
 			serverConnection.ReadQualityTables(msFilename, *collection);
 		}
 	}
 }
 
-void ProcessCommander::onConnectionFinishReadQualityTables(class ServerConnection &serverConnection, StatisticsCollection &collection)
+void ProcessCommander::onConnectionFinishReadQualityTables(ServerConnection &serverConnection, StatisticsCollection &collection)
 {
 	if(collection.PolarizationCount() == 0)
 		throw std::runtime_error("Client sent StatisticsCollection with 0 polarizations.");
@@ -131,6 +132,14 @@ void ProcessCommander::onConnectionFinishReadQualityTables(class ServerConnectio
 		_collection->SetPolarizationCount(collection.PolarizationCount());
 	}
 	_collection->Add(collection);
+}
+
+void ProcessCommander::onError(ServerConnection &connection, const std::string &error)
+{
+	std::stringstream s;
+	s << "On connection with " << connection.Hostname() << ", reported error was: " << error;
+	_errors.push_back(s.str());
+	
 }
 
 

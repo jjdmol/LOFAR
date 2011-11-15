@@ -20,6 +20,8 @@
 
 #include <limits>
 
+#include <gtkmm/messagedialog.h>
+
 #include <AOFlagger/gui/quality/aoqplotwindow.h>
 
 #include <AOFlagger/msio/measurementset.h>
@@ -101,6 +103,18 @@ void AOQPlotWindow::readStatistics()
 		aoRemote::ClusteredObservation *observation = aoRemote::ClusteredObservation::Load(_filename);
 		aoRemote::ProcessCommander commander(*observation);
 		commander.Run();
+		if(!commander.Errors().empty())
+		{
+			std::stringstream s;
+			s << commander.Errors().size() << " error(s) occured while querying the nodes or measurement sets in the given observation. This might be caused by a failing node, an unreadable measurement set, or maybe the quality tables are not available. The errors reported are:\n\n";
+			for(std::vector<std::string>::const_iterator i=commander.Errors().begin();i!=commander.Errors().end();++i)
+			{
+				s << "- " << *i << '\n';
+			}
+			s << "\nThe program will continue, but this might mean that the statistics are incomplete. If this is the case, fix the issues and reopen the observation.";
+			Gtk::MessageDialog dialog(s.str(), false, Gtk::MESSAGE_ERROR);
+			dialog.run();
+		}
 		_statCollection = new StatisticsCollection(commander.Statistics());
 		delete observation;
 		
@@ -124,7 +138,8 @@ void AOQPlotWindow::readStatistics()
 	_statCollection->IntegrateBaselinesToOneChannel();
 	std::cout << "Integrating time statistics to one channel..." << std::endl;
 	_statCollection->IntegrateTimeToOneChannel();
-
+	
+	std::cout << "Opening statistics panel..." << std::endl;
 	_isOpen = true;
 }
 

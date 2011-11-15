@@ -44,11 +44,13 @@ class ProcessCommander
 		
 		static std::string GetHostName();
 		const StatisticsCollection &Statistics() const { return *_collection; }
+		const std::vector<std::string> &Errors() const { return _errors; }
 	private:
 		void makeNodeMap(const ClusteredObservation &observation);
 		void onConnectionCreated(class ServerConnection &serverConnection, bool &acceptConnection);
 		void onConnectionAwaitingCommand(class ServerConnection &serverConnection);
 		void onConnectionFinishReadQualityTables(class ServerConnection &serverConnection, StatisticsCollection &collection);
+		void onError(ServerConnection &connection, const std::string &error);
 		
 		Server _server;
 		typedef std::map<std::string, std::deque<ClusteredObservationItem> > NodeMap;
@@ -56,6 +58,8 @@ class ProcessCommander
 		std::vector<RemoteProcess *> _processes;
 		StatisticsCollection *_collection;
 		const ClusteredObservation _observation;
+		
+		std::vector<std::string> _errors;
 };
 
 }
