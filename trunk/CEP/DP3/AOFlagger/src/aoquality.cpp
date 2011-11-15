@@ -314,6 +314,7 @@ void actionCombine(const std::string outFilename, const std::vector<std::string>
 		{
 			aoRemote::ClusteredObservation *observation = aoRemote::ClusteredObservation::Load(firstInFilename);
 			aoRemote::ProcessCommander commander(*observation);
+			commander.Run();
 			QualityTablesFormatter formatter(outFilename);
 			commander.Statistics().Save(formatter);
 			delete observation;

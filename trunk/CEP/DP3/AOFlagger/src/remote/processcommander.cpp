@@ -29,21 +29,11 @@
 namespace aoRemote {
 
 ProcessCommander::ProcessCommander(const ClusteredObservation &observation)
-: _server()
+: _server(), _observation(observation)
 {
 	_collection = new StatisticsCollection();
 	
 	_server.SignalConnectionCreated().connect(sigc::mem_fun(*this, &ProcessCommander::onConnectionCreated));
-	
-	makeNodeMap(observation);
-	const std::string thisHostName = GetHostName();
-	
-	//construct a process for each unique node name
-	for(std::map<std::string, std::deque<ClusteredObservationItem> >::const_iterator i=_nodeMap.begin();i!=_nodeMap.end();++i)
-	{
-		_processes.push_back(new RemoteProcess(i->first, thisHostName));
-	}
-	_server.Run();
 }
 
 ProcessCommander::~ProcessCommander()
@@ -53,6 +43,19 @@ ProcessCommander::~ProcessCommander()
 		delete *i;
 	}
 	delete _collection;
+}
+
+void ProcessCommander::Run()
+{
+	makeNodeMap(_observation);
+	const std::string thisHostName = GetHostName();
+	
+	//construct a process for each unique node name
+	for(std::map<std::string, std::deque<ClusteredObservationItem> >::const_iterator i=_nodeMap.begin();i!=_nodeMap.end();++i)
+	{
+		_processes.push_back(new RemoteProcess(i->first, thisHostName));
+	}
+	_server.Run();
 }
 
 void ProcessCommander::makeNodeMap(const ClusteredObservation &observation)
