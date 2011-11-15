@@ -119,6 +119,9 @@ void AOQPlotWindow::readStatistics()
 		_statCollection = new StatisticsCollection(polarizationCount);
 		_statCollection->Load(formatter);
 	}
+	// TODO ofcourse we want multi dimensional stats at one point :D
+	_statCollection->IntegrateBaselinesToOneChannel();
+	
 	_isOpen = true;
 }
 

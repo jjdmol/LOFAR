@@ -41,6 +41,21 @@ class BaselineStatisticsMap : public Serializable
 		{
 		}
 		
+		void operator+=(const BaselineStatisticsMap &other)
+		{
+			for(OuterMap::const_iterator i=other._map.begin();i!=other._map.end();++i)
+			{
+				unsigned antenna1 = i->first;
+				const InnerMap &innerMap = i->second;
+				for(InnerMap::const_iterator j=innerMap.begin();j!=innerMap.end();++j)
+				{
+					unsigned antenna2 = j->first;
+					const DefaultStatistics &stat = j->second;
+					GetStatistics(antenna1, antenna2) += stat;
+				}
+			}
+		}
+		
 		DefaultStatistics &GetStatistics(unsigned antenna1, unsigned antenna2)
 		{
 			OuterMap::iterator antenna1Map = _map.insert(OuterPair(antenna1, InnerMap())).first;
