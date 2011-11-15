@@ -191,6 +191,25 @@ class StatisticsCollection : public Serializable
 			unserializeFrequency(stream);
 			unserializeBaselines(stream);
 		}
+		
+		void IntegrateBaselinesToOneChannel()
+		{
+			size_t size = _baselineStatistics.size();
+			if(size > 1)
+			{
+				BaselineStatisticsMap fullMap(_polarizationCount);
+				double frequencySum = 0.0;
+				
+				for(std::map<double, BaselineStatisticsMap>::const_iterator i=_baselineStatistics.begin();i!=_baselineStatistics.end();++i)
+				{
+					frequencySum += i->first;
+					fullMap += i->second;
+				}
+				
+				_baselineStatistics.clear();
+				_baselineStatistics.insert(std::pair<double, BaselineStatisticsMap>(frequencySum/size, fullMap));
+			}
+		}
 	private:
 		struct StatisticSaver
 		{
