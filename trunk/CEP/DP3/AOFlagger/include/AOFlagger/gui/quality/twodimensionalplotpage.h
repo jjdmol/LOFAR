@@ -40,9 +40,9 @@ class TwoDimensionalPlotPage : public Gtk::HBox {
     {
 		}
 		
-		void SetStatistics(class StatisticsCollection *statCollection, const std::string &filename)
+		void SetStatistics(class StatisticsCollection *statCollection, const std::vector<AntennaInfo> &antennas)
 		{
-			processStatistics(statCollection, filename);
+			processStatistics(statCollection, antennas);
 			
 			_statCollection = statCollection;
 			updatePlot();
@@ -56,7 +56,7 @@ class TwoDimensionalPlotPage : public Gtk::HBox {
 			return _statCollection != 0;
 		}
 	protected:
-		virtual void processStatistics(class StatisticsCollection *, const std::string &)
+		virtual void processStatistics(class StatisticsCollection *, const std::vector<AntennaInfo> &)
 		{
 		}
 		

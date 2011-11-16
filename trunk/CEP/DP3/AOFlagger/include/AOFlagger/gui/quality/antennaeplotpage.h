@@ -31,7 +31,7 @@
 */
 class AntennaePlotPage : public TwoDimensionalPlotPage {
 	protected:
-		virtual void processStatistics(class StatisticsCollection *statCollection, const std::string &filename)
+		virtual void processStatistics(class StatisticsCollection *statCollection, const std::vector<AntennaInfo> &antennas)
 		{
 			const BaselineStatisticsMap &map = statCollection->BaselineStatistics();
 			
