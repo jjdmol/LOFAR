@@ -104,7 +104,7 @@ void ProcessCommander::continueReadAntennaTablesTask(ServerConnection &serverCon
 	
 	const std::string &hostname = serverConnection.Hostname();
 	NodeMap::iterator iter = _nodeMap.find(hostname);
-	const std::string msFilename = _observation.GetItems().front().LocalPath();
+	const std::string msFilename = iter->second.front().LocalPath();
 	std::vector<AntennaInfo> *antennas = new std::vector<AntennaInfo>();
 	serverConnection.ReadAntennaTables(msFilename, *antennas);
 }
