@@ -281,16 +281,16 @@ const JonesMatrix::View StationBeamFormer::evaluateImpl(const Grid &grid,
                     ++p_im;
                 }
             }
-
+// hier gebeurt het (vdtol)
             if(!element.flag[0])
             {
-                AFX += AF;
+                AFX += AF * element.antennagain[0];
                 ++countX;
             }
 
             if(!element.flag[1])
             {
-                AFY += AF;
+                AFY += AF * element.antennagain[1];
                 ++countY;
             }
         }

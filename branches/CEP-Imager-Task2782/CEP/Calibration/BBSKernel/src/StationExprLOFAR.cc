@@ -184,15 +184,9 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
                 // Ionosphere.
                 if(config.useIonosphere())
                 {
-                    // Create an AZ, EL expression for the phase reference
-                    // direction.
-                    Expr<Vector<2> >::Ptr exprAzEl =
-                        makeAzElExpr(instrument->station(i)->position(),
-                        exprRefPhase);
-
                     itsExpr[i] = compose(itsExpr[i],
                         makeIonosphereExpr(itsScope, instrument->station(i),
-                        instrument->position(), exprAzEl, exprIonosphere));
+                        instrument->position(), exprRefPhaseITRF, exprIonosphere));
                 }
             }
         }
@@ -218,7 +212,6 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
                         makeDirectionalGainExpr(itsScope,
                         instrument->station(i), patch, config.usePhasors()));
                 }
-
                 // Beam.
                 if(config.useBeam())
                 {
@@ -248,15 +241,9 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
                 // Ionosphere.
                 if(config.useIonosphere())
                 {
-                    // Create an AZ, EL expression for the centroid direction of
-                    // the patch.
-                    Expr<Vector<2> >::Ptr exprAzEl =
-                        makeAzElExpr(instrument->station(i)->position(),
-                        exprPatch->position());
-
                     itsExpr[i] = compose(itsExpr[i],
                         makeIonosphereExpr(itsScope, instrument->station(i),
-                        instrument->position(), exprAzEl, exprIonosphere));
+                        instrument->position(), exprPatchPositionITRF, exprIonosphere));
                 }
             }
         }

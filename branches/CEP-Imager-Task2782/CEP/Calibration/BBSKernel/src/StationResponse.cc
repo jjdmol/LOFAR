@@ -78,6 +78,7 @@ StationResponse::StationResponse(const casa::MeasurementSet &ms,
 
     // Load observation details.
     Instrument::Ptr instrument = initInstrument(ms);
+    itsInstrument = instrument;
     double refFreq = getReferenceFreq(ms);
 
     // The ITRF direction vectors for the direction of interest and the
@@ -266,6 +267,35 @@ void StationResponse::setDirection(const casa::MDirection &direction)
     radec.assign(0, Matrix(angles.getBaseValue()(0)));
     radec.assign(1, Matrix(angles.getBaseValue()(1)));
     itsDirection->setValue(radec);
+
+    // Clear cache.
+    itsCache.clear();
+    itsCache.clearStats();
+}
+
+void StationResponse::setAntennaGains(int station, int field, const casa::Array<casa::DComplex> &antennagains)
+{
+//    Station::ConstPtr station = itsInstrument->station(i);
+/*    cout << "Hallo "  << itsInstrument->nStations() << " stations" << endl;
+    cout << "Hallo "  << antennagains.shape() << " stations" << endl;
+    cout << "Hallo "  << itsInstrument->station(0)->nField() << " fields" << endl;
+    cout << "Hallo "  << itsInstrument->station(0)->field(0)->nElement() << " elements" << endl;
+    cout << "Hallo "  << itsInstrument->station(0)->field(0)->element(0).antennagain[0] << " gain X" << endl;
+    cout << "Hallo "  << antennagains << endl;
+    cout << "Hallo "  << antennagains[0] << endl;*/
+//    cout << "Hallo "  << antennagains(p) << endl;
+    for(unsigned int i = 0; i < itsInstrument->station(station)->field(field)->nElement(); ++i) 
+    { 
+      dcomplex g[2];
+      casa::IPosition p(2);
+      p(1) = i;
+      p(0) = 0;
+      g[0] = antennagains(p);
+      p(0) = 1;
+      g[1] = antennagains(p);
+//      cout << g[0] << "," << g[1] << endl;
+      itsInstrument->station(station)->field(field)->setElementGain(i, g);
+    }
 
     // Clear cache.
     itsCache.clear();

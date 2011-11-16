@@ -189,8 +189,10 @@ const JonesMatrix IonPhaseShift::evaluateExpr(const Request &request,
     // normal to the ionospheric thin layer at the pierce point position). A
     // large slant implies a longer path through the ionosphere, and thus a
     // higher TEC value.
-    tecX /= cos(piercePoint.value(3));
-    tecY /= cos(piercePoint.value(3));
+    tecX *= piercePoint.value(3);
+    tecY *= piercePoint.value(3);
+    
+    LOG_DEBUG_STR("TEC: " << tecX);
 
     // Convert from slanted TEC to phase shift.
     //
