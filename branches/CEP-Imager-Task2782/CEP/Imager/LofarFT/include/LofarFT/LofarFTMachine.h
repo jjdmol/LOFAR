@@ -143,14 +143,10 @@ public:
 //	  String convType="SF", Float padding=1.0, Bool usezero=True, Bool useDoublePrec=False);
   LofarFTMachine(Long cachesize, Int tilesize,  CountedPtr<VisibilityResamplerBase>& visResampler, String convType, const MeasurementSet& ms,
                  Int nwPlanes,
-                 MPosition mLocation, Float padding, Bool usezero,
-                 Bool useDoublePrec, double wmax, const String& beamPath,
-                 Int verbose,
-		 Int maxsupport,
-                 Int oversample,
-                 const String& imageName,
-                 const Matrix<Bool>& gridMuellerMask,
-                 const Matrix<Bool>& degridMuellerMask);
+	 MPosition mLocation, Float padding=1.0, Bool usezero=True,
+                 Bool useDoublePrec=False, double wmax=500., const String& beamPath="", Int verbose=0,
+		 Int maxsupport=1024,
+                 Int oversample=8);
 //  LofarFTMachine(Long cachesize, Int tilesize,  CountedPtr<VisibilityResamplerBase>& visResampler,String convType,
 //	 MDirection mTangent, Float padding=1.0, Bool usezero=True,
 //	 Bool useDoublePrec=False);
@@ -396,9 +392,6 @@ protected:
   int itsVerbose;
   int itsMaxSupport;
   Int itsOversample;
-  String itsImgName;
-  Matrix<Bool> itsGridMuellerMask;
-  Matrix<Bool> itsDegridMuellerMask;
   double itsGriddingTime;
   double itsDegriddingTime;
   double itsCFTime;

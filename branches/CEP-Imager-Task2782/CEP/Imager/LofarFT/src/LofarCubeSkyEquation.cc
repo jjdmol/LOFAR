@@ -347,7 +347,6 @@ void  LofarCubeSkyEquation::predict(Bool incremental, MS::PredefinedColumns col)
     return;
   
   
-  
   // Now do the images
   for (Int model=0; model < (sm_->numberOfModels());++model){ 
     // Change the model polarization frame
@@ -378,12 +377,14 @@ void  LofarCubeSkyEquation::predict(Bool incremental, MS::PredefinedColumns col)
     initializeGetSlice(* vb, 0,incremental, cubeSlice, nCubeSlice);
     for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
       for (vi.origin(); vi.more(); vi++) {
-	if(!incremental&&!initialized) {
-	  vb->setModelVisCube(Complex(0.0,0.0));
-	}
-	// get the model visibility and write it to the model MS
-	getSlice(* vb,incremental, cubeSlice, nCubeSlice);
-	vi.setVis(vb->modelVisCube(),visCol);
+        if(!incremental&&!initialized) {
+          vb->setModelVisCube(Complex(0.0,0.0));
+        }
+        // get the model visibility and write it to the model MS
+        getSlice(* vb,incremental, cubeSlice, nCubeSlice);
+        vi.setVis(vb->modelVisCube(),visCol);
+        cout << vi.getMeasurementSet() << endl;
+        cout << vb->modelVisCube() << endl;
       }
     }
     finalizeGetSlice();

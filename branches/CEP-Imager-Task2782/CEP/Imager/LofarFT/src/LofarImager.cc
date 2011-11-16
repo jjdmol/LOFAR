@@ -61,10 +61,10 @@ namespace LOFAR
                                     itsParameters.asString("beam.element.path"),
                                     itsParameters.asInt("verbose"),
                                     itsParameters.asInt("maxsupport"),
-                                    itsParameters.asInt("oversample"),
-                                    itsParameters.asString("imagename"),
+                                    itsParameters.asInt("oversample"));
+/*                                    itsParameters.asString("imagename"),
                                     itsParameters.asArrayBool("mueller.grid"),
-                                    itsParameters.asArrayBool("mueller.degrid"));
+                                    itsParameters.asArrayBool("mueller.degrid"));*/
     ft_p  = itsMachine;
     cft_p = new SimpleComponentFTMachine();
 
@@ -79,14 +79,16 @@ namespace LOFAR
     Int nrowBlock = nrowPerTime * max(1,ntime);
     // Set row blocking in VisIter.
     rvi_p->setRowBlocking (nrowBlock);
-/*    os << LogIO::NORMAL
+    LogIO os;
+    os << LogIO::NORMAL
        << "vi.setRowBlocking(" << nrowBlock << ")"
-       << LogIO::POST;*/
+       << LogIO::POST;
     return True;
   }
 
   void LofarImager::setSkyEquation()
   {
+//    rvi_p->setRowBlocking (10);
     se_p = new LofarCubeSkyEquation(*sm_p, *rvi_p, *ft_p, *cft_p,
                                     !useModelCol_p);
     return;
@@ -94,8 +96,8 @@ namespace LOFAR
 
 //   void LofarImager::setSkyEquation()
 //   {
-//     vs_p = new VisSet(*rvi_p);
-//     se_p = new SkyEquation(*sm_p, *vs_p, *ft_p, *cft_p, !useModelCol_p);
+//     vs_p = new VisSet(*wvi_p);
+//     se_p = new LofarCubeSkyEquation(*sm_p, *vs_p, *ft_p, *cft_p, !useModelCol_p);
 //     return;
 //   }
 

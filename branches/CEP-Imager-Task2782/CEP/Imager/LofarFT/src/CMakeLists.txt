@@ -6,6 +6,8 @@ lofar_add_library(lofarft
   Package__Version.cc
   FFTCMatrix.cc
   LofarATerm.cc
+  LofarATermBeam.cc
+  LofarATermIonosphere.cc
   LofarConvolutionFunction.cc
   LofarImager.cc
   LofarCFStore.cc
@@ -18,4 +20,5 @@ lofar_add_library(lofarft
 
 lofar_add_bin_program(versionlofarft versionlofarft.cc)
 lofar_add_bin_program(awimager awimager.cc)
+lofar_add_bin_program(pdbtest pdbtest.cc)
 lofar_add_bin_program(makefftwisdom2d makefftwisdom2d.cc)

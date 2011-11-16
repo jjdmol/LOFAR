@@ -24,6 +24,7 @@
 #define LOFARFT_LOFARCONVOLUTIONFUNCTION_H
 
 #include <LofarFT/LofarATerm.h>
+#include <LofarFT/LofarATermBeam.h>
 #include <LofarFT/LofarWTerm.h>
 #include <LofarFT/LofarCFStore.h>
 #include <LofarFT/FFTCMatrix.h>
@@ -74,9 +75,9 @@ namespace LOFAR
                              uInt nW, double Wmax,
                              uInt oversample,
                              const String& beamElementPath,
-			     Int verbose,
-			     Int maxsupport,
-                             const String& imgName);
+                             const String& save_image_beam_directory="",
+			     Int verbose=0,
+			     Int maxsupport=1024);
 
 //      ~LofarConvolutionFunction ()
 //      {
@@ -92,14 +93,8 @@ namespace LOFAR
     void store_all_W_images();
 
     // Get the spheroidal cut.
-    const Matrix<Float>& getSpheroidCut();
-
-    // Get the spheroidal cut from the file.
-    static Matrix<Float> getSpheroidCut (const String& imgName);
-
-    // Get the average PB from the file.
-    static Matrix<Float> getAveragePB (const String& imgName);
-
+    const Matrix<Float>& getSpheroidCut() const
+      { return Spheroid_cut_im; }
 
     // Compute the fft of the beam at the minimal resolution for all antennas,
     // and append it to a map object with a (double time) key.
@@ -149,7 +144,8 @@ namespace LOFAR
 
     // Estime spheroidal convolution function from the support of the fft
     // of the spheroidal in the image plane
-    Double makeSpheroidCut();
+    Double estimateSpheroidalResolution(const IPosition &shape,
+                                        const DirectionCoordinate &coordinates);
 
     // Return the angular resolution required for making the image of the
     // angular size determined by coordinates and shape.
@@ -168,16 +164,17 @@ namespace LOFAR
     template <typename T>
     void taper (Matrix<T> &function) const
     {
-      AlwaysAssert(function.shape()[0] == function.shape()[1], SynthesisError);
-      uInt size = function.shape()[0];
+      AlwaysAssert(function.shape()(0) == function.shape()(1), SynthesisError);
+      //cout<<"function.shape()(0) "<<function.shape()(0)<<endl;
+      uInt size = function.shape()(0);
       Double halfSize = (size-1) / 2.0;
       Vector<Double> x(size);
-      for (uInt i=0; i<size; ++i) {
-        x[i] = spheroidal(abs(i - halfSize) / halfSize);
+      for (uInt i = 0; i < size; ++i) {
+        x(i) = spheroidal(abs(Double(i) - halfSize) / halfSize);
       }
-      for (uInt i=0; i<size; ++i) {
-        for (uInt j=0; j<size; ++j) {
-          function(j, i) *= x[i] * x[j];
+      for(uInt i = 0; i < size; ++i) {
+        for(uInt j = 0; j < size; ++j) {
+          function(j, i) *= x(i) * x(j);
         }
       }
     }
@@ -187,10 +184,9 @@ namespace LOFAR
     template <typename T>
     uInt findSupport(Matrix<T> &function, Double threshold) const
     {
-      ///      Double peak = abs(max(abs(function)));
-      Double peak = max(amplitude(function));
+      Double peak = abs(max(abs(function)));
       threshold *= peak;
-      uInt halfSize = function.shape()[0] / 2;
+      uInt halfSize = function.shape()(0) / 2;
       uInt x = 0;
       while (x < halfSize && abs(function(x, halfSize)) < threshold) {
         ++x;
@@ -204,9 +200,9 @@ namespace LOFAR
     DirectionCoordinate m_coordinates;
     WScale              m_wScale;
     LofarWTerm          m_wTerm;
-    LofarATerm          m_aTerm;
+    LofarATerm          *m_aTerm;
     Double              m_maxW;
-    Double              m_pixelSizeSpheroidal;
+    Double              Pixel_Size_Spheroidal;
     uInt                m_nWPlanes;
     uInt                m_nStations;
     uInt                m_oversampling;
@@ -216,17 +212,16 @@ namespace LOFAR
     //# Stack of the convolution functions for the average PB calculation
     Matrix<Complex>     Spheroid_cut;
     //# Stack of the convolution functions for the average PB calculation
-    Matrix<Float>       Spheroid_cut_im;
+    Matrix<float>       Spheroid_cut_im;
+    DirectionCoordinate coordinates_Conv_Func_image;
+    string              save_image_Aterm_dir;
     //# List of the ferquencies the CF have to be caluclated for
     Vector< Double >    list_freq;
     vector< Matrix<Complex> > m_WplanesStore;
     //# Aterm_store[double time][antenna][channel]=Cube[Npix,Npix,4]
     map<Double, vector< vector< Cube<Complex> > > > m_AtermStore;
-    //# Average primary beam
-    Matrix<Float>       Im_Stack_PB_CF0;
     Int                 itsVerbose;
     Int                 itsMaxSupport;
-    String              itsImgName;
     vector<FFTCMatrix>  itsFFTMachines;
     Double              itsTimeW;
     Double              itsTimeWpar;
