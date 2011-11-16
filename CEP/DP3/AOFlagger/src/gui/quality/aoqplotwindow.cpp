@@ -145,6 +145,9 @@ void AOQPlotWindow::readStatistics()
 	std::cout << "Integrating time statistics to one channel..." << std::endl;
 	_statCollection->IntegrateTimeToOneChannel();
 	
+	StatisticsDerivator test(*_statCollection);
+	test.CreateTFData(QualityTablesFormatter::DVarianceStatistic);
+	
 	std::cout << "Opening statistics panel..." << std::endl;
 	_isOpen = true;
 }

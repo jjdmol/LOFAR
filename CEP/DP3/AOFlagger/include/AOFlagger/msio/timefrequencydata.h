@@ -173,6 +173,21 @@ class TimeFrequencyData
 			return *this;
 		}
 		
+		static TimeFrequencyData CreateComplexTFData(size_t polarisationCount, Image2DCPtr *realImages, Image2DCPtr *imagImages)
+		{
+			switch(polarisationCount)
+			{
+				case 1:
+					return TimeFrequencyData(StokesIPolarisation, realImages[0], imagImages[0]);
+				case 2:
+					return TimeFrequencyData(AutoDipolePolarisation, realImages[0], imagImages[0], realImages[1], imagImages[1]);
+				case 4:
+					return TimeFrequencyData(realImages[0], imagImages[0], realImages[1], imagImages[1], realImages[2], imagImages[2], realImages[3], imagImages[3]);
+				default:
+					throw BadUsageException("Can not create TimeFrequencyData structure with polarization type other than 1, 2 or 4 polarizations.");
+			}
+		}
+		
 		bool IsEmpty() const { return !_containsData; }
 
 		bool HasXX() const
