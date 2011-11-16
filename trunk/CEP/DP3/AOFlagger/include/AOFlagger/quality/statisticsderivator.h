@@ -23,6 +23,9 @@
 #include "statisticscollection.h"
 
 #include <complex>
+#include <set>
+
+#include <AOFlagger/msio/timefrequencydata.h>
 
 class StatisticsDerivator
 {
@@ -64,6 +67,23 @@ class StatisticsDerivator
 		{
 			const std::complex<long double> variance = deriveVariance(n, sum, sumP2);
 			return sqrt(variance.real()*variance.real() + variance.imag()*variance.imag());
+		}
+		
+		TimeFrequencyData CreateTFData()
+		{
+			const std::map<double, std::map<double, DefaultStatistics> > &map = _collection.AllTimeStatistics();
+			std::set<double> frequencies;
+			std::set<double> timesteps;
+			for(std::map<double, std::map<double, DefaultStatistics> >::const_iterator i=map.begin();i!=map.end();++i)
+			{
+				const double frequency = i->first;
+				const std::map<double, DefaultStatistics> &innerMap = i->second;
+				for(std::map<double, DefaultStatistics>::const_iterator j=innerMap.begin();j!=innerMap.end();++j)
+				{
+					const double time = j->first;
+					
+				}
+			}
 		}
 	private:
 		template<typename T>
