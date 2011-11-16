@@ -65,25 +65,78 @@ class StatisticsDerivator
 		
 		static long double VarianceAmplitude(unsigned long n, std::complex<long double> sum, std::complex<long double> sumP2)
 		{
-			const std::complex<long double> variance = deriveVariance(n, sum, sumP2);
+			const std::complex<long double> variance = deriveVariance<long double>(n, sum, sumP2);
 			return sqrt(variance.real()*variance.real() + variance.imag()*variance.imag());
 		}
 		
-		TimeFrequencyData CreateTFData()
+		TimeFrequencyData CreateTFData(QualityTablesFormatter::StatisticKind kind)
 		{
 			const std::map<double, std::map<double, DefaultStatistics> > &map = _collection.AllTimeStatistics();
 			std::set<double> frequencies;
 			std::set<double> timesteps;
+			// List the frequencies and timesteps
 			for(std::map<double, std::map<double, DefaultStatistics> >::const_iterator i=map.begin();i!=map.end();++i)
 			{
 				const double frequency = i->first;
+				frequencies.insert(frequency);
+				
 				const std::map<double, DefaultStatistics> &innerMap = i->second;
 				for(std::map<double, DefaultStatistics>::const_iterator j=innerMap.begin();j!=innerMap.end();++j)
 				{
 					const double time = j->first;
-					
+					timesteps.insert(time);
 				}
 			}
+			std::map<double, size_t> freqIndices;
+			std::map<double, size_t> timeIndices;
+			size_t index = 0;
+			for(std::set<double>::const_iterator i=frequencies.begin();i!=frequencies.end();++i)
+			{
+				freqIndices.insert(std::pair<double, size_t>(*i, index));
+				++index;
+			}
+			index = 0;
+			for(std::set<double>::const_iterator i=timesteps.begin();i!=timesteps.end();++i)
+			{
+				timeIndices.insert(std::pair<double, size_t>(*i, index));
+				++index;
+			}
+			
+			// create the images
+			const size_t pCount = _collection.PolarizationCount();
+			Image2DPtr realImage[pCount], imagImage[pCount];
+			std::cout << "Image size: " << timesteps.size() << " x " << frequencies.size() << "\n";
+			Mask2DPtr mask = Mask2D::CreateSetMaskPtr<true>(timesteps.size(), frequencies.size());
+			for(size_t p=0;p<pCount;++p)
+			{
+				realImage[p] = Image2D::CreateZeroImagePtr(timesteps.size(), frequencies.size());
+				imagImage[p] = Image2D::CreateZeroImagePtr(timesteps.size(), frequencies.size());
+			}
+
+			// add the statistis
+			for(std::map<double, std::map<double, DefaultStatistics> >::const_iterator i=map.begin();i!=map.end();++i)
+			{
+				const double frequency = i->first;
+				const size_t freqIndex = freqIndices.find(frequency)->second;
+				
+				const std::map<double, DefaultStatistics> &innerMap = i->second;
+				for(std::map<double, DefaultStatistics>::const_iterator j=innerMap.begin();j!=innerMap.end();++j)
+				{
+					const double time = j->first;
+					const size_t timeIndex = timeIndices.find(time)->second;
+					
+					mask->SetValue(timeIndex, freqIndex, true);
+					for(size_t p=0;p<pCount;++p)
+					{
+						const std::complex<num_t> statValue = deriveComplex<num_t>(kind, j->second, p);
+						realImage[p]->SetValue(timeIndex, freqIndex, statValue.real());
+						imagImage[p]->SetValue(timeIndex, freqIndex, statValue.imag());
+					}
+				}
+			}
+			TimeFrequencyData data = TimeFrequencyData::CreateComplexTFData(pCount, (Image2DCPtr*) realImage, (Image2DCPtr*) imagImage);
+			data.SetGlobalMask(mask);
+			return data;
 		}
 	private:
 		template<typename T>
@@ -101,8 +154,8 @@ class StatisticsDerivator
 					return statistics.SumP2<T>(polarization);
 					break;
 				case QualityTablesFormatter::VarianceStatistic:
-					return deriveVariance(statistics.count[polarization],
-																statistics.sum[polarization],
+					return deriveVariance<T>(statistics.count[polarization],
+															 	statistics.sum[polarization],
 																statistics.sumP2[polarization]);
 					break;
 				case QualityTablesFormatter::DCountStatistic:
@@ -115,7 +168,7 @@ class StatisticsDerivator
 					return statistics.DSumP2<T>(polarization);
 					break;
 				case QualityTablesFormatter::DVarianceStatistic:
-					return deriveVariance(statistics.dCount[polarization],
+					return deriveVariance<T>(statistics.dCount[polarization],
 																statistics.dSum[polarization],
 																statistics.dSumP2[polarization]);
 					break;
@@ -127,7 +180,8 @@ class StatisticsDerivator
 					break;
 				case QualityTablesFormatter::SignalToNoiseStatistic:
 				{
-					const std::complex<T> variance = deriveComplex<T>(QualityTablesFormatter::DVarianceStatistic, statistics, polarization);
+					const std::complex<T> variance =
+						deriveComplex<T>(QualityTablesFormatter::DVarianceStatistic, statistics, polarization);
 					return std::complex<T>(statistics.Mean<T>(polarization).real() / variance.real(), statistics.Mean<T>(polarization).imag() / variance.imag());
 					break;
 				}
@@ -137,14 +191,14 @@ class StatisticsDerivator
 		}
 		
 		template<typename T>
-		static std::complex<T> deriveVariance(unsigned long n, std::complex<T> sum, std::complex<T> sumP2)
+		static std::complex<T> deriveVariance(unsigned long n, std::complex<long double> sum, std::complex<long double> sumP2)
 		{
-			return std::complex<float>(deriveVariance(n, sum.real(), sumP2.real()),
-																 deriveVariance(n, sum.imag(), sumP2.imag()));
+			return std::complex<T>(deriveVarianceSingle(n, sum.real(), sumP2.real()),
+																 deriveVarianceSingle(n, sum.imag(), sumP2.imag()));
 		}
 		
 		template<typename T>
-		static T deriveVariance(unsigned long n, T sum, T sumP2)
+		static T deriveVarianceSingle(unsigned long n, T sum, T sumP2)
 		{
 			T sumMeanSquared = sum * sum / n;
 			return (sumP2 - sumMeanSquared) / (n-1.0);
