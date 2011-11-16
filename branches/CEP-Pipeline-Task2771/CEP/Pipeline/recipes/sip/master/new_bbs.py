@@ -99,6 +99,11 @@ class new_bbs(BaseRecipe):
                  "data files that were processed by BBS (clobbered if exists)"
         )
     }
+    outputs = {
+        'mapfile': ingredient.FileField(
+            help="Full path to a mapfile describing the processed data"
+        )
+    }
 
     def __init__(self):
         super(new_bbs, self).__init__()
@@ -313,6 +318,7 @@ class new_bbs(BaseRecipe):
                 # ----------------------------------------------------------
                 return 1
 
+        self.outputs['mapfile'] = self.inputs['data_mapfile']
         return 0
 
     def _run_bbs_kernel(self, host, command, env, *arguments):
