@@ -163,6 +163,11 @@ class StatisticsCollection : public Serializable
 				throw std::runtime_error("Requesting single band single timestep statistics in statistics collection with multiple bands");
 		}
 		
+		const std::map<double, std::map<double, DefaultStatistics> > &AllTimeStatistics() const
+		{
+			return _timeStatistics;
+		}
+		
 		const std::map<double, DefaultStatistics> &FrequencyStatistics() const
 		{
 			return _frequencyStatistics;
