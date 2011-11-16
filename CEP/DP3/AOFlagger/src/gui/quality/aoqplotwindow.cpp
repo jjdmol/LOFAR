@@ -88,7 +88,6 @@ void AOQPlotWindow::close()
 		_frequencyPlotPage.CloseStatistics();
 		_summaryPage.CloseStatistics();
 		delete _statCollection;
-		delete[] _antennas;
 		_isOpen = false;
 		
 	}
@@ -102,6 +101,8 @@ void AOQPlotWindow::readStatistics()
 	{
 		aoRemote::ClusteredObservation *observation = aoRemote::ClusteredObservation::Load(_filename);
 		aoRemote::ProcessCommander commander(*observation);
+		commander.PushReadAntennaTablesTask();
+		commander.PushReadQualityTablesTask();
 		commander.Run();
 		if(!commander.Errors().empty())
 		{
@@ -118,15 +119,15 @@ void AOQPlotWindow::readStatistics()
 		_statCollection = new StatisticsCollection(commander.Statistics());
 		delete observation;
 		
-		_antennas = 0;
+		_antennas = commander.Antennas();
 	}
 	else {
 		MeasurementSet *ms = new MeasurementSet(_filename);
 		const unsigned polarizationCount = ms->GetPolarizationCount();
 		unsigned antennaCount = ms->AntennaCount();
-		_antennas = new AntennaInfo[antennaCount];
+		_antennas.clear();
 		for(unsigned a=0;a<antennaCount;++a)
-			_antennas[a] = ms->GetAntennaInfo(a);
+			_antennas.push_back(ms->GetAntennaInfo(a));
 		delete ms;
 
 		QualityTablesFormatter formatter(_filename);

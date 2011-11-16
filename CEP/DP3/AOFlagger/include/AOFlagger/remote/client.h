@@ -24,6 +24,8 @@
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/tcp.hpp>
 
+#include "format.h"
+
 namespace aoRemote {
 
 class Client
@@ -39,7 +41,13 @@ class Client
 		boost::asio::io_service _ioService;
 		boost::asio::ip::tcp::socket _socket;
 		
+		void writeGenericReadException(const std::exception &e);
+		void writeGenericReadError(enum ErrorCode code);
+		
+		std::string readStr(unsigned size);
+		
 		void handleReadQualityTables(unsigned dataSize);
+		void handleReadAntennaTables(unsigned dataSize);
 };
 	
 }

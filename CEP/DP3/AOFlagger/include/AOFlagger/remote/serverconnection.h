@@ -29,6 +29,8 @@
 
 #include <AOFlagger/remote/format.h>
 
+#include <AOFlagger/msio/antennainfo.h>
+
 class StatisticsCollection;
 
 namespace aoRemote {
@@ -41,29 +43,35 @@ class ServerConnection
 		
 		void StopClient();
 		void ReadQualityTables(const std::string &msFilename, class StatisticsCollection &collection);
+		void ReadAntennaTables(const std::string &msFilename, std::vector<AntennaInfo> &antennas);
 		void Start();
 		
 		boost::asio::ip::tcp::socket &Socket() { return _socket; }
 		
 		sigc::signal<void, ServerConnection&> &SignalAwaitingCommand() { return _onAwaitingCommand; }
 		sigc::signal<void, ServerConnection&, StatisticsCollection&> &SignalFinishReadQualityTables() { return _onFinishReadQualityTables; }
+		sigc::signal<void, ServerConnection&, std::vector<AntennaInfo>&> &SignalFinishReadAntennaTables() { return _onFinishReadAntennaTables; }
 		sigc::signal<void, ServerConnection&, const std::string&> &SignalError() { return _onError; }
 		
 		const std::string &Hostname() const { return _hostname; }
-		
-		static std::string GetErrorStr(enum ErrorCode errorCode);
 	private:
 		boost::asio::ip::tcp::socket _socket;
 		std::string _hostname;
 		
 		sigc::signal<void, ServerConnection&> _onAwaitingCommand;
 		sigc::signal<void, ServerConnection&, StatisticsCollection&> _onFinishReadQualityTables;
+		sigc::signal<void, ServerConnection&, std::vector<AntennaInfo>&> _onFinishReadAntennaTables;
 		sigc::signal<void, ServerConnection&, const std::string&> _onError;
 		
 		char *_buffer;
 		
+		void onReceiveInitialResponse();
+		
 		void onReceiveQualityTablesResponseHeader();
 		void onReceiveQualityTablesResponseData(size_t dataSize);
+		
+		void onReceiveAntennaTablesResponseHeader();
+		void onReceiveAntennaTablesResponseData(size_t dataSize);
 		
 		void prepareBuffer(size_t size)
 		{
@@ -71,7 +79,10 @@ class ServerConnection
 			_buffer = new char[size];
 		}
 		
+		void handleError(const GenericReadResponseHeader &header);
+		
 		StatisticsCollection *_collection;
+		std::vector<AntennaInfo> *_antennas;
 };
 	
 }

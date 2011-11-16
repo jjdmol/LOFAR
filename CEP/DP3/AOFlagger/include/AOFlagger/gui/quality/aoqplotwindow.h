@@ -36,6 +36,8 @@
 #include "summarypage.h"
 #include "timeplotpage.h"
 
+#include <AOFlagger/msio/antennainfo.h>
+
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
 */
@@ -68,7 +70,7 @@ class AOQPlotWindow : public Gtk::Window {
 		bool _isOpen;
 		std::string _filename;
 		class StatisticsCollection *_statCollection;
-		class AntennaInfo *_antennas;
+		std::vector<class AntennaInfo> _antennas;
 };
 
 #endif
