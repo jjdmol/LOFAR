@@ -101,9 +101,10 @@ void AOQPlotWindow::readStatistics()
 	if(aoRemote::ClusteredObservation::IsClusteredFilename(_filename))
 	{
 		aoRemote::ClusteredObservation *observation = aoRemote::ClusteredObservation::Load(_filename);
+		_statCollection = new StatisticsCollection();
 		aoRemote::ProcessCommander commander(*observation);
 		commander.PushReadAntennaTablesTask();
-		commander.PushReadQualityTablesTask();
+		commander.PushReadQualityTablesTask(_statCollection);
 		commander.Run();
 		if(!commander.Errors().empty())
 		{
@@ -117,8 +118,6 @@ void AOQPlotWindow::readStatistics()
 			Gtk::MessageDialog dialog(s.str(), false, Gtk::MESSAGE_ERROR);
 			dialog.run();
 		}
-		std::cout << "Copying statistics..." << std::endl;
-		_statCollection = new StatisticsCollection(commander.Statistics());
 		delete observation;
 		
 		_antennas = commander.Antennas();
@@ -140,6 +139,7 @@ void AOQPlotWindow::readStatistics()
 	std::cout << "Integrating baseline statistics to one channel..." << std::endl;
 	_statCollection->IntegrateBaselinesToOneChannel();
 	
+	std::cout << "Copying statistics..." << std::endl;
 	_fullStats = new StatisticsCollection(*_statCollection);
 	
 	std::cout << "Integrating time statistics to one channel..." << std::endl;
