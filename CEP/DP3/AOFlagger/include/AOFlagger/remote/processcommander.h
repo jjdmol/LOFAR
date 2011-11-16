@@ -49,7 +49,11 @@ class ProcessCommander
 		const std::vector<AntennaInfo> &Antennas() const { return _antennas; }
 		const std::vector<std::string> &Errors() const { return _errors; }
 		
-		void PushReadQualityTablesTask() { _tasks.push_back(ReadQualityTablesTask); }
+		void PushReadQualityTablesTask(StatisticsCollection *dest)
+		{
+			_tasks.push_back(ReadQualityTablesTask);
+			_collection = dest;
+		}
 		void PushReadAntennaTablesTask() { _tasks.push_back(ReadAntennaTablesTask); }
 	private:
 		enum Task { NoTask, ReadQualityTablesTask, ReadAntennaTablesTask };

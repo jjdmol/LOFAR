@@ -31,8 +31,6 @@ namespace aoRemote {
 ProcessCommander::ProcessCommander(const ClusteredObservation &observation)
 : _server(), _observation(observation)
 {
-	_collection = new StatisticsCollection();
-	
 	_server.SignalConnectionCreated().connect(sigc::mem_fun(*this, &ProcessCommander::onConnectionCreated));
 }
 
@@ -42,7 +40,6 @@ ProcessCommander::~ProcessCommander()
 	{
 		delete *i;
 	}
-	delete _collection;
 }
 
 void ProcessCommander::Run()

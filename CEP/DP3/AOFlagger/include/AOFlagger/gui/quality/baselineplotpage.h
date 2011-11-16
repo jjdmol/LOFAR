@@ -73,6 +73,7 @@ class BaselinePlotPage : public Gtk::HBox {
 		void onSelectDMean() { _selectStatisticKind = QualityTablesFormatter::DMeanStatistic; updateImage(); }
 		void onSelectDVariance() { _selectStatisticKind = QualityTablesFormatter::DVarianceStatistic; updateImage(); }
 		void onSelectRFIRatio() { _selectStatisticKind = QualityTablesFormatter::RFIRatioStatistic; updateImage(); }
+		void onSelectSNR() { _selectStatisticKind = QualityTablesFormatter::SignalToNoiseStatistic; updateImage(); }
 		
 		void onSelectMinMaxRange() { _imageWidget.SetRange(ImageWidget::MinMax); _imageWidget.Update(); }
 		void onSelectWinsorizedRange() { _imageWidget.SetRange(ImageWidget::Winsorized); _imageWidget.Update(); }
@@ -95,7 +96,7 @@ class BaselinePlotPage : public Gtk::HBox {
 		Gtk::Frame _statisticKindFrame;
 		Gtk::VBox _statisticKindBox;
 		
-		Gtk::RadioButton _countButton, _meanButton, _varianceButton, _dCountButton, _dMeanButton, _dVarianceButton, _rfiRatioButton;
+		Gtk::RadioButton _countButton, _meanButton, _varianceButton, _dCountButton, _dMeanButton, _dVarianceButton, _rfiRatioButton, _snrButton;
 		
 		Gtk::Frame _polarizationFrame;
 		Gtk::VBox _polarizationBox;

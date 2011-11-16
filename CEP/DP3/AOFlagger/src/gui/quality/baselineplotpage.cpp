@@ -34,6 +34,7 @@ BaselinePlotPage::BaselinePlotPage() :
 	_dMeanButton("DMean"),
 	_dVarianceButton("DVariance"),
 	_rfiRatioButton("RFIRatio"),
+	_snrButton("SNR"),
 	_polarizationFrame("Polarization"),
 	_polXXButton("XX"),
 	_polXYButton("XY"),
@@ -112,6 +113,10 @@ void BaselinePlotPage::initStatisticKinds()
 	_rfiRatioButton.set_group(statGroup);
 	_rfiRatioButton.signal_clicked().connect(sigc::mem_fun(*this, &BaselinePlotPage::onSelectRFIRatio));
 	_statisticKindBox.pack_start(_rfiRatioButton, Gtk::PACK_SHRINK);
+	
+	_snrButton.set_group(statGroup);
+	_snrButton.signal_clicked().connect(sigc::mem_fun(*this, &BaselinePlotPage::onSelectSNR));
+	_statisticKindBox.pack_start(_snrButton, Gtk::PACK_SHRINK);
 	
 	_varianceButton.set_active();
 	
