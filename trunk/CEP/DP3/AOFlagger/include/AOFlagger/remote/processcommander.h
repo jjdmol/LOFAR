@@ -30,6 +30,8 @@
 #include "remoteprocess.h"
 #include "server.h"
 
+#include <AOFlagger/msio/antennainfo.h>
+
 class StatisticsCollection;
 
 namespace aoRemote {
@@ -44,12 +46,24 @@ class ProcessCommander
 		
 		static std::string GetHostName();
 		const StatisticsCollection &Statistics() const { return *_collection; }
+		const std::vector<AntennaInfo> &Antennas() const { return _antennas; }
 		const std::vector<std::string> &Errors() const { return _errors; }
+		
+		void PushReadQualityTablesTask() { _tasks.push_back(ReadQualityTablesTask); }
+		void PushReadAntennaTablesTask() { _tasks.push_back(ReadAntennaTablesTask); }
 	private:
+		enum Task { NoTask, ReadQualityTablesTask, ReadAntennaTablesTask };
+		
+		void initializeNextTask();
+		
+		void continueReadQualityTablesTask(ServerConnection &serverConnection);
+		void continueReadAntennaTablesTask(ServerConnection &serverConnection);
+		
 		void makeNodeMap(const ClusteredObservation &observation);
 		void onConnectionCreated(class ServerConnection &serverConnection, bool &acceptConnection);
 		void onConnectionAwaitingCommand(class ServerConnection &serverConnection);
 		void onConnectionFinishReadQualityTables(class ServerConnection &serverConnection, StatisticsCollection &collection);
+		void onConnectionFinishReadAntennaTables(ServerConnection &serverConnection, std::vector<AntennaInfo> &antennas);
 		void onError(ServerConnection &connection, const std::string &error);
 		
 		Server _server;
@@ -57,9 +71,19 @@ class ProcessCommander
 		NodeMap _nodeMap;
 		std::vector<RemoteProcess *> _processes;
 		StatisticsCollection *_collection;
+		std::vector<AntennaInfo> _antennas;
 		const ClusteredObservation _observation;
 		
 		std::vector<std::string> _errors;
+		std::deque<enum Task> _tasks;
+		
+		Task currentTask() const {
+			if(!_tasks.empty()) return _tasks.front();
+			else return NoTask;
+		}
+		void removeCurrentTask() {
+			_tasks.pop_front();
+		}
 };
 
 }

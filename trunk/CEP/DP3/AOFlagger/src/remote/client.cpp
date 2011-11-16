@@ -20,6 +20,8 @@
 
 #include <AOFlagger/remote/client.h>
 
+#include <typeinfo>
+
 #include <boost/asio/read.hpp>
 #include <boost/asio/write.hpp>
 
@@ -28,6 +30,9 @@
 
 #include <AOFlagger/remote/format.h>
 #include <AOFlagger/remote/processcommander.h>
+
+#include <AOFlagger/msio/antennainfo.h>
+#include <AOFlagger/msio/measurementset.h>
 
 namespace aoRemote
 {
@@ -80,8 +85,45 @@ void Client::Run(const std::string &serverHost)
 				return;
 			case ReadQualityTablesRequest:
 				handleReadQualityTables(requestBlock.dataSize);
+				break;
+			case ReadAntennaTablesRequest:
+				handleReadAntennaTables(requestBlock.dataSize);
+				break;
 		}
 	}
+}
+
+void Client::writeGenericReadException(const std::exception &e)
+{
+	std::stringstream s;
+	s << "Exception type " << typeid(e).name() << ": " << e.what();
+	
+	GenericReadResponseHeader header;
+	header.blockIdentifier = GenericReadResponseHeaderId;
+	header.blockSize = sizeof(header);
+	header.errorCode = UnexpectedExceptionOccured;
+	header.dataSize = s.str().size();
+	
+	boost::asio::write(_socket, boost::asio::buffer(&header, sizeof(header)));
+	boost::asio::write(_socket, boost::asio::buffer(s.str()));
+}
+
+void Client::writeGenericReadError(enum ErrorCode error)
+{
+	GenericReadResponseHeader header;
+	header.blockIdentifier = GenericReadResponseHeaderId;
+	header.blockSize = sizeof(header);
+	header.errorCode = CouldNotOpenTableError;
+	header.dataSize = 0;
+	boost::asio::write(_socket, boost::asio::buffer(&header, sizeof(header)));
+}
+
+std::string Client::readStr(unsigned size)
+{
+	char data[size+1];
+	boost::asio::read(_socket, boost::asio::buffer(data, size));
+	data[size] = 0;
+	return std::string(data);
 }
 
 void Client::handleReadQualityTables(unsigned dataSize)
@@ -91,37 +133,68 @@ void Client::handleReadQualityTables(unsigned dataSize)
 		boost::asio::read(_socket, boost::asio::buffer(&options.flags, sizeof(options.flags)));
 		
 		unsigned nameLength = dataSize - sizeof(options.flags);
-		char data[nameLength+1];
-		boost::asio::read(_socket, boost::asio::buffer(data, nameLength));
-		data[nameLength] = 0;
-		options.msFilename = data;
+		options.msFilename = readStr(nameLength);
 		
 		QualityTablesFormatter formatter(options.msFilename);
-		StatisticsCollection collection(formatter.GetPolarizationCount());
-		collection.Load(formatter);
+		if(!formatter.TableExists(QualityTablesFormatter::KindNameTable))
+		{
+			writeGenericReadError(CouldNotOpenTableError);
+		} else {
+			StatisticsCollection collection(formatter.GetPolarizationCount());
+			collection.Load(formatter);
+			
+			GenericReadResponseHeader header;
+			header.blockIdentifier = GenericReadResponseHeaderId;
+			header.blockSize = sizeof(header);
+			header.errorCode = NoError;
+			std::ostringstream s;
+			collection.Serialize(s);
+			const std::string str = s.str();
+			header.dataSize = str.size();
+			
+			boost::asio::write(_socket, boost::asio::buffer(&header, sizeof(header)));
+			boost::asio::write(_socket, boost::asio::buffer(str));
+		}
+	} catch(std::exception &e) {
+		writeGenericReadException(e);
+	}
+}
+
+void Client::handleReadAntennaTables(unsigned dataSize)
+{
+	try {
+		ReadAntennaTablesRequestOptions options;
+		boost::asio::read(_socket, boost::asio::buffer(&options.flags, sizeof(options.flags)));
 		
-		ReadQualityTablesResponseHeader header;
-		header.blockIdentifier = ReadQualityTablesResponseHeaderId;
+		unsigned nameLength = dataSize - sizeof(options.flags);
+		options.msFilename = readStr(nameLength);
+		
+		std::ostringstream buffer;
+		
+		// Serialize the antennae info
+		MeasurementSet ms(options.msFilename);
+		size_t antennas = ms.AntennaCount();
+		Serializable::SerializeToUInt32(buffer, antennas);
+		for(unsigned aIndex = 0; aIndex<antennas; ++aIndex)
+		{
+			AntennaInfo antennaInfo = ms.GetAntennaInfo(aIndex);
+			antennaInfo.Serialize(buffer);
+		}
+		
+		GenericReadResponseHeader header;
+		header.blockIdentifier = GenericReadResponseHeaderId;
 		header.blockSize = sizeof(header);
 		header.errorCode = NoError;
-		std::stringstream s;
-		collection.Serialize(s);
-		const std::string str = s.str();
+		const std::string str = buffer.str();
 		header.dataSize = str.size();
 		
 		boost::asio::write(_socket, boost::asio::buffer(&header, sizeof(header)));
-		boost::asio::write(_socket, boost::asio::buffer(s.str()));
+		boost::asio::write(_socket, boost::asio::buffer(str));
 	} catch(std::exception &e) {
-		ReadQualityTablesResponseHeader header;
-		header.blockIdentifier = ReadQualityTablesResponseHeaderId;
-		header.blockSize = sizeof(header);
-		header.errorCode = UnexpectedExceptionOccured;
-		header.dataSize = 0;
-		
-		// TODO the exception should be pushed as well
-		boost::asio::write(_socket, boost::asio::buffer(&header, sizeof(header)));
+		writeGenericReadException(e);
 	}
 }
+
 
 } // namespace
 

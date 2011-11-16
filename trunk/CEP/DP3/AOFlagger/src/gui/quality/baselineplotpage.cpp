@@ -327,8 +327,8 @@ void BaselinePlotPage::onMouseMoved(size_t x, size_t y)
 		antenna1Name = a1.str();
 		antenna2Name = a2.str();
 	} else {
-		antenna1Name = _antennas[x].name;
-		antenna2Name = _antennas[y].name;
+		antenna1Name = (*_antennas)[x].name;
+		antenna2Name = (*_antennas)[y].name;
 	}
 	const QualityTablesFormatter::StatisticKind kind = GetSelectedStatisticKind();
 	const std::string &kindName = QualityTablesFormatter::KindToName(kind);

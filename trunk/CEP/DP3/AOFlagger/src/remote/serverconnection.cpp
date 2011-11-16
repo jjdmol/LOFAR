@@ -56,13 +56,18 @@ void ServerConnection::Start()
 	
 	boost::asio::write(_socket, boost::asio::buffer(&initialBlock, sizeof(initialBlock)));
 	
-	InitialResponseBlock initialResponse;
-	boost::asio::read(_socket, boost::asio::buffer(&initialResponse, sizeof(initialResponse)));
+	prepareBuffer(sizeof(InitialResponseBlock));
+	boost::asio::async_read(_socket, boost::asio::buffer(_buffer, sizeof(InitialResponseBlock)), boost::bind(&ServerConnection::onReceiveInitialResponse, boost::ref(*this)));
+}
+
+void ServerConnection::onReceiveInitialResponse()
+{
+	InitialResponseBlock initialResponse = *reinterpret_cast<InitialResponseBlock*>(_buffer);
 	enum ErrorCode errorCode = (enum ErrorCode) initialResponse.errorCode;
 	if(initialResponse.blockIdentifier != InitialResponseId || initialResponse.blockSize != sizeof(initialResponse))
 		throw std::runtime_error("Bad response from client during initial response");
 	if(errorCode != NoError)
-		throw std::runtime_error(std::string("Error reported by client during initial response: ") + GetErrorStr(errorCode));
+		throw std::runtime_error(std::string("Error reported by client during initial response: ") + ErrorStr::GetStr(errorCode));
 	if(initialResponse.negotiatedProtocolVersion != AO_REMOTE_PROTOCOL_VERSION)
 		throw std::runtime_error("Client seems to run different protocol version");
 	if(initialResponse.hostNameSize == 0 || initialResponse.hostNameSize > 65536)
@@ -108,22 +113,65 @@ void ServerConnection::ReadQualityTables(const std::string &msFilename, Statisti
 	
 	boost::asio::write(_socket, boost::asio::buffer(reqBuffer.str()));
 	
-	prepareBuffer(sizeof(ReadQualityTablesResponseHeader));
-	boost::asio::async_read(_socket, boost::asio::buffer(_buffer, sizeof(ReadQualityTablesResponseHeader)),
+	prepareBuffer(sizeof(GenericReadResponseHeader));
+	boost::asio::async_read(_socket, boost::asio::buffer(_buffer, sizeof(GenericReadResponseHeader)),
 		boost::bind(&ServerConnection::onReceiveQualityTablesResponseHeader, boost::ref(*this)));
+}
+
+void ServerConnection::ReadAntennaTables(const std::string &msFilename, std::vector<AntennaInfo> &antennas)
+{
+	_antennas = &antennas;
+	
+	std::stringstream reqBuffer;
+	
+	RequestBlock requestBlock;
+	ReadAntennaTablesRequestOptions options;
+	
+	requestBlock.blockIdentifier = RequestId;
+	requestBlock.blockSize = sizeof(requestBlock);
+	requestBlock.dataSize = sizeof(options.flags) + msFilename.size();
+	requestBlock.request = ReadAntennaTablesRequest;
+	reqBuffer.write(reinterpret_cast<char *>(&requestBlock), sizeof(requestBlock));
+	
+	options.flags = 0;
+	options.msFilename = msFilename;
+	reqBuffer.write(reinterpret_cast<char *>(&options.flags), sizeof(options.flags));
+	reqBuffer.write(reinterpret_cast<const char *>(options.msFilename.c_str()), options.msFilename.size());
+	
+	boost::asio::write(_socket, boost::asio::buffer(reqBuffer.str()));
+	
+	std::cout << "Requesting antenna tables from " << this->Hostname() << "...\n";
+	
+	prepareBuffer(sizeof(GenericReadResponseHeader));
+	boost::asio::async_read(_socket, boost::asio::buffer(_buffer, sizeof(GenericReadResponseHeader)),
+		boost::bind(&ServerConnection::onReceiveAntennaTablesResponseHeader, boost::ref(*this)));
+}
+
+void ServerConnection::handleError(const GenericReadResponseHeader &header)
+{
+	std::stringstream s;
+	s << "Client reported \"" << ErrorStr::GetStr(header.errorCode) << '\"';
+	if(header.dataSize > 0)
+	{
+		char message[header.dataSize+1];
+		boost::asio::read(_socket, boost::asio::buffer(message, header.dataSize));
+		message[header.dataSize] = 0;
+		s << " (detailed info: " << message << ')';
+	}
+	_onError(*this, s.str());
 }
 
 void ServerConnection::onReceiveQualityTablesResponseHeader()
 {
-	ReadQualityTablesResponseHeader responseHeader = *reinterpret_cast<ReadQualityTablesResponseHeader*>(_buffer);
-	if(responseHeader.blockIdentifier != ReadQualityTablesResponseHeaderId || responseHeader.blockSize != sizeof(responseHeader))
+	GenericReadResponseHeader responseHeader = *reinterpret_cast<GenericReadResponseHeader*>(_buffer);
+	if(responseHeader.blockIdentifier != GenericReadResponseHeaderId || responseHeader.blockSize != sizeof(responseHeader))
 	{
-		_onError(*this, "Bad response from client upon read tables request");
+		_onError(*this, "Bad response from client upon read quality tables request");
 		StopClient();
 	}
 	else if(responseHeader.errorCode != NoError)
 	{
-		_onError(*this, "Error reported by client upon read tables request");
+		handleError(responseHeader);
 		_onAwaitingCommand(*this);
 	}
 	else {
@@ -137,33 +185,53 @@ void ServerConnection::onReceiveQualityTablesResponseData(size_t dataSize)
 {
 	std::istringstream stream;
 	if(stream.rdbuf()->pubsetbuf(_buffer, dataSize) == 0)
-	{
 		throw std::runtime_error("Could not set string buffer");
-	}
 	
-	std::cout << "Unserializing stream of size " << dataSize << "..." << std::endl;
+	std::cout << "Received quality table of size " << dataSize << "." << std::endl;
 	_collection->Unserialize(stream);
 
 	_onFinishReadQualityTables(*this, *_collection);
 	_onAwaitingCommand(*this);
 }
 
-std::string ServerConnection::GetErrorStr(enum ErrorCode errorCode)
+void ServerConnection::onReceiveAntennaTablesResponseHeader()
 {
-	switch(errorCode)
+	std::cout << "Receiving antenna tables...\n";
+	GenericReadResponseHeader responseHeader = *reinterpret_cast<GenericReadResponseHeader*>(_buffer);
+	if(responseHeader.blockIdentifier != GenericReadResponseHeaderId || responseHeader.blockSize != sizeof(responseHeader))
 	{
-		case NoError: return "No error";
-			break;
-		case UnexpectedExceptionOccured: return "Unexpected exception occured";
-			break;
-		case ProtocolNotUnderstoodError: return "Protocol not understood";
-			break;
-		default: return "Unknown error code";
-			break;
+		_onError(*this, "Bad response from client upon read antenna tables request");
+		StopClient();
 	}
-	
+	else if(responseHeader.errorCode != NoError)
+	{
+		handleError(responseHeader);
+		_onAwaitingCommand(*this);
+	}
+	else {
+		prepareBuffer(responseHeader.dataSize);
+		boost::asio::async_read(_socket, boost::asio::buffer(_buffer, responseHeader.dataSize),
+			boost::bind(&ServerConnection::onReceiveAntennaTablesResponseData, boost::ref(*this), responseHeader.dataSize));
+	}
 }
 
+void ServerConnection::onReceiveAntennaTablesResponseData(size_t dataSize)
+{
+	std::istringstream stream;
+	if(stream.rdbuf()->pubsetbuf(_buffer, dataSize) == 0)
+		throw std::runtime_error("Could not set string buffer");
+	
+	std::cout << "Received antenna table of size " << dataSize << "." << std::endl;
+	size_t count = Serializable::UnserializeUInt32(stream);
+	for(size_t i=0;i<count;++i)
+	{
+		_antennas->push_back(AntennaInfo());
+		_antennas->rbegin()->Unserialize(stream);
+	}
+
+	_onFinishReadAntennaTables(*this, *_antennas);
+	_onAwaitingCommand(*this);
+}
 
 }
 

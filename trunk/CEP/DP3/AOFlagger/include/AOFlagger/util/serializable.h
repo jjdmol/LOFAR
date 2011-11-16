@@ -23,6 +23,8 @@
 #include <iostream>
 #include <complex>
 
+#include <stdint.h>
+
 class Serializable
 {
 	public:
@@ -61,6 +63,12 @@ class Serializable
 			stream.write(reinterpret_cast<char *>(&value), sizeof(value));
 		}
 		
+		static void SerializeToString(std::ostream &stream, const std::string &str)
+		{
+			SerializeToUInt64(stream, str.size());
+			stream.write(str.c_str(), str.size());
+		}
+		
 		static uint64_t UnserializeUInt64(std::istream &stream)
 		{
 			return Unserialize<uint64_t>(stream);
@@ -84,6 +92,15 @@ class Serializable
 		static std::complex<long double> UnserializeLDoubleC(std::istream &stream)
 		{
 			return Unserialize<std::complex<long double> >(stream);
+		}
+		
+		static void UnserializeString(std::istream &stream, std::string &destStr)
+		{
+			size_t size = UnserializeUInt64(stream);
+			char *str = new char[size];
+			stream.read(str, size);
+			destStr = std::string(str, size);
+			delete[] str;
 		}
 	private:
 		template<typename T>

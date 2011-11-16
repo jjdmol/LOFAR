@@ -42,10 +42,10 @@ class BaselinePlotPage : public Gtk::HBox {
 			return _selectStatisticKind;
 		}
 		
-		void SetStatistics(class StatisticsCollection *statCollection, const class AntennaInfo *antennas)
+		void SetStatistics(class StatisticsCollection *statCollection, const std::vector<class AntennaInfo> &antennas)
 		{
 			_statCollection = statCollection;
-			_antennas = antennas;
+			_antennas = &antennas;
 			updateImage();
 		}
 		void CloseStatistics()
@@ -116,7 +116,7 @@ class BaselinePlotPage : public Gtk::HBox {
 		QualityTablesFormatter::StatisticKind _selectStatisticKind;
 		ImageWidget _imageWidget;
 		class StatisticsCollection *_statCollection;
-		const class AntennaInfo *_antennas;
+		const std::vector<class AntennaInfo> *_antennas;
 		
 		sigc::signal<void, const std::string &> _signalStatusChange;
 };
