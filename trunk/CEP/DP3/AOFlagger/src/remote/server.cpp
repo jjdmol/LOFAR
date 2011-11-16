@@ -44,12 +44,12 @@ void Server::Run()
 
 void Server::startAccept()
 {
-	ServerConnection *connection = new ServerConnection(_ioService);
+	ServerConnectionPtr connection = ServerConnection::Create(_ioService);
 	
 	_acceptor.async_accept(connection->Socket(), boost::bind(&Server::handleAccept, this, connection, boost::asio::placeholders::error));
 }
 
-void Server::handleAccept(ServerConnection *connection, const boost::system::error_code &error)
+void Server::handleAccept(ServerConnectionPtr connection, const boost::system::error_code &error)
 {
 	std::cout << "Connection accepted." << std::endl;
 	
@@ -58,7 +58,7 @@ void Server::handleAccept(ServerConnection *connection, const boost::system::err
 		if (!error)
 		{
 			bool acceptConnection = true;
-			_onConnectionCreated(*connection, acceptConnection);
+			_onConnectionCreated(connection, acceptConnection);
 			if(acceptConnection)
 				connection->Start();
 		}
