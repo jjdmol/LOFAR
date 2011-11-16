@@ -35,6 +35,7 @@ TwoDimensionalPlotPage::TwoDimensionalPlotPage() :
 	_dMeanButton("DMean"),
 	_dVarianceButton("DVariance"),
 	_rfiRatioButton("RFIRatio"),
+	_snrButton("SNR"),
 	_polarizationFrame("Polarization"),
 	_polXXButton("XX"),
 	_polXYButton("XY"),
@@ -42,6 +43,7 @@ TwoDimensionalPlotPage::TwoDimensionalPlotPage() :
 	_polYYButton("YY"),
 	_polXXandYYButton("XX/2+YY/2"),
 	_polXYandYXButton("XY/2+YX/2"),
+	_phaseFrame("Phase"),
 	_amplitudeButton("Amplitude"),
 	_phaseButton("Phase"),
 	_realButton("Real"),
@@ -80,7 +82,8 @@ void TwoDimensionalPlotPage::updatePlot()
 			plotStatistic(QualityTablesFormatter::DVarianceStatistic);
 		if(_rfiRatioButton.get_active())
 			plotStatistic(QualityTablesFormatter::RFIRatioStatistic);
-		
+		if(_snrButton.get_active())
+			plotStatistic(QualityTablesFormatter::SignalToNoiseStatistic);
 		_plotWidget.Update();
 	}
 }
@@ -195,6 +198,9 @@ void TwoDimensionalPlotPage::initStatisticKindButtons()
 	
 	_rfiRatioButton.signal_clicked().connect(sigc::mem_fun(*this, &TwoDimensionalPlotPage::updatePlot));
 	_statisticBox.pack_start(_rfiRatioButton, Gtk::PACK_SHRINK);
+	
+	_snrButton.signal_clicked().connect(sigc::mem_fun(*this, &TwoDimensionalPlotPage::updatePlot));
+	_statisticBox.pack_start(_snrButton, Gtk::PACK_SHRINK);
 	
 	_statisticFrame.add(_statisticBox);
 	
