@@ -88,6 +88,7 @@ void AOQPlotWindow::close()
 		_frequencyPlotPage.CloseStatistics();
 		_summaryPage.CloseStatistics();
 		delete _statCollection;
+		delete _fullStats;
 		_isOpen = false;
 		
 	}
@@ -116,6 +117,7 @@ void AOQPlotWindow::readStatistics()
 			Gtk::MessageDialog dialog(s.str(), false, Gtk::MESSAGE_ERROR);
 			dialog.run();
 		}
+		std::cout << "Copying statistics..." << std::endl;
 		_statCollection = new StatisticsCollection(commander.Statistics());
 		delete observation;
 		
@@ -137,6 +139,9 @@ void AOQPlotWindow::readStatistics()
 	// TODO ofcourse we want multi dimensional stats at one point :D
 	std::cout << "Integrating baseline statistics to one channel..." << std::endl;
 	_statCollection->IntegrateBaselinesToOneChannel();
+	
+	_fullStats = new StatisticsCollection(*_statCollection);
+	
 	std::cout << "Integrating time statistics to one channel..." << std::endl;
 	_statCollection->IntegrateTimeToOneChannel();
 	

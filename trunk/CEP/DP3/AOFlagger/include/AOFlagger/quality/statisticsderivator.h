@@ -22,6 +22,8 @@
 
 #include "statisticscollection.h"
 
+#include <complex>
+
 class StatisticsDerivator
 {
 	public:
@@ -103,6 +105,12 @@ class StatisticsDerivator
 				case QualityTablesFormatter::RFICountStatistic:
 					return std::complex<T>(statistics.rfiCount[polarization], 0.0f);
 					break;
+				case QualityTablesFormatter::SignalToNoiseStatistic:
+				{
+					const std::complex<T> variance = deriveComplex<T>(QualityTablesFormatter::DVarianceStatistic, statistics, polarization);
+					return std::complex<T>(statistics.Mean<T>(polarization).real() / variance.real(), statistics.Mean<T>(polarization).imag() / variance.imag());
+					break;
+				}
 				default:
 					throw std::runtime_error("Can not derive requested statistic");
 			}

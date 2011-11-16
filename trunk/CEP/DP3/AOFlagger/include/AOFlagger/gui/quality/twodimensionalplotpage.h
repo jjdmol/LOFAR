@@ -90,7 +90,7 @@ class TwoDimensionalPlotPage : public Gtk::HBox {
 		
 		Gtk::Frame _statisticFrame;
 		Gtk::VBox _statisticBox;
-		Gtk::CheckButton _countButton, _meanButton, _varianceButton, _dCountButton, _dMeanButton, _dVarianceButton, _rfiRatioButton;
+		Gtk::CheckButton _countButton, _meanButton, _varianceButton, _dCountButton, _dMeanButton, _dVarianceButton,  _rfiRatioButton, _snrButton;
 		
 		Gtk::Frame _polarizationFrame;
 		Gtk::VBox _polarizationBox;
