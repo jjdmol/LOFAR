@@ -188,12 +188,6 @@ lofar_add_library(rfiengine
   Package__Version.cc
   ${IMAGING_FILES} ${MSIO_FILES} ${QUALITY_FILES} ${STRATEGY_FILES} ${UTIL_FILES})
 
-if(BOOST_ASIO_H_FOUND AND SIGCXX_FOUND)
-lofar_add_bin_program(aoremoteclient aoremoteclient.cpp
-  ${REMOTE_FILES} )
-  target_link_libraries(aoremoteclient ${SIGCXX_LIBRARIES})
-endif(BOOST_ASIO_H_FOUND AND SIGCXX_FOUND)
-
 if(GTKMM_FOUND)
   include_directories(${GTKMM_INCLUDE_DIRS})
   link_directories(${GTKMM_LIBDIR})
@@ -230,4 +224,8 @@ lofar_add_bin_program(versionaoflagger versionaoflagger.cc Package__Version.cc)
 if(BOOST_ASIO_H_FOUND AND SIGCXX_FOUND)
   lofar_add_bin_program(aoquality aoquality.cpp ${REMOTE_FILES})
   target_link_libraries(aoquality ${SIGCXX_LIBRARIES})
+
+	lofar_add_bin_program(aoremoteclient aoremoteclient.cpp
+  ${REMOTE_FILES} )
+  target_link_libraries(aoremoteclient ${SIGCXX_LIBRARIES})
 endif(BOOST_ASIO_H_FOUND AND SIGCXX_FOUND)
