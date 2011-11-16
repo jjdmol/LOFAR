@@ -66,19 +66,19 @@ void ProcessCommander::Run()
 	}
 }
 
-void ProcessCommander::continueReadQualityTablesTask(ServerConnection &serverConnection)
+void ProcessCommander::continueReadQualityTablesTask(ServerConnectionPtr serverConnection)
 {
-	const std::string &hostname = serverConnection.Hostname();
+	const std::string &hostname = serverConnection->Hostname();
 	NodeMap::iterator iter = _nodeMap.find(hostname);
 	if(iter == _nodeMap.end())
 	{
-		serverConnection.StopClient();
+		serverConnection->StopClient();
 	}
 	else {
 		std::deque<ClusteredObservationItem> &items = iter->second;
 		if(items.empty())
 		{
-			serverConnection.StopClient();
+			serverConnection->StopClient();
 			_nodeMap.erase(iter);
 			if(_nodeMap.empty())
 			{
@@ -92,21 +92,21 @@ void ProcessCommander::continueReadQualityTablesTask(ServerConnection &serverCon
 			const std::string msFilename = items.front().LocalPath();
 			items.pop_front();
 			StatisticsCollection *collection = new StatisticsCollection();
-			serverConnection.ReadQualityTables(msFilename, *collection);
+			serverConnection->ReadQualityTables(msFilename, *collection);
 		}
 	}
 }
 
-void ProcessCommander::continueReadAntennaTablesTask(ServerConnection &serverConnection)
+void ProcessCommander::continueReadAntennaTablesTask(ServerConnectionPtr serverConnection)
 {
 	removeCurrentTask();
 	initializeNextTask();
 	
-	const std::string &hostname = serverConnection.Hostname();
+	const std::string &hostname = serverConnection->Hostname();
 	NodeMap::iterator iter = _nodeMap.find(hostname);
 	const std::string msFilename = iter->second.front().LocalPath();
 	std::vector<AntennaInfo> *antennas = new std::vector<AntennaInfo>();
-	serverConnection.ReadAntennaTables(msFilename, *antennas);
+	serverConnection->ReadAntennaTables(msFilename, *antennas);
 }
 
 void ProcessCommander::initializeNextTask()
@@ -145,18 +145,18 @@ std::string ProcessCommander::GetHostName()
 	}
 }
 
-void ProcessCommander::onConnectionCreated(ServerConnection &serverConnection, bool &acceptConnection)
+void ProcessCommander::onConnectionCreated(ServerConnectionPtr serverConnection, bool &acceptConnection)
 {
-	serverConnection.SignalAwaitingCommand().connect(sigc::mem_fun(*this, &ProcessCommander::onConnectionAwaitingCommand));
-	serverConnection.SignalFinishReadQualityTables().connect(sigc::mem_fun(*this, &ProcessCommander::onConnectionFinishReadQualityTables));
-	serverConnection.SignalFinishReadAntennaTables().connect(sigc::mem_fun(*this, &ProcessCommander::onConnectionFinishReadAntennaTables));
-	serverConnection.SignalError().connect(sigc::mem_fun(*this, &ProcessCommander::onError));
+	serverConnection->SignalAwaitingCommand().connect(sigc::mem_fun(*this, &ProcessCommander::onConnectionAwaitingCommand));
+	serverConnection->SignalFinishReadQualityTables().connect(sigc::mem_fun(*this, &ProcessCommander::onConnectionFinishReadQualityTables));
+	serverConnection->SignalFinishReadAntennaTables().connect(sigc::mem_fun(*this, &ProcessCommander::onConnectionFinishReadAntennaTables));
+	serverConnection->SignalError().connect(sigc::mem_fun(*this, &ProcessCommander::onError));
 	acceptConnection = true;
 }
 
-void ProcessCommander::onConnectionAwaitingCommand(ServerConnection &serverConnection)
+void ProcessCommander::onConnectionAwaitingCommand(ServerConnectionPtr serverConnection)
 {
-	const std::string &hostname = serverConnection.Hostname();
+	const std::string &hostname = serverConnection->Hostname();
 	std::cout << "Connection " << hostname << " awaiting commands..." << std::endl;
 	
 	switch(currentTask())
@@ -168,12 +168,12 @@ void ProcessCommander::onConnectionAwaitingCommand(ServerConnection &serverConne
 			continueReadAntennaTablesTask(serverConnection);
 			break;
 		case NoTask:
-			serverConnection.StopClient();
+			serverConnection->StopClient();
 			break;
 	}
 }
 
-void ProcessCommander::onConnectionFinishReadQualityTables(ServerConnection &serverConnection, StatisticsCollection &collection)
+void ProcessCommander::onConnectionFinishReadQualityTables(ServerConnectionPtr serverConnection, StatisticsCollection &collection)
 {
 	if(collection.PolarizationCount() == 0)
 		throw std::runtime_error("Client sent StatisticsCollection with 0 polarizations.");
@@ -187,16 +187,16 @@ void ProcessCommander::onConnectionFinishReadQualityTables(ServerConnection &ser
 	delete &collection;
 }
 
-void ProcessCommander::onConnectionFinishReadAntennaTables(ServerConnection &serverConnection, std::vector<AntennaInfo> &antennas)
+void ProcessCommander::onConnectionFinishReadAntennaTables(ServerConnectionPtr serverConnection, std::vector<AntennaInfo> &antennas)
 {
 	_antennas = antennas;
 	delete &antennas;
 }
 
-void ProcessCommander::onError(ServerConnection &connection, const std::string &error)
+void ProcessCommander::onError(ServerConnectionPtr connection, const std::string &error)
 {
 	std::stringstream s;
-	s << "On connection with " << connection.Hostname() << ", reported error was: " << error;
+	s << "On connection with " << connection->Hostname() << ", reported error was: " << error;
 	_errors.push_back(s.str());
 }
 

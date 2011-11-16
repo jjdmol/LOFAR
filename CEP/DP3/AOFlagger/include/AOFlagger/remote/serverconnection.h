@@ -25,6 +25,8 @@
 
 #include <boost/asio/ip/tcp.hpp>
 
+#include <boost/enable_shared_from_this.hpp>
+
 #include <sigc++/signal.h>
 
 #include <AOFlagger/remote/format.h>
@@ -35,10 +37,16 @@ class StatisticsCollection;
 
 namespace aoRemote {
 
-class ServerConnection
+typedef boost::shared_ptr<class ServerConnection> ServerConnectionPtr;
+
+class ServerConnection : public boost::enable_shared_from_this<ServerConnection>
+
 {
 	public:
-		ServerConnection(boost::asio::io_service &ioService);
+		static ServerConnectionPtr Create(boost::asio::io_service &ioService)
+		{
+			return ServerConnectionPtr(new ServerConnection(ioService));
+		}
 		~ServerConnection();
 		
 		void StopClient();
@@ -48,20 +56,21 @@ class ServerConnection
 		
 		boost::asio::ip::tcp::socket &Socket() { return _socket; }
 		
-		sigc::signal<void, ServerConnection&> &SignalAwaitingCommand() { return _onAwaitingCommand; }
-		sigc::signal<void, ServerConnection&, StatisticsCollection&> &SignalFinishReadQualityTables() { return _onFinishReadQualityTables; }
-		sigc::signal<void, ServerConnection&, std::vector<AntennaInfo>&> &SignalFinishReadAntennaTables() { return _onFinishReadAntennaTables; }
-		sigc::signal<void, ServerConnection&, const std::string&> &SignalError() { return _onError; }
+		sigc::signal<void, ServerConnectionPtr> &SignalAwaitingCommand() { return _onAwaitingCommand; }
+		sigc::signal<void, ServerConnectionPtr, StatisticsCollection&> &SignalFinishReadQualityTables() { return _onFinishReadQualityTables; }
+		sigc::signal<void, ServerConnectionPtr, std::vector<AntennaInfo>&> &SignalFinishReadAntennaTables() { return _onFinishReadAntennaTables; }
+		sigc::signal<void, ServerConnectionPtr, const std::string&> &SignalError() { return _onError; }
 		
 		const std::string &Hostname() const { return _hostname; }
 	private:
+		ServerConnection(boost::asio::io_service &ioService);
 		boost::asio::ip::tcp::socket _socket;
 		std::string _hostname;
 		
-		sigc::signal<void, ServerConnection&> _onAwaitingCommand;
-		sigc::signal<void, ServerConnection&, StatisticsCollection&> _onFinishReadQualityTables;
-		sigc::signal<void, ServerConnection&, std::vector<AntennaInfo>&> _onFinishReadAntennaTables;
-		sigc::signal<void, ServerConnection&, const std::string&> _onError;
+		sigc::signal<void, ServerConnectionPtr> _onAwaitingCommand;
+		sigc::signal<void, ServerConnectionPtr, StatisticsCollection&> _onFinishReadQualityTables;
+		sigc::signal<void, ServerConnectionPtr, std::vector<AntennaInfo>&> _onFinishReadAntennaTables;
+		sigc::signal<void, ServerConnectionPtr, const std::string&> _onError;
 		
 		char *_buffer;
 		

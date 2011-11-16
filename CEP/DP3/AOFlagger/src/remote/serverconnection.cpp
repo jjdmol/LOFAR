@@ -57,7 +57,7 @@ void ServerConnection::Start()
 	boost::asio::write(_socket, boost::asio::buffer(&initialBlock, sizeof(initialBlock)));
 	
 	prepareBuffer(sizeof(InitialResponseBlock));
-	boost::asio::async_read(_socket, boost::asio::buffer(_buffer, sizeof(InitialResponseBlock)), boost::bind(&ServerConnection::onReceiveInitialResponse, boost::ref(*this)));
+	boost::asio::async_read(_socket, boost::asio::buffer(_buffer, sizeof(InitialResponseBlock)), boost::bind(&ServerConnection::onReceiveInitialResponse, shared_from_this()));
 }
 
 void ServerConnection::onReceiveInitialResponse()
@@ -78,7 +78,7 @@ void ServerConnection::onReceiveInitialResponse()
 	hostname[initialResponse.hostNameSize] = 0;
 	_hostname = hostname;
 	
-	_onAwaitingCommand(*this);
+	_onAwaitingCommand(shared_from_this());
 }
 
 void ServerConnection::StopClient()
@@ -115,7 +115,7 @@ void ServerConnection::ReadQualityTables(const std::string &msFilename, Statisti
 	
 	prepareBuffer(sizeof(GenericReadResponseHeader));
 	boost::asio::async_read(_socket, boost::asio::buffer(_buffer, sizeof(GenericReadResponseHeader)),
-		boost::bind(&ServerConnection::onReceiveQualityTablesResponseHeader, boost::ref(*this)));
+		boost::bind(&ServerConnection::onReceiveQualityTablesResponseHeader, shared_from_this()));
 }
 
 void ServerConnection::ReadAntennaTables(const std::string &msFilename, std::vector<AntennaInfo> &antennas)
@@ -140,11 +140,11 @@ void ServerConnection::ReadAntennaTables(const std::string &msFilename, std::vec
 	
 	boost::asio::write(_socket, boost::asio::buffer(reqBuffer.str()));
 	
-	std::cout << "Requesting antenna tables from " << this->Hostname() << "...\n";
+	std::cout << "Requesting antenna tables from " << Hostname() << "...\n";
 	
 	prepareBuffer(sizeof(GenericReadResponseHeader));
 	boost::asio::async_read(_socket, boost::asio::buffer(_buffer, sizeof(GenericReadResponseHeader)),
-		boost::bind(&ServerConnection::onReceiveAntennaTablesResponseHeader, boost::ref(*this)));
+		boost::bind(&ServerConnection::onReceiveAntennaTablesResponseHeader, shared_from_this()));
 }
 
 void ServerConnection::handleError(const GenericReadResponseHeader &header)
@@ -158,7 +158,7 @@ void ServerConnection::handleError(const GenericReadResponseHeader &header)
 		message[header.dataSize] = 0;
 		s << " (detailed info: " << message << ')';
 	}
-	_onError(*this, s.str());
+	_onError(shared_from_this(), s.str());
 }
 
 void ServerConnection::onReceiveQualityTablesResponseHeader()
@@ -166,18 +166,18 @@ void ServerConnection::onReceiveQualityTablesResponseHeader()
 	GenericReadResponseHeader responseHeader = *reinterpret_cast<GenericReadResponseHeader*>(_buffer);
 	if(responseHeader.blockIdentifier != GenericReadResponseHeaderId || responseHeader.blockSize != sizeof(responseHeader))
 	{
-		_onError(*this, "Bad response from client upon read quality tables request");
+		_onError(shared_from_this(), "Bad response from client upon read quality tables request");
 		StopClient();
 	}
 	else if(responseHeader.errorCode != NoError)
 	{
 		handleError(responseHeader);
-		_onAwaitingCommand(*this);
+		_onAwaitingCommand(shared_from_this());
 	}
 	else {
 		prepareBuffer(responseHeader.dataSize);
 		boost::asio::async_read(_socket, boost::asio::buffer(_buffer, responseHeader.dataSize),
-			boost::bind(&ServerConnection::onReceiveQualityTablesResponseData, boost::ref(*this), responseHeader.dataSize));
+			boost::bind(&ServerConnection::onReceiveQualityTablesResponseData, shared_from_this(), responseHeader.dataSize));
 	}
 }
 
@@ -190,8 +190,8 @@ void ServerConnection::onReceiveQualityTablesResponseData(size_t dataSize)
 	std::cout << "Received quality table of size " << dataSize << "." << std::endl;
 	_collection->Unserialize(stream);
 
-	_onFinishReadQualityTables(*this, *_collection);
-	_onAwaitingCommand(*this);
+	_onFinishReadQualityTables(shared_from_this(), *_collection);
+	_onAwaitingCommand(shared_from_this());
 }
 
 void ServerConnection::onReceiveAntennaTablesResponseHeader()
@@ -200,18 +200,18 @@ void ServerConnection::onReceiveAntennaTablesResponseHeader()
 	GenericReadResponseHeader responseHeader = *reinterpret_cast<GenericReadResponseHeader*>(_buffer);
 	if(responseHeader.blockIdentifier != GenericReadResponseHeaderId || responseHeader.blockSize != sizeof(responseHeader))
 	{
-		_onError(*this, "Bad response from client upon read antenna tables request");
+		_onError(shared_from_this(), "Bad response from client upon read antenna tables request");
 		StopClient();
 	}
 	else if(responseHeader.errorCode != NoError)
 	{
 		handleError(responseHeader);
-		_onAwaitingCommand(*this);
+		_onAwaitingCommand(shared_from_this());
 	}
 	else {
 		prepareBuffer(responseHeader.dataSize);
 		boost::asio::async_read(_socket, boost::asio::buffer(_buffer, responseHeader.dataSize),
-			boost::bind(&ServerConnection::onReceiveAntennaTablesResponseData, boost::ref(*this), responseHeader.dataSize));
+			boost::bind(&ServerConnection::onReceiveAntennaTablesResponseData, shared_from_this(), responseHeader.dataSize));
 	}
 }
 
@@ -229,8 +229,8 @@ void ServerConnection::onReceiveAntennaTablesResponseData(size_t dataSize)
 		_antennas->rbegin()->Unserialize(stream);
 	}
 
-	_onFinishReadAntennaTables(*this, *_antennas);
-	_onAwaitingCommand(*this);
+	_onFinishReadAntennaTables(shared_from_this(), *_antennas);
+	_onAwaitingCommand(shared_from_this());
 }
 
 }

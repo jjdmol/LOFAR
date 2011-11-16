@@ -56,15 +56,15 @@ class ProcessCommander
 		
 		void initializeNextTask();
 		
-		void continueReadQualityTablesTask(ServerConnection &serverConnection);
-		void continueReadAntennaTablesTask(ServerConnection &serverConnection);
+		void continueReadQualityTablesTask(ServerConnectionPtr serverConnection);
+		void continueReadAntennaTablesTask(ServerConnectionPtr serverConnection);
 		
 		void makeNodeMap(const ClusteredObservation &observation);
-		void onConnectionCreated(class ServerConnection &serverConnection, bool &acceptConnection);
-		void onConnectionAwaitingCommand(class ServerConnection &serverConnection);
-		void onConnectionFinishReadQualityTables(class ServerConnection &serverConnection, StatisticsCollection &collection);
-		void onConnectionFinishReadAntennaTables(ServerConnection &serverConnection, std::vector<AntennaInfo> &antennas);
-		void onError(ServerConnection &connection, const std::string &error);
+		void onConnectionCreated(ServerConnectionPtr serverConnection, bool &acceptConnection);
+		void onConnectionAwaitingCommand(ServerConnectionPtr serverConnection);
+		void onConnectionFinishReadQualityTables(ServerConnectionPtr serverConnection, StatisticsCollection &collection);
+		void onConnectionFinishReadAntennaTables(ServerConnectionPtr serverConnection, std::vector<AntennaInfo> &antennas);
+		void onError(ServerConnectionPtr connection, const std::string &error);
 		
 		Server _server;
 		typedef std::map<std::string, std::deque<ClusteredObservationItem> > NodeMap;
