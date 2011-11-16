@@ -69,10 +69,10 @@ void AOQPlotWindow::Open(const std::string &filename)
 	_filename = filename;
 	readStatistics();
 	_baselinePlotPage.SetStatistics(_statCollection, _antennas);
-	_antennaePlotPage.SetStatistics(_statCollection, filename);
-	_bLengthPlotPage.SetStatistics(_statCollection, filename);
-	_timePlotPage.SetStatistics(_statCollection, filename);
-	_frequencyPlotPage.SetStatistics(_statCollection, filename);
+	_antennaePlotPage.SetStatistics(_statCollection, _antennas);
+	_bLengthPlotPage.SetStatistics(_statCollection, _antennas);
+	_timePlotPage.SetStatistics(_statCollection, _antennas);
+	_frequencyPlotPage.SetStatistics(_statCollection, _antennas);
 	_summaryPage.SetStatistics(_statCollection);
 }
 
