@@ -878,6 +878,7 @@ class StatisticsCollection : public Serializable
 					newMap.insert(std::pair<double, DefaultStatistics>(keySum / count, integratedStat));
 				}
 			}
+			map = newMap;
 		}
 		
 		std::map<double, DoubleStatMap> _timeStatistics;
