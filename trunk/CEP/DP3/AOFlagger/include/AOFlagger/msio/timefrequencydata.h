@@ -437,14 +437,14 @@ class TimeFrequencyData
 					case AutoDipolePolarisation:
 						data = new TimeFrequencyData(AutoDipolePolarisation, _images[0], _images[1], _images[6], _images[7]);
 						if(_flagCoverage == GlobalFlagCoverage)
-							data->SetGlobalMask(GetMask(polarisation));
+							data->SetGlobalMask(_flagging[0]);
 						else if(_flagCoverage == IndividualPolarisationFlagCoverage)
 							data->SetIndividualPolarisationMasks(_flagging[0], _flagging[3]);
 						break;
 					case CrossDipolePolarisation:
 						data = new TimeFrequencyData(CrossDipolePolarisation, _images[2], _images[3], _images[4], _images[5]);
 						if(_flagCoverage == GlobalFlagCoverage)
-							data->SetGlobalMask(GetMask(polarisation));
+							data->SetGlobalMask(_flagging[0]);
 						else if(_flagCoverage == IndividualPolarisationFlagCoverage)
 							data->SetIndividualPolarisationMasks(_flagging[1], _flagging[2]);
 						break;

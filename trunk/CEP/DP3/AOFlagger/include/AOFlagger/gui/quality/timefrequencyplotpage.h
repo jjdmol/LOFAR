@@ -17,63 +17,52 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef AOQPLOT_WINDOW_H
-#define AOQPLOT_WINDOW_H
+#ifndef GUI_QUALITY__TIMEFREQUENCYPLOTPAGE_H
+#define GUI_QUALITY__TIMEFREQUENCYPLOTPAGE_H
 
 #include <gtkmm/box.h>
-#include <gtkmm/notebook.h>
-#include <gtkmm/statusbar.h>
 #include <gtkmm/window.h>
+#include <gtkmm/frame.h>
+#include <gtkmm/radiobutton.h>
 
 #include <AOFlagger/gui/imagewidget.h>
 
 #include <AOFlagger/quality/qualitytablesformatter.h>
 
-#include "antennaeplotpage.h"
-#include "baselineplotpage.h"
-#include "blengthplotpage.h"
-#include "frequencyplotpage.h"
-#include "summarypage.h"
-#include "timefrequencyplotpage.h"
-#include "timeplotpage.h"
-
-#include <AOFlagger/msio/antennainfo.h>
+#include "grayscaleplotpage.h"
 
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
 */
-class AOQPlotWindow : public Gtk::Window {
+class TimeFrequencyPlotPage : public GrayScalePlotPage {
 	public:
-		AOQPlotWindow();
-    virtual ~AOQPlotWindow()
-    { 
-			close();
+		TimeFrequencyPlotPage();
+    virtual ~TimeFrequencyPlotPage();
+		
+		sigc::signal<void, const std::string &> SignalStatusChange() { return _signalStatusChange; }
+		
+		void SetStatistics(class StatisticsCollection *statCollection)
+		{
+			_statCollection = statCollection;
+			UpdateImage();
 		}
-    
-		void Open(const std::string &filename);
+		void CloseStatistics()
+		{
+			_statCollection = 0;
+		}
+		bool HasStatistics() const
+		{
+			return _statCollection != 0;
+		}
 		
+	protected:
+		virtual TimeFrequencyData ConstructImage();
 	private:
-		void close();
-		void readStatistics();
-		void onStatusChange(const std::string &newStatus);
+		void onMouseMoved(size_t x, size_t y);
 		
-		Gtk::VBox _vBox;
-		Gtk::Notebook _notebook;
-		Gtk::Statusbar _statusBar;
-		
-		BaselinePlotPage _baselinePlotPage;
-		AntennaePlotPage _antennaePlotPage;
-		BLengthPlotPage  _bLengthPlotPage;
-		TimeFrequencyPlotPage _timeFrequencyPlotPage;
-		TimePlotPage _timePlotPage;
-		FrequencyPlotPage _frequencyPlotPage;
-		SummaryPage _summaryPage;
-
-		bool _isOpen;
-		std::string _filename;
 		class StatisticsCollection *_statCollection;
-		class StatisticsCollection *_fullStats;
-		std::vector<class AntennaInfo> _antennas;
+		
+		sigc::signal<void, const std::string &> _signalStatusChange;
 };
 
 #endif

@@ -204,6 +204,8 @@ if(GTKMM_FOUND)
 		gui/plot/plot2d.cpp
 		gui/quality/aoqplotwindow.cpp
 		gui/quality/baselineplotpage.cpp
+		gui/quality/grayscaleplotpage.cpp
+		gui/quality/timefrequencyplotpage.cpp
 		gui/quality/twodimensionalplotpage.cpp
 		gui/imagewidget.cpp)
 		target_link_libraries(aoqplot ${GTKMM_LIBRARIES})

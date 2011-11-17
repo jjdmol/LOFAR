@@ -125,7 +125,7 @@ class StatisticsDerivator
 					const double time = j->first;
 					const size_t timeIndex = timeIndices.find(time)->second;
 					
-					mask->SetValue(timeIndex, freqIndex, true);
+					mask->SetValue(timeIndex, freqIndex, false);
 					for(size_t p=0;p<pCount;++p)
 					{
 						const std::complex<num_t> statValue = deriveComplex<num_t>(kind, j->second, p);

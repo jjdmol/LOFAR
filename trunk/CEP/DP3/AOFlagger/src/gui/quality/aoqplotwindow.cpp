@@ -50,6 +50,11 @@ AOQPlotWindow::AOQPlotWindow() :
 	_notebook.append_page(_frequencyPlotPage, "Frequency");
 	_frequencyPlotPage.show();
 	
+	_notebook.append_page(_timeFrequencyPlotPage, "Time-frequency");
+	_timeFrequencyPlotPage.show();
+	_timeFrequencyPlotPage.SignalStatusChange().connect(sigc::mem_fun(*this, &AOQPlotWindow::onStatusChange));
+	//_timeFrequencyPlotPage.set_sensitive(false);
+	
 	_notebook.append_page(_summaryPage, "Summary");
 	_summaryPage.show();
 	
@@ -57,7 +62,7 @@ AOQPlotWindow::AOQPlotWindow() :
 	_notebook.show();
 	
 	_vBox.pack_end(_statusBar, Gtk::PACK_SHRINK);
-	_statusBar.push("This is the AO Quality Plot util. Author: André Offringa (offringa@astro.rug.nl)");
+	_statusBar.push("Quality plot util is ready. Author: André Offringa (offringa@astro.rug.nl)");
 	_statusBar.show();
 	
 	add(_vBox);
@@ -73,6 +78,13 @@ void AOQPlotWindow::Open(const std::string &filename)
 	_bLengthPlotPage.SetStatistics(_statCollection, _antennas);
 	_timePlotPage.SetStatistics(_statCollection, _antennas);
 	_frequencyPlotPage.SetStatistics(_statCollection, _antennas);
+	//if(_fullStats->AllTimeStatistics().size() > 1)
+	//{
+		_timeFrequencyPlotPage.SetStatistics(_fullStats);
+	//	_timeFrequencyPlotPage.set_sensitive(true);
+	//} else {
+	//	_timeFrequencyPlotPage.set_sensitive(false);
+	//}
 	_summaryPage.SetStatistics(_statCollection);
 }
 
@@ -86,6 +98,7 @@ void AOQPlotWindow::close()
 		_bLengthPlotPage.CloseStatistics();
 		_timePlotPage.CloseStatistics();
 		_frequencyPlotPage.CloseStatistics();
+		_timeFrequencyPlotPage.CloseStatistics();
 		_summaryPage.CloseStatistics();
 		delete _statCollection;
 		delete _fullStats;
@@ -144,9 +157,6 @@ void AOQPlotWindow::readStatistics()
 	
 	std::cout << "Integrating time statistics to one channel..." << std::endl;
 	_statCollection->IntegrateTimeToOneChannel();
-	
-	StatisticsDerivator test(*_statCollection);
-	test.CreateTFData(QualityTablesFormatter::DVarianceStatistic);
 	
 	std::cout << "Opening statistics panel..." << std::endl;
 	_isOpen = true;
