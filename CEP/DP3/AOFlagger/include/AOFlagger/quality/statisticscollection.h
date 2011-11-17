@@ -236,6 +236,14 @@ class StatisticsCollection : public Serializable
 				_timeStatistics.insert(std::pair<double, DoubleStatMap>(frequencySum/size, fullMap));
 			}
 		}
+		
+		void LowerTimeResolution(size_t maxSteps)
+		{
+			for(std::map<double, DoubleStatMap>::iterator i=_timeStatistics.begin();i!=_timeStatistics.end();++i)
+			{
+				lowerResolution(i->second, maxSteps);
+			}
+		}
 	private:
 		struct StatisticSaver
 		{
@@ -846,6 +854,29 @@ class StatisticsCollection : public Serializable
 				const DefaultStatistics &sourceStats = i->second;
 				
 				getDoubleStatMapStatistic(dest, key) += sourceStats;
+			}
+		}
+		
+		void lowerResolution(DoubleStatMap &map, size_t maxSteps) const
+		{
+			const size_t oldSize = map.size();
+			DoubleStatMap newMap;
+			if(oldSize > maxSteps)
+			{
+				size_t factor = (oldSize + maxSteps - 1) / maxSteps;
+				for(DoubleStatMap::iterator i=map.begin();i!=map.end();++i)
+				{
+					DefaultStatistics integratedStat(_polarizationCount);
+					double keySum = 0.0;
+					size_t count = 0;
+					for(size_t x=0;x<factor && i!=map.end();++x)
+					{
+						keySum += i->first;
+						integratedStat += i->second;
+						++i;
+					}
+					newMap.insert(std::pair<double, DefaultStatistics>(keySum / count, integratedStat));
+				}
 			}
 		}
 		
