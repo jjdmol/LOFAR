@@ -859,12 +859,12 @@ class StatisticsCollection : public Serializable
 		
 		void lowerResolution(DoubleStatMap &map, size_t maxSteps) const
 		{
-			const size_t oldSize = map.size();
-			DoubleStatMap newMap;
-			if(oldSize > maxSteps)
+			if(map.size() > maxSteps)
 			{
+				DoubleStatMap newMap;
 				const size_t factor = (oldSize + maxSteps - 1) / maxSteps;
-				for(DoubleStatMap::iterator i=map.begin();i!=map.end();++i)
+				std::cout << "Factor=" << factor << '\n';
+				for(DoubleStatMap::iterator i=map.begin();i!=map.end();)
 				{
 					DefaultStatistics integratedStat(_polarizationCount);
 					double keySum = 0.0;
@@ -879,8 +879,8 @@ class StatisticsCollection : public Serializable
 					if(count > 0)
 						newMap.insert(std::pair<double, DefaultStatistics>(keySum / count, integratedStat));
 				}
+				map = newMap;
 			}
-			map = newMap;
 		}
 		
 		std::map<double, DoubleStatMap> _timeStatistics;
