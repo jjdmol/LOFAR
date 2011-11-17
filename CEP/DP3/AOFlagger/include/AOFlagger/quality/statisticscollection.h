@@ -862,7 +862,7 @@ class StatisticsCollection : public Serializable
 			if(map.size() > maxSteps)
 			{
 				DoubleStatMap newMap;
-				const size_t factor = (oldSize + maxSteps - 1) / maxSteps;
+				const size_t factor = (map.size() + maxSteps - 1) / maxSteps;
 				std::cout << "Factor=" << factor << '\n';
 				for(DoubleStatMap::iterator i=map.begin();i!=map.end();)
 				{
