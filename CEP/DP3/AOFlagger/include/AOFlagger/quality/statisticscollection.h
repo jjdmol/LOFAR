@@ -863,7 +863,6 @@ class StatisticsCollection : public Serializable
 			{
 				DoubleStatMap newMap;
 				const size_t factor = (map.size() + maxSteps - 1) / maxSteps;
-				std::cout << "Factor=" << factor << '\n';
 				for(DoubleStatMap::iterator i=map.begin();i!=map.end();)
 				{
 					DefaultStatistics integratedStat(_polarizationCount);
