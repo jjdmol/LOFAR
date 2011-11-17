@@ -322,6 +322,12 @@ void actionCombine(const std::string outFilename, const std::vector<std::string>
 	}
 }
 
+void actionRemove(const std::string &filename)
+{
+	QualityTablesFormatter formatter(filename);
+	formatter.RemoveAllQualityTables();
+}
+
 void printSyntax(std::ostream &stream, char *argv[])
 {
 	stream << "Syntax: " << argv[0] <<
@@ -333,6 +339,7 @@ void printSyntax(std::ostream &stream, char *argv[])
 		"\\tcombine     - Combine several tables.\n"
 		"\tquery_b     - Query baselines.\n"
 		"\tquery_t     - Query time.\n"
+		"\tremove      - Remove all quality tables.\n"
 		"\tsummarize   - Give a summary of the statistics currently in the quality tables.\n";
 }
 
@@ -390,7 +397,12 @@ int main(int argc, char *argv[])
 					std::cout << "Syntax: " << argv[0] << " combine <target_ms> [<in_ms> [<in_ms> ..]]\n\n"
 						"This will read all given input measurement sets, combine the statistics and \n"
 						"write the results to a target measurement set. The target measurement set should\n"
-						"not exist beforehand.";
+						"not exist beforehand.\n";
+				}
+				else if(helpAction == "remove")
+				{
+					std::cout << "Syntax: " << argv[0] << " remove [ms]\n\n"
+						"This will completely remove all quality tables from the measurement set.\n";
 				}
 				else
 				{
@@ -457,6 +469,18 @@ int main(int argc, char *argv[])
 			}
 			else {
 				actionQueryTime(argv[2], argv[3]);
+				return 0;
+			}
+		}
+		else if(action == "remove")
+		{
+			if(argc != 3)
+			{
+				std::cerr << "Syntax for removing quality tables: 'aoquality remove <MS>'\n";
+				return -1;
+			}
+			else {
+				actionRemove(argv[2]);
 				return 0;
 			}
 		}
