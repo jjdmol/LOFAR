@@ -543,7 +543,8 @@ class StatisticsCollection : public Serializable
 							destination.count[p] += (long unsigned) source.Value(p).real();
 							break;
 						case QualityTablesFormatter::MeanStatistic:
-							destination.sum[p] += source.Value(p) * (float) destination.count[p];
+							if(destination.count[p] > 0)
+								destination.sum[p] += source.Value(p) * (float) destination.count[p];
 							break;
 						case QualityTablesFormatter::SumP2Statistic:
 							destination.sumP2[p] += source.Value(p);
@@ -552,7 +553,8 @@ class StatisticsCollection : public Serializable
 							destination.dCount[p] += (long unsigned) source.Value(p).real();
 							break;
 						case QualityTablesFormatter::DMeanStatistic:
-							destination.dSum[p] += source.Value(p) * (float) destination.dCount[p];
+							if(destination.count[p] > 0)
+								destination.dSum[p] += source.Value(p) * (float) destination.dCount[p];
 							break;
 						case QualityTablesFormatter::DSumP2Statistic:
 							destination.dSumP2[p] += source.Value(p);
@@ -574,7 +576,8 @@ class StatisticsCollection : public Serializable
 							destination.count[p] = (long unsigned) source.Value(p).real();
 							break;
 						case QualityTablesFormatter::MeanStatistic:
-							destination.sum[p] = source.Value(p) * (float) destination.count[p];
+							if(destination.count[p] > 0)
+								destination.sum[p] = source.Value(p) * (float) destination.count[p];
 							break;
 						case QualityTablesFormatter::SumP2Statistic:
 							destination.sumP2[p] = source.Value(p);
@@ -583,7 +586,8 @@ class StatisticsCollection : public Serializable
 							destination.dCount[p] = (long unsigned) source.Value(p).real();
 							break;
 						case QualityTablesFormatter::DMeanStatistic:
-							destination.dSum[p] = source.Value(p) * (float) destination.dCount[p];
+							if(destination.dCount[p] > 0)
+								destination.dSum[p] = source.Value(p) * (float) destination.dCount[p];
 							break;
 						case QualityTablesFormatter::DSumP2Statistic:
 							destination.dSumP2[p] = source.Value(p);
