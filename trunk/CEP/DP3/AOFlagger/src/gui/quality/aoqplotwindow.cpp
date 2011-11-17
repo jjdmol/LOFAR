@@ -148,7 +148,9 @@ void AOQPlotWindow::readStatistics()
 		_statCollection = new StatisticsCollection(polarizationCount);
 		_statCollection->Load(formatter);
 	}
-	// TODO ofcourse we want multi dimensional stats at one point :D
+	std::cout << "Lowering time resolution..." << std::endl;
+	_statCollection->LowerTimeResolution(1000);
+
 	std::cout << "Integrating baseline statistics to one channel..." << std::endl;
 	_statCollection->IntegrateBaselinesToOneChannel();
 	
