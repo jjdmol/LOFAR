@@ -269,22 +269,22 @@ class StatisticsCollection : public Serializable
 		
 		struct Indices
 		{
-			unsigned kindRFIRatio;
+			unsigned kindRFICount;
 			unsigned kindCount;
-			unsigned kindMean;
+			unsigned kindSum;
 			unsigned kindSumP2;
 			unsigned kindDCount;
-			unsigned kindDMean;
+			unsigned kindDSum;
 			unsigned kindDSumP2;
 			
 			void fill(QualityTablesFormatter &qd)
 			{
-				kindRFIRatio = qd.StoreOrQueryKindIndex(QualityTablesFormatter::RFIRatioStatistic),
+				kindRFICount = qd.StoreOrQueryKindIndex(QualityTablesFormatter::RFICountStatistic),
 				kindCount = qd.StoreOrQueryKindIndex(QualityTablesFormatter::CountStatistic),
-				kindMean = qd.StoreOrQueryKindIndex(QualityTablesFormatter::MeanStatistic),
+				kindSum = qd.StoreOrQueryKindIndex(QualityTablesFormatter::SumStatistic),
 				kindSumP2 = qd.StoreOrQueryKindIndex(QualityTablesFormatter::SumP2Statistic),
 				kindDCount = qd.StoreOrQueryKindIndex(QualityTablesFormatter::DCountStatistic),
-				kindDMean = qd.StoreOrQueryKindIndex(QualityTablesFormatter::DMeanStatistic),
+				kindDSum = qd.StoreOrQueryKindIndex(QualityTablesFormatter::DSumStatistic),
 				kindDSumP2 = qd.StoreOrQueryKindIndex(QualityTablesFormatter::DSumP2Statistic);
 			}
 		};
@@ -365,12 +365,12 @@ class StatisticsCollection : public Serializable
 		
 		void initializeEmptyStatistics(QualityTablesFormatter &qualityData, QualityTablesFormatter::StatisticDimension dimension) const
 		{
-			qualityData.InitializeEmptyStatistic(dimension, QualityTablesFormatter::RFIRatioStatistic);
+			qualityData.InitializeEmptyStatistic(dimension, QualityTablesFormatter::RFICountStatistic);
 			qualityData.InitializeEmptyStatistic(dimension, QualityTablesFormatter::CountStatistic);
-			qualityData.InitializeEmptyStatistic(dimension, QualityTablesFormatter::MeanStatistic);
+			qualityData.InitializeEmptyStatistic(dimension, QualityTablesFormatter::SumStatistic);
 			qualityData.InitializeEmptyStatistic(dimension, QualityTablesFormatter::SumP2Statistic);
 			qualityData.InitializeEmptyStatistic(dimension, QualityTablesFormatter::DCountStatistic);
-			qualityData.InitializeEmptyStatistic(dimension, QualityTablesFormatter::DMeanStatistic);
+			qualityData.InitializeEmptyStatistic(dimension, QualityTablesFormatter::DSumStatistic);
 			qualityData.InitializeEmptyStatistic(dimension, QualityTablesFormatter::DSumP2Statistic);
 		}
 		
@@ -379,16 +379,16 @@ class StatisticsCollection : public Serializable
 			StatisticalValue value(_polarizationCount);
 			
 			for(unsigned p=0;p<_polarizationCount;++p)
-				value.SetValue(p, std::complex<float>((double) stat.rfiCount[p] / (double) (stat.rfiCount[p] + stat.count[p]), 0.0f));
-			saver.Save(value, indices.kindRFIRatio);
+				value.SetValue(p, std::complex<float>(stat.rfiCount[p], 0.0f));
+			saver.Save(value, indices.kindRFICount);
 			
 			for(unsigned p=0;p<_polarizationCount;++p)
 				value.SetValue(p, std::complex<float>(stat.count[p], 0.0f));
 			saver.Save(value, indices.kindCount);
 
 			for(unsigned p=0;p<_polarizationCount;++p)
-				value.SetValue(p, stat.Mean<float>(p));
-			saver.Save(value, indices.kindMean);
+				value.SetValue(p, stat.Sum<float>(p));
+			saver.Save(value, indices.kindSum);
 
 			for(unsigned p=0;p<_polarizationCount;++p)
 				value.SetValue(p, stat.SumP2<float>(p));
@@ -399,8 +399,8 @@ class StatisticsCollection : public Serializable
 			saver.Save(value, indices.kindDCount);
 			
 			for(unsigned p=0;p<_polarizationCount;++p)
-				value.SetValue(p, stat.DMean<float>(p));
-			saver.Save(value, indices.kindDMean);
+				value.SetValue(p, stat.DSum<float>(p));
+			saver.Save(value, indices.kindDSum);
 
 			for(unsigned p=0;p<_polarizationCount;++p)
 				value.SetValue(p, stat.DSumP2<float>(p));
@@ -527,74 +527,45 @@ class StatisticsCollection : public Serializable
 			return selectedBaselineStatistic.GetStatistics(antenna1, antenna2);
 		}
 		
+		template<bool PerformAdd, typename T>
+		void assignOrAdd(T &value, const T otherValue)
+		{
+			if(PerformAdd)
+				value += otherValue;
+			else
+				value = otherValue;
+		}
+		
 		template<bool AddStatistics>
 		void assignStatistic(DefaultStatistics &destination, const StatisticalValue &source, QualityTablesFormatter::StatisticKind kind)
 		{
-			if(AddStatistics)
+			for(unsigned p=0;p<_polarizationCount;++p)
 			{
-				for(unsigned p=0;p<_polarizationCount;++p)
+				switch(kind)
 				{
-					switch(kind)
-					{
-						case QualityTablesFormatter::RFIRatioStatistic:
-							destination.rfiCount[p] += round((double) destination.count[p] / ((1.0/source.Value(p).real())-1.0));
-							break;
-						case QualityTablesFormatter::CountStatistic:
-							destination.count[p] += (long unsigned) source.Value(p).real();
-							break;
-						case QualityTablesFormatter::MeanStatistic:
-							if(destination.count[p] > 0)
-								destination.sum[p] += source.Value(p) * (float) destination.count[p];
-							break;
-						case QualityTablesFormatter::SumP2Statistic:
-							destination.sumP2[p] += source.Value(p);
-							break;
-						case QualityTablesFormatter::DCountStatistic:
-							destination.dCount[p] += (long unsigned) source.Value(p).real();
-							break;
-						case QualityTablesFormatter::DMeanStatistic:
-							if(destination.count[p] > 0)
-								destination.dSum[p] += source.Value(p) * (float) destination.dCount[p];
-							break;
-						case QualityTablesFormatter::DSumP2Statistic:
-							destination.dSumP2[p] += source.Value(p);
-							break;
-						default:
-							break;
-					}
-				}
-			}
-			else {
-				for(unsigned p=0;p<_polarizationCount;++p)
-				{
-					switch(kind)
-					{
-						case QualityTablesFormatter::RFIRatioStatistic:
-							destination.rfiCount[p] = round((double) destination.count[p] / ((1.0/source.Value(p).real())-1.0));
-							break;
-						case QualityTablesFormatter::CountStatistic:
-							destination.count[p] = (long unsigned) source.Value(p).real();
-							break;
-						case QualityTablesFormatter::MeanStatistic:
-							if(destination.count[p] > 0)
-								destination.sum[p] = source.Value(p) * (float) destination.count[p];
-							break;
-						case QualityTablesFormatter::SumP2Statistic:
-							destination.sumP2[p] = source.Value(p);
-							break;
-						case QualityTablesFormatter::DCountStatistic:
-							destination.dCount[p] = (long unsigned) source.Value(p).real();
-							break;
-						case QualityTablesFormatter::DMeanStatistic:
-							if(destination.dCount[p] > 0)
-								destination.dSum[p] = source.Value(p) * (float) destination.dCount[p];
-							break;
-						case QualityTablesFormatter::DSumP2Statistic:
-							destination.dSumP2[p] = source.Value(p);
-							break;
-						default:
-							break;
-					}
+					case QualityTablesFormatter::RFICountStatistic:
+						assignOrAdd<AddStatistics>(destination.rfiCount[p] , (long unsigned) source.Value(p).real());
+						break;
+					case QualityTablesFormatter::CountStatistic:
+						assignOrAdd<AddStatistics>(destination.count[p] , (long unsigned) source.Value(p).real());
+						break;
+					case QualityTablesFormatter::SumStatistic:
+						assignOrAdd<AddStatistics>(destination.sum[p] , std::complex<long double>(source.Value(p).real(), source.Value(p).imag() ));
+						break;
+					case QualityTablesFormatter::SumP2Statistic:
+						assignOrAdd<AddStatistics>(destination.sumP2[p] , std::complex<long double>(source.Value(p).real(), source.Value(p).imag() ));
+						break;
+					case QualityTablesFormatter::DCountStatistic:
+						assignOrAdd<AddStatistics>(destination.dCount[p] , (long unsigned) source.Value(p).real());
+						break;
+					case QualityTablesFormatter::DSumStatistic:
+						assignOrAdd<AddStatistics>(destination.dSum[p] , std::complex<long double>(source.Value(p).real(), source.Value(p).imag() ));
+						break;
+					case QualityTablesFormatter::DSumP2Statistic:
+						assignOrAdd<AddStatistics>(destination.dSumP2[p] , std::complex<long double>(source.Value(p).real(), source.Value(p).imag() ));
+						break;
+					default:
+						break;
 				}
 			}
 		}
@@ -602,12 +573,12 @@ class StatisticsCollection : public Serializable
 		void forEachDefaultStatistic(QualityTablesFormatter &qd, void (StatisticsCollection::*functionName)(QualityTablesFormatter &, QualityTablesFormatter::StatisticKind))
 		{
 			(this->*functionName)(qd, QualityTablesFormatter::CountStatistic);
-			(this->*functionName)(qd, QualityTablesFormatter::MeanStatistic);
+			(this->*functionName)(qd, QualityTablesFormatter::SumStatistic);
 			(this->*functionName)(qd, QualityTablesFormatter::SumP2Statistic);
 			(this->*functionName)(qd, QualityTablesFormatter::DCountStatistic);
-			(this->*functionName)(qd, QualityTablesFormatter::DMeanStatistic);
+			(this->*functionName)(qd, QualityTablesFormatter::DSumStatistic);
 			(this->*functionName)(qd, QualityTablesFormatter::DSumP2Statistic);
-			(this->*functionName)(qd, QualityTablesFormatter::RFIRatioStatistic);
+			(this->*functionName)(qd, QualityTablesFormatter::RFICountStatistic);
 		}
 		
 		template<bool AddStatistics>

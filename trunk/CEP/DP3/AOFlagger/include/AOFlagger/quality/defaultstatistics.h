@@ -151,6 +151,12 @@ class DefaultStatistics : public Serializable
 		}
 		
 		template<typename T>
+		std::complex<T> Sum(unsigned polarization) const
+		{
+			return std::complex<T>(sum[polarization].real(), sum[polarization].imag());
+		}
+		
+		template<typename T>
 		std::complex<T> SumP2(unsigned polarization) const
 		{
 			return std::complex<T>(sumP2[polarization].real(), sumP2[polarization].imag());
@@ -162,6 +168,12 @@ class DefaultStatistics : public Serializable
 			return std::complex<T>(dSum[polarization].real() / dCount[polarization], dSum[polarization].imag() / dCount[polarization]);
 		}
 		
+		template<typename T>
+		std::complex<T> DSum(unsigned polarization) const
+		{
+			return std::complex<T>(dSum[polarization].real(), dSum[polarization].imag());
+		}
+
 		template<typename T>
 		std::complex<T> DSumP2(unsigned polarization) const
 		{
