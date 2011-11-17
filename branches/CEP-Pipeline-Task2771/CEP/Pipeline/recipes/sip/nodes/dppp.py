@@ -54,7 +54,8 @@ class dppp(LOFARnodeTCP):
             #              This is achieved by setting msout to an empty string.
             # ------------------------------------------------------------------
             if outfile == infile:
-                outfile = "\"\""
+                pass  # GML: this behavior has changed in DPPP
+                #outfile = "\"\""
             else:
                 create_directory(os.path.dirname(outfile))
 
