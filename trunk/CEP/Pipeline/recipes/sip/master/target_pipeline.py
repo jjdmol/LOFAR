@@ -97,8 +97,8 @@ class target_pipeline(control):
         # Create a parameter-subset for DPPP and write it to file.
         ndppp_parset = os.path.join(
             self.config.get("layout", "job_directory"),
-            "parsets", "NDPPP.parset")
-        py_parset.makeSubset('DPPP.').writeFile(ndppp_parset)
+            "parsets", "NDPPP[0].parset")
+        py_parset.makeSubset('DPPP[0].').writeFile(ndppp_parset)
 
         # Run the Default Pre-Processing Pipeline (DPPP);
         dppp_mapfile = self.run_task(
@@ -118,11 +118,25 @@ class target_pipeline(control):
         py_parset.makeSubset('BBS.').writeFile(bbs_parset)
 
         # Run BBS to calibrate the target source(s).
-        self.run_task(
+        bbs_mapfile = self.run_task(
             "new_bbs", demix_mapfile,
             parset=bbs_parset,
             instrument_mapfile=self.inputs['instrument_mapfile'],
-            sky_mapfile=sourcedb_mapfile)
+            sky_mapfile=sourcedb_mapfile
+        )['mapfile']
+
+        # Create another parameter-subset for a second DPPP run.
+        ndppp_parset = os.path.join(
+            self.config.get("layout", "job_directory"),
+            "parsets", "NDPPP[1].parset")
+        py_parset.makeSubset('DPPP[1].').writeFile(ndppp_parset)
+
+        # Do a second run of DPPP, just to remove NaN's from the MS
+        self.run_task("ndppp", bbs_mapfile,
+            clobber=False,
+            suffix='',
+            parset=ndppp_parset
+        )
 
 if __name__ == '__main__':
     sys.exit(target_pipeline().main())
