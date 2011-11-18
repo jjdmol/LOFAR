@@ -433,7 +433,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 			itsChildResult   = CT_RESULT_NO_ERROR;
 			itsChildsInError = 0;
 			itsClaimTimer    = 0;
-			LOG_DEBUG("Requesting all childs to execute the CLAIM state");
+			LOG_INFO("Requesting all childs to execute the CLAIM state");
 			itsChildControl->requestState(CTState::CLAIMED, "");
 			itsBusyControllers = itsChildControl->countChilds(0, CNTLRTYPE_NO_TYPE);
 		}
@@ -442,7 +442,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 			itsChildResult   = CT_RESULT_NO_ERROR;
 			itsChildsInError = 0;
 			itsPrepareTimer  = 0;
-			LOG_DEBUG("Requesting all childs to execute the PREPARE state");
+			LOG_INFO("Requesting all childs to execute the PREPARE state");
 			itsChildControl->requestState(CTState::PREPARED, "");
 			itsBusyControllers = itsChildControl->countChilds(0, CNTLRTYPE_NO_TYPE);
 		}
@@ -451,7 +451,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 			itsChildResult   = CT_RESULT_NO_ERROR;
 			itsChildsInError = 0;
 			itsStartTimer    = 0;
-			LOG_DEBUG("Requesting all childs to go operation state");
+			LOG_INFO("Requesting all childs to go operation state");
 			itsChildControl->requestState(CTState::RESUMED, "");
 			itsBusyControllers = itsChildControl->countChilds(0, CNTLRTYPE_NO_TYPE);
 		}
@@ -460,7 +460,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 			itsChildResult   = itsQuitReason;
 			itsChildsInError = 0;
 			itsStopTimer     = 0;
-			LOG_DEBUG("Requesting all childs to quit");
+			LOG_INFO("Requesting all childs to quit");
 			itsChildControl->requestState(CTState::QUITED, "");
 			itsBusyControllers = itsChildControl->countChilds(0, CNTLRTYPE_NO_TYPE);
 			// reschedule forced-quit timer for safety.

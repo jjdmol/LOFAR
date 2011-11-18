@@ -739,9 +739,9 @@ GCFEvent::TResult BeamServer::beamalloc_state(GCFEvent& event, GCFPortInterface&
 			LOG_WARN("Lost connection, going back to 'enabled' state");
 			TRAN(BeamServer::enabled);
 		}
-		queueTaskEvent(event, port);
-		return (GCFEvent::HANDLED);
-//		return (GCFEvent::NEXT_STATE);
+//		queueTaskEvent(event, port);
+//		return (GCFEvent::HANDLED);
+		return (GCFEvent::NEXT_STATE);	// 181111 this should have been fixed in the GCFScheduler.
 	}
 	break;
 
@@ -753,7 +753,7 @@ GCFEvent::TResult BeamServer::beamalloc_state(GCFEvent& event, GCFPortInterface&
 	break;
 
 	default:
-		LOG_DEBUG("beamalloc_state:default --> defer command");
+		LOG_DEBUG_STR("beamalloc_state: deferring " << eventName(event) << "@" << port.getName());
 		// all other events are handled in the enabled state
 		return (GCFEvent::NEXT_STATE);
 	}
@@ -826,9 +826,9 @@ GCFEvent::TResult BeamServer::beamfree_state(GCFEvent& event, GCFPortInterface& 
 			LOG_WARN("Lost connection, going back to 'enabled' state");
 			TRAN(BeamServer::enabled);
 		}
-		queueTaskEvent(event, port);
-		return (GCFEvent::HANDLED);
-//		return (GCFEvent::NEXT_STATE);
+//		queueTaskEvent(event, port);
+//		return (GCFEvent::HANDLED);
+		return (GCFEvent::NEXT_STATE);	// 181111 this should have been fixed in the GCFScheduler.
 	}
 	break;
 
@@ -845,7 +845,7 @@ GCFEvent::TResult BeamServer::beamfree_state(GCFEvent& event, GCFPortInterface& 
 	break;
 
 	default:
-		LOG_DEBUG("beamfree_state:default --> defer command");
+		LOG_DEBUG_STR("beamfree_state: deferring " << eventName(event) << "@" << port.getName());
 		// all other events are handled in the enabled state
 		return (GCFEvent::NEXT_STATE);
 	}

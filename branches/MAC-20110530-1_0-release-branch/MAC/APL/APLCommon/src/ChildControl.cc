@@ -1012,6 +1012,7 @@ void ChildControl::_doGarbageCollection()
 	CIiter			iter  = itsCntlrList->begin();
 	const_CIiter	end   = itsCntlrList->end();
 	bool			restartTimer(false);
+	time_t			now = time(0);
 	while (iter != end) {
 		// Note: Removing a controller is done in two stages.
 		// 1: port == 0: inform main task about removal after retry interval expired
@@ -1019,15 +1020,16 @@ void ChildControl::_doGarbageCollection()
 		// This is necc. because main task may poll childcontrol for results.
 		if (!iter->port) {
 			restartTimer = true;
-			LOG_DEBUG_STR(time(0)<<"-"<<iter->requestTime<<">="<<itsStartupRetryInterval<<"*"<<itsMaxStartupRetries<<"?");
-			if ((uint32(time(0)-iter->requestTime)) >= itsStartupRetryInterval*itsMaxStartupRetries) {
-				LOG_DEBUG_STR ("Controller " << iter->cntlrName << " is still unreachable, informing main task");
+			LOG_DEBUG_STR(now<<"-"<<iter->requestTime<<">="<<itsStartupRetryInterval<<"*"<<itsMaxStartupRetries<<"?");
+			if ((uint32(now-iter->requestTime)) >= itsStartupRetryInterval*itsMaxStartupRetries) {
+				LOG_INFO_STR(now<<"-"<<iter->requestTime<<">="<<itsStartupRetryInterval<<"*"<<itsMaxStartupRetries<<"!");
+				LOG_INFO_STR ("Controller " << iter->cntlrName << " is still unreachable, informing main task");
 				_setEstablishedState(iter->cntlrName, CTState::QUITED, time(0), CT_RESULT_LOST_CONNECTION);
 				iter->port = (GCFPortInterface*) -1;
 			}
 			iter++;
 		} else if (iter->port == (GCFPortInterface*)-1) {
-			LOG_DEBUG_STR ("Removing controller " << iter->cntlrName << " from the controller list");
+			LOG_INFO_STR ("Removing controller " << iter->cntlrName << " from the controller list");
 			CIiter	iterCopy = iter;
 			iter++;
 			itsCntlrList->erase(iterCopy);
