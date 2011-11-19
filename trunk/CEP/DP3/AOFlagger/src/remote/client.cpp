@@ -142,6 +142,8 @@ void Client::handleReadQualityTables(unsigned dataSize)
 		} else {
 			StatisticsCollection collection(formatter.GetPolarizationCount());
 			collection.Load(formatter);
+			// TODO: maybe we want to configure the following parameter at one point
+			collection.LowerTimeResolution(1000);
 			
 			GenericReadResponseHeader header;
 			header.blockIdentifier = GenericReadResponseHeaderId;
