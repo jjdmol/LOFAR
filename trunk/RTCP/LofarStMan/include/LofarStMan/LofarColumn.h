@@ -160,7 +160,8 @@ public:
                                 casa::Array<casa::Double>* dataPtr);
   virtual void prepareCol();
 private:
-  casa::MDirection              itsPhaseDir;
+  casa::MDirection              itsPhaseDir;    //# could be SUN, etc.
+  casa::MDirection              itsJ2000Dir;    //# Phase dir in J2000
   casa::MeasFrame               itsFrame;
   vector<casa::MBaseline>       itsAntMB;
   vector<casa::Vector<double> > itsAntUvw;
