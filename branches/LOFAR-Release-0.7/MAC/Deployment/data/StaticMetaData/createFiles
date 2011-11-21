@@ -254,7 +254,7 @@ def createRSPDriverFile(resultDir, stationName, dataDir, partitionName,ilt_local
                         (ip, mac) = findIPandMAC(rspDestNode[str(1)],dataDir)
                         for rspNr in range(0,4):
                             RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_MAC@", mac +"   # "+rspDestNode[str(1)])
-                RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_IP@",  ip)
+                            RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_IP@",  ip)
 
 
     # Find IP address for RSP board ethernet. All NL stations have RSP address
