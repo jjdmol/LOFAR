@@ -442,7 +442,7 @@ GCFEvent::TResult BeamControl::allocBeams_state(GCFEvent& event, GCFPortInterfac
 	switch (event.signal) {
 	case F_ENTRY: 
 		itsTimerPort->cancelAllTimers();
-		itsTimerPort->setTimer(0.2);		// give CalControl + CalServer some time to allocated the beams.
+		itsTimerPort->setTimer(0.01);		// give CalControl + CalServer some time to allocated the beams.
 		break;
 
 	case F_TIMER: {
