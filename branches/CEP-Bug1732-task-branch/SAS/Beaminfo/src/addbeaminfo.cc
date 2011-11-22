@@ -98,6 +98,18 @@ vector<int> getAntennaConfigurationRCUs(const string &antennaConf, const string 
 
 // RCUmap type definition to make life easier
 typedef map<string, vector<int> > RCUmap;
+// Define a type for failedTimes including antennaId, elementFlags and respective timestamps
+
+// This is also defined in showinfo.h
+#ifndef __FAILED_TILE__
+#define __FAILED_TILE__
+typedef struct
+{
+  unsigned int antennaId;
+  vector<unsigned int> elementFlags;
+  vector<ptime> timeStamps;
+} failedTile;
+#endif
 
 // MS Antenna field functions
 RCUmap getRCUs( const MeasurementSet &ms,
@@ -128,9 +140,21 @@ map<string, ptime> getFailedHardware( map<string, ptime> &brokenBegin,
 map<string, ptime> getFailedHardware( const map<string, ptime> &brokenBegin, 
                                       const map<string, ptime> &brokenEnd);
 void getFailedTiles(MeasurementSet &ms,
-                    const map<string, ptime> &failedTiles, 
+                    const map<string, ptime> &failedTilesSAS, 
                     map<unsigned int, vector<unsigned int> > &brokenElements,                      
                     vector<ptime> &failureTimes);
+void getFailedTiles(MeasurementSet &ms,
+                    const map<string, ptime> &failedTilesSAS, 
+                    vector<failedTile> &failedTiles);
+vector<failedTile>::iterator getFailedTileAntennaId( vector<failedTile> &failedTiles,
+                                                      unsigned int antennaId);
+//map<unsigned int, unsigned int> getAntennaFieldId(MeasurementSet &ms,
+//                                                  const string &station, 
+//                                                  unsigned int RCUnum);
+unsigned int getAntennaFieldId( MeasurementSet &ms,
+                                const string &station, 
+                                unsigned int RCUnum,
+                                unsigned int &elementIndex);
 void padTo(std::string &str, const size_t num, const char paddingChar);
 
 
@@ -340,8 +364,11 @@ int main (int argc, char* argv[])
       // TODO: Update LOFAR_ANTENNA_FIELD table
       // TODO: get failed tiles
       failedHardware=getFailedHardware(brokenHardware, brokenHardwareAfter);
-      getFailedTiles(ms, failedHardware, brokenElements, failureTimes);
-      
+//      getFailedTiles(ms, failedHardware, brokenElements, failureTimes);
+  
+      vector<failedTile> failedTiles;  
+      getFailedTiles(ms, failedHardware, failedTiles);
+  
       //if(debug)
       //  showMap(failedHardware);
 //      if(debug)
@@ -1498,67 +1525,117 @@ map<string, ptime> getFailedHardware( const map<string, ptime> &brokenBegin,
   \param brokenElements     return a map of LOFAR_ANTENNA_FIELD_id and ELEMENT_FLAGS_id
   \param failureTimes       times at which the individual tiles failed
 */
+//void getFailedTiles(MeasurementSet &ms,
+//                    const map<string, ptime> &failedTilesSAS, 
+//                    map<unsigned int, vector<unsigned int> > &brokenElements,                      
+//                    vector<ptime> &failureTimes)
 void getFailedTiles(MeasurementSet &ms,
-                    const map<string, ptime> &failedTiles, 
-                    map<unsigned int, vector<unsigned int> > &brokenElements,                      
-                    vector<ptime> &failureTimes)
+                    const map<string, ptime> &failedTilesSAS, 
+                    vector<failedTile> &failedTiles)
 {
   if(verbose)
-    LOG_INFO_STR("Determining failed tiles from failed hardware");
+    LOG_INFO_STR("Determining failed tiles from failed hardware SAS information");
 
   string station, RCU;                 // station name and RCU extracted from one string
   unsigned int rcuNum=0;               // RCU number converted from string
-  vector<string> stations;             // stations to extract from failedTiles string
+//  vector<string> stations;             // stations to extract from failedTiles string
   vector<unsigned int> rcuNumbers;     // RCU numbers to extract
   vector<unsigned int> antennaIds;     // ANTENNA_FIELD_ids for a particular station
-  map<unsigned int, unsigned int> idIndex;
+  unsigned int antennaId=0, elementIndex=0;
+  vector<unsigned int> elementFlags;    // ELEMENT_FLAGS to set for a particular ANTENNA_FIELD_id
+  vector<ptime> timeStamps;             // need local vector to create a new failedTile struct
 
   //--------------------------------------------------------------------
-  map<string, ptime>::const_iterator failedTilesIt=failedTiles.begin();
 
-  cout << "failedTiles:" << endl;
-  showMap(failedTiles);
-
-  for(; failedTilesIt != failedTiles.end(); ++failedTilesIt)
+  // First get a list of antennaIds from failedTilesSAS information
+  map<string, ptime>::const_iterator failedTilesSASIt=failedTilesSAS.begin();
+  for(; failedTilesSASIt != failedTilesSAS.end(); ++failedTilesSASIt)
   {
-//    cout << failedTilesIt->first << endl;       // DEBUG  
-    // extract station and RCU from failedTilesSAS string    
-    station=failedTilesIt->first.substr(0, 5);   // station name extracted from broken hardware;
-    RCU=failedTilesIt->first.substr(9, 2);
-    rcuNum=boost::lexical_cast<unsigned int>(RCU);
-
-    ptime timestamp=failedTiles->second;        // get timestamp from failed hardware tiles map
+    station=failedTilesSASIt->first.substr(0, 5);   // station name extracted from broken hardware
+    rcuNum=boost::lexical_cast<unsigned int>(failedTilesSASIt->first.substr(9, 2));
+    ptime timestamp=failedTilesSASIt->second;
 
     // Determine ANTENNA_FIELD_ID and ELEMENT_FLAG index this RCU belongs to
-    idIndex=getAntennaFieldId(ms, station, rcuNum);
-    brokenElements.insert(idIndex);
-    failureTimes.push_back(timestamp);
-  }
- 
-  ASSERT(brokenElements.size() == failureTimes.size());
+    antennaId=getAntennaFieldId(ms, station, rcuNum, elementIndex);
 
-  showMap(brokenElements);    // DEBUG
+//    cout << failedTilesSASIt->first << endl;        // DEBUG
+
+    cout << "antennaId: " << antennaId << endl;             // DEBUG
+    cout << "elementIndex: " << elementIndex << endl;       // DEBUG
+
+    // We need to find the failed tile corresponding to this antennaId
+    // if it already exists
+    vector<failedTile>::iterator failedTileIt;
+    failedTileIt=getFailedTileAntennaId(failedTiles, antennaId);
+    if( failedTileIt != failedTiles.end() )
+    {
+      failedTileIt->elementFlags.push_back(elementIndex);
+      failedTileIt->timeStamps.push_back(timestamp);
+    }
+    else  // ... otherwise create a new failed tile struct and insert into the vector
+    {
+      elementFlags.push_back(elementIndex);
+      timeStamps.push_back(timestamp);
+      failedTile newTile={antennaId, elementFlags, timeStamps};  
+      failedTiles.push_back(newTile);
+    }
+  }
+
+//  showFailedTiles(failedTiles);     // DEBUG
 }
 
 
 /*!
-  \brief  From a station name and the RCU number get the MS antenna field id
-  \param  station     name of lofar station (e.g. CS001) 
-  \param  RCUnum      RCU number
-  \return map of row in the LOFAR_ANTENNA_FIELD table and ELEMENT_FLAG index
+  \brief Search a vector of failedTiles for this antennaId
+  \param failedTiles    vector of failedTiles
+  \param antennaId      antennaId to look for in failed tiles
+  \return iterator to failed tile with this antennaId 
 */
-map<unsigned int, unsigned int> getAntennaFieldId(MeasurementSet &ms,
-                                                  const string &station, 
-                                                  unsigned int RCUnum)
+vector<failedTile>::iterator getFailedTileAntennaId(vector<failedTile> &failedTiles,
+                                                    unsigned int antennaId)
+{
+  vector<failedTile>::iterator tileIt=failedTiles.begin();
+
+  unsigned int length=failedTiles.size();
+  for(unsigned int i=0; i<length; i++)
+  {
+    if(failedTiles[i].antennaId == antennaId)
+    {
+      tileIt += i;
+      return tileIt;      // we suppose unique antennaIds in failedTiles, found then return
+    }
+    else
+    {
+      tileIt=failedTiles.end();
+    }
+  }
+  return tileIt;
+}
+
+
+
+/*!
+  \brief  From a station name and the RCU number get the MS antenna field id (and elementFlag index)
+  \param  station         name of lofar station (e.g. CS001) 
+  \param  RCUnum          RCU number
+  \param  elementIndex    ELEMENT_FLAG index
+  \return row in the LOFAR_ANTENNA_FIELD table
+*/
+//map<unsigned int, unsigned int> getAntennaFieldId(MeasurementSet &ms,
+//                                                  const string &station, 
+//                                                  unsigned int RCUnum)
+unsigned int getAntennaFieldId( MeasurementSet &ms,
+                                const string &station, 
+                                unsigned int RCUnum,
+                                unsigned int &elementIndex)
 {
   string mode;                        // mode of observation, do we need that?
   string stationType;                 // type of station
   unsigned int antennaFieldId=0;      // antenna Id (=row in LOFAR_ANTENNA_FIELD table)
-  unsigned int elementIndex=0;
 
   vector<unsigned int> antennaIds;
   unsigned int nelementFlags=0;         // number of elements in the ELEMENT_FLAG column
-  map<unsigned int, unsigned int> idIndex;       // ANTENNA_FIELD id and ELEMENT_FLAG index
+  //map<unsigned int, unsigned int> idIndex;       // ANTENNA_FIELD id and ELEMENT_FLAG index
   
   //--------------------------------------------------------------------
   mode=getLofarAntennaSet(ms);                    // get lofarAntennaSet = Mode
@@ -1580,8 +1657,11 @@ map<unsigned int, unsigned int> getAntennaFieldId(MeasurementSet &ms,
 
   ASSERT(antennaIds.size() >= 1);
 
+  cout << "getAntennaFieldId(): antennaIds.size() = " << antennaIds.size() << endl;  // DEBUG
+  cout << "getAntennaFieldId(): stationType = " << stationType << endl;  // DEBUG
+
   // Do some error checking
-  if(antennaIds.size()==2 && stationType!="CS")
+  if(antennaIds.size()==2 && stationType!="Core")
   {
     THROW(Exception, "getAntennaFieldId(): Remote and international stations don't have HBA_DUAL");
   }
@@ -1611,10 +1691,7 @@ map<unsigned int, unsigned int> getAntennaFieldId(MeasurementSet &ms,
           " ids for station: " << station);
   }
   
-  // Put ANTENNA_FIELD id and ELEMENT_FLAG index into map
-  idIndex.insert(make_pair<unsigned int, unsigned int>(antennaFieldId, elementIndex));
-  
-  return idIndex;
+  return antennaFieldId;
 }
 
 
