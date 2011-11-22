@@ -283,7 +283,7 @@ Observation::Observation(ParameterSet*		aParSet,
         // by default, use all psets
         std::vector<unsigned> phaseThreePsets;
         if (aParSet->isDefined(olapprefix+"CNProc.phaseThreePsets"))
-          phaseTwoPsets = aParSet->getUint32Vector(olapprefix+"CNProc.phaseThreePsets", true);
+          phaseThreePsets = aParSet->getUint32Vector(olapprefix+"CNProc.phaseThreePsets", true);
         if (phaseThreePsets.empty()) 
           for (unsigned p = 0; p < 64; p++)
             phaseThreePsets.push_back(p);
