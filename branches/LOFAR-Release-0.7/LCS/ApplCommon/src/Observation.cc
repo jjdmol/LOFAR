@@ -266,6 +266,7 @@ Observation::Observation(ParameterSet*		aParSet,
 		}
 	}
 
+#if 0
         // loop over all data products and generate all data flows
 	string olapprefix = aParSet->locateModule("OLAP") + "OLAP.";
         const char *dataProductNames[] = { "CoherentStokes", "IncoherentStokes", "Beamformed", "Correlated", "Filtered" };
@@ -327,6 +328,7 @@ Observation::Observation(ParameterSet*		aParSet,
             streamsToStorage.push_back(a);
           }
         }
+#endif
 }
 
 
