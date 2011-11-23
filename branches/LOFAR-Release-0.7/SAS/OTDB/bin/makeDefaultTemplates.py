@@ -43,7 +43,7 @@ def createNewDefaultTemplate(orgTmplID, newMasterTmplID, orgTmplInfo):
     # set the old default template state to obsolete (1200)
     otdb.query("select * from settreestate(1, %s, '1200')" % (orgTmplID))
     # rename the old template with a '# ' before its original name
-    otdb.query("select * from assignTemplateName(1, %s, '# %s')" % (orgTmplID, orgTmplInfo['treeName']))
+    otdb.query("select * from assignTemplateName(1, %s, '#%-31.31s')" % (orgTmplID, orgTmplInfo['treeName']))
     otdb.query("select * from assignTemplateName(1, %s, '%s')" % (newTmplID, orgTmplInfo['treeName']))
 
     # loop over all values that were changed in the old template
