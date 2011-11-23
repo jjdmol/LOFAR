@@ -51,7 +51,7 @@ CREATE OR REPLACE FUNCTION getDefaultTemplates()
 			   strategy
 		FROM   OTDBtree 
 		WHERE  name IS NOT NULL
-		AND	   state < TSobsolete;
+		AND	   state < TSobsolete
 	  LOOP
 		RETURN NEXT vRecord;
 	  END LOOP;
