@@ -112,7 +112,7 @@ CREATE OR REPLACE FUNCTION assignTemplateName(INT4, INT4, VARCHAR(32))
 		END IF;
 
 		-- check for double defaulttemplate entries
-		IF $3 IS NOT NULL THEN
+		IF $3 IS NOT NULL AND vProcessType != '' THEN
 			SELECT	treeID
 			INTO 	vDummy
 			FROM	OTDBtree
