@@ -16,6 +16,22 @@
 
 		<sourceDirectory>src</sourceDirectory>
 		<testSourceDirectory>src/test</testSourceDirectory>
+		
+		<resources>
+			<resource>
+				<directory>${basedir}</directory>
+				<includes>
+					<include>*.log_prop</include>
+				</includes>
+			</resource>
+			
+			<resource>
+				<directory>src</directory>
+				<excludes>
+					<exclude>**/*.java</exclude>
+				</excludes>
+			</resource>
+		</resources>
 
 		<plugins>
 			<plugin>
