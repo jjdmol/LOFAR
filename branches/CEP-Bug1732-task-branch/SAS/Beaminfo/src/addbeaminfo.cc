@@ -76,6 +76,8 @@ using namespace casa;
 // MS reading functions
 //boost::posix_time::ptime fromCasaTime (const MEpoch& epoch, double addDays);
 string fromCasaTime (const MEpoch& epoch, double addDays);
+MVEpoch toCasaTime(const string &time);
+MVEpoch toCasaTime(const ptime &time);
 string getLofarAntennaSet(const string &msName);
 string getLofarAntennaSet(MeasurementSet &ms);
 
@@ -117,7 +119,13 @@ RCUmap getRCUs( const MeasurementSet &ms,
                 const string &elementColumnName="ELEMENT_FLAG");
 
 void addFailedAntennaTiles( MeasurementSet &ms, 
-                            RCUmap &failedTiles);
+                            const vector<failedTile> &failedTiles,
+                            bool flag=false);
+void doAddFailedAntennaTile(Table &failedElementsTable, 
+                            int antennaId, 
+                            int element_index, 
+                            double timeStamp, 
+                            bool flag=false);                            
 
 // SAS functions
 vector<string> getBrokenHardware( OTDBconnection &conn, 
@@ -369,6 +377,9 @@ int main (int argc, char* argv[])
       vector<failedTile> failedTiles;  
       getFailedTiles(ms, failedHardware, failedTiles);
   
+      //showFailedTiles(failedTiles);              // DEBUG
+      addFailedAntennaTiles(ms, failedTiles);
+  
       //if(debug)
       //  showMap(failedHardware);
 //      if(debug)
@@ -400,6 +411,55 @@ string fromCasaTime (const MVEpoch& epoch, double addDays=0)
 
 //  return boost::posix_time::from_iso_string (t.getTime().ISODate());  // used to return ptime
   return t.getTime().ISODate();
+}
+
+/*!
+  \brief Convert a time string time YYYY-Mon-DD TT:MM:SS.ss to a CASA MVEpoch
+  \param time   string in time format
+  \return MVEpoch time format
+*/
+MVEpoch toCasaTime(const string &time)
+{
+  // e.g. 2011-Mar-19 21:17:06.514000  // use slashes instead spaces
+  Double casaTime;        // casa MVEpoch time to be returned
+  MVTime casaMVTime;      // need this for conversion
+  String copyTime=time;   // make a temporary copy
+
+  Quantity result(casaTime, "s");
+  
+  if(time.empty())
+  {
+    THROW(Exception, "toCasaTime() string time is empty"); 
+  }
+  else
+  {
+    copyTime.gsub(" ", "/");      // replace spaces with slashes for casa conversion   
+    casaMVTime.read(result, copyTime);
+    
+//    cout << "toCasaTime() result = " << result << endl;  // DEBUG
+    
+//    MVTime function
+//      static Bool 	read (Quantity &res, MUString &in)
+  }
+  
+  return result;
+}
+
+
+/*!
+  \brief Convert a ptime to a CASA MVEpoch
+  \param time   ptime format
+  \return MVEpoch time format
+*/
+MVEpoch toCasaTime(const ptime &time)
+{
+  MVEpoch casaTime;
+  string timeString;
+
+  timeString=to_simple_string(time);
+  casaTime=toCasaTime(timeString);
+
+  return casaTime;
 }
 
 
@@ -1536,9 +1596,8 @@ void getFailedTiles(MeasurementSet &ms,
   if(verbose)
     LOG_INFO_STR("Determining failed tiles from failed hardware SAS information");
 
-  string station, RCU;                 // station name and RCU extracted from one string
+  string station;                      // station name extracted from one string
   unsigned int rcuNum=0;               // RCU number converted from string
-//  vector<string> stations;             // stations to extract from failedTiles string
   vector<unsigned int> rcuNumbers;     // RCU numbers to extract
   vector<unsigned int> antennaIds;     // ANTENNA_FIELD_ids for a particular station
   unsigned int antennaId=0, elementIndex=0;
@@ -1559,9 +1618,8 @@ void getFailedTiles(MeasurementSet &ms,
     antennaId=getAntennaFieldId(ms, station, rcuNum, elementIndex);
 
 //    cout << failedTilesSASIt->first << endl;        // DEBUG
-
-    cout << "antennaId: " << antennaId << endl;             // DEBUG
-    cout << "elementIndex: " << elementIndex << endl;       // DEBUG
+//    cout << "antennaId: " << antennaId << endl;             // DEBUG
+//    cout << "elementIndex: " << elementIndex << endl;       // DEBUG
 
     // We need to find the failed tile corresponding to this antennaId
     // if it already exists
@@ -1657,8 +1715,8 @@ unsigned int getAntennaFieldId( MeasurementSet &ms,
 
   ASSERT(antennaIds.size() >= 1);
 
-  cout << "getAntennaFieldId(): antennaIds.size() = " << antennaIds.size() << endl;  // DEBUG
-  cout << "getAntennaFieldId(): stationType = " << stationType << endl;  // DEBUG
+//  cout << "getAntennaFieldId(): antennaIds.size() = " << antennaIds.size() << endl;  // DEBUG
+//  cout << "getAntennaFieldId(): stationType = " << stationType << endl;  // DEBUG
 
   // Do some error checking
   if(antennaIds.size()==2 && stationType!="Core")
@@ -1698,48 +1756,83 @@ unsigned int getAntennaFieldId( MeasurementSet &ms,
 /*!
   \brief Create antenna table with failed antenna tiles and their times of failure
          after the observation
-  \param ms         MeasurementSet to add failed tiles information to
-  \param
-  \param
-  TODO!
+  \param ms           MeasurementSet to add failed tiles information to
+  \param failedTiles  vector of struct containing all failed tiles information
+  \param flag         set them immediately as flagged? (default=false)
 */
 void addFailedAntennaTiles( MeasurementSet &ms, 
-                            RCUmap &failedTiles)
+                            const vector<failedTile> &failedTiles,
+                            bool flag)
 {
-  RCUmap rcusMS;                      // RCUs present in the MS
-  RCUmap failedRCUs;                  // RCUs that failed during observation
-  MVEpoch timestamp;                  // timestamp variable to write to table row
-
-  Table FailedElementsTable(ms.rwKeywordSet().asTable("LOFAR_ELEMENT_FAILURE"));
-  rcusMS=getRCUs(ms);
+  MVEpoch timestamp;        // timestamp variable to write to each table row
+  Table failedElementsTable(ms.rwKeywordSet().asTable("LOFAR_ELEMENT_FAILURE"));
 
   //TODO
+  unsigned int length=failedTiles.size();
+  if(length==0)     // if there are no failed tiles....
+  {
+    LOG_INFO_STR("No failed tiles to be added to table");
+    return;         // ...do nothing
+  }
+  else              // Loop over map of failed RCUs for this MS
+  {
+    for(unsigned int i=0; i<length; i++)  
+    {
+      // Check if number of element_flags is equal to number of timestamps
+      ASSERTSTR(failedTiles[i].elementFlags.size() == failedTiles[i].timeStamps.size(),
+      "addFailedAntennaTiles() number of element_flags != number of timestamps for antennaId="
+      << failedTiles[i].antennaId);
 
-  // Loop over map of failed RCUs for this MS
-  
-  // Create a new table according to TableDesc matching MS2.0.7 ICD
-  // ANTENNA_FIELD_ID, ELEMENT_INDEX, TIME, FLAG_ROW
-  TableLocker locker(FailedElementsTable, FileLocker::Write);
-//  doAddFailedAntennaTile();
+//      cout << "addFailedAntennaTiles() " << failedTiles[0].timeStamps[0] << endl;   // DEBUG
+//      cout << "addFailedAntennaTiles() " << toCasaTime(failedTiles[0].timeStamps[0]) << endl;     // DEBUG
+
+      // Loop over multiple element_flags per antennaId
+      for(unsigned int j=0; j<failedTiles[i].elementFlags.size(); j++)
+      {
+        TableLocker locker(failedElementsTable, FileLocker::Write);
+
+        double timeStamp = toCasaTime(failedTiles[i].timeStamps[j]).get() + ;
+        doAddFailedAntennaTile( failedElementsTable, 
+                                failedTiles[i].antennaId,      
+                                failedTiles[i].elementFlags[j],
+                                timeStamp,
+                                flag);
+      }
+    }
+  }
 }
+
+//                                 toCasaTime(failedTiles[i].timeStamps[j])
 
 
 /*!
   \brief Do add a row to the Failed Antenna Tiles table
+  \param failedElementsTable    table to write failed tiles into
+  \param antennaId              antenna Id of the field with failed tiles
+  \param element_index          index into ELEMENT_FLAGS array
+  \param timeStamp              time of failure in seconds
+  \param flag                   flag the rows? (default=false)
 */
 void doAddFailedAntennaTile(Table &failedElementsTable, 
-                          int fieldId, 
-                          int element_index, 
-                          MVEpoch timeStamp, 
-                          bool flag)
+                            int antennaId, 
+                            int element_index, 
+                            Double timeStamp, 
+                            bool flag)
 {
+  // Create a new table according to TableDesc matching MS2.0.7 ICD
+  // ANTENNA_FIELD_ID, ELEMENT_INDEX, TIME, FLAG_ROW
+
   uint rownr = failedElementsTable.nrow();
   failedElementsTable.addRow();
 
-  ScalarColumn<Int> antennaFieldIdCol;
-  antennaFieldIdCol.put(rownr, fieldId);
-  ScalarColumn<Int> elementIndexCol;
+  ScalarColumn<Int> antennaFieldIdCol(failedElementsTable, "ANTENNA_FIELD_ID");
+  antennaFieldIdCol.put(rownr, antennaId);
+  ScalarColumn<Int> elementIndexCol(failedElementsTable, "ELEMENT_INDEX");
   elementIndexCol.put(rownr, element_index);
+  ScalarColumn<Double> timeStampCol(failedElementsTable, "TIME");
+  timeStampCol.put(rownr, timeStamp);
+  ScalarColumn<Bool> flagCol(failedElementsTable, "FLAG_ROW");
+  flagCol.put(rownr, flag);
 }
 
 
