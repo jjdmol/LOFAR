@@ -93,8 +93,8 @@ class StatisticsCollection : public Serializable
 			addTimeAndBaseline(antenna1, antenna2, time, centralFrequency, polarization, &(diffReals[0]), &(diffImags[0]), diffRFIFlags, nsamples-1, 1, 1, true);
 			if(antenna1 != antenna2)
 			{
-				addFrequency(band, polarization, &(diffReals[0]), &(diffImags[0]), diffRFIFlags, nsamples, 1, 1, true, false);
-				addFrequency(band, polarization, &(diffReals[0]), &(diffImags[0]), diffRFIFlags, nsamples, 1, 1, true, true);
+				addFrequency(band, polarization, &(diffReals[0]), &(diffImags[0]), diffRFIFlags, nsamples-1, 1, 1, true, false);
+				addFrequency(band, polarization, &(diffReals[0]), &(diffImags[0]), diffRFIFlags, nsamples-1, 1, 1, true, true);
 			}
 			delete[] diffRFIFlags;
 		}
@@ -103,7 +103,7 @@ class StatisticsCollection : public Serializable
 		{
 			const float *dataPtr =
 				reinterpret_cast<const float*>(&(samples[0]));
-			Add (antenna1, antenna2, time, band, polarization,
+			Add(antenna1, antenna2, time, band, polarization,
 					 dataPtr, dataPtr+1,   // real and imag parts
 					 isRFI, samples.size(), 2, 1);
 		}
