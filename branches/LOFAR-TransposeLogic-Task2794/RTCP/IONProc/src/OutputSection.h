@@ -24,7 +24,6 @@
 #include <Interface/OutputTypes.h>
 #include <Interface/Parset.h>
 #include <Interface/SmartPtr.h>
-#include <Interface/TransposeLogic.h>
 #include <IONProc/OutputThread.h>
 #include <Stream/Stream.h>
 #include <Common/Thread/Semaphore.h>
@@ -59,7 +58,7 @@ class OutputSection
 
     const std::string              	   itsLogPrefix;
     const bool                             itsVariableNrSubbands;
-    const Transpose2                       itsTranspose2Logic;
+    const Transpose2                       &itsTranspose2Logic;
 
     const unsigned			   itsNrComputeCores;
     const unsigned			   itsNrCoresPerIteration, itsNrCoresSkippedPerIteration, itsFirstStreamNr, itsNrStreams;

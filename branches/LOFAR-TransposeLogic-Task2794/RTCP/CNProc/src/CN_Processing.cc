@@ -104,9 +104,9 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
 #endif
   itsLocationInfo(locationInfo),
 #if defined HAVE_MPI
-  itsTranspose2Logic(parset, itsLocationInfo.psetNumber(), CN_Mapping::reverseMapCoreOnPset(itsLocationInfo.rankInPset(), itsLocationInfo.psetNumber()))
+  itsTranspose2Logic(parset.CN_transposeLogic(itsLocationInfo.psetNumber(), CN_Mapping::reverseMapCoreOnPset(itsLocationInfo.rankInPset(), itsLocationInfo.psetNumber())))
 #else
-  itsTranspose2Logic(parset, 0, 0)
+  itsTranspose2Logic(parset.CN_transposeLogic(0, 0))
 #endif
 {
   if(LOG_CONDITION)

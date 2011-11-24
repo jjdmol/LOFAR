@@ -36,7 +36,6 @@
 #include <Interface/SubbandMetaData.h>
 #include <Interface/TransposedData.h>
 #include <Interface/TriggerData.h>
-#include <Interface/TransposeLogic.h>
 
 #include <Stream/Stream.h>
 
@@ -141,7 +140,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
     SmartPtr<Stream>	itsTriggerDataStream;
 
     const LocationInfo	&itsLocationInfo;
-    const CN_Transpose2 itsTranspose2Logic;
+    const CN_Transpose2 &itsTranspose2Logic;
     std::vector<double> itsCenterFrequencies;
     SmartPtr<Ring>	itsFirstInputSubband, itsCurrentSubband;
     std::vector<double> itsDMs;
