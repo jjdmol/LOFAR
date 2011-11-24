@@ -27,6 +27,8 @@
 
 #include <AOFlagger/msio/timefrequencydata.h>
 
+#include <AOFlagger/strategy/imagesets/noisestatimageset.h>
+
 class StatisticsDerivator
 {
 	public:
@@ -105,7 +107,6 @@ class StatisticsDerivator
 			// create the images
 			const size_t pCount = _collection.PolarizationCount();
 			Image2DPtr realImage[pCount], imagImage[pCount];
-			std::cout << "Image size: " << timesteps.size() << " x " << frequencies.size() << "\n";
 			Mask2DPtr mask = Mask2D::CreateSetMaskPtr<true>(timesteps.size(), frequencies.size());
 			for(size_t p=0;p<pCount;++p)
 			{
@@ -136,6 +137,7 @@ class StatisticsDerivator
 			}
 			TimeFrequencyData data = TimeFrequencyData::CreateComplexTFData(pCount, (Image2DCPtr*) realImage, (Image2DCPtr*) imagImage);
 			data.SetGlobalMask(mask);
+			rfiStrategy::NoiseStatImageSet::MergeInTime(data, TimeFrequencyMetaDataPtr());
 			return data;
 		}
 	private:
