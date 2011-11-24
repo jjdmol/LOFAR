@@ -106,7 +106,7 @@ namespace LOFAR
     template <typename T,unsigned DIM> MSWriterLDA<T,DIM>::MSWriterLDA (const string &filename, const Parset &parset, OutputType outputType, unsigned fileno, bool isBigEndian)
     :
       MSWriterFile(forceextension(string(filename),".raw"),false),
-      itsTransposeLogic(parset),
+      itsTransposeLogic(parset.transposeLogic()),
       itsNrChannels(parset.nrChannelsPerSubband() * itsTransposeLogic.nrSubbands(fileno)),
       itsNextSeqNr(0)
     {
