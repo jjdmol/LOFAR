@@ -86,8 +86,8 @@ class StatisticsCollection : public Serializable
 			bool *diffRFIFlags = new bool[nsamples];
 			for (unsigned i=0;i<nsamples-1;++i)
 			{
-				diffReals[i] = (reals[(i+1)*step] - reals[i*step]) * 0.5f;
-				diffImags[i] = (imags[(i+1)*step] - imags[i*step]) * 0.5f;
+				diffReals[i] = (reals[(i+1)*step] - reals[i*step]) * M_SQRT1_2;
+				diffImags[i] = (imags[(i+1)*step] - imags[i*step]) * M_SQRT1_2;
 				diffRFIFlags[i] = isRFI[i*stepRFI] | isRFI[(i+1)*stepRFI];
 			}
 			addTimeAndBaseline(antenna1, antenna2, time, centralFrequency, polarization, &(diffReals[0]), &(diffImags[0]), diffRFIFlags, nsamples-1, 1, 1, true);
