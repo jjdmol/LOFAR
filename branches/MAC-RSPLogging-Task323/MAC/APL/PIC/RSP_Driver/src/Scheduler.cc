@@ -36,6 +36,7 @@ namespace LOFAR  {
 #define SCHEDULING_DELAY 2
 
 int Scheduler::SYNC_INTERVAL_INT = 1; // default
+int MAX_SEQUENCIAL_BOARD_ERRORS = 50;
 
 Scheduler::Scheduler()
 {
@@ -70,19 +71,33 @@ GCFEvent::TResult Scheduler::run(GCFEvent& event, GCFPortInterface& /*port*/)
 	if (F_TIMER == event.signal) {
 		LOG_DEBUG("Scheduler::run");
 
-		if (!syncHasCompleted()) {
-			LOG_ERROR("previous sync has not yet completed!, skipping sync");
-			for (map< GCFPortInterface*, bool >::iterator it = m_sync_completed.begin();
-					it != m_sync_completed.end(); it++) {
-				if (!(*it).second) {
-					LOG_WARN(formatString("port %s has not yet completed sync, trying to continue...",
-							(*it).first->getName().c_str()));
+		// check status of every board and report failures.
+		map<GCFPortInterface*, bool>::iterator	iter = m_sync_completed.begin();
+		map<GCFPortInterface*, bool>::iterator	end  = m_sync_completed.end();
+		int		fatalBoards(0);
+		while (iter != end) {
+			if (!iter->second || itsSyncErrors[iter->first]) {	// did board not finish sequence or had an error?
+				if (++itsBoardErrCount[iter->first] < MAX_SEQUENCIAL_BOARD_ERRORS) {
+					LOG_WARN(formatString("port %s has not yet completed sync or had errors, trying to continue...",
+						iter->first->getName().c_str()));
 				}
-
-				// reset the statemachines of all SyncActions for this port
-				resetSync(*(*it).first);
+				else {
+					fatalBoards++;	// board with serious error!
+				}
+			}
+			else {
+				itsBoardErrCount[iter->first]=0;
 			}
 
+			// reset the statemachines of all SyncActions for this port
+			resetSync(*(iter->first));
+			iter++;
+		}
+		if (fatalBoards) {
+			LOG_FATAL_STR(fatalBoards << " boards are in error state!");
+		}
+
+		if (!syncHasCompleted()) {
 			// This is caused by a problem with the firmware
 			// or a loose cable, simply try to continue.
 			//
@@ -131,7 +146,8 @@ GCFEvent::TResult Scheduler::dispatch(GCFEvent& event, GCFPortInterface& port)
 	// Dispatch the event to the first SyncAction that
 	// has not yet reached its 'final' state.
 	vector<SyncAction*>::iterator sa;
-	int i = 0;
+	int 	i(0);
+	// note: m_syncaction = map< GCFPortInterface*, std::vector<SyncAction*> > 
 	for (sa = m_syncactions[&port].begin(); sa != m_syncactions[&port].end(); sa++, i++) {
 		if (!(*sa)->hasCompleted()) {
 			// stil busy
@@ -151,6 +167,7 @@ GCFEvent::TResult Scheduler::dispatch(GCFEvent& event, GCFPortInterface& port)
 				current_event = &timer; 
 			}
 		}
+		itsSyncErrors[&port] |= (*sa)->hasErrors();
 	}
 
 	if (sync_completed) {
@@ -465,27 +482,34 @@ void Scheduler::initiateSync(GCFEvent& event)
 
 	// Send the first syncaction for each board the timer
 	// event to set of the data communication to each board.
-	for (map< GCFPortInterface*, vector<SyncAction*> >::iterator port = m_syncactions.begin();
-			port != m_syncactions.end(); port++) { 
+	map< GCFPortInterface*, vector<SyncAction*> >::iterator 	iter = m_syncactions.begin();
+	map< GCFPortInterface*, vector<SyncAction*> >::iterator 	end  = m_syncactions.end();
+	while (iter != end) {
 		// first reset our sync flag
-		m_sync_completed[(*port).first] = false;
+		m_sync_completed[iter->first] = false;
+		itsSyncErrors[iter->first]    = false;
 
 		// also mark all commands as not completed yet.
-		for (vector<SyncAction*>::iterator sa = (*port).second.begin();
-				sa != (*port).second.end(); sa++) { 
+		for (vector<SyncAction*>::iterator sa = iter->second.begin(); sa != iter->second.end(); sa++) { 
 			(*sa)->setCompleted(false);
 		}
 
-		// dispatch F_TIMER event to first syncactions for each board
-		if (!(*port).second.empty()) {
-			for (unsigned int i = 0; i < (*port).second.size(); i++) {
-				(*port).second[i]->doEvent(event, (*port).second[i]->getBoardPort());
-				if (!(*port).second[i]->doContinue()) {	// !doContinue() == msg was send, waiting for answer
-					break;
-				}
-			}
+		// dispatch F_TIMER event to first syncactions for each board if board is not in serious trouble
+		if (itsBoardErrCount[iter->first] > MAX_SEQUENCIAL_BOARD_ERRORS) {
+			LOG_FATAL_STR("Board " << iter->first->getName() << " in ERROR state, not sending commands");
 		}
-	}
+		else {
+			if (!iter->second.empty()) {
+				for (unsigned int i = 0; i < iter->second.size(); i++) {
+					iter->second[i]->doEvent(event, iter->second[i]->getBoardPort());
+					if (!iter->second[i]->doContinue()) {	// !doContinue() == msg was send, waiting for answer
+						break;
+					}
+				} //
+			} // action queue not empty
+		} // board not in error state
+		iter++;
+	} // while all boards
 }
 
 //

@@ -257,6 +257,7 @@ RSPDriver::RSPDriver(string name) :
 
 		// set ethertype to 0x10FA so Ethereal can decode EPA messages
 		m_boardPorts[boardid].setEtherType(ETHERTYPE_EPA);
+		m_scheduler.registerBoard(m_boardPorts[boardid]);
 	}
 
 	addAllSyncActions();
