@@ -44,7 +44,7 @@ class AsyncCommand(object):
     Executes an external command in the background
     """
 
-    def __init__(self, cmd, outfiles=[], infile=None, killcmd=os.kill, logger=None ):
+    def __init__(self, cmd, outfiles=[], infile=None, killcmd=os.kill, loggers=[] ):
         """ Run command `cmd', with I/O optionally redirected.
 
             cmd:      command to execute.
@@ -78,7 +78,7 @@ class AsyncCommand(object):
           r,w = os.pipe()
 
           # feed all file descriptors to Tee
-          Tee( r, self.outputs, logger )
+          Tee( r, self.outputs, loggers )
 
           # keep the pipe input
           stdout = w

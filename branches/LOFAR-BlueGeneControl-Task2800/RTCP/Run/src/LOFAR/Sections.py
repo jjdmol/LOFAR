@@ -125,7 +125,7 @@ class SectionSet(list):
 
 class CNProcSection(Section):
   def run(self):
-    logger = Logger.rotatingLogger( "CNProc", "%s/run.CNProc.log" % (Locations.files["logdir"]) )
+    loggers = [Logger.rotatingLogger( "CNProc", "%s/run.CNProc.log" % (Locations.files["logdir"]) )]
     logfiles = self.logoutputs
 
     # CNProc is started on the Blue Gene, which has BG/P mpirun 1.65
@@ -150,11 +150,11 @@ class CNProcSection(Section):
       # arguments
     ]
 
-    self.commands.append( AsyncCommand( "mpirun %s" % (" ".join(mpiparams),), logfiles, killcmd=mpikill, logger=logger ) )
+    self.commands.append( AsyncCommand( "mpirun %s" % (" ".join(mpiparams),), logfiles, killcmd=mpikill, loggers=loggers ) )
 
 class IONProcSection(Section):
   def run(self):
-    logger = Logger.rotatingLogger( "IONProc", "%s/run.IONProc.log" % (Locations.files["logdir"]) )
+    loggers = [Logger.rotatingLogger( "IONProc", "%s/run.IONProc.log" % (Locations.files["logdir"]) )]
     logfiles = self.logoutputs
 
     if VALGRIND_ION:
@@ -191,7 +191,7 @@ class IONProcSection(Section):
         "-v",
       ] + mpiparams
 
-    self.commands.append( AsyncCommand( "/bgsys/LOFAR/openmpi-ion/bin/mpirun %s" % (" ".join(mpiparams),), logfiles, logger=logger ) )
+    self.commands.append( AsyncCommand( "/bgsys/LOFAR/openmpi-ion/bin/mpirun %s" % (" ".join(mpiparams),), logfiles, loggers=loggers ) )
 
   def check(self):
     # I/O nodes need to be reachable -- check in parallel

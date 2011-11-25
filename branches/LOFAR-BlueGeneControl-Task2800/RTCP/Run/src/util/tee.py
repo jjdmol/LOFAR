@@ -12,12 +12,12 @@ def setNonBlock( fd ):
 
 
 class Tee(Thread):
-  def __init__(self,inputfd,outputfiles,logger=None):
+  def __init__(self,inputfd,outputfiles,loggers=[]):
     Thread.__init__(self)
 
     self.inputfd = inputfd
     self.outputfiles = filter( lambda x: x is not None, outputfiles )
-    self.logger = logger
+    self.loggers = loggers
     self.done = False
 
     setNonBlock( self.inputfd )
@@ -59,8 +59,8 @@ class Tee(Thread):
         lines[0] = "%s%s" % (prevline,lines[0])
 
         for line in lines[:-1]: 
-          if self.logger:
-            self.logger.info( "%s", line )
+          for logger in self.loggers:
+            logger.info( "%s", line )
 
           for f in self.outputfiles:
             try:
