@@ -28,6 +28,7 @@
 #include "defaultstatistics.h"
 #include "qualitytablesformatter.h"
 #include "statisticalvalue.h"
+#include <boost/concept_check.hpp>
 
 class StatisticsCollection : public Serializable
 {
@@ -251,6 +252,31 @@ class StatisticsCollection : public Serializable
 			for(std::map<double, DoubleStatMap>::iterator i=_timeStatistics.begin();i!=_timeStatistics.end();++i)
 			{
 				lowerResolution(i->second, maxSteps);
+			}
+		}
+		
+		void LowerFrequencyResolution(size_t maxSteps)
+		{
+			lowerResolution(_frequencyStatistics, maxSteps);
+		}
+		
+		/**
+		 * The regrid method will force all channels(/sub-bands) inside the collection to have the same
+		 * uniform grid. It will do this by moving around time steps, using the first grid as reference.
+		 * This is useful for raw (not NDPPP-ed) data, that might contain slightly different time steps in the
+		 * different sub-bands, but are otherwise similarly gridded.
+		 */
+		void RegridTime()
+		{
+			if(_timeStatistics.size() > 1)
+			{
+				std::map<double, DoubleStatMap>::iterator i = _timeStatistics.begin();
+				DoubleStatMap &referenceMap = i->second;
+				++i;
+				do {
+					regrid(referenceMap, i->second);
+					++i;
+				} while(i != _timeStatistics.end());
 			}
 		}
 	private:
@@ -890,6 +916,33 @@ class StatisticsCollection : public Serializable
 						newMap.insert(std::pair<double, DefaultStatistics>(keySum / count, integratedStat));
 				}
 				map = newMap;
+			}
+		}
+		
+		static void regrid(const DoubleStatMap &referenceMap, DoubleStatMap &regridMap)
+		{
+			DoubleStatMap newMap;
+			for(DoubleStatMap::const_iterator i=regridMap.begin();i!=regridMap.end();++i)
+			{
+				double key = i->first;
+				
+				// find the key in the reference map that is closest to this key, if it is within range
+				DoubleStatMap::const_iterator bound = referenceMap.lower_bound(key);
+				if(bound != referenceMap.end())
+				{
+					double rightKey = bound->first;
+					if(bound != referenceMap.begin())
+					{
+						--bound;
+						double leftKey = bound->first;
+						if(key - rightKey < leftKey - key)
+							key = rightKey;
+						else
+							key = leftKey;
+					}
+				}
+				newMap.insert(std::pair<double, DefaultStatistics>(key, i->second));
+				regridMap = newMap;
 			}
 		}
 		
