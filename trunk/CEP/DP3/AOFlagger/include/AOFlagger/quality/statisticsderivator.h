@@ -25,6 +25,7 @@
 #include <complex>
 #include <set>
 
+#include <AOFlagger/msio/antennainfo.h>
 #include <AOFlagger/msio/timefrequencydata.h>
 
 #include <AOFlagger/strategy/imagesets/noisestatimageset.h>
@@ -71,7 +72,7 @@ class StatisticsDerivator
 			return sqrt(variance.real()*variance.real() + variance.imag()*variance.imag());
 		}
 		
-		TimeFrequencyData CreateTFData(QualityTablesFormatter::StatisticKind kind)
+		std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> CreateTFData(QualityTablesFormatter::StatisticKind kind)
 		{
 			const std::map<double, std::map<double, DefaultStatistics> > &map = _collection.AllTimeStatistics();
 			std::set<double> frequencies;
@@ -91,16 +92,24 @@ class StatisticsDerivator
 			}
 			std::map<double, size_t> freqIndices;
 			std::map<double, size_t> timeIndices;
+			std::vector<double> observationTimes;
+			BandInfo band;
 			size_t index = 0;
+			band.channelCount = frequencies.size();
 			for(std::set<double>::const_iterator i=frequencies.begin();i!=frequencies.end();++i)
 			{
 				freqIndices.insert(std::pair<double, size_t>(*i, index));
+				ChannelInfo channel;
+				channel.frequencyIndex = index;
+				channel.frequencyHz = *i;
+				band.channels.push_back(channel);
 				++index;
 			}
 			index = 0;
 			for(std::set<double>::const_iterator i=timesteps.begin();i!=timesteps.end();++i)
 			{
 				timeIndices.insert(std::pair<double, size_t>(*i, index));
+				observationTimes.push_back(*i);
 				++index;
 			}
 			
@@ -137,8 +146,10 @@ class StatisticsDerivator
 			}
 			TimeFrequencyData data = TimeFrequencyData::CreateComplexTFData(pCount, (Image2DCPtr*) realImage, (Image2DCPtr*) imagImage);
 			data.SetGlobalMask(mask);
-			rfiStrategy::NoiseStatImageSet::MergeInTime(data, TimeFrequencyMetaDataPtr());
-			return data;
+			TimeFrequencyMetaDataPtr metaData(new TimeFrequencyMetaData());
+			metaData->SetObservationTimes(observationTimes);
+			metaData->SetBand(band);
+			return std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr>(data, metaData);
 		}
 	private:
 		template<typename T>
