@@ -37,7 +37,7 @@ TimeFrequencyPlotPage::~TimeFrequencyPlotPage()
 {
 }
 
-TimeFrequencyData TimeFrequencyPlotPage::ConstructImage()
+std::pair<TimeFrequencyData, TimeFrequencyMetaDataCPtr> TimeFrequencyPlotPage::ConstructImage()
 {
 	if(HasStatistics())
 	{
@@ -46,7 +46,7 @@ TimeFrequencyData TimeFrequencyPlotPage::ConstructImage()
 		StatisticsDerivator derivator(*_statCollection);
 		return derivator.CreateTFData(kind);
 	} else {
-		return TimeFrequencyData();
+		return std::pair<TimeFrequencyData, TimeFrequencyMetaDataCPtr>(TimeFrequencyData(), TimeFrequencyMetaDataCPtr());
 	}
 }
 
