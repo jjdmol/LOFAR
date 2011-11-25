@@ -271,7 +271,7 @@ class StatisticsCollection : public Serializable
 			if(_timeStatistics.size() > 1)
 			{
 				std::map<double, DoubleStatMap>::iterator i = _timeStatistics.begin();
-				DoubleStatMap &referenceMap = i->second;
+				const DoubleStatMap &referenceMap = i->second;
 				++i;
 				do {
 					regrid(referenceMap, i->second);
@@ -942,8 +942,8 @@ class StatisticsCollection : public Serializable
 					}
 				}
 				newMap.insert(std::pair<double, DefaultStatistics>(key, i->second));
-				regridMap = newMap;
 			}
+			regridMap = newMap;
 		}
 		
 		std::map<double, DoubleStatMap> _timeStatistics;
