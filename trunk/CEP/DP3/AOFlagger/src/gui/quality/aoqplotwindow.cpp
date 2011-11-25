@@ -151,6 +151,9 @@ void AOQPlotWindow::readStatistics()
 	std::cout << "Lowering time resolution..." << std::endl;
 	_statCollection->LowerTimeResolution(1000);
 
+	std::cout << "Lowering frequency resolution..." << std::endl;
+	_statCollection->LowerFrequencyResolution(1000);
+
 	std::cout << "Integrating baseline statistics to one channel..." << std::endl;
 	_statCollection->IntegrateBaselinesToOneChannel();
 	
