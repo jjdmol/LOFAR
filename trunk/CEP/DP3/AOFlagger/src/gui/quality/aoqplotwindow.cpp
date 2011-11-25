@@ -154,6 +154,9 @@ void AOQPlotWindow::readStatistics()
 	std::cout << "Integrating baseline statistics to one channel..." << std::endl;
 	_statCollection->IntegrateBaselinesToOneChannel();
 	
+	std::cout << "Regridding time statistics..." << std::endl;
+	_statCollection->RegridTime();
+	
 	std::cout << "Copying statistics..." << std::endl;
 	_fullStats = new StatisticsCollection(*_statCollection);
 	
