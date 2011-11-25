@@ -44,7 +44,17 @@ std::pair<TimeFrequencyData, TimeFrequencyMetaDataCPtr> TimeFrequencyPlotPage::C
 		const QualityTablesFormatter::StatisticKind kind = GetSelectedStatisticKind();
 		
 		StatisticsDerivator derivator(*_statCollection);
-		return derivator.CreateTFData(kind);
+		
+		std::pair<TimeFrequencyData, TimeFrequencyMetaDataCPtr> data = derivator.CreateTFData(kind);
+		if(data.second == 0)
+		{
+			GrayScaleWidget().SetXAxisDescription("Time index");
+			GrayScaleWidget().SetYAxisDescription("Frequency index");
+		} else {
+			GrayScaleWidget().SetXAxisDescription("Time");
+			GrayScaleWidget().SetYAxisDescription("Frequency (MHz)");
+		}
+		return data;
 	} else {
 		return std::pair<TimeFrequencyData, TimeFrequencyMetaDataCPtr>(TimeFrequencyData(), TimeFrequencyMetaDataCPtr());
 	}
