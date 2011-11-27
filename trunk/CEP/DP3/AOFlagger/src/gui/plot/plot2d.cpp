@@ -21,7 +21,8 @@
 
 #include <iostream>
 
-Plot2D::Plot2D()
+Plot2D::Plot2D() :
+	_logarithmicYAxis(false)
 {
 }
 
@@ -75,7 +76,10 @@ void Plot2D::Render(Gtk::DrawingArea &drawingArea)
 			double horiScaleHeight = _horizontalScale.GetHeight(cr);
 			
 			double rightMargin = _horizontalScale.GetRightMargin(cr);
-			_verticalScale.InitializeNumericTicks(_system.YRangeMin(refPointSet), _system.YRangeMax(refPointSet));
+			if(_logarithmicYAxis)
+				_verticalScale.InitializeLogarithmicTicks(_system.YRangeMin(refPointSet), _system.YRangeMax(refPointSet));
+			else
+				_verticalScale.InitializeNumericTicks(_system.YRangeMin(refPointSet), _system.YRangeMax(refPointSet));
 			_verticalScale.SetUnitsCaption(refPointSet.YUnits());
 			_verticalScale.SetPlotDimensions(_width - rightMargin, _height - horiScaleHeight - _topMargin, _topMargin);
 
@@ -117,17 +121,27 @@ void Plot2D::render(Cairo::RefPtr<Cairo::Context> cr, Plot2DPointSet &pointSet)
 	double
 		xLeft = _system.XRangeMin(pointSet),
 		xRight = _system.XRangeMax(pointSet),
-		yTop = _system.YRangeMin(pointSet),
-		yBottom = _system.YRangeMax(pointSet);
-	if(!std::isfinite(xLeft) || !std::isfinite(xRight) || xLeft == xRight)
+		yMin = _system.YRangeMin(pointSet),
+		yMax = _system.YRangeMax(pointSet);
+	if(!std::isfinite(xLeft) || !std::isfinite(xRight))
+	{
+		xLeft = -1;
+		xRight = 1;
+	}
+	else if(xLeft == xRight)
 	{
 		xLeft -= 1;
 		xRight += 1;
 	}
-	if(!std::isfinite(yTop) || !std::isfinite(yBottom) || yTop == yBottom)
+	if(!std::isfinite(yMin) || !std::isfinite(yMax))
 	{
-		yTop -= 1;
-		yBottom += 1;
+		yMin = -1;
+		yMax = 1;
+	}
+	else if(yMin == yMax)
+	{
+		yMin -= 1;
+		yMax += 1;
 	}
 
 	double plotLeftMargin = _verticalScale.GetWidth(cr);
@@ -135,7 +149,10 @@ void Plot2D::render(Cairo::RefPtr<Cairo::Context> cr, Plot2DPointSet &pointSet)
 	double plotHeight = _height - _horizontalScale.GetHeight(cr) - _topMargin;
 	
 	double fx = (double) plotWidth / (xRight - xLeft);
-	double fy = (double) plotHeight / (yBottom - yTop);
+	
+	double
+		minYLog10 = log10(yMin),
+		maxYLog10 = log10(yMax);
 
 	bool hasPrevPoint = false;
 	
@@ -146,10 +163,32 @@ void Plot2D::render(Cairo::RefPtr<Cairo::Context> cr, Plot2DPointSet &pointSet)
 	for(size_t i=0;i<iterationCount;++i)
 	{
 		double
+			y1Val, y2Val;
+		
+		if(_logarithmicYAxis)
+		{
+			if(pointSet.GetY(i) <= 0.0)
+				y1Val = 0.0;
+			else
+				y1Val = (log10(pointSet.GetY(i)) - minYLog10) / (maxYLog10 - minYLog10);
+			if(pointSet.GetY(i+1) <= 0.0)
+				y2Val = 0.0;
+			else
+				y2Val = (log10(pointSet.GetY(i+1)) - minYLog10) / (maxYLog10 - minYLog10);
+		} else {
+			y1Val = (pointSet.GetY(i) - yMin) / (yMax - yMin);
+			y2Val = (pointSet.GetY(i) - yMin) / (yMax - yMin);
+		}
+		if(y1Val < 0.0) y1Val = 0.0;
+		if(y1Val > 1.0) y1Val = 1.0;
+		if(y2Val < 0.0) y2Val = 0.0;
+		if(y2Val > 1.0) y2Val = 1.0;
+			
+		double
 			x1 = (pointSet.GetX(i) - xLeft) * fx + plotLeftMargin,
 			x2 = (pointSet.GetX(i+1) - xLeft) * fx + plotLeftMargin,
-			y1 = (yBottom - pointSet.GetY(i)) * fy + _topMargin,
-			y2 = (yBottom - pointSet.GetY(i+1)) * fy + _topMargin;
+			y1 = (1.0 - y1Val) * plotHeight + _topMargin,
+			y2 = (1.0 - y2Val) * plotHeight + _topMargin;
 
 		if(std::isfinite(x1) && std::isfinite(y1))
 		{
@@ -206,11 +245,11 @@ void Plot2D::render(Cairo::RefPtr<Cairo::Context> cr, Plot2DPointSet &pointSet)
 	}
 
 	// Draw "zero y" x-axis
-	if(yTop <= 0.0 && yBottom >= 0.0)
+	if(yMin <= 0.0 && yMax >= 0.0 && !_logarithmicYAxis)
 	{
 		cr->set_source_rgba(0.5, 0.5, 0.5, 1);
-		cr->move_to(plotLeftMargin, yBottom * fy + _topMargin);
-		cr->line_to(plotWidth + plotLeftMargin, yBottom * fy + _topMargin);
+		cr->move_to(plotLeftMargin, yMax * plotHeight / (yMax - yMin) + _topMargin);
+		cr->line_to(plotWidth + plotLeftMargin, yMax * plotHeight / (yMax - yMin) + _topMargin);
 		cr->stroke();
 	}
 }

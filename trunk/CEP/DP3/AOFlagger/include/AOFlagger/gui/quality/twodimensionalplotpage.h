@@ -72,6 +72,8 @@ class TwoDimensionalPlotPage : public Gtk::HBox {
 		enum PhaseType { AmplitudePhaseType, PhasePhaseType, RealPhaseType, ImaginaryPhaseType} ;
 		
 		void updatePlot();
+		void updatePlotConfig();
+		
 		template<enum PhaseType Phase>
 		inline double getValue(const std::complex<long double> val);
 		void plotStatistic(QualityTablesFormatter::StatisticKind kind);
@@ -85,6 +87,13 @@ class TwoDimensionalPlotPage : public Gtk::HBox {
 		void initStatisticKindButtons();
 		void initPolarizationButtons();
 		void initPhaseButtons();
+		void initPlotButtons();
+		
+		void onLogarithmicClicked()
+		{
+			_zeroAxisButton.set_sensitive(!_logarithmicButton.get_active());
+			updatePlotConfig();
+		}
 		
 		Gtk::VBox _sideBox;
 		
@@ -99,6 +108,10 @@ class TwoDimensionalPlotPage : public Gtk::HBox {
 		Gtk::Frame _phaseFrame;
 		Gtk::VBox _phaseBox;
 		Gtk::CheckButton _amplitudeButton, _phaseButton, _realButton, _imaginaryButton;
+		
+		Gtk::Frame _plotFrame;
+		Gtk::VBox _plotBox;
+		Gtk::CheckButton _logarithmicButton, _zeroAxisButton;
 		
 		class StatisticsCollection *_statCollection;
 		Plot2D _plot;

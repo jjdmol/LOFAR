@@ -48,11 +48,15 @@ TwoDimensionalPlotPage::TwoDimensionalPlotPage() :
 	_phaseButton("Phase"),
 	_realButton("Real"),
 	_imaginaryButton("Imaginary"),
+	_plotFrame("Plot"),
+	_logarithmicButton("Logarithmic"),
+	_zeroAxisButton("Zero axis"),
 	_statCollection(0)
 {
 	initStatisticKindButtons();
 	initPolarizationButtons();
 	initPhaseButtons();
+	initPlotButtons();
 	
 	pack_start(_sideBox, Gtk::PACK_SHRINK);
 	
@@ -86,6 +90,13 @@ void TwoDimensionalPlotPage::updatePlot()
 			plotStatistic(QualityTablesFormatter::SignalToNoiseStatistic);
 		_plotWidget.Update();
 	}
+}
+
+void TwoDimensionalPlotPage::updatePlotConfig()
+{
+	_plot.SetIncludeZeroYAxis(_zeroAxisButton.get_active());
+	_plot.SetLogarithmicYAxis(_logarithmicButton.get_active());
+	_plotWidget.Update();
 }
 
 template<enum TwoDimensionalPlotPage::PhaseType Phase>
@@ -253,3 +264,17 @@ void TwoDimensionalPlotPage::initPhaseButtons()
 	_sideBox.pack_start(_phaseFrame, Gtk::PACK_SHRINK);
 }
 
+void TwoDimensionalPlotPage::initPlotButtons()
+{
+	_logarithmicButton.signal_clicked().connect(sigc::mem_fun(*this, &TwoDimensionalPlotPage::onLogarithmicClicked));
+	_plotBox.pack_start(_logarithmicButton, Gtk::PACK_SHRINK);
+	
+	_zeroAxisButton.signal_clicked().connect(sigc::mem_fun(*this, &TwoDimensionalPlotPage::updatePlotConfig));
+	_zeroAxisButton.set_active(true);
+	_plotBox.pack_start(_zeroAxisButton, Gtk::PACK_SHRINK);
+	_plot.SetIncludeZeroYAxis(true);
+	
+	_plotFrame.add(_plotBox);
+	
+	_sideBox.pack_start(_plotFrame, Gtk::PACK_SHRINK);
+}

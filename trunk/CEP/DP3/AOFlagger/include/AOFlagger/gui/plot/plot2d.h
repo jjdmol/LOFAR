@@ -59,6 +59,18 @@ class Plot2D : public Plotable {
 		}
 		size_t PointSetCount() const { return _pointSets.size(); }
 		virtual void Render(Gtk::DrawingArea &drawingArea);
+		void SetIncludeZeroYAxis(bool includeZeroAxis)
+		{
+			_system.SetIncludeZeroYAxis(includeZeroAxis);
+			if(includeZeroAxis)
+				_logarithmicYAxis = false;
+		}
+		void SetLogarithmicYAxis(bool logarithmicYAxis)
+		{
+			_logarithmicYAxis = logarithmicYAxis;
+			if(_logarithmicYAxis)
+				_system.SetIncludeZeroYAxis(false);
+		}
 	private:
 		void render(Cairo::RefPtr<Cairo::Context> cr, Plot2DPointSet &pointSet);
 
@@ -68,6 +80,7 @@ class Plot2D : public Plotable {
 		int _width, _height;
 		double _topMargin;
 		System _system;
+		bool _logarithmicYAxis;
 };
 
 #endif
