@@ -3,7 +3,11 @@
 lofar_add_bin_program(packetanalysis packetanalysis.c)
 
 install(PROGRAMS 
-  BlueGeneControl.sh
+  BGPPartition.sh
+  CNProc.sh
+  IONProc.sh
+  IdentityControl.sh
+  locations.sh
   watchlogs.sh
   startOLAP.py
   commandOLAP.py
