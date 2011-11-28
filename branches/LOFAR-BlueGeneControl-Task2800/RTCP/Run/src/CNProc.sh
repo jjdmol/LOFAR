@@ -13,4 +13,4 @@ function stop() {
   mpikill "$PID" || kill -9 "$PID"
 }
 
-. IdentityControl.sh
+. controller.sh

@@ -19,4 +19,4 @@ function start() {
   /bgsys/LOFAR/openmpi-ion/bin/mpirun -host $PSETS --pernode -wd $LOGDIR $IONPROC $ISPRODUCTION >& $LOGSYMLINK/IONProc.log &
 }
 
-. IdentityControl.sh
+. controller.sh

@@ -6,7 +6,7 @@ install(PROGRAMS
   BGPPartition.sh
   CNProc.sh
   IONProc.sh
-  IdentityControl.sh
+  controller.sh
   locations.sh
   watchlogs.sh
   startOLAP.py
