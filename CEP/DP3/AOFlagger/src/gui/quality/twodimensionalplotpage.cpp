@@ -51,7 +51,8 @@ TwoDimensionalPlotPage::TwoDimensionalPlotPage() :
 	_plotFrame("Plot"),
 	_logarithmicButton("Logarithmic"),
 	_zeroAxisButton("Zero axis"),
-	_statCollection(0)
+	_statCollection(0),
+	_customButtonsCreated(false)
 {
 	initStatisticKindButtons();
 	initPolarizationButtons();

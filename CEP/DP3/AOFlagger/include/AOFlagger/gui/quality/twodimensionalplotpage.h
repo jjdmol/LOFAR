@@ -45,6 +45,13 @@ class TwoDimensionalPlotPage : public Gtk::HBox {
 			processStatistics(statCollection, antennas);
 			
 			_statCollection = statCollection;
+			// We need to do this here because it can not be done yet during construction in the
+			// constructor (virtual methods not yet available there).
+			if(!_customButtonsCreated)
+			{
+				addCustomPlotButtons(_plotBox);
+				_customButtonsCreated = true;
+			}
 			updatePlot();
 		}
 		void CloseStatistics()
@@ -64,14 +71,18 @@ class TwoDimensionalPlotPage : public Gtk::HBox {
 		
 		virtual void StartLine(Plot2D &plot, const std::string &name) = 0;
 		
+		virtual void addCustomPlotButtons(Gtk::VBox &container)
+		{
+		}
+		
 		class StatisticsCollection *GetStatCollection() const
 		{
 			return _statCollection;
 		}
+		void updatePlot();
 	private:
 		enum PhaseType { AmplitudePhaseType, PhasePhaseType, RealPhaseType, ImaginaryPhaseType} ;
 		
-		void updatePlot();
 		void updatePlotConfig();
 		
 		template<enum PhaseType Phase>
@@ -116,6 +127,8 @@ class TwoDimensionalPlotPage : public Gtk::HBox {
 		class StatisticsCollection *_statCollection;
 		Plot2D _plot;
 		PlotWidget _plotWidget;
+		
+		bool _customButtonsCreated;
 };
 
 #endif
