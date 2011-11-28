@@ -125,8 +125,8 @@ class new_bbs(BaseRecipe):
     def _make_bbs_map(self):
         """
         This method bundles the contents of three different map-files.
-        All three map-files contain a per-node list of filenames as parset.
-        The contents of these files are related. The elements of the lists
+        All three map-files contain a list of tuples of hostname and filename.
+        The contents of these files are related by index in the list. They
         form triplets of MS-file, its associated instrument model and its
         associated sky model.
 
@@ -144,31 +144,40 @@ class new_bbs(BaseRecipe):
                           (self.inputs['args'][0],
                            self.inputs['instrument_mapfile'],
                            self.inputs['sky_mapfile']))
-        data_map = parameterset(self.inputs['args'][0])
-        instrument_map = parameterset(self.inputs['instrument_mapfile'])
-        sky_map = parameterset(self.inputs['sky_mapfile'])
+        data_map = load_data_map(self.inputs['args'][0])
+        instrument_map = load_data_map(self.inputs['instrument_mapfile'])
+        sky_map = load_data_map(self.inputs['sky_mapfile'])
+
+        # The three lists must have the same length
+        if not len(data_map) == len(instrument_map) == len(sky_map):
+            raise PipelineException(
+                "Input data product lists must have the same length"
+            )
+
         bbs_map = []
-        for host in data_map.keys():
-            data = data_map.getStringVector(host, [])
-            instrument = instrument_map.getStringVector(host, [])
-            sky = sky_map.getStringVector(host, [])
-            triplets = zip(data, instrument, sky)
-            for triplet in triplets:
-                bbs_map.append((host, triplet))
-            # Error handling and reporting
-            if not len(data) == len(instrument) == len(sky):
-                self.logger.warn(
-                    "Number of data files (%d) does not match with number of "
-                    "instrument files (%d) or number of skymodel files (%d) "
-                    "on %s" % (len(data), len(instrument), len(sky), host))
-                if len(triplets) > 0:
-                    msg = "The following triplets will be used: "
-                    msg += ", ".join([str(t) for t in triplets])
-                    self.logger.warn(msg)
-                if len(triplets) < len(data):
-                    msg = "The following data files will not be processed: "
-                    msg += ", ".join([str(t) for t in data[len(triplets):]])
-                    self.logger.warn(msg)
+        error = False
+        for i in xrange(len(data_map)):
+            # All three input files must reside on the same node.
+            if not data_map[i][0] == instrument_map[i][0] == sky_map[i][0]:
+                error = True
+                self.logger.error(
+                    "Input data at index %d do not reside on the same host: %s"
+                    % (i, (
+                        ':'.join(data_map[i]),
+                        ':'.join(instrument_map[i]),
+                        ':'.join(sky_map[i])) )
+                )
+            bbs_map.append(
+                (data_map[i][0],
+                (data_map[i][1], instrument_map[i][1], sky_map[i][1]))
+            )
+
+        if error:
+            raise PipelineException(
+                "One or more input data triplets (data, instrument-, sky-model)"
+                " do not reside on the same host"
+            )
+
         # Store data mapfile containing list of files to be processed by BBS.
         data_map = []
         for (host, triplet) in bbs_map:

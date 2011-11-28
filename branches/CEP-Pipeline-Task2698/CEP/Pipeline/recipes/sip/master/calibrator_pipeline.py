@@ -9,8 +9,11 @@ import os
 import sys
 
 from lofarpipe.support.control import control
-from lofar.parameterset import parameterset
+from lofarpipe.support.lofarexceptions import PipelineException
 from lofarpipe.support.group_data import store_data_map
+from lofarpipe.support.utilities import create_directory
+from lofar.parameterset import parameterset
+
 
 class calibrator_pipeline(control):
     """
@@ -31,6 +34,8 @@ class calibrator_pipeline(control):
     def __init__(self):
         control.__init__(self)
         self.parset = parameterset()
+        self.input_data = []
+        self.output_data = []
 
 
     def usage(self):
@@ -38,21 +43,38 @@ class calibrator_pipeline(control):
         return 1
 
 
-    def _get_filemap(self, prefix):
+    def _get_io_product_specs(self):
         """
-        Read list of file names and locations from parset-file, using the keys
-        `filenames` and `locations` prefixed with `prefix`.
-        Return a list of tuples of hostname and absolute file path.
+        Get input- and output-data product specifications from the
+        parset-file, and do some sanity checks.
         """
-        filenames = self.parset.getStringVector(prefix + 'filenames')
-        locations = self.parset.getStringVector(prefix + 'locations')
-        return [os.path.join(*x).split(':') for x in zip(locations, filenames)]
+        dp = self.parset.makeSubset('ObsSW.Observation.DataProducts.')
+        self.input_data = [tuple(''.join(x).split(':')) for x in zip(
+            dp.getStringVector('Input_Correlated.locations', []),
+            dp.getStringVector('Input_Correlated.filenames', []))
+        ]
+        self.output_data = [tuple(''.join(x).split(':')) for x in zip(
+            dp.getStringVector('Output_InstrumentModel.locations', []),
+            dp.getStringVector('Output_InstrumentModel.filenames', []))
+        ]
+        # Sanity checks on input- and output map files
+        if len(self.input_data) != len(self.output_data):
+            raise PipelineException(
+                "Number of input- and output files must be equal!"
+            )
+        #if ([x.split(':')[0] for x in self.input_data] !=
+            #[x.split(':')[0] for x in self.output_data]):
+        if [x[0] for x in self.input_data] != [x[0] for x in self.output_data]:
+            raise PipelineException(
+                "Input- and output data products must reside on the same node!"
+            )
 
 
     def go(self):
         """
-        Read the parset-file that was given as input argument, and set the
-        jobname before calling the base-class's `go()` method.
+        Read the parset-file that was given as input argument;
+        set jobname, and input/output data products before calling the
+        base-class's `go()` method.
         """
         try:
             parset_file = self.inputs['args'][0]
@@ -65,6 +87,9 @@ class calibrator_pipeline(control):
             self.inputs['job_name'] = (
                 os.path.splitext(os.path.basename(parset_file))[0]
             )
+        # Get the input- and output-data product specifications
+        self._get_io_product_specs()
+        # Call the base-class's `go()` method.
         super(calibrator_pipeline, self).go()
 
 
@@ -78,13 +103,27 @@ class calibrator_pipeline(control):
         py_parset = self.parset.makeSubset(
             'ObsSW.Observation.ObservationControl.PythonControl.')
 
-        # Generate a datamap-file, which is a parset-file containing
-        # key/value pairs of hostname and list of MS-files.
-        data_mapfile = self.run_task(
-            "cep2_datamapper",
-            observation_dir=py_parset.getString('observationDirectory')
-#            parset=self.inputs['args'][0]
-        )['mapfile']
+        # Get input/output-data products specifications.
+        self._get_io_product_specs()
+
+        parset_dir = os.path.join(
+            self.config.get("layout", "job_directory"),
+            "parsets"
+        )
+
+        # Write datamap-file
+        create_directory(parset_dir)
+        data_mapfile = os.path.join(parset_dir, "data_mapfile")
+        store_data_map(data_mapfile, self.input_data)
+        self.logger.debug("Wrote mapfile: %s" % data_mapfile)
+
+        ## Generate a datamap-file, which is a parset-file containing
+        ## key/value pairs of hostname and list of MS-files.
+        #data_mapfile = self.run_task(
+            #"cep2_datamapper",
+            #observation_dir=py_parset.getString('observationDirectory')
+##            parset=self.inputs['args'][0]
+        #)['mapfile']
 
         # Create an empty parmdb for DPPP
         parmdb_mapfile = self.run_task("parmdb", data_mapfile)['mapfile']
@@ -99,9 +138,7 @@ class calibrator_pipeline(control):
         vdsinfo = self.run_task("vdsreader", gvds=gvds_file)
 
         # Create a parameter-subset for DPPP and write it to file.
-        ndppp_parset = os.path.join(
-            self.config.get("layout", "job_directory"),
-            "parsets", "NDPPP.parset")
+        ndppp_parset = os.path.join(parset_dir, "NDPPP.parset")
         py_parset.makeSubset('DPPP.').writeFile(ndppp_parset)
 
         # Run the Default Pre-Processing Pipeline (DPPP);
@@ -116,9 +153,7 @@ class calibrator_pipeline(control):
         demix_mapfile = self.run_task("demixing", dppp_mapfile)['mapfile']
 
         # Create a parameter-subset for BBS and write it to file.
-        bbs_parset = os.path.join(
-            self.config.get("layout", "job_directory"),
-            "parsets", "BBS.parset")
+        bbs_parset = os.path.join(parset_dir, "BBS.parset")
         py_parset.makeSubset('BBS.').writeFile(bbs_parset)
 
         # Run BBS to calibrate the calibrator source(s).
@@ -129,16 +164,20 @@ class calibrator_pipeline(control):
             sky_mapfile=sourcedb_mapfile)
 
         # Create a mapfile containing the locations of the output instrument
-        # model files. This is a bit hacky. I will have to clean this up a bit.
+        # model files. This is a bit hacky, because it assumes that we know
+        # where parmexportcal will put its output files.
+        # The ultimate solution is to force parmexportcal (and other exisiting
+        # recipes) to use the output-data product specifications form the
+        # parset file.
         instrument_mapfile = os.path.join(
             self.config.get("layout", "job_directory"),
-            "parsets", "instrument_mapfile_final")
-        instrument_map = self._get_filemap(
-            "ObsSW.Observation.DataProducts.Output_InstrumentModel.")
+            "parsets", "instrument_mapfile")
+        instrument_map = self.output_data
         store_data_map(instrument_mapfile, instrument_map)
 
         # Export the calibration solutions using parmexportcal
         self.run_task("parmexportcal", parmdb_mapfile)
+
 
 if __name__ == '__main__':
     sys.exit(calibrator_pipeline().main())

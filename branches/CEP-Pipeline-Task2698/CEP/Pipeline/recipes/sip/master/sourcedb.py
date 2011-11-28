@@ -7,16 +7,13 @@
 
 from __future__ import with_statement
 import os
-import collections
+import sys
 
-import lofarpipe.support.utilities as utilities
 import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
-from lofarpipe.support.clusterlogger import clusterlogger
-from lofarpipe.support.group_data import load_data_map
+from lofarpipe.support.group_data import load_data_map, store_data_map
 from lofarpipe.support.remotecommand import ComputeJob
-from lofarpipe.support.parset import Parset
 
 class sourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
     """
@@ -74,14 +71,15 @@ class sourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
         data = load_data_map(self.inputs['args'][0])
 
         command = "python %s" % (self.__file__.replace('master', 'nodes'))
-        outnames = collections.defaultdict(list)
+        outdata = []
         jobs = []
         for host, ms in data:
-            outnames[host].append(
-                os.path.join(
+            outdata.append(
+                (host,
+                 os.path.join(
                     self.inputs['working_directory'],
                     self.inputs['job_name'],
-                    os.path.basename(ms) + self.inputs['suffix']
+                    os.path.basename(ms) + self.inputs['suffix'])
                 )
             )
             jobs.append(
@@ -91,7 +89,7 @@ class sourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
                     arguments=[
                         self.inputs['executable'],
                         self.inputs['skymodel'],
-                        outnames[host][-1]
+                        outdata[-1][1]
                     ]
                 )
             )
@@ -102,7 +100,7 @@ class sourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
         else:
             self.logger.debug("Writing sky map file: %s" % 
                               self.inputs['mapfile'])
-            Parset.fromDict(outnames).writeFile(self.inputs['mapfile'])
+            store_data_map(self.inputs['mapfile'], outdata)
             self.outputs['mapfile'] = self.inputs['mapfile']
             return 0
 

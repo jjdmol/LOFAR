@@ -6,17 +6,15 @@
 # ------------------------------------------------------------------------------
 
 from __future__ import with_statement
-import collections
 import os
 import sys
-from optparse import OptionGroup
 
 import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
-from lofarpipe.support.group_data import load_data_map
+from lofarpipe.support.group_data import load_data_map, store_data_map
 from lofarpipe.support.remotecommand import ComputeJob
-from lofarpipe.support.parset import Parset
+
 
 class demixing(BaseRecipe, RemoteCommandRecipeMixIn):
     """
@@ -103,7 +101,7 @@ class demixing(BaseRecipe, RemoteCommandRecipeMixIn):
         data = load_data_map(self.inputs['args'][0])
 
         command = "python %s" % (self.__file__.replace('master', 'nodes'))
-        outnames = collections.defaultdict(list)
+        outdata = []
         jobs = []
         job_dir = os.path.join(self.inputs['working_directory'],
                                self.inputs['job_name'])
@@ -112,13 +110,13 @@ class demixing(BaseRecipe, RemoteCommandRecipeMixIn):
             # contain the string "_uv". The demixing node script will produce
             # output MS-files, whose names have the string "_uv" replaced by
             # "_" + self.inputs['ms_target'] + "_sub".
-            outnames[host].append(
-                os.path.join(
+            outdata.append(
+                (host,
+                 os.path.join(
                     job_dir,
                     os.path.basename(ms).replace(
                         '_uv',
-                        '_' + self.inputs['ms_target'] + '_sub'
-                    )
+                        '_' + self.inputs['ms_target'] + '_sub'))
                 )
             )
             jobs.append(
@@ -145,11 +143,8 @@ class demixing(BaseRecipe, RemoteCommandRecipeMixIn):
         if self.error.isSet():
             return 1
         else:
-            parset = Parset()
-            for host, filenames in outnames.iteritems():
-                parset.addStringVector(host, filenames)
             self.logger.debug("Writing mapfile %s" % self.inputs['mapfile'])
-            parset.writeFile(self.inputs['mapfile'])
+            store_data_map(self.inputs['mapfile'], outdata)
             self.outputs['mapfile'] = self.inputs['mapfile']
             return 0
 

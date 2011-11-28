@@ -5,15 +5,13 @@
 #                                                                loose@astron.nl
 # ------------------------------------------------------------------------------
 
-import collections
 import os
 import sys
 
 import lofarpipe.support.lofaringredient as ingredient
 
 from lofarpipe.support.baserecipe import BaseRecipe
-from lofarpipe.support.group_data import load_data_map
-from lofarpipe.support.parset import Parset
+from lofarpipe.support.group_data import load_data_map, store_data_map
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
 
@@ -70,15 +68,16 @@ class parmexportcal(BaseRecipe, RemoteCommandRecipeMixIn):
         data = load_data_map(self.inputs['args'][0])
 
         command = "python %s" % (self.__file__.replace('master', 'nodes'))
-        outnames = collections.defaultdict(list)
+        outdata = []
         jobs = []
         for host, infile in data:
-            outnames[host].append(
-                os.path.join(
+            outdata.append(
+                (host,
+                 os.path.join(
                     self.inputs['working_directory'],
                     self.inputs['job_name'],
                     (os.path.splitext(os.path.basename(infile))[0] +
-                     self.inputs['suffix'])
+                     self.inputs['suffix']))
                 )
             )
             jobs.append(
@@ -87,7 +86,7 @@ class parmexportcal(BaseRecipe, RemoteCommandRecipeMixIn):
                     command,
                     arguments=[
                         infile,
-                        outnames[host][-1],
+                        outdata[-1][1],
                         self.inputs['executable'],
                         self.inputs['initscript']
                      ]
@@ -101,7 +100,7 @@ class parmexportcal(BaseRecipe, RemoteCommandRecipeMixIn):
         else:
             self.logger.debug("Writing instrument map file: %s" %
                               self.inputs['mapfile'])
-            Parset.fromDict(outnames).writeFile(self.inputs['mapfile'])
+            store_data_map(self.inputs['mapfile'], outdata)
             self.outputs['mapfile'] = self.inputs['mapfile']
             return 0
 
