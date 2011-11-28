@@ -16,6 +16,9 @@ function start() {
   mkdir -p $LOGDIR
   ln -s $LOGDIR $LOGSYMLINK
 
+  # todo: log rotation and log server support (also in CNProc.sh)
+  # production logserver: "tcp:ccu001:24500"
+
   /bgsys/LOFAR/openmpi-ion/bin/mpirun -host $PSETS --pernode -wd $LOGDIR $IONPROC $ISPRODUCTION >& $LOGSYMLINK/IONProc.log &
 }
 
