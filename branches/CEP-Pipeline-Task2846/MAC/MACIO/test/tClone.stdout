@@ -1,0 +1,28 @@
+18-03-10 08:32:33 INFO  MAC.MACIO - First cloning a GCFEvent [tClone.cc:39]
+18-03-10 08:32:33 INFO  MAC.MACIO - signal=0x0000, length=0x00000000(0), _buffer=0x00000000
+ [tClone.cc:41]
+18-03-10 08:32:33 INFO  MAC.MACIO - signal=0x0000, length=0x00000000(0), _buffer=0x00000000
+ [tClone.cc:43]
+18-03-10 08:32:33 INFO  MAC.MACIO - sizeof(GCFEvent)=16 [tClone.cc:44]
+18-03-10 08:32:33 INFO  MAC.MACIO - Cloning a simple Test event [tClone.cc:50]
+18-03-10 08:32:33 INFO  MAC.MACIO - signal=0x4A01, length=0x00000000(0), _buffer=0x00000000
+ uInt = 67483
+ Int = -45896
+ Double = 5447.67
+ Float = 67483.5
+ String = At least also some letters. All those digits!
+ [tClone.cc:58]
+18-03-10 08:32:33 INFO  MAC.MACIO - signal=0x4A01, length=0x00000000(0), _buffer=0x00000000
+ uInt = 67483
+ Int = -45896
+ Double = 5447.67
+ Float = 67483.5
+ String = At least also some letters. All those digits!
+ [tClone.cc:61]
+18-03-10 08:32:33 INFO  MAC.MACIO - Cloning an event with a stringVector [tClone.cc:69]
+18-03-10 08:32:33 INFO  MAC.MACIO - signal=0x4A02, length=0x00000000(0), _buffer=0x00000000
+ SV = [aap,noot,mies,wim,zus,jet]
+ [tClone.cc:77]
+18-03-10 08:32:33 INFO  MAC.MACIO - signal=0x4A02, length=0x00000000(0), _buffer=0x00000000
+ SV = [aap,noot,mies,wim,zus,jet]
+ [tClone.cc:80]
