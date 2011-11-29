@@ -130,6 +130,18 @@ class Plot2DPointSet{
 		{
 			return MaxY();
 		}
+		void SetTickLabels(const std::vector<std::string> &tickLabels)
+		{
+			_tickLabels = tickLabels;
+		}
+		bool HasTickLabels() const
+		{
+			return !_tickLabels.empty();
+		}
+		const std::vector<std::string> &TickLabels() const
+		{
+			return _tickLabels;
+		}
 
 	private:
 		struct Point2D
@@ -147,6 +159,7 @@ class Plot2DPointSet{
 		std::string _xUnits;
 		std::string _yUnits;
 		bool _xIsTime;
+		std::vector<std::string> _tickLabels;
 		enum DrawingStyle _drawingStyle;
 };
 

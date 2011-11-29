@@ -45,6 +45,7 @@ class HorizontalPlotScale {
 		void Draw(Cairo::RefPtr<Cairo::Context> cairo);
 		void InitializeNumericTicks(double min, double max);
 		void InitializeTimeTicks(double timeMin, double timeMax);
+		void InitializeTextTicks(const std::vector<std::string> &labels);
 		void SetDrawWithDescription(bool drawWithDescription)
 		{
 			_drawWithDescription = drawWithDescription;
