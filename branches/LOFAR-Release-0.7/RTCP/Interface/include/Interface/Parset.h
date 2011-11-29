@@ -361,31 +361,39 @@ private:
   std::vector<struct StreamInfo> generateStreamInfo( const Parset &parset ) const {
     // get all info from parset, since we will be called while constructing our members
 
+    // ParameterSets are SLOW, so cache any info we need repeatedly
+
     std::vector<struct StreamInfo> infoset;
-    std::vector<unsigned> sapMapping = parset.subbandToSAPmapping();
+    const std::vector<unsigned> sapMapping = parset.subbandToSAPmapping();
+    const unsigned nrSAPs            = parset.nrBeams();
+    const unsigned nrSubbands        = parset.nrSubbands();
+    const unsigned nrCoherentStokes  = parset.nrCoherentStokes();
+    const unsigned nrSubbandsPerPart = parset.nrSubbandsPerPart();
 
     struct StreamInfo info;
     info.stream = 0;
 
-    for (unsigned sap = 0; sap < parset.nrBeams(); sap++) {
+    for (unsigned sap = 0; sap < nrSAPs; sap++) {
+      const unsigned nrBeams = parset.nrPencilBeams(sap);
+
       info.sap = sap;
 
       std::vector<unsigned> sapSubbands;
 
-      for (unsigned sb = 0; sb < parset.nrSubbands(); sb++)
+      for (unsigned sb = 0; sb < nrSubbands; sb++)
         if (sapMapping[sb] == sap)
           sapSubbands.push_back(sb);
 
-      for (unsigned beam = 0; beam < parset.nrPencilBeams(sap); beam++) {
+      for (unsigned beam = 0; beam < nrBeams; beam++) {
         info.beam = beam;
 
-        for (unsigned stokes = 0; stokes < parset.nrCoherentStokes(); stokes++) {
+        for (unsigned stokes = 0; stokes < nrCoherentStokes; stokes++) {
           info.stokes = stokes;
           info.part   = 0;
 
           // split into parts of at most parset.nrSubbandsPerPart()
-          for (unsigned sb = 0; sb < sapSubbands.size(); sb += parset.nrSubbandsPerPart() ) {
-            for (unsigned i = 0; sb + i < sapSubbands.size() && i < parset.nrSubbandsPerPart(); i++)
+          for (unsigned sb = 0; sb < sapSubbands.size(); sb += nrSubbandsPerPart ) {
+            for (unsigned i = 0; sb + i < sapSubbands.size() && i < nrSubbandsPerPart; i++)
               info.subbands.push_back(sapSubbands[sb + i]);
 
             infoset.push_back(info);
