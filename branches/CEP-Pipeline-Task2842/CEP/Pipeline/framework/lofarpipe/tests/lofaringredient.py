@@ -215,5 +215,5 @@ class LOFARIngredientTest(unittest.TestCase):
         self.assertEqual(self.lofaringredient['h'], "bar")
 
 if __name__ == "__main__":
-    unittest.main(testRunner=xmlrunner.XMLTestRunner(output='test-reports'))
+    unittest.main(testRunner=xmlrunner.XMLTestRunner(output='test-reports.xml'))
     #unittest.main()
