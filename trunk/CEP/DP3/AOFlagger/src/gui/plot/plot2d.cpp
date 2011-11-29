@@ -66,7 +66,9 @@ void Plot2D::Render(Gtk::DrawingArea &drawingArea)
 		{
 			Plot2DPointSet &refPointSet = **_pointSets.begin();
 			
-			if(refPointSet.XIsTime())
+			if(refPointSet.HasTickLabels())
+				_horizontalScale.InitializeTextTicks(refPointSet.TickLabels());
+			else if(refPointSet.XIsTime())
 				_horizontalScale.InitializeTimeTicks(_system.XRangeMin(refPointSet), _system.XRangeMax(refPointSet));
 			else
 				_horizontalScale.InitializeNumericTicks(_system.XRangeMin(refPointSet), _system.XRangeMax(refPointSet));

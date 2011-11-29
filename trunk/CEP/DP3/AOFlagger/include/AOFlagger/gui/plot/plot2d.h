@@ -40,7 +40,7 @@ class Plot2D : public Plotable {
 		~Plot2D();
 
 		void Clear();
-		void StartLine(const std::string &label, const std::string &xDesc = "x", const std::string &yDesc = "y", bool xIsTime = false, enum Plot2DPointSet::DrawingStyle drawingStyle = Plot2DPointSet::DrawLines)
+		Plot2DPointSet &StartLine(const std::string &label, const std::string &xDesc = "x", const std::string &yDesc = "y", bool xIsTime = false, enum Plot2DPointSet::DrawingStyle drawingStyle = Plot2DPointSet::DrawLines)
 		{
 			Plot2DPointSet *newSet = new Plot2DPointSet();
 			newSet->SetLabel(label);
@@ -49,6 +49,7 @@ class Plot2D : public Plotable {
 			newSet->SetYUnits(yDesc);
 			newSet->SetDrawingStyle(drawingStyle);
 			_pointSets.push_back(newSet);
+			return *newSet;
 		}
 		void PushDataPoint(double x, double y)
 		{
