@@ -109,50 +109,6 @@ namespace LOFAR
       evaluateStationBeam(m_instrument.station(station), refDelay, refTile,
         mapITRF, freq);
 
-    vector< Array<DComplex> > response_separated =
-      evaluateStationAndElementBeam(m_instrument.station(station), refDelay, refTile,
-        mapITRF, freq);
-    
-    response=response_separated[0];
-
-
-    // DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
-//    MDirection world;
-//    Vector<double> refPixel = coordinates.referencePixel();
-
-//    cout << "shape: " << shape << " ref. pixel: " << refPixel << endl;
-//    coordinates.toWorld(world, refPixel);
-
-//    casa::Quantum<casa::Vector<casa::Double> > refAngles = world.getAngle();
-//    double ra = refAngles.getBaseValue()(0);
-//    double dec = refAngles.getBaseValue()(1);
-//    cout << "ref. world: " << std::setprecision(17) << ra << " " << dec << endl;
-
-//    cout << "station: " << station << endl;
-//    cout << "freq: " << std::setprecision(17) << freq << endl;
-//    cout << "time: " << std::setprecision(17) << epoch.getValue().getTime("s") << endl;
-//    IPosition st(4, refPixel(0), refPixel(1), 0, 0);
-//    IPosition en(4, refPixel(0), refPixel(1), 3, freq.size() - 1);
-//    Array<DComplex> tmpResponse = response(st, en).nonDegenerate();
-//    cout << "response shape: " << tmpResponse.shape() << endl;
-//    cout << "response: " << endl << tmpResponse << endl;
-
-//    refPixel = 0.0;
-//    coordinates.toWorld(world, refPixel);
-//    refAngles = world.getAngle();
-//    ra = refAngles.getBaseValue()(0);
-//    dec = refAngles.getBaseValue()(1);
-//    cout << "0 world: " << std::setprecision(17) << ra << " " << dec << endl;
-
-//    st = IPosition(4, 0, 0, 0, 0);
-//    en = IPosition(4, 0, 0, 3, freq.size() - 1);
-//    Array<DComplex> tmpResponse2 = response(st, en).nonDegenerate();
-//    cout << "response shape: " << tmpResponse2.shape() << endl;
-//    cout << "response: " << endl << tmpResponse2 << endl;
-
-//    AlwaysAssert(false, SynthesisError);
-    // DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
-
 
 
     //Cyril
@@ -173,52 +129,85 @@ namespace LOFAR
       tmp.push_back(planef);
     }
 
-    // if(normalize)
-    //   MDirection::Convert convertor = MDirection::Convert(MDirection::J2000, MDirection::Ref(MDirection::ITRF, MeasFrame(epoch, m_instrument.position())));
-    // mapITRF = computeITRFMap(coordinates, shape, convertor);
-    // Cube<double> mapITRF_center;
-    // DirectionCoordinate coordinates_center(coordinates);
-    //   Vector<Double> Refpix(2,0.);
-    //   coordinates_center.setReferencePixel(Refpix);
-    //   mapITRF_center = computeITRFMap(coordinates_center, IPosition(2,1,1), convertor);
-    //   for(uInt i = 0; i < freq.size(); ++i){
-    // 	{
-    //   evaluateStationBeam(m_instrument.station(station), refDelay, refTile,
-    //     mapITRF, freq);
-    // 	  Cube<Complex> gain(evaluateStationBeam(mapITRF_center, convertor(m_phaseReference), m_instrument.station(station), freq[i]));
-    // 	  Matrix<Complex> central_gain(gain.xzPlane(0));
-    // 	  // central_gain.resize(2,2,true); //resize does not work:
-    // 	  // Central gain  Axis Lengths: [1, 4]  (NB: Matrix in Row/Column order)
-    // 	  //   [(-0.0235668,-0.000796029), (-0.0345345,-0.000373378), (0.030112,0.000938836), (-0.0268743,-0.000258621)]
-    // 	  // Central gain  Axis Lengths: [2, 2]  (NB: Matrix in Row/Column order)
-    // 	  //   [(-0.0235668,-0.000796029), (-0.0345345,-0.000373378)
-    // 	  //    (0,0), (0,0)]
-    // 	  Matrix<Complex> central_gain_reform(central_gain.reform(IPosition(2,2,2)));
-    // 	  Matrix<Complex> central_gain_invert(invert(central_gain_reform));
-
-    // 	  //Cube<Complex> IM=beams[i];
-    // 	  for(uInt ii=0;ii<shape[0];++ii)
-    // 	    {
-    // 	      for(uInt jj=0;jj<shape[1];++jj)
-    // 	  	{
-    // 	  	  Cube<Complex> pixel(tmp[i](IPosition(3,ii,jj,0),IPosition(3,ii,jj,3)).copy());
-    // 		  // cout<<"================="<<pixel<<endl;
-    // 		  // cout<<"pixel"<<pixel<<endl;
-    // 	  	  Matrix<Complex> pixel_reform(pixel.reform(IPosition(2,2,2)));
-    // 		  // cout<<"pixel_reform"<<pixel_reform<<endl;
-    // 	  	  Matrix<Complex> pixel_product=product(central_gain_invert,pixel_reform);
-    // 		  // cout<<"pixel_product"<<pixel_product<<endl;
-    // 		  Matrix<Complex> pixel_product_reform(pixel_product.reform(IPosition(2,1,4)));
-    // 		  // cout<<"pixel_product_reform"<<pixel_product_reform<<endl;
-
-    // 		  for(uInt ind=0;ind<4;++ind){tmp[i](ii,jj,ind)=pixel_product_reform(0,ind);};
-    // 		    //beams[i](IPosition(3,ii,jj,0),IPosition(3,ii,jj,3))=pixel_product;
-    // 					//IM(ii,jj)=pixel_product;
-    // 	  	}
-    // 	    }
-    // 	};
 
     return tmp;
+  }
+
+
+
+
+  vector< vector< Cube< Complex > > > LofarATerm::evaluateSeparated(const IPosition &shape,
+    const DirectionCoordinate &coordinates,
+    uint station,
+    const MEpoch &epoch,
+    const Vector<Double> &freq,
+    bool normalize) const
+  {
+    AlwaysAssert(station < m_instrument.nStations(), SynthesisError);
+    AlwaysAssert(shape[0] > 0 && shape[1] > 0, SynthesisError);
+    AlwaysAssert(freq.size() > 0, SynthesisError);
+
+    // Create conversion engine (from J2000 -> ITRF).
+    MDirection::Convert convertor = MDirection::Convert(MDirection::J2000,
+      MDirection::Ref(MDirection::ITRF,
+      MeasFrame(epoch, m_instrument.position())));
+
+    MVDirection mvRefDelay = convertor(m_refDelay).getValue();
+    Vector3 refDelay = {{mvRefDelay(0), mvRefDelay(1), mvRefDelay(2)}};
+
+    MVDirection mvRefTile = convertor(m_refTile).getValue();
+    Vector3 refTile = {{mvRefTile(0), mvRefTile(1), mvRefTile(2)}};
+
+    // Compute ITRF map.
+    LOG_INFO("LofarATerm::evaluate(): Computing ITRF map...");
+    Cube<double> mapITRF = computeITRFMap(coordinates, shape, convertor);
+    LOG_INFO("LofarATerm::evaluate(): Computing ITRF map... done.");
+
+    // Compute element beam response.
+    LOG_INFO("LofarATerm::evaluate(): Computing station response...");
+
+    vector< Array<DComplex> > response_separated =
+      evaluateStationAndElementBeam(m_instrument.station(station), refDelay, refTile,
+        mapITRF, freq);
+    
+    Array<DComplex> response_element=response_separated[0];
+    Array<DComplex> response_station=response_separated[1];
+
+
+    //Cyril
+    if(normalize)
+    {
+     response_element = this->normalize(response_element);
+    }
+    LOG_INFO("LofarATerm::evaluate(): Computing station response... done.");
+
+    // Convert an Array<DComplex> to a vector<Cube<Complex> >.
+    vector<Cube<Complex> > tmp_element;
+    tmp_element.reserve(freq.size());
+    for (ArrayIterator<DComplex> iter(response_element, 3);
+         !iter.pastEnd(); iter.next())
+    {
+      Cube<Complex> planef(iter.array().shape());
+      convertArray (planef, iter.array());
+      tmp_element.push_back(planef);
+    }
+
+    // Convert an Array<DComplex> to a vector<Cube<Complex> >.
+    vector<Cube<Complex> > tmp_station;
+    tmp_station.reserve(freq.size());
+    for (ArrayIterator<DComplex> iter(response_station, 3);
+         !iter.pastEnd(); iter.next())
+    {
+      Cube<Complex> planef(iter.array().shape());
+      convertArray (planef, iter.array());
+      tmp_station.push_back(planef);
+    }
+    
+    vector< vector< Cube< Complex > > > response;
+    response.push_back(tmp_element);
+    response.push_back(tmp_station);
+
+    return response;
   }
 
   Array<DComplex> LofarATerm::normalize(const Array<DComplex> &response)

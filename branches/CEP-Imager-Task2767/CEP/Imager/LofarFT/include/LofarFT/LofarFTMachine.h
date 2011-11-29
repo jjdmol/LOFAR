@@ -48,6 +48,8 @@
 #include <lattices/Lattices/LatticeCache.h>
 #include <lattices/Lattices/ArrayLattice.h>
 
+#include <Common/OpenMP.h>
+#include <omp.h>
 
 using namespace casa;
 
@@ -153,7 +155,9 @@ public:
                  const Matrix<Bool>& degridMuellerMask,
 		 Double RefFreq,
 		 Bool Use_Linear_Interp_Gridder,
-		 Bool Use_EJones);
+		 Bool Use_EJones,
+		 Bool Apply_Element,
+		 Double PBCut);
 //  LofarFTMachine(Long cachesize, Int tilesize,  CountedPtr<VisibilityResamplerBase>& visResampler,String convType,
 //	 MDirection mTangent, Float padding=1.0, Bool usezero=True,
 //	 Bool useDoublePrec=False);
@@ -332,6 +336,62 @@ protected:
   // Gridder
   ConvolveGridder<Double, Complex>* gridder;
 
+  //Sum Grids
+  void SumGridsOMP(Array<Complex> grid, Array<Complex> GridToAdd){
+
+    int y,ch,pol,dChan,dPol,dx;
+    int GridSize(grid.shape()[0]);
+    int NPol(grid.shape()[2]);
+    int NChan(grid.shape()[3]);
+    Complex* gridPtr;
+    Complex* GridToAddPtr;
+    
+#pragma omp parallel for private(y,ch,pol,gridPtr,GridToAddPtr)
+    for(int x=0 ; x<grid.shape()[0] ; ++x){
+      for(ch=0 ; ch<NChan ; ++ch){
+	for(pol=0 ; pol<NPol ; ++pol){
+	  gridPtr = grid.data() + ch*NPol*GridSize*GridSize + pol*GridSize*GridSize+x*GridSize;
+	  GridToAddPtr = GridToAdd.data() + ch*NPol*GridSize*GridSize + pol*GridSize*GridSize+x*GridSize;
+	  for(y=0 ; y<grid.shape()[1] ; ++y){
+	    (*gridPtr++) += *GridToAddPtr++;
+	    //gridPtr++;
+	    //GridToAddPtr++;
+	  }
+	}
+      }
+    }
+    
+  }
+
+  void SumGridsOMP(Array<Complex> grid, vector< Array<Complex> > GridToAdd0 ){
+
+    for(uInt vv=0; vv<GridToAdd0.size();vv++){
+      Array<Complex> GridToAdd(GridToAdd0[vv]);
+      int y,ch,pol,dChan,dPol,dx;
+      int GridSize(grid.shape()[0]);
+      int NPol(grid.shape()[2]);
+      int NChan(grid.shape()[3]);
+      Complex* gridPtr;
+      Complex* GridToAddPtr;
+      
+#pragma omp parallel for private(y,ch,pol,gridPtr,GridToAddPtr)
+      for(int x=0 ; x<grid.shape()[0] ; ++x){
+	for(ch=0 ; ch<NChan ; ++ch){
+	  for(pol=0 ; pol<NPol ; ++pol){
+	    gridPtr = grid.data() + ch*NPol*GridSize*GridSize + pol*GridSize*GridSize+x*GridSize;
+	    GridToAddPtr = GridToAdd.data() + ch*NPol*GridSize*GridSize + pol*GridSize*GridSize+x*GridSize;
+	    for(y=0 ; y<grid.shape()[1] ; ++y){
+	      (*gridPtr++) += *GridToAddPtr++;
+	      //gridPtr++;
+	      //GridToAddPtr++;
+	    }
+	  }
+	}
+      }
+    }
+
+  }
+
   // Is this tiled?
   Bool isTiled;
 
@@ -354,10 +414,14 @@ protected:
 
   // Arrays for non-tiled gridding (one per thread).
   vector< Array<Complex> >  itsGriddedData;
+  Array<Complex> its_stacked_GriddedData;
+
   vector< Array<DComplex> > itsGriddedData2;
   vector< Matrix<Complex> > itsSumPB;
   vector< Matrix<Double> >  itsSumWeight;
   vector< double > itsSumCFWeight;
+
+
   ///Array<Complex>  griddedData;
   ///Array<DComplex> griddedData2;
   ///Matrix<Complex> itsSumPB;
@@ -397,8 +461,11 @@ protected:
   casa::MeasurementSet itsMS;
   Int itsNWPlanes;
   double itsWMax;
+  Double its_PBCut;
   int itsNThread;
   Bool its_Use_EJones;
+  Bool its_Apply_Element;
+  Bool its_Already_Initialized;
 
   CountedPtr<LofarConvolutionFunction> itsConvFunc;
   Vector<Int> ConjCFMap_p, CFMap_p;
@@ -414,6 +481,7 @@ protected:
   double itsDegriddingTime;
   double itsCFTime;
   PrecTimer itsTotalTimer;
+  PrecTimer itsCyrilTimer;
 
 
       template <class T>

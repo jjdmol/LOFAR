@@ -25,6 +25,7 @@
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include<cassert>
+#include <Common/OpenMP.h>
 
 namespace LOFAR {
 
@@ -280,12 +281,18 @@ namespace LOFAR {
     Int sampy = SynthesisUtils::nint (cfs.sampling[1]);
     Int supx = cfs.xSupport[0];
     Int supy = cfs.ySupport[0];
+    
     ///AlwaysAssert ((2*supx+1)*sampx == nConvX, AipsError);
     ///AlwaysAssert ((2*supy+1)*sampy == nConvY, AipsError);
 
     Double* __restrict__ sumWtPtr = sumwt.data();
     Complex psfValues[4];
     psfValues[0] = psfValues[1] = psfValues[2] = psfValues[3] = Complex(1,0);
+    // psfValues[0] = -Complex(2,0);
+    // psfValues[1] = -Complex(1,1);
+    // psfValues[2] = -Complex(1,-1);
+    // psfValues[3] = -Complex(0,0);
+
 
     // Loop over all visibility rows to process.
     for (Int inx=rbeg; inx<rend; ++inx) {
@@ -326,8 +333,10 @@ namespace LOFAR {
           Int fsupy  = SynthesisUtils::nint (supy / freqFact);
 
           // Only use visibility point if the full support is within grid.
+	  
           if (locx-supx >= 0  &&  locx+supx < nGridX  &&
               locy-supy >= 0  &&  locy+supy < nGridY) {
+
             ///            cout << "in grid"<<endl;
             // Get pointer to data and flags for this channel.
             Int doff = (irow * nVisChan + visChan) * nVisPol;
@@ -353,25 +362,32 @@ namespace LOFAR {
   		    //cout<<"goff<<locy<<sy<<nGridX<<locx<<supx "<<goff<<" "<<locy<<" "<<sy<<" "<<nGridX<<" "<<locx<<" "<<supx<<endl;
                     // Get pointers to the first element to use in the 4
                     // convolution functions for this channel,pol.
-                    const Complex* __restrict__ cf[4];
+                    const Complex* __restrict__ cf[1];
                     Int cfoff = (offy + sy*fsampy)*nConvX + offx - fsupx*fsampx;
-  		    //cout<<"cfoff<<offy<<fsampy<<nConvX<<offx<<fsupx<<fsampx "<<cfoff<<" "<<offy<<" "<<fsampy<<" "<<nConvX<<" "<<offx<<" "<<fsupx<<" "<<fsampx<<endl;
-                    for (int i=0; i<4; ++i) {
-                      cf[i] = (*cfs.vdata)[gridChan][i][ipol].data() + cfoff;
-                    }
+		    cf[0] = (*cfs.vdata)[gridChan][0][0].data() + cfoff;
                     for (Int sx=-fsupx; sx<=fsupx; ++sx) {
                       // Loop over polarizations to correct for leakage.
                       Complex polSum(0,0);
-                      for (Int i=0; i<4; ++i) {
-                        ///                        cout<<"cf="<< cf[i]-(*cfs.vdata)[gridChan][ipol][i].data()<<',';
-  			//cout<<"visPtr[i] <<" "<< *cf[i] == "<<visPtr[i] <<" "<< *cf[i]<<endl;
-                        polSum += visPtr[i] * *cf[i];
-                        cf[i] += fsampx;
-                      }
-                      ///                      cout<<"  g="<<gridPtr-grid.data()<<' '<<visPtr[i]<<endl;
+		      polSum += visPtr[ipol] * *cf[0];
+		      cf[0] += fsampx;
   		      polSum *= *imgWtPtr;
                       *gridPtr++ += polSum;
                     }
+                    // const Complex* __restrict__ cf[4];
+                    // Int cfoff = (offy + sy*fsampy)*nConvX + offx - fsupx*fsampx;
+                    // for (int i=0; i<4; ++i) {
+                    //   cf[i] = (*cfs.vdata)[gridChan][i][ipol].data() + cfoff;
+                    // }
+                    // for (Int sx=-fsupx; sx<=fsupx; ++sx) {
+                    //   // Loop over polarizations to correct for leakage.
+                    //   Complex polSum(0,0);
+                    //   for (Int i=0; i<4; ++i) {
+                    //     polSum += visPtr[i] * *cf[i];
+                    //     cf[i] += fsampx;
+                    //   }
+  		    //   polSum *= *imgWtPtr;
+                    //   *gridPtr++ += polSum;
+                    // }
                   }
                   sumWtPtr[gridPol+gridChan*nGridPol] += *imgWtPtr;
                 } // end if gridPol
@@ -697,21 +713,33 @@ namespace LOFAR {
                                                   (locy+sy)*nGridX + locx-supx;
                     // Get pointers to the first element to use in the 4
                     // convolution functions for this channel,pol.
-                    const Complex* __restrict__ cf[4];
+                    const Complex* __restrict__ cf[1];
                     Int cfoff = (offy + sy*fsampy)*nConvX + offx - fsupx*fsampx;
-                    for (int i=0; i<4; ++i) {
-                      cf[i] = (*cfs.vdata)[gridChan][i][ipol].data() + cfoff;
-                    }
+		    cf[0] = (*cfs.vdata)[gridChan][0][0].data() + cfoff;
+
                     for (Int sx=-fsupx; sx<=fsupx; ++sx) {
                       // Loop over polarizations to correct for leakage.
-                      for (Int i=0; i<nVisPol; ++i) {
-                        ///                        cout<<"cf="<< cf[i]-(*cfs.vdata)[gridChan][ipol][i].data()<<',';
-                        visPtr[i] += *gridPtr * *cf[i];
-                        cf[i] += fsampx;
-                      }
+		      visPtr[ipol] += *gridPtr * *cf[0];
+		      cf[0] += fsampx;
+
                       ///                      cout<<"  g="<<gridPtr-grid.data()<<' '<<nvalue<<endl;
                       gridPtr++;
                     }
+
+                    // for (int i=0; i<4; ++i) {
+                    //   cf[i] = (*cfs.vdata)[gridChan][i][ipol].data() + cfoff;
+                    // }
+                    // for (Int sx=-fsupx; sx<=fsupx; ++sx) {
+                    //   // Loop over polarizations to correct for leakage.
+                    //   for (Int i=0; i<nVisPol; ++i) {
+                    //     ///                        cout<<"cf="<< cf[i]-(*cfs.vdata)[gridChan][ipol][i].data()<<',';
+                    //     visPtr[i] += *gridPtr * *cf[i];
+                    //     cf[i] += fsampx;
+                    //   }
+                    //   ///                      cout<<"  g="<<gridPtr-grid.data()<<' '<<nvalue<<endl;
+                    //   gridPtr++;
+                    // }
+
                   }
                 } // end if gridPol
               } // end if !flagPtr
@@ -1032,18 +1060,19 @@ namespace LOFAR {
       {
     	for(uInt ichan = start(0); ichan < last(0); ichan++){
 	  //cout<< ichan << vbs.modelCube_p(ichan,0,347) <<vbs.correctedCube_p(ichan,0,347)<< endl;
-    	  for(uInt ipol = start(1); ipol < last(1); ipol++)
-    	    for(uInt irow = start(2); irow < last(2); irow++){
+    	  for(uInt ipol = start(1); ipol < last(1); ipol++){
+	    for(uInt irow = start(2); irow < last(2); irow++){
     	      //cout<<"===="<<endl;
 	      //if(!(abs(vbs.modelCube_p(ichan,ipol,irow))==0.)){cout<<ipol<<" "<<ichan<<" "<<irow<<" "<<vbs.modelCube_p(ichan,ipol,irow)<<"  "<<vbs.correctedCube_p(ichan,ipol,irow)<<endl;};
     	      
-	      if(!(abs(vbs.modelCube_p(ichan,ipol,irow))==0.)){cout<<"data "<<ipol<<" "<<ichan<<" "<<irow<<" "<<vbs.modelCube_p(ichan,ipol,irow)<<" "<<vbs.correctedCube_p(ichan,ipol,irow)<<endl;};
+	      //if(!(abs(vbs.modelCube_p(ichan,ipol,irow))==0.)){cout<<"data "<<ipol<<" "<<ichan<<" "<<irow<<" "<<vbs.modelCube_p(ichan,ipol,irow)<<" "<<vbs.correctedCube_p(ichan,ipol,irow)<<endl;};
 	 
     	      vbs.modelCube_p(ichan,ipol,irow) = vbs.modelCube_p(ichan,ipol,irow) - vbs.correctedCube_p(ichan,ipol,irow);
     	      //cout<<vbs.modelCube_p(ichan,ipol,irow)<<"  "<<vbs.modelCube_p(ichan,ipol,irow)<<"  "<<vbs.correctedCube_p(ichan,ipol,irow)<<endl;
     	    };
-	};
+	  };
 	
+	}
       }
 
     // if (!vbs.useCorrected_p)

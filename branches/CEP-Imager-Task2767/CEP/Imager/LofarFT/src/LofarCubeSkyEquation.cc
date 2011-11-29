@@ -74,6 +74,8 @@
 #include <msvis/MSVis/VisBufferAsync.h>
 //#include <synthesis/Utilities/ThreadTimers.h>
 
+#include <casa/OS/PrecTimer.h>
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 LofarCubeSkyEquation::LofarCubeSkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft,
@@ -85,7 +87,6 @@ LofarCubeSkyEquation::LofarCubeSkyEquation(SkyModel& sm, VisSet& vs, FTMachine& 
   firstOneChangesPut_p(False),
   firstOneChangesGet_p(False)
 {
-
     init(ft);
 
 }
@@ -497,9 +498,16 @@ void LofarCubeSkyEquation::makeMosaicPSF(PtrBlock<TempImage<Float> * >& psfs){
 
 void LofarCubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
 
+  //  PrecTimer TimerCyril;
+  //  TimerCyril.start();
+  
+//  cout<<"psfs[0].name() "<<psfs[0]->name()<<endl;
+//File myFile("Cube_dirty.img"+String::toString(count_cycle));
+//  if(!myFile.exists()){
+//       }
+
   Int nmodels=psfs.nelements();
     LogIO os(LogOrigin("LofarCubeSkyEquation", "makeSimplePSF"));
-    cout<<"LofarCubeSkyEquation"<< "makeSimplePSF"<<endl;
     ft_->setNoPadding(noModelCol_p);
     isPSFWork_p= True; // avoid PB correction etc for PSF estimation
     Bool doPSF=True;
@@ -517,6 +525,11 @@ void LofarCubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
     VisBufferAutoPtr vb (vi);
     vi.originChunks();
     vi.origin();
+    //  TimerCyril.stop();
+    //  TimerCyril.show(cout,"1");
+    //  TimerCyril.reset();
+    //  TimerCyril.start();
+
     // Change the model polarization frame
     for (Int model=0; model < nmodels; ++model){
         if(vb->polFrame()==MSIter::Linear) {
@@ -532,6 +545,10 @@ void LofarCubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
 
     Int nCubeSlice=1;
     isLargeCube(sm_->cImage(0), nCubeSlice);
+    //  TimerCyril.stop();
+    //  TimerCyril.show(cout,"2");
+    //  TimerCyril.reset();
+    //  TimerCyril.start();
     for (Int cubeSlice=0; cubeSlice< nCubeSlice; ++cubeSlice){
         changedVI= getFreqRange(vi, sm_->cImage(0).coordinates(),
                                 cubeSlice, nCubeSlice) || changedVI;
@@ -545,8 +562,16 @@ void LofarCubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
 
         initializePutSlice(* vb, cubeSlice, nCubeSlice);
 
+	//  TimerCyril.stop();
+	//  TimerCyril.show(cout,"3");
+	//  TimerCyril.reset();
+	//  TimerCyril.start();
         for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
             for (vi.origin(); vi.more(); vi++) {
+	      //  TimerCyril.stop();
+	      //  TimerCyril.show(cout,"4a");
+	      //  TimerCyril.reset();
+	      //  TimerCyril.start();
                 if(noModelCol_p) {
                     //This here forces the modelVisCube shape and prevents reading model column
                     vb->setModelVisCube(Complex(0.0,0.0));
@@ -555,12 +580,16 @@ void LofarCubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
                 cohDone+=vb->nRow();
                 pm.update(Double(cohDone));
 
+		//  TimerCyril.stop();
+		//  TimerCyril.show(cout,"4b");
+		//  TimerCyril.reset();
+		//  TimerCyril.start();
             }
         }
         finalizePutSlice(* vb, cubeSlice, nCubeSlice);
     }
 
-    //lets return original selection back to iterator
+   //lets return original selection back to iterator
 
 
     if(changedVI)
@@ -570,6 +599,10 @@ void LofarCubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
     fixImageScale();
     for(Int model=0; model < nmodels; ++model){
         {
+	  //  TimerCyril.stop();
+	  //  TimerCyril.show(cout,"5a");
+	  //  TimerCyril.reset();
+	  //  TimerCyril.start();
             //Normalize the gS image
             Int nXX=sm_->ggS(model).shape()(0);
             Int nYY=sm_->ggS(model).shape()(1);
@@ -579,6 +612,10 @@ void LofarCubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
             IPosition trc(4, nXX, nYY, npola, nchana);
             blc(0)=0; blc(1)=0; trc(0)=nXX-1; trc(1)=nYY-1;
             //max weights per plane
+	    //  TimerCyril.stop();
+	    //  TimerCyril.show(cout,"5b");
+	    //  TimerCyril.reset();
+	    //  TimerCyril.start();
             for (Int j=0; j < npola; ++j){
                 for (Int k=0; k < nchana ; ++k){
 
@@ -601,6 +638,10 @@ void LofarCubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
                     }
                 }
             }
+	    //  TimerCyril.stop();
+	    //  TimerCyril.show(cout,"6");
+	    //  TimerCyril.reset();
+	    //  TimerCyril.start();
             //
         }
 
@@ -639,6 +680,55 @@ void LofarCubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
     isPSFWork_p=False; // resetting this flag so that subsequent calculation uses
     // the right SkyJones correction;
 }
+
+// //============================ ADDED by Cyril
+
+// void LofarCubeSkyEquation::setExistingPSF(PtrBlock<TempImage<Float> * >& psfs) {
+
+//   Int nmodels=psfs.nelements();
+//   String FileName("test.img.psf");
+//   PagedImage<Float> myimage (FileName);
+//   for(Int model=0; model < nmodels; ++model){
+//     {
+//       Int nXX=sm_->ggS(model).shape()(0);
+//       Int nYY=sm_->ggS(model).shape()(1);
+//       Int npola= sm_->ggS(model).shape()(2);
+//       Int nchana= sm_->ggS(model).shape()(3);
+//       IPosition blc(4,nXX, nYY, npola, nchana);
+//       IPosition trc(4, nXX, nYY, npola, nchana);
+//       blc(0)=0; blc(1)=0; trc(0)=nXX-1; trc(1)=nYY-1;
+//       for (Int j=0; j < npola; ++j){
+// 	for (Int k=0; k < nchana ; ++k){
+	  
+// 	  blc(2)=j; trc(2)=j;
+// 	  blc(3)=k; trc(3)=k;
+// 	  Slicer sl(blc, trc, Slicer::endIsLast);
+// 	  SubImage<Float> gSSub(sm_->gS(model), sl, False);
+// 	  SubImage<Float> ggSSub(sm_->ggS(model), sl, False);
+// 	  SubImage<Float> psfSub(*(psfs[model]), sl, True);
+// 	  Float planeMax;
+// 	  LatticeExprNode LEN = max( ggSSub );
+// 	  planeMax =  LEN.getFloat();
+// 	  if(planeMax !=0){
+// 	    psfSub.copyData( (LatticeExpr<Float>)
+// 			     (iif(ggSSub > (0.0),
+// 				  (gSSub/planeMax),0.0)));
+// 	  }
+// 	  else{
+// 	    psfSub.set(0.0);
+// 	  }
+// 	}
+//       }
+
+//     }
+
+//     isPSFWork_p=False;
+//   }
+
+// // ======================== END added by Cyril
+
+
+
 
 void LofarCubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
 
@@ -800,11 +890,12 @@ void LofarCubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
             for (rvi_p->origin(); rvi_p->more(); (*rvi_p)++) {
 
 	      //	      Timers tInitModel=Timers::getTime();
+	  
                 if(!incremental && !predictedComp) {
                     //This here forces the modelVisCube shape and prevents reading model column
                     vb->setModelVisCube(Complex(0.0,0.0));
                 }
-                // get the model visibility and write it to the model MS
+                 // get the model visibility and write it to the model MS
 		//	Timers tGetSlice=Timers::getTime();
 		//		Timers tgetSlice=Timers::getTime();
                 if(!isEmpty)
@@ -832,6 +923,7 @@ void LofarCubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
 
                 cohDone+=vb->nRow();
                 pm.update(Double(cohDone));
+
 		// Timers tDoneGridding=Timers::getTime();
 		// aInitModel += tgetSlice - tInitModel;
 		// aGetSlice += tsetModel - tgetSlice;
@@ -949,6 +1041,7 @@ void  LofarCubeSkyEquation::isLargeCube(ImageInterface<Complex>& theIm,
 void LofarCubeSkyEquation::initializePutSlice(const VisBuffer& vb, 
 					 Int cubeSlice, Int nCubeSlice) {
 
+
   AlwaysAssert(ok(),AipsError);
   Bool dirDep= (ej_ != NULL);
   for(Int model=0; model < (sm_->numberOfModels()) ; ++model){
@@ -1011,7 +1104,7 @@ LofarCubeSkyEquation::putSlice(VisBuffer & vb, Bool dopsf, FTMachine::Type col, 
             }
 
             for (Int model=0; model<sm_->numberOfModels(); ++model){
-	      //cout<<"model = "<<model<<endl;
+	      //  cout<<"model = "<<model<<endl;
                      iftm_p[model]->put(vb, row, dopsf, col);
             }
         }

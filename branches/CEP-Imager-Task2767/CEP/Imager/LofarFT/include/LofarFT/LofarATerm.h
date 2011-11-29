@@ -247,6 +247,13 @@ namespace LOFAR
       const casa::Vector<casa::Double> &freq,
       bool normalize = false) const;
 
+    vector< vector< casa::Cube<casa::Complex> > > evaluateSeparated(const casa::IPosition &shape,
+      const casa::DirectionCoordinate &coordinates,
+      uint station,
+      const casa::MEpoch &epoch,
+      const casa::Vector<casa::Double> &freq,
+      bool normalize = false) const;
+
   private:
     casa::Array<casa::DComplex>
     normalize(const casa::Array<casa::DComplex> &response) const;

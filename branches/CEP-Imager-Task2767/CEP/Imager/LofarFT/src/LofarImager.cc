@@ -67,7 +67,7 @@ namespace LOFAR
                                     itsParameters.asString("imagename"),
                                     itsParameters.asArrayBool("mueller.grid"),
                                     itsParameters.asArrayBool("mueller.degrid"),
-				    RefFreq, itsParameters.asBool("UseLIG"), itsParameters.asBool("UseEJones"));
+				    RefFreq, itsParameters.asBool("UseLIG"), itsParameters.asBool("UseEJones"), itsParameters.asBool("ApplyElement"), itsParameters.asDouble("PBCut"));
     
     ft_p  = itsMachine;
     cft_p = new SimpleComponentFTMachine();
