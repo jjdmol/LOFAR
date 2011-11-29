@@ -61,7 +61,7 @@ void HorizontalPlotScale::Draw(Cairo::RefPtr<Cairo::Context> cairo)
 		cairo->get_text_extents(tick.second, extents);
 		if(_rotateUnits)
 		{
-			cairo->move_to(x - extents.y_bearing - extents.height/2, _topMargin + _plotHeight + extents.width + 3);
+			cairo->move_to(x - extents.y_bearing - extents.height/2, _topMargin + _plotHeight + extents.width + 8);
 			cairo->save();
 			cairo->rotate(-M_PI*0.5);
 			cairo->show_text(tick.second);
@@ -133,7 +133,7 @@ void HorizontalPlotScale::initializeMetrics(Cairo::RefPtr<Cairo::Context> cairo)
 				}
 			}
 			if(_rotateUnits)
-				_height = maxHeight + 10;
+				_height = maxHeight + 15;
 			else
 				_height = maxHeight*2 + 10;
 			if(_drawWithDescription)
@@ -178,7 +178,7 @@ void HorizontalPlotScale::InitializeTextTicks(const std::vector<std::string> &la
 {
 	if(_tickSet != 0)
 		delete _tickSet;
-	_tickSet = new TextTickSet(labels, 25);
+	_tickSet = new TextTickSet(labels, 100);
 	_metricsAreInitialized = false;
 }
 
