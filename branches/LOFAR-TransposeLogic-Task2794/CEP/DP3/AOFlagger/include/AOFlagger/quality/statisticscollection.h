@@ -28,6 +28,7 @@
 #include "defaultstatistics.h"
 #include "qualitytablesformatter.h"
 #include "statisticalvalue.h"
+#include <boost/concept_check.hpp>
 
 class StatisticsCollection : public Serializable
 {
@@ -69,34 +70,43 @@ class StatisticsCollection : public Serializable
 			_centralFrequencies.insert(std::pair<unsigned, double>(band, centralFrequency));
 		}
 		
-		void Add(unsigned antenna1, unsigned antenna2, double time, unsigned band, int polarization, const std::vector<std::complex<float> > &samples, const bool *isRFI)
+		void Add(unsigned antenna1, unsigned antenna2, double time, unsigned band, int polarization, const float *reals, const float *imags, const bool *isRFI, unsigned nsamples, unsigned step, unsigned stepRFI)
 		{
-			if(samples.empty()) return;
+			if(nsamples == 0) return;
 			
 			const double centralFrequency = _centralFrequencies.find(band)->second;
 			
-			addTimeAndBaseline(antenna1, antenna2, time, centralFrequency, polarization, samples, isRFI, false);
+			addTimeAndBaseline(antenna1, antenna2, time, centralFrequency, polarization, reals, imags, isRFI, nsamples, step, stepRFI, false);
 			if(antenna1 != antenna2)
-				addFrequency(band, polarization, samples, isRFI, false, false);
+				addFrequency(band, polarization, reals, imags, isRFI, nsamples, step, stepRFI, false, false);
 			
-			std::vector<std::complex<float> > diffSamples;
-			
-			for(std::vector<std::complex<float> >::const_iterator i=samples.begin();i+1!=samples.end();++i)
+			// Allocate vector with length nsamples, so there is
+			// a diff element, even if nsamples=1.
+			std::vector<float> diffReals(nsamples);
+			std::vector<float> diffImags(nsamples);
+			bool *diffRFIFlags = new bool[nsamples];
+			for (unsigned i=0;i<nsamples-1;++i)
 			{
-				diffSamples.push_back((*(i+1) - *i) * 0.5f);
+				diffReals[i] = (reals[(i+1)*step] - reals[i*step]) * M_SQRT1_2;
+				diffImags[i] = (imags[(i+1)*step] - imags[i*step]) * M_SQRT1_2;
+				diffRFIFlags[i] = isRFI[i*stepRFI] | isRFI[(i+1)*stepRFI];
 			}
-			bool *diffRFIFlags = new bool[samples.size()];
-			for(unsigned i=0;i<samples.size()-1;++i)
-			{
-				diffRFIFlags[i] = isRFI[i] | isRFI[i+1];
-			}
-			addTimeAndBaseline(antenna1, antenna2, time, centralFrequency, polarization, diffSamples, diffRFIFlags, true);
+			addTimeAndBaseline(antenna1, antenna2, time, centralFrequency, polarization, &(diffReals[0]), &(diffImags[0]), diffRFIFlags, nsamples-1, 1, 1, true);
 			if(antenna1 != antenna2)
 			{
-				addFrequency(band, polarization, diffSamples, diffRFIFlags, true, false);
-				addFrequency(band, polarization, diffSamples, diffRFIFlags, true, true);
+				addFrequency(band, polarization, &(diffReals[0]), &(diffImags[0]), diffRFIFlags, nsamples-1, 1, 1, true, false);
+				addFrequency(band, polarization, &(diffReals[0]), &(diffImags[0]), diffRFIFlags, nsamples-1, 1, 1, true, true);
 			}
 			delete[] diffRFIFlags;
+		}
+		
+		void Add(unsigned antenna1, unsigned antenna2, double time, unsigned band, int polarization, const std::vector<std::complex<float> > &samples, const bool *isRFI)
+		{
+			const float *dataPtr =
+				reinterpret_cast<const float*>(&(samples[0]));
+			Add(antenna1, antenna2, time, band, polarization,
+					 dataPtr, dataPtr+1,   // real and imag parts
+					 isRFI, samples.size(), 2, 1);
 		}
 		
 		void Save(QualityTablesFormatter &qualityData) const
@@ -244,6 +254,31 @@ class StatisticsCollection : public Serializable
 				lowerResolution(i->second, maxSteps);
 			}
 		}
+		
+		void LowerFrequencyResolution(size_t maxSteps)
+		{
+			lowerResolution(_frequencyStatistics, maxSteps);
+		}
+		
+		/**
+		 * The regrid method will force all channels(/sub-bands) inside the collection to have the same
+		 * uniform grid. It will do this by moving around time steps, using the first grid as reference.
+		 * This is useful for raw (not NDPPP-ed) data, that might contain slightly different time steps in the
+		 * different sub-bands, but are otherwise similarly gridded.
+		 */
+		void RegridTime()
+		{
+			if(_timeStatistics.size() > 1)
+			{
+				std::map<double, DoubleStatMap>::iterator i = _timeStatistics.begin();
+				const DoubleStatMap &referenceMap = i->second;
+				++i;
+				do {
+					regrid(referenceMap, i->second);
+					++i;
+				} while(i != _timeStatistics.end());
+			}
+		}
 	private:
 		struct StatisticSaver
 		{
@@ -302,22 +337,23 @@ class StatisticsCollection : public Serializable
 			return *this;
 		}
 
-		void addTimeAndBaseline(unsigned antenna1, unsigned antenna2, double time, double centralFrequency, int polarization, const std::vector<std::complex<float> > samples, const bool *isRFI, bool isDiff)
+		void addTimeAndBaseline(unsigned antenna1, unsigned antenna2, double time, double centralFrequency, int polarization, const float *reals, const float *imags, const bool *isRFI, unsigned nsamples, unsigned step, unsigned stepRFI, bool isDiff)
 		{
 			unsigned long rfiCount = 0;
 			unsigned long count = 0;
 			long double sum_R = 0.0, sum_I = 0.0;
 			long double sumP2_R = 0.0, sumP2_I = 0.0;
-			for(unsigned i=0;i<samples.size();++i)
+			for(unsigned j=0;j<nsamples;++j)
 			{
-				if(std::isfinite(samples[i].real()) && std::isfinite(samples[i].imag()))
+				unsigned i = j*step;
+				if(std::isfinite(reals[i]) && std::isfinite(imags[i]))
 				{
-					if(isRFI[i])
+					if(isRFI[j*stepRFI])
 					{
 						++rfiCount;
 					} else {
-						const long double rVal = samples[i].real();
-						const long double iVal = samples[i].imag();
+						const long double rVal = reals[i];
+						const long double iVal = imags[i];
 						++count;
 						sum_R += rVal;
 						sum_I += iVal;
@@ -351,20 +387,21 @@ class StatisticsCollection : public Serializable
 			}
 		}
 		
-		void addFrequency(unsigned band, int polarization, const std::vector<std::complex<float> > samples, const bool *isRFI, bool isDiff, bool shiftOneUp)
+		void addFrequency(unsigned band, int polarization, const float *reals, const float *imags, const bool *isRFI, unsigned nsamples, unsigned step, unsigned stepRFI, bool isDiff, bool shiftOneUp)
 		{
 			std::vector<DefaultStatistics *> &bandStats = _bands.find(band)->second;
 			const unsigned fAdd = shiftOneUp ? 1 : 0;
-			for(unsigned f=0;f<samples.size();++f)
+			for(unsigned j=0;j<nsamples;++j)
 			{
-				if(std::isfinite(samples[f].real()) && std::isfinite(samples[f].imag()))
+				unsigned f = j*step;
+				if(std::isfinite(reals[f]) && std::isfinite(imags[f]))
 				{
-					DefaultStatistics &freqStat = *bandStats[f + fAdd];
-					if(isRFI[f])
+					DefaultStatistics &freqStat = *bandStats[j + fAdd];
+					if(isRFI[j*stepRFI])
 					{
 						addToStatistic(freqStat, polarization, 0, 0.0, 0.0, 0.0, 0.0, 1, isDiff);
 					} else {
-						const long double r = samples[f].real(), i = samples[f].imag();
+						const long double r = reals[f], i = imags[f];
 						addToStatistic(freqStat, polarization, 1, r, i, r*r, i*i, 0, isDiff);
 					}
 				}
@@ -880,6 +917,33 @@ class StatisticsCollection : public Serializable
 				}
 				map = newMap;
 			}
+		}
+		
+		static void regrid(const DoubleStatMap &referenceMap, DoubleStatMap &regridMap)
+		{
+			DoubleStatMap newMap;
+			for(DoubleStatMap::const_iterator i=regridMap.begin();i!=regridMap.end();++i)
+			{
+				double key = i->first;
+				
+				// find the key in the reference map that is closest to this key, if it is within range
+				DoubleStatMap::const_iterator bound = referenceMap.lower_bound(key);
+				if(bound != referenceMap.end())
+				{
+					double rightKey = bound->first;
+					if(bound != referenceMap.begin())
+					{
+						--bound;
+						double leftKey = bound->first;
+						if(key - rightKey < leftKey - key)
+							key = rightKey;
+						else
+							key = leftKey;
+					}
+				}
+				newMap.insert(std::pair<double, DefaultStatistics>(key, i->second));
+			}
+			regridMap = newMap;
 		}
 		
 		std::map<double, DoubleStatMap> _timeStatistics;

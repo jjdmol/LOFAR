@@ -40,7 +40,7 @@ class Plot2D : public Plotable {
 		~Plot2D();
 
 		void Clear();
-		void StartLine(const std::string &label, const std::string &xDesc = "x", const std::string &yDesc = "y", bool xIsTime = false, enum Plot2DPointSet::DrawingStyle drawingStyle = Plot2DPointSet::DrawLines)
+		Plot2DPointSet &StartLine(const std::string &label, const std::string &xDesc = "x", const std::string &yDesc = "y", bool xIsTime = false, enum Plot2DPointSet::DrawingStyle drawingStyle = Plot2DPointSet::DrawLines)
 		{
 			Plot2DPointSet *newSet = new Plot2DPointSet();
 			newSet->SetLabel(label);
@@ -49,6 +49,7 @@ class Plot2D : public Plotable {
 			newSet->SetYUnits(yDesc);
 			newSet->SetDrawingStyle(drawingStyle);
 			_pointSets.push_back(newSet);
+			return *newSet;
 		}
 		void PushDataPoint(double x, double y)
 		{
@@ -59,6 +60,18 @@ class Plot2D : public Plotable {
 		}
 		size_t PointSetCount() const { return _pointSets.size(); }
 		virtual void Render(Gtk::DrawingArea &drawingArea);
+		void SetIncludeZeroYAxis(bool includeZeroAxis)
+		{
+			_system.SetIncludeZeroYAxis(includeZeroAxis);
+			if(includeZeroAxis)
+				_logarithmicYAxis = false;
+		}
+		void SetLogarithmicYAxis(bool logarithmicYAxis)
+		{
+			_logarithmicYAxis = logarithmicYAxis;
+			if(_logarithmicYAxis)
+				_system.SetIncludeZeroYAxis(false);
+		}
 	private:
 		void render(Cairo::RefPtr<Cairo::Context> cr, Plot2DPointSet &pointSet);
 
@@ -68,6 +81,7 @@ class Plot2D : public Plotable {
 		int _width, _height;
 		double _topMargin;
 		System _system;
+		bool _logarithmicYAxis;
 };
 
 #endif

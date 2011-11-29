@@ -38,7 +38,7 @@ BaselinePlotPage::~BaselinePlotPage()
 {
 }
 
-TimeFrequencyData BaselinePlotPage::ConstructImage()
+std::pair<TimeFrequencyData, TimeFrequencyMetaDataCPtr> BaselinePlotPage::ConstructImage()
 {
 	if(HasStatistics())
 	{
@@ -94,9 +94,9 @@ TimeFrequencyData BaselinePlotPage::ConstructImage()
 			s << "Set has not 1, 2 or 4 polarizations (?!?) : StatisticsCollection.PolarizationCount() == " << polarizationCount;
 			throw std::runtime_error(s.str());
 		}
-		return data;
+		return std::pair<TimeFrequencyData, TimeFrequencyMetaDataCPtr>(data, TimeFrequencyMetaDataCPtr());
 	} else {
-		return TimeFrequencyData();
+		return std::pair<TimeFrequencyData, TimeFrequencyMetaDataCPtr>(TimeFrequencyData(), TimeFrequencyMetaDataCPtr());
 	}
 }
 
