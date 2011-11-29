@@ -56,8 +56,9 @@ class BaselinePlotPage : public GrayScalePlotPage {
 		{
 			return _statCollection != 0;
 		}
+		
 	protected:
-		virtual std::pair<TimeFrequencyData, TimeFrequencyMetaDataCPtr> ConstructImage();
+		virtual TimeFrequencyData ConstructImage();
 	private:
 		void onMouseMoved(size_t x, size_t y);
 		

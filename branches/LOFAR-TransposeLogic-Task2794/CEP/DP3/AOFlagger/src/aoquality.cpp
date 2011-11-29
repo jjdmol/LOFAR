@@ -45,7 +45,7 @@ void reportProgress(unsigned step, unsigned totalSteps)
 	}
 }
 
-void actionCollect(const std::string &filename, bool collectAll)
+void actionCollect(const std::string &filename, bool useCorrectedData)
 {
 	MeasurementSet *ms = new MeasurementSet(filename);
 	const unsigned polarizationCount = ms->GetPolarizationCount();
@@ -77,7 +77,7 @@ void actionCollect(const std::string &filename, bool collectAll)
 		collection.InitializeBand(b, frequencies[b], bands[b].channelCount);
 	}
 
-	const char *dataColumnName = "DATA";
+	const char *dataColumnName = useCorrectedData ? "CORRECTED_DATA" : "DATA";
 	casa::ROArrayColumn<casa::Complex> dataColumn(table, dataColumnName);
 	casa::ROArrayColumn<bool> flagColumn(table, "FLAG");
 	casa::ROScalarColumn<double> timeColumn(table, "TIME");
@@ -366,7 +366,7 @@ int main(int argc, char *argv[])
 				}
 				else if(helpAction == "collect")
 				{
-					std::cout << "Syntax: " << argv[0] << " collect [-a] <ms>\n\n"
+					std::cout << "Syntax: " << argv[0] << " collect [-c] <ms>\n\n"
 						"The collect action will go over a whole measurement set and \n"
 						"collect the default statistics. It will write the results in the \n"
 						"quality subtables of the main measurement set.\n\n"
@@ -413,7 +413,7 @@ int main(int argc, char *argv[])
 		}
 		else if(action == "collect")
 		{
-			if(argc != 3 && !(argc == 4 && std::string(argv[2]) == "-a") )
+			if(argc != 3 && !(argc == 4 && std::string(argv[2]) == "-c") )
 			{
 				std::cerr << "collect actions needs one or two parameters (the measurement set)\n";
 				return -1;

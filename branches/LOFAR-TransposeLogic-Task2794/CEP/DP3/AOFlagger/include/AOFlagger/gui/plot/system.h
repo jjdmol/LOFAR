@@ -30,7 +30,7 @@
 */
 class System {
 	public:
-		System() : _includeZeroYAxis(false)
+		System()
 		{
 		}
 
@@ -62,19 +62,11 @@ class System {
 		}
 		double YRangeMin(class Plot2DPointSet &pointSet) const
 		{
-			const double yMin = _dimensions.find(pointSet.YUnits())->second->YRangeMin();
-			if(yMin > 0.0 && _includeZeroYAxis)
-				return 0.0;
-			else
-				return yMin;
+			return _dimensions.find(pointSet.YUnits())->second->YRangeMin();
 		}
 		double YRangeMax(class Plot2DPointSet &pointSet) const
 		{
-			const double yMax = _dimensions.find(pointSet.YUnits())->second->YRangeMax();
-			if(yMax < 0.0 && _includeZeroYAxis)
-				return 0.0;
-			else
-				return yMax;
+			return _dimensions.find(pointSet.YUnits())->second->YRangeMax();
 		}
 		void Clear()
 		{
@@ -82,10 +74,8 @@ class System {
 				delete i->second;
 			_dimensions.clear();
 		}
-		void SetIncludeZeroYAxis(bool includeZeroYAxis) { _includeZeroYAxis = includeZeroYAxis; }
 	private:
 		std::map<std::string, Dimension*> _dimensions;
-		bool _includeZeroYAxis;
 };
 
 #endif

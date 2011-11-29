@@ -45,13 +45,6 @@ class TwoDimensionalPlotPage : public Gtk::HBox {
 			processStatistics(statCollection, antennas);
 			
 			_statCollection = statCollection;
-			// We need to do this here because it can not be done yet during construction in the
-			// constructor (virtual methods not yet available there).
-			if(!_customButtonsCreated)
-			{
-				addCustomPlotButtons(_plotBox);
-				_customButtonsCreated = true;
-			}
 			updatePlot();
 		}
 		void CloseStatistics()
@@ -71,20 +64,14 @@ class TwoDimensionalPlotPage : public Gtk::HBox {
 		
 		virtual void StartLine(Plot2D &plot, const std::string &name) = 0;
 		
-		virtual void addCustomPlotButtons(Gtk::VBox &container)
-		{
-		}
-		
 		class StatisticsCollection *GetStatCollection() const
 		{
 			return _statCollection;
 		}
-		void updatePlot();
 	private:
 		enum PhaseType { AmplitudePhaseType, PhasePhaseType, RealPhaseType, ImaginaryPhaseType} ;
 		
-		void updatePlotConfig();
-		
+		void updatePlot();
 		template<enum PhaseType Phase>
 		inline double getValue(const std::complex<long double> val);
 		void plotStatistic(QualityTablesFormatter::StatisticKind kind);
@@ -98,13 +85,6 @@ class TwoDimensionalPlotPage : public Gtk::HBox {
 		void initStatisticKindButtons();
 		void initPolarizationButtons();
 		void initPhaseButtons();
-		void initPlotButtons();
-		
-		void onLogarithmicClicked()
-		{
-			_zeroAxisButton.set_sensitive(!_logarithmicButton.get_active());
-			updatePlotConfig();
-		}
 		
 		Gtk::VBox _sideBox;
 		
@@ -120,15 +100,9 @@ class TwoDimensionalPlotPage : public Gtk::HBox {
 		Gtk::VBox _phaseBox;
 		Gtk::CheckButton _amplitudeButton, _phaseButton, _realButton, _imaginaryButton;
 		
-		Gtk::Frame _plotFrame;
-		Gtk::VBox _plotBox;
-		Gtk::CheckButton _logarithmicButton, _zeroAxisButton;
-		
 		class StatisticsCollection *_statCollection;
 		Plot2D _plot;
 		PlotWidget _plotWidget;
-		
-		bool _customButtonsCreated;
 };
 
 #endif

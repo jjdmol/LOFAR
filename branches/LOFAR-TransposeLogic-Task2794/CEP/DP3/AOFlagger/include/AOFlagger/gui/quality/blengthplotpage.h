@@ -32,16 +32,10 @@
 	@author A.R. Offringa <offringa@astro.rug.nl>
 */
 class BLengthPlotPage : public TwoDimensionalPlotPage {
-	public:
-    BLengthPlotPage() :
-			_includeAutoCorrelationsButton("Auto-correlations")
-		{
-		}
 	protected:
 		virtual void processStatistics(class StatisticsCollection *statCollection, const std::vector<AntennaInfo> &antennas)
 		{
-			_statisticsWithAutocorrelations.clear();
-			_statisticsWithoutAutocorrelations.clear();
+			_statistics.clear();
 			
 			const BaselineStatisticsMap &map = statCollection->BaselineStatistics();
 			
@@ -49,37 +43,22 @@ class BLengthPlotPage : public TwoDimensionalPlotPage {
 			for(vector<std::pair<unsigned, unsigned> >::const_iterator i=baselines.begin();i!=baselines.end();++i)
 			{
 				Baseline bline(antennas[i->first], antennas[i->second]);
-				const DefaultStatistics &statistics = map.GetStatistics(i->first, i->second);
-				_statisticsWithAutocorrelations.insert(std::pair<double, DefaultStatistics>(bline.Distance(), statistics));
-				if(i->first != i->second)
-					_statisticsWithoutAutocorrelations.insert(std::pair<double, DefaultStatistics>(bline.Distance(), statistics));
+				_statistics.insert(std::pair<double, DefaultStatistics>(bline.Distance(), map.GetStatistics(i->first, i->second)));
 			}
 		}
 		
 		virtual const std::map<double, class DefaultStatistics> &GetStatistics() const
 		{
-			return _includeAutoCorrelationsButton.get_active() ? _statisticsWithAutocorrelations : _statisticsWithoutAutocorrelations;
+			return _statistics;
 		}
 		
 		virtual void StartLine(Plot2D &plot, const std::string &name)
 		{
 			plot.StartLine(name, "Baseline length (m)", "Value", false, Plot2DPointSet::DrawPoints);
 		}
-		virtual void addCustomPlotButtons(Gtk::VBox &container)
-		{
-			_includeAutoCorrelationsButton.signal_clicked().connect(sigc::mem_fun(*this, &BLengthPlotPage::onAutoCorrelationsClicked));
-			container.pack_start(_includeAutoCorrelationsButton);
-			_includeAutoCorrelationsButton.show();
-		}
-	private:
-		void onAutoCorrelationsClicked()
-		{
-			updatePlot();
-		}
 		
-		std::map<double, DefaultStatistics> _statisticsWithAutocorrelations;
-		std::map<double, DefaultStatistics> _statisticsWithoutAutocorrelations;
-		Gtk::CheckButton _includeAutoCorrelationsButton;
+	private:
+		std::map<double, DefaultStatistics> _statistics;
 };
 
 #endif

@@ -32,9 +32,7 @@
 */
 class Plot2DPointSet{
 	public:
-		Plot2DPointSet() :
-			_rotateUnits(false)
-		{ }
+		Plot2DPointSet() { }
 		~Plot2DPointSet() { }
 		
 		enum DrawingStyle { DrawLines, DrawPoints, DrawColumns };
@@ -132,26 +130,7 @@ class Plot2DPointSet{
 		{
 			return MaxY();
 		}
-		void SetTickLabels(const std::vector<std::string> &tickLabels)
-		{
-			_tickLabels = tickLabels;
-		}
-		bool HasTickLabels() const
-		{
-			return !_tickLabels.empty();
-		}
-		const std::vector<std::string> &TickLabels() const
-		{
-			return _tickLabels;
-		}
-		void SetRotateUnits(bool rotateUnits)
-		{
-			_rotateUnits = rotateUnits;
-		}
-		bool RotateUnits() const
-		{
-			return _rotateUnits;
-		}
+
 	private:
 		struct Point2D
 		{
@@ -168,8 +147,6 @@ class Plot2DPointSet{
 		std::string _xUnits;
 		std::string _yUnits;
 		bool _xIsTime;
-		std::vector<std::string> _tickLabels;
-		bool _rotateUnits;
 		enum DrawingStyle _drawingStyle;
 };
 

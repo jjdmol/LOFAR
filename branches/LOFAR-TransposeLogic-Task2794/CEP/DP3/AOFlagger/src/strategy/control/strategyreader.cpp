@@ -83,7 +83,7 @@ Strategy *StrategyReader::CreateStrategyFromFile(const std::string &filename)
 {
 	_xmlDocument = xmlReadFile(filename.c_str(), NULL, 0);
 	if (_xmlDocument == NULL)
-		throw StrategyReaderError("Failed to read file");
+		throw StrategyReaderError("Failed to parse file");
 
 	xmlNode *rootElement = xmlDocGetRootElement(_xmlDocument);
 	Strategy *strategy = 0;

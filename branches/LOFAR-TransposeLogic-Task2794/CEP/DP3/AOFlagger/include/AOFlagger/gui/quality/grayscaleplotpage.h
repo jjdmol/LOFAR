@@ -30,7 +30,6 @@
 #include <AOFlagger/quality/qualitytablesformatter.h>
 
 #include <AOFlagger/msio/timefrequencydata.h>
-#include <AOFlagger/msio/timefrequencymetadata.h>
 
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
@@ -41,7 +40,7 @@ class GrayScalePlotPage : public Gtk::HBox {
     virtual ~GrayScalePlotPage();
 		
 	protected:
-		virtual std::pair<TimeFrequencyData, TimeFrequencyMetaDataCPtr> ConstructImage() = 0;
+		virtual TimeFrequencyData ConstructImage() = 0;
 		
 		QualityTablesFormatter::StatisticKind GetSelectedStatisticKind() const
 		{

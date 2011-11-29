@@ -212,8 +212,8 @@ void GrayScalePlotPage::UpdateImage()
 {
 	if(_ready)
 	{
-		std::pair<TimeFrequencyData, TimeFrequencyMetaDataCPtr> pair = ConstructImage();
-		TimeFrequencyData &data = pair.first;
+		TimeFrequencyData data = ConstructImage();
+		
 		if(!data.IsEmpty())
 		{
 			setToSelectedPolarization(data);
@@ -222,8 +222,6 @@ void GrayScalePlotPage::UpdateImage()
 			
 			_imageWidget.SetImage(data.GetSingleImage());
 			_imageWidget.SetOriginalMask(data.GetSingleMask());
-			if(pair.second != 0)
-				_imageWidget.SetMetaData(pair.second);
 			_imageWidget.Update();
 		}
 	}

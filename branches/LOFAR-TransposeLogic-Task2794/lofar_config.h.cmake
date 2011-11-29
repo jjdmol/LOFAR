@@ -127,9 +127,6 @@
 /* Define if LAM is installed */
 #cmakedefine HAVE_LAM 1
 
-/* Define if LDA is installed */
-#cmakedefine HAVE_LDA
-
 /* Define if LOG4CPLUS is installed */
 #cmakedefine HAVE_LOG4CPLUS 1
 
