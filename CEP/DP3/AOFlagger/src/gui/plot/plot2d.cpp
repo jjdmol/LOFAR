@@ -66,6 +66,7 @@ void Plot2D::Render(Gtk::DrawingArea &drawingArea)
 		{
 			Plot2DPointSet &refPointSet = **_pointSets.begin();
 			
+			_horizontalScale.SetRotateUnits(refPointSet.RotateUnits());
 			if(refPointSet.HasTickLabels())
 				_horizontalScale.InitializeTextTicks(refPointSet.TickLabels());
 			else if(refPointSet.XIsTime())
