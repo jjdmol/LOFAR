@@ -61,6 +61,7 @@ class AntennaePlotPage : public TwoDimensionalPlotPage {
 			for(std::vector<AntennaInfo>::const_iterator i=_antennas.begin();i!=_antennas.end();++i)
 				labels.push_back(i->name);
 			pointSet.SetTickLabels(labels);
+			pointSet.SetRotateUnits(true);
 		}
 		
 	private:

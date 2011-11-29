@@ -66,6 +66,11 @@ class HorizontalPlotScale {
 			_tickValuesFontSize = fontSize;
 			_metricsAreInitialized = false;
 		}
+		void SetRotateUnits(bool rotate)
+		{
+			_rotateUnits = rotate;
+			_metricsAreInitialized = false;
+		}
 	private:
 		void drawUnits(Cairo::RefPtr<Cairo::Context> cairo);
 		bool ticksFit(Cairo::RefPtr<Cairo::Context> cairo);
@@ -79,6 +84,7 @@ class HorizontalPlotScale {
 		std::string _unitsCaption;
 		double _descriptionFontSize;
 		double _tickValuesFontSize;
+		bool _rotateUnits;
 };
 
 #endif

@@ -24,7 +24,7 @@
 #include <AOFlagger/util/aologger.h>
 
 HorizontalPlotScale::HorizontalPlotScale()
-	: _plotWidth(0), _plotHeight(0), _metricsAreInitialized(false), _tickSet(0), _drawWithDescription(true), _unitsCaption("x"), _descriptionFontSize(14), _tickValuesFontSize(14)
+	: _plotWidth(0), _plotHeight(0), _metricsAreInitialized(false), _tickSet(0), _drawWithDescription(true), _unitsCaption("x"), _descriptionFontSize(14), _tickValuesFontSize(14), _rotateUnits(false)
 {
 }
 
@@ -59,8 +59,19 @@ void HorizontalPlotScale::Draw(Cairo::RefPtr<Cairo::Context> cairo)
 		cairo->line_to(x, _topMargin + _plotHeight + 3);
 		Cairo::TextExtents extents;
 		cairo->get_text_extents(tick.second, extents);
-		cairo->move_to(x - extents.width/2, _topMargin + _plotHeight - extents.y_bearing + extents.height);
-		cairo->show_text(tick.second);
+		if(_rotateUnits)
+		{
+			cairo->move_to(x - extents.y_bearing - extents.height/2, _topMargin + _plotHeight + extents.width + 3);
+			cairo->save();
+			cairo->rotate(-M_PI*0.5);
+			cairo->show_text(tick.second);
+			cairo->restore();
+		}
+		else
+		{
+			cairo->move_to(x - extents.width/2, _topMargin + _plotHeight - extents.y_bearing + extents.height);
+			cairo->show_text(tick.second);
+		}
 	}
 	cairo->stroke();
 	
@@ -112,10 +123,19 @@ void HorizontalPlotScale::initializeMetrics(Cairo::RefPtr<Cairo::Context> cairo)
 				const Tick tick = _tickSet->GetTick(i);
 				Cairo::TextExtents extents;
 				cairo->get_text_extents(tick.second, extents);
-				if(maxHeight < extents.height)
-					maxHeight = extents.height;
+				if(_rotateUnits)
+				{
+					if(maxHeight < extents.width)
+						maxHeight = extents.width;
+				} else {
+					if(maxHeight < extents.height)
+						maxHeight = extents.height;
+				}
 			}
-			_height = maxHeight*2 + 10;
+			if(_rotateUnits)
+				_height = maxHeight + 10;
+			else
+				_height = maxHeight*2 + 10;
 			if(_drawWithDescription)
 			{
 				cairo->set_font_size(_descriptionFontSize);
@@ -172,9 +192,20 @@ bool HorizontalPlotScale::ticksFit(Cairo::RefPtr<Cairo::Context> cairo)
 		Cairo::TextExtents extents;
 		cairo->get_text_extents(tick.second + "M", extents);
 		const double
-			midX = tick.first * (_plotWidth - _verticalScaleWidth) + _verticalScaleWidth,
+			midX = tick.first * (_plotWidth - _verticalScaleWidth) + _verticalScaleWidth;
+		double startX, endX;
+		if(_rotateUnits)
+		{
+			// Use "M" to get at least an "M" of distance between axis
+			startX = midX - extents.height/2,
+			endX = startX + extents.height;
+		} else
+		{
+			// Use "M" to get at least an "M" of distance between ticks
+			cairo->get_text_extents(tick.second + "M", extents);
 			startX = midX - extents.width/2,
 			endX = startX + extents.width;
+		}
 		if(startX < prevEndX)
 			return false;
 		prevEndX = endX;
