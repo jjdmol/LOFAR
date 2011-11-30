@@ -8,7 +8,7 @@ from Locations import Locations
 # allow ../util to be found, a bit of a hack
 sys.path += [(os.path.dirname(__file__) or ".")+"/.."]
 
-from util.Commands import SyncCommand,backquote
+from util.Commands import backquote
 
 __all__ = ["packetAnalysis","stationInPartition","Stations","overrideRack"]
 

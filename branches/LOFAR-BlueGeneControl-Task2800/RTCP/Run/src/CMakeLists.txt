@@ -4,12 +4,11 @@ lofar_add_bin_program(packetanalysis packetanalysis.c)
 
 install(PROGRAMS 
   BGPPartition.sh
-  CNProc.sh
-  IONProc.sh
+  CNProcessing.sh
+  IONProcessing.sh
   controller.sh
   locations.sh
   watchlogs.sh
-  startOLAP.py
   commandOLAP.py
   runParset.py
   DESTINATION bin)

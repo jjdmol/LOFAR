@@ -6,31 +6,6 @@ from Locations import Locations
 from ObservationID import ObservationID
 from Parset import Parset
 from Stations import Stations,overrideRack
-import signal
-from threading import Lock
-import thread
-
-aborted = False
-lock = Lock()
-lock.acquire() # lock can be released by anyone to signal the end of the run
-
-def installSigHandlers():
-  """ Translate signals to KeyboardInterrupts to catch them in a try block. """
-
-  def sigHandler( sig, frame ):
-    global aborted,lock
-
-    critical( "Caught signal %s -- aborting" % (sig,) )
-    aborted = True
-
-    try:
-      lock.release()
-    except thread.error:
-      pass
-
-  signal.signal( signal.SIGTERM, sigHandler )
-  signal.signal( signal.SIGQUIT, sigHandler )
-  signal.signal( signal.SIGINT, sigHandler )
 
 def buildParset( parset = None, args = "", olapparset = "OLAP.parset", partition = None ):
   """

@@ -28,4 +28,4 @@ function delpid() {
   true
 }
 
-. IdentityControl.sh
+. controller.sh
