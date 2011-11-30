@@ -22,7 +22,10 @@
 #include <iostream>
 
 Plot2D::Plot2D() :
-	_logarithmicYAxis(false)
+	_logarithmicYAxis(false),
+	_showAxes(true),
+	_showAxisDescriptions(true),
+	_vRangeDetermination(MinMaxRange)
 {
 }
 
@@ -66,28 +69,39 @@ void Plot2D::Render(Gtk::DrawingArea &drawingArea)
 		{
 			Plot2DPointSet &refPointSet = **_pointSets.begin();
 			
-			_horizontalScale.SetRotateUnits(refPointSet.RotateUnits());
-			if(refPointSet.HasTickLabels())
-				_horizontalScale.InitializeTextTicks(refPointSet.TickLabels());
-			else if(refPointSet.XIsTime())
-				_horizontalScale.InitializeTimeTicks(_system.XRangeMin(refPointSet), _system.XRangeMax(refPointSet));
-			else
-				_horizontalScale.InitializeNumericTicks(_system.XRangeMin(refPointSet), _system.XRangeMax(refPointSet));
-			_horizontalScale.SetUnitsCaption(refPointSet.XUnits());
-			_topMargin = 10.0;
-			_horizontalScale.SetPlotDimensions(_width, _height, _topMargin, 0.0);
-			double horiScaleHeight = _horizontalScale.GetHeight(cr);
-			
-			double rightMargin = _horizontalScale.GetRightMargin(cr);
-			if(_logarithmicYAxis)
-				_verticalScale.InitializeLogarithmicTicks(_system.YRangeMin(refPointSet), _system.YRangeMax(refPointSet));
-			else
-				_verticalScale.InitializeNumericTicks(_system.YRangeMin(refPointSet), _system.YRangeMax(refPointSet));
-			_verticalScale.SetUnitsCaption(refPointSet.YUnits());
-			_verticalScale.SetPlotDimensions(_width - rightMargin, _height - horiScaleHeight - _topMargin, _topMargin);
+			double verticalScaleWidth, horiScaleHeight;
+		
+			if(_showAxes)
+			{
+				_horizontalScale.SetDrawWithDescription(_showAxisDescriptions);
+				_horizontalScale.SetRotateUnits(refPointSet.RotateUnits());
+				if(refPointSet.HasTickLabels())
+					_horizontalScale.InitializeTextTicks(refPointSet.TickLabels());
+				else if(refPointSet.XIsTime())
+					_horizontalScale.InitializeTimeTicks(_system.XRangeMin(refPointSet), _system.XRangeMax(refPointSet));
+				else
+					_horizontalScale.InitializeNumericTicks(_system.XRangeMin(refPointSet), _system.XRangeMax(refPointSet));
+				_horizontalScale.SetUnitsCaption(refPointSet.XUnits());
+				_topMargin = 10.0;
+				_horizontalScale.SetPlotDimensions(_width, _height, _topMargin, 0.0);
+				horiScaleHeight = _horizontalScale.GetHeight(cr);
+				
+				double rightMargin = _horizontalScale.GetRightMargin(cr);
+				_verticalScale.SetDrawWithDescription(_showAxisDescriptions);
+				if(_logarithmicYAxis)
+					_verticalScale.InitializeLogarithmicTicks(MinY(), MaxY());
+				else
+					_verticalScale.InitializeNumericTicks(MinY(), MaxY());
+				_verticalScale.SetUnitsCaption(refPointSet.YUnits());
+				_verticalScale.SetPlotDimensions(_width - rightMargin, _height - horiScaleHeight - _topMargin, _topMargin);
 
-			double verticalScaleWidth =  _verticalScale.GetWidth(cr);
-			_horizontalScale.SetPlotDimensions(_width - rightMargin, _height - horiScaleHeight, 0.0, verticalScaleWidth);
+				verticalScaleWidth =  _verticalScale.GetWidth(cr);
+				_horizontalScale.SetPlotDimensions(_width - rightMargin, _height - horiScaleHeight, 0.0, verticalScaleWidth);
+			}
+			else {
+				verticalScaleWidth = 0.0;
+				horiScaleHeight = 0.0;
+			}
 			
 			for(std::vector<Plot2DPointSet*>::iterator i=_pointSets.begin();i!=_pointSets.end();++i)
 			{
@@ -107,11 +121,18 @@ void Plot2D::Render(Gtk::DrawingArea &drawingArea)
 				render(cr, **i);
 			}
 			
-			_horizontalScale.Draw(cr);
-			_verticalScale.Draw(cr);
+			double rightMargin;
+			if(_showAxes)
+			{
+				_horizontalScale.Draw(cr);
+				_verticalScale.Draw(cr);
+				rightMargin = _horizontalScale.GetRightMargin(cr);
+			} else {
+				rightMargin = 0.0;
+			}
 			
 			cr->set_source_rgb(0.0, 0.0, 0.0);
-			cr->rectangle(verticalScaleWidth, _topMargin, _width - verticalScaleWidth - _horizontalScale.GetRightMargin(cr), _height - horiScaleHeight - _topMargin);
+			cr->rectangle(verticalScaleWidth, _topMargin, _width - verticalScaleWidth - rightMargin, _height - horiScaleHeight - _topMargin);
 			cr->stroke();
 		}
 	}
@@ -147,9 +168,12 @@ void Plot2D::render(Cairo::RefPtr<Cairo::Context> cr, Plot2DPointSet &pointSet)
 		yMax += 1;
 	}
 
-	double plotLeftMargin = _verticalScale.GetWidth(cr);
-	double plotWidth = _width - _horizontalScale.GetRightMargin(cr) - plotLeftMargin;
-	double plotHeight = _height - _horizontalScale.GetHeight(cr) - _topMargin;
+	const double rightMargin = _showAxes ? _horizontalScale.GetRightMargin(cr) : 0.0;
+	const double bottomMargin = _showAxes ? _horizontalScale.GetHeight(cr) : 0.0;
+	const double plotLeftMargin = _showAxes ? _verticalScale.GetWidth(cr) : 0.0;
+	
+	const double plotWidth = _width - rightMargin - plotLeftMargin;
+	const double plotHeight = _height - bottomMargin - _topMargin;
 	
 	double fx = (double) plotWidth / (xRight - xLeft);
 	
