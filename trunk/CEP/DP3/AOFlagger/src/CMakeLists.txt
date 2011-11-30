@@ -202,6 +202,7 @@ if(GTKMM_FOUND)
 		gui/plot/horizontalplotscale.cpp
 		gui/plot/verticalplotscale.cpp
 		gui/plot/plot2d.cpp
+		gui/plot/plotpropertieswindow.cpp
 		gui/quality/aoqplotwindow.cpp
 		gui/quality/baselineplotpage.cpp
 		gui/quality/grayscaleplotpage.cpp

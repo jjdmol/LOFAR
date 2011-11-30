@@ -36,6 +36,8 @@
 */
 class Plot2D : public Plotable {
 	public:
+		enum RangeDetermination { MinMaxRange, WinsorizedRange, SpecifiedRange };
+		
 		Plot2D();
 		~Plot2D();
 
@@ -72,6 +74,55 @@ class Plot2D : public Plotable {
 			if(_logarithmicYAxis)
 				_system.SetIncludeZeroYAxis(false);
 		}
+		bool LogarithmicYAxis() const
+		{
+			return _logarithmicYAxis;
+		}
+		void SetVRangeDetermination(enum RangeDetermination range) {
+			_vRangeDetermination = range;
+		}
+		enum RangeDetermination VRangeDetermination() const
+		{
+			return _vRangeDetermination;
+		}
+		void SetMaxY(double maxY)
+		{
+			_vRangeDetermination = SpecifiedRange;
+			_specifiedMaxY = maxY;
+		}
+		double MaxY() const
+		{
+			if(_vRangeDetermination == SpecifiedRange)
+				return _specifiedMaxY;
+			else if(_pointSets.empty())
+				return 1.0;
+			else
+				return _system.YRangeMax(**_pointSets.begin());
+		}
+		void SetMinY(double minY)
+		{
+			_vRangeDetermination = SpecifiedRange;
+			_specifiedMinY = minY;
+		}
+		double MinY() const
+		{
+			if(_pointSets.empty())
+				return -1.0;
+			else
+				return _system.YRangeMin(**_pointSets.begin());
+		}
+		void SetShowAxes(bool showAxes) {
+			_showAxes = showAxes;
+		}
+		bool ShowAxes() const {
+			return _showAxes;
+		}
+		void SetShowAxisDescriptions(bool showAxisDescriptions) {
+			_showAxisDescriptions = showAxisDescriptions;
+		}
+		bool ShowAxisDescriptions() const {
+			return _showAxisDescriptions;
+		}
 	private:
 		void render(Cairo::RefPtr<Cairo::Context> cr, Plot2DPointSet &pointSet);
 
@@ -81,7 +132,9 @@ class Plot2D : public Plotable {
 		int _width, _height;
 		double _topMargin;
 		System _system;
-		bool _logarithmicYAxis;
+		bool _logarithmicYAxis, _showAxes, _showAxisDescriptions;
+		double _specifiedMinY, _specifiedMaxY;
+		enum RangeDetermination _vRangeDetermination;
 };
 
 #endif
