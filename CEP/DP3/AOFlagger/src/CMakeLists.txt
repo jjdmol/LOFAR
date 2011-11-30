@@ -207,7 +207,9 @@ if(GTKMM_FOUND)
 		gui/quality/grayscaleplotpage.cpp
 		gui/quality/timefrequencyplotpage.cpp
 		gui/quality/twodimensionalplotpage.cpp
-		gui/imagewidget.cpp)
+		gui/imagewidget.cpp
+		gui/imagepropertieswindow.cpp
+		)
 		target_link_libraries(aoqplot ${GTKMM_LIBRARIES})
 	endif(BOOST_ASIO_H_FOUND AND SIGCXX_FOUND)
 else()
