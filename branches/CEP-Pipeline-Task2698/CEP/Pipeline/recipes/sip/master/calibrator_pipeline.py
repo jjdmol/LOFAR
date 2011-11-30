@@ -53,10 +53,14 @@ class calibrator_pipeline(control):
             dp.getStringVector('Input_Correlated.locations', []),
             dp.getStringVector('Input_Correlated.filenames', []))
         ]
+        self.logger.debug("Found %d Input_Correlated data products" %
+                          len(self.input_data))
         self.output_data = [tuple(''.join(x).split(':')) for x in zip(
             dp.getStringVector('Output_InstrumentModel.locations', []),
             dp.getStringVector('Output_InstrumentModel.filenames', []))
         ]
+        self.logger.debug("Found %d Input_InstrumentModel data products" %
+                          len(self.output_data))
         # Sanity checks on input- and output map files
         if len(self.input_data) != len(self.output_data):
             raise PipelineException(
@@ -87,8 +91,6 @@ class calibrator_pipeline(control):
             self.inputs['job_name'] = (
                 os.path.splitext(os.path.basename(parset_file))[0]
             )
-        # Get the input- and output-data product specifications
-        self._get_io_product_specs()
         # Call the base-class's `go()` method.
         super(calibrator_pipeline, self).go()
 

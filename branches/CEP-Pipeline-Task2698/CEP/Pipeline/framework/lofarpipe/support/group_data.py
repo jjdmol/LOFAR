@@ -87,25 +87,37 @@ def gvds_iterator(gvds_file, nproc=4):
         else:
             yield yieldable
 
+#def load_data_map(filename):
+    #"""
+    #Load a mapping of filename <-> compute node from a parset on disk.
+    #"""
+    #datamap = Parset(filename)
+    #data = []
+    #for host in datamap:
+        #for filename in datamap.getStringVector(host):
+            #data.append((host, filename))
+    #return data
+
+#def store_data_map(filename, data):
+    #"""
+    #Store a mapping of filename <-> compute node as a parset on disk.
+    #"""
+    #datamap = defaultdict(list)
+    #for (host,file) in data:
+        #datamap[host].append(file)
+    #outfile = open(filename, 'w')
+    #for key in sorted(datamap):
+        #outfile.write('%s = %s\n' % (key, datamap[key]))
+    #outfile.close()
+
 def load_data_map(filename):
-    """
-    Load a mapping of filename <-> compute node from a parset on disk.
-    """
-    datamap = Parset(filename)
-    data = []
-    for host in datamap:
-        for filename in datamap.getStringVector(host):
-            data.append((host, filename))
+    file = open(filename)
+    data = eval(file.read())
+    file.close()
     return data
 
+
 def store_data_map(filename, data):
-    """
-    Store a mapping of filename <-> compute node as a parset on disk.
-    """
-    datamap = defaultdict(list)
-    for (host,file) in data:
-        datamap[host].append(file)
-    outfile = open(filename, 'w')
-    for key in sorted(datamap):
-        outfile.write('%s = %s\n' % (key, datamap[key]))
-    outfile.close()
+    file = open(filename, 'w')
+    file.write(str(data))
+    file.close()
