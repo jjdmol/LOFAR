@@ -37,16 +37,26 @@ TimeFrequencyPlotPage::~TimeFrequencyPlotPage()
 {
 }
 
-TimeFrequencyData TimeFrequencyPlotPage::ConstructImage()
+std::pair<TimeFrequencyData, TimeFrequencyMetaDataCPtr> TimeFrequencyPlotPage::ConstructImage()
 {
 	if(HasStatistics())
 	{
 		const QualityTablesFormatter::StatisticKind kind = GetSelectedStatisticKind();
 		
 		StatisticsDerivator derivator(*_statCollection);
-		return derivator.CreateTFData(kind);
+		
+		std::pair<TimeFrequencyData, TimeFrequencyMetaDataCPtr> data = derivator.CreateTFData(kind);
+		if(data.second == 0)
+		{
+			GrayScaleWidget().SetXAxisDescription("Time index");
+			GrayScaleWidget().SetYAxisDescription("Frequency index");
+		} else {
+			GrayScaleWidget().SetXAxisDescription("Time");
+			GrayScaleWidget().SetYAxisDescription("Frequency (MHz)");
+		}
+		return data;
 	} else {
-		return TimeFrequencyData();
+		return std::pair<TimeFrequencyData, TimeFrequencyMetaDataCPtr>(TimeFrequencyData(), TimeFrequencyMetaDataCPtr());
 	}
 }
 

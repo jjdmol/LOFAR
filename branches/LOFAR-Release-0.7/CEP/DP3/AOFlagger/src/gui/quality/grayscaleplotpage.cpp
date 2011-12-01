@@ -22,6 +22,8 @@
 
 #include <AOFlagger/gui/quality/grayscaleplotpage.h>
 
+#include <AOFlagger/gui/imagepropertieswindow.h>
+
 #include <AOFlagger/quality/statisticscollection.h>
 #include <AOFlagger/quality/statisticsderivator.h>
 
@@ -47,18 +49,20 @@ GrayScalePlotPage::GrayScalePlotPage() :
 	_phasePhaseButton("Phase"),
 	_realPhaseButton("Real"),
 	_imaginaryPhaseButton("Imaginary"),
-	_rangeFrame("Colour range"),
+	_plotFrame("Plot"),
 	_rangeMinMaxButton("Min to max"),
 	_rangeWinsorizedButton("Winsorized"),
 	_rangeSpecified("Specified"),
 	_logarithmicScaleButton("Logarithmic"),
+	_plotPropertiesButton("Properties..."),
 	_selectStatisticKind(QualityTablesFormatter::VarianceStatistic),
-	_ready(false)
+	_ready(false),
+	_imagePropertiesWindow(0)
 {
 	initStatisticKinds();
 	initPolarizations();
 	initPhaseButtons();
-	initRanges();
+	initPlotOptions();
 	
 	pack_start(_sideBox, Gtk::PACK_SHRINK);
 	
@@ -78,6 +82,8 @@ GrayScalePlotPage::GrayScalePlotPage() :
 
 GrayScalePlotPage::~GrayScalePlotPage()
 {
+	if(_imagePropertiesWindow != 0)
+		delete _imagePropertiesWindow;
 }
 
 void GrayScalePlotPage::initStatisticKinds()
@@ -183,28 +189,32 @@ void GrayScalePlotPage::initPhaseButtons()
 	_sideBox.pack_start(_phaseFrame, Gtk::PACK_SHRINK);
 }
 
-void GrayScalePlotPage::initRanges()
+void GrayScalePlotPage::initPlotOptions()
 {
 	Gtk::RadioButtonGroup rangeGroup;
 	_rangeMinMaxButton.set_group(rangeGroup);
 	_rangeMinMaxButton.signal_clicked().connect(sigc::mem_fun(*this, &GrayScalePlotPage::onSelectMinMaxRange));
-	_rangeBox.pack_start(_rangeMinMaxButton, Gtk::PACK_SHRINK);
+	_plotBox.pack_start(_rangeMinMaxButton, Gtk::PACK_SHRINK);
 
 	_rangeWinsorizedButton.set_group(rangeGroup);
 	_rangeWinsorizedButton.signal_clicked().connect(sigc::mem_fun(*this, &GrayScalePlotPage::onSelectWinsorizedRange));
-	_rangeBox.pack_start(_rangeWinsorizedButton, Gtk::PACK_SHRINK);
+	_plotBox.pack_start(_rangeWinsorizedButton, Gtk::PACK_SHRINK);
 
 	_rangeSpecified.set_group(rangeGroup);
 	_rangeSpecified.signal_clicked().connect(sigc::mem_fun(*this, &GrayScalePlotPage::onSelectSpecifiedRange));
-	_rangeBox.pack_start(_rangeSpecified, Gtk::PACK_SHRINK);
+	_plotBox.pack_start(_rangeSpecified, Gtk::PACK_SHRINK);
 	
 	_logarithmicScaleButton.signal_clicked().connect(sigc::mem_fun(*this, &GrayScalePlotPage::onLogarithmicScaleClicked));
-	_rangeBox.pack_start(_logarithmicScaleButton, Gtk::PACK_SHRINK);
+	_plotBox.pack_start(_logarithmicScaleButton, Gtk::PACK_SHRINK);
 	_logarithmicScaleButton.set_active(true);
 	
-	_rangeFrame.add(_rangeBox);
 	
-	_sideBox.pack_start(_rangeFrame, Gtk::PACK_SHRINK);
+	_plotPropertiesButton.signal_clicked().connect(sigc::mem_fun(*this, &GrayScalePlotPage::onPropertiesClicked));
+	_plotBox.pack_start(_plotPropertiesButton, Gtk::PACK_SHRINK);
+	
+	_plotFrame.add(_plotBox);
+	
+	_sideBox.pack_start(_plotFrame, Gtk::PACK_SHRINK);
 }
 
 
@@ -212,8 +222,8 @@ void GrayScalePlotPage::UpdateImage()
 {
 	if(_ready)
 	{
-		TimeFrequencyData data = ConstructImage();
-		
+		std::pair<TimeFrequencyData, TimeFrequencyMetaDataCPtr> pair = ConstructImage();
+		TimeFrequencyData &data = pair.first;
 		if(!data.IsEmpty())
 		{
 			setToSelectedPolarization(data);
@@ -222,6 +232,8 @@ void GrayScalePlotPage::UpdateImage()
 			
 			_imageWidget.SetImage(data.GetSingleImage());
 			_imageWidget.SetOriginalMask(data.GetSingleMask());
+			if(pair.second != 0)
+				_imageWidget.SetMetaData(pair.second);
 			_imageWidget.Update();
 		}
 	}
@@ -268,4 +280,12 @@ void GrayScalePlotPage::setToSelectedPhase(TimeFrequencyData &data)
 		data = *newData;
 		delete newData;
 	}
+}
+
+void GrayScalePlotPage::onPropertiesClicked()
+{
+	if(_imagePropertiesWindow == 0)
+		_imagePropertiesWindow = new ImagePropertiesWindow(_imageWidget, "Plotting properties");
+	_imagePropertiesWindow->show();
+	_imagePropertiesWindow->raise();
 }

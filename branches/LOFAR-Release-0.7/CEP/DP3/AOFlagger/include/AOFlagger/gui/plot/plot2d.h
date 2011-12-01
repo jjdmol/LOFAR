@@ -36,11 +36,13 @@
 */
 class Plot2D : public Plotable {
 	public:
+		enum RangeDetermination { MinMaxRange, WinsorizedRange, SpecifiedRange };
+		
 		Plot2D();
 		~Plot2D();
 
 		void Clear();
-		void StartLine(const std::string &label, const std::string &xDesc = "x", const std::string &yDesc = "y", bool xIsTime = false, enum Plot2DPointSet::DrawingStyle drawingStyle = Plot2DPointSet::DrawLines)
+		Plot2DPointSet &StartLine(const std::string &label, const std::string &xDesc = "x", const std::string &yDesc = "y", bool xIsTime = false, enum Plot2DPointSet::DrawingStyle drawingStyle = Plot2DPointSet::DrawLines)
 		{
 			Plot2DPointSet *newSet = new Plot2DPointSet();
 			newSet->SetLabel(label);
@@ -49,6 +51,7 @@ class Plot2D : public Plotable {
 			newSet->SetYUnits(yDesc);
 			newSet->SetDrawingStyle(drawingStyle);
 			_pointSets.push_back(newSet);
+			return *newSet;
 		}
 		void PushDataPoint(double x, double y)
 		{
@@ -59,6 +62,67 @@ class Plot2D : public Plotable {
 		}
 		size_t PointSetCount() const { return _pointSets.size(); }
 		virtual void Render(Gtk::DrawingArea &drawingArea);
+		void SetIncludeZeroYAxis(bool includeZeroAxis)
+		{
+			_system.SetIncludeZeroYAxis(includeZeroAxis);
+			if(includeZeroAxis)
+				_logarithmicYAxis = false;
+		}
+		void SetLogarithmicYAxis(bool logarithmicYAxis)
+		{
+			_logarithmicYAxis = logarithmicYAxis;
+			if(_logarithmicYAxis)
+				_system.SetIncludeZeroYAxis(false);
+		}
+		bool LogarithmicYAxis() const
+		{
+			return _logarithmicYAxis;
+		}
+		void SetVRangeDetermination(enum RangeDetermination range) {
+			_vRangeDetermination = range;
+		}
+		enum RangeDetermination VRangeDetermination() const
+		{
+			return _vRangeDetermination;
+		}
+		void SetMaxY(double maxY)
+		{
+			_vRangeDetermination = SpecifiedRange;
+			_specifiedMaxY = maxY;
+		}
+		double MaxY() const
+		{
+			if(_vRangeDetermination == SpecifiedRange)
+				return _specifiedMaxY;
+			else if(_pointSets.empty())
+				return 1.0;
+			else
+				return _system.YRangeMax(**_pointSets.begin());
+		}
+		void SetMinY(double minY)
+		{
+			_vRangeDetermination = SpecifiedRange;
+			_specifiedMinY = minY;
+		}
+		double MinY() const
+		{
+			if(_pointSets.empty())
+				return -1.0;
+			else
+				return _system.YRangeMin(**_pointSets.begin());
+		}
+		void SetShowAxes(bool showAxes) {
+			_showAxes = showAxes;
+		}
+		bool ShowAxes() const {
+			return _showAxes;
+		}
+		void SetShowAxisDescriptions(bool showAxisDescriptions) {
+			_showAxisDescriptions = showAxisDescriptions;
+		}
+		bool ShowAxisDescriptions() const {
+			return _showAxisDescriptions;
+		}
 	private:
 		void render(Cairo::RefPtr<Cairo::Context> cr, Plot2DPointSet &pointSet);
 
@@ -68,6 +132,9 @@ class Plot2D : public Plotable {
 		int _width, _height;
 		double _topMargin;
 		System _system;
+		bool _logarithmicYAxis, _showAxes, _showAxisDescriptions;
+		double _specifiedMinY, _specifiedMaxY;
+		enum RangeDetermination _vRangeDetermination;
 };
 
 #endif

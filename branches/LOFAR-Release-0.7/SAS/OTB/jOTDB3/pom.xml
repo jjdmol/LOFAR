@@ -11,11 +11,32 @@
 		<name>Astron</name>
 		<url>http://www.astron.nl</url>
 	</organization>
+	
+	<properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.test.sourceEncoding>UTF-8</project.test.sourceEncoding>
+    </properties>
 
 	<build>
 
 		<sourceDirectory>src</sourceDirectory>
 		<testSourceDirectory>src/test</testSourceDirectory>
+		
+		<resources>
+			<resource>
+				<directory>${basedir}</directory>
+				<includes>
+					<include>*.log_prop</include>
+				</includes>
+			</resource>
+			
+			<resource>
+				<directory>src</directory>
+				<excludes>
+					<exclude>**/*.java</exclude>
+				</excludes>
+			</resource>
+		</resources>
 
 		<plugins>
 			<plugin>
@@ -27,6 +48,54 @@
 					<target>1.6</target>
 				</configuration>
 			</plugin>
+			
+			
+			<!-- Set the main class in the manifest file -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>2.1</version>
+				
+				<configuration>
+					<archive>
+						<manifest>
+							<mainClass>nl.astron.lofar.sas.otb.jotdb3.jOTDBserver</mainClass>
+							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+							<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+						</manifest>
+					</archive>
+				</configuration>
+			</plugin>
+				
+			<!-- Include dependencies in an self-containing executable JAR -->
+			<plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.2.1</version>
+                <configuration>
+
+                    <archive>
+                        <manifest>
+                            <mainClass>nl.astron.lofar.sas.otb.jotdb3.jOTDBserver</mainClass>
+							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+							<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+                        </manifest>
+                    </archive>
+
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                </configuration>
+
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
 		</plugins>
 
 	</build>

@@ -30,6 +30,7 @@
 #include <AOFlagger/quality/qualitytablesformatter.h>
 
 #include <AOFlagger/msio/timefrequencydata.h>
+#include <AOFlagger/msio/timefrequencymetadata.h>
 
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
@@ -40,7 +41,7 @@ class GrayScalePlotPage : public Gtk::HBox {
     virtual ~GrayScalePlotPage();
 		
 	protected:
-		virtual TimeFrequencyData ConstructImage() = 0;
+		virtual std::pair<TimeFrequencyData, TimeFrequencyMetaDataCPtr> ConstructImage() = 0;
 		
 		QualityTablesFormatter::StatisticKind GetSelectedStatisticKind() const
 		{
@@ -54,7 +55,7 @@ class GrayScalePlotPage : public Gtk::HBox {
 		void initStatisticKinds();
 		void initPolarizations();
 		void initPhaseButtons();
-		void initRanges();
+		void initPlotOptions();
 		
 		void onSelectCount() { _selectStatisticKind = QualityTablesFormatter::CountStatistic; UpdateImage(); }
 		void onSelectMean() { _selectStatisticKind = QualityTablesFormatter::MeanStatistic; UpdateImage(); }
@@ -64,6 +65,7 @@ class GrayScalePlotPage : public Gtk::HBox {
 		void onSelectDVariance() { _selectStatisticKind = QualityTablesFormatter::DVarianceStatistic; UpdateImage(); }
 		void onSelectRFIRatio() { _selectStatisticKind = QualityTablesFormatter::RFIRatioStatistic; UpdateImage(); }
 		void onSelectSNR() { _selectStatisticKind = QualityTablesFormatter::SignalToNoiseStatistic; UpdateImage(); }
+		void onPropertiesClicked();
 		
 		void onSelectMinMaxRange() { _imageWidget.SetRange(ImageWidget::MinMax); _imageWidget.Update(); }
 		void onSelectWinsorizedRange() { _imageWidget.SetRange(ImageWidget::Winsorized); _imageWidget.Update(); }
@@ -97,16 +99,19 @@ class GrayScalePlotPage : public Gtk::HBox {
 		
 		Gtk::RadioButton _amplitudePhaseButton, _phasePhaseButton, _realPhaseButton, _imaginaryPhaseButton;
 		
-		Gtk::Frame _rangeFrame;
-		Gtk::VBox _rangeBox;
+		Gtk::Frame _plotFrame;
+		Gtk::VBox _plotBox;
 		
 		Gtk::RadioButton _rangeMinMaxButton, _rangeWinsorizedButton, _rangeSpecified;
 		Gtk::CheckButton _logarithmicScaleButton;
+		Gtk::Button _plotPropertiesButton;
 		
 		QualityTablesFormatter::StatisticKind _selectStatisticKind;
 		ImageWidget _imageWidget;
 		
 		bool _ready;
+		
+		class ImagePropertiesWindow *_imagePropertiesWindow;
 };
 
 #endif

@@ -45,6 +45,7 @@ class HorizontalPlotScale {
 		void Draw(Cairo::RefPtr<Cairo::Context> cairo);
 		void InitializeNumericTicks(double min, double max);
 		void InitializeTimeTicks(double timeMin, double timeMax);
+		void InitializeTextTicks(const std::vector<std::string> &labels);
 		void SetDrawWithDescription(bool drawWithDescription)
 		{
 			_drawWithDescription = drawWithDescription;
@@ -65,6 +66,11 @@ class HorizontalPlotScale {
 			_tickValuesFontSize = fontSize;
 			_metricsAreInitialized = false;
 		}
+		void SetRotateUnits(bool rotate)
+		{
+			_rotateUnits = rotate;
+			_metricsAreInitialized = false;
+		}
 	private:
 		void drawUnits(Cairo::RefPtr<Cairo::Context> cairo);
 		bool ticksFit(Cairo::RefPtr<Cairo::Context> cairo);
@@ -78,6 +84,7 @@ class HorizontalPlotScale {
 		std::string _unitsCaption;
 		double _descriptionFontSize;
 		double _tickValuesFontSize;
+		bool _rotateUnits;
 };
 
 #endif
