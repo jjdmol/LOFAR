@@ -95,10 +95,10 @@ void showNodeList(const vector<OTDBnode>&	nodes) {
 void showValueList(const vector<OTDBvalue>&	items) {
 
 
-	cout << "name                                                             |value |time" << endl;
-	cout << "-----------------------------------------------------------------+------+--------------------" << endl;
+	cout << "name                               |value |time" << endl;
+	cout << "-----------------------------------+------+--------------------" << endl;
 	for (uint32	i = 0; i < items.size(); ++i) {
-		string row(formatString("%-65.65s|%-7.7s|%s",
+		string row(formatString("%-35.35s|%-7.7s|%s",
 			items[i].name.c_str(),
 			items[i].value.c_str(),
 			to_simple_string(items[i].time).c_str()));
@@ -236,55 +236,45 @@ int main (int	argc, char*	argv[]) {
 		LOG_INFO("ParameterSet added, going to query it");
 
 		LOG_INFO ("Searching Node: LOFAR.PIC.Rack1.status");
-		vector<OTDBvalue>	valueList;
 		vector<OTDBnode>	nodeList=tm.getItemList(treeID, "LOFAR.PIC.Rack1.status");
 		showNodeList(nodeList);
 
-		if (!nodeList.empty()) {
-			nodeIDType		nodeID = nodeList[nodeList.size()-1].nodeID();
-			LOG_INFO_STR("Parameter ID = : " << nodeID);
-			LOG_INFO_STR("Getting all the values back");
-			valueList = tv.searchInPeriod(nodeID,0);
-			ASSERTSTR(valueList.size(), "No values of PIC item found");
-			showValueList(valueList);
-
-			LOG_INFO_STR("Getting all the values back from 2005 on");
-			valueList = tv.searchInPeriod(nodeID,0,
-						time_from_string("2005-01-01"));
-			ASSERTSTR(valueList.size(), "No values of PIC item found");
-			showValueList(valueList);
-
-			LOG_INFO_STR("Getting all the values back till 2005");
-			valueList = tv.searchInPeriod(nodeID,0,
-						ptime(min_date_time),
-						time_from_string("2005-01-01"));
-			ASSERTSTR(valueList.size(), "No values of PIC item found");
-			showValueList(valueList);
-
-			LOG_INFO_STR("Getting only the latest value back");
-			valueList = tv.searchInPeriod(nodeID,0,
-						ptime(min_date_time),
-						ptime(max_date_time),
-						true);
-			ASSERTSTR(valueList.size(), "No values of PIC item found");
-			showValueList(valueList);
-
-			LOG_INFO_STR("Getting latest values from whole tree");
-			valueList = tv.searchInPeriod(topNode.nodeID(),3,
-						ptime(min_date_time),
-						ptime(max_date_time),
-						true);
-			ASSERTSTR(valueList.size(), "No values of PIC item found");
-			showValueList(valueList);
-		}
-
-		LOG_INFO_STR("Getting broken hardware (now)");
-		valueList = tv.getBrokenHardware();
+		nodeIDType		nodeID = nodeList[nodeList.size()-1].nodeID();
+		LOG_INFO_STR("Parameter ID = : " << nodeID);
+		LOG_INFO_STR("Getting all the values back");
+		vector<OTDBvalue>	valueList = tv.searchInPeriod(nodeID,0);
+		ASSERTSTR(valueList.size(), "No values of PIC item found");
 		showValueList(valueList);
 
-		LOG_INFO_STR("Getting broken hardware (2010-05-26 07:30:00)");
-		valueList = tv.getBrokenHardware(time_from_string("2010-05-26 07:30:00"));
+		LOG_INFO_STR("Getting all the values back from 2005 on");
+		valueList = tv.searchInPeriod(nodeID,0,
+					time_from_string("2005-01-01"));
+		ASSERTSTR(valueList.size(), "No values of PIC item found");
 		showValueList(valueList);
+
+		LOG_INFO_STR("Getting all the values back till 2005");
+		valueList = tv.searchInPeriod(nodeID,0,
+					ptime(min_date_time),
+					time_from_string("2005-01-01"));
+		ASSERTSTR(valueList.size(), "No values of PIC item found");
+		showValueList(valueList);
+
+		LOG_INFO_STR("Getting only the latest value back");
+		valueList = tv.searchInPeriod(nodeID,0,
+					ptime(min_date_time),
+					ptime(max_date_time),
+					true);
+		ASSERTSTR(valueList.size(), "No values of PIC item found");
+		showValueList(valueList);
+
+		LOG_INFO_STR("Getting latest values from whole tree");
+		valueList = tv.searchInPeriod(topNode.nodeID(),3,
+					ptime(min_date_time),
+					ptime(max_date_time),
+					true);
+		ASSERTSTR(valueList.size(), "No values of PIC item found");
+		showValueList(valueList);
+
 	}
 	catch (std::exception&	ex) {
 		LOG_FATAL_STR("Unexpected exception: " << ex.what());

@@ -23,7 +23,6 @@ package nl.astron.lofar.sas.otbcomponents;
 import java.rmi.RemoteException;
 import java.util.Enumeration;
 import java.util.Vector;
-import javax.swing.JLabel;
 import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb3.jOTDBnode;
@@ -93,13 +92,9 @@ public class MultiEditDialog extends javax.swing.JDialog {
         europeStationSelectionPanel.setTitle("Europe");
         europeStationSelectionPanel.init();
         europeStationSelectionPanel.setEnabled(false);
-        storageNodeSelectionPanel.init();
-        storageNodeSelectionPanel.setEnabled(false);
         statusLabel.setText("");
 
         applyStationList.setSelected(false);
-        applyStorageNodes.setSelected(false);
-        applyMSNameMask.setSelected(false);
 
         isAdministrator = itsMainFrame.getUserAccount().isAdministrator();
         jOTDBparam aParam=null;
@@ -108,7 +103,6 @@ public class MultiEditDialog extends javax.swing.JDialog {
 
                 //We are looking for:
                 // VirtualInstrument.stationList
-                // VirtualInstrument.storageNodeList
                 Vector<jOTDBnode> node = OtdbRmi.getRemoteMaintenance().getItemList(itsTreeIDs[0], "VirtualInstrument");
                 if (node.size() > 0) {
                     jOTDBnode aNode = node.firstElement();
@@ -123,24 +117,6 @@ public class MultiEditDialog extends javax.swing.JDialog {
                             aParam = OtdbRmi.getRemoteMaintenance().getParam(anotherNode);
                         }
                         setField("VirtualInstrument", aParam, anotherNode);
-                    }
-                }
-
-                // Observation.MSNameMask
-                node = OtdbRmi.getRemoteMaintenance().getItemList(itsTreeIDs[0], "Observation");
-                if (node.size() > 0) {
-                    jOTDBnode aNode = node.firstElement();
-                    Vector<jOTDBnode> childs = OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
-                    // get all the params per child
-                    Enumeration e = childs.elements();
-                    while (e.hasMoreElements()) {
-                        jOTDBnode anotherNode = (jOTDBnode) e.nextElement();
-                        aParam = null;
-                        // We need to keep all the params needed by this panel
-                        if (anotherNode.leaf) {
-                            aParam = OtdbRmi.getRemoteMaintenance().getParam(anotherNode);
-                        }
-                        setField("Observation", aParam, anotherNode);
                     }
                 }
 
@@ -197,25 +173,8 @@ public class MultiEditDialog extends javax.swing.JDialog {
                 this.europeStationSelectionPanel.setToolTipText(aParam.description);
                 this.itsStationList = aNode;
                 setStationLists(aNode.limits);
-            } else if (aKeyName.equals("storageNodeList")) {
-                this.storageNodeSelectionPanel.setToolTipText(aParam.description);
-                this.itsStorageNodeList = aNode;
-                setStorageNodeLists(aNode.limits);
-            }
-        } else if (parentName.equals("Observation")) {
-            // Observation VirtualInstrument parameters
-
-            if (aKeyName.equals("MSNameMask")) {
-                inputMSNameMask.setToolTipText(aParam.description);
-                itsMSNameMask=aNode;
-                if (isRef && aParam != null) {
-                    inputMSNameMask.setText(aNode.limits + " : " + aParam.limits);
-                } else {
-                    inputMSNameMask.setText(aNode.limits);
-                }
             }
         }
-
     }
 
     /**
@@ -252,19 +211,8 @@ public class MultiEditDialog extends javax.swing.JDialog {
             if (aKeyName.equals("stationList") && setStationList) {
                 aNode.limits=getUsedStations();
                 saveNode(aNode);
-            } else if (aKeyName.equals("storageNodeList") && setStorageNodes) {
-                aNode.limits=getUsedStorageNodes();
-                saveNode(aNode);
-            }
-        } else if (parentName.equals("Observation")) {
-            // Observation VirtualInstrument parameters
-
-            if (aKeyName.equals("MSNameMask") && setMSNameMask) {
-                aNode.limits = inputMSNameMask.getText();
-                saveNode(aNode);
             }
         }
-
     }
 
      /**
@@ -320,40 +268,6 @@ public class MultiEditDialog extends javax.swing.JDialog {
 
         aS+="]";
         return aS;
-    }
-
-    public String getUsedStorageNodes() {
-        this.itsUsedStorageNodes = this.storageNodeSelectionPanel.getUsedStorageNodeList();
-        String aS= "[";
-        boolean first=true;
-        for (int i=0; i< itsUsedStorageNodes.size();i++) {
-            if (first) {
-                first=false;
-                aS+=itsUsedStorageNodes.get(i);
-            } else {
-                aS+=","+itsUsedStorageNodes.get(i);
-            }
-        }
-        aS+="]";
-        return aS;
-    }
-
-    private void setStorageNodeLists(String nodes) {
-        itsUsedStorageNodes.clear();
-
-        if (nodes.startsWith("[")) {
-           nodes = nodes.substring(1, nodes.length());
-        }
-        if (nodes.endsWith("]")) {
-            nodes = nodes.substring(0, nodes.length() - 1);
-        }
-        if (!nodes.equals("")) {
-            String[] aS = nodes.split("\\,");
-            for (int i = 0; i < aS.length; i++) {
-                    itsUsedStorageNodes.add(aS[i]);
-            }
-            this.storageNodeSelectionPanel.setUsedStorageNodeList(itsUsedStorageNodes);
-        }
     }
 
     private void setStationLists(String stations) {
@@ -412,11 +326,6 @@ public class MultiEditDialog extends javax.swing.JDialog {
         // determine what fields need to be gathered and rewritten.
         // only the ones that have actually been changed should be written
 
-        // Virtual Instrument storageNodes
-        if (this.itsStorageNodeList != null && setStorageNodes) {
-            itsStorageNodeList.limits = getUsedStorageNodes();
-            saveNode(itsStorageNodeList);
-        }
 
         // Virtual Instrument StationList
         if (this.itsStationList != null && setStationList) {
@@ -424,11 +333,6 @@ public class MultiEditDialog extends javax.swing.JDialog {
             saveNode(itsStationList);
         }
 
-        // Observation MSNameMask
-        if (itsMSNameMask != null && setMSNameMask) {
-            itsMSNameMask.limits = inputMSNameMask.getText();
-            saveNode(itsMSNameMask);
-        }
 
 
 
@@ -439,11 +343,8 @@ public class MultiEditDialog extends javax.swing.JDialog {
             // the nodes only need to be collected if the data actually was changed.
             for (int i = 1; i < itsTreeIDs.length; i++) {
 
-                if (setStationList || setStorageNodes) {
+                if (setStationList ) {
                     collectAndSaveVirtualInstrumentNodes(itsTreeIDs[i]);
-                }
-                if(setMSNameMask) {
-                    collectAndSaveObservationNodes(itsTreeIDs[i]);
                 }
 
             }
@@ -471,14 +372,9 @@ public class MultiEditDialog extends javax.swing.JDialog {
         coreStationSelectionPanel = new nl.astron.lofar.sas.otbcomponents.StationSelectionPanel();
         remoteStationSelectionPanel = new nl.astron.lofar.sas.otbcomponents.StationSelectionPanel();
         europeStationSelectionPanel = new nl.astron.lofar.sas.otbcomponents.StationSelectionPanel();
-        storageNodeSelectionPanel = new nl.astron.lofar.sas.otbcomponents.StorageSelectionPanel();
-        labelMSNameMask = new javax.swing.JLabel();
-        inputMSNameMask = new javax.swing.JTextField();
         restoreButton = new javax.swing.JButton();
         statusLabel = new javax.swing.JLabel();
         applyStationList = new javax.swing.JCheckBox();
-        applyStorageNodes = new javax.swing.JCheckBox();
-        applyMSNameMask = new javax.swing.JCheckBox();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("LOFAR View TreeInfo");
@@ -524,13 +420,6 @@ public class MultiEditDialog extends javax.swing.JDialog {
 
         europeStationSelectionPanel.setEnabled(false);
 
-        storageNodeSelectionPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "StorageNode List", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
-        storageNodeSelectionPanel.setEnabled(false);
-
-        labelMSNameMask.setText("MSNameMask:");
-
-        inputMSNameMask.setEnabled(false);
-
         restoreButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_undo.png"))); // NOI18N
         restoreButton.setText("Restore");
         restoreButton.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -548,18 +437,6 @@ public class MultiEditDialog extends javax.swing.JDialog {
             }
         });
 
-        applyStorageNodes.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                applyStorageNodesActionPerformed(evt);
-            }
-        });
-
-        applyMSNameMask.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                applyMSNameMaskActionPerformed(evt);
-            }
-        });
-
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -570,35 +447,26 @@ public class MultiEditDialog extends javax.swing.JDialog {
                         .add(235, 235, 235)
                         .add(jScrollPane1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 343, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                     .add(layout.createSequentialGroup()
-                        .addContainerGap()
-                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
-                                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
-                                    .add(applyMSNameMask)
-                                    .add(applyStorageNodes)
-                                    .add(applyStationList))
-                                .add(18, 18, 18)
-                                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                                    .add(storageNodeSelectionPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                                    .add(layout.createSequentialGroup()
-                                        .add(coreStationSelectionPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                        .add(remoteStationSelectionPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                        .add(europeStationSelectionPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                                    .add(layout.createSequentialGroup()
-                                        .add(labelMSNameMask, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 84, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                        .add(inputMSNameMask, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 777, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
-                                .add(53, 53, 53))
+                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
                             .add(layout.createSequentialGroup()
-                                .add(restoreButton, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 142, Short.MAX_VALUE)
+                                .add(14, 14, 14)
+                                .add(restoreButton, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 161, Short.MAX_VALUE)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(cancelButton)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(saveButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 90, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(statusLabel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 575, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                            .add(org.jdesktop.layout.GroupLayout.LEADING, layout.createSequentialGroup()
+                                .addContainerGap()
+                                .add(applyStationList)
                                 .add(18, 18, 18)
-                                .add(statusLabel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 627, Short.MAX_VALUE)))))
+                                .add(coreStationSelectionPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(remoteStationSelectionPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(europeStationSelectionPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                        .add(53, 53, 53)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -611,28 +479,18 @@ public class MultiEditDialog extends javax.swing.JDialog {
                         .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                             .add(coreStationSelectionPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                             .add(remoteStationSelectionPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                            .add(europeStationSelectionPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
-                        .add(storageNodeSelectionPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 207, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                            .add(europeStationSelectionPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
                     .add(layout.createSequentialGroup()
                         .add(131, 131, 131)
-                        .add(applyStationList)
-                        .add(192, 192, 192)
-                        .add(applyStorageNodes)))
-                .add(18, 18, 18)
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                        .add(inputMSNameMask, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                        .add(labelMSNameMask))
-                    .add(applyMSNameMask))
-                .add(57, 57, 57)
+                        .add(applyStationList)))
+                .add(27, 27, 27)
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING, false)
-                    .add(statusLabel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                        .add(restoreButton, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .add(cancelButton, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .add(saveButton, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                .addContainerGap(162, Short.MAX_VALUE))
+                    .add(restoreButton, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(cancelButton, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                        .add(saveButton, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .add(statusLabel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                .addContainerGap(23, Short.MAX_VALUE))
         );
 
         pack();
@@ -713,10 +571,6 @@ public class MultiEditDialog extends javax.swing.JDialog {
      */
     private void restore() {
 
-      // Observation Specific parameters
-      inputMSNameMask.setText(itsMSNameMask.limits);
-      //Virtual Instrument storageNodeList
-      setStorageNodeLists(itsStorageNodeList.limits);
       //Virtual Instrument stationList
       setStationLists(itsStationList.limits);
     }
@@ -746,16 +600,6 @@ public class MultiEditDialog extends javax.swing.JDialog {
         this.setStationList = applyStationList.isSelected();
     }//GEN-LAST:event_applyStationListActionPerformed
 
-    private void applyStorageNodesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_applyStorageNodesActionPerformed
-        this.storageNodeSelectionPanel.setEnabled(applyStorageNodes.isSelected());
-        this.setStorageNodes = applyStorageNodes.isSelected();
-    }//GEN-LAST:event_applyStorageNodesActionPerformed
-
-    private void applyMSNameMaskActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_applyMSNameMaskActionPerformed
-        this.inputMSNameMask.setEnabled(applyMSNameMask.isSelected());
-        this.setMSNameMask = applyMSNameMask.isSelected();
-    }//GEN-LAST:event_applyMSNameMaskActionPerformed
-
 
     private MainFrame itsMainFrame = null;
     private jOTDBtree itsTree = null;
@@ -769,36 +613,24 @@ public class MultiEditDialog extends javax.swing.JDialog {
     private Vector<String>    itsUsedCoreStations      = new Vector<String>();
     private Vector<String>    itsUsedRemoteStations    = new Vector<String>();
     private Vector<String>    itsUsedEuropeStations    = new Vector<String>();
-    private Vector<String>    itsUsedStorageNodes      = new Vector<String>();
 
     // Observation Virtual Instrument parameters
     private jOTDBnode itsStationList=null;
-    private jOTDBnode itsStorageNodeList=null;
-
-    // Obsservation.MSNameMask
-    private jOTDBnode itsMSNameMask=null;
 
 
     private boolean   isInitialized=false;
     private boolean   setStationList=false;
-    private boolean   setStorageNodes=false;
-    private boolean   setMSNameMask=false;
      
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JCheckBox applyMSNameMask;
     private javax.swing.JCheckBox applyStationList;
-    private javax.swing.JCheckBox applyStorageNodes;
     private javax.swing.JButton cancelButton;
     private nl.astron.lofar.sas.otbcomponents.StationSelectionPanel coreStationSelectionPanel;
     private nl.astron.lofar.sas.otbcomponents.StationSelectionPanel europeStationSelectionPanel;
-    private javax.swing.JTextField inputMSNameMask;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JLabel labelMSNameMask;
     private nl.astron.lofar.sas.otbcomponents.StationSelectionPanel remoteStationSelectionPanel;
     private javax.swing.JButton restoreButton;
     private javax.swing.JButton saveButton;
     private javax.swing.JLabel statusLabel;
-    private nl.astron.lofar.sas.otbcomponents.StorageSelectionPanel storageNodeSelectionPanel;
     private javax.swing.JTextArea topLabel;
     // End of variables declaration//GEN-END:variables
 

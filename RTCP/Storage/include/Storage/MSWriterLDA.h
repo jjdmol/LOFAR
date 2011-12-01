@@ -37,7 +37,6 @@
 
 #include <Interface/Parset.h>
 #include <Interface/StreamableData.h>
-#include <Interface/TransposeLogic.h>
 #include <Storage/MSWriter.h>
 #include <Storage/MSWriterFile.h>
 
@@ -60,7 +59,7 @@ namespace LOFAR
 #ifdef USE_LDA
       virtual void write(StreamableData *data);
     private:
-      const Transpose2 itsTransposeLogic;
+      const Transpose2 &itsTransposeLogic;
       const unsigned itsNrChannels;
       unsigned itsNrSamples;
       unsigned itsNextSeqNr;
