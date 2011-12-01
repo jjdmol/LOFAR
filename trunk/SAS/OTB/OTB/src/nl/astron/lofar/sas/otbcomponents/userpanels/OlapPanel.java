@@ -151,6 +151,35 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                     this.retrieveAndDisplayChildDataForNode(aNode);
                 }
             }
+
+            //we also need the Output_ nodes from the Dataproducts here
+            Vector OUchilds = OtdbRmi.getRemoteMaintenance().getItemList(itsNode.treeID(),"%Output_%");
+
+            // get all the params per child
+            Enumeration eOU = OUchilds.elements();
+            while( eOU.hasMoreElements()  ) {
+                aParam=null;
+
+                jOTDBnode aNode = (jOTDBnode)eOU.nextElement();
+
+                // We need to keep all the nodes needed by this panel
+                // if the node is a leaf we need to get the pointed to value via Param.
+                if (aNode.leaf) {
+                    aParam = OtdbRmi.getRemoteMaintenance().getParam(aNode);
+                    setField(itsNode,aParam,aNode);
+                }else if (LofarUtils.keyName(aNode.name).equals("Output_Beamformed")) {
+                    this.retrieveAndDisplayChildDataForNode(aNode);
+                }else if (LofarUtils.keyName(aNode.name).equals("Output_CoherentStokes")) {
+                    this.retrieveAndDisplayChildDataForNode(aNode);
+                }else if (LofarUtils.keyName(aNode.name).equals("Output_Correlated")) {
+                    this.retrieveAndDisplayChildDataForNode(aNode);
+                }else if (LofarUtils.keyName(aNode.name).equals("Output_Filtered")) {
+                    this.retrieveAndDisplayChildDataForNode(aNode);
+                }else if (LofarUtils.keyName(aNode.name).equals("Output_IncoherentStokes")) {
+                    this.retrieveAndDisplayChildDataForNode(aNode);
+                }
+            }
+
         } catch (RemoteException ex) {
             String aS="Error during getComponentParam: "+ ex;
             logger.error(aS);
@@ -514,81 +543,6 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                     }
                 }
                 inputCorrectBandPass.setSelected(aSelection);
-            } else if (aKeyName.equals("outputCorrelatedData")) {
-                inputOutputCorrelatedData.setToolTipText(aParam.description);
-                itsOutputCorrelatedData=aNode;
-                boolean aSelection = false;
-                if (isRef && aParam != null) {
-                    if (aParam.limits.equals("true")||aParam.limits.equals("TRUE")) {
-                        aSelection = true;
-                    }
-                } else {
-                    if (aNode.limits.equals("true")||aNode.limits.equals("TRUE")) {
-                        aSelection = true;
-                    }
-                }
-                inputOutputCorrelatedData.setSelected(aSelection);
-                inputIntegrationTime.setEnabled(aSelection);
-            } else if (aKeyName.equals("outputFilteredData")) {
-                inputOutputFilteredData.setToolTipText(aParam.description);
-                itsOutputFilteredData=aNode;
-                boolean aSelection = false;
-                if (isRef && aParam != null) {
-                    if (aParam.limits.equals("true")||aParam.limits.equals("TRUE")) {
-                        aSelection = true;
-                    }
-                } else {
-                    if (aNode.limits.equals("true")||aNode.limits.equals("TRUE")) {
-                        aSelection = true;
-                    }
-                }
-                inputOutputFilteredData.setSelected(aSelection);
-            } else if (aKeyName.equals("outputBeamFormedData")) {
-                inputOutputBeamFormedData.setToolTipText(aParam.description);
-                itsOutputBeamFormedData=aNode;
-                boolean aSelection = false;
-                if (isRef && aParam != null) {
-                    if (aParam.limits.equals("true")||aParam.limits.equals("TRUE")) {
-                        aSelection = true;
-                    }
-                } else {
-                    if (aNode.limits.equals("true")||aNode.limits.equals("TRUE")) {
-                        aSelection = true;
-                    }
-                }
-                inputOutputBeamFormedData.setSelected(aSelection);
-                checkSettings();
-            } else if (aKeyName.equals("outputCoherentStokes")) {
-                inputOutputCoherentStokes.setToolTipText(aParam.description);
-                itsOutputCoherentStokes=aNode;
-                boolean aSelection = false;
-                if (isRef && aParam != null) {
-                    if (aParam.limits.equals("true")||aParam.limits.equals("TRUE")) {
-                        aSelection = true;
-                    }
-                } else {
-                    if (aNode.limits.equals("true")||aNode.limits.equals("TRUE")) {
-                        aSelection = true;
-                    }
-                }
-                inputOutputCoherentStokes.setSelected(aSelection);
-                checkSettings();
-                
-            } else if (aKeyName.equals("outputIncoherentStokes")) {
-                inputOutputIncoherentStokes.setToolTipText(aParam.description);
-                itsOutputIncoherentStokes=aNode;
-                boolean aSelection = false;
-                if (isRef && aParam != null) {
-                    if (aParam.limits.equals("true")||aParam.limits.equals("TRUE")) {
-                        aSelection = true;
-                    }
-                } else {
-                    if (aNode.limits.equals("true")||aNode.limits.equals("TRUE")) {
-                        aSelection = true;
-                    }
-                }
-                inputOutputIncoherentStokes.setSelected(aSelection);
-                checkSettings();
             } else if (aKeyName.equals("nrPencils")) {
                 itsNrPencils=aNode;
             }
@@ -608,7 +562,93 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                     itsAngle2.add(aNode.limits);
                 }
             }
-        }   
+        } else if (parentName.equals("Output_Beamformed")) {
+            if (aKeyName.equals("enabled")) {
+                inputOutputBeamFormedData.setToolTipText(aParam.description);
+                itsOutputBeamFormedData=aNode;
+                boolean aSelection = false;
+                if (isRef && aParam != null) {
+                    if (aParam.limits.equals("true")||aParam.limits.equals("TRUE")) {
+                        aSelection = true;
+                    }
+                } else {
+                    if (aNode.limits.equals("true")||aNode.limits.equals("TRUE")) {
+                        aSelection = true;
+                    }
+                }
+                inputOutputBeamFormedData.setSelected(aSelection);
+                checkSettings();
+            }
+        } else if (parentName.equals("Output_Correlated")) {
+            if (aKeyName.equals("enabled")) {
+                inputOutputCorrelatedData.setToolTipText(aParam.description);
+                itsOutputCorrelatedData=aNode;
+                boolean aSelection = false;
+                if (isRef && aParam != null) {
+                    if (aParam.limits.equals("true")||aParam.limits.equals("TRUE")) {
+                        aSelection = true;
+                    }
+                } else {
+                    if (aNode.limits.equals("true")||aNode.limits.equals("TRUE")) {
+                        aSelection = true;
+                    }
+                }
+                inputOutputCorrelatedData.setSelected(aSelection);
+                inputIntegrationTime.setEnabled(aSelection);
+                checkSettings();
+            }
+        } else if (parentName.equals("Output_Filtered")) {
+            if (aKeyName.equals("enabled")) {
+                inputOutputFilteredData.setToolTipText(aParam.description);
+                itsOutputFilteredData=aNode;
+                boolean aSelection = false;
+                if (isRef && aParam != null) {
+                    if (aParam.limits.equals("true")||aParam.limits.equals("TRUE")) {
+                        aSelection = true;
+                    }
+                } else {
+                    if (aNode.limits.equals("true")||aNode.limits.equals("TRUE")) {
+                        aSelection = true;
+                    }
+                }
+                inputOutputFilteredData.setSelected(aSelection);
+                checkSettings();
+            }
+        } else if (parentName.equals("Output_CoherentStokes")) {
+            if (aKeyName.equals("enabled")) {
+                inputOutputCoherentStokes.setToolTipText(aParam.description);
+                itsOutputCoherentStokes=aNode;
+                boolean aSelection = false;
+                if (isRef && aParam != null) {
+                    if (aParam.limits.equals("true")||aParam.limits.equals("TRUE")) {
+                        aSelection = true;
+                    }
+                } else {
+                    if (aNode.limits.equals("true")||aNode.limits.equals("TRUE")) {
+                        aSelection = true;
+                    }
+                }
+                inputOutputCoherentStokes.setSelected(aSelection);
+                checkSettings();
+            }
+        } else if (parentName.equals("Output_IncoherentStokes")) {
+            if (aKeyName.equals("enabled")) {
+                inputOutputIncoherentStokes.setToolTipText(aParam.description);
+                itsOutputIncoherentStokes=aNode;
+                boolean aSelection = false;
+                if (isRef && aParam != null) {
+                    if (aParam.limits.equals("true")||aParam.limits.equals("TRUE")) {
+                        aSelection = true;
+                    }
+                } else {
+                    if (aNode.limits.equals("true")||aNode.limits.equals("TRUE")) {
+                        aSelection = true;
+                    }
+                }
+                inputOutputIncoherentStokes.setSelected(aSelection);
+                checkSettings();
+            }
+        }
     }
 
     // check all settings to make a choice about enabled/disables fields

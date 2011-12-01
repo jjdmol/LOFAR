@@ -1348,8 +1348,10 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 			else {
 				// found controller, close port
 				LOG_DEBUG_STR("Removing " << controller->cntlrName << " from the controllerlist");
-				controller->port->close();
-				delete controller->port;
+				if (controller->port) {
+					controller->port->close();
+					delete controller->port;
+				}
 				itsCntlrList->erase(controller);			// just remove
 			}
 		}
