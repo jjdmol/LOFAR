@@ -125,23 +125,16 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
         JMenuItem  aMenuItem=null;
         
         aPopupMenu= new JPopupMenu();
-        // For VIC trees
-        if (itsTreeType.equals("VHtree")) {
-            //  Fill in menu as in the example above
-            aMenuItem=new JMenuItem("Create ParSet File");        
-            aMenuItem.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
-                    popupMenuHandler(evt);
-                }
-            });
-            aMenuItem.setActionCommand("Create ParSet File");
-            aPopupMenu.add(aMenuItem);
+        //  Fill in menu as in the example above
+        aMenuItem=new JMenuItem("Create ParSet File");        
+        aMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                popupMenuHandler(evt);
+            }
+        });
+        aMenuItem.setActionCommand("Create ParSet File");
+        aPopupMenu.add(aMenuItem);
             
-        // For template trees
-        } else if (itsTreeType.equals("VItemplate")) {
-                
-        }
-        
         aPopupMenu.setOpaque(true);
         aPopupMenu.show(aComponent, x, y ); 
     }
@@ -295,6 +288,9 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
                 String aS="";
                 if (keyval.length>1) aS=keyval[1];
 //                String aS=lines[i].replaceFirst(keyval[0]+"=", "");
+
+                // no values available for PIC trees.
+                if (itsTreeType.equals("hardware")) aS="";
 
                 String [] str={keyval[0],aS};
                 aModel.addRow(str);
