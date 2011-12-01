@@ -30,8 +30,7 @@ par  angle1              I      dbl   -              10    0    0               
 par  angle2              I      dbl   -              10    0    0                    -       'Declination(s) or Elevation of the source(s) in rad. (coordinate system is the same as used in the Beams)'
 par  directionType	 I	ptext  -              10    0	 'J2000|ITRF|B1950|HADEC|AZELGEO|TOPO|ICRS|APP|GALACTIC|ECLIPTIC|COMET|MERCURY|VENUS|MARS|JUPITER|SATURN|URANUS|NEPTUNE|PLUTO|SUN|MOON;J2000' -     'Coord.system used for the sources'
 par  dispersionMeasure	 I	dbl   -              10    0    0                    -       'Dedisperse channels with this DM (0 for no dedispersion)'
-par  stationList	 I	vtext   -              10    0    0                    -     'Only accumulate data from these stations ([] = all stations)'
-
+par  incoherent          I      bool  -              10    0    false                -       'Coherent (false) or incoherent (true)'        
 
 
 #########################################################################################################
