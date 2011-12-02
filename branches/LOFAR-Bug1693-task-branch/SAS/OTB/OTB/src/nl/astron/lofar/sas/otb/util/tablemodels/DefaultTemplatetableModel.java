@@ -43,7 +43,7 @@ import org.apache.log4j.Logger;
  */
 public class DefaultTemplatetableModel extends javax.swing.table.AbstractTableModel {
     
-    private String headers[] = {"ID","Name","OriginalTree","Status","Classification","Campaign","MoMID","Description"};
+    private String headers[] = {"ID","Name","Status","PType","PStype","Strat","Classif","Campaign","Description"};
     private OtdbRmi otdbRmi;
     private Object data[][];
 
@@ -93,12 +93,13 @@ public class DefaultTemplatetableModel extends javax.swing.table.AbstractTableMo
             }
             data[row][0]=new Integer(tInfo.treeID());
             data[row][1]=new String(aDF.name);
-            data[row][2]=new Integer(tInfo.originalTree);
-            data[row][3]=new String(OtdbRmi.getTreeState().get(tInfo.state));
-            data[row][4]=new String(OtdbRmi.getClassif().get(tInfo.classification));
-            data[row][5]=new String(tInfo.campaign);
-            data[row][6]=new Integer(tInfo.momID());
-            data[row][7]=new String(tInfo.description);
+            data[row][2]=new String(OtdbRmi.getTreeState().get(tInfo.state));
+            data[row][3]=new String(tInfo.processType);
+            data[row][4]=new String(tInfo.processSubtype);
+            data[row][5]=new String(tInfo.strategy);
+            data[row][6]=new String(OtdbRmi.getClassif().get(tInfo.classification));
+            data[row][7]=new String(tInfo.campaign);
+            data[row][8]=new String(tInfo.description);
             fireTableDataChanged();
         } catch (RemoteException e) {
             logger.debug("Remote OTDB via RMI and JNI failed: " + e);
@@ -132,12 +133,13 @@ public class DefaultTemplatetableModel extends javax.swing.table.AbstractTableMo
                     logger.debug("Gathered info for ID: "+tInfo.treeID());
                     data[k][0]=new Integer(tInfo.treeID());
                     data[k][1]=new String(aDF.name);
-                    data[k][2]=new Integer(tInfo.originalTree);
-	            data[k][3]=new String(OtdbRmi.getTreeState().get(tInfo.state));
-                    data[k][4]=new String(OtdbRmi.getClassif().get(tInfo.classification));
-	            data[k][5]=new String(tInfo.campaign);
-	            data[k][6]=new Integer(tInfo.momID());
-	            data[k][7]=new String(tInfo.description);
+	            data[k][2]=new String(OtdbRmi.getTreeState().get(tInfo.state));
+                    data[k][3]=new String(tInfo.processType);
+                    data[k][4]=new String(tInfo.processSubtype);
+                    data[k][5]=new String(tInfo.strategy);
+                    data[k][6]=new String(OtdbRmi.getClassif().get(tInfo.classification));
+	            data[k][7]=new String(tInfo.campaign);
+	            data[k][8]=new String(tInfo.description);
                     k++;
                 }
             }

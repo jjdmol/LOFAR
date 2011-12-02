@@ -42,6 +42,11 @@ RSPDriver.PPS_DELAY=1000
 RSPDriver.PPS_TRIGGER=1
 
 #
+# File with delays for each AP for finetuning the sychronisation to the PPS.
+#
+RSPDriver.PPSdelayFile = "PPSdelays.conf"
+
+#
 # Specify the MAC addresses of the control port (MAC) of RSP boards
 #
 # NOTE: not used yet!
@@ -191,6 +196,7 @@ RSPDriver.IGNORE_REMOTE_DATA=0
 RSPDriver.CDO_ENABLE=1
 RSPDriver.CDO_N_BLOCKS=16
 RSPDriver.CDO_N_BEAMLETS=61
+RSPDriver.FB_ENABLE=1
 
 #
 # Specify the absolute backplane index of the first
@@ -238,22 +244,17 @@ RSPDriver.LOOPBACK_MODE=0
 # The order of these config variables does not
 # alter the order the update actions are performed.
 #
-RSPDriver.WRITE_RSU=1
-RSPDriver.WRITE_BS=1
-RSPDriver.WRITE_CDO=1
 # READ_CDO, if set to 1 reads back contents of pid=CDO, regid=0x01
 # This can be used to verify that the UDP/IP header is correctly
 # written to the register.
 RSPDriver.READ_CDO=0
-RSPDriver.WRITE_RAD=1
+
 RSPDriver.READ_STATUS=1
 RSPDriver.WRITE_XBF=1
 RSPDriver.WRITE_BF=1
 RSPDriver.WRITE_SS=1
-RSPDriver.WRITE_RCU=1
 RSPDriver.WRITE_RCU_PROTOCOL=1
 RSPDriver.WRITE_HBA_PROTOCOL=1
-RSPDriver.READWRITE_TDS_PROTOCOL=1
 RSPDriver.READ_SST=1
 RSPDriver.READ_BST=1
 RSPDriver.WRITE_WG=1
@@ -292,13 +293,6 @@ RSPDriver.READ_WG=0
 # Currently allowed values are: 0 (off), 160 (MHz) and 200 (MHz)
 #
 RSPDriver.DEFAULT_SAMPLING_FREQUENCY=200
-
-#
-# Specify how the rspdriver should operate:
-# 0: one RSP driver active --> control all boards
-# 1: many RSP drivers active --> control boards -I<n> only
-#
-RSPDriver.OPERATION_MODE=0
 
 #
 # Set initial gain for beamforming and cross-correlation
