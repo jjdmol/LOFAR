@@ -232,6 +232,35 @@ void showMap(const map<string, vector<int> > &m, const string &key)
   }
 }
 
+void showMap(const map<string, vector<unsigned int> > &m, const string &key)
+{
+  for(map<string, vector<unsigned int> >::const_iterator it=m.begin(); it!=m.end(); ++it)
+  {
+    vector<unsigned int> v=it->second;
+    
+    if(key!="")
+    {
+      if(it->first==key)
+      {
+        cout << it->first << endl;
+        for(vector<unsigned int>::const_iterator vit=v.begin(); vit!=v.end(); ++vit)
+        {
+          cout << (*vit) << "\t";
+        }
+        cout << endl;
+      }
+    }
+    else
+    {
+      cout << it->first << endl;
+      for(vector<unsigned int>::const_iterator vit=v.begin(); vit!=v.end(); ++vit)
+      {
+        cout << (*vit) << "\t";
+      }
+      cout << endl;
+    }
+  }
+}
 
 void showMap(const map<string, ptime> &m, const string &key)
 {

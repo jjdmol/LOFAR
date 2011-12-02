@@ -50,6 +50,7 @@ void showVector(const std::vector<ptime> &v);
 void showMap(const std::map<std::string, std::string> &m, const std::string &key="");
 void showMap(const std::map<std::string, std::vector<std::string> > &m, const std::string &key="");
 void showMap(const std::map<std::string, int> &m, const std::string &key="");
+void showMap(const std::map<std::string, std::vector<unsigned int> > &m, const std::string &key="");
 void showMap(const std::map<std::string, std::vector<int> > &m, const std::string &key="");
 void showMap(const std::map<std::string, ptime> &m, const std::string &key="");
 void showMap(const std::map<std::vector<unsigned int>, std::vector<unsigned int> > &m);
