@@ -521,7 +521,7 @@ void Job::jobThread()
       if (canStart) {
         // PLC: INIT phase
         if (itsParset.realTime())
-          waitUntilCloseToStartOfObservation(10);
+          waitUntilCloseToStartOfObservation(20);
 
         // PLC: in practice, RUN must start here, because resources
         // can become available just before the observation starts.
