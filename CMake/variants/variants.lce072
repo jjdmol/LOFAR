@@ -8,7 +8,7 @@ set(PYRAP_ROOT_DIR /data/opt/cep/pyrap)
 
 set(WCSLIB_ROOT_DIR /data/opt/cep/wcslib)
 
-set(LOG4CXX_ROOT_DIR /data/opt/cep/LofIm/external/log4cxx)
+set(LOG4CXX_ROOT_DIR /data/opt/cep/lofar/external/log4cxx)
 set(LOG4CPLUS_ROOT_DIR /data/opt/cep/lofar/external/log4cplus)
 
 set(CTEST_CUSTOM_WARNING_EXCEPTION
