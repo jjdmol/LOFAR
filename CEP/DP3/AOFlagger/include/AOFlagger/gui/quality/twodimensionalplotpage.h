@@ -105,6 +105,7 @@ class TwoDimensionalPlotPage : public Gtk::HBox {
 			_zeroAxisButton.set_sensitive(!_logarithmicButton.get_active());
 			updatePlotConfig();
 		}
+		void onPlotPropertiesClicked();
 		
 		Gtk::VBox _sideBox;
 		
@@ -123,10 +124,13 @@ class TwoDimensionalPlotPage : public Gtk::HBox {
 		Gtk::Frame _plotFrame;
 		Gtk::VBox _plotBox;
 		Gtk::CheckButton _logarithmicButton, _zeroAxisButton;
+		Gtk::Button _plotPropertiesButton;
 		
 		class StatisticsCollection *_statCollection;
 		Plot2D _plot;
 		PlotWidget _plotWidget;
+		
+		class PlotPropertiesWindow *_plotPropertiesWindow;
 		
 		bool _customButtonsCreated;
 };

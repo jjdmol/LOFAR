@@ -21,10 +21,14 @@
 #include <limits>
 #include <sstream>
 
+#include <boost/bind.hpp>
+
 #include <AOFlagger/gui/quality/twodimensionalplotpage.h>
 
 #include <AOFlagger/quality/statisticscollection.h>
 #include <AOFlagger/quality/statisticsderivator.h>
+
+#include <AOFlagger/gui/plot/plotpropertieswindow.h>
 
 TwoDimensionalPlotPage::TwoDimensionalPlotPage() :
 	_statisticFrame("Statistics"),
@@ -51,7 +55,9 @@ TwoDimensionalPlotPage::TwoDimensionalPlotPage() :
 	_plotFrame("Plot"),
 	_logarithmicButton("Logarithmic"),
 	_zeroAxisButton("Zero axis"),
+	_plotPropertiesButton("Properties..."),
 	_statCollection(0),
+	_plotPropertiesWindow(0),
 	_customButtonsCreated(false)
 {
 	initStatisticKindButtons();
@@ -275,7 +281,23 @@ void TwoDimensionalPlotPage::initPlotButtons()
 	_plotBox.pack_start(_zeroAxisButton, Gtk::PACK_SHRINK);
 	_plot.SetIncludeZeroYAxis(true);
 	
+	_plotPropertiesButton.signal_clicked().connect(sigc::mem_fun(*this, &TwoDimensionalPlotPage::onPlotPropertiesClicked));
+	_plotBox.pack_start(_plotPropertiesButton, Gtk::PACK_SHRINK);
+	
 	_plotFrame.add(_plotBox);
 	
 	_sideBox.pack_start(_plotFrame, Gtk::PACK_SHRINK);
 }
+
+void TwoDimensionalPlotPage::onPlotPropertiesClicked()
+{
+	if(_plotPropertiesWindow == 0)
+	{
+		_plotPropertiesWindow = new PlotPropertiesWindow(_plot, "Plot properties");
+		_plotPropertiesWindow->OnChangesApplied = boost::bind(&TwoDimensionalPlotPage::updatePlot, this);
+	}
+	
+	_plotPropertiesWindow->show();
+	_plotPropertiesWindow->raise();
+}
+
