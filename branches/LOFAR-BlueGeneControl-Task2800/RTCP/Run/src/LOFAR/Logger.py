@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import sys
 import os
 from math import modf
@@ -72,7 +73,7 @@ class TimedSizeRotatingFileHandler(TimedRotatingFileHandler):
 
       if os.path.exists(t):
         os.remove(t)
-      os.rename(f,t)  
+      os.rename(f,t)
 
     t = self.rolloverAt - self.interval
     timeTuple = localtime(t)
@@ -107,3 +108,25 @@ def rotatingLogger( appname, filename ):
   logger.addHandler( handler )
 
   return logger
+
+if __name__ == "__main__":
+  import sys
+
+  if len(sys.argv) < 2:
+    print "Usage: %s outputfilename [maxfilesize]" % (sys.argv[0],)
+    sys.exit(1)
+
+  logfilename = sys.argv[1]  
+  if len(sys.argv) > 2:
+    maxBytes = int(sys.argv[2])
+  else:
+    maxBytes = 512*1024*1024
+
+  initLogger()
+
+  logger = rotatingLogger( "foo", logfilename )
+  logger.handlers[0].maxBytes = maxBytes
+
+  for line in sys.stdin:
+    line = line[:-1] # strip trailing \n
+    logger.info( "%s", line )

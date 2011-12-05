@@ -1,5 +1,6 @@
 #!/bin/bash
-PARTITION=R01-M0-N04-64
+
+. locations.sh
 
 function start() {
   mpirun -partition $PARTITION -timeout 300 -nofree -exe /bgsys/tools/hello >/dev/null
@@ -10,7 +11,7 @@ function stop() {
 }
 
 function getpid() {
-  STATUS=`bgpartstatus $PARTITION`
+  STATUS=`bgpartstatus $PARTITION </dev/null`
 
   case $STATUS in
     busy) PID=UP

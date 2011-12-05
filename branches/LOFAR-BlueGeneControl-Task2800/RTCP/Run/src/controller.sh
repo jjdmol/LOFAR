@@ -53,13 +53,23 @@ getpid
 case $COMMAND in
   start) if ! isstarted
          then
-           start && setpid $!
+           PID=
+
+           start || exit $!
+
+           FUNCPID=$!
+           if [ -z "$PID" ]
+           then
+             PID=$FUNCPID
+           fi  
+           setpid $PID
          fi
          ;;
 
   stop)  if isstarted
          then
-           stop && delpid
+           stop || exit $!
+           delpid
          fi
          ;;
 
