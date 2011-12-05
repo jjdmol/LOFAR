@@ -39,6 +39,7 @@ class QualityTablesFormatterTest : public UnitTest {
 			AddTest(TestTableExists(), "Query table existance");
 			AddTest(TestTableInitialization(), "Initialize tables");
 			AddTest(TestKindOperations(), "Statistic kind operations");
+			AddTest(TestKindNames(), "Statistic kind names");
 			AddTest(TestStoreStatistics(), "Storing statistics");
 		}
     virtual ~QualityTablesFormatterTest()
@@ -70,6 +71,10 @@ class QualityTablesFormatterTest : public UnitTest {
 			void operator()();
 		};
 		struct TestKindOperations : public Asserter
+		{
+			void operator()();
+		};
+		struct TestKindNames : public Asserter
 		{
 			void operator()();
 		};
@@ -200,6 +205,19 @@ void QualityTablesFormatterTest::TestStoreStatistics::operator()()
 	
 	qd.RemoveTable(QualityTablesFormatter::KindNameTable);
 	qd.RemoveTable(QualityTablesFormatter::TimeStatisticTable);
+}
+
+void QualityTablesFormatterTest::TestKindNames::operator()()
+{
+	AssertEquals(QualityTablesFormatter::KindToName(QualityTablesFormatter::MeanStatistic), "Mean");
+	AssertEquals(QualityTablesFormatter::KindToName(QualityTablesFormatter::VarianceStatistic), "Variance");
+	AssertEquals(QualityTablesFormatter::KindToName(QualityTablesFormatter::SumStatistic), "Sum");
+	AssertEquals(QualityTablesFormatter::KindToName(QualityTablesFormatter::SumP2Statistic), "SumP2");
+	AssertEquals(QualityTablesFormatter::KindToName(QualityTablesFormatter::DMeanStatistic), "DMean");
+	AssertEquals(QualityTablesFormatter::KindToName(QualityTablesFormatter::DVarianceStatistic), "DVariance");
+	AssertEquals(QualityTablesFormatter::KindToName(QualityTablesFormatter::DSumStatistic), "DSum");
+	AssertEquals(QualityTablesFormatter::KindToName(QualityTablesFormatter::DSumP2Statistic), "DSumP2");
+	AssertEquals(QualityTablesFormatter::KindToName(QualityTablesFormatter::FTSumP2Statistic), "FTSumP2");
 }
 
 #endif
