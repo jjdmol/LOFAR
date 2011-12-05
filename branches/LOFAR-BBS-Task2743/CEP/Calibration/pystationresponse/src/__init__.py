@@ -92,16 +92,15 @@ class stationresponse(StationResponse):
         self._setRefTile(ra, dec)
 
     def setRefOrientation (self, orientation):
-        """Set the orientation of the +X dipole (azimuth in the antenna field
-        coordinate system). Antenna field azimuth is defined with respect to the
-        positive Q axis, and positive azimuth runs from the positive Q axis to
-        the positive P axis (roughly North over East, depending on the field).
-        The orientation of the +Y dipole is assumed to be +90 degrees away from
+        """Set the orientation of the +X dipole, i.e. the angle in radians
+        between the +X dipole and the +P axis. The angle is measured from the +P
+        axis, increasing towards the +Q axis (roughly East over North). The
+        orientation of the +Y dipole is assumed to be +90 degrees away from
         orientation of the +X dipole.
 
         `orientation`
-          Orientation of the +X dipole as azimuth North over East, in radians.
-          Defaults to SW, or an azimuth of 3/4*pi.
+          Orientation of the +X dipole expressed as the angle from the +P axis.
+          Defaults to 5/4*pi, or roughly SW.
         """
         self._setRefOrientation(orientation)
 

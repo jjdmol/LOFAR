@@ -132,28 +132,28 @@ void HamakerBeamCoeff::init(const casa::Path &coeffFile)
 }
 
 HamakerDipole::HamakerDipole(const HamakerBeamCoeff &coeff,
-    const Expr<Vector<2> >::ConstPtr &azel,
+    const Expr<Vector<2> >::ConstPtr &target,
     const Expr<Scalar>::ConstPtr &orientation)
-    :   BasicBinaryExpr<Vector<2>, Scalar, JonesMatrix>(azel, orientation),
+    :   BasicBinaryExpr<Vector<2>, Scalar, JonesMatrix>(target, orientation),
         itsCoeff(coeff)
 {
 }
 
 const JonesMatrix::View HamakerDipole::evaluateImpl(const Grid &grid,
-    const Vector<2>::View &azel, const Scalar::View &orientation) const
+    const Vector<2>::View &target, const Scalar::View &orientation) const
 {
     const size_t nFreq = grid[FREQ]->size();
     const size_t nTime = grid[TIME]->size();
 
     // Check preconditions.
-    ASSERT(static_cast<size_t>(azel(0).nelements()) == nTime);
-    ASSERT(static_cast<size_t>(azel(1).nelements()) == nTime);
+    ASSERT(static_cast<size_t>(target(0).nelements()) == nTime);
+    ASSERT(static_cast<size_t>(target(1).nelements()) == nTime);
     ASSERT(static_cast<size_t>(orientation().nelements()) == 1);
 
     // Get pointers to input and output data.
-    const double *az = azel(0).doubleStorage();
-    const double *el = azel(1).doubleStorage();
-    const double angle = orientation().getDouble(0, 0);
+    const double *theta = target(0).doubleStorage();
+    const double *phi = target(1).doubleStorage();
+    const double phi0 = orientation().getDouble(0, 0);
 
     Matrix E00, E01, E10, E11;
     double *E00_re, *E00_im;
@@ -179,12 +179,9 @@ const JonesMatrix::View HamakerDipole::evaluateImpl(const Grid &grid,
 
     for(size_t t = 0; t < nTime; ++t)
     {
-        // Correct azimuth for dipole orientation.
-        const double phi = az[t] - angle;
-
-        // NB: The model is parameterized in terms of zenith angle. The
-        // appropriate conversion is taken care of below.
-        const double theta = casa::C::pi_2 - el[t];
+        // Correct phi for the dipole reference orientation.
+        const double theta_t = theta[t];
+        const double phi_t = phi[t] - phi0;
 
         for(size_t f = 0; f < nFreq; ++f)
         {
@@ -192,7 +189,7 @@ const JonesMatrix::View HamakerDipole::evaluateImpl(const Grid &grid,
             dcomplex J[2][2] = {{0.0, 0.0}, {0.0, 0.0}};
 
             // Only compute the beam response for directions above the horizon.
-            if(theta < casa::C::pi_2)
+            if(theta_t < casa::C::pi_2)
             {
                 // NB: The model is parameterized in terms of a normalized
                 // frequency in the range [-1, 1]. The appropriate conversion is
@@ -219,16 +216,16 @@ const JonesMatrix::View HamakerDipole::evaluateImpl(const Grid &grid,
                             inner[1] =
                                 inner[1] * normFreq + itsCoeff(1, k, i, j);
                         }
-                        P[0] = P[0] * theta + inner[0];
-                        P[1] = P[1] * theta + inner[1];
+                        P[0] = P[0] * theta_t + inner[0];
+                        P[1] = P[1] * theta_t + inner[1];
                     }
 
                     // Compute Jones matrix for this harmonic by rotating P over
-                    // kappa * phi and add it to the result.
+                    // kappa * phi_t and add it to the result.
                     const double kappa =
                         ((k & 1) == 0 ? 1.0 : -1.0) * (2.0 * k + 1.0);
-                    const double cphi = std::cos(kappa * phi);
-                    const double sphi = std::sin(kappa * phi);
+                    const double cphi = std::cos(kappa * phi_t);
+                    const double sphi = std::sin(kappa * phi_t);
 
                     J[0][0] += cphi * P[0];
                     J[0][1] += -sphi * P[1];

@@ -31,7 +31,7 @@ lofar_add_library(bbskernel
   VisDimensions.cc
   VisEquator.cc
   VisSelection.cc
-  Expr/AntennaFieldAzEl.cc
+  Expr/AntennaFieldThetaPhi.cc
   Expr/AzEl.cc
   Expr/CachePolicy.cc
   Expr/Cache.cc
@@ -68,6 +68,7 @@ lofar_add_library(bbskernel
   Expr/MatrixRep.cc
   Expr/MatrixSum.cc
   Expr/MatrixTmp.cc
+  Expr/ParallacticRotation.cc
   Expr/PhaseShift.cc
   Expr/PiercePoint.cc
   Expr/PointCoherence.cc

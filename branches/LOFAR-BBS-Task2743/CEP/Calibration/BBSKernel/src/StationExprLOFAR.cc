@@ -25,7 +25,6 @@
 #include <BBSKernel/StationExprLOFAR.h>
 #include <BBSKernel/Exceptions.h>
 #include <BBSKernel/MeasurementExprLOFARUtil.h>
-#include <BBSKernel/Expr/AntennaFieldAzEl.h>
 #include <BBSKernel/Expr/AzEl.h>
 #include <BBSKernel/Expr/CachePolicy.h>
 #include <BBSKernel/Expr/Delay.h>

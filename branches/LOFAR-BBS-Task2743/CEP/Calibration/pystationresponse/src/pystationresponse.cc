@@ -66,12 +66,11 @@ namespace LOFAR { namespace BBS  {
     // relevant only for HBA observations.
     void setRefTile(double ra, double dec);
 
-    // Set the orientation of the +X dipole (azimuth in the antenna field
-    // coordinate system). Antenna field azimuth is defined with respect to the
-    // positive Q axis, and positive azimuth runs from the positive Q axis to
-    // the positive P axis (roughly North over East, depending on the field).
-    // The orientation of the +Y dipole is assumed to be +90 degrees away from
-    // orientation of the +X dipole.
+    // Set the orientation of the +X dipole, i.e. the angle in radians between
+    // the +X dipole and the +P axis. The angle is measured from the +P axis,
+    // increasing towards the +Q axis (roughly East over North). The orientation
+    // of the +Y dipole is assumed to be +90 degrees away from orientation of
+    // the +X dipole.
     void setRefOrientation(double orientation);
 
     // Set the direction of interest in radians, J2000. Can and often will be

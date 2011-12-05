@@ -24,14 +24,15 @@
 #include <lofar_config.h>
 #include <BBSKernel/StationResponse.h>
 #include <BBSKernel/Exceptions.h>
+#include <BBSKernel/Expr/AntennaFieldThetaPhi.h>
 #include <BBSKernel/Expr/CachePolicy.h>
+#include <BBSKernel/Expr/ExprAdaptors.h>
 #include <BBSKernel/Expr/HamakerDipole.h>
+#include <BBSKernel/Expr/ITRFDirection.h>
 #include <BBSKernel/Expr/Literal.h>
 #include <BBSKernel/Expr/MatrixInverse.h>
 #include <BBSKernel/Expr/MatrixMul2.h>
-#include <BBSKernel/Expr/ExprAdaptors.h>
-#include <BBSKernel/Expr/AntennaFieldAzEl.h>
-#include <BBSKernel/Expr/ITRFDirection.h>
+#include <BBSKernel/Expr/ParallacticRotation.h>
 #include <BBSKernel/Expr/ScalarMatrixMul.h>
 #include <BBSKernel/Expr/StationBeamFormer.h>
 #include <BBSKernel/Expr/TileArrayFactor.h>
@@ -72,9 +73,10 @@ StationResponse::StationResponse(const casa::MeasurementSet &ms,
     setRefTile(casa::MDirection());
     setDirection(casa::MDirection());
 
-    // The positive X dipole direction is SE of the reference orientation, which
-    // translates to an azimuth of 3/4*pi.
-    setRefOrientation(3.0 * casa::C::pi_4);
+    // The positive X dipole direction is SW of the reference orientation, which
+    // translates to a phi coordinate of 5/4*pi in the topocentric spherical
+    // coordinate system.
+    setRefOrientation(5.0 * casa::C::pi_4);
 
     // Load observation details.
     Instrument::Ptr instrument = initInstrument(ms);
@@ -129,21 +131,30 @@ StationResponse::StationResponse(const casa::MeasurementSet &ms,
             // Element (dual-dipole) beam expression.
             if(useElementBeam)
             {
-                Expr<Vector<2> >::Ptr exprAzEl(new AntennaFieldAzEl(exprDirITRF,
+                Expr<Vector<2> >::Ptr exprThetaPhi =
+                    Expr<Vector<2> >::Ptr(new AntennaFieldThetaPhi(exprDirITRF,
                     field));
 
                 if(field->isHBA())
                 {
                     exprElementBeam[j] =
                         Expr<JonesMatrix>::Ptr(new HamakerDipole(coeffHBA,
-                        exprAzEl, itsRefOrientation));
+                        exprThetaPhi, itsRefOrientation));
                 }
                 else
                 {
                     exprElementBeam[j] =
                         Expr<JonesMatrix>::Ptr(new HamakerDipole(coeffLBA,
-                        exprAzEl, itsRefOrientation));
+                        exprThetaPhi, itsRefOrientation));
                 }
+
+                Expr<JonesMatrix>::Ptr exprRotation =
+                    Expr<JonesMatrix>::Ptr(new ParallacticRotation(exprDirITRF,
+                    field));
+
+                exprElementBeam[j] =
+                    Expr<JonesMatrix>::Ptr(new MatrixMul2(exprElementBeam[j],
+                    exprRotation));
             }
             else
             {

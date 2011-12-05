@@ -24,7 +24,7 @@
 #include <lofar_config.h>
 #include <BBSKernel/MeasurementExprLOFARUtil.h>
 #include <BBSKernel/Exceptions.h>
-#include <BBSKernel/Expr/AntennaFieldAzEl.h>
+#include <BBSKernel/Expr/AntennaFieldThetaPhi.h>
 #include <BBSKernel/Expr/AzEl.h>
 #include <BBSKernel/Expr/Delay.h>
 #include <BBSKernel/Expr/EquatorialCentroid.h>
@@ -37,6 +37,7 @@
 #include <BBSKernel/Expr/MatrixMul2.h>
 #include <BBSKernel/Expr/MatrixMul3.h>
 #include <BBSKernel/Expr/MatrixSum.h>
+#include <BBSKernel/Expr/ParallacticRotation.h>
 #include <BBSKernel/Expr/PhaseShift.h>
 #include <BBSKernel/Expr/ScalarMatrixMul.h>
 #include <BBSKernel/Expr/StationBeamFormer.h>
@@ -243,9 +244,10 @@ makeBeamExpr(Scope&,
             " station beam is missing.");
     }
 
-    // The positive X dipole direction is SE of the reference orientation, which
-    // translates to an azimuth of 3/4*pi.
-    Expr<Scalar>::Ptr exprOrientation(new Literal(3.0 * casa::C::pi_4));
+    // The positive X dipole direction is SW of the reference orientation, which
+    // translates to a phi coordinate of 5/4*pi in the topocentric spherical
+    // coordinate system.
+    Expr<Scalar>::Ptr exprOrientation(new Literal(5.0 * casa::C::pi_4));
 
     // Build expressions for the dual-dipole or tile beam of each antenna field.
     Expr<JonesMatrix>::Ptr exprElementBeam[2];
@@ -256,21 +258,30 @@ makeBeamExpr(Scope&,
         // Element (dual-dipole) beam expression.
         if(config.mode() != BeamConfig::ARRAY_FACTOR)
         {
-            Expr<Vector<2> >::Ptr exprAzEl(new AntennaFieldAzEl(exprITRF,
+            Expr<Vector<2> >::Ptr exprThetaPhi =
+                Expr<Vector<2> >::Ptr(new AntennaFieldThetaPhi(exprITRF,
                 field));
 
             if(field->isHBA())
             {
                 exprElementBeam[i] =
-                    Expr<JonesMatrix>::Ptr(new HamakerDipole(coeffHBA, exprAzEl,
-                    exprOrientation));
+                    Expr<JonesMatrix>::Ptr(new HamakerDipole(coeffHBA,
+                    exprThetaPhi, exprOrientation));
             }
             else
             {
                 exprElementBeam[i] =
-                    Expr<JonesMatrix>::Ptr(new HamakerDipole(coeffLBA, exprAzEl,
-                    exprOrientation));
+                    Expr<JonesMatrix>::Ptr(new HamakerDipole(coeffLBA,
+                    exprThetaPhi, exprOrientation));
             }
+
+            Expr<JonesMatrix>::Ptr exprRotation =
+                Expr<JonesMatrix>::Ptr(new ParallacticRotation(exprITRF,
+                field));
+
+            exprElementBeam[i] =
+                Expr<JonesMatrix>::Ptr(new MatrixMul2(exprElementBeam[i],
+                exprRotation));
         }
         else
         {

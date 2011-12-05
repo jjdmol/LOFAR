@@ -75,12 +75,12 @@ public:
     typedef shared_ptr<const HamakerDipole> ConstPtr;
 
     HamakerDipole(const HamakerBeamCoeff &coeff,
-        const Expr<Vector<2> >::ConstPtr &azel,
+        const Expr<Vector<2> >::ConstPtr &target,
         const Expr<Scalar>::ConstPtr &orientation);
 
 protected:
     virtual const JonesMatrix::View evaluateImpl(const Grid &grid,
-        const Vector<2>::View &azel, const Scalar::View &orientation) const;
+        const Vector<2>::View &target, const Scalar::View &orientation) const;
 
 private:
     HamakerBeamCoeff    itsCoeff;
