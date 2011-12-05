@@ -50,8 +50,8 @@ import javax.swing.text.MaskFormatter;
  * used.
  * 
  * @author Kai Toedter
- * @version $LastChangedRevision: 97 $
- * @version $LastChangedDate: 2006-05-24 17:30:41 +0200 (Mi, 24 Mai 2006) $
+ * @version $LastChangedRevision$
+ * @version $LastChangedDate$
  */
 public class JTextFieldDateEditor extends JFormattedTextField implements IDateEditor,
 		CaretListener, FocusListener, ActionListener {

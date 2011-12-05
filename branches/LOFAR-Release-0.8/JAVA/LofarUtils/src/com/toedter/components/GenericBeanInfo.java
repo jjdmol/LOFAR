@@ -29,8 +29,8 @@ import java.util.Locale;
  * A generic bean info class use by all bean infos of the JCalendar bean suite.
  * 
  * @author Kai Toedter
- * @version $LastChangedRevision: 85 $
- * @version $LastChangedDate: 2006-04-28 13:50:52 +0200 (Fr, 28 Apr 2006) $
+ * @version $LastChangedRevision$
+ * @version $LastChangedDate$
  */
 public class GenericBeanInfo extends SimpleBeanInfo {
 	/** 16x16 color icon. */
