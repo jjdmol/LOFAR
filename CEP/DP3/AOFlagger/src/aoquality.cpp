@@ -50,6 +50,8 @@ void actionCollect(const std::string &filename, bool collectAll)
 	MeasurementSet *ms = new MeasurementSet(filename);
 	const unsigned polarizationCount = ms->GetPolarizationCount();
 	const unsigned bandCount = ms->BandCount();
+	const bool ignoreChannelZero = ms->ChannelZeroIsRubish();
+	const std::string stationName = ms->GetStationName();
 	BandInfo *bands = new BandInfo[bandCount];
 	double **frequencies = new double*[bandCount];
 	unsigned totalChannels = 0;
@@ -68,13 +70,22 @@ void actionCollect(const std::string &filename, bool collectAll)
 	std::cout
 		<< "Polarizations: " << polarizationCount << '\n'
 		<< "Bands: " << bandCount << '\n'
-		<< "Channels/band: " << (totalChannels / bandCount) << '\n';
+		<< "Channels/band: " << (totalChannels / bandCount) << '\n'
+		<< "Channels/band: " << (totalChannels / bandCount) << '\n'
+		<< "Name of obseratory: " << stationName << '\n';
+	if(ignoreChannelZero)
+		std::cout << "Channel zero will be ignored, as this looks like a LOFAR data set that includes channel 0.\n";
+	else
+		std::cout << "Channel zero will be included in the statistics, as it seems that channel 0 is okay.\n";
 	
 	casa::Table table(filename, casa::Table::Update);
 	StatisticsCollection collection(polarizationCount);
 	for(unsigned b=0;b<bandCount;++b)
 	{
-		collection.InitializeBand(b, frequencies[b], bands[b].channelCount);
+		if(ignoreChannelZero)
+			collection.InitializeBand(b, (frequencies[b]+1), bands[b].channelCount-1);
+		else
+			collection.InitializeBand(b, frequencies[b], bands[b].channelCount);
 	}
 
 	const char *dataColumnName = "DATA";
@@ -107,7 +118,8 @@ void actionCollect(const std::string &filename, bool collectAll)
 		
 		casa::Array<casa::Complex>::const_iterator dataIter = dataArray.begin();
 		casa::Array<bool>::const_iterator flagIter = flagArray.begin();
-		for(unsigned channel = 0 ; channel<band.channelCount; ++channel)
+		const unsigned startChannel = ignoreChannelZero ? 1 : 0;
+		for(unsigned channel = startChannel ; channel<band.channelCount; ++channel)
 		{
 			for(unsigned p = 0; p < polarizationCount; ++p)
 			{

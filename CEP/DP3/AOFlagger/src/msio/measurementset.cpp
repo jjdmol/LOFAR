@@ -444,7 +444,7 @@ std::string MeasurementSet::GetStationName() const
 	casa::Table antennaTable(ms.antenna());
 	if(antennaTable.nrow() == 0)
 		throw std::runtime_error("GetStationName() : no rows in Antenna table");
-	casa::ScalarColumn<casa::String> stationColumn(antennaTable, "STATION");
+	casa::ROScalarColumn<casa::String> stationColumn(antennaTable, "STATION");
 	return stationColumn(0);
 }
 
