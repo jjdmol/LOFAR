@@ -131,7 +131,7 @@ void actionCollect(const std::string &filename, bool collectAll)
 			for(unsigned p = 0; p < polarizationCount; ++p)
 			{
 				samples[p].push_back(*dataIter);
-				isRFI[p][channel] = *flagIter;
+				isRFI[p][channel - startChannel] = *flagIter;
 				
 				++dataIter;
 				++flagIter;
