@@ -8,5 +8,4 @@ install(PROGRAMS
   Hosts.py
   Parset.py
   shlex.py
-  tee.py
   DESTINATION bin/util)

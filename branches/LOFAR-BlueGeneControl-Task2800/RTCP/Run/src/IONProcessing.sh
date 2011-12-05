@@ -4,7 +4,7 @@ function start() {
   source locations.sh
 
   # list both the partition directly (small partitions) and recursively (large partitions) to get all -32 subpartitions
-  # bghierarchy needs a valid stdin for some reason
+  # bghierarchy needs a valid stdin for some reason and will read from it, so provide a fake one
   SUBPARTITIONS="`(bghierarchy -s $PARTITION;bghierarchy -s \`bghierarchy -s $PARTITION\`) </dev/null`"
 
   # xxx-32 means both xxx-J00 and xxx-J01
@@ -15,17 +15,14 @@ function start() {
   mkdir -p "$LOGDIR"
   ln -s "$LOGDIR" "$LOGSYMLINK"
 
-  # todo: log server support (also in CNProcessing.sh)
-  # production logserver: "tcp:ccu001:24500"
-
   TMPDIR=`mktemp -d`
   PIDFILE="$TMPDIR/pid"
 
+  # use a fifo to avoid race conditions
   mkfifo "$PIDFILE"
 
-  # run through bash -i to enable line buffering (mpirun will buffer output
-  # for too long without it)
-  echo '/bgsys/LOFAR/openmpi-ion/bin/mpirun -host '"$PSETS"'  --pernode -wd '"$LOGDIR"' '"$IONPROC"' '"$ISPRODUCTION"' 2>&1 & echo $! > '"$PIDFILE"'; fg' | bash -i --noediting --norc 2>/dev/null | LOFAR/Logger.py $LOGSYMLINK/IONProc.log &
+  (/bgsys/LOFAR/openmpi-ion/bin/mpirun -host "$PSETS"  --pernode -wd "$LOGDIR" "$IONPROC" "$ISPRODUCTION" 2>&1 &
+  echo $! > "$PIDFILE") | LOFAR/Logger.py $LOGPARAMS "$LOGSYMLINK/IONProc.log" &
 
   PID=`cat $PIDFILE`
   rm -f "$PIDFILE"

@@ -3,6 +3,7 @@ COMMAND=$1
 
 type getpid >&/dev/null || function getpid() {
   PID=DOWN
+  PIDFILE="/tmp/`procname`-$USER.pid"
 
   if [ -f "$PIDFILE" ]
   then
@@ -21,6 +22,7 @@ function isstarted() {
 
 type setpid >&/dev/null || function setpid() {
   PID=$1
+  PIDFILE="/tmp/`procname`-$USER.pid"
 
   if [ "x$PID" == "x" ]
   then
@@ -31,6 +33,7 @@ type setpid >&/dev/null || function setpid() {
 }
 
 type delpid >&/dev/null || function delpid() {
+  PIDFILE="/tmp/`procname`-$USER.pid"
   rm -f -- "$PIDFILE"
 }
 
@@ -47,7 +50,6 @@ type stop >&/dev/null || function stop() {
   kill -15 "$PID"
 }
 
-PIDFILE="/tmp/`procname`-$USER.pid"
 getpid
 
 case $COMMAND in

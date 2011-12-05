@@ -1,19 +1,20 @@
 #!/bin/bash
 
 function start() {
-  . locations.sh
+  source locations.sh
 
-  TMPDIR=`mktemp -d`
+  TMPDIR="`mktemp -d`"
   PIDFILE="$TMPDIR/pid"
 
-  mkfifo $PIDFILE
+  # use a fifo to avoid race conditions
+  mkfifo "$PIDFILE"
 
-  (mpirun -mode VN -partition $PARTITION -env DCMF_COLLECTIVES=0 -env BG_MAPPING=XYZT -env LD_LIBRARY_PATH=/bgsys/drivers/ppcfloor/comm/lib:/bgsys/drivers/ppcfloor/runtime/SPI:/globalhome/romein/lib.bgp -cwd $LOGSYMLINK -exe $CNPROC 2>&1 &
-  echo $! > $PIDFILE) | LOFAR/Logger.py $LOGSYMLINK/CNProc.log &
+  (mpirun -mode VN -partition "$PARTITION" -env DCMF_COLLECTIVES=0 -env BG_MAPPING=XYZT -env LD_LIBRARY_PATH=/bgsys/drivers/ppcfloor/comm/lib:/bgsys/drivers/ppcfloor/runtime/SPI:/globalhome/romein/lib.bgp -cwd "$LOGSYMLINK" -exe "$CNPROC" 2>&1 &
+  echo $! > "$PIDFILE") | LOFAR/Logger.py $LOGPARAMS "$LOGSYMLINK/CNProc.log" &
 
-  PID=`cat $PIDFILE`
-  rm -f $PIDFILE
-  rmdir $TMPDIR
+  PID=`cat "$PIDFILE"`
+  rm -f "$PIDFILE"
+  rmdir "$TMPDIR"
 
   if [ -z "$PID" ]
   then

@@ -14,6 +14,7 @@ then
 
   LOGDIR=$HOME/log/L$TIMESTAMP
   LOGSYMLINK=$HOME/log/latest
+  LOGPARAMS="-s ccu001:24500"
 else
   ISPRODUCTION=0
 
@@ -23,6 +24,7 @@ else
 
   LOGDIR=$HOME/projects/LOFAR/L$TIMESTAMP
   LOGSYMLINK=$HOME/projects/LOFAR/log
+  LOGPARAMS="-v"
 fi
 
 if [ -d $ETCDIR ]
