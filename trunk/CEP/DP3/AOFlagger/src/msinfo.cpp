@@ -87,6 +87,8 @@ int main(int argc, char *argv[])
 		const size_t antennaCount = set.AntennaCount();
 		for(size_t i=0;i<antennaCount;++i)
 		{
+			cout.width(16);
+			cout.precision(16);
 			const AntennaInfo antenna = set.GetAntennaInfo(i);
 			cout << antenna.id << '\t' << antenna.position.Lattitude()*180.0/M_PI << '\t' << antenna.position.Longitude()*180.0/M_PI << '\t' << antenna.position.Altitude() << '\n';
 		}
