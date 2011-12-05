@@ -1,0 +1,516 @@
+V 10
+1
+LANG:1 0 
+PANEL,-1 -1 1013 750 N "_3DFace" 0
+"main()
+{
+  // Initialise the Panel
+  navPanel_initPanel(\"fw_viewBox\");
+  
+  baseDP         = g_currentDatapoint;
+  database = dpSubStr(baseDP,DPSUB_SYS);
+  
+  TopLabel.text(database+\"CEP HardwareMonitor\");
+  
+  // start the logging process
+  showLogging(baseDP);
+  
+  // check if the requiered datapoint for this view are enabled and accessible
+  if (dpExists(baseDP + \".status.message\")) {
+    if (dpConnect(\"updateStates\", baseDP + \".status.message\",
+		                  baseDP + \".process.currentAction\",
+		                  baseDP + \".process.error\",
+		                  baseDP + \".process.startTime\",
+		                  baseDP + \".process.stopTime\",
+		                  baseDP + \".process.processID\", 
+                                  baseDP + \".status.message:_online.._invalid\") == -1) {
+      LOG_ERROR(\"CEPHardwareMonitor.pnl:main|Couldn't connect to: \"+baseDP);
+    }
+  } else {
+    LOG_ERROR(\"CEPHardwareMonitor.pnl:main|Couldn't find DP to connect to: \"+baseDP);
+    setValue(\"myLogTable\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"statusMessage\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"processAction\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"processError\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"processStartTime\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"processStopTime\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"processID\", \"backCol\", \"Lofar_dpdoesnotexist\");
+  } 
+  
+    
+  LOG_DEBUG(\"CEPHardwareMonitor.pnl:main|processList found: \"+ result);    
+
+  // pass baseDP to selfstate Object to work with
+  setValue(\"selfState.light\",\"toolTipText\",baseDP);
+  
+  // connect for selfUpdates
+  showSelfState(baseDP);
+  
+  reload();
+
+}
+
+updateStates(string dp1, string message, 
+             string dp2, string action,
+             string dp3, string error,
+             string dp4, string startTime,
+             string dp5, string stopTime,
+             string dp6, unsigned processID,
+             string dp7, bool invalid)
+{
+  LOG_DEBUG(\"CEPHardwareMonitor.pnl:update|entered with: \"+ message + \" action: \" + action + \" error: \" + error);  
+  if (!invalid) {
+    setValue(\"statusMessage\", \"text\", message);
+    setValue(\"processAction\", \"text\", action);
+    setValue(\"processError\", \"text\", error);
+    setValue(\"processID\", \"text\", processID);
+    setValue(\"processStartTime\", \"text\", startTime);
+    setValue(\"processStopTime\", \"text\", stopTime);
+  } else {
+    setValue(\"statusMessage\", \"text\", \"\");
+    setValue(\"processAction\", \"text\", \"\");
+    setValue(\"processError\",  \"text\", \"\");
+    setValue(\"processID\", \"text\", \"\");
+    setValue(\"processStartTime\", \"text\", \"\");
+    setValue(\"processStopTime\", \"text\", \"\");
+  }
+}
+
+
+void prepareProcesses() {
+  dyn_string result;
+  
+  dynAppend(result,\",HardwareMonitor,\"+baseDP);    
+  dynAppend(g_processesList,baseDP);
+  
+  
+  // write result to the db so various panels can reset themselves  
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".processesList\",result);
+  
+  LOG_DEBUG(\"CEPHardwareMonitor.pnl:prepareProcesses|processList found: \"+ result);    
+  
+}
+
+//
+// Callback for dpConnect to action point.
+// If there is an action required this point will tell so
+//
+void doAction(string aDP, string anAction) {
+  LOG_DEBUG(\"CEPHardwareMonitor.pnl:doAction| Action required. found: \" + anAction);
+  // split action into essentials
+  dyn_string actionString;
+  if (!navFunct_splitAction(anAction,actionString)) {
+    return;
+  }
+  
+  LOG_DEBUG(\"CEPHardwareMonitor.pnl:doAction|found actionString: \" + actionString);
+  
+  // Reload
+  if (actionString[1] == \"Reload\") {
+    reload();
+  }
+}
+
+void reload() {
+  
+  navFunct_clearGlobalLists();
+  
+  // set the observation selectable items
+  prepareProcesses();
+
+  // set panel to ready
+  g_objectReady=true;
+  
+  // trigger that the panel values are calculated and ready
+  navPanel_setEvent(\"CEPHardwareMonitor.pnl\",\"Update\");
+}
+
+" 0
+ E E E E 1 -1 -1 0  49 92
+""0  1
+E "#uses \"navPanel.ctl\"
+
+string baseDP=\"\";
+string database=\"\";
+
+" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+25 58
+"myLogTable"
+""
+1 31.00000000000001 172 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+41 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 29 170 993 281
+EE 1 0 1 5 1 "time" 12 1 0 "s" 1
+LANG:1 4 time
+E
+1
+LANG:1 0 
+
+150 "level" 5 1 0 "s" 1
+LANG:1 5 level
+E
+1
+LANG:1 0 
+
+70 "source" 17 1 0 "s" 1
+LANG:1 6 source
+E
+1
+LANG:1 0 
+
+200 "message" 90 1 0 "s" 1
+LANG:1 7 message
+E
+1
+LANG:1 0 
+
+1000 "code" 17 1 0 "s" 1
+LANG:1 4 code
+E
+1
+LANG:1 0 
+
+200 
+14 14 "" 1 1
+LANG:1 2 #1
+10 30
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+0 1 2 1 7
+1 0
+1 75 4 "" 1
+0
+14 60
+"statusMessage"
+""
+1 139 52 E E E 1 E 1 E N "_3DText" E N "_Window" E E
+ E E
+44 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 137 50 990 71
+2 "0s" 0 0 0 0 0 -1  E E E
+2 61
+"TopLabel"
+""
+1 479 12 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+46 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 479 12 684 33
+0 2 2 "0s" 0 0 0 192 0 0  479 12 1
+1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-16-*-100-100-*-*-iso8859-1|-16,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 24 Station: HardwareMonitor
+2 62
+"PRIMITIVE_TEXT2"
+""
+1 33.00000000000001 86 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+48 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 33.00000000000001 86 114 100
+0 2 2 "0s" 0 0 0 192 0 0  33.00000000000001 86 1
+1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 14 Current Action
+2 63
+"PRIMITIVE_TEXT3"
+""
+1 33.00000000000001 53 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+50 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 33.00000000000001 53 127 67
+0 2 2 "0s" 0 0 0 192 0 0  33.00000000000001 53 1
+1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 15 Status Message:
+14 64
+"processAction"
+""
+1 139 82 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+52 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 137 80 431 101
+2 "0s" 0 0 0 0 0 -1  E E E
+2 65
+"PRIMITIVE_TEXT4"
+""
+1 33.00000000000001 116 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+54 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 33.00000000000001 116 105 130
+0 2 2 "0s" 0 0 0 192 0 0  33.00000000000001 116 1
+1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 13 Current Error
+14 66
+"processError"
+""
+1 139 112 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+56 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 137 110 431 131
+2 "0s" 0 0 0 0 0 -1  E E E
+2 67
+"PRIMITIVE_TEXT5"
+""
+1 33.00000000000001 152 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+58 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 33.00000000000001 152 118 166
+0 2 2 "0s" 0 0 0 192 0 0  33.00000000000001 152 1
+1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 13 Log Messages:
+2 68
+"PRIMITIVE_TEXT6"
+""
+1 33.00000000000001 292 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+60 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 33.00000000000001 292 133 306
+0 2 2 "0s" 0 0 0 192 0 0  33.00000000000001 292 1
+1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 18 Controller Values:
+2 69
+"PRIMITIVE_TEXT7"
+""
+1 459 86 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+62 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 459 86 513 100
+0 2 2 "0s" 0 0 0 192 0 0  459 86 1
+1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 9 StartTime
+2 70
+"PRIMITIVE_TEXT8"
+""
+1 459 116 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+64 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 459 116 512 130
+0 2 2 "0s" 0 0 0 192 0 0  459 116 1
+1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 8 StopTime
+14 71
+"processStartTime"
+""
+1 529 82 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+66 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 527 80 821 101
+2 "0s" 0 0 0 0 0 -1  E E E
+14 72
+"processStopTime"
+""
+1 529 112 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+68 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 527 110 821 131
+2 "0s" 0 0 0 0 0 -1  E E E
+2 73
+"PRIMITIVE_TEXT9"
+""
+1 849 86 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+70 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 849 86 866 100
+0 2 2 "0s" 0 0 0 192 0 0  849 86 1
+1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 3 ID:
+14 74
+"processID"
+""
+1 869 82 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+72 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 867 80 991 101
+2 "0s" 0 0 0 0 0 -1  E E E
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+3 4 "selfState"
+"objects\\lofar_self_state.pnl" 9.500000000000011 10.5 T 42 1 0 1 -0.4999999999999928 4.5
+0
+0
