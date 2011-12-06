@@ -427,8 +427,8 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
 
 #if defined HAVE_MPI
   if (streamToProcess) {
-    ASSERTSTR(itsTranspose2Logic.myPset == itsTranspose2Logic.destPset( myStream, block ) && itsTranspose2Logic.myCore == itsTranspose2Logic.destCore( myStream, block ),
-     "I'm (" << itsTranspose2Logic.myPset << ", " << itsTranspose2Logic.myCore << ") . According to the logic, for block " << block << ", I'm to handle stream " << myStream << ", yet that stream is to be handled by (" << itsTranspose2Logic.destPset( myStream, block ) << ", " << itsTranspose2Logic.destCore( myStream, block ) << ")" );
+    ASSERTSTR(itsTranspose2Logic.phaseThreePsetIndex == itsTranspose2Logic.destPset( myStream, block ) && itsTranspose2Logic.phaseThreeCoreIndex == itsTranspose2Logic.destCore( myStream, block ),
+     "I'm (" << itsTranspose2Logic.phaseThreePsetIndex << ", " << itsTranspose2Logic.phaseThreeCoreIndex << ") . According to the logic, for block " << block << ", I'm to handle stream " << myStream << ", yet that stream is to be handled by (" << itsTranspose2Logic.destPset( myStream, block ) << ", " << itsTranspose2Logic.destCore( myStream, block ) << ")" );
 
     if (LOG_CONDITION)
       LOG_DEBUG_STR(itsLogPrefix << "Phase 3");
