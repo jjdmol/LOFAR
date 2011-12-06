@@ -101,7 +101,7 @@ void TwoDimensionalPlotPage::updatePlot()
 		if(_dVarianceButton.get_active())
 			plotStatistic(QualityTablesFormatter::DVarianceStatistic);
 		if(_rfiRatioButton.get_active())
-			plotStatistic(QualityTablesFormatter::RFIRatioStatistic);
+			plotStatistic(QualityTablesFormatter::RFIPercentageStatistic);
 		if(_snrButton.get_active())
 			plotStatistic(QualityTablesFormatter::SignalToNoiseStatistic);
 		_plotWidget.Update();
