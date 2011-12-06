@@ -36,10 +36,8 @@
 class TwoDimensionalPlotPage : public Gtk::HBox {
 	public:
 		TwoDimensionalPlotPage();
-    virtual ~TwoDimensionalPlotPage()
-    {
-		}
-		
+    virtual ~TwoDimensionalPlotPage();
+
 		void SetStatistics(class StatisticsCollection *statCollection, const std::vector<AntennaInfo> &antennas)
 		{
 			processStatistics(statCollection, antennas);
@@ -84,6 +82,7 @@ class TwoDimensionalPlotPage : public Gtk::HBox {
 		enum PhaseType { AmplitudePhaseType, PhasePhaseType, RealPhaseType, ImaginaryPhaseType} ;
 		
 		void updatePlotConfig();
+		void updateDataWindow();
 		
 		template<enum PhaseType Phase>
 		inline double getValue(const std::complex<long double> val);
@@ -106,6 +105,7 @@ class TwoDimensionalPlotPage : public Gtk::HBox {
 			updatePlotConfig();
 		}
 		void onPlotPropertiesClicked();
+		void onDataExportClicked();
 		
 		Gtk::VBox _sideBox;
 		
@@ -124,13 +124,14 @@ class TwoDimensionalPlotPage : public Gtk::HBox {
 		Gtk::Frame _plotFrame;
 		Gtk::VBox _plotBox;
 		Gtk::CheckButton _logarithmicButton, _zeroAxisButton;
-		Gtk::Button _plotPropertiesButton;
+		Gtk::Button _plotPropertiesButton, _dataExportButton;
 		
 		class StatisticsCollection *_statCollection;
 		Plot2D _plot;
 		PlotWidget _plotWidget;
 		
 		class PlotPropertiesWindow *_plotPropertiesWindow;
+		class DataWindow *_dataWindow;
 		
 		bool _customButtonsCreated;
 };

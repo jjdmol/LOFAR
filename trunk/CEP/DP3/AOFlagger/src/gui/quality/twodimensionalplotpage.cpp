@@ -23,6 +23,7 @@
 
 #include <boost/bind.hpp>
 
+#include <AOFlagger/gui/quality/datawindow.h>
 #include <AOFlagger/gui/quality/twodimensionalplotpage.h>
 
 #include <AOFlagger/quality/statisticscollection.h>
@@ -56,6 +57,7 @@ TwoDimensionalPlotPage::TwoDimensionalPlotPage() :
 	_logarithmicButton("Logarithmic"),
 	_zeroAxisButton("Zero axis"),
 	_plotPropertiesButton("Properties..."),
+	_dataExportButton("Data..."),
 	_statCollection(0),
 	_plotPropertiesWindow(0),
 	_customButtonsCreated(false)
@@ -71,6 +73,13 @@ TwoDimensionalPlotPage::TwoDimensionalPlotPage() :
 	pack_start(_plotWidget, Gtk::PACK_EXPAND_WIDGET);
 	
 	show_all_children();
+	
+	_dataWindow = new DataWindow();
+}
+
+TwoDimensionalPlotPage::~TwoDimensionalPlotPage()
+{
+	delete _dataWindow;
 }
 
 void TwoDimensionalPlotPage::updatePlot()
@@ -96,6 +105,11 @@ void TwoDimensionalPlotPage::updatePlot()
 		if(_snrButton.get_active())
 			plotStatistic(QualityTablesFormatter::SignalToNoiseStatistic);
 		_plotWidget.Update();
+		
+		if(_dataWindow->get_visible())
+		{
+			updateDataWindow();
+		}
 	}
 }
 
@@ -283,6 +297,9 @@ void TwoDimensionalPlotPage::initPlotButtons()
 	
 	_plotPropertiesButton.signal_clicked().connect(sigc::mem_fun(*this, &TwoDimensionalPlotPage::onPlotPropertiesClicked));
 	_plotBox.pack_start(_plotPropertiesButton, Gtk::PACK_SHRINK);
+
+	_dataExportButton.signal_clicked().connect(sigc::mem_fun(*this, &TwoDimensionalPlotPage::onDataExportClicked));
+	_plotBox.pack_start(_dataExportButton, Gtk::PACK_SHRINK);
 	
 	_plotFrame.add(_plotBox);
 	
@@ -301,3 +318,28 @@ void TwoDimensionalPlotPage::onPlotPropertiesClicked()
 	_plotPropertiesWindow->raise();
 }
 
+void TwoDimensionalPlotPage::updateDataWindow()
+{
+	std::stringstream _dataStream;
+	if(_plot.PointSetCount() != 0)
+	{
+		const Plot2DPointSet &pointSet = _plot.GetPointSet(0);
+		size_t valueCount = pointSet.Size();
+		for(size_t i=0; i<valueCount; ++i)
+		{
+			const double
+				x = pointSet.GetX(i),
+				y = pointSet.GetY(i);
+			
+			_dataStream << i << '\t' << x << '\t' << y << '\n';
+		}
+	}
+	_dataWindow->SetData(_dataStream.str());
+}
+
+void TwoDimensionalPlotPage::onDataExportClicked()
+{
+	_dataWindow->show();
+	_dataWindow->raise();
+	updateDataWindow();
+}
