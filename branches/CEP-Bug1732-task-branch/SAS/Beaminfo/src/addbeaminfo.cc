@@ -61,6 +61,7 @@
 #include <tables/Tables/Table.h>
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/TableLocker.h>
+#include <measures/Measures.h>
 #include <casa/Quanta/MVTime.h>
 #include <casa/OS/Time.h>
 #include <casa/Arrays/VectorIter.h>
@@ -121,11 +122,11 @@ void addFailedAntennaTiles( MeasurementSet &ms,
                             const vector<failedTile> &failedTiles);
 void addFailedAntennaTiles( MeasurementSet &ms, 
                             const vector<failedTile> &failedTiles,
-                            vector<bool> flags);
+                            const vector<bool> &flags);
 void doAddFailedAntennaTile(Table &failedElementsTable, 
                             int antennaId, 
                             int element_index, 
-                            double timeStamp, 
+                            const MVEpoch &timeStamp, 
                             bool flag=false);                            
 
 // SAS functions
@@ -428,9 +429,10 @@ MVEpoch toCasaTime(const string &time)
   // e.g. 2011-Mar-19 21:17:06.514000  // use slashes instead spaces
   Double casaTime;        // casa MVEpoch time to be returned
   MVTime casaMVTime;      // need this for conversion
+//  MVEpoch casaMVTime;      // need this for conversion
   String copyTime=time;   // make a temporary copy
 
-  Quantity result(casaTime, "s");
+  Quantity result(casaTime, "s");   // set quantity unit to seconds
   
   if(time.empty())
   {
@@ -440,9 +442,6 @@ MVEpoch toCasaTime(const string &time)
   {
     copyTime.gsub(" ", "/");      // replace spaces with slashes for casa conversion   
     casaMVTime.read(result, copyTime);
-    
-//    cout << "toCasaTime() result = " << result << endl;  // DEBUG
-    
 //    MVTime function
 //      static Bool 	read (Quantity &res, MUString &in)
   }
@@ -1756,7 +1755,6 @@ unsigned int getAntennaFieldId( MeasurementSet &ms,
 void addFailedAntennaTiles( MeasurementSet &ms, 
                             const vector<failedTile> &failedTiles)
 {
-  double timestamp;        // timestamp variable to write to each table row
   Table failedElementsTable(ms.rwKeywordSet().asTable("LOFAR_ELEMENT_FAILURE"));
 
   //TODO
@@ -1775,26 +1773,14 @@ void addFailedAntennaTiles( MeasurementSet &ms,
       "addFailedAntennaTiles() number of element_flags != number of timestamps for antennaId="
       << failedTiles[i].antennaId);
 
-//      cout << "addFailedAntennaTiles() " << failedTiles[0].timeStamps[0] << endl;   // DEBUG
-//      cout << "addFailedAntennaTiles() " << toCasaTime(failedTiles[0].timeStamps[0]) << endl;     // DEBUG
-
       // Loop over multiple element_flags per antennaId
       for(unsigned int j=0; j<failedTiles[i].elementFlags.size(); j++)
       {
         TableLocker locker(failedElementsTable, FileLocker::Write);
 
-//        double timeStamp = toCasaTime(failedTiles[i].timeStamps[j]).get();
-//        MVTime timeStamp(toCasaTime(failedTiles[i].timeStamps[j]).get());              // time object for conversion to MJD
-
-        MVEpoch mvTime= toCasaTime(failedTiles[i].timeStamps[j]).getDay() + 
+        MVEpoch timestamp= toCasaTime(failedTiles[i].timeStamps[j]).getDay() + 
                         toCasaTime(failedTiles[i].timeStamps[j]).getDayFraction();
 
-        cout << toCasaTime(failedTiles[i].timeStamps[j]).getDay() << endl;            // DEBUG
-        cout << toCasaTime(failedTiles[i].timeStamps[j]).getDayFraction() << endl;    // DEBUG
-
-        timestamp = toCasaTime(failedTiles[i].timeStamps[j]).getDay() +
-                    toCasaTime(failedTiles[i].timeStamps[j]).getDayFraction();
-   
         doAddFailedAntennaTile( failedElementsTable, 
                                 failedTiles[i].antennaId,      
                                 failedTiles[i].elementFlags[j],
@@ -1813,9 +1799,8 @@ void addFailedAntennaTiles( MeasurementSet &ms,
 */
 void addFailedAntennaTiles( MeasurementSet &ms, 
                             const vector<failedTile> &failedTiles,
-                            vector<bool> flags)
+                            const vector<bool> &flags)
 {
-  MVEpoch timestamp;        // timestamp variable to write to each table row
   Table failedElementsTable(ms.rwKeywordSet().asTable("LOFAR_ELEMENT_FAILURE"));
 
   //TODO
@@ -1834,26 +1819,23 @@ void addFailedAntennaTiles( MeasurementSet &ms,
       "addFailedAntennaTiles() number of element_flags != number of timestamps for antennaId="
       << failedTiles[i].antennaId);
 
-//      cout << "addFailedAntennaTiles() " << failedTiles[0].timeStamps[0] << endl;   // DEBUG
-//      cout << "addFailedAntennaTiles() " << toCasaTime(failedTiles[0].timeStamps[0]) << endl;     // DEBUG
-
       // Loop over multiple element_flags per antennaId
       for(unsigned int j=0; j<failedTiles[i].elementFlags.size(); j++)
       {
         TableLocker locker(failedElementsTable, FileLocker::Write);
 
-        double timeStamp = toCasaTime(failedTiles[i].timeStamps[j]).get();
+        MVEpoch timestamp=toCasaTime(failedTiles[i].timeStamps[j]).getDay() + 
+                          toCasaTime(failedTiles[i].timeStamps[j]).getDayFraction();
+
         doAddFailedAntennaTile( failedElementsTable, 
                                 failedTiles[i].antennaId,      
                                 failedTiles[i].elementFlags[j],
-                                timeStamp,
+                                timestamp,
                                 flags[i]);
       }
     }
   }
 }
-
-//                                 toCasaTime(failedTiles[i].timeStamps[j])
 
 
 /*!
@@ -1867,7 +1849,7 @@ void addFailedAntennaTiles( MeasurementSet &ms,
 void doAddFailedAntennaTile(Table &failedElementsTable, 
                             int antennaId, 
                             int element_index, 
-                            Double timeStamp, 
+                            const MVEpoch &timeStamp, 
                             bool flag)
 {
   // Create a new table according to TableDesc matching MS2.0.7 ICD
@@ -1880,8 +1862,10 @@ void doAddFailedAntennaTile(Table &failedElementsTable,
   antennaFieldIdCol.put(rownr, antennaId);
   ScalarColumn<Int> elementIndexCol(failedElementsTable, "ELEMENT_INDEX");
   elementIndexCol.put(rownr, element_index);
-  ScalarColumn<Double> timeStampCol(failedElementsTable, "TIME");
-  timeStampCol.put(rownr, timeStamp);
+  ScalarMeasColumn<MEpoch> timeStampCol(failedElementsTable, "TIME");
+
+//  cout << "doAddFailedAntennaTile() timeStamp = " << timeStamp.getTime(Unit("s"));
+  timeStampCol.put(rownr, timeStamp.getTime(Unit("s")));
  
   // If there is a FLAG_ROW column
   if(failedElementsTable.tableDesc().isColumn("FLAG_ROW"))
