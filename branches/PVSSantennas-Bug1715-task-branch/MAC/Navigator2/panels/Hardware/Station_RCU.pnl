@@ -1,4 +1,4 @@
-V 10
+V 11
 1
 LANG:1 11 station_RCU
 PANEL,-1 -1 1047 803 N "_3DFace" 0
@@ -19,7 +19,9 @@ PANEL,-1 -1 1047 803 N "_3DFace" 0
   
   setValue(\"rcuLabel\",\"text\",\"RCU\"+rcuNr);
   
- 
+  // HBAButton setting and initializing
+  setHBANr();
+  ShowHBAButtom.toolTipText  = \"Show the connected HBAAntenna \"+HBANr;
   
   // pass baseDP to selfstate Object to work with
   setValue(\"selfState.light\",\"toolTipText\",baseDP);
@@ -169,18 +171,55 @@ void reload() {
 
 }
 " 0
- E E E E 1 -1 -1 0  130 290
+ E "main(int x, int y)
+{
+
+}" 0
+ E E 1 -1 -1 0  130 290
 ""0  1
 E "#uses \"navPanel.ctl\"
 string baseDP=\"\";
+bool bDoubleClicked  = false;
 int rcuNr;
+int HBANr=20; // should be dynamic 
+string aS=\"\";
 
+void setHBANr() {
+  HBANr=rcuNr/2;
+  DebugN(\"RCUpnl setHBANr -> rcuNr: \"+rcuNr);
+  DebugN(\"RCUpnl setHBANr -> rcuNr/2: \"+rcuNr/2); 
+  DebugN(\"RCUpnl setHBANr -> HBANr: \"+HBANr); 
+}
 
+// routine for single mouse click
+void click() {
+  // set delay in case double click was meant
+  delay(0, 100); 
+  if (!bDoubleClicked) {
+    navPanel_setEvent(\"RCU\"+rcuNr,\"EventClick\");
+  }
+}
+
+// routine for double mouse click
+void dblClick() {
+  // indicate this is a doubleClick
+  bDoubleClicked = true;   
+}
+
+void gotoHBAPanel() {
+  if (dpExists(baseDP) ) {
+    LOG_DEBUG(\"Station_RCU:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
+    if (HBANr < 10) aS+=\"0\";
+    g_currentDatapoint=sysName+\"LOFAR_PIC_HBA\"+aS+HBANr;
+    navPanel_setEvent(\"HBA\"+aS+HBANr,\"ChangePanel\"); 
+  } else {
+    LOG_ERROR(\"Station_RCU:DoubleClick|HBAAntenna.pnl:Initialize|No HBA found in currentDatapoint.\"+baseDP);
+  }
+}
 
 void defineStateAntenna(string anAnt) {
   string anAntDp = g_currentDatapoint + \".\" + anAnt;
   
-	
   if (dpExists(anAntDp )) {
     if (dpConnect(\"setStateAntenna\", anAntDp + \":_online.._value\",
                   	                             anAntDp + \":_online.._invalid\") == -1) {
@@ -385,12 +424,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 528 108 536 125
+E E 0 1 1 0 1 E U  0 E 528 108 536 124
 0 2 0 "0s" 0 0 0 192 0 0  528 108 1
 1
-LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,13,5,69,0,0,0,0,0
+0 1
 LANG:1 1 x
 1 859 13 "" 0
 0
@@ -420,9 +458,8 @@ LANG:1 0
  E 0 1 1 0 1 E U  0 E 12 2 678 18
 0 2 0 "0s" 0 0 0 64 0 0  12 2 1
 1
-LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
+0 1
 LANG:1 1 .
 2 240
 "Text12"
@@ -437,12 +474,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 531 702 591 719
+E E 0 1 1 0 1 E U  0 E 530 702 592 718
 0 2 0 "0s" 0 0 0 193 0 0  561 702 1
 1
-LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
+0 1
 LANG:1 9 Backplane
 2 278
 "txt_polarization_LBL"
@@ -457,12 +493,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 168 109 176 126
+E E 0 1 1 0 1 E U  0 E 168 109 176 125
 0 2 0 "0s" 0 0 0 192 0 0  168 109 1
 1
-LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,13,5,69,0,0,0,0,0
+0 1
 LANG:1 1 x
 1 869 21 "" 0
 0
@@ -541,12 +576,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 350 108 358 125
+E E 0 1 1 0 1 E U  0 E 350 108 358 124
 0 2 0 "0s" 0 0 0 192 0 0  350 108 1
 1
-LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,13,5,69,0,0,0,0,0
+0 1
 LANG:1 1 x
 2 308
 "Text3"
@@ -561,12 +595,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 150 68 172 85
+E E 0 1 1 0 1 E U  0 E 149 68 173 84
 0 2 0 "0s" 0 0 0 193 0 0  161 68 1
 1
-LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
+0 1
 LANG:1 3 LBL
 2 310
 "Text9"
@@ -581,33 +614,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 331 68 355 85
+E E 0 1 1 0 1 E U  0 E 330 68 356 84
 0 2 0 "0s" 0 0 0 193 0 0  343 68 1
 1
-LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
+0 1
 LANG:1 3 LBH
-2 311
-"Text11"
-""
-1 506 66 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-165 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 508 68 534 85
-0 2 0 "0s" 0 0 0 193 0 0  521 68 1
-1
-LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
-LANG:1 3 HBA
 1 873 22 "" 0
 0
 1 874 22 "" 1
@@ -677,7 +689,7 @@ LANG:1 0
 {
   defineStateAntenna(\"HBAEnable\");
 }" 0
- E 0 1 1 0 1 E U  1 E 493 76 7 7
+ E 0 1 1 0 1 E 1 0 1 0 1 1 E 493 76 7 7
 6 651
 "rect_delay"
 ""
@@ -705,12 +717,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 349 636 382 653
+E E 0 1 1 0 1 E U  0 E 349 636 382 652
 0 2 0 "0s" 0 0 0 192 0 0  349 636 1
 1
-LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
+0 1
 LANG:1 5 Delay
 4 656
 "line_inputOff"
@@ -843,12 +854,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 444 516 496 533
+E E 0 1 1 0 1 E U  0 E 444 516 496 532
 0 2 0 "0s" 0 0 0 193 0 0  470 516 1
 1
-LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
+0 1
 LANG:1 9 overflows
 2 688
 "Text4"
@@ -863,12 +873,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 458 501 482 518
+E E 0 1 1 0 1 E U  0 E 457 501 483 517
 0 2 0 "0s" 0 0 0 193 0 0  470 501 1
 1
-LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
+0 1
 LANG:1 5 nr of
 1 884 45 "" 1
 0
@@ -971,9 +980,8 @@ LANG:1 0
 
 0
 1
-LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-0 ""
- 365 506 439 529
+LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
+0  365 506 439 529
 2 "9d" 9 0 0 2 0 -1  E E E
 14 735
 "txt_delay"
@@ -988,9 +996,8 @@ LANG:1 0
 
 0
 1
-LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-0 ""
- 388 634 502 657
+LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
+0  388 634 502 657
 2 "3.2f" 6 0 0 2 0 -1  E E E
 2 795
 "rcuLabel"
@@ -1005,12 +1012,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 300 20 332 37
+E E 0 1 1 2 1 E U  1 E 300 20 332 36
 0 2 2 "0s" 0 0 0 192 0 0  300 20 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,13,5,75,0,0,0,0,0
+0 1
 LANG:1 3 RCU
 2 855
 "PRIMITIVE_TEXT1"
@@ -1025,13 +1031,36 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 510 640 524 657
+E E 0 1 1 2 1 E U  1 E 510 640 524 656
 0 2 2 "0s" 0 0 0 192 0 0  510 640 1
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,13,5,50,0,0,0,0,0
+0 1
 LANG:1 2 ns
+13 928
+"ShowHBAButtom"
+""
+1 505 62 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+225 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0  503 60 627 92
+
+T 
+1
+LANG:1 16 Show HBA Antenna
+"main()
+{
+  gotoHBAPanel();
+}" 0
+ E E E
 0
 LAYER, 1 
 1
@@ -1061,43 +1090,43 @@ LAYER, 7
 1
 LANG:1 6 Layer8
 0
-3 10 "HighBandFilter"
+3 10 "HighBandFilter" -1
 "objects\\Hardware\\RCU_HB_Filter.pnl" 314 200 T 96 1 0 1 145 97
 0
-3 13 ""
+3 13 "" -1
 "objects\\Hardware\\RCU_bandSelection.pnl" 475 403 T 102 1 0 1 -45 7
 1
 "$Component""bandSelLbaHba"
-3 14 ""
+3 14 "" -1
 "objects\\Hardware\\RCU_Component.pnl" 81 654 T 103 1 0 1 93 -433
 2
 "$Caption""LBAReceiver"
 "$Component""VlEnable"
-3 15 "Group11"
+3 15 "Group11" -1
 "objects\\Hardware\\RCU_Component.pnl" 60 350 T 104 1 0 1 383 -129
 2
 "$Caption""HBAReceiver"
 "$Component""VhEnable"
-3 21 "Group13"
+3 21 "Group13" -1
 "objects\\Hardware\\RCU_bandSelection.pnl" 400 485 T 153 1 0 1 -149 -306
 1
 "$Component""bandSelLblLbh"
-3 22 "LowBandFilter"
+3 22 "LowBandFilter" -1
 "objects\\Hardware\\RCU_LB_Filter.pnl" 190 350 T 161 1 0 1 0 -53
 0
-3 41 ""
+3 41 "" -1
 "objects\\Hardware\\RCU_Attenuating.pnl" 224 553 T 188 1 0 1 231 -97
 0
-3 43 "selfState"
+3 43 "selfState" -1
 "objects\\lofar_self_state.pnl" 25 171 T 196 1 0 1 54.5 489.5
 0
-3 44 ""
+3 44 "" -1
 "objects\\Hardware\\RCU_ADC_Component.pnl" 273 516 T 200 1 0 1 27 -16
 0
-3 45 ""
+3 45 "" -1
 "objects\\Hardware\\RCU_TBBInfo.pnl" 164 436 T 220 1 0 1 -61 64
 0
-3 46 ""
+3 46 "" -1
 "objects\\Hardware\\RCU_TriggerInfo.pnl" 599 454 T 221 1 0 1 47 -196
 0
 0
