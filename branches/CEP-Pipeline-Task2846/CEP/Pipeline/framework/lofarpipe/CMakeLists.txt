@@ -33,7 +33,6 @@ python_install(
   support/remotecommand.py
   support/stateful.py
   support/utilities.py
-  tests/__init__.py
-  tests/lofaringredient.py
-  tests/UnitTester.py
   DESTINATION lofarpipe)
+
+add_subdirectory(tests)
