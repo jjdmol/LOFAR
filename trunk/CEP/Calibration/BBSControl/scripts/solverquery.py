@@ -29,6 +29,7 @@ class SolverQuery:
     def __init__(self, tablename=""):
         try:
             self.TIMING=True           # use this to activate timing of query functions
+            self.convertTime=False      # conver STARTTIME and ENDTIME to human readable
 
             # Reset frequencies and time vectors that are used for parameter retrieval
             # initialize SolverQuery attributes with defaults that can be recognized
@@ -143,7 +144,12 @@ class SolverQuery:
                 result=pt.taql(taqlcmd)  
                 parameter=result.getcol(parameter_name)
 
-                starttimes = result.getcol('STARTTIME')
+                if self.convertTime == True:
+                  taqlcmd= "SELECT STARTTIME FROM " + self.tablename + " WHERE STARTTIME >= "+ str(start_time) + " AND ENDTIME <= " + str(end_time) + " AND STARTFREQ >= "+ str(start_freq) + " AND ENDFREQ <= " + str(end_freq) + " AND LASTITER=TRUE"              
+                  resultTime=pt.taql(taqlcmd)
+                  starttimes = resultTime.getcol('STARTTIME')
+                else:
+                  starttimes = result.getcol('STARTTIME')
 
                 #print "readParameter(): len(parameter): ", len(parameter)  # DEBUG
                 #print "readParameter() result.nrows() = ", result.nrows()
@@ -161,7 +167,12 @@ class SolverQuery:
                 result=pt.taql(taqlcmd)  
                 parameter=result.getcol(parameter_name)
 
-                starttimes = result.getcol('STARTTIME')
+                if self.convertTime == True:
+                  taqlcmd= "SELECT STARTTIME FROM " + self.tablename + " WHERE STARTTIME >= "+ str(start_time) + " AND ENDTIME <= " + str(end_time) + " AND STARTFREQ >= "+ str(start_freq) + " AND ENDFREQ <= " + str(end_freq) + " AND LASTITER=TRUE"              
+                  resultTime=pt.taql(taqlcmd)
+                  starttimes = resultTime.getcol('STARTTIME')
+                else:
+                  starttimes = result.getcol('STARTTIME')
 
                 parmsDict[iteration]=parameter
 
@@ -176,7 +187,12 @@ class SolverQuery:
                 result=pt.taql(taqlcmd)
                 parameter=result.getcol(parameter_name)
 
-                starttimes = result.getcol('STARTTIME')
+                if self.convertTime == False:
+                  starttimes = result.getcol('STARTTIME')
+                else:
+                  taqlcmd="SELECT CTOD(STARTTIME s) FROM " + self.tablename
+                  resultTime=pt.taql(timecmd)
+                  starttimes = resultTime.getcol('STARTTIME')
 
                 #print "readParameter(): len(selection)", len(selection)  # DEBUG
                 #print "type(result).__name__: ", type(result).__name__
@@ -454,7 +470,7 @@ class SolverQuery:
             starttimes=result.getcol('STARTTIME')  # also select starttimes
             return corrMatrix, starttimes, getRank
         elif getStartTimes==False and getRank==True: 
-            return corrMatrix, getRanl
+            return corrMatrix, getRank
         else:
             return corrMatrix
 

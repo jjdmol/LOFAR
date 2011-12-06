@@ -2,10 +2,10 @@
 
 # Solver statistics dialog
 #
-# File:           SolverDialog.py
+# File:           solverdialog.py
 # Author:         Sven Duscha (duscha@astron.nl)
 # Date:           2010-08-05
-# Last change;    2011-05-18
+# Last change;    2011-12-06
 #
 #
 
@@ -46,6 +46,7 @@ class PlotWindow(QFrame):
       # PlotWindow has been created
       self.parent=parent            # parent object/class
       self.fig=None
+
       self.x = parent.x             # plotted x axis data
       self.y1 = parent.y1           # plotted y axis data
       self.y2 = parent.y2           # plotted y2 axis data
@@ -125,7 +126,7 @@ class PlotWindow(QFrame):
       self.setLayout(mainLayout)
 
       self.show()           # show the plotWindow widget
-      self.parent.setXLabel()
+#      self.parent.setXLabel()
       self.parent.setYLabel()
       self.plot()
 
@@ -140,7 +141,7 @@ class PlotWindow(QFrame):
    # Plot data that has been read
    #
    def plot(self):
-      print "PlotWindow::plot()"      # DEBUG
+      print "PlotWindow::plot()"            # DEBUG
 
       parm=self.parent.parmsComboBox.currentText()   # Solution parameter, e.g. Gain:1:1:LBA001
       parameter=str(self.parent.parametersComboBox.currentText())    # Get solver parameter from drop down
@@ -156,7 +157,7 @@ class PlotWindow(QFrame):
       self.ax1.set_ylabel(parm + ":" + self.parent.parmValueComboBox.currentText())
 
       np.set_printoptions(precision=1)
-      self.ax1.get_xaxis().set_visible(False)  # TODO: How to get correct x-axis ticks?
+#      self.ax1.get_xaxis().set_visible(False)  # TODO: How to get correct x-axis ticks?
 
 
       np.set_printoptions(precision=1)
