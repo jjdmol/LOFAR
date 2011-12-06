@@ -29,15 +29,30 @@
 */
 class FrequencyPlotPage : public TwoDimensionalPlotPage {
 	public:
+		virtual void processStatistics(class StatisticsCollection *statCollection, const std::vector<AntennaInfo> &antennas)
+		{
+			_statistics.clear();
+			
+			const std::map<double, class DefaultStatistics> &map = statCollection->FrequencyStatistics();
+			
+			for(std::map<double, class DefaultStatistics>::const_iterator i=map.begin();i!=map.end();++i)
+			{
+				_statistics.insert(std::pair<double, DefaultStatistics>(i->first/1000000.0, i->second));
+			}
+		}
+		
 		virtual const std::map<double, class DefaultStatistics> &GetStatistics() const
 		{
-			return GetStatCollection()->FrequencyStatistics();
+			return _statistics;
 		}
 		
 		virtual void StartLine(Plot2D &plot, const std::string &name)
 		{
-			plot.StartLine(name, "Frequency (Hz)", "Value", false);
+			plot.StartLine(name, "Frequency (MHz)", "Value", false);
 		}
+		
+	private:
+		std::map<double, class DefaultStatistics> _statistics;
 };
 
 #endif
