@@ -2,4 +2,4 @@
 
 #include(LofarCTest)
 ENABLE_TESTING()
-ADD_TEST(PipelineTests python UnitTester.py -x results.xml)
+ADD_TEST(PipelineTests python ${CMAKE_CURRENT_BINARY_DIR}/CEP/Pipeline/framework/lofarpipe/tests/UnitTester.py -x results.xml)
