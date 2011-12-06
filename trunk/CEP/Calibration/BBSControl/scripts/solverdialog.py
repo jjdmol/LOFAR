@@ -179,7 +179,7 @@ class PlotWindow(QFrame):
       # Solver log plot
       self.ax2=self.fig.add_subplot(212, sharex=self.ax1)     # sharex for common zoom
       # Set labels
-      self.ax2.set_xticklabels(self.ax1.get_xticklabels(), visible=False)
+      #self.ax2.set_xticklabels(self.ax1.get_xticklabels(), visible=True)
       self.ax2.set_ylabel(self.parent.parametersComboBox.currentText())
       if self.parent.perIteration==True:
          x=range(0, len(self.y2))

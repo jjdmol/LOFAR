@@ -183,7 +183,8 @@ class SolverQuery:
                 #print "result.nrows(): ", result.nrows()
                 #print "type(selection).__name__: ", type(selection).__name__
               
-                for iter in range(1, self.getMaxIter()+2):  # +1 see arange doc, +1 due to LSQFit behaviour of one iteration more
+                for iter in range(1, len(parameter)+1):  # +1 see arange doc
+                    print "iter = ", iter," of len(parameter) = ", len(parameter)  # DEBUG
                     parmsDict[iter]=parameter[iter-1]
 
 
