@@ -1,0 +1,11 @@
+# Root directories of external packages
+set(BOOST_ROOT_DIR     $ENV{VO_LOFAR_SW_DIR}/opt/boost    )
+set(CASACORE_ROOT_DIR  $ENV{VO_LOFAR_SW_DIR}/opt/casacore )
+set(CFITSIO_ROOT_DIR   $ENV{VO_LOFAR_SW_DIR}/opt/cfitsio  )
+set(HDF5_ROOT_DIR      $ENV{VO_LOFAR_SW_DIR}/opt/hdf5     )
+set(LOG4CPLUS_ROOT_DIR $ENV{VO_LOFAR_SW_DIR}/opt/log4cplus)
+set(PYRAP_ROOT_DIR     $ENV{VO_LOFAR_SW_DIR}/opt/pyrap    )
+set(WCSLIB_ROOT_DIR    $ENV{VO_LOFAR_SW_DIR}/opt/wcslib   )
+
+# FindHDF5.cmake only checks environment variable HDF5_ROOT :-(
+set(ENV{HDF5_ROOT} ${HDF5_ROOT_DIR})
