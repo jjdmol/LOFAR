@@ -12,6 +12,7 @@ install(PROGRAMS
   CNProcessing.sh
   IONProcessing.sh
   controller.sh
+  gracefullyStopBGProcessing.sh
   ${CMAKE_CURRENT_BINARY_DIR}/locations.sh
   watchlogs.sh
   commandOLAP.py

@@ -1,15 +1,8 @@
 #!/bin/bash
 
+source locations.sh
+
 function start() {
-  source locations.sh
-
-  # list both the partition directly (small partitions) and recursively (large partitions) to get all -32 subpartitions
-  # bghierarchy needs a valid stdin for some reason and will read from it, so provide a fake one
-  SUBPARTITIONS="`(bghierarchy -s $PARTITION;bghierarchy -s \`bghierarchy -s $PARTITION\`) </dev/null`"
-
-  # xxx-32 means both xxx-J00 and xxx-J01
-  PSETS=`for i in $SUBPARTITIONS; do echo $i; done|grep -- "-32$"|sort -u|sed 's/-32$/-J00/;p;s/-J00$/-J01/'|xargs -L 1 host -4|cut -d\  -f 4|tr '\n' ','`
-
   # create a new log dir
   rm -f "$LOGSYMLINK" || true
   mkdir -p "$LOGDIR"
@@ -32,6 +25,14 @@ function start() {
   then
     PID=DOWN
   fi   
+}
+
+function stop() {
+  # graceful exit
+  alarm 10 gracefullyStopBGProcessing.sh
+
+  # ungraceful exit
+  [ -e /proc/$PID ] && kill -15 "$PID" && (sleep 2; kill -9 "$PID")
 }
 
 . controller.sh

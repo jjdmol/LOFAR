@@ -1,8 +1,8 @@
 #!/bin/bash
 
-function start() {
-  source locations.sh
+source locations.sh
 
+function start() {
   TMPDIR="`mktemp -d`"
   PIDFILE="$TMPDIR/pid"
 
@@ -23,11 +23,43 @@ function start() {
 }
 
 function stop() {
-  # ask DNA to kill our jobs
-  #bgjobs -u $USER -s | cut -d' '  -f 1 | xargs -L 1 bgkilljob
+  # graceful exit
+  alarm 10 gracefullyStopBGProcessing.sh
 
-  # mpikill only works when mpirun has started running the application
-  mpikill "$PID" || kill -9 "$PID"
+  # ungraceful exit
+  [ -e /proc/$PID ] && (
+    # mpikill only works when mpirun has started running the application
+    mpikill "$PID" ||
+
+    # ask DNA to kill the job
+    (bgjobs -u $USER -s | awk "/$PARTITION/ { print \$1; }" | xargs -L 1 bgkilljob) ||
+
+    # kill -9 is the last resort
+    kill -9 "$PID"
+  ) && sleep 5
+
+  # wait for job to die
+  while true
+  do
+    JOBSTATUS=`bgjobs -u $USER -s | awk "/$PARTITION/ { print \\$6; }"`
+    JOBID=`bgjobs -u $USER -s | awk "/$PARTITION/ { print \\$1; }"`
+
+    if [ -z "$JOBID" ]
+    then
+      # job is gone
+      break
+    fi  
+
+    case "$JOBSTATUS" in
+      dying)
+        sleep 1
+        continue ;;
+
+      *)
+        echo "Failed to kill BG/P job $JOBID. Status is $JOBSTATUS"
+        break ;;
+    esac
+  done
 }
 
 . controller.sh

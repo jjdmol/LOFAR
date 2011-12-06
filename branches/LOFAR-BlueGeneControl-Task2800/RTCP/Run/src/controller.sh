@@ -1,6 +1,12 @@
 #!/bin/bash
 COMMAND=$1
 
+# helper function to limit the execution time of a command. usage:
+# alarm timeout cmd arg1 arg2
+function alarm() {
+  perl -e 'alarm shift; exec @ARGV' "$@";
+}
+
 type getpid >&/dev/null || function getpid() {
   PID=DOWN
   PIDFILE="/tmp/`procname`-$USER.pid"
