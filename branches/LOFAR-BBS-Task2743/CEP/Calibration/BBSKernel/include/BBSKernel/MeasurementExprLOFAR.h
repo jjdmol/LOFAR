@@ -38,7 +38,6 @@
 #include <BBSKernel/VisBuffer.h>
 #include <BBSKernel/Expr/CachePolicy.h>
 #include <BBSKernel/Expr/Expr.h>
-#include <BBSKernel/Expr/HamakerDipole.h>
 #include <BBSKernel/Expr/Scope.h>
 #include <BBSKernel/Expr/Source.h>
 #include <ParmDB/ParmDB.h>

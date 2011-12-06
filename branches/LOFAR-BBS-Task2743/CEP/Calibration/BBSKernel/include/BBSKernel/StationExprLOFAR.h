@@ -36,7 +36,6 @@
 #include <BBSKernel/Expr/CachePolicy.h>
 #include <BBSKernel/Expr/Expr.h>
 #include <BBSKernel/Expr/ExprValue.h>
-#include <BBSKernel/Expr/HamakerDipole.h>
 #include <BBSKernel/Expr/Scope.h>
 #include <ParmDB/SourceDB.h>
 #include <measures/Measures/MDirection.h>

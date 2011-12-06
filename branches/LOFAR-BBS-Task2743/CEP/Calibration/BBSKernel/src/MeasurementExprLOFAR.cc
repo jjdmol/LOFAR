@@ -149,21 +149,6 @@ void MeasurementExprLOFAR::makeForwardExpr(SourceDB &sourceDB,
             instrument->station(i)->position(), refPhase);
     }
 
-    HamakerBeamCoeff coeffLBA, coeffHBA;
-    if(config.useBeam())
-    {
-        // Read LBA beam model coefficients.
-        casa::Path path;
-        path = config.getBeamConfig().getElementPath();
-        path.append("element_beam_HAMAKER_LBA.coeff");
-        coeffLBA.init(path);
-
-        // Read HBA beam model coefficients.
-        path = config.getBeamConfig().getElementPath();
-        path.append("element_beam_HAMAKER_HBA.coeff");
-        coeffHBA.init(path);
-    }
-
     IonosphereExpr::Ptr exprIonosphere;
     if(config.useIonosphere())
     {
@@ -200,7 +185,7 @@ void MeasurementExprLOFAR::makeForwardExpr(SourceDB &sourceDB,
                 exprDDE[j] = compose(exprDDE[j],
                     makeBeamExpr(itsScope, instrument->station(j), refFreq,
                     exprPatchPositionITRF, exprRefDelayITRF, exprRefTileITRF,
-                    config.getBeamConfig(), coeffLBA, coeffHBA));
+                    config.getBeamConfig()));
             }
 
             // Directional TEC.
@@ -396,21 +381,6 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
         Expr<Vector<3> >::Ptr exprRefTileITRF =
             makeITRFExpr(instrument->position(), exprRefTile);
 
-        HamakerBeamCoeff coeffLBA, coeffHBA;
-        if(config.useBeam())
-        {
-            // Read LBA beam model coefficients.
-            casa::Path path;
-            path = config.getBeamConfig().getElementPath();
-            path.append("element_beam_HAMAKER_LBA.coeff");
-            coeffLBA.init(path);
-
-            // Read HBA beam model coefficients.
-            path = config.getBeamConfig().getElementPath();
-            path.append("element_beam_HAMAKER_HBA.coeff");
-            coeffHBA.init(path);
-        }
-
         // Functor for the creation of the ionosphere sub-expression.
         IonosphereExpr::Ptr exprIonosphere;
         if(config.useIonosphere())
@@ -447,7 +417,7 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
                         makeBeamExpr(itsScope, instrument->station(i),
                         buffer->getReferenceFreq(), exprRefPhaseITRF,
                         exprRefDelayITRF, exprRefTileITRF,
-                        config.getBeamConfig(), coeffLBA, coeffHBA));
+                        config.getBeamConfig()));
                 }
 
                 // Ionosphere.
@@ -495,7 +465,7 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
                         makeBeamExpr(itsScope, instrument->station(i),
                         buffer->getReferenceFreq(), exprPatchPositionITRF,
                         exprRefDelayITRF, exprRefTileITRF,
-                        config.getBeamConfig(), coeffLBA, coeffHBA));
+                        config.getBeamConfig()));
                 }
 
                 // Directional TEC.

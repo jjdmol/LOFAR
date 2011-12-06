@@ -39,6 +39,8 @@ install(FILES
   VisSelection.h
   DESTINATION include/${PACKAGE_NAME})
 install(FILES
+  Expr/AntennaElementLBA.h
+  Expr/AntennaElementHBA.h
   Expr/AntennaFieldThetaPhi.h
   Expr/AzEl.h
   Expr/BasicExpr.h
@@ -62,7 +64,6 @@ install(FILES
   Expr/FlagIf.h
   Expr/GaussianCoherence.h
   Expr/GaussianSource.h
-  Expr/HamakerDipole.h
   Expr/IonPhaseShift.h
   Expr/ITRFDirection.h
   Expr/LinearToCircularRL.h

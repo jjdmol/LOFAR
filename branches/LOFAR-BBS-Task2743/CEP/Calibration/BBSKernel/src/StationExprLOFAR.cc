@@ -127,21 +127,6 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
         Expr<Vector<3> >::Ptr exprRefTileITRF =
             makeITRFExpr(instrument->position(), exprRefTile);
 
-        HamakerBeamCoeff coeffLBA, coeffHBA;
-        if(config.useBeam())
-        {
-            // Read LBA beam model coefficients.
-            casa::Path path;
-            path = config.getBeamConfig().getElementPath();
-            path.append("element_beam_HAMAKER_LBA.coeff");
-            coeffLBA.init(path);
-
-            // Read HBA beam model coefficients.
-            path = config.getBeamConfig().getElementPath();
-            path.append("element_beam_HAMAKER_HBA.coeff");
-            coeffHBA.init(path);
-        }
-
         // Functor for the creation of the ionosphere sub-expression.
         IonosphereExpr::Ptr exprIonosphere;
         if(config.useIonosphere())
@@ -176,8 +161,7 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
                     itsExpr[i] = compose(itsExpr[i],
                         makeBeamExpr(itsScope, instrument->station(i),
                         refFreq, exprRefPhaseITRF, exprRefDelayITRF,
-                        exprRefTileITRF, config.getBeamConfig(), coeffLBA,
-                        coeffHBA));
+                        exprRefTileITRF, config.getBeamConfig()));
                 }
 
                 // Ionosphere.
@@ -224,8 +208,7 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
                     itsExpr[i] = compose(itsExpr[i],
                         makeBeamExpr(itsScope, instrument->station(i), refFreq,
                         exprPatchPositionITRF, exprRefDelayITRF,
-                        exprRefTileITRF, config.getBeamConfig(), coeffLBA,
-                        coeffHBA));
+                        exprRefTileITRF, config.getBeamConfig()));
                 }
 
                 // Directional TEC.

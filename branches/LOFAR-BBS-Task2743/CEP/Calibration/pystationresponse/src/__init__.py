@@ -91,19 +91,6 @@ class stationresponse(StationResponse):
         """
         self._setRefTile(ra, dec)
 
-    def setRefOrientation (self, orientation):
-        """Set the orientation of the +X dipole, i.e. the angle in radians
-        between the +X dipole and the +P axis. The angle is measured from the +P
-        axis, increasing towards the +Q axis (roughly East over North). The
-        orientation of the +Y dipole is assumed to be +90 degrees away from
-        orientation of the +X dipole.
-
-        `orientation`
-          Orientation of the +X dipole expressed as the angle from the +P axis.
-          Defaults to 5/4*pi, or roughly SW.
-        """
-        self._setRefOrientation(orientation)
-
     def setDirection (self, ra, dec):
         """Set the direction of interest (can be and often will be different
         from the pointing). By default, PHASE_DIR of field 0 is used.

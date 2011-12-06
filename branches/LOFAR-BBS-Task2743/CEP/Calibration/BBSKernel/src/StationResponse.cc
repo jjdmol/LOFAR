@@ -24,10 +24,11 @@
 #include <lofar_config.h>
 #include <BBSKernel/StationResponse.h>
 #include <BBSKernel/Exceptions.h>
+#include <BBSKernel/Expr/AntennaElementLBA.h>
+#include <BBSKernel/Expr/AntennaElementHBA.h>
 #include <BBSKernel/Expr/AntennaFieldThetaPhi.h>
 #include <BBSKernel/Expr/CachePolicy.h>
 #include <BBSKernel/Expr/ExprAdaptors.h>
-#include <BBSKernel/Expr/HamakerDipole.h>
 #include <BBSKernel/Expr/ITRFDirection.h>
 #include <BBSKernel/Expr/Literal.h>
 #include <BBSKernel/Expr/MatrixInverse.h>
@@ -65,18 +66,12 @@ StationResponse::StationResponse(const casa::MeasurementSet &ms,
     bool inverse, bool useElementBeam, bool useArrayFactor, bool conjugateAF)
     :   itsRefDelay(new Dummy<Vector<2> >()),
         itsRefTile(new Dummy<Vector<2> >()),
-        itsRefOrientation(new Dummy<Scalar>()),
         itsDirection(new Dummy<Vector<2> >())
 {
     // Set pointing and beamformer reference directions towards NCP by default.
     setRefDelay(casa::MDirection());
     setRefTile(casa::MDirection());
     setDirection(casa::MDirection());
-
-    // The positive X dipole direction is SW of the reference orientation, which
-    // translates to a phi coordinate of 5/4*pi in the topocentric spherical
-    // coordinate system.
-    setRefOrientation(5.0 * casa::C::pi_4);
 
     // Load observation details.
     Instrument::Ptr instrument = initInstrument(ms);
@@ -93,13 +88,6 @@ StationResponse::StationResponse(const casa::MeasurementSet &ms,
     Expr<Vector<3> >::Ptr exprRefTileITRF =
         Expr<Vector<3> >::Ptr(new ITRFDirection(instrument->position(),
         itsRefTile));
-
-    // Load beam model coefficients.
-    HamakerBeamCoeff coeffLBA, coeffHBA;
-    coeffLBA.init(casa::Path("$LOFARROOT/share/element_beam_HAMAKER_LBA"
-        ".coeff"));
-    coeffHBA.init(casa::Path("$LOFARROOT/share/element_beam_HAMAKER_HBA"
-        ".coeff"));
 
     itsExpr.reserve(instrument->nStations());
     for(size_t i = 0; i < instrument->nStations(); ++i)
@@ -137,15 +125,13 @@ StationResponse::StationResponse(const casa::MeasurementSet &ms,
 
                 if(field->isHBA())
                 {
-                    exprElementBeam[j] =
-                        Expr<JonesMatrix>::Ptr(new HamakerDipole(coeffHBA,
-                        exprThetaPhi, itsRefOrientation));
+                    exprElementBeam[i] =
+                        Expr<JonesMatrix>::Ptr(new AntennaElementHBA(exprThetaPhi));
                 }
                 else
                 {
                     exprElementBeam[j] =
-                        Expr<JonesMatrix>::Ptr(new HamakerDipole(coeffLBA,
-                        exprThetaPhi, itsRefOrientation));
+                        Expr<JonesMatrix>::Ptr(new AntennaElementLBA(exprThetaPhi));
                 }
 
                 Expr<JonesMatrix>::Ptr exprRotation =
@@ -248,16 +234,6 @@ void StationResponse::setRefTile(const casa::MDirection &reference)
     radec.assign(0, Matrix(angles.getBaseValue()(0)));
     radec.assign(1, Matrix(angles.getBaseValue()(1)));
     itsRefTile->setValue(radec);
-
-    // Clear cache.
-    itsCache.clear();
-    itsCache.clearStats();
-}
-
-void StationResponse::setRefOrientation(double orientation)
-{
-    // Update dipole reference orientation.
-    itsRefOrientation->setValue(Scalar(Matrix(orientation)));
 
     // Clear cache.
     itsCache.clear();

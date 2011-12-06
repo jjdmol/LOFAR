@@ -66,13 +66,6 @@ namespace LOFAR { namespace BBS  {
     // relevant only for HBA observations.
     void setRefTile(double ra, double dec);
 
-    // Set the orientation of the +X dipole, i.e. the angle in radians between
-    // the +X dipole and the +P axis. The angle is measured from the +P axis,
-    // increasing towards the +Q axis (roughly East over North). The orientation
-    // of the +Y dipole is assumed to be +90 degrees away from orientation of
-    // the +X dipole.
-    void setRefOrientation(double orientation);
-
     // Set the direction of interest in radians, J2000. Can and often will be
     // different than the delay and/or tile reference direction.
     void setDirection(double ra, double dec);
@@ -131,11 +124,6 @@ namespace LOFAR { namespace BBS  {
   {
     MVDirection radec(Quantity(ra,"rad"), Quantity(dec,"rad"));
     itsResponse->setRefTile(MDirection(radec, MDirection::J2000));
-  }
-
-  void PyStationResponse::setRefOrientation(double orientation)
-  {
-    itsResponse->setRefOrientation(orientation);
   }
 
   void PyStationResponse::setDirection(double ra, double dec)
@@ -276,8 +264,6 @@ namespace LOFAR { namespace BBS  {
         (boost::python::arg("ra"), boost::python::arg("dec")))
       .def ("_setRefTile", &PyStationResponse::setRefTile,
         (boost::python::arg("ra"), boost::python::arg("dec")))
-      .def ("_setRefOrientation", &PyStationResponse::setRefOrientation,
-        (boost::python::arg("orientation")))
       .def ("_setDirection", &PyStationResponse::setDirection,
         (boost::python::arg("ra"), boost::python::arg("dec")))
       .def ("_evaluate0", &PyStationResponse::evaluate0,

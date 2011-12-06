@@ -24,13 +24,14 @@
 #include <lofar_config.h>
 #include <BBSKernel/MeasurementExprLOFARUtil.h>
 #include <BBSKernel/Exceptions.h>
+#include <BBSKernel/Expr/AntennaElementLBA.h>
+#include <BBSKernel/Expr/AntennaElementHBA.h>
 #include <BBSKernel/Expr/AntennaFieldThetaPhi.h>
 #include <BBSKernel/Expr/AzEl.h>
 #include <BBSKernel/Expr/Delay.h>
 #include <BBSKernel/Expr/EquatorialCentroid.h>
 #include <BBSKernel/Expr/ExprAdaptors.h>
 #include <BBSKernel/Expr/FaradayRotation.h>
-#include <BBSKernel/Expr/HamakerDipole.h>
 #include <BBSKernel/Expr/ITRFDirection.h>
 #include <BBSKernel/Expr/Literal.h>
 #include <BBSKernel/Expr/LMN.h>
@@ -232,9 +233,7 @@ makeBeamExpr(Scope&,
     const Expr<Vector<3> >::Ptr &exprITRF,
     const Expr<Vector<3> >::Ptr &exprRefDelayITRF,
     const Expr<Vector<3> >::Ptr &exprRefTileITRF,
-    const BeamConfig &config,
-    const HamakerBeamCoeff &coeffLBA,
-    const HamakerBeamCoeff &coeffHBA)
+    const BeamConfig &config)
 {
     // Check if the beam model can be computed for this station.
     if(!station->isPhasedArray())
@@ -243,11 +242,6 @@ makeBeamExpr(Scope&,
             " LOFAR station or the additional information needed to compute the"
             " station beam is missing.");
     }
-
-    // The positive X dipole direction is SW of the reference orientation, which
-    // translates to a phi coordinate of 5/4*pi in the topocentric spherical
-    // coordinate system.
-    Expr<Scalar>::Ptr exprOrientation(new Literal(5.0 * casa::C::pi_4));
 
     // Build expressions for the dual-dipole or tile beam of each antenna field.
     Expr<JonesMatrix>::Ptr exprElementBeam[2];
@@ -265,14 +259,12 @@ makeBeamExpr(Scope&,
             if(field->isHBA())
             {
                 exprElementBeam[i] =
-                    Expr<JonesMatrix>::Ptr(new HamakerDipole(coeffHBA,
-                    exprThetaPhi, exprOrientation));
+                    Expr<JonesMatrix>::Ptr(new AntennaElementHBA(exprThetaPhi));
             }
             else
             {
                 exprElementBeam[i] =
-                    Expr<JonesMatrix>::Ptr(new HamakerDipole(coeffLBA,
-                    exprThetaPhi, exprOrientation));
+                    Expr<JonesMatrix>::Ptr(new AntennaElementLBA(exprThetaPhi));
             }
 
             Expr<JonesMatrix>::Ptr exprRotation =
