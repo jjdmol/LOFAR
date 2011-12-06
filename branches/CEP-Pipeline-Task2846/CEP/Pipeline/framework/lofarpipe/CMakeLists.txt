@@ -34,5 +34,5 @@ python_install(
   support/stateful.py
   support/utilities.py
   tests/__init__.py
-  tests/lofaringredients.py
+  tests/lofaringredient.py
   DESTINATION lofarpipe)
