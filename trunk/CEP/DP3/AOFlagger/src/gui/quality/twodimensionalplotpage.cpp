@@ -324,14 +324,19 @@ void TwoDimensionalPlotPage::updateDataWindow()
 	if(_plot.PointSetCount() != 0)
 	{
 		const Plot2DPointSet &pointSet = _plot.GetPointSet(0);
-		size_t valueCount = pointSet.Size();
+		const size_t valueCount = pointSet.Size();
 		for(size_t i=0; i<valueCount; ++i)
 		{
 			const double
 				x = pointSet.GetX(i),
 				y = pointSet.GetY(i);
-			
-			_dataStream << i << '\t' << x << '\t' << y << '\n';
+			if(pointSet.HasTickLabels())
+			{
+				std::string label = pointSet.TickLabels()[i];
+				_dataStream << i << '\t' << label << '\t' << y << '\n';
+			}
+			else
+				_dataStream << i << '\t' << x << '\t' << y << '\n';
 		}
 	}
 	_dataWindow->SetData(_dataStream.str());
