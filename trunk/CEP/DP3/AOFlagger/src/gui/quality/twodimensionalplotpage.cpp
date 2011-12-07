@@ -39,7 +39,7 @@ TwoDimensionalPlotPage::TwoDimensionalPlotPage() :
 	_dCountButton("DCount"),
 	_dMeanButton("DMean"),
 	_dVarianceButton("DVariance"),
-	_rfiRatioButton("RFIRatio"),
+	_rfiPercentageButton("RFIPercentage"),
 	_snrButton("SNR"),
 	_polarizationFrame("Polarization"),
 	_polXXButton("XX"),
@@ -100,7 +100,7 @@ void TwoDimensionalPlotPage::updatePlot()
 			plotStatistic(QualityTablesFormatter::DMeanStatistic);
 		if(_dVarianceButton.get_active())
 			plotStatistic(QualityTablesFormatter::DVarianceStatistic);
-		if(_rfiRatioButton.get_active())
+		if(_rfiPercentageButton.get_active())
 			plotStatistic(QualityTablesFormatter::RFIPercentageStatistic);
 		if(_snrButton.get_active())
 			plotStatistic(QualityTablesFormatter::SignalToNoiseStatistic);

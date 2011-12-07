@@ -22,6 +22,7 @@
 
 #include <gtkmm/window.h>
 #include <gtkmm/textview.h>
+#include <gtkmm/scrolledwindow.h>
 
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
@@ -30,8 +31,11 @@ class DataWindow : public Gtk::Window {
 	public:
 		DataWindow()
 		{
-			add(_textView);
+			_scrolledWindow.add(_textView);
 			_textView.show();
+			
+			add(_scrolledWindow);
+			_scrolledWindow.show();
 		}
     ~DataWindow()
     {
@@ -41,6 +45,7 @@ class DataWindow : public Gtk::Window {
 			_textView.get_buffer()->set_text(data);
 		}
 	private:
+		Gtk::ScrolledWindow _scrolledWindow;
 		Gtk::TextView _textView;
 };
 
