@@ -39,7 +39,7 @@ TwoDimensionalPlotPage::TwoDimensionalPlotPage() :
 	_dCountButton("DCount"),
 	_dMeanButton("DMean"),
 	_dVarianceButton("DVariance"),
-	_rfiPercentageButton("RFIPercentage"),
+	_rfiPercentageButton("RFI"),
 	_snrButton("SNR"),
 	_polarizationFrame("Polarization"),
 	_polXXButton("XX"),

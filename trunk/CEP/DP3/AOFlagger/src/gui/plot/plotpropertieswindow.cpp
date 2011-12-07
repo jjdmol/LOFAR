@@ -101,7 +101,7 @@ void PlotPropertiesWindow::initVRangeWidgets()
 	_minMaxVRangeButton.set_group(group);
 	_minMaxVRangeButton.signal_clicked().connect(sigc::mem_fun(*this, &PlotPropertiesWindow::onVRangeChanged));
 
-	_vRangeBox.pack_start(_winsorizedVRangeButton);
+	//_vRangeBox.pack_start(_winsorizedVRangeButton);
 	_winsorizedVRangeButton.set_group(group);
 	_winsorizedVRangeButton.signal_clicked().connect(sigc::mem_fun(*this, &PlotPropertiesWindow::onVRangeChanged));
 	_vRangeBox.pack_start(_specifiedVRangeButton);
