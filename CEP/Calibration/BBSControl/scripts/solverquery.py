@@ -200,9 +200,7 @@ class SolverQuery:
                 #print "type(selection).__name__: ", type(selection).__name__
               
                 for iter in range(1, len(parameter)+1):  # +1 see arange doc
-                    print "iter = ", iter," of len(parameter) = ", len(parameter)  # DEBUG
                     parmsDict[iter]=parameter[iter-1]
-
 
             else:
                 print "readParameter() unknown iteration keyword"
@@ -875,13 +873,53 @@ class SolverQuery:
     # Return a histogram of converged solutions, i.e. distribution
     # of iterations where solver converged or max iter
     #
-    # TODO
+    # TODO: This is better done in the plotting class
     def histogramConvergedIteration(self):
         print "histogramConvergedIteration():"
 
         # Get all converged solutions
 
         # make a histogram of the data
+
+
+    # Get the message from the solver for a (series of cells)
+    #
+    def getMessages(self, start_time, end_time, start_freq, end_freq, iteration="last"):
+        print "getMessage()"    # DEBUG
+
+        messagesDict={}       # create an empty dictionary
+        # return all iterations (default behaviour)
+        if iteration == "all":
+           messagesDict["result"]="all"
+
+           # Loop over all iterations
+           for iter in range(1, maxIter+1):
+                 taqlcmd="SELECT * FROM " + self.tablename + " WHERE STARTTIME>=" + str(start_freq) + " AND ENDTIME<=" + str(end_freq) + " AND STARTFREQ>=" + str(start_freq) + " AND ENDFREQ<=" + str(end_freq) + " AND ITER=" + str(iter)
+                 result=pt.taql(taqlcmd)           # execute TaQL command
+                 messagesDict[iter]=result.getcol("MESSAGE")
+           return messagesDict
+
+        # return the last iteration only
+        elif iteration == "Last" or iteration == "last":
+           #print "readCells(): last"        # DEBUG
+           messagesDict["result"]="last"
+
+           taqlcmd="SELECT * FROM " + self.tablename + " WHERE STARTTIME>=" + str(start_freq) + " AND ENDTIME<=" + str(end_freq) + " AND STARTFREQ>=" + str(start_freq) + " AND ENDFREQ<=" + str(end_freq) + " AND LASTITER=TRUE"
+           result=pt.taql(taqlcmd)           # execute TaQL command
+           messagesDict["last"]=result.getcol("MESSAGE")
+   
+           return messagesDict
+
+        # return only a particular iteration
+        elif type(iteration).__name__ == "int":
+            #print "iteration: ", iteration    # DEBUG
+            messagesDict["result"]="iteration"
+            taqlcmd="SELECT * FROM " + self.tablename + " WHERE STARTFREQ=" + str(start_freq) + " AND ENDFREQ=" + str(end_freq) + " AND ITER=" + str(iteration) + " ORDERBY STARTFREQ"
+            result=pt.taql(taqlcmd)        # execute TaQL command      
+            
+            messagesDict[iteration]=result.getcol("MESSAGE")
+
+            return messagesDict
 
 
 
@@ -1013,6 +1051,9 @@ class SolverQuery:
         if len(self.frequencies) == 0:
             taqlcmd="SELECT UNIQUE STARTFREQ, ENDFREQ FROM " + self.tablename
             self.frequencies=pt.taql(taqlcmd)
+            
+            self.startFreqs=self.frequencies.getcol("STARTFREQ")
+            self.endFreqs=self.frequencies.getcol("ENDFREQ")
 
 
     # Get table of frequencies with STARTFREQ, ENDFREQ column
@@ -1038,14 +1079,14 @@ class SolverQuery:
     #
     def setStartFreqs(self):
         taqlcmd="SELECT UNIQUE STARTFREQ FROM " + self.tablename
-        self.startfreqs=pt.taql(taqlcmd)
+        self.startFreqs=pt.taql(taqlcmd)
 
 
     # Return the unique STARTTIMES present in the
     # Measurementset
     #
     def getStartFreqs(self):
-        return self.startfreqs
+        return self.startFreqs
 
 
     # Read the unique ENDTIMES present in the
@@ -1053,14 +1094,14 @@ class SolverQuery:
     #
     def setEndFreqs(self):
         taqlcmd="SELECT UNIQUE ENDFREQ FROM " + self.tablename
-        self.endfreqs=pt.taql(taqlcmd)
+        self.endFreqs=pt.taql(taqlcmd)
 
 
     # Return the unique ENDTIMES present in the
     # Measurementset
     #
     def getEndFreqs(self):
-        return self.endfreqs
+        return self.endFreqs
 
 
     # Read the MAXITER value from the solver table Measurementset,
