@@ -335,6 +335,7 @@ void TwoDimensionalPlotPage::onPlotPropertiesClicked()
 void TwoDimensionalPlotPage::updateDataWindow()
 {
 	std::stringstream _dataStream;
+	 _dataStream << std::setprecision(14);
 	if(_plot.PointSetCount() != 0)
 	{
 		const Plot2DPointSet &pointSet = _plot.GetPointSet(0);
