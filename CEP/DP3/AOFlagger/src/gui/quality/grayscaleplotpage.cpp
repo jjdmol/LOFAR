@@ -230,6 +230,7 @@ void GrayScalePlotPage::UpdateImage()
 			
 			setToSelectedPhase(data);
 			
+			_imageWidget.SetZAxisDescription(StatisticsDerivator::GetDescWithUnits(GetSelectedStatisticKind()));
 			_imageWidget.SetImage(data.GetSingleImage());
 			_imageWidget.SetOriginalMask(data.GetSingleMask());
 			if(pair.second != 0)
