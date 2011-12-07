@@ -56,6 +56,7 @@ void Plot2D::Render(Gtk::DrawingArea &drawingArea)
 		Gtk::Allocation allocation = drawingArea.get_allocation();
 		_width = allocation.get_width();
 		_height = allocation.get_height();
+		render(cr);
 	}
 }
 
