@@ -273,15 +273,27 @@ void actionQueryTime(const std::string &kindName, const std::string &filename)
 
 void actionSummarize(const std::string &filename)
 {
-	MeasurementSet *ms = new MeasurementSet(filename);
-	const unsigned polarizationCount = ms->GetPolarizationCount();
-	delete ms;
+	bool remote = aoRemote::ClusteredObservation::IsClusteredFilename(filename);
+	StatisticsCollection collection;
+	if(remote)
+	{
+		aoRemote::ClusteredObservation *observation = aoRemote::ClusteredObservation::Load(filename);
+		aoRemote::ProcessCommander commander(*observation);
+		commander.PushReadQualityTablesTask(&collection);
+		commander.Run();
+		delete observation;
+	}
+	else {
+		MeasurementSet *ms = new MeasurementSet(filename);
+		const unsigned polarizationCount = ms->GetPolarizationCount();
+		delete ms;
+		
+		collection.SetPolarizationCount(polarizationCount);
+		QualityTablesFormatter qualityData(filename);
+		collection.Load(qualityData);
+	}
 	
-	QualityTablesFormatter qualityData(filename);
-	StatisticsCollection collection(polarizationCount);
-	collection.Load(qualityData);
-	
-	DefaultStatistics statistics(polarizationCount);
+	DefaultStatistics statistics(collection.PolarizationCount());
 	
 	collection.GetGlobalTimeStatistics(statistics);
 	std::cout << "Time statistics: \n";
