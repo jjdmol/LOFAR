@@ -17,6 +17,7 @@ import lofar.parmdb as parmdb
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
+import pyrap.quanta as pq   # used to convert date from double to normal format
 import numpy as np
 import unicodedata
 import time        # for timing functions
@@ -46,6 +47,10 @@ class PlotWindow(QFrame):
       # PlotWindow has been created
       self.parent=parent            # parent object/class
       self.fig=None
+      self.showMarker=False
+      self.markerId=None
+      self.marker1=None              # position marker in the plot
+      self.marker2=None
 
       self.x = parent.x             # plotted x axis data
       self.y1 = parent.y1           # plotted y axis data
@@ -79,6 +84,10 @@ class PlotWindow(QFrame):
       self.exportComboBox.setMaximumWidth(100)
       self.exportComboBox.setMinimumHeight(25)
 
+      self.showMarkerCheckBox=QCheckBox("Show marker")
+      self.showMarkerCheckBox.setToolTip("Show a marker line in both plots")
+      self.showMarkerCheckBox.setCheckState(Qt.Unchecked)    # default off
+
       self.histogramButton=QPushButton("&Histogram")    # button to create a histogram
       self.histogramButton.setToolTip("Create a histogram of the current parameter")
       #self.histogramButton.hide()
@@ -101,7 +110,7 @@ class PlotWindow(QFrame):
       self.connect(self.exportButton, SIGNAL('clicked()'), self.on_export)
       self.connect(self.histogramButton, SIGNAL('clicked()'), parent.on_histogram)
       self.connect(self.closeButton, SIGNAL('clicked()'), SLOT('close()'))
-
+      self.connect(self.showMarkerCheckBox, SIGNAL('stateChanged(int)'), self.on_marker)
 
       # Layouts for canvas and buttons
       #
@@ -110,6 +119,7 @@ class PlotWindow(QFrame):
       buttonLayout.addWidget(self.exportButton)
       buttonLayout.addWidget(self.exportComboBox)
       #buttonLayout.insertStretch(-1)
+      buttonLayout.addWidget(self.showMarkerCheckBox)
       buttonLayout.addWidget(self.histogramButton)
       buttonLayout.addWidget(self.histogramBinSpin)
       buttonLayout.addWidget(self.closeButton)
@@ -126,9 +136,53 @@ class PlotWindow(QFrame):
       self.setLayout(mainLayout)
 
       self.show()           # show the plotWindow widget
-#      self.parent.setXLabel()
+      self.parent.setXLabel()
       self.parent.setYLabel()
+
       self.plot()
+      
+      if self.showMarker==True:
+        cid = self.fig.canvas.mpl_connect('motion_notify_event', self.update_marker)
+
+
+   # React on showMarkerCheckBox signal
+   #
+   def on_marker(self):
+      #print "on_marker checkState = ", self.showMarkerCheckBox.checkState()  # DEBUG
+      if self.showMarkerCheckBox.isChecked()==True:
+        self.showMarker=True
+        self.markerId = self.fig.canvas.mpl_connect('motion_notify_event', self.update_marker)
+      else:
+        print "on_marker() disconnecting marker event"
+        self.showMarker=False
+        self.fig.canvas.mpl_disconnect(self.markerId)
+
+
+   # Plot a vertical line marker on the solutions plot showing the solution
+   # of the currently plotted solver parameters
+   # TODO: EXPERIMENTAL
+   #
+   def update_marker(self, event):
+      #print "plotMarker() pos = ", event.xdata       # DEBUG
+      
+      #print 'button=%d, x=%d, y=%d, xdata=%f, ydata=%f'%(
+      #   event.button, event.x, event.y, event.xdata, event.ydata)     # DEBUG      
+      
+      # Create markers (vertical lines) in both plots
+      self.marker1=self.ax1.axvline(x=event.xdata, linewidth=1.5, color='r')
+      self.marker2=self.ax2.axvline(x=event.xdata, linewidth=1.5, color='r')
+ 
+      # We need to remove all unnecessary marker in plot 1 and plot 2
+      # TODO: find better method, keeps double marker sometimes
+      while len(self.ax1.lines)-1 > 1:
+        self.ax1.lines[len(self.ax1.lines)-1].remove()
+      while len(self.ax2.lines)-1 > 1:
+        self.ax2.lines[len(self.ax1.lines)-1].remove()  
+        
+      self.marker1=self.ax1.axvline(x=event.xdata, linewidth=1.5, color='r')
+      self.marker2=self.ax1.axvline(x=event.xdata, linewidth=1.5, color='r')
+      self.canvas.draw_idle()
+#      self.canvas.draw()
 
 
    # Handle export button clicked()
@@ -137,6 +191,20 @@ class PlotWindow(QFrame):
       fileformat=self.exportComboBox.currentText()
       self.parent.on_export(fileformat)
 
+
+   # Functio to execute on a click event (experimental)
+   #
+   def on_clickMarker(self, event):
+      print 'button=%d, x=%d, y=%d, xdata=%f, ydata=%f'%(
+         event.button, event.x, event.y, event.xdata, event.ydata)     # DEBUG      
+
+      # Pick per iteration details if possible
+      if self.parent.tableType == "PERITERATION" or self.tableType == "PERITERATION_CORRMATRIX":
+          print "trying to get per iterations for this cell"        # DEBUG
+      else:
+          print "on_clickMarker() table is not of correct type"
+
+#cid = fig.canvas.mpl_connect('button_press_event', onclick)
 
    # Plot data that has been read
    #
@@ -198,58 +266,6 @@ class PlotWindow(QFrame):
                self.ax2.plot(self.x, self.y2)
 
       self.canvas.draw()
-
-
-   # Plot a correlation matrix in a plotWindow
-   #
-   # corrMatrix      - numpy.ndarray holding (linearized) correlation Matrix
-   #
-   def plotCorrMatrix(self, corrMatrix):
-      print "PlotWindow::plotCorrMatrix()"   # DEBUG
-
-      # We plot into the existing canvas object of the PlotWindow class
-
-      # Do we need this? Better to compare to sqrt(len(corrmatrix)
-      if ranks!=None:
-         if len(ranks) != len(corrmatrices):
-            raise ValueError
-      else:
-        ranks=np.zeros(len(corrmatrices), dtype=int)
-        for i in range(0, len(corrmatrices)):
-            ranks[i]=math.sqrt(len(corrmatrices[i]))
-
-      # First determine, if we got a single corrMatrix or a list of them
-      if len(corrmatrices >= 1):
-         for i in range(0, len(corrmatrices)):
-            shape=corrmatrices[i].shape      # get shape of array (might be 1-D)
-
-            #print "plotCorrMatrix() shape = ", shape
-
-            if len(shape)==1:                # if we got only one dimension...
-                if shape[0] != ranks[i]*ranks[i]:        # if the length of the array is not rank^2
-                    raise ValueError
-                else:
-                    #print "plotCorrMatrix() ranks[i] = ", ranks[i]                            # DEBUG
-                    #print "plotCorrMatrix() shape[0] = ", shape[0]                            # DEBUG
-                    #print "plotCorrMatrix() corrmatrices[i] = ", corrmatrices[i]              # DEBUG
-                    #print "plotCorrMatrix() type(corrmatrices[i]) = ", type(corrmatrices[i])  # DEBUG
-
-                    corrmatrix=np.reshape(corrmatrices[i], (ranks[i], ranks[i]))
-            elif len(shape)==2:              # we already have a two-dimensional array
-                if shape[0] != ranks[i] or shape[1] != ranks[i]:
-                    raise ValueError
-
-            # plot CorrMatrix as a figure image
-            #corrImage=pl.matshow(corrmatrix)
-            # Add a color bar to the figure
-            #pl.colorbar(corrImage)
-            ax.addsubplot(111)
-            ax.plot(corrImage, cmap=cm.jet)
-            # pl.figimage(corrmatrix, cmap=cm.jet, origin='lower')
-            self.canvas.draw()
-      else:
-        print "plotCorrMatrix() corrmatrices have length 0"
-
 
 
 
@@ -456,12 +472,34 @@ class SolverAppForm(QMainWindow):
            self.parmDB=None
 
 
+    # Convert date from a double MJD time (s) to a date format string
+    # YYYY/MM/DD/HH:MM:SS
+    #
+    def convertDate(self, date=None):
+      print "convertDate()"                     # DEBUG
+
+      if date==None:
+        raise ValueError
+      elif isinstance(date, np.ndarray):
+        print "array"
+        dateString=[]
+        for i in range(0, len(date)):
+          q=pq.quantity(date[i], 's')
+          print q
+          dateString[i].append(q.formatted('YMD'))
+      elif isinstance(date, float):
+        dateString=""
+        q=pq.quantity(date, 's')
+        dateString=q.formatted('YMD')
+      
+      return dateString
+      
+
     # Function to handle table index slider has changed
     #
     def on_timeStartSlider(self, index):
         # Read time at index
         starttime=self.solverQuery.timeSlots[index]['STARTTIME']
-
         self.timeStartSliderLabel.setText("S:" +  str(starttime) + " s")
 
         # Handle behaviour of timeEndSlider in combination with timeStartSlider
@@ -470,6 +508,7 @@ class SolverAppForm(QMainWindow):
             self.timeEndSlider.setValue(self.timeStartSlider.sliderPosition())
 
         self.repaint()
+
 
     # Function to handle table index slider has changed
     #
@@ -723,6 +762,10 @@ class SolverAppForm(QMainWindow):
         self.showIterationsCheckBox.setText('Show iterations')
         self.showIterationsCheckBox.setToolTip('Show all iterations for this solution')
         self.showIterationsCheckBox.setCheckState(Qt.Unchecked)
+        self.showDatesCheckBox=QCheckBox()
+        self.showDatesCheckBox.setCheckState(Qt.Unchecked)
+        self.showDatesCheckBox.setText("Convert to ISO date")
+        self.showDatesCheckBox.setToolTip("Convert casa times to ISO format YY/MM/DD:HH:MM:SS")
 
         self.singleCellCheckBox=QCheckBox()                    # Checkbox to show individual iterations parameters
         self.singleCellCheckBox.setCheckState(Qt.Unchecked)           # Default: False
@@ -811,7 +854,7 @@ class SolverAppForm(QMainWindow):
         timeEndLayout=QHBoxLayout()
 
         # Add the button widgets to the buttonsLayout  (self.colorizeCheckBox) left out for the 
-        for widget in [self.loadButton, self.saveButton, self.plotButton, self.quitButton, self.plottingOptions, self.showIterationsCheckBox, self.singleCellCheckBox, self.scatterCheckBox, self.xAxisComboBox]:
+        for widget in [self.loadButton, self.saveButton, self.plotButton, self.quitButton, self.plottingOptions, self.showIterationsCheckBox, self.singleCellCheckBox, self.scatterCheckBox, self.showDatesCheckBox, self.xAxisComboBox]:
             self.buttonsLayout.addWidget(widget)
             widget.setMaximumWidth(170)   # restrain all widgets to that maximum width
             widget.show()                 # DEBUG does this fix the display update issue?
@@ -850,6 +893,7 @@ class SolverAppForm(QMainWindow):
         self.connect(self.clfCheckBox, SIGNAL('stateChanged(int)'), self.on_clf)
         self.connect(self.newCheckBox, SIGNAL('stateChanged(int)'), self.on_newFigure)
         self.connect(self.physicalValuesCheckBox, SIGNAL('stateChanged(int)'), self.on_physicalValues)
+        self.connect(self.showDatesCheckBox, SIGNAL('stateChanged(int)'), self.on_convertDate)
         #self.connect(self.showMessageCheckBox, SIGNAL('stateChanged(int)'), self.on_showMessage)
         #lself.connect(self.exportButton, SIGNAL('clicked()'), self.on_export)
         #self.connect(self.histogramButton, SIGNAL('clicked()'), self.on_histogram)
@@ -1276,6 +1320,16 @@ class SolverAppForm(QMainWindow):
         print "on_physicalValue()"      # DEBUG
         self.physicalValues=self.physicalValuesCheckBox.isChecked()
 
+    def on_convertDate(self):
+        print "on_convertDate()"       # DEBUG        
+        #self.convertDate(self.x)
+
+        # Update x-axis labels
+        self.setXLabel()
+        self.setYLabel()
+        # and S: and E: labels
+        
+
     # Set class attribute when showIterationsCheckBox is clicked
     # and changes its state
     #
@@ -1293,7 +1347,10 @@ class SolverAppForm(QMainWindow):
             self.singleCellCheckBox.setCheckState(Qt.Checked)
             #self.singleCellCheckBox.setCheckState(Qt.Unchecked)     # we seem to need this Tristate to have "normal" CheckBoxes
         else:
-            self.xLabel="Time (UTC) in s"    # TODO this must distinguish between Time and Frequency!
+            if self.showDatesCheckBox.isChecked():
+              self.xLabel="Time (UTC) in s after " + str(self.convertDate(self.x[0]))
+            else:
+              self.xLabel="Time (UTC) in s after " + str(self.x[0])    # TODO this must distinguish between Time and Frequency!
 
     # If xAxis has been changed in ComboBox
     #
@@ -1327,8 +1384,17 @@ class SolverAppForm(QMainWindow):
         print "setXLabel()"                 # DEBUG
 
         if self.xAxisType == "Time":
-            self.xLabel="Time (UTC) in s"
+            # first check we have a valid self.x
+            if self.x==None:
+              self.x=self.sq.getTimeSlots()[0]
+            if self.showDatesCheckBox.isChecked():
+              self.xLabel="Time (UTC) in s after " + str(self.convertDate(self.x[0]))
+            else:
+              self.xLabel="Time (UTC) in s after " + str(self.x[0])    # TODO this must distinguish between Time and Frequency!
         elif self.xAxisType == "Frequency":
+            # first check we have a valid self.x
+            if self.x==None:
+              self.x=self.sq.getFreqs()[0]
             self.xLabel="Frequency in Hz"
         else:
             self.xLabel="Iteration No."
@@ -1647,19 +1713,7 @@ class SolverAppForm(QMainWindow):
         y=y[0:length]   # drop remainder of y
 
         return x,y
-
-
-    # Plot a vertical line marker on the solutions plot showing the solution
-    # of the currently plotted solver parameters
-    #
-    #
-    def update_plotMarker(self):
-        print "plotMarker()"
-
-        # get current cell
-        if self.currentSolution != None:
-            axvline()
-
+        
 
     # TODO
     # Get the current solution from a mouse click in the solutions plot
@@ -2199,13 +2253,9 @@ class SolverAppForm(QMainWindow):
         print "computePhase(): parameter = ", parameter   # DEBUG
 
         phase=[]
-
         parameter=str(parameter)   # convert QString to string
 
         self.parmMap=self.createParmMap()
-
-        print "computeAmplitude() parameter = ", parameter   # DEBUG
-        print "computeAmplitude() parmMap = ", self.parmMap  # DEBUG
 
         # Insert REAL and Imag into parameter
         parameterReal=parameter[:8] + ":Real" + parameter[8:]
@@ -2213,10 +2263,6 @@ class SolverAppForm(QMainWindow):
 
         real_idx=self.parmMap[parameterReal][0]
         imag_idx=self.parmMap[parameterImag][0]
-
-        print "real_idx = ", real_idx   # DEBUG
-        print "imag_idx = ", imag_idx   # DEBUG
-        print "type(solutions) = ", type(solutions)  # DEBUG
 
         # Decide on data type of solutions
         if isinstance(solutions, int):
