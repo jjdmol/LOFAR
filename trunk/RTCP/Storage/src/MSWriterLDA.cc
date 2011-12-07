@@ -367,15 +367,15 @@ namespace LOFAR
       coordinateTypes[1] = "Spectral"; // or SpectralCoord ?
       coordinates.coordinateTypes().set(coordinateTypes);
 
-      Coordinate timeCoordinate = coordinates.coordinate(0);
-      timeCoordinate.create();
-      timeCoordinate.groupType()     .set("TimeCoord");
+      SmartPtr<TimeCoordinate> timeCoordinate = dynamic_cast<TimeCoordinate*>(coordinates.coordinate(0));
+      timeCoordinate.get()->create();
+      timeCoordinate.get()->groupType()     .set("TimeCoord");
 
-      timeCoordinate.coordinateType().set("Time");
-      timeCoordinate.storageType()   .set(vector<string>(1,"Linear"));
-      timeCoordinate.nofAxes()       .set(1);
-      timeCoordinate.axisNames()     .set(vector<string>(1,"Time"));
-      timeCoordinate.axisUnits()     .set(vector<string>(1,"us"));
+      timeCoordinate.get()->coordinateType().set("Time");
+      timeCoordinate.get()->storageType()   .set(vector<string>(1,"Linear"));
+      timeCoordinate.get()->nofAxes()       .set(1);
+      timeCoordinate.get()->axisNames()     .set(vector<string>(1,"Time"));
+      timeCoordinate.get()->axisUnits()     .set(vector<string>(1,"us"));
 
       // linear coordinates:
       //   referenceValue = offset from starting time, in axisUnits
@@ -383,26 +383,25 @@ namespace LOFAR
       //   increment      = time increment for each sample
       //   pc             = scaling factor (?)
 
-      timeCoordinate.referenceValue().set(vector<double>(1,0));
-      timeCoordinate.referencePixel().set(vector<double>(1,0));
-      timeCoordinate.increment()     .set(vector<double>(1,parset.sampleDuration()));
-      timeCoordinate.pc()            .set(vector<double>(1,1)); // [1] or [1,0] ??
+      timeCoordinate.get()->referenceValue().set(0);
+      timeCoordinate.get()->referencePixel().set(0);
+      timeCoordinate.get()->increment()     .set(parset.sampleDuration());
 
-      Coordinate spectralCoordinate = coordinates.coordinate(1);
-      spectralCoordinate.create();
-      spectralCoordinate.groupType()     .set("SpectralCoord");
+      SmartPtr<SpectralCoordinate> spectralCoordinate = dynamic_cast<SpectralCoordinate*>(coordinates.coordinate(1));
+      spectralCoordinate.get()->create();
+      spectralCoordinate.get()->groupType()     .set("SpectralCoord");
 
-      spectralCoordinate.coordinateType().set("Spectral");
-      spectralCoordinate.storageType()   .set(vector<string>(1,"Tabular"));
-      spectralCoordinate.nofAxes()       .set(1);
-      spectralCoordinate.axisNames()     .set(vector<string>(1,"Frequency"));
-      spectralCoordinate.axisUnits()     .set(vector<string>(1,"MHz"));
+      spectralCoordinate.get()->coordinateType().set("Spectral");
+      spectralCoordinate.get()->storageType()   .set(vector<string>(1,"Tabular"));
+      spectralCoordinate.get()->nofAxes()       .set(1);
+      spectralCoordinate.get()->axisNames()     .set(vector<string>(1,"Frequency"));
+      spectralCoordinate.get()->axisUnits()     .set(vector<string>(1,"MHz"));
 
       // tabular coordinates:
       //   axisValuePixel = data indices
       //   axisValueWorld = corresponding (central) frequencies
 
-      vector<double> spectralPixels;
+      vector<unsigned> spectralPixels;
       vector<double> spectralWorld;
 
       for(unsigned sb = 0; sb < nrSubbands; sb++) {
@@ -415,8 +414,8 @@ namespace LOFAR
         }
       }
 
-      spectralCoordinate.axisValuesPixel().set(spectralPixels);
-      spectralCoordinate.axisValuesWorld().set(spectralWorld);
+      spectralCoordinate.get()->axisValuesPixel().set(spectralPixels);
+      spectralCoordinate.get()->axisValuesWorld().set(spectralWorld);
 
       BF_StokesDataset stokesDS = beam.stokes(stokesNr);
 
