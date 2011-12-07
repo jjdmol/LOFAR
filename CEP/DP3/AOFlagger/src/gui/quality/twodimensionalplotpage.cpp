@@ -228,8 +228,8 @@ void TwoDimensionalPlotPage::initStatisticKindButtons()
 	_dVarianceButton.signal_clicked().connect(sigc::mem_fun(*this, &TwoDimensionalPlotPage::updatePlot));
 	_statisticBox.pack_start(_dVarianceButton, Gtk::PACK_SHRINK);
 	
-	_rfiRatioButton.signal_clicked().connect(sigc::mem_fun(*this, &TwoDimensionalPlotPage::updatePlot));
-	_statisticBox.pack_start(_rfiRatioButton, Gtk::PACK_SHRINK);
+	_rfiPercentageButton.signal_clicked().connect(sigc::mem_fun(*this, &TwoDimensionalPlotPage::updatePlot));
+	_statisticBox.pack_start(_rfiPercentageButton, Gtk::PACK_SHRINK);
 	
 	_snrButton.signal_clicked().connect(sigc::mem_fun(*this, &TwoDimensionalPlotPage::updatePlot));
 	_statisticBox.pack_start(_snrButton, Gtk::PACK_SHRINK);
