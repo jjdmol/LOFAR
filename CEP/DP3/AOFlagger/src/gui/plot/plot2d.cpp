@@ -56,85 +56,118 @@ void Plot2D::Render(Gtk::DrawingArea &drawingArea)
 		Gtk::Allocation allocation = drawingArea.get_allocation();
 		_width = allocation.get_width();
 		_height = allocation.get_height();
+	}
+}
 
-		cr->set_line_width(2);
+void Plot2D::SavePdf(const std::string &filename)
+{
+	Cairo::RefPtr<Cairo::PdfSurface> surface = Cairo::PdfSurface::create(filename, _width, _height);
+	Cairo::RefPtr<Cairo::Context> cairo = Cairo::Context::create(surface);
+	AOLogger::Debug << "Saving PDF of " << _width << " x " << _height << "\n";
+	render(cairo);
+	cairo->show_page();
+	surface->finish();
+}
 
-		cr->set_source_rgba(1, 1, 1, 1);
-		cr->paint();
-		cr->fill();
+void Plot2D::SaveSvg(const std::string &filename)
+{
+	Cairo::RefPtr<Cairo::SvgSurface> surface = Cairo::SvgSurface::create(filename, _width, _height);
+	Cairo::RefPtr<Cairo::Context> cairo = Cairo::Context::create(surface);
+	AOLogger::Debug << "Saving SVG of " << _width << " x " << _height << "\n";
+	render(cairo);
+	cairo->show_page();
+	surface->finish();
+}
 
-		size_t c = 0;
+void Plot2D::SavePng(const std::string &filename)
+{
+	Cairo::RefPtr<Cairo::ImageSurface> surface = Cairo::ImageSurface::create(Cairo::FORMAT_ARGB32, _width, _height);
+	Cairo::RefPtr<Cairo::Context> cairo = Cairo::Context::create(surface);
+	AOLogger::Debug << "Saving PNG of " << _width << " x " << _height << "\n";
+	render(cairo);
+	surface->write_to_png(filename);
+}
+
+
+void Plot2D::render(Cairo::RefPtr<Cairo::Context> cr)
+{
+	cr->set_line_width(2);
+
+	cr->set_source_rgba(1, 1, 1, 1);
+	cr->paint();
+	cr->fill();
+
+	size_t c = 0;
+	
+	if(!_pointSets.empty())
+	{
+		Plot2DPointSet &refPointSet = **_pointSets.begin();
 		
-		if(!_pointSets.empty())
+		double verticalScaleWidth, horiScaleHeight;
+	
+		if(_showAxes)
 		{
-			Plot2DPointSet &refPointSet = **_pointSets.begin();
+			_horizontalScale.SetDrawWithDescription(_showAxisDescriptions);
+			_horizontalScale.SetRotateUnits(refPointSet.RotateUnits());
+			if(refPointSet.HasTickLabels())
+				_horizontalScale.InitializeTextTicks(refPointSet.TickLabels());
+			else if(refPointSet.XIsTime())
+				_horizontalScale.InitializeTimeTicks(_system.XRangeMin(refPointSet), _system.XRangeMax(refPointSet));
+			else
+				_horizontalScale.InitializeNumericTicks(_system.XRangeMin(refPointSet), _system.XRangeMax(refPointSet));
+			_horizontalScale.SetUnitsCaption(refPointSet.XUnits());
+			_topMargin = 10.0;
+			_horizontalScale.SetPlotDimensions(_width, _height, _topMargin, 0.0);
+			horiScaleHeight = _horizontalScale.GetHeight(cr);
 			
-			double verticalScaleWidth, horiScaleHeight;
-		
-			if(_showAxes)
-			{
-				_horizontalScale.SetDrawWithDescription(_showAxisDescriptions);
-				_horizontalScale.SetRotateUnits(refPointSet.RotateUnits());
-				if(refPointSet.HasTickLabels())
-					_horizontalScale.InitializeTextTicks(refPointSet.TickLabels());
-				else if(refPointSet.XIsTime())
-					_horizontalScale.InitializeTimeTicks(_system.XRangeMin(refPointSet), _system.XRangeMax(refPointSet));
-				else
-					_horizontalScale.InitializeNumericTicks(_system.XRangeMin(refPointSet), _system.XRangeMax(refPointSet));
-				_horizontalScale.SetUnitsCaption(refPointSet.XUnits());
-				_topMargin = 10.0;
-				_horizontalScale.SetPlotDimensions(_width, _height, _topMargin, 0.0);
-				horiScaleHeight = _horizontalScale.GetHeight(cr);
-				
-				double rightMargin = _horizontalScale.GetRightMargin(cr);
-				_verticalScale.SetDrawWithDescription(_showAxisDescriptions);
-				if(_logarithmicYAxis)
-					_verticalScale.InitializeLogarithmicTicks(MinY(), MaxY());
-				else
-					_verticalScale.InitializeNumericTicks(MinY(), MaxY());
-				_verticalScale.SetUnitsCaption(refPointSet.YUnits());
-				_verticalScale.SetPlotDimensions(_width - rightMargin, _height - horiScaleHeight - _topMargin, _topMargin);
+			double rightMargin = _horizontalScale.GetRightMargin(cr);
+			_verticalScale.SetDrawWithDescription(_showAxisDescriptions);
+			if(_logarithmicYAxis)
+				_verticalScale.InitializeLogarithmicTicks(MinY(), MaxY());
+			else
+				_verticalScale.InitializeNumericTicks(MinY(), MaxY());
+			_verticalScale.SetUnitsCaption(refPointSet.YUnits());
+			_verticalScale.SetPlotDimensions(_width - rightMargin, _height - horiScaleHeight - _topMargin, _topMargin);
 
-				verticalScaleWidth =  _verticalScale.GetWidth(cr);
-				_horizontalScale.SetPlotDimensions(_width - rightMargin, _height - horiScaleHeight, 0.0, verticalScaleWidth);
-			}
-			else {
-				verticalScaleWidth = 0.0;
-				horiScaleHeight = 0.0;
-			}
-			
-			for(std::vector<Plot2DPointSet*>::iterator i=_pointSets.begin();i!=_pointSets.end();++i)
-			{
-				switch(c)
-				{
-					case 0: cr->set_source_rgba(1, 0, 0, 1); break;
-					case 1: cr->set_source_rgba(0, 1, 0, 1); break;
-					case 2: cr->set_source_rgba(0, 0, 1, 1); break;
-					case 3: cr->set_source_rgba(0, 0, 0, 1); break;
-					case 4: cr->set_source_rgba(1, 1, 0, 1); break;
-					case 5: cr->set_source_rgba(1, 0, 1, 1); break;
-					case 6: cr->set_source_rgba(0, 1, 1, 1); break;
-					case 7: cr->set_source_rgba(0.5, 0.5, 0.5, 1); break;
-				}
-				c = (c+1)%8;
-
-				render(cr, **i);
-			}
-			
-			double rightMargin;
-			if(_showAxes)
-			{
-				_horizontalScale.Draw(cr);
-				_verticalScale.Draw(cr);
-				rightMargin = _horizontalScale.GetRightMargin(cr);
-			} else {
-				rightMargin = 0.0;
-			}
-			
-			cr->set_source_rgb(0.0, 0.0, 0.0);
-			cr->rectangle(verticalScaleWidth, _topMargin, _width - verticalScaleWidth - rightMargin, _height - horiScaleHeight - _topMargin);
-			cr->stroke();
+			verticalScaleWidth =  _verticalScale.GetWidth(cr);
+			_horizontalScale.SetPlotDimensions(_width - rightMargin, _height - horiScaleHeight, 0.0, verticalScaleWidth);
 		}
+		else {
+			verticalScaleWidth = 0.0;
+			horiScaleHeight = 0.0;
+		}
+		
+		for(std::vector<Plot2DPointSet*>::iterator i=_pointSets.begin();i!=_pointSets.end();++i)
+		{
+			switch(c)
+			{
+				case 0: cr->set_source_rgba(1, 0, 0, 1); break;
+				case 1: cr->set_source_rgba(0, 1, 0, 1); break;
+				case 2: cr->set_source_rgba(0, 0, 1, 1); break;
+				case 3: cr->set_source_rgba(0, 0, 0, 1); break;
+				case 4: cr->set_source_rgba(1, 1, 0, 1); break;
+				case 5: cr->set_source_rgba(1, 0, 1, 1); break;
+				case 6: cr->set_source_rgba(0, 1, 1, 1); break;
+				case 7: cr->set_source_rgba(0.5, 0.5, 0.5, 1); break;
+			}
+			c = (c+1)%8;
+
+			render(cr, **i);
+		}
+		
+		double rightMargin;
+		if(_showAxes)
+		{
+			_horizontalScale.Draw(cr);
+			_verticalScale.Draw(cr);
+			rightMargin = _horizontalScale.GetRightMargin(cr);
+		} else {
+			rightMargin = 0.0;
+		}
+		
+		cr->set_source_rgb(0.0, 0.0, 0.0);
+		cr->rectangle(verticalScaleWidth, _topMargin, _width - verticalScaleWidth - rightMargin, _height - horiScaleHeight - _topMargin);
+		cr->stroke();
 	}
 }
 

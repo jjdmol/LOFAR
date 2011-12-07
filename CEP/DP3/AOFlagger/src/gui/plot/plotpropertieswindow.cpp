@@ -233,12 +233,12 @@ void PlotPropertiesWindow::onExportClicked()
 
 	if(result == Gtk::RESPONSE_OK)
 	{
-		/*const Gtk::FileFilter *filter = dialog.get_filter();
+		const Gtk::FileFilter *filter = dialog.get_filter();
 		if(filter->get_name() == pdfName)
 			_plot.SavePdf(dialog.get_filename());
 		else if(filter->get_name() == svgName)
 			_plot.SaveSvg(dialog.get_filename());
 		else
-			_plot.SavePng(dialog.get_filename());*/
+			_plot.SavePng(dialog.get_filename());
 	}
 }
