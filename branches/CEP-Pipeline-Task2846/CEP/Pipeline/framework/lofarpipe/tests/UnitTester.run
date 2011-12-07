@@ -1,0 +1,9 @@
+#!/bin/sh -x
+
+
+#add correct path for lofarPipe python files 
+#**WORKAROUND** for incorrect path setting in testframework code
+export PYTHONPATH=$PYTHONPATH:"/opt/cep/LofIm/daily/lofar/lib/python2.6/dist-packages:/opt/cep/LofIm/daily/pyrap/lib"
+
+#run the actual python script performing the tests
+python UnitTester.py -p $srcdir

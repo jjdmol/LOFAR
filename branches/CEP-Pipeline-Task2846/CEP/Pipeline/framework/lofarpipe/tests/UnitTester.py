@@ -22,20 +22,27 @@ class Discover():
         allMatcher = re.compile(".*")
         #matcher for the expression
         patternMatcher = re.compile(pattern)
+        #matcher for hidden dirs
+        hiddenMatcher = re.compile(".*/\..*")
         
-        for root, dirs, files in os.walk(path):            
+        for root, dirs, files in os.walk(path):  
+            #skip hidden directories
+            if hiddenMatcher.match(root):
+                continue         
+             
             dirSuite = unittest.TestSuite()
-            for name in files:                   
+            for name in files:                 
                 fileNameParts = name.split('.')
                 #assert correct file extention 
                 if (len(fileNameParts) == 1) or (fileNameParts[1] !=  'py'):
                     continue
+
                 #try loading as a module
                 try: 
-                    module = __import__(fileNameParts[0] , globals={}, locals={})
-                except:
-                    continue                   
-                    
+                    module = self.import_path(root, fileNameParts[0])  #use import including path
+                except BaseException:
+                    continue          
+                
                 #the expression mechanism
                 testMatcher = None
                 if patternMatcher.match(name):
@@ -45,14 +52,14 @@ class Discover():
                 #create a test suite
                 fileSuite = unittest.TestSuite()
                 testnames = dir(module)
-
+                
                 #add all cases ending with test and match the regexp search string
                 for testName in testnames:
                     if testName.endswith('Test') or testName.endswith('test'):
                         try:
-                            testClass = getattr(module, testName) #try loading it
-                            if inspect.isclass(testClass):    #if class add it
-                                if not testMatcher.match(testName):  #if not matching with 
+                            testClass = getattr(module, testName)    #load attribute
+                            if inspect.isclass(testClass):           #if class 
+                                if not testMatcher.match(testName):  #Continue of current testname does not match supplied expression
                                     continue 
                                 fileSuite.addTest(unittest.makeSuite(testClass))
                         except:
@@ -65,6 +72,20 @@ class Discover():
             #add to top level suite
             if dirSuite.countTestCases() != 0:
                 self.suite.addTest(dirSuite)
+
+            
+    def import_path(self, path, filename):
+        """ 
+        Import a file with full path specification. Allows one to
+        import from anywhere, something __import__ does not do. 
+        """
+        filename, ext = os.path.splitext(filename)
+        sys.path.append(path)
+        module = __import__(filename)
+        reload(module) # Might be out of date
+        del sys.path[-1]
+        return module
+
 
 class UnitTesterTest(unittest.TestCase):
     """
@@ -125,10 +146,21 @@ if __name__ == "__main__":
 
     #Collect tests from files and paths    
     test = Discover(path, expression)
-    
-    #deside on unit testrunner to use
+
+    #decide on unit testrunner to use, run it and save the results
     if xml:
         import xmlrunner
-        testRunner=xmlrunner.XMLTestRunner(output=xml).run(test.suite)
+        result = xmlrunner.XMLTestRunner(output=xml).run(test.suite)
     else:
-        unittest.TextTestRunner(verbosity=2).run(test.suite)
+        result = unittest.TextTestRunner(verbosity=2).run(test.suite)
+    
+    #collect the numeric results using expressions
+    FailedTestMatcher = re.compile(".*run=(\d+).*errors=(\d+).*failures=(\d+)")
+    matches = FailedTestMatcher.match(str(result))
+    runErrorFailures = matches.groups(0)
+
+    #add to get the total number of not succesfull tests
+    failingTests = int(runErrorFailures[1]) + int(runErrorFailures[2])
+
+    #provide number of failing tests as exit value
+    sys.exit(failingTests)  
