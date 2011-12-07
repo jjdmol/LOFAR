@@ -67,7 +67,7 @@ class TwoDimensionalPlotPage : public Gtk::HBox {
 		
 		virtual const std::map<double, class DefaultStatistics> &GetStatistics() const = 0;
 		
-		virtual void StartLine(Plot2D &plot, const std::string &name) = 0;
+		virtual void StartLine(Plot2D &plot, const std::string &name, const std::string &yAxisDesc) = 0;
 		
 		virtual void addCustomPlotButtons(Gtk::VBox &container)
 		{
@@ -78,6 +78,8 @@ class TwoDimensionalPlotPage : public Gtk::HBox {
 			return _statCollection;
 		}
 		void updatePlot();
+		
+		unsigned selectedKindCount() const;
 	private:
 		enum PhaseType { AmplitudePhaseType, PhasePhaseType, RealPhaseType, ImaginaryPhaseType} ;
 		
@@ -134,6 +136,8 @@ class TwoDimensionalPlotPage : public Gtk::HBox {
 		class DataWindow *_dataWindow;
 		
 		bool _customButtonsCreated;
+		
+		std::string getYDesc() const;
 };
 
 #endif

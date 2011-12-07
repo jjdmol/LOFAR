@@ -82,6 +82,20 @@ TwoDimensionalPlotPage::~TwoDimensionalPlotPage()
 	delete _dataWindow;
 }
 
+unsigned TwoDimensionalPlotPage::selectedKindCount() const
+{
+	unsigned count = 0;
+	if(_countButton.get_active()) ++count;
+	if(_meanButton.get_active()) ++count;
+	if(_varianceButton.get_active()) ++count;
+	if(_dCountButton.get_active()) ++count;
+	if(_dMeanButton.get_active()) ++count;
+	if(_dVarianceButton.get_active()) ++count;
+	if(_rfiPercentageButton.get_active()) ++count;
+	if(_snrButton.get_active()) ++count;
+	return count;
+}
+
 void TwoDimensionalPlotPage::updatePlot()
 {
 	if(HasStatistics())
@@ -137,7 +151,7 @@ void TwoDimensionalPlotPage::plotPhase(QualityTablesFormatter::StatisticKind kin
 {
 	std::ostringstream s;
 	s << "Polarization " << polarization;
-	StartLine(_plot, s.str());
+	StartLine(_plot, s.str(), getYDesc());
 	StatisticsDerivator derivator(*_statCollection);
 	const std::map<double, DefaultStatistics> &statistics = GetStatistics();
 	for(std::map<double, DefaultStatistics>::const_iterator i=statistics.begin();i!=statistics.end();++i)
@@ -153,7 +167,7 @@ void TwoDimensionalPlotPage::plotPhase(QualityTablesFormatter::StatisticKind kin
 {
 	std::ostringstream s;
 	s << "Polarization " << polarizationA << " and " << polarizationB;
-	StartLine(_plot, s.str());
+	StartLine(_plot, s.str(), getYDesc());
 	StatisticsDerivator derivator(*_statCollection);
 	const std::map<double, DefaultStatistics> &statistics = GetStatistics();
 	for(std::map<double, DefaultStatistics>::const_iterator i=statistics.begin();i!=statistics.end();++i)
@@ -348,3 +362,23 @@ void TwoDimensionalPlotPage::onDataExportClicked()
 	_dataWindow->raise();
 	updateDataWindow();
 }
+
+std::string TwoDimensionalPlotPage::getYDesc() const
+{
+	if(selectedKindCount() != 1)
+		return "Value";
+	else
+	{
+		QualityTablesFormatter::StatisticKind kind;
+		if(_countButton.get_active()) kind = QualityTablesFormatter::CountStatistic;
+		if(_meanButton.get_active()) kind = QualityTablesFormatter::MeanStatistic;
+		if(_varianceButton.get_active()) kind = QualityTablesFormatter::VarianceStatistic;
+		if(_dCountButton.get_active()) kind = QualityTablesFormatter::DCountStatistic;
+		if(_dMeanButton.get_active()) kind = QualityTablesFormatter::DMeanStatistic;
+		if(_dVarianceButton.get_active()) kind = QualityTablesFormatter::DVarianceStatistic;
+		if(_rfiPercentageButton.get_active()) kind = QualityTablesFormatter::RFIPercentageStatistic;
+		if(_snrButton.get_active()) kind = QualityTablesFormatter::SignalToNoiseStatistic;
+		return StatisticsDerivator::GetDescWithUnits(kind);
+	}
+}
+

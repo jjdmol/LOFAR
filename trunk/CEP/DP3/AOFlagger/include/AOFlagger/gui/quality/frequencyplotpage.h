@@ -46,9 +46,9 @@ class FrequencyPlotPage : public TwoDimensionalPlotPage {
 			return _statistics;
 		}
 		
-		virtual void StartLine(Plot2D &plot, const std::string &name)
+		virtual void StartLine(Plot2D &plot, const std::string &name, const std::string &yAxisDesc)
 		{
-			plot.StartLine(name, "Frequency (MHz)", "Value", false);
+			plot.StartLine(name, "Frequency (MHz)", yAxisDesc, false);
 		}
 		
 	private:
