@@ -41,7 +41,7 @@ class PlotWindow(QFrame):
    def __init__(self, parent):
       QFrame.__init__(self)
 
-      self.rim=0.1                  # rim around plot
+      self.rim=0.05                 # rim around plot
 
       # The plot class holds its data now, so that it can be exported after a different
       # PlotWindow has been created
@@ -61,13 +61,13 @@ class PlotWindow(QFrame):
       self.fig = Figure((5, 4), dpi=100)
       self.canvas = FigureCanvas(self.fig)
       self.canvas.setParent(self)
-      self.fig.subplots_adjust(left=self.rim, right=1.0-self.rim, top=1.0-self.rim, bottom=self.rim)  # set a small rim
+      self.fig.subplots_adjust(left=self.rim+0.05, right=1.0-self.rim, top=1.0-self.rim, bottom=self.rim)  # set a small rim
 
       self.mpl_toolbar = NavigationToolbar(self.canvas, self)
       self.mpl_toolbar.show()   # first hide the toolbar
 
-      self.setMinimumWidth(700)
-      self.setMinimumHeight(400)
+      self.setMinimumWidth(900)
+      self.setMinimumHeight(500)
 
       # Create Buttons for data export
       #
