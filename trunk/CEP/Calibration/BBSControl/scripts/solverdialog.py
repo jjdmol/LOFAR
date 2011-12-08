@@ -226,12 +226,10 @@ class PlotWindow(QFrame):
 
       np.set_printoptions(precision=1)
 #      self.ax1.get_xaxis().set_visible(False)  # TODO: How to get correct x-axis ticks?
-
-
-      np.set_printoptions(precision=1)
+      np.set_printoptions(precision=2)    # does this work?
 
       if self.parent.perIteration==True:
-         x=range(0, len(self.y1))
+         x=range(1, len(self.y1)+1)       # we want the first iteration to be called "1"
          if self.parent.scatterCheckBox.isChecked()==True:
             self.ax1.scatter(x, self.y1)
          else:
@@ -251,11 +249,11 @@ class PlotWindow(QFrame):
       #self.ax2.set_xticklabels(self.ax1.get_xticklabels(), visible=True)
       self.ax2.set_ylabel(self.parent.parametersComboBox.currentText())
       if self.parent.perIteration==True:
-         x=range(0, len(self.y2))
+         x=range(1, len(self.y2)+1)
          if self.parent.scatterCheckBox.isChecked()==True:
-            self.ax2.scatter(self.x, self.y2)
+            self.ax2.scatter(x, self.y2)
          else:
-            self.ax2.plot(self.x, self.y2)   # have to increase lower y limit (for unknown reason)
+            self.ax2.plot(x, self.y2)   # have to increase lower y limit (for unknown reason)
       else:
          if self.parent.scatterCheckBox.isChecked()==True:
             self.ax2.scatter(self.x, self.y2)
