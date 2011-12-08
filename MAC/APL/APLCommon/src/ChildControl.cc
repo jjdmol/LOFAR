@@ -228,8 +228,8 @@ bool ChildControl::startChild (uint16				aCntlrType,
 		// When program must run on another system scp file to that system
 		if (hostname != myHostname(false)  && 
 			hostname != myHostname(true)) {
-			remoteCopy(cntlrSetName, hostname, cntlrSetName, MAC_SCP_TIMEOUT);
 			remoteCopy(baseSetName, hostname, baseSetName, MAC_SCP_TIMEOUT);
+			remoteCopy(cntlrSetName, hostname, cntlrSetName, MAC_SCP_TIMEOUT);
 			onRemoteMachine = true;
 		}
 	}
