@@ -1377,6 +1377,7 @@ class SolverAppForm(QMainWindow):
         # If periteration has been enabled, set everything to singleCell mode
         if self.perIteration:
             self.xLabel="Iteration"   # TODO: this should be handled by the self.xAxisType attribute
+            self.xAxisType="Iteration"
 
             self.timeEndSlider.setValue(self.timeStartSlider.sliderPosition())
             self.syncSliders()
@@ -1523,6 +1524,7 @@ class SolverAppForm(QMainWindow):
 
             # If we plot a single solution per iteration
             elif self.perIteration == True:
+                self.xAxisType="Iteration"
                 y, x=self.solverQuery.readParameter(parameter, start_time, end_time, start_freq, end_freq, iteration='all')
                 # Set x to go from iteration 1 to the last one found in the dictionary for y
                 x = range(1, len(y))
