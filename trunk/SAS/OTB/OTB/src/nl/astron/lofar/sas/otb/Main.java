@@ -35,8 +35,6 @@ import nl.astron.lofar.sas.otb.exceptions.NoServerConnectionException;
 import nl.astron.lofar.sas.otb.exceptions.NotLoggedInException;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
-import sun.misc.Signal;
-import sun.misc.SignalHandler;
 
 /**
  * This is the Main class for the OTB framework.
@@ -51,40 +49,22 @@ public class Main {
     
     static Logger logger = Logger.getLogger(Main.class);
     static MainFrame itsMainFrame = null;
-    private static boolean running = true;
-    
-    public static void init() {
+        
+    static {
     Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
       public void run() {
         System.out.println("Shutting down OTB");
+        if (itsMainFrame != null)  itsMainFrame.exit();
       }
     });
 
-    SignalHandler handler = new SignalHandler () {
-            @Override
-      public void handle(Signal sig) {
-        if (running) {
-          running = false;
-          System.out.println("Signal " + sig);
-          System.out.println("Shutting down connections to the database...");
-          if (itsMainFrame != null)  itsMainFrame.exit();
-        } else {
-          // only on the second attempt do we exit
-          System.out.println(" database connection shutdown interrupted!");
-          System.exit(0);
-        }
-      }
-    };
-    Signal.handle(new Signal("INT"), handler);
-    Signal.handle(new Signal("TERM"), handler);
   }
 
     /**
      * @param args the command line arguments
      */
     public static void main(String[] argv) {
-        init();
         try {
             String logConfig = "OTB.log_prop";
             String server    = "sas001";
