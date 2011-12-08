@@ -45,10 +45,13 @@ void VerticalPlotScale::Draw(Cairo::RefPtr<Cairo::Context> cairo, double offsetX
 	for(unsigned i=0;i!=_tickSet->Size();++i)
 	{
 		const Tick tick = _tickSet->GetTick(i);
+		double y = getTickYPosition(tick);
+		cairo->move_to(_width - 3 + offsetX, y);
+		cairo->line_to(_width + offsetX, y);
 		Cairo::TextExtents extents;
 		cairo->get_text_extents(tick.second, extents);
-		cairo->move_to(_width - extents.width - 5 + offsetX,
-										getTickYPosition(tick) - extents.height/2  - extents.y_bearing + offsetY);
+		cairo->move_to(_width - extents.width - 8 + offsetX,
+										y - extents.height/2  - extents.y_bearing + offsetY);
 		cairo->show_text(tick.second);
 	}
 	cairo->stroke();
