@@ -8,7 +8,7 @@
 # File:			SolverQuery.py
 # Author:		Sven Duscha (duscha@astron.nl)
 # Date:          	2010/07/16
-# Last change:   	2011/01/10
+# Last change:   	2011/12/08
 #
 
 
@@ -353,8 +353,8 @@ class SolverQuery:
 
             #print "getSolution() nrows() = ", selection.nrows()  # DEBUG
 
-            for iter in range(1, selection.nrows()+1):
-                solution=selection.getcol("SOLUTION")
+            solution=selection.getcol("SOLUTION")
+            for iter in range(1, len(solution)+1):
                 solutionsDict[iter]=solution[iter-1]
 
         elif iteration=="last":
@@ -383,7 +383,7 @@ class SolverQuery:
             if(type(selection).__name__ == 'NoneType'):
                 solutionsDict["result"]="False"
       
-            print "selection.nrows(): ", selection.nrows()   # DEBUG
+            #print "selection.nrows(): ", selection.nrows()   # DEBUG
             #print "selection: ", selection.getcol("ITER")    # DEBUG
             solutionsDict[str(iteration)]=selection.getcol("SOLUTION")
 
