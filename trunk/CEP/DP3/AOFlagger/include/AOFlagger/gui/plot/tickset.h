@@ -174,20 +174,91 @@ class LogarithmicTickSet : public TickSet
 				if(sizeRequest == 0)
 					sizeRequest = 1;
 				const double
-					tickStart = roundUpToBase10Number(_min),
-					tickEnd = roundDownToBase10Number(_max);
+					tickStart = roundUpToBase10Number(_min*0.999),
+					tickEnd = roundDownToBase10Number(_max*1.001);
 				_ticks.push_back(tickStart);
-				if(sizeRequest == 1 || tickEnd == tickStart)
+				if(sizeRequest == 1)
 					return;
-				const unsigned distance = (unsigned) log10(tickEnd / tickStart);
-				const unsigned step = (distance + sizeRequest - 1) / sizeRequest;
-				const double factor = exp10((double) step);
-				double pos = tickStart * factor;
-				while(pos <= tickEnd && _ticks.size() < sizeRequest)
+				if(tickEnd > tickStart)
 				{
-					_ticks.push_back(pos);
-					pos *= factor;
+					const unsigned distance = (unsigned) log10(tickEnd / tickStart);
+					const unsigned step = (distance + sizeRequest - 1) / sizeRequest;
+					const double factor = exp10((double) step);
+					double pos = tickStart * factor;
+					while(pos <= tickEnd && _ticks.size() < sizeRequest)
+					{
+						_ticks.push_back(pos);
+						pos *= factor;
+					}
 				}
+				// can we add two to nine?
+				if((_ticks.size()+1)*10 < sizeRequest)
+				{
+					double base = tickStart / 10.0;
+					do {
+						for(double i=2.0;i<9.5;++i)
+						{
+							double val = base * i;
+							if(val >= _min && val <= _max)
+								_ticks.push_back(val);
+						}
+						base *= 10.0;
+					} while(base < _max);
+				}
+				// can we add two, four, ... eight?
+				else if((_ticks.size()+1)*5 < sizeRequest)
+				{
+					double base = tickStart / 10.0;
+					do {
+						for(double i=2.0;i<9.0;i+=2.0)
+						{
+							double val = base * i;
+							if(val >= _min && val <= _max)
+								_ticks.push_back(val);
+						}
+						base *= 10.0;
+					} while(base < _max);
+				}
+				// can we add two and five?
+				else if((_ticks.size()+1)*3 < sizeRequest)
+				{
+					double base = tickStart / 10.0;
+					do {
+						for(double i=2.0;i<6.0;i+=3.0)
+						{
+							double val = base * i;
+							if(val >= _min && val <= _max)
+								_ticks.push_back(val);
+						}
+						base *= 10.0;
+					} while(base < _max);
+				}
+				// can we add two and five?
+				else if((_ticks.size()+1)*3 < sizeRequest)
+				{
+					double base = tickStart / 10.0;
+					do {
+						for(double i=2.0;i<6.0;i+=3.0)
+						{
+							double val = base * i;
+							if(val >= _min && val <= _max)
+								_ticks.push_back(val);
+						}
+						base *= 10.0;
+					} while(base < _max);
+				}
+				// can we add five?
+				else if((_ticks.size()+1)*2 < sizeRequest)
+				{
+					double base = tickStart / 10.0;
+					do {
+						double val = base * 5.0;
+						if(val >= _min && val <= _max)
+							_ticks.push_back(val);
+						base *= 10.0;
+					} while(base < _max);
+				}
+				std::sort(_ticks.begin(), _ticks.end());
 			}
 		}
 		
