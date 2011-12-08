@@ -50,8 +50,6 @@ void actionCollect(const std::string &filename, bool collectAll)
 	MeasurementSet *ms = new MeasurementSet(filename);
 	const unsigned polarizationCount = ms->GetPolarizationCount();
 	const unsigned bandCount = ms->BandCount();
-	const bool ignoreChannelZero = ms->ChannelZeroIsRubish();
-	const std::string stationName = ms->GetStationName();
 	BandInfo *bands = new BandInfo[bandCount];
 	double **frequencies = new double*[bandCount];
 	unsigned totalChannels = 0;
@@ -70,21 +68,13 @@ void actionCollect(const std::string &filename, bool collectAll)
 	std::cout
 		<< "Polarizations: " << polarizationCount << '\n'
 		<< "Bands: " << bandCount << '\n'
-		<< "Channels/band: " << (totalChannels / bandCount) << '\n'
-		<< "Name of obseratory: " << stationName << '\n';
-	if(ignoreChannelZero)
-		std::cout << "Channel zero will be ignored, as this looks like a LOFAR data set with bad channel 0.\n";
-	else
-		std::cout << "Channel zero will be included in the statistics, as it seems that channel 0 is okay.\n";
+		<< "Channels/band: " << (totalChannels / bandCount) << '\n';
 	
 	casa::Table table(filename, casa::Table::Update);
 	StatisticsCollection collection(polarizationCount);
 	for(unsigned b=0;b<bandCount;++b)
 	{
-		if(ignoreChannelZero)
-			collection.InitializeBand(b, (frequencies[b]+1), bands[b].channelCount-1);
-		else
-			collection.InitializeBand(b, frequencies[b], bands[b].channelCount);
+		collection.InitializeBand(b, frequencies[b], bands[b].channelCount);
 	}
 
 	const char *dataColumnName = "DATA";
@@ -117,21 +107,12 @@ void actionCollect(const std::string &filename, bool collectAll)
 		
 		casa::Array<casa::Complex>::const_iterator dataIter = dataArray.begin();
 		casa::Array<bool>::const_iterator flagIter = flagArray.begin();
-		const unsigned startChannel = ignoreChannelZero ? 1 : 0;
-		if(ignoreChannelZero)
-		{
-			for(unsigned p = 0; p < polarizationCount; ++p)
-			{
-				++dataIter;
-				++flagIter;
-			}
-		}
-		for(unsigned channel = startChannel ; channel<band.channelCount; ++channel)
+		for(unsigned channel = 0 ; channel<band.channelCount; ++channel)
 		{
 			for(unsigned p = 0; p < polarizationCount; ++p)
 			{
 				samples[p].push_back(*dataIter);
-				isRFI[p][channel - startChannel] = *flagIter;
+				isRFI[p][channel] = *flagIter;
 				
 				++dataIter;
 				++flagIter;
@@ -273,27 +254,15 @@ void actionQueryTime(const std::string &kindName, const std::string &filename)
 
 void actionSummarize(const std::string &filename)
 {
-	bool remote = aoRemote::ClusteredObservation::IsClusteredFilename(filename);
-	StatisticsCollection collection;
-	if(remote)
-	{
-		aoRemote::ClusteredObservation *observation = aoRemote::ClusteredObservation::Load(filename);
-		aoRemote::ProcessCommander commander(*observation);
-		commander.PushReadQualityTablesTask(&collection);
-		commander.Run();
-		delete observation;
-	}
-	else {
-		MeasurementSet *ms = new MeasurementSet(filename);
-		const unsigned polarizationCount = ms->GetPolarizationCount();
-		delete ms;
-		
-		collection.SetPolarizationCount(polarizationCount);
-		QualityTablesFormatter qualityData(filename);
-		collection.Load(qualityData);
-	}
+	MeasurementSet *ms = new MeasurementSet(filename);
+	const unsigned polarizationCount = ms->GetPolarizationCount();
+	delete ms;
 	
-	DefaultStatistics statistics(collection.PolarizationCount());
+	QualityTablesFormatter qualityData(filename);
+	StatisticsCollection collection(polarizationCount);
+	collection.Load(qualityData);
+	
+	DefaultStatistics statistics(polarizationCount);
 	
 	collection.GetGlobalTimeStatistics(statistics);
 	std::cout << "Time statistics: \n";

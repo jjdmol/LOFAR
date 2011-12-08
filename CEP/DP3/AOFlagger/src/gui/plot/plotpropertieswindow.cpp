@@ -101,7 +101,7 @@ void PlotPropertiesWindow::initVRangeWidgets()
 	_minMaxVRangeButton.set_group(group);
 	_minMaxVRangeButton.signal_clicked().connect(sigc::mem_fun(*this, &PlotPropertiesWindow::onVRangeChanged));
 
-	//_vRangeBox.pack_start(_winsorizedVRangeButton);
+	_vRangeBox.pack_start(_winsorizedVRangeButton);
 	_winsorizedVRangeButton.set_group(group);
 	_winsorizedVRangeButton.signal_clicked().connect(sigc::mem_fun(*this, &PlotPropertiesWindow::onVRangeChanged));
 	_vRangeBox.pack_start(_specifiedVRangeButton);
@@ -233,12 +233,12 @@ void PlotPropertiesWindow::onExportClicked()
 
 	if(result == Gtk::RESPONSE_OK)
 	{
-		const Gtk::FileFilter *filter = dialog.get_filter();
+		/*const Gtk::FileFilter *filter = dialog.get_filter();
 		if(filter->get_name() == pdfName)
 			_plot.SavePdf(dialog.get_filename());
 		else if(filter->get_name() == svgName)
 			_plot.SaveSvg(dialog.get_filename());
 		else
-			_plot.SavePng(dialog.get_filename());
+			_plot.SavePng(dialog.get_filename());*/
 	}
 }

@@ -151,55 +151,6 @@ class StatisticsDerivator
 			metaData->SetBand(band);
 			return std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr>(data, metaData);
 		}
-		static std::string GetDescription(QualityTablesFormatter::StatisticKind kind)
-		{
-			switch(kind)
-			{
-				case QualityTablesFormatter::MeanStatistic: return "Mean";
-				case QualityTablesFormatter::VarianceStatistic: return "Variance";
-				case QualityTablesFormatter::CountStatistic: return "Sample count";
-				case QualityTablesFormatter::DMeanStatistic: return "Differential mean";
-				case QualityTablesFormatter::DVarianceStatistic: return "Differential variance";
-				case QualityTablesFormatter::DCountStatistic: return "Sample count in differential statistics";
-				case QualityTablesFormatter::RFICountStatistic: return "Sample count affected by RFI";
-				case QualityTablesFormatter::RFIRatioStatistic: return "RFI";
-				case QualityTablesFormatter::RFIPercentageStatistic: return "RFI";
-				case QualityTablesFormatter::SignalToNoiseStatistic: return "SNR";
-				default: return "Value";
-			}
-		}
-		static bool HasUnits(QualityTablesFormatter::StatisticKind kind)
-		{
-			return !GetUnits(kind).empty();
-		}
-		static std::string GetUnits(QualityTablesFormatter::StatisticKind kind)
-		{
-			switch(kind)
-			{
-				case QualityTablesFormatter::MeanStatistic:
-				case QualityTablesFormatter::VarianceStatistic:
-				case QualityTablesFormatter::DMeanStatistic:
-				case QualityTablesFormatter::DVarianceStatistic:
-					return "arbitrary units";
-				case QualityTablesFormatter::RFIPercentageStatistic:
-					return "%";
-				case QualityTablesFormatter::CountStatistic:
-				case QualityTablesFormatter::DCountStatistic:
-				case QualityTablesFormatter::RFICountStatistic:
-				case QualityTablesFormatter::RFIRatioStatistic:
-				case QualityTablesFormatter::SignalToNoiseStatistic:
-				default:
-					return "";
-			}
-		}
-		static std::string GetDescWithUnits(QualityTablesFormatter::StatisticKind kind)
-		{
-			std::ostringstream str;
-			str << GetDescription(kind);
-			if(HasUnits(kind))
-				str << " (" << GetUnits(kind) << ")";
-			return str.str();
-		}
 	private:
 		template<typename T>
 		std::complex<T> deriveComplex(QualityTablesFormatter::StatisticKind kind, const DefaultStatistics &statistics, unsigned polarization) const
@@ -236,9 +187,6 @@ class StatisticsDerivator
 					break;
 				case QualityTablesFormatter::RFIRatioStatistic:
 					return std::complex<T>((double) statistics.rfiCount[polarization] / (statistics.count[polarization] + statistics.rfiCount[polarization]), 0.0f);
-					break;
-				case QualityTablesFormatter::RFIPercentageStatistic:
-					return std::complex<T>(100.0 * (double) statistics.rfiCount[polarization] / (statistics.count[polarization] + statistics.rfiCount[polarization]), 0.0f);
 					break;
 				case QualityTablesFormatter::RFICountStatistic:
 					return std::complex<T>(statistics.rfiCount[polarization], 0.0f);

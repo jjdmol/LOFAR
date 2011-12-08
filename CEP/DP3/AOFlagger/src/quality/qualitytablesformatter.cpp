@@ -37,7 +37,7 @@
 
 const std::string QualityTablesFormatter::_kindToNameTable[] =
 {
-	"Count", "Sum", "Mean", "RFICount", "RFISum", "RFIMean", "RFIRatio", "RFIPercentage", "FlaggedCount", "FlaggedRatio", "SumP2", "SumP3", "SumP4", "Variance", "VarianceOfVariance", "Skewness", "Kurtosis", "SignalToNoise", "DSum", "DMean", "DSumP2", "DSumP3", "DSumP4", "DVariance", "DVarianceOfVariance", "DCount", "BadSolutionCount", "CorrectCount", "CorrectedMean", "CorrectedSumP2", "CorrectedDCount", "CorrectedDMean", "CorrectedDSumP2", "FTSum", "FTSumP2"
+	"Count", "Sum", "Mean", "RFICount", "RFISum", "RFIMean", "RFIRatio", "FlaggedCount", "FlaggedRatio", "SumP2", "SumP3", "SumP4", "Variance", "VarianceOfVariance", "Skewness", "Kurtosis", "SignalToNoise", "DMean", "DSumP2", "DSumP3", "DSumP4", "DVariance", "DVarianceOfVariance", "DCount", "BadSolutionCount", "CorrectCount", "CorrectedMean", "CorrectedSumP2", "CorrectedDCount", "CorrectedDMean", "CorrectedDSumP2", "FTSum", "FTSumP2"
 };
 
 const std::string QualityTablesFormatter::_tableToNameTable[] =
