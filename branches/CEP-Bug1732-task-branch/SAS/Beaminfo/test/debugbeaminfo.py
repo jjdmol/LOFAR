@@ -28,9 +28,10 @@ def removeFailedElements(antennaFieldId):
   if nrows > 0:
     print "removing rows 0 to ", nrows
     if antennaFieldId=="":     # remove all
-      for i in range(0, nrows):
-        print "i ", i , " of ", nrows
-        failedElementsTab.removerows(i)
+      while nrows > 0:
+        print "removing row =  ",  nrows
+        failedElementsTab.removerows(nrows-1)
+	nrows=failedElementsTab.nrows()
     else:                      # remove only those for particular station
       antennaFieldIdCol=failedElementsTab.getcol("ANTENNA_FIELD_ID")
       for i in range(0, nrows):
