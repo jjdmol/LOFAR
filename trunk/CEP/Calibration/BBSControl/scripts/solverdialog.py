@@ -341,11 +341,11 @@ class SolverAppForm(QMainWindow):
     def load_table(self):
         #if self.table == True:
         #    print "load_table() we have already a table"   # DEBUG
-        #    self.close_table()
+        #   self.close_table()
 
         # Customization: check if ~/Cluster/SolutionTests exists
-        if os.path.exists('/Users/duscha/Cluster/SolutionTests'):
-            setDir=QString('/Users/duscha/Cluster/SolutionTests')
+        if os.path.exists('/data/scratch'):
+            setDir=QString('/data/scratch')
         else:
             setDir=QString('')
 
@@ -419,6 +419,7 @@ class SolverAppForm(QMainWindow):
         self.timeStartSlider.deleteLater()
         self.timeEndSlider.deleteLater()
         self.frequencyStartSlider.deleteLater()
+        self.frequencyStartSliderLabel.deleteLater()
         self.frequencyEndSlider.deleteLater()
         self.timeEndSliderLabel.deleteLater()
         self.frequencyStartSlider.deleteLater()
@@ -426,8 +427,8 @@ class SolverAppForm(QMainWindow):
         self.frequencyStartSliderLabel.deleteLater()
         self.frequencyEndSliderLabel.deleteLater()
         # NOW in self.close_parmDB()
-        #self.parametersComboBox.deleteLater()
-        #self.parmValueComboBox.deleteLater()
+        self.parametersComboBox.deleteLater()
+        self.parmValueComboBox.deleteLater()
 
         # Delete the Widgets
         del self.xAxisComboBox
@@ -446,10 +447,11 @@ class SolverAppForm(QMainWindow):
         
         self.buttonsLayout.update()
         #self.mainLayout.update()     # There is no mainLayout anymore
+        self.close_parmDB()    # we also must close the parmDB (and remove its widgets)
         self.solverQuery.close()
         self.table=False       # we don't have an open table anymore
 
-        self.close_parmDB()    # we also must close the parmDB (and remove its widgets)
+        
 
 
     # Open parmDB
@@ -462,6 +464,7 @@ class SolverAppForm(QMainWindow):
     # TODO: What is the proper way to close the parmDB?
     #
     def close_parmDB(self):
+        print "close_parmDB()"   # DEBUG
         self.parametersComboBox.deleteLater()
         self.parmValueComboBox.deleteLater()
         del self.parametersComboBox
@@ -476,13 +479,13 @@ class SolverAppForm(QMainWindow):
     # YYYY/MM/DD/HH:MM:SS
     #
     def convertDate(self, date=None):
-      print "convertDate()"                     # DEBUG
+      #print "convertDate()"                     # DEBUG
 
+      dateString=""
       if date==None:
         raise ValueError
       elif isinstance(date, np.ndarray):
         print "array"
-        dateString=[]
         for i in range(0, len(date)):
           q=pq.quantity(date[i], 's')
           print q
@@ -500,7 +503,11 @@ class SolverAppForm(QMainWindow):
     def on_timeStartSlider(self, index):
         # Read time at index
         starttime=self.solverQuery.timeSlots[index]['STARTTIME']
-        self.timeStartSliderLabel.setText("S:" +  str(starttime) + " s")
+        
+        if self.showDatesCheckBox.isChecked():
+          self.timeStartSliderLabel.setText("S:" +  str(self.convertDate(starttime)))
+        else:
+          self.timeStartSliderLabel.setText("S:" +  str(starttime) + " s")
 
         # Handle behaviour of timeEndSlider in combination with timeStartSlider
         # If timeEndSlider is smaller than timeStartSlider adjust the latter
@@ -515,7 +522,11 @@ class SolverAppForm(QMainWindow):
     def on_timeEndSlider(self, index):
         # Read time at index
         endtime=self.solverQuery.timeSlots[index]['ENDTIME']
-        self.timeEndSliderLabel.setText("E:" + str(endtime) + " s")
+
+        if self.showDatesCheckBox.isChecked():
+          self.timeEndSliderLabel.setText("S:" +  str(self.convertDate(endtime)))
+        else:
+          self.timeEndSliderLabel.setText("S:" +  str(endtime) + " s")
 
         # Handle behaviour of timeEndSlider in combination with timeStartSlider
         # If timeEndSlider is smaller than timeStartSlider adjust the latter
@@ -965,7 +976,12 @@ class SolverAppForm(QMainWindow):
             self.timeStartSliderLabel = QLabel("S:")
             self.timeStartSlider.setTracking(False)
             starttime=self.solverQuery.timeSlots[0]['STARTTIME']              # read first STARTTIME
-            self.timeStartSliderLabel.setText("S:" +  str(starttime) + " s")  # initialize StartTimeLabel with it
+
+            if self.showDatesCheckBox.isChecked():
+              self.timeStartSliderLabel.setText("S:" +  str(self.convertDate(starttime)))  # initialize StartTimeLabel with it
+            else:
+              self.timeStartSliderLabel.setText("S:" +  str(starttime) + " s")  # initialize StartTimeLabel with it
+
             self.timeStartSlider.setSingleStep(1)                        # step behaviour for single steps
             self.timeStartSlider.setPageStep(10)
             self.timeStartSlider.setMaximumWidth(170)
@@ -975,7 +991,12 @@ class SolverAppForm(QMainWindow):
             self.timeEndSliderLabel = QLabel("E:")
             self.timeEndSlider.setTracking(False)
             endtime=self.solverQuery.timeSlots[0]['ENDTIME']              # read first ENDTIME
-            self.timeEndSliderLabel.setText("E:" +  str(endtime) + " s")  # initialize EndTimeLabel with it
+
+            if self.showDatesCheckBox.isChecked():
+              self.timeEndSliderLabel.setText("E:" +  str(self.convertDate(endtime)))  # initialize EndTimeLabel with it
+            else:
+              self.timeEndSliderLabel.setText("E:" +  str(endtime) + " s")  # initialize EndTimeLabel with it
+
             self.timeEndSlider.setSingleStep(1)                        # step behaviour for single steps
             self.timeEndSlider.setPageStep(10)
             self.timeEndSlider.setMaximumWidth(170)
@@ -1321,13 +1342,30 @@ class SolverAppForm(QMainWindow):
         self.physicalValues=self.physicalValuesCheckBox.isChecked()
 
     def on_convertDate(self):
-        print "on_convertDate()"       # DEBUG        
-        #self.convertDate(self.x)
+        #print "on_convertDate()"       # DEBUG        
 
         # Update x-axis labels
         self.setXLabel()
         self.setYLabel()
-        # and S: and E: labels
+
+        # and S: and E: labels for sliders
+
+        indexStart=self.timeStartSlider.sliderPosition()
+        indexEnd=self.timeEndSlider.sliderPosition()
+        starttime=self.solverQuery.timeSlots[indexStart]['STARTTIME']
+        endtime=self.solverQuery.timeSlots[indexEnd]['ENDTIME']
+
+        if self.showDatesCheckBox.isChecked():
+          self.timeStartSliderLabel.setText("S:" +  str(self.convertDate(starttime)))
+        else:
+          self.timeStartSliderLabel.setText("S:" +  str(starttime) + " s")
+        if self.showDatesCheckBox.isChecked():
+          self.timeEndSliderLabel.setText("E:" +  str(self.convertDate(endtime)))
+        else:
+          self.timeEndSliderLabel.setText("E:" +  str(endtime) + " s")
+        
+        self.timeStartSlider.setValue(self.timeStartSlider.sliderPosition())
+        self.timeEndSlider.setValue(self.timeEndSlider.sliderPosition())
         
 
     # Set class attribute when showIterationsCheckBox is clicked
@@ -1385,8 +1423,8 @@ class SolverAppForm(QMainWindow):
 
         if self.xAxisType == "Time":
             # first check we have a valid self.x
-            if self.x==None:
-              self.x=self.sq.getTimeSlots()[0]
+            if self.x==None:      # get time
+              self.x=self.solverQuery.getTimeSlots()
             if self.showDatesCheckBox.isChecked():
               self.xLabel="Time (UTC) in s after " + str(self.convertDate(self.x[0]))
             else:
