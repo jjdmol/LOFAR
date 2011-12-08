@@ -22,35 +22,11 @@ PANEL,-1 -1 556 569 N "_3DFace" 0
  
   // pass baseDP to selfstate Object to work with
   setValue(\"selfState.light\",\"toolTipText\",baseDP);
-
+  
+  // connect for childUpdates
+  showChildState(baseDP);
   // connect for selfUpdates
   showSelfState(baseDP);
-
- 
- // if (dpExists(baseDP + \".InputEnable:_online.._value\")) {
- //   if (dpConnect(\"ShowInputLines\", baseDP + \".InputEnable:_online.._value\",
- //                 	                            baseDP + \".InputEnable:_online.._invalid\") == -1) {
- //     LOG_ERROR(\"Station_RCU.pnl:Initialize|couldn't connect to \"+baseDP + \".InputEnable \" + getLastError());
- //   }      
- // }
-  
-
-  // Aanpassen voor het dp HBAAntenna
-//  if (dpExists(baseDP + \".VddVccEnable:_online.._value\") &&
-//      dpExists(baseDP + \".nofOverflow:_online.._value\")) {
-//    setValue(\"txt_component\", \"text\", \"ADC\");
-//    if (dpConnect(\"ControlOverflow\", baseDP + \".VddVccEnable:_online.._value\",
-//	   		             baseDP + \".nofOverflow:_online.._value\",
-//                                     baseDP + \".VddVccEnable:_online.._invalid\") == -1) {
-//      LOG_ERROR(\"Station_RCU.pnl:Initialize|couldn't connect to \"+baseDP + \".VddVccEnable \" + getLastError());
-//    }
-//    if (!navFunct_dpReachable(baseDP + \".VddVccEnable\")) {
-//      ControlOverflow(\"\",false,\"\",0,\"\",true);
-//    }      
-//  } else {
-//    setValue(\"rect_overflow\", \"backCol\", \"Lofar_dpdoesnotexist\");
-//    setValue(\"txt_overflow\" , \"visible\", FALSE);    
-//  }
   
    reload();
 }
@@ -133,7 +109,7 @@ LANG:1 6 Layer1
 1 19 1 "" 1
 0
 6 2
-"RECTANGLE1"
+"childStateBorder"
 ""
 1 151 99 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
  E E
@@ -143,15 +119,13 @@ E E E
 1
 LANG:1 0 
 
-3
-"hoverfclr" "N \"Blue\""
-"hoverbclr" "N \"_Transparent\""
+1
 "dashclr"N "_Transparent"
 E E 0 3 2 1 1 E 1 0 1 -4 -6 1 E 71 83 515 527
 2 18
 "theHBAAntenna"
 ""
-1 70.86428379467891 24 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 71.42774945920596 24 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 235 0 0 0 0 0
 E E E

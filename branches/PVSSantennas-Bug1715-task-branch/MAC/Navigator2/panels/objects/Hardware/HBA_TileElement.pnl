@@ -26,7 +26,7 @@ PANEL,-1 -1 114 109 N "_3DFace" 1
      if (dpExists(baseDP + \".X.status.state:_online.._value\")) {
        if (dpConnect(\"ShowStates\", baseDP + \".X.status.state:_online.._value\", 
                                    baseDP + \".Y.status.state:_online.._value\",
-                                   baseDP + \".comm:_online.._value\",
+                                   baseDP + \".comm.status.state:_online.._value\",
                      	            baseDP + \".X.status.state:_online.._invalid\") == -1) {
          LOG_ERROR(\"HBA_TileElement.pnl:Initialize|couldn't connect to \"+baseDP + \".X or .Y .status.state \" + getLastError());
        }      
@@ -36,28 +36,26 @@ PANEL,-1 -1 114 109 N "_3DFace" 1
 
 void ShowStates( string dp1, int X_Status, 
                  string dp2, int Y_Status, 
-                 string dp3, bool Comm_Status, 
+                 string dp3, int Comm_Status, 
                  string dp4, bool invalid) {
   if(!invalid) {
        DebugN(\"HBA_TileElement.pnl ShowStates: OK : X_Status = \" + X_Status + \" Y_Status = \" + Y_Status+ \" Comm_Status = \" + Comm_Status);
        ColorObject(\"XBox\",X_Status);
        ColorObject(\"YBox\",Y_Status);
-       if (!Comm_Status) {
-          ColorObject(\"CBox\",40); 
-       } else {
-          ColorObject(\"CBox\",10);      
-       }
+       ColorObject(\"CBox\",Comm_Status);
        
        string theToolTipText = \"\";
        string XPolStatusString = \"\";
        string YPolStatusString = \"\";
        string CommStatusString = \"\";
        
-       if (!Comm_Status) {
+       if (Comm_Status != 10) {
          CommStatusString = \"<i><font color=\\\"red\\\">No communication possible</font></i>\";
          XPolStatusString = \"<i><font color=\\\"red\\\">Inoperative</font></i>\";
          YPolStatusString = \"<i><font color=\\\"red\\\">Inoperative</font></i>\";
-         setValue(\"elementBorder\",\"backCol\",\"Lofar_off\");
+         setValue(\"elementBorder\",\"backCol\",\"Lofar_off\");      
+         setValue(\"XBox\",\"backCol\",\"black\");      
+         setValue(\"YBox\",\"backCol\",\"black\");      
        } else {
          CommStatusString = \"OK\";
          XPolStatusString = (X_Status == 10) ? \"OK\" : \"<font color=\\\"red\\\">Problem with Switches and/or Receiver</font>\" ; 
@@ -73,6 +71,9 @@ void ShowStates( string dp1, int X_Status,
        theToolTipText += \"------------------------------------------------------------\";
        elementBorder.toolTipText = theToolTipText;
     } 
+
+    // connect for selfUpdates
+    showSelfState(baseDP);  
 }
 
 
@@ -122,8 +123,7 @@ E E E
 1
 LANG:1 23 Status of this element:
 
-2
-"hoverfclr" "N \"STD_spinner_busyBlink_2\""
+1
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E 1 0 1 -18 -72 1 E 25 79 94 148
 6 9
