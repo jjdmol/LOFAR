@@ -40,7 +40,6 @@ class QualityTablesFormatter {
 			RFISumStatistic,
 			RFIMeanStatistic,
 			RFIRatioStatistic,
-			RFIPercentageStatistic,
 			FlaggedCountStatistic,
 			FlaggedRatioStatistic,
 			SumP2Statistic,

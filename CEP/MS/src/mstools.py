@@ -126,9 +126,9 @@ def movemss (srcPattern, dstPattern, userName, bandsPerBeam=80, dryrun=False):
                 srcDir = os.path.dirname(srcName)
                 cmd = ''
                 if createDir:
-                    cmd = 'ssh -x ' + userName + '@' + dstHosts[i] + \
+                    cmd = 'ssh -x' + userName + '@' + dstHosts[i] + \
                         ' "mkdir -p ' + srcDir  + '" && '
-                cmd += 'ssh -x ' + userName + '@' + srcHosts[inx] + \
+                cmd += 'ssh -x' + userName + '@' + srcHosts[inx] + \
                     ' "scp -r ' + srcName + ' ' + \
                     userName + '@' + dstHosts[i] + ':' + srcDir + \
                     ' && rm -rf ' + srcName + '"'

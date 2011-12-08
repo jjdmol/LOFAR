@@ -21,15 +21,10 @@
 #include <limits>
 #include <sstream>
 
-#include <boost/bind.hpp>
-
-#include <AOFlagger/gui/quality/datawindow.h>
 #include <AOFlagger/gui/quality/twodimensionalplotpage.h>
 
 #include <AOFlagger/quality/statisticscollection.h>
 #include <AOFlagger/quality/statisticsderivator.h>
-
-#include <AOFlagger/gui/plot/plotpropertieswindow.h>
 
 TwoDimensionalPlotPage::TwoDimensionalPlotPage() :
 	_statisticFrame("Statistics"),
@@ -39,7 +34,7 @@ TwoDimensionalPlotPage::TwoDimensionalPlotPage() :
 	_dCountButton("DCount"),
 	_dMeanButton("DMean"),
 	_dVarianceButton("DVariance"),
-	_rfiPercentageButton("RFI"),
+	_rfiRatioButton("RFIRatio"),
 	_snrButton("SNR"),
 	_polarizationFrame("Polarization"),
 	_polXXButton("XX"),
@@ -56,10 +51,7 @@ TwoDimensionalPlotPage::TwoDimensionalPlotPage() :
 	_plotFrame("Plot"),
 	_logarithmicButton("Logarithmic"),
 	_zeroAxisButton("Zero axis"),
-	_plotPropertiesButton("Properties..."),
-	_dataExportButton("Data..."),
 	_statCollection(0),
-	_plotPropertiesWindow(0),
 	_customButtonsCreated(false)
 {
 	initStatisticKindButtons();
@@ -73,27 +65,6 @@ TwoDimensionalPlotPage::TwoDimensionalPlotPage() :
 	pack_start(_plotWidget, Gtk::PACK_EXPAND_WIDGET);
 	
 	show_all_children();
-	
-	_dataWindow = new DataWindow();
-}
-
-TwoDimensionalPlotPage::~TwoDimensionalPlotPage()
-{
-	delete _dataWindow;
-}
-
-unsigned TwoDimensionalPlotPage::selectedKindCount() const
-{
-	unsigned count = 0;
-	if(_countButton.get_active()) ++count;
-	if(_meanButton.get_active()) ++count;
-	if(_varianceButton.get_active()) ++count;
-	if(_dCountButton.get_active()) ++count;
-	if(_dMeanButton.get_active()) ++count;
-	if(_dVarianceButton.get_active()) ++count;
-	if(_rfiPercentageButton.get_active()) ++count;
-	if(_snrButton.get_active()) ++count;
-	return count;
 }
 
 void TwoDimensionalPlotPage::updatePlot()
@@ -114,16 +85,11 @@ void TwoDimensionalPlotPage::updatePlot()
 			plotStatistic(QualityTablesFormatter::DMeanStatistic);
 		if(_dVarianceButton.get_active())
 			plotStatistic(QualityTablesFormatter::DVarianceStatistic);
-		if(_rfiPercentageButton.get_active())
-			plotStatistic(QualityTablesFormatter::RFIPercentageStatistic);
+		if(_rfiRatioButton.get_active())
+			plotStatistic(QualityTablesFormatter::RFIRatioStatistic);
 		if(_snrButton.get_active())
 			plotStatistic(QualityTablesFormatter::SignalToNoiseStatistic);
 		_plotWidget.Update();
-		
-		if(_dataWindow->get_visible())
-		{
-			updateDataWindow();
-		}
 	}
 }
 
@@ -151,7 +117,7 @@ void TwoDimensionalPlotPage::plotPhase(QualityTablesFormatter::StatisticKind kin
 {
 	std::ostringstream s;
 	s << "Polarization " << polarization;
-	StartLine(_plot, s.str(), getYDesc());
+	StartLine(_plot, s.str());
 	StatisticsDerivator derivator(*_statCollection);
 	const std::map<double, DefaultStatistics> &statistics = GetStatistics();
 	for(std::map<double, DefaultStatistics>::const_iterator i=statistics.begin();i!=statistics.end();++i)
@@ -167,7 +133,7 @@ void TwoDimensionalPlotPage::plotPhase(QualityTablesFormatter::StatisticKind kin
 {
 	std::ostringstream s;
 	s << "Polarization " << polarizationA << " and " << polarizationB;
-	StartLine(_plot, s.str(), getYDesc());
+	StartLine(_plot, s.str());
 	StatisticsDerivator derivator(*_statCollection);
 	const std::map<double, DefaultStatistics> &statistics = GetStatistics();
 	for(std::map<double, DefaultStatistics>::const_iterator i=statistics.begin();i!=statistics.end();++i)
@@ -242,8 +208,8 @@ void TwoDimensionalPlotPage::initStatisticKindButtons()
 	_dVarianceButton.signal_clicked().connect(sigc::mem_fun(*this, &TwoDimensionalPlotPage::updatePlot));
 	_statisticBox.pack_start(_dVarianceButton, Gtk::PACK_SHRINK);
 	
-	_rfiPercentageButton.signal_clicked().connect(sigc::mem_fun(*this, &TwoDimensionalPlotPage::updatePlot));
-	_statisticBox.pack_start(_rfiPercentageButton, Gtk::PACK_SHRINK);
+	_rfiRatioButton.signal_clicked().connect(sigc::mem_fun(*this, &TwoDimensionalPlotPage::updatePlot));
+	_statisticBox.pack_start(_rfiRatioButton, Gtk::PACK_SHRINK);
 	
 	_snrButton.signal_clicked().connect(sigc::mem_fun(*this, &TwoDimensionalPlotPage::updatePlot));
 	_statisticBox.pack_start(_snrButton, Gtk::PACK_SHRINK);
@@ -309,77 +275,7 @@ void TwoDimensionalPlotPage::initPlotButtons()
 	_plotBox.pack_start(_zeroAxisButton, Gtk::PACK_SHRINK);
 	_plot.SetIncludeZeroYAxis(true);
 	
-	_plotPropertiesButton.signal_clicked().connect(sigc::mem_fun(*this, &TwoDimensionalPlotPage::onPlotPropertiesClicked));
-	_plotBox.pack_start(_plotPropertiesButton, Gtk::PACK_SHRINK);
-
-	_dataExportButton.signal_clicked().connect(sigc::mem_fun(*this, &TwoDimensionalPlotPage::onDataExportClicked));
-	_plotBox.pack_start(_dataExportButton, Gtk::PACK_SHRINK);
-	
 	_plotFrame.add(_plotBox);
 	
 	_sideBox.pack_start(_plotFrame, Gtk::PACK_SHRINK);
 }
-
-void TwoDimensionalPlotPage::onPlotPropertiesClicked()
-{
-	if(_plotPropertiesWindow == 0)
-	{
-		_plotPropertiesWindow = new PlotPropertiesWindow(_plot, "Plot properties");
-		_plotPropertiesWindow->OnChangesApplied = boost::bind(&TwoDimensionalPlotPage::updatePlot, this);
-	}
-	
-	_plotPropertiesWindow->show();
-	_plotPropertiesWindow->raise();
-}
-
-void TwoDimensionalPlotPage::updateDataWindow()
-{
-	std::stringstream _dataStream;
-	 _dataStream << std::setprecision(14);
-	if(_plot.PointSetCount() != 0)
-	{
-		const Plot2DPointSet &pointSet = _plot.GetPointSet(0);
-		const size_t valueCount = pointSet.Size();
-		for(size_t i=0; i<valueCount; ++i)
-		{
-			const double
-				x = pointSet.GetX(i),
-				y = pointSet.GetY(i);
-			if(pointSet.HasTickLabels())
-			{
-				std::string label = pointSet.TickLabels()[i];
-				_dataStream << i << '\t' << label << '\t' << y << '\n';
-			}
-			else
-				_dataStream << i << '\t' << x << '\t' << y << '\n';
-		}
-	}
-	_dataWindow->SetData(_dataStream.str());
-}
-
-void TwoDimensionalPlotPage::onDataExportClicked()
-{
-	_dataWindow->show();
-	_dataWindow->raise();
-	updateDataWindow();
-}
-
-std::string TwoDimensionalPlotPage::getYDesc() const
-{
-	if(selectedKindCount() != 1)
-		return "Value";
-	else
-	{
-		QualityTablesFormatter::StatisticKind kind;
-		if(_countButton.get_active()) kind = QualityTablesFormatter::CountStatistic;
-		if(_meanButton.get_active()) kind = QualityTablesFormatter::MeanStatistic;
-		if(_varianceButton.get_active()) kind = QualityTablesFormatter::VarianceStatistic;
-		if(_dCountButton.get_active()) kind = QualityTablesFormatter::DCountStatistic;
-		if(_dMeanButton.get_active()) kind = QualityTablesFormatter::DMeanStatistic;
-		if(_dVarianceButton.get_active()) kind = QualityTablesFormatter::DVarianceStatistic;
-		if(_rfiPercentageButton.get_active()) kind = QualityTablesFormatter::RFIPercentageStatistic;
-		if(_snrButton.get_active()) kind = QualityTablesFormatter::SignalToNoiseStatistic;
-		return StatisticsDerivator::GetDescWithUnits(kind);
-	}
-}
-

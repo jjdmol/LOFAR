@@ -36,8 +36,10 @@
 class TwoDimensionalPlotPage : public Gtk::HBox {
 	public:
 		TwoDimensionalPlotPage();
-    virtual ~TwoDimensionalPlotPage();
-
+    virtual ~TwoDimensionalPlotPage()
+    {
+		}
+		
 		void SetStatistics(class StatisticsCollection *statCollection, const std::vector<AntennaInfo> &antennas)
 		{
 			processStatistics(statCollection, antennas);
@@ -67,7 +69,7 @@ class TwoDimensionalPlotPage : public Gtk::HBox {
 		
 		virtual const std::map<double, class DefaultStatistics> &GetStatistics() const = 0;
 		
-		virtual void StartLine(Plot2D &plot, const std::string &name, const std::string &yAxisDesc) = 0;
+		virtual void StartLine(Plot2D &plot, const std::string &name) = 0;
 		
 		virtual void addCustomPlotButtons(Gtk::VBox &container)
 		{
@@ -78,13 +80,10 @@ class TwoDimensionalPlotPage : public Gtk::HBox {
 			return _statCollection;
 		}
 		void updatePlot();
-		
-		unsigned selectedKindCount() const;
 	private:
 		enum PhaseType { AmplitudePhaseType, PhasePhaseType, RealPhaseType, ImaginaryPhaseType} ;
 		
 		void updatePlotConfig();
-		void updateDataWindow();
 		
 		template<enum PhaseType Phase>
 		inline double getValue(const std::complex<long double> val);
@@ -106,14 +105,12 @@ class TwoDimensionalPlotPage : public Gtk::HBox {
 			_zeroAxisButton.set_sensitive(!_logarithmicButton.get_active());
 			updatePlotConfig();
 		}
-		void onPlotPropertiesClicked();
-		void onDataExportClicked();
 		
 		Gtk::VBox _sideBox;
 		
 		Gtk::Frame _statisticFrame;
 		Gtk::VBox _statisticBox;
-		Gtk::CheckButton _countButton, _meanButton, _varianceButton, _dCountButton, _dMeanButton, _dVarianceButton,  _rfiPercentageButton, _snrButton;
+		Gtk::CheckButton _countButton, _meanButton, _varianceButton, _dCountButton, _dMeanButton, _dVarianceButton,  _rfiRatioButton, _snrButton;
 		
 		Gtk::Frame _polarizationFrame;
 		Gtk::VBox _polarizationBox;
@@ -126,18 +123,12 @@ class TwoDimensionalPlotPage : public Gtk::HBox {
 		Gtk::Frame _plotFrame;
 		Gtk::VBox _plotBox;
 		Gtk::CheckButton _logarithmicButton, _zeroAxisButton;
-		Gtk::Button _plotPropertiesButton, _dataExportButton;
 		
 		class StatisticsCollection *_statCollection;
 		Plot2D _plot;
 		PlotWidget _plotWidget;
 		
-		class PlotPropertiesWindow *_plotPropertiesWindow;
-		class DataWindow *_dataWindow;
-		
 		bool _customButtonsCreated;
-		
-		std::string getYDesc() const;
 };
 
 #endif

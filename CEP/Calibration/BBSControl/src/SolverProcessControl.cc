@@ -104,8 +104,8 @@ namespace LOFAR
         // Initialize the calibration session.
         string key = ps->getString("BBDB.Key", "default");
         itsCalSession.reset(new CalSession(key,
-          ps->getString("BBDB.Name", (getenv("USER") ? : "")),
-          ps->getString("BBDB.User", "postgres"),
+          ps->getString("BBDB.Name"),
+          ps->getString("BBDB.User"),
           ps->getString("BBDB.Password", ""),
           ps->getString("BBDB.Host", "localhost"),
           ps->getString("BBDB.Port", "")));
