@@ -59,7 +59,7 @@ StorageNode			-		C	Y	LOFAR_PIC_@osrack@_@ossubcluster@_@storagenode@
 OfflineNode			-		C	Y	LOFAR_PIC_@osrack@_@ossubcluster@_@offlinenode@
 CEPPermSW			-		C	N	LOFAR_PermSW
 InputBufferControl		-		C	Y	LOFAR_PermSW_InputBufferControl
-CEPHardwareMonitor		-		C	Y	LOFAR_PermSW_HardwareMonitor
+CEPHardwareMonitor		HWM		C	Y	LOFAR_PermSW_HardwareMonitor
 SoftwareMonitor			-		C	Y	LOFAR_PermSW_SoftwareMonitor
 Daemons				-		C	N	LOFAR_PermSW_Daemons
 PVSS00pmon			-		C	Y	LOFAR_PermSW_Daemons_PVSS00pmon

@@ -435,6 +435,21 @@ void GCFScheduler::handleEventQueue()
 		// remove the event from the Q so that transitions can be put in front of it.
 		theEventQueue.pop_front();
 
+		// when this command was an entry in a new state, inject the task queue into the current queue
+		// before executing the F_ENTRY so that doing a TRAN during the F_ENTRY delivers the parked events
+		// in the 'TRANned' statemachine.
+		if (theQueueEntry->event->signal == F_ENTRY) {
+			// inject port-events first (so that they are handled after the inserted task events).
+			_injectParkedEvents();		
+			GCFFsm*				task(theQueueEntry->task);
+			GCFEvent*			eventPtr;
+			GCFPortInterface*	portPtr;
+			while (task->unqueueTaskEvent(&eventPtr, &portPtr)) {
+				LOG_DEBUG_STR("Injecting deferred taskEvent " << eventName(*eventPtr) << "into the event queue");
+				_injectEvent(task, *eventPtr, portPtr, false);	// false=don't copy event(it's already cloned)
+			}
+		}
+
 		// pass it to the task
 		GCFEvent::TResult	status = _sendEvent(theQueueEntry->task, *(theQueueEntry->event), 
 												theQueueEntry->port);
@@ -446,18 +461,6 @@ void GCFScheduler::handleEventQueue()
 			if (status != GCFEvent::HANDLED) {
 				LOG_TRACE_COND_STR("Event " << eventName(*(theQueueEntry->event)) << " in task " << taskName << 
 							 " NOT HANDLED, deleting it");
-			}
-			// when this command was an entry in a new state, inject the task queue into the current queue
-			if (theQueueEntry->event->signal == F_ENTRY) {
-				// inject port-events first (so that they are handled after the inserted task events).
-				_injectParkedEvents();		
-				GCFFsm*				task(theQueueEntry->task);
-				GCFEvent*			eventPtr;
-				GCFPortInterface*	portPtr;
-				while (task->unqueueTaskEvent(&eventPtr, &portPtr)) {
-					LOG_DEBUG_STR("Injecting deferred taskEvent " << eventName(*eventPtr) << "into the event queue");
-					_injectEvent(task, *eventPtr, portPtr, false);	// false=don't copy event(it's already cloned)
-				}
 			}
 		}
 		else { // all other protocols
