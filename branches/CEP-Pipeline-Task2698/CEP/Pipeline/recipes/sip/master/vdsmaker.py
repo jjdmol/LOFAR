@@ -114,6 +114,7 @@ class vdsmaker(BaseRecipe, RemoteCommandRecipeMixIn):
             if combineproc.returncode != 0:
                 raise subprocess.CalledProcessError(combineproc.returncode, command)
             self.outputs['gvds'] = gvds_out
+            self.logger.info("Wrote combined VDS file: %s" % gvds_out)
         except subprocess.CalledProcessError, cpe:
             self.logger.exception("combinevds failed with status %d: %s" % (cpe.returncode, serr))
             failure = True
