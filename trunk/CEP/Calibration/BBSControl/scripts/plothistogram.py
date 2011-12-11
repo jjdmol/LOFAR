@@ -125,7 +125,7 @@ class plothistogram(QFrame):
       self.connect(self.closeButton, SIGNAL('clicked()'), SLOT('close()'))
       self.connect(self.histogramBinSpin, SIGNAL('valueChanged(int)'), self.on_changeBinSpin)      
       self.connect(self.normedCheckBox, SIGNAL('stateChanged(int)'), self.on_normedCheckBox)
-      self.connect(self.dataComboBox, SIGNAL('valueChanged(int)'), self.on_data)
+      self.connect(self.dataComboBox, SIGNAL('currentIndexChanged(int)'), self.on_data)
       
    def on_changeBinSpin(self):
       self.nbins=self.histogramBinSpin.value()      
