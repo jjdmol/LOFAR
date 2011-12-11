@@ -250,9 +250,18 @@ template <bool ALLSTOKES> void Stokes::calculateIncoherent(const SampleData<> *s
     }
   }
 
-  /* hack: if no valid samples, insert zeroes */
-  if (nrValidStations == 0)
-    nrValidStations = 1;
+  if (nrValidStations == 0) {
+    /* if no valid samples, insert zeroes */
+
+    for (unsigned stokes = 0; stokes < ALLSTOKES ? 4 : 1; stokes++)
+      for (unsigned ch = 0; ch < info.nrChannels)
+        memset(&out->samples[stokes][ch][0], 0, info.nrSamples * sizeof out->samples[0][0][0]);
+
+    // flag everything
+    out->flags[0].include(0, info.nrSamples);
+
+    return;
+  }
 
   // shorten the flags over the integration length
   out->flags[0] /= timeIntegrations;
