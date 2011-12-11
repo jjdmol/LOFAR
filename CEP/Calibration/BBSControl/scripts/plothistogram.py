@@ -78,7 +78,14 @@ class plothistogram(QFrame):
       self.normedCheckLabel=QLabel("Normalize")
       self.normedCheckBox.setToolTip("Normalize histogram")
       self.normedCheckBox.show()
-      self.dpi = 100
+      #self.dpi = 100
+      
+      self.dataComboBox=QComboBox()
+      self.dataComboBox.addItem(self.parent.parent.parmValueComboBox.currentText())
+      self.dataComboBox.addItem(self.parent.parent.parametersComboBox.currentText())
+      self.dataComboBox.setMaximumWidth(120)
+      self.dataComboBox.setMinimumHeight(25)
+      self.dataComboBox.setCurrentIndex(1)
 
    def createLayout(self):
       #print "createLayout()"      # DEBUG
@@ -93,6 +100,7 @@ class plothistogram(QFrame):
       #self.buttonLayout.addWidget(self.normedCheckBox)
       #self.buttonLayout.addWidget(self.normedCheckLabel)
       self.buttonLayout.addWidget(self.histogramBinSpin)
+      self.buttonLayout.addWidget(self.dataComboBox)
       self.buttonLayout.insertStretch(-1)
       self.buttonLayout.addWidget(self.closeButton)
       self.plotLayout.addWidget(self.canvas)
@@ -117,6 +125,7 @@ class plothistogram(QFrame):
       self.connect(self.closeButton, SIGNAL('clicked()'), SLOT('close()'))
       self.connect(self.histogramBinSpin, SIGNAL('valueChanged(int)'), self.on_changeBinSpin)      
       self.connect(self.normedCheckBox, SIGNAL('stateChanged(int)'), self.on_normedCheckBox)
+      self.connect(self.dataComboBox, SIGNAL('valueChanged(int)'), self.on_data)
       
    def on_changeBinSpin(self):
       self.nbins=self.histogramBinSpin.value()      
@@ -135,13 +144,23 @@ class plothistogram(QFrame):
    def on_normedCheckBox(self):
       self.plot()
 
+   def on_data(self):
+      print "on_data()"       # DEBUG
+      if self.dataComboBox.currentText()==self.parent.parent.parametersComboBox.currentText():
+          self.data=self.data2
+      else:
+          self.data=self.data1
+      self.plot()
+
    def plot(self):
       self.fig.delaxes(self.ax)            # delete all axes first
       self.ax=self.fig.add_subplot(111)
       
       n, bins = np.histogram(self.data, self.histogramBinSpin.value(), normed=self.normedCheckBox.isChecked())
 
-      self.ax.bar(bins[1:], n, color='blue', width=0.1)
+      self.xmin=bins[1]
+      self.xmax=bins[len(bins)-1]
+      self.ax.bar(bins[1:], n, color='blue', width=(self.xmax-self.xmin)/len(bins))
       self.canvas.draw()
 
       
