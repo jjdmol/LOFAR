@@ -89,17 +89,11 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
 #endif
     int			transposeBeams(unsigned block);
     void		filter();
-    void		dedisperseBeforeBeamForming();
     void		dedisperseAfterBeamForming(unsigned beam, double dm);
     void		preCorrelationFlagging();
     void		mergeStations();
     void		formBeams(unsigned sap, unsigned firstBeam, unsigned nrBeams);
     void		receiveBeam(unsigned stream);
-    void		preTransposeBeams(unsigned inbeam, unsigned outbeam);
-    void		postTransposeBeams(unsigned subband);
-    void		postTransposeStokes(unsigned subband);
-    void		calculateCoherentStokes(unsigned inbeam, unsigned outbeam);
-    void		calculateIncoherentStokes();
     void		correlate();
     void		postCorrelationFlagging();
 
@@ -134,9 +128,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
     Stream		*itsInputStream;
 #endif
     SmartPtr<Stream>	itsCorrelatedDataStream;
-    SmartPtr<Stream>	itsIncoherentStokesStream;
     SmartPtr<Stream>	itsFinalBeamFormedDataStream;
-    SmartPtr<Stream>	itsFinalCoherentStokesDataStream;
     SmartPtr<Stream>	itsTriggerDataStream;
 
     const LocationInfo	&itsLocationInfo;
@@ -146,7 +138,6 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
     std::vector<double> itsDMs;
     bool		itsFakeInputData;
     bool		itsHasPhaseOne, itsHasPhaseTwo, itsHasPhaseThree;
-
 
 #if defined HAVE_MPI
     SmartPtr<AsyncTranspose<SAMPLE_TYPE> >	itsAsyncTransposeInput;
@@ -160,21 +151,19 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
     SmartPtr<FilteredData>			itsFilteredData;
     SmartPtr<CorrelatedData>			itsCorrelatedData;
     SmartPtr<BeamFormedData>			itsBeamFormedData;
-    SmartPtr<PreTransposeBeamFormedData>	itsPreTransposeBeamFormedData;
-    SmartPtr<StokesData>			itsIncoherentStokesData;
-    SmartPtr<StokesData>			itsCoherentStokesData;
-    SmartPtr<TransposedStokesData>		itsTransposedCoherentStokesData;
     SmartPtr<TransposedBeamFormedData>		itsTransposedBeamFormedData;
-    SmartPtr<FinalStokesData>			itsFinalCoherentStokesData;
     SmartPtr<FinalBeamFormedData>		itsFinalBeamFormedData;
     SmartPtr<TriggerData>			itsTriggerData;
 
+    std::vector<SmartPtr<PreTransposeBeamFormedData> > itsPreTransposeBeamFormedData;
+    void                                        *itsBeamMemory;
+    SmartPtr<Arena>                             itsBeamArena;
+    SmartPtr<Allocator>                         itsBeamAllocator;
+
     SmartPtr<PPF<SAMPLE_TYPE> >			itsPPF;
     SmartPtr<BeamFormer>			itsBeamFormer;
-    SmartPtr<Stokes>				itsCoherentStokes;
-    SmartPtr<Stokes>				itsIncoherentStokes;
+    SmartPtr<Stokes>				itsStokes;
     SmartPtr<Correlator>			itsCorrelator;
-    SmartPtr<DedispersionBeforeBeamForming>	itsDedispersionBeforeBeamForming;
     SmartPtr<DedispersionAfterBeamForming>	itsDedispersionAfterBeamForming;
     SmartPtr<PreCorrelationFlagger>		itsPreCorrelationFlagger;
     SmartPtr<PostCorrelationFlagger>		itsPostCorrelationFlagger;

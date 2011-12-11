@@ -57,7 +57,7 @@ class OutputSection
     void				   notDroppingData(unsigned subband);
 
     const std::string              	   itsLogPrefix;
-    const bool                             itsVariableNrSubbands;
+    const bool                             itsVariableDataSize;
     const Transpose2                       &itsTranspose2Logic;
 
     const unsigned			   itsNrComputeCores;
@@ -66,6 +66,7 @@ class OutputSection
 
     const unsigned			   itsNrIntegrationSteps;
     unsigned				   itsCurrentIntegrationStep;
+    const unsigned			   itsNrSamplesPerIntegration;
     unsigned				   itsSequenceNumber;
 
     const bool                		   itsIsRealTime;
@@ -111,24 +112,10 @@ class CorrelatedDataOutputSection : public PhaseTwoOutputSection
 };
 
 
-class IncoherentStokesOutputSection : public PhaseTwoOutputSection
-{
-  public:
-    IncoherentStokesOutputSection(const Parset &, Stream * (*createStream)(unsigned, unsigned));
-};
-
-
 class BeamFormedDataOutputSection : public PhaseThreeOutputSection
 {
   public:
     BeamFormedDataOutputSection(const Parset &, Stream * (*createStream)(unsigned, unsigned));
-};
-
-
-class CoherentStokesOutputSection : public PhaseThreeOutputSection
-{
-  public:
-    CoherentStokesOutputSection(const Parset &, Stream * (*createStream)(unsigned, unsigned));
 };
 
 

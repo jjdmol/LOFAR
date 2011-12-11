@@ -26,11 +26,6 @@
 #ifndef LOFAR_STORAGE_MSWRITERLDA_H
 #define LOFAR_STORAGE_MSWRITERLDA_H
 
-#if defined HAVE_LDA && defined HAVE_HDF5
-#define USE_LDA
-#endif
-
-
 //# Includes
 #include <Common/LofarTypes.h>
 #include <Common/lofar_vector.h>
@@ -40,11 +35,7 @@
 #include <Storage/MSWriter.h>
 #include <Storage/MSWriterFile.h>
 
-#ifdef USE_LDA
 #include <vector>
-#endif
-
-//# Forward declarations
 
 namespace LOFAR
 {
@@ -56,16 +47,15 @@ namespace LOFAR
     public:
       MSWriterLDA(const string &filename, const Parset &parset, OutputType outputType, unsigned fileno, bool isBigEndian);
       ~MSWriterLDA();
-#ifdef USE_LDA
       virtual void write(StreamableData *data);
     private:
       const Transpose2 &itsTransposeLogic;
+      const StreamInfo &itsInfo;
       const unsigned itsNrChannels;
-      unsigned itsNrSamples;
+      const unsigned itsNrSamples;
       unsigned itsNextSeqNr;
 
-      std::vector<T> itsZeroBlock; // block with zeros, the same size of StreamableData::samples
-#endif
+      const unsigned itsBlockSize; // the size of StreamableData::samples, in T
     };
   }
 }

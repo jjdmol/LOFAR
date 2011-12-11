@@ -8,15 +8,13 @@ enum OutputType
 {
   FILTERED_DATA = 1,
   CORRELATED_DATA,
-  INCOHERENT_STOKES,
   BEAM_FORMED_DATA,
-  COHERENT_STOKES,
   TRIGGER_DATA
 };
 
 
 const OutputType FIRST_OUTPUT_TYPE = static_cast<OutputType>(1);
-const OutputType LAST_OUTPUT_TYPE  = static_cast<OutputType>(7); // exclusive
+const OutputType LAST_OUTPUT_TYPE  = static_cast<OutputType>(5); // exclusive
 
 
 inline OutputType operator ++ (OutputType &outputType) // prefix ++

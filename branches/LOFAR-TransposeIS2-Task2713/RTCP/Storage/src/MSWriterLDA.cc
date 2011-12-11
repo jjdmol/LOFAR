@@ -29,7 +29,6 @@
 #include <Storage/MSWriter.h>
 #include <Storage/MSWriterLDA.h>
 
-#ifdef USE_LDA
 #include <lofar/BF_File.h>
 
 using namespace LDA;
@@ -107,8 +106,11 @@ namespace LOFAR
     :
       MSWriterFile(forceextension(string(filename),".raw"),false),
       itsTransposeLogic(parset.transposeLogic()),
-      itsNrChannels(parset.nrChannelsPerSubband() * itsTransposeLogic.nrSubbands(fileno)),
-      itsNextSeqNr(0)
+      itsInfo(itsTransposeLogic.streamInfo[fileno]),
+      itsNrChannels(itsInfo.nrChannels * itsInfo.subbands.size()),
+      itsNrSamples(itsInfo.nrSamples),
+      itsNextSeqNr(0),
+      itsBlockSize(itsNrSamples * itsNrChannels)
     {
       string h5filename = forceextension(string(filename),".h5");
       string rawfilename = forceextension(string(filename),".raw");
@@ -125,67 +127,30 @@ namespace LOFAR
       itsTransposeLogic.decompose( fileno, sapNr, beamNr, stokesNr, partNr );
 
       unsigned nrBlocks = ceil((parset.stopTime() - parset.startTime()) / parset.CNintegrationTime());
-      unsigned nrSubbands = itsTransposeLogic.nrSubbands(fileno);
-      vector<unsigned> subbands = itsTransposeLogic.subbands(fileno);
+      unsigned nrSubbands = itsInfo.subbands.size();
+      const vector<unsigned> &subbands = itsInfo.subbands;
 
-      unsigned nrValuesPerStokes;
       vector<string> stokesVars;
 
-      switch (outputType) {
-        case INCOHERENT_STOKES:  {
-          // assume stokes are either I or IQUV
+      switch (itsInfo.stokesType) {
+        case STOKES_I:
           stokesVars.push_back("I");
-
-          if (parset.nrIncoherentStokes() > 1) {
-            stokesVars.push_back("Q");
-            stokesVars.push_back("U");
-            stokesVars.push_back("V");
-          }
-
-          nrValuesPerStokes = 1;
-
-          itsNrSamples = parset.CNintegrationSteps() / parset.incoherentStokesTimeIntegrationFactor();
           break;
-        }
 
-        case COHERENT_STOKES: {
-          // assume stokes are either I or IQUV
+        case STOKES_IQUV:
           stokesVars.push_back("I");
-
-          if (parset.nrIncoherentStokes() > 1) {
-            stokesVars.push_back("Q");
-            stokesVars.push_back("U");
-            stokesVars.push_back("V");
-          }
-
-          nrValuesPerStokes = 1;
-
-          itsNrSamples = parset.CNintegrationSteps() / parset.coherentStokesTimeIntegrationFactor();
+          stokesVars.push_back("Q");
+          stokesVars.push_back("U");
+          stokesVars.push_back("V");
           break;
-        }
 
-        case BEAM_FORMED_DATA: {
-          if (parset.nrCoherentStokes() == 2) {
-            stokesVars.push_back("X");
-            stokesVars.push_back("Y");
-          } else {
-            stokesVars.push_back("Xr");
-            stokesVars.push_back("Xi");
-            stokesVars.push_back("Yr");
-            stokesVars.push_back("Yi");
-          }
-
-          nrValuesPerStokes = 4 / parset.nrCoherentStokes();
-
-          itsNrSamples = parset.CNintegrationSteps();
+        case STOKES_XXYY:
+          stokesVars.push_back("Xr");
+          stokesVars.push_back("Xi");
+          stokesVars.push_back("Yr");
+          stokesVars.push_back("Yi");
           break;
-        }
-
-        default:
-          THROW(StorageException, "MSWriterLDA can only handle Coherent Stokes and Beam-formed Data");
-      }
-
-      itsZeroBlock.resize( itsNrSamples * itsNrChannels * nrValuesPerStokes );
+      }    
 
       LOG_DEBUG_STR("MSWriterLDA: opening " << filename);
 
@@ -277,7 +242,7 @@ namespace LOFAR
       // SysLog group -- empty for now
       file.sysLog().create();
 
-      // Information about the station beam (SAP)
+      // information about the station beam (SAP)
       BF_SubArrayPointing sap = file.subArrayPointing(sapNr);
       sap.create();
       sap.groupType()   .set("SubArrayPointing");
@@ -309,7 +274,7 @@ namespace LOFAR
 
       sap.nofBeams()          .set(parset.nrPencilBeams(sapNr));
 
-      // Information about the pencil beam
+      // information about the pencil beam
 
       BF_BeamGroup beam = sap.beam(beamNr);
       beam.create();
@@ -342,10 +307,10 @@ namespace LOFAR
 
       //beam.baryCenter()             .set(false);
 
-      beam.nofStokes()              .set(stokesVars.size());
+      beam.nofStokes()              .set(itsInfo.nrStokes);
       beam.stokesComponents()       .set(stokesVars);
-      beam.complexVoltages()        .set(outputType == BEAM_FORMED_DATA);
-      beam.signalSum()              .set(outputType == INCOHERENT_STOKES ? "INCOHERENT" : "COHERENT");
+      beam.complexVoltages()        .set(itsInfo.stokesType == STOKES_XXYY);
+      beam.signalSum()              .set(itsInfo.coherent ? "COHERENT" : "INCOHERENT");
 
       CoordinatesGroup coordinates = beam.coordinates();
       coordinates.create();
@@ -385,7 +350,7 @@ namespace LOFAR
 
       timeCoordinate.get()->referenceValue().set(0);
       timeCoordinate.get()->referencePixel().set(0);
-      timeCoordinate.get()->increment()     .set(parset.sampleDuration());
+      timeCoordinate.get()->increment()     .set(parset.sampleDuration() * itsInfo.timeIntFactor);
 
       SmartPtr<SpectralCoordinate> spectralCoordinate = dynamic_cast<SpectralCoordinate*>(coordinates.coordinate(1));
       spectralCoordinate.get()->create();
@@ -408,7 +373,7 @@ namespace LOFAR
         const unsigned subbandOffset = 512 * (parset.nyquistZone() - 1);
         const double subbandBeginFreq = subbandBandwidth * (subbands[sb] + subbandOffset - 0.5);
 
-        for(unsigned ch = 0; ch < parset.nrChannelsPerSubband(); ch++) {
+        for(unsigned ch = 0; ch < itsInfo.nrChannels; ch++) {
           spectralPixels.push_back(spectralPixels.size());
           spectralWorld .push_back(subbandBeginFreq + ch * channelBandwidth);
         }
@@ -430,7 +395,7 @@ namespace LOFAR
       stokesDS.create(dims, maxdims, LOFAR::basename(rawfilename), isBigEndian ? BF_StokesDataset::BIG : BF_StokesDataset::LITTLE);
 
       stokesDS.stokesComponent().set(stokesVars[stokesNr]);
-      stokesDS.nofChannels()    .set(vector<unsigned>(nrSubbands, parset.nrChannelsPerSubband()));
+      stokesDS.nofChannels()    .set(vector<unsigned>(nrSubbands, itsInfo.nrChannels));
       stokesDS.nofSamples()     .set(dims[0]);
     }
 
@@ -444,10 +409,10 @@ namespace LOFAR
 
       ASSERT( data );
       ASSERT( sdata );
-      ASSERTSTR( sdata->samples.num_elements() >= itsZeroBlock.size(), "A block is at least " << itsZeroBlock.size() << " elements, but provided sdata only has " << sdata->samples.num_elements() << " elements" );
+      ASSERTSTR( sdata->samples.num_elements() >= itsBlockSize, "A block is at least " << itsBlockSize << " elements, but provided sdata only has " << sdata->samples.num_elements() << " elements" );
 
       unsigned seqNr = data->sequenceNumber();
-      unsigned bytesPerBlock = itsZeroBlock.size() * sizeof(T);
+      unsigned bytesPerBlock = itsBlockSize * sizeof(T);
 
       // fill in zeroes for lost blocks
       if (itsNextSeqNr < seqNr)
@@ -459,34 +424,9 @@ namespace LOFAR
       itsNextSeqNr = seqNr + 1;
     }
 
-    // specialisation for StokesData
+    // specialisation for FinalBeamFormedData
     template class MSWriterLDA<float,3>;
 
-    // specialisation for FinalBeamFormedData
-    template class MSWriterLDA<float,4>;
   } // namespace RTCP
 } // namespace LOFAR
 
-#else // no USE_LDA
-
-namespace LOFAR 
-{
-
-  namespace RTCP
-  {
-
-    template <typename T,unsigned DIM> MSWriterLDA<T,DIM>::MSWriterLDA (const string &filename, const Parset &parset, OutputType outputType, unsigned fileno, bool isBigEndian)
-    :
-      MSWriterFile(filename,false)
-    {
-      LOG_ERROR_STR( "Using the LDA writer is not supported (file: " << filename << ")" );
-    }
-
-    template <typename T,unsigned DIM> MSWriterLDA<T,DIM>::~MSWriterLDA()
-    {
-    }
-
-  } // namespace RTCP
-} // namespace LOFAR
-
-#endif

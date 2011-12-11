@@ -95,7 +95,7 @@ class Parset(util.Parset.Parset):
         if key in self:
           return self.getStringVector(key)
   
-        outputnames = ["Filtered","Correlated","Beamformed","IncoherentStokes","CoherentStokes","Trigger"]
+        outputnames = ["Filtered","Correlated","Beamformed","Trigger"]
         locationkeys = ["Observation.DataProducts.Output_%s.locations" % p for p in outputnames]
 
         storagenodes = set()
@@ -149,16 +149,12 @@ class Parset(util.Parset.Parset):
         self.setdefault('Observation.DataProducts.Output_Filtered.namemask','L${OBSID}_SB${SUBBAND}.filtered')
         self.setdefault('Observation.DataProducts.Output_Beamformed.namemask','L${OBSID}_SAP${SAP}_B${BEAM}_S${STOKES}_P${PART}_bf.raw')
         self.setdefault('Observation.DataProducts.Output_Correlated.namemask','L${OBSID}_SB${SUBBAND}_uv.MS')
-        self.setdefault('Observation.DataProducts.Output_CoherentStokes.namemask','L${OBSID}_SAP${SAP}_B${BEAM}_S${STOKES}_P${PART}_bf.raw')
-        self.setdefault('Observation.DataProducts.Output_IncoherentStokes.namemask','L${OBSID}_SB${SUBBAND}_bf.incoherentstokes')
         self.setdefault('Observation.DataProducts.Output_Trigger.namemask','L${OBSID}_SAP${SAP}_B${BEAM}_S${STOKES}_P${PART}_bf.trigger')
 	self.setdefault('OLAP.dispersionMeasure', 0);
 
         self.setdefault('Observation.DataProducts.Output_Filtered.dirmask','L${YEAR}_${OBSID}')
         self.setdefault('Observation.DataProducts.Output_Beamformed.dirmask','L${YEAR}_${OBSID}')
         self.setdefault('Observation.DataProducts.Output_Correlated.dirmask','L${YEAR}_${OBSID}')
-        self.setdefault('Observation.DataProducts.Output_CoherentStokes.dirmask','L${YEAR}_${OBSID}')
-        self.setdefault('Observation.DataProducts.Output_IncoherentStokes.dirmask','L${YEAR}_${OBSID}')
         self.setdefault('Observation.DataProducts.Output_Trigger.dirmask','L${YEAR}_${OBSID}')
 
         # default beamlet settings, derived from subbandlist, for development
@@ -272,12 +268,13 @@ class Parset(util.Parset.Parset):
             self[v] = self[k]
 
         # convert pencil beams (assign them to station beam 0)
-        pbkeys = [ "angle1", "angle2", "directionType", "dispersionMeasure" ]
+        pbkeys = [ "angle1", "angle2", "directionType", "dispersionMeasure", "coherent" ]
         pbdefaults = {
           "angle1": 0.0,
           "angle2": 0.0,
           "directionType": "J2000",
           "dispersionMeasure": 0,
+          "coherent": True,
         }  
 
         old_prefix = "OLAP.Pencil"
@@ -515,8 +512,8 @@ class Parset(util.Parset.Parset):
 
         # generate filenames to produce - phase 2
         nodelist = self.getInt32Vector( "OLAP.storageNodeList" );
-        products = ["Filtered","Correlated","IncoherentStokes"]
-        outputkeys = ["Filtered","Correlated","IncoherentStokes"]
+        products = ["Filtered","Correlated"]
+        outputkeys = ["Filtered","Correlated"]
 
         for p,o in zip(products,outputkeys):
           outputkey    = "Observation.DataProducts.Output_%s.enabled" % (o,)
@@ -771,10 +768,8 @@ class Parset(util.Parset.Parset):
       return sum([self.getNrBeams(sap) * self.getNrCoherentStokes() * self.getNrParts(sap) for sap in xrange(self.getNrSAPs())])
 
     def phaseThreeExists( self ):  
-      # NO support for mixing with Observation.mode and Observation.outputIncoherentStokesI
       output_keys = [
         "Observation.DataProducts.Output_Beamformed.enabled",
-        "Observation.DataProducts.Output_CoherentStokes.enabled",
         "Observation.DataProducts.Output_Trigger.enabled",
       ]
 
@@ -814,13 +809,10 @@ class Parset(util.Parset.Parset):
         "Observation.DataProducts.Output_Filtered",
         "Observation.DataProducts.Output_Correlated",
         "Observation.DataProducts.Output_Beamformed",
-        "Observation.DataProducts.Output_CoherentStokes",
-        "Observation.DataProducts.Output_IncoherentStokes",
         "Observation.DataProducts.Output_Trigger",
       ]
 
     def getNrOutputs( self ):
-      # NO support for mixing with Observation.mode and Observation.outputIncoherentStokesI
       output_keys = [ "%s.enabled" % (p,) for p in self.outputPrefixes() ]
 
       return sum( (1 for k in output_keys if k in self and self.getBool(k)) )

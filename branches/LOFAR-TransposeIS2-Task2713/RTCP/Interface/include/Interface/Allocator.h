@@ -78,7 +78,6 @@ class SparseSetAllocator : public Allocator
     std::map<void *, size_t>	sizes;
 };
 
-
 } // namespace RTCP
 } // namespace LOFAR
 

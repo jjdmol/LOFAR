@@ -30,7 +30,7 @@ class AsyncTransposeBeams
 {
   public:
 
-  AsyncTransposeBeams(bool isTransposeInput, bool isTransposeOutput, unsigned nrSubbands, unsigned nrSubbeams,
+  AsyncTransposeBeams(bool isTransposeInput, bool isTransposeOutput, unsigned nrSubbands,
 	   	      const LocationInfo &, 
 		      const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &inputCores, const std::vector<unsigned> &outputPsets, const std::vector<unsigned> &outputCores);
   
@@ -67,8 +67,6 @@ class AsyncTransposeBeams
   Matrix<int> itsCommHandles; // [itsNrCommunications][itsNrInputPsets]
 
   Vector<int> itsLocalSubbands;
-
-  const unsigned itsNrSubbeams;
 };
 
 #endif // defined HAVE_MPI

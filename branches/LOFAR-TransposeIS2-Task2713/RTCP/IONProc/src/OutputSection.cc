@@ -23,6 +23,7 @@
 
 #include <Interface/Allocator.h>
 #include <Interface/DataFactory.h>
+#include <Interface/BeamFormedData.h>
 #include <Interface/SmartPtr.h>
 #include <Common/Thread/Cancellation.h>
 
@@ -45,10 +46,10 @@ OutputSection::OutputSection(const Parset &parset,
 			     const std::vector<unsigned> &cores,
 			     int psetIndex,
 			     bool integratable,
-                             bool variableNrSubbands)
+                             bool variableDataSize)
 :
   itsLogPrefix(str(boost::format("[obs %u type %u") % parset.observationID() % outputType)), // no trailing "] " so we can add subband info for some log messages
-  itsVariableNrSubbands(variableNrSubbands),
+  itsVariableDataSize(variableDataSize),
   itsTranspose2Logic(parset.transposeLogic()),
   itsNrComputeCores(cores.size()),
   itsNrCoresPerIteration(parset.maxNrStreamsPerPset(outputType)),
@@ -58,6 +59,7 @@ OutputSection::OutputSection(const Parset &parset,
   itsCurrentComputeCore(0),
   itsNrIntegrationSteps(integratable ? parset.IONintegrationSteps() : 1),
   itsCurrentIntegrationStep(0),
+  itsNrSamplesPerIntegration(parset.CNintegrationSteps()),
   itsSequenceNumber(0),
   itsIsRealTime(parset.realTime()),
   itsDroppedCount(itsNrStreams),
@@ -126,23 +128,9 @@ CorrelatedDataOutputSection::CorrelatedDataOutputSection(const Parset &parset, S
 }
 
 
-IncoherentStokesOutputSection::IncoherentStokesOutputSection(const Parset &parset, Stream * (*createStreamFromCN)(unsigned, unsigned))
-:
-  PhaseTwoOutputSection(parset, createStreamFromCN, INCOHERENT_STOKES, false)
-{
-}
-
-
 BeamFormedDataOutputSection::BeamFormedDataOutputSection(const Parset &parset, Stream * (*createStreamFromCN)(unsigned, unsigned))
 :
   PhaseThreeOutputSection(parset, createStreamFromCN, BEAM_FORMED_DATA)
-{
-}
-
-
-CoherentStokesOutputSection::CoherentStokesOutputSection(const Parset &parset, Stream * (*createStreamFromCN)(unsigned, unsigned))
-:
-  PhaseThreeOutputSection(parset, createStreamFromCN, COHERENT_STOKES)
 {
 }
 
@@ -183,8 +171,13 @@ OutputSection::~OutputSection()
 
 void OutputSection::readData( Stream *stream, StreamableData *data, unsigned streamNr )
 {
-  if (itsVariableNrSubbands)
-    data->setNrSubbands(itsTranspose2Logic.nrSubbands(itsFirstStreamNr + streamNr));
+  if (itsVariableDataSize) {
+    ASSERT( dynamic_cast<FinalBeamFormedData*>(data) );
+
+    const StreamInfo &info = itsTranspose2Logic.streamInfo[itsFirstStreamNr + streamNr];
+
+    data->setDimensions(itsNrSamplesPerIntegration / info.timeIntFactor, info.subbands.size(), info.nrChannels); 
+  }  
 
   data->read(stream, false);
 }

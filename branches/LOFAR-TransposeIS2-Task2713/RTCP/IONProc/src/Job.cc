@@ -24,7 +24,6 @@
 #include <Common/LofarLogger.h>
 #include <Interface/CN_Command.h>
 #include <Interface/Exceptions.h>
-#include <Interface/OutputTypes.h>
 #include <Interface/PrintVector.h>
 #include <Interface/RSPTimeStamp.h>
 #include <InputSection.h>
@@ -741,17 +740,11 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
 
     if (itsParset.outputCorrelatedData())
       outputSections.push_back(new CorrelatedDataOutputSection(itsParset, createCNstream));
-
-    if (itsParset.outputIncoherentStokes())
-      outputSections.push_back(new IncoherentStokesOutputSection(itsParset, createCNstream));
   }
 
   if (itsHasPhaseThree) {
     if (itsParset.outputBeamFormedData())
       outputSections.push_back(new BeamFormedDataOutputSection(itsParset, createCNstream));
-
-    if (itsParset.outputCoherentStokes())
-      outputSections.push_back(new CoherentStokesOutputSection(itsParset, createCNstream));
 
     if (itsParset.outputTrigger())
       outputSections.push_back(new TriggerDataOutputSection(itsParset, createCNstream));

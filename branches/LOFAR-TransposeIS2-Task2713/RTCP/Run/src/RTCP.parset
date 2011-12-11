@@ -53,6 +53,7 @@ Observation.Beam[0].TiedArrayBeam[0].angle1 = 0
 Observation.Beam[0].TiedArrayBeam[0].angle2 = 0
 Observation.Beam[0].TiedArrayBeam[0].directionType = J2000
 Observation.Beam[0].TiedArrayBeam[0].dispersionMeasure = 0
+Observation.Beam[0].TiedArrayBeam[0].coherent = F
 #Observation.Beam[0].TiedArrayBeam[1].angle1 = 0
 #Observation.Beam[0].TiedArrayBeam[1].angle2 = 0
 #Observation.Beam[0].TiedArrayBeam[1].directionType = J2000
@@ -67,17 +68,13 @@ OLAP.Storage.hosts = [locus080]
 OLAP.Storage.targetDirectory = /data # will be appended with dirmask and filenammask
 
 Observation.DataProducts.Output_Filtered.enabled = F
-Observation.DataProducts.Output_Beamformed.enabled = F
-Observation.DataProducts.Output_Correlated.enabled = T
-Observation.DataProducts.Output_CoherentStokes.enabled = F
-Observation.DataProducts.Output_IncoherentStokes.enabled = F
+Observation.DataProducts.Output_Beamformed.enabled = T
+Observation.DataProducts.Output_Correlated.enabled = F
 Observation.DataProducts.Output_Trigger.enabled = F
 
 Observation.DataProducts.Output_Filtered.namemask = L${OBSID}_SB${SUBBAND}.filtered
 Observation.DataProducts.Output_Correlated.namemask = L${OBSID}_SB${SUBBAND}_uv.MS
-Observation.DataProducts.Output_IncoherentStokes.namemask = L${OBSID}_SB${SUBBAND}_bf.incoherentstokes
 Observation.DataProducts.Output_Beamformed.namemask = L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.raw
-Observation.DataProducts.Output_CoherentStokes.namemask = L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.h5
 Observation.DataProducts.Output_Trigger.namemask = L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.trigger
 
 Observation.channelsPerSubband = 64
