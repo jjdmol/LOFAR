@@ -5,14 +5,16 @@
 # File:           solverdialog.py
 # Author:         Sven Duscha (duscha@astron.nl)
 # Date:           2010-08-05
-# Last change;    2011-12-06
+# Last change;    2011-12-11  
 #
 #
 
 # Import
 import sys, os, random
 import lofar.bbs.solverquery as sq
+import lofar.bbs.plothistogram as ph          # TODO: need to move this into LOFAR python module
 import lofar.parmdb as parmdb
+
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -94,12 +96,12 @@ class PlotWindow(QFrame):
       self.histogramButton.setMaximumWidth(120)
       self.histogramButton.setToolTip('Create a histogram of current data')
 
-      self.histogramBinSpin=QSpinBox()            # spinbox for histogram binsize
-      self.histogramBinSpin.setMinimum(5)
-      self.histogramBinSpin.setMaximum(100)
-      self.histogramBinSpin.setSingleStep(5)
-      self.histogramBinSpin.setMaximumWidth(120)
-      self.histogramBinSpin.setMinimumHeight(25)
+#      self.histogramBinSpin=QSpinBox()            # spinbox for histogram binsize
+#      self.histogramBinSpin.setMinimum(5)
+#      self.histogramBinSpin.setMaximum(100)
+#      self.histogramBinSpin.setSingleStep(5)
+#      self.histogramBinSpin.setMaximumWidth(120)
+#      self.histogramBinSpin.setMinimumHeight(25)
 
       self.closeButton=QPushButton()
       self.closeButton.setText('Close')
@@ -108,7 +110,7 @@ class PlotWindow(QFrame):
 
       # Set connections
       self.connect(self.exportButton, SIGNAL('clicked()'), self.on_export)
-      self.connect(self.histogramButton, SIGNAL('clicked()'), parent.on_histogram)
+      self.connect(self.histogramButton, SIGNAL('clicked()'), self.on_histogram)
       self.connect(self.closeButton, SIGNAL('clicked()'), SLOT('close()'))
       self.connect(self.showMarkerCheckBox, SIGNAL('stateChanged(int)'), self.on_marker)
 
@@ -118,12 +120,12 @@ class PlotWindow(QFrame):
       buttonLayout = QVBoxLayout()
       buttonLayout.addWidget(self.exportButton)
       buttonLayout.addWidget(self.exportComboBox)
-      #buttonLayout.insertStretch(-1)
       buttonLayout.addWidget(self.showMarkerCheckBox)
       buttonLayout.addWidget(self.histogramButton)
-      buttonLayout.addWidget(self.histogramBinSpin)
-      buttonLayout.addWidget(self.closeButton)
+      #buttonLayout.addWidget(self.histogramBinSpin)
       buttonLayout.insertStretch(-1)
+      buttonLayout.addWidget(self.closeButton)
+      #buttonLayout.insertStretch(-1)
 
       # Canvas layout
       canvasLayout = QVBoxLayout()
@@ -143,7 +145,7 @@ class PlotWindow(QFrame):
       
       if self.showMarker==True:
         cid = self.fig.canvas.mpl_connect('motion_notify_event', self.update_marker)
-
+        cid = fig.canvas.mpl_connect('button_press_event', onclick)
 
    # React on showMarkerCheckBox signal
    #
@@ -204,7 +206,14 @@ class PlotWindow(QFrame):
       else:
           print "on_clickMarker() table is not of correct type"
 
-#cid = fig.canvas.mpl_connect('button_press_event', onclick)
+
+   # Display a histogram of the converged solutions (i.e. LASTITER=TRUE)
+   # for the currently selected parameter
+   #
+   def on_histogram(self):
+      print "on_histogram()"    # DEBUG
+      self.histoDialog=ph.plothistogram(self)
+      self.histoDialog.show()
 
    # Plot data that has been read
    #
@@ -695,34 +704,6 @@ class SolverAppForm(QMainWindow):
             self.exportDataMatlab(filename_parameter, parameter)    # export the solver parameter
 
 
-    # Display a histogram of the converged solutions (i.e. LASTITER=TRUE)
-    # for the currently selected parameter
-    #
-    def on_histogram(self):
-        print "on_histogram()"    # DEBUG
-
-        # Get time and frequency intervals from the QWidgets
-        start_time=self.solverQuery.timeSlots[self.timeStartSlider.value()]['STARTTIME']
-        end_time=self.solverQuery.timeSlots[self.timeEndSlider.value()]['ENDTIME']
-        start_freq=self.solverQuery.frequencies[self.frequencySlider.value()]['STARTFREQ']
-        end_freq=self.solverQuery.frequencies[self.frequencySlider.value()]['ENDFREQ']
-    
-        # Get number of bins from GUI element histogramBinSelector()
-        #solutionIndex=self.parmsComboBox.currentIndex()
-        parameter=self.parametersComboBox.currentText()
-        nbins=self.histogramBinSpin.value()
-
-        print "DEBUG"
-        print "on_histogram(): parameter = ", parameter       # DEBUG
-        print "on_histogram(): start_time = ", start_time     # DEBUG
-        print "on_histogram(): end_time = ", end_time         # DEBUG
-
-        # TODO: This does not work here (but works in tSolverQuery.py?? Why?
-        convergedParameter=self.solverQuery.getConvergedParameter(parameter, start_time, end_time, start_freq, end_freq)
-
-        # Create and display histogram
-        n, bins, patches = pl.hist(convergedParameter, nbins, histtype='stepfilled')
-
 
 
     #**************************************************
@@ -772,7 +753,7 @@ class SolverAppForm(QMainWindow):
         self.showIterationsCheckBox.setToolTip('Show all iterations for this solution')
         self.showIterationsCheckBox.setCheckState(Qt.Unchecked)
         self.showDatesCheckBox=QCheckBox()
-        self.showDatesCheckBox.setCheckState(Qt.Unchecked)
+        self.showDatesCheckBox.setCheckState(Qt.Checked)      # by default now convert to ISO date
         self.showDatesCheckBox.setText("Convert to ISO date")
         self.showDatesCheckBox.setToolTip("Convert casa times to ISO format YY/MM/DD:HH:MM:SS")
 
@@ -988,8 +969,9 @@ class SolverAppForm(QMainWindow):
             self.timeEndSlider=QSlider(Qt.Horizontal)
             self.timeEndSliderLabel = QLabel("E:")
             self.timeEndSlider.setTracking(False)
-            endtime=self.solverQuery.timeSlots[0]['ENDTIME']              # read first ENDTIME
-
+            #endtime=self.solverQuery.timeSlots[0]['ENDTIME']              # read first ENDTIME
+            # set endtime to last entry in TimeSlots ENDTIME
+            endtime=self.solverQuery.timeSlots[len(self.solverQuery.timeSlots)-1]['ENDTIME']
             if self.showDatesCheckBox.isChecked():
               self.timeEndSliderLabel.setText("E:" +  str(self.convertDate(endtime)))  # initialize EndTimeLabel with it
             else:
@@ -1023,6 +1005,7 @@ class SolverAppForm(QMainWindow):
             self.timeStartSlider.setRange(0, self.solverQuery.getNumTimeSlots()-1)
             self.connect(self.timeStartSlider, SIGNAL('valueChanged(int)'), self.on_timeStartSlider)
             self.timeEndSlider.setRange(0, self.solverQuery.getNumTimeSlots()-1)
+            self.timeEndSlider.setValue(endtime)
             self.connect(self.timeEndSlider, SIGNAL('valueChanged(int)'), self.on_timeEndSlider)
 
             self.frequencyStartSlider.setRange(0, self.solverQuery.getNumFreqs()-1)
