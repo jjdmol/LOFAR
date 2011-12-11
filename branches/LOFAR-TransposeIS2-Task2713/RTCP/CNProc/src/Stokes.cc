@@ -194,19 +194,24 @@ template<> struct stokes<false> {
 };
 
 // compute Stokes values, and add them to an existing stokes array
-template <bool ALLSTOKES> static inline void addStokes(struct stokes<ALLSTOKES> &stokes, const fcomplex &polX, const fcomplex &polY)
+template <bool ALLSTOKES> static inline void addStokes(struct stokes<ALLSTOKES> &stokes, const LOFAR::fcomplex (*XY)[2], unsigned nrIntegrations = 1)
 {
   // assert: two polarizations
-  const double powerX = sqr(real(polX)) + sqr(imag(polX));
-  const double powerY = sqr(real(polY)) + sqr(imag(polY));
+  for (unsigned i = 0 ; i < nrIntegrations; i++, XY++) {
+    const LOFAR::fcomplex polX = (*XY)[0];
+    const LOFAR::fcomplex polY = (*XY)[1];
 
-  stokes.I() += powerX + powerY;
+    const double powerX = sqr(real(polX)) + sqr(imag(polX));
+    const double powerY = sqr(real(polY)) + sqr(imag(polY));
 
-  if (ALLSTOKES) {
-    stokes.Q() += powerX - powerY;
-    stokes.U() += 2 * real(polX * conj(polY));
-    stokes.V() += 2 * imag(polX * conj(polY));
-  }
+    stokes.I() += powerX + powerY;
+
+    if (ALLSTOKES) {
+      stokes.Q() += powerX - powerY;
+      stokes.U() += 2 * real(polX * conj(polY));
+      stokes.V() += 2 * imag(polX * conj(polY));
+    }
+  }  
 }
 
 // Calculate incoherent stokes values from (filtered) station data.
@@ -252,26 +257,22 @@ template <bool ALLSTOKES> void Stokes::calculateIncoherent(const SampleData<> *s
   // shorten the flags over the integration length
   out->flags[0] /= timeIntegrations;
 
-  for (unsigned ch = 0; ch < itsNrChannels; ch += channelIntegrations) {
+  for (unsigned inch = 0, outch = 0; inch < itsNrChannels; inch += channelIntegrations, outch++) {
     for (unsigned inTime = 0, outTime = 0; inTime < itsNrSamples; inTime += timeIntegrations, outTime ++) {
       struct stokes<ALLSTOKES> stokes;
 
-      for (unsigned c = 0; c < channelIntegrations; c++) {
-        for (unsigned stat = 0; stat < nrStations; stat ++) {
-          unsigned srcStat = stationMapping[stat];
+      for (unsigned stat = 0; stat < nrStations; stat ++) {
+        unsigned srcStat = stationMapping[stat];
 
-          if (!validStation[stat])
-            continue;
+        if (!validStation[stat])
+          continue;
 
-          for (unsigned fractime = 0; fractime < timeIntegrations; fractime ++)  {
-            addStokes<ALLSTOKES>(stokes, in[ch + c][srcStat][inTime + fractime][0], in[ch + c][srcStat][inTime + fractime][1]);
-          }
+        for (unsigned c = 0; c < channelIntegrations; c++) {
+          addStokes<ALLSTOKES>(stokes, reinterpret_cast<const fcomplex (*)[2]>(&in[inch + c][srcStat][inTime][0]), timeIntegrations);
         }
       }  
 
-      unsigned outchnum = ch / channelIntegrations;
-
-      #define dest(stokes) out->samples[stokes][outchnum][outTime]
+      #define dest(stokes) out->samples[stokes][outch][outTime]
       dest(0) = stokes.I() / nrValidStations;
 
       if (ALLSTOKES) {
