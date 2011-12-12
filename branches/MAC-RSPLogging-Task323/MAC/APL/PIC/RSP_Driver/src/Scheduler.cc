@@ -95,6 +95,7 @@ GCFEvent::TResult Scheduler::run(GCFEvent& event, GCFPortInterface& /*port*/)
 		}
 		if (fatalBoards) {
 			LOG_FATAL_STR(fatalBoards << " boards are in error state!");
+			GCFScheduler::instance()->stop();				// FOR NOW WE QUIT THE RSPDRIVER !!!
 		}
 
 		if (!syncHasCompleted()) {
