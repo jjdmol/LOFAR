@@ -232,6 +232,7 @@ template <bool ALLSTOKES> void Stokes::calculateIncoherent(const SampleData<> *s
   const MultiDimArray<fcomplex, 4> &in = sampleData->samples;
   const std::vector< SparseSet<unsigned> > &inflags = sampleData->flags;
   PreTransposeBeamFormedData *out = stokesData;
+  std::vector<unsigned> stationList;
 
   out->flags[0].reset();
 
@@ -253,14 +254,24 @@ template <bool ALLSTOKES> void Stokes::calculateIncoherent(const SampleData<> *s
   if (nrValidStations == 0) {
     /* if no valid samples, insert zeroes */
 
-    for (unsigned stokes = 0; stokes < ALLSTOKES ? 4 : 1; stokes++)
-      for (unsigned ch = 0; ch < info.nrChannels)
+    for (unsigned stokes = 0; stokes < info.nrStokes; stokes++)
+      for (unsigned ch = 0; ch < info.nrChannels; ch++)
         memset(&out->samples[stokes][ch][0], 0, info.nrSamples * sizeof out->samples[0][0][0]);
 
     // flag everything
     out->flags[0].include(0, info.nrSamples);
 
     return;
+  }
+
+  // enumerate all valid stations
+  for (unsigned stat = 0; stat < nrStations; stat ++) {
+    unsigned srcStat = stationMapping[stat];
+
+    if (!validStation[stat])
+      continue;
+
+    stationList.push_back(srcStat);  
   }
 
   // shorten the flags over the integration length
@@ -270,15 +281,11 @@ template <bool ALLSTOKES> void Stokes::calculateIncoherent(const SampleData<> *s
     for (unsigned inTime = 0, outTime = 0; inTime < itsNrSamples; inTime += timeIntegrations, outTime ++) {
       struct stokes<ALLSTOKES> stokes;
 
-      for (unsigned stat = 0; stat < nrStations; stat ++) {
-        unsigned srcStat = stationMapping[stat];
+      for (unsigned i = 0; i < stationList.size(); i ++) {
+        unsigned stat = stationList[i];
 
-        if (!validStation[stat])
-          continue;
-
-        for (unsigned c = 0; c < channelIntegrations; c++) {
-          addStokes<ALLSTOKES>(stokes, reinterpret_cast<const fcomplex (*)[2]>(&in[inch + c][srcStat][inTime][0]), timeIntegrations);
-        }
+        for (unsigned c = 0; c < channelIntegrations; c++)
+          addStokes<ALLSTOKES>(stokes, reinterpret_cast<const fcomplex (*)[2]>(&in[inch + c][stat][inTime][0]), timeIntegrations);
       }  
 
       #define dest(stokes) out->samples[stokes][outch][outTime]
