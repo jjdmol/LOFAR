@@ -30,7 +30,6 @@
 #include <DPPP/DPInput.h>
 #include <DPPP/DPBuffer.h>
 #include <measures/Measures/UVWMachine.h>
-#include <casa/Arrays/Matrix.h>
 
 namespace LOFAR {
 
@@ -86,11 +85,8 @@ namespace LOFAR {
       DPInput*          itsInput;
       string            itsName;
       vector<string>    itsCenter;
-      bool              itsUseMach;
       vector<double>    itsFreqC;      //# freq/C
       casa::UVWMachine* itsMachine;
-      casa::Matrix<double> itsMat1;       //# TT in phasehift.py
-      double            itsXYZ[3];     //# numpy.dot((w-w1).T, T)
       NSTimer           itsTimer;
     };
 

@@ -51,21 +51,6 @@ namespace LOFAR {
                  "freqstep and/or timestep must be specified when averaging");
     }
 
-    Averager::Averager (DPInput* input, const string& stepName,
-                        uint nchanAvg, uint ntimeAvg)
-      : itsInput     (input),
-        itsName      (stepName),
-        itsNChanAvg  (nchanAvg),
-        itsNTimeAvg  (ntimeAvg),
-        itsMinNPoint (1),
-        itsMinPerc   (0),
-        itsNTimes    (0),
-        itsTimeInterval (0)
-    {
-      ASSERTSTR (itsNChanAvg > 1  ||  itsNTimeAvg > 1,
-                 "freqstep and/or timestep must be specified when averaging");
-    }
-
     Averager::~Averager()
     {}
 

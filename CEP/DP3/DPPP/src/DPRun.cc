@@ -26,7 +26,6 @@
 #include <DPPP/DPBuffer.h>
 #include <DPPP/DPInfo.h>
 #include <DPPP/MSReader.h>
-#include <DPPP/MultiMSReader.h>
 #include <DPPP/MSWriter.h>
 #include <DPPP/MSUpdater.h>
 #include <DPPP/Averager.h>
@@ -35,8 +34,6 @@
 #include <DPPP/PreFlagger.h>
 #include <DPPP/UVWFlagger.h>
 #include <DPPP/PhaseShift.h>
-#include <DPPP/Demixer.h>
-///#include <DPPP/Estimator.h>
 #include <DPPP/Counter.h>
 #include <DPPP/ParSet.h>
 #include <DPPP/ProgressMeter.h>
@@ -45,7 +42,6 @@
 #include <Common/StreamUtil.h>
 
 #include <casa/OS/Path.h>
-#include <casa/OS/DirectoryIterator.h>
 #include <casa/OS/Timer.h>
 
 namespace LOFAR {
@@ -61,8 +57,7 @@ namespace LOFAR {
       bool checkparset    = parset.getBool ("checkparset", false);
       bool showProgress   = parset.getBool ("showprogress", true);
       bool showTimings    = parset.getBool ("showtimings", true);
-      string msName;
-      DPStep::ShPtr firstStep = makeSteps (parset, msName);
+      DPStep::ShPtr firstStep = makeSteps (parset);
       // Show the steps and determine DPInfo again to get #times
       // to process.
       DPInfo info;
@@ -112,15 +107,6 @@ namespace LOFAR {
       // Finish the processing.
       DPLOG_INFO_STR ("Finishing processing ...");
       firstStep->finish();
-      // Give all steps the option to add something to the MS written.
-      // Currently it is used by the AOFlagger to write its statistics.
-      if (! msName.empty()) {
-        step = firstStep;
-        while (step) {
-          step->addToMS (msName);
-          step = step->getNextStep();
-        }
-      }
       // Show the counts where needed.
       step = firstStep;
       while (step) {
@@ -149,54 +135,30 @@ namespace LOFAR {
       // The destructors are called automatically at this point.
     }
 
-    DPStep::ShPtr DPRun::makeSteps (const ParSet& parset, string& msName)
+    DPStep::ShPtr DPRun::makeSteps (const ParSet& parset)
     {
       DPStep::ShPtr firstStep;
       DPStep::ShPtr lastStep;
       // Get input and output MS name.
       // Those parameters were always called msin and msout.
       // However, SAS/MAC cannot handle a parameter and a group with the same
-      // name, hence one can also use msin.name and msout.name.
-      vector<string> inNames = parset.getStringVector ("msin.name",
-                                                       vector<string>());
-      if (inNames.empty()) {
-        inNames = parset.getStringVector ("msin");
-      }
-      ASSERTSTR (inNames.size() > 0, "No input MeasurementSets given");
-      // Find all file names matching a possibly wildcarded input name.
-      // This is only possible if a single name is given.
-      if (inNames.size() == 1) {
-        if (inNames[0].find_first_of ("*?{['") != string::npos) {
-          vector<string> names;
-          names.reserve (80);
-          casa::Path path(inNames[0]);
-          casa::String dirName(path.dirName());
-          casa::Directory dir(dirName);
-          // Use the basename as the file name pattern.
-          casa::DirectoryIterator dirIter (dir,
-                                           casa::Regex::fromPattern(path.baseName()));
-          while (!dirIter.pastEnd()) {
-            names.push_back (dirName + '/' + dirIter.name());
-            dirIter++;
-          }
-          ASSERTSTR (!names.empty(), "No datasets found matching msin "
-                     << inNames[0]);
-          inNames = names;
-        }
+      // name, hence it uses msin.name and msout.name.
+      string inName = parset.getString ("msin.name", "");
+      if (inName.empty()) {
+        inName = parset.getString ("msin");
       }
       string outName = parset.getString ("msout.name", "");
       if (outName.empty()) {
         outName = parset.getString ("msout");
       }
-      // A write should always be done if an output name is given.
-      // A name equal to . or input name means an update, so clear outname.
+      // See if a write should always be done.
       bool needWrite = false;
       if (! outName.empty()) {
 	needWrite = true;
 	if (outName == ".") {
 	  outName = "";
 	} else {
-	  casa::Path pathIn (inNames[0]);
+	  casa::Path pathIn (inName);
 	  casa::Path pathOut(outName);
 	  if (pathIn.absoluteName() == pathOut.absoluteName()) {
 	    outName = "";
@@ -208,12 +170,8 @@ namespace LOFAR {
       // Currently the input MS must be given.
       // In the future it might be possible to have a simulation step instead.
       // Create MSReader step if input ms given.
-      MSReader* reader = 0;
-      if (inNames.size() == 1) {
-        reader = new MSReader (inNames[0], parset, "msin.");
-      } else {
-        reader = new MultiMSReader (inNames, parset, "msin.");
-      }
+      ASSERTSTR (!inName.empty(), "Name of input MS is not given");
+      MSReader* reader = new MSReader (inName, parset, "msin.");
       firstStep = DPStep::ShPtr (reader);
       lastStep = firstStep;
       // Create the other steps.
@@ -238,10 +196,6 @@ namespace LOFAR {
           step = DPStep::ShPtr(new Counter (reader, parset, prefix));
         } else if (type == "phaseshifter"  ||  type == "phaseshift") {
           step = DPStep::ShPtr(new PhaseShift (reader, parset, prefix));
-        } else if (type == "demixer"  ||  type == "demix") {
-          step = DPStep::ShPtr(new Demixer (reader, parset, prefix));
-          ///        } else if (type == "estimate"  ||  type == "estimator") {
-          ///          step = DPStep::ShPtr(new Estimator (reader, parset, prefix));
         } else {
           THROW (LOFAR::Exception, "DPPP step type " << type << " is unknown");
         }
@@ -260,7 +214,8 @@ namespace LOFAR {
         step = step->getNextStep();
       }
       // Tell the reader if visibility data needs to be read.
-      reader->setReadVisData (info.needVisData());
+      // We also do that if a forced update is done (to get flags for NaNs).
+      reader->setReadVisData (info.needVisData()  ||  needWrite);
       // Create an updater step if an input MS was given; otherwise a writer.
       // Create an updater step only if needed (e.g. not if only count is done).
       // If the user specified an output name, a writer is always created 
@@ -271,10 +226,7 @@ namespace LOFAR {
         ASSERTSTR (info.phaseCenterIsOriginal(),
                    "A new MS has to be given in msout if a phase shift is done");
         if (needWrite  ||  info.needWrite()) {
-          ASSERTSTR (inNames.size() == 1,
-                     "No update can be done if multiple input MSs are used");
           step = DPStep::ShPtr(new MSUpdater (reader, parset, "msout."));
-          msName = inNames[0];
         } else {
           step = DPStep::ShPtr(new NullStep());
         }
@@ -282,7 +234,6 @@ namespace LOFAR {
         step = DPStep::ShPtr(new MSWriter (reader, outName, info,
                                            parset, "msout."));
         reader->setReadVisData (true);
-        msName = outName;
       }
       lastStep->setNextStep (step);
       lastStep = step;

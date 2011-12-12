@@ -332,7 +332,7 @@ class StatisticsCollection : public Serializable
 			}
 		};
 		
-		StatisticsCollection & operator=(const StatisticsCollection &/*source*/) // don't allow assignment
+		StatisticsCollection & operator=(const StatisticsCollection &source) // don't allow assignment
 		{
 			return *this;
 		}

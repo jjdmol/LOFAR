@@ -11,10 +11,6 @@
 		<name>Astron</name>
 		<url>http://www.astron.nl</url>
 	</organization>
-	<properties>
-            <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-            <project.test.sourceEncoding>UTF-8</project.test.sourceEncoding>
-        </properties>
 
 	<build>
 

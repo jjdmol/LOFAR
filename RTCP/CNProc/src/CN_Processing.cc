@@ -109,11 +109,9 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
   itsTranspose2Logic(parset.CN_transposeLogic(0, 0))
 #endif
 {
-#if defined DEBUG_TRANSPOSE2
   if(LOG_CONDITION)
     for (unsigned i = 0; i < itsTranspose2Logic.nrStreams(); i++)
       itsTranspose2Logic.streamInfo[i].log();
-#endif
 
 #if defined HAVE_MPI
   unsigned myPset	    = itsLocationInfo.psetNumber();
@@ -189,8 +187,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
     itsTransposedInputData = new TransposedData<SAMPLE_TYPE>(itsNrStations, parset.nrSamplesToCNProc(), itsBigAllocator);
 
 #if defined HAVE_MPI
-    if (LOG_CONDITION)
-      LOG_DEBUG_STR("Processes subbands " << itsCurrentSubband->list());
+    LOG_DEBUG_STR("Processes subbands " << itsCurrentSubband->list());
 #endif // HAVE_MPI
 
     itsPPF	    = new PPF<SAMPLE_TYPE>(itsNrStations, itsNrChannels, itsNrSamplesPerIntegration, parset.sampleRate() / itsNrChannels, parset.delayCompensation() || itsTotalNrPencilBeams > 1 || parset.correctClocks(), parset.correctBandPass(), itsLocationInfo.rank() == 0);
@@ -201,8 +198,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
 
     if (parset.onlineFlagging() && parset.onlinePreCorrelationFlagging()) {
       itsPreCorrelationFlagger = new PreCorrelationFlagger(parset, itsNrStations, itsNrChannels, itsNrSamplesPerIntegration);
-      if (LOG_CONDITION)
-        LOG_DEBUG_STR("Online PreCorrelation flagger enabled");
+      LOG_DEBUG_STR("Online PreCorrelation flagger enabled");
     }
 
     if (parset.outputCorrelatedData()) {
@@ -212,13 +208,11 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
 
     if (parset.onlineFlagging() && parset.onlinePostCorrelationFlagging()) {
       itsPostCorrelationFlagger = new PostCorrelationFlagger(parset, nrMergedStations, itsNrChannels);
-      if (LOG_CONDITION)
-        LOG_DEBUG_STR("Online PostCorrelation flagger enabled");
+      LOG_DEBUG_STR("Online PostCorrelation flagger enabled");
     }
 
     if (parset.onlineFlagging() && parset.onlinePostCorrelationFlagging() && parset.onlinePostCorrelationFlaggingDetectBrokenStations()) {
-      if (LOG_CONDITION)
-        LOG_DEBUG_STR("Online PostCorrelation flagger Detect Broken Stations enabled");
+      LOG_DEBUG_STR("Online PostCorrelation flagger Detect Broken Stations enabled");
     }
 
 
@@ -427,8 +421,8 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
 
 #if defined HAVE_MPI
   if (streamToProcess) {
-    ASSERTSTR(itsTranspose2Logic.phaseThreePsetIndex == itsTranspose2Logic.destPset( myStream, block ) && itsTranspose2Logic.phaseThreeCoreIndex == itsTranspose2Logic.destCore( myStream, block ),
-     "I'm (" << itsTranspose2Logic.phaseThreePsetIndex << ", " << itsTranspose2Logic.phaseThreeCoreIndex << ") . According to the logic, for block " << block << ", I'm to handle stream " << myStream << ", yet that stream is to be handled by (" << itsTranspose2Logic.destPset( myStream, block ) << ", " << itsTranspose2Logic.destCore( myStream, block ) << ")" );
+    ASSERTSTR(itsTranspose2Logic.myPset == itsTranspose2Logic.destPset( myStream, block ) && itsTranspose2Logic.myCore == itsTranspose2Logic.destCore( myStream, block ),
+     "I'm (" << itsTranspose2Logic.myPset << ", " << itsTranspose2Logic.myCore << ") . According to the logic, for block " << block << ", I'm to handle stream " << myStream << ", yet that stream is to be handled by (" << itsTranspose2Logic.destPset( myStream, block ) << ", " << itsTranspose2Logic.destCore( myStream, block ) << ")" );
 
     if (LOG_CONDITION)
       LOG_DEBUG_STR(itsLogPrefix << "Phase 3");

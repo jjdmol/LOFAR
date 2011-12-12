@@ -286,8 +286,7 @@ namespace LOFAR
       sap.stationsList().set(parset.allStationNames());
 
       // TODO: non-J2000 pointings
-      if( parset.getBeamDirectionType(sapNr) != "J2000" )
-        LOG_WARN("HDF5 writer does not record positions of non-J2000 observations yet.");
+      ASSERT( parset.getBeamDirectionType(sapNr) == "J2000" );
 
       vector<double> beamDir = parset.getBeamDirection(sapNr);
       sap.pointRA() .set(beamDir[0] * 180.0 / M_PI);
@@ -368,15 +367,15 @@ namespace LOFAR
       coordinateTypes[1] = "Spectral"; // or SpectralCoord ?
       coordinates.coordinateTypes().set(coordinateTypes);
 
-      SmartPtr<TimeCoordinate> timeCoordinate = dynamic_cast<TimeCoordinate*>(coordinates.coordinate(0));
-      timeCoordinate.get()->create();
-      timeCoordinate.get()->groupType()     .set("TimeCoord");
+      Coordinate timeCoordinate = coordinates.coordinate(0);
+      timeCoordinate.create();
+      timeCoordinate.groupType()     .set("TimeCoord");
 
-      timeCoordinate.get()->coordinateType().set("Time");
-      timeCoordinate.get()->storageType()   .set(vector<string>(1,"Linear"));
-      timeCoordinate.get()->nofAxes()       .set(1);
-      timeCoordinate.get()->axisNames()     .set(vector<string>(1,"Time"));
-      timeCoordinate.get()->axisUnits()     .set(vector<string>(1,"us"));
+      timeCoordinate.coordinateType().set("Time");
+      timeCoordinate.storageType()   .set(vector<string>(1,"Linear"));
+      timeCoordinate.nofAxes()       .set(1);
+      timeCoordinate.axisNames()     .set(vector<string>(1,"Time"));
+      timeCoordinate.axisUnits()     .set(vector<string>(1,"us"));
 
       // linear coordinates:
       //   referenceValue = offset from starting time, in axisUnits
@@ -384,25 +383,26 @@ namespace LOFAR
       //   increment      = time increment for each sample
       //   pc             = scaling factor (?)
 
-      timeCoordinate.get()->referenceValue().set(0);
-      timeCoordinate.get()->referencePixel().set(0);
-      timeCoordinate.get()->increment()     .set(parset.sampleDuration());
+      timeCoordinate.referenceValue().set(vector<double>(1,0));
+      timeCoordinate.referencePixel().set(vector<double>(1,0));
+      timeCoordinate.increment()     .set(vector<double>(1,parset.sampleDuration()));
+      timeCoordinate.pc()            .set(vector<double>(1,1)); // [1] or [1,0] ??
 
-      SmartPtr<SpectralCoordinate> spectralCoordinate = dynamic_cast<SpectralCoordinate*>(coordinates.coordinate(1));
-      spectralCoordinate.get()->create();
-      spectralCoordinate.get()->groupType()     .set("SpectralCoord");
+      Coordinate spectralCoordinate = coordinates.coordinate(1);
+      spectralCoordinate.create();
+      spectralCoordinate.groupType()     .set("SpectralCoord");
 
-      spectralCoordinate.get()->coordinateType().set("Spectral");
-      spectralCoordinate.get()->storageType()   .set(vector<string>(1,"Tabular"));
-      spectralCoordinate.get()->nofAxes()       .set(1);
-      spectralCoordinate.get()->axisNames()     .set(vector<string>(1,"Frequency"));
-      spectralCoordinate.get()->axisUnits()     .set(vector<string>(1,"MHz"));
+      spectralCoordinate.coordinateType().set("Spectral");
+      spectralCoordinate.storageType()   .set(vector<string>(1,"Tabular"));
+      spectralCoordinate.nofAxes()       .set(1);
+      spectralCoordinate.axisNames()     .set(vector<string>(1,"Frequency"));
+      spectralCoordinate.axisUnits()     .set(vector<string>(1,"MHz"));
 
       // tabular coordinates:
       //   axisValuePixel = data indices
       //   axisValueWorld = corresponding (central) frequencies
 
-      vector<unsigned> spectralPixels;
+      vector<double> spectralPixels;
       vector<double> spectralWorld;
 
       for(unsigned sb = 0; sb < nrSubbands; sb++) {
@@ -415,8 +415,8 @@ namespace LOFAR
         }
       }
 
-      spectralCoordinate.get()->axisValuesPixel().set(spectralPixels);
-      spectralCoordinate.get()->axisValuesWorld().set(spectralWorld);
+      spectralCoordinate.axisValuesPixel().set(spectralPixels);
+      spectralCoordinate.axisValuesWorld().set(spectralWorld);
 
       BF_StokesDataset stokesDS = beam.stokes(stokesNr);
 

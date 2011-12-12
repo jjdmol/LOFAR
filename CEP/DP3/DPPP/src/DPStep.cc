@@ -33,9 +33,6 @@ namespace LOFAR {
     void DPStep::updateInfo (DPInfo&)
     {}
 
-    void DPStep::addToMS (const string&)
-    {}
-
     void DPStep::showCounts (std::ostream&) const
     {}
 
