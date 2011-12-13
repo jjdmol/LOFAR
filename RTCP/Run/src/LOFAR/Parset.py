@@ -353,6 +353,7 @@ class Parset(util.Parset.Parset):
 	self["OLAP.Storage.userName"] = getpass.getuser()
 	self["OLAP.Storage.sshIdentityFile"]  = "%s/.ssh/id_rsa" % (os.environ["HOME"],)
 	self["OLAP.Storage.msWriter"] = Locations.resolvePath( Locations.files["storage"], self )
+	self["OLAP.Storage.parsetFilename"] = self.filename
 
         self.setdefault("OLAP.Storage.AntennaSetsConf",  "${STORAGE_CONFIGDIR}/AntennaSets.conf");
         self.setdefault("OLAP.Storage.AntennaFieldsDir", "${STORAGE_CONFIGDIR}/StaticMetaData");
