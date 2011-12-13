@@ -17,6 +17,7 @@ par nchan		I	int	-	10	0	1	 		-	"number of channels"
 par angle1		I   	vdbl    -   	10 	0	'>>Beam.angle1'		-	'direction angle1'
 par angle2		I   	vdbl    -   	10 	0	'>>Beam.angle2'		-	'direction angle2'
 par directionType	I	text	-	10	0	'>>Beam.directionType' 	-	'direction type'
+par subbandsPerImage    I       int     -       10      0       10                      -       'the number of subbands per sky image'
 
 
 # -- Solver --
