@@ -25,7 +25,7 @@ NavigatorInstance.NavigatorInstance	1#
 		action	25#
 		selection	9#
 	fw_topDetailSelection	1#
-		event	25#7
+		event	25#
 		action	25#
 		selection	9#
 	fw_bottomDetailSelection	1#
@@ -70,8 +70,8 @@ NavigatorInstance.NavigatorInstance	1#
 		event	25#
 		action	25#
 		selection	9#
-	progress	5#
-	panelParamList	25
+	progress	21#
+	panelParamList	25#
 		
 		
 TypeName
@@ -118,7 +118,6 @@ NavPanelConfig.NavPanelConfig	1#
 	BGPRack_Hardware	9#
 	OSRack_Hardware	9#
 	BGPMidplane_Hardware	9#
-	OSSubcluster_Hardware	9#
 	BGPAppl_Processes	9#
 	CEPHardwareMonitor_Processes	9#
 	BGPProc_Processes	9#
@@ -158,7 +157,7 @@ DpName	TypeName
 __navigator	Navigator
 root	NavPanelConfig
 __gcf_cwd	GCFWatchDog
-rootsaves	NavigatorUserSaves
+rootSaves	NavigatorUserSaves
 _CtrlDebug_CTRL_5	_CtrlDebug
 _CtrlDebug_CTRL_6	_CtrlDebug
 _CtrlDebug_CTRL_7	_CtrlDebug
@@ -208,7 +207,6 @@ root.CEPPIC_Hardware	NavPanelConfig	"Hardware/CEP.pnl"
 root.BGPRack_Hardware	NavPanelConfig	"Hardware/CEP_BGPRack_detailed.pnl"
 root.OSRack_Hardware	NavPanelConfig	"Hardware/CEP_OSRack_detailed.pnl"
 root.BGPMidplane_Hardware	NavPanelConfig	"Hardware/CEP_Midplane.pnl"
-root.OSSubcluster_Hardware	NavPanelConfig	"Hardware/CEP_OSSubcluster.pnl"
 root.BGPAppl_Processes	NavPanelConfig	"Processes/BGPAppl.pnl"
 root.CEPHardwareMonitor_Processes	NavPanelConfig	"Processes/CEPHardwareMonitor.pnl"
 root.BGPProc_Processes	NavPanelConfig	"Processes/BGPProc_mainloader.pnl"

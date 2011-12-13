@@ -1,5 +1,6 @@
 # InputBuffer
-stationName			string
+stationName		string
+observationName		stringArr
 
 # statistics of the 4 input streams
 stream0.blocksIn	int
