@@ -32,7 +32,7 @@ function stop() {
   alarm 10 gracefullyStopBGProcessing.sh
 
   # ungraceful exit
-  [ -e /proc/$PID ] && kill -15 "$PID" && (sleep 2; kill -9 "$PID")
+  [ -e /proc/$PID ] && kill -15 "$PID" && (sleep 2; [ -e /proc/$PID ] && kill -9 "$PID")
 }
 
 . controller.sh
