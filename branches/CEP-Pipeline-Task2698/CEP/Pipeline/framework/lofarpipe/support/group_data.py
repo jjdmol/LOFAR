@@ -110,14 +110,58 @@ def gvds_iterator(gvds_file, nproc=4):
         #outfile.write('%s = %s\n' % (key, datamap[key]))
     #outfile.close()
 
+
+def validate_data_maps(*args):
+    """
+    Validate the IO product specifications in the data maps `args`. Each data
+    map must be a list of tuples (hostname, filepath). 
+    
+    Requirements imposed on product specifiations:
+    - Length of all product lists must be equal.
+    - All data-products must reside on the same node.
+    
+    Return True if all requirements are met, otherwise return False.
+    """
+    # Precondition check on `args`. All arguments must be lists; and all
+    # lists must contains tuples of length 2.
+    for arg in args:
+        assert(
+            isinstance(arg, list) and
+            all(isinstance(item, tuple) and len(item) == 2 for item in arg)
+        )
+
+    # Check if all lists have equal length. We do this by creating a set
+    # from a tuple of lenghts of `args`. The set must have length 1.
+    if len(set(len(arg) for arg in args)) != 1: return False
+    
+    # Next, check if the data products in `args`, when matched by index,
+    # reside on the same node. We can use the same trick as before, by
+    # checking the size of a set created from a tuple of hostnames.
+    for i in xrange(len(args[0])):
+        if len(set(arg[i][0] for arg in args)) != 1: return False
+    
+    return True
+    
+
 def load_data_map(filename):
+    """
+    Load map-file `filename` containing tuples of (host,filepath)
+    """
     file = open(filename)
     data = eval(file.read())
     file.close()
+    if not validate_data_maps(data):
+        raise TypeError("Map-file data validation failed")
     return data
 
 
 def store_data_map(filename, data):
+    """
+    Store tuples of (host,filepath) in a map-file `filename`.
+    """
+    if not validate_data_maps(data):
+        raise TypeError("Map-file data validation failed")
     file = open(filename, 'w')
-    file.write(str(data))
+    file.write(repr(data))
     file.close()
+
