@@ -1,4 +1,4 @@
 # $Id$
 
-lofar_package(Offline DEPENDS CEP MSLofar)
+lofar_package(Offline DEPENDS CEP MSLofar Deployment)
 
