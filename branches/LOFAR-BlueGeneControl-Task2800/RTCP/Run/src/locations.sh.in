@@ -8,8 +8,8 @@ if isproduction
 then
   ISPRODUCTION=1
 
-  CNPROC=$HOME/production/lofar/bgpcn_opt/bin/CN_Processing
-  IONPROC=$HOME/production/lofar/bgpion_opt/bin/ION_Processing
+  CNPROC=$HOME/production/lofar/bgp_cn/bin/CN_Processing
+  IONPROC=$HOME/production/lofar/bgp_ion/bin/ION_Processing
   ETCDIR=/opt/lofar/etc
 
   LOGDIR=$HOME/log/L$TIMESTAMP

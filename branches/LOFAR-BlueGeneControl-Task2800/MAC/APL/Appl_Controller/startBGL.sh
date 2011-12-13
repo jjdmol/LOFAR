@@ -37,4 +37,4 @@ echo "OLAP.IONProc.PLC_controlled = T"
 ) >> $PARSET
 
 # Inject the parset into the correlator
-$BINPATH/runParset.py -P $PARTITION parset=$PARSET >>/opt/lofar/log/run.runParset.py.log 2>&1 &
+/opt/lofar/bin/runParset.py -P $PARTITION parset=$PARSET >>/opt/lofar/log/run.runParset.py.log 2>&1 &
