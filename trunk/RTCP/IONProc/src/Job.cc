@@ -397,7 +397,7 @@ void Job::startStorageProcesses()
   std::string userName   = itsParset.getString("OLAP.Storage.userName");
   std::string sshKey     = itsParset.getString("OLAP.Storage.sshIdentityFile");
   std::string executable = itsParset.getString("OLAP.Storage.msWriter");
-  std::string parset     = itsParset.name();
+  std::string parset     = itsParset.getString("OLAP.Storage.parsetFilename");
 
   char cwd[1024];
 
