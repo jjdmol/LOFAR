@@ -100,6 +100,7 @@ class StatisticsCollection : public Serializable
 			  addFrequency(band, polarization, &(diffReals[0]), &(diffImags[0]), diffRFIFlags, diffOrigFlags, nsamples-1, 1, 1, 1, true, true);
 			}
 			delete[] diffRFIFlags;
+			delete[] diffOrigFlags;
 		}
 		
 		void Add(unsigned antenna1, unsigned antenna2, double time, unsigned band, int polarization, const std::vector<std::complex<float> > &samples, const bool *isRFI)
