@@ -865,7 +865,7 @@ class SolverQuery:
             taqlcmd="SELECT * FROM " + self.tablename + " WHERE STARTFREQ=" + str(start_freq) + " AND ENDFREQ=" + str(end_freq) + " AND ITER=" + str(iteration) + " ORDERBY STARTFREQ"
             selection=pt.taql(taqlcmd)        # execute TaQL command      
 
-            cellsDict[iteration]
+            cellsDict[iteration]=selection
 
             return cellsDict
         
@@ -885,8 +885,6 @@ class SolverQuery:
     # Get the message from the solver for a (series of cells)
     #
     def getMessages(self, start_time, end_time, start_freq, end_freq, iteration="last"):
-        print "getMessage()"    # DEBUG
-
         messagesDict={}       # create an empty dictionary
         # return all iterations (default behaviour)
         if iteration == "all":
@@ -894,32 +892,30 @@ class SolverQuery:
 
            # Loop over all iterations
            for iter in range(1, maxIter+1):
-                 taqlcmd="SELECT * FROM " + self.tablename + " WHERE STARTTIME>=" + str(start_freq) + " AND ENDTIME<=" + str(end_freq) + " AND STARTFREQ>=" + str(start_freq) + " AND ENDFREQ<=" + str(end_freq) + " AND ITER=" + str(iter)
+                 taqlcmd="SELECT * FROM " + self.tablename + " WHERE STARTTIME>=" + str(start_time) + " AND ENDTIME<=" + str(end_time) + " AND STARTFREQ>=" + str(start_freq) + " AND ENDFREQ<=" + str(end_freq) + " AND ITER=" + str(iter)
                  result=pt.taql(taqlcmd)           # execute TaQL command
                  messagesDict[iter]=result.getcol("MESSAGE")
-           return messagesDict
 
         # return the last iteration only
         elif iteration == "Last" or iteration == "last":
            #print "readCells(): last"        # DEBUG
            messagesDict["result"]="last"
 
-           taqlcmd="SELECT * FROM " + self.tablename + " WHERE STARTTIME>=" + str(start_freq) + " AND ENDTIME<=" + str(end_freq) + " AND STARTFREQ>=" + str(start_freq) + " AND ENDFREQ<=" + str(end_freq) + " AND LASTITER=TRUE"
+           taqlcmd="SELECT * FROM " + self.tablename + " WHERE STARTTIME>=" + str(start_time) + " AND ENDTIME<=" + str(end_time) + " AND STARTFREQ>=" + str(start_freq) + " AND ENDFREQ<=" + str(end_freq) + " AND LASTITER=TRUE"
            result=pt.taql(taqlcmd)           # execute TaQL command
+           
            messagesDict["last"]=result.getcol("MESSAGE")
-   
-           return messagesDict
 
         # return only a particular iteration
         elif type(iteration).__name__ == "int":
             #print "iteration: ", iteration    # DEBUG
             messagesDict["result"]="iteration"
-            taqlcmd="SELECT * FROM " + self.tablename + " WHERE STARTFREQ=" + str(start_freq) + " AND ENDFREQ=" + str(end_freq) + " AND ITER=" + str(iteration) + " ORDERBY STARTFREQ"
+            taqlcmd="SELECT * FROM " + self.tablename + + " WHERE STARTTIME>=" + str(start_time) + " AND ENDTIME<=" + str(end_time) + " AND STARTFREQ=" + str(start_freq) + " AND ENDFREQ=" + str(end_freq) + " AND ITER=" + str(iteration) + " ORDERBY STARTFREQ"
             result=pt.taql(taqlcmd)        # execute TaQL command      
             
             messagesDict[iteration]=result.getcol("MESSAGE")
 
-            return messagesDict
+        return messagesDict
 
 
 

@@ -12,7 +12,7 @@
 # Import
 import sys, os, random
 import lofar.bbs.solverquery as sq
-import lofar.bbs.plothistogram as ph          # TODO: need to move this into LOFAR python module
+import lofar.bbs.plotwindow
 import lofar.parmdb as parmdb
 
 
@@ -30,250 +30,6 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
 from matplotlib.figure import Figure
 import matplotlib.cm as cm     # color maps?
-#import pylab as pl   # do we need that, too? (used for debugging display)
-
-
-
-# Class that pops up a plot window instance with its own plot
-#
-class PlotWindow(QFrame):
-
-   # Init the class: create plot window and canvas layout (and corresponding buttons)
-   #
-   def __init__(self, parent):
-      QFrame.__init__(self)
-
-      self.rim=0.05                 # rim around plot
-
-      # The plot class holds its data now, so that it can be exported after a different
-      # PlotWindow has been created
-      self.parent=parent            # parent object/class
-      self.fig=None
-      self.showMarker=False
-      self.markerId=None
-      self.marker1=None              # position marker in the plot
-      self.marker2=None
-
-      self.x = parent.x             # plotted x axis data
-      self.y1 = parent.y1           # plotted y axis data
-      self.y2 = parent.y2           # plotted y2 axis data
-
-
-      # Create canvas for plotting
-      self.fig = Figure((5, 4), dpi=100)
-      self.canvas = FigureCanvas(self.fig)
-      self.canvas.setParent(self)
-      self.fig.subplots_adjust(left=self.rim+0.05, right=1.0-self.rim, top=1.0-self.rim, bottom=self.rim)  # set a small rim
-
-      self.mpl_toolbar = NavigationToolbar(self.canvas, self)
-      self.mpl_toolbar.show()   # first hide the toolbar
-
-      self.setMinimumWidth(900)
-      self.setMinimumHeight(500)
-
-      # Create Buttons for data export
-      #
-      self.exportButton=QPushButton("&Export Data")
-      self.exportButton.setToolTip("Export the currently plotted data")
-      self.exportButton.setMaximumWidth(100)
-
-      self.exportComboBox=QComboBox()
-      self.exportComboBox.addItem("ASCII")
-      # export in Matlab format is only possible if scipy.io module has been imported
-      if parent.haveModule('scipy') == True or parent.haveModule('scipy.io') == True:
-         self.exportComboBox.addItem("Matlab")
-      self.exportComboBox.setToolTip('File format for exporting data')
-      self.exportComboBox.setMaximumWidth(100)
-      self.exportComboBox.setMinimumHeight(25)
-
-      self.showMarkerCheckBox=QCheckBox("Show marker")
-      self.showMarkerCheckBox.setToolTip("Show a marker line in both plots")
-      self.showMarkerCheckBox.setCheckState(Qt.Unchecked)    # default off
-
-      self.histogramButton=QPushButton("&Histogram")    # button to create a histogram
-      self.histogramButton.setToolTip("Create a histogram of the current parameter")
-      #self.histogramButton.hide()
-      self.histogramButton.setMaximumWidth(120)
-      self.histogramButton.setToolTip('Create a histogram of current data')
-
-#      self.histogramBinSpin=QSpinBox()            # spinbox for histogram binsize
-#      self.histogramBinSpin.setMinimum(5)
-#      self.histogramBinSpin.setMaximum(100)
-#      self.histogramBinSpin.setSingleStep(5)
-#      self.histogramBinSpin.setMaximumWidth(120)
-#      self.histogramBinSpin.setMinimumHeight(25)
-
-      self.closeButton=QPushButton()
-      self.closeButton.setText('Close')
-      self.closeButton.setToolTip('close this plot window')
-      self.closeButton.setMaximumWidth(120)
-
-      # Set connections
-      self.connect(self.exportButton, SIGNAL('clicked()'), self.on_export)
-      self.connect(self.histogramButton, SIGNAL('clicked()'), self.on_histogram)
-      self.connect(self.closeButton, SIGNAL('clicked()'), SLOT('close()'))
-      self.connect(self.showMarkerCheckBox, SIGNAL('stateChanged(int)'), self.on_marker)
-
-      # Layouts for canvas and buttons
-      #
-      #
-      buttonLayout = QVBoxLayout()
-      buttonLayout.addWidget(self.exportButton)
-      buttonLayout.addWidget(self.exportComboBox)
-      buttonLayout.addWidget(self.showMarkerCheckBox)
-      buttonLayout.addWidget(self.histogramButton)
-      #buttonLayout.addWidget(self.histogramBinSpin)
-      buttonLayout.insertStretch(-1)
-      buttonLayout.addWidget(self.closeButton)
-      #buttonLayout.insertStretch(-1)
-
-      # Canvas layout
-      canvasLayout = QVBoxLayout()
-      canvasLayout.addWidget(self.canvas, 1)
-      canvasLayout.addWidget(self.mpl_toolbar)
-
-      mainLayout = QHBoxLayout()
-      mainLayout.addLayout(buttonLayout)
-      mainLayout.addLayout(canvasLayout)
-      self.setLayout(mainLayout)
-
-      self.show()           # show the plotWindow widget
-      self.parent.setXLabel()
-      self.parent.setYLabel()
-
-      self.plot()
-      
-      if self.showMarker==True:
-        cid = self.fig.canvas.mpl_connect('motion_notify_event', self.update_marker)
-        cid = fig.canvas.mpl_connect('button_press_event', onclick)
-
-   # React on showMarkerCheckBox signal
-   #
-   def on_marker(self):
-      #print "on_marker checkState = ", self.showMarkerCheckBox.checkState()  # DEBUG
-      if self.showMarkerCheckBox.isChecked()==True:
-        self.showMarker=True
-        self.markerId = self.fig.canvas.mpl_connect('motion_notify_event', self.update_marker)
-      else:
-        print "on_marker() disconnecting marker event"
-        self.showMarker=False
-        self.fig.canvas.mpl_disconnect(self.markerId)
-
-
-   # Plot a vertical line marker on the solutions plot showing the solution
-   # of the currently plotted solver parameters
-   # TODO: EXPERIMENTAL
-   #
-   def update_marker(self, event):
-      #print "plotMarker() pos = ", event.xdata       # DEBUG
-      
-      #print 'button=%d, x=%d, y=%d, xdata=%f, ydata=%f'%(
-      #   event.button, event.x, event.y, event.xdata, event.ydata)     # DEBUG      
-      
-      # Create markers (vertical lines) in both plots
-      self.marker1=self.ax1.axvline(x=event.xdata, linewidth=1.5, color='r')
-      self.marker2=self.ax2.axvline(x=event.xdata, linewidth=1.5, color='r')
- 
-      # We need to remove all unnecessary marker in plot 1 and plot 2
-      # TODO: find better method, keeps double marker sometimes
-      while len(self.ax1.lines)-1 > 1:
-        self.ax1.lines[len(self.ax1.lines)-1].remove()
-      while len(self.ax2.lines)-1 > 1:
-        self.ax2.lines[len(self.ax1.lines)-1].remove()  
-        
-      self.marker1=self.ax1.axvline(x=event.xdata, linewidth=1.5, color='r')
-      self.marker2=self.ax1.axvline(x=event.xdata, linewidth=1.5, color='r')
-      self.canvas.draw_idle()
-#      self.canvas.draw()
-
-
-   # Handle export button clicked()
-   #
-   def on_export(self):
-      fileformat=self.exportComboBox.currentText()
-      self.parent.on_export(fileformat)
-
-
-   # Functio to execute on a click event (experimental)
-   #
-   def on_clickMarker(self, event):
-      print 'button=%d, x=%d, y=%d, xdata=%f, ydata=%f'%(
-         event.button, event.x, event.y, event.xdata, event.ydata)     # DEBUG      
-
-      # Pick per iteration details if possible
-      if self.parent.tableType == "PERITERATION" or self.tableType == "PERITERATION_CORRMATRIX":
-          print "trying to get per iterations for this cell"        # DEBUG
-      else:
-          print "on_clickMarker() table is not of correct type"
-
-
-   # Display a histogram of the converged solutions (i.e. LASTITER=TRUE)
-   # for the currently selected parameter
-   #
-   def on_histogram(self):
-      print "on_histogram()"    # DEBUG
-      self.histoDialog=ph.plothistogram(self)
-      self.histoDialog.show()
-
-   # Plot data that has been read
-   #
-   def plot(self):
-      print "PlotWindow::plot()"            # DEBUG
-
-      parm=self.parent.parmsComboBox.currentText()   # Solution parameter, e.g. Gain:1:1:LBA001
-      parameter=str(self.parent.parametersComboBox.currentText())    # Get solver parameter from drop down
-
-      # Give for Time axis only time relative to start time
-      # TODO this does not work
-      if self.parent.xAxisType=="Time":
-         self.x=self.parent.computeRelativeX()
-      
-      self.ax1=self.fig.add_subplot(211)   # create solutions subplot
-      # Set title and labels
-      self.ax1.set_xlabel(self.parent.xLabel)
-      self.ax1.set_ylabel(parm + ":" + self.parent.parmValueComboBox.currentText())
-
-      np.set_printoptions(precision=1)
-#      self.ax1.get_xaxis().set_visible(False)  # TODO: How to get correct x-axis ticks?
-      np.set_printoptions(precision=2)    # does this work?
-
-      if self.parent.perIteration==True:
-         x=range(1, len(self.y1)+1)       # we want the first iteration to be called "1"
-         if self.parent.scatterCheckBox.isChecked()==True:
-            self.ax1.scatter(x, self.y1)
-         else:
-            self.ax1.plot(x, self.y1)
-      else:
-         if self.parent.scatterCheckBox.isChecked()==True:
-            self.ax1.scatter(self.x, self.y1)
-         else:
-            if len(self.y1)==1 or isinstance(self.y1, float):
-               self.ax1.scatter(self.x, self.y1)
-            else:
-               self.ax1.plot(self.x, self.y1)
-
-      # Solver log plot
-      self.ax2=self.fig.add_subplot(212, sharex=self.ax1)     # sharex for common zoom
-      # Set labels
-      #self.ax2.set_xticklabels(self.ax1.get_xticklabels(), visible=True)
-      self.ax2.set_ylabel(self.parent.parametersComboBox.currentText())
-      if self.parent.perIteration==True:
-         x=range(1, len(self.y2)+1)
-         if self.parent.scatterCheckBox.isChecked()==True:
-            self.ax2.scatter(x, self.y2)
-         else:
-            self.ax2.plot(x, self.y2)   # have to increase lower y limit (for unknown reason)
-      else:
-         if self.parent.scatterCheckBox.isChecked()==True:
-            self.ax2.scatter(self.x, self.y2)
-         else:
-            if len(self.y1)==1 or isinstance(self.y2, float):
-               self.ax2.scatter(self.x, self.y2)
-            else:
-               self.ax2.plot(self.x, self.y2)
-
-      self.canvas.draw()
-
 
 
 # Class to hold all the GUI elements of a Solver application form
@@ -289,6 +45,7 @@ class SolverAppForm(QMainWindow):
 
         self.solverQuery = sq.SolverQuery()       # attribute to hold SolverQuery object
         self.table=False                          # attribute to check if we have an open table
+        self.tableName=""                         # name of opened table
         self.tableType=""                         # table type
         self.SolutionSubplot=None                 # attribute to define if solutions are shown or not
         self.ParameterSubplot=None
@@ -305,6 +62,7 @@ class SolverAppForm(QMainWindow):
         self.relativeX=[]                         # array holding x-values relative to start
         self.y1=None                              # array holding top subplot y-values
         self.y2=None                              # array holding bottom subplot y-values
+        self.messages = None                      # array to hold solver messages
 
         # Labels                                  # axis labels
         self.xLabel="Time"                        # x-axis label for all subplots
@@ -393,7 +151,7 @@ class SolverAppForm(QMainWindow):
 
         self.create_table_widgets()
         self.table=True
-
+        self.tableName=tableName
 
         # Enable checkboxes
         if self.tableType == "PERITERATION" or self.tableType == "PERITERATION_CORRMATRIX":
@@ -531,9 +289,9 @@ class SolverAppForm(QMainWindow):
         endtime=self.solverQuery.timeSlots[index]['ENDTIME']
 
         if self.showDatesCheckBox.isChecked():
-          self.timeEndSliderLabel.setText("S:" +  str(self.convertDate(endtime)))
+          self.timeEndSliderLabel.setText("E:" +  str(self.convertDate(endtime)))
         else:
-          self.timeEndSliderLabel.setText("S:" +  str(endtime) + " s")
+          self.timeEndSliderLabel.setText("E:" +  str(endtime) + " s")
 
         # Handle behaviour of timeEndSlider in combination with timeStartSlider
         # If timeEndSlider is smaller than timeStartSlider adjust the latter
@@ -639,11 +397,7 @@ class SolverAppForm(QMainWindow):
 
             self.solutions_plot=True   # indicate in attribute that we now do show solutions
 
-            # TODO define title for subplots
-            #titleString="Solver parameter:" + str(self.parametersComboBox.currentText())
-
         # Call self.on_plot() function to replot current parameter (+solution if toggled)
-        #self.setTitle(titleString)
         self.on_plot()
 
 
@@ -792,36 +546,6 @@ class SolverAppForm(QMainWindow):
         self.newCheckBox.setCheckState(Qt.Unchecked)
 
         self.createxAxisCombo()   # create xAxis Combobox
-
-        #self.exportButton=QPushButton("&Export Data")
-        #self.exportButton.setToolTip("Export the currently plotted data")
-        #self.exportButton.setMaximumWidth(100)
-
-        #self.exportComboBox=QComboBox()
-        #self.exportComboBox.addItem("ASCII")
-        # export in Matlab format is only possible if scipy.io module has been imported
-        #if self.haveModule('scipy') or self.haveModule('scipy.io'):
-        #    self.exportComboBox.addItem("Matlab")
-        #self.exportComboBox.setToolTip('File format for exporting data')
-        #self.exportComboBox.setMaximumWidth(85)
-        #self.exportComboBox.setMinimumHeight(25)
-        #
-        #self.histogramButton=QPushButton("&Histogram")    # button to create a histogram
-        #self.histogramButton.setToolTip("Create a histogram of the current parameter")
-        #self.histogramButton.hide()
-        #self.histogramButton.setMaximumWidth(85)
-        #self.histogramButton.setToolTip('Create a histogram of current data')
-
-        #self.histogramBinSpin=QSpinBox()            # spinbox for histogram binsize
-        #self.histogramBinSpin.setMinimum(5)
-        #self.histogramBinSpin.setMaximum(100)
-        #self.histogramBinSpin.setSingleStep(5)
-        #self.histogramBinSpin.setMaximumWidth(120)
-        #self.histogramBinSpin.setMinimumHeight(25)
-        
- 
-        # TODO solution message
-        self.messageLabel=QLabel()     # Used to display the last solver message of a solution
 
         # Check if a table has been loaded
         if self.table is False:
@@ -1107,39 +831,8 @@ class SolverAppForm(QMainWindow):
         for name in parmnames:
             self.parmsComboBox.addItem(name)
 
-
         self.connect(self.parmsComboBox, SIGNAL('currentIndexChanged(int)'), self.on_solution_changed)
         self.buttonsLayout.addWidget(self.parmsComboBox)
-
-        # If solutions plotting is not optional anymore, then do not hide it by default
-        #self.parmsComboBox.hide()                          # by default it is not visible, only if solutions are also plotted
-
-
-    """
-    # Create a drop down menu to choose which physical value
-    # of a parameter is being plotted (e.g. Amplitude / Phase)
-    #
-    def create_parms_value_dropdown(self):
-        print "create_parms_value_dropdown()"   # DEBUG
-
-        self.statusBar().showMessage('Creating parmDB menu')
-
-        self.parmValueComboBox=QComboBox()
-        self.parmValueComboBox.setMaximumWidth(170)
-
-        # Make this a bit more intelligently, decide depending on parameter
-        # names what physical value is contained in them
-        parameter=str(self.parmsComboBox.currentText())   # need to convert QString to python string
-
-        if parameter.find("Gain") is not -1:
-            self.parmValueComboBox.addItem("Amplitude")
-            self.parmValueComboBox.addItem("Phase")
-
-        self.buttonsLayout.addWidget(self.parmValueComboBox)
-        # If solutions plotting is not optional anymore, then do not hide it by default
-        #self.parmValueComboBox.hide()
-    """
-
 
 
     # Create a status bar at the bottom of the MainWindow
@@ -1148,7 +841,6 @@ class SolverAppForm(QMainWindow):
         print "create_status_bar()"
         self.status_text = QLabel("Solver statistics")
         self.statusBar().addWidget(self.status_text, 1)
-
 
 
     #******************************************************
@@ -1164,8 +856,7 @@ class SolverAppForm(QMainWindow):
     # THIS function is not used anymore, now using PlotWindow::plot()
     #
     def on_plot(self):
-
-    	parm=self.parmsComboBox.currentText()   # Solution parameter, e.g. Gain:1:1:LBA001
+        parm=self.parmsComboBox.currentText()   # Solution parameter, e.g. Gain:1:1:LBA001
         parameter=str(self.parametersComboBox.currentText())    # Get solver parameter from drop down
 
         # update class attribute plot arrays
@@ -1176,74 +867,10 @@ class SolverAppForm(QMainWindow):
             self.y1=self.getSolutions(perIteration=self.perIteration)
 
         self.x, self.y2=self.getParameter(parameter)   # get parameter to plot
+        self.getMessages()                             # get dictionary with solver messages
 
       	# TODO: get current PlotWindow
-        self.plots.append(PlotWindow(self))     # call PlotWindow class with this class as parent
-      	"""
-        # Version using pylab (did not work on the cluster)
-        # DEBUG use pylab to plot in new figure
-        if self.clf:
-            pl.clf()
-
-        # If in GUI the checkbox for a new figure is set
-        # TODO
-        if self.newfigure:
-            self.Figures.append(pl.figure())             # create a new figure
-        else:                                            # otherwise get current figure
-            self.currentFigure=pl.gcf()                  # get current figure
-            print "cfignum = ", self.currentFigure.number
-
-
-        # set labels
-        pl.xlabel("UTC time in seconds")
-
-        #x1=range(0, len(self.y1))                        # DEBUG
-        plot1=pl.subplot(211)                             # DEBUG
-
-        pl.xlabel(self.xLabel)
-        pl.ylabel(parm + ":" + self.parmValueComboBox.currentText())   # DEBUG
-
-        print "on_plot() we set the labels"     # DEBUG
-
-
-
-        # NEW: allowing line/scatter plot
-        if self.perIteration==True:
-            x=range(0, len(self.y1))
-            if self.scatterCheckBox.isChecked()==True:
-                pl.scatter(x, self.y1)
-            else:
-                pl.plot(x,self.y1)
-        else:
-            if self.scatterCheckBox.isChecked()==True:
-                pl.scatter(self.x, self.y1)                   # DEBUG
-            else:
-                if len(self.y1)==1:
-                    pl.scatter(self.x, self.y1)
-                else:
-                    pl.plot(self.x, self.y1)
-
-
-        pl.setp(plot1.get_xticklabels(), visible=False)   # DEBUG
-
-        plot2=pl.subplot(212, sharex=plot1)               # DEBUG
-        pl.ylabel(self.parametersComboBox.currentText())  # DEBUG
-
-        if self.perIteration==True:
-            x=range(0, len(self.y2))
-            if self.scatterCheckBox.isChecked()==True:
-                pl.scatter(self.x, self.y2)                      # DEBUG
-            else:
-                pl.plot(self.x, self.y2)   # have to increase lower y limit (for unknown reason)
-        else:
-            if parameter=="CORRMATRIX":                      # special case of CORRMATRIX parameter...
-                self.plotCorrMatrix(self.y2)                 # call plotCorrMatrix()
-            else:
-                pl.scatter(self.x, self.y2)                  # DEBUG
-
-      pl.draw()    # force the figure to be drawn without losing control (show())
-      """
-
+        self.plots.append(lofar.bbs.plotwindow.PlotWindow(self))     # call PlotWindow class with this class as parent
         print "on_plot() finished drawing"
 
 
@@ -1601,6 +1228,23 @@ class SolverAppForm(QMainWindow):
             return solution, x
         else:
             return solution
+
+
+    # Get the solver messages for this time and freq range (or per iteration)
+    #
+    def getMessages(self):
+        print "getMessages()"   # DEBUG
+
+        # Get time and frequency intervals from the QWidgets
+        start_time=self.solverQuery.timeSlots[self.timeStartSlider.value()]['STARTTIME']
+        end_time=self.solverQuery.timeSlots[self.timeEndSlider.value()]['ENDTIME']
+        start_freq=self.solverQuery.frequencies[self.frequencyStartSlider.value()]['STARTFREQ']
+        end_freq=self.solverQuery.frequencies[self.frequencyEndSlider.value()]['ENDFREQ']
+        
+        if self.perIteration==True:
+          self.messages=self.solverQuery.getMessages(start_time, end_time, start_freq, end_freq, iteration="all")
+        else:
+          self.messages=self.solverQuery.getMessages(start_time, end_time, start_freq, end_freq, iteration="last")
 
 
     # Plot a corrmatrix on the lower subplot
