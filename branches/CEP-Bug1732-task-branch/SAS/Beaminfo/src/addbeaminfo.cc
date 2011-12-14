@@ -182,7 +182,7 @@ void padTo(std::string &str, const size_t num, const char paddingChar);
 // MS Table writing functions TODO
 //void updateAntennaFieldTable( MeasurementSet &ms, 
 //                              const map<string, vector<unsigned int> > &brokenRCUs);
-void updateAntennaFieldTable( MeasurementSet &ms, const RCUmap &brokenRCUs);
+void updateAntennaFieldTable( MeasurementSet &ms, const vector<failedTile> &brokenTiles);
 void updateElementFlags(Table &table, unsigned int antennaId, unsigned int elementIndex);
 
 // File I/O
@@ -408,9 +408,9 @@ int main (int argc, char* argv[])
         showMap(brokenRCUs);
       
       vector<failedTile> brokenTiles=getBrokenTiles(ms, brokenRCUs); // Convert stations to antennaIds
-      
-      //showMap(brokenRCUs);
-      //updateAntennaFieldTable(ms, brokenRCUs);    // TODO: Update LOFAR_ANTENNA_FIELD table
+      //showFailedTiles(brokenTiles);
+
+      updateAntennaFieldTable(ms, brokenTiles);    // TODO: Update LOFAR_ANTENNA_FIELD table
 
       
       // Test getting failed tiles information per LOFAR_ANTENNA_FIELD
@@ -418,9 +418,9 @@ int main (int argc, char* argv[])
       failedHardware=getFailedHardware(brokenHardware, brokenHardwareAfter);
         
 //        vector<failedTile> failedTiles=getFailedTiles(ms, failedHardware);
-        RCUmap failedTiles=getFailedTiles(failedHardware);
+        //RCUmap failedTiles=getFailedTiles(failedHardware);
     
-        showMap(failedTiles);              // DEBUG
+        //showMap(failedTiles);              // DEBUG
         //addFailedAntennaTiles(ms, failedTiles);
     
         if(debug)
@@ -505,21 +505,18 @@ MVEpoch toCasaTime(const ptime &time)
 /*!
   \brief  Update the element flags in the MeasurementSet with failed tiles info
   \param  ms            MeasurementSet to update ELEMENT_FLAGs
-  \param  rcus          map containing failed RCUs for this MS
+  \param  brokenTiles   vector containing failed tiles against antennaId
   \param  overwrite     overwrite existing entries (default=true)
 */
-//void updateAntennaFieldTable( MeasurementSet &ms, 
-//                              const map<string, vector<unsigned int> > &brokenRCUs)
-void updateAntennaFieldTable( MeasurementSet &ms,  const vector<failedTile> &brokenTiles)
+void updateAntennaFieldTable(MeasurementSet &ms,  const vector<failedTile> &brokenTiles)
 {
   LOG_INFO_STR("Updating ELEMENT_FLAG in MS");
 
+  cout << "brokenTiles.size() = " << brokenTiles.size() << endl;
   if(brokenTiles.size()==0)     // if there were no broken tiles...
   {
     return;                     // just return
   }
-
-  unsigned int elementIndex;    // elementIndex for station and RCU
 
   // Open MS/LOFAR_ANTENNA_FIELD table
   Table antennaFieldTable(ms.rwKeywordSet().asTable("LOFAR_ANTENNA_FIELD"));
@@ -527,22 +524,35 @@ void updateAntennaFieldTable( MeasurementSet &ms,  const vector<failedTile> &bro
 
   // loop over ANTENNA_FIELD_TABLE
   uInt nrows=antennaFieldTable.nrow();
-  for(unsigned int antennaId; antennaId<nrows; antennaId++)
+  map<unsigned int, unsigned int> indices;
+  for(unsigned int antennaId=0; antennaId<nrows; antennaId++)
   {
-    vector<failedTile>::const_iterator brokenTilesIt=getFailedTileAntennaId(brokenTiles, antennaId);
-    if(brokenTilesIt != brokenTiles.end())
+    
+    for(unsigned int i=0; i<brokenTiles.size(); i++)
     {
-      for(unsigned int rcuNum=0; rcuNum < brokenTilesIt->rcus.size(); rcuNum++)
+      if(brokenTiles[i].antennaId==antennaId)
       {
-        elementIndex=brokenTilesIt->rcus[rcuNum]%2;
-      
-        cout << "antennaId = " << antennaId << " elementIndex = " << elementIndex << endl;    // DEBUG
-      
-        // Update ELEMENT_FLAGS column in LOFAR_ANTENNA_FIELD table
-        //TableLocker locker(antennaFieldTable, FileLocker::Write);
-        //updateElementFlags(antennaFieldTable, antennaId, elementIndex);    
+        indices[antennaId]=i;
       }
     }
+  }
+   
+  for(unsigned int antennaId=0; antennaId<nrows; antennaId++)
+  {
+      map<unsigned int, unsigned int>::iterator it;
+      
+      if(indices.find(antennaId) != indices.end())
+      {
+        unsigned int index=indices[antennaId];  
+        for(unsigned int rcuIndex=0; rcuIndex < brokenTiles[index].rcus.size(); rcuIndex++)
+        {
+          unsigned int rcuNum=brokenTiles[index].rcus[rcuIndex];
+          
+          // Update ELEMENT_FLAGS column in LOFAR_ANTENNA_FIELD table
+          TableLocker locker(antennaFieldTable, FileLocker::Write);
+          updateElementFlags(antennaFieldTable, antennaId, rcuNum);    
+        }
+      }
   }
 }
 
@@ -565,12 +575,13 @@ void updateElementFlags(Table &table, unsigned int antennaId, unsigned int rcu)
   
   // get ELEMENT_FLAG array for antennaId (row=antennaId)
   Matrix<Bool> elementFlags=elementFlagCol(antennaId);  
-  unsigned int elementIndex=rcu % 2;
-//  cout << "updateELementFlags() shape: " << shape << endl;              // DEBUG
-//  cout << "updateELementFlags() antennaId = " << antennaId << endl;     // DEBUG
+  unsigned int elementIndex=rcu / 2;
 
-   elementFlags(0, elementIndex)=true;          // Update ELEMENT_FLAGS at elementIndex
-   elementFlags(1, elementIndex)=true;          // Update ELEMENT_FLAGS at elementIndex
+  cout << "updateELementFlags() antennaId = " << antennaId << "\t";     // DEBUG
+  cout << "elementIndex = " << elementIndex << endl;  // DEBUG
+
+  elementFlags(0, elementIndex)=true;          // Update ELEMENT_FLAGS at elementIndex
+  elementFlags(1, elementIndex)=true;          // Update ELEMENT_FLAGS at elementIndex
 
   elementFlagCol.put(antennaId, elementFlags);  // write modified array to column
 }
@@ -1862,12 +1873,15 @@ vector<failedTile> getBrokenTiles(MeasurementSet &ms, const RCUmap &brokenRCUs)
     {
       failedTile newTile;                     // new tile struct
       newTile.antennaId=antennaId;
-      newTile.rcus=rcuStation->second;  
+      for(unsigned int i=0; i<rcuStation->second.size(); i++)
+      {
+        newTile.rcus.push_back(rcuStation->second[i]);
+      }
+      
       brokenTiles.push_back(newTile);         // store it in vector of all brokenTiles
     }
   }
   
-  //showFailedTiles(brokenTiles);     // DEBUG
   return brokenTiles;
 }
 
