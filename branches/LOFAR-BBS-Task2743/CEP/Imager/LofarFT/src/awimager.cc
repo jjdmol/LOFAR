@@ -292,14 +292,11 @@ int main (Int argc, char** argv)
     inputs.create ("wmax", "500.0",
 		   "omit data with w-term > wmax (in meters)",
 		   "float");
-    inputs.create ("beamelementpath", "$LOFARROOT/share",
-		   "directory where the Hamaker beam element files reside",
-		   "string");
     inputs.create ("muellergrid", "all",
-		   "Nueller elements to use when gridding (all,diagonal,band1,band2)",
+		   "Mueller elements to use when gridding (all,diagonal,band1,band2)",
 		   "string");
     inputs.create ("muellerdegrid", "all",
-		   "Nueller elements to use when degridding (all,diagonal,band1,band2)",
+		   "Mueller elements to use when degridding (all,diagonal,band1,band2)",
 		   "string");
     inputs.create ("cachesize", "512",
 		   "maximum size of gridding cache (in MBytes)",
@@ -434,7 +431,6 @@ int main (Int argc, char** argv)
     Double padding   = inputs.getDouble("padding");
     Double gain      = inputs.getDouble("gain");
     Double maskValue = inputs.getDouble("maskvalue");
-    String beamDir   = inputs.getString("beamelementpath");
     String mode      = inputs.getString("mode");
     String operation = inputs.getString("operation");
     String weight    = inputs.getString("weight");
@@ -558,7 +554,6 @@ int main (Int argc, char** argv)
     Record params;
     params.define ("timewindow", timewindow);
     params.define ("wmax", wmax);
-    params.define ("beam.element.path", beamDir);
     params.define ("mueller.grid", muelgrid);
     params.define ("mueller.degrid", mueldegrid);
     params.define ("verbose", verbose);
@@ -743,7 +738,7 @@ int main (Int argc, char** argv)
   } catch (AipsError& x) {
     cout << x.getMesg() << endl;
     return 1;
-  } 
+  }
   cout << "awzim normally ended" << endl;
   return 0;
 }

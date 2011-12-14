@@ -60,7 +60,7 @@ namespace BBS
 
 MeasurementExprLOFAR::MeasurementExprLOFAR(SourceDB &sourceDB,
     const BufferMap &buffers, const ModelConfig &config,
-    const Instrument::Ptr &instrument, const BaselineSeq &baselines,
+    const Instrument::ConstPtr &instrument, const BaselineSeq &baselines,
     double refFreq, const casa::MDirection &refPhase,
     const casa::MDirection &refDelay, const casa::MDirection &refTile,
     bool circular)
@@ -104,7 +104,7 @@ void MeasurementExprLOFAR::solvablesChanged()
 
 void MeasurementExprLOFAR::makeForwardExpr(SourceDB &sourceDB,
     const BufferMap &buffers, const ModelConfig &config,
-    const Instrument::Ptr &instrument, double refFreq,
+    const Instrument::ConstPtr &instrument, double refFreq,
     const casa::MDirection &refPhase, const casa::MDirection &refDelay,
     const casa::MDirection &refTile, bool circular)
 {
@@ -313,7 +313,7 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
 
     LOG_DEBUG_STR("Building expression tree...");
 
-    Instrument::Ptr instrument = buffer->instrument();
+    Instrument::ConstPtr instrument = buffer->instrument();
 
     // Allocate space for the station response expressions.
     vector<Expr<JonesMatrix>::Ptr> stationExpr(instrument->nStations());

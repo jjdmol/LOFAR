@@ -86,7 +86,7 @@ private:
     void initialize(SourceDB &sourceDB,
         const BufferMap &buffers,
         const ModelConfig &config,
-        const Instrument::Ptr &instrument,
+        const Instrument::ConstPtr &instrument,
         double refFreq,
         const casa::MDirection &refPhase,
         const casa::MDirection &refDelay,

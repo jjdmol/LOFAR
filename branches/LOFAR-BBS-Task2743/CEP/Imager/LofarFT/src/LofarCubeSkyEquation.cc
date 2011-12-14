@@ -25,6 +25,7 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
 #include <casa/iostream.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/Utilities/Assert.h>
@@ -107,19 +108,19 @@ void LofarCubeSkyEquation::init(FTMachine& ft){
 
   doflat_p=False;
   nchanPerSlice_p = 1;
-  
-   if(sm_->numberOfTaylorTerms()>1) 
+
+   if(sm_->numberOfTaylorTerms()>1)
     {
       nmod = (sm_->numberOfModels()/sm_->numberOfTaylorTerms()) * (2 * sm_->numberOfTaylorTerms() - 1);
     }
-  
+
   //case of component ft only
   if(nmod==0)
     nmod=1;
-  
+
   ftm_p.resize(nmod, True);
   iftm_p.resize(nmod, True);
-  
+
   //make a distinct ift_ as gridding and degridding can occur simultaneously
   if(ft.name() == "MosaicFT"){
     ft_=new MosaicFT(static_cast<MosaicFT &>(ft));
@@ -127,9 +128,9 @@ void LofarCubeSkyEquation::init(FTMachine& ft){
     ftm_p[0]=ft_;
     iftm_p[0]=ift_;
     //For mosaic ...outlier fields get normal GridFT's
-    
+
     MPosition loc=ift_->getLocation();
-    for (Int k=1; k < (nmod); ++k){ 
+    for (Int k=1; k < (nmod); ++k){
       ftm_p[k]=new GridFT(1000000, 16, "SF", loc, 1.0, False);
       iftm_p[k]=new GridFT(1000000, 16, "SF", loc, 1.0, False);
     }
@@ -144,9 +145,9 @@ void LofarCubeSkyEquation::init(FTMachine& ft){
     static_cast<WProjectFT &>(*ftm_p[0]).setConvFunc(sharedconvFunc);
     static_cast<WProjectFT &>(*iftm_p[0]).setConvFunc(sharedconvFunc);
     // For now have all the fields have WProjectFt machines....
-    //but should be seperated between GridFT's for the outliers and 
+    //but should be seperated between GridFT's for the outliers and
     //WProject for the facets.
-    for (Int k=1; k < (nmod); ++k){ 
+    for (Int k=1; k < (nmod); ++k){
       ftm_p[k]=new WProjectFT(static_cast<WProjectFT &>(*ft_));
       iftm_p[k]=new WProjectFT(static_cast<WProjectFT &>(*ift_));
       // Give each pair of FTMachine a convolution function set to share
@@ -171,7 +172,7 @@ void LofarCubeSkyEquation::init(FTMachine& ft){
      iftm_p[0]=ift_;
      if(nmod != (2 * sm_->numberOfTaylorTerms() - 1)) /* MFS */
        throw(AipsError("No multifield with pb-projection allowed"));
-     for (Int k=1; k < (nmod); ++k){ 
+     for (Int k=1; k < (nmod); ++k){
       ftm_p[k]=new nPBWProjectFT(static_cast<nPBWProjectFT &>(*ft_));
       iftm_p[k]=new nPBWProjectFT(static_cast<nPBWProjectFT &>(*ift_));
     }
@@ -184,7 +185,7 @@ void LofarCubeSkyEquation::init(FTMachine& ft){
      iftm_p[0]=ift_;
      if(nmod != (2 * sm_->numberOfTaylorTerms() - 1)) /* MFS */
        throw(AipsError("No multifield with a-projection allowed"));
-     for (Int k=1; k < (nmod); ++k){ 
+     for (Int k=1; k < (nmod); ++k){
       ftm_p[k]=new AWProjectFT(static_cast<AWProjectFT &>(*ft_));
       iftm_p[k]=new AWProjectFT(static_cast<AWProjectFT &>(*ift_));
       //      iftm_p[k]=ftm_p[k];
@@ -198,10 +199,10 @@ void LofarCubeSkyEquation::init(FTMachine& ft){
      iftm_p[0]=ift_;
      // if(nmod != (2 * sm_->numberOfTaylorTerms() - 1)) /* MFS */
      //   throw(AipsError("No multifield with a-projection allowed"));
-     for (Int k=1; k < (nmod); ++k){ 
+     for (Int k=1; k < (nmod); ++k){
       ftm_p[k]=new AWProjectWBFT(static_cast<AWProjectWBFT &>(*ft_));
       iftm_p[k]=new AWProjectWBFT(static_cast<AWProjectWBFT &>(*ift_));
-      if(sm_->numberOfTaylorTerms()>1) 
+      if(sm_->numberOfTaylorTerms()>1)
 	{
 	  for (Int model=0; model < (sm_->numberOfModels()) ; ++model)
 	    {
@@ -221,7 +222,7 @@ void LofarCubeSkyEquation::init(FTMachine& ft){
      iftm_p[0]=ift_;
      if(nmod != (2 * sm_->numberOfTaylorTerms() - 1)) /* MFS */
        throw(AipsError("No multifield with pb-mosaic allowed"));
-     for (Int k=1; k < (nmod); ++k){ 
+     for (Int k=1; k < (nmod); ++k){
       ftm_p[k]=new PBMosaicFT(static_cast<PBMosaicFT &>(*ft_));
       iftm_p[k]=new PBMosaicFT(static_cast<PBMosaicFT &>(*ift_));
     }
@@ -232,7 +233,7 @@ void LofarCubeSkyEquation::init(FTMachine& ft){
     // ftm_p[0]=CountedPtr<FTMachine>(ft_, False);
     ftm_p[0]=ft_;
     iftm_p[0]=ift_;
-    for (Int k=1; k < (nmod); ++k){ 
+    for (Int k=1; k < (nmod); ++k){
       ftm_p[k]=new rGridFT(static_cast<rGridFT &>(*ft_));
       iftm_p[k]=new rGridFT(static_cast<rGridFT &>(*ift_));
     }
@@ -242,11 +243,11 @@ void LofarCubeSkyEquation::init(FTMachine& ft){
     ift_=new MultiTermFT(static_cast<MultiTermFT &>(ft));
     ftm_p[0]=ft_;
     iftm_p[0]=ift_;
-    for (Int k=1; k < (nmod); ++k){ 
+    for (Int k=1; k < (nmod); ++k){
       ftm_p[k]=new MultiTermFT(static_cast<MultiTermFT &>(*ft_));
       iftm_p[k]=new MultiTermFT(static_cast<MultiTermFT &>(*ift_));
     }
-     for (Int k=0; k < (nmod); ++k){ 
+     for (Int k=0; k < (nmod); ++k){
       ftm_p[k]->setMiscInfo(sm_->getTaylorIndex(k));
       iftm_p[k]->setMiscInfo(sm_->getTaylorIndex(k));
     }
@@ -259,7 +260,7 @@ void LofarCubeSkyEquation::init(FTMachine& ft){
      iftm_p[0]=ift_;
      if(nmod != (2 * sm_->numberOfTaylorTerms() - 1)) /* MFS */
        throw(AipsError("No multifield with a-projection allowed"));
-     for (Int k=1; k < (nmod); ++k){ 
+     for (Int k=1; k < (nmod); ++k){
       ftm_p[k]=new LOFAR::LofarFTMachine(static_cast<LOFAR::LofarFTMachine &>(*ft_));
       iftm_p[k]=new LOFAR::LofarFTMachine(static_cast<LOFAR::LofarFTMachine &>(*ift_));
       //      iftm_p[k]=ftm_p[k];
@@ -271,7 +272,7 @@ void LofarCubeSkyEquation::init(FTMachine& ft){
     // ftm_p[0]=CountedPtr<FTMachine>(ft_, False);
     ftm_p[0]=ft_;
     iftm_p[0]=ift_;
-    for (Int k=1; k < (nmod); ++k){ 
+    for (Int k=1; k < (nmod); ++k){
       ftm_p[k]=new GridFT(static_cast<GridFT &>(*ft_));
       iftm_p[k]=new GridFT(static_cast<GridFT &>(*ift_));
     }
@@ -284,7 +285,7 @@ void LofarCubeSkyEquation::init(FTMachine& ft){
 }
 
 LofarCubeSkyEquation::~LofarCubeSkyEquation(){
-  //As we  make an explicit ift_ in the constructor we need 
+  //As we  make an explicit ift_ in the constructor we need
   //to take care of it here...
   //if(ift_ && (ift_ != ft_))
   //  delete ift_;
@@ -300,7 +301,7 @@ void  LofarCubeSkyEquation::predict(Bool incremental, MS::PredefinedColumns col)
   VisibilityIterator::DataColumn visCol=VisibilityIterator::Model;
   if(col==MS::DATA){
     visCol=VisibilityIterator::Observed;
-  } 
+  }
   if(col==MS::CORRECTED_DATA){
     visCol=VisibilityIterator::Corrected;
   }
@@ -310,7 +311,7 @@ void  LofarCubeSkyEquation::predict(Bool incremental, MS::PredefinedColumns col)
   if(sm_->numberOfModels()!= 0)  AlwaysAssert(ok(),AipsError);
   if(noModelCol_p)
     throw(AipsError("Cannot predict visibilities without using scratch columns yet"));
-  // Initialize 
+  // Initialize
   VisIter& vi=*wvi_p;
   //Lets get the channel selection for later use
   vi.getChannelSelection(blockNumChanGroup_p, blockChanStart_p,
@@ -323,16 +324,16 @@ void  LofarCubeSkyEquation::predict(Bool incremental, MS::PredefinedColumns col)
   Bool initialized=False;
   predictComponents(incremental, initialized);
   //set to zero then loop over model...check for size...subimage then loop over  subimages
-  
-  
+
+
   Bool isEmpty=True;
   for (Int model=0; model < (sm_->numberOfModels());++model){
-    isEmpty=isEmpty &&  (sm_->isEmpty(model));                
-    
+    isEmpty=isEmpty &&  (sm_->isEmpty(model));
+
   }
-  
-  
-  if( (sm_->numberOfModels() >0) && isEmpty  && !initialized && !incremental){ 
+
+
+  if( (sm_->numberOfModels() >0) && isEmpty  && !initialized && !incremental){
     // We are at the begining with an empty model as starting point
     for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
       for (vi.origin(); vi.more(); vi++) {
@@ -341,15 +342,15 @@ void  LofarCubeSkyEquation::predict(Bool incremental, MS::PredefinedColumns col)
       }
     }
   }
-  
+
     //If all model is zero...no need to continue
-  if(isEmpty) 
+  if(isEmpty)
     return;
-  
-  
-  
+
+
+
   // Now do the images
-  for (Int model=0; model < (sm_->numberOfModels());++model){ 
+  for (Int model=0; model < (sm_->numberOfModels());++model){
     // Change the model polarization frame
     if(vb->polFrame()==MSIter::Linear) {
       StokesImageUtil::changeCStokesRep(sm_->cImage(model),
@@ -389,22 +390,22 @@ void  LofarCubeSkyEquation::predict(Bool incremental, MS::PredefinedColumns col)
     finalizeGetSlice();
     if(!incremental&&!initialized) initialized=True;
   }
-  
+
   for(Int model=0; model < sm_->numberOfModels(); ++model){
       //For now unscale test on name of ft_
     ft_=&(*ftm_p[model]);
     unScaleImage(model, incremental);
   }
   ft_=&(*ftm_p[0]);
-  
+
   //lets return original selection back to iterator
   if(changedVI)
-    vi.selectChannel(blockNumChanGroup_p, blockChanStart_p, 
-		     blockChanWidth_p, blockChanInc_p, blockSpw_p); 
-  
+    vi.selectChannel(blockNumChanGroup_p, blockChanStart_p,
+		     blockChanWidth_p, blockChanInc_p, blockSpw_p);
+
 }
 
-void LofarCubeSkyEquation::makeApproxPSF(PtrBlock<TempImage<Float> * >& psfs) 
+void LofarCubeSkyEquation::makeApproxPSF(PtrBlock<TempImage<Float> * >& psfs)
 {
 
   if(iftm_p[0]->name()=="MosaicFT")
@@ -451,7 +452,7 @@ void LofarCubeSkyEquation::makeMosaicPSF(PtrBlock<TempImage<Float> * >& psfs){
 	planeMax =  LEN.getFloat();
 	if( (planeMax >0.0) && (planeMax < 0.8 *peak)){
 	  psfSub.put(goodplane);
-	  
+
 	}
       }
     }
@@ -591,7 +592,7 @@ void LofarCubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
       PagedImage<Float> thisScreen(psfs[model]->shape(), psfs[model]->coordinates(), String("ELPSF).psf"));
 	LatticeExpr<Float> le(*psfs[model]);
 	thisScreen.copyData(le);
-      } 
+      }
          */
         LatticeExprNode maxPSF=max(*psfs[model]);
         Float maxpsf=maxPSF.getFloat();
@@ -687,9 +688,9 @@ void LofarCubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
     checkVisIterNumRows(*rvi_p);
     VisBufferAutoPtr vb (rvi_p);
     //    Timers tVisAutoPtr=Timers::getTime();
-    
+
     /**** Do we need to do this
-  if( (sm_->isEmpty(0))  && !initialized && !incremental){ 
+  if( (sm_->isEmpty(0))  && !initialized && !incremental){
     // We are at the begining with an empty model as starting point
     for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
       for (vi.origin(); vi.more(); vi++) {
@@ -794,7 +795,7 @@ void LofarCubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
                 // Now lets grid the -ve of residual
                 // use visCube if there is no correctedData
 		//		Timers tGetRes=Timers::getTime();
-		
+
 		if(!iftm_p[0]->canComputeResiduals()){
 		  cout<<"CANNOT!!!!"<<endl;
 		  if(!useCorrected) vb->modelVisCube()-=vb->visCube();
@@ -805,7 +806,7 @@ void LofarCubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
 		//		Timers tPutSlice = Timers::getTime();
                 //putSlice(* vb, False, FTMachine::MODEL, cubeSlice, nCubeSlice);
 
-                putSlice(* vb, False, FTMachine::MODEL, cubeSlice, nCubeSlice);		
+                putSlice(* vb, False, FTMachine::MODEL, cubeSlice, nCubeSlice);
 
                 cohDone+=vb->nRow();
                 pm.update(Double(cohDone));
@@ -825,7 +826,7 @@ void LofarCubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
 	//	Timers tFinalizePutSlice=Timers::getTime();
         finalizePutSlice(* vb, cubeSlice, nCubeSlice);
 	//	Timers tDoneFinalizePutSlice=Timers::getTime();
-	
+
 	// aFinalizeGetSlice += tFinalizePutSlice - tFinalizeGetSlice;
 	// aFinalizePutSlice += tDoneFinalizePutSlice - tFinalizePutSlice;
     }
@@ -853,31 +854,31 @@ void LofarCubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
         rvi_p = oldRvi;      // make the old vi the current vi
     }
    // cerr << "gradChiSq: "
-   // 	<< "InitGrad = " << aInitGrad.formatAverage().c_str() << " " 
-   // 	<< "GetChanSel = " << aGetChanSel.formatAverage().c_str() << " " 
-   // 	<< "ChangeStokes = " << aChangeStokes.formatAverage().c_str() << " " 
-   // 	<< "CheckVisRows = " << aCheckVisRows.formatAverage().c_str() << " " 
-   // 	<< "GetFreq = " << aGetFreq.formatAverage().c_str() << " " 
-   // 	<< "OrigChunks = " << aOrigChunks.formatAverage().c_str() << " " 
-   // 	<< "VBInValid = " << aVBInValid.formatAverage().c_str() << " " 
-   // 	<< "InitGetSlice = " << aInitGetSlice.formatAverage().c_str() << " " 
-   // 	<< "InitPutSlice = " << aInitPutSlice.formatAverage().c_str() << " " 
-   // 	<< "PutSlice = " << aPutSlice.formatAverage().c_str() << " " 
-   // 	<< "FinalGetSlice = " << aFinalizeGetSlice.formatAverage().c_str() << " " 
-   // 	<< "FinalPutSlice = " << aFinalizePutSlice.formatAverage().c_str() << " " 
+   // 	<< "InitGrad = " << aInitGrad.formatAverage().c_str() << " "
+   // 	<< "GetChanSel = " << aGetChanSel.formatAverage().c_str() << " "
+   // 	<< "ChangeStokes = " << aChangeStokes.formatAverage().c_str() << " "
+   // 	<< "CheckVisRows = " << aCheckVisRows.formatAverage().c_str() << " "
+   // 	<< "GetFreq = " << aGetFreq.formatAverage().c_str() << " "
+   // 	<< "OrigChunks = " << aOrigChunks.formatAverage().c_str() << " "
+   // 	<< "VBInValid = " << aVBInValid.formatAverage().c_str() << " "
+   // 	<< "InitGetSlice = " << aInitGetSlice.formatAverage().c_str() << " "
+   // 	<< "InitPutSlice = " << aInitPutSlice.formatAverage().c_str() << " "
+   // 	<< "PutSlice = " << aPutSlice.formatAverage().c_str() << " "
+   // 	<< "FinalGetSlice = " << aFinalizeGetSlice.formatAverage().c_str() << " "
+   // 	<< "FinalPutSlice = " << aFinalizePutSlice.formatAverage().c_str() << " "
    // 	<< endl;
-   
-   // cerr << "VB loop: " 
-   // 	<< "InitModel = " << aInitModel.formatAverage().c_str() << " " 
-   // 	<< "GetSlice = " << aGetSlice.formatAverage().c_str() << " " 
-   // 	<< "SetModel = " << aSetModel.formatAverage().c_str() << " " 
-   // 	<< "GetRes = " << aGetRes.formatAverage().c_str() << " " 
-   // 	<< "PutSlice = " << aPutSlice.formatAverage().c_str() << " " 
-   // 	<< "Extra = " << aExtra.formatAverage().c_str() << " " 
+
+   // cerr << "VB loop: "
+   // 	<< "InitModel = " << aInitModel.formatAverage().c_str() << " "
+   // 	<< "GetSlice = " << aGetSlice.formatAverage().c_str() << " "
+   // 	<< "SetModel = " << aSetModel.formatAverage().c_str() << " "
+   // 	<< "GetRes = " << aGetRes.formatAverage().c_str() << " "
+   // 	<< "PutSlice = " << aPutSlice.formatAverage().c_str() << " "
+   // 	<< "Extra = " << aExtra.formatAverage().c_str() << " "
    // 	<< endl;
 }
 
-void  LofarCubeSkyEquation::isLargeCube(ImageInterface<Complex>& theIm, 
+void  LofarCubeSkyEquation::isLargeCube(ImageInterface<Complex>& theIm,
 				   Int& nslice) {
 
   //non-cube
@@ -896,7 +897,7 @@ void  LofarCubeSkyEquation::isLargeCube(ImageInterface<Complex>& theIm,
     if(memtot < 512000){
       ostringstream oss;
       oss << "The amount of memory reported " << memtot << " kB is too small to work with" << endl;
-      throw(AipsError(String(oss))); 
+      throw(AipsError(String(oss)));
 
     }
     Long pixInMem=(memtot/8)*1024;
@@ -923,7 +924,7 @@ void  LofarCubeSkyEquation::isLargeCube(ImageInterface<Complex>& theIm,
   }
 }
 
-void LofarCubeSkyEquation::initializePutSlice(const VisBuffer& vb, 
+void LofarCubeSkyEquation::initializePutSlice(const VisBuffer& vb,
 					 Int cubeSlice, Int nCubeSlice) {
 
   AlwaysAssert(ok(),AipsError);
@@ -960,7 +961,7 @@ LofarCubeSkyEquation::putSlice(VisBuffer & vb, Bool dopsf, FTMachine::Type col, 
     firstOneChangesPut_p=False;  // Has this VB changed from the previous one?
     if((ftm_p[0]->name() != "MosaicFT")    && (ftm_p[0]->name() != "PBWProjectFT") &&
        (ftm_p[0]->name() != "AWProjectFT") && (ftm_p[0]->name() != "AWProjectWBFT") &&
-       (ftm_p[0]->name() != "LofarFTMachine") ) 
+       (ftm_p[0]->name() != "LofarFTMachine") )
     {
         changedSkyJonesLogic(vb, firstOneChangesPut_p, internalChangesPut_p);
     }
@@ -1016,7 +1017,7 @@ LofarCubeSkyEquation::putSlice(VisBuffer & vb, Bool dopsf, FTMachine::Type col, 
 
 }
 
-void LofarCubeSkyEquation::finalizePutSlice(const VisBuffer& vb,  
+void LofarCubeSkyEquation::finalizePutSlice(const VisBuffer& vb,
 				       Int cubeSlice, Int nCubeSlice) {
   for (Int model=0; model < sm_->numberOfModels(); ++model){
     //the different apply...jones use ft_ and ift_
@@ -1024,11 +1025,11 @@ void LofarCubeSkyEquation::finalizePutSlice(const VisBuffer& vb,
     ift_=&(*iftm_p[model]);
     // Actually do the transform. Update weights as we do so.
     iftm_p[model]->finalizeToSky();
-    // 1. Now get the (unnormalized) image and add the 
+    // 1. Now get the (unnormalized) image and add the
     // weight to the summed weight
     Matrix<Float> delta;
     imPutSlice_p[model]->copyData(iftm_p[model]->getImage(delta, False));
-    
+
 
 
 
@@ -1052,11 +1053,11 @@ void LofarCubeSkyEquation::finalizePutSlice(const VisBuffer& vb,
 		     *gSSlice);
     SubImage<Float> *ggSSlice;
     sliceCube(ggSSlice, sm_->ggS(model), cubeSlice, nCubeSlice);
-  
+
     // 3. Apply the square of the SkyJones and add this to gradgrad chisquared
     applySkyJonesSquare(vb, -1, weightSlice_p[model], *workSlice,
 			*ggSSlice);
-  
+
 
     delete workSlice;
     delete gSSlice;
@@ -1068,9 +1069,9 @@ void LofarCubeSkyEquation::finalizePutSlice(const VisBuffer& vb,
   sm_->addStatistics(sumwt, chisq);
 }
 
-void LofarCubeSkyEquation::initializeGetSlice(const VisBuffer& vb, 
-					   Int row, 
-					   Bool incremental, Int cubeSlice, 
+void LofarCubeSkyEquation::initializeGetSlice(const VisBuffer& vb,
+					   Int row,
+					   Bool incremental, Int cubeSlice,
 					   Int nCubeSlice){
   imGetSlice_p.resize(sm_->numberOfModels(), True, False);
   for(Int model=0; model < sm_->numberOfModels(); ++model){
@@ -1090,11 +1091,11 @@ void LofarCubeSkyEquation::initializeGetSlice(const VisBuffer& vb,
   }
   ft_=&(*ftm_p[0]);
   ift_=&(*iftm_p[0]);
-  
+
 
 }
 
-void LofarCubeSkyEquation::sliceCube(CountedPtr<ImageInterface<Complex> >& slice,Int model, Int cubeSlice, 
+void LofarCubeSkyEquation::sliceCube(CountedPtr<ImageInterface<Complex> >& slice,Int model, Int cubeSlice,
 				Int nCubeSlice, Int typeOfSlice){
 
   IPosition blc(4,0,0,0,0);
@@ -1110,8 +1111,8 @@ void LofarCubeSkyEquation::sliceCube(CountedPtr<ImageInterface<Complex> >& slice
   sl_p=Slicer (blc, trc, Slicer::endIsLast);
   SubImage<Complex>* sliceIm= new SubImage<Complex>(sm_->cImage(model), sl_p, False);
   //  cerr << "SliceCube: " << beginChannel << " " << endChannel << endl;
-  if(typeOfSlice==0){    
-    
+  if(typeOfSlice==0){
+
     Double memoryMB=HostInfo::memoryTotal(true)/1024.0/(8.0*(sm_->numberOfModels()));
     slice=new TempImage<Complex> (sliceIm->shape(), sliceIm->coordinates(), memoryMB);
     //slice.copyData(sliceIm);
@@ -1126,7 +1127,7 @@ void LofarCubeSkyEquation::sliceCube(CountedPtr<ImageInterface<Complex> >& slice
 }
 
 void LofarCubeSkyEquation::sliceCube(SubImage<Float>*& slice,
-				  ImageInterface<Float>& image, Int cubeSlice, 
+				  ImageInterface<Float>& image, Int cubeSlice,
 				  Int nCubeSlice){
   IPosition blc(4,0,0,0,0);
   IPosition trc(4,image.shape()(0)-1,
@@ -1143,7 +1144,7 @@ void LofarCubeSkyEquation::sliceCube(SubImage<Float>*& slice,
   slice=  new SubImage<Float> (image, sl_p, True);
 }
 
-VisBuffer& LofarCubeSkyEquation::getSlice(VisBuffer& result,  
+VisBuffer& LofarCubeSkyEquation::getSlice(VisBuffer& result,
 				     Bool incremental,
 				     Int cubeSlice, Int nCubeSlice) {
 
@@ -1175,7 +1176,7 @@ VisBuffer& LofarCubeSkyEquation::getSlice(VisBuffer& result,
     Matrix<Complex> refvb;
     for (Int row=0; row<nRow; row++) {
       finalizeGetSlice();
-      initializeGetSlice(result, row, False, cubeSlice, 
+      initializeGetSlice(result, row, False, cubeSlice,
 			 nCubeSlice);
       if(incremental || (nmodels > 1)){
 	for (Int model=0; model < nmodels; ++model){
@@ -1259,7 +1260,7 @@ LofarCubeSkyEquation::getFreqRange(ROVisibilityIterator& vi,
     if(nslice==1)
         return False;
 
-    Double start=0.0; 
+    Double start=0.0;
     Double end=0.0;
     Double chanwidth=1.0;
     Int specIndex=coords.findCoordinate(Coordinate::SPECTRAL);
@@ -1286,8 +1287,8 @@ LofarCubeSkyEquation::getFreqRange(ROVisibilityIterator& vi,
     if(spwb.nelements()==0)
         return False;
 
-    //vi.selectChannel(1, startb[0][0], nchanb[0][0], 1, spwb[0][0]); 
-    vi.selectChannel(blockNumChanGroup_p, startb, nchanb, incrb, spwb); 
+    //vi.selectChannel(1, startb[0][0], nchanb[0][0], 1, spwb[0][0]);
+    vi.selectChannel(blockNumChanGroup_p, startb, nchanb, incrb, spwb);
 
     return True;
 
@@ -1298,27 +1299,27 @@ void LofarCubeSkyEquation::fixImageScale()
   LogIO os(LogOrigin("LofarCubeSkyEquation", "fixImageScale"));
 
   // make a minimum value to ggS
-  // This has the same effect as Sault Weighting, but 
+  // This has the same effect as Sault Weighting, but
   // is implemented somewhat differently.
   // We also keep the fluxScale(mod) images around to
   // undo the weighting.
   Float ggSMax=0.0;
   for (Int model=0;model<sm_->numberOfModels();model++) {
-    
+
     LatticeExprNode LEN = max( sm_->ggS(model) );
     ggSMax =  max(ggSMax,LEN.getFloat());
   }
   ggSMax_p=ggSMax;
   Float ggSMin1;
   Float ggSMin2;
-  
+
   ggSMin1 = ggSMax * constPB_p * constPB_p;
   ggSMin2 = ggSMax * minPB_p * minPB_p;
-    
+
   for (Int model=0;model<sm_->numberOfModels();model++) {
     if(ej_ || (ftm_p[model]->name() == "MosaicFT") ) {
-      
-      
+
+
 
     /*Don't print this for now
       if (scaleType_p == "SAULT") {
@@ -1331,7 +1332,7 @@ void LofarCubeSkyEquation::fixImageScale()
     sm_->fluxScale(model).removeRegion ("mask0", RegionHandler::Any, False);
     if ((ftm_p[model]->name()!="MosaicFT")) {
       if(scaleType_p=="SAULT"){
-	
+
 	  // Adjust flux scale to account for ggS being truncated at ggSMin1
 	  // Below ggSMin2, set flux scale to 0.0
 	  // FluxScale * image => true brightness distribution, but
@@ -1339,47 +1340,47 @@ void LofarCubeSkyEquation::fixImageScale()
 	  // if ggS < ggSMin2, set to Zero;
 	  // if ggS > ggSMin2 && < ggSMin1, set to ggSMin1/ggS
 	  // if ggS > ggSMin1, set to 1.0
-	
-	sm_->fluxScale(model).copyData( (LatticeExpr<Float>) 
+
+	sm_->fluxScale(model).copyData( (LatticeExpr<Float>)
 					(iif(sm_->ggS(model) < (ggSMin2), 0.0,
 					     sqrt((sm_->ggS(model))/ggSMin1) )) );
-	sm_->fluxScale(model).copyData( (LatticeExpr<Float>) 
+	sm_->fluxScale(model).copyData( (LatticeExpr<Float>)
 					(iif(sm_->ggS(model) > (ggSMin1), 1.0,
 					     (sm_->fluxScale(model)) )) );
 	// truncate ggS at ggSMin1
-	sm_->ggS(model).copyData( (LatticeExpr<Float>) 
-				  (iif(sm_->ggS(model) < (ggSMin1), ggSMin1*(sm_->fluxScale(model)), 
+	sm_->ggS(model).copyData( (LatticeExpr<Float>)
+				  (iif(sm_->ggS(model) < (ggSMin1), ggSMin1*(sm_->fluxScale(model)),
 				       sm_->ggS(model)) )
 				  );
-	
+
 	}
 
 	else{
 
-	  sm_->fluxScale(model).copyData( (LatticeExpr<Float>) 
+	  sm_->fluxScale(model).copyData( (LatticeExpr<Float>)
 					  (iif(sm_->ggS(model) < (ggSMin2), 0.0,
 					       sqrt((sm_->ggS(model))/ggSMax) )) );
-	  sm_->ggS(model).copyData( (LatticeExpr<Float>) 
+	  sm_->ggS(model).copyData( (LatticeExpr<Float>)
 					  (iif(sm_->ggS(model) < (ggSMin2), 0.0,
 					       sqrt((sm_->ggS(model))*ggSMax) )) );
 
 	}
 
       } else {
-	
+
 	  Int nXX=sm_->ggS(model).shape()(0);
 	  Int nYY=sm_->ggS(model).shape()(1);
 	  Int npola= sm_->ggS(model).shape()(2);
 	  Int nchana= sm_->ggS(model).shape()(3);
 	  IPosition blc(4,nXX, nYY, npola, nchana);
 	  IPosition trc(4, nXX, nYY, npola, nchana);
-	  blc(0)=0; blc(1)=0; trc(0)=nXX-1; trc(1)=nYY-1; 
+	  blc(0)=0; blc(1)=0; trc(0)=nXX-1; trc(1)=nYY-1;
 
-	  //Those damn weights per plane can be wildly different so 
+	  //Those damn weights per plane can be wildly different so
 	  //deal with it properly here
 	  for (Int j=0; j < npola; ++j){
 	    for (Int k=0; k < nchana ; ++k){
-	      
+
 	      blc(2)=j; trc(2)=j;
 	      blc(3)=k; trc(3)=k;
 	      Slicer sl(blc, trc, Slicer::endIsLast);
@@ -1399,49 +1400,49 @@ void LofarCubeSkyEquation::fixImageScale()
 	      ///lets be conservative and go to 1% of ggsMin2
 	      if(planeMax !=0){
 		if(doflat_p){
-		  fscalesub.copyData( (LatticeExpr<Float>) 
-				      (iif(ggSSub < (ggSMin2/100.0), 
+		  fscalesub.copyData( (LatticeExpr<Float>)
+				      (iif(ggSSub < (ggSMin2/100.0),
 					   0.0, sqrt(ggSSub/planeMax))));
-		  ggSSub.copyData( (LatticeExpr<Float>) 
-				   (iif(ggSSub < (ggSMin2/100.0), 0.0, 
+		  ggSSub.copyData( (LatticeExpr<Float>)
+				   (iif(ggSSub < (ggSMin2/100.0), 0.0,
 					sqrt(planeMax*ggSSub))));
 		}
 		else{
-		  fscalesub.copyData( (LatticeExpr<Float>) 
-				      (iif(ggSSub < (ggSMin2/100.0), 
+		  fscalesub.copyData( (LatticeExpr<Float>)
+				      (iif(ggSSub < (ggSMin2/100.0),
 					   0.0, (ggSSub/planeMax))));
-		  ggSSub.copyData( (LatticeExpr<Float>) 
-				   (iif(ggSSub < (ggSMin2/100.0), 0.0, 
+		  ggSSub.copyData( (LatticeExpr<Float>)
+				   (iif(ggSSub < (ggSMin2/100.0), 0.0,
 					(planeMax))));
 		}
 
-		//ggSSub.copyData( (LatticeExpr<Float>) 
-		//		 (iif(ggSSub < (ggSMin2/100.0), 0.0, 
+		//ggSSub.copyData( (LatticeExpr<Float>)
+		//		 (iif(ggSSub < (ggSMin2/100.0), 0.0,
 		//		      planeMax)));
-	
+
 
 	      }
 	    }
 
 	  }
 	  /*
-	    
+
 	  ftm_p[model]->getFluxImage(sm_->fluxScale(model));
-	  
-	  sm_->fluxScale(model).copyData( (LatticeExpr<Float>) 
+
+	  sm_->fluxScale(model).copyData( (LatticeExpr<Float>)
 					  (iif(sm_->ggS(model) < (ggSMin2), 0.0,
 					  (sm_->ggS(model)/ggSMax) )) );
 
 	  */
-	  //}	
+	  //}
       }
-    
+
       //because for usual ft machines a applySJoneInv is done on the gS
       //in the finalizeput stage...need to understand if its necessary
       /*need to understand that square business
       if( (ft_->name() != "MosaicFT") && (!isPSFWork_p)){
-	sm_->gS(model).copyData( (LatticeExpr<Float>) 
-				 (iif(sm_->fluxScale(model) > 0.0, 
+	sm_->gS(model).copyData( (LatticeExpr<Float>)
+				 (iif(sm_->fluxScale(model) > 0.0,
 				      ((sm_->gS(model))/(sm_->fluxScale(model))), 0.0 )) );
 
       }

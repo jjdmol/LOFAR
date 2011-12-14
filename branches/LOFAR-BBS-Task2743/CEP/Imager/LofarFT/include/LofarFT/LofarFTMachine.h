@@ -144,9 +144,9 @@ public:
   LofarFTMachine(Long cachesize, Int tilesize,  CountedPtr<VisibilityResamplerBase>& visResampler, String convType, const MeasurementSet& ms,
                  Int nwPlanes,
                  MPosition mLocation, Float padding, Bool usezero,
-                 Bool useDoublePrec, double wmax, const String& beamPath,
+                 Bool useDoublePrec, double wmax,
                  Int verbose,
-		 Int maxsupport,
+                 Int maxsupport,
                  Int oversample,
                  const String& imageName,
                  const Matrix<Bool>& gridMuellerMask,
@@ -242,7 +242,7 @@ public:
     // size is not done.  If sumWt is not provided, normalization by
     // the sum of weights is also not done.
     //
-  
+
 
 
     virtual void makeSensitivityImage(Lattice<Complex>&,
@@ -392,7 +392,6 @@ protected:
 
   CountedPtr<LofarConvolutionFunction> itsConvFunc;
   Vector<Int> ConjCFMap_p, CFMap_p;
-  String itsBeamPath;
   int itsVerbose;
   int itsMaxSupport;
   Int itsOversample;
@@ -408,7 +407,7 @@ protected:
       template <class T>
         void store(const Cube<T> &data, const string &name)
         {
-          
+
           CoordinateSystem csys;
           Matrix<Double> xform(2, 2);
           xform = 0.0;
@@ -427,7 +426,7 @@ protected:
           stokes(3) = Stokes::YY;
           csys.addCoordinate(StokesCoordinate(stokes));
           csys.addCoordinate(SpectralCoordinate(casa::MFrequency::TOPO, 60e6, 0.0, 0.0, 60e6));
-          
+
           PagedImage<T> im(TiledShape(IPosition(4, data.shape()(0), data.shape()(1), 4, 1)), csys, name);
           im.putSlice(data, IPosition(4, 0, 0, 0, 0));
         }

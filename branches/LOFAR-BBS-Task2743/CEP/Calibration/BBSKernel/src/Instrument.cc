@@ -54,7 +54,7 @@ const Vector3 &AntennaField::position() const
     return itsPosition;
 }
 
-const Vector3 &AntennaField::axis(Axis axis)
+const Vector3 &AntennaField::axis(Axis axis) const
 {
     return itsAxes[axis];
 }
@@ -110,6 +110,13 @@ const casa::MPosition &Station::position() const
 bool Station::isPhasedArray() const
 {
     return !itsFields.empty();
+}
+
+size_t Station::nElement() const
+{
+    ASSERT(nField() == 1 || nField() == 2);
+    return (nField() == 1 ? field(0)->nElement() : (field(0)->nElement()
+        + field(1)->nElement()));
 }
 
 unsigned int Station::nField() const

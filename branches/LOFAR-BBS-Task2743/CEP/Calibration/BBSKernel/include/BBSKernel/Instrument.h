@@ -50,8 +50,8 @@ namespace BBS
 class AntennaField
 {
 public:
-    typedef shared_ptr<AntennaField>    Ptr;
-    typedef shared_ptr<AntennaField>    ConstPtr;
+    typedef shared_ptr<AntennaField>        Ptr;
+    typedef shared_ptr<const AntennaField>  ConstPtr;
 
     enum Axis
     {
@@ -72,7 +72,7 @@ public:
 
     const string &name() const;
     const Vector3 &position() const;
-    const Vector3 &axis(Axis axis);
+    const Vector3 &axis(Axis axis) const;
 
     bool isHBA() const;
 
@@ -95,8 +95,8 @@ private:
 class Station
 {
 public:
-    typedef shared_ptr<Station> Ptr;
-    typedef shared_ptr<Station> ConstPtr;
+    typedef shared_ptr<Station>       Ptr;
+    typedef shared_ptr<const Station> ConstPtr;
 
     Station(const string &name, const casa::MPosition &position);
     Station(const string &name, const casa::MPosition &position,
@@ -108,6 +108,7 @@ public:
     const casa::MPosition &position() const;
 
     bool isPhasedArray() const;
+    size_t nElement() const;
     unsigned int nField() const;
     AntennaField::ConstPtr field(unsigned int i) const;
 
@@ -120,8 +121,8 @@ private:
 class Instrument
 {
 public:
-    typedef shared_ptr<Instrument>  Ptr;
-    typedef shared_ptr<Instrument>  ConstPtr;
+    typedef shared_ptr<Instrument>        Ptr;
+    typedef shared_ptr<const Instrument>  ConstPtr;
 
     Instrument(const string &name, const casa::MPosition &position);
 

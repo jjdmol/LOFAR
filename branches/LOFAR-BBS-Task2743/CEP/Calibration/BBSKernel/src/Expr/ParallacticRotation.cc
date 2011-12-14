@@ -80,8 +80,8 @@ const JonesMatrix::View ParallacticRotation::evaluateImpl(const Grid&,
     // Compute the cosine and sine of the parallactic angle, i.e. the angle
     // between v1 and v2, both tangent to a latitude circle of their respective
     // spherical coordinate systems.
-    Matrix cospar = v1x * v2x + v1y * v2y + v1z * v2z;
-    Matrix sinpar = (v1y * v2z - v1z * v2y) * direction(0)
+    Matrix coschi = v1x * v2x + v1y * v2y + v1z * v2z;
+    Matrix sinchi = (v1y * v2z - v1z * v2y) * direction(0)
         + (v1z * v2x - v1x * v2z) * direction(1)
         + (v1x * v2y - v1y * v2x) * direction(2);
 
@@ -107,24 +107,24 @@ const JonesMatrix::View ParallacticRotation::evaluateImpl(const Grid&,
     // [-sin(phi)  cos(phi)]
     //
     // Here, cos(phi) and sin(phi) can be computed directly, without having to
-    // compute phi first (see the computation of cospar and sinpar above).
+    // compute phi first (see the computation of coschi and sinchi above).
     //
-    // Now, sinpar as computed above is opposite to sin(phi), because the
+    // Now, sinchi as computed above is opposite to sin(phi), because the
     // direction used in the computation is the direction of arrival instead
-    // of the direction of propagation. Therefore, the sign of sinpar needs to
+    // of the direction of propagation. Therefore, the sign of sinchi needs to
     // be reversed. Furthermore, as explained above, the X axis has to be
     // flipped to align with the theta axis. The Jones matrix returned from this
     // function is therefore given by:
     //
-    // [-cospar  sinpar]
-    // [ sinpar  cospar]
+    // [-coschi  sinchi]
+    // [ sinchi  coschi]
     //
     // This is an improper rotation, or rotoreflection.
 
-//    LOG_DEBUG_STR("COS: " << cospar);
-//    LOG_DEBUG_STR("SIN: " << sinpar);
+//    LOG_DEBUG_STR("COS: " << coschi);
+//    LOG_DEBUG_STR("SIN: " << sinchi);
 
-    return JonesMatrix::View(-cospar, sinpar, sinpar, cospar);
+    return JonesMatrix::View(-coschi, sinchi, sinchi, coschi);
 }
 
 } //# namespace BBS

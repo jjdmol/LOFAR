@@ -73,9 +73,8 @@ namespace LOFAR
                              const MeasurementSet& ms,
                              uInt nW, double Wmax,
                              uInt oversample,
-                             const String& beamElementPath,
-			     Int verbose,
-			     Int maxsupport,
+                             Int verbose,
+                             Int maxsupport,
                              const String& imgName);
 
 //      ~LofarConvolutionFunction ()
@@ -144,9 +143,6 @@ namespace LOFAR
     MEpoch observationStartTime (const MeasurementSet &ms,
                                  uInt idObservation) const;
 
-    Double observationReferenceFreq (const MeasurementSet &ms,
-                                     uInt idDataDescription);
-
     // Estime spheroidal convolution function from the support of the fft
     // of the spheroidal in the image plane
     Double makeSpheroidCut();
@@ -181,7 +177,7 @@ namespace LOFAR
         }
       }
     }
-    
+
     Double spheroidal(Double nu) const;
 
     template <typename T>

@@ -25,6 +25,8 @@
 #include <Common/LofarLogger.h>
 #include <Common/OpenMP.h>
 
+#include <BBSKernel/MeasurementAIPS.h>
+
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogOrigin.h>
 #include <casa/Arrays/Cube.h>
@@ -68,13 +70,12 @@ namespace LOFAR
    const MeasurementSet& ms,
    uInt nW, double Wmax,
    uInt oversample,
-   const String& beamElementPath,
    Int verbose,
    Int maxsupport,
    const String& imgName)
     : m_shape(shape),
       m_coordinates(coordinates),
-      m_aTerm(ms, beamElementPath),
+      m_aTerm(ms),
       m_maxW(Wmax), //maximum W set by ft machine to flag the w>wmax
       m_nWPlanes(nW),
       m_oversampling(oversample),
@@ -104,7 +105,7 @@ namespace LOFAR
     m_wScale = WScale(m_maxW, m_nWPlanes);
     MEpoch start = observationStartTime(ms, 0);
 
-    m_refFrequency = observationReferenceFreq(ms, 0);
+    m_refFrequency = BBS::readFreqReference(ms, 0);
 
     if (m_oversampling%2 == 0) {
       // Make OverSampling an odd number
@@ -223,6 +224,7 @@ namespace LOFAR
       // Thread private variables.
       PrecTimer timerFFT;
       PrecTimer timerPar;
+
       ///#pragma omp for
       for (uInt i=0; i<m_nStations; ++i) {
         timerPar.start();
@@ -267,10 +269,20 @@ namespace LOFAR
         //======================================
         MEpoch binEpoch;
         binEpoch.set(Quantity(time, "s"));
-        vector< Cube<Complex> > aTermA = m_aTerm.evaluate(shape,
-                                                          coordinate,
-                                                          i, binEpoch,
-                                                          list_freq, true);
+//        vector< Cube<Complex> > aTermA = m_aTerm.evaluate(shape,
+//                                                          coordinate,
+//                                                          i, binEpoch,
+//                                                          list_freq, true);
+
+        // JVZ: Direction map should be computed only once for all stations.
+        // However, this requires the DirectionCoordinate instance and shape to
+        // be exactly equal for all stations.
+        LofarATerm::ITRFDirectionMap dirMap =
+          m_aTerm.makeDirectionMap(coordinate, shape, binEpoch);
+
+        vector< Cube<Complex> > aTermA = m_aTerm.evaluate(i, dirMap, list_freq,
+          list_freq, true);
+
         // Compute the fft on the beam
         for (uInt ch=0; ch<m_nChannel; ++ch) {
           for (uInt pol=0; pol<4; ++pol) {
@@ -326,7 +338,7 @@ namespace LOFAR
     Bool Stack = (Append_average_PB_CF != 0.);
 
     // If the beam is not in memory, compute it
-        
+
     map<Double, vector< vector< Cube<Complex> > > >::const_iterator aiter =
       m_AtermStore.find(time);
     AlwaysAssert (aiter!=m_AtermStore.end(), AipsError);
@@ -400,8 +412,8 @@ namespace LOFAR
       // better result in the end. If you try Npix_out2=Npix_out, then the average PB shows
       // structure like aliasing, producing high values in the devided disrty map... This
       // is likely to be due to the way fft works?...
-      // FIX: I now do the average of the PB by stacking the CF, FFT the result and square 
-      // it in the end. This is not the way to do in principle but the result is almost the 
+      // FIX: I now do the average of the PB by stacking the CF, FFT the result and square
+      // it in the end. This is not the way to do in principle but the result is almost the
       // same. It should pose no problem I think.
       Matrix<Complex> Spheroid_cut_padded2f;
       Cube<Complex> aTermA_padded2;
@@ -410,7 +422,7 @@ namespace LOFAR
       // Keep the non-padded convolution functions for average PB calculation.
       vector< vector < Matrix<Complex> > > Kron_Product_non_padded;
       Kron_Product_non_padded.reserve(4);
-	    
+
       if (Stack) {
         Npix_out2 = Npix_out;
         Spheroid_cut_padded2f = zero_padding(Spheroid_cut, Npix_out2);
@@ -524,7 +536,7 @@ namespace LOFAR
         result_non_padded.push_back(Kron_Product_non_padded);
       }
     }
-          
+
     // Stacks the weighted quadratic sum of the convolution function of
     // average PB estimate (!!!!! done for channel 0 only!!!)
     if (Stack) {
@@ -552,7 +564,7 @@ namespace LOFAR
         }
       }
     }
-	
+
     // Put the resulting vec(vec(vec))) in a LofarCFStore object
     CoordinateSystem csys;
     Vector<Float> samp(2, m_oversampling);
@@ -580,7 +592,7 @@ namespace LOFAR
   }
 
   //================================================
-      
+
   // Returns the average Primary Beam from the disk
   Matrix<Float> LofarConvolutionFunction::Give_avg_pb()
   {
@@ -620,7 +632,7 @@ namespace LOFAR
       normalized_fft(Sum_Stack_PB_CF, false);
       //store(Im_Stack_PB_CF00,"Im_Stack_PB_CF00.img");
       Im_Stack_PB_CF0.resize (IPosition(2, m_shape[0], m_shape[1]));
-	
+
       float threshold = 1.e-6;
       for (Int jj=0; jj<m_shape[1]; ++jj) {
         for (Int ii=0; ii<m_shape[0]; ++ii) {
@@ -705,7 +717,7 @@ namespace LOFAR
     /*   Start_image_enlarged+=0.5;} */
     for (Int jj=0; jj<Image.shape()[1]; ++jj) {
       for (Int ii=0; ii<Image.shape()[0]; ++ii) {
-        Image_Enlarged(Start_image_enlarged+ii,Start_image_enlarged+jj) = 
+        Image_Enlarged(Start_image_enlarged+ii,Start_image_enlarged+jj) =
           ratio*Image(ii,jj);
       }
     }
@@ -744,28 +756,6 @@ namespace LOFAR
     AlwaysAssert(!observation.flagRow()(idObservation), SynthesisError);
 
     return observation.timeRangeMeas()(0)(IPosition(1, 0));
-  }
-
-  //=================================================
-  Double LofarConvolutionFunction::observationReferenceFreq
-  (const MeasurementSet &ms, uInt idDataDescription)
-  {
-    // Read polarization id and spectral window id.
-    ROMSDataDescColumns desc(ms.dataDescription());
-    AlwaysAssert(desc.nrow() > idDataDescription, SynthesisError);
-    AlwaysAssert(!desc.flagRow()(idDataDescription), SynthesisError);
-
-    const uInt idWindow = desc.spectralWindowId()(idDataDescription);
-
-    /*        logIO() << LogOrigin("LofarATerm", "initReferenceFreq") << LogIO::NORMAL
-              << "spectral window: " << desc.spectralWindowId()(idDataDescription) << LogIO::POST;*/
-    //            << "spectral window: " << desc.spectralWindowId() << LogIO::POST;
-    // Get spectral information.
-    ROMSSpWindowColumns window(ms.spectralWindow());
-    AlwaysAssert(window.nrow() > idWindow, SynthesisError);
-    AlwaysAssert(!window.flagRow()(idWindow), SynthesisError);
-
-    return window.refFrequency()(idWindow);
   }
 
   //=================================================
@@ -816,7 +806,7 @@ namespace LOFAR
     store(Spheroid_cut_im, itsImgName + ".spheroid_cut_im");
     if (itsVerbose > 0) {
       store(Spheroid_cut, itsImgName + ".spheroid_cut");
-    }	
+    }
     return Pixel_Size_Spheroidal;
   }
 
@@ -920,7 +910,7 @@ namespace LOFAR
       bot += Q[part][k] * delnusqPow;
       delnusqPow *= delnusq;
     }
-	
+
     double result = (bot == 0  ?  0 : (1.0 - nusq) * (top / bot));
     //if(result<1.e-3){result=1.e-3;}
     return result;
