@@ -11,10 +11,10 @@ import sys
 import lofarpipe.support.lofaringredient as ingredient
 
 from lofarpipe.support.baserecipe import BaseRecipe
-from lofarpipe.support.group_data import load_data_map, store_data_map
-from lofarpipe.support.group_data import validate_data_maps
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
+from lofarpipe.support.group_data import load_data_map, store_data_map
+from lofarpipe.support.group_data import validate_data_maps
 
 
 class parmexportcal(BaseRecipe, RemoteCommandRecipeMixIn):

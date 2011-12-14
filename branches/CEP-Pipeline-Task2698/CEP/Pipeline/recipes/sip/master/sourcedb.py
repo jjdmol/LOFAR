@@ -13,6 +13,7 @@ import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.group_data import load_data_map, store_data_map
+from lofarpipe.support.group_data import validate_data_maps
 from lofarpipe.support.remotecommand import ComputeJob
 
 class sourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
@@ -61,27 +62,37 @@ class sourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
         'mapfile': ingredient.FileField()
     }
 
+
     def go(self):
         self.logger.info("Starting sourcedb run")
         super(sourcedb, self).go()
 
         #                           Load file <-> compute node mapping from disk
         # ----------------------------------------------------------------------
-        self.logger.debug("Loading map from %s" % self.inputs['args'][0])
-        data = load_data_map(self.inputs['args'][0])
-
-        command = "python %s" % (self.__file__.replace('master', 'nodes'))
-        outdata = []
-        jobs = []
-        for host, ms in data:
-            outdata.append(
+        args = self.inputs['args']
+        self.logger.debug("Loading input-data mapfile: %s" % args[0])
+        indata = load_data_map(args[0])
+        if len(args) > 1:
+            self.logger.debug("Loading output-data mapfile: %s" % args[1])
+            outdata = load_data_map(args[1])
+            if not validate_data_maps(indata, outdata):
+                self.logger.error(
+                    "Validation of input/output data mapfiles failed"
+                )
+                return 1
+        else:
+            outdata = [
                 (host,
                  os.path.join(
                     self.inputs['working_directory'],
                     self.inputs['job_name'],
-                    os.path.basename(ms) + self.inputs['suffix'])
-                )
-            )
+                    os.path.basename(infile) + self.inputs['suffix'])
+                ) for host, infile in indata
+            ]
+
+        command = "python %s" % (self.__file__.replace('master', 'nodes'))
+        jobs = []
+        for host, outfile in outdata:
             jobs.append(
                 ComputeJob(
                     host,
@@ -89,7 +100,7 @@ class sourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
                     arguments=[
                         self.inputs['executable'],
                         self.inputs['skymodel'],
-                        outdata[-1][1]
+                        outfile
                     ]
                 )
             )
@@ -103,6 +114,7 @@ class sourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
             store_data_map(self.inputs['mapfile'], outdata)
             self.outputs['mapfile'] = self.inputs['mapfile']
             return 0
+
 
 if __name__ == '__main__':
     sys.exit(sourcedb().main())

@@ -5,15 +5,16 @@
 #                                                                loose@astron.nl
 # ------------------------------------------------------------------------------
 
-from __future__ import with_statement
 import os
 import sys
 
 import lofarpipe.support.lofaringredient as ingredient
+
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
-from lofarpipe.support.group_data import load_data_map, store_data_map
 from lofarpipe.support.remotecommand import ComputeJob
+from lofarpipe.support.group_data import load_data_map, store_data_map
+from lofarpipe.support.group_data import validate_data_maps
 
 
 class demixing(BaseRecipe, RemoteCommandRecipeMixIn):
@@ -95,35 +96,45 @@ class demixing(BaseRecipe, RemoteCommandRecipeMixIn):
         self.logger.info("Starting demixing run")
         super(demixing, self).go()
 
-        #                       Load file <-> compute node mapping from disk
-        # ------------------------------------------------------------------
-        self.logger.debug("Loading map from %s" % self.inputs['args'][0])
-        data = load_data_map(self.inputs['args'][0])
-
-        command = "python %s" % (self.__file__.replace('master', 'nodes'))
-        outdata = []
-        jobs = []
         job_dir = os.path.join(self.inputs['working_directory'],
                                self.inputs['job_name'])
-        for host, ms in data:
+
+        #                       Load file <-> compute node mapping from disk
+        # ------------------------------------------------------------------
+        args = self.inputs['args']
+        self.logger.debug("Loading input-data mapfile: %s" % args[0])
+        indata = load_data_map(args[0])
+        if len(args) > 1:
+            self.logger.debug("Loading output-data mapfile: %s" % args[1])
+            outdata = load_data_map(args[1])
+            if not validate_data_maps(indata, outdata):
+                self.logger.error(
+                    "Validation of input/output data mapfiles failed"
+                )
+                return 1
+        else:
             # This is a bit of a kludge. The input MS-filenames are supposed to
             # contain the string "_uv". The demixing node script will produce
             # output MS-files, whose names have the string "_uv" replaced by
             # "_" + self.inputs['ms_target'] + "_sub".
-            outdata.append(
+            outdata = [
                 (host,
                  os.path.join(
                     job_dir,
-                    os.path.basename(ms).replace(
+                    os.path.basename(infile).replace(
                         '_uv',
                         '_' + self.inputs['ms_target'] + '_sub'))
-                )
-            )
+                ) for host, infile in indata
+            ]
+       
+        command = "python %s" % (self.__file__.replace('master', 'nodes'))
+        jobs = []
+        for host, infile in indata:
             jobs.append(
                 ComputeJob(
                     host, command,
                     arguments=[
-                        ms,
+                        infile,
                         job_dir,
                         self.inputs['initscript'],
                         self.inputs['demix_sources'],

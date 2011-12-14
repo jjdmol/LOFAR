@@ -5,7 +5,6 @@
 #                                                      swinbank@transientskp.org
 # ------------------------------------------------------------------------------
 
-from __future__ import with_statement
 import os
 import sys
 import subprocess
@@ -16,6 +15,7 @@ from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
 from lofarpipe.support.group_data import load_data_map, store_data_map
+from lofarpipe.support.group_data import validate_data_maps
 from lofarpipe.support.pipelinelogging import log_process_output
 import lofarpipe.support.lofaringredient as ingredient
 
@@ -48,7 +48,6 @@ class parmdb(BaseRecipe, RemoteCommandRecipeMixIn):
         'executable': ingredient.ExecField(
             '--executable',
             help="Full path to parmdbm executable",
-            default="/opt/LofIm/daily/lofar/bin/parmdbm"
         ),
         'nproc': ingredient.IntField(
             '--nproc',
@@ -95,8 +94,8 @@ class parmdb(BaseRecipe, RemoteCommandRecipeMixIn):
             )
             sout, serr = parmdbm_process.communicate(template % pdbfile)
             log_process_output("parmdbm", sout, serr, self.logger)
-        except OSError, e:
-            self.logger.error("Failed to spawn parmdbm: %s" % str(e))
+        except OSError, err:
+            self.logger.error("Failed to spawn parmdbm: %s" % str(err))
             return 1
 
         #                     try-finally block to always remove temporary files
@@ -104,28 +103,37 @@ class parmdb(BaseRecipe, RemoteCommandRecipeMixIn):
         try:
             #                       Load file <-> compute node mapping from disk
             # ------------------------------------------------------------------
-            self.logger.debug("Loading map from %s" % self.inputs['args'][0])
-            data = load_data_map(self.inputs['args'][0])
-
-            command = "python %s" % (self.__file__.replace('master', 'nodes'))
-            outdata = []
-            jobs = []
-            for host, ms in data:
-                outdata.append(
+            args = self.inputs['args']
+            self.logger.debug("Loading input-data mapfile: %s" % args[0])
+            indata = load_data_map(args[0])
+            if len(args) > 1:
+                self.logger.debug("Loading output-data mapfile: %s" % args[1])
+                outdata = load_data_map(args[1])
+                if not validate_data_maps(indata, outdata):
+                    self.logger.error(
+                        "Validation of input/output data mapfiles failed"
+                    )
+                    return 1
+            else:
+                outdata = [
                     (host,
                      os.path.join(
                         self.inputs['working_directory'],
                         self.inputs['job_name'],
-                        os.path.basename(ms) + self.inputs['suffix'])
-                    )
-                )
+                        os.path.basename(infile) + self.inputs['suffix'])
+                    ) for host, infile in indata
+                ]
+                
+            command = "python %s" % (self.__file__.replace('master', 'nodes'))
+            jobs = []
+            for host, outfile in outdata:
                 jobs.append(
                     ComputeJob(
                         host,
                         command,
                         arguments=[
                             pdbfile,
-                            outdata[-1][1]
+                            outfile
                         ]
                     )
                 )
@@ -139,7 +147,7 @@ class parmdb(BaseRecipe, RemoteCommandRecipeMixIn):
             self.logger.warn("Detected failed parmdb job")
             return 1
         else:
-            self.logger.debug("Writing empty parameter database file: %s" %
+            self.logger.debug("Writing parmdb map file: %s" %
                               self.inputs['mapfile'])
             store_data_map(self.inputs['mapfile'], outdata)
             self.outputs['mapfile'] = self.inputs['mapfile']

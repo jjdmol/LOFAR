@@ -5,18 +5,18 @@
 #                                                      swinbank@transientskp.org
 # ------------------------------------------------------------------------------
 
-from __future__ import with_statement
-
 from collections import defaultdict
 
 import sys
 import os
 
 import lofarpipe.support.lofaringredient as ingredient
+
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
 from lofarpipe.support.group_data import load_data_map, store_data_map
+from lofarpipe.support.group_data import validate_data_maps
 
 class dppp(BaseRecipe, RemoteCommandRecipeMixIn):
     """
@@ -110,27 +110,37 @@ class dppp(BaseRecipe, RemoteCommandRecipeMixIn):
 
         #                            Load file <-> output node mapping from disk
         # ----------------------------------------------------------------------
-        self.logger.debug("Loading map from %s" % self.inputs['args'])
-        data = load_data_map(self.inputs['args'][0])
-
-        command = "python %s" % (self.__file__.replace('master', 'nodes'))
-        outdata = []
-        jobs = []
-        for host, ms in data:
-            outdata.append(
+        args = self.inputs['args']
+        self.logger.debug("Loading input-data mapfile: %s" % args[0])
+        indata = load_data_map(args[0])
+        if len(args) > 1:
+            self.logger.debug("Loading output-data mapfile: %s" % args[1])
+            outdata = load_data_map(args[1])
+            if not validate_data_maps(indata, outdata):
+                self.logger.error(
+                    "Validation of input/output data mapfiles failed"
+                )
+                return 1
+        else:
+            outdata = [
                 (host,
                  os.path.join(
                     self.inputs['working_directory'],
                     self.inputs['job_name'],
-                    os.path.basename(ms.rstrip('/')) + self.inputs['suffix'])
-                )
-            )
+                    os.path.basename(infile) + self.inputs['suffix'])
+                ) for host, infile in indata
+            ]
+
+        command = "python %s" % (self.__file__.replace('master', 'nodes'))
+        jobs = []
+        for host, infile, outfile in (x+(y[1],) 
+            for x, y in zip(indata, outdata)):
             jobs.append(
                 ComputeJob(
                     host, command,
                     arguments=[
-                        ms,
-                        outdata[-1][1],
+                        infile,
+                        outfile,
                         self.inputs['parset'],
                         self.inputs['executable'],
                         self.inputs['initscript'],
