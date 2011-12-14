@@ -16,6 +16,7 @@ lofar_add_library(lofarft
 #  LofarVisibilityResamplerBase.cc
   LofarVisResampler.cc
   LofarCubeSkyEquation.cc
+  GridderAlgorithm.cc
 )
 
 lofar_add_bin_program(versionlofarft versionlofarft.cc)

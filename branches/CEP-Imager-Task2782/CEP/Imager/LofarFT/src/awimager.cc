@@ -43,6 +43,8 @@
 #include <casa/OS/PrecTimer.h>
 #include <casa/iostream.h>
 #include <casa/sstream.h>
+#include <synthesis/Parallel/Applicator.h>
+#include <LofarFT/GridderAlgorithm.h>
 
 using namespace casa;
 
@@ -228,6 +230,14 @@ void correctPB (const String& restoName, const String& modelName,
 int main (Int argc, char** argv)
 {
   try {
+    
+    GridderAlgorithm gridderalgorithm;
+    applicator.defineAlgorithm( &gridderalgorithm );
+    applicator.init(argc, argv);
+    if (applicator.isWorker()) {
+      return 0;
+    };
+   
     Input inputs(1);
     // define the input structure
     inputs.version("2011Sep19-CT/SvdT/JvZ/GvD");
