@@ -62,7 +62,7 @@ void showMap(const std::map<unsigned int, std::vector<unsigned int> > &m);
 typedef struct
 {
   unsigned int antennaId;
-  std::vector<unsigned int> elementFlags;
+  std::vector<unsigned int> rcus;
   std::vector<ptime> timeStamps;
 } failedTile;
 #endif

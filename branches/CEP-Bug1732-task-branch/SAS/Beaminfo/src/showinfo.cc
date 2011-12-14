@@ -325,9 +325,9 @@ void showFailedTiles(const std::vector<failedTile> &failedTiles)
   {
     cout << "antennaId: " << failedTiles[i].antennaId << endl;
     cout << "elementFlags:"; 
-    for(unsigned int j=0; j<failedTiles[i].elementFlags.size() ; j++)
+    for(unsigned int j=0; j<failedTiles[i].rcus.size() ; j++)
     {
-      cout << "\t" << failedTiles[i].elementFlags[j];
+      cout << "\t" << failedTiles[i].rcus[j];
     }
     cout << endl << "timeStamps:"; 
     for(unsigned int j=0; j<failedTiles[i].timeStamps.size(); j++)
