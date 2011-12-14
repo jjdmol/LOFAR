@@ -110,10 +110,13 @@ void actionCollect(const std::string &filename, bool collectAll)
 		const casa::Array<casa::Complex> dataArray = dataColumn(row);
 		const casa::Array<bool> flagArray = flagColumn(row);
 		
-		std::vector<std::complex<float> > samples[polarizationCount];
+		std::complex<float> *samples[polarizationCount];
 		bool *isRFI[polarizationCount];
 		for(unsigned p = 0; p < polarizationCount; ++p)
+		{
 			isRFI[p] = new bool[band.channelCount];
+			samples[p] = new std::complex<float>[band.channelCount];
+		}
 		
 		casa::Array<casa::Complex>::const_iterator dataIter = dataArray.begin();
 		casa::Array<bool>::const_iterator flagIter = flagArray.begin();
@@ -130,7 +133,7 @@ void actionCollect(const std::string &filename, bool collectAll)
 		{
 			for(unsigned p = 0; p < polarizationCount; ++p)
 			{
-				samples[p].push_back(*dataIter);
+				samples[p][channel - startChannel] = *dataIter;
 				isRFI[p][channel - startChannel] = *flagIter;
 				
 				++dataIter;
@@ -140,11 +143,15 @@ void actionCollect(const std::string &filename, bool collectAll)
 		
 		for(unsigned p = 0; p < polarizationCount; ++p)
 		{
-			collection.Add(antenna1Index, antenna2Index, time, bandIndex, p, samples[p], isRFI[p]);
+			const bool origFlags = false;
+			collection.Add(antenna1Index, antenna2Index, time, bandIndex, p, &samples[p]->real(), &samples[p]->imag(), isRFI[p], &origFlags, band.channelCount, 2, 1, 0);
 		}
 
 		for(unsigned p = 0; p < polarizationCount; ++p)
+		{
 			delete[] isRFI[p];
+			delete[] samples[p];
+		}
 		
 		reportProgress(row, nrow);
 	}
