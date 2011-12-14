@@ -15,7 +15,7 @@ import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
-from lofarpipe.support.group_data import load_data_map, validate_data_maps
+from lofarpipe.support.group_data import load_data_map
 from lofarpipe.support.pipelinelogging import log_process_output
 
 class vdsmaker(BaseRecipe, RemoteCommandRecipeMixIn):
@@ -68,28 +68,17 @@ class vdsmaker(BaseRecipe, RemoteCommandRecipeMixIn):
         # ----------------------------------------------------------------------
         args = self.inputs['args']
         self.logger.debug("Loading input-data mapfile: %s" % args[0])
-        indata = load_data_map(args[0])
-        if len(args) > 1:
-            self.logger.debug("Loading output-data mapfile: %s" % args[1])
-            outdata = load_data_map(args[1])
-            if not validate_data_maps(indata, outdata):
-                self.logger.error(
-                    "Validation of input/output data mapfiles failed"
-                )
-                return 1
-        else:
-            outdata = [
-                (host,
-                 os.path.join(
-                    self.inputs['directory'],
-                    os.path.basename(infile) + '.vds')
-                ) for host, infile in indata
-            ]
+        data = load_data_map(args[0])
+
+        vdsnames = [
+            os.path.join(
+                self.inputs['directory'], os.path.basename(x[1]) + '.vds'
+            ) for x in data
+        ]
 
         command = "python %s" % (self.__file__.replace('master', 'nodes'))
         jobs = []
-        for host, infile, outfile in (x+(y[1],) 
-            for x, y in zip(indata, outdata)):
+        for host, infile, outfile in (x+(y,) for x, y in zip(data, vdsnames)):
             jobs.append(
                 ComputeJob(
                     host, command,
@@ -112,7 +101,6 @@ class vdsmaker(BaseRecipe, RemoteCommandRecipeMixIn):
         self.logger.info("Combining VDS files")
         executable = self.inputs['combinevds']
         gvds_out = self.inputs['gvds']
-        vdsnames = [x[1] for x in outdata]
         try:
             command = [executable, gvds_out] + vdsnames
             combineproc = subprocess.Popen(
