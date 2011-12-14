@@ -1,0 +1,8 @@
+Name = tmwimager.in_ms0
+FileSys = node1:/usr
+StartTime = 0
+EndTime = 2
+StepTime = 0.5
+NChan = [2]
+StartFreqs = [20,25]
+EndFreqs = [22,30]
