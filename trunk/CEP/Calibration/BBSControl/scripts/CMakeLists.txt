@@ -13,6 +13,7 @@ python_install(
 python_install(
   #__init__.py
   solverquery.py
+  plotwindow.py
   plothistogram.py
   DESTINATION lofar/bbs)
 
