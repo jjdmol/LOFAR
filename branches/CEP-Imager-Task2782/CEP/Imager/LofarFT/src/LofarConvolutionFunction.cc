@@ -233,6 +233,11 @@ namespace LOFAR
     vector< vector< Cube<Complex> > >& aTermList = m_AtermStore[time];
     // Calculate the A-term and fill the vector for all stations.
     aTermList.resize (m_nStations);
+
+    MEpoch binEpoch;
+    binEpoch.set(Quantity(time, "s"));
+    m_aTerm->setEpoch(binEpoch);
+
     ///#pragma omp parallel
     {
       // Thread private variables.
@@ -274,11 +279,9 @@ namespace LOFAR
         //======================================
         // Enable the beam
         //======================================
-        MEpoch binEpoch;
-        binEpoch.set(Quantity(time, "s"));
         vector< Cube<Complex> > aTermA = m_aTerm->evaluate(shape,
                                                           coordinate,
-                                                          i, binEpoch,
+                                                          i,
                                                           list_freq, true);
         // Compute the fft on the beam
         for (uInt ch=0; ch<m_nChannel; ++ch) {

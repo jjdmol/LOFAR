@@ -78,7 +78,7 @@ namespace LOFAR
     Int ntime = itsParameters.asDouble("timewindow") / interval;
     Int nrowBlock = nrowPerTime * max(1,ntime);
     // Set row blocking in VisIter.
-    rvi_p->setRowBlocking (nrowBlock);
+    rvi_p->setRowBlocking (nrowBlock - 1);
     LogIO os;
     os << LogIO::NORMAL
        << "vi.setRowBlocking(" << nrowBlock << ")"

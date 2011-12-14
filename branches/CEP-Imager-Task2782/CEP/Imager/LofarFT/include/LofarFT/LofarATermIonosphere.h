@@ -57,11 +57,13 @@ namespace LOFAR
     virtual vector<casa::Cube<casa::Complex> > evaluate(const casa::IPosition &shape,
       const casa::DirectionCoordinate &coordinates,
       uint station,
-      const casa::MEpoch &epoch,
       const casa::Vector<casa::Double> &freq,
       bool normalize = false);
 
     virtual double resolution();
+
+    virtual void setEpoch( const casa::MEpoch &epoch );
+ 
 
   private:
     casa::Array<casa::DComplex>
@@ -84,13 +86,12 @@ namespace LOFAR
     void initReferenceFreq(const casa::MeasurementSet &ms,
       uint idDataDescription);
 
-    void setEpoch( const casa::MEpoch &epoch );
-  
     double get_parmvalue( std::string parmname );
   
     casa::MDirection refDelay, refTile;
     double           refFreq;
     double           time;
+    casa::MEpoch     epoch;
     double           r0, beta, height;
     Instrument       instrument;
     LOFAR::BBS::ParmFacade* pdb;

@@ -51,10 +51,11 @@ namespace LOFAR
     virtual vector<casa::Cube<casa::Complex> > evaluate(const casa::IPosition &shape,
       const casa::DirectionCoordinate &coordinates,
       uint station,
-      const casa::MEpoch &epoch,
       const casa::Vector<casa::Double> &freq,
       bool normalize = false) = 0;
     virtual double resolution() = 0;
+    virtual void setEpoch( const casa::MEpoch &epoch )=0;
+  
 
   };
 } // namespace LOFAR

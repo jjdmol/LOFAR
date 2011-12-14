@@ -80,7 +80,6 @@ namespace LOFAR
   vector<Cube<Complex> > LofarATermIonosphere::evaluate(const IPosition &shape,
     const DirectionCoordinate &coordinates,
     uint station,
-    const MEpoch &epoch,
     const Vector<Double> &freq,
     bool normalize)
   {
@@ -88,11 +87,9 @@ namespace LOFAR
 //    AlwaysAssert(shape[0] > 0 && shape[1] > 0, SynthesisError);
 //    AlwaysAssert(freq.size() > 0, SynthesisError);
 
-    setEpoch(epoch);
-
     // Create conversion engine (from J2000 -> ITRF).
     MDirection::Convert convertor = MDirection::Convert(MDirection::J2000,
-      MDirection::Ref(MDirection::ITRF, MeasFrame(epoch, this->instrument.position())));
+      MDirection::Ref(MDirection::ITRF, MeasFrame(this->epoch, this->instrument.position())));
 
     MVDirection mvRefDelay = convertor(this->refDelay).getValue();
     Vector3 refDelay = {{mvRefDelay(0), mvRefDelay(1), mvRefDelay(2)}};
@@ -129,7 +126,10 @@ namespace LOFAR
     double c = x*x + y*y + z*z - 1.0;
     
     Cube<double> piercepoints(4, nX, nY, 0.0);
-
+   
+    #pragma omp parallel
+    {
+    #pragma omp for
     for(uint i = 0 ; i < nX; ++i) 
     {
       for(uint j = 0 ; j < nY; ++j) 
@@ -198,12 +198,14 @@ namespace LOFAR
 
       }
     }
-      
+    }  
     Matrix<Double> tec(nX, nY, 0.0);
     
     Double r0sqr = this->r0 * this->r0;
     Double beta_2 = 0.5 * this->beta;
-    
+    #pragma omp parallel
+    {
+    #pragma omp for
     for(uint i = 0 ; i < nX; ++i) 
     {
       for(uint j = 0 ; j < nY; ++j) 
@@ -219,8 +221,8 @@ namespace LOFAR
         tec(i,j) *= (-0.5 * piercepoints(3,i,j));
       }
     }
-    
-    cout << "TEC center pixel: " << tec(nX / 2, nY/ 2 ) << endl;
+    }
+//     cout << "TEC center pixel: " << tec(nX / 2, nY/ 2 ) << endl;
 
 //    cout << tec << endl;
     
@@ -493,6 +495,7 @@ namespace LOFAR
     if (this->time != time) {
       cout << (time - this->time) << endl;
       this->time = time;
+      this->epoch = epoch;
       this->r0 = get_parmvalue("r_0");
       this->beta = get_parmvalue("beta");
       this->height = get_parmvalue("height");

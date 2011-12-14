@@ -243,7 +243,6 @@ namespace LOFAR
     vector<casa::Cube<casa::Complex> > evaluate(const casa::IPosition &shape,
       const casa::DirectionCoordinate &coordinates,
       uint station,
-      const casa::MEpoch &epoch,
       const casa::Vector<casa::Double> &freq,
       bool normalize = false) const;
 

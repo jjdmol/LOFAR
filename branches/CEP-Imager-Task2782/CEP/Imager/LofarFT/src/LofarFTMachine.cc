@@ -634,7 +634,7 @@ void LofarFTMachine::finalizeToSky()
       for(uInt i=0;i<nx;++i){
   	for(uInt j=0;j<nx;++j){
 	  IPosition pos(4,i,j,k,0);
-	  Complex pixel(itsGriddedData[ii](pos));
+	  Complex pixel(itsGriddedData[ii](pos));  //segfault
 	  tempimage(i,j,k)=pixel;
   	}
       }
@@ -685,11 +685,11 @@ Array<Complex>* LofarFTMachine::getDataPointer(const IPosition& centerLoc2D,
 void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
                          FTMachine::Type type)
 {
-  if (itsVerbose > 0) {
+//   if (itsVerbose > 0) {
     logIO() << LogOrigin("LofarFTMachine", "put") << LogIO::NORMAL
             << "I am gridding " << vb.nRow() << " row(s)."  << LogIO::POST;
     logIO() << LogIO::NORMAL << "Padding is " << padding_p  << LogIO::POST;
-  }
+//   }
 
 
   gridOk(gridder->cSupport()(0));
@@ -838,6 +838,7 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
   visResamplers_p.setMaps(chanMap, polMap);
 
   // First compute the A-terms for all stations (if needed).
+  cout << "LofarFT machine gridding calls computeAterm" << endl;
   itsConvFunc->computeAterm (time);
 
   uInt Nchannels = vb.nChannel();
@@ -1073,6 +1074,7 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
   //ROVisIter& via(vb.iter());
 
   // First compute the A-terms for all stations (if needed).
+  cout << "LofarFT machine degridding calls computeAterm" << endl;
   itsConvFunc->computeAterm (time);
 
   itsTotalTimer.start();

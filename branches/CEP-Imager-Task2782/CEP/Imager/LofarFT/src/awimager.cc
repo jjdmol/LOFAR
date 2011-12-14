@@ -349,8 +349,8 @@ int main (Int argc, char** argv)
 		   "TaQL selection string for MS",
 		   "string");
     inputs.create ("operation", "image",
-                   ///		   "Operation (empty,image,clark,hogbom,csclean,multiscale,entropy)",
-		   "Operation (empty,image,csclean)",
+                   ///		   "Operation (empty,predict,image,clark,hogbom,csclean,multiscale,entropy)",
+		   "Operation (empty,predict,image,csclean)",
 		   "string");
     inputs.create ("niter", "1000",
 		   "Number of clean iterations",
@@ -529,7 +529,7 @@ int main (Int argc, char** argv)
       phaseCenter = readDirection (phasectr);
     }
     operation.downcase();
-    AlwaysAssertExit (operation=="empty" || operation=="image" || operation=="csclean");
+    AlwaysAssertExit (operation=="empty" || operation=="predict" || operation=="image" || operation=="csclean");
     ///AlwaysAssertExit (operation=="empty" || operation=="image" || operation=="hogbom" || operation=="clark" || operation=="csclean" || operation=="multiscale" || operation =="entropy");
     IPosition maskBlc, maskTrc;
     Quantity threshold;
@@ -576,7 +576,7 @@ int main (Int argc, char** argv)
                     String(),                       // spwstring
                     String(),                       // uvdist
                     String(),                       // scan
-                    True);                          // useModelCol
+                    False);                          // useModelCol
 
     imager.defineImage (npix,                       // nx
                         npix,                       // ny
@@ -637,13 +637,20 @@ int main (Int argc, char** argv)
                         padding,                      // padding
                         wplanes);                     // wprojplanes
 
-      if (operation == "image") {
+      if (operation == "predict") {
         Timer timer;
         PrecTimer precTimer;
         precTimer.start();
-//        imager.makeimage (imageType, imgName);
-        cout << "=======================" << modelName << "========================" << endl;
         imager.ft (Vector<String>(1, modelName), "");
+        precTimer.stop();
+        timer.show ("makeimage");
+        imager.showTimings (cout, precTimer.getReal());
+
+      } else if (operation == "image") {
+        Timer timer;
+        PrecTimer precTimer;
+        precTimer.start();
+        imager.makeimage (imageType, imgName);
         precTimer.stop();
         timer.show ("makeimage");
         imager.showTimings (cout, precTimer.getReal());

@@ -383,8 +383,6 @@ void  LofarCubeSkyEquation::predict(Bool incremental, MS::PredefinedColumns col)
         // get the model visibility and write it to the model MS
         getSlice(* vb,incremental, cubeSlice, nCubeSlice);
         vi.setVis(vb->modelVisCube(),visCol);
-        cout << vi.getMeasurementSet() << endl;
-        cout << vb->modelVisCube() << endl;
       }
     }
     finalizeGetSlice();
