@@ -161,7 +161,7 @@ class new_bbs(BaseRecipe):
         store_data_map(self.inputs['data_mapfile'], data_map)
 
         self.bbs_map = [
-            (dat + (ins[1], sky[1]))
+            (dat[0], (dat[1], ins[1], sky[1]))
             for dat, ins, sky in zip(data_map, instrument_map, sky_map)
         ]
         
