@@ -54,7 +54,10 @@ void ProcessCommander::Run()
 		makeNodeMap(_observation);
 		for(std::map<std::string, std::deque<ClusteredObservationItem> >::const_iterator i=_nodeMap.begin();i!=_nodeMap.end();++i)
 		{
-			_processes.push_back(new RemoteProcess(i->first, thisHostName));
+			RemoteProcess *process = new RemoteProcess(i->first, thisHostName);
+			process->SignalFinished().connect(sigc::mem_fun(*this, &ProcessCommander::onProcessFinished));
+			process->Start();
+			_processes.push_back(process);
 		}
 		
 		initializeNextTask();
@@ -66,6 +69,8 @@ void ProcessCommander::Run()
 void ProcessCommander::continueReadQualityTablesTask(ServerConnectionPtr serverConnection)
 {
 	const std::string &hostname = serverConnection->Hostname();
+	
+	boost::mutex::scoped_lock lock(_mutex);
 	NodeMap::iterator iter = _nodeMap.find(hostname);
 	if(iter == _nodeMap.end())
 	{
@@ -81,6 +86,7 @@ void ProcessCommander::continueReadQualityTablesTask(ServerConnectionPtr serverC
 			{
 				removeCurrentTask();
 				initializeNextTask();
+				lock.unlock();
 				onConnectionAwaitingCommand(serverConnection);
 			}
 		}
@@ -96,6 +102,7 @@ void ProcessCommander::continueReadQualityTablesTask(ServerConnectionPtr serverC
 
 void ProcessCommander::continueReadAntennaTablesTask(ServerConnectionPtr serverConnection)
 {
+	boost::mutex::scoped_lock lock(_mutex);
 	removeCurrentTask();
 	initializeNextTask();
 	
@@ -172,6 +179,7 @@ void ProcessCommander::onConnectionAwaitingCommand(ServerConnectionPtr serverCon
 
 void ProcessCommander::onConnectionFinishReadQualityTables(ServerConnectionPtr serverConnection, StatisticsCollection &collection)
 {
+	boost::mutex::scoped_lock lock(_mutex);
 	if(collection.PolarizationCount() == 0)
 		throw std::runtime_error("Client sent StatisticsCollection with 0 polarizations.");
 	
@@ -186,6 +194,7 @@ void ProcessCommander::onConnectionFinishReadQualityTables(ServerConnectionPtr s
 
 void ProcessCommander::onConnectionFinishReadAntennaTables(ServerConnectionPtr serverConnection, std::vector<AntennaInfo> &antennas)
 {
+	boost::mutex::scoped_lock lock(_mutex);
 	_antennas = antennas;
 	delete &antennas;
 }
@@ -194,7 +203,34 @@ void ProcessCommander::onError(ServerConnectionPtr connection, const std::string
 {
 	std::stringstream s;
 	s << "On connection with " << connection->Hostname() << ", reported error was: " << error;
+	boost::mutex::scoped_lock lock(_mutex);
 	_errors.push_back(s.str());
+}
+
+void ProcessCommander::onProcessFinished(RemoteProcess &process, bool error, int status)
+{
+	boost::mutex::scoped_lock lock(_mutex);
+	NodeMap::iterator iter = _nodeMap.find(process.ClientHostname());
+	if(iter == _nodeMap.end())
+	{
+		// There were no comments for this client, thus probably finished okay.
+	}
+	else {
+		_nodeMap.erase(iter);
+		if(_nodeMap.empty())
+		{
+			removeCurrentTask();
+			initializeNextTask();
+		}
+	}
+	
+	if(error)
+	{
+		std::stringstream s;
+		s << "Remote process to " << process.ClientHostname() << " reported an error";
+		if(status != 0) s << " (status " << status << ")";
+		_errors.push_back(s.str());
+	}
 }
 
 
