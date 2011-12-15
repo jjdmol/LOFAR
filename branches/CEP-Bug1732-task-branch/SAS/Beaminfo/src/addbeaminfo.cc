@@ -45,6 +45,7 @@
 #include <unistd.h>
 
 // Boost
+#include <boost/bind.hpp>           // for searching vectors of structs
 #include <boost/date_time.hpp>
 #include <boost/lexical_cast.hpp>   // convert string to number
 #include <boost/tokenizer.hpp>
@@ -162,10 +163,11 @@ void getFailedTiles(MeasurementSet &ms,
 RCUmap getFailedTiles(const map<string, ptime> &failedTilesSAS);
 vector<failedTile> getFailedTilesAntennaId(MeasurementSet &ms,
                                            const map<string, ptime> &failedTilesSAS);
-vector<failedTile>::iterator getFailedTileAntennaId(vector<failedTile> &failedTiles,
-                                                    unsigned int antennaId);
-vector<failedTile>::const_iterator getFailedTileAntennaId(const vector<failedTile> &failedTiles,
-                                                          unsigned int antennaId);
+// don't need this anymore: now use find_fi and boost::bind
+//vector<failedTile>::iterator getFailedTileAntennaId(vector<failedTile> &failedTiles,
+//                                                    unsigned int antennaId);
+//vector<failedTile>::const_iterator getFailedTileAntennaId(const vector<failedTile> &failedTiles,
+//                                                          unsigned int antennaId);
 vector<failedTile> getBrokenTiles(MeasurementSet &ms, const RCUmap &brokenRCus);
 vector<failedTile> getFailedTiles(MeasurementSet &ms, 
                                   const RCUmap &failedRCUs, 
@@ -198,9 +200,6 @@ void writeFailedElementsFile( const string &filename,
                               const vector<string> &brokenHardware,
                               const vector<MVEpoch> &timestamps,
                               bool strip=true);                              
-//void readFailedElementsFile(const string &filename,
-//                            vector<string> &brokenHardware,
-//                            vector<MVEpoch> &timestamps);
 map<string, MVEpoch> readFailedElementsFile(const string &filename);
 
 
@@ -411,19 +410,20 @@ int main (int argc, char* argv[])
         showMap(brokenRCUs);
       
       vector<failedTile> brokenTiles=getBrokenTiles(ms, brokenRCUs); // Convert stations to antennaIds
-      //showFailedTiles(brokenTiles);
+      if(debug)
+        showFailedTiles(brokenTiles);
 
-//      updateAntennaFieldTable(ms, brokenTiles);    // TODO: Update LOFAR_ANTENNA_FIELD table
-
-      
+      updateAntennaFieldTable(ms, brokenTiles);    // TODO: Update LOFAR_ANTENNA_FIELD table
+    
       // Test getting failed tiles information per LOFAR_ANTENNA_FIELD
       failedHardware=getFailedHardware(brokenHardware, brokenHardwareAfter);
 //      RCUmap failedRCUs=getFailedTiles(failedHardware);        
       vector<failedTile> failedTiles=getFailedTilesAntennaId(ms, failedHardware);
-      
-    
-      showFailedTiles(failedTiles);              // DEBUG
-//      addFailedAntennaTiles(ms, failedTiles);
+
+      if(debug)    
+        showFailedTiles(failedTiles);
+        
+      addFailedAntennaTiles(ms, failedTiles);
     }
   
   }
@@ -1714,18 +1714,19 @@ vector<failedTile> getFailedTilesAntennaId( MeasurementSet &ms,
       ptime timestamp=failedTilesSASIt->second;
       vector<unsigned int> antennaIds;
       
+      /*
       cout << "name = " << name << "\t";                  // DEBUG
       cout << "station = " << station << "\t";            // DEBUG
       cout << "rcuNumString = " << rcuNumString << "\t";  // DEBUG
       cout << "rcu = " << rcu << "\t";                    // DEBUG    
       cout << "ptime = " << timestamp << endl;            // DEBUG
+      */
       
       if(name==station)     // if SAS station name is that of ANTENNA
       {
-        cout << name << " == " << station << endl;
         // Check if this antennaId is already in failedTiles vector
-        vector<failedTile>::iterator failedTileIt;
-        failedTileIt=getFailedTileAntennaId(failedTiles, antennaId);
+        vector<failedTile>::iterator failedTileIt=std::find_if(failedTiles.begin(),
+        failedTiles.end(), boost::bind(&failedTile::antennaId, _1) == antennaId);
         if( failedTileIt != failedTiles.end() )
         {
           failedTileIt->rcus.push_back(rcu);
@@ -1733,8 +1734,6 @@ vector<failedTile> getFailedTilesAntennaId( MeasurementSet &ms,
         }
         else  // ... otherwise create a new failed tile struct and insert into the vector
         {
-          //rcus.push_back(rcuNum);
-          //timeStamps.push_back(timestamp);
           failedTile newTile;
           newTile.antennaId=antennaId;
           newTile.rcus.push_back(rcu);
@@ -1777,59 +1776,15 @@ vector<unsigned int> getAntennaIds(Table &antennaTable, const string &station)
 }
 
 
-/*!
-  \brief Search a vector of failedTiles for this antennaId
-  \param failedTiles    vector of failedTiles
-  \param antennaId      antennaId to look for in failed tiles
-  \return iterator to failed tile with this antennaId 
-*/
-vector<failedTile>::iterator getFailedTileAntennaId(vector<failedTile> &failedTiles,
-                                                    unsigned int antennaId)
-{
-  vector<failedTile>::iterator tileIt=failedTiles.begin();
-
-  unsigned int length=failedTiles.size();
-  for(unsigned int i=0; i<length; i++)
-  {
-    if(failedTiles[i].antennaId == antennaId)
-    {
-      tileIt += i;
-      return tileIt;      // we suppose unique antennaIds in failedTiles, found then return
-    }
-    else
-    {
-      tileIt=failedTiles.end();
-    }
-  }
-  return tileIt;
-}
-
-vector<failedTile>::const_iterator getFailedTileAntennaId(const vector<failedTile> &failedTiles,
-                                                          unsigned int antennaId)
-{
-  vector<failedTile>::const_iterator tileIt=failedTiles.begin();
-
-  unsigned int length=failedTiles.size();
-  for(unsigned int i=0; i<length; i++)
-  {
-    if(failedTiles[i].antennaId == antennaId)
-    {
-      tileIt += i;
-      return tileIt;      // we suppose unique antennaIds in failedTiles, found then return
-    }
-    else
-    {
-      tileIt=failedTiles.end();
-    }
-  }
-  return tileIt;
-}
-
-
-
 // Ger's approach, looping over the ANTENNA table to determine
 // ANTENNA_IDs in MS and referencing them to RCU numbers
 //
+/*!
+  \brief Convert a RCUmap of broken RCUs to a list of broken tiles with antennaIds
+  \param ms           Measurementset to read ANTENNA table from
+  \param brokenRCUs   map of broken RCUs against station name
+  \return vector      vector with failed RCUs against antennaId
+*/
 vector<failedTile> getBrokenTiles(MeasurementSet &ms, const RCUmap &brokenRCUs)
 {
   vector<failedTile> brokenTiles;
@@ -1980,6 +1935,7 @@ void doAddFailedAntennaTile(Table &failedElementsTable,
 
   // First check if that failed tile isn't already present in the table
   // we don't want to have double entries of failures
+  
   if(!failedAntennaElementExists(failedElementsTable, antennaId, element_index))
   {
     uint rownr = failedElementsTable.nrow();
@@ -1987,11 +1943,9 @@ void doAddFailedAntennaTile(Table &failedElementsTable,
   
     antennaFieldIdCol.put(rownr, antennaId);
     elementIndexCol.put(rownr, element_index);
-  
-  //  cout << "doAddFailedAntennaTile() timeStamp = " << timeStamp.getTime(Unit("s"));
     timeStampCol.put(rownr, timeStamp.getTime(Unit("s")));
    
-    // If there is a FLAG_ROW column
+    // If there is a FLAG_ROW column, add the flags
     if(failedElementsTable.tableDesc().isColumn("FLAG_ROW"))
     {
       ScalarColumn<Bool> flagCol(failedElementsTable, "FLAG_ROW");
