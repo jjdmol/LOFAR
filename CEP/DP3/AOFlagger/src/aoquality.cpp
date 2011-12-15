@@ -144,7 +144,7 @@ void actionCollect(const std::string &filename, bool collectAll)
 		for(unsigned p = 0; p < polarizationCount; ++p)
 		{
 			const bool origFlags = false;
-			collection.Add(antenna1Index, antenna2Index, time, bandIndex, p, &samples[p]->real(), &samples[p]->imag(), isRFI[p], &origFlags, band.channelCount, 2, 1, 0);
+			collection.Add(antenna1Index, antenna2Index, time, bandIndex, p, &samples[p]->real(), &samples[p]->imag(), isRFI[p], &origFlags, band.channelCount - startChannel, 2, 1, 0);
 		}
 
 		for(unsigned p = 0; p < polarizationCount; ++p)
