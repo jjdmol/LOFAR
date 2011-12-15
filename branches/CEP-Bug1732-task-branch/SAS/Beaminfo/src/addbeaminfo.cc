@@ -212,7 +212,7 @@ void usage(char *programname)
   cout << "-d             run in debug mode" << endl;
   cout << "-q             query SAS database for broken tiles ifnromation" << endl;
   cout << "-f             read broken hardware information from file" << endl;
-  cout << "-m             MeasurementSet to add beaminfo to" << endl;
+  cout << "-m <msname>    MeasurementSet to add beaminfo to" << endl;
   cout << "-p <filename>  read parset (instead of default)" << endl;
   cout << "-s <time>      start time of observation in MS"<< endl;
   cout << "-e <time>      end time of observation in MS"<< endl;
@@ -238,12 +238,12 @@ int main (int argc, char* argv[])
   string parsetName="addbeaminfo.parset";   // parset location (default)
   string starttimeString, endtimeString;    // strings to get start and end time
 
-  map<string, ptime> brokenHardware;    // map of broken hardware with timestamps
-  map<string, ptime> brokenHardwareAfter;    // hardware that failed duing obs
-  map<string, ptime> failedHardware;    // hardware that failed during the observation
-  RCUmap brokenRCUs;                    // broken RCUs (before obs)
-  // Vector<MVEpoch> obsTimes;             // observation times of MS (for debugging mode only!)
-  MVEpoch startTime, endTime;           // starttime and endtime of observation
+  map<string, ptime> brokenHardware;        // map of broken hardware with timestamps
+  map<string, ptime> brokenHardwareAfter;   // hardware that failed duing obs
+  map<string, ptime> failedHardware;        // hardware that failed during the observation
+  RCUmap brokenRCUs;                        // broken RCUs (before obs)
+  // Vector<MVEpoch> obsTimes;              // observation times of MS (for debugging mode only!)
+  MVEpoch startTime, endTime;               // starttime and endtime of observation
 
   //---------------------------------------------
   // Init logger
@@ -262,6 +262,7 @@ int main (int argc, char* argv[])
         break;
       case 'q':         // query database
         query=true;
+        update=false;
         break;
       case 'f':         // read from files
         file=true;
@@ -295,16 +296,10 @@ int main (int argc, char* argv[])
     }
   }
   
-  // Check command arguments DEBUG
-//  cout << "debug = " << debug << endl;
-//  cout << "query = " << query << endl;
-//  cout << "file = " << file << endl;
-//  cout << "parsetName = " << parsetName << endl;
-  
   // Check command arguments consistency
-  if(query==true && file==true)
+  if(query==true && update==true)
   {
-    LOG_DEBUG_STR(argv[0] << ": options -f and -q are mutually exclusive. Exiting.");
+    LOG_DEBUG_STR(argv[0] << ": options -q and -u are mutually exclusive. Exiting.");
     usage(argv[0]);
     exit(0);
   }
@@ -315,24 +310,22 @@ int main (int argc, char* argv[])
     if(verbose)
       LOG_INFO_STR("Reading parset: " << parsetName);
 
+    //---------------------------------------------------------------------
     ParameterSet parset(parsetName);
-    string msName;      // name of MS to update
-    if(msArgName=="")   // if no MS filename was supplied as command argument
-    {
-          msName      = parset.getString("ms");   
-    }
-    string antSet      = parset.getString("antennaset", "");
     //string host        = parset.getString("host", "sas.control.lofar.eu");  // production
     string host        = parset.getString("host", "RS005.astron.nl");         // DEBUG
     string db          = parset.getString("db", "TESTLOFAR_3");
     string user        = parset.getString("user", "paulus");
     string password    = parset.getString("password", "boskabouter");
     string brokenfilename = parset.getString("brokenTilesFile", "/opt/lofar/share/brokenTiles.txt");
+    string brokenAfterfilename = parset.getString("brokenTilesAfterFile", "/opt/lofar/share/brokenTilesAfter.txt");
     string failedfilename = parset.getString("failedTilesFile", "/opt/lofar/share/failedTiles.txt");
     // Optional parameters that give outside access of internal format handling
     // this should not be necessary to be changed
     string elementTable = parset.getString("elementTable", "LOFAR_ANTENNA_FIELD");                                          
     string elementColumn = parset.getString("elementColumn", "ELEMENT_FLAG");
+
+    //---------------------------------------------------------------------
     // Handle observation starttime and endtime
     if(starttimeString=="")   // if we didn't get the start time from the command arguments
     {
@@ -349,7 +342,8 @@ int main (int argc, char* argv[])
       THROW(Exception, "starttime >= endtime: " << starttimeString << " >= " << endtimeString);    
     }
 
-    // Connect to SAS
+    //---------------------------------------------------------------------
+    // Connect to SAS: Query mode
     if(query)
     {   
       LOG_INFO_STR("Getting SAS antenna health information");
@@ -360,52 +354,79 @@ int main (int argc, char* argv[])
 
       // Get broken hardware strings from SAS
       brokenHardware=getBrokenHardwareMap(conn, startTime);
-
-      // write broken hardware (raw vector) to file
       writeBrokenHardwareFile(brokenfilename, brokenHardware);
       
-      //if(debug)
-      //  showMap(brokenHardware);   // DEBUG     
+      if(debug)
+        showMap(brokenHardware);   // DEBUG     
 
+      // Get hardware strings that was broken after observation
       brokenHardwareAfter=getBrokenHardwareMap(conn, endTime);          
+      writeBrokenHardwareFile(brokenAfterfilename, brokenHardwareAfter);
+      
       failedHardware=getFailedHardware(brokenHardware, brokenHardwareAfter);
+      writeBrokenHardwareFile(failedfilename, failedHardware);
 
       if(debug)
       {
         cout << "failedHardware:" << endl;
         showMap(failedHardware);    // DEBUG
       }
-      
-      writeBrokenHardwareFile(failedfilename, failedHardware);
     }
 
-    if(update)
+    //---------------------------------------------------------------------
+    // Read broken hardware information from file: File mode
+    //
+    if(file)
     {
-       MeasurementSet ms(msName, Table::Update);     // open MeasurementSet
-    
-      // This is the "second" call, when information stored in the brokenTiles.txt
-      // and failedTiles.txt is used to update the MS
-      //if(file)
-      //{
-        // TEST: reading broken hardware from a file
+      // TEST: reading broken hardware from a file
       LOG_INFO_STR("reading brokenHardware from file:" << brokenfilename);
       brokenHardware=readBrokenHardwareFile(brokenfilename);
-      brokenHardwareAfter=readBrokenHardwareFile("/opt/lofar/share/brokenTilesDebug.txt"); // DEBUG
-      //}
-  
-      //if(file)
-      //{
-      brokenRCUs=getBrokenRCUs(brokenHardware);               // get all broken RCUs
+      brokenHardwareAfter=readBrokenHardwareFile(brokenAfterfilename);
+    
+      failedHardware=getFailedHardware(brokenHardware, brokenHardwareAfter);
+    }
+
+    //---------------------------------------------------------------------
+    // Update MS with broken tiles and failed tiles info: Update mode
+    //
+    if(update)
+    {
+      // This is the "second" call, when information stored in the brokenTiles.txt
+      // and failedTiles.txt is used to update the MS
+      string msName;     
+      if(msArgName=="")   // if no MS filename was supplied as command argument
+      {
+        msName = parset.getString("ms");   
+      }
+      else
+      {
+        msName=msArgName;
+      }
+      if(msName=="")
+      {
+        THROW(Exception, "No MS filename given.");
+      }
+
+      MeasurementSet ms(msName, Table::Update);     // open MeasurementSet
+
+      //----------------------------------------------------------------------------    
+      LOG_INFO_STR("reading brokenHardware from file:" << brokenfilename);
+      brokenHardware=readBrokenHardwareFile(brokenfilename);
+      brokenHardwareAfter=readBrokenHardwareFile(brokenAfterfilename);
+      
+
+      brokenRCUs=getBrokenRCUs(brokenHardware);   // get all broken RCUs into a RCUmap
       if(debug)
         showMap(brokenRCUs);
       
       vector<failedTile> brokenTiles=getBrokenTiles(ms, brokenRCUs); // Convert stations to antennaIds
       if(debug)
         showFailedTiles(brokenTiles);
-
       updateAntennaFieldTable(ms, brokenTiles);    // TODO: Update LOFAR_ANTENNA_FIELD table
     
-      // Test getting failed tiles information per LOFAR_ANTENNA_FIELD
+      //----------------------------------------------------------------------------
+      // Get Tiles that failed during observation
+      //
       failedHardware=getFailedHardware(brokenHardware, brokenHardwareAfter);
 //      RCUmap failedRCUs=getFailedTiles(failedHardware);        
       vector<failedTile> failedTiles=getFailedTilesAntennaId(ms, failedHardware);
@@ -986,7 +1007,6 @@ vector<unsigned int> getAntennaIds(const MeasurementSet &ms, const string &stati
 void writeBrokenHardwareFile(const string &filename, const vector<string> &brokenHardware, bool strip)
 {
   fstream outfile;
-//  outfile.open(filename.c_str(), ios::trunc);
   outfile.open(filename.c_str(), ios::out);   // this shows the correct behaviour of overwriting the file
 
   if (outfile.is_open())
