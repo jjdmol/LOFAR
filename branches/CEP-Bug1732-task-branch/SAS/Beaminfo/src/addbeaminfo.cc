@@ -80,6 +80,9 @@ using namespace casa;
 string fromCasaTime (const MEpoch& epoch, double addDays);
 MVEpoch toCasaTime(const string &time);
 MVEpoch toCasaTime(const ptime &time);
+bool checkTime(const ptime &starttime, const ptime &endtime);
+bool checkTime(const string &starttimeString, const string &endtimeString);
+bool checkTime(const MVEpoch &starttime, const MVEpoch &endtime);
 string getLofarAntennaSet(const string &msName);
 string getLofarAntennaSet(MeasurementSet &ms);
 
@@ -341,24 +344,11 @@ int main (int argc, char* argv[])
     }
     startTime=toCasaTime(starttimeString);
     endTime=toCasaTime(endtimeString);
-    
-    cout << "startTime = " << startTime << endl;    // DEBUG
-    cout << "endTime = " << endTime << endl;        // DEBUG
-    
-    /*
-    // The dependency on MS was only possible for debugging, not in release SAS mode
-    if (antSet.empty())                   // if LOFAR_ANTENNA_SET was not provided in parset
+    if(checkTime(startTime, endTime) != true)
     {
-      antSet=getLofarAntennaSet(msName);          // get it from the MS
+      THROW(Exception, "starttime >= endtime: " << starttimeString << " >= " << endtimeString);    
     }
 
-    MeasurementSet ms(msName, Table::Update);     // open Measurementset
-    
-    // Read observation times from MS
-    obsTimes=readObservationTimes(ms);
-    RCUmap rcus=getRCUs(ms);  //, rcus, antennas);   
-    */
-    
     // Connect to SAS
     if(query)
     {   
@@ -448,8 +438,6 @@ int main (int argc, char* argv[])
 string fromCasaTime (const MVEpoch& epoch, double addDays=0)
 {
   MVTime t (epoch.get() + addDays);
-
-//  return boost::posix_time::from_iso_string (t.getTime().ISODate());  // used to return ptime
   return t.getTime().ISODate();
 }
 
@@ -496,6 +484,54 @@ MVEpoch toCasaTime(const ptime &time)
   casaTime=toCasaTime(timeString);
 
   return casaTime;
+}
+
+
+/*!
+  \brief Check that Starttime < Endtime
+  \param starttime    start time of observation
+  \param endtime      end time of observation
+  \return valid       vailid if starttime < endtime
+*/
+bool checkTime(const ptime &starttime, const ptime &endtime)
+{
+  bool valid=false;
+  
+  if(starttime < endtime)
+  {
+    valid=true;
+  }
+  return valid;
+}
+
+bool checkTime(const string &starttimeString, const string &endtimeString)
+{
+  bool valid=false;
+
+  MVEpoch starttimeCasa, endtimeCasa;
+  
+  cout << "starttimeString: " << starttimeString << endl;
+  cout << "endtimeString: " << endtimeString << endl;
+  
+  starttimeCasa=toCasaTime(starttimeString);
+  starttimeCasa=toCasaTime(endtimeString);
+  
+  ptime starttime=time_from_string(fromCasaTime(starttimeCasa));
+  ptime endtime=time_from_string(fromCasaTime(endtimeCasa));
+  
+  valid=checkTime(starttime, endtime);
+  return valid;
+}
+
+bool checkTime(const MVEpoch &starttimeCasa, const MVEpoch &endtimeCasa)
+{
+  bool valid=False;
+
+  ptime starttime=time_from_string(fromCasaTime(starttimeCasa));
+  ptime endtime=time_from_string(fromCasaTime(endtimeCasa));
+  
+  valid=checkTime(starttime, endtime);
+  return valid;
 }
 
 
