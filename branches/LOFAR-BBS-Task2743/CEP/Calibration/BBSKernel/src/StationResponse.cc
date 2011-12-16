@@ -24,6 +24,7 @@
 #include <lofar_config.h>
 #include <BBSKernel/StationResponse.h>
 #include <BBSKernel/Exceptions.h>
+#include <BBSKernel/MeasurementAIPS.h>
 #include <BBSKernel/Expr/AntennaElementLBA.h>
 #include <BBSKernel/Expr/AntennaElementHBA.h>
 #include <BBSKernel/Expr/AntennaFieldThetaPhi.h>
@@ -40,22 +41,6 @@
 #include <Common/LofarLogger.h>
 #include <measures/Measures/MeasConvert.h>
 #include <measures/Measures/MCDirection.h>
-#include <measures/Measures/MCPosition.h>
-#include <ms/MeasurementSets/MSAntenna.h>
-#include <ms/MeasurementSets/MSAntennaParse.h>
-#include <ms/MeasurementSets/MSAntennaColumns.h>
-#include <ms/MeasurementSets/MSDataDescription.h>
-#include <ms/MeasurementSets/MSDataDescColumns.h>
-#include <ms/MeasurementSets/MSField.h>
-#include <ms/MeasurementSets/MSFieldColumns.h>
-#include <ms/MeasurementSets/MSObservation.h>
-#include <ms/MeasurementSets/MSObsColumns.h>
-#include <ms/MeasurementSets/MSPolarization.h>
-#include <ms/MeasurementSets/MSPolColumns.h>
-#include <ms/MeasurementSets/MSSpectralWindow.h>
-#include <ms/MeasurementSets/MSSpWindowColumns.h>
-#include <ms/MeasurementSets/MSSelection.h>
-#include <measures/Measures/MeasTable.h>
 
 namespace LOFAR
 {
@@ -74,8 +59,8 @@ StationResponse::StationResponse(const casa::MeasurementSet &ms,
     setDirection(casa::MDirection());
 
     // Load observation details.
-    Instrument::Ptr instrument = initInstrument(ms);
-    double refFreq = getReferenceFreq(ms);
+    Instrument::Ptr instrument = readInstrument(ms);
+    double refFreq = readFreqReference(ms);
 
     // The ITRF direction vectors for the direction of interest and the
     // reference direction are computed w.r.t. the center of the station
@@ -291,172 +276,6 @@ StationResponse::compose(const Expr<JonesMatrix>::Ptr &lhs,
     }
 
     return rhs;
-}
-
-Instrument::Ptr StationResponse::initInstrument(const casa::MeasurementSet &ms)
-    const
-{
-    // Get station names and positions in ITRF coordinates.
-    casa::ROMSAntennaColumns antenna(ms.antenna());
-    casa::ROMSObservationColumns observation(ms.observation());
-    ASSERT(observation.nrow() > 0);
-    ASSERT(!observation.flagRow()(0));
-
-    // Get instrument name.
-    string name = observation.telescopeName()(0);
-
-    // Get station positions.
-    casa::MVPosition centroid;
-    vector<Station::Ptr> stations(antenna.nrow());
-    for(unsigned int i = 0; i < stations.size(); ++i)
-    {
-        // Get station name and ITRF position.
-        casa::MPosition position =
-            casa::MPosition::Convert(antenna.positionMeas()(i),
-            casa::MPosition::ITRF)();
-
-        // Store station information.
-        stations[i] = initStation(ms, i, antenna.name()(i), position);
-
-        // Update ITRF centroid.
-        centroid += position.getValue();
-    }
-
-    // Get the instrument position in ITRF coordinates, or use the centroid
-    // of the station positions if the instrument position is unknown.
-    casa::MPosition position;
-    if(casa::MeasTable::Observatory(position, name))
-    {
-        position = casa::MPosition::Convert(position, casa::MPosition::ITRF)();
-    }
-    else
-    {
-        LOG_WARN("Instrument position unknown; will use centroid of stations.");
-        ASSERT(antenna.nrow() != 0);
-        centroid *= 1.0 / static_cast<double>(antenna.nrow());
-        position = casa::MPosition(centroid, casa::MPosition::ITRF);
-    }
-
-    return Instrument::Ptr(new Instrument(name, position, stations.begin(),
-        stations.end()));
-}
-
-Station::Ptr StationResponse::initStation(const casa::MeasurementSet &ms,
-    unsigned int id, const string &name, const casa::MPosition &position) const
-{
-    if(!ms.keywordSet().isDefined("LOFAR_ANTENNA_FIELD"))
-    {
-        return Station::Ptr(new Station(name, position));
-    }
-
-    casa::Table tab_field(ms.keywordSet().asTable("LOFAR_ANTENNA_FIELD"));
-    tab_field = tab_field(tab_field.col("ANTENNA_ID")
-        == static_cast<casa::Int>(id));
-
-    const size_t nFields = tab_field.nrow();
-    if(nFields < 1 || nFields > 2)
-    {
-        LOG_WARN_STR("Antenna " << name << " consists of an incompatible number"
-            " of antenna fields. Beam model simulation will not work for this"
-            " antenna.");
-        return Station::Ptr(new Station(name, position));
-    }
-
-    casa::ROScalarColumn<casa::String> c_name(tab_field, "NAME");
-    casa::ROArrayQuantColumn<casa::Double> c_position(tab_field, "POSITION",
-        "m");
-    casa::ROArrayQuantColumn<casa::Double> c_axes(tab_field, "COORDINATE_AXES",
-        "m");
-    casa::ROArrayQuantColumn<casa::Double> c_tile_offset(tab_field,
-        "TILE_ELEMENT_OFFSET", "m");
-    casa::ROArrayQuantColumn<casa::Double> c_offset(tab_field, "ELEMENT_OFFSET",
-        "m");
-    casa::ROArrayColumn<casa::Bool> c_flag(tab_field, "ELEMENT_FLAG");
-
-    AntennaField::Ptr field[2];
-    for(size_t i = 0; i < nFields; ++i)
-    {
-        // Read antenna field center.
-        casa::Vector<casa::Quantum<casa::Double> > aips_position =
-            c_position(i);
-        ASSERT(aips_position.size() == 3);
-
-        Vector3 position = {{aips_position(0).getValue(),
-            aips_position(1).getValue(), aips_position(2).getValue()}};
-
-        // Read antenna field coordinate axes.
-        casa::Matrix<casa::Quantum<casa::Double> > aips_axes = c_axes(i);
-        ASSERT(aips_axes.shape().isEqual(casa::IPosition(2, 3, 3)));
-
-        Vector3 P = {{aips_axes(0, 0).getValue(), aips_axes(1, 0).getValue(),
-            aips_axes(2, 0).getValue()}};
-        Vector3 Q = {{aips_axes(0, 1).getValue(), aips_axes(1, 1).getValue(),
-            aips_axes(2, 1).getValue()}};
-        Vector3 R = {{aips_axes(0, 2).getValue(), aips_axes(1, 2).getValue(),
-            aips_axes(2, 2).getValue()}};
-
-        // Store information as AntennaField.
-        field[i] = AntennaField::Ptr(new AntennaField(c_name(i), position, P,
-            Q, R));
-
-        if(c_name(i) != "LBA")
-        {
-            // Read tile configuration for HBA antenna fields.
-            casa::Matrix<casa::Quantum<casa::Double> > aips_offset =
-                c_tile_offset(i);
-            ASSERT(aips_offset.nrow() == 3);
-
-            const size_t nElement = aips_offset.ncolumn();
-            for(size_t j = 0; j < nElement; ++j)
-            {
-                Vector3 offset = {{aips_offset(0, j).getValue(),
-                    aips_offset(1, j).getValue(),
-                    aips_offset(2, j).getValue()}};
-
-                field[i]->appendTileElement(offset);
-            }
-        }
-
-        // Read element position offsets and flags.
-        casa::Matrix<casa::Quantum<casa::Double> > aips_offset = c_offset(i);
-        casa::Matrix<casa::Bool> aips_flag = c_flag(i);
-
-        const size_t nElement = aips_offset.ncolumn();
-        ASSERT(aips_offset.shape().isEqual(casa::IPosition(2, 3, nElement)));
-        ASSERT(aips_flag.shape().isEqual(casa::IPosition(2, 2, nElement)));
-
-        for(size_t j = 0; j < nElement; ++j)
-        {
-            AntennaField::Element element;
-            element.offset[0] = aips_offset(0, j).getValue();
-            element.offset[1] = aips_offset(1, j).getValue();
-            element.offset[2] = aips_offset(2, j).getValue();
-            element.flag[0] = aips_flag(0, j);
-            element.flag[1] = aips_flag(1, j);
-
-            field[i]->appendElement(element);
-        }
-    }
-
-    return (nFields == 1 ? Station::Ptr(new Station(name, position, field[0]))
-        : Station::Ptr(new Station(name, position, field[0], field[1])));
-}
-
-double StationResponse::getReferenceFreq(const casa::MeasurementSet &ms) const
-{
-    // Read polarization id and spectral window id.
-    casa::ROMSDataDescColumns desc(ms.dataDescription());
-    ASSERT(desc.nrow() > 0);
-    ASSERT(!desc.flagRow()(0));
-
-    const unsigned int idWindow = desc.spectralWindowId()(0);
-
-    // Get spectral information.
-    casa::ROMSSpWindowColumns window(ms.spectralWindow());
-    ASSERT(window.nrow() > idWindow);
-    ASSERT(!window.flagRow()(idWindow));
-
-    return window.refFrequency()(idWindow);
 }
 
 } //# namespace BBS

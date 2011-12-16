@@ -82,11 +82,13 @@ public:
 
     void appendElement(const Element &element);
     inline size_t nElement() const;
+    inline size_t nActiveElement() const;
     inline const Element &element(size_t i) const;
 
 private:
     string                  itsName;
     Vector3                 itsPosition;
+    size_t                  itsActiveElementCount;
     Vector3                 itsAxes[N_Axis];
     vector<Vector3>         itsTileElements;
     vector<Element>         itsElements;
@@ -108,8 +110,10 @@ public:
     const casa::MPosition &position() const;
 
     bool isPhasedArray() const;
-    size_t nElement() const;
     unsigned int nField() const;
+    size_t nElement() const;
+    size_t nActiveElement() const;
+
     AntennaField::ConstPtr field(unsigned int i) const;
 
 private:
@@ -165,6 +169,11 @@ const Vector3 &AntennaField::tileElement(size_t i) const
 inline size_t AntennaField::nElement() const
 {
     return itsElements.size();
+}
+
+inline size_t AntennaField::nActiveElement() const
+{
+    return itsActiveElementCount;
 }
 
 inline const AntennaField::Element &AntennaField::element(size_t i) const

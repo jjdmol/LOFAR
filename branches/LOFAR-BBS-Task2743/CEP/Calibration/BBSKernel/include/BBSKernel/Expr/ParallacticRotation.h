@@ -52,12 +52,12 @@ public:
     typedef shared_ptr<ParallacticRotation>         Ptr;
     typedef shared_ptr<const ParallacticRotation>   ConstPtr;
 
-    ParallacticRotation(const Expr<Vector<3> >::ConstPtr &direction,
+    ParallacticRotation(const Expr<Vector<3> >::ConstPtr &target,
         const AntennaField::ConstPtr &field);
 
 protected:
     virtual const JonesMatrix::View evaluateImpl(const Grid &grid,
-        const Vector<3>::View &direction) const;
+        const Vector<3>::View &target) const;
 
 private:
     AntennaField::ConstPtr  itsField;

@@ -43,8 +43,10 @@ const JonesMatrix::View AntennaElementLBA::evaluateImpl(const Grid &grid,
     const size_t nTime = grid[TIME]->size();
 
     // Check preconditions.
-    ASSERT(static_cast<size_t>(target(0).nelements()) == nTime);
-    ASSERT(static_cast<size_t>(target(1).nelements()) == nTime);
+    ASSERT(!target(0).isComplex() && target(0).nx() == 1
+        && static_cast<size_t>(target(0).ny()) == nTime);
+    ASSERT(!target(1).isComplex() && target(1).nx() == 1
+        && static_cast<size_t>(target(1).ny()) == nTime);
 
     // Get pointers to input and output data.
     const double *theta = target(0).doubleStorage();

@@ -35,27 +35,33 @@ namespace BBS
 {
 
 ParallacticRotation::ParallacticRotation(
-    const Expr<Vector<3> >::ConstPtr &direction,
+    const Expr<Vector<3> >::ConstPtr &target,
     const AntennaField::ConstPtr &field)
-    :   BasicUnaryExpr<Vector<3>, JonesMatrix>(direction),
+    :   BasicUnaryExpr<Vector<3>, JonesMatrix>(target),
         itsField(field)
 {
 }
 
-const JonesMatrix::View ParallacticRotation::evaluateImpl(const Grid&,
-    const Vector<3>::View &direction) const
+const JonesMatrix::View ParallacticRotation::evaluateImpl(const Grid &grid,
+    const Vector<3>::View &target) const
 {
+    const size_t nFreq = grid[FREQ]->size();
+    const size_t nTime = grid[TIME]->size();
+
     // Check preconditions.
-    ASSERTSTR(!direction(0).isComplex() && !direction(1).isComplex()
-        && !direction(2).isComplex(), "Source directions should be real"
-        " valued.");
+    ASSERT(!target(0).isComplex() && target(0).nx() == 1
+        && static_cast<size_t>(target(0).ny()) == nTime);
+    ASSERT(!target(1).isComplex() && target(1).nx() == 1
+        && static_cast<size_t>(target(1).ny()) == nTime);
+    ASSERT(!target(2).isComplex() && target(2).nx() == 1
+        && static_cast<size_t>(target(2).ny()) == nTime);
 
     // Compute the cross product of the NCP and the target direction. This
     // yields a vector tangent to the celestial sphere at the target direction,
     // pointing towards the East (the direction of +Y in the IAU definition,
     // or positive right ascension).
-    Matrix v1x = -direction(1);
-    Matrix v1y = direction(0);
+    Matrix v1x = -target(1);
+    Matrix v1y = target(0);
     Matrix v1z = Matrix(0.0);
 
     Matrix v1norm = sqrt(sqr(v1x) + sqr(v1y) + sqr(v1z));
@@ -68,9 +74,9 @@ const JonesMatrix::View ParallacticRotation::evaluateImpl(const Grid&,
     // coordinate system at the target direction, pointing towards the direction
     // of positive phi (which runs East over North around the pseudo zenith).
     const Vector3 &r = itsField->axis(AntennaField::R);
-    Matrix v2x = direction(2) * r[1] - direction(1) * r[2];
-    Matrix v2y = direction(0) * r[2] - direction(2) * r[0];
-    Matrix v2z = direction(1) * r[0] - direction(0) * r[1];
+    Matrix v2x = target(2) * r[1] - target(1) * r[2];
+    Matrix v2y = target(0) * r[2] - target(2) * r[0];
+    Matrix v2z = target(1) * r[0] - target(0) * r[1];
 
     Matrix v2norm = sqrt(sqr(v2x) + sqr(v2y) + sqr(v2z));
     v2x = v2x / v2norm;
@@ -81,9 +87,9 @@ const JonesMatrix::View ParallacticRotation::evaluateImpl(const Grid&,
     // between v1 and v2, both tangent to a latitude circle of their respective
     // spherical coordinate systems.
     Matrix coschi = v1x * v2x + v1y * v2y + v1z * v2z;
-    Matrix sinchi = (v1y * v2z - v1z * v2y) * direction(0)
-        + (v1z * v2x - v1x * v2z) * direction(1)
-        + (v1x * v2y - v1y * v2x) * direction(2);
+    Matrix sinchi = (v1y * v2z - v1z * v2y) * target(0)
+        + (v1z * v2x - v1x * v2z) * target(1)
+        + (v1x * v2y - v1y * v2x) * target(2);
 
     // The input coordinate system is a right handed system with its third axis
     // along the direction of propagation (IAU +Z). The output coordinate system
@@ -124,7 +130,36 @@ const JonesMatrix::View ParallacticRotation::evaluateImpl(const Grid&,
 //    LOG_DEBUG_STR("COS: " << coschi);
 //    LOG_DEBUG_STR("SIN: " << sinchi);
 
-    return JonesMatrix::View(-coschi, sinchi, sinchi, coschi);
+    ASSERT(!coschi.isComplex() && coschi.nx() == 1
+        && static_cast<size_t>(coschi.ny()) == nTime);
+    ASSERT(!sinchi.isComplex() && sinchi.nx() == 1
+        && static_cast<size_t>(sinchi.ny()) == nTime);
+
+    if(nFreq == 1)
+    {
+        return JonesMatrix::View(-coschi, sinchi, sinchi, coschi);
+    }
+
+    // Create 2D arrays because MeqMatrix does not support 1D.
+    const double *p_coschi = coschi.doubleStorage();
+    const double *p_sinchi = sinchi.doubleStorage();
+
+    Matrix coschi2, sinchi2;
+    double *p_coschi2 = coschi2.setDoubleFormat(nFreq, nTime);
+    double *p_sinchi2 = sinchi2.setDoubleFormat(nFreq, nTime);
+
+    for(unsigned int t = 0; t < nTime; ++t)
+    {
+        for(unsigned int f = 0; f < nFreq; ++f)
+        {
+            *p_coschi2++ = *p_coschi;
+            *p_sinchi2++ = *p_sinchi;
+        }
+        ++p_coschi;
+        ++p_sinchi;
+    }
+
+    return JonesMatrix::View(-coschi2, sinchi2, sinchi2, coschi2);
 }
 
 } //# namespace BBS

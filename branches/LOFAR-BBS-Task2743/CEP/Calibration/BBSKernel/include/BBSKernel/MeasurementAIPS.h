@@ -75,7 +75,6 @@ public:
     // @}
 
 private:
-    void initInstrument();
     void initReferenceDirections();
     void initDimensions();
 
@@ -119,16 +118,15 @@ private:
 };
 
 Instrument::Ptr readInstrument(const casa::MeasurementSet &ms,
-    const string &observatory = "LOFAR");
+    unsigned int idObservation = 0);
 casa::MDirection readPhaseReference(const casa::MeasurementSet &ms,
-    unsigned int idField);
+    unsigned int idField = 0);
 casa::MDirection readDelayReference(const casa::MeasurementSet &ms,
-    unsigned int idField);
+    unsigned int idField = 0);
 casa::MDirection readTileReference(const casa::MeasurementSet &ms,
-    unsigned int idField);
+    unsigned int idField = 0);
 double readFreqReference(const casa::MeasurementSet &ms,
-    unsigned int idDataDescription);
-
+    unsigned int idDataDescription = 0);
 // @}
 
 } //# namespace BBS

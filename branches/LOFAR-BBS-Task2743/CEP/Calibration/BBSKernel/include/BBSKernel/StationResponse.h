@@ -121,11 +121,6 @@ public:
     const JonesMatrix::View evaluate(unsigned int i);
 
 private:
-    Instrument::Ptr initInstrument(const casa::MeasurementSet &ms) const;
-    Station::Ptr initStation(const casa::MeasurementSet &ms, unsigned int id,
-        const string &name, const casa::MPosition &position) const;
-    double getReferenceFreq(const casa::MeasurementSet &ms) const;
-
     // Right multiply \p lhs by \p rhs. Return \p rhs if \p lhs is
     // uninitialized.
     Expr<JonesMatrix>::Ptr compose(const Expr<JonesMatrix>::Ptr &lhs,

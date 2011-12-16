@@ -69,9 +69,9 @@ namespace
   LofarATerm::LofarATerm(const MeasurementSet& ms)
   {
     itsInstrument = BBS::readInstrument(ms);
-    itsRefDelay = MDirection::Convert(BBS::readDelayReference(ms, 0),
+    itsRefDelay = MDirection::Convert(BBS::readDelayReference(ms),
       MDirection::J2000)();
-    itsRefTile = MDirection::Convert(BBS::readTileReference(ms, 0),
+    itsRefTile = MDirection::Convert(BBS::readTileReference(ms),
       MDirection::J2000)();
   }
 
@@ -430,9 +430,9 @@ namespace
     }
 
     // Normalize.
-    if(station->nElement() > 0)
+    if(station->nActiveElement() > 0)
     {
-      AF /= static_cast<Double>(station->nElement());
+      AF /= static_cast<Double>(station->nActiveElement());
     }
 
     return AF;

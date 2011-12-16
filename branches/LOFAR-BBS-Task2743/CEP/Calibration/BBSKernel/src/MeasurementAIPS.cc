@@ -99,7 +99,7 @@ MeasurementAIPS::MeasurementAIPS(const string &filename,
         itsIdDataDescription(idDataDescription)
 {
     // Get information about the telescope (instrument).
-    initInstrument();
+    itsInstrument = readInstrument(itsMS, itsIdObservation);
 
     // Get the reference directions for the selected field (i.e. phase center,
     // delay center, tile delay center).
@@ -600,18 +600,6 @@ BaselineMask MeasurementAIPS::asMask(const string &filter) const
     }
 
     return mask;
-}
-
-void MeasurementAIPS::initInstrument()
-{
-    // Get station names and positions in ITRF coordinates.
-    ROMSObservationColumns observation(itsMS.observation());
-    ASSERT(observation.nrow() > itsIdObservation);
-    ASSERT(!observation.flagRow()(itsIdObservation));
-
-    // Read observatory information.
-    itsInstrument = readInstrument(itsMS,
-        observation.telescopeName()(itsIdObservation));
 }
 
 void MeasurementAIPS::initReferenceDirections()
@@ -1297,8 +1285,12 @@ VisDimensions MeasurementAIPS::getDimensionsImpl(const Table &tab_selection,
 }
 
 Instrument::Ptr readInstrument(const MeasurementSet &ms,
-    const string &observatory)
+  unsigned int idObservation)
 {
+    ROMSObservationColumns observation(ms.observation());
+    ASSERT(observation.nrow() > idObservation);
+    ASSERT(!observation.flagRow()(idObservation));
+
     // Get station names and positions in ITRF coordinates.
     ROMSAntennaColumns antenna(ms.antenna());
 
@@ -1321,6 +1313,9 @@ Instrument::Ptr readInstrument(const MeasurementSet &ms,
     // Get the instrument position in ITRF coordinates, or use the centroid
     // of the station positions if the instrument position is unknown.
     MPosition position;
+
+    // Read observatory name and try to look-up its position.
+    const string observatory = observation.telescopeName()(idObservation);
     if(MeasTable::Observatory(position, observatory))
     {
         position = MPosition::Convert(position, MPosition::ITRF)();

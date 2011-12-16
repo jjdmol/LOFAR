@@ -316,13 +316,13 @@ const JonesMatrix::View StationBeamFormer::evaluateImpl(const Grid &grid,
     }
 
     // Normalize.
-    const size_t nElement = itsStation->nElement();
-    if(nElement > 0)
+    const size_t nActiveElement = itsStation->nActiveElement();
+    if(nActiveElement > 0)
     {
-        E[0][0] /= nElement;
-        E[0][1] /= nElement;
-        E[1][0] /= nElement;
-        E[1][1] /= nElement;
+        E[0][0] /= nActiveElement;
+        E[0][1] /= nActiveElement;
+        E[1][0] /= nActiveElement;
+        E[1][1] /= nActiveElement;
     }
 
     return JonesMatrix::View(E[0][0], E[0][1], E[1][0], E[1][1]);
