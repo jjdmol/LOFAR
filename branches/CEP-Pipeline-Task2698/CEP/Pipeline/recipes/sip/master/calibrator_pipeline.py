@@ -48,16 +48,16 @@ class calibrator_pipeline(control):
         Get input- and output-data product specifications from the
         parset-file, and do some sanity checks.
         """
-        dp = self.parset.makeSubset('ObsSW.Observation.DataProducts.')
+        odp = self.parset.makeSubset('ObsSW.Observation.DataProducts.')
         self.input_data = [tuple(''.join(x).split(':')) for x in zip(
-            dp.getStringVector('Input_Correlated.locations', []),
-            dp.getStringVector('Input_Correlated.filenames', []))
+            odp.getStringVector('Input_Correlated.locations', []),
+            odp.getStringVector('Input_Correlated.filenames', []))
         ]
         self.logger.debug("Found %d Input_Correlated data products" %
                           len(self.input_data))
         self.output_data = [tuple(''.join(x).split(':')) for x in zip(
-            dp.getStringVector('Output_InstrumentModel.locations', []),
-            dp.getStringVector('Output_InstrumentModel.filenames', []))
+            odp.getStringVector('Output_InstrumentModel.locations', []),
+            odp.getStringVector('Output_InstrumentModel.filenames', []))
         ]
         self.logger.debug("Found %d Input_InstrumentModel data products" %
                           len(self.output_data))
@@ -113,11 +113,14 @@ class calibrator_pipeline(control):
             "parsets"
         )
 
-        # Write datamap-file
+        # Write input- and output data map-files
         create_directory(parset_dir)
         data_mapfile = os.path.join(parset_dir, "data_mapfile")
         store_data_map(data_mapfile, self.input_data)
-        self.logger.debug("Wrote mapfile: %s" % data_mapfile)
+        self.logger.debug("Wrote input mapfile: %s" % data_mapfile)
+        instrument_mapfile = os.path.join(parset_dir, "instrument_mapfile")
+        store_data_map(instrument_mapfile, self.output_data)
+        self.logger.debug("Wrote output mapfile: %s" % instrument_mapfile)
 
         ## Generate a datamap-file, which is a parset-file containing
         ## key/value pairs of hostname and list of MS-files.
@@ -144,8 +147,8 @@ class calibrator_pipeline(control):
         py_parset.makeSubset('DPPP.').writeFile(ndppp_parset)
 
         # Run the Default Pre-Processing Pipeline (DPPP);
-        dppp_mapfile = self.run_task(
-            "ndppp", data_mapfile,
+        dppp_mapfile = self.run_task("ndppp",
+            data_mapfile,
             data_start_time=vdsinfo['start_time'],
             data_end_time=vdsinfo['end_time'],
             parset=ndppp_parset
@@ -159,26 +162,15 @@ class calibrator_pipeline(control):
         py_parset.makeSubset('BBS.').writeFile(bbs_parset)
 
         # Run BBS to calibrate the calibrator source(s).
-        self.run_task(
-            "new_bbs", demix_mapfile,
+        self.run_task("new_bbs", 
+            demix_mapfile,
             parset=bbs_parset,
             instrument_mapfile=parmdb_mapfile,
             sky_mapfile=sourcedb_mapfile)
 
-        # Create a mapfile containing the locations of the output instrument
-        # model files. This is a bit hacky, because it assumes that we know
-        # where parmexportcal will put its output files.
-        # The ultimate solution is to force parmexportcal (and other exisiting
-        # recipes) to use the output-data product specifications form the
-        # parset file.
-        instrument_mapfile = os.path.join(
-            self.config.get("layout", "job_directory"),
-            "parsets", "instrument_mapfile")
-        instrument_map = self.output_data
-        store_data_map(instrument_mapfile, instrument_map)
-
-        # Export the calibration solutions using parmexportcal
-        self.run_task("parmexportcal", parmdb_mapfile)
+        # Export the calibration solutions using parmexportcal and store
+        # the results in the files specified in the instrument mapfile.
+        self.run_task("parmexportcal", (parmdb_mapfile, instrument_mapfile))
 
 
 if __name__ == '__main__':

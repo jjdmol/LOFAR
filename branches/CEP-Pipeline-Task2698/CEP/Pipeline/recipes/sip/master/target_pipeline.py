@@ -56,25 +56,25 @@ class target_pipeline(control):
         Get input- and output-data product specifications from the
         parset-file, and do some sanity checks.
         """
-        dp = self.parset.makeSubset('ObsSW.Observation.DataProducts.')
+        odp = self.parset.makeSubset('ObsSW.Observation.DataProducts.')
         self.input_data['data'] = [
             tuple(''.join(x).split(':')) for x in zip(
-                dp.getStringVector('Input_Correlated.locations', []),
-                dp.getStringVector('Input_Correlated.filenames', []))
+                odp.getStringVector('Input_Correlated.locations', []),
+                odp.getStringVector('Input_Correlated.filenames', []))
         ]
         self.logger.debug("Found %d Input_Correlated data products" %
                           len(self.input_data['data']))
         self.input_data['instrument'] = [
             tuple(''.join(x).split(':')) for x in zip(
-                dp.getStringVector('Input_InstrumentModel.locations', []),
-                dp.getStringVector('Input_InstrumentModel.filenames', []))
+                odp.getStringVector('Input_InstrumentModel.locations', []),
+                odp.getStringVector('Input_InstrumentModel.filenames', []))
         ]
         self.logger.debug("Found %d Input_InstrumentModel data products" %
                           len(self.input_data['instrument']))
         self.output_data['data'] = [
             tuple(''.join(x).split(':')) for x in zip(
-                dp.getStringVector('Output_Correlated.locations', []),
-                dp.getStringVector('Output_Correlated.filenames', []))
+                odp.getStringVector('Output_Correlated.locations', []),
+                odp.getStringVector('Output_Correlated.filenames', []))
         ]
         self.logger.debug("Found %d Output_Correlated data products" %
                           len(self.output_data['data']))
@@ -129,15 +129,25 @@ class target_pipeline(control):
             "parsets"
         )
 
-        # Write data- and instrument-map files.
+        # Write input- and output data map-files.
         create_directory(parset_dir)
+        
         data_mapfile = os.path.join(parset_dir, "data_mapfile")
         store_data_map(data_mapfile, self.input_data['data'])
-        self.logger.debug("Wrote data mapfile: %s" % data_mapfile)
+        self.logger.debug(
+            "Wrote input data mapfile: %s" % data_mapfile
+        )
         instrument_mapfile = os.path.join(parset_dir, "instrument_mapfile")
         store_data_map(instrument_mapfile, self.input_data['instrument'])
-        self.logger.debug("Wrote instrument mapfile: %s" % instrument_mapfile)
-
+        self.logger.debug(
+            "Wrote input instrument mapfile: %s" % instrument_mapfile
+        )
+        corrected_mapfile = os.path.join(parset_dir, "corrected_data_mapfile")
+        store_data_map(corrected_mapfile, self.output_data['data'])
+        self.logger.debug(
+            "Wrote output corrected data mapfile: %s" % corrected_mapfile
+        )
+        
         ## Generate a datamap-file, which is a parset-file containing
         ## key/value pairs of hostname and list of MS-files.
         #data_mapfile = self.run_task(
@@ -163,8 +173,8 @@ class target_pipeline(control):
         py_parset.makeSubset('DPPP[0].').writeFile(ndppp_parset)
 
         # Run the Default Pre-Processing Pipeline (DPPP);
-        dppp_mapfile = self.run_task(
-            "ndppp", data_mapfile,
+        dppp_mapfile = self.run_task("ndppp", 
+            data_mapfile,
             data_start_time=vdsinfo['start_time'],
             data_end_time=vdsinfo['end_time'],
             parset=ndppp_parset
@@ -180,8 +190,8 @@ class target_pipeline(control):
         py_parset.makeSubset('BBS.').writeFile(bbs_parset)
 
         # Run BBS to calibrate the target source(s).
-        bbs_mapfile = self.run_task(
-            "new_bbs", demix_mapfile,
+        bbs_mapfile = self.run_task("new_bbs", 
+            demix_mapfile,
             parset=bbs_parset,
             instrument_mapfile=instrument_mapfile,
             sky_mapfile=sourcedb_mapfile
@@ -193,12 +203,15 @@ class target_pipeline(control):
             "parsets", "NDPPP[1].parset")
         py_parset.makeSubset('DPPP[1].').writeFile(ndppp_parset)
 
-        # Do a second run of DPPP, just to remove NaN's from the MS
-        self.run_task("ndppp", bbs_mapfile,
+        # Do a second run of DPPP, just to remove NaN's from the MS. Store the
+        # results in the files specified in the corrected data map-file
+        self.run_task("ndppp", 
+            (bbs_mapfile, corrected_mapfile),
             clobber=False,
             suffix='',
             parset=ndppp_parset
         )
+
 
 if __name__ == '__main__':
     sys.exit(target_pipeline().main())
