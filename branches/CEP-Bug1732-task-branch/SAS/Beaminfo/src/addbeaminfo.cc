@@ -2080,8 +2080,17 @@ bool failedElementInObservation(const Table &antennaFieldTable,
   
   ROScalarColumn<Int> antennaFieldIdCol(failedElementsTable, "ANTENNA_FIELD_ID");
   ROArrayColumn<Bool> elementFlagCol(antennaFieldTable, "ELEMENT_FLAG");
-  
-  
+
+  Matrix<Bool> elementFlags=elementFlagCol(antennaId);   // ELEMENT_FLAG array for antennaId  
+  if(element_index > elementFlags.ncolumn())
+  {
+    THROW(Exception, "element_index " << element_index << " out of range, ncolums = "
+          << elementFlags.ncolumn());
+  }
+  if(elementFlags(0, element_index)==false && elementFlags(1, element_index)==false)
+  {
+    operational=true;
+  }
   
   return operational;
 }
