@@ -31,8 +31,7 @@ class AWImager(LOFARnodeTCP):
         with log_time(self.logger):
             if not os.access(executable, os.X_OK):
                 self.logger.error("Could not find executable: {0}".format(
-                                                                executable))
-                self.logger.error(str(e))              
+                                                                executable))        
                 return 1
 
             # Calculate AWImager parameters that depend on measurement set      
