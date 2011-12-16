@@ -152,25 +152,15 @@ RCUmap getBrokenRCUs( const vector<string> &brokenHardware,
 void extractRCUs(RCUmap &brokenRCUs, 
                  const map<string, ptime> &brokenHardware, 
                  const string &station);                      
-/*
-map<string, ptime> getFailedHardware( map<string, ptime> &brokenBegin, 
-                                      map<string, ptime> &brokenEnd);
-*/
 map<string, ptime> getFailedHardware( const map<string, ptime> &brokenBegin, 
                                       const map<string, ptime> &brokenEnd);
 void getFailedTiles(MeasurementSet &ms,
                     const map<string, ptime> &failedTilesSAS, 
                     map<unsigned int, vector<unsigned int> > &brokenElements,                      
                     vector<ptime> &failureTimes);
-//vector<failedTile> getFailedTiles(const map<string, ptime> &failedTilesSAS);
 RCUmap getFailedTiles(const map<string, ptime> &failedTilesSAS);
 vector<failedTile> getFailedTilesAntennaId(MeasurementSet &ms,
                                            const map<string, ptime> &failedTilesSAS);
-// don't need this anymore: now use find_fi and boost::bind
-//vector<failedTile>::iterator getFailedTileAntennaId(vector<failedTile> &failedTiles,
-//                                                    unsigned int antennaId);
-//vector<failedTile>::const_iterator getFailedTileAntennaId(const vector<failedTile> &failedTiles,
-//                                                          unsigned int antennaId);
 vector<failedTile> getBrokenTiles(MeasurementSet &ms, const RCUmap &brokenRCus);
 vector<failedTile> getFailedTiles(MeasurementSet &ms, 
                                   const RCUmap &failedRCUs, 
@@ -182,6 +172,10 @@ unsigned int getAntennaFieldId( MeasurementSet &ms,
                                 const string &station, 
                                 unsigned int RCUnum,
                                 unsigned int &elementIndex);
+bool failedElementInObservation(const Table &antennaFieldTable,
+                                const Table &failedElementsTable,
+                                unsigned int antennaId,
+                                unsigned int element_index);                                
 void padTo(std::string &str, const size_t num, const char paddingChar);
 
 
@@ -192,6 +186,9 @@ void padTo(std::string &str, const size_t num, const char paddingChar);
 //                              const map<string, vector<unsigned int> > &brokenRCUs);
 void updateAntennaFieldTable( MeasurementSet &ms, const vector<failedTile> &brokenTiles);
 void updateElementFlags(Table &table, unsigned int antennaId, unsigned int elementIndex);
+void updateElementFlags(  Table &table, 
+                          unsigned int antennaId, 
+                          const vector<unsigned int> &elementIndex);
 
 // File I/O
 void writeBrokenHardwareFile(const string &filename, const vector<string> &brokenHardware, bool strip=true);
@@ -471,7 +468,7 @@ MVEpoch toCasaTime(const string &time)
 {
   // e.g. 2011-Mar-19 21:17:06.514000  // use slashes instead spaces
   Double casaTime;        // casa MVEpoch time to be returned
-  MVTime casaMVTime;      // need this for conversion
+//  MVTime casaMVTime;      // need this for conversion
 //  MVEpoch casaMVTime;      // need this for conversion
   String copyTime=time;   // make a temporary copy
 
@@ -484,7 +481,7 @@ MVEpoch toCasaTime(const string &time)
   else
   {
     copyTime.gsub(" ", "/");      // replace spaces with slashes for casa conversion   
-    casaMVTime.read(result, copyTime);
+    MVTime::read(result, copyTime);
   }
   
   return result;
@@ -528,11 +525,7 @@ bool checkTime(const ptime &starttime, const ptime &endtime)
 bool checkTime(const string &starttimeString, const string &endtimeString)
 {
   bool valid=false;
-
   MVEpoch starttimeCasa, endtimeCasa;
-  
-  cout << "starttimeString: " << starttimeString << endl;
-  cout << "endtimeString: " << endtimeString << endl;
   
   starttimeCasa=toCasaTime(starttimeString);
   starttimeCasa=toCasaTime(endtimeString);
@@ -586,11 +579,20 @@ void updateAntennaFieldTable(MeasurementSet &ms,  const vector<failedTile> &brok
     {
       if(brokenTiles[i].antennaId==antennaId)
       {
-        indices[antennaId]=i;
+        unsigned int size= brokenTiles[i].rcus.size();
+        for(unsigned int rcuIndex=0; rcuIndex < size; rcuIndex++)
+        {
+          unsigned int rcuNum=brokenTiles[i].rcus[rcuIndex];
+          updateElementFlags(antennaFieldTable, antennaId, rcuNum);    
+        }
+        
+        updateElementFlags(antennaFieldTable, antennaId, brokenTiles[i].rcus);
+        break;
       }
     }
   }
-   
+  
+  /*
   for(unsigned int antennaId=0; antennaId<nrows; antennaId++)
   {
       map<unsigned int, unsigned int>::iterator it;
@@ -600,14 +602,13 @@ void updateAntennaFieldTable(MeasurementSet &ms,  const vector<failedTile> &brok
         unsigned int index=indices[antennaId];  
         for(unsigned int rcuIndex=0; rcuIndex < brokenTiles[index].rcus.size(); rcuIndex++)
         {
-          unsigned int rcuNum=brokenTiles[index].rcus[rcuIndex];
-          
+          unsigned int rcuNum=brokenTiles[index].rcus[rcuIndex];         
           // Update ELEMENT_FLAGS column in LOFAR_ANTENNA_FIELD table
-          TableLocker locker(antennaFieldTable, FileLocker::Write);
           updateElementFlags(antennaFieldTable, antennaId, rcuNum);    
         }
       }
   }
+  */
 }
 
 
@@ -647,7 +648,7 @@ void updateElementFlags(Table &table, unsigned int antennaId, unsigned int rcu)
   \param antennaId      antenna id (=rownr) in LOFAR_ANTENNA_FIELD table
   \param elementIndex   index into ELEMENT_FLAG column array of RCUs
 */
-void updateElementFlags(Table &table, unsigned int antennaId, vector<unsigned int> rcus)
+void updateElementFlags(Table &table, unsigned int antennaId, const vector<unsigned int> &rcus)
 {
   ArrayColumn<Bool> elementFlagCol(table, "ELEMENT_FLAG");  
   Matrix<Bool> elementFlags=elementFlagCol(antennaId);
@@ -658,6 +659,10 @@ void updateElementFlags(Table &table, unsigned int antennaId, vector<unsigned in
   {
     THROW(Exception, "updateElementFlags() antennaId " << antennaId << " out of range");
   }
+  if(rcus.size()==0)    // if there are no rcus to be updated for this antennaId....
+  {
+    return;             // ... just return
+  }
   
   //uInt ncolumn=elementFlags.ncolumn();
 //  cout << "updateELementFlags() shape: " << shape << endl;              // DEBUG
@@ -666,7 +671,7 @@ void updateElementFlags(Table &table, unsigned int antennaId, vector<unsigned in
   unsigned int nrcus=rcus.size();
   for(unsigned int i=0; i<nrcus; i++)
   {
-    unsigned int elementIndex=rcus[i] % 2;
+    unsigned int elementIndex=rcus[i] / 2;
     elementFlags(0, elementIndex)=true;          // Update ELEMENT_FLAGS at elementIndex
     elementFlags(1, elementIndex)=true;          // Update ELEMENT_FLAGS at elementIndex
   }
@@ -1660,6 +1665,10 @@ map<string, ptime> getFailedHardware( const map<string, ptime> &brokenBegin,
     // try to find brokenHardware
     map<string, ptime>::const_iterator found=brokenBegin.find(brokenEndIt->first);
 
+    cout << "found->first = " << found->first << "\t";                    // DEBUG
+    cout << "brokenEndIt->second = " << brokenEndIt->second << "\t";     // DEBUG
+    cout << " (--brokenBegin.end())->second = " <<  (--brokenBegin.end())->second << endl;  // DEBUG
+
     if(brokenEndIt->second < (--brokenBegin.end())->second) 
     {
       failedHardware.insert(*brokenEndIt);
@@ -1676,6 +1685,7 @@ map<string, ptime> getFailedHardware( const map<string, ptime> &brokenBegin,
   \param failureTiles SAS   individual tiles that failed during observation failed hardware info
   \return vector<failedTile>    vector of failed tiles structs with antennaId, element index, failure times
 */
+/*
 //void getFailedTiles(MeasurementSet &ms,
 //                    const map<string, ptime> &failedTilesSAS, 
 //                    map<unsigned int, vector<unsigned int> > &brokenElements,                      
@@ -1708,7 +1718,7 @@ RCUmap getFailedTiles(const map<string, ptime> &failedTilesSAS)
     ptime timestamp=failedTilesSASIt->second;
 
     // Determine ANTENNA_FIELD_ID and ELEMENT_FLAG index this RCU belongs to
-    /*
+ 
     antennaId=getAntennaFieldId(ms, station);
 
 //    cout << failedTilesSASIt->first << endl;                // DEBUG
@@ -1732,11 +1742,13 @@ RCUmap getFailedTiles(const map<string, ptime> &failedTilesSAS)
       failedTile newTile={antennaId, elementFlags, timeStamps};  
       failedTiles.push_back(newTile);
     }
-  */
+
   }
   showMap(failedTiles);     // DEBUG
   return failedTiles;
 }
+*/
+
 
 /*!
   \brief Convert a RCUmap (station -> rcu) to a failedTile struct (antennaId -> rcu)
@@ -1912,7 +1924,7 @@ void addFailedAntennaTiles( MeasurementSet &ms,
 
         doAddFailedAntennaTile( failedElementsTable, 
                                 failedTiles[i].antennaId,      
-                                failedTiles[i].rcus[j] % 2,
+                                failedTiles[i].rcus[j] / 2,
                                 timestamp);
       }
     }
@@ -1931,8 +1943,9 @@ void addFailedAntennaTiles( MeasurementSet &ms,
                             const vector<bool> &flags)
 {
   Table failedElementsTable(ms.rwKeywordSet().asTable("LOFAR_ELEMENT_FAILURE"));
-
-  //TODO
+  // needed to check in ELEMENT_FLAG column/Array if tile is taking part in observation
+  Table antennaFieldTable(ms.rwKeywordSet().asTable("LOFAR_ANTENNA_FIELD"));
+  
   unsigned int length=failedTiles.size();
   if(length==0)     // if there are no failed tiles....
   {
@@ -1952,16 +1965,27 @@ void addFailedAntennaTiles( MeasurementSet &ms,
       // TODO: use vector update function instead!
       for(unsigned int j=0; j<failedTiles[i].rcus.size(); j++)
       {
-        TableLocker locker(failedElementsTable, FileLocker::Write);
-
-        MVEpoch timestamp=toCasaTime(failedTiles[i].timeStamps[j]).getDay() + 
-                          toCasaTime(failedTiles[i].timeStamps[j]).getDayFraction();
-
-        doAddFailedAntennaTile( failedElementsTable, 
-                                failedTiles[i].antennaId,      
-                                failedTiles[i].rcus[j] % 2,
-                                timestamp,
-                                flags[i]);
+        unsigned int antennaId=failedTiles[i].antennaId;
+        unsigned int elementIndex=failedTiles[i].rcus[j] / 2;
+      
+        // First check if the ELEMENT_FLAG is false, i.e. only if the RCU is used
+        // in this observation mode
+        if(failedElementInObservation(antennaFieldTable, failedElementsTable,
+                                      antennaId, elementIndex) == true)
+        {
+        
+        }
+        else
+        {
+            MVEpoch timestamp=toCasaTime(failedTiles[i].timeStamps[j]).getDay() + 
+                              toCasaTime(failedTiles[i].timeStamps[j]).getDayFraction();
+    
+            doAddFailedAntennaTile( failedElementsTable, 
+                                    antennaId,      
+                                    elementIndex,
+                                    timestamp,
+                                    flags[i]);
+        }
       }
     }
   }
@@ -1988,10 +2012,9 @@ void doAddFailedAntennaTile(Table &failedElementsTable,
   ScalarColumn<Int> antennaFieldIdCol(failedElementsTable, "ANTENNA_FIELD_ID");
   ScalarColumn<Int> elementIndexCol(failedElementsTable, "ELEMENT_INDEX");
   ScalarMeasColumn<MEpoch> timeStampCol(failedElementsTable, "TIME");
-
-  // First check if that failed tile isn't already present in the table
+ 
+  // Check if that failed tile isn't already present in the table
   // we don't want to have double entries of failures
-  
   if(!failedAntennaElementExists(failedElementsTable, antennaId, element_index))
   {
     uint rownr = failedElementsTable.nrow();
@@ -2040,6 +2063,29 @@ bool failedAntennaElementExists(const Table &failedElementsTable,
   
   return exists;
 }
+
+
+/*!
+  \brief Particular element takes part in observation
+  \param antennaFieldTable  LOFAR_ANTENNA_FIELD table of MS
+  \param antennaId          antenna Id within LOFAR_ANTENNA_FIELD table
+  \param element_index      element_index into ELEMENT_FLAG table
+*/
+bool failedElementInObservation(const Table &antennaFieldTable,
+                                const Table &failedElementsTable,
+                                unsigned int antennaId,
+                                unsigned int element_index)
+{
+  bool operational=False;
+  
+  ROScalarColumn<Int> antennaFieldIdCol(failedElementsTable, "ANTENNA_FIELD_ID");
+  ROArrayColumn<Bool> elementFlagCol(antennaFieldTable, "ELEMENT_FLAG");
+  
+  
+  
+  return operational;
+}
+
 
 /*!
   \brief Left pad a string with a padding character
