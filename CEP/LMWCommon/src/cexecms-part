@@ -33,6 +33,8 @@ if test "$1" = "-e"; then
     . $1
     shift
 fi
+parset=$1
+shift
 if test $# -lt 2; then
     showhelp
     exit 1
@@ -91,7 +93,7 @@ command=`echo "$command" | sed \
     -e 's%:DOLLAR:%$%g'`
 
 # Process all files.
-# Substitute placeholders in the command.
+# Substitute placeholders in the command and possible parset.
 for fname in $names
 do
     dname=`dirname $fname`
@@ -111,12 +113,33 @@ do
 	-e "s%<FILENAME\.>%$fnamed%g" \
 	-e "s%<DIRNAME\.>%$dnamed%g" \
 	-e "s%<BASENAME\.>%$bnamed%g"`
-    # If nothing substituted, give the file name to the command.
-    # Use eval to execute the command, otherwise the shell gets confused
-    # by possible quoted parts.
-    if test "$commandnew" = "$command"; then
-	eval $command $fname "$@" || echo "Failure in $command $fname $*"
+    # If a parset is given, replace placeholders in there as well.
+    if test "$parset" != ""; then
+        psname=$HOME/`basename $parset`-$USER-$$
+        sed \
+	-e "s%<FN>%$fname%g" \
+	-e "s%<DN>%$dname%g" \
+	-e "s%<BN>%$bname%g" \
+	-e "s%<FN\.>%$fnamed%g" \
+	-e "s%<DN\.>%$dnamed%g" \
+	-e "s%<BN\.>%$bnamed%g" \
+	-e "s%<FILENAME>%$fname%g" \
+	-e "s%<DIRNAME>%$dname%g" \
+	-e "s%<BASENAME>%$bname%g" \
+	-e "s%<FILENAME\.>%$fnamed%g" \
+	-e "s%<DIRNAME\.>%$dnamed%g" \
+	-e "s%<BASENAME\.>%$bnamed%g" \
+        $parset > $psname
+	eval $commandnew $psname "$@" || echo "Failure in $commandnew $psname $*"
+        rm -f $psname
     else
-	eval $commandnew "$@" || echo "Failure in $commandnew $*"
+        # If nothing substituted, give the file name to the command.
+        # Use eval to execute the command, otherwise the shell gets confused
+        # by possible quoted parts.
+        if test "$commandnew" = "$command"; then
+	    eval $command $fname "$@" || echo "Failure in $command $fname $*"
+        else
+	    eval $commandnew "$@" || echo "Failure in $commandnew $*"
+        fi
     fi
 done
