@@ -11,6 +11,9 @@ showhelp()
   echo ''
   echo '      -c cluster    cluster name as defined for cexec'
   echo '                    default is lce: if run on an lfe node, otherwise locus:'
+  echo '      -p parset     command will execute this parset file where'
+  echo '                    placeholders like <FN> are replaced'
+  echo '                    The parset will be the first argument to the command'
   echo '      command       command to be executed remotely'
   echo '                    Quotes are needed if it contains spaces, etc.'
   echo '      nameglob      file name glob pattern (# is a shorthand for [0-9])'
@@ -61,7 +64,18 @@ if test $# -lt 2; then
     showhelp
     exit 1
 fi
-cluster=""
+cluster=
+parset=
+if test "$1" = "-c"; then
+    shift
+    cluster="$1"
+    shift
+fi
+if test "$1" = "-p"; then
+    shift
+    parset="$1"
+    shift
+fi
 if test "$1" = "-c"; then
     shift
     cluster="$1"
@@ -123,5 +137,5 @@ nameglobnew=`echo "$nameglob" | sed \
     -e 's%{%:LBRACE:%g' \
     -e 's%}%:RBRACE:%g'`
 
-cexec $cluster $pgmpath/cexecms-part -e "$envfile" "'$commandnew'" "$nameglobnew" "$@"
+cexec $cluster $pgmpath/cexecms-part -e "$envfile" "$parset" "'$commandnew'" "$nameglobnew" "$@"
 rm -f "$envfile"
