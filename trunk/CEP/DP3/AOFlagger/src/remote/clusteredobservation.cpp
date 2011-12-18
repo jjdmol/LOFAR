@@ -22,7 +22,7 @@
 
 #include <stdexcept>
 
-#include <auto_ptr.h>
+#include <memory> // for auto_ptr
 
 #include <LMWCommon/VdsDesc.h>
 
