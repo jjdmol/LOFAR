@@ -143,7 +143,7 @@ class SummaryPage : public Gtk::HBox {
 			addValues(totalStdDev, map.PolarizationCount(), s);
 			s << " Jy\nAverage signal to noise ratio = ";
 			addValues(totalSNR, map.PolarizationCount(), s);
-			s << " Jy\n(calculated with BaselineMean/BaselineStdDev)\n";
+			s << " Jy\n(calculated with BaselineMean/BaselineDStdDev)\n";
 		}
 
 		void addValues(const double *values, unsigned polarizationCount, std::ostringstream &s)
