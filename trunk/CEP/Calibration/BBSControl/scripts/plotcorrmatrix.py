@@ -58,8 +58,6 @@ class plotCorrmatrix(QDialog):
 
 
    def createWidgets(self):
-     print "createWidgets()"   # DEBUG
-
      # Get time indices (and frequency range) from solverdialog class according to plotwindow index
      self.index = np.searchsorted(self.parent.x, [self.parent.xdata])[0]
      
@@ -94,8 +92,6 @@ class plotCorrmatrix(QDialog):
       
 
    def createLayouts(self):
-     print "createLayouts()"   # DEBUG
-     
      self.buttonLayout=QVBoxLayout()                   # layout containing widgets
      self.matrixLayout=QVBoxLayout()                   # layout containing canvas and toolbar
      self.mainLayout=QHBoxLayout()
@@ -138,13 +134,11 @@ class plotCorrmatrix(QDialog):
    #*********************************************
 
    def on_prevButton(self):
-     print "on_prevButton()"    # DEBUG
      self.index = self.index - 1
      if self.index == 0:
        self.prevButton.setDisabled(True)
   
    def on_nextButton(self):
-     print "on_nextButton()"    # DEBUG
      self.index = self.index + 1
      if self.index > 0 and self.index < len(self.parent.x)-1:
        self.prevButton.setEnabled(True)
@@ -182,7 +176,6 @@ class plotCorrmatrix(QDialog):
      self.plot(self.corrmatrix)
 
    def updateLabels(self):
-     print "updateLabels()"   # DEBUG
      self.startTimeLabel.setText("S: " + str(self.parent.parent.convertDate(self.start_time)))
      self.endTimeLabel.setText("E: " + str(self.parent.parent.convertDate(self.end_time)))
      self.startFreqLabel.setText("S: " + str(self.start_freq) + " Hz")

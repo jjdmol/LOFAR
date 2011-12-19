@@ -138,7 +138,11 @@ class PlotWindow(QFrame):
       self.setMinimumHeight(600)
 
       self.setWindowTitle = self.parent.tableName  + ": " + str(self.parent.solverQuery.getRank()) + " Parameters"
+      self.createWidgets()
+      self.createConnections()
+      self.createLayouts()
 
+   def createWidgets(self):
       # Create Buttons for data export
       #
       self.exportButton=QPushButton("&Export Data")
@@ -148,7 +152,7 @@ class PlotWindow(QFrame):
       self.exportComboBox=QComboBox()
       self.exportComboBox.addItem("ASCII")
       # export in Matlab format is only possible if scipy.io module has been imported
-      if parent.haveModule('scipy') == True or parent.haveModule('scipy.io') == True:
+      if self.parent.haveModule('scipy') == True or self.parent.haveModule('scipy.io') == True:
          self.exportComboBox.addItem("Matlab")
       self.exportComboBox.setToolTip('File format for exporting data')
       self.exportComboBox.setMaximumWidth(100)
@@ -160,17 +164,17 @@ class PlotWindow(QFrame):
 
       self.histogramButton=QPushButton("&Histogram")    # button to create a histogram
       self.histogramButton.setToolTip("Create a histogram of the current parameter")
-      #self.histogramButton.hide()
-      self.histogramButton.setMaximumWidth(120)
+      self.histogramButton.setMaximumWidth(150)
       self.histogramButton.setToolTip('Create a histogram of current data')
 
-#      self.histogramBinSpin=QSpinBox()            # spinbox for histogram binsize
-#      self.histogramBinSpin.setMinimum(5)
-#      self.histogramBinSpin.setMaximum(100)
-#      self.histogramBinSpin.setSingleStep(5)
-#      self.histogramBinSpin.setMaximumWidth(120)
-#      self.histogramBinSpin.setMinimumHeight(25)
-
+      self.onClickLabel=QLabel("On click display:")
+      self.onClickComboBox=QComboBox()
+      self.onClickComboBox.setMaximumWidth(150)
+      self.onClickComboBox.setToolTip('What to display when data point in graph is clicked')
+      self.onClickComboBox.addItem("CorrMatrix")      # first, default = correlation matrix
+      self.onClickComboBox.addItem("Zoom")
+      #self.onClickComboBox.addItem("Per iteration")
+      #self.onClickComboBox.addItem("CorrMatrix and Iterations")
 
       self.solverMessageLabel=QLabel("Solver Message:")
 
@@ -186,20 +190,24 @@ class PlotWindow(QFrame):
       self.closeButton.setMaximumWidth(120)
 
 
+   def createConnections(self):
       # Set connections
       self.connect(self.exportButton, SIGNAL('clicked()'), self.on_export)
       self.connect(self.histogramButton, SIGNAL('clicked()'), self.on_histogram)
       self.connect(self.closeButton, SIGNAL('clicked()'), SLOT('close()'))
       self.connect(self.showCursorCheckBox, SIGNAL('stateChanged(int)'), self.on_cursor)
+      self.connect(self.onClickComboBox, SIGNAL('valueChanged(int)'), self.on_onClickComboBox)
 
-      # Layouts for canvas and buttons
-      #
-      #
+
+   # Layouts for canvas and buttons
+   #
+   def createLayouts(self):
       buttonLayout = QVBoxLayout()
       buttonLayout.addWidget(self.exportButton)
       buttonLayout.addWidget(self.exportComboBox)
       buttonLayout.addWidget(self.showCursorCheckBox)
       buttonLayout.addWidget(self.histogramButton)
+      buttonLayout.addWidget(self.onClickComboBox)
       buttonLayout.addWidget(self.solverMessageLabel)
       buttonLayout.addWidget(self.solverMessageText)
       buttonLayout.insertStretch(-1)
@@ -313,8 +321,8 @@ class PlotWindow(QFrame):
       print "on_cursor() self.showCursor = ", self.showCursor
    
       if self.showCursor==True:
-        #self.cursor = Cursor(self.ax1, self)
-        self.cursor = SnaptoCursor(self.ax1, self.x, self.y1, self)
+        self.cursor = Cursor(self.ax1, self)
+        #self.cursor = SnaptoCursor(self.ax1, self.x, self.y1, self)
         self.fig.canvas.mpl_connect('motion_notify_event', self.cursor.mouse_move)
       else:
         self.cursor.lx.remove()
@@ -328,8 +336,9 @@ class PlotWindow(QFrame):
       fileformat=self.exportComboBox.currentText()
       self.parent.on_export(fileformat)
 
+   # TODO!
    def on_logarithmic(self):
-      self.xscale('log')
+      self.yscale('log')
 
 
    # Functio to execute on a click event (experimental)
@@ -343,21 +352,35 @@ class PlotWindow(QFrame):
       self.xdata=event.xdata
       self.ydata=event.ydata
 
-      # Pick per iteration details if possible
-      if self.parent.tableType == "PERSOLUTION_CORRMATRIX" or self.parent.tableType == "PERITERATION_CORRMATRIX":
-          self.plotcorrmatrix()
-      else:
-          print "on_clickMarker() table is not of correct type"
+      # Depending on the setting in the onClickComboBox launch appropriate dialog
+      #
+      if self.onClickComboBox.currentText()=="CorrMatrix":   # if CorrMatrix should be displayed
+        # Pick per iteration details if possible
+        if self.parent.tableType == "PERSOLUTION_CORRMATRIX" or self.parent.tableType == "PERITERATION_CORRMATRIX":
+            self.plotcorrmatrix()
+        else:
+            print "on_clickMarker() table is not of correct type"
+      elif self.onClickComboBox.currentText()=="Per iteration":
+        print "plotwindow::on_click() trying to launch per iteration plotwindow"
 
 
    # Display a histogram of the converged solutions (i.e. LASTITER=TRUE)
    # for the currently selected parameter
    #
    def on_histogram(self):
-      print "on_histogram()"    # DEBUG
       self.histoDialog=ph.plothistogram(self)
       self.histoDialog.show()
 
+
+   def on_onClickComboBox(self):
+      print "on_onClickComboBox()"    # DEBUG
+      if self.onClickComboBox.currentText()=="Zoom":
+        self.fig.canvas.mpl_disconnect(self.cursorId)
+      elif self.onClickComboBox.currentText()=="CorrMatrix":
+        self.cursorId = self.fig.canvas.mpl_connect('button_press_event', self.on_click)
+      elif self.onClickComboBox.currentText()=="Per iteration":
+        self.cursorId = self.fig.canvas.mpl_connect('button_press_event', self.on_click)
+      
 
    def on_solverMessage(self, event):
       if self.messages!=None:                       # only if we indeed inherited messages from parent
