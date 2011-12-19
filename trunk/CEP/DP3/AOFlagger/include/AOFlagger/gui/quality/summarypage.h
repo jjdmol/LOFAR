@@ -119,6 +119,11 @@ class SummaryPage : public Gtk::HBox {
 			const BaselineStatisticsMap &map = _statCollection->BaselineStatistics();
 			std::vector<std::pair <unsigned, unsigned> > list = map.BaselineList();
 			double totalStdDev[map.PolarizationCount()], totalSNR[map.PolarizationCount()];
+			for(size_t p=0;p<map.PolarizationCount();++p)
+			{
+				totalStdDev[p] = 0.0;
+				totalSNR[p] = 0.0;
+			}
 			size_t count = 0;
 			for(std::vector<std::pair <unsigned, unsigned> >::const_iterator i=list.begin(); i!=list.end(); ++i)
 			{
