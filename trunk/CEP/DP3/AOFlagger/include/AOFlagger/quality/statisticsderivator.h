@@ -61,6 +61,12 @@ class StatisticsDerivator
 			return deriveComplex<long double>(kind, statistics, polarization);
 		}
 		
+		static long double GetStatisticAmplitude(QualityTablesFormatter::StatisticKind kind, const DefaultStatistics &statistics, unsigned polarization)
+		{
+			const std::complex<long double> val = GetComplexStatistic(kind, statistics, polarization);
+			return sqrtl(val.real()*val.real() + val.imag()*val.imag());
+		}
+		
 		static std::complex<long double> Variance(unsigned long n, std::complex<long double> sum, std::complex<long double> sumP2)
 		{
 			return deriveVariance<long double>(n, sum, sumP2);
@@ -69,7 +75,13 @@ class StatisticsDerivator
 		static long double VarianceAmplitude(unsigned long n, std::complex<long double> sum, std::complex<long double> sumP2)
 		{
 			const std::complex<long double> variance = deriveVariance<long double>(n, sum, sumP2);
-			return sqrt(variance.real()*variance.real() + variance.imag()*variance.imag());
+			return sqrtl(variance.real()*variance.real() + variance.imag()*variance.imag());
+		}
+		
+		static long double StandardDeviationAmplitude(unsigned long n, std::complex<long double> sum, std::complex<long double> sumP2)
+		{
+			const std::complex<long double> stdDev = deriveStandardDeviation<long double>(n, sum, sumP2);
+			return sqrtl(stdDev.real()*stdDev.real() + stdDev.imag()*stdDev.imag());
 		}
 		
 		std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> CreateTFData(QualityTablesFormatter::StatisticKind kind)
@@ -263,7 +275,7 @@ class StatisticsDerivator
 				{
 					const std::complex<T> stddev =
 						deriveComplex<T>(QualityTablesFormatter::DStandardDeviationStatistic, statistics, polarization);
-					return std::complex<T>(statistics.Mean<T>(polarization).real() / stddev.real(), statistics.Mean<T>(polarization).imag() / stddev.imag());
+					return std::complex<T>(fabsl(statistics.Mean<T>(polarization).real() / stddev.real()), fabsl(statistics.Mean<T>(polarization).imag() / stddev.imag()));
 					break;
 				}
 				default:
