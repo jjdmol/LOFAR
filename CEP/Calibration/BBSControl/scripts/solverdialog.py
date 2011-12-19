@@ -1246,7 +1246,7 @@ class SolverAppForm(QMainWindow):
         else:
           self.messages=self.solverQuery.getMessages(start_time, end_time, start_freq, end_freq, iteration="last")
 
-        print "solverDialog.py::getMessages() self.messages = ", self.messages
+        #print "solverDialog.py::getMessages() self.messages = ", self.messages   # DEBUG
 
     """
     # Plot a corrmatrix on the lower subplot

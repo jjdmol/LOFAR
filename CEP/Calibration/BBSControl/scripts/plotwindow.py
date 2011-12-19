@@ -387,7 +387,7 @@ class PlotWindow(QFrame):
         x, y = event.xdata, event.ydata             # get cursor position from figure
         index = np.searchsorted(self.x, [x])[0]     # get Message for the index of cursor position
     
-        #print "self.parent.messages = ", self.parent.messages
+        print "self.parent.messages = ", self.parent.messages
       """
         resultType=self.messages['result']
         if self.messages[resultType]=="last":
