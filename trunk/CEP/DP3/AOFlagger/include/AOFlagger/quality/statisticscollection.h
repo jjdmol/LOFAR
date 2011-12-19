@@ -399,20 +399,21 @@ class StatisticsCollection : public Serializable
 			const unsigned fAdd = shiftOneUp ? 1 : 0;
 			for(unsigned j=0;j<nsamples;++j)
 			{
-			    if (!origFlags[j*stepFlags]) {
-				unsigned f = j*step;
-				if(std::isfinite(reals[f]) && std::isfinite(imags[f]))
+				if (!origFlags[j*stepFlags])
 				{
-					DefaultStatistics &freqStat = *bandStats[j + fAdd];
-					if(isRFI[j*stepRFI])
+					unsigned f = j*step;
+					if(std::isfinite(reals[f]) && std::isfinite(imags[f]))
 					{
-						addToStatistic(freqStat, polarization, 0, 0.0, 0.0, 0.0, 0.0, 1, isDiff);
-					} else {
-						const long double r = reals[f], i = imags[f];
-						addToStatistic(freqStat, polarization, 1, r, i, r*r, i*i, 0, isDiff);
+						DefaultStatistics &freqStat = *bandStats[j + fAdd];
+						if(isRFI[j*stepRFI])
+						{
+							addToStatistic(freqStat, polarization, 0, 0.0, 0.0, 0.0, 0.0, 1, isDiff);
+						} else {
+							const long double r = reals[f], i = imags[f];
+							addToStatistic(freqStat, polarization, 1, r, i, r*r, i*i, 0, isDiff);
+						}
 					}
 				}
-			    }
 			}
 		}
 		
