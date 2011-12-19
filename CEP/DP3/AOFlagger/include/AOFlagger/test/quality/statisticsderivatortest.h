@@ -78,8 +78,8 @@ void StatisticsDerivatorTest::TestStatistics::operator()()
 	statistics.dSum[0] = statistics.sum[0];
 	statistics.dSumP2[0] = statistics.sumP2[0];
 	val = StatisticsDerivator::GetComplexStatistic(QualityTablesFormatter::SignalToNoiseStatistic, statistics, 0);
-	AssertEquals(val.real(), 2.0 / sqrt(2.0/3.0), "Real SNR");
-	AssertEquals(val.imag(), 6.0 / sqrt(8.0/3.0), "Imag SNR");
+	AssertAlmostEqual(val.real(), 2.0 / sqrt(2.0/3.0), "Real SNR");
+	AssertAlmostEqual(val.imag(), 6.0 / sqrt(8.0/3.0), "Imag SNR");
 }
 
 #endif
