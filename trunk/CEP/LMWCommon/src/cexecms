@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# todo
+#   maybe allow -i ID1=... -i ID2=...
+# so different ids can be used in the glob pattern.
+
 showhelp() 
 {
   echo ''
@@ -11,9 +15,16 @@ showhelp()
   echo ''
   echo '      -c cluster    cluster name as defined for cexec'
   echo '                    default is lce: if run on an lfe node, otherwise locus:'
-  echo '      -p parset     command will execute this parset file where'
-  echo '                    placeholders like <FN> are replaced'
-  echo '                    The parset will be the first argument to the command'
+  echo '      -d            do a dryrun (i.e., do not execute, but only print the command)'
+  echo '      -i ids        List of ids to replace <ID> in the nameglob argument'
+  echo '                    A comma and/or blank can be used as separator'
+  echo '                    Ids can be given with parset range style (e.g. 33678..33683)'
+  echo '                    In this way the command can be executed for multiple observations'
+  echo '      -p parset     parset to be used by the command'
+  echo '                    It must b accessible on all nodes in the cluster'
+  echo '                    placeholders in the parset like <FN> are replaced'
+  echo '                    The parset will be used as the first argument for the command'
+  echo '      -w workdir    Working directory in remote process. Default is login directory'
   echo '      command       command to be executed remotely'
   echo '                    Quotes are needed if it contains spaces, etc.'
   echo '      nameglob      file name glob pattern (# is a shorthand for [0-9])'
@@ -66,11 +77,44 @@ if test $# -lt 2; then
 fi
 cluster=
 parset=
-if test "$1" = "-c"; then
+ids=
+dryrun=
+workdir=
+# Handle possible options.
+while [ $# != 0 ]
+do
+  if test "$1" = "-c"; then
     shift
     cluster="$1"
     shift
-fi
+  elif test "$1" = "-p"; then
+    shift
+    parset="$1"
+    shift
+  elif test "$1" = "-i"; then
+    shift
+    ids="$1"
+    shift
+  elif test "$1" = "-w"; then
+    shift
+    workdir="$1"
+    shift
+  elif test "$1" = "-d"; then
+    shift
+    dryrun="-d"
+  else
+    case "$1" in
+    -*)
+      echo "$1 is an unknown cexecms option"
+      exit 1
+      ;;
+    *)
+      # A command has been found, so stop parsing options.
+      break
+      ;;
+    esac
+  fi
+done
 if test "$1" = "-p"; then
     shift
     parset="$1"
@@ -85,6 +129,10 @@ if test $# -lt 2; then
     showhelp
     exit 1
 fi
+
+# Replace possible commas in ids by blanks.
+ids=`echo "$ids" | sed 's/,/ /g'`
+# Get coomand and glob pattern.
 command="$1"
 shift
 nameglob="$1"
@@ -97,6 +145,9 @@ if test "$cluster" = ""; then
     lfe*) cluster="lce:";;
   esac
 fi
+
+# The ids can be given in parset format (e.g. 001..4), so expand them.
+ids=`expandparameter "$ids"`
 
 # Find all PATH and ROOT variables and store in a file with the pid in its name.
 envfile=$HOME/${USER}-$$.env
@@ -137,5 +188,18 @@ nameglobnew=`echo "$nameglob" | sed \
     -e 's%{%:LBRACE:%g' \
     -e 's%}%:RBRACE:%g'`
 
-cexec $cluster $pgmpath/cexecms-part -e "$envfile" "$parset" "'$commandnew'" "$nameglobnew" "$@"
+# Add -p is parset is used.
+# Same for -w.
+test "$parset"  = ""  ||   parset="-p $parset"
+test "$workdir" = ""  ||  workdir="-w $workdir"
+# Do a single run if no ids given, otherwise iterate over all ids.
+if test "$ids" = ""; then
+  cexec $cluster $pgmpath/cexecms-part $dryrun -e "$envfile" "$parset" "$workdir" "'$commandnew'" "$nameglobnew" "$@"
+else
+  for id in $ids
+  do
+    nm=`echo "$nameglobnew" | sed -e "s%<ID>%$id%g"`
+    cexec $cluster $pgmpath/cexecms-part $dryrun -e "$envfile" "$parset" "$workdir" "'$commandnew'" "$nm" "$@"
+  done
+fi
 rm -f "$envfile"

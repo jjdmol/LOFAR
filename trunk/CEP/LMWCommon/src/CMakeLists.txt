@@ -43,6 +43,7 @@ lofar_add_bin_program(finddproc finddproc.cc)
 install(PROGRAMS
   cexecms
   cexecms-part
+  expandparameter
   rundist
   rundist-part
   startdistproc
