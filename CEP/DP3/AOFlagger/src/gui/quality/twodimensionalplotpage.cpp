@@ -107,13 +107,13 @@ void TwoDimensionalPlotPage::updatePlot()
 		if(_meanButton.get_active())
 			plotStatistic(QualityTablesFormatter::MeanStatistic);
 		if(_stdDevButton.get_active())
-			plotStatistic(QualityTablesFormatter::VarianceStatistic);
+			plotStatistic(QualityTablesFormatter::StandardDeviationStatistic);
 		if(_dCountButton.get_active())
 			plotStatistic(QualityTablesFormatter::DCountStatistic);
 		if(_dMeanButton.get_active())
 			plotStatistic(QualityTablesFormatter::DMeanStatistic);
 		if(_dStdDevButton.get_active())
-			plotStatistic(QualityTablesFormatter::DVarianceStatistic);
+			plotStatistic(QualityTablesFormatter::DStandardDeviationStatistic);
 		if(_rfiPercentageButton.get_active())
 			plotStatistic(QualityTablesFormatter::RFIPercentageStatistic);
 		if(_snrButton.get_active())
