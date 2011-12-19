@@ -56,12 +56,12 @@ namespace LOFAR {
 // BlueGeneMonitor()
 //
 BlueGeneMonitor::BlueGeneMonitor(const string&	cntlrName) :
-//	GCFTask 			((State)&BlueGeneMonitor::initial_state,cntlrName),
-	GCFTask 			((State)&BlueGeneMonitor::getBlueGeneState,cntlrName),
+	GCFTask 			((State)&BlueGeneMonitor::initial_state,cntlrName),
 	itsOwnPropertySet	(0),
 	itsTimerPort		(0),
 	itsDPservice		(0),
-	itsPollInterval		(60)
+	itsPollInterval		(60),
+	itsLastBGPState		(-1)
 {
 	LOG_TRACE_OBJ_STR (cntlrName << " construction");
 
@@ -176,7 +176,7 @@ GCFEvent::TResult BlueGeneMonitor::getBlueGeneState(GCFEvent& event,
 
 	switch (event.signal) {
 	case F_ENTRY: {
-//		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("BlueGene:requesting BlueGene info"));
+		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("BlueGene:requesting BlueGene info"));
 		itsTimerPort->setTimer(15.0);		// in case the answer never comes
 
 		string	command(formatString("ssh %s 'bgpartstatus R00' 2>&1", itsBlueGeneFrontEnd.c_str()));
@@ -185,7 +185,7 @@ GCFEvent::TResult BlueGeneMonitor::getBlueGeneState(GCFEvent& event,
 		line[0] = '\0';
 		if (!pipe || !fgets (line, sizeof (line), pipe)) {
 			LOG_ERROR_STR ("BlueGene:Unable to read pipe: " << command);
-//			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("BlueGene:pipe failure"));
+			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("BlueGene:pipe failure"));
 			if (pipe) {
 				LOG_ERROR_STR("Pipe error: " << strerror(errno));
 				fclose(pipe);
@@ -206,16 +206,19 @@ GCFEvent::TResult BlueGeneMonitor::getBlueGeneState(GCFEvent& event,
 		bool	inError(false);
 		if (!strcmp(line, "error")) {
 			LOG_ERROR_STR ("BlueGene:Partition R00 in error state: " << line);
-//			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("BlueGene:unknown partitionstate"));
+			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("BlueGene:unknown partitionstate"));
 			inError = true;
 		}
 
-		string	pvssDBname(PVSSinfo::getLocalSystemName());
-		for (int i = 0;  i < IONODES_PER_BGP_PARTITION; i++) {
-			LOG_INFO_STR("setObjectState(" << getName() << "," <<  formatString("%s:%s", pvssDBname.c_str(), _IOnodeName(i).c_str()) << "," <<  (inError ? RTDB_OBJ_STATE_BROKEN : RTDB_OBJ_STATE_OPERATIONAL) << ")");
-//			setObjectState(getName(), formatString("%s:%s", pvssDBname.c_str(), _IOnodeName(25).c_str()), 
-//				inError ? RTDB_OBJ_STATE_BROKEN : RTDB_OBJ_STATE_OPERATIONAL);
+		int		newState(inError ? RTDB_OBJ_STATE_BROKEN : RTDB_OBJ_STATE_OPERATIONAL);
+		if (newState != itsLastBGPState) {
+			string	pvssDBname(PVSSinfo::getLocalSystemName());
+			for (int i = 0;  i < IONODES_PER_BGP_PARTITION; i++) {
+				LOG_INFO_STR("setObjectState(" << getName() << "," <<  formatString("%s:%s", pvssDBname.c_str(), _IOnodeName(i).c_str()) << "," <<  newState << ")");
+				setObjectState(getName(), formatString("%s:%s", pvssDBname.c_str(), _IOnodeName(i).c_str()), newState);
+			}
 		}
+		itsLastBGPState = newState;
 		TRAN(BlueGeneMonitor::waitForNextCycle);				// go to next state.
 		break;
 	}
@@ -259,7 +262,7 @@ GCFEvent::TResult BlueGeneMonitor::waitForNextCycle(GCFEvent& event,
 
 	switch (event.signal) {
 	case F_ENTRY: {
-//		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("BlueGene:wait for next cycle"));
+		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("BlueGene:wait for next cycle"));
 		int		waitTime = itsPollInterval - (time(0) % itsPollInterval);
 		if (waitTime == 0) {
 			waitTime = itsPollInterval;
@@ -271,7 +274,7 @@ GCFEvent::TResult BlueGeneMonitor::waitForNextCycle(GCFEvent& event,
 	break;
 
 	case F_TIMER: {
-//		itsOwnPropertySet->setValue(string(PN_FSM_ERROR),GCFPVString(""));
+		itsOwnPropertySet->setValue(string(PN_FSM_ERROR),GCFPVString(""));
 		TRAN(BlueGeneMonitor::getBlueGeneState);
 	}
 	break;
@@ -305,7 +308,7 @@ GCFEvent::TResult BlueGeneMonitor::finish_state(GCFEvent& event, GCFPortInterfac
 	switch (event.signal) {
 	case F_ENTRY: {
 		// update PVSS
-//		itsOwnPropertySet->setValue(string(PN_FSM_CURRENT_ACTION),GCFPVString("BlueGene:finished"));
+		itsOwnPropertySet->setValue(string(PN_FSM_CURRENT_ACTION),GCFPVString("BlueGene:finished"));
 		break;
 	}
   

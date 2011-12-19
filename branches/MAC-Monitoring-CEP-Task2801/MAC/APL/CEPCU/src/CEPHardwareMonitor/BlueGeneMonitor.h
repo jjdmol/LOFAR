@@ -72,12 +72,12 @@ private:
 	RTDBPropertySet*			itsOwnPropertySet;
 
 	GCFTimerPort*				itsTimerPort;
-	GCFTCPPort*					itsBlueGeneDriver;
 	DPservice*					itsDPservice;
 
 	string						itsBlueGeneFrontEnd;
-
 	uint32						itsPollInterval;
+
+	int							itsLastBGPState;
 };
 
   };//CEPCU

@@ -81,6 +81,7 @@ private:
 	int							itsLastClusterNode;
 
 	uint32						itsPollInterval;
+	vector<int>					itsLastState;
 };
 
   };//CEPCU

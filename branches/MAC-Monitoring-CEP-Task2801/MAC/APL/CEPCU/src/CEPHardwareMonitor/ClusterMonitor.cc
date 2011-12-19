@@ -42,6 +42,7 @@
 #include "ClusterMonitor.h"
 #include "PVSSDatapointDefs.h"
 
+#define	MAX_CLUSTER_NODE	100
 #define MAX2(a,b)	((a) > (b)) ? (a) : (b)
 
 namespace LOFAR {
@@ -73,10 +74,13 @@ ClusterMonitor::ClusterMonitor(const string&	cntlrName) :
 
 	itsClusterNameMask  = globalParameterSet()->getString("ClusterNameMask", "locus%03d");
 	itsClusterNetwork   = globalParameterSet()->getString("ClusterNetwork",  "cep2.lofar");
-	itsFirstClusterNode = globalParameterSet()->getInt("FirstClusterNode", 1);
-	itsLastClusterNode  = globalParameterSet()->getInt("LastClusterNode", 100);
+	itsFirstClusterNode = globalParameterSet()->getUint("FirstClusterNode", 1);
+	itsLastClusterNode  = globalParameterSet()->getUint("LastClusterNode", MAX_CLUSTER_NODE);
 	ASSERTSTR(!itsClusterNameMask.empty(), "NameMask of Cluster not specified");
 	ASSERTSTR(!itsClusterNetwork.empty(),  "Network name of Cluster not specified");
+	ASSERTSTR(itsLastClusterNode <= MAX_CLUSTER_NODE, "Supporting only " << MAX_CLUSTER_NODE << " nodes");
+
+	itsLastState.resize(itsLastClusterNode+1, -1);
 }
 
 
@@ -173,7 +177,7 @@ GCFEvent::TResult ClusterMonitor::getClusterState(GCFEvent& event,
 
 	switch (event.signal) {
 	case F_ENTRY: {
-//		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("Cluster:requesting Cluster info"));
+		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("Cluster:requesting Cluster info"));
 		itsTimerPort->setTimer(15.0);		// in case the answer never comes
 
 		string	command(formatString("for i in `echo \".\" | awk '{ for (i=%d; i<=%d;i++) { printf \"%s.%s\\n\",i } }'`; do ./zabbix_get -s $i -k system.hostname ; done", 
@@ -190,7 +194,7 @@ GCFEvent::TResult ClusterMonitor::getClusterState(GCFEvent& event,
 		line[0] = '\0';
 		size_t	btsRead = fread(&line[0], 1, lineLength-1, pipe);
 		if (!btsRead) {
-//			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("Cluster:pipe failure"));
+			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("Cluster:pipe failure"));
 			LOG_WARN_STR("Could not determine the state of the clusternodes!");
 		}
 		else {
@@ -199,28 +203,6 @@ GCFEvent::TResult ClusterMonitor::getClusterState(GCFEvent& event,
 		}
 		fclose(pipe);
 		TRAN(ClusterMonitor::waitForNextCycle);				// go to next state.
-
-		// possible answers:
-		// locus999
-		// zabbix_get [4624]: Get value error: cannot connect to [[locus002.cep2.lofar]:10050]: [113] No route to host
-
-#if 0
-		string	pvssDBname(PVSSinfo::getLocalSystemName());
-		if (!strcmp(line, "error")) {
-			LOG_ERROR_STR ("Cluster:Partition R00 in error state: " << line);
-//			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("Cluster:unknown partitionstate"));
-			LOG_INFO_STR("setObjectState(" << getName() << "," <<  formatString("%s:BGPpartition", pvssDBname.c_str()) << "," <<  RTDB_OBJ_STATE_BROKEN);
-//			setObjectState(getName(), formatString("%s:BGPpartition", pvssDBname.c_str()), RTDB_OBJ_STATE_BROKEN);
-			TRAN(ClusterMonitor::waitForNextCycle);				// go to next state.
-			break;
-		}
-
-		// in all(?) the other cases the HARDWARE is available
-//		itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString(""));
-		LOG_INFO_STR("setObjectState(" << getName() << "," <<  formatString("%s:BGPpartition", pvssDBname.c_str()) << "," <<  RTDB_OBJ_STATE_OPERATIONAL);
-//		setObjectState(getName(), formatString("%s:BGPpartition", pvssDBname.c_str()), RTDB_OBJ_STATE_OPERATIONAL);
-		TRAN(ClusterMonitor::waitForNextCycle);				// go to next state.
-#endif
 		break;
 	}
 
@@ -258,7 +240,6 @@ void ClusterMonitor::_analyzeClusterResult(vector<char>	result, size_t	length)
 			begin--;
 		}
 
-		LOG_DEBUG_STR("NODE= " << (char*)&result[begin]);
 		// possible answers:
 		// locus999
 		// zabbix_get [4624]: Get value error: cannot connect to [[locus002.cep2.lofar]:10050]: [113] No route to host
@@ -275,8 +256,13 @@ void ClusterMonitor::_analyzeClusterResult(vector<char>	result, size_t	length)
 		end = begin - 1;
 	}
 
+	// Finally update the statusfields of all the nodes
 	for (int i = itsFirstClusterNode; i <= itsLastClusterNode; i++) {
-		LOG_DEBUG_STR("Node " << _clusterNodeName(i) << ": " << (online[i] ? "ON" : "OFF"));
+		int		newState = online[i] ? RTDB_OBJ_STATE_BROKEN : RTDB_OBJ_STATE_OPERATIONAL;
+		if (itsLastState[i] != newState) {
+			LOG_DEBUG_STR("Node " << _clusterNodeName(i) << ": " << (online[i] ? "ON" : "OFF"));
+			itsLastState[i] = newState;
+		}
 	}
 }
 
@@ -312,7 +298,7 @@ GCFEvent::TResult ClusterMonitor::waitForNextCycle(GCFEvent& event,
 
 	switch (event.signal) {
 	case F_ENTRY: {
-//		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("Cluster:wait for next cycle"));
+		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("Cluster:wait for next cycle"));
 		int		waitTime = itsPollInterval - (time(0) % itsPollInterval);
 		if (waitTime == 0) {
 			waitTime = itsPollInterval;
@@ -324,7 +310,7 @@ GCFEvent::TResult ClusterMonitor::waitForNextCycle(GCFEvent& event,
 	break;
 
 	case F_TIMER: {
-//		itsOwnPropertySet->setValue(string(PN_FSM_ERROR),GCFPVString(""));
+		itsOwnPropertySet->setValue(string(PN_FSM_ERROR),GCFPVString(""));
 		TRAN(ClusterMonitor::getClusterState);
 	}
 	break;
@@ -358,7 +344,7 @@ GCFEvent::TResult ClusterMonitor::finish_state(GCFEvent& event, GCFPortInterface
 	switch (event.signal) {
 	case F_ENTRY: {
 		// update PVSS
-//		itsOwnPropertySet->setValue(string(PN_FSM_CURRENT_ACTION),GCFPVString("Cluster:finished"));
+		itsOwnPropertySet->setValue(string(PN_FSM_CURRENT_ACTION),GCFPVString("Cluster:finished"));
 		break;
 	}
   
