@@ -1246,7 +1246,9 @@ class SolverAppForm(QMainWindow):
         else:
           self.messages=self.solverQuery.getMessages(start_time, end_time, start_freq, end_freq, iteration="last")
 
+        print "solverDialog.py::getMessages() self.messages = ", self.messages
 
+    """
     # Plot a corrmatrix on the lower subplot
     # corrmatrixDict  - (linear) array with correlation matrix to plot
     # ranks           - list of corresponding ranks of corrmatrices (to check for consistency, default=None)
@@ -1296,9 +1298,9 @@ class SolverAppForm(QMainWindow):
                 self.canvas.draw()
         else:
             print "plotCorrMatrix() corrmatrices have length 0"
+    """
 
-
-
+    """
     # (Modified Joris'plot function)
     #
     # Plotting function that reads the setting for  scatter, newfig etc. from the GUI
@@ -1361,7 +1363,7 @@ class SolverAppForm(QMainWindow):
         tplotEnd=time.time()                  # take final time after redrawing of the canvas
         tplotTime=tplotEnd-tplotStart
         print "plot(): plotting took %6.2f ms" % (tplotTime*1000)
-
+    """
 
 
     #******************************************************
@@ -1379,16 +1381,6 @@ class SolverAppForm(QMainWindow):
 
         return x,y
         
-
-    # TODO
-    # Get the current solution from a mouse click in the solutions plot
-    # this will be marked with the plotMarker
-    #
-    def getCurrentSolution(self):
-        print "getCurrentSolution()"   # DEBUG
-
-        return self.currentSolution
-
 
     #*****************************************************
     #
@@ -1428,8 +1420,6 @@ class SolverAppForm(QMainWindow):
     # Check if a particular module has been imported
     #
     def haveModule(self, module):
-        print "haveModule()"
-
         print "haveModule() module = ", module
         #print "haveModule() sys.modules = ", sys.modules
         print "module in sys = ", module in sys.modules
@@ -1473,8 +1463,9 @@ class SolverAppForm(QMainWindow):
     #
     def getRanks(self, start_time, end_time, start_freq, end_freq):
         print "solverDialog::getRanks()"    # DEBUG
+        ranks=self.solverQuery.getRank()
 
-
+        return ranks
 
     # Delete all axes in a figure, figure defaults to None
     # then self.fig is used

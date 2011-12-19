@@ -15,6 +15,7 @@ from PyQt4.QtGui import *
 #import pyrap.quanta as pq   # used to convert date from double to normal format
 import numpy as np
 import lofar.bbs.plothistogram as ph          # TODO: need to move this into LOFAR python module
+import lofar.bbs.plotcorrmatrix as pc
 #import unicodedata
 #import time        # for timing functions
 #import datetime    # needed for timestamps
@@ -43,7 +44,7 @@ class Cursor:
         self.lx.set_ydata(y )
         self.ly.set_xdata(x )
 
-        self.txt.set_text( 'x=%1.2f, y=%1.2f'%(x,y) )
+        self.txt.set_text( 'x=%1.2f, y=%1.2f'%(event.xdata, event.ydata) )
         self.parent.fig.canvas.draw()
 
 
@@ -75,8 +76,8 @@ class SnaptoCursor:
         self.lx.set_ydata(y )
         self.ly.set_xdata(x )
 
-        self.txt.set_text( 'x=%1.2f, y=%1.2f'%(x,y) )
-        print 'x=%1.2f, y=%1.2f'%(x,y)
+        self.txt.set_text( 'x=%1.2f, y=%1.2f'%(x, y) )
+        print 'x=%1.2f, y=%1.2f'%(event.xdata, event.ydata)
         self.parent.fig.canvas.draw()
         
 # Example usage      
@@ -117,8 +118,11 @@ class PlotWindow(QFrame):
       self.marker2=None
 
       self.x = parent.x             # plotted x axis data
+      self.x0 = self.parent.solverQuery.getTimeSlots()[0]['STARTTIME']
       self.y1 = parent.y1           # plotted y axis data
       self.y2 = parent.y2           # plotted y2 axis data
+      self.xdata = None             # cursor click x coordinate in data value
+      self.ydata = None             # cursor click y coordinate in data value
       self.messages = parent.messages   # solver messages
 
       # Create canvas for plotting
@@ -223,7 +227,7 @@ class PlotWindow(QFrame):
       #  cid = self.fig.canvas.mpl_connect('button_press_event', onclick)
 
       cid = self.fig.canvas.mpl_connect('motion_notify_event', self.on_solverMessage)
-
+      self.cursorId = self.fig.canvas.mpl_connect('button_press_event', self.on_click)
       self.plot()
 
 
@@ -267,6 +271,38 @@ class PlotWindow(QFrame):
       self.canvas.draw()
    """
 
+   def plotcorrmatrix(self):
+      print "plotcorrmatrix()"      # DEBUG
+
+      #print "self.parent.xAxisType = ", self.parent.xAxisType   # DEBUG
+      
+      indx = np.searchsorted(self.x, [self.xdata])[0]
+      if self.parent.xAxisType=="Time":
+        start_time=self.parent.solverQuery.timeSlots[indx]['STARTTIME']
+        end_time=self.parent.solverQuery.timeSlots[indx]['ENDTIME']      
+        start_freq=self.parent.solverQuery.frequencies[self.parent.frequencyStartSlider.value()]['STARTFREQ']
+        end_freq=self.parent.solverQuery.frequencies[self.parent.frequencyEndSlider.value()]['ENDFREQ']
+      elif self.parent.xAxisType=="Freq":
+        start_freq=self.parent.solverQuery.frequencySlots[indx]['STARTFREQ']
+        end_freq=self.parent.solverQuery.frequencylots[indx]['ENDFREQ']      
+        start_time=self.parent.solverQuery.frequencies[self.parent.timeStartSlider.value()]['STARTTIME']
+        end_time=self.parent.solverQuery.frequencies[self.parent.timeEndSlider.value()]['ENDTIME']
+      else:     # Iteration
+        start_time=self.parent.solverQuery.timeSlots[self.parent.timeStartSlider.value()]['STARTTIME']
+        end_time=self.parent.solverQuery.timeSlots[self.parent.timeEndSlider.value()]['ENDTIME']      
+        start_freq=self.parent.solverQuery.frequencies[self.parent.frequencyStartSlider.value()]['STARTFREQ']
+        end_freq=self.parent.solverQuery.frequencies[self.parent.frequencyEndSlider.value()]['ENDFREQ']
+
+
+      #print "plotwindow::plotcorrmatri() start_time = ", start_time     # DEBUG
+      #print "plotwindow::plotcorrmatri() end_time = ", end_time         # DEBUG
+      #print "plotwindow::plotcorrmatri() start_freq = ", start_freq     # DEBUG
+      #print "plotwindow::plotcorrmatri() end_freq = ", end_freq         # DEBUG
+
+      corrMatrix=self.parent.solverQuery.getCorrMatrix(start_time, end_time, start_freq, end_freq)
+      
+      self.corrmatrixDialog=pc.plotCorrmatrix(self, corrMatrix)
+      self.corrmatrixDialog.show()
 
    # Activate / Deactivate Matplotlib demo cursor 
    #
@@ -277,13 +313,10 @@ class PlotWindow(QFrame):
       print "on_cursor() self.showCursor = ", self.showCursor
    
       if self.showCursor==True:
-        #self.cursor = SnaptoCursor(self.ax1, self.x, self.y1, self)
-        self.cursor = Cursor(self.ax1, self)
+        #self.cursor = Cursor(self.ax1, self)
+        self.cursor = SnaptoCursor(self.ax1, self.x, self.y1, self)
         self.fig.canvas.mpl_connect('motion_notify_event', self.cursor.mouse_move)
-        self.cursorId = self.fig.canvas.mpl_connect('button_press_event', self.on_click)
       else:
-        #self.fig.delaxes(self.cursor.ax)
-        #self.fig.delaxes(self.cursor.ly)
         self.cursor.lx.remove()
         self.cursor.ly.remove()
         self.fig.canvas.mpl_disconnect(self.cursorId)
@@ -295,6 +328,9 @@ class PlotWindow(QFrame):
       fileformat=self.exportComboBox.currentText()
       self.parent.on_export(fileformat)
 
+   def on_logarithmic(self):
+      self.xscale('log')
+
 
    # Functio to execute on a click event (experimental)
    #
@@ -302,9 +338,14 @@ class PlotWindow(QFrame):
       print 'button=%d, x=%d, y=%d, xdata=%f, ydata=%f'%(
          event.button, event.x, event.y, event.xdata, event.ydata)     # DEBUG      
 
+      print "event.key = ", event.key   # DEBUG
+
+      self.xdata=event.xdata
+      self.ydata=event.ydata
+
       # Pick per iteration details if possible
-      if self.parent.tableType == "PERITERATION" or self.tableType == "PERITERATION_CORRMATRIX":
-          print "trying to get per iterations for this cell"        # DEBUG
+      if self.parent.tableType == "PERSOLUTION_CORRMATRIX" or self.parent.tableType == "PERITERATION_CORRMATRIX":
+          self.plotcorrmatrix()
       else:
           print "on_clickMarker() table is not of correct type"
 
@@ -323,10 +364,17 @@ class PlotWindow(QFrame):
         x, y = event.xdata, event.ydata             # get cursor position from figure
         index = np.searchsorted(self.x, [x])[0]     # get Message for the index of cursor position
     
+        #print "self.parent.messages = ", self.parent.messages
+      """
         resultType=self.messages['result']
-        self.solverMessageText.setText(self.messages[resultType][index])   
-
-
+        if self.messages[resultType]=="last":
+            self.solverMessageText.setText(self.messages[resultType][index])    
+        elif self.messages[resultType]=="all":
+            self.solverMessageText.setText(self.messages[resultType][index])
+        elif resultType==None:
+            print "on_solverMessage() None messages"
+      """        
+  
    # Plot data that has been read
    #
    def plot(self):

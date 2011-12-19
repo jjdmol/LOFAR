@@ -15,6 +15,7 @@ python_install(
   solverquery.py
   plotwindow.py
   plothistogram.py
+  plotcorrmatrix.py
   DESTINATION lofar/bbs)
 
 install(PROGRAMS addImagingColumns.py DESTINATION bin)

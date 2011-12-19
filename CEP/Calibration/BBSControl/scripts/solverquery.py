@@ -447,25 +447,25 @@ class SolverQuery:
         taqlcmd="SELECT STARTTIME, CORRMATRIX FROM " + self.tablename + " WHERE STARTTIME >= "+ str(start_time) + " AND ENDTIME <= " + str(end_time) + " AND STARTFREQ >= " + str(start_freq) + " AND ENDFREQ <= " + str(end_freq) + " AND LASTITER=TRUE"
 
         result=pt.taql(taqlcmd)
-        #print "getCorrMatrix: rows/cols", result.nrows(), " ", result.ncols()    # DEBUG
-
         rank=self.getRank(start_time, end_time, start_freq, end_freq)          # get the RANK from this cell
         #rankDef=self.getRankDef(start_time, end_time, start_freq, end_freq)    # rank deficiency
 
-        print "getCorrMatrix() result.nrows() = ", result.nrows()   # DEBUG
-        print "getCorrMatrix() result = ", result                   # DEBUG
-        #print "getCorrMatrix() rank = ", rank                       # DEBUG
+        #print "solverQuery::getCorrMatrix() result.nrows() = ", result.nrows()   # DEBUG
 
         # This is needed if we get back more than one result (but is buggy now)
         #if self.type=="PERITERATION_CORRMATRIX":
-        #    result=result[1]
+        #    result=result[1]['CORRMATRIX']
         #else:
-        #    result=result[0]
-
-        corrMatrix=result.getcol('CORRMATRIX')  # select CORRMATRIX and write to numpy 1D-array
+        #    result=result[0]['CORRMATRIX']
+  
+        # The Corrmatrix will only be for (N+1)th iteration
+        if result.nrows()==1:
+          corrMatrix=result[0]['CORRMATRIX']  # select CORRMATRIX and write to numpy 1D-array
+        else:
+          corrMatrix=result[1]['CORRMATRIX']  # select CORRMATRIX and write to numpy 1D-array
 
         if getStartTimes==True and getRank==True:
-            starttimes=result.getcol('STARTTIME')  # also select starttimes
+            starttimes=result[1].getcol('STARTTIME')  # also select starttimes
             return corrMatrix, starttimes, getRank
         elif getStartTimes==False and getRank==True: 
             return corrMatrix, getRank
@@ -891,7 +891,7 @@ class SolverQuery:
            messagesDict["result"]="all"
 
            # Loop over all iterations
-           for iter in range(1, maxIter+1):
+           for iter in range(1, self.getMaxIter()+1):
                  taqlcmd="SELECT * FROM " + self.tablename + " WHERE STARTTIME>=" + str(start_time) + " AND ENDTIME<=" + str(end_time) + " AND STARTFREQ>=" + str(start_freq) + " AND ENDFREQ<=" + str(end_freq) + " AND ITER=" + str(iter)
                  result=pt.taql(taqlcmd)           # execute TaQL command
                  messagesDict[iter]=result.getcol("MESSAGE")
@@ -903,6 +903,8 @@ class SolverQuery:
 
            taqlcmd="SELECT * FROM " + self.tablename + " WHERE STARTTIME>=" + str(start_time) + " AND ENDTIME<=" + str(end_time) + " AND STARTFREQ>=" + str(start_freq) + " AND ENDFREQ<=" + str(end_freq) + " AND LASTITER=TRUE"
            result=pt.taql(taqlcmd)           # execute TaQL command
+           
+           print "result.nrows() = ", result.nrows()
            
            messagesDict["last"]=result.getcol("MESSAGE")
 
@@ -927,7 +929,7 @@ class SolverQuery:
         if start_time == None or end_time == None or start_freq == None or end_freq == None:
             rank=self.readParameterIdx("RANK", 0)
         else:
-            taqlcmd="SELECT RANK FROM " + self.tablename + " WHERE STARTTIME >= " + str(start_time) + " AND ENDTIME <= " + str(end_time) + " AND STARTFREQ >= " + str(start_freq) + " AND ENDFREQ <= " + str(end_freq)
+            taqlcmd="SELECT RANK FROM " + self.tablename + " WHERE STARTTIME >= " + str(start_time) + " AND ENDTIME <= " + str(end_time) + " AND STARTFREQ >= " + str(start_freq) + " AND ENDFREQ <= " + str(end_freq) + " AND LASTITER=TRUE"
 
             result=pt.taql(taqlcmd)
             rank=result.getcol("RANK")
@@ -937,14 +939,11 @@ class SolverQuery:
 
     # Get the rank deficancy for a particular cell
     #
-    def getRankDef():
-        print "getRankDef()"     # DEBUG
-
+    def getRankDef(self, start_time=None, end_time=None, start_freq=None, end_freq=None):
         if start_time == None or end_time == None or start_freq == None or end_freq == None:
             rank=self.readParameterIdx("RANK", 0)
         else:
-            taqlcmd="SELECT RANKDEF FROM " + self.tablename + " WHERE STARTTIME >= " + str(start_time) + " AND ENDTIME <= " + str(end_time) + " AND STARTFREQ >= " + str(start_freq) + " AND ENDFREQ <= " + str(end_freq)
-
+            taqlcmd="SELECT RANKDEF FROM " + self.tablename + " WHERE STARTTIME >= " + str(start_time) + " AND ENDTIME <= " + str(end_time) + " AND STARTFREQ >= " + str(start_freq) + " AND ENDFREQ <= " + str(end_freq) + " AND LASTITER=TRUE"
             result=pt.taql(taqlcmd)
             rankdef=result.getcol("RANKDEF")
 
