@@ -39,7 +39,7 @@ class plothistogram(QFrame):
       #print "self.data = ", self.data   # DEBUG
 
       # Create canvas for plotting
-      self.rim=0.05
+      self.rim=0.1
       self.fig = Figure((5, 4), dpi=100)
       self.canvas = FigureCanvas(self.fig)
       self.canvas.setParent(self)
