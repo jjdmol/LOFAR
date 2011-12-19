@@ -124,25 +124,26 @@ class target_pipeline(control):
 
         # Get input/output-data products specifications.
         self._get_io_product_specs()
-        parset_dir = os.path.join(
-            self.config.get("layout", "job_directory"),
-            "parsets"
-        )
+        
+        job_dir = self.config.get("layout", "job_directory")
+        parset_dir = os.path.join(job_dir, "parsets")
+        mapfile_dir = os.path.join(job_dir, "mapfiles")
 
         # Write input- and output data map-files.
         create_directory(parset_dir)
+        create_directory(mapfile_dir)
         
-        data_mapfile = os.path.join(parset_dir, "data_mapfile")
+        data_mapfile = os.path.join(mapfile_dir, "data.mapfile")
         store_data_map(data_mapfile, self.input_data['data'])
         self.logger.debug(
             "Wrote input data mapfile: %s" % data_mapfile
         )
-        instrument_mapfile = os.path.join(parset_dir, "instrument_mapfile")
+        instrument_mapfile = os.path.join(mapfile_dir, "instrument.mapfile")
         store_data_map(instrument_mapfile, self.input_data['instrument'])
         self.logger.debug(
             "Wrote input instrument mapfile: %s" % instrument_mapfile
         )
-        corrected_mapfile = os.path.join(parset_dir, "corrected_data_mapfile")
+        corrected_mapfile = os.path.join(mapfile_dir, "corrected_data.mapfile")
         store_data_map(corrected_mapfile, self.output_data['data'])
         self.logger.debug(
             "Wrote output corrected data mapfile: %s" % corrected_mapfile
@@ -167,9 +168,7 @@ class target_pipeline(control):
         vdsinfo = self.run_task("vdsreader", gvds=gvds_file)
 
         # Create a parameter-subset for DPPP and write it to file.
-        ndppp_parset = os.path.join(
-            self.config.get("layout", "job_directory"),
-            "parsets", "NDPPP[0].parset")
+        ndppp_parset = os.path.join(parset_dir, "NDPPP[0].parset")
         py_parset.makeSubset('DPPP[0].').writeFile(ndppp_parset)
 
         # Run the Default Pre-Processing Pipeline (DPPP);
@@ -184,9 +183,7 @@ class target_pipeline(control):
         demix_mapfile = self.run_task("demixing", dppp_mapfile)['mapfile']
 
         # Create a parameter-subset for BBS and write it to file.
-        bbs_parset = os.path.join(
-            self.config.get("layout", "job_directory"),
-            "parsets", "BBS.parset")
+        bbs_parset = os.path.join(parset_dir, "BBS.parset")
         py_parset.makeSubset('BBS.').writeFile(bbs_parset)
 
         # Run BBS to calibrate the target source(s).
@@ -198,9 +195,7 @@ class target_pipeline(control):
         )['mapfile']
 
         # Create another parameter-subset for a second DPPP run.
-        ndppp_parset = os.path.join(
-            self.config.get("layout", "job_directory"),
-            "parsets", "NDPPP[1].parset")
+        ndppp_parset = os.path.join(parset_dir, "NDPPP[1].parset")
         py_parset.makeSubset('DPPP[1].').writeFile(ndppp_parset)
 
         # Do a second run of DPPP, just to remove NaN's from the MS. Store the

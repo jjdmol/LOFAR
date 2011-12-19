@@ -59,7 +59,7 @@ class calibrator_pipeline(control):
             odp.getStringVector('Output_InstrumentModel.locations', []),
             odp.getStringVector('Output_InstrumentModel.filenames', []))
         ]
-        self.logger.debug("Found %d Input_InstrumentModel data products" %
+        self.logger.debug("Found %d Output_InstrumentModel data products" %
                           len(self.output_data))
         # Sanity checks on input- and output map files
         if len(self.input_data) != len(self.output_data):
@@ -108,17 +108,19 @@ class calibrator_pipeline(control):
         # Get input/output-data products specifications.
         self._get_io_product_specs()
 
-        parset_dir = os.path.join(
-            self.config.get("layout", "job_directory"),
-            "parsets"
-        )
+        job_dir = self.config.get("layout", "job_directory")
+        parset_dir = os.path.join(job_dir, "parsets")
+        mapfile_dir = os.path.join(job_dir, "mapfiles")
 
-        # Write input- and output data map-files
+        # Create directories for temporary parset- and map files
         create_directory(parset_dir)
-        data_mapfile = os.path.join(parset_dir, "data_mapfile")
+        create_directory(mapfile_dir)
+        
+        # Write input- and output data map-files
+        data_mapfile = os.path.join(mapfile_dir, "data.mapfile")
         store_data_map(data_mapfile, self.input_data)
         self.logger.debug("Wrote input mapfile: %s" % data_mapfile)
-        instrument_mapfile = os.path.join(parset_dir, "instrument_mapfile")
+        instrument_mapfile = os.path.join(mapfile_dir, "instrument.mapfile")
         store_data_map(instrument_mapfile, self.output_data)
         self.logger.debug("Wrote output mapfile: %s" % instrument_mapfile)
 
