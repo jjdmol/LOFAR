@@ -17,17 +17,24 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef AOFLAGGER_MSIOTESTGROUP_H
-#define AOFLAGGER_MSIOTESTGROUP_H
+#ifndef AOFLAGGER_QUALITYTESTGROUP_H
+#define AOFLAGGER_QUALITYTESTGROUP_H
 
 #include <AOFlagger/test/testingtools/testgroup.h>
 
-class MSIOTestGroup : public TestGroup {
+#include <AOFlagger/test/quality/qualitytablesformattertest.h>
+#include <AOFlagger/test/quality/statisticscollectiontest.h>
+#include <AOFlagger/test/quality/statisticsderivatortest.h>
+
+class QualityTestGroup : public TestGroup {
 	public:
-		MSIOTestGroup() : TestGroup("Measurement set input/output") { }
+		QualityTestGroup() : TestGroup("Quality statistic tools") { }
 		
 		virtual void Initialize()
 		{
+			Add(new QualityTablesFormatterTest());
+			Add(new StatisticsCollectionTest());
+			Add(new StatisticsDerivatorTest());
 		}
 };
 

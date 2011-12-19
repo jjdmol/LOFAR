@@ -56,7 +56,7 @@ class StatisticsDerivator
 			return deriveComplex<long double>(kind, statistics, polarization);
 		}
 	
-		std::complex<long double> GetComplexStatistic(QualityTablesFormatter::StatisticKind kind, const DefaultStatistics &statistics, unsigned polarization) const
+		static std::complex<long double> GetComplexStatistic(QualityTablesFormatter::StatisticKind kind, const DefaultStatistics &statistics, unsigned polarization)
 		{
 			return deriveComplex<long double>(kind, statistics, polarization);
 		}
@@ -202,7 +202,7 @@ class StatisticsDerivator
 		}
 	private:
 		template<typename T>
-		std::complex<T> deriveComplex(QualityTablesFormatter::StatisticKind kind, const DefaultStatistics &statistics, unsigned polarization) const
+		static std::complex<T> deriveComplex(QualityTablesFormatter::StatisticKind kind, const DefaultStatistics &statistics, unsigned polarization)
 		{
 			switch(kind)
 			{
@@ -212,11 +212,19 @@ class StatisticsDerivator
 				case QualityTablesFormatter::MeanStatistic:
 					return statistics.Mean<T>(polarization);
 					break;
+				case QualityTablesFormatter::SumStatistic:
+					return statistics.Sum<T>(polarization);
+					break;
 				case QualityTablesFormatter::SumP2Statistic:
 					return statistics.SumP2<T>(polarization);
 					break;
 				case QualityTablesFormatter::VarianceStatistic:
 					return deriveVariance<T>(statistics.count[polarization],
+															 	statistics.sum[polarization],
+																statistics.sumP2[polarization]);
+					break;
+				case QualityTablesFormatter::StandardDeviationStatistic:
+					return deriveStandardDeviation<T>(statistics.count[polarization],
 															 	statistics.sum[polarization],
 																statistics.sumP2[polarization]);
 					break;
@@ -226,11 +234,19 @@ class StatisticsDerivator
 				case QualityTablesFormatter::DMeanStatistic:
 					return statistics.DMean<T>(polarization);
 					break;
+				case QualityTablesFormatter::DSumStatistic:
+					return statistics.DSum<T>(polarization);
+					break;
 				case QualityTablesFormatter::DSumP2Statistic:
 					return statistics.DSumP2<T>(polarization);
 					break;
 				case QualityTablesFormatter::DVarianceStatistic:
 					return deriveVariance<T>(statistics.dCount[polarization],
+																statistics.dSum[polarization],
+																statistics.dSumP2[polarization]);
+					break;
+				case QualityTablesFormatter::DStandardDeviationStatistic:
+					return deriveStandardDeviation<T>(statistics.dCount[polarization],
 																statistics.dSum[polarization],
 																statistics.dSumP2[polarization]);
 					break;
@@ -245,9 +261,9 @@ class StatisticsDerivator
 					break;
 				case QualityTablesFormatter::SignalToNoiseStatistic:
 				{
-					const std::complex<T> variance =
-						deriveComplex<T>(QualityTablesFormatter::DVarianceStatistic, statistics, polarization);
-					return std::complex<T>(statistics.Mean<T>(polarization).real() / variance.real(), statistics.Mean<T>(polarization).imag() / variance.imag());
+					const std::complex<T> stddev =
+						deriveComplex<T>(QualityTablesFormatter::DStandardDeviationStatistic, statistics, polarization);
+					return std::complex<T>(statistics.Mean<T>(polarization).real() / stddev.real(), statistics.Mean<T>(polarization).imag() / stddev.imag());
 					break;
 				}
 				default:
@@ -259,7 +275,14 @@ class StatisticsDerivator
 		static std::complex<T> deriveVariance(unsigned long n, std::complex<long double> sum, std::complex<long double> sumP2)
 		{
 			return std::complex<T>(deriveVarianceSingle(n, sum.real(), sumP2.real()),
-																 deriveVarianceSingle(n, sum.imag(), sumP2.imag()));
+															 deriveVarianceSingle(n, sum.imag(), sumP2.imag()));
+		}
+		
+		template<typename T>
+		static std::complex<T> deriveStandardDeviation(unsigned long n, std::complex<long double> sum, std::complex<long double> sumP2)
+		{
+			return std::complex<T>(deriveStandardDeviationSingle(n, sum.real(), sumP2.real()),
+															 deriveStandardDeviationSingle(n, sum.imag(), sumP2.imag()));
 		}
 		
 		template<typename T>
@@ -267,6 +290,13 @@ class StatisticsDerivator
 		{
 			T sumMeanSquared = sum * sum / n;
 			return (sumP2 - sumMeanSquared) / (n-1.0);
+		}
+		
+		template<typename T>
+		static T deriveStandardDeviationSingle(unsigned long n, T sum, T sumP2)
+		{
+			T sumMeanSquared = sum * sum / n;
+			return sqrt((sumP2 - sumMeanSquared) / n);
 		}
 		
 		const StatisticsCollection &_collection;
