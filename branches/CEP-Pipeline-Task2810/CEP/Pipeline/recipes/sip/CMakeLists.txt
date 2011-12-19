@@ -3,6 +3,7 @@
 include(PythonInstall)
 
 python_install(
+  master/awimager.py
   master/bbs.py
   master/cimager.py
   master/cep2_datamapper.py
@@ -24,6 +25,7 @@ python_install(
   master/target_pipeline.py
   master/vdsmaker.py
   master/vdsreader.py
+  nodes/awimager.py
   nodes/bbs.py
   nodes/cimager.py
   nodes/count_timesteps.py
