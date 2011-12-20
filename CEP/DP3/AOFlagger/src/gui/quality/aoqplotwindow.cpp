@@ -59,6 +59,7 @@ AOQPlotWindow::AOQPlotWindow() :
 	_summaryPage.show();
 	
 	_vBox.pack_start(_notebook);
+	_notebook.signal_switch_page().connect(sigc::mem_fun(*this, &AOQPlotWindow::onSwitchPage));
 	_notebook.show();
 	
 	_vBox.pack_end(_statusBar, Gtk::PACK_SHRINK);
