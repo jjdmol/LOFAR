@@ -200,6 +200,7 @@ void actionCollect(const std::string &filename, enum CollectingMode mode)
 		case CollectHistograms:
 			const std::map<HistogramCollection::AntennaPair, LogHistogram*> &map = histogramCollection.GetHistograms(0);
 			Plot plotSlopes("histogram-slopes.pdf");
+			plotSlopes.SetYRange(-10.0, 10.0);
 			Plot plotHistograms("histograms.pdf");
 			for(std::map<HistogramCollection::AntennaPair, LogHistogram*>::const_iterator i = map.begin(); i != map.end(); ++i)
 			{
@@ -233,19 +234,34 @@ void actionCollect(const std::string &filename, enum CollectingMode mode)
 				}
 			}
 			Plot plotFine("histogram-fine.pdf");
+			Plot plotGlobalSlopes("histogram-gslopes.pdf");
 			plotFine.SetLogScale(true, true);
+			plotGlobalSlopes.SetLogScale(true, false);
+			plotGlobalSlopes.SetYRange(-5.0, 5.0);
 			LogHistogram intHistogram;
 			histogramCollection.GetHistogramForCrossCorrelations(0, intHistogram);
 			
 			plotFine.StartLine("Total");
+			plotGlobalSlopes.StartLine("Total");
 			for(LogHistogram::iterator i=intHistogram.begin(); i!=intHistogram.end(); ++i)
+			{
 				plotFine.PushDataPoint(i.value(), i.normalizedCount(LogHistogram::TotalAmplitudeHistogram));
+				plotGlobalSlopes.PushDataPoint(i.value(), intHistogram.NormalizedSlope(i.value()*0.5, i.value()*2.0, LogHistogram::TotalAmplitudeHistogram));
+			}
 			plotFine.StartLine("RFI");
+			plotGlobalSlopes.StartLine("RFI");
 			for(LogHistogram::iterator i=intHistogram.begin(); i!=intHistogram.end(); ++i)
+			{
 				plotFine.PushDataPoint(i.value(), i.normalizedCount(LogHistogram::RFIAmplitudeHistogram));
+				plotGlobalSlopes.PushDataPoint(i.value(), intHistogram.NormalizedSlope(i.value()*0.5, i.value()*2.0, LogHistogram::RFIAmplitudeHistogram));
+			}
 			plotFine.StartLine("Data");
+			plotGlobalSlopes.StartLine("Data");
 			for(LogHistogram::iterator i=intHistogram.begin(); i!=intHistogram.end(); ++i)
+			{
 				plotFine.PushDataPoint(i.value(), i.normalizedCount(LogHistogram::DataAmplitudeHistogram));
+				plotGlobalSlopes.PushDataPoint(i.value(), intHistogram.NormalizedSlope(i.value()*0.5, i.value()*2.0, LogHistogram::DataAmplitudeHistogram));
+			}
 			break;
 	}
 	
