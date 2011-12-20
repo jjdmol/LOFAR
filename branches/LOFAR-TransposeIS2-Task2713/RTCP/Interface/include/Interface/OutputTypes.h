@@ -25,7 +25,7 @@ inline OutputType operator ++ (OutputType &outputType) // prefix ++
 
 inline OutputType operator ++ (OutputType &outputType, int) // postfix ++
 {
-  return (outputType = static_cast<OutputType>(outputType + 1));
+  return static_cast<OutputType>((outputType = static_cast<OutputType>(outputType + 1)) - 1);
 }
 
 } // namespace RTCP
