@@ -1027,11 +1027,12 @@ void ChildControl::_doGarbageCollection()
 		if (!iter->port) {
 			restartTimer = true;
 			LOG_DEBUG_STR(time(0)<<"-"<<iter->requestTime<<">="<<itsStartupRetryInterval<<"*"<<itsMaxStartupRetries<<"?");
-			if ((uint32(time(0)-iter->requestTime)) >= itsStartupRetryInterval*itsMaxStartupRetries) {
+			if ((uint32(time(0)-iter->requestTime)) >= MAC_SCP_TIMEOUT + itsStartupRetryInterval*itsMaxStartupRetries) {
 				LOG_DEBUG_STR ("Controller " << iter->cntlrName << " is still unreachable, informing main task");
 				_setEstablishedState(iter->cntlrName, CTState::QUITED, time(0), CT_RESULT_LOST_CONNECTION);
 				iter->port = (GCFPortInterface*) -1;
 			}
+
 			iter++;
 		} else if (iter->port == (GCFPortInterface*)-1) {
 			LOG_DEBUG_STR ("Removing controller " << iter->cntlrName << " from the controller list");
