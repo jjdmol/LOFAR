@@ -158,7 +158,6 @@ void getFailedTiles(MeasurementSet &ms,
                     const map<string, ptime> &failedTilesSAS, 
                     map<unsigned int, vector<unsigned int> > &brokenElements,                      
                     vector<ptime> &failureTimes);
-RCUmap getFailedTiles(const map<string, ptime> &failedTilesSAS);
 vector<failedTile> getFailedTilesAntennaId(MeasurementSet &ms,
                                            const map<string, ptime> &failedTilesSAS);
 vector<failedTile> getBrokenTiles(MeasurementSet &ms, const RCUmap &brokenRCus);
@@ -1088,7 +1087,6 @@ string stripRCUString(const string &brokenHardware)
   string stripped;          // stripped broken hardware line
   vector<string> tokens;
 
-  // TODO: will this really increase parsing speed of the broken hardware strings?
   typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
   boost::char_separator<char> sep(".");
   tokenizer tok(brokenHardware, sep);
@@ -1097,8 +1095,6 @@ string stripRCUString(const string &brokenHardware)
   {
     tokens.push_back(*beg);
   }
-  
-//  cout << tokens[3] << "\t" << tokens[7] << endl;     // DEBUG
   stripped=tokens[3].append(".").append(tokens[7]).append(".");
    
   return stripped;
@@ -1214,15 +1210,14 @@ map<string, MVEpoch> readFailedElementsFile(const string &filename)
       }
       else
       {
-        // read first and second column of line
-        if((pos1=line.find(" "))!=string::npos)
+        if((pos1=line.find(" "))!=string::npos)   // read first and second column of line 
         {
-          name=line.substr(0, pos1);        // read up to first space
-          while(pos2!=string::npos)         // read all successive spaces
+          name=line.substr(0, pos1);              // read up to first space
+          while(pos2!=string::npos)               // read all successive spaces
           {
-            pos2=line.find(" ");            // find next space
+            pos2=line.find(" ");                  // find next space
           }
-          pos2++;                           // skip space
+          pos2++;                                 // skip space
           if(pos2!=string::npos)
           {
             timestamp=line.substr(pos2, pos2-pos1);  // read timestamp
@@ -1240,18 +1235,18 @@ map<string, MVEpoch> readFailedElementsFile(const string &filename)
         
 //        cout << "readFailedElementsFile() name = "  << name << endl;            // DEBUG
 //        cout << "readFailedElementsFile() timestamp = " << timestamp << endl;   // DEBUG
+        MVEpoch timestamp(Quantity(50237.29, "d")); // convert timestamp to a casa epoch
         
-        // convert timestamp to a casa epoch
-        MVEpoch timestamp(Quantity(50237.29, "d"));
-        
-        failedElements[name]=timestamp;   // add to map
+        failedElements[name]=timestamp;             // add timestamp to map with corresponding name
       }
     }   
     infile.close();
   }
   else
-    cout << "readFailedElementsFile(): Unable to open file" << filename << " for reading." << endl;
-
+  {
+    THROW(Exception, "readFailedElementsFile(): Unable to open file" << filename << 
+          " for reading.");
+  }
   return failedElements;
 }
 
@@ -1277,7 +1272,6 @@ string determineStationType(const string &station)
   {
     stationType="European";
   }
-  
   return stationType;
 }
 
@@ -1620,7 +1614,6 @@ map<string, ptime> getFailedHardware( MeasurementSet &ms,
       failedHardware.insert(*hwEndIt);      // ...copy it over to the failed hardware vector
     }  
   }
-
   return failedHardware;
 }
 
@@ -1670,92 +1663,21 @@ map<string, ptime> getFailedHardware( const map<string, ptime> &brokenBegin,
   map<string, ptime>::const_iterator brokenEndIt=brokenEnd.begin();
   for(; brokenEndIt != brokenEnd.end(); ++brokenEndIt)
   {
-    // try to find brokenHardware
     map<string, ptime>::const_iterator found=brokenBegin.find(brokenEndIt->first);
 
     cout << "found->first = " << found->first << "\t";                    // DEBUG
     cout << "brokenEndIt->second = " << brokenEndIt->second << "\t";     // DEBUG
     cout << " (--brokenBegin.end())->second = " <<  (--brokenBegin.end())->second << endl;  // DEBUG
 
-    if(brokenEndIt->second < (--brokenBegin.end())->second) 
+//    if(brokenEndIt->second < (--brokenBegin.end())->second) 
+    if(found == brokenBegin.end())
     {
       failedHardware.insert(*brokenEndIt);
     }
   }
-
+  
   return failedHardware;
 }
-
-
-/*!
-  \brief Get the failed tiles including failure times
-  \param MeasurementSet     measurement set to get
-  \param failureTiles SAS   individual tiles that failed during observation failed hardware info
-  \return vector<failedTile>    vector of failed tiles structs with antennaId, element index, failure times
-*/
-/*
-//void getFailedTiles(MeasurementSet &ms,
-//                    const map<string, ptime> &failedTilesSAS, 
-//                    map<unsigned int, vector<unsigned int> > &brokenElements,                      
-//                    vector<ptime> &failureTimes)
-//void getFailedTiles(MeasurementSet &ms,
-//                    const map<string, ptime> &failedTilesSAS, 
-//                    vector<failedTile> &failedTiles)
-RCUmap getFailedTiles(const map<string, ptime> &failedTilesSAS)
-{
-  if(verbose)
-    LOG_INFO_STR("Determining failed tiles from failed hardware SAS information");
-
-  string station;                      // station name extracted from one string
-  unsigned int rcuNum=0;               // RCU number converted from string
-  vector<unsigned int> rcuNumbers;     // RCU numbers to extract
-  vector<unsigned int> antennaIds;     // ANTENNA_FIELD_ids for a particular station
-  unsigned int antennaId=0, elementIndex=0;
-  vector<unsigned int> elementFlags;    // ELEMENT_FLAGS to set for a particular ANTENNA_FIELD_id
-  vector<ptime> timeStamps;             // need local vector to create a new failedTile struct
-  RCUmap failedTiles;                   // vector to return containing failed tiles
-
-  //--------------------------------------------------------------------
-
-  // First get a list of antennaIds from failedTilesSAS information
-  map<string, ptime>::const_iterator failedTilesSASIt=failedTilesSAS.begin();
-  for(; failedTilesSASIt != failedTilesSAS.end(); ++failedTilesSASIt)
-  {
-    station=failedTilesSASIt->first.substr(0, 5);   // station name extracted from broken hardware
-    rcuNum=boost::lexical_cast<unsigned int>(failedTilesSASIt->first.substr(9, 2));
-    ptime timestamp=failedTilesSASIt->second;
-
-    // Determine ANTENNA_FIELD_ID and ELEMENT_FLAG index this RCU belongs to
- 
-    antennaId=getAntennaFieldId(ms, station);
-
-//    cout << failedTilesSASIt->first << endl;                // DEBUG
-//    cout << "antennaId: " << antennaId << endl;             // DEBUG
-//    cout << "elementIndex: " << elementIndex << endl;       // DEBUG
-
-    // We need to find the failed tile corresponding to this antennaId
-    // if it already exists
-    
-    vector<failedTile>::iterator failedTileIt;
-    failedTileIt=getFailedTileAntennaId(failedTiles, antennaId);
-    if( failedTileIt != failedTiles.end() )
-    {
-      failedTileIt->rcus.push_back(rcuNum);
-      failedTileIt->timeStamps.push_back(timestamp);
-    }
-    else  // ... otherwise create a new failed tile struct and insert into the vector
-    {
-      elementFlags.push_back(rcuNum);
-      timeStamps.push_back(timestamp);
-      failedTile newTile={antennaId, elementFlags, timeStamps};  
-      failedTiles.push_back(newTile);
-    }
-
-  }
-  showMap(failedTiles);     // DEBUG
-  return failedTiles;
-}
-*/
 
 
 /*!
@@ -1819,7 +1741,6 @@ vector<failedTile> getFailedTilesAntennaId( MeasurementSet &ms,
       }
     }
   }
-  
   return failedTiles;
 }
 
@@ -1890,7 +1811,6 @@ vector<failedTile> getBrokenTiles(MeasurementSet &ms, const RCUmap &brokenRCUs)
       brokenTiles.push_back(newTile);         // store it in vector of all brokenTiles
     }
   }
-  
   return brokenTiles;
 }
 
@@ -2111,5 +2031,7 @@ bool failedElementInObservation(const Table &antennaFieldTable,
 void padTo(std::string &str, const size_t num, const char paddingChar = ' ')
 {
     if(num > str.size())
+    {
         str.insert(0, num - str.size(), paddingChar);
+    }
 }
