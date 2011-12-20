@@ -26,6 +26,7 @@
 #include <AOFlagger/msio/measurementset.h>
 
 #include <AOFlagger/quality/defaultstatistics.h>
+#include <AOFlagger/quality/histogramcollection.h>
 #include <AOFlagger/quality/qualitytablesformatter.h>
 #include <AOFlagger/quality/statisticscollection.h>
 #include <AOFlagger/quality/statisticsderivator.h>
@@ -45,7 +46,13 @@ void reportProgress(unsigned step, unsigned totalSteps)
 	}
 }
 
-void actionCollect(const std::string &filename, bool collectAll)
+enum CollectingMode
+{
+	CollectDefault,
+	CollectHistograms
+};
+
+void actionCollect(const std::string &filename, enum CollectingMode mode)
 {
 	MeasurementSet *ms = new MeasurementSet(filename);
 	const unsigned polarizationCount = ms->GetPolarizationCount();
@@ -77,16 +84,23 @@ void actionCollect(const std::string &filename, bool collectAll)
 	else
 		std::cout << "Channel zero will be included in the statistics, as it seems that channel 0 is okay.\n";
 	
-	casa::Table table(filename, casa::Table::Update);
+	// Initialize statisticscollection
 	StatisticsCollection collection(polarizationCount);
-	for(unsigned b=0;b<bandCount;++b)
+	if(mode == CollectDefault)
 	{
-		if(ignoreChannelZero)
-			collection.InitializeBand(b, (frequencies[b]+1), bands[b].channelCount-1);
-		else
-			collection.InitializeBand(b, frequencies[b], bands[b].channelCount);
+		for(unsigned b=0;b<bandCount;++b)
+		{
+			if(ignoreChannelZero)
+				collection.InitializeBand(b, (frequencies[b]+1), bands[b].channelCount-1);
+			else
+				collection.InitializeBand(b, frequencies[b], bands[b].channelCount);
+		}
 	}
+	// Initialize Histograms collection
+	HistogramCollection histogramCollection(polarizationCount);
 
+	// get columns
+	casa::Table table(filename, casa::Table::Update);
 	const char *dataColumnName = "DATA";
 	casa::ROArrayColumn<casa::Complex> dataColumn(table, dataColumnName);
 	casa::ROArrayColumn<bool> flagColumn(table, "FLAG");
@@ -143,8 +157,18 @@ void actionCollect(const std::string &filename, bool collectAll)
 		
 		for(unsigned p = 0; p < polarizationCount; ++p)
 		{
-			const bool origFlags = false;
-			collection.Add(antenna1Index, antenna2Index, time, bandIndex, p, &samples[p]->real(), &samples[p]->imag(), isRFI[p], &origFlags, band.channelCount - startChannel, 2, 1, 0);
+			switch(mode)
+			{
+				case CollectDefault:
+					{
+						const bool origFlags = false;
+						collection.Add(antenna1Index, antenna2Index, time, bandIndex, p, &samples[p]->real(), &samples[p]->imag(), isRFI[p], &origFlags, band.channelCount - startChannel, 2, 1, 0);
+					}
+					break;
+				case CollectHistograms:
+					histogramCollection.Add(antenna1Index, antenna2Index, p, samples[p], isRFI[p], band.channelCount - startChannel);
+					break;
+			}
 		}
 
 		for(unsigned p = 0; p < polarizationCount; ++p)
@@ -160,11 +184,37 @@ void actionCollect(const std::string &filename, bool collectAll)
 		delete[] frequencies[b];
 	delete[] frequencies;
 	delete[] bands;
+	std::cout << "100\n";
 	
-	std::cout << "100\nWriting quality tables..." << std::endl;
-	
-	QualityTablesFormatter qualityData(filename);
-	collection.Save(qualityData);
+	switch(mode)
+	{
+		case CollectDefault:
+			{
+				std::cout << "Writing quality tables..." << std::endl;
+				
+				QualityTablesFormatter qualityData(filename);
+				collection.Save(qualityData);
+			}
+			break;
+		case CollectHistograms:
+			const std::map<HistogramCollection::AntennaPair, LogHistogram*> &map = histogramCollection.GetHistograms(0);
+			for(std::map<HistogramCollection::AntennaPair, LogHistogram*>::const_iterator i = map.begin(); i != map.end(); ++i)
+			{
+				const LogHistogram *histogram = i->second;
+				double rangeStart = histogram->MinPositiveAmplitude();
+				rangeStart = exp2(floor(log2(rangeStart)));
+				const double maxAmplitude = histogram->MaxAmplitude();
+				std::cout << "Antennae " << i->first.first << " x " << i->first.second << "\n";
+				while(rangeStart < maxAmplitude)
+				{
+					const double rangeEnd = rangeStart * 2.0;
+					const double slope = histogram->Slope(rangeStart, rangeEnd, LogHistogram::TotalAmplitudeHistogram);
+					std::cout << rangeStart << "-" << rangeEnd << ": " << slope << "\n";
+					rangeStart *= 2.0;
+				}
+			}
+			break;
+	}
 	
 	std::cout << "Done.\n";
 }
@@ -458,7 +508,7 @@ int main(int argc, char *argv[])
 			}
 			else {
 				std::string filename = (argc==3) ? argv[2] : argv[3];
-				actionCollect(filename, argc==4);
+				actionCollect(filename, argc==4 ? CollectHistograms : CollectDefault);
 			}
 		}
 		else if(action == "combine")
