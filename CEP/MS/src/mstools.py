@@ -12,10 +12,7 @@ def findFiles (msPattern, lsOption='', cluster=''):
                    'Warning: No xauth data; .*',
                    '/usr/bin/xauth:  error in locking authority file.*']
     nomatchline = re.compile ('^(%s)$' % '|'.join(nomatch))
-    cl = ''
-    if cluster.size() > 0:
-        cl = ' -c ' + cluster
-    pipe = os.popen ('cexec' + cl + ' "ls ' + lsOption + ' ' + msPattern + '"')
+    pipe = os.popen ('cexec ' + cluster + ' "ls ' + lsOption + ' ' + msPattern + '"')
     files = []
     hosts = []
     host = ''
