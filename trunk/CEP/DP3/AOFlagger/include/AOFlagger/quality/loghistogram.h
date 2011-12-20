@@ -69,11 +69,10 @@ class LogHistogram
 			{
 				const double centralAmp = getCentralAmplitude(amplitude);
 				AmplitudeBin &bin = getBin(centralAmp);
-				++bin.count;
 				if(isRfi)
-				{
 					++bin.rfiCount;
-				}
+				else
+					++bin.count;
 			}
 		}
 		
