@@ -35,6 +35,7 @@
 #include <casa/OS/HostInfo.h>
 #include <casa/System/ProgressMeter.h>
 #include <casa/Utilities/CountedPtr.h>
+#include <lattices/Lattices/ArrayLattice.h>
 
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
@@ -506,6 +507,9 @@ void LofarCubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
 //  if(!myFile.exists()){
 //       }
 
+
+  
+
   Int nmodels=psfs.nelements();
     LogIO os(LogOrigin("LofarCubeSkyEquation", "makeSimplePSF"));
     ft_->setNoPadding(noModelCol_p);
@@ -562,16 +566,16 @@ void LofarCubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
 
         initializePutSlice(* vb, cubeSlice, nCubeSlice);
 
-	//  TimerCyril.stop();
-	//  TimerCyril.show(cout,"3");
-	//  TimerCyril.reset();
-	//  TimerCyril.start();
+  	//  TimerCyril.stop();
+  	//  TimerCyril.show(cout,"3");
+  	//  TimerCyril.reset();
+  	//  TimerCyril.start();
         for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
             for (vi.origin(); vi.more(); vi++) {
-	      //  TimerCyril.stop();
-	      //  TimerCyril.show(cout,"4a");
-	      //  TimerCyril.reset();
-	      //  TimerCyril.start();
+  	      //  TimerCyril.stop();
+  	      //  TimerCyril.show(cout,"4a");
+  	      //  TimerCyril.reset();
+  	      //  TimerCyril.start();
                 if(noModelCol_p) {
                     //This here forces the modelVisCube shape and prevents reading model column
                     vb->setModelVisCube(Complex(0.0,0.0));
@@ -580,10 +584,10 @@ void LofarCubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
                 cohDone+=vb->nRow();
                 pm.update(Double(cohDone));
 
-		//  TimerCyril.stop();
-		//  TimerCyril.show(cout,"4b");
-		//  TimerCyril.reset();
-		//  TimerCyril.start();
+  		//  TimerCyril.stop();
+  		//  TimerCyril.show(cout,"4b");
+  		//  TimerCyril.reset();
+  		//  TimerCyril.start();
             }
         }
         finalizePutSlice(* vb, cubeSlice, nCubeSlice);
@@ -599,10 +603,10 @@ void LofarCubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
     fixImageScale();
     for(Int model=0; model < nmodels; ++model){
         {
-	  //  TimerCyril.stop();
-	  //  TimerCyril.show(cout,"5a");
-	  //  TimerCyril.reset();
-	  //  TimerCyril.start();
+  	  //  TimerCyril.stop();
+  	  //  TimerCyril.show(cout,"5a");
+  	  //  TimerCyril.reset();
+  	  //  TimerCyril.start();
             //Normalize the gS image
             Int nXX=sm_->ggS(model).shape()(0);
             Int nYY=sm_->ggS(model).shape()(1);
@@ -612,10 +616,10 @@ void LofarCubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
             IPosition trc(4, nXX, nYY, npola, nchana);
             blc(0)=0; blc(1)=0; trc(0)=nXX-1; trc(1)=nYY-1;
             //max weights per plane
-	    //  TimerCyril.stop();
-	    //  TimerCyril.show(cout,"5b");
-	    //  TimerCyril.reset();
-	    //  TimerCyril.start();
+  	    //  TimerCyril.stop();
+  	    //  TimerCyril.show(cout,"5b");
+  	    //  TimerCyril.reset();
+  	    //  TimerCyril.start();
             for (Int j=0; j < npola; ++j){
                 for (Int k=0; k < nchana ; ++k){
 
@@ -638,12 +642,27 @@ void LofarCubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
                     }
                 }
             }
-	    //  TimerCyril.stop();
-	    //  TimerCyril.show(cout,"6");
-	    //  TimerCyril.reset();
-	    //  TimerCyril.start();
+  	    //  TimerCyril.stop();
+  	    //  TimerCyril.show(cout,"6");
+  	    //  TimerCyril.reset();
+  	    //  TimerCyril.start();
             //
         }
+
+  //PtrBlock<TempImage<Float> * >& psfs
+
+
+	// Cyril: Gets the PSF from disk
+	// String nameii("PSF.keep");
+	// ostringstream nameiii(nameii);
+	// PagedImage<Float> tmpi(nameiii.str().c_str());
+	// Slicer slicei(IPosition(4,0,0,0,0), tmpi.shape(), IPosition(4,1,1,1,1));
+	// Array<Float> PSF_Disk;
+	// tmpi.doGetSlice(PSF_Disk, slicei);
+	// CountedPtr<Lattice<Float> > PSF_Lattice;
+	// PSF_Lattice = new ArrayLattice<Float>(PSF_Disk);
+	// SubImage<Float> psfSub(*(psfs[0]), slicei, True);
+	// psfSub.copyData(*PSF_Lattice);
 
         /*
     if(0){
@@ -675,11 +694,17 @@ void LofarCubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
         //     }
         // }
 	//===============================================
+	
+
+
     }
 
     isPSFWork_p=False; // resetting this flag so that subsequent calculation uses
     // the right SkyJones correction;
 }
+
+
+
 
 // //============================ ADDED by Cyril
 

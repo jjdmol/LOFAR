@@ -113,7 +113,7 @@ LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize,
                                const String& imgName,
                                const Matrix<bool>& gridMuellerMask,
                                const Matrix<bool>& degridMuellerMask,
-			       Double RefFreq, Bool Use_Linear_Interp_Gridder, Bool Use_EJones, Bool Apply_Element, Double PBCut)
+			       Double RefFreq, Bool Use_Linear_Interp_Gridder, Bool Use_EJones, int StepApplyElement, Double PBCut, Bool PredictFT, String PsfOnDisk)
   : FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize),
     tilesize(itilesize), gridder(0), isTiled(False), convType(iconvType),
     maxAbsData(0.0), centerLoc(IPosition(4,0)),
@@ -140,10 +140,15 @@ LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize,
   itsSumCFWeight.resize (itsNThread);
   itsSumWeight.resize (itsNThread);
   itsRefFreq=RefFreq;
+  itsNamePsfOnDisk=PsfOnDisk;
   its_Use_Linear_Interp_Gridder=Use_Linear_Interp_Gridder;
   its_Use_EJones=Use_EJones;
-  its_Apply_Element=Apply_Element;
   its_PBCut=PBCut;
+  itsStepApplyElement=StepApplyElement;
+  its_Apply_Element=false;
+  itsPredictFT=PredictFT;
+  if(itsStepApplyElement>0){its_Apply_Element=true;}
+
   if(its_Use_Linear_Interp_Gridder){
     cout<<"Gridding using oversampling of 1 only"<<endl;
     itsOversample=1;
@@ -250,6 +255,7 @@ LofarFTMachine& LofarFTMachine::operator=(const LofarFTMachine& other)
     its_Use_Linear_Interp_Gridder= other.its_Use_Linear_Interp_Gridder;
     its_Use_EJones= other.its_Use_EJones;
     its_Apply_Element= other.its_Apply_Element;
+    itsStepApplyElement=other.itsStepApplyElement;
     its_Already_Initialized= other.its_Already_Initialized;
     its_PBCut= other.its_PBCut;
      //cyrr: mfs
@@ -266,6 +272,7 @@ LofarFTMachine& LofarFTMachine::operator=(const LofarFTMachine& other)
     itsVerbose = other.itsVerbose;
     itsMaxSupport = other.itsMaxSupport;
     itsOversample = other.itsOversample;
+    itsPredictFT = other.itsPredictFT;
     itsImgName = other.itsImgName;
     itsGridMuellerMask = other.itsGridMuellerMask;
     itsDegridMuellerMask = other.itsDegridMuellerMask;
@@ -403,6 +410,11 @@ void LofarFTMachine::init() {
 
   }
   itsCyrilTimer.start();
+  itsTStartObs=1.e30;
+  itsDeltaTime=0.;
+  itsNextApplyTime=0.;;
+  itsCounterTimes=0;
+  
 }
 
 // This is nasty, we should use CountedPointers here.
@@ -423,7 +435,6 @@ const Matrix<Float>& LofarFTMachine::getAveragePB() const
     PagedImage<Float> pim(itsImgName+String::toString(thisterm_p) + ".avgpb");
     Array<Float> arr = pim.get();
     itsAvgPB.reference (arr.nonDegenerate(2));
-    cout<<"itsAvgPB(200,200)"<<itsAvgPB(200,200)<<endl;
   }
   return itsAvgPB;
 }
@@ -433,9 +444,6 @@ const Matrix<Float>& LofarFTMachine::getAveragePB() const
 void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
                                      const VisBuffer& vb)
 {
-  if (itsVerbose > 0) {
-    cout<<"---------------------------> initializeToVis"<<endl;
-  }
   image=&iimage;
 
   ok();
@@ -476,6 +484,11 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
     itsSumWeight[i].resize(npol, nchan);
     itsSumWeight[i] = 0.;
   }
+  itsCounterTimes=0;
+  itsTStartObs=1.e30;
+  itsDeltaTime=0.;
+  itsTotalStepsGrid=0;
+  itsTotalStepsDeGrid=0;
 
   //griddedData can be a reference of image data...if not using model col
   //hence using an undocumented feature of resize that if
@@ -527,7 +540,6 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
     // Normalising clean components by the beam 
     
     // const Matrix<Float>& datai = getSpheroidCut();
-
     const Matrix<Float>& data = getAveragePB();
     //    cout<<"tmp.shape() "<<data.shape()<<"  "<<lattice->shape()<<endl;
     IPosition pos(4,lattice->shape()[0],lattice->shape()[1],1,1);
@@ -546,12 +558,12 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
     Array<Float> datai;
     tmpi.doGetSlice(datai, slicei);
 
-    // String nameii(itsImgName+String::toString(thisterm_p) + ".spheroid_cut_im");
-    // ostringstream nameiii(nameii);
-    // PagedImage<Float> tmpi(nameiii.str().c_str());
-    // Slicer slicei(IPosition(4,0,0,0,0), tmpi.shape(), IPosition(4,1,1,1,1));
-    // Array<Float> datai;
-    // tmpi.doGetSlice(datai, slicei);
+    String nameii_element("Spheroid_cut_im_element.img");
+    ostringstream nameiii_element(nameii_element);
+    PagedImage<Float> tmpi_element(nameiii_element.str().c_str());
+    Slicer slicei_element(IPosition(4,0,0,0,0), tmpi_element.shape(), IPosition(4,1,1,1,1));
+    Array<Float> spheroidCutElement;
+    tmpi_element.doGetSlice(spheroidCutElement, slicei_element);
 
     Complex ff;
     double I=100.;
@@ -595,7 +607,12 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
 	  //   pixel*=Complex(fact);
 	  // }
 	  
-	  fact*=sqrt(maxPB)/sqrt(data(pos2));
+	  if(!itsPredictFT){
+	    fact*=sqrt(maxPB)/sqrt(data(pos2));
+	  } else {
+	    fact/=datai(pos2);//*datai(pos2);
+	    if(its_Apply_Element){fact/=spheroidCutElement(pos2);}
+	  }
 	  pixel*=Complex(fact);
 	  
 	  if((data(pos2)>(minPB))&&(abs(pixel)>0.)){
@@ -605,11 +622,13 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
       }
     }
 
-
     //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     // Now do the FFT2D in place
     LatticeFFT::cfft2d(*lattice);
+
+    if((!(itsConvFunc->itsFilledVectorMasks))&&(its_Apply_Element)){itsConvFunc->ReadMaskDegrid();}
+    //if((!(itsConvFunc->VectorMaskIsFilled()))&&(its_Apply_Element)){itsConvFunc->ReadMaskDegrid();}
 
     logIO() << LogIO::DEBUGGING
 	    << "Finished grid correction and FFT of image" << LogIO::POST;
@@ -678,6 +697,11 @@ void LofarFTMachine::initializeToSky(ImageInterface<Complex>& iimage,
   }
   weight.resize(itsSumWeight[0].shape());
   weight=0.0;
+  itsCounterTimes=0;
+  itsTStartObs=1.e30;
+  itsDeltaTime=0.;
+  itsTotalStepsGrid=0;
+  itsTotalStepsDeGrid=0;
 
   //iimage.get(griddedData, False);
   //if(arrayLattice) delete arrayLattice; arrayLattice=0;
@@ -731,7 +755,12 @@ void LofarFTMachine::finalizeToSky()
   //   }
   // }
 
-
+  if(!its_Apply_Element){
+    SumGridsOMP(its_stacked_GriddedData, itsGriddedData);
+    for (int i=0; i<itsNThread; ++i) {
+      itsGriddedData[i]=Complex();
+    }
+  }
 
 
   for (int i=1; i<itsNThread; ++i) {
@@ -974,12 +1003,10 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
   Int Max_Num_Threads(itsNThread);
   omp_set_num_threads(Max_Num_Threads);
 
-  for (int i=0; i<itsNThread; ++i) {
-    itsGriddedData[i]=Complex();
-  }
 
-  logIO() <<"============================== Gridding data " << LogIO::POST;
-    PrecTimer CyrilTimer2grid;
+  //logIO() <<"============================== Gridding data " << LogIO::POST;
+  //cout<<"... gridding with t= "<<time<<endl;
+  PrecTimer CyrilTimer2grid;
     PrecTimer CyrilTimer2conv;
     PrecTimer CyrilTimer2gridconv;
     CyrilTimer2gridconv.start();
@@ -1049,7 +1076,8 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
       //cfTimer.stop();
       CyrilTimer2conv.stop();
 
-      //Int nConvX = (*(cfStore.vdata))[0][0][0].shape()[0];
+      Int nConvX = (*(cfStore.vdata))[0][0][0].shape()[0];
+      //cout<<ant1[ist]<<" "<<ant2[ist]<<" " <<nConvX/5<<endl;
       //double cfstep=CyrilTimer2conv.getReal();
       CyrilTimer2grid.start();
       if (useDoubleGrid_p) {
@@ -1118,21 +1146,38 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
   double Tgridconv=CyrilTimer2gridconv.getReal();
 
   PrecTimer CyrilTimer2elem;
-  CyrilTimer2elem.start();
-  if(its_Apply_Element){
-    CyrilTimer2elem.start();
-    Array<Complex> tmp_stacked_GriddedData;
-    tmp_stacked_GriddedData.resize (itsGriddedData[0].shape());
-    tmp_stacked_GriddedData = Complex();
-    SumGridsOMP(tmp_stacked_GriddedData, itsGriddedData);
-    
-    SumGridsOMP(its_stacked_GriddedData, itsConvFunc->ApplyElementBeam2 (tmp_stacked_GriddedData, time, spw, itsGridMuellerMask, false));
-    CyrilTimer2elem.stop();
-  } else{
-    SumGridsOMP(its_stacked_GriddedData, itsGriddedData);
+  if(itsDeltaTime<(times[times.size()-1] - times[0])){itsDeltaTime=(times[times.size()-1] - times[0]);};
+  Bool lastchunk(false);
+  if((times[times.size()-1] - times[0])<0.95*itsDeltaTime){
+    lastchunk=true;
+    itsDeltaTime=0.;
   }
+
+  //cout<<"time: "<<time<<" "<<itsStepApplyElement<<" "<<its_Apply_Element<<endl;
+  CyrilTimer2elem.start();
+
+  if(itsCounterTimes==(itsStepApplyElement-1)/2){itsNextApplyTime=time;}
+  if(its_Apply_Element){
+    if((itsCounterTimes==itsStepApplyElement-1)||(lastchunk)){
+      Array<Complex> tmp_stacked_GriddedData;
+      tmp_stacked_GriddedData.resize (itsGriddedData[0].shape());
+      tmp_stacked_GriddedData = Complex();
+      SumGridsOMP(tmp_stacked_GriddedData, itsGriddedData);
+      itsConvFunc->MakeMaskDegrid(tmp_stacked_GriddedData, itsTotalStepsGrid);
+      SumGridsOMP(its_stacked_GriddedData, itsConvFunc->ApplyElementBeam2 (tmp_stacked_GriddedData, itsNextApplyTime, spw, itsGridMuellerMask, false));
+      CyrilTimer2elem.stop();
+      itsCounterTimes=0;
+      for (int i=0; i<itsNThread; ++i) {
+	itsGriddedData[i]=Complex();
+      }
+      itsTotalStepsGrid+=1;
+    } else {
+      itsCounterTimes+=1;
+    }
+  }
+
   CyrilTimer2elem.stop();
-  cout<<"times: aterm:"<<Taterm<<", conv: "<<CyrilTimer2conv.getReal()<<", grid: "<<CyrilTimer2grid.getReal()<<", gridconv: "<<Tgridconv<<", sum: "<<CyrilTimer2elem.getReal()<<", other: "<<itsCyrilTimer.getReal()<<endl;
+  //cout<<"times: aterm:"<<Taterm<<", conv: "<<CyrilTimer2conv.getReal()<<", grid: "<<CyrilTimer2grid.getReal()<<", gridconv: "<<Tgridconv<<", sum: "<<CyrilTimer2elem.getReal()<<", other: "<<itsCyrilTimer.getReal()<<endl;
   //cout<<"times: conv:"<<CyrilTimer2conv.getReal()<<", grid:"<<CyrilTimer2grid.getReal()<<", element:"<<CyrilTimer2elem.getReal()<<endl;
   itsTotalTimer.stop();
   itsCyrilTimer.reset();
@@ -1280,6 +1325,10 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
   // First compute the A-terms for all stations (if needed).
   itsConvFunc->computeAterm (time);
 
+  if(times[0]<itsTStartObs){itsTStartObs=times[0];}
+  if(itsDeltaTime<(times[times.size()-1] - times[0])){itsDeltaTime=(times[times.size()-1] - times[0]);};
+  if(itsDeltaTime<(times[times.size()-1] - times[0])){itsDeltaTime=(times[times.size()-1] - times[0]);};
+
   itsTotalTimer.start();
 
   vector< Bool> done;
@@ -1292,11 +1341,32 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
 
   PrecTimer CyrilElement;
   CyrilElement.start();
-  Array<Complex> tmp_stacked_GriddedData2;
+  //cout.precision(20);
+  //cout<<" ======================= De-Grid ... time="<<time<<", at "<<itsCounterTimes<<endl;
   if(its_Apply_Element){
-    tmp_stacked_GriddedData2= itsConvFunc->ApplyElementBeam2 (its_stacked_GriddedData, time, spw, itsGridMuellerMask, true);
+    if(itsCounterTimes==0){
+     double TimeElement(itsTStartObs+itsDeltaTime*itsStepApplyElement/2.);
+     //cout<<"... Appying element with t="<<TimeElement<<", itsTStartObs="<<itsTStartObs<<"< itsDeltaTime="<<itsDeltaTime<<endl;
+     itsConvFunc->computeAterm(TimeElement);
+     itsGridToDegrid.reference(itsConvFunc->ApplyElementBeam2(its_stacked_GriddedData, TimeElement, spw, itsGridMuellerMask, true, itsTotalStepsDeGrid));
+     itsTotalStepsDeGrid+=1;
+    }
+    itsCounterTimes+=1;
+    if(itsCounterTimes==itsStepApplyElement){
+      itsTStartObs=1.e30;
+      itsCounterTimes=0;
+    }
+    Bool lastchunk(false);
+    if((times[times.size()-1] - times[0])<0.95*itsDeltaTime){
+      cout<<"Last Chunk Degrid!!!"<<endl;
+      lastchunk=true;
+      itsDeltaTime=0.;
+      itsTStartObs=1e12;
+    }
+      
+ 
   } else{
-    tmp_stacked_GriddedData2=its_stacked_GriddedData;
+    itsGridToDegrid.reference(its_stacked_GriddedData);
   }
   CyrilElement.stop();
 
@@ -1353,7 +1423,7 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
       CyrilGrid.start();
 
       degridTimer.start();
-      visResamplers_p.lofarGridToData(vbs, tmp_stacked_GriddedData2,//its_stacked_GriddedData,//itsGriddedData[0],
+      visResamplers_p.lofarGridToData(vbs, itsGridToDegrid,//its_stacked_GriddedData,//itsGriddedData[0],
                                       blIndex, blStart[i], blEnd[i], cfStore);
       CyrilGrid.stop();
 
@@ -1393,7 +1463,7 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
     
   }//end While loop
   
-  cout<<"Element: "<<CyrilElement.getReal()<<", Conv: "<<CyrilConv.getReal()<<", Grid: "<<CyrilGrid.getReal()<<endl;;
+  //cout<<"Element: "<<CyrilElement.getReal()<<", Conv: "<<CyrilConv.getReal()<<", Grid: "<<CyrilGrid.getReal()<<endl;;
 
 
 
@@ -1582,8 +1652,9 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
     	}
       }
     }
-    uInt count_cycle(0);
-    Bool written(false);
+
+    // uInt count_cycle(0);
+    // Bool written(false);
 
     // while(!written){
     //   Cube<Complex> tempimagePB(IPosition(3,shapeout,shapeout,lattice->shape()[2]));
@@ -1884,7 +1955,7 @@ void LofarFTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
   visResamplers_p.lofarComputeResiduals(vbs);
 
   TimerResid.stop();
-  cout<<"Residuals: "<<TimerResid.getReal()<<endl;
+  //cout<<"Residuals: "<<TimerResid.getReal()<<endl;
   
   //  vb.correctedVisCube()=0.;//vb.modelVisCube();
 }

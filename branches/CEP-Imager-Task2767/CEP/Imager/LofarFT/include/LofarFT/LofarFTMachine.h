@@ -156,8 +156,10 @@ public:
 		 Double RefFreq,
 		 Bool Use_Linear_Interp_Gridder,
 		 Bool Use_EJones,
-		 Bool Apply_Element,
-		 Double PBCut);
+		 int StepApplyElement,
+		 Double PBCut,
+		 Bool PredictFT,
+		 String PsfOnDisk);
 //  LofarFTMachine(Long cachesize, Int tilesize,  CountedPtr<VisibilityResamplerBase>& visResampler,String convType,
 //	 MDirection mTangent, Float padding=1.0, Bool usezero=True,
 //	 Bool useDoublePrec=False);
@@ -304,16 +306,25 @@ public:
   virtual void setMiscInfo(const Int qualifier){thisterm_p=qualifier;};
   virtual void ComputeResiduals(VisBuffer&vb, Bool useCorrected);
 
-    void makeConjPolMap(const VisBuffer& vb, const Vector<Int> cfPolMap, Vector<Int>& conjPolMap);
-    //    Vector<Int> makeConjPolMap(const VisBuffer& vb);
-    void makeCFPolMap(const VisBuffer& vb, const Vector<Int>& cfstokes, Vector<Int>& polM);
 
+  void makeConjPolMap(const VisBuffer& vb, const Vector<Int> cfPolMap, Vector<Int>& conjPolMap);
+  //    Vector<Int> makeConjPolMap(const VisBuffer& vb);
+  void makeCFPolMap(const VisBuffer& vb, const Vector<Int>& cfstokes, Vector<Int>& polM);
+
+  String itsNamePsfOnDisk;
+  void setPsfOnDisk(String NamePsf){itsNamePsfOnDisk=NamePsf;}
+  virtual String GiveNamePsfOnDisk(){return itsNamePsfOnDisk;}
+  
 
 protected:
   // Padding in FFT
   Float padding_p;
   Int thisterm_p;
   Double itsRefFreq;
+  Bool itsPredictFT;
+  Int itsTotalStepsGrid;
+  Int itsTotalStepsDeGrid;
+  Bool itsMasksAllDone;
 
   // Get the appropriate data pointer
   Array<Complex>* getDataPointer(const IPosition&, Bool);
@@ -391,6 +402,10 @@ protected:
     }
 
   }
+
+  
+  
+
 
   // Is this tiled?
   Bool isTiled;
@@ -482,6 +497,15 @@ protected:
   double itsCFTime;
   PrecTimer itsTotalTimer;
   PrecTimer itsCyrilTimer;
+
+  double itsNextApplyTime;
+  int itsCounterTimes;
+  int itsStepApplyElement;
+  double itsTStartObs;
+  double itsDeltaTime;
+  Array<Complex> itsTmpStackedGriddedData;
+  Array<Complex> itsGridToDegrid;
+
 
 
       template <class T>

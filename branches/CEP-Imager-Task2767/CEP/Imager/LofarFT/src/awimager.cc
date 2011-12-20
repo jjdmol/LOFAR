@@ -444,9 +444,9 @@ int main (Int argc, char** argv)
     inputs.create ("UseEJones", "true",
 		   "Use the beam for the calculation of the convolution function",
 		   "bool");
-    inputs.create ("ApplyElement", "false",
-		   "Apply the element beam",
-		   "bool");
+    // inputs.create ("ApplyElement", "false",
+    // 		   "Apply the element beam",
+    // 		   "bool");
     inputs.create ("PBCut", "1e-2",
 		   "Level below which the dirty images will be set to zero. Expressed in units of peak primary beam.",
 		   "Double");
@@ -459,6 +459,12 @@ int main (Int argc, char** argv)
     inputs.create ("ModelImPredict", "",
 		   "Input Model image for the predict",
 		   "string");
+    inputs.create ("PsfImage", "",
+		   "Input PSF image for the cleaning",
+		   "string");
+    inputs.create ("StepApplyElement", "0",
+		   "If turned to >0, apply the element beam every N number of timewindows",
+		   "int");
  
     // Fill the input structure from the command line.
     inputs.readArguments (argc, argv);
@@ -467,7 +473,7 @@ int main (Int argc, char** argv)
     Bool fixed          = inputs.getBool("fixed");
     Bool UseLIG         = inputs.getBool("UseLIG");
     Bool UseEJones      = inputs.getBool("UseEJones");
-    Bool ApplyElement   = inputs.getBool("ApplyElement");
+    Bool ApplyElement   ;//= inputs.getBool("ApplyElement");
     Bool constrainFlux  = inputs.getBool("constrainflux");
     Bool preferVelocity = inputs.getBool("prefervelocity");
     Bool displayProgress= inputs.getBool("displayprogress");
@@ -488,6 +494,8 @@ int main (Int argc, char** argv)
     Int verbose      = inputs.getInt("verbose");
     Int maxsupport   = inputs.getInt("maxsupport");
     Int oversample   = inputs.getInt("oversample");
+    Int StepApplyElement   = inputs.getInt("StepApplyElement");
+    
     Int nterms   = inputs.getInt("nterms");
     Vector<Double> userScaleSizes(inputs.getDoubleVector("uservector"));
     Double padding   = inputs.getDouble("padding");
@@ -531,6 +539,7 @@ int main (Int argc, char** argv)
     Matrix<Bool> muelgrid   = readMueller (inputs.getString("muellergrid"), stokes, true);
     Matrix<Bool> mueldegrid = readMueller (inputs.getString("muellerdegrid"), stokes, false);
     String ModelImPredict    = inputs.getString("ModelImPredict");
+    String PsfImage    = inputs.getString("PsfImage");
 
     // Check and interpret input values.
     Quantity qcellsize = readQuantity (cellsize);
@@ -632,8 +641,14 @@ int main (Int argc, char** argv)
     params.define ("imagename", imgName);
     params.define ("UseLIG", UseLIG);
     params.define ("UseEJones", UseEJones);
-    params.define ("ApplyElement", ApplyElement);
+    //params.define ("ApplyElement", ApplyElement);
     params.define ("PBCut", PBCut);
+    params.define ("StepApplyElement", StepApplyElement);
+    Bool PredictFT(false);
+    if(operation=="predict"){PredictFT=true;}
+    params.define ("PredictFT", PredictFT);
+    params.define ("PsfImage", PsfImage);
+    
     LOFAR::LofarImager imager(ms, params);
 
     ROMSSpWindowColumns window(ms.spectralWindow());
@@ -875,6 +890,8 @@ int main (Int argc, char** argv)
 
         }
         // Do the final correction for primary beam and spheroidal.
+	ApplyElement=false;
+	if(StepApplyElement>0){ApplyElement=true;}
         correctImages (restoName, modelName, residName, imgName, imager, ApplyElement);
         precTimer.stop();
         timer.show ("clean");

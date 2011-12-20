@@ -67,9 +67,16 @@ namespace LOFAR
                                     itsParameters.asString("imagename"),
                                     itsParameters.asArrayBool("mueller.grid"),
                                     itsParameters.asArrayBool("mueller.degrid"),
-				    RefFreq, itsParameters.asBool("UseLIG"), itsParameters.asBool("UseEJones"), itsParameters.asBool("ApplyElement"), itsParameters.asDouble("PBCut"));
+				    RefFreq,
+				    itsParameters.asBool("UseLIG"),
+				    itsParameters.asBool("UseEJones"),
+				    itsParameters.asInt("StepApplyElement"),
+				    itsParameters.asDouble("PBCut"),
+				    itsParameters.asBool("PredictFT"),
+				    itsParameters.asString("PsfImage"));
     
     ft_p  = itsMachine;
+
     cft_p = new SimpleComponentFTMachine();
 
     //setClarkCleanImageSkyModel();
@@ -94,6 +101,7 @@ namespace LOFAR
   {
     se_p = new LofarCubeSkyEquation(*sm_p, *rvi_p, *ft_p, *cft_p,
                                     !useModelCol_p);
+
     return;
   }
 

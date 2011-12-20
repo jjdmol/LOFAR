@@ -85,7 +85,12 @@ class LofarCubeSkyEquation : public SkyEquation {
 
   //Get the flux scale that the ftmachines have if they have
   virtual void getCoverageImage(Int model, ImageInterface<Float>& im);
+
+
+
  protected:
+
+
 
   //Different versions of psf making
   void makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs);
@@ -105,12 +110,14 @@ class LofarCubeSkyEquation : public SkyEquation {
   Bool getFreqRange(ROVisibilityIterator& vi, const CoordinateSystem& coords,
 		  Int slice, Int nslice);
 
+
  private:
   // if skyjones changed in get or put we need to tell put or get respectively
   // about it
   void init(FTMachine& ft);
 
   Bool destroyVisibilityIterator_p;
+
 
   Bool internalChangesPut_p;
   Bool internalChangesGet_p;

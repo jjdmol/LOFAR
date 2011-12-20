@@ -155,7 +155,7 @@ namespace LOFAR
 
     // Precalculate the Wtwerm fft for all w-planes.
     store_all_W_images();
-
+    itsFilledVectorMasks=false;
 
     // Build the cutted spheroidal for the element beam image
     Double pixelSize = abs(m_coordinates.increment()[0]);
@@ -615,9 +615,15 @@ namespace LOFAR
 
   //==================================================================
   //==================================================================
-  Array<Complex> LofarConvolutionFunction::ApplyElementBeam2(Array<Complex>& input_grid, Double time, uInt spw, const Matrix<bool>& Mask_Mueller_in, bool degridding_step)
+  Array<Complex> LofarConvolutionFunction::ApplyElementBeam2(Array<Complex>& input_grid, Double time, uInt spw, const Matrix<bool>& Mask_Mueller_in2, bool degridding_step, Int UsedMask)
   {
     
+    Matrix<bool> Mask_Mueller_in(Mask_Mueller_in2.copy());
+    for(uInt i=0;i<4;++i){
+      for(uInt j=0;j<4;++j){
+    	Mask_Mueller_in(i,j)=true;
+      }
+    }
     map<Double, vector< vector< Cube<Complex> > > >::const_iterator aiter_element = m_AtermStore_element.find(time);
     AlwaysAssert (aiter_element!=m_AtermStore_element.end(), AipsError);
     const vector< vector< Cube<Complex> > >& aterm_element = aiter_element->second;
@@ -662,25 +668,27 @@ namespace LOFAR
     }
     }
 
-
-    vector< vector< Matrix<Complex> > > vec_plane_product;
-    vec_plane_product.resize(4);
     if (!degridding_step) {
       for (uInt i=0; i<4; ++i) {
-    	for (uInt j=i; j<4; ++j) {
+	for (uInt j=i; j<4; ++j) {
 	  IPosition pos_tmp(Mueller_Coordinates[i][j]);
 	  Mueller_Coordinates[i][j]=Mueller_Coordinates[j][i];
 	  Mueller_Coordinates[j][i]=pos_tmp;
-        }
+	  Bool bool_tmp(Mask_Mueller_in(i,j));
+	  Mask_Mueller_in(i,j)=Mask_Mueller_in(j,i);
+	  Mask_Mueller_in(i,j)=bool_tmp;
+	}
       }
     }
 
+    Cube<Complex> aTermA(aterm_element[0][spw].copy());
+    Array<Complex> grid_out(input_grid.shape(),0.);
     Int nx(input_grid.shape()[0]);
     Int ny(input_grid.shape()[1]);
     Int npol(input_grid.shape()[2]);
 
-    Cube<Complex> aTermA(aterm_element[0][spw].copy());
-    Array<Complex> grid_out(input_grid.shape(),0.);
+    vector< vector< Matrix<Complex> > > vec_plane_product;
+    vec_plane_product.resize(4);
       
 
     //logIO()<<"LofarConvolutionFunction::ApplyElementBeam "<<"Calculate element beams"<< LogIO::POST;//<<endl;
@@ -728,16 +736,29 @@ namespace LOFAR
       Int jj;
 #pragma omp parallel for private(ii,jj)
       for(uInt iii=0;iii<16;++iii){
-	jj=floor(float(iii)/4.);
-	ii=floor((float(iii)/4.-jj)*4.);
-	//cout<<"iii"<<iii<<" "<<ii<<" "<<jj<<endl;
+	ii=floor(float(iii)/4.);
+	jj=floor((float(iii)/4.-ii)*4.);
+	//cout<<"iii"<<iii<<" "<<ii<<" "<<jj<<" M="<<Mask_Mueller_in(jj,ii)<<endl;
 	if(Mask_Mueller_in(ii,jj)==true){
 	  Matrix<Complex> ConvFunc(vec_plane_product[ii][jj]);
-	  // Matrix<Complex> plane_array_in  = input_grid(Slicer(IPosition(4, 0, 0, jj, 0),
-	  // 						      IPosition(4, nx, nx, 1, 1))).nonDegenerate();
+
+	  //ConvolveGerArray(input_grid, ii, GridsMueller[ii][jj], ConvFunc);
+
+	  if(npol==1){
+	    if(!(UsedMask>-1)){
+	      ConvolveGerArray(input_grid, 0, GridsMueller[ii][jj], ConvFunc);
+	    } else {
+	      ConvolveGerArrayMask(input_grid, 0, GridsMueller[ii][jj], ConvFunc, UsedMask);
+	    }
+	  }
+	  if(npol==4){
+	    if(!(UsedMask>-1)){
+	      ConvolveGerArray(input_grid, ii, GridsMueller[ii][jj], ConvFunc);
+	    } else {
+	      ConvolveGerArrayMask(input_grid, ii, GridsMueller[ii][jj], ConvFunc, UsedMask);
+	    }
+	  }
 	  
-	  //ConvolveGer(grids_in[ii], GridsMueller[ii][jj], ConvFunc);
-	  ConvolveGerArray(input_grid, ii, GridsMueller[ii][jj], ConvFunc);
 	  
 	}
 
@@ -756,14 +777,13 @@ namespace LOFAR
     //   }
     // }
 
-    //assert(false);
+
 
 
 
     //    #pragma omp parallel 
     if(npol==4)
       {
-	//logIO()<<"LofarConvolutionFunction::ApplyElementBeam "<<"Summing over Mueller grids"<< LogIO::POST;//<<endl;
 	int y=0;
 	uInt ii=0;
 	uInt jj=0;
@@ -782,6 +802,22 @@ namespace LOFAR
 	    }
 	  }
 	}
+      }
+
+
+    if(npol==1)
+      {
+    	int y=0;
+    	uInt ii=0;
+    	#pragma omp parallel for private(y,ii)
+    	for(int x=0 ; x<nx ; ++x){
+    	  for(y=0 ; y<nx ; ++y){
+    	    for(ii=0;ii<4;++ii){
+    	      grid_out(IPosition(4,x,y,0,0)) += 0.5*(GridsMueller[0][ii](x,y) + GridsMueller[3][ii](x,y));///Spheroid_cut_im_element(x,y);
+
+    	    }
+    	  }
+    	}
       }
 
 
@@ -917,6 +953,7 @@ namespace LOFAR
         cout << "fft shapes " << wTerm_paddedf.shape() << ' ' << Spheroid_cut_paddedf.shape()
              << ' ' << aTermA_padded.shape() << ' ' << aTermB_padded.shape() << endl;
       }
+
       for (uInt i=0; i<4; ++i) {
         // Make a matrix referencing the data in the cube's plane.
         Matrix<Complex> planeAf(aTermA_padded.xyPlane(i));

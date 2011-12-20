@@ -132,7 +132,7 @@ namespace LOFAR
 					 uInt spw, Int TaylorTerm, double RefFreq);
 
     Array<Complex>  ApplyElementBeam(Array<Complex> input_grid, Double time, uInt spw, const Matrix<bool>& Mask_Mueller_in, bool degridding_step);
-    Array<Complex>  ApplyElementBeam2(Array<Complex>& input_grid, Double time, uInt spw, const Matrix<bool>& Mask_Mueller_in, bool degridding_step);
+    Array<Complex>  ApplyElementBeam2(Array<Complex>& input_grid, Double time, uInt spw, const Matrix<bool>& Mask_Mueller_in, bool degridding_step, Int UsedMask=-1);
     
     // Returns the average Primary Beam from the disk
     Matrix<float> Give_avg_pb();
@@ -151,6 +151,64 @@ namespace LOFAR
     // Get the W scale.
     const WScale& wScale() const
       { return m_wScale; }
+
+    vector< Matrix< Bool > > itsVectorMasksDegridElement;
+    void MakeMaskDegrid( const Array<Complex>& gridin, Int NumMask)
+    {
+
+      String MaskName("JAWS_masks_degrid/Mask"+String::toString(NumMask)+".boolim");
+      File MaskFile(MaskName);
+      if(!MaskFile.exists()){
+	cout<<"... Making Masks ..."<<endl;
+	Matrix<Bool> Mask(IPosition(2,gridin.shape()[0],gridin.shape()[0]),false);
+	Matrix<Int> IntMask(IPosition(2,gridin.shape()[0],gridin.shape()[0]),false);
+	int GridSize(gridin.shape()[0]);
+	const Complex* inPtr = gridin.data();
+	Bool* outPtr = Mask.data();
+	for (uInt i=0; i<GridSize; ++i) {
+	  for (uInt j=0; j<GridSize; ++j) {
+	    if (inPtr->real() != 0  ||  inPtr->imag() != 0) {
+	      (*(outPtr)) = true;
+	    }
+	    inPtr++;
+	    outPtr++;
+	  }
+	}
+	//itsVectorMasksDegridElement.push_back(Mask);
+	
+	store(Mask,MaskName);
+	cout<<"... Done Making Masks ..."<<endl;
+      }
+    }
+
+    Bool itsFilledVectorMasks;
+      //vector< Matrix< Bool > > itsVectorMasksDegridElement;
+      void ReadMaskDegrid()
+      {
+      	Int NumMask(0);
+      	while(true){
+      	  String MaskName("JAWS_masks_degrid/Mask"+String::toString(NumMask)+".boolim");
+      	  File MaskFile(MaskName);
+      	  if(MaskFile.exists())
+	    {
+	      cout<<"Reading:"<<MaskName<<endl;
+	      PagedImage<Bool> pim(MaskName);
+	      Array<Bool> arr = pim.get();
+	      Matrix<Bool> Mask;
+	      Mask.reference (arr.nonDegenerate(2));
+	      itsVectorMasksDegridElement.push_back(Mask);
+	      NumMask+=1;
+	    }
+	  else
+	    {
+	      break;
+	    }
+	}
+	itsFilledVectorMasks=true;
+	
+      }
+      
+      Bool VectorMaskIsFilled(){return itsFilledVectorMasks;}
 
   private:
     void normalized_fft (Matrix<Complex>&, bool toFreq=true);
@@ -332,8 +390,39 @@ namespace LOFAR
 	inPtr += Support;
       }
     }
+    
+    
 
+    void ConvolveGerArrayMask( const Array<Complex>& gridin, Int ConvPol, Matrix<Complex>& gridout,
+			       const Matrix<Complex>& ConvFunc, Int UsedMask)
+    {
+      int Support(ConvFunc.shape()[0]);
+      int GridSize(gridin.shape()[0]);
+      int off(Support/2);
 
+      const Complex* inPtr = gridin.data() + ConvPol*GridSize*GridSize + off*GridSize + off;
+      const Bool* MaskPtr = itsVectorMasksDegridElement[UsedMask].data() + off*GridSize + off;
+      for (uInt i=0; i<GridSize-Support; ++i) {
+	for (uInt j=0; j<GridSize-Support; ++j) {
+	  if ((*MaskPtr)==true) {
+	    const Complex* cfPtr = ConvFunc.data();
+	    for (uInt ii=0; ii<Support; ++ii) {
+	      Complex* outPtr = gridout.data() + (i+ii)*GridSize + j;
+	      for (uInt jj=0; jj<Support; ++jj) {
+		outPtr[jj] += *cfPtr++ * *inPtr;
+	      }
+	    }
+	  }
+	  MaskPtr++;
+	  inPtr++;
+	}
+	inPtr += Support;
+	MaskPtr += Support;
+      }
+    }
+    
+    
+    
     // Linear interpolation
     template <typename T>
     Matrix< T > LinearInterpol2(Matrix<T> ImageIn, Int  NpixOut)
