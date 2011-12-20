@@ -384,19 +384,30 @@ class PlotWindow(QFrame):
 
    def on_solverMessage(self, event):
       if self.messages!=None:                       # only if we indeed inherited messages from parent
-        x, y = event.xdata, event.ydata             # get cursor position from figure
-        index = np.searchsorted(self.x, [x])[0]     # get Message for the index of cursor position
+        self.xdata = event.xdata
+        self.ydata = event.ydata                    # get cursor position from figure
     
-        print "self.parent.messages = ", self.parent.messages
-      """
+        index = np.searchsorted(self.x, [self.xdata])[0]     # get Message for the index of cursor position
         resultType=self.messages['result']
-        if self.messages[resultType]=="last":
+
+        #print "resultType = ", resultType
+        #print "len(self.messages) = ", len(self.messages['last'])
+        #print "self.xdata = ", self.xdata    
+        #print "on_solverMessage() index = ", index
+        #print "self.messages[index] = ", self.messages[resultType][index]
+
+        #print "self.parent.messages = ", self.parent.messages
+        #self.solverMessageText.setText(self.messages[resultType][index])
+      
+        self.solverMessageText.setReadOnly(False)     # make it writable
+        if resultType=="last":
             self.solverMessageText.setText(self.messages[resultType][index])    
-        elif self.messages[resultType]=="all":
+        elif resultType=="all":
             self.solverMessageText.setText(self.messages[resultType][index])
         elif resultType==None:
             print "on_solverMessage() None messages"
-      """        
+            return
+        self.solverMessageText.setReadOnly(True)      # make it readonly again that user can't mess with it
   
    # Plot data that has been read
    #
