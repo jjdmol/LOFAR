@@ -203,36 +203,39 @@ void actionCollect(const std::string &filename, enum CollectingMode mode)
 			Plot plotHistograms("histograms.pdf");
 			for(std::map<HistogramCollection::AntennaPair, LogHistogram*>::const_iterator i = map.begin(); i != map.end(); ++i)
 			{
-				const LogHistogram *histogram = i->second;
-				double rangeCentre = histogram->MinPositiveAmplitude();
-				rangeCentre = exp2(floor(log2(rangeCentre)));
-				const double maxAmplitude = histogram->MaxAmplitude();
-				std::cout << "Antennae " << i->first.first << " x " << i->first.second << "\n";
-				std::stringstream s;
-				s << i->first.first << " x " << i->first.second;
-				//plotSlopes.StartLine(s.str());
-				//plotHistograms.StartLine(s.str());
-				plotSlopes.StartLine();
-				plotSlopes.SetLogScale(true, false);
-				plotHistograms.StartLine();
-				plotHistograms.SetLogScale(true, true);
-				while(rangeCentre < maxAmplitude)
+				if(i->first.first != i->first.second)
 				{
-					const double rangeStart = rangeCentre * 0.75;
-					const double rangeEnd = rangeCentre * 1.5;
-					const double slope = histogram->NormalizedSlope(rangeStart, rangeEnd, LogHistogram::TotalAmplitudeHistogram);
-					std::cout << rangeStart << "-" << rangeEnd << ": " << slope << "\n";
-					rangeCentre *= 2.0;
-					plotSlopes.PushDataPoint(rangeCentre, slope);
-					const double count = histogram->NormalizedCount(rangeStart, rangeEnd, LogHistogram::TotalAmplitudeHistogram);
-					if(count > 0 && std::isfinite(count))
-						plotHistograms.PushDataPoint(rangeCentre, count);
+					const LogHistogram *histogram = i->second;
+					double rangeCentre = histogram->MinPositiveAmplitude();
+					rangeCentre = exp2(floor(log2(rangeCentre)));
+					const double maxAmplitude = histogram->MaxAmplitude();
+					std::cout << "Antennae " << i->first.first << " x " << i->first.second << "\n";
+					std::stringstream s;
+					s << i->first.first << " x " << i->first.second;
+					//plotSlopes.StartLine(s.str());
+					//plotHistograms.StartLine(s.str());
+					plotSlopes.StartLine();
+					plotSlopes.SetLogScale(true, false);
+					plotHistograms.StartLine();
+					plotHistograms.SetLogScale(true, true);
+					while(rangeCentre < maxAmplitude)
+					{
+						const double rangeStart = rangeCentre * 0.75;
+						const double rangeEnd = rangeCentre * 1.5;
+						const double slope = histogram->NormalizedSlope(rangeStart, rangeEnd, LogHistogram::TotalAmplitudeHistogram);
+						std::cout << rangeStart << "-" << rangeEnd << ": " << slope << "\n";
+						rangeCentre *= 2.0;
+						plotSlopes.PushDataPoint(rangeCentre, slope);
+						const double count = histogram->NormalizedCount(rangeStart, rangeEnd, LogHistogram::TotalAmplitudeHistogram);
+						if(count > 0 && std::isfinite(count))
+							plotHistograms.PushDataPoint(rangeCentre, count);
+					}
 				}
 			}
 			Plot plotFine("histogram-fine.pdf");
 			plotFine.SetLogScale(true, true);
 			LogHistogram intHistogram;
-			histogramCollection.GetHistogram(0, intHistogram);
+			histogramCollection.GetHistogramForCrossCorrelations(0, intHistogram);
 			
 			plotFine.StartLine("Total");
 			for(LogHistogram::iterator i=intHistogram.begin(); i!=intHistogram.end(); ++i)
