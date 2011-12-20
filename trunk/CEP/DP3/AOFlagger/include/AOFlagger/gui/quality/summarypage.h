@@ -119,12 +119,13 @@ class SummaryPage : public Gtk::HBox {
 			const BaselineStatisticsMap &map = _statCollection->BaselineStatistics();
 			std::vector<std::pair <unsigned, unsigned> > list = map.BaselineList();
 			double totalStdDev[map.PolarizationCount()], totalSNR[map.PolarizationCount()];
+			size_t count[map.PolarizationCount()];
 			for(size_t p=0;p<map.PolarizationCount();++p)
 			{
 				totalStdDev[p] = 0.0;
 				totalSNR[p] = 0.0;
+				count[p] = 0;
 			}
-			size_t count = 0;
 			for(std::vector<std::pair <unsigned, unsigned> >::const_iterator i=list.begin(); i!=list.end(); ++i)
 			{
 				unsigned a1=i->first, a2=i->second;
@@ -133,16 +134,22 @@ class SummaryPage : public Gtk::HBox {
 					const DefaultStatistics &stat = map.GetStatistics(a1, a2);
 					for(size_t p=0;p<map.PolarizationCount();++p)
 					{
-						totalStdDev[p] += StatisticsDerivator::GetStatisticAmplitude(QualityTablesFormatter::StandardDeviationStatistic, stat, p);
-						totalSNR[p] += StatisticsDerivator::GetStatisticAmplitude(QualityTablesFormatter::SignalToNoiseStatistic, stat, p);
+						const double
+							thisStdDev = StatisticsDerivator::GetStatisticAmplitude(QualityTablesFormatter::StandardDeviationStatistic, stat, p),
+							thisSNR = StatisticsDerivator::GetStatisticAmplitude(QualityTablesFormatter::SignalToNoiseStatistic, stat, p);
+						if(std::isfinite(thisStdDev) && std::isfinite(thisSNR))
+						{
+							totalStdDev[p] += thisStdDev;
+							totalSNR[p] += thisSNR;
+							++count[p];
+						}
 					}
-					++count;
 				}
 			}
 			for(size_t p=0;p<map.PolarizationCount();++p)
 			{
-				totalStdDev[p] /= (double) count;
-				totalSNR[p] /= (double) count;
+				totalStdDev[p] /= (double) count[p];
+				totalSNR[p] /= (double) count[p];
 			}
 			s << "Average standard deviation = ";
 			addValues(totalStdDev, map.PolarizationCount(), s);
