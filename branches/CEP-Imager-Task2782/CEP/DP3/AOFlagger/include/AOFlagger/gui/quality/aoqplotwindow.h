@@ -34,7 +34,10 @@
 #include "blengthplotpage.h"
 #include "frequencyplotpage.h"
 #include "summarypage.h"
+#include "timefrequencyplotpage.h"
 #include "timeplotpage.h"
+
+#include <AOFlagger/msio/antennainfo.h>
 
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
@@ -48,11 +51,27 @@ class AOQPlotWindow : public Gtk::Window {
 		}
     
 		void Open(const std::string &filename);
-		
+		void SetStatus(const std::string &newStatus)
+		{
+			onStatusChange(newStatus);
+		}
 	private:
 		void close();
 		void readStatistics();
 		void onStatusChange(const std::string &newStatus);
+		void onSwitchPage(GtkNotebookPage *page, guint pageNr)
+		{
+			switch(pageNr)
+			{
+				case 0: SetStatus("Baseline statistics"); break;
+				case 1: SetStatus("Antennae statistics"); break;
+				case 2: SetStatus("Baseline length statistics");  break;
+				case 3: SetStatus("Time statistics"); break;
+				case 4: SetStatus("Frequency statistics"); break;
+				case 5: SetStatus("Time-frequency statistics");  break;
+				case 6: SetStatus("Summary"); break;
+			}
+		}
 		
 		Gtk::VBox _vBox;
 		Gtk::Notebook _notebook;
@@ -61,6 +80,7 @@ class AOQPlotWindow : public Gtk::Window {
 		BaselinePlotPage _baselinePlotPage;
 		AntennaePlotPage _antennaePlotPage;
 		BLengthPlotPage  _bLengthPlotPage;
+		TimeFrequencyPlotPage _timeFrequencyPlotPage;
 		TimePlotPage _timePlotPage;
 		FrequencyPlotPage _frequencyPlotPage;
 		SummaryPage _summaryPage;
@@ -68,7 +88,8 @@ class AOQPlotWindow : public Gtk::Window {
 		bool _isOpen;
 		std::string _filename;
 		class StatisticsCollection *_statCollection;
-		class AntennaInfo *_antennas;
+		class StatisticsCollection *_fullStats;
+		std::vector<class AntennaInfo> _antennas;
 };
 
 #endif

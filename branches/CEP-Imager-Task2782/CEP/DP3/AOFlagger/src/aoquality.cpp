@@ -45,11 +45,13 @@ void reportProgress(unsigned step, unsigned totalSteps)
 	}
 }
 
-void actionCollect(const std::string &filename, bool useCorrectedData)
+void actionCollect(const std::string &filename, bool collectAll)
 {
 	MeasurementSet *ms = new MeasurementSet(filename);
 	const unsigned polarizationCount = ms->GetPolarizationCount();
 	const unsigned bandCount = ms->BandCount();
+	const bool ignoreChannelZero = ms->ChannelZeroIsRubish();
+	const std::string stationName = ms->GetStationName();
 	BandInfo *bands = new BandInfo[bandCount];
 	double **frequencies = new double*[bandCount];
 	unsigned totalChannels = 0;
@@ -68,16 +70,24 @@ void actionCollect(const std::string &filename, bool useCorrectedData)
 	std::cout
 		<< "Polarizations: " << polarizationCount << '\n'
 		<< "Bands: " << bandCount << '\n'
-		<< "Channels/band: " << (totalChannels / bandCount) << '\n';
+		<< "Channels/band: " << (totalChannels / bandCount) << '\n'
+		<< "Name of obseratory: " << stationName << '\n';
+	if(ignoreChannelZero)
+		std::cout << "Channel zero will be ignored, as this looks like a LOFAR data set with bad channel 0.\n";
+	else
+		std::cout << "Channel zero will be included in the statistics, as it seems that channel 0 is okay.\n";
 	
 	casa::Table table(filename, casa::Table::Update);
 	StatisticsCollection collection(polarizationCount);
 	for(unsigned b=0;b<bandCount;++b)
 	{
-		collection.InitializeBand(b, frequencies[b], bands[b].channelCount);
+		if(ignoreChannelZero)
+			collection.InitializeBand(b, (frequencies[b]+1), bands[b].channelCount-1);
+		else
+			collection.InitializeBand(b, frequencies[b], bands[b].channelCount);
 	}
 
-	const char *dataColumnName = useCorrectedData ? "CORRECTED_DATA" : "DATA";
+	const char *dataColumnName = "DATA";
 	casa::ROArrayColumn<casa::Complex> dataColumn(table, dataColumnName);
 	casa::ROArrayColumn<bool> flagColumn(table, "FLAG");
 	casa::ROScalarColumn<double> timeColumn(table, "TIME");
@@ -100,19 +110,31 @@ void actionCollect(const std::string &filename, bool useCorrectedData)
 		const casa::Array<casa::Complex> dataArray = dataColumn(row);
 		const casa::Array<bool> flagArray = flagColumn(row);
 		
-		std::vector<std::complex<float> > samples[polarizationCount];
+		std::complex<float> *samples[polarizationCount];
 		bool *isRFI[polarizationCount];
 		for(unsigned p = 0; p < polarizationCount; ++p)
+		{
 			isRFI[p] = new bool[band.channelCount];
+			samples[p] = new std::complex<float>[band.channelCount];
+		}
 		
 		casa::Array<casa::Complex>::const_iterator dataIter = dataArray.begin();
 		casa::Array<bool>::const_iterator flagIter = flagArray.begin();
-		for(unsigned channel = 0 ; channel<band.channelCount; ++channel)
+		const unsigned startChannel = ignoreChannelZero ? 1 : 0;
+		if(ignoreChannelZero)
 		{
 			for(unsigned p = 0; p < polarizationCount; ++p)
 			{
-				samples[p].push_back(*dataIter);
-				isRFI[p][channel] = *flagIter;
+				++dataIter;
+				++flagIter;
+			}
+		}
+		for(unsigned channel = startChannel ; channel<band.channelCount; ++channel)
+		{
+			for(unsigned p = 0; p < polarizationCount; ++p)
+			{
+				samples[p][channel - startChannel] = *dataIter;
+				isRFI[p][channel - startChannel] = *flagIter;
 				
 				++dataIter;
 				++flagIter;
@@ -121,11 +143,15 @@ void actionCollect(const std::string &filename, bool useCorrectedData)
 		
 		for(unsigned p = 0; p < polarizationCount; ++p)
 		{
-			collection.Add(antenna1Index, antenna2Index, time, bandIndex, p, samples[p], isRFI[p]);
+			const bool origFlags = false;
+			collection.Add(antenna1Index, antenna2Index, time, bandIndex, p, &samples[p]->real(), &samples[p]->imag(), isRFI[p], &origFlags, band.channelCount - startChannel, 2, 1, 0);
 		}
 
 		for(unsigned p = 0; p < polarizationCount; ++p)
+		{
 			delete[] isRFI[p];
+			delete[] samples[p];
+		}
 		
 		reportProgress(row, nrow);
 	}
@@ -254,15 +280,27 @@ void actionQueryTime(const std::string &kindName, const std::string &filename)
 
 void actionSummarize(const std::string &filename)
 {
-	MeasurementSet *ms = new MeasurementSet(filename);
-	const unsigned polarizationCount = ms->GetPolarizationCount();
-	delete ms;
+	bool remote = aoRemote::ClusteredObservation::IsClusteredFilename(filename);
+	StatisticsCollection collection;
+	if(remote)
+	{
+		aoRemote::ClusteredObservation *observation = aoRemote::ClusteredObservation::Load(filename);
+		aoRemote::ProcessCommander commander(*observation);
+		commander.PushReadQualityTablesTask(&collection);
+		commander.Run();
+		delete observation;
+	}
+	else {
+		MeasurementSet *ms = new MeasurementSet(filename);
+		const unsigned polarizationCount = ms->GetPolarizationCount();
+		delete ms;
+		
+		collection.SetPolarizationCount(polarizationCount);
+		QualityTablesFormatter qualityData(filename);
+		collection.Load(qualityData);
+	}
 	
-	QualityTablesFormatter qualityData(filename);
-	StatisticsCollection collection(polarizationCount);
-	collection.Load(qualityData);
-	
-	DefaultStatistics statistics(polarizationCount);
+	DefaultStatistics statistics(collection.PolarizationCount());
 	
 	collection.GetGlobalTimeStatistics(statistics);
 	std::cout << "Time statistics: \n";
@@ -322,6 +360,12 @@ void actionCombine(const std::string outFilename, const std::vector<std::string>
 	}
 }
 
+void actionRemove(const std::string &filename)
+{
+	QualityTablesFormatter formatter(filename);
+	formatter.RemoveAllQualityTables();
+}
+
 void printSyntax(std::ostream &stream, char *argv[])
 {
 	stream << "Syntax: " << argv[0] <<
@@ -333,6 +377,7 @@ void printSyntax(std::ostream &stream, char *argv[])
 		"\\tcombine     - Combine several tables.\n"
 		"\tquery_b     - Query baselines.\n"
 		"\tquery_t     - Query time.\n"
+		"\tremove      - Remove all quality tables.\n"
 		"\tsummarize   - Give a summary of the statistics currently in the quality tables.\n";
 }
 
@@ -359,7 +404,7 @@ int main(int argc, char *argv[])
 				}
 				else if(helpAction == "collect")
 				{
-					std::cout << "Syntax: " << argv[0] << " collect [-c] <ms>\n\n"
+					std::cout << "Syntax: " << argv[0] << " collect [-a] <ms>\n\n"
 						"The collect action will go over a whole measurement set and \n"
 						"collect the default statistics. It will write the results in the \n"
 						"quality subtables of the main measurement set.\n\n"
@@ -390,7 +435,12 @@ int main(int argc, char *argv[])
 					std::cout << "Syntax: " << argv[0] << " combine <target_ms> [<in_ms> [<in_ms> ..]]\n\n"
 						"This will read all given input measurement sets, combine the statistics and \n"
 						"write the results to a target measurement set. The target measurement set should\n"
-						"not exist beforehand.";
+						"not exist beforehand.\n";
+				}
+				else if(helpAction == "remove")
+				{
+					std::cout << "Syntax: " << argv[0] << " remove [ms]\n\n"
+						"This will completely remove all quality tables from the measurement set.\n";
 				}
 				else
 				{
@@ -401,7 +451,7 @@ int main(int argc, char *argv[])
 		}
 		else if(action == "collect")
 		{
-			if(argc != 3 && !(argc == 4 && std::string(argv[2]) == "-c") )
+			if(argc != 3 && !(argc == 4 && std::string(argv[2]) == "-a") )
 			{
 				std::cerr << "collect actions needs one or two parameters (the measurement set)\n";
 				return -1;
@@ -457,6 +507,18 @@ int main(int argc, char *argv[])
 			}
 			else {
 				actionQueryTime(argv[2], argv[3]);
+				return 0;
+			}
+		}
+		else if(action == "remove")
+		{
+			if(argc != 3)
+			{
+				std::cerr << "Syntax for removing quality tables: 'aoquality remove <MS>'\n";
+				return -1;
+			}
+			else {
+				actionRemove(argv[2]);
 				return 0;
 			}
 		}

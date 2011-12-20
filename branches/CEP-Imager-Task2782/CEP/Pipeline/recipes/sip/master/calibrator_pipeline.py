@@ -10,6 +10,7 @@ import sys
 
 from lofarpipe.support.control import control
 from lofar.parameterset import parameterset
+from lofarpipe.support.group_data import store_data_map
 
 class calibrator_pipeline(control):
     """
@@ -35,6 +36,17 @@ class calibrator_pipeline(control):
     def usage(self):
         print >> sys.stderr, "Usage: %s [options] <parset-file>" % sys.argv[0]
         return 1
+
+
+    def _get_filemap(self, prefix):
+        """
+        Read list of file names and locations from parset-file, using the keys
+        `filenames` and `locations` prefixed with `prefix`.
+        Return a list of tuples of hostname and absolute file path.
+        """
+        filenames = self.parset.getStringVector(prefix + 'filenames')
+        locations = self.parset.getStringVector(prefix + 'locations')
+        return [os.path.join(*x).split(':') for x in zip(locations, filenames)]
 
 
     def go(self):
@@ -115,6 +127,18 @@ class calibrator_pipeline(control):
             parset=bbs_parset,
             instrument_mapfile=parmdb_mapfile,
             sky_mapfile=sourcedb_mapfile)
+
+        # Create a mapfile containing the locations of the output instrument
+        # model files. This is a bit hacky. I will have to clean this up a bit.
+        instrument_mapfile = os.path.join(
+            self.config.get("layout", "job_directory"),
+            "parsets", "instrument_mapfile_final")
+        instrument_map = self._get_filemap(
+            "ObsSW.Observation.DataProducts.Output_InstrumentModel.")
+        store_data_map(instrument_mapfile, instrument_map)
+
+        # Export the calibration solutions using parmexportcal
+        self.run_task("parmexportcal", parmdb_mapfile)
 
 if __name__ == '__main__':
     sys.exit(calibrator_pipeline().main())

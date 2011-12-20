@@ -28,20 +28,52 @@
 
 #include "types.h"
 
+#include <AOFlagger/util/serializable.h>
+
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
 */
-struct EarthPosition {
-	num_t x, y, z;
+struct EarthPosition : public Serializable {
+	double x, y, z;
 	std::string ToString() {
 		std::stringstream s;
 		s.setf(std::ios::fixed,std::ios::floatfield);
 		s.width(16);
 		s.precision(16);
-		s << x << "," << y << "," << z << " (alt " << sqrtl(x*x+y*y+z*z) << ")";
+		s << x << "," << y << "," << z << " (alt " << sqrtl(x*x+y*y+z*z) << "), or "
+		<< "N" << Lattitude()*180/M_PI << " E" << Longitude()*180/M_PI;
 		return s.str();
 	}
 	EarthPosition FromITRS(long double x, long double y, long double z);
+	
+	double Longitude() const
+	{
+		return atan2l(y, x);
+	}
+
+	double Lattitude() const
+	{
+		return atan2l(z, sqrtl((long double) x*x + y*y));
+	}
+	
+	double Altitude() const
+	{
+		return sqrtl((long double) x*x+y*y+z*z);
+	}
+
+	virtual void Serialize(std::ostream &stream) const
+	{
+		SerializeToDouble(stream, x);
+		SerializeToDouble(stream, y);
+		SerializeToDouble(stream, z);
+	}
+	
+	virtual void Unserialize(std::istream &stream)
+	{
+		x = UnserializeDouble(stream);
+		y = UnserializeDouble(stream);
+		z = UnserializeDouble(stream);
+	}
 };
 
 struct UVW {
@@ -50,7 +82,7 @@ struct UVW {
 	num_t u, v, w;
 };
 
-struct AntennaInfo {
+struct AntennaInfo : public Serializable {
 	AntennaInfo() { }
 	AntennaInfo(const AntennaInfo &source)
 		: id(source.id), position(source.position), name(source.name), diameter(source.diameter), mount(source.mount), station(source.station)
@@ -71,6 +103,26 @@ struct AntennaInfo {
 	double diameter;
 	std::string mount;
 	std::string station;
+	
+	virtual void Serialize(std::ostream &stream) const
+	{
+		SerializeToUInt32(stream, id);
+		position.Serialize(stream);
+		SerializeToString(stream, name);
+		SerializeToDouble(stream, diameter);
+		SerializeToString(stream, mount);
+		SerializeToString(stream, station);
+	}
+	
+	virtual void Unserialize(std::istream &stream)
+	{
+		id = UnserializeUInt32(stream);
+		position.Unserialize(stream);
+		UnserializeString(stream, name);
+		diameter = UnserializeDouble(stream);
+		UnserializeString(stream, mount);
+		UnserializeString(stream, station);
+	}
 };
 
 struct ChannelInfo {

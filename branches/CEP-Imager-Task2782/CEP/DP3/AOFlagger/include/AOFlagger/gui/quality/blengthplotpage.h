@@ -32,43 +32,54 @@
 	@author A.R. Offringa <offringa@astro.rug.nl>
 */
 class BLengthPlotPage : public TwoDimensionalPlotPage {
-	protected:
-		virtual void processStatistics(class StatisticsCollection *statCollection, const std::string &filename)
+	public:
+    BLengthPlotPage() :
+			_includeAutoCorrelationsButton("Auto-correlations")
 		{
-			_statistics.clear();
+		}
+	protected:
+		virtual void processStatistics(class StatisticsCollection *statCollection, const std::vector<AntennaInfo> &antennas)
+		{
+			_statisticsWithAutocorrelations.clear();
+			_statisticsWithoutAutocorrelations.clear();
 			
-			if(!aoRemote::ClusteredObservation::IsClusteredFilename(filename))
+			const BaselineStatisticsMap &map = statCollection->BaselineStatistics();
+			
+			vector<std::pair<unsigned, unsigned> > baselines = map.BaselineList();
+			for(vector<std::pair<unsigned, unsigned> >::const_iterator i=baselines.begin();i!=baselines.end();++i)
 			{
-				const BaselineStatisticsMap &map = statCollection->BaselineStatistics();
-				
-				MeasurementSet ms(filename);
-				unsigned antennaCount = ms.AntennaCount();
-				AntennaInfo antennas[antennaCount];
-				for(unsigned a=0;a<antennaCount;++a)
-				{
-					antennas[a] = ms.GetAntennaInfo(a);
-				}
-				vector<std::pair<unsigned, unsigned> > baselines = map.BaselineList();
-				for(vector<std::pair<unsigned, unsigned> >::const_iterator i=baselines.begin();i!=baselines.end();++i)
-				{
-					Baseline bline(antennas[i->first], antennas[i->second]);
-					_statistics.insert(std::pair<double, DefaultStatistics>(bline.Distance(), map.GetStatistics(i->first, i->second)));
-				}
+				Baseline bline(antennas[i->first], antennas[i->second]);
+				const DefaultStatistics &statistics = map.GetStatistics(i->first, i->second);
+				_statisticsWithAutocorrelations.insert(std::pair<double, DefaultStatistics>(bline.Distance(), statistics));
+				if(i->first != i->second)
+					_statisticsWithoutAutocorrelations.insert(std::pair<double, DefaultStatistics>(bline.Distance(), statistics));
 			}
 		}
 		
 		virtual const std::map<double, class DefaultStatistics> &GetStatistics() const
 		{
-			return _statistics;
+			return _includeAutoCorrelationsButton.get_active() ? _statisticsWithAutocorrelations : _statisticsWithoutAutocorrelations;
 		}
 		
-		virtual void StartLine(Plot2D &plot, const std::string &name)
+		virtual void StartLine(Plot2D &plot, const std::string &name, const std::string &yAxisDesc)
 		{
-			plot.StartLine(name, "Baseline length (m)", "Value", false, Plot2DPointSet::DrawPoints);
+			plot.StartLine(name, "Baseline length (m)", yAxisDesc, false, Plot2DPointSet::DrawPoints);
+		}
+		virtual void addCustomPlotButtons(Gtk::VBox &container)
+		{
+			_includeAutoCorrelationsButton.signal_clicked().connect(sigc::mem_fun(*this, &BLengthPlotPage::onAutoCorrelationsClicked));
+			container.pack_start(_includeAutoCorrelationsButton);
+			_includeAutoCorrelationsButton.show();
+		}
+	private:
+		void onAutoCorrelationsClicked()
+		{
+			updatePlot();
 		}
 		
-	private:
-		std::map<double, DefaultStatistics> _statistics;
+		std::map<double, DefaultStatistics> _statisticsWithAutocorrelations;
+		std::map<double, DefaultStatistics> _statisticsWithoutAutocorrelations;
+		Gtk::CheckButton _includeAutoCorrelationsButton;
 };
 
 #endif

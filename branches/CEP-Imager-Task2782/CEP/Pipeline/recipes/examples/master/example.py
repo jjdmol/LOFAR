@@ -55,6 +55,6 @@ class example(BaseRecipe):
             )
             return 1
 
-
+#Initiate the current script as stand alone.
 if __name__ == '__main__':
     sys.exit(example().main())

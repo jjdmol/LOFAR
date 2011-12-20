@@ -128,6 +128,9 @@ namespace LOFAR {
     class MSReader: public DPInput
     {
     public:
+      // Default constructor.
+      MSReader();
+
       // Construct the object for the given MS.
       // Parameters are obtained from the parset using the given prefix.
       MSReader (const std::string& msName,
@@ -176,8 +179,7 @@ namespace LOFAR {
                      const casa::Cube<bool>& flags);
 
       // Tell if the visibility data are to be read.
-      void setReadVisData (bool readVisData)
-        { itsReadVisData = readVisData; }
+      virtual void setReadVisData (bool readVisData);
 
       // Get the main MS table.
       casa::Table& table()
@@ -185,16 +187,16 @@ namespace LOFAR {
 
       // Get the rownrs for meta info of missing time slots.
       // It uses the rows of the first time slot.
-      const casa::Vector<uint> getBaseRowNrs() const
+      const casa::Vector<uint>& getBaseRowNrs() const
         { return itsBaseRowNrs; }
 
       // Get the name of the MS.
       virtual casa::String msName() const;
 
       // Get the time information.
-      double startTime() const
+      double firstTime() const
         { return itsFirstTime; }
-      double endTime() const
+      double lastTime() const
         { return itsLastTime; }
       double timeInterval() const
         { return itsInterval; }
@@ -203,12 +205,38 @@ namespace LOFAR {
       uint spectralWindow() const
         { return itsSpw; }
 
+      // Get the baseline selection.
+      const string& baselineSelection() const
+        { return itsSelBL; }
+
+      // Is the data column missing?
+      bool missingData() const
+        { return itsMissingData; }
+
+      // Get the start channel.
+      uint startChan() const
+        { return itsStartChan; }
+
+      // Get the frequency information (used by the writer).
+      virtual void getFreqInfo (casa::Vector<double>& freq,
+                                casa::Vector<double>& width,
+                                casa::Vector<double>& effBW,
+                                casa::Vector<double>& resolution) const;
+
       // Get the nr of averaged full resolution channels.
       uint nchanAvg() const
         { return itsFullResNChanAvg; }
       // Get the nr of averaged full resolution time slots.
       uint ntimeAvg() const
         { return itsFullResNTimeAvg; }
+
+      // Tell if the input MS has LOFAR_FULL_RES_FLAG.
+      bool hasFullResFlags() const
+        { return itsHasFullResFlags; }
+
+      // Get access to the buffer.
+      const DPBuffer& getBuffer() const
+        { return itsBuffer; }
 
     private:
       // Prepare the access to the MS.
@@ -226,18 +254,22 @@ namespace LOFAR {
       // Calculate the weights from the autocorrelations.
       void autoWeight (casa::Cube<float>& weights, const DPBuffer& buf);
 
+    protected:
       //# Data members.
+      casa::String        itsMSName;
       casa::Table         itsMS;
       casa::TableIterator itsIter;
       casa::String        itsDataColName;
       casa::String        itsStartChanStr;  //# startchan expression
       casa::String        itsNrChanStr;     //# nchan expression
+      string              itsSelBL;         //# Baseline selection string
       bool                itsReadVisData;   //# read visibility data?
       bool                itsNeedSort;      //# sort needed on time,baseline?
       bool                itsAutoWeight;    //# calculate weights from autocorr?
       bool                itsHasWeightSpectrum;
       bool                itsUseFlags;
       bool                itsUseAllChan;    //# all channels (i.e. no slicer)?
+      bool                itsMissingData;   //# allow missing data column?
       int                 itsSpw;           //# spw (band) to use (<0 no select)
       uint                itsStartChan;
       double              itsInterval;

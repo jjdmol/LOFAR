@@ -184,13 +184,6 @@ else()
 		remote/clusteredobservation.cpp)
 endif(BOOST_ASIO_H_FOUND AND SIGCXX_FOUND)
 
-if(BOOST_ASIO_H_FOUND AND SIGCXX_FOUND)
-lofar_add_bin_program(aoremoteclient aoremoteclient.cpp
-  ${REMOTE_FILES}
-  quality/qualitytablesformatter.cpp )
-  target_link_libraries(aoremoteclient ${SIGCXX_LIBRARIES})
-endif(BOOST_ASIO_H_FOUND AND SIGCXX_FOUND)
-
 lofar_add_library(rfiengine
   Package__Version.cc
   ${IMAGING_FILES} ${MSIO_FILES} ${QUALITY_FILES} ${STRATEGY_FILES} ${UTIL_FILES})
@@ -209,10 +202,15 @@ if(GTKMM_FOUND)
 		gui/plot/horizontalplotscale.cpp
 		gui/plot/verticalplotscale.cpp
 		gui/plot/plot2d.cpp
+		gui/plot/plotpropertieswindow.cpp
 		gui/quality/aoqplotwindow.cpp
 		gui/quality/baselineplotpage.cpp
+		gui/quality/grayscaleplotpage.cpp
+		gui/quality/timefrequencyplotpage.cpp
 		gui/quality/twodimensionalplotpage.cpp
-		gui/imagewidget.cpp)
+		gui/imagewidget.cpp
+		gui/imagepropertieswindow.cpp
+		)
 		target_link_libraries(aoqplot ${GTKMM_LIBRARIES})
 	endif(BOOST_ASIO_H_FOUND AND SIGCXX_FOUND)
 else()
@@ -231,4 +229,8 @@ lofar_add_bin_program(versionaoflagger versionaoflagger.cc Package__Version.cc)
 if(BOOST_ASIO_H_FOUND AND SIGCXX_FOUND)
   lofar_add_bin_program(aoquality aoquality.cpp ${REMOTE_FILES})
   target_link_libraries(aoquality ${SIGCXX_LIBRARIES})
+
+	lofar_add_bin_program(aoremoteclient aoremoteclient.cpp
+  ${REMOTE_FILES} )
+  target_link_libraries(aoremoteclient ${SIGCXX_LIBRARIES})
 endif(BOOST_ASIO_H_FOUND AND SIGCXX_FOUND)

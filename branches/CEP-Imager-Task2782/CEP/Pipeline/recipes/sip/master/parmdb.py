@@ -7,6 +7,7 @@
 
 from __future__ import with_statement
 import os
+import sys
 import subprocess
 import shutil
 import tempfile
@@ -59,8 +60,8 @@ class parmdb(BaseRecipe, RemoteCommandRecipeMixIn):
         ),
         'suffix': ingredient.StringField(
             '--suffix',
-            help="Suffix of the table name of the instrument model",
-            default=".instrument"
+            help="Suffix of the table name of the empty parmameter database",
+            default=".parmdb"
         ),
         'working_directory': ingredient.StringField(
             '-w', '--working-directory',
@@ -70,7 +71,7 @@ class parmdb(BaseRecipe, RemoteCommandRecipeMixIn):
         'mapfile': ingredient.StringField(
             '--mapfile',
             help="Full path of mapfile to produce; it will contain "
-                 "a list of the generated instrument-model files"
+                 "a list of the generated empty parameter database files"
         )
     }
 
@@ -140,7 +141,7 @@ class parmdb(BaseRecipe, RemoteCommandRecipeMixIn):
             self.logger.warn("Detected failed parmdb job")
             return 1
         else:
-            self.logger.debug("Writing instrument map file: %s" %
+            self.logger.debug("Writing empty parameter database file: %s" %
                               self.inputs['mapfile'])
             Parset.fromDict(outnames).writeFile(self.inputs['mapfile'])
             self.outputs['mapfile'] = self.inputs['mapfile']

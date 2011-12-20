@@ -16,6 +16,7 @@ python_install(
   master/make_flaggable.py
   master/new_bbs.py
   master/parmdb.py
+  master/parmexportcal.py
   master/rficonsole.py
   master/skymodel.py
   master/sourcedb.py
@@ -32,6 +33,7 @@ python_install(
   nodes/make_flaggable.py
   nodes/new_bbs.py
   nodes/parmdb.py
+  nodes/parmexportcal.py
   nodes/rficonsole.py
   nodes/sourcedb.py
   nodes/vdsmaker.py

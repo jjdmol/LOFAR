@@ -33,26 +33,43 @@ class QualityTablesFormatter {
 	public:
 		enum StatisticKind
 		{
-			RFIRatioStatistic,
-			FlaggedRatioStatistic,
 			CountStatistic,
+			SumStatistic,
 			MeanStatistic,
-			RFIMeanStatistic,
 			RFICountStatistic,
+			RFISumStatistic,
+			RFIMeanStatistic,
+			RFIRatioStatistic,
+			RFIPercentageStatistic,
+			FlaggedCountStatistic,
+			FlaggedRatioStatistic,
 			SumP2Statistic,
 			SumP3Statistic,
 			SumP4Statistic,
 			VarianceStatistic,
 			VarianceOfVarianceStatistic,
+			StandardDeviationStatistic,
 			SkewnessStatistic,
-			KurtosisStatistic,
+			KurtosisStatistic, 
 			SignalToNoiseStatistic,
+			DSumStatistic,
 			DMeanStatistic,
 			DSumP2Statistic,
+			DSumP3Statistic,
 			DSumP4Statistic,
 			DVarianceStatistic,
 			DVarianceOfVarianceStatistic,
-			DCountStatistic
+			DStandardDeviationStatistic,
+			DCountStatistic,
+			BadSolutionCountStatistic,
+			CorrectCountStatistic,
+			CorrectedMeanStatistic,
+			CorrectedSumP2Statistic,
+			CorrectedDCountStatistic,
+			CorrectedDMeanStatistic,
+			CorrectedDSumP2Statistic,
+			FTSumStatistic,
+			FTSumP2Statistic
 		};
 		
 		enum StatisticDimension

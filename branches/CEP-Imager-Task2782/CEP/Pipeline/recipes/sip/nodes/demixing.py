@@ -135,14 +135,21 @@ class demixing(LOFARnodeTCP):
                 if os.system ('cp -r ' + infile + ' ' + mstarget) != 0:
                     return 1
 
-            # Use heuristics to get list of A-team sources if it wasn't given
-            if not remove:
-                self.logger.debug("Get list of A-team sources to remove")
-                remove = getAteamList(
-                             infile,
-                             verbose=self.logger.isEnabledFor(logging.DEBUG))
-                self.logger.debug("getAteamList returned: %s" % remove)
-
+            # Use heuristics to get a list of A-team sources that may need
+            # to be removed. If the user specified a list of candidate A-team
+            # sources to remove, then determine the intersection of both lists.
+            # Otherwise just use the list obtained from heuristics.
+            ateam_list = getAteamList(
+                infile,
+                outerDistance=2.e4,
+                elLimit=5.,
+                verbose=self.logger.isEnabledFor(logging.DEBUG)
+            )
+            self.logger.debug("getAteamList returned: %s" % ateam_list)
+            if remove:
+                remove = list(set(remove).intersection(ateam_list))
+            else:
+                remove = ateam_list
             self.logger.info("Removing target(s) %s from %s" %
                              (', '.join(remove), mstarget))
             spc.shiftphasecenter (mstarget, remove, freqstep, timestep)

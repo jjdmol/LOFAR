@@ -28,6 +28,8 @@
 
 #include <sigc++/signal.h>
 
+#include "serverconnection.h"
+
 class StatisticsCollection;
 
 namespace aoRemote {
@@ -42,17 +44,17 @@ class Server
 		
 		static unsigned PORT() { return 1892; }
 		
-		sigc::signal<void, class ServerConnection &, bool&> &SignalConnectionCreated()
+		sigc::signal<void, ServerConnectionPtr, bool&> &SignalConnectionCreated()
 		{
 			return _onConnectionCreated;
 		}
 	private:
 		void startAccept();
-		void handleAccept(class ServerConnection *connection, const boost::system::error_code &error);
+		void handleAccept(ServerConnectionPtr connection, const boost::system::error_code &error);
 		
 		boost::asio::io_service _ioService;
 		boost::asio::ip::tcp::acceptor _acceptor;
-		sigc::signal<void, class ServerConnection &, bool&> _onConnectionCreated;
+		sigc::signal<void, ServerConnectionPtr, bool&> _onConnectionCreated;
 };
 	
 }
