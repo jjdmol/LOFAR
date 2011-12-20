@@ -518,9 +518,9 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
           LOG_DEBUG_STR(itsLogPrefix << "transpose: (stream, subband, block) -> (pset, core): (" << stream << ", " << *itsCurrentSubband << ", " << block << ") -> (" << pset << ", " << core << ")" );
 #endif
           if (itsCoherentStokesData != 0)
-            itsAsyncTransposeBeams->asyncSend(pset, core, *itsCurrentSubband, i, stokes, stream, itsCoherentStokesData.get()); // Asynchronously send one beam to another pset.
+            itsAsyncTransposeBeams->asyncSend(pset, core, *itsCurrentSubband, beam, stokes, stream, itsCoherentStokesData.get()); // Asynchronously send one beam to another pset.
           else
-            itsAsyncTransposeBeams->asyncSend(pset, core, *itsCurrentSubband, i, stokes, stream, itsPreTransposeBeamFormedData.get()); // Asynchronously send one beam to another pset.
+            itsAsyncTransposeBeams->asyncSend(pset, core, *itsCurrentSubband, beam, stokes, stream, itsPreTransposeBeamFormedData.get()); // Asynchronously send one beam to another pset.
         }
 
         asyncSendTimer.stop();
