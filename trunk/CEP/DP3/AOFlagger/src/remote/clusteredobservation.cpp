@@ -92,7 +92,9 @@ bool ClusteredObservation::IsVdsFilename(const std::string &filename)
 	return
 		(filename.size() > 4 && filename.substr(filename.size()-4) == ".vds")
 		||
-		(filename.size() > 4 && filename.substr(filename.size()-4) == ".gds");
+		(filename.size() > 4 && filename.substr(filename.size()-4) == ".gds")
+		||
+		(filename.size() > 5 && filename.substr(filename.size()-5) == ".gvds");
 }
 
 bool ClusteredObservation::IsRefFilename(const std::string &filename)
