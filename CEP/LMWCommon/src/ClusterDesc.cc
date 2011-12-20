@@ -105,7 +105,7 @@ namespace LOFAR { namespace CEP {
       remoteFilesys = remoteDisks;
     } else {
       ASSERTSTR (remoteFilesys.size() == remoteDisks.size(),
-                 "RemoteFileSys must be empty or have same length as RemoteDisks");
+                 "RemoteFileSys must be empty or have equal length as RemoteDisks");
     }
     for (uint i=0; i<names.size(); ++i) {
       vector<string> rdisks, rfilesys, lfilesys, ldisks;
@@ -129,7 +129,7 @@ namespace LOFAR { namespace CEP {
         } else {
           ASSERTSTR (rfilesys.size() == rdisks.size(),
                      "RemoteFileSys," + names[i] +
-                     " must be empty or have same length as RemoteDisks." +
+                     " must be empty or have equal length as RemoteDisks." +
                      names[i]);
         }
         rfsysp = &rfilesys;

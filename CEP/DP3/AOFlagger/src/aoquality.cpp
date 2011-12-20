@@ -26,14 +26,12 @@
 #include <AOFlagger/msio/measurementset.h>
 
 #include <AOFlagger/quality/defaultstatistics.h>
-#include <AOFlagger/quality/histogramcollection.h>
 #include <AOFlagger/quality/qualitytablesformatter.h>
 #include <AOFlagger/quality/statisticscollection.h>
 #include <AOFlagger/quality/statisticsderivator.h>
 
 #include <AOFlagger/remote/clusteredobservation.h>
 #include <AOFlagger/remote/processcommander.h>
-#include <AOFlagger/util/plot.h>
 
 void reportProgress(unsigned step, unsigned totalSteps)
 {
@@ -47,19 +45,11 @@ void reportProgress(unsigned step, unsigned totalSteps)
 	}
 }
 
-enum CollectingMode
-{
-	CollectDefault,
-	CollectHistograms
-};
-
-void actionCollect(const std::string &filename, enum CollectingMode mode)
+void actionCollect(const std::string &filename, bool collectAll)
 {
 	MeasurementSet *ms = new MeasurementSet(filename);
 	const unsigned polarizationCount = ms->GetPolarizationCount();
 	const unsigned bandCount = ms->BandCount();
-	const bool ignoreChannelZero = ms->ChannelZeroIsRubish();
-	const std::string stationName = ms->GetStationName();
 	BandInfo *bands = new BandInfo[bandCount];
 	double **frequencies = new double*[bandCount];
 	unsigned totalChannels = 0;
@@ -78,30 +68,15 @@ void actionCollect(const std::string &filename, enum CollectingMode mode)
 	std::cout
 		<< "Polarizations: " << polarizationCount << '\n'
 		<< "Bands: " << bandCount << '\n'
-		<< "Channels/band: " << (totalChannels / bandCount) << '\n'
-		<< "Name of obseratory: " << stationName << '\n';
-	if(ignoreChannelZero)
-		std::cout << "Channel zero will be ignored, as this looks like a LOFAR data set with bad channel 0.\n";
-	else
-		std::cout << "Channel zero will be included in the statistics, as it seems that channel 0 is okay.\n";
+		<< "Channels/band: " << (totalChannels / bandCount) << '\n';
 	
-	// Initialize statisticscollection
-	StatisticsCollection collection(polarizationCount);
-	if(mode == CollectDefault)
-	{
-		for(unsigned b=0;b<bandCount;++b)
-		{
-			if(ignoreChannelZero)
-				collection.InitializeBand(b, (frequencies[b]+1), bands[b].channelCount-1);
-			else
-				collection.InitializeBand(b, frequencies[b], bands[b].channelCount);
-		}
-	}
-	// Initialize Histograms collection
-	HistogramCollection histogramCollection(polarizationCount);
-
-	// get columns
 	casa::Table table(filename, casa::Table::Update);
+	StatisticsCollection collection(polarizationCount);
+	for(unsigned b=0;b<bandCount;++b)
+	{
+		collection.InitializeBand(b, frequencies[b], bands[b].channelCount);
+	}
+
 	const char *dataColumnName = "DATA";
 	casa::ROArrayColumn<casa::Complex> dataColumn(table, dataColumnName);
 	casa::ROArrayColumn<bool> flagColumn(table, "FLAG");
@@ -125,31 +100,19 @@ void actionCollect(const std::string &filename, enum CollectingMode mode)
 		const casa::Array<casa::Complex> dataArray = dataColumn(row);
 		const casa::Array<bool> flagArray = flagColumn(row);
 		
-		std::complex<float> *samples[polarizationCount];
+		std::vector<std::complex<float> > samples[polarizationCount];
 		bool *isRFI[polarizationCount];
 		for(unsigned p = 0; p < polarizationCount; ++p)
-		{
 			isRFI[p] = new bool[band.channelCount];
-			samples[p] = new std::complex<float>[band.channelCount];
-		}
 		
 		casa::Array<casa::Complex>::const_iterator dataIter = dataArray.begin();
 		casa::Array<bool>::const_iterator flagIter = flagArray.begin();
-		const unsigned startChannel = ignoreChannelZero ? 1 : 0;
-		if(ignoreChannelZero)
+		for(unsigned channel = 0 ; channel<band.channelCount; ++channel)
 		{
 			for(unsigned p = 0; p < polarizationCount; ++p)
 			{
-				++dataIter;
-				++flagIter;
-			}
-		}
-		for(unsigned channel = startChannel ; channel<band.channelCount; ++channel)
-		{
-			for(unsigned p = 0; p < polarizationCount; ++p)
-			{
-				samples[p][channel - startChannel] = *dataIter;
-				isRFI[p][channel - startChannel] = *flagIter;
+				samples[p].push_back(*dataIter);
+				isRFI[p][channel] = *flagIter;
 				
 				++dataIter;
 				++flagIter;
@@ -158,25 +121,11 @@ void actionCollect(const std::string &filename, enum CollectingMode mode)
 		
 		for(unsigned p = 0; p < polarizationCount; ++p)
 		{
-			switch(mode)
-			{
-				case CollectDefault:
-					{
-						const bool origFlags = false;
-						collection.Add(antenna1Index, antenna2Index, time, bandIndex, p, &samples[p]->real(), &samples[p]->imag(), isRFI[p], &origFlags, band.channelCount - startChannel, 2, 1, 0);
-					}
-					break;
-				case CollectHistograms:
-					histogramCollection.Add(antenna1Index, antenna2Index, p, samples[p], isRFI[p], band.channelCount - startChannel);
-					break;
-			}
+			collection.Add(antenna1Index, antenna2Index, time, bandIndex, p, samples[p], isRFI[p]);
 		}
 
 		for(unsigned p = 0; p < polarizationCount; ++p)
-		{
 			delete[] isRFI[p];
-			delete[] samples[p];
-		}
 		
 		reportProgress(row, nrow);
 	}
@@ -185,69 +134,11 @@ void actionCollect(const std::string &filename, enum CollectingMode mode)
 		delete[] frequencies[b];
 	delete[] frequencies;
 	delete[] bands;
-	std::cout << "100\n";
 	
-	switch(mode)
-	{
-		case CollectDefault:
-			{
-				std::cout << "Writing quality tables..." << std::endl;
-				
-				QualityTablesFormatter qualityData(filename);
-				collection.Save(qualityData);
-			}
-			break;
-		case CollectHistograms:
-			const std::map<HistogramCollection::AntennaPair, LogHistogram*> &map = histogramCollection.GetHistograms(0);
-			Plot plotSlopes("histogram-slopes.pdf");
-			Plot plotHistograms("histograms.pdf");
-			for(std::map<HistogramCollection::AntennaPair, LogHistogram*>::const_iterator i = map.begin(); i != map.end(); ++i)
-			{
-				if(i->first.first != i->first.second)
-				{
-					const LogHistogram *histogram = i->second;
-					double rangeCentre = histogram->MinPositiveAmplitude();
-					rangeCentre = exp2(floor(log2(rangeCentre)));
-					const double maxAmplitude = histogram->MaxAmplitude();
-					std::cout << "Antennae " << i->first.first << " x " << i->first.second << "\n";
-					std::stringstream s;
-					s << i->first.first << " x " << i->first.second;
-					//plotSlopes.StartLine(s.str());
-					//plotHistograms.StartLine(s.str());
-					plotSlopes.StartLine();
-					plotSlopes.SetLogScale(true, false);
-					plotHistograms.StartLine();
-					plotHistograms.SetLogScale(true, true);
-					while(rangeCentre < maxAmplitude)
-					{
-						const double rangeStart = rangeCentre * 0.75;
-						const double rangeEnd = rangeCentre * 1.5;
-						const double slope = histogram->NormalizedSlope(rangeStart, rangeEnd, LogHistogram::TotalAmplitudeHistogram);
-						std::cout << rangeStart << "-" << rangeEnd << ": " << slope << "\n";
-						rangeCentre *= 2.0;
-						plotSlopes.PushDataPoint(rangeCentre, slope);
-						const double count = histogram->NormalizedCount(rangeStart, rangeEnd, LogHistogram::TotalAmplitudeHistogram);
-						if(count > 0 && std::isfinite(count))
-							plotHistograms.PushDataPoint(rangeCentre, count);
-					}
-				}
-			}
-			Plot plotFine("histogram-fine.pdf");
-			plotFine.SetLogScale(true, true);
-			LogHistogram intHistogram;
-			histogramCollection.GetHistogramForCrossCorrelations(0, intHistogram);
-			
-			plotFine.StartLine("Total");
-			for(LogHistogram::iterator i=intHistogram.begin(); i!=intHistogram.end(); ++i)
-				plotFine.PushDataPoint(i.value(), i.normalizedCount(LogHistogram::TotalAmplitudeHistogram));
-			plotFine.StartLine("RFI");
-			for(LogHistogram::iterator i=intHistogram.begin(); i!=intHistogram.end(); ++i)
-				plotFine.PushDataPoint(i.value(), i.normalizedCount(LogHistogram::RFIAmplitudeHistogram));
-			plotFine.StartLine("Data");
-			for(LogHistogram::iterator i=intHistogram.begin(); i!=intHistogram.end(); ++i)
-				plotFine.PushDataPoint(i.value(), i.normalizedCount(LogHistogram::DataAmplitudeHistogram));
-			break;
-	}
+	std::cout << "100\nWriting quality tables..." << std::endl;
+	
+	QualityTablesFormatter qualityData(filename);
+	collection.Save(qualityData);
 	
 	std::cout << "Done.\n";
 }
@@ -363,27 +254,15 @@ void actionQueryTime(const std::string &kindName, const std::string &filename)
 
 void actionSummarize(const std::string &filename)
 {
-	bool remote = aoRemote::ClusteredObservation::IsClusteredFilename(filename);
-	StatisticsCollection collection;
-	if(remote)
-	{
-		aoRemote::ClusteredObservation *observation = aoRemote::ClusteredObservation::Load(filename);
-		aoRemote::ProcessCommander commander(*observation);
-		commander.PushReadQualityTablesTask(&collection);
-		commander.Run();
-		delete observation;
-	}
-	else {
-		MeasurementSet *ms = new MeasurementSet(filename);
-		const unsigned polarizationCount = ms->GetPolarizationCount();
-		delete ms;
-		
-		collection.SetPolarizationCount(polarizationCount);
-		QualityTablesFormatter qualityData(filename);
-		collection.Load(qualityData);
-	}
+	MeasurementSet *ms = new MeasurementSet(filename);
+	const unsigned polarizationCount = ms->GetPolarizationCount();
+	delete ms;
 	
-	DefaultStatistics statistics(collection.PolarizationCount());
+	QualityTablesFormatter qualityData(filename);
+	StatisticsCollection collection(polarizationCount);
+	collection.Load(qualityData);
+	
+	DefaultStatistics statistics(polarizationCount);
 	
 	collection.GetGlobalTimeStatistics(statistics);
 	std::cout << "Time statistics: \n";
@@ -541,7 +420,7 @@ int main(int argc, char *argv[])
 			}
 			else {
 				std::string filename = (argc==3) ? argv[2] : argv[3];
-				actionCollect(filename, argc==4 ? CollectHistograms : CollectDefault);
+				actionCollect(filename, argc==4);
 			}
 		}
 		else if(action == "combine")

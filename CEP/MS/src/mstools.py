@@ -2,7 +2,7 @@ import os
 import re
 
 """ Find files on nodes in a cluster matching the given pattern """
-def findFiles (msPattern, lsOption='', cluster=''):
+def findFiles (msPattern, lsOption=''):
     hostline    = re.compile ('^-+ +[^ ]+ +-+$')
     hostline1   = re.compile ('^-+ +')
     hostline2   = re.compile (' +-+$')
@@ -12,7 +12,7 @@ def findFiles (msPattern, lsOption='', cluster=''):
                    'Warning: No xauth data; .*',
                    '/usr/bin/xauth:  error in locking authority file.*']
     nomatchline = re.compile ('^(%s)$' % '|'.join(nomatch))
-    pipe = os.popen ('cexec ' + cluster + ' "ls ' + lsOption + ' ' + msPattern + '"')
+    pipe = os.popen ('cexec "ls ' + lsOption + ' ' + msPattern + '"')
     files = []
     hosts = []
     host = ''
@@ -31,8 +31,8 @@ def findFiles (msPattern, lsOption='', cluster=''):
 
 
 """ Find directories on nodes in a cluster matching the given pattern """
-def findDirs (pattern, cluster=''):
-    return findFiles (pattern, '-d', cluster)
+def findDirs (pattern):
+    return findFiles (pattern, '-d')
 
 
 """ Check if all files have the same SAP """
@@ -126,9 +126,9 @@ def movemss (srcPattern, dstPattern, userName, bandsPerBeam=80, dryrun=False):
                 srcDir = os.path.dirname(srcName)
                 cmd = ''
                 if createDir:
-                    cmd = 'ssh -x ' + userName + '@' + dstHosts[i] + \
+                    cmd = 'ssh -x' + userName + '@' + dstHosts[i] + \
                         ' "mkdir -p ' + srcDir  + '" && '
-                cmd += 'ssh -x ' + userName + '@' + srcHosts[inx] + \
+                cmd += 'ssh -x' + userName + '@' + srcHosts[inx] + \
                     ' "scp -r ' + srcName + ' ' + \
                     userName + '@' + dstHosts[i] + ':' + srcDir + \
                     ' && rm -rf ' + srcName + '"'

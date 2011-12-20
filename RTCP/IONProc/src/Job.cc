@@ -397,7 +397,7 @@ void Job::startStorageProcesses()
   std::string userName   = itsParset.getString("OLAP.Storage.userName");
   std::string sshKey     = itsParset.getString("OLAP.Storage.sshIdentityFile");
   std::string executable = itsParset.getString("OLAP.Storage.msWriter");
-  std::string parset     = itsParset.getString("OLAP.Storage.parsetFilename");
+  std::string parset     = itsParset.name();
 
   char cwd[1024];
 
@@ -521,7 +521,7 @@ void Job::jobThread()
       if (canStart) {
         // PLC: INIT phase
         if (itsParset.realTime())
-          waitUntilCloseToStartOfObservation(20);
+          waitUntilCloseToStartOfObservation(10);
 
         // PLC: in practice, RUN must start here, because resources
         // can become available just before the observation starts.

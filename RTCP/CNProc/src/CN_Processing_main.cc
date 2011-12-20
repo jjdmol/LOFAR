@@ -140,7 +140,7 @@ void *my_fftw_malloc(size_t n) {
 }
 
 void my_fftw_free(void *p) {
-  delete[] static_cast<char*>(p);
+  delete[] p;
 }
 #endif
 

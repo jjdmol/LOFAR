@@ -38,9 +38,7 @@ namespace LOFAR {
         itsName        (prefix),
         itsCount       (0),
         itsFlagCounter (input, parset, prefix)
-    {
-      itsFlagData = parset.getBool (prefix+"flagdata", false);
-    }
+    {}
 
     Counter::~Counter()
     {}
@@ -54,16 +52,13 @@ namespace LOFAR {
     {
       os << endl << "Cumulative flag counts in Counter " << itsName;
       os << endl << "=================================" << endl;
-      itsFlagCounter.showBaseline (os, itsCount);
+      itsFlagCounter.showBaseline (os, itsInput->getAnt1(),
+                                   itsInput->getAnt2(), itsCount);
       itsFlagCounter.showChannel  (os, itsCount);
     }
 
     void Counter::updateInfo (DPInfo& info)
     {
-      // Visibility data must be read if needed.
-      if (itsFlagData) {
-        info.setNeedVisData();
-      }
       // Initialize the flag counters.
       itsFlagCounter.init (info.nbaselines(), info.nchan(), info.ncorr());
     }

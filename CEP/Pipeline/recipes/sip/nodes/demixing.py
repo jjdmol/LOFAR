@@ -141,8 +141,6 @@ class demixing(LOFARnodeTCP):
             # Otherwise just use the list obtained from heuristics.
             ateam_list = getAteamList(
                 infile,
-                outerDistance=2.e4,
-                elLimit=5.,
                 verbose=self.logger.isEnabledFor(logging.DEBUG)
             )
             self.logger.debug("getAteamList returned: %s" % ateam_list)

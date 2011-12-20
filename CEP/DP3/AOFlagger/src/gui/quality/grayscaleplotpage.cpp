@@ -31,11 +31,11 @@ GrayScalePlotPage::GrayScalePlotPage() :
 	_statisticKindFrame("Statistic kind"),
 	_countButton("Count"),
 	_meanButton("Mean"),
-	_stdDevButton("StdDev"),
+	_varianceButton("Variance"),
 	_dCountButton("DCount"),
 	_dMeanButton("DMean"),
-	_dStdDevButton("DStdDev"),
-	_rfiPercentageButton("RFIPercentage"),
+	_dVarianceButton("DVariance"),
+	_rfiRatioButton("RFIRatio"),
 	_snrButton("SNR"),
 	_polarizationFrame("Polarization"),
 	_polXXButton("XX"),
@@ -97,9 +97,9 @@ void GrayScalePlotPage::initStatisticKinds()
 	_meanButton.signal_clicked().connect(sigc::mem_fun(*this, &GrayScalePlotPage::onSelectMean));
 	_statisticKindBox.pack_start(_meanButton, Gtk::PACK_SHRINK);
 	
-	_stdDevButton.set_group(statGroup);
-	_stdDevButton.signal_clicked().connect(sigc::mem_fun(*this, &GrayScalePlotPage::onSelectStdDev));
-	_statisticKindBox.pack_start(_stdDevButton, Gtk::PACK_SHRINK);
+	_varianceButton.set_group(statGroup);
+	_varianceButton.signal_clicked().connect(sigc::mem_fun(*this, &GrayScalePlotPage::onSelectVariance));
+	_statisticKindBox.pack_start(_varianceButton, Gtk::PACK_SHRINK);
 	
 	_dCountButton.set_group(statGroup);
 	_dCountButton.signal_clicked().connect(sigc::mem_fun(*this, &GrayScalePlotPage::onSelectDCount));
@@ -109,19 +109,19 @@ void GrayScalePlotPage::initStatisticKinds()
 	_dMeanButton.signal_clicked().connect(sigc::mem_fun(*this, &GrayScalePlotPage::onSelectDMean));
 	_statisticKindBox.pack_start(_dMeanButton, Gtk::PACK_SHRINK);
 	
-	_dStdDevButton.set_group(statGroup);
-	_dStdDevButton.signal_clicked().connect(sigc::mem_fun(*this, &GrayScalePlotPage::onSelectDStdDev));
-	_statisticKindBox.pack_start(_dStdDevButton, Gtk::PACK_SHRINK);
+	_dVarianceButton.set_group(statGroup);
+	_dVarianceButton.signal_clicked().connect(sigc::mem_fun(*this, &GrayScalePlotPage::onSelectDVariance));
+	_statisticKindBox.pack_start(_dVarianceButton, Gtk::PACK_SHRINK);
 	
-	_rfiPercentageButton.set_group(statGroup);
-	_rfiPercentageButton.signal_clicked().connect(sigc::mem_fun(*this, &GrayScalePlotPage::onSelectRFIPercentage));
-	_statisticKindBox.pack_start(_rfiPercentageButton, Gtk::PACK_SHRINK);
+	_rfiRatioButton.set_group(statGroup);
+	_rfiRatioButton.signal_clicked().connect(sigc::mem_fun(*this, &GrayScalePlotPage::onSelectRFIRatio));
+	_statisticKindBox.pack_start(_rfiRatioButton, Gtk::PACK_SHRINK);
 	
 	_snrButton.set_group(statGroup);
 	_snrButton.signal_clicked().connect(sigc::mem_fun(*this, &GrayScalePlotPage::onSelectSNR));
 	_statisticKindBox.pack_start(_snrButton, Gtk::PACK_SHRINK);
 	
-	_stdDevButton.set_active();
+	_varianceButton.set_active();
 	
 	_statisticKindFrame.add(_statisticKindBox);
 	
@@ -230,7 +230,6 @@ void GrayScalePlotPage::UpdateImage()
 			
 			setToSelectedPhase(data);
 			
-			_imageWidget.SetZAxisDescription(StatisticsDerivator::GetDescWithUnits(GetSelectedStatisticKind()));
 			_imageWidget.SetImage(data.GetSingleImage());
 			_imageWidget.SetOriginalMask(data.GetSingleMask());
 			if(pair.second != 0)

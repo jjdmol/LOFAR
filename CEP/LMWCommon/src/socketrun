@@ -123,9 +123,9 @@ do
   echo "ssh -x -n $host $program socket $masterhost $port $np $rank '$part' '$fsys' '$partvds' '$envfile' $arg" " &"
   if test "$dry" = 0; then
     if test "$logfile" = ""; then
-      ssh -o NoHostAuthenticationForLocalhost=yes -o NumberOfPasswordPrompts=0 -x -n $host $program socket $masterhost $port $np $rank "$part" "$fsys" "$partvds" $envfile $arg &
+      ssh -x -n $host $program socket $masterhost $port $np $rank "$part" "$fsys" "$partvds" $envfile $arg &
     else
-      ssh -o NoHostAuthenticationForLocalhost=yes -o NumberOfPasswordPrompts=0 -x -n $host $program socket $masterhost $port $np $rank "$part" "$fsys" "$partvds" $envfile $arg > $logfile-$rank 2>&1 &
+      ssh -x -n $host $program socket $masterhost $port $np $rank "$part" "$fsys" "$partvds" $envfile $arg > $logfile-$rank 2>&1 &
     fi
     pidlist="$pidlist $!"
   fi

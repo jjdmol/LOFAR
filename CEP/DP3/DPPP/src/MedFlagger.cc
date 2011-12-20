@@ -103,7 +103,8 @@ namespace LOFAR {
     {
       os << endl << "Flags set by MADFlagger " << itsName;
       os << endl << "=======================" << endl;
-      itsFlagCounter.showBaseline (os, itsNTimes);
+      itsFlagCounter.showBaseline (os, itsInput->getAnt1(),
+                                   itsInput->getAnt2(), itsNTimes);
       itsFlagCounter.showChannel  (os, itsNTimes);
       itsFlagCounter.showCorrelation (os, itsNTimes);
     }

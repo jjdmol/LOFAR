@@ -1,4 +1,6 @@
 # $Id$
 
-lofar_package(Offline DEPENDS CEP MSLofar Deployment)
+lofar_package(Offline
+  DEPENDS ASKAPsoft pyparameterset BBSControl BBSTools ExpIon pystationresponse
+  pyparmdb MWImager DPPP AOFlagger LofarStMan MSLofar Pipeline)
 

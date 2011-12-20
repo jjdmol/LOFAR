@@ -438,27 +438,3 @@ void MeasurementSet::AddAOFlaggerHistory(const rfiStrategy::Strategy &strategy, 
 	cli.put         (rownr, clivec);
 }
 
-std::string MeasurementSet::GetStationName() const
-{
-	casa::MeasurementSet ms(_location);
-	casa::Table antennaTable(ms.antenna());
-	if(antennaTable.nrow() == 0)
-		throw std::runtime_error("GetStationName() : no rows in Antenna table");
-	casa::ROScalarColumn<casa::String> stationColumn(antennaTable, "STATION");
-	return stationColumn(0);
-}
-
-bool MeasurementSet::ChannelZeroIsRubish()
-{
-	try
-	{
-		const std::string station = GetStationName();
-		if(station != "LOFAR") return false;
-		// This is of course a hack, but its the best estimate we can make :-/ (easily)
-		const BandInfo bandInfo = GetBandInfo(0);
-		return (bandInfo.channelCount == 256 || bandInfo.channelCount==64);
-	} catch(std::exception &e)
-	{
-		return false;
-	}
-}

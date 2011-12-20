@@ -29,7 +29,6 @@
 --             1: get all trees that are scheduled to start in the period: now till now+period
 --             2: get all trees with starttime <=now and stoptime > now ; period param is ignored
 --             3: get all trees with stoptime in the period: now-period till now
---             4: get all trees with stoptime < now and have state >= FINISHED
 --
 -- With this function we can get the planned, active or finished trees from the database.
 --
@@ -69,18 +68,12 @@ CREATE OR REPLACE FUNCTION getTreeGroup(INT, INT)
 		    vQuery := vQuery || ' AND t.state > ' || TSscheduled;
 		    vQuery := vQuery || ' AND t.state < ' || TSfinished;
 	      ELSE 
-                    IF $1 = 3 THEN
-                          vQuery := ' AND t.state >= ' || TSfinished;
-                          vQuery := vQuery || ' AND t.stoptime > now()-interval ' || chr(39) || $2 || ' minutes' || chr(39);
-                          vSortOrder := 't.stoptime, t.treeID';
-                ELSE
-		      IF $1 = 4 THEN
-		  	    vQuery := ' AND t.state >= ' || TSfinished;
-			    vQuery := vQuery || ' AND t.stoptime < now() ';
-			    vSortOrder := 't.treeID';
-		      ELSE
-			    RAISE EXCEPTION 'groupType must be 0,1,2,3 or 4 not %', $1;
-                      END IF;
+		    IF $1 = 3 THEN
+			  vQuery := ' AND t.state >= ' || TSfinished;
+			  vQuery := vQuery || ' AND t.stoptime > now()-interval ' || chr(39) || $2 || ' minutes' || chr(39);
+			  vSortOrder := 't.stoptime, t.treeID';
+		    ELSE
+			  RAISE EXCEPTION 'groupType must be 0,1,2 or 3 not %', $1;
 		    END IF;
 		  END IF;
 	    END IF;

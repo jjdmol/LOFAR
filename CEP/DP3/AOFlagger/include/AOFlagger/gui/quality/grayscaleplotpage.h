@@ -59,11 +59,11 @@ class GrayScalePlotPage : public Gtk::HBox {
 		
 		void onSelectCount() { _selectStatisticKind = QualityTablesFormatter::CountStatistic; UpdateImage(); }
 		void onSelectMean() { _selectStatisticKind = QualityTablesFormatter::MeanStatistic; UpdateImage(); }
-		void onSelectStdDev() { _selectStatisticKind = QualityTablesFormatter::StandardDeviationStatistic; UpdateImage(); }
+		void onSelectVariance() { _selectStatisticKind = QualityTablesFormatter::VarianceStatistic; UpdateImage(); }
 		void onSelectDCount() { _selectStatisticKind = QualityTablesFormatter::DCountStatistic; UpdateImage(); }
 		void onSelectDMean() { _selectStatisticKind = QualityTablesFormatter::DMeanStatistic; UpdateImage(); }
-		void onSelectDStdDev() { _selectStatisticKind = QualityTablesFormatter::DStandardDeviationStatistic; UpdateImage(); }
-		void onSelectRFIPercentage() { _selectStatisticKind = QualityTablesFormatter::RFIPercentageStatistic; UpdateImage(); }
+		void onSelectDVariance() { _selectStatisticKind = QualityTablesFormatter::DVarianceStatistic; UpdateImage(); }
+		void onSelectRFIRatio() { _selectStatisticKind = QualityTablesFormatter::RFIRatioStatistic; UpdateImage(); }
 		void onSelectSNR() { _selectStatisticKind = QualityTablesFormatter::SignalToNoiseStatistic; UpdateImage(); }
 		void onPropertiesClicked();
 		
@@ -87,7 +87,7 @@ class GrayScalePlotPage : public Gtk::HBox {
 		Gtk::Frame _statisticKindFrame;
 		Gtk::VBox _statisticKindBox;
 		
-		Gtk::RadioButton _countButton, _meanButton, _stdDevButton, _dCountButton, _dMeanButton, _dStdDevButton, _rfiPercentageButton, _snrButton;
+		Gtk::RadioButton _countButton, _meanButton, _varianceButton, _dCountButton, _dMeanButton, _dVarianceButton, _rfiRatioButton, _snrButton;
 		
 		Gtk::Frame _polarizationFrame;
 		Gtk::VBox _polarizationBox;
