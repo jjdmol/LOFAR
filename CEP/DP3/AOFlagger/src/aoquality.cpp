@@ -33,6 +33,7 @@
 
 #include <AOFlagger/remote/clusteredobservation.h>
 #include <AOFlagger/remote/processcommander.h>
+#include <AOFlagger/util/plot.h>
 
 void reportProgress(unsigned step, unsigned totalSteps)
 {
@@ -198,19 +199,34 @@ void actionCollect(const std::string &filename, enum CollectingMode mode)
 			break;
 		case CollectHistograms:
 			const std::map<HistogramCollection::AntennaPair, LogHistogram*> &map = histogramCollection.GetHistograms(0);
+			Plot plotSlopes("histogram-slopes.pdf");
+			Plot plotHistograms("histograms.pdf");
 			for(std::map<HistogramCollection::AntennaPair, LogHistogram*>::const_iterator i = map.begin(); i != map.end(); ++i)
 			{
 				const LogHistogram *histogram = i->second;
-				double rangeStart = histogram->MinPositiveAmplitude();
-				rangeStart = exp2(floor(log2(rangeStart)));
+				double rangeCentre = histogram->MinPositiveAmplitude();
+				rangeCentre = exp2(floor(log2(rangeCentre)));
 				const double maxAmplitude = histogram->MaxAmplitude();
 				std::cout << "Antennae " << i->first.first << " x " << i->first.second << "\n";
-				while(rangeStart < maxAmplitude)
+				std::stringstream s;
+				s << i->first.first << " x " << i->first.second;
+				//plotSlopes.StartLine(s.str());
+				//plotHistograms.StartLine(s.str());
+				plotSlopes.StartLine();
+				plotSlopes.SetLogScale(true, false);
+				plotHistograms.StartLine();
+				plotHistograms.SetLogScale(true, true);
+				while(rangeCentre < maxAmplitude)
 				{
-					const double rangeEnd = rangeStart * 2.0;
-					const double slope = histogram->Slope(rangeStart, rangeEnd, LogHistogram::TotalAmplitudeHistogram);
+					const double rangeStart = rangeCentre * 0.75;
+					const double rangeEnd = rangeCentre * 1.5;
+					const double slope = histogram->NormalizedSlope(rangeStart, rangeEnd, LogHistogram::TotalAmplitudeHistogram);
 					std::cout << rangeStart << "-" << rangeEnd << ": " << slope << "\n";
-					rangeStart *= 2.0;
+					rangeCentre *= 2.0;
+					plotSlopes.PushDataPoint(rangeCentre, slope);
+					const double count = histogram->NormalizedCount(rangeStart, rangeEnd, LogHistogram::TotalAmplitudeHistogram);
+					if(count > 0 && std::isfinite(count))
+						plotHistograms.PushDataPoint(rangeCentre, count);
 				}
 			}
 			break;

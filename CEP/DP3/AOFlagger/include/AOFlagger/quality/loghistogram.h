@@ -57,7 +57,7 @@ class LogHistogram
 			}
 		}
 		
-		double Slope(double startAmplitude, double endAmplitude, enum HistogramType type) const
+		double NormalizedSlope(double startAmplitude, double endAmplitude, enum HistogramType type) const
 		{
 			unsigned long n = 0;
 			long double sumX = 0.0, sumXY = 0.0, sumY = 0.0, sumXSquare = 0.0;
@@ -103,6 +103,26 @@ class LogHistogram
 					throw std::runtime_error("Histogram does not contain positive values");
 			}
 			return i->first;
+		}
+		
+		double NormalizedCount(double startAmplitude, double endAmplitude, enum HistogramType type) const
+		{
+			unsigned long count = 0;
+			for(std::map<double, class AmplitudeBin>::const_iterator i=_amplitudes.begin();i!=_amplitudes.end();++i)
+			{
+				if(i->first >= startAmplitude && i->first < endAmplitude)
+				{
+					unsigned long thisCount = 0;
+					switch(type)
+					{
+						case TotalAmplitudeHistogram: thisCount = i->second.count + i->second.rfiCount; break;
+						case RFIAmplitudeHistogram: thisCount = i->second.rfiCount; break;
+						case DataAmplitudeHistogram: thisCount = i->second.count; break;
+					}
+					count += thisCount;
+				}
+			}
+			return (double) count / (endAmplitude - startAmplitude);
 		}
 	private:
 		struct AmplitudeBin
