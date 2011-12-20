@@ -69,6 +69,17 @@ class HistogramCollection
 			return *i->second;
 		}
 		
+		void GetHistogram(const unsigned polarization, LogHistogram &target)
+		{
+			for(unsigned p=0;p<_polarizationCount;++p)
+			{
+				for(std::map<AntennaPair, LogHistogram*>::iterator i=_histograms[p].begin(); i!=_histograms[p].end(); ++i)
+				{
+					target.Add(*i->second);
+				}
+			}
+		}
+		
 		const std::map<AntennaPair, LogHistogram*> GetHistograms(const unsigned polarization) const
 		{
 			return _histograms[polarization];
