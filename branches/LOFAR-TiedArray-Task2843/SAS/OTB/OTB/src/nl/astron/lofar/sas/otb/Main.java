@@ -28,7 +28,6 @@ import com.darwinsys.lang.GetOpt;
 import com.darwinsys.lang.GetOptDesc;
 import java.awt.GraphicsEnvironment;
 import java.awt.Rectangle;
-import java.awt.event.WindowEvent;
 import java.io.File;
 import java.util.Iterator;
 import java.util.Map;
@@ -50,6 +49,18 @@ public class Main {
     
     static Logger logger = Logger.getLogger(Main.class);
     static MainFrame itsMainFrame = null;
+        
+    static {
+    Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+      public void run() {
+        System.out.println("Shutting down OTB");
+        if (itsMainFrame != null)  itsMainFrame.exit();
+      }
+    });
+
+  }
+
     /**
      * @param args the command line arguments
      */

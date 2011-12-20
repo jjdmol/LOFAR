@@ -30,6 +30,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collection;
@@ -48,6 +49,9 @@ import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb3.jOTDBnode;
 import nl.astron.lofar.sas.otb.jotdb3.jOTDBparam;
 import nl.astron.lofar.sas.otb.jotdb3.jOTDBtree;
+import nl.astron.lofar.sas.otb.objects.AnaBeam;
+import nl.astron.lofar.sas.otb.objects.Beam;
+import nl.astron.lofar.sas.otb.objects.TiedArrayBeam;
 import nl.astron.lofar.sas.otb.util.IViewPanel;
 import nl.astron.lofar.sas.otb.util.OtdbRmi;
 import nl.astron.lofar.sas.otb.util.UserAccount;
@@ -95,6 +99,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         initialize();
     }
     
+    @Override
     public void setMainFrame(MainFrame aMainFrame) {
         if (aMainFrame != null) {
             itsMainFrame=aMainFrame;
@@ -103,10 +108,12 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         }
     }
     
+    @Override
     public String getShortName() {
         return name;
     }
     
+    @Override
     public void setContent(Object anObject) {   
         itsNode=(jOTDBnode)anObject;
         
@@ -123,15 +130,12 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             inputTreeDescription.setText(itsOldTreeDescription);   
             
             //we need to get all the childs from this node.    
-            Vector childs = OtdbRmi.getRemoteMaintenance().getItemList(itsNode.treeID(), itsNode.nodeID(), 1);
-            
-            // get all the params per child
-            Enumeration e = childs.elements();
-            while( e.hasMoreElements()  ) {
+            ArrayList<jOTDBnode> childs = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(itsNode.treeID(), itsNode.nodeID(), 1));
+
+            for (jOTDBnode aNode: childs) {
+                // get all the params per child
                 aParam=null;
-            
-                jOTDBnode aNode = (jOTDBnode)e.nextElement();
-                        
+                            
                 // We need to keep all the nodes needed by this panel
                 // if the node is a leaf we need to get the pointed to value via Param.
                 if (aNode.leaf) {
@@ -140,13 +144,35 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 //we need to get all the childs from the following nodes as well.
                 }else if (LofarUtils.keyName(aNode.name).contains("Beam") && 
                         !LofarUtils.keyName(aNode.name).contains("Beamformer") &&
-                        !LofarUtils.keyName(aNode.name).contains("AnaBeam")
+                        !LofarUtils.keyName(aNode.name).contains("AnaBeam") &&
+                        !LofarUtils.keyName(aNode.name).contains("TiedArrayBeam")
                         ) {
-                    itsBeams.addElement(aNode);
+                    // Create a new Beam & TiedArrayBeamto add found childs to
+                    itsActiveBeam = new Beam();
+                    itsActiveTAB = new TiedArrayBeam();
+                    itsTABList.clear();
+                    itsBeams.add(aNode);
                     this.retrieveAndDisplayChildDataForNode(aNode);
+                    // beam childs finished, add found TieadArrayList to Beam and add beam to BeamArrayList
+                    itsActiveBeam.setTiedArrayBeams(itsTABList);
+                    // Bug1641 Backwards compatibility
+                    if (itsActiveBeam.getMaximizeDuration().equals("")) {
+                        itsActiveBeam.setMaximizeDuration("Missing");
+                    }
+                    beamConfigurationPanel.setColumnSize("maxDur",0);
+                    itsBeamList.add(itsActiveBeam);
                 }else if (LofarUtils.keyName(aNode.name).contains("AnaBeam")) {
-                    itsAnaBeams.addElement(aNode);
+                    // Create a new AnaBeam to add found childs to
+                    itsActiveAnaBeam = new AnaBeam();
+                    itsAnaBeams.add(aNode);
                     this.retrieveAndDisplayChildDataForNode(aNode);
+                    // Bug1641 Backwards compatibility
+                    if (itsActiveAnaBeam.getMaximizeDuration().equals("")) {
+                        itsActiveAnaBeam.setMaximizeDuration("Missing");
+                        anaBeamConfigurationPanel.setColumnSize("maxDur",0);
+                     }
+                    // AnaBeam childs finished, add to AnaBeamArrayList
+                    itsAnaBeamList.add(itsActiveAnaBeam);
                 }else if (LofarUtils.keyName(aNode.name).contains("Beamformer")) {
                     itsBeamformers.addElement(aNode);
                     this.retrieveAndDisplayChildDataForNode(aNode);
@@ -161,15 +187,19 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             return;
         }
         
+        
         initPanel();
     }
+    @Override
     public boolean isSingleton() {
         return false;
     }
     
+    @Override
     public JPanel getInstance() {
         return new ObservationPanel();
     }
+    @Override
     public boolean hasPopupMenu() {
         return true;
     }
@@ -192,6 +222,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
      *
      *  aPopupMenu.show(aComponent, x, y );        
      */
+    @Override
     public void createPopupMenu(Component aComponent,int x, int y) {
         JPopupMenu aPopupMenu=null;
         JMenuItem  aMenuItem=null;
@@ -200,6 +231,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         //  Fill in menu as in the example above
         aMenuItem=new JMenuItem("Create ParSet File");        
         aMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            @Override
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 popupMenuHandler(evt);
             }
@@ -220,6 +252,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
      *          perform action
      *      }  
      */
+    @Override
     public void popupMenuHandler(java.awt.event.ActionEvent evt) {
          if (evt.getActionCommand().equals("Create ParSet File")) {
             logger.trace("Create ParSet File");
@@ -241,11 +274,10 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                     
                     //obtain the remote file
                     byte[] dldata = OtdbRmi.getRemoteFileTrans().downloadFile(aRemoteFileName);
-
-                    BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(aFile));
-                    output.write(dldata,0,dldata.length);
-                    output.flush();
-                    output.close();
+                    try (BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(aFile))) {
+                        output.write(dldata,0,dldata.length);
+                        output.flush();
+                    }
                     logger.trace("File written to: " + aFile.getPath());
                 } catch (RemoteException ex) {
                     String aS="exportTree failed : " + ex;
@@ -282,8 +314,16 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 // We need to keep all the params needed by this panel
                 if (aHWNode.leaf) {
                     aParam = OtdbRmi.getRemoteMaintenance().getParam(aHWNode);
+                    setField(aNode,aParam,aHWNode);
+                } else {
+                    if (LofarUtils.keyName(aHWNode.name).contains("TiedArrayBeam") ) {
+                        // Create a new TiedArrayBeam to add found childs to
+                        itsActiveTAB = new TiedArrayBeam();
+                        this.retrieveAndDisplayChildDataForNode(aHWNode);
+                        // tiedArrayBeam childs finished, add to TiedArrayBeamList
+                        itsTABList.add(itsActiveTAB);                    
+                    }
                 }
-                setField(aNode,aParam,aHWNode);
             }
         } catch (RemoteException ex) {
             String aS="Error during retrieveAndDisplayChildDataForNode: "+ ex;
@@ -322,124 +362,209 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         }
         
         if(parentName.equals("Observation")){        
-        // Observation Specific parameters
-            if (aKeyName.equals("channelsPerSubband")) {
-                inputNrChannelsPerSubband.setToolTipText(aParam.description);
-                itsChannelsPerSubband=aNode;
-                if (isRef && aParam != null) {
-                    inputNrChannelsPerSubband.setText(aNode.limits + " : " + aParam.limits);
-               } else {
-                    inputNrChannelsPerSubband.setText(aNode.limits);
-               }
-            } else if (aKeyName.equals("nrSlotsInFrame")) {        
-                inputNrSlotsInFrame.setToolTipText(aParam.description);
-                itsNrSlotsInFrame=aNode;
-                if (isRef && aParam != null) {
-                    inputNrSlotsInFrame.setText(aNode.limits + " : " + aParam.limits);
-               } else {
-                    inputNrSlotsInFrame.setText(aNode.limits);
-               }
-            } else if (aKeyName.equals("nrBeams")) {
-                itsNrBeams=aNode;
-            } else if (aKeyName.equals("nrAnaBeams")) {
-                itsNrAnaBeams=aNode;
-            } else if (aKeyName.equals("nrBeamformers")) {
-                itsNrBeamformers=aNode;
+            // Observation Specific parameters
+            switch (aKeyName) {
+                case "channelsPerSubband":
+                    inputNrChannelsPerSubband.setToolTipText(aParam.description);
+                    itsChannelsPerSubband=aNode;
+                    if (isRef && aParam != null) {
+                        inputNrChannelsPerSubband.setText(aNode.limits + " : " + aParam.limits);
+                   } else {
+                        inputNrChannelsPerSubband.setText(aNode.limits);
+                   }break;
+                case "nrSlotsInFrame":
+                    inputNrSlotsInFrame.setToolTipText(aParam.description);
+                    itsNrSlotsInFrame=aNode;
+                    if (isRef && aParam != null) {
+                        inputNrSlotsInFrame.setText(aNode.limits + " : " + aParam.limits);
+                   } else {
+                        inputNrSlotsInFrame.setText(aNode.limits);
+                   }break;
+                case "nrBeams":
+                    itsNrBeams=aNode;
+                    break;
+                case "nrAnaBeams":
+                    itsNrAnaBeams=aNode;
+                    break;
+                case "nrBeamformers":
+                    itsNrBeamformers=aNode;
+                    break;
             }
-        } else if(parentName.contains("Beam") && !parentName.contains("Beamformer") && !parentName.contains("AnaBeam")){
+        } else if(parentName.contains("Beam") && !parentName.contains("Beamformer") && !parentName.contains("AnaBeam") && !parentName.contains("TiedArrayBeam")){
             // Observation Beam parameters
-            if (aKeyName.equals("target")) {
-                if (isRef && aParam != null) {
-                    itsBeamTargets.add(aNode.limits + " : " + aParam.limits);
-                } else {
-                    itsBeamTargets.add(aNode.limits);
-                }
-            } else if (aKeyName.equals("angle1")) {
-                if (isRef && aParam != null) {
-                    itsBeamAngles1.add(aNode.limits + " : " + aParam.limits);
-                } else {
-                    itsBeamAngles1.add(aNode.limits);
-                }
-                itsBeamCoordTypes.add("rad");
-            } else if (aKeyName.equals("angle2")) {        
-                if (isRef && aParam != null) {
-                    itsBeamAngles2.add(aNode.limits + " : " + aParam.limits);
-                } else {
-                    itsBeamAngles2.add(aNode.limits);
-                }
-            } else if (aKeyName.equals("directionType")) { 
-                itsBeamDirectionTypeChoices=aParam.limits;
-                itsBeamDirectionTypes.add(aNode.limits);
-            } else if (aKeyName.equals("duration")) {
-                if (isRef && aParam != null) {
-                    itsBeamDurations.add(aNode.limits + " : " + aParam.limits);
-               } else {
-                    itsBeamDurations.add(aNode.limits);
-               }
-            } else if (aKeyName.equals("startTime")) {
-                if (isRef && aParam != null) {
-                    itsBeamStartTimes.add(aNode.limits + " : " + aParam.limits);
-               } else {
-                    itsBeamStartTimes.add(aNode.limits);
-               }
-            } else if (aKeyName.equals("beamletList")) {        
-                if (isRef && aParam != null) {
-                    itsBeamBeamletList.add(aNode.limits + " : " + aParam.limits);
-               } else {
-                    itsBeamBeamletList.add(aNode.limits);
-               }
-            } else if (aKeyName.equals("subbandList")) {        
-                if (isRef && aParam != null) {
-                    itsBeamSubbandList.add(aNode.limits + " : " + aParam.limits);
-                } else {
-                    itsBeamSubbandList.add(aNode.limits);
-                }
-            } else if (aKeyName.equals("momID")) {
-                if (isRef && aParam != null) {
-                    itsBeamMomIDs.add(aNode.limits + " : " + aParam.limits);
-                } else {
-                    itsBeamMomIDs.add(aNode.limits);
-                }
+            switch (aKeyName) {
+                case "target":
+                    if (isRef && aParam != null) {
+                        itsActiveBeam.setTarget(aNode.limits + " : " + aParam.limits);
+                    } else {
+                        itsActiveBeam.setTarget(aNode.limits);
+                    }
+                    break;
+                case "angle1":
+                    if (isRef && aParam != null) {
+                        itsActiveBeam.setAngle1(aNode.limits + " : " + aParam.limits);
+                    } else {
+                        itsActiveBeam.setAngle1(aNode.limits);
+                    }
+                    itsActiveBeam.setCoordType("rad");
+                    break;
+                case "angle2":
+                    if (isRef && aParam != null) {
+                        itsActiveBeam.setAngle2(aNode.limits + " : " + aParam.limits);
+                    } else {
+                        itsActiveBeam.setAngle2(aNode.limits);
+                    }
+                    break;
+                case "directionType":
+                    itsActiveBeam.setDirectionTypeChoices(aParam.limits);
+                    itsActiveBeam.setDirectionType(aNode.limits);
+                    break;
+                case "duration":
+                    if (isRef && aParam != null) {
+                        itsActiveBeam.setDuration(aNode.limits + " : " + aParam.limits);
+                   } else {
+                        itsActiveBeam.setDuration(aNode.limits);
+                   }break;
+                case "maximizeDuration":
+                    if (isRef && aParam != null) {
+                        itsActiveBeam.setMaximizeDuration(aNode.limits + " : " + aParam.limits);
+                   } else {
+                        itsActiveBeam.setMaximizeDuration(aNode.limits);
+                   }break;
+                case "startTime":
+                    if (isRef && aParam != null) {
+                        itsActiveBeam.setStartTime(aNode.limits + " : " + aParam.limits);
+                   } else {
+                        itsActiveBeam.setStartTime(aNode.limits);
+                   }break;
+                case "beamletList":
+                    if (isRef && aParam != null) {
+                        itsActiveBeam.setBeamletList(aNode.limits + " : " + aParam.limits);
+                   } else {
+                        itsActiveBeam.setBeamletList(aNode.limits);
+                   }break;
+                case "subbandList":
+                    if (isRef && aParam != null) {
+                        itsActiveBeam.setSubbandList(aNode.limits + " : " + aParam.limits);
+                    } else {
+                        itsActiveBeam.setSubbandList(aNode.limits);
+                    }
+                    break;
+                case "momID":
+                    if (isRef && aParam != null) {
+                        itsActiveBeam.setMomID(aNode.limits + " : " + aParam.limits);
+                    } else {
+                        itsActiveBeam.setMomID(aNode.limits);
+                    }
+                    break;
+                case "nrTiedArrayBeams":
+                    if (isRef && aParam != null) {
+                        itsActiveBeam.setNrTiedArrayBeams(aNode.limits + " : " + aParam.limits);
+                    } else {
+                        itsActiveBeam.setNrTiedArrayBeams(aNode.limits);
+                    }
+                    break;
+                case "nrTabRings":
+                    if (isRef && aParam != null) {
+                        itsActiveBeam.setNrTabRings(aNode.limits + " : " + aParam.limits);
+                    } else {
+                        itsActiveBeam.setNrTabRings(aNode.limits);
+                    }
+                    break;
+                case "tabRingSize":
+                    if (isRef && aParam != null) {
+                        itsActiveBeam.setTabRingSize(aNode.limits + " : " + aParam.limits);
+                    } else {
+                        itsActiveBeam.setTabRingSize(aNode.limits);
+                    }
+                    break;
             }
         } else if(parentName.contains("AnaBeam")){
             // Observation Analog Beam parameters
-            if (aKeyName.equals("target")) {
-                if (isRef && aParam != null) {
-                    itsAnaBeamTargets.add(aNode.limits + " : " + aParam.limits);
-                } else {
-                    itsAnaBeamTargets.add(aNode.limits);
-                }
-            } else if (aKeyName.equals("angle1")) {
-                if (isRef && aParam != null) {
-                    itsAnaBeamAngles1.add(aNode.limits + " : " + aParam.limits);
-                } else {
-                    itsAnaBeamAngles1.add(aNode.limits);
-                }
-                itsAnaBeamCoordTypes.add("rad");
-            } else if (aKeyName.equals("angle2")) {
-                if (isRef && aParam != null) {
-                    itsAnaBeamAngles2.add(aNode.limits + " : " + aParam.limits);
-                } else {
-                    itsAnaBeamAngles2.add(aNode.limits);
-                }
-            } else if (aKeyName.equals("directionType")) {
-                itsAnaBeamDirectionTypeChoices=aParam.limits;
-                itsAnaBeamDirectionTypes.add(aNode.limits);
-            } else if (aKeyName.equals("duration")) {
-                if (isRef && aParam != null) {
-                    itsAnaBeamDurations.add(aNode.limits + " : " + aParam.limits);
-               } else {
-                    itsAnaBeamDurations.add(aNode.limits);
-               }
-            } else if (aKeyName.equals("startTime")) {
-                if (isRef && aParam != null) {
-                    itsAnaBeamStartTimes.add(aNode.limits + " : " + aParam.limits);
-               } else {
-                    itsAnaBeamStartTimes.add(aNode.limits);
-               }
-            } else if (aKeyName.equals("rank")) {
-                itsAnaBeamRankChoices=aParam.limits;
-                itsAnaBeamRanks.add(aNode.limits);
+            switch (aKeyName) {
+                case "target":
+                    if (isRef && aParam != null) {
+                        itsActiveAnaBeam.setTarget(aNode.limits + " : " + aParam.limits);
+                    } else {
+                        itsActiveAnaBeam.setTarget(aNode.limits);
+                    }
+                    break;
+                case "angle1":
+                    if (isRef && aParam != null) {
+                        itsActiveAnaBeam.setAngle1(aNode.limits + " : " + aParam.limits);
+                    } else {
+                        itsActiveAnaBeam.setAngle1(aNode.limits);
+                    }
+                    itsActiveAnaBeam.setCoordType("rad");
+                    break;
+                case "angle2":
+                    if (isRef && aParam != null) {
+                        itsActiveAnaBeam.setAngle2(aNode.limits + " : " + aParam.limits);
+                    } else {
+                        itsActiveAnaBeam.setAngle2(aNode.limits);
+                    }
+                    break;
+                case "directionType":
+                    itsActiveAnaBeam.setDirectionTypeChoices(aParam.limits);
+                    itsActiveAnaBeam.setDirectionType(aNode.limits);
+                    break;
+                case "duration":
+                    if (isRef && aParam != null) {
+                        itsActiveAnaBeam.setDuration(aNode.limits + " : " + aParam.limits);
+                   } else {
+                        itsActiveAnaBeam.setDuration(aNode.limits);
+                   }break;
+                case "maximizeDuration":
+                    if (isRef && aParam != null) {
+                        itsActiveAnaBeam.setMaximizeDuration(aNode.limits + " : " + aParam.limits);
+                   } else {
+                        itsActiveAnaBeam.setMaximizeDuration(aNode.limits);
+                   }break;
+                case "startTime":
+                    if (isRef && aParam != null) {
+                        itsActiveAnaBeam.setStartTime(aNode.limits + " : " + aParam.limits);
+                   } else {
+                        itsActiveAnaBeam.setStartTime(aNode.limits);
+                   }break;
+                case "rank":
+                    itsActiveAnaBeam.setRankChoices(aParam.limits);
+                    itsActiveAnaBeam.setRank(aNode.limits);
+                    break;
+            }
+        } else if(parentName.contains("TiedArrayBeam")){
+            // Observation TiedArray Beam parameters
+            switch (aKeyName) {
+                case "angle1":
+                    if (isRef && aParam != null) {
+                        itsActiveTAB.setAngle1(aNode.limits + " : " + aParam.limits);
+                    } else {
+                        itsActiveTAB.setAngle1(aNode.limits);
+                    }
+                    itsActiveTAB.setCoordType("rad");
+                    break;
+                case "angle2":
+                    if (isRef && aParam != null) {
+                        itsActiveTAB.setAngle2(aNode.limits + " : " + aParam.limits);
+                    } else {
+                        itsActiveTAB.setAngle2(aNode.limits);
+                    }
+                    break;
+                case "directionType":
+                    itsActiveTAB.setDirectionTypeChoices(aParam.limits);
+                    itsActiveTAB.setDirectionType(aNode.limits);
+                    break;
+                case "dispersionMeasure":
+                    if (isRef && aParam != null) {
+                        itsActiveTAB.setDispersionMeasure(aNode.limits + " : " + aParam.limits);
+                   } else {
+                        itsActiveTAB.setDispersionMeasure(aNode.limits);
+                   }break;
+                case "coherent":
+                    if (isRef && aParam != null) {
+                        itsActiveTAB.setCoherent(aNode.limits + " : " + aParam.limits);
+                   } else {
+                        itsActiveTAB.setCoherent(aNode.limits);
+                   }break;
             }
         } else if(parentName.contains("Beamformer")){        
             // Observation Beamformer parameters
@@ -452,9 +577,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 
                 // add found stations to usedStationList
                 String[] aList = aNode.limits.split("[,]");
-                for (int i=0; i < aList.length;i++ ) {
-                  itsUsedBeamformStations.add(aList[i]);
-                }
+                itsUsedBeamformStations.addAll(Arrays.asList(aList));
             }
         } else if(parentName.equals("VirtualInstrument")){        
             // Observation VirtualInstrument parameters
@@ -560,26 +683,10 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
          fillBeamletBitset();
       }
 
-        // Bug1641 Backwards compatibility
-        if (itsBeamMaxDurs.size() < itsBeamTargets.size()) {
-            for (int i=itsBeamMaxDurs.size(); i <= itsBeamTargets.size();i++) {
-                itsBeamMaxDurs.addElement("Missing");
-            }
-
-            beamConfigurationPanel.setColumnSize("maxDur",0);
-        }
-        if (itsAnaBeamMaxDurs.size() < itsAnaBeamTargets.size()) {
-            for (int i=itsAnaBeamMaxDurs.size(); i <= itsAnaBeamTargets.size();i++) {
-                itsAnaBeamMaxDurs.addElement("Missing");
-            }
-            anaBeamConfigurationPanel.setColumnSize("maxDur",0);
-        }
 
       // set tables back to initial values
-      itsBeamConfigurationTableModel.fillTable(itsTreeType,itsBeamDirectionTypes,itsBeamTargets,itsBeamAngles1,itsBeamAngles2,
-              itsBeamCoordTypes,itsBeamDurations,itsBeamMaxDurs,itsBeamStartTimes,itsBeamSubbandList,itsBeamBeamletList,itsBeamMomIDs,false);
-      itsAnaBeamConfigurationTableModel.fillTable(itsTreeType,itsAnaBeamDirectionTypes,itsAnaBeamTargets,itsAnaBeamAngles1,itsAnaBeamAngles2,
-              itsAnaBeamCoordTypes,itsAnaBeamDurations,itsAnaBeamMaxDurs,itsAnaBeamStartTimes,itsAnaBeamRanks,false);
+      itsBeamConfigurationTableModel.fillTable(itsTreeType,itsBeamList,false);
+      itsAnaBeamConfigurationTableModel.fillTable(itsTreeType,itsAnaBeamList,false);
       
       itsBeamformerConfigurationTableModel.fillTable(itsTreeType, itsStations);
       
@@ -605,7 +712,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
       
       fillBeamformerStationList();
 
-      if (beamConfigurationPanel.getTableModel().getRowCount() == 8) {
+      if (beamConfigurationPanel.getTableModel().getRowCount() == 243) {
         this.addBeamButton.setEnabled(false);
       } else {
         this.addBeamButton.setEnabled(true);
@@ -619,12 +726,11 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
      */
     private void fillBeamletBitset() {
         itsUsedBeamlets.clear();
-        for (int i=1;i<itsBeamBeamletList.size();i++) {
-            BitSet aNewBitSet=LofarUtils.beamletToBitSet(LofarUtils.expandedArrayString(itsBeamBeamletList.elementAt(i)));
-            
+        for (Beam b : itsBeamList) {
+            BitSet aNewBitSet=b.getBeamletBitSet();
             // check if no duplication between the two bitsets
             if (itsUsedBeamlets.intersects(aNewBitSet)) {
-                String errorMsg = "ERROR:  This BeamletList has beamlets defined that are allready used in a prior BeamConfiguration!!!!!  BeamNr: "+i;
+                String errorMsg = "ERROR:  This BeamletList has beamlets defined that are allready used in a prior BeamConfiguration!!!!!  Beam: "+b;
                 JOptionPane.showMessageDialog(this,errorMsg,"BeamletError",JOptionPane.ERROR_MESSAGE);
                 logger.debug(errorMsg );
                 return;
@@ -654,8 +760,9 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         beamConfigurationPanel.setColumnSize("angle 2",20);
         beamConfigurationPanel.setColumnSize("coordtype",20);
         beamConfigurationPanel.setColumnSize("maxDur",20);
-        beamConfigurationPanel.setColumnSize("subbands",75);
-        beamConfigurationPanel.setColumnSize("beamlets",75);
+        beamConfigurationPanel.setColumnSize("#Tab",20);
+        beamConfigurationPanel.setColumnSize("subbands",65);
+        beamConfigurationPanel.setColumnSize("beamlets",65);
         beamConfigurationPanel.repaint();
         
         itsAnaBeamConfigurationTableModel = new AnaBeamConfigurationTableModel();
@@ -773,6 +880,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
      *
      * @param   visible     true/false visible/invisible
      */
+    @Override
     public void setButtonsVisible(boolean visible) {
         loadBeamsButton.setVisible(visible);
         loadAnaBeamsButton.setVisible(visible);
@@ -791,6 +899,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
      *
      * @param   enabled     true/false enabled/disabled
      */
+    @Override
     public void setAllEnabled(boolean enabled) {
         this.inputDescription.setEnabled(enabled);
         this.inputNrChannelsPerSubband.setEnabled(enabled);
@@ -800,38 +909,37 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     private boolean saveInput() {
         // Digital Beam
         // keep default Beams
-        jOTDBnode aDefaultBNode= itsBeams.elementAt(0);
+        jOTDBnode aDefaultBNode= itsBeams.get(0);
         if (itsBeamConfigurationTableModel.changed()) {
-           int i=0;
-
-            //delete all Beams from the table (excluding the Default one);
-            // Keep the 1st one, it's the default Beam
            try {
-              for (i=1; i< itsBeams.size(); i++) {
-                    OtdbRmi.getRemoteMaintenance().deleteNode(itsBeams.elementAt(i));
+              for (jOTDBnode n: itsBeams) {
+                    OtdbRmi.getRemoteMaintenance().deleteNode(n);
                 }
            } catch (RemoteException ex) {
-                String aS="Error during deletion of default beam node: "+ex;
+                String aS="Error during deletion beam node: "+ex;
                 logger.error(aS);
                 LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 return false;
             }
         
-            // Digital Beam
-           i=0;
+         
 
             // now that all Nodes are deleted we should collect the tables input and create new Beams to save to the database.
-            itsBeamConfigurationTableModel.getTable(itsBeamDirectionTypes,itsBeamTargets,itsBeamAngles1,itsBeamAngles2,itsBeamCoordTypes,itsBeamDurations,
-                    itsBeamMaxDurs,itsBeamStartTimes,itsBeamSubbandList,itsBeamBeamletList,itsBeamMomIDs);
+            itsBeamList.clear();
+            itsBeams.clear();
+            // add the default node again
+            itsBeams.add(aDefaultBNode);
+            itsBeamList = itsBeamConfigurationTableModel.getTable();
+            short index=0;
             try {
                // for all elements
-                for (i=1; i < itsBeamDirectionTypes.size();i++) {
+                for (Beam b : itsBeamList) {
 
                     // make a dupnode from the default node, give it the next number in the count,get the elements and fill all values from the elements
                     // with the values from the set fields and save the elements again
                    //
                     // Duplicates the given node (and its parameters and children)
-                    int aN = OtdbRmi.getRemoteMaintenance().dupNode(itsNode.treeID(),aDefaultBNode.nodeID(),(short)(i-1));
+                    int aN = OtdbRmi.getRemoteMaintenance().dupNode(itsNode.treeID(),aDefaultBNode.nodeID(),index++);
                     if (aN <= 0) {
                         String aS="Something went wrong with dupNode("+itsNode.treeID()+","+aDefaultBNode.nodeID()+") will try to save remainder";
                         logger.error(aS);
@@ -839,55 +947,147 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                     } else {
                         // we got a new duplicate whos children need to be filled with the settings from the panel.
                         jOTDBnode aNode = OtdbRmi.getRemoteMaintenance().getNode(itsNode.treeID(),aN);
-                        // store new duplicate in itsBeams.
-                        itsBeams.add(aNode);
-
-                        Vector HWchilds = OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
+                        ArrayList<jOTDBnode> HWchilds = new ArrayList<>(OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1));
                         // get all the params per child
-                        Enumeration e1 = HWchilds.elements();
-                        while( e1.hasMoreElements()  ) {
-                            jOTDBnode aHWNode = (jOTDBnode)e1.nextElement();
-                            String aKeyName = LofarUtils.keyName(aHWNode.name);
-                            if (aKeyName.equals("directionType")) {
-                                aHWNode.limits=itsBeamDirectionTypes.elementAt(i);
-                            } else if (aKeyName.equals("target")) {
-                                aHWNode.limits=itsBeamTargets.elementAt(i);
-                            } else if (aKeyName.equals("angle1")) {
-                                String aVal=itsBeamAngles1.elementAt(i);
-                                if (!itsBeamCoordTypes.elementAt(i).equals("rad") ) {
-                                    String tmp=itsBeamCoordTypes.elementAt(i);
-                                    if (tmp.equals("hmsdms")) {
-                                        tmp="hms";
-                                    } else if (tmp.equals("dmsdms")) {
-                                        tmp="dms";
+                        for (jOTDBnode n: HWchilds) {
+                            String aKeyName = LofarUtils.keyName(n.name);
+                            if (!n.leaf) {
+                                if (LofarUtils.keyName(n.name).contains("TiedArrayBeam") ) {
+                                    for (TiedArrayBeam tab : b.getTiedArrayBeams()) {
+                                        // Duplicates the given node (and its parameters and children)
+                                        int aTabN = OtdbRmi.getRemoteMaintenance().dupNode(itsNode.treeID(),n.nodeID(),index++);
+                                        if (aTabN <= 0) {
+                                            String aS="Something went wrong with dupNode("+itsNode.treeID()+","+n.nodeID()+") will try to save remainder";
+                                            logger.error(aS);
+                                            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                                        } else {
+                                            // we got a new duplicate whos children need to be filled with the settings from the panel.
+                                            jOTDBnode aTabNode = OtdbRmi.getRemoteMaintenance().getNode(itsNode.treeID(),aTabN);
+                                            ArrayList<jOTDBnode> tabHWchilds = new ArrayList<>(OtdbRmi.getRemoteMaintenance().getItemList(aTabNode.treeID(), aTabNode.nodeID(), 1));
+                                            for (jOTDBnode tabn: tabHWchilds) {
+                                                String aTabKeyName = LofarUtils.keyName(tabn.name);
+                                                switch (aKeyName) {
+                                
+                                                    case "directionType" :
+                                                        tabn.limits=tab.getDirectionType();
+                                                        break;
+                                                    case "angle1" :
+                                                        String aVal1=tab.getAngle1();
+                                                    if (!tab.getCoordType().equals("rad") ) {
+                                                        String tmp=tab.getCoordType();
+                                                        switch (tmp) {
+                                                            case "hmsdms":
+                                                                tmp="hms";
+                                                                break;
+                                                            case "dmsdms":
+                                                                tmp="dms";
+                                                                break;
+                                                            }
+                                                            aVal1=LofarUtils.changeCoordinate(tmp, "rad", aVal1);
+                                                        }
+                                                        tabn.limits=aVal1;
+                                                        break;
+                                                    case "angle2" :
+                                                        String aVal2=tab.getAngle2();
+                                                    if (!tab.getCoordType().equals("rad") ) {
+                                                        String tmp=tab.getCoordType();
+                                                        switch (tmp) {
+                                                            case "hmsdms":
+                                                                tmp="hms";
+                                                                break;
+                                                            case "dmsdms":
+                                                                tmp="dms";
+                                                                break;
+                                                            }
+                                                            aVal2=LofarUtils.changeCoordinate(tmp, "rad", aVal2);
+                                                        }
+                                                        tabn.limits=aVal2;
+                                                        break;
+                                                    case "dispersionmeasure" :
+                                                        tabn.limits=tab.getDispersionMeasure();
+                                                        break;
+                                                    case "coherent" :
+                                                        tabn.limits=tab.getCoherent();
+                                                        break;
+                                                }
+                                                saveNode(tabn);
+                                            }
+                                        }
                                     }
-                                    aVal=LofarUtils.changeCoordinate(tmp, "rad", aVal);
                                 }
-                                aHWNode.limits=aVal;
-                            } else if (aKeyName.equals("angle2")) {
-                                String aVal=itsBeamAngles2.elementAt(i);
-                                if (!itsBeamCoordTypes.elementAt(i).equals("rad") ) {
-                                    String tmp=itsBeamCoordTypes.elementAt(i);
-                                    if (tmp.equals("hmsdms") || tmp.equals("dmsdms")) {
-                                        tmp="dms";
-                                    }
-                                    aVal=LofarUtils.changeCoordinate(tmp, "rad", aVal);
-                                }
-                                aHWNode.limits=aVal;
-                            } else if (aKeyName.equals("duration")) {
-                                aHWNode.limits=itsBeamDurations.elementAt(i);
-                            } else if (aKeyName.equals("maximizeDuration")) {
-                                aHWNode.limits=itsBeamMaxDurs.elementAt(i);
-                            } else if (aKeyName.equals("startTime")) {
-                                aHWNode.limits=itsBeamStartTimes.elementAt(i);
-                            } else if (aKeyName.equals("subbandList")) {
-                                aHWNode.limits=itsBeamSubbandList.elementAt(i);
-                            } else if (aKeyName.equals("beamletList")) {
-                                aHWNode.limits=itsBeamBeamletList.elementAt(i);
-                            } else if (aKeyName.equals("momID")) {
-                                aHWNode.limits=itsBeamMomIDs.elementAt(i);
+                                continue;
                             }
-                            saveNode(aHWNode);
+                            // for leafs:
+                            switch (aKeyName) {
+                                
+                                case "directionType" :
+                                    n.limits=b.getDirectionType();
+                                    break;
+                                case "target" :
+                                    n.limits=b.getTarget();
+                                    break;
+                                case "angle1" :
+                                    String aVal1=b.getAngle1();
+                                    if (!b.getCoordType().equals("rad") ) {
+                                        String tmp=b.getCoordType();
+                                        switch (tmp) {
+                                        case "hmsdms":
+                                            tmp="hms";
+                                            break;
+                                        case "dmsdms":
+                                            tmp="dms";
+                                            break;
+                                        }
+                                        aVal1=LofarUtils.changeCoordinate(tmp, "rad", aVal1);
+                                    }
+                                    n.limits=aVal1;
+                                    break;
+                                case "angle2" :
+                                    String aVal2=b.getAngle2();
+                                    if (!b.getCoordType().equals("rad") ) {
+                                        String tmp=b.getCoordType();
+                                        if (tmp.equals("hmsdms") || tmp.equals("dmsdms")) {
+                                          tmp="dms";
+                                        }
+                                        aVal2=LofarUtils.changeCoordinate(tmp, "rad", aVal2);
+                                    }
+                                    n.limits=aVal2;
+                                    break;
+                                case "duration" :
+                                    n.limits=b.getDuration();
+                                    break;
+                                case "maximizeDuration" :
+                                    n.limits=b.getMaximizeDuration();
+                                    break;
+                                case "startTime" :
+                                    n.limits=b.getStartTime();
+                                    break;
+                                case "subbandList" :
+                                    n.limits=b.getSubbandList();
+                                    break;
+                                case "beamletList" :
+                                    n.limits=b.getBeamletList();
+                                    break;
+                                case "momID" :
+                                    n.limits=b.getMomID();
+                                    break;
+                                case "nrTabRings" :
+                                    n.limits=b.getNrTabRings();
+                                    break;
+                                case "tabRingSize" :
+                                    n.limits=b.getTabRingSize();
+                                    break;
+                                case "nrTiedArrayBeams" :
+                                    n.limits=b.getNrTiedArrayBeams();
+                                    break;
+                                default :
+                                    String aS="Wrong key found during duplication and save: " + aKeyName;
+                                    logger.error(aS);
+                                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                            }
+                            saveNode(n);
+                            // store new node in itsBeams.
+                            itsBeams.add(n);
                         }
                     }
                 }
@@ -902,23 +1102,23 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
 
         }
         // store new number of instances in baseSetting
-        short beams= (short)(itsBeamDirectionTypes.size()-1);
-        aDefaultBNode.instances = beams; //
-        saveNode(aDefaultBNode);
+        short beams= (short)(itsBeams.size()-1);
+        itsBeams.get(0).instances = beams; //
+        saveNode(itsBeams.get(0));
 
-        // keep default AnaBeams
-        jOTDBnode aDefaultABNode= itsAnaBeams.elementAt(0);
+        //   =====================   AnaBeams 
         
-        short nrBeams=(short)(itsAnaBeamDirectionTypes.size()-1);
+        
+        // same for Analog Beams
+        // delete all Analog Beams from the table (excluding the Default one);
+        // Keep the 1st one, it's the default Analog Beam
+        jOTDBnode aDefaultABNode= itsAnaBeams.get(0);
+        
         // save anabeams if changes, or delete all if anaBeamConfiguration isn't visible (LBA mode)
         if (itsAnaBeamConfigurationTableModel.changed() || (!anaBeamConfiguration.isVisible())) {
-            // same for Analog Beams
-            // delete all Analog Beams from the table (excluding the Default one);
-            // Keep the 1st one, it's the default Analog Beam
-            int i=0;
             try {
-                for (i=1; i< itsAnaBeams.size(); i++) {
-                    OtdbRmi.getRemoteMaintenance().deleteNode(itsAnaBeams.elementAt(i));
+                for (jOTDBnode n : itsAnaBeams) {
+                    OtdbRmi.getRemoteMaintenance().deleteNode(n);
                 }
             } catch (RemoteException ex) {
                 String aS="Error during deletion of default analog beam node: "+ex;
@@ -928,23 +1128,24 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             }
 
             // now that all Nodes are deleted we should collect the tables input and create new AnaBeams to save to the database.
+            itsAnaBeamList.clear();
+            itsAnaBeams.clear();
             // however, if anaBeamConfiguration is invisible, we can skip this and set nrAnabeams to 0
 
             if (anaBeamConfiguration.isVisible()) {
-                itsAnaBeamConfigurationTableModel.getTable(itsAnaBeamDirectionTypes,itsAnaBeamTargets,itsAnaBeamAngles1,itsAnaBeamAngles2,
-                    itsAnaBeamCoordTypes,itsAnaBeamDurations,itsAnaBeamMaxDurs,itsAnaBeamStartTimes,itsAnaBeamRanks);
-
+                // add the default node again
+                itsAnaBeams.add(aDefaultABNode);
+                itsAnaBeamList = itsAnaBeamConfigurationTableModel.getTable();
+                short index=0;
                 try {
-                    // store new number
-                    nrBeams=(short)(itsAnaBeamDirectionTypes.size()-1);
                     // for all elements
-                    for (i=1; i < itsAnaBeamDirectionTypes.size();i++) {
+                    for (AnaBeam b : itsAnaBeamList) {
 
                         // make a dupnode from the default node, give it the next number in the count,get the elements and fill all values from the elements
                         // with the values from the set fields and save the elements again
                         //
                         // Duplicates the given node (and its parameters and children)
-                        int aN = OtdbRmi.getRemoteMaintenance().dupNode(itsNode.treeID(),aDefaultABNode.nodeID(),(short)(i-1));
+                        int aN = OtdbRmi.getRemoteMaintenance().dupNode(itsNode.treeID(),aDefaultABNode.nodeID(),index++);
                         if (aN <= 0) {
                             String aS="Something went wrong with dupNode("+itsNode.treeID()+","+aDefaultABNode.nodeID()+") will try to save remainder";
                             logger.error(aS);
@@ -952,54 +1153,62 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                         } else {
                             // we got a new duplicate whos children need to be filled with the settings from the panel.
                             jOTDBnode aNode = OtdbRmi.getRemoteMaintenance().getNode(itsNode.treeID(),aN);
-                            // store new duplicate in itsBeams.
-                            itsAnaBeams.add(aNode);
 
-                            Vector HWchilds = OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
-                            // get all the params per child
-                            Enumeration e1 = HWchilds.elements();
-                            while( e1.hasMoreElements()  ) {
-                                jOTDBnode aHWNode = (jOTDBnode)e1.nextElement();
-                                String aKeyName = LofarUtils.keyName(aHWNode.name);
-                                if (aKeyName.equals("directionType")) {
-                                    aHWNode.limits=itsAnaBeamDirectionTypes.elementAt(i);
-                                } else if (aKeyName.equals("target")) {
-                                    aHWNode.limits=itsAnaBeamTargets.elementAt(i);
-                                } else if (aKeyName.equals("angle1")) {
-                                    String aVal=itsAnaBeamAngles1.elementAt(i);
-                                    if (!itsAnaBeamCoordTypes.elementAt(i).equals("rad") ) {
-                                        String tmp=itsAnaBeamCoordTypes.elementAt(i);
-                                        if (tmp.equals("hmsdms")) {
-                                            tmp="hms";
-                                        } else if (tmp.equals("dmsdms")) {
-                                            tmp="dms";
+                            ArrayList<jOTDBnode> HWchilds = new ArrayList<>(OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1));
+                            for (jOTDBnode n: HWchilds) {
+                                String aKeyName = LofarUtils.keyName(n.name);
+                                switch (aKeyName) {
+                                    case "directionType" :
+                                        n.limits=b.getDirectionType();
+                                        break;
+                                    case "target" :
+                                        n.limits=b.getTarget();
+                                        break;
+                                    case "angle1" :
+                                        String aVal1=b.getAngle1();
+                                        if (!b.getCoordType().equals("rad") ) {
+                                            String tmp=b.getCoordType();
+                                            switch (tmp) {
+                                            case "hmsdms":
+                                                tmp="hms";
+                                                break;
+                                            case "dmsdms":
+                                                tmp="dms";
+                                                break;
+                                            }
+                                            aVal1=LofarUtils.changeCoordinate(tmp, "rad", aVal1);
                                         }
-                                        aVal=LofarUtils.changeCoordinate(tmp, "rad", aVal);
-                                    }
-                                    aHWNode.limits=aVal;
-                                } else if (aKeyName.equals("angle2")) {
-                                    String aVal=itsAnaBeamAngles2.elementAt(i);
-                                    if (!itsAnaBeamCoordTypes.elementAt(i).equals("rad") ) {
-                                        String tmp=itsAnaBeamCoordTypes.elementAt(i);
-                                        if (tmp.equals("hmsdms") || tmp.equals("dmsdms")) {
-                                            tmp="dms";
+                                        n.limits=aVal1;
+                                        break;
+                                    case "angle2" :
+                                        String aVal2=b.getAngle2();
+                                        if (!b.getCoordType().equals("rad") ) {
+                                            String tmp=b.getCoordType();
+                                            if (tmp.equals("hmsdms") || tmp.equals("dmsdms")) {
+                                                tmp="dms";
+                                            }
+                                            aVal2=LofarUtils.changeCoordinate(tmp, "rad", aVal2);
                                         }
-                                        aVal=LofarUtils.changeCoordinate(tmp, "rad", aVal);
+                                        n.limits=aVal2;
+                                        break;
+                                    case "duration" :
+                                        n.limits=b.getDuration();
+                                        break;
+                                    case "maximizeDuration" :
+                                        n.limits=b.getMaximizeDuration();
+                                        break;
+                                    case "startTime" :
+                                        n.limits=b.getStartTime();
+                                        break;
+                                    case "rank" :
+                                        n.limits=b.getRank();
+                                        break;
                                     }
-                                    aHWNode.limits=aVal;
-                                } else if (aKeyName.equals("duration")) {
-                                    aHWNode.limits=itsAnaBeamDurations.elementAt(i);
-                                } else if (aKeyName.equals("maximizeDuration")) {
-                                    aHWNode.limits=itsAnaBeamMaxDurs.elementAt(i);
-                                } else if (aKeyName.equals("startTime")) {
-                                    aHWNode.limits=itsAnaBeamStartTimes.elementAt(i);
-                                } else if (aKeyName.equals("rank")) {
-                                    aHWNode.limits=itsAnaBeamRanks.elementAt(i);
+                                    saveNode(n);
+                                    itsAnaBeams.add(n);
                                 }
-                                saveNode(aHWNode);
                             }
                         }
-                    }
 
                 } catch (RemoteException ex) {
                     String aS="Error during duplication and save : " + ex;
@@ -1007,14 +1216,19 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                     LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                     return false;
                 }
-            } else {
-               nrBeams=0;
+                
+                // store new number of instances in baseSetting
+                short anaBeams= (short)(itsAnaBeams.size()-1);
+                itsAnaBeams.get(0).instances = anaBeams; //
+                saveNode(itsAnaBeams.get(0));
+            } else {                
+                // Anabeams not visible, set to 0 instances
+                short anaBeams= (short)(0);
+                itsAnaBeams.get(0).instances = anaBeams; //
+                saveNode(itsAnaBeams.get(0));
             }
-
         }
-        // store new number of instances in baseSetting
-        aDefaultABNode.instances = nrBeams; //
-        saveNode(aDefaultABNode);
+
 
 
 
@@ -1036,9 +1250,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 return false;
             }
-
-
-            itsBeamformerConfigurationTableModel.getTable(itsStations);
+            boolean succes = itsBeamformerConfigurationTableModel.getTable(itsStations);
             // keep default save
             for (int j=0; j< itsStations.size(); j++) {
                 if (itsStations.get(j).equals("")) {
@@ -1192,12 +1404,9 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
 
     private void deleteBeam() {
         int row = beamConfigurationPanel.getSelectedRow();
-
-        // if removed then the old Beamlets's should be removed form the checklist also
-        String oldBeamlets = itsBeamConfigurationTableModel.getSelection(row)[9];
-        BitSet beamletSet = LofarUtils.beamletToBitSet(LofarUtils.expandedArrayString(oldBeamlets));
-        
         if (JOptionPane.showConfirmDialog(this,"Are you sure you want to delete this Beam ?","Delete Beam",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
+            // if removed then the old Beamlets's should be removed form the checklist also
+            BitSet beamletSet = itsBeamConfigurationTableModel.getSelection(row).getBeamletBitSet();
             if (row > -1) {
                 itsBeamConfigurationTableModel.removeRow(row);
                 itsUsedBeamlets.xor(beamletSet);
@@ -1210,7 +1419,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             }
         } 
         
-      if (beamConfigurationPanel.getTableModel().getRowCount() == 8) {
+      if (beamConfigurationPanel.getTableModel().getRowCount() == 243) {
         this.addBeamButton.setEnabled(false);
       } else {
         this.addBeamButton.setEnabled(true);
@@ -1231,7 +1440,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             }
         }
 
-      if (anaBeamConfigurationPanel.getTableModel().getRowCount() == 8) {
+      if (anaBeamConfigurationPanel.getTableModel().getRowCount() == 1) {
         this.addAnaBeamButton.setEnabled(false);
       } else {
         this.addAnaBeamButton.setEnabled(true);
@@ -1242,23 +1451,17 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
      
         BitSet aBS=itsUsedBeamlets;
         itsSelectedRow=-1;
+        itsSelectedRow = beamConfigurationPanel.getSelectedRow();
         // set selection to defaults.
-        String [] selection = {itsBeamDirectionTypes.elementAt(0),itsBeamTargets.get(0),itsBeamAngles1.elementAt(0),
-                               itsBeamAngles2.elementAt(0),itsBeamCoordTypes.elementAt(0),itsBeamDurations.elementAt(0),
-                               itsBeamMaxDurs.elementAt(0),itsBeamStartTimes.elementAt(0), itsBeamSubbandList.elementAt(0),
-                               itsBeamBeamletList.elementAt(0),itsBeamMomIDs.elementAt(0)};
+        if (itsSelectedRow < 0) return;
+        Beam selection = itsBeamList.get(0);
         if (editBeam) {
-            itsSelectedRow = beamConfigurationPanel.getSelectedRow();
             selection = itsBeamConfigurationTableModel.getSelection(itsSelectedRow);
                        
-            BitSet oldBeamlets = LofarUtils.beamletToBitSet(LofarUtils.expandedArrayString(selection[9]));
+            BitSet oldBeamlets = selection.getBeamletBitSet();
             aBS.xor(oldBeamlets);
-            // if no row is selected, nothing to be done
-            if (selection == null || selection[0].equals("")) {
-                return;
-            }
         }
-        beamDialog = new BeamDialog(itsMainFrame,true,aBS,selection,itsBeamDirectionTypeChoices,editBeam);
+        beamDialog = new BeamDialog(itsMainFrame,true,aBS,selection,editBeam);
         beamDialog.setLocationRelativeTo(this);
         if (editBeam) {
             beamDialog.setBorderTitle("edit Beam");
@@ -1269,22 +1472,22 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         
         // check if something has changed 
         if (beamDialog.hasChanged()) {
-            String[] newRow = beamDialog.getBeam();
+            Beam newBeam = beamDialog.getBeam();
             itsUsedBeamlets=beamDialog.getBeamletList();
             // check if we are editting an entry or adding a new entry
             if (editBeam) {
-                itsBeamConfigurationTableModel.updateRow(newRow,itsSelectedRow);
+                itsBeamConfigurationTableModel.updateRow(newBeam,itsSelectedRow);
                 // set editting = false
                 editBeam=false;
             } else {            
-                itsBeamConfigurationTableModel.addRow(newRow[0],newRow[1],newRow[2],newRow[3],newRow[4],newRow[5],newRow[6],newRow[7],newRow[8],newRow[9],newRow[10]);
+                boolean succes = itsBeamConfigurationTableModel.addRow(newBeam);
             }
         }
         
         this.editBeamButton.setEnabled(false);
         this.deleteBeamButton.setEnabled(false);
         this.copyBeamButton.setEnabled(false);
-        if (beamConfigurationPanel.getTableModel().getRowCount() == 8 ) {
+        if (beamConfigurationPanel.getTableModel().getRowCount() == 243 ) {
             this.addBeamButton.setEnabled(false);
         } else {
             this.addBeamButton.setEnabled(true);
@@ -1292,58 +1495,41 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         
     }
 
-    private void copyBeam() {
+    private void copyBeamToAnaBeam() {
 
         itsSelectedRow=-1;
         // set selection to defaults.
-        String [] defaultAnaBeam = {itsAnaBeamDirectionTypes.elementAt(0),itsAnaBeamTargets.elementAt(0),itsAnaBeamAngles1.elementAt(0),
-                                    itsAnaBeamAngles2.elementAt(0),itsAnaBeamCoordTypes.elementAt(0),itsAnaBeamDurations.elementAt(0),
-                                    itsAnaBeamMaxDurs.elementAt(0),itsAnaBeamStartTimes.elementAt(0),itsAnaBeamRanks.elementAt(0)};
+        AnaBeam defaultAnaBeam = itsAnaBeamList.get(0);
 
         itsSelectedRow = beamConfigurationPanel.getSelectedRow();
-        String [] selection = itsBeamConfigurationTableModel.getSelection(itsSelectedRow);
-
-        // set DirectionTypes and angles from beam to anabeam
-        // direction Type
-        defaultAnaBeam[0]= selection[0];
-
-        // Angle1
-        defaultAnaBeam[2] = selection[2];
-
-        // Angle2
-        defaultAnaBeam[3] = selection[3];
-
-        // CoordType
-        defaultAnaBeam[4] = selection[4];
-
-        // MaxDuration
-        defaultAnaBeam[6] = selection[6];
-
+        if (itsSelectedRow < 0 ) return;
+        Beam selection = itsBeamConfigurationTableModel.getSelection(itsSelectedRow);
+        
+        
+        // set matching beam pars to anabeam
+        defaultAnaBeam.setTarget(selection.getTarget());
+        defaultAnaBeam.setAngle1(selection.getAngle1());
+        defaultAnaBeam.setAngle2(selection.getAngle2());
+        defaultAnaBeam.setCoordType(selection.getCoordType());
+        defaultAnaBeam.setDuration(selection.getDuration());
+        defaultAnaBeam.setMaximizeDuration(selection.getMaximizeDuration());
+        defaultAnaBeam.setStartTime(selection.getStartTime());
         // Rank default to 1 in this case
-        defaultAnaBeam[8] = "1";
-
-        itsAnaBeamConfigurationTableModel.addRow(defaultAnaBeam[0],defaultAnaBeam[1],defaultAnaBeam[2],defaultAnaBeam[3],defaultAnaBeam[4],
-                defaultAnaBeam[5],defaultAnaBeam[6],defaultAnaBeam[7],defaultAnaBeam[8]);
-
+        defaultAnaBeam.setRank("1");
+        boolean succes = itsAnaBeamConfigurationTableModel.addRow(defaultAnaBeam);
     }
 
     private void addAnaBeam() {
 
         itsSelectedRow=-1;
         // set selection to defaults.
-        String [] selection = {itsAnaBeamDirectionTypes.elementAt(0),itsAnaBeamTargets.elementAt(0),itsAnaBeamAngles1.elementAt(0),
-                               itsAnaBeamAngles2.elementAt(0),itsAnaBeamCoordTypes.elementAt(0),itsAnaBeamDurations.elementAt(0),
-                               itsAnaBeamMaxDurs.elementAt(0),itsAnaBeamStartTimes.elementAt(0),itsAnaBeamRanks.elementAt(0)};
+        AnaBeam selection = itsAnaBeamList.get(0);
         if (editAnaBeam) {
             itsSelectedRow = anaBeamConfigurationPanel.getSelectedRow();
+            if (itsSelectedRow < 0) return;
             selection = itsAnaBeamConfigurationTableModel.getSelection(itsSelectedRow);
-
-            // if no row is selected, nothing to be done
-            if (selection == null || selection[0].equals("")) {
-                return;
-            }
         }
-        anaBeamDialog = new AnaBeamDialog(itsMainFrame,true,selection,itsAnaBeamDirectionTypeChoices,itsAnaBeamRankChoices,editAnaBeam);
+        anaBeamDialog = new AnaBeamDialog(itsMainFrame,true,selection,editAnaBeam);
         anaBeamDialog.setLocationRelativeTo(this);
         if (editAnaBeam) {
             anaBeamDialog.setBorderTitle("edit Beam");
@@ -1354,20 +1540,20 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
 
         // check if something has changed
         if (anaBeamDialog.hasChanged()) {
-            String[] newRow = anaBeamDialog.getBeam();
+            AnaBeam newBeam = anaBeamDialog.getAnaBeam();
             // check if we are editting an entry or adding a new entry
             if (editAnaBeam) {
-                itsAnaBeamConfigurationTableModel.updateRow(newRow,itsSelectedRow);
+                itsAnaBeamConfigurationTableModel.updateRow(newBeam,itsSelectedRow);
                 // set editting = false
                 editAnaBeam=false;
             } else {
-                itsAnaBeamConfigurationTableModel.addRow(newRow[0],newRow[1],newRow[2],newRow[3],newRow[4],newRow[5],newRow[6],newRow[7],newRow[8]);
+                itsAnaBeamConfigurationTableModel.addRow(newBeam);
             }
         }
 
         this.editAnaBeamButton.setEnabled(false);
         this.deleteAnaBeamButton.setEnabled(false);
-        if (anaBeamConfigurationPanel.getTableModel().getRowCount() == 8 ) {
+        if (anaBeamConfigurationPanel.getTableModel().getRowCount() == 243 ) {
             this.addAnaBeamButton.setEnabled(false);
         } else {
             this.addAnaBeamButton.setEnabled(true);
@@ -1386,6 +1572,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         // beam0.maximizeDuration=true
         // beam0.subbandList=[1,2,3,4,5]
         // beam0.beamletList[1,2,3,4,5]
+        // beam0.tiedarraybeam0.angle1 = 1
         // #
         // beam1.target=test2
         // beam1.angle1=3
@@ -1431,30 +1618,27 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     private void readFile(File aNewFile, String choice) {
         logger.trace("File to read: " + aNewFile.getPath());
 
-        Vector<String> targets = new Vector<String>();
-        Vector<String> angles1 = new Vector<String>();
-        Vector<String> angles2 = new Vector<String>();
-        Vector<String> coordTypes = new Vector<String>();
-        Vector<String> directionTypes = new Vector<String>();
-        Vector<String> durations = new Vector<String>();
-        Vector<String> maxdurs = new Vector<String>();
-        Vector<String> startTimes = new Vector<String>();
-        Vector<String> subbandList = new Vector<String>();
-        Vector<String> beamletList = new Vector<String>();
-        Vector<String> ranks = new Vector<String>();
-        Vector<String> momIDs = new Vector<String>();
+        ArrayList<Beam> readBeams = new ArrayList<>();
+        ArrayList<AnaBeam> readAnaBeams = new ArrayList<>();
+        ArrayList<TiedArrayBeam> readTABs = new ArrayList<>();;
+        
 
         //line to read filelines into
+        String inLine = "";
         String line = "";
         BufferedReader in = null;
-        try {
-            FileReader f = new FileReader(aNewFile.getPath());
+        int oldIdx = -1;
+        Boolean foundTAB = false;
+        int tabIdx = -1;
+        
+        try (FileReader f = new FileReader(aNewFile.getPath())) {
             in = new BufferedReader(f);
-            while ((line = in.readLine()) != null) {
+            while ((inLine = in.readLine()) != null) {
 
-                if (line == null || line.startsWith("#") || line.isEmpty()) {
+                if (inLine == null || inLine.startsWith("#") || inLine.isEmpty()) {
                     continue;
                 }
+                line = inLine.toLowerCase();
                 // split into key value
                 String[] keyVal = line.split("[=]");
                 if (keyVal == null || keyVal.length < 2 || keyVal[0].isEmpty() || keyVal[1].isEmpty()) {
@@ -1466,6 +1650,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
 
                 // split in (ana)beam# and key
                 String[] beamKey = keyVal[0].split("[.]");
+                String[] TABkey = new String[2];
 
                 if (beamKey == null || beamKey.length < 2 || beamKey[0].isEmpty() || beamKey[1].isEmpty()) {
                     String aS = "Error in input: " + line;
@@ -1474,94 +1659,279 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                     continue;
                 }
 
-                // check index and if not in list, add new default Vector to all lists
+                // tiedArrayBeam have also a beam in the remaining beamKey
+                if (beamKey[0].contains(".")) {
+                    String[] aS = beamKey[0].split("[.]");
+                    TABkey[0] = aS[0];
+                    TABkey[1] = beamKey[1];
+                    beamKey[0] = aS[0];
+                    foundTAB = true;
+                    tabIdx = Integer.parseInt(beamKey[0].toLowerCase().replace("tiedarraybeam", ""));
+                } else {
+                    foundTAB = false;
+                }
+                // check index and if not in list, add new default Beam or AnaBeam to all lists
                 String check = "beam";
                 if (choice.equals("AnaBeams")) {
                     check = "anabeam";
                 }
-                int idx = Integer.parseInt(beamKey[0].toLowerCase().replace(check, ""));
-                if (idx < 0 || idx > 7) {
-                    String aS = "Error in index, only beam 0-7 allowed : " + idx;
+                int idx = Integer.parseInt(beamKey[0].replace(check, ""));
+                if (idx != oldIdx) {
+                    oldIdx = idx;
+                    if (foundTAB) {
+                        // since this is a new beam we also need a an empty TAB array
+                        // but write the total nr of tiedArrayBeams to the old Beam first
+                        readBeams.get(idx+1).setNrTiedArrayBeams(Integer.toString(readTABs.size()-1));
+                        readTABs.clear();
+                    }
+                }
+                if (check.equals("beam") && (idx < 0 || idx > 243)) {
+                    String aS = "Error in index, only beam 0-243 allowed : " + idx;
                     logger.error(aS);
                     LofarUtils.showErrorPanel(this, aS, new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                     continue;
-                }
+                } else if (check.equals("anabeam") && idx != 0) {
+                    String aS = "Error in index, only anabeam 0 allowed : " + idx;
+                    logger.error(aS);
+                    LofarUtils.showErrorPanel(this, aS, new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                    continue;
+                } 
 
                 // set Defaults
-                while (angles1.size() < idx + 2) {
-                    if (choice.equals("Beams")) {
-                        targets.add((itsBeamTargets.elementAt(0)));
-                        angles1.add(itsBeamAngles1.elementAt(0));
-                        angles2.add(itsBeamAngles2.elementAt(0));
-                        coordTypes.add("rad");
-                        directionTypes.add(itsBeamDirectionTypes.elementAt(0));
-                        startTimes.add(itsBeamStartTimes.elementAt(0));
-                        durations.add(itsBeamDurations.elementAt(0));
-                        maxdurs.add(itsBeamMaxDurs.elementAt(0));
-                        subbandList.add(itsBeamSubbandList.elementAt(0));
-                        beamletList.add(itsBeamBeamletList.elementAt(0));
-                        momIDs.add("0");
-                    } else if (choice.equals("AnaBeams")) {
-                        targets.add((itsAnaBeamTargets.elementAt(0)));
-                        angles1.add(itsAnaBeamAngles1.elementAt(0));
-                        angles2.add(itsAnaBeamAngles2.elementAt(0));
-                        coordTypes.add("rad");
-                        directionTypes.add(itsAnaBeamDirectionTypes.elementAt(0));
-                        startTimes.add(itsAnaBeamStartTimes.elementAt(0));
-                        durations.add(itsAnaBeamDurations.elementAt(0));
-                        maxdurs.add(itsAnaBeamMaxDurs.elementAt(0));
-                        ranks.add(itsAnaBeamRanks.elementAt(0));
-                    }
+                switch (check) {
+                    case "beam" :
+                        while (readBeams.size() < idx + 2) {
+                            readBeams.add(itsBeamList.get(0));
+                        }
+                        if (foundTAB) {
+                            while (readTABs.size() < tabIdx + 2) {
+                                readTABs.add(itsBeamList.get(0).getTiedArrayBeams().get(0));
+                            }                            
+                        }
+                        break;
+                    case "anabeam" :
+                        while (readAnaBeams.size() < idx + 2) {
+                            readAnaBeams.add(itsAnaBeamList.get(0));
+                        }
+                        break;
+                }
+                
+                if (foundTAB) {
+                    check = "tiedarraybeam";
                 }
 
 
                 // add new keyval
                 // beams start with 0
-                if (beamKey[1].toLowerCase().equals("angle1")) {
-                    angles1.setElementAt(keyVal[1], idx + 1);
-                } else if (beamKey[1].toLowerCase().equals("angle2")) {
-                    angles2.setElementAt(keyVal[1], idx + 1);
-                } else if (beamKey[1].toLowerCase().equals("coordtype")) {
-                    if (keyVal[1].toLowerCase().equals("rad") || keyVal[1].toLowerCase().equals("deg") || keyVal[1].toLowerCase().equals("hmsdms")
-                            ||keyVal[1].toLowerCase().equals("dmsdms") ) {
-                        coordTypes.setElementAt(keyVal[1], idx + 1);
-                    } else {
-                        String aS = "Error in directionType value : " + line;
+                switch (beamKey[1]) {
+                    case "target" :
+                        switch (check) {
+                            case "beam" :
+                                readBeams.get(idx+1).setTarget(keyVal[1]);
+                                break;
+                            case "anabeam" :
+                                readAnaBeams.get(idx+1).setTarget(keyVal[1]);
+                                break;
+                            case "tiedarraybeam" :
+                                break;
+                        }
+                        break;
+                    case "angle1" :
+                        switch (check) {
+                            case "beam" :
+                                readBeams.get(idx+1).setAngle1(keyVal[1]);
+                                break;
+                            case "anabeam" :
+                                readAnaBeams.get(idx+1).setAngle1(keyVal[1]);
+                                break;
+                            case "tiedarraybeam" :
+                                readBeams.get(idx+1).getTiedArrayBeams().get(tabIdx+1).setAngle1(keyVal[1]);
+                                break;
+                        }
+                        break;
+                    case "angle2" :
+                        switch (check) {
+                            case "beam" :
+                                readBeams.get(idx+1).setAngle2(keyVal[1]);
+                                break;
+                            case "anabeam" :
+                                readAnaBeams.get(idx+1).setAngle2(keyVal[1]);
+                                break;
+                            case "tiedarraybeam" :
+                                readBeams.get(idx+1).getTiedArrayBeams().get(tabIdx+1).setAngle2(keyVal[1]);
+                                break;
+                        }
+                        break;
+                    case "coordtype" :
+                        if (keyVal[1].toLowerCase().equals("rad") || keyVal[1].toLowerCase().equals("deg") || keyVal[1].toLowerCase().equals("hmsdms")
+                                ||keyVal[1].toLowerCase().equals("dmsdms") ) {
+                            switch (check) {
+                                case "beam" :
+                                    readBeams.get(idx+1).setCoordType(keyVal[1]);
+                                    break;
+                                case "anabeam" :
+                                    readAnaBeams.get(idx+1).setCoordType(keyVal[1]);
+                                    break;
+                                case "tiedarraybeam" :
+                                    readBeams.get(idx+1).getTiedArrayBeams().get(tabIdx+1).setCoordType(keyVal[1]);
+                                    break;
+                            }
+                        } else {
+                            String aS = "Error in directionType value : " + line;
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this, aS, new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                        }
+                        break;
+                    case "directiontype" :
+                        if (keyVal[1].equals("J2000") || keyVal[1].equals("AZEL") || keyVal[1].equals("LMN")) {
+                            switch (check) {
+                                case "beam" :
+                                    readBeams.get(idx+1).setDirectionType(keyVal[1]);
+                                    break;
+                                case "anabeam" :
+                                    readAnaBeams.get(idx+1).setDirectionType(keyVal[1]);
+                                    break;
+                                case "tiedarraybeam" :
+                                    readBeams.get(idx+1).getTiedArrayBeams().get(tabIdx+1).setDirectionType(keyVal[1]);
+                                    break;
+                            }
+                        } else {
+                            String aS = "Error in directionType value : " + line;
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this, aS, new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                        }
+                        break;
+                    case "starttime" :
+                        switch (check) {
+                            case "beam" :
+                                readBeams.get(idx+1).setStartTime(keyVal[1]);
+                                break;
+                            case "anabeam" :
+                                readAnaBeams.get(idx+1).setStartTime(keyVal[1]);
+                                break;
+                            case "tiedarraybeam" :
+                                break;
+                        }
+                        break;
+                    case "duration" :
+                        switch (check) {
+                            case "beam" :
+                                readBeams.get(idx+1).setDuration(keyVal[1]);
+                                break;
+                            case "anabeam" :
+                                readAnaBeams.get(idx+1).setDuration(keyVal[1]);
+                                break;
+                            case "tiedarraybeam" :
+                                break;
+                        }
+                        break;
+                    case "maximizeduration" :
+                        switch (check) {
+                            case "beam" :
+                                readBeams.get(idx+1).setMaximizeDuration(keyVal[1]);
+                                break;
+                            case "anabeam" :
+                                readAnaBeams.get(idx+1).setMaximizeDuration(keyVal[1]);
+                                break;
+                            case "tiedarraybeam" :
+                                break;
+                        }
+                        break;
+                    case "subbandlist" :
+                        switch (check) {
+                            case "beam" :
+                                readBeams.get(idx+1).setSubbandList(keyVal[1]);
+                                break;
+                            case "anabeam" :
+                                break;
+                            case "tiedarraybeam" :
+                                break;
+                        }
+                        break;
+                    case "beamletlist" :
+                        switch (check) {
+                            case "beam" :
+                                readBeams.get(idx+1).setBeamletList(keyVal[1]);
+                                break;
+                            case "anabeam" :
+                                break;
+                            case "tiedarraybeam" :
+                                break;
+                        }
+                        break;
+                    case "nrtiedarraybeams" :
+                        switch (check) {
+                            case "beam" :
+                                readBeams.get(idx+1).setNrTiedArrayBeams(keyVal[1]);
+                                break;
+                            case "anabeam" :
+                                break;
+                            case "tiedarraybeam" :
+                                break;
+                        }
+                    case "nrtabrings" :
+                        switch (check) {
+                            case "beam" :
+                                readBeams.get(idx+1).setNrTabRings(keyVal[1]);
+                                break;
+                            case "anabeam" :
+                                break;
+                            case "tiedarraybeam" :
+                                break;
+                        }
+                    case "tabringsize" :
+                        switch (check) {
+                            case "beam" :
+                                readBeams.get(idx+1).setTabRingSize(keyVal[1]);
+                                break;
+                            case "anabeam" :
+                                break;
+                            case "tiedarraybeam" :
+                                break;
+                        }
+                    case "rank" :
+                        if (keyVal[1].equals("1") || keyVal[1].equals("2") || keyVal[1].equals("3") || keyVal[1].equals("4") || keyVal[1].equals("5")) {
+                            switch (check) {
+                                case "beam" :
+                                    break;
+                                case "anabeam" :
+                                    readAnaBeams.get(idx+1).setRank(keyVal[1]);
+                                    break;
+                                case "tiedarraybeam" :
+                                    break;
+                            }
+                        } else {
+                            String aS = "Error in ranks value : " + line;
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this, aS, new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                        }
+                        break;
+                    case "dispersionmeasure" :
+                        switch (check) {
+                            case "beam" :
+                                break;
+                            case "anabeam" :
+                                break;
+                            case "tiedarraybeam" :
+                                readBeams.get(idx+1).getTiedArrayBeams().get(tabIdx+1).setDispersionMeasure(keyVal[1]);
+                                break;
+                        }
+                        break;                    
+                    case "coherent" :
+                        switch (check) {
+                            case "beam" :
+                                break;
+                            case "anabeam" :
+                                break;
+                            case "tiedarraybeam" :
+                                readBeams.get(idx+1).getTiedArrayBeams().get(tabIdx+1).setCoherent(keyVal[1]);
+                                break;
+                        }
+                    default :
+                        String aS = "Unknown key : " + line;
                         logger.error(aS);
                         LofarUtils.showErrorPanel(this, aS, new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
-                    }
-                } else if (beamKey[1].toLowerCase().equals("directiontype")) {
-                    if (keyVal[1].equals("J2000") || keyVal[1].equals("AZEL") || keyVal[1].equals("LMN")) {
-                        directionTypes.setElementAt(keyVal[1], idx + 1);
-                    } else {
-                        String aS = "Error in directionType value : " + line;
-                        logger.error(aS);
-                        LofarUtils.showErrorPanel(this, aS, new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
-                    }
-                } else if (beamKey[1].toLowerCase().equals("starttime")) {
-                    startTimes.setElementAt(keyVal[1], idx + 1);
-                } else if (beamKey[1].toLowerCase().equals("duration")) {
-                    durations.setElementAt(keyVal[1], idx + 1);
-                } else if (beamKey[1].toLowerCase().equals("maximizeDuration")) {
-                    maxdurs.setElementAt(keyVal[1], idx + 1);
-                } else if (beamKey[1].toLowerCase().equals("subbandlist")) {
-                    subbandList.setElementAt(keyVal[1], idx + 1);
-                } else if (beamKey[1].toLowerCase().equals("beamletlist")) {
-                    beamletList.setElementAt(keyVal[1], idx + 1);
-                } else if (beamKey[1].toLowerCase().equals("target")) {
-                    targets.setElementAt(keyVal[1], idx + 1);
-                } else if (beamKey[1].toLowerCase().equals("rank")) {
-                    if (keyVal[1].equals("1") || keyVal[1].equals("2") || keyVal[1].equals("3") || keyVal[1].equals("4") || keyVal[1].equals("5")) {
-                        ranks.setElementAt(keyVal[1], idx + 1);
-                    } else {
-                        String aS = "Error in ranks value : " + line;
-                        logger.error(aS);
-                        LofarUtils.showErrorPanel(this, aS, new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
-                    }
-                } else {
-                    String aS = "Unknown key : " + line;
-                    logger.error(aS);
-                    LofarUtils.showErrorPanel(this, aS, new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                        break;
                 }
             }
             // all input read.  close file
@@ -1574,24 +1944,20 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         }
 
         // Bug1641 Backwards compatibility
-        if (maxdurs.size() < targets.size()) {
-            for (int i=maxdurs.size(); i <= targets.size();i++) {
-                maxdurs.addElement("Missing");
-            }
-
-            if (choice.equals("Beams")) {
-                beamConfigurationPanel.setColumnSize("maxDur",0);
-            } else if (choice.equals("AnaBeams")) {
-                anaBeamConfigurationPanel.setColumnSize("maxDur",0);
-            }
+        for (Beam b : readBeams ) {
+            if (b.getMaximizeDuration().equals("")) b.setMaximizeDuration("Missing");
         }
-
-
+        for (AnaBeam b : readAnaBeams ) {
+            if (b.getMaximizeDuration().equals("")) b.setMaximizeDuration("Missing");
+        }
         // fill table with all entries
-        if (choice.equals("Beams")) {
-            itsBeamConfigurationTableModel.fillTable(itsTreeType, directionTypes, targets, angles1, angles2, coordTypes, durations, maxdurs, startTimes, subbandList, beamletList, momIDs, true);
-        } else if (choice.equals("AnaBeams")) {
-            itsAnaBeamConfigurationTableModel.fillTable(itsTreeType, directionTypes, targets, angles1, angles2, coordTypes, durations, maxdurs, startTimes, ranks, true);
+        switch (choice) {
+            case "Beams":
+                itsBeamConfigurationTableModel.fillTable(itsTreeType,readBeams, true);
+                break;
+            case "AnaBeams":
+                itsAnaBeamConfigurationTableModel.fillTable(itsTreeType, readAnaBeams, true);
+                break;
         }
     }
 
@@ -2136,19 +2502,22 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     }//GEN-LAST:event_beamConfigurationPanelMouseClicked
 
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
-        if(evt.getActionCommand().equals("Apply")) {
-            itsMainFrame.setHourglassCursor();
-            // save the input from the AntennaConfig Panel
-            this.antennaConfigPanel.saveInput();
-            // save the input from the Generic Panel
-            saveInput();
-            // reset all buttons, flags and tables to initial start position. So the panel now reflects the new, saved situation
-            initPanel();
-            itsMainFrame.setNormalCursor();
-        } else if(evt.getActionCommand().equals("Restore")) {
-            itsMainFrame.setHourglassCursor();
-            restore();
-            itsMainFrame.setNormalCursor();
+        switch (evt.getActionCommand()) {
+            case "Apply":
+                itsMainFrame.setHourglassCursor();
+                // save the input from the AntennaConfig Panel
+                this.antennaConfigPanel.saveInput();
+                // save the input from the Generic Panel
+                saveInput();
+                // reset all buttons, flags and tables to initial start position. So the panel now reflects the new, saved situation
+                initPanel();
+                itsMainFrame.setNormalCursor();
+                break;
+            case "Restore":
+                itsMainFrame.setHourglassCursor();
+                restore();
+                itsMainFrame.setNormalCursor();
+                break;
         }
 
     }//GEN-LAST:event_buttonPanel1ActionPerformed
@@ -2182,17 +2551,20 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     }//GEN-LAST:event_addBeamformerButtonActionPerformed
 
     private void jTabbedPane1StateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_jTabbedPane1StateChanged
-        if (jTabbedPane1.getTitleAt(jTabbedPane1.getSelectedIndex()).equals("Station")) {
-        } else if (jTabbedPane1.getTitleAt(jTabbedPane1.getSelectedIndex()).equals("Generic")) {
-            LofarUtils.fillList(stationList, antennaConfigPanel.getUsedStations(),false);
-            DefaultListModel aM = (DefaultListModel)stationList.getModel();
-            checkBeamformers(aM.toArray());
-            fillBeamformerStationList();
-            if (this.antennaConfigPanel.isLBASelected()){
-                this.setAnaBeamConfiguration(false);
-            } else {
-                this.setAnaBeamConfiguration(true);
-            }
+        switch (jTabbedPane1.getTitleAt(jTabbedPane1.getSelectedIndex())) {
+            case "Station":
+                break;
+            case "Generic":
+                LofarUtils.fillList(stationList, antennaConfigPanel.getUsedStations(),false);
+                DefaultListModel aM = (DefaultListModel)stationList.getModel();
+                checkBeamformers(aM.toArray());
+                fillBeamformerStationList();
+                if (this.antennaConfigPanel.isLBASelected()){
+                    this.setAnaBeamConfiguration(false);
+                } else {
+                    this.setAnaBeamConfiguration(true);
+                }
+                break;
         }
     }//GEN-LAST:event_jTabbedPane1StateChanged
 
@@ -2233,7 +2605,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     }//GEN-LAST:event_loadAnaBeamsButtonActionPerformed
 
     private void copyBeamButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_copyBeamButtonActionPerformed
-        copyBeam();
+        copyBeamToAnaBeam();
     }//GEN-LAST:event_copyBeamButtonActionPerformed
 
     private void beamformerStationListMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_beamformerStationListMouseClicked
@@ -2255,9 +2627,6 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     private jOTDBnode                         itsNode = null;
     private MainFrame                         itsMainFrame;
     private jOTDBparam                        itsOldDescriptionParam;
-    private String                            itsBeamDirectionTypeChoices;
-    private String                            itsAnaBeamRankChoices;
-    private String                            itsAnaBeamDirectionTypeChoices;
     private String                            itsOldTreeDescription;
     private String                            itsTreeType="";
     private BeamConfigurationTableModel       itsBeamConfigurationTableModel = null;
@@ -2277,42 +2646,31 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
   
     
     // Beams
-    private Vector<jOTDBnode> itsBeams          = new Vector<jOTDBnode>();
-    // Observation Beam parameters
-    private Vector<String>    itsBeamTargets         = new Vector<String>();
-    private Vector<String>    itsBeamAngles1         = new Vector<String>();
-    private Vector<String>    itsBeamAngles2         = new Vector<String>();
-    private Vector<String>    itsBeamCoordTypes      = new Vector<String>();
-    private Vector<String>    itsBeamDirectionTypes  = new Vector<String>();
-    private Vector<String>    itsBeamDurations       = new Vector<String>();
-    private Vector<String>    itsBeamMaxDurs         = new Vector<String>();
-    private Vector<String>    itsBeamStartTimes      = new Vector<String>();
-    private Vector<String>    itsBeamSubbandList     = new Vector<String>();
-    private Vector<String>    itsBeamBeamletList     = new Vector<String>();
-    private Vector<String>    itsBeamMomIDs          = new Vector<String>();
-    // Analog Beams
-    private Vector<jOTDBnode> itsAnaBeams          = new Vector<jOTDBnode>();
-    // Analog Beam parameters
-    private Vector<String>    itsAnaBeamTargets         = new Vector<String>();
-    private Vector<String>    itsAnaBeamAngles1         = new Vector<String>();
-    private Vector<String>    itsAnaBeamAngles2         = new Vector<String>();
-    private Vector<String>    itsAnaBeamCoordTypes      = new Vector<String>();
-    private Vector<String>    itsAnaBeamDirectionTypes  = new Vector<String>();
-    private Vector<String>    itsAnaBeamDurations       = new Vector<String>();
-    private Vector<String>    itsAnaBeamMaxDurs         = new Vector<String>();
-    private Vector<String>    itsAnaBeamStartTimes      = new Vector<String>();
-    private Vector<String>    itsAnaBeamRanks           = new Vector<String>();
+    private ArrayList<Beam>     itsBeamList       = new ArrayList<>();
+    private Beam                itsActiveBeam;
+    // keep nodes for deletion
+    private ArrayList<jOTDBnode> itsBeams = new ArrayList<>();
+    
+    // AnalogBeams
+    private ArrayList<AnaBeam>  itsAnaBeamList    = new ArrayList<>();
+    private AnaBeam             itsActiveAnaBeam;
+    // keep nodes for deletion
+    private ArrayList<jOTDBnode> itsAnaBeams = new ArrayList<>();
 
+    // TiedArrayBeams
+    private ArrayList<TiedArrayBeam>  itsTABList    = new ArrayList<>();
+    private TiedArrayBeam       itsActiveTAB;
+    
     // Beamformers
-    private Vector<jOTDBnode> itsBeamformers    = new Vector<jOTDBnode>();
-    private Vector<String>    itsStations       = new Vector<String>();
+    private Vector<jOTDBnode> itsBeamformers    = new Vector<>();
+    private Vector<String>    itsStations       = new Vector<>();
    
     // Observation Virtual Instrument parameters
     private jOTDBnode itsStationList=null;
 
     // keeps lists of available (unused)  and all used stations for Beamformer creation
     private Vector<String>    itsAvailableBeamformStations       = new Vector<String>();
-    private Vector<String>    itsUsedBeamformStations            = new Vector<String>();
+    private Vector<String>    itsUsedBeamformStations            = new Vector<>();
     // each beamlet has its bit in the bitset
     private BitSet   itsUsedBeamlets = new BitSet(216);
     private boolean  editBeam = false;
@@ -2321,7 +2679,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
 
 
     // Temp
-    private Vector<String>    itsUsedStorageNodes      = new Vector<String>();
+    private Vector<String>    itsUsedStorageNodes      = new Vector<>();
 
 
 
