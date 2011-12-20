@@ -47,9 +47,9 @@ class TransposedBeamFormedData: public SampleData<float,3>
   public:
     typedef SampleData<float,3> SuperType;
 
-    TransposedBeamFormedData(unsigned nrSubbands, unsigned nrSamples, unsigned nrChannels, Allocator &allocator = heapAllocator);
+    TransposedBeamFormedData(unsigned nrSubbands, unsigned nrChannels, unsigned nrSamples, Allocator &allocator = heapAllocator);
 
-    virtual void setDimensions(unsigned nrSubbands, unsigned nrSamples, unsigned nrChannels);
+    virtual void setDimensions(unsigned nrSubbands, unsigned nrChannels, unsigned nrSamples);
 };
 
 
@@ -74,23 +74,23 @@ inline BeamFormedData::BeamFormedData(unsigned nrBeams, unsigned nrChannels, uns
 }
 
 
-inline PreTransposeBeamFormedData::PreTransposeBeamFormedData(unsigned nrStokes, unsigned nrSamples, unsigned nrChannels, Allocator &allocator)
+inline PreTransposeBeamFormedData::PreTransposeBeamFormedData(unsigned nrStokes, unsigned nrChannels, unsigned nrSamples, Allocator &allocator)
 :
-  SuperType::SampleData(boost::extents[nrStokes][nrSamples  | 2][nrChannels], 1, allocator)
+  SuperType::SampleData(boost::extents[nrStokes][nrChannels][nrSamples  | 2], 1, allocator)
 {
 }
 
 
-inline TransposedBeamFormedData::TransposedBeamFormedData(unsigned nrSubbands, unsigned nrSamples, unsigned nrChannels, Allocator &allocator)
+inline TransposedBeamFormedData::TransposedBeamFormedData(unsigned nrSubbands, unsigned nrChannels, unsigned nrSamples, Allocator &allocator)
 :
-  SuperType(boost::extents[nrSubbands][nrSamples | 2][nrChannels], nrSubbands, allocator)
+  SuperType(boost::extents[nrSubbands][nrChannels][nrSamples | 2], nrSubbands, allocator)
 {
 }
 
 
-inline void TransposedBeamFormedData::setDimensions(unsigned nrSubbands, unsigned nrSamples, unsigned nrChannels)
+inline void TransposedBeamFormedData::setDimensions(unsigned nrSubbands, unsigned nrChannels, unsigned nrSamples)
 {
-  samples.resizeInplace(boost::extents[nrSubbands][nrSamples | 2][nrChannels]);
+  samples.resizeInplace(boost::extents[nrSubbands][nrChannels][nrSamples | 2]);
 }
 
 

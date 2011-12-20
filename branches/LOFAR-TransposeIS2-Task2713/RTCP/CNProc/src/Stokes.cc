@@ -81,7 +81,7 @@ template <bool ALLSTOKES> void Stokes::calculateCoherent(const SampleData<> *sam
 
   // process data
   const boost::detail::multi_array::const_sub_array<fcomplex,3> &in = sampleData->samples[inbeam];
-  MultiDimArray<float,3> out = stokesData->samples;
+  MultiDimArray<float,3> &out = stokesData->samples;
 
   if (timeIntegrations <= 1 && channelIntegrations <= 1) {
     for (unsigned ch = 0; ch < itsNrChannels; ch ++) {

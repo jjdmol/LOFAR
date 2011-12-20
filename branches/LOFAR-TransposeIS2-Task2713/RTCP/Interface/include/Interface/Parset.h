@@ -314,8 +314,8 @@ public:
     nrPhaseThreeCores( parset.phaseThreeCores().size() ),
 
     nrSubbandsPerPset( parset.nrSubbandsPerPset() ),
-    nrStreamsPerPset( parset.nrPhase3StreamsPerPset() ),
-    streamInfo( generateStreamInfo(parset) )
+    streamInfo( generateStreamInfo(parset) ),
+    nrStreamsPerPset( divideRoundUp( nrStreams(), parset.phaseThreePsets().size() ) )
   {
   }
 
@@ -351,7 +351,7 @@ public:
   unsigned maxNrChannels() const { return streamInfo.size() == 0 ? 0 : std::max_element( streamInfo.begin(), streamInfo.end(), &streamInfoChannelsComp )->nrChannels; }
   unsigned maxNrSamples() const { return streamInfo.size() == 0 ? 0 : std::max_element( streamInfo.begin(), streamInfo.end(), &streamInfoSamplesComp )->nrSamples; }
 
-  size_t subbandSize( unsigned stream ) const { const StreamInfo &info = streamInfo[stream]; return (size_t)info.nrChannels * info.nrSamples * sizeof(float); }
+  size_t subbandSize( unsigned stream ) const { const StreamInfo &info = streamInfo[stream]; return (size_t)info.nrChannels * (info.nrSamples|2) * sizeof(float); }
 
   //unsigned maxNrSubbandsPerStream() const { return std::min(nrSubbands, nrSubbandsPerPart); }
 
@@ -388,9 +388,10 @@ public:
   const unsigned nrPhaseThreeCores;
 
   const unsigned nrSubbandsPerPset;
-  const unsigned nrStreamsPerPset;
 
   const std::vector<struct StreamInfo> streamInfo;
+
+  const unsigned nrStreamsPerPset;
 private:
 
   static bool streamInfoSubbandsComp( const struct StreamInfo &a, const struct StreamInfo &b ) {
@@ -403,6 +404,10 @@ private:
 
   static bool streamInfoSamplesComp( const struct StreamInfo &a, const struct StreamInfo &b ) {
     return a.nrSamples < b.nrSamples;
+  }
+
+  static unsigned divideRoundUp( unsigned a, unsigned b ) {
+    return b == 0 ? 0 : (a + b - 1) / b;
   }
 
   std::vector<struct StreamInfo> generateStreamInfo( const Parset &parset ) const {
@@ -494,7 +499,8 @@ public:
   // the stream to process on (myPset, myCore)
   int myStream( unsigned block ) const { 
     unsigned first = phaseThreePsetIndex * nrStreamsPerPset;
-    unsigned relative = (nrPhaseThreeCores + phaseThreeCoreIndex - phaseThreeGroupSize() * block) % nrPhaseThreeCores;
+    unsigned blockShift = (phaseThreeGroupSize() * block) % nrPhaseThreeCores;
+    unsigned relative = (nrPhaseThreeCores + phaseThreeCoreIndex - blockShift) % nrPhaseThreeCores;
 
     // such a stream does not exist
     if (first + relative >= nrStreams())

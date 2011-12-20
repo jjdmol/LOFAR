@@ -41,11 +41,13 @@ class OutputSection
   public:
                                            ~OutputSection();
 
+    void                                   start();
+
     void				   addIterations(unsigned count);
     void				   noMoreIterations();
 
   protected:
-					   OutputSection(const Parset &, Stream * (*createStream)(unsigned, unsigned), OutputType, const std::vector<unsigned> &cores, int psetIndex, bool integratable, bool variableNrSubbands);
+					   OutputSection(const Parset &, Stream * (*createStream)(unsigned, unsigned), OutputType, unsigned firstBlockNumber, const std::vector<unsigned> &cores, int psetIndex, bool integratable, bool variableNrSubbands);
 
   private:
 
@@ -87,42 +89,42 @@ class OutputSection
 class PhaseTwoOutputSection : public OutputSection
 {
   protected:
-    PhaseTwoOutputSection(const Parset &, Stream * (*createStream)(unsigned, unsigned), OutputType, bool integratable);
+    PhaseTwoOutputSection(const Parset &, Stream * (*createStream)(unsigned, unsigned), OutputType, unsigned firstBlockNumber, bool integratable);
 };
 
 
 class PhaseThreeOutputSection : public OutputSection
 {
   protected:
-    PhaseThreeOutputSection(const Parset &, Stream * (*createStream)(unsigned, unsigned), OutputType);
+    PhaseThreeOutputSection(const Parset &, Stream * (*createStream)(unsigned, unsigned), OutputType, unsigned firstBlockNumber);
 };
 
 
 class FilteredDataOutputSection : public PhaseTwoOutputSection
 {
   public:
-    FilteredDataOutputSection(const Parset &, Stream * (*createStream)(unsigned, unsigned));
+    FilteredDataOutputSection(const Parset &, Stream * (*createStream)(unsigned, unsigned), unsigned firstBlockNumber);
 };
 
 
 class CorrelatedDataOutputSection : public PhaseTwoOutputSection
 {
   public:
-    CorrelatedDataOutputSection(const Parset &, Stream * (*createStream)(unsigned, unsigned));
+    CorrelatedDataOutputSection(const Parset &, Stream * (*createStream)(unsigned, unsigned), unsigned firstBlockNumber);
 };
 
 
 class BeamFormedDataOutputSection : public PhaseThreeOutputSection
 {
   public:
-    BeamFormedDataOutputSection(const Parset &, Stream * (*createStream)(unsigned, unsigned));
+    BeamFormedDataOutputSection(const Parset &, Stream * (*createStream)(unsigned, unsigned), unsigned firstBlockNumber);
 };
 
 
 class TriggerDataOutputSection : public PhaseThreeOutputSection
 {
   public:
-    TriggerDataOutputSection(const Parset &, Stream * (*createStream)(unsigned, unsigned));
+    TriggerDataOutputSection(const Parset &, Stream * (*createStream)(unsigned, unsigned), unsigned firstBlockNumber);
 };
 
 

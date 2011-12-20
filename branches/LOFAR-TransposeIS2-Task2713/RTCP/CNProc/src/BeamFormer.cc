@@ -699,14 +699,12 @@ void BeamFormer::postTransposeBeam(const TransposedBeamFormedData *in, FinalBeam
       out->samples[t][sb][c] = 0;
 #endif
 
-#if 0
+#if 1
   /* reference implementation */
   for (unsigned t = 0; t < nrSamples; t ++)
     for (unsigned c = 0; c < itsNrChannels; c ++)
-      out->samples[t][sb][c] = in->samples[sb][t][c];
+      out->samples[t][sb][c] = in->samples[sb][c][t];
 #else
-  for (unsigned t = 0; t < nrSamples; t ++)
-     memcpy( &out->samples[t][sb][0], &in->samples[sb][t][0], nrChannels * sizeof in->samples[0][0][0] );
 #endif
 }
 

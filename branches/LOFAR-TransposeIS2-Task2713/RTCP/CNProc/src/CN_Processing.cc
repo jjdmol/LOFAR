@@ -91,12 +91,13 @@ CN_Processing_Base::~CN_Processing_Base()
 
 
 #if defined CLUSTER_SCHEDULING
-template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const Parset &parset, const std::vector<SmartPtr<Stream> > &inputStreams, Stream *(*createStream)(unsigned, const LocationInfo &), const LocationInfo &locationInfo, Allocator &bigAllocator)
+template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const Parset &parset, const std::vector<SmartPtr<Stream> > &inputStreams, Stream *(*createStream)(unsigned, const LocationInfo &), const LocationInfo &locationInfo, Allocator &bigAllocator, unsigned firstBlock)
 #else
-template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const Parset &parset, Stream *inputStream, Stream *(*createStream)(unsigned, const LocationInfo &), const LocationInfo &locationInfo, Allocator &bigAllocator)
+template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const Parset &parset, Stream *inputStream, Stream *(*createStream)(unsigned, const LocationInfo &), const LocationInfo &locationInfo, Allocator &bigAllocator, unsigned firstBlock)
 #endif
 :
   itsBigAllocator(bigAllocator),
+  itsBlock(firstBlock),
   itsParset(parset),
 #if defined CLUSTER_SCHEDULING
   itsInputStreams(inputStreams),
@@ -186,6 +187,18 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
 
   if (itsHasPhaseTwo) {
     itsCurrentSubband = new Ring(itsPhaseTwoPsetIndex, itsNrSubbandsPerPset, phaseTwoCoreIndex, phaseOneTwoCores.size());
+
+    // skip ahead to the first block
+    for( unsigned b = 0, core = 0; b < itsBlock; b++ ) {
+      for (unsigned sb = 0; sb < itsNrSubbandsPerPset; sb++) {
+        if (core == phaseTwoCoreIndex)
+          itsCurrentSubband->next();
+        
+        if (++core == phaseOneTwoCores.size())
+          core = 0;
+      }
+    }
+
     itsTransposedSubbandMetaData = new SubbandMetaData(itsNrStations, itsTotalNrPencilBeams + 1);
     itsTransposedInputData = new TransposedData<SAMPLE_TYPE>(itsNrStations, parset.nrSamplesToCNProc(), itsBigAllocator);
 
@@ -275,9 +288,11 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
       size_t max_totalsize = *std::max_element(totalsizes.begin(), totalsizes.end());
 
       itsBeamMemory    = itsBigAllocator.allocate(max_totalsize, 32);
+      LOG_DEBUG_STR("itsBeamMemory is " << max_totalsize << " bytes");
       itsBeamArena     = new FixedArena(itsBeamMemory, max_totalsize);
       itsBeamAllocator = new SparseSetAllocator(*itsBeamArena.get()); // allocates consecutively
 
+      LOG_DEBUG_STR(itsLogPrefix << "Resizing to " << itsMaxNrPencilBeams << " beams");
       itsPreTransposeBeamFormedData.resize(itsMaxNrPencilBeams);
   }
 
@@ -294,7 +309,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
 
   if (itsHasPhaseThree) {
     if (parset.outputBeamFormedData() || parset.outputTrigger()) {
-      itsTransposedBeamFormedData  = new TransposedBeamFormedData(itsTranspose2Logic.maxNrSubbands(), itsTranspose2Logic.maxNrSamples(), itsTranspose2Logic.maxNrChannels(), itsBigAllocator);
+      itsTransposedBeamFormedData  = new TransposedBeamFormedData(itsTranspose2Logic.maxNrSubbands(), itsTranspose2Logic.maxNrChannels(), itsTranspose2Logic.maxNrSamples(), itsBigAllocator);
       itsFinalBeamFormedData	   = (FinalBeamFormedData*)newStreamableData(parset, BEAM_FORMED_DATA, -1, itsBigAllocator);
       itsFinalBeamFormedDataStream = createStream(BEAM_FORMED_DATA, itsLocationInfo);
     }
@@ -424,6 +439,24 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
   int myStream          = itsTranspose2Logic.myStream( block );
   bool streamToProcess  = itsHasPhaseThree && myStream >= 0;
 
+  if (!streamToProcess) {
+    // check whether we really have nothing to process
+    unsigned myPset = itsTranspose2Logic.phaseThreePsetIndex;
+    unsigned myCore = itsTranspose2Logic.phaseThreeCoreIndex;
+
+    for (unsigned s = 0; s < itsTranspose2Logic.nrStreams(); s++) {
+      ASSERTSTR(!(myPset == itsTranspose2Logic.destPset(s, block) && myCore == itsTranspose2Logic.destCore(s, block)),
+       "I'm (" << myPset << ", " << myCore << ") and should process stream " << s << " for block " << block << " but myStream( ) does not return it.");
+    }
+  }
+
+  if (itsHasPhaseTwo && *itsCurrentSubband < itsNrSubbands) {
+    unsigned subband = *itsCurrentSubband;
+
+    ASSERTSTR((unsigned)itsTranspose2Logic.phaseThreePsetIndex == itsTranspose2Logic.sourcePset( subband, block ) && (unsigned)itsTranspose2Logic.phaseThreeCoreIndex == itsTranspose2Logic.sourceCore( subband, block ),
+     "I'm (" << itsTranspose2Logic.phaseThreePsetIndex << ", " << itsTranspose2Logic.phaseThreeCoreIndex << ") . For block " << block << ", I have subband " << subband << ", but the logic expects that subband from (" << itsTranspose2Logic.sourcePset( subband, block ) << ", " << itsTranspose2Logic.sourceCore( subband, block ) << ")" );
+  }
+
 #if defined HAVE_MPI
   if (streamToProcess) {
     ASSERTSTR((unsigned)itsTranspose2Logic.phaseThreePsetIndex == itsTranspose2Logic.destPset( myStream, block ) && (unsigned)itsTranspose2Logic.phaseThreeCoreIndex == itsTranspose2Logic.destCore( myStream, block ),
@@ -434,7 +467,7 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
 
     const StreamInfo &info = itsTranspose2Logic.streamInfo[myStream];
 
-    itsTransposedBeamFormedData->setDimensions(info.subbands.size(), info.nrSamples, info.nrChannels);
+    itsTransposedBeamFormedData->setDimensions(info.subbands.size(), info.nrChannels, info.nrSamples);
 
     if (itsFinalBeamFormedData != 0) {
       itsFinalBeamFormedData->setDimensions(info.nrSamples, info.subbands.size(), info.nrChannels);
@@ -512,11 +545,22 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
         groupSize = 1;
       }
 
+      if(LOG_CONDITION)
+        LOG_DEBUG_STR(itsLogPrefix << " Group size: " << groupSize << " coherent: " << info.coherent);
+
       for (unsigned i = 0; i < groupSize; i ++, beam ++) {
         stream = itsTranspose2Logic.stream(sap, beam, 0, part, stream);
+
+        if(LOG_CONDITION)
+          LOG_DEBUG_STR(itsLogPrefix << "Beam " << beam << " is stream " << stream << " out of " << itsTranspose2Logic.nrStreams());
+
         const StreamInfo &info = itsTranspose2Logic.streamInfo[stream];
 
+        ASSERT( beam < itsPreTransposeBeamFormedData.size() );
+
         itsPreTransposeBeamFormedData[beam] = new PreTransposeBeamFormedData(info.nrStokes, info.nrChannels, info.nrSamples, *itsBeamAllocator.get());
+
+        ASSERT( itsPreTransposeBeamFormedData[beam].get() != NULL );
 
         if (info.coherent) {
           if (itsDedispersionAfterBeamForming != 0)
@@ -524,14 +568,20 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
 
           switch (info.stokesType) {
             case STOKES_I:
+              if(LOG_CONDITION)
+                LOG_DEBUG_STR(itsLogPrefix << "Calculating coherent Stokes I");
               itsStokes->calculateCoherent<false>(itsBeamFormedData.get(), itsPreTransposeBeamFormedData[beam].get(), i, info);
               break;
 
             case STOKES_IQUV:
+              if(LOG_CONDITION)
+                LOG_DEBUG_STR(itsLogPrefix << "Calculating coherent Stokes IQUV");
               itsStokes->calculateCoherent<true>(itsBeamFormedData.get(), itsPreTransposeBeamFormedData[beam].get(), i, info);
               break;
 
             case STOKES_XXYY:
+              if(LOG_CONDITION)
+                LOG_DEBUG_STR(itsLogPrefix << "Calculating coherent Stokes XXYY");
               itsBeamFormer->preTransposeBeam(itsBeamFormedData.get(), itsPreTransposeBeamFormedData[beam].get(), i);
               break;
 
@@ -542,10 +592,14 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
         } else {  
           switch (info.stokesType) {
             case STOKES_I:
+              if(LOG_CONDITION)
+                LOG_DEBUG_STR(itsLogPrefix << "Calculating incoherent Stokes I");
               itsStokes->calculateIncoherent<false>(itsFilteredData.get(), itsPreTransposeBeamFormedData[beam].get(), itsBeamFormer->getStationMapping(), info);
               break;
 
             case STOKES_IQUV:
+              if(LOG_CONDITION)
+                LOG_DEBUG_STR(itsLogPrefix << "Calculating incoherent Stokes IQUV");
               itsStokes->calculateIncoherent<true>(itsFilteredData.get(), itsPreTransposeBeamFormedData[beam].get(), itsBeamFormer->getStationMapping(), info);
               break;
 
@@ -558,6 +612,8 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
               break;
           }
         }
+        if(LOG_CONDITION)
+          LOG_DEBUG_STR(itsLogPrefix << "Done calculating Stokes");
 
         asyncSendTimer.start();
 
@@ -769,8 +825,11 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::finishSendingBe
 
   // free all pretranspose data that we just send, to make room for a different configuration
   // (because the configuration depends on itsCurrentSubband)
-  for( unsigned i = 0; i < itsPreTransposeBeamFormedData.size(); i++ )
+  for( unsigned i = 0; i < itsPreTransposeBeamFormedData.size(); i++ ) {
+    LOG_DEBUG_STR(itsLogPrefix << "Freeing beam " << i);
     itsPreTransposeBeamFormedData[i] = 0;
+  }  
+  LOG_DEBUG_STR(itsLogPrefix << "Freed all beams");
 }
 
 
@@ -842,7 +901,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process(unsigne
 
   if (itsHasPhaseTwo && *itsCurrentSubband < itsNrSubbands) {
     if (LOG_CONDITION)
-      LOG_DEBUG_STR(itsLogPrefix << "Phase 2: Processing subband " << *itsCurrentSubband);
+      LOG_DEBUG_STR(itsLogPrefix << "Phase 2: Processing subband " << *itsCurrentSubband << " block " << itsBlock);
 
 #if defined CLUSTER_SCHEDULING
     receiveInput();
@@ -894,7 +953,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process(unsigne
   // a beam.
 
   if ((itsHasPhaseThree && itsPhaseThreeDisjunct) || (itsHasPhaseTwo && itsPhaseThreeExists)) {
-    int streamToProcess = transposeBeams(block);
+    int streamToProcess = transposeBeams(itsBlock);
     bool doPhaseThree = streamToProcess >= 0;
 
     if (doPhaseThree) {

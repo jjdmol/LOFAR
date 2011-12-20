@@ -72,9 +72,9 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
 {
   public:
 #if defined CLUSTER_SCHEDULING
-			CN_Processing(const Parset &, const std::vector<SmartPtr<Stream> > &inputStream, Stream *(*createStream)(unsigned, const LocationInfo &), const LocationInfo &, Allocator & = heapAllocator);
+			CN_Processing(const Parset &, const std::vector<SmartPtr<Stream> > &inputStream, Stream *(*createStream)(unsigned, const LocationInfo &), const LocationInfo &, Allocator & = heapAllocator, unsigned firstBlock = 0);
 #else
-			CN_Processing(const Parset &, Stream *inputStream, Stream *(*createStream)(unsigned, const LocationInfo &), const LocationInfo &, Allocator & = heapAllocator);
+			CN_Processing(const Parset &, Stream *inputStream, Stream *(*createStream)(unsigned, const LocationInfo &), const LocationInfo &, Allocator & = heapAllocator, unsigned firstBlock = 0);
 #endif
 			~CN_Processing();
 

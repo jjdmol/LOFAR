@@ -27,8 +27,6 @@ PERFORMANCE_TEST = False
 NRRSPBOARDS=4
 NRBOARBEAMLETS=61
 
-NRCVSTOKES=2 # 2: X and Y, 4: Xr, Xi, Yr, Yi
-
 class Parset(util.Parset.Parset):
     def __init__(self):
         util.Parset.Parset.__init__(self)
@@ -237,12 +235,6 @@ class Parset(util.Parset.Parset):
               self["%s.%s" % (prefix,k)] = v
 
           self["Observation.Beam[%s].nrTiedArrayBeams" % (b,)] = len(allsets)    
-
-          if self.getBool("Observation.DataProducts.Output_Beamformed.enabled"):
-            if NRCVSTOKES == 4:
-              self["OLAP.CNProc_CoherentStokes.which"] = "XXYY"
-            else: 
-              self["OLAP.CNProc_CoherentStokes.which"] = "XY"
 
 
     def convertDepricatedKeys(self):
@@ -542,8 +534,8 @@ class Parset(util.Parset.Parset):
 
         # generate filenames to produce - phase 3
         nodelist = self.getInt32Vector( "OLAP.PencilInfo.storageNodeList" );
-        products = ["Beamformed","CoherentStokes","Trigger"]
-        outputkeys = ["Beamformed","CoherentStokes","Trigger"]
+        products = ["Beamformed","Trigger"]
+        outputkeys = ["Beamformed","Trigger"]
 
         for p,o in zip(products,outputkeys):
           outputkey    = "Observation.DataProducts.Output_%s.enabled" % (o,)
@@ -613,13 +605,6 @@ class Parset(util.Parset.Parset):
           ])))
 
         self.setdefault('OLAP.CNProc.integrationSteps', cnIntegrationSteps)
-
-        if self.getBool( "OLAP.realTime" ):
-          earliest_start = time.time() + 15 # allow a 15-second overhead
-          if timestamp(parse(self["Observation.startTime"])) < earliest_start < timestamp(parse(self["Observation.stopTime"])):
-            # remove the start of the observation that we missed
-            warn("The start time of the observation has already passed. Moving it from %s to %s." % (self["Observation.startTime"],format(earliest_start)))
-            self["Observation.startTime"] = format(earliest_start)
 
     def setStations(self,stations):
 	""" Set the array of stations to use (used internally). """
@@ -759,8 +744,6 @@ class Parset(util.Parset.Parset):
         return len(self["OLAP.CNProc_CoherentStokes.which"])
       elif self.getBool("Observation.DataProducts.Output_Trigger.enabled"):
         return len(self["OLAP.CNProc_CoherentStokes.which"]) # todo: recombine Xi+Xr and Yi+Yr
-      elif self.getBool("Observation.DataProducts.Output_CoherentStokes.enabled"):
-        return len(self["OLAP.CNProc_CoherentStokes.which"])
       else:
         return 0
 
@@ -846,11 +829,8 @@ class Parset(util.Parset.Parset):
           for p in psets:
             assert p < nrPsets, "Use of pset %d requested in key %s, but only psets [0..%d] are available" % (p,k,nrPsets-1)
 
-        # no both bf complex voltages and stokes
-        assert not (getBool("Observation.DataProducts.Output_Beamformed.enabled") and getBool("Observation.DataProducts.Output_CoherentStokes.enabled")), "Cannot output both complex voltages and coherent stokes."
-
         # restrictions on #samples and integration in beam forming modes
-        if self.getBool("Observation.DataProducts.Output_Beamformed.enabled") or self.getBool("Observation.DataProducts.Output_CoherentStokes.enabled"):
+        if self.getBool("Observation.DataProducts.Output_Beamformed.enabled"):
           # beamforming needs a multiple of 16 samples
           assert int(self["OLAP.CNProc.integrationSteps"]) % 16 == 0, "OLAP.CNProc.integrationSteps should be dividable by 16"
 
@@ -862,9 +842,6 @@ class Parset(util.Parset.Parset):
           # create at least 1 beam
           #assert self.getNrBeams( True ) > 0, "Beam forming requested, but no beams defined. Add at least one beam."
 
-        if self.getBool("Observation.DataProducts.Output_CoherentStokes.enabled"):
-          assert int(self["OLAP.CNProc.integrationSteps"]) >= 4, "OLAP.CNProc.integrationSteps should be at least 4 if coherent stokes are requested"
-
         assert int(self["OLAP.CNProc_CoherentStokes.channelsPerSubband"]) <= int(self["Observation.channelsPerSubband"]), "Coherent Stokes should have the same number or fewer channels than specified for the full observation."
         assert int(self["Observation.channelsPerSubband"]) % int(self["OLAP.CNProc_CoherentStokes.channelsPerSubband"]) == 0, "Coherent Stokes channels should be a whole fraction of the total number of channels."
 
@@ -873,9 +850,6 @@ class Parset(util.Parset.Parset):
 
         # verify start/stop times
         assert self["Observation.startTime"] < self["Observation.stopTime"], "Start time (%s) must be before stop time (%s)" % (self["Observation.startTime"],self["Observation.stopTime"])
-
-        if self.getBool( "OLAP.realTime" ):
-          assert timestamp(parse(self["Observation.startTime"])) > time.time(), "Observation.realTime is set, so start time (%s) should be later than now (%s)" % (self["Observation.startTime"],format(time.time()))
 
         # verify stations
         for s in self.stations:
