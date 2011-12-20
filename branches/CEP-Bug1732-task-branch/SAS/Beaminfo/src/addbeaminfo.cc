@@ -1032,7 +1032,10 @@ void writeBrokenHardwareFile(const string &filename, const vector<string> &broke
     outfile.close();
   }
   else
-    cout << "writeBrokenHardwareFile(): Unable to open file " << filename << " for reading." << endl;
+  {
+    THROW(Exception, "writeBrokenHardwareFile(): Unable to open file " << filename << 
+          " for reading.");
+  }
 }
 
 
@@ -1068,7 +1071,10 @@ void writeBrokenHardwareFile(const string &filename, const map<string, ptime> &b
     outfile.close();
   }
   else
-    cout << "writeBrokenHardwareFile(): Unable to open file " << filename << " for reading." << endl;
+  {
+    THROW(Exception, "writeBrokenHardwareFile(): Unable to open file " << filename << 
+          " for reading.");
+  }
 }
 
 
@@ -1125,7 +1131,7 @@ map<string, ptime> readBrokenHardwareFile(const string &filename)//, vector<stri
   }
   else
   {
-    cout << "readFile(): Unable to open file" << filename << " for reading." << endl;
+    THROW(Exception, "readFile(): Unable to open file" << filename << " for reading.");
   }
   
   return brokenHardware;
@@ -1144,7 +1150,6 @@ void writeFailedElementsFile( const string &filename,
                               bool strip)
 {
   fstream outfile;
-//  outfile.open(filename.c_str(), ios::trunc);
   outfile.open(filename.c_str(), ios::out);   // this shows the correct behaviour of overwriting the file
 
   ASSERTSTR(failedElements.size() == timestamps.size(), 
@@ -1172,7 +1177,10 @@ void writeFailedElementsFile( const string &filename,
     outfile.close();
   }
   else
-    cout << "writeFailedElementsFile(): Unable to open file " << filename << " for reading." << endl;
+  {
+    THROW(Exception, "writeFailedElementsFile(): Unable to open file " << filename << 
+          " for reading.");
+  }
 }
 
 
@@ -1962,7 +1970,6 @@ void addFailedAntennaTiles( MeasurementSet &ms,
       << failedTiles[i].antennaId);
 
       // Loop over multiple element_flags per antennaId
-      // TODO: use vector update function instead!
       for(unsigned int j=0; j<failedTiles[i].rcus.size(); j++)
       {
         unsigned int antennaId=failedTiles[i].antennaId;
@@ -1973,7 +1980,7 @@ void addFailedAntennaTiles( MeasurementSet &ms,
         if(failedElementInObservation(antennaFieldTable, failedElementsTable,
                                       antennaId, elementIndex) == true)
         {
-        
+            return;   // we don't add it to the LOFAR_FAILED_ELEMENT table
         }
         else
         {
@@ -2060,7 +2067,6 @@ bool failedAntennaElementExists(const Table &failedElementsTable,
       exists=true;
     }
   }
-  
   return exists;
 }
 
