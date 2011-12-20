@@ -21,31 +21,62 @@
 #define HISTOGRAM_COLLECTION_H
 
 #include "loghistogram.h"
+
 #include <complex>
+#include <map>
+#include <vector>
 
 class HistogramCollection
 {
 	public:
-		void Add(const unsigned antenna1, const unsigned antenna2, const std::complex<float> sample, const bool isRFI)
+		typedef std::pair<unsigned, unsigned> AntennaPair;
+		
+		HistogramCollection(unsigned polarizationCount) : _polarizationCount(polarizationCount)
 		{
-			LogHistogram &histogram = getHistogram(antenna1, antenna2);
-			const double amplitude = sample.real()*sample.real() + sample.imag()
-			histogram
+			_histograms = new std::map<AntennaPair, LogHistogram*>[polarizationCount];
 		}
-	private:
-		LogHistogram &getHistogram(const unsigned a1, const unsigned a2)
+		
+		~HistogramCollection()
+		{
+			for(unsigned p=0;p<_polarizationCount;++p)
+			{
+				for(std::map<AntennaPair, LogHistogram*>::iterator i=_histograms[p].begin(); i!=_histograms[p].end(); ++i)
+				{
+					delete i->second;
+				}
+			}
+			delete[] _histograms;
+		}
+		
+		void Add(const unsigned antenna1, const unsigned antenna2, const unsigned polarization, const std::complex<float> *values, const bool *isRFI, size_t sampleCount)
+		{
+			LogHistogram &histogram = GetHistogram(antenna1, antenna2, polarization);
+			for(size_t i=0;i<sampleCount;++i)
+			{
+				const double amplitude = sqrt(values[i].real()*values[i].real() + values[i].imag()*values[i].imag());
+				histogram.Add(amplitude, isRFI[i]);
+			}
+		}
+		
+		LogHistogram &GetHistogram(const unsigned a1, const unsigned a2, const unsigned polarization)
 		{
 			const AntennaPair antennae(a1, a2);
-			std::map<AntennaPair, LogHistogram*>::iterator i = _histograms.find(antennae);
-			if(i == _histograms.end())
+			std::map<AntennaPair, LogHistogram*>::iterator i = _histograms[polarization].find(antennae);
+			if(i == _histograms[polarization].end())
 			{
-				i = _histograms.insert(std::pair<AntennaPair, LogHistogram*>(antennae, new LogHistogram())).first;
+				i = _histograms[polarization].insert(std::pair<AntennaPair, LogHistogram*>(antennae, new LogHistogram())).first;
 			}
 			return *i->second;
 		}
 		
-		typedef std::pair<unsigned, unsigned> AntennaPair;
-		std::map<AntennaPair, LogHistogram*> _histograms;
+		const std::map<AntennaPair, LogHistogram*> GetHistograms(const unsigned polarization) const
+		{
+			return _histograms[polarization];
+		}
+		
+	private:
+		unsigned _polarizationCount;
+		std::map<AntennaPair, LogHistogram*> *_histograms;
 };
 
 #endif

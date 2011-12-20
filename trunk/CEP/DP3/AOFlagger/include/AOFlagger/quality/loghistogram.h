@@ -22,11 +22,19 @@
 
 #include <map>
 #include <cmath>
+#include <stdexcept>
 
 class LogHistogram
 {
 	public:
-		Add(const double amplitude, bool isRfi)
+		enum HistogramType
+		{
+			TotalAmplitudeHistogram,
+			RFIAmplitudeHistogram,
+			DataAmplitudeHistogram
+		};
+		
+		void Add(const double amplitude, bool isRfi)
 		{
 			if(std::isfinite(amplitude))
 			{
@@ -47,6 +55,54 @@ class LogHistogram
 					++bin->rfiCount;
 				}
 			}
+		}
+		
+		double Slope(double startAmplitude, double endAmplitude, enum HistogramType type) const
+		{
+			unsigned long n = 0;
+			long double sumX = 0.0, sumXY = 0.0, sumY = 0.0, sumXSquare = 0.0;
+			for(std::map<double, class AmplitudeBin>::const_iterator i=_amplitudes.begin();i!=_amplitudes.end();++i)
+			{
+				if(i->first >= startAmplitude && i->first < endAmplitude)
+				{
+					long unsigned count;
+					switch(type)
+					{
+						case TotalAmplitudeHistogram: count = i->second.count + i->second.rfiCount; break;
+						case RFIAmplitudeHistogram: count = i->second.rfiCount; break;
+						case DataAmplitudeHistogram: count = i->second.count; break;
+					}
+					double x = log10(i->first);
+					double y = log10((double) count / i->first);
+					++n;
+					sumX += x;
+					sumXSquare += x * x;
+					sumY += y;
+					sumXY += x * y;
+				}
+			}
+			return (sumXY - sumX*sumY/n)/(sumXSquare - (sumX*sumX/n));
+		}
+		
+		double MaxAmplitude() const
+		{
+			if(_amplitudes.empty())
+				throw std::runtime_error("Empty histogram");
+			return _amplitudes.rbegin()->first;
+		}
+		
+		double MinPositiveAmplitude() const
+		{
+			std::map<double, AmplitudeBin>::const_iterator i = _amplitudes.begin();
+			if(i == _amplitudes.end())
+				throw std::runtime_error("Empty histogram");
+			while(i->first <= 0.0)
+			{
+				++i;
+				if(i == _amplitudes.end())
+					throw std::runtime_error("Histogram does not contain positive values");
+			}
+			return i->first;
 		}
 	private:
 		struct AmplitudeBin
@@ -69,3 +125,5 @@ class LogHistogram
 				return -pow(10.0, round(100.0*log10(-amplitude))/100.0);
 		}
 };
+
+#endif
