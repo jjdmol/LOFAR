@@ -64,8 +64,8 @@ void Plot::Close()
 			<< "set term postscript enhanced color"; // font \"Helvetica"; <-- that did not work with some gnuplots.
 		//if(_fontSize>0)
 		//	header << "," << _fontSize;
+		// header << "\"";
 		header
-			<< "\""
 			<< "\nset title \"" << _title << '\"'
 		  << "\nset pm3d map" // at s
 			<< "\nset palette rgbformulae 33,13,10"
