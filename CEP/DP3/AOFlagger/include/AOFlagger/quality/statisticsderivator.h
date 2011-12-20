@@ -169,9 +169,11 @@ class StatisticsDerivator
 			{
 				case QualityTablesFormatter::MeanStatistic: return "Mean";
 				case QualityTablesFormatter::VarianceStatistic: return "Variance";
+				case QualityTablesFormatter::StandardDeviationStatistic: return "Standard deviation";
 				case QualityTablesFormatter::CountStatistic: return "Sample count";
 				case QualityTablesFormatter::DMeanStatistic: return "Differential mean";
 				case QualityTablesFormatter::DVarianceStatistic: return "Differential variance";
+				case QualityTablesFormatter::DStandardDeviationStatistic: return "Differential standard deviation";
 				case QualityTablesFormatter::DCountStatistic: return "Sample count in differential statistics";
 				case QualityTablesFormatter::RFICountStatistic: return "Sample count affected by RFI";
 				case QualityTablesFormatter::RFIRatioStatistic: return "RFI";
@@ -190,8 +192,10 @@ class StatisticsDerivator
 			{
 				case QualityTablesFormatter::MeanStatistic:
 				case QualityTablesFormatter::VarianceStatistic:
+				case QualityTablesFormatter::StandardDeviationStatistic:
 				case QualityTablesFormatter::DMeanStatistic:
 				case QualityTablesFormatter::DVarianceStatistic:
+				case QualityTablesFormatter::DStandardDeviationStatistic:
 					return "arbitrary units";
 				case QualityTablesFormatter::RFIPercentageStatistic:
 					return "%";
