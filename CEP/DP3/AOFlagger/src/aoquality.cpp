@@ -229,6 +229,20 @@ void actionCollect(const std::string &filename, enum CollectingMode mode)
 						plotHistograms.PushDataPoint(rangeCentre, count);
 				}
 			}
+			Plot plotFine("histogram-fine.pdf");
+			plotFine.SetLogScale(true, true);
+			LogHistogram intHistogram;
+			histogramCollection.GetHistogram(0, intHistogram);
+			
+			plotFine.StartLine("Total");
+			for(LogHistogram::iterator i=intHistogram.begin(); i!=intHistogram.end(); ++i)
+				plotFine.PushDataPoint(i.value(), i.normalizedCount(LogHistogram::TotalAmplitudeHistogram));
+			plotFine.StartLine("RFI");
+			for(LogHistogram::iterator i=intHistogram.begin(); i!=intHistogram.end(); ++i)
+				plotFine.PushDataPoint(i.value(), i.normalizedCount(LogHistogram::RFIAmplitudeHistogram));
+			plotFine.StartLine("Data");
+			for(LogHistogram::iterator i=intHistogram.begin(); i!=intHistogram.end(); ++i)
+				plotFine.PushDataPoint(i.value(), i.normalizedCount(LogHistogram::DataAmplitudeHistogram));
 			break;
 	}
 	

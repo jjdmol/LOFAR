@@ -61,9 +61,9 @@ void Plot::Close()
 		}
 		std::stringstream header;
 		header
-			<< "set term postscript enhanced color font \"Helvetica";
-		if(_fontSize>0)
-			header << "," << _fontSize;
+			<< "set term postscript enhanced color"; // font \"Helvetica"; <-- that did not work with some gnuplots.
+		//if(_fontSize>0)
+		//	header << "," << _fontSize;
 		header
 			<< "\""
 			<< "\nset title \"" << _title << '\"'
