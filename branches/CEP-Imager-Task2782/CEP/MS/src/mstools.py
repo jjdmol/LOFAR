@@ -2,7 +2,7 @@ import os
 import re
 
 """ Find files on nodes in a cluster matching the given pattern """
-def findFiles (msPattern, lsOption=''):
+def findFiles (msPattern, lsOption='', cluster=''):
     hostline    = re.compile ('^-+ +[^ ]+ +-+$')
     hostline1   = re.compile ('^-+ +')
     hostline2   = re.compile (' +-+$')
@@ -12,7 +12,7 @@ def findFiles (msPattern, lsOption=''):
                    'Warning: No xauth data; .*',
                    '/usr/bin/xauth:  error in locking authority file.*']
     nomatchline = re.compile ('^(%s)$' % '|'.join(nomatch))
-    pipe = os.popen ('cexec "ls ' + lsOption + ' ' + msPattern + '"')
+    pipe = os.popen ('cexec ' + cluster + ' "ls ' + lsOption + ' ' + msPattern + '"')
     files = []
     hosts = []
     host = ''
@@ -31,8 +31,8 @@ def findFiles (msPattern, lsOption=''):
 
 
 """ Find directories on nodes in a cluster matching the given pattern """
-def findDirs (pattern):
-    return findFiles (pattern, '-d')
+def findDirs (pattern, cluster=''):
+    return findFiles (pattern, '-d', cluster)
 
 
 """ Check if all files have the same SAP """
