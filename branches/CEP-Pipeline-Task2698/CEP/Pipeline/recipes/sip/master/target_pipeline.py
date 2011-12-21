@@ -200,6 +200,8 @@ class target_pipeline(control):
 
         # Do a second run of DPPP, just to remove NaN's from the MS. Store the
         # results in the files specified in the corrected data map-file
+        # WARNING: This will create a new MS with a DATA column containing the
+        # CORRECTED_DATA column of the original MS.
         self.run_task("ndppp", 
             (bbs_mapfile, corrected_mapfile),
             clobber=False,
