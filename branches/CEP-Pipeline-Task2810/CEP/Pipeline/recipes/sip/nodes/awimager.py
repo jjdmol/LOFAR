@@ -24,7 +24,7 @@ from subprocess import CalledProcessError
 
 
 class AWImager(LOFARnodeTCP):
-    def run(self, executable, initScript, parset, workingDir, measurementSet):        
+    def run(self, executable, init_script, parset, working_dir, measurement_set):        
         log4CPlusName = "AWImagerRecipe" 
         
         # Time execution of this job
@@ -36,20 +36,20 @@ class AWImager(LOFARnodeTCP):
 
             # Calculate AWImager parameters that depend on measurement set      
             maxbaseline = get_parset(parset).getInt('maxbaseline')
-            cellSize, npix, wMax, wProjPlanes = \
-                self._calcParamFromMeasurement(measurementSet, maxbaseline)
-            cellSizeFormatted = str(int(round(cellSize))) + 'arcsec'
+            cell_size, npix, w_max, w_proj_planes = \
+                self._calc_par_from_measurement(measurement_set, maxbaseline)
+            cell_size_formatted = str(int(round(cell_size))) + 'arcsec'
             
             # Update the parset (supplied to awimager) with calculated parameters
-            patchDictionary = {'uselogger': 'True',  # enables log4cpluscd log
-                               'ms': measurementSet,  
-                               'cellsize': cellSizeFormatted,
+            patch_dictionary = {'uselogger': 'True',  # enables log4cpluscd log
+                               'ms': measurement_set,  
+                               'cellsize': cell_size_formatted,
                                'npix': str(npix),
-                               'wmax': str(wMax),
-                               'wprojplanes':str(wProjPlanes)
+                               'wmax': str(w_max),
+                               'wprojplanes':str(w_proj_planes)
                                }      
             try:
-                tempParsetFilename = patch_parset(parset, patchDictionary)
+                temp_parset_filename = patch_parset(parset, patch_dictionary)
             except Exception, e:
                 self.logger.error("failed loading and updating the parset: {0}",
                                   format(parset))
@@ -57,14 +57,14 @@ class AWImager(LOFARnodeTCP):
                 return 1
             
             # The command and parameters to be run
-            cmd = [executable, tempParsetFilename]
+            cmd = [executable, temp_parset_filename]
                               
             try:
-                environment = read_initscript(self.logger, initScript)               
-                with CatchLog4CPlus(workingDir,
+                environment = read_initscript(self.logger, init_script)               
+                with CatchLog4CPlus(working_dir,
                     self.logger.name + "." + os.path.basename(log4CPlusName),
                     os.path.basename(executable)) as logger:                      
-                        catch_segfaults(cmd, workingDir, environment, logger,
+                        catch_segfaults(cmd, working_dir, environment, logger,
                                     cleanup=None)
             
             # Thrown by catch_segfault
@@ -78,11 +78,11 @@ class AWImager(LOFARnodeTCP):
             
             finally:
                 # Cleanup of temporary parameterset
-                os.unlink(tempParsetFilename)
+                os.unlink(temp_parset_filename)
 
         return 0
     
-    def _nearestCeiledPower2(self, value):
+    def _nearest_ceiled_power2(self, value):
         '''
         Return int value of  the nearest Ceiled power of 2 for the 
         suplied argument
@@ -90,52 +90,52 @@ class AWImager(LOFARnodeTCP):
         '''
         return int(pow(2, math.ceil(math.log(value, 2)))) 
     
-    def _calcParamFromMeasurement(self, measurementSet, 
-                                            baselineLimit):                   
-        ardSecInDegree = 3600
-        arcSecInRad = (180.0 / math.pi) * ardSecInDegree
+    def _calc_par_from_measurement(self, measurement_set, 
+                                            baseline_limit):                   
+        ard_sec_in_degree = 3600
+        arc_sec_in_rad = (180.0 / math.pi) * ard_sec_in_degree
         
-        # Calculate the cellSize         
-        maxBaseline = pt.taql('CALC sqrt(max([select sumsqr(UVW[:2]) from ' + \
+        # Calculate the cell_size         
+        max_baseline = pt.taql('CALC sqrt(max([select sumsqr(UVW[:2]) from ' + \
             '{0} where sumsqr(UVW[:2]) <{1} giving as memory]))'.format( \
-            measurementSet, baselineLimit *
-            baselineLimit))[0]
+            measurement_set, baseline_limit *
+            baseline_limit))[0]
             
         waveLength = pt.taql('CALC C()/REF_FREQUENCY ' + \
-            'from {0}/SPECTRAL_WINDOW'.format(measurementSet))[0]
+            'from {0}/SPECTRAL_WINDOW'.format(measurement_set))[0]
 
-        cellSize = (1.0/3) * (waveLength/float(maxBaseline)) * arcSecInRad            
+        cell_size = (1.0/3) * (waveLength/float(max_baseline)) * arc_sec_in_rad            
                          
         # Calculate the number of pixels in x and y dim
         #    fov and diameter depending on the antenna name
         fov = None
-        stationDiameter = None
-        antennaName = pt.taql('select NAME from {0}/ANTENNA'.format( \
-                          measurementSet)).getcell('NAME',0)
-        if antennaName.count('HBA'):
+        station_diameter = None
+        antenna_name = pt.taql('select NAME from {0}/ANTENNA'.format( \
+                          measurement_set)).getcell('NAME',0)
+        if antenna_name.count('HBA'):
             fov = 6  #(degrees)
-            stationDiameter = 35 #(meters)
-        elif antennaName.count('LBA'):
+            station_diameter = 35 #(meters)
+        elif antenna_name.count('LBA'):
             fov = 3
-            stationDiameter = 30
+            station_diameter = 30
         else:
             self.logger.error('unknow antenna type for antenna: {0}').format( \
-                                                                antennaName)
+                                                                antenna_name)
             return 1
            
-        npix = (ardSecInDegree * fov) / cellSize
-        npix = self._nearestCeiledPower2(npix)
+        npix = (ard_sec_in_degree * fov) / cell_size
+        npix = self._nearest_ceiled_power2(npix)
             
         # Get the max w with baseline < 10000
-        wMax = pt.taql('CALC max([select UVW[2] from ' + \
+        w_max = pt.taql('CALC max([select UVW[2] from ' + \
             '{0} where sumsqr(UVW[:2]) <{1} giving as memory])'.format(  
-            measurementSet, baselineLimit*baselineLimit))[0]
+            measurement_set, baseline_limit * baseline_limit))[0]
                 
         # Calculate number of projection planes
-        wProjPlanes = (maxBaseline * waveLength) / (stationDiameter ** 2)
-        wProjPlanes = int(round(wProjPlanes))
+        w_proj_planes = (max_baseline * waveLength) / (station_diameter ** 2)
+        w_proj_planes = int(round(w_proj_planes))
         
-        return cellSize, npix, wMax, wProjPlanes
+        return cell_size, npix, w_max, w_proj_planes
     
 
 if __name__ == "__main__":

@@ -58,29 +58,29 @@ class AWImager(BaseRecipe, RemoteCommandRecipeMixIn):
         outnames = collections.defaultdict(list)
         
         # Compile the command to be executed on the remote machine
-        nodeCommand = "python %s" % (self.__file__.replace("master", "nodes"))
+        node_command = "python %s" % (self.__file__.replace("master", "nodes"))
         
         # Environment type variables
         executable = self.inputs['executable']  #absolute path, daily build
-        initScript = self.inputs['initscript']
+        init_script = self.inputs['initscript']
         parset = self.inputs['parset']                  #Using parameter set             
-        workingDir = self.inputs['working_directory']     
+        working_dir = self.inputs['working_directory']     
              
 
         # Create the jobs
         jobs = []
-        for host, measurementSet in data:
+        for host, measurement_set in data:
             #construct and save the output name
             outnames[host].append(os.path.join(
                             self.inputs['working_directory'],
                             self.inputs['job_name'],
-                            os.path.basename(measurementSet.rstrip('/')) + 
+                            os.path.basename(measurement_set.rstrip('/')) + 
                             self.inputs['suffix']))
             
-            arguments=[executable, initScript, parset, workingDir, \
-                       measurementSet]
+            arguments=[executable, init_script, parset, working_dir, \
+                       measurement_set]
             
-            jobs.append(ComputeJob(host, nodeCommand, arguments))
+            jobs.append(ComputeJob(host, node_command, arguments))
         
         # Hand over the job(s) to the pipeline scheduler
         self._schedule_jobs(jobs)
