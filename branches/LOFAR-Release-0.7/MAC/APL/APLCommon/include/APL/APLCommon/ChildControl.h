@@ -178,7 +178,7 @@ private:
 	uint32						itsActionTimer;		// ID of actiontimer.
 
 	uint32						itsGarbageTimer;	// for garbage collection
-	uint16						itsGarbageInterval;	// seconds between garbage coll.
+	uint32						itsGarbageInterval;	// seconds between garbage coll.
 
 	GCFTimerPort*				itsCompletionTimer;	// to signal parent in situation B
 	GCFITCPort*					itsCompletionPort;	// to signal parent in situation C
