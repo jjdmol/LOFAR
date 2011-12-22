@@ -35,6 +35,12 @@
 #include <AOFlagger/remote/processcommander.h>
 #include <AOFlagger/util/plot.h>
 
+#include <AOFlagger/configuration.h>
+
+#ifdef HAS_LOFARSTMAN
+#include <LofarStMan/Register.h>
+#endif // HAS_LOFARSTMAN                                                       
+
 void reportProgress(unsigned step, unsigned totalSteps)
 {
 	const unsigned twoPercent = (totalSteps+49)/50;
@@ -219,7 +225,7 @@ void actionCollect(const std::string &filename, enum CollectingMode mode)
 					plotSlopes.SetLogScale(true, false);
 					plotHistograms.StartLine();
 					plotHistograms.SetLogScale(true, true);
-					while(rangeCentre < maxAmplitude)
+					while(rangeCentre < maxAmplitude && rangeCentre > 0.0)
 					{
 						const double rangeStart = rangeCentre * 0.75;
 						const double rangeEnd = rangeCentre * 1.5;
@@ -482,6 +488,10 @@ void printSyntax(std::ostream &stream, char *argv[])
 
 int main(int argc, char *argv[])
 {
+#ifdef HAS_LOFARSTMAN
+	register_lofarstman();
+#endif // HAS_LOFARSTMAN
+
 	if(argc < 2)
 	{
 		printSyntax(std::cerr, argv);
