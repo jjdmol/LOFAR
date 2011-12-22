@@ -109,7 +109,7 @@ class LogHistogram
 		double MaxAmplitude() const
 		{
 			if(_amplitudes.empty())
-				throw std::runtime_error("Empty histogram");
+				return 0.0;
 			return _amplitudes.rbegin()->first;
 		}
 		
@@ -117,12 +117,12 @@ class LogHistogram
 		{
 			std::map<double, AmplitudeBin>::const_iterator i = _amplitudes.begin();
 			if(i == _amplitudes.end())
-				throw std::runtime_error("Empty histogram");
+				return 0.0;
 			while(i->first <= 0.0)
 			{
 				++i;
 				if(i == _amplitudes.end())
-					throw std::runtime_error("Histogram does not contain positive values");
+					return 0.0;
 			}
 			return i->first;
 		}

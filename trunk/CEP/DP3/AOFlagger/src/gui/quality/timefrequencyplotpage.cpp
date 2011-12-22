@@ -67,6 +67,6 @@ void TimeFrequencyPlotPage::onMouseMoved(size_t x, size_t y)
 	const QualityTablesFormatter::StatisticKind kind = GetSelectedStatisticKind();
 	const std::string &kindName = QualityTablesFormatter::KindToName(kind);
 	
-	text << kindName << " = " << GrayScaleWidget().Image()->Value(x, y);
+	text << kindName << " = " << GrayScaleWidget().Image()->Value(x, y) << " (" << x << ", " << y << ")";
 	_signalStatusChange(text.str());
 }
