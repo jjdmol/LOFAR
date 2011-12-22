@@ -22,7 +22,7 @@
 
 #include <stdexcept>
 
-#include <memory> // for auto_ptr
+#include <auto_ptr.h>
 
 #include <LMWCommon/VdsDesc.h>
 
@@ -92,9 +92,7 @@ bool ClusteredObservation::IsVdsFilename(const std::string &filename)
 	return
 		(filename.size() > 4 && filename.substr(filename.size()-4) == ".vds")
 		||
-		(filename.size() > 4 && filename.substr(filename.size()-4) == ".gds")
-		||
-		(filename.size() > 5 && filename.substr(filename.size()-5) == ".gvds");
+		(filename.size() > 4 && filename.substr(filename.size()-4) == ".gds");
 }
 
 bool ClusteredObservation::IsRefFilename(const std::string &filename)

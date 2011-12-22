@@ -8,7 +8,7 @@
 # File:			SolverQuery.py
 # Author:		Sven Duscha (duscha@astron.nl)
 # Date:          	2010/07/16
-# Last change:   	2011/12/08
+# Last change:   	2011/01/10
 #
 
 
@@ -29,7 +29,6 @@ class SolverQuery:
     def __init__(self, tablename=""):
         try:
             self.TIMING=True           # use this to activate timing of query functions
-            self.convertTime=False      # conver STARTTIME and ENDTIME to human readable
 
             # Reset frequencies and time vectors that are used for parameter retrieval
             # initialize SolverQuery attributes with defaults that can be recognized
@@ -144,12 +143,7 @@ class SolverQuery:
                 result=pt.taql(taqlcmd)  
                 parameter=result.getcol(parameter_name)
 
-                if self.convertTime == True:
-                  taqlcmd= "SELECT STARTTIME FROM " + self.tablename + " WHERE STARTTIME >= "+ str(start_time) + " AND ENDTIME <= " + str(end_time) + " AND STARTFREQ >= "+ str(start_freq) + " AND ENDFREQ <= " + str(end_freq) + " AND LASTITER=TRUE"              
-                  resultTime=pt.taql(taqlcmd)
-                  starttimes = resultTime.getcol('STARTTIME')
-                else:
-                  starttimes = result.getcol('STARTTIME')
+                starttimes = result.getcol('STARTTIME')
 
                 #print "readParameter(): len(parameter): ", len(parameter)  # DEBUG
                 #print "readParameter() result.nrows() = ", result.nrows()
@@ -167,12 +161,7 @@ class SolverQuery:
                 result=pt.taql(taqlcmd)  
                 parameter=result.getcol(parameter_name)
 
-                if self.convertTime == True:
-                  taqlcmd= "SELECT STARTTIME FROM " + self.tablename + " WHERE STARTTIME >= "+ str(start_time) + " AND ENDTIME <= " + str(end_time) + " AND STARTFREQ >= "+ str(start_freq) + " AND ENDFREQ <= " + str(end_freq) + " AND LASTITER=TRUE"              
-                  resultTime=pt.taql(taqlcmd)
-                  starttimes = resultTime.getcol('STARTTIME')
-                else:
-                  starttimes = result.getcol('STARTTIME')
+                starttimes = result.getcol('STARTTIME')
 
                 parmsDict[iteration]=parameter
 
@@ -187,20 +176,16 @@ class SolverQuery:
                 result=pt.taql(taqlcmd)
                 parameter=result.getcol(parameter_name)
 
-                if self.convertTime == False:
-                  starttimes = result.getcol('STARTTIME')
-                else:
-                  taqlcmd="SELECT CTOD(STARTTIME s) FROM " + self.tablename
-                  resultTime=pt.taql(timecmd)
-                  starttimes = resultTime.getcol('STARTTIME')
+                starttimes = result.getcol('STARTTIME')
 
                 #print "readParameter(): len(selection)", len(selection)  # DEBUG
                 #print "type(result).__name__: ", type(result).__name__
                 #print "result.nrows(): ", result.nrows()
                 #print "type(selection).__name__: ", type(selection).__name__
               
-                for iter in range(1, len(parameter)+1):  # +1 see arange doc
+                for iter in range(1, self.getMaxIter()+2):  # +1 see arange doc, +1 due to LSQFit behaviour of one iteration more
                     parmsDict[iter]=parameter[iter-1]
+
 
             else:
                 print "readParameter() unknown iteration keyword"
@@ -353,8 +338,8 @@ class SolverQuery:
 
             #print "getSolution() nrows() = ", selection.nrows()  # DEBUG
 
-            solution=selection.getcol("SOLUTION")
-            for iter in range(1, len(solution)+1):
+            for iter in range(1, selection.nrows()+1):
+                solution=selection.getcol("SOLUTION")
                 solutionsDict[iter]=solution[iter-1]
 
         elif iteration=="last":
@@ -383,7 +368,7 @@ class SolverQuery:
             if(type(selection).__name__ == 'NoneType'):
                 solutionsDict["result"]="False"
       
-            #print "selection.nrows(): ", selection.nrows()   # DEBUG
+            print "selection.nrows(): ", selection.nrows()   # DEBUG
             #print "selection: ", selection.getcol("ITER")    # DEBUG
             solutionsDict[str(iteration)]=selection.getcol("SOLUTION")
 
@@ -447,28 +432,28 @@ class SolverQuery:
         taqlcmd="SELECT STARTTIME, CORRMATRIX FROM " + self.tablename + " WHERE STARTTIME >= "+ str(start_time) + " AND ENDTIME <= " + str(end_time) + " AND STARTFREQ >= " + str(start_freq) + " AND ENDFREQ <= " + str(end_freq) + " AND LASTITER=TRUE"
 
         result=pt.taql(taqlcmd)
+        #print "getCorrMatrix: rows/cols", result.nrows(), " ", result.ncols()    # DEBUG
+
         rank=self.getRank(start_time, end_time, start_freq, end_freq)          # get the RANK from this cell
         #rankDef=self.getRankDef(start_time, end_time, start_freq, end_freq)    # rank deficiency
 
-        #print "solverQuery::getCorrMatrix() result.nrows() = ", result.nrows()   # DEBUG
+        print "getCorrMatrix() result.nrows() = ", result.nrows()   # DEBUG
+        print "getCorrMatrix() result = ", result                   # DEBUG
+        #print "getCorrMatrix() rank = ", rank                       # DEBUG
 
         # This is needed if we get back more than one result (but is buggy now)
         #if self.type=="PERITERATION_CORRMATRIX":
-        #    result=result[1]['CORRMATRIX']
+        #    result=result[1]
         #else:
-        #    result=result[0]['CORRMATRIX']
-  
-        # The Corrmatrix will only be for (N+1)th iteration
-        if result.nrows()==1:
-          corrMatrix=result[0]['CORRMATRIX']  # select CORRMATRIX and write to numpy 1D-array
-        else:
-          corrMatrix=result[1]['CORRMATRIX']  # select CORRMATRIX and write to numpy 1D-array
+        #    result=result[0]
+
+        corrMatrix=result.getcol('CORRMATRIX')  # select CORRMATRIX and write to numpy 1D-array
 
         if getStartTimes==True and getRank==True:
-            starttimes=result[1].getcol('STARTTIME')  # also select starttimes
+            starttimes=result.getcol('STARTTIME')  # also select starttimes
             return corrMatrix, starttimes, getRank
         elif getStartTimes==False and getRank==True: 
-            return corrMatrix, getRank
+            return corrMatrix, getRanl
         else:
             return corrMatrix
 
@@ -865,7 +850,7 @@ class SolverQuery:
             taqlcmd="SELECT * FROM " + self.tablename + " WHERE STARTFREQ=" + str(start_freq) + " AND ENDFREQ=" + str(end_freq) + " AND ITER=" + str(iteration) + " ORDERBY STARTFREQ"
             selection=pt.taql(taqlcmd)        # execute TaQL command      
 
-            cellsDict[iteration]=selection
+            cellsDict[iteration]
 
             return cellsDict
         
@@ -873,51 +858,13 @@ class SolverQuery:
     # Return a histogram of converged solutions, i.e. distribution
     # of iterations where solver converged or max iter
     #
-    # TODO: This is better done in the plotting class
+    # TODO
     def histogramConvergedIteration(self):
         print "histogramConvergedIteration():"
 
         # Get all converged solutions
 
         # make a histogram of the data
-
-
-    # Get the message from the solver for a (series of cells)
-    #
-    def getMessages(self, start_time, end_time, start_freq, end_freq, iteration="last"):
-        messagesDict={}       # create an empty dictionary
-        # return all iterations (default behaviour)
-        if iteration == "all":
-           messagesDict["result"]="all"
-
-           # Loop over all iterations
-           for iter in range(1, self.getMaxIter()+1):
-                 taqlcmd="SELECT * FROM " + self.tablename + " WHERE STARTTIME>=" + str(start_time) + " AND ENDTIME<=" + str(end_time) + " AND STARTFREQ>=" + str(start_freq) + " AND ENDFREQ<=" + str(end_freq) + " AND ITER=" + str(iter)
-                 result=pt.taql(taqlcmd)           # execute TaQL command
-                 messagesDict[iter]=result.getcol("MESSAGE")
-
-        # return the last iteration only
-        elif iteration == "Last" or iteration == "last":
-           #print "readCells(): last"        # DEBUG
-           messagesDict["result"]="last"
-
-           taqlcmd="SELECT * FROM " + self.tablename + " WHERE STARTTIME>=" + str(start_time) + " AND ENDTIME<=" + str(end_time) + " AND STARTFREQ>=" + str(start_freq) + " AND ENDFREQ<=" + str(end_freq) + " AND LASTITER=TRUE"
-           result=pt.taql(taqlcmd)           # execute TaQL command
-           
-           print "result.nrows() = ", result.nrows()
-           
-           messagesDict["last"]=result.getcol("MESSAGE")
-
-        # return only a particular iteration
-        elif type(iteration).__name__ == "int":
-            #print "iteration: ", iteration    # DEBUG
-            messagesDict["result"]="iteration"
-            taqlcmd="SELECT * FROM " + self.tablename + + " WHERE STARTTIME>=" + str(start_time) + " AND ENDTIME<=" + str(end_time) + " AND STARTFREQ=" + str(start_freq) + " AND ENDFREQ=" + str(end_freq) + " AND ITER=" + str(iteration) + " ORDERBY STARTFREQ"
-            result=pt.taql(taqlcmd)        # execute TaQL command      
-            
-            messagesDict[iteration]=result.getcol("MESSAGE")
-
-        return messagesDict
 
 
 
@@ -929,7 +876,7 @@ class SolverQuery:
         if start_time == None or end_time == None or start_freq == None or end_freq == None:
             rank=self.readParameterIdx("RANK", 0)
         else:
-            taqlcmd="SELECT RANK FROM " + self.tablename + " WHERE STARTTIME >= " + str(start_time) + " AND ENDTIME <= " + str(end_time) + " AND STARTFREQ >= " + str(start_freq) + " AND ENDFREQ <= " + str(end_freq) + " AND LASTITER=TRUE"
+            taqlcmd="SELECT RANK FROM " + self.tablename + " WHERE STARTTIME >= " + str(start_time) + " AND ENDTIME <= " + str(end_time) + " AND STARTFREQ >= " + str(start_freq) + " AND ENDFREQ <= " + str(end_freq)
 
             result=pt.taql(taqlcmd)
             rank=result.getcol("RANK")
@@ -939,11 +886,14 @@ class SolverQuery:
 
     # Get the rank deficancy for a particular cell
     #
-    def getRankDef(self, start_time=None, end_time=None, start_freq=None, end_freq=None):
+    def getRankDef():
+        print "getRankDef()"     # DEBUG
+
         if start_time == None or end_time == None or start_freq == None or end_freq == None:
             rank=self.readParameterIdx("RANK", 0)
         else:
-            taqlcmd="SELECT RANKDEF FROM " + self.tablename + " WHERE STARTTIME >= " + str(start_time) + " AND ENDTIME <= " + str(end_time) + " AND STARTFREQ >= " + str(start_freq) + " AND ENDFREQ <= " + str(end_freq) + " AND LASTITER=TRUE"
+            taqlcmd="SELECT RANKDEF FROM " + self.tablename + " WHERE STARTTIME >= " + str(start_time) + " AND ENDTIME <= " + str(end_time) + " AND STARTFREQ >= " + str(start_freq) + " AND ENDFREQ <= " + str(end_freq)
+
             result=pt.taql(taqlcmd)
             rankdef=result.getcol("RANKDEF")
 
@@ -1046,9 +996,6 @@ class SolverQuery:
         if len(self.frequencies) == 0:
             taqlcmd="SELECT UNIQUE STARTFREQ, ENDFREQ FROM " + self.tablename
             self.frequencies=pt.taql(taqlcmd)
-            
-            self.startFreqs=self.frequencies.getcol("STARTFREQ")
-            self.endFreqs=self.frequencies.getcol("ENDFREQ")
 
 
     # Get table of frequencies with STARTFREQ, ENDFREQ column
@@ -1074,14 +1021,14 @@ class SolverQuery:
     #
     def setStartFreqs(self):
         taqlcmd="SELECT UNIQUE STARTFREQ FROM " + self.tablename
-        self.startFreqs=pt.taql(taqlcmd)
+        self.startfreqs=pt.taql(taqlcmd)
 
 
     # Return the unique STARTTIMES present in the
     # Measurementset
     #
     def getStartFreqs(self):
-        return self.startFreqs
+        return self.startfreqs
 
 
     # Read the unique ENDTIMES present in the
@@ -1089,14 +1036,14 @@ class SolverQuery:
     #
     def setEndFreqs(self):
         taqlcmd="SELECT UNIQUE ENDFREQ FROM " + self.tablename
-        self.endFreqs=pt.taql(taqlcmd)
+        self.endfreqs=pt.taql(taqlcmd)
 
 
     # Return the unique ENDTIMES present in the
     # Measurementset
     #
     def getEndFreqs(self):
-        return self.endFreqs
+        return self.endfreqs
 
 
     # Read the MAXITER value from the solver table Measurementset,

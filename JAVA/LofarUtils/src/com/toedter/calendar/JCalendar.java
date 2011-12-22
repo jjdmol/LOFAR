@@ -38,8 +38,8 @@ import javax.swing.JPanel;
  * JCalendar is a bean for entering a date by choosing the year, month and day.
  * 
  * @author Kai Toedter
- * @version $LastChangedRevision$
- * @version $LastChangedDate$
+ * @version $LastChangedRevision: 95 $
+ * @version $LastChangedDate: 2006-05-05 18:43:15 +0200 (Fr, 05 Mai 2006) $
  */
 public class JCalendar extends JPanel implements PropertyChangeListener {
 	private static final long serialVersionUID = 8913369762644440133L;

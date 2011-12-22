@@ -67,6 +67,7 @@ class Locations:
 
         # the parset that will be written by us and read by the sections
         # the observation ID is included to allow parallel observations
+	"parset":  "${RUNDIR}/RTCP-${OBSID}.parset", 
 
         # where to store logs
 	"logdir":  "${BASEDIR}/D${TIMESTAMP}",
@@ -86,8 +87,7 @@ class Locations:
         "obssymlink": "${BASEDIR}/D${YEAR}_${OBSID}",
 
         # parset name mas
-        "parset": "${LOGSYMLINK}/L${OBSID}.parset",     # for communication with Storage and offline pipelines
-        "parset-ion": "${LOGSYMLINK}/L${OBSID}.parset", # for communication with the I/O nodes
+        "parset": "${LOGSYMLINK}/L${OBSID}.parset",
 
         # location of the observation id counter
 	"nextmsnumber": "/globalhome/lofarsystem/log/nextMSNumber",
@@ -112,9 +112,6 @@ class Locations:
 
         # where to store logs
 	"logdir":  "${HOME}/log/L${TIMESTAMP}",
-
-	# where to save the parset
-	"parset-ion":  "/bghome0/lofarsys/parsets/RTCP-${OBSID}.parset", # for communication to the IO nodes 
 
         # where configuration files are kept
         "configdir": "${BASEDIR}/bgfen/etc",

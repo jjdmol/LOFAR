@@ -18,47 +18,21 @@
 
 showhelp()
 {
-  echo ' run like:   cexecms-part [-d] [-e envfile] [-w workdir] [-p parset] command nameglob [arg1 arg2 ...]'
+  echo ' run like:   cexecms-part [-e envfile] command nameglob [arg1 arg2 ...]'
   echo '     see cexecms for more information'
 }
 
-# Handle possible options.
+if test $# -lt 2; then
+    showhelp
+    exit 1
+fi
+# Get a possibly given envfile.
 envfile=
-parset=
-dryrun=0
-workdir=
-while [ $# != 0 ]
-do
-  if test "$1" = "-e"; then
+if test "$1" = "-e"; then
     shift
-    envfile="$1"
+    . $1
     shift
-  elif test "$1" = "-p"; then
-    shift
-    parset="$1"
-    shift
-  elif test "$1" = "-w"; then
-    shift
-    workdir="$1"
-    shift
-  elif test "$1" = "-d"; then
-    shift
-    dryrun=1
-  else
-    case "$1" in
-    -*)
-      echo "$1 is an unknown cexecms-part option"
-      exit 1
-      ;;
-    *)
-      # A command has been found, so stop parsing options.
-      break
-      ;;
-    esac
-  fi
-done
-
-# Test if at least 2 parameters.
+fi
 if test $# -lt 2; then
     showhelp
     exit 1
@@ -70,11 +44,7 @@ shift
 
 # Setup the environment by sourcing the envfile.
 if test "$envfile" != ""; then
-    . "$envfile"
-fi
-# cd if work directory is given.
-if test "$workdir" != ""; then
-    cd "$workdir"  ||  exit 1
+    . $envfile
 fi
 
 # Find all matching files (first substitute # by [0-9] and substitute special characters back).
@@ -121,15 +91,13 @@ command=`echo "$command" | sed \
     -e 's%:DOLLAR:%$%g'`
 
 # Process all files.
-# Substitute placeholders in the command and possible parset.
+# Substitute placeholders in the command.
 for fname in $names
 do
-    # Form the various placeholder replacements.
-    dname=`dirname $fname`                          # directory
-    bname=`basename $fname`                         # basename
-    bnamed=`echo $bname | sed -e 's%\..*%%'`        # basename without extension
-    fnamed=$dname/$bnamed                           # full name without extension
-    # Replace the placeholders.
+    dname=`dirname $fname`
+    bname=`basename $fname`
+    bnamed=`echo $bname | sed -e 's%\..*%%'`
+    fnamed=$dname/$bnamed
     commandnew=`echo "$command" | sed \
 	-e "s%<FN>%$fname%g" \
 	-e "s%<DN>%$dname%g" \
@@ -143,47 +111,12 @@ do
 	-e "s%<FILENAME\.>%$fnamed%g" \
 	-e "s%<DIRNAME\.>%$dnamed%g" \
 	-e "s%<BASENAME\.>%$bnamed%g"`
-    if test "$parset" != ""; then
-        # A parset is given, replace placeholders in there as well.
-        psname=$HOME/`basename $parset`-$USER-$$
-        sed \
-	-e "s%<FN>%$fname%g" \
-	-e "s%<DN>%$dname%g" \
-	-e "s%<BN>%$bname%g" \
-	-e "s%<FN\.>%$fnamed%g" \
-	-e "s%<DN\.>%$dnamed%g" \
-	-e "s%<BN\.>%$bnamed%g" \
-	-e "s%<FILENAME>%$fname%g" \
-	-e "s%<DIRNAME>%$dname%g" \
-	-e "s%<BASENAME>%$bname%g" \
-	-e "s%<FILENAME\.>%$fnamed%g" \
-	-e "s%<DIRNAME\.>%$dnamed%g" \
-	-e "s%<BASENAME\.>%$bnamed%g" \
-        $parset > $psname
-	if test $dryrun = 1; then
-	    echo "Dryrun: " $commandnew $psname "$@"
-	    cat $psname
-        else
-	    eval $commandnew $psname "$@" || echo "Failure in $commandnew $psname $*"
-	fi
-        rm -f $psname
+    # If nothing substituted, give the file name to the command.
+    # Use eval to execute the command, otherwise the shell gets confused
+    # by possible quoted parts.
+    if test "$commandnew" = "$command"; then
+	eval $command $fname "$@" || echo "Failure in $command $fname $*"
     else
-        # Execute the command.
-        # If nothing substituted, give the file name to the command.
-        # Use eval to execute the command, otherwise the shell gets confused
-        # by possible quoted parts.
-        if test "$commandnew" = "$command"; then
-	    if test $dryrun = 1; then
-		echo "Dryrun: " $command $fname "$@"
-	    else
-		eval $command $fname "$@" || echo "Failure in $command $fname $*"
-	    fi
-        else
-	    if test $dryrun = 1; then
-		echo "$Dryrun " $commandnew "$@"
-	    else
-		eval $commandnew "$@" || echo "Failure in $commandnew $*"
-            fi
-	fi
+	eval $commandnew "$@" || echo "Failure in $commandnew $*"
     fi
 done

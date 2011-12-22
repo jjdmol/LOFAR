@@ -157,8 +157,6 @@ class MeasurementSet {
 		bool HasRFIConsoleHistory();
 		void GetAOFlaggerHistory(std::ostream &stream);
 		void AddAOFlaggerHistory(const class rfiStrategy::Strategy &strategy, const std::string &commandline);
-		std::string GetStationName() const;
-		bool ChannelZeroIsRubish();
 	private:
 		void InitCacheData();
 		void CalculateScanCounts();

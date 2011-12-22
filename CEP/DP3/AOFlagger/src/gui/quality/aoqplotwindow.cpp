@@ -59,7 +59,6 @@ AOQPlotWindow::AOQPlotWindow() :
 	_summaryPage.show();
 	
 	_vBox.pack_start(_notebook);
-	_notebook.signal_switch_page().connect(sigc::mem_fun(*this, &AOQPlotWindow::onSwitchPage));
 	_notebook.show();
 	
 	_vBox.pack_end(_statusBar, Gtk::PACK_SHRINK);
@@ -124,15 +123,9 @@ void AOQPlotWindow::readStatistics()
 		{
 			std::stringstream s;
 			s << commander.Errors().size() << " error(s) occured while querying the nodes or measurement sets in the given observation. This might be caused by a failing node, an unreadable measurement set, or maybe the quality tables are not available. The errors reported are:\n\n";
-			size_t count = 0;
-			for(std::vector<std::string>::const_iterator i=commander.Errors().begin();i!=commander.Errors().end() && count < 30;++i)
+			for(std::vector<std::string>::const_iterator i=commander.Errors().begin();i!=commander.Errors().end();++i)
 			{
 				s << "- " << *i << '\n';
-				++count;
-			}
-			if(commander.Errors().size() > 30)
-			{
-				s << "... and " << (commander.Errors().size()-30) << " more.\n";
 			}
 			s << "\nThe program will continue, but this might mean that the statistics are incomplete. If this is the case, fix the issues and reopen the observation.";
 			Gtk::MessageDialog dialog(s.str(), false, Gtk::MESSAGE_ERROR);
