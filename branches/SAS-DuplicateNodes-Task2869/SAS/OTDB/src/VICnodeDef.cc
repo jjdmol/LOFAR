@@ -1,6 +1,6 @@
 //#  VICnodeDef.cc: Structure containing the node info.
 //#
-//#  Copyright (C) 2002-2004
+//#  Copyright (C) 2002-2011
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -45,7 +45,8 @@ VICnodeDef::VICnodeDef(const string&	aName,
 	classif		(aClassif),
 	constraints (aConstraint),
 	description (aDescription),
-	itsNodeID	(0)
+	itsNodeID	(0),
+	itsParentID (0)
 { 
 }
 
@@ -54,6 +55,7 @@ VICnodeDef::VICnodeDef(const result::tuple&	row)
 {
 	// construct a node class with the right database keys
 	row["nodeid"].to(itsNodeID);
+	row["parentid"].to(itsParentID);
 
 	// add rest of the info
 	row["name"].to(name);
@@ -70,6 +72,7 @@ VICnodeDef::VICnodeDef(const result::tuple&	row)
 ostream& VICnodeDef::print (ostream& os) const
 {
 	os << "nodeID  : " << itsNodeID	  << endl;
+	os << "parentID: " << itsParentID << endl;
 	os << "name    : " << name 	 	  << endl;
 	os << "version : " << VersionNr(version)  << endl;
 	os << "classif : " << classif 	  << endl;

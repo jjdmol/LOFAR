@@ -165,7 +165,7 @@ CREATE OR REPLACE FUNCTION addComponentToVT(INT4, INT4, INT4, INT4, VARCHAR(150)
 	  END IF;
 	  
 	  -- finally copy the node (orgNode, tree, parent, newname)
-	  vNewNodeID := instanciateVTleafnode($2, $3, $4, vNewName);
+	  vNewNodeID := instanciateVTleafNode($2, $3, $4, vNewName);
 
 	  RETURN vNewNodeID;
 	END;

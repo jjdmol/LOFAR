@@ -23,9 +23,9 @@
 --
 
 --
--- getVCNodeList (namefragment, versionnr, toponly)
+-- getVCNodeList (namefragment, versionnr, topNodesOnly)
 --
--- Get a list with the top components
+-- Get a list with the (top) components
 --
 -- Authorisation: no
 --
@@ -34,37 +34,46 @@
 -- Types:	OTDBnodeDef
 --
 CREATE OR REPLACE FUNCTION getVCNodeList(VARCHAR(150), INT4, BOOLEAN)
-  RETURNS SETOF OTDBnodeDef AS '
+  RETURNS SETOF OTDBnodeDef AS $$
 	DECLARE
 		vRecord			RECORD;
 		vRestriction	VARCHAR(200);
+		vJoin			VARCHAR(100);
+		vParentID		VARCHAR(10);
 
 	BEGIN
 	  IF $2 <> 0 THEN
-		vRestriction := \' AND version = \' || $2;
+		vRestriction := ' AND version = ' || $2;
 	  ELSE
-		vRestriction := \'\';
+		vRestriction := '';
 	  END IF;
 
 	  IF $3 = TRUE THEN
-		vRestriction := \' EXCEPT SELECT n.* FROM VICnodeDEF n, VICparamDef p \' ||
-						\' WHERE cleanNodeName(p.name) = n.name\';
+		vRestriction := vRestriction || ' EXCEPT SELECT n.nodeID,0,n.name,n.version,n.classif,n.constraints,n.description FROM VICnodeDEF n, VICparamDef p ' ||
+						' WHERE cleanNodeName(p.name) = n.name';
+		vJoin := '';
+		vParentID := '\'0\',';
+	  ELSE
+		vJoin := ' INNER JOIN VICparamdef p ON cleanNodeName(p.name) = n.name';
+		vParentID := 'p.nodeID,';
 	  END IF;
 
 	  -- do selection
-	  FOR vRecord IN EXECUTE \'
-		SELECT nodeID,
-			   name,
-			   version,
-			   classif,
-			   constraints,
-			   description
-		FROM   VICnodedef 
-		WHERE  name LIKE \' || chr(39) || $1 || chr(39) || vRestriction
+	  FOR vRecord IN EXECUTE '
+		SELECT DISTINCT ON (n.nodeID)
+			   n.nodeID,
+			   ' || vParentID || '
+			   n.name,
+			   n.version,
+			   n.classif,
+			   n.constraints,
+			   n.description
+		FROM   VICnodedef n ' || vJoin || '
+		WHERE  n.name LIKE ' || chr(39) || $1 || chr(39) || vRestriction 
 	  LOOP
 		RETURN NEXT vRecord;
 	  END LOOP;
 	  RETURN;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 

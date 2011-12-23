@@ -65,7 +65,7 @@ CREATE TYPE OTDBnode AS (
 	nodeID			INT4,
 	parentID		INT4,
 	paramDefID		INT4,
-	name			VARCHAR(40),
+	name			VARCHAR(150),
 	index			SMALLINT,
 	leaf			BOOLEAN,
 	instances		INT2,			-- only filled for VIC template
@@ -74,7 +74,7 @@ CREATE TYPE OTDBnode AS (
 );
 
 -- make constructor for OTDBnode
-CREATE OR REPLACE FUNCTION makeOTDBnode(INT4,INT4,INT4,VARCHAR(40),INT2,BOOLEAN,INT2,TEXT,TEXT)
+CREATE OR REPLACE FUNCTION makeOTDBnode(INT4,INT4,INT4,VARCHAR(150),INT2,BOOLEAN,INT2,TEXT,TEXT)
   RETURNS OTDBnode AS $$
 	DECLARE
 	  vResult	RECORD;
@@ -110,6 +110,7 @@ CREATE TYPE OTDBvalue AS (
 
 CREATE TYPE OTDBnodeDef AS (
 	nodeID			INT4,
+	parentID		INT4,
 	name			VARCHAR(40),
 	version			INT4,
 	classif			INT2,

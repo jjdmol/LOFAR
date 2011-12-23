@@ -81,9 +81,9 @@ CREATE TABLE VICnodedef (
 	constraints	TEXT,			-- interpreted by OTDB
 	description	TEXT,
 
-	CONSTRAINT      Vnodedef_PK     	PRIMARY KEY (nodeID),
+	CONSTRAINT  Vnodedef_PK     	PRIMARY KEY (nodeID),
 	CONSTRAINT	Vnodedef_node_uniq	UNIQUE(nodeID),
-	CONSTRAINT	Vnodedef_name_uniq  	UNIQUE(name, version, classif)
+	CONSTRAINT	Vnodedef_name_uniq  UNIQUE(name, version, classif)
 ) WITHOUT OIDS;
 
 -- Index: Vnodedef_node_indx
@@ -136,7 +136,7 @@ CREATE TABLE VICtemplate (
 	nodeID		INT4			NOT NULL DEFAULT nextval('VICtemplateID'),
 	parentID	INT4			NOT NULL,  -- REFERENCES VICtemplate(nodeID),
 	originID	INT4			NOT NULL DEFAULT 0, -- REF VICnode or VICparam
-	name		VARCHAR(40)		NOT NULL,
+	name		VARCHAR(150)		NOT NULL,
 	index		INT2			NOT NULL DEFAULT -1,
 	leaf		BOOLEAN			DEFAULT TRUE,
 	instances	INT2			NOT NULL DEFAULT 1,
