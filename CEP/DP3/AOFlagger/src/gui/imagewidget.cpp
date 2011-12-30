@@ -324,8 +324,8 @@ void ImageWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, un
 		_highlightConfig->Execute(image, highlightMask, true, 10.0);
 	}
 	const bool
-		originalActive = _showOriginalMask && _originalMask != 0,
-		altActive = _showAlternativeMask && _alternativeMask != 0;
+		originalActive = _showOriginalMask && originalMask != 0,
+		altActive = _showAlternativeMask && alternativeMask != 0;
 	for(unsigned long y=startY;y<endY;++y) {
 		guint8* rowpointer = data + rowStride * (endY - y - 1);
 		for(unsigned long x=startX;x<endX;++x) {
@@ -333,9 +333,9 @@ void ImageWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, un
 			char r,g,b,a;
 			if(_highlighting && highlightMask->Value(x, y) != 0) {
 				r = 255; g = 0; b = 0; a = 255;
-			} else if(originalActive && _originalMask->Value(x, y)) {
+			} else if(originalActive && originalMask->Value(x, y)) {
 				r = 255; g = 0; b = 255; a = 255;
-			} else if(altActive && _alternativeMask->Value(x, y)) {
+			} else if(altActive && alternativeMask->Value(x, y)) {
 				r = 255; g = 255; b = 0; a = 255;
 			} else {
 				num_t val = image->Value(x, y);
