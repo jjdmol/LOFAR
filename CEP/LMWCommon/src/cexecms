@@ -143,7 +143,7 @@ if test "$cluster" = ""; then
 fi
 
 # The ids can be given in parset format (e.g. 001..4), so expand them.
-ids=`expandparameter "$ids"`
+ids=`$pgmpath/expandparameter "$ids"`
 
 # Find all PATH and ROOT variables and store in a file with the pid in its name.
 envfile=$HOME/${USER}-$$.env
