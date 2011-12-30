@@ -1087,20 +1087,25 @@ void MSWindow::onShowStats()
 			original = _timeFrequencyWidget.OriginalMask(),
 			alternative = _timeFrequencyWidget.AlternativeMask();
 		Mask2DPtr
-			intersect = Mask2D::CreateCopy(original);
-		intersect->Intersect(alternative);
-		unsigned intCount = intersect->GetCount<true>();
-		if(intCount != 0)
+			intersect;
+		if(original != 0 && alternative != 0)
 		{
-			if(!original->Equals(alternative))
+			intersect = Mask2D::CreateCopy(original);
+			intersect->Intersect(alternative);
+			
+			unsigned intCount = intersect->GetCount<true>();
+			if(intCount != 0)
 			{
-				s << "Overlap between original and alternative: " << TimeFrequencyStatistics::FormatRatio((double) intCount / ((double) (original->Width() * original->Height()))) << "\n"
-				<< "(relative to alternative flags: " << TimeFrequencyStatistics::FormatRatio((double) intCount / ((double) (alternative->GetCount<true>()))) << ")\n";
-				
+				if(!original->Equals(alternative))
+				{
+					s << "Overlap between original and alternative: " << TimeFrequencyStatistics::FormatRatio((double) intCount / ((double) (original->Width() * original->Height()))) << "\n"
+					<< "(relative to alternative flags: " << TimeFrequencyStatistics::FormatRatio((double) intCount / ((double) (alternative->GetCount<true>()))) << ")\n";
+					
+				}
 			}
 		}
 		
-		Image2DCPtr powerImg = activeData.GetSingleImage();	
+		Image2DCPtr powerImg = activeData.GetSingleImage();
 		Mask2DCPtr mask = activeData.GetSingleMask();
 		double power = 0.0;
 		for(unsigned y=0;y<powerImg->Height();++y)
@@ -1113,9 +1118,7 @@ void MSWindow::onShowStats()
 				}
 			}
 		}
-		s
-			<< "Total unflagged power: " << power << "\n";
-
+		s << "Total unflagged power: " << power << "\n";
 		Gtk::MessageDialog dialog(*this, s.str(), false, Gtk::MESSAGE_INFO);
 		dialog.run();
 	}
