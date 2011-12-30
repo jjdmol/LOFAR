@@ -18,13 +18,13 @@
 
 showhelp()
 {
-  echo ' run like:   cexecms-part [-d] [-e envfile] [-w workdir] [-p parset] command nameglob [arg1 arg2 ...]'
+  echo ' run like:   cexecms-part [-d] [-e envfile] [-w workdir] [-s script] command nameglob [arg1 arg2 ...]'
   echo '     see cexecms for more information'
 }
 
 # Handle possible options.
 envfile=
-parset=
+script=
 dryrun=0
 workdir=
 while [ $# != 0 ]
@@ -33,9 +33,9 @@ do
     shift
     envfile="$1"
     shift
-  elif test "$1" = "-p"; then
+  elif test "$1" = "-s"; then
     shift
-    parset="$1"
+    script="$1"
     shift
   elif test "$1" = "-w"; then
     shift
@@ -121,7 +121,7 @@ command=`echo "$command" | sed \
     -e 's%:DOLLAR:%$%g'`
 
 # Process all files.
-# Substitute placeholders in the command and possible parset.
+# Substitute placeholders in the command and possible script.
 for fname in $names
 do
     # Form the various placeholder replacements.
@@ -143,9 +143,9 @@ do
 	-e "s%<FILENAME\.>%$fnamed%g" \
 	-e "s%<DIRNAME\.>%$dnamed%g" \
 	-e "s%<BASENAME\.>%$bnamed%g"`
-    if test "$parset" != ""; then
-        # A parset is given, replace placeholders in there as well.
-        psname=$HOME/`basename $parset`-$USER-$$
+    if test "$script" != ""; then
+        # A script is given, replace placeholders in there as well.
+        psname=$HOME/`basename $script`-$USER-$$
         sed \
 	-e "s%<FN>%$fname%g" \
 	-e "s%<DN>%$dname%g" \
@@ -159,7 +159,7 @@ do
 	-e "s%<FILENAME\.>%$fnamed%g" \
 	-e "s%<DIRNAME\.>%$dnamed%g" \
 	-e "s%<BASENAME\.>%$bnamed%g" \
-        $parset > $psname
+        $script > $psname
 	if test $dryrun = 1; then
 	    echo "Dryrun: " $commandnew $psname "$@"
 	    cat $psname
