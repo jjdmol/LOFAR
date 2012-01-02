@@ -151,21 +151,6 @@ namespace
         element.reference(computeElementResponse<ElementLBA>(field, map, freq));
       }
 
-      if(field->isHBA())
-      {
-        // Compute tile array factor.
-        Cube<DComplex> tileAF = computeTileArrayFactor(field, map, freq);
-
-        // Multiply the element response by the tile array factor.
-        for(uint j = 0; j < 4; ++j)
-        {
-          IPosition start(4, 0, 0, j, 0);
-          IPosition end(4, nX - 1, nY - 1, j, nFreq - 1);
-          Array<DComplex> slice = element(start, end).nonDegenerate();
-          slice *= tileAF;
-        }
-      }
-
       // Compute antenna field array factor.
       Array<DComplex> fieldAF = computeFieldArrayFactor(station, i, map, freq,
         reference);
@@ -223,8 +208,10 @@ namespace
     const uint nX = AF.shape()[0];
     const uint nY = AF.shape()[1];
     const uint nFreq = AF.shape()[3];
-    Cube<DComplex> slice = AF(IPosition(4, 0, 0, idPolarization, 0),
-        IPosition(4, nX - 1, nY - 1, idPolarization, nFreq - 1));
+
+    IPosition start(4, 0, 0, idPolarization, 0);
+    IPosition end(4, nX - 1, nY - 1, idPolarization, nFreq - 1);
+    Cube<DComplex> slice = AF(start, end).reform(IPosition(3, nX, nY, nFreq));
 
     if(normalize)
     {
@@ -416,7 +403,7 @@ namespace
       {
         IPosition start(4, 0, 0, 0, 0);
         IPosition end(4, nX - 1, nY - 1, 0, nFreq - 1);
-        Array<DComplex> slice = AF(start, end).nonDegenerate();
+        Array<DComplex> slice = AF(start, end).reform(weight.shape());
         slice += weight;
       }
 
@@ -424,7 +411,7 @@ namespace
       {
         IPosition start(4, 0, 0, 1, 0);
         IPosition end(4, nX - 1, nY - 1, 1, nFreq - 1);
-        Array<DComplex> slice = AF(start, end).nonDegenerate();
+        Array<DComplex> slice = AF(start, end).reform(weight.shape());
         slice += weight;
       }
     }
@@ -433,6 +420,21 @@ namespace
     if(station->nActiveElement() > 0)
     {
       AF /= static_cast<Double>(station->nActiveElement());
+    }
+
+    if(field->isHBA())
+    {
+      // Compute tile array factor.
+      Cube<DComplex> tileAF = computeTileArrayFactor(field, map, freq);
+
+      // Multiply the station array factor by the tile array factor.
+      for(uint i = 0; i < 2; ++i)
+      {
+        IPosition start(4, 0, 0, i, 0);
+        IPosition end(4, nX - 1, nY - 1, i, nFreq - 1);
+        Array<DComplex> slice = AF(start, end).reform(tileAF.shape());
+        slice *= tileAF;
+      }
     }
 
     return AF;
