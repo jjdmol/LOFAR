@@ -657,8 +657,6 @@ void CEPlogProcessor::_processIONProcLine(const struct logline &logline)
         return;
     }
 
-    processNr -= 1; // locusXXX numbering starts at 1, our indexing at 0
-
     if (processNr >= itsNrInputBuffers) {
         LOG_WARN_STR("Inputbuffer range = 0.." << itsNrInputBuffers << ". Index " << processNr << " is invalid");
         return;
