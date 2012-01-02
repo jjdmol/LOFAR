@@ -530,11 +530,14 @@ void updateAntennaFieldTable(MeasurementSet &ms,  const vector<failedTile> &brok
       if(brokenTiles[i].antennaId==antennaId)
       {
         unsigned int size= brokenTiles[i].rcus.size();
+        
+        /*
         for(unsigned int rcuIndex=0; rcuIndex < size; rcuIndex++)
         {
           unsigned int rcuNum=brokenTiles[i].rcus[rcuIndex];
           updateElementFlags(antennaFieldTable, antennaId, rcuNum);    
         }
+        */
         
         updateElementFlags(antennaFieldTable, antennaId, brokenTiles[i].rcus);
         break;
