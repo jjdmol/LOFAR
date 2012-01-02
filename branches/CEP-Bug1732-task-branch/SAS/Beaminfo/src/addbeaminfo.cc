@@ -519,27 +519,6 @@ void updateAntennaFieldTable(MeasurementSet &ms,  const vector<failedTile> &brok
 
   // loop over ANTENNA_FIELD_TABLE
   uInt nrows=antennaFieldTable.nrow();
-//  map<unsigned int, unsigned int> indices;
-  /*
-  for(unsigned int antennaId=0; antennaId<nrows; antennaId++)
-  {   
-    for(unsigned int i=0; i<brokenTiles.size(); i++)
-    {
-      if(brokenTiles[i].antennaId==antennaId)
-      {
-//        for(unsigned int rcuIndex=0; rcuIndex < brokenTiles[i].rcus.size(); rcuIndex++)
-//        {
-//          unsigned int rcuNum=brokenTiles[i].rcus[rcuIndex];
-//          updateElementFlags(antennaFieldTable, antennaId, rcuNum);    
-//        }
-        
-        updateElementFlags(antennaFieldTable, antennaId, brokenTiles[i].rcus);
-        break;
-      }
-    }
-  }
-  */
-  
   for(unsigned int i=0; i<brokenTiles.size(); i++)    // loop over broken tiles map
   {
     if(brokenTiles[i].antennaId < nrows)    // if the antenna id is present in ANTENNA table
