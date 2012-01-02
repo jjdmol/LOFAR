@@ -196,10 +196,9 @@ map<string, ptime> readBrokenHardwareFile(const string &filename);
 string stripRCUString(const string &brokenHardware);
 void getSASFailureTimes();
 void writeFailedElementsFile( const string &filename,
-                              const vector<string> &brokenHardware,
-                              const vector<MVEpoch> &timestamps,
+                              const map<string, ptime> &failedHardware,
                               bool strip=true);                              
-map<string, MVEpoch> readFailedElementsFile(const string &filename);
+map<string, ptime> readFailedElementsFile(const string &filename);
 
 
 void usage(char *programname)
@@ -377,9 +376,21 @@ int main (int argc, char* argv[])
       // TEST: reading broken hardware from a file
       LOG_INFO_STR("reading brokenHardware from file:" << brokenfilename);
       brokenHardware=readBrokenHardwareFile(brokenfilename);
+      LOG_INFO_STR("reading brokenHardware after from file:" << brokenAfterfilename);      
       brokenHardwareAfter=readBrokenHardwareFile(brokenAfterfilename);
+
+//      showMap(brokenHardware);        // DEBUG
+//      showMap(brokenHardwareAfter);   // DEBUG
     
       failedHardware=getFailedHardware(brokenHardware, brokenHardwareAfter);
+      if(debug)
+        showMap(failedHardware);
+        
+      writeFailedElementsFile(failedfilename, failedHardware);  // write failed tiles to disk
+
+      cout << "Read failed tiles from file:" << endl;  // DEBUG
+      failedHardware=readFailedElementsFile(failedfilename);    // DEBUG
+      showMap(failedHardware);
     }
 
     //---------------------------------------------------------------------
@@ -1141,33 +1152,22 @@ map<string, ptime> readBrokenHardwareFile(const string &filename)//, vector<stri
   \param timestamps     vector containing the associated timestamps for the failed elements
 */
 void writeFailedElementsFile( const string &filename,
-                              const vector<string> &failedElements,
-                              const vector<MVEpoch> &timestamps,
+                              const map<string, ptime> &failedElements,
                               bool strip)
 {
   fstream outfile;
   outfile.open(filename.c_str(), ios::out);   // this shows the correct behaviour of overwriting the file
 
-  ASSERTSTR(failedElements.size() == timestamps.size(), 
-            "writeFailedElementsFile() sizes of failedElements and timestamps differ");
-
   if (outfile.is_open())
   {
     LOG_INFO_STR("Writing SAS failed elements RCUs with timestamps to file: " << filename);
   
-    vector<MVEpoch>::const_iterator timestampsIt=timestamps.begin();
-    for(vector<string>::const_iterator it=failedElements.begin(); it!=failedElements.end() ; ++it)
+    for(map<string, ptime>::const_iterator it=failedElements.begin(); it!=failedElements.end() ; ++it)
     {
-      if(it->find("RCU")!=string::npos)   // Only write lines that contain RCU
+      if(it->first.find("RCU")!=string::npos)   // Only write lines that contain RCU
       {
-        // optionally strip off unnecessary information from string
-        if(strip)
-          outfile << stripRCUString(*it) << endl;
-        else
-          outfile << *it << endl;
-          
-        outfile << "\t" << *timestampsIt << endl;          // Write timestamp
-        ++timestampsIt;
+        outfile << it->first;                           // write Station.RCU<num>
+        outfile << "\t" << it->second << endl;          // Write timestamp
       }
     }
     outfile.close();
@@ -1175,7 +1175,7 @@ void writeFailedElementsFile( const string &filename,
   else
   {
     THROW(Exception, "writeFailedElementsFile(): Unable to open file " << filename << 
-          " for reading.");
+          " for writing.");
   }
 }
 
@@ -1186,16 +1186,10 @@ void writeFailedElementsFile( const string &filename,
   \param failedElements vector of failed element names
   \param timestamps     vector containing the associated timestamps for the failed elements
 */
-//void readFailedElementsFile(const string &filename,
-//                            vector<string> &failedElements,
-//                            vector<MVEpoch> &timestamps)
-map<string, MVEpoch> readFailedElementsFile(const string &filename)
+map<string, ptime> readFailedElementsFile(const string &filename)
 {
-  string line;                                    // line read from file
-  string name, timestamp;                         // name and timestamp to split into 
-  string::size_type pos1=string::npos, pos2=string::npos;    // positions for line split
-  map<string, MVEpoch> failedElements;
-  
+  string name, date, time;                        // name and timestamp to split into 
+  map<string, ptime> failedElements;
   fstream infile;
   infile.open(filename.c_str(), ios::in);
 
@@ -1203,43 +1197,11 @@ map<string, MVEpoch> readFailedElementsFile(const string &filename)
   {
     while(infile.good())
     {
-      getline (infile,line);      
-      if(line.find("#") != string::npos)          // Ignore comment lines "#"
-      {
-        // do nothing
-      }
-      else
-      {
-        if((pos1=line.find(" "))!=string::npos)   // read first and second column of line 
-        {
-          name=line.substr(0, pos1);              // read up to first space
-          while(pos2!=string::npos)               // read all successive spaces
-          {
-            pos2=line.find(" ");                  // find next space
-          }
-          pos2++;                                 // skip space
-          if(pos2!=string::npos)
-          {
-            timestamp=line.substr(pos2, pos2-pos1);  // read timestamp
-          }
-          else
-          {
-            LOG_DEBUG_STR("readFailedElementsFile() " << line << " lacks timestamp entry.");            
-          }
-        }
-        else
-        {
-          LOG_DEBUG_STR("readFailedElementsFile() " << line << " contains an error near pos = " 
-          << pos1);
-        }
-        
-//        cout << "readFailedElementsFile() name = "  << name << endl;            // DEBUG
-//        cout << "readFailedElementsFile() timestamp = " << timestamp << endl;   // DEBUG
-        MVEpoch timestamp(Quantity(50237.29, "d")); // convert timestamp to a casa epoch
-        
-        failedElements[name]=timestamp;             // add timestamp to map with corresponding name
-      }
-    }   
+      string datetime="";
+      infile >> name >> date >> time;
+      datetime=date.append(" ").append(time);     // YYYY-MM-DD HH-MM-SS.ssss        
+      failedElements.insert(std::make_pair(name, time_from_string(datetime)));
+    }
     infile.close();
   }
   else
@@ -1665,12 +1627,7 @@ map<string, ptime> getFailedHardware( const map<string, ptime> &brokenBegin,
   {
     map<string, ptime>::const_iterator found=brokenBegin.find(brokenEndIt->first);
 
-    cout << "found->first = " << found->first << "\t";                    // DEBUG
-    cout << "brokenEndIt->second = " << brokenEndIt->second << "\t";     // DEBUG
-    cout << " (--brokenBegin.end())->second = " <<  (--brokenBegin.end())->second << endl;  // DEBUG
-
-//    if(brokenEndIt->second < (--brokenBegin.end())->second) 
-    if(found == brokenBegin.end())
+    if(found == brokenBegin.end())        // if we didn't find it in broken hardware at the beginning
     {
       failedHardware.insert(*brokenEndIt);
     }
@@ -1895,7 +1852,7 @@ void addFailedAntennaTiles( MeasurementSet &ms,
         unsigned int antennaId=failedTiles[i].antennaId;
         unsigned int elementIndex=failedTiles[i].rcus[j] / 2;
       
-        // First check if the ELEMENT_FLAG is false, i.e. only if the RCU is used
+        // First check if the ELEMENT_FLAG is true, i.e. only if the RCU is used
         // in this observation mode
         if(failedElementInObservation(antennaFieldTable, failedElementsTable,
                                       antennaId, elementIndex) == true)
