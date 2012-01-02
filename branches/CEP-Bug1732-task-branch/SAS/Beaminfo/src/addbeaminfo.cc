@@ -377,8 +377,8 @@ int main (int argc, char* argv[])
       vector<failedTile> brokenTiles=getBrokenTiles(ms, brokenRCUs); // Convert stations to antennaIds
       if(debug)
         showFailedTiles(brokenTiles);
-      updateAntennaFieldTable(ms, brokenTiles);    // TODO: Update LOFAR_ANTENNA_FIELD table
-    
+      updateAntennaFieldTable(ms, brokenTiles);
+      
       //----------------------------------------------------------------------------
       // Get Tiles that failed during observation
       //
@@ -439,7 +439,6 @@ MVEpoch toCasaTime(const string &time)
   return result;
 }
 
-
 /*!
   \brief Convert a ptime to a CASA MVEpoch
   \param time   ptime format
@@ -455,7 +454,6 @@ MVEpoch toCasaTime(const ptime &time)
 
   return casaTime;
 }
-
 
 /*!
   \brief Check that Starttime < Endtime
@@ -510,7 +508,6 @@ void updateAntennaFieldTable(MeasurementSet &ms,  const vector<failedTile> &brok
 {
   LOG_INFO_STR("Updating ELEMENT_FLAG in MS");
 
-//  cout << "brokenTiles.size() = " << brokenTiles.size() << endl;  // DEBUG
   if(brokenTiles.size()==0)     // if there were no broken tiles...
   {
     return;                     // just return
@@ -529,10 +526,8 @@ void updateAntennaFieldTable(MeasurementSet &ms,  const vector<failedTile> &brok
     {
       if(brokenTiles[i].antennaId==antennaId)
       {
-        unsigned int size= brokenTiles[i].rcus.size();
-        
         /*
-        for(unsigned int rcuIndex=0; rcuIndex < size; rcuIndex++)
+        for(unsigned int rcuIndex=0; rcuIndex < brokenTiles[i].rcus.size(); rcuIndex++)
         {
           unsigned int rcuNum=brokenTiles[i].rcus[rcuIndex];
           updateElementFlags(antennaFieldTable, antennaId, rcuNum);    
