@@ -288,11 +288,9 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
       size_t max_totalsize = *std::max_element(totalsizes.begin(), totalsizes.end());
 
       itsBeamMemory    = itsBigAllocator.allocate(max_totalsize, 32);
-      LOG_DEBUG_STR("itsBeamMemory is " << max_totalsize << " bytes");
       itsBeamArena     = new FixedArena(itsBeamMemory, max_totalsize);
       itsBeamAllocator = new SparseSetAllocator(*itsBeamArena.get()); // allocates consecutively
 
-      LOG_DEBUG_STR(itsLogPrefix << "Resizing to " << itsMaxNrPencilBeams << " beams");
       itsPreTransposeBeamFormedData.resize(itsMaxNrPencilBeams);
   }
 
@@ -825,11 +823,8 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::finishSendingBe
 
   // free all pretranspose data that we just send, to make room for a different configuration
   // (because the configuration depends on itsCurrentSubband)
-  for( unsigned i = 0; i < itsPreTransposeBeamFormedData.size(); i++ ) {
-    LOG_DEBUG_STR(itsLogPrefix << "Freeing beam " << i);
+  for( unsigned i = 0; i < itsPreTransposeBeamFormedData.size(); i++ )
     itsPreTransposeBeamFormedData[i] = 0;
-  }  
-  LOG_DEBUG_STR(itsLogPrefix << "Freed all beams");
 }
 
 
