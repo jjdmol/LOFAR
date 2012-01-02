@@ -37,6 +37,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>   // for ASSERT and ASSERTSTR?
 #include <Common/SystemUtil.h>    // needed for basename
+#include <Common/Exception.h>     // THROW macro for exceptions
 
 // STL/C++ includes
 #include <iostream>
@@ -91,12 +92,12 @@ int main(int argc, char *argv[])
   unsigned int nwplanes=128;      // got to see  how to export this feature to the outside
 
   // Init logger
-//  string progName = basename(argv[0]);
-//  INIT_LOGGER(progName);
+  string progName = basename(argv[0]);
+  INIT_LOGGER(progName);
     
   if(argc < 3)        // if not enough parameters given, display usage information
   {
-      usage(argv[0]);
+      usage(progName);
       exit(0);
   }
   else      // Handle file arguments: MS image image (and options, e.g. -w 512)
@@ -149,7 +150,7 @@ int main(int argc, char *argv[])
   // Rename the existing MODEL_DATA.
   if(LofarMS.tableDesc().isColumn("MODEL_DATA"))
   {
-      LofarMS.renameColumn ("MODEL_DATA_bak", "MODEL_DATA");
+    LofarMS.renameColumn ("MODEL_DATA_bak", "MODEL_DATA");
   }
  
   map<string, double> refFrequencies;
@@ -157,19 +158,29 @@ int main(int argc, char *argv[])
  
   for(unsigned int i=0; i < patchNames.size(); i++)   // Loop over patchNames
   {
+    string error;                   // to hold error mesage from validModelImage
     string columnName;              // columnName for uv data of this patch in table
     Vector<String> model(1);        // we need a ft per model to write to each column
 
-    columnName=createColumnName(patchNames[i]);       
     model[0]=patchNames[i];
 
-    cout << "Adding column: " << columnName << endl;
+    if(!validModelImage(patchNames[i], error))      // validate model image (.model, Jy/pixel)
+    {
+      LOG_WARN_STR("Skipping image " << model[0] << " because it is invalid.");
+      LOG_WARN_STR(error);
+      break;
+    }
+    else
+    {
+      columnName=createColumnName(patchNames[i]);       
+      LOG_INFO_STR("Adding column: " << columnName);
+    }
 
     // Add the MODEL_DATA column for this patch.
     addModelColumn(LofarMS, columnName);
     LofarMS.flush();
 
-    cout << "Using nwplanes = " << nwplanes << endl;
+    LOG_INFO_STR("Using nwplanes = " << nwplanes);
 
     //showColumnNames(LofarMS);
     // Do a predict with the casarest ft() function, complist="", because we only use the model images
@@ -185,10 +196,8 @@ int main(int argc, char *argv[])
     imager.ft(model, "", False);
      
     // rename MODEL_DATA column to MODEL_DATA_patchname column
-    LofarMS.renameColumn (columnName, "MODEL_DATA");
-      
-    addDirectionKeyword(LofarMS, patchNames[i]);           
-    
+    LofarMS.renameColumn (columnName, "MODEL_DATA"); 
+    addDirectionKeyword(LofarMS, patchNames[i]);               
     LofarMS.flush();
   }
     
@@ -276,7 +285,7 @@ map<string, double> patchFrequency(MeasurementSet &ms, const Vector<String> &pat
   uInt nPatches=patchNames.size();
   for(uInt i=0; i<nPatches; i++)
   {
-    cout << "Patching image " << patchNames[i] << " with MS frequency: " << MSrefFreq << endl;
+    LOG_INFO_STR("Patching image " << patchNames[i] << " with MS frequency: " << MSrefFreq);
     imageRestfreq=updateFrequency(patchNames[i], MSrefFreq);
     refFrequencies[patchNames[i]]=imageRestfreq;            // store image ref frequency in map
   }
@@ -293,8 +302,6 @@ double updateFrequency(const string &imageName, double reffreq)
     IPosition shape(1);                 // define shape for a one-dimensional array
     shape(0)=1;                   
     Array<Double> reffreqArray(shape, reffreq);  // one-dimensional array to store rest frequencies from image
-
-//    LOG_INFO_STR("Writing frequency " << MSrefFreq << " to " << patchNames[i]);
 
     // Get image reference frequency and write it to the map
     //
@@ -332,8 +339,7 @@ void restoreFrequency(const map<string, double> &refFrequencies)
   map<string, double>::const_iterator mapIt;
   for(mapIt=refFrequencies.begin(); mapIt!=refFrequencies.end(); ++mapIt)
   {
-    cout << "Restoring image: " << mapIt->first <<"\tFrequency: " << mapIt->second << endl;
-  
+    LOG_INFO_STR("Restoring image: " << mapIt->first <<"\tFrequency: " << mapIt->second);
     updateFrequency(mapIt->first, mapIt->second);
   }
 }
@@ -406,7 +412,6 @@ casa::MDirection getPatchDirection(const string &patchName)
   return MDirWorld;
 }
 
-
 // Add keyword "LOFAR_DIRECTION" containing a 2-valued vector of type double with J2000 RA and DEC of patch 
 // center in radians.
 //
@@ -436,7 +441,6 @@ void addDirectionKeyword(casa::Table LofarTable, const string &patchName)
   }
 }
 
-
 // Create a column name based on the Modelfilename of the form
 // modelfilename (minus any file extension)
 //
@@ -450,6 +454,7 @@ string createColumnName(const casa::String &ModelFilename)
   Filename=Path.baseName();                   // remove path from ModelFilename
 
   unsigned long pos=Filename.find(".");       // remove .image or .img extension from Patchname  
+  /*
   if((pos=Filename.find(".img")) != string::npos)
   {
   }
@@ -457,6 +462,10 @@ string createColumnName(const casa::String &ModelFilename)
   {
   }
   else if((pos=Filename.find(".model")) != string::npos)
+  {
+  }
+  */
+  if((pos=Filename.find(".model")) != string::npos) // only accept .model extension anymore
   {
   }
   
@@ -469,6 +478,63 @@ string createColumnName(const casa::String &ModelFilename)
   return columnName;
 }
 
+// Check that input model image has Jy/pixel flux
+//
+bool validModelImage(const casa::String &imageName, string &error)
+{
+  size_t pos=string::npos;
+  bool valid=false;
+  bool validName=false, validUnit=false;
+
+  if((pos=imageName.find(".model")) != string::npos)   // Check filename extension
+  {
+    valid=true;
+  }
+  else if((pos=imageName.find(".img")) != string::npos)
+  {
+    error="Image filename ";
+    error.append(imageName).append(" must have .model extension.");
+    validName=false;    
+  }
+  else if((pos=imageName.find(".image")) != string::npos)
+  {
+    error="Image filename ";
+    error.append(imageName).append(" must have .model extension.");
+    validName=false;
+  }
+  else    // no extension is acceptable
+  {
+    validName=true;     // can we accept no extension?
+  }
+
+  // Look for Jy/beam entry in file table keywords "unit"
+  Table image(imageName);                                       // open image-table as read-only
+  const TableRecord &imageKeywords(image.keywordSet());
+  RecordFieldId unitsId("units");
+  string units=imageKeywords.asString(unitsId);
+  if(units=="Jy/pixel")
+  {
+    validUnit=true;
+  }
+  else
+  {
+    error="Image ";
+    error.append(imageName).append(" must have flux unit Jy/pixel.");
+    validUnit=false;
+  }
+
+  // Determine final validity
+  if(validName && validUnit)
+  {
+    valid=true;
+  }
+  else
+  {
+    valid=false;
+  }
+
+  return valid;
+}
 
 // Check table for existing patch names, if any of the existing patch names are already
 // present in <patchname> columns, offer overwrite option
@@ -495,7 +561,7 @@ void removeExistingColumns(const string &MSfilename, const Vector<String> &patch
 
 // Display usage info
 //
-void usage(const char *programname)
+void usage(const string &programname)
 {
   cout << "Usage: " << programname << "<options> LofarMS <patchname[s]>" << endl;
   cout << "LofarMS            - MS to add model data to" << endl;
@@ -503,7 +569,6 @@ void usage(const char *programname)
   cout << "<patchname[s]>     - list of patchname[s] of image[s], these filenames are used to name the column and should be" << endl;
   cout << "                     referred to in the parset file with .image,.img,.model extension removed" << endl;
 }
-
 
 // From: CEP/MS/src/MSCreate::addImagerColumns
 //
@@ -597,9 +662,6 @@ void addModelColumn (MeasurementSet& ms, const String& dataManName)
   }
 }
 
-
-
-
 //------------------------------------------------------------------
 // DEBUG functions
 
@@ -624,7 +686,6 @@ void showColumnNames(Table &table)
   }
   cout << endl;
 }
-
 
 //
 // Show the content of a STL vector
