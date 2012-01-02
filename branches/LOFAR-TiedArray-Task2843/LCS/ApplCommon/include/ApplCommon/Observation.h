@@ -86,6 +86,17 @@ public:
 		int				duration;
 	};
 		
+	class TiedArrayBeam {
+	public:
+		TiedArrayBeam() {};
+		~TiedArrayBeam() {};
+		double			angle1;
+		double			angle2;
+		string			directionType;
+		double			dispersionMeasure;
+		bool			coherent;
+	};
+		
 	class Beam {
 	public:
 		Beam() {};
@@ -101,14 +112,21 @@ public:
 			}
 			return (*this);
 		}
+		// -- datamembers --
+		string					name;
+		string					target;
+		string					antennaSet;
+		vector<Pointing>		pointings;
+		bool					maximizeDuration;
 
-		string				name;
-		string				antennaSet;
-		vector<Pointing>	pointings;
+		int						momID;
+		vector<int>				subbands;
+		vector<int>				beamlets;
 
-		int					momID;
-		vector<int>			subbands;
-		vector<int>			beamlets;
+		int						nrTABs;
+		int						nrTABrings;
+		double					TABringSize;	// Radians
+		vector<TiedArrayBeam>	TABs;
 	};
 
 	class AnaBeam {
@@ -124,7 +142,7 @@ public:
 			}
 			return (*this);
 		};
-
+		// -- datamembers --
 		string				name;
 		string				antennaSet;
 		vector<Pointing>	pointings;
@@ -141,7 +159,6 @@ public:
         unsigned sourcePset;
         string destStorageNode;
         string destDirectory;
-          
     };
 
 	//# Datamembers
