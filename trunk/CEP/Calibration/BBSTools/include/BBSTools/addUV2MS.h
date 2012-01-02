@@ -43,6 +43,7 @@ void addModelColumn ( casa::MeasurementSet &ms,
                       const casa::String &dataManName);
 map<string, double>  patchFrequency(casa::MeasurementSet &ms, 
                                     const casa::Vector<casa::String> &patchNames);
+bool validModelImage(const casa::String &imageName, string &error);                                    
 unsigned int makeTempImages(const casa::Vector<casa::String> &patchNames, 
                             const std::string &prefix="tmp");
 unsigned int removeTempImages(const casa::Vector<casa::String> &patchNames, 
@@ -57,6 +58,6 @@ void restoreFrequency(const std::map<std::string,
 //
 casa::Vector<casa::String> getColumnNames(const casa::Table &table);
 void showColumnNames(casa::Table &table);
-void usage(const char *);
+void usage(const string &);
 
 void showVector(const vector<string> &v, const string &key="");
