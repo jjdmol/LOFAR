@@ -326,9 +326,6 @@ int main (int argc, char* argv[])
       brokenHardware=readBrokenHardwareFile(brokenfilename);
       LOG_INFO_STR("reading brokenHardware after from file:" << brokenAfterfilename);      
       brokenHardwareAfter=readBrokenHardwareFile(brokenAfterfilename);
-
-//      showMap(brokenHardware);        // DEBUG
-//      showMap(brokenHardwareAfter);   // DEBUG
     
       failedHardware=getFailedHardware(brokenHardware, brokenHardwareAfter);
       if(debug)
@@ -367,16 +364,17 @@ int main (int argc, char* argv[])
       //----------------------------------------------------------------------------    
       LOG_INFO_STR("reading brokenHardware from file:" << brokenfilename);
       brokenHardware=readBrokenHardwareFile(brokenfilename);
+      LOG_INFO_STR("reading brokenHardware after from file:" << brokenfilename);
       brokenHardwareAfter=readBrokenHardwareFile(brokenAfterfilename);
       
 
-      brokenRCUs=getBrokenRCUs(brokenHardware);   // get all broken RCUs into a RCUmap
-      if(debug)
-        showMap(brokenRCUs);
-      
+      brokenRCUs=getBrokenRCUs(brokenHardware);   // get all broken RCUs into a RCUmap     
       vector<failedTile> brokenTiles=getBrokenTiles(ms, brokenRCUs); // Convert stations to antennaIds
       if(debug)
+      {
+        cout << "Broken tiles:" << endl;
         showFailedTiles(brokenTiles);
+      }
       updateAntennaFieldTable(ms, brokenTiles);
       
       //----------------------------------------------------------------------------
@@ -385,9 +383,11 @@ int main (int argc, char* argv[])
       failedHardware=getFailedHardware(brokenHardware, brokenHardwareAfter);
       vector<failedTile> failedTiles=getFailedTilesAntennaId(ms, failedHardware);
 
-      if(debug)    
-        showFailedTiles(failedTiles);
-        
+      if(debug)
+      {
+        cout << "Failed tiles:" << endl;
+        showFailedTiles(failedTiles);       
+      }
       addFailedAntennaTiles(ms, failedTiles);
     }
   }
@@ -519,24 +519,32 @@ void updateAntennaFieldTable(MeasurementSet &ms,  const vector<failedTile> &brok
 
   // loop over ANTENNA_FIELD_TABLE
   uInt nrows=antennaFieldTable.nrow();
-  map<unsigned int, unsigned int> indices;
+//  map<unsigned int, unsigned int> indices;
+  /*
   for(unsigned int antennaId=0; antennaId<nrows; antennaId++)
   {   
     for(unsigned int i=0; i<brokenTiles.size(); i++)
     {
       if(brokenTiles[i].antennaId==antennaId)
       {
-        /*
-        for(unsigned int rcuIndex=0; rcuIndex < brokenTiles[i].rcus.size(); rcuIndex++)
-        {
-          unsigned int rcuNum=brokenTiles[i].rcus[rcuIndex];
-          updateElementFlags(antennaFieldTable, antennaId, rcuNum);    
-        }
-        */
+//        for(unsigned int rcuIndex=0; rcuIndex < brokenTiles[i].rcus.size(); rcuIndex++)
+//        {
+//          unsigned int rcuNum=brokenTiles[i].rcus[rcuIndex];
+//          updateElementFlags(antennaFieldTable, antennaId, rcuNum);    
+//        }
         
         updateElementFlags(antennaFieldTable, antennaId, brokenTiles[i].rcus);
         break;
       }
+    }
+  }
+  */
+  
+  for(unsigned int i=0; i<brokenTiles.size(); i++)    // loop over broken tiles map
+  {
+    if(brokenTiles[i].antennaId < nrows)    // if the antenna id is present in ANTENNA table
+    {
+      updateElementFlags(antennaFieldTable, brokenTiles[i].antennaId, brokenTiles[i].rcus);
     }
   }
 }
@@ -561,13 +569,16 @@ void updateElementFlags(Table &table, unsigned int antennaId, unsigned int rcu)
   Matrix<Bool> elementFlags=elementFlagCol(antennaId);  
   unsigned int elementIndex=rcu / 2;
 
-  cout << "updateELementFlags() antennaId = " << antennaId << "\t";     // DEBUG
-  cout << "rcu = " << rcu << "\telementIndex = " << elementIndex << endl;  // DEBUG
-
-  elementFlags(0, elementIndex)=true;          // Update ELEMENT_FLAGS at elementIndex
-  elementFlags(1, elementIndex)=true;          // Update ELEMENT_FLAGS at elementIndex
-
-  elementFlagCol.put(antennaId, elementFlags);  // write modified array to column
+  if(elementIndex > elementFlags.ncolumn()-1)        // if elementIndex is out of range
+  {
+    return;
+  }
+  else
+  {
+    elementFlags(0, elementIndex)=true;           // Update ELEMENT_FLAGS at elementIndex
+    elementFlags(1, elementIndex)=true;           // Update ELEMENT_FLAGS at elementIndex
+    elementFlagCol.put(antennaId, elementFlags);  // write modified array to column
+  }
 }
 
 /*!
@@ -583,28 +594,34 @@ void updateElementFlags(Table &table, unsigned int antennaId, const vector<unsig
 
   unsigned int nrows=elementFlagCol.nrow();
 
-  if(antennaId > nrows-1)
-  {
-    THROW(Exception, "updateElementFlags() antennaId " << antennaId << " out of range");
-  }
   if(rcus.size()==0)    // if there are no rcus to be updated for this antennaId....
   {
     return;             // ... just return
   }
+  if(antennaId > nrows-1)
+  {
+    THROW(Exception, "updateElementFlags() antennaId " << antennaId << " out of range");
+  }
   
   //uInt ncolumn=elementFlags.ncolumn();
-//  cout << "updateELementFlags() shape: " << shape << endl;              // DEBUG
-//  cout << "updateELementFlags() antennaId = " << antennaId << endl;     // DEBUG
+  cout << "updateELementFlags() antennaId = " << antennaId << endl;     // DEBUG
+  cout << "rcus: " << endl;                                             // DEBUG
+  showVector(rcus);                                                     // DEBUG
 
-  unsigned int nrcus=rcus.size();
-  for(unsigned int i=0; i<nrcus; i++)
+  for(unsigned int i=0; i<rcus.size(); i++)
   {
     unsigned int elementIndex=rcus[i] / 2;
-    elementFlags(0, elementIndex)=true;          // Update ELEMENT_FLAGS at elementIndex
-    elementFlags(1, elementIndex)=true;          // Update ELEMENT_FLAGS at elementIndex
+    if(elementIndex > elementFlags.ncolumn()-1)       // if elementIndex is out of range
+    {
+      return;
+    }
+    else
+    {
+      elementFlags(0, elementIndex)=true;             // update array at elementIndex X polarization
+      elementFlags(1, elementIndex)=true;             // update array at elementIndex Y polarization
+      elementFlagCol.put(antennaId, elementFlags);    // update ELEMENT_FLAGS column/row
+    }
   }
-
-  elementFlagCol.put(antennaId, elementFlags);
 }
 
 /*!
