@@ -9,4 +9,4 @@ node  DataProducts     4.0.2  development 'node constraint'  "Place holder for a
 
 #    name              dir.    type   unit     prun.   vm      value   constr. descr.
 #--------------------------------------------------------------------------------------------------------
-uses  @dataproduct@    4.0.2  development 'node constraint'  "Storage settings for @dataproduct@ type"
+uses  @dataproduct@    4.0.2  development '1'  "Storage settings for @dataproduct@ type"

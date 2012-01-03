@@ -236,8 +236,8 @@ GCFEvent::TResult ObsClaimer::preparePVSS_state (GCFEvent& event, GCFPortInterfa
 				Observation			theObs(&obsPS);
 
 				RTDBPropertySet*	theObsPS = itsCurrentObs->second->propSet;
-//				theObsPS->setValue(PN_OBS_CLAIM_PERIOD,		GCFPVInteger(itsClaimPeriod), 0.0, false);
-//				theObsPS->setValue(PN_OBS_PREPARE_PERIOD,	GCFPVInteger(itsPreparePeriod), 0.0, false);
+				theObsPS->setValue(PN_OBS_CLAIM_PERIOD,		GCFPVInteger(itsClaimPeriod), 0.0, false);
+				theObsPS->setValue(PN_OBS_PREPARE_PERIOD,	GCFPVInteger(itsPreparePeriod), 0.0, false);
 				theObsPS->setValue(PN_OBS_RUN_STATE,		GCFPVString(""), 0.0, false);
 				theObsPS->setValue(PN_OBS_START_TIME,		GCFPVString (to_simple_string(from_time_t(theObs.startTime))), 0.0, false);
 				theObsPS->setValue(PN_OBS_STOP_TIME,		GCFPVString (to_simple_string(from_time_t(theObs.stopTime))), 0.0, false);
@@ -246,13 +246,16 @@ GCFEvent::TResult ObsClaimer::preparePVSS_state (GCFEvent& event, GCFPortInterfa
 				theObsPS->setValue(PN_OBS_ANTENNA_ARRAY,	GCFPVString (theObs.antennaArray), 	  0.0, false);
 				theObsPS->setValue(PN_OBS_RECEIVER_LIST, 	GCFPVString (theObs.receiverList), 	  0.0, false);
 				theObsPS->setValue(PN_OBS_SAMPLE_CLOCK, 	GCFPVInteger(theObs.sampleClock), 	  0.0, false);
-				theObsPS->setValue(PN_OBS_MEASUREMENT_SET, 	GCFPVString (theObs.MSNameMask), 	  0.0, false);
-				stringstream	oss;
-				writeVector(oss, theObs.stations);
-				theObsPS->setValue(PN_OBS_STATION_LIST, 	GCFPVString (oss.str()),		 	  0.0, false);
-//				theObsPS->setValue(PN_OBS_STATION_LIST, 	GCFPVString (theObs.stationList), 	  0.0, false);
-				theObsPS->setValue(PN_OBS_BGL_NODE_LIST, 	GCFPVString (theObs.BGLNodeList), 	  0.0, false);
-				theObsPS->setValue(PN_OBS_STORAGE_NODE_LIST,GCFPVString (theObs.storageNodeList), 0.0, false);
+//				theObsPS->setValue(PN_OBS_MEASUREMENT_SET, 	GCFPVString (theObs.MSNameMask), 	  0.0, false);
+				stringstream	osl;
+				writeVector(osl, theObs.stations);
+				theObsPS->setValue(PN_OBS_STATION_LIST, 	GCFPVString (osl.str()),		 	  0.0, false);
+				stringstream	obnl;
+				writeVector(obnl, theObs.stations);
+				theObsPS->setValue(PN_OBS_STATION_LIST, 	GCFPVString (obnl.str()),		 	  0.0, false);
+				stringstream	osnl;
+				writeVector(osnl, theObs.stations);
+				theObsPS->setValue(PN_OBS_STATION_LIST, 	GCFPVString (osnl.str()),		 	  0.0, false);
 
 				// for the beams we have to construct dyn arrays first.
 				GCFPValueArray		subbandArr;

@@ -19,7 +19,7 @@ par  workingdir              I    text   -      10    0    "/opt/lofar/bin/"   	
 #      name              vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
 node   CorrAppl        	 4.0.0  development 'node constraint'  "CorrAppl"
-uses   CorrProc      	 4.0.0  development 'node constraint'  "CorrProc"
+uses   CorrProc      	 4.0.0  development '1'  "CorrProc"
 
 #    name                    dir. type   unit   prun. vm   value                         constr.  descr.
 #--------------------------------------------------------------------------------------------------------

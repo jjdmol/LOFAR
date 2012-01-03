@@ -125,12 +125,12 @@ par correctBandPass	I   	bool    -       10  	0	true		-		'apply the bandpass fil
 
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-uses  CNProc       4.0.0  development 'node constraint'  "Compute-Node Processing: application running on the BlueGene compute nodes"
-uses  CNProc_CoherentStokes 4.0.0  development 'node constraint'  "Coherent Stokes"
-uses  CNProc_IncoherentStokes 4.0.0  development 'node constraint'  "Inoherent Stokes"
-uses  OLAP_Conn    4.0.0  development 'node constraint'  "Connection specification of OLAP"
-uses  Correlator   4.0.0  development 'node constraint'  "Correlator specification"
-uses  PencilInfo   4.0.0  development 'node constraint'  "Settings for pencil beamformer"
-uses  DelayComp    4.0.0  development 'node constraint'  "Setting of the delaycompensation"
-uses  IONProc      4.0.0  development 'node constraint'  "I/O Node Processing: application running on the BlueGene I/O nodes"
-uses  StorageProc  4.0.0  development 'node constraint'  "Stores output from the correlator in one or more MeasurmentSet files"
+uses  CNProc       4.0.0  development '1'  "Compute-Node Processing: application running on the BlueGene compute nodes"
+uses  CNProc_CoherentStokes 4.0.0  development '1'  "Coherent Stokes"
+uses  CNProc_IncoherentStokes 4.0.0  development '1'  "Inoherent Stokes"
+uses  OLAP_Conn    4.0.0  development '1'  "Connection specification of OLAP"
+uses  Correlator   4.0.0  development '1'  "Correlator specification"
+uses  PencilInfo   4.0.0  development '1'  "Settings for pencil beamformer"
+uses  DelayComp    4.0.0  development '1'  "Setting of the delaycompensation"
+uses  IONProc      4.0.0  development '1'  "I/O Node Processing: application running on the BlueGene I/O nodes"
+uses  StorageProc  4.0.0  development '1'  "Stores output from the correlator in one or more MeasurmentSet files"

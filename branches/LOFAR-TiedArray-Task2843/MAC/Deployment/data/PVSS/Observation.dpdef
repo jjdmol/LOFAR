@@ -10,7 +10,7 @@ nyquistzone			int
 antennaArray		string
 receiverList		string
 sampleClock			int
-runState		string
+runState			string
 measurementSet		string
 
 stationList			string

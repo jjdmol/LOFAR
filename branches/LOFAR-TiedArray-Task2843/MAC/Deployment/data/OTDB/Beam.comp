@@ -70,5 +70,5 @@ par  tabRingSize         I      dbl     -       10    0    0                    
 
 #      name              vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-uses  TiedArrayBeam  4.0.0  development '1'		       "Tied-array (pencil) beam specification"
+uses  TiedArrayBeam  4.0.0  development '0'		       "Tied-array (pencil) beam specification"
 
