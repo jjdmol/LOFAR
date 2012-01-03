@@ -1,0 +1,3073 @@
+bandpass:X:ST_0  type=polc
+    domain:  freq=[25 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[2.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.111302  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[26 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[2.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.130192  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[27 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[2.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.168233  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[28 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[2.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.196541  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[29 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[2.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.213199  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[30 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.224616  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[31 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.230735  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[32 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.231109  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[33 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.244951  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[34 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.251806  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[35 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.257548  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[36 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.269664  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[37 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.279153  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[38 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.286468  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[39 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.293566  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[40 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.310159  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[41 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.333714  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[42 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.345542  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[43 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.356156  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[44 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.371263  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[45 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.375484  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[46 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.400763  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[47 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.421178  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[48 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.437284  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[49 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.45246  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[50 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.47725  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[51 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.512261  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[52 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.552845  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[53 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.597029  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[54 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.628077  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[55 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.654614  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[56 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.666558  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[57 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.714797  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[58 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.769449  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[59 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.848692  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[60 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.87913  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[61 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.908307  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[62 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.941263  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[63 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.912136  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[64 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.864543  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[65 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.847435  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[66 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.783702  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[67 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.762751  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[68 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.755733  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[69 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.732023  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[70 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.70108  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[71 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.666082  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[72 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.616287  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[73 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.625146  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[74 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.624613  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[75 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.628464  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[76 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.631966  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[77 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.613729  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[78 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.600229  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[79 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.575616  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[80 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.530769  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[81 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.459831  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[82 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.371439  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[83 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.304968  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[84 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.243751  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[85 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.197554  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[86 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.152109  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[87 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.110523  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_0  type=polc
+    domain:  freq=[88 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.0746205  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[25 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[2.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.18418  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[26 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[2.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.201188  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[27 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[2.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.23665  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[28 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[2.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.262733  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[29 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[2.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.277592  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[30 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.2874  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[31 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.292103  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[32 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.29127  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[33 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.303415  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[34 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.308828  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[35 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.313167  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[36 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.323649  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[37 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.331599  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[38 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.337455  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[39 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.343102  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[40 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.357898  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[41 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.379401  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[42 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.389605  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[43 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.398639  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[44 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.412003  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[45 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.414878  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[46 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.438043  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[47 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.456521  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[48 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.470847  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[49 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.484277  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[50 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.50697  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[51 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.539513  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[52 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.577425  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[53 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.618806  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[54 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.64753  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[55 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.671907  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[56 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.682223  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[57 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.727511  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[58 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.778978  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[59 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.85414  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[60 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.882276  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[61 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.909197  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[62 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.939759  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[63 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.910501  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[64 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.863449  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[65 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.845772  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[66 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.783169  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[67 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.761789  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[68 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.753834  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[69 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.729795  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[70 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.698788  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[71 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.663872  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[72 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.614699  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[73 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.622043  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[74 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.620336  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[75 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.622855  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[76 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.625036  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[77 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.60627  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[78 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.59207  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[79 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.567161  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[80 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.522756  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[81 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.453211  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[82 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.366847  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[83 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.301606  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[84 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.241428  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[85 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.195722  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[86 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.15074  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[87 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.109477  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_1  type=polc
+    domain:  freq=[88 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.0736901  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[25 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[2.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.0837918  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[26 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[2.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.103434  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[27 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[2.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.142156  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[28 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[2.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.171182  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[29 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[2.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.188601  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[30 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.200798  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[31 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.207717  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[32 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.208912  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[33 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.223524  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[34 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.231177  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[35 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.237719  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[36 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.250613  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[37 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.260889  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[38 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.269  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[39 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.276894  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[40 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.294248  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[41 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.318538  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[42 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.331145  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[43 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.342541  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[44 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.358415  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[45 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.363443  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[46 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.389451  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[47 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.410612  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[48 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.427482  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[49 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.443423  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[50 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.468944  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[51 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.504648  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[52 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.545904  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[53 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.590747  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[54 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.622503  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[55 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.649765  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[56 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.662487  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[57 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.71137  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[58 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.766642  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[59 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.846414  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[60 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.877562  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[61 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.907454  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[62 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.941111  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[63 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.912913  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[64 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.866318  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[65 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.850095  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[66 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.78742  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[67 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.767369  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[68 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.761198  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[69 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.738398  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[70 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.708392  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[71 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.674345  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[72 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.625556  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[73 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.635205  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[74 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.635496  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[75 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.640155  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[76 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.644466  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[77 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.627119  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[78 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.614491  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[79 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.590791  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[80 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.546932  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[81 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.477078  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[82 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.389834  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[83 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.324431  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[84 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.264263  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[85 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.219058  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[86 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.174603  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[87 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.133993  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_2  type=polc
+    domain:  freq=[88 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.0990448  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[25 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[2.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.229883  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[26 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[2.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.245712  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[27 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[2.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.279556  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[28 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[2.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.304245  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[29 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[2.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.317974  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[30 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.326773  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[31 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.330589  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[32 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.328999  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[33 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.340079  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[34 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.344588  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[35 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.348048  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[36 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.357505  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[37 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.36449  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[38 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.369431  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[39 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.374168  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[40 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.387836  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[41 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.408053  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[42 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.417239  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[43 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.425282  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[44 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.437553  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[45 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.439583  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[46 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.461422  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[47 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.478685  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[48 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.491896  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[49 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.50423  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[50 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.525609  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[51 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.556604  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[52 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.59284  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[53 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.632463  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[54 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.659729  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[55 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.682752  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[56 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.692047  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[57 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.735484  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[58 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.784954  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[59 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.857557  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[60 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.884249  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[61 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.909755  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[62 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.938816  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[63 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.909476  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[64 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.862764  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[65 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.844729  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[66 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.782835  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[67 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.761186  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[68 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.752643  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[69 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.728398  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[70 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.69735  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[71 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.662486  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[72 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.613703  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[73 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.620097  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[74 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.617654  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[75 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.619337  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[76 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.620689  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[77 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.601593  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[78 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.586953  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[79 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.561859  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[80 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.517731  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[81 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.449059  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[82 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.363968  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[83 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.299498  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[84 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.239971  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[85 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.194572  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[86 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.149882  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[87 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.108821  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:X:ST_3  type=polc
+    domain:  freq=[88 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.0731065  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[25 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[2.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.0989354  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[26 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[2.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.115726  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[27 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[2.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.14954  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[28 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[2.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.174703  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[29 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[2.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.18951  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[30 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.199659  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[31 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.205098  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[32 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.20543  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[33 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.217734  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[34 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.223828  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[35 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.228931  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[36 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.239701  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[37 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.248136  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[38 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.254638  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[39 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.260948  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[40 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.275697  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[41 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.296635  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[42 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.307148  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[43 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.316583  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[44 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.330012  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[45 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.333764  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[46 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.356234  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[47 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.374381  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[48 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.388697  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[49 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.402186  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[50 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.424222  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[51 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.455343  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[52 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.491418  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[53 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.530692  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[54 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.558291  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[55 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.581879  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[56 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.592496  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[57 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.635375  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[58 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.683954  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[59 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.754393  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[60 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.781449  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[61 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.807384  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[62 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.836678  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[63 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.810788  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[64 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.768482  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[65 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.753275  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[66 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.696624  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[67 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.678001  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[68 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.671762  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[69 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.650687  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[70 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.623183  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[71 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.592073  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[72 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.54781  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[73 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.555685  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[74 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.555211  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[75 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.558635  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[76 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.561747  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[77 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.545537  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[78 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.533537  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[79 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.511658  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[80 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.471795  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[81 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.408739  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[82 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.330168  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[83 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.271083  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[84 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.216668  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[85 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.175604  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[86 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.135208  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[87 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.0982428  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_0  type=polc
+    domain:  freq=[88 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.0663293  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[25 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[2.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.163715  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[26 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[2.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.178834  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[27 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[2.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.210355  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[28 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[2.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.233541  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[29 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[2.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.246748  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[30 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.255466  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[31 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.259647  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[32 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.258907  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[33 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.269702  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[34 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.274514  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[35 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.278371  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[36 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.287688  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[37 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.294755  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[38 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.29996  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[39 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.30498  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[40 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.318131  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[41 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.337246  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[42 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.346316  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[43 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.354346  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[44 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.366225  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[45 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.36878  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[46 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.389371  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[47 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.405796  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[48 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.418531  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[49 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.430468  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[50 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.45064  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[51 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.479567  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[52 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.513267  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[53 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.550049  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[54 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.575582  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[55 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.597251  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[56 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.60642  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[57 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.646676  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[58 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.692425  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[59 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.759235  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[60 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.784245  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[61 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.808175  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[62 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.835341  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[63 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.809334  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[64 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.76751  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[65 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.751797  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[66 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.696151  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[67 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.677146  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[68 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.670075  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[69 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.648707  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[70 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.621145  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[71 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.590108  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[72 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.546399  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[73 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.552927  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[74 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.55141  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[75 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.553649  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[76 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.555587  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[77 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.538907  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[78 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.526284  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[79 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.504143  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[80 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.464672  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[81 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.402854  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[82 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.326087  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[83 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.268094  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[84 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.214603  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[85 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.173975  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[86 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.133991  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[87 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.0973129  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_1  type=polc
+    domain:  freq=[88 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.0655023  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[25 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[2.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.0744816  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[26 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[2.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.091941  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[27 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[2.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.126361  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[28 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[2.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.152162  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[29 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[2.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.167646  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[30 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.178487  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[31 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.184638  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[32 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.185699  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[33 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.198688  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[34 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.205491  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[35 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.211306  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[36 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.222767  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[37 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.231902  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[38 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.239111  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[39 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.246128  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[40 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.261554  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[41 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.283145  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[42 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.294351  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[43 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.304481  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[44 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.318591  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[45 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.32306  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[46 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.346178  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[47 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.364989  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[48 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.379984  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[49 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.394154  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[50 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.416839  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[51 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.448576  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[52 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.485248  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[53 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.525109  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[54 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.553336  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[55 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.577568  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[56 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.588877  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[57 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.632329  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[58 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.681459  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[59 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.752368  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[60 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.780055  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[61 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.806626  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[62 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.836543  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[63 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.811479  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[64 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.77006  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[65 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.75564  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[66 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.699929  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[67 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.682106  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[68 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.676621  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[69 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.656354  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[70 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.629682  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[71 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.599418  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[72 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.55605  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[73 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.564627  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[74 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.564885  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[75 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.569027  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[76 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.572859  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[77 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.557439  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[78 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.546214  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[79 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.525147  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[80 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.486162  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[81 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.424069  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[82 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.346519  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[83 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.288383  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[84 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.2349  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[85 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.194718  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[86 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.155203  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[87 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.119105  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_2  type=polc
+    domain:  freq=[88 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.0880398  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[25 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[2.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.204341  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[26 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[2.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.21841  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[27 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[2.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.248494  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[28 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[2.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.27044  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[29 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[2.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.282644  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[30 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.290465  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[31 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.293857  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[32 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.292444  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[33 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.302293  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[34 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.3063  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[35 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.309376  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[36 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.317782  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[37 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.323991  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[38 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.328383  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[39 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[3.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.332593  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[40 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.344743  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[41 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.362714  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[42 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.370879  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[43 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.378028  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[44 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.388936  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[45 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.39074  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[46 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.410153  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[47 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.425498  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[48 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.437241  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[49 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[4.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.448205  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[50 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.467208  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[51 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.494759  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[52 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.526969  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[53 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.562189  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[54 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.586426  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[55 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.60689  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[56 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.615153  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[57 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.653764  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[58 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.697737  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[59 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[5.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.762273  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[60 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.785999  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[61 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.808671  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[62 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.834503  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[63 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.808423  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[64 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.766901  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[65 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.750871  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[66 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.695854  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[67 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.67661  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[68 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.669016  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[69 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[6.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.647465  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[70 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.619867  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[71 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.588877  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[72 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.545514  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[73 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.551197  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[74 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.549026  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[75 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.550521  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[76 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.551724  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[77 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.53475  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[78 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.521736  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[79 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[7.9e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.49943  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[80 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.460205  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[81 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.1e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.399163  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[82 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.2e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.323527  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[83 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.3e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.26622  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[84 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.4e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.213307  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[85 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.5e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.172953  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[86 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.6e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.133228  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[87 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.7e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.0967297  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+bandpass:Y:ST_3  type=polc
+    domain:  freq=[88 MHz +1000 KHz] time=[2006/05/01/20:00:00 +43200 sec]
+    offset=[8.8e+07,4.65323e+09] scale=[1e+06,43200]
+    values:  0.0649836  shape=[1,1]  mask=1
+    pert=1e-06 pert_rel=y
+    weight=0  ID=0 parentID=0
+512 parms found
