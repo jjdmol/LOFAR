@@ -24,7 +24,7 @@
 
 //#include <vector>
 #include <casa/Arrays/Vector.h>
-
+#include <synthesis/MeasurementEquations/Imager.h>          // casarest ft()
 
 void parseOptions(const vector<string> &arguments, 
                   string &msName, 
@@ -41,6 +41,8 @@ void removeExistingColumns( const std::string &MSfilename,
 void addImagerColumns (casa::MeasurementSet& ms);
 void addModelColumn ( casa::MeasurementSet &ms, 
                       const casa::String &dataManName);
+casa::Double getMSReffreq(const casa::MeasurementSet &ms);
+casa::Double getMSChanwidth(const casa::MeasurementSet &ms);
 map<string, double>  patchFrequency(casa::MeasurementSet &ms, 
                                     const casa::Vector<casa::String> &patchNames);
 bool validModelImage(const casa::String &imageName, string &error);                                    
@@ -52,6 +54,10 @@ double updateFrequency(const std::string &imageName,
                       double reffreq);
 void restoreFrequency(const std::map<std::string, 
                       double> &refFrequencies);
+void getImageOptions( const string &patchName, 
+                      unsigned int &imSizeX, unsigned int &imSizeY, 
+                      casa::Quantity &cellSizeX, casa::Quantity &cellSizeY, 
+                      unsigned int &nchan, unsigned int &npol);
 
 //--------------------------------------------------------------
 // Function declarations (debug functions)
