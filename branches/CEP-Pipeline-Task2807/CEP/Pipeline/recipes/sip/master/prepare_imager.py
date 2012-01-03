@@ -14,6 +14,13 @@
 # TODO: command line argument example:
 #python prepare_imager.py ~/build/preparation/input.map --job prepare_imager --config ~/build/preparation/pipeline.cfg --initscript /opt/cep/LofIm/daily/lofar/lofarinit.sh --output-mapfile ~/build/preparation/output.map --parset ~/build/preparation/parset.par --working-directory "/data/scratch/klijn" --subbands-per-image 10 --slices-per-image 9 --ndppp /opt/cep/LofIm/daily/lofar/bin/NDPPP -v
 
+#parset:
+#msin.missingdata=true
+#msin.baseline="[CR]S*&"
+#msin.datacolumn=DATA
+#steps=[]
+
+
 import os
 import sys
 import collections
@@ -72,7 +79,7 @@ class prepare_imager(BaseRecipe, RemoteCommandRecipeMixIn):
         """
         self.logger.info("Starting prepare_imager run")     
         super(prepare_imager, self).go()
-        
+              
         # *********************************************************************
         # Load inputs, validate
         # *********************************************************************        
@@ -91,7 +98,7 @@ class prepare_imager(BaseRecipe, RemoteCommandRecipeMixIn):
             self.logger.warn("ERROR: incorrect number of input ms for "+
                               "supplied parameters")
             return 1
-                    
+        
         # *********************************************************************            
         # construct command and create variables for running on remote nodes
         # TODO: candidate for refactoring
@@ -102,35 +109,29 @@ class prepare_imager(BaseRecipe, RemoteCommandRecipeMixIn):
         outnames = collections.defaultdict(list)
         jobs = []
         n_subband_groups = len(output_map)
-        for idx_sb_group, (host, measurement_set) in enumerate(output_map):
+        for idx_sb_group, (host, output_measurement_set) in enumerate(output_map):
             #construct and save the output name
             input_map_for_subband = self._create_input_map_for_subband(
                                 slices_per_image, n_subband_groups, 
                                 subbands_per_image, idx_sb_group, input_map)
-            
-            #create and save the location for the output on the node
-            output_file = os.path.join(self.inputs['working_directory'],
-                            self.inputs['job_name'],
-                            os.path.basename(measurement_set.rstrip('/')) + 
-                            self.inputs['suffix'])            
-            outnames[host].append(output_file)
+                     
+            outnames[host].append(output_measurement_set)
             
             
             arguments=[init_script, parset, os.path.join(
                             self.inputs['working_directory'],
                             self.inputs['job_name']),
                         self.inputs['ndppp'], 
-                        measurement_set, slices_per_image, 
-                        subbands_per_image, repr(input_map_for_subband), 
-                        output_file]
+                        output_measurement_set, slices_per_image, 
+                        subbands_per_image, repr(input_map_for_subband)]
+            
             # TODO: The size of input_for_image could surpass the command line
             # length: Use rar instead?
             jobs.append(ComputeJob(host, nodeCommand, arguments))
         
         # Hand over the job(s) to the pipeline scheduler
         self._schedule_jobs(jobs)
-        
-        
+                  
         # *********************************************************************
         # validate performace and cleanup
         # *********************************************************************

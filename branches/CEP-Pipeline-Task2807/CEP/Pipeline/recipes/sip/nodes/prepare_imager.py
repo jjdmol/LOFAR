@@ -26,14 +26,15 @@ from subprocess import CalledProcessError
 import pyrap.tables as pt #@UnresolvedImport
  
 class prepare_imager(LOFARnodeTCP):
-    def run(self, init_script, parset, working_dir, ndppp, measurement_set,
-            slices_per_image, subbands_per_image, input_map_repr, 
-            output_file_path):
+    def run(self, init_script, parset, working_dir, ndppp, output_measurement_set,
+            slices_per_image, subbands_per_image, input_map_repr):
+        
         log4CPlusName = "prepare_imager_node_recipe" 
         group_dir = "group_sets"
         sets_dir = "working_sets"        
         self._create_dir(working_dir)
         
+
         # Time execution of this job  
         # TODO: The data column is depending on output/functioning of previous
         # pipelines. When update ms then use corrected data
@@ -44,11 +45,11 @@ class prepare_imager(LOFARnodeTCP):
                 os.path.join(working_dir, "node_input.map")))
             
             input_map = eval(input_map_repr)
-            
-                     
+            self.logger.info(input_map)
+      
             missing_files = self._copy_input_files(working_dir, sets_dir,
                                                    input_map) 
-                    
+                   
 #            # ********************* temp solution for quick debugging
 #            missing_files = []  
 #            skip_copy = True
@@ -78,7 +79,7 @@ class prepare_imager(LOFARnodeTCP):
                          
             # Perform the concat of the timeslices
             self._concat_timeslices(group_measurements_collected, 
-                                    output_file_path)       
+                                    output_measurement_set)       
     
         # TODO: clean up of temporary files??
         # The subgroup ms cannot be removed: they are collected in the final 
