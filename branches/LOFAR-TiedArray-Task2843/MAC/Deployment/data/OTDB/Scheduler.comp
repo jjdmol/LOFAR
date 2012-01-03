@@ -14,7 +14,7 @@ par fixedTime			I	bool	-	10	0	false	-	"fixes the task to the scheduled time (not
 par lastPossibleDay		I	uint	-	10	0 	0	-	"last possible date for scheduling"
 par late			I	bool	-	10	0	false	-	"true takes earliest time in case of ambiguity"
 par nightTimeWeightFactor	I	uint	-	10	0 	0	-	"weight factor curve for penalty calculation"
-par predecessors		I   	vtext   -   	10	0	[]	-	"predecessor(s) of this task"
+par predecessors		I   	vtext   -   	10	0	'[]'	-	"predecessor(s) of this task"
 par predMaxTimeDif		I   	text    -	10	0 	''	-	"maximal distance to predecessor"
 par predMinTimeDif		I   	text    -	10	0 	''	-	"minimal distance to predecessor"
 par priority			I	flt	-	10	0	0.0	-	"the task priority"
