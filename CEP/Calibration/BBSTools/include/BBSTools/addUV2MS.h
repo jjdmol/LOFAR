@@ -57,7 +57,7 @@ void restoreFrequency(const std::map<std::string,
 void getImageOptions( const string &patchName, 
                       unsigned int &imSizeX, unsigned int &imSizeY, 
                       casa::Quantity &cellSizeX, casa::Quantity &cellSizeY, 
-                      unsigned int &nchan, unsigned int &npol);
+                      unsigned int &nchan, unsigned int &npol, string &stokes);
 
 //--------------------------------------------------------------
 // Function declarations (debug functions)
