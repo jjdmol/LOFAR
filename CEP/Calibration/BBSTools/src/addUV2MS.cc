@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
   vector<string> arguments;       // vector to keep arguments for arg parsing
   casa::String MSfilename;        // Filename of LafarMS
   Vector<String> patchNames;      // vector with filenames of patches used as models
-  unsigned int nwplanes=128;      // got to see  how to export this feature to the outside
+  unsigned int nwplanes=0;        // got to see  how to export this feature to the outside
 
   // Init logger
   string progName = basename(argv[0]);
@@ -187,14 +187,86 @@ int main(int argc, char *argv[])
     // Casarest Imager object which has ft method
     // (last parameter casa::True "use MODEL_DATA column")
     //Imager imager(LofarMS, True, True);
+       
+    // Get image options
+    unsigned imSizeX=0, imSizeY=0, nchan=1, npol=1;
+    Quantity cellSizeX;
+    Quantity cellSizeY;
+    getImageOptions(patchNames[i], imSizeX, imSizeY, cellSizeX, cellSizeY, nchan, npol);
     
+    MDirection patchdir=getPatchDirection(patchNames[i]);
+    String stokes;
+    if(npol==1)
+    {
+     stokes="I";
+    }
+    else if(npol==4)
+    {
+     stokes="IQUV";
+    }
+    
+    String mode="mfs";
+    Quantity qStep(getMSChanwidth(LofarMS), "Hz");
+    Vector<Int> spwIds(1);
+    spwIds[0]=0;
+    
+    // Display image info
+    LOG_INFO_STR("imSizeX = " << imSizeX);
+    LOG_INFO_STR("imSizeY = " << imSizeY);
+    LOG_INFO_STR("stokes = " << stokes);
+
     // Values for setoptions were taken from Imager::setdefaults entries
     Imager imager(LofarMS, True, True);
     MPosition obsPosition;
-    imager.setoptions( "ft", (HostInfo::memoryTotal()/8)*1024, 16, "SF", obsPosition, 1.2, 
-                        nwplanes);
-    imager.ft(model, "", False);
-     
+    
+    imager.defineImage( imSizeX,  imSizeY,
+                        cellSizeX, cellSizeY,
+                        stokes,  patchdir, 0,
+                        mode, nchan,
+                			  0, 1,
+			                  MFrequency(MVFrequency(getMSReffreq(LofarMS))),
+			                  MRadialVelocity(Quantity(0, "km/s")), 
+                	      qStep,
+                	      spwIds);
+    
+    // From Imager.h
+    /*
+      virtual Bool defineImage(const Int nx, const Int ny,
+			   const Quantity& cellx, const Quantity& celly,
+			   const String& stokes,
+			   const MDirection& phaseCenter, 
+			   const Int fieldid,
+			   const String& mode, const Int nchan,
+			   const Int start, const Int step,
+			   const MFrequency& mFreqStart,
+			   const MRadialVelocity& mStart, 
+			   const Quantity& qStep,
+			   const Vector<Int>& spectralwindowids, 
+			   const Int facets=1, 
+			   const Quantity& restFreq=Quantity(0,"Hz"),
+                           const MFrequency::Types& mFreqFrame=MFrequency::LSRK,
+			   const Quantity& distance=Quantity(0,"m"),
+			   const Bool trackSource=False, const MDirection& 
+			   trackDir=MDirection(Quantity(0.0, "deg"), 
+					       Quantity(90.0, "deg")));
+		*/
+    
+    /* From Joris' script
+    imager.defineImage( nx=512,  ny=512,
+                        cellx=4, celly=4,
+                        mode='mfs', spw='0',
+                        nchan=NCH, start=0,
+                        phasecenter=0,
+                        stokes='IQUV')
+    */
+    
+    if(nwplanes != 0)     //  if we want to do a wprojection, i.e. nwplanes not zero
+    {
+      imager.setoptions( "wproject", (HostInfo::memoryTotal()/8)*1024, 16, "SF", obsPosition, 1.2, 
+                          nwplanes);
+    }
+    imager.ft(model, "", false);       // perform fft
+    
     // rename MODEL_DATA column to MODEL_DATA_patchname column
     LofarMS.renameColumn (columnName, "MODEL_DATA"); 
     addDirectionKeyword(LofarMS, patchNames[i]);               
@@ -255,9 +327,6 @@ void parseOptions(const vector<string> &args,
   vector<string>::iterator argIt=arguments.begin();
   arguments.erase(argIt);
 
-//  cout << "arguments.size() = " << arguments.size() << endl;       // DEBUG
-//  cout << "patchNames.size() =  " << patchNames.size() << endl;    // DEBUG
-
   // Add patch names to casa vector (need to do this because there is no Vector.append!?
   uInt length=arguments.size();
   patchNames.resize(length, True);                     // reshape casa vector to hold all patch names
@@ -267,6 +336,30 @@ void parseOptions(const vector<string> &args,
   }  
 }
 
+// Get the reference frequency, reffreq, from the MS
+//
+Double getMSReffreq(const MeasurementSet &ms)
+{
+  // Read MSfrequency from MS/SPECTRAL_WINDOW table
+  Table SpectralWindowTable(ms.keywordSet().asTable("SPECTRAL_WINDOW"));
+  ROScalarColumn<Double> LofarRefFreqColumn(SpectralWindowTable, "REF_FREQUENCY");
+  
+  Double MSrefFreq=LofarRefFreqColumn(0);
+  return MSrefFreq;
+}
+
+// Get the channel width, chanWidth, from the MS
+//
+Double getMSChanwidth(const MeasurementSet &ms)
+{
+  // Read MSfrequency from MS/SPECTRAL_WINDOW table
+  Table SpectralWindowTable(ms.keywordSet().asTable("SPECTRAL_WINDOW"));
+  ROArrayColumn<Double> ChanWidthColumn(SpectralWindowTable, "CHAN_WIDTH");
+  
+  Vector<Double> chanWidthArray=ChanWidthColumn(0);
+  Double MSchanWidth=chanWidthArray[0];  
+  return MSchanWidth;
+}
 
 // Read frequency from Image, patch if different from MS frequency and keep original
 // in map
@@ -292,7 +385,6 @@ map<string, double> patchFrequency(MeasurementSet &ms, const Vector<String> &pat
 
   return refFrequencies;
 }
-
 
 // Update the reffrequency information in an image with a new frequency
 //
@@ -341,6 +433,50 @@ void restoreFrequency(const map<string, double> &refFrequencies)
   {
     LOG_INFO_STR("Restoring image: " << mapIt->first <<"\tFrequency: " << mapIt->second);
     updateFrequency(mapIt->first, mapIt->second);
+  }
+}
+
+// Read options from necessary to be passed on to casarest imager
+//
+void getImageOptions( const string &patchName, 
+                      unsigned int &imSizeX, unsigned int &imSizeY, 
+                      Quantity &cellSizeX, Quantity &cellSizeY, 
+                      unsigned int &nchan, unsigned int &npol)
+{
+  IPosition shape;                      // shape of image: x,y,npol,nchan
+  Vector<Double> delta;                 // get delta world per pixel
+  Vector<String> units;                // world axes units
+  
+  PagedImage<Float> image(patchName);
+  // Get image dimensions
+  shape=image.shape();                  // get image shape
+  imSizeX=shape[0];                     // No. of x pixels
+  imSizeY=shape[1];                     // No. of y pixels
+  npol=shape[2];                        // No. of polarizations
+  nchan=shape[3];                       // No. of channels
+  
+  //cout << "shape = " << shape << endl;  // DEBUG
+  
+  // get crpix from image, casacore::coordinates.increment()
+  CoordinateSystem coordsys=image.coordinates();
+  if(coordsys.hasDirectionCoordinate())
+  {
+    delta=coordsys.increment();
+    units=coordsys.worldAxisUnits();
+    cellSizeX=Quantity(delta[0], units[0]);
+    cellSizeY=Quantity(delta[1], units[1]);
+  }
+  else
+  {
+    THROW(Exception, "Image " << patchName << " has no directional coordinate.");
+  }
+  if(coordsys.hasPolarizationAxis())     // get Stokes array from image
+  {
+    Int polAxis=coordsys.polarizationAxisNumber();
+  }
+  else
+  {
+    THROW(Exception, "Image " << patchName << " has no Stokes coordinate.");  
   }
 }
 
@@ -453,7 +589,7 @@ string createColumnName(const casa::String &ModelFilename)
     
   Filename=Path.baseName();                   // remove path from ModelFilename
 
-  unsigned long pos=Filename.find(".");       // remove .image or .img extension from Patchname  
+  unsigned long pos=string::npos;             // remove .image or .img extension from Patchname  
   /*
   if((pos=Filename.find(".img")) != string::npos)
   {
@@ -488,7 +624,7 @@ bool validModelImage(const casa::String &imageName, string &error)
 
   if((pos=imageName.find(".model")) != string::npos)   // Check filename extension
   {
-    valid=true;
+    validName=true;
   }
   else if((pos=imageName.find(".img")) != string::npos)
   {
@@ -523,8 +659,7 @@ bool validModelImage(const casa::String &imageName, string &error)
     validUnit=false;
   }
 
-  // Determine final validity
-  if(validName && validUnit)
+  if(validName && validUnit)    // Determine final validity
   {
     valid=true;
   }
@@ -565,7 +700,7 @@ void usage(const string &programname)
 {
   cout << "Usage: " << programname << "<options> LofarMS <patchname[s]>" << endl;
   cout << "LofarMS            - MS to add model data to" << endl;
-  cout << "-w <nprojplanes>   - number of w projection planes to use (default w=128)" << endl;
+  cout << "-w <nprojplanes>   - number of w projection planes to use (default w=0, i.e. normal ft)" << endl;
   cout << "<patchname[s]>     - list of patchname[s] of image[s], these filenames are used to name the column and should be" << endl;
   cout << "                     referred to in the parset file with .image,.img,.model extension removed" << endl;
 }
