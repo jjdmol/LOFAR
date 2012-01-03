@@ -192,24 +192,14 @@ int main(int argc, char *argv[])
     unsigned imSizeX=0, imSizeY=0, nchan=1, npol=1;
     Quantity cellSizeX;
     Quantity cellSizeY;
-    getImageOptions(patchNames[i], imSizeX, imSizeY, cellSizeX, cellSizeY, nchan, npol);
+    String stokes;
+    getImageOptions(patchNames[i], imSizeX, imSizeY, cellSizeX, cellSizeY, nchan, npol, stokes);
     
     MDirection patchdir=getPatchDirection(patchNames[i]);
-    String stokes;
-    if(npol==1)
-    {
-     stokes="I";
-    }
-    else if(npol==4)
-    {
-     stokes="IQUV";
-    }
-    
     String mode="mfs";
     Quantity qStep(getMSChanwidth(LofarMS), "Hz");
     Vector<Int> spwIds(1);
     spwIds[0]=0;
-    
     // Display image info
     LOG_INFO_STR("imSizeX = " << imSizeX);
     LOG_INFO_STR("imSizeY = " << imSizeY);
@@ -217,8 +207,7 @@ int main(int argc, char *argv[])
 
     // Values for setoptions were taken from Imager::setdefaults entries
     Imager imager(LofarMS, True, True);
-    MPosition obsPosition;
-    
+    MPosition obsPosition;    
     imager.defineImage( imSizeX,  imSizeY,
                         cellSizeX, cellSizeY,
                         stokes,  patchdir, 0,
@@ -228,37 +217,6 @@ int main(int argc, char *argv[])
 			                  MRadialVelocity(Quantity(0, "km/s")), 
                 	      qStep,
                 	      spwIds);
-    
-    // From Imager.h
-    /*
-      virtual Bool defineImage(const Int nx, const Int ny,
-			   const Quantity& cellx, const Quantity& celly,
-			   const String& stokes,
-			   const MDirection& phaseCenter, 
-			   const Int fieldid,
-			   const String& mode, const Int nchan,
-			   const Int start, const Int step,
-			   const MFrequency& mFreqStart,
-			   const MRadialVelocity& mStart, 
-			   const Quantity& qStep,
-			   const Vector<Int>& spectralwindowids, 
-			   const Int facets=1, 
-			   const Quantity& restFreq=Quantity(0,"Hz"),
-                           const MFrequency::Types& mFreqFrame=MFrequency::LSRK,
-			   const Quantity& distance=Quantity(0,"m"),
-			   const Bool trackSource=False, const MDirection& 
-			   trackDir=MDirection(Quantity(0.0, "deg"), 
-					       Quantity(90.0, "deg")));
-		*/
-    
-    /* From Joris' script
-    imager.defineImage( nx=512,  ny=512,
-                        cellx=4, celly=4,
-                        mode='mfs', spw='0',
-                        nchan=NCH, start=0,
-                        phasecenter=0,
-                        stokes='IQUV')
-    */
     
     if(nwplanes != 0)     //  if we want to do a wprojection, i.e. nwplanes not zero
     {
@@ -274,9 +232,8 @@ int main(int argc, char *argv[])
   }
     
   restoreFrequency(refFrequencies);
-    
-  // Rename MODEL_DATA_bak column back to MODEL_DATA.
-  if(LofarMS.canRenameColumn("MODEL_DATA_bak"))
+   
+  if(LofarMS.canRenameColumn("MODEL_DATA_bak"))   // Rename MODEL_DATA_bak column back to MODEL_DATA
   {
     LofarMS.renameColumn ("MODEL_DATA", "MODEL_DATA_bak"); 
   }
@@ -285,7 +242,7 @@ int main(int argc, char *argv[])
   // Cleanup
   //
   LofarMS.flush();
-  LofarMS.closeSubTables();                            // close Lofar MS
+  LofarMS.closeSubTables();                       // close Lofar MS
 }
 
 
@@ -441,45 +398,82 @@ void restoreFrequency(const map<string, double> &refFrequencies)
 void getImageOptions( const string &patchName, 
                       unsigned int &imSizeX, unsigned int &imSizeY, 
                       Quantity &cellSizeX, Quantity &cellSizeY, 
-                      unsigned int &nchan, unsigned int &npol)
+                      unsigned int &nchan, unsigned int &npol, string &stokes)
 {
   IPosition shape;                      // shape of image: x,y,npol,nchan
   Vector<Double> delta;                 // get delta world per pixel
-  Vector<String> units;                // world axes units
+  Vector<String> units;                 // world axes units
+  Vector<Int> dirAxesNumbers(2);        // indices of direction axes
+  Vector<String> worldNames(4);         // names for world axes (should be RA,Dec)
+  Vector<Int> stokesEnum;               // stokes enum indices of stokes parms present in image
+  Vector<String> stokesParm;            // stokes parameters present in image
   
-  PagedImage<Float> image(patchName);
-  // Get image dimensions
+  PagedImage<Float> image(patchName);   // get a page image interface for this patch
   shape=image.shape();                  // get image shape
-  imSizeX=shape[0];                     // No. of x pixels
-  imSizeY=shape[1];                     // No. of y pixels
-  npol=shape[2];                        // No. of polarizations
-  nchan=shape[3];                       // No. of channels
   
-  //cout << "shape = " << shape << endl;  // DEBUG
-  
-  // get crpix from image, casacore::coordinates.increment()
+  //-----------------------------------------------------------------------
   CoordinateSystem coordsys=image.coordinates();
-  if(coordsys.hasDirectionCoordinate())
+  // Direction coordinate (x and y)
+  if(coordsys.hasDirectionCoordinate())     // get Stokes array from image
   {
+    dirAxesNumbers=coordsys.directionAxesNumbers();
+    worldNames=coordsys.worldAxisNames();
+
     delta=coordsys.increment();
     units=coordsys.worldAxisUnits();
-    cellSizeX=Quantity(delta[0], units[0]);
-    cellSizeY=Quantity(delta[1], units[1]);
-  }
+    
+    // Depending on orientation if RA:x Dec:y or vice versa
+    if(worldNames[0]=="Right Ascension" && worldNames[1]=="Declination")
+    {
+      imSizeX=shape[dirAxesNumbers[0]];
+      imSizeY=shape[dirAxesNumbers[1]];        
+      cellSizeX=Quantity(delta[0], units[0]);
+      cellSizeY=Quantity(delta[1], units[1]);
+    }
+    else if(worldNames[0]=="Declination" && worldNames[1]=="Right Ascension")
+    {
+      imSizeX=shape[dirAxesNumbers[1]];
+      imSizeY=shape[dirAxesNumbers[0]];    
+      cellSizeX=Quantity(delta[0], units[1]);
+      cellSizeY=Quantity(delta[1], units[0]);
+    }
+    else
+    {
+      THROW(Exception, "Image " << patchName << "invalid world coordinates, not 'RA' and 'Dec'.");
+    }
+  }  
   else
   {
-    THROW(Exception, "Image " << patchName << " has no directional coordinate.");
+    THROW(Exception, "Image " << patchName << " has no Direction coordinate.");  
   }
+  // Stokes
   if(coordsys.hasPolarizationAxis())     // get Stokes array from image
   {
-    Int polAxis=coordsys.polarizationAxisNumber();
+    npol=shape[coordsys.polarizationAxisNumber()];  // No. of polarizations
+
+    // Get a vector with enum integers into stokes::StokesTypes
+    stokesEnum=coordsys.stokesCoordinate(coordsys.polarizationCoordinateNumber()).stokes();
+    stokesParm.resize(stokesEnum.size());
+    for(uInt i=0; i<stokesEnum.size(); i++)   // convert enum entries to string Stokes parameters
+    {
+      stokesParm[i]=Stokes::name(Stokes::type(stokesEnum[i]));
+      stokes.append(stokesParm[i]);
+    }
   }
   else
   {
     THROW(Exception, "Image " << patchName << " has no Stokes coordinate.");  
   }
+  // Spectral
+  if(coordsys.hasSpectralAxis())
+  {
+    nchan=shape[coordsys.spectralAxisNumber()];  
+  }
+  else
+  {
+    THROW(Exception, "Image " << patchName << " has no Direction coordinate.");  
+  }
 }
-
 
 /*
 // TODO
