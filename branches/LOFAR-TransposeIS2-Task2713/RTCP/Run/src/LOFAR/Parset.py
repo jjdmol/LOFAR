@@ -363,6 +363,7 @@ class Parset(util.Parset.Parset):
 
         # Versioning info
         self["OLAP.BeamsAreTransposed"] = True
+        self["OLAP.IncoherentStokesAreTransposed"] = True
 
 	# TODO: we use self.setdefault, but this can create inconsistencies if we
 	# set one value but not the other in a pair of interdependent parameters.
