@@ -110,7 +110,7 @@ StationResponse::StationResponse(const casa::MeasurementSet &ms,
 
                 if(field->isHBA())
                 {
-                    exprElementBeam[i] =
+                    exprElementBeam[j] =
                         Expr<JonesMatrix>::Ptr(new AntennaElementHBA(exprThetaPhi));
                 }
                 else
