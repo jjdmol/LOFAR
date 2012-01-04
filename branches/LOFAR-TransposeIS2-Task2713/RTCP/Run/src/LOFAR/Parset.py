@@ -589,6 +589,8 @@ class Parset(util.Parset.Parset):
           return a
 
         def lcm( a, b ):
+          if b == 0: return a
+          if a == 0: return b
           return a * b / gcd(a, b)
 
         def lcmlist( l ):
