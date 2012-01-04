@@ -52,6 +52,21 @@ class RankOperatorROCExperiment : public UnitTest {
 		}
 		
 	private:
+		struct EvaluationResult
+		{
+			EvaluationResult() :
+				tpRatio(0.0), fpRatio(0.0),
+				tpFuzzy(0.0), fpFuzzy(0.0)
+			{
+			}
+			
+			double tpRatio;
+			double fpRatio;
+			double tpFuzzy;
+			double fpFuzzy;
+			std::vector<double> tpRefTP, tpRefFP;
+		};
+
 		struct RankOperatorROCGaussian : public Asserter
 		{
 			void operator()();
@@ -66,6 +81,7 @@ class RankOperatorROCExperiment : public UnitTest {
 		enum TestType { GaussianBroadband, SinusoidalBroadband};
 		
 		static void TestNoisePerformance(size_t totalRFI, double totalRFISum, const std::string &testname);
+		static void evaluateIterationResults(Mask2DPtr result, Mask2DPtr maskGroundTruth, Image2DPtr fuzzyGroundTruth, const size_t totalRFI, struct EvaluationResult &evaluationResult);
 		
 		static rfiStrategy::Strategy *createThresholdStrategy();
 		static void executeTest(enum TestType testType);
@@ -93,7 +109,7 @@ class RankOperatorROCExperiment : public UnitTest {
 		}
 };
 
-const unsigned RankOperatorROCExperiment::_repeatCount = 100;
+const unsigned RankOperatorROCExperiment::_repeatCount = 1;
 
 inline rfiStrategy::Strategy *RankOperatorROCExperiment::createThresholdStrategy()
 {
@@ -153,6 +169,40 @@ inline void RankOperatorROCExperiment::RankOperatorROCSinusoidal::operator()()
 	executeTest(SinusoidalBroadband);
 }
 
+void RankOperatorROCExperiment::evaluateIterationResults(Mask2DPtr result, Mask2DPtr maskGroundTruth, Image2DPtr fuzzyGroundTruth, const size_t totalRFI, EvaluationResult &evaluationResult)
+{
+	size_t totalPositives = result->GetCount<true>();
+	double tpFuzzyRatio = getRatio(fuzzyGroundTruth, result, false, false);
+	double fpFuzzyRatio = getRatio(fuzzyGroundTruth, result, true, false);
+	
+	Mask2DCPtr originalResult = Mask2D::CreateCopy(result);
+	result->Intersect(maskGroundTruth);
+	size_t truePositives = result->GetCount<true>();
+	size_t falsePositives = totalPositives - truePositives;
+	
+	double tpR = (double) truePositives / totalRFI;
+	double fpR = (double) falsePositives / totalRFI;
+	
+	evaluationResult.tpRatio += tpR;
+	evaluationResult.fpRatio += fpR;
+	evaluationResult.tpFuzzy += tpFuzzyRatio;
+	evaluationResult.fpFuzzy += fpFuzzyRatio;
+	
+	for(size_t i=1;i<=10;++i)
+	{
+		double groundTruthThreshold = (double) i / 20;
+		Mask2DPtr thrGroundTruth = ThresholdTools::Threshold(fuzzyGroundTruth, groundTruthThreshold);
+		Mask2DPtr intersectResult = Mask2D::CreateCopy(originalResult);
+		size_t refTotalRFI = thrGroundTruth->GetCount<true>();
+		intersectResult->Intersect(thrGroundTruth);
+		size_t refTruePositives = intersectResult->GetCount<true>();
+		size_t refFalsePositives = totalPositives - refTruePositives;
+		
+		evaluationResult.tpRefTP.push_back((double) refTruePositives / refTotalRFI);
+		evaluationResult.tpRefFP.push_back((double) refFalsePositives / refTotalRFI);
+	}
+}
+
 void RankOperatorROCExperiment::executeTest(enum TestType testType)
 {
 	const size_t ETA_STEPS = 100, DIL_STEPS = 128;
@@ -170,25 +220,7 @@ void RankOperatorROCExperiment::executeTest(enum TestType testType)
 			break;
 	}
 	
-	numl_t
-		grRankTpRatio[ETA_STEPS+1], grRankFpRatio[ETA_STEPS+1],
-		grRankTpSum[ETA_STEPS+1], grRankFpSum[ETA_STEPS+1],
-		grDilTpRatio[DIL_STEPS+1], grDilFpRatio[DIL_STEPS+1],
-		grDilTpSum[DIL_STEPS+1], grDilFpSum[DIL_STEPS+1];
-	for(unsigned i=0;i<ETA_STEPS+1;++i)
-	{
-		grRankTpRatio[i] = 0.0;
-		grRankFpRatio[i] = 0.0;
-		grRankTpSum[i] = 0.0;
-		grRankFpSum[i] = 0.0;
-	}
-	for(unsigned i=0;i<DIL_STEPS;++i)
-	{
-		grDilTpRatio[i] = 0.0;
-		grDilFpRatio[i] = 0.0;
-		grDilTpSum[i] = 0.0;
-		grDilFpSum[i] = 0.0;
-	}
+	EvaluationResult rocResults[ETA_STEPS+1], dilResults[DIL_STEPS+1];
 	
 	for(unsigned repeatIndex=0 ; repeatIndex<_repeatCount ; ++repeatIndex)
 	{
@@ -263,48 +295,20 @@ void RankOperatorROCExperiment::executeTest(enum TestType testType)
 		for(unsigned i=0;i<ETA_STEPS+1;++i)
 		{
 			const num_t eta = (num_t) i / (num_t) ETA_STEPS;
-			Mask2DPtr tempMask = Mask2D::CreateCopy(input);
-			ScaleInvariantDilation::DilateVertically(tempMask, eta);
+			Mask2DPtr resultMask = Mask2D::CreateCopy(input);
+			ScaleInvariantDilation::DilateVertically(resultMask, eta);
 			
-			size_t totalPositives = tempMask->GetCount<true>();
-			double tpFuzzyRatio = getRatio(groundTruth, tempMask, false, false);
-			double fpFuzzyRatio = getRatio(groundTruth, tempMask, true, false);
-			
-			tempMask->Intersect(mask);
-			size_t truePositives = tempMask->GetCount<true>();
-			size_t falsePositives = totalPositives - truePositives;
-			
-			double tpRatio = (double) truePositives / totalRFI;
-			double fpRatio = (double) falsePositives / totalRFI;
-			
-			grRankTpRatio[i] += tpRatio;
-			grRankFpRatio[i] += fpRatio;
-			grRankTpSum[i] += tpFuzzyRatio;
-			grRankFpSum[i] += fpFuzzyRatio;
+			evaluateIterationResults(resultMask, mask, groundTruth, totalRFI, rocResults[i]);
 		}
 			
 		for(size_t i=0;i<DIL_STEPS;++i)
 		{
 			const size_t dilSize = i * MAX_DILATION / DIL_STEPS;
 			
-			Mask2DPtr tempMask = Mask2D::CreateCopy(input);
-			StatisticalFlagger::EnlargeFlags(tempMask, 0, dilSize);
+			Mask2DPtr resultMask = Mask2D::CreateCopy(input);
+			StatisticalFlagger::EnlargeFlags(resultMask, 0, dilSize);
 			
-			size_t totalPositives = tempMask->GetCount<true>();
-			double tpFuzzyRatio = getRatio(groundTruth, tempMask, false, false);
-			double fpFuzzyRatio = getRatio(groundTruth, tempMask, true, false);
-			
-			tempMask->Intersect(mask);
-			size_t truePositives = tempMask->GetCount<true>();
-			size_t falsePositives = totalPositives - truePositives;
-			
-			double tpRatio = (double) truePositives / totalRFI;
-			double fpRatio = (double) falsePositives / totalRFI;
-			
-			grDilTpRatio[i] += tpRatio;
-			grDilFpRatio[i] += fpRatio;
-			grDilTpSum[i] += tpFuzzyRatio;
-			grDilFpSum[i] += fpFuzzyRatio;
+			evaluateIterationResults(resultMask, mask, groundTruth, totalRFI, dilResults[i]);
 		}
 		
 		//grTotalRFI += totalRFI;
@@ -320,11 +324,15 @@ void RankOperatorROCExperiment::executeTest(enum TestType testType)
 		const num_t eta = (num_t) i / (num_t) ETA_STEPS;
 			rankOperatorFile
 			<< "eta\t" << eta
-			<< "\tTP\t" << grRankTpRatio[i] / _repeatCount
-			<< "\tFP\t" << grRankFpRatio[i] / _repeatCount
-			<< "\ttpSum\t" << grRankTpSum[i] / _repeatCount
-			<< "\tfpSum\t" << grRankFpSum[i] / _repeatCount
-			<< '\n';
+			<< "\tTP\t" << rocResults[i].tpRatio / _repeatCount
+			<< "\tFP\t" << rocResults[i].fpRatio / _repeatCount
+			<< "\ttpSum\t" << rocResults[i].tpFuzzy / _repeatCount
+			<< "\tfpSum\t" << rocResults[i].fpFuzzy / _repeatCount;
+			for(size_t j=0;j<rocResults[i].tpRefTP.size();++j)
+			{
+				rankOperatorFile << "\t" << rocResults[i].tpRefTP[j] << "\t" << rocResults[i].tpRefFP[j];
+			}
+			rankOperatorFile << '\n';
 	}
 	const std::string dilationFilename(std::string("dilation-roc-") + testname + ".txt");
 	std::ofstream dilationFile(dilationFilename.c_str());
@@ -333,11 +341,15 @@ void RankOperatorROCExperiment::executeTest(enum TestType testType)
 		const size_t dilSize = i * MAX_DILATION / DIL_STEPS;
 		dilationFile
 		<< "size\t" << dilSize
-		<< "\tTP\t" << grDilTpRatio[i] / _repeatCount
-		<< "\tFP\t" << grDilFpRatio[i] / _repeatCount
-		<< "\ttpSum\t" << grDilTpSum[i] / _repeatCount
-		<< "\tfpSum\t" << grDilFpSum[i] / _repeatCount
-		<< '\n';
+		<< "\tTP\t" << dilResults[i].tpRatio / _repeatCount
+		<< "\tFP\t" << dilResults[i].fpRatio / _repeatCount
+		<< "\ttpSum\t" << dilResults[i].tpFuzzy / _repeatCount
+		<< "\tfpSum\t" << dilResults[i].fpFuzzy / _repeatCount;
+			for(size_t j=0;j<dilResults[i].tpRefTP.size();++j)
+			{
+				dilationFile << "\t" << dilResults[i].tpRefTP[j] << "\t" << dilResults[i].tpRefFP[j];
+			}
+			dilationFile << '\n';
 	}
 	
 	//TestNoisePerformance(grTotalRFI / _repeatCount, grTotalRFISum / _repeatCount, testname);
