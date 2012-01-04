@@ -204,9 +204,14 @@ public:
 	// Checks if the given Key is defined in the ParameterSet.
 	bool	isDefined (const string& searchKey) const;
 
-	// Searches for a module whose short nam is given and returns it position
-	// in the parameterSet.
-	string	locateModule(const string&	shortName) const;
+	// Searches for a module whose name end in the given modulename.
+	// e.g: a.b.c.d.param=xxxx --> locateModule(d)-->a.b.c.
+	string	locateModule  (const string&	shortName) const;
+
+	// Searches the module name or module hierarchy and returns its fullposition.
+	// e.g: a.b.c.d.param=xxxx --> fullModuleName(d)-->a.b.c.d
+	// e.g: a.b.c.d.param=xxxx --> fullModuleName(b.c)-->a.b.c
+	string	fullModuleName(const string&	shortName) const;
 
 	// Return scalar value.
 	// @{
@@ -458,6 +463,11 @@ inline bool	ParameterSet::isDefined (const string& searchKey) const
 inline string	ParameterSet::locateModule(const string&	shortName) const
 {
 	return (itsSet->locateModule(shortName));
+}
+
+inline string	ParameterSet::fullModuleName(const string&	shortName) const
+{
+	return (itsSet->fullModuleName(shortName));
 }
 
 //#	getBool(key)

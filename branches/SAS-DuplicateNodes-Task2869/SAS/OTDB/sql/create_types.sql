@@ -110,7 +110,6 @@ CREATE TYPE OTDBvalue AS (
 
 CREATE TYPE OTDBnodeDef AS (
 	nodeID			INT4,
-	parentID		INT4,
 	name			VARCHAR(40),
 	version			INT4,
 	classif			INT2,

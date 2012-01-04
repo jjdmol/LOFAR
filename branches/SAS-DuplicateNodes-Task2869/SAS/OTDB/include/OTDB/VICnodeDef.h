@@ -53,7 +53,6 @@ public:
 	~VICnodeDef() {};
 
 	nodeIDType		nodeID() 	 const	{ return (itsNodeID); }
-	nodeIDType		parentID() 	 const	{ return (itsParentID); }
 	string			name;
 	int32			version;
 	int16			classif;
@@ -76,7 +75,6 @@ private:
 	VICnodeDef(const pqxx::result::tuple&	row);
 
 	nodeIDType		itsNodeID;
-	nodeIDType		itsParentID;
 };
 
 //#
