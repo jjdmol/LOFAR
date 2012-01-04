@@ -8,7 +8,7 @@ set(PQ_ROOT_DIR /usr/local/pgsql)
 set(CPPLAPACK_ROOT_DIR /usr)
 
 # Path to PVSS
-set(PVSS_ROOT_DIR /opt/pvss/pvss2_v3.7)
+#set(PVSS_ROOT_DIR /opt/pvss/pvss2_v3.7)  set via /opt/pvss/pvssproj/VersInfo.mk
 set(PVSS_DEFINITIONS "-Wno-deprecated")
 
 # Path to Matlab
@@ -25,4 +25,5 @@ set(CTEST_CUSTOM_WARNING_EXCEPTION
   "/boost/python/object/value_holder.hpp:[0-9]+: warning: unused parameter"
   "/matlab-2008a/extern/include/mclcppclass.h"
   "/pvss2_v3.7/api/include/(Basics|Datapoint|Manager|Messages)/"
+  "/opt/WinCC_OA/3.10/api/include/(Basics|Datapoint|Manager|Messages)/"
 )
