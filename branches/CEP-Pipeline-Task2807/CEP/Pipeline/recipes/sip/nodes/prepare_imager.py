@@ -9,6 +9,8 @@
 # Wouter Klijn 
 # 2012
 # klijn@astron.nl
+        # TODO: The data column is depending on output/functioning of previous
+        # pipelines. When update ms then use corrected data
 # ------------------------------------------------------------------------------
 
 from __future__ import with_statement
@@ -28,17 +30,13 @@ import pyrap.tables as pt #@UnresolvedImport
 class prepare_imager(LOFARnodeTCP):
     def run(self, init_script, parset, working_dir, ndppp, output_measurement_set,
             slices_per_image, subbands_per_image, input_map_repr):
-        
-        log4CPlusName = "prepare_imager_node_recipe" 
+        self.outputs["completed"] = "true"
+        return 0 #TODO!!!         
+        log4CPlusName = "prepare_imager_node" 
         group_dir = "group_sets"
         sets_dir = "working_sets"        
-        self._create_dir(working_dir)
-        
-
-        # Time execution of this job  
-        # TODO: The data column is depending on output/functioning of previous
-        # pipelines. When update ms then use corrected data
-        
+        self._create_dir(working_dir)  #TODO: Moet mischien nog worden verwijderd
+         
         with log_time(self.logger):          
             # Load the input file names
             self.logger.info("Loading input map from {0}".format(
@@ -84,6 +82,7 @@ class prepare_imager(LOFARnodeTCP):
         # TODO: clean up of temporary files??
         # The subgroup ms cannot be removed: they are collected in the final 
         # concat set. The raw data is copied and good candidate
+        
         return 0
     
     def _create_dir(self,path):

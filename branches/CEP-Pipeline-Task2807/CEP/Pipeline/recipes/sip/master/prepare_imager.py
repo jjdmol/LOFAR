@@ -52,7 +52,7 @@ class prepare_imager(BaseRecipe, RemoteCommandRecipeMixIn):
         ),
         'working_directory': ingredient.StringField(
             '-w', '--working-directory',
-            help="Working directory used on output nodes. Results location"
+            help="Working directory used by the nodes: local data"
         ),
         'suffix': ingredient.StringField(
             '--suffix',
@@ -61,7 +61,8 @@ class prepare_imager(BaseRecipe, RemoteCommandRecipeMixIn):
         ),
         'output_mapfile': ingredient.FileField(
             '--output-mapfile',
-            help="Added to the input filename to generate the output filename"
+            help="Contains the node and path to target files, defines the"\
+               " number of nodes the nodes will start on."
         ),
         'slices_per_image': ingredient.IntField(
             '--slices-per-image',
@@ -70,8 +71,17 @@ class prepare_imager(BaseRecipe, RemoteCommandRecipeMixIn):
         'subbands_per_image': ingredient.IntField(
             '--subbands-per-image',
             help="The number of subbands to be collected in each output image"
-        )                
-    } 
+        ),                
+        'mapfile': ingredient.StringField(
+            '--mapfile',
+            help="Full path of mapfile to produce; contains a list of the"
+                 "successfully generated and concatenated sub-band groups:"
+        )
+    }
+
+    outputs = {
+        'mapfile': ingredient.FileField()
+    }    
                   
     def go(self): 
         """
@@ -91,7 +101,10 @@ class prepare_imager(BaseRecipe, RemoteCommandRecipeMixIn):
         subbands_per_image = self.inputs['subbands_per_image']
         init_script = self.inputs['initscript']
         parset = self.inputs['parset']
-
+        working_directory = self.inputs['working_directory']
+        job_name = self.inputs['job_name']
+        ndppp_path = self.inputs['ndppp']
+        mapfile = self.inputs['mapfile']
         # Validate inputs:
         if len(input_map) != len(output_map) * \
                                    (slices_per_image * subbands_per_image):
@@ -118,31 +131,43 @@ class prepare_imager(BaseRecipe, RemoteCommandRecipeMixIn):
             outnames[host].append(output_measurement_set)
             
             
-            arguments=[init_script, parset, os.path.join(
-                            self.inputs['working_directory'],
-                            self.inputs['job_name']),
-                        self.inputs['ndppp'], 
-                        output_measurement_set, slices_per_image, 
-                        subbands_per_image, repr(input_map_for_subband)]
+            arguments=[init_script, parset, os.path.join(working_directory,
+                            job_name),ndppp_path, output_measurement_set,
+                        slices_per_image, subbands_per_image,
+                        repr(input_map_for_subband)]      
+            # TODO: The size of input_map_for_subband could surpass the command line
+            # length: Use rar instead.
             
-            # TODO: The size of input_for_image could surpass the command line
-            # length: Use rar instead?
             jobs.append(ComputeJob(host, nodeCommand, arguments))
         
         # Hand over the job(s) to the pipeline scheduler
         self._schedule_jobs(jobs)
                   
         # *********************************************************************
-        # validate performace and cleanup
+        # validate performance, cleanup, create output
         # *********************************************************************
-        #TODO: Output validation!!!
-        
-        # Test for errors
+        # Test for any errors
+        fp = open(mapfile, "w")
         if self.error.isSet():
-            self.logger.warn("Failed prepare_imager run detected")
-            return 1
+            self.logger.warn("Failed prepare_imager run detected: Generating "
+                             "new mapfile without failed runs!")
+            new_output_mapfile = []
+            #scan the return dict for completed key
+            for ((host, output_measurement_set),job) in zip(output_map, jobs):
+                if job.results.has_key("completed"):
+                    new_output_mapfile.append((host, output_measurement_set))
+                else:
+                    self.logger.warn("Failed run on {0}. NOT Created: {1} ".format(
+                        host, output_measurement_set))
+            
+            fp.write(repr(new_output_mapfile))               
+            
         else:
-            return 0
+            #Copy output map  input mapfile and return
+            fp.write(repr(output_map))
+        
+        fp.close()
+        return 0
 
 
     def _create_input_map_for_subband(self, slices_per_image, n_subband_groups,

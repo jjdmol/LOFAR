@@ -25,31 +25,27 @@ from subprocess import CalledProcessError
 
 class AWImager(LOFARnodeTCP):
     def run(self, executable, init_script, parset, working_dir, measurement_set):
+        self.logger.info("Start AWImager run: client")   
         log4CPlusName = "AWImagerRecipe" 
+        if not os.access(executable, os.X_OK):
+            self.logger.error("Could not find executable: {0}".format(
+                                                             executable))        
+            return 1    
         
         # Time execution of this job
         with log_time(self.logger):
-            if not os.access(executable, os.X_OK):
-                self.logger.error("Could not find executable: {0}".format(
-                                                                executable))        
-                return 1
-
-            # Calculate AWImager parameters that depend on measurement set      
-            maxbaseline = get_parset(parset).getInt('maxbaseline')
+            # Calculate AWImager parameters that depend on measurement set                 
             cell_size, npix, w_max, w_proj_planes = \
-                self._calc_par_from_measurement(measurement_set, maxbaseline)
-            cell_size_formatted = str(int(round(cell_size))) + 'arcsec'
+                self._calc_par_from_measurement(measurement_set, parset)          
             
-            # Update the parset (supplied to awimager) with calculated parameters
+            # Update the parset with calculated parameters
             patch_dictionary = {'uselogger': 'True',  # enables log4cpluscd log
                                'ms': measurement_set,  
-                               'cellsize': cell_size_formatted,
-                               'npix': str(npix),
-                               'wmax': str(w_max),
-                               'wprojplanes':str(w_proj_planes)
+                               'cellsize': cell_size,
+                               'npix': npix,
+                               'wmax': w_max,
+                               'wprojplanes':w_proj_planes
                                }     
-            self.logger.info(patch_dictionary)
-             
             try:
                 temp_parset_filename = patch_parset(parset, patch_dictionary)
             except Exception, e:
@@ -60,7 +56,10 @@ class AWImager(LOFARnodeTCP):
             
             # The command and parameters to be run
             cmd = [executable, temp_parset_filename]
+            
+            #run awimager
             try:
+                environment = read_initscript(self.logger, init_script) 
                 with CatchLog4CPlus(working_dir, self.logger.name + "." + os.path.basename(log4CPlusName), os.path.basename(executable)) as logger:                                                          
                         catch_segfaults(cmd, working_dir, environment, logger,
                                     cleanup=None)
@@ -88,8 +87,18 @@ class AWImager(LOFARnodeTCP):
         '''
         return int(pow(2, math.ceil(math.log(value, 2)))) 
     
-    def _calc_par_from_measurement(self, measurement_set, 
-                                            baseline_limit):                   
+    def _calc_par_from_measurement(self, measurement_set, parset):
+        """
+        calculate and format some parameters that are determined runtime based
+        on values in the measurement set:
+        1: The cellsize
+        2: The npixels in a each of the two dimension of the image
+        3. What columns use to determine the maximum baseline
+        4. The number of projection planes (if > 512 the ask George heald 
+        
+        """
+        baseline_limit = get_parset(parset).getInt('maxbaseline')
+                           
         ard_sec_in_degree = 3600
         arc_sec_in_rad = (180.0 / math.pi) * ard_sec_in_degree
         
@@ -140,8 +149,11 @@ class AWImager(LOFARnodeTCP):
         # Calculate number of projection planes
         w_proj_planes = (max_baseline * waveLength) / (station_diameter ** 2)
         w_proj_planes = int(round(w_proj_planes))
-        
-        return cell_size, npix, w_max, w_proj_planes
+        if w_proj_planes > 511:
+            raise Exception("The number of projections planes for the current" +
+                            "measurement set is to large.")  #FIXME: Ask george 
+        cell_size_formatted = str(int(round(cell_size))) + 'arcsec'
+        return cell_size_formatted, str(npix), str(w_max), str(w_proj_planes)
     
 
 if __name__ == "__main__":

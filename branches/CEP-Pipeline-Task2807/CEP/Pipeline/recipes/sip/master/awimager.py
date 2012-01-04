@@ -48,56 +48,68 @@ class AWImager(BaseRecipe, RemoteCommandRecipeMixIn):
         )  
     }
                   
-    def go(self): 
-        self.logger.info("Starting AWImager run")     
+    def go(self):     
         super(AWImager, self).go()
-              
-        # Load datafile containing node --> dataset pairs     
-        self.logger.debug("Loading map from %s" % self.inputs['args'])
-        #TODO Read of data is temporary until marcels change
-        data = eval(open(self.inputs['args'][0]).read())
-        self.logger.info(repr(data))
+        self.logger.info("Starting AWImager run")
         
-        # Output
-        outnames = collections.defaultdict(list)
+        #collect the inputs        
+        # TODO:  input_map to be merged with change marcel
+        input_map = eval(open(self.inputs['args'][0]).read()) 
+        executable = self.inputs['executable']  
+        init_script = self.inputs['initscript']
+        parset = self.inputs['parset']            
+        working_dir = self.inputs['working_directory']  
+        job_name = self.inputs['job_name']
+        suffix = self.inputs['suffix']
+        
+        #Get the base output fileneam from the parset
+        parset_datamap = load_data_map(parset)
+        
+        self.logger.info(repr(parset_datamap))
+        return 0
         
         # Compile the command to be executed on the remote machine
         node_command = "python %s" % (self.__file__.replace("master", "nodes"))
         
-        # Environment type variables
-        executable = self.inputs['executable']  #absolute path, daily build
-        init_script = self.inputs['initscript']
-        parset = self.inputs['parset']                  #Using parameter set             
-        working_dir = self.inputs['working_directory']     
-             
-
         # Create the jobs
         jobs = []
-        for host, measurement_set in data:
+        outnames = collections.defaultdict(list)
+        for host, measurement_set in input_map:
+            self._validate_correct_data_location(measurement_set, working_dir,
+                                                  host)
             #construct and save the output name
-            outnames[host].append(os.path.join(
-                            self.inputs['working_directory'],
-                            self.inputs['job_name'],
+            outnames[host].append(os.path.join(working_dir, job_name,
                             os.path.basename(measurement_set.rstrip('/')) + 
-                            self.inputs['suffix']))
+                            suffix))
             
             
-            arguments=[executable, init_script, parset, working_dir, \
+            arguments=[executable, init_script, parset, working_dir, 
                        measurement_set]
             
             jobs.append(ComputeJob(host, node_command, arguments))
         
         # Hand over the job(s) to the pipeline scheduler
-        self._schedule_jobs(jobs)
-        
-        #todo: What to do with the output??
-        
+        self._schedule_jobs(jobs)       
+
         # Test for errors
         if self.error.isSet():
             self.logger.warn("Failed AWImager run detected")
             return 1
         else:
             return 0
+    
+    
+    def _validate_correct_data_location(self, measurement_set, working_dir, 
+                                        host):
+        """
+        tests if the input ms is available in the working directory.
+        awimager fail if this is not the case
+        """  
+        if not (working_dir == '/'.join( #kan worden gedaan met  os.path.basename
+                                measurement_set.rstrip('/').split('/')[:-1])):
+            raise Exception("{0}: Incorrect input(s): Measurement set is not"
+                             " located in working directory".format(host))
+        
 
 if __name__ == "__main__":
     sys.exit(AWImager().main())
