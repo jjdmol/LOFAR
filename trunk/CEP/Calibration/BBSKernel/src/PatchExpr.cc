@@ -53,7 +53,7 @@ const string &PatchExpr::name() const
 {
     return itsName;
 }
-
+    
 Expr<Vector<2> >::Ptr PatchExpr::position() const
 {
     return itsPosition;
