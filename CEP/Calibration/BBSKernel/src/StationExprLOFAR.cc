@@ -117,7 +117,7 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
                 " correction can only be applied for a single direction on the"
                 " sky.");
         }
-
+        
         // Beam reference position on the sky.
         Expr<Vector<2> >::Ptr exprRefDelay = makeDirectionExpr(refDelay);
         Expr<Vector<3> >::Ptr exprRefDelayITRF =
@@ -449,8 +449,16 @@ PatchExprBase::Ptr StationExprLOFAR::makePatchExpr(const string &name,
             it->second));
     }
 
-    return PatchExprBase::Ptr(new PatchExpr(itsScope, sourceDB, name,
-        refPhase));
+    PatchExpr *exprPatch = new PatchExpr(itsScope, sourceDB, name, refPhase);
+
+    // Check if the exprPatch created from patch name does contain any sources
+    if(exprPatch->nSources() == 0)
+    {
+        THROW(BBSKernelException, "Patch " << name << " does not contain " 
+              << "any sources");
+    }
+    
+    return PatchExprBase::Ptr(exprPatch);
 }
 
 } //# namespace BBS
