@@ -48,9 +48,6 @@
 
 // Boost
 #include <boost/lexical_cast.hpp>             // convert string to number
-//#include <boost/filesystem.hpp>               // copy images to tmp
-//#include <boost/filesystem/operations.hpp>
-//#include <boost/filesystem/convenience.hpp>
 
 // casacore includes
 #include <tables/Tables/Table.h>
@@ -180,13 +177,11 @@ int main(int argc, char *argv[])
     addModelColumn(LofarMS, columnName);
     LofarMS.flush();
 
-    LOG_INFO_STR("Using nwplanes = " << nwplanes);
-
     //showColumnNames(LofarMS);
     // Do a predict with the casarest ft() function, complist="", because we only use the model images
     // Casarest Imager object which has ft method
     // (last parameter casa::True "use MODEL_DATA column")
-    //Imager imager(LofarMS, True, True);
+    // i.e. Imager imager(LofarMS, True, True);
        
     // Get image options
     unsigned imSizeX=0, imSizeY=0, nchan=1, npol=1;
@@ -219,7 +214,8 @@ int main(int argc, char *argv[])
                 	      spwIds);
     
     if(nwplanes != 0)     //  if we want to do a wprojection, i.e. nwplanes not zero
-    {
+    {    
+      LOG_INFO_STR("Using nwplanes = " << nwplanes);
       imager.setoptions( "wproject", (HostInfo::memoryTotal()/8)*1024, 16, "SF", obsPosition, 1.2, 
                           nwplanes);
     }
@@ -244,7 +240,6 @@ int main(int argc, char *argv[])
   LofarMS.flush();
   LofarMS.closeSubTables();                       // close Lofar MS
 }
-
 
 // Parse command line options, e.g. -w 512
 //
@@ -475,53 +470,6 @@ void getImageOptions( const string &patchName,
   }
 }
 
-/*
-// TODO
-// Make a temporary copy of all input images (to avoid corruption)
-// through patching the image frequency
-//
-unsigned int makeTempImages(const Vector<String> &patchNames, const string &prefix)
-{
-  unsigned int numCopies=0;
-//  boost::filesystem::error_code::error_code ec;            // system error code
-
-  for(unsigned int i=0; i<patchNames.size(); i++)      // exclude MS and get remaining Patchnames
-  {
-    // Need to separate path from filename, then insert prefix at the beginning of filename
-    casa::String dirname;               // path part of patch name
-    casa::String filename;              // filename part of the patch name
-    casa::Path Path(patchNames[i]);     // casa Path object to allow basename stripping
-    casa::String destName;              // destination file name
-    
-    dirname=Path.absoluteName();        // get path component
-    filename=Path.baseName();           // get filename component
-    
-    cout << "dirname = " << dirname << endl;              // DEBUG
-    cout << "filename = " << filename << endl;            // DEBUG
-    
-    string patchName=patchNames[i];
-    destName=prefix + patchName;
-    boost::copy_directory (patchNames[i], destName);
-    numCopies++;
-  }
-
-  return numCopies;
-}
-
-
-// Remove temporary images
-//
-unsigned int removeTempImages(const Vector<String> &patchNames, const string &prefix)
-{
-  unsigned int numDeletions=0;
-//  boost::filesystem::error_code ec;      // system error code
-
-//  boost::filesystem::remove_all(const path& p);
-
-  return numDeletions;
-}
-*/
-
 // Get the patch direction, i.e. RA/Dec of the central image pixel
 //
 casa::MDirection getPatchDirection(const string &patchName)
@@ -547,7 +495,6 @@ casa::MDirection getPatchDirection(const string &patchName)
 //
 void addDirectionKeyword(casa::Table LofarTable, const string &patchName)
 {  
-  //casa::Vector<casa::Double> direction;
   casa::MDirection direction(casa::MDirection::J2000);
   string columnName=createColumnName(patchName);
   
@@ -814,23 +761,4 @@ void showColumnNames(Table &table)
     cout << *it << "\t";
   }
   cout << endl;
-}
-
-//
-// Show the content of a STL vector
-//
-void showVector(const vector<string> &v, const string &key)
-{
-  for(vector<string>::const_iterator it=v.begin(); it!=v.end(); ++it)
-  {
-    if(key!="")
-    {
-      if(*it==key)
-        cout << *it << endl;
-    }
-    else
-    {
-      cout << *it << endl;
-    }
-  }
 }
