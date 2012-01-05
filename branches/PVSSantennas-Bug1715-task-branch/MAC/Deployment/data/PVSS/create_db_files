@@ -1129,16 +1129,25 @@ create_dp_file()
 #
 # expand_component compname labelprefix DPprefix
 #
-# format COMPONENT_FILE:
+# format DPT_FILE:
 #	comp.comp 1#
 #		field1	??#
 #		field2	??#
 #		...
 expand_component()
 {
-	expanding=false
-	cleanlist $COMPONENT_FILE | while read field fldtype
+	# use (tiny) dpdef file if it exists, otherwise use (large) types.dpl file
+	if [ -f $1.dpdef ]; then
+		expanding=true
+		filename=$1.dpdef
+	else
+		expanding=false
+		filename=${DPT_FILE}
+	fi
+
+	cleanlist ${filename} | while read field fldtype
 	do
+		# when dpl file is used we need to search for start of definition wee need.
 		if [ $expanding == false ]; then
 			if [ $field == $1.$1 ]; then
 				expanding=true
@@ -1146,13 +1155,17 @@ expand_component()
 			continue
 		fi
 
-		if [ -z "${fldtype}" ] || [ "${fldtype:0:8}" == "TypeName" ]; then 
-			expanding=false
-			continue
+		if [ $expanding == true ] && ([ -z "${fldtype}" ] || [ "${fldtype:0:8}" == "TypeName" ]) ; then
+			break
 		fi
-		
-		varlabel=`labelize $2_$field`
-		echo "#define	PN_${varlabel}	\"$3.${field}\""
+
+		modulename=`echo ${fldtype} | cut -d':' -f2`
+		if [ ${modulename} == ${fldtype} ]; then
+			varlabel=`labelize $2_$field`
+			echo "#define	PN_${varlabel}	\"$3.${field}\""
+		else
+			expand_component ${modulename} $2_${field} $3.${field}
+		fi
 	done	
 }
 
