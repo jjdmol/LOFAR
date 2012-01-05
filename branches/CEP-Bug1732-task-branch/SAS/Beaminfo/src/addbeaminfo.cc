@@ -227,7 +227,6 @@ int main (int argc, char* argv[])
         verbose=true;
         break;
       case 'h':
-        cout << "option -h" << endl;
         usage(argv[0]);
         break;
       case ':':
@@ -464,7 +463,6 @@ MVEpoch toCasaTime(const ptime &time)
 bool checkTime(const ptime &starttime, const ptime &endtime)
 {
   bool valid=false;
-  
   if(starttime < endtime)
   {
     valid=true;
@@ -490,7 +488,6 @@ bool checkTime(const string &starttimeString, const string &endtimeString)
 bool checkTime(const MVEpoch &starttimeCasa, const MVEpoch &endtimeCasa)
 {
   bool valid=False;
-
   ptime starttime=time_from_string(fromCasaTime(starttimeCasa));
   ptime endtime=time_from_string(fromCasaTime(endtimeCasa));
   
@@ -582,11 +579,12 @@ void updateElementFlags(Table &table, unsigned int antennaId, const vector<unsig
     THROW(Exception, "updateElementFlags() antennaId " << antennaId << " out of range");
   }
   
-  //uInt ncolumn=elementFlags.ncolumn();
-  cout << "updateELementFlags() antennaId = " << antennaId << endl;     // DEBUG
-  cout << "rcus: " << endl;                                             // DEBUG
-  showVector(rcus);                                                     // DEBUG
-
+  if(debug) // if debugging is switched on, show information on flag updates
+  {
+    cout << "updateELementFlags() antennaId = " << antennaId << endl;     // DEBUG
+    cout << "rcus: " << endl;                                             // DEBUG
+    showVector(rcus);                                                     // DEBUG
+  }
   for(unsigned int i=0; i<rcus.size(); i++)
   {
     unsigned int elementIndex=rcus[i] / 2;
@@ -1075,9 +1073,7 @@ void addFailedAntennaTiles( MeasurementSet &ms,
       for(unsigned int j=0; j<failedTiles[i].rcus.size(); j++)
       {
         TableLocker locker(failedElementsTable, FileLocker::Write);
-
-        MVEpoch timestamp= toCasaTime(failedTiles[i].timeStamps[j]).getDay() + 
-                        toCasaTime(failedTiles[i].timeStamps[j]).getDayFraction();
+        MVEpoch timestamp = toCasaTime(failedTiles[i].timeStamps[j]).get();
 
         doAddFailedAntennaTile( failedElementsTable, 
                                 failedTiles[i].antennaId,      
