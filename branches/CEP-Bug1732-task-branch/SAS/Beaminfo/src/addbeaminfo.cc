@@ -269,11 +269,11 @@ int main (int argc, char* argv[])
 
     //---------------------------------------------------------------------
     // Handle observation starttime and endtime
-    if(starttimeString=="")   // if we didn't get the start time from the command arguments
+    if(starttimeString.empty())   // if we didn't get the start time from the command arguments
     {
       starttimeString = parset.getString("StartTime", "");
     }
-    if(endtimeString=="")     // if we didn't get the end time from the command arguments
+    if(endtimeString.empty())     // if we didn't get the end time from the command arguments
     {
       endtimeString = parset.getString("EndTime", "");
     }
@@ -345,7 +345,7 @@ int main (int argc, char* argv[])
       // This is the "second" call, when information stored in the brokenTiles.txt
       // and failedTiles.txt is used to update the MS
       string msName;     
-      if(msArgName=="")   // if no MS filename was supplied as command argument
+      if(msArgName.empty())           // if no MS filename was supplied as command argument
       {
         msName = parset.getString("ms");   
       }
@@ -353,7 +353,7 @@ int main (int argc, char* argv[])
       {
         msName=msArgName;
       }
-      if(msName=="")
+      if(msName.empty())
       {
         THROW(Exception, "No MS filename given.");
       }
@@ -434,7 +434,6 @@ MVEpoch toCasaTime(const string &time)
     copyTime.gsub(" ", "/");      // replace spaces with slashes for casa conversion   
     MVTime::read(result, copyTime);
   }
-  
   return result;
 }
 
@@ -462,37 +461,20 @@ MVEpoch toCasaTime(const ptime &time)
 */
 bool checkTime(const ptime &starttime, const ptime &endtime)
 {
-  bool valid=false;
-  if(starttime < endtime)
-  {
-    valid=true;
-  }
-  return valid;
+  return(starttime < endtime);
 }
 
 bool checkTime(const string &starttimeString, const string &endtimeString)
 {
-  bool valid=false;
-  MVEpoch starttimeCasa, endtimeCasa;
-  
-  starttimeCasa=toCasaTime(starttimeString);
-  starttimeCasa=toCasaTime(endtimeString);
-  
-  ptime starttime=time_from_string(fromCasaTime(starttimeCasa));
-  ptime endtime=time_from_string(fromCasaTime(endtimeCasa));
-  
-  valid=checkTime(starttime, endtime);
-  return valid;
+  ptime starttime=time_from_string(starttimeString);
+  ptime endtime=time_from_string(endtimeString);
+
+  return(checkTime(starttime, endtime));
 }
 
 bool checkTime(const MVEpoch &starttimeCasa, const MVEpoch &endtimeCasa)
 {
-  bool valid=False;
-  ptime starttime=time_from_string(fromCasaTime(starttimeCasa));
-  ptime endtime=time_from_string(fromCasaTime(endtimeCasa));
-  
-  valid=checkTime(starttime, endtime);
-  return valid;
+  return(starttimeCasa.get() < endtimeCasa.get());
 }
 
 /*!
