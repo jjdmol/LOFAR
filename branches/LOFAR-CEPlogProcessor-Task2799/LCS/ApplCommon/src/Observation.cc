@@ -29,6 +29,7 @@
 #include <Common/StreamUtil.h>
 #include <ApplCommon/Observation.h>
 #include <Common/lofar_set.h>
+#include <Common/lofar_map.h>
 #include <boost/format.hpp>
 
 using boost::format;
@@ -52,7 +53,7 @@ Observation::Observation() :
 //
 // Observation(ParameterSet*)
 //
-Observation::Observation(ParameterSet*		aParSet,
+Observation::Observation(const ParameterSet*		aParSet,
 						 bool				hasDualHBA) :
 	name(),
 	obsID(0),
@@ -266,11 +267,11 @@ Observation::Observation(ParameterSet*		aParSet,
 		}
 	}
 
-#if 0
         // loop over all data products and generate all data flows
 	string olapprefix = aParSet->locateModule("OLAP") + "OLAP.";
         const char *dataProductNames[] = { "CoherentStokes", "IncoherentStokes", "Beamformed", "Correlated", "Filtered" };
         unsigned dataProductPhases[]   = { 3,                2,                  3,            2,            2          };
+        unsigned dataProductNrs[]      = { 5,                3,                  4,            2,            1          }; // match with RTCP/Interface/include/Interface/OutputTypes.h
         size_t nrDataProducts = sizeof dataProductNames / sizeof dataProductNames[0];
 
         // by default, use all psets
@@ -284,10 +285,13 @@ Observation::Observation(ParameterSet*		aParSet,
         // by default, use all psets
         std::vector<unsigned> phaseThreePsets;
         if (aParSet->isDefined(olapprefix+"CNProc.phaseThreePsets"))
-          phaseTwoPsets = aParSet->getUint32Vector(olapprefix+"CNProc.phaseThreePsets", true);
+          phaseThreePsets = aParSet->getUint32Vector(olapprefix+"CNProc.phaseThreePsets", true);
         if (phaseThreePsets.empty()) 
           for (unsigned p = 0; p < 64; p++)
             phaseThreePsets.push_back(p);
+
+        std::map<unsigned,    unsigned> filesPerIONode;
+        std::map<std::string, unsigned> filesPerStorage;
 
         for (size_t d = 0; d < nrDataProducts; d ++) {
           bool enabled = aParSet->getBool(prefix+str(format("DataProducts.Output_%s.enabled") % dataProductNames[d]), false);
@@ -306,8 +310,8 @@ Observation::Observation(ParameterSet*		aParSet,
           // pset, and then proceed to fill up the I/O nodes starting from
           // the first pset. Each data product is treated individually.
 
-          std::vector<std::string> filenames = aParSet->getStringVector(prefix+str(format("DataProducts.Output_%s.filenames") % dataProductNames[d]));
-          std::vector<std::string> locations = aParSet->getStringVector(prefix+str(format("DataProducts.Output_%s.locations") % dataProductNames[d]));
+          std::vector<std::string> filenames = aParSet->getStringVector(prefix+str(format("DataProducts.Output_%s.filenames") % dataProductNames[d]), true);
+          std::vector<std::string> locations = aParSet->getStringVector(prefix+str(format("DataProducts.Output_%s.locations") % dataProductNames[d]), true);
           std::vector<unsigned> &psets = dataProductPhases[d] == 2 ? phaseTwoPsets : phaseThreePsets;
 
           unsigned numFiles = filenames.size();
@@ -317,18 +321,22 @@ Observation::Observation(ParameterSet*		aParSet,
             StreamToStorage a;
 
             a.dataProduct = dataProductNames[d];
+            a.dataProductNr = dataProductNrs[d];
             a.streamNr = i;
             a.filename = filenames[i];
             a.sourcePset = psets[i / filesPerPset];
 
             std::vector<std::string> locparts = StringUtil::split(locations[i],':');
             a.destStorageNode = locparts[0];
-            a.destDirectory = locparts[1];
+            a.destDirectory   = locparts[1];
+
+            // use a static allocation for now, starting at 0 for each pset/locus node
+            a.adderNr  = filesPerIONode[a.sourcePset]++;
+            a.writerNr = filesPerStorage[locparts[0]]++;
 
             streamsToStorage.push_back(a);
           }
         }
-#endif
 }
 
 

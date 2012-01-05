@@ -80,6 +80,8 @@ class OutputSection
     Semaphore				   itsNrIterationsToDo;
 
     SmartPtr<Thread>			   itsThread;
+
+    std::vector<unsigned>		   itsAdders; // [subband]
 };
 
 

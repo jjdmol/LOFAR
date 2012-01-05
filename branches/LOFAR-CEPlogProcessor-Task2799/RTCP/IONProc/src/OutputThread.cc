@@ -39,9 +39,9 @@ namespace LOFAR {
 namespace RTCP {
 
 
-OutputThread::OutputThread(const Parset &parset, OutputType outputType, unsigned streamNr)
+OutputThread::OutputThread(const Parset &parset, OutputType outputType, unsigned streamNr, unsigned adderNr)
 :
-  itsLogPrefix(str(boost::format("[obs %u type %u stream %3u] ") % parset.observationID() % outputType % streamNr)),
+  itsLogPrefix(str(boost::format("[obs %u type %u stream %3u adder %3u] ") % parset.observationID() % outputType % streamNr % adderNr)),
   itsOutputDescriptor(getStreamDescriptorBetweenIONandStorage(parset, outputType, streamNr)),
   itsThread(this, &OutputThread::mainLoop, itsLogPrefix + "[OutputThread] ", 65536)
 {
