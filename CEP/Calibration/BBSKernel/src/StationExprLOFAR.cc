@@ -449,7 +449,7 @@ PatchExprBase::Ptr StationExprLOFAR::makePatchExpr(const string &name,
             it->second));
     }
 
-    PatchExpr *exprPatch = new PatchExpr(itsScope, sourceDB, name, refPhase);
+    PatchExpr::Ptr exprPatch(new PatchExpr(itsScope, sourceDB, name, refPhase));
 
     // Check if the exprPatch created from patch name does contain any sources
     if(exprPatch->nSources() == 0)
@@ -458,7 +458,7 @@ PatchExprBase::Ptr StationExprLOFAR::makePatchExpr(const string &name,
               << "any sources");
     }
     
-    return PatchExprBase::Ptr(exprPatch);
+    return exprPatch;
 }
 
 } //# namespace BBS
