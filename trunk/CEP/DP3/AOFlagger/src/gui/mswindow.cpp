@@ -568,6 +568,8 @@ void MSWindow::createToolbar()
 	sigc::mem_fun(*this, &MSWindow::onOpenTestSetSinusoidalBroadband));
 	_actionGroup->add( Gtk::Action::create("OpenTestSetSlewedGaussianBroadband", "Slewed Gaussian"),
 	sigc::mem_fun(*this, &MSWindow::onOpenTestSetSlewedGaussianBroadband));
+	_actionGroup->add( Gtk::Action::create("OpenTestSetBurstBroadband", "Burst"),
+	sigc::mem_fun(*this, &MSWindow::onOpenTestSetBurstBroadband));
 	_actionGroup->add( Gtk::Action::create("AddTestModification", "Test modify") );
 	_actionGroup->add( Gtk::Action::create("AddStaticFringe", "Static fringe"),
 	sigc::mem_fun(*this, &MSWindow::onAddStaticFringe) );
@@ -805,6 +807,7 @@ void MSWindow::createToolbar()
 		"        <menuitem action='OpenTestSetGaussianBroadband'/>"
 		"        <menuitem action='OpenTestSetSinusoidalBroadband'/>"
 		"        <menuitem action='OpenTestSetSlewedGaussianBroadband'/>"
+		"        <menuitem action='OpenTestSetBurstBroadband'/>"
 		"      </menu>"
 		"      <menu action='AddTestModification'>"
 		"        <menuitem action='AddStaticFringe'/>"
