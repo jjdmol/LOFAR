@@ -470,6 +470,10 @@ Image2DPtr MitigationTester::CreateTestSet(int number, Mask2DPtr rfi, unsigned w
 			image = Image2DPtr(CreateNoise(width, height, gaussianNoise));
 			AddSlewedBroadbandToTestSet(image, rfi, 1.0);
 		} break;
+		case 29: { // Several bursty broadband lines
+			image = Image2DPtr(CreateNoise(width, height, gaussianNoise));
+			AddBurstBroadbandToTestSet(image, rfi);
+		} break;
 	}
 	return image;
 }

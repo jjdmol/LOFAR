@@ -35,12 +35,8 @@
 class MitigationTester{
 	public:
 		enum NoiseType { Gaussian, GaussianProduct, GaussianPartialProduct, Rayleigh };
-		enum BroadbandShape { UniformShape, GaussianShape, SinusoidalShape };
+		enum BroadbandShape { UniformShape, GaussianShape, SinusoidalShape, BurstShape };
 	
-		MitigationTester();
-
-		~MitigationTester();
-
 		void GenerateNoise(size_t scanCount, size_t frequencyCount, bool independentComplex = false, double sigma=1.0, enum NoiseType noiseType=GaussianPartialProduct);
 		
 		static double shapeLevel(enum BroadbandShape shape, double x)
@@ -54,6 +50,8 @@ class MitigationTester{
 					return exp(-x*x*3.0*3.0);
 				case SinusoidalShape:
 					return (1.0 + cos(x*M_PI*2.0*1.5)) * 0.5;
+				case BurstShape:
+					return RNG::Gaussian() * 0.6;
 			}
 		}
 
@@ -106,6 +104,10 @@ class MitigationTester{
 		{
 			AddBroadbandToTestSet(image, rfi, 1.0, 1.0, false, SinusoidalShape);
 		}
+		static void AddBurstBroadbandToTestSet(Image2DPtr image, Mask2DPtr rfi)
+		{
+			AddBroadbandToTestSet(image, rfi, 1.0, 1.0, false, BurstShape);
+		}
 		static void AddSlewedGaussianBroadbandToTestSet(Image2DPtr image, Mask2DPtr rfi)
 		{
 			AddSlewedBroadbandToTestSet(image, rfi, 1.0);
@@ -130,6 +132,9 @@ class MitigationTester{
 
 		Image2DPtr _real, _imaginary;
 		void Clear();
+		
+		MitigationTester();
+		~MitigationTester();
 };
 
 template<typename T1,typename T2>

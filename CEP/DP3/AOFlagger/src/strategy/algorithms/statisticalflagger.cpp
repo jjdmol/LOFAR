@@ -74,6 +74,88 @@ void StatisticalFlagger::EnlargeFlags(Mask2DPtr mask, size_t timeSize, size_t fr
 	}
 }
 
+void StatisticalFlagger::DilateFlagsHorizontally(Mask2DPtr mask, size_t timeSize)
+{
+	Mask2DPtr destination = Mask2D::CreateUnsetMaskPtr(mask->Width(), mask->Height());
+	if(2*timeSize > mask->Width()) timeSize = mask->Width()/2;
+	const int intSize = (int) timeSize;
+	
+	for(size_t y=0;y<mask->Height();++y)
+	{
+		int dist = intSize + 1;
+		for(size_t x=0;x<timeSize;++x)
+		{
+			if(mask->Value(x, y))
+				dist = - intSize;
+			dist++;
+		}
+		for(size_t x=0;x<mask->Width() - timeSize;++x)
+		{
+			if(mask->Value(x + timeSize, y))
+				dist = -intSize;
+			if(dist <= intSize)
+			{
+				destination->SetValue(x, y, true);
+				dist++;
+			} else {
+				destination->SetValue(x, y, false);
+			}
+		}
+		for(size_t x=mask->Width() - timeSize;x<mask->Width();++x)
+		{
+			if(dist <= intSize)
+			{
+				destination->SetValue(x, y, true);
+				dist++;
+			} else {
+				destination->SetValue(x, y, false);
+			}
+		}
+	}
+	mask->Swap(destination);
+}
+
+void StatisticalFlagger::DilateFlagsVertically(Mask2DPtr mask, size_t frequencySize)
+{
+	Mask2DPtr destination = Mask2D::CreateUnsetMaskPtr(mask->Width(), mask->Height());
+	if(2*frequencySize > mask->Height()) frequencySize = mask->Height()/2;
+	const int intSize = (int) frequencySize;
+	
+	for(size_t x=0;x<mask->Width();++x)
+	{
+		int dist = intSize + 1;
+		for(size_t y=0;y<frequencySize;++y)
+		{
+			if(mask->Value(x, y))
+				dist = - intSize;
+			dist++;
+		}
+		for(size_t y=0;y<mask->Height() - frequencySize;++y)
+		{
+			if(mask->Value(x, y + frequencySize))
+				dist = -intSize;
+			if(dist <= intSize)
+			{
+				destination->SetValue(x, y, true);
+				dist++;
+			} else {
+				destination->SetValue(x, y, false);
+			}
+		}
+		for(size_t y=mask->Height() - frequencySize;y<mask->Width();++y)
+		{
+			if(dist <= intSize)
+			{
+				destination->SetValue(x, y, true);
+				dist++;
+			} else {
+				destination->SetValue(x, y, false);
+			}
+		}
+	}
+	mask->Swap(destination);
+}
+
 void StatisticalFlagger::LineRemover(Mask2DPtr mask, size_t maxTimeContamination, size_t maxFreqContamination)
 {
 	for(size_t x=0;x<mask->Width();++x)

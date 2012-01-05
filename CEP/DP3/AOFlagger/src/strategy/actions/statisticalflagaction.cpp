@@ -37,7 +37,7 @@ namespace rfiStrategy {
 			
 		Mask2DPtr mask = Mask2D::CreateCopy(data.GetSingleMask());
 		
-		StatisticalFlagger::EnlargeFlags(mask, _enlargeTimeSize, _enlargeFrequencySize);
+		StatisticalFlagger::DilateFlags(mask, _enlargeTimeSize, _enlargeFrequencySize);
 		//StatisticalFlagger::LineRemover(mask, (size_t) (_maxContaminatedTimesRatio * (double) mask->Width()), (size_t) (_maxContaminatedFrequenciesRatio * (double) mask->Height()));
 		ScaleInvariantDilation::DilateHorizontally(mask, _minimumGoodTimeRatio);
 		ScaleInvariantDilation::DilateVertically(mask, _minimumGoodFrequencyRatio);
