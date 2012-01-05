@@ -22,6 +22,9 @@
 //# $Id: addUV2MS.h xxxx 2011-10-21 14:16:37Z duscha $
 
 
+#ifndef LOFAR_BBSTOOLS_ADDUV2MS_H
+#define LOFAR_BBSTOOLS_ADDUV2MS_H
+
 //#include <vector>
 #include <casa/Arrays/Vector.h>
 #include <synthesis/MeasurementEquations/Imager.h>          // casarest ft()
@@ -67,3 +70,5 @@ void showColumnNames(casa::Table &table);
 void usage(const string &);
 
 void showVector(const vector<string> &v, const string &key="");
+
+#endif
