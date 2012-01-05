@@ -49,6 +49,7 @@ class RankOperatorROCExperiment : public UnitTest {
 		{
 			AddTest(RankOperatorROCGaussian(), "Constructing rank operator & dilation ROC curve for Gaussian broadband RFI");
 			AddTest(RankOperatorROCSinusoidal(), "Constructing rank operator & dilation ROC curve for sinusoidal broadband RFI");
+			AddTest(RankOperatorROCSGaussian(), "Constructing rank operator & dilation ROC curve for slewed Gaussian RFI");
 		}
 		
 	private:
@@ -75,10 +76,14 @@ class RankOperatorROCExperiment : public UnitTest {
 		{
 			void operator()();
 		};
+		struct RankOperatorROCSGaussian : public Asserter
+		{
+			void operator()();
+		};
 		
 		static const unsigned _repeatCount;
 		
-		enum TestType { GaussianBroadband, SinusoidalBroadband};
+		enum TestType { GaussianBroadband, SinusoidalBroadband, SlewedGaussianBroadband };
 		
 		static void TestNoisePerformance(size_t totalRFI, double totalRFISum, const std::string &testname);
 		static void evaluateIterationResults(Mask2DPtr result, Mask2DPtr maskGroundTruth, Image2DPtr fuzzyGroundTruth, const size_t totalRFI, struct EvaluationResult &evaluationResult);
@@ -169,6 +174,11 @@ inline void RankOperatorROCExperiment::RankOperatorROCSinusoidal::operator()()
 	executeTest(SinusoidalBroadband);
 }
 
+inline void RankOperatorROCExperiment::RankOperatorROCSGaussian::operator()()
+{
+	executeTest(SlewedGaussianBroadband);
+}
+
 void RankOperatorROCExperiment::evaluateIterationResults(Mask2DPtr result, Mask2DPtr maskGroundTruth, Image2DPtr fuzzyGroundTruth, const size_t totalRFI, EvaluationResult &evaluationResult)
 {
 	size_t totalPositives = result->GetCount<true>();
@@ -218,6 +228,9 @@ void RankOperatorROCExperiment::executeTest(enum TestType testType)
 		case SinusoidalBroadband:
 			testname = "sinusoidal";
 			break;
+		case SlewedGaussianBroadband:
+			testname = "slewed_gaussian";
+			break;
 	}
 	
 	EvaluationResult rocResults[ETA_STEPS+1], dilResults[DIL_STEPS+1];
@@ -251,6 +264,23 @@ void RankOperatorROCExperiment::executeTest(enum TestType testType)
 				groundTruth = Image2D::CreateCopy(TimeFrequencyData(SinglePolarisation, realTruth, imagTruth).GetSingleImage());
 				data = TimeFrequencyData(SinglePolarisation, realImage, imagImage);
 			} break;
+			case SlewedGaussianBroadband:
+			{
+				Image2DPtr
+					realTruth  = Image2D::CreateZeroImagePtr(width, height),
+					imagTruth  = Image2D::CreateZeroImagePtr(width, height);
+				realImage = MitigationTester::CreateTestSet(2, mask, width, height),
+				imagImage = MitigationTester::CreateTestSet(2, mask, width, height);
+				rfiLessData = TimeFrequencyData(SinglePolarisation, realImage, imagImage);
+				rfiLessData.Trim(0, 0, 180, height);
+				rfiLessImage = rfiLessData.GetSingleImage();
+				MitigationTester::AddSlewedGaussianBroadbandToTestSet(realImage, mask);
+				MitigationTester::AddSlewedGaussianBroadbandToTestSet(imagImage, mask);
+				MitigationTester::AddSlewedGaussianBroadbandToTestSet(realTruth, mask);
+				MitigationTester::AddSlewedGaussianBroadbandToTestSet(imagTruth, mask);
+				groundTruth = Image2D::CreateCopy(TimeFrequencyData(SinglePolarisation, realTruth, imagTruth).GetSingleImage());
+				data = TimeFrequencyData(SinglePolarisation, realImage, imagImage);
+			} break;
 			case SinusoidalBroadband:
 			{
 				Image2DPtr
@@ -271,6 +301,7 @@ void RankOperatorROCExperiment::executeTest(enum TestType testType)
 				data = TimeFrequencyData(SinglePolarisation, realImage, imagImage);
 			} break;
 		}
+		std::cout << '_' << std::flush;
 		
 		data.Trim(0, 0, 180, height);
 		groundTruth->SetTrim(0, 0, 180, height);
@@ -301,6 +332,8 @@ void RankOperatorROCExperiment::executeTest(enum TestType testType)
 			evaluateIterationResults(resultMask, mask, groundTruth, totalRFI, rocResults[i]);
 		}
 			
+		std::cout << '.' << std::flush;
+		
 		for(size_t i=0;i<DIL_STEPS;++i)
 		{
 			const size_t dilSize = i * MAX_DILATION / DIL_STEPS;
@@ -315,7 +348,7 @@ void RankOperatorROCExperiment::executeTest(enum TestType testType)
 		//grTotalRFISum += totalRFISum;
 		
 		std::cout << '.' << std::flush;
-	}
+	} // next repetition
 	
 	const std::string rankOperatorFilename(std::string("rank-operator-roc-") + testname + ".txt");
 	std::ofstream rankOperatorFile(rankOperatorFilename.c_str());
