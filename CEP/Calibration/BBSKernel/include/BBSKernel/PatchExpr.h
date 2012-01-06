@@ -79,7 +79,6 @@ public:
     //
     // @{
     virtual const string &name() const;
-    size_t nSources() const;
     virtual Expr<Vector<2> >::Ptr position() const;
     virtual Expr<JonesMatrix>::Ptr coherence(const baseline_t &baseline,
         const Expr<Vector<3> >::Ptr &uvwLHS,
@@ -87,6 +86,7 @@ public:
     // @}
     
 private:
+    size_t nSources() const;
     void initSourceList(Scope &scope, SourceDB &sourceDB, const string &name);
     void initPositionExpr(const vector<Source::Ptr> &sources);
     void initLMNExpr(const vector<Source::Ptr> &sources,

@@ -449,16 +449,8 @@ PatchExprBase::Ptr StationExprLOFAR::makePatchExpr(const string &name,
             it->second));
     }
 
-    PatchExpr::Ptr exprPatch(new PatchExpr(itsScope, sourceDB, name, refPhase));
-
-    // Check if the exprPatch created from patch name does contain any sources
-    if(exprPatch->nSources() == 0)
-    {
-        THROW(BBSKernelException, "Patch " << name << " does not contain " 
-              << "any sources");
-    }
-    
-    return exprPatch;
+    return PatchExprBase::Ptr(new PatchExpr(itsScope, sourceDB, name, 
+        refPhase));
 }
 
 } //# namespace BBS
