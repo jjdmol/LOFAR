@@ -25,7 +25,7 @@
 #include <AOFlagger/test/testingtools/asserter.h>
 #include <AOFlagger/test/testingtools/unittest.h>
 
-#include <AOFlagger/strategy/algorithms/scaleinvariantdilation.h>
+#include <AOFlagger/strategy/algorithms/siroperator.h>
 #include <AOFlagger/strategy/algorithms/statisticalflagger.h>
 
 #include <AOFlagger/util/rng.h>
@@ -81,7 +81,7 @@ inline void ScaleInvariantDilationExperiment::TestTimingN::operator()()
 			for(unsigned repeat=0;repeat<_repeatCount;++repeat)
 			{
 				for(unsigned i=0;i<n;++i) flags[i] = prototypeFlags[i];
-				ScaleInvariantDilation::Dilate(flags, n, eta);
+				SIROperator::Operate(flags, n, eta);
 			}
 			file << n << '\t' << (watch.Seconds()/(double) _repeatCount) << '\t' << x << std::endl;
 			delete[] flags;
