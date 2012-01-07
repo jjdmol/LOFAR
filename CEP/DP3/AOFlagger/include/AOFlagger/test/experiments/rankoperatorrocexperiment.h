@@ -26,7 +26,7 @@
 #include <AOFlagger/test/testingtools/unittest.h>
 
 #include <AOFlagger/strategy/algorithms/mitigationtester.h>
-#include <AOFlagger/strategy/algorithms/scaleinvariantdilation.h>
+#include <AOFlagger/strategy/algorithms/siroperator.h>
 #include <AOFlagger/strategy/algorithms/statisticalflagger.h>
 #include <AOFlagger/strategy/algorithms/thresholdtools.h>
 
@@ -346,7 +346,7 @@ void RankOperatorROCExperiment::executeTest(enum TestType testType)
 		{
 			const num_t eta = (num_t) i / (num_t) ETA_STEPS;
 			Mask2DPtr resultMask = Mask2D::CreateCopy(input);
-			ScaleInvariantDilation::DilateVertically(resultMask, eta);
+			SIROperator::OperateVertically(resultMask, eta);
 			
 			evaluateIterationResults(resultMask, mask, groundTruth, totalRFI, rocResults[i]);
 		}
@@ -460,7 +460,7 @@ inline void RankOperatorROCExperiment::TestNoisePerformance(size_t totalRFI, dou
 		{
 			Mask2DPtr tempMask = Mask2D::CreateCopy(input);
 			const num_t eta = i/100.0;
-			ScaleInvariantDilation::DilateVertically(tempMask, eta);
+			SIROperator::OperateVertically(tempMask, eta);
 			size_t falsePositives = tempMask->GetCount<true>();
 			tempMask->Invert();
 			num_t fpSum = ThresholdTools::Sum(inputImage, tempMask);
