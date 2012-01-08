@@ -62,8 +62,10 @@ CEPlogProcessor::CEPlogProcessor(const string&  cntlrName) :
     itsOwnPropertySet   (0),
     itsTimerPort        (0),
     itsNrInputBuffers   (0),
+    itsNrIONodes         (0),
     itsNrAdders         (0),
     itsNrStorage        (0),
+    itsNrWriters        (0),
     itsBufferSize       (0)
 {
     LOG_TRACE_OBJ_STR (cntlrName << " construction");
@@ -79,8 +81,10 @@ CEPlogProcessor::CEPlogProcessor(const string&  cntlrName) :
 
     itsBufferSize     = globalParameterSet()->getInt("CEPlogProcessor.bufferSize", 1024);
     itsNrInputBuffers = globalParameterSet()->getInt("CEPlogProcessor.nrInputBuffers", 64);
-    itsNrAdders       = globalParameterSet()->getInt("CEPlogProcessor.nrAdders", 64);
-    itsNrStorage      = globalParameterSet()->getInt("CEPlogProcessor.nrStorage", 100);
+    itsNrIONodes      = globalParameterSet()->getInt("CEPlogProcessor.nrIONodes", 64);
+    itsNrAdders       = globalParameterSet()->getInt("CEPlogProcessor.nrAdders", 10); // per io node
+    itsNrStorage      = globalParameterSet()->getInt("CEPlogProcessor.nrStorageNodes", 100);
+    itsNrWriters      = globalParameterSet()->getInt("CEPlogProcessor.nrWriters", 20); // per storage node
 
     registerProtocol(DP_PROTOCOL, DP_PROTOCOL_STRINGS);
 
@@ -228,10 +232,9 @@ GCFEvent::TResult CEPlogProcessor::createPropertySets(GCFEvent& event,
 
         // create propSets for the inputbuffer processes
         itsInputBuffers.resize(itsNrInputBuffers,  0);
-        string  inputBufferNameMask (createPropertySetName(PSN_INPUT_BUFFER, getName()));
         for (unsigned inputBuffer = 0; inputBuffer < itsNrInputBuffers; inputBuffer++) {
             if (!itsInputBuffers[inputBuffer]) {
-                string PSname(formatString(inputBufferNameMask.c_str(), inputBuffer));
+                string PSname(formatString("LOFAR_PermSW_PSIONode%02d_InputBuffer", inputBuffer));
                 itsInputBuffers[inputBuffer] = new RTDBPropertySet(PSname, PST_INPUT_BUFFER, PSAT_WO | PSAT_CW, this);
             }
 
@@ -239,31 +242,36 @@ GCFEvent::TResult CEPlogProcessor::createPropertySets(GCFEvent& event,
         }
 
         // create propSets for the adder processes
-        itsAdders.resize (itsNrAdders, 0);
-        string  adderNameMask(createPropertySetName(PSN_ADDER, getName()));
-        for (unsigned adder = 0; adder < itsNrAdders; adder++) {
-            if (!itsAdders[adder]) {
-                string PSname(formatString(adderNameMask.c_str(), adder));
-                itsAdders[adder] = new RTDBPropertySet(PSname, PST_ADDER, PSAT_WO | PSAT_CW, this);
-            }
+        itsAdders.resize (itsNrAdders * itsNrIONodes);
 
-            usleep (2000); // wait 2 ms in order not to overload the system  
+        for (unsigned ionode = 0; ionode < itsNrIONodes; ionode++) {
+          for (unsigned adder = 0; adder < itsNrAdders; adder++) {
+              unsigned index = inode * itsNrAdders + adder;
+
+              if (!itsAdders[index]) {
+                  string PSname(formatString("LOFAR_ObsSW_OSIONode%02d_Adder%01d", ionode, adder));
+                  itsAdders[index] = new RTDBPropertySet(PSname, PST_ADDER, PSAT_WO | PSAT_CW, this);
+              }
+
+              usleep (2000); // wait 2 ms in order not to overload the system  
+          }
         }
-        itsDroppingCount.resize (itsNrAdders, 0);
-
 
         // create propSets for the storage processes
-        itsStorage.resize (itsNrStorage, 0);
-        string  storageNameMask(createPropertySetName(PSN_STORAGE, getName()));
+        itsStorage.resize (itsNrWriters * itsNrStorage, 0);
         for (unsigned storage = 0; storage < itsNrStorage; storage++) {
-            if (!itsStorage[storage]) {
-                string PSname(formatString(storageNameMask.c_str(), storage));
-                itsStorage[storage] = new RTDBPropertySet(PSname, PST_STORAGE, PSAT_WO | PSAT_CW, this);
+          for (unsigned writer = 0; writer < itsNrWriters; writer++) {
+            unsigned index = inode * itsNrWriters + writer;
+
+            if (!itsStorage[index]) {
+              string PSname(formatString("LOFAR_ObsSW_OSLocusNode%03d_Writer%02d", storage, writer));
+              itsStorage[index] = new RTDBPropertySet(PSname, PST_STORAGE, PSAT_WO | PSAT_CW, this);
             }
 
             usleep (2000); // wait 2 ms in order not to overload the system  
+          }  
         }
-
+/*
         itsStorageBuf.resize (itsNrStorage);
         for (unsigned i = 0; i < itsNrStorage; i++) {
           //set array sizes
@@ -271,7 +279,7 @@ GCFEvent::TResult CEPlogProcessor::createPropertySets(GCFEvent& event,
           itsStorageBuf[i].count.resize(MPIProcs,0);
           itsStorageBuf[i].dropped.resize(MPIProcs);
         }
-
+*/
         LOG_INFO("Giving PVSS 5 seconds to process the requests");
         itsTimerPort->setTimer(5.0);    // give database some time to finish the job
     }
@@ -279,13 +287,13 @@ GCFEvent::TResult CEPlogProcessor::createPropertySets(GCFEvent& event,
 
     case F_TIMER: {
         // database should be ready by ts, check if allocation was succesfull
-        for (unsigned inputBuffer = 0; inputBuffer < itsNrInputBuffers; inputBuffer++) {
+        for (unsigned inputBuffer = 0; inputBuffer < itsInputBuffers.size(); inputBuffer++) {
             ASSERTSTR(itsInputBuffers[inputBuffer], "Allocation of PS for inputBuffer " << inputBuffer << " failed.");
         }
-        for (unsigned adder = 0; adder < itsNrAdders; adder++) {
+        for (unsigned adder = 0; adder < itsAdders.size(); adder++) {
             ASSERTSTR(itsAdders[adder], "Allocation of PS for adder " << adder << " failed.");
         }
-        for (unsigned storage = 0; storage < itsNrStorage; storage++) {
+        for (unsigned storage = 0; storage < itsStorage.size(); storage++) {
             ASSERTSTR(itsStorage[storage], "Allocation of PS for storage " << storage << " failed.");
         }
         LOG_DEBUG_STR("Allocation of all propertySets successfull, going to open the listener");
@@ -787,34 +795,34 @@ void CEPlogProcessor::_processIONProcLine(const struct logline &logline)
     //
     // Adder
     //
+    int adderNr = _getparam(logline.target, "adder ");
+    int adderIndex = processNr * itsNrAdders + adderNr;
 
-    // IONProc@17 07-01-11 20:59:00.981 WARN  [obs 1002069 output 6 index L1002069_B102_S0_P000_bf.raw] Dropping data
-    if ((result = strstr(logline.msg, "Dropping data"))) {
-        LOG_DEBUG(formatString("[%d] Dropping data started ",processNr));
-        itsAdders[processNr]->setValue(PN_ADD_DROPPING, GCFPVBool(true), logline.timestamp);
-        itsAdders[processNr]->setValue(PN_ADD_LOG_LINE,GCFPVString(result), logline.timestamp);
-        itsDroppingCount[processNr]++;
-        LOG_DEBUG(formatString("Dropping count[%d] : %d", processNr,itsDroppingCount[processNr]));
-        return;
-    }
+    if (adderNr >= 0) {
+      // TODO: reset drop count at start of obs --> maybe MAC should do that when assigning the mapping?
 
-    // IONProc@23 07-01-11 20:58:27.848 WARN  [obs 1002069 output 6 index L1002069_B139_S0_P000_bf.raw] Dropped 9 blocks
-    if ((result = strstr(logline.msg, "Dropped "))) {
-        int dropped(0);
-        if (sscanf(result, "Dropped %d ", &dropped) == 1) {
-                LOG_DEBUG(formatString("[%d] Dropped %d ",processNr,dropped));
-            itsAdders[processNr]->setValue(PN_ADD_NR_BLOCKS_DROPPED, GCFPVInteger(dropped), logline.timestamp);
-        }
-        itsAdders[processNr]->setValue(PN_ADD_LOG_LINE,GCFPVString(result), logline.timestamp);
-        itsDroppingCount[processNr]--;
-        LOG_DEBUG(formatString("Dropping count[%d] : %d", processNr,itsDroppingCount[processNr]));
-        // if dropcount = 0 again, if so reset dropping flag
-        if (itsDroppingCount[processNr] <= 0) {
-            LOG_DEBUG(formatString("[%d] Dropping data ended ",processNr));
-            itsAdders[processNr]->setValue(PN_ADD_DROPPING, GCFPVBool(false), logline.timestamp);
-        }
+      // IONProc@17 07-01-11 20:59:00.981 WARN  [obs 1002069 output 6 index L1002069_B102_S0_P000_bf.raw] Dropping data
+      if ((result = strstr(logline.msg, "Dropping data"))) {
+        LOG_DEBUG(formatString("[%d] Dropping data started ",adderIndex));
+        itsAdders[adderIndex]->setValue(PN_ADD_DROPPING, GCFPVBool(true), logline.timestamp);
+        itsAdders[adderIndex]->setValue(PN_ADD_LOG_LINE,GCFPVString(result), logline.timestamp);
         return;
-    }
+      }
+
+      // IONProc@23 07-01-11 20:58:27.848 WARN  [obs 1002069 output 6 index L1002069_B139_S0_P000_bf.raw] Dropped 9 blocks this time and 15 blocks since start
+      if ((result = strstr(logline.msg, "Dropped "))) {
+        LOG_DEBUG(formatString("[%d] Dropping data ended ",adderIndex));
+
+        int dropped(0), total(0);
+        if (sscanf(result, "Dropped %d blocks this time and %d blocks since start", &dropped, &total) == 2) {
+          LOG_DEBUG(formatString("[%d] Dropped %d for a total of %d",processNr,dropped, total));
+          itsAdders[adderIndex]->setValue(PN_ADD_NR_BLOCKS_DROPPED, GCFPVInteger(total), logline.timestamp);
+        }
+        itsAdders[adderIndex]->setValue(PN_ADD_DROPPING, GCFPVBool(false), logline.timestamp);
+        itsAdders[adderIndex]->setValue(PN_ADD_LOG_LINE,GCFPVString(result), logline.timestamp);
+        return;
+      }
+    }   
 }
 
 void CEPlogProcessor::_processCNProcLine(const struct logline &logline)
@@ -824,9 +832,6 @@ void CEPlogProcessor::_processCNProcLine(const struct logline &logline)
 
 void CEPlogProcessor::_processStorageLine(const struct logline &logline)
 {
-  (void)logline;
-  return;
-
     unsigned hostNr;
 
     if (sscanf(logline.host, "%u", &hostNr) == 1) {
@@ -838,10 +843,15 @@ void CEPlogProcessor::_processStorageLine(const struct logline &logline)
         return;
     }
 
-    if (hostNr >= itsNrStorage) {
-        LOG_WARN_STR("Storage range = 0.." << itsNrStorage << ". Index " << hostNr << " is invalid");
+    if (hostNr < 1 || hostNr > itsNrStorage) {
+        LOG_WARN_STR("Storage range = 1.." << itsNrStorage << ". Index " << hostNr << " is invalid");
         return;
     }
+
+    hostNr--; // use 0-based indexing
+
+    int writerNr = _getparam(logline.target, "writer ");
+    int writerIndex = hostNr * itsNrWriters + writerNr;
 
 #if 0
     char*   result;

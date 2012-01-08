@@ -142,14 +142,14 @@ private:
     vector<RTDBPropertySet*>    itsInputBuffers;
     vector<RTDBPropertySet*>    itsAdders;
     vector<RTDBPropertySet*>    itsStorage;
-    vector<int>                 itsDroppingCount;
     vector<logBuffer_t>         itsStorageBuf;
-
 
     // values read from the conf file.
     unsigned        itsNrInputBuffers;
+    unsigned        itsNrIONodes;
     unsigned        itsNrAdders;
     unsigned        itsNrStorage;
+    unsigned        itsNrWriters;
     unsigned        itsBufferSize;
 
     template<typename T, typename U> class BiMap {

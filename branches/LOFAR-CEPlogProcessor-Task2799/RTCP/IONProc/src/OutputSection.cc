@@ -60,6 +60,7 @@ OutputSection::OutputSection(const Parset &parset,
   itsSequenceNumber(0),
   itsIsRealTime(parset.realTime()),
   itsDroppedCount(itsNrStreams),
+  itsTotalDroppedCount(itsNrStreams),
   itsStreamsFromCNs(cores.size()),
   itsTmpSum(newStreamableData(parset, outputType, -1, hugeMemoryAllocator))
 {
@@ -226,7 +227,10 @@ void OutputSection::droppingData(unsigned stream)
 void OutputSection::notDroppingData(unsigned stream)
 {
   if (itsDroppedCount[stream] > 0) {
-    LOG_WARN_STR(itsLogPrefix << str(boost::format(" stream %3u adder %3u] ") % (itsFirstStreamNr + stream) % itsAdders[stream]) << "Dropped " <<  itsDroppedCount[stream] << " blocks" );
+    itsTotalDroppedCount[stream] += itsDroppedCount[stream];
+
+    LOG_WARN_STR(itsLogPrefix << str(boost::format(" stream %3u adder %3u] ") % (itsFirstStreamNr + stream) % itsAdders[stream]) << "Dropped " <<  itsDroppedCount[stream] << " blocks this time and " << itsTotalDroppedCount[stream] << " blocks since start" );
+
     itsDroppedCount[stream] = 0;
   }
 }
