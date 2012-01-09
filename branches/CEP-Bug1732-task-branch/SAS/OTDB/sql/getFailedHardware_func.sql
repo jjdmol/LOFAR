@@ -45,21 +45,22 @@ CREATE OR REPLACE FUNCTION nextPICkvt(int,timestamp)
 	LIMIT    1; 
 $$ LANGUAGE SQL;
 
-CREATE OR REPLACE FUNCTION getfailedHardware(TIMESTAMP, TIMESTAMP) 
-	RETURNS SETOF OTDBvalue AS $$
-	DECLARE
-		vRecord		RECORD;
-		vRecord2	RECORD;
-		vStartTime	TIMESTAMP;
-		vEndTime TIMESTAMP;
+CREATE OR REPLACE FUNCTION getFailedHardware(TIMESTAMP,TIMESTAMP) 
+  RETURNS SETOF OTDBvalue AS $$
+  DECLARE
+    vRecord		RECORD;
+    vRecord2	RECORD;
+    vStartTime	TIMESTAMP;
+    vEndTime TIMESTAMP;
 
-	BEGIN
-		IF $2 IS NULL THEN
-      vStartTime = $1
-			vEndTime = now();
-		ELSE 
-		  vStartTime = $1
-			vEndTime = $2;
+  BEGIN
+    IF $2 IS NULL THEN
+      vStartTime = $1;
+      vEndTime = now();
+    ELSE 
+      vStartTime = $1;
+      vEndTime = $2;
+    END IF;
 
     FOR vRecord IN
       SELECT p.paramid,r.pvssname,p.value,p.time 
@@ -77,7 +78,7 @@ CREATE OR REPLACE FUNCTION getfailedHardware(TIMESTAMP, TIMESTAMP)
       RETURN NEXT vRecord;
     END LOOP;
 
-		RETURN;
-	END
+    RETURN;
+  END
 $$ LANGUAGE plpgsql;
 
