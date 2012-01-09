@@ -61,7 +61,7 @@
 #include <ms/MeasurementSets/MSAntennaColumns.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/ScalarColumn.h>
-#include <tables/Tables/TableLocker.h>
+//#include <tables/Tables/TableLocker.h>
 #include <measures/Measures.h>
 #include <casa/Quanta/MVTime.h>
 #include <casa/OS/Time.h>
@@ -129,10 +129,9 @@ vector<failedTile> getBrokenTiles(MeasurementSet &ms, const RCUmap &brokenRCus);
 vector<failedTile> getFailedTiles(MeasurementSet &ms, 
                                   const RCUmap &failedRCUs, 
                                   const map<string, ptime> &failedHardware);
-bool failedElementInObservation(const Table &antennaFieldTable,
-                                const Table &failedElementsTable,
-                                unsigned int antennaId,
-                                unsigned int element_index);                                
+bool elementInObservation(const Table &antennaFieldTable,
+                          unsigned int antennaId,
+                          unsigned int element_index);                                
 void padTo(std::string &str, const size_t num, const char paddingChar);
 
 // MS Table writing functions TODO
@@ -143,8 +142,11 @@ void updateElementFlags(Table &table,
                         const vector<unsigned int> &elementIndex);
 
 // File I/O
-void writeBrokenHardwareFile(const string &filename, const vector<string> &brokenHardware, bool strip=true);
-void writeBrokenHardwareFile(const string &filename, const map<string, ptime> &brokenHardware, bool strip=true);
+void writeBrokenHardwareFile( const string &filename, 
+                              const vector<string> &brokenHardware, 
+                              bool strip=true);
+void writeBrokenHardwareFile( const string &filename, const map<string, 
+                              ptime> &brokenHardware, bool strip=true);
 map<string, ptime> readBrokenHardwareFile(const string &filename);
 string stripRCUString(const string &brokenHardware);
 void writeFailedElementsFile( const string &filename,
@@ -815,7 +817,9 @@ map<string, ptime> getBrokenHardwareMap( OTDBconnection &conn,
   }
   else
   {
-    valueList = tv.getBrokenHardware((time_from_string(fromCasaTime(timestamp))));
+//    valueList = tv.getBrokenHardware((time_from_string(fromCasaTime(timestamp))));
+    valueList = tv.getFailedHardware( time_from_string("2011-Mar-04 11:08:27"), 
+                                        time_from_string("2011-Mar-04 12:08:27"));
   }
 
   for(unsigned int i=0; i < valueList.size(); i++)
@@ -1054,9 +1058,7 @@ void addFailedAntennaTiles( MeasurementSet &ms,
       // Loop over multiple element_flags per antennaId
       for(unsigned int j=0; j<failedTiles[i].rcus.size(); j++)
       {
-        TableLocker locker(failedElementsTable, FileLocker::Write);
         MVEpoch timestamp = toCasaTime(failedTiles[i].timeStamps[j]).get();
-
         doAddFailedAntennaTile( failedElementsTable, 
                                 failedTiles[i].antennaId,      
                                 failedTiles[i].rcus[j] / 2,
@@ -1104,16 +1106,17 @@ void addFailedAntennaTiles( MeasurementSet &ms,
       
         // First check if the ELEMENT_FLAG is true, i.e. only if the RCU is used
         // in this observation mode
-        if(failedElementInObservation(antennaFieldTable, failedElementsTable,
-                                      antennaId, elementIndex) == true)
+//        if(failedElementInObservation(antennaFieldTable, failedElementsTable,
+//                                      antennaId, elementIndex) == true)
+        if(elementInObservation(antennaFieldTable, antennaId, elementIndex) == true)
         {
+            cout << "antennaFieldId = " << antennaId << " is operational." << endl;    // DEBUG
             return;   // we don't add it to the LOFAR_FAILED_ELEMENT table
         }
         else
         {
-            MVEpoch timestamp=toCasaTime(failedTiles[i].timeStamps[j]).getDay() + 
-                              toCasaTime(failedTiles[i].timeStamps[j]).getDayFraction();
-    
+            cout << "antennaFieldId = " << antennaId << " is not operational." << endl;    // DEBUG        
+            MVEpoch timestamp=toCasaTime(failedTiles[i].timeStamps[j]).get();
             doAddFailedAntennaTile( failedElementsTable, 
                                     antennaId,      
                                     elementIndex,
@@ -1200,14 +1203,14 @@ bool failedAntennaElementExists(const Table &failedElementsTable,
   \param antennaId          antenna Id within LOFAR_ANTENNA_FIELD table
   \param element_index      element_index into ELEMENT_FLAG table
 */
-bool failedElementInObservation(const Table &antennaFieldTable,
-                                const Table &failedElementsTable,
-                                unsigned int antennaId,
-                                unsigned int element_index)
+bool elementInObservation(const Table &antennaFieldTable,
+                          unsigned int antennaId,
+                          unsigned int element_index)
 {
   bool operational=False;
   
-  ROScalarColumn<Int> antennaFieldIdCol(failedElementsTable, "ANTENNA_FIELD_ID");
+//  ROScalarColumn<Int> antennaFieldIdCol(failedElementsTable, "ANTENNA_FIELD_ID");
+//  ROScalarColumn<Int> antennaFieldIdCol(antennaFieldTable, "ANTENNA_FIELD_ID");
   ROArrayColumn<Bool> elementFlagCol(antennaFieldTable, "ELEMENT_FLAG");
 
   Matrix<Bool> elementFlags=elementFlagCol(antennaId);   // ELEMENT_FLAG array for antennaId  

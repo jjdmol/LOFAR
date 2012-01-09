@@ -85,7 +85,9 @@ public:
 
 	// Query for getting list of broken hardware on a certain time.
 	vector<OTDBvalue> getBrokenHardware(const ptime&	atTime = ptime(max_date_time));
-
+  // Query for getting list of broken hardware within time interval
+  vector<OTDBvalue> getFailedHardware(const ptime&	startTime, 
+                                      const ptime& endTime=ptime(max_date_time));
 	//# SAS queries
 	// For scheduling the VIC tree on the OTDB tree SAS must know what
 	// resources exist in the OTDB tree. This list can be retrieved with
