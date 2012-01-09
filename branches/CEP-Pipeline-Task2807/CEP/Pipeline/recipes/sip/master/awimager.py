@@ -1,7 +1,7 @@
 #                                                         LOFAR IMAGING PIPELINE
 #
 #                                    Example recipe with simple job distribution
-#                                                            John Swinbank, 2010
+#                                                          Wouter Klijn, 2010
 #                                                      swinbank@transientskp.org
 # ------------------------------------------------------------------------------
 # python awimager.py ~/build/preparation/output.map --job awimager --config ~/build/preparation/pipeline.cfg --initscript /opt/cep/LofIm/daily/lofar/lofarinit.sh --parset ~/build/preparation/parset.par --working-directory "/data/scratch/klijn" --executable /opt/cep/LofIm/daily/lofar/bin/awimager -d
@@ -16,17 +16,17 @@ from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
 from lofarpipe.support.group_data import load_data_map
 
-class AWImager(BaseRecipe, RemoteCommandRecipeMixIn): 
+class awimager(BaseRecipe, RemoteCommandRecipeMixIn): 
     """
-    Run the AWImager on the nodes and the data files suplied in the mapfile
+    Run the awimager on the nodes and the data files suplied in the mapfile
     **Arguments**
-    A mapfile containing node->datafile pairs 
+    A mapfile containing node->datafile pairs  
  
     """
     inputs = {
         'executable': ingredient.ExecField(
             '--executable',
-            help="The full path to the relevant AWImager executable"
+            help="The full path to the relevant awimager executable"
         ),
         'initscript': ingredient.FileField(
             '--initscript',
@@ -35,7 +35,7 @@ class AWImager(BaseRecipe, RemoteCommandRecipeMixIn):
         ),
         'parset': ingredient.FileField(
             '-p', '--parset',
-            help="The full path to a AWImager configuration parset."
+            help="The full path to a awimager configuration parset."
         ),
         'working_directory': ingredient.StringField(
             '-w', '--working-directory',
@@ -49,9 +49,9 @@ class AWImager(BaseRecipe, RemoteCommandRecipeMixIn):
     }
                   
     def go(self):     
-        super(AWImager, self).go()
-        self.logger.info("Starting AWImager run")
-        
+        super(awimager, self).go()
+        self.logger.info("Starting awimager run")
+        #return 0
         #collect the inputs        
         # TODO:  input_map to be merged with change marcel
         input_map = eval(open(self.inputs['args'][0]).read()) 
@@ -59,14 +59,13 @@ class AWImager(BaseRecipe, RemoteCommandRecipeMixIn):
         init_script = self.inputs['initscript']
         parset = self.inputs['parset']            
         working_dir = self.inputs['working_directory']  
-        job_name = self.inputs['job_name']
+#        job_name = self.inputs['job_name']
         suffix = self.inputs['suffix']
         
         #Get the base output fileneam from the parset
         parset_datamap = load_data_map(parset)
         
-        self.logger.info(repr(parset_datamap))
-        return 0
+        self.logger.info(repr(parset_datamap))      
         
         # Compile the command to be executed on the remote machine
         node_command = "python %s" % (self.__file__.replace("master", "nodes"))
@@ -75,14 +74,8 @@ class AWImager(BaseRecipe, RemoteCommandRecipeMixIn):
         jobs = []
         outnames = collections.defaultdict(list)
         for host, measurement_set in input_map:
-            self._validate_correct_data_location(measurement_set, working_dir,
-                                                  host)
             #construct and save the output name
-            outnames[host].append(os.path.join(working_dir, job_name,
-                            os.path.basename(measurement_set.rstrip('/')) + 
-                            suffix))
-            
-            
+            outnames[host].append(measurement_set + suffix)
             arguments=[executable, init_script, parset, working_dir, 
                        measurement_set]
             
@@ -92,24 +85,14 @@ class AWImager(BaseRecipe, RemoteCommandRecipeMixIn):
         self._schedule_jobs(jobs)       
 
         # Test for errors
+        #TODO: Er moeten nog tests worden gegeven.
+        #TODO: Er is nog geen output
         if self.error.isSet():
-            self.logger.warn("Failed AWImager run detected")
+            self.logger.warn("Failed awimager run detected")
             return 1
         else:
             return 0
     
-    
-    def _validate_correct_data_location(self, measurement_set, working_dir, 
-                                        host):
-        """
-        tests if the input ms is available in the working directory.
-        awimager fail if this is not the case
-        """  
-        if not (working_dir == '/'.join( #kan worden gedaan met  os.path.basename
-                                measurement_set.rstrip('/').split('/')[:-1])):
-            raise Exception("{0}: Incorrect input(s): Measurement set is not"
-                             " located in working directory".format(host))
-        
 
 if __name__ == "__main__":
-    sys.exit(AWImager().main())
+    sys.exit(awimager().main())

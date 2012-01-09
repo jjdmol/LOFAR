@@ -1,15 +1,22 @@
 
 import os
 import sys
+import errno
 
 from lofarpipe.support.control import control
 from lofar.parameterset import parameterset #@UnresolvedImport
-from lofarpipe.support.group_data import store_data_map
+import lofarpipe.support.lofaringredient as ingredient
 
 class imager_pipeline(control):
     """
-    Description
+    Description 
     """
+    inputs = {
+        'input_mapfile': ingredient.FileField(
+            '--input_mapfile',
+            help="bwaaaaa"
+        )
+    }
 
     def __init__(self):
         control.__init__(self)
@@ -17,7 +24,7 @@ class imager_pipeline(control):
 
 
     def usage(self):
-        print >> sys.stderr, "Usage: %s [options] <parset-file>" % sys.argv[0]
+        print >> sys.stderr, "Usage: %s <parset-file>  [options]" % sys.argv[0]
         return 1
 
 
@@ -45,72 +52,98 @@ class imager_pipeline(control):
         Define the individual tasks that comprise the current pipeline.
         This method will be invoked by the base-class's `go()` method.
         """
-#
-#        # Create a parameter-subset containing only python-control stuff.
-#        py_parset = self.parset.makeSubset(
-#            'ObsSW.Observation.ObservationControl.PythonControl.')
-#
-#        # Generate a datamap-file, which is a parset-file containing
-#        # key/value pairs of hostname and list of MS-files.
-#        data_mapfile = self.run_task(
-#            "cep2_datamapper",
-#            observation_dir=py_parset.getString('observationDirectory')
-##            parset=self.inputs['args'][0]
-#        )['mapfile']
-#
-#        # Create an empty parmdb for DPPP
-#        parmdb_mapfile = self.run_task("parmdb", data_mapfile)['mapfile']
-#
-#        # Create a sourcedb based on sourcedb's input argument "skymodel"
-#        sourcedb_mapfile = self.run_task("sourcedb", data_mapfile)['mapfile']
-#
-#        # Produce a GVDS file describing the data on the compute nodes.
-#        gvds_file = self.run_task("vdsmaker", data_mapfile)['gvds']
-#
-#        # Read metadata (start, end times, pointing direction) from GVDS.
-#        vdsinfo = self.run_task("vdsreader", gvds=gvds_file)
-#
-#        # Create a parameter-subset for DPPP and write it to file.
-#        ndppp_parset = os.path.join(
-#            self.config.get("layout", "job_directory"),
-#            "parsets", "NDPPP.parset")
-#        py_parset.makeSubset('DPPP.').writeFile(ndppp_parset)
-#
-#        # Run the Default Pre-Processing Pipeline (DPPP);
-#        dppp_mapfile = self.run_task(
-#            "ndppp", data_mapfile,
-#            data_start_time=vdsinfo['start_time'],
-#            data_end_time=vdsinfo['end_time'],
-#            parset=ndppp_parset
-#        )['mapfile']
-#
-#        # Demix the relevant A-team sources
-#        demix_mapfile = self.run_task("demixing", dppp_mapfile)['mapfile']
-#
-#        # Create a parameter-subset for BBS and write it to file.
-#        bbs_parset = os.path.join(
-#            self.config.get("layout", "job_directory"),
-#            "parsets", "BBS.parset")
-#        py_parset.makeSubset('BBS.').writeFile(bbs_parset)
-#
-#        # Run BBS to calibrate the calibrator source(s).
-#        self.run_task(
-#            "new_bbs", demix_mapfile,
-#            parset=bbs_parset,
-#            instrument_mapfile=parmdb_mapfile,
-#            sky_mapfile=sourcedb_mapfile)
-#
-#        # Create a mapfile containing the locations of the output instrument
-#        # model files. This is a bit hacky. I will have to clean this up a bit.
-#        instrument_mapfile = os.path.join(
-#            self.config.get("layout", "job_directory"),
-#            "parsets", "instrument_mapfile_final")
-#        instrument_map = self._get_filemap(
-#            "ObsSW.Observation.DataProducts.Output_InstrumentModel.")
-#        store_data_map(instrument_mapfile, instrument_map)
-#
-#        # Export the calibration solutions using parmexportcal
-#        self.run_task("parmexportcal", parmdb_mapfile)
+        
+        #Get parameters prepare imager from the parset and inputs
+        raw_ms_mapfile = self.inputs['input_mapfile']
+        
+        prepare_imager_parset = self.parset.makeSubset("prepare_imager.")
+        ndppp = prepare_imager_parset.getString("ndppp")
+        initscript = prepare_imager_parset.getString("initscript")      
+        working_directory = self.config.get("DEFAULT", "default_working_directory") #.#get("working_directory","error")
+        output_mapfile = prepare_imager_parset.getString("output_mapfile")
+        slices_per_image = prepare_imager_parset.getInt("slices_per_image")
+        subbands_per_image = prepare_imager_parset.getInt("subbands_per_image")
+        mapfile = prepare_imager_parset.getString("mapfile")
+
+        #write subset of parameters to file
+        prepare_imager_parset_file = \
+            self._write_parset_to_file(prepare_imager_parset, "prepare_imager")
+
+        #run the prepare imager
+        prepare_imager_output_mapfile = None
+        skip_prepare = False
+        if skip_prepare:
+            prepare_imager_output_mapfile = "/home/klijn/build/preparation/actual_output.map"
+        else:
+            prepare_imager_output_mapfile = \
+                    self.run_task("prepare_imager", raw_ms_mapfile,
+                        ndppp = ndppp,
+                        initscript = initscript,
+                        parset = prepare_imager_parset_file,
+                        working_directory = working_directory,
+                        output_mapfile = output_mapfile,
+                        slices_per_image = slices_per_image,
+                        subbands_per_image = subbands_per_image,
+                        mapfile = mapfile)['mapfile']
+        
+        #Get parameters awimager from the parset and inputs        
+        awimager_parset = self.parset.makeSubset("awimager.")
+        executable = awimager_parset.getString("executable")
+        
+        awimager_parset = \
+            self._write_parset_to_file(awimager_parset, "awimager")
+            
+        #run the awimager recipe
+        awimager_output_mapfile = \
+            self.run_task("awimager", prepare_imager_output_mapfile,
+                          parset = awimager_parset,
+                          executable = executable)
+
+        return 0
+
+    def _create_dir(self,path):
+        """
+        Create the directory suplied in path. Continues if directory exist
+        Creates parent directory of this does not exsist
+        throw original exception in other error cases
+        """
+        print path
+        try:
+            os.mkdir(path)
+        except OSError as exc:
+            if exc.errno == errno.EEXIST:    #if dir exists continue
+                pass
+            elif exc.errno == errno.ENOENT:  #if parent dir does not excist
+                raise  #TODO
+#                #check if parent of parent dir exsist
+#                parant_parent = os.path.split(os.path.split(path))
+#                if os.path.exists(parant_parent):
+#                    self._create_dir(os.path.split(path))
+#                else: 
+#                    raise                
+        else:  
+            raise  
+
+            
+    def _write_parset_to_file(self,parset, parset_name):
+        """
+        Write the suplied the suplied parameterset to the parameter set 
+        directory in the jibs dir with the filename suplied in parset_name.
+        Return the full path to the created file.
+        
+        """
+        # todo make a subset parset and supply to the prepareimager        
+        parset_dir = os.path.join(
+            self.config.get("layout", "job_directory"), "parsets")
+        #create the parset dir if it does not exist
+        self._create_dir(parset_dir)
+        
+        #write the content to a new parset file
+        prepare_imager_parset_file = os.path.join(parset_dir,
+                         "{0}.parset".format(parset_name))
+        parset.writeFile(prepare_imager_parset_file)
+        
+        return prepare_imager_parset_file
 
 if __name__ == '__main__':
     sys.exit(imager_pipeline().main())

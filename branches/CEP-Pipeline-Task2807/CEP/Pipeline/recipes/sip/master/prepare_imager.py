@@ -89,12 +89,13 @@ class prepare_imager(BaseRecipe, RemoteCommandRecipeMixIn):
         """
         self.logger.info("Starting prepare_imager run")     
         super(prepare_imager, self).go()
-              
+        self.outputs['mapfile'] = self.inputs['mapfile']
+        #return 0
         # *********************************************************************
         # Load inputs, validate
         # *********************************************************************        
         # load mapfiles
-        input_map, output_map = self._load_input_output_map()
+        input_map, output_map = self._load_map_files()
        
         # Environment variables
         slices_per_image = self.inputs['slices_per_image']
@@ -102,7 +103,6 @@ class prepare_imager(BaseRecipe, RemoteCommandRecipeMixIn):
         init_script = self.inputs['initscript']
         parset = self.inputs['parset']
         working_directory = self.inputs['working_directory']
-        job_name = self.inputs['job_name']
         ndppp_path = self.inputs['ndppp']
         mapfile = self.inputs['mapfile']
         # Validate inputs:
@@ -131,8 +131,8 @@ class prepare_imager(BaseRecipe, RemoteCommandRecipeMixIn):
             outnames[host].append(output_measurement_set)
             
             
-            arguments=[init_script, parset, os.path.join(working_directory,
-                            job_name),ndppp_path, output_measurement_set,
+            arguments=[init_script, parset, working_directory,
+                        ndppp_path, output_measurement_set,
                         slices_per_image, subbands_per_image,
                         repr(input_map_for_subband)]      
             # TODO: The size of input_map_for_subband could surpass the command line
@@ -160,13 +160,15 @@ class prepare_imager(BaseRecipe, RemoteCommandRecipeMixIn):
                     self.logger.warn("Failed run on {0}. NOT Created: {1} ".format(
                         host, output_measurement_set))
             
-            fp.write(repr(new_output_mapfile))               
-            
+            fp.write(repr(new_output_mapfile))
+                          
         else:
-            #Copy output map  input mapfile and return
+            #Copy output map from input mapfile and return
             fp.write(repr(output_map))
-        
+                  
         fp.close()
+        self.logger.info("debug: end of master script")
+        self.outputs['mapfile'] = self.inputs['mapfile']
         return 0
 
 
@@ -194,7 +196,7 @@ class prepare_imager(BaseRecipe, RemoteCommandRecipeMixIn):
         return inputs_for_image  
 
     
-    def _load_input_output_map(self):
+    def _load_map_files(self):
         """
         Load datafiles containing node --> dataset pairs
         The input mapfile is structured each line contains:

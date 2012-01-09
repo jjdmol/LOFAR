@@ -30,40 +30,39 @@ import pyrap.tables as pt #@UnresolvedImport
 class prepare_imager(LOFARnodeTCP):
     def run(self, init_script, parset, working_dir, ndppp, output_measurement_set,
             slices_per_image, subbands_per_image, input_map_repr):
-        self.outputs["completed"] = "true"
-        return 0 #TODO!!!         
+  
         log4CPlusName = "prepare_imager_node" 
         group_dir = "group_sets"
-        sets_dir = "working_sets"        
+        collected_ms_dir = "collected_ms"    
         self._create_dir(working_dir)  #TODO: Moet mischien nog worden verwijderd
-         
+
         with log_time(self.logger):          
             # Load the input file names
             self.logger.info("Loading input map from {0}".format(
                 os.path.join(working_dir, "node_input.map")))
             
             input_map = eval(input_map_repr)
-            self.logger.info(input_map)
+##            self.logger.info(input_map)
+#      
+#           missing_files = self._copy_input_files(working_dir, collected_ms_dir,
+#                                                   input_map) 
       
-            missing_files = self._copy_input_files(working_dir, sets_dir,
-                                                   input_map) 
-                   
-#            # ********************* temp solution for quick debugging
-#            missing_files = []  
-#            skip_copy = True
-#            temp_missing = os.path.join(working_dir, "temp_missing" )
-#            if not skip_copy:
-#                #Collect all files and copy to current node
-#                missing_files = self._copy_input_files(working_dir, sets_dir,
-#                                                   input_map)                 
-#                                   
-#                #Temp solution for the missing files
-#                temp_missing = os.path.join(working_dir, "temp_missing" )
-#                fp = open(temp_missing, 'w')
-#                fp.write(repr(missing_files))
-#            else:
-#                missing_files = eval(open(temp_missing).read())
-#            # ********************* temp solution for quick debugging
+            # ********************* temp solution for quick debugging
+            missing_files = []  
+            skip_copy = False
+            temp_missing = os.path.join(working_dir, "temp_missing" )
+            if not skip_copy:
+                #Collect all files and copy to current node
+                missing_files = self._copy_input_files(working_dir, collected_ms_dir,
+                                                   input_map)                 
+                                   
+                #Temp solution for the missing files
+                temp_missing = os.path.join(working_dir, "temp_missing" )
+                fp = open(temp_missing, 'w')
+                fp.write(repr(missing_files))
+            else:
+                missing_files = eval(open(temp_missing).read())
+            # ********************* temp solution for quick debugging
             
             if len(missing_files):
                 self.logger.info(repr(missing_files))
@@ -71,32 +70,41 @@ class prepare_imager(LOFARnodeTCP):
             #run dppp
             group_measurements_collected = \
                 self._run_dppp( working_dir, group_dir, slices_per_image,
-                    input_map, subbands_per_image, missing_files, sets_dir, 
+                    input_map, subbands_per_image, missing_files, collected_ms_dir, 
                     parset, ndppp, init_script, log4CPlusName)
-
-                         
+            
             # Perform the concat of the timeslices
             self._concat_timeslices(group_measurements_collected, 
                                     output_measurement_set)       
-    
+
         # TODO: clean up of temporary files??
         # The subgroup ms cannot be removed: they are collected in the final 
         # concat set. The raw data is copied and good candidate
-        
+        self.outputs["completed"] = "true"      
         return 0
     
     def _create_dir(self,path):
         """
         Create the directory suplied in path. Continues if directory exist
+        Creates parent directory of this does not exsist
         throw original exception in other error cases
         """
         try:
             os.mkdir(path)
         except OSError as exc:
-            if exc.errno == errno.EEXIST: #if dir exists continue  
+            if exc.errno == errno.EEXIST:    #if dir exists continue 
                 pass
-            else:
-                raise
+            elif exc.errno == errno.ENOENT:  #if parent dir does not excist
+                parent_path = os.path.split(path)[0]
+                parent_parent_path = os.path.split(parent_path)[0]
+                #check if parent of parent dir exsist
+                if os.path.exists(parent_parent_path):
+                    os.mkdir(parent_path)
+                    os.mkdir(path)
+                else: 
+                    raise                
+        except:  
+            raise
 
     def _copy_input_files(self, working_dir, sets_dir, input_map):
         """
@@ -140,8 +148,11 @@ class prepare_imager(LOFARnodeTCP):
         group_measurement_directory = os.path.join(working_dir, group_dir)
         group_measurements_collected = []
         self._create_dir(group_measurement_directory)
+        
+
         # assure empty dir
-        os.system("rm -r {0}/*".format(group_measurement_directory))
+        
+        os.system("rm -rf {0}/*".format(group_measurement_directory))
                 
         for idx_time_slice in range(slices_per_image):
             #collect the subband for this timeslice in a single list
@@ -154,28 +165,30 @@ class prepare_imager(LOFARnodeTCP):
                                           list(zip(*input_map_subgroup)[1]))
 
             #Remove the missing files
-            input_subgroups = filter(lambda x: not(x in missing_files),
-                                      input_subgroups)
+            #input_subgroups = filter(lambda x: not(x in missing_files),
+            #                          input_subgroups)
                
             #join with the group_measurement_directory
             # TODO: Fixme the write of the ms is a layer to deep!! The current
             # input location is incorrect after fix of the input file fix this 
             # Remove addition x: due to incorrect path structure of source files
-            input_path = map(lambda x: os.path.join(working_dir,
+        
+           
+            ndppp_input_ms = map(lambda x: os.path.join(working_dir,
                          sets_dir, x, x), input_subgroups)
                 
-            group_ms_name = "time_slice_{0}.dppp.ms".format(idx_time_slice)
+            output_ms_name = "time_slice_{0}.dppp.ms".format(idx_time_slice)
             group_measurements_collected.append(
-                os.path.join(working_dir, group_dir, group_ms_name))
-                
+                os.path.join(working_dir, group_dir, output_ms_name))
+
             # create the directory to save group measurement set for this 
             # group
             group_ms_path = os.path.join(group_measurement_directory,
-                                         group_ms_name)
-                
+                                         output_ms_name)
+            
             # Update the parset with calculated parameters
             patchDictionary = {'uselogger': 'True', # enables log4cplus
-                               'msin': repr(input_path),  
+                               'msin': repr(ndppp_input_ms),  
                                'msout':group_ms_path
                                }               
             temp_parset_filename = None                     
@@ -194,15 +207,14 @@ class prepare_imager(LOFARnodeTCP):
                                     os.path.basename(ndppp)) as logger:                      
                         catch_segfaults(cmd, working_dir, environment,
                                         logger, cleanup=None)
+
             except CalledProcessError, e:
-                self.logger.error(str(e))
                 return 1
             except Exception, e:
-                self.logger.error(str(e))
                 return 1
             finally:
                 os.unlink(temp_parset_filename)
-        
+            
         return group_measurements_collected
 
     def _concat_timeslices(self, group_measurements_collected, 
@@ -213,14 +225,20 @@ class prepare_imager(LOFARnodeTCP):
         # *************************************************************
         # TODO: Currently the concat does not work wait for fix ger
         # The next line should be the target copde
-        pt.msconcat(group_measurements_collected, 
-                                output_file_path, concatTime=True)
+
                    self.logger.info("pyrap test !!1")
         # Temp Fix:                      
         """         
+#        self.logger.info("***************1234****************")
+#        self.logger.info(group_measurements_collected)
+#        self.logger.info("debug0: {0}".format(output_file_path))
+
+#        pt.msconcat(group_measurements_collected, 
+#                                output_file_path, concatTime=True)
         tn = pt.table(group_measurements_collected)            
         tn.rename(output_file_path) 
         tn.close()    
+        
                  
 
 if __name__ == "__main__":
