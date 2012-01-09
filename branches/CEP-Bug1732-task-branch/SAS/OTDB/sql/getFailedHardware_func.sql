@@ -23,7 +23,7 @@
 --
 
 --
--- getBrokenHardware ([timestamp])
+-- getFailedHardware ([timestamp], [timestamp])
 -- 
 -- Get a list KVTs from the pic of hardware that was 'broken' on the given date.
 --

@@ -117,6 +117,8 @@ bool failedAntennaElementExists(const Table &failedElementsTable,
 // SAS functions
 map<string, ptime> getBrokenHardwareMap(OTDBconnection &conn,
                                         const MVEpoch &timestamp=0);
+map<string, ptime> getFailedHardwareMap( OTDBconnection &conn,
+                                         const MVEpoch &timestamp);                                        
 RCUmap getBrokenRCUs(const map<string, ptime> &brokenHardware);
 void extractRCUs(RCUmap &brokenRCUs, 
                  const map<string, ptime> &brokenHardware, 
@@ -817,9 +819,9 @@ map<string, ptime> getBrokenHardwareMap( OTDBconnection &conn,
   }
   else
   {
-//    valueList = tv.getBrokenHardware((time_from_string(fromCasaTime(timestamp))));
-    valueList = tv.getFailedHardware( time_from_string("2011-Mar-04 11:08:27"), 
-                                        time_from_string("2011-Mar-04 12:08:27"));
+//    valueList = tv.getBrokenHardware(fromCasaTime(timestamp));
+   valueList = tv.getFailedHardware( time_from_string("2011-Mar-04 11:08:27"), 
+                                     time_from_string("2011-Mar-04 12:08:27"));
   }
 
   for(unsigned int i=0; i < valueList.size(); i++)
@@ -828,6 +830,58 @@ map<string, ptime> getBrokenHardwareMap( OTDBconnection &conn,
   }
   
   return brokenHardware;
+}
+
+/*!
+  \brief  Get hardware that failed during time interval between timeStart and timeEnd
+          including timestamp of time of failure
+  \param connection       OTDB connection to SAS
+  \param timeStart        timestamp to check for broken hardware at
+  \param timeEnd          timestamp to check for broken hardware at
+  \return failedHardware  map of failed hardware with timestamp of failure
+*/
+map<string, ptime> getFailedHardwareMap( OTDBconnection &conn,
+                                         const MVEpoch &timestamp)
+{
+  TreeTypeConv TTconv(&conn);     // TreeType converter object
+  ClassifConv CTconv(&conn);      // converter I don't know
+  vector<OTDBvalue> valueList;    // OTDB value list for the previous month
+  
+  map<string, ptime> failedHardware;  // map of name and time of the broken hardware (all)
+  
+  // Get list of all broken hardware from SAS for timestamp
+  LOG_INFO("Searching for a Hardware tree");
+  vector<OTDBtree>    treeList = conn.getTreeList(TTconv.get("hardware"), CTconv.get("operational"));
+  showTreeList(treeList);
+  ASSERTSTR(treeList.size(),"No hardware tree found, run tPICtree first");
+  
+  treeIDType  treeID = treeList[treeList.size()-1].treeID();
+  LOG_INFO_STR ("Using tree " << treeID << " for the tests");
+  OTDBtree    treeInfo = conn.getTreeInfo(treeID);
+  LOG_INFO_STR(treeInfo);
+  
+  LOG_INFO("Trying to construct a TreeValue object");
+  TreeValue   tv(&conn, treeID);
+
+  LOG_INFO_STR("Getting broken hardware at " << timestamp);
+
+  // Query SAS for broken hardware
+  if(timestamp==0)
+  {
+     valueList = tv.getBrokenHardware();
+  }
+  else
+  {
+   valueList = tv.getFailedHardware( time_from_string("2011-Mar-04 11:08:27"), 
+                                     time_from_string("2011-Mar-04 12:08:27"));
+  }
+
+  for(unsigned int i=0; i < valueList.size(); i++)
+  {
+    failedHardware.insert(make_pair(valueList[i].name, valueList[i].time));
+  }
+  
+  return failedHardware;
 }
 
 /*

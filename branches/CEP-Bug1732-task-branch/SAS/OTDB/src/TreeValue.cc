@@ -323,7 +323,7 @@ vector<OTDBvalue> TreeValue::getFailedHardware(const ptime&	startTime, const pti
   // construct a query that calls a stored procedure.
   work	xAction(*(itsConn->getConn()), "getBrokenHardware");
   try {
-      string	query("SELECT * from getFailedHardware('" + to_simple_string(startTime) + "," + to_simple_string(endTime) + "')");
+      string	query("SELECT * from getFailedHardware('" + to_simple_string(startTime) + "','" + to_simple_string(endTime) + "')");
       result res = xAction.exec(query);
       // check result
       result::size_type	nrRecords = res.size();
