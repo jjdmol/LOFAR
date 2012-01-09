@@ -31,33 +31,43 @@
 
 class SIROperatorTest : public UnitTest {
 	public:
-		SIROperatorTest() : UnitTest("Scale invariant dilation")
+		SIROperatorTest() : UnitTest("Scale-invariant rank operator")
 		{
-			AddTest(TestSingleDilation(), "Single dilation");
-			AddTest(TestDilationSpeed(), "Dilation speed");
-			AddTest(TestTimeDilation(), "Time dilation");
-			AddTest(TestFrequencyDilation(), "Frequency dilation");
-			AddTest(TestTimeDilationSpeed(), "Time dilation speed");
+			AddTest(TestThreePassAlgorithm(), "Three pass algorithm");
+			//AddTest(TestTwoPassAlgorithm(), "Two pass algorithm");
+			AddTest(TestSpeed(), "SIR operator speed");
+			AddTest(TestTimeApplication(), "Time application");
+			AddTest(TestFrequencyApplication(), "Frequency application");
+			AddTest(TestTimeApplicationSpeed(), "Time application speed");
 		}
 		
 	private:
-		struct TestSingleDilation : public Asserter
+		struct TestSingleApplication : public Asserter
+		{
+			template<typename Functor>
+			inline void TestImplementation(Functor operate);
+		};
+		struct TestThreePassAlgorithm : public TestSingleApplication
 		{
 			void operator()();
 		};
-		struct TestDilationSpeed : public Asserter
+		struct TestTwoPassAlgorithm : public TestSingleApplication
 		{
 			void operator()();
 		};
-		struct TestTimeDilation : public Asserter
+		struct TestSpeed : public Asserter
 		{
 			void operator()();
 		};
-		struct TestFrequencyDilation : public Asserter
+		struct TestTimeApplication : public Asserter
 		{
 			void operator()();
 		};
-		struct TestTimeDilationSpeed : public Asserter
+		struct TestFrequencyApplication : public Asserter
+		{
+			void operator()();
+		};
+		struct TestTimeApplicationSpeed : public Asserter
 		{
 			void operator()();
 		};
@@ -110,92 +120,103 @@ class SIROperatorTest : public UnitTest {
 
 };
 
-inline void SIROperatorTest::TestSingleDilation::operator()()
+inline void SIROperatorTest::TestThreePassAlgorithm::operator()()
+{
+	TestImplementation(SIROperator::Operate);
+}
+
+inline void SIROperatorTest::TestTwoPassAlgorithm::operator()()
+{
+	TestImplementation(SIROperator::Operate2PassAlgorithm);
+}
+
+template<typename Functor>
+inline void SIROperatorTest::TestSingleApplication::TestImplementation(Functor operate)
 {
 	bool *flags = new bool[40];
 	setFlags(flags, "     x    ");
 	
-	SIROperator::Operate(flags, 10, 0.0);
+	operate(flags, 10, 0.0);
 	AssertEquals(flagsToString(flags, 10), "     x    ", "Eta=0.0, single center flagged, no enlarge");
 	
-	SIROperator::Operate(flags, 10, 0.4);
+	operate(flags, 10, 0.4);
 	AssertEquals(flagsToString(flags, 10), "     x    ", "Eta=0.4, single center flagged");
 	
-	SIROperator::Operate(flags, 10, 0.5);
+	operate(flags, 10, 0.5);
 	AssertEquals(flagsToString(flags, 10), "    xxx   ", "Eta=0.5, from one to three samples");
 
-	SIROperator::Operate(flags, 10, 0.0);
-	AssertEquals(flagsToString(flags, 10), "    xxx   ");
+	operate(flags, 10, 0.0);
+	AssertEquals(flagsToString(flags, 10), "    xxx   ", "Eta=0.0, three samples flagged");
 	
-	SIROperator::Operate(flags, 10, 0.25);
+	operate(flags, 10, 0.25);
 	AssertEquals(flagsToString(flags, 10), "   xxxxx  ");
 
-	SIROperator::Operate(flags, 10, 0.16);
+	operate(flags, 10, 0.16);
 	AssertEquals(flagsToString(flags, 10), "   xxxxx  ");
 
-	SIROperator::Operate(flags, 10, 0.17);
+	operate(flags, 10, 0.17);
 	AssertEquals(flagsToString(flags, 10), "  xxxxxxx ");
 
-	SIROperator::Operate(flags, 10, 1.0);
+	operate(flags, 10, 1.0);
 	AssertEquals(flagsToString(flags, 10), "xxxxxxxxxx");
 	
 	setFlags(flags, "xx xx     ");
 
-	SIROperator::Operate(flags, 10, 0.0);
+	operate(flags, 10, 0.0);
 	AssertEquals(flagsToString(flags, 10), "xx xx     ");
 
-	SIROperator::Operate(flags, 10, 0.19);
-	AssertEquals(flagsToString(flags, 10), "xx xx     ", "Did not fill hole");
+	operate(flags, 10, 0.19);
+	AssertEquals(flagsToString(flags, 10), "xx xx     ", "Did not fill hole (eta=0.19)");
 
 	setFlags(flags, "xx xx     ");
-	SIROperator::Operate(flags, 10, 0.2);
-	AssertEquals(flagsToString(flags, 10), "xxxxx     ", "Fills hole");
+	operate(flags, 10, 0.2);
+	AssertEquals(flagsToString(flags, 10), "xxxxx     ", "Fills hole (eta=0.2)");
 	
 	setFlags(flags, "x         ");
-	SIROperator::Operate(flags, 10, 0.5);
+	operate(flags, 10, 0.5);
 	AssertEquals(flagsToString(flags, 10), "xx        ", "Left border, isolated");
-	SIROperator::Operate(flags, 10, 0.4);
+	operate(flags, 10, 0.4);
 	AssertEquals(flagsToString(flags, 10), "xxx       ", "Left border, combined");
 	
 	setFlags(flags, "         x");
-	SIROperator::Operate(flags, 10, 0.5);
+	operate(flags, 10, 0.5);
 	AssertEquals(flagsToString(flags, 10), "        xx", "Right border, isolated");
-	SIROperator::Operate(flags, 10, 0.4);
+	operate(flags, 10, 0.4);
 	AssertEquals(flagsToString(flags, 10), "       xxx", "Right border, combined");
 	
 	setFlags(flags, " x        ");
-	SIROperator::Operate(flags, 10, 0.4);
+	operate(flags, 10, 0.4);
 	AssertEquals(flagsToString(flags, 10), " x        ", "Left border empty");
 	
 	setFlags(flags, "        x ");
-	SIROperator::Operate(flags, 10, 0.4);
+	operate(flags, 10, 0.4);
 	AssertEquals(flagsToString(flags, 10), "        x ", "Right border empty");
 	
 	//               0    5    0    5    0    5    0    5    
 	setFlags(flags, "     xxxxxx xx xx x x xxx xxxxx         ");
-	SIROperator::Operate(flags, 40, 0.2);
+	operate(flags, 40, 0.2);
 	AssertEquals(flagsToString(flags, 40), "    xxxxxxxxxxxxx x xxxxxxxxxxxx        ", "Input: '     xxxxxx xx xx x x xxx xxxxx         '");
 
 	setFlags(flags, "     xxxxxx xx xx x x xxx xxxxx         ");
-	SIROperator::Operate(flags, 40, 0.3);
+	operate(flags, 40, 0.3);
 	AssertEquals(flagsToString(flags, 40), "   xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx       ", "Input: '     xxxxxx xx xx x x xxx xxxxx         '");
 
 	setFlags(flags, "     xxxxxx xx xx x x xxx xxxxx         ");
-	SIROperator::Operate(flags, 40, 0.4);
+	operate(flags, 40, 0.4);
 	AssertEquals(flagsToString(flags, 40), "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx  ");
 
 	setFlags(flags, "xxxxxxxxxxxxxxx       xxxxxxxxxxxxxxxxxx");
-	SIROperator::Operate(flags, 40, 0.3);
+	operate(flags, 40, 0.3);
 	AssertEquals(flagsToString(flags, 40), "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
 	
 	setFlags(flags, "      x   x  x xx xxx    ");
-	SIROperator::Operate(flags, 25, 0.5);
+	operate(flags, 25, 0.5);
 	AssertEquals(flagsToString(flags, 25), "     xxxxxxxxxxxxxxxxxxxx");
 	
 	delete[] flags;
 }
 
-inline void SIROperatorTest::TestDilationSpeed::operator()()
+inline void SIROperatorTest::TestSpeed::operator()()
 {
 	const unsigned flagsSize = 100000;
 	bool flags[flagsSize];
@@ -206,7 +227,7 @@ inline void SIROperatorTest::TestDilationSpeed::operator()()
 	SIROperator::Operate(flags, flagsSize, 0.1);
 }
 
-inline void SIROperatorTest::TestTimeDilation::operator()()
+inline void SIROperatorTest::TestTimeApplication::operator()()
 {
 	Mask2DPtr mask = Mask2D::CreateSetMaskPtr<false>(10, 1);
 	setMask(mask, "     x    ");
@@ -268,7 +289,7 @@ inline void SIROperatorTest::TestTimeDilation::operator()()
 	AssertEquals(maskToString(mask), "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
 }
 
-inline void SIROperatorTest::TestFrequencyDilation::operator()()
+inline void SIROperatorTest::TestFrequencyApplication::operator()()
 {
 	Mask2DPtr mask = Mask2D::CreateSetMaskPtr<false>(1, 10);
 	setMask(mask, "     x    ");
@@ -330,7 +351,7 @@ inline void SIROperatorTest::TestFrequencyDilation::operator()()
 	AssertEquals(maskToString(mask), "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
 }
 
-inline void SIROperatorTest::TestTimeDilationSpeed::operator()()
+inline void SIROperatorTest::TestTimeApplicationSpeed::operator()()
 {
 	const unsigned flagsSize = 10000;
 	const unsigned channels = 256;
