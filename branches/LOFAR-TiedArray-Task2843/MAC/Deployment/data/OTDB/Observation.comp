@@ -43,6 +43,9 @@ par  strategy                O    text   -      10    100    ''                 
 par  topologyID              I    text   -      10    100    ''                       - 'topology ID for identifying and structuring data products'
 par  KSPType                 O    ptext  -      10    0      'eor|cosmicrays|surveys|transients|magnetism|solar;surveys'          -   'Key science project'
 
+# piggyback
+par  tbbPiggybackAllowed     I    bool   -      10    100    false   -   'TBB piggybacking allowed for this observation'
+
 # clock related info
 par  clockMode               I    pnode  -      10    0      '<<Clock160|<<Clock200;<<Clock200'        - 'Mode in which clock is running'
 par  sampleClock             I    dbl    MHz    10    100    '>>Observation.clockMode.systemClock'       - 'SampleClock'
