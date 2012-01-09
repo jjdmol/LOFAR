@@ -79,6 +79,19 @@ void KVTLogger::log(const string& key, const string& value, double secsEpoch1970
 	itsKVTport->send(&logEvent);
 }
 
+void KVTLogger::log(const string& keyAndTime, const string& value)
+{
+	if (!itsLoggingEnabled) {
+		return;
+	}
+
+	KVTSendMsgEvent		logEvent;
+	logEvent.seqnr = ++itsSeqnr;
+	logEvent.key   = keyAndTime;
+	logEvent.value = value;
+	itsKVTport->send(&logEvent);
+}
+
 // -------------------- Internal routines --------------------
 
 //

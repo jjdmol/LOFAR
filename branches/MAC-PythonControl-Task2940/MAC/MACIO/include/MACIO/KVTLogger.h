@@ -56,6 +56,10 @@ public:
 
 	// log()
 	void log(const string& key, const string& value, double secsEpoch1970);
+	void log(const string& keyAndTime, const string& value);
+
+	// hasConnection()
+	bool hasConnection() { return (itsLoggingEnabled); }
 
 private:
 	KVTLogger();

@@ -1,6 +1,6 @@
-//#  PythonControl.cc: Implementation of the MAC Scheduler task
+//#  PythonControl.cc: Implementation of the PythonController task
 //#
-//#  Copyright (C) 2010
+//#  Copyright (C) 2010-2012
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -32,6 +32,8 @@
 #include <Common/SystemUtil.h>
 #include <ApplCommon/StationInfo.h>
 #include <MACIO/MACServiceInfo.h>
+#include <MACIO/KVTLogger.h>
+#include <MACIO/KVT_Protocol.ph>
 #include <GCF/TM/GCF_Protocols.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/RTDB/DP_Protocol.ph>
@@ -68,7 +70,9 @@ PythonControl::PythonControl(const string&	cntlrName) :
 	itsListener			(0),
 	itsPythonPort		(0),
 	itsState			(CTState::NOSTATE),
-	itsTreePrefix       ("")
+	itsFeedbackFile     (""),
+	itsFeedbackWaittime (1.0),
+	itsKVTLoggerHost    ("")
 //	itsStopTimerID      (0)
 {
 	LOG_TRACE_OBJ_STR (cntlrName << " construction");
@@ -77,8 +81,10 @@ PythonControl::PythonControl(const string&	cntlrName) :
 	LOG_DEBUG_STR("Reading parset file:" << LOFAR_SHARE_LOCATION << "/" << cntlrName);
 	globalParameterSet()->adoptFile(string(LOFAR_SHARE_LOCATION)+"/"+cntlrName);
 
-	// Readin some parameters from the ParameterSet.
-	itsTreePrefix = globalParameterSet()->getString("prefix");
+	// Readin some parameters from the conf-file.
+	itsFeedbackFile     = globalParameterSet()->getString("MetadataFeedbackFile", "");
+	itsFeedbackWaittime = globalParameterSet()->getFloat ("FeedbackWaittime", 1.0);
+	itsKVTLoggerHost    = globalParameterSet()->getString("KVTLoggerHost", "localhost");
 
 	// attach to parent control task
 	itsParentControl = ParentControl::instance();
@@ -92,6 +98,7 @@ PythonControl::PythonControl(const string&	cntlrName) :
 	// for debugging purposes
 	registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
 	registerProtocol (DP_PROTOCOL, 		   DP_PROTOCOL_STRINGS);
+	registerProtocol (KVT_PROTOCOL,		   KVT_PROTOCOL_STRINGS);
 }
 
 
@@ -236,7 +243,7 @@ GCFEvent::TResult PythonControl::initial_state(GCFEvent& event,
 		break;
 
 	case DP_CREATED: {
-		// NOTE: thsi function may be called DURING the construction of the PropertySet.
+		// NOTE: this function may be called DURING the construction of the PropertySet.
 		// Always exit this event in a way that GCF can end the construction.
 		DPCreatedEvent  dpEvent(event);
 		LOG_DEBUG_STR("Result of creating " << dpEvent.DPname << " = " << dpEvent.result);
@@ -581,6 +588,7 @@ GCFEvent::TResult PythonControl::operational_state(GCFEvent& event, GCFPortInter
 //
 // finishing_state(event, port)
 //
+// Pickup Metadata feedbackfile is any and pass it to SAS
 //
 GCFEvent::TResult PythonControl::finishing_state(GCFEvent& event, GCFPortInterface& port)
 {
@@ -596,11 +604,13 @@ GCFEvent::TResult PythonControl::finishing_state(GCFEvent& event, GCFPortInterfa
 		itsPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("finished"));
 		itsPropertySet->setValue(PN_FSM_ERROR, GCFPVString(""));
 #endif
-		itsTimerPort->setTimer(3.0);
+		// Give python environment time to construct the file
+		itsTimerPort->setTimer(itsFeedbackFile.empty() ? 3.0 : itsFeedbackWaittime);
 		break;
 	}
 
 	case F_TIMER:
+		_passMetadatToOTDB();
 		GCFScheduler::instance()->stop();
 		break;
 
@@ -615,6 +625,37 @@ GCFEvent::TResult PythonControl::finishing_state(GCFEvent& event, GCFPortInterfa
 	}
 
 	return (status);
+}
+
+//
+//		_passMetadatToOTDB();
+//
+void PythonControl::_passMetadatToOTDB()
+{
+	if (itsFeedbackFile.empty()) {
+		return;
+	}
+
+	// Try to setup the connection with the KVTlogger
+	string	moduleName(globalParameterSet()->getString("_moduleName", "PythonControl"));
+	int		obsID     (globalParameterSet()->getInt   ("_treeID", 0));
+	KVTLogger	myLogger(obsID, moduleName, itsKVTLoggerHost, true);
+	if (!myLogger.hasConnection()) {
+		LOG_FATAL_STR("No connection with KVTLogger at host '" << itsKVTLoggerHost << "'! Logging not possible!!!");
+		return;
+	}
+
+	ParameterSet	metadata;
+	metadata.adoptFile(itsFeedbackFile);
+
+	ParameterSet::iterator		iter = metadata.begin();
+	ParameterSet::iterator		end  = metadata.end();
+	while (iter != end) {
+		LOG_DEBUG_STR("Sending: " << iter->first << " = " << iter->second);
+		myLogger.log(iter->first, iter->second);
+		iter++;
+	}
+	LOG_INFO_STR(metadata.size() << " metadata values send to SAS");
 }
 
 }; // CEPCU
