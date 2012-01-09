@@ -36,14 +36,6 @@ class EqualsAsserter {
 		{
 		}
 		
-		void AssertEquals(bool actual, bool expected) const
-		{
-			if(!(actual == expected))
-			{
-				throwComparisonError(boolToString(actual), boolToString(expected), typeid(bool));
-			}
-		}
-		
 		template<typename T>
 		void AssertEquals(bool, T) const
 		{
@@ -62,14 +54,6 @@ class EqualsAsserter {
 				"AssertEquals(): Trying to compare a boolean with some other type is not allowed for safety "
 				"(second parameter to AssertEquals was a bool, first was " << typeid(T).name() << ")";
 			throw std::runtime_error(s.str());
-		}
-		
-		void AssertEquals(bool actual, bool expected, const std::string &description) const
-		{
-			if(!(actual == expected))
-			{
-				throwComparisonError(boolToString(actual), boolToString(expected), typeid(bool), description);
-			}
 		}
 		
 		template<typename T>
@@ -113,6 +97,16 @@ class EqualsAsserter {
 			{
 				throwComparisonError(std::string("'") + actual + "'", std::string("'") + expected + "'", typeid(const std::string &), description);
 			}
+		}
+		
+		void AssertEquals(const std::string &actual, const char *expected, const std::string &description) const
+		{
+			AssertEquals(actual, std::string(expected), description);
+		}
+		
+		void AssertEquals(const char *actual, const std::string &expected, const std::string &description) const
+		{
+			AssertEquals(std::string(actual), expected, description);
 		}
 		
 		template<typename T>
@@ -236,17 +230,33 @@ class EqualsAsserter {
 		{ AssertAlmostEqual((double) actual, (double) expected, description); }
 		
 		void AssertTrue(bool actual) const
-		{ AssertEquals(actual, true); }
+		{ assertEqualsBool(actual, true); }
 
 		void AssertTrue(bool actual, const std::string &description) const
-		{ AssertEquals(actual, true, description); }
+		{ assertEqualsBool(actual, true, description); }
 
 		void AssertFalse(bool actual) const
-		{ AssertEquals(actual, false); }
+		{ assertEqualsBool(actual, false); }
 
 		void AssertFalse(bool actual, const std::string &description) const
-		{ AssertEquals(actual, false, description); }
+		{ assertEqualsBool(actual, false, description); }
 	private:
+		void assertEqualsBool(bool actual, bool expected) const
+		{
+			if(!(actual == expected))
+			{
+				throwComparisonError(boolToString(actual), boolToString(expected), typeid(bool));
+			}
+		}
+		
+		void assertEqualsBool(bool actual, bool expected, const std::string &description) const
+		{
+			if(!(actual == expected))
+			{
+				throwComparisonError(boolToString(actual), boolToString(expected), typeid(bool), description);
+			}
+		}
+		
 		template <typename T>
 		void throwComparisonError(T actual, T expected, const std::type_info &type) const
 		{
