@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 #                                                         LOFAR IMAGING PIPELINE
 #
 #                                                     Calibrator Pipeline recipe
@@ -14,7 +15,7 @@ from lofarpipe.support.group_data import store_data_map
 from lofarpipe.support.utilities import create_directory
 from lofar.parameterset import parameterset
 
-class target_pipeline(control):
+class msss_target_pipeline(control):
     """
     The target pipeline can be used to calibrate the observation of a "target"
     source using an instrument database that was previously determined using
@@ -109,7 +110,7 @@ class target_pipeline(control):
             self.inputs['job_name'] = (
                 os.path.splitext(os.path.basename(parset_file))[0]
             )
-        super(target_pipeline, self).go()
+        super(msss_target_pipeline, self).go()
 
 
     def pipeline_logic(self):
@@ -211,4 +212,4 @@ class target_pipeline(control):
 
 
 if __name__ == '__main__':
-    sys.exit(target_pipeline().main())
+    sys.exit(msss_target_pipeline().main())

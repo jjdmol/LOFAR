@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 #                                                         LOFAR IMAGING PIPELINE
 #
 #                                                     Calibrator Pipeline recipe
@@ -15,7 +16,7 @@ from lofarpipe.support.utilities import create_directory
 from lofar.parameterset import parameterset
 
 
-class calibrator_pipeline(control):
+class msss_calibrator_pipeline(control):
     """
     The calibrator pipeline can be used to determine the instrument database
     (parmdb) from the observation of a known "calibrator" source.
@@ -92,7 +93,7 @@ class calibrator_pipeline(control):
                 os.path.splitext(os.path.basename(parset_file))[0]
             )
         # Call the base-class's `go()` method.
-        super(calibrator_pipeline, self).go()
+        super(msss_calibrator_pipeline, self).go()
 
 
     def pipeline_logic(self):
@@ -176,4 +177,4 @@ class calibrator_pipeline(control):
 
 
 if __name__ == '__main__':
-    sys.exit(calibrator_pipeline().main())
+    sys.exit(msss_calibrator_pipeline().main())
