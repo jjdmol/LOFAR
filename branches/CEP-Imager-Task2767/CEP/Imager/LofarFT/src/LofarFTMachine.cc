@@ -580,7 +580,7 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
 	if(abs(pixel)<minPB){minPB=abs(pixel);};
       }
     }
-    cout<<"lattice->shape()"<<" "<<lattice->shape()<<" "<<minPB<<" "<<maxPB<<endl;
+
     for(Int k=0;k<lattice->shape()[2];++k){
       ff=0.;
       cout<<"k="<<k<<endl;
