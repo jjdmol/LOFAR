@@ -77,7 +77,7 @@ void StatisticalFlagger::EnlargeFlags(Mask2DPtr mask, size_t timeSize, size_t fr
 void StatisticalFlagger::DilateFlagsHorizontally(Mask2DPtr mask, size_t timeSize)
 {
 	Mask2DPtr destination = Mask2D::CreateUnsetMaskPtr(mask->Width(), mask->Height());
-	if(2*timeSize > mask->Width()) timeSize = mask->Width()/2;
+	if(timeSize > mask->Width()) timeSize = mask->Width();
 	const int intSize = (int) timeSize;
 	
 	for(size_t y=0;y<mask->Height();++y)
@@ -118,7 +118,7 @@ void StatisticalFlagger::DilateFlagsHorizontally(Mask2DPtr mask, size_t timeSize
 void StatisticalFlagger::DilateFlagsVertically(Mask2DPtr mask, size_t frequencySize)
 {
 	Mask2DPtr destination = Mask2D::CreateUnsetMaskPtr(mask->Width(), mask->Height());
-	if(2*frequencySize > mask->Height()) frequencySize = mask->Height()/2;
+	if(frequencySize > mask->Height()) frequencySize = mask->Height();
 	const int intSize = (int) frequencySize;
 	
 	for(size_t x=0;x<mask->Width();++x)
@@ -142,7 +142,7 @@ void StatisticalFlagger::DilateFlagsVertically(Mask2DPtr mask, size_t frequencyS
 				destination->SetValue(x, y, false);
 			}
 		}
-		for(size_t y=mask->Height() - frequencySize;y<mask->Width();++y)
+		for(size_t y=mask->Height() - frequencySize;y<mask->Height();++y)
 		{
 			if(dist <= intSize)
 			{
