@@ -303,7 +303,9 @@ int main (int argc, char* argv[])
       writeBrokenHardwareFile(brokenfilename, brokenHardware);
       
       if(debug)
+      {
         showMap(brokenHardware);   // DEBUG     
+      }
 
       // Get hardware strings that was broken after observation
       brokenHardwareAfter=getBrokenHardwareMap(conn, endTime);          
@@ -314,13 +316,13 @@ int main (int argc, char* argv[])
 
       if(debug)
       {
-        cout << "failedHardware:" << endl;
+        LOG_DEBUG_STR("failedHardware:");
         showMap(failedHardware);    // DEBUG
       }
     }
 
     //---------------------------------------------------------------------
-    // Read broken hardware information from file: File mode
+    // Read broken hardware information from file: File mode (for debugging)
     //
     if(file)
     {
@@ -332,11 +334,13 @@ int main (int argc, char* argv[])
     
       failedHardware=getFailedHardware(brokenHardware, brokenHardwareAfter);
       if(debug)
+      {
         showMap(failedHardware);
-        
+      }
+      
       writeFailedElementsFile(failedfilename, failedHardware);  // write failed tiles to disk
 
-      cout << "Read failed tiles from file:" << endl;  // DEBUG
+      LOG_INFO_STR("Read failed tiles from file:");             // DEBUG
       failedHardware=readFailedElementsFile(failedfilename);    // DEBUG
       showMap(failedHardware);
     }
@@ -370,12 +374,11 @@ int main (int argc, char* argv[])
       LOG_INFO_STR("reading brokenHardware after from file:" << brokenfilename);
       brokenHardwareAfter=readBrokenHardwareFile(brokenAfterfilename);
       
-
       brokenRCUs=getBrokenRCUs(brokenHardware);   // get all broken RCUs into a RCUmap     
       vector<failedTile> brokenTiles=getBrokenTiles(ms, brokenRCUs); // Convert stations to antennaIds
       if(debug)
       {
-        cout << "Broken tiles:" << endl;
+        LOG_DEBUG_STR("Broken tiles:");
         showFailedTiles(brokenTiles);
       }
       updateAntennaFieldTable(ms, brokenTiles);
@@ -383,12 +386,13 @@ int main (int argc, char* argv[])
       //----------------------------------------------------------------------------
       // Get Tiles that failed during observation
       //
-      failedHardware=getFailedHardware(brokenHardware, brokenHardwareAfter);
+      //failedHardware=getFailedHardware(brokenHardware, brokenHardwareAfter);
+      failedHardware=readFailedElementsFile(failedfilename);
       vector<failedTile> failedTiles=getFailedTilesAntennaId(ms, failedHardware);
 
       if(debug)
       {
-        cout << "Failed tiles:" << endl;
+        LOG_DEBUG_STR("Failed tiles:");
         showFailedTiles(failedTiles);       
       }
       addFailedAntennaTiles(ms, failedTiles);
@@ -400,8 +404,7 @@ int main (int argc, char* argv[])
     return 1;
   }
   
-  LOG_INFO_STR ("Terminated succesfully: " << argv[0]);
-  
+  LOG_INFO_STR ("Terminated succesfully: " << argv[0]);  
   return 0;
 }
 
@@ -567,9 +570,9 @@ void updateElementFlags(Table &table, unsigned int antennaId, const vector<unsig
   
   if(debug) // if debugging is switched on, show information on flag updates
   {
-    cout << "updateELementFlags() antennaId = " << antennaId << endl;     // DEBUG
-    cout << "rcus: " << endl;                                             // DEBUG
-    showVector(rcus);                                                     // DEBUG
+    LOG_DEBUG_STR("updateELementFlags() antennaId = " << antennaId);     // DEBUG
+    LOG_DEBUG_STR("rcus: ");                                             // DEBUG
+    showVector(rcus);                                                    // DEBUG
   }
   for(unsigned int i=0; i<rcus.size(); i++)
   {
@@ -701,18 +704,28 @@ map<string, ptime> readBrokenHardwareFile(const string &filename)//, vector<stri
   {
     while(infile.good())
     {
+      unsigned int linenumber=0;      // keep a track of line numbers to report errors
+      linenumber++;
+      
       datetime="";
       infile >> name >> date >> time;
       datetime=date.append(" ").append(time);     // YYYY-MM-DD HH-MM-SS.ssss        
-      brokenHardware.insert(std::make_pair(name, time_from_string(datetime)));
-    }   
+      if(name.empty() || date.empty() || time.empty())
+      {
+        LOG_WARN_STR("readFailedElementsFile() line " << linenumber << " is corrupt. Skipping...");      
+        continue;
+      }
+      else
+      {
+        brokenHardware.insert(std::make_pair(name, time_from_string(datetime)));
+      }
+    } 
     infile.close();
   }
   else
   {
     THROW(Exception, "readFile(): Unable to open file" << filename << " for reading.");
   }
-  
   return brokenHardware;
 }
 
@@ -766,10 +779,21 @@ map<string, ptime> readFailedElementsFile(const string &filename)
   {
     while(infile.good())
     {
+      unsigned int linenumber=0;      // keep a track of line numbers to report errors
+      linenumber++;
+    
       string datetime="";
       infile >> name >> date >> time;
       datetime=date.append(" ").append(time);     // YYYY-MM-DD HH-MM-SS.ssss        
-      failedElements.insert(std::make_pair(name, time_from_string(datetime)));
+      if(name.empty() || date.empty() || date.empty())
+      {
+        LOG_WARN_STR("readFailedElementsFile() line " << linenumber << " is corrupt. Skipping...");      
+        continue;
+      }
+      else
+      {
+        failedElements.insert(std::make_pair(name, time_from_string(datetime)));      
+      }
     }
     infile.close();
   }
@@ -819,9 +843,9 @@ map<string, ptime> getBrokenHardwareMap( OTDBconnection &conn,
   }
   else
   {
-//    valueList = tv.getBrokenHardware(fromCasaTime(timestamp));
-   valueList = tv.getFailedHardware( time_from_string("2011-Mar-04 11:08:27"), 
-                                     time_from_string("2011-Mar-04 12:08:27"));
+    valueList = tv.getBrokenHardware(time_from_string(fromCasaTime(timestamp)));
+//   valueList = tv.getFailedHardware( time_from_string("2011-Mar-04 11:08:27"), 
+//                                     time_from_string("2011-Mar-04 12:08:27"));
   }
 
   for(unsigned int i=0; i < valueList.size(); i++)
@@ -1067,16 +1091,29 @@ vector<failedTile> getBrokenTiles(MeasurementSet &ms, const RCUmap &brokenRCUs)
   {
     String station=nameCol(antennaId).substr(0, 5);       // get station name part of nameCol
     
-    RCUmap::const_iterator rcuStation=brokenRCUs.find(station);
-    if(rcuStation != brokenRCUs.end())        // if that station in the map of broken RCUs
+    RCUmap::const_iterator rcuStationIt = brokenRCUs.find(station);
+    if(rcuStationIt != brokenRCUs.end())        // if that station in the map of broken RCUs
     {
-      failedTile newTile;                     // new tile struct
-      newTile.antennaId=antennaId;
-      for(unsigned int i=0; i<rcuStation->second.size(); i++)
+      // Check if we already have this antennaId
+      vector<failedTile>::iterator brokenTilesIt=std::find_if(brokenTiles.begin(),
+      brokenTiles.end(), boost::bind(&failedTile::antennaId, _1) == antennaId);
+      if(brokenTilesIt != brokenTiles.end())
       {
-        newTile.rcus.push_back(rcuStation->second[i]);
-      }      
-      brokenTiles.push_back(newTile);         // store it in vector of all brokenTiles
+        for(unsigned int i=0; i<rcuStationIt->second.size(); i++)
+        {
+          brokenTilesIt->rcus.push_back(rcuStationIt->second[i]);
+        }
+      }
+      else
+      {
+        failedTile newTile;                     // new tile struct
+        newTile.antennaId=antennaId;
+        for(unsigned int i=0; i<rcuStationIt->second.size(); i++)
+        {
+          newTile.rcus.push_back(rcuStationIt->second[i]);
+        }      
+        brokenTiles.push_back(newTile);         // store it in vector of all brokenTiles      
+      }
     }
   }
   return brokenTiles;
@@ -1091,9 +1128,9 @@ vector<failedTile> getBrokenTiles(MeasurementSet &ms, const RCUmap &brokenRCUs)
 void addFailedAntennaTiles( MeasurementSet &ms, 
                             const vector<failedTile> &failedTiles)
 {
+  Table antennaFieldTable(ms.rwKeywordSet().asTable("LOFAR_ANTENNA_FIELD"));
   Table failedElementsTable(ms.rwKeywordSet().asTable("LOFAR_ELEMENT_FAILURE"));
 
-  //TODO
   unsigned int length=failedTiles.size();
   if(length==0)     // if there are no failed tiles....
   {
@@ -1113,10 +1150,17 @@ void addFailedAntennaTiles( MeasurementSet &ms,
       for(unsigned int j=0; j<failedTiles[i].rcus.size(); j++)
       {
         MVEpoch timestamp = toCasaTime(failedTiles[i].timeStamps[j]).get();
-        doAddFailedAntennaTile( failedElementsTable, 
-                                failedTiles[i].antennaId,      
-                                failedTiles[i].rcus[j] / 2,
-                                timestamp);
+        unsigned int antennaId=failedTiles[i].antennaId;
+        unsigned int elementIndex=failedTiles[i].rcus[j] / 2;
+
+        if(elementInObservation(antennaFieldTable, antennaId, elementIndex) == true)
+        {
+            cout << "antennaId = " << antennaId << " is operational." << endl;    // DEBUG
+            doAddFailedAntennaTile( failedElementsTable, 
+                                    antennaId,      
+                                    elementIndex,
+                                    timestamp);
+        }
       }
     }
   }
@@ -1160,16 +1204,9 @@ void addFailedAntennaTiles( MeasurementSet &ms,
       
         // First check if the ELEMENT_FLAG is true, i.e. only if the RCU is used
         // in this observation mode
-//        if(failedElementInObservation(antennaFieldTable, failedElementsTable,
-//                                      antennaId, elementIndex) == true)
         if(elementInObservation(antennaFieldTable, antennaId, elementIndex) == true)
         {
-            cout << "antennaFieldId = " << antennaId << " is operational." << endl;    // DEBUG
-            return;   // we don't add it to the LOFAR_FAILED_ELEMENT table
-        }
-        else
-        {
-            cout << "antennaFieldId = " << antennaId << " is not operational." << endl;    // DEBUG        
+            cout << "antennaId = " << antennaId << " is operational." << endl;    // DEBUG
             MVEpoch timestamp=toCasaTime(failedTiles[i].timeStamps[j]).get();
             doAddFailedAntennaTile( failedElementsTable, 
                                     antennaId,      
