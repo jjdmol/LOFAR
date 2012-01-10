@@ -376,7 +376,7 @@ int main (Int argc, char** argv)
 		   "string");
     inputs.create ("operation", "image",
                    ///		   "Operation (empty,image,clark,hogbom,csclean,multiscale,entropy)",
-		   "Operation (empty,image,csclean)",
+		   "Operation (empty,image,csclean,predict)",
 		   "string");
     inputs.create ("niter", "1000",
 		   "Number of clean iterations",
