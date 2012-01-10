@@ -108,7 +108,7 @@ LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize,
                                const MeasurementSet& ms, Int nwPlanes,
                                MPosition mLocation, Float padding, Bool usezero,
                                Bool useDoublePrec, double wmax,
-			       const String& beamPath, Int verbose,
+                               Int verbose,
                                Int maxsupport, Int oversample,
                                const String& imgName,
                                const Matrix<bool>& gridMuellerMask,
@@ -119,7 +119,7 @@ LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize,
     maxAbsData(0.0), centerLoc(IPosition(4,0)),
     offsetLoc(IPosition(4,0)), usezero_p(usezero), noPadding_p(False),
     usePut2_p(False), machineName_p("LofarFTMachine"), itsMS(ms),
-    itsNWPlanes(nwPlanes), itsWMax(wmax), itsConvFunc(0), itsBeamPath(beamPath),
+    itsNWPlanes(nwPlanes), itsWMax(wmax), itsConvFunc(0),
     itsVerbose(verbose),
     itsMaxSupport(maxsupport), itsOversample(oversample), itsImgName(imgName),
     itsGridMuellerMask(gridMuellerMask),
@@ -268,7 +268,6 @@ LofarFTMachine& LofarFTMachine::operator=(const LofarFTMachine& other)
     itsSumPB.resize (itsNThread);
     itsSumCFWeight.resize (itsNThread);
     itsSumWeight.resize (itsNThread);
-    itsBeamPath = other.itsBeamPath;
     itsVerbose = other.itsVerbose;
     itsMaxSupport = other.itsMaxSupport;
     itsOversample = other.itsOversample;
@@ -375,8 +374,8 @@ void LofarFTMachine::init() {
   itsConvFunc = new LofarConvolutionFunction(padded_shape,
                                              image->coordinates().directionCoordinate (image->coordinates().findCoordinate(Coordinate::DIRECTION)),
                                              itsMS, itsNWPlanes, itsWMax,
-                                             itsOversample, itsBeamPath,
-					     itsVerbose, itsMaxSupport,
+                                             itsOversample,
+                                             itsVerbose, itsMaxSupport,
                                              itsImgName+String::toString(thisterm_p),
 					     its_Use_EJones,
 					     its_Apply_Element);
@@ -414,7 +413,7 @@ void LofarFTMachine::init() {
   itsDeltaTime=0.;
   itsNextApplyTime=0.;;
   itsCounterTimes=0;
-  
+
 }
 
 // This is nasty, we should use CountedPointers here.
@@ -537,8 +536,8 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
     // }
 
     //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    // Normalising clean components by the beam 
-    
+    // Normalising clean components by the beam
+
     // const Matrix<Float>& datai = getSpheroidCut();
     const Matrix<Float>& data = getAveragePB();
     //    cout<<"tmp.shape() "<<data.shape()<<"  "<<lattice->shape()<<endl;
@@ -549,7 +548,7 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
     pos2[2]=0.;
     pos2[3]=0.;
     Int offset_pad(floor(data.shape()[0]-lattice->shape()[0])/2.);
-    
+
     //    cout<<"LofarFTMachine::initializeToVis lattice->shape() == "<<lattice->shape()<<endl;
     String nameii(itsImgName+String::toString(thisterm_p) + ".spheroid_cut_im");
     ostringstream nameiii(nameii);
@@ -606,7 +605,7 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
 	  //   //if(data(pos2)>1e-6){fact/=sqrt(data(pos2));};//*datai(pos2);};
 	  //   pixel*=Complex(fact);
 	  // }
-	  
+
 	  if(!itsPredictFT){
 	    fact*=sqrt(maxPB)/sqrt(data(pos2));
 	  } else {
@@ -614,7 +613,7 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
 	    if(its_Apply_Element){fact/=spheroidCutElement(pos2);}
 	  }
 	  pixel*=Complex(fact);
-	  
+
 	  if((data(pos2)>(minPB))&&(abs(pixel)>0.)){
 	    lattice->putAt(pixel,pos);
 	  };
@@ -641,7 +640,7 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
     // 	  pos[2]=k;
     // 	  Complex pixel(lattice->getAt(pos));
     // 	  //cout<<"i,j,pixel value: "<<i<<" "<<j<<" "<<pixel<<endl;
-	  
+
     // 	};
     //   };
     // };
@@ -833,10 +832,10 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
   }
 
 
-  
-    
+
+
   //cout<<"... Gridding Spectral Window:    "<<vb.spectralWindow()<<", with Taylor Term: "<< thisterm_p<<endl;
-  
+
   uInt spw(vb.spectralWindow());
 
   //No point in reading data if it's not matching in frequency
@@ -988,7 +987,7 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
   itsConvFunc->computeAterm (time);
   CyrilTimer2Aterm.stop();
   double Taterm=CyrilTimer2Aterm.getReal();
-  
+
   uInt Nchannels = vb.nChannel();
 
   itsTotalTimer.start();
@@ -999,7 +998,7 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
 
   Bool all_done(false);
   Int doagain(0);
-  
+
   Int Max_Num_Threads(itsNThread);
   omp_set_num_threads(Max_Num_Threads);
 
@@ -1011,10 +1010,10 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
     PrecTimer CyrilTimer2gridconv;
     CyrilTimer2gridconv.start();
     //    CyrilTimer2conv.reset();
-    
+
   while(!all_done){
 
-#pragma omp parallel 
+#pragma omp parallel
   {
     // Thread-private variables.
     PrecTimer gridTimer;
@@ -1098,7 +1097,7 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
 	  visResamplers_p.lofarDataToGrid_linear
 	    (itsGriddedData[threadNum], vbs, blIndex, blStart[i],
 	     blEnd[i], itsSumWeight[threadNum], dopsf, cfStore);
-	  
+
 	};
 	  gridTimer.stop();
       }
@@ -1139,9 +1138,9 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
       doagain+=1;
       //omp_set_num_threads(int(omp_get_num_threads()/2.));
     };
-    
+
   }//end While loop
-  
+
   CyrilTimer2gridconv.stop();
   double Tgridconv=CyrilTimer2gridconv.getReal();
 
@@ -1239,7 +1238,7 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
   vbs.uvw_p.reference(uvw);
   //    vbs.imagingWeight.reference(elWeight);
   vbs.visCube_p.reference(data);
-  
+
   vbs.freq_p.reference(interpVisFreq_p);
   vbs.rowFlag_p.resize(0); vbs.rowFlag_p = vb.flagRow();
   if(!usezero_p)
@@ -1363,8 +1362,8 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
       itsDeltaTime=0.;
       itsTStartObs=1e12;
     }
-      
- 
+
+
   } else{
     itsGridToDegrid.reference(its_stacked_GriddedData);
   }
@@ -1378,12 +1377,12 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
   //logIO() <<"============================== De-Gridding data " << LogIO::POST;
   PrecTimer CyrilConv;
   PrecTimer CyrilGrid;
-  
+
 
   while(!all_done){
 
 
-    
+
 
 #pragma omp parallel
   {
@@ -1407,7 +1406,7 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
       }
       cfTimer.start();
       CyrilConv.start();
-      
+
       LofarCFStore cfStore =
         itsConvFunc->makeConvolutionFunction (ant1[ist], ant2[ist], time,
                                               0.5*(vbs.uvw()(2,ist) + vbs.uvw()(2,iend)),
@@ -1460,9 +1459,9 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
       cout<<"================================"<<endl;
       //omp_set_num_threads(int(omp_get_num_threads()/2.));
     };
-    
+
   }//end While loop
-  
+
   //cout<<"Element: "<<CyrilElement.getReal()<<", Conv: "<<CyrilConv.getReal()<<", Grid: "<<CyrilGrid.getReal()<<endl;;
 
 
@@ -1590,10 +1589,10 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
     // posi[2]=0.;
     // posi[3]=0.;
     // posi2[2]=0.;
-    // posi2[3]=0.;    
+    // posi2[3]=0.;
     // Int offset_pad(floor(data.shape()[0]-lattice->shape()[0])/2.);
 
-    
+
 
 
     // for(uInt k=0;k<lattice->shape()[2];++k){
@@ -1641,10 +1640,10 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
     	  pos[1]=j+istart;
     	  pos[2]=k;
     	  Complex pixel(lattice->getAt(pos));
-    	  
+
     	  pixel*=sqrt(maxPB)/sqrt(itsAvgPB(i+istart,j+istart));
-    	  
-    	  
+
+
 	  //if(itsAvgPB(pos)<1e-6*maxPB){pixel=0.;}
 	  if((sqrt(itsAvgPB(pos))/sphe(pos)<its_PBCut)||(itsAvgPB(pos)<2.*minPB)){pixel=0.;}
     	  lattice->putAt(pixel,pos);
@@ -1671,7 +1670,7 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
     //   	written=true;
     //   	store(tempimage,"Cube_dirty.img"+String::toString(count_cycle));
     //   	store(tempimagePB,"Cube_dirty.img"+String::toString(count_cycle)+".pb");
-	
+
     //   }
     //   else{
     //   	count_cycle++;
@@ -1948,7 +1947,7 @@ void LofarFTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
   if (useCorrected) vbs.correctedCube_p.reference(vb.correctedVisCube());
   else vbs.visCube_p.reference(vb.visCube());
   //  cout<<"BLA===="<<vb.visCube()<<"    "<<useCorrected<<endl;
-  
+
   //for(uInt i=0;i<vbs.nRow_p;++i){cout<<"ROW "<<i<<" "<<vb.antenna1()(i)<<" "<<vb.antenna2()(i)<<endl;};
 
   vbs.useCorrected_p = useCorrected;
@@ -1956,7 +1955,7 @@ void LofarFTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
 
   TimerResid.stop();
   //cout<<"Residuals: "<<TimerResid.getReal()<<endl;
-  
+
   //  vb.correctedVisCube()=0.;//vb.modelVisCube();
 }
 
@@ -2368,7 +2367,7 @@ void LofarFTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
     conjPolMap = cfPolMap;
 
     Int i,j,N = cfPolMap.nelements();
-    
+
     for(i=0;i<N;i++)
       if (cfPolMap[i] > -1)
 	{

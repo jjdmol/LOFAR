@@ -46,19 +46,19 @@ class LofarCubeSkyEquation : public SkyEquation {
 
  public:
   LofarCubeSkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft, ComponentFTMachine& cft, Bool noModelCol=False);
- 
+
   //Read only iterator...hence no scratch col
   LofarCubeSkyEquation(SkyModel& sm, ROVisibilityIterator& vi, FTMachine& ft, ComponentFTMachine& cft, Bool noModelCol=False);
 
   virtual ~LofarCubeSkyEquation();
   virtual void predict(Bool incremental=False, MS::PredefinedColumns Type=MS::MODEL_DATA);
   virtual void gradientsChiSquared(Bool incremental, Bool commitModel=False);
-  
-  virtual Matrix<Float> GiveAvgPB (Int taylor_order)
-  {
-    Matrix< Float > a((ftm_p[taylor_order]->getAveragePB()).copy());
-    return a;
-  };
+
+//  virtual Matrix<Float> GiveAvgPB (Int taylor_order)
+//  {
+//    Matrix< Float > a((ftm_p[taylor_order]->getAveragePB()).copy());
+//    return a;
+//  };
 
   /* virtual const Matrix<Float>& GiveAvgPB(Int taylor_order) { */
   /*   Matrix< Float> a(IPosition(2,2,2),0.); */
@@ -66,21 +66,21 @@ class LofarCubeSkyEquation : public SkyEquation {
   /* }; */
 
   virtual void initializePutSlice(const VisBuffer& vb, Int cubeSlice=0, Int nCubeSlice=1);
-  virtual void putSlice(VisBuffer& vb, Bool dopsf, 
-			FTMachine::Type col,Int cubeSlice=0, 
+  virtual void putSlice(VisBuffer& vb, Bool dopsf,
+			FTMachine::Type col,Int cubeSlice=0,
 			Int nCubeSlice=1);
-  virtual void finalizePutSlice(const VisBuffer& vb,  
+  virtual void finalizePutSlice(const VisBuffer& vb,
 				Int cubeSlice=0, Int nCubeSlice=1);
   void initializeGetSlice(const VisBuffer& vb, Int row,
-			  Bool incremental, Int cubeSlice=0, 
-			  Int nCubeSlice=1);   
-  virtual VisBuffer& getSlice(VisBuffer& vb, 
+			  Bool incremental, Int cubeSlice=0,
+			  Int nCubeSlice=1);
+  virtual VisBuffer& getSlice(VisBuffer& vb,
 			      Bool incremental, Int cubeSlice=0,
-			      Int nCubeSlice=1); 
+			      Int nCubeSlice=1);
   void finalizeGetSlice();
   void isLargeCube(ImageInterface<Complex>& theIm, Int& nCubeSlice);
   //void makeApproxPSF(Int model, ImageInterface<Float>& psf);
-  //virtual void makeApproxPSF(Int model, ImageInterface<Float>& psf); 
+  //virtual void makeApproxPSF(Int model, ImageInterface<Float>& psf);
   void makeApproxPSF(PtrBlock<TempImage<Float> * >& psfs);
 
   //Get the flux scale that the ftmachines have if they have
@@ -101,10 +101,10 @@ class LofarCubeSkyEquation : public SkyEquation {
   Block<Matrix<Float> >weightSlice_p;
   Slicer sl_p;
   Int nchanPerSlice_p;
-  // Type of copy 
+  // Type of copy
   // 0 => a independent image just with coordinates gotten from cImage
   // 1 => a subImage referencing cImage ...no image copy
-  void sliceCube(CountedPtr<ImageInterface<Complex> >& slice,Int model, Int cubeSlice, Int nCubeSlice, Int typeOfCopy=0); 
+  void sliceCube(CountedPtr<ImageInterface<Complex> >& slice,Int model, Int cubeSlice, Int nCubeSlice, Int typeOfCopy=0);
   void sliceCube(SubImage<Float>*& slice,ImageInterface<Float>& image, Int cubeSlice, Int nCubeSlice);
   //frequency range from image
   Bool getFreqRange(ROVisibilityIterator& vi, const CoordinateSystem& coords,

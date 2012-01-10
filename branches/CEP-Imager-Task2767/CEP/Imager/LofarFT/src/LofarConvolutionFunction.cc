@@ -25,6 +25,8 @@
 #include <Common/LofarLogger.h>
 #include <Common/OpenMP.h>
 
+#include <BBSKernel/MeasurementAIPS.h>
+
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogOrigin.h>
 #include <casa/Arrays/Cube.h>
@@ -64,9 +66,6 @@
 #include <lattices/Lattices/ArrayLattice.h>
 #include <lattices/Lattices/LatticeFFT.h>
 
-
-
-
 namespace LOFAR
 {
 
@@ -76,7 +75,6 @@ namespace LOFAR
    const MeasurementSet& ms,
    uInt nW, double Wmax,
    uInt oversample,
-   const String& beamElementPath,
    Int verbose,
    Int maxsupport,
    const String& imgName,
@@ -87,7 +85,7 @@ namespace LOFAR
     //Double RefFreq
     : m_shape(shape),
       m_coordinates(coordinates),
-      m_aTerm(ms, beamElementPath),
+      m_aTerm(ms),
       m_maxW(Wmax), //maximum W set by ft machine to flag the w>wmax
       m_nWPlanes(nW),
       m_oversampling(oversample),
@@ -120,7 +118,7 @@ namespace LOFAR
       m_wScale = WScale(m_maxW, m_nWPlanes);
     MEpoch start = observationStartTime(ms, 0);
 
-    m_refFrequency = observationReferenceFreq(ms, 0);
+    m_refFrequency = BBS::readFreqReference(ms, 0);
     its_Use_EJones=Use_EJones;
     its_Apply_Element=Apply_Element;
     //if(!its_Use_EJones){cout<<"Not using the beam in the calculation of the CFs...."<<endl;}
@@ -183,7 +181,7 @@ namespace LOFAR
     }
     Spheroid_cut_im_element.reference (real(spheroid_cut_element_padfft_fft));
     store(Spheroid_cut_im_element,"Spheroid_cut_im_element.img");
-    
+
   }
 
   //      ~LofarConvolutionFunction ()
@@ -296,6 +294,7 @@ namespace LOFAR
       // Thread private variables.
       PrecTimer timerFFT;
       PrecTimer timerPar;
+
       ///#pragma omp for
       for (uInt i=0; i<m_nStations; ++i) {
         timerPar.start();
@@ -342,19 +341,19 @@ namespace LOFAR
 	binEpoch.set(Quantity(time, "s"));
 	vector< vector< Cube<Complex> > > aTermAtmp;
 	vector< vector< Cube<Complex> > > aTermAtmp2;
-	aTermAtmp = m_aTerm.evaluateSeparated(shape_element,
-					   coordinate_element,
-					   i, binEpoch,
-					   list_freq, true);
-	aTermA_element=aTermAtmp[0];
-	aTermAtmp2 = m_aTerm.evaluateSeparated(shape,
-					   coordinate,
-					   i, binEpoch,
-					   list_freq, true);
-	aTermA_station=aTermAtmp2[1];
+//	aTermAtmp = m_aTerm.evaluateSeparated(shape_element,
+//					   coordinate_element,
+//					   i, binEpoch,
+//					   list_freq, true);
+//	aTermA_element=aTermAtmp[0];
+//	aTermAtmp2 = m_aTerm.evaluateSeparated(shape,
+//					   coordinate,
+//					   i, binEpoch,
+//					   list_freq, true);
+//	aTermA_station=aTermAtmp2[1];
 	//store(aTermA_element[0],"aTermA_element.img");
 	//store(aTermA_station[0],"aTermA_station.img");
-	
+
 	vector< Cube<Complex> > aTermA;
 	// if(!its_Use_EJones){
 	//   Cube<Complex> aterm_cube(IPosition(3,nPixelsConv,nPixelsConv,4),1.);
@@ -370,13 +369,22 @@ namespace LOFAR
         //======================================
         // Enable the beam
         //======================================
-	aTermA = m_aTerm.evaluate(shape,
-				  coordinate,
-				  i, binEpoch,
-				  list_freq, true);
+//	aTermA = m_aTerm.evaluate(shape,
+//				  coordinate,
+//				  i, binEpoch,
+//				  list_freq, true);
 	// }
 
-	
+
+//        // JVZ: Direction map should be computed only once for all stations.
+//        // However, this requires the DirectionCoordinate instance and shape to
+//        // be exactly equal for all stations.
+//        LofarATerm::ITRFDirectionMap dirMap =
+//          m_aTerm.makeDirectionMap(coordinate, shape, binEpoch);
+
+//        vector< Cube<Complex> > aTermA = m_aTerm.evaluate(i, dirMap, list_freq,
+//          list_freq, true);
+
         // Compute the fft on the beam
 	vector< Cube<Complex> > aTermAs;
 	aTermAs.resize(m_nChannel);
@@ -398,7 +406,7 @@ namespace LOFAR
             // normalized_fft (timerFFT, plane2, false);
 	    // Matrix<Complex> plane3=aTermAs[0].xyPlane(pol);
 	    // plane3=plane2;
-	    
+
           }
         }
         // Note that push_back uses the copy constructor, so for the Cubes
@@ -429,11 +437,11 @@ namespace LOFAR
 
   Array<Complex> LofarConvolutionFunction::ApplyElementBeam(Array<Complex> input_grid, Double time, uInt spw, const Matrix<bool>& Mask_Mueller_in, bool degridding_step)
   {
-    
+
     map<Double, vector< vector< Cube<Complex> > > >::const_iterator aiter_element = m_AtermStore_element.find(time);
     AlwaysAssert (aiter_element!=m_AtermStore_element.end(), AipsError);
     const vector< vector< Cube<Complex> > >& aterm_element = aiter_element->second;
-    
+
 
 
     vector< vector< IPosition > > Mueller_Coordinates;
@@ -445,8 +453,8 @@ namespace LOFAR
 	Mueller_Coordinates[i][j]=pos;
       }
     }
-    
-    
+
+
     uInt ind0;
     uInt ind1;
     uInt ii = 0;
@@ -537,7 +545,7 @@ namespace LOFAR
 
 
     logIO()<<"LofarConvolutionFunction::ApplyElementBeam "<<"FFT - Zero Pad - IFFT"<< LogIO::POST;//<<endl;
-    //#pragma omp parallel 
+    //#pragma omp parallel
     {
       Int ii;
       Int jj;
@@ -555,11 +563,11 @@ namespace LOFAR
 
       }
     }
-    
+
     //    assert(false);
 
 
-    //#pragma omp parallel 
+    //#pragma omp parallel
     if(npol==4)
       {
 	logIO()<<"LofarConvolutionFunction::ApplyElementBeam "<<"Multiply element and data in the image plane"<< LogIO::POST;//<<endl;
@@ -570,12 +578,12 @@ namespace LOFAR
 	for(int x=0 ; x<nx ; ++x){
 	  //cout<<"x="<<x<<endl;
 	  for(y=0 ; y<nx ; ++y){
-	    
+
 	    for(ii=0;ii<4;++ii){
 	      for(jj=0;jj<4;++jj){
 		if(Mask_Mueller_in(ii,jj)==true){
 		  grid_out(IPosition(4,x,y,jj,0)) += vec_element_product[ii][jj](x,y) * input_grid(IPosition(4,x,y,ii,0))/Spheroid_cut_im_element(x,y);
-		  
+
 		}
 	      }
 	    }
@@ -593,7 +601,7 @@ namespace LOFAR
 	for(int x=0 ; x<nx ; ++x){
 	  //cout<<"x="<<x<<endl;
 	  for(y=0 ; y<nx ; ++y){
-	    
+
 	    for(ii=0;ii<4;++ii){
 	      for(jj=0;jj<4;++jj){
 		if(Mask_Mueller_in(ii,jj)==true){
@@ -603,21 +611,21 @@ namespace LOFAR
 	    }
 	  }
 	}
-	
+
       }
-    
+
     logIO()<<"LofarConvolutionFunction::ApplyElementBeam "<<"Shapes InputGrid:"<<input_grid.shape()<<", Shapes OutputGrid:"<< LogIO::POST;//<<grid_out.shape()<<endl;
-   
+
 
     return grid_out;
-  
+
   }
 
   //==================================================================
   //==================================================================
   Array<Complex> LofarConvolutionFunction::ApplyElementBeam2(Array<Complex>& input_grid, Double time, uInt spw, const Matrix<bool>& Mask_Mueller_in2, bool degridding_step, Int UsedMask)
   {
-    
+
     Matrix<bool> Mask_Mueller_in(Mask_Mueller_in2.copy());
     for(uInt i=0;i<4;++i){
       for(uInt j=0;j<4;++j){
@@ -627,7 +635,7 @@ namespace LOFAR
     map<Double, vector< vector< Cube<Complex> > > >::const_iterator aiter_element = m_AtermStore_element.find(time);
     AlwaysAssert (aiter_element!=m_AtermStore_element.end(), AipsError);
     const vector< vector< Cube<Complex> > >& aterm_element = aiter_element->second;
-    
+
 
 
     vector< vector< IPosition > > Mueller_Coordinates;
@@ -639,7 +647,7 @@ namespace LOFAR
 	Mueller_Coordinates[i][j]=pos;
       }
     }
-    
+
     {
     uInt ind0;
     uInt ind1;
@@ -689,7 +697,7 @@ namespace LOFAR
 
     vector< vector< Matrix<Complex> > > vec_plane_product;
     vec_plane_product.resize(4);
-      
+
 
     //logIO()<<"LofarConvolutionFunction::ApplyElementBeam "<<"Calculate element beams"<< LogIO::POST;//<<endl;
     for(uInt ii=0;ii<4;++ii){
@@ -707,7 +715,7 @@ namespace LOFAR
     }
 
     //assert(false);
-    //#pragma omp parallel 
+    //#pragma omp parallel
     if(GridsMueller.size()==0){
       //logIO()<<"LofarConvolutionFunction::ApplyElementBeam "<<"...Declare GridsMueller Matrix"<< LogIO::POST;//<<endl;
       GridsMueller.resize(4);
@@ -758,8 +766,8 @@ namespace LOFAR
 	      ConvolveGerArrayMask(input_grid, ii, GridsMueller[ii][jj], ConvFunc, UsedMask);
 	    }
 	  }
-	  
-	  
+
+
 	}
 
       }
@@ -781,7 +789,7 @@ namespace LOFAR
 
 
 
-    //    #pragma omp parallel 
+    //    #pragma omp parallel
     if(npol==4)
       {
 	int y=0;
@@ -791,12 +799,12 @@ namespace LOFAR
 	for(int x=0 ; x<nx ; ++x){
 	  //cout<<"x="<<x<<endl;
 	  for(y=0 ; y<nx ; ++y){
-	    
+
 	    for(ii=0;ii<4;++ii){
 	      for(jj=0;jj<4;++jj){
 		//if(Mask_Mueller_in(ii,jj)==true){
 		  grid_out(IPosition(4,x,y,jj,0)) += GridsMueller[ii][jj](x,y) ;///Spheroid_cut_im_element(x,y);
-		  
+
 		//}
 	      }
 	    }
@@ -821,12 +829,12 @@ namespace LOFAR
       }
 
 
-    
+
     //logIO()<<"LofarConvolutionFunction::ApplyElementBeam "<<"Shapes InputGrid:"<<input_grid.shape()<<", Shapes OutputGrid:"<< LogIO::POST;//<<grid_out.shape()<<endl;
-   
+
 
     return grid_out;
-  
+
   }
 
   //==================================================================
@@ -868,7 +876,7 @@ namespace LOFAR
 
 
     // If the beam is not in memory, compute it
-        
+
     // map<Double, vector< vector< Cube<Complex> > > >::const_iterator aiter =
     //   m_AtermStore.find(time);
     // AlwaysAssert (aiter!=m_AtermStore.end(), AipsError);
@@ -881,7 +889,7 @@ namespace LOFAR
     const vector< vector< Cube<Complex> > >& aterm_station = aiter_station->second;
 
 
-    
+
 
     ///        if(m_AtermStore.find(time)==m_AtermStore.end()){computeAterm(time);}
 
@@ -905,13 +913,13 @@ namespace LOFAR
     if (w > 0.) {
       wTerm.reference (conj(wTerm));
     }
-    
+
     uInt ch(spw);
     //for (uInt ch=0; ch<m_nChannel; ++ch) {
       // Load the Aterm
     //const Cube<Complex> aTermA(aterm_station[stationA][ch].copy());
     Cube<Complex> aTermA(aterm_station[stationA][ch].copy());
-    
+
 
     //const Cube<Complex>& aTermB(aterm_station[stationB][ch]);
     Cube<Complex> aTermB(aterm_station[stationB][ch].copy());
@@ -939,7 +947,7 @@ namespace LOFAR
         cout<<"Number of pixel in the final conv function for baseline ["<< stationA<<", "<<stationB<<"] = "<<Npix_out
             <<" "<<aTermA.shape()[0]<<" "<<aTermB.shape()[0]<<" "<<wTerm.shape()[0]<<endl;
       }
-      
+
       // Zero pad to make the image planes of the A1, A2, and W term have the same resolution in the image plane
       Matrix<Complex> Spheroid_cut_paddedf(zero_padding(Spheroid_cut,Npix_out));
       Matrix<Complex> wTerm_paddedf(zero_padding(wTerm, Npix_out));
@@ -991,8 +999,8 @@ namespace LOFAR
       // better result in the end. If you try Npix_out2=Npix_out, then the average PB shows
       // structure like aliasing, producing high values in the devided disrty map... This
       // is likely to be due to the way fft works?...
-      // FIX: I now do the average of the PB by stacking the CF, FFT the result and square 
-      // it in the end. This is not the way to do in principle but the result is almost the 
+      // FIX: I now do the average of the PB by stacking the CF, FFT the result and square
+      // it in the end. This is not the way to do in principle but the result is almost the
       // same. It should pose no problem I think.
       Matrix<Complex> Spheroid_cut_padded2f;
       Matrix<Complex> spheroid_cut_element_fft2;
@@ -1002,7 +1010,7 @@ namespace LOFAR
       // Keep the non-padded convolution functions for average PB calculation.
       vector< vector < Matrix<Complex> > > Kron_Product_non_padded;
       Kron_Product_non_padded.reserve(4);
-	    
+
       if (Stack) {
         Npix_out2 = Npix_out;
         Spheroid_cut_padded2f = zero_padding(Spheroid_cut, Npix_out2);
@@ -1125,7 +1133,7 @@ namespace LOFAR
         result_non_padded.push_back(Kron_Product_non_padded);
       }
       //}
-          
+
     // Stacks the weighted quadratic sum of the convolution function of
     // average PB estimate (!!!!! done for channel 0 only!!!)
     if (Stack) {
@@ -1153,7 +1161,7 @@ namespace LOFAR
         }
       }
     }
-	
+
     // Put the resulting vec(vec(vec))) in a LofarCFStore object
     CoordinateSystem csys;
     Vector<Float> samp(2, m_oversampling);
@@ -1183,6 +1191,7 @@ namespace LOFAR
 
 
   //================================================
+
   // Returns the average Primary Beam from the disk
   Matrix<Float> LofarConvolutionFunction::Give_avg_pb()
   {
@@ -1223,7 +1232,7 @@ namespace LOFAR
       //store(Sum_Stack_PB_CF,"Im_Stack_PB_CF00.img");
       store(Sum_Stack_PB_CF, itsImgName + ".before");
       Im_Stack_PB_CF0.resize (IPosition(2, m_shape[0], m_shape[1]));
-	
+
       float maxPB(0.);
       float maxPB_noabs(0.);
       for(uInt i=0;i<m_shape[1];++i){
@@ -1319,7 +1328,7 @@ namespace LOFAR
     /*   Start_image_enlarged+=0.5;} */
     for (Int jj=0; jj<Image.shape()[1]; ++jj) {
       for (Int ii=0; ii<Image.shape()[0]; ++ii) {
-        Image_Enlarged(Start_image_enlarged+ii,Start_image_enlarged+jj) = 
+        Image_Enlarged(Start_image_enlarged+ii,Start_image_enlarged+jj) =
           ratio*Image(ii,jj);
       }
     }
@@ -1359,28 +1368,6 @@ namespace LOFAR
     AlwaysAssert(!observation.flagRow()(idObservation), SynthesisError);
 
     return observation.timeRangeMeas()(0)(IPosition(1, 0));
-  }
-
-  //=================================================
-  Double LofarConvolutionFunction::observationReferenceFreq
-  (const MeasurementSet &ms, uInt idDataDescription)
-  {
-    // Read polarization id and spectral window id.
-    ROMSDataDescColumns desc(ms.dataDescription());
-    AlwaysAssert(desc.nrow() > idDataDescription, SynthesisError);
-    AlwaysAssert(!desc.flagRow()(idDataDescription), SynthesisError);
-
-    const uInt idWindow = desc.spectralWindowId()(idDataDescription);
-
-    /*        logIO() << LogOrigin("LofarATerm", "initReferenceFreq") << LogIO::NORMAL
-              << "spectral window: " << desc.spectralWindowId()(idDataDescription) << LogIO::POST;*/
-    //            << "spectral window: " << desc.spectralWindowId() << LogIO::POST;
-    // Get spectral information.
-    ROMSSpWindowColumns window(ms.spectralWindow());
-    AlwaysAssert(window.nrow() > idWindow, SynthesisError);
-    AlwaysAssert(!window.flagRow()(idWindow), SynthesisError);
-
-    return window.refFrequency()(idWindow);
   }
 
   //=================================================
@@ -1431,7 +1418,7 @@ namespace LOFAR
     store(Spheroid_cut_im, itsImgName + ".spheroid_cut_im");
     if (itsVerbose > 0) {
       store(Spheroid_cut, itsImgName + ".spheroid_cut");
-    }	
+    }
     return Pixel_Size_Spheroidal;
   }
 
@@ -1535,7 +1522,7 @@ namespace LOFAR
       bot += Q[part][k] * delnusqPow;
       delnusqPow *= delnusq;
     }
-	
+
     double result = (bot == 0  ?  0 : (1.0 - nusq) * (top / bot));
     //if(result<1.e-3){result=1.e-3;}
     return result;

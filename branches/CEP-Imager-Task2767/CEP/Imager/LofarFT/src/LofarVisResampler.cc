@@ -20,11 +20,12 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
 #include <LofarFT/LofarVisResampler.h>
 #include <synthesis/MeasurementComponents/Utils.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
-#include<cassert>
+#include <cassert>
 #include <Common/OpenMP.h>
 
 namespace LOFAR {
@@ -94,7 +95,7 @@ namespace LOFAR {
       deltax_pix_interp[i]=0;
       deltay_pix_interp[i]=0;
     }
-    
+
     // Loop over all visibility rows to process.
     for (Int inx=rbeg; inx<rend; ++inx) {
       Int irow = rows[inx];
@@ -106,7 +107,7 @@ namespace LOFAR {
       // Skip channel if data are not needed.
       for (Int visChan=0; visChan<nVisChan; ++visChan) {
         Int gridChan = chanMap_p[visChan];
-	
+
 	//cout<<"visChan "<<visChan<<endl;
         if (gridChan >= 0  &&  gridChan < nGridChan) {
           // Determine the grid position from the UV coordinates in wavelengths.
@@ -144,7 +145,7 @@ namespace LOFAR {
 
 	  Double diff_floor_x(abs(posx-floor(posx)));
 	  Double diff_floor_y(abs(posy-floor(posy)));
-	  
+
 
 	  Weights_Lin_Interp[0]=(1.-diff_floor_x)*(1.-diff_floor_y);
 	  Weights_Lin_Interp[1]=    diff_floor_x *(1.-diff_floor_y);
@@ -281,7 +282,7 @@ namespace LOFAR {
     Int sampy = SynthesisUtils::nint (cfs.sampling[1]);
     Int supx = cfs.xSupport[0];
     Int supy = cfs.ySupport[0];
-    
+
     ///AlwaysAssert ((2*supx+1)*sampx == nConvX, AipsError);
     ///AlwaysAssert ((2*supy+1)*sampy == nConvY, AipsError);
 
@@ -305,7 +306,7 @@ namespace LOFAR {
       // Skip channel if data are not needed.
       for (Int visChan=0; visChan<nVisChan; ++visChan) {
         Int gridChan = chanMap_p[visChan];
-	
+
   	//cout<<"visChan "<<visChan<<endl;
         if (gridChan >= 0  &&  gridChan < nGridChan) {
           // Determine the grid position from the UV coordinates in wavelengths.
@@ -333,7 +334,7 @@ namespace LOFAR {
           Int fsupy  = SynthesisUtils::nint (supy / freqFact);
 
           // Only use visibility point if the full support is within grid.
-	  
+
           if (locx-supx >= 0  &&  locx+supx < nGridX  &&
               locy-supy >= 0  &&  locy+supy < nGridY) {
 
@@ -466,7 +467,7 @@ namespace LOFAR {
       }
     }
     //cout<<"cfs.vdata= "<<&cfs<<endl;
-      
+
     const Double *freq  = vbs.freq_p.data();
 
     // Cache increment values for adding to grid in gridInc.  This is
@@ -927,14 +928,14 @@ namespace LOFAR {
       //store2(im,"Aterm-ch"+String::toString(i)+".img");
       }
     }
-    
-    
+
+
     // Vector<Double> UVWSCALE_MOI(uvwScale_p*1.4);
     // Vector<Double> UVWOFF_MOI(offset_p);
     // UVWOFF_MOI(0)=320;
     // UVWOFF_MOI(1)=320;
     // UVWOFF_MOI(2)=0;
-    
+
     Double *freq=vbs.freq_p.getStorage(Dummy);
 
     Matrix<Float>&  imagingWeight=vbs.imagingWeight_p;
@@ -965,7 +966,7 @@ namespace LOFAR {
 	    uvwScale_p,offset_p,sampling);
 	    //sgrid(pos,loc,off,phasor,irow,uvw,dphase_p[irow],freq[ichan],
 	//	  UVWSCALE_MOI,UVWOFF_MOI,sampling);
-	    
+
 
 
 	    iloc[2]=max(0, min(nw-1, loc[2]));
@@ -1045,7 +1046,7 @@ namespace LOFAR {
     //cout<<"vbDataShape "<<vbDataShape<<" ,last "<<" ,start "<<start<<" ,vbs.modelCube_p "<< (vbs.modelCube_p).shape() << endl;
 
     //cout<<"//////////////////// Compuute residual!!!!!!"<<"vbs.useCorrected_p"<<vbs.useCorrected_p<<endl;
-    
+
 
 
     if (!vbs.useCorrected_p)
@@ -1054,7 +1055,7 @@ namespace LOFAR {
     	  for(uInt ipol = start(1); ipol < last(1); ipol++)
     	    for(uInt irow = start(2); irow < last(2); irow++)
     	      vbs.modelCube_p(ichan,ipol,irow) = vbs.modelCube_p(ichan,ipol,irow) - vbs.visCube_p(ichan,ipol,irow);
-	
+
       }
     else
       {
@@ -1064,14 +1065,13 @@ namespace LOFAR {
 	    for(uInt irow = start(2); irow < last(2); irow++){
     	      //cout<<"===="<<endl;
 	      //if(!(abs(vbs.modelCube_p(ichan,ipol,irow))==0.)){cout<<ipol<<" "<<ichan<<" "<<irow<<" "<<vbs.modelCube_p(ichan,ipol,irow)<<"  "<<vbs.correctedCube_p(ichan,ipol,irow)<<endl;};
-    	      
+
 	      //if(!(abs(vbs.modelCube_p(ichan,ipol,irow))==0.)){cout<<"data "<<ipol<<" "<<ichan<<" "<<irow<<" "<<vbs.modelCube_p(ichan,ipol,irow)<<" "<<vbs.correctedCube_p(ichan,ipol,irow)<<endl;};
-	 
+
     	      vbs.modelCube_p(ichan,ipol,irow) = vbs.modelCube_p(ichan,ipol,irow) - vbs.correctedCube_p(ichan,ipol,irow);
     	      //cout<<vbs.modelCube_p(ichan,ipol,irow)<<"  "<<vbs.modelCube_p(ichan,ipol,irow)<<"  "<<vbs.correctedCube_p(ichan,ipol,irow)<<endl;
-    	    };
-	  };
-	
+    	    }
+	  }
 	}
       }
 
@@ -1081,7 +1081,7 @@ namespace LOFAR {
     // 	  for(uInt ipol = start(1); ipol < last(1); ipol++)
     // 	    for(uInt irow = start(2); irow < last(2); irow++)
     // 	      vbs.modelCube_p(ichan,ipol,irow) = vbs.modelCube_p(ichan,ipol,irow) - vbs.visCube_p(ichan,ipol,irow);
-	
+
     //   }
     // else
     //   {
@@ -1093,7 +1093,7 @@ namespace LOFAR {
     // 	      vbs.correctedCube_p(ichan,ipol,irow) = vbs.correctedCube_p(ichan,ipol,irow) - vbs.modelCube_p(ichan,ipol,irow);
     // 	      //cout<<vbs.correctedCube_p(ichan,ipol,irow)<<"  "<< vbs.correctedCube_p(ichan,ipol,irow)<<"  "<< vbs.modelCube_p(ichan,ipol,irow)<<endl;
     // 	    };
-	
+
     //   }
 
 

@@ -24,19 +24,21 @@
 #include <lofar_config.h>
 #include <BBSKernel/MeasurementExprLOFARUtil.h>
 #include <BBSKernel/Exceptions.h>
-#include <BBSKernel/Expr/AntennaFieldAzEl.h>
+#include <BBSKernel/Expr/AntennaElementLBA.h>
+#include <BBSKernel/Expr/AntennaElementHBA.h>
+#include <BBSKernel/Expr/AntennaFieldThetaPhi.h>
 #include <BBSKernel/Expr/AzEl.h>
 #include <BBSKernel/Expr/Delay.h>
 #include <BBSKernel/Expr/EquatorialCentroid.h>
 #include <BBSKernel/Expr/ExprAdaptors.h>
 #include <BBSKernel/Expr/FaradayRotation.h>
-#include <BBSKernel/Expr/HamakerDipole.h>
 #include <BBSKernel/Expr/ITRFDirection.h>
 #include <BBSKernel/Expr/Literal.h>
 #include <BBSKernel/Expr/LMN.h>
 #include <BBSKernel/Expr/MatrixMul2.h>
 #include <BBSKernel/Expr/MatrixMul3.h>
 #include <BBSKernel/Expr/MatrixSum.h>
+#include <BBSKernel/Expr/ParallacticRotation.h>
 #include <BBSKernel/Expr/PhaseShift.h>
 #include <BBSKernel/Expr/ScalarMatrixMul.h>
 #include <BBSKernel/Expr/StationBeamFormer.h>
@@ -231,9 +233,7 @@ makeBeamExpr(Scope&,
     const Expr<Vector<3> >::Ptr &exprITRF,
     const Expr<Vector<3> >::Ptr &exprRefDelayITRF,
     const Expr<Vector<3> >::Ptr &exprRefTileITRF,
-    const BeamConfig &config,
-    const HamakerBeamCoeff &coeffLBA,
-    const HamakerBeamCoeff &coeffHBA)
+    const BeamConfig &config)
 {
     // Check if the beam model can be computed for this station.
     if(!station->isPhasedArray())
@@ -242,10 +242,6 @@ makeBeamExpr(Scope&,
             " LOFAR station or the additional information needed to compute the"
             " station beam is missing.");
     }
-
-    // The positive X dipole direction is SE of the reference orientation, which
-    // translates to an azimuth of 3/4*pi.
-    Expr<Scalar>::Ptr exprOrientation(new Literal(3.0 * casa::C::pi_4));
 
     // Build expressions for the dual-dipole or tile beam of each antenna field.
     Expr<JonesMatrix>::Ptr exprElementBeam[2];
@@ -256,21 +252,28 @@ makeBeamExpr(Scope&,
         // Element (dual-dipole) beam expression.
         if(config.mode() != BeamConfig::ARRAY_FACTOR)
         {
-            Expr<Vector<2> >::Ptr exprAzEl(new AntennaFieldAzEl(exprITRF,
+            Expr<Vector<2> >::Ptr exprThetaPhi =
+                Expr<Vector<2> >::Ptr(new AntennaFieldThetaPhi(exprITRF,
                 field));
 
             if(field->isHBA())
             {
                 exprElementBeam[i] =
-                    Expr<JonesMatrix>::Ptr(new HamakerDipole(coeffHBA, exprAzEl,
-                    exprOrientation));
+                    Expr<JonesMatrix>::Ptr(new AntennaElementHBA(exprThetaPhi));
             }
             else
             {
                 exprElementBeam[i] =
-                    Expr<JonesMatrix>::Ptr(new HamakerDipole(coeffLBA, exprAzEl,
-                    exprOrientation));
+                    Expr<JonesMatrix>::Ptr(new AntennaElementLBA(exprThetaPhi));
             }
+
+            Expr<JonesMatrix>::Ptr exprRotation =
+                Expr<JonesMatrix>::Ptr(new ParallacticRotation(exprITRF,
+                field));
+
+            exprElementBeam[i] =
+                Expr<JonesMatrix>::Ptr(new MatrixMul2(exprElementBeam[i],
+                exprRotation));
         }
         else
         {

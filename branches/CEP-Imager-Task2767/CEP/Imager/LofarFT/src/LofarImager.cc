@@ -60,7 +60,6 @@ namespace LOFAR
                                     *ms_p, wprojPlanes_p, mLocation_p,
                                     padding_p, false, useDoublePrecGrid,
                                     itsParameters.asDouble("wmax"),
-                                    itsParameters.asString("beam.element.path"),
                                     itsParameters.asInt("verbose"),
                                     itsParameters.asInt("maxsupport"),
                                     itsParameters.asInt("oversample"),
@@ -120,4 +119,3 @@ namespace LOFAR
 
 
 } //# end namespace
-

@@ -31,8 +31,6 @@
 #include <Common/lofar_vector.h>
 #include <Common/lofar_iosfwd.h>
 
-#include <casa/OS/Path.h>
-
 namespace LOFAR
 {
 namespace BBS
@@ -54,11 +52,10 @@ public:
     };
 
     BeamConfig();
-    BeamConfig(Mode mode, bool conjugateAF, const casa::Path &elementPath);
+    BeamConfig(Mode mode, bool conjugateAF);
 
     Mode mode() const;
     bool conjugateAF() const;
-    const casa::Path &getElementPath() const;
 
     static bool isDefined(Mode in);
     static Mode asMode(const string &in);
@@ -67,7 +64,6 @@ public:
 private:
     Mode            itsMode;
     bool            itsConjugateAF;
-    casa::Path      itsElementPath;
 };
 
 // Configuration options specific to the ionospheric model.
