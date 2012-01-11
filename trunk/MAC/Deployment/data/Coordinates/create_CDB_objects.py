@@ -33,7 +33,7 @@ def getStationList():
 # MAIN
 #
 if __name__ == '__main__':
-    print "Connecting to database coordtest"
+    print "Connecting to database ", dbName
     db = pg.connect(user="postgres", host=dbHost, dbname=dbName)
     
     pol = 2 # number of polarizations
