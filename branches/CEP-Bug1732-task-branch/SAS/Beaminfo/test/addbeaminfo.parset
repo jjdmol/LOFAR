@@ -1,6 +1,6 @@
 ms = /Users/duscha/Cluster/L2011_24380/L24380_SB030_uv.MS.dppp.dppp
-StartTime = 19-Mar-2011 16:59:08.0 
-EndTime = 19-Mar-2011 22:59:06.0
+StartTime = 2011/03/19/16:59:08.0 
+EndTime = 2011/03/19/22:59:06.0
 # brokenTilesFile =
 # failedTilesFile =
 overwrite = T

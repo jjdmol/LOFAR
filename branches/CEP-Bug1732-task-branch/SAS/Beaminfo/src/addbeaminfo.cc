@@ -118,7 +118,8 @@ bool failedAntennaElementExists(const Table &failedElementsTable,
 map<string, ptime> getBrokenHardwareMap(OTDBconnection &conn,
                                         const MVEpoch &timestamp=0);
 map<string, ptime> getFailedHardwareMap( OTDBconnection &conn,
-                                         const MVEpoch &timestamp);                                        
+                                         const MVEpoch &timeStart,
+                                         const MVEpoch &timeEnd);                                        
 RCUmap getBrokenRCUs(const map<string, ptime> &brokenHardware);
 void extractRCUs(RCUmap &brokenRCUs, 
                  const map<string, ptime> &brokenHardware, 
@@ -311,7 +312,8 @@ int main (int argc, char* argv[])
       brokenHardwareAfter=getBrokenHardwareMap(conn, endTime);          
       writeBrokenHardwareFile(brokenAfterfilename, brokenHardwareAfter);
       
-      failedHardware=getFailedHardware(brokenHardware, brokenHardwareAfter);
+      failedHardware=getFailedHardware(brokenHardware, brokenHardwareAfter);  // use comparison
+      //failedHardware=getFailedHardwareMap(conn, startTime, endTime);
       writeBrokenHardwareFile(failedfilename, failedHardware);
 
       if(debug)
@@ -332,7 +334,8 @@ int main (int argc, char* argv[])
       LOG_INFO_STR("reading brokenHardware after from file:" << brokenAfterfilename);      
       brokenHardwareAfter=readBrokenHardwareFile(brokenAfterfilename);
     
-      failedHardware=getFailedHardware(brokenHardware, brokenHardwareAfter);
+//      failedHardware=getFailedHardware(brokenHardware, brokenHardwareAfter);
+      failedHardware=readFailedElementsFile(failedfilename);
       if(debug)
       {
         showMap(failedHardware);
@@ -386,8 +389,8 @@ int main (int argc, char* argv[])
       //----------------------------------------------------------------------------
       // Get Tiles that failed during observation
       //
-      //failedHardware=getFailedHardware(brokenHardware, brokenHardwareAfter);
-      failedHardware=readFailedElementsFile(failedfilename);
+      failedHardware=getFailedHardware(brokenHardware, brokenHardwareAfter);
+      //failedHardware=readFailedElementsFile(failedfilename);
       vector<failedTile> failedTiles=getFailedTilesAntennaId(ms, failedHardware);
 
       if(debug)
@@ -427,9 +430,8 @@ string fromCasaTime (const MVEpoch& epoch, double addDays=0)
 */
 MVEpoch toCasaTime(const string &time)
 {
-  // e.g. 2011-Mar-19 21:17:06.514000  // use slashes instead spaces
-  Double casaTime;        // casa MVEpoch time to be returned
-  String copyTime=time;   // make a temporary copy
+  // e.g. 2011-Mar-19 21:17:06.514000
+  Double casaTime;                  // casa MVEpoch time to be returned
   Quantity result(casaTime, "s");   // set quantity unit to seconds
   
   if(time.empty())
@@ -438,9 +440,8 @@ MVEpoch toCasaTime(const string &time)
   }
   else
   {
-    copyTime.gsub(" ", "/");      // replace spaces with slashes for casa conversion   
-    MVTime::read(result, copyTime);
-  }
+    MVTime::read(result, time);
+  }  
   return result;
 }
 
@@ -696,18 +697,17 @@ string stripRCUString(const string &brokenHardware)
 map<string, ptime> readBrokenHardwareFile(const string &filename)//, vector<string> &brokenHardware)
 {
   map<string, ptime> brokenHardware;
-  string name, date, time, datetime;
   fstream infile;
   infile.open(filename.c_str(), ios::in);
 
   if(infile.is_open())
   {
+    unsigned int linenumber=0;      // keep a track of line numbers to report errors
     while(infile.good())
     {
-      unsigned int linenumber=0;      // keep a track of line numbers to report errors
       linenumber++;
-      
-      datetime="";
+      string name, date, time, datetime;
+
       infile >> name >> date >> time;
       datetime=date.append(" ").append(time);     // YYYY-MM-DD HH-MM-SS.ssss        
       if(name.empty() || date.empty() || time.empty())
@@ -777,9 +777,9 @@ map<string, ptime> readFailedElementsFile(const string &filename)
 
   if(infile.is_open())
   {
+    unsigned int linenumber=0;      // keep a track of line numbers to report errors
     while(infile.good())
     {
-      unsigned int linenumber=0;      // keep a track of line numbers to report errors
       linenumber++;
     
       string datetime="";
@@ -834,7 +834,7 @@ map<string, ptime> getBrokenHardwareMap( OTDBconnection &conn,
   LOG_INFO("Trying to construct a TreeValue object");
   TreeValue   tv(&conn, treeID);
 
-  LOG_INFO_STR("Getting broken hardware at " << timestamp);
+  LOG_INFO_STR("Getting broken hardware at " << MVTime(timestamp.get()).getTime().ISODate());
 
   // Query SAS for broken hardware
   if(timestamp==0)
@@ -845,7 +845,7 @@ map<string, ptime> getBrokenHardwareMap( OTDBconnection &conn,
   {
     valueList = tv.getBrokenHardware(time_from_string(fromCasaTime(timestamp)));
 //   valueList = tv.getFailedHardware( time_from_string("2011-Mar-04 11:08:27"), 
-//                                     time_from_string("2011-Mar-04 12:08:27"));
+//                                     time_from_string("2011-Mar-04 12:08:27")); // DEBUG
   }
 
   for(unsigned int i=0; i < valueList.size(); i++)
@@ -860,12 +860,13 @@ map<string, ptime> getBrokenHardwareMap( OTDBconnection &conn,
   \brief  Get hardware that failed during time interval between timeStart and timeEnd
           including timestamp of time of failure
   \param connection       OTDB connection to SAS
-  \param timeStart        timestamp to check for broken hardware at
-  \param timeEnd          timestamp to check for broken hardware at
+  \param timeStart        timestamp to check for failed hardware from
+  \param timeEnd          timestamp to check for failed hardware to
   \return failedHardware  map of failed hardware with timestamp of failure
 */
 map<string, ptime> getFailedHardwareMap( OTDBconnection &conn,
-                                         const MVEpoch &timestamp)
+                                         const MVEpoch &timeStart,
+                                         const MVEpoch &timeEnd)
 {
   TreeTypeConv TTconv(&conn);     // TreeType converter object
   ClassifConv CTconv(&conn);      // converter I don't know
@@ -887,24 +888,18 @@ map<string, ptime> getFailedHardwareMap( OTDBconnection &conn,
   LOG_INFO("Trying to construct a TreeValue object");
   TreeValue   tv(&conn, treeID);
 
-  LOG_INFO_STR("Getting broken hardware at " << timestamp);
+  LOG_INFO_STR("Getting failed hardware from " << MVTime(timeStart.get()).getTime().ISODate() 
+               << " to " << MVTime(timeEnd.get()).getTime().ISODate());
 
   // Query SAS for broken hardware
-  if(timestamp==0)
-  {
-     valueList = tv.getBrokenHardware();
-  }
-  else
-  {
-   valueList = tv.getFailedHardware( time_from_string("2011-Mar-04 11:08:27"), 
-                                     time_from_string("2011-Mar-04 12:08:27"));
-  }
+  valueList = tv.getFailedHardware(time_from_string(fromCasaTime(timeStart)), 
+                                   time_from_string(fromCasaTime(timeEnd)));
 
   for(unsigned int i=0; i < valueList.size(); i++)
   {
     failedHardware.insert(make_pair(valueList[i].name, valueList[i].time));
   }
-  
+
   return failedHardware;
 }
 
@@ -1149,17 +1144,16 @@ void addFailedAntennaTiles( MeasurementSet &ms,
       // Loop over multiple element_flags per antennaId
       for(unsigned int j=0; j<failedTiles[i].rcus.size(); j++)
       {
-        MVEpoch timestamp = toCasaTime(failedTiles[i].timeStamps[j]).get();
+        MVEpoch timestamp = toCasaTime(failedTiles[i].timeStamps[j]);
         unsigned int antennaId=failedTiles[i].antennaId;
         unsigned int elementIndex=failedTiles[i].rcus[j] / 2;
 
         if(elementInObservation(antennaFieldTable, antennaId, elementIndex) == true)
         {
-            cout << "antennaId = " << antennaId << " is operational." << endl;    // DEBUG
             doAddFailedAntennaTile( failedElementsTable, 
                                     antennaId,      
                                     elementIndex,
-                                    timestamp);
+                                    timestamp.get());
         }
       }
     }
@@ -1206,8 +1200,7 @@ void addFailedAntennaTiles( MeasurementSet &ms,
         // in this observation mode
         if(elementInObservation(antennaFieldTable, antennaId, elementIndex) == true)
         {
-            cout << "antennaId = " << antennaId << " is operational." << endl;    // DEBUG
-            MVEpoch timestamp=toCasaTime(failedTiles[i].timeStamps[j]).get();
+            MVEpoch timestamp=toCasaTime(failedTiles[i].timeStamps[j]).get(); 
             doAddFailedAntennaTile( failedElementsTable, 
                                     antennaId,      
                                     elementIndex,
