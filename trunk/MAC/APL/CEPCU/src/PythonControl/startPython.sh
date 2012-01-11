@@ -29,28 +29,28 @@ usage()
   exit 1
 }
 
-error()
-{
-  echo "ERROR: $@" 1>&2
-  exit 1
-}
-
 # Check for correct number of input arguments.
 [ $# -eq 5 ] || usage
-
-pythonProgram="$1"
-parsetFile="$2"
 
 # Initialize the environment. We will assume here that we can use the
 # Lofar Login Environment (LLE).
 use LofIm
 
+pythonProgram="${1}"
+parsetFile="${2}"
+programOptions=" \
+ -d \
+ -c ${LOFARROOT}/share/pipeline.cfg \
+ -t ${LOFARROOT}/share/tasks.cfg \
+ -r ${LOFARROOT}/share"
+ 
 # Print some debugging information if debugging is enabled.
 if [ -n "$debug" ]; then
   echo "PATH=${PATH}"
   echo "PYHONTPATH=${PYTHONPATH}"
   echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}"
+  echo "${pythonProgram} ${programOptions} ${parsetFile}"
 fi
 
 # Start the Python program.
-python "${pythonProgram}" "${parsetFile}"
+${pythonProgram} ${programOptions} ${parsetFile}
