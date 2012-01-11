@@ -84,14 +84,14 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
         //empty old settings
         removeAllRows();
         
-        itsBeams = new ArrayList<Beam>(aBeamList);
+        itsBeams = aBeamList;
 
         // need to skip first entry because it is the default (dummy) TBBsetting in other then VHTree's
         if (itsTreeType.equals("VHtree")) {
             offset=0;
         }
         
-        // need to skip first entry because it is the default (dummy) TBBsetting
+        // add all objects to table
         for (Beam b : itsBeams ) {
             this.addRow(b);
         }
@@ -164,7 +164,7 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
      * @return  String[] containing all values from the given row
      */
     public Beam getSelection(int row) {
-        if (row < this.getRowCount() && row >= 0) {
+        if (row < this.getRowCount() && row >= 0 && itsBeams != null) {
             return itsBeams.get(row+offset);
         } else {
             return null;
@@ -177,15 +177,19 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
 
     public void removeAllRows() {
         this.setRowCount(0);
-        itsBeams.clear();
-        isChanged=true;
+        if (itsBeams != null) {
+            itsBeams.clear();
+            isChanged=true;
+        }
     }
 
     @Override
     public void removeRow(int row) {
         super.removeRow(row);
-        itsBeams.remove(row+offset);
-        isChanged=true;
+        if (itsBeams != null) {
+            itsBeams.remove(row+offset);
+            isChanged=true;
+        }
     }
 
     /** returns the isEditable flag from the given row and column.

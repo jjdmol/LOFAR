@@ -71,10 +71,19 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_initO
     const char* n = env->GetStringUTFChars (str, &isCopy);
     const string name (n);
 
- 
+    std::map<std::string,void *>::iterator iter;
+//    cout << "connect: theirC_ObjectMap contains: " << endl;
+//    for (iter=theirC_ObjectMap.begin();iter!=theirC_ObjectMap.end(); ++iter) {
+//        cout << iter->second << " " << iter->first << endl;
+//    }
+    
 
     theirC_ObjectMap[name+"_OTDBconnection"]=(void *)aPtr;
 
+//    cout << "after connect: theirC_ObjectMap contains: " << endl;
+//    for (iter=theirC_ObjectMap.begin();iter!=theirC_ObjectMap.end(); ++iter) {
+//        cout << iter->second << " " << iter->first << endl;
+//    }
 
     env->ReleaseStringUTFChars (str, n);
 
@@ -122,6 +131,12 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_c
 JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_disconnect(JNIEnv *env, jobject jOTDBconnection) {
 
   try {
+    std::map<std::string,void *>::iterator iter;
+//    cout << "disconnect: theirC_ObjectMap contains: " << endl;
+//    for (iter=theirC_ObjectMap.begin();iter!=theirC_ObjectMap.end(); ++iter) {
+//        cout << iter->second << " " << iter->first << endl;
+//    }
+
     ((OTDBconnection*)getCObjectPtr(env,jOTDBconnection,"_OTDBconnection"))->disconnect();
 
     jclass class_jOTDBconn = env->GetObjectClass (jOTDBconnection);
@@ -133,11 +148,31 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_disco
     const char* n = env->GetStringUTFChars (str, &isCopy);
     const string name (n);
 
-    std::map<std::string,void *>::iterator iter = theirC_ObjectMap.find(name+"_OTDBconnection");
-    if( iter != theirC_ObjectMap.end() ) 
-       theirC_ObjectMap.erase(iter);
-    else
-       cout << "Key is not in myMap" << '\n';
+    bool found = false;
+    std::map<std::string,void *>::iterator itr;
+    std::map<std::string,void *>::iterator end;
+    itr = theirC_ObjectMap.begin();
+    end = theirC_ObjectMap.end();
+    while (itr != end) {
+        std::string n = itr->first;
+        if (itr->first.find(name)!= string::npos ){
+            cout << " found match " << itr->first << endl;
+            if (!found) found=true;
+            std::map<std::string,void *>::iterator tmpitr = itr;
+            itr++;
+            theirC_ObjectMap.erase(tmpitr);
+        } else {
+            itr++;
+        }
+    }
+    if (!found) {
+        cout << name << " not found in theirC_ObjectMap" << endl;
+    }
+
+//    cout << "after disconnect: theirC_ObjectMap contains: " << endl;
+//    for (iter=theirC_ObjectMap.begin();iter!=theirC_ObjectMap.end(); ++iter) {
+//        cout << iter->second << " " << iter->first << endl;
+//    }
 
   } catch (exception &ex) {
     cout << "Exception during OTDBconnection::disconnect "<< ex.what() << endl;

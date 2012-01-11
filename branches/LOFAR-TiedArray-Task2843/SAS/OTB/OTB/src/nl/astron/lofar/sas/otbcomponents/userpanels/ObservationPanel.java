@@ -682,10 +682,8 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
          // create original Beamlet Bitset
          fillBeamletBitset();
       }
-
-
-      // set tables back to initial values
-      itsBeamConfigurationTableModel.fillTable(itsTreeType,itsBeamList,false);
+        // set tables back to initial values
+        boolean fillTable = itsBeamConfigurationTableModel.fillTable(itsTreeType,itsBeamList,false);
       itsAnaBeamConfigurationTableModel.fillTable(itsTreeType,itsAnaBeamList,false);
       
       itsBeamformerConfigurationTableModel.fillTable(itsTreeType, itsStations);
@@ -760,7 +758,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         beamConfigurationPanel.setColumnSize("angle 2",20);
         beamConfigurationPanel.setColumnSize("coordtype",20);
         beamConfigurationPanel.setColumnSize("maxDur",20);
-        beamConfigurationPanel.setColumnSize("#Tab",20);
+        beamConfigurationPanel.setColumnSize("#TAB",20);
         beamConfigurationPanel.setColumnSize("subbands",65);
         beamConfigurationPanel.setColumnSize("beamlets",65);
         beamConfigurationPanel.repaint();
