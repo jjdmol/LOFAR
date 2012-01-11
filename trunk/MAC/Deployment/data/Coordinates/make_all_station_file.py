@@ -133,7 +133,7 @@ if __name__ == '__main__':
         frame = ''
     
         # from database select all antennas for given station and target-date
-        cursor.execute("select * from get_gen_coord(%s, %f)", (station, float(sys.argv[1])))
+        cursor.execute("select * from get_gen_coord(%s, %f) order by objtype desc", (station, float(sys.argv[1])))
     
         # start with empty arrays
         aPosL = np.zeros((0,2,3))
@@ -188,8 +188,8 @@ if __name__ == '__main__':
             print 'ERR, no data found for %s' %(station)
             exit(1)
              
-        # do somthing with the data
-        print 'Making %s-AntennaField.conf with LBA shape=%s  HBA shape=%s' %(station, np.shape(aPosL), np.shape(aPosL))
+        # do something with the data
+        print 'Making %s-AntennaField.conf with LBA shape=%s  HBA shape=%s' %(station, np.shape(aPosL), np.shape(aPosH))
          
         aRef = None
         
