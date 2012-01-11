@@ -42,7 +42,7 @@ if __name__ == '__main__':
         if (len(findStationInfo(station)) < 12):
             continue
         (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = findStationInfo(station)
-        if long != '0.0':
+        if height[0] != '0':
             print "updating %s to the coordinate database " % station
             for lba in xrange(0, int(nrLBA)*2):
                 db.query("select * from add_object('%s', '%s', %d)" % ( name, "LBA", lba ))
