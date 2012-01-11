@@ -79,7 +79,7 @@ namespace LOFAR {
     psfValues[0] = psfValues[1] = psfValues[2] = psfValues[3] = Complex(1,0);
 
     // Loop over all visibility rows to process.
-    for (Int inx=rbeg; inx<rend; ++inx) {
+    for (Int inx=rbeg; inx<=rend; ++inx) {
       Int irow = rows[inx];
       const Double*  __restrict__ uvwPtr   = vbs.uvw_p.data() + irow*3;
       const Float*   __restrict__ imgWtPtr = vbs.imagingWeight_p.data() +
@@ -391,7 +391,7 @@ namespace LOFAR {
     ///AlwaysAssert ((2*supy+1)*sampy == nConvY, AipsError);
 
     // Loop over all visibility rows to process.
-    for (Int inx=rbeg; inx<rend; ++inx) {
+    for (Int inx=rbeg; inx<=rend; ++inx) {
       Int irow = rows[inx];
       const Double*  __restrict__ uvwPtr   = vbs.uvw_p.data() + irow*3;
       // Loop over all channels in the visibility data.
