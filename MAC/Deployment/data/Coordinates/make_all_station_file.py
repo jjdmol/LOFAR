@@ -133,7 +133,7 @@ if __name__ == '__main__':
         frame = ''
     
         # from database select all antennas for given station and target-date
-        cursor.execute("select * from get_gen_coord(%s, %f) order by objtype desc", (station, float(sys.argv[1])))
+        cursor.execute("select * from get_gen_coord(%s, %f) order by objtype, number", (station, float(sys.argv[1])))
     
         # start with empty arrays
         aPosL = np.zeros((0,2,3))
