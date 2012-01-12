@@ -6,15 +6,15 @@ PANEL,-1 -1 114 109 N "_3DFace" 1
 "main()
 {
   baseDP=g_currentDatapoint;
-  DebugN(\"HBA_TileElement.pnl baseDP: \"+baseDP);
+  LOG_DEBUG(\"HBA_TileElement.pnl:initialize|baseDP: \"+baseDP);
 
   theElementNr=$elementNr;  
-  DebugN(\"HBA_TileElement.pnl elementNr: \"+theElementNr);
+  LOG_DEBUG(\"HBA_TileElement.pnl:initialize|elementNr: \"+theElementNr);
 
   string aS=\"\";
   if (theElementNr < 10) aS+=\"0\";
   baseDP+=\".element\"+aS+theElementNr;
-  DebugN(\"HBA_TileElement.pnl : Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
+  LOG_DEBUG(\"HBA_TileElement.pnl:initialize| Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
 
   if (dpExists(baseDP) ) {
      setValue(\"text_ElementNr\", \"text\", \"E-\" + aS + theElementNr );
@@ -39,7 +39,7 @@ void ShowStates( string dp1, int X_Status,
                  string dp3, int Comm_Status, 
                  string dp4, bool invalid) {
   if(!invalid) {
-       DebugN(\"HBA_TileElement.pnl ShowStates: OK : X_Status = \" + X_Status + \" Y_Status = \" + Y_Status+ \" Comm_Status = \" + Comm_Status);
+       LOG_DEBUG(\"HBA_TileElement.pnl:initialize| OK  X_Status = \" + X_Status + \" Y_Status = \" + Y_Status+ \" Comm_Status = \" + Comm_Status);
        ColorObject(\"XBox\",X_Status);
        ColorObject(\"YBox\",Y_Status);
        ColorObject(\"CBox\",Comm_Status);

@@ -63,13 +63,14 @@ PANEL,-1 -1 241 145 N "_3DFace" 4
   antennaHighlight.toolTipText  = strToolTip;
   aNr.toolTipText   = strToolTip;
   HBA.toolTipText  = strToolTip;
-  antennaBG.toolTipText  = strToolTip;
+  childStateBorder.toolTipText  = strToolTip;
 
   // check if the required datapoints for this view are enabled and accessible
   if (dpExists(antennaDP+ \".status.state\") &&
       dpExists(baseDPX) && 
       dpExists(baseDPY)) {
     dpConnect(\"updateHBAAntenna\",antennaDP  + \".status.state\",
+                                 antennaDP + \".status.childState\",
                                  RCUXDP,
  	                         RCUYDP,
                                  baseDPX+ \".status.state\",
@@ -89,27 +90,32 @@ PANEL,-1 -1 241 145 N "_3DFace" 4
 }
 
 void updateHBAAntenna(string dp1, int state,
-                      string dp2, bool x_enabled,
-                      string dp3, bool y_enabled,
-                      string dp4, int x_state,
-                      string dp5, int y_state,
-                      string dp6, bool invalid)
+                      string dp2, int childState,
+                      string dp3, bool x_enabled,
+                      string dp4, bool y_enabled,
+                      string dp5, int x_state,
+                      string dp6, int y_state,
+                      string dp7, bool invalid)
 {
   
   string AntennaCol;
+  string childCol;
   string XCol;
   string YCol;
 
   if (invalid) {
     if (dp1 == \"\") {
       AntennaCol=\"Lofar_dpOffline\";
+      childCol = \"Lofar_dpOffline\";
     } else {
       AntennaCol=\"Lofar_invalid\";
+      childCol = \"Lofar_invalid\";
     }
     XCol=AntennaCol;
     YCol=AntennaCol;
   } else {
     AntennaCol = getStateColor(state);
+    childCol = getStateColor(childState);
     if (x_state > OPERATIONAL || x_enabled) {
       XCol=getStateColor(x_state);
     } else {
@@ -124,6 +130,7 @@ void updateHBAAntenna(string dp1, int state,
   setValue(\"HBA\", \"backCol\", AntennaCol);
   setValue(\"RCUX\", \"foreCol\", XCol);
   setValue(\"RCUY\", \"foreCol\", YCol);
+  setValue(\"childStateBorder\",\"foreCol\",childCol);
 }
 
 " 0
@@ -278,7 +285,7 @@ E "main()
 {
   click();
 }" 0
- 0 1 1 2 1 E 1 0 1 -40 -70 1 E 40 70 80 110
+ 0 2 1 2 1 E 1 0 1 -40 -70 1 E 40 70 80 110
 6 8
 "antennaHighlight"
 ""
