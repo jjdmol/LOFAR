@@ -26,6 +26,7 @@
 #include <Common/StreamUtil.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_vector.h>
+#include <Common/lofar_map.h>
 #include <Common/lofar_string.h>
 #include <cstring>
 
@@ -63,6 +64,13 @@ int main()
   vs.push_back("duif");  vs.push_back("schapen");
   cout << "A vector of strings:" << endl
        << vs << endl << endl;
+
+  map<string,int> m;
+  m["abc"] = 1;
+  m["ef"]  = -3;
+  print (cout, m.begin(), m.end(), "...", "(", ")");
+  cout << endl;
+  cout << m << endl;
 
   return 0;
 }
