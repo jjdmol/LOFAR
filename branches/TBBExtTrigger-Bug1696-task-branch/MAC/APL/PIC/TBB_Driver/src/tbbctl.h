@@ -26,7 +26,7 @@
 #define TBBCTL_H_
 
 #include <APL/TBB_Protocol/TBB_Protocol.ph>
-
+#include <APL/RTCCommon/NsTimestamp.h>
 #include <GCF/TM/GCF_Control.h>
 #include <GCF/TM/GCF_ETHRawPort.h>
 #include <GCF/TM/GCF_TimerPort.h>
@@ -34,7 +34,6 @@
 #include <Common/lofar_list.h>
 #include <Common/lofar_string.h>
 #include <cstdio>
-
 
 
 namespace LOFAR {
@@ -46,7 +45,7 @@ namespace LOFAR {
 
 GCFTimerPort* itsCmdTimer;
 
-static const int TBBCTL_VERSION = 238;
+static const int TBBCTL_VERSION = 240;
 
 // MAX_N_TBBOARDS and MAX_N_RCUS come from TBB_protocol.ph
 
@@ -516,16 +515,26 @@ public:
 	virtual ~ReadCmd() { }
 	virtual void send();
 	virtual GCFEvent::TResult ack(GCFEvent& e);
+	void setTime(double time) { itsTime.set(time); }
+	void setTimeBefore(double time) { itsTimeAfter.set(time); }
+	void setTimeAfter(double time) { itsTimeBefore.set(time); }
+	/*
 	void setSecondsTime(uint32 secondstime) { itsSecondsTime = secondstime; }
-	void setSampleTime(uint32 sampletime) { itsSampleTime = sampletime; }
+	void setSampleNr(uint32 samplenr) { itsSampleNr = samplenr; }
 	void setPrePages(uint32 prepages) { itsPrePages = prepages; }
 	void setPostPages(uint32 postpages) { itsPostPages = postpages; }
+	*/
 private:
 	uint32 itsStage;
+	RTC::NsTimestamp itsTime;
+    RTC::NsTimestamp itsTimeBefore;
+	RTC::NsTimestamp itsTimeAfter;
+	/*
 	uint32 itsSecondsTime;
-	uint32 itsSampleTime;
+	uint32 itsSampleNr;
 	uint32 itsPrePages;
 	uint32 itsPostPages;
+	*/
 };
 
 //-----------------------------------------------------------------------------
@@ -537,12 +546,21 @@ public:
 	virtual void send();
 	virtual GCFEvent::TResult ack(GCFEvent& e);
 	void setPages(uint32 pages) { itsPages = pages; }
+	void setTime(double time) { itsTime.set(time); }
+	void setTimeBefore(double time) { itsTimeAfter.set(time); }
+	void setTimeAfter(double time) { itsTimeBefore.set(time); }
+
 private:
 	int itsStage;
 	int itsRcu;
-	uint32 itsSecondsTime;
-	uint32 itsSampleTime;
 	uint32 itsPages;
+	RTC::NsTimestamp itsTime;
+    RTC::NsTimestamp itsTimeBefore;
+	RTC::NsTimestamp itsTimeAfter;
+	/*
+	uint32 itsSecondsTime;
+	uint32 itsSampleNr;
+	*/
 };
 
 //-----------------------------------------------------------------------------

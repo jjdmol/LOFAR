@@ -15,8 +15,8 @@ include = '<Common/LofarTypes.h>';
 include = '<Common/lofar_bitset.h>';
 
 include = '<APL/CR_Protocol/CRstopVector.h>';
-//include = '<APL/CR_Protocol/CRreadVector.h>';
-//include = '<APL/CR_Protocol/CRrecordVector.h>';
+include = '<APL/CR_Protocol/CRreadVector.h>';
+include = '<APL/CR_Protocol/CRrecordVector.h>';
 
 prelude = << PRELUDE_END
 
@@ -50,6 +50,10 @@ error = {
 	msg = "No errors";
 };
 
+error = {
+	id = TIME;
+	msg = "Time errors, given time in past";
+};
 
 //
 // CR events
@@ -98,12 +102,12 @@ event = {
 		name = "observationID";
 		type = "uint32";
 	};
-//	param = {
-//		name = "readVector";
-//		type = "CRreadVector";
-//		userdefined;
-//		printable;
-//	};
+	param = {
+		name = "readVector";
+		type = "CRreadVector";
+		userdefined;
+		printable;
+	};
 	param = {
 		name = "metadata";
 		type = "string";
@@ -136,12 +140,12 @@ event = {
 		name = "observationID";
 		type = "uint32";
 	};
-//	param = {
-//		name = "recordVector";
-//		type = "CRrecordVector";
-//		userdefined;
-//		printable;
-//	};
+	param = {
+		name = "recordVector";
+		type = "CRrecordVector";
+		userdefined;
+		printable;
+	};
 };
 
 event = {
@@ -157,6 +161,38 @@ event = {
 	};
 };
 
+// CEP_SPEED
+// cepDelay in nsec, minimum step 5 nSec
+// cepDatapaths 1..6
+event = {
+	signal = CEP_SPEED;
+	dir = IN;
+	param = {
+		name = "triggerID";
+		type = "uint32";
+	};
+	param = {
+		name = "cepDelay";
+		type = "uint32";
+	};
+	param = {
+		name = "cepDatapaths";
+		type = "uint32";
+	};
+};
+
+event = {
+	signal = CEP_SPEED_ACK;
+	dir = OUT;
+	param = {
+		name = "triggerID";
+		type = "uint32";
+	};
+	param = {
+		name = "result";
+		type = "uint32";
+	};
+};
 
 // STOP_DUMPS
 event = {

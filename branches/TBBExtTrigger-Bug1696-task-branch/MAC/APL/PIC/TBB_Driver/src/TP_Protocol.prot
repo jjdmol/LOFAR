@@ -18,6 +18,14 @@ include = '<Common/lofar_bitset.h>';
 
 prelude = << PRELUDE_END
 	
+	static const uint32 TP_WATCHDOG_ETH = 0;
+	static const uint32 TP_WATCHDOG_CLK = 1;
+	
+	static const uint32 TP_ARP_DISABLE = 0;
+	static const uint32 TP_ARP_AUTO = 1;
+	
+	
+	
 	//--TP Command Opcode's-------------------------------------------------------
 	//--Data Recording----------
 	static const uint32 oc_ALLOC        = 0x00000100;  // OUT allocate buffer space to a certain input channel

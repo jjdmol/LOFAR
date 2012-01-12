@@ -274,19 +274,21 @@ namespace LOFAR {
 // \internal
 // Internal macro used by the LOG_TRACE_<level> macros.
 #define LofarLogTrace(level,message) do { \
-	if (getLogger().logger().isEnabledFor(level)) \
+	  if (getLogger().logger().isEnabledFor(level)) { \
                 ::LOFAR::ScopedDelayCancellation dc; \
 		getLogger().logger().forcedLog(level, message, __FILE__, __LINE__); \
+          } \
 	} while(0)
 
 // \internal
 // Internal macro used by the LOG_TRACE_<level>_STR macros.
 #define LofarLogTraceStr(level,stream) do { \
-	if (getLogger().logger().isEnabledFor(level)) { \
+	  if (getLogger().logger().isEnabledFor(level)) { \
                 ::LOFAR::ScopedDelayCancellation dc; \
 		std::ostringstream	lfr_log_oss;	\
 		lfr_log_oss << stream;					\
-		getLogger().logger().forcedLog(level, lfr_log_oss.str(), __FILE__, __LINE__); } \
+		getLogger().logger().forcedLog(level, lfr_log_oss.str(), __FILE__, __LINE__); \
+          } \
 	} while(0)
 
 // @}

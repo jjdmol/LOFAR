@@ -28,6 +28,10 @@
 #include <math.h>
 #include <time.h>
 
+//using namespace LOFAR;
+//using namespace RTC;
+//using namespace std;
+
 namespace LOFAR {
   namespace RTC {
 

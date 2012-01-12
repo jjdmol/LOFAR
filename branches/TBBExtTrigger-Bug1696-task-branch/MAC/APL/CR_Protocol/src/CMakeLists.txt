@@ -18,7 +18,11 @@ lofar_add_library(cr_protocol
   Package__Version.cc
   CR_Protocol.cc
   CRstopRequest.cc
-  CRstopVector.cc)
+  CRstopVector.cc
+  CRreadRequest.cc
+  CRreadVector.cc
+  CRrecordRequest.cc
+  CRrecordVector.cc)
 
 lofar_add_bin_program(versioncr_protocol versioncr_protocol.cc)
 

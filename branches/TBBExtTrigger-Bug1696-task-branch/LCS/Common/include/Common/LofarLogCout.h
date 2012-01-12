@@ -229,15 +229,8 @@ public: \
 
 #define LFDebugCheck(level)	getLFDebugContext().check(level)
 
-#define	thread_unsafe_cLog(level,levelname,message) \
-	do { \
-	  if (::LOFAR::LFDebug::LFDebugCheck(level)) \
-	      ::LOFAR::LFDebug::getDebugStream() << ::LOFAR::LFDebug::sysInfo << ::LOFAR::LFDebug::spaced_time_string << levelname \
-			<< message << std::endl; \
-	} while (0)
-
 // make sure that the logging is 
-//   a) thread safe, using a mutex, which is unlocked even if thread_unsafe_cLog throws
+//   a) thread safe, using a mutex, which is unlocked even if cLog throws
 //   b) does not trigger on a pthread_cancel, because stl will cause an abort() due to
 //      not rethrowing after a catch(...) in ostream::put(char) (fixed in GCC 4.4+, maybe in 4.3 as well).
 //   c) will not cancel halfway through printing a log line when using pthread_cancel in GCC 4.4+,
@@ -263,33 +256,42 @@ int main() {
   pthread_cancel( t );
   pthread_join( t, 0 );
 }
+
+- Make sure to grab locks AFTER the message has been evaluated, because doing so might trigger other log messages
 */
 #define	cLog(level,levelname,message) \
 	do { \
+	  if (::LOFAR::LFDebug::LFDebugCheck(level)) { \
+	      std::ostringstream ss_message; \
+              ss_message << message; \
+              { \
                 ::LOFAR::ScopedLock sl(::LOFAR::LFDebug::mutex); \
                 ::LOFAR::ScopedDelayCancellation dc; \
-		thread_unsafe_cLog(level,levelname,message); \
+	        ::LOFAR::LFDebug::getDebugStream() << ::LOFAR::LFDebug::sysInfo << ::LOFAR::LFDebug::spaced_time_string << levelname \
+			<< ss_message.str() << std::endl; \
+              } \
+          } \
 	} while(0)
 
-// thread_unsafe_cLog can handle both strings and streams
+// cLog can handle both strings and streams
 #define cLogstr cLog
 
 #define	cDebug cLog
 #define	cDebugstr cDebug
 
-#define thread_unsafe_cTrace(level,message) \
-	do { \
-	  if (::LOFAR::LFDebug::LFDebugCheck(level)) \
-	      ::LOFAR::LFDebug::getDebugStream() << ::LOFAR::LFDebug::sysInfo << ::LOFAR::LFDebug::spaced_time_string << "TRACE" << LOG4CPLUS_LEVEL(level) \
-			<< " TRC." << getLFDebugContext().name() << " " \
-			<< message << std::endl; \
-	} while(0)
-
 #define cTrace(level,message) \
 	do { \
+	  if (::LOFAR::LFDebug::LFDebugCheck(level)) { \
+	      std::ostringstream ss_message; \
+              ss_message << message; \
+              { \
                 ::LOFAR::ScopedLock sl(::LOFAR::LFDebug::mutex); \
                 ::LOFAR::ScopedDelayCancellation dc; \
-		thread_unsafe_cTrace(level,message); \
+                ::LOFAR::LFDebug::getDebugStream() << ::LOFAR::LFDebug::sysInfo << ::LOFAR::LFDebug::spaced_time_string << "TRACE" << LOG4CPLUS_LEVEL(level) \
+                          << " TRC." << getLFDebugContext().name() << " " \
+                          << ss_message.str() << std::endl; \
+              } \
+          } \
 	} while(0)
 
 #define cTracestr cTrace

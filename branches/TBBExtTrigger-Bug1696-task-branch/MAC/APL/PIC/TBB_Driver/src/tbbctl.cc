@@ -442,8 +442,8 @@ TrigGenerateCmd::TrigGenerateCmd(GCFPortInterface& port) : Command(port)
 	cout << endl;
 	cout << "== TBB ============================ generate trigger on selected rcu's ====" << endl;
 	cout << endl;
-	cout << "RCU  seq_nr     time       sample      sum         samples    peak       pwr_before  pwr_after  missed   " << endl;
-	cout << "---  ---------  ---------  ----------  ----------  ---------  ---------  ----------  ---------  ---------" << endl;
+	cout << "RCU  time sec    time nsec   sum         samples    peak       pwr_before  pwr_after  missed   " << endl;
+	cout << "---  ----------  ----------  ----------  ---------  ---------  ----------  ---------  ---------" << endl;
 }
 
 //-----------------------------------------------------------------------------
@@ -473,11 +473,10 @@ GCFEvent::TResult TrigGenerateCmd::ack(GCFEvent& e)
 	}
 	if (e.signal == TBB_TRIGGER) {
 		TBBTriggerEvent trig(e);
-		cout << formatString(" %2d  %9u  %9u  %10u  %10u  %9u  %9u  %9u  %9u  %9u",
+		cout << formatString(" %2d  %10u  %10u  %10u  %9u  %9u  %9u  %9u  %9u",
 									trig.rcu,
-									trig.sequence_nr,
-									trig.time,
-									trig.sample_nr,
+									trig.nstimestamp.sec(),
+									trig.nstimestamp.nsec(),
 									trig.trigger_sum,
 									trig.trigger_samples,
 									trig.peak_value,
@@ -618,9 +617,8 @@ GCFEvent::TResult TrigInfoCmd::ack(GCFEvent& e)
 	cout << "RCU  Info" << endl;
 	cout << "---  -------------------------------------------------------" << endl;
 	if (ack.status_mask == TBB_SUCCESS) {
-		cout << formatString(" %2d  sequence   : %lu",getRcu(),ack.sequence_nr) << endl;
-		cout << formatString("      time       : %lu",ack.time) << endl;
-		cout << formatString("      sample     : %lu",ack.sample_nr) << endl;
+		cout << formatString(" %2d  time_sec   : %lu",getRcu(),ack.nstimestamp.sec()) << endl;
+		cout << formatString("      time_nsec  : %lu",ack.nstimestamp.nsec()) << endl;
 		cout << formatString("      sum        : %lu",ack.trigger_sum) << endl;
 		cout << formatString("      samples    : %lu",ack.trigger_samples) << endl;
 		cout << formatString("      peak value : %lu",ack.peak_value) << endl;
@@ -645,6 +643,14 @@ ListenCmd::ListenCmd(GCFPortInterface& port) : Command(port),
 //-----------------------------------------------------------------------------
 void ListenCmd::send()
 {
+	if (itsCmdStage != 4) {
+		TBBSubscribeEvent subscribe;
+		subscribe.triggers = true;
+		subscribe.hardware = true;
+		itsPort.send(subscribe);
+		itsPort.setTimer(DELAY);
+	}
+	/*
 	switch (itsCmdStage) {
 		case 0: {
 			cout << "-stop all trigger systems" << endl;
@@ -652,6 +658,7 @@ void ListenCmd::send()
 			release.rcu_stop_mask.set();
 			release.rcu_start_mask.reset();
 			itsPort.send(release);
+			itsPort.setTimer(DELAY);
 		} break;
 
 		case 1: {
@@ -659,6 +666,7 @@ void ListenCmd::send()
 			TBBStopEvent stop;
 			stop.rcu_mask = getRcuMask();
 			itsPort.send(stop);
+			itsPort.setTimer(DELAY);
 		} break;
 
 		case 2: {
@@ -666,6 +674,7 @@ void ListenCmd::send()
 			TBBRecordEvent record;
 			record.rcu_mask = getRcuMask(); // if select cmd is used
 			itsPort.send(record);
+			itsPort.setTimer(DELAY);
 		} break;
 
 		case 3: {
@@ -673,6 +682,7 @@ void ListenCmd::send()
 			subscribe.triggers = true;
 			subscribe.hardware = true;
 			itsPort.send(subscribe);
+			itsPort.setTimer(DELAY);
 		} break;
 
 		case 4: {
@@ -682,21 +692,23 @@ void ListenCmd::send()
 			release.rcu_stop_mask = getRcuMask();
 			release.rcu_start_mask = getRcuMask();
 			itsPort.send(release);
+			itsPort.setTimer(DELAY);
 			cout << endl;
-			cout << "RCU  seq_nr     time        sample      sum         samples    peak       pwr_before  pwr_after  missed   " << endl;
-			cout << "---  ---------  ----------  ----------  ----------  ---------  ---------  ----------  ---------  ---------" << endl;
+			cout << "RCU  time sec    time nsec   sum         samples    peak       pwr_before  pwr_after  missed   " << endl;
+			cout << "---  ----------  ----------  ----------  ---------  ---------  ----------  ---------  ---------" << endl;
 		} break;
 
 		default: {
 		} break;
 	}
-	itsPort.setTimer(DELAY);
+	*/
+	
 }
 
 //-----------------------------------------------------------------------------
 GCFEvent::TResult ListenCmd::ack(GCFEvent& e)
 {
-	static int nummer;
+	static int nummer = 0;
 	if (e.signal == TBB_STOP_ACK) {
 		TBBTrigReleaseAckEvent ack(e);
 		if (itsCmdStage == 1) { itsCmdStage = 2; }
@@ -716,21 +728,23 @@ GCFEvent::TResult ListenCmd::ack(GCFEvent& e)
 	}
 
 	if (e.signal == TBB_TRIGGER) {
-
+         if (++nummer >= 40) {
+            cout << "RCU  time sec    time nsec   sum         samples    peak       pwr_before  pwr_after  missed   " << endl;
+			   cout << "---  ----------  ----------  ----------  ---------  ---------  ----------  ---------  ---------" << endl;
+			   nummer = 0;
+			}
 			TBBTriggerEvent trig(e);
-			nummer++;
-			cout << formatString(" %2d  %9u  %9u  %10u  %10u  %9u  %9u  %9u  %9u  %9u  %6d",
+			//nummer++;
+			cout << formatString(" %2d  %10u  %10u  %10u  %9u  %9u  %9u  %9u  %9u",
 										trig.rcu,
-										trig.sequence_nr,
-										trig.time,
-										trig.sample_nr,
+										trig.nstimestamp.sec(),
+										trig.nstimestamp.nsec(),
 										trig.trigger_sum,
 										trig.trigger_samples,
 										trig.peak_value,
 										trig.power_before,
 										trig.power_after,
-										trig.missed,
-										nummer ) << endl;
+										trig.missed) << endl;
 
 			/*
 			if (itsListenMode == TBB_LISTEN_ONE_SHOT) {
@@ -751,7 +765,7 @@ GCFEvent::TResult ListenCmd::ack(GCFEvent& e)
 
 //---- READ -------------------------------------------------------------------
 ReadCmd::ReadCmd(GCFPortInterface& port) : Command(port),
-	itsStage(0), itsSecondsTime(0),itsSampleTime(0),itsPrePages(0),itsPostPages(0)
+	itsStage(0), itsTime(0), itsTimeBefore(0), itsTimeAfter(0)
 {
 	cout << endl;
 	cout << "== TBB ==============  transfer data to CEP for all selected rcu ====" << endl;
@@ -765,10 +779,9 @@ void ReadCmd::send()
 		case 0: {
 			TBBReadEvent event;
 			event.rcu = (uint32)getRcu();
-			event.secondstime = itsSecondsTime;
-			event.sampletime = itsSampleTime;
-			event.prepages = itsPrePages;
-			event.postpages = itsPostPages;
+			event.nstimestamp = itsTime;
+			event.nstimebefore = itsTimeBefore;
+			event.nstimeafter = itsTimeAfter;
 			itsPort.send(event);
 			itsPort.setTimer(DELAY);
 		} break;
@@ -826,7 +839,7 @@ GCFEvent::TResult ReadCmd::ack(GCFEvent& e)
 
 //---- READALL -------------------------------------------------------------------
 ReadAllCmd::ReadAllCmd(GCFPortInterface& port) : Command(port),
-	itsStage(0), itsRcu(0), itsSecondsTime(0),itsSampleTime(0),itsPages(0)
+	itsStage(0), itsRcu(0), itsPages(0), itsTime(0), itsTimeBefore(0), itsTimeAfter(0)
 {
 	cout << endl;
 	cout << "== TBB ==============  transfer all data to CEP for all selected rcu ====" << endl;
@@ -860,31 +873,38 @@ void ReadAllCmd::send()
 			itsPort.send(event);
 			itsPort.setTimer(DELAY);
 		} break;
+      
+      case 2: {
+			TBBReadrEvent event;
 
-		case 2: {
+			event.board = rcu2board(itsRcu);
+			event.mp = rcu2mp(itsRcu);
+			event.pid = rcu2writer(itsRcu);
+			event.regid = 6; // Last stored sample frequency
+			//cout << "readr board=" << event.board << " mp=" << event.mp << " writer=" << event.pid << endl;
+			itsPort.send(event);
+			itsPort.setTimer(DELAY);
+		} break;
+		
+		case 3: {
 			TBBReadEvent event;
 			event.rcu = itsRcu;
-			event.secondstime = itsSecondsTime;
-			event.sampletime = itsSampleTime;
-			if (itsPages == 0) {
-				event.prepages = 0;
-			} else {
-				event.prepages = itsPages - 1;
-			}
+			event.nstimestamp = itsTime;
+			event.nstimebefore = itsTimeBefore;
+			event.nstimeafter = itsTimeAfter;
 			cout << "         wait while sending " << itsPages << " pages to cep [" << flush;
-			event.postpages = 0;
 			itsPort.send(event);
 			itsPort.setTimer(DELAY);
 		} break;
 
-		case 3: {
+		case 4: {
 			TBBCepStatusEvent event;
 			event.boardmask = (1 << rcu2board(getRcu()));
 			itsPort.send(event);
 			itsPort.setTimer(DELAY);
 		} break;
 
-		case 4: {
+		case 5: {
 			TBBRecordEvent event;
 			if (isSelectionDone()) event.rcu_mask = getRcuMask(); // if select cmd is used
 
@@ -899,79 +919,106 @@ void ReadAllCmd::send()
 //-----------------------------------------------------------------------------
 GCFEvent::TResult ReadAllCmd::ack(GCFEvent& e)
 {
-	switch (itsStage) {
-		case 0: {
-			TBBStopAckEvent ack(e);
-			cout << "all selected channels are stopped" << endl;
-			// look for 1e Rcu to handle
-			while (!isSelected(itsRcu)) {
-				itsRcu++;
-				if (itsRcu > getMaxSelections()) {
-					setCmdDone(true);
-					break;
-				}
+   static uint32 secondsTime;
+   static uint32 sampleNr;
+   static uint32 savedSamples;
+   static uint32 sampleFreq;
+   
+	if (e.signal == TBB_STOP_ACK) {
+		TBBStopAckEvent ack(e);
+		cout << "all selected channels are stopped" << endl;
+		// look for 1e Rcu to handle
+		while (!isSelected(itsRcu)) {
+			itsRcu++;
+			if (itsRcu > getMaxSelections()) {
+				setCmdDone(true);
+				break;
 			}
-			itsStage = 1;
-		} break;
-
-		case 1: {
+		}
+		itsStage = 1;
+	}
+	
+	else if (e.signal == TBB_READR_ACK) {
+		if (itsStage == 1) {
 			TBBReadrAckEvent ack(e);
-			itsSecondsTime = ack.data[0];
-			itsSampleTime = ack.data[1];
-			cout << formatString("rcu %-3d, last recorded time 0x%08x seconds and sample number 0x%08x",
-										itsRcu, itsSecondsTime, itsSampleTime) << endl;
+			secondsTime = ack.data[0];
+			sampleNr = ack.data[1];
+			cout << formatString("rcu %-3d, last recorded time %lu seconds and sample number %lu",
+										itsRcu, secondsTime, sampleNr) << endl;
+			
 			itsStage = 2;
-		} break;
+		}
+		else if (itsStage == 2) { 
+			TBBReadrAckEvent ack(e);
+			savedSamples = ack.data[0];
+			sampleFreq = ack.data[1];
+			
+			// make timestamp
+			double sampletime = 1. / (sampleFreq * 1E6);
+			RTC::NsTimestamp lastTime(secondsTime + (sampleNr * sampletime));
+			itsTime = lastTime;
+			itsTimeAfter.set(0.0);
+			RTC::NsTimestamp timeBefore(itsPages * savedSamples * sampletime);
+			itsTimeBefore = timeBefore;
+			
+			cout << formatString("rcu %-3d, last recorded time=%lu seconds, sample number=%lu and sample-freq=%dMHz",
+										itsRcu, secondsTime, sampleNr,sampleFreq) << endl;
+			cout << formatString("         time       = %lu seconds, %lu nseconds", 
+			                     itsTime.sec(), itsTime.nsec()) << endl;
+			cout << formatString("         timebefore = %lu seconds, %lu nseconds",
+			                     itsTimeBefore.sec(), itsTimeBefore.nsec()) << endl;
+			cout << formatString("         timeafter  = %lu seconds, %lu nseconds",
+			                     itsTimeAfter.sec(), itsTimeAfter.nsec()) << endl;
+			itsStage = 3;
+		}
+	}
+	
+	else if (e.signal == TBB_READ_ACK) {
+		TBBReadAckEvent ack(e);
+		if (ack.status_mask == TBB_SUCCESS) {
+			itsStage = 4;
+			setCmdSendNext(false);
+			itsCmdTimer->setTimer(1.0);
+		}
+		else {
+			cout << endl << formatString(" %2d  %s",getRcu(), getDriverErrorStr(ack.status_mask).c_str()) << endl;
+			setCmdDone(true);
+		}
+	}
 
-		case 2: {
-			TBBReadAckEvent ack(e);
-			if (ack.status_mask == TBB_SUCCESS) {
-				itsStage = 3;
-				setCmdSendNext(false);
+	else if (e.signal == TBB_CEP_STATUS_ACK) {
+		TBBCepStatusAckEvent ack(e);
+		if (ack.status_mask[rcu2board(getRcu())] == TBB_SUCCESS) {
+			if (ack.pages_left[rcu2board(getRcu())] != 0) {
+				cout << "*" << flush;
 				itsCmdTimer->setTimer(1.0);
 			}
 			else {
-				cout << endl << formatString(" %2d  %s",getRcu(), getDriverErrorStr(ack.status_mask).c_str()) << endl;
-				setCmdDone(true);
-			}
-		} break;
-
-		case 3: {
-			TBBCepStatusAckEvent ack(e);
-			if (ack.status_mask[rcu2board(getRcu())] == TBB_SUCCESS) {
-				if (ack.pages_left[rcu2board(getRcu())] != 0) {
-					cout << "*" << flush;
-					itsCmdTimer->setTimer(1.0);
-				}
-				else {
-					setCmdSendNext(true);
-					cout << "]" << endl;
-					// look for next Rcu
+				setCmdSendNext(true);
+				cout << "]" << endl;
+				// look for next Rcu
+				itsRcu++;
+				itsStage = 1;
+				while (!isSelected(itsRcu)) {
 					itsRcu++;
-					itsStage = 1;
-					while (!isSelected(itsRcu)) {
-						itsRcu++;
-						if (itsRcu >= getMaxSelections()) {
-							itsStage = 4;
-							//setCmdDone(true); // delete this line if new image with cep_status cmd is active
-							break;
-						}
+					if (itsRcu >= getMaxSelections()) {
+						itsStage = 5;
+						//setCmdDone(true); // delete this line if new image with cep_status cmd is active
+						break;
 					}
 				}
 			}
-			else {
-				cout << formatString(" %2d  %s",getRcu(), getDriverErrorStr(ack.status_mask[rcu2board(getRcu())]).c_str()) << endl;
-				setCmdDone(true);
-			}
-		} break;
-
-		case 4: {
-			TBBRecordAckEvent ack(e);
-			cout << "all stopped channels are started again" << endl;
+		}
+		else {
+			cout << formatString(" %2d  %s",getRcu(), getDriverErrorStr(ack.status_mask[rcu2board(getRcu())]).c_str()) << endl;
 			setCmdDone(true);
-		} break;
+		}
+	}
 
-		default: break;
+	else if (e.signal == TBB_RECORD_ACK) {
+		TBBRecordAckEvent ack(e);
+		cout << "all stopped channels are started again" << endl;
+		setCmdDone(true);
 	}
 	return(GCFEvent::HANDLED);
 }
@@ -1133,7 +1180,7 @@ GCFEvent::TResult StatusCmd::ack(GCFEvent& e)
 		if (isSelected(bnr) ) {
 			if (ack.status_mask[bnr] == TBB_SUCCESS) {
 
-				cout << formatString("%3d  %5d  %6s  %4.2fV  %4.2fV  %4.2fV  %2u'C  %2u'C  %2u'C %s  %2u'C %s  %2u'C %s  %2u'C %s   0x%2x",
+				cout << formatString("%3d  %5d  %6s  %4.2fV  %4.2fV  %4.2fV  %2u'C  %2u'C  %2u'C %s  %2u'C %s  %2u'C %s  %2u'C %s   0x%02x",
 						bnr,
 						ack.CurrentImage[bnr],
 						ack.WatchDogMode[bnr]?"ETH":"clock",
@@ -2609,15 +2656,13 @@ void TBBCtl::commandHelp(int level)
 	cout << endl;
 	cout << "______| CEP |_____________________________________________________________________________________________________________" << endl;
 	cout << " tbbctl --mode=[transient | subbands] [--select=<rcuset>]              # set receive mode to configure UDP/IP header for CEP tranport" << endl;
-	cout << "      # before using: --read, readall, --arp or --arpmode, " << endl;
-	cout << "      # first use --mode or --cepsettings to setup UDP/IP header " << endl;
 	cout << " tbbctl --storage=node [--select=<rcuset>]                             # set storage node to configure UDP/IP header for CEP tranport" << endl;
-	cout << " tbbctl --read=rcunr,secondstime,sampletime,prepages,postpages         # transfer recorded data from rcunr to CEP, " << endl;
+	cout << " tbbctl --read=rcunr,centertime,timebefore,timeafter                   # transfer recorded data from rcunr to CEP, " << endl;
 	cout << " tbbctl --readall=pages [--select=<rcuset>]                            # transfer number of pages from all selected rcunr to CEP, " << endl;
 	cout << " tbbctl --stopcep [--select=<boardset>]                                # stop sending data to CEP" << endl;
 	cout << " tbbctl --cepdelay=delay [--select=<boardset>]                         # set delay between CEP frames, 1 delay unit = 5 uS" << endl;
-	cout << " tbbctl --arp [--select=<boardset>]                                    # send 1 arp message" << endl;
-	cout << " tbbctl --arpmode=mode [--select=<boardset>]                           # set arp mode, 0=manual, 1=auto(every 42 seconds 1 message)" << endl;
+//   cout << " tbbctl --arp [--select=<boardset>]                                    # send 1 arp message" << endl;
+//   cout << " tbbctl --arpmode=mode [--select=<boardset>]                           # set arp mode, 0=manual, 1=auto(every 42 seconds 1 message)" << endl;
 	cout << endl;
 	cout << "______| TRIGGER |_________________________________________________________________________________________________________" << endl;
 	cout << " tbbctl --settings [--select=<rcuset>]                                 # list trigger settings for selected rcu's" << endl;
@@ -3189,23 +3234,32 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 
 				if (optarg) {
 					int rcu = 0;
+					double centerTime;
+					double timeBefore;
+					double timeAfter;
+					/*
 					uint32 secondstime = 0;
-					uint32 sampletime = 0;
+					uint32 samplenr = 0;
 					uint32 prepages = 0;
 					uint32 postpages = 0;
-					int numitems = sscanf(optarg, "%d,%u,%u,%u,%u",
-						&rcu, &secondstime, &sampletime, &prepages, &postpages);
-					if (numitems < 5 || numitems == EOF || rcu < 0 || rcu >= MAX_N_RCUS) {
+					*/
+					int numitems = sscanf(optarg, "%d,%lf,%lf,%lf",
+						&rcu, &centerTime, &timeBefore, &timeAfter);
+					if (numitems < 4 || numitems == EOF || rcu < 0 || rcu >= MAX_N_RCUS) {
 						cout << "Error: invalid number of arguments. Should be of the format " << endl;
-						cout << "       '--read=rcu,secondstime,sampletime,prepages,postpages' " << endl;
-						cout << "       rcu=0.." << (MAX_N_RCUS - 1) << ",  time = secondstime + (sampletime * sample-interval) "<< endl;
+						cout << "       '--read=rcu,centertime,timebefore,timeafter' " << endl;
+						cout << "       rcu=0.." << (MAX_N_RCUS - 1) << ",  time in double "<< endl;
 						exit(EXIT_FAILURE);
 					}
+					readcmd->setTime(centerTime);
+					readcmd->setTimeBefore(timeBefore);
+					readcmd->setTimeAfter(timeAfter);
+					/*
 					readcmd->setSecondsTime(secondstime);
-					readcmd->setSampleTime(sampletime);
+					readcmd->setSampleNr(samplenr);
 					readcmd->setPrePages(prepages);
 					readcmd->setPostPages(postpages);
-
+                    */
 					select.clear();
 					select.push_back(rcu);
 					command->setSelected(true);
@@ -3308,7 +3362,15 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 				command = resetcmd;
 				command->setCmdType(BOARDCMD);
 			} break;
+         
+         case 'u':
+         case 'v': {
+            cout << "--arp and --arpmode not used anymore in tbbctl" << endl;
+            cout << "arp messages now send automatically by TBBDriver" << endl;
+            exit(EXIT_FAILURE);
+         } break;
 
+/*
 			case 'u': {    // --arp
 				if (command) delete command;
 				ArpCmd* arpcmd = new ArpCmd(itsServerPort);
@@ -3333,7 +3395,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 				}
 				command->setCmdType(BOARDCMD);
 			} break;
-
+*/
 			case 'w': {    // --stopcep
 				if (command) delete command;
 				StopCepCmd* stopcepcmd = new StopCepCmd(itsServerPort);

@@ -12,9 +12,11 @@ id = "(LOFAR::MACIO::F_APL_PROTOCOL+14)";
 include = '<sys/time.h>';
 include = '<linux/types.h>';
 include = '<Common/LofarTypes.h>';
+include = '<Common/LofarConstants.h>';
 include = '<Common/lofar_bitset.h>';
 
-include = '<APL/RTCCommon/Timestamp.h>';
+//include = '<APL/RTCCommon/Timestamp.h>';
+include = '<APL/RTCCommon/NsTimestamp.h>';
 
 prelude = << PRELUDE_END
 
@@ -233,6 +235,25 @@ event = {
 	};
 };
 
+// set used clockfreq
+event = {
+	signal = CLOCK;
+	dir = IN;
+	param = {
+		name = "clock";
+		type = "int32";
+	};
+};
+
+event = {
+	signal = CLOCK_ACK;
+	dir = OUT;
+	param = {
+		name = "status_mask";
+		type = "uint32";
+	};
+};
+
 // data recording
 event = {
 	signal = ALLOC;
@@ -331,16 +352,9 @@ event = {
 		type = "int32";
 	};
 	param = {
-		name = "sequence_nr";
-		type = "uint32";
-	};
-	param = {
-		name = "time";
-		type = "uint32";
-	};
-	param = {
-		name = "sample_nr";
-		type = "uint32";
+		name = "nstimestamp";
+		type = "RTC::NsTimestamp";
+		userdefined;
 	};
 	param = {
 		name = "trigger_sum";
@@ -527,16 +541,9 @@ event = {
 		type = "int32";
 	};
 	param = {
-		name = "sequence_nr";
-		type = "uint32";
-	};
-	param = {
-		name = "time";
-		type = "uint32";
-	};
-	param = {
-		name = "sample_nr";
-		type = "uint32";
+		name = "nstimestamp";
+		type = "RTC::NsTimestamp";
+		userdefined;
 	};
 	param = {
 		name = "trigger_sum";
@@ -573,21 +580,36 @@ event = {
 		name = "rcu";
 		type = "int32";
 	};
+//	param = {
+//		name = "secondstime";
+//		type = "uint32";
+//	};
+//	param = {
+//		name = "samplenr";
+//		type = "uint32";
+//	};
+//	param = {
+//		name = "prepages";
+//		type = "uint32";
+//	};
+//	param = {
+//		name = "postpages";
+//		type = "uint32";
+//	};
 	param = {
-		name = "secondstime";
-		type = "uint32";
+		name = "nstimestamp";
+		type = "RTC::NsTimestamp";
+		userdefined;
 	};
 	param = {
-		name = "sampletime";
-		type = "uint32";
+		name = "nstimebefore";
+		type = "RTC::NsTimestamp";
+		userdefined;
 	};
 	param = {
-		name = "prepages";
-		type = "uint32";
-	};
-	param = {
-		name = "postpages";
-		type = "uint32";
+		name = "nstimeafter";
+		type = "RTC::NsTimestamp";
+		userdefined;
 	};
 };
 

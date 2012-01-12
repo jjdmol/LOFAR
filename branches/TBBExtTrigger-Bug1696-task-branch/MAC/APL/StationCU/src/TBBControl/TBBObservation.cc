@@ -38,9 +38,11 @@ TBBObservation::TBBObservation() :
 {
 }
 
-TBBObservation::TBBObservation(ParameterSet*		aParSet)
+TBBObservation::TBBObservation(ParameterSet* aParSet)
 {
 	itsSettingsLoaded = false;
+	clockFreq = 200;
+	sampleTime = 5.0;
 	// analyse ParameterSet.
 	string prefix = aParSet->locateModule("Observation") + "Observation.TBB.TBBsetting";
 	LOG_DEBUG_STR("'TBB' located at: " << prefix);
@@ -81,9 +83,11 @@ TBBObservation::TBBObservation(ParameterSet*		aParSet)
 		vector<uint16> RCUnumbers(rcuParset.getUint16Vector("x"));
 		if (RCUnumbers.empty()) {			// No receivers in the list?
 			tbbsettings.RCUset.set();						// assume all receivers
+			allRCUset.set();
 		} else {
 			for (uint i = 0; i < RCUnumbers.size();i++) {
-				tbbsettings.RCUset.set(RCUnumbers[i]);	// set mentioned receivers in all set
+				tbbsettings.RCUset.set(RCUnumbers[i]);
+				allRCUset.set(RCUnumbers[i]);	// set mentioned receivers in all set
 			}
 		}
 
@@ -93,10 +97,15 @@ TBBObservation::TBBObservation(ParameterSet*		aParSet)
 		setNr++;
 		setnr = formatString("[%d]", setNr);
 	}
-
 	if (setNr == 0) {
 		LOG_DEBUG_STR("No TBB parameterSets defined");
 	}
+	// get used clock frequency
+	prefix = aParSet->locateModule("Observation") + "Observation.";
+	LOG_DEBUG_STR("'Observation' located at: " << prefix);
+	clockFreq = aParSet->getInt32(prefix + "sampleClock");
+	sampleTime = 1. / (clockFreq*1e6);
+	NSEC2SAMPLE = 1. / (sampleTime*1e9);
 }
 
 //

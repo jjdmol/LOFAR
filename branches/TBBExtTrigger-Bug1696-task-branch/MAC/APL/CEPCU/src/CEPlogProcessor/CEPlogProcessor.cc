@@ -375,9 +375,9 @@ GCFEvent::TResult CEPlogProcessor::operational(GCFEvent& event, GCFPortInterface
               droppedArray[i] = new GCFPVString(itsStorageBuf[j].dropped[i]);
           }
           
-          itsStorage[j]->setValue(PN_STR_TIME, GCFPVDynArr(LPT_DYNSTRING, timeArray));
-          itsStorage[j]->setValue(PN_STR_COUNT, GCFPVDynArr(LPT_DYNINTEGER, countArray));
-          itsStorage[j]->setValue(PN_STR_DROPPED, GCFPVDynArr(LPT_DYNSTRING, droppedArray));
+          itsStorage[j]->setValue(PN_STR_TIME, GCFPVDynArr(timeArray));
+          itsStorage[j]->setValue(PN_STR_COUNT, GCFPVDynArr(countArray));
+          itsStorage[j]->setValue(PN_STR_DROPPED, GCFPVDynArr(droppedArray));
 
           for (unsigned i = 0; i<MPIProcs;i++) {
             delete timeArray[i];

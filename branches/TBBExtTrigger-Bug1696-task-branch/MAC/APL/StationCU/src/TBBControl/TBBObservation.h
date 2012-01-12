@@ -1,5 +1,5 @@
 //#  TBBObservation.h: class/struct that holds the Observation information
-//#
+//# 
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
@@ -59,8 +59,8 @@ public:
 
 	class cSettings {
 	public:
-	    cSettings() {};
-	    ~cSettings() {};
+		cSettings() {};
+		~cSettings() {};
 		uint16 filter0[4];
 		uint16 filter1[4];
 		uint16 triggerLevel;
@@ -73,11 +73,13 @@ public:
 		
 		RCUset_t      RCUset;
 		vector<int32> SubbandList;
-   };
+	};
 	//# Datamembers
 	vector<cSettings> TbbSettings;
-	//RCUset_t          RCUset;
-	//vector<int32>     SubbandList;
+	RCUset_t allRCUset;
+	int clockFreq;
+	double sampleTime;
+	double NSEC2SAMPLE;
 	
 	bool isLoaded();
 	//# print function for operator<<
