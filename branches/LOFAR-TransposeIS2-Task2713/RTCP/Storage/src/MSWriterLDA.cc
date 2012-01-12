@@ -128,7 +128,13 @@ namespace LOFAR
 
       unsigned nrBlocks = ceil((parset.stopTime() - parset.startTime()) / parset.CNintegrationTime());
       unsigned nrSubbands = itsInfo.subbands.size();
-      const vector<unsigned> &subbands = itsInfo.subbands;
+      const vector<unsigned> &subbandIndices = itsInfo.subbands;
+      const vector<unsigned> allSubbands = parset.subbandList();
+
+      vector<unsigned> subbands(nrSubbands, 0); // actual subbands written in this file
+
+      for (unsigned sb = 0; sb < nrSubbands; sb++)
+        subbands[sb] = allSubbands[subbandIndices[sb]];
 
       vector<string> stokesVars;
 
@@ -192,12 +198,6 @@ namespace LOFAR
 
       file.observationNofStations().set(parset.nrStations()); // TODO: SS beamformer?
       file.observationStationsList().set(parset.allStationNames()); // TODO: SS beamformer?
-
-#if 0
-      vector<unsigned> subbands = parset.subbandList();
-      unsigned max_subband = *max_element( subbands.begin(), subbands.end() );
-      unsigned min_subband = *min_element( subbands.begin(), subbands.end() );
-#endif
 
       const vector<double> subbandCenterFrequencies = parset.subbandToFrequencyMapping();
       double min_centerfrequency = *min_element( subbandCenterFrequencies.begin(), subbandCenterFrequencies.end() );
@@ -294,7 +294,12 @@ namespace LOFAR
       beam.pointOffsetRA() .set(pbeamDir[0] * 180.0 / M_PI);
       beam.pointOffsetDEC().set(pbeamDir[0] * 180.0 / M_PI);
 
-      double beamCenterFrequencySum = accumulate(subbands.begin(), subbands.end(), 0.0);
+      vector<double> beamCenterFrequencies(nrSubbands, 0.0);
+
+      for (unsigned sb = 0; sb < nrSubbands; sb++)
+        beamCenterFrequencies[sb] = subbandCenterFrequencies[subbandIndices[sb]];
+
+      double beamCenterFrequencySum = accumulate(beamCenterFrequencies.begin(), beamCenterFrequencies.end(), 0.0);
 
       beam.beamFrequencyCenter().set(beamCenterFrequencySum / nrSubbands);
 
@@ -370,8 +375,7 @@ namespace LOFAR
       vector<double> spectralWorld;
 
       for(unsigned sb = 0; sb < nrSubbands; sb++) {
-        const unsigned subbandOffset = 512 * (parset.nyquistZone() - 1);
-        const double subbandBeginFreq = subbandBandwidth * (subbands[sb] + subbandOffset - 0.5);
+        const double subbandBeginFreq = beamCenterFrequencies[sb] - 0.5 * subbandBandwidth;
 
         for(unsigned ch = 0; ch < itsInfo.nrChannels; ch++) {
           spectralPixels.push_back(spectralPixels.size());
