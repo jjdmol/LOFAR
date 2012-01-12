@@ -6,6 +6,7 @@ import errno
 from lofarpipe.support.control import control
 from lofar.parameterset import parameterset #@UnresolvedImport
 import lofarpipe.support.lofaringredient as ingredient
+from lofarpipe.support.utilities import create_directory
 
 class imager_pipeline(control):
     """
@@ -13,8 +14,8 @@ class imager_pipeline(control):
     """
     inputs = {
         'input_mapfile': ingredient.FileField(
-            '--input_mapfile',
-            help="bwaaaaa"
+            '--input-mapfile',
+            help = "mapfile with inputs specific to this node script"
         )
     }
 
@@ -52,13 +53,14 @@ class imager_pipeline(control):
         Define the individual tasks that comprise the current pipeline.
         This method will be invoked by the base-class's `go()` method.
         """
-        
+        #*****************************************************************
         #Get parameters prepare imager from the parset and inputs
         raw_ms_mapfile = self.inputs['input_mapfile']
-        
+
         prepare_imager_parset = self.parset.makeSubset("prepare_imager.")
+
         ndppp = prepare_imager_parset.getString("ndppp")
-        initscript = prepare_imager_parset.getString("initscript")      
+        initscript = prepare_imager_parset.getString("initscript")
         working_directory = self.config.get("DEFAULT", "default_working_directory") #.#get("working_directory","error")
         output_mapfile = prepare_imager_parset.getString("output_mapfile")
         slices_per_image = prepare_imager_parset.getInt("slices_per_image")
@@ -80,52 +82,40 @@ class imager_pipeline(control):
                         ndppp = ndppp,
                         initscript = initscript,
                         parset = prepare_imager_parset_file,
-                        working_directory = working_directory,
+                        working_directory = working_directory, #TODO: deze parameters hoeven dus echt niet meer mee.
                         output_mapfile = output_mapfile,
                         slices_per_image = slices_per_image,
                         subbands_per_image = subbands_per_image,
                         mapfile = mapfile)['mapfile']
-        
+
+        #*****************************************************************
         #Get parameters awimager from the parset and inputs        
         awimager_parset = self.parset.makeSubset("awimager.")
         executable = awimager_parset.getString("executable")
-        
+
         awimager_parset = \
             self._write_parset_to_file(awimager_parset, "awimager")
-            
+
         #run the awimager recipe
         awimager_output_mapfile = \
             self.run_task("awimager", prepare_imager_output_mapfile,
                           parset = awimager_parset,
                           executable = executable)
 
+        #run the awimager recipe
+#        awimager_output_mapfile = \
+#            self.run_task("bbs_imager", #prepare_imager_output_mapfile,
+#                          parset = "/home/klijn/build/preparation/parset.par",
+#                          executable = "/opt/cep/LofIm/daily/lofar/lib/python2.6/dist-packages/lofar/gsmutils.py",
+#                          initscript = "/opt/cep/LofIm/daily/lofar/lofarinit.sh")
+
+
         return 0
 
-    def _create_dir(self,path):
-        """
-        Create the directory suplied in path. Continues if directory exist
-        Creates parent directory of this does not exsist
-        throw original exception in other error cases
-        """
-        print path
-        try:
-            os.mkdir(path)
-        except OSError as exc:
-            if exc.errno == errno.EEXIST:    #if dir exists continue
-                pass
-            elif exc.errno == errno.ENOENT:  #if parent dir does not excist
-                raise  #TODO
-#                #check if parent of parent dir exsist
-#                parant_parent = os.path.split(os.path.split(path))
-#                if os.path.exists(parant_parent):
-#                    self._create_dir(os.path.split(path))
-#                else: 
-#                    raise                
-        else:  
-            raise  
 
-            
-    def _write_parset_to_file(self,parset, parset_name):
+
+
+    def _write_parset_to_file(self, parset, parset_name):
         """
         Write the suplied the suplied parameterset to the parameter set 
         directory in the jibs dir with the filename suplied in parset_name.
@@ -136,13 +126,13 @@ class imager_pipeline(control):
         parset_dir = os.path.join(
             self.config.get("layout", "job_directory"), "parsets")
         #create the parset dir if it does not exist
-        self._create_dir(parset_dir)
-        
+        create_directory(parset_dir)
+
         #write the content to a new parset file
         prepare_imager_parset_file = os.path.join(parset_dir,
                          "{0}.parset".format(parset_name))
         parset.writeFile(prepare_imager_parset_file)
-        
+
         return prepare_imager_parset_file
 
 if __name__ == '__main__':
