@@ -2,7 +2,7 @@
 #coding: iso-8859-15
 
 ## database info
-dbName="StationCoordinates_20120111"
+dbName="StationCoordinates"
 dbHost="localhost"
 
 def getDBname():
