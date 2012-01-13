@@ -99,11 +99,11 @@ par integrationSteps	O	int		-		10  	0	30	-	'number of blocks summed by the IONPr
 #
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node  StorageProc     4.0.0  development 'node constraint'  "???"
+#node  StorageProc     4.0.0  development 'node constraint'  "???"
 
 #    name          	dir. 	type   unit   	prun. 	vm  	value   constr. descr.
 #--------------------------------------------------------------------------------------------------------
-par subbandsPerMS	I	int	-	10	0	1	-	'???'
+#par subbandsPerMS	I	int	-	10	0	1	-	'???'
 
 
 # -- OLAP--
@@ -133,4 +133,4 @@ uses  Correlator   4.0.0  development '1'  "Correlator specification"
 uses  PencilInfo   4.0.0  development '1'  "Settings for pencil beamformer"
 uses  DelayComp    4.0.0  development '1'  "Setting of the delaycompensation"
 uses  IONProc      4.0.0  development '1'  "I/O Node Processing: application running on the BlueGene I/O nodes"
-uses  StorageProc  4.0.0  development '1'  "Stores output from the correlator in one or more MeasurmentSet files"
+#uses  StorageProc  4.0.0  development '1'  "Stores output from the correlator in one or more MeasurmentSet files"
