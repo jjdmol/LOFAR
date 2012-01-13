@@ -200,7 +200,7 @@ if __name__ == '__main__':
         writeRotationMatrix(station, 'LBA')
         writeAntennaField(station, 'LBA', aRefL)
         aOffset = aPosL - [[aRefL,aRefL]]
-        writeAntennaField(station, 'LBA', aOffset)
+        writeAntennaField(station, '', aOffset)
         
         # write HBA information to AntennaPos.conf   
         # if not a core station
@@ -209,7 +209,7 @@ if __name__ == '__main__':
             writeRotationMatrix(station, 'HBA')
         writeAntennaField(station, 'HBA', aRefH)
         aOffset = aPosH - [[aRefH,aRefH]]
-        writeAntennaField(station, 'HBA', aOffset)
+        writeAntennaField(station, '', aOffset)
         
         
         # if core station add also information for HBA0 and HBA1 fields 
