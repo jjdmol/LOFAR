@@ -236,8 +236,8 @@ GCFEvent::TResult ObsClaimer::preparePVSS_state (GCFEvent& event, GCFPortInterfa
 				Observation			theObs(&obsPS);
 
 				RTDBPropertySet*	theObsPS = itsCurrentObs->second->propSet;
-				theObsPS->setValue(PN_OBS_CLAIM_PERIOD,		GCFPVInteger(itsClaimPeriod), 0.0, false);
-				theObsPS->setValue(PN_OBS_PREPARE_PERIOD,	GCFPVInteger(itsPreparePeriod), 0.0, false);
+//				theObsPS->setValue(PN_OBS_CLAIM_PERIOD,		GCFPVInteger(itsClaimPeriod), 0.0, false);
+//				theObsPS->setValue(PN_OBS_PREPARE_PERIOD,	GCFPVInteger(itsPreparePeriod), 0.0, false);
 				theObsPS->setValue(PN_OBS_RUN_STATE,		GCFPVString(""), 0.0, false);
 				theObsPS->setValue(PN_OBS_START_TIME,		GCFPVString (to_simple_string(from_time_t(theObs.startTime))), 0.0, false);
 				theObsPS->setValue(PN_OBS_STOP_TIME,		GCFPVString (to_simple_string(from_time_t(theObs.stopTime))), 0.0, false);
@@ -281,6 +281,32 @@ GCFEvent::TResult ObsClaimer::preparePVSS_state (GCFEvent& event, GCFPortInterfa
 				theObsPS->setValue(PN_OBS_BEAMS_ANGLE1,			GCFPVDynArr(LPT_DYNDOUBLE, angle1Arr),   0.0, false);
 				theObsPS->setValue(PN_OBS_BEAMS_ANGLE2,			GCFPVDynArr(LPT_DYNDOUBLE, angle2Arr),   0.0, false);
 				theObsPS->setValue(PN_OBS_BEAMS_DIRECTION_TYPE,	GCFPVDynArr(LPT_DYNSTRING, dirTypesArr), 0.0, false);
+
+				// for the TiedArrayBeams we have to construct dyn arrays first.
+				GCFPValueArray		beamIndexArr;
+				GCFPValueArray		TABangle1Arr;
+				GCFPValueArray		TABangle2Arr;
+				GCFPValueArray		TABdirTypesArr;
+				GCFPValueArray		dispersionArr;
+				GCFPValueArray		coherentArr;
+				for (uint32	b(0); b < theObs.beams.size(); b++) {
+					for (uint32 t(0); t < theObs.beams[b].TABs.size(); t++) {
+						beamIndexArr.push_back  (new GCFPVInteger(b));
+						angle1Arr.push_back	  	(new GCFPVDouble(theObs.beams[b].TABs[t].angle1));
+						angle2Arr.push_back	  	(new GCFPVDouble(theObs.beams[b].TABs[t].angle2));
+						dirTypesArr.push_back 	(new GCFPVString(theObs.beams[b].TABs[t].directionType));
+						dispersionArr.push_back (new GCFPVDouble(theObs.beams[b].TABs[t].dispersionMeasure));
+						coherentArr.push_back	(new GCFPVBool(theObs.beams[b].TABs[t].coherent));
+					}
+				}
+
+				// Finally we can write those value to PVSS as well.
+				theObsPS->setValue(PN_OBS_TIED_ARRAY_BEAMS_BEAM_INDEX,		GCFPVDynArr(LPT_DYNINTEGER, beamIndexArr),  0.0, false);
+				theObsPS->setValue(PN_OBS_TIED_ARRAY_BEAMS_ANGLE1,			GCFPVDynArr(LPT_DYNDOUBLE, TABangle1Arr),   0.0, false);
+				theObsPS->setValue(PN_OBS_TIED_ARRAY_BEAMS_ANGLE2,			GCFPVDynArr(LPT_DYNDOUBLE, TABangle2Arr),   0.0, false);
+				theObsPS->setValue(PN_OBS_TIED_ARRAY_BEAMS_DIRECTION_TYPE,	GCFPVDynArr(LPT_DYNSTRING, TABdirTypesArr), 0.0, false);
+				theObsPS->setValue(PN_OBS_TIED_ARRAY_BEAMS_DISPERSION,		GCFPVDynArr(LPT_DYNSTRING, dispersionArr),  0.0, false);
+				theObsPS->setValue(PN_OBS_TIED_ARRAY_BEAMS_COHERENT,		GCFPVDynArr(LPT_DYNBOOL, coherentArr),  0.0, false);
 				theObsPS->flush();
 
 				setObjectState("MACScheduler: registration", itsCurrentObs->second->DPname, RTDB_OBJ_STATE_OFF, true);
@@ -304,6 +330,14 @@ GCFEvent::TResult ObsClaimer::preparePVSS_state (GCFEvent& event, GCFPortInterfa
 					delete	angle1Arr[i];
 					delete	angle2Arr[i];
 					delete	dirTypesArr[i];
+				}
+				for (int i = beamIndexArr.size()-1; i >=0; i--) {
+					delete	beamIndexArr[i];
+					delete	TABangle1Arr[i];
+					delete	TABangle2Arr[i];
+					delete	TABdirTypesArr[i];
+					delete	dispersionArr[i];
+					delete	coherentArr[i];
 				}
 
 			} catch (Exception	&e) {	
