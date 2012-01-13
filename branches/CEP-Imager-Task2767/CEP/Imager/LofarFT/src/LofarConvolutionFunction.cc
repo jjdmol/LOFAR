@@ -336,11 +336,34 @@ namespace LOFAR
         // Separated element and station
         //======================================
 	vector< Cube<Complex> > aTermA_element;
-	vector< Cube<Complex> > aTermA_station;
+	vector< Cube<Complex> > aTermA_array;
 	MEpoch binEpoch;
 	binEpoch.set(Quantity(time, "s"));
-	vector< vector< Cube<Complex> > > aTermAtmp;
-	vector< vector< Cube<Complex> > > aTermAtmp2;
+
+        LofarATerm::ITRFDirectionMap dirMap = m_aTerm.makeDirectionMap(coordinate, shape, binEpoch);
+	vector< Matrix<Complex> > aTermA_array_plane(m_aTerm.evaluateArrayFactor(i, 0, dirMap, list_freq , list_freq , true));
+	aTermA_array.resize(m_nChannel);
+        for (uInt ch=0; ch<m_nChannel; ++ch) {
+	  aTermA_array[ch].resize(IPosition(3,shape[0],shape[0],4));
+	  aTermA_array[ch]=0.;
+	}
+        for (uInt ch=0; ch<m_nChannel; ++ch) {
+	  Matrix<Complex> plane(aTermA_array[ch].xyPlane(0));
+	  plane=aTermA_array_plane[ch].copy();
+	  Matrix<Complex> plane2(aTermA_array[ch].xyPlane(3));
+	  plane2=aTermA_array_plane[ch].copy();
+	}
+        LofarATerm::ITRFDirectionMap dirMape = m_aTerm.makeDirectionMap(coordinate_element, shape_element, binEpoch);
+	aTermA_element=m_aTerm.evaluateElementResponse(i, 0, dirMape, list_freq, true);
+	store(coordinate,aTermA_element[0],"aTermA_element.img");
+	store(coordinate,aTermA_array[0],"aTermA_array.img");
+
+        vector< Cube<Complex> > aTermA = m_aTerm.evaluate(i, dirMap, list_freq, list_freq, false);
+	store(coordinate,aTermA[0],"aTermA.orig.img");
+	cout.precision(20);
+	cout<<"For time: "<<time<<endl;
+	assert(false);
+
 //	aTermAtmp = m_aTerm.evaluateSeparated(shape_element,
 //					   coordinate_element,
 //					   i, binEpoch,
@@ -354,16 +377,30 @@ namespace LOFAR
 	//store(aTermA_element[0],"aTermA_element.img");
 	//store(aTermA_station[0],"aTermA_station.img");
 
-	vector< Cube<Complex> > aTermA;
+	//vector< Cube<Complex> > aTermA;
 	// if(!its_Use_EJones){
-	//   Cube<Complex> aterm_cube(IPosition(3,nPixelsConv,nPixelsConv,4),1.);
-	//   for (Int iiii=0;iiii<nPixelsConv;++iiii) {
-	//     for (Int iiiii=0;iiiii<nPixelsConv;++iiiii) {
-	//       aterm_cube(iiii,iiiii,1)=0.;
-	//       aterm_cube(iiii,iiiii,2)=0.;
-	//     }
-	//   }
-	//   aTermA.push_back(aterm_cube);
+
+        // for (uInt ch=0; ch<m_nChannel; ++ch) {
+	//   Matrix<Complex> slice0=aTermA_element[ch].xyPlane(0);
+	//   slice0=1.;
+	//   Matrix<Complex> slice1=aTermA_element[ch].xyPlane(1);
+	//   slice1=0.;
+	//   Matrix<Complex> slice2=aTermA_element[ch].xyPlane(2);
+	//   slice2=0.;
+	//   Matrix<Complex> slice3=aTermA_element[ch].xyPlane(3);
+	//   slice3=1.;
+	// }
+        // for (uInt ch=0; ch<m_nChannel; ++ch) {
+	//   Matrix<Complex> slice0=aTermA_array[ch].xyPlane(0);
+	//   slice0=1.;
+	//   Matrix<Complex> slice1=aTermA_array[ch].xyPlane(1);
+	//   slice1=0.;
+	//   Matrix<Complex> slice2=aTermA_array[ch].xyPlane(2);
+	//   slice2=0.;
+	//   Matrix<Complex> slice3=aTermA_array[ch].xyPlane(3);
+	//   slice3=1.;
+	// }
+
 	// }
 	// else{
         //======================================
@@ -379,8 +416,6 @@ namespace LOFAR
 //        // JVZ: Direction map should be computed only once for all stations.
 //        // However, this requires the DirectionCoordinate instance and shape to
 //        // be exactly equal for all stations.
-//        LofarATerm::ITRFDirectionMap dirMap =
-//          m_aTerm.makeDirectionMap(coordinate, shape, binEpoch);
 
 //        vector< Cube<Complex> > aTermA = m_aTerm.evaluate(i, dirMap, list_freq,
 //          list_freq, true);
@@ -392,13 +427,13 @@ namespace LOFAR
         for (uInt ch=0; ch<m_nChannel; ++ch) {
           for (uInt pol=0; pol<4; ++pol) {
 	    //cout<<ch<<" "<<pol<<endl;
-            Matrix<Complex> plane (aTermA[ch].xyPlane(pol));
-            AlwaysAssert (plane.contiguousStorage(), AipsError);
-            normalized_fft (timerFFT, plane);
-            Matrix<Complex> plane0 (aTermA_element[ch].xyPlane(pol));
+            //Matrix<Complex> plane (aTermA[ch].xyPlane(pol));
+            //AlwaysAssert (plane.contiguousStorage(), AipsError);
+            //normalized_fft (timerFFT, plane);
+            //Matrix<Complex> plane0 (aTermA_element[ch].xyPlane(pol));
 
 
-            Matrix<Complex> plane1 (aTermA_station[ch].xyPlane(pol));
+            Matrix<Complex> plane1 (aTermA_array[ch].xyPlane(pol));
 	    //Matrix< Complex > plane0int = LinearInterpol2(plane1,200.);
             normalized_fft (timerFFT, plane1);
 
@@ -411,9 +446,9 @@ namespace LOFAR
         }
         // Note that push_back uses the copy constructor, so for the Cubes
         // in the vector the copy constructor is called too (which is cheap).
-        aTermList[i] = aTermA;
+        //aTermList[i] = aTermA;
         aTermList_element[i] = aTermA_element;
-        aTermList_station[i] = aTermA_station;
+        aTermList_station[i] = aTermA_array;
         timerPar.stop();
       } // end omp for
       // Update the timing info.
@@ -664,6 +699,8 @@ namespace LOFAR
 	    // This Mueller ordering is for polarisation given as XX,XY,YX YY
 	    ind0 = row0 + 2*row1;
 	    ind1 = col0 + 2*col1;
+	    //ind0 = 2.*row0 + row1;
+	    //ind1 = 2.*col0 + col1;
 	    IPosition pos(2,2,1);
 	    pos[0]=ind0;
 	    pos[1]=ind1;

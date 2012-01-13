@@ -566,9 +566,9 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
 
     Complex ff;
     double I=100.;
-    double Q=40.;
-    double U=20.;
-    double V=10.;
+    double Q=0.;
+    double U=0.;
+    double V=0.;
 
     double maxPB(0.);
     double minPB(1e10);
@@ -598,21 +598,22 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
 	  Complex pixel(lattice->getAt(pos));
 	  double fact(1.);
 
-	  // pixel=0.;
-	  // if((pos[0]==351.)&&(pos[1]==319.)){//319
-	  //   pixel=ff;//*139./143;//-100.;
-	  //   if(datai(pos2)>1e-6){fact/=datai(pos2)*datai(pos2);};//*datai(pos2);};
-	  //   //if(data(pos2)>1e-6){fact/=sqrt(data(pos2));};//*datai(pos2);};
-	  //   pixel*=Complex(fact);
-	  // }
-
-	  if(!itsPredictFT){
-	    fact*=sqrt(maxPB)/sqrt(data(pos2));
-	  } else {
-	    fact/=datai(pos2);//*datai(pos2);
-	    if(its_Apply_Element){fact/=spheroidCutElement(pos2);}
+	  pixel=0.;
+	  if((pos[0]==183.)&&(pos[1]==187.)){//319
+	    pixel=ff;//*139./143;//-100.;
+	    //if(datai(pos2)>1e-6){fact/=datai(pos2)*datai(pos2);};//*datai(pos2);};
+	    if(datai(pos2)>1e-6){fact*=sqrt(maxPB)/sqrt(data(pos2));};
+	    //if(data(pos2)>1e-6){fact/=sqrt(data(pos2));};//*datai(pos2);};
+	    pixel*=Complex(fact);
 	  }
-	  pixel*=Complex(fact);
+
+	  // if(!itsPredictFT){
+	  //   fact*=sqrt(maxPB)/sqrt(data(pos2));
+	  // } else {
+	  //   fact/=datai(pos2);//*datai(pos2);
+	  //   if(its_Apply_Element){fact/=spheroidCutElement(pos2);}
+	  // }
+	  // pixel*=Complex(fact);
 
 	  if((data(pos2)>(minPB))&&(abs(pixel)>0.)){
 	    lattice->putAt(pixel,pos);
@@ -1340,12 +1341,13 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
 
   PrecTimer CyrilElement;
   CyrilElement.start();
-  //cout.precision(20);
-  //cout<<" ======================= De-Grid ... time="<<time<<", at "<<itsCounterTimes<<endl;
+  cout.precision(20);
+  cout<<" ======================= De-Grid ... time="<<time<<", at "<<itsCounterTimes<<endl;
   if(its_Apply_Element){
+    cout<<"itsCounterTimes= "<<itsCounterTimes<<endl;
     if(itsCounterTimes==0){
      double TimeElement(itsTStartObs+itsDeltaTime*itsStepApplyElement/2.);
-     //cout<<"... Appying element with t="<<TimeElement<<", itsTStartObs="<<itsTStartObs<<"< itsDeltaTime="<<itsDeltaTime<<endl;
+     cout<<"... Appying element with t="<<TimeElement<<", itsTStartObs="<<itsTStartObs<<", itsDeltaTime="<<itsDeltaTime<<endl;
      itsConvFunc->computeAterm(TimeElement);
      itsGridToDegrid.reference(itsConvFunc->ApplyElementBeam2(its_stacked_GriddedData, TimeElement, spw, itsGridMuellerMask, true, itsTotalStepsDeGrid));
      itsTotalStepsDeGrid+=1;

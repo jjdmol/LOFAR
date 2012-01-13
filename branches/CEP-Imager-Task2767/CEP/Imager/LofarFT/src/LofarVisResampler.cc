@@ -296,7 +296,7 @@ namespace LOFAR {
 
 
     // Loop over all visibility rows to process.
-    for (Int inx=rbeg; inx<rend; ++inx) {
+    for (Int inx=rbeg; inx<=rend; ++inx) {
       Int irow = rows[inx];
       const Double*  __restrict__ uvwPtr   = vbs.uvw_p.data() + irow*3;
       const Float*   __restrict__ imgWtPtr = vbs.imagingWeight_p.data() +
@@ -363,6 +363,8 @@ namespace LOFAR {
   		    //cout<<"goff<<locy<<sy<<nGridX<<locx<<supx "<<goff<<" "<<locy<<" "<<sy<<" "<<nGridX<<" "<<locx<<" "<<supx<<endl;
                     // Get pointers to the first element to use in the 4
                     // convolution functions for this channel,pol.
+
+		    // Fast version
                     const Complex* __restrict__ cf[1];
                     Int cfoff = (offy + sy*fsampy)*nConvX + offx - fsupx*fsampx;
 		    cf[0] = (*cfs.vdata)[gridChan][0][0].data() + cfoff;
@@ -374,6 +376,8 @@ namespace LOFAR {
   		      polSum *= *imgWtPtr;
                       *gridPtr++ += polSum;
                     }
+
+		    // // Full version
                     // const Complex* __restrict__ cf[4];
                     // Int cfoff = (offy + sy*fsampy)*nConvX + offx - fsupx*fsampx;
                     // for (int i=0; i<4; ++i) {
@@ -389,6 +393,7 @@ namespace LOFAR {
   		    //   polSum *= *imgWtPtr;
                     //   *gridPtr++ += polSum;
                     // }
+
                   }
                   sumWtPtr[gridPol+gridChan*nGridPol] += *imgWtPtr;
                 } // end if gridPol
@@ -644,7 +649,7 @@ namespace LOFAR {
     deltay_pix_interp.resize(4);
 
     // Loop over all visibility rows to process.
-    for (Int inx=rbeg; inx<rend; ++inx) {
+    for (Int inx=rbeg; inx<=rend; ++inx) {
       Int irow = rows[inx];
       const Double*  __restrict__ uvwPtr   = vbs.uvw_p.data() + irow*3;
       // Loop over all channels in the visibility data.
@@ -714,30 +719,28 @@ namespace LOFAR {
                                                   (locy+sy)*nGridX + locx-supx;
                     // Get pointers to the first element to use in the 4
                     // convolution functions for this channel,pol.
+
+		    // fast version
                     const Complex* __restrict__ cf[1];
                     Int cfoff = (offy + sy*fsampy)*nConvX + offx - fsupx*fsampx;
 		    cf[0] = (*cfs.vdata)[gridChan][0][0].data() + cfoff;
-
                     for (Int sx=-fsupx; sx<=fsupx; ++sx) {
-                      // Loop over polarizations to correct for leakage.
 		      visPtr[ipol] += *gridPtr * *cf[0];
 		      cf[0] += fsampx;
-
-                      ///                      cout<<"  g="<<gridPtr-grid.data()<<' '<<nvalue<<endl;
                       gridPtr++;
                     }
 
+		    // // Full version
+                    // const Complex* __restrict__ cf[4];
+                    // Int cfoff = (offy + sy*fsampy)*nConvX + offx - fsupx*fsampx;
                     // for (int i=0; i<4; ++i) {
                     //   cf[i] = (*cfs.vdata)[gridChan][i][ipol].data() + cfoff;
                     // }
                     // for (Int sx=-fsupx; sx<=fsupx; ++sx) {
-                    //   // Loop over polarizations to correct for leakage.
                     //   for (Int i=0; i<nVisPol; ++i) {
-                    //     ///                        cout<<"cf="<< cf[i]-(*cfs.vdata)[gridChan][ipol][i].data()<<',';
                     //     visPtr[i] += *gridPtr * *cf[i];
                     //     cf[i] += fsampx;
                     //   }
-                    //   ///                      cout<<"  g="<<gridPtr-grid.data()<<' '<<nvalue<<endl;
                     //   gridPtr++;
                     // }
 

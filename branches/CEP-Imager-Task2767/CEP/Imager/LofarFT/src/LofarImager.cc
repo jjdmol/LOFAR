@@ -40,7 +40,7 @@ namespace LOFAR
   // @brief Imager for LOFAR data correcting for DD effects
 
   LofarImager::LofarImager (MeasurementSet& ms, const Record& parameters)
-    : Imager(ms),
+    : Imager(ms,false, true),
       itsParameters (parameters)
   {
     cout << itsParameters<<endl;
