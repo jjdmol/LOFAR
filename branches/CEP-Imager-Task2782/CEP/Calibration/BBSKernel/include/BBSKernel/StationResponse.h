@@ -114,9 +114,6 @@ public:
     // Set the direction of interest.
     void setDirection(const casa::MDirection &direction);
 
-    // Set the antenna gains
-    void setAntennaGains(int station, int field, const casa::Array<casa::DComplex> &antennagains);
-
     // Set the grid on which the station responses will be evaluated.
     void setEvalGrid(const Grid &grid);
 
@@ -138,7 +135,6 @@ private:
     Expr<JonesMatrix>::Ptr compose(const Expr<JonesMatrix>::Ptr &lhs,
         const Expr<JonesMatrix>::Ptr &rhs) const;
 
-    Instrument::Ptr                 itsInstrument;
     Dummy<Vector<2> >::Ptr          itsRefDelay;
     Dummy<Vector<2> >::Ptr          itsRefTile;
     Dummy<Scalar>::Ptr              itsRefOrientation;

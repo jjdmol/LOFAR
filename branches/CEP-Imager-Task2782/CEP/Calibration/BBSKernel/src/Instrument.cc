@@ -74,13 +74,6 @@ void AntennaField::appendElement(const Element &element)
     itsElements.push_back(element);
 }
 
-void AntennaField::setElementGain(int i, dcomplex antennagain[2])
-{
-  itsElements[i].antennagain[0] = antennagain[0];
-  itsElements[i].antennagain[1] = antennagain[1];
-}
-
-
 Station::Station(const string &name, const casa::MPosition &position)
     :   itsName(name),
         itsPosition(position)

@@ -65,7 +65,6 @@ public:
     {
         Vector3 offset;
         bool    flag[2];
-        dcomplex antennagain[2];
     };
 
     AntennaField(const string &name, const Vector3 &position, const Vector3 &p,
@@ -84,8 +83,6 @@ public:
     void appendElement(const Element &element);
     inline size_t nElement() const;
     inline const Element &element(size_t i) const;
-
-    void setElementGain(int i, dcomplex antennagain[2]);
 
 private:
     string                  itsName;

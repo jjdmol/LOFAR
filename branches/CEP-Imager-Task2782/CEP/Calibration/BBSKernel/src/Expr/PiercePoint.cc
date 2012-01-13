@@ -155,12 +155,8 @@ const Vector<4>::View PiercePoint::evaluateImpl(const Grid &grid,
       
       *pp_airmass = norm_normal / (directionX*normal_x + directionY*normal_y + directionZ*normal_z);
       
-      LOG_DEBUG_STR("Piercepoint: " << alpha << "," << *pp_x << "," << *pp_y << "," << *pp_z << "," << *pp_airmass );
-
       ++pp_x; ++pp_y; ++pp_z; ++pp_airmass;
     }
-      LOG_DEBUG_STR("==========================================================" );
-
     // Create result.
     Vector<4>::View result;
     result.assign(0, out_x);

@@ -192,8 +192,6 @@ const JonesMatrix IonPhaseShift::evaluateExpr(const Request &request,
     tecX *= piercePoint.value(3);
     tecY *= piercePoint.value(3);
     
-    LOG_DEBUG_STR("TEC: " << tecX);
-
     // Convert from slanted TEC to phase shift.
     //
     // TODO: Because MeqMatrix cannot handle the elementwise product of an N x 1

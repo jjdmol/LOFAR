@@ -124,17 +124,10 @@ Expr<JonesMatrix>::Ptr MIMExpr::construct(const casa::MPosition &refPosition,
 
 ExpIonExpr::ExpIonExpr(const IonosphereConfig&, Scope &scope)
 {
-    LOG_DEBUG_STR("Creating ExpIonExpr");
-
     // Create parameter nodes for ionosphere model parameters.
     itsR0 = scope(INSTRUMENT, "r_0");
-    LOG_DEBUG_STR("r0 = " << itsR0);
-
     itsBeta = scope(INSTRUMENT, "beta");
-    LOG_DEBUG_STR("beta = " << itsBeta);
-
     itsHeight = scope(INSTRUMENT, "height");
-    LOG_DEBUG_STR("height = " << itsHeight);
 
     // Find out which calibrator pierce points are available in the instrument
     // parameter database.
@@ -143,8 +136,6 @@ ExpIonExpr::ExpIonExpr(const IonosphereConfig&, Scope &scope)
     vector<string> parmNames = ParmManager::instance().find(INSTRUMENT,
         "Piercepoint:X:*:*");
     size_t nPiercePoints = parmNames.size();
-
-    LOG_DEBUG_STR("Number of piercepoints: " << nPiercePoints);
 
     if(nPiercePoints == 0)
     {
