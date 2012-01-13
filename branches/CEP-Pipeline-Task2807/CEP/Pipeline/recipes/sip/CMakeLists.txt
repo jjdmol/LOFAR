@@ -13,6 +13,7 @@ python_install(
   master/demixing.py
   master/dppp.py
   master/flag_baseline.py
+  master/imager_pipeline.py
   master/make_flaggable.py
   master/new_bbs.py
   master/parmdb.py

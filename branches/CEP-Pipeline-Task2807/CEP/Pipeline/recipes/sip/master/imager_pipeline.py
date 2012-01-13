@@ -1,3 +1,10 @@
+#!/usr/bin/env python
+#                                                         LOFAR IMAGING PIPELINE
+#
+#                                                         Imager Pipeline recipe
+#                                                             Marcel Loose, 2012
+#                                                                loose@astron.nl
+# ------------------------------------------------------------------------------
 
 import os
 import sys
@@ -8,10 +15,45 @@ from lofar.parameterset import parameterset #@UnresolvedImport
 import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.utilities import create_directory
 
+
 class imager_pipeline(control):
     """
-    Description 
+    The MSSS imager pipeline can be used to generate MSSS images.
+
+    MSSS images are compiled from a number of so-called slices. Each slice
+    comprises a short (approx. 10 min) observation of a field (an area on the
+    sky) containing 80 subbands. The number of slices will be different for LBA
+    observations (typically 9) and HBA observations (typically 2), due to
+    differences in sensitivity.
+
+    One MSSS observation will produce a number of images (typically 8), one for
+    each so-called subband-group (SBG). Each SBG consists of the same number
+    of consecutive subbands (typically 10).
+    
+    Each image will be compiled on a different cluster node to balance the
+    processing load. The input- and output- files and locations are determined
+    by the scheduler and specified in the parset-file.
+
+    This pipeline will perform the following operations:
+    - Copy the preprocessed MS's from the different compute nodes to the nodes
+      where the images will be compiled (the prepare phase).
+    - Flag the long baselines using DPPP
+    - Concatenate the MS's of the different slices as one virtual MS for
+      imaging.
+    - Generate a local sky model (LSM) from the global sky model (GSM) for the
+      sources that are in the field-of-view (FoV).
+    - Repeat until convergence (3 times for the time being):
+      - Per slice: solve and correct for phases using BBS with TEC enabled
+      - Run the awimager.
+      - Run the source finder (PyBDSM) and update the local sky model (LSM).
+      
+    Per subband-group, the following output products will be delivered:
+    - Calibration solutions and corrected visibilities
+    - An image
+    - A source list
     """
+
+
     inputs = {
         'input_mapfile': ingredient.FileField(
             '--input-mapfile',
@@ -19,9 +61,12 @@ class imager_pipeline(control):
         )
     }
 
+
     def __init__(self):
         control.__init__(self)
         self.parset = parameterset()
+        self.input_data = {}
+        self.output_data = {}
 
 
     def usage(self):
