@@ -1,6 +1,6 @@
 # $Id: CMakeLists.txt 18231 2011-06-09 14:46:14Z duscha $
 
-lofar_package(BBSTools 1.0)
+lofar_package(BBSTools 1.0 DEPENDS Common)
 
 #include(LofarFindPackage)
 lofar_find_package(Boost REQUIRED)

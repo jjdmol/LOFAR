@@ -84,10 +84,9 @@ public:
         const Expr<Vector<3> >::Ptr &uvwLHS,
         const Expr<Vector<3> >::Ptr &uvwRHS) const;
     // @}
-
+    
 private:
     size_t nSources() const;
-
     void initSourceList(Scope &scope, SourceDB &sourceDB, const string &name);
     void initPositionExpr(const vector<Source::Ptr> &sources);
     void initLMNExpr(const vector<Source::Ptr> &sources,
