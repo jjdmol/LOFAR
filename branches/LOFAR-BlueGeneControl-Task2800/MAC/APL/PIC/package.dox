@@ -1,6 +1,0 @@
-// \ingroup APL
-// \defgroup PIC Physical Instrument Components (?)
-//
-// The PIC package contains all the executables of the station that communicate 
-// with the station hardware.
-
