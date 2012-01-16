@@ -227,7 +227,7 @@ class Parset(util.Parset.Parset):
             )
 
           # first define the rings, then the manual beams (which thus get shifted in number!)
-          allsets = ringset + flyseyeset + manualset
+          allsets = manualset + ringset + flyseyeset
           for m,s in enumerate(allsets):
             prefix = "Observation.Beam[%s].TiedArrayBeam[%s]" % (b,m)
 
