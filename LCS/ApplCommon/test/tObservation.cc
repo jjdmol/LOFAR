@@ -66,6 +66,16 @@ int main (int argc, char* argv[])
 		Observation  obs2(&parSet1);
 		cout << obs2 << endl;
 
+                // test storage node assignment
+                parSet1.add("ObsSW.OLAP.CNProc.phaseOnePsets", "[]");
+                parSet1.add("ObsSW.OLAP.CNProc.phaseTwoPsets", "[]");
+                parSet1.add("ObsSW.OLAP.CNProc.phaseThreePsets", "[]");
+                parSet1.add("ObsSW.Observation.DataProducts.Output_CoherentStokes.enabled", "true");
+                parSet1.add("ObsSW.Observation.DataProducts.Output_CoherentStokes.filenames", "[beam0.h5,beam1.h5]");
+                parSet1.add("ObsSW.Observation.DataProducts.Output_CoherentStokes.locations", "[/,/]");
+                Observation obs4(&parSet1);
+		ASSERTSTR(obs4.streamsToStorage.size() == 2, "Each file should have its own stream to storage");
+
 		cout << ">>>" << endl;
 		// test conflicts in clock
 		ParameterSet conflictPS1("tObservation.in_conflict1");
