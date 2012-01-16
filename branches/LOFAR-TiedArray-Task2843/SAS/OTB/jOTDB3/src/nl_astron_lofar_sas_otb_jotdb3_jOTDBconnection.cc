@@ -71,19 +71,14 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_initO
     const char* n = env->GetStringUTFChars (str, &isCopy);
     const string name (n);
 
-    std::map<std::string,void *>::iterator iter;
-//    cout << "connect: theirC_ObjectMap contains: " << endl;
-//    for (iter=theirC_ObjectMap.begin();iter!=theirC_ObjectMap.end(); ++iter) {
-//        cout << iter->second << " " << iter->first << endl;
-//    }
-    
+    std::map<std::string,void *>::iterator iter;    
 
     theirC_ObjectMap[name+"_OTDBconnection"]=(void *)aPtr;
 
-//    cout << "after connect: theirC_ObjectMap contains: " << endl;
-//    for (iter=theirC_ObjectMap.begin();iter!=theirC_ObjectMap.end(); ++iter) {
-//        cout << iter->second << " " << iter->first << endl;
-//    }
+    LOG_DEBUG("after connect: theirC_ObjectMap contains: ");
+    for (iter=theirC_ObjectMap.begin();iter!=theirC_ObjectMap.end(); ++iter) {
+        LOG_DEBUG_STR(iter->second << " " << iter->first);
+    }
 
     env->ReleaseStringUTFChars (str, n);
 
@@ -132,10 +127,6 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_disco
 
   try {
     std::map<std::string,void *>::iterator iter;
-//    cout << "disconnect: theirC_ObjectMap contains: " << endl;
-//    for (iter=theirC_ObjectMap.begin();iter!=theirC_ObjectMap.end(); ++iter) {
-//        cout << iter->second << " " << iter->first << endl;
-//    }
 
     ((OTDBconnection*)getCObjectPtr(env,jOTDBconnection,"_OTDBconnection"))->disconnect();
 
@@ -156,7 +147,7 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_disco
     while (itr != end) {
         std::string n = itr->first;
         if (itr->first.find(name)!= string::npos ){
-            cout << " found match " << itr->first << endl;
+            LOG_DEBUG_STR( " found match " << itr->first);
             if (!found) found=true;
             std::map<std::string,void *>::iterator tmpitr = itr;
             itr++;
@@ -166,13 +157,13 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_disco
         }
     }
     if (!found) {
-        cout << name << " not found in theirC_ObjectMap" << endl;
+         LOG_DEBUG_STR(name << " not found in theirC_ObjectMap");
     }
 
-//    cout << "after disconnect: theirC_ObjectMap contains: " << endl;
-//    for (iter=theirC_ObjectMap.begin();iter!=theirC_ObjectMap.end(); ++iter) {
-//        cout << iter->second << " " << iter->first << endl;
-//    }
+    LOG_DEBUG("after disconnect: theirC_ObjectMap contains: ");
+    for (iter=theirC_ObjectMap.begin();iter!=theirC_ObjectMap.end(); ++iter) {
+        LOG_DEBUG_STR(iter->second << " " << iter->first);
+    }
 
   } catch (exception &ex) {
     cout << "Exception during OTDBconnection::disconnect "<< ex.what() << endl;
