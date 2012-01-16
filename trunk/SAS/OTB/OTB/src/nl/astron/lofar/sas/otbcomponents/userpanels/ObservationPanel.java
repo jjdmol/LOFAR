@@ -605,7 +605,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
       
       fillBeamformerStationList();
 
-      if (beamConfigurationPanel.getTableModel().getRowCount() == 8) {
+      if (beamConfigurationPanel.getTableModel().getRowCount() == 244) {
         this.addBeamButton.setEnabled(false);
       } else {
         this.addBeamButton.setEnabled(true);
@@ -1210,7 +1210,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             }
         } 
         
-      if (beamConfigurationPanel.getTableModel().getRowCount() == 8) {
+      if (beamConfigurationPanel.getTableModel().getRowCount() == 244) {
         this.addBeamButton.setEnabled(false);
       } else {
         this.addBeamButton.setEnabled(true);
@@ -1231,7 +1231,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             }
         }
 
-      if (anaBeamConfigurationPanel.getTableModel().getRowCount() == 8) {
+      if (anaBeamConfigurationPanel.getTableModel().getRowCount() == 1) {
         this.addAnaBeamButton.setEnabled(false);
       } else {
         this.addAnaBeamButton.setEnabled(true);
@@ -1284,7 +1284,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         this.editBeamButton.setEnabled(false);
         this.deleteBeamButton.setEnabled(false);
         this.copyBeamButton.setEnabled(false);
-        if (beamConfigurationPanel.getTableModel().getRowCount() == 8 ) {
+        if (beamConfigurationPanel.getTableModel().getRowCount() == 244 ) {
             this.addBeamButton.setEnabled(false);
         } else {
             this.addBeamButton.setEnabled(true);
@@ -1367,7 +1367,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
 
         this.editAnaBeamButton.setEnabled(false);
         this.deleteAnaBeamButton.setEnabled(false);
-        if (anaBeamConfigurationPanel.getTableModel().getRowCount() == 8 ) {
+        if (anaBeamConfigurationPanel.getTableModel().getRowCount() == 1 ) {
             this.addAnaBeamButton.setEnabled(false);
         } else {
             this.addAnaBeamButton.setEnabled(true);
@@ -1480,8 +1480,8 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                     check = "anabeam";
                 }
                 int idx = Integer.parseInt(beamKey[0].toLowerCase().replace(check, ""));
-                if (idx < 0 || idx > 7) {
-                    String aS = "Error in index, only beam 0-7 allowed : " + idx;
+                if (idx < 0 || idx > 243) {
+                    String aS = "Error in index, only beam 0-243 allowed : " + idx;
                     logger.error(aS);
                     LofarUtils.showErrorPanel(this, aS, new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                     continue;
@@ -1542,7 +1542,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                     startTimes.setElementAt(keyVal[1], idx + 1);
                 } else if (beamKey[1].toLowerCase().equals("duration")) {
                     durations.setElementAt(keyVal[1], idx + 1);
-                } else if (beamKey[1].toLowerCase().equals("maximizeDuration")) {
+                } else if (beamKey[1].toLowerCase().equals("maximizeduration")) {
                     maxdurs.setElementAt(keyVal[1], idx + 1);
                 } else if (beamKey[1].toLowerCase().equals("subbandlist")) {
                     subbandList.setElementAt(keyVal[1], idx + 1);
