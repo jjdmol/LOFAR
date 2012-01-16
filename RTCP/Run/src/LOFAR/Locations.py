@@ -51,13 +51,9 @@ class Locations:
   def setDefaults(self):
     # default build variants
     self.buildvars.update( {
-        "CNProc":  "bgpcn_opt",
-        "IONProc": "bgpion_opt",
         "Storage": "gnu_opt",
     } )
     self.executables.update( {
-        "CNProc":  "CN_Processing",
-        "IONProc": "ION_Processing",
         "Storage": "Storage_main",
     } )
 
@@ -102,8 +98,6 @@ class Locations:
 	"basedir": "${HOME}/production/lofar",
 
         # the locations of the main executables
-	"cnproc":  "${BASEDIR}/bgp_cn/bin/%s" % (self.executables["CNProc"],),
-	"ionproc": "${BASEDIR}/bgp_ion/bin/%s" % (self.executables["IONProc"],),
 	"storage": "/opt/storage/current/bin/%s" % (self.executables["Storage"],),
 
         # where to start the executables. rundir needs to be reachable
@@ -129,11 +123,6 @@ class Locations:
         "ionsuppfile": "",
         "storagesuppfile": "",
       } )
-      
-      self.nodes.update( {
-        # default log server address
-        "logserver": "tcp:ccu001:24500",
-      } )
     else:
       self.files.update( {
         # the base directory most paths will be related to
@@ -143,18 +132,11 @@ class Locations:
         "configdir": "${BASEDIR}/RTCP/Run/src",
 	"storage_configdir": "${BASEDIR}/installed/%s/etc" % (self.buildvars["Storage"],),
 
-	"cnproc":  "${BASEDIR}/installed/%s/bin/%s" % (self.buildvars["CNProc"],self.executables["CNProc"]),
-	"ionproc": "${BASEDIR}/installed/%s/bin/%s" % (self.buildvars["IONProc"],self.executables["IONProc"]),
 	"storage": "${BASEDIR}/installed/%s/bin/%s" % (self.buildvars["Storage"],self.executables["Storage"]),
 
         # location of valgrind suppressions file
         "ionsuppfile": "${BASEDIR}/RTCP/IONProc/src/IONProc.supp",
         "storagesuppfile": "${BASEDIR}/RTCP/Storage/src/Storage.supp",
-      } )
-
-      self.nodes.update( {
-        # no external log server
-        "logserver": "",
       } )
 
     #if not os.path.isdir( self.files["configdir"] ):
