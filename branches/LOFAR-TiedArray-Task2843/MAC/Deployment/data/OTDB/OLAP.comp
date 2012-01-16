@@ -123,15 +123,18 @@ node  OLAP         4.0.1  development 'node constraint'  "OLAP"
 
 #    name          	dir.    type   unit   prun.     vm      value   	constr.  	descr.
 #--------------------------------------------------------------------------------------------------------
-par realTime		I	bool    -	10	0	true		-		"whether data is processed at real-time"
-par delayCompensation	I   	bool    -       10  	0	true		-		"perform delay compensation between stations"
-par storageStationNames	I   	text    -	10	0	'AllStations'	-		'???'
-par nrTimesInFrame	I	int	-	10	0	16		-		"number of timeslots per station UDP packet"
-par nrSubbandsPerFrame	I	int	-	10	0	>>Observation.nrSlotsInFrame		-		"number of subbands per station UDP packet"
-par nrBitsPerSample	I	int	-	10	0	16		-		"sample size in bits"
-par nrSecondsOfBuffer	I	dbl	-	10	0	2.5		-		'buffer size for raw station data (in seconds)'
-par maxNetworkDelay	I	dbl	-	10	0	0.25		-		'???'
-par correctBandPass	I   	bool    -       10  	0	true		-		'apply the bandpass filter'
+par realTime		   I    bool    -	10	0	true		-		"whether data is processed at real-time"
+par delayCompensation	   I    bool    -       10  	0	true		-		"perform delay compensation between stations"
+par storageStationNames	   I    text    -	10	0	'AllStations'	-		'???'
+par nrTimesInFrame	   I	int	-	10	0	16		-		"number of timeslots per station UDP packet"
+par nrSubbandsPerFrame	   I	int	-	10	0	>>Observation.nrSlotsInFrame		-		"number of subbands per station UDP packet"
+par nrBitsPerSample	   I	int	-	10	0	16		-		"sample size in bits"
+par nrSecondsOfBuffer	   I	dbl	-	10	0	2.5		-		'buffer size for raw station data (in seconds)'
+par maxNetworkDelay	   I	dbl	-	10	0	0.25		-		'???'
+par correctBandPass	   I   	bool    -       10  	0	true		-		'apply the bandpass filter'
+par outputCoherentStokes   I    bool    -       10      0       false           -               "Store coherent Stokes"
+par outputIncoherentStokes I    bool    -       10      0       false           -               "Store incoherent Stokes"
+
 
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
