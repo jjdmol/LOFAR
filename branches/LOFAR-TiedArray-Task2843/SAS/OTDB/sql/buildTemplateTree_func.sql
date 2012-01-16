@@ -116,8 +116,8 @@ CREATE OR REPLACE FUNCTION instanciateVTleafNode(INT4, INT4, INT4)
 	  vNewNodeID := nextval('VICtemplateID');
 	  INSERT 
 	  INTO	 VICtemplate(treeID, nodeID, parentID, originID, name, leaf, instances, limits)
-	  VALUES ($2, vNewNodeID, $3, vNode.nodeID,  vNode.name, false, vInstances, vNode.constraints);
-	  -- note: index is defaulted.
+	  VALUES ($2, vNewNodeID, $3, vNode.nodeID,  strippedNodeName(vNode.name), false, 1, vNode.constraints);
+	  -- note: nodeId and index are defaulted.
 
 	  PERFORM instanciateVTparams($1, $2, vNewNodeID);
 
