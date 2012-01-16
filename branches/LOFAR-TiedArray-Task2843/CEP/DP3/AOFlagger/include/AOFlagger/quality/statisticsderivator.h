@@ -188,6 +188,9 @@ class StatisticsDerivator
 				case QualityTablesFormatter::RFIRatioStatistic:
 					return std::complex<T>((double) statistics.rfiCount[polarization] / (statistics.count[polarization] + statistics.rfiCount[polarization]), 0.0f);
 					break;
+				case QualityTablesFormatter::RFIPercentageStatistic:
+					return std::complex<T>(100.0 * (double) statistics.rfiCount[polarization] / (statistics.count[polarization] + statistics.rfiCount[polarization]), 0.0f);
+					break;
 				case QualityTablesFormatter::RFICountStatistic:
 					return std::complex<T>(statistics.rfiCount[polarization], 0.0f);
 					break;

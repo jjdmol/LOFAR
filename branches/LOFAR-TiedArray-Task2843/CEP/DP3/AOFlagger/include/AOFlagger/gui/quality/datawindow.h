@@ -17,42 +17,36 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef GUI_QUALITY__FREQUENCYPLOTPAGE_H
-#define GUI_QUALITY__FREQUENCYPLOTPAGE_H
+#ifndef GUI_QUALITY__DATA_WINDOW_H
+#define GUI_QUALITY__DATA_WINDOW_H
 
-#include "twodimensionalplotpage.h"
-
-#include <AOFlagger/quality/statisticscollection.h>
+#include <gtkmm/window.h>
+#include <gtkmm/textview.h>
+#include <gtkmm/scrolledwindow.h>
 
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
 */
-class FrequencyPlotPage : public TwoDimensionalPlotPage {
+class DataWindow : public Gtk::Window {
 	public:
-		virtual void processStatistics(class StatisticsCollection *statCollection, const std::vector<AntennaInfo> &antennas)
+		DataWindow()
 		{
-			_statistics.clear();
+			_scrolledWindow.add(_textView);
+			_textView.show();
 			
-			const std::map<double, class DefaultStatistics> &map = statCollection->FrequencyStatistics();
-			
-			for(std::map<double, class DefaultStatistics>::const_iterator i=map.begin();i!=map.end();++i)
-			{
-				_statistics.insert(std::pair<double, DefaultStatistics>(i->first/1000000.0, i->second));
-			}
+			add(_scrolledWindow);
+			_scrolledWindow.show();
 		}
-		
-		virtual const std::map<double, class DefaultStatistics> &GetStatistics() const
+    ~DataWindow()
+    {
+		}
+		void SetData(const std::string &data)
 		{
-			return _statistics;
+			_textView.get_buffer()->set_text(data);
 		}
-		
-		virtual void StartLine(Plot2D &plot, const std::string &name)
-		{
-			plot.StartLine(name, "Frequency (MHz)", "Value", false);
-		}
-		
 	private:
-		std::map<double, class DefaultStatistics> _statistics;
+		Gtk::ScrolledWindow _scrolledWindow;
+		Gtk::TextView _textView;
 };
 
 #endif

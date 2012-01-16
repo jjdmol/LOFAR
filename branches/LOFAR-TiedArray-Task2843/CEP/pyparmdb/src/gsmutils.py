@@ -39,7 +39,7 @@ def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius, assoc_the
     # This is dimensionless search radius that takes into account 
     # the ra and decl difference between two sources weighted by 
     # their positional errors.
-    deRuiter_reduced = 3.717/3600.
+    deRuiter_reduced = DERUITER_R/3600.
     try:
         cursor = conn.cursor()
         query = """\
@@ -369,7 +369,7 @@ SELECT t0.v_catsrcid
             #print "BBS ra = ", ra2bbshms(ra[i]), "; BBS decl = ", decl2bbsdms(decl[i])
             bbsrow += ra2bbshms(ra[i]) + ", " + decl2bbsdms(decl[i]) + ", "
             # Stokes I id default, so filed is empty
-            bbsrow += ", "
+            #bbsrow += ", "
             lognu = []
             logflux = []
             lognu.append(np.log10(74.0/60.0))

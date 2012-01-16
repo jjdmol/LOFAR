@@ -27,8 +27,6 @@ PERFORMANCE_TEST = False
 NRRSPBOARDS=4
 NRBOARBEAMLETS=61
 
-NRCVSTOKES=2 # 2: X and Y, 4: Xr, Xi, Yr, Yi
-
 class Parset(util.Parset.Parset):
     def __init__(self):
         util.Parset.Parset.__init__(self)
@@ -95,7 +93,7 @@ class Parset(util.Parset.Parset):
         if key in self:
           return self.getStringVector(key)
   
-        outputnames = ["Filtered","Correlated","Beamformed","IncoherentStokes","CoherentStokes","Trigger"]
+        outputnames = ["Filtered","Correlated","Beamformed","Trigger"]
         locationkeys = ["Observation.DataProducts.Output_%s.locations" % p for p in outputnames]
 
         storagenodes = set()
@@ -149,16 +147,12 @@ class Parset(util.Parset.Parset):
         self.setdefault('Observation.DataProducts.Output_Filtered.namemask','L${OBSID}_SB${SUBBAND}.filtered')
         self.setdefault('Observation.DataProducts.Output_Beamformed.namemask','L${OBSID}_SAP${SAP}_B${BEAM}_S${STOKES}_P${PART}_bf.raw')
         self.setdefault('Observation.DataProducts.Output_Correlated.namemask','L${OBSID}_SB${SUBBAND}_uv.MS')
-        self.setdefault('Observation.DataProducts.Output_CoherentStokes.namemask','L${OBSID}_SAP${SAP}_B${BEAM}_S${STOKES}_P${PART}_bf.raw')
-        self.setdefault('Observation.DataProducts.Output_IncoherentStokes.namemask','L${OBSID}_SB${SUBBAND}_bf.incoherentstokes')
         self.setdefault('Observation.DataProducts.Output_Trigger.namemask','L${OBSID}_SAP${SAP}_B${BEAM}_S${STOKES}_P${PART}_bf.trigger')
 	self.setdefault('OLAP.dispersionMeasure', 0);
 
         self.setdefault('Observation.DataProducts.Output_Filtered.dirmask','L${YEAR}_${OBSID}')
         self.setdefault('Observation.DataProducts.Output_Beamformed.dirmask','L${YEAR}_${OBSID}')
         self.setdefault('Observation.DataProducts.Output_Correlated.dirmask','L${YEAR}_${OBSID}')
-        self.setdefault('Observation.DataProducts.Output_CoherentStokes.dirmask','L${YEAR}_${OBSID}')
-        self.setdefault('Observation.DataProducts.Output_IncoherentStokes.dirmask','L${YEAR}_${OBSID}')
         self.setdefault('Observation.DataProducts.Output_Trigger.dirmask','L${YEAR}_${OBSID}')
 
         # default beamlet settings, derived from subbandlist, for development
@@ -233,7 +227,7 @@ class Parset(util.Parset.Parset):
             )
 
           # first define the rings, then the manual beams (which thus get shifted in number!)
-          allsets = ringset + flyseyeset + manualset
+          allsets = manualset + ringset + flyseyeset
           for m,s in enumerate(allsets):
             prefix = "Observation.Beam[%s].TiedArrayBeam[%s]" % (b,m)
 
@@ -241,12 +235,6 @@ class Parset(util.Parset.Parset):
               self["%s.%s" % (prefix,k)] = v
 
           self["Observation.Beam[%s].nrTiedArrayBeams" % (b,)] = len(allsets)    
-
-          if self.getBool("Observation.DataProducts.Output_Beamformed.enabled"):
-            if NRCVSTOKES == 4:
-              self["OLAP.CNProc_CoherentStokes.which"] = "XXYY"
-            else: 
-              self["OLAP.CNProc_CoherentStokes.which"] = "XY"
 
 
     def convertDepricatedKeys(self):
@@ -272,12 +260,13 @@ class Parset(util.Parset.Parset):
             self[v] = self[k]
 
         # convert pencil beams (assign them to station beam 0)
-        pbkeys = [ "angle1", "angle2", "directionType", "dispersionMeasure" ]
+        pbkeys = [ "angle1", "angle2", "directionType", "dispersionMeasure", "coherent" ]
         pbdefaults = {
           "angle1": 0.0,
           "angle2": 0.0,
           "directionType": "J2000",
           "dispersionMeasure": 0,
+          "coherent": True,
         }  
 
         old_prefix = "OLAP.Pencil"
@@ -374,6 +363,7 @@ class Parset(util.Parset.Parset):
 
         # Versioning info
         self["OLAP.BeamsAreTransposed"] = True
+        self["OLAP.IncoherentStokesAreTransposed"] = True
 
 	# TODO: we use self.setdefault, but this can create inconsistencies if we
 	# set one value but not the other in a pair of interdependent parameters.
@@ -515,8 +505,8 @@ class Parset(util.Parset.Parset):
 
         # generate filenames to produce - phase 2
         nodelist = self.getInt32Vector( "OLAP.storageNodeList" );
-        products = ["Filtered","Correlated","IncoherentStokes"]
-        outputkeys = ["Filtered","Correlated","IncoherentStokes"]
+        products = ["Filtered","Correlated"]
+        outputkeys = ["Filtered","Correlated"]
 
         for p,o in zip(products,outputkeys):
           outputkey    = "Observation.DataProducts.Output_%s.enabled" % (o,)
@@ -545,8 +535,8 @@ class Parset(util.Parset.Parset):
 
         # generate filenames to produce - phase 3
         nodelist = self.getInt32Vector( "OLAP.PencilInfo.storageNodeList" );
-        products = ["Beamformed","CoherentStokes","Trigger"]
-        outputkeys = ["Beamformed","CoherentStokes","Trigger"]
+        products = ["Beamformed","Trigger"]
+        outputkeys = ["Beamformed","Trigger"]
 
         for p,o in zip(products,outputkeys):
           outputkey    = "Observation.DataProducts.Output_%s.enabled" % (o,)
@@ -599,6 +589,8 @@ class Parset(util.Parset.Parset):
           return a
 
         def lcm( a, b ):
+          if b == 0: return a
+          if a == 0: return b
           return a * b / gcd(a, b)
 
         def lcmlist( l ):
@@ -616,13 +608,6 @@ class Parset(util.Parset.Parset):
           ])))
 
         self.setdefault('OLAP.CNProc.integrationSteps', cnIntegrationSteps)
-
-        if self.getBool( "OLAP.realTime" ):
-          earliest_start = time.time() + 15 # allow a 15-second overhead
-          if timestamp(parse(self["Observation.startTime"])) < earliest_start < timestamp(parse(self["Observation.stopTime"])):
-            # remove the start of the observation that we missed
-            warn("The start time of the observation has already passed. Moving it from %s to %s." % (self["Observation.startTime"],format(earliest_start)))
-            self["Observation.startTime"] = format(earliest_start)
 
     def setStations(self,stations):
 	""" Set the array of stations to use (used internally). """
@@ -762,8 +747,6 @@ class Parset(util.Parset.Parset):
         return len(self["OLAP.CNProc_CoherentStokes.which"])
       elif self.getBool("Observation.DataProducts.Output_Trigger.enabled"):
         return len(self["OLAP.CNProc_CoherentStokes.which"]) # todo: recombine Xi+Xr and Yi+Yr
-      elif self.getBool("Observation.DataProducts.Output_CoherentStokes.enabled"):
-        return len(self["OLAP.CNProc_CoherentStokes.which"])
       else:
         return 0
 
@@ -771,10 +754,8 @@ class Parset(util.Parset.Parset):
       return sum([self.getNrBeams(sap) * self.getNrCoherentStokes() * self.getNrParts(sap) for sap in xrange(self.getNrSAPs())])
 
     def phaseThreeExists( self ):  
-      # NO support for mixing with Observation.mode and Observation.outputIncoherentStokesI
       output_keys = [
         "Observation.DataProducts.Output_Beamformed.enabled",
-        "Observation.DataProducts.Output_CoherentStokes.enabled",
         "Observation.DataProducts.Output_Trigger.enabled",
       ]
 
@@ -814,13 +795,10 @@ class Parset(util.Parset.Parset):
         "Observation.DataProducts.Output_Filtered",
         "Observation.DataProducts.Output_Correlated",
         "Observation.DataProducts.Output_Beamformed",
-        "Observation.DataProducts.Output_CoherentStokes",
-        "Observation.DataProducts.Output_IncoherentStokes",
         "Observation.DataProducts.Output_Trigger",
       ]
 
     def getNrOutputs( self ):
-      # NO support for mixing with Observation.mode and Observation.outputIncoherentStokesI
       output_keys = [ "%s.enabled" % (p,) for p in self.outputPrefixes() ]
 
       return sum( (1 for k in output_keys if k in self and self.getBool(k)) )
@@ -854,11 +832,8 @@ class Parset(util.Parset.Parset):
           for p in psets:
             assert p < nrPsets, "Use of pset %d requested in key %s, but only psets [0..%d] are available" % (p,k,nrPsets-1)
 
-        # no both bf complex voltages and stokes
-        assert not (getBool("Observation.DataProducts.Output_Beamformed.enabled") and getBool("Observation.DataProducts.Output_CoherentStokes.enabled")), "Cannot output both complex voltages and coherent stokes."
-
         # restrictions on #samples and integration in beam forming modes
-        if self.getBool("Observation.DataProducts.Output_Beamformed.enabled") or self.getBool("Observation.DataProducts.Output_CoherentStokes.enabled"):
+        if self.getBool("Observation.DataProducts.Output_Beamformed.enabled"):
           # beamforming needs a multiple of 16 samples
           assert int(self["OLAP.CNProc.integrationSteps"]) % 16 == 0, "OLAP.CNProc.integrationSteps should be dividable by 16"
 
@@ -870,9 +845,6 @@ class Parset(util.Parset.Parset):
           # create at least 1 beam
           #assert self.getNrBeams( True ) > 0, "Beam forming requested, but no beams defined. Add at least one beam."
 
-        if self.getBool("Observation.DataProducts.Output_CoherentStokes.enabled"):
-          assert int(self["OLAP.CNProc.integrationSteps"]) >= 4, "OLAP.CNProc.integrationSteps should be at least 4 if coherent stokes are requested"
-
         assert int(self["OLAP.CNProc_CoherentStokes.channelsPerSubband"]) <= int(self["Observation.channelsPerSubband"]), "Coherent Stokes should have the same number or fewer channels than specified for the full observation."
         assert int(self["Observation.channelsPerSubband"]) % int(self["OLAP.CNProc_CoherentStokes.channelsPerSubband"]) == 0, "Coherent Stokes channels should be a whole fraction of the total number of channels."
 
@@ -881,9 +853,6 @@ class Parset(util.Parset.Parset):
 
         # verify start/stop times
         assert self["Observation.startTime"] < self["Observation.stopTime"], "Start time (%s) must be before stop time (%s)" % (self["Observation.startTime"],self["Observation.stopTime"])
-
-        if self.getBool( "OLAP.realTime" ):
-          assert timestamp(parse(self["Observation.startTime"])) > time.time(), "Observation.realTime is set, so start time (%s) should be later than now (%s)" % (self["Observation.startTime"],format(time.time()))
 
         # verify stations
         for s in self.stations:

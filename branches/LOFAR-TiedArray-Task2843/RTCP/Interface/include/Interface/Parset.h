@@ -56,6 +56,22 @@ namespace RTCP {
 class Transpose2;
 class CN_Transpose2;
 
+enum StokesType { STOKES_I = 0, STOKES_IQUV, STOKES_XXYY, INVALID_STOKES = -1 };
+
+static StokesType stokesType( const std::string &name ) {
+  if (name == "I")
+    return STOKES_I;
+
+  if (name == "IQUV")
+    return STOKES_IQUV;
+
+  if (name == "XXYY")
+    return STOKES_XXYY;
+
+  return INVALID_STOKES;
+};
+    
+
 // The Parset class is a public struct that can be used as base-class
 // for holding Parset related information.
 // It can be instantiated with a parset containing Parset information.
@@ -65,6 +81,7 @@ class Parset: public ParameterSet
     Parset();
     Parset(const std::string &name);
     Parset(Stream *);
+
      
     std::string			name() const;
     void			check() const;
@@ -96,7 +113,6 @@ class Parset: public ParameterSet
     unsigned			incoherentStokesTimeIntegrationFactor() const;
     unsigned			coherentStokesChannelsPerSubband() const;
     unsigned			incoherentStokesChannelsPerSubband() const;
-    std::vector<double>		incoherentStokesDedispersionMeasures() const;
     double			CNintegrationTime() const;
     double			IONintegrationTime() const;
     unsigned			nrSubbandSamples() const;
@@ -146,8 +162,6 @@ class Parset: public ParameterSet
     bool			outputFilteredData() const;
     bool			outputCorrelatedData() const;
     bool			outputBeamFormedData() const;
-    bool			outputCoherentStokes() const;
-    bool			outputIncoherentStokes() const;
     bool			outputTrigger() const;
     bool			outputThisType(OutputType) const;
 
@@ -170,8 +184,8 @@ class Parset: public ParameterSet
     bool			fakeInputData() const;
     bool			checkFakeInputData() const;
 
-    unsigned			nrCoherentStokes() const;
-    unsigned			nrIncoherentStokes() const;
+    std::string			coherentStokes() const;
+    std::string			incoherentStokes() const;
     std::string			bandFilter() const;
     std::string			antennaSet() const;
 
@@ -179,6 +193,7 @@ class Parset: public ParameterSet
     std::vector<unsigned>	nrPencilBeams() const;
     unsigned			totalNrPencilBeams() const;
     unsigned			maxNrPencilBeams() const;
+    bool                        isCoherent(unsigned beam, unsigned pencil) const;
     BeamCoordinates		pencilBeams(unsigned beam) const;
     double			dispersionMeasure(unsigned beam=0,unsigned pencil=0) const;
     std::vector<std::string>	pencilBeamStationList(unsigned beam=0,unsigned pencil=0) const;
@@ -259,6 +274,14 @@ struct StreamInfo {
 
   unsigned sap;
   unsigned beam;
+
+  bool coherent;
+  unsigned nrChannels;     // channels per subband
+  unsigned timeIntFactor;  // time integration factor
+  unsigned nrStokes;       // total # stokes for this beam
+  StokesType stokesType;
+  unsigned nrSamples;      // # samples/channel, after temporal integration
+
   unsigned stokes;
   unsigned part;
 
@@ -275,8 +298,14 @@ public:
   :
     phaseThreeDisjunct( parset.phaseThreeDisjunct() ),
 
+    nrChannels( parset.nrChannelsPerSubband() ),
+    nrCoherentChannels( parset.coherentStokesChannelsPerSubband() ),
+    nrIncoherentChannels( parset.incoherentStokesChannelsPerSubband() ),
+    nrSamples( parset.CNintegrationSteps() ),
+    coherentTimeIntFactor( parset.coherentStokesTimeIntegrationFactor() ),
+    incoherentTimeIntFactor( parset.incoherentStokesTimeIntegrationFactor() ),
+
     nrBeams( parset.totalNrPencilBeams() ),
-    nrStokesPerBeam( parset.nrCoherentStokes() ),
     nrSubbandsPerPart( parset.nrSubbandsPerPart() ),
 
     nrPhaseTwoPsets( parset.phaseTwoPsets().size() ),
@@ -285,16 +314,16 @@ public:
     nrPhaseThreeCores( parset.phaseThreeCores().size() ),
 
     nrSubbandsPerPset( parset.nrSubbandsPerPset() ),
-    nrStreamsPerPset( parset.nrPhase3StreamsPerPset() ),
-    streamInfo( generateStreamInfo(parset) )
+    streamInfo( generateStreamInfo(parset) ),
+    nrStreamsPerPset( divideRoundUp( nrStreams(), parset.phaseThreePsets().size() ) )
   {
   }
 
   unsigned nrStreams() const { return streamInfo.size(); }
 
   // compose and decompose a stream number
-  unsigned stream( unsigned sap, unsigned beam, unsigned stokes, unsigned part ) const {
-    for (unsigned i = 0; i < streamInfo.size(); i++) {
+  unsigned stream( unsigned sap, unsigned beam, unsigned stokes, unsigned part, unsigned startAt = 0) const {
+    for (unsigned i = startAt; i < streamInfo.size(); i++) {
       const struct StreamInfo &info = streamInfo[i];
 
       if (sap == info.sap && beam == info.beam && stokes == info.stokes && part == info.part)
@@ -318,7 +347,11 @@ public:
 
   std::vector<unsigned> subbands( unsigned stream ) const { ASSERT(stream < streamInfo.size()); return streamInfo[stream].subbands; }
   unsigned nrSubbands( unsigned stream ) const { return stream >= streamInfo.size() ? 0 : subbands(stream).size(); }
-  unsigned maxNrSubbands() const { return streamInfo.size() == 0 ? 0 : std::max_element( streamInfo.begin(), streamInfo.end(), &streamInfoSizeComp )->subbands.size(); }
+  unsigned maxNrSubbands() const { return streamInfo.size() == 0 ? 0 : std::max_element( streamInfo.begin(), streamInfo.end(), &streamInfoSubbandsComp )->subbands.size(); }
+  unsigned maxNrChannels() const { return streamInfo.size() == 0 ? 0 : std::max_element( streamInfo.begin(), streamInfo.end(), &streamInfoChannelsComp )->nrChannels; }
+  unsigned maxNrSamples() const { return streamInfo.size() == 0 ? 0 : std::max_element( streamInfo.begin(), streamInfo.end(), &streamInfoSamplesComp )->nrSamples; }
+
+  size_t subbandSize( unsigned stream ) const { const StreamInfo &info = streamInfo[stream]; return (size_t)info.nrChannels * (info.nrSamples|2) * sizeof(float); }
 
   //unsigned maxNrSubbandsPerStream() const { return std::min(nrSubbands, nrSubbandsPerPart); }
 
@@ -339,8 +372,14 @@ public:
 
   const bool phaseThreeDisjunct;
 
+  const unsigned nrChannels;
+  const unsigned nrCoherentChannels;
+  const unsigned nrIncoherentChannels;
+  const unsigned nrSamples;
+  const unsigned coherentTimeIntFactor;
+  const unsigned incoherentTimeIntFactor;
+
   const unsigned nrBeams;
-  const unsigned nrStokesPerBeam;
   const unsigned nrSubbandsPerPart;
 
   const unsigned nrPhaseTwoPsets;
@@ -349,13 +388,26 @@ public:
   const unsigned nrPhaseThreeCores;
 
   const unsigned nrSubbandsPerPset;
-  const unsigned nrStreamsPerPset;
 
   const std::vector<struct StreamInfo> streamInfo;
+
+  const unsigned nrStreamsPerPset;
 private:
 
-  static bool streamInfoSizeComp( const struct StreamInfo &a, const struct StreamInfo &b ) {
+  static bool streamInfoSubbandsComp( const struct StreamInfo &a, const struct StreamInfo &b ) {
     return a.subbands.size() < b.subbands.size();
+  }
+
+  static bool streamInfoChannelsComp( const struct StreamInfo &a, const struct StreamInfo &b ) {
+    return a.nrChannels < b.nrChannels;
+  }
+
+  static bool streamInfoSamplesComp( const struct StreamInfo &a, const struct StreamInfo &b ) {
+    return a.nrSamples < b.nrSamples;
+  }
+
+  static unsigned divideRoundUp( unsigned a, unsigned b ) {
+    return b == 0 ? 0 : (a + b - 1) / b;
   }
 
   std::vector<struct StreamInfo> generateStreamInfo( const Parset &parset ) const {
@@ -365,10 +417,21 @@ private:
 
     std::vector<struct StreamInfo> infoset;
     const std::vector<unsigned> sapMapping = parset.subbandToSAPmapping();
-    const unsigned nrSAPs            = parset.nrBeams();
-    const unsigned nrSubbands        = parset.nrSubbands();
-    const unsigned nrCoherentStokes  = parset.nrCoherentStokes();
-    const unsigned nrSubbandsPerPart = parset.nrSubbandsPerPart();
+    const unsigned nrSAPs             = parset.nrBeams();
+    const unsigned nrSubbands         = parset.nrSubbands();
+    const unsigned nrSubbandsPerPart  = parset.nrSubbandsPerPart();
+
+    const unsigned nrCoherentStokes          = parset.coherentStokes().size();
+    const StokesType coherentType            = stokesType( parset.coherentStokes() );
+    const unsigned nrCoherentChannels        = parset.coherentStokesChannelsPerSubband();
+    const unsigned nrCoherentTimeIntFactor   = parset.coherentStokesTimeIntegrationFactor();
+
+    const unsigned nrIncoherentStokes        = parset.incoherentStokes().size();
+    const StokesType incoherentType          = stokesType( parset.incoherentStokes() );
+    const unsigned nrIncoherentChannels      = parset.incoherentStokesChannelsPerSubband();
+    const unsigned nrIncoherentTimeIntFactor = parset.incoherentStokesTimeIntegrationFactor();
+
+    const unsigned nrSamples                 = parset.CNintegrationSteps();
 
     struct StreamInfo info;
     info.stream = 0;
@@ -387,7 +450,17 @@ private:
       for (unsigned beam = 0; beam < nrBeams; beam++) {
         info.beam = beam;
 
-        for (unsigned stokes = 0; stokes < nrCoherentStokes; stokes++) {
+        const bool coherent = parset.isCoherent(sap, beam);
+        const unsigned nrStokes = coherent ? nrCoherentStokes : nrIncoherentStokes;
+
+        info.coherent       = coherent;
+        info.nrChannels     = coherent ? nrCoherentChannels : nrIncoherentChannels;
+        info.timeIntFactor  = coherent ? nrCoherentTimeIntFactor : nrIncoherentTimeIntFactor;
+        info.nrStokes       = nrStokes;
+        info.stokesType     = coherent ? coherentType : incoherentType;
+        info.nrSamples      = nrSamples / info.timeIntFactor;
+
+        for (unsigned stokes = 0; stokes < nrStokes; stokes++) {
           info.stokes = stokes;
           info.part   = 0;
 
@@ -426,7 +499,8 @@ public:
   // the stream to process on (myPset, myCore)
   int myStream( unsigned block ) const { 
     unsigned first = phaseThreePsetIndex * nrStreamsPerPset;
-    unsigned relative = (nrPhaseThreeCores + phaseThreeCoreIndex - phaseThreeGroupSize() * block) % nrPhaseThreeCores;
+    unsigned blockShift = (phaseThreeGroupSize() * block) % nrPhaseThreeCores;
+    unsigned relative = (nrPhaseThreeCores + phaseThreeCoreIndex - blockShift) % nrPhaseThreeCores;
 
     // such a stream does not exist
     if (first + relative >= nrStreams())
@@ -633,17 +707,32 @@ inline unsigned Parset::incoherentStokesTimeIntegrationFactor() const
 
 inline unsigned Parset::coherentStokesChannelsPerSubband() const
 {
-  return getUint32("OLAP.CNProc_CoherentStokes.channelsPerSubband");
+ unsigned numch = getUint32("OLAP.CNProc_CoherentStokes.channelsPerSubband");
+
+ if (numch == 0)
+   return nrChannelsPerSubband();
+ else
+   return numch;
 }
 
 inline unsigned Parset::incoherentStokesChannelsPerSubband() const
 {
-  return getUint32("OLAP.CNProc_IncoherentStokes.channelsPerSubband");
+ unsigned numch = getUint32("OLAP.CNProc_IncoherentStokes.channelsPerSubband");
+
+ if (numch == 0)
+   return nrChannelsPerSubband();
+ else
+   return numch;
 }
 
-inline std::vector<double> Parset::incoherentStokesDedispersionMeasures() const
+inline std::string Parset::coherentStokes() const
 {
-  return getDoubleVector("OLAP.CNProc_IncoherentStokes.dedispersionMeasures");
+  return getString("OLAP.CNProc_CoherentStokes.which");
+}
+
+inline std::string Parset::incoherentStokes() const
+{
+  return getString("OLAP.CNProc_IncoherentStokes.which");
 }
 
 inline bool Parset::outputFilteredData() const
@@ -659,16 +748,6 @@ inline bool Parset::outputCorrelatedData() const
 inline bool Parset::outputBeamFormedData() const
 {
   return getBool("Observation.DataProducts.Output_Beamformed.enabled", false);
-}
-
-inline bool Parset::outputCoherentStokes() const
-{
-  return getBool("Observation.DataProducts.Output_CoherentStokes.enabled", false);
-}
-
-inline bool Parset::outputIncoherentStokes() const
-{
-  return getBool("Observation.DataProducts.Output_IncoherentStokes.enabled", false);
 }
 
 inline bool Parset::outputTrigger() const
@@ -698,38 +777,22 @@ inline bool Parset::onlinePostCorrelationFlagging() const
 
 inline string Parset::onlinePreCorrelationFlaggingType(std::string defaultVal) const
 {
-  try {
-    return getString("OLAP.CNProc.onlinePreCorrelationFlaggingType");
-  } catch (...) {
-    return defaultVal;
-  }
+  return getString("OLAP.CNProc.onlinePreCorrelationFlaggingType", defaultVal);
 }
 
 inline string Parset::onlinePreCorrelationFlaggingStatisticsType(std::string defaultVal) const
 {
-  try {
-  return getString("OLAP.CNProc.onlinePreCorrelationFlaggingStatisticsType");
-  } catch (...) {
-    return defaultVal;
-  }
+  return getString("OLAP.CNProc.onlinePreCorrelationFlaggingStatisticsType", defaultVal);
 }
 
 inline string Parset::onlinePostCorrelationFlaggingType(std::string defaultVal) const
 {
-  try {
-    return getString("OLAP.CNProc.onlinePostCorrelationFlaggingType");
-  } catch (...) {
-    return defaultVal;
-  }
+  return getString("OLAP.CNProc.onlinePostCorrelationFlaggingType", defaultVal);
 }
 
 inline string Parset::onlinePostCorrelationFlaggingStatisticsType(std::string defaultVal) const
 {
-  try {
-  return getString("OLAP.CNProc.onlinePostCorrelationFlaggingStatisticsType");
-  } catch (...) {
-    return defaultVal;
-  }
+  return getString("OLAP.CNProc.onlinePostCorrelationFlaggingStatisticsType", defaultVal);
 }
 
 inline bool Parset::onlinePostCorrelationFlaggingDetectBrokenStations() const
@@ -802,7 +865,7 @@ inline unsigned Parset::nrPartsPerStokes() const
 
 inline unsigned Parset::nrPhase3StreamsPerPset() const
 {
-  return maxNrStreamsPerPset(BEAM_FORMED_DATA) + maxNrStreamsPerPset(COHERENT_STOKES) + maxNrStreamsPerPset(TRIGGER_DATA);
+  return maxNrStreamsPerPset(BEAM_FORMED_DATA) + maxNrStreamsPerPset(TRIGGER_DATA);
 }
 
 inline unsigned Parset::nrPPFTaps() const

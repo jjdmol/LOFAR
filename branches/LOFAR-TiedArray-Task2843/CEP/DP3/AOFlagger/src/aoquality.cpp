@@ -71,10 +71,9 @@ void actionCollect(const std::string &filename, bool collectAll)
 		<< "Polarizations: " << polarizationCount << '\n'
 		<< "Bands: " << bandCount << '\n'
 		<< "Channels/band: " << (totalChannels / bandCount) << '\n'
-		<< "Channels/band: " << (totalChannels / bandCount) << '\n'
 		<< "Name of obseratory: " << stationName << '\n';
 	if(ignoreChannelZero)
-		std::cout << "Channel zero will be ignored, as this looks like a LOFAR data set that includes channel 0.\n";
+		std::cout << "Channel zero will be ignored, as this looks like a LOFAR data set with bad channel 0.\n";
 	else
 		std::cout << "Channel zero will be included in the statistics, as it seems that channel 0 is okay.\n";
 	
@@ -119,12 +118,20 @@ void actionCollect(const std::string &filename, bool collectAll)
 		casa::Array<casa::Complex>::const_iterator dataIter = dataArray.begin();
 		casa::Array<bool>::const_iterator flagIter = flagArray.begin();
 		const unsigned startChannel = ignoreChannelZero ? 1 : 0;
+		if(ignoreChannelZero)
+		{
+			for(unsigned p = 0; p < polarizationCount; ++p)
+			{
+				++dataIter;
+				++flagIter;
+			}
+		}
 		for(unsigned channel = startChannel ; channel<band.channelCount; ++channel)
 		{
 			for(unsigned p = 0; p < polarizationCount; ++p)
 			{
 				samples[p].push_back(*dataIter);
-				isRFI[p][channel] = *flagIter;
+				isRFI[p][channel - startChannel] = *flagIter;
 				
 				++dataIter;
 				++flagIter;
@@ -266,15 +273,27 @@ void actionQueryTime(const std::string &kindName, const std::string &filename)
 
 void actionSummarize(const std::string &filename)
 {
-	MeasurementSet *ms = new MeasurementSet(filename);
-	const unsigned polarizationCount = ms->GetPolarizationCount();
-	delete ms;
+	bool remote = aoRemote::ClusteredObservation::IsClusteredFilename(filename);
+	StatisticsCollection collection;
+	if(remote)
+	{
+		aoRemote::ClusteredObservation *observation = aoRemote::ClusteredObservation::Load(filename);
+		aoRemote::ProcessCommander commander(*observation);
+		commander.PushReadQualityTablesTask(&collection);
+		commander.Run();
+		delete observation;
+	}
+	else {
+		MeasurementSet *ms = new MeasurementSet(filename);
+		const unsigned polarizationCount = ms->GetPolarizationCount();
+		delete ms;
+		
+		collection.SetPolarizationCount(polarizationCount);
+		QualityTablesFormatter qualityData(filename);
+		collection.Load(qualityData);
+	}
 	
-	QualityTablesFormatter qualityData(filename);
-	StatisticsCollection collection(polarizationCount);
-	collection.Load(qualityData);
-	
-	DefaultStatistics statistics(polarizationCount);
+	DefaultStatistics statistics(collection.PolarizationCount());
 	
 	collection.GetGlobalTimeStatistics(statistics);
 	std::cout << "Time statistics: \n";
