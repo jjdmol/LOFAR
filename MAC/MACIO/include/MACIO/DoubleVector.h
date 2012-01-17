@@ -1,4 +1,4 @@
-//#  StringVector.h: Wrapper class for protocol files.
+//#  DoubleVector.h: Wrapper class for protocol files.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -18,17 +18,16 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  $Id$
+//#  $Id: DoubleVector.h 14588 2009-12-02 15:31:07Z overeem $
 
-#ifndef MACIO_STRING_VECTOR_H
-#define MACIO_STRING_VECTOR_H
+#ifndef MACIO_DOUBLE_VECTOR_H
+#define MACIO_DOUBLE_VECTOR_H
 
-// \file StringVector.h
+// \file DoubleVector.h
 // Wrapper class for protocol files.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
-#include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 #include <Common/StreamUtil.h>
 #include <MACIO/Marshalling.h>
@@ -43,61 +42,60 @@ namespace LOFAR {
 
 
 // class_description
-class StringVector
+class DoubleVector
 {
 public:
-	StringVector() {};
-	~StringVector() {};
+	DoubleVector() {};
+	~DoubleVector() {};
 
 	unsigned int getSize();
 	unsigned int pack  (void	*buffer);
 	unsigned int unpack(void	*buffer);
 	ostream& print (ostream& os) const;
 
-	vector<string>&	operator()()
+	vector<double>&	operator()()
 		{ return (theVector); }
-
 
 	//# --- Datamember ---
 private:
-	vector<string>	theVector;
+	vector<double>	theVector;
 };
 
 // @}
 
 // getSize()
-inline unsigned int StringVector::getSize()
+inline unsigned int DoubleVector::getSize()
 {
 	unsigned int	offset = 0;
-	MSH_SIZE_VECTOR_STRING(offset, theVector);
+	MSH_SIZE_VECTOR_DOUBLE(offset, theVector);
 	return (offset);
 }
 
 // pack()
-inline unsigned int StringVector::pack(void	*buffer)
+inline unsigned int DoubleVector::pack(void	*buffer)
 {
 	unsigned int offset = 0;
-	MSH_PACK_VECTOR_STRING(buffer, offset, theVector);
+	MSH_PACK_VECTOR_DOUBLE(buffer, offset, theVector);
 	return (offset);
 }
 
 // unpack()
-inline unsigned int StringVector::unpack(void	*buffer)
+inline unsigned int DoubleVector::unpack(void	*buffer)
 {
 	unsigned int offset = 0;
-	MSH_UNPACK_VECTOR_STRING(buffer, offset, theVector);
+	MSH_UNPACK_VECTOR_DOUBLE(buffer, offset, theVector);
 	return (offset);
 }
 
 // print(ostream&)
-inline ostream& StringVector::print (ostream&os) const
+inline ostream& DoubleVector::print (ostream&os) const
 {
 	writeVector(os, theVector);
 	return (os);
 }
 
 // operator<< 
-inline ostream& operator<< (ostream& os, const StringVector&	sv)
+inline ostream& operator<< (ostream& os, const DoubleVector&	sv)
 {
 	return (sv.print(os));
 }

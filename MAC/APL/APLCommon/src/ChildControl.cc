@@ -732,7 +732,7 @@ void ChildControl::_processActionList()
 				}
 
 				// There is an connection with the startDaemon
-				if (action->nrRetries < itsMaxStartupRetries) {	// retries left?
+				if ((int)action->nrRetries < itsMaxStartupRetries) {	// retries left?
 					LOG_DEBUG_STR("Requesting start of " << action->cntlrName << " at " 
 																	<< action->hostname);
 					STARTDAEMONCreateEvent		startRequest;
