@@ -131,12 +131,7 @@ vector<failedTile> getBrokenTilesAntennaId( MeasurementSet &ms,
                                             const map<string, ptime> &failedTilesSAS);
 vector<failedTile> getFailedTilesAntennaId(MeasurementSet &ms,
                                            const map<string, ptime> &failedTilesSAS);
-//vector<failedTile> getBrokenTiles(MeasurementSet &ms, const RCUmap &brokenRCus);
-/*
-vector<failedTile> getFailedTiles(MeasurementSet &ms, 
-                                  const RCUmap &failedRCUs, 
-                                  const map<string, ptime> &failedHardware);
-*/
+
 bool elementInObservation(const Table &antennaFieldTable,
                           unsigned int antennaId,
                           unsigned int element_index);                                
@@ -348,14 +343,14 @@ int main (int argc, char* argv[])
       LOG_INFO_STR("reading brokenHardware after from file:" << brokenAfterfilename);      
       brokenHardwareAfter=readBrokenHardwareFile(brokenAfterfilename);
     
-      failedHardware=getFailedHardware(brokenHardware, brokenHardwareAfter);
+//      failedHardware=getFailedHardware(brokenHardware, brokenHardwareAfter);
 //      failedHardware=readFailedElementsFile(failedfilename);
       if(debug)
       {
         showMap(failedHardware);
       }
       
-      writeFailedElementsFile(failedfilename, failedHardware);  // write failed tiles to disk
+//      writeFailedElementsFile(failedfilename, failedHardware);  // write failed tiles to disk
 
       LOG_INFO_STR("Read failed tiles from file:");             // DEBUG
       failedHardware=readFailedElementsFile(failedfilename);    // DEBUG
@@ -391,7 +386,6 @@ int main (int argc, char* argv[])
       LOG_INFO_STR("reading brokenHardware after from file:" << brokenfilename);
       brokenHardwareAfter=readBrokenHardwareFile(brokenAfterfilename);
       
-      brokenRCUs=getBrokenRCUs(brokenHardware);   // get all broken RCUs into a RCUmap     
       vector<failedTile> brokenTiles=getFailedTilesAntennaId(ms, brokenHardware);
       if(debug)
       {
@@ -403,8 +397,8 @@ int main (int argc, char* argv[])
       //----------------------------------------------------------------------------
       // Get Tiles that failed during observation
       //
-      failedHardware=getFailedHardware(brokenHardware, brokenHardwareAfter);
-      //failedHardware=readFailedElementsFile(failedfilename);
+      //failedHardware=getFailedHardware(brokenHardware, brokenHardwareAfter);
+      failedHardware=readFailedElementsFile(failedfilename);
       vector<failedTile> failedTiles=getFailedTilesAntennaId(ms, failedHardware);
 
       if(debug)
@@ -1220,9 +1214,8 @@ vector<failedTile> getFailedTilesAntennaId( MeasurementSet &ms,
         }
       }
     }
-  }
-  
-//  sortFailedTilesByTime(failedTiles);
+  }  
+  sortFailedTilesByTime(failedTiles);
   return failedTiles;
 }
 
