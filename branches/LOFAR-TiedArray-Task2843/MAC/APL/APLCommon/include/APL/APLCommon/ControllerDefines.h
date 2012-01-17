@@ -57,7 +57,7 @@ enum
   CT_RESULT_UNSPECIFIED
 };
 
-const int	MAC_SCP_TIMEOUT	= 10;
+const int	MAC_SCP_TIMEOUT	= 90;
 
 // Define numbers for the controllertypes. These numbers are translated to names,
 // execuables, etc in the class ControllerName.

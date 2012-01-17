@@ -177,7 +177,9 @@ bool ChildControl::startChild (uint16				aCntlrType,
 									". Skipping creation of observation-based parset.");
 		// just copy the base-file if child runs on another system
 		if (hostname != myHostname(false)  && hostname != myHostname(true)) {
-			remoteCopy(baseSetName, hostname, baseSetName, MAC_SCP_TIMEOUT);
+		  remoteCopy(baseSetName, hostname, baseSetName, 10);
+		  // Used to be:
+		  //remoteCopy(baseSetName, hostname, baseSetName, MAC_SCP_TIMEOUT);
 			onRemoteMachine = true;
 		}
 	}
@@ -228,8 +230,13 @@ bool ChildControl::startChild (uint16				aCntlrType,
 		// When program must run on another system scp file to that system
 		if (hostname != myHostname(false)  && 
 			hostname != myHostname(true)) {
-			remoteCopy(cntlrSetName, hostname, cntlrSetName, MAC_SCP_TIMEOUT);
-			remoteCopy(baseSetName, hostname, baseSetName, MAC_SCP_TIMEOUT);
+			remoteCopy(cntlrSetName, hostname, cntlrSetName, 10);
+			// Used to be:
+			//remoteCopy(cntlrSetName, hostname, cntlrSetName, MAC_SCP_TIMEOUT);
+
+			remoteCopy(baseSetName, hostname, baseSetName, 10);
+			//Used to be:
+			//remoteCopy(baseSetName, hostname, baseSetName, MAC_SCP_TIMEOUT);
 			onRemoteMachine = true;
 		}
 	}
@@ -1020,11 +1027,12 @@ void ChildControl::_doGarbageCollection()
 		if (!iter->port) {
 			restartTimer = true;
 			LOG_DEBUG_STR(time(0)<<"-"<<iter->requestTime<<">="<<itsStartupRetryInterval<<"*"<<itsMaxStartupRetries<<"?");
-			if ((uint32(time(0)-iter->requestTime)) >= itsStartupRetryInterval*itsMaxStartupRetries) {
+			if ((time(0)-iter->requestTime) >= int32(MAC_SCP_TIMEOUT+(itsStartupRetryInterval*itsMaxStartupRetries))) {
 				LOG_DEBUG_STR ("Controller " << iter->cntlrName << " is still unreachable, informing main task");
 				_setEstablishedState(iter->cntlrName, CTState::QUITED, time(0), CT_RESULT_LOST_CONNECTION);
 				iter->port = (GCFPortInterface*) -1;
 			}
+
 			iter++;
 		} else if (iter->port == (GCFPortInterface*)-1) {
 			LOG_DEBUG_STR ("Removing controller " << iter->cntlrName << " from the controller list");
