@@ -21,6 +21,9 @@
 //#
 //# @author Sven Duscha
 
+#ifndef BEAMINFO_SHOWINFO_H
+#define BEAMINFO_SHOWINFO_H
+
 #include <vector>
 #include <map>
 
@@ -59,14 +62,15 @@ void showMap(const std::map<unsigned int, std::vector<unsigned int> > &m);
 // Taken from addbeaminfo.h
 #ifndef __FAILED_TILE__
 #define __FAILED_TILE__
-typedef struct
+struct failedTile
 {
-  unsigned int antennaId;
+  unsigned int antennaFieldId;
   std::vector<unsigned int> rcus;
   std::vector<ptime> timeStamps;
-} failedTile;
+};
 #endif
 
 void showFailedTiles(const std::vector<failedTile> &failedTiles);
 
 void padTo(std::string &str, const size_t num, const char paddingChar);
+#endif

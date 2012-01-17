@@ -323,7 +323,7 @@ void showFailedTiles(const std::vector<failedTile> &failedTiles)
   unsigned int length=failedTiles.size();
   for(unsigned int i=0; i<length;i++)
   {
-    cout << "antennaId: " << failedTiles[i].antennaId << endl;
+    cout << "antennaFieldId: " << failedTiles[i].antennaFieldId << endl;
     cout << "rcus:"; 
     for(unsigned int j=0; j<failedTiles[i].rcus.size() ; j++)
     {
