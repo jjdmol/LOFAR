@@ -167,8 +167,8 @@ private:
 	map <string, GCFTCPPort*>	itsStartDaemonMap;	// map<hostname,sdconnection>
 	typedef map<string, GCFTCPPort*>::iterator			SDiter;
 	typedef map<string, GCFTCPPort*>::const_iterator	const_SDiter;
-	uint32						itsStartupRetryInterval;
-	uint32						itsMaxStartupRetries;
+	int32						itsStartupRetryInterval;
+	int32						itsMaxStartupRetries;
 
 	list<ControllerInfo>*		itsCntlrList;		// admin. of child controllers
 

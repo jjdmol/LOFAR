@@ -15,7 +15,7 @@ set(PVSS_DEFINITIONS "-Wno-deprecated")
 set(MATLAB_ROOT_DIR /usr/local/matlab-2008a)
 
 # Path to JAVA
-set(ENV{JAVA_HOME} /usr/local/jdk1.6.0_19)
+set(ENV{JAVA_HOME} /usr/local/jdk1.6.0_29)
 
 # Ignore warnings matching the following pattern(s)
 set(CTEST_CUSTOM_WARNING_EXCEPTION
