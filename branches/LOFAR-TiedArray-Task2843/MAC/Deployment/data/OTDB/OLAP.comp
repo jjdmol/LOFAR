@@ -30,7 +30,7 @@ node   CNProc_CoherentStokes     4.0.0  development 'node constraint'  "Coherent
 par  which                   I    ptext  -      10    0      "I|IQUV;I"                                - "Which Stokes values to compute"
 par  channelsPerSubband      I    int    -      10    0      "<<Observation.channelsPerSubband"        - "Number of channels for Stokes data"
 par  timeIntegrationFactor   I    int    -      10    0      1                                         - "Time-wise integration of Stokes data (in samples)"
-
+par  subbandsPerFile         I	  int    -	10    0      1                                         - "the number of subbands each Stokes file will hold"
 
 # -- CNProc_IncoherentStokes --
 #
@@ -43,6 +43,7 @@ node   CNProc_IncoherentStokes   4.0.0  development 'node constraint'  "Incohere
 par  which                   I    ptext  -      10    0      "I|IQUV;I"                                - "Which Stokes values to compute"
 par  channelsPerSubband      I    int    -      10    0      "<<Observation.channelsPerSubband"        - "Number of channels for Stokes data"
 par  timeIntegrationFactor   I    int    -      10    0      1                                         - "Time-wise integration of Stokes data (in samples)"
+par  subbandsPerFile         I    int    -      10    0      1                                         - "the number of subbands each Stokes file will hold"
 
 
 # -- OLAP_Conni --
@@ -109,11 +110,11 @@ par subbandsPerMS	I	int	-	10	0	1	-	'this key is obsolete'
 #
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node  Storage         4.0.0  development 'node constraint'  "Correlator Storage settings"
+#node  Storage         4.0.0  development 'node constraint'  "Correlator Storage settings"
 
 #    name               dir.    type   unit     prun.   vm	value   constr. descr.
 #--------------------------------------------------------------------------------------------------------
-par subbandsPerPart	I	int     -	10	0	1	-	'the number of subbands each Stokes file part will hold'
+#par subbandsPerPart	I	int     -	10	0	1	-	'the number of subbands each Stokes file part will hold'
 
 
 # -- OLAP--
@@ -146,6 +147,6 @@ uses  Correlator   4.0.0  development '1'  "Correlator specification"
 uses  PencilInfo   4.0.0  development '1'  "Settings for pencil beamformer"
 uses  DelayComp    4.0.0  development '1'  "Setting of the delaycompensation"
 uses  IONProc      4.0.0  development '1'  "I/O Node Processing: application running on the BlueGene I/O nodes"
-uses  Storage      4.0.0  development '1'  "Correlator Storage settings"
+#uses  Storage      4.0.0  development '1'  "Correlator Storage settings"
 uses  StorageProc  4.0.0  development '1'  "???"
 
