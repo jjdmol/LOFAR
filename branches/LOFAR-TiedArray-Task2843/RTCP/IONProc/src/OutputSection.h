@@ -100,13 +100,6 @@ class PhaseThreeOutputSection : public OutputSection
 };
 
 
-class FilteredDataOutputSection : public PhaseTwoOutputSection
-{
-  public:
-    FilteredDataOutputSection(const Parset &, Stream * (*createStream)(unsigned, unsigned), unsigned firstBlockNumber);
-};
-
-
 class CorrelatedDataOutputSection : public PhaseTwoOutputSection
 {
   public:

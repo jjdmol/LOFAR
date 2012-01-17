@@ -93,7 +93,7 @@ class Parset(util.Parset.Parset):
         if key in self:
           return self.getStringVector(key)
   
-        outputnames = ["Filtered","Correlated","Beamformed","Trigger"]
+        outputnames = ["Correlated","Beamformed","Trigger"]
         locationkeys = ["Observation.DataProducts.Output_%s.locations" % p for p in outputnames]
 
         storagenodes = set()
@@ -144,13 +144,11 @@ class Parset(util.Parset.Parset):
         for k in ["OLAP.CNProc_CoherentStokes.channelsPerSubband", "OLAP.CNProc_IncoherentStokes.channelsPerSubband"]:
           if k not in self or int(self[k]) == 0:
             self[k] = self["Observation.channelsPerSubband"]
-        self.setdefault('Observation.DataProducts.Output_Filtered.namemask','L${OBSID}_SB${SUBBAND}.filtered')
         self.setdefault('Observation.DataProducts.Output_Beamformed.namemask','L${OBSID}_SAP${SAP}_B${BEAM}_S${STOKES}_P${PART}_bf.raw')
         self.setdefault('Observation.DataProducts.Output_Correlated.namemask','L${OBSID}_SB${SUBBAND}_uv.MS')
         self.setdefault('Observation.DataProducts.Output_Trigger.namemask','L${OBSID}_SAP${SAP}_B${BEAM}_S${STOKES}_P${PART}_bf.trigger')
 	self.setdefault('OLAP.dispersionMeasure', 0);
 
-        self.setdefault('Observation.DataProducts.Output_Filtered.dirmask','L${YEAR}_${OBSID}')
         self.setdefault('Observation.DataProducts.Output_Beamformed.dirmask','L${YEAR}_${OBSID}')
         self.setdefault('Observation.DataProducts.Output_Correlated.dirmask','L${YEAR}_${OBSID}')
         self.setdefault('Observation.DataProducts.Output_Trigger.dirmask','L${YEAR}_${OBSID}')
@@ -191,6 +189,7 @@ class Parset(util.Parset.Parset):
               "dispersionMeasure": dm,
               "stationList": [],
               "specificationType": "ring",
+              "coherent": True,
             } for (angle1,angle2) in ringcoordinates.coordinates()
           ]
 
@@ -207,6 +206,7 @@ class Parset(util.Parset.Parset):
                   "dispersionMeasure": dm,
                   "stationList": [s],
                   "specificationType": "flyseye",
+                  "coherent": True,
                 }
               )
 
@@ -223,6 +223,7 @@ class Parset(util.Parset.Parset):
                 "dispersionMeasure": self["Observation.Beam[%s].TiedArrayBeam[%s].dispersionMeasure" % (b,m)],
                 "stationList": [],
                 "specificationType": "manual",
+                "coherent": self["Observation.Beam[%s].TiedArrayBeam[%s].coherent" % (b,m)],
               }
             )
 
@@ -242,17 +243,6 @@ class Parset(util.Parset.Parset):
 
         convertmap = [
           # ("old","new")
-          ("OLAP.Stokes.which", "OLAP.CNProc_CoherentStokes.which"),
-          ("OLAP.Stokes.which", "OLAP.CNProc_IncoherentStokes.which"),
-
-          ("OLAP.Stokes.integrationSteps", "OLAP.CNProc_CoherentStokes.timeIntegrationFactor"),
-          ("OLAP.Stokes.integrationSteps", "OLAP.CNProc_IncoherentStokes.timeIntegrationFactor"),
-
-          ("OLAP.Stokes.channelsPerSubband", "OLAP.CNProc_CoherentStokes.channelsPerSubband"),
-          ("OLAP.Stokes.channelsPerSubband", "OLAP.CNProc_IncoherentStokes.channelsPerSubband"),
-
-          ("OLAP.PencilInfo.ringSize", "Observation.Beam[0].TabRingSize"),
-          ("OLAP.PencilInfo.nrRings",  "Observation.Beam[0].nrTabRings"),
         ]
 
         for (k,v) in convertmap:
@@ -499,8 +489,8 @@ class Parset(util.Parset.Parset):
 
         # generate filenames to produce - phase 2
         nodelist = self.getInt32Vector( "OLAP.storageNodeList" );
-        products = ["Filtered","Correlated"]
-        outputkeys = ["Filtered","Correlated"]
+        products = ["Correlated"]
+        outputkeys = ["Correlated"]
 
         for p,o in zip(products,outputkeys):
           outputkey    = "Observation.DataProducts.Output_%s.enabled" % (o,)
@@ -807,7 +797,6 @@ class Parset(util.Parset.Parset):
 
     def outputPrefixes( self ):
       return [
-        "Observation.DataProducts.Output_Filtered",
         "Observation.DataProducts.Output_Correlated",
         "Observation.DataProducts.Output_Beamformed",
         "Observation.DataProducts.Output_Trigger",

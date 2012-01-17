@@ -121,7 +121,6 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
 
     const Parset        &itsParset;
 
-    SmartPtr<Stream>	itsFilteredDataStream;
 #if defined CLUSTER_SCHEDULING
     const std::vector<SmartPtr<Stream> > &itsInputStreams;
 #else

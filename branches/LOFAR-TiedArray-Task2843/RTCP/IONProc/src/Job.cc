@@ -753,9 +753,6 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
     attachToInputSection<SAMPLE_TYPE>();
 
   if (itsHasPhaseTwo) {
-    if (itsParset.outputFilteredData())
-      outputSections.push_back(new FilteredDataOutputSection(itsParset, createCNstream, itsBlockNumber));
-
     if (itsParset.outputCorrelatedData())
       outputSections.push_back(new CorrelatedDataOutputSection(itsParset, createCNstream, itsBlockNumber));
   }

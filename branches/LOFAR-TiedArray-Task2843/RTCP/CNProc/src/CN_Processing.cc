@@ -208,10 +208,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
 #endif // HAVE_MPI
 
     itsPPF	    = new PPF<SAMPLE_TYPE>(itsNrStations, itsNrChannels, itsNrSamplesPerIntegration, parset.sampleRate() / itsNrChannels, parset.delayCompensation() || itsTotalNrPencilBeams > 1 || parset.correctClocks(), parset.correctBandPass(), itsLocationInfo.rank() == 0);
-    itsFilteredData = (FilteredData*)newStreamableData(parset, FILTERED_DATA, -1, itsBigAllocator);
-
-    if (parset.outputFilteredData())
-      itsFilteredDataStream = createStream(FILTERED_DATA, itsLocationInfo);
+    itsFilteredData = new FilteredData(parset.nrStations(), parset.nrChannelsPerSubband(), parset.CNintegrationSteps(), itsBigAllocator);
 
     if (parset.onlineFlagging() && parset.onlinePreCorrelationFlagging()) {
       itsPreCorrelationFlagger = new PreCorrelationFlagger(parset, itsNrStations, itsNrChannels, itsNrSamplesPerIntegration);
@@ -927,9 +924,6 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process(unsigne
 
     if (itsPostCorrelationFlagger != 0)
       postCorrelationFlagging();
-
-    if (itsFilteredDataStream != 0)
-      sendOutput(itsFilteredData, itsFilteredDataStream);
 
     if (itsCorrelatedDataStream != 0)
       sendOutput(itsCorrelatedData, itsCorrelatedDataStream);

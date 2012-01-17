@@ -213,7 +213,6 @@ string Parset::getInputStreamName(const string &stationName, unsigned rspBoardNu
 std::string Parset::keyPrefix(OutputType outputType)
 {
   switch (outputType) {
-    case FILTERED_DATA:     return "Observation.DataProducts.Output_FilteredData";
     case CORRELATED_DATA:   return "Observation.DataProducts.Output_Correlated";
     case BEAM_FORMED_DATA:  return "Observation.DataProducts.Output_Beamformed";
     case TRIGGER_DATA:	    return "Observation.DataProducts.Output_Trigger";
@@ -246,7 +245,6 @@ unsigned Parset::nrStreams(OutputType outputType, bool force) const
     return 0;
 
   switch (outputType) {
-    case FILTERED_DATA :	    // FALL THROUGH
     case CORRELATED_DATA :   return nrSubbands();
     case BEAM_FORMED_DATA :         // FALL THROUGH
     case TRIGGER_DATA :      return transposeLogic().nrStreams();
@@ -261,7 +259,6 @@ unsigned Parset::maxNrStreamsPerPset(OutputType outputType, bool force) const
   unsigned nrPsets;
 
   switch (outputType) {
-    case FILTERED_DATA :	    // FALL THROUGH
     case CORRELATED_DATA :   nrPsets = phaseTwoPsets().size();
 			     break;
 
@@ -406,7 +403,7 @@ bool Parset::isCoherent(unsigned beam, unsigned pencil) const
 {
   string key = str(boost::format("Observation.Beam[%u].TiedArrayBeam[%u].coherent") % beam % pencil);
 
-  return getBool(key);
+  return getBool(key, true);
 }
 
 
@@ -417,7 +414,7 @@ double Parset::dispersionMeasure(unsigned beam, unsigned pencil) const
 
   string key = str(boost::format("Observation.Beam[%u].TiedArrayBeam[%u].dispersionMeasure") % beam % pencil);
 
-  return getDouble(key);
+  return getDouble(key, 0.0);
 }
 
 

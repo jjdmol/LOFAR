@@ -37,8 +37,6 @@ namespace RTCP {
 StreamableData *newStreamableData(const Parset &parset, OutputType outputType, int streamNr, Allocator &allocator)
 {
   switch (outputType) {
-    case FILTERED_DATA     : return new FilteredData(parset.nrStations(), parset.nrChannelsPerSubband(), parset.CNintegrationSteps(), allocator);
-
     case CORRELATED_DATA   : return new CorrelatedData(parset.nrMergedStations(), parset.nrChannelsPerSubband(), parset.integrationSteps(), allocator);
 
     case BEAM_FORMED_DATA  : {

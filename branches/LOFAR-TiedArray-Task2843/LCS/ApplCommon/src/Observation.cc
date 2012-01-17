@@ -286,8 +286,8 @@ Observation::Observation(ParameterSet*		aParSet,
 	// loop over all data products and generate all data flows
 	string olapprefix = aParSet->locateModule("OLAP") + "OLAP.";
 	if (!olapprefix.empty()) {		// offline Pipelines don't have OLAP in the parset.
-		const char *dataProductNames[] = { "CoherentStokes", "IncoherentStokes", "Beamformed", "Correlated", "Filtered" };
-		unsigned dataProductPhases[]   = { 3,                2,                  3,            2,            2          };
+		const char *dataProductNames[] = { "Beamformed", "Correlated" };
+		unsigned dataProductPhases[]   = { 3,            2 };
 		size_t nrDataProducts = sizeof dataProductNames / sizeof dataProductNames[0];
 
 		// by default, use all psets

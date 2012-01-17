@@ -122,13 +122,6 @@ PhaseThreeOutputSection::PhaseThreeOutputSection(const Parset &parset, Stream * 
 }
 
 
-FilteredDataOutputSection::FilteredDataOutputSection(const Parset &parset, Stream * (*createStreamFromCN)(unsigned, unsigned), unsigned firstBlockNumber)
-:
-  PhaseTwoOutputSection(parset, createStreamFromCN, FILTERED_DATA, firstBlockNumber, false)
-{
-}
-
-
 CorrelatedDataOutputSection::CorrelatedDataOutputSection(const Parset &parset, Stream * (*createStreamFromCN)(unsigned, unsigned), unsigned firstBlockNumber)
 :
   PhaseTwoOutputSection(parset, createStreamFromCN, CORRELATED_DATA, firstBlockNumber, true)

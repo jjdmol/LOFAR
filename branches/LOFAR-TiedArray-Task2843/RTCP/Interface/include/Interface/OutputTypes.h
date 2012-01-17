@@ -6,8 +6,7 @@ namespace RTCP {
 
 enum OutputType
 {
-  FILTERED_DATA = 1,
-  CORRELATED_DATA,
+  CORRELATED_DATA = 1,
   BEAM_FORMED_DATA,
   TRIGGER_DATA
 };
