@@ -2,10 +2,19 @@
 
 lofar_add_bin_program(packetanalysis packetanalysis.c)
 
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/locations.sh.in
+  ${CMAKE_CURRENT_BINARY_DIR}/locations.sh
+  @ONLY)
+
 install(PROGRAMS 
-  BlueGeneControl.sh
+  BGPPartition.sh
+  CNProcessing.sh
+  IONProcessing.sh
+  controller.sh
+  gracefullyStopBGProcessing.sh
+  ${CMAKE_CURRENT_BINARY_DIR}/locations.sh
   watchlogs.sh
-  startOLAP.py
   commandOLAP.py
   runParset.py
   DESTINATION bin)

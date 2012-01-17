@@ -13,8 +13,8 @@ PATH=$PATH:/globalhome/broekema/bin
 function set_logdir {
   LOGDIR=$1
 
-  CNPROC=$LOGDIR/run.CNProc.log
-  IONPROC=$LOGDIR/run.IONProc.log
+  CNPROC=$LOGDIR/CNProc.log
+  IONPROC=$LOGDIR/IONProc.log
 }
 
 for d in . "$HOME/production/lofar/bgfen/log/latest" "$HOME/log/latest" "$HOME/projects/LOFAR/log"

@@ -251,7 +251,8 @@ namespace LOFAR
       sap.stationsList().set(parset.allStationNames());
 
       // TODO: non-J2000 pointings
-      ASSERT( parset.getBeamDirectionType(sapNr) == "J2000" );
+      if( parset.getBeamDirectionType(sapNr) != "J2000" )
+        LOG_WARN("HDF5 writer does not record positions of non-J2000 observations yet.");
 
       vector<double> beamDir = parset.getBeamDirection(sapNr);
       sap.pointRA() .set(beamDir[0] * 180.0 / M_PI);
