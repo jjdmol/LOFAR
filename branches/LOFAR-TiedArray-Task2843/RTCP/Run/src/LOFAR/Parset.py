@@ -541,7 +541,7 @@ class Parset(util.Parset.Parset):
           paths = [ self.parseMask( mask, sap = sap, beam = b, stokes = s, part = p )
                     for sap in xrange(self.getNrSAPs())
                     for b in xrange(self.getNrBeams(sap))
-                    for s in xrange(self.getNrStokes(sap, self.isCoherent(sap, b)))
+                    for s in xrange(self.getNrStokes(self.isCoherent(sap, b)))
                     for p in xrange(self.getNrParts(sap, self.isCoherent(sap, b)))
                   ]
           filenames = map( os.path.basename, paths )
