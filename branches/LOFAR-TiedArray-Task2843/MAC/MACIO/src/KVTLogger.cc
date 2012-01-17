@@ -72,7 +72,7 @@ bool KVTLogger::log(const string& key, const string& value, double secsEpoch1970
 		return (false);
 	}
 
-	KVTSendKvtEvent		logEvent;
+	KVTSendMsgEvent		logEvent;
 	logEvent.seqnr     = --itsSeqnr;	// use negative seqnrs to avoid ack messages
 	logEvent.key       = key;
 	logEvent.value     = value;
@@ -93,7 +93,7 @@ bool KVTLogger::log(const vector<string> keys, const vector<string> values, cons
 		return (false);
 	}
 
-	KVTSendKvtPoolEvent		logEvent;
+	KVTSendMsgPoolEvent		logEvent;
 	logEvent.seqnr     = --itsSeqnr;	// use negative seqnrs to avoid ack messages
 	logEvent.nrElements= nrElements;
 	logEvent.keys()    = keys;
