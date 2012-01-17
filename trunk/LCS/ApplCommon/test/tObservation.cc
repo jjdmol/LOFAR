@@ -50,6 +50,7 @@ int main (int argc, char* argv[])
 			return (0);
 		}
 
+		cout << ">>>" << endl;
 		ParameterSet parSet2("tObservation.in_parset2");
 		Observation  dualObs(&parSet2);
 		cout << dualObs << endl;
@@ -57,6 +58,7 @@ int main (int argc, char* argv[])
 		ParameterSet parSet1("tObservation.in_parset1");
 		Observation  obs1(&parSet1);
 		cout << obs1 << endl;
+		cout << "<<<" << endl;
 
 		// add an extra beam
 		parSet1.replace("ObsSW.Observation.nrBeams", "2");
@@ -140,6 +142,7 @@ int main (int argc, char* argv[])
 		cout << "LBA_X(true)  = " << obs3.getAntennaArrayName(true) << endl;
 
 		// test old syntax agains new syntax
+		cout << ">>>" << endl;
 		ParameterSet oldParset("tObservation.in_oldParset");
 		Observation  oldObs(&oldParset,true);
 		cout << "OLD SYNTAX" << endl;
@@ -149,6 +152,7 @@ int main (int argc, char* argv[])
 		Observation  newObs(&newParset,true);
 		cout << "NEW SYNTAX" << endl;
 		cout << newObs << endl;
+		cout << "<<<" << endl;
 
 	}
 	catch (Exception& e) {
