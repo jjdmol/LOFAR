@@ -268,7 +268,7 @@ GCFEvent::TResult ObsClaimer::preparePVSS_state (GCFEvent& event, GCFPortInterfa
 					writeVector(os1, theObs.beams[i].subbands);
 					subbandArr.push_back  (new GCFPVString(os1.str()));
 					stringstream		os2;
-					writeVector(os2, theObs.beams[i].beamlets);
+					writeVector(os2, theObs.getBeamlets(i));
 					beamletArr.push_back  (new GCFPVString(os2.str()));
 					angle1Arr.push_back	  (new GCFPVDouble(theObs.beams[i].pointings[0].angle1));
 					angle2Arr.push_back	  (new GCFPVDouble(theObs.beams[i].pointings[0].angle2));

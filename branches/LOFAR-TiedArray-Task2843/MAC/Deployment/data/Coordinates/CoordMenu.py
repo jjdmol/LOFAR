@@ -62,7 +62,7 @@ def load_normal_vectors():
         sys.exit()
     res = Popen(['./load_normal_vectors.py',filename]).wait()
     if (res != 0): sys.exit(1)
-    time.sleep(3)
+    #time.sleep(3)
     
 def load_rotation_matrices():
     print 'Loading rotation matrices'
@@ -75,7 +75,7 @@ def load_rotation_matrices():
         sys.exit()
     res = Popen(['./load_rotation_matrices.py',filename]).wait()
     if (res != 0): sys.exit(1)
-    time.sleep(3)
+    #time.sleep(3)
     
 def load_hba_rotations():
     print 'Loading hba field rotations'
@@ -88,11 +88,11 @@ def load_hba_rotations():
         sys.exit()
     res = Popen(['./load_hba_rotations.py',filename]).wait()
     if (res != 0): sys.exit(1)
-    time.sleep(3)
+    #time.sleep(3)
 
 def calculate_hba_deltas():
     print 'calculating hba-deltas'
-    time.sleep(3)
+    #time.sleep(3)
     res = Popen(['./calc_hba_deltas.py']).wait()
     if (res != 0): sys.exit(1)
     
