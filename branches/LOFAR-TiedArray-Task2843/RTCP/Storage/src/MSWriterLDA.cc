@@ -102,7 +102,7 @@ namespace LOFAR
     // uses global locks too anyway.
     static Mutex HDF5Mutex;
 
-    template <typename T,unsigned DIM> MSWriterLDA<T,DIM>::MSWriterLDA (const string &filename, const Parset &parset, OutputType outputType, unsigned fileno, bool isBigEndian)
+    template <typename T,unsigned DIM> MSWriterLDA<T,DIM>::MSWriterLDA (const string &filename, const Parset &parset, unsigned fileno, bool isBigEndian)
     :
       MSWriterFile(forceextension(string(filename),".raw"),false),
       itsTransposeLogic(parset.transposeLogic()),

@@ -93,9 +93,15 @@ OLAP.Correlator.integrationTime = 1.0
 #OLAP.IONProc.integrationSteps = 1   # (generated)
 #OLAP.CNProc.integrationSteps  = 768 # (generated, multiple of 128 for pencil beams)
 
-OLAP.Stokes.which = I              # I or IQUV
-OLAP.Stokes.integrationSteps = 1   # time integration
-#OLAP.Stokes.nrChannelsPerSubband = 256 # reduce # channels by integration if desired
+OLAP.CNProc_CoherentStokes.subbandsPerFile = 244
+OLAP.CNProc_CoherentStokes.which = I                  # I or IQUV or XXYY
+OLAP.CNProc_CoherentStokes.timeIntegrationSteps = 1   # time integration
+OLAP.CNProc_CoherentStokes.channelsPerSubband = 0     # 0 = same as observation
+
+OLAP.CNProc_IncoherentStokes.subbandsPerFile = 244
+OLAP.CNProc_IncoherentStokes.which = I                # I or IQUV or XXYY
+OLAP.CNProc_IncoherentStokes.timeIntegrationSteps = 1 # time integration
+OLAP.CNProc_IncoherentStokes.channelsPerSubband = 0   # 0 = same as observation
 
 # ----- Beam forming
 OLAP.PencilInfo.flysEye = F           # don't form pencil beams, but turn stations
@@ -103,7 +109,6 @@ OLAP.PencilInfo.flysEye = F           # don't form pencil beams, but turn statio
 
 OLAP.PencilInfo.nrRings = 0 # 0 = just the central beam
 OLAP.PencilInfo.ringSize = 0.01
-OLAP.Storage.subbandsPerPart = 244
 
 # Eg. tiedArray beamforming
 #Observation.Beamformer[0].stationList = "B01_0,B01_1"

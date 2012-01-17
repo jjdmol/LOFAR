@@ -110,15 +110,15 @@ class Parset: public ParameterSet
     unsigned			IONintegrationSteps() const;
     unsigned			integrationSteps() const;
     unsigned			coherentStokesTimeIntegrationFactor() const;
+    unsigned			coherentStokesNrSubbandsPerFile() const; 
     unsigned			incoherentStokesTimeIntegrationFactor() const;
     unsigned			coherentStokesChannelsPerSubband() const;
     unsigned			incoherentStokesChannelsPerSubband() const;
+    unsigned			incoherentStokesNrSubbandsPerFile() const; 
     double			CNintegrationTime() const;
     double			IONintegrationTime() const;
     unsigned			nrSubbandSamples() const;
     unsigned			nrSubbandsPerPset() const; 
-    unsigned			nrSubbandsPerPart() const; 
-    unsigned			nrPartsPerStokes() const; 
     unsigned			nrPhase3StreamsPerPset() const; 
     unsigned			nrHistorySamples() const;
     unsigned			nrSamplesToCNProc() const;
@@ -306,7 +306,8 @@ public:
     incoherentTimeIntFactor( parset.incoherentStokesTimeIntegrationFactor() ),
 
     nrBeams( parset.totalNrPencilBeams() ),
-    nrSubbandsPerPart( parset.nrSubbandsPerPart() ),
+    coherentNrSubbandsPerFile( parset.coherentStokesNrSubbandsPerFile() ),
+    incoherentNrSubbandsPerFile( parset.incoherentStokesNrSubbandsPerFile() ),
 
     nrPhaseTwoPsets( parset.phaseTwoPsets().size() ),
     nrPhaseTwoCores( parset.phaseOneTwoCores().size() ),
@@ -353,7 +354,7 @@ public:
 
   size_t subbandSize( unsigned stream ) const { const StreamInfo &info = streamInfo[stream]; return (size_t)info.nrChannels * (info.nrSamples|2) * sizeof(float); }
 
-  //unsigned maxNrSubbandsPerStream() const { return std::min(nrSubbands, nrSubbandsPerPart); }
+  //unsigned maxNrSubbandsPerStream() const { return std::min(nrSubbands, nrSubbandsPerFile); }
 
   // the pset/core which processes a certain block of a certain subband
   // note: AsyncTransposeBeams applied the mapping of phaseThreePsets
@@ -380,7 +381,8 @@ public:
   const unsigned incoherentTimeIntFactor;
 
   const unsigned nrBeams;
-  const unsigned nrSubbandsPerPart;
+  const unsigned coherentNrSubbandsPerFile;
+  const unsigned incoherentNrSubbandsPerFile;
 
   const unsigned nrPhaseTwoPsets;
   const unsigned nrPhaseTwoCores;
@@ -419,7 +421,8 @@ private:
     const std::vector<unsigned> sapMapping = parset.subbandToSAPmapping();
     const unsigned nrSAPs             = parset.nrBeams();
     const unsigned nrSubbands         = parset.nrSubbands();
-    const unsigned nrSubbandsPerPart  = parset.nrSubbandsPerPart();
+    const unsigned nrCoherentSubbandsPerFile    = parset.coherentStokesNrSubbandsPerFile();
+    const unsigned nrIncoherentSubbandsPerFile  = parset.incoherentStokesNrSubbandsPerFile();
 
     const unsigned nrCoherentStokes          = parset.coherentStokes().size();
     const StokesType coherentType            = stokesType( parset.coherentStokes() );
@@ -460,13 +463,15 @@ private:
         info.stokesType     = coherent ? coherentType : incoherentType;
         info.nrSamples      = nrSamples / info.timeIntFactor;
 
+        const unsigned nrSubbandsPerFile = coherent ? nrCoherentSubbandsPerFile : nrIncoherentSubbandsPerFile;
+
         for (unsigned stokes = 0; stokes < nrStokes; stokes++) {
           info.stokes = stokes;
           info.part   = 0;
 
-          // split into parts of at most parset.nrSubbandsPerPart()
-          for (unsigned sb = 0; sb < sapSubbands.size(); sb += nrSubbandsPerPart ) {
-            for (unsigned i = 0; sb + i < sapSubbands.size() && i < nrSubbandsPerPart; i++)
+          // split into parts of at most nrSubbandsPerFile
+          for (unsigned sb = 0; sb < sapSubbands.size(); sb += nrSubbandsPerFile ) {
+            for (unsigned i = 0; sb + i < sapSubbands.size() && i < nrSubbandsPerFile; i++)
               info.subbands.push_back(sapSubbands[sb + i]);
 
             infoset.push_back(info);
@@ -853,14 +858,14 @@ inline unsigned Parset::nrSubbandsPerPset() const
   return (psets == 0 ? 0 : subbands + psets - 1) / psets;
 }
 
-inline unsigned Parset::nrSubbandsPerPart() const
+inline unsigned Parset::coherentStokesNrSubbandsPerFile() const
 {
-  return std::min( getUint32("OLAP.Storage.subbandsPerPart"), nrSubbands() );
+  return std::min( getUint32("OLAP.CNProc_CoherentStokes.subbandsPerFile"), nrSubbands() );
 }
 
-inline unsigned Parset::nrPartsPerStokes() const
+inline unsigned Parset::incoherentStokesNrSubbandsPerFile() const
 {
-  return getUint32("OLAP.Storage.partsPerStokes");
+  return std::min( getUint32("OLAP.CNProc_IncoherentStokes.subbandsPerFile"), nrSubbands() );
 }
 
 inline unsigned Parset::nrPhase3StreamsPerPset() const

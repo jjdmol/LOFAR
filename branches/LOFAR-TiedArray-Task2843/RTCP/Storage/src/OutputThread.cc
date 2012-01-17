@@ -152,7 +152,7 @@ void OutputThread::createMS()
     // HDF5 writer requested
     switch (itsOutputType) {
       case BEAM_FORMED_DATA:
-        itsWriter = new MSWriterLDA<float,3>(path.c_str(), itsParset, itsOutputType, itsStreamNr, itsIsBigEndian);
+        itsWriter = new MSWriterLDA<float,3>(path.c_str(), itsParset, itsStreamNr, itsIsBigEndian);
         break;
       default:
         itsWriter = new MSWriterFile(path, itsOutputType == BEAM_FORMED_DATA);

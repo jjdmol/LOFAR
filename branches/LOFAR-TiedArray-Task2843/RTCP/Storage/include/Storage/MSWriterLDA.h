@@ -45,7 +45,7 @@ namespace LOFAR
     template<typename T, unsigned DIM> class MSWriterLDA : public MSWriterFile
     {
     public:
-      MSWriterLDA(const string &filename, const Parset &parset, OutputType outputType, unsigned fileno, bool isBigEndian);
+      MSWriterLDA(const string &filename, const Parset &parset, unsigned fileno, bool isBigEndian);
       ~MSWriterLDA();
       virtual void write(StreamableData *data);
     private:
