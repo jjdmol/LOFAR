@@ -259,14 +259,14 @@ GCFEvent::TResult KeyValueLogger::operational(GCFEvent&		event, GCFPortInterface
 	}
 	break;
 
-	case KVT_SEND_KVT: {
-		KVTSendKvtEvent		logEvent(event);
+	case KVT_SEND_MSG: {
+		KVTSendMsgEvent		logEvent(event);
 		LOG_DEBUG_STR("Received: " << logEvent);
 		bool	sendOk(itsKVTgate->addKVT(logEvent.key, logEvent.value, from_ustime_t(logEvent.timestamp)));
 		itsClients[&port].msgCnt++;
 
 		if (logEvent.seqnr > 0) {
-			KVTSendKvtAckEvent	answer;
+			KVTSendMsgAckEvent	answer;
 			answer.seqnr  = logEvent.seqnr;
 			answer.result = !sendOk;
 			port.send(answer);
@@ -275,8 +275,8 @@ GCFEvent::TResult KeyValueLogger::operational(GCFEvent&		event, GCFPortInterface
 	break;
 
 
-	case KVT_SEND_KVT_POOL: {
-		KVTSendKvtPoolEvent		logEvent(event);
+	case KVT_SEND_MSG_POOL: {
+		KVTSendMsgPoolEvent		logEvent(event);
 		if (logEvent.keys().size() != logEvent.nrElements || 
 			logEvent.values().size() != logEvent.nrElements ||
 			logEvent.times().size() != logEvent.nrElements) {
@@ -284,7 +284,7 @@ GCFEvent::TResult KeyValueLogger::operational(GCFEvent&		event, GCFPortInterface
 					itsClients[&port].name.c_str(), logEvent.seqnr, logEvent.nrElements, 
 					logEvent.keys().size(), logEvent.values().size(), logEvent.times().size()));
 			if (logEvent.seqnr > 0) {
-				KVTSendKvtPoolAckEvent	answer;
+				KVTSendMsgPoolAckEvent	answer;
 				answer.seqnr = logEvent.seqnr;
 				answer.result = -1;
 				port.send(answer);
@@ -298,7 +298,7 @@ GCFEvent::TResult KeyValueLogger::operational(GCFEvent&		event, GCFPortInterface
 		}
 		itsClients[&port].msgCnt += logEvent.nrElements;
 		if (logEvent.seqnr > 0) {
-			KVTSendKvtPoolAckEvent	answer;
+			KVTSendMsgPoolAckEvent	answer;
 			answer.seqnr  = logEvent.seqnr;
 			answer.result = !sendOk;	// bool -> int: 0=Ok
 			port.send(answer);
