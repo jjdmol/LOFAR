@@ -26,6 +26,7 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <Common/ParameterSet.h>
+#include <Common/StreamUtil.h>
 #include <ApplCommon/Observation.h>
 
 using namespace LOFAR;
@@ -36,7 +37,7 @@ int main (int argc, char* argv[])
 	try {
 		if (argc == 2) {
 			ParameterSet	userPS(argv[1]);
-			Observation		someObs(&userPS);
+			Observation		someObs(&userPS, true);
 			cout << someObs;
 			cout << "getRCUbitset(96,48,'') = " << someObs.getRCUbitset(96,48,"") << endl;	// Europe
 			cout << "getRCUbitset(96,96,'') = " << someObs.getRCUbitset(96,96,"") << endl;	// Europe
@@ -44,7 +45,8 @@ int main (int argc, char* argv[])
 			cout << "getRCUbitset(96,96,LBA_XXX) = " << someObs.getRCUbitset(96,96,"LBA_XXX") << endl;	// Core
 			cout << "getRCUbitset(96,48,HBA_XXX) = " << someObs.getRCUbitset(96,48,"HBA_XXX") << endl;	// Core
 			cout << "getRCUbitset(96,96,HBA_XXX) = " << someObs.getRCUbitset(96,96,"HBA_XXX") << endl;	// Core
-			cout << someObs;
+			vector<int>	b2b = someObs.getBeamAllocation("RS005");
+			cout << "BeamAlloc for RS005 : " << b2b << endl;
 			return (0);
 		}
 
@@ -65,6 +67,16 @@ int main (int argc, char* argv[])
 		parSet1.add("ObsSW.Observation.Beam[1].beamletList", 	"[15,16,18]");
 		Observation  obs2(&parSet1);
 		cout << obs2 << endl;
+
+                // test storage node assignment
+                parSet1.add("ObsSW.OLAP.CNProc.phaseOnePsets", "[]");
+                parSet1.add("ObsSW.OLAP.CNProc.phaseTwoPsets", "[]");
+                parSet1.add("ObsSW.OLAP.CNProc.phaseThreePsets", "[]");
+                parSet1.add("ObsSW.Observation.DataProducts.Output_CoherentStokes.enabled", "true");
+                parSet1.add("ObsSW.Observation.DataProducts.Output_CoherentStokes.filenames", "[beam0.h5,beam1.h5]");
+                parSet1.add("ObsSW.Observation.DataProducts.Output_CoherentStokes.locations", "[/,/]");
+                Observation obs4(&parSet1);
+		ASSERTSTR(obs4.streamsToStorage.size() == 2, "Each file should have its own stream to storage");
 
 		cout << ">>>" << endl;
 		// test conflicts in clock
@@ -94,13 +106,6 @@ int main (int argc, char* argv[])
 		cout << "<<<" << endl;
 		cout << "No conflict found in file 5 which is oke." << endl;
 
-		// test RCUbitset based on receiverList
-		bitset<MAX_RCUS>	expectedRCUs;
-		expectedRCUs.reset();
-		for (int r = 0; r < 12; r++) {
-			expectedRCUs.set(r);
-		}
-
 		// basic test on RCU bitsets
 		Observation		obs3(&parSet1);
 		cout << "getRCUbitset(96,48,'') = " << obs3.getRCUbitset(96,48,"") << endl;	// Europe
@@ -110,8 +115,7 @@ int main (int argc, char* argv[])
 		cout << "getRCUbitset(96,48,HBA_XXX) = " << obs3.getRCUbitset(96,48,"HBA_XXX") << endl;	// Core
 		cout << "getRCUbitset(96,96,HBA_XXX) = " << obs3.getRCUbitset(96,96,"HBA_XXX") << endl;	// Core
 		
-		// tricky test on RCU bitsets
-		
+		// test translation of antennaSetname
 		obs3.antennaSet = "HBA_ZERO";
 		cout << "HBA_ZERO(false) = " << obs3.getAntennaArrayName(false) << endl;
 		cout << "HBA_ZERO(true)  = " << obs3.getAntennaArrayName(true) << endl;
@@ -134,6 +138,18 @@ int main (int argc, char* argv[])
 		obs3.antennaSet = "LBA_X";
 		cout << "LBA_X(false) = " << obs3.getAntennaArrayName(false) << endl;
 		cout << "LBA_X(true)  = " << obs3.getAntennaArrayName(true) << endl;
+
+		// test old syntax agains new syntax
+		ParameterSet oldParset("tObservation.in_oldParset");
+		Observation  oldObs(&oldParset,true);
+		cout << "OLD SYNTAX" << endl;
+		cout << oldObs << endl;
+
+		ParameterSet newParset("tObservation.in_newParset");
+		Observation  newObs(&newParset,true);
+		cout << "NEW SYNTAX" << endl;
+		cout << newObs << endl;
+
 	}
 	catch (Exception& e) {
 		cout << "Exception: " << e.what() << endl;

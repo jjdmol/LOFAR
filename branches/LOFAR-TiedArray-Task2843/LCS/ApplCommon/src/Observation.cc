@@ -26,9 +26,13 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <Common/lofar_datetime.h>
-#include <Common/StreamUtil.h>
-#include <ApplCommon/Observation.h>
 #include <Common/lofar_set.h>
+#include <Common/lofar_string.h>
+#include <Common/lofar_vector.h>
+#include <Common/StreamUtil.h>
+#include <Common/SystemUtil.h>
+#include <ApplCommon/Observation.h>
+
 #include <boost/format.hpp>
 
 using boost::format;
@@ -45,12 +49,12 @@ Observation::Observation() :
 	stopTime(0),
 	nyquistZone(0),
 	sampleClock(0),
-	splitterOn(false)
-{
-}
+	splitterOn(false),
+	itsStnHasDualHBA(false)
+{ }
 
 //
-// Observation(ParameterSet*)
+// Observation(ParameterSet*, [hasDualHBA]))
 //
 Observation::Observation(ParameterSet*		aParSet,
 						 bool				hasDualHBA) :
@@ -60,7 +64,8 @@ Observation::Observation(ParameterSet*		aParSet,
 	stopTime(0),
 	nyquistZone(0),
 	sampleClock(0),
-	splitterOn(false)
+	splitterOn(false),
+	itsStnHasDualHBA(hasDualHBA)
 {
 	// analyse ParameterSet.
 	string prefix = aParSet->locateModule("Observation") + "Observation.";
@@ -69,6 +74,8 @@ Observation::Observation(ParameterSet*		aParSet,
 	name  = aParSet->getString(prefix+"name", "");
 	obsID = aParSet->getInt32("_treeID", 0);
 	realPVSSdatapoint = aParSet->getString("_DPname","NOT_THE_REAL_DPNAME");
+
+	// Start and stop times
 #if !defined HAVE_BGL
 	try {
 		if (aParSet->isDefined(prefix+"startTime")) {
@@ -85,12 +92,15 @@ Observation::Observation(ParameterSet*		aParSet,
 		THROW( Exception, prefix << "stopTime cannot be parsed as a valid time string. Please use YYYY-MM-DD HH:MM:SS[.hhh]." );
 	}
 #endif
+
+	// stationlist(s)
 	if (aParSet->isDefined(prefix+"VirtualInstrument.stationList")) {
 		stationList = aParSet->getString(prefix+"VirtualInstrument.stationList");
 		stations    = aParSet->getStringVector(prefix+"VirtualInstrument.stationList", true);	// true:expandable
 		std::sort(stations.begin(), stations.end());
 	}
 
+	// miscellaneous
 	sampleClock = aParSet->getUint32(prefix+"sampleClock",  0);
 	filter 		= aParSet->getString(prefix+"bandFilter",   "");
 	antennaArray= aParSet->getString(prefix+"antennaArray", "");
@@ -107,6 +117,7 @@ Observation::Observation(ParameterSet*		aParSet,
 	splitterOn = ((antennaSet == "HBA_ZERO") || (antennaSet == "HBA_ONE") || (antennaSet == "HBA_DUAL"));
 	dualMode   = (antennaSet == "HBA_DUAL");
 
+	// RCU information
 	RCUset.reset();							// clear RCUset by default.
 	if (aParSet->isDefined(prefix+"receiverList")) {
 		receiverList = aParSet->getString(prefix+"receiverList");
@@ -119,21 +130,27 @@ Observation::Observation(ParameterSet*		aParSet,
 	BGLNodeList     = compactedArrayString(aParSet->getString(prefix+"VirtualInstrument.BGLNodeList","[]"));
 	storageNodeList = compactedArrayString(aParSet->getString(prefix+"VirtualInstrument.storageNodeList","[]"));
 
-	// allocate beamlet 2 beam mapping and reset to -1
-	beamlet2beams.resize   (MAX_BEAMLETS, -1);
-	beamlet2subbands.resize(MAX_BEAMLETS, -1);
-	// when nrSlotsInFrame differs from MAX_BEAMLETS_PER_RSP mark the gaps at the end of each RSPboard.
-	nrSlotsInFrame = aParSet->getInt(prefix+"nrSlotsInFrame");
+	// construct array with usable (-1) slots and unusable(999) slots. Unusable slots arise
+	// when nrSlotsInFrame differs from MAX_BEAMLETS_PER_RSP.
+	itsSlotTemplate.resize (MAX_BEAMLETS, -1);	// assume all are usable.
+	nrSlotsInFrame = aParSet->getInt(prefix+"nrSlotsInFrame",MAX_BEAMLETS_PER_RSP);
 	if (nrSlotsInFrame != MAX_BEAMLETS_PER_RSP) {
 		for (int rsp = 0; rsp < 4; rsp++) {
 			for (int bl = nrSlotsInFrame; bl < MAX_BEAMLETS_PER_RSP; bl++) {
-				beamlet2beams   [rsp*MAX_BEAMLETS_PER_RSP + bl] = 999;
-				beamlet2subbands[rsp*MAX_BEAMLETS_PER_RSP + bl] = 999;
+				itsSlotTemplate[rsp*MAX_BEAMLETS_PER_RSP + bl] = 999;
 			}
 		}
 	}
-	
-	set<uint32> subbands;		
+
+	// determine if DataslotLists are available in this parset
+	itsHasDataslots = aParSet->isDefined(prefix+str(format("Dataslots.%s%s.DataslotList") % stations[0] % antennaArray));
+	if (itsHasDataslots) {
+		itsDataslotParset = aParSet->makeSubset(prefix+"Dataslots.");		// save subset for later
+	}
+	else {	// init old arrays.
+		itsDataslotParset = aParSet->makeSubset(prefix+"Beam", "Beam");		// save subset for later
+		beamlet2beams = itsSlotTemplate;
+	}
 		
 	//
 	// NOTE: THE DATAMODEL USED IN SAS IS NOT RIGHT. IT SUPPORTS ONLY 1 POINTING PER BEAM.
@@ -149,6 +166,7 @@ Observation::Observation(ParameterSet*		aParSet,
 	//		 once in the HBA_ONE antennaSet.
 
 	// loop over all digital beams
+	vector<int>		BeamBeamlets;
 	int32	nrBeams = aParSet->getInt32(prefix+"nrBeams", 0);		// theoretical number
 	while (nrBeams > 0 && !aParSet->isDefined(prefix+formatString("Beam[%d].angle1", nrBeams-1))) {	// check reality
 		nrBeams--;
@@ -219,20 +237,26 @@ Observation::Observation(ParameterSet*		aParSet,
 			beams.push_back(newBeam);
 		}
 
-		// finally update beamlet 2 beam mapping.
-		for (int32  i = newBeam.beamlets.size()-1 ; i > -1; i--) {
-			if (beamlet2beams[newBeam.beamlets[i]] != -1) {
-				stringstream	os;
-				os << "beamlet2beams   : "; writeVector(os, beamlet2beams,    ",", "[", "]"); os << endl;
-				os << "beamlet2subbands: "; writeVector(os, beamlet2subbands, ",", "[", "]"); os << endl << endl;
-				LOG_ERROR_STR(os.str());
-				THROW (Exception, "beamlet " << i << "(" << newBeam.beamlets[i] << ") of beam " << beamIdx << " clashes with beamlet of other beam"); 
-			}
-			beamlet2beams   [newBeam.beamlets[i]] = beamIdx;
-			beamlet2subbands[newBeam.beamlets[i]] = newBeam.subbands[i];
-			subbands.insert(newBeam.subbands[i]);
+		// finally update vector with beamnumbers
+		int	nrBeamlets = newBeam.subbands.size();
+		if (!itsHasDataslots) {		// old situation
+			BeamBeamlets = aParSet->getInt32Vector(beamPrefix+"beamletList", vector<int32>(), true);	// true:expandable
+			for (int  i = 0; i < nrBeamlets; ++i) {
+				if (beamlet2beams[BeamBeamlets[i]] != -1) {
+					stringstream	os;
+					os << "beamlet2beams   : "; writeVector(os, beamlet2beams,    ",", "[", "]"); os << endl;
+					LOG_ERROR_STR(os.str());
+					THROW (Exception, "beamlet " << i << "(" << BeamBeamlets[i] << ") of beam " << beamIdx << " clashes with beamlet of other beam"); 
+				}
+				beamlet2beams[BeamBeamlets[i]] = beamIdx;
+			} // for all beamlets
 		}
-	} // for
+		else { // new situation
+			for (int  i = 0; i < nrBeamlets; ++i) {
+				itsBeamSlotList.push_back(beamIdx);
+			}
+		} // itsHasDataslots
+	} // for all digital beams
 
 	// loop over al analogue beams
 	int32	nrAnaBeams = aParSet->getInt32(prefix+"nrAnaBeams", 0);		// theoretical number
@@ -280,7 +304,7 @@ Observation::Observation(ParameterSet*		aParSet,
 			newBeam.antennaSet = "HBA_ONE";
 			anaBeams.push_back(newBeam);
 		}
-	}
+	} // for all analogue beams
 
 	// Create a vector which dataStream is written to what Storagenode.
 	// loop over all data products and generate all data flows
@@ -401,17 +425,6 @@ bool	Observation::conflicts(const	Observation&	other) const
 		}
 	}
 
-	// check beamlets overlap
-	int		maxBeamlets = beamlet2beams.size();
-	for (int bl = 0; bl < maxBeamlets; bl++) {
-		if (beamlet2beams[bl] != -1 && other.beamlet2beams[bl] != -1) {
-			LOG_INFO_STR("Conflict in beamlets between observation " << obsID <<
-						 " and " << other.obsID);
-			LOG_DEBUG_STR("First conflicting beamlet: " << bl);
-			return (true);
-		}
-	}
-
 	// for now also check nr of slots in frame. In the future we might allow
 	// different slotsinFrame for each RSPboard but for now we treat it as a conflict.
 	if (nrSlotsInFrame != other.nrSlotsInFrame) {
@@ -419,6 +432,19 @@ bool	Observation::conflicts(const	Observation&	other) const
 					other.nrSlotsInFrame << " for resp. observation " << obsID << 
 					" and " << other.obsID);
 		return (true);
+	}
+
+	// check beamlets overlap
+	vector<int> thisb2b = getBeamAllocation();
+	vector<int> thatb2b = other.getBeamAllocation();
+	int		maxBeamlets = thisb2b.size();
+	for (int bl = 0; bl < maxBeamlets; bl++) {
+		if (thisb2b[bl] != -1 && thatb2b[bl] != -1 && thisb2b[bl] != 999) {
+			LOG_INFO_STR("Conflict in beamlets between observation " << obsID <<
+						 " and " << other.obsID);
+			LOG_DEBUG_STR("First conflicting beamlet: " << bl);
+			return (true);
+		}
 	}
 
 	return (false);	// no conflicts
@@ -448,6 +474,99 @@ bitset<MAX_RCUS> Observation::getRCUbitset(int nrLBAs, int nrHBAs, const string&
 	}
 	return (tmpRCUset);
 }
+
+//
+// getBeamAllocation(stationname)
+//
+// Return station specific beamlet2beam vector.
+//
+vector<int> Observation::getBeamAllocation(const string& stationName) const
+{
+	vector<int>		b2b;
+
+	if (!itsHasDataslots) {
+		return (beamlet2beams);	// return old mapping so it keeps working
+	}
+
+	// construct stationname if not given by user.
+	string	station(stationName);
+	if (station.empty()) {
+		station = myHostname(false);
+		char	lastChar(*(--(station.end())));
+		if (lastChar == 'C' || lastChar == 'T') {
+			station.erase(station.length()-1, 1);		// station.pop_back();
+		}
+	}
+	// is DSL for this station available?
+	if (!itsDataslotParset.isDefined(str(format("%s%s.DataslotList") % station % antennaArray)) ||
+	    !itsDataslotParset.isDefined(str(format("%s%s.RSPBoardList") % station % antennaArray))) {
+		LOG_ERROR_STR("No dataslots defined for " << station << antennaArray);
+		return (b2b);
+	}
+	vector<int>	RSPboardList = itsDataslotParset.getIntVector(str(format("%s%s.RSPBoardList") % station % antennaArray),true);
+	vector<int>	DataslotList = itsDataslotParset.getIntVector(str(format("%s%s.DataslotList") % station % antennaArray),true);
+
+	ASSERTSTR (RSPboardList.size() == DataslotList.size(), "RSPBoardlist (" << RSPboardList << 
+			") differs size of DataslotList(" << DataslotList << ") for station " << station);
+	ASSERTSTR (RSPboardList.size() == itsBeamSlotList.size(), RSPboardList.size() << 
+			" dataslot allocations, but beams specify " << itsBeamSlotList.size() << " for station " << station);
+
+	// initialize arrays
+	b2b = itsSlotTemplate;
+
+	// fill with required information
+	for (int i = RSPboardList.size()-1; i >= 0; --i) {
+		int	idx = RSPboardList[i] * MAX_BEAMLETS_PER_RSP + DataslotList[i];
+		if (b2b[idx] != -1) {
+			THROW (Exception, "beamlet " << i << " of beam " << itsBeamSlotList[i] << " clashes with beamlet of other beam(" << b2b[idx] << ")"); 
+		}
+		else {
+			b2b[idx] = itsBeamSlotList[i];
+		}
+	}
+
+	return (b2b);
+}
+
+//
+// getBeamlets(beamNr, [stationName])
+//
+vector<int>	Observation::getBeamlets (uint beamIdx, const string&	stationName) const
+{
+	uint	parsetIdx = (dualMode && itsStnHasDualHBA) ? beamIdx/2 : beamIdx;
+
+	if (!itsHasDataslots) {
+		return (itsDataslotParset.getInt32Vector(str(format("Beam[%d].beamletList") % parsetIdx), vector<int32>(), true));	// true:expandable
+	}
+
+	// construct stationname if not given by user.
+	string	station(stationName);
+	if (station.empty()) {
+		station = myHostname(false);
+		char	lastChar(*(--(station.end())));
+		if (lastChar == 'C' || lastChar == 'T') {
+			station.erase(station.length()-1, 1);		// station.pop_back();
+		}
+	}
+		
+	// is DSL for this station available?
+	vector<int>	result;
+	if (!itsDataslotParset.isDefined(str(format("%s%s.DataslotList") % station % antennaArray)) ||
+	    !itsDataslotParset.isDefined(str(format("%s%s.RSPBoardList") % station % antennaArray))) {
+		return (result);
+	}
+	vector<int>	RSPboardList = itsDataslotParset.getIntVector(str(format("%s%s.RSPBoardList") % station % antennaArray),true);
+	vector<int>	DataslotList = itsDataslotParset.getIntVector(str(format("%s%s.DataslotList") % station % antennaArray),true);
+
+	uint	nrEntries = itsBeamSlotList.size();
+	for (uint i = 0; i < nrEntries; ++i) {
+		if (itsBeamSlotList[i] == parsetIdx) {
+			result.push_back(RSPboardList[i] * MAX_BEAMLETS_PER_RSP + DataslotList[i]);
+		}
+	}
+	return (result);
+}
+
 
 //
 // TEMP HACK TO GET THE ANTENNAARRAYNAME
@@ -553,7 +672,7 @@ ostream& Observation::print (ostream&	os) const
 		os << "Beam[" << b << "].antennaSet : " << beams[b].antennaSet << endl;
 		os << "Beam[" << b << "].momID      : " << beams[b].momID << endl;
 		os << "Beam[" << b << "].subbandList: "; writeVector(os, beams[b].subbands, ",", "[", "]"); os << endl;
-		os << "Beam[" << b << "].beamletList: "; writeVector(os, beams[b].beamlets, ",", "[", "]"); os << endl;
+		os << "Beam[" << b << "].beamletList: "; writeVector(os, getBeamlets(b), ",", "[", "]"); os << endl;
 		os << "Beam[" << b << "].maxDuration: " << (beams[b].maximizeDuration ? "YES" : "NO") << endl;
 		os << "nrPointings : " << beams[b].pointings.size() << endl;
 		for (size_t p = 0; p < beams[b].pointings.size(); ++p) {
@@ -573,8 +692,7 @@ ostream& Observation::print (ostream&	os) const
 			os << formatString ("Beam[%d].TAB[%d]: %f, %f, %s, %f, %scoherent\n", b, t, tab->angle1, tab->angle2, tab->directionType.c_str(), tab->dispersionMeasure, (tab->coherent ? "" : "in"));
 		}
 	}
-	os << "beamlet2beams   : "; writeVector(os, beamlet2beams,    ",", "[", "]"); os << endl;
-	os << "beamlet2subbands: "; writeVector(os, beamlet2subbands, ",", "[", "]"); os << endl << endl;
+	os << "beamlet2beams   : "; writeVector(os, getBeamAllocation(), ",", "[", "]"); os << endl;
 
     os << "nrAnaBeams   : " << anaBeams.size() << endl;
 	for (size_t	b(0) ; b < anaBeams.size(); b++) {
