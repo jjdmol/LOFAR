@@ -13,7 +13,7 @@ enum OutputType
 
 
 const OutputType FIRST_OUTPUT_TYPE = static_cast<OutputType>(1);
-const OutputType LAST_OUTPUT_TYPE  = static_cast<OutputType>(5); // exclusive
+const OutputType LAST_OUTPUT_TYPE  = static_cast<OutputType>(4); // exclusive
 
 
 inline OutputType operator ++ (OutputType &outputType) // prefix ++
