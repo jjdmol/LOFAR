@@ -34,10 +34,10 @@ prelude = << PRELUDE_END
 
 //	REGISTER 	  	 (uint obsID, string	name);
 //	REGISTER_ACK	 (uint obsID, string	name);
-//	SEND_KVT		 (int seqnr, string key, string value, double	secsEpoch1970);
-//	SEND_KVT_ACK	 (int seqnr, uint result);
-//	SEND_KVT_POOL	 (int seqnr, uint nrMsgs, strVector key, strVector value, dblVector time);
-//	SEND_KVT_POOL_ACK(int seqnr, uint result);
+//	SEND_MSG		 (int seqnr, string key, string value, double	secsEpoch1970);
+//	SEND_MSG_ACK	 (int seqnr, uint result);
+//	SEND_MSG_POOL	 (int seqnr, uint nrMsgs, strVector key, strVector value, dblVector time);
+//	SEND_MSG_POOL_ACK(int seqnr, uint result);
 
 PRELUDE_END;
 
@@ -74,7 +74,7 @@ event = {
 };
 
 event = {
-	signal = SEND_KVT;
+	signal = SEND_MSG;
 	dir = IN;
 	param = {
 		name = "seqnr";
@@ -95,7 +95,7 @@ event = {
 };
 
 event = {
-	signal = SEND_KVT_ACK;
+	signal = SEND_MSG_ACK;
 	dir = OUT;
 	param = {
 		name = "seqnr";
@@ -108,7 +108,7 @@ event = {
 };
 
 event = {
-	signal = SEND_KVT_POOL;
+	signal = SEND_MSG_POOL;
 	dir = IN;
 	param = {
 		name = "seqnr";
@@ -139,7 +139,7 @@ event = {
 };
 
 event = {
-	signal = SEND_KVT_POOL_ACK;
+	signal = SEND_MSG_POOL_ACK;
 	dir = OUT;
 	param = {
 		name = "seqnr";
