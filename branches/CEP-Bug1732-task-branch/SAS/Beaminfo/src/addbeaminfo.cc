@@ -313,17 +313,15 @@ int main (int argc, char* argv[])
         showMap(brokenHardware);   // DEBUG     
       }
 
-      // Get hardware strings that was broken after observation
-      brokenHardwareAfter=getBrokenHardwareMap(conn, endTime);          
-      writeBrokenHardwareFile(brokenAfterfilename, brokenHardwareAfter);
-      
-      //failedHardware=getFailedHardware(brokenHardware, brokenHardwareAfter);  // use comparison
       failedHardware=getFailedHardwareMap(conn, startTime, endTime);
-
-//      cout << "main() failedHardware:" << endl;           // DEBUG
-//      showMap(failedHardware);                            // DEBUG
-
       writeBrokenHardwareFile(failedfilename, failedHardware);
+
+      // UPDATED:
+      // Get hardware strings that was broken after observation
+//      brokenHardwareAfter=getBrokenHardwareMap(conn, endTime);          
+//      writeBrokenHardwareFile(brokenAfterfilename, brokenHardwareAfter);
+//      failedHardware=getFailedHardware(brokenHardware, brokenHardwareAfter);  // use comparison
+
 
       if(debug)
       {
@@ -343,14 +341,10 @@ int main (int argc, char* argv[])
       LOG_INFO_STR("reading brokenHardware after from file:" << brokenAfterfilename);      
       brokenHardwareAfter=readBrokenHardwareFile(brokenAfterfilename);
     
-//      failedHardware=getFailedHardware(brokenHardware, brokenHardwareAfter);
-//      failedHardware=readFailedElementsFile(failedfilename);
       if(debug)
       {
         showMap(failedHardware);
       }
-      
-//      writeFailedElementsFile(failedfilename, failedHardware);  // write failed tiles to disk
 
       LOG_INFO_STR("Read failed tiles from file:");             // DEBUG
       failedHardware=readFailedElementsFile(failedfilename);    // DEBUG
