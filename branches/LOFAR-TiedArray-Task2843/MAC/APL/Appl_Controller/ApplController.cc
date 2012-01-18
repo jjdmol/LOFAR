@@ -453,16 +453,16 @@ void ApplController::sendToKVLogger(ParameterSet&	aResultPS)
 	ParameterSet::iterator	end  = aResultPS.end();
 	KVTSendMsgPoolEvent		poolEvent;
 	poolEvent.seqnr = 1;
-	poolEvent.msgCount = 0;
+	poolEvent.nrElements = 0;
 	while (iter != end) {
-		poolEvent.keys.theVector.push_back(iter->first);
-		poolEvent.values.theVector.push_back(iter->second);
-		poolEvent.msgCount++;
+		poolEvent.keys().push_back(iter->first);
+		poolEvent.values().push_back(iter->second);
+		poolEvent.nrElements++;
 		iter++;
 	}
 
 	// empty PS?
-	if (!poolEvent.msgCount) {
+	if (!poolEvent.nrElements) {
 		return;
 	}
 

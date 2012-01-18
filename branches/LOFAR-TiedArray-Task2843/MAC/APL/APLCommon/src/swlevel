@@ -29,7 +29,6 @@ VERSION="v2.1 20100517"		# loading image 1 before starting RSPdriver
 if [ "$LOFARROOT" == "" ]; then
   # default value until all MAC controlled systems provide $LOFARROOT
   LOFARROOT=/opt/lofar
-  echo "WARNING: LOFARROOT not set, using $LOFARROOT"
 fi
 
 BINDIR=$LOFARROOT/bin
