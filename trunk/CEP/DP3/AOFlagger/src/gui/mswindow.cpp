@@ -87,14 +87,16 @@
 
 #include <iostream>
 
-MSWindow::MSWindow() : _imagePlaneWindow(0), _optionWindow(0), _editStrategyWindow(0), _gotoWindow(0), _progressWindow(0), _highlightWindow(0), _plotComplexPlaneWindow(0), _imagePropertiesWindow(0), _antennaMapWindow(0), _statistics(new RFIStatistics()),  _imageSet(0), _imageSetIndex(0), _gaussianTestSets(true), _spatialMetaData(0)
+MSWindow::MSWindow() : _imagePlaneWindow(0), _optionWindow(0), _editStrategyWindow(0), _gotoWindow(0), _progressWindow(0), _highlightWindow(0), _plotComplexPlaneWindow(0), _imagePropertiesWindow(0), _antennaMapWindow(0), _statistics(new RFIStatistics()),  _imageSet(0), _imageSetIndex(0), _gaussianTestSets(true), _spatialMetaData(0), _plotWindow(_plotManager)
 {
 	createToolbar();
 
 	_mainVBox.pack_start(_timeFrequencyWidget);
 	_timeFrequencyWidget.OnMouseMovedEvent().connect(sigc::mem_fun(*this, &MSWindow::onTFWidgetMouseMoved));
 	_timeFrequencyWidget.OnButtonReleasedEvent().connect(sigc::mem_fun(*this, &MSWindow::onTFWidgetButtonReleased));
-	_timeFrequencyWidget.SetShowAxisDescriptions(false);
+	_timeFrequencyWidget.SetShowXAxisDescription(false);
+	_timeFrequencyWidget.SetShowYAxisDescription(false);
+	_timeFrequencyWidget.SetShowZAxisDescription(false);
 	_timeFrequencyWidget.show();
 
 	_mainVBox.pack_end(_statusbar, Gtk::PACK_SHRINK);
