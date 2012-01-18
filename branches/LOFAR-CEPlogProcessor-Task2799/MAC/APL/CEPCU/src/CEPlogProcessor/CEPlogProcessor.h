@@ -127,14 +127,6 @@ private:
         CircularBuffer* buffer;
     } streamBuffer_t;
 
-    // internal structure for locus based logging
-    typedef struct {
-        vector<string>              timeStr;
-        vector<int>                 count;
-        vector<string>              dropped;
-    } logBuffer_t;
-   
-
     // Map containing all the streambuffers.
     map<GCFPortInterface*, streamBuffer_t>  itsLogStreams;
     vector<GCFPortInterface*>               itsLogStreamsGarbage;
@@ -142,7 +134,6 @@ private:
     vector<RTDBPropertySet*>    itsInputBuffers;
     vector<RTDBPropertySet*>    itsAdders;
     vector<RTDBPropertySet*>    itsStorage;
-    vector<logBuffer_t>         itsStorageBuf;
 
     // values read from the conf file.
     unsigned        itsNrInputBuffers;

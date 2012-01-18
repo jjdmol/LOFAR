@@ -62,7 +62,7 @@ CEPlogProcessor::CEPlogProcessor(const string&  cntlrName) :
     itsOwnPropertySet   (0),
     itsTimerPort        (0),
     itsNrInputBuffers   (0),
-    itsNrIONodes         (0),
+    itsNrIONodes        (0),
     itsNrAdders         (0),
     itsNrStorage        (0),
     itsNrWriters        (0),
@@ -216,6 +216,7 @@ GCFEvent::TResult CEPlogProcessor::initial_state(GCFEvent& event,
 // createPropertySets(event, port)
 //
 // Create PropertySets for all processes.
+// Actual properties are listed in MAC/Deployment/data/PVSS/*.dpdef.
 //
 GCFEvent::TResult CEPlogProcessor::createPropertySets(GCFEvent& event, 
                                                     GCFPortInterface& port)
@@ -271,15 +272,7 @@ GCFEvent::TResult CEPlogProcessor::createPropertySets(GCFEvent& event,
             usleep (2000); // wait 2 ms in order not to overload the system  
           }  
         }
-/*
-        itsStorageBuf.resize (itsNrStorage);
-        for (unsigned i = 0; i < itsNrStorage; i++) {
-          //set array sizes
-          itsStorageBuf[i].timeStr.resize(MPIProcs);
-          itsStorageBuf[i].count.resize(MPIProcs,0);
-          itsStorageBuf[i].dropped.resize(MPIProcs);
-        }
-*/
+
         LOG_INFO("Giving PVSS 5 seconds to process the requests");
         itsTimerPort->setTimer(5.0);    // give database some time to finish the job
     }
@@ -366,33 +359,7 @@ GCFEvent::TResult CEPlogProcessor::operational(GCFEvent& event, GCFPortInterface
         break;
     case F_TIMER:
 
-        LOG_DEBUG("Timer event, preparing PVSS arrays");
-
-        for (unsigned j = 0; j < itsNrStorage; j++) {
-          GCFPValueArray timeArray;
-          GCFPValueArray countArray;
-          GCFPValueArray droppedArray;
-
-          timeArray.resize(MPIProcs,0);
-          countArray.resize(MPIProcs,0);
-          droppedArray.resize(MPIProcs,0);
-
-          for (unsigned i = 0; i<MPIProcs;i++) {
-              timeArray[i] = new GCFPVString(itsStorageBuf[j].timeStr[i]);
-              countArray[i] = new GCFPVInteger(itsStorageBuf[j].count[i]);
-              droppedArray[i] = new GCFPVString(itsStorageBuf[j].dropped[i]);
-          }
-          
-          itsStorage[j]->setValue(PN_STR_TIME, GCFPVDynArr(LPT_DYNSTRING, timeArray));
-          itsStorage[j]->setValue(PN_STR_COUNT, GCFPVDynArr(LPT_DYNINTEGER, countArray));
-          itsStorage[j]->setValue(PN_STR_DROPPED, GCFPVDynArr(LPT_DYNSTRING, droppedArray));
-
-          for (unsigned i = 0; i<MPIProcs;i++) {
-            delete timeArray[i];
-            delete countArray[i];
-            delete droppedArray[i];
-          }
-        }
+        LOG_DEBUG("Timer event -- collecting garbage");
 
         collectGarbage();
         break;
@@ -670,6 +637,8 @@ void CEPlogProcessor::_processIONProcLine(const struct logline &logline)
         return;
     }
 
+    RTDBPropertySet *inputBuffer = itsInputBuffers[processNr];
+
     char*   result;
 
     // IONProc@00 31-03-11 00:17:22.438 INFO  [obs 24811] ----- Creating new job
@@ -701,18 +670,18 @@ void CEPlogProcessor::_processIONProcLine(const struct logline &logline)
     }
 
     //
-    // InputBuffer
+    // InputBuffer = input from station
     //
 
     // IONProc@01 23-02-11 01:02:58.687 INFO  [obs 23603 station CS005HBA1] [1298422977s, 80863], late: 17.6 ms, delays: [8.657333 us], flags 0: (0%), flags 1: (0%), flags 2: (0%), flags 3: (0%)
     // IONProc@05 07-01-11 20:57:56.765 INFO  [obs 1002069 station S10] [1294433876s, 0], late: 8.85 ms, delays: [-616.3421 ns], flags 0: [0..52992> (100%), flags 1: [0..52992> (100%), flags 2: [0..52992> (100%), flags 3: [0..52992> (100%)
 
     if ((result = strstr(logline.msg, " late: "))) {
-        float late;
+        float late = 0.0f;
 
         if (sscanf(result, " late: %f ", &late) == 1 ) {
             LOG_DEBUG_STR("[" << processNr << "] Late: " << late);
-            itsInputBuffers[processNr]->setValue(PN_IPB_LATE, GCFPVDouble(late), logline.timestamp);
+            inputBuffer->setValue("late", GCFPVDouble(late), logline.timestamp, false);
         }
 
         // 0% flags look like : flags 0: (0%)
@@ -724,22 +693,23 @@ void CEPlogProcessor::_processIONProcLine(const struct logline &logline)
               &flags0, &flags1, &flags2, &flags3) == 4) {
                 LOG_DEBUG(formatString("[%d] %%bad: %.2f, %.2f, %.2f, %.2f", processNr, flags0, flags1, flags2, flags3));
 
-                itsInputBuffers[processNr]->setValue(PN_IPB_STREAM0_PERC_BAD, GCFPVDouble(flags0), logline.timestamp, false);
-                itsInputBuffers[processNr]->setValue(PN_IPB_STREAM1_PERC_BAD, GCFPVDouble(flags1), logline.timestamp, false);
-                itsInputBuffers[processNr]->setValue(PN_IPB_STREAM2_PERC_BAD, GCFPVDouble(flags2), logline.timestamp, false);
-                itsInputBuffers[processNr]->setValue(PN_IPB_STREAM3_PERC_BAD, GCFPVDouble(flags3), logline.timestamp, false);
-                itsInputBuffers[processNr]->flush();
+                inputBuffer->setValue("stream0.percBad", GCFPVDouble(flags0), logline.timestamp, false);
+                inputBuffer->setValue("stream1.percBad", GCFPVDouble(flags1), logline.timestamp, false);
+                inputBuffer->setValue("stream2.percBad", GCFPVDouble(flags2), logline.timestamp, false);
+                inputBuffer->setValue("stream3.percBad", GCFPVDouble(flags3), logline.timestamp, false);
             }
         }
+
+        inputBuffer->flush();
         return;
     }
 
     // IONProc@36 23-02-11 00:59:59.151 DEBUG [obs 23603 station CS003HBA0]  ION->CN:  483 ms
     if ((result = strstr(logline.msg, "ION->CN:"))) {
-        float   ioTime;
+        float ioTime = 0.0f;
         if (sscanf(result, "ION->CN:%f", &ioTime) == 1) {
-                LOG_DEBUG_STR("[" << processNr << "] ioTime: " << ioTime);
-            itsInputBuffers[processNr]->setValue(PN_IPB_IO_TIME, GCFPVDouble(ioTime), logline.timestamp);
+            LOG_DEBUG_STR("[" << processNr << "] ioTime: " << ioTime);
+            inputBuffer->setValue("IOTime", GCFPVDouble(ioTime), logline.timestamp);
             return;
         }
     }
@@ -752,11 +722,12 @@ void CEPlogProcessor::_processIONProcLine(const struct logline &logline)
 
         if (sscanf(result, "received packets = [%d,%d,%d,%d]", &received[0], &received[1], &received[2], &received[3]) == 4) {
           LOG_DEBUG(formatString("[%d] blocks: %d, %d, %d, %d", processNr, received[0], received[1], received[2], received[3]));
-          itsInputBuffers[processNr]->setValue(PN_IPB_STREAM0_BLOCKS_IN, GCFPVInteger(received[0]), logline.timestamp, false);
-          itsInputBuffers[processNr]->setValue(PN_IPB_STREAM1_BLOCKS_IN, GCFPVInteger(received[1]), logline.timestamp, false);
-          itsInputBuffers[processNr]->setValue(PN_IPB_STREAM2_BLOCKS_IN, GCFPVInteger(received[2]), logline.timestamp, false);
-          itsInputBuffers[processNr]->setValue(PN_IPB_STREAM3_BLOCKS_IN, GCFPVInteger(received[3]), logline.timestamp, false);
-          itsInputBuffers[processNr]->flush();
+          inputBuffer->setValue("stream0.blocksIn", GCFPVInteger(received[0]), logline.timestamp, false);
+          inputBuffer->setValue("stream1.blocksIn", GCFPVInteger(received[1]), logline.timestamp, false);
+          inputBuffer->setValue("stream2.blocksIn", GCFPVInteger(received[2]), logline.timestamp, false);
+          inputBuffer->setValue("stream3.blocksIn", GCFPVInteger(received[3]), logline.timestamp, false);
+
+          // flush will happen below
         }
 
         // if rejected was found in same line this means that a certain amount of blocks was rejected, 
@@ -783,11 +754,11 @@ void CEPlogProcessor::_processIONProcLine(const struct logline &logline)
           }
         }
 
-        itsInputBuffers[processNr]->setValue(PN_IPB_STREAM0_REJECTED, GCFPVInteger(badsize[0] + badtimestamp[0]), logline.timestamp, false);
-        itsInputBuffers[processNr]->setValue(PN_IPB_STREAM1_REJECTED, GCFPVInteger(badsize[1] + badtimestamp[1]), logline.timestamp, false);
-        itsInputBuffers[processNr]->setValue(PN_IPB_STREAM2_REJECTED, GCFPVInteger(badsize[2] + badtimestamp[2]), logline.timestamp, false);
-        itsInputBuffers[processNr]->setValue(PN_IPB_STREAM3_REJECTED, GCFPVInteger(badsize[3] + badtimestamp[3]), logline.timestamp, false);
-        itsInputBuffers[processNr]->flush();
+        inputBuffer->setValue("stream0.rejected", GCFPVInteger(badsize[0] + badtimestamp[0]), logline.timestamp, false);
+        inputBuffer->setValue("stream1.rejected", GCFPVInteger(badsize[1] + badtimestamp[1]), logline.timestamp, false);
+        inputBuffer->setValue("stream2.rejected", GCFPVInteger(badsize[2] + badtimestamp[2]), logline.timestamp, false);
+        inputBuffer->setValue("stream3.rejected", GCFPVInteger(badsize[3] + badtimestamp[3]), logline.timestamp, false);
+        inputBuffer->flush();
         return;
     }
 
@@ -796,30 +767,34 @@ void CEPlogProcessor::_processIONProcLine(const struct logline &logline)
     // Adder
     //
     int adderNr = _getparam(logline.target, "adder ");
-    int adderIndex = processNr * itsNrAdders + adderNr;
 
     if (adderNr >= 0) {
+      int adderIndex = processNr * itsNrAdders + adderNr;
+      RTDBPropertySet *adder = itsAdders[adderIndex];
+
       // TODO: reset drop count at start of obs --> maybe MAC should do that when assigning the mapping?
 
       // IONProc@17 07-01-11 20:59:00.981 WARN  [obs 1002069 output 6 index L1002069_B102_S0_P000_bf.raw] Dropping data
       if ((result = strstr(logline.msg, "Dropping data"))) {
-        LOG_DEBUG(formatString("[%d] Dropping data started ",adderIndex));
-        itsAdders[adderIndex]->setValue(PN_ADD_DROPPING, GCFPVBool(true), logline.timestamp);
-        itsAdders[adderIndex]->setValue(PN_ADD_LOG_LINE,GCFPVString(result), logline.timestamp);
+        LOG_DEBUG(formatString("[%d] Dropping data started ", adderIndex));
+
+        adder->setValue("dropping", GCFPVBool(true), logline.timestamp, false);
+        adder->flush();
         return;
       }
 
       // IONProc@23 07-01-11 20:58:27.848 WARN  [obs 1002069 output 6 index L1002069_B139_S0_P000_bf.raw] Dropped 9 blocks this time and 15 blocks since start
       if ((result = strstr(logline.msg, "Dropped "))) {
+        int dropped = 0, total = 0;
+
         LOG_DEBUG(formatString("[%d] Dropping data ended ",adderIndex));
 
-        int dropped(0), total(0);
         if (sscanf(result, "Dropped %d blocks this time and %d blocks since start", &dropped, &total) == 2) {
-          LOG_DEBUG(formatString("[%d] Dropped %d for a total of %d",processNr,dropped, total));
-          itsAdders[adderIndex]->setValue(PN_ADD_NR_BLOCKS_DROPPED, GCFPVInteger(total), logline.timestamp);
+          LOG_DEBUG(formatString("[%d] Dropped %d for a total of %d", processNr, dropped, total));
+          adder->setValue("dropped", GCFPVInteger(total), logline.timestamp, false);
         }
-        itsAdders[adderIndex]->setValue(PN_ADD_DROPPING, GCFPVBool(false), logline.timestamp);
-        itsAdders[adderIndex]->setValue(PN_ADD_LOG_LINE,GCFPVString(result), logline.timestamp);
+        adder->setValue("dropping", GCFPVBool(false), logline.timestamp, false);
+        adder->flush();
         return;
       }
     }   
@@ -851,7 +826,23 @@ void CEPlogProcessor::_processStorageLine(const struct logline &logline)
     hostNr--; // use 0-based indexing
 
     int writerNr = _getparam(logline.target, "writer ");
-    int writerIndex = hostNr * itsNrWriters + writerNr;
+
+    if (writerNr >= 0) {
+      int writerIndex = hostNr * itsNrWriters + writerNr;
+      RTDBPropertySet *writer = itsWriters[writerIndex];
+
+      // Storage@11 23-01-11 17:34:11.315 INFO  [obs 22899 output 1 subband 202] Written block with seqno = 7439, 7438 blocks written, 1 blocks dropped 
+      if ((result = strstr(logline.msg, "Written block"))) {
+        int seqno = 0, written = 0, dropped = 0;
+        if (sscanf(result, "Written block with seqno = %d, %d blocks written, %d blocks dropped", &seqno, &written, &dropped) == 3) {
+          LOG_DEBUG(formatString("[%d] Dropped %d for a total of %d", processNr, dropped, total));
+          writer->setValue("count", GCFPVInteger(written), logline.timestamp, false);
+          writer->setValue("dropped", GCFPVInteger(dropped), logline.timestamp, false);
+          writer->flush();
+        }
+        return;
+      }
+    }
 
 #if 0
     char*   result;
