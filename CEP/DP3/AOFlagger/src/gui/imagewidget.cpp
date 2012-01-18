@@ -50,10 +50,15 @@ ImageWidget::ImageWidget() :
 	_scaleOption(NormalScale),
 	_showXYAxes(true),
 	_showColorScale(true),
-	_showAxisDescriptions(true),
+	_showXAxisDescription(true),
+	_showYAxisDescription(true),
+	_showZAxisDescription(true),
 	_max(1.0), _min(0.0),
 	_range(Winsorized),
-	_cairoFilter(Cairo::FILTER_BEST)
+	_cairoFilter(Cairo::FILTER_BEST),
+	_manualXAxisDescription(false),
+	_manualYAxisDescription(false),
+	_manualZAxisDescription(false)
 {
 	_highlightConfig = new ThresholdConfig();
 	_highlightConfig->InitializeLengthsSingleSample();
@@ -205,9 +210,9 @@ void ImageWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, un
 	if(_showXYAxes)
 	{
 		_vertScale = new VerticalPlotScale();
-		_vertScale->SetDrawWithDescription(_showAxisDescriptions);
+		_vertScale->SetDrawWithDescription(_showYAxisDescription);
 		_horiScale = new HorizontalPlotScale();
-		_horiScale->SetDrawWithDescription(_showAxisDescriptions);
+		_horiScale->SetDrawWithDescription(_showXAxisDescription);
 	} else {
 		_vertScale = 0;
 		_horiScale = 0;
@@ -215,7 +220,7 @@ void ImageWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, un
 	if(_showColorScale)
 	{
 		_colorScale = new ColorScale();
-		_colorScale->SetDrawWithDescription(_showAxisDescriptions);
+		_colorScale->SetDrawWithDescription(_showZAxisDescription);
 	} else {
 		_colorScale = 0;
 	}
@@ -234,9 +239,9 @@ void ImageWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, un
 		} else {
 			_horiScale->InitializeNumericTicks(-0.5 + startX, 0.5 + endX - 1.0);
 		}
-		if(!_xAxisDescription.empty())
+		if(_manualXAxisDescription)
 			_horiScale->SetUnitsCaption(_xAxisDescription);
-		if(!_yAxisDescription.empty())
+		if(_manualYAxisDescription)
 			_vertScale->SetUnitsCaption(_yAxisDescription);
 	}
 	if(_metaData != 0) {
@@ -254,7 +259,7 @@ void ImageWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, un
 			_colorScale->InitializeLogarithmicTicks(min, max);
 		else
 			_colorScale->InitializeNumericTicks(min, max);
-		if(!_zAxisDescription.empty())
+		if(_manualZAxisDescription)
 			_colorScale->SetUnitsCaption(_zAxisDescription);
 	}
 

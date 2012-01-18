@@ -39,6 +39,9 @@
 #include <AOFlagger/strategy/control/types.h>
 
 #include <AOFlagger/gui/plot/plotwidget.h>
+#include <AOFlagger/gui/plot/plotmanager.h>
+
+#include <AOFlagger/gui/plotwindow.h>
 
 #include <AOFlagger/gui/plotframe.h>
 #include <AOFlagger/gui/imagecomparisonwidget.h>
@@ -265,6 +268,8 @@ class MSWindow : public Gtk::Window {
 		class SpatialMatrixMetaData *_spatialMetaData;
 		std::vector<double> _horProfile, _vertProfile;
 		TimeFrequencyData _storedData;
+		PlotManager _plotManager;
+		PlotWindow _plotWindow;
 };
 
 #endif
