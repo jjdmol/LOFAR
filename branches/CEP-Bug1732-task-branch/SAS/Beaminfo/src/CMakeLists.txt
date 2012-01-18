@@ -15,7 +15,7 @@ set(beaminfo_PROGRAMS
 #  lofar_add_bin_program(${prog} ${prog}.cc)
 #endforeach(prog ${beaminfo_PROGRAMS})
 
-lofar_add_bin_program(addbeaminfo addbeaminfo.cc showinfo.cc)  
+lofar_add_bin_program(addbeaminfo addbeaminfo.cc)  
 
 install(PROGRAMS
 #  addbeaminfo

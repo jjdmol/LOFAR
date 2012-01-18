@@ -27,6 +27,7 @@
 #include <Common/ParameterSet.h>
 #include <Common/LofarLogger.h>   // for ASSERT and ASSERTSTR?
 #include <Common/SystemUtil.h>    // needed for basename
+#include <Common/StreamUtil.h>    // writeVector and writeMap functions
 #include <Common/Exception.h>     // THROW macro for exceptions
 
 // SAS
@@ -61,14 +62,13 @@
 #include <ms/MeasurementSets/MSAntennaColumns.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/ScalarColumn.h>
-//#include <tables/Tables/TableLocker.h>
 #include <measures/Measures.h>
 #include <casa/Quanta/MVTime.h>
 #include <casa/OS/Time.h>
 #include <casa/Arrays/VectorIter.h>
 #include <casa/Arrays/ArrayIter.h>
 
-#include <Beaminfo/showinfo.h>    // showVector, showMap etc. debug functions
+//#include <Beaminfo/showinfo.h>    // showVector, showMap etc. debug functions
 
 using namespace std;
 using namespace LOFAR;
@@ -136,6 +136,7 @@ bool elementInObservation(const Table &antennaFieldTable,
                           unsigned int antennaId,
                           unsigned int element_index);                                
 void sortFailedTilesByTime(vector<failedTile> &tiles);
+void showFailedTiles(const std::vector<failedTile> &failedTiles);
 void padTo(std::string &str, const size_t num, const char paddingChar);
 
 // MS Table writing function
@@ -166,10 +167,10 @@ void usage(char *programname)
 {
   cout << "Usage: " << programname << "<options>" << endl;
   cout << "-d             run in debug mode" << endl;
-  cout << "-q             query SAS database for broken tiles ifnromation" << endl;
+  cout << "-q             query SAS database for broken tiles information" << endl;
   cout << "-f             read broken hardware information from file" << endl;
   cout << "-m <msname>    MeasurementSet to add beaminfo to" << endl;
-  cout << "-p <filename>  read parset (instead of default)" << endl;
+  cout << "-p <filename>  read parset (instead of default: addbeaminfo.parset)" << endl;
   cout << "-s <time>      start time of observation in MS"<< endl;
   cout << "-e <time>      end time of observation in MS"<< endl;
   cout << "-v             turn on verbose mode" << endl;
@@ -269,6 +270,8 @@ int main (int argc, char* argv[])
     string db          = parset.getString("db", "TESTLOFAR_3");
     string user        = parset.getString("user", "paulus");
     string password    = parset.getString("password", "boskabouter");
+    string port        = parset.getString("port", "5432");
+    // Locations to save SAS hardware strings of broken and failed tiles to
     string brokenfilename = parset.getString("brokenTilesFile", "/opt/lofar/share/brokenTiles.txt");
     string brokenAfterfilename = parset.getString("brokenTilesAfterFile", "/opt/lofar/share/brokenTilesAfter.txt");
     string failedfilename = parset.getString("failedTilesFile", "/opt/lofar/share/failedTiles.txt");
@@ -299,7 +302,7 @@ int main (int argc, char* argv[])
     if(query)
     {   
       LOG_INFO_STR("Getting SAS antenna health information");
-      OTDBconnection conn(user, password, db, host); 
+      OTDBconnection conn(user, password, db, host, port); 
       LOG_INFO("Trying to connect to the database");
       ASSERTSTR(conn.connect(), "Connnection failed");
       LOG_INFO_STR("Connection succesful: " << conn);
@@ -310,23 +313,16 @@ int main (int argc, char* argv[])
       
       if(debug)
       {
-        showMap(brokenHardware);   // DEBUG     
+        cout << brokenHardware << endl;   // DEBUG     
       }
 
       failedHardware=getFailedHardwareMap(conn, startTime, endTime);
       writeBrokenHardwareFile(failedfilename, failedHardware);
 
-      // UPDATED:
-      // Get hardware strings that was broken after observation
-//      brokenHardwareAfter=getBrokenHardwareMap(conn, endTime);          
-//      writeBrokenHardwareFile(brokenAfterfilename, brokenHardwareAfter);
-//      failedHardware=getFailedHardware(brokenHardware, brokenHardwareAfter);  // use comparison
-
-
       if(debug)
       {
         LOG_DEBUG_STR("failedHardware:");
-        showMap(failedHardware);    // DEBUG
+        cout << failedHardware << endl;    // DEBUG
       }
     }
 
@@ -340,15 +336,14 @@ int main (int argc, char* argv[])
       brokenHardware=readBrokenHardwareFile(brokenfilename);
       LOG_INFO_STR("reading brokenHardware after from file:" << brokenAfterfilename);      
       brokenHardwareAfter=readBrokenHardwareFile(brokenAfterfilename);
-    
+
+      LOG_INFO_STR("Read failed tiles from file:");             // DEBUG    
+      failedHardware=readFailedElementsFile(failedfilename);    // DEBUG
+
       if(debug)
       {
-        showMap(failedHardware);
+        cout << failedHardware << endl;
       }
-
-      LOG_INFO_STR("Read failed tiles from file:");             // DEBUG
-      failedHardware=readFailedElementsFile(failedfilename);    // DEBUG
-      showMap(failedHardware);
     }
 
     //---------------------------------------------------------------------
@@ -495,11 +490,6 @@ bool checkTime(const MVEpoch &starttimeCasa, const MVEpoch &endtimeCasa)
   \param failedTiles  tiles with timestamp that failed during observation
   \return void
 */
-/*
-void updateBeamTables(MeasurementSet &ms, 
-                      const map<string, ptime> &brokenHardware, 
-                      const map<string, ptime> &failedHardware)
-*/
 void updateBeamTables(MeasurementSet &ms, 
                       const vector<failedTile> &brokenTiles, 
                       const vector<failedTile> &failedTiles)
@@ -523,8 +513,6 @@ void updateBeamTables(MeasurementSet &ms,
     // check if station is in brokenHardware
     vector<failedTile>::const_iterator brokenTileIt=std::find_if(brokenTiles.begin(),
         brokenTiles.end(), boost::bind(&failedTile::antennaFieldId, _1) == antennaFieldId);
-    //map<string, ptime>::iterator brokenHardwareIt=std::find(brokenHardware.begin(),
-    //    brokenHardware.end()), name);
     if(brokenTileIt!=brokenTiles.end())
     {
       // update ELEMENT_FLAG in LOFAR_ANTENNA_FIELD at loop-index, i.e. ANTENNA_FIELDID
@@ -635,7 +623,8 @@ void updateElementFlags(Table &table, unsigned int antennaFieldId, const vector<
   {
     LOG_DEBUG_STR("updateELementFlags() antennaFieldId = " << antennaFieldId);   // DEBUG
     LOG_DEBUG_STR("rcus: ");                                                     // DEBUG
-    showVector(rcus);                                                            // DEBUG
+//    showVector(rcus);                                                            // DEBUG
+    cout << rcus << endl;                          // DEBUG
   }
   for(unsigned int i=0; i<rcus.size(); i++)
   {
@@ -885,7 +874,7 @@ map<string, ptime> getBrokenHardwareMap( OTDBconnection &conn,
   // Get list of all broken hardware from SAS for timestamp
   LOG_INFO("Searching for a Hardware tree");
   vector<OTDBtree>    treeList = conn.getTreeList(TTconv.get("hardware"), CTconv.get("operational"));
-  showTreeList(treeList);
+//  showTreeList(treeList);
   ASSERTSTR(treeList.size(),"No hardware tree found, run tPICtree first");
   
   treeIDType  treeID = treeList[treeList.size()-1].treeID();
@@ -937,7 +926,7 @@ map<string, ptime> getFailedHardwareMap( OTDBconnection &conn,
   // Get list of all broken hardware from SAS for timestamp
   LOG_INFO("Searching for a Hardware tree");
   vector<OTDBtree>    treeList = conn.getTreeList(TTconv.get("hardware"), CTconv.get("operational"));
-  showTreeList(treeList);
+//  showTreeList(treeList);
   ASSERTSTR(treeList.size(),"No hardware tree found, run tPICtree first");
   
   treeIDType  treeID = treeList[treeList.size()-1].treeID();
@@ -1482,6 +1471,27 @@ void sortFailedTilesByTime(vector<failedTile> &tiles)
       tiles[i+1]=tiles[i];
       tiles[i]=tileTemp;
     }
+  }
+}
+
+void showFailedTiles(const std::vector<failedTile> &failedTiles)
+{
+  unsigned int length=failedTiles.size();
+  for(unsigned int i=0; i<length;i++)
+  {
+    cout << "antennaFieldId: " << failedTiles[i].antennaFieldId << endl;
+    cout << "rcus:"; 
+    for(unsigned int j=0; j<failedTiles[i].rcus.size() ; j++)
+    {
+      cout << "\t" << failedTiles[i].rcus[j];
+    }
+    cout << endl << "timeStamps:"; 
+    for(unsigned int j=0; j<failedTiles[i].timeStamps.size(); j++)
+    {
+      cout << "\t" << failedTiles[i].timeStamps[j];
+    }
+    cout << endl;
+    cout << "------------------------------------------" << endl;
   }
 }
 
