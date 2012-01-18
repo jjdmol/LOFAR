@@ -372,8 +372,9 @@ int main (int argc, char* argv[])
       //----------------------------------------------------------------------------    
       LOG_INFO_STR("reading brokenHardware from file:" << brokenfilename);
       brokenHardware=readBrokenHardwareFile(brokenfilename);
-      LOG_INFO_STR("reading brokenHardware after from file:" << brokenfilename);
-      brokenHardwareAfter=readBrokenHardwareFile(brokenAfterfilename);
+      
+      //LOG_INFO_STR("reading brokenHardware after from file:" << brokenfilename);
+      //brokenHardwareAfter=readBrokenHardwareFile(brokenAfterfilename);
       
       vector<failedTile> brokenTiles=getFailedTilesAntennaId(ms, brokenHardware);
       if(debug)
@@ -381,7 +382,7 @@ int main (int argc, char* argv[])
         LOG_DEBUG_STR("Broken tiles:");
         showFailedTiles(brokenTiles);
       }
-      updateAntennaFieldTable(ms, brokenTiles);
+      //updateAntennaFieldTable(ms, brokenTiles);
       
       //----------------------------------------------------------------------------
       // Get Tiles that failed during observation
@@ -395,7 +396,9 @@ int main (int argc, char* argv[])
         LOG_DEBUG_STR("Failed tiles:");
         showFailedTiles(failedTiles);       
       }
-      addFailedAntennaTiles(ms, failedTiles);
+      //addFailedAntennaTiles(ms, failedTiles);
+
+      updateBeamTables(ms, brokenTiles, failedTiles);
     }
   }
   catch (std::exception& x)
@@ -499,7 +502,7 @@ void updateBeamTables(MeasurementSet &ms,
   // open LOFAR_FAILED_ELEMENT table
   Table antennaTable(ms.keywordSet().asTable("ANTENNA"));
   Table antennaFieldTable(ms.keywordSet().asTable("LOFAR_ANTENNA_FIELD"));
-  Table failedElementsTable(ms.keywordSet().asTable("LOFAR_FAILED_ELEMENT"));    
+  Table failedElementsTable(ms.keywordSet().asTable("LOFAR_ELEMENT_FAILURE"));    
   ScalarColumn<String> nameCol(antennaTable, "NAME");        // create nameCol scalarColumn
 
   // Loop over LOFAR_ANTENNA_FIELD table

@@ -13,7 +13,7 @@ import sys
 import pyrap.tables as pt
 
 MS="/Users/duscha/Cluster/L2011_24380/L24380_SB030_uv.MS.dppp.dppp"
-
+MS="/tmp/joined.MS"
 
 # Remove LOFAR_FAILED_ELEMENTS entries
 #
