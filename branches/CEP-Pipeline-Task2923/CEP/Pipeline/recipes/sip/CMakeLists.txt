@@ -48,7 +48,7 @@ python_install(
 install(FILES
   pipeline.cfg
   tasks.cfg
-  DESTINATION share)
+  DESTINATION share/pipeline)
 
 install(FILES
   demixing/bbs_CasA.parset
