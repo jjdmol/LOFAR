@@ -268,8 +268,8 @@ void LofarCubeSkyEquation::init(FTMachine& ft){
       ftm_p[k]=new LOFAR::LofarFTMachine(static_cast<LOFAR::LofarFTMachine &>(*ft_));
       iftm_p[k]=new LOFAR::LofarFTMachine(static_cast<LOFAR::LofarFTMachine &>(*ift_));
       // test MSMFT for LOFAR
-      ftm_p[k]->setMiscInfo(sm_->getTaylorIndex(k));
-      iftm_p[k]->setMiscInfo(sm_->getTaylorIndex(k));
+      ftm_p[k]->setMiscInfo(0);//sm_->getTaylorIndex(k));
+      iftm_p[k]->setMiscInfo(0);//sm_->getTaylorIndex(k));
 
      }
       // if(sm_->numberOfTaylorTerms()>1)

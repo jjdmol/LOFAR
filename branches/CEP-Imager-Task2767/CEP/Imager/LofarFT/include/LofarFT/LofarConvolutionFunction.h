@@ -541,6 +541,7 @@ namespace LOFAR
     Bool                its_Use_EJones;
     Bool                its_Apply_Element;
     uInt                its_MaxWSupport;
+    uInt                its_count_time;
     mutable LogIO       m_logIO;
     Matrix<Complex>     spheroid_cut_element_fft;
     vector< vector< Matrix< Complex > > > GridsMueller;

@@ -598,22 +598,23 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
 	  Complex pixel(lattice->getAt(pos));
 	  double fact(1.);
 
-	  pixel=0.;
-	  if((pos[0]==183.)&&(pos[1]==187.)){//319
-	    pixel=ff;//*139./143;//-100.;
-	    //if(datai(pos2)>1e-6){fact/=datai(pos2)*datai(pos2);};//*datai(pos2);};
-	    if(datai(pos2)>1e-6){fact*=sqrt(maxPB)/sqrt(data(pos2));};
-	    //if(data(pos2)>1e-6){fact/=sqrt(data(pos2));};//*datai(pos2);};
-	    pixel*=Complex(fact);
-	  }
-
-	  // if(!itsPredictFT){
+	  // pixel=0.;
+	  // if((pos[0]==372.)&&(pos[1]==370.)){//319
+	  //   pixel=ff;//*139./143;//-100.;
+	  //   //if(datai(pos2)>1e-6){fact/=datai(pos2)*datai(pos2);};//*datai(pos2);};
+	  //   //if(datai(pos2)>1e-6){fact*=sqrt(maxPB)/sqrt(data(pos2));};
 	  //   fact*=sqrt(maxPB)/sqrt(data(pos2));
-	  // } else {
-	  //   fact/=datai(pos2);//*datai(pos2);
-	  //   if(its_Apply_Element){fact/=spheroidCutElement(pos2);}
+	  //   //if(data(pos2)>1e-6){fact/=sqrt(data(pos2));};//*datai(pos2);};
+	  //   pixel*=Complex(fact);
 	  // }
-	  // pixel*=Complex(fact);
+
+	  if(!itsPredictFT){
+	    fact*=sqrt(maxPB)/sqrt(data(pos2));
+	  } else {
+	    fact/=datai(pos2);//*datai(pos2);
+	    if(its_Apply_Element){fact/=spheroidCutElement(pos2);}
+	  }
+	  pixel*=Complex(fact);
 
 	  if((data(pos2)>(minPB))&&(abs(pixel)>0.)){
 	    lattice->putAt(pixel,pos);
@@ -1064,9 +1065,11 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
       //{
       CyrilTimer2conv.start();
       cfTimer.start();
+      Double Wmean=0.5*(vbs.uvw()(2,ist) + vbs.uvw()(2,iend));
+      //cout<< Wmean<<endl;
       LofarCFStore cfStore =
         itsConvFunc->makeConvolutionFunction (ant1[ist], ant2[ist], time,
-                                              0.5*(vbs.uvw()(2,ist) + vbs.uvw()(2,iend)),
+                                              Wmean,
                                               itsGridMuellerMask, false,
                                               average_weight,
                                               itsSumPB[threadNum],
@@ -1163,8 +1166,9 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
       tmp_stacked_GriddedData.resize (itsGriddedData[0].shape());
       tmp_stacked_GriddedData = Complex();
       SumGridsOMP(tmp_stacked_GriddedData, itsGriddedData);
-      itsConvFunc->MakeMaskDegrid(tmp_stacked_GriddedData, itsTotalStepsGrid);
-      SumGridsOMP(its_stacked_GriddedData, itsConvFunc->ApplyElementBeam2 (tmp_stacked_GriddedData, itsNextApplyTime, spw, itsGridMuellerMask, false));
+      Array<Complex> tmp_stacked_GriddedData_appliedelement=itsConvFunc->ApplyElementBeam2 (tmp_stacked_GriddedData, itsNextApplyTime, spw, itsGridMuellerMask, false);
+      itsConvFunc->MakeMaskDegrid(tmp_stacked_GriddedData_appliedelement, itsTotalStepsGrid);
+      SumGridsOMP(its_stacked_GriddedData, tmp_stacked_GriddedData_appliedelement);
       CyrilTimer2elem.stop();
       itsCounterTimes=0;
       for (int i=0; i<itsNThread; ++i) {

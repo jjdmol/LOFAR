@@ -870,12 +870,16 @@ int main (Int argc, char** argv)
 	  
 	}
 	else {
+	  Vector<String> modelNames(2);
+	  modelNames[0]="model.main";
+	  modelNames[1]="model.outlier";
           imager.clean(operation,                     // algorithm,
                        niter,                         // niter
                        gain,                          // gain
                        threshold,                     // threshold
                        displayProgress,               // displayProgress
                        Vector<String>(1, modelName),  // model
+		      //  modelNames,
                        Vector<Bool>(1, fixed),        // fixed
                        "",                            // complist
                        Vector<String>(1, maskName),   // mask
