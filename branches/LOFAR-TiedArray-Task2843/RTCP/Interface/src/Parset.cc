@@ -409,7 +409,7 @@ bool Parset::isCoherent(unsigned beam, unsigned pencil) const
 
 double Parset::dispersionMeasure(unsigned beam, unsigned pencil) const
 {
-  if (!getBool("OLAP.coherentDedispersion",true))
+  if (!getBool("OLAP.coherentDedisperseChannels",true))
     return 0.0;
 
   string key = str(boost::format("Observation.Beam[%u].TiedArrayBeam[%u].dispersionMeasure") % beam % pencil);

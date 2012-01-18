@@ -80,7 +80,7 @@ Observation.DataProducts.Output_Trigger.namemask = L${OBSID}_B${BEAM}_S${STOKES}
 Observation.channelsPerSubband = 64
 
 OLAP.delayCompensation = T
-OLAP.coherentDedispersion = T
+OLAP.coherentDedisperseChannels = T
 
 OLAP.correctBandPass = T
 #Observation.bandFilter = LBA_10_90
