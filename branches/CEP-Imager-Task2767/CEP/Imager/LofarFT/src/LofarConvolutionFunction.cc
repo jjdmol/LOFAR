@@ -341,7 +341,7 @@ namespace LOFAR
 	binEpoch.set(Quantity(time, "s"));
 
         LofarATerm::ITRFDirectionMap dirMap = m_aTerm.makeDirectionMap(coordinate, shape, binEpoch);
-	vector< Matrix<Complex> > aTermA_array_plane(m_aTerm.evaluateArrayFactor(i, 0, dirMap, list_freq , list_freq , false));//false));//true));//false));//true));//false));//true));
+	vector< Matrix<Complex> > aTermA_array_plane(m_aTerm.evaluateArrayFactor(i, 0, dirMap, list_freq , list_freq , true));//false));//false));//true));//false));//true));//false));//true));
 	aTermA_array.resize(m_nChannel);
         for (uInt ch=0; ch<m_nChannel; ++ch) {
 	  aTermA_array[ch].resize(IPosition(3,shape[0],shape[0],4));
@@ -354,7 +354,7 @@ namespace LOFAR
 	  plane2=aTermA_array_plane[ch].copy();
 	}
         LofarATerm::ITRFDirectionMap dirMape(dirMap);// = m_aTerm.makeDirectionMap(coordinate_element, shape_element, binEpoch);
-	aTermA_element=m_aTerm.evaluateElementResponse(i, 0, dirMape, list_freq, false);
+	aTermA_element=m_aTerm.evaluateElementResponse(i, 0, dirMape, list_freq, true);//false);
 
 	//store(coordinate,aTermA_element[0],"aTermA_element."+String::toString(i)+".img");
 	//store(coordinate,aTermA_array[0],"aTermA_array."+String::toString(i)+".img");
@@ -735,7 +735,7 @@ namespace LOFAR
       for(uInt jj=0;jj<4;++jj){
 	if(Mask_Mueller_in(ii,jj)==true){
 	  vec_plane_product[ii][jj].resize(aTermA.xyPlane(0).shape());
-	  vec_plane_product[ii][jj]=conj(aTermA.xyPlane((Mueller_Coordinates[ii][jj])[0])) * aTermA.xyPlane((Mueller_Coordinates[ii][jj])[1]);
+	  vec_plane_product[ii][jj]=aTermA.xyPlane((Mueller_Coordinates[ii][jj])[0]) * conj(aTermA.xyPlane((Mueller_Coordinates[ii][jj])[1]));
 	  taper(vec_plane_product[ii][jj]);
 	  if(!degridding_step){vec_plane_product[ii][jj]=conj(vec_plane_product[ii][jj]);};
 	  //store(vec_plane_product[ii][jj],"vec_plane_product."+String::toString(ii)+"."+String::toString(jj)+".img");

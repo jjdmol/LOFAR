@@ -89,8 +89,9 @@ namespace LOFAR
     Int nrowBlock = nrowPerTime * max(1,ntime);
     // Set row blocking in VisIter.
     rvi_p->setRowBlocking (nrowBlock);
-    //Float na=10;
-    //rvi_p->setRowBlocking (1000*(na*na-na)/2+na);
+    //rvi_p->setRowBlocking (10000);
+    Float na=10;
+    rvi_p->setRowBlocking (100*na);//(na*na-na)/2+na);
 /*    os << LogIO::NORMAL
        << "vi.setRowBlocking(" << nrowBlock << ")"
        << LogIO::POST;*/

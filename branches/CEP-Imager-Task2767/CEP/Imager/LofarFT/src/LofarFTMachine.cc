@@ -811,11 +811,11 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
   //PrecTimer TimerCyril;
   //TimerCyril.start();
 
-  if (itsVerbose > 0) {
+  //  if (itsVerbose > 0) {
     logIO() << LogOrigin("LofarFTMachine", "put") << LogIO::NORMAL
             << "I am gridding " << vb.nRow() << " row(s)."  << LogIO::POST;
     logIO() << LogIO::NORMAL << "Padding is " << padding_p  << LogIO::POST;
-  }
+    //}
 
 
   gridOk(gridder->cSupport()(0));
@@ -1353,7 +1353,7 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
      double TimeElement(itsTStartObs+itsDeltaTime*itsStepApplyElement/2.);
      cout<<"... Appying element with t="<<TimeElement<<", itsTStartObs="<<itsTStartObs<<", itsDeltaTime="<<itsDeltaTime<<endl;
      itsConvFunc->computeAterm(TimeElement);
-     itsGridToDegrid.reference(itsConvFunc->ApplyElementBeam2(its_stacked_GriddedData, TimeElement, spw, itsGridMuellerMask, true, itsTotalStepsDeGrid));
+     itsGridToDegrid.reference(itsConvFunc->ApplyElementBeam2(its_stacked_GriddedData, TimeElement, spw, itsGridMuellerMask, true, itsTotalStepsDeGrid));//true));//, itsTotalStepsDeGrid));
      itsTotalStepsDeGrid+=1;
     }
     itsCounterTimes+=1;
