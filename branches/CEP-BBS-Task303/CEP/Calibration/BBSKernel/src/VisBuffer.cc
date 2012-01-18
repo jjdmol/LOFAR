@@ -24,6 +24,7 @@
 #include <lofar_config.h>
 #include <BBSKernel/VisBuffer.h>
 #include <BBSKernel/Exceptions.h>
+#include <BBSKernel/EstimateUtil.h>
 
 #include <Common/lofar_algorithm.h>
 #include <Common/LofarLogger.h>
@@ -36,6 +37,10 @@
 #include <measures/Measures/MCPosition.h>
 #include <measures/Measures/MCBaseline.h>
 #include <casa/Quanta/MVuvw.h>
+//#include <casa/complex.h>
+//#include <casa/BasicSL/Complex.h>
+//#include <casa/BasicMath/Math.h>
+//#include <casa/BasicSL/Constants.h>
 
 namespace LOFAR
 {
@@ -203,6 +208,30 @@ void VisBuffer::flagsNot()
         it != end; ++it)
     {
         *it = ~(*it);
+    }
+}
+
+void VisBuffer::flagsNan()
+{
+    // Check if has uvw
+    if(!hasUVW())
+    {
+        return;
+    }
+
+    // Loop over all samples: nSamples()
+    typedef boost::multi_array<double, 3>::element* uvwIterator;
+    typedef boost::multi_array<flag_t, 4>::element* flagsIterator;
+    flagsIterator flagsIt;
+    for(uvwIterator uvwIt = uvw.data(), end = uvw.data() + uvw.num_elements();
+        uvwIt != end; ++uvwIt)
+    {                
+        if(isnan(*uvwIt))
+        {
+            LOG_WARN_STR("Flagged a NAN."); // DEBUG
+            *flagsIt=true;                  // flag it
+        }
+        flagsIt++;
     }
 }
 
