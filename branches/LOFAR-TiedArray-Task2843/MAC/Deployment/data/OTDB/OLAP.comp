@@ -122,8 +122,6 @@ par nrBitsPerSample	        I    int     -	10	0	16		-		"sample size in bits"
 par nrSecondsOfBuffer	        I    dbl     -	10	0	2.5		-		'buffer size for raw station data (in seconds)'
 par maxNetworkDelay	        I    dbl     -	10	0	0.25		-		'???'
 par correctBandPass	        I    bool    -  10  	0	true		-		'apply the bandpass filter'
-par outputCoherentStokes        I    bool    -  10      0       false           -               "Store coherent Stokes"
-par outputIncoherentStokes      I    bool    -  10      0       false           -               "Store incoherent Stokes"
 par coherentDedisperseChannels  I    bool    -  10      0       false           -               "coherent dedispersion applied (true/false)"
 
 #      name        vers   qual        constr.            descr.
