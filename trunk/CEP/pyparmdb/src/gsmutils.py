@@ -156,6 +156,7 @@ SELECT t0.v_catsrcid
                       ,i_int_avg_err
                   FROM catalogedsources 
                  WHERE cat_id = 5
+                   AND (src_type = 'S' OR src_type = 'C')
                    AND zone BETWEEN CAST(FLOOR(CAST(%s AS DOUBLE) - %s) AS INTEGER)
                                 AND CAST(FLOOR(CAST(%s AS DOUBLE) + %s) AS INTEGER)
                    AND decl BETWEEN CAST(%s AS DOUBLE) - %s
@@ -222,6 +223,7 @@ SELECT t0.v_catsrcid
                       ,i_int_avg_err
                   FROM catalogedsources 
                  WHERE cat_id = 6
+                   AND (src_type = 'S' OR src_type = 'C')
                    AND zone BETWEEN CAST(FLOOR(CAST(%s AS DOUBLE) - %s) AS INTEGER)
                                 AND CAST(FLOOR(CAST(%s AS DOUBLE) + %s) AS INTEGER)
                    AND decl BETWEEN CAST(%s AS DOUBLE) - %s
