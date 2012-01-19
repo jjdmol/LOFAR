@@ -27,7 +27,7 @@ node   CNProc_CoherentStokes     4.0.0  development 'node constraint'  "Coherent
 
 # name   	        dir.    type    unit    prun.   vm      value    constr. descr.
 #--------------------------------------------------------------------------------------------------------
-par  which                   I    ptext  -      10    0      "I|IQUV;I"                                - "Which Stokes values to compute"
+par  which                   I    ptext  -      10    0      "I|IQUV|XXYY;I"                           - "Which Stokes values to compute"
 par  channelsPerSubband      I    int    -      10    0      ">>Observation.channelsPerSubband"        - "Number of channels for Stokes data"
 par  timeIntegrationFactor   I    int    -      10    0      1                                         - "Time-wise integration of Stokes data (in samples)"
 par  subbandsPerFile         I	  int    -	10    0      1                                         - "the number of subbands each Stokes file will hold"
