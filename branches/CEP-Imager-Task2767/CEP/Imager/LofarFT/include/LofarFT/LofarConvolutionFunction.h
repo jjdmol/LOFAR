@@ -158,7 +158,7 @@ namespace LOFAR
       String MaskName("JAWS_masks_degrid/Mask"+String::toString(NumMask)+".boolim");
       File MaskFile(MaskName);
       if(!MaskFile.exists()){
-	cout<<"... Making Masks ..."<<endl;
+	//cout<<"... Making Masks ..."<<endl;
 	Matrix<Bool> Mask(IPosition(2,gridin.shape()[0],gridin.shape()[0]),false);
 	Matrix<Int> IntMask(IPosition(2,gridin.shape()[0],gridin.shape()[0]),false);
 	int GridSize(gridin.shape()[0]);
@@ -176,7 +176,7 @@ namespace LOFAR
 	//itsVectorMasksDegridElement.push_back(Mask);
 	
 	store(Mask,MaskName);
-	cout<<"... Done Making Masks ..."<<endl;
+	//cout<<"... Done Making Masks ..."<<endl;
       }
     }
 
@@ -190,7 +190,7 @@ namespace LOFAR
       	  File MaskFile(MaskName);
       	  if(MaskFile.exists())
 	    {
-	      cout<<"Reading:"<<MaskName<<endl;
+	      //cout<<"Reading:"<<MaskName<<endl;
 	      PagedImage<Bool> pim(MaskName);
 	      Array<Bool> arr = pim.get();
 	      Matrix<Bool> Mask;
@@ -573,7 +573,7 @@ namespace LOFAR
   void store (const DirectionCoordinate &dir, const Matrix<T> &data,
               const string &name)
   {
-    cout<<"Saving... "<<name<<endl;
+    //cout<<"Saving... "<<name<<endl;
     Vector<Int> stokes(1);
     stokes(0) = Stokes::I;
     CoordinateSystem csys;
@@ -604,7 +604,7 @@ namespace LOFAR
              const string &name)
   {
     AlwaysAssert(data.shape()(2) == 4, SynthesisError);
-    cout<<"Saving... "<<name<<endl;
+    //cout<<"Saving... "<<name<<endl;
     Vector<Int> stokes(4);
     stokes(0) = Stokes::XX;
     stokes(1) = Stokes::XY;

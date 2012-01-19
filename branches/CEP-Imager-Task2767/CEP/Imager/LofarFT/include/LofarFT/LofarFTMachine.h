@@ -159,7 +159,9 @@ public:
 		 int StepApplyElement,
 		 Double PBCut,
 		 Bool PredictFT,
-		 String PsfOnDisk);
+		 String PsfOnDisk,
+		 Bool UseMasksDegrid);//,
+		 //Double FillFactor);
 //  LofarFTMachine(Long cachesize, Int tilesize,  CountedPtr<VisibilityResamplerBase>& visResampler,String convType,
 //	 MDirection mTangent, Float padding=1.0, Bool usezero=True,
 //	 Bool useDoublePrec=False);
@@ -325,7 +327,8 @@ protected:
   Int itsTotalStepsGrid;
   Int itsTotalStepsDeGrid;
   Bool itsMasksAllDone;
-
+  Bool its_UseMasksDegrid;
+  //Float its_FillFactor;
   // Get the appropriate data pointer
   Array<Complex>* getDataPointer(const IPosition&, Bool);
 

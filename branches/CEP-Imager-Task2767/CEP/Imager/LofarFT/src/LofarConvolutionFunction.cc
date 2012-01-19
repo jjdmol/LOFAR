@@ -296,52 +296,54 @@ namespace LOFAR
       PrecTimer timerPar;
 
       ///#pragma omp for
+      DirectionCoordinate coordinate = m_coordinates;
+      Double aPixelAngSize = min(m_pixelSizeSpheroidal, estimateAResolution(m_shape, m_coordinates));
+      Int nPixelsConv = imageDiameter / aPixelAngSize;
+      if (nPixelsConv > itsMaxSupport) {
+	nPixelsConv = itsMaxSupport;
+      }
+      // Make odd and optimal.
+      nPixelsConv = FFTCMatrix::optimalOddFFTSize (nPixelsConv);
+      aPixelAngSize = imageDiameter / nPixelsConv;
+      IPosition shape(2, nPixelsConv, nPixelsConv);
+      Vector<Double> increment_old(coordinate.increment());
+      Vector<Double> increment(2);
+      increment[0] = aPixelAngSize*sign(increment_old[0]);
+      increment[1] = aPixelAngSize*sign(increment_old[1]);
+      coordinate.setIncrement(increment);
+      Vector<Double> refpix(2, 0.5*(nPixelsConv-1));
+      coordinate.setReferencePixel(refpix);
+      
+      DirectionCoordinate coordinate_element = m_coordinates;
+      //Double aPixelAngSize_element = estimateAResolution(m_shape, m_coordinates, 30.);
+      Double aPixelAngSize_element = min(m_pixelSizeSpheroidal, estimateAResolution(m_shape, m_coordinates));
+      Int nPixelsConv_element = imageDiameter / aPixelAngSize_element;
+      //cout<<"Element_beam size:"<<"1 "<<nPixelsConv_element<<", 2 "<<aPixelAngSize_element<<endl;
+      nPixelsConv_element = FFTCMatrix::optimalOddFFTSize (nPixelsConv_element);
+      aPixelAngSize_element = imageDiameter / nPixelsConv_element;
+      //cout<<"Element_beam size:"<<"1 "<<nPixelsConv_element<<", 2 "<<aPixelAngSize_element<<endl;
+      IPosition shape_element(2, nPixelsConv_element, nPixelsConv_element);
+      Vector<Double> increment_element(2);
+      increment_element[0] = aPixelAngSize_element*sign(increment_old[0]);
+      increment_element[1] = aPixelAngSize_element*sign(increment_old[1]);
+      coordinate_element.setIncrement(increment_element);
+      Vector<Double> refpix_element(2, 0.5*(nPixelsConv_element-1));
+      coordinate_element.setReferencePixel(refpix_element);
+      
+      MEpoch binEpoch;
+      binEpoch.set(Quantity(time, "s"));
+      LofarATerm::ITRFDirectionMap dirMap = m_aTerm.makeDirectionMap(coordinate, shape, binEpoch);
+
       for (uInt i=0; i<m_nStations; ++i) {
         timerPar.start();
-	DirectionCoordinate coordinate = m_coordinates;
-        Double aPixelAngSize = min(m_pixelSizeSpheroidal, estimateAResolution(m_shape, m_coordinates));
-        Int nPixelsConv = imageDiameter / aPixelAngSize;
-        if (nPixelsConv > itsMaxSupport) {
-          nPixelsConv = itsMaxSupport;
-        }
-        // Make odd and optimal.
-        nPixelsConv = FFTCMatrix::optimalOddFFTSize (nPixelsConv);
-        aPixelAngSize = imageDiameter / nPixelsConv;
-        IPosition shape(2, nPixelsConv, nPixelsConv);
-        Vector<Double> increment_old(coordinate.increment());
-        Vector<Double> increment(2);
-        increment[0] = aPixelAngSize*sign(increment_old[0]);
-        increment[1] = aPixelAngSize*sign(increment_old[1]);
-        coordinate.setIncrement(increment);
-        Vector<Double> refpix(2, 0.5*(nPixelsConv-1));
-        coordinate.setReferencePixel(refpix);
-
-	DirectionCoordinate coordinate_element = m_coordinates;
-        //Double aPixelAngSize_element = estimateAResolution(m_shape, m_coordinates, 30.);
-        Double aPixelAngSize_element = min(m_pixelSizeSpheroidal, estimateAResolution(m_shape, m_coordinates));
-        Int nPixelsConv_element = imageDiameter / aPixelAngSize_element;
-	//cout<<"Element_beam size:"<<"1 "<<nPixelsConv_element<<", 2 "<<aPixelAngSize_element<<endl;
-	nPixelsConv_element = FFTCMatrix::optimalOddFFTSize (nPixelsConv_element);
-        aPixelAngSize_element = imageDiameter / nPixelsConv_element;
-	//cout<<"Element_beam size:"<<"1 "<<nPixelsConv_element<<", 2 "<<aPixelAngSize_element<<endl;
-	IPosition shape_element(2, nPixelsConv_element, nPixelsConv_element);
-	Vector<Double> increment_element(2);
-        increment_element[0] = aPixelAngSize_element*sign(increment_old[0]);
-        increment_element[1] = aPixelAngSize_element*sign(increment_old[1]);
-        coordinate_element.setIncrement(increment_element);
-        Vector<Double> refpix_element(2, 0.5*(nPixelsConv_element-1));
-        coordinate_element.setReferencePixel(refpix_element);
 
         //======================================
         // Separated element and station
         //======================================
 	vector< Cube<Complex> > aTermA_element;
 	vector< Cube<Complex> > aTermA_array;
-	MEpoch binEpoch;
-	binEpoch.set(Quantity(time, "s"));
 
-        LofarATerm::ITRFDirectionMap dirMap = m_aTerm.makeDirectionMap(coordinate, shape, binEpoch);
-	vector< Matrix<Complex> > aTermA_array_plane(m_aTerm.evaluateArrayFactor(i, 0, dirMap, list_freq , list_freq , true));//false));//false));//true));//false));//true));//false));//true));
+	vector< Matrix<Complex> > aTermA_array_plane(m_aTerm.evaluateArrayFactor(i, 0, dirMap, list_freq , list_freq , true));
 	aTermA_array.resize(m_nChannel);
         for (uInt ch=0; ch<m_nChannel; ++ch) {
 	  aTermA_array[ch].resize(IPosition(3,shape[0],shape[0],4));
@@ -353,8 +355,8 @@ namespace LOFAR
 	  Matrix<Complex> plane2(aTermA_array[ch].xyPlane(3));
 	  plane2=aTermA_array_plane[ch].copy();
 	}
-        LofarATerm::ITRFDirectionMap dirMape(dirMap);// = m_aTerm.makeDirectionMap(coordinate_element, shape_element, binEpoch);
-	aTermA_element=m_aTerm.evaluateElementResponse(i, 0, dirMape, list_freq, true);//false);
+
+	aTermA_element=m_aTerm.evaluateElementResponse(i, 0, dirMap, list_freq, true);
 
 	//store(coordinate,aTermA_element[0],"aTermA_element."+String::toString(i)+".img");
 	//store(coordinate,aTermA_array[0],"aTermA_array."+String::toString(i)+".img");
@@ -1268,7 +1270,7 @@ namespace LOFAR
 
       normalized_fft(Sum_Stack_PB_CF, false);
       //store(Sum_Stack_PB_CF,"Im_Stack_PB_CF00.img");
-      store(Sum_Stack_PB_CF, itsImgName + ".before");
+      //store(Sum_Stack_PB_CF, itsImgName + ".before");
       Im_Stack_PB_CF0.resize (IPosition(2, m_shape[0], m_shape[1]));
 
       float maxPB(0.);
@@ -1423,7 +1425,7 @@ namespace LOFAR
       store(spheroidal, itsImgName + ".spheroidal");
     }
     normalized_fft(spheroidal);
-    Double Support_Speroidal = findSupport(spheroidal, 0.001);
+    Double Support_Speroidal = findSupport(spheroidal, 0.01);
     if (itsVerbose > 0) {
       store(spheroidal, itsImgName + ".spheroidal_fft");
     }

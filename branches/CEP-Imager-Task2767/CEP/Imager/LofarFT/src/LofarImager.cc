@@ -72,7 +72,9 @@ namespace LOFAR
 				    itsParameters.asInt("StepApplyElement"),
 				    itsParameters.asDouble("PBCut"),
 				    itsParameters.asBool("PredictFT"),
-				    itsParameters.asString("PsfImage"));
+				    itsParameters.asString("PsfImage"),
+				    itsParameters.asBool("UseMasksDegrid"));//,
+				    //itsParameters.asDouble("FillFactor"));
     
     ft_p  = itsMachine;
 
@@ -89,9 +91,9 @@ namespace LOFAR
     Int nrowBlock = nrowPerTime * max(1,ntime);
     // Set row blocking in VisIter.
     rvi_p->setRowBlocking (nrowBlock);
-    //rvi_p->setRowBlocking (10000);
-    Float na=10;
-    rvi_p->setRowBlocking (100*na);//(na*na-na)/2+na);
+    if(itsParameters.asInt("RowBlock")>0){
+      rvi_p->setRowBlocking (itsParameters.asInt("RowBlock"));
+    };
 /*    os << LogIO::NORMAL
        << "vi.setRowBlocking(" << nrowBlock << ")"
        << LogIO::POST;*/

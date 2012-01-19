@@ -436,10 +436,10 @@ int main (Int argc, char** argv)
 		   "Number of Taylor terms",
 		   "int");
     inputs.create ("UseLIG", "false",
-		   "Use gridder using linear interpolation",
+		   "Use gridder using linear interpolation (not working yet, never to be)",
 		   "bool");
     inputs.create ("UseEJones", "true",
-		   "Use the beam for the calculation of the convolution function",
+		   "Use the beam for the calculation of the convolution function (not working yet)",
 		   "bool");
     // inputs.create ("ApplyElement", "false",
     // 		   "Apply the element beam",
@@ -460,8 +460,17 @@ int main (Int argc, char** argv)
 		   "Input PSF image for the cleaning",
 		   "string");
     inputs.create ("StepApplyElement", "0",
-		   "If turned to >0, apply the element beam every N number of timewindows",
+		   "If turned to >0, apply the element beam every N number of timewindows.",
 		   "int");
+    inputs.create ("UseMasks", "true",
+		   "When the element beam is applied (StepApplyElement), the addictional step of convolving the grid can be made more efficient by computing masks. If true, it will create a directory in which it stores the masks.",
+		   "bool");
+    inputs.create ("RowBlock", "0",
+		   "In certain obscure circounstances (taql, selection using uvdist), the RowBlocking used by the imager calculated from the timewindow value is not correct. This parameter can be used to specify the RowBlocking.",
+		   "int");
+    // inputs.create ("FillFactor", "1",
+    // 		   "Fraction of the data that will be selected from the selected MS. (don't use it yet)",
+    // 		   "Double");
  
     // Fill the input structure from the command line.
     inputs.readArguments (argc, argv);
@@ -536,6 +545,9 @@ int main (Int argc, char** argv)
     Matrix<Bool> mueldegrid = readMueller (inputs.getString("muellerdegrid"), stokes, false);
     String ModelImPredict    = inputs.getString("ModelImPredict");
     String PsfImage    = inputs.getString("PsfImage");
+    Bool Use_masks    = inputs.getBool("UseMasks");
+    Int RowBlock   = inputs.getInt("RowBlock");
+    //Double FillFactor= 1.;//inputs.getDouble("FillFactor");
 
     // Check and interpret input values.
     Quantity qcellsize = readQuantity (cellsize);
@@ -643,6 +655,9 @@ int main (Int argc, char** argv)
     if(operation=="predict"){PredictFT=true;}
     params.define ("PredictFT", PredictFT);
     params.define ("PsfImage", PsfImage);
+    params.define ("UseMasksDegrid", Use_masks);
+    params.define ("RowBlock", RowBlock);
+    //params.define ("FillFactor", FillFactor);
     
     LOFAR::LofarImager imager(ms, params);
 
@@ -873,6 +888,35 @@ int main (Int argc, char** argv)
 	  Vector<String> modelNames(2);
 	  modelNames[0]="model.main";
 	  modelNames[1]="model.outlier";
+	  File Dir_masks_file("JAWS_masks_degrid");
+	  Directory Dir_masks("JAWS_masks_degrid");
+	  if(Dir_masks_file.exists()){
+	    Dir_masks.removeRecursive();
+	  }
+	  if(Use_masks){
+	    Dir_masks.create();
+	  }
+	  // Vector<String> Namelist(5);
+	  // Namelist[0]=".spheroid_cut_im";
+	  // Namelist[1]=".residual";
+	  // Namelist[2]=".residual.corr";
+	  // Namelist[3]=".restored";
+	  // Namelist[4]=".restored.corr";
+	  // //Namelist[5]="0.avgpb";
+	  // for(uInt i=0; i<Namelist.size(); ++i){
+	  //   String avgpb_name(imgName + Namelist[i]);
+	  //   File avgpb_name_file(avgpb_name);
+	  //   Directory avgpb_name_dir(avgpb_name);
+	  //   cout<<avgpb_name<<endl;
+	  //   if(avgpb_name_file.exists()){
+	  //     cout<<"... remove"<<endl;
+	  //     avgpb_name_dir.removeRecursive();
+	  //   }
+	  // }
+	  // Regex rx1 (Regex::fromPattern ("*.avgpb"));
+	  // Vector<String> avgpbfiles;
+	  // avgpbfiles=Directory::find(rx1);
+
           imager.clean(operation,                     // algorithm,
                        niter,                         // niter
                        gain,                          // gain
