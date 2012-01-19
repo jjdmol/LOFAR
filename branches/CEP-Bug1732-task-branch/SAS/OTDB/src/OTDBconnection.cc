@@ -40,7 +40,7 @@ namespace LOFAR {
 OTDBconnection::OTDBconnection (const string&	username,
 								const string&	passwd,
 								const string&	database,
-								const string&	hostname
+								const string&	hostname,
 								const string &  port):
 	itsUser		  (username),
 	itsPassword	  (passwd),

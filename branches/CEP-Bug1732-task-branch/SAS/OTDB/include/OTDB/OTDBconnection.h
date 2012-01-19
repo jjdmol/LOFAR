@@ -127,6 +127,7 @@ private:
 	string		itsPassword;
 	string		itsDatabase;
 	string		itsHost;
+	string      itsPort;
 	bool		itsIsConnected;
 	connection*	itsConnection;
 	uint32		itsAuthToken;
