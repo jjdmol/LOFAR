@@ -1,8 +1,8 @@
-ms = /tmp/joined.MS
-#ms = /Users/duscha/Cluster/L2011_24380/L24380_SB030_uv.MS.dppp.dppp
-StartTime = 2011/05/19/16:59:08.0 
-EndTime = 2011/05/19/22:59:06.0
+ms = /Users/duscha/Cluster/L2011_24380/L24380_SB030_uv.MS.dppp.dppp
+StartTime = 2011/03/19/16:59:08.0 
+EndTime = 2011/03/19/22:59:06.0
 # brokenTilesFile =
 # failedTilesFile =
+port = 5433
 overwrite = T
 
