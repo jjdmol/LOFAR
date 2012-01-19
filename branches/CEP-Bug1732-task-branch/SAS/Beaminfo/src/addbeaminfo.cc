@@ -613,9 +613,6 @@ void updateElementFlags(Table &table, unsigned int antennaFieldId, const vector<
   Matrix<Bool> elementFlags=elementFlagCol(antennaFieldId);
 
   unsigned int nrows=elementFlagCol.nrow();
-
-  cout << "foo" << endl;
-
   if(rcus.size()==0)    // if there are no rcus to be updated for this antennaId....
   {
     return;             // ... just return
@@ -639,10 +636,7 @@ void updateElementFlags(Table &table, unsigned int antennaFieldId, const vector<
       return;
     }
     else
-    {
-      cout << "updateElementFlags() antennaFieldId = " << antennaFieldId << 
-      "\telementIndex = " << elementIndex << endl;
-    
+    {    
       elementFlags(0, elementIndex)=true;             // update array at elementIndex X polarization
       elementFlags(1, elementIndex)=true;             // update array at elementIndex Y polarization
       elementFlagCol.put(antennaFieldId, elementFlags);    // update ELEMENT_FLAGS column/row
