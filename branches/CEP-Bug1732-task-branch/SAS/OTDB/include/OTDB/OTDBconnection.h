@@ -55,7 +55,8 @@ public:
 	OTDBconnection (const string&	username,
 					const string&	passwd,
 					const string&	database,
-					const string&	hostname);
+					const string&	hostname,
+					const string &  port="5432");
 
 	virtual ~OTDBconnection ();
 
