@@ -498,7 +498,8 @@ void updateBeamTables(MeasurementSet &ms,
                       const vector<failedTile> &brokenTiles, 
                       const vector<failedTile> &failedTiles)
 {
-  showFailedTiles(brokenTiles); // DEBUG
+  cout << "updateBeamTables() brokenTiles:" << endl;
+  showFailedTiles(brokenTiles);       // DEBUG
 
   Table antennaTable(ms.keywordSet().asTable("ANTENNA"));
   Table antennaFieldTable(ms.keywordSet().asTable("LOFAR_ANTENNA_FIELD"));
@@ -1063,6 +1064,7 @@ vector<failedTile> getBrokenTilesAntennaId( MeasurementSet &ms,
       int antennaFieldId=getAntennaFieldId(ms, antennaId, rcu);    // get antennaFieldId      
       if(antennaFieldId==-1)
       {
+        cout << "station " << station << " continuing..." << endl; // DEBUG
         continue;
       }
       if(name==station)     // if SAS station name is that of ANTENNA
@@ -1306,8 +1308,9 @@ void doAddFailedAntennaTile(Table &failedElementsTable,
 */
 int getAntennaFieldId(const MeasurementSet &ms, int antennaId, int rcu)
 { 
-  unsigned int antennaFieldId=-1;
+  unsigned int antennaFieldId;
   unsigned int elementIndex=rcu/2;
+//  bool found=false;     // if we found a correct antennaFieldId for antennaId and rcu
 
   Table antennaFieldTable(ms.keywordSet().asTable("LOFAR_ANTENNA_FIELD"));
   ROScalarColumn<Int> antennaIdCol(antennaFieldTable, "ANTENNA_ID");
@@ -1317,19 +1320,17 @@ int getAntennaFieldId(const MeasurementSet &ms, int antennaId, int rcu)
   for(antennaFieldId=0; antennaFieldId<nrows-1; antennaFieldId++)
   {
     const Matrix<Bool> elementFlags=elementFlagCol(antennaFieldId);   // ELEMENT_FLAG array for antennaId 
-
-    if(elementIndex > elementFlags.ncolumn()-1)
+//    cout << "antennaId = " << antennaId << "\tantennaIdCol(antennaFieldId) = " 
+//         << antennaIdCol(antennaFieldId) << endl;
+    
+    if(antennaIdCol(antennaFieldId) == antennaId && 
+       elementFlags(0, elementIndex)==false && elementFlags(1, elementIndex)==false)
     {
-      return antennaFieldId;  // return error (-1)
-    }
-    if((antennaIdCol(antennaFieldId) == antennaId) && 
-       (elementFlags(0, elementIndex)==0) && (elementFlags(1, elementIndex)==0))
-    {
+//      found=true;
       return antennaFieldId;
     }
   }
-  
-  return antennaFieldId=-1;
+  return antennaFieldId;
 }
 
 /*!
