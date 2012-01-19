@@ -150,9 +150,6 @@ void updateElementFlags(Table &table,
                         const vector<unsigned int> &elementIndex);
 
 // File I/O
-void writeBrokenHardwareFile( const string &filename, 
-                              const vector<string> &brokenHardware, 
-                              bool strip=true);
 void writeBrokenHardwareFile( const string &filename, const map<string, 
                               ptime> &brokenHardware, bool strip=true);
 map<string, ptime> readBrokenHardwareFile(const string &filename);
@@ -507,7 +504,7 @@ void updateBeamTables(MeasurementSet &ms,
 
   // Loop over LOFAR_ANTENNA_FIELD table
   unsigned int nrows=antennaFieldTable.nrow();
-  for(unsigned int antennaFieldId=0; antennaFieldId<nrows; antennaFieldId++)
+  for(unsigned int antennaFieldId=0; antennaFieldId<nrows-1; antennaFieldId++)
   {
     // index ANTENNA_ID into ANTENNA table
     ScalarColumn<String> nameCol(antennaTable, "NAME");         // get station name
@@ -645,42 +642,6 @@ void updateElementFlags(Table &table, unsigned int antennaFieldId, const vector<
   }
 }
 
-/*!
-  \brief  Write broken dipoles to temporary file (this is quicker to work on than
-          querying the database)
-  \param filename         name of temporary file
-  \param brokenHardware   vector containing SAS output of broken hardware
-  \param strip            strip SAS broken hardware string down to station.RCU. (default=true)
-*/
-void writeBrokenHardwareFile(const string &filename, const vector<string> &brokenHardware, bool strip)
-{
-  fstream outfile;
-  outfile.open(filename.c_str(), ios::out);   // this shows the correct behaviour of overwriting the file
-
-  if (outfile.is_open())
-  {
-    LOG_INFO_STR("Writing SAS broken RCUs to file: " << filename);
-  
-    for(vector<string>::const_iterator it=brokenHardware.begin(); it!=brokenHardware.end() ; ++it)
-    {
-      if(it->find("RCU")!=string::npos)   // Only write lines that contain RCU
-      {
-        // optionally strip off unnecessary information from string
-        if(strip)
-          outfile << stripRCUString(*it) << endl;
-        else
-          outfile << *it << endl;
-      }
-    }
-    outfile.close();
-  }
-  else
-  {
-    THROW(Exception, "writeBrokenHardwareFile(): Unable to open file " << filename << 
-          " for reading.");
-  }
-}
-
 void writeBrokenHardwareFile(const string &filename, const map<string, ptime> &brokenHardware, bool strip)
 {
   fstream outfile;
@@ -757,13 +718,14 @@ map<string, ptime> readBrokenHardwareFile(const string &filename)//, vector<stri
   if(infile.is_open())
   {
     unsigned int linenumber=0;      // keep a track of line numbers to report errors
-    while(infile.good())
+    
+    string name, date, time, datetime;
+    infile >> name >> date >> time;
+    while(!infile.eof())
     {
       linenumber++;
-      string name, date, time, datetime;
-
-      infile >> name >> date >> time;
-      datetime=date.append(" ").append(time);     // YYYY-MM-DD HH-MM-SS.ssss        
+      datetime=date.append(" ").append(time);     // YYYY-MM-DD HH-MM-SS.ssss
+      
       if(name.empty() || date.empty() || time.empty())
       {
         LOG_WARN_STR("readFailedElementsFile() line " << linenumber << " is corrupt. Skipping...");      
@@ -773,6 +735,7 @@ map<string, ptime> readBrokenHardwareFile(const string &filename)//, vector<stri
       {
         brokenHardware.insert(std::make_pair(name, time_from_string(datetime)));
       }
+      infile >> name >> date >> time;
     } 
     infile.close();
   }
