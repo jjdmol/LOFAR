@@ -43,7 +43,7 @@ public class jTreeValue implements jTreeValueInterface
         itsTreeID=aTreeID;
     }
 
-    public int treeID() {
+    public int TreeID() {
         return itsTreeID;
     }
 
