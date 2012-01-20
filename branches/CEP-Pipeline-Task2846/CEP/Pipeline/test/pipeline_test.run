@@ -1,4 +1,4 @@
-#!/bin/sh -x
+#!/bin/sh
 
 
 #add correct path for lofarPipe python files 
