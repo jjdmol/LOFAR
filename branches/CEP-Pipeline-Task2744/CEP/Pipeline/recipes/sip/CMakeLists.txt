@@ -6,7 +6,6 @@ python_install(
   master/bbs.py
   master/cimager.py
   master/cep2_datamapper.py
-  master/calibrator_pipeline.py
   master/compression_pipeline.py
   master/count_timesteps.py
   master/datamapper.py
@@ -21,7 +20,6 @@ python_install(
   master/skymodel.py
   master/sourcedb.py
   master/storagemapper.py
-  master/target_pipeline.py
   master/vdsmaker.py
   master/vdsreader.py
   nodes/bbs.py
@@ -44,6 +42,11 @@ python_install(
   nodes/demix/smoothdemix.py
   nodes/demix/subtract_from_averaged.py
   DESTINATION lofarpipe/recipes)
+
+install(PROGRAMS
+  bin/msss_calibrator_pipeline.py
+  bin/msss_target_pipeline.py
+  DESTINATION bin)
 
 install(FILES
   pipeline.cfg
