@@ -14,6 +14,7 @@ class Discover():
     all individual tests matching the expression 
     """
     #TODO: ordering of suites is not controlled atm.   
+    #TODO: maybe it should be expanded with multi path input?? 
     suite = unittest.TestSuite()
     
     def __init__(self,path,pattern):

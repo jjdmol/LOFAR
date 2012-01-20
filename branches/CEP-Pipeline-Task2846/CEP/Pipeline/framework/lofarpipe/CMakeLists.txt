@@ -34,5 +34,3 @@ python_install(
   support/stateful.py
   support/utilities.py
   DESTINATION lofarpipe)
-
-add_subdirectory(tests)
