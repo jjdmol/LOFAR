@@ -218,6 +218,14 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
                              ",".join(self.inputs["task_files"])
         self.task_definitions.read(self.inputs["task_files"])
 
+        # Specify the working directory on the compute nodes
+        if not self.inputs.has_key('working_directory'):
+            self.inputs['working_directory'] = self.config.get(
+                "DEFAULT", "working_directory"
+            )
+        else:
+            self.config.set("DEFAULT", "working_directory", self.inputs['working_directory'])
+            
         try:
             self.recipe_path = [
                 os.path.join(root, 'master') for root in utilities.string_to_list(
