@@ -128,17 +128,7 @@ class awimager(LOFARnodeTCP):
         antenna.close()
         t.close()
 
-        hba_core_diameter   = 30.8
-        hba_remote_diameter = 41.1
-        lba_inner           = 32.3
-        lba_outer           = 81.3
-        
-        
         if antenna_name.count('HBA'):
-            if antenna_name.count('CS'):
-                station_diameter = hba_core_diameter
-            elif antenna_name.count('CS'):
-                 station_diameter = hba_remote_diameter
             fov = 6  #(degrees)
             station_diameter = 35 #(meters)
         elif antenna_name.count('LBA'):

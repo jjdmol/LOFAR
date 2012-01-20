@@ -4,7 +4,7 @@
 #                                                          Wouter Klijn, 2012
 #                                                      swinbank@transientskp.org
 # ------------------------------------------------------------------------------
-# python bbs_imager.py ~/build/preparation/output.map --job imager_create_dbs --config ~/build/preparation/pipeline.cfg --initscript /opt/cep/LofIm/daily/lofar/lofarinit.sh --parset ~/build/preparation/parset.par --working-directory "/data/scratch/klijn" --executable /opt/cep/LofIm/daily/lofar/bin/bbs_imager -d
+# python bbs_imager.py ~/build/preparation/output.map --job ImagerCreateDBs --config ~/build/preparation/pipeline.cfg --initscript /opt/cep/LofIm/daily/lofar/lofarinit.sh --parset ~/build/preparation/parset.par --working-directory "/data/scratch/klijn" --executable /opt/cep/LofIm/daily/lofar/bin/bbs_imager -d
 # the measurement set with input should be located in the working directory
 
 import os
@@ -16,7 +16,7 @@ from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
 from lofarpipe.support.group_data import load_data_map
 
-class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
+class ImagerCreateDBs(BaseRecipe, RemoteCommandRecipeMixIn):
     """
 
     """
@@ -37,7 +37,7 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
         ),
         'suffix': ingredient.StringField(
             '--suffix',
-            default = ".imager_create_dbs",
+            default = ".ImagerCreateDBs",
             help = "Added to the input filename to generate the output filename"
         ),
         # recipe specific inputs
@@ -87,10 +87,10 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
 
 
     def __init__(self):
-        super(imager_create_dbs, self).__init__()
+        super(ImagerCreateDBs, self).__init__()
 
     def go(self):
-        super(imager_create_dbs, self).go()
+        super(ImagerCreateDBs, self).go()
         suffix = self.inputs["suffix"]
 
         # collect and assign the parameters for the         
@@ -156,11 +156,11 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
         #TODO: Er moeten nog tests worden gegeven.
         #TODO: Er is nog geen output
         if self.error.isSet():
-            self.logger.warn("Failed imager_create_dbs run detected")
+            self.logger.warn("Failed ImagerCreateDBs run detected")
             return 1
         else:
             return 0
 
 
 if __name__ == "__main__":
-    sys.exit(imager_create_dbs().main())
+    sys.exit(ImagerCreateDBs().main())
