@@ -43,6 +43,7 @@ python_install(
   nodes/demix/shiftphasecenter.py
   nodes/demix/smoothdemix.py
   nodes/demix/subtract_from_averaged.py
+  nodes/imager_create_dbs.py
   DESTINATION lofarpipe/recipes)
 
 install(FILES
