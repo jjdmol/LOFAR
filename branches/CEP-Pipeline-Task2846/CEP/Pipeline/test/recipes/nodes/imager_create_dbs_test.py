@@ -10,8 +10,7 @@ import tempfile
 import pyrap.tables as tb                                                       #@UnresolvedImport
 from lofarpipe.support.utilities import create_directory                        #@UnresolvedImport
 from lofarpipe.recipes.nodes.imager_create_dbs import imager_create_dbs         #@UnresolvedImport
-#import xmlrunner Mischien includen in de setup
-from test_fixture.logger import logger
+from logger import logger
 
 
 class ImagerCreateDBsTestWrapper(imager_create_dbs):
