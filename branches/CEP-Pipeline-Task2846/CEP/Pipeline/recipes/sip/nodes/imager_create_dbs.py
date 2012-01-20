@@ -32,7 +32,7 @@ quit
 """
 
 
-class ImagerCreateDBs(LOFARnodeTCP):
+class imager_create_dbs(LOFARnodeTCP):
     def run(self, concatenated_measurement_set, sourcedb_target_path,
             monet_db_hostname, monet_db_port, monet_db_name, monet_db_user,
             monet_db_password, assoc_theta, parmdb_executable, slice_paths,
@@ -43,7 +43,7 @@ class ImagerCreateDBs(LOFARnodeTCP):
         All inputs are path wise, and no information regarding the number of 
         slices is needed 
         """
-        self.logger.info("Starting ImagerCreateDBs Node")
+        self.logger.info("Starting imager_create_dbs Node")
 
         # create the source db
         # returns zero on succes
@@ -254,5 +254,5 @@ class ImagerCreateDBs(LOFARnodeTCP):
 if __name__ == "__main__":
     # args contain information regarding to the logging server
     jobid, jobhost, jobport = sys.argv[1:4]
-    sys.exit(ImagerCreateDBs(jobid, jobhost, jobport).run_with_stored_arguments())
+    sys.exit(imager_create_dbs(jobid, jobhost, jobport).run_with_stored_arguments())
 
