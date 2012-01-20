@@ -24,8 +24,9 @@ from subprocess import CalledProcessError
 
 
 class awimager(LOFARnodeTCP):
-    def run(self, executable, init_script, parset, working_dir, measurement_set):
+    def run(self, executable, init_script, parset, working_dir, concatenated_measurement_set):
         self.logger.info("Start awimager run: client")
+
         log4CPlusName = "AWImagerRecipe"
         if not os.access(executable, os.X_OK):
             self.logger.error("Could not find executable: {0}".format(
@@ -36,11 +37,11 @@ class awimager(LOFARnodeTCP):
         with log_time(self.logger):
             # Calculate awimager parameters that depend on measurement set                 
             cell_size, npix, w_max, w_proj_planes = \
-                self._calc_par_from_measurement(measurement_set, parset)
+                self._calc_par_from_measurement(concatenated_measurement_set, parset)
 
             # Update the parset with calculated parameters
             patch_dictionary = {'uselogger': 'True', # enables log4cpluscd log
-                               'ms': measurement_set,
+                               'ms': concatenated_measurement_set,
                                'cellsize': cell_size,
                                'npix': npix,
                                'wmax': w_max,
@@ -127,7 +128,17 @@ class awimager(LOFARnodeTCP):
         antenna.close()
         t.close()
 
+        hba_core_diameter   = 30.8
+        hba_remote_diameter = 41.1
+        lba_inner           = 32.3
+        lba_outer           = 81.3
+        
+        
         if antenna_name.count('HBA'):
+            if antenna_name.count('CS'):
+                station_diameter = hba_core_diameter
+            elif antenna_name.count('CS'):
+                 station_diameter = hba_remote_diameter
             fov = 6  #(degrees)
             station_diameter = 35 #(meters)
         elif antenna_name.count('LBA'):
@@ -157,5 +168,8 @@ class awimager(LOFARnodeTCP):
 
 
 if __name__ == "__main__":
+    print "************************"
+    print sys.argv
+    print "************************"
     jobid, jobhost, jobport = sys.argv[1:4]
     sys.exit(awimager(jobid, jobhost, jobport).run_with_stored_arguments())

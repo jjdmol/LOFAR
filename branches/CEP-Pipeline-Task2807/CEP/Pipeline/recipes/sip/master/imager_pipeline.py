@@ -102,6 +102,7 @@ class imager_pipeline(control):
         #Get parameters prepare imager from the parset and inputs
         raw_ms_mapfile = self.inputs['input_mapfile']
 
+##prepare phase and awimager Working
         prepare_imager_parset = self.parset.makeSubset("prepare_imager.")
 
         ndppp = prepare_imager_parset.getString("ndppp")
@@ -118,7 +119,7 @@ class imager_pipeline(control):
 
         #run the prepare imager
         prepare_imager_output_mapfile = None
-        skip_prepare = False
+        skip_prepare = True
         if skip_prepare:
             prepare_imager_output_mapfile = "/home/klijn/build/preparation/actual_output.map"
         else:
@@ -133,6 +134,8 @@ class imager_pipeline(control):
                         subbands_per_image = subbands_per_image,
                         mapfile = mapfile)['mapfile']
 
+
+
         #*****************************************************************
         #Get parameters awimager from the parset and inputs        
         awimager_parset = self.parset.makeSubset("awimager.")
@@ -146,10 +149,11 @@ class imager_pipeline(control):
             self.run_task("awimager", prepare_imager_output_mapfile,
                           parset = awimager_parset,
                           executable = executable)
+#prepare phase and awimager Working
 
-        #run the awimager recipe
-#        awimager_output_mapfile = \
-#            self.run_task("bbs_imager", #prepare_imager_output_mapfile,
+#        #run the bbs_imager recipe
+#        bbs_imager_mapfile = \
+#            self.run_task("bbs_imager", raw_ms_mapfile,
 #                          parset = "/home/klijn/build/preparation/parset.par",
 #                          executable = "/opt/cep/LofIm/daily/lofar/lib/python2.6/dist-packages/lofar/gsmutils.py",
 #                          initscript = "/opt/cep/LofIm/daily/lofar/lofarinit.sh")

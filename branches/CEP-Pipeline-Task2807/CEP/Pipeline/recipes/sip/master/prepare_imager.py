@@ -39,55 +39,55 @@ class prepare_imager(BaseRecipe, RemoteCommandRecipeMixIn):
     inputs = {
         'ndppp': ingredient.ExecField(
             '--ndppp',
-            help="The full path to the ndppp executable"
+            help = "The full path to the ndppp executable"
         ),
         'initscript': ingredient.FileField(
             '--initscript',
-            help='''The full path to an (Bourne) shell script which will\
+            help = '''The full path to an (Bourne) shell script which will\
              intialise the environment (ie, ``lofarinit.sh``)'''
         ),
         'parset': ingredient.FileField(
             '-p', '--parset',
-            help="The full path to a PreparePhase configuration parset."
+            help = "The full path to a PreparePhase configuration parset."
         ),
         'working_directory': ingredient.StringField(
             '-w', '--working-directory',
-            help="Working directory used by the nodes: local data"
+            help = "Working directory used by the nodes: local data"
         ),
         'suffix': ingredient.StringField(
             '--suffix',
-            default=".prepare_imager",
-            help="Added to the input filename to generate the output filename"
+            default = ".prepare_imager",
+            help = "Added to the input filename to generate the output filename"
         ),
         'output_mapfile': ingredient.FileField(
             '--output-mapfile',
-            help="Contains the node and path to target files, defines the"\
+            help = "Contains the node and path to target files, defines the"\
                " number of nodes the nodes will start on."
         ),
         'slices_per_image': ingredient.IntField(
             '--slices-per-image',
-            help="The number of (time) slices for each output image"
+            help = "The number of (time) slices for each output image"
         ),
         'subbands_per_image': ingredient.IntField(
             '--subbands-per-image',
-            help="The number of subbands to be collected in each output image"
-        ),                
+            help = "The number of subbands to be collected in each output image"
+        ),
         'mapfile': ingredient.StringField(
             '--mapfile',
-            help="Full path of mapfile to produce; contains a list of the"
+            help = "Full path of mapfile to produce; contains a list of the"
                  "successfully generated and concatenated sub-band groups:"
         )
     }
 
     outputs = {
         'mapfile': ingredient.FileField()
-    }    
-                  
-    def go(self): 
+    }
+
+    def go(self):
         """
         Main function for recipe: Called by the pipeline framework
         """
-        self.logger.info("Starting prepare_imager run")     
+        self.logger.info("Starting prepare_imager run")
         super(prepare_imager, self).go()
         self.outputs['mapfile'] = self.inputs['mapfile']
         #return 0
@@ -96,7 +96,7 @@ class prepare_imager(BaseRecipe, RemoteCommandRecipeMixIn):
         # *********************************************************************        
         # load mapfiles
         input_map, output_map = self._load_map_files()
-       
+
         # Environment variables
         slices_per_image = self.inputs['slices_per_image']
         subbands_per_image = self.inputs['subbands_per_image']
@@ -108,16 +108,16 @@ class prepare_imager(BaseRecipe, RemoteCommandRecipeMixIn):
         # Validate inputs:
         if len(input_map) != len(output_map) * \
                                    (slices_per_image * subbands_per_image):
-            self.logger.warn("ERROR: incorrect number of input ms for "+
+            self.logger.warn("ERROR: incorrect number of input ms for " +
                               "supplied parameters")
             return 1
-        
+
         # *********************************************************************            
         # construct command and create variables for running on remote nodes
         # TODO: candidate for refactoring
         # *********************************************************************
         # Compile the command to be executed on the remote machine, fi
-        nodeCommand = "python %s" % (self.__file__.replace("master", "nodes")) 
+        nodeCommand = "bash -c '. ${APS_LOCAL}/login/loadpackage.bash LofIm' ; python %s" % (self.__file__.replace("master", "nodes"))
 
         outnames = collections.defaultdict(list)
         jobs = []
@@ -125,24 +125,24 @@ class prepare_imager(BaseRecipe, RemoteCommandRecipeMixIn):
         for idx_sb_group, (host, output_measurement_set) in enumerate(output_map):
             #construct and save the output name
             input_map_for_subband = self._create_input_map_for_subband(
-                                slices_per_image, n_subband_groups, 
+                                slices_per_image, n_subband_groups,
                                 subbands_per_image, idx_sb_group, input_map)
-                     
+
             outnames[host].append(output_measurement_set)
-            
-            
-            arguments=[init_script, parset, working_directory,
+
+
+            arguments = [init_script, parset, working_directory,
                         ndppp_path, output_measurement_set,
                         slices_per_image, subbands_per_image,
-                        repr(input_map_for_subband)]      
+                        repr(input_map_for_subband)]
             # TODO: The size of input_map_for_subband could surpass the command line
             # length: Use rar instead.
-            
+
             jobs.append(ComputeJob(host, nodeCommand, arguments))
-        
+
         # Hand over the job(s) to the pipeline scheduler
         self._schedule_jobs(jobs)
-                  
+
         # *********************************************************************
         # validate performance, cleanup, create output
         # *********************************************************************
@@ -153,19 +153,19 @@ class prepare_imager(BaseRecipe, RemoteCommandRecipeMixIn):
                              "new mapfile without failed runs!")
             new_output_mapfile = []
             #scan the return dict for completed key
-            for ((host, output_measurement_set),job) in zip(output_map, jobs):
+            for ((host, output_measurement_set), job) in zip(output_map, jobs):
                 if job.results.has_key("completed"):
                     new_output_mapfile.append((host, output_measurement_set))
                 else:
                     self.logger.warn("Failed run on {0}. NOT Created: {1} ".format(
                         host, output_measurement_set))
-            
+
             fp.write(repr(new_output_mapfile))
-                          
+
         else:
             #Copy output map from input mapfile and return
             fp.write(repr(output_map))
-                  
+
         fp.close()
         self.logger.info("debug: end of master script")
         self.outputs['mapfile'] = self.inputs['mapfile']
@@ -189,13 +189,13 @@ class prepare_imager(BaseRecipe, RemoteCommandRecipeMixIn):
                 (n_subband_groups * subbands_per_image) + \
                 (idx_sb_group * subbands_per_image)
             line_idx_end = line_idx_start + subbands_per_image
-                
+
             #extend inputs with the files for the current time slice
             inputs_for_image.extend(input_mapfile[line_idx_start: line_idx_end])
-        
-        return inputs_for_image  
 
-    
+        return inputs_for_image
+
+
     def _load_map_files(self):
         """
         Load datafiles containing node --> dataset pairs
@@ -207,7 +207,7 @@ class prepare_imager(BaseRecipe, RemoteCommandRecipeMixIn):
                                      slice1_SB002
                                      slice2_SB001
                                      etc
-        """  
+        """
         self.logger.debug("Loading input map: {0}".format(self.inputs['args']))
         input_map = eval(open(self.inputs['args'][0]).read())
 
@@ -216,7 +216,7 @@ class prepare_imager(BaseRecipe, RemoteCommandRecipeMixIn):
                                                 self.inputs['output_mapfile']))
         output_map = eval(open(self.inputs['output_mapfile']).read())
         return input_map, output_map
-                    
+
 
 if __name__ == "__main__":
     sys.exit(prepare_imager().main())

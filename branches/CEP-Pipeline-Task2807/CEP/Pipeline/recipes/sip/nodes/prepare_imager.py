@@ -32,7 +32,7 @@ class prepare_imager(LOFARnodeTCP):
             slices_per_image, subbands_per_image, input_map_repr):
 
         log4CPlusName = "prepare_imager_node"
-        group_dir = "group_sets"  #TODO constant!!
+        time_slice_dir = "group_sets"  #TODO constant!! Dit moet slices worden
         collected_ms_dir = "collected_ms"
         self._create_dir(working_dir)  #TODO: Moet mischien nog worden verwijderd
 
@@ -69,7 +69,7 @@ class prepare_imager(LOFARnodeTCP):
 
             #run dppp
             group_measurements_collected = \
-                self._run_dppp(working_dir, group_dir, slices_per_image,
+                self._run_dppp(working_dir, time_slice_dir, slices_per_image,
                     input_map, subbands_per_image, missing_files, collected_ms_dir,
                     parset, ndppp, init_script, log4CPlusName)
 
