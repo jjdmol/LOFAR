@@ -898,7 +898,7 @@ int main (Int argc, char** argv)
 	  }
 	  // Vector<String> Namelist(5);
 	  // Namelist[0]=".spheroid_cut_im";
-	  // Namelist[1]=".residual";
+ 	  // Namelist[1]=".residual";
 	  // Namelist[2]=".residual.corr";
 	  // Namelist[3]=".restored";
 	  // Namelist[4]=".restored.corr";
