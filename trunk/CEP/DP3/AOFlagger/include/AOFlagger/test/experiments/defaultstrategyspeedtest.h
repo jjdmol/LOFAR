@@ -24,7 +24,7 @@
 #include <AOFlagger/test/testingtools/unittest.h>
 
 #include <AOFlagger/strategy/algorithms/mitigationtester.h>
-#include <AOFlagger/strategy/algorithms/scaleinvariantdilation.h>
+#include <AOFlagger/strategy/algorithms/siroperator.h>
 #include <AOFlagger/strategy/algorithms/thresholdmitigater.h>
 
 #include <AOFlagger/strategy/actions/changeresolutionaction.h>
@@ -50,10 +50,10 @@ class DefaultStrategySpeedTest : public UnitTest {
 			AddTest(TimeLoopUntilAmplitude(), "Timing loop until amplitude");
 			AddTest(TimeLoop(), "Timing loop");
 			AddTest(TimeSlidingWindowFit(), "Timing sliding window fit");
-			AddTest(TimeSumThreshold(), "Timing sum threshold method");
-			AddTest(TimeRankOperator(), "Timing scale invariant rank operator");
+			AddTest(TimeSumThreshold(), "Timing SumThreshold method");
+			AddTest(TimeRankOperator(), "Timing scale-invariant rank operator");
 			}
-			AddTest(TimeSumThresholdN(), "Timing varying sum threshold method");
+			AddTest(TimeSumThresholdN(), "Timing varying SumThreshold method");
 			AddTest(TimeStrategy(), "Timing strategy");
 		}
 		
@@ -337,8 +337,8 @@ inline void DefaultStrategySpeedTest::TimeRankOperator::operator()()
 	Mask2DPtr input = Mask2D::CreateCopy(artifacts.ContaminatedData().GetSingleMask());
 	
 	Stopwatch operatorTimer(true);
-	ScaleInvariantDilation::DilateHorizontally(input, 0.2);
-	ScaleInvariantDilation::DilateVertically(input, 0.2);
+	SIROperator::OperateHorizontally(input, 0.2);
+	SIROperator::OperateVertically(input, 0.2);
 	operatorTimer.Pause();
 	
 	long double operatorTime = operatorTimer.Seconds();
