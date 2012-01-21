@@ -87,10 +87,10 @@ void ThresholdMitigater::VerticalSumThresholdLargeSSE(Image2DCPtr input, Mask2DP
 				// ** Check sum **
 				
 				// if sum/count > threshold || sum/count < -threshold
-				__m128 count4AsSingle = _mm_cvtepi32_ps(count4);
+				__m128 avg4 = _mm_div_ps(sum4, _mm_cvtepi32_ps(count4));
 				const unsigned flagConditions =
-					_mm_movemask_ps(_mm_cmpgt_ps(_mm_div_ps(sum4, count4AsSingle), threshold4Pos)) |
-					_mm_movemask_ps(_mm_cmplt_ps(_mm_div_ps(sum4, count4AsSingle), threshold4Neg));
+					_mm_movemask_ps(_mm_cmpgt_ps(avg4, threshold4Pos)) |
+					_mm_movemask_ps(_mm_cmplt_ps(avg4, threshold4Neg));
 				// | _mm_movemask_ps(_mm_cmplt_ps(count4, zero4i));
 				
 				// The assumption is that most of the values are actually not thresholded, hence, if
