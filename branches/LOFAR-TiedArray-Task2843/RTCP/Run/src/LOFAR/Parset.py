@@ -227,6 +227,7 @@ class Parset(util.Parset.Parset):
               beamformedFiles[0].append(filename)
               beamformedFiles[1].append(location)
 
+          self["Observation.DataProducts.Output_Beamformed.enabled"] = True
           self["Observation.DataProducts.Output_Beamformed.filenames"] = beamformedFiles[0]
           self["Observation.DataProducts.Output_Beamformed.locations"] = beamformedFiles[1]
 
