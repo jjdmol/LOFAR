@@ -24,6 +24,7 @@ python_install(
   master/target_pipeline.py
   master/vdsmaker.py
   master/vdsreader.py
+  master/__init__.py
   nodes/bbs.py
   nodes/cimager.py
   nodes/count_timesteps.py
@@ -43,6 +44,8 @@ python_install(
   nodes/demix/shiftphasecenter.py
   nodes/demix/smoothdemix.py
   nodes/demix/subtract_from_averaged.py
+  nodes/imager_create_dbs.py
+  nodes/__init__.py
   DESTINATION lofarpipe/recipes)
 
 install(FILES
