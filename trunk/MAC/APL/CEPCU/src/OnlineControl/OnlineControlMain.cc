@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
 		return(-1);
 	}
 
-	GCFScheduler::instance()->init(argc, argv, "OnlineControl");
+	GCFScheduler::instance()->init(argc, argv, argv[1]);
 
 	ParentControl*	pc = ParentControl::instance();
 	pc->start();	// make initial transition
