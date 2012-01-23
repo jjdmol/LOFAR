@@ -178,59 +178,6 @@ class Parset(util.Parset.Parset):
         delIfEmpty( "OLAP.CNProc.phaseTwoPsets" )
         delIfEmpty( "OLAP.CNProc.phaseThreePsets" )
 
-        # The Scheduler creates three lists of files (for beamformed, coherent and incoherent),
-        # but we collapse this into one list (beamformed)
-
-        def getlist( dataproduct ):
-          enabled = self.getBool("Observation.DataProducts.Output_%s.enabled" % (dataproduct,), False)
-
-          if enabled:
-            filenames = self.get("Observation.DataProducts.Output_%s.filenames" % (dataproduct,), [])
-            locations = self.get("Observation.DataProducts.Output_%s.locations" % (dataproduct,), [])
-          else:
-            filenames = []
-            locations = []
-
-          return (filenames, locations)
-
-        beamformedFiles  = getlist("Beamformed")
-        coherentFiles    = getlist("CoherentStokes")
-        incoherentFiles  = getlist("IncoherentStokes")
-
-        # either coherent or beamformed are set as they are mutually exclusive
-        if coherentFiles == ([], []):
-          coherentFiles = beamformedFiles
-
-        # if nothing is set, the filenames and locations are generated preWrite
-        if coherentFiles != ([], []) or incoherentFiles != ([], []):
-          # this will be the final list
-          beamformedFiles = ([], [])  
-
-          # reconstruct the full list  
-          for b in count():
-            if "Observation.Beam[%s].angle1" % (b,) not in self:
-              break
-
-            for t in count():
-              if "Observation.Beam[%s].TiedArrayBeam[%s].angle1" % (b,t) not in self:
-                break
-
-              coherent = self.getBool("Observation.Beam[%s].TiedArrayBeam[%s].coherent" % (b,t))
-
-              if coherent:
-                filename = coherentFiles[0].pop(0)
-                location = coherentFiles[1].pop(0)
-              else:
-                filename = incoherentFiles[0].pop(0)
-                location = incoherentFiles[1].pop(0)
-
-              beamformedFiles[0].append(filename)
-              beamformedFiles[1].append(location)
-
-          self["Observation.DataProducts.Output_Beamformed.enabled"] = True
-          self["Observation.DataProducts.Output_Beamformed.filenames"] = beamformedFiles[0]
-          self["Observation.DataProducts.Output_Beamformed.locations"] = beamformedFiles[1]
-
         # convert pencil rings and fly's eye to more coordinates
         for b in count():
           if "Observation.Beam[%s].angle1" % (b,) not in self:
@@ -336,6 +283,65 @@ class Parset(util.Parset.Parset):
 	  self["Observation.beamList"]     = [s["beam"] for s in sortedSubbands]
 	  self["Observation.rspBoardList"] = [s["rspboard"] for s in sortedSubbands]
 	  self["Observation.rspSlotList"]  = [s["rspslot"] for s in sortedSubbands]
+
+        # The Scheduler creates three lists of files (for beamformed, coherent and incoherent),
+        # but we collapse this into one list (beamformed)
+
+        def getlist( dataproduct ):
+          enabled = self.getBool("Observation.DataProducts.Output_%s.enabled" % (dataproduct,), False)
+
+          if enabled:
+            filenames = self.get("Observation.DataProducts.Output_%s.filenames" % (dataproduct,), [])
+            locations = self.get("Observation.DataProducts.Output_%s.locations" % (dataproduct,), [])
+          else:
+            filenames = []
+            locations = []
+
+          return (filenames, locations)
+
+        beamformedFiles  = getlist("Beamformed")
+        coherentFiles    = getlist("CoherentStokes")
+        incoherentFiles  = getlist("IncoherentStokes")
+
+        # either coherent or beamformed are set as they are mutually exclusive
+        if coherentFiles == ([], []):
+          coherentFiles = beamformedFiles
+
+        # if nothing is set, the filenames and locations are generated preWrite
+        if coherentFiles != ([], []) or incoherentFiles != ([], []):
+          # this will be the final list
+          beamformedFiles = ([], [])  
+
+          # reconstruct the full list  
+          for b in count():
+            if "Observation.Beam[%s].angle1" % (b,) not in self:
+              break
+
+            for t in count():
+              if "Observation.Beam[%s].TiedArrayBeam[%s].angle1" % (b,t) not in self:
+                break
+
+              coherent = self.getBool("Observation.Beam[%s].TiedArrayBeam[%s].coherent" % (b,t))
+
+              nrstokes = self.getNrStokes(coherent)
+              nrparts  = self.getNrParts(b, coherent)
+
+              for s in xrange(nrstokes):
+                for p in xrange(nrparts):
+                  if coherent:
+                    filename = coherentFiles[0].pop(0)
+                    location = coherentFiles[1].pop(0)
+                  else:
+                    filename = incoherentFiles[0].pop(0)
+                    location = incoherentFiles[1].pop(0)
+
+                  beamformedFiles[0].append(filename)
+                  beamformedFiles[1].append(location)
+
+          self["Observation.DataProducts.Output_Beamformed.enabled"] = True
+          self["Observation.DataProducts.Output_Beamformed.filenames"] = beamformedFiles[0]
+          self["Observation.DataProducts.Output_Beamformed.locations"] = beamformedFiles[1]
+
 
     def addStorageKeys(self):
 	self["OLAP.Storage.userName"] = getpass.getuser()
