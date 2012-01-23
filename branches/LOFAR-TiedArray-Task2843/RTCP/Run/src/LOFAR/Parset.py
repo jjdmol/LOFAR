@@ -93,7 +93,7 @@ class Parset(util.Parset.Parset):
         if key in self:
           return self.getStringVector(key)
   
-        outputnames = ["Correlated","Beamformed","Trigger"]
+        outputnames = ["Correlated","Beamformed","Trigger"] + ["Coherent","Incoherent"] # still parse Coherent and Incoherent because the scheduler still sets them. While we collapse them into Beamformed later on, this code is needed before that
         locationkeys = ["Observation.DataProducts.Output_%s.locations" % p for p in outputnames]
 
         storagenodes = set()
@@ -182,7 +182,7 @@ class Parset(util.Parset.Parset):
         # but we collapse this into one list (beamformed)
 
         def getlist( dataproduct ):
-          enabled = self.get("Observation.DataProducts.Output_%s.enabled" % (dataproduct,), False)
+          enabled = self.getBool("Observation.DataProducts.Output_%s.enabled" % (dataproduct,), False)
 
           if enabled:
             filenames = self.get("Observation.DataProducts.Output_%s.filenames" % (dataproduct,), [])
@@ -201,32 +201,34 @@ class Parset(util.Parset.Parset):
         if coherentFiles == ([], []):
           coherentFiles = beamformedFiles
 
-        # this will be the final list
-        beamformedFiles = ([], [])  
+        # if nothing is set, the filenames and locations are generated preWrite
+        if coherentFiles != ([], []) or incoherentFiles != ([], []):
+          # this will be the final list
+          beamformedFiles = ([], [])  
 
-        # reconstruct the full list  
-        for b in count():
-          if "Observation.Beam[%s].angle1" % (b,) not in self:
-            break
-
-          for t in count():
-            if "Observation.Beam[%s].TiedArrayBeam[%s].angle1" % (b,t) not in self:
+          # reconstruct the full list  
+          for b in count():
+            if "Observation.Beam[%s].angle1" % (b,) not in self:
               break
 
-            coherent = self.getBool("Observation.Beam[%s].TiedArrayBeam[%s].coherent" % (b,t))
+            for t in count():
+              if "Observation.Beam[%s].TiedArrayBeam[%s].angle1" % (b,t) not in self:
+                break
 
-            if coherent:
-              filename = coherentFiles[0].pop(0)
-              location = coherentFiles[1].pop(0)
-            else:
-              filename = incoherentFiles[0].pop(0)
-              location = incoherentFiles[1].pop(0)
+              coherent = self.getBool("Observation.Beam[%s].TiedArrayBeam[%s].coherent" % (b,t))
 
-            beamformedFiles[0].append(filename)
-            beamformedFiles[1].append(location)
+              if coherent:
+                filename = coherentFiles[0].pop(0)
+                location = coherentFiles[1].pop(0)
+              else:
+                filename = incoherentFiles[0].pop(0)
+                location = incoherentFiles[1].pop(0)
 
-        self["Observation.DataProducts.Output_Beamformed.filenames"] = beamformedFiles[0]
-        self["Observation.DataProducts.Output_Beamformed.locations"] = beamformedFiles[1]
+              beamformedFiles[0].append(filename)
+              beamformedFiles[1].append(location)
+
+          self["Observation.DataProducts.Output_Beamformed.filenames"] = beamformedFiles[0]
+          self["Observation.DataProducts.Output_Beamformed.locations"] = beamformedFiles[1]
 
         # convert pencil rings and fly's eye to more coordinates
         for b in count():
