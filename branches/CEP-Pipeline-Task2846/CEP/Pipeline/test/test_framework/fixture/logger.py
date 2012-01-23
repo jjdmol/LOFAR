@@ -22,4 +22,7 @@ class logger():
         self._log.append(("warn", input_string))
 
     def last(self):
+        """
+        return that last error
+        """
         return self._log[-1]
