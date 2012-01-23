@@ -93,7 +93,7 @@ class Parset(util.Parset.Parset):
         if key in self:
           return self.getStringVector(key)
   
-        outputnames = ["Correlated","Beamformed","Trigger"] + ["Coherent","Incoherent"] # still parse Coherent and Incoherent because the scheduler still sets them. While we collapse them into Beamformed later on, this code is needed before that
+        outputnames = ["Correlated","Beamformed","Trigger"] + ["CoherentStokes","IncoherentStokes"] # still parse Coherent and Incoherent because the scheduler still sets them. While we collapse them into Beamformed later on, this code is needed before that
         locationkeys = ["Observation.DataProducts.Output_%s.locations" % p for p in outputnames]
 
         storagenodes = set()
