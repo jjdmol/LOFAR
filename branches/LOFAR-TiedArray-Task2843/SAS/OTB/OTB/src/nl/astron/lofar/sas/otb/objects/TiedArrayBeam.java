@@ -75,7 +75,20 @@ public class TiedArrayBeam implements IBeam {
         this.itsDirectionTypeChoices =directionTypeChoices;
     }
     
-
+    @Override
+    public TiedArrayBeam clone() {
+        TiedArrayBeam clone = new TiedArrayBeam();
+        clone.itsAngle1 = itsAngle1;
+        clone.itsAngle2 = itsAngle2;
+        clone.itsCoordType = itsCoordType;
+        clone.itsDirectionType = itsDirectionType;
+        clone.itsDispersionMeasure = itsDispersionMeasure;
+        clone.itsCoherent = itsCoherent;
+        clone.itsDirectionTypeChoices = itsDirectionTypeChoices;
+        
+        return clone;
+    }
+    
     private String itsAngle1;
     private String itsAngle2;
     private String itsCoordType;

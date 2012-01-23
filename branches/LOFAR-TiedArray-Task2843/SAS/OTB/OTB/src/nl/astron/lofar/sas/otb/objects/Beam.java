@@ -13,7 +13,7 @@ import nl.astron.lofar.sas.otb.util.IBeam;
  *
  * @author coolen
  */
-public class Beam implements IBeam{
+public class Beam implements IBeam {
     
     
     @Override
@@ -86,7 +86,8 @@ public class Beam implements IBeam{
     }
 
     public String getNrTiedArrayBeams() {
-        return itsNrTiedArrayBeams;
+        int i = this.itsTiedArrayBeams.size()-offset;
+        return Integer.toString(i);
     }
 
     public void setNrTiedArrayBeams(String aNrTiedArrayBeams) {
@@ -130,8 +131,9 @@ public class Beam implements IBeam{
     }
     
     public void setTiedArrayBeams(ArrayList<TiedArrayBeam> aTiedArrayBeams) {
-        this.itsTiedArrayBeams = aTiedArrayBeams;
-        this.itsNrTiedArrayBeams = Integer.toString(aTiedArrayBeams.size());
+        if (aTiedArrayBeams != null) {
+            this.itsTiedArrayBeams = aTiedArrayBeams;
+        }
     }
 
     public String getCoordType() {
@@ -154,6 +156,44 @@ public class Beam implements IBeam{
         return LofarUtils.beamletToBitSet(LofarUtils.expandedArrayString(itsBeamletList));
     }
     
+    public String getTreeType() {
+        return itsTreeType;
+    }
+
+    public void setTreeType(String aTreeType) {
+        itsTreeType = aTreeType;
+        if (itsTreeType.equals("VHtree")) {
+            offset=0;
+        }
+    }
+
+    @Override
+    public Beam clone() {
+        Beam clone = new Beam();
+        clone.itsTarget = itsTarget;
+        clone.itsAngle1 = itsAngle1;
+        clone.itsAngle2 = itsAngle2;
+        clone.itsCoordType = itsCoordType;
+        clone.itsDirectionType = itsDirectionType;
+        clone.itsStartTime = itsStartTime;
+        clone.itsDuration = itsDuration;
+        clone.itsMaximizeDuration = itsMaximizeDuration;
+        clone.itsSubbandList = itsSubbandList;
+        clone.itsBeamletList = itsBeamletList;
+        clone.itsMomID = itsMomID;
+        clone.itsNrTiedArrayBeams = itsNrTiedArrayBeams;     // 
+        clone.itsNrTabRings = itsNrTabRings;
+        clone.itsTabRingSize = itsTabRingSize;
+        clone.itsTiedArrayBeams = itsTiedArrayBeams; 
+        clone.itsDirectionTypeChoices = itsDirectionTypeChoices;
+        clone.itsTreeType = itsTreeType;
+        clone.offset = offset;
+        
+        return clone;
+        
+    }
+    
+    
     
     private static String            itsType="Beam";
 
@@ -168,9 +208,13 @@ public class Beam implements IBeam{
     private String                   itsSubbandList;
     private String                   itsBeamletList;
     private String                   itsMomID;
-    private String                   itsNrTiedArrayBeams;
+    private String                   itsNrTiedArrayBeams="1";     // 
     private String                   itsNrTabRings;
     private String                   itsTabRingSize;
     private ArrayList<TiedArrayBeam> itsTiedArrayBeams = new ArrayList<>(); 
     private String                   itsDirectionTypeChoices;
+    private String                   itsTreeType;
+    private int                      offset=1;
+
+
 }

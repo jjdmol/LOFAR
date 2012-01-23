@@ -108,6 +108,23 @@ public class AnaBeam implements IBeam {
         this.itsTarget = aTarget;
     }
     
+    @Override
+    public AnaBeam clone() {
+        AnaBeam clone = new AnaBeam();
+        clone.itsTarget = itsTarget;
+        clone.itsAngle1 = itsAngle1;
+        clone.itsAngle2 = itsAngle2;
+        clone.itsCoordType = itsCoordType;
+        clone.itsDirectionType = itsDirectionType;
+        clone.itsDirectionTypeChoices = itsDirectionTypeChoices;
+        clone.itsStartTime = itsStartTime;
+        clone.itsDuration = itsDuration;
+        clone.itsMaximizeDuration = itsMaximizeDuration;
+        clone.itsRank = itsRank;
+        clone.itsRankChoices = itsRankChoices;
+        return clone;
+    }
+    
     
     private String itsTarget;
     private String itsAngle1;

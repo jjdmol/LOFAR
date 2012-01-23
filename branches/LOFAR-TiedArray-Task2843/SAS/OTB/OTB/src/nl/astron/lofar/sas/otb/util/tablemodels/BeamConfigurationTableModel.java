@@ -84,7 +84,7 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
         //empty old settings
         removeAllRows();
         
-        itsBeams = aBeamList;
+        itsBeams = new ArrayList<Beam>(aBeamList);
 
         // need to skip first entry because it is the default (dummy) TBBsetting in other then VHTree's
         if (itsTreeType.equals("VHtree")) {
@@ -92,7 +92,17 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
         }
         
         // add all objects to table
-        for (Beam b : itsBeams ) {
+        ArrayList<Beam> testList = new ArrayList<>(itsBeams);
+        
+        boolean skip = false;
+        if (offset!=0) {
+            skip = true;
+        }
+        for (Beam b : testList ) {
+            if (skip) {
+                skip = false;
+                continue;
+            }
             this.addRow(b);
         }
         isChanged=refill;
@@ -146,14 +156,27 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
      */
     public boolean updateRow(Beam newBeam,int row) {
         if (row < this.getRowCount() && row >= 0) {
-            itsBeams.set(row+offset, newBeam);
+            if (itsBeams != null) {
+                itsBeams.set(row+offset, newBeam);
+            }
         } else {
             logger.error("Error in updateRow, illegal rownumber supplied");
             return false;
         }
+        
+        
+        this.setValueAt(newBeam.getDirectionType(),row,0);
+        this.setValueAt(newBeam.getAngle1(),row,1);
+        this.setValueAt(newBeam.getAngle2(),row,2);
+        this.setValueAt(newBeam.getCoordType(),row,3);
+        this.setValueAt(newBeam.getMaximizeDuration(),row,4);
+        this.setValueAt(newBeam.getNrTiedArrayBeams(),row,5);
+        this.setValueAt(newBeam.getSubbandList(),row,6);
+        this.setValueAt(newBeam.getBeamletList(),row,7);
+        
         isChanged=true;
 
-        fireTableDataChanged();
+        this.fireTableDataChanged();
         return true;
     }
     
@@ -165,10 +188,12 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
      */
     public Beam getSelection(int row) {
         if (row < this.getRowCount() && row >= 0 && itsBeams != null) {
-            return itsBeams.get(row+offset);
-        } else {
-            return null;
-        }                           
+            if (itsBeams != null) {
+                return itsBeams.get(row+offset);
+            }
+        }
+        return null;
+                           
     }
 
     public boolean changed() {

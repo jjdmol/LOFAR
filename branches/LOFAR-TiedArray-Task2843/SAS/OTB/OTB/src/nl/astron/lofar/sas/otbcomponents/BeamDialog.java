@@ -54,7 +54,7 @@ public class BeamDialog extends javax.swing.JDialog {
      * @param   directionTypeChoices    String with all possible choices + default for combobox
      * @param   edit                    indicates edit or add mode
      */
-    public BeamDialog(java.awt.Frame parent, boolean modal,BitSet usedBeamlets, Beam aBeam, boolean edit ) {
+    public BeamDialog(java.awt.Frame parent, String treeType, boolean modal,BitSet usedBeamlets, Beam aBeam, boolean edit ) {
 
         super(parent, modal);
         initComponents();
@@ -63,6 +63,12 @@ public class BeamDialog extends javax.swing.JDialog {
         itsSavedBeamlets=(BitSet)usedBeamlets.clone();
         itsUsedBeamlets=(BitSet)usedBeamlets.clone();
         editting=edit;
+        itsTreeType = treeType;
+        // need to skip first entry because it is the default (dummy) TBBsetting in other then VHTree's
+        if (itsTreeType.equals("VHtree")) {
+            offset=0;
+        }
+
         initialize();
     }
     
@@ -148,8 +154,9 @@ public class BeamDialog extends javax.swing.JDialog {
         inputStartTime.setText(itsBeam.getStartTime());
         inputNrTabRings.setText(itsBeam.getNrTabRings());
         inputTabRingSize.setText(itsBeam.getTabRingSize());
+        itsTiedArrayBeams=itsBeam.getTiedArrayBeams();
         // fill table with all entries
-        itsTABConfigurationTableModel.fillTable(itsBeam.getTiedArrayBeams(), true);
+        itsTABConfigurationTableModel.fillTable(itsTreeType,itsBeam.getTiedArrayBeams(), true);
     }
     
     public boolean hasChanged() {
@@ -658,6 +665,7 @@ public class BeamDialog extends javax.swing.JDialog {
         itsBeam.setBeamletList(LofarUtils.compactedArrayString(inputBeamletList.getText()));
         itsBeam.setNrTabRings(inputNrTabRings.getText());
         itsBeam.setTabRingSize(inputTabRingSize.getText());
+        itsBeam.setNrTiedArrayBeams(Integer.toString(itsTABConfigurationTableModel.getTable().size()));
         
         itsBeam.setTiedArrayBeams(itsTiedArrayBeams);
         return itsBeam;
@@ -681,12 +689,11 @@ public class BeamDialog extends javax.swing.JDialog {
         itsSelectedRow=-1;
         itsSelectedRow = TABConfigurationPanel.getSelectedRow();
         // set selection to defaults.
-        if (itsSelectedRow < 0) return;
         TiedArrayBeam selection = itsTiedArrayBeams.get(0);
         if (editTiedArrayBeam) {
             selection = itsTABConfigurationTableModel.getSelection(itsSelectedRow);
         }
-        itsTABDialog = new TiedArrayBeamDialog(itsMainFrame,true,selection,editTiedArrayBeam);
+        itsTABDialog = new TiedArrayBeamDialog(itsMainFrame,true,selection.clone(),editTiedArrayBeam);
         itsTABDialog.setLocationRelativeTo(this);
         if (editTiedArrayBeam) {
             itsTABDialog.setBorderTitle("edit TiedArrayBeam");
@@ -717,13 +724,15 @@ public class BeamDialog extends javax.swing.JDialog {
     private boolean   isChanged=false;
     private Beam      itsBeam;
     private ArrayList<TiedArrayBeam> itsTiedArrayBeams;
-    private int      itsSelectedRow = -1;
+    private int       itsSelectedRow = -1;
+    private int       offset = 1;
 
     
     private boolean   editTiedArrayBeam = false;
     private boolean   editting          = false;
     private BitSet    itsUsedBeamlets   = null;
     private BitSet    itsSavedBeamlets  = null;
+    private String    itsTreeType       = null;
     
     private TiedArrayBeamConfigurationTableModel itsTABConfigurationTableModel = null;
     private TiedArrayBeamDialog                  itsTABDialog = null;

@@ -52,8 +52,13 @@ public class TiedArrayBeamDialog extends javax.swing.JDialog {
 
         super(parent, modal);
         initComponents();
-        LofarUtils.setPopupComboChoices(inputDirectionType,itsTAB.getDirectionTypeChoices());
+        if (aTAB == null) {
+            isChanged=false;
+            setVisible(false);
+            dispose();            
+        }
         itsTAB = aTAB;
+        LofarUtils.setPopupComboChoices(inputDirectionType,itsTAB.getDirectionTypeChoices());
         inputCoherent.setSelected(LofarUtils.StringToBoolean(itsTAB.getCoherent()));
 
         editting=edit;

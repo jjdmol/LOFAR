@@ -84,15 +84,25 @@ public class AnaBeamConfigurationTableModel extends javax.swing.table.DefaultTab
         
         removeAllRows();
 
-        itsAnaBeams = new ArrayList<AnaBeam>(anAnaBeamList);
+        itsAnaBeams = new ArrayList<>(anAnaBeamList);
 
         // need to skip first entry because it is the default (dummy) TBBsetting in other then VHTree's
         if (itsTreeType.equals("VHtree")) {
             offset=0;
         }
         
+        ArrayList<AnaBeam> testList = new ArrayList<>(itsAnaBeams);
+
         // need to skip first entry because it is the default (dummy) TBBsetting
-        for (AnaBeam b : itsAnaBeams ) {
+        boolean skip = false;
+        if (offset!=0) {
+            skip = true;
+        }
+        for (AnaBeam b : testList ) {
+            if (skip) {
+                skip = false;
+                continue;
+            }
             this.addRow(b);
         }
 
@@ -149,6 +159,14 @@ public class AnaBeamConfigurationTableModel extends javax.swing.table.DefaultTab
             logger.error("Error in updateRow, illegal rownumber supplied");
             return false;
         }
+        
+        this.setValueAt(aNewAnaBeam.getDirectionType(),row,0);
+        this.setValueAt(aNewAnaBeam.getAngle1(),row,1);
+        this.setValueAt(aNewAnaBeam.getAngle2(),row,2);
+        this.setValueAt(aNewAnaBeam.getCoordType(),row,3);
+        this.setValueAt(aNewAnaBeam.getMaximizeDuration(),row,4);
+        this.setValueAt(aNewAnaBeam.getRank(),row,5);
+        
         isChanged=true;
         fireTableDataChanged();
         return true;
@@ -162,16 +180,19 @@ public class AnaBeamConfigurationTableModel extends javax.swing.table.DefaultTab
      */
     public AnaBeam getSelection(int row) {
         if (row < this.getRowCount() && row >= 0) {
-            return itsAnaBeams.get(row+offset);
-        } else {
-            return null;
+            if (itsAnaBeams != null) {
+                return itsAnaBeams.get(row+offset);
+            }
         }
+        return null;
                                
     }
 
     public void removeAllRows() {
         this.setRowCount(0);
-        itsAnaBeams.clear();
+        if (itsAnaBeams != null) {
+            itsAnaBeams.clear();
+        }
         isChanged=true;
     }
 
@@ -180,7 +201,9 @@ public class AnaBeamConfigurationTableModel extends javax.swing.table.DefaultTab
     @Override
     public void removeRow(int row) {
         super.removeRow(row);
-        itsAnaBeams.remove(row+offset);
+        if (itsAnaBeams != null) {
+            itsAnaBeams.remove(row+offset);
+        }
         isChanged=true;
     }
 

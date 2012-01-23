@@ -49,6 +49,7 @@ public class TiedArrayBeamConfigurationTableModel extends javax.swing.table.Defa
     private ArrayList<TiedArrayBeam> itsTiedArrayBeams;
 
     private int offset=1;
+    private String itsTreeType=null;
 
     private boolean isChanged=false;
 
@@ -59,7 +60,7 @@ public class TiedArrayBeamConfigurationTableModel extends javax.swing.table.Defa
         this.addColumn("angle 1");
         this.addColumn("angle 2");
         this.addColumn("coordtype");
-        this.addColumn("dispersionMeasure");
+        this.addColumn("disp.Measure");
         this.addColumn("coherent");
     }
     
@@ -70,7 +71,7 @@ public class TiedArrayBeamConfigurationTableModel extends javax.swing.table.Defa
      *
      * @return True if succes else False
      */
-     public boolean fillTable(ArrayList<TiedArrayBeam> aTiedArrayBeamList,boolean refill) {
+     public boolean fillTable(String treeType ,ArrayList<TiedArrayBeam> aTiedArrayBeamList,boolean refill) {
          
         // "clear" the table
         setRowCount(0);
@@ -82,11 +83,27 @@ public class TiedArrayBeamConfigurationTableModel extends javax.swing.table.Defa
         
         removeAllRows();
 
+        itsTreeType = treeType;
         itsTiedArrayBeams = new ArrayList<>(aTiedArrayBeamList);
 
+        ArrayList<TiedArrayBeam> testList = new ArrayList<>(itsTiedArrayBeams);
         
-        // need to skip first entry because it is the default (dummy) TBBsetting
-        for (TiedArrayBeam b : itsTiedArrayBeams ) {
+                // need to skip first entry because it is the default (dummy) TBBsetting in other then VHTree's
+        if (itsTreeType.equals("VHtree")) {
+            offset=0;
+        }
+
+
+        // need to skip first entry because it is the default (dummy) TABsetting
+        boolean skip = false;
+        if (offset!=0) {
+            skip = true;
+        }
+        for (TiedArrayBeam b : testList ) {
+            if (skip) {
+                skip = false;
+                continue;
+            }
             this.addRow(b);
         }
 
@@ -138,12 +155,25 @@ public class TiedArrayBeamConfigurationTableModel extends javax.swing.table.Defa
      */
     public boolean updateRow(TiedArrayBeam aNewTiedArrayBeam,int row) {
         if (row < this.getRowCount() && row >= 0) {
-            itsTiedArrayBeams.set(row+offset, aNewTiedArrayBeam);
+            if (itsTiedArrayBeams != null) {
+                itsTiedArrayBeams.set(row+offset, aNewTiedArrayBeam);
+            } else {
+                return false;
+            }
         } else {
             logger.error("Error in updateRow, illegal rownumber supplied");
             return false;
         }
         isChanged=true;
+        
+        this.setValueAt(aNewTiedArrayBeam.getDirectionType(),row,0);
+        this.setValueAt(aNewTiedArrayBeam.getAngle1(),row,1);
+        this.setValueAt(aNewTiedArrayBeam.getAngle2(),row,2);
+        this.setValueAt(aNewTiedArrayBeam.getCoordType(),row,3);
+        this.setValueAt(aNewTiedArrayBeam.getDispersionMeasure(),row,4);
+        this.setValueAt(aNewTiedArrayBeam.getCoherent(),row,5);
+
+
         fireTableDataChanged();
         return true;
     }
@@ -156,7 +186,11 @@ public class TiedArrayBeamConfigurationTableModel extends javax.swing.table.Defa
      */
     public TiedArrayBeam getSelection(int row) {
         if (row < this.getRowCount() && row >= 0) {
-            return itsTiedArrayBeams.get(row+offset);
+            if (itsTiedArrayBeams != null) {
+                return itsTiedArrayBeams.get(row+offset);
+            } else {
+                return null;
+            }
         } else {
             return null;
         }
@@ -165,7 +199,9 @@ public class TiedArrayBeamConfigurationTableModel extends javax.swing.table.Defa
 
     public void removeAllRows() {
         this.setRowCount(0);
-        itsTiedArrayBeams.clear();
+        if (itsTiedArrayBeams != null) {
+            itsTiedArrayBeams.clear();
+        }
         isChanged=true;
     }
 
@@ -174,7 +210,9 @@ public class TiedArrayBeamConfigurationTableModel extends javax.swing.table.Defa
     @Override
     public void removeRow(int row) {
         super.removeRow(row);
-        itsTiedArrayBeams.remove(row+offset);
+        if (itsTiedArrayBeams != null) {
+            itsTiedArrayBeams.remove(row+offset);
+        }
         isChanged=true;
     }
 
