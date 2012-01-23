@@ -1,6 +1,6 @@
 //#  MACScheduler.cc: Implementation of the MAC Scheduler task
 //#
-//#  Copyright (C) 2004-2008
+//#  Copyright (C) 2004-2012
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -51,6 +51,9 @@ namespace LOFAR {
 	using namespace APLCommon;
 	namespace MainCU {
 
+#define	MAX_CONCURRENT_OBSERVATIONS		100
+#define MIN2(a,b) (((a) < (b)) ? (a) : (b))
+
 // static (this) pointer used for signal handling
 static MACScheduler* pMacScheduler = 0;
 	
@@ -69,6 +72,8 @@ MACScheduler::MACScheduler() :
 	itsNextPlannedTime	(0),
 	itsNextActiveTime	(0),
 	itsNextFinishedTime	(0),
+	itsNrPlanned		(0),
+	itsNrActive			(0),
 	itsOTDBconnection	(0)
 {
 	LOG_TRACE_OBJ ("MACscheduler construction");
@@ -82,6 +87,10 @@ MACScheduler::MACScheduler() :
 	itsFinishedItv	 = globalParameterSet()->getTime("pollIntervalFinished", 60);
 	itsPlannedPeriod = globalParameterSet()->getTime("plannedPeriod",  86400) / 60;	// in minutes
 	itsFinishedPeriod= globalParameterSet()->getTime("finishedPeriod", 86400) / 60; // in minutes
+	itsMaxPlanned    = globalParameterSet()->getTime("maxPlannedList",  30);
+	itsMaxFinished   = globalParameterSet()->getTime("maxFinishedList", 40);
+
+	ASSERTSTR(itsMaxPlanned + itsMaxFinished < MAX_CONCURRENT_OBSERVATIONS, "maxPlannedList + maxFinishedList should be less than " << MAX_CONCURRENT_OBSERVATIONS);
 
 	// Read the schedule periods for starting observations.
 	itsQueuePeriod 		= globalParameterSet()->getTime("QueuePeriod");
@@ -155,11 +164,6 @@ void MACScheduler::_databaseEventHandler(GCFEvent& event)
 			uint32	newVal = ((GCFPVUnsigned*) (dpEvent.value._pValue))->getValue();
 			LOG_INFO_STR ("Changing QueuePeriod from " << itsQueuePeriod << " to " << newVal);
 			itsQueuePeriod = newVal;
-		}
-		if (strstr(dpEvent.DPname.c_str(), PVSSNAME_MS_CLAIMPERIOD) != 0) {
-			uint32	newVal = ((GCFPVUnsigned*) (dpEvent.value._pValue))->getValue();
-			LOG_INFO_STR ("Changing ClaimPeriod from " << itsClaimPeriod << " to " << newVal);
-			itsClaimPeriod = newVal;
 		}
 #endif
 	}  
@@ -610,7 +614,7 @@ void MACScheduler::_updatePlannedList()
 
 	// walk through the list, prepare PVSS for the new obs, update own admin lists.
 	GCFPValueArray	plannedArr;
-	int32			idx = plannedDBlist.size() - 1;
+	int32			idx = MIN2(plannedDBlist.size(), itsMaxPlanned) - 1;
 
 	while (idx >= 0)  {
 		// construct name and timings info for observation
@@ -682,6 +686,8 @@ void MACScheduler::_updatePlannedList()
 
 	// Finally we can pass the list with planned observations to PVSS.
 	itsPropertySet->setValue(PN_MS_PLANNED_OBSERVATIONS, GCFPVDynArr(LPT_DYNSTRING, plannedArr));
+	itsNrPlanned = plannedArr.size();
+
 	// free used memory
 	for (int i = plannedArr.size()-1; i>=0; --i) {
 		delete plannedArr[i];
@@ -734,6 +740,7 @@ void MACScheduler::_updateActiveList()
 
 	// Finally we can pass the list with active observations to PVSS.
 	itsPropertySet->setValue(PN_MS_ACTIVE_OBSERVATIONS,	GCFPVDynArr(LPT_DYNSTRING, activeArr));
+	itsNrActive = activeArr.size();
 
 	// free used memory
 	for (int i = activeArr.size()-1; i>=0; --i) {
@@ -756,9 +763,12 @@ void MACScheduler::_updateFinishedList()
 	}
 
 	// walk through the list, prepare PVSS for the new obs, update own admin lists.
+	// We must show the last part of the (optional) limited list.
 	GCFPValueArray	finishedArr;
-	int32			idx = finishedDBlist.size() - 1;
-	while (idx >= 0)  {
+	int32	freeSpace = MAX_CONCURRENT_OBSERVATIONS - itsNrPlanned - itsNrActive;
+	int32	idx       = finishedDBlist.size() - 1;
+	int32	limit     = idx - (MIN2(MIN2(finishedDBlist.size(), itsMaxFinished), freeSpace) - 1);
+	while (idx >= limit)  {
 		// construct name and timings info for observation
 		string		obsName(observationName(finishedDBlist[idx].treeID()));
 		finishedArr.push_back(new GCFPVString(obsName));
