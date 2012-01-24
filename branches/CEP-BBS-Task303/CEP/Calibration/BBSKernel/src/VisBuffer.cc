@@ -38,7 +38,7 @@
 #include <measures/Measures/MCBaseline.h>
 #include <casa/Quanta/MVuvw.h>
 //#include <casa/complex.h>
-//#include <casa/BasicSL/Complex.h>
+#include <casa/BasicSL/Complex.h>
 //#include <casa/BasicMath/Math.h>
 //#include <casa/BasicSL/Constants.h>
 
@@ -211,7 +211,7 @@ void VisBuffer::flagsNot()
     }
 }
 
-void VisBuffer::flagsNan()
+void VisBuffer::flagsNaN()
 {
     // Check if has uvw
     if(!hasUVW())
@@ -225,13 +225,12 @@ void VisBuffer::flagsNan()
     flagsIterator flagsIt;
     for(uvwIterator uvwIt = uvw.data(), end = uvw.data() + uvw.num_elements();
         uvwIt != end; ++uvwIt)
-    {                
-        if(isnan(*uvwIt))
+    {   
+        if(casa::isNaN(*uvwIt))
         {
-            LOG_WARN_STR("Flagged a NAN."); // DEBUG
-            *flagsIt=true;                  // flag it
+            *flagsIt = *flagsIt | 1;                 // flag first bit        
+            LOG_WARN_STR("Flagged a NAN. *flagsIt = " << *flagsIt); // DEBUG
         }
-        flagsIt++;
     }
 }
 
