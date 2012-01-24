@@ -33,6 +33,7 @@
 #include "baselineplotpage.h"
 #include "blengthplotpage.h"
 #include "frequencyplotpage.h"
+#include "openoptionswindow.h"
 #include "summarypage.h"
 #include "timefrequencyplotpage.h"
 #include "timeplotpage.h"
@@ -56,8 +57,9 @@ class AOQPlotWindow : public Gtk::Window {
 			onStatusChange(newStatus);
 		}
 	private:
+		void onOpenOptionsSelected(std::string filename, bool downsampleTime, bool downsampleFreq);
 		void close();
-		void readStatistics();
+		void readStatistics(bool downsampleTime, bool downsampleFreq);
 		void onStatusChange(const std::string &newStatus);
 		void onSwitchPage(GtkNotebookPage *page, guint pageNr)
 		{
@@ -84,6 +86,8 @@ class AOQPlotWindow : public Gtk::Window {
 		TimePlotPage _timePlotPage;
 		FrequencyPlotPage _frequencyPlotPage;
 		SummaryPage _summaryPage;
+		
+		OpenOptionsWindow _openOptionsWindow;
 
 		bool _isOpen;
 		std::string _filename;
