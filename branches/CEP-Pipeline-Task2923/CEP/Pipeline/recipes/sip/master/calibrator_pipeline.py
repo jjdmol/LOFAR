@@ -90,7 +90,15 @@ class calibrator_pipeline(control):
         parmdb_mapfile = self.run_task("parmdb", data_mapfile)['mapfile']
 
         # Create a sourcedb based on sourcedb's input argument "skymodel"
-        sourcedb_mapfile = self.run_task("sourcedb", data_mapfile)['mapfile']
+        sourcedb_mapfile = self.run_task(
+            "sourcedb", data_mapfile,
+            skymodel=os.path.join(
+                self.config.get('DEFAULT', 'lofarroot'),
+                'share', 'pipeline', 'skymodels', 
+                py_parset.getString('Calibration.CalibratorSource') +
+                    '.skymodel'
+            )
+        )['mapfile']
 
         # Produce a GVDS file describing the data on the compute nodes.
         gvds_file = self.run_task("vdsmaker", data_mapfile)['gvds']
