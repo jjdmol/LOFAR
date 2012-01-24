@@ -722,7 +722,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
       
       fillBeamformerStationList();
 
-      if (beamConfigurationPanel.getTableModel().getRowCount() == 243) {
+      if (beamConfigurationPanel.getTableModel().getRowCount() == 244) {
         this.addBeamButton.setEnabled(false);
       } else {
         this.addBeamButton.setEnabled(true);
@@ -1460,7 +1460,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             }
         } 
         
-      if (beamConfigurationPanel.getTableModel().getRowCount() == 243) {
+      if (beamConfigurationPanel.getTableModel().getRowCount() == 244) {
         this.addBeamButton.setEnabled(false);
       } else {
         this.addBeamButton.setEnabled(true);
@@ -1527,7 +1527,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         this.editBeamButton.setEnabled(false);
         this.deleteBeamButton.setEnabled(false);
         this.copyBeamButton.setEnabled(false);
-        if (beamConfigurationPanel.getTableModel().getRowCount() == 243 ) {
+        if (beamConfigurationPanel.getTableModel().getRowCount() == 244 ) {
             this.addBeamButton.setEnabled(false);
         } else {
             this.addBeamButton.setEnabled(true);
@@ -1593,7 +1593,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
 
         this.editAnaBeamButton.setEnabled(false);
         this.deleteAnaBeamButton.setEnabled(false);
-        if (anaBeamConfigurationPanel.getTableModel().getRowCount() == 243 ) {
+        if (anaBeamConfigurationPanel.getTableModel().getRowCount() == 1 ) {
             this.addAnaBeamButton.setEnabled(false);
         } else {
             this.addAnaBeamButton.setEnabled(true);

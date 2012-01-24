@@ -62,6 +62,8 @@ public class MainFrame extends javax.swing.JFrame {
     private String itsUserName             = "";
 
     private String itsServiceName          = "";
+    
+    private boolean isEnded                = false;
 
 
     
@@ -471,20 +473,23 @@ public class MainFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_formWindowClosing
 
     public void exit() {
-        logger.info("Exit requested");
-        logout();
-        setVisible(false);
-        // remove used rmi connections from server
-        try {
-            if ( OtdbRmi.getRemoteOTDBaccess() != null) {
-                OtdbRmi.getRemoteOTDBaccess().logout(OtdbRmi.getRMIRegistryName());
+        if (!isEnded) {
+            logger.info("Exit requested");
+            logout();
+            setVisible(false);  
+           // remove used rmi connections from server
+            try {
+                if ( OtdbRmi.getRemoteOTDBaccess() != null) {
+                    OtdbRmi.getRemoteOTDBaccess().logout(OtdbRmi.getRMIRegistryName());
+                }
+            } catch (RemoteException ex) {
+                String aS= "Remote Exception "+ex.getMessage();
+                logger.error(aS);
+                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             }
-        } catch (RemoteException ex) {
-            String aS= "Remote Exception "+ex.getMessage();
-            logger.error(aS);
-            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+            this.dispose();
+            isEnded=true;
         }
-        this.dispose();
     }
     
     /** Event handler called when a button in the button panel is called
