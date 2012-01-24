@@ -57,9 +57,9 @@ class AOQPlotWindow : public Gtk::Window {
 			onStatusChange(newStatus);
 		}
 	private:
-		void onOpenOptionsSelected(std::string filename, bool downsampleTime, bool downsampleFreq);
+		void onOpenOptionsSelected(std::string filename, bool downsampleTime, bool downsampleFreq, size_t freqSize);
 		void close();
-		void readStatistics(bool downsampleTime, bool downsampleFreq);
+		void readStatistics(bool downsampleTime, bool downsampleFreq, size_t freqSize);
 		void onStatusChange(const std::string &newStatus);
 		void onSwitchPage(GtkNotebookPage *page, guint pageNr)
 		{

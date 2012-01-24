@@ -23,6 +23,7 @@
 #include <gtkmm/button.h>
 #include <gtkmm/buttonbox.h>
 #include <gtkmm/checkbutton.h>
+#include <gtkmm/entry.h>
 #include <gtkmm/stock.h>
 #include <gtkmm/window.h>
 
@@ -39,8 +40,14 @@ class OpenOptionsWindow : public Gtk::Window {
 		{
 			_box.pack_start(_downsampleTimeButton);
 			_downsampleTimeButton.set_active(true);
-			_box.pack_start(_downsampleFreqButton);
+			
+			_freqBox.pack_start(_downsampleFreqButton);
 			_downsampleFreqButton.set_active(true);
+			
+			_freqBox.pack_start(_freqDownsampleEntry);
+			_freqDownsampleEntry.set_text("1000");
+			
+			_box.pack_start(_freqBox);
 			
 			_buttonBox.pack_start(_cancelButton);
 			
@@ -63,21 +70,24 @@ class OpenOptionsWindow : public Gtk::Window {
 			show();
 		}
 		
-		sigc::signal<void, std::string, bool, bool> SignalOpen() { return _signalOpen; }
+		sigc::signal<void, std::string, bool, bool, size_t> &SignalOpen() { return _signalOpen; }
 	private:
 		void onOpen()
 		{
-			_signalOpen.emit(_file, _downsampleTimeButton.get_active(), _downsampleFreqButton.get_active());
+			size_t freqRes = atol(_freqDownsampleEntry.get_text().c_str());
+			_signalOpen.emit(_file, _downsampleTimeButton.get_active(), _downsampleFreqButton.get_active(), freqRes);
 			_file.clear();
 			hide();
 		}
 		
 		Gtk::VBox _box;
 		Gtk::CheckButton _downsampleTimeButton;
+		Gtk::HBox _freqBox;
 		Gtk::CheckButton _downsampleFreqButton;
+		Gtk::Entry _freqDownsampleEntry;
 		Gtk::HButtonBox _buttonBox;
 		Gtk::Button _cancelButton, _openButton;
-		sigc::signal<void, std::string, bool, bool> _signalOpen;
+		sigc::signal<void, std::string, bool, bool, size_t> _signalOpen;
 		
 		std::string _file;
 };

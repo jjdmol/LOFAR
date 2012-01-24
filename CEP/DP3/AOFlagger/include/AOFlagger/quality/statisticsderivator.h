@@ -224,7 +224,7 @@ class StatisticsDerivator
 			const double width = statistics.rbegin()->first - statistics.begin()->first;
 			const double fStart = -2.0 * M_PI / width;
 			const double fEnd = 2.0 * M_PI / width;
-			const double fStep = (fEnd - fStart) / statistics.size();
+			const double fStep = (fEnd - fStart) / (statistics.size()*2);
 			const unsigned polCount = statistics.begin()->second.PolarizationCount();
 			for(double f = fStart; f < fEnd ; f += fStep)
 			{
@@ -234,7 +234,7 @@ class StatisticsDerivator
 				{
 					const double t = i->first;
 					DefaultStatistics tStat = i->second;
-					tStat *= cosl(2.0l * M_PIl * t * f);
+					tStat *= cosl(t * f);
 					nextStat += tStat;
 				}
 				output.insert(newElement);
