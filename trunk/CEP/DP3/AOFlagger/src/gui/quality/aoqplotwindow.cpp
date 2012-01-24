@@ -77,10 +77,10 @@ void AOQPlotWindow::Open(const std::string &filename)
 	_openOptionsWindow.ShowForFile(filename);
 }
 
-void AOQPlotWindow::onOpenOptionsSelected(std::string filename, bool downsampleTime, bool downsampleFreq)
+void AOQPlotWindow::onOpenOptionsSelected(std::string filename, bool downsampleTime, bool downsampleFreq, size_t freqCount)
 {
 	_filename = filename;
-	readStatistics(downsampleTime, downsampleFreq);
+	readStatistics(downsampleTime, downsampleFreq, freqCount);
 	_baselinePlotPage.SetStatistics(_statCollection, _antennas);
 	_antennaePlotPage.SetStatistics(_statCollection, _antennas);
 	_bLengthPlotPage.SetStatistics(_statCollection, _antennas);
@@ -108,7 +108,7 @@ void AOQPlotWindow::close()
 	}
 }
 
-void AOQPlotWindow::readStatistics(bool downsampleTime, bool downsampleFreq)
+void AOQPlotWindow::readStatistics(bool downsampleTime, bool downsampleFreq, size_t freqSize)
 {
 	close();
 	
@@ -164,7 +164,7 @@ void AOQPlotWindow::readStatistics(bool downsampleTime, bool downsampleFreq)
 	if(downsampleFreq)
 	{
 		std::cout << "Lowering frequency resolution..." << std::endl;
-		_statCollection->LowerFrequencyResolution(1000);
+		_statCollection->LowerFrequencyResolution(freqSize);
 	}
 
 	std::cout << "Integrating baseline statistics to one channel..." << std::endl;
