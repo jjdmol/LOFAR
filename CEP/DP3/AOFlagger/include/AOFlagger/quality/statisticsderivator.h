@@ -30,6 +30,7 @@
 
 #include <AOFlagger/strategy/imagesets/noisestatimageset.h>
 
+struct stat;
 class StatisticsDerivator
 {
 	public:
@@ -215,6 +216,30 @@ class StatisticsDerivator
 			if(HasUnits(kind))
 				str << " (" << GetUnits(kind) << ")";
 			return str.str();
+		}
+		
+		static std::map<double, class DefaultStatistics> PerformFT(std::map<double, class DefaultStatistics> statistics)
+		{
+			std::map<double, class DefaultStatistics> output;
+			const double width = statistics.rbegin()->first - statistics.begin()->first;
+			const double fStart = -2.0 * M_PI / width;
+			const double fEnd = 2.0 * M_PI / width;
+			const double fStep = (fEnd - fStart) / statistics.size();
+			const unsigned polCount = statistics.begin()->second.PolarizationCount();
+			for(double f = fStart; f < fEnd ; f += fStep)
+			{
+				std::pair<double, class DefaultStatistics> newElement(f, DefaultStatistics(polCount));
+				DefaultStatistics &nextStat = newElement.second;
+				for(std::map<double, class DefaultStatistics>::const_iterator i = statistics.begin(); i!=statistics.end(); ++i)
+				{
+					const double t = i->first;
+					DefaultStatistics tStat = i->second;
+					tStat *= cosl(2.0l * M_PIl * t * f);
+					nextStat += tStat;
+				}
+				output.insert(newElement);
+			}
+			return output;
 		}
 	private:
 		template<typename T>

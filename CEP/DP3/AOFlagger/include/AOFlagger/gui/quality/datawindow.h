@@ -36,6 +36,7 @@ class DataWindow : public Gtk::Window {
 			
 			add(_scrolledWindow);
 			_scrolledWindow.show();
+			set_default_size(200, 200);
 		}
     ~DataWindow()
     {

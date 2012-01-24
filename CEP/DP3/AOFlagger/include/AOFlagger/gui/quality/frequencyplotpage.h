@@ -23,12 +23,17 @@
 #include "twodimensionalplotpage.h"
 
 #include <AOFlagger/quality/statisticscollection.h>
+#include <AOFlagger/quality/statisticsderivator.h>
 
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
 */
 class FrequencyPlotPage : public TwoDimensionalPlotPage {
 	public:
+    FrequencyPlotPage() : _ftButton("FT")
+		{
+		}
+		
 		virtual void processStatistics(class StatisticsCollection *statCollection, const std::vector<AntennaInfo> &antennas)
 		{
 			_statistics.clear();
@@ -39,20 +44,49 @@ class FrequencyPlotPage : public TwoDimensionalPlotPage {
 			{
 				_statistics.insert(std::pair<double, DefaultStatistics>(i->first/1000000.0, i->second));
 			}
+			_ftStatistics.clear();
 		}
 		
 		virtual const std::map<double, class DefaultStatistics> &GetStatistics() const
 		{
-			return _statistics;
+			if(_ftButton.get_active())
+			{
+				return _ftStatistics;
+			}
+			else
+				return _statistics;
 		}
 		
 		virtual void StartLine(Plot2D &plot, const std::string &name, const std::string &yAxisDesc)
 		{
-			plot.StartLine(name, "Frequency (MHz)", yAxisDesc, false);
+			if(_ftButton.get_active())
+				plot.StartLine(name, "Time (μs)", yAxisDesc, false);
+			else
+				plot.StartLine(name, "Frequency (MHz)", yAxisDesc, false);
 		}
 		
+		virtual void addCustomPlotButtons(Gtk::VBox &container)
+		{
+			_ftButton.signal_clicked().connect(sigc::mem_fun(*this, &FrequencyPlotPage::onFTButtonClicked));
+			container.pack_start(_ftButton);
+			_ftButton.show();
+		}
 	private:
+		void onFTButtonClicked()
+		{
+			if(_ftStatistics.empty())
+				createFTStatistics();
+			updatePlot();
+		}
+		
+		void createFTStatistics()
+		{
+			_ftStatistics = StatisticsDerivator::PerformFT(_statistics);
+		}
+		
 		std::map<double, class DefaultStatistics> _statistics;
+		std::map<double, class DefaultStatistics> _ftStatistics;
+		Gtk::CheckButton _ftButton;
 };
 
 #endif
