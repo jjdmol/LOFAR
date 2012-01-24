@@ -82,9 +82,13 @@ PythonControl::PythonControl(const string&	cntlrName) :
 	globalParameterSet()->adoptFile(string(LOFAR_SHARE_LOCATION)+"/"+cntlrName);
 
 	// Readin some parameters from the conf-file.
-	itsFeedbackFile     = globalParameterSet()->getString("MetadataFeedbackFile", "");
 	itsFeedbackWaittime = globalParameterSet()->getFloat ("FeedbackWaittime", 1.0);
 	itsKVTLoggerHost    = globalParameterSet()->getString("KVTLoggerHost", "localhost");
+
+	// Readin parameters from the obsercationfile.
+	string	prefix  = globalParameterSet()->fullModuleName("PythonControl");
+	ASSERTSTR(!prefix.empty(), "Key 'PythonControl' not found in the observation parameterset");
+	itsFeedbackFile = globalParameterSet()->getString(prefix + "metadataFeedbackFile", "");
 
 	// attach to parent control task
 	itsParentControl = ParentControl::instance();
