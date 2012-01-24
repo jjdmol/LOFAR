@@ -86,9 +86,7 @@ PythonControl::PythonControl(const string&	cntlrName) :
 	itsKVTLoggerHost    = globalParameterSet()->getString("KVTLoggerHost", "localhost");
 
 	// Readin parameters from the obsercationfile.
-	string	prefix  = globalParameterSet()->fullModuleName("PythonControl");
-	ASSERTSTR(!prefix.empty(), "Key 'PythonControl' not found in the observation parameterset");
-	itsFeedbackFile = globalParameterSet()->getString(prefix + "metadataFeedbackFile", "");
+	itsFeedbackFile = globalParameterSet()->getString("metadataFeedbackFile", "");
 
 	// attach to parent control task
 	itsParentControl = ParentControl::instance();
