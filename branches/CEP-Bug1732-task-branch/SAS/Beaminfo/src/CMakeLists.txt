@@ -3,24 +3,25 @@
 include(LofarPackageVersion)
 #include(PythonInstall)
 
-#set(beaminfo_LIB_SRCS)
+set(beaminfo_LIB_SRCS
+  FailedTileInfo
+)
 
 set(beaminfo_PROGRAMS
   addbeaminfo
+  failedtiles2ms
 )
 
-#lofar_add_library(ms ${beaminfo_LIB_SRCS})
+lofar_add_library(ms ${beaminfo_LIB_SRCS})
 
-#foreach(prog ${beaminfo_PROGRAMS})
-#  lofar_add_bin_program(${prog} ${prog}.cc)
-#endforeach(prog ${beaminfo_PROGRAMS})
-
-lofar_add_bin_program(addbeaminfo addbeaminfo.cc)  
-lofar_add_bin_program(failedtiles2ms failedtiles2ms.cc)  
+foreach(prog ${beaminfo_PROGRAMS})
+  lofar_add_bin_program(${prog} ${prog}.cc)
+endforeach(prog ${beaminfo_PROGRAMS})
 
 install(PROGRAMS
-#  addbeaminfo
-  DESTINATION bin)
+  addbeaminfo
+  failedtiles2ms
+DESTINATION bin)
 
 # Python modules.
 #python_install(
