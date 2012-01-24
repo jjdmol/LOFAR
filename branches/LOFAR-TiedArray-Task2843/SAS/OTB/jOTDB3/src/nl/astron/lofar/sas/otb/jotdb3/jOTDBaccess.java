@@ -68,7 +68,7 @@ public class jOTDBaccess implements jOTDBaccessInterface
        itsRMIport=anRMIport;
        itsRMIobjectPort=anRMIobjectPort;
        itsLocalRegistry=aLocalRegistry;
-       itsLocalRegistry = LocateRegistry.getRegistry(aDBhost, itsRMIport);
+       itsLocalRegistry = LocateRegistry.getRegistry(anRMIhost, itsRMIport);
        // each server has an unique rmi port, so make seqNr equal 
        // to that to obtain more or less unique name_nr names
        seqNr=itsRMIport;
@@ -76,6 +76,7 @@ public class jOTDBaccess implements jOTDBaccessInterface
    
    
     // To connect or reconnect in case the connection was lost
+    @Override
     public String login(String name,String pwd, String dbName) throws RemoteException {
         seqNr+=1;
         String nameExtention = name+"_"+Integer.toString(seqNr);
