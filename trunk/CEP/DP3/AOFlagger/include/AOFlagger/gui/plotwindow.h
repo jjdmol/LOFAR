@@ -34,7 +34,7 @@ class PlotWindow : public Gtk::Window {
 	public:
 		PlotWindow(PlotManager &plotManager) : _plotManager(plotManager)
 		{
-			plotManager.OnChange() = boost::bind(&PlotWindow::handleUpdate, this);
+			plotManager.OnUpdate() = boost::bind(&PlotWindow::handleUpdate, this);
 		}
 		~PlotWindow()
 		{

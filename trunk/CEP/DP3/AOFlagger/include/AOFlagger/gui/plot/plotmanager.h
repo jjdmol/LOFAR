@@ -34,16 +34,17 @@ class PlotManager
 		{
 			Plot2D *plot = new Plot2D();
 			_items.insert(plot);
-			_onChange();
 			return *plot;
 		}
 		
-		boost::function<void()> &OnChange() { return _onChange; }
+		void Update() { _onUpdate(); }
+		
+		boost::function<void()> &OnUpdate() { return _onUpdate; }
 		
 	private:
 		std::set<Plot2D*> _items;
 		
-		boost::function<void()> _onChange;
+		boost::function<void()> _onUpdate;
 };
 
 #endif
