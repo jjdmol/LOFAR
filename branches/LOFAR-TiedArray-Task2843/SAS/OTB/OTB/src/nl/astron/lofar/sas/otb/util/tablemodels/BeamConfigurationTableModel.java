@@ -47,7 +47,7 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
     static String name = "BeamConfigurationTableModel";
 
     private String itsTreeType = null;
-    private ArrayList<Beam> itsBeams;
+    private ArrayList<Beam> itsBeams = new ArrayList<>();
 
     private int offset=1;
 
@@ -84,15 +84,13 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
         //empty old settings
         removeAllRows();
         
-        itsBeams = new ArrayList<Beam>(aBeamList);
-
         // need to skip first entry because it is the default (dummy) TBBsetting in other then VHTree's
         if (itsTreeType.equals("VHtree")) {
             offset=0;
         }
         
         // add all objects to table
-        ArrayList<Beam> testList = new ArrayList<>(itsBeams);
+        ArrayList<Beam> testList = new ArrayList<>(aBeamList);
         
         boolean skip = false;
         if (offset!=0) {
@@ -101,6 +99,7 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
         for (Beam b : testList ) {
             if (skip) {
                 skip = false;
+                itsBeams.add(b);
                 continue;
             }
             this.addRow(b);
@@ -144,6 +143,8 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
                              aBeam.getSubbandList(),
                              aBeam.getBeamletList() };
         this.addRow(newRow);
+        itsBeams.trimToSize();
+
 
         isChanged=true;
         return true;
@@ -158,6 +159,7 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
         if (row < this.getRowCount() && row >= 0) {
             if (itsBeams != null) {
                 itsBeams.set(row+offset, newBeam);
+                itsBeams.trimToSize();
             }
         } else {
             logger.error("Error in updateRow, illegal rownumber supplied");
@@ -204,6 +206,7 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
         this.setRowCount(0);
         if (itsBeams != null) {
             itsBeams.clear();
+            itsBeams.trimToSize();
             isChanged=true;
         }
     }
@@ -213,6 +216,7 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
         super.removeRow(row);
         if (itsBeams != null) {
             itsBeams.remove(row+offset);
+            itsBeams.trimToSize();
             isChanged=true;
         }
     }

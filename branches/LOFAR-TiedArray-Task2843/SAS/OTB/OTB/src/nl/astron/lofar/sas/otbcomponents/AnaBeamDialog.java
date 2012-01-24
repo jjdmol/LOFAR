@@ -303,15 +303,21 @@ public class AnaBeamDialog extends javax.swing.JDialog {
             }
             try {
                 if (!inputAngle1.getText().isEmpty()) {
-                    if (ch.equals("dmsdms")) {
-                        tmpch = "dms";
-                    } else if (ch.equals("hmsdms")) {
-                        tmpch = "hms";
+                    switch (ch) {
+                        case "dmsdms":
+                            tmpch = "dms";
+                            break;
+                        case "hmsdms":
+                            tmpch = "hms";
+                            break;
                     }
-                    if (itsAnaBeam.getCoordType().equals("hmsdms")) {
-                        tmpcoord = "hms";
-                    } else if (itsAnaBeam.getCoordType().equals("dmsdms")) {
-                        tmpcoord = "dms";
+                    switch (itsAnaBeam.getCoordType()) {
+                        case "hmsdms":
+                            tmpcoord = "hms";
+                            break;
+                        case "dmsdms":
+                            tmpcoord = "dms";
+                            break;
                     }
                     inputAngle1.setText(LofarUtils.changeCoordinate(tmpcoord, tmpch, inputAngle1.getText()));
                 }

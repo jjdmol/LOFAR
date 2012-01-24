@@ -945,7 +945,9 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             itsBeams.clear();
             // add the default node again
             itsBeams.add(aDefaultBNode);
+            itsBeams.trimToSize();
             itsBeamList = itsBeamConfigurationTableModel.getTable();
+            itsBeamList.trimToSize();
             short index=0;
             try {
                // for all elements except the first (default) one
@@ -974,8 +976,10 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                             String aKeyName = LofarUtils.keyName(n.name);
                             if (!n.leaf) {
                                 if (LofarUtils.keyName(n.name).contains("TiedArrayBeam") ) {
+                                    
                                     // for all TiedArrays except the first (default) one
                                     keep = true;
+                                    short idx=0;
                                     for (TiedArrayBeam tab : b.getTiedArrayBeams()) {
                                         if (keep) {
                                             keep = false;
@@ -983,7 +987,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                                         }    
 
                                         // Duplicates the given node (and its parameters and children)
-                                        int aTabN = OtdbRmi.getRemoteMaintenance().dupNode(itsNode.treeID(),n.nodeID(),index++);
+                                        int aTabN = OtdbRmi.getRemoteMaintenance().dupNode(itsNode.treeID(),n.nodeID(),idx++);
                                         if (aTabN <= 0) {
                                             String aS="Something went wrong with dupNode("+itsNode.treeID()+","+n.nodeID()+") will try to save remainder";
                                             logger.error(aS);
@@ -994,7 +998,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                                             ArrayList<jOTDBnode> tabHWchilds = new ArrayList<>(OtdbRmi.getRemoteMaintenance().getItemList(aTabNode.treeID(), aTabNode.nodeID(), 1));
                                             for (jOTDBnode tabn: tabHWchilds) {
                                                 String aTabKeyName = LofarUtils.keyName(tabn.name);
-                                                switch (aKeyName) {
+                                                switch (aTabKeyName) {
                                 
                                                     case "directionType" :
                                                         tabn.limits=tab.getDirectionType();
@@ -1042,6 +1046,10 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                                             }
                                         }
                                     }
+                                    // store new number of instances in baseSetting
+                                    short tabbeams= (short)(b.getTiedArrayBeams().size()-1);
+                                    n.instances = tabbeams; //
+                                    saveNode(n);
                                 }
                                 continue;
                             }
@@ -1164,6 +1172,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             // now that all Nodes are deleted we should collect the tables input and create new AnaBeams to save to the database.
             itsAnaBeamList.clear();
             itsAnaBeams.clear();
+            itsAnaBeams.trimToSize();
             // however, if anaBeamConfiguration is invisible, we can skip this and set nrAnabeams to 0
 
             if (anaBeamConfiguration.isVisible() && aDefaultABNode != null) {
@@ -1502,6 +1511,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             aBS.xor(oldBeamlets);
         }
         beamDialog = new BeamDialog(itsMainFrame,itsTreeType,true,aBS,selection.clone(),editBeam);
+        
         beamDialog.setLocationRelativeTo(this);
         if (editBeam) {
             beamDialog.setBorderTitle("edit Beam");
@@ -1523,6 +1533,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 boolean succes = itsBeamConfigurationTableModel.addRow(newBeam);
             }
         }
+        beamDialog.dispose();
         
         this.editBeamButton.setEnabled(false);
         this.deleteBeamButton.setEnabled(false);

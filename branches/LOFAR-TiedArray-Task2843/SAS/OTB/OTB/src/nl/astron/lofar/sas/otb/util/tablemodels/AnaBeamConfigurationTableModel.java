@@ -47,7 +47,7 @@ public class AnaBeamConfigurationTableModel extends javax.swing.table.DefaultTab
     static String name = "AnaBeamConfigurationTableModel";
 
     private String itsTreeType;
-    private ArrayList<AnaBeam> itsAnaBeams;
+    private ArrayList<AnaBeam> itsAnaBeams = new ArrayList<>();
 
     private int offset=1;
 
@@ -84,14 +84,12 @@ public class AnaBeamConfigurationTableModel extends javax.swing.table.DefaultTab
         
         removeAllRows();
 
-        itsAnaBeams = new ArrayList<>(anAnaBeamList);
-
         // need to skip first entry because it is the default (dummy) TBBsetting in other then VHTree's
         if (itsTreeType.equals("VHtree")) {
             offset=0;
         }
         
-        ArrayList<AnaBeam> testList = new ArrayList<>(itsAnaBeams);
+        ArrayList<AnaBeam> testList = new ArrayList<>(anAnaBeamList);
 
         // need to skip first entry because it is the default (dummy) TBBsetting
         boolean skip = false;
@@ -101,6 +99,7 @@ public class AnaBeamConfigurationTableModel extends javax.swing.table.DefaultTab
         for (AnaBeam b : testList ) {
             if (skip) {
                 skip = false;
+                itsAnaBeams.add(b);
                 continue;
             }
             this.addRow(b);
@@ -142,6 +141,7 @@ public class AnaBeamConfigurationTableModel extends javax.swing.table.DefaultTab
                              anAnaBeam.getMaximizeDuration(),
                              anAnaBeam.getRank()};
         this.addRow(newRow);
+        itsAnaBeams.trimToSize();
 
         isChanged=true;
         return true;
@@ -192,6 +192,7 @@ public class AnaBeamConfigurationTableModel extends javax.swing.table.DefaultTab
         this.setRowCount(0);
         if (itsAnaBeams != null) {
             itsAnaBeams.clear();
+            itsAnaBeams.trimToSize();
         }
         isChanged=true;
     }
@@ -203,6 +204,7 @@ public class AnaBeamConfigurationTableModel extends javax.swing.table.DefaultTab
         super.removeRow(row);
         if (itsAnaBeams != null) {
             itsAnaBeams.remove(row+offset);
+            itsAnaBeams.trimToSize();
         }
         isChanged=true;
     }

@@ -155,6 +155,7 @@ public class BeamDialog extends javax.swing.JDialog {
         inputNrTabRings.setText(itsBeam.getNrTabRings());
         inputTabRingSize.setText(itsBeam.getTabRingSize());
         itsTiedArrayBeams=itsBeam.getTiedArrayBeams();
+        itsTiedArrayBeams.trimToSize();
         // fill table with all entries
         itsTABConfigurationTableModel.fillTable(itsTreeType,itsBeam.getTiedArrayBeams(), true);
     }
@@ -501,7 +502,10 @@ public class BeamDialog extends javax.swing.JDialog {
 
         }else {
             setVisible(false);
-            dispose();
+            this.itsTiedArrayBeams= this.itsTABConfigurationTableModel.getTable();
+            itsTiedArrayBeams.trimToSize();
+            this.TABConfigurationPanel=null;
+            this.itsTABConfigurationTableModel = null;
         }
 }//GEN-LAST:event_saveButtonActionPerformed
 
@@ -509,7 +513,9 @@ public class BeamDialog extends javax.swing.JDialog {
         isChanged=false;
         itsUsedBeamlets=(BitSet)itsSavedBeamlets.clone();
         setVisible(false);
-        dispose();
+        TABConfigurationPanel=null;
+        itsTABConfigurationTableModel = null;
+
 }//GEN-LAST:event_cancelButtonActionPerformed
 
     private void coordTypeChangeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_coordTypeChangeActionPerformed
@@ -665,8 +671,7 @@ public class BeamDialog extends javax.swing.JDialog {
         itsBeam.setBeamletList(LofarUtils.compactedArrayString(inputBeamletList.getText()));
         itsBeam.setNrTabRings(inputNrTabRings.getText());
         itsBeam.setTabRingSize(inputTabRingSize.getText());
-        itsBeam.setNrTiedArrayBeams(Integer.toString(itsTABConfigurationTableModel.getTable().size()));
-        
+        itsBeam.setNrTiedArrayBeams(Integer.toString(itsTiedArrayBeams.size()-offset));
         itsBeam.setTiedArrayBeams(itsTiedArrayBeams);
         return itsBeam;
     }

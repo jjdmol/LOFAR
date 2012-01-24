@@ -46,7 +46,7 @@ public class TiedArrayBeamConfigurationTableModel extends javax.swing.table.Defa
     static Logger logger = Logger.getLogger(TiedArrayBeamConfigurationTableModel.class);
     static String name = "TiedArrayBeamConfigurationTableModel";
 
-    private ArrayList<TiedArrayBeam> itsTiedArrayBeams;
+    private ArrayList<TiedArrayBeam> itsTiedArrayBeams = new ArrayList<>();
 
     private int offset=1;
     private String itsTreeType=null;
@@ -84,9 +84,8 @@ public class TiedArrayBeamConfigurationTableModel extends javax.swing.table.Defa
         removeAllRows();
 
         itsTreeType = treeType;
-        itsTiedArrayBeams = new ArrayList<>(aTiedArrayBeamList);
 
-        ArrayList<TiedArrayBeam> testList = new ArrayList<>(itsTiedArrayBeams);
+        ArrayList<TiedArrayBeam> testList = new ArrayList<>(aTiedArrayBeamList);
         
                 // need to skip first entry because it is the default (dummy) TBBsetting in other then VHTree's
         if (itsTreeType.equals("VHtree")) {
@@ -102,6 +101,7 @@ public class TiedArrayBeamConfigurationTableModel extends javax.swing.table.Defa
         for (TiedArrayBeam b : testList ) {
             if (skip) {
                 skip = false;
+                itsTiedArrayBeams.add(b);
                 continue;
             }
             this.addRow(b);
@@ -143,6 +143,7 @@ public class TiedArrayBeamConfigurationTableModel extends javax.swing.table.Defa
                              aTiedArrayBeam.getDispersionMeasure(),
                              aTiedArrayBeam.getCoherent()};
         this.addRow(newRow);
+        itsTiedArrayBeams.trimToSize();
 
         isChanged=true;
         return true;
@@ -157,6 +158,7 @@ public class TiedArrayBeamConfigurationTableModel extends javax.swing.table.Defa
         if (row < this.getRowCount() && row >= 0) {
             if (itsTiedArrayBeams != null) {
                 itsTiedArrayBeams.set(row+offset, aNewTiedArrayBeam);
+            itsTiedArrayBeams.trimToSize();
             } else {
                 return false;
             }
@@ -201,6 +203,7 @@ public class TiedArrayBeamConfigurationTableModel extends javax.swing.table.Defa
         this.setRowCount(0);
         if (itsTiedArrayBeams != null) {
             itsTiedArrayBeams.clear();
+            itsTiedArrayBeams.trimToSize();
         }
         isChanged=true;
     }
@@ -212,6 +215,7 @@ public class TiedArrayBeamConfigurationTableModel extends javax.swing.table.Defa
         super.removeRow(row);
         if (itsTiedArrayBeams != null) {
             itsTiedArrayBeams.remove(row+offset);
+            itsTiedArrayBeams.trimToSize();
         }
         isChanged=true;
     }
