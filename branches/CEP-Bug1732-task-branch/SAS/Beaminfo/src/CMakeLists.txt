@@ -16,6 +16,7 @@ set(beaminfo_PROGRAMS
 #endforeach(prog ${beaminfo_PROGRAMS})
 
 lofar_add_bin_program(addbeaminfo addbeaminfo.cc)  
+lofar_add_bin_program(failedtiles2ms failedtiles2ms.cc)  
 
 install(PROGRAMS
 #  addbeaminfo
