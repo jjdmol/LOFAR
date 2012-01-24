@@ -28,9 +28,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 import nl.astron.lofar.lofarutils.remoteFile;
 import nl.astron.lofar.lofarutils.remoteFileInterface;
 import org.apache.log4j.Logger;
@@ -135,6 +133,7 @@ public class jOTDBaccess implements jOTDBaccessInterface
     }
 
 
+    @Override
     public void logout(String name) throws RemoteException {
         logger.info("jOTDBaccess: logout");
 
