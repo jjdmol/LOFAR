@@ -74,10 +74,10 @@ class OpenOptionsWindow : public Gtk::Window {
 	private:
 		void onOpen()
 		{
+			hide();
 			size_t freqRes = atol(_freqDownsampleEntry.get_text().c_str());
 			_signalOpen.emit(_file, _downsampleTimeButton.get_active(), _downsampleFreqButton.get_active(), freqRes);
 			_file.clear();
-			hide();
 		}
 		
 		Gtk::VBox _box;

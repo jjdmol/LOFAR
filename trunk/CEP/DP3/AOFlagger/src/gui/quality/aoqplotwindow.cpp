@@ -135,7 +135,8 @@ void AOQPlotWindow::readStatistics(bool downsampleTime, bool downsampleFreq, siz
 				s << "... and " << (commander.Errors().size()-30) << " more.\n";
 			}
 			s << "\nThe program will continue, but this might mean that the statistics are incomplete. If this is the case, fix the issues and reopen the observation.";
-			Gtk::MessageDialog dialog(s.str(), false, Gtk::MESSAGE_ERROR);
+			std::cerr << s.str() << std::endl;
+			Gtk::MessageDialog dialog(*this, s.str(), false, Gtk::MESSAGE_ERROR);
 			dialog.run();
 		}
 		delete observation;
