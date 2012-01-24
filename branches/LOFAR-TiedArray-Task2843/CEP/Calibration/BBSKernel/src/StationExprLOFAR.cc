@@ -117,7 +117,7 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
                 " correction can only be applied for a single direction on the"
                 " sky.");
         }
-
+        
         // Beam reference position on the sky.
         Expr<Vector<2> >::Ptr exprRefDelay = makeDirectionExpr(refDelay);
         Expr<Vector<3> >::Ptr exprRefDelayITRF =
@@ -449,7 +449,7 @@ PatchExprBase::Ptr StationExprLOFAR::makePatchExpr(const string &name,
             it->second));
     }
 
-    return PatchExprBase::Ptr(new PatchExpr(itsScope, sourceDB, name,
+    return PatchExprBase::Ptr(new PatchExpr(itsScope, sourceDB, name, 
         refPhase));
 }
 

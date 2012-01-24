@@ -69,6 +69,7 @@ class ProcessCommander
 		void onConnectionFinishReadQualityTables(ServerConnectionPtr serverConnection, StatisticsCollection &collection);
 		void onConnectionFinishReadAntennaTables(ServerConnectionPtr serverConnection, std::vector<AntennaInfo> &antennas);
 		void onError(ServerConnectionPtr connection, const std::string &error);
+		void onProcessFinished(RemoteProcess &process, bool error, int status);
 		
 		Server _server;
 		typedef std::map<std::string, std::deque<ClusteredObservationItem> > NodeMap;
@@ -80,6 +81,7 @@ class ProcessCommander
 		
 		std::vector<std::string> _errors;
 		std::deque<enum Task> _tasks;
+		boost::mutex _mutex;
 		
 		Task currentTask() const {
 			if(!_tasks.empty()) return _tasks.front();

@@ -30,6 +30,8 @@
 #include <iostream>
 #include <stdexcept>
 
+#include <sigc++/signal.h>
+
 #include <boost/thread/thread.hpp>
 
 #include "clusteredobservation.h"
@@ -41,7 +43,7 @@ class RemoteProcess
 {
 	public:
 		RemoteProcess(const std::string &clientHostName, const std::string &serverHostName)
-		: _clientHostName(clientHostName), _serverHostName(serverHostName), _thread(ThreadFunctor(*this)), _running(true)
+		: _clientHostName(clientHostName), _serverHostName(serverHostName),  _running(false)
 		{
 		}
 		
@@ -54,9 +56,26 @@ class RemoteProcess
 		{
 			if(_running)
 			{
-				_thread.join();
+				_thread->join();
+				delete _thread;
 				_running = false;
 			}
+		}
+		
+		void Start()
+		{
+			_running = true;
+			_thread = new boost::thread(ThreadFunctor(*this));
+		}
+		
+		sigc::signal<void, RemoteProcess &/*process*/, bool /*error*/, int /*status*/> &SignalFinished()
+		{
+			return _onFinished;
+		}
+		
+		const std::string &ClientHostname() const
+		{
+			return _clientHostName;
 		}
 	private:
 		RemoteProcess(const RemoteProcess &source) { }
@@ -83,17 +102,29 @@ class RemoteProcess
 				}
 				
 				// Wait for process to terminate
-				int pStatus, pidReturn;
+				int pStatus;
 				do {
-					pidReturn = waitpid(pid, &pStatus, 0);
-				} while (pidReturn == -1 && errno == EINTR);
+					int pidReturn;
+					do {
+						pidReturn = waitpid(pid, &pStatus, 0);
+					} while (pidReturn == -1 && errno == EINTR);
+				} while(!WIFEXITED(pStatus) && !WIFSIGNALED(pStatus));
+				if(WIFEXITED(pStatus))
+				{
+					const int exitStatus = WEXITSTATUS(pStatus);
+					_remoteProcess._onFinished(_remoteProcess, exitStatus!=0, exitStatus);
+				} else {
+					_remoteProcess._onFinished(_remoteProcess, true, 0);
+				}
 			}
 		};
 		
 		const ClusteredObservationItem _item;
 		const std::string _clientHostName, _serverHostName;
-		boost::thread _thread;
+		boost::thread *_thread;
 		bool _running;
+		
+		sigc::signal<void, RemoteProcess &/*process*/, bool /*error*/, int /*status*/> _onFinished;
 };
 
 }

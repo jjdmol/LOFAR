@@ -51,11 +51,27 @@ class AOQPlotWindow : public Gtk::Window {
 		}
     
 		void Open(const std::string &filename);
-		
+		void SetStatus(const std::string &newStatus)
+		{
+			onStatusChange(newStatus);
+		}
 	private:
 		void close();
 		void readStatistics();
 		void onStatusChange(const std::string &newStatus);
+		void onSwitchPage(GtkNotebookPage *page, guint pageNr)
+		{
+			switch(pageNr)
+			{
+				case 0: SetStatus("Baseline statistics"); break;
+				case 1: SetStatus("Antennae statistics"); break;
+				case 2: SetStatus("Baseline length statistics");  break;
+				case 3: SetStatus("Time statistics"); break;
+				case 4: SetStatus("Frequency statistics"); break;
+				case 5: SetStatus("Time-frequency statistics");  break;
+				case 6: SetStatus("Summary"); break;
+			}
+		}
 		
 		Gtk::VBox _vBox;
 		Gtk::Notebook _notebook;

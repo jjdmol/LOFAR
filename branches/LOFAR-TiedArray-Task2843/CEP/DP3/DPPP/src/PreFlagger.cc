@@ -99,8 +99,7 @@ namespace LOFAR {
     {
       os << endl << "Flags set by PreFlagger " << itsName;
       os << endl << "=======================" << endl;
-      itsFlagCounter.showBaseline (os, itsInput->getAnt1(),
-                                   itsInput->getAnt2(), itsCount);
+      itsFlagCounter.showBaseline (os, itsCount);
       itsFlagCounter.showChannel  (os, itsCount);
     }
 
@@ -128,7 +127,8 @@ namespace LOFAR {
       out.getFlags().unique();
       // Do the PSet steps and combine the result with the current flags.
       // Only count if the flag changes.
-      Cube<bool>* flags = itsPSet.process (out, itsCount, Block<bool>());
+      Cube<bool>* flags = itsPSet.process (out, itsCount, Block<bool>(),
+                                           itsTimer);
       const IPosition& shape = flags->shape();
       uint nrcorr = shape[0];
       uint nrchan = shape[1];
@@ -181,7 +181,8 @@ namespace LOFAR {
                                  bool mode, const DPBuffer& buf)
     {
       const Complex* dataPtr = buf.getData().data();
-      Cube<float> weights = itsInput->fetchWeights (buf, buf.getRowNrs());
+      Cube<float> weights = itsInput->fetchWeights (buf, buf.getRowNrs(),
+                                                    itsTimer);
       const float* weightPtr = weights.data();
       for (uint i=0; i<nrbl; ++i) {
         for (uint j=0; j<nrchan; ++j) {
@@ -452,7 +453,8 @@ namespace LOFAR {
 
     Cube<bool>* PreFlagger::PSet::process (DPBuffer& out,
                                            uint timeSlot,
-                                           const Block<bool>& matchBL)
+                                           const Block<bool>& matchBL,
+                                           NSTimer& timer)
     {
       // No need to process it if the time mismatches or if only time selection.
       if (itsFlagOnTime) {
@@ -490,7 +492,8 @@ namespace LOFAR {
         return &itsFlags;
       }
       // Flag on UV distance if necessary.
-      if (itsFlagOnUV  &&  !flagUV (itsInput->fetchUVW(out, out.getRowNrs()))) {
+      if (itsFlagOnUV  &&  !flagUV (itsInput->fetchUVW(out, out.getRowNrs(),
+                                                       timer))) {
         return &itsFlags;
       }
       // Flag on AzEl is necessary.
@@ -535,7 +538,8 @@ namespace LOFAR {
         for (vector<int>::const_iterator oper = itsRpn.begin();
              oper != itsRpn.end(); ++oper) {
           if (*oper >= 0) {
-            results.push (itsPSets[*oper]->process (out, timeSlot, itsMatchBL));
+            results.push (itsPSets[*oper]->process (out, timeSlot, itsMatchBL,
+                                                    timer));
           } else if (*oper == OpNot) {
             Cube<bool>* left = results.top();
             // No ||= operator exists, so use the transform function.

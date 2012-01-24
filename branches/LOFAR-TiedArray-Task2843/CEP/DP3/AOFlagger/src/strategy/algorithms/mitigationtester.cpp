@@ -93,27 +93,39 @@ void MitigationTester::AddBroadbandLinePos(Image2DPtr data, Mask2DPtr rfi, doubl
 {
 	const double s = (frequencyEnd-frequencyStart);
 	for(size_t f=frequencyStart;f<frequencyEnd;++f) {	
+		// x will run from -1 to 1
+		const double x = (double) ((f-frequencyStart)*2)/s-1.0;
+		double factor = shapeLevel(shape, x);
 		for(size_t t=startTime;t<startTime+duration;++t) {
-			// x will run from -1 to 1
-			const double x = (double) ((f-frequencyStart)*2)/s-1.0;
-			double factor;
-			switch(shape)
-			{
-				default:
-				case UniformShape:
-					factor = 1.0;
-					break;
-				case GaussianShape:
-					factor = exp(-x*x*3.0*3.0);
-					break;
-				case SinusoidalShape:
-					factor = (1.0 + cos(x*M_PI*2.0*1.5)) * 0.5;
-					break;
-			}
 			data->AddValue(t, f, lineStrength * factor);
 			if(lineStrength > 0.0)
 				rfi->SetValue(t, f, true);
 		}
+	}
+}
+
+void MitigationTester::AddSlewedBroadbandLinePos(Image2DPtr data, Mask2DPtr rfi, double lineStrength, double slewrate, size_t startTime, size_t duration, unsigned frequencyStart, double frequencyEnd, enum BroadbandShape shape)
+{
+	const double s = (frequencyEnd-frequencyStart);
+	for(size_t f=frequencyStart;f<frequencyEnd;++f) {	
+			// x will run from -1 to 1
+		const double x = (double) ((f-frequencyStart)*2)/s-1.0;
+		double factor = shapeLevel(shape, x);
+		double slew = slewrate * (double) f;
+		size_t slewInt = (size_t) slew;
+		double slewRest = slew - slewInt;
+		
+		data->AddValue(startTime+slewInt, f, lineStrength * factor * (1.0 - slewRest));
+		if(lineStrength > 0.0)
+			rfi->SetValue(startTime+slewInt, f, true);
+		for(size_t t=startTime+1;t<startTime+duration;++t) {
+			data->AddValue(t+slewInt, f, lineStrength * factor);
+			if(lineStrength > 0.0)
+				rfi->SetValue(t+slewInt, f, true);
+		}
+		data->AddValue(startTime+duration+slewInt, f, lineStrength * factor * slewRest);
+		if(lineStrength > 0.0)
+			rfi->SetValue(startTime+duration+slewInt, f, true);
 	}
 }
 
@@ -454,6 +466,14 @@ Image2DPtr MitigationTester::CreateTestSet(int number, Mask2DPtr rfi, unsigned w
 			image = Image2DPtr(CreateNoise(width, height, gaussianNoise));
 			AddBroadbandToTestSet(image, rfi, 1.0, 1.0, false, SinusoidalShape);
 		} break;
+		case 28: { // Several slewed Gaussian broadband lines
+			image = Image2DPtr(CreateNoise(width, height, gaussianNoise));
+			AddSlewedBroadbandToTestSet(image, rfi, 1.0);
+		} break;
+		case 29: { // Several bursty broadband lines
+			image = Image2DPtr(CreateNoise(width, height, gaussianNoise));
+			AddBurstBroadbandToTestSet(image, rfi);
+		} break;
 	}
 	return image;
 }
@@ -512,6 +532,25 @@ void MitigationTester::AddBroadbandToTestSet(Image2DPtr image, Mask2DPtr rfi, lo
 		AddBroadbandLinePos(image, rfi, 1.8*strength, step*9, 1, fStart, fEnd, shape);
 		AddBroadbandLinePos(image, rfi, 1.6*strength, step*10, 1, fStart, fEnd, shape);
 	}
+}
+
+void MitigationTester::AddSlewedBroadbandToTestSet(Image2DPtr image, Mask2DPtr rfi, long double length, double strength, double slewrate, enum BroadbandShape shape)
+{
+	size_t frequencyCount = image->Height();
+	unsigned step = image->Width()/11;
+	unsigned fStart = (unsigned) ((0.5 - length/2.0) * frequencyCount);
+	unsigned fEnd = (unsigned) ((0.5 + length/2.0) * frequencyCount);
+	AddSlewedBroadbandLinePos(image, rfi, 3.0*strength, slewrate, step*1, 3, fStart, fEnd, shape);
+	AddSlewedBroadbandLinePos(image, rfi, 2.5*strength, slewrate, step*2, 3, fStart, fEnd, shape);
+	AddSlewedBroadbandLinePos(image, rfi, 2.0*strength, slewrate, step*3, 3, fStart, fEnd, shape);
+	AddSlewedBroadbandLinePos(image, rfi, 1.8*strength, slewrate, step*4, 3, fStart, fEnd, shape);
+	AddSlewedBroadbandLinePos(image, rfi, 1.6*strength, slewrate, step*5, 3, fStart, fEnd, shape);
+
+	AddSlewedBroadbandLinePos(image, rfi, 3.0*strength, slewrate, step*6, 1, fStart, fEnd, shape);
+	AddSlewedBroadbandLinePos(image, rfi, 2.5*strength, slewrate, step*7, 1, fStart, fEnd, shape);
+	AddSlewedBroadbandLinePos(image, rfi, 2.0*strength, slewrate, step*8, 1, fStart, fEnd, shape);
+	AddSlewedBroadbandLinePos(image, rfi, 1.8*strength, slewrate, step*9, 1, fStart, fEnd, shape);
+	AddSlewedBroadbandLinePos(image, rfi, 1.6*strength, slewrate, step*10, 1, fStart, fEnd, shape);
 }
 
 void MitigationTester::AddVarBroadbandToTestSet(Image2DPtr image, Mask2DPtr rfi)

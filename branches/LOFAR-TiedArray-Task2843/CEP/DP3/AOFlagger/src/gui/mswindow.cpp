@@ -87,14 +87,16 @@
 
 #include <iostream>
 
-MSWindow::MSWindow() : _imagePlaneWindow(0), _optionWindow(0), _editStrategyWindow(0), _gotoWindow(0), _progressWindow(0), _highlightWindow(0), _plotComplexPlaneWindow(0), _imagePropertiesWindow(0), _antennaMapWindow(0), _statistics(new RFIStatistics()),  _imageSet(0), _imageSetIndex(0), _gaussianTestSets(true), _spatialMetaData(0)
+MSWindow::MSWindow() : _imagePlaneWindow(0), _optionWindow(0), _editStrategyWindow(0), _gotoWindow(0), _progressWindow(0), _highlightWindow(0), _plotComplexPlaneWindow(0), _imagePropertiesWindow(0), _antennaMapWindow(0), _statistics(new RFIStatistics()),  _imageSet(0), _imageSetIndex(0), _gaussianTestSets(true), _spatialMetaData(0), _plotWindow(_plotManager)
 {
 	createToolbar();
 
 	_mainVBox.pack_start(_timeFrequencyWidget);
 	_timeFrequencyWidget.OnMouseMovedEvent().connect(sigc::mem_fun(*this, &MSWindow::onTFWidgetMouseMoved));
 	_timeFrequencyWidget.OnButtonReleasedEvent().connect(sigc::mem_fun(*this, &MSWindow::onTFWidgetButtonReleased));
-	_timeFrequencyWidget.SetShowAxisDescriptions(false);
+	_timeFrequencyWidget.SetShowXAxisDescription(false);
+	_timeFrequencyWidget.SetShowYAxisDescription(false);
+	_timeFrequencyWidget.SetShowZAxisDescription(false);
 	_timeFrequencyWidget.show();
 
 	_mainVBox.pack_end(_statusbar, Gtk::PACK_SHRINK);
@@ -566,6 +568,10 @@ void MSWindow::createToolbar()
 	sigc::mem_fun(*this, &MSWindow::onOpenTestSetGaussianBroadband));
 	_actionGroup->add( Gtk::Action::create("OpenTestSetSinusoidalBroadband", "Sinusoidal broadband"),
 	sigc::mem_fun(*this, &MSWindow::onOpenTestSetSinusoidalBroadband));
+	_actionGroup->add( Gtk::Action::create("OpenTestSetSlewedGaussianBroadband", "Slewed Gaussian"),
+	sigc::mem_fun(*this, &MSWindow::onOpenTestSetSlewedGaussianBroadband));
+	_actionGroup->add( Gtk::Action::create("OpenTestSetBurstBroadband", "Burst"),
+	sigc::mem_fun(*this, &MSWindow::onOpenTestSetBurstBroadband));
 	_actionGroup->add( Gtk::Action::create("AddTestModification", "Test modify") );
 	_actionGroup->add( Gtk::Action::create("AddStaticFringe", "Static fringe"),
 	sigc::mem_fun(*this, &MSWindow::onAddStaticFringe) );
@@ -802,6 +808,8 @@ void MSWindow::createToolbar()
 		"        <menuitem action='OpenTestSetBAligned'/>"
 		"        <menuitem action='OpenTestSetGaussianBroadband'/>"
 		"        <menuitem action='OpenTestSetSinusoidalBroadband'/>"
+		"        <menuitem action='OpenTestSetSlewedGaussianBroadband'/>"
+		"        <menuitem action='OpenTestSetBurstBroadband'/>"
 		"      </menu>"
 		"      <menu action='AddTestModification'>"
 		"        <menuitem action='AddStaticFringe'/>"
@@ -1087,20 +1095,25 @@ void MSWindow::onShowStats()
 			original = _timeFrequencyWidget.OriginalMask(),
 			alternative = _timeFrequencyWidget.AlternativeMask();
 		Mask2DPtr
-			intersect = Mask2D::CreateCopy(original);
-		intersect->Intersect(alternative);
-		unsigned intCount = intersect->GetCount<true>();
-		if(intCount != 0)
+			intersect;
+		if(original != 0 && alternative != 0)
 		{
-			if(!original->Equals(alternative))
+			intersect = Mask2D::CreateCopy(original);
+			intersect->Intersect(alternative);
+			
+			unsigned intCount = intersect->GetCount<true>();
+			if(intCount != 0)
 			{
-				s << "Overlap between original and alternative: " << TimeFrequencyStatistics::FormatRatio((double) intCount / ((double) (original->Width() * original->Height()))) << "\n"
-				<< "(relative to alternative flags: " << TimeFrequencyStatistics::FormatRatio((double) intCount / ((double) (alternative->GetCount<true>()))) << ")\n";
-				
+				if(!original->Equals(alternative))
+				{
+					s << "Overlap between original and alternative: " << TimeFrequencyStatistics::FormatRatio((double) intCount / ((double) (original->Width() * original->Height()))) << "\n"
+					<< "(relative to alternative flags: " << TimeFrequencyStatistics::FormatRatio((double) intCount / ((double) (alternative->GetCount<true>()))) << ")\n";
+					
+				}
 			}
 		}
 		
-		Image2DCPtr powerImg = activeData.GetSingleImage();	
+		Image2DCPtr powerImg = activeData.GetSingleImage();
 		Mask2DCPtr mask = activeData.GetSingleMask();
 		double power = 0.0;
 		for(unsigned y=0;y<powerImg->Height();++y)
@@ -1113,9 +1126,7 @@ void MSWindow::onShowStats()
 				}
 			}
 		}
-		s
-			<< "Total unflagged power: " << power << "\n";
-
+		s << "Total unflagged power: " << power << "\n";
 		Gtk::MessageDialog dialog(*this, s.str(), false, Gtk::MESSAGE_INFO);
 		dialog.run();
 	}

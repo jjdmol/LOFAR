@@ -51,6 +51,21 @@ namespace LOFAR {
                  "freqstep and/or timestep must be specified when averaging");
     }
 
+    Averager::Averager (DPInput* input, const string& stepName,
+                        uint nchanAvg, uint ntimeAvg)
+      : itsInput     (input),
+        itsName      (stepName),
+        itsNChanAvg  (nchanAvg),
+        itsNTimeAvg  (ntimeAvg),
+        itsMinNPoint (1),
+        itsMinPerc   (0),
+        itsNTimes    (0),
+        itsTimeInterval (0)
+    {
+      ASSERTSTR (itsNChanAvg > 1  ||  itsNTimeAvg > 1,
+                 "freqstep and/or timestep must be specified when averaging");
+    }
+
     Averager::~Averager()
     {}
 
@@ -87,8 +102,10 @@ namespace LOFAR {
       if (itsNTimes == 0) {
         // The first time we assign because that is faster than first clearing
         // and adding thereafter.
-        itsBuf.getUVW()     = itsInput->fetchUVW (buf, rowNrs);
-        itsBuf.getWeights() = itsInput->fetchWeights (buf, rowNrs);
+        itsBuf.getUVW()     = itsInput->fetchUVW (buf, rowNrs, itsTimer);
+        itsBuf.getWeights() = itsInput->fetchWeights (buf, rowNrs, itsTimer);
+        Cube<bool> fullResFlags(itsInput->fetchFullResFlags (buf, rowNrs,
+                                                             itsTimer));
         itsBuf.getData()    = buf.getData();
         IPosition shapeIn   = buf.getData().shape();
         itsNPoints.resize (shapeIn);
@@ -97,7 +114,6 @@ namespace LOFAR {
         itsWeightAll = itsBuf.getWeights();
         // Take care of the fullRes flags.
         // We have to shape the output array and copy to a part of it.
-        Cube<bool> fullResFlags(itsInput->fetchFullResFlags (buf, rowNrs));
         IPosition ofShape = fullResFlags.shape();
         ofShape[1] *= itsNTimeAvg;      // more time entries, same chan and bl
         // Make it unique in case FullRes is referenced elsewhere.
@@ -137,10 +153,10 @@ namespace LOFAR {
         // For now we assume that all timeslots have the same nr of baselines,
         // so check if the buffer sizes are the same.
         ASSERT (itsBuf.getData().shape() == buf.getData().shape());
-        itsBuf.getUVW() += itsInput->fetchUVW (buf, rowNrs);
-        copyFullResFlags (itsInput->fetchFullResFlags(buf, rowNrs),
+        itsBuf.getUVW() += itsInput->fetchUVW (buf, rowNrs, itsTimer);
+        copyFullResFlags (itsInput->fetchFullResFlags(buf, rowNrs, itsTimer),
                           buf.getFlags(), itsNTimes);
-        Cube<float> weights(itsInput->fetchWeights(buf, rowNrs));
+        Cube<float> weights(itsInput->fetchWeights(buf, rowNrs, itsTimer));
         // Ignore flagged points.
         Array<Complex>::const_contiter indIter = buf.getData().cbegin();
         Array<float>::const_contiter   inwIter = weights.cbegin();

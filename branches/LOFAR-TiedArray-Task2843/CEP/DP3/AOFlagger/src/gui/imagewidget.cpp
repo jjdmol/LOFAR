@@ -50,10 +50,15 @@ ImageWidget::ImageWidget() :
 	_scaleOption(NormalScale),
 	_showXYAxes(true),
 	_showColorScale(true),
-	_showAxisDescriptions(true),
+	_showXAxisDescription(true),
+	_showYAxisDescription(true),
+	_showZAxisDescription(true),
 	_max(1.0), _min(0.0),
 	_range(Winsorized),
-	_cairoFilter(Cairo::FILTER_BEST)
+	_cairoFilter(Cairo::FILTER_BEST),
+	_manualXAxisDescription(false),
+	_manualYAxisDescription(false),
+	_manualZAxisDescription(false)
 {
 	_highlightConfig = new ThresholdConfig();
 	_highlightConfig->InitializeLengthsSingleSample();
@@ -205,9 +210,9 @@ void ImageWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, un
 	if(_showXYAxes)
 	{
 		_vertScale = new VerticalPlotScale();
-		_vertScale->SetDrawWithDescription(_showAxisDescriptions);
+		_vertScale->SetDrawWithDescription(_showYAxisDescription);
 		_horiScale = new HorizontalPlotScale();
-		_horiScale->SetDrawWithDescription(_showAxisDescriptions);
+		_horiScale->SetDrawWithDescription(_showXAxisDescription);
 	} else {
 		_vertScale = 0;
 		_horiScale = 0;
@@ -215,7 +220,7 @@ void ImageWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, un
 	if(_showColorScale)
 	{
 		_colorScale = new ColorScale();
-		_colorScale->SetDrawWithDescription(_showAxisDescriptions);
+		_colorScale->SetDrawWithDescription(_showZAxisDescription);
 	} else {
 		_colorScale = 0;
 	}
@@ -234,9 +239,9 @@ void ImageWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, un
 		} else {
 			_horiScale->InitializeNumericTicks(-0.5 + startX, 0.5 + endX - 1.0);
 		}
-		if(!_xAxisDescription.empty())
+		if(_manualXAxisDescription)
 			_horiScale->SetUnitsCaption(_xAxisDescription);
-		if(!_yAxisDescription.empty())
+		if(_manualYAxisDescription)
 			_vertScale->SetUnitsCaption(_yAxisDescription);
 	}
 	if(_metaData != 0) {
@@ -254,7 +259,7 @@ void ImageWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, un
 			_colorScale->InitializeLogarithmicTicks(min, max);
 		else
 			_colorScale->InitializeNumericTicks(min, max);
-		if(!_zAxisDescription.empty())
+		if(_manualZAxisDescription)
 			_colorScale->SetUnitsCaption(_zAxisDescription);
 	}
 
@@ -324,8 +329,8 @@ void ImageWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, un
 		_highlightConfig->Execute(image, highlightMask, true, 10.0);
 	}
 	const bool
-		originalActive = _showOriginalMask && _originalMask != 0,
-		altActive = _showAlternativeMask && _alternativeMask != 0;
+		originalActive = _showOriginalMask && originalMask != 0,
+		altActive = _showAlternativeMask && alternativeMask != 0;
 	for(unsigned long y=startY;y<endY;++y) {
 		guint8* rowpointer = data + rowStride * (endY - y - 1);
 		for(unsigned long x=startX;x<endX;++x) {
@@ -333,9 +338,9 @@ void ImageWidget::update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, un
 			char r,g,b,a;
 			if(_highlighting && highlightMask->Value(x, y) != 0) {
 				r = 255; g = 0; b = 0; a = 255;
-			} else if(originalActive && _originalMask->Value(x, y)) {
+			} else if(originalActive && originalMask->Value(x, y)) {
 				r = 255; g = 0; b = 255; a = 255;
-			} else if(altActive && _alternativeMask->Value(x, y)) {
+			} else if(altActive && alternativeMask->Value(x, y)) {
 				r = 255; g = 255; b = 0; a = 255;
 			} else {
 				num_t val = image->Value(x, y);

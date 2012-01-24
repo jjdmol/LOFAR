@@ -27,6 +27,7 @@
 #include <sys/select.h>
 #include <unistd.h>
 #include <cstdio>
+#include <cstdlib>
 
 #include <stdexcept>
 #include <string>
@@ -107,7 +108,7 @@ void ExitOnClosedStdin::mainLoop()
 int main(int argc, char *argv[])
 {
 #if defined HAVE_LOG4CPLUS
-  INIT_LOGGER( CMAKE_INSTALL_PREFIX "/etc/Storage_main.log_prop" );
+  INIT_LOGGER(string(getenv("LOFARROOT") ? : ".") + "/etc/Storage_main.log_prop");
 #elif defined HAVE_LOG4CXX
   #error LOG4CXX support is broken (nonsensical?) -- please fix this code if you want to use it
   Context::initialize();

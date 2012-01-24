@@ -33,22 +33,32 @@ class StatisticalFlagger{
 		~StatisticalFlagger();
 		
 		static inline bool SquareContainsFlag(Mask2DCPtr mask, size_t xLeft, size_t yTop, size_t xRight, size_t yBottom);
+		/**
+		 * @deprecated Very slow, use DilateFlags
+		 */
 		static void EnlargeFlags(Mask2DPtr mask, size_t timeSize, size_t frequencySize);
+		static void DilateFlags(Mask2DPtr mask, size_t timeSize, size_t frequencySize)
+		{
+			DilateFlagsHorizontally(mask, timeSize);
+			DilateFlagsVertically(mask, frequencySize);
+		}
+		static void DilateFlagsHorizontally(Mask2DPtr mask, size_t timeSize);
+		static void DilateFlagsVertically(Mask2DPtr mask, size_t frequencySize);
 		static void LineRemover(Mask2DPtr mask, size_t maxTimeContamination, size_t maxFreqContamination);
 		static void DensityTimeFlagger(Mask2DPtr mask, num_t minimumGoodDataRatio);
 		static void DensityFrequencyFlagger(Mask2DPtr mask, num_t minimumGoodDataRatio);
 		
 		/**
 		 * Performs an accurate scale invariant, but very slow. This algorithm is O(n^2),
-		 * and has been superseded by a much quicker O(n) algorith. See 
+		 * and has been superseded by a much quicker O(n) algorithm. See 
 		 * ScaleInvariantDilation::Dilate().
 		 * @deprecated Not efficient, use ScaleInvariantDilation::Dilate().
 		 */
 		static void ScaleInvDilationFull(bool *flags, const unsigned n, num_t minimumGoodDataRatio);
 		
 		/**
-		 * Performs in inaccurate version of the scale invariant. This algorithm is O(n x log n),
-		 * and has been superseded by a much quicker O(n) algorith. See 
+		 * Performs an inaccurate version of the scale invariant. This algorithm is O(n x log n),
+		 * and has been superseded by a much quicker O(n) algorithm. See 
 		 * ScaleInvariantDilation::Dilate().
 		 * @deprecated Not efficient, use ScaleInvariantDilation::Dilate().
 		 */

@@ -9,12 +9,8 @@ import sys, pylab, string
 import numpy as np
 import monetdb.sql as db
 import logging
-from tkp.config import config
 
-DERUITER_R = config['source_association']['deruiter_radius']
-print "DERUITER_R =",DERUITER_R
-
-def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius, assoc_theta, bbsfile, storespectraplots=False):
+def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius, assoc_theta, bbsfile, storespectraplots=False, deruiter_radius=0.):
     """Search for VLSS, WENSS and NVSS sources that
     are in the given FoV. The FoV is set by its central position
     (ra_central, decl_central) out to a radius of fov_radius.
@@ -23,11 +19,25 @@ def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius, assoc_the
 
     All units are in degrees.
 
+    deruiter_radius is a measure for the association uncertainty that takes
+    position errors into account (see thesis Bart Scheers). If not given
+    as a positive value, it is read from the TKP config file. If not
+    available, it defaults to 3.717.
+
     The query returns all vlss sources (id) that are in the FoV.
     If so, the counterparts from other catalogues are returned as well 
     (also their ids).
     """
     
+    DERUITER_R = deruiter_radius
+    if DERUITER_R <= 0:
+        try:
+            from tkp.config import config
+            DERUITER_R = config['source_association']['deruiter_radius']
+            print "DERUITER_R =",DERUITER_R
+        except:
+            DERUITER_R=3.717
+
     if ra_central + alpha(fov_radius, decl_central) > 360:
         "This will be implemented soon"
         raise BaseException("ra = %s > 360 degrees, not implemented yet" % str(ra_central + alpha(fov_radius, decl_central))) 
@@ -146,6 +156,7 @@ SELECT t0.v_catsrcid
                       ,i_int_avg_err
                   FROM catalogedsources 
                  WHERE cat_id = 5
+                   AND (src_type = 'S' OR src_type = 'C')
                    AND zone BETWEEN CAST(FLOOR(CAST(%s AS DOUBLE) - %s) AS INTEGER)
                                 AND CAST(FLOOR(CAST(%s AS DOUBLE) + %s) AS INTEGER)
                    AND decl BETWEEN CAST(%s AS DOUBLE) - %s
@@ -212,6 +223,7 @@ SELECT t0.v_catsrcid
                       ,i_int_avg_err
                   FROM catalogedsources 
                  WHERE cat_id = 6
+                   AND (src_type = 'S' OR src_type = 'C')
                    AND zone BETWEEN CAST(FLOOR(CAST(%s AS DOUBLE) - %s) AS INTEGER)
                                 AND CAST(FLOOR(CAST(%s AS DOUBLE) + %s) AS INTEGER)
                    AND decl BETWEEN CAST(%s AS DOUBLE) - %s

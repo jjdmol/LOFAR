@@ -55,6 +55,9 @@ namespace LOFAR {
     //  <li> 'finish' finishes the processing which could mean that 'process'
     //       of the next step has to be called several times. When done,
     //       it should call 'finish' of the next step.
+    //  <li> 'addToMS' is called after 'finish'. It gives a step the opportunity
+    //       to add some data to the MS written/updated. It is, for example,
+    //       used by AOFlagger to write its statistics.
     //  <li> 'showCounts' can be used to show possible counts of flags, etc.
     // </ul>
 
@@ -77,6 +80,10 @@ namespace LOFAR {
       // Update the general info.
       // The default implementation does nothing.
       virtual void updateInfo (DPInfo&);
+
+      // Add some data to the MeasurementSet written/updated.
+      // The default implementation does nothing.
+      virtual void addToMS (const string& msName);
 
       // Show the step parameters.
       virtual void show (std::ostream&) const = 0;
@@ -132,7 +139,7 @@ namespace LOFAR {
 
     // This class defines step in the DPPP pipeline that keeps the result
     // to make it possible to get the result of another step.
-    // Its default next step is the NullStep.
+    // It only keeps the buffer, but does not process it in next steps.
 
     class ResultStep: public DPStep
     {
@@ -142,10 +149,10 @@ namespace LOFAR {
 
       virtual ~ResultStep();
 
-      // Process the data. It keeps the buffer and sends it to the next step.
+      // Keep the buffer.
       virtual bool process (const DPBuffer&);
 
-      // Finish the processing of subsequent steps.
+      // Finish does not do anything.
       virtual void finish();
 
       // Show the step parameters.
@@ -162,6 +169,45 @@ namespace LOFAR {
 
     private:
       DPBuffer itsBuffer;
+    };
+
+
+
+    // @ingroup NDPPP
+
+    // This class defines step in the DPPP pipeline that keeps the result
+    // to make it possible to get the result of another step.
+    // It only keeps buffers, but does not process them in next steps.
+    // Buffers are accumulated until cleared.
+
+    class MultiResultStep: public DPStep
+    {
+    public:
+      // Create the object. By default it sets its next step to the NullStep.
+      MultiResultStep (uint reserveSize);
+
+      virtual ~MultiResultStep();
+
+      // Add the buffer to the vector of kept buffers.
+      virtual bool process (const DPBuffer&);
+
+      // Finish does not do anything.
+      virtual void finish();
+
+      // Show the step parameters.
+      // It does nothing.
+      virtual void show (std::ostream&) const;
+
+      // Get the result.
+      const vector<DPBuffer>& get() const
+        { return itsBuffers; }
+
+      // Clear the buffers.
+      void clear()
+        { itsBuffers.clear(); }
+
+    private:
+      vector<DPBuffer> itsBuffers;
     };
 
   } //# end namespace

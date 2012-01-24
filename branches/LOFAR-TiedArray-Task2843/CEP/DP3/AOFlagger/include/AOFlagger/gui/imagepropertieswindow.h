@@ -55,6 +55,7 @@ class ImagePropertiesWindow : public Gtk::Window {
 		void initScaleWidgets();
 		void initOptionsWidgets();
 		void initZoomWidgets();
+		void initAxisWidgets();
 		
 		void updateMinMaxEntries();
 
@@ -86,7 +87,15 @@ class ImagePropertiesWindow : public Gtk::Window {
 		Gtk::HScale _hStartScale, _hStopScale;
 		Gtk::VScale _vStartScale, _vStopScale;
 		
-		Gtk::CheckButton _showXYAxes, _showAxisDescriptionsButton, _showColorScale;
+		Gtk::Frame _axesFrame;
+		Gtk::HBox _axesHBox;
+		Gtk::VBox _axesGeneralBox;
+		Gtk::VBox _axesVisibilityBox;
+		Gtk::CheckButton _showXYAxes, _showColorScale;
+		Gtk::HBox _xAxisBox, _yAxisBox, _zAxisBox;
+		Gtk::CheckButton _showXAxisDescriptionButton, _showYAxisDescriptionButton, _showZAxisDescriptionButton;
+		Gtk::CheckButton _manualXAxisDescription, _manualYAxisDescription, _manualZAxisDescription;
+		Gtk::Entry _xAxisDescriptionEntry, _yAxisDescriptionEntry, _zAxisDescriptionEntry;
 };
 
 #endif // IMAGEPROPERTIESWINDOW_H

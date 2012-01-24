@@ -1,6 +1,6 @@
 
-#ifndef SCALEINVARIANTDILATION_H
-#define SCALEINVARIANTDILATION_H
+#ifndef SIROPERATOR_H
+#define SIROPERATOR_H
 
 #include <AOFlagger/msio/mask2d.h>
 #include <AOFlagger/msio/types.h>
@@ -8,7 +8,7 @@
 
 /**
  * This class contains functions that implement an algorithm to dilate
- * a flag mask: the "scale invariant rank operator".
+ * a flag mask: the "scale-invariant rank (SIR) operator".
  * The amount of dilation is relative to the size of the flagged
  * areas in the input, hence it is scale invariant. This behaviour is very
  * effective for application after amplitude based RFI detection and is a step
@@ -33,12 +33,12 @@
  * 
  * @author A.R. Offringa
  */
-class ScaleInvariantDilation
+class SIROperator
 {
 	public:
 		/**
 		 * This is the proof of concept, reference version of the O(N) algorithm. It is
-		 * fast, but DilateHorizontally() and DilateVertically() have been optimized
+		 * fast, but OperateHorizontally() and OperateVertically() have been optimized
 		 * for operating on a mask directly, which is the common mode of operation.
 		 * 
 		 * It contains extra comments to explain the algorithm within the code.
@@ -49,7 +49,7 @@ class ScaleInvariantDilation
 		 * @param [in] eta The η parameter that specifies the minimum number of good data
 		 * that any subsequence should have (see class description for the definition).
 		 */
-		static void Dilate(bool *flags, const unsigned flagsSize, num_t eta)
+		static void Operate(bool *flags, const unsigned flagsSize, num_t eta)
 		{
 			// The test for a sample to become flagged can be rewritten as
 			//         \\sum_{y=Y1}^{Y2-1} ( η - w(y) ) >= 0.
@@ -131,9 +131,9 @@ class ScaleInvariantDilation
 		 * @param [in] eta The η parameter that specifies the minimum number of good data
 		 * that any subsequence should have.
 		 */
-		static void DilateHorizontally(Mask2DPtr &mask, num_t eta)
+		static void OperateHorizontally(Mask2DPtr &mask, num_t eta)
 		{
-			dilateHorizontally<Mask2D>(*mask, eta);
+			operateHorizontally<Mask2D>(*mask, eta);
 		}
 		
 		/**
@@ -143,14 +143,48 @@ class ScaleInvariantDilation
 		 * @param [in] eta The η parameter that specifies the minimum number of good data
 		 * that any subsequence should have.
 		 */
-		static void DilateVertically(Mask2DPtr mask, num_t eta)
+		static void OperateVertically(Mask2DPtr mask, num_t eta)
 		{
 			XYSwappedMask2D swappedMask(*mask);
-			dilateHorizontally<XYSwappedMask2D>(swappedMask, eta);
+			operateHorizontally<XYSwappedMask2D>(swappedMask, eta);
 		}
 		
+		/**
+		 * This is an experimental algorithm that might be slightly faster than
+		 * the original algorithm. Jasper van de Gronde is preparing an article about it.
+		 * @param [in,out] flags The input array of flags to be dilated that will be overwritten
+		 * by the dilatation of itself.
+		 * @param [in] flagsSize Size of the @c flags array.
+		 * @param [in] eta The η parameter that specifies the minimum number of good data
+		 * that any subsequence should have (see class description for the definition).
+		 */
+		static void Operate2PassAlgorithm(bool *flags, const size_t flagsSize, num_t eta)
+		{
+			bool temp[flagsSize];
+			num_t credit = 0.0;
+			for(size_t i=0; i<flagsSize; ++i)
+			{
+				// credit ← max(0, credit) + w(f [i])
+				const num_t w = flags[i] ? eta : eta-1.0;
+				const num_t maxcredit0 = credit > 0.0 ? credit : 0.0;
+				credit = maxcredit0 + w;
+				temp[i] = (credit >= 0.0);
+			}
+			
+			// The same iteration, but now backwards
+			credit = 0.0;
+			size_t i = flagsSize;
+			while(i > 0)
+			{
+				--i;
+				const num_t w = flags[i] ? eta : eta-1.0;
+				const num_t maxcredit0 = credit > 0.0 ? credit : 0.0;
+				credit = maxcredit0 + w;
+				flags[i] = (credit >= 0.0) || temp[i];
+			}
+		}
 	private:
-		ScaleInvariantDilation() { }
+		SIROperator() { }
 
 		/**
 		 * Performs a horizontal dilation directly on a mask. Algorithm is equal to Dilate().
@@ -161,7 +195,7 @@ class ScaleInvariantDilation
 		 * that any subsequence should have.
 		 */
 		template<typename MaskLike>
-		static void dilateHorizontally(MaskLike &mask, num_t eta)
+		static void operateHorizontally(MaskLike &mask, num_t eta)
 		{
 			const unsigned
 				width = mask.Width(),

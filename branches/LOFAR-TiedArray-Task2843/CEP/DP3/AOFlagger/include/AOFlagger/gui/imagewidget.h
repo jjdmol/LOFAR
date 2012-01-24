@@ -126,10 +126,22 @@ class ImageWidget : public Gtk::DrawingArea {
 			_showColorScale = showColorScale;
 		}
 		
-		bool ShowAxisDescriptions() const { return _showAxisDescriptions; }
-		void SetShowAxisDescriptions(bool showAxisDescriptions)
+		bool ShowXAxisDescription() const { return _showXAxisDescription; }
+		void SetShowXAxisDescription(bool showXAxisDescription)
 		{
-			_showAxisDescriptions = showAxisDescriptions;
+			_showXAxisDescription = showXAxisDescription;
+		}
+		
+		bool ShowYAxisDescription() const { return _showYAxisDescription; }
+		void SetShowYAxisDescription(bool showYAxisDescription)
+		{
+			_showYAxisDescription = showYAxisDescription;
+		}
+		
+		bool ShowZAxisDescription() const { return _showZAxisDescription; }
+		void SetShowZAxisDescription(bool showZAxisDescription)
+		{
+			_showZAxisDescription = showZAxisDescription;
 		}
 		
 		void Clear();
@@ -150,6 +162,22 @@ class ImageWidget : public Gtk::DrawingArea {
 		void SetZAxisDescription(const std::string &description)
 		{
 			_zAxisDescription = description;
+		}
+		
+		bool ManualXAxisDescription() const { return _manualXAxisDescription; }
+		void SetManualXAxisDescription(bool manualDesc)
+		{
+			_manualXAxisDescription = manualDesc;
+		}
+		bool ManualYAxisDescription() const { return _manualYAxisDescription; }
+		void SetManualYAxisDescription(bool manualDesc)
+		{
+			_manualYAxisDescription = manualDesc;
+		}
+		bool ManualZAxisDescription() const { return _manualZAxisDescription; }
+		void SetManualZAxisDescription(bool manualDesc)
+		{
+			_manualZAxisDescription = manualDesc;
 		}
 
 	private:
@@ -185,11 +213,16 @@ class ImageWidget : public Gtk::DrawingArea {
 		enum ScaleOption _scaleOption;
 		bool _showXYAxes;
 		bool _showColorScale;
-		bool _showAxisDescriptions;
+		bool _showXAxisDescription;
+		bool _showYAxisDescription;
+		bool _showZAxisDescription;
 		num_t _max, _min;
 		enum Range _range;
 		Cairo::Filter _cairoFilter;
 		std::string _xAxisDescription, _yAxisDescription, _zAxisDescription;
+		bool _manualXAxisDescription;
+		bool _manualYAxisDescription;
+		bool _manualZAxisDescription;
 
 		sigc::signal<void, size_t, size_t> _onMouseMoved;
 		sigc::signal<void, size_t, size_t> _onButtonReleased;
