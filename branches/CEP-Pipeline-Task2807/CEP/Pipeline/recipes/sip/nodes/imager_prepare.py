@@ -27,11 +27,11 @@ from lofarpipe.support.lofarnode import  LOFARnodeTCP
 from subprocess import CalledProcessError
 import pyrap.tables as pt #@UnresolvedImport
 
-class prepare_imager(LOFARnodeTCP):
+class imager_prepare(LOFARnodeTCP):
     def run(self, init_script, parset, working_dir, ndppp, output_measurement_set,
             slices_per_image, subbands_per_image, input_map_repr):
 
-        log4CPlusName = "prepare_imager_node"
+        log4CPlusName = "imager_prepare_node"
         time_slice_dir = "group_sets"  #TODO constant!! Dit moet slices worden
         collected_ms_dir = "collected_ms"
         self._create_dir(working_dir)  #TODO: Moet mischien nog worden verwijderd
@@ -244,4 +244,4 @@ class prepare_imager(LOFARnodeTCP):
 if __name__ == "__main__":
     jobid, jobhost, jobport = sys.argv[1:4]
     sys.exit(
-        prepare_imager(jobid, jobhost, jobport).run_with_stored_arguments())
+        imager_prepare(jobid, jobhost, jobport).run_with_stored_arguments())

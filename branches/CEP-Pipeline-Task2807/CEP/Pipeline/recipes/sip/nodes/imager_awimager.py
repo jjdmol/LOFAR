@@ -23,11 +23,11 @@ import pyrap.tables as pt                   #@UnresolvedImport
 from subprocess import CalledProcessError
 
 
-class awimager(LOFARnodeTCP):
+class imager_awimager(LOFARnodeTCP):
     def run(self, executable, init_script, parset, working_dir, concatenated_measurement_set):
-        self.logger.info("Start awimager run: client")
+        self.logger.info("Start imager_awimager  run: client")
 
-        log4CPlusName = "AWImagerRecipe"
+        log4CPlusName = "imager_awimager"
         if not os.access(executable, os.X_OK):
             self.logger.error("Could not find executable: {0}".format(
                                                              executable))
@@ -158,8 +158,5 @@ class awimager(LOFARnodeTCP):
 
 
 if __name__ == "__main__":
-    print "************************"
-    print sys.argv
-    print "************************"
     jobid, jobhost, jobport = sys.argv[1:4]
     sys.exit(awimager(jobid, jobhost, jobport).run_with_stored_arguments())

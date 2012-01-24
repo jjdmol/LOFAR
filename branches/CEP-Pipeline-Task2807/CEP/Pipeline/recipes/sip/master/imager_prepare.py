@@ -29,7 +29,7 @@ from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
 
-class prepare_imager(BaseRecipe, RemoteCommandRecipeMixIn):
+class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
     """
     Run the AWImager on the nodes and the data files suplied in the mapfile
     **Arguments**
@@ -87,8 +87,8 @@ class prepare_imager(BaseRecipe, RemoteCommandRecipeMixIn):
         """
         Main function for recipe: Called by the pipeline framework
         """
-        self.logger.info("Starting prepare_imager run")
-        super(prepare_imager, self).go()
+        self.logger.info("Starting imager_prepare run")
+        super(imager_prepare, self).go()
         self.outputs['mapfile'] = self.inputs['mapfile']
         #return 0
         # *********************************************************************
@@ -219,4 +219,4 @@ class prepare_imager(BaseRecipe, RemoteCommandRecipeMixIn):
 
 
 if __name__ == "__main__":
-    sys.exit(prepare_imager().main())
+    sys.exit(imager_prepare().main())

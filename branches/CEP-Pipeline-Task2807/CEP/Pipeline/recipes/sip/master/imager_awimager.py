@@ -4,7 +4,7 @@
 #                                                          Wouter Klijn, 2010
 #                                                      swinbank@transientskp.org
 # ------------------------------------------------------------------------------
-# python awimager.py ~/build/preparation/output.map --job awimager --config ~/build/preparation/pipeline.cfg --initscript /opt/cep/LofIm/daily/lofar/lofarinit.sh --parset ~/build/preparation/parset.par --working-directory "/data/scratch/klijn" --executable /opt/cep/LofIm/daily/lofar/bin/awimager -d
+# python imager_awimager.py ~/build/preparation/output.map --job imager_awimager --config ~/build/preparation/pipeline.cfg --initscript /opt/cep/LofIm/daily/lofar/lofarinit.sh --parset ~/build/preparation/parset.par --working-directory "/data/scratch/klijn" --executable /opt/cep/LofIm/daily/lofar/bin/awimager -d
 # the measurement set with input should be located in the working directory
 
 import os
@@ -16,9 +16,9 @@ from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
 from lofarpipe.support.group_data import load_data_map
 
-class awimager(BaseRecipe, RemoteCommandRecipeMixIn):
+class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
     """
-    Run the awimager on the nodes and the data files suplied in the mapfile
+    Run the imager_awimager on the nodes and the data files suplied in the mapfile
     **Arguments**
     A mapfile containing node->datafile pairs  
  
@@ -49,7 +49,7 @@ class awimager(BaseRecipe, RemoteCommandRecipeMixIn):
     }
 
     def go(self):
-        super(awimager, self).go()
+        super(imager_awimager, self).go()
         self.logger.info("Starting awimager run")
 
         #collect the inputs        
@@ -96,4 +96,4 @@ class awimager(BaseRecipe, RemoteCommandRecipeMixIn):
 
 
 if __name__ == "__main__":
-    sys.exit(awimager().main())
+    sys.exit(imager_awimager().main())
