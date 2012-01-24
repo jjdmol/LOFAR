@@ -38,12 +38,8 @@ class Discover():
                 if (len(fileNameParts) == 1) or (fileNameParts[1] !=  'py'):
                     continue
 
-                #try loading as a module
-                try: 
-                    module = self.import_path(root, fileNameParts[0])  #use import including path
-                except BaseException:
-                    continue          
-                
+                module = self.import_path(root, fileNameParts[0])  #use import including path
+       
                 #the expression mechanism
                 testMatcher = None
                 if patternMatcher.match(name):
@@ -53,7 +49,7 @@ class Discover():
                 #create a test suite
                 fileSuite = unittest.TestSuite()
                 testnames = dir(module)
-                
+
                 #add all cases ending with test and match the regexp search string
                 for testName in testnames:
                     if testName.endswith('Test') or testName.endswith('test'):
@@ -120,6 +116,7 @@ def usage():
     print usage
 
 if __name__ == "__main__":
+
 
     #Default parameters settings
     path = '.'
