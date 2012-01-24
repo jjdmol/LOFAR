@@ -42,12 +42,10 @@ class imager_prepare(LOFARnodeTCP):
                 os.path.join(working_dir, "node_input.map")))
 
             input_map = eval(input_map_repr)
-##            self.logger.info(input_map)
-#      
 #           missing_files = self._copy_input_files(working_dir, collected_ms_dir,
 #                                                   input_map) 
 
-            # ********************* temp solution for quick debugging
+            # TODO: ********************* temp solution for quick debugging
             missing_files = []
             skip_copy = False
             temp_missing = os.path.join(working_dir, "temp_missing")
@@ -62,7 +60,7 @@ class imager_prepare(LOFARnodeTCP):
                 fp.write(repr(missing_files))
             else:
                 missing_files = eval(open(temp_missing).read())
-            # ********************* temp solution for quick debugging
+
 
             if len(missing_files):
                 self.logger.info(repr(missing_files))
@@ -229,10 +227,6 @@ class imager_prepare(LOFARnodeTCP):
                    self.logger.info("pyrap test !!1")
         # Temp Fix:                      
         """
-#        self.logger.info("***************1234****************")
-#        self.logger.info(group_measurements_collected)
-#        self.logger.info("debug0: {0}".format(output_file_path))
-
 #        pt.msconcat(group_measurements_collected, 
 #                                output_file_path, concatTime=True)
         tn = pt.table(group_measurements_collected)
