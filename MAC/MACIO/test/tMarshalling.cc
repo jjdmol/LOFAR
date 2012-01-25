@@ -27,6 +27,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/lofar_bitset.h>
 #include <Common/lofar_map.h>
+#include <Common/lofar_vector.h>
 #include <Common/hexdump.h>
 #include <MACIO/Marshalling.h>
 #include "tMarshalling.h"
