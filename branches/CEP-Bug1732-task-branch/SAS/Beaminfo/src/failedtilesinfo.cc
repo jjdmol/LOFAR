@@ -93,7 +93,6 @@ void usage(char *programname)
   cout << "Usage: " << programname << "<options>" << endl;
   cout << "-d             run in debug mode" << endl;
   cout << "-q             query SAS database for broken tiles information" << endl;
-  cout << "-f             read broken hardware information from file" << endl;
   cout << "-p <filename>  read parset (instead of default: addbeaminfo.parset)" << endl;
   cout << "-s <time>      start time of observation in MS"<< endl;
   cout << "-e <time>      end time of observation in MS"<< endl;
@@ -301,16 +300,22 @@ void getFailedTilesInfo(OTDBconnection &conn,
     valueList = tv.getFailedHardware(time_from_string(fromCasaTime(timeStart)), 
                                      time_from_string(fromCasaTime(timeEnd)));
   }
-  
-  ASSERT(!valueList.empty());
-  // Now write entry in valuelist with broken hardware to file
-  for(unsigned int i=0; i<valueList.size(); i++)
+
+  if(valueList.empty())
   {
-    if(valueList[i].name.find("RCU")!=string::npos)   // Only write lines that contain RCU
+    LOG_INFO_STR("No failed hardware found.");
+  }
+  else
+  {
+    // Now write entry in valuelist with broken hardware to file
+    for(unsigned int i=0; i<valueList.size(); i++)
     {
-      outfile << stripRCUString(valueList[i].name) << "\t" << valueList[i].time << endl;
+      if(valueList[i].name.find("RCU")!=string::npos)   // Only write lines that contain RCU
+      {
+        outfile << stripRCUString(valueList[i].name) << "\t" << valueList[i].time << endl;
+      }  
     }  
-  }  
+  }
   outfile.close();
 }
 
