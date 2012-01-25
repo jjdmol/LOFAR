@@ -5,7 +5,6 @@
 #include <Common/lofar_complex.h>
 #include <Interface/FilteredData.h>
 #include <Interface/BeamFormedData.h>
-#include <Interface/StokesData.h>
 #include <vector>
 
 using namespace LOFAR;
@@ -45,7 +44,7 @@ void test_incoherent_stokes( unsigned NRSTOKES, unsigned INTEGRATION ) {
 
   std::vector<unsigned> stationMapping(NRSTATIONS);
   FilteredData		in( NRSTATIONS, NRCHANNELS, NRSAMPLES );
-  StokesData		out( false, NRSTOKES, NRPENCILBEAMS, NRCHANNELS, NRSAMPLES, INTEGRATION );
+  PreTransposeBeamFormedData out( NRSTOKES, NRCHANNELS, NRSAMPLES / INTEGRATION );
 
   // fill
   for( unsigned c = 0; c < NRCHANNELS; c++ ) {

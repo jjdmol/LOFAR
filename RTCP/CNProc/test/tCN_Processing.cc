@@ -232,7 +232,7 @@ template <typename SAMPLE_TYPE> void doWork()
   parset.add("Observation.beamList",                 "[0]");
   parset.add("Observation.Beam[0].nrTiedArrayBeams", "0");
 
-  BeamFormer beamFormer(parset, 1);
+  BeamFormer beamFormer(parset);
 
   const char *env;
   unsigned nrBeamFormedStations = nrStations;
