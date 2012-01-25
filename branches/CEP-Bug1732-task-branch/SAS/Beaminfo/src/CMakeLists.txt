@@ -8,7 +8,7 @@ set(beaminfo_LIB_SRCS
 )
 
 set(beaminfo_PROGRAMS
-  addbeaminfo
+  failedtilesinfo
   failedtiles2ms
 )
 
@@ -19,10 +19,6 @@ foreach(prog ${beaminfo_PROGRAMS})
 endforeach(prog ${beaminfo_PROGRAMS})
 
 install(PROGRAMS
-  addbeaminfo
+  failedtilesinfo
   failedtiles2ms
 DESTINATION bin)
-
-# Python modules.
-#python_install(
-#  DESTINATION lofar)
