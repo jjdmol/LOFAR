@@ -10,7 +10,6 @@
 node BBDB            4.0.0  development 'node constraint' 'BBS Blackboard Database'
 #    name                   dir. type   unit   prun. vm   value                constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par  Key                    I    text   -      10    0    'default'            -        'Key used by the Blackboard database to identify an observation'
 par  Host                   I    text   -      10    0    'localhost'          -        'Host on which the Blackboard database resides'
 par  Port                   I    int    -      10    0    5432                 -        'Port on which the Blackboard database is listening'
 par  Name                   I    text   -      10    0    'blackboard'         -        'Database name with the Black Board tables'
@@ -249,7 +248,8 @@ uses Solve           4.0.0  development 1                 'BBS Solve Step attrib
 #    name                   dir. type   unit   prun. vm   value                constr.  descr.
 #--------------------------------------------------------------------------------------------------------
 par  Steps                  I    vtext   -      10   0    '[]'                 -        'The steps contained in this BBS Step'
-par  Baselines              I    text    -      10   0    '*&'                 -        'Baselines to process; use CASA baseline selection syntax'
+par  Baselines              I    text    -      10   0    '*&'                 -        'Baselines to process; use 
+CASA baseline selection syntax'
 par  Correlations           I    vtext   -      10   0    '[]'                 -        'Correlations to process'
 par  Operation              I    text    -      10   0    ''                   -        'Operation to be performed in this BBS Step'
 
@@ -260,40 +260,15 @@ par  Operation              I    text    -      10   0    ''                   -
 node Step             4.0.0  development 'node constraint' 'BBS Step Container'
 uses DefaultBBSStep   4.0.0  development 1                 'BBS Template Step'
 
-# -- BBSKernel
+# -- BBS
 #
 #    name             vers   qual        constr.           descr.
 #--------------------------------------------------------------------------------------------------------
-node BBSKernel        4.0.0  development 'node constraint' 'BBSKernel'
-#    name                    dir. type   unit   prun. vm   value                         constr.  descr.
-#--------------------------------------------------------------------------------------------------------
-par  _executable             I    text    -      10    0    '-'                             -        'The name of the executable to start'
-par  _startstopType          I    ptext   -      10    0    'cmdline|mpirun|bgl;bgl'        -        'Method of starting the proces'
-par  _node                   I    vtext   -      10    0    '[]'                            -        'Nodes used by the process'
-
-# -- BBSControl
-#
-#    name             vers   qual        constr.           descr.
-#--------------------------------------------------------------------------------------------------------
-node BBSControl       4.0.0  development 'node constraint' 'BBSControl'
+node BBS              4.0.0  development 'node constraint' 'Blackboard system'
 uses BBDB             4.0.0  development 1                 'Blackboard database for BBS'
 uses Strategy         4.0.0  development 1                 'Strategy to be used by BBS'
 uses Step             4.0.0  development 1                 'Strategy Step Container'
 #    name                    dir. type   unit   prun. vm   value                         constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par  _executable             I    text   -      10    0    '-'                           -        'The name of the executable to start'
-par  _startstopType          I    ptext  -      10    0    'cmdline|mpiru|bgl;bgl'       -        'Method of starting the proces'
-par  _node                   I    vtext  -      10    0    '[]'                          -        'Nodes used by the process'
 
-# --BBS Global--
-#
-#    name             vers   qual        constr.           descr.
-#--------------------------------------------------------------------------------------------------------
-node BBS              4.0.0  development 'node constraint' 'BBS'
-uses BBSKernel        4.0.0  development 1                 'BBSKernel'
-uses BBSControl       4.0.0  development 1                 'BBSControl'
-#    name                    dir. type   unit   prun. vm   value                         constr.  descr.
-#--------------------------------------------------------------------------------------------------------
-par  _procs                  I    vtext   -      10    0   '["BBSKernel","BBSControl"]'  -        'The processes the application consists of'
-par  _depends                I    vtext   -      10    0   '["Flagger"]'                 -        'The application that must be finished before this appl. can start'
 
