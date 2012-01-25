@@ -195,11 +195,10 @@ public:
 	// e.g: a.b.c.d.param=xxx ; locateModule('d') --> 'a.b.c.'
 	string	locateModule(const string&	shortName) const;
 
-	// Return the 'metadata' from the parameterCollection.
-//	string  getName          () const;
-
-	// Return the 'metadata' from the parameterCollection.
-//	string  getVersionNr     () const;
+	// Searches the module name or module hierarchy and returns its fullposition.
+	// e.g: a.b.c.d.param=xxxx --> fullModuleName(d)-->a.b.c.d
+	// e.g: a.b.c.d.param=xxxx --> fullModuleName(b.c)-->a.b.c
+	string	fullModuleName(const string&	shortName) const;
 
 	// Return scalar value.
 	// @{

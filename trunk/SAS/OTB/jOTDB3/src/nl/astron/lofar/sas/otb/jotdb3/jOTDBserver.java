@@ -29,6 +29,8 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
@@ -39,6 +41,24 @@ public class jOTDBserver {
     {
         System.loadLibrary("jotdb3");
     }
+    
+    static {
+ 
+        int delay = 1000 * 60; // delay for 1 minute
+        int repeat = delay * 5; // repeat every 5 minutes
+ 
+        Timer gcTimer = new Timer();
+        gcTimer.scheduleAtFixedRate(new TimerTask() {
+ 
+        @Override
+        public void run() {
+//          System.out.println("Running Gargabe-Collector");
+            System.gc();
+        }
+   
+        }, delay, repeat);
+  
+ }
 
     static Logger logger = Logger.getLogger(jOTDBserver.class);
 
@@ -46,6 +66,7 @@ public class jOTDBserver {
     static jOTDBaccessInterface access = null;
 
     public static void main(String[] argv)  {
+
         try {
             String logConfig = "jOTDB3.log_prop";
             
@@ -54,7 +75,6 @@ public class jOTDBserver {
                 jInitCPPLogger aCPPLogger= new jInitCPPLogger(logConfig);
             } catch (Exception ex) {
                 System.out.println("Error: "+ ex);
-                ex.printStackTrace();
             }
             logger.info("jOTDBServer started. LogPropFile: "+ logConfig);
             logger.info("java.library.path:"+ System.getProperty("java.library.path"));

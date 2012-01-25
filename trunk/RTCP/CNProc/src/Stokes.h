@@ -3,8 +3,9 @@
 
 #include <Interface/FilteredData.h>
 #include <Interface/StreamableData.h>
-#include <Interface/StokesData.h>
+#include <Interface/BeamFormedData.h>
 #include <Interface/MultiDimArray.h>
+#include <Interface/Parset.h>
 
 #if 0 || !defined HAVE_BGP
 #define STOKES_C_IMPLEMENTATION
@@ -19,19 +20,14 @@ class Stokes
   public:
     static const float MAX_FLAGGED_PERCENTAGE = 0.9f;
 
-    Stokes(int nrStokes, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerOutputIntegration, unsigned nrStokesChannels);
+    Stokes(unsigned nrChannels, unsigned nrSamples);
 
-    template <bool ALLSTOKES> void calculateCoherent(const SampleData<> *sampleData, StokesData *stokesData, unsigned inbeam, unsigned outbeam);
-    template <bool ALLSTOKES> void calculateIncoherent(const SampleData<> *sampleData, StokesData *stokesData, const std::vector<unsigned> &stationMapping);
-
-    void postTransposeStokes(const TransposedStokesData *in, FinalStokesData *out, unsigned sb);
+    template <bool ALLSTOKES> void calculateCoherent(const SampleData<> *sampleData, PreTransposeBeamFormedData *stokesData, unsigned inbeam, const StreamInfo &info);
+    template <bool ALLSTOKES> void calculateIncoherent(const SampleData<> *sampleData, PreTransposeBeamFormedData *stokesData, const std::vector<unsigned> &stationMapping, const StreamInfo &info);
 
   private:
     const unsigned          itsNrChannels;
-    const unsigned          itsNrSamplesPerIntegration;
-    const unsigned          itsNrSamplesPerStokesIntegration;
-    const unsigned          itsNrStokes;
-    const unsigned          itsNrChannelsPerIntegration;
+    const unsigned          itsNrSamples;
 };
 
 } // namespace RTCP

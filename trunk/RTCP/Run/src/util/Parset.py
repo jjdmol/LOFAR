@@ -272,7 +272,9 @@ class Parset(dict):
       # avoid KeyErrors
       if key in self: dict.__delitem__(self,key)
 
-    def getBool(self, key):
+    def getBool(self, key, default = False):
+      if key not in self: return default
+
       return self[key] in TRUE_VALUES
 
     def getString(self, key):

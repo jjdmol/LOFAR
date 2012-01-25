@@ -53,6 +53,7 @@ Observation.Beam[0].TiedArrayBeam[0].angle1 = 0
 Observation.Beam[0].TiedArrayBeam[0].angle2 = 0
 Observation.Beam[0].TiedArrayBeam[0].directionType = J2000
 Observation.Beam[0].TiedArrayBeam[0].dispersionMeasure = 0
+Observation.Beam[0].TiedArrayBeam[0].coherent = F
 #Observation.Beam[0].TiedArrayBeam[1].angle1 = 0
 #Observation.Beam[0].TiedArrayBeam[1].angle2 = 0
 #Observation.Beam[0].TiedArrayBeam[1].directionType = J2000
@@ -67,23 +68,19 @@ OLAP.Storage.hosts = [locus080]
 OLAP.Storage.targetDirectory = /data # will be appended with dirmask and filenammask
 
 Observation.DataProducts.Output_Filtered.enabled = F
-Observation.DataProducts.Output_Beamformed.enabled = F
-Observation.DataProducts.Output_Correlated.enabled = T
-Observation.DataProducts.Output_CoherentStokes.enabled = F
-Observation.DataProducts.Output_IncoherentStokes.enabled = F
+Observation.DataProducts.Output_Beamformed.enabled = T
+Observation.DataProducts.Output_Correlated.enabled = F
 Observation.DataProducts.Output_Trigger.enabled = F
 
 Observation.DataProducts.Output_Filtered.namemask = L${OBSID}_SB${SUBBAND}.filtered
 Observation.DataProducts.Output_Correlated.namemask = L${OBSID}_SB${SUBBAND}_uv.MS
-Observation.DataProducts.Output_IncoherentStokes.namemask = L${OBSID}_SB${SUBBAND}_bf.incoherentstokes
 Observation.DataProducts.Output_Beamformed.namemask = L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.raw
-Observation.DataProducts.Output_CoherentStokes.namemask = L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.h5
 Observation.DataProducts.Output_Trigger.namemask = L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.trigger
 
 Observation.channelsPerSubband = 64
 
 OLAP.delayCompensation = T
-OLAP.coherentDedispersion = T
+OLAP.coherentDedisperseChannels = T
 
 OLAP.correctBandPass = T
 #Observation.bandFilter = LBA_10_90
@@ -96,9 +93,15 @@ OLAP.Correlator.integrationTime = 1.0
 #OLAP.IONProc.integrationSteps = 1   # (generated)
 #OLAP.CNProc.integrationSteps  = 768 # (generated, multiple of 128 for pencil beams)
 
-OLAP.Stokes.which = I              # I or IQUV
-OLAP.Stokes.integrationSteps = 1   # time integration
-#OLAP.Stokes.nrChannelsPerSubband = 256 # reduce # channels by integration if desired
+OLAP.CNProc_CoherentStokes.subbandsPerFile = 244
+OLAP.CNProc_CoherentStokes.which = I                  # I or IQUV or XXYY
+OLAP.CNProc_CoherentStokes.timeIntegrationSteps = 1   # time integration
+OLAP.CNProc_CoherentStokes.channelsPerSubband = 0     # 0 = same as observation
+
+OLAP.CNProc_IncoherentStokes.subbandsPerFile = 244
+OLAP.CNProc_IncoherentStokes.which = I                # I or IQUV or XXYY
+OLAP.CNProc_IncoherentStokes.timeIntegrationSteps = 1 # time integration
+OLAP.CNProc_IncoherentStokes.channelsPerSubband = 0   # 0 = same as observation
 
 # ----- Beam forming
 OLAP.PencilInfo.flysEye = F           # don't form pencil beams, but turn stations
@@ -106,7 +109,6 @@ OLAP.PencilInfo.flysEye = F           # don't form pencil beams, but turn statio
 
 OLAP.PencilInfo.nrRings = 0 # 0 = just the central beam
 OLAP.PencilInfo.ringSize = 0.01
-OLAP.Storage.subbandsPerPart = 244
 
 # Eg. tiedArray beamforming
 #Observation.Beamformer[0].stationList = "B01_0,B01_1"

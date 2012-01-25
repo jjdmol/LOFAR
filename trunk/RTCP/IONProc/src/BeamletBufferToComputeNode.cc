@@ -52,14 +52,14 @@ namespace RTCP {
 template<typename SAMPLE_TYPE> const unsigned BeamletBufferToComputeNode<SAMPLE_TYPE>::itsMaximumDelay;
 
 
-template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::BeamletBufferToComputeNode(const Parset &ps, const std::vector<Stream *> &phaseOneTwoStreams, const std::vector<SmartPtr<BeamletBuffer<SAMPLE_TYPE> > > &beamletBuffers, unsigned psetNumber)
+template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::BeamletBufferToComputeNode(const Parset &ps, const std::vector<Stream *> &phaseOneTwoStreams, const std::vector<SmartPtr<BeamletBuffer<SAMPLE_TYPE> > > &beamletBuffers, unsigned psetNumber, unsigned firstBlockNumber)
 :
   itsPhaseOneTwoStreams(phaseOneTwoStreams),
   itsPS(ps),
   itsNrInputs(beamletBuffers.size()),
   itsPsetNumber(psetNumber),
   itsBeamletBuffers(beamletBuffers),
-  itsBlockNumber(0),
+  itsBlockNumber(firstBlockNumber),
   itsDelayTimer("delay consumer", true, true)
 {
   bool haveStationInput = itsNrInputs > 0;
@@ -76,7 +76,7 @@ template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::BeamletB
   itsMaxNrPencilBeams	      = ps.maxNrPencilBeams();
   itsNrPencilBeams	      = ps.nrPencilBeams();
   itsNrPhaseTwoPsets	      = ps.phaseTwoPsets().size();
-  itsCurrentPhaseOneTwoComputeCore = 0;
+  itsCurrentPhaseOneTwoComputeCore = (itsBlockNumber * itsNrSubbandsPerPset) % itsPhaseOneTwoStreams.size();
   itsSampleDuration	      = ps.sampleDuration();
   itsDelayCompensation	      = ps.delayCompensation();
   itsCorrectClocks	      = ps.correctClocks();
@@ -88,7 +88,7 @@ template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::BeamletB
     itsSubbandToRSPslotMapping  = ps.subbandToRSPslotMapping(stationName);
   }
 
-  itsCurrentTimeStamp	      = TimeStamp(static_cast<int64>(ps.startTime() * itsSampleRate), ps.clockSpeed());
+  itsCurrentTimeStamp	      = TimeStamp(static_cast<int64>(ps.startTime() * itsSampleRate + itsBlockNumber * itsNrSamplesPerSubband), ps.clockSpeed());
   itsIsRealTime		      = ps.realTime();
   itsMaxNetworkDelay	      = ps.maxNetworkDelay();
   itsNrHistorySamples	      = ps.nrHistorySamples();

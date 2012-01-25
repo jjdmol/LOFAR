@@ -1,6 +1,6 @@
 //# Observation.cc: class for easy access to observation definitions
 //#
-//# Copyright (C) 2006
+//# Copyright (C) 2006-2012
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -104,7 +104,6 @@ Observation::Observation(ParameterSet*		aParSet,
 	sampleClock = aParSet->getUint32(prefix+"sampleClock",  0);
 	filter 		= aParSet->getString(prefix+"bandFilter",   "");
 	antennaArray= aParSet->getString(prefix+"antennaArray", "");
-	MSNameMask  = aParSet->getString(prefix+"MSNameMask",   "");
 	nyquistZone = nyquistzoneFromFilter(filter);
 
 	// new way of specifying the receivers and choosing the antenna array.
@@ -175,9 +174,17 @@ Observation::Observation(ParameterSet*		aParSet,
 	for (int32 beamIdx(0) ; beamIdx < nrBeams; beamIdx++) {
 		Beam	newBeam;
 		string	beamPrefix(prefix+formatString("Beam[%d].", beamIdx));
-		newBeam.momID	   = aParSet->getInt(beamPrefix+"momID", 0);
-		newBeam.subbands   = aParSet->getInt32Vector(beamPrefix+"subbandList", vector<int32>(), true);	// true:expandable
-		newBeam.name       = getBeamName(beamIdx);
+		newBeam.momID	 		 = aParSet->getInt        (beamPrefix+"momID", 0);
+		newBeam.target	 		 = aParSet->getString     (beamPrefix+"target", "");
+		newBeam.maximizeDuration = aParSet->getBool       (beamPrefix+"maximizeDuration", false);
+		newBeam.subbands 		 = aParSet->getInt32Vector(beamPrefix+"subbandList", vector<int32>(), true);// true:expand
+		newBeam.beamlets 		 = aParSet->getInt32Vector(beamPrefix+"beamletList", vector<int32>(), true);// true:expand
+		if (newBeam.subbands.size() != newBeam.beamlets.size()) {
+			THROW (Exception, "Number of subbands(" << newBeam.subbands.size() << 
+							  ") != number of beamlets(" << newBeam.beamlets.size() << 
+							  ") in beam " << beamIdx);
+		}
+		newBeam.name = getBeamName(beamIdx);
 		newBeam.antennaSet = antennaSet;
 		if (dualMode) {
 			newBeam.antennaSet = "HBA_ZERO";
@@ -186,12 +193,12 @@ Observation::Observation(ParameterSet*		aParSet,
 			}
 		}
 
-		// ONLY one pointing per beam.
+		// Only ONE pointing per beam.
 		Pointing		newPt;
 		newPt.angle1 		= aParSet->getDouble(beamPrefix+"angle1", 0.0);
 		newPt.angle2 		= aParSet->getDouble(beamPrefix+"angle2", 0.0);
 		newPt.directionType = aParSet->getString(beamPrefix+"directionType", "");
-		newPt.duration	    = aParSet->getInt(beamPrefix+"duration", 0);
+		newPt.duration	    = aParSet->getInt	(beamPrefix+"duration", 0);
 		newPt.startTime 	= startTime;	// assume time of observation itself
 #if !defined HAVE_BGL
 		try {
@@ -204,6 +211,21 @@ Observation::Observation(ParameterSet*		aParSet,
 		}
 #endif
 		newBeam.pointings.push_back(newPt);
+
+		// Add TiedArrayBeam information
+		newBeam.nrTABs	    = aParSet->getInt   (beamPrefix+"nrTiedArrayBeams", 0);
+		newBeam.nrTABrings  = aParSet->getInt   (beamPrefix+"nrTabRings", 0);
+		newBeam.TABringSize = aParSet->getDouble(beamPrefix+"tabRingSize", 0.0);
+		for (int32	tabIdx(0); tabIdx < newBeam.nrTABs; tabIdx++) {
+			TiedArrayBeam	newTAB;
+			string	tabPrefix(beamPrefix+formatString("TiedArrayBeam[%d].", tabIdx));
+			newTAB.angle1			 = aParSet->getDouble(tabPrefix+"angle1", 0.0);
+			newTAB.angle2			 = aParSet->getDouble(tabPrefix+"angle2", 0.0);
+			newTAB.directionType     = aParSet->getString(tabPrefix+"directionType", "");
+			newTAB.dispersionMeasure = aParSet->getDouble(tabPrefix+"dispersionMeasure", 0.0);
+			newTAB.coherent 		 = aParSet->getBool  (tabPrefix+"coherent", false);
+			newBeam.TABs.push_back(newTAB);
+		}
 
 		// Finally add the beam to the vector
 		beams.push_back(newBeam);
@@ -288,8 +310,8 @@ Observation::Observation(ParameterSet*		aParSet,
 	// loop over all data products and generate all data flows
 	string olapprefix = aParSet->locateModule("OLAP") + "OLAP.";
 	if (!olapprefix.empty()) {		// offline Pipelines don't have OLAP in the parset.
-		const char *dataProductNames[] = { "CoherentStokes", "IncoherentStokes", "Beamformed", "Correlated", "Filtered" };
-		unsigned dataProductPhases[]   = { 3,                2,                  3,            2,            2          };
+		const char *dataProductNames[] = { "Beamformed", "Correlated" };
+		unsigned dataProductPhases[]   = { 3,            2 };
 		size_t nrDataProducts = sizeof dataProductNames / sizeof dataProductNames[0];
 
 		// by default, use all psets
@@ -637,7 +659,6 @@ ostream& Observation::print (ostream&	os) const
     os << "filter       : " << filter << endl;
     os << "splitter     : " << (splitterOn ? "ON" : "OFF") << endl;
     os << "nyquistZone  : " << nyquistZone << endl << endl;
-    os << "Meas.set     : " << MSNameMask << endl << endl;
 
 	os << "(Receivers)  : " << receiverList << endl;
 	os << "Stations     : " << stationList << endl;
@@ -647,10 +668,12 @@ ostream& Observation::print (ostream&	os) const
     os << "nrBeams      : " << beams.size() << endl;
 	for (size_t	b(0) ; b < beams.size(); b++) {
 		os << "Beam[" << b << "].name       : " << beams[b].name << endl;
+		os << "Beam[" << b << "].target     : " << beams[b].target << endl;
 		os << "Beam[" << b << "].antennaSet : " << beams[b].antennaSet << endl;
 		os << "Beam[" << b << "].momID      : " << beams[b].momID << endl;
 		os << "Beam[" << b << "].subbandList: "; writeVector(os, beams[b].subbands, ",", "[", "]"); os << endl;
 		os << "Beam[" << b << "].beamletList: "; writeVector(os, getBeamlets(b), ",", "[", "]"); os << endl;
+		os << "Beam[" << b << "].maxDuration: " << (beams[b].maximizeDuration ? "YES" : "NO") << endl;
 		os << "nrPointings : " << beams[b].pointings.size() << endl;
 		for (size_t p = 0; p < beams[b].pointings.size(); ++p) {
 			const Pointing*		pt = &(beams[b].pointings[p]);
@@ -660,6 +683,13 @@ ostream& Observation::print (ostream&	os) const
 			os << formatString("Beam[%d].pointing[%d]: %f, %f, %s, %s\n", b, p, pt->angle1, pt->angle2, 
 				pt->directionType.c_str(), to_simple_string(from_time_t(pt->startTime)).c_str());
 #endif
+		}
+		os << "nrTABs      : " << beams[b].nrTABs << endl;
+		os << "nrTABrings  : " << beams[b].nrTABrings << endl;
+		os << "TABringsize : " << beams[b].TABringSize << endl;
+		for (int t = 0; t < beams[b].nrTABs; ++t) {
+			const TiedArrayBeam*	tab = &(beams[b].TABs[t]);
+			os << formatString ("Beam[%d].TAB[%d]: %f, %f, %s, %f, %scoherent\n", b, t, tab->angle1, tab->angle2, tab->directionType.c_str(), tab->dispersionMeasure, (tab->coherent ? "" : "in"));
 		}
 	}
 	os << "beamlet2beams   : "; writeVector(os, getBeamAllocation(), ",", "[", "]"); os << endl;

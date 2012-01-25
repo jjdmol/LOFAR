@@ -626,7 +626,7 @@ int32 	indexValue (const string&	label, const char	indexMarker[2])
 // locateModule(shortKey)
 //
 // Searches for a key ending in the given 'shortkey' and returns it full name.
-// e.g: a.b.c.d.param=xxxx --> locateKey(d)-->a.b.c.
+// e.g: a.b.c.d.param=xxxx --> locateModule(d)-->a.b.c.
 string	ParameterSetImpl::locateModule(const string&	shortKey) const
 {
 	const_iterator		iter = begin();
@@ -638,6 +638,34 @@ string	ParameterSetImpl::locateModule(const string&	shortKey) const
 				prefix += ".";
 			}
 			return (prefix);
+		}
+		iter++;
+	}
+	return ("");
+}
+
+//
+// fullModuleName(shortKey)
+//
+// Searches for a key ending in the given 'shortkey' and returns it full name.
+// e.g: a.b.c.d.param=xxxx --> fullModuleName(d)      --> a.b.c.d
+// e.g: a.b.c.d.param=xxxx --> fullModuleName(b.c)    --> a.b.c
+// e.g: a.b.c.d.param=xxxx --> fullModuleName(d.param)-->
+string	ParameterSetImpl::fullModuleName(const string&	shortKey) const
+{
+	const_iterator		iter = begin();
+	const_iterator		eom  = end();
+	while ((iter != eom)) {
+		string::size_type	start = moduleName(iter->first).rfind(shortKey);
+		if (start != string::npos) {
+			string::size_type	keyLen = shortKey.length();
+			string::size_type	last = start+keyLen;
+			string::size_type	iterLen = (iter->first).length();
+			if ((last == iterLen || (last < iterLen && (iter->first)[last] == '.')) &&
+				(start == 0 || (start > 0 && (iter->first)[start-1] == '.'))) {
+				string prefix = iter->first.substr(0, start);
+				return (prefix+shortKey);
+			}
 		}
 		iter++;
 	}
