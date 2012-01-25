@@ -30,6 +30,7 @@
 
 #include <AOFlagger/remote/clusteredobservation.h>
 #include <AOFlagger/remote/processcommander.h>
+#include <gtkmm/main.h>
 
 AOQPlotWindow::AOQPlotWindow() :
 	_isOpen(false)
@@ -70,6 +71,7 @@ AOQPlotWindow::AOQPlotWindow() :
 	_vBox.show();
 	
 	_openOptionsWindow.SignalOpen().connect(sigc::mem_fun(*this, &AOQPlotWindow::onOpenOptionsSelected));
+	signal_hide().connect(sigc::mem_fun(*this, &AOQPlotWindow::onHide));
 }
 
 void AOQPlotWindow::Open(const std::string &filename)
@@ -77,10 +79,10 @@ void AOQPlotWindow::Open(const std::string &filename)
 	_openOptionsWindow.ShowForFile(filename);
 }
 
-void AOQPlotWindow::onOpenOptionsSelected(std::string filename, bool downsampleTime, bool downsampleFreq, size_t freqCount)
+void AOQPlotWindow::onOpenOptionsSelected(std::string filename, bool downsampleTime, bool downsampleFreq, size_t timeCount, size_t freqCount)
 {
 	_filename = filename;
-	readStatistics(downsampleTime, downsampleFreq, freqCount);
+	readStatistics(downsampleTime, downsampleFreq, timeCount, freqCount);
 	_baselinePlotPage.SetStatistics(_statCollection, _antennas);
 	_antennaePlotPage.SetStatistics(_statCollection, _antennas);
 	_bLengthPlotPage.SetStatistics(_statCollection, _antennas);
@@ -88,6 +90,7 @@ void AOQPlotWindow::onOpenOptionsSelected(std::string filename, bool downsampleT
 	_frequencyPlotPage.SetStatistics(_statCollection, _antennas);
 	_timeFrequencyPlotPage.SetStatistics(_fullStats);
 	_summaryPage.SetStatistics(_statCollection);
+	show();
 }
 
 void AOQPlotWindow::close()
@@ -108,7 +111,7 @@ void AOQPlotWindow::close()
 	}
 }
 
-void AOQPlotWindow::readStatistics(bool downsampleTime, bool downsampleFreq, size_t freqSize)
+void AOQPlotWindow::readStatistics(bool downsampleTime, bool downsampleFreq, size_t timeSize, size_t freqSize)
 {
 	close();
 	
@@ -159,7 +162,7 @@ void AOQPlotWindow::readStatistics(bool downsampleTime, bool downsampleFreq, siz
 	if(downsampleTime)
 	{
 		std::cout << "Lowering time resolution..." << std::endl;
-		_statCollection->LowerTimeResolution(1000);
+		_statCollection->LowerTimeResolution(timeSize);
 	}
 
 	if(downsampleFreq)
