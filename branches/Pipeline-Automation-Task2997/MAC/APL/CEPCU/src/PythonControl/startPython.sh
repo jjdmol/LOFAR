@@ -34,7 +34,7 @@ usage()
 
 # Initialize the environment. We will assume here that we can use the
 # Lofar Login Environment (LLE).
-use LofIm
+use Lofar
 
 pythonProgram="${1}"
 parsetFile="${2}"
