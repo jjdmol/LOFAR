@@ -79,8 +79,8 @@ def createNewDefaultTemplate(orgTmplID, newMasterTmplID, orgTmplInfo):
 
     # get a list with the removed items
     parentNodes = {}
-    command = """comm -13 dfltTree%s MasterTree_%s | cut -d'=' -f1 >diff1 ; 
-                 comm -23 dfltTree%s MasterTree_%s | cut -d'=' -f1 >diff2 ; 
+    command = """comm -13 dfltTree%s MasterTree_%s | cut -d'=' -f1 | sort >diff1 ; 
+                 comm -23 dfltTree%s MasterTree_%s | cut -d'=' -f1 | sort >diff2 ; 
                  comm -23 diff1 diff2 ; rm diff1 diff2
               """ % (orgTmplID, treeIdentification, orgTmplID, treeIdentification)
     # loop over the list: when the NODE(=parent) of this parameter was removed in the ORIGINAL default template
