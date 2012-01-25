@@ -1,8 +1,7 @@
 # Writer
-time		stringArr
-count		intArr
-dropped		stringArr
+written		int
+dropped		int
 fileName	string
 dataRate	float
-dataProduktType	string
+dataProductType	string
 observationName	string
