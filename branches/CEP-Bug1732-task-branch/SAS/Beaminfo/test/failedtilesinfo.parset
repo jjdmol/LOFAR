@@ -4,6 +4,6 @@ StartTime = 2011/03/19/16:59:08.0
 EndTime = 2011/03/19/22:59:06.0
 # brokenTilesFile =
 # failedTilesFile =
-port = 5433
+port = 5432
 overwrite = T
 
