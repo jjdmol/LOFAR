@@ -2,7 +2,8 @@
 
 # List of header files that will be installed.
 set(inst_HEADERS
-	)
+   FailedTileInfo.h	
+   )
 
 # Create symbolic link to include directory.
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink 

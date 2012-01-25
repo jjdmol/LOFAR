@@ -85,6 +85,7 @@ void getFailedTilesInfo(OTDBconnection &conn,
                         const string &filename,
                         const MVEpoch &timeStart,
                         const MVEpoch &timeEnd=0);
+string stripRCUString(const string &brokenHardware);
 
 //----------------------------------------------------------------------------------
 void usage(char *programname)
@@ -307,7 +308,7 @@ void getFailedTilesInfo(OTDBconnection &conn,
   {
     if(valueList[i].name.find("RCU")!=string::npos)   // Only write lines that contain RCU
     {
-      outfile << valueList[i].name << "\t" << valueList[i].time << endl;
+      outfile << stripRCUString(valueList[i].name) << "\t" << valueList[i].time << endl;
     }  
   }  
   outfile.close();
