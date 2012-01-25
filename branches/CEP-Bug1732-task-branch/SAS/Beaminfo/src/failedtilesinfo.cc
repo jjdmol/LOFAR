@@ -40,36 +40,14 @@
 #include <OTDB/Converter.h>
 #include <OTDB/TreeTypeConv.h>
 
-// C system headers
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-
-// Boost
-//#include <boost/bind.hpp>           // for searching vectors of structs
-//#include <boost/date_time.hpp>
-//#include <boost/lexical_cast.hpp>   // convert string to number
-//#include <boost/tokenizer.hpp>
-
 // STL
 #include <iostream>
-#include <fstream>
-#include <map>
 
 // Casacore
 #include <ms/MeasurementSets/MeasurementSet.h>
-//#include <ms/MeasurementSets/MSObsColumns.h>
-//#include <ms/MeasurementSets/MSAntennaColumns.h>
-//#include <tables/Tables/Table.h>
-//#include <tables/Tables/ScalarColumn.h>
 #include <measures/Measures.h>
 #include <measures/Measures/MEpoch.h>
 #include <casa/Quanta/MVTime.h>
-#include <casa/OS/Time.h>
-//#include <casa/Arrays/VectorIter.h>
-//#include <casa/Arrays/ArrayIter.h>
-
-//#include <Beaminfo/showinfo.h>    // showVector, showMap etc. debug functions
 
 using namespace std;
 using namespace LOFAR;
@@ -109,11 +87,9 @@ bool verbose=false;                         // verbose mode
 int main (int argc, char* argv[])
 {
   int opt=0;                                // argument parsing, current option
-  bool file=false, query=false;             // read from file, query database
-  bool update=false;                        // update MS with beaminfo (node mode)
   vector<MEpoch> failingTimes;
 
-  string parsetName="addbeaminfo.parset";   // parset location (default)
+  string parsetName="failedtiles.parset";   // parset location (default)
   string starttimeString, endtimeString;    // strings to get start and end time
   MVEpoch startTime, endTime;               // starttime and endtime of observation
 
@@ -130,13 +106,6 @@ int main (int argc, char* argv[])
     { 
       case 'd':
         debug=true;
-        break;
-      case 'q':         // query database
-        query=true;
-        update=false;
-        break;
-      case 'f':         // read from files
-        file=true;
         break;
       case 'p':         // location of parset file
         parsetName=optarg;
