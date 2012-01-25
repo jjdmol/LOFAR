@@ -54,5 +54,26 @@ install(PROGRAMS
 install(FILES
   pipeline.cfg
   tasks.cfg
-  DESTINATION share)
+  DESTINATION share/pipeline)
+
+install(FILES
+  demixing/bbs_CasA.parset
+  demixing/bbs_CasA_smoothcal.parset
+  demixing/bbs_CygA.parset
+  demixing/bbs_CygA_smoothcal.parset
+  demixing/bbs_HerA.parset
+  demixing/bbs_HerA_smoothcal.parset
+  demixing/bbs_HydA.parset
+  demixing/bbs_HydA_smoothcal.parset
+  demixing/bbs_TauA.parset
+  demixing/bbs_TauA_smoothcal.parset
+  demixing/bbs_VirA.parset
+  demixing/bbs_VirA_smoothcal.parset
+  DESTINATION share/pipeline/demixing)
+
+install(FILES
+  skymodels/3C196.skymodel
+  skymodels/3C48.skymodel
+  skymodels/Ateam_LBA_CC.skymodel
+  DESTINATION share/pipeline/skymodels)
 
