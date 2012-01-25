@@ -18,7 +18,7 @@ foreach(prog ${beaminfo_PROGRAMS})
   lofar_add_bin_program(${prog} ${prog}.cc)
 endforeach(prog ${beaminfo_PROGRAMS})
 
-install(PROGRAMS
-  failedtilesinfo
-  failedtiles2ms
-DESTINATION bin)
+#install(PROGRAMS
+#  failedtilesinfo
+#  failedtiles2ms
+#DESTINATION bin)

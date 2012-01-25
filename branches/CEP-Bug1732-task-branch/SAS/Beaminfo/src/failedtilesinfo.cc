@@ -164,7 +164,9 @@ int main (int argc, char* argv[])
   try
   {
     if(verbose)
+    {
       LOG_INFO_STR("Reading parset: " << parsetName);
+    }
 
     //---------------------------------------------------------------------
     ParameterSet parset(parsetName);
