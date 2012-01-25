@@ -23,26 +23,32 @@
 
 #include <boost/function.hpp>
 
-#include <set>
+#include <map>
 
 #include "plot2d.h"
 
 class PlotManager
 {
 	public:
-		Plot2D &NewPlot2D()
+		Plot2D &NewPlot2D(const std::string &plotName)
 		{
 			Plot2D *plot = new Plot2D();
-			_items.insert(plot);
+			_items.push_back(plot);
 			return *plot;
+		}
+		
+		Plot2D &NewPlot2D()
+		{
+			return NewPlot2D("");
 		}
 		
 		void Update() { _onUpdate(); }
 		
 		boost::function<void()> &OnUpdate() { return _onUpdate; }
 		
+		const std::vector<Plot2D*> Items() const { return _items; }
 	private:
-		std::set<Plot2D*> _items;
+		std::vector<Plot2D*> _items;
 		
 		boost::function<void()> _onUpdate;
 };
