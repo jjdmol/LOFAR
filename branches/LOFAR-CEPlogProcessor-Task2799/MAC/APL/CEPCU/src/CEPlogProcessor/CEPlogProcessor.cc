@@ -835,8 +835,8 @@ void CEPlogProcessor::_processStorageLine(const struct logline &logline)
       if ((result = strstr(logline.msg, "Written block"))) {
         int seqno = 0, written = 0, dropped = 0;
         if (sscanf(result, "Written block with seqno = %d, %d blocks written, %d blocks dropped", &seqno, &written, &dropped) == 3) {
-          LOG_DEBUG(formatString("[%d] Dropped %d for a total of %d", processNr, dropped, total));
-          writer->setValue("count", GCFPVInteger(written), logline.timestamp, false);
+          LOG_DEBUG(formatString("[%d] Written %d, dropped %d", processNr, written, dropped));
+          writer->setValue("written", GCFPVInteger(written), logline.timestamp, false);
           writer->setValue("dropped", GCFPVInteger(dropped), logline.timestamp, false);
           writer->flush();
         }
