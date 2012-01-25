@@ -5,23 +5,18 @@
 #                                                      swinbank@transientskp.org
 # ------------------------------------------------------------------------------
 
-from __future__ import with_statement
-
-from itertools import cycle
-from contextlib import nested
 from collections import defaultdict
 
-import collections
 import sys
 import os
 
-import lofarpipe.support.utilities as utilities
 import lofarpipe.support.lofaringredient as ingredient
+
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
-from lofarpipe.support.group_data import load_data_map
-from lofarpipe.support.parset import Parset
+from lofarpipe.support.group_data import load_data_map, store_data_map
+from lofarpipe.support.group_data import validate_data_maps
 
 class dppp(BaseRecipe, RemoteCommandRecipeMixIn):
     """
@@ -40,11 +35,13 @@ class dppp(BaseRecipe, RemoteCommandRecipeMixIn):
         ),
         'initscript': ingredient.FileField(
             '--initscript',
-            help="The full path to an (Bourne) shell script which will intialise the environment (ie, ``lofarinit.sh``)"
+            help="The full path to an (Bourne) shell script which will "
+                 "intialise the environment (ie, ``lofarinit.sh``)"
         ),
         'parset': ingredient.FileField(
             '-p', '--parset',
-            help="The full path to a DPPP configuration parset. The ``msin`` and ``msout`` keys will be added by this recipe"
+            help="The full path to a DPPP configuration parset. The ``msin`` "
+                 "and ``msout`` keys will be added by this recipe"
         ),
         'suffix': ingredient.StringField(
             '--suffix',
@@ -53,7 +50,8 @@ class dppp(BaseRecipe, RemoteCommandRecipeMixIn):
         ),
         'working_directory': ingredient.StringField(
             '-w', '--working-directory',
-            help="Working directory used on output nodes. Results will be written here"
+            help="Working directory used on output nodes. Results will be "
+                 "written here"
         ),
         # NB times are read from vds file as string
         'data_start_time': ingredient.StringField(
@@ -78,12 +76,16 @@ class dppp(BaseRecipe, RemoteCommandRecipeMixIn):
         ),
         'mapfile': ingredient.StringField(
             '--mapfile',
-            help="Filename into which a mapfile describing the output data will be written"
+            help="Filename into which a mapfile describing the output data "
+                 "will be written"
         ),
         'clobber': ingredient.BoolField(
             '--clobber',
             default=False,
-            help="If ``True``, pre-existing output files will be removed before processing starts. If ``False``, the pipeline will abort if files already exist with the appropriate output filenames"
+            help="If ``True``, pre-existing output files will be removed "
+                 "before processing starts. If ``False``, the pipeline will "
+                 "abort if files already exist with the appropriate output "
+                 "filenames"
         )
     }
 
@@ -92,7 +94,8 @@ class dppp(BaseRecipe, RemoteCommandRecipeMixIn):
             help="The full path to a mapfile describing the processed data"
         ),
         'fullyflagged': ingredient.ListField(
-            help="A list of all baselines which were completely flagged in any of the input MeasurementSets"
+            help="A list of all baselines which were completely flagged in any "
+                 "of the input MeasurementSets"
         )
     }
 
@@ -107,26 +110,37 @@ class dppp(BaseRecipe, RemoteCommandRecipeMixIn):
 
         #                            Load file <-> output node mapping from disk
         # ----------------------------------------------------------------------
-        self.logger.debug("Loading map from %s" % self.inputs['args'])
-        data = load_data_map(self.inputs['args'][0])
-
-        command = "python %s" % (self.__file__.replace('master', 'nodes'))
-        outnames = collections.defaultdict(list)
-        jobs = []
-        for host, ms in data:
-            outnames[host].append(
-                os.path.join(
+        args = self.inputs['args']
+        self.logger.debug("Loading input-data mapfile: %s" % args[0])
+        indata = load_data_map(args[0])
+        if len(args) > 1:
+            self.logger.debug("Loading output-data mapfile: %s" % args[1])
+            outdata = load_data_map(args[1])
+            if not validate_data_maps(indata, outdata):
+                self.logger.error(
+                    "Validation of input/output data mapfiles failed"
+                )
+                return 1
+        else:
+            outdata = [
+                (host,
+                 os.path.join(
                     self.inputs['working_directory'],
                     self.inputs['job_name'],
-                    os.path.basename(ms.rstrip('/')) + self.inputs['suffix']
-                )
-            )
+                    os.path.basename(infile) + self.inputs['suffix'])
+                ) for host, infile in indata
+            ]
+
+        command = "python %s" % (self.__file__.replace('master', 'nodes'))
+        jobs = []
+        for host, infile, outfile in (x+(y[1],) 
+            for x, y in zip(indata, outdata)):
             jobs.append(
                 ComputeJob(
                     host, command,
                     arguments=[
-                        ms,
-                        outnames[host][-1],
+                        infile,
+                        outfile,
                         self.inputs['parset'],
                         self.inputs['executable'],
                         self.inputs['initscript'],
@@ -156,10 +170,9 @@ class dppp(BaseRecipe, RemoteCommandRecipeMixIn):
             self.logger.warn("Failed DPPP process detected")
             return 1
         else:
-            parset = Parset()
-            for host, filenames in outnames.iteritems():
-                parset.addStringVector(host, filenames)
-            parset.writeFile(self.inputs['mapfile'])
+            self.logger.debug("Writing data map file: %s" %
+                              self.inputs['mapfile'])
+            store_data_map(self.inputs['mapfile'], outdata)
             self.outputs['mapfile'] = self.inputs['mapfile']
             return 0
 

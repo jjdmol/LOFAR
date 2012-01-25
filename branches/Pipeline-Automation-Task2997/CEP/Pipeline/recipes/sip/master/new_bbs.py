@@ -19,6 +19,7 @@ from lofar.parameterset import parameterset
 
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.group_data import load_data_map, store_data_map
+from lofarpipe.support.group_data import validate_data_maps
 from lofarpipe.support.lofarexceptions import PipelineException
 from lofarpipe.support.pipelinelogging import CatchLog4CPlus
 from lofarpipe.support.pipelinelogging import log_process_output
@@ -107,6 +108,7 @@ class new_bbs(BaseRecipe):
 
     def __init__(self):
         super(new_bbs, self).__init__()
+        self.bbs_map = list()
         self.parset = parameterset()
         self.killswitch = threading.Event()
 
@@ -125,13 +127,13 @@ class new_bbs(BaseRecipe):
     def _make_bbs_map(self):
         """
         This method bundles the contents of three different map-files.
-        All three map-files contain a per-node list of filenames as parset.
-        The contents of these files are related. The elements of the lists
+        All three map-files contain a list of tuples of hostname and filename.
+        The contents of these files are related by index in the list. They
         form triplets of MS-file, its associated instrument model and its
         associated sky model.
 
-        The returned data structure `bbs_map` is a list of tuples, where
-        each tuple is a pair of hostname and the aforementioned triplet.
+        The data structure `self.bbs_map` is a list of tuples, where each
+        tuple is a pair of hostname and the aforementioned triplet.
 
         For example:
         bbs_map[0] = ('locus001',
@@ -139,43 +141,31 @@ class new_bbs(BaseRecipe):
             '/data/scratch/loose/L29697/L29697_SAP000_SB000_uv.MS.instrument',
             '/data/scratch/loose/L29697/L29697_SAP000_SB000_uv.MS.sky')
         )
+        
+        Returns `False` if validation of the three map-files fails, otherwise
+        returns `True`.
         """
         self.logger.debug("Creating BBS map-file using: %s, %s, %s" %
                           (self.inputs['args'][0],
                            self.inputs['instrument_mapfile'],
                            self.inputs['sky_mapfile']))
-        data_map = parameterset(self.inputs['args'][0])
-        instrument_map = parameterset(self.inputs['instrument_mapfile'])
-        sky_map = parameterset(self.inputs['sky_mapfile'])
-        bbs_map = []
-        for host in data_map.keys():
-            data = data_map.getStringVector(host, [])
-            instrument = instrument_map.getStringVector(host, [])
-            sky = sky_map.getStringVector(host, [])
-            triplets = zip(data, instrument, sky)
-            for triplet in triplets:
-                bbs_map.append((host, triplet))
-            # Error handling and reporting
-            if not len(data) == len(instrument) == len(sky):
-                self.logger.warn(
-                    "Number of data files (%d) does not match with number of "
-                    "instrument files (%d) or number of skymodel files (%d) "
-                    "on %s" % (len(data), len(instrument), len(sky), host))
-                if len(triplets) > 0:
-                    msg = "The following triplets will be used: "
-                    msg += ", ".join([str(t) for t in triplets])
-                    self.logger.warn(msg)
-                if len(triplets) < len(data):
-                    msg = "The following data files will not be processed: "
-                    msg += ", ".join([str(t) for t in data[len(triplets):]])
-                    self.logger.warn(msg)
+        data_map = load_data_map(self.inputs['args'][0])
+        instrument_map = load_data_map(self.inputs['instrument_mapfile'])
+        sky_map = load_data_map(self.inputs['sky_mapfile'])
+
+        if not validate_data_maps(data_map, instrument_map, sky_map):
+            self.logger.error("Validation of input data mapfiles failed")
+            return False
+
         # Store data mapfile containing list of files to be processed by BBS.
-        data_map = []
-        for (host, triplet) in bbs_map:
-            data_map.append((host, triplet[0]))
         store_data_map(self.inputs['data_mapfile'], data_map)
 
-        return bbs_map
+        self.bbs_map = [
+            (dat[0], (dat[1], ins[1], sky[1]))
+            for dat, ins, sky in zip(data_map, instrument_map, sky_map)
+        ]
+        
+        return True
 
 
     def go(self):
@@ -215,7 +205,8 @@ class new_bbs(BaseRecipe):
 
         #                   Create a bbs_map describing the file mapping on disk
         # ----------------------------------------------------------------------
-        bbs_map = self._make_bbs_map()
+        if not self._make_bbs_map():
+            return 1
 
         # Produce a GVDS file, describing the data that must be processed.
         gvds_file = self.run_task(
@@ -278,7 +269,7 @@ class new_bbs(BaseRecipe):
             bbs_kernels = []
             with job_server(self.logger, jobpool, self.error) as (jobhost, jobport):
                 self.logger.debug("Job server at %s:%d" % (jobhost, jobport))
-                for job_id, details in enumerate(bbs_map):
+                for job_id, details in enumerate(self.bbs_map):
                     host, files = details
                     jobpool[job_id] = ComputeJob(
                         host, command,
