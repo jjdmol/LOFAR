@@ -44,17 +44,11 @@ class FrequencyPlotPage : public TwoDimensionalPlotPage {
 			{
 				_statistics.insert(std::pair<double, DefaultStatistics>(i->first/1000000.0, i->second));
 			}
-			_ftStatistics.clear();
 		}
 		
 		virtual const std::map<double, class DefaultStatistics> &GetStatistics() const
 		{
-			if(_ftButton.get_active())
-			{
-				return _ftStatistics;
-			}
-			else
-				return _statistics;
+			return _statistics;
 		}
 		
 		virtual void StartLine(Plot2D &plot, const std::string &name, const std::string &yAxisDesc)
@@ -63,6 +57,14 @@ class FrequencyPlotPage : public TwoDimensionalPlotPage {
 				plot.StartLine(name, "Time (μs)", yAxisDesc, false);
 			else
 				plot.StartLine(name, "Frequency (MHz)", yAxisDesc, false);
+		}
+		
+		virtual void processPlot(Plot2D &plot)
+		{
+			if(_ftButton.get_active())
+			{
+				performFt(plot);
+			}
 		}
 		
 		virtual void addCustomPlotButtons(Gtk::VBox &container)
@@ -74,18 +76,44 @@ class FrequencyPlotPage : public TwoDimensionalPlotPage {
 	private:
 		void onFTButtonClicked()
 		{
-			if(_ftStatistics.empty())
-				createFTStatistics();
 			updatePlot();
 		}
 		
-		void createFTStatistics()
+		void performFt(Plot2D &plot)
 		{
-			_ftStatistics = StatisticsDerivator::PerformFT(_statistics);
+			size_t count = plot.PointSetCount();
+			for(size_t line=0;line<count;++line)
+			{
+				Plot2DPointSet &pointSet = plot.GetPointSet(line);
+				std::vector<std::pair<double, std::complex<double> > > output;
+				const double min = pointSet.MinX();
+				const double width = pointSet.MaxX() - min;
+				const double fStart = -2.0 * M_PI * (double) pointSet.Size() / width;
+				const double fEnd = 2.0 * M_PI * (double) pointSet.Size() / width;
+				const double fStep = (fEnd - fStart) / (double) pointSet.Size();
+				for(double f = fStart; f < fEnd ; f += fStep)
+				{
+					std::pair<double, std::complex<double> > newElement(f/(2.0*M_PI), std::complex<double>(0.0, 0.0));
+					std::complex<double> &nextStat = newElement.second;
+					for(size_t i=0; i != pointSet.Size(); ++i)
+					{
+						const double t_f = pointSet.GetX(i) * f;
+						const double val = pointSet.GetY(i);
+						nextStat += std::complex<double>(val * cos(t_f), val * sin(t_f));
+					}
+					output.push_back(newElement);
+				}
+				
+				pointSet.Clear();
+				for(std::vector<std::pair<double, std::complex<double> > >::const_iterator i=output.begin();i!=output.end();++i)
+				{
+					double real = i->second.real(), imag=i->second.imag();
+					pointSet.PushDataPoint(i->first, sqrt(real*real + imag*imag));
+				}
+			}
 		}
 		
 		std::map<double, class DefaultStatistics> _statistics;
-		std::map<double, class DefaultStatistics> _ftStatistics;
 		Gtk::CheckButton _ftButton;
 };
 

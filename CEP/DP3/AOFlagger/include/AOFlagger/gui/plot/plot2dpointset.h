@@ -57,6 +57,11 @@ class Plot2DPointSet{
 		enum DrawingStyle DrawingStyle() const { return _drawingStyle; }
 		void SetDrawingStyle(enum DrawingStyle drawingStyle) { _drawingStyle = drawingStyle; }
 
+		void Clear()
+		{
+			_points.clear();
+		}
+
 		void PushDataPoint(double x, double y)
 		{
 			_points.push_back(Point2D(x,y));

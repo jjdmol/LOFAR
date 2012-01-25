@@ -118,6 +118,9 @@ void TwoDimensionalPlotPage::updatePlot()
 			plotStatistic(QualityTablesFormatter::RFIPercentageStatistic);
 		if(_snrButton.get_active())
 			plotStatistic(QualityTablesFormatter::SignalToNoiseStatistic);
+		
+		processPlot(_plot);
+		
 		_plotWidget.Update();
 		
 		if(_dataWindow->get_visible())

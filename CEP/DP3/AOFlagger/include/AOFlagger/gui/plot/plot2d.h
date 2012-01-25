@@ -69,6 +69,7 @@ class Plot2D : public Plotable {
 				throw std::runtime_error("Trying to push a data point into a plot without point sets (call StartLine first).");
 		}
 		size_t PointSetCount() const { return _pointSets.size(); }
+		Plot2DPointSet &GetPointSet(size_t index) { return *_pointSets[index]; }
 		const Plot2DPointSet &GetPointSet(size_t index) const { return *_pointSets[index]; }
 		virtual void Render(Gtk::DrawingArea &drawingArea);
 		void SetIncludeZeroYAxis(bool includeZeroAxis)
