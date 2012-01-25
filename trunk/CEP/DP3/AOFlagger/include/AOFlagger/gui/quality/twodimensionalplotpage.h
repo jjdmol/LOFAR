@@ -69,6 +69,10 @@ class TwoDimensionalPlotPage : public Gtk::HBox {
 		
 		virtual void StartLine(Plot2D &plot, const std::string &name, const std::string &yAxisDesc) = 0;
 		
+		virtual void processPlot(Plot2D &plot)
+		{
+		}
+		
 		virtual void addCustomPlotButtons(Gtk::VBox &container)
 		{
 		}
