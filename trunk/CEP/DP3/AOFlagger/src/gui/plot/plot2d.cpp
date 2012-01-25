@@ -218,7 +218,7 @@ void Plot2D::render(Cairo::RefPtr<Cairo::Context> cr, Plot2DPointSet &pointSet)
 	bool hasPrevPoint = false;
 	
 	unsigned iterationCount = pointSet.Size();
-	if(pointSet.DrawingStyle() == Plot2DPointSet::DrawLines)
+	if(pointSet.DrawingStyle() == Plot2DPointSet::DrawLines && iterationCount!=0)
 		--iterationCount;
 
 	for(size_t i=0;i<iterationCount;++i)

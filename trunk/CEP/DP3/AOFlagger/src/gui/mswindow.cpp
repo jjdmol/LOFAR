@@ -63,7 +63,6 @@
 #include <AOFlagger/strategy/plots/timeflagcountplot.h>
 
 #include <AOFlagger/util/compress.h>
-#include <AOFlagger/util/plot.h>
 #include <AOFlagger/util/multiplot.h>
 
 #include <AOFlagger/gui/plot/plot2d.h>
@@ -1136,25 +1135,24 @@ void MSWindow::onPlotDistPressed()
 {
 	if(_timeFrequencyWidget.HasImage())
 	{
-		Plot plot("dist.pdf");
+		Plot2D &plot = _plotManager.NewPlot2D("Distribution");
 
 		TimeFrequencyData activeData = GetActiveData();
 		Image2DCPtr image = activeData.GetSingleImage();
 		Mask2DPtr mask =
 			Mask2D::CreateSetMaskPtr<false>(image->Width(), image->Height());
-		plot.StartLine("Total");
-		RFIPlots::MakeDistPlot(plot, image, mask);
+		Plot2DPointSet &totalSet = plot.StartLine("Total");
+		RFIPlots::MakeDistPlot(totalSet, image, mask);
 
-		plot.StartLine("Uncontaminated");
+		Plot2DPointSet &uncontaminatedSet = plot.StartLine("Uncontaminated");
 		mask = Mask2D::CreateCopy(activeData.GetSingleMask());
-		RFIPlots::MakeDistPlot(plot, image, mask);
+		RFIPlots::MakeDistPlot(uncontaminatedSet, image, mask);
 
 		mask->Invert();
-		plot.StartLine("RFI");
-		RFIPlots::MakeDistPlot(plot, image, mask);
+		Plot2DPointSet &rfiSet = plot.StartLine("RFI");
+		RFIPlots::MakeDistPlot(rfiSet, image, mask);
 
-		plot.Close();
-		plot.Show();
+		_plotManager.Update();
 	}
 }
 
@@ -1172,24 +1170,24 @@ void MSWindow::onPlotPowerSpectrumPressed()
 {
 	if(_timeFrequencyWidget.HasImage())
 	{
-		Plot plot("Power-spectrum.pdf");
+		Plot2D &plot = _plotManager.NewPlot2D("Power spectrum");
+		plot.SetLogarithmicYAxis(true);
 
 		TimeFrequencyData data = _timeFrequencyWidget.GetActiveData();
 		Image2DCPtr image = data.GetSingleImage();
 		Mask2DPtr mask =
 			Mask2D::CreateSetMaskPtr<false>(image->Width(), image->Height());
-		plot.StartLine("Before");
-		RFIPlots::MakePowerSpectrumPlot(plot, image, mask, _timeFrequencyWidget.GetMetaData());
+		Plot2DPointSet &beforeSet = plot.StartLine("Before");
+		RFIPlots::MakePowerSpectrumPlot(beforeSet, image, mask, _timeFrequencyWidget.GetMetaData());
 
 		mask = Mask2D::CreateCopy(data.GetSingleMask());
 		if(!mask->AllFalse())
 		{
-			plot.StartLine("After");
-			RFIPlots::MakePowerSpectrumPlot(plot, image, mask, _timeFrequencyWidget.GetMetaData());
+			Plot2DPointSet &afterSet = plot.StartLine("After");
+			RFIPlots::MakePowerSpectrumPlot(afterSet, image, mask, _timeFrequencyWidget.GetMetaData());
 		}
-
-		plot.Close();
-		plot.Show();
+		
+		_plotManager.Update();
 	}
 }
 
@@ -1197,22 +1195,21 @@ void MSWindow::onPlotPowerSpectrumComparisonPressed()
 {
 	if(_timeFrequencyWidget.HasImage())
 	{
-		Plot plot("Power-spectrum-comparison.pdf");
+		Plot2D &plot = _plotManager.NewPlot2D("Power spectrum comparison");
 
 		TimeFrequencyData data = _timeFrequencyWidget.OriginalData();
 		Image2DCPtr image = data.GetSingleImage();
 		Mask2DCPtr mask = data.GetSingleMask();
-		plot.StartLine("Original");
-		RFIPlots::MakePowerSpectrumPlot(plot, image, mask, _timeFrequencyWidget.GetMetaData());
+		Plot2DPointSet &originalSet = plot.StartLine("Original");
+		RFIPlots::MakePowerSpectrumPlot(originalSet, image, mask, _timeFrequencyWidget.GetMetaData());
 
 		data = _timeFrequencyWidget.ContaminatedData();
 		image = data.GetSingleImage();
 		mask = data.GetSingleMask();
-		plot.StartLine("Alternative");
-		RFIPlots::MakePowerSpectrumPlot(plot, image, mask, _timeFrequencyWidget.GetMetaData());
+		Plot2DPointSet &alternativeSet = plot.StartLine("Alternative");
+		RFIPlots::MakePowerSpectrumPlot(alternativeSet, image, mask, _timeFrequencyWidget.GetMetaData());
 	
-		plot.Close();
-		plot.Show();
+		_plotManager.Update();
 	}
 }
 
@@ -1220,26 +1217,26 @@ void MSWindow::onPlotPowerRMSPressed()
 {
 	if(_timeFrequencyWidget.HasImage())
 	{
-		Plot plot("Spectrum-rms.pdf");
+		Plot2D &plot = _plotManager.NewPlot2D("Spectrum RMS");
+		plot.SetLogarithmicYAxis(true);
 
 		Mask2DPtr mask =
 			Mask2D::CreateSetMaskPtr<false>(_timeFrequencyWidget.Image()->Width(), _timeFrequencyWidget.Image()->Height());
-		plot.StartLine("Before");		
-		RFIPlots::MakeRMSSpectrumPlot(plot, _timeFrequencyWidget.Image(), mask);
+		Plot2DPointSet &beforeSet = plot.StartLine("Before");
+		RFIPlots::MakeRMSSpectrumPlot(beforeSet, _timeFrequencyWidget.Image(), mask);
 
 		mask = Mask2D::CreateCopy(_timeFrequencyWidget.GetActiveData().GetSingleMask());
 		if(!mask->AllFalse())
 		{
-			plot.StartLine("After");
-			RFIPlots::MakeRMSSpectrumPlot(plot, _timeFrequencyWidget.Image(), mask);
+			Plot2DPointSet &afterSet = plot.StartLine("After");
+			RFIPlots::MakeRMSSpectrumPlot(afterSet, _timeFrequencyWidget.Image(), mask);
 	
 			//mask->Invert();
-			//plot.StartLine("RFI");
-			//RFIPlots::MakeRMSSpectrumPlot(plot, _timeFrequencyWidget.Image(), mask);
+			//Plot2DPointSet &rfiSet = plot.StartLine("RFI");
+			//RFIPlots::MakeRMSSpectrumPlot(rfiSet, _timeFrequencyWidget.Image(), mask);
 		}
 
-		plot.Close();
-		plot.Show();
+		_plotManager.Update();
 	}
 }
 
@@ -1250,26 +1247,26 @@ void MSWindow::onPlotPowerSNRPressed()
 		model = _timeFrequencyWidget.RevisedData().GetSingleImage();
 	if(_timeFrequencyWidget.HasImage())
 	{
-		Plot plot("Spectrum-snr.pdf");
+		Plot2D &plot = _plotManager.NewPlot2D("SNR spectrum");
+		plot.SetLogarithmicYAxis(true);
 
 		Mask2DPtr mask =
 			Mask2D::CreateSetMaskPtr<false>(image->Width(), image->Height());
-		plot.StartLine("Total");		
-		RFIPlots::MakeSNRSpectrumPlot(plot, image, model, mask);
+		Plot2DPointSet &totalPlot = plot.StartLine("Total");
+		RFIPlots::MakeSNRSpectrumPlot(totalPlot, image, model, mask);
 
 		mask = Mask2D::CreateCopy(_timeFrequencyWidget.GetActiveData().GetSingleMask());
 		if(!mask->AllFalse())
 		{
-			plot.StartLine("Uncontaminated");
-			RFIPlots::MakeSNRSpectrumPlot(plot, image, model, mask);
+			Plot2DPointSet &uncontaminatedPlot = plot.StartLine("Uncontaminated");
+			RFIPlots::MakeSNRSpectrumPlot(uncontaminatedPlot, image, model, mask);
 	
 			mask->Invert();
-			plot.StartLine("RFI");
-			RFIPlots::MakeSNRSpectrumPlot(plot, image, model, mask);
+			Plot2DPointSet &rfiPlot = plot.StartLine("RFI");
+			RFIPlots::MakeSNRSpectrumPlot(rfiPlot, image, model, mask);
 		}
 
-		plot.Close();
-		plot.Show();
+		_plotManager.Update();
 	}
 }
 
@@ -1277,26 +1274,26 @@ void MSWindow::onPlotPowerTimePressed()
 {
 	if(_timeFrequencyWidget.HasImage())
 	{
-		Plot plot("Time.pdf");
+		Plot2D &plot = _plotManager.NewPlot2D("Power over time");
+		plot.SetLogarithmicYAxis(true);
 
 		Mask2DPtr mask =
 			Mask2D::CreateSetMaskPtr<false>(_timeFrequencyWidget.Image()->Width(), _timeFrequencyWidget.Image()->Height());
-		plot.StartLine("Total");		
-		RFIPlots::MakePowerTimePlot(plot, _timeFrequencyWidget.Image(), mask, _timeFrequencyWidget.GetMetaData());
+		Plot2DPointSet &totalPlot = plot.StartLine("Total");
+		RFIPlots::MakePowerTimePlot(totalPlot, _timeFrequencyWidget.Image(), mask, _timeFrequencyWidget.GetMetaData());
 
 		mask = Mask2D::CreateCopy(_timeFrequencyWidget.GetActiveData().GetSingleMask());
 		if(!mask->AllFalse())
 		{
-			plot.StartLine("Uncontaminated");
-			RFIPlots::MakePowerTimePlot(plot, _timeFrequencyWidget.Image(), mask, _timeFrequencyWidget.GetMetaData());
+			Plot2DPointSet &uncontaminatedPlot = plot.StartLine("Uncontaminated");
+			RFIPlots::MakePowerTimePlot(uncontaminatedPlot, _timeFrequencyWidget.Image(), mask, _timeFrequencyWidget.GetMetaData());
 	
 			mask->Invert();
-			plot.StartLine("RFI");
-			RFIPlots::MakePowerTimePlot(plot, _timeFrequencyWidget.Image(), mask, _timeFrequencyWidget.GetMetaData());
+			Plot2DPointSet &rfiPlot = plot.StartLine("RFI");
+			RFIPlots::MakePowerTimePlot(rfiPlot, _timeFrequencyWidget.Image(), mask, _timeFrequencyWidget.GetMetaData());
 		}
 
-		plot.Close();
-		plot.Show();
+		_plotManager.Update();
 	}
 }
 
@@ -1304,22 +1301,22 @@ void MSWindow::onPlotPowerTimeComparisonPressed()
 {
 	if(_timeFrequencyWidget.HasImage())
 	{
-		Plot plot("Time-comparison.pdf");
+		Plot2D &plot = _plotManager.NewPlot2D("Time comparison");
 
 		TimeFrequencyData data = _timeFrequencyWidget.OriginalData();
 		Mask2DCPtr mask = data.GetSingleMask();
 		Image2DCPtr image = data.GetSingleImage();
-		plot.StartLine("Original");
-		RFIPlots::MakePowerTimePlot(plot, image, mask, _timeFrequencyWidget.GetMetaData());
+		Plot2DPointSet &originalPlot = plot.StartLine("Original");
+		RFIPlots::MakePowerTimePlot(originalPlot, image, mask, _timeFrequencyWidget.GetMetaData());
 
 		data = _timeFrequencyWidget.ContaminatedData();
 		mask = data.GetSingleMask();
 		image = data.GetSingleImage();
+		Plot2DPointSet &alternativePlot = plot.StartLine("Original");
 		plot.StartLine("Alternative");
-		RFIPlots::MakePowerTimePlot(plot, image, mask, _timeFrequencyWidget.GetMetaData());
+		RFIPlots::MakePowerTimePlot(alternativePlot, image, mask, _timeFrequencyWidget.GetMetaData());
 
-		plot.Close();
-		plot.Show();
+		_plotManager.Update();
 	}
 }
 
@@ -1327,10 +1324,10 @@ void MSWindow::onPlotTimeScatterPressed()
 {
 	if(_timeFrequencyWidget.HasImage())
 	{
-		MultiPlot plot("Scatter.pdf", 4);
+		MultiPlot plot(_plotManager.NewPlot2D("Time scatter"), 4);
 		RFIPlots::MakeScatterPlot(plot, GetActiveData(), _timeFrequencyWidget.GetMetaData());
 		plot.Finish();
-		plot.Show();
+		_plotManager.Update();
 	}
 }
 
@@ -1338,11 +1335,11 @@ void MSWindow::onPlotTimeScatterComparisonPressed()
 {
 	if(_timeFrequencyWidget.HasImage())
 	{
-		MultiPlot plot("Scatter-comparison.pdf", 8);
+		MultiPlot plot(_plotManager.NewPlot2D("Time scatter comparison"), 8);
 		RFIPlots::MakeScatterPlot(plot, GetOriginalData(), _timeFrequencyWidget.GetMetaData(), 0);
 		RFIPlots::MakeScatterPlot(plot, GetContaminatedData(), _timeFrequencyWidget.GetMetaData(), 4);
 		plot.Finish();
-		plot.Show();
+		_plotManager.Update();
 	}
 }
 
@@ -1350,11 +1347,10 @@ void MSWindow::onPlotSingularValuesPressed()
 {
 	if(HasImage())
 	{
-		Plot plot("singularvalues.pdf");
+		Plot2D &plot = _plotManager.NewPlot2D("Singular values");
 
 		SVDMitigater::CreateSingularValueGraph(GetActiveData(), plot);
-		plot.Close();
-		plot.Show();
+		_plotManager.Update();
 	}
 }
 
@@ -1362,10 +1358,9 @@ void MSWindow::onPlotQuality25Pressed()
 {
 	if(HasImage())
 	{
-		Plot plot("quality.pdf");
-		RFIPlots::MakeQualityPlot(plot, GetActiveData(), _timeFrequencyWidget.RevisedData(), 25);
-		plot.Close();
-		plot.Show();
+		Plot2D &plot = _plotManager.NewPlot2D("Quality over 25");
+		RFIPlots::MakeQualityPlot(plot.StartLine(), GetActiveData(), _timeFrequencyWidget.RevisedData(), 25);
+		_plotManager.Update();
 	}
 }
 
@@ -1373,10 +1368,9 @@ void MSWindow::onPlotQualityAllPressed()
 {
 	if(HasImage())
 	{
-		Plot plot("quality.pdf");
-		RFIPlots::MakeQualityPlot(plot, GetActiveData(), _timeFrequencyWidget.RevisedData(), _timeFrequencyWidget.RevisedData().ImageWidth());
-		plot.Close();
-		plot.Show();
+		Plot2D &plot = _plotManager.NewPlot2D("Quality over all");
+		RFIPlots::MakeQualityPlot(plot.StartLine(), GetActiveData(), _timeFrequencyWidget.RevisedData(), _timeFrequencyWidget.RevisedData().ImageWidth());
+		_plotManager.Update();
 	}
 }
 
@@ -1387,19 +1381,15 @@ void MSWindow::onPlotSNRToFitVariance()
 	FringeStoppingFitter fitter;
 	fitter.SetMetaData(_timeFrequencyWidget.GetMetaData());
 	
-	Plot
-		plotA("/tmp/snrplot-a.pdf"),
-		plotB("/tmp/snrplot-b.pdf");
-	plotA.StartLine("Stddev");
+	Plot2D
+		&plotA = _plotManager.NewPlot2D("/tmp/snrplot-a.pdf"),
+		&plotB = _plotManager.NewPlot2D("/tmp/snrplot-b.pdf");
+	plotA.StartLine("Stddev", "SNR (dB)", "Error (sigma-epsilon)");
 	plotA.SetTitle("Fit errors");
-	plotA.SetXAxisText("SNR (dB)");
-	plotA.SetYAxisText("Error (sigma-epsilon)");
-	plotA.SetLogScale(false, false, false);
-	plotB.StartLine("Stddev");
+	plotA.SetLogarithmicYAxis(false);
+	plotB.StartLine("Stddev", "SNR (ratio, non-logarithmic)", "Error (sigma-epsilon)");
 	plotB.SetTitle("Fit errors");
-	plotB.SetXAxisText("SNR (ratio, non-logarithmic)");
-	plotB.SetYAxisText("Error (sigma-epsilon)");
-	plotB.SetLogScale(false, false, false);
+	plotB.SetLogarithmicYAxis(false);
 
 	const unsigned iterations = 2500;
 	std::vector<long double> medians, means, maxs, snrDbs, snrRatios;
@@ -1409,8 +1399,6 @@ void MSWindow::onPlotSNRToFitVariance()
 	if(relative)
 		stop = 0.01;
 
-	plotA.SetXRange(10.0 * logl(stop) / logl(10.0L), 10.0 * logl(start) / logl(10.0L));
-	plotB.SetXRange(stop, start);
 	for(long double snr = start;snr>stop;snr *= 0.9) {
 		long double amplitudes[iterations], mean = 0, stddev = 0;
 		long double db = 10.0 * logl(snr) / logl(10.0L);
@@ -1519,10 +1507,7 @@ void MSWindow::onPlotSNRToFitVariance()
 			plotB.PushDataPoint(snrRatios[i], snrRatios[i]);
 		}
 	}
-	plotA.Close();
-	plotA.Show();
-	plotB.Close();
-	plotB.Show();
+	_plotManager.Update();
 }
 
 void MSWindow::onImagePropertiesPressed()
