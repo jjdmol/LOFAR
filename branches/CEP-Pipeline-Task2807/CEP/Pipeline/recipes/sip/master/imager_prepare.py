@@ -117,8 +117,11 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         # TODO: candidate for refactoring
         # *********************************************************************
         # Compile the command to be executed on the remote machine, fi
-        nodeCommand = "bash -c '. ${APS_LOCAL}/login/loadpackage.bash LofIm' ; python %s" % (self.__file__.replace("master", "nodes"))
-
+        #nodeCommand = "bash -c '. ${APS_LOCAL}/login/loadpackage.bash LofIm' ; python %s" % (self.__file__.replace("master", "nodes"))
+        nodeCommand = " bash -c '. /opt/cep/login/bashrc; use LofIm; python %s" % (self.__file__.replace("master", "nodes"))
+        #TODO: the bash -c is at this location NOT ' limited!!!
+        #This is done very far down in the source code at: run_via_ssh (rematecommand.py) 
+        
         outnames = collections.defaultdict(list)
         jobs = []
         n_subband_groups = len(output_map)

@@ -13,7 +13,10 @@ python_install(
   master/demixing.py
   master/dppp.py
   master/flag_baseline.py
+  master/imager_awimager.py
+  master/imager_create_dbs.py
   master/imager_pipeline.py
+  master/imager_prepare.py
   master/make_flaggable.py
   master/new_bbs.py
   master/parmdb.py
@@ -34,6 +37,9 @@ python_install(
   nodes/flag_baseline.py
   nodes/make_flaggable.py
   nodes/new_bbs.py
+  nodes/imager_awimager.py
+  nodes/imager_create_dbs.py
+  nodes/imager_prepare.py
   nodes/parmdb.py
   nodes/parmexportcal.py
   nodes/rficonsole.py

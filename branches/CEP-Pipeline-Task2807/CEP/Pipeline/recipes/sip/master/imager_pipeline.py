@@ -103,7 +103,7 @@ class imager_pipeline(control):
         raw_ms_mapfile = self.inputs['input_mapfile']
 
 ##prepare phase and awimager Working
-        prepare_imager_parset = self.parset.makeSubset("prepare_imager.")
+        prepare_imager_parset = self.parset.makeSubset("imager_prepare.")
 
         ndppp = prepare_imager_parset.getString("ndppp")
         initscript = prepare_imager_parset.getString("initscript")
@@ -119,12 +119,12 @@ class imager_pipeline(control):
 
         #run the prepare imager
         prepare_imager_output_mapfile = None
-        skip_prepare = True
+        skip_prepare = False
         if skip_prepare:
             prepare_imager_output_mapfile = "/home/klijn/build/preparation/actual_output.map"
         else:
             prepare_imager_output_mapfile = \
-                    self.run_task("prepare_imager", raw_ms_mapfile,
+                    self.run_task("imager_prepare", raw_ms_mapfile,
                         ndppp = ndppp,
                         initscript = initscript,
                         parset = prepare_imager_parset_file,
@@ -146,7 +146,7 @@ class imager_pipeline(control):
 
         #run the awimager recipe
         awimager_output_mapfile = \
-            self.run_task("awimager", prepare_imager_output_mapfile,
+            self.run_task("imager_awimager", prepare_imager_output_mapfile,
                           parset = awimager_parset,
                           executable = executable)
 #prepare phase and awimager Working

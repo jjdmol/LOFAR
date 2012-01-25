@@ -31,6 +31,17 @@ class imager_prepare(LOFARnodeTCP):
     def run(self, init_script, parset, working_dir, ndppp, output_measurement_set,
             slices_per_image, subbands_per_image, input_map_repr):
 
+        self.logger.info("#####################################")
+        self.logger.info("** {0} ".format(init_script))
+        self.logger.info("** {0} ".format(parset))
+        self.logger.info("** {0} ".format(working_dir))
+        self.logger.info("** {0} ".format(ndppp))
+        self.logger.info("** {0} ".format(output_measurement_set))
+        self.logger.info("** {0} ".format(slices_per_image))
+        self.logger.info("** {0} ".format(subbands_per_image))
+        self.logger.info("** {0} ".format(input_map_repr))
+        self.logger.info("#####################################")
+        raise Exception
         log4CPlusName = "imager_prepare_node"
         time_slice_dir = "group_sets"  #TODO constant!! Dit moet slices worden
         collected_ms_dir = "collected_ms"
@@ -47,7 +58,7 @@ class imager_prepare(LOFARnodeTCP):
 
             # TODO: ********************* temp solution for quick debugging
             missing_files = []
-            skip_copy = False
+            skip_copy = True
             temp_missing = os.path.join(working_dir, "temp_missing")
             if not skip_copy:
                 #Collect all files and copy to current node
@@ -198,6 +209,7 @@ class imager_prepare(LOFARnodeTCP):
 
             #run ndppp
             cmd = [ndppp, temp_parset_filename]
+
             try:
                 environment = read_initscript(self.logger, init_script)
                 with CatchLog4CPlus(working_dir, self.logger.name +
@@ -236,6 +248,9 @@ class imager_prepare(LOFARnodeTCP):
 
 
 if __name__ == "__main__":
+    print sys.argv
     jobid, jobhost, jobport = sys.argv[1:4]
     sys.exit(
         imager_prepare(jobid, jobhost, jobport).run_with_stored_arguments())
+
+

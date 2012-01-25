@@ -1,6 +1,5 @@
 from __future__ import with_statement
 import os
-import errno
 import unittest
 import shutil
 import numpy
@@ -10,7 +9,7 @@ import tempfile
 import pyrap.tables as tb                                                       #@UnresolvedImport
 from lofarpipe.support.utilities import create_directory                        #@UnresolvedImport
 from lofarpipe.recipes.nodes.imager_create_dbs import imager_create_dbs         #@UnresolvedImport
-from logger import logger
+from logger import logger                                                       #@UnresolvedImport
 
 
 class ImagerCreateDBsTestWrapper(imager_create_dbs):
@@ -363,6 +362,30 @@ class ImagerCreateDBsTest(unittest.TestCase):
             pass
 
         os.rmdir(tempdir)
+
+    def test__create_bbs_sky_model_exception_thrown_by_gsm(self):
+        """
+        Test correct functioning of _create_bbs_sky_model.
+        The inner workings of nested funtions is not tested 
+        """
+        theta = "20"
+
+        # create the muck db with location
+        ra = 123
+        decl = 456
+        variable_dictionary = {'NAME':["--LBA--"],
+                               'REF_FREQUENCY':["75E6"],
+                               'LOFAR_ANTENNA_SET':["--OUTER--"],
+                               'PHASE_DIR':[numpy.array([ra, decl])]}
+        tb.table.variable_dictionary = variable_dictionary
+
+        test_skymodel_path = "except"
+        
+        # test correct return value: gsm threw exception
+        #  __create_bbs_sky_model should return 1     
+        self.assertTrue(1 == self.imager_create_dbs._create_bbs_sky_model(
+            "measurement_set", test_skymodel_path, "host", "db_port",
+             "db_name", "db_user", "db_password", theta))
 
 
 if __name__ == "__main__":
