@@ -134,7 +134,8 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
     const CN_Transpose2 &itsTranspose2Logic;
     std::vector<double> itsCenterFrequencies;
     SmartPtr<Ring>	itsFirstInputSubband, itsCurrentSubband;
-    std::vector<double> itsDMs;
+    std::vector<double> itsCoherentDMs;
+    std::vector<double> itsIncoherentDMs;
     bool		itsFakeInputData;
     bool		itsHasPhaseOne, itsHasPhaseTwo, itsHasPhaseThree;
 
@@ -164,6 +165,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
     SmartPtr<Stokes>				itsStokes;
     SmartPtr<Correlator>			itsCorrelator;
     SmartPtr<DedispersionAfterBeamForming>	itsDedispersionAfterBeamForming;
+    SmartPtr<DedispersionBeforeBeamForming>	itsDedispersionBeforeBeamForming;
     SmartPtr<PreCorrelationFlagger>		itsPreCorrelationFlagger;
     SmartPtr<PostCorrelationFlagger>		itsPostCorrelationFlagger;
     SmartPtr<Trigger>				itsTrigger;

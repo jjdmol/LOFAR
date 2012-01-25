@@ -6,6 +6,7 @@
 #include <Interface/BeamFormedData.h>
 #include <Interface/MultiDimArray.h>
 #include <Interface/Parset.h>
+#include <Dedispersion.h>
 
 #if 0 || !defined HAVE_BGP
 #define STOKES_C_IMPLEMENTATION
@@ -23,7 +24,7 @@ class Stokes
     Stokes(unsigned nrChannels, unsigned nrSamples);
 
     template <bool ALLSTOKES> void calculateCoherent(const SampleData<> *sampleData, PreTransposeBeamFormedData *stokesData, unsigned inbeam, const StreamInfo &info);
-    template <bool ALLSTOKES> void calculateIncoherent(const SampleData<> *sampleData, PreTransposeBeamFormedData *stokesData, const std::vector<unsigned> &stationMapping, const StreamInfo &info);
+    template <bool ALLSTOKES> void calculateIncoherent(const FilteredData *sampleData, PreTransposeBeamFormedData *stokesData, const std::vector<unsigned> &stationMapping, const StreamInfo &info, DedispersionBeforeBeamForming *dedispersion, unsigned subband, double dm, Allocator &allocator);
 
   private:
     const unsigned          itsNrChannels;

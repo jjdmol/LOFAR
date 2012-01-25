@@ -75,7 +75,6 @@ template <bool ALLSTOKES> void Stokes::calculateCoherent(const SampleData<> *sam
   // process flags
   const std::vector<SparseSet<unsigned> > &inflags = sampleData->flags;
   std::vector<SparseSet<unsigned> > &outflags = stokesData->flags;
-
   outflags[0] = inflags[inbeam];
   outflags[0] /= timeIntegrations;
 
@@ -215,41 +214,36 @@ template <bool ALLSTOKES> static inline void addStokes(struct stokes<ALLSTOKES> 
 }
 
 // Calculate incoherent stokes values from (filtered) station data.
-template <bool ALLSTOKES> void Stokes::calculateIncoherent(const SampleData<> *sampleData, PreTransposeBeamFormedData *stokesData, const std::vector<unsigned> &stationMapping, const StreamInfo &info)
+template <bool ALLSTOKES> void Stokes::calculateIncoherent(const FilteredData *in, PreTransposeBeamFormedData *out, const std::vector<unsigned> &stationMapping, const StreamInfo &info, DedispersionBeforeBeamForming *dedispersion, unsigned subband, double dm, Allocator &allocator)
 {
   const unsigned nrStations = stationMapping.size();
 
-  ASSERT(sampleData->samples.shape()[0] == itsNrChannels);
-  // sampleData->samples.shape()[1] has to be bigger than all elements in stationMapping
-  ASSERT(sampleData->samples.shape()[2] >= itsNrSamples);
-  ASSERT(sampleData->samples.shape()[3] == NR_POLARIZATIONS);
+  ASSERT(in->samples.shape()[0] == itsNrChannels);
+  // in->samples.shape()[1] has to be bigger than all elements in stationMapping
+  ASSERT(in->samples.shape()[2] >= itsNrSamples);
+  ASSERT(in->samples.shape()[3] == NR_POLARIZATIONS);
 
   const unsigned &timeIntegrations = info.timeIntFactor;
-  const unsigned upperBound = static_cast<unsigned>(itsNrSamples * Stokes::MAX_FLAGGED_PERCENTAGE);
   const unsigned channelIntegrations = itsNrChannels / info.nrChannels;
-  bool validStation[nrStations];
-  unsigned nrValidStations = 0;
-  const MultiDimArray<fcomplex, 4> &in = sampleData->samples;
-  const std::vector< SparseSet<unsigned> > &inflags = sampleData->flags;
-  PreTransposeBeamFormedData *out = stokesData;
   std::vector<unsigned> stationList;
 
   out->flags[0].reset();
 
   for (unsigned stat = 0; stat < nrStations; stat ++) {
+    const unsigned upperBound = static_cast<unsigned>(itsNrSamples * Stokes::MAX_FLAGGED_PERCENTAGE);
     const unsigned srcStat = stationMapping[stat];
 
-    if(inflags[srcStat].count() > upperBound) {
+    if(in->flags[srcStat].count() > upperBound) {
       // drop station due to too much flagging
-      validStation[stat] = false;
     } else {
-      validStation[stat] = true;
-      nrValidStations ++;
+      stationList.push_back(srcStat);  
 
       // conservative flagging: flag anything that is flagged in one of the stations
-      out->flags[0] |= inflags[srcStat];
+      out->flags[0] |= in->flags[srcStat];
     }
   }
+
+  const unsigned nrValidStations = stationList.size();
 
   if (nrValidStations == 0) {
     /* if no valid samples, insert zeroes */
@@ -264,28 +258,40 @@ template <bool ALLSTOKES> void Stokes::calculateIncoherent(const SampleData<> *s
     return;
   }
 
-  // enumerate all valid stations
-  for (unsigned stat = 0; stat < nrStations; stat ++) {
-    unsigned srcStat = stationMapping[stat];
-
-    if (!validStation[stat])
-      continue;
-
-    stationList.push_back(srcStat);  
-  }
-
   // shorten the flags over the integration length
   out->flags[0] /= timeIntegrations;
 
+  SmartPtr<FilteredData> dedispersed;
+  const bool dedisperse = dm != 0.0 && dedispersion;
+  
+  if (dedisperse)
+    dedispersed = new FilteredData(nrValidStations, channelIntegrations, itsNrSamples, allocator);
+
   for (unsigned inch = 0, outch = 0; inch < itsNrChannels; inch += channelIntegrations, outch++) {
+
+    if (dedisperse) {
+      // dedisperse channelIntegration channels for all stations
+      for (unsigned outstat = 0; outstat < stationList.size(); outstat ++) {
+        unsigned instat = stationList[outstat];
+
+        dedispersion->dedisperse( in, dedispersed.get(), instat, outstat, inch, channelIntegrations, subband, dm );
+      }
+    }
+
     for (unsigned inTime = 0, outTime = 0; inTime < itsNrSamples; inTime += timeIntegrations, outTime ++) {
       struct stokes<ALLSTOKES> stokes;
 
-      for (unsigned i = 0; i < stationList.size(); i ++) {
-        unsigned stat = stationList[i];
+      if (dedisperse) {
+         for (unsigned i = 0; i < nrValidStations; i ++)
+          for (unsigned c = 0; c < channelIntegrations; c++)
+            addStokes<ALLSTOKES>(stokes, reinterpret_cast<const fcomplex (*)[2]>(&dedispersed->samples[c][i][inTime][0]), timeIntegrations);
+      } else {
+         for (unsigned i = 0; i < nrValidStations; i ++) {
+          unsigned stat = stationList[i];
 
-        for (unsigned c = 0; c < channelIntegrations; c++)
-          addStokes<ALLSTOKES>(stokes, reinterpret_cast<const fcomplex (*)[2]>(&in[inch + c][stat][inTime][0]), timeIntegrations);
+          for (unsigned c = 0; c < channelIntegrations; c++)
+            addStokes<ALLSTOKES>(stokes, reinterpret_cast<const fcomplex (*)[2]>(&in->samples[inch + c][stat][inTime][0]), timeIntegrations);
+        }  
       }  
 
       #define dest(stokes) out->samples[stokes][outch][outTime]
@@ -301,8 +307,8 @@ template <bool ALLSTOKES> void Stokes::calculateIncoherent(const SampleData<> *s
   }
 }
 
-template void Stokes::calculateIncoherent<true>(const SampleData<> *, PreTransposeBeamFormedData *, const std::vector<unsigned> &, const StreamInfo&);
-template void Stokes::calculateIncoherent<false>(const SampleData<> *, PreTransposeBeamFormedData *, const std::vector<unsigned> &, const StreamInfo&);
+template void Stokes::calculateIncoherent<true>(const FilteredData *, PreTransposeBeamFormedData *, const std::vector<unsigned> &, const StreamInfo&, DedispersionBeforeBeamForming *, unsigned, double, Allocator&);
+template void Stokes::calculateIncoherent<false>(const FilteredData *, PreTransposeBeamFormedData *, const std::vector<unsigned> &, const StreamInfo&, DedispersionBeforeBeamForming *, unsigned, double, Allocator&);
 
 } // namespace RTCP
 } // namespace LOFAR
