@@ -101,6 +101,21 @@ class DefaultStatistics : public Serializable
 			return *this;
 		}
 		
+		DefaultStatistics &operator*=(const long double factor)
+		{
+			for(unsigned p=0;p<_polarizationCount;++p)
+			{
+				rfiCount[p] *= factor;
+				count[p] *= factor;
+				sum[p] *= factor;
+				sumP2[p] *= factor;
+				dCount[p] *= factor;
+				dSum[p] *= factor;
+				dSumP2[p] *= factor;
+			}
+			return *this;
+		}
+		
 		virtual void Serialize(std::ostream &stream) const
 		{
 			SerializeToUInt32(stream, _polarizationCount);

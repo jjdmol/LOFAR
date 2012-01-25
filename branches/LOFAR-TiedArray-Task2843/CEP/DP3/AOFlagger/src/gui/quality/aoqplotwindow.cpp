@@ -68,27 +68,27 @@ AOQPlotWindow::AOQPlotWindow() :
 	
 	add(_vBox);
 	_vBox.show();
+	
+	_openOptionsWindow.SignalOpen().connect(sigc::mem_fun(*this, &AOQPlotWindow::onOpenOptionsSelected));
 }
 
 void AOQPlotWindow::Open(const std::string &filename)
 {
+	_openOptionsWindow.ShowForFile(filename);
+}
+
+void AOQPlotWindow::onOpenOptionsSelected(std::string filename, bool downsampleTime, bool downsampleFreq, size_t freqCount)
+{
 	_filename = filename;
-	readStatistics();
+	readStatistics(downsampleTime, downsampleFreq, freqCount);
 	_baselinePlotPage.SetStatistics(_statCollection, _antennas);
 	_antennaePlotPage.SetStatistics(_statCollection, _antennas);
 	_bLengthPlotPage.SetStatistics(_statCollection, _antennas);
 	_timePlotPage.SetStatistics(_statCollection, _antennas);
 	_frequencyPlotPage.SetStatistics(_statCollection, _antennas);
-	//if(_fullStats->AllTimeStatistics().size() > 1)
-	//{
-		_timeFrequencyPlotPage.SetStatistics(_fullStats);
-	//	_timeFrequencyPlotPage.set_sensitive(true);
-	//} else {
-	//	_timeFrequencyPlotPage.set_sensitive(false);
-	//}
+	_timeFrequencyPlotPage.SetStatistics(_fullStats);
 	_summaryPage.SetStatistics(_statCollection);
 }
-
 
 void AOQPlotWindow::close()
 {
@@ -108,7 +108,7 @@ void AOQPlotWindow::close()
 	}
 }
 
-void AOQPlotWindow::readStatistics()
+void AOQPlotWindow::readStatistics(bool downsampleTime, bool downsampleFreq, size_t freqSize)
 {
 	close();
 	
@@ -135,7 +135,8 @@ void AOQPlotWindow::readStatistics()
 				s << "... and " << (commander.Errors().size()-30) << " more.\n";
 			}
 			s << "\nThe program will continue, but this might mean that the statistics are incomplete. If this is the case, fix the issues and reopen the observation.";
-			Gtk::MessageDialog dialog(s.str(), false, Gtk::MESSAGE_ERROR);
+			std::cerr << s.str() << std::endl;
+			Gtk::MessageDialog dialog(*this, s.str(), false, Gtk::MESSAGE_ERROR);
 			dialog.run();
 		}
 		delete observation;
@@ -155,11 +156,17 @@ void AOQPlotWindow::readStatistics()
 		_statCollection = new StatisticsCollection(polarizationCount);
 		_statCollection->Load(formatter);
 	}
-	std::cout << "Lowering time resolution..." << std::endl;
-	_statCollection->LowerTimeResolution(1000);
+	if(downsampleTime)
+	{
+		std::cout << "Lowering time resolution..." << std::endl;
+		_statCollection->LowerTimeResolution(1000);
+	}
 
-	std::cout << "Lowering frequency resolution..." << std::endl;
-	_statCollection->LowerFrequencyResolution(1000);
+	if(downsampleFreq)
+	{
+		std::cout << "Lowering frequency resolution..." << std::endl;
+		_statCollection->LowerFrequencyResolution(freqSize);
+	}
 
 	std::cout << "Integrating baseline statistics to one channel..." << std::endl;
 	_statCollection->IntegrateBaselinesToOneChannel();
