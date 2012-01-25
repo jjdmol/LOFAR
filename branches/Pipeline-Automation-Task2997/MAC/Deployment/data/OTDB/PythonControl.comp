@@ -22,6 +22,6 @@ par  canCommunicate	 I    bool   -	10	0	'true'			-	"Temp flag to tell MAC if the
 uses  DPPP	   4.0.0  development 	1	"DPcube"
 uses  BBS  	   4.0.0  development 	1	"Blackboard System"
 uses  Imager 	   4.0.0  development 	1	"Imager"
-uses Calibration
+uses Calibration   4.0.0  development   1   "Calibration"
 
 
