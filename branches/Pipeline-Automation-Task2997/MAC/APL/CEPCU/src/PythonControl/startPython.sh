@@ -42,8 +42,9 @@ programOptions=" \
  -d \
  -c ${LOFARROOT}/share/pipeline.cfg \
  -t ${LOFARROOT}/share/tasks.cfg \
- -r ${LOFARROOT}/share"
- 
+ -r ${LOFARROOT}/share \
+ -w /data/scratch/${USER}"
+  
 # Print some debugging information if debugging is enabled.
 if [ -n "$debug" ]; then
   echo "PATH=${PATH}"
@@ -54,3 +55,4 @@ fi
 
 # Start the Python program.
 ${pythonProgram} ${programOptions} ${parsetFile}
+
