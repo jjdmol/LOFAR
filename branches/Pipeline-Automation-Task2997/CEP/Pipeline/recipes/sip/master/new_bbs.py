@@ -177,10 +177,10 @@ class new_bbs(BaseRecipe):
         self.logger.debug("Reading parset from %s" % self.inputs['parset'])
         self.parset = parameterset(self.inputs['parset'])
 
-        self._set_input('db_host', 'BBSControl.BBDB.Host')
-        self._set_input('db_user', 'BBSControl.BBDB.User')
-        self._set_input('db_name', 'BBSControl.BBDB.Name')
-        self._set_input('db_key', 'BBSControl.BBDB.Key')
+        self._set_input('db_host', 'BBDB.Host')
+        self._set_input('db_user', 'BBDB.User')
+        self._set_input('db_name', 'BBDB.Name')
+        self._set_input('db_key', 'BBDB.Key')
 
         #self.logger.debug("self.inputs = %s" % self.inputs)
 
@@ -219,7 +219,7 @@ class new_bbs(BaseRecipe):
         # ------------------------------------------------------------------
         self.logger.debug("Building parset for BBS control")
         bbs_parset = utilities.patch_parset(
-            self.parset.makeSubset("BBSControl."),
+            self.parset,
             {
                 'Observation': gvds_file,
                 'BBDB.Key': self.inputs['db_key'],
