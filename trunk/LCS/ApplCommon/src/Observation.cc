@@ -176,14 +176,7 @@ Observation::Observation(ParameterSet*		aParSet,
 		string	beamPrefix(prefix+formatString("Beam[%d].", beamIdx));
 		newBeam.momID	 		 = aParSet->getInt        (beamPrefix+"momID", 0);
 		newBeam.target	 		 = aParSet->getString     (beamPrefix+"target", "");
-		newBeam.maximizeDuration = aParSet->getBool       (beamPrefix+"maximizeDuration", false);
 		newBeam.subbands 		 = aParSet->getInt32Vector(beamPrefix+"subbandList", vector<int32>(), true);// true:expand
-		newBeam.beamlets 		 = aParSet->getInt32Vector(beamPrefix+"beamletList", vector<int32>(), true);// true:expand
-		if (newBeam.subbands.size() != newBeam.beamlets.size()) {
-			THROW (Exception, "Number of subbands(" << newBeam.subbands.size() << 
-							  ") != number of beamlets(" << newBeam.beamlets.size() << 
-							  ") in beam " << beamIdx);
-		}
 		newBeam.name = getBeamName(beamIdx);
 		newBeam.antennaSet = antennaSet;
 		if (dualMode) {
@@ -673,7 +666,6 @@ ostream& Observation::print (ostream&	os) const
 		os << "Beam[" << b << "].momID      : " << beams[b].momID << endl;
 		os << "Beam[" << b << "].subbandList: "; writeVector(os, beams[b].subbands, ",", "[", "]"); os << endl;
 		os << "Beam[" << b << "].beamletList: "; writeVector(os, getBeamlets(b), ",", "[", "]"); os << endl;
-		os << "Beam[" << b << "].maxDuration: " << (beams[b].maximizeDuration ? "YES" : "NO") << endl;
 		os << "nrPointings : " << beams[b].pointings.size() << endl;
 		for (size_t p = 0; p < beams[b].pointings.size(); ++p) {
 			const Pointing*		pt = &(beams[b].pointings[p]);
