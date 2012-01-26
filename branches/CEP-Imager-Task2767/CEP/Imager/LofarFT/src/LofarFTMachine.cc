@@ -164,7 +164,7 @@ LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize,
     cout<<"Gridding using oversampling of 1 only"<<endl;
     itsOversample=1;
   };
-  cout<<"FTMahin: itsRefFreq "<<itsRefFreq<<endl;
+  //cout<<"FTMahin: itsRefFreq "<<itsRefFreq<<endl;
 
   ROMSSpWindowColumns window(ms.spectralWindow());
   itsListFreq.resize(window.nrow());
@@ -316,7 +316,7 @@ void LofarFTMachine::init() {
   logIO() << LogOrigin("LofarFTMachine", "init")  << LogIO::NORMAL;
   canComputeResiduals_p = DORES;
   ok();
-  cout<<"LofarFTMachine::init()" <<endl;
+  //  cout<<"LofarFTMachine::init()" <<endl;
 
   /* hardwiring isTiled is False
   // Padding is possible only for non-tiled processing
@@ -331,7 +331,7 @@ void LofarFTMachine::init() {
   */
     // We are padding.
 
-  cout<<"padding_p!!!!! "<<padding_p<<endl;
+  //cout<<"padding_p!!!!! "<<padding_p<<endl;
 
   isTiled=False;
   if(!noPadding_p){
@@ -1043,9 +1043,9 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
       Int ist  = blIndex[blStart[i]];
       Int iend = blIndex[blEnd[i]];
       if(done[i]==true){continue;};
-      if(doagain>0){
-	cout<<"Doing again (doagain) baseline: A1="<<ant1[ist]<<", A2="<<ant2[ist]<<endl;
-      }
+      //if(doagain>0){
+	//cout<<"Doing again (doagain) baseline: A1="<<ant1[ist]<<", A2="<<ant2[ist]<<endl;
+      //}
 
       try{
 
@@ -1061,7 +1061,9 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
           }
         }
       }
-      average_weight=average_weight/Nvis;
+      if(Nvis>0){
+	average_weight=average_weight/Nvis;
+      } else {average_weight=0.;}
       ///        itsSumWeight += average_weight * average_weight;
       if (itsVerbose > 1) {
         cout<<"average weights= "<<average_weight<<", Nvis="<<Nvis<<endl;
@@ -1089,6 +1091,9 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
                                               itsSumCFWeight[threadNum],
 					      spw,thisterm_p,itsRefFreq
 					      );
+      
+
+
       //cfTimer.stop();
       CyrilTimer2conv.stop();
 
@@ -1148,10 +1153,10 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
       if(done[i]==false){all_done=false;number_missed+=1;};
     };
     if(all_done==false){
-      cout<<"================================"<<endl;
-      cout<<"Memory exception returned by "<<number_missed<<" threads"<<endl;
+      //cout<<"================================"<<endl;
+      //cout<<"Memory exception returned by "<<number_missed<<" threads"<<endl;
       //cout<<"Reducing number of threads to: "<<int(omp_get_num_threads()/2.)<<endl;
-      cout<<"================================"<<endl;
+      //cout<<"================================"<<endl;
       doagain+=1;
       //omp_set_num_threads(int(omp_get_num_threads()/2.));
     };
@@ -1479,10 +1484,10 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
       if(done[i]==false){all_done=false;number_missed+=1;};
     };
     if(all_done==false){
-      cout<<"================================"<<endl;
-      cout<<"Memory exception returned by "<<number_missed<<" threads"<<endl;
+      //cout<<"================================"<<endl;
+      //cout<<"Memory exception returned by "<<number_missed<<" threads"<<endl;
       //cout<<"Reducing number of threads to: "<<int(omp_get_num_threads()/2.)<<endl;
-      cout<<"================================"<<endl;
+      //cout<<"================================"<<endl;
       //omp_set_num_threads(int(omp_get_num_threads()/2.));
     };
 

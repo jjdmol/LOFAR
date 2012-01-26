@@ -975,6 +975,7 @@ namespace LOFAR
       Npix_out = std::max(std::max(aTermA.shape()[0], aTermB.shape()[0]),
                           std::max(wTerm.shape()[0], Spheroid_cut.shape()[0]));
 
+      //cout << "CF Shapes, Wterm:" << wTerm.shape()[0] << ", Beam " << aTermA.shape()[0] << ", Spheroid: " << Spheroid_cut.shape()[0] << endl;
 
       // Zero pad to make the image planes of the A1, A2, and W term have the same resolution in the image plane
       Matrix<Complex> Spheroid_cut_paddedf(zero_padding(Spheroid_cut,Npix_out));
@@ -1266,7 +1267,7 @@ namespace LOFAR
         cout<<"..... Compute average PB"<<endl;
       }
       Sum_Stack_PB_CF /= float(sum_weight_square);
-      store(Sum_Stack_PB_CF,"Stack_PB_CF.img");
+      //store(Sum_Stack_PB_CF,"Stack_PB_CF.img");
 
       normalized_fft(Sum_Stack_PB_CF, false);
       //store(Sum_Stack_PB_CF,"Im_Stack_PB_CF00.img");
@@ -1425,7 +1426,7 @@ namespace LOFAR
       store(spheroidal, itsImgName + ".spheroidal");
     }
     normalized_fft(spheroidal);
-    Double Support_Speroidal = findSupport(spheroidal, 0.01);
+    Double Support_Speroidal = findSupport(spheroidal, 0.0001);
     if (itsVerbose > 0) {
       store(spheroidal, itsImgName + ".spheroidal_fft");
     }

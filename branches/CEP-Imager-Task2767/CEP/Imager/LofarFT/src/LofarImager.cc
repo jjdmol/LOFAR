@@ -97,7 +97,7 @@ namespace LOFAR
 /*    os << LogIO::NORMAL
        << "vi.setRowBlocking(" << nrowBlock << ")"
        << LogIO::POST;*/
-    cout<<"sm_p.getReferenceFrequency() "<<(*sm_p).getReferenceFrequency()<<endl;
+    
     return True;
   }
 
