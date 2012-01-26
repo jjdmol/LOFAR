@@ -55,7 +55,7 @@ Stokes::Stokes(unsigned nrChannels, unsigned nrSamples)
 } 
 
 // Calculate coherent stokes values from pencil beams.
-template <bool ALLSTOKES> void Stokes::calculateCoherent(const SampleData<> *sampleData, PreTransposeBeamFormedData *stokesData, unsigned inbeam, const StreamInfo &info)
+template <bool ALLSTOKES> void Stokes::calculateCoherent(const BeamFormedData *sampleData, PreTransposeBeamFormedData *stokesData, unsigned inbeam, const StreamInfo &info)
 {
   // TODO: divide by #valid stations
   ASSERT(sampleData->samples.shape()[0] > inbeam);
@@ -164,8 +164,8 @@ template <bool ALLSTOKES> void Stokes::calculateCoherent(const SampleData<> *sam
   }  
 }
 
-template void Stokes::calculateCoherent<true>(const SampleData<> *, PreTransposeBeamFormedData *, unsigned, const StreamInfo&);
-template void Stokes::calculateCoherent<false>(const SampleData<> *, PreTransposeBeamFormedData *, unsigned, const StreamInfo&);
+template void Stokes::calculateCoherent<true>(const BeamFormedData *, PreTransposeBeamFormedData *, unsigned, const StreamInfo&);
+template void Stokes::calculateCoherent<false>(const BeamFormedData *, PreTransposeBeamFormedData *, unsigned, const StreamInfo&);
 
 template <bool ALLSTOKES> struct stokes {
   // the sums of stokes values over a number of stations or beams
@@ -215,7 +215,7 @@ template <bool ALLSTOKES> static inline void addStokes(struct stokes<ALLSTOKES> 
 }
 
 // Calculate incoherent stokes values from (filtered) station data.
-template <bool ALLSTOKES> void Stokes::calculateIncoherent(const SampleData<> *sampleData, PreTransposeBeamFormedData *stokesData, const std::vector<unsigned> &stationMapping, const StreamInfo &info)
+template <bool ALLSTOKES> void Stokes::calculateIncoherent(const FilteredData *sampleData, PreTransposeBeamFormedData *stokesData, const std::vector<unsigned> &stationMapping, const StreamInfo &info)
 {
   const unsigned nrStations = stationMapping.size();
 
@@ -301,8 +301,8 @@ template <bool ALLSTOKES> void Stokes::calculateIncoherent(const SampleData<> *s
   }
 }
 
-template void Stokes::calculateIncoherent<true>(const SampleData<> *, PreTransposeBeamFormedData *, const std::vector<unsigned> &, const StreamInfo&);
-template void Stokes::calculateIncoherent<false>(const SampleData<> *, PreTransposeBeamFormedData *, const std::vector<unsigned> &, const StreamInfo&);
+template void Stokes::calculateIncoherent<true>(const FilteredData *, PreTransposeBeamFormedData *, const std::vector<unsigned> &, const StreamInfo&);
+template void Stokes::calculateIncoherent<false>(const FilteredData *, PreTransposeBeamFormedData *, const std::vector<unsigned> &, const StreamInfo&);
 
 } // namespace RTCP
 } // namespace LOFAR

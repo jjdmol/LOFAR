@@ -22,8 +22,8 @@ class Stokes
 
     Stokes(unsigned nrChannels, unsigned nrSamples);
 
-    template <bool ALLSTOKES> void calculateCoherent(const SampleData<> *sampleData, PreTransposeBeamFormedData *stokesData, unsigned inbeam, const StreamInfo &info);
-    template <bool ALLSTOKES> void calculateIncoherent(const SampleData<> *sampleData, PreTransposeBeamFormedData *stokesData, const std::vector<unsigned> &stationMapping, const StreamInfo &info);
+    template <bool ALLSTOKES> void calculateCoherent(const BeamFormedData *sampleData, PreTransposeBeamFormedData *stokesData, unsigned inbeam, const StreamInfo &info);
+    template <bool ALLSTOKES> void calculateIncoherent(const FilteredData *sampleData, PreTransposeBeamFormedData *stokesData, const std::vector<unsigned> &stationMapping, const StreamInfo &info);
 
   private:
     const unsigned          itsNrChannels;

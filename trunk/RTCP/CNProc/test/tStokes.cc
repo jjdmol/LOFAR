@@ -5,6 +5,7 @@
 #include <Common/lofar_complex.h>
 #include <Interface/FilteredData.h>
 #include <Interface/BeamFormedData.h>
+#include <Interface/Parset.h>
 #include <vector>
 
 using namespace LOFAR;
@@ -55,7 +56,7 @@ void test_incoherent_stokes( unsigned NRSTOKES, unsigned INTEGRATION ) {
         }
 
         for( unsigned s = 0; s < NRSTOKES; s++ ) {
-          out.samples[0][s][c][i] = -1.0;
+          out.samples[s][c][i] = -1.0;
         }
       }
     }
@@ -66,11 +67,26 @@ void test_incoherent_stokes( unsigned NRSTOKES, unsigned INTEGRATION ) {
   }
 
   // calculate
-  Stokes     s = Stokes( NRSTOKES, NRCHANNELS, NRSAMPLES, INTEGRATION, NRCHANNELS );
+  Stokes s( NRCHANNELS, NRSAMPLES );
+
+  struct StreamInfo info;
+
+  info.stream = 0;
+  info.sap = 0;
+  info.beam = 0;
+  info.coherent = false;
+  info.nrChannels = NRCHANNELS;
+  info.timeIntFactor = INTEGRATION;
+  info.nrStokes = NRSTOKES;
+  info.stokesType = NRSTOKES == 4 ? STOKES_IQUV : STOKES_I;
+  info.nrSamples = NRSAMPLES/INTEGRATION;
+  info.stokes = 0;
+  info.part = 0;
+
   if (NRSTOKES == 4) {
-    s.calculateIncoherent<true>( &in, &out, stationMapping );
+    s.calculateIncoherent<true>( &in, &out, stationMapping, info );
   } else {
-    s.calculateIncoherent<false>( &in, &out, stationMapping );
+    s.calculateIncoherent<false>( &in, &out, stationMapping, info );
   }
 
   // check
@@ -106,22 +122,22 @@ void test_incoherent_stokes( unsigned NRSTOKES, unsigned INTEGRATION ) {
        stokesU /= NRSTATIONS;
        stokesV /= NRSTATIONS;
 
-       if( !same(stokesI,out.samples[0][0][c][i]) )  {
-         std::cerr << "StokesI: " << out.samples[0][0][c][i] << " =/= " << stokesI << " for channel " << c << " sample " << i << std::endl;
+       if( !same(stokesI,out.samples[0][c][i]) )  {
+         std::cerr << "StokesI: " << out.samples[0][c][i] << " =/= " << stokesI << " for channel " << c << " sample " << i << std::endl;
          exit(1);
        }
 
        if( NRSTOKES == 4 ) {
-         if( !same(stokesQ,out.samples[0][1][c][i]) )  {
-           std::cerr << "StokesQ: " << out.samples[0][1][c][i] << " =/= " << stokesQ << " for channel " << c << " sample " << i << std::endl;
+         if( !same(stokesQ,out.samples[1][c][i]) )  {
+           std::cerr << "StokesQ: " << out.samples[1][c][i] << " =/= " << stokesQ << " for channel " << c << " sample " << i << std::endl;
            exit(1);
          }
-         if( !same(stokesU,out.samples[0][2][c][i]) )  {
-           std::cerr << "StokesU: " << out.samples[0][2][c][i] << " =/= " << stokesU << " for channel " << c << " sample " << i << std::endl;
+         if( !same(stokesU,out.samples[2][c][i]) )  {
+           std::cerr << "StokesU: " << out.samples[2][c][i] << " =/= " << stokesU << " for channel " << c << " sample " << i << std::endl;
            exit(1);
          }
-         if( !same(stokesV,out.samples[0][3][c][i]) )  {
-           std::cerr << "StokesV: " << out.samples[0][3][c][i] << " =/= " << stokesV << " for channel " << c << " sample " << i << std::endl;
+         if( !same(stokesV,out.samples[3][c][i]) )  {
+           std::cerr << "StokesV: " << out.samples[3][c][i] << " =/= " << stokesV << " for channel " << c << " sample " << i << std::endl;
            exit(1);
          }
        }
@@ -131,8 +147,8 @@ void test_incoherent_stokes( unsigned NRSTOKES, unsigned INTEGRATION ) {
 
 void test_coherent_stokes( unsigned NRSTOKES, unsigned INTEGRATION, unsigned CHANNEL_INTEGRATION ) {
   BeamFormedData in( NRPENCILBEAMS, NRCHANNELS, NRSAMPLES );
-  StokesData	 out( true, NRSTOKES, NRPENCILBEAMS, NRCHANNELS/CHANNEL_INTEGRATION, NRSAMPLES, INTEGRATION );
-  StokesData	 out2( true, NRSTOKES, NRPENCILBEAMS, NRCHANNELS/CHANNEL_INTEGRATION, NRSAMPLES, INTEGRATION );
+  PreTransposeBeamFormedData	 out( NRSTOKES, NRCHANNELS/CHANNEL_INTEGRATION, NRSAMPLES );
+  PreTransposeBeamFormedData	 out2( NRSTOKES, NRCHANNELS/CHANNEL_INTEGRATION, NRSAMPLES );
 
   // fill
   for( unsigned b = 0; b < NRPENCILBEAMS; b++ ) {
@@ -145,30 +161,41 @@ void test_coherent_stokes( unsigned NRSTOKES, unsigned INTEGRATION, unsigned CHA
     }
   }  
 
-  for( unsigned b = 0; b < NRPENCILBEAMS; b++ ) {
+  for( unsigned s = 0; s < NRSTOKES; s++ ) {
     for( unsigned c = 0; c < NRCHANNELS/CHANNEL_INTEGRATION; c++ ) {
       for( unsigned i = 0; i < NRSAMPLES/INTEGRATION; i++ ) {
-        for( unsigned s = 0; s < NRSTOKES; s++ ) {
-          out.samples[b][s][c][i] = -1.0;
+        out.samples[s][c][i] = -1.0;
 
-          out2.samples[b][s][c][i] = 0.0;
-        }
+        out2.samples[s][c][i] = 0.0;
       }
     }
   }
 
-  // calculate
-  Stokes     s = Stokes( NRSTOKES, NRCHANNELS, NRSAMPLES, INTEGRATION, NRCHANNELS/CHANNEL_INTEGRATION );
-  for( unsigned b = 0; b < NRPENCILBEAMS; b++ ) {
-    if (NRSTOKES == 4) {
-      s.calculateCoherent<true>( &in, &out, b, b );
-    } else {
-      s.calculateCoherent<false>( &in, &out, b, b );
-    }
-  }
+  Stokes s( NRCHANNELS, NRSAMPLES );
 
-  // check
   for( unsigned b = 0; b < NRPENCILBEAMS; b++ ) {
+    struct StreamInfo info;
+
+    info.stream = b * NRSTOKES;
+    info.sap = 0;
+    info.beam = b;
+    info.coherent = true;
+    info.nrChannels = NRCHANNELS/CHANNEL_INTEGRATION;
+    info.timeIntFactor = INTEGRATION;
+    info.nrStokes = NRSTOKES;
+    info.stokesType = NRSTOKES == 4 ? STOKES_IQUV : STOKES_I;
+    info.nrSamples = NRSAMPLES/INTEGRATION;
+    info.stokes = 0;
+    info.part = 0;
+
+    // calculate using Stokes.cc
+    if (NRSTOKES == 4) {
+      s.calculateCoherent<true>( &in, &out, b, info );
+    } else {
+      s.calculateCoherent<false>( &in, &out, b, info );
+    }
+
+    // calculate our own
     for( unsigned c = 0; c < NRCHANNELS; c++ ) {
       for( unsigned i = 0, outi = 0; i < NRSAMPLES; outi++ ) {
         float stokes[4] = { 0.0, 0.0, 0.0, 0.0 };
@@ -199,22 +226,21 @@ void test_coherent_stokes( unsigned NRSTOKES, unsigned INTEGRATION, unsigned CHA
         unsigned outch = c / CHANNEL_INTEGRATION;
 
         for( unsigned s = 0; s < NRSTOKES; s++ ) {
-          out2.samples[b][s][outch][outi] += stokes[s];
+          out2.samples[s][outch][outi] += stokes[s];
         }
       }
     }
-  }
-  
-  for( unsigned b = 0; b < NRPENCILBEAMS; b++ ) {
+
+    // compare results
     for( unsigned c = 0; c < NRCHANNELS/CHANNEL_INTEGRATION; c++ ) {
       for( unsigned i = 0; i < NRSAMPLES/INTEGRATION; i++ ) {
         assert( !out.flags[b].test(i) );
 
         for( unsigned s = 0; s < NRSTOKES; s++ ) {
-          if (!same( out.samples[b][s][c][i], out2.samples[b][s][c][i] ) ) {
+          if (!same( out.samples[s][c][i], out2.samples[s][c][i] ) ) {
             char stokes[] = "IQUV";
 
-            std::cerr << "test_coherent_stokes(" << NRSTOKES << "," << INTEGRATION << "," << CHANNEL_INTEGRATION << ") Stokes" << stokes[s] << ": " << out.samples[b][s][c][i] << " =/= " << out2.samples[b][s][c][i] << " for beam " << b << " channel " << c << " sample " << i << std::endl;
+            std::cerr << "test_coherent_stokes(" << NRSTOKES << "," << INTEGRATION << "," << CHANNEL_INTEGRATION << ") Stokes" << stokes[s] << ": " << out.samples[s][c][i] << " =/= " << out2.samples[s][c][i] << " for beam " << b << " channel " << c << " sample " << i << std::endl;
             exit(1);
           }
         }
