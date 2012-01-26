@@ -161,16 +161,6 @@ void test_coherent_stokes( unsigned NRSTOKES, unsigned INTEGRATION, unsigned CHA
     }
   }  
 
-  for( unsigned s = 0; s < NRSTOKES; s++ ) {
-    for( unsigned c = 0; c < NRCHANNELS/CHANNEL_INTEGRATION; c++ ) {
-      for( unsigned i = 0; i < NRSAMPLES/INTEGRATION; i++ ) {
-        out.samples[s][c][i] = -1.0;
-
-        out2.samples[s][c][i] = 0.0;
-      }
-    }
-  }
-
   Stokes s( NRCHANNELS, NRSAMPLES );
 
   for( unsigned b = 0; b < NRPENCILBEAMS; b++ ) {
@@ -187,6 +177,17 @@ void test_coherent_stokes( unsigned NRSTOKES, unsigned INTEGRATION, unsigned CHA
     info.nrSamples = NRSAMPLES/INTEGRATION;
     info.stokes = 0;
     info.part = 0;
+
+    // clean output arrays
+    for( unsigned p = 0; p < NRSTOKES; p++ ) {
+      for( unsigned c = 0; c < NRCHANNELS/CHANNEL_INTEGRATION; c++ ) {
+        for( unsigned i = 0; i < NRSAMPLES/INTEGRATION; i++ ) {
+          out.samples[p][c][i] = -1.0;
+
+          out2.samples[p][c][i] = 0.0;
+        }
+      }
+    }
 
     // calculate using Stokes.cc
     if (NRSTOKES == 4) {
@@ -234,7 +235,7 @@ void test_coherent_stokes( unsigned NRSTOKES, unsigned INTEGRATION, unsigned CHA
     // compare results
     for( unsigned c = 0; c < NRCHANNELS/CHANNEL_INTEGRATION; c++ ) {
       for( unsigned i = 0; i < NRSAMPLES/INTEGRATION; i++ ) {
-        assert( !out.flags[b].test(i) );
+        assert( !out.flags[0].test(i) );
 
         for( unsigned s = 0; s < NRSTOKES; s++ ) {
           if (!same( out.samples[s][c][i], out2.samples[s][c][i] ) ) {
