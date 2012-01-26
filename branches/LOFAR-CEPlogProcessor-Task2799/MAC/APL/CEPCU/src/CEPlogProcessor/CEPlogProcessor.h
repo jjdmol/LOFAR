@@ -133,7 +133,7 @@ private:
 
     vector<RTDBPropertySet*>    itsInputBuffers;
     vector<RTDBPropertySet*>    itsAdders;
-    vector<RTDBPropertySet*>    itsStorage;
+    vector<RTDBPropertySet*>    itsWriters;
 
     // values read from the conf file.
     unsigned        itsNrInputBuffers;

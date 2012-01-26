@@ -107,7 +107,7 @@ CEPlogProcessor::~CEPlogProcessor()
         delete itsAdders[adder];
     }
     for (int    storage = itsNrStorage - 1; storage >= 0; storage--) {
-        delete itsStorage[storage];
+        delete itsWriters[storage];
     }
 
     // close all streams
@@ -247,7 +247,7 @@ GCFEvent::TResult CEPlogProcessor::createPropertySets(GCFEvent& event,
 
         for (unsigned ionode = 0; ionode < itsNrIONodes; ionode++) {
           for (unsigned adder = 0; adder < itsNrAdders; adder++) {
-              unsigned index = inode * itsNrAdders + adder;
+              unsigned index = ionode * itsNrAdders + adder;
 
               if (!itsAdders[index]) {
                   string PSname(formatString("LOFAR_ObsSW_OSIONode%02d_Adder%01d", ionode, adder));
@@ -259,14 +259,14 @@ GCFEvent::TResult CEPlogProcessor::createPropertySets(GCFEvent& event,
         }
 
         // create propSets for the storage processes
-        itsStorage.resize (itsNrWriters * itsNrStorage, 0);
+        itsWriters.resize (itsNrWriters * itsNrStorage, 0);
         for (unsigned storage = 0; storage < itsNrStorage; storage++) {
           for (unsigned writer = 0; writer < itsNrWriters; writer++) {
-            unsigned index = inode * itsNrWriters + writer;
+            unsigned index = storage * itsNrWriters + writer;
 
-            if (!itsStorage[index]) {
+            if (!itsWriters[index]) {
               string PSname(formatString("LOFAR_ObsSW_OSLocusNode%03d_Writer%02d", storage, writer));
-              itsStorage[index] = new RTDBPropertySet(PSname, PST_STORAGE, PSAT_WO | PSAT_CW, this);
+              itsWriters[index] = new RTDBPropertySet(PSname, PST_STORAGE, PSAT_WO | PSAT_CW, this);
             }
 
             usleep (2000); // wait 2 ms in order not to overload the system  
@@ -286,8 +286,8 @@ GCFEvent::TResult CEPlogProcessor::createPropertySets(GCFEvent& event,
         for (unsigned adder = 0; adder < itsAdders.size(); adder++) {
             ASSERTSTR(itsAdders[adder], "Allocation of PS for adder " << adder << " failed.");
         }
-        for (unsigned storage = 0; storage < itsStorage.size(); storage++) {
-            ASSERTSTR(itsStorage[storage], "Allocation of PS for storage " << storage << " failed.");
+        for (unsigned storage = 0; storage < itsWriters.size(); storage++) {
+            ASSERTSTR(itsWriters[storage], "Allocation of PS for storage " << storage << " failed.");
         }
         LOG_DEBUG_STR("Allocation of all propertySets successfull, going to open the listener");
         TRAN(CEPlogProcessor::startListener);
@@ -766,7 +766,7 @@ void CEPlogProcessor::_processIONProcLine(const struct logline &logline)
     //
     // Adder
     //
-    int adderNr = _getparam(logline.target, "adder ");
+    int adderNr = _getParam(logline.target, "adder ");
 
     if (adderNr >= 0) {
       int adderIndex = processNr * itsNrAdders + adderNr;
@@ -825,7 +825,9 @@ void CEPlogProcessor::_processStorageLine(const struct logline &logline)
 
     hostNr--; // use 0-based indexing
 
-    int writerNr = _getparam(logline.target, "writer ");
+    char*   result;
+
+    int writerNr = _getParam(logline.target, "writer ");
 
     if (writerNr >= 0) {
       int writerIndex = hostNr * itsNrWriters + writerNr;
@@ -835,7 +837,7 @@ void CEPlogProcessor::_processStorageLine(const struct logline &logline)
       if ((result = strstr(logline.msg, "Written block"))) {
         int seqno = 0, written = 0, dropped = 0;
         if (sscanf(result, "Written block with seqno = %d, %d blocks written, %d blocks dropped", &seqno, &written, &dropped) == 3) {
-          LOG_DEBUG(formatString("[%d] Written %d, dropped %d", processNr, written, dropped));
+          LOG_DEBUG(formatString("[%d] Written %d, dropped %d", writerNr, written, dropped));
           writer->setValue("written", GCFPVInteger(written), logline.timestamp, false);
           writer->setValue("dropped", GCFPVInteger(dropped), logline.timestamp, false);
           writer->flush();
@@ -855,8 +857,8 @@ void CEPlogProcessor::_processStorageLine(const struct logline &logline)
         if (sscanf(result, "time = %[^,], rank = %d, count = %d", tim, &rank, &count)== 3)
         {
             LOG_DEBUG(formatString("[%d] time: %s, rank: %d, count: %d", processNr, tim, rank, count));
-            itsStorageBuf[processNr].timeStr[rank]  = tim;
-            itsStorageBuf[processNr].count[rank] = count;
+            itsWritersBuf[processNr].timeStr[rank]  = tim;
+            itsWritersBuf[processNr].count[rank] = count;
         }
         return;
     }
@@ -874,7 +876,7 @@ void CEPlogProcessor::_processStorageLine(const struct logline &logline)
           LOG_DEBUG(formatString("Dropped %d blocks: %d, subband: %d, output: %d", blocks, subband, output));
 
   // dropped has no rank in yet 
-  // itsStorageBuf[processNr].dropped[rank] = result;
+  // itsWritersBuf[processNr].dropped[rank] = result;
       }
         return;
     }
