@@ -1,4 +1,4 @@
-//# addbeaminfo.cc: add and update failed tiles info to the MeasurementSet 
+//# failedtilesinfo.cc: extract failed tiles info from the SAS database
 //# Copyright (C) 2011
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
@@ -17,7 +17,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: addbeaminfo.cc 18832 2011-09-19 17:22:32Z duscha $
+//# $Id: failedtilesinfo.cc 18832 2011-09-19 17:22:32Z duscha $
 //#
 //# @author Sven Duscha
 
@@ -25,9 +25,8 @@
 
 // LOFAR
 #include <Common/ParameterSet.h>
-#include <Common/LofarLogger.h>   // for ASSERT and ASSERTSTR?
+#include <Common/LofarLogger.h>
 #include <Common/SystemUtil.h>    // needed for basename
-#include <Common/StreamUtil.h>    // writeVector and writeMap functions
 #include <Common/Exception.h>     // THROW macro for exceptions
 
 // SAS
@@ -44,8 +43,6 @@
 #include <iostream>
 
 // Casacore
-#include <ms/MeasurementSets/MeasurementSet.h>
-#include <measures/Measures.h>
 #include <measures/Measures/MEpoch.h>
 #include <casa/Quanta/MVTime.h>
 
@@ -68,11 +65,10 @@ string stripRCUString(const string &brokenHardware);
 //----------------------------------------------------------------------------------
 void usage(char *programname)
 {
-  cout << "Usage: " << programname << "<options>" << endl;
+  cout << "Usage: " << programname << " <options>" << endl;
   cout << "-d             run in debug mode" << endl;
-  cout << "-q             query SAS database for broken tiles information" << endl;
-  cout << "-p <filename>  read parset (instead of default: addbeaminfo.parset)" << endl;
-  cout << "-s <time>      start time of observation in MS"<< endl;
+  cout << "-p <filename>  read parset (instead of default: failedtilesinfo.parset)" << endl;
+  cout << "-s <time>      start time of observation in MS like 3-Mar-2011/13:54:23"<< endl;
   cout << "-e <time>      end time of observation in MS"<< endl;
   cout << "-v             turn on verbose mode" << endl;
   cout << "-h             show this help info" << endl;
@@ -89,7 +85,7 @@ int main (int argc, char* argv[])
   int opt=0;                                // argument parsing, current option
   vector<MEpoch> failingTimes;
 
-  string parsetName="failedtiles.parset";   // parset location (default)
+  string parsetName="failedtilesinfo.parset";   // parset location (default)
   string starttimeString, endtimeString;    // strings to get start and end time
   MVEpoch startTime, endTime;               // starttime and endtime of observation
 
@@ -101,7 +97,7 @@ int main (int argc, char* argv[])
   // Parse command line arguments TODO!
   while(opt != -1) 
   {
-    opt = getopt( argc, argv, "dqfm:p:s:e::vh");
+    opt = getopt( argc, argv, "dp:s:e:vh");
     switch(opt) 
     { 
       case 'd':
@@ -209,18 +205,6 @@ MVEpoch toCasaTime(const string &time)
   MVTime::read(result, time);
 
   return result;
-}
-
-// Convert a ptime to a CASA MVEpoch
-MVEpoch toCasaTime(const ptime &time)
-{
-  MVEpoch casaTime;
-  string timeString;
-
-  timeString=to_simple_string(time);
-  casaTime=toCasaTime(timeString);
-
-  return casaTime;
 }
 
 bool checkTime(const MVEpoch &starttimeCasa, const MVEpoch &endtimeCasa)

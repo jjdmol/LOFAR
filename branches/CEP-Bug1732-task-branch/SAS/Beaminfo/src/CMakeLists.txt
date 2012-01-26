@@ -12,13 +12,12 @@ set(beaminfo_PROGRAMS
   failedtiles2ms
 )
 
-lofar_add_library(ms ${beaminfo_LIB_SRCS})
+#lofar_add_library(beaminfo ${beaminfo_LIB_SRCS})
 
-foreach(prog ${beaminfo_PROGRAMS})
-  lofar_add_bin_program(${prog} ${prog}.cc)
-endforeach(prog ${beaminfo_PROGRAMS})
+lofar_add_bin_program(failedtilesinfo failedtilesinfo.cc)
+lofar_add_bin_program(failedtiles2ms failedtiles2ms.cc FailedTileInfo.cc)
 
-#install(PROGRAMS
-#  failedtilesinfo
-#  failedtiles2ms
-#DESTINATION bin)
+install(PROGRAMS
+  failedtilesinfo
+  failedtiles2ms
+DESTINATION bin)
