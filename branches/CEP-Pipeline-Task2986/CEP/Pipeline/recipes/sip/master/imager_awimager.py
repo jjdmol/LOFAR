@@ -50,7 +50,7 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
 
     def go(self):
         super(imager_awimager, self).go()
-        self.logger.info("Starting awimager run")
+        self.logger.info("Starting imager_awimager run")
 
         #collect the inputs        
         # TODO:  input_map to be merged with change marcel
@@ -69,7 +69,7 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
 
         # Compile the command to be executed on the remote machine
         #TODO:  moet nog een use LofIm voor? 
-        node_command = "bash -c '. ${APS_LOCAL}/login/loadpackage.bash LofIm '; python %s" % (self.__file__.replace("master", "nodes"))
+        node_command = "bash -c '. /opt/cep/login/bashrc; use LofIm ; python %s" % (self.__file__.replace("master", "nodes"))
 
         # Create the jobs
         jobs = []

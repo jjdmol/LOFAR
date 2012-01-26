@@ -2,15 +2,13 @@
 #
 # Prepare phase of the imager pipeline: node (also see master recipe)
 #
-# 1 collect measurementsets: copy to current node
-# 2. Start dppp remove missing dataset 
-# 3. concat the measurement sets  
+# 1. Collect the Measurement Sets (MSs): copy to the  current node
+# 2. Start dppp, mark missing dataset 
+# 3. Concatenate the measurement sets, to a virtual ms  
 #
 # Wouter Klijn 
 # 2012
 # klijn@astron.nl
-        # TODO: The data column is depending on output/functioning of previous
-        # pipelines. When update ms then use corrected data
 # ------------------------------------------------------------------------------
 
 from __future__ import with_statement
@@ -26,94 +24,70 @@ from lofarpipe.support.utilities import catch_segfaults
 from lofarpipe.support.lofarnode import  LOFARnodeTCP
 from subprocess import CalledProcessError
 import pyrap.tables as pt #@UnresolvedImport
+from lofarpipe.support.utilities import create_directory
+
+# Some constant settings for the recipe
+log4CPlusName = "imager_prepare_node"
+time_slice_dir = "time_slices"  
+collected_ms_dir = "subband_mss"
 
 class imager_prepare(LOFARnodeTCP):
     def run(self, init_script, parset, working_dir, ndppp, output_measurement_set,
             slices_per_image, subbands_per_image, input_map_repr):
-
-        self.logger.info("#####################################")
-        self.logger.info("** {0} ".format(init_script))
-        self.logger.info("** {0} ".format(parset))
-        self.logger.info("** {0} ".format(working_dir))
-        self.logger.info("** {0} ".format(ndppp))
-        self.logger.info("** {0} ".format(output_measurement_set))
-        self.logger.info("** {0} ".format(slices_per_image))
-        self.logger.info("** {0} ".format(subbands_per_image))
-        self.logger.info("** {0} ".format(input_map_repr))
-        self.logger.info("#####################################")
-        raise Exception
-        log4CPlusName = "imager_prepare_node"
-        time_slice_dir = "group_sets"  #TODO constant!! Dit moet slices worden
-        collected_ms_dir = "collected_ms"
-        self._create_dir(working_dir)  #TODO: Moet mischien nog worden verwijderd
-
-        with log_time(self.logger):
-            # Load the input file names
+        with log_time(self.logger):            
+            create_directory(working_dir)  
+            # TODO: Load the input file names ( will be performed by marcel code )
             self.logger.info("Loading input map from {0}".format(
                 os.path.join(working_dir, "node_input.map")))
 
             input_map = eval(input_map_repr)
-#           missing_files = self._copy_input_files(working_dir, collected_ms_dir,
-#                                                   input_map) 
 
-            # TODO: ********************* temp solution for quick debugging
-            missing_files = []
-            skip_copy = True
-            temp_missing = os.path.join(working_dir, "temp_missing")
-            if not skip_copy:
-                #Collect all files and copy to current node
-                missing_files = self._copy_input_files(working_dir, collected_ms_dir,
-                                                   input_map)
-
-                #Temp solution for the missing files
-                temp_missing = os.path.join(working_dir, "temp_missing")
-                fp = open(temp_missing, 'w')
-                fp.write(repr(missing_files))
-            else:
-                missing_files = eval(open(temp_missing).read())
-
-
-            if len(missing_files):
-                self.logger.info(repr(missing_files))
-
+            #Copy the input files (caching included for testing purpose)
+            missing_files = self._cached_copy_input_files(working_dir,
+                                collected_ms_dir, input_map, True)
+            if len(missing_files): self.logger.info(repr(missing_files))         
+            
             #run dppp
             group_measurements_collected = \
                 self._run_dppp(working_dir, time_slice_dir, slices_per_image,
                     input_map, subbands_per_image, missing_files, collected_ms_dir,
                     parset, ndppp, init_script, log4CPlusName)
 
-            # Perform the concat of the timeslices
+            # Perform the (virtual) concatenation of the timeslices
             self._concat_timeslices(group_measurements_collected,
                                     output_measurement_set)
 
-        # TODO: clean up of temporary files??
-        # The subgroup ms cannot be removed: they are collected in the final 
-        # concat set. The raw data is copied and good candidate
-        self.outputs["completed"] = "true"
+            #return succes
+            self.outputs["completed"] = "true"
+            
         return 0
+    
+    
+    def _cached_copy_input_files(self, working_dir, collected_ms_dir,
+                                 input_map, cached = False):
+        """
+        Perform a optionally cached copy of the input ms:
+        For testing purpose the output, the missing_files can be saved
+        allowing the skip of this copy 
+        """
+        missing_files = []
+        temp_missing = os.path.join(working_dir, "temp_missing")
+        if not cached:
+            #Collect all files and copy to current node
+            missing_files = self._copy_input_files(working_dir, collected_ms_dir,
+                                                   input_map)
 
-    def _create_dir(self, path):
-        """
-        Create the directory suplied in path. Continues if directory exist
-        Creates parent directory of this does not exsist
-        throw original exception in other error cases
-        """
-        try:
-            os.mkdir(path)
-        except OSError, exc:
-            if exc.errno == errno.EEXIST:    #if dir exists continue 
-                pass
-            elif exc.errno == errno.ENOENT:  #if parent dir does not excist
-                parent_path = os.path.split(path)[0]
-                parent_parent_path = os.path.split(parent_path)[0]
-                #check if parent of parent dir exsist
-                if os.path.exists(parent_parent_path):
-                    os.mkdir(parent_path)
-                    os.mkdir(path)
-                else:
-                    raise
-        except:
-            raise
+            temp_missing = os.path.join(working_dir, "temp_missing")
+            fp = open(temp_missing, 'w')
+            fp.write(repr(missing_files))
+            fp.close()
+            
+        else:
+            missing_files = eval(open(temp_missing).read())
+            temp_missing.close()
+        
+        return missing_files
+            
 
     def _copy_input_files(self, working_dir, sets_dir, input_map):
         """
@@ -123,7 +97,7 @@ class imager_prepare(LOFARnodeTCP):
         Return value is a set of missing files
         """
         working_set_path = os.path.join(working_dir, sets_dir)
-        self._create_dir(working_set_path)
+        create_directory(working_set_path)
         missing_files = []
 
         #loop all measurement sets
@@ -156,7 +130,7 @@ class imager_prepare(LOFARnodeTCP):
         #create the directory to save subband group data sets
         group_measurement_directory = os.path.join(working_dir, group_dir)
         group_measurements_collected = []
-        self._create_dir(group_measurement_directory)
+        create_directory(group_measurement_directory)
 
 
         # assure empty dir
@@ -226,31 +200,19 @@ class imager_prepare(LOFARnodeTCP):
                 os.unlink(temp_parset_filename)
 
         return group_measurements_collected
+    
 
     def _concat_timeslices(self, group_measurements_collected,
                                     output_file_path):
         """
-        run pyrap to combine the time slices in a single ms:
-        Virtual copy, a new ms with symbolic links to actual data is created!
-        # *************************************************************
-        # TODO: Currently the concat does not work wait for fix ger
-        # The next line should be the target copde
-
-                   self.logger.info("pyrap test !!1")
-        # Temp Fix:                      
+        Msconcat to combine the time slices in a single ms:
+        It is a virtual ms, a ms with symbolic links to actual data is created!                 
         """
-#        pt.msconcat(group_measurements_collected, 
-#                                output_file_path, concatTime=True)
-        tn = pt.table(group_measurements_collected)
-        tn.rename(output_file_path)
-        tn.close()
-
+        pt.msconcat(group_measurements_collected, 
+                               output_file_path, concatTime=True)
 
 
 if __name__ == "__main__":
-    print sys.argv
     jobid, jobhost, jobport = sys.argv[1:4]
     sys.exit(
         imager_prepare(jobid, jobhost, jobport).run_with_stored_arguments())
-
-

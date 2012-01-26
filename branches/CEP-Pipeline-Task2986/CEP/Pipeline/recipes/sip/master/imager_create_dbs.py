@@ -76,7 +76,7 @@ class ImagerCreateDBs(BaseRecipe, RemoteCommandRecipeMixIn):
             help = "Location of the parmdb executable"
         ),
         'slice_paths_mapfile': ingredient.FileField(
-            '--slice_paths_mapfile',
+            '--slice-paths-mapfile',
             help = "Location of the mapfile containing the slice paths"
         ),
         'parmdb_suffix': ingredient.StringField(
@@ -125,9 +125,9 @@ class ImagerCreateDBs(BaseRecipe, RemoteCommandRecipeMixIn):
 
 
         # Compile the command to be executed on the remote machine
-        node_command = "bash -c '. ${APS_LOCAL}/login/loadpackage.bash LofIm "\
-           "; . ${APS_LOCAL}/login/loadpackage.bash MonetDB; " \
-           " export PYTHONPATH=~/build/gnu_debug/installed/lib/python2.6/dist-packages/lofar:$PYTHONPATH ; python %s'" % (self.__file__.replace("master", "nodes"))
+        node_command = "bash -c '. /opt/cep/login/bashrc; use LofIm "\
+           "; . /opt/cep/login/bashrc; use MonetDB; " \
+           " export PYTHONPATH=~/build/gnu_debug/installed/lib/python2.6/dist-packages/lofar:$PYTHONPATH ; python %s" % (self.__file__.replace("master", "nodes"))
 
         # Create the jobs
         jobs = []

@@ -2,23 +2,15 @@
 #
 # Prepare phase of the imager pipeline: master node (also see node recipe)
 # 
-# 1. Create input files for individual nodes based on the structered input mapfile
+# 1. Create input files for individual nodes based on the structured input mapfile
 # 2. Perform basic input parsing and input validation
-# 3. Call the nodescipts with correct input
+# 3. Call the node scripts with correct input
 # 4. validate performance (minimal in the current implementation)
 #
 # Wouter Klijn 
 # 2012
 # klijn@astron.nl
 # ------------------------------------------------------------------------------
-# TODO: command line argument example:
-#python prepare_imager.py ~/build/preparation/input.map --job prepare_imager --config ~/build/preparation/pipeline.cfg --initscript /opt/cep/LofIm/daily/lofar/lofarinit.sh --output-mapfile ~/build/preparation/output.map --parset ~/build/preparation/parset.par --working-directory "/data/scratch/klijn" --subbands-per-image 10 --slices-per-image 9 --ndppp /opt/cep/LofIm/daily/lofar/bin/NDPPP -v
-
-#parset:
-#msin.missingdata=true
-#msin.baseline="[CR]S*&"
-#msin.datacolumn=DATA
-#steps=[]
 
 
 import os

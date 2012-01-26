@@ -45,6 +45,7 @@ class ImagerCreateDBsTest(unittest.TestCase):
         """
         Test the calcultaion of the FOV for lowest freq on a hba core station 
         """
+
         variable_dictionary = {'NAME':["CS--HBA--"],
                                'REF_FREQUENCY':["120E6"]}        
         tb.table.variable_dictionary = variable_dictionary

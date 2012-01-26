@@ -138,7 +138,7 @@ class imager_pipeline(control):
 
         #*****************************************************************
         #Get parameters awimager from the parset and inputs        
-        awimager_parset = self.parset.makeSubset("awimager.")
+        awimager_parset = self.parset.makeSubset("imager_awimager.")
         executable = awimager_parset.getString("executable")
 
         awimager_parset = \

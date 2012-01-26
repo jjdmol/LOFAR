@@ -159,4 +159,4 @@ class imager_awimager(LOFARnodeTCP):
 
 if __name__ == "__main__":
     jobid, jobhost, jobport = sys.argv[1:4]
-    sys.exit(awimager(jobid, jobhost, jobport).run_with_stored_arguments())
+    sys.exit(imager_awimager(jobid, jobhost, jobport).run_with_stored_arguments())

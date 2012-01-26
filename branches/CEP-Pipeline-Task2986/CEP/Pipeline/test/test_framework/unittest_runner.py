@@ -39,33 +39,34 @@ class Discover():
                     continue
 
                 #try loading as a module
-                try: 
-                    module = self.import_path(root, fileNameParts[0])  #use import including path
-                except BaseException:
-                    continue          
+                #try: 
+                module = self.import_path(root, fileNameParts[0])  #use import including path
+                #except BaseException:
+                #    continue          
                 
                 #the expression mechanism
                 testMatcher = None
                 if patternMatcher.match(name):
                     testMatcher = allMatcher      #if current dir matches with expression include all tests
                 else:
-                    testMatcher = patternMatcher                                
+                    testMatcher = patternMatcher    
+                    
+                                       
                 #create a test suite
                 fileSuite = unittest.TestSuite()
                 testnames = dir(module)
                 
+                
+                    
                 #add all cases ending with test and match the regexp search string
                 for testName in testnames:
                     if testName.endswith('Test') or testName.endswith('test'):
-                        try:
-                            testClass = getattr(module, testName)    #load attribute
-                            if inspect.isclass(testClass):           #if class 
-                                if not testMatcher.match(testName):  #Continue of current testname does not match supplied expression
-                                    continue 
-                                fileSuite.addTest(unittest.makeSuite(testClass))
-                        except:
-                            pass
-                        
+                        testClass = getattr(module, testName)    #load attribute
+                        if inspect.isclass(testClass):           #if class 
+                            if not testMatcher.match(testName):  #Continue of current testname does not match supplied expression
+                                continue 
+                            fileSuite.addTest(unittest.makeSuite(testClass))
+                                                        
                 #if tests found add the file suite to the directory suite
                 if fileSuite.countTestCases() != 0:
                     dirSuite.addTest(fileSuite)
