@@ -213,23 +213,22 @@ void VisBuffer::flagsNot()
 
 void VisBuffer::flagsNaN()
 {
-    // Check if has uvw
-    if(!hasUVW())
+    if(!hasFlags())
     {
-        return;
+      return;
     }
 
     // Loop over all samples: nSamples()
-    typedef boost::multi_array<double, 3>::element* uvwIterator;
+    typedef boost::multi_array<dcomplex, 4>::element* samplesIterator;
     typedef boost::multi_array<flag_t, 4>::element* flagsIterator;
-    flagsIterator flagsIt;
-    for(uvwIterator uvwIt = uvw.data(), end = uvw.data() + uvw.num_elements();
-        uvwIt != end; ++uvwIt)
+    flagsIterator flagsIt=flags.data();
+        
+    for(samplesIterator samplesIt = samples.data(), end = samples.data() + samples.num_elements();
+        samplesIt != end; ++samplesIt, ++flagsIt)
     {   
-        if(casa::isNaN(*uvwIt))
+        if(casa::isNaN(*samplesIt))
         {
-            *flagsIt = *flagsIt | 1;                 // flag first bit        
-            LOG_WARN_STR("Flagged a NAN. *flagsIt = " << *flagsIt); // DEBUG
+            *flagsIt = *flagsIt | 1;        
         }
     }
 }

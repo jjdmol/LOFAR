@@ -573,7 +573,7 @@ namespace LOFAR
       // Write output if required.
       if(!command.outputColumn().empty())
       {
-        chunk->flagsNaN();   // flag NaNs
+        chunk->flagsNaN();
       
         itsMeasurement->write(chunk, itsChunkSelection,
           command.outputColumn(), command.writeCovariance(),
@@ -722,7 +722,7 @@ namespace LOFAR
       if(!command.outputColumn().empty())
       {
         chunk->flagsNaN();
-      
+
         itsMeasurement->write(chunk, itsChunkSelection,
           command.outputColumn(), command.writeCovariance(),
           command.writeFlags(), 1);
