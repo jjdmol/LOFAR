@@ -307,8 +307,10 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
       itsPreTransposeBeamFormedData.resize(itsMaxNrPencilBeams);
   }
 
-  if (itsHasPhaseTwo || itsHasPhaseThree)
-    itsStokes = new Stokes(itsNrChannels, itsNrSamplesPerIntegration);
+  if (itsHasPhaseTwo || itsHasPhaseThree) {
+    itsCoherentStokes   = new CoherentStokes(itsNrChannels, itsNrSamplesPerIntegration);
+    itsIncoherentStokes = new IncoherentStokes(itsNrChannels, itsNrSamplesPerIntegration, nrMergedStations, parset.nrChannelsPerSubband() / parset.incoherentStokesChannelsPerSubband(), itsDedispersionBeforeBeamForming, itsBigAllocator);
+  }
 
 #if defined HAVE_MPI
   if (itsHasPhaseOne || itsHasPhaseTwo)
@@ -581,13 +583,13 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
             case STOKES_I:
               if(LOG_CONDITION)
                 LOG_DEBUG_STR(itsLogPrefix << "Calculating coherent Stokes I");
-              itsStokes->calculateCoherent<false>(itsBeamFormedData.get(), itsPreTransposeBeamFormedData[beam].get(), i, info);
+              itsCoherentStokes->calculate<false>(itsBeamFormedData.get(), itsPreTransposeBeamFormedData[beam].get(), i, info);
               break;
 
             case STOKES_IQUV:
               if(LOG_CONDITION)
                 LOG_DEBUG_STR(itsLogPrefix << "Calculating coherent Stokes IQUV");
-              itsStokes->calculateCoherent<true>(itsBeamFormedData.get(), itsPreTransposeBeamFormedData[beam].get(), i, info);
+              itsCoherentStokes->calculate<true>(itsBeamFormedData.get(), itsPreTransposeBeamFormedData[beam].get(), i, info);
               break;
 
             case STOKES_XXYY:
@@ -603,19 +605,17 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
         } else {  
           // TODO: optimise dedispersion to only do the forwardFFT once
 
-          // TODO: allocate memory in itsStokes constructor
-
           switch (info.stokesType) {
             case STOKES_I:
               if(LOG_CONDITION)
                 LOG_DEBUG_STR(itsLogPrefix << "Calculating incoherent Stokes I");
-              itsStokes->calculateIncoherent<false>(itsFilteredData.get(), itsPreTransposeBeamFormedData[beam].get(), itsBeamFormer->getStationMapping(), info, itsDedispersionBeforeBeamForming, subband, itsIncoherentDMs[beam], itsBigAllocator);
+              itsIncoherentStokes->calculate<false>(itsFilteredData.get(), itsPreTransposeBeamFormedData[beam].get(), itsBeamFormer->getStationMapping(), info, subband, itsIncoherentDMs[beam]);
               break;
 
             case STOKES_IQUV:
               if(LOG_CONDITION)
                 LOG_DEBUG_STR(itsLogPrefix << "Calculating incoherent Stokes IQUV");
-              itsStokes->calculateIncoherent<true>(itsFilteredData.get(), itsPreTransposeBeamFormedData[beam].get(), itsBeamFormer->getStationMapping(), info, itsDedispersionBeforeBeamForming, subband, itsIncoherentDMs[beam], itsBigAllocator);
+              itsIncoherentStokes->calculate<true>(itsFilteredData.get(), itsPreTransposeBeamFormedData[beam].get(), itsBeamFormer->getStationMapping(), info, subband, itsIncoherentDMs[beam]);
               break;
 
             case STOKES_XXYY:

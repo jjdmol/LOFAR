@@ -23,12 +23,31 @@ class Stokes
 
     Stokes(unsigned nrChannels, unsigned nrSamples);
 
-    template <bool ALLSTOKES> void calculateCoherent(const SampleData<> *sampleData, PreTransposeBeamFormedData *stokesData, unsigned inbeam, const StreamInfo &info);
-    template <bool ALLSTOKES> void calculateIncoherent(const FilteredData *sampleData, PreTransposeBeamFormedData *stokesData, const std::vector<unsigned> &stationMapping, const StreamInfo &info, DedispersionBeforeBeamForming *dedispersion, unsigned subband, double dm, Allocator &allocator);
-
-  private:
+  protected:
     const unsigned          itsNrChannels;
     const unsigned          itsNrSamples;
+};
+
+class CoherentStokes: public Stokes
+{
+  public:
+    CoherentStokes(unsigned nrChannels, unsigned nrSamples);
+
+    template <bool ALLSTOKES> void calculate(const SampleData<> *sampleData, PreTransposeBeamFormedData *stokesData, unsigned inbeam, const StreamInfo &info);
+};
+
+class IncoherentStokes: public Stokes
+{
+  public:
+    IncoherentStokes(unsigned nrChannels, unsigned nrSamples, unsigned nrStations, unsigned channelIntegrations, DedispersionBeforeBeamForming *dedispersion, Allocator &allocator);
+
+    template <bool ALLSTOKES> void calculate(const FilteredData *sampleData, PreTransposeBeamFormedData *stokesData, const std::vector<unsigned> &stationMapping, const StreamInfo &info, unsigned subband, double dm);
+
+  private:  
+    Allocator                     &itsAllocator;
+    SmartPtr<FilteredData>        itsDedispersedData;
+    DedispersionBeforeBeamForming *itsDedispersion;
+    const unsigned                itsMaxChannelIntegrations;
 };
 
 } // namespace RTCP
