@@ -41,7 +41,9 @@ namespace LOFAR
 
   LofarImager::LofarImager (MeasurementSet& ms, const Record& parameters)
     : Imager(ms,false, true),
-      itsParameters (parameters)
+      itsParameters (parameters),
+      itsMachine    (0),
+      itsMachineOld (0)
   {
     cout << itsParameters<<endl;
   }
@@ -55,28 +57,44 @@ namespace LOFAR
     Bool useDoublePrecGrid = False;
     Double RefFreq((*sm_p).getReferenceFrequency());
 
-    itsMachine = new LofarFTMachine(cache_p/2, tile_p,
+    if (itsParameters.asBool("splitbeam")) {
+      itsMachine = new LofarFTMachine(cache_p/2, tile_p,
+                                      visResampler, gridfunction_p,
+                                      *ms_p, wprojPlanes_p, mLocation_p,
+                                      padding_p, false, useDoublePrecGrid,
+                                      itsParameters.asDouble("wmax"),
+                                      itsParameters.asInt("verbose"),
+                                      itsParameters.asInt("maxsupport"),
+                                      itsParameters.asInt("oversample"),
+                                      itsParameters.asString("imagename"),
+                                      itsParameters.asArrayBool("mueller.grid"),
+                                      itsParameters.asArrayBool("mueller.degrid"),
+                                      RefFreq,
+                                      itsParameters.asBool("UseLIG"),
+                                      itsParameters.asBool("UseEJones"),
+                                      itsParameters.asInt("StepApplyElement"),
+                                      itsParameters.asDouble("PBCut"),
+                                      itsParameters.asBool("PredictFT"),
+                                      itsParameters.asString("PsfImage"),
+                                      itsParameters.asBool("UseMasksDegrid"));//,
+                                      //itsParameters.asDouble("FillFactor"));
+    
+      ft_p  = itsMachine;
+    } else {
+    itsMachineOld = new LofarFTMachineOld(cache_p/2, tile_p,
                                     visResampler, gridfunction_p,
                                     *ms_p, wprojPlanes_p, mLocation_p,
                                     padding_p, false, useDoublePrecGrid,
                                     itsParameters.asDouble("wmax"),
+                                    itsParameters.asString("beam.element.path"),
                                     itsParameters.asInt("verbose"),
                                     itsParameters.asInt("maxsupport"),
                                     itsParameters.asInt("oversample"),
                                     itsParameters.asString("imagename"),
                                     itsParameters.asArrayBool("mueller.grid"),
-                                    itsParameters.asArrayBool("mueller.degrid"),
-				    RefFreq,
-				    itsParameters.asBool("UseLIG"),
-				    itsParameters.asBool("UseEJones"),
-				    itsParameters.asInt("StepApplyElement"),
-				    itsParameters.asDouble("PBCut"),
-				    itsParameters.asBool("PredictFT"),
-				    itsParameters.asString("PsfImage"),
-				    itsParameters.asBool("UseMasksDegrid"));//,
-				    //itsParameters.asDouble("FillFactor"));
-    
-    ft_p  = itsMachine;
+                                    itsParameters.asArrayBool("mueller.degrid"));
+      ft_p  = itsMachineOld;
+    }
 
     cft_p = new SimpleComponentFTMachine();
 
@@ -119,7 +137,11 @@ namespace LOFAR
   // Show the relative timings of the various steps.
   void LofarImager::showTimings (std::ostream&, double duration) const
   {
-    itsMachine->showTimings (cout, duration);
+    if (itsMachine) {
+      itsMachine->showTimings (cout, duration);
+    } else if (itsMachineOld) {
+      itsMachineOld->showTimings (cout, duration);
+    }
   }
 
 

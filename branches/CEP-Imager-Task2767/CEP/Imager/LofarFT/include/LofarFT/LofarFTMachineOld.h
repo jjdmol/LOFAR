@@ -1,4 +1,4 @@
-//# LofarFTMachine.h: Definition for LofarFTMachine
+//# LofarFTMachineOld.h: Definition for LofarFTMachineOld
 //# Copyright (C) 1996,1997,1998,1999,2000,2002
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -26,14 +26,14 @@
 //#
 //# $Id$
 
-#ifndef LOFARFT_LOFARFTMACHINE_H
-#define LOFARFT_LOFARFTMACHINE_H
+#ifndef LOFARFT_LOFARFTMACHINEOLD_H
+#define LOFARFT_LOFARFTMACHINEOLD_H
 
 #include <synthesis/MeasurementComponents/FTMachine.h>
 #include <casa/OS/File.h>
 #include <casa/OS/PrecTimer.h>
-#include <LofarFT/LofarVisResampler.h>
-#include <LofarFT/LofarConvolutionFunction.h>
+#include <LofarFT/LofarVisResamplerOld.h>
+#include <LofarFT/LofarConvolutionFunctionOld.h>
 #include <LofarFT/LofarCFStore.h>
 #include <casa/Arrays/Matrix.h>
 #include <scimath/Mathematics/FFTServer.h>
@@ -48,7 +48,6 @@
 #include <lattices/Lattices/LatticeCache.h>
 #include <lattices/Lattices/ArrayLattice.h>
 
-#include <Common/OpenMP.h>
 
 using namespace casa;
 
@@ -127,7 +126,7 @@ class casa::UVWMachine;
 // <ul> Deal with large VLA spectral line case
 // </todo>
 
-class LofarFTMachine : public casa::FTMachine {
+class LofarFTMachineOld : public casa::FTMachine {
 public:
 
   // Constructor: cachesize is the size of the cache in words
@@ -140,49 +139,40 @@ public:
   // mTangent is specified then the uvw rotation is done for
   // that location iso the image center.
   // <group>
-//  LofarFTMachine(Long cachesize, Int tilesize, CountedPtr<VisibilityResamplerBase>& visResampler,
+//  LofarFTMachineOld(Long cachesize, Int tilesize, CountedPtr<VisibilityResamplerBase>& visResampler,
 //	  String convType="SF", Float padding=1.0, Bool usezero=True, Bool useDoublePrec=False);
-  LofarFTMachine(Long cachesize, Int tilesize,  CountedPtr<VisibilityResamplerBase>& visResampler, String convType, const MeasurementSet& ms,
+  LofarFTMachineOld(Long cachesize, Int tilesize,  CountedPtr<VisibilityResamplerBase>& visResampler, String convType, const MeasurementSet& ms,
                  Int nwPlanes,
                  MPosition mLocation, Float padding, Bool usezero,
-                 Bool useDoublePrec, double wmax,
+                 Bool useDoublePrec, double wmax, const String& beamPath,
                  Int verbose,
-                 Int maxsupport,
+		 Int maxsupport,
                  Int oversample,
                  const String& imageName,
                  const Matrix<Bool>& gridMuellerMask,
-                 const Matrix<Bool>& degridMuellerMask,
-		 Double RefFreq,
-		 Bool Use_Linear_Interp_Gridder,
-		 Bool Use_EJones,
-		 int StepApplyElement,
-		 Double PBCut,
-		 Bool PredictFT,
-		 String PsfOnDisk,
-		 Bool UseMasksDegrid);//,
-		 //Double FillFactor);
-//  LofarFTMachine(Long cachesize, Int tilesize,  CountedPtr<VisibilityResamplerBase>& visResampler,String convType,
+                 const Matrix<Bool>& degridMuellerMask);
+//  LofarFTMachineOld(Long cachesize, Int tilesize,  CountedPtr<VisibilityResamplerBase>& visResampler,String convType,
 //	 MDirection mTangent, Float padding=1.0, Bool usezero=True,
 //	 Bool useDoublePrec=False);
-//  LofarFTMachine(Long cachesize, Int tilesize,  CountedPtr<VisibilityResamplerBase>& visResampler,String convType,
+//  LofarFTMachineOld(Long cachesize, Int tilesize,  CountedPtr<VisibilityResamplerBase>& visResampler,String convType,
 //	 MPosition mLocation, MDirection mTangent, Float passing=1.0,
 //	 Bool usezero=True, Bool useDoublePrec=False);
   // </group>
 
-  // Construct from a Record containing the LofarFTMachine state
-//  LofarFTMachine(const RecordInterface& stateRec);
+  // Construct from a Record containing the LofarFTMachineOld state
+//  LofarFTMachineOld(const RecordInterface& stateRec);
 
   // Copy constructor
-  LofarFTMachine(const LofarFTMachine &other);
+  LofarFTMachineOld(const LofarFTMachineOld &other);
 
   // Assignment operator
-  LofarFTMachine &operator=(const LofarFTMachine &other);
+  LofarFTMachineOld &operator=(const LofarFTMachineOld &other);
 
   // Clone
-  LofarFTMachine* clone() const;
+  LofarFTMachineOld* clone() const;
 
 
-  ~LofarFTMachine();
+  ~LofarFTMachineOld();
 
   // Show the relative timings of the various steps.
   void showTimings (std::ostream&, double duration) const;
@@ -215,8 +205,6 @@ public:
   void put(const VisBuffer& vb, Int row=-1, Bool dopsf=False,
            FTMachine::Type type=FTMachine::OBSERVED);
 
-  mutable Matrix<Float> itsAvgPB;
-  Bool its_Use_Linear_Interp_Gridder;
 
   // Make the entire image
   void makeImage(FTMachine::Type type,
@@ -229,7 +217,7 @@ public:
   ImageInterface<Complex>& getImage(Matrix<Float>&, Bool normalize=True);
 
   // Get the average primary beam.
-  virtual const Matrix<Float>& getAveragePB() const;
+  const Matrix<Float>& getAveragePB() const;
 
   // Get the spheroidal cut.
   const Matrix<Float>& getSpheroidCut() const
@@ -240,7 +228,7 @@ public:
   ///			      const Matrix<Double>& sumOfWts,
   ///			      Lattice<Float>& sensitivityImage,
   ///			      Bool fftNorm)
-  ///    {throw(AipsError("LofarFTMachine::normalizeImage() called"));}
+  ///    {throw(AipsError("LofarFTMachineOld::normalizeImage() called"));}
 
   void normalizeAvgPB();
   void normalizeAvgPB(ImageInterface<Complex>& inImage,
@@ -254,7 +242,7 @@ public:
     // size is not done.  If sumWt is not provided, normalization by
     // the sum of weights is also not done.
     //
-
+  
 
 
     virtual void makeSensitivityImage(Lattice<Complex>&,
@@ -290,7 +278,7 @@ public:
   // Get the final weights image
   void getWeightImage(ImageInterface<Float>&, Matrix<Float>&);
 
-  // Save and restore the LofarFTMachine to and from a record
+  // Save and restore the LofarFTMachineOld to and from a record
   virtual Bool toRecord(String& error, RecordInterface& outRec,
 			Bool withImage=False);
   virtual Bool fromRecord(String& error, const RecordInterface& inRec);
@@ -301,33 +289,18 @@ public:
   virtual void setNoPadding(Bool nopad){noPadding_p=nopad;};
 
   virtual String name();
-  //virtual void setMiscInfo(const Int qualifier){(void)qualifier;};
-
-  //Cyr: The FTMachine has got to know the order of the Taylor term
-  virtual void setMiscInfo(const Int qualifier){thisterm_p=qualifier;};
+  virtual void setMiscInfo(const Int qualifier){(void)qualifier;};
   virtual void ComputeResiduals(VisBuffer&vb, Bool useCorrected);
 
+    void makeConjPolMap(const VisBuffer& vb, const Vector<Int> cfPolMap, Vector<Int>& conjPolMap);
+    //    Vector<Int> makeConjPolMap(const VisBuffer& vb);
+    void makeCFPolMap(const VisBuffer& vb, const Vector<Int>& cfstokes, Vector<Int>& polM);
 
-  void makeConjPolMap(const VisBuffer& vb, const Vector<Int> cfPolMap, Vector<Int>& conjPolMap);
-  //    Vector<Int> makeConjPolMap(const VisBuffer& vb);
-  void makeCFPolMap(const VisBuffer& vb, const Vector<Int>& cfstokes, Vector<Int>& polM);
-
-  String itsNamePsfOnDisk;
-  void setPsfOnDisk(String NamePsf){itsNamePsfOnDisk=NamePsf;}
-  virtual String GiveNamePsfOnDisk(){return itsNamePsfOnDisk;}
-  
 
 protected:
   // Padding in FFT
   Float padding_p;
-  Int thisterm_p;
-  Double itsRefFreq;
-  Bool itsPredictFT;
-  Int itsTotalStepsGrid;
-  Int itsTotalStepsDeGrid;
-  Bool itsMasksAllDone;
-  Bool its_UseMasksDegrid;
-  //Float its_FillFactor;
+
   // Get the appropriate data pointer
   Array<Complex>* getDataPointer(const IPosition&, Bool);
 
@@ -348,65 +321,6 @@ protected:
 
   // Gridder
   ConvolveGridder<Double, Complex>* gridder;
-
-  //Sum Grids
-  void SumGridsOMP(Array<Complex>& grid, const Array<Complex>& GridToAdd){
-    int y,ch,pol,dChan,dPol,dx;
-    int GridSize(grid.shape()[0]);
-    int NPol(grid.shape()[2]);
-    int NChan(grid.shape()[3]);
-    Complex* gridPtr;
-    const Complex* GridToAddPtr;
-    
-#pragma omp parallel for private(y,ch,pol,gridPtr,GridToAddPtr)
-    for(int x=0 ; x<grid.shape()[0] ; ++x){
-      for(ch=0 ; ch<NChan ; ++ch){
-	for(pol=0 ; pol<NPol ; ++pol){
-	  gridPtr = grid.data() + ch*NPol*GridSize*GridSize + pol*GridSize*GridSize+x*GridSize;
-	  GridToAddPtr = GridToAdd.data() + ch*NPol*GridSize*GridSize + pol*GridSize*GridSize+x*GridSize;
-	  for(y=0 ; y<grid.shape()[1] ; ++y){
-	    (*gridPtr++) += *GridToAddPtr++;
-	    //gridPtr++;
-	    //GridToAddPtr++;
-	  }
-	}
-      }
-    }
-    
-  }
-
-  void SumGridsOMP(Array<Complex>& grid, const vector< Array<Complex> >& GridToAdd0 ){
-
-    for(uInt vv=0; vv<GridToAdd0.size();vv++){
-      Array<Complex> GridToAdd(GridToAdd0[vv]);
-      int y,ch,pol,dChan,dPol,dx;
-      int GridSize(grid.shape()[0]);
-      int NPol(grid.shape()[2]);
-      int NChan(grid.shape()[3]);
-      Complex* gridPtr;
-      const Complex* GridToAddPtr;
-      
-#pragma omp parallel for private(y,ch,pol,gridPtr,GridToAddPtr)
-      for(int x=0 ; x<grid.shape()[0] ; ++x){
-	for(ch=0 ; ch<NChan ; ++ch){
-	  for(pol=0 ; pol<NPol ; ++pol){
-	    gridPtr = grid.data() + ch*NPol*GridSize*GridSize + pol*GridSize*GridSize+x*GridSize;
-	    GridToAddPtr = GridToAdd.data() + ch*NPol*GridSize*GridSize + pol*GridSize*GridSize+x*GridSize;
-	    for(y=0 ; y<grid.shape()[1] ; ++y){
-	      (*gridPtr++) += *GridToAddPtr++;
-	      //gridPtr++;
-	      //GridToAddPtr++;
-	    }
-	  }
-	}
-      }
-    }
-
-  }
-
-  
-  
-
 
   // Is this tiled?
   Bool isTiled;
@@ -430,18 +344,15 @@ protected:
 
   // Arrays for non-tiled gridding (one per thread).
   vector< Array<Complex> >  itsGriddedData;
-  Array<Complex> its_stacked_GriddedData;
-
   vector< Array<DComplex> > itsGriddedData2;
   vector< Matrix<Complex> > itsSumPB;
   vector< Matrix<Double> >  itsSumWeight;
   vector< double > itsSumCFWeight;
-
-
   ///Array<Complex>  griddedData;
   ///Array<DComplex> griddedData2;
   ///Matrix<Complex> itsSumPB;
   ///double itsSumWeight;
+  mutable Matrix<Float> itsAvgPB;
 
   Int priorCacheSize;
 
@@ -472,23 +383,19 @@ protected:
     CountedPtr<ImageInterface<Float> > avgPB_p;
     CountedPtr<ImageInterface<Complex> > avgPBSq_p;
 
-  LofarVisResampler visResamplers_p;
+  LofarVisResamplerOld visResamplers_p;
 
   casa::MeasurementSet itsMS;
   Int itsNWPlanes;
   double itsWMax;
-  Double its_PBCut;
   int itsNThread;
-  Bool its_Use_EJones;
-  Bool its_Apply_Element;
-  Bool its_Already_Initialized;
 
-  CountedPtr<LofarConvolutionFunction> itsConvFunc;
+  CountedPtr<LofarConvolutionFunctionOld> itsConvFunc;
   Vector<Int> ConjCFMap_p, CFMap_p;
+  String itsBeamPath;
   int itsVerbose;
   int itsMaxSupport;
   Int itsOversample;
-  Vector< Double >    itsListFreq;
   String itsImgName;
   Matrix<Bool> itsGridMuellerMask;
   Matrix<Bool> itsDegridMuellerMask;
@@ -496,22 +403,12 @@ protected:
   double itsDegriddingTime;
   double itsCFTime;
   PrecTimer itsTotalTimer;
-  PrecTimer itsCyrilTimer;
-
-  double itsNextApplyTime;
-  int itsCounterTimes;
-  int itsStepApplyElement;
-  double itsTStartObs;
-  double itsDeltaTime;
-  Array<Complex> itsTmpStackedGriddedData;
-  Array<Complex> itsGridToDegrid;
-
 
 
       template <class T>
         void store(const Cube<T> &data, const string &name)
         {
-
+          
           CoordinateSystem csys;
           Matrix<Double> xform(2, 2);
           xform = 0.0;
@@ -530,7 +427,7 @@ protected:
           stokes(3) = Stokes::YY;
           csys.addCoordinate(StokesCoordinate(stokes));
           csys.addCoordinate(SpectralCoordinate(casa::MFrequency::TOPO, 60e6, 0.0, 0.0, 60e6));
-
+          
           PagedImage<T> im(TiledShape(IPosition(4, data.shape()(0), data.shape()(1), 4, 1)), csys, name);
           im.putSlice(data, IPosition(4, 0, 0, 0, 0));
         }
