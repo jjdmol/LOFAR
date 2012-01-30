@@ -8,8 +8,13 @@ PANEL,-1 -1 114 109 N "_3DFace" 1
   baseDP=g_currentDatapoint;
   LOG_DEBUG(\"HBA_TileElement.pnl:initialize|baseDP: \"+baseDP);
 
-  theElementNr=$elementNr;  
-  LOG_DEBUG(\"HBA_TileElement.pnl:initialize|elementNr: \"+theElementNr);
+  // theElementNr in the database is from 0 to 15
+  // The given elementNr is 1 to low for the text_ElementNr so increase this value by one
+  // The PVSSdB element numbers is from 0..15 but the hardware elementnumbers are 1..16
+  theElementNr=$elementNr;
+  ElementNr_HardWare=theElementNr+1;
+  LOG_ERROR(\"HBA_TileElement.pnl:initialize|elementNr: \"+theElementNr);
+  LOG_ERROR(\"HBA_TileElement.pnl:initialize|elementNr_Hardware: \"+ElementNr_HardWare);
 
   string aS=\"\";
   if (theElementNr < 10) aS+=\"0\";
@@ -17,7 +22,8 @@ PANEL,-1 -1 114 109 N "_3DFace" 1
   LOG_DEBUG(\"HBA_TileElement.pnl:initialize| Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
 
   if (dpExists(baseDP) ) {
-     setValue(\"text_ElementNr\", \"text\", \"E-\" + aS + theElementNr );
+     setValue(\"text_ElementNr\", \"text\", \"E-\" + aS + ElementNr_HardWare );
+     //setValue(\"text_ElementNr\", \"text\", \"E-\" + aS + theElementNr );
      // pass baseDP to selfstate Object to work with
      setValue(\"selfState.light\",\"toolTipText\",baseDP);
      // connect for selfUpdates
@@ -87,9 +93,8 @@ void ColorObject(string anObject, int aValue) {
 ""0  1
 E "#uses \"navPanel.ctl\"
 string baseDP = \"\";
-int theElementNr=\"\";  
-
-" 0
+int theElementNr=-1;  
+int ElementNr_HardWare=0;" 0
  2
 "CBRef" "1"
 "EClose" E
