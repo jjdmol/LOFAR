@@ -24,6 +24,7 @@
 #include <lofar_config.h>
 #include <BBSKernel/VisBuffer.h>
 #include <BBSKernel/Exceptions.h>
+#include <BBSKernel/EstimateUtil.h>
 
 #include <Common/lofar_algorithm.h>
 #include <Common/LofarLogger.h>
@@ -36,6 +37,10 @@
 #include <measures/Measures/MCPosition.h>
 #include <measures/Measures/MCBaseline.h>
 #include <casa/Quanta/MVuvw.h>
+//#include <casa/complex.h>
+#include <casa/BasicSL/Complex.h>
+//#include <casa/BasicMath/Math.h>
+//#include <casa/BasicSL/Constants.h>
 
 namespace LOFAR
 {
@@ -203,6 +208,28 @@ void VisBuffer::flagsNot()
         it != end; ++it)
     {
         *it = ~(*it);
+    }
+}
+
+void VisBuffer::flagsNaN()
+{
+    if(!hasFlags())
+    {
+      return;
+    }
+
+    // Loop over all samples: nSamples()
+    typedef boost::multi_array<dcomplex, 4>::element* samplesIterator;
+    typedef boost::multi_array<flag_t, 4>::element* flagsIterator;
+    flagsIterator flagsIt=flags.data();
+        
+    for(samplesIterator samplesIt = samples.data(), end = samples.data() + samples.num_elements();
+        samplesIt != end; ++samplesIt, ++flagsIt)
+    {   
+        if(casa::isNaN(*samplesIt))
+        {
+            *flagsIt = *flagsIt | 1;        
+        }
     }
 }
 
