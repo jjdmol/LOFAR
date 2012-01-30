@@ -40,9 +40,9 @@ pythonProgram="${1}"
 parsetFile="${2}"
 programOptions=" \
  -d \
- -c ${LOFARROOT}/share/pipeline.cfg \
- -t ${LOFARROOT}/share/tasks.cfg \
- -r ${LOFARROOT}/share \
+ -c ${LOFARROOT}/share/pipeline/pipeline.cfg \
+ -t ${LOFARROOT}/share/pipeline/tasks.cfg \
+ -r ${LOFARROOT}/share/pipeline \
  -w /data/scratch/${USER}"
   
 # Print some debugging information if debugging is enabled.
