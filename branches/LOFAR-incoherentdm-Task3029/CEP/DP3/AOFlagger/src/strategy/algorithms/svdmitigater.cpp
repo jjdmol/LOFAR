@@ -21,7 +21,7 @@
 
 #include <AOFlagger/strategy/algorithms/svdmitigater.h>
 
-#include <AOFlagger/util/plot.h>
+#include <AOFlagger/gui/plot/plot2d.h>
 
 extern "C" {
   int zgesvd_(char *jobu, char *jobvt, integer *m, integer *n, 
@@ -163,12 +163,11 @@ void SVDMitigater::Compose()
 		std::cout << watch.ToString() << std::endl;
 }
 
-void SVDMitigater::CreateSingularValueGraph(const TimeFrequencyData &data, class Plot &plot)
+void SVDMitigater::CreateSingularValueGraph(const TimeFrequencyData &data, Plot2D &plot)
 {
 	size_t polarisationCount = data.PolarisationCount();
-	plot.SetXAxisText("Singular value index");
-	plot.SetYAxisText("Singular value");
 	plot.SetTitle("Distribution of singular values");
+	plot.SetLogarithmicYAxis(true);
 	for(size_t i=0;i<polarisationCount;++i)
 	{
 		TimeFrequencyData *polarizationData = data.CreateTFDataFromPolarisationIndex(i);
@@ -177,9 +176,9 @@ void SVDMitigater::CreateSingularValueGraph(const TimeFrequencyData &data, class
 		svd.Decompose();
 		size_t minmn = svd._m<svd._n ? svd._m : svd._n;
 		
-		plot.StartLine(polarizationData->Description());
-		plot.SetLogScale(false, true, false);
-		plot.SetXRangeAutoMin(minmn);
+		Plot2DPointSet &pointSet = plot.StartLine(polarizationData->Description());
+		pointSet.SetXDesc("Singular value index");
+		pointSet.SetYDesc("Singular value");
 		
 		for(size_t i=0;i<minmn;++i)
 			plot.PushDataPoint(i, svd.SingularValue(i));

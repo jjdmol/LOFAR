@@ -21,6 +21,7 @@
 #define AOQPLOT_WINDOW_H
 
 #include <gtkmm/box.h>
+#include <gtkmm/main.h>
 #include <gtkmm/notebook.h>
 #include <gtkmm/statusbar.h>
 #include <gtkmm/window.h>
@@ -57,9 +58,13 @@ class AOQPlotWindow : public Gtk::Window {
 			onStatusChange(newStatus);
 		}
 	private:
-		void onOpenOptionsSelected(std::string filename, bool downsampleTime, bool downsampleFreq, size_t freqSize);
+		void onOpenOptionsSelected(std::string filename, bool downsampleTime, bool downsampleFreq, size_t timeSize, size_t freqSize);
 		void close();
-		void readStatistics(bool downsampleTime, bool downsampleFreq, size_t freqSize);
+		void readStatistics(bool downsampleTime, bool downsampleFreq, size_t timeSize, size_t freqSize);
+		void onHide()
+		{
+			Gtk::Main::quit();
+		}
 		void onStatusChange(const std::string &newStatus);
 		void onSwitchPage(GtkNotebookPage *page, guint pageNr)
 		{

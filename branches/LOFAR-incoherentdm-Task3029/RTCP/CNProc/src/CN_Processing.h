@@ -156,7 +156,15 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
     SmartPtr<TriggerData>			itsTriggerData;
 
     std::vector<SmartPtr<PreTransposeBeamFormedData> > itsPreTransposeBeamFormedData;
-    void                                        *itsBeamMemory;
+
+    struct autoDeallocate { // SmartPtr doesn't work with custom Allocators
+      void *ptr;
+      Allocator *allocator;
+
+      autoDeallocate(): ptr(0), allocator(0) {}
+      ~autoDeallocate() { if (ptr && allocator) allocator->deallocate(ptr); }
+    } itsBeamMemory;
+
     SmartPtr<Arena>                             itsBeamArena;
     SmartPtr<Allocator>                         itsBeamAllocator;
 

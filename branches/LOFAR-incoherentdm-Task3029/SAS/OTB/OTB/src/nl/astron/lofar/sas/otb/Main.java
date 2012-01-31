@@ -64,23 +64,23 @@ public class Main {
 
   }
     
-static {
- 
-    int delay = 1000 * 60; // delay for 1 minute
-    int repeat = delay * 2; // repeat every 2 minutes
- 
-    Timer gcTimer = new Timer();
-    gcTimer.scheduleAtFixedRate(new TimerTask() {
- 
-    @Override
-    public void run() {
-//        System.out.println("Running Gargabe-Collector");
-        System.gc();
-    }
-   
-    }, delay, repeat);
-  
- }
+//static {
+// 
+//    int delay = 1000 * 60; // delay for 1 minute
+//    int repeat = delay * 2; // repeat every 2 minutes
+// 
+//    Timer gcTimer = new Timer();
+//    gcTimer.scheduleAtFixedRate(new TimerTask() {
+// 
+//    @Override
+//    public void run() {
+////        System.out.println("Running Gargabe-Collector");
+//        System.gc();
+//    }
+//   
+//    }, delay, repeat);
+//  
+// }
 
 
     /**

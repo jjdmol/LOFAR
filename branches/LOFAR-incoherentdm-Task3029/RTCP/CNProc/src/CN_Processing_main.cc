@@ -286,6 +286,11 @@ int main(int argc, char **argv)
 	case CN_Command::POSTPROCESS :	// proc == 0 if PREPROCESS threw an exception, after which all cores receive a POSTPROCESS message
 					delete proc.release();
 					delete parset.release();
+
+#if defined HAVE_BGP // only SparseAllocator keeps track of its allocations
+                                        if (!bigAllocator.empty())
+                                          LOG_ERROR("Memory leak detected in bigAllocator");
+#endif
 					break;
 
 	case CN_Command::STOP :		break;

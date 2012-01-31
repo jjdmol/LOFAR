@@ -300,9 +300,10 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
       // allocate memory for the largest SAP
       size_t max_totalsize = *std::max_element(totalsizes.begin(), totalsizes.end());
 
-      itsBeamMemory    = itsBigAllocator.allocate(max_totalsize, 32);
-      itsBeamArena     = new FixedArena(itsBeamMemory, max_totalsize);
-      itsBeamAllocator = new SparseSetAllocator(*itsBeamArena.get()); // allocates consecutively
+      itsBeamMemory.allocator = &itsBigAllocator;
+      itsBeamMemory.ptr       = itsBigAllocator.allocate(max_totalsize, 32);
+      itsBeamArena      = new FixedArena(itsBeamMemory.ptr, max_totalsize);
+      itsBeamAllocator  = new SparseSetAllocator(*itsBeamArena.get()); // allocates consecutively
 
       itsPreTransposeBeamFormedData.resize(itsMaxNrPencilBeams);
   }
@@ -340,6 +341,11 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::~CN_Processing()
 {
   if (LOG_CONDITION)
     LOG_INFO_STR(itsLogPrefix << "----- Observation finished");
+
+  // destruct all uses of itsBeamMemory so it can be freed properly
+  itsPreTransposeBeamFormedData.resize(0);
+  itsBeamAllocator = 0;
+  itsBeamArena = 0;
 
   // don't accumulate plans in memory, as we might run out or create fragmentation
 #if defined HAVE_FFTW3

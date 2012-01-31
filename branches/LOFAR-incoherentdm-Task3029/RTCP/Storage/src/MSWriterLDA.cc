@@ -156,6 +156,10 @@ namespace LOFAR
           stokesVars.push_back("Yr");
           stokesVars.push_back("Yi");
           break;
+
+        case INVALID_STOKES:
+          LOG_ERROR("MSWriterLDA asked to write INVALID_STOKES");
+          return;
       }    
 
       LOG_DEBUG_STR("MSWriterLDA: opening " << filename);

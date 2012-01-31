@@ -120,11 +120,9 @@ public:
 		string					target;
 		string					antennaSet;
 		vector<Pointing>		pointings;
-		bool					maximizeDuration;
 
 		int						momID;
 		vector<int>				subbands;
-		vector<int>				beamlets;
 
 		int						nrTABs;
 		int						nrTABrings;

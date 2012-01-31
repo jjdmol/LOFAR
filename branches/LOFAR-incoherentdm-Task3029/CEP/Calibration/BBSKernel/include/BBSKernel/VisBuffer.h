@@ -106,6 +106,7 @@ public:
     void flagsOrWithMask(flag_t mask);
     void flagsSet(flag_t value);
     void flagsNot();
+    void flagsNaN();
     // @}
 
     // Station UVW coordinates in meters.
