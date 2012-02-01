@@ -33,6 +33,7 @@
 #include <Common/SystemUtil.h>
 #include <ApplCommon/Observation.h>
 
+#include <Common/lofar_map.h>
 #include <boost/format.hpp>
 
 using boost::format;
@@ -56,7 +57,7 @@ Observation::Observation() :
 //
 // Observation(ParameterSet*, [hasDualHBA]))
 //
-Observation::Observation(ParameterSet*		aParSet,
+Observation::Observation(const ParameterSet*		aParSet,
 						 bool				hasDualHBA) :
 	name(),
 	obsID(0),
@@ -299,12 +300,12 @@ Observation::Observation(ParameterSet*		aParSet,
 		}
 	} // for all analogue beams
 
-	// Create a vector which dataStream is written to what Storagenode.
-	// loop over all data products and generate all data flows
+        // loop over all data products and generate all data flows
 	string olapprefix = aParSet->locateModule("OLAP") + "OLAP.";
 	if (!olapprefix.empty()) {		// offline Pipelines don't have OLAP in the parset.
 		const char *dataProductNames[] = { "Beamformed", "Correlated" };
 		unsigned dataProductPhases[]   = { 3,            2 };
+                unsigned dataProductNrs[]      = { 2,            1 };
 		size_t nrDataProducts = sizeof dataProductNames / sizeof dataProductNames[0];
 
 		// by default, use all psets
@@ -328,6 +329,9 @@ Observation::Observation(ParameterSet*		aParSet,
 				phaseThreePsets.push_back(p);
 			}
 		}
+
+		std::map<unsigned,    unsigned> filesPerIONode;
+		std::map<std::string, unsigned> filesPerStorage;
 
 		for (size_t d = 0; d < nrDataProducts; d ++) {
 			bool enabled = aParSet->getBool(prefix+str(format("DataProducts.Output_%s.enabled") % dataProductNames[d]), false);
@@ -357,6 +361,7 @@ Observation::Observation(ParameterSet*		aParSet,
 				StreamToStorage a;
 
 				a.dataProduct = dataProductNames[d];
+				a.dataProductNr = dataProductNrs[d];
 				a.streamNr = i;
 				a.filename = filenames[i];
 				a.sourcePset = psets[i / filesPerPset];
@@ -364,6 +369,10 @@ Observation::Observation(ParameterSet*		aParSet,
 				vector<string> locparts = StringUtil::split(locations[i],':');
 				a.destStorageNode = locparts[0];
 				a.destDirectory = locparts[1];
+
+				// use a static allocation for now, starting at 0 for each pset/locus node
+				a.adderNr  = filesPerIONode[a.sourcePset]++;
+				a.writerNr = filesPerStorage[locparts[0]]++;
 
 				streamsToStorage.push_back(a);
 			} // for filenames

@@ -52,7 +52,7 @@ class Observation
 public:
 	Observation();
 	~Observation();
-	explicit	Observation (ParameterSet*		aParSet, bool	hasDualHBA = false);
+	explicit	Observation (const ParameterSet*		aParSet, bool	hasDualHBA = false);
 
 	// global function for converting filtername to nyquist zone
 	static uint nyquistzoneFromFilter(const string&	filterName);
@@ -154,12 +154,21 @@ public:
     class StreamToStorage {
     public:
         string dataProduct;
+        unsigned dataProductNr;
+
         unsigned streamNr;
         string filename;
 
         unsigned sourcePset;
+
         string destStorageNode;
         string destDirectory;
+<<<<<<< .working
+
+        unsigned adderNr;
+        unsigned writerNr;
+=======
+>>>>>>> .merge-right.r20001
     };
 
 	//# Datamembers

@@ -26,6 +26,7 @@
 #include <Interface/BeamFormedData.h>
 #include <Interface/SmartPtr.h>
 #include <Common/Thread/Cancellation.h>
+#include <ApplCommon/Observation.h>
 
 #include <ION_Allocator.h>
 #include <GlobalVars.h>
@@ -33,8 +34,6 @@
 #include <Scheduling.h>
 
 #include <boost/format.hpp>
-#include <iomanip> // for std::setw
-
 
 namespace LOFAR {
 namespace RTCP {
@@ -64,15 +63,31 @@ OutputSection::OutputSection(const Parset &parset,
   itsSequenceNumber(firstBlockNumber),
   itsIsRealTime(parset.realTime()),
   itsDroppedCount(itsNrStreams),
+  itsTotalDroppedCount(itsNrStreams),
   itsStreamsFromCNs(cores.size()),
   itsTmpSum(newStreamableData(parset, outputType, -1, hugeMemoryAllocator))
 {
+  // lookup the PVSS adders to use in our reports
+  Observation obs(&parset);
+  itsAdders.resize(itsNrStreams);
+
+  for (unsigned i = 0; i < itsNrStreams; i ++) {
+    for (unsigned j = 0; j < obs.streamsToStorage.size(); j++) {
+      Observation::StreamToStorage &s = obs.streamsToStorage[j];
+
+      if (s.dataProductNr == static_cast<unsigned>(outputType) && s.streamNr == itsFirstStreamNr + i) {
+        itsAdders[i] = s.adderNr;
+        break;
+      }
+    }
+  }
+
   if (itsNrIntegrationSteps > 1)
     for (unsigned i = 0; i < itsNrStreams; i ++)
       itsSums.push_back(newStreamableData(parset, outputType, itsFirstStreamNr + i, hugeMemoryAllocator));
 
   for (unsigned i = 0; i < itsNrStreams; i ++)
-    itsOutputThreads.push_back(new OutputThread(parset, outputType, itsFirstStreamNr + i));
+    itsOutputThreads.push_back(new OutputThread(parset, outputType, itsFirstStreamNr + i, itsAdders[i]));
 
   LOG_DEBUG_STR(itsLogPrefix << "] Creating streams between compute nodes and OutputSection...");
 
@@ -156,7 +171,7 @@ OutputSection::~OutputSection()
 
   for (unsigned i = 0; i < itsOutputThreads.size(); i ++) {
     if (itsIsRealTime && !itsOutputThreads[i]->itsThread.wait(timeout)) {
-      LOG_WARN_STR(itsLogPrefix << " stream " << std::setw(3) << itsFirstStreamNr + i << "] cancelling output thread");
+      LOG_WARN_STR(itsLogPrefix << str(boost::format(" stream %3u adder %3u] ") % (itsFirstStreamNr + i) % itsAdders[i]) << "cancelling output thread");
       itsOutputThreads[i]->itsThread.cancel();
     }
 
@@ -199,14 +214,17 @@ void OutputSection::noMoreIterations()
 void OutputSection::droppingData(unsigned stream)
 {
   if (itsDroppedCount[stream] ++ == 0)
-    LOG_WARN_STR(itsLogPrefix << " stream " << std::setw(3) << itsFirstStreamNr + stream << "] Dropping data");
+    LOG_WARN_STR(itsLogPrefix << str(boost::format(" stream %3u adder %3u] ") % (itsFirstStreamNr + stream) % itsAdders[stream]) << "Dropping data");
 }
 
 
 void OutputSection::notDroppingData(unsigned stream)
 {
   if (itsDroppedCount[stream] > 0) {
-    LOG_WARN_STR(itsLogPrefix << " stream " << std::setw(3) << itsFirstStreamNr + stream << "] Dropped " << itsDroppedCount[stream] << " blocks" );
+    itsTotalDroppedCount[stream] += itsDroppedCount[stream];
+
+    LOG_WARN_STR(itsLogPrefix << str(boost::format(" stream %3u adder %3u] ") % (itsFirstStreamNr + stream) % itsAdders[stream]) << "Dropped " <<  itsDroppedCount[stream] << " blocks this time and " << itsTotalDroppedCount[stream] << " blocks since start" );
+
     itsDroppedCount[stream] = 0;
   }
 }
