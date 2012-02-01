@@ -163,12 +163,9 @@ public:
 
         string destStorageNode;
         string destDirectory;
-<<<<<<< .working
 
         unsigned adderNr;
         unsigned writerNr;
-=======
->>>>>>> .merge-right.r20001
     };
 
 	//# Datamembers
