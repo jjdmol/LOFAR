@@ -27,6 +27,7 @@
 #include <BBSKernel/Expr/AntennaFieldAzEl.h>
 #include <BBSKernel/Expr/AzEl.h>
 #include <BBSKernel/Expr/Delay.h>
+#include <BBSKernel/Expr/ElevationCut.h>
 #include <BBSKernel/Expr/EquatorialCentroid.h>
 #include <BBSKernel/Expr/ExprAdaptors.h>
 #include <BBSKernel/Expr/FaradayRotation.h>
@@ -222,6 +223,14 @@ makeDirectionalGainExpr(Scope &scope,
     }
 
     return Expr<JonesMatrix>::Ptr(new AsExpr<JonesMatrix>(J00, J01, J10, J11));
+}
+
+Expr<JonesMatrix>::Ptr
+makeElevationCutExpr(const Expr<Vector<2> >::Ptr &exprAzEl,
+    const ElevationCutConfig &config)
+{
+    return Expr<JonesMatrix>::Ptr(new ElevationCut(exprAzEl,
+        config.threshold()));
 }
 
 Expr<JonesMatrix>::Ptr

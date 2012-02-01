@@ -183,13 +183,13 @@ namespace LOFAR
       if(itsModelConfig.useFlagger()) {
         const FlaggerConfig &config = itsModelConfig.getFlaggerConfig();
         ps.add(prefix + "Model.Flagger.Threshold",
-          toString(config.getThreshold()));
+          toString(config.threshold()));
       }
 
       ps.add(prefix + "Model.Cache.Enable",
         toString(itsModelConfig.useCache()));
 
-      ps.add(prefix + "Model.Sources", toString(itsModelConfig.getSources()));
+      ps.add(prefix + "Model.Sources", toString(itsModelConfig.sources()));
 
       LOG_TRACE_VAR_STR("\nContents of ParameterSet ps:\n" << ps);
     }
@@ -302,7 +302,7 @@ namespace LOFAR
         double threshold = 0.0;
         if(itsModelConfig.useFlagger()) {
           threshold = ps.getDouble("Model.Flagger.Threshold",
-            itsModelConfig.getFlaggerConfig().getThreshold());
+            itsModelConfig.getFlaggerConfig().threshold());
         } else {
           threshold = ps.getDouble("Model.Flagger.Threshold");
         }
@@ -316,7 +316,7 @@ namespace LOFAR
         itsModelConfig.useCache()));
 
       itsModelConfig.setSources(ps.getStringVector("Model.Sources",
-        itsModelConfig.getSources()));
+        itsModelConfig.sources()));
     }
 
 
