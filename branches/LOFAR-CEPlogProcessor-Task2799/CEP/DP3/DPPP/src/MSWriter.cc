@@ -390,13 +390,15 @@ namespace LOFAR {
       makeArrayColumn (tdesc["RESOLUTION"], shape, 0, outSPW);
       // Get the original frequency info.
       Vector<double> oldFreq, oldWidth, oldBW, oldRes;
-      itsReader->getFreqInfo (oldFreq, oldWidth, oldBW, oldRes);
+      double refFreq;
+      itsReader->getFreqInfo (oldFreq, oldWidth, oldBW, oldRes, refFreq);
       // Create the required column objects.
       ArrayColumn<Double> outFREQ(outSPW, "CHAN_FREQ");
       ArrayColumn<Double> outWIDTH(outSPW, "CHAN_WIDTH");
       ArrayColumn<Double> outBW(outSPW, "EFFECTIVE_BW");
       ArrayColumn<Double> outRESOLUTION(outSPW, "RESOLUTION");
       ScalarColumn<Double> outTOTALBW(outSPW, "TOTAL_BANDWIDTH");
+      ScalarColumn<Double> outREFFREQ(outSPW, "REF_FREQUENCY");
       Vector<double> newFreq  (itsNrChan);
       Vector<double> newWidth (itsNrChan);
       Vector<double> newBW    (itsNrChan);
@@ -432,6 +434,7 @@ namespace LOFAR {
       outBW.put        (0, newBW);
       outRESOLUTION.put(0, newRes);
       outTOTALBW.put   (0, totalBW);
+      outREFFREQ.put   (0, refFreq);
       // Adjust the spwid in the DATA_DESCRIPTION.
       ScalarColumn<Int> spwCol(outDD, "SPECTRAL_WINDOW_ID");
       spwCol.put (0, 0);
@@ -532,13 +535,17 @@ namespace LOFAR {
         writeFullResFlags (out, buf);
       }
       ArrayColumn<float> weightCol(out, "WEIGHT_SPECTRUM");
-      weightCol.putColumn (itsReader->fetchWeights (buf, buf.getRowNrs()));
+      // Do not account for getting the weights in the timings.
+      Array<float> weights (itsReader->fetchWeights (buf, buf.getRowNrs(),
+                                                     itsTimer));
+      weightCol.putColumn (weights);
     }
 
     void MSWriter::writeFullResFlags (Table& out, const DPBuffer& buf)
     {
       // Get the flags.
-      Cube<bool> flags (itsReader->fetchFullResFlags (buf, buf.getRowNrs()));
+      Cube<bool> flags (itsReader->fetchFullResFlags (buf, buf.getRowNrs(),
+                                                      itsTimer));
       const IPosition& ofShape = flags.shape();
       ASSERT (uint(ofShape[0]) == itsNChanAvg * itsNrChan);
       ASSERT (uint(ofShape[1]) == itsNTimeAvg);

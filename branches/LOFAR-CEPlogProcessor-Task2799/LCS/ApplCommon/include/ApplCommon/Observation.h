@@ -69,6 +69,10 @@ public:
 	// TEMP HACK
 	string getAntennaArrayName(bool hasSplitters) const;
 
+	// Support for dynamic dataslot allocation
+	vector<int>	getBeamAllocation(const string&	stationName = "") const;
+	vector<int>	getBeamlets (uint beamIdx, const string&	stationName = "") const;
+
 	// for operator <<
 	ostream& print (ostream&	os) const;
 
@@ -86,6 +90,17 @@ public:
 		int				duration;
 	};
 		
+	class TiedArrayBeam {
+	public:
+		TiedArrayBeam() {};
+		~TiedArrayBeam() {};
+		double			angle1;
+		double			angle2;
+		string			directionType;
+		double			dispersionMeasure;
+		bool			coherent;
+	};
+		
 	class Beam {
 	public:
 		Beam() {};
@@ -97,18 +112,22 @@ public:
 				this->pointings  = that.pointings;
 				this->momID 	 = that.momID;
 				this->subbands 	 = that.subbands;
-				this->beamlets 	 = that.beamlets;
 			}
 			return (*this);
 		}
+		// -- datamembers --
+		string					name;
+		string					target;
+		string					antennaSet;
+		vector<Pointing>		pointings;
 
-		string				name;
-		string				antennaSet;
-		vector<Pointing>	pointings;
+		int						momID;
+		vector<int>				subbands;
 
-		int					momID;
-		vector<int>			subbands;
-		vector<int>			beamlets;
+		int						nrTABs;
+		int						nrTABrings;
+		double					TABringSize;	// Radians
+		vector<TiedArrayBeam>	TABs;
 	};
 
 	class AnaBeam {
@@ -124,7 +143,7 @@ public:
 			}
 			return (*this);
 		};
-
+		// -- datamembers --
 		string				name;
 		string				antennaSet;
 		vector<Pointing>	pointings;
@@ -144,9 +163,12 @@ public:
 
         string destStorageNode;
         string destDirectory;
+<<<<<<< .working
 
         unsigned adderNr;
         unsigned writerNr;
+=======
+>>>>>>> .merge-right.r20001
     };
 
 	//# Datamembers
@@ -164,20 +186,16 @@ public:
 
 	// old way of specifying antennas
 	string			antennaArray;
-private:
-	RCUset_t		RCUset;				// set with participating receivers, use getRCUbitset to get this value.
 
-public:
 	// new way of selecting antennas
 	string			antennaSet;			// like LBA_INNER, LBA_OUTER, etc.
 	bool			useLongBaselines;
 	bool			splitterOn;			// On or Off
 	bool			dualMode;			// HBA_DUAL selected
 
+	// beams
 	vector<Beam>	beams;
 	vector<AnaBeam>	anaBeams;
-	vector<int>		beamlet2beams;		// to which beam each beamlet belongs
-	vector<int>		beamlet2subbands;	// which subband is mapped to each beamlet.
 
     vector<StreamToStorage> streamsToStorage; 
 
@@ -186,6 +204,17 @@ public:
 	string			stationList;
 	string			BGLNodeList; 	 
 	string			storageNodeList;
+
+private:
+	RCUset_t		RCUset;				// set with participating receivers, use getRCUbitset to get this value.
+
+	// many(!) vectors for dataslot allocation
+	bool			itsHasDataslots;	// old or new type of parset
+	bool			itsStnHasDualHBA;	// 
+	ParameterSet	itsDataslotParset;	// subset of parset with dataslotinfo for getxxxAllocation()
+	vector<int>		itsSlotTemplate;	// clean template with the slots that may be used.
+	vector<uint>	itsBeamSlotList;	// beamnumber vector
+	vector<int>		beamlet2beams;		// OLD:to which beam each beamlet belongs
 };
 
 //#

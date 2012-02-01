@@ -8,7 +8,9 @@ def findFiles (msPattern, lsOption='', cluster=''):
     hostline2   = re.compile (' +-+$')
     nomatch     = ['ls: No match.',
                    'ls: cannot access .*: No such file or directory',
-                   'ssh: connect to host .*: No route to host',
+                   'ssh: connect to host .*: ' +
+                       '(No route to host|Connection refused)',
+                   'Permission denied \(publickey,keyboard-interactive\).',
                    'Warning: No xauth data; .*',
                    '/usr/bin/xauth:  error in locking authority file.*']
     nomatchline = re.compile ('^(%s)$' % '|'.join(nomatch))

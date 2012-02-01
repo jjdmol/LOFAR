@@ -41,6 +41,10 @@ namespace LOFAR
           time_duration diff(aPtime - epoch);
           return diff.total_seconds();
 	}
+
+	inline ptime from_ustime_t(double	secsEpoch1970) {
+		return (from_time_t((time_t)trunc(secsEpoch1970)) + microseconds((int64_t)((secsEpoch1970-trunc(secsEpoch1970))*1000000)));
+	}
 }
 
 #endif

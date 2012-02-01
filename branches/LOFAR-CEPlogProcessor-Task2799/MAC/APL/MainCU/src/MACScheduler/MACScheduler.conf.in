@@ -10,12 +10,20 @@ OTDBpollInterval	= 5s
 # startup periods of Observations
 QueuePeriod			= 3m
 
-# manage lists of observations
+# Manage lists of observations
 pollIntervalPlanned	= 5s	# check if observations must be started
-pollIntervalExecute 	= 5s	# check if observations are still active
-pollIntervalFinished	= 5s	# update the list with finished observations
+pollIntervalExecute = 5s	# check if observations are still active
+pollIntervalFinished= 5s	# update the list with finished observations
+
+# What period should (at max) be shown in the lists
 plannedPeriod		= 24h	# period you will see in the Navigator
 finishedPeriod		= 24h	# period you will see in the Navigator
+
+# Extra restriction to the length of the lists.
+# Remember that nrPlanned + nrActive + nrFinished <= 100
+# If nrPlanned + nrActive + nrFinished > 100, the finished list will be truncated.
+maxPlannedList	= 30	# Never show more planned observations
+maxFinishedList	= 40	# Never show more finished observations
 
 # next parameters are optional, defaultvalues are shown
 #ChildControl.StartupRetryInterval = 10s

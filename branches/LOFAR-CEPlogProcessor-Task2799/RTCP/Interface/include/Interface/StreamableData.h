@@ -74,7 +74,7 @@ class StreamableData
       rawSequenceNumber = seqno;
     }
 
-    virtual void setNrSubbands(unsigned) { }
+    virtual void setDimensions(unsigned, unsigned, unsigned) { }
 
     uint32_t peerMagicNumber;    /// magic number received from peer
 

@@ -1,13 +1,115 @@
+#!/usr/bin/python
+
 import sys
 import os
-from math import modf
-from time import time,strftime,localtime
+from time import strftime,localtime,sleep
 import logging
 from logging.handlers import TimedRotatingFileHandler
 from traceback import format_exception
 from itertools import count
+import socket
+import Queue
+from threading import Thread
 
 DEBUG=False
+
+class reconnecting_socket:
+  """ A socket that keeps reconnecting if the connection is lost. Data is sent
+      asynchronously, with a buffer which drops messages if full. """
+
+  def __init__( self, host, port, retry_timeout=10, socket_timeout=5, bufsize=256 ):
+    self.host = host
+    self.port = port
+    self.socket_timeout = socket_timeout
+    self.retry_timeout = retry_timeout
+    self.socket = None
+    self.done = False
+
+    self.writebuf = Queue.Queue( bufsize )
+
+    self.iothread = Thread( target=self.iothread_main, name="I/O thread for %s:%s" % (host,port) )
+    self.iothread.start()
+
+  def iothread_main( self ):
+    def close():
+      self.socket.close()
+      self.socket = None
+
+    def reconnect():
+      self.socket = socket.socket()
+      self.socket.settimeout( self.socket_timeout )
+
+      while not self.done:
+        try:
+          self.socket.connect( (self.host,self.port) )
+        except socket.error:
+          pass
+        except socket.timeout:
+          pass
+        else:
+          # connected!
+          break
+
+        # sleep, but do stop when told
+        for i in xrange( self.retry_timeout ):
+          if self.done:
+            return
+          sleep( 1 )
+
+    def write( data ):
+      if self.socket is None:
+        reconnect()
+
+      if self.done:
+        return
+
+      written = 0
+
+      try:
+        while written < len(data):
+          written += self.socket.send( data[written:] )
+      except socket.error:
+        # do not attempt to send remaining data
+        close()
+        return
+      except socket.timeout:
+        # do not attempt to send remaining data
+        close()
+        return
+
+    # start with a connection
+    if self.socket is None:
+      reconnect()
+
+    while True:
+      try:
+        data = self.writebuf.get( timeout=1 )
+      except Queue.Empty:
+        # TODO: we can't keep a close check on our socket, delaying
+        # closing and reconnecting and keeping the line open
+        continue
+
+      if data is None:
+        # close request
+        break
+
+      write( data ) 
+
+  def write( self, data ):
+    if self.done:
+      return
+
+    try:
+      self.writebuf.put_nowait( data )
+    except Queue.Full:
+      # queue full -- drop data
+      pass
+
+  def close( self ):
+    self.done = True # abort any reconnection attempts
+    self.writebuf.put( None ) # prod the deque, wait if necessary
+
+    self.iothread.join()
 
 def my_excepthook( etype, value, tb ):
   """ Replacement for default exception handler, which uses the logger instead of stderr. """
@@ -72,7 +174,7 @@ class TimedSizeRotatingFileHandler(TimedRotatingFileHandler):
 
       if os.path.exists(t):
         os.remove(t)
-      os.rename(f,t)  
+      os.rename(f,t)
 
     t = self.rolloverAt - self.interval
     timeTuple = localtime(t)
@@ -107,3 +209,76 @@ def rotatingLogger( appname, filename ):
   logger.addHandler( handler )
 
   return logger
+
+if __name__ == "__main__":
+  import sys
+
+  if len(sys.argv) < 2:
+    print "Usage: %s outputfilename [maxfilesize]" % (sys.argv[0],)
+    sys.exit(1)
+
+if __name__ == "__main__":
+  from optparse import OptionParser,OptionGroup
+
+  parser = OptionParser( usage = """usage: %prog [options] outputfilename
+    """ )
+
+  parser.add_option( "-s", "--server",
+  			dest = "server",
+			type = "string",
+  			help = "output to logserver (host:port)" )
+  parser.add_option( "-v", "--verbose",
+  			dest = "verbose",
+			action = "store_true",
+			default = False,
+  			help = "output to stdout [%default]" )
+  parser.add_option( "-m", "--maxmb",
+  			dest = "maxmb",
+			type = "int",
+                        default = 512,
+  			help = "maximum file size in megabytes [%default]" )
+
+  # parse arguments
+  (options, args) = parser.parse_args()
+
+  if not args:
+    parser.print_help()
+    sys.exit(1)
+
+  initLogger()
+
+  logfilename = args[0]
+  logger = rotatingLogger( "foo", logfilename )
+  logger.handlers[0].maxBytes = options.maxmb * 1024 * 1024
+
+  verbose = options.verbose
+  if options.server:
+    host,port = options.server.split(":")
+    port = int(port)
+
+    if port == 0:
+      print "Invalid port number: %s" % (sys.argv[2],)
+      sys.exit(1)
+
+    server = reconnecting_socket(host, port)
+  else:
+    server = None
+
+  # 'for line in sys.stdin' buffers input, which
+  # is not what we want at all, so we use
+  # sys.stdin.readline instead.
+  for line in iter(sys.stdin.readline, ""): 
+    if server:
+      server.write(line)
+
+    line = line[:-1] # strip trailing \n
+
+    logger.info( "%s", line )
+
+    if verbose:
+      print line
+
+
+  if server:
+    server.close()
+

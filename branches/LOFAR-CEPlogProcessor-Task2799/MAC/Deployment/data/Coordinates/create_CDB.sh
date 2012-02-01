@@ -54,3 +54,4 @@ psql -f add_field_rotation_func.sql -h $DATABASEHOST -U postgres $DATABASENAME 2
 psql -f get_field_rotation_func.sql -h $DATABASEHOST -U postgres $DATABASENAME 2>&1 | grep ERROR
 
 psql -f get_transformation_info_func.sql -h $DATABASEHOST -U postgres $DATABASENAME 2>&1 | grep ERROR
+sleep 2

@@ -25,6 +25,7 @@
 #include <DPPP/MSReader.h>
 #include <DPPP/DPBuffer.h>
 #include <DPPP/DPInfo.h>
+#include <DPPP/DPLogger.h>
 #include <DPPP/ParSet.h>
 #include <Common/LofarLogger.h>
 #include <tables/Tables/TableRecord.h>
@@ -55,16 +56,15 @@ namespace LOFAR {
     {}
 
     MSReader::MSReader (const string& msName,
-                        const ParSet& parset, const string& prefix)
-      : itsMS          (msName, TableLock::AutoNoReadLocking),
-        itsReadVisData (False),
+                        const ParSet& parset, const string& prefix,
+                        bool missingData)
+      : itsReadVisData (False),
+        itsMissingData (missingData),
         itsLastMSTime  (0),
         itsNrRead      (0),
         itsNrInserted  (0)
     {
       NSTimer::StartStop sstime(itsTimer);
-      // Get full MS name.
-      itsMSName = itsMS.tableName();
       // Get info from parset.
       itsSpw              = parset.getInt    (prefix+"band", -1);
       itsStartChanStr     = parset.getString (prefix+"startchan", "0");
@@ -73,10 +73,17 @@ namespace LOFAR {
       string endTimeStr   = parset.getString (prefix+"endtime", "");
       itsUseFlags         = parset.getBool   (prefix+"useflag", true);
       itsDataColName      = parset.getString (prefix+"datacolumn", "DATA");
-      itsMissingData      = parset.getBool   (prefix+"missingdata", false);
       itsAutoWeight       = parset.getBool   (prefix+"autoweight", false);
       itsNeedSort         = parset.getBool   (prefix+"sort", false);
       itsSelBL            = parset.getString (prefix+"baseline", string());
+      // Try to open the MS and get its full name.
+      if (itsMissingData  &&  !Table::isReadable (msName)) {
+        DPLOG_WARN_STR ("MeasurementSet " << msName
+			<< " not found; dummy data used");
+        return;
+      }
+      itsMS = MeasurementSet (msName, TableLock::AutoNoReadLocking);
+      itsMSName = itsMS.tableName();
       // See if a selection on band needs to be done.
       // We assume that DATA_DESC_ID and SPW_ID map 1-1.
       if (itsSpw >= 0) {
@@ -108,7 +115,7 @@ namespace LOFAR {
       }
       // Prepare the MS access and get time info.
       double startTime, endTime;
-      prepare (startTime, endTime, itsInterval);
+      prepare (startTime, endTime, itsTimeInterval);
       // Start and end time can be given in the parset in case leading
       // or trailing time slots are missing.
       // They can also be used to select part of the MS.
@@ -119,7 +126,7 @@ namespace LOFAR {
           THROW (LOFAR::Exception, startTimeStr << " is an invalid date/time");
         }
         itsFirstTime = qtime.getValue("s");
-        ASSERT (itsFirstTime < endTime);
+        ASSERT (itsFirstTime <= endTime);
       }
       itsLastTime = endTime;
       if (!endTimeStr.empty()) {
@@ -128,12 +135,12 @@ namespace LOFAR {
         }
         itsLastTime = qtime.getValue("s");
       }
-      ASSERT (itsLastTime > itsFirstTime);
+      ASSERT (itsLastTime >= itsFirstTime);
       // If needed, skip the first times in the MS.
       // It also sets itsFirstTime properly (round to time/interval in MS).
       skipFirstTimes();
       itsNextTime  = itsFirstTime;
-      itsStartTime = itsFirstTime - 0.5*itsInterval;
+      itsStartTime = itsFirstTime - 0.5*itsTimeInterval;
       // Parse the chan expressions.
       // Nr of channels can be used as 'nchan' in the expressions.
       Record rec;
@@ -191,7 +198,8 @@ namespace LOFAR {
     void MSReader::getFreqInfo (Vector<double>& freq,
                                 Vector<double>& width,
                                 Vector<double>& effBW,
-                                Vector<double>& resolution) const
+                                Vector<double>& resolution,
+                                double& refFreq) const
     {
       freq.resize (itsNrChan);
       width.resize (itsNrChan);
@@ -202,12 +210,14 @@ namespace LOFAR {
       ROArrayColumn<Double> inWIDTH(inSPW, "CHAN_WIDTH");
       ROArrayColumn<Double> inBW(inSPW, "EFFECTIVE_BW");
       ROArrayColumn<Double> inRESOLUTION(inSPW, "RESOLUTION");
+      ROScalarColumn<Double> inREFFREQ(inSPW, "REF_FREQUENCY");
       Slicer slicer(IPosition(1, itsStartChan),
                     IPosition(1, itsNrChan));
       inFREQ.getSlice (itsSpw, slicer, freq);
       inWIDTH.getSlice (itsSpw, slicer, width);
       inBW.getSlice (itsSpw, slicer, effBW);
       inRESOLUTION.getSlice (itsSpw, slicer, resolution);
+      refFreq = inREFFREQ(itsSpw);
     }
 
     bool MSReader::process (const DPBuffer&)
@@ -333,7 +343,7 @@ namespace LOFAR {
       getNextStep()->process (itsBuffer);
       ///      cout << "Reader: " << itsNextTime-4.75e9<<endl;
       // Do not add to previous time, because it introduces round-off errors.
-      itsNextTime = itsFirstTime + (itsNrRead+itsNrInserted) * itsInterval;
+      itsNextTime = itsFirstTime + (itsNrRead+itsNrInserted) * itsTimeInterval;
       return true;
     }
 
@@ -345,8 +355,8 @@ namespace LOFAR {
     void MSReader::updateInfo (DPInfo& info)
     {
       info.init (itsNrCorr, itsStartChan, itsNrChan, itsNrBl,
-                 int((itsLastTime - itsFirstTime)/itsInterval + 1.5),
-                 itsInterval);
+                 int((itsLastTime - itsFirstTime)/itsTimeInterval + 1.5),
+                 itsTimeInterval);
       info.setPhaseCenter (itsPhaseCenter, true);
     }
 
@@ -354,24 +364,28 @@ namespace LOFAR {
     {
       os << "MSReader" << std::endl;
       os << "  input MS:       " << itsMSName << std::endl;
-      if (! itsSelBL.empty()) {
-        os << "  baseline:       " << itsSelBL << std::endl;
+      if (itsMS.isNull()) {
+        os << "    *** MS does not exist ***" << std::endl;
+      } else {
+        if (! itsSelBL.empty()) {
+          os << "  baseline:       " << itsSelBL << std::endl;
+        }
+        os << "  band            " << itsSpw << std::endl;
+        os << "  startchan:      " << itsStartChan << "  (" << itsStartChanStr
+           << ')' << std::endl;
+        os << "  nchan:          " << itsNrChan << "  (" << itsNrChanStr
+           << ')' << std::endl;
+        os << "  ncorrelations:  " << itsNrCorr << std::endl;
+        os << "  nbaselines:     " << itsNrBl << std::endl;
+        os << "  ntimes:         " << itsMS.nrow() / itsNrBl << std::endl;
+        os << "  time interval:  " << itsTimeInterval << std::endl;
+        os << "  DATA column:    " << itsDataColName;
+        if (itsMissingData) {
+          os << "  (not present)";
+        }
+        os << std::endl;
+        os << "  autoweight:     " << itsAutoWeight << std::endl;
       }
-      os << "  band            " << itsSpw << std::endl;
-      os << "  startchan:      " << itsStartChan << "  (" << itsStartChanStr
-         << ')' << std::endl;
-      os << "  nchan:          " << itsNrChan << "  (" << itsNrChanStr
-         << ')' << std::endl;
-      os << "  ncorrelations:  " << itsNrCorr << std::endl;
-      os << "  nbaselines:     " << itsNrBl << std::endl;
-      os << "  ntimes:         " << itsMS.nrow() / itsNrBl << std::endl;
-      os << "  time interval:  " << itsInterval << std::endl;
-      os << "  DATA column:    " << itsDataColName;
-      if (itsMissingData) {
-        os << "  (not present)";
-      }
-      os << std::endl;
-      os << "  autoweight:     " << itsAutoWeight << std::endl;
     }
 
     void MSReader::showCounts (std::ostream& os) const
@@ -544,12 +558,12 @@ namespace LOFAR {
           // Note that a time stamp might be missing at this point,
           // so do not simply assume that mstime can be used.
           if (mstime > itsFirstTime) {
-            int nrt = int((mstime - itsFirstTime) / itsInterval);
-            mstime -= (nrt+1) * itsInterval;    // Add 1 for rounding errors
+            int nrt = int((mstime - itsFirstTime) / itsTimeInterval);
+            mstime -= (nrt+1) * itsTimeInterval;   // Add 1 for rounding errors
             if (near(mstime, itsFirstTime)) {
               itsFirstTime = mstime;
             } else {
-              itsFirstTime = mstime + itsInterval;
+              itsFirstTime = mstime + itsTimeInterval;
             }
             break;
           }
@@ -572,6 +586,7 @@ namespace LOFAR {
 
     Matrix<double> MSReader::getUVW (const RefRows& rowNrs)
     {
+      NSTimer::StartStop sstime(itsTimer);
       // Empty rownrs cannot happen for data, because in that case the buffer
       // should contain UVW for a missing time slot.
       ASSERT (! rowNrs.rowVector().empty());
@@ -582,6 +597,7 @@ namespace LOFAR {
     Cube<float> MSReader::getWeights (const RefRows& rowNrs,
                                       const DPBuffer& buf)
     {
+      NSTimer::StartStop sstime(itsTimer);
       if (rowNrs.rowVector().empty()) {
         // rowNrs can be empty if a time slot was inserted.
         Cube<float> weights(itsNrCorr, itsNrChan, itsNrBl);
@@ -649,7 +665,7 @@ namespace LOFAR {
           const Complex* auto2 = data + autoInx[itsAnt2[i]]*nchan*npol;
           for (uint j=0; j<nchan; ++j) {
             if (auto1[0].real() != 0  &&  auto2[0].real() != 0) {
-              double w = chanWidths[j] * itsInterval;
+              double w = chanWidths[j] * itsTimeInterval;
               weight[0] *= w / (auto1[0].real() * auto2[0].real());      // XX
               if (npol == 4) {
                 if (auto1[3].real() != 0  &&  auto2[3].real() != 0) {
@@ -677,6 +693,7 @@ namespace LOFAR {
 
     Cube<bool> MSReader::getFullResFlags (const RefRows& rowNrs)
     {
+      NSTimer::StartStop sstime(itsTimer);
       // Return empty array if no fullRes flags.
       if (!itsHasFullResFlags  ||  rowNrs.rowVector().empty()) {
         return Cube<bool>();
@@ -714,6 +731,7 @@ namespace LOFAR {
     Cube<Complex> MSReader::getData (const String& columnName,
                                      const RefRows& rowNrs)
     {
+      NSTimer::StartStop sstime(itsTimer);
       // Empty rownrs cannot happen for data, because in that case the buffer
       // should contain data for a missing time slot.
       ASSERT (! rowNrs.rowVector().empty());

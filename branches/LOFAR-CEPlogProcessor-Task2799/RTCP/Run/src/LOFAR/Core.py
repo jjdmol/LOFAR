@@ -2,83 +2,10 @@
 
 import Logger
 from logging import debug,info,warning,error,critical
-import Sections
-from util import Commands
 from Locations import Locations
-from CommandClient import sendCommand
 from ObservationID import ObservationID
 from Parset import Parset
 from Stations import Stations,overrideRack
-from util.dateutil import format
-import sys
-import signal
-from threading import Lock
-import thread
-import socket
-
-DRYRUN = False
-
-aborted = False
-lock = Lock()
-lock.acquire() # lock can be released by anyone to signal the end of the run
-
-def installSigHandlers():
-  """ Translate signals to KeyboardInterrupts to catch them in a try block. """
-
-  def sigHandler( sig, frame ):
-    global aborted,lock
-
-    critical( "Caught signal %s -- aborting" % (sig,) )
-    aborted = True
-
-    try:
-      lock.release()
-    except thread.error:
-      pass
-
-  signal.signal( signal.SIGTERM, sigHandler )
-  signal.signal( signal.SIGQUIT, sigHandler )
-  signal.signal( signal.SIGINT, sigHandler )
-
-def runCorrelator( partition, start_cnproc = True, start_ionproc = True ):
-  """ Run an observation using the provided parsets. """
-
-  # ----- Select the sections to start
-  sections = Sections.SectionSet()
-
-  if start_ionproc:
-    sections += [Sections.IONProcSection( partition )]
-  if start_cnproc:
-    sections += [Sections.CNProcSection( partition )]
-
-  # sanity check on sections
-  if not DRYRUN:
-    sections.check()
-
-  installSigHandlers()  
-
-  # ----- Run all sections
-  try:
-    # start all sections
-    sections.run()
-    sections.wait( lock )
-
-    if aborted:
-      raise Exception("aborted")
-
-  except Exception,e:
-    error( "%s", e )
-
-    try:
-      # soft abort -- wait for all observations to stop
-      sendCommand( partition, "cancel all" )
-      sendCommand( partition, "quit" )
-    except: 
-      # hard abort -- kill all sections
-      sections.abort()
-
-  # let the sections clean up 
-  sections.postProcess()
 
 def buildParset( parset = None, args = "", olapparset = "OLAP.parset", partition = None ):
   """

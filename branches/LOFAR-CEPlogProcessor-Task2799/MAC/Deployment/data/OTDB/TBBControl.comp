@@ -2,7 +2,7 @@
 #
 # Component description of TBBControl configuration setting
 #
-# $Id: TBBControl.comp 15544 2010-04-26 11:35:35Z donker $
+# $Id$
 #
 # name          name of the node
 # version       version of this node specification

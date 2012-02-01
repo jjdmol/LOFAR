@@ -273,11 +273,12 @@ do
 		substitute_marker "../PVSS/Rings" "@ring@" >${outputname}
 	fi
 
-	grep @dataproduct@ $file >/dev/null 2>&1
-	if [ $? -eq 0 ]; then
-		cat $file | \
-		expand_storagemarker "DataProductNode" "@dataproduct@" >${outputname}
-	fi
+        grep @inputdataproduct@ $file >/dev/null 2>&1
+        if [ $? -eq 0 ]; then
+                cat $file | \
+                expand_storagemarker "InputDataProductNode" "@inputdataproduct@" |\
+		expand_storagemarker "OutputDataProductNode" "@outputdataproduct@" >${outputname}
+        fi
 
 #	grep @BGL-Storage@ $file >/dev/null 2>&1
 #	if [ $? -eq 0 ]; then

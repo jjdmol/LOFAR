@@ -71,16 +71,16 @@ public class ConfigPanelHelper {
         itsPanelMap.put("*",itsVector);
         
         //BBS
-        itsVector = new Vector<String>();
-        itsVector.add("nl.astron.lofar.sas.otbcomponents.bbs.BBSPanel");
-        itsPanelMap.put("BBSControl",itsVector);
-        addParSetPanel();
+ //       itsVector = new Vector<String>();
+ //       itsVector.add("nl.astron.lofar.sas.otbcomponents.bbs.BBSPanel");
+ //       itsPanelMap.put("BBSControl",itsVector);
+ //       addParSetPanel();
         
         //BBS Strategy
-        itsVector = new Vector<String>();
-        itsVector.add("nl.astron.lofar.sas.otbcomponents.bbs.BBSStrategyPanel");
-        itsPanelMap.put("Strategy",itsVector);
-        addParSetPanel();
+//        itsVector = new Vector<String>();
+//        itsVector.add("nl.astron.lofar.sas.otbcomponents.bbs.BBSStrategyPanel");
+//       itsPanelMap.put("Strategy",itsVector);
+//        addParSetPanel();
   
 
         //OLAP

@@ -69,6 +69,10 @@ CREATE OR REPLACE FUNCTION deleteTree(INT4, INT4)
 		DELETE FROM StateHistory
 		WHERE  treeID = $2;
 
+		-- make sure that there are not kvt's left that refer to this tree
+		DELETE FROM VICkvt
+		WHERE treeID = $2;
+
 		-- delete tree		
 		IF vOldTree.treetype = TThardware THEN
 		  DELETE FROM PIChierarchy
@@ -80,10 +84,6 @@ CREATE OR REPLACE FUNCTION deleteTree(INT4, INT4)
 		  DELETE FROM VIChierarchy
 		  WHERE	 treeID = $2;
 		END IF;
-
-		-- make sure that there are not kvt's left that refer to this tree
-		DELETE FROM VICkvt
-		WHERE treeID = $2;
 
 		-- Finally delete tree entry
 		DELETE FROM OTDBtree

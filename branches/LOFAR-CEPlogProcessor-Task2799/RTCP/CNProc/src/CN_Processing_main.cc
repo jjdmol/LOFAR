@@ -238,26 +238,28 @@ int main(int argc, char **argv)
 
       switch (command.value()) {
 	case CN_Command::PREPROCESS :	try {
+                                          unsigned firstBlock = command.param();
+
 					  parset = new Parset(ionStream);
 
 				          switch (parset->nrBitsPerSample()) {
 #if defined CLUSTER_SCHEDULING
-                                            case 4:  proc = new CN_Processing<i4complex>(*parset, ionStreams, &createIONstream, locationInfo, bigAllocator);
+                                            case 4:  proc = new CN_Processing<i4complex>(*parset, ionStreams, &createIONstream, locationInfo, bigAllocator, firstBlock);
                                                      break;
 
-                                            case 8:  proc = new CN_Processing<i8complex>(*parset, ionStreams, &createIONstream, locationInfo, bigAllocator);
+                                            case 8:  proc = new CN_Processing<i8complex>(*parset, ionStreams, &createIONstream, locationInfo, bigAllocator, firstBlock);
                                                      break;
 
-                                            case 16: proc = new CN_Processing<i16complex>(*parset, ionStreams, &createIONstream, locationInfo, bigAllocator);
+                                            case 16: proc = new CN_Processing<i16complex>(*parset, ionStreams, &createIONstream, locationInfo, bigAllocator, firstBlock);
                                                      break;
 #else
-                                            case 4:  proc = new CN_Processing<i4complex>(*parset, ionStream, &createIONstream, locationInfo, bigAllocator);
+                                            case 4:  proc = new CN_Processing<i4complex>(*parset, ionStream, &createIONstream, locationInfo, bigAllocator, firstBlock);
                                                      break;
 
-                                            case 8:  proc = new CN_Processing<i8complex>(*parset, ionStream, &createIONstream, locationInfo, bigAllocator);
+                                            case 8:  proc = new CN_Processing<i8complex>(*parset, ionStream, &createIONstream, locationInfo, bigAllocator, firstBlock);
                                                      break;
 
-                                            case 16: proc = new CN_Processing<i16complex>(*parset, ionStream, &createIONstream, locationInfo, bigAllocator);
+                                            case 16: proc = new CN_Processing<i16complex>(*parset, ionStream, &createIONstream, locationInfo, bigAllocator, firstBlock);
                                                      break;
 #endif
                                           }
@@ -284,6 +286,11 @@ int main(int argc, char **argv)
 	case CN_Command::POSTPROCESS :	// proc == 0 if PREPROCESS threw an exception, after which all cores receive a POSTPROCESS message
 					delete proc.release();
 					delete parset.release();
+
+#if defined HAVE_BGP // only SparseAllocator keeps track of its allocations
+                                        if (!bigAllocator.empty())
+                                          LOG_ERROR("Memory leak detected in bigAllocator");
+#endif
 					break;
 
 	case CN_Command::STOP :		break;

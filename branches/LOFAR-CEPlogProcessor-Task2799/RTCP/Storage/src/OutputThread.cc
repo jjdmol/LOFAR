@@ -150,22 +150,15 @@ void OutputThread::createMS()
   LOG_INFO_STR(itsLogPrefix << "Writing to " << path);
 
   try {
-#ifdef USE_LDA
     // HDF5 writer requested
     switch (itsOutputType) {
-      case COHERENT_STOKES:
-        itsWriter = new MSWriterLDA<float,3>(path.c_str(), itsParset, itsOutputType, itsStreamNr, itsIsBigEndian);
-        break;
       case BEAM_FORMED_DATA:
-        itsWriter = new MSWriterLDA<float,4>(path.c_str(), itsParset, itsOutputType, itsStreamNr, itsIsBigEndian);
+        itsWriter = new MSWriterLDA<float,3>(path.c_str(), itsParset, itsStreamNr, itsIsBigEndian);
         break;
       default:
-        itsWriter = new MSWriterFile(path, itsOutputType == COHERENT_STOKES || itsOutputType == BEAM_FORMED_DATA || itsOutputType == INCOHERENT_STOKES);
+        itsWriter = new MSWriterFile(path, itsOutputType == BEAM_FORMED_DATA);
         break;
     }
-#else
-    itsWriter = new MSWriterFile(path, itsOutputType == COHERENT_STOKES || itsOutputType == BEAM_FORMED_DATA || itsOutputType == INCOHERENT_STOKES);
-#endif    
   } catch (SystemCallException &ex) {
     LOG_ERROR_STR(itsLogPrefix << "Cannot open " << path << ": " << ex);
     itsWriter = new MSWriterNull;

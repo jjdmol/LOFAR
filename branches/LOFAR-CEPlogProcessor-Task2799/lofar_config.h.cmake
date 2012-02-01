@@ -1,13 +1,6 @@
 /* $Id$ */
 
 /*-------------------------------------------------------------------------*\
-|     Defines installation information                                      |
-\*-------------------------------------------------------------------------*/
-
-/* Define the destination root directory into which the software will be installed */
-#cmakedefine CMAKE_INSTALL_PREFIX "@CMAKE_INSTALL_PREFIX@"
-
-/*-------------------------------------------------------------------------*\
 |     Defines for the presence or absence of (system) header files          |
 \*-------------------------------------------------------------------------*/
 

@@ -36,7 +36,6 @@
 #include <DPPP/UVWFlagger.h>
 #include <DPPP/PhaseShift.h>
 #include <DPPP/Demixer.h>
-///#include <DPPP/Estimator.h>
 #include <DPPP/Counter.h>
 #include <DPPP/ParSet.h>
 #include <DPPP/ProgressMeter.h>
@@ -62,18 +61,9 @@ namespace LOFAR {
       bool showProgress   = parset.getBool ("showprogress", true);
       bool showTimings    = parset.getBool ("showtimings", true);
       string msName;
-      DPStep::ShPtr firstStep = makeSteps (parset, msName);
-      // Show the steps and determine DPInfo again to get #times
-      // to process.
       DPInfo info;
-      DPStep::ShPtr step = firstStep;
-      while (step) {
-        step->updateInfo (info);
-        ostringstream os;
-        step->show (os);
-        DPLOG_INFO (os.str(), true);
-        step = step->getNextStep();
-      }
+      // Create the steps and fill the DPInfo object.
+      DPStep::ShPtr firstStep = makeSteps (parset, info, msName);
       // Show unused parameters (might be misspelled).
       vector<string> unused = parset.unusedKeys();
       if (! unused.empty()) {
@@ -114,6 +104,7 @@ namespace LOFAR {
       firstStep->finish();
       // Give all steps the option to add something to the MS written.
       // Currently it is used by the AOFlagger to write its statistics.
+      DPStep::ShPtr step;
       if (! msName.empty()) {
         step = firstStep;
         while (step) {
@@ -151,7 +142,8 @@ namespace LOFAR {
       // The destructors are called automatically at this point.
     }
 
-    DPStep::ShPtr DPRun::makeSteps (const ParSet& parset, string& msName)
+    DPStep::ShPtr DPRun::makeSteps (const ParSet& parset,
+                                    DPInfo& info, string& msName)
     {
       DPStep::ShPtr firstStep;
       DPStep::ShPtr lastStep;
@@ -242,8 +234,6 @@ namespace LOFAR {
           step = DPStep::ShPtr(new PhaseShift (reader, parset, prefix));
         } else if (type == "demixer"  ||  type == "demix") {
           step = DPStep::ShPtr(new Demixer (reader, parset, prefix));
-          ///        } else if (type == "estimate"  ||  type == "estimator") {
-          ///          step = DPStep::ShPtr(new Estimator (reader, parset, prefix));
         } else {
           THROW (LOFAR::Exception, "DPPP step type " << type << " is unknown");
         }
@@ -255,7 +245,6 @@ namespace LOFAR {
         }
       }
       // Let all steps update their info.
-      DPInfo info;
       DPStep::ShPtr step = firstStep;
       while (step) {
         step->updateInfo (info);
@@ -265,7 +254,7 @@ namespace LOFAR {
       reader->setReadVisData (info.needVisData());
       // Create an updater step if an input MS was given; otherwise a writer.
       // Create an updater step only if needed (e.g. not if only count is done).
-      // If the user specified an output name, a writer is always created 
+      // If the user specified an output name, a writer is always created
       // If there is a writer, the reader needs to read the visibility data.
       if (outName.empty()) {
         ASSERTSTR (info.nchanAvg() == 1  &&  info.ntimeAvg() == 1,

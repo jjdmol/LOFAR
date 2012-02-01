@@ -732,7 +732,7 @@ void ChildControl::_processActionList()
 				}
 
 				// There is an connection with the startDaemon
-				if (action->nrRetries < itsMaxStartupRetries) {	// retries left?
+				if ((int)action->nrRetries < itsMaxStartupRetries) {	// retries left?
 					LOG_DEBUG_STR("Requesting start of " << action->cntlrName << " at " 
 																	<< action->hostname);
 					STARTDAEMONCreateEvent		startRequest;
@@ -1027,7 +1027,7 @@ void ChildControl::_doGarbageCollection()
 		if (!iter->port) {
 			restartTimer = true;
 			LOG_DEBUG_STR(time(0)<<"-"<<iter->requestTime<<">="<<itsStartupRetryInterval<<"*"<<itsMaxStartupRetries<<"?");
-			if ((uint32(time(0)-iter->requestTime)) >= MAC_SCP_TIMEOUT + itsStartupRetryInterval*itsMaxStartupRetries) {
+			if ((time(0)-iter->requestTime) >= int32(MAC_SCP_TIMEOUT+(itsStartupRetryInterval*itsMaxStartupRetries))) {
 				LOG_DEBUG_STR ("Controller " << iter->cntlrName << " is still unreachable, informing main task");
 				_setEstablishedState(iter->cntlrName, CTState::QUITED, time(0), CT_RESULT_LOST_CONNECTION);
 				iter->port = (GCFPortInterface*) -1;

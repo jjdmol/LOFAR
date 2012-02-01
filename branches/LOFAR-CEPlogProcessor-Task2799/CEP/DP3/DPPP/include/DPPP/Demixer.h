@@ -29,8 +29,19 @@
 
 #include <DPPP/DPInput.h>
 #include <DPPP/DPBuffer.h>
-#include <DPPP/Averager.h>
+#include <DPPP/PhaseShift.h>
+#include <DPPP/BBSExpr.h>
+
 #include <casa/Arrays/Cube.h>
+#include <measures/Measures/MDirection.h>
+
+#include <BBSKernel/MeasurementExprLOFAR.h>
+#include <BBSKernel/BaselineMask.h>
+#include <BBSKernel/CorrelationMask.h>
+#include <BBSKernel/ParmManager.h>
+#include <BBSKernel/VisBuffer.h>
+#include <ParmDB/SourceDB.h>
+#include <DPPP/EstimateNDPPP.h>
 
 namespace LOFAR {
 
@@ -76,28 +87,70 @@ namespace LOFAR {
       virtual void showTimings (std::ostream&, double duration) const;
 
     private:
-      // Demix and return the result.
-      DPBuffer demix() const;
+      casa::MDirection handleCenter(const vector<string> &center) const;
 
-      // Subtract sources and return the result.
-      DPBuffer subtract() const;
+      // Solve gains and subtract sources.
+      void demix();
+
+//      // Do the subtraction.
+//      void subtract();
+
+      // Add the decorrelation factor contribution for each time slot.
+      void addFactors (const DPBuffer& newBuf);
+
+      // Calculate the decorrelation factors by averaging them.
+      void averageFactors();
 
       //# Data members.
-      DPInput*              itsInput;
-      string                itsName;
-      DPStep::ShPtr         itsAverager;
-      ResultStep*           itsAvgResult;
-      vector<DPStep::ShPtr> itsFirstSteps;
-      vector<DPStep::ShPtr> itsSecondSteps;
-      vector<ResultStep*>   itsDemixInputs;
-      vector<ResultStep*>   itsSubtractInputs;
-      vector<string>        itsSources;
-      uint                  itsNChanAvg;
-      uint                  itsNTimeAvg;
-      uint                  itsDMChanAvg;
-      uint                  itsDMTimeAvg;
-      uint                  itsTimeWindow;
-      NSTimer               itsTimer;
+      DPInput*                 itsInput;
+      string                   itsName;
+      vector<PhaseShift*>      itsPhaseShifts;
+      vector<DPStep::ShPtr>    itsFirstSteps;   //# phaseshift/average steps
+      vector<MultiResultStep*> itsAvgResults;
+      vector<BBSExpr::ShPtr>   itsBBSExpr;
+      vector<BBS::MeasurementExpr::Ptr> itsModels;
+      string                   itsTarget;
+      vector<string>           itsSources;
+      vector<string>           itsExtraSources;
+      vector<string>           itsAllSources;
+//      vector<DPBuffer>         itsBuf;
+      double                   itsTimeStart;
+      double                   itsTimeInterval;
+      vector<double>           itsTimeCenters;
+      vector<double>           itsTimeWidths;
+      bool                     itsJointSolve;
+      uint                     itsNrDir;
+      uint                     itsNrBl;
+      uint                     itsNrCorr;
+      uint                     itsNrChanIn;
+      uint                     itsNrChanOut;
+      uint                     itsNChanAvg;
+      uint                     itsNTimeAvg;
+      uint                     itsResChanAvg;
+      uint                     itsResTimeAvg;
+      uint                     itsNTimeChunk;
+      uint                     itsNTimeIn;
+      uint                     itsNTimeOut;
+      double                   itsTimeIntervalAvg;
+      double                   itsTimeIntervalRes;
+      casa::Array<casa::DComplex> itsFactorBuf; //# ncorr,nchan,nbl,ndir*ndir
+      vector<casa::Array<casa::DComplex> > itsFactors; //# demix factors/time
+      //# each Array is basically cube(ncorr,nchan,nbl) of matrix(ndir,ndir)
+      NSTimer                  itsTimer;
+      NSTimer                  itsTimerPhaseShift;
+      NSTimer                  itsTimerDemix;
+      NSTimer                  itsTimerBBS;
+      NSTimer                  itsTimerSubtract;
+
+      boost::shared_ptr<BBS::SourceDB> itsSourceDB;
+      vector<BBS::ParmGroup>           itsModelParms;
+      BBS::ParmGroup                   itsParms;
+      BBS::BaselineSeq                 itsBaselines;
+      BBS::BaselineMask                itsBaselineMask;
+      BBS::CorrelationSeq              itsCorrelations;
+      BBS::CorrelationMask             itsCorrelationMask;
+      BBS::Axis::ShPtr                 itsFreqAxisAvg;
+      BBS::EstimateOptions             itsOptions;
     };
 
   } //# end namespace

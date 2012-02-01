@@ -47,6 +47,7 @@ install(FILES
   Expr/ConditionNumber.h
   Expr/Delay.h
   Expr/Element.h
+  Expr/ElevationCut.h
   Expr/EquatorialCentroid.h
   Expr/Expr.h
   Expr/ExprId.h

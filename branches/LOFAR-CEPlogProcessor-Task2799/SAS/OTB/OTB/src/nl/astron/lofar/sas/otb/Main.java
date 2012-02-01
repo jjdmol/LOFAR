@@ -27,10 +27,13 @@ package nl.astron.lofar.sas.otb;
 import com.darwinsys.lang.GetOpt;
 import com.darwinsys.lang.GetOptDesc;
 import java.awt.GraphicsEnvironment;
+import java.awt.HeadlessException;
 import java.awt.Rectangle;
 import java.io.File;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 import nl.astron.lofar.sas.otb.exceptions.NoServerConnectionException;
 import nl.astron.lofar.sas.otb.exceptions.NotLoggedInException;
 import org.apache.log4j.Logger;
@@ -60,6 +63,25 @@ public class Main {
     });
 
   }
+    
+//static {
+// 
+//    int delay = 1000 * 60; // delay for 1 minute
+//    int repeat = delay * 2; // repeat every 2 minutes
+// 
+//    Timer gcTimer = new Timer();
+//    gcTimer.scheduleAtFixedRate(new TimerTask() {
+// 
+//    @Override
+//    public void run() {
+////        System.out.println("Running Gargabe-Collector");
+//        System.gc();
+//    }
+//   
+//    }, delay, repeat);
+//  
+// }
+
 
     /**
      * @param args the command line arguments
@@ -150,7 +172,7 @@ public class Main {
                 logger.error(ex);
             }
         }
-        catch(Exception e) {
+        catch(IllegalStateException | HeadlessException e) {
             // catch all exceptions and create a fatal error message, including 
             // a stack trace.
             logger.fatal("Fatal exception, OTB halted",e);

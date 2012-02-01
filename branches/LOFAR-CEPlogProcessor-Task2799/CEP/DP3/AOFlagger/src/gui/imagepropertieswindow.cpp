@@ -62,9 +62,15 @@ ImagePropertiesWindow::ImagePropertiesWindow(ImageWidget &imageWidget, const std
 	_vStartScale(0, 1.01, 0.01),
 	_vStopScale(0, 1.01, 0.01),
 	
+	_axesFrame("Axes"),
 	_showXYAxes("Show XY axes"),
-	_showAxisDescriptionsButton("Show axis descriptions"),
-	_showColorScale("Show color scale")
+	_showColorScale("Show color scale"),
+	_showXAxisDescriptionButton("x-axis desc"),
+	_showYAxisDescriptionButton("y-axis desc"),
+	_showZAxisDescriptionButton("z-axis desc"),
+	_manualXAxisDescription("manual"),
+	_manualYAxisDescription("manual"),
+	_manualZAxisDescription("manual")
 {
 	set_title(title);
 
@@ -72,6 +78,7 @@ ImagePropertiesWindow::ImagePropertiesWindow(ImageWidget &imageWidget, const std
 	initScaleWidgets();
 	initOptionsWidgets();
 	initZoomWidgets();
+	initAxisWidgets();
 	
 	_applyButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePropertiesWindow::onApplyClicked));
 	_bottomButtonBox.pack_start(_applyButton);
@@ -85,15 +92,6 @@ ImagePropertiesWindow::ImagePropertiesWindow(ImageWidget &imageWidget, const std
 
 	_topVBox.pack_start(_framesHBox);
 	
-	_showXYAxes.set_active(_imageWidget.ShowXYAxes());
-	_topVBox.pack_start(_showXYAxes);
-
-	_showAxisDescriptionsButton.set_active(_imageWidget.ShowAxisDescriptions());
-	_topVBox.pack_start(_showAxisDescriptionsButton);
-
-	_showColorScale.set_active(_imageWidget.ShowColorScale());
-	_topVBox.pack_start(_showColorScale);
-
 	_topVBox.pack_start(_bottomButtonBox);
 
 	add(_topVBox);
@@ -223,6 +221,53 @@ void ImagePropertiesWindow::initZoomWidgets()
 	_topVBox.pack_start(_zoomFrame);
 }
 
+void ImagePropertiesWindow::initAxisWidgets()
+{
+	
+	_showXYAxes.set_active(_imageWidget.ShowXYAxes());
+	_axesGeneralBox.pack_start(_showXYAxes);
+
+	_showColorScale.set_active(_imageWidget.ShowColorScale());
+	_axesGeneralBox.pack_start(_showColorScale);
+	
+	_axesHBox.pack_start(_axesGeneralBox);
+	
+	_showXAxisDescriptionButton.set_active(_imageWidget.ShowXAxisDescription());
+	_xAxisBox.pack_start(_showXAxisDescriptionButton);
+	
+	_manualXAxisDescription.set_active(_imageWidget.ManualXAxisDescription());
+	_xAxisBox.pack_start(_manualXAxisDescription);
+	
+	_xAxisBox.pack_start(_xAxisDescriptionEntry);
+	
+	_axesVisibilityBox.pack_start(_xAxisBox);
+	
+	_showYAxisDescriptionButton.set_active(_imageWidget.ShowYAxisDescription());
+	_yAxisBox.pack_start(_showYAxisDescriptionButton);
+	
+	_manualYAxisDescription.set_active(_imageWidget.ManualYAxisDescription());
+	_yAxisBox.pack_start(_manualYAxisDescription);
+	
+	_yAxisBox.pack_start(_yAxisDescriptionEntry);
+	
+	_axesVisibilityBox.pack_start(_yAxisBox);
+	
+	_showZAxisDescriptionButton.set_active(_imageWidget.ShowZAxisDescription());
+	_zAxisBox.pack_start(_showZAxisDescriptionButton);
+	
+	_manualZAxisDescription.set_active(_imageWidget.ManualZAxisDescription());
+	_zAxisBox.pack_start(_manualZAxisDescription);
+	
+	_zAxisBox.pack_start(_zAxisDescriptionEntry);
+	
+	_axesVisibilityBox.pack_start(_zAxisBox);
+	
+	_axesHBox.pack_start(_axesVisibilityBox);
+	
+	_axesFrame.add(_axesHBox);
+	_topVBox.pack_start(_axesFrame);
+}
+
 void ImagePropertiesWindow::updateMinMaxEntries()
 {
 	std::stringstream minStr;
@@ -277,7 +322,18 @@ void ImagePropertiesWindow::onApplyClicked()
 	_imageWidget.SetVerticalDomain(freqStart, freqEnd);
 		
 	_imageWidget.SetShowXYAxes(_showXYAxes.get_active());
-	_imageWidget.SetShowAxisDescriptions(_showAxisDescriptionsButton.get_active());
+	_imageWidget.SetShowXAxisDescription(_showXAxisDescriptionButton.get_active());
+	_imageWidget.SetShowYAxisDescription(_showYAxisDescriptionButton.get_active());
+	_imageWidget.SetShowZAxisDescription(_showZAxisDescriptionButton.get_active());
+	_imageWidget.SetManualXAxisDescription(_manualXAxisDescription.get_active());
+	if(_manualXAxisDescription.get_active())
+		_imageWidget.SetXAxisDescription(_xAxisDescriptionEntry.get_text());
+	_imageWidget.SetManualYAxisDescription(_manualYAxisDescription.get_active());
+	if(_manualYAxisDescription.get_active())
+		_imageWidget.SetYAxisDescription(_yAxisDescriptionEntry.get_text());
+	_imageWidget.SetManualZAxisDescription(_manualZAxisDescription.get_active());
+	if(_manualZAxisDescription.get_active())
+		_imageWidget.SetZAxisDescription(_zAxisDescriptionEntry.get_text());
 	_imageWidget.SetShowColorScale(_showColorScale.get_active());
 	
 	_imageWidget.Update();

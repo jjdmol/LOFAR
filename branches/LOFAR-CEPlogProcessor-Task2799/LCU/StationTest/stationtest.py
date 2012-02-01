@@ -3,7 +3,7 @@
 #
 # Run the tests to test a LOFAR station
 # H. Meulman
-# Version 0.10                22-nov-2011	SVN*****
+# Version 0.11                22-nov-2011	SVN*****
 
 # 24 sep: local log directory aangepast
 # 27 sept: 	- Toevoeging delay voor tbbdriver polling
@@ -23,8 +23,10 @@
 # 18 mrt 2011: Als alle LBA's niet werken, wordt error gelogd. (average < 4000000)
 # 30 mrt 2011: TBBversion_int.gold aangepast voor internationale stations.
 # 7 sep 2011: Bug removed. On the remote stations LBA mode 1 will now also be tested.
-# added CS028 and CS031
-# 22 nov 2011 TBB versie aanpassen naar 2.39
+# oct 2011: added CS028 and CS031
+# 22 nov 2011: TBB versie aanpassen naar 2.39
+# 22 nov 2011: Changed filename to not overwrite testdata subrack test
+# 12 jan 2012: Reject LBA antennas when signal differs more than 10dB
 
 # todo:
 # - Als meer dan 10 elementen geen rf signaal hebben, keur dan hele tile af
@@ -32,6 +34,7 @@
 # - =='LOCKED' in 160 en 200 MHz clock test over een aantal keren!
 # Loggen absolute waarden van alle antennes (LBH LBL eb HBA)
 # BIST toevoegen RSP boards
+# Cabinet temperatuur monitoren
 
 
 
@@ -1247,6 +1250,7 @@ def LBAtest():
 	f_log = file('/opt/stationtest/test/hbatest/LBA_elements.log', 'w')
 	f_log.write(' ************ \n \n LOG File for LBA element test \n \n *************** \n')
 	f_logfac = file('/opt/stationtest/test/hbatest/LBA_factors.log', 'w')
+	f_loglin = file('/opt/stationtest/test/hbatest/LBA_lin.log', 'w')
 	f_logdown = file('/opt/stationtest/test/hbatest/LBA_down.log', 'w')	# log number that indicates if LBA antenna is falen over (down)
 # initialize data arrays
 	ref_data=range(0, num_rcu)
@@ -1292,13 +1296,17 @@ def LBAtest():
 	
         	# start processing the element measurements
 		averagesum=0
+		Rejected_antennas=0
 		for file_cnt in range(len(files)) :
 			f, frames_to_process, rcu_nr  = open_file(files, file_cnt)
         	       	if frames_to_process > 0 : 
 				sst_data = read_frame(f)
         	       		sst_subband = sst_data[subband_nr]
 				meet_data[rcu_nr] = sst_subband
-				averagesum=averagesum+sst_subband
+				if ((sst_subband>15000000) and (sst_subband<1500000000)): # average LCU is 150.000.000. Reject antennes met grotere afwijking dan 10dB
+					averagesum=averagesum+sst_subband
+				else:
+					Rejected_antennas=Rejected_antennas+1
 				if debug:
 		                	if rcu_nr==0:
         	               			print ' waarde sst_subband 0 is ' + str(sst_subband)
@@ -1306,17 +1314,25 @@ def LBAtest():
         	        			print ' waarde sst_subband 2 is ' + str(sst_subband)
 					if rcu_nr==50:
 						print ' waarde sst_subband 50 is ' + str(sst_subband)
+
 			f.close
-		average_lba=averagesum/num_rcu
+		average_lba=averagesum/(num_rcu-Rejected_antennas)
 #		if debug: 
 		print 'average = ' + str(average_lba)
+		print 'Number of rejected antennas = ' + str(Rejected_antennas)
+		f_loglin.write('Number of rejected antennas for mode 1 = ' + str(Rejected_antennas) + '\n')  
 		if average_lba < 4000000:
 			print ('LBA levels to low in mode 1!!!')
 #			if Severity<SeverityOfThisTest: Severity=SeverityOfThisTest
 #			if Priority<PriorityOfThisTest: Priority=PriorityOfThisTest
 			st_log.write('LBAmd1>: Sv=%s Pr=%s, LBA levels to low!!!\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest]))
 			return
-		
+
+		for rcuind in range(num_rcu) :			# Log lineair value of data
+			print 'RCU: ' + str(rcuind) + ' factor: ' + str(meet_data[rcuind])
+		        f_loglin.write(str(rcuind) + ' ' + str(meet_data[rcuind]) + '\n')  
+
+	
 		f_log.write('\nrcumode 1: \n')
 		if average_lba <> 0:
 			for rcuind in range(num_rcu) :
@@ -1406,24 +1422,31 @@ def LBAtest():
 
         # start processing the element measurements
 	averagesum=0
+	Rejected_antennas=0
 	for file_cnt in range(len(files)) :
 		f, frames_to_process, rcu_nr  = open_file(files, file_cnt)
                	if frames_to_process > 0 : 
 			sst_data = read_frame(f)
                		sst_subband = sst_data[subband_nr]
 			meet_data[rcu_nr] = sst_subband
-			averagesum=averagesum+sst_subband
+			if ((sst_subband>15000000) and (sst_subband<1500000000)): # average LCU is 150.000.000. Reject antennes met grotere afwijking dan 10dB
+				averagesum=averagesum+sst_subband
+			else:
+				Rejected_antennas=Rejected_antennas+1
+			#averagesum=averagesum+sst_subband
 			if debug:
 	                	if rcu_nr==0:
                        			print ' waarde sst_subband 0 is ' + str(sst_subband)
-                		if rcu_nr==2:
-                			print ' waarde sst_subband 2 is ' + str(sst_subband)
-				if rcu_nr==50:
-					print ' waarde sst_subband 50 is ' + str(sst_subband)
+                		if rcu_nr==166:
+                			print ' waarde sst_subband 166 is ' + str(sst_subband)
+				if rcu_nr==167:
+					print ' waarde sst_subband 167 is ' + str(sst_subband)
 		f.close
-	average_lba=averagesum/num_rcu
+	average_lba=averagesum/(num_rcu-Rejected_antennas)
 #	if debug: 
 	print 'average = ' + str(average_lba)
+	print 'Number of rejected antennas = ' + str(Rejected_antennas)
+	f_loglin.write('Number of rejected antennas for mode 3 = ' + str(Rejected_antennas) + '\n')  
 	if average_lba < 4000000:
 		print ('LBA levels to low in mode 3!!!')
 #		if Severity<SeverityOfThisTest: Severity=SeverityOfThisTest
@@ -1431,6 +1454,10 @@ def LBAtest():
 		st_log.write('LBAmd3>: Sv=%s Pr=%s, LBA levels to low!!!\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest]))
 		return
 			
+	for rcuind in range(num_rcu) :			# Log lineair value of data
+		print 'RCU: ' + str(rcuind) + ' factor: ' + str(meet_data[rcuind])
+	        f_loglin.write(str(rcuind) + ' ' + str(meet_data[rcuind]) + '\n')  
+	
 	f_log.write('\nrcumode 3: \n')
 	if average_lba <> 0:
 		for rcuind in range(num_rcu) :
@@ -1485,6 +1512,7 @@ def LBAtest():
 	
         f_log.close
 	f_logfac.close
+	f_loglin.close
 	rm_files(dir_name,'*')
 #	os.popen("killall beamctl")
 	if debug:

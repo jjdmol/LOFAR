@@ -30,6 +30,7 @@
 
 #include <AOFlagger/strategy/imagesets/noisestatimageset.h>
 
+struct stat;
 class StatisticsDerivator
 {
 	public:

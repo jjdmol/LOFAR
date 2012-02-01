@@ -48,7 +48,7 @@ namespace RTCP {
 
 template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
   public:
-    BeamletBufferToComputeNode(const Parset &ps, const std::vector<Stream *> &phaseOneTwoStreams, const std::vector<SmartPtr<BeamletBuffer<SAMPLE_TYPE> > > &beamletBuffers, unsigned psetNumber);
+    BeamletBufferToComputeNode(const Parset &ps, const std::vector<Stream *> &phaseOneTwoStreams, const std::vector<SmartPtr<BeamletBuffer<SAMPLE_TYPE> > > &beamletBuffers, unsigned psetNumber, unsigned firstBlockNumber);
     ~BeamletBufferToComputeNode();
   
     void			 process();
