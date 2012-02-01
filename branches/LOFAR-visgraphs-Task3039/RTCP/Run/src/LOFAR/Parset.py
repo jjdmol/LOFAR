@@ -303,12 +303,12 @@ class Parset(util.Parset.Parset):
         coherentFiles    = getlist("CoherentStokes")
         incoherentFiles  = getlist("IncoherentStokes")
 
-        # either coherent or beamformed are set as they are mutually exclusive
-        if coherentFiles == ([], []):
-          coherentFiles = beamformedFiles
-
         # if nothing is set, the filenames and locations are generated preWrite
         if coherentFiles != ([], []) or incoherentFiles != ([], []):
+          # either coherent or beamformed are set as they are mutually exclusive
+          if coherentFiles == ([], []):
+            coherentFiles = beamformedFiles
+
           # this will be the final list
           beamformedFiles = ([], [])  
 
@@ -341,7 +341,6 @@ class Parset(util.Parset.Parset):
           self["Observation.DataProducts.Output_Beamformed.enabled"] = True
           self["Observation.DataProducts.Output_Beamformed.filenames"] = beamformedFiles[0]
           self["Observation.DataProducts.Output_Beamformed.locations"] = beamformedFiles[1]
-
 
     def addStorageKeys(self):
 	self["OLAP.Storage.userName"] = getpass.getuser()
@@ -743,8 +742,9 @@ class Parset(util.Parset.Parset):
       else:  
         prefix = "OLAP.CNProc_IncoherentStokes"
 
-      subbandsPerFile = int(self["%s.subbandsPerFile" % (prefix,)])
-      return int(math.ceil(1.0 * self.getNrSubbands(sap) / subbandsPerFile))
+      subbands = self.getNrSubbands(sap)  
+      subbandsPerFile = int(self.get("%s.subbandsPerFile" % (prefix,),subbands))
+      return int(math.ceil(1.0 * subbands / subbandsPerFile))
 
     def getNrBeams( self, sap ):
       return self["Observation.Beam[%u].nrTiedArrayBeams" % (sap,)]
