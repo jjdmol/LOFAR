@@ -8,3 +8,7 @@ lofar_add_bin_program(CEPHardwareMonitor
 install(FILES
   CEPHardwareMonitor.conf
   DESTINATION etc)
+
+install(PROGRAMS
+  zabbix_get
+  DESTINATION sbin)

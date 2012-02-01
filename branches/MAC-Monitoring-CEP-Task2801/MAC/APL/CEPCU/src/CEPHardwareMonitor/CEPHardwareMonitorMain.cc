@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
 	// args: cntlrname, parentHost, parentService
 	GCFScheduler::instance()->init(argc, argv, "CEPHardwareMonitor");
 
-	LOG_INFO("MACProcessScope: LOFAR_PermSW_CEPHardwareMonitor");
+	LOG_INFO("MACProcessScope: LOFAR_PermSW_HardwareMonitor");
 	LOG_INFO(Version::getInfo<CEPCUVersion>("CEPHardwareMonitor"));
 
 	// Create tasks and call initial routines

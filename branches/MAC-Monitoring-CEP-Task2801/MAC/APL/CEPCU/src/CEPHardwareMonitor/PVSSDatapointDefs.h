@@ -325,13 +325,6 @@
 #define PSN_SAS_GATEWAY	"LOFAR_PermSW_Daemons_SASGateway"
 #define PST_SAS_GATEWAY	"SASGateway"
 
-// HardwareMonitor
-#define PSN_HARDWARE_MONITOR	"LOFAR_PermSW_HardwareMonitor"
-#define PST_HARDWARE_MONITOR	"HardwareMonitor"
-#define PN_HWM_RSP_CONNECTED	"RSP.connected"
-#define PN_HWM_TBB_CONNECTED	"TBB.connected"
-#define PN_HWM_EC_CONNECTED	"EC.connected"
-
 // SoftwareMonitor
 #define PSN_SOFTWARE_MONITOR	"LOFAR_PermSW_SoftwareMonitor"
 #define PST_SOFTWARE_MONITOR	"SoftwareMonitor"

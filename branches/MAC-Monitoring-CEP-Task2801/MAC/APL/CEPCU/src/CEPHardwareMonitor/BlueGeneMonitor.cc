@@ -73,6 +73,8 @@ BlueGeneMonitor::BlueGeneMonitor(const string&	cntlrName) :
 
 	itsBlueGeneFrontEnd = globalParameterSet()->getString("BlueGeneFrontEnd", "");
 	ASSERTSTR(!itsBlueGeneFrontEnd.empty(), "Name of BlueGene FrontEnd node not specified");
+
+	registerProtocol(DP_PROTOCOL, DP_PROTOCOL_STRINGS);
 }
 
 
@@ -105,10 +107,10 @@ GCFEvent::TResult BlueGeneMonitor::initial_state(GCFEvent& event,
 
 	case F_ENTRY: {
 		// Get access to my own propertyset.
-		LOG_DEBUG_STR ("Activating PropertySet " << PSN_HARDWARE_MONITOR);
+		LOG_DEBUG_STR ("Activating PropertySet " << PSN_CEP_HARDWARE_MONITOR);
 		itsTimerPort->setTimer(2.0);
-		itsOwnPropertySet = new RTDBPropertySet(PSN_HARDWARE_MONITOR,
-												PST_HARDWARE_MONITOR,
+		itsOwnPropertySet = new RTDBPropertySet(PSN_CEP_HARDWARE_MONITOR,
+												PST_CEP_HARDWARE_MONITOR,
 												PSAT_WO,
 												this);
 
@@ -127,7 +129,7 @@ GCFEvent::TResult BlueGeneMonitor::initial_state(GCFEvent& event,
 
 	case F_TIMER: {
 		// PropertySet must exist by now
-		ASSERTSTR(itsOwnPropertySet, "Could not create the PVSS datapoint " << PSN_HARDWARE_MONITOR);
+		ASSERTSTR(itsOwnPropertySet, "Could not create the PVSS datapoint " << PSN_CEP_HARDWARE_MONITOR);
 
 		// update PVSS.
 		LOG_TRACE_FLOW ("Updateing state to PVSS");
