@@ -1,0 +1,378 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Creator: fig2dev Version 3.2 Patchlevel 5a -->
+
+<!-- CreationDate: Fri Nov 20 04:47:03 2009 -->
+
+<!-- Magnification: 1.050 -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="487.68051"
+   height="429.66644"
+   viewBox="519 1464 6531.5071 5712.9719"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.47pre4 r22446"
+   sodipodi:docname="fig3.fig">
+  <metadata
+     id="metadata106">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs104">
+    <inkscape:perspective
+       sodipodi:type="inkscape:persp3d"
+       inkscape:vp_x="0 : 216.00002 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_z="486 : 216.00002 : 1"
+       inkscape:persp3d-origin="243 : 144.00001 : 1"
+       id="perspective108" />
+    <inkscape:perspective
+       id="perspective2982"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+  </defs>
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1680"
+     inkscape:window-height="976"
+     id="namedview102"
+     showgrid="false"
+     inkscape:zoom="1.673611"
+     inkscape:cx="243"
+     inkscape:cy="214.44031"
+     inkscape:window-x="0"
+     inkscape:window-y="25"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg2" />
+  <image
+     y="1443.111"
+     x="541.72919"
+     id="image2984"
+     height="5743.9214"
+     width="6508.7778"
+     xlink:href="file:///home/rob/workspace/LOFAR/doc/papers/2010/SPM/figures/Europe_countries_map.png" />
+  <g
+     style="fill:none;stroke-width:0.025in"
+     id="g4"
+     transform="translate(0,-10.364557)">
+    <!-- Image -->
+    <image
+       href="Europe_countries_map.png"
+       preserveAspectRatio="none"
+       x="519"
+       y="1464"
+       width="6509"
+       height="5744"
+       id="image6" />
+    <!-- Line -->
+    <polyline
+       points="2598,6661 2787,6661 "
+       style="stroke:#ff0000;stroke-width:16;stroke-linecap:butt;stroke-linejoin:miter"
+       id="polyline8" />
+    <!-- Line -->
+    <polyline
+       points="2692,6566 2692,6755 "
+       style="stroke:#ff0000;stroke-width:16;stroke-linecap:butt;stroke-linejoin:miter"
+       id="polyline10" />
+    <!-- Line -->
+    <polyline
+       points="5244,6236 5433,6236 "
+       style="stroke:#ff0000;stroke-width:16;stroke-linecap:butt;stroke-linejoin:miter"
+       id="polyline12" />
+    <!-- Line -->
+    <polyline
+       points="5338,6141 5338,6330 "
+       style="stroke:#ff0000;stroke-width:16;stroke-linecap:butt;stroke-linejoin:miter"
+       id="polyline14" />
+    <!-- Line -->
+    <polyline
+       points="5622,4488 5811,4488 "
+       style="stroke:#ff0000;stroke-width:16;stroke-linecap:butt;stroke-linejoin:miter"
+       id="polyline16" />
+    <!-- Line -->
+    <polyline
+       points="5716,4393 5716,4582 "
+       style="stroke:#ff0000;stroke-width:16;stroke-linecap:butt;stroke-linejoin:miter"
+       id="polyline18" />
+    <!-- Line -->
+    <polyline
+       points="5338,5149 5527,5149 "
+       style="stroke:#ff0000;stroke-width:16;stroke-linecap:butt;stroke-linejoin:miter"
+       id="polyline20" />
+    <!-- Line -->
+    <polyline
+       points="5433,5055 5433,5244 "
+       style="stroke:#ff0000;stroke-width:16;stroke-linecap:butt;stroke-linejoin:miter"
+       id="polyline22" />
+    <!-- Line -->
+    <polyline
+       points="3921,4960 4110,4960 "
+       style="stroke:#ff0000;stroke-width:16;stroke-linecap:butt;stroke-linejoin:miter"
+       id="polyline24" />
+    <!-- Line -->
+    <polyline
+       points="4015,4866 4015,5055 "
+       style="stroke:#ff0000;stroke-width:16;stroke-linecap:butt;stroke-linejoin:miter"
+       id="polyline26" />
+    <!-- Line -->
+    <polyline
+       points="4110,5196 4299,5196 "
+       style="stroke:#ff0000;stroke-width:16;stroke-linecap:butt;stroke-linejoin:miter"
+       id="polyline28" />
+    <!-- Line -->
+    <polyline
+       points="4204,5102 4204,5291 "
+       style="stroke:#ff0000;stroke-width:16;stroke-linecap:butt;stroke-linejoin:miter"
+       id="polyline30" />
+    <!-- Line -->
+    <polyline
+       points="1559,4393 1748,4393 "
+       style="stroke:#ff0000;stroke-width:16;stroke-linecap:butt;stroke-linejoin:miter"
+       id="polyline32" />
+    <!-- Line -->
+    <polyline
+       points="1653,4299 1653,4488 "
+       style="stroke:#ff0000;stroke-width:16;stroke-linecap:butt;stroke-linejoin:miter"
+       id="polyline34" />
+    <!-- Line -->
+    <polyline
+       points="3968,4299 4157,4299 "
+       style="stroke:#ff0000;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter"
+       id="polyline36" />
+    <!-- Line -->
+    <polyline
+       points="4062,4204 4062,4393 "
+       style="stroke:#ff0000;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter"
+       id="polyline38" />
+    <!-- Line -->
+    <polyline
+       points="4062,3968 4251,3968 "
+       style="stroke:#ff0000;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter"
+       id="polyline40" />
+    <!-- Line -->
+    <polyline
+       points="4157,3874 4157,4062 "
+       style="stroke:#ff0000;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter"
+       id="polyline42" />
+    <!-- Line -->
+    <polyline
+       points="3826,4062 4015,4062 "
+       style="stroke:#ff0000;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter"
+       id="polyline44" />
+    <!-- Line -->
+    <polyline
+       points="3921,3968 3921,4157 "
+       style="stroke:#ff0000;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter"
+       id="polyline46" />
+    <!-- Line -->
+    <polyline
+       points="3874,4157 4062,4157 "
+       style="stroke:#ff0000;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter"
+       id="polyline48" />
+    <!-- Line -->
+    <polyline
+       points="3968,4062 3968,4251 "
+       style="stroke:#ff0000;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter"
+       id="polyline50" />
+    <!-- Line -->
+    <polyline
+       points="3921,4251 4110,4251 "
+       style="stroke:#ff0000;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter"
+       id="polyline52" />
+    <!-- Line -->
+    <polyline
+       points="4015,4157 4015,4346 "
+       style="stroke:#ff0000;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter"
+       id="polyline54" />
+    <!-- Line -->
+    <polyline
+       points="3874,4062 4062,4062 "
+       style="stroke:#ff0000;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter"
+       id="polyline56" />
+    <!-- Line -->
+    <polyline
+       points="3968,3968 3968,4157 "
+       style="stroke:#ff0000;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter"
+       id="polyline58" />
+    <!-- Line -->
+    <polyline
+       points="3968,4062 4157,4062 "
+       style="stroke:#ff0000;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter"
+       id="polyline60" />
+    <!-- Line -->
+    <polyline
+       points="4062,3968 4062,4157 "
+       style="stroke:#ff0000;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter"
+       id="polyline62" />
+    <!-- Line -->
+    <polyline
+       points="4110,4062 4299,4062 "
+       style="stroke:#ff0000;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter"
+       id="polyline64" />
+    <!-- Line -->
+    <polyline
+       points="4204,3968 4204,4157 "
+       style="stroke:#ff0000;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter"
+       id="polyline66" />
+    <!-- Line -->
+    <polyline
+       points="4015,4110 4204,4110 "
+       style="stroke:#ff0000;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter"
+       id="polyline68" />
+    <!-- Line -->
+    <polyline
+       points="4110,4015 4110,4204 "
+       style="stroke:#ff0000;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter"
+       id="polyline70" />
+    <!-- Line -->
+    <polyline
+       points="3921,4204 4110,4204 "
+       style="stroke:#ff0000;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter"
+       id="polyline72" />
+    <!-- Line -->
+    <polyline
+       points="4015,4110 4015,4299 "
+       style="stroke:#ff0000;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter"
+       id="polyline74" />
+    <!-- Line -->
+    <polyline
+       points="5669,2078 5858,2078 "
+       style="stroke:#ff0000;stroke-width:16;stroke-linecap:butt;stroke-linejoin:miter"
+       id="polyline76" />
+    <!-- Line -->
+    <polyline
+       points="5763,1984 5763,2173 "
+       style="stroke:#ff0000;stroke-width:16;stroke-linecap:butt;stroke-linejoin:miter"
+       id="polyline78" />
+    <!-- Circle -->
+    <circle
+       cx="4157"
+       cy="4157"
+       r="67"
+       style="fill:#ff0000;stroke:#ff0000;stroke-width:8"
+       id="circle80"
+       sodipodi:cx="4157"
+       sodipodi:cy="4157"
+       sodipodi:rx="67"
+       sodipodi:ry="67"
+       d="m 4224,4157 c 0,37.0031 -29.9969,67 -67,67 -37.0031,0 -67,-29.9969 -67,-67 0,-37.0031 29.9969,-67 67,-67 37.0031,0 67,29.9969 67,67 z" />
+    <!-- Circle -->
+    <circle
+       cx="4062"
+       cy="4157"
+       r="299"
+       style="stroke:#00b000;stroke-width:16"
+       id="circle82"
+       sodipodi:cx="4062"
+       sodipodi:cy="4157"
+       sodipodi:rx="299"
+       sodipodi:ry="299"
+       d="m 4361,4157 c 0,165.1331 -133.8669,299 -299,299 -165.1331,0 -299,-133.8669 -299,-299 0,-165.1331 133.8669,-299 299,-299 165.1331,0 299,133.8669 299,299 z" />
+    <!-- Line -->
+    <polyline
+       points="3543,3023 3911,3761 "
+       style="stroke:#00b000;stroke-width:16;stroke-linecap:butt;stroke-linejoin:miter"
+       id="polyline84" />
+    <!-- Arrowhead on XXXpoint 3543 3023 - 3982 3901-->
+    <polygon
+       points="3920,3778 3849,3778 3849,3778 3976,3891 3962,3722 "
+       style="fill:#00b000;stroke:#00b000;stroke-width:8;stroke-miterlimit:8"
+       id="polygon86" />
+    <!-- Text -->
+    <text
+       xml:space="preserve"
+       x="1748"
+       y="4157"
+       font-style="italic"
+       font-weight="bold"
+       font-size="177"
+       id="text88"
+       style="font-size:177px;font-style:italic;font-weight:bold;text-anchor:middle;fill:#0000ff;font-family:Helvetica">United Kingdom</text>
+    <!-- Text -->
+    <text
+       xml:space="preserve"
+       x="3779"
+       y="4629"
+       font-style="italic"
+       font-weight="bold"
+       font-size="177"
+       id="text90"
+       style="font-size:177px;font-style:italic;font-weight:bold;text-anchor:middle;fill:#0000ff;font-family:Helvetica">the Netherlands</text>
+    <!-- Text -->
+    <text
+       xml:space="preserve"
+       x="4771"
+       y="5669"
+       font-style="italic"
+       font-weight="bold"
+       font-size="177"
+       id="text92"
+       style="font-size:177px;font-style:italic;font-weight:bold;text-anchor:middle;fill:#0000ff;font-family:Helvetica">Germany</text>
+    <!-- Text -->
+    <text
+       xml:space="preserve"
+       x="2456"
+       y="6283"
+       font-style="italic"
+       font-weight="bold"
+       font-size="177"
+       id="text94"
+       style="font-size:177px;font-style:italic;font-weight:bold;text-anchor:middle;fill:#0000ff;font-family:Helvetica">France</text>
+    <!-- Text -->
+    <text
+       xml:space="preserve"
+       x="6283"
+       y="2409"
+       font-style="italic"
+       font-weight="bold"
+       font-size="177"
+       id="text96"
+       style="font-size:177px;font-style:italic;font-weight:bold;text-anchor:middle;fill:#0000ff;font-family:Helvetica">Sweden</text>
+    <!-- Text -->
+    <text
+       xml:space="preserve"
+       x="2409"
+       y="2551"
+       font-style="italic"
+       font-weight="bold"
+       font-size="177"
+       id="text98"
+       style="font-size:177px;font-style:italic;font-weight:bold;text-anchor:start;fill:#00b000;font-family:Helvetica">20 core stations +</text>
+    <!-- Text -->
+    <text
+       xml:space="preserve"
+       x="2409"
+       y="2881"
+       font-style="italic"
+       font-weight="bold"
+       font-size="177"
+       id="text100"
+       style="font-size:177px;font-style:italic;font-weight:bold;text-anchor:start;fill:#00b000;font-family:Helvetica">16 remote stations</text>
+  </g>
+</svg>
