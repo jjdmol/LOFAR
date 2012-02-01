@@ -115,6 +115,9 @@ class calibrator_pipeline(control):
         # Demix the relevant A-team sources
         demix_mapfile = self.run_task("demixing", dppp_mapfile)['mapfile']
 
+        # Do a second run of flagging, this time using rficonsole
+        self.run_task("rficonsole", demix_mapfile, indirect_read=True)
+        
         # Create a parameter-subset for BBS and write it to file.
         bbs_parset = os.path.join(
             self.config.get("layout", "job_directory"),
