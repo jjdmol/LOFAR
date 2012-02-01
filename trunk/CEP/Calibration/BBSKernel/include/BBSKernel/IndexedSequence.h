@@ -94,6 +94,14 @@ private:
     SequenceType    itsSequence;
 };
 
+// Test IndexedSequence instances for equality.
+template <typename T>
+bool operator==(const IndexedSequence<T> &lhs, const IndexedSequence<T> &rhs);
+
+// Test IndexedSequence instances for inequality.
+template <typename T>
+bool operator!=(const IndexedSequence<T> &lhs, const IndexedSequence<T> &rhs);
+
 // Write an IndexedSequence to an output stream in human readable form.
 template <typename T>
 ostream &operator<<(ostream &out, const IndexedSequence<T> &obj);
@@ -213,6 +221,31 @@ template <typename T>
 bool IndexedSequence<T>::contains(const T &element) const
 {
     return (itsIndex.find(element) != itsIndex.end());
+}
+
+template <typename T>
+bool operator==(const IndexedSequence<T> &lhs, const IndexedSequence<T> &rhs)
+{
+    if(lhs.size() != rhs.size())
+    {
+        return false;
+    }
+
+    for(size_t i = 0; i < lhs.size(); ++i)
+    {
+        if(lhs[i] != rhs[i])
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+template <typename T>
+bool operator!=(const IndexedSequence<T> &lhs, const IndexedSequence<T> &rhs)
+{
+    return !(operator==(lhs, rhs));
 }
 
 template <typename T>
