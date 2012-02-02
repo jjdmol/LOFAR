@@ -860,6 +860,10 @@ class Parset(util.Parset.Parset):
 
         # restrictions on #samples and integration in beam forming modes
         if self.getBool("Observation.DataProducts.Output_Beamformed.enabled"):
+          if self["OLAP.CNProc_CoherentStokes.which"] == "XXYY":
+            assert int(self["OLAP.CNProc_CoherentStokes.timeIntegrationFactor"]) == 1, "Cannot integrate complex voltages (stokes XXYY) but temporal integration was requested"
+            assert int(self["OLAP.CNProc_CoherentStokes.channelsPerSubband"]) in [0, int(self["Observation.channelsPerSubband"])], "Cannot integrate complex voltages (stokes XXYY) but channel collapse was requested"
+
           # beamforming needs a multiple of 16 samples
           assert int(self["OLAP.CNProc.integrationSteps"]) % 16 == 0, "OLAP.CNProc.integrationSteps should be dividable by 16"
 
