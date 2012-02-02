@@ -397,8 +397,8 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::bypass(unsigned stat, dou
     double   phiBegin = -2 * M_PI * metaData->beams(stat)[0].delayAtBegin;
     double   phiEnd   = -2 * M_PI * metaData->beams(stat)[0].delayAfterEnd;
     double   deltaPhi = (phiEnd - phiBegin) / itsNrSamplesPerIntegration;
-    dcomplex v	      = cosisin(phiBegin * frequency) __attribute__((aligned(16)));
-    dcomplex vf       = cosisin(deltaPhi * frequency) __attribute__((aligned(16)));
+    dcomplex v	 __attribute__((aligned(16))) = cosisin(phiBegin * frequency);
+    dcomplex vf  __attribute__((aligned(16))) = cosisin(deltaPhi * frequency) ;
 
     _apply_single_channel_delays(filteredData->samples[0][stat].origin(), itsNrSamplesPerIntegration, &v, &vf);
   }
