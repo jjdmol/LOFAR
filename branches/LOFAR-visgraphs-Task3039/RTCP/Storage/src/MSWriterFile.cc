@@ -130,7 +130,7 @@ size_t FastFileStream::tryWrite(const void *ptr, size_t size)
 }
 
 
-MSWriterFile::MSWriterFile (const string &msName)`
+MSWriterFile::MSWriterFile (const string &msName)
 :
  itsFile(msName, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)
 {
