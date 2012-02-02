@@ -24,7 +24,7 @@
 
 # Set srcdir if not defined (in case run by hand).
 if test "$srcdir" = ""; then
-  srcdir="../../../test"
+  srcdir="../../../../../LOFAR/CEP/MS/test"
 fi
 
 # Symlink to scripts/programs, so they can be started from test directory.
@@ -56,14 +56,16 @@ echo "AntennaTableName=$wd/tmakems_tmp/WSRT_ANTENNA" >> tmakems.parset
 
 
 # Create MS parts in a distributed way.
-./makemsdistr -hfn $wd/tmakems_tmp/hfn tmakems.parset $wd/tmakems_tmp.cd $wd
+makemsdistr -hfn $wd/tmakems_tmp/hfn tmakems.parset $wd/tmakems_tmp.cd $wd
 echo "<<<"
 
 # Print global VDS file without system-dependent names.
 grep -v 'Name *=' tmakems_tmp/vds/tmakems_tmp.ms.gds | grep -v "ClusterDesc *="
 echo
 
-./makems tmakems.parset
+echo ">>>"
+makems tmakems.parset
+echo "<<<"
 grep -v 'Name *=' tmakems_tmp.ms.gds | grep -v "ClusterDesc *="
 
 # Clean up.

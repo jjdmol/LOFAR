@@ -27,7 +27,7 @@
 
 # Set srcdir if not set.
 if test "$srcdir" = ""; then
-  srcdir=../../../test
+  srcdir=../../../../../LOFAR/CEP/LMWCommon/test
 fi
 curdir=`pwd`
 # Set the src and make it absolute.

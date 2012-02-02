@@ -29,7 +29,6 @@
 #include <Storage/MSWriter.h>
 #include <Storage/MSWriterLDA.h>
 
-#ifdef USE_LDA
 #include <lofar/BF_File.h>
 
 using namespace LDA;
@@ -103,12 +102,15 @@ namespace LOFAR
     // uses global locks too anyway.
     static Mutex HDF5Mutex;
 
-    template <typename T,unsigned DIM> MSWriterLDA<T,DIM>::MSWriterLDA (const string &filename, const Parset &parset, OutputType outputType, unsigned fileno, bool isBigEndian)
+    template <typename T,unsigned DIM> MSWriterLDA<T,DIM>::MSWriterLDA (const string &filename, const Parset &parset, unsigned fileno, bool isBigEndian)
     :
       MSWriterFile(forceextension(string(filename),".raw"),false),
-      itsTransposeLogic(parset),
-      itsNrChannels(parset.nrChannelsPerSubband() * itsTransposeLogic.nrSubbands(fileno)),
-      itsNextSeqNr(0)
+      itsTransposeLogic(parset.transposeLogic()),
+      itsInfo(itsTransposeLogic.streamInfo[fileno]),
+      itsNrChannels(itsInfo.nrChannels * itsInfo.subbands.size()),
+      itsNrSamples(itsInfo.nrSamples),
+      itsNextSeqNr(0),
+      itsBlockSize(itsNrSamples * itsNrChannels)
     {
       string h5filename = forceextension(string(filename),".h5");
       string rawfilename = forceextension(string(filename),".raw");
@@ -125,67 +127,40 @@ namespace LOFAR
       itsTransposeLogic.decompose( fileno, sapNr, beamNr, stokesNr, partNr );
 
       unsigned nrBlocks = ceil((parset.stopTime() - parset.startTime()) / parset.CNintegrationTime());
-      unsigned nrSubbands = itsTransposeLogic.nrSubbands(fileno);
-      vector<unsigned> subbands = itsTransposeLogic.subbands(fileno);
+      unsigned nrSubbands = itsInfo.subbands.size();
+      const vector<unsigned> &subbandIndices = itsInfo.subbands;
+      const vector<unsigned> allSubbands = parset.subbandList();
 
-      unsigned nrValuesPerStokes;
+      vector<unsigned> subbands(nrSubbands, 0); // actual subbands written in this file
+
+      for (unsigned sb = 0; sb < nrSubbands; sb++)
+        subbands[sb] = allSubbands[subbandIndices[sb]];
+
       vector<string> stokesVars;
 
-      switch (outputType) {
-        case INCOHERENT_STOKES:  {
-          // assume stokes are either I or IQUV
+      switch (itsInfo.stokesType) {
+        case STOKES_I:
           stokesVars.push_back("I");
-
-          if (parset.nrIncoherentStokes() > 1) {
-            stokesVars.push_back("Q");
-            stokesVars.push_back("U");
-            stokesVars.push_back("V");
-          }
-
-          nrValuesPerStokes = 1;
-
-          itsNrSamples = parset.CNintegrationSteps() / parset.incoherentStokesTimeIntegrationFactor();
           break;
-        }
 
-        case COHERENT_STOKES: {
-          // assume stokes are either I or IQUV
+        case STOKES_IQUV:
           stokesVars.push_back("I");
-
-          if (parset.nrIncoherentStokes() > 1) {
-            stokesVars.push_back("Q");
-            stokesVars.push_back("U");
-            stokesVars.push_back("V");
-          }
-
-          nrValuesPerStokes = 1;
-
-          itsNrSamples = parset.CNintegrationSteps() / parset.coherentStokesTimeIntegrationFactor();
+          stokesVars.push_back("Q");
+          stokesVars.push_back("U");
+          stokesVars.push_back("V");
           break;
-        }
 
-        case BEAM_FORMED_DATA: {
-          if (parset.nrCoherentStokes() == 2) {
-            stokesVars.push_back("X");
-            stokesVars.push_back("Y");
-          } else {
-            stokesVars.push_back("Xr");
-            stokesVars.push_back("Xi");
-            stokesVars.push_back("Yr");
-            stokesVars.push_back("Yi");
-          }
-
-          nrValuesPerStokes = 4 / parset.nrCoherentStokes();
-
-          itsNrSamples = parset.CNintegrationSteps();
+        case STOKES_XXYY:
+          stokesVars.push_back("Xr");
+          stokesVars.push_back("Xi");
+          stokesVars.push_back("Yr");
+          stokesVars.push_back("Yi");
           break;
-        }
 
-        default:
-          THROW(StorageException, "MSWriterLDA can only handle Coherent Stokes and Beam-formed Data");
-      }
-
-      itsZeroBlock.resize( itsNrSamples * itsNrChannels * nrValuesPerStokes );
+        case INVALID_STOKES:
+          LOG_ERROR("MSWriterLDA asked to write INVALID_STOKES");
+          return;
+      }    
 
       LOG_DEBUG_STR("MSWriterLDA: opening " << filename);
 
@@ -227,12 +202,6 @@ namespace LOFAR
 
       file.observationNofStations().set(parset.nrStations()); // TODO: SS beamformer?
       file.observationStationsList().set(parset.allStationNames()); // TODO: SS beamformer?
-
-#if 0
-      vector<unsigned> subbands = parset.subbandList();
-      unsigned max_subband = *max_element( subbands.begin(), subbands.end() );
-      unsigned min_subband = *min_element( subbands.begin(), subbands.end() );
-#endif
 
       const vector<double> subbandCenterFrequencies = parset.subbandToFrequencyMapping();
       double min_centerfrequency = *min_element( subbandCenterFrequencies.begin(), subbandCenterFrequencies.end() );
@@ -277,7 +246,7 @@ namespace LOFAR
       // SysLog group -- empty for now
       file.sysLog().create();
 
-      // Information about the station beam (SAP)
+      // information about the station beam (SAP)
       BF_SubArrayPointing sap = file.subArrayPointing(sapNr);
       sap.create();
       sap.groupType()   .set("SubArrayPointing");
@@ -286,7 +255,8 @@ namespace LOFAR
       sap.stationsList().set(parset.allStationNames());
 
       // TODO: non-J2000 pointings
-      ASSERT( parset.getBeamDirectionType(sapNr) == "J2000" );
+      if( parset.getBeamDirectionType(sapNr) != "J2000" )
+        LOG_WARN("HDF5 writer does not record positions of non-J2000 observations yet.");
 
       vector<double> beamDir = parset.getBeamDirection(sapNr);
       sap.pointRA() .set(beamDir[0] * 180.0 / M_PI);
@@ -309,7 +279,7 @@ namespace LOFAR
 
       sap.nofBeams()          .set(parset.nrPencilBeams(sapNr));
 
-      // Information about the pencil beam
+      // information about the pencil beam
 
       BF_BeamGroup beam = sap.beam(beamNr);
       beam.create();
@@ -329,7 +299,12 @@ namespace LOFAR
       beam.pointOffsetRA() .set(pbeamDir[0] * 180.0 / M_PI);
       beam.pointOffsetDEC().set(pbeamDir[0] * 180.0 / M_PI);
 
-      double beamCenterFrequencySum = accumulate(subbands.begin(), subbands.end(), 0.0);
+      vector<double> beamCenterFrequencies(nrSubbands, 0.0);
+
+      for (unsigned sb = 0; sb < nrSubbands; sb++)
+        beamCenterFrequencies[sb] = subbandCenterFrequencies[subbandIndices[sb]];
+
+      double beamCenterFrequencySum = accumulate(beamCenterFrequencies.begin(), beamCenterFrequencies.end(), 0.0);
 
       beam.beamFrequencyCenter().set(beamCenterFrequencySum / nrSubbands);
 
@@ -342,10 +317,10 @@ namespace LOFAR
 
       //beam.baryCenter()             .set(false);
 
-      beam.nofStokes()              .set(stokesVars.size());
+      beam.nofStokes()              .set(itsInfo.nrStokes);
       beam.stokesComponents()       .set(stokesVars);
-      beam.complexVoltages()        .set(outputType == BEAM_FORMED_DATA);
-      beam.signalSum()              .set(outputType == INCOHERENT_STOKES ? "INCOHERENT" : "COHERENT");
+      beam.complexVoltages()        .set(itsInfo.stokesType == STOKES_XXYY);
+      beam.signalSum()              .set(itsInfo.coherent ? "COHERENT" : "INCOHERENT");
 
       CoordinatesGroup coordinates = beam.coordinates();
       coordinates.create();
@@ -367,15 +342,15 @@ namespace LOFAR
       coordinateTypes[1] = "Spectral"; // or SpectralCoord ?
       coordinates.coordinateTypes().set(coordinateTypes);
 
-      Coordinate timeCoordinate = coordinates.coordinate(0);
-      timeCoordinate.create();
-      timeCoordinate.groupType()     .set("TimeCoord");
+      SmartPtr<TimeCoordinate> timeCoordinate = dynamic_cast<TimeCoordinate*>(coordinates.coordinate(0));
+      timeCoordinate.get()->create();
+      timeCoordinate.get()->groupType()     .set("TimeCoord");
 
-      timeCoordinate.coordinateType().set("Time");
-      timeCoordinate.storageType()   .set(vector<string>(1,"Linear"));
-      timeCoordinate.nofAxes()       .set(1);
-      timeCoordinate.axisNames()     .set(vector<string>(1,"Time"));
-      timeCoordinate.axisUnits()     .set(vector<string>(1,"us"));
+      timeCoordinate.get()->coordinateType().set("Time");
+      timeCoordinate.get()->storageType()   .set(vector<string>(1,"Linear"));
+      timeCoordinate.get()->nofAxes()       .set(1);
+      timeCoordinate.get()->axisNames()     .set(vector<string>(1,"Time"));
+      timeCoordinate.get()->axisUnits()     .set(vector<string>(1,"us"));
 
       // linear coordinates:
       //   referenceValue = offset from starting time, in axisUnits
@@ -383,40 +358,38 @@ namespace LOFAR
       //   increment      = time increment for each sample
       //   pc             = scaling factor (?)
 
-      timeCoordinate.referenceValue().set(vector<double>(1,0));
-      timeCoordinate.referencePixel().set(vector<double>(1,0));
-      timeCoordinate.increment()     .set(vector<double>(1,parset.sampleDuration()));
-      timeCoordinate.pc()            .set(vector<double>(1,1)); // [1] or [1,0] ??
+      timeCoordinate.get()->referenceValue().set(0);
+      timeCoordinate.get()->referencePixel().set(0);
+      timeCoordinate.get()->increment()     .set(parset.sampleDuration() * itsInfo.timeIntFactor);
 
-      Coordinate spectralCoordinate = coordinates.coordinate(1);
-      spectralCoordinate.create();
-      spectralCoordinate.groupType()     .set("SpectralCoord");
+      SmartPtr<SpectralCoordinate> spectralCoordinate = dynamic_cast<SpectralCoordinate*>(coordinates.coordinate(1));
+      spectralCoordinate.get()->create();
+      spectralCoordinate.get()->groupType()     .set("SpectralCoord");
 
-      spectralCoordinate.coordinateType().set("Spectral");
-      spectralCoordinate.storageType()   .set(vector<string>(1,"Tabular"));
-      spectralCoordinate.nofAxes()       .set(1);
-      spectralCoordinate.axisNames()     .set(vector<string>(1,"Frequency"));
-      spectralCoordinate.axisUnits()     .set(vector<string>(1,"MHz"));
+      spectralCoordinate.get()->coordinateType().set("Spectral");
+      spectralCoordinate.get()->storageType()   .set(vector<string>(1,"Tabular"));
+      spectralCoordinate.get()->nofAxes()       .set(1);
+      spectralCoordinate.get()->axisNames()     .set(vector<string>(1,"Frequency"));
+      spectralCoordinate.get()->axisUnits()     .set(vector<string>(1,"MHz"));
 
       // tabular coordinates:
       //   axisValuePixel = data indices
       //   axisValueWorld = corresponding (central) frequencies
 
-      vector<double> spectralPixels;
+      vector<unsigned> spectralPixels;
       vector<double> spectralWorld;
 
       for(unsigned sb = 0; sb < nrSubbands; sb++) {
-        const unsigned subbandOffset = 512 * (parset.nyquistZone() - 1);
-        const double subbandBeginFreq = subbandBandwidth * (subbands[sb] + subbandOffset - 0.5);
+        const double subbandBeginFreq = beamCenterFrequencies[sb] - 0.5 * subbandBandwidth;
 
-        for(unsigned ch = 0; ch < parset.nrChannelsPerSubband(); ch++) {
+        for(unsigned ch = 0; ch < itsInfo.nrChannels; ch++) {
           spectralPixels.push_back(spectralPixels.size());
           spectralWorld .push_back(subbandBeginFreq + ch * channelBandwidth);
         }
       }
 
-      spectralCoordinate.axisValuesPixel().set(spectralPixels);
-      spectralCoordinate.axisValuesWorld().set(spectralWorld);
+      spectralCoordinate.get()->axisValuesPixel().set(spectralPixels);
+      spectralCoordinate.get()->axisValuesWorld().set(spectralWorld);
 
       BF_StokesDataset stokesDS = beam.stokes(stokesNr);
 
@@ -431,7 +404,7 @@ namespace LOFAR
       stokesDS.create(dims, maxdims, LOFAR::basename(rawfilename), isBigEndian ? BF_StokesDataset::BIG : BF_StokesDataset::LITTLE);
 
       stokesDS.stokesComponent().set(stokesVars[stokesNr]);
-      stokesDS.nofChannels()    .set(vector<unsigned>(nrSubbands, parset.nrChannelsPerSubband()));
+      stokesDS.nofChannels()    .set(vector<unsigned>(nrSubbands, itsInfo.nrChannels));
       stokesDS.nofSamples()     .set(dims[0]);
     }
 
@@ -445,10 +418,10 @@ namespace LOFAR
 
       ASSERT( data );
       ASSERT( sdata );
-      ASSERTSTR( sdata->samples.num_elements() >= itsZeroBlock.size(), "A block is at least " << itsZeroBlock.size() << " elements, but provided sdata only has " << sdata->samples.num_elements() << " elements" );
+      ASSERTSTR( sdata->samples.num_elements() >= itsBlockSize, "A block is at least " << itsBlockSize << " elements, but provided sdata only has " << sdata->samples.num_elements() << " elements" );
 
       unsigned seqNr = data->sequenceNumber();
-      unsigned bytesPerBlock = itsZeroBlock.size() * sizeof(T);
+      unsigned bytesPerBlock = itsBlockSize * sizeof(T);
 
       // fill in zeroes for lost blocks
       if (itsNextSeqNr < seqNr)
@@ -460,34 +433,9 @@ namespace LOFAR
       itsNextSeqNr = seqNr + 1;
     }
 
-    // specialisation for StokesData
+    // specialisation for FinalBeamFormedData
     template class MSWriterLDA<float,3>;
 
-    // specialisation for FinalBeamFormedData
-    template class MSWriterLDA<float,4>;
   } // namespace RTCP
 } // namespace LOFAR
 
-#else // no USE_LDA
-
-namespace LOFAR 
-{
-
-  namespace RTCP
-  {
-
-    template <typename T,unsigned DIM> MSWriterLDA<T,DIM>::MSWriterLDA (const string &filename, const Parset &parset, OutputType outputType, unsigned fileno, bool isBigEndian)
-    :
-      MSWriterFile(filename,false)
-    {
-      LOG_ERROR_STR( "Using the LDA writer is not supported (file: " << filename << ")" );
-    }
-
-    template <typename T,unsigned DIM> MSWriterLDA<T,DIM>::~MSWriterLDA()
-    {
-    }
-
-  } // namespace RTCP
-} // namespace LOFAR
-
-#endif

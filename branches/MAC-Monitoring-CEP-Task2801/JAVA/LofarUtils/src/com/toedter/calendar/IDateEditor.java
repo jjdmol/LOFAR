@@ -31,8 +31,8 @@ import javax.swing.JComponent;
  * interface.
  * 
  * @author Kai Toedter
- * @version $LastChangedRevision: 96 $
- * @version $LastChangedDate: 2006-05-12 18:19:35 +0200 (Fr, 12 Mai 2006) $
+ * @version $LastChangedRevision$
+ * @version $LastChangedDate$
  * 
  */
 public interface IDateEditor {

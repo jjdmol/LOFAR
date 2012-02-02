@@ -48,7 +48,10 @@ namespace LOFAR {
 
     private:
       // Create the step objects.
-      static DPStep::ShPtr makeSteps (const ParSet& parset);
+      // It fills DPInfo object and the name of the MS being written.
+      static DPStep::ShPtr makeSteps (const ParSet& parset,
+                                      DPInfo& info,
+                                      std::string& msName);
     };
 
   } //# end namespace

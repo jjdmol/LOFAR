@@ -22,15 +22,12 @@
 
 #include <AOFlagger/test/testingtools/testgroup.h>
 
-#include <AOFlagger/test/msio/qualitydatatest.h>
-
 class MSIOTestGroup : public TestGroup {
 	public:
 		MSIOTestGroup() : TestGroup("Measurement set input/output") { }
 		
 		virtual void Initialize()
 		{
-			Add(new QualityTablesFormatterTest());
 		}
 };
 

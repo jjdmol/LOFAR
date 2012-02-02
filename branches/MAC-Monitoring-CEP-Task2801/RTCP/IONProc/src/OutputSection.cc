@@ -23,8 +23,10 @@
 
 #include <Interface/Allocator.h>
 #include <Interface/DataFactory.h>
+#include <Interface/BeamFormedData.h>
 #include <Interface/SmartPtr.h>
 #include <Common/Thread/Cancellation.h>
+#include <ApplCommon/Observation.h>
 
 #include <ION_Allocator.h>
 #include <GlobalVars.h>
@@ -32,8 +34,6 @@
 #include <Scheduling.h>
 
 #include <boost/format.hpp>
-#include <iomanip> // for std::setw
-
 
 namespace LOFAR {
 namespace RTCP {
@@ -42,34 +42,52 @@ namespace RTCP {
 OutputSection::OutputSection(const Parset &parset,
 			     Stream * (*createStreamFromCN)(unsigned, unsigned),
 			     OutputType outputType,
+                             unsigned firstBlockNumber,
 			     const std::vector<unsigned> &cores,
 			     int psetIndex,
 			     bool integratable,
-                             bool variableNrSubbands)
+                             bool variableDataSize)
 :
   itsLogPrefix(str(boost::format("[obs %u type %u") % parset.observationID() % outputType)), // no trailing "] " so we can add subband info for some log messages
-  itsVariableNrSubbands(variableNrSubbands),
-  itsTranspose2Logic(parset),
+  itsVariableDataSize(variableDataSize),
+  itsTranspose2Logic(parset.transposeLogic()),
   itsNrComputeCores(cores.size()),
   itsNrCoresPerIteration(parset.maxNrStreamsPerPset(outputType)),
   itsNrCoresSkippedPerIteration(parset.phaseThreeDisjunct() ? 0 : parset.maxNrStreamsPerPset(CORRELATED_DATA,true) - itsNrCoresPerIteration), // if phase 1+2=phase 3, we iterate over the #subbands, not over #streams produced in phase 3
   itsFirstStreamNr(psetIndex * itsNrCoresPerIteration),
   itsNrStreams(psetIndex < 0 || itsFirstStreamNr >= parset.nrStreams(outputType) ? 0 : std::min(itsNrCoresPerIteration, parset.nrStreams(outputType) - itsFirstStreamNr)),
-  itsCurrentComputeCore(0),
+  itsCurrentComputeCore((firstBlockNumber * (itsNrCoresPerIteration + itsNrCoresSkippedPerIteration)) % itsNrComputeCores),
   itsNrIntegrationSteps(integratable ? parset.IONintegrationSteps() : 1),
-  itsCurrentIntegrationStep(0),
-  itsSequenceNumber(0),
+  itsCurrentIntegrationStep(firstBlockNumber % itsNrIntegrationSteps),
+  itsNrSamplesPerIntegration(parset.CNintegrationSteps()),
+  itsSequenceNumber(firstBlockNumber),
   itsIsRealTime(parset.realTime()),
   itsDroppedCount(itsNrStreams),
+  itsTotalDroppedCount(itsNrStreams),
   itsStreamsFromCNs(cores.size()),
   itsTmpSum(newStreamableData(parset, outputType, -1, hugeMemoryAllocator))
 {
+  // lookup the PVSS adders to use in our reports
+  Observation obs(&parset);
+  itsAdders.resize(itsNrStreams);
+
+  for (unsigned i = 0; i < itsNrStreams; i ++) {
+    for (unsigned j = 0; j < obs.streamsToStorage.size(); j++) {
+      Observation::StreamToStorage &s = obs.streamsToStorage[j];
+
+      if (s.dataProductNr == static_cast<unsigned>(outputType) && s.streamNr == itsFirstStreamNr + i) {
+        itsAdders[i] = s.adderNr;
+        break;
+      }
+    }
+  }
+
   if (itsNrIntegrationSteps > 1)
     for (unsigned i = 0; i < itsNrStreams; i ++)
       itsSums.push_back(newStreamableData(parset, outputType, itsFirstStreamNr + i, hugeMemoryAllocator));
 
   for (unsigned i = 0; i < itsNrStreams; i ++)
-    itsOutputThreads.push_back(new OutputThread(parset, outputType, itsFirstStreamNr + i));
+    itsOutputThreads.push_back(new OutputThread(parset, outputType, itsFirstStreamNr + i, itsAdders[i]));
 
   LOG_DEBUG_STR(itsLogPrefix << "] Creating streams between compute nodes and OutputSection...");
 
@@ -78,16 +96,22 @@ OutputSection::OutputSection(const Parset &parset,
 
   LOG_DEBUG_STR(itsLogPrefix << "] Creating streams between compute nodes and OutputSection: done");
 
+}
+
+
+void OutputSection::start()
+{
   itsThread = new Thread(this, &OutputSection::mainLoop, itsLogPrefix + "] [OutputSection] ", 65536);
 }
 
 
-PhaseTwoOutputSection::PhaseTwoOutputSection(const Parset &parset, Stream * (*createStreamFromCN)(unsigned, unsigned), OutputType outputType, bool integratable)
+PhaseTwoOutputSection::PhaseTwoOutputSection(const Parset &parset, Stream * (*createStreamFromCN)(unsigned, unsigned), OutputType outputType, unsigned firstBlockNumber, bool integratable)
 :
   OutputSection(
     parset,
     createStreamFromCN,
     outputType,
+    firstBlockNumber,
     parset.phaseOneTwoCores(),
     parset.phaseTwoPsetIndex(myPsetNumber),
     integratable,
@@ -97,12 +121,13 @@ PhaseTwoOutputSection::PhaseTwoOutputSection(const Parset &parset, Stream * (*cr
 }
 
 
-PhaseThreeOutputSection::PhaseThreeOutputSection(const Parset &parset, Stream * (*createStreamFromCN)(unsigned, unsigned), OutputType outputType)
+PhaseThreeOutputSection::PhaseThreeOutputSection(const Parset &parset, Stream * (*createStreamFromCN)(unsigned, unsigned), OutputType outputType, unsigned firstBlockNumber)
 :
   OutputSection(
     parset,
     createStreamFromCN,
     outputType,
+    firstBlockNumber,
     parset.phaseThreeCores(),
     parset.phaseThreePsetIndex(myPsetNumber),
     false,
@@ -112,44 +137,23 @@ PhaseThreeOutputSection::PhaseThreeOutputSection(const Parset &parset, Stream * 
 }
 
 
-FilteredDataOutputSection::FilteredDataOutputSection(const Parset &parset, Stream * (*createStreamFromCN)(unsigned, unsigned))
+CorrelatedDataOutputSection::CorrelatedDataOutputSection(const Parset &parset, Stream * (*createStreamFromCN)(unsigned, unsigned), unsigned firstBlockNumber)
 :
-  PhaseTwoOutputSection(parset, createStreamFromCN, FILTERED_DATA, false)
+  PhaseTwoOutputSection(parset, createStreamFromCN, CORRELATED_DATA, firstBlockNumber, true)
 {
 }
 
 
-CorrelatedDataOutputSection::CorrelatedDataOutputSection(const Parset &parset, Stream * (*createStreamFromCN)(unsigned, unsigned))
+BeamFormedDataOutputSection::BeamFormedDataOutputSection(const Parset &parset, Stream * (*createStreamFromCN)(unsigned, unsigned), unsigned firstBlockNumber)
 :
-  PhaseTwoOutputSection(parset, createStreamFromCN, CORRELATED_DATA, true)
+  PhaseThreeOutputSection(parset, createStreamFromCN, BEAM_FORMED_DATA, firstBlockNumber)
 {
 }
 
 
-IncoherentStokesOutputSection::IncoherentStokesOutputSection(const Parset &parset, Stream * (*createStreamFromCN)(unsigned, unsigned))
+TriggerDataOutputSection::TriggerDataOutputSection(const Parset &parset, Stream * (*createStreamFromCN)(unsigned, unsigned), unsigned firstBlockNumber)
 :
-  PhaseTwoOutputSection(parset, createStreamFromCN, INCOHERENT_STOKES, false)
-{
-}
-
-
-BeamFormedDataOutputSection::BeamFormedDataOutputSection(const Parset &parset, Stream * (*createStreamFromCN)(unsigned, unsigned))
-:
-  PhaseThreeOutputSection(parset, createStreamFromCN, BEAM_FORMED_DATA)
-{
-}
-
-
-CoherentStokesOutputSection::CoherentStokesOutputSection(const Parset &parset, Stream * (*createStreamFromCN)(unsigned, unsigned))
-:
-  PhaseThreeOutputSection(parset, createStreamFromCN, COHERENT_STOKES)
-{
-}
-
-
-TriggerDataOutputSection::TriggerDataOutputSection(const Parset &parset, Stream * (*createStreamFromCN)(unsigned, unsigned))
-:
-  PhaseThreeOutputSection(parset, createStreamFromCN, TRIGGER_DATA)
+  PhaseThreeOutputSection(parset, createStreamFromCN, TRIGGER_DATA, firstBlockNumber)
 {
 }
 
@@ -167,7 +171,7 @@ OutputSection::~OutputSection()
 
   for (unsigned i = 0; i < itsOutputThreads.size(); i ++) {
     if (itsIsRealTime && !itsOutputThreads[i]->itsThread.wait(timeout)) {
-      LOG_WARN_STR(itsLogPrefix << " stream " << std::setw(3) << itsFirstStreamNr + i << "] cancelling output thread");
+      LOG_WARN_STR(itsLogPrefix << str(boost::format(" stream %3u adder %3u] ") % (itsFirstStreamNr + i) % itsAdders[i]) << "cancelling output thread");
       itsOutputThreads[i]->itsThread.cancel();
     }
 
@@ -183,8 +187,13 @@ OutputSection::~OutputSection()
 
 void OutputSection::readData( Stream *stream, StreamableData *data, unsigned streamNr )
 {
-  if (itsVariableNrSubbands)
-    data->setNrSubbands(itsTranspose2Logic.nrSubbands(itsFirstStreamNr + streamNr));
+  if (itsVariableDataSize) {
+    ASSERT( dynamic_cast<FinalBeamFormedData*>(data) );
+
+    const StreamInfo &info = itsTranspose2Logic.streamInfo[itsFirstStreamNr + streamNr];
+
+    data->setDimensions(info.nrSamples, info.subbands.size(), info.nrChannels); 
+  }  
 
   data->read(stream, false);
 }
@@ -205,14 +214,17 @@ void OutputSection::noMoreIterations()
 void OutputSection::droppingData(unsigned stream)
 {
   if (itsDroppedCount[stream] ++ == 0)
-    LOG_WARN_STR(itsLogPrefix << " stream " << std::setw(3) << itsFirstStreamNr + stream << "] Dropping data");
+    LOG_WARN_STR(itsLogPrefix << str(boost::format(" stream %3u adder %3u] ") % (itsFirstStreamNr + stream) % itsAdders[stream]) << "Dropping data");
 }
 
 
 void OutputSection::notDroppingData(unsigned stream)
 {
   if (itsDroppedCount[stream] > 0) {
-    LOG_WARN_STR(itsLogPrefix << " stream " << std::setw(3) << itsFirstStreamNr + stream << "] Dropped " << itsDroppedCount[stream] << " blocks" );
+    itsTotalDroppedCount[stream] += itsDroppedCount[stream];
+
+    LOG_WARN_STR(itsLogPrefix << str(boost::format(" stream %3u adder %3u] ") % (itsFirstStreamNr + stream) % itsAdders[stream]) << "Dropped " <<  itsDroppedCount[stream] << " blocks this time and " << itsTotalDroppedCount[stream] << " blocks since start" );
+
     itsDroppedCount[stream] = 0;
   }
 }

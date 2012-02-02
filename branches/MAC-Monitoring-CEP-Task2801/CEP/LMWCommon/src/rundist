@@ -36,23 +36,23 @@
 
 
 # Find the path used to start the script.
-pgmpath=`dirname $0`
-pgmpath=`cd $pgmpath > /dev/null 2>&1  &&  pwd`
+pgmpath=`dirname "$0"`
+pgmpath=`cd "$pgmpath" > /dev/null 2>&1  &&  pwd`
 
 # Get possible options.
 help=0
 dry=
 logfile=
-cdn=$HOME/CEP.clusterdesc
+cdn="$HOME/CEP.clusterdesc"
 wd=
 hfn=
 gdsout=
 overwrite=1
-useenv='-useenv'
+envfile=
 while [ $# != 0 ]
 do
   # Accept both one and two leading hyphens
-  opt=`echo $1 | sed 's/^--/-/'`
+  opt=`echo "$1" | sed 's/^--/-/'`
   if [ "$opt" = "-h"  -o  "$1" = "-help" ]; then
     help=1
     break
@@ -76,9 +76,8 @@ do
     shift
   elif [ "$opt" = "-envfile" ]; then
     shift
-    dn=`dirname $1`
-    envf=`cd $dn > /dev/null; pwd`/`basename $1`    # absolute path
-    useenv="-useenv $envf"
+    dn=`dirname "$1"`
+    envfile=`cd "$dn" > /dev/null; pwd`/`basename "$1"`    # absolute path
     shift
   elif [ "$opt" = "-machinefile"  -o  "$opt" = "-hfn" ]; then
     shift
@@ -132,9 +131,9 @@ if test $help = 1; then
   exit 1
 fi
 
-prog=$1
+prog="$1"
 shift
-msvds=$1
+msvds="$1"
 shift
 if test "$cdn" = ""; then
   echo "No clusterdesc file given using -cdn"
@@ -144,46 +143,46 @@ fi
 # Create the name of the output GDS file.
 # It is the same as the input GDS but with the given extension.
 if test "$gdsout" != ""; then
-  vdsname=`echo $msvds | sed -e "s%\([^.]*\)\.[^/]*$%\1.$gdsout%"`
+  vdsname=`echo "$msvds" | sed -e "s%\([^.]*\)\.[^/]*$%\1.$gdsout%"`
 fi
 
 # Make all file names absolute.
-dn=`dirname $msvds`
-msvds=`cd $dn > /dev/null; pwd`/`basename $msvds`
-dn=`dirname $cdn`
-cdn=`cd $dn > /dev/null; pwd`/`basename $cdn`
+dn=`dirname "$msvds"`
+msvds=`cd "$dn" > /dev/null; pwd`/`basename "$msvds"`
+dn=`dirname "$cdn"`
+cdn=`cd "$dn" > /dev/null; pwd`/`basename "$cdn"`
 if test "$hfn" != ""; then
-  dn=`dirname $hfn`
-  hfn=`cd $dn > /dev/null; pwd`/`basename $hfn`
+  dn=`dirname "$hfn"`
+  hfn=`cd "$dn" > /dev/null; pwd`/`basename "$hfn"`
 fi
 # Make name of program absolute.
 # First test if it contains a slash. If so, it has a path; make it absolute.
-progx=`echo $prog | sed -e 's%/%%'`
+progx=`echo "$prog" | sed -e 's%/%%'`
 if test "$prog" != "$progx"; then
-  dn=`dirname $prog`
-  prog=`cd $dn > /dev/null; pwd`/`basename $prog`
+  dn=`dirname "$prog"`
+  prog=`cd "$dn" > /dev/null; pwd`/`basename "$prog"`
 else
   # Find the program; which returns an error string if not found.
   # If not found, it can be a builtin command, so leave it.
   # Note that which always succeeds, even if not found. So test its output.
-  progx=`which $prog`
+  progx=`which "$prog"`
   if test -e "$progx"; then
-    dn=`dirname $progx`
-    prog=`cd $dn > /dev/null; pwd`/`basename $progx`
+    dn=`dirname "$progx"`
+    prog=`cd "$dn" > /dev/null; pwd`/`basename "$progx"`
   fi
 fi
 
 
 # Start the processes on the various machines.
-echo "startdistproc $useenv -mode 0 -nomasterhost -dsn '$msvds' -hfn '$hfn' -cdn '$cdn' -logfile '$logfile' $dry $prog '$wd' $*"
-startdistproc $useenv -mode 0 -nomasterhost -dsn "$msvds" -hfn "$hfn" -cdn "$cdn" -logfile "$logfile" $dry $pgmpath/rundist-part $prog "$wd" "$@"  ||  exit 1
+echo "startdistproc -useenv '$envfile' -mode 0 -nomasterhost -dsn '$msvds' -hfn '$hfn' -cdn '$cdn' -logfile '$logfile' $dry '$prog' '$wd' $*"
+startdistproc -useenv "$envfile" -mode 0 -nomasterhost -dsn "$msvds" -hfn "$hfn" -cdn "$cdn" -logfile "$logfile" $dry "$pgmpath/rundist-part" "$prog" "$wd" "$@"  ||  exit 1
 
 # Optionally create a GDS file for output created by the remote processes.
 # Its name is the input GDS with the extension replaced by $pdb.
 # Refer in it to the actual pdb filename.
 if test "$vdsname" != ""; then
-  if test -e $vdsname; then
-    if test -d $vdsname; then
+  if test -e "$vdsname"; then
+    if test -d "$vdsname"; then
       echo "Error, global VDS file $vdsname already exists as a directory"
       exit 1
     fi
@@ -194,6 +193,6 @@ if test "$vdsname" != ""; then
   fi
   echo "Creating global VDS file $vdsname"
   if test "$dry" = ""; then
-    sed -e "s%\(Part.*\.FileName *= *[^ #.]*\)\.[^/ #]*%\1.$gdsout%" $msvds > $vdsname
+    sed -e "s%\(Part.*\.FileName *= *[^ #.]*\)\.[^/ #]*%\1.$gdsout%" "$msvds" > "$vdsname"
   fi
 fi

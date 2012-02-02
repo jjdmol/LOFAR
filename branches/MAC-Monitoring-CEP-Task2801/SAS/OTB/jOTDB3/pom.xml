@@ -3,7 +3,7 @@
 <project>
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>nl.astron.lofar.sas</groupId>
-	<artifactId>jOTB3</artifactId>
+	<artifactId>jOTDB3</artifactId>
 	<name>lib Object Tree Browser</name>
 	<version>1.0.0</version>
 
@@ -13,9 +13,9 @@
 	</organization>
 	
 	<properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.test.sourceEncoding>UTF-8</project.test.sourceEncoding>
-    </properties>
+            <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+            <project.test.sourceEncoding>UTF-8</project.test.sourceEncoding>
+        </properties>
 
 	<build>
 

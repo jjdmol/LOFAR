@@ -121,7 +121,7 @@ void MeasurementExprLOFAR::makeForwardExpr(SourceDB &sourceDB,
 
     // Make a list of patches matching the selection criteria specified by the
     // user.
-    vector<string> patches = makePatchList(sourceDB, config.getSources());
+    vector<string> patches = makePatchList(sourceDB, config.sources());
     LOG_DEBUG_STR("No. of patches used in the model: " << patches.size());
     if(patches.empty())
     {
@@ -183,6 +183,15 @@ void MeasurementExprLOFAR::makeForwardExpr(SourceDB &sourceDB,
         Expr<Vector<3> >::Ptr exprPatchPositionITRF =
             makeITRFExpr(instrument->position(), exprPatch->position());
 
+        Expr<JonesMatrix>::Ptr exprElevationCut;
+        if(config.useElevationCut())
+        {
+            Expr<Vector<2> >::Ptr exprAzEl =
+                makeAzElExpr(instrument->position(), exprPatch->position());
+            exprElevationCut = makeElevationCutExpr(exprAzEl,
+                config.getElevationCutConfig());
+        }
+
         vector<Expr<JonesMatrix>::Ptr> exprDDE(instrument->nStations());
         for(size_t j = 0; j < instrument->nStations(); ++j)
         {
@@ -192,6 +201,12 @@ void MeasurementExprLOFAR::makeForwardExpr(SourceDB &sourceDB,
                 exprDDE[j] = compose(exprDDE[j],
                     makeDirectionalGainExpr(itsScope, instrument->station(j),
                     patch, config.usePhasors()));
+            }
+
+            // Elevation cut.
+            if(config.useElevationCut())
+            {
+                exprDDE[j] = compose(exprDDE[j], exprElevationCut);
             }
 
             // Beam.
@@ -377,7 +392,7 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
     if(haveDDE)
     {
         // Position of interest on the sky (given as patch name).
-        if(config.getSources().size() > 1)
+        if(config.sources().size() > 1)
         {
             THROW(BBSKernelException, "Multiple patches selected, yet a"
                 " correction can only be applied for a single direction on the"
@@ -419,7 +434,7 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
                 IonosphereExpr::create(config.getIonosphereConfig(), itsScope);
         }
 
-        if(config.getSources().empty())
+        if(config.sources().empty())
         {
             LOG_DEBUG_STR("Applying a correction for the phase reference of the"
                 " observation.");
@@ -467,7 +482,7 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
         }
         else
         {
-            const string &patch = config.getSources().front();
+            const string &patch = config.sources().front();
             LOG_DEBUG_STR("Applying a correction for the centroid of patch: "
                 << patch);
 
@@ -543,7 +558,7 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
                     Expr<Scalar>::Ptr(new ConditionNumber(stationExpr[i]));
                 Expr<Scalar>::Ptr exprThreshold(makeFlagIf(exprCond,
                     std::bind2nd(std::greater_equal<double>(),
-                    flagConfig.getThreshold())));
+                    flagConfig.threshold())));
 
                 typedef MergeFlags<JonesMatrix, Scalar> T_MERGEFLAGS;
                 stationExpr[i] =

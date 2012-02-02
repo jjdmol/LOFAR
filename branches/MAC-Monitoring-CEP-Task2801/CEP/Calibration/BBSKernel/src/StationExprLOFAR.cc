@@ -111,7 +111,7 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
         || config.useIonosphere())
     {
         // Position of interest on the sky (given as patch name).
-        if(config.getSources().size() > 1)
+        if(config.sources().size() > 1)
         {
             THROW(BBSKernelException, "Multiple patches selected, yet a"
                 " correction can only be applied for a single direction on the"
@@ -151,7 +151,7 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
                 IonosphereExpr::create(config.getIonosphereConfig(), itsScope);
         }
 
-        if(config.getSources().empty())
+        if(config.sources().empty())
         {
             LOG_DEBUG_STR("Applying a correction for the phase reference of the"
                 " observation.");
@@ -198,7 +198,7 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
         }
         else
         {
-            const string &patch = config.getSources().front();
+            const string &patch = config.sources().front();
             LOG_DEBUG_STR("Applying a correction for the centroid of patch: "
                 << patch);
 

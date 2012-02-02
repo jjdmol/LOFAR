@@ -33,6 +33,7 @@ class AntennaePlotPage : public TwoDimensionalPlotPage {
 	protected:
 		virtual void processStatistics(class StatisticsCollection *statCollection, const std::vector<AntennaInfo> &antennas)
 		{
+			_antennas = antennas;
 			const BaselineStatisticsMap &map = statCollection->BaselineStatistics();
 			
 			vector<std::pair<unsigned, unsigned> > baselines = map.BaselineList();
@@ -52,13 +53,20 @@ class AntennaePlotPage : public TwoDimensionalPlotPage {
 			return _statistics;
 		}
 		
-		virtual void StartLine(Plot2D &plot, const std::string &name)
+		virtual void StartLine(Plot2D &plot, const std::string &name, const std::string &yAxisDesc)
 		{
-			plot.StartLine(name, "Antenna index", "Value", false, Plot2DPointSet::DrawColumns);
+			Plot2DPointSet &pointSet = plot.StartLine(name, "Antenna index", yAxisDesc, false, Plot2DPointSet::DrawColumns);
+			
+			std::vector<std::string> labels;
+			for(std::vector<AntennaInfo>::const_iterator i=_antennas.begin();i!=_antennas.end();++i)
+				labels.push_back(i->name);
+			pointSet.SetTickLabels(labels);
+			pointSet.SetRotateUnits(true);
 		}
 		
 	private:
 		std::map<double, DefaultStatistics> _statistics;
+		std::vector<AntennaInfo> _antennas;
 };
 
 #endif

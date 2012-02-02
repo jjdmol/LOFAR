@@ -78,16 +78,20 @@ namespace LOFAR {
 
       // Read the given data column at the given row numbers.
       // The default implementation throws an exception.
-      virtual casa::Cube<casa::Complex> getData
-      (const casa::String& columnName, const casa::RefRows& rowNrs);
+      ///      virtual casa::Cube<casa::Complex> getData
+      ///      (const casa::String& columnName, const casa::RefRows& rowNrs);
 
       // Get the MS name.
       // The default implementation returns an empty string.
       virtual casa::String msName() const;
 
       // Get info.
+      // Start of the observation (start of first time slot).
       double startTime() const
         { return itsStartTime; }
+      // Length of each time slot.
+      double timeInterval() const
+        { return itsTimeInterval; }
       uint ncorr() const
         { return itsNrCorr; }
       uint nchan() const
@@ -134,8 +138,15 @@ namespace LOFAR {
       const casa::Vector<double>& chanFreqs() const
         { return itsChanFreqs; }
 
+      // Get the channel widths.
+      const casa::Vector<double>& chanWidths() const
+        { return itsChanWidths; }
+
       // Get averaged channel frequencies.
       casa::Vector<double> chanFreqs (uint nchanAvg) const;
+
+      // Get averaged channel widths.
+      casa::Vector<double> chanWidths (uint nchanAvg) const;
 
       // Fetch the FullRes flags.
       // If defined in the buffer, they are taken from there.
@@ -145,31 +156,36 @@ namespace LOFAR {
       // If defined, they can be merged with the buffer's flags which means
       // that if an averaged channel is flagged, the corresponding FullRes
       // flags are set.
+      // <br>It does a stop/start of the timer when actually reading the data.
       casa::Cube<bool> fetchFullResFlags (const DPBuffer& buf,
                                           const casa::RefRows& rowNrs,
+                                          NSTimer& timer,
                                           bool merge=false);
 
       // Fetch the weights.
       // If defined in the buffer, they are taken from there.
       // Otherwise there are read from the input.
+      // <br>It does a stop/start of the timer when actually reading the data.
       casa::Cube<float> fetchWeights (const DPBuffer& buf,
-                                      const casa::RefRows& rowNrs);
+                                      const casa::RefRows& rowNrs,
+                                      NSTimer& timer);
 
       // Fetch the UVW.
       // If defined in the buffer, they are taken from there.
       // Otherwise there are read from the input.
+      // <br>It does a stop/start of the timer when actually reading the data.
       casa::Matrix<double> fetchUVW (const DPBuffer& buf,
-                                     const casa::RefRows& rowNrs);
+                                     const casa::RefRows& rowNrs,
+                                     NSTimer& timer);
 
     protected:
-      double itsStartTime;
+      double itsStartTime;                         //# middle of first time slot
+      double itsTimeInterval;
       uint   itsNrChan;
       uint   itsNrCorr;
       uint   itsNrBl;
       casa::Vector<casa::Int>    itsAnt1;          //# ant1 of all baselines
       casa::Vector<casa::Int>    itsAnt2;          //# ant2 of all baselines
-      mutable vector<double>     itsBLength;       //# baseline lengths
-      mutable vector<int>        itsAutoCorrIndex; //# autocorr index per ant
       casa::Vector<casa::String> itsAntNames;
       vector<casa::MPosition>    itsAntPos;
       casa::MPosition            itsArrayPos;
@@ -178,6 +194,9 @@ namespace LOFAR {
       casa::MDirection           itsTileBeamDir;
       casa::Vector<double>       itsChanFreqs;
       casa::Vector<double>       itsChanWidths;
+    private:
+      mutable vector<double>     itsBLength;       //# baseline lengths
+      mutable vector<int>        itsAutoCorrIndex; //# autocorr index per ant
     };
 
   } //# end namespace

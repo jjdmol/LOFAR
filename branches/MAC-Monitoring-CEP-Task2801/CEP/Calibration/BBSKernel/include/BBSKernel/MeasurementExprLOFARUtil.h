@@ -98,6 +98,10 @@ makeDirectionalGainExpr(Scope &scope,
     bool phasors);
 
 Expr<JonesMatrix>::Ptr
+makeElevationCutExpr(const Expr<Vector<2> >::Ptr &exprAzEl,
+    const ElevationCutConfig &config);
+
+Expr<JonesMatrix>::Ptr
 makeBeamExpr(Scope &scope,
     const Station::ConstPtr &station,
     double refFreq,

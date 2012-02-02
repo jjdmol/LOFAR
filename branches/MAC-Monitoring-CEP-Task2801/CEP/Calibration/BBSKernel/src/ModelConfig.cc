@@ -34,6 +34,25 @@ using LOFAR::operator<<;
 
 
 // -------------------------------------------------------------------------- //
+// - ElevationCutConfig implementation                                      - //
+// -------------------------------------------------------------------------- //
+
+ElevationCutConfig::ElevationCutConfig()
+    :   itsThreshold(0.0)
+{
+}
+
+ElevationCutConfig::ElevationCutConfig(double threshold)
+    :   itsThreshold(threshold)
+{
+}
+
+double ElevationCutConfig::threshold() const
+{
+    return itsThreshold;
+}
+
+// -------------------------------------------------------------------------- //
 // - BeamConfig implementation                                              - //
 // -------------------------------------------------------------------------- //
 
@@ -173,7 +192,7 @@ FlaggerConfig::FlaggerConfig(double threshold)
 {
 }
 
-double FlaggerConfig::getThreshold() const
+double FlaggerConfig::threshold() const
 {
     return itsThreshold;
 }
@@ -215,6 +234,16 @@ bool ModelConfig::useTEC() const
 bool ModelConfig::useDirectionalGain() const
 {
     return itsModelOptions[DIRECTIONAL_GAIN];
+}
+
+bool ModelConfig::useElevationCut() const
+{
+    return itsModelOptions[ELEVATION_CUT];
+}
+
+const ElevationCutConfig &ModelConfig::getElevationCutConfig() const
+{
+    return itsConfigElevationCut;
 }
 
 bool ModelConfig::useBeam() const
@@ -292,6 +321,18 @@ void ModelConfig::setDirectionalGain(bool value)
     itsModelOptions[DIRECTIONAL_GAIN] = value;
 }
 
+void ModelConfig::setElevationCutConfig(const ElevationCutConfig &config)
+{
+    itsModelOptions[ELEVATION_CUT] = true;
+    itsConfigElevationCut = config;
+}
+
+void ModelConfig::clearElevationCutConfig()
+{
+    itsConfigElevationCut = ElevationCutConfig();
+    itsModelOptions[ELEVATION_CUT] = false;
+}
+
 void ModelConfig::setBeamConfig(const BeamConfig &config)
 {
     itsModelOptions[BEAM] = true;
@@ -348,7 +389,7 @@ void ModelConfig::setSources(const vector<string> &sources)
     itsSources = sources;
 }
 
-const vector<string> &ModelConfig::getSources() const
+const vector<string> &ModelConfig::sources() const
 {
     return itsSources;
 }
@@ -359,7 +400,7 @@ const vector<string> &ModelConfig::getSources() const
 
 ostream &operator<<(ostream &out, const FlaggerConfig &obj)
 {
-    out << indent << "Threshold: " << obj.getThreshold();
+    out << indent << "Threshold: " << obj.threshold();
     return out;
 }
 
@@ -386,6 +427,12 @@ ostream &operator<<(ostream &out, const BeamConfig &obj)
     return out;
 }
 
+ostream &operator<<(ostream &out, const ElevationCutConfig &obj)
+{
+    out << indent << "Threshold: " << obj.threshold() << " (deg)";
+    return out;
+}
+
 ostream& operator<<(ostream &out, const ModelConfig &obj)
 {
     out << "Model configuration:";
@@ -403,6 +450,14 @@ ostream& operator<<(ostream &out, const ModelConfig &obj)
         << obj.useTEC() << noboolalpha;
     out << endl << indent << "Direction dependent gain enabled: " << boolalpha
         << obj.useDirectionalGain() << noboolalpha;
+
+    out << endl << indent << "Elevation cut enabled: " << boolalpha
+        << obj.useElevationCut() << noboolalpha;
+    if(obj.useElevationCut())
+    {
+        Indent id;
+        out << endl << obj.getElevationCutConfig();
+    }
 
     out << endl << indent << "Beam enabled: " << boolalpha << obj.useBeam()
         << noboolalpha;
@@ -436,7 +491,7 @@ ostream& operator<<(ostream &out, const ModelConfig &obj)
     out << endl << indent << "Cache enabled: " << boolalpha << obj.useCache()
         << noboolalpha;
 
-    out << endl << indent << "Sources: " << obj.getSources();
+    out << endl << indent << "Sources: " << obj.sources();
     return out;
 }
 

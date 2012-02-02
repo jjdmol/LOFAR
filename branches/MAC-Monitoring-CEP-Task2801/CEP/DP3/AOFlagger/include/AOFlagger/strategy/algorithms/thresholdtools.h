@@ -82,6 +82,19 @@ class ThresholdTools {
 			}
 			return image;
 		}
+		
+		static Mask2DPtr Threshold(Image2DCPtr image, num_t threshold)
+		{
+			Mask2DPtr mask = Mask2D::CreateUnsetMaskPtr(image->Width(), image->Height());
+			for(size_t y=0;y<image->Height();++y)
+			{
+				for(size_t x=0;x<image->Width();++x)
+				{
+					mask->SetValue(x, y, image->Value(x, y) >= threshold);
+				}
+			}
+			return mask;
+		}
 	private:
 		ThresholdTools() { }
 

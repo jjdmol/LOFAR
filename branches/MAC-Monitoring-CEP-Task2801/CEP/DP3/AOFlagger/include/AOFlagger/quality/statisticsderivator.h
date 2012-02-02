@@ -30,6 +30,7 @@
 
 #include <AOFlagger/strategy/imagesets/noisestatimageset.h>
 
+struct stat;
 class StatisticsDerivator
 {
 	public:
@@ -56,9 +57,15 @@ class StatisticsDerivator
 			return deriveComplex<long double>(kind, statistics, polarization);
 		}
 	
-		std::complex<long double> GetComplexStatistic(QualityTablesFormatter::StatisticKind kind, const DefaultStatistics &statistics, unsigned polarization) const
+		static std::complex<long double> GetComplexStatistic(QualityTablesFormatter::StatisticKind kind, const DefaultStatistics &statistics, unsigned polarization)
 		{
 			return deriveComplex<long double>(kind, statistics, polarization);
+		}
+		
+		static long double GetStatisticAmplitude(QualityTablesFormatter::StatisticKind kind, const DefaultStatistics &statistics, unsigned polarization)
+		{
+			const std::complex<long double> val = GetComplexStatistic(kind, statistics, polarization);
+			return sqrtl(val.real()*val.real() + val.imag()*val.imag());
 		}
 		
 		static std::complex<long double> Variance(unsigned long n, std::complex<long double> sum, std::complex<long double> sumP2)
@@ -69,7 +76,13 @@ class StatisticsDerivator
 		static long double VarianceAmplitude(unsigned long n, std::complex<long double> sum, std::complex<long double> sumP2)
 		{
 			const std::complex<long double> variance = deriveVariance<long double>(n, sum, sumP2);
-			return sqrt(variance.real()*variance.real() + variance.imag()*variance.imag());
+			return sqrtl(variance.real()*variance.real() + variance.imag()*variance.imag());
+		}
+		
+		static long double StandardDeviationAmplitude(unsigned long n, std::complex<long double> sum, std::complex<long double> sumP2)
+		{
+			const std::complex<long double> stdDev = deriveStandardDeviation<long double>(n, sum, sumP2);
+			return sqrtl(stdDev.real()*stdDev.real() + stdDev.imag()*stdDev.imag());
 		}
 		
 		std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> CreateTFData(QualityTablesFormatter::StatisticKind kind)
@@ -151,9 +164,62 @@ class StatisticsDerivator
 			metaData->SetBand(band);
 			return std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr>(data, metaData);
 		}
+		static std::string GetDescription(QualityTablesFormatter::StatisticKind kind)
+		{
+			switch(kind)
+			{
+				case QualityTablesFormatter::MeanStatistic: return "Mean";
+				case QualityTablesFormatter::VarianceStatistic: return "Variance";
+				case QualityTablesFormatter::StandardDeviationStatistic: return "Standard deviation";
+				case QualityTablesFormatter::CountStatistic: return "Sample count";
+				case QualityTablesFormatter::DMeanStatistic: return "Differential mean";
+				case QualityTablesFormatter::DVarianceStatistic: return "Differential variance";
+				case QualityTablesFormatter::DStandardDeviationStatistic: return "Differential standard deviation";
+				case QualityTablesFormatter::DCountStatistic: return "Sample count in differential statistics";
+				case QualityTablesFormatter::RFICountStatistic: return "Sample count affected by RFI";
+				case QualityTablesFormatter::RFIRatioStatistic: return "RFI";
+				case QualityTablesFormatter::RFIPercentageStatistic: return "RFI";
+				case QualityTablesFormatter::SignalToNoiseStatistic: return "SNR";
+				default: return "Value";
+			}
+		}
+		static bool HasUnits(QualityTablesFormatter::StatisticKind kind)
+		{
+			return !GetUnits(kind).empty();
+		}
+		static std::string GetUnits(QualityTablesFormatter::StatisticKind kind)
+		{
+			switch(kind)
+			{
+				case QualityTablesFormatter::MeanStatistic:
+				case QualityTablesFormatter::VarianceStatistic:
+				case QualityTablesFormatter::StandardDeviationStatistic:
+				case QualityTablesFormatter::DMeanStatistic:
+				case QualityTablesFormatter::DVarianceStatistic:
+				case QualityTablesFormatter::DStandardDeviationStatistic:
+					return "arbitrary units";
+				case QualityTablesFormatter::RFIPercentageStatistic:
+					return "%";
+				case QualityTablesFormatter::CountStatistic:
+				case QualityTablesFormatter::DCountStatistic:
+				case QualityTablesFormatter::RFICountStatistic:
+				case QualityTablesFormatter::RFIRatioStatistic:
+				case QualityTablesFormatter::SignalToNoiseStatistic:
+				default:
+					return "";
+			}
+		}
+		static std::string GetDescWithUnits(QualityTablesFormatter::StatisticKind kind)
+		{
+			std::ostringstream str;
+			str << GetDescription(kind);
+			if(HasUnits(kind))
+				str << " (" << GetUnits(kind) << ")";
+			return str.str();
+		}
 	private:
 		template<typename T>
-		std::complex<T> deriveComplex(QualityTablesFormatter::StatisticKind kind, const DefaultStatistics &statistics, unsigned polarization) const
+		static std::complex<T> deriveComplex(QualityTablesFormatter::StatisticKind kind, const DefaultStatistics &statistics, unsigned polarization)
 		{
 			switch(kind)
 			{
@@ -163,11 +229,19 @@ class StatisticsDerivator
 				case QualityTablesFormatter::MeanStatistic:
 					return statistics.Mean<T>(polarization);
 					break;
+				case QualityTablesFormatter::SumStatistic:
+					return statistics.Sum<T>(polarization);
+					break;
 				case QualityTablesFormatter::SumP2Statistic:
 					return statistics.SumP2<T>(polarization);
 					break;
 				case QualityTablesFormatter::VarianceStatistic:
 					return deriveVariance<T>(statistics.count[polarization],
+															 	statistics.sum[polarization],
+																statistics.sumP2[polarization]);
+					break;
+				case QualityTablesFormatter::StandardDeviationStatistic:
+					return deriveStandardDeviation<T>(statistics.count[polarization],
 															 	statistics.sum[polarization],
 																statistics.sumP2[polarization]);
 					break;
@@ -177,6 +251,9 @@ class StatisticsDerivator
 				case QualityTablesFormatter::DMeanStatistic:
 					return statistics.DMean<T>(polarization);
 					break;
+				case QualityTablesFormatter::DSumStatistic:
+					return statistics.DSum<T>(polarization);
+					break;
 				case QualityTablesFormatter::DSumP2Statistic:
 					return statistics.DSumP2<T>(polarization);
 					break;
@@ -185,17 +262,25 @@ class StatisticsDerivator
 																statistics.dSum[polarization],
 																statistics.dSumP2[polarization]);
 					break;
+				case QualityTablesFormatter::DStandardDeviationStatistic:
+					return deriveStandardDeviation<T>(statistics.dCount[polarization],
+																statistics.dSum[polarization],
+																statistics.dSumP2[polarization]);
+					break;
 				case QualityTablesFormatter::RFIRatioStatistic:
 					return std::complex<T>((double) statistics.rfiCount[polarization] / (statistics.count[polarization] + statistics.rfiCount[polarization]), 0.0f);
+					break;
+				case QualityTablesFormatter::RFIPercentageStatistic:
+					return std::complex<T>(100.0 * (double) statistics.rfiCount[polarization] / (statistics.count[polarization] + statistics.rfiCount[polarization]), 0.0f);
 					break;
 				case QualityTablesFormatter::RFICountStatistic:
 					return std::complex<T>(statistics.rfiCount[polarization], 0.0f);
 					break;
 				case QualityTablesFormatter::SignalToNoiseStatistic:
 				{
-					const std::complex<T> variance =
-						deriveComplex<T>(QualityTablesFormatter::DVarianceStatistic, statistics, polarization);
-					return std::complex<T>(statistics.Mean<T>(polarization).real() / variance.real(), statistics.Mean<T>(polarization).imag() / variance.imag());
+					const std::complex<T> stddev =
+						deriveComplex<T>(QualityTablesFormatter::DStandardDeviationStatistic, statistics, polarization);
+					return std::complex<T>(fabsl(statistics.Mean<T>(polarization).real() / stddev.real()), fabsl(statistics.Mean<T>(polarization).imag() / stddev.imag()));
 					break;
 				}
 				default:
@@ -207,7 +292,14 @@ class StatisticsDerivator
 		static std::complex<T> deriveVariance(unsigned long n, std::complex<long double> sum, std::complex<long double> sumP2)
 		{
 			return std::complex<T>(deriveVarianceSingle(n, sum.real(), sumP2.real()),
-																 deriveVarianceSingle(n, sum.imag(), sumP2.imag()));
+															 deriveVarianceSingle(n, sum.imag(), sumP2.imag()));
+		}
+		
+		template<typename T>
+		static std::complex<T> deriveStandardDeviation(unsigned long n, std::complex<long double> sum, std::complex<long double> sumP2)
+		{
+			return std::complex<T>(deriveStandardDeviationSingle(n, sum.real(), sumP2.real()),
+															 deriveStandardDeviationSingle(n, sum.imag(), sumP2.imag()));
 		}
 		
 		template<typename T>
@@ -215,6 +307,13 @@ class StatisticsDerivator
 		{
 			T sumMeanSquared = sum * sum / n;
 			return (sumP2 - sumMeanSquared) / (n-1.0);
+		}
+		
+		template<typename T>
+		static T deriveStandardDeviationSingle(unsigned long n, T sum, T sumP2)
+		{
+			T sumMeanSquared = sum * sum / n;
+			return sqrt((sumP2 - sumMeanSquared) / n);
 		}
 		
 		const StatisticsCollection &_collection;

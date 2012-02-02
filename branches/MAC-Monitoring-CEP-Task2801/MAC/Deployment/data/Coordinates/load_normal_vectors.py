@@ -56,12 +56,14 @@ if __name__ == '__main__':
     
     #filename = 'rotation-matrices/normal_vectors.dat'
     
+    # check stationname
+    cursor.execute("select name from station")
+    stations = cursor.fetchall()
+    print stations
+        
     lines = getLines(filename)
     for line in lines:
         (stationname,anttype,vector) = getNormalVector(line)
-        # check stationname
-        cursor.execute("select name from station")
-        stations = cursor.fetchall()
         
         station = []
         station.append(stationname)

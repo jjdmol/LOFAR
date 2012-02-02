@@ -1,5 +1,5 @@
 # $Id$
 
-lofar_add_package(jOTDB3)
-add_subdirectory(scripts)
 
+lofar_add_package(jOTDB3)
+lofar_add_package(OTB)

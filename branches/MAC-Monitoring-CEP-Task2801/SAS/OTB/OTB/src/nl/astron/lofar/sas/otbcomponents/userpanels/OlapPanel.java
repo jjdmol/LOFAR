@@ -32,10 +32,8 @@ import java.util.Enumeration;
 import java.util.Vector;
 import javax.swing.JFileChooser;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
-import javax.swing.ListSelectionModel;
 import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb3.jOTDBnode;
@@ -44,8 +42,6 @@ import nl.astron.lofar.sas.otb.jotdb3.jOTDBtree;
 import nl.astron.lofar.sas.otb.util.IViewPanel;
 import nl.astron.lofar.sas.otb.util.OtdbRmi;
 import nl.astron.lofar.sas.otb.util.UserAccount;
-import nl.astron.lofar.sas.otb.util.tablemodels.PencilConfigurationTableModel;
-import nl.astron.lofar.sas.otbcomponents.PencilDialog;
 import org.apache.log4j.Logger;
 
 /**
@@ -77,6 +73,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
         initialize();
     }   
     
+    @Override
     public void setMainFrame(MainFrame aMainFrame) {
         if (aMainFrame != null) {
             itsMainFrame=aMainFrame;
@@ -85,10 +82,12 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
         }
     }
     
+    @Override
     public String getShortName() {
         return name;
     }
     
+    @Override
     public void setContent(Object anObject) { 
         itsNode=(jOTDBnode)anObject;
         jOTDBparam aParam=null;
@@ -98,7 +97,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
         try {
            
             //we need to get all the childs from this node.    
-            Vector childs = OtdbRmi.getRemoteMaintenance().getItemList(itsNode.treeID(), itsNode.nodeID(), 1);
+            Vector<jOTDBnode> childs = OtdbRmi.getRemoteMaintenance().getItemList(itsNode.treeID(), itsNode.nodeID(), 1);
             
             // get all the params per child
             Enumeration e = childs.elements();
@@ -125,15 +124,14 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                     this.retrieveAndDisplayChildDataForNode(aNode);
                 } else if (LofarUtils.keyName(aNode.name).equals("PencilInfo")) {
                     this.retrieveAndDisplayChildDataForNode(aNode);
-                }else if (LofarUtils.keyName(aNode.name).contains("Pencil") && !LofarUtils.keyName(aNode.name).equals("PencilInfo")) {
-                    itsPencils.addElement(aNode);
+                } else if (LofarUtils.keyName(aNode.name).equals("CNProc_CoherentStokes")) {
                     this.retrieveAndDisplayChildDataForNode(aNode);
-                } else if (LofarUtils.keyName(aNode.name).equals("Stokes")) {
+                } else if (LofarUtils.keyName(aNode.name).equals("CNProc_IncoherentStokes")) {
                     this.retrieveAndDisplayChildDataForNode(aNode);
                 }
             }
             //we also need the Virtual Instrument Storagenodes here
-            Vector VIchilds = OtdbRmi.getRemoteMaintenance().getItemList(itsNode.treeID(),"%VirtualInstrument");
+            Vector<jOTDBnode> VIchilds = OtdbRmi.getRemoteMaintenance().getItemList(itsNode.treeID(),"%VirtualInstrument");
 
             // get all the params per child
             Enumeration eVI = VIchilds.elements();
@@ -151,6 +149,35 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                     this.retrieveAndDisplayChildDataForNode(aNode);
                 }
             }
+
+            //we also need the Output_ nodes from the Dataproducts here
+            Vector<jOTDBnode> OUchilds = OtdbRmi.getRemoteMaintenance().getItemList(itsNode.treeID(),"%Output_%");
+
+            // get all the params per child
+            Enumeration eOU = OUchilds.elements();
+            while( eOU.hasMoreElements()  ) {
+                aParam=null;
+
+                jOTDBnode aNode = (jOTDBnode)eOU.nextElement();
+
+                // We need to keep all the nodes needed by this panel
+                // if the node is a leaf we need to get the pointed to value via Param.
+                if (aNode.leaf) {
+                    aParam = OtdbRmi.getRemoteMaintenance().getParam(aNode);
+                    setField(itsNode,aParam,aNode);
+                }else if (LofarUtils.keyName(aNode.name).equals("Output_Beamformed")) {
+                    this.retrieveAndDisplayChildDataForNode(aNode);
+                }else if (LofarUtils.keyName(aNode.name).equals("Output_CoherentStokes")) {
+                    this.retrieveAndDisplayChildDataForNode(aNode);
+                }else if (LofarUtils.keyName(aNode.name).equals("Output_Correlated")) {
+                    this.retrieveAndDisplayChildDataForNode(aNode);
+                }else if (LofarUtils.keyName(aNode.name).equals("Output_Filtered")) {
+                    this.retrieveAndDisplayChildDataForNode(aNode);
+                }else if (LofarUtils.keyName(aNode.name).equals("Output_IncoherentStokes")) {
+                    this.retrieveAndDisplayChildDataForNode(aNode);
+                }
+            }
+
         } catch (RemoteException ex) {
             String aS="Error during getComponentParam: "+ ex;
             logger.error(aS);
@@ -161,13 +188,16 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
         initPanel();
     }
     
+    @Override
     public boolean isSingleton() {
         return false;
     }
     
+    @Override
     public JPanel getInstance() {
         return new OlapPanel();
     }
+    @Override
     public boolean hasPopupMenu() {
         return true;
     }    
@@ -189,6 +219,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
      *
      *  aPopupMenu.show(aComponent, x, y );        
      */
+    @Override
     public void createPopupMenu(Component aComponent,int x, int y) {
         JPopupMenu aPopupMenu=null;
         JMenuItem  aMenuItem=null;
@@ -199,6 +230,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
             //  Fill in menu as in the example above
             aMenuItem=new JMenuItem("Create ParSet File");        
             aMenuItem.addActionListener(new java.awt.event.ActionListener() {
+                @Override
                 public void actionPerformed(java.awt.event.ActionEvent evt) {
                     popupMenuHandler(evt);
                 }
@@ -223,6 +255,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
      *          perform action
      *      }  
      */
+    @Override
     public void popupMenuHandler(java.awt.event.ActionEvent evt) {
          if (evt.getActionCommand().equals("Create ParSet File")) {
             logger.trace("Create ParSet File");
@@ -275,7 +308,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
     private void retrieveAndDisplayChildDataForNode(jOTDBnode aNode){
         jOTDBparam aParam=null;
         try {
-            Vector HWchilds = OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
+            Vector<jOTDBnode> HWchilds = OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
             // get all the params per child
             Enumeration e1 = HWchilds.elements();
             while( e1.hasMoreElements()  ) {
@@ -339,14 +372,6 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                 } else {
                     inputNrPPFTaps.setText(aNode.limits);
                 }
-            }else if (aKeyName.equals("partition")) {
-                inputPartition.setToolTipText(aParam.description);
-                itsPartition=aNode;
-                if (isRef && aParam != null) {
-                    inputPartition.setText(aNode.limits + " : " + aParam.limits);
-                } else {
-                    inputPartition.setText(aNode.limits);
-                }
             }
             
         } else if(parentName.equals("Correlator")){
@@ -379,36 +404,20 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                 }
                 inputFlysEye.setSelected(aSelection);
                 checkSettings();
-            } else if (aKeyName.equals("nrRings")) {
-                inputNrRings.setToolTipText(aParam.description);
-                itsNrRings=aNode;
-                if (isRef && aParam != null) {
-                    inputNrRings.setText(aNode.limits + " : " + aParam.limits);
-                } else {
-                    inputNrRings.setText(aNode.limits);
-                }
-            } else if (aKeyName.equals("ringSize")) {
-                inputRingSize.setToolTipText(aParam.description);
-                itsRingSize=aNode;
-                if (isRef && aParam != null) {
-                    inputRingSize.setText(aNode.limits + " : " + aParam.limits);
-                } else {
-                    inputRingSize.setText(aNode.limits);
-                }
             }
-        } else if(parentName.equals("Stokes")){
+        } else if(parentName.equals("CNProc_CoherentStokes")){
             // OLAP PencilInfo params
 
             if (aKeyName.equals("which")) {
-                inputWhich.setToolTipText(aParam.description);
-                LofarUtils.setPopupComboChoices(inputWhich,aParam.limits);
+                inputWhichCoherent.setToolTipText(aParam.description);
+                LofarUtils.setPopupComboChoices(inputWhichCoherent,aParam.limits);
                 if (!aNode.limits.equals("")) {
-                    inputWhich.setSelectedItem(aNode.limits);
+                    inputWhichCoherent.setSelectedItem(aNode.limits);
                 }
-                itsWhich=aNode;
+                itsWhichCoherent=aNode;
             } else if (aKeyName.equals("integrateChannels")) {
-                inputIntegrateChannels.setToolTipText(aParam.description);
-                itsIntegrateChannels=aNode;
+                inputIntegrateChannelsCoherent.setToolTipText(aParam.description);
+                itsIntegrateChannelsCoherent=aNode;
                 boolean aSelection = false;
                 if (isRef && aParam != null) {
                     if (aParam.limits.equals("true")||aParam.limits.equals("TRUE")) {
@@ -419,18 +428,52 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                         aSelection = true;
                     }
                 }
-                inputIntegrateChannels.setSelected(aSelection);
+                inputIntegrateChannelsCoherent.setSelected(aSelection);
 
             } else if (aKeyName.equals("integrationSteps")) {
-                inputIntegrationSteps.setToolTipText(aParam.description);
-                itsIntegrationSteps=aNode;
+                inputIntegrationStepsCoherent.setToolTipText(aParam.description);
+                itsIntegrationStepsCoherent=aNode;
                 if (isRef && aParam != null) {
-                    inputIntegrationSteps.setText(aNode.limits + " : " + aParam.limits);
+                    inputIntegrationStepsCoherent.setText(aNode.limits + " : " + aParam.limits);
                 } else {
-                    inputIntegrationSteps.setText(aNode.limits);
+                    inputIntegrationStepsCoherent.setText(aNode.limits);
                 }
             }
 
+        } else if(parentName.equals("CNProc_IncoherentStokes")){
+            // OLAP PencilInfo params
+
+            if (aKeyName.equals("which")) {
+                inputWhichIncoherent.setToolTipText(aParam.description);
+                LofarUtils.setPopupComboChoices(inputWhichIncoherent,aParam.limits);
+                if (!aNode.limits.equals("")) {
+                    inputWhichIncoherent.setSelectedItem(aNode.limits);
+                }
+                itsWhichIncoherent=aNode;
+            } else if (aKeyName.equals("integrateChannels")) {
+                inputIntegrateChannelsIncoherent.setToolTipText(aParam.description);
+                itsIntegrateChannelsIncoherent=aNode;
+                boolean aSelection = false;
+                if (isRef && aParam != null) {
+                    if (aParam.limits.equals("true")||aParam.limits.equals("TRUE")) {
+                        aSelection = true;
+                    }
+                } else {
+                    if (aNode.limits.equals("true")||aNode.limits.equals("TRUE")) {
+                        aSelection = true;
+                    }
+                }
+                inputIntegrateChannelsIncoherent.setSelected(aSelection);
+
+            } else if (aKeyName.equals("integrationSteps")) {
+                inputIntegrationStepsIncoherent.setToolTipText(aParam.description);
+                itsIntegrationStepsIncoherent=aNode;
+                if (isRef && aParam != null) {
+                    inputIntegrationStepsIncoherent.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    inputIntegrationStepsIncoherent.setText(aNode.limits);
+                }
+            }
         } else if(parentName.equals("StorageProc")){
             // OLAP StorageProc params
             if (aKeyName.equals("subbandsPerMS")) {
@@ -514,36 +557,9 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                     }
                 }
                 inputCorrectBandPass.setSelected(aSelection);
-            } else if (aKeyName.equals("outputCorrelatedData")) {
-                inputOutputCorrelatedData.setToolTipText(aParam.description);
-                itsOutputCorrelatedData=aNode;
-                boolean aSelection = false;
-                if (isRef && aParam != null) {
-                    if (aParam.limits.equals("true")||aParam.limits.equals("TRUE")) {
-                        aSelection = true;
-                    }
-                } else {
-                    if (aNode.limits.equals("true")||aNode.limits.equals("TRUE")) {
-                        aSelection = true;
-                    }
-                }
-                inputOutputCorrelatedData.setSelected(aSelection);
-                inputIntegrationTime.setEnabled(aSelection);
-            } else if (aKeyName.equals("outputFilteredData")) {
-                inputOutputFilteredData.setToolTipText(aParam.description);
-                itsOutputFilteredData=aNode;
-                boolean aSelection = false;
-                if (isRef && aParam != null) {
-                    if (aParam.limits.equals("true")||aParam.limits.equals("TRUE")) {
-                        aSelection = true;
-                    }
-                } else {
-                    if (aNode.limits.equals("true")||aNode.limits.equals("TRUE")) {
-                        aSelection = true;
-                    }
-                }
-                inputOutputFilteredData.setSelected(aSelection);
-            } else if (aKeyName.equals("outputBeamFormedData")) {
+            }
+        } else if (parentName.equals("Output_Beamformed")) {
+            if (aKeyName.equals("enabled")) {
                 inputOutputBeamFormedData.setToolTipText(aParam.description);
                 itsOutputBeamFormedData=aNode;
                 boolean aSelection = false;
@@ -558,7 +574,44 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                 }
                 inputOutputBeamFormedData.setSelected(aSelection);
                 checkSettings();
-            } else if (aKeyName.equals("outputCoherentStokes")) {
+            }
+        } else if (parentName.equals("Output_Correlated")) {
+            if (aKeyName.equals("enabled")) {
+                inputOutputCorrelatedData.setToolTipText(aParam.description);
+                itsOutputCorrelatedData=aNode;
+                boolean aSelection = false;
+                if (isRef && aParam != null) {
+                    if (aParam.limits.equals("true")||aParam.limits.equals("TRUE")) {
+                        aSelection = true;
+                    }
+                } else {
+                    if (aNode.limits.equals("true")||aNode.limits.equals("TRUE")) {
+                        aSelection = true;
+                    }
+                }
+                inputOutputCorrelatedData.setSelected(aSelection);
+                inputIntegrationTime.setEnabled(aSelection);
+                checkSettings();
+            }
+        } else if (parentName.equals("Output_Filtered")) {
+            if (aKeyName.equals("enabled")) {
+                inputOutputFilteredData.setToolTipText(aParam.description);
+                itsOutputFilteredData=aNode;
+                boolean aSelection = false;
+                if (isRef && aParam != null) {
+                    if (aParam.limits.equals("true")||aParam.limits.equals("TRUE")) {
+                        aSelection = true;
+                    }
+                } else {
+                    if (aNode.limits.equals("true")||aNode.limits.equals("TRUE")) {
+                        aSelection = true;
+                    }
+                }
+                inputOutputFilteredData.setSelected(aSelection);
+                checkSettings();
+            }
+        } else if (parentName.equals("Output_CoherentStokes")) {
+            if (aKeyName.equals("enabled")) {
                 inputOutputCoherentStokes.setToolTipText(aParam.description);
                 itsOutputCoherentStokes=aNode;
                 boolean aSelection = false;
@@ -573,8 +626,9 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                 }
                 inputOutputCoherentStokes.setSelected(aSelection);
                 checkSettings();
-                
-            } else if (aKeyName.equals("outputIncoherentStokes")) {
+            }
+        } else if (parentName.equals("Output_IncoherentStokes")) {
+            if (aKeyName.equals("enabled")) {
                 inputOutputIncoherentStokes.setToolTipText(aParam.description);
                 itsOutputIncoherentStokes=aNode;
                 boolean aSelection = false;
@@ -589,31 +643,13 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                 }
                 inputOutputIncoherentStokes.setSelected(aSelection);
                 checkSettings();
-            } else if (aKeyName.equals("nrPencils")) {
-                itsNrPencils=aNode;
             }
-        } else if(parentName.contains("Pencil") && !parentName.equals("PencilInfo")){
-            // Observation Pencil parameters
-            if (aKeyName.equals("angle1")) {
-                if (isRef && aParam != null) {
-                    itsAngle1.add(aNode.limits + " : " + aParam.limits);
-                } else {
-                    itsAngle1.add(aNode.limits);
-                }
-                itsCoordTypes.add("rad");
-            } else if (aKeyName.equals("angle2")) {
-                if (isRef && aParam != null) {
-                    itsAngle2.add(aNode.limits + " : " + aParam.limits);
-                } else {
-                    itsAngle2.add(aNode.limits);
-                }
-            }
-        }   
+        }
     }
 
     // check all settings to make a choice about enabled/disables fields
     private void checkSettings() {
-        if (inputOutputCorrelatedData.isSelected()) {
+        if (inputOutputCorrelatedData.isSelected() ) {
             inputIntegrationTime.setEnabled(true);
         } else {
             inputIntegrationTime.setEnabled(false);
@@ -630,34 +666,29 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
             }
             inputFlysEye.setEnabled(true);
 
-            if (inputFlysEye.isSelected()) {
-                addPencilButton.setEnabled(false);
-                pencilConfigurationPanel.setEnabled(false);
-                inputNrRings.setEnabled(false);
-                inputRingSize.setEnabled(false);
-            } else {
-                addPencilButton.setEnabled(true);
-                pencilConfigurationPanel.setEnabled(true);
-                inputNrRings.setEnabled(true);
-                inputRingSize.setEnabled(true);
-            }
         } else {
             inputFlysEye.setEnabled(false);
-            addPencilButton.setEnabled(false);
-            pencilConfigurationPanel.setEnabled(false);
-            inputNrRings.setEnabled(false);
-            inputRingSize.setEnabled(false);
         }
 
-        if (inputOutputCoherentStokes.isSelected() || inputOutputIncoherentStokes.isSelected()) {
-            inputWhich.setEnabled(true);
-            inputIntegrateChannels.setEnabled(true);
-            inputIntegrationSteps.setEnabled(true);
+        if (inputOutputCoherentStokes.isSelected() ) { 
+            inputWhichCoherent.setEnabled(true);
+            inputIntegrateChannelsCoherent.setEnabled(true);
+            inputIntegrationStepsCoherent.setEnabled(true);
         } else {
-            inputWhich.setEnabled(false);
-            inputIntegrateChannels.setEnabled(false);
-            inputIntegrationSteps.setEnabled(false);
+            inputWhichCoherent.setEnabled(false);
+            inputIntegrateChannelsCoherent.setEnabled(false);
+            inputIntegrationStepsCoherent.setEnabled(false);
         }
+        if (inputOutputIncoherentStokes.isSelected() ) { 
+            inputWhichIncoherent.setEnabled(true);
+            inputIntegrateChannelsIncoherent.setEnabled(true);
+            inputIntegrationStepsIncoherent.setEnabled(true);
+        } else {
+            inputWhichIncoherent.setEnabled(false);
+            inputIntegrateChannelsIncoherent.setEnabled(false);
+            inputIntegrationStepsIncoherent.setEnabled(false);
+        }
+
     }
     
     private void restore() {
@@ -733,9 +764,6 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
       if (itsNrPPFTaps!=null) {
         inputNrPPFTaps.setText(itsNrPPFTaps.limits);
       }
-      if (itsPartition!=null) {
-        inputPartition.setText(itsPartition.limits);
-      }
       
       
       //OLAP StorageProc
@@ -757,44 +785,42 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
         inputFlysEye.setSelected(aB);
       }
 
-      if (itsRingSize!=null) {
-        inputRingSize.setText(itsRingSize.limits);
-      }
-      if (itsNrRings!=null) {
-        inputNrRings.setText(itsNrRings.limits);
-      }
 
-      // Stokes
-      if(itsWhich!=null) {
-        inputWhich.setSelectedItem(itsWhich.limits);
+      // CNProc_CoherentStokes
+      if(itsWhichCoherent!=null) {
+        inputWhichCoherent.setSelectedItem(itsWhichCoherent.limits);
       }
-      if (itsIntegrateChannels!=null) {
+      if (itsIntegrateChannelsCoherent!=null) {
         aB=false;
-        if (itsIntegrateChannels.limits.equals("true")||itsIntegrateChannels.limits.equals("TRUE")) {
+        if (itsIntegrateChannelsCoherent.limits.equals("true")||itsIntegrateChannelsCoherent.limits.equals("TRUE")) {
           aB=true;
         }
-        inputIntegrateChannels.setSelected(aB);
+        inputIntegrateChannelsCoherent.setSelected(aB);
       }
-      if (itsIntegrationSteps!=null) {
-        inputIntegrationSteps.setText(itsIntegrationSteps.limits);
+      if (itsIntegrationStepsCoherent!=null) {
+        inputIntegrationStepsCoherent.setText(itsIntegrationStepsCoherent.limits);
       }
 
-      // Pencils
-      // set table back to initial values
-      if (itsAngle1!=null && itsAngle2!=null) {
-          itsPencilConfigurationTableModel.fillTable(itsTreeType,itsAngle1,itsAngle2,itsCoordTypes,false);
+      // CNProc_IncoherentStokes
+      if(itsWhichIncoherent!=null) {
+        inputWhichIncoherent.setSelectedItem(itsWhichIncoherent.limits);
       }
-      
+      if (itsIntegrateChannelsIncoherent!=null) {
+        aB=false;
+        if (itsIntegrateChannelsIncoherent.limits.equals("true")||itsIntegrateChannelsIncoherent.limits.equals("TRUE")) {
+          aB=true;
+        }
+        inputIntegrateChannelsIncoherent.setSelected(aB);
+      }
+      if (itsIntegrationStepsIncoherent!=null) {
+        inputIntegrationStepsIncoherent.setText(itsIntegrationStepsIncoherent.limits);
+      }
+
+     
       checkSettings();
     }
      
     private void initialize() {
-        itsPencilConfigurationTableModel = new PencilConfigurationTableModel();
-        pencilConfigurationPanel.setTableModel(itsPencilConfigurationTableModel);
-        pencilConfigurationPanel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        pencilConfigurationPanel.setColumnSize("angle 1",20);
-        pencilConfigurationPanel.setColumnSize("angle 2",20);
-        pencilConfigurationPanel.repaint();
         buttonPanel1.addButton("Restore");
         buttonPanel1.setButtonIcon("Restore",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_undo.png")));
         buttonPanel1.addButton("Apply");
@@ -858,6 +884,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
      *
      * @param   enabled     true/false enabled/disabled
      */
+    @Override
     public void enableButtons(boolean enabled) {
 
         // always do this last to keep up with panel settings regardless of user settings
@@ -868,6 +895,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
      *
      * @param   visible     true/false visible/invisible
      */
+    @Override
     public void setButtonsVisible(boolean visible) {
     }        
     
@@ -875,6 +903,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
      *
      * @param   enabled     true/false enabled/disabled
      */
+    @Override
     public void setAllEnabled(boolean enabled) {
 
         // always do this last to keep up with panel settings regardless of user settings
@@ -883,89 +912,6 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
     
     private boolean saveInput() {
         boolean hasChanged = false;
-        // keep default Pencils
-        jOTDBnode aDefaultNode= itsPencils.elementAt(0);
-
-        if (itsPencilConfigurationTableModel.changed()) {
-            int i=1;
-
-            //delete all Pencils from the table (excluding the Default one);
-            // Keep the 1st one, it's the default Pencil
-            try {
-                for (i=1; i< itsPencils.size(); i++) {
-                    OtdbRmi.getRemoteMaintenance().deleteNode(itsPencils.elementAt(i));
-                }
-            } catch (RemoteException ex) {
-                String aS="Error during deletion of PencilNode: "+ex;
-                logger.error(aS);
-                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
-            }
-
-            // now that all Nodes are deleted we should collect the tables input and create new Beams to save to the database.
-            itsPencilConfigurationTableModel.getTable(itsAngle1,itsAngle2,itsCoordTypes);
-            try {
-               // for all elements
-                for (i=1; i < itsAngle1.size();i++) {
-
-                    // make a dupnode from the default node, give it the next number in the count,get the elements and fill all values from the elements
-                    // with the values from the set fields and save the elements again
-                   //
-                    // Duplicates the given node (and its parameters and children)
-                    int aN = OtdbRmi.getRemoteMaintenance().dupNode(itsNode.treeID(),aDefaultNode.nodeID(),(short)(i-1));
-                    if (aN <= 0) {
-                        String aS="Something went wrong with dupNode("+itsNode.treeID()+","+aDefaultNode.nodeID()+") will try to save remainder";
-                        logger.error(aS);
-                        LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
-                    } else {
-                        // we got a new duplicate whos children need to be filled with the settings from the panel.
-                        jOTDBnode aNode = OtdbRmi.getRemoteMaintenance().getNode(itsNode.treeID(),aN);
-                        // store new duplicate in itsBeams.
-                        itsPencils.add(aNode);
-
-                        Vector HWchilds = OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
-                        // get all the params per child
-                        Enumeration e1 = HWchilds.elements();
-                        while( e1.hasMoreElements()  ) {
-                            jOTDBnode aHWNode = (jOTDBnode)e1.nextElement();
-                            String aKeyName = LofarUtils.keyName(aHWNode.name);
-                            if (aKeyName.equals("angle1")) {
-                                String aVal=itsAngle1.elementAt(i);
-                                if (!itsCoordTypes.elementAt(i).equals("rad") ) {
-                                    String tmp=itsCoordTypes.elementAt(i);
-                                    if (tmp.equals("hmsdms")) {
-                                        tmp="hms";
-                                    } else if (tmp.equals("dmsdms")) {
-                                        tmp="dms";
-                                    }
-                                    aVal=LofarUtils.changeCoordinate(tmp, "rad", aVal);
-                                }
-                                aHWNode.limits=aVal;
-                            } else if (aKeyName.equals("angle2")) {
-                                String aVal=itsAngle2.elementAt(i);
-                                if (!itsCoordTypes.elementAt(i).equals("rad") ) {
-                                    String tmp=itsCoordTypes.elementAt(i);
-                                    if (tmp.equals("hmsdms") || tmp.equals("dmsdms")) {
-                                        tmp="dms";
-                                    }
-                                    aVal=LofarUtils.changeCoordinate(tmp, "rad", aVal);
-                                }
-                                aHWNode.limits=aVal;
-                            }
-                            saveNode(aHWNode);
-                        }
-                    }
-                }
-            } catch (RemoteException ex) {
-                String aS="Error during duplication and save : " + ex;
-                logger.error(aS);
-                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
-                return false;
-            }
-        }
-        // store new number of instances in baseSetting
-        short pencils= (short)(itsAngle1.size()-1);
-        aDefaultNode.instances = pencils; //
-        saveNode(aDefaultNode);
 
         // Generic OLAP       
         if ((!inputDelayCompensation.isSelected() &  
@@ -1074,20 +1020,11 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
             saveNode(itsOutputIncoherentStokes);
         }
 
-        if (itsNrPencils != null && !Integer.toString(pencilConfigurationPanel.getTableModel().getRowCount()).equals(itsNrPencils.limits)) {
-            itsNrPencils.limits = Integer.toString(pencilConfigurationPanel.getTableModel().getRowCount());
-            saveNode(itsNrPencils);
-        }
-
         
         // OLAP-CNProc
         if (itsNrPPFTaps != null && !inputNrPPFTaps.getText().equals(itsNrPPFTaps.limits)) {
             itsNrPPFTaps.limits = inputNrPPFTaps.getText();
             saveNode(itsNrPPFTaps);
-        }
-        if (itsPartition != null && !inputPartition.getText().equals(itsPartition.limits)) {
-            itsPartition.limits = inputPartition.getText();
-            saveNode(itsPartition);
         }
 
 
@@ -1117,104 +1054,55 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
             saveNode(itsFlysEye);
         }
 
-        if (itsNrRings != null && !inputNrRings.getText().equals(itsNrRings.limits)) {
-            itsNrRings.limits = inputNrRings.getText();
-            saveNode(itsNrRings);
+        // CNProc_CoherentStokes
+        if (itsWhichCoherent!= null && !inputWhichCoherent.getSelectedItem().toString().equals(itsWhichCoherent.limits)) {
+            itsWhichCoherent.limits = inputWhichCoherent.getSelectedItem().toString();
+            saveNode(itsWhichCoherent);
         }
 
-        if (itsRingSize != null && !inputRingSize.getText().equals(itsRingSize.limits)) {
-            itsRingSize.limits = inputRingSize.getText();
-            saveNode(itsRingSize);
+        if (itsIntegrationStepsCoherent != null && !inputIntegrationStepsCoherent.getText().equals(itsIntegrationStepsCoherent.limits)) {
+            itsIntegrationStepsCoherent.limits = inputIntegrationStepsCoherent.getText();
+            saveNode(itsIntegrationStepsCoherent);
         }
-
-        // Stokes
-
-        if (itsWhich!= null && !inputWhich.getSelectedItem().toString().equals(itsWhich.limits)) {
-            itsWhich.limits = inputWhich.getSelectedItem().toString();
-            saveNode(itsWhich);
-        }
-
-        if (itsIntegrationSteps != null && !inputIntegrationSteps.getText().equals(itsIntegrationSteps.limits)) {
-            itsIntegrationSteps.limits = inputIntegrationSteps.getText();
-            saveNode(itsIntegrationSteps);
-        }
-        if ((!inputIntegrateChannels.isSelected() &
-                (itsIntegrateChannels.limits.equals("TRUE") ||itsIntegrateChannels.limits.equals("true") )) ||
-            (inputIntegrateChannels.isSelected() &
-                (itsIntegrateChannels.limits.equals("FALSE") ||itsIntegrateChannels.limits.equals("false") )))
+        if ((!inputIntegrateChannelsCoherent.isSelected() &
+                (itsIntegrateChannelsCoherent.limits.equals("TRUE") ||itsIntegrateChannelsCoherent.limits.equals("true") )) ||
+            (inputIntegrateChannelsCoherent.isSelected() &
+                (itsIntegrateChannelsCoherent.limits.equals("FALSE") ||itsIntegrateChannelsCoherent.limits.equals("false") )))
         {
             String rt="true";
-            if (!inputIntegrateChannels.isSelected()) {
+            if (!inputIntegrateChannelsCoherent.isSelected()) {
                 rt="false";
             }
-            itsIntegrateChannels.limits = rt;
-            saveNode(itsIntegrateChannels);
+            itsIntegrateChannelsCoherent.limits = rt;
+            saveNode(itsIntegrateChannelsCoherent);
         }
+
+        // CNProc_IncoherentStokes
+        if (itsWhichIncoherent!= null && !inputWhichIncoherent.getSelectedItem().toString().equals(itsWhichIncoherent.limits)) {
+            itsWhichIncoherent.limits = inputWhichIncoherent.getSelectedItem().toString();
+            saveNode(itsWhichIncoherent);
+        }
+
+        if (itsIntegrationStepsIncoherent != null && !inputIntegrationStepsIncoherent.getText().equals(itsIntegrationStepsIncoherent.limits)) {
+            itsIntegrationStepsIncoherent.limits = inputIntegrationStepsIncoherent.getText();
+            saveNode(itsIntegrationStepsIncoherent);
+        }
+        if ((!inputIntegrateChannelsIncoherent.isSelected() &
+                (itsIntegrateChannelsIncoherent.limits.equals("TRUE") ||itsIntegrateChannelsIncoherent.limits.equals("true") )) ||
+            (inputIntegrateChannelsIncoherent.isSelected() &
+                (itsIntegrateChannelsIncoherent.limits.equals("FALSE") ||itsIntegrateChannelsIncoherent.limits.equals("false") )))
+        {
+            String rt="true";
+            if (!inputIntegrateChannelsIncoherent.isSelected()) {
+                rt="false";
+            }
+            itsIntegrateChannelsIncoherent.limits = rt;
+            saveNode(itsIntegrateChannelsIncoherent);
+        }
+        
         return true;
     }
 
-    private void deletePencil() {
-        int row = pencilConfigurationPanel.getSelectedRow();
-
-        if (JOptionPane.showConfirmDialog(this,"Are you sure you want to delete this Pencil ?","Delete Pencil",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
-            if (row > -1) {
-                itsPencilConfigurationTableModel.removeRow(row);
-                // No selection anymore after delete, so buttons disabled again
-                this.editPencilButton.setEnabled(false);
-                this.deletePencilButton.setEnabled(false);
-
-
-            }
-        }
-
-      if (pencilConfigurationPanel.getTableModel().getRowCount() == 8) {
-        this.addPencilButton.setEnabled(false);
-      } else {
-        this.addPencilButton.setEnabled(true);
-      }
-    }
-
-    private void addPencil() {
-
-        itsSelectedRow=-1;
-        // set selection to defaults.
-        String [] selection = {itsAngle1.elementAt(0),itsAngle2.elementAt(0),itsCoordTypes.elementAt(0)};
-        if (editting) {
-            itsSelectedRow = pencilConfigurationPanel.getSelectedRow();
-            selection = itsPencilConfigurationTableModel.getSelection(itsSelectedRow);
-
-            // if no row is selected, nothing to be done
-            if (selection == null || selection[0].equals("")) {
-                return;
-            }
-        }
-        pencilDialog = new PencilDialog(itsMainFrame,true,selection);
-        pencilDialog.setLocationRelativeTo(this);
-        if (editting) {
-            pencilDialog.setBorderTitle("edit Pencil");
-        } else {
-            pencilDialog.setBorderTitle("add new Pencil");
-        }
-        pencilDialog.setVisible(true);
-
-        // check if something has changed
-        if (pencilDialog.hasChanged()) {
-            String[] newRow = pencilDialog.getBeam();
-            // check if we are editting an entry or adding a new entry
-            if (editting) {
-                itsPencilConfigurationTableModel.updateRow(newRow,itsSelectedRow);
-                // set editting = false
-                editting=false;
-            } else {
-                itsPencilConfigurationTableModel.addRow(newRow[0],newRow[1],newRow[2]);
-            }
-        }
-
-        this.editPencilButton.setEnabled(false);
-        this.deletePencilButton.setEnabled(false);
-        this.addPencilButton.setEnabled(true);
-
-    }
     
     /** This method is called from within the constructor to
      * initialize the form.
@@ -1254,8 +1142,6 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
         jPanel7 = new javax.swing.JPanel();
         labelNrPPFTaps = new javax.swing.JLabel();
         inputNrPPFTaps = new javax.swing.JTextField();
-        labelPartition = new javax.swing.JLabel();
-        inputPartition = new javax.swing.JTextField();
         jPanel11 = new javax.swing.JPanel();
         labelSubbandsPerMs = new javax.swing.JLabel();
         inputSubbandsPerMS = new javax.swing.JTextField();
@@ -1263,23 +1149,20 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
         labelIntegrationTime = new javax.swing.JLabel();
         inputIntegrationTime = new javax.swing.JTextField();
         jLabel2 = new javax.swing.JLabel();
-        StokesPanel = new javax.swing.JPanel();
-        labelWhich = new javax.swing.JLabel();
-        inputWhich = new javax.swing.JComboBox();
-        inputIntegrateChannels = new javax.swing.JCheckBox();
-        labelIntegrationsteps = new javax.swing.JLabel();
-        inputIntegrationSteps = new javax.swing.JTextField();
-        jPanel3 = new javax.swing.JPanel();
-        pencilConfigurationPanel = new nl.astron.lofar.sas.otbcomponents.TablePanel();
-        addPencilButton = new javax.swing.JButton();
-        editPencilButton = new javax.swing.JButton();
-        deletePencilButton = new javax.swing.JButton();
+        CoherentStokesPanel = new javax.swing.JPanel();
+        labelWhichCoherent = new javax.swing.JLabel();
+        inputWhichCoherent = new javax.swing.JComboBox();
+        inputIntegrateChannelsCoherent = new javax.swing.JCheckBox();
+        labelIntegrationstepsCoherent = new javax.swing.JLabel();
+        inputIntegrationStepsCoherent = new javax.swing.JTextField();
+        IncoherentStokesPanel = new javax.swing.JPanel();
+        labelWhichIncoherent = new javax.swing.JLabel();
+        inputWhichIncoherent = new javax.swing.JComboBox();
+        inputIntegrateChannelsIncoherent = new javax.swing.JCheckBox();
+        labelIntegrationstepsIncoherent = new javax.swing.JLabel();
+        inputIntegrationStepsIncoherent = new javax.swing.JTextField();
         PencilInfoPanel = new javax.swing.JPanel();
         inputFlysEye = new javax.swing.JCheckBox();
-        labelNrRings = new javax.swing.JLabel();
-        inputNrRings = new javax.swing.JTextField();
-        labelRingSize = new javax.swing.JLabel();
-        inputRingSize = new javax.swing.JTextField();
         buttonPanel1 = new nl.astron.lofar.sas.otbcomponents.ButtonPanel();
 
         javax.swing.GroupLayout jPanel9Layout = new javax.swing.GroupLayout(jPanel9);
@@ -1300,7 +1183,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
         jPanel1.setPreferredSize(new java.awt.Dimension(100, 25));
         jPanel1.setLayout(new java.awt.BorderLayout());
 
-        jLabel1.setFont(new java.awt.Font("Tahoma", 1, 11));
+        jLabel1.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel1.setText("OLAP Details");
         jPanel1.add(jLabel1, java.awt.BorderLayout.CENTER);
@@ -1416,7 +1299,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                     .addGroup(jPanel8Layout.createSequentialGroup()
                         .addGap(43, 43, 43)
                         .addComponent(jLabel3)))
-                .addContainerGap(187, Short.MAX_VALUE))
+                .addContainerGap(127, Short.MAX_VALUE))
         );
         jPanel8Layout.setVerticalGroup(
             jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1472,20 +1355,14 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
 
         labelNrPPFTaps.setText("# PPFTaps:");
 
-        labelPartition.setText("Partition:");
-
         javax.swing.GroupLayout jPanel7Layout = new javax.swing.GroupLayout(jPanel7);
         jPanel7.setLayout(jPanel7Layout);
         jPanel7Layout.setHorizontalGroup(
             jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel7Layout.createSequentialGroup()
-                .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(labelPartition, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(labelNrPPFTaps, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addComponent(labelNrPPFTaps)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(inputPartition)
-                    .addComponent(inputNrPPFTaps, javax.swing.GroupLayout.PREFERRED_SIZE, 154, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addComponent(inputNrPPFTaps, javax.swing.GroupLayout.PREFERRED_SIZE, 154, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(47, Short.MAX_VALUE))
         );
         jPanel7Layout.setVerticalGroup(
@@ -1494,10 +1371,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                 .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(labelNrPPFTaps)
                     .addComponent(inputNrPPFTaps, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(labelPartition)
-                    .addComponent(inputPartition, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(59, Short.MAX_VALUE))
         );
 
         jPanel11.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Storage Proc", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
@@ -1520,7 +1394,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                 .addGroup(jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(labelSubbandsPerMs)
                     .addComponent(inputSubbandsPerMS, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(60, Short.MAX_VALUE))
+                .addContainerGap(52, Short.MAX_VALUE))
         );
 
         CorrelatorPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Correlator", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
@@ -1542,7 +1416,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                 .addComponent(inputIntegrationTime, javax.swing.GroupLayout.PREFERRED_SIZE, 54, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jLabel2)
-                .addContainerGap())
+                .addContainerGap(28, Short.MAX_VALUE))
         );
         CorrelatorPanelLayout.setVerticalGroup(
             CorrelatorPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1551,123 +1425,104 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                     .addComponent(labelIntegrationTime)
                     .addComponent(inputIntegrationTime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel2))
-                .addContainerGap(42, Short.MAX_VALUE))
+                .addContainerGap(69, Short.MAX_VALUE))
         );
 
-        StokesPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Stokes", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
-        StokesPanel.setToolTipText("Stokes");
+        CoherentStokesPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Coherent Stokes", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
+        CoherentStokesPanel.setToolTipText("Stokes");
 
-        labelWhich.setText("which");
+        labelWhichCoherent.setText("which");
 
-        inputWhich.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-        inputWhich.setEnabled(false);
+        inputWhichCoherent.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        inputWhichCoherent.setEnabled(false);
 
-        inputIntegrateChannels.setText("integrate Channels");
-        inputIntegrateChannels.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 0));
-        inputIntegrateChannels.setEnabled(false);
-        inputIntegrateChannels.setMargin(new java.awt.Insets(0, 0, 0, 0));
+        inputIntegrateChannelsCoherent.setText("integrate Channels");
+        inputIntegrateChannelsCoherent.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 0));
+        inputIntegrateChannelsCoherent.setEnabled(false);
+        inputIntegrateChannelsCoherent.setMargin(new java.awt.Insets(0, 0, 0, 0));
 
-        labelIntegrationsteps.setText("integration Steps:");
+        labelIntegrationstepsCoherent.setText("integration Steps:");
 
-        inputIntegrationSteps.setEnabled(false);
+        inputIntegrationStepsCoherent.setEnabled(false);
 
-        javax.swing.GroupLayout StokesPanelLayout = new javax.swing.GroupLayout(StokesPanel);
-        StokesPanel.setLayout(StokesPanelLayout);
-        StokesPanelLayout.setHorizontalGroup(
-            StokesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(StokesPanelLayout.createSequentialGroup()
-                .addGroup(StokesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(inputIntegrateChannels)
-                    .addGroup(StokesPanelLayout.createSequentialGroup()
-                        .addGroup(StokesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                            .addComponent(labelIntegrationsteps, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(labelWhich, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 103, Short.MAX_VALUE))
+        javax.swing.GroupLayout CoherentStokesPanelLayout = new javax.swing.GroupLayout(CoherentStokesPanel);
+        CoherentStokesPanel.setLayout(CoherentStokesPanelLayout);
+        CoherentStokesPanelLayout.setHorizontalGroup(
+            CoherentStokesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(CoherentStokesPanelLayout.createSequentialGroup()
+                .addGroup(CoherentStokesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(inputIntegrateChannelsCoherent)
+                    .addGroup(CoherentStokesPanelLayout.createSequentialGroup()
+                        .addGroup(CoherentStokesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                            .addComponent(labelIntegrationstepsCoherent, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(labelWhichCoherent, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 103, Short.MAX_VALUE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(StokesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(inputIntegrationSteps)
-                            .addComponent(inputWhich, 0, 173, Short.MAX_VALUE))))
-                .addContainerGap(74, Short.MAX_VALUE))
+                        .addGroup(CoherentStokesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(inputIntegrationStepsCoherent)
+                            .addComponent(inputWhichCoherent, 0, 173, Short.MAX_VALUE))))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
-        StokesPanelLayout.setVerticalGroup(
-            StokesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(StokesPanelLayout.createSequentialGroup()
-                .addGroup(StokesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(labelWhich)
-                    .addComponent(inputWhich, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+        CoherentStokesPanelLayout.setVerticalGroup(
+            CoherentStokesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(CoherentStokesPanelLayout.createSequentialGroup()
+                .addGroup(CoherentStokesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(labelWhichCoherent)
+                    .addComponent(inputWhichCoherent, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(8, 8, 8)
-                .addGroup(StokesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(labelIntegrationsteps)
-                    .addComponent(inputIntegrationSteps, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGroup(CoherentStokesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(labelIntegrationstepsCoherent)
+                    .addComponent(inputIntegrationStepsCoherent, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(inputIntegrateChannels, javax.swing.GroupLayout.PREFERRED_SIZE, 13, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(103, Short.MAX_VALUE))
+                .addComponent(inputIntegrateChannelsCoherent, javax.swing.GroupLayout.PREFERRED_SIZE, 13, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
-        jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Pencil Configuration", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
-        jPanel3.setPreferredSize(new java.awt.Dimension(200, 125));
-        jPanel3.setRequestFocusEnabled(false);
-        jPanel3.setVerifyInputWhenFocusTarget(false);
+        IncoherentStokesPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Incoherent Stokes", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
+        IncoherentStokesPanel.setToolTipText("Stokes");
 
-        pencilConfigurationPanel.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                pencilConfigurationPanelMouseClicked(evt);
-            }
-        });
+        labelWhichIncoherent.setText("which");
 
-        addPencilButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_add.gif"))); // NOI18N
-        addPencilButton.setText("add pencil");
-        addPencilButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
-        addPencilButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                addPencilButtonActionPerformed(evt);
-            }
-        });
+        inputWhichIncoherent.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        inputWhichIncoherent.setEnabled(false);
 
-        editPencilButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_edit.gif"))); // NOI18N
-        editPencilButton.setText("edit pencil");
-        editPencilButton.setEnabled(false);
-        editPencilButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
-        editPencilButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                editPencilButtonActionPerformed(evt);
-            }
-        });
+        inputIntegrateChannelsIncoherent.setText("integrate Channels");
+        inputIntegrateChannelsIncoherent.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 0));
+        inputIntegrateChannelsIncoherent.setEnabled(false);
+        inputIntegrateChannelsIncoherent.setMargin(new java.awt.Insets(0, 0, 0, 0));
 
-        deletePencilButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_delete.png"))); // NOI18N
-        deletePencilButton.setText("delete pencil");
-        deletePencilButton.setEnabled(false);
-        deletePencilButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
-        deletePencilButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                deletePencilButtonActionPerformed(evt);
-            }
-        });
+        labelIntegrationstepsIncoherent.setText("integration Steps:");
 
-        javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
-        jPanel3.setLayout(jPanel3Layout);
-        jPanel3Layout.setHorizontalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel3Layout.createSequentialGroup()
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(pencilConfigurationPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 946, Short.MAX_VALUE)
-                    .addGroup(jPanel3Layout.createSequentialGroup()
-                        .addComponent(addPencilButton)
+        inputIntegrationStepsIncoherent.setEnabled(false);
+
+        javax.swing.GroupLayout IncoherentStokesPanelLayout = new javax.swing.GroupLayout(IncoherentStokesPanel);
+        IncoherentStokesPanel.setLayout(IncoherentStokesPanelLayout);
+        IncoherentStokesPanelLayout.setHorizontalGroup(
+            IncoherentStokesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(IncoherentStokesPanelLayout.createSequentialGroup()
+                .addGroup(IncoherentStokesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(inputIntegrateChannelsIncoherent)
+                    .addGroup(IncoherentStokesPanelLayout.createSequentialGroup()
+                        .addGroup(IncoherentStokesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                            .addComponent(labelIntegrationstepsIncoherent, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(labelWhichIncoherent, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 103, Short.MAX_VALUE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(editPencilButton)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(deletePencilButton)))
-                .addContainerGap())
+                        .addGroup(IncoherentStokesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(inputIntegrationStepsIncoherent)
+                            .addComponent(inputWhichIncoherent, 0, 173, Short.MAX_VALUE))))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
-        jPanel3Layout.setVerticalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel3Layout.createSequentialGroup()
-                .addComponent(pencilConfigurationPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 134, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(editPencilButton)
-                    .addComponent(addPencilButton)
-                    .addComponent(deletePencilButton))
-                .addContainerGap(14, Short.MAX_VALUE))
+        IncoherentStokesPanelLayout.setVerticalGroup(
+            IncoherentStokesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(IncoherentStokesPanelLayout.createSequentialGroup()
+                .addGroup(IncoherentStokesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(labelWhichIncoherent)
+                    .addComponent(inputWhichIncoherent, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(8, 8, 8)
+                .addGroup(IncoherentStokesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(labelIntegrationstepsIncoherent)
+                    .addComponent(inputIntegrationStepsIncoherent, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(inputIntegrateChannelsIncoherent, javax.swing.GroupLayout.PREFERRED_SIZE, 13, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
         PencilInfoPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "PencilInfo", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
@@ -1683,45 +1538,20 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
             }
         });
 
-        labelNrRings.setText("# rings:");
-
-        inputNrRings.setEnabled(false);
-
-        labelRingSize.setText("Ring size:");
-
-        inputRingSize.setEnabled(false);
-
         javax.swing.GroupLayout PencilInfoPanelLayout = new javax.swing.GroupLayout(PencilInfoPanel);
         PencilInfoPanel.setLayout(PencilInfoPanelLayout);
         PencilInfoPanelLayout.setHorizontalGroup(
             PencilInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(PencilInfoPanelLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(PencilInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(PencilInfoPanelLayout.createSequentialGroup()
-                        .addGroup(PencilInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(labelRingSize, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(labelNrRings, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(PencilInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(inputNrRings, javax.swing.GroupLayout.PREFERRED_SIZE, 99, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(inputRingSize, javax.swing.GroupLayout.PREFERRED_SIZE, 99, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                    .addComponent(inputFlysEye))
-                .addContainerGap(142, Short.MAX_VALUE))
+                .addComponent(inputFlysEye)
+                .addContainerGap(210, Short.MAX_VALUE))
         );
         PencilInfoPanelLayout.setVerticalGroup(
             PencilInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(PencilInfoPanelLayout.createSequentialGroup()
                 .addComponent(inputFlysEye, javax.swing.GroupLayout.PREFERRED_SIZE, 13, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(7, 7, 7)
-                .addGroup(PencilInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(labelNrRings)
-                    .addComponent(inputNrRings, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(PencilInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(labelRingSize)
-                    .addComponent(inputRingSize, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(14, Short.MAX_VALUE))
+                .addContainerGap(59, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
@@ -1729,41 +1559,41 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
         jPanel4Layout.setHorizontalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel4Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jPanel3, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 968, Short.MAX_VALUE)
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                     .addComponent(jPanel8, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel4Layout.createSequentialGroup()
-                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(jPanel11, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jPanel7, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addContainerGap()
                         .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jPanel11, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(18, 18, 18)
+                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addComponent(PencilInfoPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(CorrelatorPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 313, Short.MAX_VALUE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(StokesPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                .addContainerGap())
+                            .addComponent(CorrelatorPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addGap(18, 18, 18)
+                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(IncoherentStokesPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(CoherentStokesPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                .addContainerGap(25, Short.MAX_VALUE))
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel4Layout.createSequentialGroup()
-                .addGap(12, 12, 12)
+                .addContainerGap()
                 .addComponent(jPanel8, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(StokesPanel, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(jPanel4Layout.createSequentialGroup()
-                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(CorrelatorPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jPanel7, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 89, Short.MAX_VALUE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(PencilInfoPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jPanel11, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, 206, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap())
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 6, Short.MAX_VALUE)
+                        .addComponent(CoherentStokesPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(CorrelatorPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jPanel7, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(IncoherentStokesPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(PencilInfoPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jPanel11, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(24, 24, 24))
         );
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
@@ -1773,13 +1603,13 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(4230, Short.MAX_VALUE))
+                .addContainerGap(4293, Short.MAX_VALUE))
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(2368, Short.MAX_VALUE))
+                .addContainerGap(2564, Short.MAX_VALUE))
         );
 
         jScrollPane1.setViewportView(jPanel2);
@@ -1822,26 +1652,6 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
         checkSettings();
     }//GEN-LAST:event_inputOutputIncoherentStokesActionPerformed
 
-    private void pencilConfigurationPanelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_pencilConfigurationPanelMouseClicked
-        if (addPencilButton.isEnabled()) {
-            editPencilButton.setEnabled(true);
-            deletePencilButton.setEnabled(true);
-        }
-}//GEN-LAST:event_pencilConfigurationPanelMouseClicked
-
-    private void addPencilButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addPencilButtonActionPerformed
-        addPencil();
-}//GEN-LAST:event_addPencilButtonActionPerformed
-
-    private void editPencilButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_editPencilButtonActionPerformed
-        editting=true;
-        addPencil();
-}//GEN-LAST:event_editPencilButtonActionPerformed
-
-    private void deletePencilButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deletePencilButtonActionPerformed
-        deletePencil();
-}//GEN-LAST:event_deletePencilButtonActionPerformed
-
     private void inputFlysEyeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputFlysEyeActionPerformed
        checkSettings();
     }//GEN-LAST:event_inputFlysEyeActionPerformed
@@ -1852,17 +1662,18 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
     private JFileChooser fc           = null;  
     private boolean  editting = false;
     private int      itsSelectedRow = -1;
-    private PencilConfigurationTableModel       itsPencilConfigurationTableModel = null;
-    private PencilDialog                        pencilDialog = null;
 
     //Olap specific parameters
     private jOTDBnode itsDelayCompensation=null;
+    private jOTDBnode itsNrTimesInFrame=null;
+    private jOTDBnode itsNrSubbandsPerFrame=null;
     private jOTDBnode itsNrBitsPerSample=null;
     private jOTDBnode itsNrSecondsOfBuffer=null;
-    private jOTDBnode itsNrTimesInFrame=null;
     private jOTDBnode itsMaxNetworkDelay=null;
-    private jOTDBnode itsNrSubbandsPerFrame=null;
     private jOTDBnode itsCorrectBandPass=null;
+    
+    
+    // _Output params
     private jOTDBnode itsOutputCorrelatedData=null;
     private jOTDBnode itsOutputFilteredData=null;
     private jOTDBnode itsOutputBeamFormedData=null;
@@ -1872,8 +1683,6 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
     
     // OLAP-CNProc parameters
     private jOTDBnode itsNrPPFTaps=null;
-    private jOTDBnode itsPartition=null;
-
  
     // OLAP-StorageProc parameters
     private jOTDBnode itsSubbandsPerMS=null;
@@ -1881,46 +1690,39 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
     //Correlator
     private jOTDBnode itsIntegrationTime=null;
 
-    // Stokes
-    private jOTDBnode itsWhich=null;
-    private jOTDBnode itsIntegrateChannels=null;
-    private jOTDBnode itsIntegrationSteps=null;
+    // CNProc_Coherentstokes
+    private jOTDBnode itsWhichCoherent=null;
+    private jOTDBnode itsIntegrateChannelsCoherent=null;
+    private jOTDBnode itsIntegrationStepsCoherent=null;
+
+    // CNProc_Incoherentstokes
+    private jOTDBnode itsWhichIncoherent=null;
+    private jOTDBnode itsIntegrateChannelsIncoherent=null;
+    private jOTDBnode itsIntegrationStepsIncoherent=null;
 
     // PencilInfo
     private jOTDBnode itsFlysEye=null;
-    private jOTDBnode itsNrRings=null;
-    private jOTDBnode itsRingSize=null;
 
-    // Pencil
-    private Vector<jOTDBnode> itsPencils          = new Vector<jOTDBnode>();
-    private Vector<String>    itsCoordTypes      = new Vector<String>();
-
-    // Olap Pencil parameters
-    private Vector<String>    itsAngle1         = new Vector<String>();
-    private Vector<String>    itsAngle2         = new Vector<String>();
-
-    private jOTDBnode itsNrPencils=null;
 
     
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JPanel CoherentStokesPanel;
     private javax.swing.JPanel CorrelatorPanel;
+    private javax.swing.JPanel IncoherentStokesPanel;
     private javax.swing.JPanel PencilInfoPanel;
-    private javax.swing.JPanel StokesPanel;
-    private javax.swing.JButton addPencilButton;
     private nl.astron.lofar.sas.otbcomponents.ButtonPanel buttonPanel1;
-    private javax.swing.JButton deletePencilButton;
-    private javax.swing.JButton editPencilButton;
     private javax.swing.JCheckBox inputCorrectBandPass;
     private javax.swing.JCheckBox inputDelayCompensation;
     private javax.swing.JCheckBox inputFlysEye;
-    private javax.swing.JCheckBox inputIntegrateChannels;
-    private javax.swing.JTextField inputIntegrationSteps;
+    private javax.swing.JCheckBox inputIntegrateChannelsCoherent;
+    private javax.swing.JCheckBox inputIntegrateChannelsIncoherent;
+    private javax.swing.JTextField inputIntegrationStepsCoherent;
+    private javax.swing.JTextField inputIntegrationStepsIncoherent;
     private javax.swing.JTextField inputIntegrationTime;
     private javax.swing.JTextField inputMaxNetworkDelay;
     private javax.swing.JTextField inputNrBitsPerSample;
     private javax.swing.JTextField inputNrPPFTaps;
-    private javax.swing.JTextField inputNrRings;
     private javax.swing.JTextField inputNrSecondsOfBuffer;
     private javax.swing.JTextField inputNrSubbandsPerFrame;
     private javax.swing.JTextField inputNrTimesInFrame;
@@ -1929,17 +1731,15 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JCheckBox inputOutputCorrelatedData;
     private javax.swing.JCheckBox inputOutputFilteredData;
     private javax.swing.JCheckBox inputOutputIncoherentStokes;
-    private javax.swing.JTextField inputPartition;
-    private javax.swing.JTextField inputRingSize;
     private javax.swing.JTextField inputSubbandsPerMS;
-    private javax.swing.JComboBox inputWhich;
+    private javax.swing.JComboBox inputWhichCoherent;
+    private javax.swing.JComboBox inputWhichIncoherent;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel11;
     private javax.swing.JPanel jPanel2;
-    private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JPanel jPanel7;
     private javax.swing.JPanel jPanel8;
@@ -1947,18 +1747,16 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JLabel labelDelayCompensation;
     private javax.swing.JLabel labelIntegrationTime;
-    private javax.swing.JLabel labelIntegrationsteps;
+    private javax.swing.JLabel labelIntegrationstepsCoherent;
+    private javax.swing.JLabel labelIntegrationstepsIncoherent;
     private javax.swing.JLabel labelMaxNetworkDelay;
     private javax.swing.JLabel labelNrBitsPerSample;
     private javax.swing.JLabel labelNrPPFTaps;
-    private javax.swing.JLabel labelNrRings;
     private javax.swing.JLabel labelNrSubbandsPerFrame;
     private javax.swing.JLabel labelNrTimesInFrame;
-    private javax.swing.JLabel labelPartition;
-    private javax.swing.JLabel labelRingSize;
     private javax.swing.JLabel labelSubbandsPerMs;
-    private javax.swing.JLabel labelWhich;
-    private nl.astron.lofar.sas.otbcomponents.TablePanel pencilConfigurationPanel;
+    private javax.swing.JLabel labelWhichCoherent;
+    private javax.swing.JLabel labelWhichIncoherent;
     private javax.swing.JTextField subbandsPerFrameDerefText;
     // End of variables declaration//GEN-END:variables
  
@@ -1971,6 +1769,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
      * Registers ActionListener to receive events.
      * @param listener The listener to register.
      */
+    @Override
     public synchronized void addActionListener(java.awt.event.ActionListener listener) {
 
         if (myListenerList == null ) {
@@ -1983,6 +1782,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
      * Removes ActionListener from the list of listeners.
      * @param listener The listener to remove.
      */
+    @Override
     public synchronized void removeActionListener(java.awt.event.ActionListener listener) {
 
         myListenerList.remove (java.awt.event.ActionListener.class, listener);

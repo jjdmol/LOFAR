@@ -32,7 +32,9 @@
 */
 class Plot2DPointSet{
 	public:
-		Plot2DPointSet() { }
+		Plot2DPointSet() :
+			_rotateUnits(false)
+		{ }
 		~Plot2DPointSet() { }
 		
 		enum DrawingStyle { DrawLines, DrawPoints, DrawColumns };
@@ -42,15 +44,23 @@ class Plot2DPointSet{
 		
 		void SetXIsTime(const bool xIsTime) { _xIsTime = xIsTime; }
 		bool XIsTime() const { return _xIsTime; }
+		
+		const std::string XUnits() const { return _xDesc; }
+		const std::string YUnits() const { return _yDesc; }
 
-		const std::string &XUnits() const { return _xUnits; }
-		void SetXUnits(std::string xUnits) { _xUnits = xUnits; }
+		const std::string &XDesc() const { return _xDesc; }
+		void SetXDesc(std::string xDesc) { _xDesc = xDesc; }
 
-		const std::string &YUnits() const { return _yUnits; }
-		void SetYUnits(std::string yUnits) { _yUnits = yUnits; }
+		const std::string &YDesc() const { return _yDesc; }
+		void SetYDesc(std::string yDesc) { _yDesc = yDesc; }
 
 		enum DrawingStyle DrawingStyle() const { return _drawingStyle; }
 		void SetDrawingStyle(enum DrawingStyle drawingStyle) { _drawingStyle = drawingStyle; }
+
+		void Clear()
+		{
+			_points.clear();
+		}
 
 		void PushDataPoint(double x, double y)
 		{
@@ -130,7 +140,33 @@ class Plot2DPointSet{
 		{
 			return MaxY();
 		}
-
+		void SetTickLabels(const std::vector<std::string> &tickLabels)
+		{
+			_tickLabels = tickLabels;
+		}
+		bool HasTickLabels() const
+		{
+			return !_tickLabels.empty();
+		}
+		const std::vector<std::string> &TickLabels() const
+		{
+			return _tickLabels;
+		}
+		void SetRotateUnits(bool rotateUnits)
+		{
+			_rotateUnits = rotateUnits;
+		}
+		bool RotateUnits() const
+		{
+			return _rotateUnits;
+		}
+		/**
+		 * Set the range that this point set minimally wants to have visualized. Other point sets might
+		 * request a larger range, which might enlarge this request.
+		 */
+		void SetYRange(double yMin, double yMax)
+		{
+		}
 	private:
 		struct Point2D
 		{
@@ -144,9 +180,11 @@ class Plot2DPointSet{
 
 		std::vector<Point2D> _points;
 		std::string _label;
-		std::string _xUnits;
-		std::string _yUnits;
+		std::string _xDesc;
+		std::string _yDesc;
 		bool _xIsTime;
+		std::vector<std::string> _tickLabels;
+		bool _rotateUnits;
 		enum DrawingStyle _drawingStyle;
 };
 

@@ -61,9 +61,9 @@ class BLengthPlotPage : public TwoDimensionalPlotPage {
 			return _includeAutoCorrelationsButton.get_active() ? _statisticsWithAutocorrelations : _statisticsWithoutAutocorrelations;
 		}
 		
-		virtual void StartLine(Plot2D &plot, const std::string &name)
+		virtual void StartLine(Plot2D &plot, const std::string &name, const std::string &yAxisDesc)
 		{
-			plot.StartLine(name, "Baseline length (m)", "Value", false, Plot2DPointSet::DrawPoints);
+			plot.StartLine(name, "Baseline length (m)", yAxisDesc, false, Plot2DPointSet::DrawPoints);
 		}
 		virtual void addCustomPlotButtons(Gtk::VBox &container)
 		{

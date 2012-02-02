@@ -267,7 +267,7 @@ bool ParentControl::nowInState(const string&		cntlrName,
 
 	PIiter		parent = findParentOnName(cntlrName);
 	if (!isParent(parent)) {
-		LOG_ERROR_STR("Unknown controllername " << cntlrName << 
+		LOG_WARN_STR("Unknown controllername " << cntlrName << 
 					  ", can not register new state: " << cts.name(newState));
 		return (false);
 	}

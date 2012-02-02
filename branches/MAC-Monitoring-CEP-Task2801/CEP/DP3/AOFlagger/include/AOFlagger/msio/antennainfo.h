@@ -34,16 +34,32 @@
 	@author A.R. Offringa <offringa@astro.rug.nl>
 */
 struct EarthPosition : public Serializable {
-	num_t x, y, z;
+	double x, y, z;
 	std::string ToString() {
 		std::stringstream s;
 		s.setf(std::ios::fixed,std::ios::floatfield);
 		s.width(16);
 		s.precision(16);
-		s << x << "," << y << "," << z << " (alt " << sqrtl(x*x+y*y+z*z) << ")";
+		s << x << "," << y << "," << z << " (alt " << sqrtl(x*x+y*y+z*z) << "), or "
+		<< "N" << Lattitude()*180/M_PI << " E" << Longitude()*180/M_PI;
 		return s.str();
 	}
 	EarthPosition FromITRS(long double x, long double y, long double z);
+	
+	double Longitude() const
+	{
+		return atan2l(y, x);
+	}
+
+	double Lattitude() const
+	{
+		return atan2l(z, sqrtl((long double) x*x + y*y));
+	}
+	
+	double Altitude() const
+	{
+		return sqrtl((long double) x*x+y*y+z*z);
+	}
 
 	virtual void Serialize(std::ostream &stream) const
 	{

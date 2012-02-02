@@ -68,20 +68,21 @@ namespace LOFAR {
       /**
        * Get the board id for this sync action.
        */
-      int getBoardId();
+      int getBoardId() { return (m_board_id); }
 
       /**
        * Get a reference to the port for SyncAction.
        */
-      GCFPortInterface& getBoardPort();
+      GCFPortInterface& getBoardPort() { return (m_board_port); }
 
       /*@{*/
       /**
        * Has the state machine reached its final state?
        */
-      void setCompleted(bool completed);
-      bool hasCompleted() const;
-	  void setFinished() { m_completed = true; m_current_index = m_n_indices; }
+      void setCompleted(bool completed)	{ m_completed = completed; }
+      bool hasCompleted() const			{ return (m_completed); }
+	  bool hasErrors() const 			{ return (itsHasError); }
+	  void setFinished() 				{ m_completed = true; m_current_index = m_n_indices; }
       /*@}*/
 
       /**
@@ -111,8 +112,8 @@ namespace LOFAR {
        * setContinue(true) is called when no event
        * has been sent and we need to continue to the next index.
        */
-      void setContinue(bool cont);
-      bool doContinue() const;
+      void setContinue(bool cont) 	{ m_continue = cont; }
+      bool doContinue() const		{ return (m_continue); }
       /*@}*/
 
    private:
@@ -123,6 +124,7 @@ namespace LOFAR {
       int               m_board_id;
       bool              m_completed; /** indicates whether the state machine has reached its final state */
       bool              m_continue; /** no event sent, continue to index */
+	  bool				itsHasError;	// True if an error occured during the sequence.
       int               m_n_indices;
       int               m_current_index;
       int               m_retries;
