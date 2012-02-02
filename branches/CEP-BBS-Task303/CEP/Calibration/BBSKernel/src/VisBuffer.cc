@@ -226,10 +226,20 @@ void VisBuffer::flagsNaN()
     for(samplesIterator samplesIt = samples.data(), end = samples.data() + samples.num_elements();
         samplesIt != end; ++samplesIt, ++flagsIt)
     {   
-        if(casa::isNaN(*samplesIt))
+        // If any of the correlations is a NaN, flag all correlations
+        for(unsigned int i=0; i<nCorrelations(); i++)
         {
-            *flagsIt = *flagsIt | 1;        
+          if(casa::isNaN(*(samplesIt+i)))
+          {
+            for(unsigned int j=0; j<nCorrelations(); j++)
+            {
+              *(flagsIt+j) = *(flagsIt+j) | 1;
+            }
+          }
+          break;
         }
+        flagsIt=flagsIt+nCorrelations()-1;
+        samplesIt=samplesIt+nCorrelations()-1;
     }
 }
 
