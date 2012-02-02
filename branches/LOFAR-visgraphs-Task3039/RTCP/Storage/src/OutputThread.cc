@@ -156,7 +156,7 @@ void OutputThread::createMS()
         itsWriter = new MSWriterLDA<float,3>(path.c_str(), itsParset, itsStreamNr, itsIsBigEndian);
         break;
       default:
-        itsWriter = new MSWriterFile(path, itsOutputType == BEAM_FORMED_DATA);
+        itsWriter = new MSWriterFile(path);
         break;
     }
   } catch (SystemCallException &ex) {
