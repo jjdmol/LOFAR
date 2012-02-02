@@ -290,7 +290,7 @@ class Parset(util.Parset.Parset):
         def getlist( dataproduct ):
           enabled = self.getBool("Observation.DataProducts.Output_%s.enabled" % (dataproduct,), False)
 
-          if enabled:
+          if True or enabled: # scheduler can still set filenames without the corresponding enabled flag
             filenames = self.get("Observation.DataProducts.Output_%s.filenames" % (dataproduct,), [])
             locations = self.get("Observation.DataProducts.Output_%s.locations" % (dataproduct,), [])
           else:
