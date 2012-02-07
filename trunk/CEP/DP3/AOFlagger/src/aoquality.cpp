@@ -438,29 +438,30 @@ void actionCombine(const std::string outFilename, const std::vector<std::string>
 		{
 			if(remote)
 			{
-				throw std::runtime_error("Can't yet create a new set with clustered observations -- make output filename yourself");
+				/*aoRemote::ClusteredObservation *observation = aoRemote::ClusteredObservation::Load(firstInFilename);
+				aoRemote::ProcessCommander commander(*observation);
+				commander.PushReadAntennaTablesTask();
+				commander.PushReadQualityTablesTask();
+				commander.Run();
+				QualityTablesFormatter formatter(outFilename);
+				commander.Statistics().Save(formatter);
+				delete observation;*/
+			} else {
+				// TODO read antenna tables from "firstInFilename"
+				// TODO read quality tables from all inFilenames
 			}
-			casa::Table templateSet(firstInFilename);
-			casa::Table templateAntennaTable = templateSet.keywordSet().asTable("ANTENNA");
+			// TODO: create main table
+			//casa::SetupNewTable mainTableSetup(outFilename, templateSet.tableDesc(), casa::Table::New);
+			//casa::Table mainOutputTable(mainTableSetup);
 			
-			casa::SetupNewTable mainTableSetup(outFilename, templateSet.tableDesc(), casa::Table::New);
-			casa::Table mainOutputTable(mainTableSetup);
+			// TODO: create antenna table			
+			//casa::SetupNewTable antennaTableSetup(outFilename + "/ANTENNA", templateAntennaTable.tableDesc(), casa::Table::New);
+			//casa::Table antennaOutputTable(antennaTableSetup);
+			//mainOutputTable.rwKeywordSet().defineTable("ANTENNA", antennaOutputTable);
 			
-			casa::SetupNewTable antennaTableSetup(outFilename + "/ANTENNA", templateAntennaTable.tableDesc(), casa::Table::New);
-			casa::Table antennaOutputTable(antennaTableSetup);
-			mainOutputTable.rwKeywordSet().defineTable("ANTENNA", antennaOutputTable);
+			// TODO fill antenna table
 			
-			casa::TableCopy::copyRows(antennaOutputTable, templateAntennaTable);
-		}
-		
-		if(remote)
-		{
-			aoRemote::ClusteredObservation *observation = aoRemote::ClusteredObservation::Load(firstInFilename);
-			aoRemote::ProcessCommander commander(*observation);
-			commander.Run();
-			QualityTablesFormatter formatter(outFilename);
-			commander.Statistics().Save(formatter);
-			delete observation;
+			// TODO fill quality table
 		}
 	}
 }
