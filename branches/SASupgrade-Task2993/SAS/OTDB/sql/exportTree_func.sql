@@ -77,6 +77,7 @@ CREATE OR REPLACE FUNCTION exportTemplateSubTree(INT4, INT4, TEXT)
 	  vResult		TEXT := '';
 	  vRow			RECORD;
 	  vBasename		TEXT;
+	  vTableRow		TEXT;
 
 	BEGIN
 	  -- Append dot to basename of not topnode
@@ -99,7 +100,7 @@ CREATE OR REPLACE FUNCTION exportTemplateSubTree(INT4, INT4, TEXT)
 
 	  -- call myself for all the children
 	  FOR vRow IN
-	    SELECT	nodeID, name, index
+	    SELECT	nodeID, name, index, recordid, tablename
 	    FROM	VICtemplate
 	    WHERE	treeID = $1
 	    AND	 	parentID = $2
@@ -109,7 +110,12 @@ CREATE OR REPLACE FUNCTION exportTemplateSubTree(INT4, INT4, TEXT)
 		IF vRow.index != -1 THEN
 		  vRow.name := vRow.name || '[' || vRow.index || ']';
 		END IF;
-		vResult := vResult || exportTemplateSubTree($1, vRow.nodeID, vBasename || vRow.name);
+		IF vRow.tablename != '' THEN
+		  EXECUTE 'SELECT * FROM export' || vRow.tablename || '(' || vRow.recordid || ')' INTO vTableRow;
+		  vResult := vResult || vBaseName || vRow.name || '=' || vTableRow || chr(10);
+		ELSE
+		  vResult := vResult || exportTemplateSubTree($1, vRow.nodeID, vBasename || vRow.name);
+		END IF;
 	  END LOOP;
 
 	  RETURN vResult;
@@ -133,6 +139,9 @@ CREATE OR REPLACE FUNCTION exportVICSubTree(INT4, INT4, INT4)
 	DECLARE
 	  vResult		TEXT := '';
 	  vRow			RECORD;
+	  vTableRow		TEXT;
+	  vLastTable	VARCHAR(50) := '';
+	  vDefinition	TEXT := '';
 
 	BEGIN
 	  -- first dump own parameters
@@ -144,20 +153,31 @@ CREATE OR REPLACE FUNCTION exportVICSubTree(INT4, INT4, INT4)
 		AND		leaf = true
 		ORDER BY name
 	  LOOP
-		vResult := vResult || substr(vRow.name,$3) || '=' 
-													|| vRow.value || chr(10);
+		vResult := vResult || substr(vRow.name,$3) || '=' || vRow.value || chr(10);
 	  END LOOP;
 
 	  -- call myself for all the children
 	  FOR vRow IN
-	    SELECT	nodeID, name
+	    SELECT	nodeID, name, recordID, tablename
 	    FROM	VIChierarchy
 	    WHERE	treeID = $1
 	    AND	 	parentID = $2
 		AND		leaf = false
 		ORDER BY name
 	  LOOP
-		vResult := vResult || exportVICSubTree($1, vRow.nodeID, $3);
+		IF vRow.tablename != '' THEN
+			-- export definition before first record
+			IF vRow.tablename != vLastTable THEN
+				EXECUTE 'SELECT * FROM export' || vRow.tablename || 'Definition()' INTO vDefinition;
+				vResult:= vResult || substring(substr(vRow.name,$3) from '([^\\[]+)\\[.*') || 
+						'._Definition=' || vDefinition || chr(10);
+				vLastTable := vRow.tablename;
+			END IF;
+			EXECUTE 'SELECT * FROM export' || vRow.tablename || '(' || vRow.recordID || ')' INTO vTableRow;
+			vResult := vResult || substr(vRow.name,$3) || '=' || vTableRow || chr(10);
+		ELSE
+			vResult := vResult || exportVICSubTree($1, vRow.nodeID, $3);
+		END IF;
 	  END LOOP;
 
 	  RETURN vResult;

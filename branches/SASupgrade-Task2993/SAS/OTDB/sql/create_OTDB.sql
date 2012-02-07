@@ -5,6 +5,7 @@
 \i create_security.sql
 \i create_tree_table.sql
 \i create_types.sql
+\i create_Dataproduct_table.sql
 
 \i create_log_system.sql
 

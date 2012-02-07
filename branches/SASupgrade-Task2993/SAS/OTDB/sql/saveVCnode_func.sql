@@ -24,7 +24,7 @@
 
 --
 -- saveVCnode (authToken, nodeID, name, version, 
---				classif, constraints, description)
+--				classif, constraints, description, tablename)
 --
 -- Saves the new values to the database
 --
@@ -35,7 +35,7 @@
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION saveVCnode(INT4, INT4, VARCHAR(150), INT4, 
-										INT2, TEXT, TEXT)
+										INT2, TEXT, TEXT, TEXT)
   RETURNS INT4 AS '
 	DECLARE
 		vNodeID			VICnodedef.nodeID%TYPE;
@@ -71,7 +71,7 @@ CREATE OR REPLACE FUNCTION saveVCnode(INT4, INT4, VARCHAR(150), INT4,
 		  vNodeID := nextval(\'VICnodedefID\');
 		  -- create new node
 		  INSERT INTO VICnodedef
-		  VALUES	(vNodeID, vName, $4, $5, vConstraints, vDescription);
+		  VALUES	(vNodeID, vName, $4, $5, vConstraints, vDescription, $8);
 		ELSE
 		  -- update node
 		  UPDATE VICnodedef

@@ -30,7 +30,7 @@
 -- Tables:	VICtemplate	insert
 --
 CREATE OR REPLACE FUNCTION attachVTparameters(INT4, INT4)
-  RETURNS VOID AS '
+  RETURNS VOID AS $$
 	DECLARE
 	  vParam		RECORD;
 
@@ -44,15 +44,13 @@ CREATE OR REPLACE FUNCTION attachVTparameters(INT4, INT4)
 	  LOOP
 		-- note: nodeid is generated automatically
 		INSERT INTO VICtemplate (treeid, parentid, originid,
-								 name, index, leaf, 
-								 instances, limits)
+								 name, index, leaf, instances, limits)
 		VALUES (vParam.treeID, $2, vParam.originID,
-				vParam.name, vParam.index, vParam.leaf, 
-				vParam.instances, vParam.limits);
+				vParam.name, vParam.index, vParam.leaf, vParam.instances, vParam.limits);
 	  END LOOP;
 	  RETURN;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 -- helper function
 -- dupVTleafNode(orgNodeID , newParentId, newIndex)
@@ -62,9 +60,11 @@ CREATE OR REPLACE FUNCTION attachVTparameters(INT4, INT4)
 -- Tables:	VICtemplate	insert
 --
 CREATE OR REPLACE FUNCTION dupVTleafNode(INT4, INT4, INT2)
-  RETURNS INT4 AS '
+  RETURNS INT4 AS $$
 	DECLARE
 		vNodeID		INT4;
+		vTablename	VICtemplate.tablename%TYPE;
+		vRecordID	VICtemplate.recordID%TYPE;
 		vOrgNode	RECORD;
 
 	BEGIN
@@ -74,7 +74,7 @@ CREATE OR REPLACE FUNCTION dupVTleafNode(INT4, INT4, INT2)
 	  FROM		VICtemplate
 	  WHERE		nodeID = $1;
 	  IF NOT FOUND THEN
-		RAISE EXCEPTION \'Node % does not exist, cannot duplicate it\', $1;
+		RAISE EXCEPTION 'Node % does not exist, cannot duplicate it', $1;
 		RETURN 0;
 	  END IF;
 
@@ -83,14 +83,14 @@ CREATE OR REPLACE FUNCTION dupVTleafNode(INT4, INT4, INT2)
 
 	  -- check that duplicate does not exist yet.
 	  -- ... check it or not ...
-	  SELECT	nodeID
-	  INTO		vNodeID		-- dummy
+	  SELECT	tablename
+	  INTO		vTablename	
 	  FROM		VICtemplate
 	  WHERE		parentID = $2
 				AND name = vOrgNode.name
 				AND index = $3;
 	  IF FOUND THEN
-		RAISE EXCEPTION \'Node % with index % already exists\',
+		RAISE EXCEPTION 'Node % with index % already exists',
 						vOrgNode.name, $3;
 	 	RETURN 0;
 	  END IF;
@@ -100,23 +100,30 @@ CREATE OR REPLACE FUNCTION dupVTleafNode(INT4, INT4, INT2)
 		vOrgNode.instances := 1;
 	  END IF;
 
+	  -- Is a real table connected to this node?
+	  IF vOrgnode.tablename != '' THEN
+		vTablename := vOrgNode.tablename;
+		vRecordID := createNewRecord(vTablename);
+	  ELSE
+		vTablename := '';
+		vRecordID := 0;
+	  END IF;
+
 	  -- add node itself
-	  vNodeID := nextval(\'VICtemplateID\');
+	  vNodeID := nextval('VICtemplateID');
 	  INSERT INTO 
-	  VICtemplate (treeid, nodeID, 
-				   parentID, originID,
-				   name, index, leaf, 
-				   instances, limits)
-	  VALUES 	  (vOrgNode.treeID, vNodeID, 
-			  	   $2, vOrgNode.originID,
-			  	   vOrgNode.name, $3, vOrgNode.leaf, 
-			  	   vOrgNode.instances, vOrgNode.limits);
+	  VICtemplate (treeid, nodeID, parentID, originID,
+				   name, index, leaf, instances, 
+				   limits, recordID, tablename)
+	  VALUES 	  (vOrgNode.treeID, vNodeID, $2, vOrgNode.originID,
+			  	   vOrgNode.name, $3, vOrgNode.leaf, vOrgNode.instances, 
+				   dataValue(vOrgNode.limits,vRecordID, vTableName), vRecordID, vTableName);
 
 	  -- and add its parameters
 	  PERFORM attachVTparameters($1, vNodeID);
 	  RETURN vNodeID;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 -- helper function
 -- dupVTsubTree(orgNodeID, newParentID, newIndex)
@@ -126,7 +133,7 @@ CREATE OR REPLACE FUNCTION dupVTleafNode(INT4, INT4, INT2)
 -- Tables:	VICtemplate	insert
 --
 CREATE OR REPLACE FUNCTION dupVTsubTree(INT4, INT4, INT2)
-  RETURNS INT4 AS '
+  RETURNS INT4 AS $$
 	DECLARE
 		vNodeID		INT4;
 		vChild		RECORD;
@@ -150,7 +157,7 @@ CREATE OR REPLACE FUNCTION dupVTsubTree(INT4, INT4, INT2)
 
 		RETURN vNodeID;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 --
 -- dupVTnode (authToken, treeID, nodeID, index)
@@ -166,7 +173,7 @@ CREATE OR REPLACE FUNCTION dupVTsubTree(INT4, INT4, INT2)
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION dupVTnode(INT4, INT4, INT4, INT2)
-  RETURNS INT4 AS '
+  RETURNS INT4 AS $$
 	DECLARE
 		vFunction		INT2 := 1;
 		vIsAuth			BOOLEAN;
@@ -180,7 +187,7 @@ CREATE OR REPLACE FUNCTION dupVTnode(INT4, INT4, INT4, INT2)
 		SELECT isAuthorized(vAuthToken, $2, vFunction, 0) 
 		INTO   vIsAuth;
 		IF NOT vIsAuth THEN
-			RAISE EXCEPTION \'Not authorized\';
+			RAISE EXCEPTION 'Not authorized';
 			RETURN $3;
 		END IF;
 
@@ -190,7 +197,7 @@ CREATE OR REPLACE FUNCTION dupVTnode(INT4, INT4, INT4, INT2)
 		FROM	VICtemplate
 		WHERE	nodeID = $3;
 		IF NOT FOUND THEN
-		  RAISE EXCEPTION \'Node with id % does not exist!\', $3;
+		  RAISE EXCEPTION 'Node with id % does not exist!', $3;
 		  RETURN 0;
 		END IF;
 
@@ -200,5 +207,5 @@ CREATE OR REPLACE FUNCTION dupVTnode(INT4, INT4, INT4, INT2)
 
 		RETURN vNewNodeID;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 

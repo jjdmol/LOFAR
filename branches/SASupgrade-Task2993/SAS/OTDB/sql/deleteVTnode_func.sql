@@ -30,15 +30,26 @@
 -- Tables:	VICtemplate	delete
 --
 CREATE OR REPLACE FUNCTION removeVTparameters(INT4)
-  RETURNS VOID AS '
+  RETURNS VOID AS $$
+	DECLARE
+		vRecordID	VICtemplate.recordID%TYPE;
+		vTablename	VICtemplate.tablename%TYPE;
+
 	BEGIN
 		DELETE
 		FROM	VICtemplate
 		WHERE	parentID = $1
 				AND leaf = TRUE;
+		SELECT	recordID,tablename
+		INTO	vRecordID,vTablename
+		FROM  	VICtemplate
+		WHERE	nodeid = $1;
+		IF FOUND AND vTablename != '' THEN
+			PERFORM 'DELETE FROM ' || vTablename || ' WHERE recordID=' || vRecordID;
+		END IF;
 	  RETURN;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 -- helper function
 -- removeVTleafNode(nodeID)
@@ -48,7 +59,7 @@ CREATE OR REPLACE FUNCTION removeVTparameters(INT4)
 -- Tables:	VICtemplate	delete
 --
 CREATE OR REPLACE FUNCTION removeVTleafNode(INT4)
-  RETURNS VOID AS '
+  RETURNS VOID AS $$
 	BEGIN
 		-- remove parameters
 		PERFORM removeVTparameters($1);
@@ -60,7 +71,7 @@ CREATE OR REPLACE FUNCTION removeVTleafNode(INT4)
 	
 		RETURN;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 -- recursive helper function
 -- removeVTsubTree(nodeID)
@@ -70,7 +81,7 @@ CREATE OR REPLACE FUNCTION removeVTleafNode(INT4)
 -- Tables:	VICtemplate	delete
 --
 CREATE OR REPLACE FUNCTION removeVTsubTree(INT4)
-  RETURNS VOID AS '
+  RETURNS VOID AS $$
 	DECLARE
 		vChild		RECORD;
 
@@ -89,7 +100,7 @@ CREATE OR REPLACE FUNCTION removeVTsubTree(INT4)
 
 		RETURN;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 --
 -- removeNode (authToken, treeID, nodeID)
@@ -104,7 +115,7 @@ CREATE OR REPLACE FUNCTION removeVTsubTree(INT4)
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION removeVTnode(INT4, INT4, INT4)
-  RETURNS BOOLEAN AS '
+  RETURNS BOOLEAN AS $$
 	DECLARE
 		vFunction		INT2 := 1;
 		vIsAuth			BOOLEAN;
@@ -116,7 +127,7 @@ CREATE OR REPLACE FUNCTION removeVTnode(INT4, INT4, INT4)
 		SELECT isAuthorized(vAuthToken, $2, vFunction, 0) 
 		INTO   vIsAuth;
 		IF NOT vIsAuth THEN
-			RAISE EXCEPTION \'Not authorized\';
+			RAISE EXCEPTION 'Not authorized';
 			RETURN FALSE;
 		END IF;
 
@@ -125,5 +136,5 @@ CREATE OR REPLACE FUNCTION removeVTnode(INT4, INT4, INT4)
 
 		RETURN TRUE;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 

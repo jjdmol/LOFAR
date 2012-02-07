@@ -23,46 +23,6 @@
 --
 
 
---
--- helper function
--- instanciateVTleafNode(orgNodeID, newTreeID, newParentID, newName):newNodeID
---
--- Constructs a VT node from the given VC nodeID.
--- 
--- Authorisation: none
---
--- Tables: 	VICnodedef		read
---			VICtemplate		insert
---
--- Types:	none
---
-CREATE OR REPLACE FUNCTION instanciateVTleafNode(INT4, INT4, INT4, VARCHAR(150))
-  RETURNS INT4 AS '
-	DECLARE
-		vNode		RECORD;
-		vNewNodeID	VICtemplate.nodeID%TYPE;
-
-	BEGIN
-	  SELECT	nodeID, constraints
-	  INTO		vNode
-	  FROM 		VICnodeDef
-	  WHERE		nodeID = $1;
-
-	  vNewNodeID := nextval(\'VICtemplateID\');
-	  INSERT 
-	  INTO	 VICtemplate(treeID, nodeID, parentID, originID, 
-						 name, leaf, instances, limits)
-	  VALUES ($2, vNewNodeID, $3, vNode.nodeID,  
-			  $4, false, 1, vNode.constraints);
-	  -- note: nodeId and index are defaulted.
-
-	  PERFORM instanciateVTparams($1, $2, vNewNodeID);
-
-	  RETURN vNewNodeID;
-	END;
-' LANGUAGE plpgsql;
-
-
 -- addComponentToVT(authToken, orgNodeID, newTreeID, newParentID, newName): newNodeID
 -- 
 -- Add the given component under the given parentNode of a template
@@ -165,7 +125,8 @@ CREATE OR REPLACE FUNCTION addComponentToVT(INT4, INT4, INT4, INT4, VARCHAR(150)
 	  END IF;
 	  
 	  -- finally copy the node (orgNode, tree, parent, newname)
-	  vNewNodeID := instanciateVTleafnode($2, $3, $4, vNewName);
+	  -- uses function from buildTemplateTree
+	  vNewNodeID := instanciateVTleafNode($2, $3, $4, vNewName);
 
 	  RETURN vNewNodeID;
 	END;

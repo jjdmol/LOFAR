@@ -214,52 +214,62 @@ CREATE OR REPLACE FUNCTION instanciateVHparams(INT4, INT4, INT4, TEXT)
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION instanciateVHleafNode(INT4, INT4, INT4, INT2, TEXT)
-  RETURNS INT4 AS '
+  RETURNS INT4 AS $$
 	DECLARE
 		vNode			RECORD;
 		vNewNodeID		VICtemplate.nodeID%TYPE;
+        vTablename  	VICtemplate.tablename%TYPE;
+        vRecordID   	VICtemplate.recordID%TYPE;
 		vTrimmedName	TEXT;
 		vFullName		TEXT;
 
 	BEGIN
-	  SELECT originID, name
+	  SELECT originID, name, recordid, tablename
 	  INTO	 vNode
 	  FROM	 VICtemplate
 	  WHERE	 nodeID = $1;
 	  IF NOT FOUND THEN
-		RAISE EXCEPTION \'node % with index -1 does not exist\', $1;
+		RAISE EXCEPTION 'node % with index -1 does not exist', $1;
 		RETURN 0;
 	  END IF;
 
-	  vNewNodeID := NEXTVAL(\'VIChierarchID\');
+      IF vNode.tablename != '' THEN
+        vTablename := vNode.tablename;
+        vRecordID  := createNewRecord(vNode.tablename);
+      ELSE
+        vTablename := '';
+        vRecordID := 0;
+      END IF;
+
+	  vNewNodeID := NEXTVAL('VIChierarchID');
 	  IF $4 != -1 THEN
-		vNode.name := vNode.name || \'[\' || $4 || \']\';
+		vNode.name := vNode.name || '[' || $4 || ']';
 	  END IF;
 
 	  -- special case: this function was designed for creating VIC trees from template trees,
-	  -- but is now also used by the scheduler forr adding NEW nodes to an existing VIC tree.
+	  -- but is now also used by the scheduler for adding NEW nodes to an existing VIC tree.
 	  -- To make this possible we must NOT add the name of the original component to the given
 	  -- name. For VIC tree creation this name always end in a DOT when the scheduler (ab)uses
 	  -- this function the name does not end in a DOT.
-	  vTrimmedName := rtrim($5, \'.\');
-	  IF vTrimmedName != $5 OR $5 = \'\' THEN
+	  vTrimmedName := rtrim($5, '.');
+	  IF vTrimmedName != $5 OR $5 = '' THEN
 		vFullName := $5 || vNode.name;
 	  ELSE
 		vFullName := $5;
 	  END IF;
-	  -- RAISE WARNING \'iVHleaf(%,%)\', vFullName,$4;
+	  -- RAISE WARNING 'iVHleaf(%,%)', vFullName,$4;
 
 	  INSERT
-	  INTO	 VIChierarchy(treeID, nodeID, parentID, 
-						  paramrefID, name, index, leaf)
-	  VALUES ($2, vNewNodeID, $3, 
-			  vNode.originID, vFullName, $4, FALSE);
+	  INTO	 VIChierarchy(treeID, nodeID, parentID, paramrefID, name, 
+					index, leaf, value, recordid, tablename)
+	  VALUES ($2, vNewNodeID, $3, vNode.originID, vFullName, $4, 
+					FALSE, dataValue('', vRecordID, vTablename), vRecordID, vTablename);
 
-	  PERFORM instanciateVHparams($1, $2, vNewNodeID, vFullName || \'.\');
+	  PERFORM instanciateVHparams($1, $2, vNewNodeID, vFullName || '.');
 
 	  RETURN vNewNodeID;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 --
 -- helper function

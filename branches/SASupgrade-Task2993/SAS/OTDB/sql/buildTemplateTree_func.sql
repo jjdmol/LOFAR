@@ -38,25 +38,25 @@
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION instanciateVTparams(INT4, INT4, INT4)
-  RETURNS VOID AS '
+  RETURNS VOID AS $$
 	DECLARE
 		vParam		RECORD;
 		dfltValue	VARCHAR(200);
 
 	BEGIN
---RAISE WARNING \'params:%,%,%\', $1, $2, $3;
+--RAISE WARNING 'params:%,%,%', $1, $2, $3;
 	  FOR vParam IN 
 		SELECT	paramID, name, limits, par_type
 		FROM 	VICparamDef
 		WHERE	nodeID = $1
-		AND		name NOT like \'#%\'
+		AND		name NOT like '#%'
 	  LOOP
 		IF vParam.par_type >= 300 THEN	-- popup parameter? leave limits fiels empty.
-		  dfltValue := substring(vParam.limits from \'[a-zA-Z0-9_.,<>]+;([a-zA-Z0-9_.,<>]+)\');
+		  dfltValue := substring(vParam.limits from '[a-zA-Z0-9_.,<>]+;([a-zA-Z0-9_.,<>]+)');
 		  IF dfltValue IS NULL THEN
-			dfltValue := \'\';
+			dfltValue := '';
 		  END IF;
---RAISE WARNING \'X:%,%\', vParam.name, dfltValue;
+--RAISE WARNING 'X:%,%', vParam.name, dfltValue;
 		  INSERT
 		  INTO 	 VICtemplate(treeID, parentID, originID, name, instances, limits)
 		  VALUES ($2, $3, vParam.paramID, vParam.name, 1, dfltValue);
@@ -70,13 +70,13 @@ CREATE OR REPLACE FUNCTION instanciateVTparams(INT4, INT4, INT4)
 	  END LOOP;
 	  RETURN;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 --
 -- helper function
--- instanciateVTleafNode(orgNodeID, newTreeID, newParentID):newNodeID
+-- instanciateVTleafNode(orgNodeID, newTreeID, newParentID, [newname]):newNodeID
 --
--- Constructs a VT node from the given VC nodeID.
+-- Constructs a VT node with params but without children-nodes from the given VICnodedef ID.
 -- 
 -- Authorisation: none
 --
@@ -85,32 +85,46 @@ CREATE OR REPLACE FUNCTION instanciateVTparams(INT4, INT4, INT4)
 --
 -- Types:	none
 --
-CREATE OR REPLACE FUNCTION instanciateVTleafNode(INT4, INT4, INT4)
-  RETURNS INT4 AS '
+--                                        (nodedefID, treeID, newParentID, [newname])
+CREATE OR REPLACE FUNCTION instanciateVTleafNode(INT4, INT4, INT4, VARCHAR(150))
+  RETURNS INT4 AS $$
 	DECLARE
 		vNode		RECORD;
 		vNewNodeID	VICtemplate.nodeID%TYPE;
+		vTablename	VICtemplate.tablename%TYPE;
+		vRecordID	VICtemplate.recordID%TYPE;
 
 	BEGIN
---RAISE WARNING \'leafNode:%,%,%\', $1, $2, $3;
-	  SELECT	nodeID, name, constraints
+--RAISE WARNING 'leafNode:%,%,%', $1, $2, $3, $4;
+	  SELECT	nodeID, name, constraints, tablename
 	  INTO		vNode
 	  FROM 		VICnodeDef
 	  WHERE		nodeID = $1;
+	  IF vNode.tablename != '' THEN
+		vTablename := vNode.tablename;
+		vRecordID  := createNewRecord(vNode.tablename);
+	  ELSE
+		vTablename := '';
+		vRecordID := 0;
+	  END IF;
 
-	  vNewNodeID := nextval(\'VICtemplateID\');
+	  IF $4 != '' THEN
+		vNode.name := $4;
+	  END IF;
+
+	  vNewNodeID := nextval('VICtemplateID');
 	  INSERT 
-	  INTO	 VICtemplate(treeID, nodeID, parentID, originID, 
-						 name, leaf, instances, limits)
-	  VALUES ($2, vNewNodeID, $3, vNode.nodeID,  
-			  vNode.name, false, 1, vNode.constraints);
+	  INTO	 VICtemplate(treeID, nodeID, parentID, originID, name, leaf, instances, 
+				limits, recordID, tablename)
+	  VALUES ($2, vNewNodeID, $3, vNode.nodeID,  vNode.name, false, 1, 
+				dataValue(vNode.constraints, vRecordID, vTablename), vRecordID, vTablename);
 	  -- note: nodeId and index are defaulted.
 
 	  PERFORM instanciateVTparams($1, $2, vNewNodeID);
 
 	  RETURN vNewNodeID;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 
 -- helper function
@@ -129,7 +143,7 @@ CREATE OR REPLACE FUNCTION instanciateVTleafNode(INT4, INT4, INT4)
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION instanciateVTsubTree(INT4, INT4, INT4)
-  RETURNS INT4 AS '
+  RETURNS INT4 AS $$
 	DECLARE
 	  vNode				RECORD;
 	  vNodeID			VICnodeDef.nodeID%TYPE;
@@ -138,21 +152,21 @@ CREATE OR REPLACE FUNCTION instanciateVTsubTree(INT4, INT4, INT4)
 	  vVersionNr		INT4;
 
 	BEGIN
---RAISE WARNING \'subTree:%,%,%\', $1, $2, $3;
+--RAISE WARNING 'subTree:%,%,%', $1, $2, $3;
 
 	  -- copy node itself
-	  vNewNodeID := instanciateVTleafNode($1, $2, $3);
+	  vNewNodeID := instanciateVTleafNode($1, $2, $3, '');
 
 	  -- loop through children
 	  FOR vNode IN
 		SELECT  name
 		FROM	VICparamDef
 		WHERE	nodeID = $1
-		AND		name like \'#%\'
+		AND		name like '#%'
 	  LOOP
 		vVersionNr := getVersionNr(vNode.name);
 		vNode.name := cleanNodeName(vNode.name);
---RAISE WARNING \'subTree2:%,%\', vVersionNr, vNode.name;
+--RAISE WARNING 'subTree2:%,%', vVersionNr, vNode.name;
 		-- translate name and versionnumber into node
 		SELECT nodeID
 		INTO   vNodeID
@@ -164,7 +178,7 @@ CREATE OR REPLACE FUNCTION instanciateVTsubTree(INT4, INT4, INT4)
 
 	  RETURN vNewNodeID;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 
 --

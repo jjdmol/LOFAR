@@ -74,16 +74,16 @@ DROP INDEX VIChierarchy_treeid_nodeid_indx;
 CREATE SEQUENCE	VICnodedefID;
 
 CREATE TABLE VICnodedef (
-	nodeID		INT4			NOT NULL DEFAULT nextval('VICnodedefID'),
-	name		VARCHAR(40)		NOT NULL,
-	version		INT4			NOT NULL DEFAULT 010000,
-	classif		INT2			NOT NULL REFERENCES classification(ID),
-	constraints	TEXT,			-- interpreted by OTDB
-	description	TEXT,
+	nodeID			INT4			NOT NULL DEFAULT nextval('VICnodedefID'),
+	name			VARCHAR(40)		NOT NULL,
+	version			INT4			NOT NULL DEFAULT 010000,
+	classif			INT2			NOT NULL REFERENCES classification(ID),
+	constraints		TEXT,			-- interpreted by OTDB
+	description		TEXT,
+	tablename		VARCHAR(40)		DEFAULT '',
 
-	CONSTRAINT      Vnodedef_PK     	PRIMARY KEY (nodeID),
-	CONSTRAINT	Vnodedef_node_uniq	UNIQUE(nodeID),
-	CONSTRAINT	Vnodedef_name_uniq  	UNIQUE(name, version, classif)
+	CONSTRAINT	Vnodedef_node_uniq	PRIMARY KEY(nodeID),
+	CONSTRAINT	Vnodedef_name_uniq 	UNIQUE(name, version, classif)
 ) WITHOUT OIDS;
 
 -- Index: Vnodedef_node_indx
@@ -141,6 +141,8 @@ CREATE TABLE VICtemplate (
 	leaf		BOOLEAN			DEFAULT TRUE,
 	instances	INT2			NOT NULL DEFAULT 1,
 	limits		TEXT,			-- interpreted by GUI: range, enum, default
+	recordID	INT4,			-- when value is in a separate table
+	tablename	VARCHAR(40),	-- when value is in a separate table
 
 	CONSTRAINT 	VTempl_PK 		PRIMARY KEY (treeID, nodeID),
 	CONSTRAINT	VTemplNode_uniqin_tree	UNIQUE(treeID, nodeID)
@@ -190,6 +192,8 @@ CREATE TABLE VIChierarchy (
 	index		INT2			NOT NULL DEFAULT -1,
 	leaf		BOOLEAN			DEFAULT TRUE,
 	value		TEXT,			-- empty for nodes, filled for params
+	recordID	INT4,			-- when value is in a separate table
+	tablename	VARCHAR(40),	-- when value is in a separate table
 
 	CONSTRAINT      VIChierarchy_PK		PRIMARY KEY (treeid, nodeid),
 	CONSTRAINT	Vparam_uniq_in_tree	UNIQUE(treeID, nodeID)

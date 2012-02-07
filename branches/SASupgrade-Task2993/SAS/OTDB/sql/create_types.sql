@@ -113,6 +113,7 @@ CREATE TYPE OTDBnodeDef AS (
 	name			VARCHAR(40),
 	version			INT4,
 	classif			INT2,
+	tablename		VARCHAR(40),
 	constraints		TEXT,
 	description		TEXT
 );

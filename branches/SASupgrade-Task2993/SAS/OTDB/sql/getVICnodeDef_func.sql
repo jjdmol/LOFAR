@@ -43,6 +43,7 @@ CREATE OR REPLACE FUNCTION getVICnodedef(INT4)
 			   name, 
 			   version,
 			   classif, 
+			   tablename,
 			   constraints, 
 			   description
 		INTO   vRecord
@@ -78,6 +79,7 @@ CREATE OR REPLACE FUNCTION getVICnodedef(VARCHAR(40), INT4, INT2)
 			   name, 
 			   version,
 			   classif, 
+			   tablename,
 			   constraints, 
 			   description
 		INTO   vRecord

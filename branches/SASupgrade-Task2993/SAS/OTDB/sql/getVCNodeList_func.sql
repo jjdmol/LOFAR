@@ -57,6 +57,7 @@ CREATE OR REPLACE FUNCTION getVCNodeList(VARCHAR(150), INT4, BOOLEAN)
 			   name,
 			   version,
 			   classif,
+			   tablename,
 			   constraints,
 			   description
 		FROM   VICnodedef 

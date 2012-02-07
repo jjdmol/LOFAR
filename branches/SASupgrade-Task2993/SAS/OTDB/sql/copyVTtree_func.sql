@@ -38,7 +38,7 @@
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION copyVTparams(INT4, INT4, INT4)
-  RETURNS VOID AS '
+  RETURNS VOID AS $$
 	DECLARE
 		vParam	RECORD;
 
@@ -60,7 +60,7 @@ CREATE OR REPLACE FUNCTION copyVTparams(INT4, INT4, INT4)
 	  END LOOP;
 	  RETURN;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 --
 -- helper function
@@ -76,10 +76,13 @@ CREATE OR REPLACE FUNCTION copyVTparams(INT4, INT4, INT4)
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION copyVTleafNode(INT4, INT4, INT4)
-  RETURNS INT4 AS '
+  RETURNS INT4 AS $$
 	DECLARE
 		vNode		RECORD;
 		vNewNodeID	VICtemplate.nodeID%TYPE;
+        vTablename  VICtemplate.tablename%TYPE;
+        vRecordID   VICtemplate.recordID%TYPE;
+
 
 	BEGIN
 	  SELECT *
@@ -87,24 +90,32 @@ CREATE OR REPLACE FUNCTION copyVTleafNode(INT4, INT4, INT4)
 	  FROM	 VICtemplate
 	  WHERE	 nodeID = $1;
 	  IF NOT FOUND THEN
-		RAISE EXCEPTION \'node % does not exist\', $1;
+		RAISE EXCEPTION 'node % does not exist', $1;
 	  END IF;
 
-	  vNewNodeID := NEXTVAL(\'VICtemplateID\');
+      IF vNode.tablename != '' THEN
+        vTablename := vNode.tablename;
+        vRecordID  := createNewRecord(vNode.tablename);
+      ELSE
+        vTablename := '';
+        vRecordID := 0;
+      END IF;
+
+	  vNewNodeID := NEXTVAL('VICtemplateID');
 
 	  INSERT
-	  INTO	 VICtemplate (treeID, nodeID, parentID, 
-						  originID, name, index, 
-						  leaf, instances, limits)
-	  VALUES ($2, vNewNodeID, $3, 
-			  vNode.originID, vNode.name, vNode.index, 
-			  vNode.leaf, vNode.instances, vNode.limits);
+	  INTO	 VICtemplate (treeID, nodeID, parentID, originID, 
+					name, index, leaf, instances, 
+					limits, recordID, tablename)
+	  VALUES ($2, vNewNodeID, $3, vNode.originID, 
+					vNode.name, vNode.index, vNode.leaf, vNode.instances, 
+					dataValue(vNode.limits, vRecordID, vTableName), vRecordID, vTableName);
 
 	  PERFORM copyVTparams($1, $2, vNewNodeID);
 
 	  RETURN vNewNodeID;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 --
 -- helper function
@@ -122,7 +133,7 @@ CREATE OR REPLACE FUNCTION copyVTleafNode(INT4, INT4, INT4)
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION copyVTsubTree(INT4, INT4, INT4)
-  RETURNS INT4 AS '
+  RETURNS INT4 AS $$
 	DECLARE
 	  vNewNodeID		VICtemplate.nodeID%TYPE;
 	  vDummy			VICtemplate.nodeID%TYPE;
@@ -144,6 +155,6 @@ CREATE OR REPLACE FUNCTION copyVTsubTree(INT4, INT4, INT4)
 
 	  RETURN vNewNodeID;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 

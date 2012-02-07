@@ -37,7 +37,7 @@
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION copyVHparams(INT4, INT4, INT4)
-  RETURNS VOID AS '
+  RETURNS VOID AS $$
 	DECLARE
 		vParam	RECORD;
 
@@ -48,15 +48,13 @@ CREATE OR REPLACE FUNCTION copyVHparams(INT4, INT4, INT4)
 		WHERE	parentID = $1
 		AND		leaf = TRUE
 	  LOOP
-	    INSERT INTO VIChierarchy (treeID, parentID, paramRefID,
-								name, index, leaf, value)
-	    VALUES	($2, $3, vParam.paramRefID,
-				 vParam.name, vParam.index, vParam.leaf, vParam.value);
+	    INSERT INTO VIChierarchy (treeID, parentID, paramRefID, name, index, leaf, value)
+	    VALUES	($2, $3, vParam.paramRefID, vParam.name, vParam.index, vParam.leaf, vParam.value);
 		-- note: nodeId is defaulted.
 	  END LOOP;
 	  RETURN;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 --
 -- helper function
@@ -72,38 +70,47 @@ CREATE OR REPLACE FUNCTION copyVHparams(INT4, INT4, INT4)
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION copyVHleafNode(INT4, INT4, INT4)
-  RETURNS INT4 AS '
+  RETURNS INT4 AS $$
 	DECLARE
-		vRow		RECORD;
-		vNewNodeID	VIChierarchy.nodeID%TYPE;
+		vRow			RECORD;
+		vNewNodeID		VIChierarchy.nodeID%TYPE;
+        vTablename      VIChierarchy.tablename%TYPE;
+        vRecordID       VIChierarchy.recordID%TYPE;
 
 	BEGIN
-	  SELECT paramRefID, name, index, leaf, value
+	  SELECT paramRefID, name, index, leaf, value, recordid, tablename
 	  INTO	 vRow
 	  FROM	 VIChierarchy
 	  WHERE	 nodeID = $1;
 --	  IF NOT FOUND THEN
---		RAISE EXCEPTION \'node % does not exist\', $1;
+--		RAISE EXCEPTION 'node % does not exist', $1;
 --	  END IF;
 
-	  vNewNodeID := NEXTVAL(\'VIChierarchID\');
+      IF vRow.tablename != '' THEN
+        vTablename := vRow.tablename;
+        vRecordID  := createNewRecord(vRow.tablename);
+      ELSE
+        vTablename := '';
+        vRecordID := 0;
+      END IF;
 
-	  INSERT INTO VIChierarchy (treeID, nodeID, parentID, paramRefID,
-								name, index, leaf, value)
-	  VALUES	($2, vNewNodeID, $3, vRow.paramRefID,
-				 vRow.name, vRow.index, vRow.leaf, vRow.value);
+	  vNewNodeID := NEXTVAL('VIChierarchID');
+	  INSERT INTO VIChierarchy (treeID, nodeID, parentID, paramRefID, name, index, leaf, 
+				value, recordid, tablename)
+	  VALUES	($2, vNewNodeID, $3, vRow.paramRefID, vRow.name, vRow.index, vRow.leaf, 
+				dataValue(vRow.value, vRow.recordid, vRow.tablename), vRow.recordid, vRow.tablename);
 
 	  PERFORM copyVHparams($1, $2, vNewNodeID);
 
 	  RETURN vNewNodeID;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 --
 -- recursive helper function
 -- copyVHsubTree (topNodeID, newTreeID, newParentID)
 --
--- Makes a key-value list of a (sub)tree in usenet format.
+-- Makes a duplicate of a VIC tree.
 --
 -- Authorisation: no
 --
@@ -113,7 +120,7 @@ CREATE OR REPLACE FUNCTION copyVHleafNode(INT4, INT4, INT4)
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION copyVHsubTree(INT4, INT4, INT4)
-  RETURNS INT4 AS '
+  RETURNS INT4 AS $$
 	DECLARE
 	  vNewNodeID	VIChierarchy.nodeID%TYPE;
 	  vDummy		VIChierarchy.nodeID%TYPE;
@@ -135,5 +142,5 @@ CREATE OR REPLACE FUNCTION copyVHsubTree(INT4, INT4, INT4)
 
 	  RETURN vNewNodeID;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 

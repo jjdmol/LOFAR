@@ -238,3 +238,47 @@ CREATE OR REPLACE FUNCTION calcArraySize(TEXT)
 		RETURN vSize;
 	END;
 ' LANGUAGE plpgsql IMMUTABLE;
+
+-- GENERIC FUNCTION --
+CREATE OR REPLACE FUNCTION createNewRecord(VARCHAR(40))
+RETURNS INT4 AS $$
+	DECLARE
+		vNewID		INT4;
+		aBasename	ALIAS FOR $1;
+
+	BEGIN
+	  vNewID := nextval(aBasename || 'ID');
+	  EXECUTE 'INSERT INTO ' || aBasename || 'Table (recordID) values (' || vNewID || ')';
+	  RETURN vNewID;
+	END;
+$$ language plpgsql;
+
+CREATE OR REPLACE FUNCTION dataValue(TEXT, INT4, VARCHAR(40))
+RETURNS TEXT AS $$
+	BEGIN
+	  IF $3 = '' THEN
+		RETURN $1;
+	  ELSE
+		RETURN '<' || $3 || '>:' || $2;
+	  END IF;
+	END;
+$$ language plpgsql IMMUTABLE;
+
+CREATE OR REREATE OR REPLACE FUNCTION textValue(BOOLEAN)
+RETURNS TEXT AS $$
+    BEGIN
+      IF $1 THEN
+        RETURN 'true';
+      ELSE
+        RETURN 'false';
+      END IF;
+    END;
+$$ language plpgsql IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION textValue(TEXT)
+RETURNS TEXT AS $$
+    BEGIN
+      RETURN '\'' || $1 || '\'';
+    END;
+$$ language plpgsql IMMUTABLE;
+
