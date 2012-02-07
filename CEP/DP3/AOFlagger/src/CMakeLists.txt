@@ -89,6 +89,7 @@ set(MSIO_FILES
   msio/timestepaccessor.cpp)
   
 set(QUALITY_FILES
+  quality/histogramtablesformatter.cpp
   quality/qualitytablesformatter.cpp)
 
 set(REMOTEAO_FILES

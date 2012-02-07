@@ -30,6 +30,19 @@
 class HistogramTablesFormatter {
 	
 		enum TableKind { HistogramCountTable, HistogramTypeTable };
+		
+		struct HistogramItem
+		{
+			double binStart;
+			double binEnd;
+			double count;
+		};
+		
+		enum HistogramType
+		{
+			TotalHistogram,
+			RFIHistogram
+		};
 	
 		HistogramTablesFormatter(const std::string &measurementSetName) :
 			_measurementSet(0),
@@ -59,11 +72,6 @@ class HistogramTablesFormatter {
 			closeMainTable();
 		}
 		
-		bool TableExists(enum TableKind table) const
-		{
-			return _measurementSet->isReadable(TableFilename(kind));
-		}
-		
 		std::string CountTableName() const
 		{
 			return "QUALITY_HISTOGRAM_COUNT";
@@ -87,7 +95,15 @@ class HistogramTablesFormatter {
 			}
 		}
 		
-		std::string TypeToName() const;
+		std::string TypeToName(HistogramType type) const
+		{
+			switch(type)
+			{
+				case TotalHistogram: return "Total";
+				case RFIHistogram: return "RFI";
+				default: return std::string();
+			}
+		}
 		
 		std::string TableFilename(enum TableKind table) const
 		{
@@ -106,12 +122,17 @@ class HistogramTablesFormatter {
 			return hasOneEntry(typeIndex);
 		}
 		
-		void InitializeEmptyTable()
+		void InitializeEmptyTables()
 		{
 			if(TableExists(HistogramCountTable))
-				removeEntries();
+				removeEntries(HistogramCountTable);
 			else
 				createCountTable();
+			
+			if(TableExists(HistogramTypeTable))
+				removeEntries(HistogramTypeTable);
+			else
+				createTypeTable();
 		}
 		
 		void RemoveTable(enum TableKind table)
@@ -128,6 +149,8 @@ class HistogramTablesFormatter {
 		void StoreValue(unsigned typeIndex, double binStart, double binEnd, double count);
 		
 		void QueryHistogram(unsigned typeIndex, std::vector<HistogramItem> &histogram);
+		
+		unsigned QueryTypeIndex(enum HistogramType type, unsigned polarizationIndex);
 		bool QueryTypeIndex(enum HistogramType type, unsigned polarizationIndex, unsigned &destTypeIndex);
 		unsigned StoreOrQueryTypeIndex(enum HistogramType type, unsigned polarizationIndex)
 		{
@@ -139,8 +162,8 @@ class HistogramTablesFormatter {
 		}
 		unsigned StoreType(enum HistogramType type, unsigned polarizationIndex);
 	private:
-		QualityTablesFormatter(const QualityTablesFormatter &) { } // don't allow copies
-		void operator=(const QualityTablesFormatter &) { } // don't allow assignment
+		HistogramTablesFormatter(const HistogramTablesFormatter &) { } // don't allow copies
+		void operator=(const HistogramTablesFormatter &) { } // don't allow assignment
 		
 		const static std::string ColumnNameType;
 		const static std::string ColumnNameName;
@@ -157,15 +180,14 @@ class HistogramTablesFormatter {
 		casa::Table *_countTable;
 		
 		bool hasOneEntry(unsigned typeIndex);
-		void removeStatisticFromStatTable(enum QualityTable table, enum StatisticKind kind);
-		void removeKindNameEntry(enum StatisticKind kind);
-		void removeEntries(enum QualityTable table);
+		void removeTypeEntry(enum HistogramType type, unsigned polarizationIndex);
+		void removeEntries(enum TableKind table);
 		
 		void addTimeColumn(casa::TableDesc &tableDesc);
 		void addFrequencyColumn(casa::TableDesc &tableDesc);
 		void addValueColumn(casa::TableDesc &tableDesc);
 		
-		void createTable(enum QualityTable table)
+		void createTable(enum TableKind table)
 		{
 			switch(table)
 			{
@@ -177,7 +199,7 @@ class HistogramTablesFormatter {
 		
 		void createTypeTable();
 		void createCountTable();
-		unsigned findFreeKindIndex();
+		unsigned findFreeTypeIndex(casa::Table &typeTable);
 		
 		void openMainTable(bool needWrite);
 		void closeMainTable()
