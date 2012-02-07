@@ -39,6 +39,7 @@
 
 #ifdef HAS_LOFARSTMAN
 #include <LofarStMan/Register.h>
+#include <AOFlagger/quality/histogramtablesformatter.h>
 #endif // HAS_LOFARSTMAN                                                       
 
 void reportProgress(unsigned step, unsigned totalSteps)
@@ -204,71 +205,78 @@ void actionCollect(const std::string &filename, enum CollectingMode mode)
 			}
 			break;
 		case CollectHistograms:
-			const std::map<HistogramCollection::AntennaPair, LogHistogram*> &map = histogramCollection.GetHistograms(0);
-			Plot plotSlopes("histogram-slopes.pdf");
-			plotSlopes.SetYRange(-10.0, 10.0);
-			Plot plotHistograms("histograms.pdf");
-			for(std::map<HistogramCollection::AntennaPair, LogHistogram*>::const_iterator i = map.begin(); i != map.end(); ++i)
 			{
-				if(i->first.first != i->first.second)
-				{
-					const LogHistogram *histogram = i->second;
-					double rangeCentre = histogram->MinPositiveAmplitude();
-					rangeCentre = exp2(floor(log2(rangeCentre)));
-					const double maxAmplitude = histogram->MaxAmplitude();
-					std::cout << "Antennae " << i->first.first << " x " << i->first.second << "\n";
-					std::stringstream s;
-					s << i->first.first << " x " << i->first.second;
-					//plotSlopes.StartLine(s.str());
-					//plotHistograms.StartLine(s.str());
-					plotSlopes.StartLine();
-					plotSlopes.SetLogScale(true, false);
-					plotHistograms.StartLine();
-					plotHistograms.SetLogScale(true, true);
-					while(rangeCentre < maxAmplitude && rangeCentre > 0.0)
-					{
-						const double rangeStart = rangeCentre * 0.75;
-						const double rangeEnd = rangeCentre * 1.5;
-						const double slope = histogram->NormalizedSlope(rangeStart, rangeEnd, LogHistogram::TotalAmplitudeHistogram);
-						std::cout << rangeStart << "-" << rangeEnd << ": " << slope << "\n";
-						rangeCentre *= 2.0;
-						plotSlopes.PushDataPoint(rangeCentre, slope);
-						const double count = histogram->NormalizedCount(rangeStart, rangeEnd, LogHistogram::TotalAmplitudeHistogram);
-						if(count > 0 && std::isfinite(count))
-							plotHistograms.PushDataPoint(rangeCentre, count);
-					}
-				}
-			}
-			Plot plotFine("histogram-fine.pdf");
-			Plot plotGlobalSlopes("histogram-gslopes.pdf");
-			plotFine.SetLogScale(true, true);
-			plotGlobalSlopes.SetLogScale(true, false);
-			plotGlobalSlopes.SetYRange(-5.0, 5.0);
-			LogHistogram intHistogram;
-			histogramCollection.GetHistogramForCrossCorrelations(0, intHistogram);
-			
-			plotFine.StartLine("Total");
-			plotGlobalSlopes.StartLine("Total");
-			for(LogHistogram::iterator i=intHistogram.begin(); i!=intHistogram.end(); ++i)
-			{
-				plotFine.PushDataPoint(i.value(), i.normalizedCount(LogHistogram::TotalAmplitudeHistogram));
-				plotGlobalSlopes.PushDataPoint(i.value(), intHistogram.NormalizedSlope(i.value()*0.5, i.value()*2.0, LogHistogram::TotalAmplitudeHistogram));
-			}
-			plotFine.StartLine("RFI");
-			plotGlobalSlopes.StartLine("RFI");
-			for(LogHistogram::iterator i=intHistogram.begin(); i!=intHistogram.end(); ++i)
-			{
-				plotFine.PushDataPoint(i.value(), i.normalizedCount(LogHistogram::RFIAmplitudeHistogram));
-				plotGlobalSlopes.PushDataPoint(i.value(), intHistogram.NormalizedSlope(i.value()*0.5, i.value()*2.0, LogHistogram::RFIAmplitudeHistogram));
-			}
-			plotFine.StartLine("Data");
-			plotGlobalSlopes.StartLine("Data");
-			for(LogHistogram::iterator i=intHistogram.begin(); i!=intHistogram.end(); ++i)
-			{
-				plotFine.PushDataPoint(i.value(), i.normalizedCount(LogHistogram::DataAmplitudeHistogram));
-				plotGlobalSlopes.PushDataPoint(i.value(), intHistogram.NormalizedSlope(i.value()*0.5, i.value()*2.0, LogHistogram::DataAmplitudeHistogram));
+				std::cout << "Writing histogram tables..." << std::endl;
+				
+				HistogramTablesFormatter histograms(filename);
+				histogramCollection.Save(histograms);
 			}
 			break;
+			
+		/*const std::map<HistogramCollection::AntennaPair, LogHistogram*> &map = histogramCollection.GetHistograms(0);
+		Plot plotSlopes("histogram-slopes.pdf");
+		plotSlopes.SetYRange(-10.0, 10.0);
+		Plot plotHistograms("histograms.pdf");
+		for(std::map<HistogramCollection::AntennaPair, LogHistogram*>::const_iterator i = map.begin(); i != map.end(); ++i)
+		{
+			if(i->first.first != i->first.second)
+			{
+				const LogHistogram *histogram = i->second;
+				double rangeCentre = histogram->MinPositiveAmplitude();
+				rangeCentre = exp2(floor(log2(rangeCentre)));
+				const double maxAmplitude = histogram->MaxAmplitude();
+				std::cout << "Antennae " << i->first.first << " x " << i->first.second << "\n";
+				std::stringstream s;
+				s << i->first.first << " x " << i->first.second;
+				//plotSlopes.StartLine(s.str());
+				//plotHistograms.StartLine(s.str());
+				plotSlopes.StartLine();
+				plotSlopes.SetLogScale(true, false);
+				plotHistograms.StartLine();
+				plotHistograms.SetLogScale(true, true);
+				while(rangeCentre < maxAmplitude && rangeCentre > 0.0)
+				{
+					const double rangeStart = rangeCentre * 0.75;
+					const double rangeEnd = rangeCentre * 1.5;
+					const double slope = histogram->NormalizedSlope(rangeStart, rangeEnd, LogHistogram::TotalAmplitudeHistogram);
+					std::cout << rangeStart << "-" << rangeEnd << ": " << slope << "\n";
+					rangeCentre *= 2.0;
+					plotSlopes.PushDataPoint(rangeCentre, slope);
+					const double count = histogram->NormalizedCount(rangeStart, rangeEnd, LogHistogram::TotalAmplitudeHistogram);
+					if(count > 0 && std::isfinite(count))
+						plotHistograms.PushDataPoint(rangeCentre, count);
+				}
+			}
+		}
+		Plot plotFine("histogram-fine.pdf");
+		Plot plotGlobalSlopes("histogram-gslopes.pdf");
+		plotFine.SetLogScale(true, true);
+		plotGlobalSlopes.SetLogScale(true, false);
+		plotGlobalSlopes.SetYRange(-5.0, 5.0);
+		LogHistogram intHistogram;
+		histogramCollection.GetHistogramForCrossCorrelations(0, intHistogram);
+		
+		plotFine.StartLine("Total");
+		plotGlobalSlopes.StartLine("Total");
+		for(LogHistogram::iterator i=intHistogram.begin(); i!=intHistogram.end(); ++i)
+		{
+			plotFine.PushDataPoint(i.value(), i.normalizedCount(LogHistogram::TotalAmplitudeHistogram));
+			plotGlobalSlopes.PushDataPoint(i.value(), intHistogram.NormalizedSlope(i.value()*0.5, i.value()*2.0, LogHistogram::TotalAmplitudeHistogram));
+		}
+		plotFine.StartLine("RFI");
+		plotGlobalSlopes.StartLine("RFI");
+		for(LogHistogram::iterator i=intHistogram.begin(); i!=intHistogram.end(); ++i)
+		{
+			plotFine.PushDataPoint(i.value(), i.normalizedCount(LogHistogram::RFIAmplitudeHistogram));
+			plotGlobalSlopes.PushDataPoint(i.value(), intHistogram.NormalizedSlope(i.value()*0.5, i.value()*2.0, LogHistogram::RFIAmplitudeHistogram));
+		}
+		plotFine.StartLine("Data");
+		plotGlobalSlopes.StartLine("Data");
+		for(LogHistogram::iterator i=intHistogram.begin(); i!=intHistogram.end(); ++i)
+		{
+			plotFine.PushDataPoint(i.value(), i.normalizedCount(LogHistogram::DataAmplitudeHistogram));
+			plotGlobalSlopes.PushDataPoint(i.value(), intHistogram.NormalizedSlope(i.value()*0.5, i.value()*2.0, LogHistogram::DataAmplitudeHistogram));
+		}*/
 	}
 	
 	std::cout << "Done.\n";

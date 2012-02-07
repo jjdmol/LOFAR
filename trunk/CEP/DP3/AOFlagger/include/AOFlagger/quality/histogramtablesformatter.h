@@ -28,7 +28,7 @@
 	@author A.R. Offringa <offringa@astro.rug.nl>
 */
 class HistogramTablesFormatter {
-	
+	public:
 		enum TableKind { HistogramCountTable, HistogramTypeTable };
 		
 		struct HistogramItem

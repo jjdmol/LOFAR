@@ -37,42 +37,31 @@ class LogHistogram
 		struct AmplitudeBin
 		{
 			AmplitudeBin() :
-				count(0), rfiCount(0)
+				count(0)
 			{
 			}
 			long unsigned count;
-			long unsigned rfiCount;
 			
-			long unsigned GetCount(enum HistogramType type) const
+			long unsigned GetCount() const
 			{
-				switch(type)
-				{
-					case TotalAmplitudeHistogram: return count + rfiCount;
-					case RFIAmplitudeHistogram: return rfiCount;
-					case DataAmplitudeHistogram: return count;
-					default: return 0;
-				}
+				return count;
 			}
 			
 			AmplitudeBin &operator+=(const AmplitudeBin &other)
 			{
 				count += other.count;
-				rfiCount += other.rfiCount;
 				return *this;
 			}
 		};
 		
 	public:
-		void Add(const double amplitude, bool isRfi)
+		void Add(const double amplitude)
 		{
 			if(std::isfinite(amplitude))
 			{
 				const double centralAmp = getCentralAmplitude(amplitude);
 				AmplitudeBin &bin = getBin(centralAmp);
-				if(isRfi)
-					++bin.rfiCount;
-				else
-					++bin.count;
+				++bin.count;
 			}
 		}
 		
@@ -85,7 +74,7 @@ class LogHistogram
 			}
 		}
 		
-		double NormalizedSlope(double startAmplitude, double endAmplitude, enum HistogramType type) const
+		double NormalizedSlope(double startAmplitude, double endAmplitude) const
 		{
 			unsigned long n = 0;
 			long double sumX = 0.0, sumXY = 0.0, sumY = 0.0, sumXSquare = 0.0;
@@ -93,7 +82,7 @@ class LogHistogram
 			{
 				if(i->first >= startAmplitude && i->first < endAmplitude)
 				{
-					long unsigned count = i->second.GetCount(type);
+					long unsigned count = i->second.GetCount();
 					double x = log10(i->first);
 					double y = log10((double) count / i->first);
 					++n;
@@ -127,23 +116,23 @@ class LogHistogram
 			return i->first;
 		}
 		
-		double NormalizedCount(double startAmplitude, double endAmplitude, enum HistogramType type) const
+		double NormalizedCount(double startAmplitude, double endAmplitude) const
 		{
 			unsigned long count = 0;
 			for(std::map<double, class AmplitudeBin>::const_iterator i=_amplitudes.begin();i!=_amplitudes.end();++i)
 			{
 				if(i->first >= startAmplitude && i->first < endAmplitude)
-					count += i->second.GetCount(type);
+					count += i->second.GetCount();
 			}
 			return (double) count / (endAmplitude - startAmplitude);
 		}
 		
-		double NormalizedCount(double centreAmplitude, enum HistogramType type) const
+		double NormalizedCount(double centreAmplitude) const
 		{
 			const double key = getCentralAmplitude(centreAmplitude);
 			std::map<double, AmplitudeBin>::const_iterator i = _amplitudes.find(key);
 			if(i == _amplitudes.end()) return 0.0;
-			return (double) i->second.GetCount(type) / key;
+			return (double) i->second.GetCount() / key;
 		}
 		
 		class iterator
@@ -160,11 +149,11 @@ class LogHistogram
 					_iterator = source._iterator;
 					return *this;
 				}
-				bool operator==(const iterator &other) { return other._iterator == _iterator; }
-				bool operator!=(const iterator &other) { return other._iterator != _iterator; }
+				bool operator==(const iterator &other) const { return other._iterator == _iterator; }
+				bool operator!=(const iterator &other) const { return other._iterator != _iterator; }
 				iterator &operator++() { ++_iterator; return *this; }
-				double value() { return _iterator->first; }
-				double normalizedCount(enum HistogramType type) { return _iterator->second.GetCount(type) / value(); }
+				double value() const { return _iterator->first; }
+				double normalizedCount() const { return _iterator->second.GetCount() / value(); }
 			private:
 				std::map<double, AmplitudeBin>::iterator _iterator;
 		};

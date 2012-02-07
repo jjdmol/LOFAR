@@ -33,47 +33,96 @@ class HistogramCollection
 		
 		HistogramCollection(unsigned polarizationCount) : _polarizationCount(polarizationCount)
 		{
-			_histograms = new std::map<AntennaPair, LogHistogram*>[polarizationCount];
+			_totalHistograms = new std::map<AntennaPair, LogHistogram*>[polarizationCount];
+			_rfiHistograms = new std::map<AntennaPair, LogHistogram*>[polarizationCount];
 		}
 		
 		~HistogramCollection()
 		{
 			for(unsigned p=0;p<_polarizationCount;++p)
 			{
-				for(std::map<AntennaPair, LogHistogram*>::iterator i=_histograms[p].begin(); i!=_histograms[p].end(); ++i)
+				for(std::map<AntennaPair, LogHistogram*>::iterator i=_totalHistograms[p].begin(); i!=_totalHistograms[p].end(); ++i)
+				{
+					delete i->second;
+				}
+				for(std::map<AntennaPair, LogHistogram*>::iterator i=_rfiHistograms[p].begin(); i!=_rfiHistograms[p].end(); ++i)
 				{
 					delete i->second;
 				}
 			}
-			delete[] _histograms;
+			delete[] _totalHistograms;
+			delete[] _rfiHistograms;
 		}
 		
 		void Add(const unsigned antenna1, const unsigned antenna2, const unsigned polarization, const std::complex<float> *values, const bool *isRFI, size_t sampleCount)
 		{
-			LogHistogram &histogram = GetHistogram(antenna1, antenna2, polarization);
+			LogHistogram &totalHistogram = GetTotalHistogram(antenna1, antenna2, polarization);
+			LogHistogram &rfiHistogram = GetRFIHistogram(antenna1, antenna2, polarization);
+			
 			for(size_t i=0;i<sampleCount;++i)
 			{
 				const double amplitude = sqrt(values[i].real()*values[i].real() + values[i].imag()*values[i].imag());
-				histogram.Add(amplitude, isRFI[i]);
+				totalHistogram.Add(amplitude);
+				if(isRFI[i])
+					rfiHistogram.Add(amplitude);
 			}
 		}
 		
-		LogHistogram &GetHistogram(const unsigned a1, const unsigned a2, const unsigned polarization)
+		LogHistogram &GetTotalHistogram(const unsigned a1, const unsigned a2, const unsigned polarization)
+		{
+			return getHistogram(_totalHistograms, a1, a2, polarization);
+		}
+		
+		LogHistogram &GetRFIHistogram(const unsigned a1, const unsigned a2, const unsigned polarization)
+		{
+			return getHistogram(_rfiHistograms, a1, a2, polarization);
+		}
+		
+		const std::map<AntennaPair, LogHistogram*> &GetTotalHistogram(const unsigned polarization) const
+		{
+			return _totalHistograms[polarization];
+		}
+		
+		const std::map<AntennaPair, LogHistogram*> &GetRFIHistogram(const unsigned polarization) const
+		{
+			return _rfiHistograms[polarization];
+		}
+		
+		void GetTotalHistogramForCrossCorrelations(const unsigned polarization, LogHistogram &target)
+		{
+			getHistogramForCrossCorrelations(_totalHistograms, polarization, target);
+		}
+		
+		void GetRFIHistogramForCrossCorrelations(const unsigned polarization, LogHistogram &target)
+		{
+			getHistogramForCrossCorrelations(_rfiHistograms, polarization, target);
+		}
+		
+		void Save(class HistogramTablesFormatter &)
+		{
+			// TODO
+		}
+	private:
+		unsigned _polarizationCount;
+		std::map<AntennaPair, LogHistogram*> *_totalHistograms;
+		std::map<AntennaPair, LogHistogram*> *_rfiHistograms;
+
+		LogHistogram &getHistogram(std::map<AntennaPair, LogHistogram*> *histograms, const unsigned a1, const unsigned a2, const unsigned polarization)
 		{
 			const AntennaPair antennae(a1, a2);
-			std::map<AntennaPair, LogHistogram*>::iterator i = _histograms[polarization].find(antennae);
-			if(i == _histograms[polarization].end())
+			std::map<AntennaPair, LogHistogram*>::iterator i = histograms[polarization].find(antennae);
+			if(i == histograms[polarization].end())
 			{
-				i = _histograms[polarization].insert(std::pair<AntennaPair, LogHistogram*>(antennae, new LogHistogram())).first;
+				i = histograms[polarization].insert(std::pair<AntennaPair, LogHistogram*>(antennae, new LogHistogram())).first;
 			}
 			return *i->second;
 		}
 		
-		void GetHistogramForCrossCorrelations(const unsigned polarization, LogHistogram &target)
+		void getHistogramForCrossCorrelations(std::map<AntennaPair, LogHistogram*> *histograms, const unsigned polarization, LogHistogram &target)
 		{
 			for(unsigned p=0;p<_polarizationCount;++p)
 			{
-				for(std::map<AntennaPair, LogHistogram*>::iterator i=_histograms[p].begin(); i!=_histograms[p].end(); ++i)
+				for(std::map<AntennaPair, LogHistogram*>::iterator i=histograms[p].begin(); i!=histograms[p].end(); ++i)
 				{
 					if(i->first.first != i->first.second)
 						target.Add(*i->second);
@@ -81,14 +130,6 @@ class HistogramCollection
 			}
 		}
 		
-		const std::map<AntennaPair, LogHistogram*> GetHistograms(const unsigned polarization) const
-		{
-			return _histograms[polarization];
-		}
-		
-	private:
-		unsigned _polarizationCount;
-		std::map<AntennaPair, LogHistogram*> *_histograms;
 };
 
 #endif
