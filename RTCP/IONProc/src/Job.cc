@@ -71,12 +71,12 @@ Job::Job(const char *parsetName)
   itsLogPrefix = str(boost::format("[obs %d] ") % itsParset.observationID());
 
   if (LOG_CONDITION) {
-    LOG_INFO_STR(itsLogPrefix << "----- Creating new job");
-    LOG_DEBUG_STR(itsLogPrefix << "usedCoresInPset = " << itsParset.usedCoresInPset());
-
-    // Handle PVSS (CEPlogProcessor) communication
+    // Handle PVSS (CEPlogProcessor) communication -- report PVSS name in the first log line to allow CEPlogProcessor to resolve obsIDs
     if (itsParset.PVSS_TempObsName() != "")
       LOG_INFO_STR(itsLogPrefix << "PVSS name: " << itsParset.PVSS_TempObsName());
+
+    LOG_INFO_STR(itsLogPrefix << "----- Creating new job");
+    LOG_DEBUG_STR(itsLogPrefix << "usedCoresInPset = " << itsParset.usedCoresInPset());
   }
 
   // Handle PLC communication
