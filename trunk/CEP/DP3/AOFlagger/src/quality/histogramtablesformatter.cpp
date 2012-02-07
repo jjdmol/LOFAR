@@ -20,6 +20,8 @@
 
 #include <AOFlagger/quality/histogramtablesformatter.h>
 
+#include <stdexcept>
+
 #include <ms/MeasurementSets/MSColumns.h>
 
 #include <tables/Tables/ScaColDesc.h>
@@ -31,102 +33,83 @@
 
 #include <AOFlagger/quality/statisticalvalue.h>
 
-const std::string HistogramTablesFormatter::_typeToNameTable[] =
-{
-	"TotalStokesI",
-	"TotalXX",
-	"TotalXY",
-	"TotalYX",
-	"TotalYY",
-	"RFIStokesI",
-	"RFIXX",
-	"RFIXY",
-	"RFIYX",
-	"RFIYY"
-};
-
 const std::string HistogramTablesFormatter::ColumnNameType      = "TYPE";
 const std::string HistogramTablesFormatter::ColumnNameName      = "NAME";
 const std::string HistogramTablesFormatter::ColumnNameCount     = "COUNT";
 const std::string HistogramTablesFormatter::ColumnNameBinStart  = "BIN_START";
 const std::string HistogramTablesFormatter::ColumnNameBinEnd    = "BIN_END";
 
-unsigned HistogramTablesFormatter::QueryTypeIndex(enum StatisticKind kind)
+unsigned HistogramTablesFormatter::QueryTypeIndex(enum HistogramType type, unsigned polarizationIndex)
 {
 	unsigned kindIndex;
-	if(!QueryKindIndex(kind, kindIndex))
+	if(!QueryTypeIndex(type, polarizationIndex, kindIndex))
 		throw std::runtime_error("getKindIndex(): Requested statistic kind not available.");
 	return kindIndex;
 }
 
-bool HistogramTablesFormatter::QueryKindIndex(enum StatisticKind kind, unsigned &destKindIndex)
+bool HistogramTablesFormatter::QueryTypeIndex(enum HistogramType type, unsigned polarizationIndex, unsigned &destTypeIndex)
 {
-	openKindNameTable(false);
-	casa::ROScalarColumn<int> kindColumn(*_kindNameTable, ColumnNameKind);
-	casa::ROScalarColumn<casa::String> nameColumn(*_kindNameTable, ColumnNameName);
-	const casa::String nameToFind(KindToName(kind));
+	openTypeTable(false);
+	casa::ROScalarColumn<int> typeColumn(*_typeTable, ColumnNameType);
+	casa::ROScalarColumn<int> polarizationColumn(*_typeTable, ColumnNamePolarization);
+	casa::ROScalarColumn<casa::String> nameColumn(*_typeTable, ColumnNameName);
+	const casa::String nameToFind(TypeToName(type));
 	
-	const unsigned nrRow = _kindNameTable->nrow();
+	const unsigned nrRow = _typeTable->nrow();
 	
 	for(unsigned i=0;i<nrRow;++i)
 	{
-		if(nameColumn(i) == nameToFind)
+		if((unsigned) polarizationColumn(i) == polarizationIndex && nameColumn(i) == nameToFind)
 		{
-			destKindIndex = kindColumn(i);
+			destTypeIndex = typeColumn(i);
 			return true;
 		}
 	}
 	return false;
 }
 
-bool HistogramTablesFormatter::hasOneEntry(enum QualityTable table, unsigned kindIndex)
+bool HistogramTablesFormatter::hasOneEntry(unsigned typeIndex)
 {
-	casa::Table &casaTable = getTable(table, false);
-	casa::ROScalarColumn<int> kindColumn(casaTable, ColumnNameKind);
+	casa::Table &casaTable = getTable(HistogramCountTable, false);
+	casa::ROScalarColumn<int> typeColumn(casaTable, ColumnNameType);
 	
 	const unsigned nrRow = casaTable.nrow();
 	
 	for(unsigned i=0;i<nrRow;++i)
 	{
-		if(kindColumn(i) == (int) kindIndex)
+		if(typeColumn(i) == (int) typeIndex)
 			return true;
 	}
 	return false;
 }
 
-void HistogramTablesFormatter::createKindNameTable()
+void HistogramTablesFormatter::createTypeTable()
 {
-	casa::TableDesc tableDesc("QUALITY_KIND_NAME_TYPE", QUALITY_TABLES_VERSION_STR, casa::TableDesc::Scratch);
-	tableDesc.comment() = "Couples the KIND column in the other quality tables to the name of a statistic (e.g. Mean)";
-	tableDesc.addColumn(casa::ScalarColumnDesc<int>(ColumnNameKind, "Index of the statistic kind"));
+	casa::TableDesc tableDesc(TypeTableName() + "_TYPE", "1.0", casa::TableDesc::Scratch);
+	tableDesc.comment() = "Couples the TYPE column in the QUALITY_HISTOGRAM_COUNT table to the name and polarization of the histogram";
+	tableDesc.addColumn(casa::ScalarColumnDesc<int>(ColumnNameType, "Index of the statistic kind"));
+	tableDesc.addColumn(casa::ScalarColumnDesc<int>(ColumnNamePolarization, "Index of the polarization corresponding to the main table"));
 	tableDesc.addColumn(casa::ScalarColumnDesc<casa::String>(ColumnNameName, "Name of the statistic"));
 
-	casa::SetupNewTable newTableSetup(TableToFilename(KindNameTable), tableDesc, casa::Table::New);
+	casa::SetupNewTable newTableSetup(TableFilename(HistogramTypeTable), tableDesc, casa::Table::New);
 	casa::Table newTable(newTableSetup);
 	openMainTable(true);
-	_measurementSet->rwKeywordSet().defineTable(TableToName(KindNameTable), newTable);
+	_measurementSet->rwKeywordSet().defineTable(TypeTableName(), newTable);
 }
 
-void HistogramTablesFormatter::addTimeColumn(casa::TableDesc &tableDesc)
+void HistogramTablesFormatter::createCountTable()
 {
-	casa::ScalarColumnDesc<double> timeDesc(ColumnNameTime, "Central time of statistic");
-	tableDesc.addColumn(timeDesc);
-	
-	casa::TableMeasRefDesc measRef(casa::MEpoch::UTC);
-	casa::TableMeasValueDesc measVal(tableDesc, ColumnNameTime);
-	casa::TableMeasDesc<casa::MEpoch> mepochCol(measVal, measRef);
-	mepochCol.write(tableDesc);
-}
+	casa::TableDesc tableDesc(CountTableName() + "_TYPE", "1.0", casa::TableDesc::Scratch);
+	tableDesc.comment() = "Histograms of the data in the main table";
+	tableDesc.addColumn(casa::ScalarColumnDesc<int>(ColumnNameType, "Index of the statistic kind"));
+	tableDesc.addColumn(casa::ScalarColumnDesc<double>(ColumnNameBinStart, "Lower start value of the bin corresponding to the count"));
+	tableDesc.addColumn(casa::ScalarColumnDesc<double>(ColumnNameBinEnd, "Higher end value of the bin corresponding to the count"));
+	tableDesc.addColumn(casa::ScalarColumnDesc<double>(ColumnNameCount, "Histogram y-value"));
 
-void HistogramTablesFormatter::addFrequencyColumn(casa::TableDesc &tableDesc)
-{
-	casa::ScalarColumnDesc<double> freqDesc(ColumnNameFrequency, "Central frequency of statistic bin");
-	tableDesc.addColumn(freqDesc);
-	
-	casa::Unit hertzUnit("Hz");
-	
-	casa::TableQuantumDesc quantDesc(tableDesc, ColumnNameFrequency, hertzUnit);
-	quantDesc.write(tableDesc);
+	casa::SetupNewTable newTableSetup(TableFilename(HistogramCountTable), tableDesc, casa::Table::New);
+	casa::Table newTable(newTableSetup);
+	openMainTable(true);
+	_measurementSet->rwKeywordSet().defineTable(CountTableName(), newTable);
 }
 
 unsigned HistogramTablesFormatter::StoreType(enum HistogramType type, unsigned polarizationIndex)
@@ -162,7 +145,7 @@ unsigned HistogramTablesFormatter::findFreeTypeIndex(casa::Table &typeTable)
 	return maxIndex + 1;
 }
 
-void HistogramTablesFormatter::openTable(enum TableType table, bool needWrite, casa::Table **tablePtr)
+void HistogramTablesFormatter::openTable(enum TableKind table, bool needWrite, casa::Table **tablePtr)
 {
 	if(*tablePtr == 0)
 	{
@@ -183,7 +166,6 @@ void HistogramTablesFormatter::StoreValue(unsigned typeIndex, double binStart, d
 	unsigned newRow = _countTable->nrow();
 	_countTable->addRow();
 	
-	// TODO maybe the columns need to be cached to avoid having to look them up for each store...
 	casa::ScalarColumn<int> typeColumn(*_countTable, ColumnNameType);
 	casa::ScalarColumn<double> binStartColumn(*_countTable, ColumnNameBinStart);
 	casa::ScalarColumn<double> binEndColumn(*_countTable, ColumnNameBinEnd);
@@ -206,7 +188,7 @@ void HistogramTablesFormatter::removeTypeEntry(enum HistogramType type, unsigned
 	
 	for(unsigned i=0;i<nrRow;++i)
 	{
-		if(nameColumn(i) == typeName && polarizationColumn(i) ==  polarizationIndex)
+		if(nameColumn(i) == typeName && (unsigned) polarizationColumn(i) ==  polarizationIndex)
 		{
 			_typeTable->removeRow(i);
 			break;
@@ -247,73 +229,7 @@ void HistogramTablesFormatter::QueryHistogram(unsigned typeIndex, std::vector<Hi
 	}
 }
 
-void HistogramTablesFormatter::QueryFrequencyStatistic(unsigned kindIndex, std::vector<std::pair<FrequencyPosition, StatisticalValue> > &entries)
-{
-	casa::Table &table(getTable(FrequencyStatisticTable, false));
-	const unsigned nrRow = table.nrow();
-	
-	casa::ROScalarColumn<double> frequencyColumn(table, ColumnNameFrequency);
-	casa::ROScalarColumn<int> kindColumn(table, ColumnNameKind);
-	casa::ROArrayColumn<casa::Complex> valueColumn(table, ColumnNameValue);
-	
-	int polarizationCount = valueColumn.columnDesc().shape()[0];
-	
-	for(unsigned i=0;i<nrRow;++i)
-	{
-		if(kindColumn(i) == (int) kindIndex)
-		{
-			StatisticalValue value(polarizationCount);
-			value.SetKindIndex(kindIndex);
-			casa::Array<casa::Complex> valueArray = valueColumn(i);
-			casa::Array<casa::Complex>::iterator iter = valueArray.begin();
-			for(int p=0;p<polarizationCount;++p)
-			{
-				value.SetValue(p, *iter);
-				++iter;
-			}
-			FrequencyPosition position;
-			position.frequency = frequencyColumn(i);
-			entries.push_back(std::pair<FrequencyPosition, StatisticalValue>(position, value));
-		}
-	}
-}
-
-void QualityTablesFormatter::QueryBaselineStatistic(unsigned kindIndex, std::vector<std::pair<BaselinePosition, StatisticalValue> > &entries)
-{
-	casa::Table &table(getTable(BaselineStatisticTable, false));
-	const unsigned nrRow = table.nrow();
-	
-	casa::ROScalarColumn<int> antenna1Column(table, ColumnNameAntenna1);
-	casa::ROScalarColumn<int> antenna2Column(table, ColumnNameAntenna2);
-	casa::ROScalarColumn<double> frequencyColumn(table, ColumnNameFrequency);
-	casa::ROScalarColumn<int> kindColumn(table, ColumnNameKind);
-	casa::ROArrayColumn<casa::Complex> valueColumn(table, ColumnNameValue);
-	
-	int polarizationCount = valueColumn.columnDesc().shape()[0];
-	
-	for(unsigned i=0;i<nrRow;++i)
-	{
-		if(kindColumn(i) == (int) kindIndex)
-		{
-			StatisticalValue value(polarizationCount);
-			value.SetKindIndex(kindIndex);
-			casa::Array<casa::Complex> valueArray = valueColumn(i);
-			casa::Array<casa::Complex>::iterator iter = valueArray.begin();
-			for(int p=0;p<polarizationCount;++p)
-			{
-				value.SetValue(p, *iter);
-				++iter;
-			}
-			BaselinePosition position;
-			position.antenna1 = antenna1Column(i);
-			position.antenna2 = antenna2Column(i);
-			position.frequency = frequencyColumn(i);
-			entries.push_back(std::pair<BaselinePosition, StatisticalValue>(position, value));
-		}
-	}
-}
-
-void QualityTablesFormatter::openMainTable(bool needWrite)
+void HistogramTablesFormatter::openMainTable(bool needWrite)
 {
 	if(_measurementSet == 0)
 	{
