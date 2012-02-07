@@ -236,7 +236,7 @@ GCFEvent::TResult CEPlogProcessor::createPropertySets(GCFEvent& event,
         for (unsigned inputBuffer = 0; inputBuffer < itsNrInputBuffers; inputBuffer++) {
             if (!itsInputBuffers[inputBuffer]) {
                 string PSname(formatString("LOFAR_PermSW_PSIONode%02d_InputBuffer", inputBuffer));
-                itsInputBuffers[inputBuffer] = new RTDBPropertySet(PSname, PST_INPUT_BUFFER, PSAT_WO | PSAT_CW, this);
+                itsInputBuffers[inputBuffer] = new RTDBPropertySet(PSname, "InputBuffer", PSAT_WO | PSAT_CW, this);
             }
 
             usleep (2000); // wait 2 ms in order not to overload the system  
@@ -251,7 +251,7 @@ GCFEvent::TResult CEPlogProcessor::createPropertySets(GCFEvent& event,
 
               if (!itsAdders[index]) {
                   string PSname(formatString("LOFAR_ObsSW_OSIONode%02d_Adder%01d", ionode, adder));
-                  itsAdders[index] = new RTDBPropertySet(PSname, PST_ADDER, PSAT_WO | PSAT_CW, this);
+                  itsAdders[index] = new RTDBPropertySet(PSname, "Adder", PSAT_WO | PSAT_CW, this);
               }
 
               usleep (2000); // wait 2 ms in order not to overload the system  
@@ -266,7 +266,7 @@ GCFEvent::TResult CEPlogProcessor::createPropertySets(GCFEvent& event,
 
             if (!itsWriters[index]) {
               string PSname(formatString("LOFAR_ObsSW_OSLocusNode%03d_Writer%02d", storage, writer));
-              itsWriters[index] = new RTDBPropertySet(PSname, PST_STORAGE, PSAT_WO | PSAT_CW, this);
+              itsWriters[index] = new RTDBPropertySet(PSname, "Writer", PSAT_WO | PSAT_CW, this);
             }
 
             usleep (2000); // wait 2 ms in order not to overload the system  
