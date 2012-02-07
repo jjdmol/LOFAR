@@ -79,13 +79,16 @@ namespace LOFAR
    Int maxsupport,
    const String& imgName,
    Bool Use_EJones,
-   Bool Apply_Element)
+   Bool Apply_Element,
+   const casa::Record& parameters
+  )
   // ,
   //Int TaylorTerm,
     //Double RefFreq
     : m_shape(shape),
       m_coordinates(coordinates),
-      m_aTerm(ms),
+      itsParameters(parameters),
+      m_aTerm(ms, parameters),
       m_maxW(Wmax), //maximum W set by ft machine to flag the w>wmax
       m_nWPlanes(nW),
       m_oversampling(oversample),
@@ -103,7 +106,6 @@ namespace LOFAR
       itsTimeCFpar(0),
       itsTimeCFfft(0),
       itsTimeCFcnt(0)
-      //Not sure how useful that is
   {
     if (itsVerbose > 0) {
       cout<<"LofarConvolutionFunction:shape  "<<shape<<endl;
@@ -330,9 +332,15 @@ namespace LOFAR
       Vector<Double> refpix_element(2, 0.5*(nPixelsConv_element-1));
       coordinate_element.setReferencePixel(refpix_element);
       
+      //hier is het
+      
+      m_aTerm.setDirection(coordinate, shape);
+      
       MEpoch binEpoch;
       binEpoch.set(Quantity(time, "s"));
-      LofarATerm::ITRFDirectionMap dirMap = m_aTerm.makeDirectionMap(coordinate, shape, binEpoch);
+      
+      m_aTerm.setEpoch(binEpoch);
+//       LofarATerm::ITRFDirectionMap dirMap = m_aTerm.makeDirectionMap(coordinate, shape, binEpoch);
 
       for (uInt i=0; i<m_nStations; ++i) {
         timerPar.start();
@@ -343,7 +351,7 @@ namespace LOFAR
 	vector< Cube<Complex> > aTermA_element;
 	vector< Cube<Complex> > aTermA_array;
 
-	vector< Matrix<Complex> > aTermA_array_plane(m_aTerm.evaluateArrayFactor(i, 0, dirMap, list_freq , list_freq , true));
+	vector< Matrix<Complex> > aTermA_array_plane(m_aTerm.evaluateArrayFactor(i, 0, list_freq , list_freq , true));
 	aTermA_array.resize(m_nChannel);
         for (uInt ch=0; ch<m_nChannel; ++ch) {
 	  aTermA_array[ch].resize(IPosition(3,shape[0],shape[0],4));
@@ -356,7 +364,7 @@ namespace LOFAR
 	  plane2=aTermA_array_plane[ch].copy();
 	}
 
-	aTermA_element=m_aTerm.evaluateElementResponse(i, 0, dirMap, list_freq, true);
+	aTermA_element=m_aTerm.evaluateElementResponse(i, 0, list_freq, true);
 
 	//store(coordinate,aTermA_element[0],"aTermA_element."+String::toString(i)+".img");
 	//store(coordinate,aTermA_array[0],"aTermA_array."+String::toString(i)+".img");

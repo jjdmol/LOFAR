@@ -82,7 +82,9 @@ namespace LOFAR
                              Int maxsupport,
                              const String& imgName,
 			     Bool Use_EJones,
-			     Bool Apply_Element);
+			     Bool Apply_Element,
+                             const casa::Record& parameters
+                            );
     //,
     //			     Int TaylorTerm,
     //			     Double RefFreq);
@@ -493,6 +495,7 @@ namespace LOFAR
 
 
     //# Data members.
+    casa::Record       itsParameters;
     IPosition           m_shape;
     DirectionCoordinate m_coordinates;
     WScale              m_wScale;

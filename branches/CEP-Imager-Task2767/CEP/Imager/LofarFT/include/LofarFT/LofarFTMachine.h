@@ -159,7 +159,9 @@ public:
 		 Double PBCut,
 		 Bool PredictFT,
 		 String PsfOnDisk,
-		 Bool UseMasksDegrid);//,
+		 Bool UseMasksDegrid,
+                 const casa::Record& parameters
+                );//,
 		 //Double FillFactor);
 //  LofarFTMachine(Long cachesize, Int tilesize,  CountedPtr<VisibilityResamplerBase>& visResampler,String convType,
 //	 MDirection mTangent, Float padding=1.0, Bool usezero=True,
@@ -474,6 +476,7 @@ protected:
 
   LofarVisResampler visResamplers_p;
 
+  casa::Record       itsParameters;
   casa::MeasurementSet itsMS;
   Int itsNWPlanes;
   double itsWMax;

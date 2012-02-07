@@ -439,8 +439,14 @@ int main (Int argc, char** argv)
 		   "Use gridder using linear interpolation (not working yet, never to be)",
 		   "bool");
     inputs.create ("UseEJones", "true",
-		   "Use the beam for the calculation of the convolution function (not working yet)",
-		   "bool");
+                   "Use the beam for the calculation of the convolution function (not working yet)",
+                   "bool");
+    inputs.create ("applyIonosphere", "false",
+                   "apply ionospheric correction",
+                   "bool");
+    inputs.create ("splitbeam", "true",
+                   "Evaluate station beam and element beam separately (splitbeam = true is faster)",
+                   "bool");
     // inputs.create ("ApplyElement", "false",
     // 		   "Apply the element beam",
     // 		   "bool");
@@ -479,6 +485,8 @@ int main (Int argc, char** argv)
     Bool fixed          = inputs.getBool("fixed");
     Bool UseLIG         = inputs.getBool("UseLIG");
     Bool UseEJones      = inputs.getBool("UseEJones");
+    Bool applyIonosphere = inputs.getBool("applyIonosphere");
+    Bool splitbeam = inputs.getBool("splitbeam");
     Bool ApplyElement   ;//= inputs.getBool("ApplyElement");
     Bool constrainFlux  = inputs.getBool("constrainflux");
     Bool preferVelocity = inputs.getBool("prefervelocity");
@@ -657,6 +665,8 @@ int main (Int argc, char** argv)
     params.define ("PsfImage", PsfImage);
     params.define ("UseMasksDegrid", Use_masks);
     params.define ("RowBlock", RowBlock);
+    params.define ("applyIonosphere", applyIonosphere);
+    params.define ("splitbeam", splitbeam);
     //params.define ("FillFactor", FillFactor);
     
     LOFAR::LofarImager imager(ms, params);

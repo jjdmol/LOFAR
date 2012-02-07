@@ -121,7 +121,9 @@ LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize,
 			       Double PBCut, 
 			       Bool PredictFT, 
 			       String PsfOnDisk, 
-			       Bool UseMasksDegrid)//, 
+			       Bool UseMasksDegrid,
+                               const Record& parameters
+                              )//, 
 			       //Double FillFactor)
   : FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize),
     tilesize(itilesize), gridder(0), isTiled(False), convType(iconvType),
@@ -133,8 +135,12 @@ LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize,
     itsMaxSupport(maxsupport), itsOversample(oversample), itsImgName(imgName),
     itsGridMuellerMask(gridMuellerMask),
     itsDegridMuellerMask(degridMuellerMask),
-    itsGriddingTime(0), itsDegriddingTime(0), itsCFTime(0)
+    itsGriddingTime(0), itsDegriddingTime(0), itsCFTime(0), itsParameters(parameters)
 {
+  cout << "=======LofarFTMachine====================================" << endl;
+  cout << itsParameters << endl;
+  cout << "=========================================================" << endl;
+  
   logIO() << LogOrigin("LofarFTMachine", "LofarFTMachine")  << LogIO::NORMAL;
   logIO() << "You are using a non-standard FTMachine" << LogIO::WARN << LogIO::POST;
   mLocation_p=mLocation;
@@ -291,6 +297,7 @@ LofarFTMachine& LofarFTMachine::operator=(const LofarFTMachine& other)
     itsGriddingTime = other.itsGriddingTime;
     itsDegriddingTime = other.itsDegriddingTime;
     itsCFTime = other.itsCFTime;
+    itsParameters = other.itsParameters;
   }
   return *this;
 }
@@ -391,7 +398,8 @@ void LofarFTMachine::init() {
                                              itsVerbose, itsMaxSupport,
                                              itsImgName+String::toString(thisterm_p),
 					     its_Use_EJones,
-					     its_Apply_Element);
+					     its_Apply_Element,
+                                             itsParameters);
 
   // Set up image cache needed for gridding. For BOX-car convolution
   // we can use non-overlapped tiles. Otherwise we need to use

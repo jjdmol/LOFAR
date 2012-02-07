@@ -26,8 +26,10 @@
 #include <Common/LofarTypes.h>
 #include <Common/lofar_vector.h>
 #include <BBSKernel/Instrument.h>
+#include <ParmDB/ParmFacade.h>
 
 #include <casa/Arrays/Array.h>
+#include <casa/Containers/Record.h>
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MEpoch.h>
 
@@ -42,7 +44,7 @@ namespace LOFAR
   class LofarATerm
   {
   public:
-    LofarATerm(const casa::MeasurementSet &ms);
+    LofarATerm(const casa::MeasurementSet &ms, const casa::Record& parameters);
 
     struct ITRFDirectionMap
     {
@@ -51,6 +53,10 @@ namespace LOFAR
       BBS::Vector3              refTile;
       casa::Cube<casa::Double>  directions;
     };
+    
+    void setDirection(const casa::DirectionCoordinate &coordinates, const casa::IPosition &shape);
+    
+    void setEpoch(const casa::MEpoch &epoch);
 
     // Compute an ITRF direction vector for each pixel at the given epoch. This
     // map can then be used to call any of the evaluate* functions.
@@ -69,7 +75,7 @@ namespace LOFAR
     // the response to be multiplied by the inverse of the response at the
     // central pixel.
     vector<casa::Cube<casa::Complex> > evaluate(uint idStation,
-      const ITRFDirectionMap &map, const casa::Vector<casa::Double> &freq,
+      const casa::Vector<casa::Double> &freq,
       const casa::Vector<casa::Double> &reference, bool normalize = false)
       const;
 
@@ -82,7 +88,7 @@ namespace LOFAR
     // the response to be multiplied by the inverse of the array factor at the
     // central pixel.
     vector<casa::Matrix<casa::Complex> > evaluateArrayFactor(uint idStation,
-      uint idPolarization, const ITRFDirectionMap &map,
+      uint idPolarization,
       const casa::Vector<casa::Double> &freq,
       const casa::Vector<casa::Double> &reference, bool normalize = false)
       const;
@@ -95,12 +101,35 @@ namespace LOFAR
     // evaluated. The normalize argument, when set to true, causes the response
     // to be multiplied by the inverse of the response at the central pixel.
     vector<casa::Cube<casa::Complex> > evaluateElementResponse(uint idStation,
-      uint idField, const ITRFDirectionMap &map,
+      uint idField,
       const casa::Vector<casa::Double> &freq, bool normalize = false) const;
 
+    vector<casa::Cube<casa::Complex> > evaluateIonosphere(
+      uint station,
+      const casa::Vector<casa::Double> &freq,
+      bool normalize);
+
   private:
-    casa::MDirection      itsRefDelay, itsRefTile;
+    
+    void initParmDB(const casa::String &parmdbname);
+    double get_parmvalue( std::string parmname );
+
+    casa::Record itsParameters;
+
     BBS::Instrument::Ptr  itsInstrument;
+    const casa::DirectionCoordinate *itsDirectionCoordinates;
+    const casa::IPosition       *itsShape;
+    casa::MDirection      itsRefDelay, itsRefTile;
+    ITRFDirectionMap      itsITRFDirectionMap;
+    
+    // state variables for ionosphere
+    casa::Bool itsapplyIonosphere;
+    LOFAR::BBS::ParmFacade* pdb;
+    double time, r0, beta, height;
+    casa::Vector<casa::String>   cal_pp_names;
+    casa::Matrix<casa::Double> cal_pp;
+    casa::Vector<casa::Double> tec_white;
+    
   };
 
 } // namespace LOFAR

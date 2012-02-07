@@ -66,15 +66,80 @@ namespace
   vector<Matrix<Complex> > asVector(Cube<DComplex> &response);
 }
 
-  LofarATerm::LofarATerm(const MeasurementSet& ms)
+  LofarATerm::LofarATerm(const MeasurementSet& ms, const casa::Record& parameters)
   {
     itsInstrument = BBS::readInstrument(ms);
     itsRefDelay = MDirection::Convert(BBS::readDelayReference(ms),
       MDirection::J2000)();
     itsRefTile = MDirection::Convert(BBS::readTileReference(ms),
       MDirection::J2000)();
+     itsDirectionCoordinates = 0;
+    itsParameters = parameters;
+    itsapplyIonosphere = False;
+    if (itsParameters.fieldNumber("applyIonosphere") > -1) itsapplyIonosphere = itsParameters.asBool("applyIonosphere");
+    cout << "Apply Ionosphere:" << itsapplyIonosphere << endl;
+    if (itsapplyIonosphere) 
+    {
+      String parmdbname = ms.tableName() + "/instrument";
+      cout << parmdbname << endl;
+      initParmDB(parmdbname);
+      cout << cal_pp_names << endl;
+    }
   }
 
+  void LofarATerm::initParmDB(const casa::String  &parmdbname)
+  {
+    this->pdb = new LOFAR::BBS::ParmFacade (parmdbname);
+    std::string prefix = "Piercepoint:X:";
+    std::vector<std::string> v = this->pdb->getNames(prefix + "*");
+    this->cal_pp_names = Vector<String>(v.size());
+    this->cal_pp = Matrix<Double>(3,v.size());
+    this->tec_white = Vector<Double>(v.size());
+    
+    //strip cal_pp_names from prefix
+    for (uint i=0; i<v.size(); i++) 
+    {
+      this->cal_pp_names[i] = v[i].substr(prefix.length());
+    }
+    
+  }
+  
+  void LofarATerm::setDirection(const casa::DirectionCoordinate &coordinates, const IPosition &shape) {
+    itsDirectionCoordinates = &coordinates;
+    itsShape = &shape;
+  }
+  
+  
+  void LofarATerm::setEpoch( const MEpoch &epoch )
+  {
+    if (this->itsDirectionCoordinates) itsITRFDirectionMap = makeDirectionMap(*itsDirectionCoordinates, *itsShape, epoch);    
+    if (this->itsapplyIonosphere) 
+    {
+      this->time = epoch.get(casa::Unit("s")).getValue();
+      this->r0 = get_parmvalue("r_0");
+      this->beta = get_parmvalue("beta");
+      this->height = get_parmvalue("height");
+      for(uint i = 0; i < this->cal_pp_names.size(); ++i) {
+        this->cal_pp(0, i) = get_parmvalue("Piercepoint:X:" + this->cal_pp_names(i));
+        this->cal_pp(1, i) = get_parmvalue("Piercepoint:Y:" + this->cal_pp_names(i));
+        this->cal_pp(2, i) = get_parmvalue("Piercepoint:Z:" + this->cal_pp_names(i));
+        this->tec_white(i) = get_parmvalue("TECfit_white:0:" + this->cal_pp_names(i));
+      }
+    }
+  }
+  
+  double LofarATerm::get_parmvalue( std::string parmname ) 
+  {
+    double freq = 50e6; // the ionospheric parameters are not frequency dependent, so just pick an arbitrary frequency
+                         // this frequency should be within the range specified in the parmdbname
+                         // this range is again quite arbitrary
+    casa::Record result = this->pdb->getValues (parmname, freq, freq+0.5, 1.0, this->time, this->time + 0.5, 1.0 );
+    casa::Array<double> parmvalues;
+    result.subRecord(parmname).get("values", parmvalues);
+    return parmvalues(IPosition(2,0,0));
+  }
+  
+  
   LofarATerm::ITRFDirectionMap
   LofarATerm::makeDirectionMap(const DirectionCoordinate &coordinates,
     const IPosition &shape, const MEpoch &epoch) const
@@ -100,7 +165,7 @@ namespace
     map.refTile[2] = mvRefTile(2);
 
     MDirection world;
-    Vector<Double> pixel = coordinates.referencePixel();
+    casa::Vector<Double> pixel = coordinates.referencePixel();
 
     Cube<Double> mapITRF(3, shape[0], shape[1], 0.0);
     for(pixel[1] = 0.0; pixel(1) < shape[1]; ++pixel[1])
@@ -125,9 +190,10 @@ namespace
   }
 
   vector<Cube<Complex> > LofarATerm::evaluate(uint idStation,
-    const ITRFDirectionMap &map, const Vector<Double> &freq,
+    const Vector<Double> &freq,
     const Vector<Double> &reference, bool normalize) const
   {
+    const ITRFDirectionMap &map = itsITRFDirectionMap;
     AlwaysAssert(idStation < itsInstrument->nStations(), SynthesisError);
     BBS::Station::ConstPtr station = itsInstrument->station(idStation);
 
@@ -189,13 +255,14 @@ namespace
   }
 
   vector<Matrix<Complex> > LofarATerm::evaluateArrayFactor(uint idStation,
-    uint idPolarization, const ITRFDirectionMap &map,
+    uint idPolarization,
     const Vector<Double> &freq, const Vector<Double> &reference, bool normalize)
     const
   {
     AlwaysAssert(idStation < itsInstrument->nStations(), SynthesisError);
     AlwaysAssert(idPolarization  < 2, SynthesisError);
 
+    const ITRFDirectionMap &map = itsITRFDirectionMap;
     BBS::Station::ConstPtr station = itsInstrument->station(idStation);
     Array<DComplex> AF = computeFieldArrayFactor(station, 0, map, freq,
       reference);
@@ -222,11 +289,12 @@ namespace
   }
 
   vector<Cube<Complex> > LofarATerm::evaluateElementResponse(uint idStation,
-    uint idField, const ITRFDirectionMap &map, const Vector<Double> &freq,
+    uint idField, const Vector<Double> &freq,
     bool normalize) const
   {
     AlwaysAssert(idStation < itsInstrument->nStations(), SynthesisError);
 
+    const ITRFDirectionMap &map = itsITRFDirectionMap;
     BBS::AntennaField::ConstPtr field =
       itsInstrument->station(idStation)->field(idField);
 
@@ -248,6 +316,167 @@ namespace
     return asVector(response);
   }
 
+  vector<Cube<Complex> > LofarATerm::evaluateIonosphere(
+    uint station,
+    const Vector<Double> &freq,
+    bool normalize)
+  {
+    const ITRFDirectionMap &map = itsITRFDirectionMap;
+
+//    AlwaysAssert(station < this->instrument.nStations(), SynthesisError);
+//    AlwaysAssert(shape[0] > 0 && shape[1] > 0, SynthesisError);
+//    AlwaysAssert(freq.size() > 0, SynthesisError);
+
+    // Create conversion engine (from J2000 -> ITRF).
+
+    const uint nX = map.directions.shape()[1];
+    const uint nY = map.directions.shape()[2];
+    
+    const uint nFreq = freq.size();
+    
+    const casa::MVPosition p = this->itsInstrument->station(station)->position().getValue();
+    
+    const double earth_ellipsoid_a = 6378137.0;
+    const double earth_ellipsoid_a2 = earth_ellipsoid_a*earth_ellipsoid_a;
+    const double earth_ellipsoid_b = 6356752.3142;
+    const double earth_ellipsoid_b2 = earth_ellipsoid_b*earth_ellipsoid_b;
+    const double earth_ellipsoid_e2 = (earth_ellipsoid_a2 - earth_ellipsoid_b2) / earth_ellipsoid_a2;
+ 
+    const double ion_ellipsoid_a = earth_ellipsoid_a + height;
+    const double ion_ellipsoid_a2_inv = 1.0 / (ion_ellipsoid_a * ion_ellipsoid_a);
+    const double ion_ellipsoid_b = earth_ellipsoid_b + height;
+    const double ion_ellipsoid_b2_inv = 1.0 / (ion_ellipsoid_b * ion_ellipsoid_b);
+
+
+    double x = p(0)/ion_ellipsoid_a;
+    double y = p(1)/ion_ellipsoid_a;
+    double z = p(2)/ion_ellipsoid_b;
+    double c = x*x + y*y + z*z - 1.0;
+    
+    casa::Cube<double> piercepoints(4, nX, nY, 0.0);
+   
+    #pragma omp parallel
+    {
+    #pragma omp for
+    for(uint i = 0 ; i < nX; ++i) 
+    {
+      for(uint j = 0 ; j < nY; ++j) 
+      {
+        double dx = map.directions(0,i,j) / ion_ellipsoid_a;
+        double dy = map.directions(1,i,j) / ion_ellipsoid_a;
+        double dz = map.directions(2,i,j) / ion_ellipsoid_b;
+        double a = dx*dx + dy*dy + dz*dz;
+        double b = x*dx + y*dy  + z*dz;
+        double alpha = (-b + std::sqrt(b*b - a*c))/a;
+        piercepoints(0, i, j) = p(0) + alpha*map.directions(0,i,j);
+        piercepoints(1, i, j) = p(1) + alpha*map.directions(1,i,j);
+        piercepoints(2, i, j) = p(2) + alpha*map.directions(2,i,j);
+        double normal_x = piercepoints(0, i, j) * ion_ellipsoid_a2_inv;
+        double normal_y = piercepoints(1, i, j) * ion_ellipsoid_a2_inv;
+        double normal_z = piercepoints(2, i, j) * ion_ellipsoid_b2_inv;
+        double norm_normal2 = normal_x*normal_x + normal_y*normal_y + normal_z*normal_z;
+        double norm_normal = std::sqrt(norm_normal2);
+        double sin_lat2 = normal_z*normal_z / norm_normal2;
+//         double cos_za = (mapITRF(0,i,j)*normal_x + mapITRF(1,i,j)*normal_y + mapITRF(2,i,j)*normal_z) / norm_normal;
+//         piercepoints(3, i, j) = cos_za;
+
+//        casa::MPosition p1(casa::MVPosition(piercepoints(0, i, j), piercepoints(1, i, j), piercepoints(2, i, j)),casa::MPosition::ITRF);
+//        positionWGS84 = casa::MPosition::Convert(p1, casa::MPosition::WGS84)();
+//        piercepoints(2, i, j) = positionWGS84.getValue().getLength().getValue()-height;
+
+        double g = 1.0 - earth_ellipsoid_e2*sin_lat2;
+        double sqrt_g = std::sqrt(g);
+
+        double M = earth_ellipsoid_b2 / ( earth_ellipsoid_a * g * sqrt_g );
+        double N = earth_ellipsoid_a / sqrt_g;
+
+        double local_ion_ellipsoid_e2 = (M-N) / ((M+height)*sin_lat2 - N - height);
+        double local_ion_ellipsoid_a = (N+height) * std::sqrt(1.0 - local_ion_ellipsoid_e2*sin_lat2);
+        double local_ion_ellipsoid_b = local_ion_ellipsoid_a*std::sqrt(1.0 - local_ion_ellipsoid_e2);
+
+        double z_offset = ((1.0-earth_ellipsoid_e2)*N + height - (1.0-local_ion_ellipsoid_e2)*(N+height)) * std::sqrt(sin_lat2);
+
+        double x1 = p(0)/local_ion_ellipsoid_a;
+        double y1 = p(1)/local_ion_ellipsoid_a;
+        double z1 = (p(2)-z_offset)/local_ion_ellipsoid_b;
+        double c1 = x1*x1 + y1*y1 + z1*z1 - 1.0;
+
+        dx = map.directions(0,i,j) / local_ion_ellipsoid_a;
+        dy = map.directions(1,i,j) / local_ion_ellipsoid_a;
+        dz = map.directions(2,i,j) / local_ion_ellipsoid_b;
+        a = dx*dx + dy*dy + dz*dz;
+        b = x1*dx + y1*dy  + z1*dz;
+        alpha = (-b + std::sqrt(b*b - a*c1))/a;
+
+        piercepoints(0, i, j) = p(0) + alpha*map.directions(0,i,j);
+        piercepoints(1, i, j) = p(1) + alpha*map.directions(1,i,j);
+        piercepoints(2, i, j) = p(2) + alpha*map.directions(2,i,j);
+        normal_x = piercepoints(0, i, j) / (local_ion_ellipsoid_a * local_ion_ellipsoid_a);
+        normal_y = piercepoints(1, i, j) / (local_ion_ellipsoid_a * local_ion_ellipsoid_a);
+        normal_z = (piercepoints(2, i, j)-z_offset) / (local_ion_ellipsoid_b * local_ion_ellipsoid_b);
+        norm_normal2 = normal_x*normal_x + normal_y*normal_y + normal_z*normal_z;
+        norm_normal = std::sqrt(norm_normal2);
+        double cos_za_rec = norm_normal / (map.directions(0,i,j)*normal_x + map.directions(1,i,j)*normal_y + map.directions(2,i,j)*normal_z);
+        piercepoints(3, i, j) = cos_za_rec;
+
+//         p1 = casa::MPosition(casa::MVPosition(piercepoints(0, i, j), piercepoints(1, i, j), piercepoints(2, i, j)),casa::MPosition::ITRF);
+//        positionWGS84 = casa::MPosition::Convert(p1, casa::MPosition::WGS84)();
+//        piercepoints(0, i, j) = positionWGS84.getValue().getLength().getValue()-height;
+//        cout << positionWGS84.getValue().getLength().getValue()-height << endl;
+
+      }
+    }
+    }  
+    Matrix<Double> tec(nX, nY, 0.0);
+    
+    Double r0sqr = r0 * r0;
+    Double beta_2 = 0.5 * beta;
+    #pragma omp parallel
+    {
+    #pragma omp for
+    for(uint i = 0 ; i < nX; ++i) 
+    {
+      for(uint j = 0 ; j < nY; ++j) 
+      {
+        for(uint k = 0 ; k < cal_pp_names.size(); ++k) 
+        {
+          Double dx = cal_pp(0, k) - piercepoints(0,i,j);
+          Double dy = cal_pp(1, k) - piercepoints(1,i,j);
+          Double dz = cal_pp(2, k) - piercepoints(2,i,j);
+          Double weight = pow((dx * dx + dy * dy + dz * dz) / r0sqr, beta_2);
+          tec(i,j) += weight * tec_white(k);
+        }
+        tec(i,j) *= (-0.5 * piercepoints(3,i,j));
+      }
+    }
+    }
+
+    // Convert an Array<DComplex> to a vector<Cube<Complex> >.
+
+    vector<Cube<Complex> > tmp;
+//    cout << "freq: " << freq[0] << endl;
+    tmp.reserve(nFreq);
+    for (uint i = 0; i < freq.size(); ++i)
+    {
+      Double a = (8.44797245e9 / freq[i]);
+      Cube<Complex> planef(IPosition(3, nX, nY, 4), Complex(0.0, 0.0));
+      for(uint j = 0 ; j < nX; ++j) 
+      {
+        for(uint k = 0 ; k < nY; ++k) 
+        {
+          Double phase = -tec(j,k) * a;
+          Complex phasor(cos(phase), sin(phase));
+          planef(j,k, 0) = phasor;
+          planef(j,k, 3) = phasor;
+        }
+      }
+//      cout << planef << endl;
+      tmp.push_back(planef);
+    }
+    return tmp;
+  }
+  
+  
 namespace
 {
   vector<Cube<Complex> > asVector(Array<DComplex> &response)
@@ -641,7 +870,7 @@ namespace
 
     return E;
   }
-
+  
 } // unnamed namespace
 
 } // namespace LOFAR

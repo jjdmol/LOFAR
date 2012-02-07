@@ -45,7 +45,6 @@ namespace LOFAR
       itsMachine    (0),
       itsMachineOld (0)
   {
-    cout << itsParameters<<endl;
   }
 
   LofarImager::~LofarImager()
@@ -58,6 +57,7 @@ namespace LOFAR
     Double RefFreq((*sm_p).getReferenceFrequency());
 
     if (itsParameters.asBool("splitbeam")) {
+      cout << itsParameters<<endl;
       itsMachine = new LofarFTMachine(cache_p/2, tile_p,
                                       visResampler, gridfunction_p,
                                       *ms_p, wprojPlanes_p, mLocation_p,
@@ -76,7 +76,8 @@ namespace LOFAR
                                       itsParameters.asDouble("PBCut"),
                                       itsParameters.asBool("PredictFT"),
                                       itsParameters.asString("PsfImage"),
-                                      itsParameters.asBool("UseMasksDegrid"));//,
+                                      itsParameters.asBool("UseMasksDegrid"),
+                                      itsParameters);//,
                                       //itsParameters.asDouble("FillFactor"));
     
       ft_p  = itsMachine;
