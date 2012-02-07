@@ -3,7 +3,7 @@
 #
 # Run the tests to test a LOFAR station
 # H. Meulman
-# Version 0.11                22-nov-2011	SVN*****
+# Version 0.12                27-jan-2012	SVN*****
 
 # 24 sep: local log directory aangepast
 # 27 sept: 	- Toevoeging delay voor tbbdriver polling
@@ -26,7 +26,9 @@
 # oct 2011: added CS028 and CS031
 # 22 nov 2011: TBB versie aanpassen naar 2.39
 # 22 nov 2011: Changed filename to not overwrite testdata subrack test
-# 12 jan 2012: Reject LBA antennas when signal differs more than 10dB
+# 12 jan 2012: Reject LBA antennas when signal differs more than 10dB up. These antennas shoeld not contribute to the average
+# 26 jan 2012: Reject LBA antennas when signal differs less than 3dB down. These antennas shoeld not contribute to the average
+# 27 jan 2012: Store logfiles in /localhome/stationtest/data in "local mode"
 
 # todo:
 # - Als meer dan 10 elementen geen rf signaal hebben, keur dan hele tile af
@@ -100,18 +102,36 @@ if debug: print ('StationType = %d' % StationType)
 if StationType == 0: print ('Error: StationType = %d (Unknown station)' % StationType)
 
 # Path
-if StationType == International: 
-	RSPgoldfile=('/misc/home/etc/stationtest/gold/rsp_version_int.gold')
-	TBBgoldfile=('/misc/home/etc/stationtest/gold/tbb_version_int.gold')
-	TDS=[0,4,8,12,16,20]
+if os.path.exists('/globalhome'): 
+	print('ILT mode')
+	if StationType == International: 
+		RSPgoldfile=('/misc/home/etc/stationtest/gold/rsp_version_int.gold')
+		TBBgoldfile=('/misc/home/etc/stationtest/gold/tbb_version_int.gold')
+		TDS=[0,4,8,12,16,20]
+	else: 
+		RSPgoldfile=('/misc/home/etc/stationtest/gold/rsp_version.gold')
+		TBBgoldfile=('/misc/home/etc/stationtest/gold/tbb_version.gold')
+		TDS=[0,4,8]
+	TBBmgoldfile=('/misc/home/etc/stationtest/gold/tbb_memory.gold')
+	#LogPath=('/misc/home/log/')
+	TestLogPath=('/misc/home/log/')	# Logging remote (on Kis001)
+	#TestLogPath=('/opt/stationtest/data/')	# Logging local (on station)
+
 else: 
-	RSPgoldfile=('/misc/home/etc/stationtest/gold/rsp_version.gold')
-	TBBgoldfile=('/misc/home/etc/stationtest/gold/tbb_version.gold')
-	TDS=[0,4,8]
-TBBmgoldfile=('/misc/home/etc/stationtest/gold/tbb_memory.gold')
-#LogPath=('/misc/home/log/')
-TestLogPath=('/misc/home/log/')	# Logging remote (on Kis001)
-#TestLogPath=('/opt/stationtest/data/')	# Logging local (on station)
+	print('Local mode')
+	if StationType == International: 
+		RSPgoldfile=('/opt/stationtest/gold/rsp_version_int.gold')
+		TBBgoldfile=('/opt/stationtest/gold/tbb_version_int.gold')
+		TDS=[0,4,8,12,16,20]
+	else: 
+		RSPgoldfile=('/opt/stationtest/gold/rsp_version.gold')
+		TBBgoldfile=('/opt/stationtest/gold/tbb_version.gold')
+		TDS=[0,4,8]
+	TBBmgoldfile=('/opt/stationtest/gold/tbb_memory.gold')
+	#LogPath=('/misc/home/log/')
+	#TestLogPath=('/misc/home/log/')	# Logging remote (on Kis001)
+	TestLogPath=('/opt/stationtest/data/')	# Logging local (on station)
+	
 #HistLogPath=('/opt/stationtest/data/')	# Logging local (on station)
 HistLogPath=('/localhome/stationtest/data/')	# Logging local (on station)
 
@@ -1295,7 +1315,7 @@ def LBAtest():
 	 	files = open_dir(dir_name)
 	
         	# start processing the element measurements
-		averagesum=0
+		averagesum=1
 		Rejected_antennas=0
 		for file_cnt in range(len(files)) :
 			f, frames_to_process, rcu_nr  = open_file(files, file_cnt)
@@ -1303,7 +1323,7 @@ def LBAtest():
 				sst_data = read_frame(f)
         	       		sst_subband = sst_data[subband_nr]
 				meet_data[rcu_nr] = sst_subband
-				if ((sst_subband>15000000) and (sst_subband<1500000000)): # average LCU is 150.000.000. Reject antennes met grotere afwijking dan 10dB
+				if ((sst_subband>75000000) and (sst_subband<1500000000)): # average LCU is about 150.000.000. Reject antennes met grotere afwijking dan 10dB en kleiner dan 3dB
 					averagesum=averagesum+sst_subband
 				else:
 					Rejected_antennas=Rejected_antennas+1
@@ -1316,7 +1336,8 @@ def LBAtest():
 						print ' waarde sst_subband 50 is ' + str(sst_subband)
 
 			f.close
-		average_lba=averagesum/(num_rcu-Rejected_antennas)
+		if (num_rcu-Rejected_antennas) <> 0: average_lba=averagesum/(num_rcu-Rejected_antennas) # to avoid devide by zero when all antenna's are wrong!
+		else: average_lba = 0
 #		if debug: 
 		print 'average = ' + str(average_lba)
 		print 'Number of rejected antennas = ' + str(Rejected_antennas)
@@ -1421,7 +1442,7 @@ def LBAtest():
  	files = open_dir(dir_name)
 
         # start processing the element measurements
-	averagesum=0
+	averagesum=1
 	Rejected_antennas=0
 	for file_cnt in range(len(files)) :
 		f, frames_to_process, rcu_nr  = open_file(files, file_cnt)
@@ -1429,7 +1450,7 @@ def LBAtest():
 			sst_data = read_frame(f)
                		sst_subband = sst_data[subband_nr]
 			meet_data[rcu_nr] = sst_subband
-			if ((sst_subband>15000000) and (sst_subband<1500000000)): # average LCU is 150.000.000. Reject antennes met grotere afwijking dan 10dB
+			if ((sst_subband>75000000) and (sst_subband<1500000000)): # average LCU is 150.000.000. Reject antennes met grotere afwijking dan 10dB en kleiner dan 3dB
 				averagesum=averagesum+sst_subband
 			else:
 				Rejected_antennas=Rejected_antennas+1
@@ -1437,12 +1458,13 @@ def LBAtest():
 			if debug:
 	                	if rcu_nr==0:
                        			print ' waarde sst_subband 0 is ' + str(sst_subband)
-                		if rcu_nr==166:
-                			print ' waarde sst_subband 166 is ' + str(sst_subband)
-				if rcu_nr==167:
-					print ' waarde sst_subband 167 is ' + str(sst_subband)
+                		if rcu_nr==2:
+                			print ' waarde sst_subband 2 is ' + str(sst_subband)
+				if rcu_nr==50:
+					print ' waarde sst_subband 50 is ' + str(sst_subband)
 		f.close
-	average_lba=averagesum/(num_rcu-Rejected_antennas)
+	if (num_rcu-Rejected_antennas) <> 0: average_lba=averagesum/(num_rcu-Rejected_antennas) # to avoid devide by zero when all antenna's are wrong!
+	else: average_lba = 0
 #	if debug: 
 	print 'average = ' + str(average_lba)
 	print 'Number of rejected antennas = ' + str(Rejected_antennas)
@@ -1807,7 +1829,7 @@ CheckTDSStatus200()		# Set clock to 200 MHz and check if locked
 CheckRSPStatus()		# Check status bits form the RSP ST
 GotoSwlevel2()			# Set system in software level 2 again (via level 1). Switching the clock will hold the TBBdriver
 #makeTBBVersionGold()		# make TBB Version ST
-CheckTBBVersion()		# CHeck TBB Version ST
+####CheckTBBVersion()		# CHeck TBB Version ST
 #makeTBBMemGold()		# make TBB Memory gold ST
 #CheckTBBMemory()		# Verify TBB memory modules on the TBB ST
 #CheckTBBSize()			# Verify the size of the TBB memory modules ST
