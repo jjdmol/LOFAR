@@ -264,8 +264,8 @@ def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0):
         names = []
         for patt in patterns:
             # Get all nodes and file names
-            ##(nodes,files) = findDirs(ps.getString(keyin))
-            (nodes,files) = (['locus1','locus2'], ['/data/L1/L1a.MS','/data/L1/L1b.MS'])
+            (nodes,files) = findDirs(ps.getString(keyin))
+            ##(nodes,files) = (['locus1','locus2'], ['/data/L1/L1a.MS','/data/L1/L1b.MS'])
             # Split into location (node:dir/) and basename.
             for i in range(len(files)):
                 locs.append  (nodes[i] + ':' + os.path.dirname(files[i]) + '/')
