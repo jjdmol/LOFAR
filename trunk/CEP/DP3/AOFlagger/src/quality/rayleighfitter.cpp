@@ -164,7 +164,7 @@ void RayleighFitter::FindFitRangeUnderRFIContamination(LogHistogram &hist, doubl
 	double maxCount = 0.0, maxPosition = 0.0;
 	for (LogHistogram::iterator i=hist.begin(); i!=hist.end(); ++i)
 	{
-		if(i.normalizedCount() > maxCount)
+		if(i.normalizedCount() > maxCount && i.value() > 0 && std::isfinite(i.value()))
 		{
 			maxCount = i.normalizedCount();
 			maxPosition = i.value();
