@@ -155,8 +155,18 @@ class LogHistogram
 				double value() const { return _iterator->first; }
 				double normalizedCount() const { return _iterator->second.GetCount() / value(); }
 				double unnormalizedCount() const { return _iterator->second.GetCount(); }
-				double binStart() const { return pow10(log10(_iterator->first)-0.005); }
-				double binEnd() const { return pow10(log10(_iterator->first)+0.005); }
+				double binStart() const
+				{
+					return _iterator->first>0.0 ?
+						pow10(log10(_iterator->first)-0.005) :
+						-pow10(log10(-_iterator->first)-0.005);
+				}
+				double binEnd() const
+				{
+					return _iterator->first>0.0 ?
+						pow10(log10(_iterator->first)+0.005) :
+						-pow10(log10(-_iterator->first)+0.005);
+				}
 			private:
 				std::map<double, AmplitudeBin>::iterator _iterator;
 		};
