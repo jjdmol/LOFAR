@@ -55,6 +55,7 @@ class HistogramPage : public Gtk::HBox {
 		}
 	private:
 		void addHistogramToPlot(class LogHistogram &histogram);
+		void addRayleighToPlot(class LogHistogram &histogram, double sigma, double n);
 		void updatePlot();
 		void plotPolarization(class HistogramCollection &histograms, unsigned p);
 		void onPlotPropertiesClicked() { }
@@ -69,6 +70,8 @@ class HistogramPage : public Gtk::HBox {
 		Gtk::Frame _polarizationFrame;
 		Gtk::VBox _polarizationBox;
 		Gtk::CheckButton _xxPolarizationButton, _xyPolarizationButton, _yxPolarizationButton, _yyPolarizationButton;
+		
+		Gtk::CheckButton _fitButton;
 		
 		std::string _statFilename;
 		Plot2D _plot;
