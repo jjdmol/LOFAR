@@ -128,7 +128,7 @@ class HistogramCollection
 				const unsigned rfiHistogramIndex = histogramTables.QueryTypeIndex(HistogramTablesFormatter::RFIHistogram, p);
 				std::vector<HistogramTablesFormatter::HistogramItem> rfiHistogram;
 				histogramTables.QueryHistogram(rfiHistogramIndex, rfiHistogram);
- 				GetRFIHistogram(0, 1, p).SetData(totalHistogram);
+ 				GetRFIHistogram(0, 1, p).SetData(rfiHistogram);
 			}
 		}
 	private:
