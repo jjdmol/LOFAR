@@ -34,25 +34,12 @@ class HistogramCollection
 		
 		HistogramCollection(unsigned polarizationCount) : _polarizationCount(polarizationCount)
 		{
-			_totalHistograms = new std::map<AntennaPair, LogHistogram*>[polarizationCount];
-			_rfiHistograms = new std::map<AntennaPair, LogHistogram*>[polarizationCount];
+			init();
 		}
 		
 		~HistogramCollection()
 		{
-			for(unsigned p=0;p<_polarizationCount;++p)
-			{
-				for(std::map<AntennaPair, LogHistogram*>::iterator i=_totalHistograms[p].begin(); i!=_totalHistograms[p].end(); ++i)
-				{
-					delete i->second;
-				}
-				for(std::map<AntennaPair, LogHistogram*>::iterator i=_rfiHistograms[p].begin(); i!=_rfiHistograms[p].end(); ++i)
-				{
-					delete i->second;
-				}
-			}
-			delete[] _totalHistograms;
-			delete[] _rfiHistograms;
+			destruct();
 		}
 		
 		void Add(const unsigned antenna1, const unsigned antenna2, const unsigned polarization, const std::complex<float> *values, const bool *isRFI, size_t sampleCount)
@@ -99,6 +86,12 @@ class HistogramCollection
 			getHistogramForCrossCorrelations(_rfiHistograms, polarization, target);
 		}
 		
+		void Clear()
+		{
+			destruct();
+			init();
+		}
+		
 		void Save(class HistogramTablesFormatter &histogramTables)
 		{
 			histogramTables.InitializeEmptyTables();
@@ -121,10 +114,50 @@ class HistogramCollection
 				}
 			}
 		}
+		
+		void Load(class HistogramTablesFormatter &histogramTables)
+		{
+			Clear();
+			for(unsigned p=0;p<_polarizationCount;++p)
+			{
+				const unsigned totalHistogramIndex = histogramTables.QueryTypeIndex(HistogramTablesFormatter::TotalHistogram, p);
+				std::vector<HistogramTablesFormatter::HistogramItem> totalHistogram;
+				histogramTables.QueryHistogram(totalHistogramIndex, totalHistogram);
+				GetTotalHistogram(0, 1, p).SetData(totalHistogram);
+
+				const unsigned rfiHistogramIndex = histogramTables.QueryTypeIndex(HistogramTablesFormatter::RFIHistogram, p);
+				std::vector<HistogramTablesFormatter::HistogramItem> rfiHistogram;
+				histogramTables.QueryHistogram(rfiHistogramIndex, rfiHistogram);
+ 				GetRFIHistogram(0, 1, p).SetData(totalHistogram);
+			}
+		}
 	private:
 		unsigned _polarizationCount;
 		std::map<AntennaPair, LogHistogram*> *_totalHistograms;
 		std::map<AntennaPair, LogHistogram*> *_rfiHistograms;
+		
+		void init()
+		{
+			_totalHistograms = new std::map<AntennaPair, LogHistogram*>[_polarizationCount];
+			_rfiHistograms = new std::map<AntennaPair, LogHistogram*>[_polarizationCount];
+		}
+		
+		void destruct()
+		{
+			for(unsigned p=0;p<_polarizationCount;++p)
+			{
+				for(std::map<AntennaPair, LogHistogram*>::iterator i=_totalHistograms[p].begin(); i!=_totalHistograms[p].end(); ++i)
+				{
+					delete i->second;
+				}
+				for(std::map<AntennaPair, LogHistogram*>::iterator i=_rfiHistograms[p].begin(); i!=_rfiHistograms[p].end(); ++i)
+				{
+					delete i->second;
+				}
+			}
+			delete[] _totalHistograms;
+			delete[] _rfiHistograms;
+		}
 
 		LogHistogram &getHistogram(std::map<AntennaPair, LogHistogram*> *histograms, const unsigned a1, const unsigned a2, const unsigned polarization)
 		{
@@ -145,7 +178,6 @@ class HistogramCollection
 					target.Add(*i->second);
 			}
 		}
-		
 };
 
 #endif
