@@ -74,6 +74,9 @@ void HistogramPage::addHistogramToPlot(const std::vector<HistogramTablesFormatte
 	for(std::vector<HistogramTablesFormatter::HistogramItem>::const_iterator i=histogram.begin();i!=histogram.end();++i)
 	{
 		const double b = (i->binStart + i->binEnd) * 0.5; // TODO this is actually slightly off
-		_plot.PushDataPoint(log(b), log(i->count));
+		const double logb = log10(b);
+		const double logc = log10(i->count);
+		if(std::isfinite(logb) && std::isfinite(logc))
+			_plot.PushDataPoint(logb, logc);
 	}
 }
