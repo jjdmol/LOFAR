@@ -113,7 +113,7 @@ class HistogramCollection
 				}
 				
 				LogHistogram rfiHistogram;
-				GetTotalHistogramForCrossCorrelations(p, rfiHistogram);
+				GetRFIHistogramForCrossCorrelations(p, rfiHistogram);
 				const unsigned rfiIndex = histogramTables.StoreOrQueryTypeIndex(HistogramTablesFormatter::RFIHistogram, p);
 				for(LogHistogram::iterator i=rfiHistogram.begin();i!=rfiHistogram.end();++i)
 				{

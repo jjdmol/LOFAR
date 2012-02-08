@@ -54,13 +54,13 @@ void HistogramPage::updatePlot()
 				const unsigned totalHistogramIndex = histogramTables.QueryTypeIndex(HistogramTablesFormatter::TotalHistogram, p);
 				std::vector<HistogramTablesFormatter::HistogramItem> totalHistogram;
 				histogramTables.QueryHistogram(totalHistogramIndex, totalHistogram);
-				_plot.StartLine("Histogram", "Amplitude in arbitrary units (log)", "Frequency (log)");
+				_plot.StartLine("Total histogram", "Amplitude in arbitrary units (log)", "Frequency (log)");
 				addHistogramToPlot(totalHistogram);
 
 				const unsigned rfiHistogramIndex = histogramTables.QueryTypeIndex(HistogramTablesFormatter::RFIHistogram, p);
 				std::vector<HistogramTablesFormatter::HistogramItem> rfiHistogram;
 				histogramTables.QueryHistogram(rfiHistogramIndex, rfiHistogram);
-				_plot.StartLine("Histogram", "Amplitude in arbitrary units (log)", "Frequency (log)");
+				_plot.StartLine("RFI histogram", "Amplitude in arbitrary units (log)", "Frequency (log)");
 				addHistogramToPlot(rfiHistogram);
 			}
 		}
@@ -75,7 +75,7 @@ void HistogramPage::addHistogramToPlot(const std::vector<HistogramTablesFormatte
 	{
 		const double b = (i->binStart + i->binEnd) * 0.5; // TODO this is actually slightly off
 		const double logb = log10(b);
-		const double logc = log10(i->count);
+		const double logc = log10(i->count / (i->binEnd - i->binStart));
 		if(std::isfinite(logb) && std::isfinite(logc))
 			_plot.PushDataPoint(logb, logc);
 	}
