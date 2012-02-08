@@ -23,9 +23,51 @@
 #include <AOFlagger/quality/histogramtablesformatter.h>
 
 #include <AOFlagger/msio/measurementset.h>
+#include <AOFlagger/quality/histogramcollection.h>
 
-HistogramPage::HistogramPage()
+HistogramPage::HistogramPage() :
+	_histogramTypeFrame("Histogram"),
+	_totalHistogramButton("Total"),
+	_rfiHistogramButton("RFI"),
+	_notRFIHistogramButton("Not RFI"),
+	_xxPolarizationButton("XX"),
+	_xyPolarizationButton("XY"),
+	_yxPolarizationButton("YX"),
+	_yyPolarizationButton("YY")
 {
+	_histogramTypeBox.pack_start(_totalHistogramButton, Gtk::PACK_SHRINK);
+	_totalHistogramButton.set_active(true);
+	_totalHistogramButton.signal_clicked().connect(sigc::mem_fun(*this, &HistogramPage::updatePlot));
+	_histogramTypeBox.pack_start(_rfiHistogramButton, Gtk::PACK_SHRINK);
+	_rfiHistogramButton.set_active(false);
+	_rfiHistogramButton.signal_clicked().connect(sigc::mem_fun(*this, &HistogramPage::updatePlot));
+	_histogramTypeBox.pack_start(_notRFIHistogramButton, Gtk::PACK_SHRINK);
+	_notRFIHistogramButton.set_active(false);
+	_notRFIHistogramButton.signal_clicked().connect(sigc::mem_fun(*this, &HistogramPage::updatePlot));
+	
+	_histogramTypeFrame.add(_histogramTypeBox);
+	
+	_sideBox.pack_start(_histogramTypeFrame, Gtk::PACK_SHRINK);
+	
+	_polarizationBox.pack_start(_xxPolarizationButton, Gtk::PACK_SHRINK);
+	_xxPolarizationButton.set_active(true);
+	_xxPolarizationButton.signal_clicked().connect(sigc::mem_fun(*this, &HistogramPage::updatePlot));
+	_polarizationBox.pack_start(_xyPolarizationButton, Gtk::PACK_SHRINK);
+	_xyPolarizationButton.set_active(false);
+	_xyPolarizationButton.signal_clicked().connect(sigc::mem_fun(*this, &HistogramPage::updatePlot));
+	_polarizationBox.pack_start(_yxPolarizationButton, Gtk::PACK_SHRINK);
+	_yxPolarizationButton.set_active(false);
+	_yxPolarizationButton.signal_clicked().connect(sigc::mem_fun(*this, &HistogramPage::updatePlot));
+	_polarizationBox.pack_start(_yyPolarizationButton, Gtk::PACK_SHRINK);
+	_yyPolarizationButton.set_active(true);
+	_yyPolarizationButton.signal_clicked().connect(sigc::mem_fun(*this, &HistogramPage::updatePlot));
+
+	_polarizationFrame.add(_polarizationBox);
+	
+	_sideBox.pack_start(_polarizationFrame, Gtk::PACK_SHRINK);
+	
+	pack_start(_sideBox, Gtk::PACK_SHRINK);
+	
 	_plotWidget.SetPlot(_plot);
 	pack_start(_plotWidget, Gtk::PACK_EXPAND_WIDGET);
 	
@@ -49,34 +91,50 @@ void HistogramPage::updatePlot()
 			
 			const unsigned polarizationCount = set.GetPolarizationCount();
 
-			for(unsigned p=0;p<polarizationCount;++p)
-			{
-				const unsigned totalHistogramIndex = histogramTables.QueryTypeIndex(HistogramTablesFormatter::TotalHistogram, p);
-				std::vector<HistogramTablesFormatter::HistogramItem> totalHistogram;
-				histogramTables.QueryHistogram(totalHistogramIndex, totalHistogram);
-				_plot.StartLine("Total histogram", "Amplitude in arbitrary units (log)", "Frequency (log)");
-				addHistogramToPlot(totalHistogram);
-
-				const unsigned rfiHistogramIndex = histogramTables.QueryTypeIndex(HistogramTablesFormatter::RFIHistogram, p);
-				std::vector<HistogramTablesFormatter::HistogramItem> rfiHistogram;
-				histogramTables.QueryHistogram(rfiHistogramIndex, rfiHistogram);
-				_plot.StartLine("RFI histogram", "Amplitude in arbitrary units (log)", "Frequency (log)");
-				addHistogramToPlot(rfiHistogram);
-			}
+			HistogramCollection histograms(polarizationCount);
+			histograms.Load(histogramTables);
+			
+			if(_xxPolarizationButton.get_active())
+				plotPolarization(histograms, 0);
+			if(_xyPolarizationButton.get_active() && polarizationCount>=1)
+				plotPolarization(histograms, 1);
+			if(_yxPolarizationButton.get_active() && polarizationCount>=2)
+				plotPolarization(histograms, 2);
+			if(_yyPolarizationButton.get_active() && polarizationCount>=3)
+				plotPolarization(histograms, 3);
 		}
 		
 		_plotWidget.Update();
 	}
 }
 
-void HistogramPage::addHistogramToPlot(const std::vector<HistogramTablesFormatter::HistogramItem> &histogram)
+void HistogramPage::plotPolarization(class HistogramCollection &histograms, unsigned p)
 {
-	for(std::vector<HistogramTablesFormatter::HistogramItem>::const_iterator i=histogram.begin();i!=histogram.end();++i)
+	if(_totalHistogramButton.get_active())
 	{
-		const double b = (i->binStart + i->binEnd) * 0.5; // TODO this is actually slightly off
-		const double logb = log10(b);
-		const double logc = log10(i->count / (i->binEnd - i->binStart));
-		if(std::isfinite(logb) && std::isfinite(logc))
-			_plot.PushDataPoint(logb, logc);
+		_plot.StartLine("Total histogram", "Amplitude in arbitrary units (log)", "Frequency (log)");
+		LogHistogram totalHistogram;
+		histograms.GetTotalHistogramForCrossCorrelations(p, totalHistogram);
+		addHistogramToPlot(totalHistogram);
+	}
+
+	if(_rfiHistogramButton.get_active())
+	{
+		_plot.StartLine("RFI histogram", "Amplitude in arbitrary units (log)", "Frequency (log)");
+		LogHistogram rfiHistogram;
+		histograms.GetRFIHistogramForCrossCorrelations(p, rfiHistogram);
+		addHistogramToPlot(rfiHistogram);
+	}
+}
+
+void HistogramPage::addHistogramToPlot(LogHistogram &histogram)
+{
+	for(LogHistogram::iterator i=histogram.begin();i!=histogram.end();++i)
+	{
+		const double x = i.value(); // TODO this is actually slightly off
+		const double logx = log10(x);
+		const double logc = log10(i.normalizedCount());
+		if(std::isfinite(logx) && std::isfinite(logc))
+			_plot.PushDataPoint(logx, logc);
 	}
 }

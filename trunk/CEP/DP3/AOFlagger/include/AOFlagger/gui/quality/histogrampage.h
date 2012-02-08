@@ -24,10 +24,10 @@
 #include <vector>
 
 #include <gtkmm/box.h>
+#include <gtkmm/checkbutton.h>
 #include <gtkmm/frame.h>
 
 #include <AOFlagger/quality/qualitytablesformatter.h>
-#include <AOFlagger/quality/histogramtablesformatter.h>
 
 #include <AOFlagger/gui/plot/plot2d.h>
 #include <AOFlagger/gui/plot/plotwidget.h>
@@ -54,10 +54,21 @@ class HistogramPage : public Gtk::HBox {
 			return !_statFilename.empty();
 		}
 	private:
-		void addHistogramToPlot(const std::vector<HistogramTablesFormatter::HistogramItem> &histogram);
+		void addHistogramToPlot(class LogHistogram &histogram);
 		void updatePlot();
+		void plotPolarization(class HistogramCollection &histograms, unsigned p);
 		void onPlotPropertiesClicked() { }
 		void onDataExportClicked() { }
+		
+		Gtk::VBox _sideBox;
+		
+		Gtk::Frame _histogramTypeFrame;
+		Gtk::VBox _histogramTypeBox;
+		Gtk::CheckButton _totalHistogramButton, _rfiHistogramButton, _notRFIHistogramButton;
+		
+		Gtk::Frame _polarizationFrame;
+		Gtk::VBox _polarizationBox;
+		Gtk::CheckButton _xxPolarizationButton, _xyPolarizationButton, _yxPolarizationButton, _yyPolarizationButton;
 		
 		std::string _statFilename;
 		Plot2D _plot;

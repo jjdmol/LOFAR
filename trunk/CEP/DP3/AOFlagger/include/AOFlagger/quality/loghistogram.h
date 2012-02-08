@@ -23,6 +23,9 @@
 #include <map>
 #include <cmath>
 #include <stdexcept>
+#include <vector>
+
+#include "histogramtablesformatter.h"
 
 class LogHistogram
 {
@@ -135,6 +138,15 @@ class LogHistogram
 			return (double) i->second.GetCount() / key;
 		}
 		
+		void SetData(std::vector<HistogramTablesFormatter::HistogramItem> &histogramData)
+		{
+			for(std::vector<HistogramTablesFormatter::HistogramItem>::const_iterator i=histogramData.begin(); i!=histogramData.end();++i)
+			{
+				const double b = (i->binStart + i->binEnd) * 0.5; // TODO somewhat inefficient...
+				getBin(getCentralAmplitude(b)).count = (unsigned long) i->count;
+			}
+		}
+		
 		class iterator
 		{
 			public:
@@ -153,7 +165,7 @@ class LogHistogram
 				bool operator!=(const iterator &other) const { return other._iterator != _iterator; }
 				iterator &operator++() { ++_iterator; return *this; }
 				double value() const { return _iterator->first; }
-				double normalizedCount() const { return _iterator->second.GetCount() / value(); }
+				double normalizedCount() const { return _iterator->second.GetCount() / (binEnd() - binStart()); }
 				double unnormalizedCount() const { return _iterator->second.GetCount(); }
 				double binStart() const
 				{
