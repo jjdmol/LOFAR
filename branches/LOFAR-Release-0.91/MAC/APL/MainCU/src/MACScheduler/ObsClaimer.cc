@@ -292,9 +292,9 @@ GCFEvent::TResult ObsClaimer::preparePVSS_state (GCFEvent& event, GCFPortInterfa
 				for (uint32	b(0); b < theObs.beams.size(); b++) {
 					for (uint32 t(0); t < theObs.beams[b].TABs.size(); t++) {
 						beamIndexArr.push_back  (new GCFPVInteger(b));
-						angle1Arr.push_back	  	(new GCFPVDouble(theObs.beams[b].TABs[t].angle1));
-						angle2Arr.push_back	  	(new GCFPVDouble(theObs.beams[b].TABs[t].angle2));
-						dirTypesArr.push_back 	(new GCFPVString(theObs.beams[b].TABs[t].directionType));
+						TABangle1Arr.push_back	  	(new GCFPVDouble(theObs.beams[b].TABs[t].angle1));
+						TABangle2Arr.push_back	  	(new GCFPVDouble(theObs.beams[b].TABs[t].angle2));
+						TABdirTypesArr.push_back 	(new GCFPVString(theObs.beams[b].TABs[t].directionType));
 						dispersionArr.push_back (new GCFPVDouble(theObs.beams[b].TABs[t].dispersionMeasure));
 						coherentArr.push_back	(new GCFPVBool(theObs.beams[b].TABs[t].coherent));
 					}
