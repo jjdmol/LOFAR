@@ -174,7 +174,7 @@ void RayleighFitter::FindFitRangeUnderRFIContamination(LogHistogram &hist, doubl
 		}
 	}
 	minValue = hist.MinPositiveAmplitude();
-	maxValue = maxPosition * 7.0;
+	maxValue = maxPosition * 2.25;
 	std::cout << "Found range " << minValue << " -- " << maxValue << "\n";
 }
 
