@@ -31,6 +31,10 @@ endif(BOOST_ASIO_H_FOUND)
 # To enable assembly .s files:
 #enable_language(ASM-ATT)
 
+if(GTKMM_FOUND)
+  add_definitions(-DHAVE_GTKMM)
+endif(GTKMM_FOUND)
+
 lofar_add_bin_program(rfihistory rfihistory.cpp)
 
 lofar_add_bin_program(aofrequencyfilter aofrequencyfilter.cpp util/rng.cpp msio/timestepaccessor.cpp util/aologger.cpp)
@@ -128,15 +132,20 @@ set(STRATEGY_ALGORITHMS_FILES
   strategy/algorithms/thresholdconfig.cpp
   strategy/algorithms/thresholdmitigater.cpp
   strategy/algorithms/thresholdtools.cpp
-  strategy/algorithms/timefrequencystatistics.cpp)
-
-set(STRATEGY_PLOTS_FILES
+  strategy/algorithms/timefrequencystatistics.cpp
   strategy/plots/antennaflagcountplot.cpp
-  strategy/plots/frequencyflagcountplot.cpp
+  strategy/plots/frequencyflagcountplot.cpp)
+
+if(GTKMM_FOUND)
+set(STRATEGY_PLOTS_FILES
   strategy/plots/frequencypowerplot.cpp
   strategy/plots/iterationsplot.cpp
   strategy/plots/rfiplots.cpp
-  strategy/plots/timeflagcountplot.cpp)
+  strategy/plots/timeflagcountplot.cpp
+  util/multiplot.cpp)
+else()
+ set(STRATEGY_PLOTS_FILES)
+endif(GTKMM_FOUND)
 
 set(STRATEGY_CONTROL_FILES
   strategy/control/actionblock.cpp
@@ -167,7 +176,6 @@ set(UTIL_FILES
   util/compress.cpp
   util/ffttools.cpp
   util/integerdomain.cpp
-  util/multiplot.cpp
   util/plot.cpp
   util/rng.cpp
   util/statwriter.cpp
