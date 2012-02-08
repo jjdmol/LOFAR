@@ -14,6 +14,7 @@ from lofarpipe.support.lofarexceptions import PipelineException
 from lofarpipe.support.group_data import store_data_map
 from lofarpipe.support.utilities import create_directory
 from lofar.parameterset import parameterset
+from lofar.mstools import findFiles
 
 
 class msss_calibrator_pipeline(control):
@@ -37,6 +38,7 @@ class msss_calibrator_pipeline(control):
         self.parset = parameterset()
         self.input_data = []
         self.output_data = []
+        self.io_data_mask = []
 
 
     def usage(self):
@@ -67,11 +69,50 @@ class msss_calibrator_pipeline(control):
             raise PipelineException(
                 "Number of input- and output files must be equal!"
             )
-        #if ([x.split(':')[0] for x in self.input_data] !=
-            #[x.split(':')[0] for x in self.output_data]):
         if [x[0] for x in self.input_data] != [x[0] for x in self.output_data]:
             raise PipelineException(
                 "Input- and output data products must reside on the same node!"
+            )
+        # Validate input data, by searching the cluster
+        self._validate_input_data()
+        # Update input- and output-data product specifications
+        self.input_data = [
+            f for (f,m) in zip(self.input_data, self.io_data_mask) if m
+        ]
+        self.output_data = [
+            f for (f,m) in zip(self.output_data, self.io_data_mask) if m
+        ]
+             
+
+    def _validate_input_data(self):
+        """
+        Search for the requested input files and mask the files in
+        `self.input_data[]` that could not be found on the system.
+        """
+        # First determine the directories to search. Get unique directory
+        # names from our input_data by creating a set first.
+        dirs = list(set(os.path.dirname(d[1]) for d in self.input_data))
+
+        # Compose the filename glob-pattern to use (see LOFAR-USG-ICD-005).
+        ms_pattern = ' '.join(
+            os.path.join(d, 'L*_SAP???_SB???_uv.MS') for d in dirs
+        )
+
+        # Search the files on the cluster; turn them into a list of tuples.
+        found_files = zip(*findFiles(ms_pattern, '-1d'))
+        
+        # Create a mask containing True if file exists, False otherwise
+        self.io_data_mask = [f in found_files for f in self.input_data]
+
+        # Log a warning if not all input data files were found.
+        if not all(self.io_data_mask):
+            self.logger.warn(
+                "The following input data files were not found: %s" %
+                ' '.join(
+                    ':'.join(f) for (f,m) in zip(
+                        self.input_data, self.io_data_mask
+                    ) if not m
+                )
             )
 
 
