@@ -37,6 +37,7 @@ endif(GTKMM_FOUND)
 
 if(GSL_FOUND)
   add_definitions(-DHAVE_GSL)
+  link_libraries(${GSL_LIBRARIES})
 endif(GSL_FOUND)
 
 lofar_add_bin_program(rfihistory rfihistory.cpp)
