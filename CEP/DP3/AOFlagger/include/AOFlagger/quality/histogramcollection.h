@@ -21,6 +21,7 @@
 #define HISTOGRAM_COLLECTION_H
 
 #include "loghistogram.h"
+#include "histogramtablesformatter.h"
 
 #include <complex>
 #include <map>
@@ -98,9 +99,27 @@ class HistogramCollection
 			getHistogramForCrossCorrelations(_rfiHistograms, polarization, target);
 		}
 		
-		void Save(class HistogramTablesFormatter &)
+		void Save(class HistogramTablesFormatter &histogramTables)
 		{
-			// TODO
+			histogramTables.InitializeEmptyTables();
+			for(size_t p=0;p<_polarizationCount;++p)
+			{
+				LogHistogram totalHistogram;
+				GetTotalHistogramForCrossCorrelations(p, totalHistogram);
+				const unsigned totalIndex = histogramTables.StoreOrQueryTypeIndex(HistogramTablesFormatter::TotalHistogram, p);
+				for(LogHistogram::iterator i=totalHistogram.begin();i!=totalHistogram.end();++i)
+				{
+					histogramTables.StoreValue(totalIndex, i.binStart(), i.binEnd(), i.unnormalizedCount());
+				}
+				
+				LogHistogram rfiHistogram;
+				GetTotalHistogramForCrossCorrelations(p, rfiHistogram);
+				const unsigned rfiIndex = histogramTables.StoreOrQueryTypeIndex(HistogramTablesFormatter::RFIHistogram, p);
+				for(LogHistogram::iterator i=rfiHistogram.begin();i!=rfiHistogram.end();++i)
+				{
+					histogramTables.StoreValue(rfiIndex, i.binStart(), i.binEnd(), i.unnormalizedCount());
+				}
+			}
 		}
 	private:
 		unsigned _polarizationCount;

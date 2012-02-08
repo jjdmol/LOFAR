@@ -215,6 +215,7 @@ if(GTKMM_FOUND)
 		gui/quality/aoqplotwindow.cpp
 		gui/quality/baselineplotpage.cpp
 		gui/quality/grayscaleplotpage.cpp
+		gui/quality/histogrampage.cpp
 		gui/quality/timefrequencyplotpage.cpp
 		gui/quality/twodimensionalplotpage.cpp
 		gui/imagewidget.cpp

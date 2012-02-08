@@ -161,6 +161,10 @@ class HistogramTablesFormatter {
 				return StoreType(type, polarizationIndex);
 		}
 		unsigned StoreType(enum HistogramType type, unsigned polarizationIndex);
+		bool HistogramsExist()
+		{
+			return TableExists(HistogramCountTable) && TableExists(HistogramTypeTable);
+		}
 	private:
 		HistogramTablesFormatter(const HistogramTablesFormatter &) { } // don't allow copies
 		void operator=(const HistogramTablesFormatter &) { } // don't allow assignment

@@ -569,7 +569,7 @@ int main(int argc, char *argv[])
 		}
 		else if(action == "collect")
 		{
-			if(argc != 3 && !(argc == 4 && std::string(argv[2]) == "-a") )
+			if(argc != 3 && !(argc == 4 && std::string(argv[2]) == "-h") )
 			{
 				std::cerr << "collect actions needs one or two parameters (the measurement set)\n";
 				return -1;
