@@ -71,12 +71,12 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
             )
 
         try:
-            format = self.config.get("logging", "format", raw=True)
+            format = self.config.get("logging", "format", raw = True)
         except:
             format = "%(asctime)s %(levelname)-7s %(name)s: %(message)s"
 
         try:
-            datefmt = self.config.get("logging", "datefmt", raw=True)
+            datefmt = self.config.get("logging", "datefmt", raw = True)
         except:
             datefmt = "%Y-%m-%d %H:%M:%S"
 
@@ -96,7 +96,7 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
         self.logger.addHandler(stream_handler)
         self.logger.addHandler(file_handler)
 
-    def run_task(self, configblock, datafiles=[], **kwargs):
+    def run_task(self, configblock, datafiles = [], **kwargs):
         """
         A task is a combination of a recipe and a set of parameters.
         Tasks can be prefedined in the task file set in the pipeline
@@ -106,8 +106,9 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
         This is a "shorthand" version of
         :meth:`lofarpipe.cuisine.WSRTrecipe.WSRTrecipe.cook_recipe`.
         """
-        self.logger.info("Running task: %s" % (configblock,))
 
+        self.logger.error("*******************debug 9 *********************")
+        print "debug 9"
         # Does the task definition exist?
         try:
             recipe = self.task_definitions.get(configblock, "recipe")
@@ -119,8 +120,9 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
         # Build inputs dict.
         # First, take details from caller.
         inputs = LOFARinput(self.inputs)
-        inputs['args'] = datafiles
 
+        inputs['args'] = datafiles
+        print "debug 8"
         # Add parameters from the task file.
         # Note that we neither need the recipe name nor any items from the
         # DEFAULT config.
@@ -128,20 +130,26 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
         del parameters['recipe']
         for key in dict(self.config.items("DEFAULT")).keys():
             del parameters[key]
+        print configblock
+        print parameters
         inputs.update(parameters)
-
+        print inputs
+        print "debug 11"
         # Update inputs with provided kwargs, if any.
         inputs.update(kwargs)
-
+        print "debug 13"
         # Default outputs dict.
         outputs = LOFARoutput()
+        print "debug 14"
 
         # Cook the recipe and return the results"
         if self.cook_recipe(recipe, inputs, outputs):
+            print "debug 12"
             self.logger.warn(
                 "%s reports failure (using %s recipe)" % (configblock, recipe)
             )
             raise PipelineRecipeFailed("%s failed", configblock)
+        print "debug 10"
         return outputs
 
     def _read_config(self):
@@ -181,7 +189,7 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
 
         if not self.inputs.has_key("start_time"):
             import datetime
-            self.inputs["start_time"] = datetime.datetime.utcnow().replace(microsecond=0).isoformat()
+            self.inputs["start_time"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat()
 
         # Config is passed in from spawning recipe. But if this is the start
         # of a pipeline, it won't have one.

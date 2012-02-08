@@ -100,14 +100,15 @@ class imager_pipeline(control):
         """
         #*****************************************************************
         #Get parameters prepare imager from the parset and inputs
+        self.logger.info("_______________________________________________")
+        self.logger.info(open("/home/klijn/build/preparation/new_bbs_output.map").read())
         raw_ms_mapfile = self.inputs['input_mapfile']
 
-##prepare phase and awimager Working
         prepare_imager_parset = self.parset.makeSubset("imager_prepare.")
 
         ndppp = prepare_imager_parset.getString("ndppp")
         initscript = prepare_imager_parset.getString("initscript")
-        working_directory = self.config.get("DEFAULT", "default_working_directory") #.#get("working_directory","error")
+        working_directory = self.config.get("DEFAULT", "default_working_directory")
         output_mapfile = prepare_imager_parset.getString("output_mapfile")
         slices_per_image = prepare_imager_parset.getInt("slices_per_image")
         subbands_per_image = prepare_imager_parset.getInt("subbands_per_image")
@@ -117,9 +118,9 @@ class imager_pipeline(control):
         prepare_imager_parset_file = \
             self._write_parset_to_file(prepare_imager_parset, "prepare_imager")
 
-        #run the prepare imager
+        #run the imager_prepare recipe
         prepare_imager_output_mapfile = None
-        skip_prepare = False
+        skip_prepare = True
         if skip_prepare:
             prepare_imager_output_mapfile = "/home/klijn/build/preparation/actual_output.map"
         else:
@@ -135,31 +136,112 @@ class imager_pipeline(control):
                         mapfile = mapfile)['mapfile']
 
 
+        # ******************************************************************
+        # Create dbs and sky model
+        imager_create_dbs_input_map = prepare_imager_output_mapfile #link output -> input
+        imager_create_dbs_output_mapfile = None
+        skip_create_dbs = True
+        if skip_create_dbs:
+            pass
+        else:
+            imager_create_dbs_output_mapfile = \
+                self.run_task("imager_create_dbs", imager_create_dbs_input_map,
+                        working_directory = working_directory, #TODO: deze parameters hoeven dus echt niet meer mee.
+                        initscript = initscript,
+                        parset = prepare_imager_parset_file,
+                        suffix = ".ImagerCreateDBs",
+                        sourcedb_target_path = "",
+                        monetdb_hostname = "ldb002",
+                        monetdb_port = 51000,
+                        monetdb_name = "gsm",
+                        monetdb_user = "gsm",
+                        monetdb_password = "msss",
+                        assoc_theta = "",
+                        parmdb_executable = "/opt/cep/LofIm/daily/lofar/bin/parmdbm",
+                        slice_paths_mapfile = "/home/klijn/build/preparation/timeslice_path.map",
+                        parmdb_suffix = ".parmdbm",
+                        monetdb_path = "/usr/lib/python2.6/site-packages",
+                        gsm_path = "/home/klijn/build/gnu_debug/installed/lib/python2.6/dist-packages/lofar",
+                        makesourcedb_path = "/opt/cep/LofIm/daily/Thu/lofar_build/install/gnu_opt/bin/makesourcedb",
+                        )
 
-        #*****************************************************************
-        #Get parameters awimager from the parset and inputs        
-        awimager_parset = self.parset.makeSubset("imager_awimager.")
-        executable = awimager_parset.getString("executable")
 
-        awimager_parset = \
-            self._write_parset_to_file(awimager_parset, "awimager")
 
+#        #*****************************************************************
+#        #Get parameters awimager from the parset and inputs        
+#        awimager_parset = self.parset.makeSubset("imager_awimager.")
+#        executable = awimager_parset.getString("executable")
+#
+#        awimager_parset = \
+#            self._write_parset_to_file(awimager_parset, "awimager")
+#
+#        self.logger.info(awimager_parset)
         #run the awimager recipe
-        awimager_output_mapfile = \
-            self.run_task("imager_awimager", prepare_imager_output_mapfile,
-                          parset = awimager_parset,
-                          executable = executable)
-#prepare phase and awimager Working
+#        awimager_output_mapfile = \
+#            self.run_task("imager_awimager", prepare_imager_output_mapfile,
+#                          parset = awimager_parset,
+#                          executable = executable)
 
-#        #run the bbs_imager recipe
+
+#        # *******************************************************************
+#        # bbs_imager recipe
+#        # imputs moeten nog dynamics en dan klaar!
+#        new_bbs_input = "/home/klijn/build/preparation/new_bbs.input.map"
 #        bbs_imager_mapfile = \
-#            self.run_task("bbs_imager", raw_ms_mapfile,
-#                          parset = "/home/klijn/build/preparation/parset.par",
-#                          executable = "/opt/cep/LofIm/daily/lofar/lib/python2.6/dist-packages/lofar/gsmutils.py",
-#                          initscript = "/opt/cep/LofIm/daily/lofar/lofarinit.sh")
+#            self.run_task("new_bbs",
+#                          new_bbs_input,
+#                          initscript = "/opt/cep/LofIm/daily/lofar/lofarinit.sh",
+#                          parset = "/home/klijn/build/preparation/bbs_new.par",
+#                          instrument_mapfile = "/home/klijn/build/preparation/new_bbs_instrument.map",
+#                          data_mapfile = "/home/klijn/build/preparation/new_bbs_output.map",
+#                          kernel_exec = "/opt/cep/LofIm/daily/Fri/lofar_build/install/gnu_opt/bin/KernelControl",
+#                          control_exec = "/opt/cep/LofIm/daily/Fri/lofar_build/install/gnu_opt/bin/GlobalControl",
+#                          sky_mapfile = "/home/klijn/build/preparation/new_bbs_sky.map",
+#                          db_name = "klijn",
+#                          db_host = "ldb002",
+#                          db_user = "postgres",
+#                          db_key = "new_bbs")
+#
+#
+#        return 0
+        self.logger.info("_______________________________________________")
+        self.logger.info(open("/home/klijn/build/preparation/new_bbs_output.map").read())
+        # *******************************************************************
+        # bbs_imager recipe
+        # imputs moeten nog dynamics en dan klaar!
+        new_bbs_input = "/home/klijn/build/preparation/new_bbs.input.map"
+        bbs_imager_mapfile = \
+            self.run_task("imager_bbs",
+                          new_bbs_input,
+                          initscript = "/opt/cep/LofIm/daily/Tue/lofar/lofarinit.sh",
+                          parset = "/home/klijn/build/preparation/bbs_new.par",
+                          instrument_mapfile = "/home/klijn/build/preparation/new_bbs_instrument.map",
+                          data_mapfile = "/home/klijn/build/preparation/new_bbs_output.map",
+                          kernel_exec = "/opt/cep/LofIm/daily/Fri/lofar_build/install/gnu_opt/bin/KernelControl",
+                          control_exec = "/opt/cep/LofIm/daily/Fri/lofar_build/install/gnu_opt/bin/GlobalControl",
+                          sky_mapfile = "/home/klijn/build/preparation/new_bbs_sky.map",
+                          db_name = "klijn",
+                          db_host = "ldb002",
+                          db_user = "postgres",
+                          db_key = "new_bbs",
+                          runtime_directory = "/home/klijn/runtime_directory/jobs/Pipeline")
+
+#        # *******************************************************************
+#        # bbs_imager recipe
+#        # imputs moeten nog dynamics en dan klaar!
+#        new_bbs_input = "/home/klijn/build/preparation/new_bbs.input.map"
+#        bbs_parset = self.parset.makeSubset("imager_bbs.")
+#        bbs_parset_path = \
+#            self._write_parset_to_file(bbs_parset, "new_bbs")
+#
+#        self.logger.info(bbs_parset_path)
+#        bbs_imager_mapfile = self.run_task("imager_bbs",
+#                          new_bbs_input,
+#                          parset = bbs_parset_path)
 
 
         return 0
+
 
 
 

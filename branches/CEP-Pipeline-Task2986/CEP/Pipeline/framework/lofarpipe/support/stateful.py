@@ -15,11 +15,11 @@ from lofarpipe.support.lofarexceptions import PipelineException
 
 def stateful(run_task):
     @wraps(run_task)
-    def wrapper(self, configblock, datafiles=[], **kwargs):
+    def wrapper(self, configblock, datafiles = [], **kwargs):
         try:
             my_state = self.completed.pop()
         except (AttributeError, IndexError):
-            my_state = ('','')
+            my_state = ('', '')
 
         if configblock == my_state[0]:
             # We have already run this task and stored its state, or...
@@ -52,7 +52,9 @@ class StatefulRecipe(BaseRecipe):
     """
     inputs = {} # No non-default inputs
     def __init__(self):
+        print "Debug 1"
         super(StatefulRecipe, self).__init__()
+        print "Debug 1"
         self.state = []
         self.completed = []
 

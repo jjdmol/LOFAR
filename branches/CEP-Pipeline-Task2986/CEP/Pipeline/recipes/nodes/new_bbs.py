@@ -81,6 +81,7 @@ class new_bbs(LOFARnodeTCP):
             working_dir = mkdtemp()
             env = read_initscript(self.logger, initscript)
             try:
+                self.logger.info("******** {0}".format(open(parset_file).read()))
                 cmd = [executable, parset_file, "0"]
                 self.logger.debug("Executing BBS kernel")
                 with CatchLog4CPlus(
@@ -89,7 +90,7 @@ class new_bbs(LOFARnodeTCP):
                     os.path.basename(executable),
                 ):
                     bbs_kernel_process = Popen(
-                        cmd, stdout=PIPE, stderr=PIPE, cwd=working_dir
+                        cmd, stdout = PIPE, stderr = PIPE, cwd = working_dir
                     )
                     sout, serr = bbs_kernel_process.communicate()
                 log_process_output("BBS kernel", sout, serr, self.logger)

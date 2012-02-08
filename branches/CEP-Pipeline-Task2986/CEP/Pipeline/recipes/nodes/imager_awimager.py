@@ -1,8 +1,18 @@
-# LOFAR AWIMAGER RECIPE
+# LOFAR AUTOMATIC IMAGING PIPELINE
+# awimager
+# The awimager recipe creates based an image of the field of view. Based on  
+# nine concatenated and measurementsets each spanning 10 subbands
+# The recipe contains two parts: The call to awimager
+# and secondairy some functionality that calculates settings (for awimager)
+# based on the information present in the measurement set
+# The calculated parameters are:
+#        1: The cellsize
+#        2: The npixels in a each of the two dimension of the image
+#        3. What columns use to determine the maximum baseline
+#        4. The number of projection planes
 # Wouter Klijn 2012
 # klijn@astron.nl
-# ------------------------------------------------------------------------------
-
+# -----------------------------------------------------------------------------
 from __future__ import with_statement
 import os
 import sys
@@ -61,9 +71,12 @@ class imager_awimager(LOFARnodeTCP):
             #run awimager
             try:
                 environment = read_initscript(self.logger, init_script)
-                with CatchLog4CPlus(working_dir, self.logger.name + "." + os.path.basename(log4CPlusName), os.path.basename(executable)) as logger:
-                        catch_segfaults(cmd, working_dir, environment, logger,
-                                    cleanup = None)
+                with CatchLog4CPlus(working_dir,
+                        self.logger.name + "." + os.path.basename(log4CPlusName),
+                        os.path.basename(executable)
+                ) as logger:
+                    catch_segfaults(cmd, working_dir, environment,
+                                            logger, cleanup = None)
 
             # Thrown by catch_segfault
             except CalledProcessError, e:

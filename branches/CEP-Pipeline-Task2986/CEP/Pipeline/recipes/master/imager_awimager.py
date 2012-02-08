@@ -69,8 +69,8 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
 
         # Compile the command to be executed on the remote machine
         #TODO:  moet nog een use LofIm voor? 
-        node_command = "bash -c '. /opt/cep/login/bashrc; use LofIm ; python %s" % (self.__file__.replace("master", "nodes"))
-
+        #node_command = "bash -c '. /opt/cep/login/bashrc; use LofIm ; python %s" % (self.__file__.replace("master", "nodes"))
+        node_command = "bash -c '. ${APS_LOCAL}/login/loadpackage.bash LofIm' ; python %s" % (self.__file__.replace("master", "nodes"))
         # Create the jobs
         jobs = []
         outnames = collections.defaultdict(list)

@@ -1,16 +1,17 @@
 # LOFAR IMAGING PIPELINE
-#
-# Prepare phase of the imager pipeline: node (also see master recipe)
-#
+# Prepare phase 
+# of the imaging pipeline: node (also see master recipe)
+# Responcible for
+# 
 # 1. Collect the Measurement Sets (MSs): copy to the  current node
-# 2. Start dppp, mark missing dataset 
-# 3. Concatenate the measurement sets, to a virtual ms  
+# 2. Start dppp: Combines the data from subgroups into single set
+# 3. Concatenate the time slice measurment sets, to a virtual ms (thus 
+#    combining information in both time and frequency  
 #
 # Wouter Klijn 
 # 2012
 # klijn@astron.nl
 # ------------------------------------------------------------------------------
-
 from __future__ import with_statement
 import sys
 import errno
@@ -23,31 +24,33 @@ from lofarpipe.support.utilities import read_initscript
 from lofarpipe.support.utilities import catch_segfaults
 from lofarpipe.support.lofarnode import  LOFARnodeTCP
 from subprocess import CalledProcessError
-import pyrap.tables as pt #@UnresolvedImport
+import pyrap.tables as pt                                                       #@UnresolvedImport
 from lofarpipe.support.utilities import create_directory
 
 # Some constant settings for the recipe
 log4CPlusName = "imager_prepare_node"
-time_slice_dir = "time_slices"  
+time_slice_dir = "time_slices"
 collected_ms_dir = "subband_mss"
 
 class imager_prepare(LOFARnodeTCP):
     def run(self, init_script, parset, working_dir, ndppp, output_measurement_set,
             slices_per_image, subbands_per_image, input_map_repr):
-        with log_time(self.logger):            
-            create_directory(working_dir)  
+        with log_time(self.logger):
+            create_directory(working_dir)
             # TODO: Load the input file names ( will be performed by marcel code )
             self.logger.info("Loading input map from {0}".format(
                 os.path.join(working_dir, "node_input.map")))
 
             input_map = eval(input_map_repr)
+            target_dir_for_collected_ms = os.path.join(working_dir,
+                                collected_ms_dir)
 
             #Copy the input files (caching included for testing purpose)
-            missing_files = self._cached_copy_input_files(working_dir,
-                                collected_ms_dir, input_map, True)
-            if len(missing_files): self.logger.info(repr(missing_files))         
-            
-            #run dppp
+            missing_files = self._cached_copy_input_files(
+                            target_dir_for_collected_ms, input_map, True)
+            if len(missing_files): self.logger.info(repr(missing_files))
+
+            #run dppp: collect indif frequencies into larger group
             group_measurements_collected = \
                 self._run_dppp(working_dir, time_slice_dir, slices_per_image,
                     input_map, subbands_per_image, missing_files, collected_ms_dir,
@@ -59,11 +62,11 @@ class imager_prepare(LOFARnodeTCP):
 
             #return succes
             self.outputs["completed"] = "true"
-            
+
         return 0
-    
-    
-    def _cached_copy_input_files(self, working_dir, collected_ms_dir,
+
+
+    def _cached_copy_input_files(self, target_dir_for_collected_ms,
                                  input_map, cached = False):
         """
         Perform a optionally cached copy of the input ms:
@@ -71,51 +74,52 @@ class imager_prepare(LOFARnodeTCP):
         allowing the skip of this copy 
         """
         missing_files = []
-        temp_missing = os.path.join(working_dir, "temp_missing")
+        temp_missing = os.path.join(target_dir_for_collected_ms, "temp_missing")
         if not cached:
             #Collect all files and copy to current node
-            missing_files = self._copy_input_files(working_dir, collected_ms_dir,
+            missing_files = self._copy_input_files(target_dir_for_collected_ms,
                                                    input_map)
 
-            temp_missing = os.path.join(working_dir, "temp_missing")
             fp = open(temp_missing, 'w')
             fp.write(repr(missing_files))
             fp.close()
-            
         else:
-            missing_files = eval(open(temp_missing).read())
-            temp_missing.close()
-        
-        return missing_files
-            
+            fp = open(temp_missing)
+            missing_files = eval(fp.read())
+            fp.close()
 
-    def _copy_input_files(self, working_dir, sets_dir, input_map):
+        return missing_files
+
+
+    def _copy_input_files(self, target_dir_for_collected_ms, input_map):
         """
         Collect all the measurement sets in a single directory:
         The measurement sets are located on different nodes on the cluster.
         This function collects all the file in the input map in the sets_dir
         Return value is a set of missing files
         """
-        working_set_path = os.path.join(working_dir, sets_dir)
-        create_directory(working_set_path)
+        create_directory(target_dir_for_collected_ms)
         missing_files = []
 
         #loop all measurement sets
         for idx, (node, path) in enumerate(input_map):
             self.logger.info("copy file: {0}".format(path))
-
-            #construct copy command
-            copy_command = "rsync -r {0}:{1} {2} ".format(node, path,
-                                                            working_set_path)
+            # construct copy command
+            # TODO: rsync return value disappears on the node:
+            # For testing purpose the sterr is send to null to prevent
+            # errors: subprocess would be a candidate for improvement
+            copy_command = "rsync -r -q {0}:{1} {2} 2> /dev/null ".format(node, path,
+                                            target_dir_for_collected_ms)
             exit_status = os.system(copy_command)
 
             #if copy failed log the missing file
             if  exit_status != 0:
                 missing_files.append(path.split('/')[-1])
                 self.logger.info("Failed loading file: {0}".format(path))
-                self.logger.info("continuing")
 
+        # return the missing files (for 'logging'
         return set(missing_files)
+
 
     def _run_dppp(self, working_dir, group_dir, slices_per_image, input_map,
                   subbands_per_image, missing_files, sets_dir, parset, ndppp,
@@ -132,9 +136,7 @@ class imager_prepare(LOFARnodeTCP):
         group_measurements_collected = []
         create_directory(group_measurement_directory)
 
-
         # assure empty dir
-
         os.system("rm -rf {0}/*".format(group_measurement_directory))
 
         for idx_time_slice in range(slices_per_image):
@@ -147,16 +149,12 @@ class imager_prepare(LOFARnodeTCP):
             input_subgroups = map(lambda x: x.split("/")[-1] ,
                                           list(zip(*input_map_subgroup)[1]))
 
-            #Remove the missing files
-            #input_subgroups = filter(lambda x: not(x in missing_files),
-            #                          input_subgroups)
-
             #join with the group_measurement_directory
             # TODO: Fixme the write of the ms is a layer to deep!! The current
             # input location is incorrect after fix of the input file fix this 
             # Remove addition x: due to incorrect path structure of source files
-
-
+            # maybee this should be data driven and not calculated??
+            # candidate for refactoring
             ndppp_input_ms = map(lambda x: os.path.join(working_dir,
                          sets_dir, x, x), input_subgroups)
 
@@ -200,7 +198,7 @@ class imager_prepare(LOFARnodeTCP):
                 os.unlink(temp_parset_filename)
 
         return group_measurements_collected
-    
+
 
     def _concat_timeslices(self, group_measurements_collected,
                                     output_file_path):
@@ -208,8 +206,8 @@ class imager_prepare(LOFARnodeTCP):
         Msconcat to combine the time slices in a single ms:
         It is a virtual ms, a ms with symbolic links to actual data is created!                 
         """
-        pt.msconcat(group_measurements_collected, 
-                               output_file_path, concatTime=True)
+        pt.msconcat(group_measurements_collected,
+                               output_file_path, concatTime = True)
 
 
 if __name__ == "__main__":

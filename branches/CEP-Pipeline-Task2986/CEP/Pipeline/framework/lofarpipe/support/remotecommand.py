@@ -118,11 +118,7 @@ def run_via_ssh(logger, host, command, environment, arguments):
     ssh_cmd = ["ssh", "-n", "-tt", "-x", host, "--", "/bin/sh", "-c"]
 
     commandstring = ["%s=%s" % (key, value) for key, value in environment.items()]
-    commandstring.append(command)
-
-    # TODO: BUGFIX WARNING!! BEWARE HERE BE DRAGONS!!!! 
-    arguments[-1] = str(arguments[-1]) + "'" #Fix to allow usage of bash -c to start the environment\
-    # TODO: BUGFIX WARNING!! BEWARE HERE BE DRAGONS!!!! 
+    commandstring.append(command) 
     commandstring.extend(re.escape(str(arg)) for arg in arguments)
     ssh_cmd.append('"' + " ".join(commandstring) + '"')
     process = spawn_process(ssh_cmd, logger)

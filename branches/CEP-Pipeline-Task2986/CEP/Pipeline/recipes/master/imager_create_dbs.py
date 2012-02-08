@@ -1,12 +1,10 @@
 #                                                         LOFAR IMAGING PIPELINE
 #
-#  Example recipe with simple job distribution
+#  imager_create_dbs (master)
+#
 #                                                          Wouter Klijn, 2012
-#                                                      swinbank@transientskp.org
+#                                                                klijn@astron.nl
 # ------------------------------------------------------------------------------
-# python bbs_imager.py ~/build/preparation/output.map --job ImagerCreateDBs --config ~/build/preparation/pipeline.cfg --initscript /opt/cep/LofIm/daily/lofar/lofarinit.sh --parset ~/build/preparation/parset.par --working-directory "/data/scratch/klijn" --executable /opt/cep/LofIm/daily/lofar/bin/bbs_imager -d
-# the measurement set with input should be located in the working directory
-
 import os
 import sys
 import collections
@@ -16,12 +14,11 @@ from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
 from lofarpipe.support.group_data import load_data_map
 
-class ImagerCreateDBs(BaseRecipe, RemoteCommandRecipeMixIn):
+class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
     """
 
     """
     inputs = {
-        # common inputs
         'working_directory': ingredient.StringField(
             '-w', '--working-directory',
             help = "Working directory used on outpuconfigt nodes. Results location"
@@ -40,6 +37,7 @@ class ImagerCreateDBs(BaseRecipe, RemoteCommandRecipeMixIn):
             default = ".ImagerCreateDBs",
             help = "Added to the input filename to generate the output filename"
         ),
+
         # recipe specific inputs
         'sourcedb_target_path': ingredient.StringField(
             '--sourcedb-target-path',
@@ -83,24 +81,38 @@ class ImagerCreateDBs(BaseRecipe, RemoteCommandRecipeMixIn):
             '--parmdb-suffix',
             help = "suffix of the to be created paramdbs"
         ),
+        'monetdb_path': ingredient.StringField(
+            '--monetdb-path',
+            help = "initializing for the monetdb"
+        ),
+        'gsm_path': ingredient.StringField(
+            '--gsm-path',
+            help = "initializing for the gsm"
+        ),
+        'makesourcedb_path': ingredient.ExecField(
+             '--makesourcedb-path',
+             help = "Path to makesourcedb executable."
+        ),
         }
 
 
     def __init__(self):
-        super(ImagerCreateDBs, self).__init__()
+        super(imager_create_dbs, self).__init__()
 
     def go(self):
-        super(ImagerCreateDBs, self).go()
+        # TODO: We need output
+        super(imager_create_dbs, self).go()
         suffix = self.inputs["suffix"]
 
         # collect and assign the parameters for the         
-
-        # Monet database parameters
+        # Monet database 
         monetdb_hostname = self.inputs["monetdb_hostname"]
         monetdb_port = self.inputs["monetdb_port"]
         monetdb_name = self.inputs["monetdb_name"]
         monetdb_user = self.inputs["monetdb_user"]
         monetdb_password = self.inputs["monetdb_password"]
+        monetdb_path = self.inputs["monetdb_path"]
+        gsm_path = self.inputs["gsm_path"]
 
         if self.inputs["assoc_theta"] == "":
             assoc_theta = None
@@ -110,7 +122,7 @@ class ImagerCreateDBs(BaseRecipe, RemoteCommandRecipeMixIn):
         parmdb_executable = self.inputs["parmdb_executable"]
 
         #Parse the mapfile containing the timeslices: get the actual
-        #paths and collect in an array. Supply nodescript with repr if this
+        #paths and collect in an array.
         slice_paths_mapfile = self.inputs["slice_paths_mapfile"]
         slice_paths_dict = eval(open(slice_paths_mapfile).read())
         slice_paths = []
@@ -119,15 +131,14 @@ class ImagerCreateDBs(BaseRecipe, RemoteCommandRecipeMixIn):
         slice_paths = repr(slice_paths)
 
         parmdb_suffix = self.inputs["parmdb_suffix"]
-
+        init_script = self.inputs["initscript"]
+        working_directory = self.inputs["working_directory"]
+        makesourcedb_path = self.inputs["makesourcedb_path"]
         # Parse the input map
         input_map = eval(open(self.inputs['args'][0]).read())
 
-
         # Compile the command to be executed on the remote machine
-        node_command = "bash -c '. /opt/cep/login/bashrc; use LofIm "\
-           "; . /opt/cep/login/bashrc; use MonetDB; " \
-           " export PYTHONPATH=~/build/gnu_debug/installed/lib/python2.6/dist-packages/lofar:$PYTHONPATH ; python %s" % (self.__file__.replace("master", "nodes"))
+        node_command = " python %s" % (self.__file__.replace("master", "nodes"))
 
         # Create the jobs
         jobs = []
@@ -146,15 +157,15 @@ class ImagerCreateDBs(BaseRecipe, RemoteCommandRecipeMixIn):
             arguments = [ concatenated_measurement_set, sourcedb_target_path,
                          monetdb_hostname, monetdb_port, monetdb_name,
                          monetdb_user, monetdb_password, assoc_theta,
-                         parmdb_executable, slice_paths, parmdb_suffix]
+                         parmdb_executable, slice_paths, parmdb_suffix,
+                         monetdb_path, gsm_path, init_script, working_directory,
+                         makesourcedb_path]
             jobs.append(ComputeJob(host, node_command, arguments))
 
         # Hand over the job(s) to the pipeline scheduler
         self._schedule_jobs(jobs)
 
         # Test for errors
-        #TODO: Er moeten nog tests worden gegeven.
-        #TODO: Er is nog geen output
         if self.error.isSet():
             self.logger.warn("Failed ImagerCreateDBs run detected")
             return 1
@@ -163,4 +174,4 @@ class ImagerCreateDBs(BaseRecipe, RemoteCommandRecipeMixIn):
 
 
 if __name__ == "__main__":
-    sys.exit(ImagerCreateDBs().main())
+    sys.exit(imager_create_dbs().main())

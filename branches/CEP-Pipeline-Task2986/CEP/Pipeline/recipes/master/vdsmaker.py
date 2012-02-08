@@ -34,29 +34,29 @@ class vdsmaker(BaseRecipe, RemoteCommandRecipeMixIn):
     inputs = {
         'gvds': ingredient.StringField(
             '-g', '--gvds',
-            help="File name for output GVDS file"
+            help = "File name for output GVDS file"
         ),
         'directory': ingredient.DirectoryField(
             '--directory',
-            help="Directory for output GVDS file"
+            help = "Directory for output GVDS file"
         ),
         'makevds': ingredient.ExecField(
             '--makevds',
-            help="Full path to makevds executable"
+            help = "Full path to makevds executable"
         ),
         'combinevds': ingredient.ExecField(
             '--combinevds',
-            help="Full path to combinevds executable"
+            help = "Full path to combinevds executable"
         ),
         'unlink': ingredient.BoolField(
             '--unlink',
-            help="Unlink VDS files after combining",
-            default=True
+            help = "Unlink VDS files after combining",
+            default = True
         ),
         'nproc': ingredient.IntField(
             '--nproc',
-            help="Maximum number of simultaneous processes per compute node",
-            default=8
+            help = "Maximum number of simultaneous processes per compute node",
+            default = 8
         )
     }
 
@@ -75,26 +75,36 @@ class vdsmaker(BaseRecipe, RemoteCommandRecipeMixIn):
         command = "python %s" % (self.__file__.replace('master', 'nodes'))
         jobs = []
         vdsnames = []
+        print "############################################"
+        print self.config.get('cluster', 'clusterdesc')
+        print self.inputs['args'][0]
+        print open(self.inputs['args'][0]).read()
+
+        return 1
         for host, ms in data:
             vdsnames.append(
                 "%s/%s.vds" % (self.inputs['directory'], os.path.basename(ms.rstrip('/')))
             )
+            self.logger.info("###################### {0}".format(vdsnames))
             jobs.append(
                 ComputeJob(
                     host, command,
-                    arguments=[
+                    arguments = [
                         ms,
                         self.config.get('cluster', 'clusterdesc'),
-                        vdsnames[-1],
+                        vdsnames[-1], ##
                         self.inputs['makevds']
                     ]
                 )
             )
-        self._schedule_jobs(jobs, max_per_node=self.inputs['nproc'])
+        self._schedule_jobs(jobs, max_per_node = self.inputs['nproc'])
 
         if self.error.isSet():
             self.logger.warn("Failed vdsmaker process detected")
             return 1
+
+        #hier komt ie dus niet
+        print "debug 100"
 
         # Combine VDS files to produce GDS
         failure = False
@@ -105,9 +115,9 @@ class vdsmaker(BaseRecipe, RemoteCommandRecipeMixIn):
             command = [executable, gvds_out] + vdsnames
             combineproc = subprocess.Popen(
                 command,
-                close_fds=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
+                close_fds = True,
+                stdout = subprocess.PIPE,
+                stderr = subprocess.PIPE
             )
             sout, serr = combineproc.communicate()
             log_process_output(executable, sout, serr, self.logger)
