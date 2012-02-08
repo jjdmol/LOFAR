@@ -27,6 +27,7 @@
 #define LOFAR_STORAGE_MSWRITERCORRELATED_H
 
 #include <Storage/MSWriterFile.h>
+#include <Interface/Parset.h>
 
 namespace LOFAR {
 namespace RTCP {
@@ -35,12 +36,13 @@ namespace RTCP {
 class MSWriterCorrelated : public MSWriterFile
 {
   public:
-    MSWriterCorrelated(const string &msName);
+    MSWriterCorrelated(const string &msName, const Parset &parset);
     ~MSWriterCorrelated();
 
     virtual void write(StreamableData *data);
 
   protected:
+    const Parset &itsParset;
 };
 
 

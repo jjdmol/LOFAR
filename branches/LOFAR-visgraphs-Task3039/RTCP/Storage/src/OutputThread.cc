@@ -154,7 +154,7 @@ void OutputThread::createMS()
     // HDF5 writer requested
     switch (itsOutputType) {
       case CORRELATED_DATA:
-        itsWriter = new MSWriterCorrelated(path);
+        itsWriter = new MSWriterCorrelated(path, itsParset);
         break;
 
       case BEAM_FORMED_DATA:

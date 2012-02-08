@@ -22,14 +22,33 @@
 
 #include <lofar_config.h>
 #include <Storage/MSWriterCorrelated.h>
+#include <Interface/CorrelatedData.h>
+#include <vector>
+#include <string>
+#include <boost/format.hpp>
+
+using boost::format;
 
 namespace LOFAR {
 namespace RTCP {
 
-MSWriterCorrelated::MSWriterCorrelated (const string &msName)
+MSWriterCorrelated::MSWriterCorrelated (const string &msName, const Parset &parset)
 :
- MSWriterFile(msName)
+ MSWriterFile(msName),
+ itsParset(parset)
 {
+  std::vector<std::string> stationNames = parset.mergedStationNames();
+  std::vector<std::string> baselineNames(parset.nrBaselines());
+  unsigned nrStations = stationNames.size();
+
+  // order of baselines as station indices:
+  // 0-0, 1-0, 1-1, 2-0, 2-1, 2-2 ... (see RTCP/CNProc/Correlator.cc)
+
+  unsigned bl = 0;
+
+  for(unsigned s1 = 0; s1 < nrStations; s1++)
+    for(unsigned s2 = 0; s2 <= s1; s2++)
+      baselineNames[bl++] = str(format("%s_%s") % stationNames[s1] % stationNames[s2]);
 }
 
 
@@ -40,6 +59,11 @@ MSWriterCorrelated::~MSWriterCorrelated()
 
 void MSWriterCorrelated::write(StreamableData *data)
 {
+  CorrelatedData *cdata = dynamic_cast<CorrelatedData*>(data);
+
+  ASSERT( data );
+  ASSERT( cdata );
+
   MSWriterFile::write(data);
 }
 
