@@ -24,7 +24,7 @@ static int fit_f(const gsl_vector *xvec, void *data, gsl_vector *f)
 	for (LogHistogram::iterator i=hist.begin(); i!=hist.end(); ++i)
 	{
 		const double x = i.value();
-		if(x >= minVal && x < maxVal)
+		if(x >= minVal && x < maxVal && std::isfinite(x))
 		{
 			const double val = i.normalizedCount();
 			const double logval = log(val);
@@ -56,7 +56,7 @@ int fit_df(const gsl_vector *xvec, void *data, gsl_matrix *J)
 	for (LogHistogram::iterator i=hist.begin(); i!=hist.end(); ++i)
 	{
 		const double x = i.value();
-		if(x >= minVal && x < maxVal)
+		if(x >= minVal && x < maxVal && std::isfinite(x))
 		{
 			const double val = i.normalizedCount();
 			const double weight = log(val);
@@ -97,14 +97,17 @@ void RayleighFitter::Fit(double minVal, double maxVal, LogHistogram &hist, doubl
 	unsigned int iter = 0;
 	const size_t nVars = 2;
 	_hist = &hist;
-	_minVal = minVal;
+	if(minVal > 0)
+		_minVal = minVal;
+	else
+		_minVal = hist.MinPositiveAmplitude();
 	_maxVal = maxVal;
 
 	size_t nData = 0;
 	for (LogHistogram::iterator i=hist.begin(); i!=hist.end(); ++i)
 	{
 		const double val = i.value();
-		if(val >= minVal && val < maxVal)
+		if(val >= minVal && val < maxVal && std::isfinite(val))
 			++nData;
 	}
 	std::cout << "ndata=" << nData << "\n";
