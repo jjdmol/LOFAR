@@ -22,7 +22,6 @@
 
 #include <gtkmm/box.h>
 #include <gtkmm/checkbutton.h>
-#include <gtkmm/window.h>
 #include <gtkmm/frame.h>
 
 #include <AOFlagger/quality/qualitytablesformatter.h>

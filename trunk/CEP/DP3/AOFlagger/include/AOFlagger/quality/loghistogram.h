@@ -154,6 +154,9 @@ class LogHistogram
 				iterator &operator++() { ++_iterator; return *this; }
 				double value() const { return _iterator->first; }
 				double normalizedCount() const { return _iterator->second.GetCount() / value(); }
+				double unnormalizedCount() const { return _iterator->second.GetCount(); }
+				double binStart() const { return pow10(log10(_iterator->first)-0.005); }
+				double binEnd() const { return pow10(log10(_iterator->first)+0.005); }
 			private:
 				std::map<double, AmplitudeBin>::iterator _iterator;
 		};
@@ -186,9 +189,9 @@ class LogHistogram
 		static double getCentralAmplitude(const double amplitude)
 		{
 			if(amplitude>=0.0)
-				return pow(10.0, round(100.0*log10(amplitude))/100.0);
+				return pow10(round(100.0*log10(amplitude))/100.0);
 			else
-				return -pow(10.0, round(100.0*log10(-amplitude))/100.0);
+				return -pow10(round(100.0*log10(-amplitude))/100.0);
 		}
 };
 
