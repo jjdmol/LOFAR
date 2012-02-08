@@ -139,13 +139,10 @@ class HistogramCollection
 		
 		void getHistogramForCrossCorrelations(std::map<AntennaPair, LogHistogram*> *histograms, const unsigned polarization, LogHistogram &target)
 		{
-			for(unsigned p=0;p<_polarizationCount;++p)
+			for(std::map<AntennaPair, LogHistogram*>::iterator i=histograms[polarization].begin(); i!=histograms[polarization].end(); ++i)
 			{
-				for(std::map<AntennaPair, LogHistogram*>::iterator i=histograms[p].begin(); i!=histograms[p].end(); ++i)
-				{
-					if(i->first.first != i->first.second)
-						target.Add(*i->second);
-				}
+				if(i->first.first != i->first.second)
+					target.Add(*i->second);
 			}
 		}
 		
