@@ -36,6 +36,7 @@
 const std::string HistogramTablesFormatter::ColumnNameType      = "TYPE";
 const std::string HistogramTablesFormatter::ColumnNameName      = "NAME";
 const std::string HistogramTablesFormatter::ColumnNameCount     = "COUNT";
+const std::string HistogramTablesFormatter::ColumnNamePolarization = "POLARIZATION";
 const std::string HistogramTablesFormatter::ColumnNameBinStart  = "BIN_START";
 const std::string HistogramTablesFormatter::ColumnNameBinEnd    = "BIN_END";
 
