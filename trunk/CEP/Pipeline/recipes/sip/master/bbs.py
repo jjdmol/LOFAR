@@ -123,10 +123,8 @@ class bbs(BaseRecipe):
         inputs['working_directory'] = self.config.get(
             "DEFAULT", "default_working_directory"
         )
-        inputs['mapfile'] = os.path.join(
-            self.config.get("layout", "job_directory"), 
-            "parsets", "parmdb_mapfile"
-        )
+        inputs['mapfile'] = self.task_definitions.get('parmdb','mapfile')
+        inputs['suffix'] = ".instrument"
         outputs = LOFARoutput(self.inputs)
         if self.cook_recipe('parmdb', inputs, outputs):
             self.logger.warn("parmdb reports failure")
@@ -134,6 +132,8 @@ class bbs(BaseRecipe):
         inputs['args'] = self.inputs['args']
         inputs['executable'] = self.inputs['makesourcedb']
         inputs['skymodel'] = self.inputs['skymodel']
+        inputs['mapfile'] = self.task_definitions.get('sourcedb','mapfile')
+        inputs['suffix'] = ".sky"
         outputs = LOFARoutput(self.inputs)
         if self.cook_recipe('sourcedb', inputs, outputs):
             self.logger.warn("sourcedb reports failure")
