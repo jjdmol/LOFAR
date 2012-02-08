@@ -107,6 +107,7 @@ void RayleighFitter::Fit(double minVal, double maxVal, LogHistogram &hist, doubl
 		if(val >= minVal && val < maxVal)
 			++nData;
 	}
+	std::cout << "ndata=" << nData << "\n";
     
 	double x_init[nVars] = { /*sigma*/ 1.0, /*N*/ 100000.0 };
 	gsl_vector_view x = gsl_vector_view_array (x_init, nVars);
