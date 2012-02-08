@@ -6,6 +6,6 @@ include(LofarFindPackage)
 lofar_find_package(Casacore COMPONENTS casa ms tables REQUIRED)
 lofar_find_package(Boost COMPONENTS date_time REQUIRED)
 
-add_subdirectory(include/beaminfo)
+add_subdirectory(include/Beaminfo)
 add_subdirectory(src)
 add_subdirectory(test)
