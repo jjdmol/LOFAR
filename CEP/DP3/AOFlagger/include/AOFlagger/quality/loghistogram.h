@@ -29,13 +29,6 @@
 
 class LogHistogram
 {
-	public:
-		enum HistogramType
-		{
-			TotalAmplitudeHistogram,
-			RFIAmplitudeHistogram,
-			DataAmplitudeHistogram
-		};
 	private:
 		struct AmplitudeBin
 		{

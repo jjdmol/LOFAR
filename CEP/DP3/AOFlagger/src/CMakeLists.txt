@@ -35,6 +35,10 @@ if(GTKMM_FOUND)
   add_definitions(-DHAVE_GTKMM)
 endif(GTKMM_FOUND)
 
+if(GSL_FOUND)
+  add_definitions(-DHAVE_GSL)
+endif(GSL_FOUND)
+
 lofar_add_bin_program(rfihistory rfihistory.cpp)
 
 lofar_add_bin_program(aofrequencyfilter aofrequencyfilter.cpp util/rng.cpp msio/timestepaccessor.cpp util/aologger.cpp)
@@ -94,6 +98,7 @@ set(MSIO_FILES
   
 set(QUALITY_FILES
   quality/histogramtablesformatter.cpp
+	quality/rayleighfitter.cpp
   quality/qualitytablesformatter.cpp)
 
 set(REMOTEAO_FILES
