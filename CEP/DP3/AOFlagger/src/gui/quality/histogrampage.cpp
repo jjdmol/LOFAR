@@ -24,6 +24,7 @@
 
 #include <AOFlagger/msio/measurementset.h>
 #include <AOFlagger/quality/histogramcollection.h>
+#include <AOFlagger/quality/rayleighfitter.h>
 
 HistogramPage::HistogramPage() :
 	_histogramTypeFrame("Histogram"),
@@ -33,7 +34,8 @@ HistogramPage::HistogramPage() :
 	_xxPolarizationButton("XX"),
 	_xyPolarizationButton("XY"),
 	_yxPolarizationButton("YX"),
-	_yyPolarizationButton("YY")
+	_yyPolarizationButton("YY"),
+	_fitButton("Fit")
 {
 	_histogramTypeBox.pack_start(_totalHistogramButton, Gtk::PACK_SHRINK);
 	_totalHistogramButton.set_active(true);
@@ -65,6 +67,8 @@ HistogramPage::HistogramPage() :
 	_polarizationFrame.add(_polarizationBox);
 	
 	_sideBox.pack_start(_polarizationFrame, Gtk::PACK_SHRINK);
+	
+	_sideBox.pack_start(_fitButton, Gtk::PACK_SHRINK);
 	
 	pack_start(_sideBox, Gtk::PACK_SHRINK);
 	
@@ -116,6 +120,17 @@ void HistogramPage::plotPolarization(class HistogramCollection &histograms, unsi
 		LogHistogram totalHistogram;
 		histograms.GetTotalHistogramForCrossCorrelations(p, totalHistogram);
 		addHistogramToPlot(totalHistogram);
+		
+		if(_fitButton.get_active())
+		{
+			_plot.StartLine("Fit to total", "Amplitude in arbitrary units (log)", "Frequency (log)");
+			double minRange, maxRange;
+			RayleighFitter::FindFitRangeUnderRFIContamination(totalHistogram, minRange, maxRange);
+			RayleighFitter fitter;
+			double sigma, n;
+			fitter.Fit(minRange, maxRange, totalHistogram, sigma, n);
+			addRayleighToPlot(totalHistogram, sigma, n);
+		}
 	}
 
 	if(_rfiHistogramButton.get_active())
@@ -124,6 +139,17 @@ void HistogramPage::plotPolarization(class HistogramCollection &histograms, unsi
 		LogHistogram rfiHistogram;
 		histograms.GetRFIHistogramForCrossCorrelations(p, rfiHistogram);
 		addHistogramToPlot(rfiHistogram);
+
+		if(_fitButton.get_active())
+		{
+			_plot.StartLine("Fit to RFI", "Amplitude in arbitrary units (log)", "Frequency (log)");
+			double minRange, maxRange;
+			RayleighFitter::FindFitRangeUnderRFIContamination(rfiHistogram, minRange, maxRange);
+			RayleighFitter fitter;
+			double sigma, n;
+			fitter.Fit(minRange, maxRange, rfiHistogram, sigma, n);
+			addRayleighToPlot(rfiHistogram, sigma, n);
+		}
 	}
 }
 
@@ -136,5 +162,20 @@ void HistogramPage::addHistogramToPlot(LogHistogram &histogram)
 		const double logc = log10(i.normalizedCount());
 		if(std::isfinite(logx) && std::isfinite(logc))
 			_plot.PushDataPoint(logx, logc);
+	}
+}
+
+void HistogramPage::addRayleighToPlot(LogHistogram &histogram, double sigma, double n)
+{
+	double x = histogram.MinPositiveAmplitude();
+	const double xend = sigma*5.0;
+	const double sigmaP2 = sigma*sigma;
+	while(x < xend) {
+		const double logx = log10(x);
+    const double c = n * x / (sigmaP2) * exp(-x*x/(2*sigmaP2));
+		const double logc = log10(c);
+		if(std::isfinite(logx) && std::isfinite(logc))
+			_plot.PushDataPoint(logx, logc);
+		x *= 1.05;
 	}
 }

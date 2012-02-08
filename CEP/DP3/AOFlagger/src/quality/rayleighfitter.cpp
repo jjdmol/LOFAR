@@ -143,8 +143,8 @@ void RayleighFitter::Fit(double minVal, double maxVal, LogHistogram &hist, doubl
 	
   std::cout << "status = " << gsl_strerror (status) << "\n";
   print_state(iter, s);
-  sigma = gsl_vector_get (s->x, 0);
-  n = gsl_vector_get (s->x, 1);
+  sigma = fabs(gsl_vector_get (s->x, 0));
+  n = fabs(gsl_vector_get (s->x, 1));
   gsl_multifit_fdfsolver_free (s);
 }
 
@@ -157,3 +157,20 @@ void RayleighFitter::Fit(double minVal, double maxVal, LogHistogram &hist, doubl
 }
 
 #endif
+
+void RayleighFitter::FindFitRangeUnderRFIContamination(LogHistogram &hist, double &minValue, double &maxValue)
+{
+	double maxCount = 0.0, maxPosition = 0.0;
+	for (LogHistogram::iterator i=hist.begin(); i!=hist.end(); ++i)
+	{
+		if(i.normalizedCount() > maxCount)
+		{
+			maxCount = i.normalizedCount();
+			maxPosition = i.value();
+		}
+	}
+	minValue = 0.0;
+	maxValue = maxPosition * 7.0;
+}
+
+
