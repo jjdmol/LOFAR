@@ -21,11 +21,13 @@
 #define HISTOGRAM_COLLECTION_H
 
 #include "loghistogram.h"
-#include "histogramtablesformatter.h"
 
 #include <complex>
 #include <map>
 #include <vector>
+
+#include <AOFlagger/msio/image2d.h>
+#include <AOFlagger/msio/mask2d.h>
 
 class HistogramCollection
 {
@@ -55,6 +57,8 @@ class HistogramCollection
 					rfiHistogram.Add(amplitude);
 			}
 		}
+		
+		void Add(const unsigned antenna1, const unsigned antenna2, const unsigned polarization, Image2DCPtr image, Mask2DCPtr mask);
 		
 		LogHistogram &GetTotalHistogram(const unsigned a1, const unsigned a2, const unsigned polarization)
 		{
@@ -92,45 +96,11 @@ class HistogramCollection
 			init();
 		}
 		
-		void Save(class HistogramTablesFormatter &histogramTables)
-		{
-			histogramTables.InitializeEmptyTables();
-			for(size_t p=0;p<_polarizationCount;++p)
-			{
-				LogHistogram totalHistogram;
-				GetTotalHistogramForCrossCorrelations(p, totalHistogram);
-				const unsigned totalIndex = histogramTables.StoreOrQueryTypeIndex(HistogramTablesFormatter::TotalHistogram, p);
-				for(LogHistogram::iterator i=totalHistogram.begin();i!=totalHistogram.end();++i)
-				{
-					histogramTables.StoreValue(totalIndex, i.binStart(), i.binEnd(), i.unnormalizedCount());
-				}
-				
-				LogHistogram rfiHistogram;
-				GetRFIHistogramForCrossCorrelations(p, rfiHistogram);
-				const unsigned rfiIndex = histogramTables.StoreOrQueryTypeIndex(HistogramTablesFormatter::RFIHistogram, p);
-				for(LogHistogram::iterator i=rfiHistogram.begin();i!=rfiHistogram.end();++i)
-				{
-					histogramTables.StoreValue(rfiIndex, i.binStart(), i.binEnd(), i.unnormalizedCount());
-				}
-			}
-		}
+		void Save(class HistogramTablesFormatter &histogramTables);
 		
-		void Load(class HistogramTablesFormatter &histogramTables)
-		{
-			Clear();
-			for(unsigned p=0;p<_polarizationCount;++p)
-			{
-				const unsigned totalHistogramIndex = histogramTables.QueryTypeIndex(HistogramTablesFormatter::TotalHistogram, p);
-				std::vector<HistogramTablesFormatter::HistogramItem> totalHistogram;
-				histogramTables.QueryHistogram(totalHistogramIndex, totalHistogram);
-				GetTotalHistogram(0, 1, p).SetData(totalHistogram);
-
-				const unsigned rfiHistogramIndex = histogramTables.QueryTypeIndex(HistogramTablesFormatter::RFIHistogram, p);
-				std::vector<HistogramTablesFormatter::HistogramItem> rfiHistogram;
-				histogramTables.QueryHistogram(rfiHistogramIndex, rfiHistogram);
- 				GetRFIHistogram(0, 1, p).SetData(rfiHistogram);
-			}
-		}
+		void Load(class HistogramTablesFormatter &histogramTables);
+		
+		void Plot(class Plot2D &plot, unsigned polarization);
 	private:
 		unsigned _polarizationCount;
 		std::map<AntennaPair, LogHistogram*> *_totalHistograms;

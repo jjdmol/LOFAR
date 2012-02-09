@@ -98,6 +98,7 @@ set(MSIO_FILES
   msio/timestepaccessor.cpp)
   
 set(QUALITY_FILES
+  quality/histogramcollection.cpp
   quality/histogramtablesformatter.cpp
 	quality/rayleighfitter.cpp
   quality/qualitytablesformatter.cpp)

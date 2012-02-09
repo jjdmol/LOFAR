@@ -178,6 +178,7 @@ class MSWindow : public Gtk::Window {
 		void onSetToOnePlusI();
 		void onShowStats();
 		void onPlotDistPressed();
+		void onPlotLogLogDistPressed();
 		void onPlotComplexPlanePressed();
 		void onPlotPowerSpectrumPressed();
 		void onPlotPowerSpectrumComparisonPressed();
