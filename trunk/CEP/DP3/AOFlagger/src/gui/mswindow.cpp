@@ -84,6 +84,8 @@
 #include <AOFlagger/imaging/model.h>
 #include <AOFlagger/imaging/observatorium.h>
 
+#include <AOFlagger/quality/histogramcollection.h>
+
 #include <iostream>
 
 MSWindow::MSWindow() : _imagePlaneWindow(0), _optionWindow(0), _editStrategyWindow(0), _gotoWindow(0), _progressWindow(0), _highlightWindow(0), _plotComplexPlaneWindow(0), _imagePropertiesWindow(0), _antennaMapWindow(0), _statistics(new RFIStatistics()),  _imageSet(0), _imageSetIndex(0), _gaussianTestSets(true), _spatialMetaData(0), _plotWindow(_plotManager)
@@ -598,11 +600,13 @@ void MSWindow::createToolbar()
 	
 	_actionGroup->add( Gtk::Action::create("PlotDist", "Plot _distribution"),
   sigc::mem_fun(*this, &MSWindow::onPlotDistPressed) );
+	_actionGroup->add( Gtk::Action::create("PlotLogLogDist", "Plot _log-log dist"),
+  sigc::mem_fun(*this, &MSWindow::onPlotLogLogDistPressed) );
 	_actionGroup->add( Gtk::Action::create("PlotComplexPlane", "Plot _complex plane"),
   sigc::mem_fun(*this, &MSWindow::onPlotComplexPlanePressed) );
 	_actionGroup->add( Gtk::Action::create("PlotPowerSpectrum", "Plot _power spectrum"),
   sigc::mem_fun(*this, &MSWindow::onPlotPowerSpectrumPressed) );
-	_actionGroup->add( Gtk::Action::create("PlotPowerSpectrumComparison", "_Power spectrum"),
+	_actionGroup->add( Gtk::Action::create("PlotPowerSpectrumComparison", "Power _spectrum"),
   sigc::mem_fun(*this, &MSWindow::onPlotPowerSpectrumComparisonPressed) );
 	_actionGroup->add( Gtk::Action::create("PlotRMSSpectrum", "Plot _rms spectrum"),
   sigc::mem_fun(*this, &MSWindow::onPlotPowerRMSPressed) );
@@ -610,9 +614,9 @@ void MSWindow::createToolbar()
   sigc::mem_fun(*this, &MSWindow::onPlotPowerSNRPressed) );
 	_actionGroup->add( Gtk::Action::create("PlotPowerTime", "Plot power vs _time"),
   sigc::mem_fun(*this, &MSWindow::onPlotPowerTimePressed) );
-	_actionGroup->add( Gtk::Action::create("PlotPowerTimeComparison", "Power vs _time"),
+	_actionGroup->add( Gtk::Action::create("PlotPowerTimeComparison", "Po_wer vs time"),
   sigc::mem_fun(*this, &MSWindow::onPlotPowerTimeComparisonPressed) );
-	_actionGroup->add( Gtk::Action::create("PlotTimeScatter", "Plot time scatter"),
+	_actionGroup->add( Gtk::Action::create("PlotTimeScatter", "Plot time s_catter"),
   sigc::mem_fun(*this, &MSWindow::onPlotTimeScatterPressed) );
 	_actionGroup->add( Gtk::Action::create("PlotTimeScatterComparison", "Time _scatter"),
   sigc::mem_fun(*this, &MSWindow::onPlotTimeScatterComparisonPressed) );
@@ -838,6 +842,7 @@ void MSWindow::createToolbar()
 		"      </menu>"
     "      <separator/>"
     "      <menuitem action='PlotDist'/>"
+    "      <menuitem action='PlotLogLogDist'/>"
     "      <menuitem action='PlotComplexPlane'/>"
     "      <menuitem action='PlotPowerSpectrum'/>"
     "      <menuitem action='PlotRMSSpectrum'/>"
@@ -1152,6 +1157,22 @@ void MSWindow::onPlotDistPressed()
 		Plot2DPointSet &rfiSet = plot.StartLine("RFI");
 		RFIPlots::MakeDistPlot(rfiSet, image, mask);
 
+		_plotManager.Update();
+	}
+}
+
+void MSWindow::onPlotLogLogDistPressed()
+{
+	if(_timeFrequencyWidget.HasImage())
+	{
+		Plot2D &plot = _plotManager.NewPlot2D("Log-log distribution");
+
+		TimeFrequencyData activeData = GetActiveData();
+		Image2DCPtr image = activeData.GetSingleImage();
+		Mask2DCPtr mask = Mask2D::CreateCopy(activeData.GetSingleMask());
+		HistogramCollection histograms(1);
+		histograms.Add(0, 1, 0, image, mask);
+		histograms.Plot(plot, 0);
 		_plotManager.Update();
 	}
 }
