@@ -148,6 +148,36 @@ class LogHistogram
 			return (double) i->second.GetCount() / (binEnd(centreAmplitude) - binStart(centreAmplitude));
 		}
 		
+		double MinNormalizedCount() const
+		{
+			const_iterator i = begin();
+			if(i == end())
+				return 0.0;
+			double minCount = i.normalizedCount();
+			do
+			{
+				const double c = i.normalizedCount();
+				if(c < minCount) minCount = c;
+				++i;
+			} while(i != end());
+			return minCount;
+		}
+		
+		double MinPosNormalizedCount() const
+		{
+			const_iterator i = begin();
+			if(i == end())
+				return 0.0;
+			double minCount = i.normalizedCount() + 1.0;
+			do
+			{
+				const double c = i.normalizedCount();
+				if(c < minCount && c > 0.0 && std::isfinite(c)) minCount = c;
+				++i;
+			} while(i != end());
+			return minCount;
+		}
+		
 		void SetData(std::vector<HistogramTablesFormatter::HistogramItem> &histogramData)
 		{
 			for(std::vector<HistogramTablesFormatter::HistogramItem>::const_iterator i=histogramData.begin(); i!=histogramData.end();++i)
@@ -157,23 +187,23 @@ class LogHistogram
 			}
 		}
 		
-		class iterator
+		class const_iterator
 		{
 			public:
-				iterator(LogHistogram &histogram, std::map<double, AmplitudeBin>::iterator iter) :
+				const_iterator(const LogHistogram &histogram, std::map<double, AmplitudeBin>::const_iterator iter) :
 					_iterator(iter)
 				{ }
-				iterator(const iterator &source) :
+				const_iterator(const const_iterator &source) :
 					_iterator(source._iterator)
 				{ }
-				iterator &operator=(const iterator &source)
+				const_iterator &operator=(const const_iterator &source)
 				{
 					_iterator = source._iterator;
 					return *this;
 				}
-				bool operator==(const iterator &other) const { return other._iterator == _iterator; }
-				bool operator!=(const iterator &other) const { return other._iterator != _iterator; }
-				iterator &operator++() { ++_iterator; return *this; }
+				bool operator==(const const_iterator &other) const { return other._iterator == _iterator; }
+				bool operator!=(const const_iterator &other) const { return other._iterator != _iterator; }
+				const_iterator &operator++() { ++_iterator; return *this; }
 				double value() const { return _iterator->first; }
 				double normalizedCount() const { return _iterator->second.GetCount() / (binEnd() - binStart()); }
 				double unnormalizedCount() const { return _iterator->second.GetCount(); }
@@ -190,17 +220,18 @@ class LogHistogram
 						-pow10(log10(-_iterator->first)+0.005);
 				}
 			private:
-				std::map<double, AmplitudeBin>::iterator _iterator;
+				std::map<double, AmplitudeBin>::const_iterator _iterator;
 		};
+		typedef const_iterator iterator;
 		
-		iterator begin()
+		const_iterator begin() const
 		{
-			return iterator(*this, _amplitudes.begin());
+			return const_iterator(*this, _amplitudes.begin());
 		}
 		
-		iterator end()
+		const_iterator end() const
 		{
-			return iterator(*this, _amplitudes.end());
+			return const_iterator(*this, _amplitudes.end());
 		}
 		
 	private:

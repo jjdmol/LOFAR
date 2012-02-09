@@ -238,14 +238,19 @@ void HistogramPage::addRayleighToPlot(LogHistogram &histogram, double sigma, dou
 void HistogramPage::addRayleighDifferenceToPlot(LogHistogram &histogram, double sigma, double n)
 {
 	const double sigmaP2 = sigma*sigma;
+	double minCount = histogram.MinPosNormalizedCount();
 	for(LogHistogram::iterator i=histogram.begin();i!=histogram.end();++i)
 	{
 		const double x = i.value();
 		
-		const double logx = log10(x);
     const double c = n * x / (sigmaP2) * exp(-x*x/(2*sigmaP2));
-		const double logc = log10(fabs(i.normalizedCount() - c));
-		if(std::isfinite(logx) && std::isfinite(logc))
-			_plot.PushDataPoint(logx, logc);
+		double diff = fabs(i.normalizedCount() - c);
+		if(diff > minCount)
+		{
+			const double logx = log10(x);
+			const double logc = log10(diff);
+			if(std::isfinite(logx) && std::isfinite(logc))
+				_plot.PushDataPoint(logx, logc);
+		}
 	}
 }
