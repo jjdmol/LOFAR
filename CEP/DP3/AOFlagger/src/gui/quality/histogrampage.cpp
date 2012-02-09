@@ -159,6 +159,22 @@ void HistogramPage::plotPolarization(class HistogramCollection &histograms, unsi
 			plotFit(rfiHistogram, "Fit to RFI");
 		}
 	}
+	
+	if(_notRFIHistogramButton.get_active())
+	{
+		_plot.StartLine("Non-RFI histogram", "Amplitude in arbitrary units (log)", "Frequency (log)");
+		LogHistogram histogram;
+		histograms.GetTotalHistogramForCrossCorrelations(p, histogram);
+		LogHistogram rfiHistogram;
+		histograms.GetRFIHistogramForCrossCorrelations(p, rfiHistogram);
+		histogram -= rfiHistogram;
+		addHistogramToPlot(histogram);
+
+		if(_fitButton.get_active() || _subtractFitButton.get_active())
+		{
+			plotFit(histogram, "Fit to Non-RFI");
+		}
+	}
 }
 
 void HistogramPage::plotFit(class LogHistogram &histogram, const std::string &title)
@@ -196,7 +212,7 @@ void HistogramPage::addHistogramToPlot(LogHistogram &histogram)
 {
 	for(LogHistogram::iterator i=histogram.begin();i!=histogram.end();++i)
 	{
-		const double x = i.value(); // TODO this is actually slightly off
+		const double x = i.value();
 		const double logx = log10(x);
 		const double logc = log10(i.normalizedCount());
 		if(std::isfinite(logx) && std::isfinite(logc))
@@ -224,7 +240,7 @@ void HistogramPage::addRayleighDifferenceToPlot(LogHistogram &histogram, double 
 	const double sigmaP2 = sigma*sigma;
 	for(LogHistogram::iterator i=histogram.begin();i!=histogram.end();++i)
 	{
-		const double x = i.value(); // TODO this is actually slightly off
+		const double x = i.value();
 		
 		const double logx = log10(x);
     const double c = n * x / (sigmaP2) * exp(-x*x/(2*sigmaP2));

@@ -89,7 +89,7 @@ void HistogramCollection::Plot(class Plot2D &plot, unsigned polarization)
 	plot.StartLine("Total");
 	for(LogHistogram::iterator i=totalHistogram.begin();i!=totalHistogram.end();++i)
 	{
-		const double x = i.value(); // TODO this is actually slightly off
+		const double x = i.value();
 		const double logx = log10(x);
 		const double logc = log10(i.normalizedCount());
 		if(std::isfinite(logx) && std::isfinite(logc))
@@ -99,9 +99,19 @@ void HistogramCollection::Plot(class Plot2D &plot, unsigned polarization)
 	plot.StartLine("RFI");
 	for(LogHistogram::iterator i=rfiHistogram.begin();i!=rfiHistogram.end();++i)
 	{
-		const double x = i.value(); // TODO this is actually slightly off
+		const double x = i.value();
 		const double logx = log10(x);
 		const double logc = log10(i.normalizedCount());
+		if(std::isfinite(logx) && std::isfinite(logc))
+			plot.PushDataPoint(logx, logc);
+	}
+	
+	plot.StartLine("Non RFI");
+	for(LogHistogram::iterator i=totalHistogram.begin();i!=totalHistogram.end();++i)
+	{
+		const double x = i.value();
+		const double logx = log10(x);
+		const double logc = log10(i.normalizedCount() - rfiHistogram.NormalizedCount(x));
 		if(std::isfinite(logx) && std::isfinite(logc))
 			plot.PushDataPoint(logx, logc);
 	}
