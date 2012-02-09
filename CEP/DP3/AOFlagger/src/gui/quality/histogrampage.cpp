@@ -228,7 +228,7 @@ void HistogramPage::addRayleighDifferenceToPlot(LogHistogram &histogram, double 
 		
 		const double logx = log10(x);
     const double c = n * x / (sigmaP2) * exp(-x*x/(2*sigmaP2));
-		const double logc = log10(i.normalizedCount() - c);
+		const double logc = log10(fabs(i.normalizedCount() - c));
 		if(std::isfinite(logx) && std::isfinite(logc))
 			_plot.PushDataPoint(logx, logc);
 	}
