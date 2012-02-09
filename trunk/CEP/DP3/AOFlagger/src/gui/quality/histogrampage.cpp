@@ -35,7 +35,10 @@ HistogramPage::HistogramPage() :
 	_xyPolarizationButton("XY"),
 	_yxPolarizationButton("YX"),
 	_yyPolarizationButton("YY"),
-	_fitButton("Fit")
+	_fitFrame("Fitting"),
+	_fitButton("Fit"),
+	_subtractFitButton("Subtract"),
+	_fitAutoRangeButton("Auto range")
 {
 	_histogramTypeBox.pack_start(_totalHistogramButton, Gtk::PACK_SHRINK);
 	_totalHistogramButton.set_active(true);
@@ -68,7 +71,24 @@ HistogramPage::HistogramPage() :
 	
 	_sideBox.pack_start(_polarizationFrame, Gtk::PACK_SHRINK);
 	
-	_sideBox.pack_start(_fitButton, Gtk::PACK_SHRINK);
+	_fitBox.pack_start(_fitButton, Gtk::PACK_SHRINK);
+	_fitButton.signal_clicked().connect(sigc::mem_fun(*this, &HistogramPage::updatePlot));
+	_fitBox.pack_start(_subtractFitButton, Gtk::PACK_SHRINK);
+	_subtractFitButton.signal_clicked().connect(sigc::mem_fun(*this, &HistogramPage::updatePlot));
+	_fitBox.pack_start(_fitAutoRangeButton, Gtk::PACK_SHRINK);
+	_fitAutoRangeButton.set_active(true);
+	_fitAutoRangeButton.signal_clicked().connect(sigc::mem_fun(*this, &HistogramPage::onAutoRangeClicked));
+	
+	_fitBox.pack_start(_fitStartEntry, Gtk::PACK_SHRINK);
+	_fitStartEntry.set_sensitive(false);
+	_fitStartEntry.signal_activate().connect(sigc::mem_fun(*this, &HistogramPage::updatePlot));
+	_fitBox.pack_start(_fitEndEntry, Gtk::PACK_SHRINK);
+	_fitEndEntry.set_sensitive(false);
+	_fitEndEntry.signal_activate().connect(sigc::mem_fun(*this, &HistogramPage::updatePlot));
+	
+	_fitFrame.add(_fitBox);
+	
+	_sideBox.pack_start(_fitFrame, Gtk::PACK_SHRINK);
 	
 	pack_start(_sideBox, Gtk::PACK_SHRINK);
 	
@@ -121,7 +141,7 @@ void HistogramPage::plotPolarization(class HistogramCollection &histograms, unsi
 		histograms.GetTotalHistogramForCrossCorrelations(p, totalHistogram);
 		addHistogramToPlot(totalHistogram);
 		
-		if(_fitButton.get_active())
+		if(_fitButton.get_active() || _subtractFitButton.get_active())
 		{
 			plotFit(totalHistogram, "Fit to total");
 		}
@@ -134,7 +154,7 @@ void HistogramPage::plotPolarization(class HistogramCollection &histograms, unsi
 		histograms.GetRFIHistogramForCrossCorrelations(p, rfiHistogram);
 		addHistogramToPlot(rfiHistogram);
 
-		if(_fitButton.get_active())
+		if(_fitButton.get_active() || _subtractFitButton.get_active())
 		{
 			plotFit(rfiHistogram, "Fit to RFI");
 		}
@@ -143,14 +163,33 @@ void HistogramPage::plotPolarization(class HistogramCollection &histograms, unsi
 
 void HistogramPage::plotFit(class LogHistogram &histogram, const std::string &title)
 {
-	_plot.StartLine(title, "Amplitude in arbitrary units (log)", "Frequency (log)");
 	double minRange, maxRange, sigmaEstimate;
 	sigmaEstimate = RayleighFitter::SigmaEstimate(histogram);
-	RayleighFitter::FindFitRangeUnderRFIContamination(histogram.MinPositiveAmplitude(), sigmaEstimate, minRange, maxRange);
+	if(_fitAutoRangeButton.get_active())
+	{
+		RayleighFitter::FindFitRangeUnderRFIContamination(histogram.MinPositiveAmplitude(), sigmaEstimate, minRange, maxRange);
+		std::stringstream minRangeStr, maxRangeStr;
+		minRangeStr << minRange;
+		maxRangeStr << maxRange;
+		_fitStartEntry.set_text(minRangeStr.str());
+		_fitEndEntry.set_text(maxRangeStr.str());
+	} else {
+		minRange = atof(_fitStartEntry.get_text().c_str());
+		maxRange = atof(_fitEndEntry.get_text().c_str());
+	}
 	RayleighFitter fitter;
 	double sigma = sigmaEstimate, n = RayleighFitter::NEstimate(histogram, minRange, maxRange);
 	fitter.Fit(minRange, maxRange, histogram, sigma, n);
-	addRayleighToPlot(histogram, sigma, n);
+	if(_fitButton.get_active())
+	{
+		_plot.StartLine(title, "Amplitude in arbitrary units (log)", "Frequency (log)");
+		addRayleighToPlot(histogram, sigma, n);
+	}
+	if(_subtractFitButton.get_active())
+	{
+		_plot.StartLine(title, "Amplitude in arbitrary units (log)", "Frequency (log)");
+		addRayleighDifferenceToPlot(histogram, sigma, n);
+	}
 }
 
 void HistogramPage::addHistogramToPlot(LogHistogram &histogram)
@@ -177,5 +216,20 @@ void HistogramPage::addRayleighToPlot(LogHistogram &histogram, double sigma, dou
 		if(std::isfinite(logx) && std::isfinite(logc))
 			_plot.PushDataPoint(logx, logc);
 		x *= 1.05;
+	}
+}
+
+void HistogramPage::addRayleighDifferenceToPlot(LogHistogram &histogram, double sigma, double n)
+{
+	const double sigmaP2 = sigma*sigma;
+	for(LogHistogram::iterator i=histogram.begin();i!=histogram.end();++i)
+	{
+		const double x = i.value(); // TODO this is actually slightly off
+		
+		const double logx = log10(x);
+    const double c = n * x / (sigmaP2) * exp(-x*x/(2*sigmaP2));
+		const double logc = log10(i.normalizedCount() - c);
+		if(std::isfinite(logx) && std::isfinite(logc))
+			_plot.PushDataPoint(logx, logc);
 	}
 }
