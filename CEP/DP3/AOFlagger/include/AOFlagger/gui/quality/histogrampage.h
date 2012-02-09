@@ -58,6 +58,7 @@ class HistogramPage : public Gtk::HBox {
 		void addRayleighToPlot(class LogHistogram &histogram, double sigma, double n);
 		void updatePlot();
 		void plotPolarization(class HistogramCollection &histograms, unsigned p);
+		void plotFit(class LogHistogram &histogram, const std::string &title);
 		void onPlotPropertiesClicked() { }
 		void onDataExportClicked() { }
 		

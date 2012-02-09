@@ -112,7 +112,7 @@ void RayleighFitter::Fit(double minVal, double maxVal, LogHistogram &hist, doubl
 	}
 	std::cout << "ndata=" << nData << "\n";
     
-	double x_init[nVars] = { /*sigma*/ 1.0, /*N*/ 100000.0 };
+	double x_init[nVars] = { sigma, n };
 	gsl_vector_view x = gsl_vector_view_array (x_init, nVars);
   
 	gsl_multifit_function_fdf f;
@@ -162,7 +162,7 @@ void RayleighFitter::Fit(double minVal, double maxVal, LogHistogram &hist, doubl
 
 #endif
 
-void RayleighFitter::FindFitRangeUnderRFIContamination(LogHistogram &hist, double &minValue, double &maxValue)
+double RayleighFitter::SigmaEstimate(LogHistogram &hist)
 {
 	double maxCount = 0.0, maxPosition = 0.0;
 	for (LogHistogram::iterator i=hist.begin(); i!=hist.end(); ++i)
@@ -173,9 +173,30 @@ void RayleighFitter::FindFitRangeUnderRFIContamination(LogHistogram &hist, doubl
 			maxPosition = i.value();
 		}
 	}
-	minValue = hist.MinPositiveAmplitude();
-	maxValue = maxPosition * 1.5;
+	return maxPosition;
+}
+
+void RayleighFitter::FindFitRangeUnderRFIContamination(double minPositiveAmplitude, double sigmaEstimate, double &minValue, double &maxValue)
+{
+	minValue = minPositiveAmplitude;
+	maxValue = sigmaEstimate * 1.5;
 	std::cout << "Found range " << minValue << " -- " << maxValue << "\n";
 }
 
-
+double RayleighFitter::NEstimate(LogHistogram &hist, double rangeStart, double rangeEnd)
+{
+	double rangeSum = 0.0;
+	size_t count = 0;
+	for (LogHistogram::iterator i=hist.begin(); i!=hist.end(); ++i)
+	{
+		if(i.value() > rangeStart && i.value() < rangeEnd && std::isfinite(i.value()))
+		{
+			if(std::isfinite(i.normalizedCount()))
+			{
+				rangeSum += i.normalizedCount();
+				++count;
+			}
+		}
+	}
+	return rangeSum / (count * 10.0);
+}

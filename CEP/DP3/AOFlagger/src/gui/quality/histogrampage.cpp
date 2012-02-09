@@ -123,13 +123,7 @@ void HistogramPage::plotPolarization(class HistogramCollection &histograms, unsi
 		
 		if(_fitButton.get_active())
 		{
-			_plot.StartLine("Fit to total", "Amplitude in arbitrary units (log)", "Frequency (log)");
-			double minRange, maxRange;
-			RayleighFitter::FindFitRangeUnderRFIContamination(totalHistogram, minRange, maxRange);
-			RayleighFitter fitter;
-			double sigma, n;
-			fitter.Fit(minRange, maxRange, totalHistogram, sigma, n);
-			addRayleighToPlot(totalHistogram, sigma, n);
+			plotFit(totalHistogram, "Fit to total");
 		}
 	}
 
@@ -142,15 +136,21 @@ void HistogramPage::plotPolarization(class HistogramCollection &histograms, unsi
 
 		if(_fitButton.get_active())
 		{
-			_plot.StartLine("Fit to RFI", "Amplitude in arbitrary units (log)", "Frequency (log)");
-			double minRange, maxRange;
-			RayleighFitter::FindFitRangeUnderRFIContamination(rfiHistogram, minRange, maxRange);
-			RayleighFitter fitter;
-			double sigma, n;
-			fitter.Fit(minRange, maxRange, rfiHistogram, sigma, n);
-			addRayleighToPlot(rfiHistogram, sigma, n);
+			plotFit(rfiHistogram, "Fit to RFI");
 		}
 	}
+}
+
+void HistogramPage::plotFit(class LogHistogram &histogram, const std::string &title)
+{
+	_plot.StartLine(title, "Amplitude in arbitrary units (log)", "Frequency (log)");
+	double minRange, maxRange, sigmaEstimate;
+	sigmaEstimate = RayleighFitter::SigmaEstimate(histogram);
+	RayleighFitter::FindFitRangeUnderRFIContamination(histogram.MinPositiveAmplitude(), sigmaEstimate, minRange, maxRange);
+	RayleighFitter fitter;
+	double sigma = sigmaEstimate, n = RayleighFitter::NEstimate(histogram, minRange, maxRange);
+	fitter.Fit(minRange, maxRange, histogram, sigma, n);
+	addRayleighToPlot(histogram, sigma, n);
 }
 
 void HistogramPage::addHistogramToPlot(LogHistogram &histogram)
