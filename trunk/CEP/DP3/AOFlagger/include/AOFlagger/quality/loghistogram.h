@@ -48,6 +48,14 @@ class LogHistogram
 				count += other.count;
 				return *this;
 			}
+			AmplitudeBin &operator-=(const AmplitudeBin &other)
+			{
+				if(count >= other.count)
+					count -= other.count;
+				else
+					count = 0;
+				return *this;
+			}
 		};
 		
 	public:
@@ -67,6 +75,15 @@ class LogHistogram
 			{
 				AmplitudeBin &bin = getBin(i->first);
 				bin += i->second;
+			}
+		}
+		
+		void operator-=(const LogHistogram &histogram)
+		{
+			for(std::map<double, AmplitudeBin>::const_iterator i=histogram._amplitudes.begin(); i!=histogram._amplitudes.end();++i)
+			{
+				AmplitudeBin &bin = getBin(i->first);
+				bin -= i->second;
 			}
 		}
 		
@@ -128,7 +145,7 @@ class LogHistogram
 			const double key = getCentralAmplitude(centreAmplitude);
 			std::map<double, AmplitudeBin>::const_iterator i = _amplitudes.find(key);
 			if(i == _amplitudes.end()) return 0.0;
-			return (double) i->second.GetCount() / key;
+			return (double) i->second.GetCount() / (binEnd(centreAmplitude) - binStart(centreAmplitude));
 		}
 		
 		void SetData(std::vector<HistogramTablesFormatter::HistogramItem> &histogramData)
@@ -197,6 +214,18 @@ class LogHistogram
 				element = _amplitudes.insert(std::pair<double, AmplitudeBin>(centralAmplitude, AmplitudeBin())).first;
 			}
 			return element->second;
+		}
+		double binStart(double x) const
+		{
+			return x>0.0 ?
+				pow10(log10(x)-0.005) :
+				-pow10(log10(x)-0.005);
+		}
+		double binEnd(double x) const
+		{
+			return x>0.0 ?
+				pow10(log10(x)+0.005) :
+				-pow10(log10(x)+0.005);
 		}
 		
 		std::map<double, AmplitudeBin> _amplitudes;
