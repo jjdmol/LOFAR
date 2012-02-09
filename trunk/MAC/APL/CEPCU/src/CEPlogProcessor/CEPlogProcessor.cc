@@ -572,7 +572,7 @@ void CEPlogProcessor::_processLogLine(const char *cString)
       _processIONProcLine(logline);
     } else if (!strcmp(logline.process,"CNProc")) {
       _processCNProcLine(logline);
-    } else if (!strcmp(logline.process,"Storage")) {
+    } else if (!strcmp(logline.process,"Storage_main")) {
       _processStorageLine(logline);
     } else {
       LOG_DEBUG_STR("Unknown process: " << logline.process);
