@@ -239,13 +239,14 @@ void HistogramPage::addRayleighDifferenceToPlot(LogHistogram &histogram, double 
 {
 	const double sigmaP2 = sigma*sigma;
 	double minCount = histogram.MinPosNormalizedCount();
+	std::cout << "addRayleighDifferenceToPlot: minCount = " << minCount << "\n";
 	for(LogHistogram::iterator i=histogram.begin();i!=histogram.end();++i)
 	{
 		const double x = i.value();
 		
     const double c = n * x / (sigmaP2) * exp(-x*x/(2*sigmaP2));
 		double diff = fabs(i.normalizedCount() - c);
-		if(diff > minCount)
+		if(diff >= minCount)
 		{
 			const double logx = log10(x);
 			const double logc = log10(diff);

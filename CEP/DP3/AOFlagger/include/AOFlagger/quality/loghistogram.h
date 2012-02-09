@@ -168,7 +168,7 @@ class LogHistogram
 			const_iterator i = begin();
 			if(i == end())
 				return 0.0;
-			double minCount = i.normalizedCount() + 1.0;
+			double minCount = std::isfinite(i.normalizedCount()) ? i.normalizedCount() + 1.0 : 1.0;
 			do
 			{
 				const double c = i.normalizedCount();
