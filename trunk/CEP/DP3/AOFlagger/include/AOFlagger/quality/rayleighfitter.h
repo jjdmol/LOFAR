@@ -7,7 +7,9 @@ class RayleighFitter
 {
  public:
 	void Fit(double minVal, double maxVal, LogHistogram &hist, double &sigma, double &n);
-	static void FindFitRangeUnderRFIContamination(LogHistogram &hist, double &minValue, double &maxValue);
+	static double SigmaEstimate(LogHistogram &hist);
+	static double NEstimate(LogHistogram &hist, double rangeStart, double rangeEnd);
+	static void FindFitRangeUnderRFIContamination(double minPositiveAmplitude, double sigmaEstimate, double &minValue, double &maxValue);
 	static double RayleighValue(double sigma, double n, double x)
 	{
 		double sigmaP2 = sigma*sigma;
