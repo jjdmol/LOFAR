@@ -25,6 +25,7 @@
 
 #include <gtkmm/box.h>
 #include <gtkmm/checkbutton.h>
+#include <gtkmm/entry.h>
 #include <gtkmm/frame.h>
 
 #include <AOFlagger/quality/qualitytablesformatter.h>
@@ -56,11 +57,21 @@ class HistogramPage : public Gtk::HBox {
 	private:
 		void addHistogramToPlot(class LogHistogram &histogram);
 		void addRayleighToPlot(class LogHistogram &histogram, double sigma, double n);
+		void addRayleighDifferenceToPlot(LogHistogram &histogram, double sigma, double n);
 		void updatePlot();
 		void plotPolarization(class HistogramCollection &histograms, unsigned p);
 		void plotFit(class LogHistogram &histogram, const std::string &title);
 		void onPlotPropertiesClicked() { }
 		void onDataExportClicked() { }
+		
+		void onAutoRangeClicked()
+		{
+			bool autoRange = _fitAutoRangeButton.get_active();
+			_fitStartEntry.set_sensitive(!autoRange);
+			_fitEndEntry.set_sensitive(!autoRange);
+			if(autoRange)
+				updatePlot();
+		}
 		
 		Gtk::VBox _sideBox;
 		
@@ -72,7 +83,10 @@ class HistogramPage : public Gtk::HBox {
 		Gtk::VBox _polarizationBox;
 		Gtk::CheckButton _xxPolarizationButton, _xyPolarizationButton, _yxPolarizationButton, _yyPolarizationButton;
 		
-		Gtk::CheckButton _fitButton;
+		Gtk::Frame _fitFrame;
+		Gtk::VBox _fitBox;
+		Gtk::CheckButton _fitButton, _subtractFitButton, _fitAutoRangeButton;
+		Gtk::Entry _fitStartEntry, _fitEndEntry;
 		
 		std::string _statFilename;
 		Plot2D _plot;
