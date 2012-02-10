@@ -88,6 +88,10 @@ class HistogramPage : public Gtk::HBox {
 		Gtk::CheckButton _fitButton, _subtractFitButton, _fitAutoRangeButton;
 		Gtk::Entry _fitStartEntry, _fitEndEntry;
 		
+		Gtk::Frame _functionFrame;
+		Gtk::VBox _functionBox;
+		Gtk::RadioButton _nsButton, _dndsButton;
+		
 		std::string _statFilename;
 		Plot2D _plot;
 		PlotWidget _plotWidget;
