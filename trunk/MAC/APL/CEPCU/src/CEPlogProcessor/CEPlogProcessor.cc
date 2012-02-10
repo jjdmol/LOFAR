@@ -265,7 +265,8 @@ GCFEvent::TResult CEPlogProcessor::createPropertySets(GCFEvent& event,
             unsigned index = storage * itsNrWriters + writer;
 
             if (!itsWriters[index]) {
-              string PSname(formatString("LOFAR_ObsSW_OSLocusNode%03d_Writer%02d", storage, writer));
+              // locus nodes start counting from 001
+              string PSname(formatString("LOFAR_ObsSW_OSLocusNode%03d_Writer%02d", storage + 1, writer));
               itsWriters[index] = new RTDBPropertySet(PSname, "Writer", PSAT_WO | PSAT_CW, this);
             }
 
@@ -810,7 +811,7 @@ void CEPlogProcessor::_processStorageLine(const struct logline &logline)
     unsigned hostNr;
 
     if (sscanf(logline.host, "%u", &hostNr) == 1) {
-      // Storage@00 will yield 00, the index of the first storage node, which is output by Log4Cout
+        // Storage_main@00 will yield 00, the index of the first storage node, which is output by Log4Cout
         LOG_FATAL_STR("Need a host name, not a number, for Storage (don't use Log4Cout?): " << logline.host );
         return;
     } else if (sscanf(logline.host, "%*[^0-9]%u", &hostNr) != 1) {
@@ -823,7 +824,7 @@ void CEPlogProcessor::_processStorageLine(const struct logline &logline)
         return;
     }
 
-    hostNr--; // use 0-based indexing
+    hostNr--; // use 0-based indexing in our arrays
 
     char*   result;
 
@@ -833,10 +834,22 @@ void CEPlogProcessor::_processStorageLine(const struct logline &logline)
       int writerIndex = hostNr * itsNrWriters + writerNr;
       RTDBPropertySet *writer = itsWriters[writerIndex];
 
-      // Storage@11 23-01-11 17:34:11.315 INFO  [obs 22899 output 1 subband 202] Written block with seqno = 7439, 7438 blocks written, 1 blocks dropped 
+      // Storage_main@locus088 10-02-12 13:20:01.056 INFO  [obs 45784 type 2 stream  12 writer   0] [OutputThread] Written block with seqno = 479, 480 blocks written, 0 blocks dropped
       if ((result = strstr(logline.msg, "Written block"))) {
         int seqno = 0, written = 0, dropped = 0;
         if (sscanf(result, "Written block with seqno = %d, %d blocks written, %d blocks dropped", &seqno, &written, &dropped) == 3) {
+          LOG_DEBUG(formatString("[%d] Written %d, dropped %d", writerNr, written, dropped));
+          writer->setValue("written", GCFPVInteger(written), logline.timestamp, false);
+          writer->setValue("dropped", GCFPVInteger(dropped), logline.timestamp, false);
+          writer->flush();
+        }
+        return;
+      }
+
+      // Storage_main@locus088 10-02-12 13:20:01.057 INFO  [obs 45784 type 2 stream  12 writer   0] [OutputThread] Finished writing: 480 blocks written, 0 blocks dropped: 0% lost
+      if ((result = strstr(logline.msg, "Finished writing"))) {
+        int written = 0, dropped = 0;
+        if (sscanf(result, "Finished writing: %d blocks written, %d blocks dropped", &written, &dropped) == 2) {
           LOG_DEBUG(formatString("[%d] Written %d, dropped %d", writerNr, written, dropped));
           writer->setValue("written", GCFPVInteger(written), logline.timestamp, false);
           writer->setValue("dropped", GCFPVInteger(dropped), logline.timestamp, false);
