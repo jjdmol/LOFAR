@@ -25,6 +25,7 @@
 #include <CorrelatorAsm.h>
 #include <FIR_Asm.h>
 #include <BeamFormer.h>
+#include <ContainsOnlyZerosAsm.h>
 
 #include <Common/Timer.h>
 #include <Interface/CN_Mapping.h>
@@ -157,6 +158,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
   if (LOG_CONDITION)
     LOG_INFO_STR(itsLogPrefix << "----- Observation start");
 
+  itsStationNames            = parset.allStationNames();
   itsNrStations	             = parset.nrStations();
   unsigned nrMergedStations  = parset.nrMergedStations();
   itsNrSubbands              = parset.nrSubbands();
@@ -169,6 +171,8 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
   itsNrChannels		     = parset.nrChannelsPerSubband();
   itsNrSamplesPerIntegration = parset.CNintegrationSteps();
   itsFakeInputData           = parset.fakeInputData();
+  itsNrSlotsInFrame          = parset.nrSlotsInFrame();
+  itsCNintegrationTime       = parset.CNintegrationTime();
 
   if (itsFakeInputData && LOG_CONDITION)
     LOG_WARN_STR(itsLogPrefix << "Generating fake input data -- any real input is discarded!");
@@ -676,6 +680,67 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::filter()
 }
 
 
+template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::checkInputForZeros()
+{
+  if (LOG_CONDITION)
+    LOG_DEBUG_STR(itsLogPrefix << "Start checking for zeroes at " << MPI_Wtime());
+
+  static NSTimer timer("input zero-check timer", true, true);
+
+  timer.start();
+
+  const unsigned nrSamplesToCNProc = itsNrSamplesPerIntegration * itsNrChannels;
+
+  for (unsigned s = 0; s < itsNrStations; s ++) {
+    const SparseSet<unsigned> &flags = itsTransposedSubbandMetaData->getFlags(s);
+    SparseSet<unsigned> validSamples = flags.invert(0, nrSamplesToCNProc);
+
+    bool allzeros = true;
+
+    // only consider non-flagged samples, as flagged samples aren't necessarily zero
+    for (SparseSet<unsigned>::const_iterator it = validSamples.getRanges().begin(); allzeros && it != validSamples.getRanges().end(); ++it) {
+
+#ifdef HAVE_BGP
+      unsigned first = it->begin;
+      unsigned nrSamples = it->end - it->begin;
+
+      ASSERT(NR_POLARIZATIONS == 2); // assumed by the assembly
+
+      allzeros = containsOnlyZeros<SAMPLE_TYPE>(itsTransposedInputData->samples[s][first].origin(), nrSamples);
+#else
+      for (unsigned t = it->begin; allzeros && t < it->end; t++) {
+        for (unsigned p = 0; p < NR_POLARIZATIONS; p++) {
+          const SAMPLE_TYPE &sample = itsTransposedInputData[s][t][p];
+
+          if (real(sample) != 0.0 || imag(sample) != 0.0) {
+            allzeros = false;
+            break;
+          }
+        }
+      }
+#endif
+    }
+
+    if (allzeros && validSamples.count() > 0) {
+      // flag everything
+      SparseSet<unsigned> newflags;
+
+      newflags.include(0, nrSamplesToCNProc);
+      itsTransposedSubbandMetaData->setFlags(s, newflags);
+
+      // Rate limit this log line, to prevent 244 warnings/station/block
+      //
+      // Emit (at most) one message per 10 seconds, and only one per RSP board (TODO: this doesn't work as expected with DataSlots)
+      unsigned logInterval = static_cast<unsigned>(ceil(10.0 / itsCNintegrationTime));
+      if (itsBlock % logInterval == 0 && *itsCurrentSubband % itsNrSlotsInFrame == 0)
+        LOG_WARN_STR(itsLogPrefix << "Station " << itsStationNames[s] << " subband " << *itsCurrentSubband << " consists of only zeros.");
+    }
+  }
+
+  timer.stop();
+}
+
+
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::dedisperseAfterBeamForming(unsigned beam, double dm)
 {
 #if defined HAVE_MPI
@@ -904,6 +969,8 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process(unsigne
 #if defined CLUSTER_SCHEDULING
     receiveInput();
 #endif
+
+    checkInputForZeros();
 
     if (itsPPF != 0)
       filter();
