@@ -38,7 +38,10 @@ HistogramPage::HistogramPage() :
 	_fitFrame("Fitting"),
 	_fitButton("Fit"),
 	_subtractFitButton("Subtract"),
-	_fitAutoRangeButton("Auto range")
+	_fitAutoRangeButton("Auto range"),
+	_functionFrame("Function"),
+	_nsButton("N(S)"),
+	_dndsButton("dN(S)/dS")
 {
 	_histogramTypeBox.pack_start(_totalHistogramButton, Gtk::PACK_SHRINK);
 	_totalHistogramButton.set_active(true);
@@ -89,6 +92,18 @@ HistogramPage::HistogramPage() :
 	_fitFrame.add(_fitBox);
 	
 	_sideBox.pack_start(_fitFrame, Gtk::PACK_SHRINK);
+	
+	Gtk::RadioButtonGroup group;
+	_functionBox.pack_start(_nsButton, Gtk::PACK_SHRINK);
+	_nsButton.signal_clicked().connect(sigc::mem_fun(*this, &HistogramPage::updatePlot));
+	_nsButton.set_group(group);
+	_functionBox.pack_start(_dndsButton, Gtk::PACK_SHRINK);
+	_dndsButton.signal_clicked().connect(sigc::mem_fun(*this, &HistogramPage::updatePlot));
+	_dndsButton.set_group(group);
+	_nsButton.set_active(true);
+	
+	_functionFrame.add(_functionBox);
+	_sideBox.pack_start(_functionFrame, Gtk::PACK_SHRINK);
 	
 	pack_start(_sideBox, Gtk::PACK_SHRINK);
 	
@@ -210,27 +225,45 @@ void HistogramPage::plotFit(class LogHistogram &histogram, const std::string &ti
 
 void HistogramPage::addHistogramToPlot(LogHistogram &histogram)
 {
+	const bool derivative = _dndsButton.get_active();
 	for(LogHistogram::iterator i=histogram.begin();i!=histogram.end();++i)
 	{
-		const double x = i.value();
-		const double logx = log10(x);
-		const double logc = log10(i.normalizedCount());
-		if(std::isfinite(logx) && std::isfinite(logc))
-			_plot.PushDataPoint(logx, logc);
+		if(derivative)
+		{
+			const double x = i.value();
+			const double logx = log10(x);
+			const double cslope = histogram.NormalizedSlope(x*0.5, x*2.0);
+			if(std::isfinite(logx) && std::isfinite(cslope))
+				_plot.PushDataPoint(logx, cslope);
+		} else {
+			const double x = i.value();
+			const double logx = log10(x);
+			const double logc = log10(i.normalizedCount());
+			if(std::isfinite(logx) && std::isfinite(logc))
+				_plot.PushDataPoint(logx, logc);
+		}
 	}
 }
 
 void HistogramPage::addRayleighToPlot(LogHistogram &histogram, double sigma, double n)
 {
+	const bool derivative = _dndsButton.get_active();
 	double x = histogram.MinPositiveAmplitude();
 	const double xend = sigma*5.0;
 	const double sigmaP2 = sigma*sigma;
 	while(x < xend) {
 		const double logx = log10(x);
-    const double c = n * x / (sigmaP2) * exp(-x*x/(2*sigmaP2));
-		const double logc = log10(c);
-		if(std::isfinite(logx) && std::isfinite(logc))
-			_plot.PushDataPoint(logx, logc);
+		if(derivative)
+		{
+			const double dc = -(pow10(2.0*x)-sigmaP2)/sigmaP2;
+			if(std::isfinite(logx) && std::isfinite(dc))
+				_plot.PushDataPoint(logx, dc);
+		} else {
+			const double c = n * x / (sigmaP2) * exp(-x*x/(2*sigmaP2));
+			const double logc = log10(c);
+			if(std::isfinite(logx) && std::isfinite(logc))
+				_plot.PushDataPoint(logx, logc);
+		}
 		x *= 1.05;
 	}
 }
