@@ -86,6 +86,7 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_initO
     env->ReleaseStringUTFChars(passwd, pass);
     env->ReleaseStringUTFChars(database, db);
     env->ReleaseStringUTFChars(hostname, hn);
+    env->ReleaseStringUTFChars(str, n);
   } catch (exception &ex) {
     cout << "Exception during new OTDBconnection(" << u << "," << p << "," << d << "," << h << ") : "<< ex.what() << endl;
     
@@ -93,6 +94,7 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_initO
     env->ReleaseStringUTFChars(passwd, pass);
     env->ReleaseStringUTFChars(database, db);
     env->ReleaseStringUTFChars(hostname, hn);
+    env->ReleaseStringUTFChars(str, n);
     env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
   }
 }
@@ -138,6 +140,7 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_disco
     jboolean isCopy;
     const char* n = env->GetStringUTFChars (str, &isCopy);
     const string name (n);
+    env->ReleaseStringUTFChars(str, n);
 
     bool found = false;
     std::map<std::string,void *>::iterator itr;
@@ -151,6 +154,8 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_disco
             if (!found) found=true;
             std::map<std::string,void *>::iterator tmpitr = itr;
             itr++;
+            // free memory
+            delete tmpitr;
             theirC_ObjectMap.erase(tmpitr);
         } else {
             itr++;
@@ -167,7 +172,7 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_disco
 
   } catch (exception &ex) {
     cout << "Exception during OTDBconnection::disconnect "<< ex.what() << endl;
-    
+    env->ReleaseStringUTFChars(str, n);
     env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
   }
 
