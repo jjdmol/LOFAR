@@ -88,7 +88,6 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_initO
     env->ReleaseStringUTFChars(passwd, pass);
     env->ReleaseStringUTFChars(database, db);
     env->ReleaseStringUTFChars(hostname, hn);
-    env->ReleaseStringUTFChars(str, n);
   } catch (exception &ex) {
     cout << "Exception during new OTDBconnection(" << u << "," << p << "," << d << "," << h << ") : "<< ex.what() << endl;
     
