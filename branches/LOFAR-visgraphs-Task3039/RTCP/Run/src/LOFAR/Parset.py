@@ -432,6 +432,7 @@ class Parset(util.Parset.Parset):
 
 	# output flow configuration
         self['OLAP.storageStationNames'] = [s.name for s in self.stations]
+        self['Observation.VirtualInstrument.stationList'] = [s.name for s in self.stations]
 
         self.setdefault('OLAP.OLAP_Conn.IONProc_Storage_Transport','TCP');
         self.setdefault('OLAP.OLAP_Conn.IONProc_CNProc_Transport','FCNP');

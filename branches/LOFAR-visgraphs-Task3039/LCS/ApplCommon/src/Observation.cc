@@ -144,7 +144,12 @@ Observation::Observation(const ParameterSet*		aParSet,
 	}
 
 	// determine if DataslotLists are available in this parset
-	itsHasDataslots = aParSet->isDefined(prefix+str(format("Dataslots.%s%s.DataslotList") % stations[0] % antennaArray));
+    if (stations.size() > 0) {
+       itsHasDataslots = aParSet->isDefined(prefix+str(format("Dataslots.%s%s.DataslotList") % stations[0] % antennaArray));
+    } else {
+       itsHasDataslots = 0;
+    }
+
 	if (itsHasDataslots) {
 		itsDataslotParset = aParSet->makeSubset(prefix+"Dataslots.");		// save subset for later
 	}
