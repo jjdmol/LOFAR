@@ -91,7 +91,7 @@ int main (int argc, char* argv[])
 
   //---------------------------------------------
   // Init logger
-  string progName = basename(argv[0]);
+  string progName = LOFAR::basename(argv[0]);
   INIT_LOGGER(progName);
 
   // Parse command line arguments TODO!
