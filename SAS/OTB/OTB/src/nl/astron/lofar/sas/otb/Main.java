@@ -32,8 +32,7 @@ import java.awt.Rectangle;
 import java.io.File;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
+import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.sas.otb.exceptions.NoServerConnectionException;
 import nl.astron.lofar.sas.otb.exceptions.NotLoggedInException;
 import org.apache.log4j.Logger;
@@ -58,29 +57,14 @@ public class Main {
             @Override
       public void run() {
         System.out.println("Shutting down OTB");
+        // uninstall tab selector
+        LofarUtils.TextSelector.uninstall();
         if (itsMainFrame != null)  itsMainFrame.exit();
       }
     });
 
   }
     
-//static {
-// 
-//    int delay = 1000 * 60; // delay for 1 minute
-//    int repeat = delay * 2; // repeat every 2 minutes
-// 
-//    Timer gcTimer = new Timer();
-//    gcTimer.scheduleAtFixedRate(new TimerTask() {
-// 
-//    @Override
-//    public void run() {
-////        System.out.println("Running Gargabe-Collector");
-//        System.gc();
-//    }
-//   
-//    }, delay, repeat);
-//  
-// }
 
 
     /**
@@ -139,7 +123,10 @@ public class Main {
             }
             if (errs) {
                 System.err.println("Usage: OTB.jar [-s server] [-p port] [-d database] [-u username] [-l logFile] [-h]");
-            }         
+            }   
+            // install tab focus
+            LofarUtils.TextSelector.install();
+
 
             File f = new File(logConfig);
             if (f.exists()) {
@@ -151,8 +138,11 @@ public class Main {
                     PropertyConfigurator.configure(logConfig);
                 } else {
                     logger.error("OTB.log_prop not found.");
-                }
+                    }
             }
+            // install tab focus
+            LofarUtils.TextSelector.install();
+
             logger.info("OTB started");
 
             try {

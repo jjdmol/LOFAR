@@ -137,8 +137,6 @@ public final class MainFrame extends javax.swing.JFrame {
         
 
         
-        
-        
             showPanel(MainPanel.getFriendlyNameStatic());
         } catch(NoServerConnectionException ex ) {
             String aS="No Server Connection "+ex;
@@ -149,7 +147,6 @@ public final class MainFrame extends javax.swing.JFrame {
         } catch (NotLoggedInException ex ) {
             String aS="Not logged in "+ex;
             logger.error(aS);
-            LofarUtils.showErrorPanel(this.getOwner(),aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             exit();
             throw ex;
         }
