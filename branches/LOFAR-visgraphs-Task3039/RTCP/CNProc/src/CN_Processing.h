@@ -89,7 +89,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
 #endif
     int			transposeBeams(unsigned block);
     void		filter();
-    void                checkInputForZeros();
+    void                checkInputForZeros(unsigned station);
     void		dedisperseAfterBeamForming(unsigned beam, double dm);
     void		preCorrelationFlagging();
     void		mergeStations();

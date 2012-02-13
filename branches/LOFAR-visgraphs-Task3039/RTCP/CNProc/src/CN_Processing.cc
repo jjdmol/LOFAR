@@ -661,6 +661,8 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::filter()
     unsigned stat = itsAsyncTransposeInput->waitForAnyReceive();
     asyncReceiveTimer.stop();
 
+    checkInputForZeros(stat);
+
     computeTimer.start();
     itsPPF->doWork(stat, itsCenterFrequencies[*itsCurrentSubband], itsTransposedSubbandMetaData, itsTransposedInputData, itsFilteredData);
     computeTimer.stop();
@@ -680,7 +682,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::filter()
 }
 
 
-template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::checkInputForZeros()
+template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::checkInputForZeros(unsigned station)
 {
   if (LOG_CONDITION)
     LOG_DEBUG_STR(itsLogPrefix << "Start checking for zeroes at " << MPI_Wtime());
@@ -691,50 +693,48 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::checkInputForZe
 
   const unsigned nrSamplesToCNProc = itsNrSamplesPerIntegration * itsNrChannels;
 
-  for (unsigned s = 0; s < itsNrStations; s ++) {
-    const SparseSet<unsigned> &flags = itsTransposedSubbandMetaData->getFlags(s);
-    SparseSet<unsigned> validSamples = flags.invert(0, nrSamplesToCNProc);
+  const SparseSet<unsigned> &flags = itsTransposedSubbandMetaData->getFlags(station);
+  SparseSet<unsigned> validSamples = flags.invert(0, nrSamplesToCNProc);
 
-    bool allzeros = true;
+  bool allzeros = true;
 
-    // only consider non-flagged samples, as flagged samples aren't necessarily zero
-    for (SparseSet<unsigned>::const_iterator it = validSamples.getRanges().begin(); allzeros && it != validSamples.getRanges().end(); ++it) {
+  // only consider non-flagged samples, as flagged samples aren't necessarily zero
+  for (SparseSet<unsigned>::const_iterator it = validSamples.getRanges().begin(); allzeros && it != validSamples.getRanges().end(); ++it) {
 
 #ifdef HAVE_BGP
-      unsigned first = it->begin;
-      unsigned nrSamples = it->end - it->begin;
+    unsigned first = it->begin;
+    unsigned nrSamples = it->end - it->begin;
 
-      ASSERT(NR_POLARIZATIONS == 2); // assumed by the assembly
+    ASSERT(NR_POLARIZATIONS == 2); // assumed by the assembly
 
-      allzeros = containsOnlyZeros<SAMPLE_TYPE>(itsTransposedInputData->samples[s][first].origin(), nrSamples);
+    allzeros = containsOnlyZeros<SAMPLE_TYPE>(itsTransposedInputData->samples[s][first].origin(), nrSamples);
 #else
-      for (unsigned t = it->begin; allzeros && t < it->end; t++) {
-        for (unsigned p = 0; p < NR_POLARIZATIONS; p++) {
-          const SAMPLE_TYPE &sample = itsTransposedInputData[s][t][p];
+    for (unsigned t = it->begin; allzeros && t < it->end; t++) {
+      for (unsigned p = 0; p < NR_POLARIZATIONS; p++) {
+        const SAMPLE_TYPE &sample = itsTransposedInputData[s][t][p];
 
-          if (real(sample) != 0.0 || imag(sample) != 0.0) {
-            allzeros = false;
-            break;
-          }
+        if (real(sample) != 0.0 || imag(sample) != 0.0) {
+          allzeros = false;
+          break;
         }
       }
+    }
 #endif
-    }
+  }
 
-    if (allzeros && validSamples.count() > 0) {
-      // flag everything
-      SparseSet<unsigned> newflags;
+  if (allzeros && validSamples.count() > 0) {
+    // flag everything
+    SparseSet<unsigned> newflags;
 
-      newflags.include(0, nrSamplesToCNProc);
-      itsTransposedSubbandMetaData->setFlags(s, newflags);
+    newflags.include(0, nrSamplesToCNProc);
+    itsTransposedSubbandMetaData->setFlags(station, newflags);
 
-      // Rate limit this log line, to prevent 244 warnings/station/block
-      //
-      // Emit (at most) one message per 10 seconds, and only one per RSP board (TODO: this doesn't work as expected with DataSlots)
-      unsigned logInterval = static_cast<unsigned>(ceil(10.0 / itsCNintegrationTime));
-      if (itsBlock % logInterval == 0 && *itsCurrentSubband % itsNrSlotsInFrame == 0)
-        LOG_WARN_STR(itsLogPrefix << "Station " << itsStationNames[s] << " subband " << *itsCurrentSubband << " consists of only zeros.");
-    }
+    // Rate limit this log line, to prevent 244 warnings/station/block
+    //
+    // Emit (at most) one message per 10 seconds, and only one per RSP board (TODO: this doesn't work as expected with DataSlots)
+    unsigned logInterval = static_cast<unsigned>(ceil(10.0 / itsCNintegrationTime));
+    if (itsBlock % logInterval == 0 && *itsCurrentSubband % itsNrSlotsInFrame == 0)
+      LOG_WARN_STR(itsLogPrefix << "Station " << itsStationNames[s] << " subband " << *itsCurrentSubband << " consists of only zeros.");
   }
 
   timer.stop();
@@ -969,8 +969,6 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process(unsigne
 #if defined CLUSTER_SCHEDULING
     receiveInput();
 #endif
-
-    checkInputForZeros();
 
     if (itsPPF != 0)
       filter();
