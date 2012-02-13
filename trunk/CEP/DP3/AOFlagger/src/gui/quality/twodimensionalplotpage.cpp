@@ -80,6 +80,8 @@ TwoDimensionalPlotPage::TwoDimensionalPlotPage() :
 TwoDimensionalPlotPage::~TwoDimensionalPlotPage()
 {
 	delete _dataWindow;
+	if(_plotPropertiesWindow != 0)
+		delete _plotPropertiesWindow;
 }
 
 unsigned TwoDimensionalPlotPage::selectedKindCount() const

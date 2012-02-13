@@ -61,7 +61,7 @@ class HistogramPage : public Gtk::HBox {
 		void updatePlot();
 		void plotPolarization(class HistogramCollection &histograms, unsigned p);
 		void plotFit(class LogHistogram &histogram, const std::string &title);
-		void onPlotPropertiesClicked() { }
+		void onPlotPropertiesClicked();
 		void onDataExportClicked() { }
 		
 		void onAutoRangeClicked()
@@ -95,6 +95,7 @@ class HistogramPage : public Gtk::HBox {
 		std::string _statFilename;
 		Plot2D _plot;
 		PlotWidget _plotWidget;
+		class PlotPropertiesWindow *_plotPropertiesWindow;
 };
 
 #endif
