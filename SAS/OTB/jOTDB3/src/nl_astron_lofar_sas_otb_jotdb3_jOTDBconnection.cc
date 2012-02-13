@@ -158,7 +158,7 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_disco
             std::map<std::string,void *>::iterator tmpitr = itr;
             itr++;
             // free memory
-            delete *tmpitr;
+            delete tmpitr->second;
             theirC_ObjectMap.erase(tmpitr);
         } else {
             itr++;
