@@ -20,6 +20,10 @@
 
 #include <AOFlagger/gui/quality/histogrampage.h>
 
+#include <boost/bind.hpp>
+
+#include <AOFlagger/gui/plot/plotpropertieswindow.h>
+
 #include <AOFlagger/quality/histogramtablesformatter.h>
 
 #include <AOFlagger/msio/measurementset.h>
@@ -41,8 +45,9 @@ HistogramPage::HistogramPage() :
 	_fitAutoRangeButton("Auto range"),
 	_functionFrame("Function"),
 	_nsButton("N(S)"),
-	_dndsButton("dN(S)/dS")
-{
+	_dndsButton("dN(S)/dS"),
+	_plotPropertiesWindow(0)
+	{
 	_histogramTypeBox.pack_start(_totalHistogramButton, Gtk::PACK_SHRINK);
 	_totalHistogramButton.set_active(true);
 	_totalHistogramButton.signal_clicked().connect(sigc::mem_fun(*this, &HistogramPage::updatePlot));
@@ -115,6 +120,8 @@ HistogramPage::HistogramPage() :
 
 HistogramPage::~HistogramPage()
 {
+	if(_plotPropertiesWindow != 0)
+		delete _plotPropertiesWindow;
 }
 
 void HistogramPage::updatePlot()
@@ -272,7 +279,6 @@ void HistogramPage::addRayleighDifferenceToPlot(LogHistogram &histogram, double 
 {
 	const double sigmaP2 = sigma*sigma;
 	double minCount = histogram.MinPosNormalizedCount();
-	std::cout << "addRayleighDifferenceToPlot: minCount = " << minCount << "\n";
 	for(LogHistogram::iterator i=histogram.begin();i!=histogram.end();++i)
 	{
 		const double x = i.value();
@@ -287,4 +293,16 @@ void HistogramPage::addRayleighDifferenceToPlot(LogHistogram &histogram, double 
 				_plot.PushDataPoint(logx, logc);
 		}
 	}
+}
+
+void HistogramPage::onPlotPropertiesClicked()
+{
+	if(_plotPropertiesWindow == 0)
+	{
+		_plotPropertiesWindow = new PlotPropertiesWindow(_plot, "Plot properties");
+		_plotPropertiesWindow->OnChangesApplied = boost::bind(&HistogramPage::updatePlot, this);
+	}
+	
+	_plotPropertiesWindow->show();
+	_plotPropertiesWindow->raise();
 }
