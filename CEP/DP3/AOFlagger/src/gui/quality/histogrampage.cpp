@@ -46,6 +46,7 @@ HistogramPage::HistogramPage() :
 	_functionFrame("Function"),
 	_nsButton("N(S)"),
 	_dndsButton("dN(S)/dS"),
+	_plotPropertiesButton("Properties"),
 	_plotPropertiesWindow(0)
 	{
 	_histogramTypeBox.pack_start(_totalHistogramButton, Gtk::PACK_SHRINK);
@@ -109,6 +110,9 @@ HistogramPage::HistogramPage() :
 	
 	_functionFrame.add(_functionBox);
 	_sideBox.pack_start(_functionFrame, Gtk::PACK_SHRINK);
+	
+	_plotPropertiesButton.signal_clicked().connect(sigc::mem_fun(*this, &HistogramPage::onPlotPropertiesClicked));
+	_sideBox.pack_start(_plotPropertiesButton, Gtk::PACK_SHRINK);
 	
 	pack_start(_sideBox, Gtk::PACK_SHRINK);
 	

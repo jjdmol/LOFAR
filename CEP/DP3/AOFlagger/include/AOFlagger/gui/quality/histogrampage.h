@@ -92,6 +92,8 @@ class HistogramPage : public Gtk::HBox {
 		Gtk::VBox _functionBox;
 		Gtk::RadioButton _nsButton, _dndsButton;
 		
+		Gtk::Button _plotPropertiesButton;
+		
 		std::string _statFilename;
 		Plot2D _plot;
 		PlotWidget _plotWidget;
