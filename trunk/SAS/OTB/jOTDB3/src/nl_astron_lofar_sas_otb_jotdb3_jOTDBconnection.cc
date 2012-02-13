@@ -54,6 +54,8 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_initO
   const string p (pass);
   const string d (db);
   const string h (hn);
+  const char* n;
+  jstring str;
 
   try {
     OTDBconnection* aPtr = new OTDBconnection(u, p, d, h);
@@ -66,9 +68,9 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_initO
     jfieldID fid_jOTDBconn_name = env->GetFieldID (class_jOTDBconn, "itsName", "Ljava/lang/String;");
     
     // itsName
-    jstring str = (jstring)env->GetObjectField (jOTDBconnection, fid_jOTDBconn_name);
+    str = (jstring)env->GetObjectField (jOTDBconnection, fid_jOTDBconn_name);
     jboolean isCopy;
-    const char* n = env->GetStringUTFChars (str, &isCopy);
+    n = env->GetStringUTFChars (str, &isCopy);
     const string name (n);
 
     std::map<std::string,void *>::iterator iter;    
@@ -126,7 +128,8 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_c
 }
 
 JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_disconnect(JNIEnv *env, jobject jOTDBconnection) {
-
+    jstring str;
+    const char* n;
   try {
     std::map<std::string,void *>::iterator iter;
 
@@ -136,9 +139,9 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_disco
     jfieldID fid_jOTDBconn_name = env->GetFieldID (class_jOTDBconn, "itsName", "Ljava/lang/String;");
     
     // itsName
-    jstring str = (jstring)env->GetObjectField (jOTDBconnection, fid_jOTDBconn_name);
+    str = (jstring)env->GetObjectField (jOTDBconnection, fid_jOTDBconn_name);
     jboolean isCopy;
-    const char* n = env->GetStringUTFChars (str, &isCopy);
+    n = env->GetStringUTFChars (str, &isCopy);
     const string name (n);
     env->ReleaseStringUTFChars(str, n);
 
@@ -156,7 +159,7 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_disco
             itr++;
             // free memory
             delete tmpitr;
-            theirC_ObjectMap.erase(tmpitr);
+            theirC_ObjectMap.erase(*tmpitr);
         } else {
             itr++;
         }
