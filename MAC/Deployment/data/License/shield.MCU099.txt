@@ -1,5 +1,6 @@
 [license]
-code        = "MCU099 00040690038"
+#hw         = "MCU099 02772147255"
+code        = "MCU099 60315490059"
 version     = 30800002
 sn          = "471_3031_1_Astron_Gen_I_1_38/3"
 date        = 2012.02.09;09:58:38,000 
@@ -14,15 +15,15 @@ ios         = 100000
 ssi         = 0
 api         = 80
 excelreport = 5
-       http = 15
- infoserver = 5000
-  comcenter = 5
+http        = 15
+infoserver  = 5000
+comcenter   = 5
 maintenance = 0
-  scheduler = 0
+scheduler   = 0
 distributed = 255
-      uifix = 0
-    parafix = 0
- pararemote = 0
-    ctrlext = 1
-     update = 0
+uifix       = 0
+parafix     = 0
+pararemote  = 0
+ctrlext     = 1
+update      = 1
 
