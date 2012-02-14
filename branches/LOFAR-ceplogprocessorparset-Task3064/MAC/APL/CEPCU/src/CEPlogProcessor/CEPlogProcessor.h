@@ -61,6 +61,7 @@ public:
     GCFEvent::TResult initial_state     (GCFEvent& event, GCFPortInterface& port);
     GCFEvent::TResult createPropertySets(GCFEvent& event, GCFPortInterface& port);
     GCFEvent::TResult startListener     (GCFEvent& event, GCFPortInterface& port);
+    GCFEvent::TResult startControlPort  (GCFEvent& event, GCFPortInterface& port);
     GCFEvent::TResult operational       (GCFEvent& event, GCFPortInterface& port);
     GCFEvent::TResult finish_state      (GCFEvent& event, GCFPortInterface& port);
 
@@ -117,6 +118,7 @@ private:
     //# --- Datamembers --- 
     // The listener socket to receive the requests on.
     GCFTCPPort*     itsListener;
+    GCFTCPPort*     itsControlPort;
 
     RTDBPropertySet*    itsOwnPropertySet;
     GCFTimerPort*       itsTimerPort;

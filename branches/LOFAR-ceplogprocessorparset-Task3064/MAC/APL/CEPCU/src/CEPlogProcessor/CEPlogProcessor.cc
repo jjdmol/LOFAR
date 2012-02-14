@@ -29,6 +29,7 @@
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <MACIO/MACServiceInfo.h>
 #include <APL/APLCommon/ControllerDefines.h>
+#include <APL/APLCommon/Controller_Protocol.ph>
 //#include <APL/RTDBCommon/RTDButilities.h>
 //#include <APL/APLCommon/StationInfo.h>
 #include <GCF/RTDB/DP_Protocol.ph>
@@ -59,6 +60,7 @@ static CEPlogProcessor*     thisLogProcessor = 0;
 CEPlogProcessor::CEPlogProcessor(const string&  cntlrName) :
     GCFTask             ((State)&CEPlogProcessor::initial_state,cntlrName),
     itsListener         (0),
+	itsControlPort		(0),
     itsOwnPropertySet   (0),
     itsTimerPort        (0),
     itsNrInputBuffers   (0),
@@ -74,10 +76,13 @@ CEPlogProcessor::CEPlogProcessor(const string&  cntlrName) :
     itsTimerPort = new GCFTimerPort(*this, "TimerPort");
 
     // prepare TCP port to accept connections on
-    itsListener = new GCFTCPPort (*this, "BGPlogger:v1_0", GCFPortInterface::MSPP, 0);
-//  itsListener = new GCFTCPPort (*this, MAC_SVCMASK_CEPPROCMONITOR, GCFPortInterface::MSPP, 0); // TODO
-    ASSERTSTR(itsListener, "Cannot allocate listener port");
-    itsListener->setPortNumber(globalParameterSet()->getInt("CEPlogProcessor.portNr"));
+    itsListener = new GCFTCPPort (*this, MAC_SVCMASK_CEPLOGPROC, GCFPortInterface::MSPP, 0);
+    ASSERTSTR(itsListener, "Cannot allocate listener port for logging");
+    itsListener->setPortNumber(CEP_LOGPROC_LOGGING);
+
+    itsControlPort = new GCFTCPPort (*this, MAC_SVCMASK_CEPLOGCONTROL, GCFPortInterface::MSPP, 0);
+    ASSERTSTR(itsListener, "Cannot allocate listener port for control");
+    itsListener->setPortNumber(CEP_LOGPROC_CONTROL);
 
     itsBufferSize     = globalParameterSet()->getInt("CEPlogProcessor.bufferSize", 1024);
     itsNrInputBuffers = globalParameterSet()->getInt("CEPlogProcessor.nrInputBuffers", 64);
@@ -86,7 +91,8 @@ CEPlogProcessor::CEPlogProcessor(const string&  cntlrName) :
     itsNrStorage      = globalParameterSet()->getInt("CEPlogProcessor.nrStorageNodes", 100);
     itsNrWriters      = globalParameterSet()->getInt("CEPlogProcessor.nrWriters", 20); // per storage node
 
-    registerProtocol(DP_PROTOCOL, DP_PROTOCOL_STRINGS);
+    registerProtocol(DP_PROTOCOL,         DP_PROTOCOL_STRINGS);
+    registerProtocol(CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
 
     thisLogProcessor = this;
 }
@@ -116,6 +122,11 @@ CEPlogProcessor::~CEPlogProcessor()
 
     // and reap the port objects immediately
     collectGarbage();
+
+    if (itsControlPort) {
+        itsControlPort->close();
+        delete itsControlPort;
+    }
 
     if (itsListener) {
         itsListener->close();
@@ -324,12 +335,39 @@ GCFEvent::TResult CEPlogProcessor::startListener(GCFEvent&  event, GCFPortInterf
         break;
 
     case F_CONNECTED:
+        LOG_DEBUG("Listener is started, going to open Controlport");
+        TRAN (CEPlogProcessor::startControlPort);
+        break;
+
+    case F_DISCONNECTED:
+        LOG_FATAL_STR("Cannot open the listener on port " << itsListener->getPortNumber() << ". Quiting!");
+        GCFScheduler::instance()->stop();
+        break;
+    }
+
+    return (GCFEvent::HANDLED);
+}
+
+//
+// startControlPort(event, port)
+//
+GCFEvent::TResult CEPlogProcessor::startControlPort(GCFEvent&  event, GCFPortInterface&    port)
+{
+    LOG_DEBUG_STR("startControlPort:" << eventName(event) << "@" << port.getName());
+
+    switch (event.signal) {
+    case F_ENTRY:
+        itsControlPort->autoOpen(0, 10, 2);    // report within 10 seconds.
+        break;
+
+    case F_CONNECTED:
         LOG_DEBUG("Listener is started, going to operational mode");
         TRAN (CEPlogProcessor::operational);
         break;
 
     case F_DISCONNECTED:
-        LOG_FATAL_STR("Cannot open the listener on port " << itsListener->getPortNumber() << ". Quiting!");
+		// DISCO from listener of controlPort: in both cases quit.
+        LOG_FATAL_STR("Cannot open the controlport on port " << itsControlPort->getPortNumber() << ". Quiting!");
         GCFScheduler::instance()->stop();
         break;
     }
@@ -358,12 +396,12 @@ GCFEvent::TResult CEPlogProcessor::operational(GCFEvent& event, GCFPortInterface
     case F_ENTRY:
         itsTimerPort->setTimer(1.0,1.0);
         break;
+
     case F_TIMER:
-
         LOG_DEBUG("Timer event -- collecting garbage");
-
         collectGarbage();
         break;
+
     case F_ACCEPT_REQ:
         _handleConnectionRequest();
         break;
@@ -371,15 +409,20 @@ GCFEvent::TResult CEPlogProcessor::operational(GCFEvent& event, GCFPortInterface
     case F_CONNECTED:
         break;
 
-    case F_DISCONNECTED: {
+    case F_DISCONNECTED: 
         _deleteStream(port);
         break;
-    }
+    
     case F_DATAIN:
         _handleDataStream(&port);
         break;
+	
+	case CONTROL_ANNOUNCE: {
+		CONTROLAnnounceEvent	announce(event);
+		LOG_DEBUG_STR("Received annoucement for Observation " << announce.observationID);
+		break;
+	}
     }
-
     return (GCFEvent::HANDLED);
 }
 
