@@ -47,6 +47,7 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeStateConv_initTr
   try {
     OTDBconnection* aConn=getConnection(name);
     TreeStateConv* aTSConv = new TreeStateConv(aConn);
+    theirC_ObjectMap.erase(name+"_TreeStateConv");
     theirC_ObjectMap[name+"_TreeStateConv"]=(void*)aTSConv;
   } catch (exception &ex) {
     cout << "Exception during new TreeStateConv "<< ex.what() << endl; 

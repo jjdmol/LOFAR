@@ -47,6 +47,7 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jParamTypeConv_initPa
   try {
     OTDBconnection* aConn=getConnection(name);
     ParamTypeConv* aPTConv = new ParamTypeConv(aConn);
+    theirC_ObjectMap.erase(name+"_ParamTypeConv");
     theirC_ObjectMap[name+"_ParamTypeConv"]=(void*)aPTConv;
   } catch (exception &ex) {
     cout << "Exception during new ParamTypeConv) : "<< ex.what() << endl;
