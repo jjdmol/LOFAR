@@ -39,13 +39,15 @@ VICnodeDef::VICnodeDef(const string&	aName,
 					   int32			aVersion,
 					   int16			aClassif,
 					   const string&	aConstraint,
-					   const string&	aDescription) :
-	name		(aName),
-	version		(aVersion),
-	classif		(aClassif),
-	constraints (aConstraint),
-	description (aDescription),
-	itsNodeID	(0)
+					   const string&	aDescription,
+					   const string&	aTableName) :
+	name		 (aName),
+	version		 (aVersion),
+	classif		 (aClassif),
+	constraints  (aConstraint),
+	description  (aDescription),
+	tablename    (aTableName),
+	itsNodeID	 (0)
 { 
 }
 
@@ -61,6 +63,7 @@ VICnodeDef::VICnodeDef(const result::tuple&	row)
 	row["classif"].to(classif);
 	row["constraints"].to(constraints);
 	row["description"].to(description);
+	row["tablename"].to(tablename);
 }
 
 //
@@ -75,6 +78,9 @@ ostream& VICnodeDef::print (ostream& os) const
 	os << "classif : " << classif 	  << endl;
 	os << "constr. : " << constraints << endl;
 	os << "descr.  : " << description << endl;
+	if (!tablename.empty()) {
+		os << "table   : " << tablename << endl;
+	}
 
 	return (os);
 }

@@ -59,6 +59,10 @@ solveNode()
 
 	grep "^uses" $nodeFile | sed "s/\\t/ /g" | sed "s/   / /g" | sed "s/  / /g" | cut -d' ' -f2 | while read nodeName
 	do
+		# name can be plain name or table reference like InputFile<Dataproduct>
+		# in that case we need the table name
+		# note that the original name is returned in the next line if the < and > are not used.
+		nodeName=`echo $nodeName | cut -d'<' -f2 | cut -d'>' -f1`
 		nodeFile=`grep "^$nodeName " ${NODELISTFILE} | cut -d' ' -f2`
 		grep "^$nodeFile" ${REVERSORDERFILE} >> /dev/null
 		if [ $? == 1 ]; then
@@ -131,7 +135,7 @@ if [ -e $DIR/load_OTDB_comps ]; then
   ./create_OTDB_comps
 
   # construct a file with 'node file' relations
-  grep "^node" *comp | sed "s/:/ /" | sed "s/\\t/ /g" | sed "s/   / /g" | sed "s/  / /g" | cut -d' ' -f1,3 | awk '{ print $2" "$1 }' >${NODELISTFILE}
+  grep -e "^node" -e "^table" *comp | sed "s/:/ /" | sed "s/\\t/ /g" | sed "s/   / /g" | sed "s/  / /g" | cut -d' ' -f1,3 | awk '{ print $2" "$1 }' >${NODELISTFILE}
 
   # construct a file with all componentfiles
   ls -1 *comp >${UNUSEDFILES}

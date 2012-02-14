@@ -58,6 +58,7 @@ public:
 	int16			classif;
 	string			constraints;
 	string			description;
+	string			tablename;
 
 	// Show treeinfo
 	ostream& print (ostream& os) const;
@@ -71,7 +72,8 @@ private:
 			   int32			version,
 			   int16			classif,
 			   const string&	constraints,
-			   const string&	description);
+			   const string&	description,
+			   const string&	tablename);
 	VICnodeDef(const pqxx::result::tuple&	row);
 
 	nodeIDType		itsNodeID;

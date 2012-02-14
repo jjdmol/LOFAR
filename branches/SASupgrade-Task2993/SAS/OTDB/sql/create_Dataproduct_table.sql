@@ -101,7 +101,7 @@ RETURNS VOID AS $$
 	END;
 $$ language plpgsql;
 
--- exportDataProductDefinition(recordnr)
+-- exportDataProductDefinition()
 CREATE OR REPLACE FUNCTION exportDataProductDefinition()
 RETURNS TEXT AS $$
 	DECLARE
@@ -114,7 +114,7 @@ RETURNS TEXT AS $$
 $$ language plpgsql IMMUTABLE;
 
 -- exportDataProduct(recordnr)
-CREATE OR REPLACE FUNCTION exportDataProduct()
+CREATE OR REPLACE FUNCTION exportDataProduct(INT4)
 RETURNS TEXT AS $$
     DECLARE
         vRec        RECORD;

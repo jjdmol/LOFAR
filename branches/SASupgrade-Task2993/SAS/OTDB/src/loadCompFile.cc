@@ -256,20 +256,22 @@ bool TreeMaintenance::saveComponentNode	(VICnodeDef&	aNode)
 			cleanConstraints.erase(pos, 1);
 		}
 
-		LOG_DEBUG (formatString("saveComponentNode(%d,'%s',%d,%d,'%s','%s')", 
+		LOG_DEBUG (formatString("saveComponentNode(%d,'%s',%d,%d,'%s','%s','%s')", 
 							aNode.nodeID(), aNode.name.c_str(), aNode.version,
-							aNode.classif, cleanConstraints.c_str(), cleanDesc.c_str()));
+							aNode.classif, cleanConstraints.c_str(), cleanDesc.c_str(), 
+							aNode.tablename.c_str()));
 					
 		// execute the insert action
 		result res = xAction.exec(
-			 formatString("SELECT saveVCnode(%d,%d,'%s',%d,%d::int2,'%s'::text,'%s'::text)",
+			 formatString("SELECT saveVCnode(%d,%d,'%s',%d,%d::int2,'%s'::text,'%s'::text,'%s'::text)",
 							itsConn->getAuthToken(),
 							aNode.nodeID(),
 							aNode.name.c_str(),
 							aNode.version,
 							aNode.classif,
 							cleanConstraints.c_str(),
-							cleanDesc.c_str()));
+							cleanDesc.c_str(),
+							aNode.tablename.c_str()));
 
 		// Analyse result
 		nodeIDType		vNodeID;
@@ -461,16 +463,15 @@ nodeIDType	TreeMaintenance::loadComponentFile (const string&	filename,
 			// syntax: node name version qual node-constraint description
 			// all elements are required
 			if (args.size() != 6) {
-				itsError = toString(lineNr) + 
-							": 'node'-line needs 6 columns not " + toString(args.size());
+				itsError = toString(lineNr) + ": 'node'-line needs 6 columns not " + toString(args.size());
 				LOG_ERROR_STR(itsError);
 				inError = true;
 				break;
 			}
-			// construct object (name, version, classif, constr. descr.)
+			// construct object (name, version, classif, constr. descr., tablename)
 		 	VICnodeDef	topNode(args[1], VersionNr(versionNrIsForced ? forcedVersionNr : args[2]), 
 								CTconv.get(qualifierIsForced ? forcedQualifier : args[3]), 
-								args[4], args[5]);
+								args[4], args[5], "");
 			saveComponentNode (topNode);			// private call
 			topNodeID = topNode.itsNodeID;
 		}
@@ -479,15 +480,31 @@ nodeIDType	TreeMaintenance::loadComponentFile (const string&	filename,
 			vector<string>	args = wSpaceSplit(line,6);
 			// syntax: uses name min_version classif instances
 			if (args.size() != 6) {
-				itsError = toString(lineNr) + 
-							": 'uses'-line needs 6 columns not " + toString(args.size());
+				itsError = toString(lineNr) + ": 'uses'-line needs 6 columns not " + toString(args.size());
 				LOG_FATAL(itsError);
 				inError = true;
 				break;
 			}
 
+			string	nodename;
+			// is nodename a reference to a table?
+			if (*(args[1].rbegin()) == '>') {
+				string::size_type pos = args[1].find_first_of('<');
+				ASSERTSTR(pos != string::npos, "'<' and '>' chars should be used in pairs to specify a tableName: " << args[1]);
+				string tableName = args[1].substr(pos+1, args[1].size()-pos-2);
+				nodename  = args[1].substr(0, pos);
+				// construct object (name, version, classif, constr. descr., tableName)
+				VICnodeDef	topNode(nodename, VersionNr(versionNrIsForced ? forcedVersionNr : args[2]), 
+									CTconv.get(qualifierIsForced ? forcedQualifier : args[3]), 
+									args[4], args[5], tableName);
+				saveComponentNode (topNode);			// private call
+			}
+			else {
+				nodename = args[1];
+			}
+
 			// Check that module that is referenced exists in the database.
-			VICnodeDef	ParentNode = getNodeDef(args[1], 
+			VICnodeDef	ParentNode = getNodeDef(nodename,
 											VersionNr(versionNrIsForced ? forcedVersionNr  : args[2]), 
 											CTconv.get(qualifierIsForced ? forcedQualifier : args[3]));		// private call
 			if (!ParentNode.nodeID()) {
@@ -515,13 +532,12 @@ nodeIDType	TreeMaintenance::loadComponentFile (const string&	filename,
 			saveParam (AttachedChild);
 		}
 		// -- PAR -- 
-		else if (!args[0].compare("par")) {
+		else if (!args[0].compare("par") || !args[0].compare("field")) {
 			vector<string>	args = wSpaceSplit(line,10);
 			// syntax: par name type unit valMoment RTmod pruning 
 			//									value constraint description
 			if (args.size() != 10) {
-				itsError = toString(lineNr) + 
-							": 'par'-line needs 10 columns not " + toString(args.size());
+				itsError = toString(lineNr) + ": 'par'-line needs 10 columns not " + toString(args.size());
 				LOG_FATAL(itsError);
 				inError = true;
 				break;
@@ -542,10 +558,28 @@ nodeIDType	TreeMaintenance::loadComponentFile (const string&	filename,
 			saveParam (AttachedChild);
 			// TODO: args[8] constraint, args[6] valmoment
 		}
+		// -- TABLE --
+		else if (!args[0].compare("table")) {
+			vector<string>	args = wSpaceSplit(line,6);
+			// syntax: node name version qual node-constraint description
+			// all elements are required
+			if (args.size() != 6) {
+				itsError = toString(lineNr) + ": 'table'-line needs 6 columns not " + toString(args.size());
+				LOG_ERROR_STR(itsError);
+				inError = true;
+				break;
+			}
+			// construct object (name, version, classif, constr. descr., isPlaceHolder)
+		 	VICnodeDef	topNode(args[1], VersionNr(versionNrIsForced ? forcedVersionNr : args[2]), 
+								CTconv.get(qualifierIsForced ? forcedQualifier : args[3]), 
+								args[4], args[5], args[1]);
+			saveComponentNode (topNode);			// private call
+			topNodeID = topNode.itsNodeID;
+		}
+
 		// -- UNKNOWN --
 		else {
-			itsError = formatString("line %d does not start with a keyword",
-									lineNr);
+			itsError = formatString("line %d does not start with a keyword >>%s<<", lineNr, line);
 			LOG_FATAL(itsError);
 			inError = true;
 			break;

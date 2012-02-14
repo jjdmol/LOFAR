@@ -441,8 +441,7 @@ vector<OTDBnode> TreeMaintenance::getVTitemList (treeIDType	aTreeID,
 	uint32				resultSize = 0;
 
 	// loop through the levels and construct the vector
-	for (uint32 queryDepth = 1; queryDepth <= depth && !nodeList.empty(); 
-															++queryDepth) {
+	for (uint32 queryDepth = 1; queryDepth <= depth && !nodeList.empty(); ++queryDepth) {
 		// construct a query that calls a stored procedure.
 		string	query("SELECT * from getVTchildren('" +
 					toString(aTreeID) + "','" +
