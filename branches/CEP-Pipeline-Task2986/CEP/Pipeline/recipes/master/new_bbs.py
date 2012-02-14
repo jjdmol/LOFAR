@@ -28,18 +28,12 @@ from lofarpipe.support.jobserver import job_server
 import lofarpipe.support.utilities as utilities
 import lofarpipe.support.lofaringredient as ingredient
 
-# TODO: Added for debugging remove!!
-from lofarpipe.support.lofaringredient import RecipeIngredients, LOFARinput, LOFARoutput
-
 
 class new_bbs(BaseRecipe):
     """
     The bbs recipe coordinates running BBS on a group of MeasurementSets. It
     runs both GlobalControl and KernelControl; as yet, SolverControl has not
     been integrated.
-
-    The recipe will also run the sourcedb and parmdb recipes on each of the
-    input MeasuementSets.
 
     **Arguments**
 
@@ -100,7 +94,11 @@ class new_bbs(BaseRecipe):
             '--data-mapfile',
             help = "Full path to the mapfile containing the names of the "
                  "data files that were processed by BBS (clobbered if exists)"
-        )
+        ),
+        'gvds': ingredient.StringField(
+            '-g', '--gvds',
+            help = "Path for output GVDS file"
+        ),
     }
     outputs = {
         'mapfile': ingredient.FileField(
@@ -176,9 +174,6 @@ class new_bbs(BaseRecipe):
         data_map = []
         for (host, triplet) in bbs_map:
             data_map.append((host, triplet[0]))
-        #Hier gaat dus iets mis:
-        # het veroorzaakt dat er een data_mapfile veranderd: de hostfile is niet meer
-        #corrcet
         store_data_map(self.inputs['data_mapfile'], data_map)
 
         return bbs_map
@@ -187,8 +182,6 @@ class new_bbs(BaseRecipe):
     def go(self):
         self.logger.info("Starting BBS run")
         super(new_bbs, self).go()
-        self.logger.error("_______________________________________________")
-        self.logger.error(open("/home/klijn/build/preparation/new_bbs_output.map").read())
 
         #                 Check for relevant input parameters in the parset-file
         # ----------------------------------------------------------------------
@@ -199,7 +192,6 @@ class new_bbs(BaseRecipe):
         self._set_input('db_user', 'BBSControl.BBDB.User')
         self._set_input('db_name', 'BBSControl.BBDB.Name')
         self._set_input('db_key', 'BBSControl.BBDB.Key')
-
 
         #self.logger.debug("self.inputs = %s" % self.inputs)
 
@@ -216,8 +208,6 @@ class new_bbs(BaseRecipe):
                          self.inputs['db_key']
                   ]
 
-        self.logger.error("_________________________( 1 )____________________")
-        self.logger.error(open("/home/klijn/build/preparation/new_bbs_output.map").read())
         self.logger.debug(command)
         if subprocess.call(command) != 0:
             self.logger.warning(
@@ -228,17 +218,14 @@ class new_bbs(BaseRecipe):
         #                   Create a bbs_map describing the file mapping on disk
         # ----------------------------------------------------------------------
         bbs_map = self._make_bbs_map()
-        self.logger.error("*********************** tester **************")
-        self.logger.error(self.inputs['data_mapfile'])
+
         # Produce a GVDS file, describing the data that must be processed.
-        self.logger.error("_________________________( 2 )____________________")
-        self.logger.error(open("/home/klijn/build/preparation/new_bbs_output.map").read())
         gvds_file = self.run_task(
             "vdsmaker",
-            self.inputs['data_mapfile']
+            self.inputs['data_mapfile'],
+            gvds = self.inputs['gvds']
         )['gvds']
 
-        return 1
         #      Construct a parset for BBS GlobalControl by patching the GVDS
         #           file and database information into the supplied template
         # ------------------------------------------------------------------
@@ -254,7 +241,6 @@ class new_bbs(BaseRecipe):
                 #'BBDB.Port': self.inputs['db_name'],
             }
         )
-
         self.logger.debug("BBS control parset is %s" % (bbs_parset,))
 
         try:
@@ -442,64 +428,5 @@ class new_bbs(BaseRecipe):
                 self.killswitch.set()
         return returncode
 
-    def run_task(self, configblock, datafiles = [], **kwargs):
-        """
-        DEBUGEGEGEGEG REMOVEEKJH
-        LKASDF:KLJHASF
-        
-        DEze classe moet dus weg
-        """
-
-        self.logger.error("*******************debug 9 *********************")
-
-        # Does the task definition exist?
-        try:
-            recipe = self.task_definitions.get(configblock, "recipe")
-        except NoSectionError:
-            raise PipelineException(
-                "%s not found -- check your task definitions" % configblock
-            )
-        self.logger.error("debug 10")
-        # Build inputs dict.
-        # First, take details from caller.
-        inputs = LOFARinput(self.inputs)
-
-        inputs['args'] = datafiles
-        self.logger.error("debug 11")
-        # Add parameters from the task file.
-        # Note that we neither need the recipe name nor any items from the
-        # DEFAULT config.
-        parameters = dict(self.task_definitions.items(configblock))
-        del parameters['recipe']
-        self.logger.error("debug 20")
-        for key in dict(self.config.items("DEFAULT")).keys():
-            del parameters[key]
-        self.logger.error("debug 21")
-        print configblock
-        print parameters
-        self.logger.error("debug 22")
-        inputs.update(parameters)
-        print inputs
-        self.logger.error("debug 12")
-        # Update inputs with provided kwargs, if any.
-        inputs.update(kwargs)
-
-        # Default outputs dict.
-        outputs = LOFARoutput()
-        self.logger.error("debug 13")
-
-        # Cook the recipe and return the results"
-        if self.cook_recipe(recipe, inputs, outputs):
-
-            print "debug 12"
-            self.logger.warn(
-                "%s reports failure (using %s recipe)" % (configblock, recipe)
-            )
-            raise PipelineRecipeFailed("%s failed", configblock)
-        self.logger.error("debug 14")
-        return outputs
-
 if __name__ == '__main__':
-    print "******************************"
-    print sys.argv
     sys.exit(new_bbs().main())
