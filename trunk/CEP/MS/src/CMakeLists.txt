@@ -31,6 +31,9 @@ install(PROGRAMS
   makemsdistr
   makemsdistr-part
   movemss
+  expandcalps
+  expandimageps
+  expandtargetps
   DESTINATION bin)
 
 # Python modules.
