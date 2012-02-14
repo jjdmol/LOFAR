@@ -468,7 +468,12 @@ void MSWindow::SetImageSet(rfiStrategy::ImageSet *newImageSet)
 	_imageSet = newImageSet;
 	_imageSetIndex = _imageSet->StartIndex();
 	
-	loadCurrentTFData();
+	if(dynamic_cast<rfiStrategy::MSImageSet*>(newImageSet) != 0)
+	{
+		onGoToPressed();
+	} else {
+		loadCurrentTFData();
+	}
 }
 
 void MSWindow::SetImageSetIndex(rfiStrategy::ImageSetIndex *newImageSetIndex)
