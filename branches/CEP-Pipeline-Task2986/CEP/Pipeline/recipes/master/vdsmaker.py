@@ -14,7 +14,7 @@ import subprocess
 
 import lofarpipe.support.utilities as utilities
 import lofarpipe.support.lofaringredient as ingredient
-
+from lofarpipe.support.utilities import create_directory
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
@@ -75,42 +75,35 @@ class vdsmaker(BaseRecipe, RemoteCommandRecipeMixIn):
         command = "python %s" % (self.__file__.replace('master', 'nodes'))
         jobs = []
         vdsnames = []
-        print "############################################"
-        print self.config.get('cluster', 'clusterdesc')
-        print self.inputs['args'][0]
-        print open(self.inputs['args'][0]).read()
-
-        return 1
         for host, ms in data:
             vdsnames.append(
                 "%s/%s.vds" % (self.inputs['directory'], os.path.basename(ms.rstrip('/')))
             )
-            self.logger.info("###################### {0}".format(vdsnames))
             jobs.append(
                 ComputeJob(
                     host, command,
-                    arguments = [
+                    arguments=[
                         ms,
                         self.config.get('cluster', 'clusterdesc'),
-                        vdsnames[-1], ##
+                        vdsnames[-1],
                         self.inputs['makevds']
                     ]
                 )
             )
-        self._schedule_jobs(jobs, max_per_node = self.inputs['nproc'])
+        self._schedule_jobs(jobs, max_per_node=self.inputs['nproc'])
 
         if self.error.isSet():
             self.logger.warn("Failed vdsmaker process detected")
             return 1
-
-        #hier komt ie dus niet
-        print "debug 100"
 
         # Combine VDS files to produce GDS
         failure = False
         self.logger.info("Combining VDS files")
         executable = self.inputs['combinevds']
         gvds_out = self.inputs['gvds']
+        # Create the gvds directory for output files, needed for combine
+        create_directory(os.path.dirname(gvds_out))
+
         try:
             command = [executable, gvds_out] + vdsnames
             combineproc = subprocess.Popen(
