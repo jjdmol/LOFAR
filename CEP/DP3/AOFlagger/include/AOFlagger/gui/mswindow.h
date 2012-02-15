@@ -220,6 +220,7 @@ class MSWindow : public Gtk::Window {
 		void onTimeMergeUnsetValues();
 		
 		void showError(const std::string &description);
+		void setSetNameInStatusBar();
 		
 		DefaultModels::SetLocation getSetLocation(bool empty = false);
 		void loadDefaultModel(DefaultModels::Distortion distortion, bool withNoise, bool empty = false);

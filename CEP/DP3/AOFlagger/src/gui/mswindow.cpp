@@ -95,6 +95,7 @@ MSWindow::MSWindow() : _imagePlaneWindow(0), _histogramWindow(0), _optionWindow(
 
 	_mainVBox.pack_start(_timeFrequencyWidget);
 	_timeFrequencyWidget.OnMouseMovedEvent().connect(sigc::mem_fun(*this, &MSWindow::onTFWidgetMouseMoved));
+	_timeFrequencyWidget.OnMouseLeaveEvent().connect(sigc::mem_fun(*this, &MSWindow::setSetNameInStatusBar));
 	_timeFrequencyWidget.OnButtonReleasedEvent().connect(sigc::mem_fun(*this, &MSWindow::onTFWidgetButtonReleased));
 	_timeFrequencyWidget.SetShowXAxisDescription(false);
 	_timeFrequencyWidget.SetShowYAxisDescription(false);
@@ -305,8 +306,7 @@ void MSWindow::loadCurrentTFData()
 				_spatialMetaData = new SpatialMatrixMetaData(static_cast<rfiStrategy::SpatialMSImageSet*>(_imageSet)->SpatialMetaData(*_imageSetIndex));
 			}
 			_timeFrequencyWidget.Update();
-			_statusbar.pop();
-			_statusbar.push(std::string() + _imageSet->Name() + ": " + _imageSetIndex->Description());
+			setSetNameInStatusBar();
 		} catch(std::exception &e)
 		{
 			AOLogger::Error << e.what() << '\n';
@@ -315,6 +315,14 @@ void MSWindow::loadCurrentTFData()
 	}
 }
 
+void MSWindow::setSetNameInStatusBar()
+{
+  if(HasImageSet()) {
+	_statusbar.pop();
+	_statusbar.push(std::string() + _imageSet->Name() + ": " + _imageSetIndex->Description());
+  }
+}
+		
 void MSWindow::onLoadPrevious()
 {
 	if(_imageSet != 0) {
