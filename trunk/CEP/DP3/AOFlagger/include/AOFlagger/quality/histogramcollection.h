@@ -39,6 +39,16 @@ class HistogramCollection
 			init();
 		}
 		
+		HistogramCollection(const HistogramCollection &source) : _polarizationCount(source._polarizationCount)
+		{
+			init();
+			for(unsigned i=0;i<_polarizationCount;++i)
+			{
+				copy(_totalHistograms[i], source._totalHistograms[i]);
+				copy(_rfiHistograms[i], source._rfiHistograms[i]);
+			}
+		}
+		
 		~HistogramCollection()
 		{
 			destruct();
@@ -101,6 +111,8 @@ class HistogramCollection
 		void Load(class HistogramTablesFormatter &histogramTables);
 		
 		void Plot(class Plot2D &plot, unsigned polarization);
+		
+		unsigned PolarizationCount() const { return _polarizationCount; }
 	private:
 		unsigned _polarizationCount;
 		std::map<AntennaPair, LogHistogram*> *_totalHistograms;
@@ -127,6 +139,14 @@ class HistogramCollection
 			}
 			delete[] _totalHistograms;
 			delete[] _rfiHistograms;
+		}
+		
+		void copy(std::map<AntennaPair, LogHistogram*> &destination, const std::map<AntennaPair, LogHistogram*> &source)
+		{
+			for(std::map<AntennaPair, LogHistogram*>::const_iterator i=source.begin();i!=source.end();++i)
+			{
+				destination.insert(std::pair<AntennaPair, LogHistogram*>(i->first, new LogHistogram(*i->second)));
+			}
 		}
 
 		LogHistogram &getHistogram(std::map<AntennaPair, LogHistogram*> *histograms, const unsigned a1, const unsigned a2, const unsigned polarization)

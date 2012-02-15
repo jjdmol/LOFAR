@@ -39,20 +39,22 @@
 class HistogramPage : public Gtk::HBox {
 	public:
 		HistogramPage();
-    virtual ~HistogramPage();
+    ~HistogramPage();
 
 		void SetStatistics(const std::string &filename)
 		{
 			_statFilename = filename;
+			readFromFile();
 			updatePlot();
 		}
+		void SetStatistics(class HistogramCollection &collection);
 		void CloseStatistics()
 		{
 			_statFilename = std::string();
 		}
 		bool HasStatistics() const
 		{
-			return !_statFilename.empty();
+			return _histograms != 0;
 		}
 	private:
 		void addHistogramToPlot(class LogHistogram &histogram);
@@ -63,6 +65,7 @@ class HistogramPage : public Gtk::HBox {
 		void plotFit(class LogHistogram &histogram, const std::string &title);
 		void onPlotPropertiesClicked();
 		void onDataExportClicked() { }
+		void readFromFile();
 		
 		void onAutoRangeClicked()
 		{
@@ -98,6 +101,7 @@ class HistogramPage : public Gtk::HBox {
 		Plot2D _plot;
 		PlotWidget _plotWidget;
 		class PlotPropertiesWindow *_plotPropertiesWindow;
+		class HistogramCollection *_histograms;
 };
 
 #endif

@@ -59,6 +59,14 @@ class LogHistogram
 		};
 		
 	public:
+		LogHistogram()
+		{
+		}
+		
+		LogHistogram(const LogHistogram &source) : _amplitudes(source._amplitudes)
+		{
+		}
+		
 		void Add(const double amplitude)
 		{
 			if(std::isfinite(amplitude))
