@@ -208,23 +208,26 @@ class imager_pipeline(control):
         self.logger.info(open("/home/klijn/build/preparation/new_bbs_output.map").read())
         # *******************************************************************
         # bbs_imager recipe
-        # imputs moeten nog dynamics en dan klaar!
+        # imputs moeten nog van de eerdere stappen in de pipeline komen.
         new_bbs_input = "/home/klijn/build/preparation/new_bbs.input.map"
         bbs_imager_mapfile = \
             self.run_task("imager_bbs",
                           new_bbs_input,
+                          job = "Pipeline",
                           initscript = "/opt/cep/LofIm/daily/Tue/lofar/lofarinit.sh",
                           parset = "/home/klijn/build/preparation/bbs_new.par",
                           instrument_mapfile = "/home/klijn/build/preparation/new_bbs_instrument.map",
-                          data_mapfile = "/home/klijn/build/preparation/new_bbs_output.map",
+                          sky_mapfile = "/home/klijn/build/preparation/new_bbs_sky.map",
                           kernel_exec = "/opt/cep/LofIm/daily/Fri/lofar_build/install/gnu_opt/bin/KernelControl",
                           control_exec = "/opt/cep/LofIm/daily/Fri/lofar_build/install/gnu_opt/bin/GlobalControl",
-                          sky_mapfile = "/home/klijn/build/preparation/new_bbs_sky.map",
                           db_name = "klijn",
                           db_host = "ldb002",
                           db_user = "postgres",
                           db_key = "new_bbs",
-                          runtime_directory = "/home/klijn/runtime_directory/jobs/Pipeline")
+                          runtime_directory = "/home/klijn/runtime_directory/jobs/Pipeline",
+                          new_bbs_path = "/home/klijn/build/gnu_debug/installed/lib/python2.6/dist-packages/lofarpipe/recipes/master/new_bbs.py")#["mapfile"]
+
+        self.logger.error("bbs_imager_mapfile")
 
 #        # *******************************************************************
 #        # bbs_imager recipe
