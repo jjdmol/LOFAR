@@ -102,6 +102,7 @@ class ImageWidget : public Gtk::DrawingArea {
 		void SetMetaData(TimeFrequencyMetaDataCPtr metaData) { _metaData = metaData; }
 
 		sigc::signal<void, size_t, size_t> &OnMouseMovedEvent() { return _onMouseMoved; }
+		sigc::signal<void> &OnMouseLeaveEvent() { return _onMouseLeft; }
 		sigc::signal<void, size_t, size_t> &OnButtonReleasedEvent() { return _onButtonReleased; }
 		
 		num_t Max() const { return _max; }
@@ -188,6 +189,7 @@ class ImageWidget : public Gtk::DrawingArea {
 		bool toUnits(double mouseX, double mouseY, int &posX, int &posY);
 		bool onExposeEvent(GdkEventExpose* ev);
 		bool onMotion(GdkEventMotion *event);
+		bool onLeave(GdkEventCrossing *event);
 		bool onButtonReleased(GdkEventButton *event);
 		class ColorMap *createColorMap();
 
@@ -223,8 +225,10 @@ class ImageWidget : public Gtk::DrawingArea {
 		bool _manualXAxisDescription;
 		bool _manualYAxisDescription;
 		bool _manualZAxisDescription;
+		bool _mouseIsIn;
 
 		sigc::signal<void, size_t, size_t> _onMouseMoved;
+		sigc::signal<void> _onMouseLeft;
 		sigc::signal<void, size_t, size_t> _onButtonReleased;
 };
 
