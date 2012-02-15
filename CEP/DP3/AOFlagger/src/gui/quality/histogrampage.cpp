@@ -47,7 +47,8 @@ HistogramPage::HistogramPage() :
 	_nsButton("N(S)"),
 	_dndsButton("dN(S)/dS"),
 	_plotPropertiesButton("Properties"),
-	_plotPropertiesWindow(0)
+	_plotPropertiesWindow(0),
+	_histograms(0)
 	{
 	_histogramTypeBox.pack_start(_totalHistogramButton, Gtk::PACK_SHRINK);
 	_totalHistogramButton.set_active(true);
@@ -126,6 +127,30 @@ HistogramPage::~HistogramPage()
 {
 	if(_plotPropertiesWindow != 0)
 		delete _plotPropertiesWindow;
+	if(_histograms != 0)
+		delete _histograms;
+}
+
+void HistogramPage::readFromFile()
+{
+	if(_histograms != 0) delete _histograms;
+	HistogramTablesFormatter histogramTables(_statFilename);
+	if(histogramTables.HistogramsExist())
+	{
+		MeasurementSet set(_statFilename);
+		
+		const unsigned polarizationCount = set.GetPolarizationCount();
+
+		_histograms = new HistogramCollection(polarizationCount);
+		_histograms->Load(histogramTables);
+	}
+}
+
+void HistogramPage::SetStatistics(HistogramCollection &collection)
+{
+	if(_histograms != 0) delete _histograms;
+	_histograms = new HistogramCollection(collection);
+	updatePlot();
 }
 
 void HistogramPage::updatePlot()
@@ -134,25 +159,15 @@ void HistogramPage::updatePlot()
 	{
 		_plot.Clear();
 		
-		HistogramTablesFormatter histogramTables(_statFilename);
-		if(histogramTables.HistogramsExist())
-		{
-			MeasurementSet set(_statFilename);
-			
-			const unsigned polarizationCount = set.GetPolarizationCount();
-
-			HistogramCollection histograms(polarizationCount);
-			histograms.Load(histogramTables);
-			
-			if(_xxPolarizationButton.get_active())
-				plotPolarization(histograms, 0);
-			if(_xyPolarizationButton.get_active() && polarizationCount>=1)
-				plotPolarization(histograms, 1);
-			if(_yxPolarizationButton.get_active() && polarizationCount>=2)
-				plotPolarization(histograms, 2);
-			if(_yyPolarizationButton.get_active() && polarizationCount>=3)
-				plotPolarization(histograms, 3);
-		}
+		const unsigned polarizationCount = _histograms->PolarizationCount();
+		if(_xxPolarizationButton.get_active())
+			plotPolarization(*_histograms, 0);
+		if(_xyPolarizationButton.get_active() && polarizationCount>=1)
+			plotPolarization(*_histograms, 1);
+		if(_yxPolarizationButton.get_active() && polarizationCount>=2)
+			plotPolarization(*_histograms, 2);
+		if(_yyPolarizationButton.get_active() && polarizationCount>=3)
+			plotPolarization(*_histograms, 3);
 		
 		_plotWidget.Update();
 	}

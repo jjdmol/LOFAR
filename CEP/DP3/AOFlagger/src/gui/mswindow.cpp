@@ -72,6 +72,7 @@
 #include <AOFlagger/gui/editstrategywindow.h>
 #include <AOFlagger/gui/gotowindow.h>
 #include <AOFlagger/gui/highlightwindow.h>
+#include <AOFlagger/gui/histogramwindow.h>
 #include <AOFlagger/gui/imageplanewindow.h>
 #include <AOFlagger/gui/imagepropertieswindow.h>
 #include <AOFlagger/gui/msoptionwindow.h>
@@ -88,7 +89,7 @@
 
 #include <iostream>
 
-MSWindow::MSWindow() : _imagePlaneWindow(0), _optionWindow(0), _editStrategyWindow(0), _gotoWindow(0), _progressWindow(0), _highlightWindow(0), _plotComplexPlaneWindow(0), _imagePropertiesWindow(0), _antennaMapWindow(0), _statistics(new RFIStatistics()),  _imageSet(0), _imageSetIndex(0), _gaussianTestSets(true), _spatialMetaData(0), _plotWindow(_plotManager)
+MSWindow::MSWindow() : _imagePlaneWindow(0), _histogramWindow(0), _optionWindow(0), _editStrategyWindow(0), _gotoWindow(0), _progressWindow(0), _highlightWindow(0), _plotComplexPlaneWindow(0), _imagePropertiesWindow(0), _antennaMapWindow(0), _statistics(new RFIStatistics()),  _imageSet(0), _imageSetIndex(0), _gaussianTestSets(true), _spatialMetaData(0), _plotWindow(_plotManager)
 {
 	createToolbar();
 
@@ -116,6 +117,8 @@ MSWindow::MSWindow() : _imagePlaneWindow(0), _optionWindow(0), _editStrategyWind
 MSWindow::~MSWindow()
 {
 	delete _imagePlaneWindow;
+	if(_histogramWindow != 0)
+		delete _histogramWindow;
 	if(_optionWindow != 0)
 		delete _optionWindow;
 	if(_editStrategyWindow != 0)
@@ -1170,15 +1173,16 @@ void MSWindow::onPlotLogLogDistPressed()
 {
 	if(_timeFrequencyWidget.HasImage())
 	{
-		Plot2D &plot = _plotManager.NewPlot2D("Log-log distribution");
-
 		TimeFrequencyData activeData = GetActiveData();
 		Image2DCPtr image = activeData.GetSingleImage();
 		Mask2DCPtr mask = Mask2D::CreateCopy(activeData.GetSingleMask());
 		HistogramCollection histograms(1);
 		histograms.Add(0, 1, 0, image, mask);
-		histograms.Plot(plot, 0);
-		_plotManager.Update();
+		if(_histogramWindow == 0)
+			_histogramWindow = new HistogramWindow(histograms);
+		else
+			_histogramWindow->SetStatistics(histograms);
+		_histogramWindow->show();
 	}
 }
 

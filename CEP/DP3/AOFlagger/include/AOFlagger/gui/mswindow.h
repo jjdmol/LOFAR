@@ -251,6 +251,7 @@ class MSWindow : public Gtk::Window {
 			_sim16ChannelsButton, _sim64ChannelsButton, _sim256ChannelsButton;
 		//std::vector<Gtk::Window*> _subWindows;
 		class ImagePlaneWindow *_imagePlaneWindow;
+		class HistogramWindow *_histogramWindow;
 		Gtk::Window
 			*_optionWindow, *_editStrategyWindow,
 			*_gotoWindow,
