@@ -77,6 +77,7 @@ namespace LOFAR
                                       itsParameters.asBool("PredictFT"),
                                       itsParameters.asString("PsfImage"),
                                       itsParameters.asBool("UseMasksDegrid"),
+                                      itsParameters.asBool("doPSF"),
                                       itsParameters);//,
                                       //itsParameters.asDouble("FillFactor"));
     

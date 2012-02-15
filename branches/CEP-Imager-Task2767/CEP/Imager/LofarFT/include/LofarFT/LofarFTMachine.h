@@ -160,6 +160,7 @@ public:
 		 Bool PredictFT,
 		 String PsfOnDisk,
 		 Bool UseMasksDegrid,
+		 Bool ReallyDoPSF,
                  const casa::Record& parameters
                 );//,
 		 //Double FillFactor);
@@ -485,7 +486,7 @@ protected:
   Bool its_Use_EJones;
   Bool its_Apply_Element;
   Bool its_Already_Initialized;
-
+  Bool                its_reallyDoPSF;
   CountedPtr<LofarConvolutionFunction> itsConvFunc;
   Vector<Int> ConjCFMap_p, CFMap_p;
   int itsVerbose;

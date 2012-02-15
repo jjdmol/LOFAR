@@ -122,6 +122,7 @@ LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize,
 			       Bool PredictFT, 
 			       String PsfOnDisk, 
 			       Bool UseMasksDegrid,
+			       Bool reallyDoPSF, 
                                const Record& parameters
                               )//, 
 			       //Double FillFactor)
@@ -160,6 +161,7 @@ LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize,
   its_Use_EJones=Use_EJones;
   its_UseMasksDegrid=UseMasksDegrid;
   its_PBCut=PBCut;
+  its_reallyDoPSF=reallyDoPSF;
   //its_FillFactor=FillFactor;
   itsStepApplyElement=StepApplyElement;
   its_Apply_Element=false;
@@ -176,7 +178,7 @@ LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize,
   itsListFreq.resize(window.nrow());
   for(uInt i=0; i<window.nrow();++i){
     itsListFreq[i]=window.refFrequency()(i);
-    cout<<itsListFreq[i]<<endl;
+    cout<<"SPW"<<i<<", freq="<<itsListFreq[i]<<endl;
   };
   its_Already_Initialized=false;
 }
@@ -275,6 +277,7 @@ LofarFTMachine& LofarFTMachine::operator=(const LofarFTMachine& other)
     its_Apply_Element= other.its_Apply_Element;
     itsStepApplyElement=other.itsStepApplyElement;
     its_Already_Initialized= other.its_Already_Initialized;
+    its_reallyDoPSF = other.its_reallyDoPSF;
     its_PBCut= other.its_PBCut;
     //its_FillFactor=other.its_FillFactor;
      //cyrr: mfs
@@ -792,12 +795,12 @@ void LofarFTMachine::finalizeToSky()
     itsSumPB[0]       += itsSumPB[i];
   }
 
-  // Cube<Complex> tempimage(shapecube,0.);
-  // for(Int k=0;k<1;++k){
+  // Cube<Complex> tempimage(IPosition(3,nx,nx,4),0.);
+  // for(Int k=0;k<4;++k){
   //   for(uInt i=0;i<nx;++i){
   //     for(uInt j=0;j<nx;++j){
   // 	IPosition pos(4,i,j,k,0);
-  // 	Complex pixel(itsGriddedData[0](pos));
+  // 	Complex pixel(its_stacked_GriddedData(pos));
   // 	tempimage(i,j,k)=pixel;
   //     }
   //   }
@@ -832,11 +835,11 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
   //PrecTimer TimerCyril;
   //TimerCyril.start();
 
-  if (itsVerbose > 0) {
+    if (itsVerbose > 0) {
     logIO() << LogOrigin("LofarFTMachine", "put") << LogIO::NORMAL
             << "I am gridding " << vb.nRow() << " row(s)."  << LogIO::POST;
     logIO() << LogIO::NORMAL << "Padding is " << padding_p  << LogIO::POST;
-  }
+    }
 
 
   gridOk(gridder->cSupport()(0));
@@ -867,10 +870,8 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
   const Matrix<Float> *imagingweight;
   imagingweight=&(vb.imagingWeight());
 
-  //dopsf=true;
-
+  if(its_reallyDoPSF) {dopsf=true;}
   if(dopsf) {type=FTMachine::PSF;}
-
   Cube<Complex> data;
   //Fortran gridder need the flag as ints
   Cube<Int> flags;
@@ -996,6 +997,8 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
   // However the VBS objects should ultimately be references
   // directly to bool cubes.
   //**************
+
+
   vbs.flagCube_p.resize(flags.shape());    vbs.flagCube_p = False; vbs.flagCube_p(flags!=0) = True;
   //  vbs.flagCube_p.reference(vb.flagCube());
   //**************

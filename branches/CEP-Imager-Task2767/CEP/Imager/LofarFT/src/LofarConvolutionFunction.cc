@@ -183,7 +183,7 @@ namespace LOFAR
       }
     }
     Spheroid_cut_im_element.reference (real(spheroid_cut_element_padfft_fft));
-    store(Spheroid_cut_im_element,"Spheroid_cut_im_element.img");
+    store(m_coordinates,Spheroid_cut_im_element,"Spheroid_cut_im_element.img");
 
   }
 
@@ -1302,7 +1302,7 @@ namespace LOFAR
         }
       }
       // Make it persistent.
-      store(Im_Stack_PB_CF0, itsImgName + ".avgpb");
+      store(m_coordinates,Im_Stack_PB_CF0, itsImgName + ".avgpb");
     }
     return Im_Stack_PB_CF0;
   }
@@ -1525,7 +1525,7 @@ namespace LOFAR
     Double res_ini=abs(coordinates.increment()(0));                      // pixel size in image in radian
     Double diam_image=res_ini*shape(0);                                  // image diameter in radian
     //Double station_diam = 70.;                                           // station diameter in meters: To be adapted to the individual station size.
-    Double Res_beam_image= ((C::c/m_refFrequency)/station_diam)/2.;      // pixel size in A-term image in radian
+    Double Res_beam_image= 0.5*((C::c/m_refFrequency)/station_diam)/2.;      // pixel size in A-term image in radian
     uInt Npix=floor(diam_image/Res_beam_image);                         // Number of pixel size in A-term image
     Res_beam_image=diam_image/Npix;
     if (Npix%2 != 1) {

@@ -307,8 +307,13 @@ namespace LOFAR {
       for (Int visChan=0; visChan<nVisChan; ++visChan) {
         Int gridChan = chanMap_p[visChan];
 
-  	//cout<<"visChan "<<visChan<<endl;
+
+	// !! dirty trick to select all channels
+	chanMap_p[visChan]=0;
+
+
         if (gridChan >= 0  &&  gridChan < nGridChan) {
+
           // Determine the grid position from the UV coordinates in wavelengths.
           Double recipWvl = vbs.freq_p[visChan] / C::c;
           Double posx = uvwScale_p[0] * uvwPtr[0] * recipWvl + offset_p[0];
@@ -338,6 +343,7 @@ namespace LOFAR {
           if (locx-supx >= 0  &&  locx+supx < nGridX  &&
               locy-supy >= 0  &&  locy+supy < nGridY) {
 
+
             ///            cout << "in grid"<<endl;
             // Get pointer to data and flags for this channel.
             Int doff = (irow * nVisChan + visChan) * nVisPol;
@@ -349,9 +355,11 @@ namespace LOFAR {
             // Handle a visibility if not flagged.
             for (Int ipol=0; ipol<nVisPol; ++ipol) {
               if (! flagPtr[ipol]) {
+
                 // Map to grid polarization. Only use pol if needed.
                 Int gridPol = polMap_p(ipol);
                 if (gridPol >= 0  &&  gridPol < nGridPol) {
+
   		  //cout<<"ipol: "<<ipol<<endl;
                   // Get the offset in the grid data array.
                   Int goff = (gridChan*nGridPol + gridPol) * nGridX * nGridY;
@@ -365,6 +373,7 @@ namespace LOFAR {
                     // convolution functions for this channel,pol.
 
 		    // Fast version
+
                     const Complex* __restrict__ cf[1];
                     Int cfoff = (offy + sy*fsampy)*nConvX + offx - fsupx*fsampx;
 		    cf[0] = (*cfs.vdata)[gridChan][0][0].data() + cfoff;
@@ -657,6 +666,11 @@ namespace LOFAR {
       // Skip channel if data are not needed.
       for (Int visChan=0; visChan<nVisChan; ++visChan) {
         Int gridChan = chanMap_p[visChan];
+
+
+	// !! dirty trick to select all channels
+	chanMap_p[visChan]=0;
+
         if (gridChan >= 0  &&  gridChan < nGridChan) {
           // Determine the grid position from the UV coordinates in wavelengths.
           Double recipWvl = vbs.freq_p[visChan] / C::c;

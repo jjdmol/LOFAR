@@ -376,7 +376,7 @@ int main (Int argc, char** argv)
 		   "string");
     inputs.create ("operation", "image",
                    ///		   "Operation (empty,image,clark,hogbom,csclean,multiscale,entropy)",
-		   "Operation (empty,image,csclean,predict)",
+		   "Operation (empty,image,csclean,predict,psf)",
 		   "string");
     inputs.create ("niter", "1000",
 		   "Number of clean iterations",
@@ -509,7 +509,9 @@ int main (Int argc, char** argv)
     Int maxsupport   = inputs.getInt("maxsupport");
     Int oversample   = inputs.getInt("oversample");
     Int StepApplyElement   = inputs.getInt("StepApplyElement");
-    
+    if ((StepApplyElement%2 == 0)&&((StepApplyElement%2 != 0))) {
+      StepApplyElement++;
+    }
     Int nterms   = inputs.getInt("nterms");
     Vector<Double> userScaleSizes(inputs.getDoubleVector("uservector"));
     Double padding   = inputs.getDouble("padding");
@@ -624,19 +626,24 @@ int main (Int argc, char** argv)
       phaseCenter = readDirection (phasectr);
     }
     operation.downcase();
-    AlwaysAssertExit (operation=="empty" || operation=="image" || operation=="csclean"|| operation=="msmfs"||operation=="predict");
+    AlwaysAssertExit (operation=="empty" || operation=="image" || operation=="csclean"|| operation=="msmfs"||operation=="predict"||operation=="psf");
     ///AlwaysAssertExit (operation=="empty" || operation=="image" || operation=="hogbom" || operation=="clark" || operation=="csclean" || operation=="multiscale" || operation =="entropy");
     IPosition maskBlc, maskTrc;
     Quantity threshold;
     Quantity sigma;
     Quantity targetFlux;
-    Bool doClean = (operation != "empty"  &&  operation != "image");
+    Bool doClean = (operation != "empty"  &&  operation != "image"&&  operation != "psf");
     if (doClean) {
       maskBlc = readIPosition (mstrBlc);
       maskTrc = readIPosition (mstrTrc);
       threshold = readQuantity (threshStr);
       sigma = readQuantity (sigmaStr);
       targetFlux = readQuantity (targetStr);
+    }
+    Bool doPSF =(operation=="psf");
+    if(doPSF==true){
+      operation="csclean";
+      niter=0;
     }
     // Get axis specification from filter.
     Quantity bmajor, bminor, bpa;
@@ -665,20 +672,32 @@ int main (Int argc, char** argv)
     params.define ("PsfImage", PsfImage);
     params.define ("UseMasksDegrid", Use_masks);
     params.define ("RowBlock", RowBlock);
+    params.define ("doPSF", doPSF);
     params.define ("applyIonosphere", applyIonosphere);
     params.define ("splitbeam", splitbeam);
     //params.define ("FillFactor", FillFactor);
     
     LOFAR::LofarImager imager(ms, params);
 
-    ROMSSpWindowColumns window(ms.spectralWindow());
+    MSSpWindowColumns window(ms.spectralWindow());
     // ROMSObservationColumns timerange(ms.observation());
     // cout<<"timerange"<<timerange.timerange()<<endl;
     Vector<Int> wind(window.nrow());
     for(uInt iii=0;iii<window.nrow();++iii){wind(iii)=iii;};
     cout<<"... Windows is shit"<<endl;
+
+    ROArrayColumn<Double> chfreq(window.chanFreq());
+
+    cout<<"Number of channels: "<<chfreq(0).shape()[0]<<endl;
+
+    Vector<Int> chansel(1);
+    chansel(0)=chfreq(0).shape()[0];
+    //chansel(1)=1;
+    //chansel(2)=2;
+    //chansel(3)=3;
+
     imager.setdata (chanmode,                       // mode
-		    nchan,
+		    chansel,//nchan,
 		    chanstart,
                     chanstep,
 		    MRadialVelocity(),              // mStart
