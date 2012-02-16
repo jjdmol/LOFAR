@@ -485,12 +485,13 @@ void actionHistogram(const std::string &filename, const std::string &query)
 	collection.Load(histogramFormatter);
 	if(query == "rfislope")
 	{
+		MeasurementSet set(filename);
+		std::cout << set.GetBandInfo(0).CenterFrequencyHz();
 		for(unsigned p=0;p<polarizationCount;++p)
 		{
 			LogHistogram histogram;
 			collection.GetRFIHistogramForCrossCorrelations(p, histogram);
-			if(p != 0) std::cout << '\t';
-			std::cout << histogram.NormalizedSlopeInRFIRegion();
+			std::cout <<  '\t' << histogram.NormalizedSlopeInRFIRegion();
 		}
 		std::cout << '\n';
 	}
