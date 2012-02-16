@@ -12,6 +12,7 @@ import sys
 from lofarpipe.support.control import control
 from lofarpipe.support.lofarexceptions import PipelineException
 from lofarpipe.support.group_data import store_data_map, validate_data_maps
+from lofarpipe.support.group_data import tally_data_map
 from lofarpipe.support.utilities import create_directory
 from lofar.parameterset import parameterset
 from lofar.mstools import findFiles
@@ -80,16 +81,18 @@ class msss_target_pipeline(control):
             )
         # Validate input data, by searching the cluster for files
         self._validate_input_data()
-        # Update input- and output-data product specifications
-        self.input_data['data'] = [f for (f,m) 
-            in zip(self.input_data['data'], self.io_data_mask) if m
-        ]
-        self.input_data['instrument'] = [f for (f,m) 
-            in zip(self.input_data['instrument'], self.io_data_mask) if m
-        ]
-        self.output_data['data'] = [f for (f,m) 
-            in zip(self.output_data['data'], self.io_data_mask) if m
-        ]
+        # Update input- and output-data product specifications if needed.
+        if not all(self.io_data_mask):
+            self.logger.info("Updating input/output product specifications")
+            self.input_data['data'] = [f for (f,m) 
+                in zip(self.input_data['data'], self.io_data_mask) if m
+            ]
+            self.input_data['instrument'] = [f for (f,m) 
+                in zip(self.input_data['instrument'], self.io_data_mask) if m
+            ]
+            self.output_data['data'] = [f for (f,m) 
+                in zip(self.output_data['data'], self.io_data_mask) if m
+            ]
 
 
     def _validate_input_data(self):
@@ -97,46 +100,28 @@ class msss_target_pipeline(control):
         Search for the requested input files and mask the files in
         `self.input_data{}` that could not be found on the system.
         """
-        # First determine the directories to search. Get unique directory
-        # names from our input_data by creating a set first.
-        dirs = list(set(os.path.dirname(d[1]) for d in self.input_data['data']))
-
-        # Compose the filename glob-pattern to use (see LOFAR-USG-ICD-005).
-        ms_pattern = ' '.join(
-            os.path.join(d, 'L*_SAP???_SB???_uv.MS') for d in dirs
+        data_mask = tally_data_map(
+            self.input_data['data'], 'L*_SAP???_SB???_uv.MS', self.logger
         )
-
-        # Search the files on the cluster; turn them into a list of tuples.
-        self.logger.debug("Searching for files: %s" % ms_pattern)
-        found_files = zip(*findFiles(ms_pattern, '-1d'))
-        
-        # Create a mask containing True if file exists, False otherwise
-        data_mask = [f in found_files for f in self.input_data['data']]
-
         # Log a warning if not all input data files were found.
         if not all(data_mask):
             self.logger.warn(
                 "The following input data files were not found: %s" %
-                ' '.join(
+                ', '.join(
                     ':'.join(f) for (f,m) in zip(
                         self.input_data['data'], data_mask
                     ) if not m
                 )
             )
-
-        dirs = list(
-            set(os.path.dirname(d[1]) for d in self.input_data['instrument'])
+        inst_mask = tally_data_map(
+            self.input_data['instrument'], 'L*_SAP???_SB???_inst.INST',
+            self.logger
         )
-        ms_pattern = ' '.join(
-            os.path.join(d, 'L*_SAP???_SB???_inst.INST') for d in dirs
-        )
-        self.logger.debug("Searching for files: %s" % ms_pattern)
-        found_files = zip(*findFiles(ms_pattern, '-1d'))
-        inst_mask = [f in found_files for f in self.input_data['instrument']]
+        # Log a warning if not all input instrument files were found.
         if not all(inst_mask):
             self.logger.warn(
                 "The following input instrument files were not found: %s" %
-                ' '.join(
+                ', '.join(
                     ':'.join(f) for (f,m) in zip(
                         self.input_data['instrument'], inst_mask
                     ) if not m
@@ -208,7 +193,9 @@ class msss_target_pipeline(control):
             self.logger.warn("No input data files to process. Bailing out")
             return 0
 
-        self.logger.debug("Processing: %s" % self.input_data['data'])
+        self.logger.debug("Processing: %s" % 
+            ', '.join(':'.join(f) for f in self.input_data['data'])
+        )
             
 #        # Create a sourcedb based on sourcedb's input argument "skymodel"
 #        # (see, e.g., tasks.cfg file).
