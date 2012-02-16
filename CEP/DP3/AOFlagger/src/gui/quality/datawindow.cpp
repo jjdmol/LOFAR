@@ -17,43 +17,35 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef PLOTWINDOW_H
-#define PLOTWINDOW_H
 
-#include <boost/bind/bind.hpp>
+#include <AOFlagger/gui/quality/datawindow.h>
+#include <AOFlagger/gui/plot/plot2d.h>
 
-#include <gtkmm/window.h>
+#include <sstream>
+#include <iomanip>
 
-#include <AOFlagger/gui/plot/plotmanager.h>
-#include <AOFlagger/gui/plot/plotwidget.h>
-
-/**
-	@author A.R. Offringa <offringa@astro.rug.nl>
-*/
-class PlotWindow : public Gtk::Window {
-	public:
-		PlotWindow(PlotManager &plotManager) : _plotManager(plotManager)
+void DataWindow::SetData(const Plot2D &plot)
+{
+	std::stringstream _dataStream;
+	_dataStream << std::setprecision(14);
+	if(plot.PointSetCount() != 0)
+	{
+		const Plot2DPointSet &pointSet = plot.GetPointSet(0);
+		const size_t valueCount = pointSet.Size();
+		for(size_t i=0; i<valueCount; ++i)
 		{
-			plotManager.OnUpdate() = boost::bind(&PlotWindow::handleUpdate, this);
-			add(_plotWidget);
-			_plotWidget.show();
+			const double
+				x = pointSet.GetX(i),
+				y = pointSet.GetY(i);
+			if(pointSet.HasTickLabels())
+			{
+				std::string label = pointSet.TickLabels()[i];
+				_dataStream << i << '\t' << label << '\t' << y << '\n';
+			}
+			else
+				_dataStream << i << '\t' << x << '\t' << y << '\n';
 		}
-		~PlotWindow()
-		{
-		}
-		
-	private:
-		void handleUpdate()
-		{
-			const std::vector<Plot2D*> &plots = _plotManager.Items();
-			Plot2D &lastPlot = **plots.rbegin();
-			_plotWidget.SetPlot(lastPlot);
-			show();
-			raise();
-		}
-		
-		PlotWidget _plotWidget;
-		PlotManager &_plotManager;
-};
+	}
+	SetData(_dataStream.str());
+}
 
-#endif
