@@ -3,6 +3,9 @@
 #                                    Example recipe with simple job distribution
 #                                                            John Swinbank, 2010
 #                                                      swinbank@transientskp.org
+#
+#  Command line syntax:
+#  python example_parallel.py --config ../../pipeline.cfg --job-name test -d
 # ------------------------------------------------------------------------------
 
 import sys
@@ -14,7 +17,7 @@ class example_parallel(BaseRecipe, RemoteCommandRecipeMixIn):
     def go(self):
         super(example_parallel, self).go()
         node_command = "python %s" % (self.__file__.replace("master", "nodes"))
-        job = ComputeJob("localhost", node_command, arguments=["example_argument"])
+        job = ComputeJob("localhost", node_command, arguments = ["example_argument"])
         self._schedule_jobs([job])
         if self.error.isSet():
             return 1
