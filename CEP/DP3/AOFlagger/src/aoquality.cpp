@@ -362,10 +362,7 @@ void actionQueryBaselines(const std::string &kindName, const std::string &filena
 
 void actionQueryTime(const std::string &kindName, const std::string &filename)
 {
-	MeasurementSet *ms = new MeasurementSet(filename);
-	const unsigned polarizationCount = ms->GetPolarizationCount();
-	delete ms;
-	
+	const unsigned polarizationCount = MeasurementSet::GetPolarizationCount(filename);
 	const QualityTablesFormatter::StatisticKind kind = QualityTablesFormatter::NameToKind(kindName);
 	
 	QualityTablesFormatter formatter(filename);
@@ -480,6 +477,25 @@ void actionRemove(const std::string &filename)
 	formatter.RemoveAllQualityTables();
 }
 
+void actionHistogram(const std::string &filename, const std::string &query)
+{
+	HistogramTablesFormatter histogramFormatter(filename);
+	const unsigned polarizationCount = MeasurementSet::GetPolarizationCount(filename);
+	HistogramCollection collection(polarizationCount);
+	collection.Load(histogramFormatter);
+	if(query == "rfislope")
+	{
+		for(unsigned p=0;p<polarizationCount;++p)
+		{
+			LogHistogram histogram;
+			collection.GetRFIHistogramForCrossCorrelations(p, histogram);
+			if(p != 0) std::cout << '\t';
+			std::cout << histogram.NormalizedSlopeInRFIRegion();
+		}
+		std::cout << '\n';
+	}
+}
+
 void printSyntax(std::ostream &stream, char *argv[])
 {
 	stream << "Syntax: " << argv[0] <<
@@ -488,7 +504,8 @@ void printSyntax(std::ostream &stream, char *argv[])
 		"\thelp        - Get more info about an action (usage: '" << argv[0] << " help <action>')\n"
 		"\tcollect     - Processes the entire measurement set, collects the statistics\n"
 		"\t              and writes them in the quality tables.\n"
-		"\\tcombine     - Combine several tables.\n"
+		"\tcombine     - Combine several tables.\n"
+		"\thistogram   - Various histogram actions.\n"
 		"\tquery_b     - Query baselines.\n"
 		"\tquery_t     - Query time.\n"
 		"\tremove      - Remove all quality tables.\n"
@@ -555,6 +572,13 @@ int main(int argc, char *argv[])
 						"write the results to a target measurement set. The target measurement set should\n"
 						"not exist beforehand.\n";
 				}
+				else if(helpAction == "histogram")
+				{
+					std::cout << "Syntax: " << argv[0] << " histogram <query> <ms>]\n\n"
+						"Query can be:\n"
+						"\trfislope - performs linear regression on the part of the histogram that should contain the RFI.\n"
+						"\t           Reports one value per polarisation.\n";
+				}
 				else if(helpAction == "remove")
 				{
 					std::cout << "Syntax: " << argv[0] << " remove [ms]\n\n"
@@ -592,6 +616,17 @@ int main(int argc, char *argv[])
 				for(int i=3;i<argc;++i)
 					inFilenames.push_back(argv[i]);
 				actionCombine(outFilename, inFilenames);
+			}
+		}
+		else if(action == "histogram")
+		{
+			if(argc != 4)
+			{
+				std::cerr << "histogram actions needs two parameters (the query and the measurement set)\n";
+				return -1;
+			}
+			else {
+				actionHistogram(argv[3], argv[2]);
 			}
 		}
 		else if(action == "summarize")
