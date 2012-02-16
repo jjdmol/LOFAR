@@ -164,16 +164,7 @@ void RayleighFitter::Fit(double minVal, double maxVal, LogHistogram &hist, doubl
 
 double RayleighFitter::SigmaEstimate(LogHistogram &hist)
 {
-	double maxCount = 0.0, maxPosition = 0.0;
-	for (LogHistogram::iterator i=hist.begin(); i!=hist.end(); ++i)
-	{
-		if(i.normalizedCount() > maxCount && i.value() > 0 && std::isfinite(i.value()))
-		{
-			maxCount = i.normalizedCount();
-			maxPosition = i.value();
-		}
-	}
-	return maxPosition;
+	return hist.AmplitudeWithMaxNormalizedCount();
 }
 
 void RayleighFitter::FindFitRangeUnderRFIContamination(double minPositiveAmplitude, double sigmaEstimate, double &minValue, double &maxValue)

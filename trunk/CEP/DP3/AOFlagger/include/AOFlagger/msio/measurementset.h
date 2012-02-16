@@ -125,6 +125,7 @@ class MeasurementSet {
 			return _minScanIndex;
 		}
 		size_t GetPolarizationCount();
+		static size_t GetPolarizationCount(const std::string &filename);
 		size_t AntennaCount();
 		size_t FieldCount();
 		size_t BandCount();

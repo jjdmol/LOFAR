@@ -95,27 +95,6 @@ class LogHistogram
 			}
 		}
 		
-		double NormalizedSlope(double startAmplitude, double endAmplitude) const
-		{
-			unsigned long n = 0;
-			long double sumX = 0.0, sumXY = 0.0, sumY = 0.0, sumXSquare = 0.0;
-			for(std::map<double, class AmplitudeBin>::const_iterator i=_amplitudes.begin();i!=_amplitudes.end();++i)
-			{
-				if(i->first >= startAmplitude && i->first < endAmplitude)
-				{
-					long unsigned count = i->second.GetCount();
-					double x = log10(i->first);
-					double y = log10((double) count / i->first);
-					++n;
-					sumX += x;
-					sumXSquare += x * x;
-					sumY += y;
-					sumXY += x * y;
-				}
-			}
-			return (sumXY - sumX*sumY/n)/(sumXSquare - (sumX*sumX/n));
-		}
-		
 		double MaxAmplitude() const
 		{
 			if(_amplitudes.empty())
@@ -171,6 +150,31 @@ class LogHistogram
 			return minCount;
 		}
 		
+		double MaxNormalizedCount() const
+		{
+			double maxCount = 0.0;
+			for (LogHistogram::const_iterator i=begin(); i!=end(); ++i)
+			{
+				if(i.normalizedCount() > maxCount && i.value() > 0 && std::isfinite(i.value()))
+					maxCount = i.normalizedCount();
+			}
+			return maxCount;
+		}
+		
+		double AmplitudeWithMaxNormalizedCount() const
+		{
+			double maxCount = 0.0, maxPosition = 0.0;
+			for (LogHistogram::const_iterator i=begin(); i!=end(); ++i)
+			{
+				if(i.normalizedCount() > maxCount && i.value() > 0 && std::isfinite(i.value()))
+				{
+					maxCount = i.normalizedCount();
+					maxPosition = i.value();
+				}
+			}
+			return maxPosition;
+		}
+		
 		double MinPosNormalizedCount() const
 		{
 			const_iterator i = begin();
@@ -184,6 +188,35 @@ class LogHistogram
 				++i;
 			} while(i != end());
 			return minCount;
+		}
+		
+		double NormalizedSlope(double startAmplitude, double endAmplitude) const
+		{
+			unsigned long n = 0;
+			long double sumX = 0.0, sumXY = 0.0, sumY = 0.0, sumXSquare = 0.0;
+			for(std::map<double, class AmplitudeBin>::const_iterator i=_amplitudes.begin();i!=_amplitudes.end();++i)
+			{
+				if(i->first >= startAmplitude && i->first < endAmplitude)
+				{
+					long unsigned count = i->second.GetCount();
+					double x = log10(i->first);
+					double y = log10((double) count / i->first);
+					++n;
+					sumX += x;
+					sumXSquare += x * x;
+					sumY += y;
+					sumXY += x * y;
+				}
+			}
+			return (sumXY - sumX*sumY/n)/(sumXSquare - (sumX*sumX/n));
+		}
+		
+		double NormalizedSlopeInRFIRegion() const
+		{
+			double sigmaEstimate = AmplitudeWithMaxNormalizedCount();
+			double maxAmplitude = MaxAmplitude();
+			double halfWay = exp((log(sigmaEstimate) + log(maxAmplitude)) * 0.5);
+			return NormalizedSlope(sigmaEstimate * 20.0, halfWay);
 		}
 		
 		void SetData(std::vector<HistogramTablesFormatter::HistogramItem> &histogramData)
