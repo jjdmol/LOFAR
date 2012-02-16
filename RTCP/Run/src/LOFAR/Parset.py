@@ -257,17 +257,11 @@ class Parset(util.Parset.Parset):
               break
 
 	    beamSubbands = self.getInt32Vector("Observation.Beam[%s].subbandList" % (b,)) # the actual subband number (0..511)
-            beamBeamlets = self.getInt32Vector("Observation.Beam[%s].beamletList" % (b,)) # the bebamlet index (0..247)
 
-            for subband,beamlet in zip(beamSubbands,beamBeamlets):
+            for subband in beamSubbands:
               allSubbands.append( {
                 "beam":     b,
                 "subband":  subband,
-                "beamlet":  beamlet,
-
-                # assign rsp board and slot according to beamlet id
-                "rspboard": beamlet // NRBOARBEAMLETS,
-                "rspslot":  beamlet % NRBOARBEAMLETS,
               } )
 
 
@@ -277,8 +271,8 @@ class Parset(util.Parset.Parset):
           # populate OLAP lists
 	  self["Observation.subbandList"]  = [s["subband"] for s in sortedSubbands]
 	  self["Observation.beamList"]     = [s["beam"] for s in sortedSubbands]
-	  self["Observation.rspBoardList"] = [s["rspboard"] for s in sortedSubbands]
-	  self["Observation.rspSlotList"]  = [s["rspslot"] for s in sortedSubbands]
+	  self["Observation.rspBoardList"] = [0 for s in sortedSubbands]
+	  self["Observation.rspSlotList"]  = [0 for s in sortedSubbands]
 
         # The Scheduler creates three lists of files (for beamformed, coherent and incoherent),
         # but we collapse this into one list (beamformed)
