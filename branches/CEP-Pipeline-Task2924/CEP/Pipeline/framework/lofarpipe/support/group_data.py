@@ -6,9 +6,11 @@
 # ------------------------------------------------------------------------------
 
 from collections import defaultdict
+import os
 import subprocess
 
 from lofar.parameterset import parameterset
+from lofar.mstools import findFiles
 
 import lofarpipe.support.utilities as utilities
 from lofarpipe.support.clusterdesc import get_compute_nodes
@@ -164,4 +166,31 @@ def store_data_map(filename, data):
     file = open(filename, 'w')
     file.write(repr(data))
     file.close()
+
+
+def tally_data_map(data, glob, logger=None):
+    """
+    Verify that the files specified in the data map `data` exist on the cluster.
+    The glob pattern `glob` should contain the pattern to be used in the search.
+    This function will return a list of booleans: True for each item in `data`
+    that is present on the cluster; False otherwise.
+    """
+    # Check that `data` is in the correct format
+    validate_data_maps(data)
+    
+    # Determine the directories to search. Get unique directory names from
+    # `data` by creating a set first.
+    dirs = list(set(os.path.dirname(d[1]) for d in data))
+
+    # Compose the filename glob-pattern.
+    glob = ' '.join(os.path.join(d, glob) for d in dirs)
+
+    # Search the files on the cluster using the glob-pattern; turn them into a
+    # list of tuples.
+    if logger:
+        logger.debug("Searching for files: %s" % glob)
+    found = zip(*findFiles(glob, '-1d'))
+    
+    # Return a mask containing True if file exists, False otherwise
+    return [f in found for f in data]
 
