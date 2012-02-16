@@ -20,6 +20,8 @@
 #ifndef GUI_QUALITY__DATA_WINDOW_H
 #define GUI_QUALITY__DATA_WINDOW_H
 
+#include <string>
+
 #include <gtkmm/window.h>
 #include <gtkmm/textview.h>
 #include <gtkmm/scrolledwindow.h>
@@ -36,7 +38,7 @@ class DataWindow : public Gtk::Window {
 			
 			add(_scrolledWindow);
 			_scrolledWindow.show();
-			set_default_size(200, 200);
+			set_default_size(300, 400);
 		}
     ~DataWindow()
     {
@@ -45,6 +47,7 @@ class DataWindow : public Gtk::Window {
 		{
 			_textView.get_buffer()->set_text(data);
 		}
+		void SetData(const class Plot2D &plot);
 	private:
 		Gtk::ScrolledWindow _scrolledWindow;
 		Gtk::TextView _textView;

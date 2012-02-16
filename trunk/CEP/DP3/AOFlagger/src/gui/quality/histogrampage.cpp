@@ -23,6 +23,7 @@
 #include <boost/bind.hpp>
 
 #include <AOFlagger/gui/plot/plotpropertieswindow.h>
+#include <AOFlagger/gui/quality/datawindow.h>
 
 #include <AOFlagger/quality/histogramtablesformatter.h>
 
@@ -47,6 +48,7 @@ HistogramPage::HistogramPage() :
 	_nsButton("N(S)"),
 	_dndsButton("dN(S)/dS"),
 	_plotPropertiesButton("Properties"),
+	_dataExportButton("Data"),
 	_plotPropertiesWindow(0),
 	_histograms(0)
 	{
@@ -115,12 +117,17 @@ HistogramPage::HistogramPage() :
 	_plotPropertiesButton.signal_clicked().connect(sigc::mem_fun(*this, &HistogramPage::onPlotPropertiesClicked));
 	_sideBox.pack_start(_plotPropertiesButton, Gtk::PACK_SHRINK);
 	
+	_dataExportButton.signal_clicked().connect(sigc::mem_fun(*this, &HistogramPage::onDataExportClicked));
+	_sideBox.pack_start(_dataExportButton, Gtk::PACK_SHRINK);
+	
 	pack_start(_sideBox, Gtk::PACK_SHRINK);
 	
 	_plotWidget.SetPlot(_plot);
 	pack_start(_plotWidget, Gtk::PACK_EXPAND_WIDGET);
 	
 	show_all_children();
+	
+	_dataWindow = new DataWindow();
 }
 
 HistogramPage::~HistogramPage()
@@ -129,6 +136,7 @@ HistogramPage::~HistogramPage()
 		delete _plotPropertiesWindow;
 	if(_histograms != 0)
 		delete _histograms;
+	delete _dataWindow;
 }
 
 void HistogramPage::readFromFile()
@@ -170,6 +178,7 @@ void HistogramPage::updatePlot()
 			plotPolarization(*_histograms, 3);
 		
 		_plotWidget.Update();
+		updateDataWindow();
 	}
 }
 
@@ -324,4 +333,17 @@ void HistogramPage::onPlotPropertiesClicked()
 	
 	_plotPropertiesWindow->show();
 	_plotPropertiesWindow->raise();
+}
+
+void HistogramPage::onDataExportClicked()
+{
+	_dataWindow->show();
+	_dataWindow->raise();
+	updateDataWindow();
+}
+
+void HistogramPage::updateDataWindow()
+{
+	if(_dataWindow->is_visible())
+		_dataWindow->SetData(_plot);
 }

@@ -64,8 +64,9 @@ class HistogramPage : public Gtk::HBox {
 		void plotPolarization(class HistogramCollection &histograms, unsigned p);
 		void plotFit(class LogHistogram &histogram, const std::string &title);
 		void onPlotPropertiesClicked();
-		void onDataExportClicked() { }
+		void onDataExportClicked();
 		void readFromFile();
+		void updateDataWindow();
 		
 		void onAutoRangeClicked()
 		{
@@ -95,12 +96,13 @@ class HistogramPage : public Gtk::HBox {
 		Gtk::VBox _functionBox;
 		Gtk::RadioButton _nsButton, _dndsButton;
 		
-		Gtk::Button _plotPropertiesButton;
+		Gtk::Button _plotPropertiesButton, _dataExportButton;
 		
 		std::string _statFilename;
 		Plot2D _plot;
 		PlotWidget _plotWidget;
 		class PlotPropertiesWindow *_plotPropertiesWindow;
+		class DataWindow *_dataWindow;
 		class HistogramCollection *_histograms;
 };
 
