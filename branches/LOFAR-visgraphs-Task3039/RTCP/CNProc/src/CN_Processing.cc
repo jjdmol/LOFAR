@@ -734,7 +734,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::checkInputForZe
     // Emit (at most) one message per 10 seconds, and only one per RSP board (TODO: this doesn't work as expected with DataSlots)
     unsigned logInterval = static_cast<unsigned>(ceil(10.0 / itsCNintegrationTime));
     if (itsBlock % logInterval == 0 && *itsCurrentSubband % itsNrSlotsInFrame == 0)
-      LOG_WARN_STR(itsLogPrefix << "Station " << itsStationNames[station] << " subband " << *itsCurrentSubband << " consists of only zeros.");
+      LOG_ERROR_STR(itsLogPrefix << "Station " << itsStationNames[station] << " subband " << *itsCurrentSubband << " consists of only zeros.");
   }
 
   timer.stop();
