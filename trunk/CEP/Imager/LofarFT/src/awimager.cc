@@ -444,6 +444,9 @@ int main (Int argc, char** argv)
     inputs.create ("applyIonosphere", "false",
                    "apply ionospheric correction",
                    "bool");
+    inputs.create ("applyBeam", "true",
+                   "apply beam (array factor)",
+                   "bool");
     inputs.create ("splitbeam", "true",
                    "Evaluate station beam and element beam separately (splitbeam = true is faster)",
                    "bool");
@@ -459,9 +462,6 @@ int main (Int argc, char** argv)
     inputs.create ("cyclespeedup", "-1",
 		   "Cycle Factor. See Casa definition.",
 		   "Double");
-    inputs.create ("ModelImPredict", "",
-		   "Input Model image for the predict",
-		   "string");
     inputs.create ("PsfImage", "",
 		   "Input PSF image for the cleaning",
 		   "string");
@@ -486,6 +486,7 @@ int main (Int argc, char** argv)
     Bool UseLIG         = inputs.getBool("UseLIG");
     Bool UseEJones      = inputs.getBool("UseEJones");
     Bool applyIonosphere = inputs.getBool("applyIonosphere");
+    Bool applyBeam = inputs.getBool("applyBeam");
     Bool splitbeam = inputs.getBool("splitbeam");
     Bool ApplyElement   ;//= inputs.getBool("ApplyElement");
     Bool constrainFlux  = inputs.getBool("constrainflux");
@@ -553,7 +554,6 @@ int main (Int argc, char** argv)
     Double cyclespeedup  = inputs.getDouble("cyclespeedup");
     Matrix<Bool> muelgrid   = readMueller (inputs.getString("muellergrid"), stokes, true);
     Matrix<Bool> mueldegrid = readMueller (inputs.getString("muellerdegrid"), stokes, false);
-    String ModelImPredict    = inputs.getString("ModelImPredict");
     String PsfImage    = inputs.getString("PsfImage");
     Bool Use_masks    = inputs.getBool("UseMasks");
     Int RowBlock   = inputs.getInt("RowBlock");
@@ -674,6 +674,7 @@ int main (Int argc, char** argv)
     params.define ("RowBlock", RowBlock);
     params.define ("doPSF", doPSF);
     params.define ("applyIonosphere", applyIonosphere);
+    params.define ("applyBeam", applyBeam);
     params.define ("splitbeam", splitbeam);
     //params.define ("FillFactor", FillFactor);
     
@@ -755,7 +756,7 @@ int main (Int argc, char** argv)
                         MPosition(),                  // mLocation
                         padding,                      // padding
                         wplanes);                     // wprojplanes
-      imager.ft(Vector<String>(1, ModelImPredict), "",
+      imager.ft(Vector<String>(1, modelName), "",
 		False);
     } else{
 

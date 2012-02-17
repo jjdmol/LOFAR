@@ -635,12 +635,12 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
 	  if(!itsPredictFT){
 	    fact*=sqrt(maxPB)/sqrt(data(pos2));
 	  } else {
-	    fact/=datai(pos2);//*datai(pos2);
+	    fact/=datai(pos2); //*datai(pos2); 
 	    if(its_Apply_Element){fact/=spheroidCutElement(pos2);}
 	  }
 	  pixel*=Complex(fact);
 
-	  if((data(pos2)>(minPB))&&(abs(pixel)>0.)){
+	  if((data(pos2)>=(minPB))&&(abs(pixel)>0.)){   // SvdT: Had to make comparison great _or equal_ because of fake PB consisting of all ones
 	    lattice->putAt(pixel,pos);
 	  };
 	}
@@ -835,11 +835,11 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
   //PrecTimer TimerCyril;
   //TimerCyril.start();
 
-    if (itsVerbose > 0) {
+  if (itsVerbose > 0) {
     logIO() << LogOrigin("LofarFTMachine", "put") << LogIO::NORMAL
             << "I am gridding " << vb.nRow() << " row(s)."  << LogIO::POST;
     logIO() << LogIO::NORMAL << "Padding is " << padding_p  << LogIO::POST;
-    }
+  }
 
 
   gridOk(gridder->cSupport()(0));
@@ -1224,6 +1224,11 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
 // Degrid
 void LofarFTMachine::get(VisBuffer& vb, Int row)
 {
+  if (itsVerbose > 0) {
+    logIO() << LogOrigin("LofarFTMachine", "get") << LogIO::NORMAL
+            << "I am degridding " << vb.nRow() << " row(s)."  << LogIO::POST;
+    logIO() << LogIO::NORMAL << "Padding is " << padding_p  << LogIO::POST;
+  }
   gridOk(gridder->cSupport()(0));
   // If row is -1 then we pass through all rows
   Int startRow, endRow, nRow;
@@ -1311,19 +1316,23 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
   bool usebl      = false;
   bool allFlagged = true;
   const Vector<Bool>& flagRow = vb.flagRow();
-  for (uint i=0; i<blnr.size(); ++i) {
+  for (uint i=0; i<blnr.size(); ++i) 
+  {
     Int inx = blIndex[i];
     Int bl = blnr[inx];
-    if (bl != lastbl) {
+    if (bl != lastbl) 
+    {
       // New baseline. Write the previous end index if applicable.
-      if (usebl  &&  !allFlagged) {
+      if (usebl  &&  !allFlagged) 
+      {
         double Wmean(0.5*(vb.uvw()[blIndex[lastIndex]](2) + vb.uvw()[blIndex[i-1]](2)));
-        if (abs(Wmean) <= itsWMax) {
-	  if (itsVerbose > 1) {
-	    cout<<"using w="<<Wmean<<endl;
-	  }
-	  blStart.push_back (lastIndex);
-	  blEnd.push_back (i-1);
+        if (abs(Wmean) <= itsWMax) 
+        {
+          if (itsVerbose > 1) {
+            cout<<"using w="<<Wmean<<endl;
+          }
+          blStart.push_back (lastIndex);
+          blEnd.push_back (i-1);
         }
       }
       // Skip auto-correlations and high W-values.
@@ -1340,13 +1349,17 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
     if (! flagRow[inx]) {
       allFlagged = false;
     }
+    
   }
   // Write the last end index if applicable.
-  if (usebl  &&  !allFlagged) {
+  if (usebl  &&  !allFlagged) 
+  {
     double Wmean(0.5*(vb.uvw()[blIndex[lastIndex]](2) + vb.uvw()[blIndex[blnr.size()-1]](2)));
-    if (abs(Wmean) <= itsWMax) {
-      if (itsVerbose > 1) {
-	cout<<"...using w="<<Wmean<<endl;
+    if (abs(Wmean) <= itsWMax) 
+    {
+      if (itsVerbose > 1) 
+      {
+        cout<<"...using w="<<Wmean<<endl;
       }
       blStart.push_back (lastIndex);
       blEnd.push_back (blnr.size()-1);
@@ -1443,9 +1456,9 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
       try {
       int threadNum = OpenMP::threadNum();
       // Get the convolution function for degridding.
-      if (itsVerbose > 1) {
-	cout<<"ANTENNA "<<ant1[ist]<<" "<<ant2[ist]<<endl;
-      }
+     if (itsVerbose > 1) {
+        cout<<"ANTENNA "<<ant1[ist]<<" "<<ant2[ist]<<endl;
+     }
       cfTimer.start();
       CyrilConv.start();
 

@@ -66,6 +66,9 @@
 #include <lattices/Lattices/ArrayLattice.h>
 #include <lattices/Lattices/LatticeFFT.h>
 
+// SvdT: to get rid of warnings for unused variables
+#define UNUSED(expr) (void)(expr);
+
 namespace LOFAR
 {
 
@@ -166,6 +169,7 @@ namespace LOFAR
     			       estimateAResolution(m_shape, m_coordinates));
     //Double aPixelAngSize = estimateAResolution(m_shape, m_coordinates, 30);
     Int nPixelsConv = imageDiameter / aPixelAngSize;
+    
     Matrix<Complex> spheroid_cut_element(IPosition(2,nPixelsConv,nPixelsConv),1.);
     taper(spheroid_cut_element);
     //Matrix<Complex> spheroid_cut_element_fft=give_normalized_fft_lapack(spheroid_cut_element, true);
@@ -184,7 +188,6 @@ namespace LOFAR
     }
     Spheroid_cut_im_element.reference (real(spheroid_cut_element_padfft_fft));
     store(m_coordinates,Spheroid_cut_im_element,"Spheroid_cut_im_element.img");
-
   }
 
   //      ~LofarConvolutionFunction ()
@@ -218,6 +221,7 @@ namespace LOFAR
                                    estimateWResolution(m_shape,
                                                        pixelSize, w));
         Int nPixelsConv = imageDiameter / wPixelAngSize;
+        nPixelsConv *= 2; // SvdT : temporary hack for testing
         if (itsVerbose > 0) {
           cout<<"Number of pixel in the "<<i<<"-wplane: "<<nPixelsConv
               <<"  (w="<<w<<")"<<endl;
@@ -351,7 +355,7 @@ namespace LOFAR
 	vector< Cube<Complex> > aTermA_element;
 	vector< Cube<Complex> > aTermA_array;
 
-	vector< Matrix<Complex> > aTermA_array_plane(m_aTerm.evaluateArrayFactor(i, 0, list_freq , list_freq , true));
+	vector< Matrix<Complex> > aTermA_array_plane(m_aTerm.evaluateStationScalarFactor(i, list_freq , list_freq , true));
 	aTermA_array.resize(m_nChannel);
         for (uInt ch=0; ch<m_nChannel; ++ch) {
 	  aTermA_array[ch].resize(IPosition(3,shape[0],shape[0],4));
@@ -498,6 +502,7 @@ namespace LOFAR
     uInt ii = 0;
     IPosition cfShape;
     Bool allElem = True;
+    UNUSED(allElem);
     for (uInt row0=0; row0<=1; ++row0) {
       for (uInt col0=0; col0<=1; ++col0) {
 	vector < Matrix<Complex> > Row(4);
@@ -535,9 +540,10 @@ namespace LOFAR
       }
     }
 
-    Int nx(input_grid.shape()[0]);
-    Int ny(input_grid.shape()[1]);
-    Int npol(input_grid.shape()[2]);
+    uInt nx(input_grid.shape()[0]);
+    uInt ny(input_grid.shape()[1]);
+    UNUSED(ny);
+    uInt npol(input_grid.shape()[2]);
 
     Cube<Complex> aTermA(aterm_element[0][spw].copy());
     Array<Complex> grid_out(input_grid.shape(),0.);
@@ -692,6 +698,7 @@ namespace LOFAR
     uInt ii = 0;
     IPosition cfShape;
     Bool allElem = True;
+    UNUSED(allElem);
     for (uInt row0=0; row0<=1; ++row0) {
       for (uInt col0=0; col0<=1; ++col0) {
 	vector < Matrix<Complex> > Row(4);
@@ -733,6 +740,7 @@ namespace LOFAR
     Array<Complex> grid_out(input_grid.shape(),0.);
     Int nx(input_grid.shape()[0]);
     Int ny(input_grid.shape()[1]);
+    UNUSED(ny);
     Int npol(input_grid.shape()[2]);
 
     vector< vector< Matrix<Complex> > > vec_plane_product;
@@ -874,7 +882,6 @@ namespace LOFAR
 
 
     return grid_out;
-
   }
 
   //==================================================================
@@ -890,9 +897,9 @@ namespace LOFAR
 
   LofarCFStore LofarConvolutionFunction::makeConvolutionFunction
   (uInt stationA, uInt stationB, Double time, Double w,
-   const Matrix<bool>& Mask_Mueller_in, bool degridding_step,
+   const Matrix<bool>& /*Mask_Mueller_in*/, bool degridding_step,
    double Append_average_PB_CF, Matrix<Complex>& Stack_PB_CF,
-   double& sum_weight_square, uInt spw, Int TaylorTerm, double RefFreq)
+   double& sum_weight_square, uInt spw, Int /*TaylorTerm*/, double /*RefFreq*/)
   {
     // Initialize timers.
     PrecTimer timerFFT;
@@ -1095,7 +1102,8 @@ namespace LOFAR
               // Compute the convolution function for the given Mueller element
               if (Mask_Mueller(ii,jj)) {
                 // Padded version for oversampling the convolution function
-                Matrix<Complex> plane_product (aTermB_padded.xyPlane(ind0) *
+
+                Matrix<Complex> plane_product (conj(aTermB_padded.xyPlane(ind0)) *
                                                aTermA_padded.xyPlane(ind1));
                 plane_product *= wTerm_paddedf;
                 plane_product *= Spheroid_cut_paddedf;
@@ -1103,6 +1111,7 @@ namespace LOFAR
                 Matrix<Complex> plane_product_paddedf
                   (zero_padding(plane_product,
                                 plane_product.shape()[0] * m_oversampling));
+
                 normalized_fft (timerFFT, plane_product_paddedf);
 
                 plane_product_paddedf *= static_cast<Float>(m_oversampling *
@@ -1284,6 +1293,7 @@ namespace LOFAR
 
       float maxPB(0.);
       float maxPB_noabs(0.);
+      UNUSED(maxPB_noabs);
       for(uInt i=0;i<m_shape[1];++i){
 	for(uInt j=0;j<m_shape[1];++j){
 	    Complex pixel(Sum_Stack_PB_CF(i,j));

@@ -47,9 +47,6 @@
 #include <lattices/Lattices/ArrayLattice.h>
 #include <lattices/Lattices/LatticeFFT.h>
 
-
-
-
 using namespace casa;
 
 namespace LOFAR
@@ -160,25 +157,25 @@ namespace LOFAR
       String MaskName("JAWS_masks_degrid/Mask"+String::toString(NumMask)+".boolim");
       File MaskFile(MaskName);
       if(!MaskFile.exists()){
-	//cout<<"... Making Masks ..."<<endl;
-	Matrix<Bool> Mask(IPosition(2,gridin.shape()[0],gridin.shape()[0]),false);
-	Matrix<Int> IntMask(IPosition(2,gridin.shape()[0],gridin.shape()[0]),false);
-	int GridSize(gridin.shape()[0]);
-	const Complex* inPtr = gridin.data();
-	Bool* outPtr = Mask.data();
-	for (uInt i=0; i<GridSize; ++i) {
-	  for (uInt j=0; j<GridSize; ++j) {
-	    if (inPtr->real() != 0  ||  inPtr->imag() != 0) {
-	      (*(outPtr)) = true;
-	    }
-	    inPtr++;
-	    outPtr++;
-	  }
-	}
-	//itsVectorMasksDegridElement.push_back(Mask);
-	
-	store(Mask,MaskName);
-	//cout<<"... Done Making Masks ..."<<endl;
+        //cout<<"... Making Masks ..."<<endl;
+        Matrix<Bool> Mask(IPosition(2,gridin.shape()[0],gridin.shape()[0]),false);
+        Matrix<Int> IntMask(IPosition(2,gridin.shape()[0],gridin.shape()[0]),false);
+        uInt GridSize(gridin.shape()[0]);
+        const Complex* inPtr = gridin.data();
+        Bool* outPtr = Mask.data();
+        for (uInt i=0; i<GridSize; ++i) {
+         for (uInt j=0; j<GridSize; ++j) {
+           if (inPtr->real() != 0  ||  inPtr->imag() != 0) {
+             (*(outPtr)) = true;
+            }
+            inPtr++;
+            outPtr++;
+          }
+        }
+        //itsVectorMasksDegridElement.push_back(Mask);
+
+        store(Mask,MaskName);
+        //cout<<"... Done Making Masks ..."<<endl;
       }
     }
 
