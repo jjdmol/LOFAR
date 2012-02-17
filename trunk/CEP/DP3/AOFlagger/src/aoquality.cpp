@@ -430,10 +430,10 @@ void actionHistogram(const std::string &filename, const std::string &query)
 {
 	HistogramTablesFormatter histogramFormatter(filename);
 	const unsigned polarizationCount = MeasurementSet::GetPolarizationCount(filename);
-	HistogramCollection collection(polarizationCount);
-	collection.Load(histogramFormatter);
 	if(query == "rfislope")
 	{
+		HistogramCollection collection(polarizationCount);
+		collection.Load(histogramFormatter);
 		MeasurementSet set(filename);
 		std::cout << set.GetBandInfo(0).CenterFrequencyHz();
 		for(unsigned p=0;p<polarizationCount;++p)
@@ -447,8 +447,25 @@ void actionHistogram(const std::string &filename, const std::string &query)
 	{
 		HistogramCollection collection;
 		actionCollectHistogram(filename, collection);
-		// Now, output (per polarization?) per baseline:
-		//   antenna1, antenna2, baselinelength, rfislope
+		MeasurementSet set(filename);
+		size_t antennaCount = set.AntennaCount();
+		AntennaInfo antennae[antennaCount];
+		for(size_t a=0;a<antennaCount;++a)
+			antennae[a] = set.GetAntennaInfo(a);
+		
+		for(unsigned p=0;p<polarizationCount;++p)
+		{
+			const std::map<HistogramCollection::AntennaPair, LogHistogram*> &histogramMap = collection.GetRFIHistogram(p);
+			for(std::map<HistogramCollection::AntennaPair, LogHistogram*>::const_iterator i=histogramMap.begin(); i!=histogramMap.end();++i)
+			{
+				const unsigned a1 = i->first.first, a2 = i->first.second;
+				Baseline baseline(antennae[a1], antennae[a2]);
+				double length = baseline.Distance();
+				const LogHistogram &histogram = *i->second;
+				double slope = histogram.NormalizedSlopeInRFIRegion();
+				std::cout << p << '\t' << a1 << '\t' << a2 << '\t' << length << '\t' << slope << '\n';
+			}
+		}
 	}
 }
 
