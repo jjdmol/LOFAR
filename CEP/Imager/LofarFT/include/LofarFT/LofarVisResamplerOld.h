@@ -1,4 +1,4 @@
-//# LofarVisResampler.h: Convolutional AW resampler for LOFAR data
+//# LofarVisResamplerOld.h: Convolutional AW resampler for LOFAR data
 //# Copyright (C) 2011
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -25,15 +25,13 @@
 //#
 //# $Id$
 
-#ifndef LOFARFT_LOFARVISRESAMPLER_H
-#define LOFARFT_LOFARVISRESAMPLER_H
+#ifndef LOFARFT_LOFARVISRESAMPLEROLD_H
+#define LOFARFT_LOFARVISRESAMPLEROLD_H
 
 #include <synthesis/MeasurementComponents/AWVisResampler.h>
 #include <LofarFT/LofarCFStore.h>
 #include <LofarFT/LofarVBStore.h>
 //added
-#include <LofarFT/LofarATerm.h>
-#include <LofarFT/LofarWTerm.h>
 #include <LofarFT/LofarCFStore.h>
 
 #include <casa/Logging/LogIO.h>
@@ -83,17 +81,17 @@ using namespace casa;
 
 namespace LOFAR { //# NAMESPACE CASA - BEGIN
 
-  class LofarVisResampler: public AWVisResampler
+  class LofarVisResamplerOld: public AWVisResampler
   {
   public:
-    LofarVisResampler(): AWVisResampler()  {}
-    LofarVisResampler(const CFStore& cfs): AWVisResampler(cfs)      {}
-    virtual ~LofarVisResampler()                                    {}
+    LofarVisResamplerOld(): AWVisResampler()  {}
+    LofarVisResamplerOld(const CFStore& cfs): AWVisResampler(cfs)      {}
+    virtual ~LofarVisResamplerOld()                                    {}
 
     virtual VisibilityResamplerBase* clone()
-    {return new LofarVisResampler(*this);}
+    {return new LofarVisResamplerOld(*this);}
 
-    void copy(const LofarVisResampler& other)
+    void copy(const LofarVisResamplerOld& other)
     {AWVisResampler::copy(other); }
 
     // Re-sample the griddedData on the VisBuffer (a.k.a gridding).
@@ -109,20 +107,6 @@ namespace LOFAR { //# NAMESPACE CASA - BEGIN
                           Matrix<Double>& sumwt,
                           const Bool& dopsf, LofarCFStore& cfs)
     {DataToGridImpl_p(griddedData, vbs, rows, rbeg, rend, sumwt,dopsf,cfs);}
-
-    void lofarDataToGrid_linear (Array<Complex>& griddedData, LofarVBStore& vbs,
-                          const Vector<uInt>& rows,
-                          Int rbeg, Int rend,
-                          Matrix<Double>& sumwt,
-                          const Bool& dopsf, LofarCFStore& cfs)
-    {DataToGridImpl_linear_p(griddedData, vbs, rows, rbeg, rend, sumwt,dopsf,cfs);}
-    void lofarDataToGrid_linear (Array<DComplex>& griddedData, LofarVBStore& vbs,
-                          const Vector<uInt>& rows,
-                          Int rbeg, Int rend,
-                          Matrix<Double>& sumwt,
-                          const Bool& dopsf, LofarCFStore& cfs)
-    {DataToGridImpl_linear_p(griddedData, vbs, rows, rbeg, rend, sumwt,dopsf,cfs);}
-
 
     void lofarGridToData(LofarVBStore& vbs,
                          const Array<Complex>& grid,
@@ -175,13 +159,6 @@ namespace LOFAR { //# NAMESPACE CASA - BEGIN
     //
     template <class T>
     void DataToGridImpl_p(Array<T>& griddedData, LofarVBStore& vb,
-                          const Vector<uInt>& rows,
-                          Int rbeg, Int rend,
-			  Matrix<Double>& sumwt,const Bool& dopsf,
-                          LofarCFStore& cfs);
-
-    template <class T>
-    void DataToGridImpl_linear_p(Array<T>& griddedData, LofarVBStore& vb,
                           const Vector<uInt>& rows,
                           Int rbeg, Int rend,
 			  Matrix<Double>& sumwt,const Bool& dopsf,

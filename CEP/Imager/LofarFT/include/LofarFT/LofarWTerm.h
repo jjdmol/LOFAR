@@ -71,11 +71,11 @@ namespace LOFAR {
       if (m_scale == 0.0) {
         return 0;
       }
-
       w = abs(w);
       uint estimate = floor(sqrt(w / m_scale));
       return w > upper(estimate) ? estimate + 1 : estimate;
     }
+
 
   private:
     //# Data members.

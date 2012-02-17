@@ -221,7 +221,6 @@ const JonesMatrix::View StationBeamFormer::evaluateImpl(const Grid &grid,
     Matrix E[2][2];
     Matrix AF(makedcomplex(0.0, 0.0), nFreq, nTime);
 
-    size_t countX = 0, countY = 0;
     for(size_t i = 0; i < itsStation->nField(); ++i)
     {
         AntennaField::ConstPtr field = itsStation->field(i);
@@ -285,13 +284,11 @@ const JonesMatrix::View StationBeamFormer::evaluateImpl(const Grid &grid,
             if(!element.flag[0])
             {
                 AFX += AF;
-                ++countX;
             }
 
             if(!element.flag[1])
             {
                 AFY += AF;
-                ++countY;
             }
         }
 
@@ -319,16 +316,13 @@ const JonesMatrix::View StationBeamFormer::evaluateImpl(const Grid &grid,
     }
 
     // Normalize.
-    if(countX > 0)
+    const size_t nActiveElement = itsStation->nActiveElement();
+    if(nActiveElement > 0)
     {
-        E[0][0] /= countX;
-        E[0][1] /= countX;
-    }
-
-    if(countY > 0)
-    {
-        E[1][0] /= countY;
-        E[1][1] /= countY;
+        E[0][0] /= nActiveElement;
+        E[0][1] /= nActiveElement;
+        E[1][0] /= nActiveElement;
+        E[1][1] /= nActiveElement;
     }
 
     return JonesMatrix::View(E[0][0], E[0][1], E[1][0], E[1][1]);
