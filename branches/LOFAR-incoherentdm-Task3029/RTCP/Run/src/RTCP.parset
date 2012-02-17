@@ -95,12 +95,12 @@ OLAP.Correlator.integrationTime = 1.0
 
 OLAP.CNProc_CoherentStokes.subbandsPerFile = 244
 OLAP.CNProc_CoherentStokes.which = I                  # I or IQUV or XXYY
-OLAP.CNProc_CoherentStokes.timeIntegrationSteps = 1   # time integration
+OLAP.CNProc_CoherentStokes.timeIntegrationFactor = 1   # time integration
 OLAP.CNProc_CoherentStokes.channelsPerSubband = 0     # 0 = same as observation
 
 OLAP.CNProc_IncoherentStokes.subbandsPerFile = 244
 OLAP.CNProc_IncoherentStokes.which = I                # I or IQUV or XXYY
-OLAP.CNProc_IncoherentStokes.timeIntegrationSteps = 1 # time integration
+OLAP.CNProc_IncoherentStokes.timeIntegrationFactor = 1 # time integration
 OLAP.CNProc_IncoherentStokes.channelsPerSubband = 0   # 0 = same as observation
 
 # ----- Beam forming
