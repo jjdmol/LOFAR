@@ -32,6 +32,7 @@
 
 #include <AOFlagger/gui/plot/plot2d.h>
 #include <AOFlagger/gui/plot/plotwidget.h>
+#include <gtkmm/textview.h>
 
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
@@ -63,9 +64,11 @@ class HistogramPage : public Gtk::HBox {
 		void updatePlot();
 		void plotPolarization(class HistogramCollection &histograms, unsigned p);
 		void plotFit(class LogHistogram &histogram, const std::string &title);
+		void plotSlope(class LogHistogram &histogram, const std::string &title);
 		void onPlotPropertiesClicked();
 		void onDataExportClicked();
 		void readFromFile();
+		void updateSlopeFrame();
 		void updateDataWindow();
 		
 		void onAutoRangeClicked()
@@ -97,6 +100,11 @@ class HistogramPage : public Gtk::HBox {
 		Gtk::RadioButton _nsButton, _dndsButton;
 		
 		Gtk::Button _plotPropertiesButton, _dataExportButton;
+		
+		Gtk::Frame _slopeFrame;
+		Gtk::VBox _slopeBox;
+		Gtk::TextView _slopeTextView;
+		Gtk::CheckButton _drawSlope;
 		
 		std::string _statFilename;
 		Plot2D _plot;
