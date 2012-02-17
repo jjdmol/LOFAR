@@ -66,9 +66,14 @@ Delays::Delays(const Parset &parset, const string &stationName, const TimeStamp 
   itsNrSamplesPerSec(parset.nrSubbandSamples()),
   itsSampleDuration(parset.sampleDuration()),
   itsStationName(stationName),
-  itsDelayTimer("delay producer", true, true),
-  itsThread(this, &Delays::mainLoop, "[DelayCompensation] ")
+  itsDelayTimer("delay producer", true, true)
 {
+}
+
+
+void Delays::start()
+{
+  itsThread = new Thread(this, &Delays::mainLoop, "[DelayCompensation] ");
 }
 
 

@@ -86,8 +86,11 @@ OutputSection::OutputSection(const Parset &parset,
     for (unsigned i = 0; i < itsNrStreams; i ++)
       itsSums.push_back(newStreamableData(parset, outputType, itsFirstStreamNr + i, hugeMemoryAllocator));
 
-  for (unsigned i = 0; i < itsNrStreams; i ++)
+  for (unsigned i = 0; i < itsNrStreams; i ++) {
     itsOutputThreads.push_back(new OutputThread(parset, outputType, itsFirstStreamNr + i, itsAdders[i]));
+
+    itsOutputThreads[i]->start();
+  }  
 
   LOG_DEBUG_STR(itsLogPrefix << "] Creating streams between compute nodes and OutputSection...");
 
@@ -170,12 +173,12 @@ OutputSection::~OutputSection()
   timeout.tv_nsec = 0;
 
   for (unsigned i = 0; i < itsOutputThreads.size(); i ++) {
-    if (itsIsRealTime && !itsOutputThreads[i]->itsThread.wait(timeout)) {
+    if (itsIsRealTime && !itsOutputThreads[i]->itsThread->wait(timeout)) {
       LOG_WARN_STR(itsLogPrefix << str(boost::format(" stream %3u adder %3u] ") % (itsFirstStreamNr + i) % itsAdders[i]) << "cancelling output thread");
-      itsOutputThreads[i]->itsThread.cancel();
+      itsOutputThreads[i]->itsThread->cancel();
     }
 
-    itsOutputThreads[i]->itsThread.wait();
+    itsOutputThreads[i]->itsThread->wait();
 
     if (itsOutputThreads[i]->itsSendQueue.size() > 0)
       itsDroppedCount[i] += itsOutputThreads[i]->itsSendQueue.size() - 1; // // the final null pointer does not count
