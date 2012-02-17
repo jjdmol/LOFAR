@@ -32,7 +32,9 @@
 */
 class Plot2DPointSet{
 	public:
-		Plot2DPointSet() { }
+		Plot2DPointSet() :
+			_rotateUnits(false)
+		{ }
 		~Plot2DPointSet() { }
 		
 		enum DrawingStyle { DrawLines, DrawPoints, DrawColumns };
@@ -108,11 +110,48 @@ class Plot2DPointSet{
 		{
 			std::sort(_points.begin(), _points.end());
 		}
-		double XRangeMin() const { return _points.begin()->x; }
-		double XRangeMax() const { return _points.rbegin()->x; }
-		double YRangeMin() const { return MinY(); }
-		double YRangeMax() const { return MaxY(); }
-
+		double XRangeMin() const
+		{
+			if(_points.empty())
+				return 0.0;
+			else
+				return _points.begin()->x;
+		}
+		double XRangeMax() const
+		{
+			if(_points.empty())
+				return 1.0;
+			else
+				return _points.rbegin()->x;
+		}
+		double YRangeMin() const
+		{
+			return MinY();
+		}
+		double YRangeMax() const
+		{
+			return MaxY();
+		}
+		void SetTickLabels(const std::vector<std::string> &tickLabels)
+		{
+			_tickLabels = tickLabels;
+		}
+		bool HasTickLabels() const
+		{
+			return !_tickLabels.empty();
+		}
+		const std::vector<std::string> &TickLabels() const
+		{
+			return _tickLabels;
+		}
+		void SetRotateUnits(bool rotateUnits)
+		{
+			_rotateUnits = rotateUnits;
+		}
+		bool RotateUnits() const
+		{
+			return _rotateUnits;
+		}
 	private:
 		struct Point2D
 		{
@@ -129,6 +168,8 @@ class Plot2DPointSet{
 		std::string _xUnits;
 		std::string _yUnits;
 		bool _xIsTime;
+		std::vector<std::string> _tickLabels;
+		bool _rotateUnits;
 		enum DrawingStyle _drawingStyle;
 };
 

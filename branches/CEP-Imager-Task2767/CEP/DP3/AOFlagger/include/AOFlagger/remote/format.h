@@ -33,12 +33,44 @@ enum BlockId
 	InitialId = 0x414F , // letters 'AO'
 	InitialResponseId = 2,
 	RequestId = 3,
-	ReadQualityTablesResponseHeaderId = 10
+	GenericReadResponseHeaderId = 10
 };
 
-enum ErrorCodes { NoError = 0, UnexpectedExceptionOccured=1, ProtocolNotUnderstoodError = 10 } ;
+enum ErrorCode {
+	NoError = 0,
+	UnexpectedExceptionOccured = 1,
+	ProtocolNotUnderstoodError = 10,
+	CouldNotOpenMeasurementSetError = 20,
+	CouldNotOpenTableError = 21
+} ;
 
-enum RequestType { StopClientRequest = 0, ReadQualityTablesRequest = 1 };
+struct ErrorStr
+{
+	static std::string GetStr(enum ErrorCode errorCode)
+	{
+		switch(errorCode)
+		{
+			case NoError: return "No error";
+				break;
+			case UnexpectedExceptionOccured: return "Unexpected exception occured";
+				break;
+			case ProtocolNotUnderstoodError: return "Protocol not understood";
+				break;
+			case CouldNotOpenMeasurementSetError: return "Could not open measurement set";
+				break;
+			case CouldNotOpenTableError: return "Could not open requested table";
+				break;
+			default: return "Unknown error code";
+				break;
+		}
+	}
+	static std::string GetStr(int16_t errorCode)
+	{
+		return GetStr((enum ErrorCode) errorCode);
+	}
+};
+
+enum RequestType { StopClientRequest = 0, ReadQualityTablesRequest = 1, ReadAntennaTablesRequest = 2 };
 
 struct InitialBlock
 {
@@ -63,7 +95,7 @@ struct RequestBlock
 	int16_t request;
 	int16_t dataSize;
 };
-struct ReadQualityTablesResponseHeader
+struct GenericReadResponseHeader
 {
 	int16_t blockSize;
 	int16_t blockIdentifier;
@@ -75,6 +107,12 @@ struct ReadQualityTablesResponseHeader
 #define READ_QTABLES_OPTION_SAVE_COLLECTED       0x0002
 
 struct ReadQualityTablesRequestOptions
+{
+	int32_t flags;
+	std::string msFilename;
+};
+
+struct ReadAntennaTablesRequestOptions
 {
 	int32_t flags;
 	std::string msFilename;

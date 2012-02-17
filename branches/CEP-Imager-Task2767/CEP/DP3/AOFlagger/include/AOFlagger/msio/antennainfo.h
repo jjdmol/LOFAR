@@ -28,10 +28,12 @@
 
 #include "types.h"
 
+#include <AOFlagger/util/serializable.h>
+
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
 */
-struct EarthPosition {
+struct EarthPosition : public Serializable {
 	num_t x, y, z;
 	std::string ToString() {
 		std::stringstream s;
@@ -42,6 +44,20 @@ struct EarthPosition {
 		return s.str();
 	}
 	EarthPosition FromITRS(long double x, long double y, long double z);
+
+	virtual void Serialize(std::ostream &stream) const
+	{
+		SerializeToDouble(stream, x);
+		SerializeToDouble(stream, y);
+		SerializeToDouble(stream, z);
+	}
+	
+	virtual void Unserialize(std::istream &stream)
+	{
+		x = UnserializeDouble(stream);
+		y = UnserializeDouble(stream);
+		z = UnserializeDouble(stream);
+	}
 };
 
 struct UVW {
@@ -50,7 +66,7 @@ struct UVW {
 	num_t u, v, w;
 };
 
-struct AntennaInfo {
+struct AntennaInfo : public Serializable {
 	AntennaInfo() { }
 	AntennaInfo(const AntennaInfo &source)
 		: id(source.id), position(source.position), name(source.name), diameter(source.diameter), mount(source.mount), station(source.station)
@@ -71,6 +87,26 @@ struct AntennaInfo {
 	double diameter;
 	std::string mount;
 	std::string station;
+	
+	virtual void Serialize(std::ostream &stream) const
+	{
+		SerializeToUInt32(stream, id);
+		position.Serialize(stream);
+		SerializeToString(stream, name);
+		SerializeToDouble(stream, diameter);
+		SerializeToString(stream, mount);
+		SerializeToString(stream, station);
+	}
+	
+	virtual void Unserialize(std::istream &stream)
+	{
+		id = UnserializeUInt32(stream);
+		position.Unserialize(stream);
+		UnserializeString(stream, name);
+		diameter = UnserializeDouble(stream);
+		UnserializeString(stream, mount);
+		UnserializeString(stream, station);
+	}
 };
 
 struct ChannelInfo {

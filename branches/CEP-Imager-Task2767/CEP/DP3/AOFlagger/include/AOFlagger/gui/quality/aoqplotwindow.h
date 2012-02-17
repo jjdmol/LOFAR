@@ -20,7 +20,9 @@
 #ifndef AOQPLOT_WINDOW_H
 #define AOQPLOT_WINDOW_H
 
+#include <gtkmm/box.h>
 #include <gtkmm/notebook.h>
+#include <gtkmm/statusbar.h>
 #include <gtkmm/window.h>
 
 #include <AOFlagger/gui/imagewidget.h>
@@ -32,7 +34,10 @@
 #include "blengthplotpage.h"
 #include "frequencyplotpage.h"
 #include "summarypage.h"
+#include "timefrequencyplotpage.h"
 #include "timeplotpage.h"
+
+#include <AOFlagger/msio/antennainfo.h>
 
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
@@ -50,11 +55,16 @@ class AOQPlotWindow : public Gtk::Window {
 	private:
 		void close();
 		void readStatistics();
+		void onStatusChange(const std::string &newStatus);
 		
+		Gtk::VBox _vBox;
 		Gtk::Notebook _notebook;
+		Gtk::Statusbar _statusBar;
+		
 		BaselinePlotPage _baselinePlotPage;
 		AntennaePlotPage _antennaePlotPage;
 		BLengthPlotPage  _bLengthPlotPage;
+		TimeFrequencyPlotPage _timeFrequencyPlotPage;
 		TimePlotPage _timePlotPage;
 		FrequencyPlotPage _frequencyPlotPage;
 		SummaryPage _summaryPage;
@@ -62,6 +72,8 @@ class AOQPlotWindow : public Gtk::Window {
 		bool _isOpen;
 		std::string _filename;
 		class StatisticsCollection *_statCollection;
+		class StatisticsCollection *_fullStats;
+		std::vector<class AntennaInfo> _antennas;
 };
 
 #endif

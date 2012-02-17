@@ -158,15 +158,13 @@ namespace LOFAR {
         itsAntMB.push_back (MBaseline (MVBaseline(mvpos), MBaseline::ITRF));
       }
       // Read the phase reference position from the FIELD subtable.
-      // Only use the first value from the PHASE_DIR array in J2000.
+      // Only use the first value from the PHASE_DIR array.
       Table fldtab (itsParent->table().keywordSet().asTable ("FIELD"));
       AlwaysAssert (fldtab.nrow() == 1, AipsError);
       ROArrayMeasColumn<MDirection> fldcol (fldtab, "PHASE_DIR");
-      itsPhaseDir = MDirection::Convert (*(fldcol(0).data()),
-                                         MDirection::J2000)();
+      itsPhaseDir = fldcol(0).data()[0];
       // Create a reference frame. Use the middle antenna as array position.
       itsFrame.set (arrayPos);
-      itsFrame.set (itsPhaseDir);
       // Initialize the rest which is used to cache the UVW per antenna.
       // The cache is only useful if the MS is accessed in time order, but that
       // is normally the case.
@@ -196,6 +194,10 @@ namespace LOFAR {
         itsLastBlNr  = blnr;
         Quantum<Double> tm(itsParent->time(blnr), "s");
         itsFrame.set (MEpoch(MVEpoch(tm.get("d").getValue()), MEpoch::UTC));
+        itsJ2000Dir = MDirection::Convert (itsPhaseDir,
+                                           MDirection::Ref(MDirection::J2000,
+                                                           itsFrame))();
+        itsFrame.set (itsJ2000Dir);
         itsUvwFilled = false;
       }
       // Calculate the UVWs for this timestamp if not done yet.
@@ -206,7 +208,7 @@ namespace LOFAR {
           mbl.getRefPtr()->set(itsFrame);       // attach frame
           MBaseline::Convert mcvt(mbl, MBaseline::J2000);
           MVBaseline bas = mcvt().getValue();
-          MVuvw jvguvw(bas, itsPhaseDir.getValue());
+          MVuvw jvguvw(bas, itsJ2000Dir.getValue());
           itsAntUvw[ant] = Muvw(jvguvw, Muvw::J2000).getValue().getVector();
           itsUvwFilled[ant] = true;
         }

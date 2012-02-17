@@ -21,6 +21,7 @@
 #include <iostream>
 
 #include <tables/Tables/SetupNewTab.h>
+#include <tables/Tables/TableCopy.h>
 
 #include <AOFlagger/msio/measurementset.h>
 
@@ -28,6 +29,9 @@
 #include <AOFlagger/quality/qualitytablesformatter.h>
 #include <AOFlagger/quality/statisticscollection.h>
 #include <AOFlagger/quality/statisticsderivator.h>
+
+#include <AOFlagger/remote/clusteredobservation.h>
+#include <AOFlagger/remote/processcommander.h>
 
 void reportProgress(unsigned step, unsigned totalSteps)
 {
@@ -41,7 +45,7 @@ void reportProgress(unsigned step, unsigned totalSteps)
 	}
 }
 
-void actionCollect(const std::string &filename, bool useCorrectedData)
+void actionCollect(const std::string &filename, bool collectAll)
 {
 	MeasurementSet *ms = new MeasurementSet(filename);
 	const unsigned polarizationCount = ms->GetPolarizationCount();
@@ -73,7 +77,7 @@ void actionCollect(const std::string &filename, bool useCorrectedData)
 		collection.InitializeBand(b, frequencies[b], bands[b].channelCount);
 	}
 
-	const char *dataColumnName = useCorrectedData ? "CORRECTED_DATA" : "DATA";
+	const char *dataColumnName = "DATA";
 	casa::ROArrayColumn<casa::Complex> dataColumn(table, dataColumnName);
 	casa::ROArrayColumn<bool> flagColumn(table, "FLAG");
 	casa::ROScalarColumn<double> timeColumn(table, "TIME");
@@ -281,18 +285,47 @@ void actionCombine(const std::string outFilename, const std::vector<std::string>
 {
 	if(!inFilenames.empty())
 	{
-		casa::Table templateSet(*inFilenames.begin());
-		casa::Table templateAntennaTable = templateSet.keywordSet().asTable("ANTENNA");
+		const std::string &firstInFilename = *inFilenames.begin();
+		bool remote = aoRemote::ClusteredObservation::IsClusteredFilename(firstInFilename);
 		
-		casa::SetupNewTable mainTableSetup(outFilename, templateSet.tableDesc(), casa::Table::New);
-		casa::Table mainOutputTable(mainTableSetup);
+		if(remote && inFilenames.size() != 1)
+			throw std::runtime_error("Can only open one remote observation file at a time");
 		
-		casa::SetupNewTable antennaTableSetup(outFilename + "/ANTENNA", templateAntennaTable.tableDesc(), casa::Table::New);
-		casa::Table antennaOutputTable(antennaTableSetup);
-		mainOutputTable.rwKeywordSet().defineTable("ANTENNA", antennaOutputTable);
+		if(!casa::Table::isReadable(outFilename))
+		{
+			if(remote)
+			{
+				throw std::runtime_error("Can't yet create a new set with clustered observations -- make output filename yourself");
+			}
+			casa::Table templateSet(firstInFilename);
+			casa::Table templateAntennaTable = templateSet.keywordSet().asTable("ANTENNA");
+			
+			casa::SetupNewTable mainTableSetup(outFilename, templateSet.tableDesc(), casa::Table::New);
+			casa::Table mainOutputTable(mainTableSetup);
+			
+			casa::SetupNewTable antennaTableSetup(outFilename + "/ANTENNA", templateAntennaTable.tableDesc(), casa::Table::New);
+			casa::Table antennaOutputTable(antennaTableSetup);
+			mainOutputTable.rwKeywordSet().defineTable("ANTENNA", antennaOutputTable);
+			
+			casa::TableCopy::copyRows(antennaOutputTable, templateAntennaTable);
+		}
 		
-		//antennaOutputTable.
+		if(remote)
+		{
+			aoRemote::ClusteredObservation *observation = aoRemote::ClusteredObservation::Load(firstInFilename);
+			aoRemote::ProcessCommander commander(*observation);
+			commander.Run();
+			QualityTablesFormatter formatter(outFilename);
+			commander.Statistics().Save(formatter);
+			delete observation;
+		}
 	}
+}
+
+void actionRemove(const std::string &filename)
+{
+	QualityTablesFormatter formatter(filename);
+	formatter.RemoveAllQualityTables();
 }
 
 void printSyntax(std::ostream &stream, char *argv[])
@@ -306,6 +339,7 @@ void printSyntax(std::ostream &stream, char *argv[])
 		"\\tcombine     - Combine several tables.\n"
 		"\tquery_b     - Query baselines.\n"
 		"\tquery_t     - Query time.\n"
+		"\tremove      - Remove all quality tables.\n"
 		"\tsummarize   - Give a summary of the statistics currently in the quality tables.\n";
 }
 
@@ -332,7 +366,7 @@ int main(int argc, char *argv[])
 				}
 				else if(helpAction == "collect")
 				{
-					std::cout << "Syntax: " << argv[0] << " collect [-c] <ms>\n\n"
+					std::cout << "Syntax: " << argv[0] << " collect [-a] <ms>\n\n"
 						"The collect action will go over a whole measurement set and \n"
 						"collect the default statistics. It will write the results in the \n"
 						"quality subtables of the main measurement set.\n\n"
@@ -363,7 +397,12 @@ int main(int argc, char *argv[])
 					std::cout << "Syntax: " << argv[0] << " combine <target_ms> [<in_ms> [<in_ms> ..]]\n\n"
 						"This will read all given input measurement sets, combine the statistics and \n"
 						"write the results to a target measurement set. The target measurement set should\n"
-						"not exist beforehand.";
+						"not exist beforehand.\n";
+				}
+				else if(helpAction == "remove")
+				{
+					std::cout << "Syntax: " << argv[0] << " remove [ms]\n\n"
+						"This will completely remove all quality tables from the measurement set.\n";
 				}
 				else
 				{
@@ -374,7 +413,7 @@ int main(int argc, char *argv[])
 		}
 		else if(action == "collect")
 		{
-			if(argc != 3 && !(argc == 4 && std::string(argv[2]) == "-c") )
+			if(argc != 3 && !(argc == 4 && std::string(argv[2]) == "-a") )
 			{
 				std::cerr << "collect actions needs one or two parameters (the measurement set)\n";
 				return -1;
@@ -430,6 +469,18 @@ int main(int argc, char *argv[])
 			}
 			else {
 				actionQueryTime(argv[2], argv[3]);
+				return 0;
+			}
+		}
+		else if(action == "remove")
+		{
+			if(argc != 3)
+			{
+				std::cerr << "Syntax for removing quality tables: 'aoquality remove <MS>'\n";
+				return -1;
+			}
+			else {
+				actionRemove(argv[2]);
 				return 0;
 			}
 		}

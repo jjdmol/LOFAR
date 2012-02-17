@@ -58,12 +58,20 @@ class ClusteredObservation
 	public:
 		ClusteredObservation();
 		
+		static bool IsClusteredFilename(const std::string &filename)
+		{
+			return IsVdsFilename(filename) || IsRefFilename(filename);
+		}
+		
+		static bool IsVdsFilename(const std::string &filename);
+		
+		static bool IsRefFilename(const std::string &filename);
+		
+		static ClusteredObservation *Load(const std::string &filename);
+		
 		static ClusteredObservation *LoadFromVds(const std::string &vdsFilename);
 		
-		static ClusteredObservation *LoadFromRef(const std::string &refFilename)
-		{
-			return 0;
-		}
+		static ClusteredObservation *LoadFromRef(const std::string &refFilename);
 		
 		void AddItem(const ClusteredObservationItem &item)
 		{
@@ -75,7 +83,11 @@ class ClusteredObservation
 			return _items;
 		}
 		
+		static bool IsRemoteModuleEnabled();
+		
 	private:
+		static void throwIfNotEnabled();
+		
 		std::vector<ClusteredObservationItem> _items;
 };
 

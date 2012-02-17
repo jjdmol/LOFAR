@@ -21,7 +21,14 @@
 #ifndef AOREMOTE__REMOTE_PROCESS_H
 #define AOREMOTE__REMOTE_PROCESS_H
 
+#include <sys/types.h>
+#include <sys/wait.h>
+
+#include <unistd.h>
+
 #include <sstream>
+#include <iostream>
+#include <stdexcept>
 
 #include <boost/thread/thread.hpp>
 
@@ -63,9 +70,23 @@ class RemoteProcess
 			{
 				std::ostringstream commandLine;
 				commandLine
-					<< "ssh " << _remoteProcess._clientHostName << " -C \"aoremoteserver connect "
-					<< _remoteProcess._serverHostName << "\"";
-				system(commandLine.str().c_str());
+					<< "ssh " << _remoteProcess._clientHostName << " -x \"bash --login -c \\\"aoremoteclient connect "
+					<< _remoteProcess._serverHostName << "\\\" \"";
+				std::cout << commandLine.str() << std::endl;
+				int pid = vfork();
+				switch (pid) {
+					case -1: // Error
+						throw std::runtime_error("Could not vfork() new process for executing remote client");
+					case 0: // Child
+						execl("/bin/sh", "sh", "-c", commandLine.str().c_str(), NULL);
+						_exit(127);
+				}
+				
+				// Wait for process to terminate
+				int pStatus, pidReturn;
+				do {
+					pidReturn = waitpid(pid, &pStatus, 0);
+				} while (pidReturn == -1 && errno == EINTR);
 			}
 		};
 		

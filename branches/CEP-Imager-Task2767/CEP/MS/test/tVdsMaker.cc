@@ -23,6 +23,7 @@
 //# Includes
 #include <MS/VdsMaker.h>
 #include <ms/MeasurementSets/MSColumns.h>
+#include <ms/MeasurementSets/MSFieldColumns.h>
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/SetupNewTab.h>
 #include <casa/Quanta/MVTime.h>
@@ -43,6 +44,12 @@ int main()
       MeasurementSet ms(newTab);
       ms.createDefaultSubtables(Table::New);
       ms.flush (True);
+      MSField msfield(ms.field());
+      MSFieldColumns fldCols(msfield);
+      fldCols.setDirectionRef (MDirection::SUN);
+      msfield.addRow();
+      Matrix<double> dirs(2,2, 0.);
+      fldCols.referenceDir().put (0, dirs);
       VdsMaker::create (msname, msname+".vds", string());
     }
     {

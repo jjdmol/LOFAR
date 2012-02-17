@@ -21,12 +21,12 @@ endif(COMPILER_SUPPORTS_MARCH_NATIVE)
 
 include(CheckIncludeFileCXX)
 
-FIND_PATH(BOOST_ASIO_H "boost/asio.hpp")
-if(BOOST_ASIO_H)
+FIND_PATH(BOOST_ASIO_H_FOUND "boost/asio.hpp")
+if(BOOST_ASIO_H_FOUND)
   message(STATUS "Boost ASIO library found.")
 else()
   message(STATUS "Boost ASIO library not found, remote access of measurement sets disabled.")
-endif(BOOST_ASIO_H)
+endif(BOOST_ASIO_H_FOUND)
 
 # To enable assembly .s files:
 #enable_language(ASM-ATT)
@@ -172,15 +172,17 @@ set(UTIL_FILES
   util/statwriter.cpp
   util/stopwatch.cpp)
 
-if(BOOST_ASIO_H)
-lofar_add_bin_program(aoremoteclient aoremoteclient.cpp
-  remote/client.cpp
-  remote/clusteredobservation.cpp
-  remote/server.cpp
-  remote/serverconnection.cpp
-  remote/processcommander.cpp
-  quality/qualitytablesformatter.cpp )
-endif(BOOST_ASIO_H)
+if(BOOST_ASIO_H_FOUND AND SIGCXX_FOUND)
+	set(REMOTE_FILES
+		remote/client.cpp
+		remote/server.cpp
+		remote/serverconnection.cpp
+		remote/processcommander.cpp
+		remote/clusteredobservation.cpp)
+else()
+	set(REMOTE_FILES
+		remote/clusteredobservation.cpp)
+endif(BOOST_ASIO_H_FOUND AND SIGCXX_FOUND)
 
 lofar_add_library(rfiengine
   Package__Version.cc
@@ -193,16 +195,24 @@ if(GTKMM_FOUND)
   lofar_add_bin_program(rfigui rfigui.cpp ${GUI_FILES})
   target_link_libraries(rfigui ${GTKMM_LIBRARIES})
   
-  lofar_add_bin_program(aoqplot aoqplot.cpp
-	gui/plot/colorscale.cpp
-	gui/plot/horizontalplotscale.cpp
-	gui/plot/verticalplotscale.cpp
-	gui/plot/plot2d.cpp
-	gui/quality/aoqplotwindow.cpp
-	gui/quality/baselineplotpage.cpp
-	gui/quality/twodimensionalplotpage.cpp
-	gui/imagewidget.cpp)
-  target_link_libraries(aoqplot ${GTKMM_LIBRARIES})
+	if(BOOST_ASIO_H_FOUND AND SIGCXX_FOUND)
+		lofar_add_bin_program(aoqplot aoqplot.cpp
+		${REMOTE_FILES}
+		gui/plot/colorscale.cpp
+		gui/plot/horizontalplotscale.cpp
+		gui/plot/verticalplotscale.cpp
+		gui/plot/plot2d.cpp
+		gui/plot/plotpropertieswindow.cpp
+		gui/quality/aoqplotwindow.cpp
+		gui/quality/baselineplotpage.cpp
+		gui/quality/grayscaleplotpage.cpp
+		gui/quality/timefrequencyplotpage.cpp
+		gui/quality/twodimensionalplotpage.cpp
+		gui/imagewidget.cpp
+		gui/imagepropertieswindow.cpp
+		)
+		target_link_libraries(aoqplot ${GTKMM_LIBRARIES})
+	endif(BOOST_ASIO_H_FOUND AND SIGCXX_FOUND)
 else()
   message(WARNING " The graphical user interface library GTKMM was not found; rfigui and aoqplot will not be compiled.")
 endif(GTKMM_FOUND)
@@ -210,9 +220,17 @@ endif(GTKMM_FOUND)
 lofar_add_bin_program(rficonsole rficonsole.cpp)
 lofar_add_bin_program(rfistrategy rfistrategy.cpp)
 lofar_add_bin_program(rfistatcollect rfistatcollect.cpp)
-lofar_add_bin_program(aoquality aoquality.cpp)
 lofar_add_bin_program(aostats aostats.cpp)
 lofar_add_bin_program(msinfo msinfo.cpp)
 lofar_add_bin_program(ns2bbs ns2bbs.cpp)
 lofar_add_bin_program(colormapper colormapper.cpp)
 lofar_add_bin_program(versionaoflagger versionaoflagger.cc Package__Version.cc)
+
+if(BOOST_ASIO_H_FOUND AND SIGCXX_FOUND)
+  lofar_add_bin_program(aoquality aoquality.cpp ${REMOTE_FILES})
+  target_link_libraries(aoquality ${SIGCXX_LIBRARIES})
+
+	lofar_add_bin_program(aoremoteclient aoremoteclient.cpp
+  ${REMOTE_FILES} )
+  target_link_libraries(aoremoteclient ${SIGCXX_LIBRARIES})
+endif(BOOST_ASIO_H_FOUND AND SIGCXX_FOUND)

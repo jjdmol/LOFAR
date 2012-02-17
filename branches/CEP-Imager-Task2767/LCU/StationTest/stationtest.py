@@ -3,7 +3,7 @@
 #
 # Run the tests to test a LOFAR station
 # H. Meulman
-# Version 0.9                7-sep-2011	SVN*****
+# Version 0.10                22-nov-2011	SVN*****
 
 # 24 sep: local log directory aangepast
 # 27 sept: 	- Toevoeging delay voor tbbdriver polling
@@ -23,13 +23,16 @@
 # 18 mrt 2011: Als alle LBA's niet werken, wordt error gelogd. (average < 4000000)
 # 30 mrt 2011: TBBversion_int.gold aangepast voor internationale stations.
 # 7 sep 2011: Bug removed. On the remote stations LBA mode 1 will now also be tested.
+# added CS028 and CS031
+# 22 nov 2011 TBB versie aanpassen naar 2.39
 
 # todo:
 # - Als meer dan 10 elementen geen rf signaal hebben, keur dan hele tile af
 # - als beamserver weer goed werkt deze weer toevoegen aan LBA test
 # - =='LOCKED' in 160 en 200 MHz clock test over een aantal keren!
-# TBB versie aanpassen naar 2.32
 # Loggen absolute waarden van alle antennes (LBH LBL eb HBA)
+# BIST toevoegen RSP boards
+
 
 
 import sys
@@ -56,7 +59,7 @@ factor = 30	# station statistics fault window: Antenna average + and - factor = 
 
 InternationalStations = ('DE601C','DE602C','DE603C','DE604C','DE605C','FR606C','SE607C','UK608C')
 RemoteStations = ('CS302C','RS106C','RS205C','RS208C','RS306C','RS307C','RS406C','RS503C')
-CoreStations = ('CS001C','CS002C','CS003C','CS004C','CS005C','CS006C','CS007C','CS011C','CS017C','CS021C','CS024C','CS026C','CS030C','CS032C','CS101C','CS103C','CS201C','CS301C','CS401C','CS501C')
+CoreStations = ('CS001C','CS002C','CS003C','CS004C','CS005C','CS006C','CS007C','CS011C','CS013C','CS017C','CS021C','CS024C','CS026C','CS028C','CS030C','CS031','CS032C','CS101C','CS103C','CS201C','CS301C','CS401C','CS501C')
 NoHBAelementtestPossible = ('DE601C','DE602C','DE603C','DE605C','FR606C','SE607C','UK608C')
 HBASubband = dict( 	DE601C=155,\
 			DE602C=155,\
@@ -181,8 +184,8 @@ if debug: print ('RspBrd = %s' % RspBrd)
 vlev = opts.verbosity
 testId = ''
 appLev = False
-logName = '/opt/stationtest/data/SUBR-%05d-%05d.dat' % (opts.rsp_nr, opts.tbb_nr)
-cli.command('rm -f /opt/stationtest/data/SUBR-%05d-%05d.dat', appLev) 
+logName = '/opt/stationtest/data/STAT-%05d-%05d.dat' % (opts.rsp_nr, opts.tbb_nr)
+cli.command('rm -f /opt/stationtest/data/STAT-%05d-%05d.dat', appLev) 
 sr = testlog.Testlog(vlev, testId, logName)
 
 sr.setResult('PASSED')

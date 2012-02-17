@@ -81,18 +81,20 @@ void VdsMaker::getFreqInfo (MS& ms, vector<int>& nrchan,
   }
 }
 
-void VdsMaker::getFields (MS& ms, vector<double>& ra, vector<double>& dec)
+void VdsMaker::getFields (MS& ms, vector<double>& ra, vector<double>& dec,
+                          vector<string>& refType)
 {
   MSField mssub(ms.field());
   ROMSFieldColumns mssubc(mssub);
   int nrf = mssub.nrow();
   ra.resize  (nrf);
   dec.resize (nrf);
+  refType.resize (nrf);
   for (int i=0; i<nrf; ++i) {
-    Array<MDirection> mds = mssubc.delayDirMeasCol().convert
-      (i, MDirection::J2000);
-    ra[i]  = mds.data()->getValue().get()[0];
-    dec[i] = mds.data()->getValue().get()[1];
+    Array<MDirection> mds = mssubc.referenceDirMeasCol()(i);
+    ra[i]  = mds.data()[i].getValue().get()[0];
+    dec[i] = mds.data()[i].getValue().get()[1];
+    refType[i] = mds.data()[i].getRefString();
   }
 }
 
@@ -236,26 +238,31 @@ void VdsMaker::create (const string& msName, const string& outName,
   }
   // Write the field directions (in J2000).
   vector<double> ra, dec;
-  getFields (ms, ra, dec);
+  vector<string> refType;
+  getFields (ms, ra, dec, refType);
   int nrfield = ra.size();
-  ostringstream oss2a, oss2b;
+  ostringstream oss2a, oss2b, oss2c;
   oss2a << '[';
   oss2b << '[';
+  oss2c << '[';
   for (int i=0; i<nrfield; ++i) {
     if (i > 0) {
       oss2a << ',';
       oss2b << ',';
+      oss2c << ',';
     }
     oss2a << MVAngle::Format(MVAngle::TIME, 12)
 	  << MVAngle(Quantity(ra[i], "rad"));
     oss2b << MVAngle::Format(MVAngle::ANGLE, 12)
 	  << MVAngle(Quantity(dec[i], "rad"));
+    oss2c << refType[i];
   }
   oss2a << ']';
   oss2b << ']';
+  oss2c << ']';
   msd.addParm ("FieldDirectionRa",  oss2a.str());
   msd.addParm ("FieldDirectionDec", oss2b.str());
-  msd.addParm ("FieldDirectionType", "J2000");
+  msd.addParm ("FieldDirectionType", oss2c.str());
   // Fill in station names.
   vector<string> antNames;
   getAntNames (ms, antNames);

@@ -10,9 +10,9 @@ Extra.DataCubeShape=[]
 Extra.DataFileIsRegular=0
 Extra.DataFileName=
 Extra.DataTileShape=[]
-Extra.FieldDirectionDec=[]
-Extra.FieldDirectionRa=[]
-Extra.FieldDirectionType=J2000
+Extra.FieldDirectionDec=[+000.00.00.000000]
+Extra.FieldDirectionRa=[00:00:00.000000]
+Extra.FieldDirectionType=[SUN]
 Extra.StationNames=[]
 
 Name       = tVdsMaker_tmp.ms2
@@ -30,7 +30,7 @@ Extra.DataFileName=
 Extra.DataTileShape=[]
 Extra.FieldDirectionDec=[]
 Extra.FieldDirectionRa=[]
-Extra.FieldDirectionType=J2000
+Extra.FieldDirectionType=[]
 Extra.StationNames=[]
 
 combinevds ...
@@ -38,9 +38,9 @@ Name       = tVdsMaker_tmp.ms.gds
 StartTime  = 2011/11/06/23:59:59.500
 EndTime    = 2011/11/07/00:00:00.500
 StepTime   = 1
-Extra.FieldDirectionDec=[]
-Extra.FieldDirectionRa=[]
-Extra.FieldDirectionType=J2000
+Extra.FieldDirectionDec=[+000.00.00.000000]
+Extra.FieldDirectionRa=[00:00:00.000000]
+Extra.FieldDirectionType=[SUN]
 NParts = 2
 Part0.Name       = tVdsMaker_tmp.ms1.vds
 Part0.FileName   = tVdsMaker_tmp.ms1
