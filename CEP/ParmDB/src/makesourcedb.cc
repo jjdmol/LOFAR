@@ -973,10 +973,7 @@ void make (const string& in, const string& out,
   int nrsource    = 0;
   int nrpatchfnd  = 0;
   int nrsourcefnd = 0;
-  if (in.empty()) {
-    process (string(), pdb, sdbf, check, nrpatch, nrsource,
-             nrpatchfnd, nrsourcefnd, searchInfo);
-  } else {
+  if (! in.empty()) {
     ifstream infile(in.c_str());
     ASSERTSTR (infile, "File " << in << " could not be opened");
     casa::Regex regexf("^[ \t]*[fF][oO][rR][mM][aA][tT][ \t]*=.*");
@@ -1015,11 +1012,11 @@ void make (const string& in, const string& out,
        << pdb.getParmDBMeta().getTableName() << endl;
   vector<string> dp(pdb.findDuplicatePatches());
   if (dp.size() > 0) {
-    cout << "Duplicate patches: " << dp << endl;
+    cerr << "Duplicate patches: " << dp << endl;
   }
   vector<string> ds(pdb.findDuplicateSources());
   if (ds.size() > 0) {
-    cout << "Duplicate sources: " << ds << endl;
+    cerr << "Duplicate sources: " << ds << endl;
   }
 }
 
@@ -1030,6 +1027,9 @@ string readFormat (string file, const string& catFile)
   // Use catalog itself if needed.
   if (file.empty()) {
     file = catFile;
+  }
+  if (file.empty()) {
+    return string();
   }
   // Read file until format line is found or until non-comment is found.
   ifstream infile(file.c_str());
@@ -1075,13 +1075,12 @@ int main (int argc, char* argv[])
   try {
     // Get the inputs.
     Input inputs(1);
-    inputs.version ("GvD 2011-Sep-01");
+    inputs.version ("GvD 2011-Feb-17");
     inputs.create("in", "",
                   "Input file name", "string");
     inputs.create("out", "",
                   "Output sourcedb name", "string");
-    inputs.create("format", "Name,Type,Ra,Dec,I,Q,U,V,MajorAxis,"
-                            "MinorAxis,Orientation",
+    inputs.create("format", "",
                   "Format of the input lines or name of file containing format",
                   "string");
     inputs.create("append", "true",
@@ -1125,10 +1124,15 @@ int main (int argc, char* argv[])
       // Read format from file.
       format = readFormat (format.substr(st), in);
     }
+    // Use default if empty format.
+    if (format.empty()) {
+      cerr << "No format string found; using default format" << endl;
+      format = "Name,Type,Ra,Dec,I,Q,U,V,MajorAxis,MinorAxis,Orientation";
+    }
     make (in, out, format, append, check,
           getSearchInfo (center, radius, width));
   } catch (Exception& x) {
-    std::cerr << "Caught LOFAR exception: " << x << std::endl;
+    cerr << "Caught LOFAR exception: " << x << endl;
     return 1;
   }
   
