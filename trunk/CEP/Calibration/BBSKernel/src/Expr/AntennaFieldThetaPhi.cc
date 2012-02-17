@@ -1,9 +1,11 @@
-//# AntennaFieldAzEl.cc: Compute azimuth and elevation in radians relevative to
-//# the antenna field coordinate system (P, Q, R). The input direction as well
-//# as the positive coordinate axes are assumed to be unit vectors expressed in
-//# ITRF. Zero azimuth corresponds to the positive Q axis and positive azimuth
-//# runs from the positive Q axis to the positive P axis. Elevation is the angle
-//# the direction makes with the (P, Q) plane.
+//# AntennaFieldThetaPhi.cc: Compute topocentric (local) theta and phi spherical
+//# coordinates (in radians) relative to the Cartesian antenna field coordinate
+//# system (PQR), for a given target direction. The target direction is assumed
+//# to be an ITRF unit vector in the direction of arrival. The positive
+//# coordinate axes are assumed to be ITRF unit vectors. Zero phi corresponds to
+//# the positive P axis, and positive phi runs from the positive P axis towards
+//# the positive Q axis (roughly East over North). Theta or zenith angle is the
+//# angle the target direction makes with the positive R axis.
 //#
 //# Copyright (C) 2011
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -26,7 +28,7 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <BBSKernel/Expr/AntennaFieldAzEl.h>
+#include <BBSKernel/Expr/AntennaFieldThetaPhi.h>
 #include <casa/BasicSL/Constants.h>
 
 namespace LOFAR
@@ -34,14 +36,14 @@ namespace LOFAR
 namespace BBS
 {
 
-AntennaFieldAzEl::AntennaFieldAzEl(const Expr<Vector<3> >::ConstPtr &direction,
+AntennaFieldThetaPhi::AntennaFieldThetaPhi(const Expr<Vector<3> >::ConstPtr &direction,
     const AntennaField::ConstPtr &field)
     :   BasicUnaryExpr<Vector<3>, Vector<2> >(direction),
         itsField(field)
 {
 }
 
-const Vector<2>::View AntennaFieldAzEl::evaluateImpl(const Grid&,
+const Vector<2>::View AntennaFieldThetaPhi::evaluateImpl(const Grid&,
     const Vector<3>::View &direction) const
 {
     // Check preconditions.
@@ -61,19 +63,27 @@ const Vector<2>::View AntennaFieldAzEl::evaluateImpl(const Grid&,
         + direction(2) * q[2];
 
     // Compute the inner product between the antenna field normal (R) and the
-    // direction vector to get the sine of the elevation (cosine of the zenith
-    // angle).
-    Matrix sinEl = direction(0) * r[0] + direction(1) * r[1]
+    // direction vector to get the cosine of the zenith angle (sine of the
+    // elevation).
+    Matrix projectionR = direction(0) * r[0] + direction(1) * r[1]
         + direction(2) * r[2];
 
-    // Compute azimuth and elevation. Zero azimuth corresponds to the positive Q
-    // axis and positive azimuth runs from the positive Q axis to the positive P
-    // axis. Elevation is computed by taking the arcsine of the angle computed
-    // earlier.
-    Vector<2>::View azel;
-    azel.assign(0, atan2(projectionP, projectionQ));
-    azel.assign(1, asin(sinEl));
-    return azel;
+    // Compute theta and phi. Zero phi corresponds to the positive P axis and
+    // positive phi runs from the positive P axis to the positive Q axis.
+    Vector<2>::View result;
+    result.assign(0, acos(projectionR));
+    result.assign(1, atan2(projectionQ, projectionP));
+
+//    LOG_DEBUG_STR("EP: [" << p[0] << ", " << p[1] << ", " << p[2] << "]");
+//    LOG_DEBUG_STR("EQ: [" << q[0] << ", " << q[1] << ", " << q[2] << "]");
+//    LOG_DEBUG_STR("ER: [" << r[0] << ", " << r[1] << ", " << r[2] << "]");
+//    LOG_DEBUG_STR("X: " << direction(0));
+//    LOG_DEBUG_STR("Y: " << direction(1));
+//    LOG_DEBUG_STR("Z: " << direction(2));
+//    LOG_DEBUG_STR("THETA: " << result(0));
+//    LOG_DEBUG_STR("PHI: " << result(1));
+
+    return result;
 }
 
 } //# namespace BBS
