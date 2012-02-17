@@ -38,7 +38,6 @@
 #include <BBSKernel/VisBuffer.h>
 #include <BBSKernel/Expr/CachePolicy.h>
 #include <BBSKernel/Expr/Expr.h>
-#include <BBSKernel/Expr/HamakerDipole.h>
 #include <BBSKernel/Expr/Scope.h>
 #include <BBSKernel/Expr/Source.h>
 #include <ParmDB/ParmDB.h>
@@ -64,7 +63,7 @@ public:
     MeasurementExprLOFAR(SourceDB &sourceDB,
         const BufferMap &buffers,
         const ModelConfig &config,
-        const Instrument::Ptr &instrument,
+        const Instrument::ConstPtr &instrument,
         const BaselineSeq &baselines,
         double refFreq,
         const casa::MDirection &refPhase,
@@ -105,7 +104,7 @@ private:
     void makeForwardExpr(SourceDB &sourceDB,
         const BufferMap &buffers,
         const ModelConfig &config,
-        const Instrument::Ptr &instrument,
+        const Instrument::ConstPtr &instrument,
         double refFreq,
         const casa::MDirection &refPhase,
         const casa::MDirection &refDelay,

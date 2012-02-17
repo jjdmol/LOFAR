@@ -60,7 +60,7 @@ enum CollectingMode
 	CollectHistograms
 };
 
-void actionCollect(const std::string &filename, enum CollectingMode mode)
+void actionCollect(const std::string &filename, enum CollectingMode mode, StatisticsCollection &statisticsCollection, HistogramCollection &histogramCollection)
 {
 	MeasurementSet *ms = new MeasurementSet(filename);
 	const unsigned polarizationCount = ms->GetPolarizationCount();
@@ -93,19 +93,19 @@ void actionCollect(const std::string &filename, enum CollectingMode mode)
 		std::cout << "Channel zero will be included in the statistics, as it seems that channel 0 is okay.\n";
 	
 	// Initialize statisticscollection
-	StatisticsCollection collection(polarizationCount);
+	statisticsCollection.SetPolarizationCount(polarizationCount);
 	if(mode == CollectDefault)
 	{
 		for(unsigned b=0;b<bandCount;++b)
 		{
 			if(ignoreChannelZero)
-				collection.InitializeBand(b, (frequencies[b]+1), bands[b].channelCount-1);
+				statisticsCollection.InitializeBand(b, (frequencies[b]+1), bands[b].channelCount-1);
 			else
-				collection.InitializeBand(b, frequencies[b], bands[b].channelCount);
+				statisticsCollection.InitializeBand(b, frequencies[b], bands[b].channelCount);
 		}
 	}
 	// Initialize Histograms collection
-	HistogramCollection histogramCollection(polarizationCount);
+	histogramCollection.SetPolarizationCount(polarizationCount);
 
 	// get columns
 	casa::Table table(filename, casa::Table::Update);
@@ -170,7 +170,7 @@ void actionCollect(const std::string &filename, enum CollectingMode mode)
 				case CollectDefault:
 					{
 						const bool origFlags = false;
-						collection.Add(antenna1Index, antenna2Index, time, bandIndex, p, &samples[p]->real(), &samples[p]->imag(), isRFI[p], &origFlags, band.channelCount - startChannel, 2, 1, 0);
+						statisticsCollection.Add(antenna1Index, antenna2Index, time, bandIndex, p, &samples[p]->real(), &samples[p]->imag(), isRFI[p], &origFlags, band.channelCount - startChannel, 2, 1, 0);
 					}
 					break;
 				case CollectHistograms:
@@ -193,6 +193,14 @@ void actionCollect(const std::string &filename, enum CollectingMode mode)
 	delete[] frequencies;
 	delete[] bands;
 	std::cout << "100\n";
+}
+
+void actionCollect(const std::string &filename, enum CollectingMode mode)
+{
+	StatisticsCollection statisticsCollection;
+	HistogramCollection histogramCollection;
+	
+	actionCollect(filename, mode, statisticsCollection, histogramCollection);
 	
 	switch(mode)
 	{
@@ -201,7 +209,7 @@ void actionCollect(const std::string &filename, enum CollectingMode mode)
 				std::cout << "Writing quality tables..." << std::endl;
 				
 				QualityTablesFormatter qualityData(filename);
-				collection.Save(qualityData);
+				statisticsCollection.Save(qualityData);
 			}
 			break;
 		case CollectHistograms:
@@ -212,74 +220,15 @@ void actionCollect(const std::string &filename, enum CollectingMode mode)
 				histogramCollection.Save(histograms);
 			}
 			break;
-			
-		/*const std::map<HistogramCollection::AntennaPair, LogHistogram*> &map = histogramCollection.GetHistograms(0);
-		Plot plotSlopes("histogram-slopes.pdf");
-		plotSlopes.SetYRange(-10.0, 10.0);
-		Plot plotHistograms("histograms.pdf");
-		for(std::map<HistogramCollection::AntennaPair, LogHistogram*>::const_iterator i = map.begin(); i != map.end(); ++i)
-		{
-			if(i->first.first != i->first.second)
-			{
-				const LogHistogram *histogram = i->second;
-				double rangeCentre = histogram->MinPositiveAmplitude();
-				rangeCentre = exp2(floor(log2(rangeCentre)));
-				const double maxAmplitude = histogram->MaxAmplitude();
-				std::cout << "Antennae " << i->first.first << " x " << i->first.second << "\n";
-				std::stringstream s;
-				s << i->first.first << " x " << i->first.second;
-				//plotSlopes.StartLine(s.str());
-				//plotHistograms.StartLine(s.str());
-				plotSlopes.StartLine();
-				plotSlopes.SetLogScale(true, false);
-				plotHistograms.StartLine();
-				plotHistograms.SetLogScale(true, true);
-				while(rangeCentre < maxAmplitude && rangeCentre > 0.0)
-				{
-					const double rangeStart = rangeCentre * 0.75;
-					const double rangeEnd = rangeCentre * 1.5;
-					const double slope = histogram->NormalizedSlope(rangeStart, rangeEnd, LogHistogram::TotalAmplitudeHistogram);
-					std::cout << rangeStart << "-" << rangeEnd << ": " << slope << "\n";
-					rangeCentre *= 2.0;
-					plotSlopes.PushDataPoint(rangeCentre, slope);
-					const double count = histogram->NormalizedCount(rangeStart, rangeEnd, LogHistogram::TotalAmplitudeHistogram);
-					if(count > 0 && std::isfinite(count))
-						plotHistograms.PushDataPoint(rangeCentre, count);
-				}
-			}
-		}
-		Plot plotFine("histogram-fine.pdf");
-		Plot plotGlobalSlopes("histogram-gslopes.pdf");
-		plotFine.SetLogScale(true, true);
-		plotGlobalSlopes.SetLogScale(true, false);
-		plotGlobalSlopes.SetYRange(-5.0, 5.0);
-		LogHistogram intHistogram;
-		histogramCollection.GetHistogramForCrossCorrelations(0, intHistogram);
-		
-		plotFine.StartLine("Total");
-		plotGlobalSlopes.StartLine("Total");
-		for(LogHistogram::iterator i=intHistogram.begin(); i!=intHistogram.end(); ++i)
-		{
-			plotFine.PushDataPoint(i.value(), i.normalizedCount(LogHistogram::TotalAmplitudeHistogram));
-			plotGlobalSlopes.PushDataPoint(i.value(), intHistogram.NormalizedSlope(i.value()*0.5, i.value()*2.0, LogHistogram::TotalAmplitudeHistogram));
-		}
-		plotFine.StartLine("RFI");
-		plotGlobalSlopes.StartLine("RFI");
-		for(LogHistogram::iterator i=intHistogram.begin(); i!=intHistogram.end(); ++i)
-		{
-			plotFine.PushDataPoint(i.value(), i.normalizedCount(LogHistogram::RFIAmplitudeHistogram));
-			plotGlobalSlopes.PushDataPoint(i.value(), intHistogram.NormalizedSlope(i.value()*0.5, i.value()*2.0, LogHistogram::RFIAmplitudeHistogram));
-		}
-		plotFine.StartLine("Data");
-		plotGlobalSlopes.StartLine("Data");
-		for(LogHistogram::iterator i=intHistogram.begin(); i!=intHistogram.end(); ++i)
-		{
-			plotFine.PushDataPoint(i.value(), i.normalizedCount(LogHistogram::DataAmplitudeHistogram));
-			plotGlobalSlopes.PushDataPoint(i.value(), intHistogram.NormalizedSlope(i.value()*0.5, i.value()*2.0, LogHistogram::DataAmplitudeHistogram));
-		}*/
 	}
 	
 	std::cout << "Done.\n";
+}
+
+void actionCollectHistogram(const std::string &filename, HistogramCollection &histogramCollection)
+{
+	StatisticsCollection tempCollection;
+	actionCollect(filename, CollectHistograms, tempCollection, histogramCollection);
 }
 
 void printStatistics(std::complex<long double> *complexStat, unsigned count)
@@ -481,10 +430,10 @@ void actionHistogram(const std::string &filename, const std::string &query)
 {
 	HistogramTablesFormatter histogramFormatter(filename);
 	const unsigned polarizationCount = MeasurementSet::GetPolarizationCount(filename);
-	HistogramCollection collection(polarizationCount);
-	collection.Load(histogramFormatter);
 	if(query == "rfislope")
 	{
+		HistogramCollection collection(polarizationCount);
+		collection.Load(histogramFormatter);
 		MeasurementSet set(filename);
 		std::cout << set.GetBandInfo(0).CenterFrequencyHz();
 		for(unsigned p=0;p<polarizationCount;++p)
@@ -494,6 +443,29 @@ void actionHistogram(const std::string &filename, const std::string &query)
 			std::cout <<  '\t' << histogram.NormalizedSlopeInRFIRegion();
 		}
 		std::cout << '\n';
+	} else if(query == "rfislope-per-baseline")
+	{
+		HistogramCollection collection;
+		actionCollectHistogram(filename, collection);
+		MeasurementSet set(filename);
+		size_t antennaCount = set.AntennaCount();
+		AntennaInfo antennae[antennaCount];
+		for(size_t a=0;a<antennaCount;++a)
+			antennae[a] = set.GetAntennaInfo(a);
+		
+		for(unsigned p=0;p<polarizationCount;++p)
+		{
+			const std::map<HistogramCollection::AntennaPair, LogHistogram*> &histogramMap = collection.GetRFIHistogram(p);
+			for(std::map<HistogramCollection::AntennaPair, LogHistogram*>::const_iterator i=histogramMap.begin(); i!=histogramMap.end();++i)
+			{
+				const unsigned a1 = i->first.first, a2 = i->first.second;
+				Baseline baseline(antennae[a1], antennae[a2]);
+				double length = baseline.Distance();
+				const LogHistogram &histogram = *i->second;
+				double slope = histogram.NormalizedSlopeInRFIRegion();
+				std::cout << p << '\t' << a1 << '\t' << a2 << '\t' << length << '\t' << slope << '\n';
+			}
+		}
 	}
 }
 

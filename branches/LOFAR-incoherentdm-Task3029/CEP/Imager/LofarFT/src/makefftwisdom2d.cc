@@ -92,7 +92,7 @@ int main (int argc, char* argv[])
   cerr << endl;
   cout << "Creating 2D FFTW wisdom for some multiples of 1024 (till 16384) ..."
        << endl;
-  int otherSizes[] = {512, 1024, 2048, 4096, 6144, 8192, 10240, 12288, 16384};
+  int otherSizes[] = {512, 1024};//, 2048, 4096, 6144, 8192, 10240, 12288, 16384};
   nsizes = sizeof(otherSizes) / sizeof(int);
   for (int i=0; i<2; ++i) {
     cerr << ' ' << otherSizes[i];

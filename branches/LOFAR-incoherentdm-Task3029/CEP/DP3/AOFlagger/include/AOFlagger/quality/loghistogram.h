@@ -194,13 +194,12 @@ class LogHistogram
 		{
 			unsigned long n = 0;
 			long double sumX = 0.0, sumXY = 0.0, sumY = 0.0, sumXSquare = 0.0;
-			for(std::map<double, class AmplitudeBin>::const_iterator i=_amplitudes.begin();i!=_amplitudes.end();++i)
+			for(const_iterator i=begin();i!=end();++i)
 			{
-				if(i->first >= startAmplitude && i->first < endAmplitude)
+				if(i.value() >= startAmplitude && i.value() < endAmplitude)
 				{
-					long unsigned count = i->second.GetCount();
-					double x = log10(i->first);
-					double y = log10((double) count / i->first);
+					double x = log10(i.value());
+					double y = log10(i.normalizedCount());
 					++n;
 					sumX += x;
 					sumXSquare += x * x;
@@ -211,12 +210,38 @@ class LogHistogram
 			return (sumXY - sumX*sumY/n)/(sumXSquare - (sumX*sumX/n));
 		}
 		
-		double NormalizedSlopeInRFIRegion() const
+		double NormalizedSlopeOffset(double startAmplitude, double endAmplitude, double slope) const
+		{
+			unsigned long n = 0;
+			long double sumOffset = 0.0;
+			for(const_iterator i=begin();i!=end();++i)
+			{
+				if(i.value() >= startAmplitude && i.value() < endAmplitude)
+				{
+					double y = log10(i.normalizedCount());
+					double x = log10(i.value());
+					double ySlope = x*slope;
+					++n;
+					sumOffset += (y - ySlope);
+				}
+			}
+			return (double) (sumOffset/(long double) n);
+		}
+		
+		void GetRFIRegion(double &start, double &end) const
 		{
 			double sigmaEstimate = AmplitudeWithMaxNormalizedCount();
 			double maxAmplitude = MaxAmplitude();
 			double halfWay = exp((log(sigmaEstimate) + log(maxAmplitude)) * 0.5);
-			return NormalizedSlope(sigmaEstimate * 20.0, halfWay);
+			start = sigmaEstimate * 20.0;
+			end = halfWay;
+		}
+
+		double NormalizedSlopeInRFIRegion() const
+		{
+			double start, end;
+			GetRFIRegion(start ,end);
+			return NormalizedSlope(start, end);
 		}
 		
 		void SetData(std::vector<HistogramTablesFormatter::HistogramItem> &histogramData)

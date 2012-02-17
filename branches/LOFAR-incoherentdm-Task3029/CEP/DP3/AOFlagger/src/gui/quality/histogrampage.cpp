@@ -49,6 +49,8 @@ HistogramPage::HistogramPage() :
 	_dndsButton("dN(S)/dS"),
 	_plotPropertiesButton("Properties"),
 	_dataExportButton("Data"),
+	_slopeFrame("Slope"),
+	_drawSlope("Draw"),
 	_plotPropertiesWindow(0),
 	_histograms(0)
 	{
@@ -120,6 +122,13 @@ HistogramPage::HistogramPage() :
 	_dataExportButton.signal_clicked().connect(sigc::mem_fun(*this, &HistogramPage::onDataExportClicked));
 	_sideBox.pack_start(_dataExportButton, Gtk::PACK_SHRINK);
 	
+	_slopeBox.pack_start(_slopeTextView, Gtk::PACK_SHRINK);
+	_drawSlope.signal_clicked().connect(sigc::mem_fun(*this, &HistogramPage::updatePlot));
+	_slopeBox.pack_start(_drawSlope, Gtk::PACK_SHRINK);
+	
+	_slopeFrame.add(_slopeBox);
+	_sideBox.pack_start(_slopeFrame, Gtk::PACK_SHRINK);
+	
 	pack_start(_sideBox, Gtk::PACK_SHRINK);
 	
 	_plotWidget.SetPlot(_plot);
@@ -178,6 +187,7 @@ void HistogramPage::updatePlot()
 			plotPolarization(*_histograms, 3);
 		
 		_plotWidget.Update();
+		updateSlopeFrame();
 		updateDataWindow();
 	}
 }
@@ -207,6 +217,10 @@ void HistogramPage::plotPolarization(class HistogramCollection &histograms, unsi
 		if(_fitButton.get_active() || _subtractFitButton.get_active())
 		{
 			plotFit(rfiHistogram, "Fit to RFI");
+		}
+		if(_drawSlope.get_active())
+		{
+			plotSlope(rfiHistogram, "Fitted slope");
 		}
 	}
 	
@@ -323,6 +337,21 @@ void HistogramPage::addRayleighDifferenceToPlot(LogHistogram &histogram, double 
 	}
 }
 
+void HistogramPage::plotSlope(class LogHistogram &histogram, const std::string &title)
+{
+	double start, end;
+	histogram.GetRFIRegion(start, end);
+	double slope = histogram.NormalizedSlope(start, end);
+	double offset = histogram.NormalizedSlopeOffset(start, end, slope);
+	_plot.StartLine(title, "Amplitude in arbitrary units (log)", "Frequency (log)");
+	double xStart = log10(start / 10.0);
+	double xEnd = log10(histogram.MaxAmplitude());
+	double yStart = xStart*slope + offset;
+	double yEnd = xEnd*slope + offset;
+	_plot.PushDataPoint(xStart, yStart);
+	_plot.PushDataPoint(xEnd, yEnd);
+}
+
 void HistogramPage::onPlotPropertiesClicked()
 {
 	if(_plotPropertiesWindow == 0)
@@ -340,6 +369,20 @@ void HistogramPage::onDataExportClicked()
 	_dataWindow->show();
 	_dataWindow->raise();
 	updateDataWindow();
+}
+
+void HistogramPage::updateSlopeFrame()
+{
+	std::stringstream str;
+	str << "Slopes:";
+	for(size_t p=0;p<_histograms->PolarizationCount();++p)
+	{
+		LogHistogram histogram;
+		_histograms->GetRFIHistogramForCrossCorrelations(p, histogram);
+		double slope = histogram.NormalizedSlopeInRFIRegion();
+		str << '\n' << slope;
+	}
+	_slopeTextView.get_buffer()->set_text(str.str());
 }
 
 void HistogramPage::updateDataWindow()
