@@ -100,8 +100,9 @@ class msss_target_pipeline(control):
         Search for the requested input files and mask the files in
         `self.input_data{}` that could not be found on the system.
         """
+        # Use filename glob-pattern as defined in LOFAR-USG-ICD-005.
         data_mask = tally_data_map(
-            self.input_data['data'], 'L*_SAP???_SB???_uv.MS', self.logger
+            self.input_data['data'], 'L*_SB???_uv.MS', self.logger
         )
         # Log a warning if not all input data files were found.
         if not all(data_mask):
@@ -113,9 +114,9 @@ class msss_target_pipeline(control):
                     ) if not m
                 )
             )
+        # Use filename glob-pattern as defined in LOFAR-USG-ICD-005.
         inst_mask = tally_data_map(
-            self.input_data['instrument'], 'L*_SAP???_SB???_inst.INST',
-            self.logger
+            self.input_data['instrument'], 'L*_SB???_inst.INST', self.logger
         )
         # Log a warning if not all input instrument files were found.
         if not all(inst_mask):
@@ -197,9 +198,9 @@ class msss_target_pipeline(control):
             ', '.join(':'.join(f) for f in self.input_data['data'])
         )
             
-#        # Create a sourcedb based on sourcedb's input argument "skymodel"
-#        # (see, e.g., tasks.cfg file).
-#        sourcedb_mapfile = self.run_task("sourcedb", data_mapfile)['mapfile']
+        # Create a sourcedb based on sourcedb's input argument "skymodel"
+        # (see, e.g., tasks.cfg file).
+        sourcedb_mapfile = self.run_task("sourcedb", data_mapfile)['mapfile']
 
         # Produce a GVDS file describing the data on the compute nodes.
         gvds_file = self.run_task("vdsmaker", data_mapfile)['gvds']

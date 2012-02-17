@@ -88,8 +88,9 @@ class msss_calibrator_pipeline(control):
         Search for the requested input files and mask the files in
         `self.input_data[]` that could not be found on the system.
         """
+        # Use filename glob-pattern as defined in LOFAR-USG-ICD-005.
         self.io_data_mask = tally_data_map(
-            self.input_data, 'L*_SAP???_SB???_uv.MS', self.logger
+            self.input_data, 'L*_SB???_uv.MS', self.logger
         )
         # Log a warning if not all input data files were found.
         if not all(self.io_data_mask):
