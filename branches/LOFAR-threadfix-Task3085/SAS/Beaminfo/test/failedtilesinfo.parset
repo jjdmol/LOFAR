@@ -1,0 +1,9 @@
+#ms = /Users/duscha/Cluster/L2011_24380/L24380_SB030_uv.MS.dppp.dppp
+ms = /tmp/joined.MS
+StartTime = 2011/05/15/16:59:08.0 
+EndTime = 2011/05/21/22:59:06.0
+# brokenTilesFile =
+# failedTilesFile =
+port = 5432
+overwrite = T
+
