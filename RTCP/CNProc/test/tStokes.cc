@@ -67,7 +67,7 @@ void test_incoherent_stokes( unsigned NRSTOKES, unsigned INTEGRATION ) {
   }
 
   // calculate
-  Stokes s( NRCHANNELS, NRSAMPLES );
+  IncoherentStokes s( NRCHANNELS, NRSAMPLES, NRSTATIONS, 1, 0, heapAllocator );
 
   struct StreamInfo info;
 
@@ -84,9 +84,9 @@ void test_incoherent_stokes( unsigned NRSTOKES, unsigned INTEGRATION ) {
   info.part = 0;
 
   if (NRSTOKES == 4) {
-    s.calculateIncoherent<true>( &in, &out, stationMapping, info );
+    s.calculate<true>( &in, &out, stationMapping, info, 0, 0.0 );
   } else {
-    s.calculateIncoherent<false>( &in, &out, stationMapping, info );
+    s.calculate<false>( &in, &out, stationMapping, info, 0, 0.0 );
   }
 
   // check
@@ -161,7 +161,7 @@ void test_coherent_stokes( unsigned NRSTOKES, unsigned INTEGRATION, unsigned CHA
     }
   }  
 
-  Stokes s( NRCHANNELS, NRSAMPLES );
+  CoherentStokes s( NRCHANNELS, NRSAMPLES );
 
   for( unsigned b = 0; b < NRPENCILBEAMS; b++ ) {
     struct StreamInfo info;
@@ -191,9 +191,9 @@ void test_coherent_stokes( unsigned NRSTOKES, unsigned INTEGRATION, unsigned CHA
 
     // calculate using Stokes.cc
     if (NRSTOKES == 4) {
-      s.calculateCoherent<true>( &in, &out, b, info );
+      s.calculate<true>( &in, &out, b, info );
     } else {
-      s.calculateCoherent<false>( &in, &out, b, info );
+      s.calculate<false>( &in, &out, b, info );
     }
 
     // calculate our own
