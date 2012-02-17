@@ -34,6 +34,10 @@ class HistogramCollection
 	public:
 		typedef std::pair<unsigned, unsigned> AntennaPair;
 		
+		HistogramCollection() : _polarizationCount(0)
+		{
+		}
+		
 		HistogramCollection(unsigned polarizationCount) : _polarizationCount(polarizationCount)
 		{
 			init();
@@ -52,6 +56,13 @@ class HistogramCollection
 		~HistogramCollection()
 		{
 			destruct();
+		}
+		
+		void SetPolarizationCount(unsigned polarizationCount)
+		{
+			destruct();
+			_polarizationCount = polarizationCount;
+			init();
 		}
 		
 		void Add(const unsigned antenna1, const unsigned antenna2, const unsigned polarization, const std::complex<float> *values, const bool *isRFI, size_t sampleCount)
@@ -120,25 +131,34 @@ class HistogramCollection
 		
 		void init()
 		{
-			_totalHistograms = new std::map<AntennaPair, LogHistogram*>[_polarizationCount];
-			_rfiHistograms = new std::map<AntennaPair, LogHistogram*>[_polarizationCount];
+			if(_polarizationCount != 0)
+			{
+				_totalHistograms = new std::map<AntennaPair, LogHistogram*>[_polarizationCount];
+				_rfiHistograms = new std::map<AntennaPair, LogHistogram*>[_polarizationCount];
+			} else {
+				_totalHistograms = 0;
+				_rfiHistograms = 0;
+			}
 		}
 		
 		void destruct()
 		{
-			for(unsigned p=0;p<_polarizationCount;++p)
+			if(_polarizationCount != 0)
 			{
-				for(std::map<AntennaPair, LogHistogram*>::iterator i=_totalHistograms[p].begin(); i!=_totalHistograms[p].end(); ++i)
+				for(unsigned p=0;p<_polarizationCount;++p)
 				{
-					delete i->second;
+					for(std::map<AntennaPair, LogHistogram*>::iterator i=_totalHistograms[p].begin(); i!=_totalHistograms[p].end(); ++i)
+					{
+						delete i->second;
+					}
+					for(std::map<AntennaPair, LogHistogram*>::iterator i=_rfiHistograms[p].begin(); i!=_rfiHistograms[p].end(); ++i)
+					{
+						delete i->second;
+					}
 				}
-				for(std::map<AntennaPair, LogHistogram*>::iterator i=_rfiHistograms[p].begin(); i!=_rfiHistograms[p].end(); ++i)
-				{
-					delete i->second;
-				}
+				delete[] _totalHistograms;
+				delete[] _rfiHistograms;
 			}
-			delete[] _totalHistograms;
-			delete[] _rfiHistograms;
 		}
 		
 		void copy(std::map<AntennaPair, LogHistogram*> &destination, const std::map<AntennaPair, LogHistogram*> &source)
