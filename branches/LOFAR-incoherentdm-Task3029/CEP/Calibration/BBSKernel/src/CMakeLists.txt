@@ -38,6 +38,7 @@ lofar_add_library(bbskernel
   Expr/ConditionNumber.cc
   Expr/Delay.cc
   Expr/Element.cc
+  Expr/ElevationCut.cc
   Expr/EquatorialCentroid.cc
   Expr/Expr.cc
   Expr/ExprAdaptors.cc

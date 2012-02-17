@@ -54,6 +54,8 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_initO
   const string p (pass);
   const string d (db);
   const string h (hn);
+  const char* n;
+  jstring str;
 
   try {
     OTDBconnection* aPtr = new OTDBconnection(u, p, d, h);
@@ -66,13 +68,14 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_initO
     jfieldID fid_jOTDBconn_name = env->GetFieldID (class_jOTDBconn, "itsName", "Ljava/lang/String;");
     
     // itsName
-    jstring str = (jstring)env->GetObjectField (jOTDBconnection, fid_jOTDBconn_name);
+    str = (jstring)env->GetObjectField (jOTDBconnection, fid_jOTDBconn_name);
     jboolean isCopy;
-    const char* n = env->GetStringUTFChars (str, &isCopy);
+    n = env->GetStringUTFChars (str, &isCopy);
     const string name (n);
 
     std::map<std::string,void *>::iterator iter;    
 
+    theirC_ObjectMap.erase(name+"_OTDBconnection");
     theirC_ObjectMap[name+"_OTDBconnection"]=(void *)aPtr;
 
     LOG_DEBUG("after connect: theirC_ObjectMap contains: ");
@@ -93,6 +96,7 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_initO
     env->ReleaseStringUTFChars(passwd, pass);
     env->ReleaseStringUTFChars(database, db);
     env->ReleaseStringUTFChars(hostname, hn);
+    env->ReleaseStringUTFChars(str, n);
     env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
   }
 }
@@ -124,7 +128,8 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_c
 }
 
 JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_disconnect(JNIEnv *env, jobject jOTDBconnection) {
-
+    jstring str;
+    const char* n;
   try {
     std::map<std::string,void *>::iterator iter;
 
@@ -134,10 +139,11 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_disco
     jfieldID fid_jOTDBconn_name = env->GetFieldID (class_jOTDBconn, "itsName", "Ljava/lang/String;");
     
     // itsName
-    jstring str = (jstring)env->GetObjectField (jOTDBconnection, fid_jOTDBconn_name);
+    str = (jstring)env->GetObjectField (jOTDBconnection, fid_jOTDBconn_name);
     jboolean isCopy;
-    const char* n = env->GetStringUTFChars (str, &isCopy);
+    n = env->GetStringUTFChars (str, &isCopy);
     const string name (n);
+    env->ReleaseStringUTFChars(str, n);
 
     bool found = false;
     std::map<std::string,void *>::iterator itr;
@@ -151,6 +157,8 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_disco
             if (!found) found=true;
             std::map<std::string,void *>::iterator tmpitr = itr;
             itr++;
+            // free memory
+            delete tmpitr->second;
             theirC_ObjectMap.erase(tmpitr);
         } else {
             itr++;
@@ -167,7 +175,7 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_disco
 
   } catch (exception &ex) {
     cout << "Exception during OTDBconnection::disconnect "<< ex.what() << endl;
-    
+    env->ReleaseStringUTFChars(str, n);
     env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
   }
 

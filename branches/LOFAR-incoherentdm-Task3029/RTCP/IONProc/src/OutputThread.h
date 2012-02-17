@@ -42,7 +42,7 @@ namespace RTCP {
 class OutputThread
 {
   public:
-			    OutputThread(const Parset &, OutputType outputType, unsigned streamNr);
+			    OutputThread(const Parset &, OutputType outputType, unsigned streamNr, unsigned adderNr);
 
     static const unsigned   maxSendQueueSize = 3; // use 2 if you run out of memory, but test carefully to avoid data loss
 

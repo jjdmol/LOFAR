@@ -31,6 +31,7 @@
 #include <AOFlagger/remote/clusteredobservation.h>
 #include <AOFlagger/remote/processcommander.h>
 #include <gtkmm/main.h>
+#include <AOFlagger/quality/histogramtablesformatter.h>
 
 AOQPlotWindow::AOQPlotWindow() :
 	_isOpen(false)
@@ -58,6 +59,8 @@ AOQPlotWindow::AOQPlotWindow() :
 	
 	_notebook.append_page(_summaryPage, "Summary");
 	_summaryPage.show();
+	
+	_notebook.append_page(_histogramPage, "Histograms");
 	
 	_vBox.pack_start(_notebook);
 	_notebook.signal_switch_page().connect(sigc::mem_fun(*this, &AOQPlotWindow::onSwitchPage));
@@ -90,6 +93,8 @@ void AOQPlotWindow::onOpenOptionsSelected(std::string filename, bool downsampleT
 	_frequencyPlotPage.SetStatistics(_statCollection, _antennas);
 	_timeFrequencyPlotPage.SetStatistics(_fullStats);
 	_summaryPage.SetStatistics(_statCollection);
+	if(_histogramPage.is_visible())
+		_histogramPage.SetStatistics(_filename);
 	show();
 }
 
@@ -104,6 +109,8 @@ void AOQPlotWindow::close()
 		_frequencyPlotPage.CloseStatistics();
 		_timeFrequencyPlotPage.CloseStatistics();
 		_summaryPage.CloseStatistics();
+		if(_histogramPage.is_visible())
+			_histogramPage.CloseStatistics();
 		delete _statCollection;
 		delete _fullStats;
 		_isOpen = false;
@@ -145,6 +152,8 @@ void AOQPlotWindow::readStatistics(bool downsampleTime, bool downsampleFreq, siz
 		delete observation;
 		
 		_antennas = commander.Antennas();
+		
+		setShowHistograms(false);
 	}
 	else {
 		MeasurementSet *ms = new MeasurementSet(_filename);
@@ -155,9 +164,12 @@ void AOQPlotWindow::readStatistics(bool downsampleTime, bool downsampleFreq, siz
 			_antennas.push_back(ms->GetAntennaInfo(a));
 		delete ms;
 
-		QualityTablesFormatter formatter(_filename);
+		QualityTablesFormatter qualityTables(_filename);
 		_statCollection = new StatisticsCollection(polarizationCount);
-		_statCollection->Load(formatter);
+		_statCollection->Load(qualityTables);
+		
+		HistogramTablesFormatter histogramTables(_filename);
+		setShowHistograms(histogramTables.HistogramsExist());
 	}
 	if(downsampleTime)
 	{

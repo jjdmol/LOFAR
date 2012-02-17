@@ -250,39 +250,29 @@ class Parset(util.Parset.Parset):
         # SAS specifies beams differently
         if "Observation.subbandList" not in self:
           # convert beam configuration
-          allSubbands = {}
+          allSubbands = []
 
 	  for b in count():
             if "Observation.Beam[%s].angle1" % (b,) not in self:
               break
 
 	    beamSubbands = self.getInt32Vector("Observation.Beam[%s].subbandList" % (b,)) # the actual subband number (0..511)
-            beamBeamlets = self.getInt32Vector("Observation.Beam[%s].beamletList" % (b,)) # the bebamlet index (0..247)
 
-            assert len(beamSubbands) == len(beamBeamlets), "Beam %d has %d subbands but %d beamlets defined" % (b,len(beamSubbands),len(beamBeamlets))
-
-            for subband,beamlet in zip(beamSubbands,beamBeamlets):
-              assert beamlet not in allSubbands, "Beam %d and %d both use beamlet %d" % (allSubbands[beamlet]["beam"],b,beamlet)
-
-              allSubbands[beamlet] = {
+            for subband in beamSubbands:
+              allSubbands.append( {
                 "beam":     b,
                 "subband":  subband,
-                "beamlet":  beamlet,
-
-                # assign rsp board and slot according to beamlet id
-                "rspboard": beamlet // NRBOARBEAMLETS,
-                "rspslot":  beamlet % NRBOARBEAMLETS,
-              }
+              } )
 
 
           # order subbands according to beamlet id, for more human-friendly reading
-          sortedSubbands = [allSubbands[x] for x in sorted( allSubbands )]
+          sortedSubbands = sorted( allSubbands )
 
           # populate OLAP lists
 	  self["Observation.subbandList"]  = [s["subband"] for s in sortedSubbands]
 	  self["Observation.beamList"]     = [s["beam"] for s in sortedSubbands]
-	  self["Observation.rspBoardList"] = [s["rspboard"] for s in sortedSubbands]
-	  self["Observation.rspSlotList"]  = [s["rspslot"] for s in sortedSubbands]
+	  self["Observation.rspBoardList"] = [0 for s in sortedSubbands]
+	  self["Observation.rspSlotList"]  = [0 for s in sortedSubbands]
 
         # The Scheduler creates three lists of files (for beamformed, coherent and incoherent),
         # but we collapse this into one list (beamformed)
@@ -290,7 +280,7 @@ class Parset(util.Parset.Parset):
         def getlist( dataproduct ):
           enabled = self.getBool("Observation.DataProducts.Output_%s.enabled" % (dataproduct,), False)
 
-          if enabled:
+          if True or enabled: # scheduler can still set filenames without the corresponding enabled flag
             filenames = self.get("Observation.DataProducts.Output_%s.filenames" % (dataproduct,), [])
             locations = self.get("Observation.DataProducts.Output_%s.locations" % (dataproduct,), [])
           else:
@@ -341,6 +331,10 @@ class Parset(util.Parset.Parset):
           self["Observation.DataProducts.Output_Beamformed.enabled"] = True
           self["Observation.DataProducts.Output_Beamformed.filenames"] = beamformedFiles[0]
           self["Observation.DataProducts.Output_Beamformed.locations"] = beamformedFiles[1]
+
+        if beamformedFiles != ([], []):
+          # fix a scheduler bug causing this boolean not to be set
+          self["Observation.DataProducts.Output_Beamformed.enabled"] = True
 
 
     def addStorageKeys(self):
@@ -743,8 +737,9 @@ class Parset(util.Parset.Parset):
       else:  
         prefix = "OLAP.CNProc_IncoherentStokes"
 
-      subbandsPerFile = int(self["%s.subbandsPerFile" % (prefix,)])
-      return int(math.ceil(1.0 * self.getNrSubbands(sap) / subbandsPerFile))
+      subbands = self.getNrSubbands(sap)
+      subbandsPerFile = int(self.get("%s.subbandsPerFile" % (prefix,),subbands))
+      return int(math.ceil(1.0 * subbands / subbandsPerFile))
 
     def getNrBeams( self, sap ):
       return self["Observation.Beam[%u].nrTiedArrayBeams" % (sap,)]
@@ -855,6 +850,10 @@ class Parset(util.Parset.Parset):
 
         # restrictions on #samples and integration in beam forming modes
         if self.getBool("Observation.DataProducts.Output_Beamformed.enabled"):
+          if self["OLAP.CNProc_CoherentStokes.which"] == "XXYY":
+            assert int(self["OLAP.CNProc_CoherentStokes.timeIntegrationFactor"]) == 1, "Cannot integrate complex voltages (stokes XXYY) but temporal integration was requested"
+            assert int(self["OLAP.CNProc_CoherentStokes.channelsPerSubband"]) in [0, int(self["Observation.channelsPerSubband"])], "Cannot integrate complex voltages (stokes XXYY) but channel collapse was requested"
+
           # beamforming needs a multiple of 16 samples
           assert int(self["OLAP.CNProc.integrationSteps"]) % 16 == 0, "OLAP.CNProc.integrationSteps should be dividable by 16"
 

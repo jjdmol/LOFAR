@@ -178,6 +178,7 @@ class MSWindow : public Gtk::Window {
 		void onSetToOnePlusI();
 		void onShowStats();
 		void onPlotDistPressed();
+		void onPlotLogLogDistPressed();
 		void onPlotComplexPlanePressed();
 		void onPlotPowerSpectrumPressed();
 		void onPlotPowerSpectrumComparisonPressed();
@@ -219,6 +220,7 @@ class MSWindow : public Gtk::Window {
 		void onTimeMergeUnsetValues();
 		
 		void showError(const std::string &description);
+		void setSetNameInStatusBar();
 		
 		DefaultModels::SetLocation getSetLocation(bool empty = false);
 		void loadDefaultModel(DefaultModels::Distortion distortion, bool withNoise, bool empty = false);
@@ -250,6 +252,7 @@ class MSWindow : public Gtk::Window {
 			_sim16ChannelsButton, _sim64ChannelsButton, _sim256ChannelsButton;
 		//std::vector<Gtk::Window*> _subWindows;
 		class ImagePlaneWindow *_imagePlaneWindow;
+		class HistogramWindow *_histogramWindow;
 		Gtk::Window
 			*_optionWindow, *_editStrategyWindow,
 			*_gotoWindow,

@@ -35,6 +35,7 @@
 #include <boost/format.hpp>
 
 #include <errno.h>
+#include <time.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -209,6 +210,8 @@ static Semaphore writeSemaphore(300);
 
 void OutputThread::doWork()
 {
+  time_t prevlog = 0;
+
   for (SmartPtr<StreamableData> data; (data = itsReceiveQueue.remove()) != 0; itsFreeQueue.append(data.release())) {
     //NSTimer writeTimer("write data", false, false);
 
@@ -228,7 +231,18 @@ void OutputThread::doWork()
 
     writeSemaphore.up();
     //writeTimer.stop();
-    LOG_INFO_STR(itsLogPrefix << "Written block with seqno = " << data->sequenceNumber());
+
+    time_t now = time(0L);
+
+    if (now > prevlog + 5) {
+      // print info every 5 seconds
+      LOG_INFO_STR(itsLogPrefix << "Written block with seqno = " << data->sequenceNumber() << ", " << itsBlocksWritten << " blocks written, " << itsBlocksDropped << " blocks dropped");
+
+      prevlog = now;
+    } else {
+      // print debug info for the other blocks
+      LOG_DEBUG_STR(itsLogPrefix << "Written block with seqno = " << data->sequenceNumber() << ", " << itsBlocksWritten << " blocks written, " << itsBlocksDropped << " blocks dropped");
+    }
   }
 }
 
@@ -238,7 +252,7 @@ void OutputThread::cleanUp()
 
   float dropPercent = itsBlocksWritten + itsBlocksDropped == 0 ? 0.0 : (100.0 * itsBlocksDropped) / (itsBlocksWritten + itsBlocksDropped);
 
-  LOG_INFO_STR(itsLogPrefix << itsBlocksWritten << " blocks written, " << itsBlocksDropped << " blocks dropped: " << std::setprecision(3) << dropPercent << "% lost" );
+  LOG_INFO_STR(itsLogPrefix << "Finished writing: " << itsBlocksWritten << " blocks written, " << itsBlocksDropped << " blocks dropped: " << std::setprecision(3) << dropPercent << "% lost" );
 }
 
 

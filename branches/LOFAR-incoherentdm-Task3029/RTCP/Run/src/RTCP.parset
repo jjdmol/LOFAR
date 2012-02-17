@@ -67,12 +67,10 @@ Observation.Beam[0].TiedArrayBeam[0].coherent = F
 OLAP.Storage.hosts = [locus080]
 OLAP.Storage.targetDirectory = /data # will be appended with dirmask and filenammask
 
-Observation.DataProducts.Output_Filtered.enabled = F
 Observation.DataProducts.Output_Beamformed.enabled = T
 Observation.DataProducts.Output_Correlated.enabled = F
 Observation.DataProducts.Output_Trigger.enabled = F
 
-Observation.DataProducts.Output_Filtered.namemask = L${OBSID}_SB${SUBBAND}.filtered
 Observation.DataProducts.Output_Correlated.namemask = L${OBSID}_SB${SUBBAND}_uv.MS
 Observation.DataProducts.Output_Beamformed.namemask = L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.raw
 Observation.DataProducts.Output_Trigger.namemask = L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.trigger
@@ -95,7 +93,7 @@ OLAP.Correlator.integrationTime = 1.0
 
 OLAP.CNProc_CoherentStokes.subbandsPerFile = 244
 OLAP.CNProc_CoherentStokes.which = I                  # I or IQUV or XXYY
-OLAP.CNProc_CoherentStokes.timeIntegrationFactor = 1   # time integration
+OLAP.CNProc_CoherentStokes.timeIntegrationFactor = 1  # time integration
 OLAP.CNProc_CoherentStokes.channelsPerSubband = 0     # 0 = same as observation
 
 OLAP.CNProc_IncoherentStokes.subbandsPerFile = 244

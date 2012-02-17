@@ -73,6 +73,7 @@ class OutputSection
 
     const bool                		   itsIsRealTime;
     std::vector<unsigned>		   itsDroppedCount; // [subband]
+    std::vector<unsigned>		   itsTotalDroppedCount; // [subband]
     std::vector<SmartPtr<OutputThread> >   itsOutputThreads; // [subband]
 
     std::vector<SmartPtr<Stream> >	   itsStreamsFromCNs;
@@ -83,6 +84,8 @@ class OutputSection
     Semaphore				   itsNrIterationsToDo;
 
     SmartPtr<Thread>			   itsThread;
+
+    std::vector<unsigned>		   itsAdders; // [subband]
 };
 
 

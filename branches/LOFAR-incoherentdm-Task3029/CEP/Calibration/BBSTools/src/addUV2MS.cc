@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
   unsigned int nwplanes=0;        // got to see  how to export this feature to the outside
 
   // Init logger
-  string progName = basename(argv[0]);
+  string progName = LOFAR::basename(argv[0]);
   INIT_LOGGER(progName);
     
   if(argc < 3)        // if not enough parameters given, display usage information

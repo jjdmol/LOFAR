@@ -34,6 +34,7 @@
 #include "baselineplotpage.h"
 #include "blengthplotpage.h"
 #include "frequencyplotpage.h"
+#include "histogrampage.h"
 #include "openoptionswindow.h"
 #include "summarypage.h"
 #include "timefrequencyplotpage.h"
@@ -79,6 +80,10 @@ class AOQPlotWindow : public Gtk::Window {
 				case 6: SetStatus("Summary"); break;
 			}
 		}
+		void setShowHistograms(bool show)
+		{
+			_histogramPage.set_visible(show);
+		}
 		
 		Gtk::VBox _vBox;
 		Gtk::Notebook _notebook;
@@ -91,6 +96,7 @@ class AOQPlotWindow : public Gtk::Window {
 		TimePlotPage _timePlotPage;
 		FrequencyPlotPage _frequencyPlotPage;
 		SummaryPage _summaryPage;
+		HistogramPage _histogramPage;
 		
 		OpenOptionsWindow _openOptionsWindow;
 

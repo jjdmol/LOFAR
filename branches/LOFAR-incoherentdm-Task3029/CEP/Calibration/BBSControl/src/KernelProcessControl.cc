@@ -474,7 +474,7 @@ namespace LOFAR
       VisBuffer::Ptr chunk(itsBuffers["DATA"]);
 
       // Load precomputed visibilities if required.
-      loadPrecomputedVis(command.modelConfig().getSources());
+      loadPrecomputedVis(command.modelConfig().sources());
 
       // Determine selected baselines and correlations.
       BaselineMask blMask = itsMeasurement->asMask(command.baselines());
@@ -533,7 +533,7 @@ namespace LOFAR
       VisBuffer::Ptr chunk(itsBuffers["DATA"]);
 
       // Load precomputed visibilities if required.
-      loadPrecomputedVis(command.modelConfig().getSources());
+      loadPrecomputedVis(command.modelConfig().sources());
 
       // Determine selected baselines and correlations.
       BaselineMask blMask = itsMeasurement->asMask(command.baselines());
@@ -596,7 +596,7 @@ namespace LOFAR
       VisBuffer::Ptr chunk(itsBuffers["DATA"]);
 
       // Load precomputed visibilities if required.
-      loadPrecomputedVis(command.modelConfig().getSources());
+      loadPrecomputedVis(command.modelConfig().sources());
 
       // Determine selected baselines and correlations.
       BaselineMask blMask = itsMeasurement->asMask(command.baselines());
@@ -659,7 +659,7 @@ namespace LOFAR
       VisBuffer::Ptr chunk(itsBuffers["DATA"]);
 
       // Load precomputed visibilities if required.
-      loadPrecomputedVis(command.modelConfig().getSources());
+      loadPrecomputedVis(command.modelConfig().sources());
 
       // Determine selected baselines and correlations.
       BaselineMask blMask = itsMeasurement->asMask(command.baselines());
@@ -756,7 +756,7 @@ namespace LOFAR
       VisBuffer::Ptr chunk(itsBuffers["DATA"]);
 
       // Load precomputed visibilities if required.
-      loadPrecomputedVis(command.modelConfig().getSources());
+      loadPrecomputedVis(command.modelConfig().sources());
 
       // Determine selected baselines and correlations.
       BaselineMask blMask = itsMeasurement->asMask(command.baselines());

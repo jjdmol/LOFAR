@@ -39,6 +39,7 @@
 
 #ifdef HAS_LOFARSTMAN
 #include <LofarStMan/Register.h>
+#include <AOFlagger/quality/histogramtablesformatter.h>
 #endif // HAS_LOFARSTMAN                                                       
 
 void reportProgress(unsigned step, unsigned totalSteps)
@@ -204,71 +205,78 @@ void actionCollect(const std::string &filename, enum CollectingMode mode)
 			}
 			break;
 		case CollectHistograms:
-			const std::map<HistogramCollection::AntennaPair, LogHistogram*> &map = histogramCollection.GetHistograms(0);
-			Plot plotSlopes("histogram-slopes.pdf");
-			plotSlopes.SetYRange(-10.0, 10.0);
-			Plot plotHistograms("histograms.pdf");
-			for(std::map<HistogramCollection::AntennaPair, LogHistogram*>::const_iterator i = map.begin(); i != map.end(); ++i)
 			{
-				if(i->first.first != i->first.second)
-				{
-					const LogHistogram *histogram = i->second;
-					double rangeCentre = histogram->MinPositiveAmplitude();
-					rangeCentre = exp2(floor(log2(rangeCentre)));
-					const double maxAmplitude = histogram->MaxAmplitude();
-					std::cout << "Antennae " << i->first.first << " x " << i->first.second << "\n";
-					std::stringstream s;
-					s << i->first.first << " x " << i->first.second;
-					//plotSlopes.StartLine(s.str());
-					//plotHistograms.StartLine(s.str());
-					plotSlopes.StartLine();
-					plotSlopes.SetLogScale(true, false);
-					plotHistograms.StartLine();
-					plotHistograms.SetLogScale(true, true);
-					while(rangeCentre < maxAmplitude && rangeCentre > 0.0)
-					{
-						const double rangeStart = rangeCentre * 0.75;
-						const double rangeEnd = rangeCentre * 1.5;
-						const double slope = histogram->NormalizedSlope(rangeStart, rangeEnd, LogHistogram::TotalAmplitudeHistogram);
-						std::cout << rangeStart << "-" << rangeEnd << ": " << slope << "\n";
-						rangeCentre *= 2.0;
-						plotSlopes.PushDataPoint(rangeCentre, slope);
-						const double count = histogram->NormalizedCount(rangeStart, rangeEnd, LogHistogram::TotalAmplitudeHistogram);
-						if(count > 0 && std::isfinite(count))
-							plotHistograms.PushDataPoint(rangeCentre, count);
-					}
-				}
-			}
-			Plot plotFine("histogram-fine.pdf");
-			Plot plotGlobalSlopes("histogram-gslopes.pdf");
-			plotFine.SetLogScale(true, true);
-			plotGlobalSlopes.SetLogScale(true, false);
-			plotGlobalSlopes.SetYRange(-5.0, 5.0);
-			LogHistogram intHistogram;
-			histogramCollection.GetHistogramForCrossCorrelations(0, intHistogram);
-			
-			plotFine.StartLine("Total");
-			plotGlobalSlopes.StartLine("Total");
-			for(LogHistogram::iterator i=intHistogram.begin(); i!=intHistogram.end(); ++i)
-			{
-				plotFine.PushDataPoint(i.value(), i.normalizedCount(LogHistogram::TotalAmplitudeHistogram));
-				plotGlobalSlopes.PushDataPoint(i.value(), intHistogram.NormalizedSlope(i.value()*0.5, i.value()*2.0, LogHistogram::TotalAmplitudeHistogram));
-			}
-			plotFine.StartLine("RFI");
-			plotGlobalSlopes.StartLine("RFI");
-			for(LogHistogram::iterator i=intHistogram.begin(); i!=intHistogram.end(); ++i)
-			{
-				plotFine.PushDataPoint(i.value(), i.normalizedCount(LogHistogram::RFIAmplitudeHistogram));
-				plotGlobalSlopes.PushDataPoint(i.value(), intHistogram.NormalizedSlope(i.value()*0.5, i.value()*2.0, LogHistogram::RFIAmplitudeHistogram));
-			}
-			plotFine.StartLine("Data");
-			plotGlobalSlopes.StartLine("Data");
-			for(LogHistogram::iterator i=intHistogram.begin(); i!=intHistogram.end(); ++i)
-			{
-				plotFine.PushDataPoint(i.value(), i.normalizedCount(LogHistogram::DataAmplitudeHistogram));
-				plotGlobalSlopes.PushDataPoint(i.value(), intHistogram.NormalizedSlope(i.value()*0.5, i.value()*2.0, LogHistogram::DataAmplitudeHistogram));
+				std::cout << "Writing histogram tables..." << std::endl;
+				
+				HistogramTablesFormatter histograms(filename);
+				histogramCollection.Save(histograms);
 			}
 			break;
+			
+		/*const std::map<HistogramCollection::AntennaPair, LogHistogram*> &map = histogramCollection.GetHistograms(0);
+		Plot plotSlopes("histogram-slopes.pdf");
+		plotSlopes.SetYRange(-10.0, 10.0);
+		Plot plotHistograms("histograms.pdf");
+		for(std::map<HistogramCollection::AntennaPair, LogHistogram*>::const_iterator i = map.begin(); i != map.end(); ++i)
+		{
+			if(i->first.first != i->first.second)
+			{
+				const LogHistogram *histogram = i->second;
+				double rangeCentre = histogram->MinPositiveAmplitude();
+				rangeCentre = exp2(floor(log2(rangeCentre)));
+				const double maxAmplitude = histogram->MaxAmplitude();
+				std::cout << "Antennae " << i->first.first << " x " << i->first.second << "\n";
+				std::stringstream s;
+				s << i->first.first << " x " << i->first.second;
+				//plotSlopes.StartLine(s.str());
+				//plotHistograms.StartLine(s.str());
+				plotSlopes.StartLine();
+				plotSlopes.SetLogScale(true, false);
+				plotHistograms.StartLine();
+				plotHistograms.SetLogScale(true, true);
+				while(rangeCentre < maxAmplitude && rangeCentre > 0.0)
+				{
+					const double rangeStart = rangeCentre * 0.75;
+					const double rangeEnd = rangeCentre * 1.5;
+					const double slope = histogram->NormalizedSlope(rangeStart, rangeEnd, LogHistogram::TotalAmplitudeHistogram);
+					std::cout << rangeStart << "-" << rangeEnd << ": " << slope << "\n";
+					rangeCentre *= 2.0;
+					plotSlopes.PushDataPoint(rangeCentre, slope);
+					const double count = histogram->NormalizedCount(rangeStart, rangeEnd, LogHistogram::TotalAmplitudeHistogram);
+					if(count > 0 && std::isfinite(count))
+						plotHistograms.PushDataPoint(rangeCentre, count);
+				}
+			}
+		}
+		Plot plotFine("histogram-fine.pdf");
+		Plot plotGlobalSlopes("histogram-gslopes.pdf");
+		plotFine.SetLogScale(true, true);
+		plotGlobalSlopes.SetLogScale(true, false);
+		plotGlobalSlopes.SetYRange(-5.0, 5.0);
+		LogHistogram intHistogram;
+		histogramCollection.GetHistogramForCrossCorrelations(0, intHistogram);
+		
+		plotFine.StartLine("Total");
+		plotGlobalSlopes.StartLine("Total");
+		for(LogHistogram::iterator i=intHistogram.begin(); i!=intHistogram.end(); ++i)
+		{
+			plotFine.PushDataPoint(i.value(), i.normalizedCount(LogHistogram::TotalAmplitudeHistogram));
+			plotGlobalSlopes.PushDataPoint(i.value(), intHistogram.NormalizedSlope(i.value()*0.5, i.value()*2.0, LogHistogram::TotalAmplitudeHistogram));
+		}
+		plotFine.StartLine("RFI");
+		plotGlobalSlopes.StartLine("RFI");
+		for(LogHistogram::iterator i=intHistogram.begin(); i!=intHistogram.end(); ++i)
+		{
+			plotFine.PushDataPoint(i.value(), i.normalizedCount(LogHistogram::RFIAmplitudeHistogram));
+			plotGlobalSlopes.PushDataPoint(i.value(), intHistogram.NormalizedSlope(i.value()*0.5, i.value()*2.0, LogHistogram::RFIAmplitudeHistogram));
+		}
+		plotFine.StartLine("Data");
+		plotGlobalSlopes.StartLine("Data");
+		for(LogHistogram::iterator i=intHistogram.begin(); i!=intHistogram.end(); ++i)
+		{
+			plotFine.PushDataPoint(i.value(), i.normalizedCount(LogHistogram::DataAmplitudeHistogram));
+			plotGlobalSlopes.PushDataPoint(i.value(), intHistogram.NormalizedSlope(i.value()*0.5, i.value()*2.0, LogHistogram::DataAmplitudeHistogram));
+		}*/
 	}
 	
 	std::cout << "Done.\n";
@@ -354,10 +362,7 @@ void actionQueryBaselines(const std::string &kindName, const std::string &filena
 
 void actionQueryTime(const std::string &kindName, const std::string &filename)
 {
-	MeasurementSet *ms = new MeasurementSet(filename);
-	const unsigned polarizationCount = ms->GetPolarizationCount();
-	delete ms;
-	
+	const unsigned polarizationCount = MeasurementSet::GetPolarizationCount(filename);
 	const QualityTablesFormatter::StatisticKind kind = QualityTablesFormatter::NameToKind(kindName);
 	
 	QualityTablesFormatter formatter(filename);
@@ -438,29 +443,30 @@ void actionCombine(const std::string outFilename, const std::vector<std::string>
 		{
 			if(remote)
 			{
-				throw std::runtime_error("Can't yet create a new set with clustered observations -- make output filename yourself");
+				/*aoRemote::ClusteredObservation *observation = aoRemote::ClusteredObservation::Load(firstInFilename);
+				aoRemote::ProcessCommander commander(*observation);
+				commander.PushReadAntennaTablesTask();
+				commander.PushReadQualityTablesTask();
+				commander.Run();
+				QualityTablesFormatter formatter(outFilename);
+				commander.Statistics().Save(formatter);
+				delete observation;*/
+			} else {
+				// TODO read antenna tables from "firstInFilename"
+				// TODO read quality tables from all inFilenames
 			}
-			casa::Table templateSet(firstInFilename);
-			casa::Table templateAntennaTable = templateSet.keywordSet().asTable("ANTENNA");
+			// TODO: create main table
+			//casa::SetupNewTable mainTableSetup(outFilename, templateSet.tableDesc(), casa::Table::New);
+			//casa::Table mainOutputTable(mainTableSetup);
 			
-			casa::SetupNewTable mainTableSetup(outFilename, templateSet.tableDesc(), casa::Table::New);
-			casa::Table mainOutputTable(mainTableSetup);
+			// TODO: create antenna table			
+			//casa::SetupNewTable antennaTableSetup(outFilename + "/ANTENNA", templateAntennaTable.tableDesc(), casa::Table::New);
+			//casa::Table antennaOutputTable(antennaTableSetup);
+			//mainOutputTable.rwKeywordSet().defineTable("ANTENNA", antennaOutputTable);
 			
-			casa::SetupNewTable antennaTableSetup(outFilename + "/ANTENNA", templateAntennaTable.tableDesc(), casa::Table::New);
-			casa::Table antennaOutputTable(antennaTableSetup);
-			mainOutputTable.rwKeywordSet().defineTable("ANTENNA", antennaOutputTable);
+			// TODO fill antenna table
 			
-			casa::TableCopy::copyRows(antennaOutputTable, templateAntennaTable);
-		}
-		
-		if(remote)
-		{
-			aoRemote::ClusteredObservation *observation = aoRemote::ClusteredObservation::Load(firstInFilename);
-			aoRemote::ProcessCommander commander(*observation);
-			commander.Run();
-			QualityTablesFormatter formatter(outFilename);
-			commander.Statistics().Save(formatter);
-			delete observation;
+			// TODO fill quality table
 		}
 	}
 }
@@ -471,6 +477,26 @@ void actionRemove(const std::string &filename)
 	formatter.RemoveAllQualityTables();
 }
 
+void actionHistogram(const std::string &filename, const std::string &query)
+{
+	HistogramTablesFormatter histogramFormatter(filename);
+	const unsigned polarizationCount = MeasurementSet::GetPolarizationCount(filename);
+	HistogramCollection collection(polarizationCount);
+	collection.Load(histogramFormatter);
+	if(query == "rfislope")
+	{
+		MeasurementSet set(filename);
+		std::cout << set.GetBandInfo(0).CenterFrequencyHz();
+		for(unsigned p=0;p<polarizationCount;++p)
+		{
+			LogHistogram histogram;
+			collection.GetRFIHistogramForCrossCorrelations(p, histogram);
+			std::cout <<  '\t' << histogram.NormalizedSlopeInRFIRegion();
+		}
+		std::cout << '\n';
+	}
+}
+
 void printSyntax(std::ostream &stream, char *argv[])
 {
 	stream << "Syntax: " << argv[0] <<
@@ -479,7 +505,8 @@ void printSyntax(std::ostream &stream, char *argv[])
 		"\thelp        - Get more info about an action (usage: '" << argv[0] << " help <action>')\n"
 		"\tcollect     - Processes the entire measurement set, collects the statistics\n"
 		"\t              and writes them in the quality tables.\n"
-		"\\tcombine     - Combine several tables.\n"
+		"\tcombine     - Combine several tables.\n"
+		"\thistogram   - Various histogram actions.\n"
 		"\tquery_b     - Query baselines.\n"
 		"\tquery_t     - Query time.\n"
 		"\tremove      - Remove all quality tables.\n"
@@ -546,6 +573,13 @@ int main(int argc, char *argv[])
 						"write the results to a target measurement set. The target measurement set should\n"
 						"not exist beforehand.\n";
 				}
+				else if(helpAction == "histogram")
+				{
+					std::cout << "Syntax: " << argv[0] << " histogram <query> <ms>]\n\n"
+						"Query can be:\n"
+						"\trfislope - performs linear regression on the part of the histogram that should contain the RFI.\n"
+						"\t           Reports one value per polarisation.\n";
+				}
 				else if(helpAction == "remove")
 				{
 					std::cout << "Syntax: " << argv[0] << " remove [ms]\n\n"
@@ -560,7 +594,7 @@ int main(int argc, char *argv[])
 		}
 		else if(action == "collect")
 		{
-			if(argc != 3 && !(argc == 4 && std::string(argv[2]) == "-a") )
+			if(argc != 3 && !(argc == 4 && std::string(argv[2]) == "-h") )
 			{
 				std::cerr << "collect actions needs one or two parameters (the measurement set)\n";
 				return -1;
@@ -583,6 +617,17 @@ int main(int argc, char *argv[])
 				for(int i=3;i<argc;++i)
 					inFilenames.push_back(argv[i]);
 				actionCombine(outFilename, inFilenames);
+			}
+		}
+		else if(action == "histogram")
+		{
+			if(argc != 4)
+			{
+				std::cerr << "histogram actions needs two parameters (the query and the measurement set)\n";
+				return -1;
+			}
+			else {
+				actionHistogram(argv[3], argv[2]);
 			}
 		}
 		else if(action == "summarize")
