@@ -1182,10 +1182,14 @@ void MSWindow::onPlotLogLogDistPressed()
 	if(_timeFrequencyWidget.HasImage())
 	{
 		TimeFrequencyData activeData = GetActiveData();
-		Image2DCPtr image = activeData.GetSingleImage();
-		Mask2DCPtr mask = Mask2D::CreateCopy(activeData.GetSingleMask());
-		HistogramCollection histograms(1);
-		histograms.Add(0, 1, 0, image, mask);
+		HistogramCollection histograms(activeData.PolarisationCount());
+		for(unsigned p=0;p!=activeData.PolarisationCount();++p)
+		{
+			TimeFrequencyData *polData = activeData.CreateTFDataFromPolarisationIndex(p);
+			Image2DCPtr image = polData->GetSingleImage();
+			Mask2DCPtr mask = Mask2D::CreateCopy(polData->GetSingleMask());
+			histograms.Add(0, 1, p, image, mask);
+		}
 		if(_histogramWindow == 0)
 			_histogramWindow = new HistogramWindow(histograms);
 		else
