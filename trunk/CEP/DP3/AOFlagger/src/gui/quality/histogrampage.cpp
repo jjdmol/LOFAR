@@ -50,7 +50,8 @@ HistogramPage::HistogramPage() :
 	_plotPropertiesButton("Properties"),
 	_dataExportButton("Data"),
 	_slopeFrame("Slope"),
-	_drawSlope("Draw"),
+	_drawSlopeButton("Draw"),
+	_slopeAutoRangeButton("Auto range"),
 	_plotPropertiesWindow(0),
 	_histograms(0)
 	{
@@ -123,8 +124,19 @@ HistogramPage::HistogramPage() :
 	_sideBox.pack_start(_dataExportButton, Gtk::PACK_SHRINK);
 	
 	_slopeBox.pack_start(_slopeTextView, Gtk::PACK_SHRINK);
-	_drawSlope.signal_clicked().connect(sigc::mem_fun(*this, &HistogramPage::updatePlot));
-	_slopeBox.pack_start(_drawSlope, Gtk::PACK_SHRINK);
+	_drawSlopeButton.signal_clicked().connect(sigc::mem_fun(*this, &HistogramPage::updatePlot));
+	_slopeBox.pack_start(_drawSlopeButton, Gtk::PACK_SHRINK);
+
+	_slopeBox.pack_start(_slopeAutoRangeButton, Gtk::PACK_SHRINK);
+	_slopeAutoRangeButton.set_active(true);
+	_slopeAutoRangeButton.signal_clicked().connect(sigc::mem_fun(*this, &HistogramPage::onSlopeAutoRangeClicked));
+	
+	_slopeBox.pack_start(_slopeStartEntry, Gtk::PACK_SHRINK);
+	_slopeStartEntry.set_sensitive(false);
+	_slopeStartEntry.signal_activate().connect(sigc::mem_fun(*this, &HistogramPage::updatePlot));
+	_slopeBox.pack_start(_slopeEndEntry, Gtk::PACK_SHRINK);
+	_slopeEndEntry.set_sensitive(false);
+	_slopeEndEntry.signal_activate().connect(sigc::mem_fun(*this, &HistogramPage::updatePlot));
 	
 	_slopeFrame.add(_slopeBox);
 	_sideBox.pack_start(_slopeFrame, Gtk::PACK_SHRINK);
@@ -218,7 +230,7 @@ void HistogramPage::plotPolarization(class HistogramCollection &histograms, unsi
 		{
 			plotFit(rfiHistogram, "Fit to RFI");
 		}
-		if(_drawSlope.get_active())
+		if(_drawSlopeButton.get_active())
 		{
 			plotSlope(rfiHistogram, "Fitted slope");
 		}
@@ -340,7 +352,13 @@ void HistogramPage::addRayleighDifferenceToPlot(LogHistogram &histogram, double 
 void HistogramPage::plotSlope(class LogHistogram &histogram, const std::string &title)
 {
 	double start, end;
-	histogram.GetRFIRegion(start, end);
+	if(_slopeAutoRangeButton.get_active())
+	{
+		histogram.GetRFIRegion(start, end);
+	} else {
+		start = atof(_slopeStartEntry.get_text().c_str());
+		end = atof(_slopeEndEntry.get_text().c_str());
+	}
 	double slope = histogram.NormalizedSlope(start, end);
 	double offset = histogram.NormalizedSlopeOffset(start, end, slope);
 	_plot.StartLine(title, "Amplitude in arbitrary units (log)", "Frequency (log)");
@@ -379,7 +397,25 @@ void HistogramPage::updateSlopeFrame()
 	{
 		LogHistogram histogram;
 		_histograms->GetRFIHistogramForCrossCorrelations(p, histogram);
-		double slope = histogram.NormalizedSlopeInRFIRegion();
+		
+		double minRange, maxRange;
+		if(_slopeAutoRangeButton.get_active())
+		{
+			histogram.GetRFIRegion(minRange, maxRange);
+			if(p==0)
+			{
+				std::stringstream minRangeStr, maxRangeStr;
+				minRangeStr << minRange;
+				maxRangeStr << maxRange;
+				_slopeStartEntry.set_text(minRangeStr.str());
+				_slopeEndEntry.set_text(maxRangeStr.str());
+			}
+		} else {
+			minRange = atof(_slopeStartEntry.get_text().c_str());
+			maxRange = atof(_slopeEndEntry.get_text().c_str());
+		}
+
+		double slope = histogram.NormalizedSlope(minRange, maxRange);
 		str << '\n' << slope;
 	}
 	_slopeTextView.get_buffer()->set_text(str.str());

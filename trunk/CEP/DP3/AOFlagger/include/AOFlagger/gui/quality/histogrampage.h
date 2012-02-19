@@ -80,6 +80,15 @@ class HistogramPage : public Gtk::HBox {
 				updatePlot();
 		}
 		
+		void onSlopeAutoRangeClicked()
+		{
+			bool autoRange = _slopeAutoRangeButton.get_active();
+			_slopeStartEntry.set_sensitive(!autoRange);
+			_slopeEndEntry.set_sensitive(!autoRange);
+			if(autoRange)
+				updatePlot();
+		}
+		
 		Gtk::VBox _sideBox;
 		
 		Gtk::Frame _histogramTypeFrame;
@@ -104,7 +113,9 @@ class HistogramPage : public Gtk::HBox {
 		Gtk::Frame _slopeFrame;
 		Gtk::VBox _slopeBox;
 		Gtk::TextView _slopeTextView;
-		Gtk::CheckButton _drawSlope;
+		Gtk::CheckButton _drawSlopeButton;
+		Gtk::CheckButton _slopeAutoRangeButton;
+		Gtk::Entry _slopeStartEntry, _slopeEndEntry;
 		
 		std::string _statFilename;
 		Plot2D _plot;
