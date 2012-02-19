@@ -232,8 +232,8 @@ class LogHistogram
 		{
 			double sigmaEstimate = AmplitudeWithMaxNormalizedCount();
 			double maxAmplitude = MaxAmplitude();
-			double halfWay = exp((log(sigmaEstimate) + log(maxAmplitude)) * 0.5);
 			start = sigmaEstimate * 20.0;
+			double halfWay = exp((log(start) + log(maxAmplitude)) * 0.5);
 			end = halfWay;
 		}
 
