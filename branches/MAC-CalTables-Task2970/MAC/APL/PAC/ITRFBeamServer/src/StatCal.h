@@ -68,7 +68,10 @@ private:
 	string 	itsFileName;
 	bool	itsIsValid;
 
-	typedef struct headerinfo_t {
+	class headerinfo {
+	public:
+		headerinfo() : mode(-1) {};
+		// datamembers
 		string	station;
 		int		mode;
 		string	source;
@@ -78,7 +81,7 @@ private:
 		string	calDate;
 		string	calPPSdelay;
 		string	comment;
-	} headerinfo;
+	};
 	headerinfo		itsHI;
 
 	// two 

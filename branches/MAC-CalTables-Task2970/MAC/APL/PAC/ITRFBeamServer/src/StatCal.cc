@@ -99,7 +99,7 @@ bool StatCal::_readData(uint mode)
 		}
 	}
 	fclose(file);
-	LOG_INFO_STR("Static CalibrationTable loaded for mode " << mode);
+	LOG_INFO_STR("Static CalibrationTable loaded for mode " << mode << ", first value = " << itsStaticCalibration(0,0,0));
 	return (true);
 }
 
@@ -108,29 +108,41 @@ bool StatCal::_readData(uint mode)
 //
 bool StatCal::_readHeaderInfo(FILE*	file)
 {
-	char	line[1024];
+	char		line[1024];
+	if (!fgets(line,30,file) || strncmp(line, "HeaderStart", 11)) {
+		fseek(file, 0, SEEK_SET);
+		LOG_INFO("Caltable does not start with 'HeaderStart', no headerinfo found");
+		return (true);
+	}
+
 	while (fgets(line, 1024,file)) {
-		if (!strcmp(line, "CalTableHeader.Observation.Station"))
-			itsHI.station = line;
-		else if (!strcmp(line, "CalTableHeader.Observation.Mode"))
-			itsHI.mode = atoi(line);
-		else if (!strcmp(line, "CalTableHeader.Observation.Source"))
-			itsHI.source = line;
-		else if (!strcmp(line, "CalTableHeader.Observation.Date"))
-			itsHI.date = line;
-		else if (!strcmp(line, "CalTableHeader.Calibration.Version"))
-			itsHI.calVersion = line;
-		else if (!strcmp(line, "CalTableHeader.Calibration.Name"))
-			itsHI.calName = line;
-		else if (!strcmp(line, "CalTableHeader.Calibration.Date"))
-			itsHI.calDate = line;
-		else if (!strcmp(line, "CalTableHeader.Calibration.PPSDelay"))
-			itsHI.calPPSdelay = line;
-		else if (!strcmp(line, "CalTableHeader.Comment")) {
-			itsHI.comment = line;
-			fgetc(file);	// readaway last #FF character.
-//		}
-//		else fi (!strcmp(line, "END OF HEADERINFO")) {
+		if (line[strlen(line)-1] == '\n') {	// cut trailing newline character if any
+			line[strlen(line)-1] = '\0';
+		}
+		char*	value(strchr(line,'='));	// position value just after '=' character
+		if (value && *(value+1) != '\0') {
+			value++;
+		}
+		if (strstr(line, "CalTableHeader.Observation.Station"))
+			itsHI.station = ltrim(value);
+		else if (strstr(line, "CalTableHeader.Observation.Mode"))
+			itsHI.mode = atoi(value);
+		else if (strstr(line, "CalTableHeader.Observation.Source"))
+			itsHI.source = ltrim(value);
+		else if (strstr(line, "CalTableHeader.Observation.Date"))
+			itsHI.date = ltrim(value);
+		else if (strstr(line, "CalTableHeader.Calibration.Version"))
+			itsHI.calVersion = ltrim(value);
+		else if (strstr(line, "CalTableHeader.Calibration.Name"))
+			itsHI.calName = ltrim(value);
+		else if (strstr(line, "CalTableHeader.Calibration.Date"))
+			itsHI.calDate = ltrim(value);
+		else if (strstr(line, "CalTableHeader.Calibration.PPSDelay"))
+			itsHI.calPPSdelay = ltrim(value);
+		else if (strstr(line, "CalTableHeader.Comment"))
+			itsHI.comment = ltrim(value);
+		else if (strstr(line, "HeaderStop")) {
+			LOG_INFO("Header information read");
 			return (true);
 		}
 	}
@@ -138,17 +150,21 @@ bool StatCal::_readHeaderInfo(FILE*	file)
 }
 
 //
-// _checkHEaderInfo(mode)
+// _checkHeaderInfo(mode)
 //
 bool StatCal::_checkHeaderInfo(uint	mode) const
 {
+	if (itsHI.mode == -1) {	// file without header?
+		return (true);
+	}
+
 	if ((uint)itsHI.mode != mode) {
-		LOG_ERROR_STR("Caltable for mode " << mode << " contains weights for mode " << itsHI.mode);
+		LOG_ERROR_STR("CALTABLE FOR MODE " << mode << " CONTAINS WEIGHTS FOR MODE " << itsHI.mode);
 		return (false);
 	}
 
 	if (itsHI.station != PVSSDatabaseName()) {
-		LOG_ERROR_STR("Caltable for mode " << mode << " is ment for station " << itsHI.station);
+		LOG_ERROR_STR("CALTABLE FOR MODE " << mode << " IS MENT FOR STATION " << itsHI.station);
 		return (false);
 	}
 
