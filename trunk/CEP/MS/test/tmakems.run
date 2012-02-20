@@ -29,11 +29,11 @@ fi
 
 # Add path of makemsdistr, combinevds/makems, getparsetvalue, startdistproc.
 # Make all of them absolute.
-p1=`cd "$srcdir/../src" >& /dev/null  &&  pwd`
-p2=`cd "../src" >& /dev/null  &&  pwd`
-p3=`cd "../../../LCS/Common/src" >& /dev/null  &&  pwd`
-p4=`cd "$srcdir/../../LMWCommon/src" >& /dev/null  &&  pwd`
-p5=`cd "$srcdir/../../LMWCommxxon/src" >& /dev/null  &&  pwd`
+p1=`cd "$srcdir/../src" > /dev/null 2>&1  &&  pwd`
+p2=`cd "../src" > /dev/null 2>&1  &&  pwd`
+p3=`cd "../../../LCS/Common/src" > /dev/null 2>&1  &&  pwd`
+p4=`cd "$srcdir/../../LMWCommon/src" > /dev/null 2?&1  &&  pwd`
+p5=`cd "$srcdir/../../LMWCommxxon/src" > /dev/null 2>&1  &&  pwd`
 PATH=".:$p1:$p2:$p3:$p4:$p5:$PATH"
 export PATH
 
