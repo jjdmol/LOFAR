@@ -95,42 +95,47 @@ np=`wc -l "$hfn" | awk '{print $1}'`
 # The first host is the master one.
 pidlist=
 rank=0
-for inline in `cat "$hfn"`
+
+# Start a remote process for each line in the hfn file.
+while read inline
 do
-  host=`echo $inline | awk -F'#' '{print $1'}`
-  rest=`echo $inline | awk -F'#' '{print $2'}`
-  part=`echo $rest | awk -F',' '{print $1'}`
-  fsys=`echo $rest | awk -F',' '{print $2'}`
-  partvds=`echo $rest | awk -F',' '{print $3'}`
-  if test "$part" = ""; then
-    part=.
-  fi
-  if test "$fsys" = ""; then
-    fsys=.
-  fi
-  if test "$partvds" = ""; then
-    partvds=.
-  fi
-  if test "$masterhost" = ""; then
-    masterhost="$host"
-  fi
-  # Quote all arguments ("$@" does not work over ssh).
-  arg=
-  for a in "$@"
-  do
-    arg="$arg '$a'"
-  done
-  echo "ssh -x -n $host $program socket $masterhost $port $np $rank '$part' '$fsys' '$partvds' '$envfile' $arg" " &"
-  if test "$dry" = 0; then
-    if test "$logfile" = ""; then
-      ssh -o NoHostAuthenticationForLocalhost=yes -o NumberOfPasswordPrompts=0 -x -n "$host" "$program" socket "$masterhost" "$port" "$np" "$rank" "$part" "$fsys" "$partvds" "$envfile" $arg &
-    else
-      ssh -o NoHostAuthenticationForLocalhost=yes -o NumberOfPasswordPrompts=0 -x -n "$host" "$program" socket "$masterhost" "$port" "$np" "$rank" "$part" "$fsys" "$partvds" "$envfile" $arg > "$logfile-$rank" 2>&1 &
+  if test "$inline" != ""; then
+    host=`echo $inline | awk -F'#' '{print $1'}`
+    rest=`echo $inline | awk -F'#' '{print $2'}`
+    part=`echo $rest | awk -F',' '{print $1'}`
+    fsys=`echo $rest | awk -F',' '{print $2'}`
+    partvds=`echo $rest | awk -F',' '{print $3'}`
+    if test "$part" = ""; then
+      part=.
     fi
-    pidlist="$pidlist $!"
+    if test "$fsys" = ""; then
+      fsys=.
+    fi
+    if test "$partvds" = ""; then
+      partvds=.
+    fi
+    if test "$masterhost" = ""; then
+      masterhost="$host"
+    fi
+    # Quote all arguments ("$@" does not work over ssh).
+    arg=
+    for a in "$@"
+    do
+      arg="$arg '$a'"
+    done
+    echo "ssh -x -n '$host' '$program' socket '$masterhost' $port $np $rank '$part' '$fsys' '$partvds' '$envfile' $arg" " &"
+    if test "$dry" = 0; then
+      if test "$logfile" = ""; then
+        # Use extra quotes in argument that might contain whitespace.
+        ssh -o NoHostAuthenticationForLocalhost=yes -o NumberOfPasswordPrompts=0 -x -n "$host" "'$program'" socket "'$masterhost'" "'$port'" "$np" "$rank" "'$part'" "'$fsys'" "'$partvds'" "'$envfile'" $arg &
+      else
+        ssh -o NoHostAuthenticationForLocalhost=yes -o NumberOfPasswordPrompts=0 -x -n "$host" "'$program'" socket "'$masterhost'" "'$port'" "$np" "$rank" "'$part'" "'$fsys'" "'$partvds'" "'$envfile'" $arg > "$logfile-$rank" 2>&1 &
+      fi
+      pidlist="$pidlist $!"
+    fi
+    rank=`expr $rank + 1`
   fi
-  rank=`expr $rank + 1`
-done
+done < "$hfn"
 
 # If needed, wait for the processes to end.
 # If a process ended unsuccessfully, kill the others if needed.
