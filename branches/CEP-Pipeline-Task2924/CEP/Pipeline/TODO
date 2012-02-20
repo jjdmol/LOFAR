@@ -1,6 +1,0 @@
-* Make sure that the A-team source model files are put into the LOFAR source
-  tree and that they're installed in $LOFARROOT/share/skymodels.
-
-* How should the calibrator pipeline get the location of the calibrator source
-  model file? Should they also become part of the LOFAR source tree and be
-  installed in $LOFARROOT/share/skymodels
