@@ -29,7 +29,9 @@
 #include <AOFlagger/msio/image2d.h>
 #include <AOFlagger/msio/mask2d.h>
 
-class HistogramCollection
+#include <AOFlagger/util/serializable.h>
+
+class HistogramCollection : public Serializable
 {
 	public:
 		typedef std::pair<unsigned, unsigned> AntennaPair;
@@ -79,6 +81,38 @@ class HistogramCollection
 			}
 		}
 		
+		void Add(const HistogramCollection &collection)
+		{
+			if(collection._polarizationCount != _polarizationCount)
+				throw std::runtime_error("Polarization counts of histogram collections don't match");
+			for(unsigned p=0;p<_polarizationCount;++p)
+			{
+				for(std::map<AntennaPair, LogHistogram*>::const_iterator i=collection._totalHistograms[p].begin(); i!=collection._totalHistograms[p].end(); ++i)
+				{
+					LogHistogram &histogram = GetTotalHistogram(i->first.first, i->first.second, p);
+					histogram.Add(*i->second);
+				}
+				
+				for(std::map<AntennaPair, LogHistogram*>::const_iterator i=collection._rfiHistograms[p].begin(); i!=collection._rfiHistograms[p].end(); ++i)
+				{
+					LogHistogram &histogram = GetRFIHistogram(i->first.first, i->first.second, p);
+					histogram.Add(*i->second);
+				}
+			}
+		}
+		
+		bool Empty() const
+		{
+			if(_polarizationCount == 0)
+				return true;
+			for(unsigned p=0;p!=_polarizationCount;++p)
+			{
+				if(!_totalHistograms[p].empty() || !_rfiHistograms[p].empty())
+					return false;
+			}
+			return true;
+		}
+		
 		void Add(const unsigned antenna1, const unsigned antenna2, const unsigned polarization, Image2DCPtr image, Mask2DCPtr mask);
 		
 		LogHistogram &GetTotalHistogram(const unsigned a1, const unsigned a2, const unsigned polarization)
@@ -124,6 +158,23 @@ class HistogramCollection
 		void Plot(class Plot2D &plot, unsigned polarization);
 		
 		unsigned PolarizationCount() const { return _polarizationCount; }
+		
+		virtual void Serialize(std::ostream &stream) const
+		{
+			SerializeToUInt64(stream, _polarizationCount);
+			serializeMapArray(stream, _totalHistograms);
+			serializeMapArray(stream, _rfiHistograms);
+		}
+		
+		virtual void Unserialize(std::istream &stream)
+		{
+			destruct();
+			_polarizationCount = UnserializeUInt64(stream);
+			init();
+			unserializeMapArray(stream, _totalHistograms);
+			unserializeMapArray(stream, _rfiHistograms);
+		}
+		
 	private:
 		unsigned _polarizationCount;
 		std::map<AntennaPair, LogHistogram*> *_totalHistograms;
@@ -158,6 +209,47 @@ class HistogramCollection
 				}
 				delete[] _totalHistograms;
 				delete[] _rfiHistograms;
+			}
+		}
+		
+		void serializeMapArray(std::ostream &stream, const std::map<AntennaPair, LogHistogram*> *map) const
+		{
+			for(unsigned p=0;p<_polarizationCount;++p)
+				serializeMap(stream, map[p]);
+		}
+		
+		void unserializeMapArray(std::istream &stream, std::map<AntennaPair, LogHistogram*> *map)
+		{
+			for(unsigned p=0;p<_polarizationCount;++p)
+				unserializeMap(stream, map[p]);
+		}
+		
+		void serializeMap(std::ostream &stream, const std::map<AntennaPair, LogHistogram*> &map) const
+		{
+			SerializeToUInt64(stream, map.size());
+			for(std::map<AntennaPair, LogHistogram*>::const_iterator i=map.begin();i!=map.end();++i)
+			{
+				const AntennaPair &antennae = i->first;
+				const LogHistogram *histogram = i->second;
+				SerializeToUInt32(stream, antennae.first);
+				SerializeToUInt32(stream, antennae.second);
+				histogram->Serialize(stream);
+			}
+		}
+		
+		void unserializeMap(std::istream &stream, std::map<AntennaPair, LogHistogram*> &map)
+		{
+			map.clear();
+			size_t mapSize = UnserializeUInt64(stream);
+			std::map<AntennaPair, LogHistogram*>::iterator insertPos = map.begin();
+			for(size_t i=0;i!=mapSize;++i)
+			{
+				std::pair<AntennaPair, LogHistogram*> p;
+				p.first.first = UnserializeUInt32(stream);
+				p.first.second = UnserializeUInt32(stream);
+				p.second = new LogHistogram();
+				p.second->Unserialize(stream);
+				insertPos = map.insert(insertPos, p);
 			}
 		}
 		

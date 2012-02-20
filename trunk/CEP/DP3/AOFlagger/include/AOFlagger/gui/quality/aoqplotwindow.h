@@ -103,6 +103,7 @@ class AOQPlotWindow : public Gtk::Window {
 		bool _isOpen;
 		std::string _filename;
 		class StatisticsCollection *_statCollection;
+		class HistogramCollection *_histCollection;
 		class StatisticsCollection *_fullStats;
 		std::vector<class AntennaInfo> _antennas;
 };
