@@ -53,7 +53,8 @@ HistogramPage::HistogramPage() :
 	_drawSlopeButton("Draw"),
 	_slopeAutoRangeButton("Auto range"),
 	_plotPropertiesWindow(0),
-	_histograms(0)
+	_histograms(0),
+	_summedPolarizationHistograms(0)
 	{
 	_histogramTypeBox.pack_start(_totalHistogramButton, Gtk::PACK_SHRINK);
 	_totalHistogramButton.set_active(true);
@@ -157,12 +158,14 @@ HistogramPage::~HistogramPage()
 		delete _plotPropertiesWindow;
 	if(_histograms != 0)
 		delete _histograms;
+	if(_summedPolarizationHistograms != 0)
+		delete _summedPolarizationHistograms;
 	delete _dataWindow;
 }
 
 void HistogramPage::readFromFile()
 {
-	if(_histograms != 0) delete _histograms;
+	CloseStatistics();
 	HistogramTablesFormatter histogramTables(_statFilename);
 	if(histogramTables.HistogramsExist())
 	{
@@ -175,10 +178,18 @@ void HistogramPage::readFromFile()
 	}
 }
 
+void HistogramPage::CloseStatistics()
+{
+	_statFilename = std::string();
+	if(_histograms != 0) delete _histograms;
+	if(_summedPolarizationHistograms != 0) delete _summedPolarizationHistograms;
+}
+
 void HistogramPage::SetStatistics(HistogramCollection &collection)
 {
-	if(_histograms != 0) delete _histograms;
+	CloseStatistics();
 	_histograms = new HistogramCollection(collection);
+	_summedPolarizationHistograms = _histograms->CreateSummedPolarizationCollection();
 	updatePlot();
 }
 
@@ -191,11 +202,11 @@ void HistogramPage::updatePlot()
 		const unsigned polarizationCount = _histograms->PolarizationCount();
 		if(_xxPolarizationButton.get_active())
 			plotPolarization(*_histograms, 0);
-		if(_xyPolarizationButton.get_active() && polarizationCount>=1)
+		if(_xyPolarizationButton.get_active() && polarizationCount>=2)
 			plotPolarization(*_histograms, 1);
-		if(_yxPolarizationButton.get_active() && polarizationCount>=2)
+		if(_yxPolarizationButton.get_active() && polarizationCount>=3)
 			plotPolarization(*_histograms, 2);
-		if(_yyPolarizationButton.get_active() && polarizationCount>=3)
+		if(_yyPolarizationButton.get_active() && polarizationCount>=4)
 			plotPolarization(*_histograms, 3);
 		
 		_plotWidget.Update();
@@ -219,21 +230,21 @@ void HistogramPage::plotPolarization(class HistogramCollection &histograms, unsi
 		}
 	}
 
+	LogHistogram rfiHistogram;
+	histograms.GetRFIHistogramForCrossCorrelations(p, rfiHistogram);
 	if(_rfiHistogramButton.get_active())
 	{
 		_plot.StartLine("RFI histogram", "Amplitude in arbitrary units (log)", "Frequency (log)");
-		LogHistogram rfiHistogram;
-		histograms.GetRFIHistogramForCrossCorrelations(p, rfiHistogram);
 		addHistogramToPlot(rfiHistogram);
 
 		if(_fitButton.get_active() || _subtractFitButton.get_active())
 		{
 			plotFit(rfiHistogram, "Fit to RFI");
 		}
-		if(_drawSlopeButton.get_active())
-		{
-			plotSlope(rfiHistogram, "Fitted slope");
-		}
+	}
+	if(_drawSlopeButton.get_active())
+	{
+		plotSlope(rfiHistogram, "Fitted slope");
 	}
 	
 	if(_notRFIHistogramButton.get_active())

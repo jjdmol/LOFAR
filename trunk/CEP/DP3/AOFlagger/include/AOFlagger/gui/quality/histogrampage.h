@@ -27,12 +27,12 @@
 #include <gtkmm/checkbutton.h>
 #include <gtkmm/entry.h>
 #include <gtkmm/frame.h>
+#include <gtkmm/textview.h>
 
 #include <AOFlagger/quality/qualitytablesformatter.h>
 
 #include <AOFlagger/gui/plot/plot2d.h>
 #include <AOFlagger/gui/plot/plotwidget.h>
-#include <gtkmm/textview.h>
 
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
@@ -49,10 +49,7 @@ class HistogramPage : public Gtk::HBox {
 			updatePlot();
 		}
 		void SetStatistics(class HistogramCollection &collection);
-		void CloseStatistics()
-		{
-			_statFilename = std::string();
-		}
+		void CloseStatistics();
 		bool HasStatistics() const
 		{
 			return _histograms != 0;
@@ -123,6 +120,7 @@ class HistogramPage : public Gtk::HBox {
 		class PlotPropertiesWindow *_plotPropertiesWindow;
 		class DataWindow *_dataWindow;
 		class HistogramCollection *_histograms;
+		class HistogramCollection *_summedPolarizationHistograms;
 };
 
 #endif
