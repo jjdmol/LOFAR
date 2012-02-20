@@ -774,12 +774,13 @@ class StatisticsCollection : public Serializable
 			_timeStatistics.clear();
 			size_t count = (size_t) UnserializeUInt64(stream);
 			
+			std::map<double, DoubleStatMap>::iterator insertPos = _timeStatistics.begin();
 			for(size_t i=0;i<count;++i)
 			{
 				double frequency = UnserializeDouble(stream);
-				std::map<double, DoubleStatMap>::iterator iterator =
-					_timeStatistics.insert(std::pair<double, DoubleStatMap>(frequency, DoubleStatMap())).first;
-				unserializeDoubleStatMap(stream, iterator->second);
+				insertPos =
+					_timeStatistics.insert(insertPos, std::pair<double, DoubleStatMap>(frequency, DoubleStatMap()));
+				unserializeDoubleStatMap(stream, insertPos->second);
 			}
 		}
 		
@@ -813,12 +814,13 @@ class StatisticsCollection : public Serializable
 			_baselineStatistics.clear();
 			size_t count = (size_t) UnserializeUInt64(stream);
 			
+			std::map<double, BaselineStatisticsMap>::iterator insertPos = _baselineStatistics.begin();
 			for(size_t i=0;i<count;++i)
 			{
 				double frequency = UnserializeDouble(stream);
-				std::map<double, BaselineStatisticsMap>::iterator iterator =
-					_baselineStatistics.insert(std::pair<double, BaselineStatisticsMap>(frequency, BaselineStatisticsMap(_polarizationCount))).first;
-				iterator->second.Unserialize(stream);
+				insertPos = _baselineStatistics.insert(
+					insertPos, std::pair<double, BaselineStatisticsMap>(frequency, BaselineStatisticsMap(_polarizationCount)));
+				insertPos->second.Unserialize(stream);
 			}
 		}
 		
@@ -839,12 +841,13 @@ class StatisticsCollection : public Serializable
 		{
 			size_t count = (size_t) UnserializeUInt64(stream);
 			
+			std::map<double, DefaultStatistics>::iterator insertPos = statMap.begin();
 			for(size_t i=0;i<count;++i)
 			{
 				double key = UnserializeDouble(stream);
-				std::map<double, DefaultStatistics>::iterator iterator =
-					statMap.insert(std::pair<double, DefaultStatistics>(key, DefaultStatistics(_polarizationCount))).first;
-				iterator->second.Unserialize(stream);
+				insertPos =
+					statMap.insert(insertPos, std::pair<double, DefaultStatistics>(key, DefaultStatistics(_polarizationCount)));
+				insertPos->second.Unserialize(stream);
 			}
 		}
 		
