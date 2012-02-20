@@ -55,13 +55,14 @@ class HistogramPage : public Gtk::HBox {
 			return _histograms != 0;
 		}
 	private:
-		void addHistogramToPlot(class LogHistogram &histogram);
-		void addRayleighToPlot(class LogHistogram &histogram, double sigma, double n);
-		void addRayleighDifferenceToPlot(LogHistogram &histogram, double sigma, double n);
+		void addHistogramToPlot(const class LogHistogram &histogram);
+		void addRayleighToPlot(const class LogHistogram &histogram, double sigma, double n);
+		void addRayleighDifferenceToPlot(const LogHistogram &histogram, double sigma, double n);
 		void updatePlot();
-		void plotPolarization(class HistogramCollection &histograms, unsigned p);
-		void plotFit(class LogHistogram &histogram, const std::string &title);
-		void plotSlope(class LogHistogram &histogram, const std::string &title);
+		void plotPolarization(const HistogramCollection &histogramCollection, unsigned polarization);
+		void plotPolarization(const class LogHistogram &totalHistogram, const class LogHistogram &rfiHistogram);
+		void plotFit(const class LogHistogram &histogram, const std::string &title);
+		void plotSlope(const class LogHistogram &histogram, const std::string &title);
 		void onPlotPropertiesClicked();
 		void onDataExportClicked();
 		void readFromFile();
@@ -94,7 +95,7 @@ class HistogramPage : public Gtk::HBox {
 		
 		Gtk::Frame _polarizationFrame;
 		Gtk::VBox _polarizationBox;
-		Gtk::CheckButton _xxPolarizationButton, _xyPolarizationButton, _yxPolarizationButton, _yyPolarizationButton;
+		Gtk::CheckButton _xxPolarizationButton, _xyPolarizationButton, _yxPolarizationButton, _yyPolarizationButton, _sumPolarizationButton;
 		
 		Gtk::Frame _fitFrame;
 		Gtk::VBox _fitBox;

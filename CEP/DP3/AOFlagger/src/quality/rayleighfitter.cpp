@@ -17,11 +17,11 @@ static int fit_f(const gsl_vector *xvec, void *data, gsl_vector *f)
 	
 	size_t t = 0;
 	RayleighFitter &fitter = *(RayleighFitter *) data;
-	LogHistogram &hist = *fitter._hist;
+	const LogHistogram &hist = *fitter._hist;
 	const double minVal = fitter._minVal;
 	const double maxVal = fitter._maxVal;
   
-	for (LogHistogram::iterator i=hist.begin(); i!=hist.end(); ++i)
+	for (LogHistogram::const_iterator i=hist.begin(); i!=hist.end(); ++i)
 	{
 		const double x = i.value();
 		if(x >= minVal && x < maxVal && std::isfinite(x))
@@ -48,12 +48,12 @@ int fit_df(const gsl_vector *xvec, void *data, gsl_matrix *J)
 	
 	size_t t = 0;
 	RayleighFitter &fitter = *(RayleighFitter *) data;
-	LogHistogram &hist = *fitter._hist;
+	const LogHistogram &hist = *fitter._hist;
 	const double minVal = fitter._minVal;
 	const double maxVal = fitter._maxVal;
 	const double sigma2P2 = 2.0*sigma*sigma;
   const double sigmaP3 = sigma*sigma*sigma;
-	for (LogHistogram::iterator i=hist.begin(); i!=hist.end(); ++i)
+	for (LogHistogram::const_iterator i=hist.begin(); i!=hist.end(); ++i)
 	{
 		const double x = i.value();
 		if(x >= minVal && x < maxVal && std::isfinite(x))
@@ -92,7 +92,7 @@ void print_state(size_t iter, gsl_multifit_fdfsolver *s)
 	std::cout << "iteration " << iter << ", sigma=" << sigma << ", N=" << N << "\n";
 }
 
-void RayleighFitter::Fit(double minVal, double maxVal, LogHistogram &hist, double &sigma, double &n)
+void RayleighFitter::Fit(double minVal, double maxVal, const LogHistogram &hist, double &sigma, double &n)
 {
 	unsigned int iter = 0;
 	const size_t nVars = 2;
@@ -154,7 +154,7 @@ void RayleighFitter::Fit(double minVal, double maxVal, LogHistogram &hist, doubl
 
 #else // No gsl...
 
-void RayleighFitter::Fit(double minVal, double maxVal, LogHistogram &hist, double &sigma, double &n)
+void RayleighFitter::Fit(double minVal, double maxVal, const LogHistogram &hist, double &sigma, double &n)
 {
 	sigma = 1.0;
 	n = 1.0;
@@ -162,7 +162,7 @@ void RayleighFitter::Fit(double minVal, double maxVal, LogHistogram &hist, doubl
 
 #endif
 
-double RayleighFitter::SigmaEstimate(LogHistogram &hist)
+double RayleighFitter::SigmaEstimate(const LogHistogram &hist)
 {
 	return hist.AmplitudeWithMaxNormalizedCount();
 }
@@ -174,11 +174,11 @@ void RayleighFitter::FindFitRangeUnderRFIContamination(double minPositiveAmplitu
 	std::cout << "Found range " << minValue << " -- " << maxValue << "\n";
 }
 
-double RayleighFitter::NEstimate(LogHistogram &hist, double rangeStart, double rangeEnd)
+double RayleighFitter::NEstimate(const LogHistogram &hist, double rangeStart, double rangeEnd)
 {
 	double rangeSum = 0.0;
 	size_t count = 0;
-	for (LogHistogram::iterator i=hist.begin(); i!=hist.end(); ++i)
+	for (LogHistogram::const_iterator i=hist.begin(); i!=hist.end(); ++i)
 	{
 		if(i.value() > rangeStart && i.value() < rangeEnd && std::isfinite(i.value()))
 		{

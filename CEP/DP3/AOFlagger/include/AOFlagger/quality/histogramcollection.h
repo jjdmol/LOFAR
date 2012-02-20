@@ -125,12 +125,12 @@ class HistogramCollection : public Serializable
 			return _rfiHistograms[polarization];
 		}
 		
-		void GetTotalHistogramForCrossCorrelations(const unsigned polarization, LogHistogram &target)
+		void GetTotalHistogramForCrossCorrelations(const unsigned polarization, LogHistogram &target) const
 		{
 			getHistogramForCrossCorrelations(_totalHistograms, polarization, target);
 		}
 		
-		void GetRFIHistogramForCrossCorrelations(const unsigned polarization, LogHistogram &target)
+		void GetRFIHistogramForCrossCorrelations(const unsigned polarization, LogHistogram &target) const
 		{
 			getHistogramForCrossCorrelations(_rfiHistograms, polarization, target);
 		}
@@ -284,9 +284,9 @@ class HistogramCollection : public Serializable
 			return *i->second;
 		}
 		
-		void getHistogramForCrossCorrelations(std::map<AntennaPair, LogHistogram*> *histograms, const unsigned polarization, LogHistogram &target)
+		void getHistogramForCrossCorrelations(std::map<AntennaPair, LogHistogram*> *histograms, const unsigned polarization, LogHistogram &target) const
 		{
-			for(std::map<AntennaPair, LogHistogram*>::iterator i=histograms[polarization].begin(); i!=histograms[polarization].end(); ++i)
+			for(std::map<AntennaPair, LogHistogram*>::const_iterator i=histograms[polarization].begin(); i!=histograms[polarization].end(); ++i)
 			{
 				if(i->first.first != i->first.second)
 					target.Add(*i->second);
