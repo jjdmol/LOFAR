@@ -74,7 +74,7 @@ if test $help = 1; then
   echo "                     -makeopt='format=<'"
   echo "       ms-gds        name of global VDS file of the MS"
   echo "       srccat        name of ASCII file containing sources"
-  echo "                     makesourcedb options can be givn using -makeopt"
+  echo "                     makesourcedb options can be given using -makeopt"
   echo "       sourcedb-name   extension name of new sourcedb (defaults to sky)"
   echo "                     e.g. for 100319.MS the name 100319.sky is used"
   echo "       clusterdesc   name of clusterdesc file"
@@ -140,7 +140,7 @@ fi
 # Its name is the MS-vds one with the extension replaced by $pdb.
 vdsname=`echo "$msvds" | sed -e "s%\([^.\]*\)\.[^/]*$%\1.$pdb%"`
 if test -e "$vdsname"; then
-  if test $overwrite = 0; then
+  if test "$overwrite" = 0; then
     echo "Error, distributed sourcedb $vdsname already exists"
     exit 1
   else

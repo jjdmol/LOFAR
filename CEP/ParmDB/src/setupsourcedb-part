@@ -82,7 +82,8 @@ if test "$dry" != dry; then
     rm -rf "$msn/$pdb"
   fi
   # Use eval to avoid problems with quotes in sdbopt.
-  eval makesourcedb "$sdbopt" "'in=$srccat'" "'out=$msn/$pdb'" || exit 1
+  # Use quotes in case filenames contain blanks.
+  eval makesourcedb $sdbopt "'in=$srccat'" "'out=$msn/$pdb'" || exit 1
 
   if test "$stepfreq" != "."  -a  "$steptime" != "."; then
     # Put default steps into the sourcedb.
