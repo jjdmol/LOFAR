@@ -110,8 +110,7 @@ void AOQPlotWindow::close()
 		_frequencyPlotPage.CloseStatistics();
 		_timeFrequencyPlotPage.CloseStatistics();
 		_summaryPage.CloseStatistics();
-		if(_histogramPage.is_visible())
-			_histogramPage.CloseStatistics();
+		_histogramPage.CloseStatistics();
 		delete _statCollection;
 		delete _histCollection;
 		delete _fullStats;
@@ -169,8 +168,11 @@ void AOQPlotWindow::readStatistics(bool downsampleTime, bool downsampleFreq, siz
 		_statCollection->Load(qualityTables);
 		
 		HistogramTablesFormatter histogramTables(_filename);
+		_histCollection = new HistogramCollection(polarizationCount);
 		if(histogramTables.HistogramsExist())
+		{
 			_histCollection->Load(histogramTables);
+		}
 	}
 	setShowHistograms(!_histCollection->Empty());
 	if(downsampleTime)
