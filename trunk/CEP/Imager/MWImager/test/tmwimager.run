@@ -28,19 +28,21 @@ curdir=`pwd`
 if test "$srcdir" = ""; then
   srcdir=../../../../../../LOFAR/CEP/Imager/MWImager/test
 fi
-srcdir=`cd "$srcdir/../src" > /dev/null && pwd`
-exedir=`cd ../test > /dev/null && pwd`
-# Also define paths for getparsetvalue and startdistproc
-gpvdir=`cd ../../../../LCS/Common/src > /dev/null && pwd`
-sdpdir=`cd "$srcdir/../../../LMWCommon/src" > /Dev/null && pwd`
-ppddir=`cd ../../../../LCS/pyparameterset/src > /dev/null && pwd`
-libdir=`cd ../../../../installed/lib > /dev/null && pwd`
+srcdir=`cd "$srcdir/../src" > /dev/null 2>&1  &&  pwd`
+exedir=`cd ../test > /dev/null 2>&1  &&  pwd`
+# Also define paths for getparsetvalue, startdistproc, finddproc.
+gpvdir=`cd ../../../../LCS/Common/src > /dev/null 2>&1  &&  pwd`
+sdpdir=`cd "$srcdir/../../../LMWCommon/src" > /dev/null 2>&1  &&  pwd`
+fdpdir=`cd ../../../LMWCommon/src > /dev/null 2>&1  &&  pwd`
+ppddir=`cd ../../../../LCS/pyparameterset/src > /dev/null 2>&1  &&  pwd`
+libdir=`cd ../../../../installed/lib > /dev/null 2>&1  &&  pwd`
 
 # Extend PATH.
-PATH="`pwd`:$srcdir:$exedir:$gpvdir:$sdpdir:$PATH"
+PATH="`pwd`:$srcdir:$exedir:$gpvdir:$sdpdir:$fdpdir:$PATH"
 export PATH
 
-# Make it possible to find lofar.parameterset by sett ing path.
+# Make it possible to find lofar.parameterset by setting path to installed
+# because _parameterset.so is only built when installed.
 PYTHONPATH="$libdir/python2.5/site-packages:$PYTHONPATH"
 export PYTHONPATH
 LD_LIBRARY_PATH="$libdir:$LD_LIBRARY_PATH"
