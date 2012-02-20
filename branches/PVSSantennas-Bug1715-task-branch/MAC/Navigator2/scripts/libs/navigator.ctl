@@ -63,6 +63,8 @@ global dyn_int    g_subrackList;       // holds valid subracks for choices in th
 global dyn_int    g_RSPList;           // holds valid RSP's for choices in the viewBox
 global dyn_int    g_TBBList;           // holds valid TBB's for choices in the viewBox
 global dyn_int    g_RCUList;           // holds valid RCU's for choices in the viewBox
+global dyn_int    g_AntennaList;       // holds valid Antenna's for choices in the viewBox
+global dyn_int    g_ElementList;       // holds valid HBA Elements's for choices in the viewBox
 // CEP based globals
 global dyn_int    g_BGPRackList;       // holds valid bgpracks for choices in viewBox
 global dyn_int    g_BGPMidplaneList;   // holds valid bgpmidplanes for choices in viewBox
