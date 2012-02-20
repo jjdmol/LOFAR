@@ -27,10 +27,12 @@
 
 #include "histogramtablesformatter.h"
 
-class LogHistogram
+#include <AOFlagger/util/serializable.h>
+
+class LogHistogram : public Serializable
 {
 	private:
-		struct AmplitudeBin
+		struct AmplitudeBin : public Serializable
 		{
 			AmplitudeBin() :
 				count(0)
@@ -55,6 +57,15 @@ class LogHistogram
 				else
 					count = 0;
 				return *this;
+			}
+			
+			virtual void Serialize(std::ostream &stream) const
+			{
+				SerializeToUInt64(stream, count);
+			}
+			virtual void Unserialize(std::istream &stream)
+			{
+				count = UnserializeUInt64(stream);
 			}
 		};
 		
@@ -300,7 +311,32 @@ class LogHistogram
 			return const_iterator(*this, _amplitudes.end());
 		}
 		
+		virtual void Serialize(std::ostream &stream) const
+		{
+			SerializeToUInt64(stream, _amplitudes.size());
+			for(std::map<double, AmplitudeBin>::const_iterator i=_amplitudes.begin();i!=_amplitudes.end();++i)
+			{
+				SerializeToDouble(stream, i->first);
+				i->second.Serialize(stream);
+			}
+		}
+		
+		virtual void Unserialize(std::istream &stream)
+		{
+			_amplitudes.clear();
+			size_t mapSize = UnserializeUInt64(stream);
+			std::map<double, AmplitudeBin>::iterator insertPos = _amplitudes.begin();
+			for(size_t i=0;i!=mapSize;++i)
+			{
+				std::pair<double, AmplitudeBin> p;
+				p.first = UnserializeDouble(stream);
+				p.second.Unserialize(stream);
+				insertPos = _amplitudes.insert(insertPos, p);
+			}
+		}
 	private:
+		std::map<double, AmplitudeBin> _amplitudes;
+		
 		AmplitudeBin &getBin(double centralAmplitude)
 		{
 			std::map<double, class AmplitudeBin>::iterator element =
@@ -324,8 +360,6 @@ class LogHistogram
 				pow10(log10(x)+0.005) :
 				-pow10(log10(x)+0.005);
 		}
-		
-		std::map<double, AmplitudeBin> _amplitudes;
 		
 		static double getCentralAmplitude(const double amplitude)
 		{

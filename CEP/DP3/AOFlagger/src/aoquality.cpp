@@ -340,12 +340,13 @@ void actionQueryTime(const std::string &kindName, const std::string &filename)
 void actionSummarize(const std::string &filename)
 {
 	bool remote = aoRemote::ClusteredObservation::IsClusteredFilename(filename);
-	StatisticsCollection collection;
+	StatisticsCollection statisticsCollection;
+	HistogramCollection histogramCollection;
 	if(remote)
 	{
 		aoRemote::ClusteredObservation *observation = aoRemote::ClusteredObservation::Load(filename);
 		aoRemote::ProcessCommander commander(*observation);
-		commander.PushReadQualityTablesTask(&collection);
+		commander.PushReadQualityTablesTask(&statisticsCollection, &histogramCollection);
 		commander.Run();
 		delete observation;
 	}
@@ -354,26 +355,26 @@ void actionSummarize(const std::string &filename)
 		const unsigned polarizationCount = ms->GetPolarizationCount();
 		delete ms;
 		
-		collection.SetPolarizationCount(polarizationCount);
+		statisticsCollection.SetPolarizationCount(polarizationCount);
 		QualityTablesFormatter qualityData(filename);
-		collection.Load(qualityData);
+		statisticsCollection.Load(qualityData);
 	}
 	
-	DefaultStatistics statistics(collection.PolarizationCount());
+	DefaultStatistics statistics(statisticsCollection.PolarizationCount());
 	
-	collection.GetGlobalTimeStatistics(statistics);
+	statisticsCollection.GetGlobalTimeStatistics(statistics);
 	std::cout << "Time statistics: \n";
 	printStatistics(statistics);
 	
-	collection.GetGlobalFrequencyStatistics(statistics);
+	statisticsCollection.GetGlobalFrequencyStatistics(statistics);
 	std::cout << "\nFrequency statistics: \n";
 	printStatistics(statistics);
 
-	collection.GetGlobalCrossBaselineStatistics(statistics);
+	statisticsCollection.GetGlobalCrossBaselineStatistics(statistics);
 	std::cout << "\nCross-correlated baseline statistics: \n";
 	printStatistics(statistics);
 
-	collection.GetGlobalAutoBaselineStatistics(statistics);
+	statisticsCollection.GetGlobalAutoBaselineStatistics(statistics);
 	std::cout << "\nAuto-correlated baseline: \n";
 	printStatistics(statistics);
 }
