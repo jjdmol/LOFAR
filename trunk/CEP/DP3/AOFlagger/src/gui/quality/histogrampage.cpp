@@ -40,6 +40,7 @@ HistogramPage::HistogramPage() :
 	_xyPolarizationButton("XY"),
 	_yxPolarizationButton("YX"),
 	_yyPolarizationButton("YY"),
+	_sumPolarizationButton("Sum"),
 	_fitFrame("Fitting"),
 	_fitButton("Fit"),
 	_subtractFitButton("Subtract"),
@@ -71,7 +72,7 @@ HistogramPage::HistogramPage() :
 	_sideBox.pack_start(_histogramTypeFrame, Gtk::PACK_SHRINK);
 	
 	_polarizationBox.pack_start(_xxPolarizationButton, Gtk::PACK_SHRINK);
-	_xxPolarizationButton.set_active(true);
+	_xxPolarizationButton.set_active(false);
 	_xxPolarizationButton.signal_clicked().connect(sigc::mem_fun(*this, &HistogramPage::updatePlot));
 	_polarizationBox.pack_start(_xyPolarizationButton, Gtk::PACK_SHRINK);
 	_xyPolarizationButton.set_active(false);
@@ -80,8 +81,11 @@ HistogramPage::HistogramPage() :
 	_yxPolarizationButton.set_active(false);
 	_yxPolarizationButton.signal_clicked().connect(sigc::mem_fun(*this, &HistogramPage::updatePlot));
 	_polarizationBox.pack_start(_yyPolarizationButton, Gtk::PACK_SHRINK);
-	_yyPolarizationButton.set_active(true);
+	_yyPolarizationButton.set_active(false);
 	_yyPolarizationButton.signal_clicked().connect(sigc::mem_fun(*this, &HistogramPage::updatePlot));
+	_polarizationBox.pack_start(_sumPolarizationButton, Gtk::PACK_SHRINK);
+	_sumPolarizationButton.set_active(true);
+	_sumPolarizationButton.signal_clicked().connect(sigc::mem_fun(*this, &HistogramPage::updatePlot));
 
 	_polarizationFrame.add(_polarizationBox);
 	
@@ -208,6 +212,8 @@ void HistogramPage::updatePlot()
 			plotPolarization(*_histograms, 2);
 		if(_yyPolarizationButton.get_active() && polarizationCount>=4)
 			plotPolarization(*_histograms, 3);
+		if(_sumPolarizationButton.get_active())
+			plotPolarization(*_summedPolarizationHistograms, 0);
 		
 		_plotWidget.Update();
 		updateSlopeFrame();
@@ -215,13 +221,19 @@ void HistogramPage::updatePlot()
 	}
 }
 
-void HistogramPage::plotPolarization(class HistogramCollection &histograms, unsigned p)
+void HistogramPage::plotPolarization(const HistogramCollection &histogramCollection, unsigned polarization)
+{
+	LogHistogram totalHistogram, rfiHistogram;
+	histogramCollection.GetTotalHistogramForCrossCorrelations(polarization, totalHistogram);
+	histogramCollection.GetRFIHistogramForCrossCorrelations(polarization, rfiHistogram);
+	plotPolarization(totalHistogram, rfiHistogram);
+}
+
+void HistogramPage::plotPolarization(const LogHistogram &totalHistogram, const LogHistogram &rfiHistogram)
 {
 	if(_totalHistogramButton.get_active())
 	{
 		_plot.StartLine("Total histogram", "Amplitude in arbitrary units (log)", "Frequency (log)");
-		LogHistogram totalHistogram;
-		histograms.GetTotalHistogramForCrossCorrelations(p, totalHistogram);
 		addHistogramToPlot(totalHistogram);
 		
 		if(_fitButton.get_active() || _subtractFitButton.get_active())
@@ -230,8 +242,6 @@ void HistogramPage::plotPolarization(class HistogramCollection &histograms, unsi
 		}
 	}
 
-	LogHistogram rfiHistogram;
-	histograms.GetRFIHistogramForCrossCorrelations(p, rfiHistogram);
 	if(_rfiHistogramButton.get_active())
 	{
 		_plot.StartLine("RFI histogram", "Amplitude in arbitrary units (log)", "Frequency (log)");
@@ -250,10 +260,7 @@ void HistogramPage::plotPolarization(class HistogramCollection &histograms, unsi
 	if(_notRFIHistogramButton.get_active())
 	{
 		_plot.StartLine("Non-RFI histogram", "Amplitude in arbitrary units (log)", "Frequency (log)");
-		LogHistogram histogram;
-		histograms.GetTotalHistogramForCrossCorrelations(p, histogram);
-		LogHistogram rfiHistogram;
-		histograms.GetRFIHistogramForCrossCorrelations(p, rfiHistogram);
+		LogHistogram histogram(totalHistogram);
 		histogram -= rfiHistogram;
 		addHistogramToPlot(histogram);
 
@@ -264,7 +271,7 @@ void HistogramPage::plotPolarization(class HistogramCollection &histograms, unsi
 	}
 }
 
-void HistogramPage::plotFit(class LogHistogram &histogram, const std::string &title)
+void HistogramPage::plotFit(const LogHistogram &histogram, const std::string &title)
 {
 	double minRange, maxRange, sigmaEstimate;
 	sigmaEstimate = RayleighFitter::SigmaEstimate(histogram);
@@ -295,7 +302,7 @@ void HistogramPage::plotFit(class LogHistogram &histogram, const std::string &ti
 	}
 }
 
-void HistogramPage::addHistogramToPlot(LogHistogram &histogram)
+void HistogramPage::addHistogramToPlot(const LogHistogram &histogram)
 {
 	const bool derivative = _dndsButton.get_active();
 	for(LogHistogram::iterator i=histogram.begin();i!=histogram.end();++i)
@@ -317,7 +324,7 @@ void HistogramPage::addHistogramToPlot(LogHistogram &histogram)
 	}
 }
 
-void HistogramPage::addRayleighToPlot(LogHistogram &histogram, double sigma, double n)
+void HistogramPage::addRayleighToPlot(const LogHistogram &histogram, double sigma, double n)
 {
 	const bool derivative = _dndsButton.get_active();
 	double x = histogram.MinPositiveAmplitude();
@@ -340,7 +347,7 @@ void HistogramPage::addRayleighToPlot(LogHistogram &histogram, double sigma, dou
 	}
 }
 
-void HistogramPage::addRayleighDifferenceToPlot(LogHistogram &histogram, double sigma, double n)
+void HistogramPage::addRayleighDifferenceToPlot(const LogHistogram &histogram, double sigma, double n)
 {
 	const double sigmaP2 = sigma*sigma;
 	double minCount = histogram.MinPosNormalizedCount();
@@ -360,7 +367,7 @@ void HistogramPage::addRayleighDifferenceToPlot(LogHistogram &histogram, double 
 	}
 }
 
-void HistogramPage::plotSlope(class LogHistogram &histogram, const std::string &title)
+void HistogramPage::plotSlope(const LogHistogram &histogram, const std::string &title)
 {
 	double start, end;
 	if(_slopeAutoRangeButton.get_active())
