@@ -11,9 +11,11 @@ import sys
 
 from lofarpipe.support.control import control
 from lofarpipe.support.lofarexceptions import PipelineException
-from lofarpipe.support.group_data import store_data_map
+from lofarpipe.support.group_data import store_data_map, validate_data_maps
+from lofarpipe.support.group_data import tally_data_map
 from lofarpipe.support.utilities import create_directory
 from lofar.parameterset import parameterset
+from lofar.mstools import findFiles
 
 
 class msss_calibrator_pipeline(control):
@@ -37,6 +39,7 @@ class msss_calibrator_pipeline(control):
         self.parset = parameterset()
         self.input_data = []
         self.output_data = []
+        self.io_data_mask = []
 
 
     def usage(self):
@@ -54,24 +57,50 @@ class msss_calibrator_pipeline(control):
             odp.getStringVector('Input_Correlated.locations', []),
             odp.getStringVector('Input_Correlated.filenames', []))
         ]
-        self.logger.debug("Found %d Input_Correlated data products" %
+        self.logger.debug("%d Input_Correlated data products specified" %
                           len(self.input_data))
         self.output_data = [tuple(''.join(x).split(':')) for x in zip(
             odp.getStringVector('Output_InstrumentModel.locations', []),
             odp.getStringVector('Output_InstrumentModel.filenames', []))
         ]
-        self.logger.debug("Found %d Output_InstrumentModel data products" %
+        self.logger.debug("%d Output_InstrumentModel data products specified" %
                           len(self.output_data))
-        # Sanity checks on input- and output map files
-        if len(self.input_data) != len(self.output_data):
+        # Sanity checks on input- and output data product specifications
+        if not validate_data_maps(self.input_data, self.output_data):
             raise PipelineException(
-                "Number of input- and output files must be equal!"
+                "Validation of input/output data product specification failed!"
             )
-        #if ([x.split(':')[0] for x in self.input_data] !=
-            #[x.split(':')[0] for x in self.output_data]):
-        if [x[0] for x in self.input_data] != [x[0] for x in self.output_data]:
-            raise PipelineException(
-                "Input- and output data products must reside on the same node!"
+        # Validate input data, by searching the cluster for files
+        self._validate_input_data()
+        # Update input- and output-data product specifications if needed
+        if not all(self.io_data_mask):
+            self.logger.info("Updating input/output product specifications")
+            self.input_data = [
+                f for (f,m) in zip(self.input_data, self.io_data_mask) if m
+            ]
+            self.output_data = [
+                f for (f,m) in zip(self.output_data, self.io_data_mask) if m
+            ]
+
+
+    def _validate_input_data(self):
+        """
+        Search for the requested input files and mask the files in
+        `self.input_data[]` that could not be found on the system.
+        """
+        # Use filename glob-pattern as defined in LOFAR-USG-ICD-005.
+        self.io_data_mask = tally_data_map(
+            self.input_data, 'L*_SB???_uv.MS', self.logger
+        )
+        # Log a warning if not all input data files were found.
+        if not all(self.io_data_mask):
+            self.logger.warn(
+                "The following input data files were not found: %s" %
+                ', '.join(
+                    ':'.join(f) for (f,m) in zip(
+                        self.input_data, self.io_data_mask
+                    ) if not m
+                )
             )
 
 
@@ -125,13 +154,13 @@ class msss_calibrator_pipeline(control):
         store_data_map(instrument_mapfile, self.output_data)
         self.logger.debug("Wrote output mapfile: %s" % instrument_mapfile)
 
-        ## Generate a datamap-file, which is a parset-file containing
-        ## key/value pairs of hostname and list of MS-files.
-        #data_mapfile = self.run_task(
-            #"cep2_datamapper",
-            #observation_dir=py_parset.getString('observationDirectory')
-##            parset=self.inputs['args'][0]
-        #)['mapfile']
+        if len(self.input_data) == 0:
+            self.logger.warn("No input data files to process. Bailing out")
+            return 0
+
+        self.logger.debug("Processing: %s" % 
+            ', '.join(':'.join(f) for f in self.input_data)
+        )
 
         # Create an empty parmdb for DPPP
         parmdb_mapfile = self.run_task("parmdb", data_mapfile)['mapfile']

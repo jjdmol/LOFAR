@@ -32,7 +32,7 @@ class sourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
             '--executable',
             help="Full path to makesourcedb executable",
         ),
-        'skymodel': ingredient.FileField(
+        'skymodel': ingredient.StringField(
             '-s', '--skymodel',
             help="Input sky catalogue"
         ),
@@ -90,6 +90,14 @@ class sourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
                 ) for host, infile in indata
             ]
 
+        # Check if input skymodel file exists. If not, make filename empty.
+        if not os.path.isfile(self.inputs['skymodel']):
+            self.logger.warn(
+                "Source catalog %s does not exist. Using an empty one." %
+                self.inputs['skymodel']
+            )
+            self.inputs['skymodel'] = ""
+        
         command = "python %s" % (self.__file__.replace('master', 'nodes'))
         jobs = []
         for host, outfile in outdata:
