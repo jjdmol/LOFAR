@@ -158,12 +158,9 @@ HistogramPage::HistogramPage() :
 
 HistogramPage::~HistogramPage()
 {
+	CloseStatistics();
 	if(_plotPropertiesWindow != 0)
 		delete _plotPropertiesWindow;
-	if(_histograms != 0)
-		delete _histograms;
-	if(_summedPolarizationHistograms != 0)
-		delete _summedPolarizationHistograms;
 	delete _dataWindow;
 }
 
@@ -185,8 +182,16 @@ void HistogramPage::readFromFile()
 void HistogramPage::CloseStatistics()
 {
 	_statFilename = std::string();
-	if(_histograms != 0) delete _histograms;
-	if(_summedPolarizationHistograms != 0) delete _summedPolarizationHistograms;
+	if(_histograms != 0)
+	{
+		delete _histograms;
+		_histograms = 0;
+	}
+	if(_summedPolarizationHistograms != 0)
+	{
+		delete _summedPolarizationHistograms;
+		_summedPolarizationHistograms = 0;
+	}
 }
 
 void HistogramPage::SetStatistics(HistogramCollection &collection)
