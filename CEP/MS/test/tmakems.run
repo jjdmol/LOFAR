@@ -27,12 +27,14 @@ if test "$srcdir" = ""; then
   srcdir="../../../../../LOFAR/CEP/MS/test"
 fi
 
-# Symlink to scripts/programs, so they can be started from test directory.
-ln -s $srcdir/../src/makemsdistr .
-ln -s $srcdir/../src/makemsdistr-part .
-ln -s ../src/combinevds .
-ln -s ../src/makems .
-PATH=.:$PATH
+# Add path of makemsdistr, combinevds/makems, getparsetvalue, startdistproc.
+# Make all of them absolute.
+p1=`cd "$srcdir/../src" >& /dev/null  &&  pwd`
+p2=`cd "../src" >& /dev/null  &&  pwd`
+p3=`cd "../../../LCS/Common/src" >& /dev/null  &&  pwd`
+p4=`cd "$srcdir/../../LMWCommon/src" >& /dev/null  &&  pwd`
+p5=`cd "$srcdir/../../LMWCommxxon/src" >& /dev/null  &&  pwd`
+PATH=".:$p1:$p2:$p3:$p4:$p5:$PATH"
 export PATH
 
 # Create ClusterDesc file using pwd.
@@ -42,7 +44,7 @@ ClusterName = cl
 NNodes = 1
 Node0.NodeName = localhost
 Node0.NodeFileSys = [/usr]
-Node0.NodeMountPoints = [$wd]
+Node0.NodeMountPoints = ["$wd"]
 EOF
 
 # Take care that system-dependent output is excluded.
@@ -56,7 +58,7 @@ echo "AntennaTableName=$wd/tmakems_tmp/WSRT_ANTENNA" >> tmakems.parset
 
 
 # Create MS parts in a distributed way.
-makemsdistr -hfn $wd/tmakems_tmp/hfn tmakems.parset $wd/tmakems_tmp.cd $wd
+makemsdistr -hfn "$wd/tmakems_tmp/hfn" tmakems.parset "$wd/tmakems_tmp.cd" "$wd"
 echo "<<<"
 
 # Print global VDS file without system-dependent names.
@@ -67,6 +69,3 @@ echo ">>>"
 makems tmakems.parset
 echo "<<<"
 grep -v 'Name *=' tmakems_tmp.ms.gds | grep -v "ClusterDesc *="
-
-# Clean up.
-rm makemsdistr makemsdistr-part combinevds makems
