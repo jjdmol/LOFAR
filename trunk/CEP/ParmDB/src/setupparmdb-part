@@ -70,7 +70,7 @@ cd "$wd"  ||  exit 1
 echo "Create $msn/$pdb (copy of $pdbfile)"
 if test "$dry" != dry; then
   rm -rf "$msn/$pdb"           # this is safe because $pdb is not empty
-  cp -r "$pdbfile" "$msn/$pdb"
+  cp -r "$pdbfile" "$msn/$pdb"  ||  exit 1
 
   if test "$stepfreq" != "."  -a  "$steptime" != "."; then
     # Put default steps into the parmdb.
