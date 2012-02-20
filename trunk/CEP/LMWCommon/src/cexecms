@@ -64,6 +64,7 @@ showhelp()
   echo '                   giving /data/scratch/diepen/<BN.>_sel.MS'"'"'"'
   echo '             "/data/scratch/pipeline/L2011_22663/*SB0##*"'
   echo ' Note that quotes have to be used abundantly.'
+  echo ' Also note that (t)csh requires a ! to be escaped with a backslash.'
   echo ''
   echo ' Sometimes a command can be dangerous or take a long time to run.'
   echo ' In such a case it makes sense to execute it first with the -d option.'
