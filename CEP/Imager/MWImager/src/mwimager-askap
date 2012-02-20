@@ -40,7 +40,7 @@ msn="$3"
 vds="$4"
 dry="$5"
 
-psnbase=`basename $psn`
+psnbase=`basename "$psn"`
 
 # Add channel info to the parset file.
 cp "$psn" "$psnbase.part$seqnr"  ||  exit 1
