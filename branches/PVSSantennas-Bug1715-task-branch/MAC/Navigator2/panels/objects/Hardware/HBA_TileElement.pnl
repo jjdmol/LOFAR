@@ -1,7 +1,7 @@
 V 11
 1
 LANG:1 14 HBATileElement
-PANEL,-1 -1 114 109 N "_3DFace" 1
+PANEL,-1 -1 114 101 N "_3DFace" 1
 "$elementNr"
 "main()
 {
@@ -26,6 +26,8 @@ PANEL,-1 -1 114 109 N "_3DFace" 1
      //setValue(\"text_ElementNr\", \"text\", \"E-\" + aS + theElementNr );
      // pass baseDP to selfstate Object to work with
      setValue(\"selfState.light\",\"toolTipText\",baseDP);
+     // connect for childstate updates
+     showChildState(baseDP);
      // connect for selfUpdates
      showSelfState(baseDP);  
 
@@ -118,7 +120,7 @@ LANG:1 0
 "dashclr"N "_Transparent"
 E E 0 1 1 2 1 E 1 0 1 -21 -75 1 E 23 77 102 156
 6 2
-"elementBorder"
+"childstate"
 ""
 1 40 110 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
@@ -130,7 +132,7 @@ LANG:1 23 Status of this element:
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E 1 0 1 -18 -72 1 E 25 79 94 148
+E E 0 2 1 0 1 E 1 0 1 -18 -72 1 E 25 79 94 148
 6 9
 "XBox"
 ""

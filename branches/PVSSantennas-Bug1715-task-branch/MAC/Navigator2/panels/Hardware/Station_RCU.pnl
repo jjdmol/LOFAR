@@ -28,7 +28,7 @@ PANEL,-1 -1 1047 803 N "_3DFace" 0
 
   // connect for selfUpdates
   showSelfState(baseDP);
-
+  showChildState(baseDP);
  
   if (dpExists(baseDP + \".InputEnable:_online.._value\")) {
     if (dpConnect(\"ShowInputLines\", baseDP + \".InputEnable:_online.._value\",
@@ -322,7 +322,7 @@ LAYER, 0
 1
 LANG:1 6 Layer1
 6 129
-"border1"
+"childStateBorder"
 ""
 1 70 687 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
  E E
