@@ -248,8 +248,7 @@ uses Solve           4.0.0  development 1                 'BBS Solve Step attrib
 #    name                   dir. type   unit   prun. vm   value                constr.  descr.
 #--------------------------------------------------------------------------------------------------------
 par  Steps                  I    vtext   -      10   0    '[]'                 -        'The steps contained in this BBS Step'
-par  Baselines              I    text    -      10   0    '*&'                 -        'Baselines to process; use 
-CASA baseline selection syntax'
+par  Baselines              I    text    -      10   0    '*&'                 -        'Baselines to process; use CASA baseline selection syntax'
 par  Correlations           I    vtext   -      10   0    '[]'                 -        'Correlations to process'
 par  Operation              I    text    -      10   0    ''                   -        'Operation to be performed in this BBS Step'
 
