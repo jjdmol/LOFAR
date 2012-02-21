@@ -35,8 +35,8 @@
 #include <Common/ParameterSet.h>
 #include <BBSControl/Step.h>
 
-// gethostname() and getpid()
-#include <unistd.h>
+//// gethostname() and getpid()
+//#include <unistd.h>
 
 // numeric_limits<int32>
 // TODO: Create lofar_limits.h in Common.
@@ -104,13 +104,14 @@ ostream& operator<<(ostream& os, const ProcessId &obj)
 
 CalSession::CalSession(const string &key, const string &db, const string &user,
     const string &password, const string &host, const string &port)
-    :   itsSessionId(-1)
+    :   itsSessionId(-1),
+        itsProcessId(ProcessId::id())
 {
-    // Determine the ProcessId of this worker.
-    char hostname[512];
-    int status = gethostname(hostname, 512);
-    ASSERT(status == 0);
-    itsProcessId = ProcessId(string(hostname), getpid());
+//    // Determine the ProcessId of this worker.
+//    char hostname[512];
+//    int status = gethostname(hostname, 512);
+//    ASSERT(status == 0);
+//    itsProcessId = ProcessId(string(hostname), getpid());
 
     // Build connection string.
     string opts("dbname='" + db + "' user='" + user + "' host='" + host + "'");
@@ -386,7 +387,8 @@ void CalSession::postResult(const CommandId &id, const CommandResult &result)
     }
 }
 
-CommandStatus CalSession::getCommandStatus(const CommandId &id) const
+CalSession::CommandStatus CalSession::getCommandStatus(const CommandId &id)
+  const
 {
     int32 status = -1;
     WorkerType addressee;
@@ -636,10 +638,12 @@ ProcessId CalSession::getWorkerByIndex(WorkerType type, size_t index) const
     ASSERT(index <= static_cast<size_t>(std::numeric_limits<int32>::max()));
     syncWorkerRegister();
 
+    LOG_DEBUG_STR("looking for: index: " << index << " type: " << type);
     vector<Worker>::const_iterator it = itsRegister.begin();
     vector<Worker>::const_iterator itEnd = itsRegister.end();
     while(it != itEnd)
     {
+        LOG_DEBUG_STR("index: " << it->index << " type: " << it->type);
         if(it->type == type && it->index == static_cast<int32>(index))
         {
             return it->id;

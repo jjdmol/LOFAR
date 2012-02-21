@@ -2,31 +2,31 @@
 
 include(LofarPackageVersion)
 
-lofar_add_library(bbscontrol
+set(SRC_LIST
   Package__Version.cc
   AddStep.cc
   BlobStreamableConnection.cc
-  CalSession.cc
-  CalSessionTransactors.cc
   Command.cc
+  CommandProcessorCore.cc
+  CommandProcessorSolver.cc
   CommandResult.cc
   CorrectStep.cc
+  DistributedLMSolver.cc
   FinalizeCommand.cc
-  GlobalProcessControl.cc
   GlobalSolveController.cc
   InitializeCommand.cc
   KernelConnection.cc
-  KernelProcessControl.cc
-  LocalSolveController.cc
   Messages.cc
   MultiStep.cc
   NextChunkCommand.cc
+  OptionParser.cc
   PredictStep.cc
+  ProcessGroup.cc
+  ProcessId.cc
   RecoverCommand.cc
   RefitStep.cc
   ShiftStep.cc
   SingleStep.cc
-  SolverProcessControl.cc
   SolveStep.cc
   SolveTask.cc
   Step.cc
@@ -34,12 +34,22 @@ lofar_add_library(bbscontrol
   StreamUtil.cc
   SubtractStep.cc
   SynchronizeCommand.cc
-  Types.cc)
+  Types.cc
+  Util.cc)
+
+if(HAVE_PQXX)
+  set(SRC_LIST ${SRC_LIST} CalSession.cc CalSessionTransactors.cc)
+endif(HAVE_PQXX)
+
+lofar_add_library(bbscontrol ${SRC_LIST})
 
 lofar_add_bin_program(versionbbscontrol versionbbscontrol.cc)
-lofar_add_bin_program(GlobalControl GlobalControl.cc)
-lofar_add_bin_program(KernelControl KernelControl.cc)
-lofar_add_bin_program(SolverControl SolverControl.cc)
+lofar_add_bin_program(bbs-data-processor bbs-data-processor.cc)
+
+if(HAVE_PQXX)
+  lofar_add_bin_program(bbs-controller bbs-controller.cc)
+  lofar_add_bin_program(bbs-solver bbs-solver.cc)
+endif(HAVE_PQXX)
 
 install(PROGRAMS
   calibrate

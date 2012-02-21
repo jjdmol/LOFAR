@@ -350,16 +350,17 @@ class PQGetCommandStatus: public pqxx::transactor<>
 {
 public:
     PQGetCommandStatus(const CommandId &id, int32 &status,
-        CalSession::WorkerType &addressee, CommandStatus &commandStatus);
+        CalSession::WorkerType &addressee,
+        CalSession::CommandStatus &commandStatus);
     void operator()(argument_type &transaction);
     void on_commit();
 
 private:
-    int32                   itsCommandId;
-    int32                   *itsStatus;
-    CalSession::WorkerType  *itsAddressee;
-    CommandStatus           *itsCommandStatus;
-    pqxx::result            itsQueryResult;
+    int32                     itsCommandId;
+    int32                     *itsStatus;
+    CalSession::WorkerType    *itsAddressee;
+    CalSession::CommandStatus *itsCommandStatus;
+    pqxx::result              itsQueryResult;
 };
 
 class PQGetResults: public pqxx::transactor<>

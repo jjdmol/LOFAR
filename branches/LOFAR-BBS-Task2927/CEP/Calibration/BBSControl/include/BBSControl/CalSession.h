@@ -29,8 +29,10 @@
 
 #include <BBSControl/Command.h>
 #include <BBSControl/CommandResult.h>
+#include <BBSControl/Exceptions.h>
 #include <BBSControl/Types.h>
 #include <BBSKernel/Types.h>
+#include <BBSControl/ProcessId.h>
 
 #include <Common/LofarTypes.h>
 #include <Common/LofarLogger.h>
@@ -66,48 +68,6 @@ class PQGetWorkerRegister;
 // \addtogroup BBSControl
 // @{
 
-// ProcessId is an id that can be used to uniquely identify processes running on
-// different hosts.
-struct ProcessId
-{
-    ProcessId()
-        :   pid(-1)
-    {
-    }
-
-    ProcessId(const string &hostname, int64 pid)
-        :   hostname(hostname),
-            pid(pid)
-    {
-    }
-
-    // ProcessIds are sorted on pid first as this is a faster comparison.
-    bool operator<(const ProcessId &rhs) const
-    {
-        return pid < rhs.pid || (pid == rhs.pid && hostname < rhs.hostname);
-    }
-
-    bool operator==(const ProcessId &rhs) const
-    {
-        return pid == rhs.pid && hostname == rhs.hostname;
-    }
-
-    string  hostname;
-    int64   pid;
-};
-
-// Output ProcessId in human-readable form.
-ostream& operator<<(ostream& os, const ProcessId &obj);
-
-// Status of a Command.
-struct CommandStatus
-{
-    // Number of workers that finished the command.
-    unsigned int    finished;
-    // Number of workers that reported failure.
-    unsigned int    failed;
-};
-
 class CalSession
 {
 public:
@@ -127,6 +87,15 @@ public:
         KERNEL,
         SOLVER,
         N_WorkerType
+    };
+
+    // Status of a Command.
+    struct CommandStatus
+    {
+        // Number of workers that finished the command.
+        unsigned int    finished;
+        // Number of workers that reported failure.
+        unsigned int    failed;
     };
 
     CalSession(const string &key, const string &db, const string &user,

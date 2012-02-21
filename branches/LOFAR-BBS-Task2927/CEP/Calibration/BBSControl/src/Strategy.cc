@@ -25,6 +25,7 @@
 #include <BBSControl/Strategy.h>
 #include <BBSControl/Exceptions.h>
 #include <BBSControl/MultiStep.h>
+#include <BBSControl/SolveStep.h>
 #include <BBSControl/Step.h>
 #include <BBSControl/StreamUtil.h>
 #include <BBSControl/Types.h>
@@ -64,20 +65,19 @@ namespace LOFAR
       // Get the chunk size.
       itsChunkSize = ps.getUint32("ChunkSize");
 
-      // Use a (global) solver?
-      itsUseSolver = ps.getBool("UseSolver", false);
-
       // This strategy consists of the following steps.
       vector<string> steps(ps.getStringVector("Steps"));
 
-      if(steps.empty()) {
-        THROW(BBSControlException, "Strategy contains no steps");
-      }
+//      if(steps.empty()) {
+//        THROW(BBSControlException, "Strategy contains no steps");
+//      }
 
       // Try to create a step for each name in \a steps.
       for(size_t i = 0; i < steps.size(); ++i) {
         itsSteps.push_back(Step::create(steps[i], parset, 0));
       }
+
+      itsUseSolver = findGlobalSolveStep();
     }
 
     Strategy::~Strategy()
@@ -103,6 +103,23 @@ namespace LOFAR
       for(size_t i = 0; i < itsSteps.size(); ++i) {
     	  os << endl << indent << *itsSteps[i];
       }
+    }
+
+    bool Strategy::findGlobalSolveStep() const
+    {
+      StrategyIterator it(*this);
+      while(!it.atEnd()) {
+        shared_ptr<const SolveStep> step =
+          dynamic_pointer_cast<const SolveStep>(*it);
+
+        if(step && step->globalSolution()) {
+          return true;
+        }
+
+        ++it;
+      }
+
+      return false;
     }
 
     //##--------   G l o b a l   m e t h o d s   --------##//

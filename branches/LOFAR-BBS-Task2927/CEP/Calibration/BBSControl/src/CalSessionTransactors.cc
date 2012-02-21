@@ -775,7 +775,7 @@ void PQGetCommand::on_commit()
 
 
 PQGetCommandStatus::PQGetCommandStatus(const CommandId &id, int32 &status,
-    CalSession::WorkerType &addressee, CommandStatus &commandStatus)
+    CalSession::WorkerType &addressee, CalSession::CommandStatus &commandStatus)
     :   pqxx::transactor<>("PQGetCommandStatus"),
         itsCommandId(id),
         itsStatus(&status),

@@ -6,7 +6,13 @@ lofar_package(BBSControl 1.0 DEPENDS BBSKernel Blob Common LMWCommon ParmDB PLC 
 include(LofarFindPackage)
 lofar_find_package(Boost REQUIRED)
 lofar_find_package(Casacore REQUIRED COMPONENTS casa measures)
-lofar_find_package(PQXX REQUIRED)
+
+option(USE_PQXX "Enable BBS distributed calibration (using a postgres database as shared memory, requires pqxx)" OFF)
+if(USE_PQXX)
+  lofar_find_package(PQXX REQUIRED)
+else(USE_PQXX)
+  set(HAVE_PQXX OFF)
+endif(USE_PQXX)
 
 add_subdirectory(include/BBSControl)
 add_subdirectory(src)
