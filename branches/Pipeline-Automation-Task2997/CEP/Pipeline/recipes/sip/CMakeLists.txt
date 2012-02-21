@@ -49,6 +49,7 @@ python_install(
 install(PROGRAMS
   bin/msss_calibrator_pipeline.py
   bin/msss_target_pipeline.py
+  bin/startPython.sh
   DESTINATION bin)
 
 install(FILES
