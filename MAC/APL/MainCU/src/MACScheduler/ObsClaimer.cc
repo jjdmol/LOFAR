@@ -292,9 +292,9 @@ GCFEvent::TResult ObsClaimer::preparePVSS_state (GCFEvent& event, GCFPortInterfa
 				for (uint32	b(0); b < theObs.beams.size(); b++) {
 					for (uint32 t(0); t < theObs.beams[b].TABs.size(); t++) {
 						beamIndexArr.push_back  (new GCFPVInteger(b));
-						angle1Arr.push_back	  	(new GCFPVDouble(theObs.beams[b].TABs[t].angle1));
-						angle2Arr.push_back	  	(new GCFPVDouble(theObs.beams[b].TABs[t].angle2));
-						dirTypesArr.push_back 	(new GCFPVString(theObs.beams[b].TABs[t].directionType));
+						TABangle1Arr.push_back	  	(new GCFPVDouble(theObs.beams[b].TABs[t].angle1));
+						TABangle2Arr.push_back	  	(new GCFPVDouble(theObs.beams[b].TABs[t].angle2));
+						TABdirTypesArr.push_back 	(new GCFPVString(theObs.beams[b].TABs[t].directionType));
 						dispersionArr.push_back (new GCFPVDouble(theObs.beams[b].TABs[t].dispersionMeasure));
 						coherentArr.push_back	(new GCFPVBool(theObs.beams[b].TABs[t].coherent));
 					}
@@ -305,7 +305,7 @@ GCFEvent::TResult ObsClaimer::preparePVSS_state (GCFEvent& event, GCFPortInterfa
 				theObsPS->setValue(PN_OBS_TIED_ARRAY_BEAMS_ANGLE1,			GCFPVDynArr(LPT_DYNDOUBLE, TABangle1Arr),   0.0, false);
 				theObsPS->setValue(PN_OBS_TIED_ARRAY_BEAMS_ANGLE2,			GCFPVDynArr(LPT_DYNDOUBLE, TABangle2Arr),   0.0, false);
 				theObsPS->setValue(PN_OBS_TIED_ARRAY_BEAMS_DIRECTION_TYPE,	GCFPVDynArr(LPT_DYNSTRING, TABdirTypesArr), 0.0, false);
-				theObsPS->setValue(PN_OBS_TIED_ARRAY_BEAMS_DISPERSION,		GCFPVDynArr(LPT_DYNSTRING, dispersionArr),  0.0, false);
+				theObsPS->setValue(PN_OBS_TIED_ARRAY_BEAMS_DISPERSION,		GCFPVDynArr(LPT_DYNDOUBLE, dispersionArr),  0.0, false);
 				theObsPS->setValue(PN_OBS_TIED_ARRAY_BEAMS_COHERENT,		GCFPVDynArr(LPT_DYNBOOL, coherentArr),  0.0, false);
 				theObsPS->flush();
 

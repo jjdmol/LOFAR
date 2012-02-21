@@ -144,8 +144,7 @@ Observation::Observation(const ParameterSet*		aParSet,
 	}
 
 	// determine if DataslotLists are available in this parset
-	LOG_DEBUG_STR(str(format("Dataslots.%s%s.DataslotList") % stations[0] % getAntennaFieldName(itsStnHasDualHBA)));
-	itsHasDataslots = aParSet->isDefined(prefix+str(format("Dataslots.%s%s.DataslotList") % stations[0] % getAntennaFieldName(itsStnHasDualHBA)));
+	itsHasDataslots = !stations.empty() && aParSet->isDefined(prefix+str(format("Dataslots.%s%s.DataslotList") % stations[0] % getAntennaFieldName(itsStnHasDualHBA)));
 	if (itsHasDataslots) {
 		itsDataslotParset = aParSet->makeSubset(prefix+"Dataslots.");		// save subset for later
 	}
