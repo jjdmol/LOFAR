@@ -144,7 +144,8 @@ Observation::Observation(const ParameterSet*		aParSet,
 	}
 
 	// determine if DataslotLists are available in this parset
-	itsHasDataslots = aParSet->isDefined(prefix+str(format("Dataslots.%s%s.DataslotList") % stations[0] % antennaArray));
+	LOG_DEBUG_STR(str(format("Dataslots.%s%s.DataslotList") % stations[0] % getAntennaFieldName(itsStnHasDualHBA)));
+	itsHasDataslots = aParSet->isDefined(prefix+str(format("Dataslots.%s%s.DataslotList") % stations[0] % getAntennaFieldName(itsStnHasDualHBA)));
 	if (itsHasDataslots) {
 		itsDataslotParset = aParSet->makeSubset(prefix+"Dataslots.");		// save subset for later
 	}
@@ -232,9 +233,11 @@ Observation::Observation(const ParameterSet*		aParSet,
 		}
 
 		// finally update vector with beamnumbers
-		int	nrBeamlets = newBeam.subbands.size();
+		int	nrSubbands = newBeam.subbands.size();
 		if (!itsHasDataslots) {		// old situation
 			BeamBeamlets = aParSet->getInt32Vector(beamPrefix+"beamletList", vector<int32>(), true);	// true:expandable
+			int nrBeamlets = BeamBeamlets.size();
+			ASSERTSTR(nrBeamlets == nrSubbands, "Number of beamlets(" << nrBeamlets << ") != nr of subbands(" << nrSubbands << ") for Beam " << beamIdx);
 			for (int  i = 0; i < nrBeamlets; ++i) {
 				if (beamlet2beams[BeamBeamlets[i]] != -1) {
 					stringstream	os;
@@ -246,7 +249,7 @@ Observation::Observation(const ParameterSet*		aParSet,
 			} // for all beamlets
 		}
 		else { // new situation
-			for (int  i = 0; i < nrBeamlets; ++i) {
+			for (int  i = 0; i < nrSubbands; ++i) {	// Note nrBeamlets=nrSubbands
 				itsBeamSlotList.push_back(beamIdx);
 			}
 		} // itsHasDataslots
@@ -500,13 +503,15 @@ vector<int> Observation::getBeamAllocation(const string& stationName) const
 		}
 	}
 	// is DSL for this station available?
-	if (!itsDataslotParset.isDefined(str(format("%s%s.DataslotList") % station % antennaArray)) ||
-	    !itsDataslotParset.isDefined(str(format("%s%s.RSPBoardList") % station % antennaArray))) {
+	string	fieldName = getAntennaFieldName(itsStnHasDualHBA);
+	string	dsl(str(format("%s%s.DataslotList") % station % fieldName));
+	string	rbl(str(format("%s%s.RSPBoardList") % station % fieldName));
+	if (!itsDataslotParset.isDefined(dsl) || !itsDataslotParset.isDefined(rbl)) {
 		LOG_ERROR_STR("No dataslots defined for " << station << antennaArray);
 		return (b2b);
 	}
-	vector<int>	RSPboardList = itsDataslotParset.getIntVector(str(format("%s%s.RSPBoardList") % station % antennaArray),true);
-	vector<int>	DataslotList = itsDataslotParset.getIntVector(str(format("%s%s.DataslotList") % station % antennaArray),true);
+	vector<int>	RSPboardList = itsDataslotParset.getIntVector(rbl,true);
+	vector<int>	DataslotList = itsDataslotParset.getIntVector(dsl,true);
 
 	ASSERTSTR (RSPboardList.size() == DataslotList.size(), "RSPBoardlist (" << RSPboardList << 
 			") differs size of DataslotList(" << DataslotList << ") for station " << station);
@@ -536,8 +541,10 @@ vector<int> Observation::getBeamAllocation(const string& stationName) const
 vector<int>	Observation::getBeamlets (uint beamIdx, const string&	stationName) const
 {
 	uint	parsetIdx = (dualMode && itsStnHasDualHBA) ? beamIdx/2 : beamIdx;
+	string	fieldName = getAntennaFieldName(itsStnHasDualHBA, beamIdx);
 
 	if (!itsHasDataslots) {
+		// both fields use the same beamlet mapping
 		return (itsDataslotParset.getInt32Vector(str(format("Beam[%d].beamletList") % parsetIdx), vector<int32>(), true));	// true:expandable
 	}
 
@@ -552,14 +559,15 @@ vector<int>	Observation::getBeamlets (uint beamIdx, const string&	stationName) c
 	}
 		
 	// is DSL for this station available?
+	// both fields have their own beamlet mapping
+	string	dsl(str(format("%s%s.DataslotList") % station % fieldName));
+	string	rbl(str(format("%s%s.RSPBoardList") % station % fieldName));
 	vector<int>	result;
-	if (!itsDataslotParset.isDefined(str(format("%s%s.DataslotList") % station % antennaArray)) ||
-	    !itsDataslotParset.isDefined(str(format("%s%s.RSPBoardList") % station % antennaArray))) {
+	if (!itsDataslotParset.isDefined(dsl) || !itsDataslotParset.isDefined(rbl)) {
 		return (result);
 	}
-	vector<int>	RSPboardList = itsDataslotParset.getIntVector(str(format("%s%s.RSPBoardList") % station % antennaArray),true);
-	vector<int>	DataslotList = itsDataslotParset.getIntVector(str(format("%s%s.DataslotList") % station % antennaArray),true);
-
+	vector<int>	RSPboardList = itsDataslotParset.getIntVector(rbl,true);
+	vector<int>	DataslotList = itsDataslotParset.getIntVector(dsl,true);
 	uint	nrEntries = itsBeamSlotList.size();
 	for (uint i = 0; i < nrEntries; ++i) {
 		if (itsBeamSlotList[i] == parsetIdx) {
@@ -571,9 +579,11 @@ vector<int>	Observation::getBeamlets (uint beamIdx, const string&	stationName) c
 
 
 //
-// TEMP HACK TO GET THE ANTENNAARRAYNAME
+// TEMP HACK TO GET THE ANTENNAFIELDNAME
 //
-string Observation::getAntennaArrayName(bool hasSplitters) const
+// Except for the beamIdx dependancy we should look in the antennaSet file.
+//
+string Observation::getAntennaFieldName(bool hasSplitters, uint32	beamIdx) const
 {
 	string	result;
 	if (antennaSet.empty()) {
@@ -595,6 +605,7 @@ string Observation::getAntennaArrayName(bool hasSplitters) const
 	if (result == "HBA_ZERO") 	return ("HBA0");
 	if (result == "HBA_ONE") 	return ("HBA1");
 	if (result == "HBA_JOINED")	return ("HBA");
+	if (result == "HBA_DUAL")	return (beamIdx % 2 == 0 ? "HBA0" : "HBA1");
 	return ("HBA");
 }	
 

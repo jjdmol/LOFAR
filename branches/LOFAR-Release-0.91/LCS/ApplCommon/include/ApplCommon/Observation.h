@@ -66,8 +66,6 @@ public:
 
 	// Returns a bitset containing the RCU's requested by the observation.
 	bitset<MAX_RCUS> getRCUbitset(int nrLBAs, int nrHBAs, const string& anAntennaSet);
-	// TEMP HACK
-	string getAntennaArrayName(bool hasSplitters) const;
 
 	// Support for dynamic dataslot allocation
 	vector<int>	getBeamAllocation(const string&	stationName = "") const;
@@ -75,6 +73,9 @@ public:
 
 	// for operator <<
 	ostream& print (ostream&	os) const;
+
+	// TEMP HACK
+	string getAntennaFieldName(bool hasSplitters, uint32 beamIdx = 0) const;
 
 	// data types
 	typedef bitset<MAX_RCUS> 	  RCUset_t;
