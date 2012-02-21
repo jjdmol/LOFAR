@@ -439,7 +439,10 @@ void HistogramPage::updateSlopeFrame()
 		}
 
 		double slope = histogram.NormalizedSlope(minRange, maxRange);
-		str << '\n' << slope;
+		double offset = histogram.NormalizedSlopeOffset(minRange, maxRange, slope);
+		double upperLimit = histogram.PowerLawUpperLimit(minRange, slope, pow10(offset));
+		double lowerLimit = histogram.PowerLawLowerLimit(minRange, slope, pow10(offset));
+		str << '\n' << slope << ',' << offset << '[' << log10(lowerLimit) << ';' << log10(upperLimit) << ']';
 	}
 	_slopeTextView.get_buffer()->set_text(str.str());
 }

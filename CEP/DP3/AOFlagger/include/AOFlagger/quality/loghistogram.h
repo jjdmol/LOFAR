@@ -172,6 +172,32 @@ class LogHistogram : public Serializable
 			return maxCount;
 		}
 		
+		double NormalizedTotalCount() const
+		{
+			double count = 0;
+			for (LogHistogram::const_iterator i=begin(); i!=end(); ++i)
+				count += i.normalizedCount();
+			return count;
+		}
+		
+		double NormalizedCountAbove(double lowerLimitingAmplitude) const
+		{
+			unsigned long count = 0;
+			LogHistogram::const_iterator i=begin();
+			while(i!=end() && i.value() <= lowerLimitingAmplitude)
+			{
+				++i;
+			}
+			double actualStart = i.binStart();
+			while(i!=end())
+			{
+				count += i.unnormalizedCount();
+				++i;
+			}
+			--i;
+			return count;
+		}
+		
 		double AmplitudeWithMaxNormalizedCount() const
 		{
 			double maxCount = 0.0, maxPosition = 0.0;
@@ -239,6 +265,22 @@ class LogHistogram : public Serializable
 			return (double) (sumOffset/(long double) n);
 		}
 		
+		double PowerLawUpperLimit(double constrainingAmplitude, double exponent, double factor) const
+		{
+			const double count = NormalizedCountAbove(constrainingAmplitude);
+			const double term = count * (exponent+1.0)/factor + pow(constrainingAmplitude, exponent+1.0);
+			std::cout << "count = " << count << ", term = " << term << ", x^a=" << pow(constrainingAmplitude, exponent+1.0) << '\n';
+			return pow(term, 1.0/(exponent+1.0));
+		}
+		
+		double PowerLawLowerLimit(double constrainingAmplitude, double exponent, double factor) const
+		{
+			const double countPart = NormalizedCountAbove(constrainingAmplitude);
+			const double countTotal = NormalizedTotalCount();
+			const double term = (countTotal - countPart) * (exponent+1.0)/factor + pow(constrainingAmplitude, exponent+1.0);
+			return pow(term, 1.0/(exponent+1.0));
+		}
+		
 		void GetRFIRegion(double &start, double &end) const
 		{
 			double sigmaEstimate = AmplitudeWithMaxNormalizedCount();
@@ -281,9 +323,10 @@ class LogHistogram : public Serializable
 				bool operator==(const const_iterator &other) const { return other._iterator == _iterator; }
 				bool operator!=(const const_iterator &other) const { return other._iterator != _iterator; }
 				const_iterator &operator++() { ++_iterator; return *this; }
+				const_iterator &operator--() { --_iterator; return *this; }
 				double value() const { return _iterator->first; }
 				double normalizedCount() const { return _iterator->second.GetCount() / (binEnd() - binStart()); }
-				double unnormalizedCount() const { return _iterator->second.GetCount(); }
+				long unsigned unnormalizedCount() const { return _iterator->second.GetCount(); }
 				double binStart() const
 				{
 					return _iterator->first>0.0 ?
