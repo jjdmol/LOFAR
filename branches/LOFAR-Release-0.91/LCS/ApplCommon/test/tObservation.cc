@@ -45,8 +45,8 @@ int main (int argc, char* argv[])
 			cout << "getRCUbitset(96,96,LBA_XXX) = " << someObs.getRCUbitset(96,96,"LBA_XXX") << endl;	// Core
 			cout << "getRCUbitset(96,48,HBA_XXX) = " << someObs.getRCUbitset(96,48,"HBA_XXX") << endl;	// Core
 			cout << "getRCUbitset(96,96,HBA_XXX) = " << someObs.getRCUbitset(96,96,"HBA_XXX") << endl;	// Core
-			vector<int>	b2b = someObs.getBeamAllocation("RS005");
-			cout << "BeamAlloc for RS005 : " << b2b << endl;
+			vector<int>	b2b = someObs.getBeamAllocation("CS002");
+			cout << "BeamAlloc for CS002 : " << b2b << endl;
 			return (0);
 		}
 
@@ -119,27 +119,27 @@ int main (int argc, char* argv[])
 		
 		// test translation of antennaSetname
 		obs3.antennaSet = "HBA_ZERO";
-		cout << "HBA_ZERO(false) = " << obs3.getAntennaArrayName(false) << endl;
-		cout << "HBA_ZERO(true)  = " << obs3.getAntennaArrayName(true) << endl;
+		cout << "HBA_ZERO(false) = " << obs3.getAntennaFieldName(false) << endl;
+		cout << "HBA_ZERO(true)  = " << obs3.getAntennaFieldName(true) << endl;
 		obs3.antennaSet = "HBA_ONE";
-		cout << "HBA_ONE(false) = " << obs3.getAntennaArrayName(false) << endl;
-		cout << "HBA_ONE(true)  = " << obs3.getAntennaArrayName(true) << endl;
+		cout << "HBA_ONE(false) = " << obs3.getAntennaFieldName(false) << endl;
+		cout << "HBA_ONE(true)  = " << obs3.getAntennaFieldName(true) << endl;
 		obs3.antennaSet = "HBA_DUAL";
-		cout << "HBA_DUAL(false) = " << obs3.getAntennaArrayName(false) << endl;
-		cout << "HBA_DUAL(true)  = " << obs3.getAntennaArrayName(true) << endl;
+		cout << "HBA_DUAL(false) = " << obs3.getAntennaFieldName(false) << endl;
+		cout << "HBA_DUAL(true)  = " << obs3.getAntennaFieldName(true) << endl;
 		obs3.antennaSet = "HBA_JOINED";
-		cout << "HBA_JOINED(false) = " << obs3.getAntennaArrayName(false) << endl;
-		cout << "HBA_JOINED(true)  = " << obs3.getAntennaArrayName(true) << endl;
+		cout << "HBA_JOINED(false) = " << obs3.getAntennaFieldName(false) << endl;
+		cout << "HBA_JOINED(true)  = " << obs3.getAntennaFieldName(true) << endl;
 
 		obs3.antennaSet = "LBA_INNER";
-		cout << "LBA_INNER(false) = " << obs3.getAntennaArrayName(false) << endl;
-		cout << "LBA_INNER(true)  = " << obs3.getAntennaArrayName(true) << endl;
+		cout << "LBA_INNER(false) = " << obs3.getAntennaFieldName(false) << endl;
+		cout << "LBA_INNER(true)  = " << obs3.getAntennaFieldName(true) << endl;
 		obs3.antennaSet = "LBA_OUTER";
-		cout << "LBA_OUTER(false) = " << obs3.getAntennaArrayName(false) << endl;
-		cout << "LBA_OUTER(true)  = " << obs3.getAntennaArrayName(true) << endl;
+		cout << "LBA_OUTER(false) = " << obs3.getAntennaFieldName(false) << endl;
+		cout << "LBA_OUTER(true)  = " << obs3.getAntennaFieldName(true) << endl;
 		obs3.antennaSet = "LBA_X";
-		cout << "LBA_X(false) = " << obs3.getAntennaArrayName(false) << endl;
-		cout << "LBA_X(true)  = " << obs3.getAntennaArrayName(true) << endl;
+		cout << "LBA_X(false) = " << obs3.getAntennaFieldName(false) << endl;
+		cout << "LBA_X(true)  = " << obs3.getAntennaFieldName(true) << endl;
 
 		// test old syntax agains new syntax
 		cout << ">>>" << endl;
