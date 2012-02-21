@@ -44,9 +44,6 @@ namespace LOFAR
     // Exception class for the command line argument parser.
     EXCEPTION_CLASS(OptionParserException, BBSControlException);
 
-//    // Exception class for the (global) solver controller.
-//    EXCEPTION_CLASS(SolverControlException, BBSControlException);
-
     // Exception class for protocol errors.
     EXCEPTION_CLASS(ProtocolException, BBSControlException);
 

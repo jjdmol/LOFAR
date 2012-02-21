@@ -25,24 +25,14 @@
 #include <BBSControl/CalSession.h>
 #include <BBSControl/CalSessionTransactors.h>
 #include <BBSControl/Exceptions.h>
-
+#include <BBSControl/Step.h>
 #include <LMWCommon/VdsDesc.h>
-
 #include <Common/LofarLogger.h>
 #include <Common/lofar_numeric.h>
 #include <Common/lofar_string.h>
-
 #include <Common/ParameterSet.h>
-#include <BBSControl/Step.h>
-
-//// gethostname() and getpid()
-//#include <unistd.h>
-
-// numeric_limits<int32>
-// TODO: Create lofar_limits.h in Common.
-#include <limits>
-
 #include <pqxx/except>
+#include <limits>
 
 // Now here's an ugly kludge: libpqxx defines four different top-level
 // exception classes. In order to avoid a lot of code duplication we clumped

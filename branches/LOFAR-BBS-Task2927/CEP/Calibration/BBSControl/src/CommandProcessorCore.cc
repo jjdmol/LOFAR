@@ -124,13 +124,13 @@ CommandResult CommandProcessorCore::visit(const InitializeCommand &command)
   }
 
   itsChunkSelection.setBaselineFilter(command.baselines());
-  return CommandResult(CommandResult::OK, "");
+  return CommandResult(CommandResult::OK);
 }
 
-CommandResult CommandProcessorCore::visit(const FinalizeCommand &command)
+CommandResult CommandProcessorCore::visit(const FinalizeCommand&)
 {
   itsHasFinished = true;
-  return CommandResult(CommandResult::OK, "");
+  return CommandResult(CommandResult::OK);
 }
 
 CommandResult CommandProcessorCore::visit(const NextChunkCommand &command)
@@ -181,7 +181,7 @@ CommandResult CommandProcessorCore::visit(const NextChunkCommand &command)
   // Display information about chunk.
   LOG_DEBUG_STR("Chunk dimensions: " << endl << itsBuffers["DATA"]->dims());
 
-  return CommandResult(CommandResult::OK, "");
+  return CommandResult(CommandResult::OK);
 }
 
 CommandResult CommandProcessorCore::visit(const RecoverCommand &command)

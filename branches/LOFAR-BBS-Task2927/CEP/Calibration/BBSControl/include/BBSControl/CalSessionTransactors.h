@@ -38,22 +38,14 @@
 // NOTE: pqxx specific exceptions are not caught here but are deliberately
 // propagated to the caller.
 
-#if defined(HAVE_PQXX)
-# include <pqxx/transactor>
-# include <pqxx/binarystring>
-#else
-# error libpqxx, the C++ API to PostgreSQL, is required
-#endif
-
 #include <BBSControl/CalSession.h>
-
 #include <Common/LofarTypes.h>
 #include <Common/lofar_string.h>
-
 #include <Common/DataFormat.h>
 #include <Common/DataConvert.h>
-
 #include <Common/ParameterSet.h>
+#include <pqxx/transactor>
+#include <pqxx/binarystring>
 
 namespace LOFAR
 {

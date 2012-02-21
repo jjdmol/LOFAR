@@ -33,24 +33,14 @@
 #include <BBSControl/Types.h>
 #include <BBSKernel/Types.h>
 #include <BBSControl/ProcessId.h>
-
 #include <Common/LofarTypes.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_smartptr.h>
 #include <Common/lofar_string.h>
-
 #include <ParmDB/Axis.h>
-
-//# TODO: Create lofar_functional.h in Common.
+#include <pqxx/connection>
+#include <pqxx/trigger>
 #include <functional>
-
-#if defined(HAVE_PQXX)
-# include <pqxx/connection>
-# include <pqxx/trigger>
-#else
-# error libpqxx, the C++ API to PostgreSQL, is required
-#endif
-
 
 namespace LOFAR
 {

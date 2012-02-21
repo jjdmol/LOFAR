@@ -78,6 +78,11 @@ void Evaluator::setCorrelationMask(const CorrelationMask &mask)
         back_inserter(itsCrMap));
 }
 
+bool Evaluator::isSelectionEmpty() const
+{
+    return itsBlMap.empty() || itsCrMap.empty();
+}
+
 void Evaluator::setMode(Mode mode)
 {
     switch(mode)
@@ -101,12 +106,14 @@ void Evaluator::setMode(Mode mode)
 
 void Evaluator::process()
 {
-    if(itsCrMap.empty())
+    itsProcTimers[ALL].start();
+
+    if(isSelectionEmpty())
     {
+        itsProcTimers[ALL].stop();
         return;
     }
 
-    itsProcTimers[ALL].start();
     for(size_t i = 0; i < itsBlMap.size(); ++i)
     {
         // Evaluate the expression for this baseline.
