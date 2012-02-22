@@ -349,11 +349,6 @@ class testsip:
             columnnames=self.columns
     
         for column in columnnames:
-            if self.debug:
-              print "compareColumns() column = ", column, "   taql = ", taql # DEBUG
-        
-            print "compareColumns() column = ", column, "   taql = ", taql # DEBUG
-        
             ret = self.compareColumn(column, taql) # need, taql           
             self.results[column] = ret
             
