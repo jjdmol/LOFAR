@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# calibrate-standalone: top-level calibration script (stand-alone version).
+# calibrate-stand-alone: top-level calibration script (stand-alone version).
 #
 # Copyright (C) 2009
 # ASTRON (Netherlands Institute for Radio Astronomy)
@@ -30,7 +30,7 @@
 usage()
 {
     echo "usage:"
-    echo "  calibrate-standalone [options] <observation> <parset> <catalog>"
+    echo "  calibrate-stand-alone [options] <observation> <parset> <catalog>"
     echo
     echo "arguments:"
     echo "  <observation>        observation (MS)"
