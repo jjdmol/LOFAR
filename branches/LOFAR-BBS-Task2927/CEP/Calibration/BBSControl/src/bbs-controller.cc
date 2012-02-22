@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
   parser.appendOptionWithDefault("Name", "-d", "--db-name",
     (getenv("USER") ? : ""), "Name of the database used to store shared"
     " state.");
-  parser.appendOptionWithDefault("Host", "-h", "--db-host", "localhost",
+  parser.appendOptionWithDefault("Host", "-H", "--db-host", "localhost",
     "Hostname of the machine that runs the database server.");
   parser.appendOptionWithDefault("Port", "-p", "--db-port", "5432", "Port on"
     " which the database server is listening.");

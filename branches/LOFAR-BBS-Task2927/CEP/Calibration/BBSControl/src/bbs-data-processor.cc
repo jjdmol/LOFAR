@@ -51,7 +51,7 @@ bool runDistributed(const OptionParser::ArgumentList &args,
 {
   MeasurementAIPS::Ptr ms(new MeasurementAIPS(args[2]));
 
-  SourceDB sourceDB(ParmDBMeta("casa", options.getString("Catalog", args[2]
+  SourceDB sourceDB(ParmDBMeta("casa", options.getString("SourceDB", args[2]
     + "/sky")));
   ParmManager::instance().initCategory(SKY, sourceDB.getParmDB());
 
@@ -140,7 +140,7 @@ bool runStandAlone(const OptionParser::ArgumentList &args,
 {
   MeasurementAIPS::Ptr ms(new MeasurementAIPS(args[1]));
 
-  SourceDB sourceDB(ParmDBMeta("casa", options.getString("Catalog", args[1]
+  SourceDB sourceDB(ParmDBMeta("casa", options.getString("SourceDB", args[1]
     + "/sky")));
   ParmManager::instance().initCategory(SKY, sourceDB.getParmDB());
 
@@ -229,13 +229,13 @@ int main(int argc, char *argv[])
   OptionParser parser;
   parser.appendOption("Help", "-h", "--help", "Print usage information"
     " and exit.");
-  parser.appendOptionWithArgument("Catalog", "-c", "--catalog", "Path to an"
-    " alternative catalog. By default MS/sky will be used.");
-  parser.appendOptionWithArgument("ParmDB", "-P", "--parm-db", "Path to an"
+  parser.appendOptionWithArgument("SourceDB", "-s", "--sourcedb", "Path to an"
+    " alternative source database. By default MS/sky will be used.");
+  parser.appendOptionWithArgument("ParmDB", "-P", "--parmdb", "Path to an"
     " alternative parameter database. By default MS/instrument will be used.");
 
 #ifdef HAVE_PQXX
-  parser.appendOption("Distributed", "-d", "--distributed", "Run in distributed"
+  parser.appendOption("Distributed", "-D", "--distributed", "Run in distributed"
     " mode, as part of the distributed calibration session identified by"
     " session key KEY.");
   parser.appendOptionWithDefault("Key", "-k", "--key", "default", "Session key"
@@ -243,7 +243,7 @@ int main(int argc, char *argv[])
   parser.appendOptionWithDefault("Name", "-d", "--db-name",
     (getenv("USER") ? : ""), "Name of the database used to store shared state"
     " (distributed runs only).");
-  parser.appendOptionWithDefault("Host", "-h", "--db-host", "localhost",
+  parser.appendOptionWithDefault("Host", "-H", "--db-host", "localhost",
     "Hostname of the machine that runs the database server (distributed runs"
     " only).");
   parser.appendOptionWithDefault("Port", "-p", "--db-port", "5432", "Port on"

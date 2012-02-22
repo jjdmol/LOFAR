@@ -54,4 +54,5 @@ endif(HAVE_PQXX)
 install(PROGRAMS
   calibrate
   calibrate-part
+  calibrate-stand-alone
   DESTINATION bin)

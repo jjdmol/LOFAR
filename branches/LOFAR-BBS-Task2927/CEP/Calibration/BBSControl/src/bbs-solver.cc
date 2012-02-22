@@ -63,15 +63,12 @@ int main(int argc, char *argv[])
     "Range of ports to search for a free port on which to start listening");
   parser.appendOptionWithDefault("Backlog", "-b", "--backlog", "10", "Maximal"
     " number of pending connections.");
-  parser.appendOption("Distributed", "-d", "--distributed", "Run in distributed"
-    " mode, as part of the distributed calibration session identified by"
-    " session key KEY.");
   parser.appendOptionWithDefault("Key", "-k", "--key", "default", "Session"
     " key.");
   parser.appendOptionWithDefault("Name", "-d", "--db-name",
     (getenv("USER") ? : ""), "Name of the database used to store shared"
     " state.");
-  parser.appendOptionWithDefault("Host", "-h", "--db-host", "localhost",
+  parser.appendOptionWithDefault("Host", "-H", "--db-host", "localhost",
     "Hostname of the machine that runs the database server.");
   parser.appendOptionWithDefault("Port", "-p", "--db-port", "5432", "Port on"
     " which the database server is listening.");
@@ -97,7 +94,6 @@ int main(int argc, char *argv[])
   if(options.getBool("Help", false))
   {
     cout << "Usage: " << progName << " [OPTION]..." << endl
-      << "   Or: " << progName << " [OPTION]... -d FILESYSTEM MS" << endl
       << "Calibrate MS blablabla asdasd asdasd asd" << endl << endl
       << "Mandatory arguments to long options are mandatory for short options"
           " too." << endl

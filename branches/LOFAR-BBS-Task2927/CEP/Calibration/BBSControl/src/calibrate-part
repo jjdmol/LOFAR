@@ -47,7 +47,7 @@ if test $# != 20; then
   echo "usage:"
   echo "    calibrate-part <ignored> <ignored> <ignored> <ignored> rank"
   echo "        part filesystem partvds envfile lofarroot wd key db-host"
-  echo "        db-port db-name db-user parmdb sourcedb imcolumns dry"
+  echo "        db-port db-name db-user parmdb sourcedb add-columns dry"
   exit 1
 fi
 
@@ -69,9 +69,8 @@ db_name=${10}
 db_user=${11}
 parmdb=${12}
 sourcedb=${13}
-imcolumns=${14}
+add_columns=${14}
 dry=${15}
-
 
 echo "arguments:"
 echo "    part: ${part}"
@@ -93,7 +92,7 @@ echo "    db name: ${db_name}"
 echo "    db user: ${db_user}"
 echo "    parmdb: ${parmdb}"
 echo "    sourcedb: ${sourcedb}"
-echo "    imcolumns: ${imcolumns}"        # flag to add imaging columns to part-MS
+echo "    add_columns: ${add_columns}"
 echo "    dry: ${dry}"
 echo
 
@@ -108,15 +107,17 @@ if test ! -r "${lofarroot}/lofarinit.sh"; then
 fi
 . ${lofarroot}/lofarinit.sh
 
-# Get the MS name from the vds file. If an MS name is given, use that instead.
-#if test ! -d "${ms}"; then
-#  tmp=`getparsetvalue ${ms} FileName` || error "Key \"FileName\" not found in: ${ms}"
-#  ms=${tmp}
-#fi
-
 # Check preconditions.
 if test ! -d "${part}"; then
     error "not a directory: ${part}"
+fi
+
+if test ! -d "${part}/${sourcedb}"; then
+    error "not a directory: ${part}/${sourcedb}"
+fi
+
+if test ! -d "${part}/${parmdb}"; then
+    error "not a directory: ${part}/${parmdb}"
 fi
 
 if test ! -d "${wd}"; then
@@ -126,40 +127,34 @@ fi
 # Set to working directory.
 cd "${wd}" || error "could not change to: ${wd}"
 
-# Create the parset for KernelControl.
-echo "create ${wd}/${key}_kernel_$$.parset"
-if test "${dry}" != "dry"; then
-    cat > "${key}_kernel_$$.parset" << EOF
-ObservationPart.Filesystem = "${filesys}"
-ObservationPart.Path = "${part}"
 
-BBDB.Key = "${key}"
-BBDB.Name = "${db_name}"
-BBDB.User = "${db_user}"
-BBDB.Host = "${db_host}"
-BBDB.Port = "${db_port}"
+#
+# ADD "IMAGING COLUMNS" (MODEL_DATA, CORRECTED_DATA, IMAGE_WEIGHTS) TO MS
+#
 
-ParmDB.Sky = "${part}/${sourcedb}"
-ParmDB.Instrument = "${part}/${parmdb}"
-EOF
+if test ${add_columns} -eq 1; then
+    echo "addImagingColumns.py \"${part}\""
+
+    if test "${dry}" != "dry"; then
+        addImagingColumns.py "${part}"
+        if test $? -ne 0 ; then
+            echo "addImagingColumns.py ${part} failed"
+            exit 1
+        fi
+    fi
 fi
 
 
 #
-# Add "imaging columns" (MODEL_DATA, CORRECTED_DATA, IMAGE_WEIGHTS) to part-MS
+# EXECUTE MAIN PROCESS
 #
-if test ${imcolumns} -eq 1; then
-   echo "adding imaging columns to MS: addImagingColumns.py ${part}"
-   if test "${dry}" != "dry"; then
-      addImagingColumns.py ${part}           # use wrapper python script that adds imaging columns to that MS part
-      if test $? -ne 0 ; then
-        echo "addImagingColumns.py ${part} failed"
-        exit 1
-      fi 
-  fi
+
+port_option=
+if test -n "${db_port}"; then
+    port_option="--db-port=\"${db_port}\""
 fi
 
-echo "execute KernelControl ${key}_kernel_$$.parset 0 > ${key}_kernel_$$.log 2>&1"
+echo "execute bbs-data-processor --distributed --sourcedb=\"${part}/${sourcedb}\" --parmdb=\"${part}/${parmdb}\" --key=\"${key}\" --db-name=\"${db_name}\" --db-host=\"${db_host}\" ${port_option} --db-user=\"${db_user}\" \"${filesys}\" \"${part}\" > \"${key}_kernel_$$.log\" 2>&1"
 if test "${dry}" != "dry"; then
-    KernelControl "${key}_kernel_$$.parset" 0 > "${key}_kernel_$$.log" 2>&1
+    bbs-data-processor --distributed --sourcedb="${part}/${sourcedb}" --parmdb="${part}/${parmdb}" --key="${key}" --db-name="${db_name}" --db-host="${db_host}" ${port_option} --db-user="${db_user}" "${filesys}" "${part}" > "${key}_bbs-data-processor_$$.log" 2>&1
 fi
