@@ -404,9 +404,9 @@ class testsip:
             
 #            taqlcmd = "SELECT * FROM '" + self.test_MS + "' WHERE !all(NEAR(Real("+columnname+"), Real("+testcolumnname+")) AND NEAR(Imag("+columnname+"), Imag("+testcolumnname+")))"
 #            errorcount = result.nrows()
-            taqlcmd = "COUNT( [SELECT * FROM '" + self.test_MS + "' WHERE !all(NEARABS(Real("+columnname+"), Real("+testcolumnname+")," + str(self.acceptancelimit) + ") AND NEARABS(Imag("+columnname+"), Imag("+testcolumnname+"),"+ str(self.acceptancelimit) +"))] )"
-            #print "taqlcmd = ", taqlcmd     # DEBUG
-            errorcount=pt.taql(taqlcmd)            
+            taqlcmd = "SELECT * FROM '" + self.test_MS + "' WHERE !all(NEARABS(Real("+columnname+"), Real("+testcolumnname+")," + str(self.acceptancelimit) + ") AND NEARABS(Imag("+columnname+"), Imag("+testcolumnname+"),"+ str(self.acceptancelimit) +"))"
+#            print "taqlcmd = ", taqlcmd     # DEBUG
+            errorcount=pt.taql(taqlcmd).nrows()            
             
             if self.verbose or self.debug:
               print "errorcount = ", errorcount         # display number of errors=No. of rows
