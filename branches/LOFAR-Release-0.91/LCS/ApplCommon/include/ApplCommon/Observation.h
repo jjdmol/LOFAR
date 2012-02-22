@@ -204,6 +204,8 @@ public:
 	string			storageNodeList;
 
 private:
+	bool			_isStationName(const string&	hostname) const;
+
 	RCUset_t		RCUset;				// set with participating receivers, use getRCUbitset to get this value.
 
 	// many(!) vectors for dataslot allocation

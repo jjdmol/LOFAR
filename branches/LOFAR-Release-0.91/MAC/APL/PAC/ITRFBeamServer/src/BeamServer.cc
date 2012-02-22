@@ -791,13 +791,12 @@ GCFEvent::TResult BeamServer::beamfree_state(GCFEvent& event, GCFPortInterface& 
 		// it was stopped (CAL_STOP by SRG) then
 		// issue a warning but continue
 		if (ack.status != CAL_Protocol::CAL_SUCCESS) {
-			LOG_WARN("CAL_UNSUBSCRIBE failed");
+			LOG_WARN_STR("CAL_UNSUBSCRIBE failed, status = " << ack.status);
 		}
 
 		// send succesful ack
 		beamfreeack.status   = IBS_Protocol::IBS_NO_ERR;
 		beamfreeack.beamName = itsBeamTransaction.getBeam()->name();
-
 		itsBeamTransaction.getPort()->send(beamfreeack);
 
 		// destroy beam, updates itsBeamTransaction
