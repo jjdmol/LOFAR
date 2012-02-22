@@ -193,7 +193,6 @@ class LogHistogram : public Serializable
 				count += i.unnormalizedCount();
 				++i;
 			}
-			--i;
 			return count;
 		}
 		

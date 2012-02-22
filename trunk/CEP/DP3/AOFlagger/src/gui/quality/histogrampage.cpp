@@ -143,7 +143,7 @@ HistogramPage::HistogramPage() :
 	_slopeEndEntry.set_sensitive(false);
 	_slopeEndEntry.signal_activate().connect(sigc::mem_fun(*this, &HistogramPage::updatePlot));
 	_slopeBox.pack_start(_slopeRFIRatio, Gtk::PACK_SHRINK);
-	_slopeRFIRatio.set_text("0.1");
+	_slopeRFIRatio.set_text("1.0");
 	_slopeRFIRatio.signal_activate().connect(sigc::mem_fun(*this, &HistogramPage::updatePlot));
 	
 	_slopeFrame.add(_slopeBox);
@@ -419,36 +419,45 @@ void HistogramPage::updateSlopeFrame()
 {
 	std::stringstream str;
 	str << "Slopes:";
+	
+	LogHistogram summedHistogram;
+	_summedPolarizationHistograms->GetRFIHistogramForCrossCorrelations(0, summedHistogram);
+	addSlopeText(str, summedHistogram, true);
+	
 	for(size_t p=0;p<_histograms->PolarizationCount();++p)
 	{
 		LogHistogram histogram;
 		_histograms->GetRFIHistogramForCrossCorrelations(p, histogram);
-		
-		double minRange, maxRange;
-		if(_slopeAutoRangeButton.get_active())
-		{
-			histogram.GetRFIRegion(minRange, maxRange);
-			if(p==0)
-			{
-				std::stringstream minRangeStr, maxRangeStr;
-				minRangeStr << minRange;
-				maxRangeStr << maxRange;
-				_slopeStartEntry.set_text(minRangeStr.str());
-				_slopeEndEntry.set_text(maxRangeStr.str());
-			}
-		} else {
-			minRange = atof(_slopeStartEntry.get_text().c_str());
-			maxRange = atof(_slopeEndEntry.get_text().c_str());
-		}
-		double rfiRatio = atof(_slopeRFIRatio.get_text().c_str());
-
-		double slope = histogram.NormalizedSlope(minRange, maxRange);
-		double offset = histogram.NormalizedSlopeOffset(minRange, maxRange, slope);
-		double upperLimit = histogram.PowerLawUpperLimit(minRange, slope, pow10(offset));
-		double lowerLimit = histogram.PowerLawLowerLimit(minRange, slope, pow10(offset), rfiRatio);
-		str << '\n' << slope << ',' << offset << '[' << log10(lowerLimit) << ';' << log10(upperLimit) << ']';
+		addSlopeText(str, histogram, false);
 	}
 	_slopeTextView.get_buffer()->set_text(str.str());
+}
+
+void HistogramPage::addSlopeText(std::stringstream &str, const LogHistogram &histogram, bool updateRange)
+{
+	double minRange, maxRange;
+	if(_slopeAutoRangeButton.get_active())
+	{
+		histogram.GetRFIRegion(minRange, maxRange);
+		if(updateRange)
+		{
+			std::stringstream minRangeStr, maxRangeStr;
+			minRangeStr << minRange;
+			maxRangeStr << maxRange;
+			_slopeStartEntry.set_text(minRangeStr.str());
+			_slopeEndEntry.set_text(maxRangeStr.str());
+		}
+	} else {
+		minRange = atof(_slopeStartEntry.get_text().c_str());
+		maxRange = atof(_slopeEndEntry.get_text().c_str());
+	}
+	double rfiRatio = atof(_slopeRFIRatio.get_text().c_str());
+
+	double slope = histogram.NormalizedSlope(minRange, maxRange);
+	double offset = histogram.NormalizedSlopeOffset(minRange, maxRange, slope);
+	double upperLimit = histogram.PowerLawUpperLimit(minRange, slope, pow10(offset));
+	double lowerLimit = histogram.PowerLawLowerLimit(minRange, slope, pow10(offset), rfiRatio);
+	str << '\n' << slope << '[' << log10(lowerLimit) << ';' << log10(upperLimit) << ']';
 }
 
 void HistogramPage::updateDataWindow()
