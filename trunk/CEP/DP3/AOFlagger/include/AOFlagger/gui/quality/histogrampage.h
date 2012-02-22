@@ -113,7 +113,7 @@ class HistogramPage : public Gtk::HBox {
 		Gtk::TextView _slopeTextView;
 		Gtk::CheckButton _drawSlopeButton;
 		Gtk::CheckButton _slopeAutoRangeButton;
-		Gtk::Entry _slopeStartEntry, _slopeEndEntry;
+		Gtk::Entry _slopeStartEntry, _slopeEndEntry, _slopeRFIRatio;
 		
 		std::string _statFilename;
 		Plot2D _plot;

@@ -174,9 +174,9 @@ class LogHistogram : public Serializable
 		
 		double NormalizedTotalCount() const
 		{
-			double count = 0;
+			unsigned long count = 0;
 			for (LogHistogram::const_iterator i=begin(); i!=end(); ++i)
-				count += i.normalizedCount();
+				count += i.unnormalizedCount();
 			return count;
 		}
 		
@@ -188,7 +188,6 @@ class LogHistogram : public Serializable
 			{
 				++i;
 			}
-			double actualStart = i.binStart();
 			while(i!=end())
 			{
 				count += i.unnormalizedCount();
@@ -269,15 +268,14 @@ class LogHistogram : public Serializable
 		{
 			const double count = NormalizedCountAbove(constrainingAmplitude);
 			const double term = count * (exponent+1.0)/factor + pow(constrainingAmplitude, exponent+1.0);
-			std::cout << "count = " << count << ", term = " << term << ", x^a=" << pow(constrainingAmplitude, exponent+1.0) << '\n';
 			return pow(term, 1.0/(exponent+1.0));
 		}
 		
-		double PowerLawLowerLimit(double constrainingAmplitude, double exponent, double factor) const
+		double PowerLawLowerLimit(double constrainingAmplitude, double exponent, double factor, double rfiRatio) const
 		{
 			const double countPart = NormalizedCountAbove(constrainingAmplitude);
-			const double countTotal = NormalizedTotalCount();
-			const double term = (countTotal - countPart) * (exponent+1.0)/factor + pow(constrainingAmplitude, exponent+1.0);
+			const double countTotal = NormalizedTotalCount() * rfiRatio;
+			const double term = (countPart - countTotal) * (exponent+1.0)/factor + pow(constrainingAmplitude, exponent+1.0);
 			return pow(term, 1.0/(exponent+1.0));
 		}
 		

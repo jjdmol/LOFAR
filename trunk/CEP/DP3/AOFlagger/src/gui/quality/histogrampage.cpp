@@ -142,6 +142,9 @@ HistogramPage::HistogramPage() :
 	_slopeBox.pack_start(_slopeEndEntry, Gtk::PACK_SHRINK);
 	_slopeEndEntry.set_sensitive(false);
 	_slopeEndEntry.signal_activate().connect(sigc::mem_fun(*this, &HistogramPage::updatePlot));
+	_slopeBox.pack_start(_slopeRFIRatio, Gtk::PACK_SHRINK);
+	_slopeRFIRatio.set_text("0.1");
+	_slopeRFIRatio.signal_activate().connect(sigc::mem_fun(*this, &HistogramPage::updatePlot));
 	
 	_slopeFrame.add(_slopeBox);
 	_sideBox.pack_start(_slopeFrame, Gtk::PACK_SHRINK);
@@ -437,11 +440,12 @@ void HistogramPage::updateSlopeFrame()
 			minRange = atof(_slopeStartEntry.get_text().c_str());
 			maxRange = atof(_slopeEndEntry.get_text().c_str());
 		}
+		double rfiRatio = atof(_slopeRFIRatio.get_text().c_str());
 
 		double slope = histogram.NormalizedSlope(minRange, maxRange);
 		double offset = histogram.NormalizedSlopeOffset(minRange, maxRange, slope);
 		double upperLimit = histogram.PowerLawUpperLimit(minRange, slope, pow10(offset));
-		double lowerLimit = histogram.PowerLawLowerLimit(minRange, slope, pow10(offset));
+		double lowerLimit = histogram.PowerLawLowerLimit(minRange, slope, pow10(offset), rfiRatio);
 		str << '\n' << slope << ',' << offset << '[' << log10(lowerLimit) << ';' << log10(upperLimit) << ']';
 	}
 	_slopeTextView.get_buffer()->set_text(str.str());
