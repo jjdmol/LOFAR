@@ -26,7 +26,7 @@ class testbbs(testsip):
     def __init__(self, MS, parset, skymodel, wd='.', verbose=True, taql=True, key='tests'):
         self.sip=testsip.__init__(self, MS, parset, wd, verbose, taql)   # call baseclass constructor
         self.skymodel = skymodel                              # BBS has in addition a skymodel
-
+        self.key=key
 
     def show(self):
         self.sip.showCommon()                                 # call baseclass show() method first
@@ -145,7 +145,7 @@ class testbbs(testsip):
     #
     def runBBS(self):    
         print bcolors.OKBLUE + "Running BBS through calibrate script." + bcolors.ENDC
-        arguments = '-v -f -n --clean --key bbstest --cluster-desc ' + self.clusterdesc + ' --db ' + self.dbserver + ' --db-user ' + self.dbuser + ' ' + self.gds + ' ' + self.parset + ' ' + self.skymodel + ' ' + self.wd
+        arguments = '-v -f -n --clean --key ' + self.key  + ' --cluster-desc ' + self.clusterdesc + ' --db ' + self.dbserver + ' --db-user ' + self.dbuser + ' ' + self.gds + ' ' + self.parset + ' ' + self.skymodel + ' ' + self.wd
         command = ['calibrate', arguments] # '-v', '-f', '--clean', '--key bbstest', '--cluster-desc ' + self.clusterdesc, 
 #        '--db ' + self.dbserver, '--db-user ' + self.dbuser, self.gds, self.parset, self.skymodel,  self.wd]
     
