@@ -67,6 +67,7 @@ class HistogramPage : public Gtk::HBox {
 		void onDataExportClicked();
 		void readFromFile();
 		void updateSlopeFrame();
+		void addSlopeText(std::stringstream &str, const LogHistogram &histogram, bool updateRange);
 		void updateDataWindow();
 		
 		void onAutoRangeClicked()

@@ -474,6 +474,18 @@ Image2DPtr MitigationTester::CreateTestSet(int number, Mask2DPtr rfi, unsigned w
 			image = Image2DPtr(CreateNoise(width, height, gaussianNoise));
 			AddBurstBroadbandToTestSet(image, rfi);
 		} break;
+		case 30: { // noise + RFI ^-2 distribution
+			image = sampleRFIDistribution(width, height, 1.0);
+			rfi->SetAll<true>();
+		} break;
+		case 31: { // noise + RFI ^-2 distribution
+			image = sampleRFIDistribution(width, height, 0.1);
+			rfi->SetAll<true>();
+		} break;
+		case 32: { // noise + RFI ^-2 distribution
+			image = sampleRFIDistribution(width, height, 0.01);
+			rfi->SetAll<true>();
+		} break;
 	}
 	return image;
 }
@@ -616,4 +628,17 @@ void MitigationTester::SubtractBackground(Image2DPtr image)
 			image->AddValue(x, y, 1.0); 
 		}
 	}
+}
+
+Image2DPtr MitigationTester::sampleRFIDistribution(unsigned width, unsigned height, double ig_over_rsq)
+{
+	Image2DPtr image = Image2D::CreateUnsetImagePtr(width, height);
+	const double sigma = 1.0;
+
+	for(size_t f=0; f<height;++f) {
+		for(size_t t=0; t<width;++t) {
+			image->SetValue(t, f, Rand(Gaussian)*sigma + ig_over_rsq / RNG::Uniform());
+		}
+	}
+	return image;
 }
