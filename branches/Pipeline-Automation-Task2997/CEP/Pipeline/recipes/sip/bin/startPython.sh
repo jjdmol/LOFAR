@@ -53,6 +53,7 @@ if [ -n "$debug" ]; then
   echo "${pythonProgram} ${programOptions} ${parsetFile}"
 fi
 
-# Start the Python program.
-${pythonProgram} ${programOptions} ${parsetFile}
+# Start the Python program in the background. This script should return ASAP
+# so that MAC can set the task to ACTIVE.
+${pythonProgram} ${programOptions} ${parsetFile} &
 
