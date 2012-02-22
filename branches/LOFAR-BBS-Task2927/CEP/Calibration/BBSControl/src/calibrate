@@ -52,7 +52,6 @@ usage()
     echo "  --key keyname     unique key to identify the session"
     echo "                    (default: default)"
     echo "  --cluster-desc    cluster description file"
-    echo "                    (default: ~/CEP.clusterdesc)"
     echo "  --db host:port    host and port where the control db is running"
     echo "                    (default: localhost)"
     echo "  --db-name name    name of the control db (default: ${USER})"
@@ -126,7 +125,7 @@ add_columns=1
 dry=0
 clean=0
 key="default"
-cluster_desc="${HOME}/CEP.clusterdesc"
+cluster_desc=
 db_host="localhost"
 db_port=
 db_name=${USER}

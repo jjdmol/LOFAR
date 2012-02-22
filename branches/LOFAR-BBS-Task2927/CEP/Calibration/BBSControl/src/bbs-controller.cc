@@ -31,6 +31,7 @@
 #include <BBSControl/FinalizeCommand.h>
 #include <BBSControl/NextChunkCommand.h>
 #include <LMWCommon/VdsDesc.h>
+#include <Common/LofarLogger.h>
 #include <casa/Quanta/Quantum.h>
 #include <casa/Quanta/MVTime.h>
 #include <unistd.h>
@@ -140,21 +141,19 @@ int main(int argc, char *argv[])
   LOG_INFO_STR(Version::getInfo<BBSControlVersion>(progName, "other"));
 
   OptionParser parser;
-  parser.appendOption("Help", "-h", "--help", "Print usage information"
-    " and exit.");
-  parser.appendOptionWithDefault("Key", "-k", "--key", "default", "Session"
-    " key.");
-  parser.appendOptionWithDefault("Name", "-d", "--db-name",
+  parser.addOption("Help", "-h", "--help", "Print usage information and exit.");
+  parser.addOptionWithDefault("Key", "-k", "--key", "default", "Session key.");
+  parser.addOptionWithDefault("Name", "-d", "--db-name",
     (getenv("USER") ? : ""), "Name of the database used to store shared"
     " state.");
-  parser.appendOptionWithDefault("Host", "-H", "--db-host", "localhost",
-    "Hostname of the machine that runs the database server.");
-  parser.appendOptionWithDefault("Port", "-p", "--db-port", "5432", "Port on"
-    " which the database server is listening.");
-  parser.appendOptionWithDefault("User", "-U", "--db-user", "postgres", "User"
-    " name for database authentication.");
-  parser.appendOptionWithDefault("Password", "-w", "--db-password", "",
-    "Password for database authentication.");
+  parser.addOptionWithDefault("Host", "-H", "--db-host", "localhost", "Hostname"
+    " of the machine that runs the database server.");
+  parser.addOptionWithDefault("Port", "-p", "--db-port", "5432", "Port on which"
+    " the database server is listening.");
+  parser.addOptionWithDefault("User", "-U", "--db-user", "postgres", "Username"
+    " used for authentication.");
+  parser.addOptionWithDefault("Password", "-w", "--db-password", "", "Password"
+    " used for authentication.");
 
   ParameterSet options;
   OptionParser::ArgumentList args = OptionParser::makeArgumentList(argc, argv);
@@ -173,11 +172,17 @@ int main(int argc, char *argv[])
   if(options.getBool("Help", false))
   {
     cout << "Usage: " << progName << " [OPTION]... VDS PARSET" << endl
-      << "Calibrate MS blablabla asdasd asdasd asd" << endl << endl
+      << endl
+      << "Control the distributed execution of the reduction of the observation"
+      " described" << endl
+      << "by the specified VDS file. (The VDS file is mainly just a list of"
+      " paths to" << endl
+      << "measurement sets (MS) that together constitute the observation.) The"
+      " reduction" << endl
+      << "is described by the PARSET." << endl << endl
       << "Mandatory arguments to long options are mandatory for short options"
           " too." << endl
-      << parser.documentation() << endl << endl
-      << "blablabla blabal" << endl;
+      << parser.documentation() << endl;
     return 0;
   }
 

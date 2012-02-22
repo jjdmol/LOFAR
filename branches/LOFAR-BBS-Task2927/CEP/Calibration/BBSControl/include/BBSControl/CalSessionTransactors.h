@@ -39,10 +39,11 @@
 // propagated to the caller.
 
 #include <BBSControl/CalSession.h>
-#include <Common/LofarTypes.h>
-#include <Common/lofar_string.h>
 #include <Common/DataFormat.h>
 #include <Common/DataConvert.h>
+#include <Common/LofarTypes.h>
+#include <Common/LofarLogger.h>
+#include <Common/lofar_string.h>
 #include <Common/ParameterSet.h>
 #include <pqxx/transactor>
 #include <pqxx/binarystring>

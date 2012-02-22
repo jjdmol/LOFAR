@@ -34,6 +34,7 @@
 #include <BBSControl/Util.h>
 #include <BBSKernel/MeasurementAIPS.h>
 #include <BBSKernel/ParmManager.h>
+#include <Common/LofarLogger.h>
 
 #ifdef HAVE_PQXX
 #include <BBSControl/CalSession.h>
@@ -227,31 +228,29 @@ int main(int argc, char *argv[])
   LOG_INFO_STR(Version::getInfo<BBSControlVersion>(progName, "other"));
 
   OptionParser parser;
-  parser.appendOption("Help", "-h", "--help", "Print usage information"
-    " and exit.");
-  parser.appendOptionWithArgument("SourceDB", "-s", "--sourcedb", "Path to an"
+  parser.addOption("Help", "-h", "--help", "Print usage information and exit.");
+  parser.addOptionWithArgument("SourceDB", "-s", "--sourcedb", "Path to an"
     " alternative source database. By default MS/sky will be used.");
-  parser.appendOptionWithArgument("ParmDB", "-P", "--parmdb", "Path to an"
+  parser.addOptionWithArgument("ParmDB", "-P", "--parmdb", "Path to an"
     " alternative parameter database. By default MS/instrument will be used.");
 
 #ifdef HAVE_PQXX
-  parser.appendOption("Distributed", "-D", "--distributed", "Run in distributed"
+  parser.addOption("Distributed", "-D", "--distributed", "Run in distributed"
     " mode, as part of the distributed calibration session identified by"
     " session key KEY.");
-  parser.appendOptionWithDefault("Key", "-k", "--key", "default", "Session key"
+  parser.addOptionWithDefault("Key", "-k", "--key", "default", "Session key"
     " (distributed runs only).");
-  parser.appendOptionWithDefault("Name", "-d", "--db-name",
+  parser.addOptionWithDefault("Name", "-d", "--db-name",
     (getenv("USER") ? : ""), "Name of the database used to store shared state"
     " (distributed runs only).");
-  parser.appendOptionWithDefault("Host", "-H", "--db-host", "localhost",
-    "Hostname of the machine that runs the database server (distributed runs"
-    " only).");
-  parser.appendOptionWithDefault("Port", "-p", "--db-port", "5432", "Port on"
-    " which the database server is listening (distributed runs only).");
-  parser.appendOptionWithDefault("User", "-U", "--db-user", "postgres", "User"
-    " name for database authentication (distributed runs only).");
-  parser.appendOptionWithDefault("Password", "-w", "--db-password", "",
-    "Password for database authentication (distributed runs only).");
+  parser.addOptionWithDefault("Host", "-H", "--db-host", "localhost", "Hostname"
+    " of the machine that runs the database server (distributed runs only).");
+  parser.addOptionWithDefault("Port", "-p", "--db-port", "5432", "Port on which"
+    " the database server is listening (distributed runs only).");
+  parser.addOptionWithDefault("User", "-U", "--db-user", "postgres", "Username"
+    " used for authentication (distributed runs only).");
+  parser.addOptionWithDefault("Password", "-w", "--db-password", "", "Password"
+    " used for authentication (distributed runs only).");
 #endif
 
   ParameterSet options;
@@ -272,13 +271,19 @@ int main(int argc, char *argv[])
   {
     cout << "Usage: " << progName << " [OPTION]... MS PARSET" << endl
 #ifdef HAVE_PQXX
-      << "   Or: " << progName << " [OPTION]... -d FILESYSTEM MS" << endl
+      << "   Or: " << progName << " [OPTION]... -D FILESYSTEM MS" << endl
 #endif
-      << "Calibrate MS blablabla asdasd asdasd asd" << endl << endl
+      << endl
+      << "Calibrate a single MS using the reduction strategy described by"
+      " PARSET. The" << endl
+      << "second form instead tries to join a distributed calibration"
+      " run with session" << endl
+      << "key KEY. In this case the reduction is controlled"
+      " remotely by a bbs-controller" << endl
+      << "process." << endl << endl
       << "Mandatory arguments to long options are mandatory for short options"
           " too." << endl
-      << parser.documentation() << endl << endl
-      << "blablabla blabal" << endl;
+      << parser.documentation() << endl;
     return 0;
   }
 

@@ -23,13 +23,13 @@
 
 #include <lofar_config.h>
 #include <BBSControl/CommandProcessorCore.h>
-
+#include <BBSControl/GlobalSolveController.h>
+#include <BBSControl/Messages.h>
 #include <BBSControl/InitializeCommand.h>
 #include <BBSControl/FinalizeCommand.h>
 #include <BBSControl/NextChunkCommand.h>
 #include <BBSControl/RecoverCommand.h>
 #include <BBSControl/SynchronizeCommand.h>
-
 #include <BBSControl/MultiStep.h>
 #include <BBSControl/PredictStep.h>
 #include <BBSControl/SubtractStep.h>
@@ -38,24 +38,12 @@
 #include <BBSControl/SolveStep.h>
 #include <BBSControl/ShiftStep.h>
 #include <BBSControl/RefitStep.h>
-
 #include <BBSKernel/ParmManager.h>
 #include <BBSKernel/MeasurementExprLOFAR.h>
-//#include <BBSKernel/ParmManager.h>
-//#include <BBSKernel/Evaluator.h>
-//#include <BBSKernel/VisEquator.h>
-//#include <BBSKernel/Solver.h>
-//#include <BBSKernel/Exceptions.h>
-#include <BBSControl/GlobalSolveController.h>
 #include <BBSKernel/UVWFlagger.h>
-
 #include <BBSKernel/Apply.h>
 #include <BBSKernel/Estimate.h>
-
-#include <BBSControl/BlobStreamableConnection.h>
 #include <Common/lofar_iomanip.h>
-
-#include <BBSControl/Messages.h>
 
 namespace LOFAR
 {
@@ -71,13 +59,13 @@ namespace
 }
 
 CommandProcessorCore::CommandProcessorCore(const ProcessGroup &group,
-    const Measurement::Ptr &measurement, const ParmDB &parmDB,
-    const SourceDB &sourceDB)
-    : itsProcessGroup(group),
-      itsMeasurement(measurement),
-      itsParmDB(parmDB),
-      itsSourceDB(sourceDB),
-      itsHasFinished(false)
+  const Measurement::Ptr &measurement, const ParmDB &parmDB,
+  const SourceDB &sourceDB)
+  : itsProcessGroup(group),
+    itsMeasurement(measurement),
+    itsParmDB(parmDB),
+    itsSourceDB(sourceDB),
+    itsHasFinished(false)
 {
 }
 
@@ -88,7 +76,8 @@ bool CommandProcessorCore::hasFinished() const
 
 CommandResult CommandProcessorCore::visit(const InitializeCommand &command)
 {
-  if(command.useSolver()) {
+  if(command.useSolver())
+  {
     ASSERT(itsProcessGroup.getProcessCount(ProcessGroup::SOLVER) == 1);
 
     const Process solverProcess = itsProcessGroup.process(ProcessGroup::SOLVER,
@@ -105,7 +94,8 @@ CommandResult CommandProcessorCore::visit(const InitializeCommand &command)
     itsSolverConnection.reset(new BlobStreamableConnection(solverId.hostname,
       tmp.str(), Socket::TCP));
 
-    if(!itsSolverConnection->connect()) {
+    if(!itsSolverConnection->connect())
+    {
       return CommandResult(CommandResult::ERROR, "Unable to connect to"
         " solver.");
     }
@@ -170,7 +160,7 @@ CommandResult CommandProcessorCore::visit(const NextChunkCommand &command)
   try
   {
     itsBuffers["DATA"] = itsMeasurement->read(itsChunkSelection,
-        itsInputColumn);
+      itsInputColumn);
   }
   catch(Exception &ex)
   {
@@ -317,10 +307,10 @@ CommandResult CommandProcessorCore::visit(const SolveStep &command)
   if(command.globalSolution())
   {
     ASSERTSTR(command.algorithm() == "L2"
-        && command.mode() == "COMPLEX"
-        && !command.reject(), "Global calibration only supports Solve.Mode"
-        " = COMPLEX, Solve.Algorithm = L2, and Solve.OutlierRejection ="
-        " F.");
+      && command.mode() == "COMPLEX"
+      && !command.reject(), "Global calibration only supports Solve.Mode"
+      " = COMPLEX, Solve.Algorithm = L2, and Solve.OutlierRejection ="
+      " F.");
 
     // Initialize equator.
     VisEquator::Ptr equator(new VisEquator(buffer, model));
@@ -536,34 +526,20 @@ void CommandProcessorCore::loadPrecomputedVis(const vector<string> &patches)
 Axis::ShPtr
 CommandProcessorCore::getCalGroupFreqAxis(const vector<uint32> &groups) const
 {
-//  ASSERT(itsKernelIndex >= 0);
-//  unsigned int kernel = static_cast<unsigned int>(itsKernelIndex);
-
   unsigned int kernel = itsProcessGroup.getIndex();
-  LOG_DEBUG_STR("My index: " << kernel);
 
   // Determine the calibration group to which this kernel process belongs,
   // and find the index of the first and last kernel process in that
   // calibration group.
   unsigned int idx = 0, count = groups[0];
-
   while(kernel >= count)
   {
     ++idx;
     ASSERT(idx < groups.size());
     count += groups[idx];
   }
-
   ASSERT(kernel < count);
   LOG_DEBUG_STR("Calibration group index: " << idx);
-
-//  ProcessId first = itsCalSession->getWorkerByIndex(CalSession::KERNEL,
-//    count - groups[idx]);
-//  ProcessId last = itsCalSession->getWorkerByIndex(CalSession::KERNEL,
-//    count - 1);
-
-//  double freqStart = itsCalSession->getFreqRange(first).start;
-//  double freqEnd = itsCalSession->getFreqRange(last).end;
 
   const Process &first = itsProcessGroup.process(ProcessGroup::KERNEL,
     count - groups[idx]);
@@ -578,26 +554,6 @@ CommandProcessorCore::getCalGroupFreqAxis(const vector<uint32> &groups) const
 
   return Axis::ShPtr(new RegularAxis(freqStart, freqEnd, 1, true));
 }
-
-//void CommandProcessorCore::getParmDBLog(const string &name)
-//{
-////  casa::Path path(itsPath);
-////  path.append(command.logName());
-//  map<string, ParmDBLog>::iterator it = itsLogs.find(name);
-//  if(it != itsLogs.end()) {
-//    return *it;
-//  }
-
-//  casa::Path path(name);
-//  ParmDBLog &
-//  itsLogs[name] = ParmDBLog(path.absoluteName(), ParmDBLoglevel(level).get(),
-//      true);
-//  }
-
-//  ParmDBLog log(path.absoluteName(),
-//    ParmDBLoglevel(command.logLevel()).get(), itsChunkCount == 0);
-
-//}
 
 } //# namespace BBS
 } //# namespace LOFAR

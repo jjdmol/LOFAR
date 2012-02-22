@@ -55,30 +55,30 @@ namespace
 
 } //# unnamed namespace
 
-void OptionParser::appendOption(const string &name, const string &shortOption,
+void OptionParser::addOption(const string &name, const string &shortOption,
     const string &longOption, const string &description)
 {
     OptionDescriptor desc = {name, description, false, '\0', "", false,
         false, ""};
-    appendOption(desc, shortOption, longOption);
+    addOption(desc, shortOption, longOption);
 }
 
-void OptionParser::appendOptionWithArgument(const string &name,
+void OptionParser::addOptionWithArgument(const string &name,
     const string &shortOption, const string &longOption,
     const string &description)
 {
     OptionDescriptor desc = {name, description, false, '\0', "", true,
         false, ""};
-    appendOption(desc, shortOption, longOption);
+    addOption(desc, shortOption, longOption);
 }
 
-void OptionParser::appendOptionWithDefault(const string &name,
+void OptionParser::addOptionWithDefault(const string &name,
     const string &shortOption, const string &longOption,
     const string &defaultValue,const string &description)
 {
     OptionDescriptor desc = {name, description, false, '\0', "", true, true,
         defaultValue};
-    appendOption(desc, shortOption, longOption);
+    addOption(desc, shortOption, longOption);
 }
 
 string OptionParser::documentation(size_t width, const string &prefix) const
@@ -297,7 +297,7 @@ string OptionParser::parseLongOption(const string &option) const
     return option.substr(2);
 }
 
-void OptionParser::appendOption(OptionParser::OptionDescriptor desc,
+void OptionParser::addOption(OptionParser::OptionDescriptor desc,
     const string &shortOption, const string &longOption)
 {
     if(shortOption.empty() && longOption.empty())
@@ -349,6 +349,7 @@ OptionParser::findLongOption(const string &prefix) const
             ++count;
         }
     }
+
     if(count != 1)
     {
         THROW(OptionParserException, (count == 0 ? "Unrecognized" : "Ambiguous")

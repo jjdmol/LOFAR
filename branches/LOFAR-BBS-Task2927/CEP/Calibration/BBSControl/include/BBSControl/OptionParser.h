@@ -43,23 +43,57 @@ class OptionParser
 public:
     typedef vector<string>  ArgumentList;
 
+    // Helper function to convert standard command line arguments to an
+    // \c ArgumentList instance.
     static ArgumentList makeArgumentList(int argc, char *argv[]);
 
-    void appendOption(const string &name, const string &shortOption,
-        const string &longOption, const string &description = "");
-    void appendOptionWithArgument(const string &name, const string &shortOption,
+    // Define options recognized by the parser. These functions should be called
+    // prior to calling \c parse() or \c documentation().
+    //
+    // An option can be given a to a short option name (e.g. -s), a long option
+    // name (e.g. --long-option), or both. If both \p shortOption and
+    // \p longOption are left empty an exception will be thrown.
+    //
+    // For long options that expect an argument, \p name in uppercase can be
+    // used in \p description to refer to the argument value.
+    // @{
+
+    // Define a switch (i.e. an option without an argument).
+    void addOption(const string &name, const string &shortOption,
         const string &longOption, const string &description = "");
 
-    void appendOptionWithDefault(const string &name, const string &shortOption,
+    // Define an option that expects an argument.
+    void addOptionWithArgument(const string &name, const string &shortOption,
+        const string &longOption, const string &description = "");
+
+    // Define an option that expects an argument. The value of the argument
+    // defaults to \p defaultValue.
+    void addOptionWithDefault(const string &name, const string &shortOption,
         const string &longOption, const string &defaultValue,
         const string &description = "");
+    // @}
 
+    // Generate GNU style option documentation. The documentation will be
+    // wrapped on word boundaries such that its width in characters is smaller
+    // than or equal to \p width (excluding the width of \p prefix).
+    //
+    // Note that escape sequences are not handled specially while word wrapping,
+    // thus wrapping will not work correctly for text that contains tab,
+    // newline, backspace, et cetera.
     string documentation(size_t width = 56, const string &prefix = "\t\t\t")
         const;
 
+    // Parse the argument list. Options are removed from the input
+    // \c ArgumentList instance, such that only non-option arguments are left
+    // after \c parse() returns. The first argument is not considered for option
+    // parsing because it contains the name of the application by convention.
+    // The first non-option argument left in \p args after \c parse() returns is
+    // therefore always equal to the first argument in \p args before \c parse()
+    // was called.
     ParameterSet parse(ArgumentList &args) const;
 
 private:
+    // Description of an option.
     struct OptionDescriptor
     {
         string  name;
@@ -78,7 +112,7 @@ private:
     char parseShortOption(const string &option) const;
     string parseLongOption(const string &option) const;
 
-    void appendOption(OptionDescriptor desc, const string &shortOption,
+    void addOption(OptionDescriptor desc, const string &shortOption,
         const string &longOption);
     const OptionDescriptor &findShortOption(char option) const;
     const OptionDescriptor &findLongOption(const string &prefix) const;

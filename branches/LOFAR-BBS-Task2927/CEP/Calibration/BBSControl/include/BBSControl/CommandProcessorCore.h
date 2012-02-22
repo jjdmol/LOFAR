@@ -30,7 +30,6 @@
 #include <BBSControl/Command.h>
 #include <BBSControl/CommandVisitor.h>
 #include <BBSControl/ProcessGroup.h>
-//#include <BBSControl/CalSession.h>
 #include <BBSControl/BlobStreamableConnection.h>
 #include <BBSKernel/Measurement.h>
 #include <BBSKernel/Evaluator.h>
@@ -55,9 +54,10 @@ class CommandProcessorCore: public CommandVisitor
 {
 public:
     CommandProcessorCore(const ProcessGroup &group,
-        const Measurement::Ptr &measurement,
-        const ParmDB &parmDB, const SourceDB &sourceDB);
+      const Measurement::Ptr &measurement, const ParmDB &parmDB,
+      const SourceDB &sourceDB);
 
+    // Returns true if a FinalizeCommand has been received.
     bool hasFinished() const;
 
     // @name Implementation of CommandVisitor interface.
@@ -81,26 +81,27 @@ private:
     CommandResult unsupported(const Command &command) const;
     CommandResult simulate(const SingleStep &command, Evaluator::Mode mode);
 
+    // Find the combined frequency axis of the calibration group the process
+    // belongs to, given the specified partition of processes into groups.
     Axis::ShPtr getCalGroupFreqAxis(const vector<uint32> &groups) const;
 
-    // Create CorrelationMask from the baseline selection specified in the
+    // Create a CorrelationMask from the correlation selection specified in the
     // parset.
     CorrelationMask makeCorrelationMask(const vector<string> &selection) const;
 
     // Create buffers and load precomputed visbilities on demand.
     void loadPrecomputedVis(const vector<string> &patches);
 
-    ProcessGroup            itsProcessGroup;
-    Measurement::Ptr        itsMeasurement;
-    ParmDB                  itsParmDB;
-    SourceDB                itsSourceDB;
-    bool                    itsHasFinished;
+    ProcessGroup                          itsProcessGroup;
+    Measurement::Ptr                      itsMeasurement;
+    ParmDB                                itsParmDB;
+    SourceDB                              itsSourceDB;
+    bool                                  itsHasFinished;
 
-    string                  itsInputColumn;
-    VisSelection            itsChunkSelection;
-    BufferMap               itsBuffers;
-//    map<string, ParmDBLog*> itsLogs;
-    shared_ptr<BlobStreamableConnection>    itsSolverConnection;
+    string                                itsInputColumn;
+    VisSelection                          itsChunkSelection;
+    BufferMap                             itsBuffers;
+    shared_ptr<BlobStreamableConnection>  itsSolverConnection;
 };
 
 // @}

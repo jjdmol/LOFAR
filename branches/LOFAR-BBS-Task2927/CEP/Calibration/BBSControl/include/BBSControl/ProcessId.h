@@ -39,20 +39,22 @@ namespace BBS
 // \addtogroup BBSControl
 // @{
 
-// ProcessId is an id that can be used to uniquely identify processes running on
-// different hosts.
+// Unique process identifier (a combination of the name of the host where the
+// process is running and the process' PID).
 class ProcessId
 {
 public:
     ProcessId();
     ProcessId(const string &hostname, int64 pid);
 
+    // Return the ProcessId of the current process.
     static ProcessId id();
 
     string  hostname;
     int64   pid;
 };
 
+// Comparison operators.
 bool operator<(const ProcessId &lhs, const ProcessId &rhs);
 bool operator==(const ProcessId &lhs, const ProcessId &rhs);
 

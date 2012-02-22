@@ -44,13 +44,9 @@ class CommandProcessorSolver: public CommandVisitor
 {
 public:
     CommandProcessorSolver(const ProcessGroup &group,
-      const DistributedLMSolver::Ptr &solver)
-    : itsHasFinished(false),
-      itsProcessGroup(group),
-      itsSolver(solver)
-    {
-    }
+      const DistributedLMSolver::Ptr &solver);
 
+    // Returns true if a FinalizeCommand has been received.
     bool hasFinished() const;
 
     // @name Implementation of CommandVisitor interface.

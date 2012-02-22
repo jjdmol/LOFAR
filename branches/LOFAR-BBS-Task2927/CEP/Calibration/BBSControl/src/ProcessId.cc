@@ -1,4 +1,5 @@
-//# ProcessId.cc: Unique process identifier (a combination of the name of the host where the process is running and the process' PID).
+//# ProcessId.cc: Unique process identifier (a combination of the name of the
+//# host where the process is running and the process' PID).
 //#
 //# Copyright (C) 2012
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -22,10 +23,7 @@
 
 #include <lofar_config.h>
 #include <BBSControl/ProcessId.h>
-
 #include <Common/LofarLogger.h>
-
-// gethostname() and getpid()
 #include <unistd.h>
 
 namespace LOFAR

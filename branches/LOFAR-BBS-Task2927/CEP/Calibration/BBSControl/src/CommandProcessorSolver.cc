@@ -52,6 +52,14 @@ namespace
   NextChunkCommand  cmd2;
 }
 
+CommandProcessorSolver::CommandProcessorSolver(const ProcessGroup &group,
+  const DistributedLMSolver::Ptr &solver)
+  : itsHasFinished(false),
+    itsProcessGroup(group),
+    itsSolver(solver)
+{
+}
+
 bool CommandProcessorSolver::hasFinished() const
 {
   return itsHasFinished;
@@ -119,7 +127,6 @@ CommandResult CommandProcessorSolver::visit(const CorrectStep &command)
 
 CommandResult CommandProcessorSolver::visit(const SolveStep &command)
 {
-  // Initialize a solve task for each calibration group.
   SolverOptions options;
   options.maxIter = command.maxIter();
   options.epsValue = command.epsValue();

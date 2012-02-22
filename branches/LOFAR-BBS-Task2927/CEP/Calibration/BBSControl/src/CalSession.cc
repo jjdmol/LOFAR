@@ -97,12 +97,6 @@ CalSession::CalSession(const string &key, const string &db, const string &user,
     :   itsSessionId(-1),
         itsProcessId(ProcessId::id())
 {
-//    // Determine the ProcessId of this worker.
-//    char hostname[512];
-//    int status = gethostname(hostname, 512);
-//    ASSERT(status == 0);
-//    itsProcessId = ProcessId(string(hostname), getpid());
-
     // Build connection string.
     string opts("dbname='" + db + "' user='" + user + "' host='" + host + "'");
     if(!port.empty()) {

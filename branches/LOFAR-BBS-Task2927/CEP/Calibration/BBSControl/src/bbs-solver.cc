@@ -22,27 +22,11 @@
 //# $Id:
 
 #include <lofar_config.h>
-//#include <BBSControl/KernelProcessControl.h>
-#include <BBSControl/KernelConnection.h>
-#include <BBSControl/SolveTask.h>
-#include <BBSControl/OptionParser.h>
+#include <BBSControl/Package__Version.h>
 #include <BBSControl/CalSession.h>
 #include <BBSControl/CommandProcessorSolver.h>
-#include <BBSKernel/MeasurementAIPS.h>
-#include <BBSKernel/ParmManager.h>
-#include <BBSControl/Messages.h>
-#include <BBSControl/SolveStep.h>
-#include <BBSControl/Strategy.h>
-#include <BBSControl/Step.h>
-#include <BBSControl/InitializeCommand.h>
-#include <BBSControl/FinalizeCommand.h>
-#include <BBSControl/NextChunkCommand.h>
-#include <BBSControl/Package__Version.h>
+#include <BBSControl/OptionParser.h>
 #include <BBSControl/Util.h>
-#include <PLC/ACCmain.h>
-#include <Common/Exception.h>
-#include <Common/StreamUtil.h>
-#include <cstdlib>
 
 using namespace LOFAR;
 using namespace LOFAR::BBS;
@@ -57,25 +41,23 @@ int main(int argc, char *argv[])
   LOG_INFO_STR(Version::getInfo<BBSControlVersion>(progName, "other"));
 
   OptionParser parser;
-  parser.appendOption("Help", "-h", "--help", "Print usage information"
-    " and exit.");
-  parser.appendOptionWithDefault("Range", "-r", "--port-range", "6500:6599",
+  parser.addOption("Help", "-h", "--help", "Print usage information and exit.");
+  parser.addOptionWithDefault("Range", "-r", "--port-range", "6500:6599",
     "Range of ports to search for a free port on which to start listening");
-  parser.appendOptionWithDefault("Backlog", "-b", "--backlog", "10", "Maximal"
+  parser.addOptionWithDefault("Backlog", "-b", "--backlog", "10", "Maximal"
     " number of pending connections.");
-  parser.appendOptionWithDefault("Key", "-k", "--key", "default", "Session"
-    " key.");
-  parser.appendOptionWithDefault("Name", "-d", "--db-name",
+  parser.addOptionWithDefault("Key", "-k", "--key", "default", "Session key.");
+  parser.addOptionWithDefault("Name", "-d", "--db-name",
     (getenv("USER") ? : ""), "Name of the database used to store shared"
     " state.");
-  parser.appendOptionWithDefault("Host", "-H", "--db-host", "localhost",
-    "Hostname of the machine that runs the database server.");
-  parser.appendOptionWithDefault("Port", "-p", "--db-port", "5432", "Port on"
-    " which the database server is listening.");
-  parser.appendOptionWithDefault("User", "-U", "--db-user", "postgres", "User"
-    " name for database authentication.");
-  parser.appendOptionWithDefault("Password", "-w", "--db-password", "",
-    "Password for database authentication.");
+  parser.addOptionWithDefault("Host", "-H", "--db-host", "localhost", "Hostname"
+    " of the machine that runs the database server.");
+  parser.addOptionWithDefault("Port", "-p", "--db-port", "5432", "Port on which"
+    " the database server is listening.");
+  parser.addOptionWithDefault("User", "-U", "--db-user", "postgres", "Username"
+    " used for authentication.");
+  parser.addOptionWithDefault("Password", "-w", "--db-password", "", "Password"
+    " used for authentication.");
 
   ParameterSet options;
   OptionParser::ArgumentList args = OptionParser::makeArgumentList(argc, argv);
@@ -94,11 +76,17 @@ int main(int argc, char *argv[])
   if(options.getBool("Help", false))
   {
     cout << "Usage: " << progName << " [OPTION]..." << endl
-      << "Calibrate MS blablabla asdasd asdasd asd" << endl << endl
+      << endl
+      << "This distributed LM solver is used in distributed calibration runs."
+      " It combines" << endl
+      << "the normal equations from multiple bbs-data-processor processes and"
+      " computes" << endl
+      << "new parameters estimates. On start-up the solver will try to join the"
+      << endl
+      << "distributed calibration run with session key KEY." << endl << endl
       << "Mandatory arguments to long options are mandatory for short options"
           " too." << endl
-      << parser.documentation() << endl << endl
-      << "blablabla blabal" << endl;
+      << parser.documentation() << endl;
     return 0;
   }
 
