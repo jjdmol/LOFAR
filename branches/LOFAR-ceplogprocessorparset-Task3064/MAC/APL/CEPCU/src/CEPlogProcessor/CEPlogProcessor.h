@@ -54,7 +54,7 @@ namespace LOFAR {
 class CEPlogProcessor : public GCFTask
 {
 public:
-    explicit CEPlogProcessor(const string&  cntlrName);
+    explicit CEPlogProcessor(const std::string&  cntlrName);
     ~CEPlogProcessor();
 
     // its processing states
@@ -83,6 +83,8 @@ private:
     void     _handleDataStream  (GCFPortInterface*  port);
     time_t   _parseDateTime     (const char *datestr, const char *timestr) const;
     void     _processLogLine    (const char *cString);
+
+    void     processParset      (const std::string &observationID);
 
     struct logline {
       // info straight from splitting log line
@@ -186,7 +188,7 @@ private:
 
     // a BiMap is needed to automatically remove obsIDs that point to
     // reused tempObsNames.
-    BiMap<int,string> itsTempObsMapping;
+    BiMap<int, std::string> itsTempObsMapping;
 };
 
 // @} addgroup

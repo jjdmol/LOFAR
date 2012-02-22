@@ -25,6 +25,7 @@
 #include <Common/LofarLocators.h>
 #include <Common/StringUtil.h>
 #include <Common/ParameterSet.h>
+#include <ApplCommon/Observation.h>
 
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <MACIO/MACServiceInfo.h>
@@ -105,14 +106,14 @@ CEPlogProcessor::~CEPlogProcessor()
 {
     LOG_TRACE_OBJ_STR (getName() << " destruction");
 
-    // database should be ready by ts, check if allocation was succesfull
-    for (int    inputBuf = itsNrInputBuffers - 1; inputBuf >= 0; inputBuf--) {
+    // database should be ready by ts, check if allocation was succesful
+    for (int    inputBuf = itsInputBuffers.size() - 1; inputBuf >= 0; inputBuf--) {
         delete itsInputBuffers[inputBuf];
     }
-    for (int    adder = itsNrAdders - 1; adder >= 0; adder--) {
+    for (int    adder = itsAdders.size() - 1; adder >= 0; adder--) {
         delete itsAdders[adder];
     }
-    for (int    storage = itsNrStorage - 1; storage >= 0; storage--) {
+    for (int    storage = itsWriters.size() - 1; storage >= 0; storage--) {
         delete itsWriters[storage];
     }
 
@@ -385,6 +386,75 @@ void CEPlogProcessor::collectGarbage()
 }
 
 
+void CEPlogProcessor::processParset( const std::string &observationID )
+{
+    time_t now = time(0L);
+    unsigned obsID;
+
+    if (sscanf(observationID.c_str(), "%u", &obsID) != 1) {
+      LOG_ERROR_STR("Observation ID not numerical: " << observationID);
+      return;
+    }
+
+    // parsets are in /opt/lofar/share
+    string filename(formatString("/opt/lofar/share/Observation%s", observationID.c_str()));
+
+    ParameterSet parset(filename);
+    Observation obs(&parset);
+
+    unsigned nrStreams = obs.streamsToStorage.size();
+
+    // process all the writers
+    for( unsigned i = 0; i < nrStreams; i++ ) {
+      Observation::StreamToStorage &s = obs.streamsToStorage[i];
+
+      unsigned hostNr;
+
+      if (sscanf(s.destStorageNode.c_str(), "%*[^0-9]%u", &hostNr) != 1) {
+        LOG_WARN_STR("Could not extract host number from name: " << s.destStorageNode );
+        continue;
+      }
+
+      hostNr--; // we use 0-based indexing in our arrays
+
+      unsigned writerIndex = hostNr * itsNrWriters + s.writerNr;
+      RTDBPropertySet *writer = itsWriters[writerIndex];
+
+      // reset/fill all fields for this writer
+      writer->setValue("written",         GCFPVInteger(0), now, false);
+      writer->setValue("dropped",         GCFPVInteger(0), now, false);
+      writer->setValue("fileName",        GCFPVString(s.filename), now, false);
+      writer->setValue("dataRate",        GCFPVDouble(0.0), now, false);
+      writer->setValue("dataProductType", GCFPVString(s.dataProduct), now, false);
+      writer->setValue("observationName", GCFPVString(observationID), now, false);
+      writer->flush();
+    }
+
+    // process all the adders
+    for( unsigned i = 0; i < nrStreams; i++ ) {
+      Observation::StreamToStorage &s = obs.streamsToStorage[i];
+
+      unsigned adderIndex = s.sourcePset * itsNrAdders + s.adderNr;
+      RTDBPropertySet *adder = itsAdders[adderIndex];
+
+      // reset/fill all fields for this writer
+      adder->setValue("dropping",        GCFPVBool(false), now, false);
+      adder->setValue("dropped",         GCFPVInteger(0), now, false);
+      adder->setValue("dataProductType", GCFPVString(s.dataProduct), now, false);
+      adder->setValue("fileName",        GCFPVString(s.filename), now, false);
+      adder->setValue("locusNode",       GCFPVString(s.destStorageNode), now, false);
+      adder->setValue("directory",       GCFPVString(s.destDirectory), now, false);
+      adder->setValue("observationName", GCFPVString(observationID), now, false);
+      adder->flush();
+    }
+
+    if (parset.isDefined("_DPname")) {
+      // register the temporary obs name
+      itsTempObsMapping.set( obsID, parset.getString("_DPname") );
+    }
+}
+
+
 //
 // operational(event, port)
 //
@@ -420,6 +490,9 @@ GCFEvent::TResult CEPlogProcessor::operational(GCFEvent& event, GCFPortInterface
 	case CONTROL_ANNOUNCE: {
 		CONTROLAnnounceEvent	announce(event);
 		LOG_DEBUG_STR("Received annoucement for Observation " << announce.observationID);
+
+        processParset(announce.observationID);
+
 		break;
 	}
     }
@@ -645,7 +718,13 @@ string CEPlogProcessor::getTempObsName(int obsID, const char *msg)
   if (sscanf(msg,"PVSS name: %[^\n]", &tempObsName[0]) == 1) {
     LOG_DEBUG_STR("obs " << obsID << " is mapped to " << &tempObsName[0]);
 
-    itsTempObsMapping.set( obsID, string(&tempObsName[0]) );
+    if (!itsTempObsMapping.exists(obsID))
+      processParset(formatString("%d",obsID));
+
+    if (itsTempObsMapping.exists(obsID))
+      ASSERTSTR(itsTempObsMapping.lookup(obsID) == string(&tempObsName[0]), "Observation ID remapped from " << itsTempObsMapping.lookup(obsID) << " to " << string(&tempObsName[0]));
+    else  
+      itsTempObsMapping.set( obsID, string(&tempObsName[0]) );
   }
 
   if (!strcmp(msg,"----- Job finished succesfully")
