@@ -65,7 +65,7 @@ setBBSTestdir()
     bbstestdir='/globaldata/bbs/tests'
   elif [ ${CEPCLUSTER} == "Sven-Duschas-Macbook-Pro" ]
   then
-    bbstestdir='/Users/duscha/Cluster/Test'
+    bbstestdir='/Users/duscha/Cluster/BBSTests'
   else
 #    bbstestdir=''
     echo "bbstests.sh: Unknown host environment. Exiting..."
@@ -224,6 +224,8 @@ done
 
 
 # Cleanup and finish
+rm ${wd}/${key}_*                   # delete local kernel log and parset files
 if [ ${verbosity} == 1 ]; then 
+  echo "rm ${wd}/${key}_*"
   echo "bbstest.sh finished."
 fi
