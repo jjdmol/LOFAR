@@ -541,6 +541,8 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
           }
         }
 
+        if(LOG_CONDITION)
+          LOG_DEBUG_STR(itsLogPrefix << "Forming beams " << beam << " .. " << (beam+groupSize-1) << " at t = " << blockAge());
         formBeams(sap, beam, groupSize);
       } else {
         groupSize = 1;
@@ -558,8 +560,12 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
         ASSERT( itsPreTransposeBeamFormedData[beam].get() != NULL );
 
         if (info.coherent) {
-          if (itsDedispersionAfterBeamForming != 0)
+          if (itsDedispersionAfterBeamForming != 0) {
+            if(LOG_CONDITION)
+              LOG_DEBUG_STR(itsLogPrefix << "Dedispersing beam-formed data at t = " << blockAge());
+
             dedisperseAfterBeamForming(i, itsDMs[beam]);
+          }
 
           switch (info.stokesType) {
             case STOKES_I:
