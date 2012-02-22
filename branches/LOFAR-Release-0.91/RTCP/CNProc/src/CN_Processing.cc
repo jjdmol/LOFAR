@@ -861,7 +861,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::receiveBeam(uns
   for (unsigned subband = 0; subband < nrSubbands; subband++) {
 #endif
 
-    if (LOG_CONDITION)
+    if (LOG_CONDITION && (i == 0 || i == 1 || i == nrSubbands - 2 || i == nrSubbands - 1))
       LOG_DEBUG_STR(itsLogPrefix << "Starting to post process subband " << i << " / " << nrSubbands << " at t = " << blockAge());
 
     if (itsFinalBeamFormedData != 0) {
