@@ -27,10 +27,12 @@
 
 #include "histogramtablesformatter.h"
 
-class LogHistogram
+#include <AOFlagger/util/serializable.h>
+
+class LogHistogram : public Serializable
 {
 	private:
-		struct AmplitudeBin
+		struct AmplitudeBin : public Serializable
 		{
 			AmplitudeBin() :
 				count(0)
@@ -56,9 +58,26 @@ class LogHistogram
 					count = 0;
 				return *this;
 			}
+			
+			virtual void Serialize(std::ostream &stream) const
+			{
+				SerializeToUInt64(stream, count);
+			}
+			virtual void Unserialize(std::istream &stream)
+			{
+				count = UnserializeUInt64(stream);
+			}
 		};
 		
 	public:
+		LogHistogram()
+		{
+		}
+		
+		LogHistogram(const LogHistogram &source) : _amplitudes(source._amplitudes)
+		{
+		}
+		
 		void Add(const double amplitude)
 		{
 			if(std::isfinite(amplitude))
@@ -85,27 +104,6 @@ class LogHistogram
 				AmplitudeBin &bin = getBin(i->first);
 				bin -= i->second;
 			}
-		}
-		
-		double NormalizedSlope(double startAmplitude, double endAmplitude) const
-		{
-			unsigned long n = 0;
-			long double sumX = 0.0, sumXY = 0.0, sumY = 0.0, sumXSquare = 0.0;
-			for(std::map<double, class AmplitudeBin>::const_iterator i=_amplitudes.begin();i!=_amplitudes.end();++i)
-			{
-				if(i->first >= startAmplitude && i->first < endAmplitude)
-				{
-					long unsigned count = i->second.GetCount();
-					double x = log10(i->first);
-					double y = log10((double) count / i->first);
-					++n;
-					sumX += x;
-					sumXSquare += x * x;
-					sumY += y;
-					sumXY += x * y;
-				}
-			}
-			return (sumXY - sumX*sumY/n)/(sumXSquare - (sumX*sumX/n));
 		}
 		
 		double MaxAmplitude() const
@@ -163,6 +161,55 @@ class LogHistogram
 			return minCount;
 		}
 		
+		double MaxNormalizedCount() const
+		{
+			double maxCount = 0.0;
+			for (LogHistogram::const_iterator i=begin(); i!=end(); ++i)
+			{
+				if(i.normalizedCount() > maxCount && i.value() > 0 && std::isfinite(i.value()))
+					maxCount = i.normalizedCount();
+			}
+			return maxCount;
+		}
+		
+		double NormalizedTotalCount() const
+		{
+			unsigned long count = 0;
+			for (LogHistogram::const_iterator i=begin(); i!=end(); ++i)
+				count += i.unnormalizedCount();
+			return count;
+		}
+		
+		double NormalizedCountAbove(double lowerLimitingAmplitude) const
+		{
+			unsigned long count = 0;
+			LogHistogram::const_iterator i=begin();
+			while(i!=end() && i.value() <= lowerLimitingAmplitude)
+			{
+				++i;
+			}
+			while(i!=end())
+			{
+				count += i.unnormalizedCount();
+				++i;
+			}
+			return count;
+		}
+		
+		double AmplitudeWithMaxNormalizedCount() const
+		{
+			double maxCount = 0.0, maxPosition = 0.0;
+			for (LogHistogram::const_iterator i=begin(); i!=end(); ++i)
+			{
+				if(i.normalizedCount() > maxCount && i.value() > 0 && std::isfinite(i.value()))
+				{
+					maxCount = i.normalizedCount();
+					maxPosition = i.value();
+				}
+			}
+			return maxPosition;
+		}
+		
 		double MinPosNormalizedCount() const
 		{
 			const_iterator i = begin();
@@ -176,6 +223,75 @@ class LogHistogram
 				++i;
 			} while(i != end());
 			return minCount;
+		}
+		
+		double NormalizedSlope(double startAmplitude, double endAmplitude) const
+		{
+			unsigned long n = 0;
+			long double sumX = 0.0, sumXY = 0.0, sumY = 0.0, sumXSquare = 0.0;
+			for(const_iterator i=begin();i!=end();++i)
+			{
+				if(i.value() >= startAmplitude && i.value() < endAmplitude)
+				{
+					double x = log10(i.value());
+					double y = log10(i.normalizedCount());
+					++n;
+					sumX += x;
+					sumXSquare += x * x;
+					sumY += y;
+					sumXY += x * y;
+				}
+			}
+			return (sumXY - sumX*sumY/n)/(sumXSquare - (sumX*sumX/n));
+		}
+		
+		double NormalizedSlopeOffset(double startAmplitude, double endAmplitude, double slope) const
+		{
+			unsigned long n = 0;
+			long double sumOffset = 0.0;
+			for(const_iterator i=begin();i!=end();++i)
+			{
+				if(i.value() >= startAmplitude && i.value() < endAmplitude)
+				{
+					double y = log10(i.normalizedCount());
+					double x = log10(i.value());
+					double ySlope = x*slope;
+					++n;
+					sumOffset += (y - ySlope);
+				}
+			}
+			return (double) (sumOffset/(long double) n);
+		}
+		
+		double PowerLawUpperLimit(double constrainingAmplitude, double exponent, double factor) const
+		{
+			const double count = NormalizedCountAbove(constrainingAmplitude);
+			const double term = count * (exponent+1.0)/factor + pow(constrainingAmplitude, exponent+1.0);
+			return pow(term, 1.0/(exponent+1.0));
+		}
+		
+		double PowerLawLowerLimit(double constrainingAmplitude, double exponent, double factor, double rfiRatio) const
+		{
+			const double countPart = NormalizedCountAbove(constrainingAmplitude);
+			const double countTotal = NormalizedTotalCount() * rfiRatio;
+			const double term = (countPart - countTotal) * (exponent+1.0)/factor + pow(constrainingAmplitude, exponent+1.0);
+			return pow(term, 1.0/(exponent+1.0));
+		}
+		
+		void GetRFIRegion(double &start, double &end) const
+		{
+			double sigmaEstimate = AmplitudeWithMaxNormalizedCount();
+			double maxAmplitude = MaxAmplitude();
+			start = sigmaEstimate * 20.0;
+			double halfWay = exp((log(start) + log(maxAmplitude)) * 0.5);
+			end = halfWay;
+		}
+
+		double NormalizedSlopeInRFIRegion() const
+		{
+			double start, end;
+			GetRFIRegion(start ,end);
+			return NormalizedSlope(start, end);
 		}
 		
 		void SetData(std::vector<HistogramTablesFormatter::HistogramItem> &histogramData)
@@ -204,9 +320,10 @@ class LogHistogram
 				bool operator==(const const_iterator &other) const { return other._iterator == _iterator; }
 				bool operator!=(const const_iterator &other) const { return other._iterator != _iterator; }
 				const_iterator &operator++() { ++_iterator; return *this; }
+				const_iterator &operator--() { --_iterator; return *this; }
 				double value() const { return _iterator->first; }
 				double normalizedCount() const { return _iterator->second.GetCount() / (binEnd() - binStart()); }
-				double unnormalizedCount() const { return _iterator->second.GetCount(); }
+				long unsigned unnormalizedCount() const { return _iterator->second.GetCount(); }
 				double binStart() const
 				{
 					return _iterator->first>0.0 ?
@@ -234,7 +351,32 @@ class LogHistogram
 			return const_iterator(*this, _amplitudes.end());
 		}
 		
+		virtual void Serialize(std::ostream &stream) const
+		{
+			SerializeToUInt64(stream, _amplitudes.size());
+			for(std::map<double, AmplitudeBin>::const_iterator i=_amplitudes.begin();i!=_amplitudes.end();++i)
+			{
+				SerializeToDouble(stream, i->first);
+				i->second.Serialize(stream);
+			}
+		}
+		
+		virtual void Unserialize(std::istream &stream)
+		{
+			_amplitudes.clear();
+			size_t mapSize = UnserializeUInt64(stream);
+			std::map<double, AmplitudeBin>::iterator insertPos = _amplitudes.begin();
+			for(size_t i=0;i!=mapSize;++i)
+			{
+				std::pair<double, AmplitudeBin> p;
+				p.first = UnserializeDouble(stream);
+				p.second.Unserialize(stream);
+				insertPos = _amplitudes.insert(insertPos, p);
+			}
+		}
 	private:
+		std::map<double, AmplitudeBin> _amplitudes;
+		
 		AmplitudeBin &getBin(double centralAmplitude)
 		{
 			std::map<double, class AmplitudeBin>::iterator element =
@@ -258,8 +400,6 @@ class LogHistogram
 				pow10(log10(x)+0.005) :
 				-pow10(log10(x)+0.005);
 		}
-		
-		std::map<double, AmplitudeBin> _amplitudes;
 		
 		static double getCentralAmplitude(const double amplitude)
 		{

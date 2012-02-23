@@ -52,6 +52,7 @@ set(GUI_PLOT_FILES
   gui/plot/colorscale.cpp
   gui/plot/horizontalplotscale.cpp
   gui/plot/plot2d.cpp
+  gui/plot/plotpropertieswindow.cpp
   gui/plot/plotwidget.cpp
   gui/plot/verticalplotscale.cpp)
 
@@ -74,6 +75,8 @@ set(GUI_FILES
   gui/progresswindow.cpp
   gui/rawoptionwindow.cpp
   gui/tfstatoptionwindow.cpp
+  gui/quality/datawindow.cpp
+  gui/quality/histogrampage.cpp
   ${GUI_PLOT_FILES})
 
 set(MSIO_FILES
@@ -221,6 +224,7 @@ if(GTKMM_FOUND)
 		gui/plot/plotpropertieswindow.cpp
 		gui/quality/aoqplotwindow.cpp
 		gui/quality/baselineplotpage.cpp
+		gui/quality/datawindow.cpp
 		gui/quality/grayscaleplotpage.cpp
 		gui/quality/histogrampage.cpp
 		gui/quality/timefrequencyplotpage.cpp

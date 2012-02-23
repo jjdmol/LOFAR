@@ -53,7 +53,9 @@ namespace rfiStrategy {
 			if(msImageSet != 0)
 			{
 				// Check memory usage
-				size_t timeStepCount = msImageSet->GetObservationTimesSet().size();
+				ImageSetIndex *tempIndex = msImageSet->StartIndex();
+				size_t timeStepCount = msImageSet->ObservationTimesVector(*tempIndex).size();
+				delete tempIndex;
 				size_t channelCount = msImageSet->GetBandInfo(0).channelCount;
 				size_t estMemorySizePerThread = 8/*bp complex*/ * 4 /*polarizations*/ * timeStepCount * channelCount * 3 /* approx copies of the data that will be made in memory*/;
 				AOLogger::Debug << "Estimate of memory each thread will use: " << estMemorySizePerThread/(1024*1024) << " MB.\n";

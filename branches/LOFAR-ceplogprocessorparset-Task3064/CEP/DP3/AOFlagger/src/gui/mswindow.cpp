@@ -72,6 +72,7 @@
 #include <AOFlagger/gui/editstrategywindow.h>
 #include <AOFlagger/gui/gotowindow.h>
 #include <AOFlagger/gui/highlightwindow.h>
+#include <AOFlagger/gui/histogramwindow.h>
 #include <AOFlagger/gui/imageplanewindow.h>
 #include <AOFlagger/gui/imagepropertieswindow.h>
 #include <AOFlagger/gui/msoptionwindow.h>
@@ -88,12 +89,13 @@
 
 #include <iostream>
 
-MSWindow::MSWindow() : _imagePlaneWindow(0), _optionWindow(0), _editStrategyWindow(0), _gotoWindow(0), _progressWindow(0), _highlightWindow(0), _plotComplexPlaneWindow(0), _imagePropertiesWindow(0), _antennaMapWindow(0), _statistics(new RFIStatistics()),  _imageSet(0), _imageSetIndex(0), _gaussianTestSets(true), _spatialMetaData(0), _plotWindow(_plotManager)
+MSWindow::MSWindow() : _imagePlaneWindow(0), _histogramWindow(0), _optionWindow(0), _editStrategyWindow(0), _gotoWindow(0), _progressWindow(0), _highlightWindow(0), _plotComplexPlaneWindow(0), _imagePropertiesWindow(0), _antennaMapWindow(0), _statistics(new RFIStatistics()),  _imageSet(0), _imageSetIndex(0), _gaussianTestSets(true), _spatialMetaData(0), _plotWindow(_plotManager)
 {
 	createToolbar();
 
 	_mainVBox.pack_start(_timeFrequencyWidget);
 	_timeFrequencyWidget.OnMouseMovedEvent().connect(sigc::mem_fun(*this, &MSWindow::onTFWidgetMouseMoved));
+	_timeFrequencyWidget.OnMouseLeaveEvent().connect(sigc::mem_fun(*this, &MSWindow::setSetNameInStatusBar));
 	_timeFrequencyWidget.OnButtonReleasedEvent().connect(sigc::mem_fun(*this, &MSWindow::onTFWidgetButtonReleased));
 	_timeFrequencyWidget.SetShowXAxisDescription(false);
 	_timeFrequencyWidget.SetShowYAxisDescription(false);
@@ -116,6 +118,8 @@ MSWindow::MSWindow() : _imagePlaneWindow(0), _optionWindow(0), _editStrategyWind
 MSWindow::~MSWindow()
 {
 	delete _imagePlaneWindow;
+	if(_histogramWindow != 0)
+		delete _histogramWindow;
 	if(_optionWindow != 0)
 		delete _optionWindow;
 	if(_editStrategyWindow != 0)
@@ -302,8 +306,7 @@ void MSWindow::loadCurrentTFData()
 				_spatialMetaData = new SpatialMatrixMetaData(static_cast<rfiStrategy::SpatialMSImageSet*>(_imageSet)->SpatialMetaData(*_imageSetIndex));
 			}
 			_timeFrequencyWidget.Update();
-			_statusbar.pop();
-			_statusbar.push(std::string() + _imageSet->Name() + ": " + _imageSetIndex->Description());
+			setSetNameInStatusBar();
 		} catch(std::exception &e)
 		{
 			AOLogger::Error << e.what() << '\n';
@@ -312,6 +315,14 @@ void MSWindow::loadCurrentTFData()
 	}
 }
 
+void MSWindow::setSetNameInStatusBar()
+{
+  if(HasImageSet()) {
+	_statusbar.pop();
+	_statusbar.push(std::string() + _imageSet->Name() + ": " + _imageSetIndex->Description());
+  }
+}
+		
 void MSWindow::onLoadPrevious()
 {
 	if(_imageSet != 0) {
@@ -468,7 +479,12 @@ void MSWindow::SetImageSet(rfiStrategy::ImageSet *newImageSet)
 	_imageSet = newImageSet;
 	_imageSetIndex = _imageSet->StartIndex();
 	
-	loadCurrentTFData();
+	if(dynamic_cast<rfiStrategy::MSImageSet*>(newImageSet) != 0)
+	{
+		onGoToPressed();
+	} else {
+		loadCurrentTFData();
+	}
 }
 
 void MSWindow::SetImageSetIndex(rfiStrategy::ImageSetIndex *newImageSetIndex)
@@ -573,6 +589,12 @@ void MSWindow::createToolbar()
 	sigc::mem_fun(*this, &MSWindow::onOpenTestSetSlewedGaussianBroadband));
 	_actionGroup->add( Gtk::Action::create("OpenTestSetBurstBroadband", "Burst"),
 	sigc::mem_fun(*this, &MSWindow::onOpenTestSetBurstBroadband));
+	_actionGroup->add( Gtk::Action::create("OpenTestSetRFIDistributionLow", "Slope -2 dist low"),
+	sigc::mem_fun(*this, &MSWindow::onOpenTestSetRFIDistributionLow));
+	_actionGroup->add( Gtk::Action::create("OpenTestSetRFIDistributionMid", "Slope -2 dist mid"),
+	sigc::mem_fun(*this, &MSWindow::onOpenTestSetRFIDistributionMid));
+	_actionGroup->add( Gtk::Action::create("OpenTestSetRFIDistributionHigh", "Slope -2 dist high"),
+	sigc::mem_fun(*this, &MSWindow::onOpenTestSetRFIDistributionHigh));
 	_actionGroup->add( Gtk::Action::create("AddTestModification", "Test modify") );
 	_actionGroup->add( Gtk::Action::create("AddStaticFringe", "Static fringe"),
 	sigc::mem_fun(*this, &MSWindow::onAddStaticFringe) );
@@ -813,6 +835,9 @@ void MSWindow::createToolbar()
 		"        <menuitem action='OpenTestSetSinusoidalBroadband'/>"
 		"        <menuitem action='OpenTestSetSlewedGaussianBroadband'/>"
 		"        <menuitem action='OpenTestSetBurstBroadband'/>"
+		"        <menuitem action='OpenTestSetRFIDistributionLow'/>"
+		"        <menuitem action='OpenTestSetRFIDistributionMid'/>"
+		"        <menuitem action='OpenTestSetRFIDistributionHigh'/>"
 		"      </menu>"
 		"      <menu action='AddTestModification'>"
 		"        <menuitem action='AddStaticFringe'/>"
@@ -1165,15 +1190,20 @@ void MSWindow::onPlotLogLogDistPressed()
 {
 	if(_timeFrequencyWidget.HasImage())
 	{
-		Plot2D &plot = _plotManager.NewPlot2D("Log-log distribution");
-
 		TimeFrequencyData activeData = GetActiveData();
-		Image2DCPtr image = activeData.GetSingleImage();
-		Mask2DCPtr mask = Mask2D::CreateCopy(activeData.GetSingleMask());
-		HistogramCollection histograms(1);
-		histograms.Add(0, 1, 0, image, mask);
-		histograms.Plot(plot, 0);
-		_plotManager.Update();
+		HistogramCollection histograms(activeData.PolarisationCount());
+		for(unsigned p=0;p!=activeData.PolarisationCount();++p)
+		{
+			TimeFrequencyData *polData = activeData.CreateTFDataFromPolarisationIndex(p);
+			Image2DCPtr image = polData->GetSingleImage();
+			Mask2DCPtr mask = Mask2D::CreateCopy(polData->GetSingleMask());
+			histograms.Add(0, 1, p, image, mask);
+		}
+		if(_histogramWindow == 0)
+			_histogramWindow = new HistogramWindow(histograms);
+		else
+			_histogramWindow->SetStatistics(histograms);
+		_histogramWindow->show();
 	}
 }
 

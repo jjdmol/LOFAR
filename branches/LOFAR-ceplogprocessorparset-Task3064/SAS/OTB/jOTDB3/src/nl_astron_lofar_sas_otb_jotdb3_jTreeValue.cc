@@ -512,10 +512,12 @@ void  setTreeValConnection(JNIEnv *env, jobject jTreeValue) {
       if (treeVal->treeID() != aTreeID) {
 	delete treeVal;
 	treeVal = new TreeValue(aConn,aTreeID);
+        theirC_ObjectMap.erase(name+"_TreeValue");
 	theirC_ObjectMap[name+"_TreeValue"]=(void*)treeVal;
       }
     } else {
       treeVal = new TreeValue(aConn,aTreeID);
+      theirC_ObjectMap.erase(name+"_TreeValue");
       theirC_ObjectMap[name+"_TreeValue"]=(void*)treeVal;
     }
     

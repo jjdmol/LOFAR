@@ -75,6 +75,7 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_initO
 
     std::map<std::string,void *>::iterator iter;    
 
+    theirC_ObjectMap.erase(name+"_OTDBconnection");
     theirC_ObjectMap[name+"_OTDBconnection"]=(void *)aPtr;
 
     LOG_DEBUG("after connect: theirC_ObjectMap contains: ");
@@ -88,7 +89,6 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_initO
     env->ReleaseStringUTFChars(passwd, pass);
     env->ReleaseStringUTFChars(database, db);
     env->ReleaseStringUTFChars(hostname, hn);
-    env->ReleaseStringUTFChars(str, n);
   } catch (exception &ex) {
     cout << "Exception during new OTDBconnection(" << u << "," << p << "," << d << "," << h << ") : "<< ex.what() << endl;
     

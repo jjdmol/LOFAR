@@ -168,6 +168,9 @@ class MSWindow : public Gtk::Window {
 		void onOpenTestSetSinusoidalBroadband() { openTestSet(27); }
 		void onOpenTestSetSlewedGaussianBroadband() { openTestSet(28); }
 		void onOpenTestSetBurstBroadband() { openTestSet(29); }
+		void onOpenTestSetRFIDistributionLow() { openTestSet(32); }
+		void onOpenTestSetRFIDistributionMid() { openTestSet(31); }
+		void onOpenTestSetRFIDistributionHigh() { openTestSet(30); }
 		void onGaussianTestSets() { _gaussianTestSets = 1; }
 		void onRayleighTestSets() { _gaussianTestSets = 0; }
 		void onZeroTestSets() { _gaussianTestSets = 2; }
@@ -220,6 +223,7 @@ class MSWindow : public Gtk::Window {
 		void onTimeMergeUnsetValues();
 		
 		void showError(const std::string &description);
+		void setSetNameInStatusBar();
 		
 		DefaultModels::SetLocation getSetLocation(bool empty = false);
 		void loadDefaultModel(DefaultModels::Distortion distortion, bool withNoise, bool empty = false);
@@ -251,6 +255,7 @@ class MSWindow : public Gtk::Window {
 			_sim16ChannelsButton, _sim64ChannelsButton, _sim256ChannelsButton;
 		//std::vector<Gtk::Window*> _subWindows;
 		class ImagePlaneWindow *_imagePlaneWindow;
+		class HistogramWindow *_histogramWindow;
 		Gtk::Window
 			*_optionWindow, *_editStrategyWindow,
 			*_gotoWindow,

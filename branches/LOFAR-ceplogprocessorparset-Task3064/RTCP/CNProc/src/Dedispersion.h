@@ -37,7 +37,7 @@ class Dedispersion
 
   protected:
     void initFFT(fcomplex *data);
-    void forwardFFT(fcomplex *data);
+    void forwardFFT(const fcomplex *data);
     void backwardFFT(fcomplex *data);
 
     const unsigned itsNrChannels, itsNrSamplesPerIntegration, itsFFTsize;
@@ -66,7 +66,7 @@ class DedispersionBeforeBeamForming : public Dedispersion
   public:
     DedispersionBeforeBeamForming(const Parset &, FilteredData *, const std::vector<unsigned> &subbandIndices, std::vector<double> &DMs, Allocator &allocator = heapAllocator);
 
-    void dedisperse(FilteredData *, unsigned subbandIndex, double dm);
+    void dedisperse(const FilteredData *, FilteredData *, unsigned instat, unsigned outstat, unsigned firstch, unsigned numch, unsigned subbandIndex, double dm);
 
   private:
     const unsigned itsNrStations;

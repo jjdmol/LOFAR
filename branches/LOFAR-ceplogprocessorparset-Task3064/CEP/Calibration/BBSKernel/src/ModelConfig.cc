@@ -96,11 +96,9 @@ BeamConfig::BeamConfig()
 {
 }
 
-BeamConfig::BeamConfig(Mode mode, bool conjugateAF,
-    const casa::Path &elementPath)
+BeamConfig::BeamConfig(Mode mode, bool conjugateAF)
     :   itsMode(mode),
-        itsConjugateAF(conjugateAF),
-        itsElementPath(elementPath)
+        itsConjugateAF(conjugateAF)
 {
 }
 
@@ -112,11 +110,6 @@ BeamConfig::Mode BeamConfig::mode() const
 bool BeamConfig::conjugateAF() const
 {
     return itsConjugateAF;
-}
-
-const casa::Path &BeamConfig::getElementPath() const
-{
-    return itsElementPath;
 }
 
 // -------------------------------------------------------------------------- //
@@ -421,9 +414,7 @@ ostream &operator<<(ostream &out, const BeamConfig &obj)
 {
     out << indent << "Mode: " << BeamConfig::asString(obj.mode())
         << endl << indent << "Conjugate array factor: " << boolalpha
-        << obj.conjugateAF() << noboolalpha
-        << endl << indent << "Element model path: "
-        << obj.getElementPath().originalName();
+        << obj.conjugateAF() << noboolalpha;
     return out;
 }
 

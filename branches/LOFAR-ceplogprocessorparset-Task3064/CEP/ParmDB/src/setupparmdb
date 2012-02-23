@@ -23,8 +23,8 @@
 # $Id$
 
 # Find the path used to start the script.
-pgmpath=`dirname $0`
-pgmpath=`cd $pgmpath > /dev/null 2>&1  &&  pwd`
+pgmpath=`dirname "$0"`
+pgmpath=`cd "$pgmpath" > /dev/null 2>&1  &&  pwd`
 
 # Get possible options.
 overwrite=0
@@ -81,16 +81,16 @@ if test $help = 1; then
   exit 1
 fi
 
-msvds=$1
+msvds="$1"
 shift
 pdbfile=
 if test $# != 0; then
-  pdbfile=$1
+  pdbfile="$1"
   shift
 fi
 pdb=
 if test $# != 0; then
-  pdb=$1
+  pdb="$1"
   shift
 fi
 if test "$pdb" = ""; then
@@ -98,17 +98,17 @@ if test "$pdb" = ""; then
 fi
 cdn=
 if test $# != 0; then
-  cdn=$1
+  cdn="$1"
   shift
 fi
 logfile=
 if test $# != 0; then
-  logfile=$1
+  logfile="$1"
   shift
 fi
 dry=
 if test $# != 0; then
-  dry=$1
+  dry="$1"
   shift
 fi
 if test "$dry" = ""; then
@@ -116,12 +116,12 @@ if test "$dry" = ""; then
 fi
 hfn=
 if test $# != 0; then
-  hfn=$1
+  hfn="$1"
   shift
 fi
 wd=
 if test $# != 0; then
-  wd=$1
+  wd="$1"
   shift
 fi
 if test "$wd" = ""; then
@@ -131,8 +131,8 @@ fi
 # Generate a VDS file name for the parmdb-s.
 # This is the file that has to be used in pyparmdb.
 # Its name is the MS-vds one with the extension replaced by $pdb.
-vdsname=`echo $msvds | sed -e "s%\([^.\]*\)\.[^/]*$%\1.$pdb%"`
-if test -e $vdsname; then
+vdsname=`echo "$msvds" | sed -e "s%\([^.\]*\)\.[^/]*$%\1.$pdb%"`
+if test -e "$vdsname"; then
   if test $overwrite = 0; then
     echo "Error, distributed parmdb $vdsname already exists"
     exit 1
@@ -146,7 +146,7 @@ madetmpl=0
 if test "$pdbfile" = ""; then
   echo "Creating template parmdb $vdsname.template"
   madetmpl=1
-  pdbfile=$vdsname.template
+  pdbfile="$vdsname.template"
   parmdbm <<EOF
 create tablename="$pdbfile"
 adddef Gain:0:0:Ampl  values=1.0
@@ -160,6 +160,9 @@ adddef DirectionalGain:1:1:Real  values=1.0
 adddef AntennaOrientation values=5.497787144
 quit
 EOF
+  if $? != 0; then
+    exit
+  fi
 fi
 
 # By default do not set steps.
@@ -170,45 +173,45 @@ steptime=.
 # In that case only that MS is handled.
 if test -d "$msvds"  -a  -e "$msvds/table.dat"; then
   echo "setupparmdb-part '' '' '' '' 0 '$msvds' '' '' '$wd' '$pdbfile' '$pdb' '$dry' '$stepfreq' '$steptime'"
-  $pgmpath/setupparmdb-part "" "" "" "" 0 "$msvds" "" "" "$wd" "$pdbfile" "$pdb" "$dry" "$stepfreq" "$steptime"
-  test $madetmpl = 0  ||  rm -rf $vdsname.template
-  exit
+  "$pgmpath/setupparmdb-part" "" "" "" "" 0 "$msvds" "" "" "$wd" "$pdbfile" "$pdb" "$dry" "$stepfreq" "$steptime"  ||  exit 1
+  test $madetmpl = 0  ||  rm -rf "$vdsname.template"
 fi
 
 # Get step in freq and time from the VDS file.
 # They represent the steps in the MS.
 if test $setsteps = 1; then
-  steptime=`getparsetvalue $msvds StepTime`
-  stfreq=`getparsetvalue $msvds StartFreqs 0`
-  endfreq=`getparsetvalue $msvds EndFreqs 0`
+  steptime=`getparsetvalue "$msvds" StepTime`
+  stfreq=`getparsetvalue "$msvds" StartFreqs 0`
+  endfreq=`getparsetvalue "$msvds" EndFreqs 0`
   stepfreq=`python -c "print $endfreq - $stfreq"`
 fi
 
 # Get clusterdesc name from the VDS file if not given.
 if test "$cdn" = ""; then
-  cdn=`getparsetvalue $msvds ClusterDesc`
+  cdn=`getparsetvalue "$msvds" ClusterDesc`
 fi
 
 # Make all file names absolute.
-dn=`dirname $msvds`
-msvds=`cd $dn > /dev/null; pwd`/`basename $msvds`
-dn=`dirname $pdbfile`
-pdbfile=`cd $dn > /dev/null; pwd`/`basename $pdbfile`
-dn=`dirname $cdn`
-cdn=`cd $dn > /dev/null; pwd`/`basename $cdn`
+dn=`dirname "$msvds"`
+msvds=`cd "$dn" > /dev/null; pwd`/`basename "$msvds"`
+dn=`dirname "$pdbfile"`
+pdbfile=`cd "$dn" > /dev/null; pwd`/`basename "$pdbfile"`
+dn=`dirname "$cdn"`
+cdn=`cd "$dn" > /dev/null; pwd`/`basename "$cdn"`
 if test "$hfn" != ""; then
-  dn=`dirname $hfn`
-  hfn=`cd $dn > /dev/null; pwd`/`basename $hfn`
+  dn=`dirname "$hfn"`
+  hfn=`cd "$dn" > /dev/null; pwd`/`basename "$hfn"`
 fi
 
 # Start the processes on the various machines.
-echo "startdistproc -useenv -mode 0 -nomasterhost -dsn '$msvds' -hfn '$hfn' -cdn '$cdn' -logfile '$logfile' $pgmpath/setupparmdb-part '$wd' '$pdbfile' '$pdb' '$dry' '$stepfreq' '$steptime'"
-startdistproc -useenv -mode 0 -nomasterhost -dsn "$msvds" -hfn "$hfn" -cdn "$cdn" -logfile "$logfile" $pgmpath/setupparmdb-part "$wd" "$pdbfile" "$pdb" "$dry" "$stepfreq" "$steptime"  ||  exit 1
+# Exit in case of an error.
+echo "startdistproc -useenv -mode 0 -nomasterhost -dsn '$msvds' -hfn '$hfn' -cdn '$cdn' -logfile '$logfile' '$pgmpath/setupparmdb-part' '$wd' '$pdbfile' '$pdb' '$dry' '$stepfreq' '$steptime'"
+startdistproc -useenv -mode 0 -nomasterhost -dsn "$msvds" -hfn "$hfn" -cdn "$cdn" -logfile "$logfile" "$pgmpath/setupparmdb-part" "$wd" "$pdbfile" "$pdb" "$dry" "$stepfreq" "$steptime"  ||  exit 1
 
 # Create a VDS file for the parmdb-s by copying it.
 # This is the file that has to be used in pyparmdb.
 # Its name is the MS-vds one with the extension replaced by $pdb.
 # Refer in it to the actual pdb filename.
 echo "Create overall VDS $vdsname"
-sed -e "s%\(Part.*\.FileName *= *[^ #]*\)%\1/$pdb%" $msvds > $vdsname
-test $madetmpl = 0  ||  rm -rf $vdsname.template
+sed -e "s%\(Part.*\.FileName *= *[^ #]*\)%\1/$pdb%" "$msvds" > "$vdsname"
+test $madetmpl = 0  ||  rm -rf "$vdsname.template"

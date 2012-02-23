@@ -279,7 +279,7 @@ std::string SocketStream::readkey(const char *nfskey, time_t &timeout)
     char portStr[16];
     ssize_t len;
 
-    len = readlink(nfskey, portStr, sizeof portStr);
+    len = readlink(nfskey, portStr, sizeof portStr - 1); // reserve 1 character to insert \0 below
 
     if (len >= 0) {
       portStr[len] = 0;

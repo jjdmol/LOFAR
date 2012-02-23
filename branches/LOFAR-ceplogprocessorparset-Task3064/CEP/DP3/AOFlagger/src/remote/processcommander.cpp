@@ -25,6 +25,7 @@
 #include <AOFlagger/remote/serverconnection.h>
 
 #include <AOFlagger/quality/statisticscollection.h>
+#include <AOFlagger/quality/histogramcollection.h>
 
 namespace aoRemote {
 
@@ -94,8 +95,9 @@ void ProcessCommander::continueReadQualityTablesTask(ServerConnectionPtr serverC
 		{
 			const std::string msFilename = items.front().LocalPath();
 			items.pop_front();
-			StatisticsCollection *collection = new StatisticsCollection();
-			serverConnection->ReadQualityTables(msFilename, *collection);
+			StatisticsCollection *statisticsCollection = new StatisticsCollection();
+			HistogramCollection *histogramCollection = new HistogramCollection();
+			serverConnection->ReadQualityTables(msFilename, *statisticsCollection, *histogramCollection);
 		}
 	}
 }
@@ -177,19 +179,28 @@ void ProcessCommander::onConnectionAwaitingCommand(ServerConnectionPtr serverCon
 	}
 }
 
-void ProcessCommander::onConnectionFinishReadQualityTables(ServerConnectionPtr serverConnection, StatisticsCollection &collection)
+void ProcessCommander::onConnectionFinishReadQualityTables(ServerConnectionPtr serverConnection, StatisticsCollection &statisticsCollection, HistogramCollection &histogramCollection)
 {
 	boost::mutex::scoped_lock lock(_mutex);
-	if(collection.PolarizationCount() == 0)
+	if(statisticsCollection.PolarizationCount() == 0)
 		throw std::runtime_error("Client sent StatisticsCollection with 0 polarizations.");
 	
 	// If the collection is still empty, we need to set its polarization count
-	if(_collection->PolarizationCount() == 0)
+	if(_statisticsCollection->PolarizationCount() == 0)
+		_statisticsCollection->SetPolarizationCount(statisticsCollection.PolarizationCount());
+	
+	_statisticsCollection->Add(statisticsCollection);
+	
+	if(!histogramCollection.Empty())
 	{
-		_collection->SetPolarizationCount(collection.PolarizationCount());
+		if(_histogramCollection->PolarizationCount() == 0)
+			_histogramCollection->SetPolarizationCount(histogramCollection.PolarizationCount());
+		
+		_histogramCollection->Add(histogramCollection);
 	}
-	_collection->Add(collection);
-	delete &collection;
+	
+	delete &statisticsCollection;
+	delete &histogramCollection;
 }
 
 void ProcessCommander::onConnectionFinishReadAntennaTables(ServerConnectionPtr serverConnection, std::vector<AntennaInfo> &antennas)

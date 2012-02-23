@@ -64,7 +64,7 @@ void IndirectBaselineReader::PerformReadRequests()
 	{
 		const ReadRequest request = _readRequests[i];
 		_results.push_back(Result());
-		const size_t width = ObservationTimes().size();
+		const size_t width = AllObservationTimes().size();
 		for(size_t p=0;p<PolarizationCount();++p)
 		{
 			if(ReadData()) {
@@ -264,7 +264,7 @@ void IndirectBaselineReader::reorderMS()
 		double time = timeColumn(rowIndex);
 		if(time != prevTime)
 		{
-			timeIndex = ObservationTimes().find(time)->second;
+			timeIndex = AllObservationTimes().find(time)->second;
 			if(timeIndex != prevTimeIndex+1)
 			{
 				std::stringstream s;
@@ -525,7 +525,7 @@ void IndirectBaselineReader::updateOriginalMS()
 		if(time != prevTime)
 		{
 			// This row has a different time value, so search it up in the index table and do sanity check
-			timeIndex = ObservationTimes().find(time)->second;
+			timeIndex = AllObservationTimes().find(time)->second;
 			if(timeIndex != prevTimeIndex+1)
 			{
 				std::stringstream s;

@@ -173,9 +173,7 @@ namespace rfiStrategy {
 		metaData->SetAntenna2(_set.GetAntennaInfo(GetAntenna2(msIndex)));
 		metaData->SetBand(_set.GetBandInfo(msIndex._band));
 		metaData->SetField(_set.GetFieldInfo(msIndex._field));
-		std::vector<double> *times = _set.CreateObservationTimesVector();
-		metaData->SetObservationTimes(*times);
-		delete times;
+		metaData->SetObservationTimes(ObservationTimesVector(msIndex));
 		if(_reader != 0)
 		{
 			metaData->SetUVW(uvw);

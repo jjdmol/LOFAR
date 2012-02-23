@@ -38,6 +38,31 @@ class Parset(util.Parset.Parset):
 
         self.filename = ""
 
+    def applyAntennaSet( self, station, antennaset = None ):
+      if antennaset is None:
+        antennaset = self["Observation.antennaSet"]
+
+      if antennaset == "":
+        # useful for manually entered complete station names like CS302HBA1
+        suffix = [""]
+      elif antennaset in ["LBA_INNER","LBA_OUTER","LBA_X","LBA_Y","LBA_SPARSE_EVEN","LBA_SPARSE_ODD"]:
+        suffix = ["LBA"]
+      elif station.startswith("CS"):
+        if antennaset == "HBA_ZERO":
+          suffix = ["HBA0"]
+        elif antennaset == "HBA_ONE":  
+          suffix = ["HBA1"]
+        elif antennaset == "HBA_JOINED":  
+          suffix = ["HBA"]
+        else: 
+          assert antennaset == "HBA_DUAL", "Unknown antennaSet: %s" % (antennaset,)
+          suffix = ["HBA0","HBA1"]
+      else:  
+        suffix = ["HBA"]
+
+      return "+".join(["%s%s" % (station,s) for s in suffix])
+
+
     def setFilename( self, filename ):
         self.filename = filename
 
@@ -56,28 +81,7 @@ class Parset(util.Parset.Parset):
         # translate station name + antenna set to CEP comprehensable names
         antennaset = self["Observation.antennaSet"]
 
-        def applyAntennaSet( station, antennaset ):
-          if antennaset == "":
-            # useful for manually entered complete station names like CS302HBA1
-            suffix = [""]
-          elif antennaset in ["LBA_INNER","LBA_OUTER","LBA_X","LBA_Y","LBA_SPARSE_EVEN","LBA_SPARSE_ODD"]:
-            suffix = ["LBA"]
-          elif station.startswith("CS"):
-            if antennaset == "HBA_ZERO":
-              suffix = ["HBA0"]
-            elif antennaset == "HBA_ONE":  
-              suffix = ["HBA1"]
-            elif antennaset == "HBA_JOINED":  
-              suffix = ["HBA"]
-            else: 
-              assert antennaset == "HBA_DUAL", "Unknown antennaSet: %s" % (antennaset,)
-              suffix = ["HBA0","HBA1"]
-          else:  
-            suffix = ["HBA"]
-
-          return "+".join(["%s%s" % (station,s) for s in suffix])
-
-        return "+".join( [applyAntennaSet(s, self["Observation.antennaSet"]) for s in self[key]] )
+        return "+".join( [self.applyAntennaSet(s) for s in self[key]] )
 
     def distillPartition(self, key="OLAP.CNProc.partition"):
         """ Distill partition to use from the parset file and return it. """
@@ -250,39 +254,29 @@ class Parset(util.Parset.Parset):
         # SAS specifies beams differently
         if "Observation.subbandList" not in self:
           # convert beam configuration
-          allSubbands = {}
+          allSubbands = []
 
 	  for b in count():
             if "Observation.Beam[%s].angle1" % (b,) not in self:
               break
 
 	    beamSubbands = self.getInt32Vector("Observation.Beam[%s].subbandList" % (b,)) # the actual subband number (0..511)
-            beamBeamlets = self.getInt32Vector("Observation.Beam[%s].beamletList" % (b,)) # the bebamlet index (0..247)
 
-            assert len(beamSubbands) == len(beamBeamlets), "Beam %d has %d subbands but %d beamlets defined" % (b,len(beamSubbands),len(beamBeamlets))
-
-            for subband,beamlet in zip(beamSubbands,beamBeamlets):
-              assert beamlet not in allSubbands, "Beam %d and %d both use beamlet %d" % (allSubbands[beamlet]["beam"],b,beamlet)
-
-              allSubbands[beamlet] = {
+            for subband in beamSubbands:
+              allSubbands.append( {
                 "beam":     b,
                 "subband":  subband,
-                "beamlet":  beamlet,
-
-                # assign rsp board and slot according to beamlet id
-                "rspboard": beamlet // NRBOARBEAMLETS,
-                "rspslot":  beamlet % NRBOARBEAMLETS,
-              }
+              } )
 
 
           # order subbands according to beamlet id, for more human-friendly reading
-          sortedSubbands = [allSubbands[x] for x in sorted( allSubbands )]
+          sortedSubbands = sorted( allSubbands )
 
           # populate OLAP lists
 	  self["Observation.subbandList"]  = [s["subband"] for s in sortedSubbands]
 	  self["Observation.beamList"]     = [s["beam"] for s in sortedSubbands]
-	  self["Observation.rspBoardList"] = [s["rspboard"] for s in sortedSubbands]
-	  self["Observation.rspSlotList"]  = [s["rspslot"] for s in sortedSubbands]
+	  self["Observation.rspBoardList"] = [0 for s in sortedSubbands]
+	  self["Observation.rspSlotList"]  = [0 for s in sortedSubbands]
 
         # The Scheduler creates three lists of files (for beamformed, coherent and incoherent),
         # but we collapse this into one list (beamformed)
@@ -380,46 +374,48 @@ class Parset(util.Parset.Parset):
 	# sloppy to let it pass through here unnoticed.
 
 	# tied-array beam forming
-        tiedArrayStationList = []
-	tabList = []
-	beamFormedStations = []
+        superStations = []
 
         for index in count():
           if "Observation.Beamformer[%s].stationList" % (index,) not in self:
             break
 
-	  curlist = self.getString('Observation.Beamformer[%s].stationList' % (index,))
+	  stations = self.getStringVector('Observation.Beamformer[%s].stationList' % (index,))
 
-          # remove any initial or trailing "
-	  curlist = curlist.strip('"').rstrip('"')
+          stations = [self.applyAntennaSet(st) for st in stations]
 
-          # transform , to +
-	  curlist = curlist.replace(',','+')
-
-	  tiedArrayStationList.append(curlist)
-
-          # extract the individual stations
-	  beamFormedStations += curlist.split('+')
+          superStations.append(stations)
 	
-	if index > 0:
+	if superStations != []:
 	  # tied-array beamforming will occur
 
 	  # add remaining stations to the list
 	  allStationNames = [st.getName() for st in self.stations]
-	  tiedArrayStationList += filter( lambda st: st not in beamFormedStations, allStationNames )
+          beamFormedStations = sum(superStations, [])
+          individualStations = [st for st in allStationNames if st not in beamFormedStations]
 
-          # create a list of indices for all the stations, which by definition occur in
-	  # the tiedArrayStationList
-	  def findTabStation( s ):
-	    for nr,tab in enumerate(tiedArrayStationList):
-	      for st in tab.split('+'):
-	        if s.getName() == st:
-	          return nr
 
-	  tabList = map( findTabStation, self.stations )
+          allTabs = superStations + [[st] for st in individualStations]
+          # sorting is important: because the original station list is sorted, a sorted tabList makes sure that no slot is overwritten before it is needed (data is always generated before or at the slot of the source station)
+          allTabs.sort()
+
+	  def findTabStation( st ):
+	    for nr,tab in enumerate(allTabs):
+              if st in tab:
+                return nr
+
+	  tabList = map( findTabStation, allStationNames )
+
+          # make sure this tabList can be processed by going from element 0 to n-1 (dest slot is always at or after source slot)
+          for st,nr in enumerate(tabList):
+            assert st >= nr, "Station %s is at position %u in the station list but at position %u in the tab list, which could lead to data corruption" % (allStationNames[st],st,nr)
 	   
-	self.setdefault('OLAP.tiedArrayStationNames', tiedArrayStationList)
-	self.setdefault('OLAP.CNProc.tabList', tabList)
+	  self.setdefault('OLAP.tiedArrayStationNames', ["+".join(x) for x in allTabs])
+	  self.setdefault('OLAP.CNProc.tabList', tabList)
+        else:
+          # no super-station beam forming
+	  self.setdefault('OLAP.tiedArrayStationNames', [])
+	  self.setdefault('OLAP.CNProc.tabList', [])
 
 	# input flow configuration
 	for station in self.stations:
