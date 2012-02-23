@@ -78,12 +78,10 @@ CEPlogProcessor::CEPlogProcessor(const string&  cntlrName) :
 
     // prepare TCP port to accept connections on
     itsListener = new GCFTCPPort (*this, MAC_SVCMASK_CEPLOGPROC, GCFPortInterface::MSPP, 0);
-    ASSERTSTR(itsListener, "Cannot allocate listener port for logging");
     itsListener->setPortNumber(CEP_LOGPROC_LOGGING);
 
     itsControlPort = new GCFTCPPort (*this, MAC_SVCMASK_CEPLOGCONTROL, GCFPortInterface::MSPP, 0);
-    ASSERTSTR(itsListener, "Cannot allocate listener port for control");
-    itsListener->setPortNumber(CEP_LOGPROC_CONTROL);
+    itsControlPort->setPortNumber(CEP_LOGPROC_CONTROL);
 
     itsBufferSize     = globalParameterSet()->getInt("CEPlogProcessor.bufferSize", 1024);
     itsNrInputBuffers = globalParameterSet()->getInt("CEPlogProcessor.nrInputBuffers", 64);
@@ -378,11 +376,13 @@ GCFEvent::TResult CEPlogProcessor::startControlPort(GCFEvent&  event, GCFPortInt
 
 void CEPlogProcessor::collectGarbage()
 {
-  LOG_DEBUG("Cleaning up garbage");
-  for (unsigned i = 0; i < itsLogStreamsGarbage.size(); i++)
-    delete itsLogStreamsGarbage[i];
+  if (!itsLogStreamsGarbage.empty()) {
+    LOG_DEBUG("Cleaning up garbage");
+    for (unsigned i = 0; i < itsLogStreamsGarbage.size(); i++)
+      delete itsLogStreamsGarbage[i];
 
-  itsLogStreamsGarbage.clear();
+    itsLogStreamsGarbage.clear();
+  }  
 }
 
 
@@ -468,7 +468,6 @@ GCFEvent::TResult CEPlogProcessor::operational(GCFEvent& event, GCFPortInterface
         break;
 
     case F_TIMER:
-        LOG_DEBUG("Timer event -- collecting garbage");
         collectGarbage();
         break;
 
