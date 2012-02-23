@@ -188,13 +188,6 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
         if not hasattr(self, "config"):
             self.config = self._read_config()
 
-        # Only configure handlers if our parent is the root logger.
-        # Otherwise, our parent should have done it for us.
-        if isinstance(self.logger.parent, logging.RootLogger):
-            self._setup_logging()
-
-        self.logger.debug("Pipeline start time: %s" % self.inputs['start_time'])
-
         # Ensure we have a runtime directory
         if not self.inputs.has_key('runtime_directory'):
             self.inputs["runtime_directory"] = self.config.get(
@@ -241,3 +234,11 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
                 "Required inputs not available: %s" %
                 " ".join(self.inputs.missing())
             )
+
+        # Only configure handlers if our parent is the root logger.
+        # Otherwise, our parent should have done it for us.
+        if isinstance(self.logger.parent, logging.RootLogger):
+            self._setup_logging()
+
+        self.logger.debug("Pipeline start time: %s" % self.inputs['start_time'])
+
