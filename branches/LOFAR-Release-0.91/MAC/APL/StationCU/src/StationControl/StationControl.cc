@@ -1060,7 +1060,7 @@ uint16 StationControl::_addObservation(const string&	name)
 	LOG_DEBUG_STR("Trying to readfile " << filename);
 	try {
 		theObsPS.adoptFile(filename);
-		theObs = Observation(&theObsPS);
+		theObs = Observation(&theObsPS, itsHasSplitters);
 		LOG_DEBUG_STR("theOBS=" << theObs);
 	}
 	catch (Exception&	ex) {
