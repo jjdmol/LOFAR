@@ -144,7 +144,7 @@ Observation::Observation(const ParameterSet*		aParSet,
 	}
 
 	// determine if DataslotLists are available in this parset
-	itsHasDataslots = !stations.empty() && aParSet->isDefined(prefix+str(format("Dataslots.%s%s.DataslotList") % stations[0] % getAntennaFieldName(itsStnHasDualHBA)));
+	itsHasDataslots = _hasDataSlots(aParSet);
 	if (itsHasDataslots) {
 		itsDataslotParset = aParSet->makeSubset(prefix+"Dataslots.");		// save subset for later
 	}
@@ -645,6 +645,24 @@ bool Observation::_isStationName(const string&	hostname) const
 	// If we want to check more secure we have to implement all allowed stationnames
 	return (isalpha(hostname[0]) && isalpha(hostname[1]) &&
 			isdigit(hostname[2]) && isdigit(hostname[3]) && isdigit(hostname[4]));
+}
+
+//
+// _hasDataSlots
+//
+bool Observation::_hasDataSlots(const ParameterSet*	aPS) const
+{
+	ParameterSet::const_iterator	iter = aPS->begin();
+	ParameterSet::const_iterator	end  = aPS->end();
+	while (iter != end) {
+		string::size_type	pos(iter->first.find("Dataslots."));
+		if (pos != string::npos) {	// found begin. what is after it?
+			return _isStationName((iter->first.substr(pos+10,5)));
+		}
+		iter++;	// try next line
+	}
+	
+	return (false);
 }
 
 //
