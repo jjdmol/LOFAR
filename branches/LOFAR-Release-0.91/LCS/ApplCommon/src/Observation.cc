@@ -354,8 +354,8 @@ Observation::Observation(const ParameterSet*		aParSet,
 			// pset, and then proceed to fill up the I/O nodes starting from
 			// the first pset. Each data product is treated individually.
 
-			vector<string> filenames = aParSet->getStringVector(prefix+str(format("DataProducts.Output_%s.filenames") % dataProductNames[d]));
-			vector<string> locations = aParSet->getStringVector(prefix+str(format("DataProducts.Output_%s.locations") % dataProductNames[d]));
+			vector<string> filenames = aParSet->getStringVector(prefix+str(format("DataProducts.Output_%s.filenames") % dataProductNames[d]), true);
+			vector<string> locations = aParSet->getStringVector(prefix+str(format("DataProducts.Output_%s.locations") % dataProductNames[d]), true);
 			vector<unsigned> &psets = dataProductPhases[d] == 2 ? phaseTwoPsets : phaseThreePsets;
 
 			unsigned numFiles = filenames.size();
