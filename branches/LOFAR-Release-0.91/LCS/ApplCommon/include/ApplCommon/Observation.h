@@ -52,7 +52,8 @@ class Observation
 public:
 	Observation();
 	~Observation();
-	explicit	Observation (const ParameterSet*		aParSet, bool	hasDualHBA = false);
+//	explicit	Observation (const ParameterSet*		aParSet, bool	hasDualHBA = false);
+	explicit	Observation (const ParameterSet*		aParSet, bool	hasDualHBA);
 
 	// global function for converting filtername to nyquist zone
 	static uint nyquistzoneFromFilter(const string&	filterName);

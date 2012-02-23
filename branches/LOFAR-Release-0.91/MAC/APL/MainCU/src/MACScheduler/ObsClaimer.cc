@@ -233,7 +233,7 @@ GCFEvent::TResult ObsClaimer::preparePVSS_state (GCFEvent& event, GCFPortInterfa
 														itsCurrentObs->second->obsName.c_str()));
 			ParameterSet	obsPS(obsPSFilename);
 			try {
-				Observation			theObs(&obsPS);
+				Observation			theObs(&obsPS, false);
 
 				RTDBPropertySet*	theObsPS = itsCurrentObs->second->propSet;
 				theObsPS->setValue(PN_OBS_RUN_STATE,		GCFPVString(""), 0.0, false);
