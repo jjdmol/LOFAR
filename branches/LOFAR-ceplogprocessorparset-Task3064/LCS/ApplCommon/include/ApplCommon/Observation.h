@@ -206,6 +206,7 @@ public:
 
 private:
 	bool			_isStationName(const string&	hostname) const;
+	bool 			_hasDataSlots (const ParameterSet*	aPS) const;
 
 	RCUset_t		RCUset;				// set with participating receivers, use getRCUbitset to get this value.
 
