@@ -162,20 +162,6 @@ class msss_calibrator_pipeline(control):
             ', '.join(':'.join(f) for f in self.input_data)
         )
 
-        # Create an empty parmdb for DPPP
-        parmdb_mapfile = self.run_task("parmdb", data_mapfile)['mapfile']
-
-        # Create a sourcedb based on sourcedb's input argument "skymodel"
-        sourcedb_mapfile = self.run_task(
-            "sourcedb", data_mapfile,
-            skymodel=os.path.join(
-                self.config.get('DEFAULT', 'lofarroot'),
-                'share', 'pipeline', 'skymodels', 
-                py_parset.getString('Calibration.CalibratorSource') +
-                    '.skymodel'
-            )
-        )['mapfile']
-
         # Produce a GVDS file describing the data on the compute nodes.
         gvds_file = self.run_task("vdsmaker", data_mapfile)['gvds']
 
@@ -196,6 +182,20 @@ class msss_calibrator_pipeline(control):
 
         # Demix the relevant A-team sources
         demix_mapfile = self.run_task("demixing", dppp_mapfile)['mapfile']
+
+        # Create an empty parmdb for DPPP
+        parmdb_mapfile = self.run_task("parmdb", data_mapfile)['mapfile']
+
+        # Create a sourcedb based on sourcedb's input argument "skymodel"
+        sourcedb_mapfile = self.run_task(
+            "sourcedb", data_mapfile,
+            skymodel=os.path.join(
+                self.config.get('DEFAULT', 'lofarroot'),
+                'share', 'pipeline', 'skymodels', 
+                py_parset.getString('Calibration.CalibratorSource') +
+                    '.skymodel'
+            )
+        )['mapfile']
 
         # Create a parameter-subset for BBS and write it to file.
         bbs_parset = os.path.join(parset_dir, "BBS.parset")
