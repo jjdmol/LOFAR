@@ -128,7 +128,7 @@ uses Phasors         4.0.0  development 1                 'Model parameters expr
 uses Bandpass        4.0.0  development 1                 'Model for real-valued bandpass correction' 
 uses Gain            4.0.0  development 1                 'Model for complex-valued gain correction'
 uses DirectionalGain 4.0.0  development 1                 'Model for complex-valued direction-dependent gain'
-uses BBS:Beam            4.0.0  development 1                 'Beam model configuration'
+uses BBS:Beam        4.0.0  development 1                 'Beam model configuration'
 uses Ionosphere      4.0.0  development 1                 'Ionospheric model configuration'
 uses Flagger         4.0.0  development 1                 'Condition number flagging configuration'
 #    name                   dir. type   unit   prun. vm   value                constr.  descr.
@@ -176,7 +176,7 @@ node OutlierRejection 4.0.0  development 1                 'Outlier rejections c
 #    name                    dir. type   unit   prun. vm   value                constr.  descr.
 #--------------------------------------------------------------------------------------------------------
 par  Enable                  I    bool   F      10    0    F                    -        'Toggles outlier rejection'
-par  Threshold               I    vdbl   -      10    0    [7.0, 5.0, 4.0, 3.5, 3.0, 2.8, 2.6, 2.4, 2.2, 2.5] - 'RMS thresholds for outlier rejection'
+par  Threshold               I    vdbl   -      10    0    [7.0,5.0,4.0,3.5,3.0,2.8,2.6,2.4,2.2,2.5] - 'RMS thresholds for outlier rejection'
 
 # -- Solve Step PhaseShift attributes
 #
@@ -228,7 +228,7 @@ uses Options          4.0.0  development 1                 'Solver configuration
 #    name                    dir. type   unit   prun. vm   value                constr.  descr.
 #--------------------------------------------------------------------------------------------------------
 par  Algorithm               I    text   -      10    0    'L2'                 -        'Solving algorithm to use'
-par  EpsilonL1               I    vdbl   -      10    0    [1e-4, 1e-5, 1e-6]   -        'Epsilon values for L1 weighted least squares'
+par  EpsilonL1               I    vdbl   -      10    0    [1e-4,1e-5,1e-6]     -        'Epsilon values for L1 weighted least squares'
 par  Mode                    I    text   -      10    0    'COMPLEX'            -        'How to compare data and model values'
 par  Parms                   I    vtext  -      10    0    '[]'                 -        'Parameters to fit; shell-style wildcards may be used'
 par  ExclParms               I    vtext  -      10    0    '[]'                 -        'Subset of Parms that should NOT be fitted'
@@ -247,7 +247,7 @@ uses Output          4.0.0  development 1                 'BBS Step Output attri
 uses Solve           4.0.0  development 1                 'BBS Solve Step attributes'
 #    name                   dir. type   unit   prun. vm   value                constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par  Steps                  I    vtext   -      10   0    '[]'                 -        'OPTIONAL: The steps contained in this BBS Step'
+#par  Steps                  I    vtext   -      10   0    '[]'                 -        'OPTIONAL: The steps contained in this BBS Step'
 par  Baselines              I    text    -      10   0    '*&'                 -        'Baselines to process; use CASA baseline selection syntax'
 par  Correlations           I    vtext   -      10   0    '[]'                 -        'Correlations to process'
 par  Operation              I    text    -      10   0    ''                   -        'Operation to be performed in this BBS Step'
