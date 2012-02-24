@@ -1024,13 +1024,12 @@ void ChildControl::_doGarbageCollection()
 		// 1: port == 0: inform main task about removal after retry interval expired
 		// 2: port == -1: remove from list
 		// This is necc. because main task may poll childcontrol for results.
-		if (!iter->port) {
-			restartTimer = true;
-			LOG_DEBUG_STR(time(0)<<"-"<<iter->requestTime<<">="<<itsStartupRetryInterval<<"*"<<itsMaxStartupRetries<<"?");
+		if (!iter->port && (iter->requestedState != CTState::CONNECTED)) {
 			if ((time(0)-iter->requestTime) >= int32(MAC_SCP_TIMEOUT+(itsStartupRetryInterval*itsMaxStartupRetries))) {
 				LOG_DEBUG_STR ("Controller " << iter->cntlrName << " is still unreachable, informing main task");
 				_setEstablishedState(iter->cntlrName, CTState::QUITED, time(0), CT_RESULT_LOST_CONNECTION);
 				iter->port = (GCFPortInterface*) -1;
+				restartTimer = true;
 			}
 
 			iter++;
@@ -1178,7 +1177,6 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 					_setEstablishedState(controller->cntlrName, CTState::ANYSTATE, 
 													time(0), CT_RESULT_LOST_CONNECTION);
 					controller->port = 0;
-
 #if 0
 					// Try to restart the controller over 5 seconds
 					// Add it to the action list.
@@ -1186,7 +1184,6 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 					itsListener->cancelTimer(itsActionTimer);
 					itsActionTimer = itsListener->setTimer(1.0);
 					itsActionList.push_back(*controller);
-
 #endif
 				}
 
