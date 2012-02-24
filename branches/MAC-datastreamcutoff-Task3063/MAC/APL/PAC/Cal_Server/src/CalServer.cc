@@ -76,45 +76,9 @@ using namespace GCF::TM;
 #define SCHEDULING_DELAY 3
 
 //
-// parseOptions
-//
-void CalServer::parseOptions(int	argc,
-				 char**	argv)
-{
-	static struct option long_options[] = {
-	{ "instance",   required_argument, 0, 'I' },
-	{ "daemonize",  optional_argument, 0, 'd' },
-	{ 0, 0, 0, 0 },
-	};
-
-	optind = 0; // reset option parsing
-	for(;;) {
-	int option_index = 0;
-	int c = getopt_long(argc, argv, "dI:", long_options, &option_index);
-
-	if (c == -1) {
-		break;
-	}
-
-	switch (c) {
-	case 'I': 	// --instance
-		m_instancenr = atoi(optarg);
-		break;
-
-	case 'd':	// --daemonize
-		break;
-
-	default:
-		LOG_FATAL (formatString("Unknown option %c", c));
-		ASSERT(false);
-	} // switch
-	} // for loop
-}
-
-//
 // CalServer constructor
 //
-CalServer::CalServer(const string& name, ACCs& accs, int argc, char** argv)
+CalServer::CalServer(const string& name, ACCs& accs)
 	: GCFTask((State)&CalServer::initial, name),
 	m_accs(accs),
 	m_cal(0),
@@ -122,7 +86,8 @@ CalServer::CalServer(const string& name, ACCs& accs, int argc, char** argv)
 	m_sampling_frequency(0.0),
 	m_n_rspboards(0),
 	m_n_rcus(0),
-	m_instancenr(-1),
+	itsHasSecondRing	(0),
+	itsSecondRingActive (false),
 	itsListener			(0),
 	itsRSPDriver		(0),
 	itsCheckTimer		(0)
@@ -136,9 +101,6 @@ CalServer::CalServer(const string& name, ACCs& accs, int argc, char** argv)
 
 	LOG_INFO(Version::getInfo<Cal_ServerVersion>("CalServer"));
 
-	// adopt commandline switches
-	parseOptions (argc, argv);
-
 	if (!GET_CONFIG("CalServer.DisableCalibration", i)) {
 		m_converter = new AMC::ConverterClient("localhost");
 		ASSERT(m_converter != 0);
@@ -147,13 +109,15 @@ CalServer::CalServer(const string& name, ACCs& accs, int argc, char** argv)
 	registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_STRINGS);
 	registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_STRINGS);
 
-	string	instanceID;
-	if (m_instancenr >= 0) {
-		instanceID = formatString("(%d)", m_instancenr);
-	}
 	itsCheckTimer = new GCFTimerPort(*this, "CheckTimer");
+	ASSERTSTR(itsCheckTimer, "Couldn't allocate the timer device");
 	itsListener   = new GCFTCPPort(*this, MAC_SVCMASK_CALSERVER, GCFPortInterface::MSPP, CAL_PROTOCOL);
+	ASSERTSTR(itsListener, "Couldn't allocate the listener device");
 	itsRSPDriver  = new GCFTCPPort(*this, MAC_SVCMASK_RSPDRIVER,  GCFPortInterface::SAP,  RSP_PROTOCOL);
+	ASSERTSTR(itsRSPDriver, "Couldn't allocate the port to the RSPDriver");
+
+	StationConfig	SC;
+	itsHasSecondRing = SC.hasSplitters;
 }
 
 //
@@ -173,8 +137,7 @@ CalServer::~CalServer()
 //
 void CalServer::undertaker()
 {
-	for (list<GCFPortInterface*>::iterator it = m_dead_clients.begin();
-											it != m_dead_clients.end(); ++it) {
+	for (list<GCFPortInterface*>::iterator it = m_dead_clients.begin(); it != m_dead_clients.end(); ++it) {
 		delete (*it);
 	}
 	m_dead_clients.clear();
@@ -187,7 +150,7 @@ void CalServer::undertaker()
 //
 void CalServer::remove_client(GCFPortInterface* port)
 {
-	ASSERT(port != 0);
+	ASSERTSTR(port != 0, "Trying to remove an already deleted port");
 
 	map<string, GCFPortInterface*>::iterator	iter = m_clients.begin();
 	map<string, GCFPortInterface*>::iterator	end  = m_clients.end();
@@ -224,11 +187,9 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
 	switch(e.signal) {
 	case F_INIT: {
 		try {
-
 #ifdef USE_CAL_THREAD
 			pthread_mutex_lock(&m_globallock); // lock for dipolemodels, and sources
 #endif
-
 			ConfigLocator cl;
 
 			// load the dipole models
@@ -253,14 +214,12 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
 
 			// Setup calibration algorithm
 			m_cal = new RemoteStationCalibration(m_sources, m_dipolemodels, *m_converter);
-
 #ifdef USE_CAL_THREAD
 			// Setup calibration thread
 			m_calthread = new CalibrationThread(&m_subarrays, m_cal, m_globallock, itsDataDir);
 
 			pthread_mutex_unlock(&m_globallock); // unlock global lock
 #endif
-
 		} catch (Exception& e)  {
 
 #ifdef USE_CAL_THREAD
@@ -273,6 +232,7 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
 	break;
 
 	case F_ENTRY: {
+		// Open connections with outside world
 		if (!itsListener->isConnected()) {
 			itsListener->open();
 		}
@@ -282,6 +242,7 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
 	break;
 
 	case F_CONNECTED: {
+		// Wait till both connections are on the air
 		if ( itsListener->isConnected() && itsRSPDriver->isConnected()) {
 			RSPGetconfigEvent getconfig;
 			itsRSPDriver->send(getconfig);
@@ -335,6 +296,25 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
 			exit(EXIT_FAILURE);
 		}
 
+		// subscribe to the splittersettings if this station has splitters.
+		if (itsHasSecondRing) {
+			RSPSubsplitterEvent		subsplitter;
+			subsplitter.timestamp = Timestamp(0,0);
+			subsplitter.period    = 1;
+			itsRSPDriver->send(subsplitter);
+		}
+		else {
+			TRAN(CalServer::enabled);
+		}
+	}
+	break;
+
+	case RSP_SUBSPLITTERACK: {
+		RSPSubsplitterackEvent ack(e);
+		if (ack.status != RSP_Protocol::RSP_SUCCESS) {
+			LOG_FATAL("Failed to subscribe to splitter status updates.");
+			exit(EXIT_FAILURE);
+		}
 		TRAN(CalServer::enabled);
 	}
 	break;
@@ -373,6 +353,7 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
 
 	switch (e.signal) {
 	case F_ENTRY: {
+		// switch off receivers by default.
 		_disableRCUs(0);
 		itsCheckTimer->setTimer(0.0, 1.0);
 	}
@@ -394,11 +375,18 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
 
 	case RSP_UPDCLOCK: {
 		RSPUpdclockEvent updclock(e);
-
 		// use new sampling frequency
 		m_sampling_frequency = updclock.clock * (uint32)1.0e6;
-
 		LOG_INFO_STR("New sampling frequency: " << m_sampling_frequency);
+	}
+	break;
+
+	case RSP_UPDSPLITTER: {
+		RSPUpdsplitterEvent updsplitter(e);
+		// update admin
+		itsSecondRingActive = (updsplitter.splitter.count() == m_n_rspboards);
+		LOG_INFO_STR("Second ring is " << itsSecondRingActive ? "" : "not " << "active.");
+//		@@@ TODO: switch off if new value is false @@@
 	}
 	break;
 
@@ -692,8 +680,6 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 					setrcu.settings().resize(1);
 					setrcu.settings()(0) = start.rcumode()(0);
 
-					// previous LOG statement contained start.rcumask.to_ulong() which
-					// throws an exception because the number of bits = 256!
 					LOG_DEBUG(formatString("Sending RSP_SETRCU(%08X)", start.rcumode()(0).getRaw()));
 					itsRSPDriver->send(setrcu);
 				}
@@ -841,6 +827,7 @@ GCFEvent::TResult CalServer::handle_cal_getsubarray(GCFEvent& e, GCFPortInterfac
 //
 void CalServer::_enableRCUs(SubArray*	subarray, int delay)
 {
+	// TODO: @@@ do tests with the rings @@@
 	
 	// increment the usecount of the receivers
 	SubArray::RCUmask_t	rcuMask = subarray->getRCUMask();
@@ -900,6 +887,8 @@ void CalServer::_disableRCUs(SubArray*	subarray)
 	SubArray::RCUmask_t	rcus2switchOff;
 	rcus2switchOff.reset();
 
+	// TODO: @@@ do tests with the rings @@@
+
 	if (subarray) {		// when no subarray is defined skip this loop: switch all rcus off.
 		SubArray::RCUmask_t	rcuMask = subarray->getRCUMask();
 		for (int r = 0; r < m_n_rcus; r++) {
@@ -953,6 +942,27 @@ void CalServer::_disableRCUs(SubArray*	subarray)
 		itsRSPDriver->send(disableCmd);
 	}
 }
+
+//
+// _dataOnRing(uint	ringNr) : bool
+//
+bool CalServer::_dataOnRing(uint	ringNr)	const
+{
+	int	nrRings(itsHasSecondRing > 2 : 1);
+
+	ASSERTSTR(ringNr<=nrRings, "RingNr "<<ringNr<<" does not exist, station has only ring 0 "<<(itsHasSecondRing?"and 1":""));
+
+	int min(!itsSecondRingsActive ?        0 :  ringNr   *(m_n_rcus/2));
+	int	max(!itsSecondRingsActive ? m_n_rcus : (ringNr+1)*(m_n_rcus/2));
+	LOG_DEBUG_STR("_dataOnRing("<<ringNr<<"):"<<min<<"-"<<max<<", splitter="<<(itsSecondRingActive?"ON":"OFF"));
+	for (int r = min; r < max; r++) {
+		if (itsRCUcount[r]) {
+			return (true);
+		}
+	}
+	return (false);
+}
+
 
 #if 0
 GCFEvent::TResult CalServer::handle_cal_getsubarray(GCFEvent& e, GCFPortInterface &port)
@@ -1038,16 +1048,6 @@ void CalServer::write_acc()
 //
 int main(int argc, char** argv)
 {
-	/* daemonize if required */
-	if (argc >= 2) {
-		if (!strcmp(argv[1], "-d")) {
-			if (0 != daemonize(false)) {
-				cerr << "Failed to background this process: " << strerror(errno) << endl;
-				exit(EXIT_FAILURE);
-			}
-		}
-	}
-
 	GCFScheduler::instance()->init(argc, argv, "CalServer");
 
 	LOG_INFO("MACProcessScope: LOFAR_PermSW_CalServer");
@@ -1073,7 +1073,7 @@ int main(int argc, char** argv)
 	//
 	bool	ACMProxyEnabled(!globalParameterSet()->getBool("CalServer.DisableACMProxy"));
 	try {
-		CalServer cal     ("CalServer", *accs, argc, argv);
+		CalServer cal     ("CalServer", *accs);
 		ACMProxy  acmproxy("ACMProxy",  *accs);
 
 		cal.start();      // make initial transition

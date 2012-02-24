@@ -70,12 +70,8 @@ void SetDatastreamCmd::ack(CacheBuffer& cache)
 //
 void SetDatastreamCmd::apply(CacheBuffer& cache, 	bool setModFlag)
 {
-	if (itsEvent->switch_on) {
-		cache.setCepEnabled(true); // enable datastream to cep
-	}
-	else {
-		cache.setCepEnabled(false); // disable datastream to cep
-	}
+	cache.setCepEnabled(0, itsEvent->switch_on1); // enable datastream to cep
+	cache.setCepEnabled(1, itsEvent->switch_on2); // enable datastream to cep
 
 	// mark registers that the serdes registers should be written.
 	if (setModFlag) {

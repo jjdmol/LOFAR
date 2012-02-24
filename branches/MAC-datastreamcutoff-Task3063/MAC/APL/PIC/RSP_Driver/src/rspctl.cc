@@ -1223,7 +1223,7 @@ GCFEvent::TResult SICommand::ack(GCFEvent& e)
 //
 // DataStreamCommand
 //
-DataStreamCommand::DataStreamCommand(GCFPortInterface& port) : Command(port), itsStreamOn(true)
+DataStreamCommand::DataStreamCommand(GCFPortInterface& port) : Command(port), itsStream1On(true), itsStream2On(true)
 {
 }
 
@@ -1245,9 +1245,10 @@ void DataStreamCommand::send()
 
 		request.timestamp = Timestamp(0,0);
 		//request.rcumask   = getRSPMask();
-		request.switch_on = itsStreamOn;
+		request.switch_on1 = itsStream1On;
+		request.switch_on2 = itsStream2On;
 
-		logMessage(cout,formatString("set datastream %s", request.switch_on?"on":"off"));
+		logMessage(cout,formatString("set datastream %s %s", request.switch_on1?"on":"off", request.switch_on2?"on":"off"));
 
 		m_rspport.send(request);
 	}
@@ -1270,7 +1271,7 @@ GCFEvent::TResult DataStreamCommand::ack(GCFEvent& e)
 			logMessage(cerr, "Error: RSP_GETDATASTREAM command failed.");
 			break;
 		}
-		cout << formatString("DataStream to CEP switched %s\n", ack.switch_on?"on":"off");
+		cout << formatString("Datastream to CEP switched %s %s\n", ack.switch_on1?"on":"off", ack.switch_on2?"on":"off");
 		cout << endl;
 	}
 	break;
@@ -3007,7 +3008,7 @@ static void usage(bool exportMode)
 	cout << "rspctl --hbadelays[=<list>] [--select=<set>]   # set or get the 16 delays of one or more HBA's" << endl;
 	cout << "rspctl --tbbmode[=transient | =subbands,<set>] # set or get TBB mode, 'transient' or 'subbands', if subbands then specify subband set" << endl;
 	cout << "rspctl --splitter[=0|1]                        # set or get the status of the Serdes splitter" << endl;
-	cout << "rspctl --datastream[=0|1]                      # set or get the status of data stream to cep" << endl;
+	cout << "rspctl --datastream[=0|1|2|3]                  # set or get the status of data stream to cep" << endl;
 	cout << "rspctl --swapxy[=0|1] [--select=<set>]         # set or get the status of xy swap, 0=normal, 1=swapped" << endl;
 	if (exportMode) {
 	cout << endl;
@@ -3686,7 +3687,8 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
 			if (optarg) {
 				datastreamCmd->setMode(false);
-				datastreamCmd->setStream(strncmp(optarg, "0", 1));
+				datastreamCmd->setStream(0,atoi(optarg)%2);
+				datastreamCmd->setStream(1,atoi(optarg)/2);
 			}
 		}
 		break;
