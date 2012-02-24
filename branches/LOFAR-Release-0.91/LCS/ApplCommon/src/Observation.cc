@@ -656,7 +656,8 @@ bool Observation::_hasDataSlots(const ParameterSet*	aPS) const
 	ParameterSet::const_iterator	end  = aPS->end();
 	while (iter != end) {
 		string::size_type	pos(iter->first.find("Dataslots."));
-		if (pos != string::npos) {	// found begin. what is after it?
+		// if begin found, what is after it?
+		if (pos != string::npos && iter->first.find("Dataslots.DataslotInfo.") == string::npos) {	
 			return _isStationName((iter->first.substr(pos+10,5)));
 		}
 		iter++;	// try next line
