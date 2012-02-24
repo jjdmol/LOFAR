@@ -41,15 +41,18 @@ offset = None
 starttime = None
 
 for l in sys.stdin:
-  dt = convertDateTime( extractDateTime( l ) )
-  if offset is None:
-    offset = dt
-    starttime = now()
-    wait = datetime.timedelta()
-  else:
-    wait = dt - offset
+  try:
+    dt = convertDateTime( extractDateTime( l ) )
+    if offset is None:
+      offset = dt
+      starttime = now()
+      wait = datetime.timedelta()
+    else:
+      wait = dt - offset
 
-  if totalseconds( wait ) > 0:  
-    sleepUntil( starttime + wait )
+    if totalseconds( wait ) > 0:  
+      sleepUntil( starttime + wait )
+  except ValueError:
+    continue
 
   print l.rstrip()
