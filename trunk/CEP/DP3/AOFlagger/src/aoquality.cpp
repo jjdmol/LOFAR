@@ -483,6 +483,9 @@ void actionHistogram(const std::string &filename, const std::string &query)
 	} else if(query == "remove")
 	{
 		histogramFormatter.RemoveAll();
+	} else
+	{
+		std::cerr << "Unknown histogram command: " << query << "\n";
 	}
 }
 
