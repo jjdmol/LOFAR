@@ -224,7 +224,6 @@ void HistogramPage::updatePlot()
 			plotPolarization(*_summedPolarizationHistograms, 0);
 		
 		_plotWidget.Update();
-		updateSlopeFrame();
 		updateDataWindow();
 	}
 }
@@ -248,6 +247,7 @@ void HistogramPage::plotPolarization(const LogHistogram &totalHistogram, const L
 		{
 			plotFit(totalHistogram, "Fit to total");
 		}
+		updateSlopeFrame(totalHistogram);
 	}
 
 	if(_rfiHistogramButton.get_active())
@@ -259,6 +259,7 @@ void HistogramPage::plotPolarization(const LogHistogram &totalHistogram, const L
 		{
 			plotFit(rfiHistogram, "Fit to RFI");
 		}
+		updateSlopeFrame(rfiHistogram);
 	}
 	if(_drawSlopeButton.get_active())
 	{
@@ -415,21 +416,13 @@ void HistogramPage::onDataExportClicked()
 	updateDataWindow();
 }
 
-void HistogramPage::updateSlopeFrame()
+void HistogramPage::updateSlopeFrame(const LogHistogram &histogram)
 {
 	std::stringstream str;
 	str << "Slopes:";
 	
-	LogHistogram summedHistogram;
-	_summedPolarizationHistograms->GetRFIHistogramForCrossCorrelations(0, summedHistogram);
-	addSlopeText(str, summedHistogram, true);
+	addSlopeText(str, histogram, true);
 	
-	for(size_t p=0;p<_histograms->PolarizationCount();++p)
-	{
-		LogHistogram histogram;
-		_histograms->GetRFIHistogramForCrossCorrelations(p, histogram);
-		addSlopeText(str, histogram, false);
-	}
 	_slopeTextView.get_buffer()->set_text(str.str());
 }
 
@@ -458,8 +451,10 @@ void HistogramPage::addSlopeText(std::stringstream &str, const LogHistogram &his
 		offset = histogram.NormalizedSlopeOffset(minRange, maxRange, slope),
 		error = histogram.NormalizedSlopeStdDev(minRange, maxRange, slope, offset),
 		upperLimit = histogram.PowerLawUpperLimit(minRange, slope, pow10(offset)),
-		lowerLimit = histogram.PowerLawLowerLimit(minRange, slope, pow10(offset), rfiRatio);
-	str << '\n' << slope << "±" << error << '[' << log10(lowerLimit) << ';' << log10(upperLimit) << ']';
+		lowerLimit = histogram.PowerLawLowerLimit(minRange, slope, pow10(offset), rfiRatio),
+		lowerError = fabs(lowerLimit - histogram.PowerLawLowerLimit(minRange, slope - error, pow10(offset), rfiRatio));
+	str << '\n' << slope << "±" << error << "\n["
+		<< log10(lowerLimit) << "±" << lowerError << ';' << log10(upperLimit) << ']';
 }
 
 void HistogramPage::updateDataWindow()
