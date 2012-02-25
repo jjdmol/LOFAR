@@ -141,8 +141,10 @@ class HistogramTablesFormatter {
 			{
 				Close();
 				openMainTable(true);
-				_measurementSet->rwKeywordSet().removeField(TableName(table));
-				casa::Table::deleteTable(TableFilename(table));
+				if(_measurementSet->keywordSet().isDefined(TableName(table)))
+					_measurementSet->rwKeywordSet().removeField(TableName(table));
+				if(_measurementSet->isReadable(TableFilename(table)))
+					casa::Table::deleteTable(TableFilename(table));
 			}
 		}
 		
