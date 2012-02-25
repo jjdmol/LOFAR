@@ -263,6 +263,34 @@ class LogHistogram : public Serializable
 			return (double) (sumOffset/(long double) n);
 		}
 		
+		double NormalizedSlopeStdDev(double startAmplitude, double endAmplitude, double slope, double offset) const
+		{
+			long double sqErrorSum = 0.0, xsqErrorSum = 0.0, xSum = 0.0;
+			unsigned long n = 0;
+			// determine the 'average' x
+			for(const_iterator i=begin();i!=end();++i)
+			{
+				if(i.value() >= startAmplitude && i.value() < endAmplitude)
+				{
+					xSum += log10(i.value());
+					++n;
+				}
+			}
+			const long double avgX = xSum / n;
+			for(const_iterator i=begin();i!=end();++i)
+			{
+				if(i.value() >= startAmplitude && i.value() < endAmplitude)
+				{
+					long double y = log10(i.normalizedCount());
+					long double x = log10(i.value());
+					long double ySlope = x*slope + offset;
+					sqErrorSum += (y-ySlope)*(y-ySlope);
+					xsqErrorSum += (x - avgX)*(x - avgX);
+				}
+			}
+			return (double) sqrtl(sqErrorSum/(xsqErrorSum * (long double) (n-2)));
+		}
+		
 		double PowerLawUpperLimit(double constrainingAmplitude, double exponent, double factor) const
 		{
 			const double count = NormalizedCountAbove(constrainingAmplitude);

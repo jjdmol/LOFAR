@@ -453,11 +453,13 @@ void HistogramPage::addSlopeText(std::stringstream &str, const LogHistogram &his
 	}
 	double rfiRatio = atof(_slopeRFIRatio.get_text().c_str());
 
-	double slope = histogram.NormalizedSlope(minRange, maxRange);
-	double offset = histogram.NormalizedSlopeOffset(minRange, maxRange, slope);
-	double upperLimit = histogram.PowerLawUpperLimit(minRange, slope, pow10(offset));
-	double lowerLimit = histogram.PowerLawLowerLimit(minRange, slope, pow10(offset), rfiRatio);
-	str << '\n' << slope << '[' << log10(lowerLimit) << ';' << log10(upperLimit) << ']';
+	const double
+		slope = histogram.NormalizedSlope(minRange, maxRange),
+		offset = histogram.NormalizedSlopeOffset(minRange, maxRange, slope),
+		error = histogram.NormalizedSlopeStdDev(minRange, maxRange, slope, offset),
+		upperLimit = histogram.PowerLawUpperLimit(minRange, slope, pow10(offset)),
+		lowerLimit = histogram.PowerLawLowerLimit(minRange, slope, pow10(offset), rfiRatio);
+	str << '\n' << slope << "±" << error << '[' << log10(lowerLimit) << ';' << log10(upperLimit) << ']';
 }
 
 void HistogramPage::updateDataWindow()
