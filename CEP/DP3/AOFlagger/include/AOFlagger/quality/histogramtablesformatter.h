@@ -165,6 +165,11 @@ class HistogramTablesFormatter {
 		{
 			return TableExists(HistogramCountTable) && TableExists(HistogramTypeTable);
 		}
+		void RemoveAll()
+		{
+			RemoveTable(HistogramCountTable);
+			RemoveTable(HistogramTypeTable);
+		}
 	private:
 		HistogramTablesFormatter(const HistogramTablesFormatter &) { } // don't allow copies
 		void operator=(const HistogramTablesFormatter &) { } // don't allow assignment
