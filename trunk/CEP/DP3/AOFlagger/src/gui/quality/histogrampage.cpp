@@ -452,9 +452,11 @@ void HistogramPage::addSlopeText(std::stringstream &str, const LogHistogram &his
 		error = histogram.NormalizedSlopeStdDev(minRange, maxRange, slope, offset),
 		upperLimit = histogram.PowerLawUpperLimit(minRange, slope, pow10(offset)),
 		lowerLimit = histogram.PowerLawLowerLimit(minRange, slope, pow10(offset), rfiRatio),
-		lowerError = fabs(lowerLimit - histogram.PowerLawLowerLimit(minRange, slope - error, pow10(offset), rfiRatio));
+		lowerError = fabs(lowerLimit - histogram.PowerLawLowerLimit(minRange, slope - error, pow10(offset), rfiRatio)),
+		lowerLimit2 = histogram.PowerLawLowerLimit2(minRange, slope, pow10(offset), rfiRatio);
 	str << '\n' << slope << "±" << error << "\n["
-		<< log10(lowerLimit) << "±" << lowerError << ';' << log10(upperLimit) << ']';
+		<< log10(lowerLimit) << "±" << lowerError << ';' << log10(upperLimit) << ']' << '\n'
+		<< log10(lowerLimit2);
 }
 
 void HistogramPage::updateDataWindow()

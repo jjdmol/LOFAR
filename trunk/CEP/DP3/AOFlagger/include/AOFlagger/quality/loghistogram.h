@@ -306,6 +306,14 @@ class LogHistogram : public Serializable
 			return pow(term, 1.0/(exponent+1.0));
 		}
 		
+		double PowerLawLowerLimit2(double constrainingAmplitude, double exponent, double factor, double rfiRatio) const
+		{
+			const double countPart = NormalizedCountAbove(constrainingAmplitude);
+			const double countTotal = NormalizedTotalCount() * rfiRatio;
+			const double term = (countPart - countTotal) * (exponent+1.0)/factor + pow(constrainingAmplitude, exponent+1.0);
+			return pow(term/-exponent, 1.0/(exponent+1.0));
+		}
+		
 		void GetRFIRegion(double &start, double &end) const
 		{
 			double sigmaEstimate = AmplitudeWithMaxNormalizedCount();
