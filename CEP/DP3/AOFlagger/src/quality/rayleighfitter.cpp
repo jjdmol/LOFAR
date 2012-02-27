@@ -33,10 +33,9 @@ static int fit_f(const gsl_vector *xvec, void *data, gsl_vector *f)
 			double sigmaP2 = sigma*sigma;
 			double Yi = x * exp(-(x*x)/(2*sigmaP2)) * n / sigmaP2;
 			if(fitter.FitLogarithmic())
-				gsl_vector_set(f, t, (Yi - val));
-			else
 				gsl_vector_set(f, t, log(Yi) - log(val));
-			
+			else
+				gsl_vector_set(f, t, (Yi - val));
 			++t;
 		}
 	}
