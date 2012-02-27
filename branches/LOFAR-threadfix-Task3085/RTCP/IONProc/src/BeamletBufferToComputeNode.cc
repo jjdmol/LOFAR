@@ -236,8 +236,9 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::wri
 
     double currentTime  = tv.tv_sec + tv.tv_usec / 1e6;
     double expectedTime = itsCorrelationStartTime * itsSampleDuration;
+    double recordingTime = itsCurrentTimeStamp * itsSampleDuration;
 
-    logStr << ", late: " << PrettyTime(currentTime - expectedTime);
+    logStr << ", age: " << PrettyTime(currentTime - recordingTime) << ", late: " << PrettyTime(currentTime - expectedTime);
   }
 
   if (itsNeedDelays) {
