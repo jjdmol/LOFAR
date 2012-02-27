@@ -38,6 +38,31 @@ class Parset(util.Parset.Parset):
 
         self.filename = ""
 
+    def applyAntennaSet( self, station, antennaset = None ):
+      if antennaset is None:
+        antennaset = self["Observation.antennaSet"]
+
+      if antennaset == "":
+        # useful for manually entered complete station names like CS302HBA1
+        suffix = [""]
+      elif antennaset in ["LBA_INNER","LBA_OUTER","LBA_X","LBA_Y","LBA_SPARSE_EVEN","LBA_SPARSE_ODD"]:
+        suffix = ["LBA"]
+      elif station.startswith("CS"):
+        if antennaset == "HBA_ZERO":
+          suffix = ["HBA0"]
+        elif antennaset == "HBA_ONE":  
+          suffix = ["HBA1"]
+        elif antennaset == "HBA_JOINED":  
+          suffix = ["HBA"]
+        else: 
+          assert antennaset == "HBA_DUAL", "Unknown antennaSet: %s" % (antennaset,)
+          suffix = ["HBA0","HBA1"]
+      else:  
+        suffix = ["HBA"]
+
+      return "+".join(["%s%s" % (station,s) for s in suffix])
+
+
     def setFilename( self, filename ):
         self.filename = filename
 
@@ -56,28 +81,7 @@ class Parset(util.Parset.Parset):
         # translate station name + antenna set to CEP comprehensable names
         antennaset = self["Observation.antennaSet"]
 
-        def applyAntennaSet( station, antennaset ):
-          if antennaset == "":
-            # useful for manually entered complete station names like CS302HBA1
-            suffix = [""]
-          elif antennaset in ["LBA_INNER","LBA_OUTER","LBA_X","LBA_Y","LBA_SPARSE_EVEN","LBA_SPARSE_ODD"]:
-            suffix = ["LBA"]
-          elif station.startswith("CS"):
-            if antennaset == "HBA_ZERO":
-              suffix = ["HBA0"]
-            elif antennaset == "HBA_ONE":  
-              suffix = ["HBA1"]
-            elif antennaset == "HBA_JOINED":  
-              suffix = ["HBA"]
-            else: 
-              assert antennaset == "HBA_DUAL", "Unknown antennaSet: %s" % (antennaset,)
-              suffix = ["HBA0","HBA1"]
-          else:  
-            suffix = ["HBA"]
-
-          return "+".join(["%s%s" % (station,s) for s in suffix])
-
-        return "+".join( [applyAntennaSet(s, self["Observation.antennaSet"]) for s in self[key]] )
+        return "+".join( [self.applyAntennaSet(s) for s in self[key]] )
 
     def distillPartition(self, key="OLAP.CNProc.partition"):
         """ Distill partition to use from the parset file and return it. """
@@ -370,46 +374,48 @@ class Parset(util.Parset.Parset):
 	# sloppy to let it pass through here unnoticed.
 
 	# tied-array beam forming
-        tiedArrayStationList = []
-	tabList = []
-	beamFormedStations = []
+        superStations = []
 
         for index in count():
           if "Observation.Beamformer[%s].stationList" % (index,) not in self:
             break
 
-	  curlist = self.getString('Observation.Beamformer[%s].stationList' % (index,))
+	  stations = self.getStringVector('Observation.Beamformer[%s].stationList' % (index,))
 
-          # remove any initial or trailing "
-	  curlist = curlist.strip('"').rstrip('"')
+          stations = [self.applyAntennaSet(st) for st in stations]
 
-          # transform , to +
-	  curlist = curlist.replace(',','+')
-
-	  tiedArrayStationList.append(curlist)
-
-          # extract the individual stations
-	  beamFormedStations += curlist.split('+')
+          superStations.append(stations)
 	
-	if index > 0:
+	if superStations != []:
 	  # tied-array beamforming will occur
 
 	  # add remaining stations to the list
 	  allStationNames = [st.getName() for st in self.stations]
-	  tiedArrayStationList += filter( lambda st: st not in beamFormedStations, allStationNames )
+          beamFormedStations = sum(superStations, [])
+          individualStations = [st for st in allStationNames if st not in beamFormedStations]
 
-          # create a list of indices for all the stations, which by definition occur in
-	  # the tiedArrayStationList
-	  def findTabStation( s ):
-	    for nr,tab in enumerate(tiedArrayStationList):
-	      for st in tab.split('+'):
-	        if s.getName() == st:
-	          return nr
 
-	  tabList = map( findTabStation, self.stations )
+          allTabs = superStations + [[st] for st in individualStations]
+          # sorting is important: because the original station list is sorted, a sorted tabList makes sure that no slot is overwritten before it is needed (data is always generated before or at the slot of the source station)
+          allTabs.sort()
+
+	  def findTabStation( st ):
+	    for nr,tab in enumerate(allTabs):
+              if st in tab:
+                return nr
+
+	  tabList = map( findTabStation, allStationNames )
+
+          # make sure this tabList can be processed by going from element 0 to n-1 (dest slot is always at or after source slot)
+          for st,nr in enumerate(tabList):
+            assert st >= nr, "Station %s is at position %u in the station list but at position %u in the tab list, which could lead to data corruption" % (allStationNames[st],st,nr)
 	   
-	self.setdefault('OLAP.tiedArrayStationNames', tiedArrayStationList)
-	self.setdefault('OLAP.CNProc.tabList', tabList)
+	  self.setdefault('OLAP.tiedArrayStationNames', ["+".join(x) for x in allTabs])
+	  self.setdefault('OLAP.CNProc.tabList', tabList)
+        else:
+          # no super-station beam forming
+	  self.setdefault('OLAP.tiedArrayStationNames', [])
+	  self.setdefault('OLAP.CNProc.tabList', [])
 
 	# input flow configuration
 	for station in self.stations:

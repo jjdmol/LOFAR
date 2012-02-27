@@ -27,6 +27,7 @@
 #include <gtkmm/checkbutton.h>
 #include <gtkmm/entry.h>
 #include <gtkmm/frame.h>
+#include <gtkmm/textview.h>
 
 #include <AOFlagger/quality/qualitytablesformatter.h>
 
@@ -48,24 +49,25 @@ class HistogramPage : public Gtk::HBox {
 			updatePlot();
 		}
 		void SetStatistics(class HistogramCollection &collection);
-		void CloseStatistics()
-		{
-			_statFilename = std::string();
-		}
+		void CloseStatistics();
 		bool HasStatistics() const
 		{
 			return _histograms != 0;
 		}
 	private:
-		void addHistogramToPlot(class LogHistogram &histogram);
-		void addRayleighToPlot(class LogHistogram &histogram, double sigma, double n);
-		void addRayleighDifferenceToPlot(LogHistogram &histogram, double sigma, double n);
+		void addHistogramToPlot(const class LogHistogram &histogram);
+		void addRayleighToPlot(const class LogHistogram &histogram, double sigma, double n);
+		void addRayleighDifferenceToPlot(const LogHistogram &histogram, double sigma, double n);
 		void updatePlot();
-		void plotPolarization(class HistogramCollection &histograms, unsigned p);
-		void plotFit(class LogHistogram &histogram, const std::string &title);
+		void plotPolarization(const HistogramCollection &histogramCollection, unsigned polarization);
+		void plotPolarization(const class LogHistogram &totalHistogram, const class LogHistogram &rfiHistogram);
+		void plotFit(const class LogHistogram &histogram, const std::string &title);
+		void plotSlope(const class LogHistogram &histogram, const std::string &title, bool useLowerLimit2);
 		void onPlotPropertiesClicked();
 		void onDataExportClicked();
 		void readFromFile();
+		void updateSlopeFrame(const LogHistogram &histogram);
+		void addSlopeText(std::stringstream &str, const LogHistogram &histogram, bool updateRange);
 		void updateDataWindow();
 		
 		void onAutoRangeClicked()
@@ -73,6 +75,15 @@ class HistogramPage : public Gtk::HBox {
 			bool autoRange = _fitAutoRangeButton.get_active();
 			_fitStartEntry.set_sensitive(!autoRange);
 			_fitEndEntry.set_sensitive(!autoRange);
+			if(autoRange)
+				updatePlot();
+		}
+		
+		void onSlopeAutoRangeClicked()
+		{
+			bool autoRange = _slopeAutoRangeButton.get_active();
+			_slopeStartEntry.set_sensitive(!autoRange);
+			_slopeEndEntry.set_sensitive(!autoRange);
 			if(autoRange)
 				updatePlot();
 		}
@@ -85,7 +96,7 @@ class HistogramPage : public Gtk::HBox {
 		
 		Gtk::Frame _polarizationFrame;
 		Gtk::VBox _polarizationBox;
-		Gtk::CheckButton _xxPolarizationButton, _xyPolarizationButton, _yxPolarizationButton, _yyPolarizationButton;
+		Gtk::CheckButton _xxPolarizationButton, _xyPolarizationButton, _yxPolarizationButton, _yyPolarizationButton, _sumPolarizationButton;
 		
 		Gtk::Frame _fitFrame;
 		Gtk::VBox _fitBox;
@@ -98,12 +109,20 @@ class HistogramPage : public Gtk::HBox {
 		
 		Gtk::Button _plotPropertiesButton, _dataExportButton;
 		
+		Gtk::Frame _slopeFrame;
+		Gtk::VBox _slopeBox;
+		Gtk::TextView _slopeTextView;
+		Gtk::CheckButton _drawSlopeButton, _drawSlope2Button;
+		Gtk::CheckButton _slopeAutoRangeButton;
+		Gtk::Entry _slopeStartEntry, _slopeEndEntry, _slopeRFIRatio;
+		
 		std::string _statFilename;
 		Plot2D _plot;
 		PlotWidget _plotWidget;
 		class PlotPropertiesWindow *_plotPropertiesWindow;
 		class DataWindow *_dataWindow;
 		class HistogramCollection *_histograms;
+		class HistogramCollection *_summedPolarizationHistograms;
 };
 
 #endif

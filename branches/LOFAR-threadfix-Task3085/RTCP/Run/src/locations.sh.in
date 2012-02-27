@@ -12,9 +12,12 @@ then
   IONPROC=$HOME/production/lofar/bgp_ion/bin/ION_Processing
   ETCDIR=/opt/lofar/etc
 
+  LOGHOST=`$HOME/production/lofar/bgp_cn/bin/CEPlogProcessorSettings | awk '/host:/ { print $2; }'`
+  LOGPORT=`$HOME/production/lofar/bgp_cn/bin/CEPlogProcessorSettings | awk '/port:/ { print $2; }'`
+
   LOGDIR=$HOME/log/L$TIMESTAMP
   LOGSYMLINK=$HOME/log/latest
-  LOGPARAMS="-s ccu001:24500"
+  LOGPARAMS="-s $LOGHOST:$LOGPORT"
 else
   ISPRODUCTION=0
 

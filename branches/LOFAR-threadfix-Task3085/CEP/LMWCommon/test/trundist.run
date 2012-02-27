@@ -31,13 +31,13 @@ if test "$srcdir" = ""; then
 fi
 curdir=`pwd`
 # Set the src and make it absolute.
-ssdir=`cd $srcdir/../src > /dev/null 2>&1; pwd`
+ssdir=`cd "$srcdir/../src" > /dev/null 2>&1; pwd`
 sedir=`cd ../src > /dev/null 2>&1; pwd`
 
 # Add srcdir to PATH, so runlogpid can be found.
 # Add ../src to PATH, so finddproc can be found
 # Add test to PATH, so tstartdproc can be found.
-PATH=$ssdir:$sedir:$curdir:$PATH
+PATH="$ssdir:$sedir:$curdir:$PATH"
 export PATH
 
 # Run in dry mode.
@@ -45,7 +45,7 @@ echo 'echo "argc=$#"' > trundist_tmp.sh
 echo 'echo "argv=$*"' >> trundist_tmp.sh
 chmod 755 trundist_tmp.sh
 rundist -dry -cdn trundist.in_cd -hfn trundist_tmp.hfn -envfile trundist_tmp.env \
-$curdir/trundist_tmp.sh trundist.in_vd -arg "a b c d" > trundist_tmp.log
+"$curdir/trundist_tmp.sh" trundist.in_vd -arg "a b c d" > trundist_tmp.log
 echo "status=$?"
 cat trundist_tmp.hfn
 # Remove absolute directory path from logfiles.
@@ -57,7 +57,7 @@ echo 'echo "argv=$*"' >> trundist_tmp.sh
 chmod 755 trundist_tmp.sh
 rundist -cdn trundist.in_cd -hfn trundist_tmp.hfn -envfile trundist_tmp.env \
 -logfile trundist_tmp.logx -gdsout img \
-$curdir/trundist_tmp.sh trundist.in_vd -arg "a b c d" > trundist_tmp.log
+"$curdir/trundist_tmp.sh" trundist.in_vd -arg "a b c d" > trundist_tmp.log
 echo "status=$?"
 cat trundist_tmp.hfn
 # Remove absolute directory path from logfile.

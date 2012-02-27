@@ -589,6 +589,12 @@ void MSWindow::createToolbar()
 	sigc::mem_fun(*this, &MSWindow::onOpenTestSetSlewedGaussianBroadband));
 	_actionGroup->add( Gtk::Action::create("OpenTestSetBurstBroadband", "Burst"),
 	sigc::mem_fun(*this, &MSWindow::onOpenTestSetBurstBroadband));
+	_actionGroup->add( Gtk::Action::create("OpenTestSetRFIDistributionLow", "Slope -2 dist low"),
+	sigc::mem_fun(*this, &MSWindow::onOpenTestSetRFIDistributionLow));
+	_actionGroup->add( Gtk::Action::create("OpenTestSetRFIDistributionMid", "Slope -2 dist mid"),
+	sigc::mem_fun(*this, &MSWindow::onOpenTestSetRFIDistributionMid));
+	_actionGroup->add( Gtk::Action::create("OpenTestSetRFIDistributionHigh", "Slope -2 dist high"),
+	sigc::mem_fun(*this, &MSWindow::onOpenTestSetRFIDistributionHigh));
 	_actionGroup->add( Gtk::Action::create("AddTestModification", "Test modify") );
 	_actionGroup->add( Gtk::Action::create("AddStaticFringe", "Static fringe"),
 	sigc::mem_fun(*this, &MSWindow::onAddStaticFringe) );
@@ -829,6 +835,9 @@ void MSWindow::createToolbar()
 		"        <menuitem action='OpenTestSetSinusoidalBroadband'/>"
 		"        <menuitem action='OpenTestSetSlewedGaussianBroadband'/>"
 		"        <menuitem action='OpenTestSetBurstBroadband'/>"
+		"        <menuitem action='OpenTestSetRFIDistributionLow'/>"
+		"        <menuitem action='OpenTestSetRFIDistributionMid'/>"
+		"        <menuitem action='OpenTestSetRFIDistributionHigh'/>"
 		"      </menu>"
 		"      <menu action='AddTestModification'>"
 		"        <menuitem action='AddStaticFringe'/>"
@@ -1182,10 +1191,14 @@ void MSWindow::onPlotLogLogDistPressed()
 	if(_timeFrequencyWidget.HasImage())
 	{
 		TimeFrequencyData activeData = GetActiveData();
-		Image2DCPtr image = activeData.GetSingleImage();
-		Mask2DCPtr mask = Mask2D::CreateCopy(activeData.GetSingleMask());
-		HistogramCollection histograms(1);
-		histograms.Add(0, 1, 0, image, mask);
+		HistogramCollection histograms(activeData.PolarisationCount());
+		for(unsigned p=0;p!=activeData.PolarisationCount();++p)
+		{
+			TimeFrequencyData *polData = activeData.CreateTFDataFromPolarisationIndex(p);
+			Image2DCPtr image = polData->GetSingleImage();
+			Mask2DCPtr mask = Mask2D::CreateCopy(polData->GetSingleMask());
+			histograms.Add(0, 1, p, image, mask);
+		}
 		if(_histogramWindow == 0)
 			_histogramWindow = new HistogramWindow(histograms);
 		else

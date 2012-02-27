@@ -31,13 +31,13 @@ if test "$srcdir" = ""; then
 fi
 curdir=`pwd`
 # Set the src and make it absolute.
-ssdir=`cd $srcdir/../src > /dev/null 2>&1; pwd`
+ssdir=`cd "$srcdir/../src" > /dev/null 2>&1; pwd`
 sedir=`cd ../src > /dev/null 2>&1; pwd`
 
 # Add srcdir to PATH, so runlogpid can be found.
 # Add ../src to PATH, so finddproc can be found
 # Add test to PATH, so tstartdproc can be found.
-PATH=$ssdir:$sedir:$curdir:$PATH
+PATH="$ssdir:$sedir:$curdir:$PATH"
 export PATH
 
 startdistproc -dsn tstartdproc.in_vd -cdn tstartdproc.in_cd \
@@ -52,7 +52,7 @@ echo "status=$?"
 cat tstartdproc_tmp.out1
 
 echo ''
-startdistproc -useenv $curdir/tstartdproc_tmp.out2.envfile \
+startdistproc -useenv "$curdir/tstartdproc_tmp.out2.envfile" \
 -dsn tstartdproc.in_vd -cdn tstartdproc.in_cd \
 -mode 3851 -dry -hfn tstartdproc_tmp.out2 -fdp ../src prog1 -arg "a b" \
 > tstartdproc_tmp.log2
@@ -62,10 +62,10 @@ cat tstartdproc_tmp.out2
 sed -e "s%$curdir%%g" tstartdproc_tmp.log2
 
 echo ''
-startdistproc -killonfail -useenv $curdir/tstartdproc_tmp.out3.envfile \
--logfile $curdir/tstartdproc_tmp.log3b \
+startdistproc -killonfail -useenv "$curdir/tstartdproc_tmp.out3.envfile" \
+-logfile "$curdir/tstartdproc_tmp.log3b" \
 -dsn tstartdproc.in_vd -cdn tstartdproc.in_cd1 -nostartmaster \
--mode 3851 -hfn tstartdproc_tmp.out3 -fdp ../src `pwd`/tstartdproc.in_run \
+-mode 3851 -hfn tstartdproc_tmp.out3 -fdp ../src "`pwd`/tstartdproc.in_run" \
 > tstartdproc_tmp.log3a
 echo "status=$?"
 cat tstartdproc_tmp.out3

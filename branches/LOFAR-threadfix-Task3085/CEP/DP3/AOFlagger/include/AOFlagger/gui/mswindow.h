@@ -168,6 +168,9 @@ class MSWindow : public Gtk::Window {
 		void onOpenTestSetSinusoidalBroadband() { openTestSet(27); }
 		void onOpenTestSetSlewedGaussianBroadband() { openTestSet(28); }
 		void onOpenTestSetBurstBroadband() { openTestSet(29); }
+		void onOpenTestSetRFIDistributionLow() { openTestSet(32); }
+		void onOpenTestSetRFIDistributionMid() { openTestSet(31); }
+		void onOpenTestSetRFIDistributionHigh() { openTestSet(30); }
 		void onGaussianTestSets() { _gaussianTestSets = 1; }
 		void onRayleighTestSets() { _gaussianTestSets = 0; }
 		void onZeroTestSets() { _gaussianTestSets = 2; }

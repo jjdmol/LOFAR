@@ -25,6 +25,8 @@
 #include <boost/asio/read.hpp>
 #include <boost/asio/write.hpp>
 
+#include <AOFlagger/quality/histogramcollection.h>
+#include <AOFlagger/quality/histogramtablesformatter.h>
 #include <AOFlagger/quality/qualitytablesformatter.h>
 #include <AOFlagger/quality/statisticscollection.h>
 
@@ -145,12 +147,22 @@ void Client::handleReadQualityTables(unsigned dataSize)
 			// TODO: maybe we want to configure the following parameter at one point
 			collection.LowerTimeResolution(1000);
 			
+			HistogramTablesFormatter histogramFormatter(options.msFilename);
+			HistogramCollection histogramCollection(formatter.GetPolarizationCount());
+			const bool histogramsExist = histogramFormatter.HistogramsExist();
+			if(histogramsExist)
+			{
+				histogramCollection.Load(histogramFormatter);
+			}
+			
 			GenericReadResponseHeader header;
 			header.blockIdentifier = GenericReadResponseHeaderId;
 			header.blockSize = sizeof(header);
 			header.errorCode = NoError;
 			std::ostringstream s;
 			collection.Serialize(s);
+			if(histogramsExist)
+				histogramCollection.Serialize(s);
 			const std::string str = s.str();
 			header.dataSize = str.size();
 			

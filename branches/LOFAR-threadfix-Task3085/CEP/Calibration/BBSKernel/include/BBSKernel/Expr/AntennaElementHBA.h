@@ -1,7 +1,7 @@
-//# YatawattaDipole.h: Dipole voltage beam using Sarod Yatawatta's analytical
-//# model.
+//# AntennaElementHBA.h: Model of an idealized LOFAR HBA dual dipole antenna
+//# element.
 //#
-//# Copyright (C) 2008
+//# Copyright (C) 2011
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -21,16 +21,13 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSKERNEL_EXPR_YATAWATTADIPOLE_H
-#define LOFAR_BBSKERNEL_EXPR_YATAWATTADIPOLE_H
+#ifndef LOFAR_BBSKERNEL_EXPR_ANTENNAELEMENTHBA_H
+#define LOFAR_BBSKERNEL_EXPR_ANTENNAELEMENTHBA_H
+
+// \file
+// Model of an idealized LOFAR HBA dual dipole antenna element.
 
 #include <BBSKernel/Expr/BasicExpr.h>
-#include <BBSKernel/Expr/ExternalFunction.h>
-
-namespace casa
-{
-    class Path;
-}
 
 namespace LOFAR
 {
@@ -40,19 +37,17 @@ namespace BBS
 // \addtogroup Expr
 // @{
 
-class YatawattaDipole: public BasicBinaryExpr<Vector<2>, Scalar, JonesMatrix>
+class AntennaElementHBA: public BasicUnaryExpr<Vector<2>, JonesMatrix>
 {
 public:
-    YatawattaDipole(const casa::Path &moduleTheta, const casa::Path &modulePhi,
-        const Expr<Vector<2> >::ConstPtr &azel,
-        const Expr<Scalar>::ConstPtr &orientation);
+    typedef shared_ptr<AntennaElementHBA>       Ptr;
+    typedef shared_ptr<const AntennaElementHBA> ConstPtr;
+
+    AntennaElementHBA(const Expr<Vector<2> >::ConstPtr &target);
 
 protected:
     virtual const JonesMatrix::View evaluateImpl(const Grid &grid,
-        const Vector<2>::View &azel, const Scalar::View &orientation) const;
-
-private:
-    ExternalFunction    itsThetaFunction, itsPhiFunction;
+        const Vector<2>::View &target) const;
 };
 
 // @}

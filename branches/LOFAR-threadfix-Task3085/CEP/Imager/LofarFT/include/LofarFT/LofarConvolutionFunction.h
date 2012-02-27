@@ -44,6 +44,8 @@
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <casa/OS/PrecTimer.h>
 
+#include <lattices/Lattices/ArrayLattice.h>
+#include <lattices/Lattices/LatticeFFT.h>
 
 using namespace casa;
 
@@ -73,10 +75,16 @@ namespace LOFAR
                              const MeasurementSet& ms,
                              uInt nW, double Wmax,
                              uInt oversample,
-                             const String& beamElementPath,
-			     Int verbose,
-			     Int maxsupport,
-                             const String& imgName);
+                             Int verbose,
+                             Int maxsupport,
+                             const String& imgName,
+			     Bool Use_EJones,
+			     Bool Apply_Element,
+                             const casa::Record& parameters
+                            );
+    //,
+    //			     Int TaylorTerm,
+    //			     Double RefFreq);
 
 //      ~LofarConvolutionFunction ()
 //      {
@@ -118,8 +126,12 @@ namespace LOFAR
                                          bool degridding_step,
                                          double Append_average_PB_CF,
                                          Matrix<Complex>& Stack_PB_CF,
-                                         double& sum_weight_square);
+                                         double& sum_weight_square,
+					 uInt spw, Int TaylorTerm, double RefFreq);
 
+    Array<Complex>  ApplyElementBeam(Array<Complex> input_grid, Double time, uInt spw, const Matrix<bool>& Mask_Mueller_in, bool degridding_step);
+    Array<Complex>  ApplyElementBeam2(Array<Complex>& input_grid, Double time, uInt spw, const Matrix<bool>& Mask_Mueller_in, bool degridding_step, Int UsedMask=-1);
+    
     // Returns the average Primary Beam from the disk
     Matrix<float> Give_avg_pb();
 
@@ -133,19 +145,89 @@ namespace LOFAR
     // Zero padding of a Matrix
     Matrix<Complex> zero_padding(const Matrix<Complex>& Image, int Npixel_Out);
 
+
     // Get the W scale.
     const WScale& wScale() const
       { return m_wScale; }
+
+    vector< Matrix< Bool > > itsVectorMasksDegridElement;
+    void MakeMaskDegrid( const Array<Complex>& gridin, Int NumMask)
+    {
+
+      String MaskName("JAWS_masks_degrid/Mask"+String::toString(NumMask)+".boolim");
+      File MaskFile(MaskName);
+      if(!MaskFile.exists()){
+        //cout<<"... Making Masks ..."<<endl;
+        Matrix<Bool> Mask(IPosition(2,gridin.shape()[0],gridin.shape()[0]),false);
+        Matrix<Int> IntMask(IPosition(2,gridin.shape()[0],gridin.shape()[0]),false);
+        uInt GridSize(gridin.shape()[0]);
+        const Complex* inPtr = gridin.data();
+        Bool* outPtr = Mask.data();
+        for (uInt i=0; i<GridSize; ++i) {
+         for (uInt j=0; j<GridSize; ++j) {
+           if (inPtr->real() != 0  ||  inPtr->imag() != 0) {
+             (*(outPtr)) = true;
+            }
+            inPtr++;
+            outPtr++;
+          }
+        }
+        //itsVectorMasksDegridElement.push_back(Mask);
+
+        store(Mask,MaskName);
+        //cout<<"... Done Making Masks ..."<<endl;
+      }
+    }
+
+    Bool itsFilledVectorMasks;
+      //vector< Matrix< Bool > > itsVectorMasksDegridElement;
+      void ReadMaskDegrid()
+      {
+      	Int NumMask(0);
+      	while(true){
+      	  String MaskName("JAWS_masks_degrid/Mask"+String::toString(NumMask)+".boolim");
+      	  File MaskFile(MaskName);
+      	  if(MaskFile.exists())
+	    {
+	      //cout<<"Reading:"<<MaskName<<endl;
+	      PagedImage<Bool> pim(MaskName);
+	      Array<Bool> arr = pim.get();
+	      Matrix<Bool> Mask;
+	      Mask.reference (arr.nonDegenerate(2));
+	      itsVectorMasksDegridElement.push_back(Mask);
+	      NumMask+=1;
+	    }
+	  else
+	    {
+	      break;
+	    }
+	}
+	itsFilledVectorMasks=true;
+	
+      }
+      
+      Bool VectorMaskIsFilled(){return itsFilledVectorMasks;}
 
   private:
     void normalized_fft (Matrix<Complex>&, bool toFreq=true);
     void normalized_fft (PrecTimer& timer, Matrix<Complex>&, bool toFreq=true);
 
+    Matrix<Complex> give_normalized_fft_lapack(const Matrix<Complex> &im, bool toFreq=true)
+      {
+        Matrix<Complex> result(im.copy());
+        ArrayLattice<Complex> lattice(result);
+        LatticeFFT::cfft2d(lattice, toFreq);
+        if(toFreq){
+          result/=static_cast<Float>(result.shape()(0)*result.shape()(1));
+        }
+        else{
+          result*=static_cast<Float>(result.shape()(0)*result.shape()(1));
+        };
+        return result;
+      }
+
     MEpoch observationStartTime (const MeasurementSet &ms,
                                  uInt idObservation) const;
-
-    Double observationReferenceFreq (const MeasurementSet &ms,
-                                     uInt idDataDescription);
 
     // Estime spheroidal convolution function from the support of the fft
     // of the spheroidal in the image plane
@@ -158,11 +240,12 @@ namespace LOFAR
                                Double pixelSize,
                                Double w) const;
 
+
     // Return the angular resolution required for making the image of the
     // angular size determined by coordinates and shape.
     // The resolution is assumed to be the same on both direction axes.
     Double estimateAResolution(const IPosition &shape,
-                               const DirectionCoordinate &coordinates) const;
+                               const DirectionCoordinate &coordinates, double station_diam = 70.) const;
 
     // Apply a spheroidal taper to the input function.
     template <typename T>
@@ -181,7 +264,216 @@ namespace LOFAR
         }
       }
     }
+
+
+    // Linear interpolation
+    template <typename T>
+    Matrix< T > LinearInterpol(Matrix<T> ImageIn, Int  NpixOut)
+      {
+	Matrix<T> ImageOut(IPosition(2,NpixOut,NpixOut),0.);
+	float d0(1./(NpixOut-1.));
+	float d1(1./(ImageIn.shape()[0]-1.));
+	float dd(d0/d1);
+	float dx,dy,dxd,dyd,xin,yin;
+	float onef(1.);
+	uInt NpixOutm(NpixOut-1);
+	for(uInt i=0;i<(NpixOut);++i){
+	  dxd=i*dd;
+	  xin=floor(dxd);
+	  dx=dxd-xin;
+	  for(uInt j=0;j<(NpixOut);++j){
+	    dyd=j*dd;
+	    yin=floor(dyd);
+	    dy=dyd-yin;
+	    ImageOut(i,j)=(onef-dx)*(onef-dy)*ImageIn(xin,yin) + (onef-dx)*(dy)*ImageIn(xin,yin+1) + (dx)*(onef-dy)*ImageIn(xin+1,yin) + (dx)*(dy)*ImageIn(xin+1,yin+1);
+	  }
+	}
+	return ImageOut;
+      }
+
+    void Convolve(Matrix<Complex> gridin, Matrix<Complex> gridout, Matrix<Complex> ConvFunc){
+      Int Support(ConvFunc.shape()[0]);
+      Int GridSize(gridin.shape()[0]);
+      Int off(Support/2);
+      for(uInt i=Support/2;i<GridSize-Support/2;++i){
+	for(uInt j=Support/2;j<GridSize-Support/2;++j){
+	  if((gridin(i,j))!=Complex(0.,0.)){
+	    Complex val(gridin(i,j));
+	    for(uInt ii=0;ii<Support;++ii){
+	      for(uInt jj=0;jj<Support;++jj){
+		gridout(i-off+ii,j-off+jj)+=ConvFunc(ii,jj)*val;
+	      }
+	    }
+	  }
+	}
+      }
+    }
+
+    void ConvolveOpt(Matrix<Complex> gridin, Matrix<Complex> gridout, Matrix<Complex> ConvFunc){
+      Int Support(ConvFunc.shape()[0]);
+      Int GridSize(gridin.shape()[0]);
+      Int off(Support/2);
+
+      Complex* __restrict__ gridInPtr = gridin.data();
+      Complex* __restrict__ gridOutPtr = gridout.data();
+      Complex* __restrict__ ConvFuncPtr = ConvFunc.data();
+
+      for(uInt i=Support/2;i<GridSize-Support/2;++i){
+	for(uInt j=Support/2;j<GridSize-Support/2;++j){
+	  gridInPtr=gridin.data()+GridSize*i+j;
+	  if (gridInPtr->real() != 0  ||  gridInPtr->imag() != 0) {//if((*gridInPtr)!=Complex(0.,0.)){
+	    ConvFuncPtr = ConvFunc.data();
+	    for(uInt jj=0;jj<Support;++jj){
+	      for(uInt ii=0;ii<Support;++ii){
+		gridOutPtr = gridout.data()+(j-off+jj)*GridSize+i-off+ii;
+		(*gridOutPtr) += (*ConvFuncPtr)*(*gridInPtr);
+		ConvFuncPtr++;//=ConvFunc.data()+Support*ii+jj;
+	      }
+	    }
+	  }
+	  //gridInPtr++;
+	}
+      }
+      
+    }
+
+    void ConvolveGer( const Matrix<Complex>& gridin, Matrix<Complex>& gridout,
+		      const Matrix<Complex>& ConvFunc)
+    {
+      int Support(ConvFunc.shape()[0]);
+      int GridSize(gridin.shape()[0]);
+      int off(Support/2);
+      const Complex* inPtr = gridin.data() + off*GridSize + off;
+      for (uInt i=0; i<GridSize-Support; ++i) {
+	for (uInt j=0; j<GridSize-Support; ++j) {
+	  if (inPtr->real() != 0  ||  inPtr->imag() != 0) {
+	    const Complex* cfPtr = ConvFunc.data();
+	    for (uInt ii=0; ii<Support; ++ii) {
+	      Complex* outPtr = gridout.data() + (i+ii)*GridSize + j;
+	      for (uInt jj=0; jj<Support; ++jj) {
+		outPtr[jj] += *cfPtr++ * *inPtr;
+	      }
+	    }
+	  }
+	  inPtr++;
+	}
+	inPtr += Support;
+      }
+    }
+
+    void ConvolveGerArray( const Array<Complex>& gridin, Int ConvPol, Matrix<Complex>& gridout,
+			   const Matrix<Complex>& ConvFunc)
+    {
+      int Support(ConvFunc.shape()[0]);
+      int GridSize(gridin.shape()[0]);
+      int off(Support/2);
+
+      const Complex* inPtr = gridin.data() + ConvPol*GridSize*GridSize + off*GridSize + off;
+      for (uInt i=0; i<GridSize-Support; ++i) {
+	for (uInt j=0; j<GridSize-Support; ++j) {
+	  if (inPtr->real() != 0  ||  inPtr->imag() != 0) {
+	    const Complex* cfPtr = ConvFunc.data();
+	    for (uInt ii=0; ii<Support; ++ii) {
+	      Complex* outPtr = gridout.data() + (i+ii)*GridSize + j;
+	      for (uInt jj=0; jj<Support; ++jj) {
+		outPtr[jj] += *cfPtr++ * *inPtr;
+	      }
+	    }
+	  }
+	  inPtr++;
+	  }
+	inPtr += Support;
+      }
+    }
     
+    
+
+    void ConvolveGerArrayMask( const Array<Complex>& gridin, Int ConvPol, Matrix<Complex>& gridout,
+			       const Matrix<Complex>& ConvFunc, Int UsedMask)
+    {
+      int Support(ConvFunc.shape()[0]);
+      int GridSize(gridin.shape()[0]);
+      int off(Support/2);
+
+      const Complex* inPtr = gridin.data() + ConvPol*GridSize*GridSize + off*GridSize + off;
+      const Bool* MaskPtr = itsVectorMasksDegridElement[UsedMask].data() + off*GridSize + off;
+      for (uInt i=0; i<GridSize-Support; ++i) {
+	for (uInt j=0; j<GridSize-Support; ++j) {
+	  if ((*MaskPtr)==true) {
+	    const Complex* cfPtr = ConvFunc.data();
+	    for (uInt ii=0; ii<Support; ++ii) {
+	      Complex* outPtr = gridout.data() + (i+ii)*GridSize + j;
+	      for (uInt jj=0; jj<Support; ++jj) {
+		outPtr[jj] += *cfPtr++ * *inPtr;
+	      }
+	    }
+	  }
+	  MaskPtr++;
+	  inPtr++;
+	}
+	inPtr += Support;
+	MaskPtr += Support;
+      }
+    }
+    
+    
+    
+    // Linear interpolation
+    template <typename T>
+    Matrix< T > LinearInterpol2(Matrix<T> ImageIn, Int  NpixOut)
+      {
+	Matrix<T> ImageOut(IPosition(2,NpixOut,NpixOut),1e-7);
+	int nd(ImageIn.shape()[0]);
+	int ni(NpixOut);
+	float off(-.5);//-(((1.+1./(nd-1.))-1.)/2.)*(nd-1));
+	float a(nd/(ni-1.));//((1.+1./(nd-1.))/(ni-1.))*(nd-1));
+	float dx,dy,dxd,dyd,xin,yin;
+	float onef(1.);
+	uInt NpixOutm(NpixOut-1);
+	for(uInt i=0;i<(NpixOut);++i){
+	  dxd=i*a+off;
+	  xin=floor(dxd);
+	  dx=dxd-xin;
+	  for(uInt j=0;j<(NpixOut);++j){
+	    dyd=j*a+off;
+	    yin=floor(dyd);
+	    dy=dyd-yin;
+	    if((dxd<0)||((xin+1)>ImageIn.shape()[0]-1.)){continue;}
+	    if((dyd<0)||((yin+1)>ImageIn.shape()[0]-1.)){continue;}
+	    ImageOut(i,j)=(onef-dx)*(onef-dy)*ImageIn(xin,yin) + (onef-dx)*(dy)*ImageIn(xin,yin+1) + (dx)*(onef-dy)*ImageIn(xin+1,yin) + (dx)*(dy)*ImageIn(xin+1,yin+1);
+	  }
+	}
+	/* store(ImageIn,"ImageIn.img"); */
+	/* store(ImageOut,"ImageOut.img"); */
+	/* assert(false); */
+	return ImageOut;
+      }
+
+    void EstimateCoordShape(IPosition shape, DirectionCoordinate coordinate, double station_diameter=70.){
+      coordinate = m_coordinates;
+      Double aPixelAngSize = min(m_pixelSizeSpheroidal,
+				 estimateAResolution(m_shape, m_coordinates, station_diameter));
+      
+      Double pixelSize = abs(m_coordinates.increment()[0]);
+      Double imageDiameter = pixelSize * m_shape(0);
+      Int nPixelsConv = imageDiameter / aPixelAngSize;
+      if (nPixelsConv > itsMaxSupport) {
+          nPixelsConv = itsMaxSupport;
+      }
+      // Make odd and optimal.
+      nPixelsConv = FFTCMatrix::optimalOddFFTSize (nPixelsConv);
+      aPixelAngSize = imageDiameter / nPixelsConv;
+
+      shape=IPosition(2, nPixelsConv, nPixelsConv);
+      Vector<Double> increment_old(coordinate.increment());
+      Vector<Double> increment(2);
+      increment[0] = aPixelAngSize*sign(increment_old[0]);
+      increment[1] = aPixelAngSize*sign(increment_old[1]);
+      coordinate.setIncrement(increment);
+      Vector<Double> refpix(2, 0.5*(nPixelsConv-1));
+      coordinate.setReferencePixel(refpix);
+    }
+
     Double spheroidal(Double nu) const;
 
     template <typename T>
@@ -200,6 +492,7 @@ namespace LOFAR
 
 
     //# Data members.
+    casa::Record       itsParameters;
     IPosition           m_shape;
     DirectionCoordinate m_coordinates;
     WScale              m_wScale;
@@ -217,15 +510,20 @@ namespace LOFAR
     Matrix<Complex>     Spheroid_cut;
     //# Stack of the convolution functions for the average PB calculation
     Matrix<Float>       Spheroid_cut_im;
+    Matrix<Float>       Spheroid_cut_im_element;
     //# List of the ferquencies the CF have to be caluclated for
     Vector< Double >    list_freq;
     vector< Matrix<Complex> > m_WplanesStore;
     //# Aterm_store[double time][antenna][channel]=Cube[Npix,Npix,4]
     map<Double, vector< vector< Cube<Complex> > > > m_AtermStore;
+    map<Double, vector< vector< Cube<Complex> > > > m_AtermStore_element;
+    map<Double, vector< vector< Cube<Complex> > > > m_AtermStore_station;
     //# Average primary beam
     Matrix<Float>       Im_Stack_PB_CF0;
     Int                 itsVerbose;
     Int                 itsMaxSupport;
+    //    Int                 itsTaylorTerm;
+    //Double              itsRefFreq;
     String              itsImgName;
     vector<FFTCMatrix>  itsFFTMachines;
     Double              itsTimeW;
@@ -240,6 +538,17 @@ namespace LOFAR
     Double              itsTimeCFpar;
     Double              itsTimeCFfft;
     unsigned long long  itsTimeCFcnt;
+    Bool                its_Use_EJones;
+    Bool                its_Apply_Element;
+    uInt                its_MaxWSupport;
+    uInt                its_count_time;
+    mutable LogIO       m_logIO;
+    Matrix<Complex>     spheroid_cut_element_fft;
+    vector< vector< Matrix< Complex > > > GridsMueller;
+    LogIO &logIO() const
+      {
+        return m_logIO;
+      }
   };
 
 
@@ -264,7 +573,7 @@ namespace LOFAR
   void store (const DirectionCoordinate &dir, const Matrix<T> &data,
               const string &name)
   {
-    cout<<"Saving... "<<name<<endl;
+    //cout<<"Saving... "<<name<<endl;
     Vector<Int> stokes(1);
     stokes(0) = Stokes::I;
     CoordinateSystem csys;
@@ -295,7 +604,7 @@ namespace LOFAR
              const string &name)
   {
     AlwaysAssert(data.shape()(2) == 4, SynthesisError);
-    cout<<"Saving... "<<name<<endl;
+    //cout<<"Saving... "<<name<<endl;
     Vector<Int> stokes(4);
     stokes(0) = Stokes::XX;
     stokes(1) = Stokes::XY;
