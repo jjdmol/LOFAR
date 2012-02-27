@@ -31,5 +31,7 @@ install(FILES
   multitail-olap.conf
   DESTINATION etc)
 
+lofar_add_bin_program(CEPlogProcessorSettings CEPlogProcessorSettings.cc)
+
 add_subdirectory(LOFAR)
 add_subdirectory(util)
