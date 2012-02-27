@@ -27,8 +27,8 @@ PANEL,-1 -1 241 145 N "_3DFace" 4
     RCUXDP=sysName+RCUX;
     RCUYDP=sysName+RCUY;
     
-    baseDP=dpSubStr(RCUXDP,DPSUB_SYS_DP);  
-    baseDPX=baseDP;
+    baseDP=antennaDP;
+    baseDPX=dpSubStr(RCUXDP,DPSUB_SYS_DP);  
     baseDPY=dpSubStr(RCUYDP,DPSUB_SYS_DP);  
   
     //determine rcu nr's used
@@ -170,7 +170,7 @@ void click() {
   // set delay in case double click was meant
   delay(0, 100); 
   if (!bDoubleClicked) {
-    navPanel_setEvent(\"RCU\"+curXRCU+\"|RCU\"+curYRCU,\"EventClick\");
+    navPanel_setEvent(\"HBA\"+curHBA,\"EventClick\");
   }
 }
 
@@ -184,7 +184,7 @@ void dblClick() {
   if (dpExists(baseDP) ) {
     LOG_DEBUG(\"Station_HBA.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
     g_currentDatapoint=baseDP;
-    navPanel_setEvent(\"RCU\"+curXRCU,\"ChangePanel\");   
+    navPanel_setEvent(\"HBA\"+curHBA,\"ChangePanel\");   
   }
   
   // set delay to avoid click event will be triggered
@@ -194,7 +194,7 @@ void dblClick() {
 
 // routine for right mouse click
 void rClick() {
-  navPanel_setEvent(\"Antenna\"+curHBA,\"EventRightClick\");
+  navPanel_setEvent(\"HBA\"+curHBA,\"EventRightClick\");
 }" 0
  2
 "CBRef" "1"
@@ -315,10 +315,9 @@ LANG:1 0
 void StationCallback(string dp1, bool aTrig) {
   
   LOG_DEBUG(\"Station_HBA.pnl:StationCallback|ObjectTrigger Callback on: \"+dp1+\" trigger: \"+aTrig);
-  LOG_DEBUG(\"Station_HBA.pnl:StationCallback|Found highlight : \" + highlight + \" Looking for RCU\" + curXRCU +
-             \" or RCU\" + curYRCU);
+  LOG_DEBUG(\"Station_HBA.pnl:StationCallback|Found highlight : \" + highlight + \" Looking for HBA\" + curHBA);
   bool bHighlight=false;
-  if (dynContains(highlight,\"RCU\"+curXRCU) ||dynContains(highlight,\"RCU\"+curYRCU) ) {
+  if (dynContains(highlight,\"HBA\"+curHBA)) {
     bHighlight=true;
   }
   LOG_DEBUG(\"Station_HBA.pnl:StationCallback|Highlight request: \"+bHighlight);

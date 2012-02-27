@@ -35,6 +35,7 @@
 // navFunct_receiver2Cabinet                  : Returns the CabinetNr for a RecieverNr
 // navFunct_receiver2Subrack                  : Returns the SubrackNr for a RecieverNr
 // navFunct_receiver2RSP                      : Returns the RSPNr for a RecieverNr
+// navFunct_receiver2HBA                      : Returns the HBANr for a RecieverNr
 // navFunct_RSP2Cabinet                       : Returns the CabinetNr for a given RSP
 // navFunct_RSP2Subrack                       : Returns the SubrackNr for a given RSP
 // navFunct_TBB2Cabinet                       : Returns the CabinetNr for a given TBB
@@ -399,6 +400,20 @@ void showDynArray(dyn_anytype anArray,string name) {
   for (int i = 1; i <= dynlen(anArray); i++) { 
   	DebugN("navFunct.ctl:showDynArray|", i, " = "+anArray[i]);  
   }
+}
+
+// ****************************************
+// Name : navFunct_receiver2HBA
+// ****************************************
+// Description:
+//    Returns the HBANr to which a receiver is connected 
+//
+// Returns:
+//    The HBANr
+// ***************************************
+
+int navFunct_receiver2HBA(int receiverNr) {
+  return floor(receiverNr/2);
 }
 
 // ****************************************
@@ -1025,7 +1040,7 @@ bool navFunct_hardware2Obs(string stationName, string observation,
     
     // the station is involved in the stationList, but since receiverbitmap has been moved 
     // to the station database it is possible that the station is offline, so the receiverbitmap can be empty, in that case it is
-    // not meaning that the station is not involved. So we won't check for en empty receiverBitmap anymore
+    // not meaning that the station is not involved. So we won't check for an empty receiverBitmap anymore
 //    if (receiverBitmap == "" && stationName) {
 //        LOG_ERROR("navFunct.ctl:navFunct_hardware2Obs|Empty receiverBitmap");
 //        return false;
@@ -1057,10 +1072,14 @@ bool navFunct_hardware2Obs(string stationName, string observation,
       if (receiverBitmap != "" && receiverBitmap[intData] == "1") {
         flag = true;
       }
-    } else if (objectName == "Antenna") {
+    } else if (objectName == "HBA") {
       if (receiverBitmap != "" && (receiverBitmap[(intData*2)] == "1" || receiverBitmap[((intData*2)+1)] == "1")) {
         flag = true;
       } 
+    } else if (objectName == "Element") {  // needs to be done when element is added to the receiverbitmap
+//      if (receiverBitmap != "" && (receiverBitmap[(intData*2)] == "1" || receiverBitmap[((intData*2)+1)] == "1")) {
+//        flag = true;
+//      }       
     } else if (objectName == "SPU") {
       flag = true;
     } else if (objectName == "Clock") {
@@ -1271,6 +1290,29 @@ void navFunct_fillObservationsList() {
             if (found) break;
           }
         }
+
+        if (!found) {
+          // check HBAAntenna
+          for (int c = 1; c<=dynlen(g_HBAList); c++) {
+            if (navFunct_hardware2Obs(station, g_observations["NAME"][i],"HBA","",g_HBAList[c])) {
+              // we found one involved HBA, so obs can be included and we can skip the rest
+              found = true;
+            }
+            if (found) break;
+          }
+        }
+
+        if (!found) {
+          // check Element
+          for (int c = 1; c<=dynlen(g_elementList); c++) {
+            if (navFunct_hardware2Obs(station, g_observations["NAME"][i],"Element","",g_elementList[c])) {
+              // we found one involved Element, so obs can be included and we can skip the rest
+              found = true;
+            }
+            if (found) break;
+          }
+        }
+
         if (found && !dynContains(g_observationsList, shortObs)){
           dynAppend(g_observationsList,shortObs);
         }
@@ -1474,6 +1516,31 @@ void navFunct_fillHardwareTree() {
           dynAppend(result,connectTo+",RCU"+g_RCUList[i]+","+dp);
         }
       }
+      
+      // add HBAAntennas
+      if (dynlen(g_HBAList) > 0) {
+        for (int i = 1; i <= dynlen(g_HBAList); i++) {
+          connectTo = station+":LOFAR";
+          dp = station+":LOFAR_PIC_HBA"+g_HBAList[i];
+          dynAppend(result,connectTo+",HBA"+g_HBAList[i]+","+dp);
+        }
+      }
+
+    // add Elements
+      // add HBAAntennas
+      if (dynlen(g_elementList) > 0) {
+        for (int i = 1; i <= dynlen(g_HBAList); i++) {
+          connectTo = station+":LOFAR_PIC";
+          dp = station+":LOFAR_PIC_HBA"+g_HBAList[i];
+          dynAppend(result,connectTo+",HBA"+g_HBAList[i]+","+dp);
+          for (int j = 1; j <= dynlen(g_elementList); i++) {
+            connectTo = dp;
+            dpel = station+":LOFAR_PIC_HBA"+g_HBAList[i] + "_Element" + g_elementList[j];
+            dynAppend(result,connectTo+",Element"+g_elementList[j]+","+dp);
+          }
+        }
+      }
+
     }
   }
   
@@ -1548,6 +1615,8 @@ void navFunct_clearGlobalLists() {
   dynClear(g_RSPList);
   dynClear(g_TBBList);
   dynClear(g_RCUList);
+  dynClear(g_HBAList);
+  dynClear(g_elementList);  
   dynClear(g_BGPRackList);
   dynClear(g_BGPMidplaneList);
   dynClear(g_IONodeList);

@@ -1224,7 +1224,7 @@ LANG:1 6 Layer8
 1
 "$APNr""3"
 3 15 "RCU0" -1
-"objects\\Hardware\\RSPBoard_RCU.pnl" 62 153 T 161 1 0 1 73 132
+"objects\\Hardware\\RSPBoard_RCU.pnl" 62 153 T 161 1 0 1 73 137
 1
 "$RCUNr""0"
 3 16 "RCU1" -1

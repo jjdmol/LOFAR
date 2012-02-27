@@ -1,4 +1,4 @@
-V 10
+V 11
 3
 LANG:1 12 antennaField
 LANG:6 8 (NoName)
@@ -315,8 +315,9 @@ void redraw(string mode) {
     string yDP=baseDP+\"_PIC_Cabinet\"+navFunct_receiver2Cabinet(YRCU)+\"_Subrack\"+
                navFunct_receiver2Subrack(YRCU)+\"_RSPBoard\"+navFunct_receiver2RSP(YRCU)+\"_RCU\"+YRCU;
     if (i-1 < NRSP*8/2) {
-      dynAppend(g_RCUList,XRCU);
-      dynAppend(g_RCUList,YRCU);
+//      dynAppend(g_RCUList,XRCU);
+//      dynAppend(g_RCUList,YRCU);
+      dynAppend(g_HBAList,navFunct_receiver2HBA(XRCU));
     }
     refNames[ref]=\"ant\"+(ref);
     xPos_AddSymbol = (mainpanel_midX+shiftFactorX) + (antennaOffsetsX[i] * expandFactorX);
@@ -456,12 +457,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 796 5 869 19
+E E 0 1 1 2 1 E U  1 E 796 5 869 18
 0 2 2 "0s" 0 0 0 192 0 0  796 5 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 13 Select Array:
 1 167 5 "" 2190
 0
@@ -484,9 +484,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 887 -1 951 43
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  887 -1 951 43
 2
 T 
 1
@@ -530,9 +529,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 870 38 890 58
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  870 38 890 58
 
 T 
 1
@@ -557,9 +555,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 902 38 922 58
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  902 38 922 58
 
 T 
 1
@@ -584,12 +581,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 931 40 962 54
+E E 0 1 1 2 1 E U  1 E 931 40 962 53
 0 2 2 "0s" 0 0 0 192 0 0  931 40 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 4 Zoom
 13 136
 "shift_down"
@@ -604,9 +600,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 886 87 906 107
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  886 87 906 107
 
 P 
 4294967295
@@ -633,9 +628,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 886 55 906 75
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  886 55 906 75
 
 P 
 4294967295
@@ -662,9 +656,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 870 71 890 91
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  870 71 890 91
 
 P 
 4294967295
@@ -691,9 +684,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 902 71 922 91
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  902 71 922 91
 
 P 
 4294967295
@@ -720,9 +712,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 886 71 906 91
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  886 71 906 91
 
 P 
 4294967295
@@ -761,9 +752,8 @@ LANG:1 31 Give the shift value to be used
   }
 }"
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 938 69 991 90
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  938 69 991 90
 3 "0d" 0 0 0 1 0 -1  E "main()
 {
   setValue(\"\",\"text\",shiftValue);
@@ -782,9 +772,8 @@ LANG:1 26 set zoomsize to 100% again
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 886 38 906 58
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  886 38 906 58
 
 P 
 4294967295
@@ -811,12 +800,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 931 58 993 72
+E E 0 1 1 2 1 E U  1 E 931 58 993 71
 0 2 2 "0s" 0 0 0 192 0 0  931 58 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 11 ShiftFactor
 0
 LAYER, 1 
@@ -891,10 +879,10 @@ LAYER, 7
 1
 LANG:1 6 Layer8
 0
-3 2 "PANEL_REF3"
+3 2 "PANEL_REF3" -1
 "objects\\compass.pnl" 212 350 T 12 0.742857142857143 0 0.752688172043011 -29.7142857142857 -52.6881720430108
 0
-3 5 "PANEL_REF6"
+3 5 "PANEL_REF6" -1
 "objects\\Hardware\\Station_Cabinet_top.pnl" 298 258 T 13 1 0 1 40 -100
 0
 0
