@@ -21,7 +21,7 @@ def extractDateTime( logline ):
 
 def convertDateTime( dt ):
   if dt is None:
-    return now()
+    return None
 
   y,m,d = dt[0].split("-")
   H,M,S = dt[1].split(":")
@@ -33,6 +33,9 @@ def convertDateTime( dt ):
   return datetime.datetime( int(y), int(m), int(d), int(H), int(M), int(S), int(float(F)*1000) )
 
 def sleepUntil( dt ):
+  if dt is None:
+    return
+
   sleeptime = totalseconds(dt-now())
   if sleeptime > 0:
     time.sleep( sleeptime )
@@ -43,16 +46,19 @@ starttime = None
 for l in sys.stdin:
   try:
     dt = convertDateTime( extractDateTime( l ) )
-    if offset is None:
+    if dt is None:
+      wait = None
+    elif offset is None:
       offset = dt
       starttime = now()
       wait = datetime.timedelta()
     else:
       wait = dt - offset
 
-    if totalseconds( wait ) > 0:  
+    if wait is not None and totalseconds( wait ) > 0: 
       sleepUntil( starttime + wait )
   except ValueError:
     continue
 
   print l.rstrip()
+
