@@ -44,6 +44,7 @@ HistogramPage::HistogramPage() :
 	_fitFrame("Fitting"),
 	_fitButton("Fit"),
 	_subtractFitButton("Subtract"),
+	_fitLogarithmicButton("Log fit"),
 	_fitAutoRangeButton("Auto range"),
 	_functionFrame("Function"),
 	_nsButton("N(S)"),
@@ -96,6 +97,8 @@ HistogramPage::HistogramPage() :
 	_fitButton.signal_clicked().connect(sigc::mem_fun(*this, &HistogramPage::updatePlot));
 	_fitBox.pack_start(_subtractFitButton, Gtk::PACK_SHRINK);
 	_subtractFitButton.signal_clicked().connect(sigc::mem_fun(*this, &HistogramPage::updatePlot));
+	_fitBox.pack_start(_fitLogarithmicButton, Gtk::PACK_SHRINK);
+	_fitLogarithmicButton.signal_clicked().connect(sigc::mem_fun(*this, &HistogramPage::updatePlot));
 	_fitBox.pack_start(_fitAutoRangeButton, Gtk::PACK_SHRINK);
 	_fitAutoRangeButton.set_active(true);
 	_fitAutoRangeButton.signal_clicked().connect(sigc::mem_fun(*this, &HistogramPage::onAutoRangeClicked));
@@ -314,6 +317,7 @@ void HistogramPage::plotFit(const LogHistogram &histogram, const std::string &ti
 	}
 	double sigma = sigmaEstimate, n = RayleighFitter::NEstimate(histogram, minRange, maxRange);
 	RayleighFitter fitter;
+	fitter.SetFitLogarithmic(_fitLogarithmicButton.get_active());
 	fitter.Fit(minRange, maxRange, histogram, sigma, n);
 	if(_fitButton.get_active())
 	{
