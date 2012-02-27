@@ -52,6 +52,7 @@ HistogramPage::HistogramPage() :
 	_dataExportButton("Data"),
 	_slopeFrame("Slope"),
 	_drawSlopeButton("Draw"),
+	_drawSlope2Button("Draw2"),
 	_slopeAutoRangeButton("Auto range"),
 	_plotPropertiesWindow(0),
 	_histograms(0),
@@ -131,6 +132,8 @@ HistogramPage::HistogramPage() :
 	_slopeBox.pack_start(_slopeTextView, Gtk::PACK_SHRINK);
 	_drawSlopeButton.signal_clicked().connect(sigc::mem_fun(*this, &HistogramPage::updatePlot));
 	_slopeBox.pack_start(_drawSlopeButton, Gtk::PACK_SHRINK);
+	_drawSlope2Button.signal_clicked().connect(sigc::mem_fun(*this, &HistogramPage::updatePlot));
+	_slopeBox.pack_start(_drawSlope2Button, Gtk::PACK_SHRINK);
 
 	_slopeBox.pack_start(_slopeAutoRangeButton, Gtk::PACK_SHRINK);
 	_slopeAutoRangeButton.set_active(true);
@@ -247,6 +250,14 @@ void HistogramPage::plotPolarization(const LogHistogram &totalHistogram, const L
 		{
 			plotFit(totalHistogram, "Fit to total");
 		}
+		if(_drawSlopeButton.get_active())
+		{
+			plotSlope(totalHistogram, "Fitted slope", false);
+		}
+		if(_drawSlope2Button.get_active())
+		{
+			plotSlope(totalHistogram, "Fitted slope", true);
+		}
 		updateSlopeFrame(totalHistogram);
 	}
 
@@ -260,10 +271,14 @@ void HistogramPage::plotPolarization(const LogHistogram &totalHistogram, const L
 			plotFit(rfiHistogram, "Fit to RFI");
 		}
 		updateSlopeFrame(rfiHistogram);
-	}
-	if(_drawSlopeButton.get_active())
-	{
-		plotSlope(rfiHistogram, "Fitted slope");
+		if(_drawSlopeButton.get_active())
+		{
+			plotSlope(rfiHistogram, "Fitted slope", false);
+		}
+		if(_drawSlope2Button.get_active())
+		{
+			plotSlope(rfiHistogram, "Fitted slope", true);
+		}
 	}
 	
 	if(_notRFIHistogramButton.get_active())
@@ -376,7 +391,7 @@ void HistogramPage::addRayleighDifferenceToPlot(const LogHistogram &histogram, d
 	}
 }
 
-void HistogramPage::plotSlope(const LogHistogram &histogram, const std::string &title)
+void HistogramPage::plotSlope(const LogHistogram &histogram, const std::string &title, bool useLowerLimit2)
 {
 	double start, end;
 	if(_slopeAutoRangeButton.get_active())
@@ -386,13 +401,30 @@ void HistogramPage::plotSlope(const LogHistogram &histogram, const std::string &
 		start = atof(_slopeStartEntry.get_text().c_str());
 		end = atof(_slopeEndEntry.get_text().c_str());
 	}
-	double slope = histogram.NormalizedSlope(start, end);
-	double offset = histogram.NormalizedSlopeOffset(start, end, slope);
+	double
+		xMin = log10(histogram.MinPositiveAmplitude()),
+		rfiRatio = atof(_slopeRFIRatio.get_text().c_str()),
+		slope = histogram.NormalizedSlope(start, end),
+		offset = histogram.NormalizedSlopeOffset(start, end, slope),
+		upperLimit = log10(histogram.PowerLawUpperLimit(start, slope, pow10(offset))),
+		lowerLimit = useLowerLimit2 ?
+			log10(histogram.PowerLawLowerLimit2(start, slope, pow10(offset), rfiRatio)) :
+			log10(histogram.PowerLawLowerLimit(start, slope, pow10(offset), rfiRatio));
+	double xStart, xEnd;
+	if(std::isfinite(lowerLimit))
+		xStart = lowerLimit;
+	else
+		xStart = log10(start) - 1.0;
+	if(std::isfinite(upperLimit))
+		xEnd = upperLimit;
+	else
+		xEnd = log10(histogram.MaxAmplitude());
+	double
+		yStart = xStart*slope + offset,
+		yEnd = xEnd*slope + offset;
 	_plot.StartLine(title, "Amplitude in arbitrary units (log)", "Frequency (log)");
-	double xStart = log10(start / 10.0);
-	double xEnd = log10(histogram.MaxAmplitude());
-	double yStart = xStart*slope + offset;
-	double yEnd = xEnd*slope + offset;
+	if(useLowerLimit2 && std::isfinite(xMin))
+		_plot.PushDataPoint(xMin, yStart);
 	_plot.PushDataPoint(xStart, yStart);
 	_plot.PushDataPoint(xEnd, yEnd);
 }

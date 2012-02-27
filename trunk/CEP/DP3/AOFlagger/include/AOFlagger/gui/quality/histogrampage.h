@@ -62,7 +62,7 @@ class HistogramPage : public Gtk::HBox {
 		void plotPolarization(const HistogramCollection &histogramCollection, unsigned polarization);
 		void plotPolarization(const class LogHistogram &totalHistogram, const class LogHistogram &rfiHistogram);
 		void plotFit(const class LogHistogram &histogram, const std::string &title);
-		void plotSlope(const class LogHistogram &histogram, const std::string &title);
+		void plotSlope(const class LogHistogram &histogram, const std::string &title, bool useLowerLimit2);
 		void onPlotPropertiesClicked();
 		void onDataExportClicked();
 		void readFromFile();
@@ -112,7 +112,7 @@ class HistogramPage : public Gtk::HBox {
 		Gtk::Frame _slopeFrame;
 		Gtk::VBox _slopeBox;
 		Gtk::TextView _slopeTextView;
-		Gtk::CheckButton _drawSlopeButton;
+		Gtk::CheckButton _drawSlopeButton, _drawSlope2Button;
 		Gtk::CheckButton _slopeAutoRangeButton;
 		Gtk::Entry _slopeStartEntry, _slopeEndEntry, _slopeRFIRatio;
 		
