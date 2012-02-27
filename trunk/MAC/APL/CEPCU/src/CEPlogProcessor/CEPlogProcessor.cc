@@ -25,10 +25,12 @@
 #include <Common/LofarLocators.h>
 #include <Common/StringUtil.h>
 #include <Common/ParameterSet.h>
+#include <ApplCommon/Observation.h>
 
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <MACIO/MACServiceInfo.h>
 #include <APL/APLCommon/ControllerDefines.h>
+#include <APL/APLCommon/Controller_Protocol.ph>
 //#include <APL/RTDBCommon/RTDButilities.h>
 //#include <APL/APLCommon/StationInfo.h>
 #include <GCF/RTDB/DP_Protocol.ph>
@@ -59,6 +61,7 @@ static CEPlogProcessor*     thisLogProcessor = 0;
 CEPlogProcessor::CEPlogProcessor(const string&  cntlrName) :
     GCFTask             ((State)&CEPlogProcessor::initial_state,cntlrName),
     itsListener         (0),
+	itsControlPort		(0),
     itsOwnPropertySet   (0),
     itsTimerPort        (0),
     itsNrInputBuffers   (0),
@@ -74,10 +77,11 @@ CEPlogProcessor::CEPlogProcessor(const string&  cntlrName) :
     itsTimerPort = new GCFTimerPort(*this, "TimerPort");
 
     // prepare TCP port to accept connections on
-    itsListener = new GCFTCPPort (*this, "BGPlogger:v1_0", GCFPortInterface::MSPP, 0);
-//  itsListener = new GCFTCPPort (*this, MAC_SVCMASK_CEPPROCMONITOR, GCFPortInterface::MSPP, 0); // TODO
-    ASSERTSTR(itsListener, "Cannot allocate listener port");
-    itsListener->setPortNumber(globalParameterSet()->getInt("CEPlogProcessor.portNr"));
+    itsListener = new GCFTCPPort (*this, MAC_SVCMASK_CEPLOGPROC, GCFPortInterface::MSPP, 0);
+    itsListener->setPortNumber(CEP_LOGPROC_LOGGING);
+
+    itsControlPort = new GCFTCPPort (*this, MAC_SVCMASK_CEPLOGCONTROL, GCFPortInterface::MSPP, 0);
+    itsControlPort->setPortNumber(CEP_LOGPROC_CONTROL);
 
     itsBufferSize     = globalParameterSet()->getInt("CEPlogProcessor.bufferSize", 1024);
     itsNrInputBuffers = globalParameterSet()->getInt("CEPlogProcessor.nrInputBuffers", 64);
@@ -86,7 +90,8 @@ CEPlogProcessor::CEPlogProcessor(const string&  cntlrName) :
     itsNrStorage      = globalParameterSet()->getInt("CEPlogProcessor.nrStorageNodes", 100);
     itsNrWriters      = globalParameterSet()->getInt("CEPlogProcessor.nrWriters", 20); // per storage node
 
-    registerProtocol(DP_PROTOCOL, DP_PROTOCOL_STRINGS);
+    registerProtocol(DP_PROTOCOL,         DP_PROTOCOL_STRINGS);
+    registerProtocol(CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
 
     thisLogProcessor = this;
 }
@@ -99,14 +104,14 @@ CEPlogProcessor::~CEPlogProcessor()
 {
     LOG_TRACE_OBJ_STR (getName() << " destruction");
 
-    // database should be ready by ts, check if allocation was succesfull
-    for (int    inputBuf = itsNrInputBuffers - 1; inputBuf >= 0; inputBuf--) {
+    // database should be ready by ts, check if allocation was succesful
+    for (int    inputBuf = itsInputBuffers.size() - 1; inputBuf >= 0; inputBuf--) {
         delete itsInputBuffers[inputBuf];
     }
-    for (int    adder = itsNrAdders - 1; adder >= 0; adder--) {
+    for (int    adder = itsAdders.size() - 1; adder >= 0; adder--) {
         delete itsAdders[adder];
     }
-    for (int    storage = itsNrStorage - 1; storage >= 0; storage--) {
+    for (int    storage = itsWriters.size() - 1; storage >= 0; storage--) {
         delete itsWriters[storage];
     }
 
@@ -116,6 +121,11 @@ CEPlogProcessor::~CEPlogProcessor()
 
     // and reap the port objects immediately
     collectGarbage();
+
+    if (itsControlPort) {
+        itsControlPort->close();
+        delete itsControlPort;
+    }
 
     if (itsListener) {
         itsListener->close();
@@ -324,8 +334,8 @@ GCFEvent::TResult CEPlogProcessor::startListener(GCFEvent&  event, GCFPortInterf
         break;
 
     case F_CONNECTED:
-        LOG_DEBUG("Listener is started, going to operational mode");
-        TRAN (CEPlogProcessor::operational);
+        LOG_DEBUG("Listener is started, going to open Controlport");
+        TRAN (CEPlogProcessor::startControlPort);
         break;
 
     case F_DISCONNECTED:
@@ -337,13 +347,111 @@ GCFEvent::TResult CEPlogProcessor::startListener(GCFEvent&  event, GCFPortInterf
     return (GCFEvent::HANDLED);
 }
 
+//
+// startControlPort(event, port)
+//
+GCFEvent::TResult CEPlogProcessor::startControlPort(GCFEvent&  event, GCFPortInterface&    port)
+{
+    LOG_DEBUG_STR("startControlPort:" << eventName(event) << "@" << port.getName());
+
+    switch (event.signal) {
+    case F_ENTRY:
+        itsControlPort->autoOpen(0, 10, 2);    // report within 10 seconds.
+        break;
+
+    case F_CONNECTED:
+        LOG_DEBUG("Listener is started, going to operational mode");
+        TRAN (CEPlogProcessor::operational);
+        break;
+
+    case F_DISCONNECTED:
+		// DISCO from listener of controlPort: in both cases quit.
+        LOG_FATAL_STR("Cannot open the controlport on port " << itsControlPort->getPortNumber() << ". Quiting!");
+        GCFScheduler::instance()->stop();
+        break;
+    }
+
+    return (GCFEvent::HANDLED);
+}
+
 void CEPlogProcessor::collectGarbage()
 {
-  LOG_DEBUG("Cleaning up garbage");
-  for (unsigned i = 0; i < itsLogStreamsGarbage.size(); i++)
-    delete itsLogStreamsGarbage[i];
+  if (!itsLogStreamsGarbage.empty()) {
+    LOG_DEBUG("Cleaning up garbage");
+    for (unsigned i = 0; i < itsLogStreamsGarbage.size(); i++)
+      delete itsLogStreamsGarbage[i];
 
-  itsLogStreamsGarbage.clear();
+    itsLogStreamsGarbage.clear();
+  }  
+}
+
+
+void CEPlogProcessor::processParset( const std::string &observationID )
+{
+    time_t now = time(0L);
+    unsigned obsID;
+
+    if (sscanf(observationID.c_str(), "%u", &obsID) != 1) {
+      LOG_ERROR_STR("Observation ID not numerical: " << observationID);
+      return;
+    }
+
+    // parsets are in /opt/lofar/share
+    string filename(formatString("/opt/lofar/share/Observation%s", observationID.c_str()));
+
+    ParameterSet parset(filename);
+    Observation obs(&parset);
+
+    unsigned nrStreams = obs.streamsToStorage.size();
+
+    // process all the writers
+    for( unsigned i = 0; i < nrStreams; i++ ) {
+      Observation::StreamToStorage &s = obs.streamsToStorage[i];
+
+      unsigned hostNr;
+
+      if (sscanf(s.destStorageNode.c_str(), "%*[^0-9]%u", &hostNr) != 1) {
+        LOG_WARN_STR("Could not extract host number from name: " << s.destStorageNode );
+        continue;
+      }
+
+      hostNr--; // we use 0-based indexing in our arrays
+
+      unsigned writerIndex = hostNr * itsNrWriters + s.writerNr;
+      RTDBPropertySet *writer = itsWriters[writerIndex];
+
+      // reset/fill all fields for this writer
+      writer->setValue("written",         GCFPVInteger(0), now, false);
+      writer->setValue("dropped",         GCFPVInteger(0), now, false);
+      writer->setValue("fileName",        GCFPVString(s.filename), now, false);
+      writer->setValue("dataRate",        GCFPVDouble(0.0), now, false);
+      writer->setValue("dataProductType", GCFPVString(s.dataProduct), now, false);
+      writer->setValue("observationName", GCFPVString(observationID), now, false);
+      writer->flush();
+    }
+
+    // process all the adders
+    for( unsigned i = 0; i < nrStreams; i++ ) {
+      Observation::StreamToStorage &s = obs.streamsToStorage[i];
+
+      unsigned adderIndex = s.sourcePset * itsNrAdders + s.adderNr;
+      RTDBPropertySet *adder = itsAdders[adderIndex];
+
+      // reset/fill all fields for this writer
+      adder->setValue("dropping",        GCFPVBool(false), now, false);
+      adder->setValue("dropped",         GCFPVInteger(0), now, false);
+      adder->setValue("dataProductType", GCFPVString(s.dataProduct), now, false);
+      adder->setValue("fileName",        GCFPVString(s.filename), now, false);
+      adder->setValue("locusNode",       GCFPVString(s.destStorageNode), now, false);
+      adder->setValue("directory",       GCFPVString(s.destDirectory), now, false);
+      adder->setValue("observationName", GCFPVString(observationID), now, false);
+      adder->flush();
+    }
+
+    if (parset.isDefined("_DPname")) {
+      // register the temporary obs name
+      itsTempObsMapping.set( obsID, parset.getString("_DPname") );
+    }
 }
 
 
@@ -358,12 +466,11 @@ GCFEvent::TResult CEPlogProcessor::operational(GCFEvent& event, GCFPortInterface
     case F_ENTRY:
         itsTimerPort->setTimer(1.0,1.0);
         break;
+
     case F_TIMER:
-
-        LOG_DEBUG("Timer event -- collecting garbage");
-
         collectGarbage();
         break;
+
     case F_ACCEPT_REQ:
         _handleConnectionRequest();
         break;
@@ -371,15 +478,23 @@ GCFEvent::TResult CEPlogProcessor::operational(GCFEvent& event, GCFPortInterface
     case F_CONNECTED:
         break;
 
-    case F_DISCONNECTED: {
+    case F_DISCONNECTED: 
         _deleteStream(port);
         break;
-    }
+    
     case F_DATAIN:
         _handleDataStream(&port);
         break;
-    }
+	
+	case CONTROL_ANNOUNCE: {
+		CONTROLAnnounceEvent	announce(event);
+		LOG_DEBUG_STR("Received annoucement for Observation " << announce.observationID);
 
+        processParset(announce.observationID);
+
+		break;
+	}
+    }
     return (GCFEvent::HANDLED);
 }
 
@@ -602,7 +717,13 @@ string CEPlogProcessor::getTempObsName(int obsID, const char *msg)
   if (sscanf(msg,"PVSS name: %[^\n]", &tempObsName[0]) == 1) {
     LOG_DEBUG_STR("obs " << obsID << " is mapped to " << &tempObsName[0]);
 
-    itsTempObsMapping.set( obsID, string(&tempObsName[0]) );
+    if (!itsTempObsMapping.exists(obsID))
+      processParset(formatString("%d",obsID));
+
+    if (itsTempObsMapping.exists(obsID))
+      ASSERTSTR(itsTempObsMapping.lookup(obsID) == string(&tempObsName[0]), "Observation ID remapped from " << itsTempObsMapping.lookup(obsID) << " to " << string(&tempObsName[0]));
+    else  
+      itsTempObsMapping.set( obsID, string(&tempObsName[0]) );
   }
 
   if (!strcmp(msg,"----- Job finished succesfully")
