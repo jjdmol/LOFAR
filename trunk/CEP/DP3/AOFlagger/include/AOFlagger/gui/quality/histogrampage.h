@@ -102,6 +102,7 @@ class HistogramPage : public Gtk::HBox {
 		Gtk::VBox _fitBox;
 		Gtk::CheckButton _fitButton, _subtractFitButton, _fitAutoRangeButton;
 		Gtk::Entry _fitStartEntry, _fitEndEntry;
+		Gtk::TextView _fitTextView;
 		
 		Gtk::Frame _functionFrame;
 		Gtk::VBox _functionBox;

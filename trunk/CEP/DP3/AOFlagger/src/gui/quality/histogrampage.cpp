@@ -106,6 +106,7 @@ HistogramPage::HistogramPage() :
 	_fitBox.pack_start(_fitEndEntry, Gtk::PACK_SHRINK);
 	_fitEndEntry.set_sensitive(false);
 	_fitEndEntry.signal_activate().connect(sigc::mem_fun(*this, &HistogramPage::updatePlot));
+	_fitBox.pack_start(_fitTextView, Gtk::PACK_SHRINK);
 	
 	_fitFrame.add(_fitBox);
 	
@@ -311,8 +312,8 @@ void HistogramPage::plotFit(const LogHistogram &histogram, const std::string &ti
 		minRange = atof(_fitStartEntry.get_text().c_str());
 		maxRange = atof(_fitEndEntry.get_text().c_str());
 	}
-	RayleighFitter fitter;
 	double sigma = sigmaEstimate, n = RayleighFitter::NEstimate(histogram, minRange, maxRange);
+	RayleighFitter fitter;
 	fitter.Fit(minRange, maxRange, histogram, sigma, n);
 	if(_fitButton.get_active())
 	{
@@ -324,6 +325,13 @@ void HistogramPage::plotFit(const LogHistogram &histogram, const std::string &ti
 		_plot.StartLine(title, "Amplitude in arbitrary units (log)", "Frequency (log)");
 		addRayleighDifferenceToPlot(histogram, sigma, n);
 	}
+
+	std::stringstream str;
+	str << "σ=1e" << log10(sigma) << ",n=1e" << log10(n) << '\n'
+		<< "n_t=1e" << log10(histogram.NormalizedTotalCount()) << '\n'
+		<< "mode=1e" << log10(histogram.AmplitudeWithMaxNormalizedCount()) << '\n'
+		<< "ε_R=" << RayleighFitter::ErrorOfFit(histogram, minRange, maxRange, sigma, n);
+	_fitTextView.get_buffer()->set_text(str.str());
 }
 
 void HistogramPage::addHistogramToPlot(const LogHistogram &histogram)
