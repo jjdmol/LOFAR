@@ -27,12 +27,15 @@ static int fit_f(const gsl_vector *xvec, void *data, gsl_vector *f)
 		if(x >= minVal && x < maxVal && std::isfinite(x))
 		{
 			const double val = i.normalizedCount();
-			const double logval = log(val);
-			const double weight = logval;
+			//const double logval = log(val);
+			//const double weight = logval;
 			
 			double sigmaP2 = sigma*sigma;
 			double Yi = x * exp(-(x*x)/(2*sigmaP2)) * n / sigmaP2;
-			gsl_vector_set (f, t, (log(Yi) - logval)*weight);
+			if(fitter.FitLogarithmic())
+				gsl_vector_set(f, t, (Yi - val));
+			else
+				gsl_vector_set(f, t, log(Yi) - log(val));
 			
 			++t;
 		}
@@ -51,7 +54,7 @@ int fit_df(const gsl_vector *xvec, void *data, gsl_matrix *J)
 	const LogHistogram &hist = *fitter._hist;
 	const double minVal = fitter._minVal;
 	const double maxVal = fitter._maxVal;
-	const double sigma2P2 = 2.0*sigma*sigma;
+	const double sigmaP2 = sigma*sigma;
   const double sigmaP3 = sigma*sigma*sigma;
 	for (LogHistogram::const_iterator i=hist.begin(); i!=hist.end(); ++i)
 	{
@@ -59,16 +62,22 @@ int fit_df(const gsl_vector *xvec, void *data, gsl_matrix *J)
 		if(x >= minVal && x < maxVal && std::isfinite(x))
 		{
 			const double val = i.normalizedCount();
-			const double weight = log(val);
+			//const double weight = log(val);
 
-			const double dfdsigma = (x*x-sigma2P2)/sigmaP3;
-			const double dfdn = 1.0/n;
-
+			double dfdsigma, dfdn;
+			if(fitter.FitLogarithmic())
+			{
+				dfdsigma = (x*x-2.0*sigmaP2)/sigmaP3;
+				dfdn = 1.0/n;
+			} else {
+				dfdsigma = -n * 2.0*x*x*x / (sigmaP3 * sigmaP3) * exp(-x*x/(2.0*sigmaP2));
+				dfdn = x * exp(-(x*x)/(2*sigmaP2)) / sigmaP2;
+			}
 			
 			// diff to sigma
-			gsl_matrix_set (J, t, 0, dfdsigma*weight); 
+			gsl_matrix_set (J, t, 0, dfdsigma); 
 			// diff to n
-			gsl_matrix_set (J, t, 1, dfdn*weight);
+			gsl_matrix_set (J, t, 1, dfdn);
 			
 			++t;
 		}
@@ -184,14 +193,11 @@ double RayleighFitter::ErrorOfFit(const LogHistogram &histogram, double rangeSta
 		if(x >= rangeStart && x < rangeEnd && std::isfinite(x))
 		{
 			const double val = i.normalizedCount();
-			const double logval = log10(val);
-			const double weight = logval;
 			
 			double sigmaP2 = sigma*sigma;
 			double Yi = x * exp(-(x*x)/(2*sigmaP2)) * n / sigmaP2;
-			double logYi = log10(Yi);
 			
-			double error = (logYi - logval)*(logYi - logval)*weight;
+			double error = (Yi - val)*(Yi - val);
 			sum += error;
 			++count;
 		}
