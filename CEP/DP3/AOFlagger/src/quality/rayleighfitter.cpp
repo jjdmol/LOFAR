@@ -174,6 +174,31 @@ void RayleighFitter::FindFitRangeUnderRFIContamination(double minPositiveAmplitu
 	std::cout << "Found range " << minValue << " -- " << maxValue << "\n";
 }
 
+double RayleighFitter::ErrorOfFit(const LogHistogram &histogram, double rangeStart, double rangeEnd, double sigma, double n)
+{
+	double sum = 0.0;
+	size_t count = 0;
+	for (LogHistogram::const_iterator i=histogram.begin(); i!=histogram.end(); ++i)
+	{
+		const double x = i.value();
+		if(x >= rangeStart && x < rangeEnd && std::isfinite(x))
+		{
+			const double val = i.normalizedCount();
+			const double logval = log10(val);
+			const double weight = logval;
+			
+			double sigmaP2 = sigma*sigma;
+			double Yi = x * exp(-(x*x)/(2*sigmaP2)) * n / sigmaP2;
+			double logYi = log10(Yi);
+			
+			double error = (logYi - logval)*(logYi - logval)*weight;
+			sum += error;
+			++count;
+		}
+	}
+	return sum / (double) count;
+}
+
 double RayleighFitter::NEstimate(const LogHistogram &hist, double rangeStart, double rangeEnd)
 {
 	double rangeSum = 0.0;

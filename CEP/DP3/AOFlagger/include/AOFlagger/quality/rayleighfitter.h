@@ -15,6 +15,7 @@ class RayleighFitter
 		double sigmaP2 = sigma*sigma;
 		return n * x / (sigmaP2) * exp(-x*x/(2*sigmaP2));
 	}
+	static double ErrorOfFit(const LogHistogram &histogram, double rangeStart, double rangeEnd, double sigma, double n);
 	
 	const LogHistogram *_hist;
 	double _minVal, _maxVal;
