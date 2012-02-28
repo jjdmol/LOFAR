@@ -68,7 +68,7 @@ OutputSection::OutputSection(const Parset &parset,
   itsTmpSum(newStreamableData(parset, outputType, -1, hugeMemoryAllocator))
 {
   // lookup the PVSS adders to use in our reports
-  Observation obs(&parset, false);
+  Observation obs(&parset);
   itsAdders.resize(itsNrStreams);
 
   for (unsigned i = 0; i < itsNrStreams; i ++) {
