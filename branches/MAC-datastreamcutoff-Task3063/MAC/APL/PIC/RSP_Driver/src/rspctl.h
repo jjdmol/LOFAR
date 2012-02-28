@@ -603,12 +603,12 @@ public:
 	virtual void send();
 	virtual GCFEvent::TResult ack(GCFEvent& e);
 	void setStream(int ringNr, bool streamOn) {
-		if (ringNr) itsStream1On = streamOn;
-		else itsStream2On = streamOn;
+		if (!ringNr) itsStream0On = streamOn;
+		else itsStream1On = streamOn;
 	}
 private:
+	bool itsStream0On;
 	bool itsStream1On;
-	bool itsStream2On;
 };
 
 //

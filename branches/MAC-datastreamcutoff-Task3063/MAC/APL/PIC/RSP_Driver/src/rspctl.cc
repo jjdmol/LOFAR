@@ -1223,7 +1223,7 @@ GCFEvent::TResult SICommand::ack(GCFEvent& e)
 //
 // DataStreamCommand
 //
-DataStreamCommand::DataStreamCommand(GCFPortInterface& port) : Command(port), itsStream1On(true), itsStream2On(true)
+DataStreamCommand::DataStreamCommand(GCFPortInterface& port) : Command(port), itsStream0On(true), itsStream1On(true)
 {
 }
 
@@ -1245,10 +1245,13 @@ void DataStreamCommand::send()
 
 		request.timestamp = Timestamp(0,0);
 		//request.rcumask   = getRSPMask();
-		request.switch_on1 = itsStream1On;
-		request.switch_on2 = itsStream2On;
+		request.switch_on0 = itsStream0On;
+		request.switch_on1 = gSplitter ? itsStream1On : false;
 
-		logMessage(cout,formatString("set datastream %s %s", request.switch_on1?"on":"off", request.switch_on2?"on":"off"));
+		if (itsStream1On && !gSplitter) {
+			logMessage(cout,"Splitter is off, second datastream cannot be turned on!");
+		}
+		logMessage(cout,formatString("set datastream 0:%s 1:%s", request.switch_on0?"on":"off", request.switch_on1?"on":"off"));
 
 		m_rspport.send(request);
 	}
@@ -1271,7 +1274,7 @@ GCFEvent::TResult DataStreamCommand::ack(GCFEvent& e)
 			logMessage(cerr, "Error: RSP_GETDATASTREAM command failed.");
 			break;
 		}
-		cout << formatString("Datastream to CEP switched %s %s\n", ack.switch_on1?"on":"off", ack.switch_on2?"on":"off");
+		cout << formatString("Datastream to CEP switched 0:%s 1:%s\n", ack.switch_on0?"on":"off", ack.switch_on1?"on":"off");
 		cout << endl;
 	}
 	break;
@@ -1632,10 +1635,6 @@ void WGCommand::send()
 		wgset.timestamp = Timestamp(0,0);
 		wgset.rcumask   = getRCUMask();
 		wgset.settings().resize(1);
-
-		//wgset.settings()(0).freq = (uint32)((m_frequency * ((uint32)-1) / gSampleFrequency) + 0.5);
-		//wgset.settings()(0).freq = (uint32)round(m_frequency * ((uint64)1 << 32) / gSampleFrequency);
-		//wgset.settings()(0).freq    = m_frequency;
 
 		wgset.settings()(0).freq        = (uint32)round(itsFrequency * ((uint64)1 << 32) / gSampleFrequency);
 		wgset.settings()(0).phase       = m_phase;
@@ -3689,6 +3688,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 				datastreamCmd->setMode(false);
 				datastreamCmd->setStream(0,atoi(optarg)%2);
 				datastreamCmd->setStream(1,atoi(optarg)/2);
+				itsNeedSplitter = true;
 			}
 		}
 		break;

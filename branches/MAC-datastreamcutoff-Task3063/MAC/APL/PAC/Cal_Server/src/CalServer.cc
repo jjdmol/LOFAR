@@ -87,7 +87,9 @@ CalServer::CalServer(const string& name, ACCs& accs)
 	m_n_rspboards(0),
 	m_n_rcus(0),
 	itsHasSecondRing	(0),
-	itsSecondRingActive (false),
+	itsSecondRingActive (true),
+	itsFirstRingOn	    (true),
+	itsSecondRingOn     (false),
 	itsListener			(0),
 	itsRSPDriver		(0),
 	itsCheckTimer		(0)
@@ -118,6 +120,9 @@ CalServer::CalServer(const string& name, ACCs& accs)
 
 	StationConfig	SC;
 	itsHasSecondRing = SC.hasSplitters;
+	if (!itsHasSecondRing) {
+		itsSecondRingActive=false;
+	}
 }
 
 //
@@ -385,8 +390,8 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
 		RSPUpdsplitterEvent updsplitter(e);
 		// update admin
 		itsSecondRingActive = (updsplitter.splitter.count() == m_n_rspboards);
-		LOG_INFO_STR("Second ring is " << itsSecondRingActive ? "" : "not " << "active.");
-//		@@@ TODO: switch off if new value is false @@@
+		LOG_INFO_STR("Second ring is " << (itsSecondRingActive ? "" : "not ") << "active.");
+		_updateDataStream(0);
 	}
 	break;
 
@@ -575,7 +580,7 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 
 		// check start.subset value
 		bitset<MAX_RCUS> invalidmask;
-		for (int i = 0; i < m_n_rcus; i++) {
+		for (uint i = 0; i < m_n_rcus; i++) {
 			invalidmask.set(i);
 		}
 		invalidmask.flip();
@@ -618,7 +623,7 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 
 			bitset<MAX_RCUS> validmask;
 
-			for (int rcu = 0; rcu < m_n_rcus; ++rcu) {
+			for (uint rcu = 0; rcu < m_n_rcus; ++rcu) {
 				validmask.set(rcu);   // select rcu
 			}
 
@@ -662,7 +667,7 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 			for (int step = 0; step < steps; ++step) {
 				validmask.reset();
 				// select 12 even(X) rcus and 12 odd(Y) rcus
-				for (int rcu = (step * 2); rcu < m_n_rcus; rcu += jump) {
+				for (uint rcu = (step * 2); rcu < m_n_rcus; rcu += jump) {
 					validmask.set(rcu);   // select X (HBA power supply)
 					validmask.set(rcu+1); // select Y
 				}
@@ -827,14 +832,12 @@ GCFEvent::TResult CalServer::handle_cal_getsubarray(GCFEvent& e, GCFPortInterfac
 //
 void CalServer::_enableRCUs(SubArray*	subarray, int delay)
 {
-	// TODO: @@@ do tests with the rings @@@
-	
 	// increment the usecount of the receivers
 	SubArray::RCUmask_t	rcuMask = subarray->getRCUMask();
 	SubArray::RCUmask_t	rcus2switchOn;
 	rcus2switchOn.reset();
 	Timestamp timeStamp;
-	for (int r = 0; r < m_n_rcus; r++) {
+	for (uint r = 0; r < m_n_rcus; r++) {
 		if (rcuMask.test(r)) {
 			if(++itsRCUcounts[r] == 1) {
 				rcus2switchOn.set(r);
@@ -845,13 +848,7 @@ void CalServer::_enableRCUs(SubArray*	subarray, int delay)
 	// anything to enable? Tell the RSPDriver.
 	if (rcus2switchOn.any()) {
 		// all RCUs still off? Switch on the datastream also
-		if (std::accumulate(itsRCUcounts.begin(), itsRCUcounts.end(), 0) > 0) {
-			RSPSetdatastreamEvent	dsCmd;
-			dsCmd.timestamp.setNow(delay+1);
-			dsCmd.switch_on = 1;
-			LOG_INFO("Switching the datastream ON");
-			itsRSPDriver->send(dsCmd);
-		}
+		_updateDataStream(delay+1);
 
 		RSPSetrcuEvent	enableCmd;
 		timeStamp.setNow(delay);
@@ -887,11 +884,9 @@ void CalServer::_disableRCUs(SubArray*	subarray)
 	SubArray::RCUmask_t	rcus2switchOff;
 	rcus2switchOff.reset();
 
-	// TODO: @@@ do tests with the rings @@@
-
 	if (subarray) {		// when no subarray is defined skip this loop: switch all rcus off.
 		SubArray::RCUmask_t	rcuMask = subarray->getRCUMask();
-		for (int r = 0; r < m_n_rcus; r++) {
+		for (uint r = 0; r < m_n_rcus; r++) {
 			if (rcuMask.test(r)) {
 				if (--itsRCUcounts[r] == 0) {
 					rcus2switchOff.set(r);
@@ -907,7 +902,7 @@ void CalServer::_disableRCUs(SubArray*	subarray)
 
 	if (allSwitchedOff) { 	// all receivers off? force all rcu's to mode 0, disable
 		rcus2switchOff.reset();
-		for (int i = 0; i < m_n_rcus; i++) {
+		for (uint i = 0; i < m_n_rcus; i++) {
 			rcus2switchOff.set(i);
 		}
 		LOG_INFO("No active rcu's anymore, forcing all units to mode 0 and disable");
@@ -923,13 +918,7 @@ void CalServer::_disableRCUs(SubArray*	subarray)
 
 	// anything to disable? Tell the RSPDriver.
 	if (rcus2switchOff.any()) {
-		if (allSwitchedOff) {
-			RSPSetdatastreamEvent	dsCmd;
-			dsCmd.timestamp = Timestamp(0,0);
-			dsCmd.switch_on = 0;
-			LOG_INFO("Switching the datastream OFF");
-			itsRSPDriver->send(dsCmd);
-		}
+		_updateDataStream(0); // asap
 		
 		RSPSetrcuEvent	disableCmd;
 		disableCmd.timestamp = Timestamp(0,0);
@@ -945,22 +934,45 @@ void CalServer::_disableRCUs(SubArray*	subarray)
 
 //
 // _dataOnRing(uint	ringNr) : bool
+// ringNr: 0|1
 //
 bool CalServer::_dataOnRing(uint	ringNr)	const
 {
-	int	nrRings(itsHasSecondRing > 2 : 1);
+	if (ringNr == 1 && !itsSecondRingActive) {
+		return (false);
+	}
 
-	ASSERTSTR(ringNr<=nrRings, "RingNr "<<ringNr<<" does not exist, station has only ring 0 "<<(itsHasSecondRing?"and 1":""));
+	uint	nrRings(itsHasSecondRing ? 2 : 1);
+	ASSERTSTR(ringNr<nrRings, "RingNr "<<ringNr<<" does not exist, station has only ring 0 "<<(itsHasSecondRing?"and 1":""));
 
-	int min(!itsSecondRingsActive ?        0 :  ringNr   *(m_n_rcus/2));
-	int	max(!itsSecondRingsActive ? m_n_rcus : (ringNr+1)*(m_n_rcus/2));
+	int min(!itsSecondRingActive ?        0 :  ringNr   *(m_n_rcus/2));
+	int	max(!itsSecondRingActive ? m_n_rcus : (ringNr+1)*(m_n_rcus/2));
 	LOG_DEBUG_STR("_dataOnRing("<<ringNr<<"):"<<min<<"-"<<max<<", splitter="<<(itsSecondRingActive?"ON":"OFF"));
 	for (int r = min; r < max; r++) {
-		if (itsRCUcount[r]) {
+		if (itsRCUcounts[r]) {
 			return (true);
 		}
 	}
 	return (false);
+}
+
+//
+// _updateDatastreamSetting(delay)
+//
+void CalServer::_updateDataStream(uint	delay)
+{
+	bool	switchFirstOn  = _dataOnRing(0);
+	bool	switchSecondOn = itsSecondRingActive && _dataOnRing(1);
+	if ((itsFirstRingOn != switchFirstOn) || (itsSecondRingOn != switchSecondOn)) {
+		RSPSetdatastreamEvent	dsCmd;
+		dsCmd.timestamp.setNow(delay);
+		dsCmd.switch_on0 = switchFirstOn;
+		dsCmd.switch_on1 = switchSecondOn;
+		LOG_INFO_STR("Switching the datastream "<<(switchFirstOn ? "ON":"OFF")<< ", "<<(switchSecondOn ? "ON":"OFF"));
+		itsRSPDriver->send(dsCmd);
+		itsFirstRingOn  = switchFirstOn;
+		itsSecondRingOn = switchSecondOn;
+	}
 }
 
 

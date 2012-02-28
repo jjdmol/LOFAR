@@ -95,6 +95,7 @@ public:
 
 	// Helper functions
 	bool _dataOnRing(uint	ringNr)	const;
+	void _updateDataStream(uint	delay);
 
 private:
 	// ----- DATA MEMBERS -----
@@ -115,10 +116,12 @@ private:
 	double m_sampling_frequency;
 
 	// remember number of RSP boards and number of rcus
-	int m_n_rspboards;
-	int m_n_rcus;
+	uint 	m_n_rspboards;
+	uint 	m_n_rcus;
 	bool	itsHasSecondRing;			// station has splitter to create two rings
 	bool	itsSecondRingActive;		// second ring is activated.
+	bool	itsFirstRingOn;
+	bool	itsSecondRingOn;
 
 	vector<int>		itsRCUcounts;		// in how many observations an RCU participates
 
