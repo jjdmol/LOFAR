@@ -6,7 +6,6 @@ lofar_package(BBSControl 1.0 DEPENDS BBSKernel Blob Common LMWCommon ParmDB PLC 
 include(LofarFindPackage)
 lofar_find_package(Boost REQUIRED)
 lofar_find_package(Casacore REQUIRED COMPONENTS casa measures)
-lofar_find_package(PQXX REQUIRED)
 
 add_subdirectory(include/BBSControl)
 add_subdirectory(src)
