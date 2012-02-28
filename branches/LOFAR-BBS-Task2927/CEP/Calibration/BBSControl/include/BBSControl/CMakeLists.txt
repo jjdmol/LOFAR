@@ -38,13 +38,14 @@ set(SRC_LIST
   SubtractStep.h
   SynchronizeCommand.h
   Types.h
-  Util.h
-  GlobalProcessControl.h
-  KernelProcessControl.h
-  SolverProcessControl.h)
+  Util.h)
 
 if(HAVE_PQXX)
   set(SRC_LIST ${SRC_LIST} CalSession.h CalSessionTransactors.h)
+
+  # TODO: These sources are deprecated and should be removed as soon as
+  # downstream modules have been updated.
+  set(SRC_LIST ${SRC_LIST} GlobalProcessControl.h KernelProcessControl.h SolverProcessControl.h)
 endif(HAVE_PQXX)
 
 # Install header files.

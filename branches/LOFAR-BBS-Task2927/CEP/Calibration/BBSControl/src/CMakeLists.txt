@@ -35,10 +35,7 @@ set(SRC_LIST
   SubtractStep.cc
   SynchronizeCommand.cc
   Types.cc
-  Util.cc
-  GlobalProcessControl.cc
-  KernelProcessControl.cc
-  SolverProcessControl.cc)
+  Util.cc)
 
 if(HAVE_PQXX)
   set(SRC_LIST ${SRC_LIST} CalSession.cc CalSessionTransactors.cc)
@@ -65,7 +62,12 @@ if(HAVE_PQXX)
 endif(HAVE_PQXX)
 
 install(PROGRAMS
-  calibrate
-  calibrate-part
   calibrate-stand-alone
   DESTINATION bin)
+
+if(HAVE_PQXX)
+  install(PROGRAMS
+    calibrate
+    calibrate-part
+    DESTINATION bin)
+endif(HAVE_PQXX)
