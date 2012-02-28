@@ -499,7 +499,7 @@ void HistogramPage::addSlopeText(std::stringstream &str, const LogHistogram &his
 	const double
 		slope = histogram.NormalizedSlope(minRange, maxRange),
 		offset = histogram.NormalizedSlopeOffset(minRange, maxRange, slope),
-		error = histogram.NormalizedSlopeStdDev(minRange, maxRange, slope, offset),
+		error = histogram.NormalizedSlopeStdError(minRange, maxRange, slope),
 		errorB = histogram.NormalizedSlopeStdDevBySampling(minRange, maxRange, slope, deltaS),
 		upperLimit = histogram.PowerLawUpperLimit(minRange, slope, pow10(offset)),
 		lowerLimit = histogram.PowerLawLowerLimit(minRange, slope, pow10(offset), rfiRatio),
