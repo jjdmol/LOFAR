@@ -28,12 +28,11 @@
 // List of the processes co-operating in a distributed calibration run.
 
 #include <BBSControl/ProcessId.h>
+#include <BBSControl/Exceptions.h>
 #include <BBSKernel/Types.h>
 
 #include <Common/LofarLogger.h>
-#include <Common/LofarTypes.h>
 #include <Common/lofar_map.h>
-#include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 
 namespace LOFAR
@@ -44,115 +43,76 @@ namespace BBS
 // \addtogroup BBSControl
 // @{
 
-struct Process
-{
-    ProcessId         id;
-    size_t            port;
-    Interval<double>  freqRange;
-    Interval<double>  timeRange;
-};
-
 class ProcessGroup
 {
 public:
     enum ProcessType
     {
-        KERNEL,
-        SOLVER,
+        REDUCER,
+        SHARED_ESTIMATOR,
         N_ProcessType
     };
 
-    // Querying the worker register.
-    // @{
-//    bool slotsAvailable() const;
-    size_t getProcessCount() const
+private:
+    struct  ProcessDescriptor
     {
-      size_t total = 0;
-      for(size_t i = 0; i < N_ProcessType; ++i)
-      {
-        total += itsWorkers[i].size();
-      }
-      return total;
-    }
+      ProcessType       type;
+      unsigned int      port;
+      Interval<double>  range[N_AxisType];
+    };
 
-    size_t getProcessCount(ProcessType type) const
-    {
-      if(type < N_ProcessType)
-      {
-        return itsWorkers[type].size();
-      }
-      return 0;
-    }
+    typedef map<ProcessId, pair<ProcessDescriptor, size_t> > ProcessMap;
 
-    size_t getIndex(const ProcessId &id = ProcessId::id()) const
-    {
-      map<ProcessId, pair<ProcessType, size_t> >::const_iterator it =
-        itsProcessMap.find(id);
-      ASSERT(it != itsProcessMap.end());
-      return it->second.second;
-    }
+public:
+    // Constructor.
+    ProcessGroup();
 
-//    ProcessId id(ProcessType type, size_t index) const
-//    {
-//      return itsWorkers[type][index].id;
-//    }
+    // Copy constructor.
+    ProcessGroup(const ProcessGroup &other);
 
-//    bool isWorker(const ProcessId &id) const;
-//    bool isKernel(const ProcessId &id) const;
-//    bool isSolver(const ProcessId &id) const;
+    // Assignment operator.
+    ProcessGroup &operator=(const ProcessGroup &other);
 
-//    size_t getIndex() const;
-//    size_t getIndex(const ProcessId &id) const;
-//    size_t getPort(const ProcessId &id) const;
-////    string getFilesys(const ProcessId &id) const;
-////    string getPath(const ProcessId &id) const;
-//    Interval<double> getFreqRange(const ProcessId &id) const;
-//    Interval<double> getTimeRange(const ProcessId &id) const;
-////    Axis::ShPtr getFreqAxis(const ProcessId &id) const;
-////    Axis::ShPtr getTimeAxis(const ProcessId &id) const;
+    // Get total number of processes in the process group.
+    size_t nProcesses() const;
 
-//    vector<ProcessId> getWorkersByType(WorkerType type) const;
-//    ProcessId getWorkerByIndex(WorkerType type, size_t index) const;
-    // @}
+    // Get number of processes of the specified \p type.
+    size_t nProcesses(ProcessType type) const;
 
-    void push_back(ProcessType type, const Process &process = Process())
-    {
-      pair<map<ProcessId, pair<ProcessType, size_t> >::const_iterator, bool>
-        status = itsProcessMap.insert(make_pair(process.id, make_pair(type,
-        itsWorkers[type].size())));
-      ASSERT(status.second);
-      itsWorkers[type].push_back(process);
-    }
+    // Find process type given its \p id.
+    ProcessType type(const ProcessId &id = ProcessId::id()) const;
 
-//    void insert(const Worker &worker,
+    // Find process index given its \p id. Each process type has its own index,
+    // which starts at 0 for the first process of a type and increases with 1.
+    size_t index(const ProcessId &id = ProcessId::id()) const;
 
-    Process &process(ProcessType type, size_t i)
-    {
-      return itsWorkers[type][i];
-    }
+    // Get process id given a process' \p type and \p index.
+    const ProcessId &id(ProcessType type, size_t index) const;
 
-    const Process &process(ProcessType type, size_t i) const
-    {
-      return itsWorkers[type][i];
-    }
+    // Get range on FREQ or TIME axis covered by the reducer process \p index.
+    const Interval<double> &range(size_t index, AxisType axis) const;
 
-    bool is(const ProcessId &id, ProcessType type) const
-    {
-      map<ProcessId, pair<ProcessType, size_t> >::const_iterator it =
-        itsProcessMap.find(id);
-      ASSERT(it != itsProcessMap.end());
-      return it->second.first == type;
-    }
+    // Get port on which the shared estimator process \p index is listening.
+    unsigned int port(size_t index) const;
+
+    // Append a reducer process to the group.
+    void appendReducerProcess(const ProcessId &id,
+      const Interval<double> &freqRange, const Interval<double> &timeRange);
+
+    // Append a shared estimator process to the group.
+    void appendSharedEstimatorProcess(const ProcessId &id, unsigned int port);
+
+    // Remove all processes.
+    void clear();
 
 private:
-//    const Worker &getWorkerById(const ProcessId &id) const;
+    void initFrom(const ProcessGroup &other);
+    void appendProcess(ProcessType type, const ProcessId &id,
+      const ProcessDescriptor &descriptor);
+    ProcessMap::const_iterator findProcessByID(const ProcessId &id) const;
 
-    map<ProcessId, pair<ProcessType, size_t> >  itsProcessMap;
-    vector<Process>                             itsWorkers[N_ProcessType];
-
-//    vector<size_t>          itsSlotCount;
-//    vector<Worker>          itsWorkers;
-//    map<ProcessId, size_t>  itsWorkerMap;
+    ProcessMap                          itsProcessMap;
+    vector<ProcessMap::const_iterator>  itsProcesses[N_ProcessType];
 };
 
 // @}

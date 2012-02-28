@@ -361,14 +361,14 @@ fi
 # EXECUTE MAIN PROCESS
 #
 
-notice "execute bbs-data-processor"
+notice "execute bbs-reducer"
 
 if test ${verbose} -eq 1 -o ${dry} -eq 1; then
-    echo "bbs-data-processor --sourcedb=\"${sourcedb_path}\" --parmdb=\"${parmdb_path}\" \"${observation}\" \"${parset}\""
+    echo "bbs-reducer --sourcedb=\"${sourcedb_path}\" --parmdb=\"${parmdb_path}\" \"${observation}\" \"${parset}\""
 fi
 
 if test ${dry} -eq 1; then
   exit 0
 fi
 
-exec bbs-data-processor --sourcedb="${sourcedb_path}" --parmdb="${parmdb_path}" "${observation}" "${parset}"
+exec bbs-reducer --sourcedb="${sourcedb_path}" --parmdb="${parmdb_path}" "${observation}" "${parset}"

@@ -437,7 +437,7 @@ void PQGetWorkerRegister::on_commit()
         // Check if slot is empty.
         if(rowIt["hostname"].is_null() || rowIt["pid"].is_null())
         {
-            LOG_DEBUG_STR("Empty slot.");
+//            LOG_DEBUG_STR("Empty slot.");
             ++rowIt;
             continue;
         }
@@ -485,7 +485,7 @@ void PQGetWorkerRegister::on_commit()
         }
 
         itsWorkers->push_back(worker);
-        LOG_DEBUG_STR("Found worker... Type: " << type);
+//        LOG_DEBUG_STR("Found worker... Type: " << type);
 
         ++rowIt;
     }

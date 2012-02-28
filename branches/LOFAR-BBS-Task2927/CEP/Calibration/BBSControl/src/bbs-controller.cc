@@ -30,110 +30,35 @@
 #include <BBSControl/InitializeCommand.h>
 #include <BBSControl/FinalizeCommand.h>
 #include <BBSControl/NextChunkCommand.h>
+#include <BBSControl/Util.h>
 #include <LMWCommon/VdsDesc.h>
 #include <Common/LofarLogger.h>
-#include <casa/Quanta/Quantum.h>
-#include <casa/Quanta/MVTime.h>
+#include <Common/StreamUtil.h>
+#include <casa/BasicMath/Math.h>
 #include <unistd.h>
 
 using namespace LOFAR;
 using namespace LOFAR::BBS;
+using LOFAR::operator<<;
 
 // Use a terminate handler that can produce a backtrace.
 Exception::TerminateHandler handler(Exception::terminate);
 
-struct LessKernel
-{
-  bool operator()(const pair<ProcessId, double> &lhs,
-    const pair<ProcessId, double> &rhs)
-  {
-    return lhs.second < rhs.second;
-  }
-};
+// Compare two axes for equality within tolerance (using casa::near()).
+bool equal(const Axis::ShPtr &lhs, const Axis::ShPtr &rhs);
 
-// Compare two axes for equality within a tolerance (using casa::near()).
-bool equal(const Axis::ShPtr &lhs, const Axis::ShPtr &rhs)
-{
-  if(lhs->size() != rhs->size()) {
-    return false;
-  }
+// Try to combine the time axes of all the reducer processes into a single
+// global time axis.
+Axis::ShPtr getGlobalTimeAxis(const CalSession &session);
 
-  if(lhs->isRegular() && rhs->isRegular()) {
-    return casa::near(lhs->start(), rhs->start())
-      && casa::near(lhs->end(), rhs->end());
-  }
+// Assign all the worker processes an index. Reducer processes are numbered in
+// order of increasing start frequency, staring from 0. Shared estimator
+// processes are numbered in order of registration time, starting from 0.
+void createWorkerIndex(CalSession &session);
 
-  for(size_t i = 0, end = lhs->size(); i < end; ++i)
-  {
-    if(casa::near(lhs->center(i), rhs->center(i))
-      && casa::near(lhs->width(i), rhs->width(i))) {
-      continue;
-    }
+int run(const ParameterSet &options, const OptionParser::ArgumentList &args);
 
-    return false;
-  }
-
-  return true;
-}
-
-Axis::ShPtr getGlobalTimeAxis(const CalSession &session)
-{
-  vector<ProcessId> kernels =
-    session.getWorkersByType(CalSession::KERNEL);
-  ASSERT(kernels.size() > 0);
-
-  Axis::ShPtr globalAxis;
-  for(size_t i = 0; i < kernels.size(); ++i)
-  {
-    Axis::ShPtr localAxis = session.getTimeAxis(kernels[i]);
-    if(!localAxis) {
-      THROW(BBSControlException, "Time axis not known for kernel process: "
-        << kernels[i]);
-    }
-
-    if(globalAxis && !equal(globalAxis, localAxis)) {
-      THROW(CalSessionException, "Time axis inconsistent for kernel"
-        " process: " << kernels[i]);
-    } else {
-      globalAxis = localAxis;
-    }
-  }
-
-  return globalAxis;
-}
-
-void createWorkerIndex(CalSession &session)
-{
-  vector<ProcessId> kernels =
-    session.getWorkersByType(CalSession::KERNEL);
-  ASSERT(kernels.size() > 0);
-
-  // Sort kernels processes on start frequency.
-  vector<pair<ProcessId, double> > index(kernels.size());
-  for(size_t i = 0; i < kernels.size(); ++i)
-  {
-    index[i] = make_pair(kernels[i],
-      session.getFreqRange(kernels[i]).start);
-  }
-
-  stable_sort(index.begin(), index.end(), LessKernel());
-
-  // Update the worker register.
-  for(size_t i = 0; i < index.size(); ++i)
-  {
-    session.setWorkerIndex(index[i].first, i);
-  }
-
-  vector<ProcessId> solvers =
-    session.getWorkersByType(CalSession::SOLVER);
-
-  // Update the worker register.
-  for(size_t i = 0; i < solvers.size(); ++i)
-  {
-    session.setWorkerIndex(solvers[i], i);
-  }
-}
-
+// Application entry point.
 int main(int argc, char *argv[])
 {
   const char* progName = basename(argv[0]);
@@ -193,7 +118,33 @@ int main(int argc, char *argv[])
     return 1;
   }
 
-  // Read Observation descriptor.
+  try
+  {
+    int status = run(options, args);
+    if(status != 0)
+    {
+      LOG_ERROR_STR(progName << " terminated due to an error.");
+      return status;
+    }
+  }
+  catch(Exception &ex)
+  {
+    LOG_FATAL_STR(progName << " terminated due to an exception: " << ex);
+    return 1;
+  }
+  catch(...)
+  {
+    LOG_FATAL_STR(progName << " terminated due to an unknown exception.");
+    return 1;
+  }
+
+  LOG_INFO_STR(progName << " terminated successfully.");
+  return 0;
+}
+
+int run(const ParameterSet &options, const OptionParser::ArgumentList &args)
+{
+  // Read observation descriptor.
   CEP::VdsDesc vdsDesc(args[1]);
 
   // Read parameter set.
@@ -202,124 +153,110 @@ int main(int argc, char *argv[])
 
   // Initialize the calibration session.
   string key = options.getString("Key");
-  CalSession session(key,
-      options.getString("Name"),
-      options.getString("User"),
-      options.getString("Password"),
-      options.getString("Host"),
-      options.getString("Port"));
+  CalSession session(key, options.getString("Name"), options.getString("User"),
+    options.getString("Password"), options.getString("Host"),
+    options.getString("Port"));
 
   // Try to become the controller of the session.
-  if(!session.registerAsControl()) {
-    LOG_ERROR_STR("Could not register as control. There may be stale"
-      " state in the database for key: " << key);
-    return false;
+  LOG_INFO_STR("Trying to register as session controller...");
+  if(!session.registerAsControl())
+  {
+    LOG_ERROR_STR("Unable to register. There may be stale state in the database"
+      " for the session with session key: " << key);
+    return 1;
   }
+  LOG_INFO_STR("Registration OK.");
 
-  // Write the global ParameterSet to the blackboard so that it can then
-  // be retrieved by the KernelProcesses and be written to the MS/History
+  // Write the global ParameterSet to the shared session state so that it can
+  // then be retrieved by the reducer processes and be written to the processing
+  // history.
   session.setParset(parset);
 
-  // Initialize the register and switch the session state to allow workers
-  // to register.
+  // Initialize the register and switch the session state to allow workers to
+  // register.
   session.initWorkerRegister(vdsDesc, strategy.useSolver());
   session.setState(CalSession::WAITING_FOR_WORKERS);
 
   // Wait for workers to register.
-  while(session.slotsAvailable()) {
-    sleep(3);
+  LOG_INFO_STR("Waiting for workers to register...");
+  while(session.slotsAvailable())
+  {
+    sleep(5);
   }
+  LOG_INFO_STR("All workers have registered.");
 
   // All workers have registered. Assign indices sorted on frequency.
   session.setState(CalSession::INITIALIZING);
   createWorkerIndex(session);
 
   // Determine the frequency range of the observation.
-  const ProcessId firstKernel =
-    session.getWorkerByIndex(CalSession::KERNEL, 0);
-  const ProcessId lastKernel =
-    session.getWorkerByIndex(CalSession::KERNEL,
-      session.getWorkerCount(CalSession::KERNEL) - 1);
-  double itsFreqStart = session.getFreqRange(firstKernel).start;
-  double itsFreqEnd = session.getFreqRange(lastKernel).end;
-
-  LOG_INFO_STR("Observation frequency range: [" << itsFreqStart << ","
-    << itsFreqEnd << "]");
+  const ProcessId firstReducer = session.getWorkerByIndex(CalSession::KERNEL,
+    0);
+  const ProcessId lastReducer = session.getWorkerByIndex(CalSession::KERNEL,
+    session.getWorkerCount(CalSession::KERNEL) - 1);
+  pair<double, double> freqRange(session.getFreqRange(firstReducer).start,
+    session.getFreqRange(lastReducer).end);
+  LOG_INFO_STR("Total frequency range (MHz): [" << freqRange.first / 1e6 << ","
+    << freqRange.second / 1e6 << "]");
 
   // Determine global time axis and verify consistency across all parts.
-  Axis::ShPtr itsGlobalTimeAxis = getGlobalTimeAxis(session);
-  session.setTimeAxis(itsGlobalTimeAxis);
+  Axis::ShPtr timeAxis = getGlobalTimeAxis(session);
+  session.setTimeAxis(timeAxis);
 
-  // Apply TimeRange selection.
-  double itsTimeStart = 0;
-  double itsTimeEnd = itsGlobalTimeAxis->size() - 1;
-
-  const vector<string> &window = strategy.timeRange();
-
-  casa::Quantity time;
-  if(!window.empty() && casa::MVTime::read(time, window[0])) {
-    const pair<size_t, bool> result =
-      itsGlobalTimeAxis->find(time.getValue("s"));
-
-    if(result.second) {
-      itsTimeStart = result.first;
-    }
+  // Apply time range selection.
+  pair<size_t, size_t> timeRange = parseTimeRange(timeAxis,
+    strategy.timeRange());
+  if(timeRange.first > timeRange.second)
+  {
+    LOG_ERROR_STR("Observation outside the specified time range: "
+      << strategy.timeRange());
+    session.setState(CalSession::FAILED);
+    return 1;
   }
+  LOG_INFO_STR("Selected time range (sample): [" << timeRange.first << ","
+    << timeRange.second << "] (out of: " << timeAxis->size() << ")");
 
-  if(window.size() > 1 && casa::MVTime::read(time, window[1])) {
-    const pair<size_t, bool> result =
-      itsGlobalTimeAxis->find(time.getValue("s"), false);
-
-    if(result.first < itsGlobalTimeAxis->size()) {
-      itsTimeEnd = result.first;
-    }
+  size_t chunkStart = timeRange.first, chunkSize = strategy.chunkSize();
+  if(chunkSize == 0)
+  {
+    // If chunk size equals 0, take the whole observation as a single chunk.
+    chunkSize = timeRange.second - timeRange.first + 1;
   }
-
-  double itsChunkStart = itsTimeStart;
-  double itsChunkSize = strategy.chunkSize();
-  if(itsChunkSize == 0) {
-    // If chunk size equals 0, take the whole observation as a single
-    // chunk.
-    itsChunkSize = itsTimeEnd - itsTimeStart + 1;
-  }
-
-  LOG_INFO_STR("Selected time range: [" << itsTimeStart << ","
-    << itsTimeEnd << "]");
-  LOG_INFO_STR("Chunk size: " << itsChunkSize << " timestamp(s)");
+  LOG_INFO_STR("Chunk size (sample): " << chunkSize);
 
   // Switch session state.
   session.setState(CalSession::PROCESSING);
 
-  // Send InitializeCommand and wait for a reply from all workers.
-  const size_t nWorkers = session.getWorkerCount();
+  // Post an InitializeCommand and wait for all workers to respond.
+  CommandId id = session.postCommand(InitializeCommand(strategy));
 
-  InitializeCommand initCmd(strategy);
-  CommandId initId = session.postCommand(initCmd);
-  LOG_DEBUG_STR("Initialize command has ID: " << initId);
-
-  // Wait for workers to execute initialize command.
-  bool ok = false;
-  while(!ok) {
-    if(session.waitForResult()) {
-      CalSession::CommandStatus status =
-        session.getCommandStatus(initId);
-
-      if(status.failed > 0) {
-        LOG_ERROR_STR("" << status.failed << " worker(s) failed at"
-          " initialization");
-        session.setState(CalSession::FAILED);
-        return false;
-      }
-
-      ok = (status.finished == nWorkers);
+  CalSession::CommandStatus status = {0, 0};
+  size_t nWorker = session.getWorkerCount();
+  while(status.finished != nWorker)
+  {
+    if(session.waitForResult())
+    {
+      status = session.getCommandStatus(id);
     }
   }
 
-  bool finished = false;
+  if(status.failed != 0)
+  {
+    LOG_ERROR_STR("Worker processes failed to initialize.");
+    session.setState(CalSession::FAILED);
+    return 1;
+  }
+
+  // Session control.
   StrategyIterator it;
-  while(!finished) {
-    if(!it.atEnd()) {
-      if((*it)->type() != "Solve") {
+  bool done = false;
+  while(!done)
+  {
+    if(!it.atEnd())
+    {
+      // Post command.
+      if((*it)->type() != "Solve")
+      {
         session.postCommand(**it, CalSession::KERNEL);
       } else {
         session.postCommand(**it);
@@ -327,50 +264,165 @@ int main(int argc, char *argv[])
 
       // Advance to the next command.
       ++it;
-    } else if(itsChunkStart <= itsTimeEnd) {
-      // NEXT_CHUNK
-      ASSERT(itsChunkStart <= itsTimeEnd);
-      LOG_DEBUG_STR("itsChunkStart: " << itsChunkStart << " itsTimeEnd: " << itsTimeEnd);
+    }
+    else if(chunkStart <= timeRange.second)
+    {
+      // Move to the next chunk.
+      const double start = timeAxis->lower(chunkStart);
+      const double end = timeAxis->upper(std::min(chunkStart + chunkSize - 1,
+        timeRange.second));
 
-      const double start = itsGlobalTimeAxis->lower(itsChunkStart);
-      const double end = itsGlobalTimeAxis->upper(std::min(itsChunkStart
-        + itsChunkSize - 1, itsTimeEnd));
+      // Update position.
+      chunkStart += chunkSize;
 
-      itsChunkStart += itsChunkSize;
+      // Post next chunk command and wait for one or more reducers to respond
+      // succes (in other words, continue processing as soon as any reducer
+      // responds succes).
+      CommandId id = session.postCommand(NextChunkCommand(freqRange.first,
+        freqRange.second, start, end), CalSession::KERNEL);
 
-      NextChunkCommand cmd(itsFreqStart, itsFreqEnd, start, end);
-      CommandId itsWaitId = session.postCommand(cmd, CalSession::KERNEL);
-      LOG_DEBUG_STR("Next-chunk command has ID: " << itsWaitId);
-
-      while(true) {
-        if(session.waitForResult()) {
-          CalSession::CommandStatus status = session.getCommandStatus(itsWaitId);
-
-          if(status.finished > status.failed) {
-            it = StrategyIterator(strategy);
-            break;
-          }
+      CalSession::CommandStatus status = {0, 0};
+      const size_t nReducer = session.getWorkerCount(CalSession::KERNEL);
+      while(status.finished <= status.failed && status.failed < nReducer)
+      {
+        if(session.waitForResult())
+        {
+          status = session.getCommandStatus(id);
         }
       }
-    } else {
-      LOG_DEBUG_STR("itsChunkStart: " << itsChunkStart << " itsTimeEnd: " << itsTimeEnd);
 
-      // FINALIZE
-      CommandId itsWaitId = session.postCommand(FinalizeCommand());
+      if(status.failed == nReducer)
+      {
+        LOG_ERROR_STR("Reducers processes failed to move to the next chunk.");
+        session.setState(CalSession::FAILED);
+        return 1;
+      }
 
-      while(!finished) {
-        if(session.waitForResult()) {
-          CalSession::CommandStatus status = session.getCommandStatus(itsWaitId);
+      // Re-initialize strategy iterator.
+      it = StrategyIterator(strategy);
+    }
+    else
+    {
+      // Post finalize command and wait for all workers to respond.
+      CommandId id = session.postCommand(FinalizeCommand());
 
-          if(status.finished == session.getWorkerCount()) {
-            session.setState(status.failed == 0 ? CalSession::DONE : CalSession::FAILED);
-            finished = true;
-          }
+      CalSession::CommandStatus status = {0, 0};
+      const size_t nWorker = session.getWorkerCount();
+      while(status.finished != nWorker)
+      {
+        if(session.waitForResult())
+        {
+          status = session.getCommandStatus(id);
         }
       }
+
+      if(status.failed != 0)
+      {
+        LOG_ERROR_STR("Worker processes failed to finalize.");
+        session.setState(CalSession::FAILED);
+        return 1;
+      }
+
+      // Update session state and flag the current run as done.
+      session.setState(CalSession::DONE);
+      done = true;
     }
   }
 
-  LOG_INFO_STR(progName << " terminated successfully.");
   return 0;
+}
+
+bool equal(const Axis::ShPtr &lhs, const Axis::ShPtr &rhs)
+{
+  if(lhs->size() != rhs->size())
+  {
+    return false;
+  }
+
+  if(lhs->isRegular() && rhs->isRegular())
+  {
+    return casa::near(lhs->start(), rhs->start()) && casa::near(lhs->end(),
+      rhs->end());
+  }
+
+  for(size_t i = 0, end = lhs->size(); i < end; ++i)
+  {
+    if(casa::near(lhs->center(i), rhs->center(i)) && casa::near(lhs->width(i),
+      rhs->width(i)))
+    {
+      continue;
+    }
+
+    return false;
+  }
+
+  return true;
+}
+
+Axis::ShPtr getGlobalTimeAxis(const CalSession &session)
+{
+  vector<ProcessId> reducers = session.getWorkersByType(CalSession::KERNEL);
+  ASSERT(reducers.size() > 0);
+
+  Axis::ShPtr globalAxis;
+  for(size_t i = 0; i < reducers.size(); ++i)
+  {
+    Axis::ShPtr localAxis = session.getTimeAxis(reducers[i]);
+    if(!localAxis)
+    {
+      THROW(BBSControlException, "Time axis not known for reducer process: "
+        << reducers[i]);
+    }
+
+    if(globalAxis && !equal(globalAxis, localAxis))
+    {
+      THROW(CalSessionException, "Time axis inconsistent for reducer process: "
+        << reducers[i]);
+    }
+    else
+    {
+      globalAxis = localAxis;
+    }
+  }
+
+  return globalAxis;
+}
+
+// Compare reducer processes based on start frequency.
+struct LessReducer
+{
+  bool operator()(const pair<ProcessId, double> &lhs,
+    const pair<ProcessId, double> &rhs)
+  {
+    return lhs.second < rhs.second;
+  }
+};
+
+void createWorkerIndex(CalSession &session)
+{
+  vector<ProcessId> reducers = session.getWorkersByType(CalSession::KERNEL);
+
+  // Sort reducers processes on start frequency.
+  vector<pair<ProcessId, double> > index(reducers.size());
+  for(size_t i = 0; i < reducers.size(); ++i)
+  {
+    index[i] = make_pair(reducers[i], session.getFreqRange(reducers[i]).start);
+  }
+
+  stable_sort(index.begin(), index.end(), LessReducer());
+
+  // Update the worker register.
+  for(size_t i = 0; i < index.size(); ++i)
+  {
+    session.setWorkerIndex(index[i].first, i);
+  }
+
+  vector<ProcessId> solvers =
+    session.getWorkersByType(CalSession::SOLVER);
+
+  // Update the worker register.
+  for(size_t i = 0; i < solvers.size(); ++i)
+  {
+    session.setWorkerIndex(solvers[i], i);
+  }
 }

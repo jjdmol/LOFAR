@@ -22,6 +22,9 @@
 
 #include <lofar_config.h>
 #include <BBSControl/Util.h>
+#include <casa/Quanta/Quantum.h>
+#include <casa/Quanta/MVTime.h>
+#include <casa/BasicMath/Math.h>
 
 namespace LOFAR
 {
@@ -36,23 +39,16 @@ ProcessGroup makeProcessGroup(const CalSession &session)
   for(size_t i = 0, end = session.getWorkerCount(CalSession::KERNEL); i < end;
     ++i)
   {
-    ProcessId id = session.getWorkerByIndex(CalSession::KERNEL, i);
-    Process process;
-    process.id = id;
-    process.port = 0;
-    process.freqRange = session.getFreqRange(id);
-    process.timeRange = session.getTimeRange(id);
-    group.push_back(ProcessGroup::KERNEL, process);
+    const ProcessId &id = session.getWorkerByIndex(CalSession::KERNEL, i);
+    group.appendReducerProcess(id, session.getFreqRange(id),
+      session.getTimeRange(id));
   }
 
   for(size_t i = 0, end = session.getWorkerCount(CalSession::SOLVER); i < end;
     ++i)
   {
-    ProcessId id = session.getWorkerByIndex(CalSession::SOLVER, i);
-    Process process;
-    process.id = id;
-    process.port = session.getPort(id);
-    group.push_back(ProcessGroup::SOLVER, process);
+    const ProcessId &id = session.getWorkerByIndex(CalSession::SOLVER, i);
+    group.appendSharedEstimatorProcess(id, session.getPort(id));
   }
 
   return group;
@@ -61,7 +57,7 @@ ProcessGroup makeProcessGroup(const CalSession &session)
 
 pair<unsigned int, unsigned int> parseRange(const string &in)
 {
-  static const string errorMessage = "Invalid range: ";
+  static const string errorMessage = "Invalid range specifcation: ";
 
   const size_t pos = in.find(':');
   if(pos == string::npos || pos == 0 || in.size() <= (pos + 1))
@@ -77,6 +73,57 @@ pair<unsigned int, unsigned int> parseRange(const string &in)
   }
 
   return out;
+}
+
+pair<size_t, size_t> parseTimeRange(const Axis::ShPtr &axis,
+  const vector<string> &range)
+{
+  static const string errorMessage = "Invalid time specification: ";
+
+  double start = axis->start(), end = axis->end();
+  if(range.size() > 0)
+  {
+    casa::Quantity time;
+    if(!casa::MVTime::read(time, range[0]))
+    {
+      THROW(BBSControlException, errorMessage << range[0]);
+    }
+
+    start = time.getValue("s");
+  }
+
+  if(range.size() > 1)
+  {
+    casa::Quantity time;
+    if(!casa::MVTime::read(time, range[1]))
+    {
+      THROW(BBSControlException, errorMessage << range[1]);
+    }
+
+    end = time.getValue("s");
+  }
+
+  if(axis->size() == 0 || start > axis->end() || casa::near(start, axis->end())
+    || end < axis->start() || casa::near(end, axis->start()))
+  {
+    // Axis and range do not overlap.
+    return pair<size_t, size_t>(1, 0);
+  }
+
+  pair<size_t, bool> status;
+  pair<size_t, size_t> selection(0, axis->size() - 1);
+
+  status = axis->find(start);
+  if(status.second) {
+    selection.first = status.first;
+  }
+
+  status = axis->find(end);
+  if(status.second) {
+    selection.second = status.first;
+  }
+
+  return selection;
 }
 
 } //# namespace BBS

@@ -1,5 +1,5 @@
-//# CommandProcessorCore.h: Controls execution of processing steps on (a part
-//# of) the visibility data.
+//# CommandHandlerEstimator.h: Controls execution of processing steps by a
+//# solver process.
 //#
 //# Copyright (C) 2012
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -21,41 +21,30 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSCONTROL_COMMANDPROCESSORCORE_H
-#define LOFAR_BBSCONTROL_COMMANDPROCESSORCORE_H
+#ifndef LOFAR_BBSCONTROL_COMMANDHANDLERESTIMATOR_H
+#define LOFAR_BBSCONTROL_COMMANDHANDLERESTIMATOR_H
 
 // \file
-// Controls execution of processing steps on (a part of) the visibility data.
+// Controls execution of processing steps by a solver process.
 
 #include <BBSControl/Command.h>
 #include <BBSControl/CommandVisitor.h>
+#include <BBSControl/SharedEstimator.h>
 #include <BBSControl/ProcessGroup.h>
-#include <BBSControl/BlobStreamableConnection.h>
-#include <BBSKernel/Measurement.h>
-#include <BBSKernel/Evaluator.h>
-#include <ParmDB/ParmDB.h>
-#include <ParmDB/ParmDBLog.h>
-#include <ParmDB/SourceDB.h>
-
-#include <Common/lofar_map.h>
-#include <Common/lofar_string.h>
-#include <Common/lofar_vector.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
-class SingleStep;
 
 // \addtogroup BBSControl
 // @{
 
-class CommandProcessorCore: public CommandVisitor
+class CommandHandlerEstimator: public CommandVisitor
 {
 public:
-    CommandProcessorCore(const ProcessGroup &group,
-      const Measurement::Ptr &measurement, const ParmDB &parmDB,
-      const SourceDB &sourceDB);
+    CommandHandlerEstimator(const ProcessGroup &group,
+      const SharedEstimator::Ptr &estimator);
 
     // Returns true if a FinalizeCommand has been received.
     bool hasFinished() const;
@@ -79,29 +68,10 @@ public:
 
 private:
     CommandResult unsupported(const Command &command) const;
-    CommandResult simulate(const SingleStep &command, Evaluator::Mode mode);
 
-    // Find the combined frequency axis of the calibration group the process
-    // belongs to, given the specified partition of processes into groups.
-    Axis::ShPtr getCalGroupFreqAxis(const vector<uint32> &groups) const;
-
-    // Create a CorrelationMask from the correlation selection specified in the
-    // parset.
-    CorrelationMask makeCorrelationMask(const vector<string> &selection) const;
-
-    // Create buffers and load precomputed visbilities on demand.
-    void loadPrecomputedVis(const vector<string> &patches);
-
-    ProcessGroup                          itsProcessGroup;
-    Measurement::Ptr                      itsMeasurement;
-    ParmDB                                itsParmDB;
-    SourceDB                              itsSourceDB;
-    bool                                  itsHasFinished;
-
-    string                                itsInputColumn;
-    VisSelection                          itsChunkSelection;
-    BufferMap                             itsBuffers;
-    shared_ptr<BlobStreamableConnection>  itsSolverConnection;
+    bool                      itsHasFinished;
+    ProcessGroup              itsProcessGroup;
+    SharedEstimator::Ptr      itsEstimator;
 };
 
 // @}

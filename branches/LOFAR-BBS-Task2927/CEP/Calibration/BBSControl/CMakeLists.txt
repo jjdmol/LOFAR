@@ -7,7 +7,7 @@ include(LofarFindPackage)
 lofar_find_package(Boost REQUIRED)
 lofar_find_package(Casacore REQUIRED COMPONENTS casa measures)
 
-option(USE_PQXX "Enable BBS distributed calibration (using a postgres database as shared memory, requires pqxx)" OFF)
+option(USE_PQXX "Enable BBS distributed reduction (using a postgres database as shared memory, requires pqxx)" OFF)
 if(USE_PQXX)
   lofar_find_package(PQXX REQUIRED)
 else(USE_PQXX)

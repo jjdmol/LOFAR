@@ -154,7 +154,7 @@ if test -n "${db_port}"; then
     port_option="--db-port=\"${db_port}\""
 fi
 
-echo "execute bbs-data-processor --distributed --sourcedb=\"${part}/${sourcedb}\" --parmdb=\"${part}/${parmdb}\" --key=\"${key}\" --db-name=\"${db_name}\" --db-host=\"${db_host}\" ${port_option} --db-user=\"${db_user}\" \"${filesys}\" \"${part}\" > \"${key}_kernel_$$.log\" 2>&1"
+echo "execute bbs-reducer --distributed --sourcedb=\"${part}/${sourcedb}\" --parmdb=\"${part}/${parmdb}\" --key=\"${key}\" --db-name=\"${db_name}\" --db-host=\"${db_host}\" ${port_option} --db-user=\"${db_user}\" \"${filesys}\" \"${part}\" > \"${key}_kernel_$$.log\" 2>&1"
 if test "${dry}" != "dry"; then
-    bbs-data-processor --distributed --sourcedb="${part}/${sourcedb}" --parmdb="${part}/${parmdb}" --key="${key}" --db-name="${db_name}" --db-host="${db_host}" ${port_option} --db-user="${db_user}" "${filesys}" "${part}" > "${key}_bbs-data-processor_$$.log" 2>&1
+    bbs-reducer --distributed --sourcedb="${part}/${sourcedb}" --parmdb="${part}/${parmdb}" --key="${key}" --db-name="${db_name}" --db-host="${db_host}" ${port_option} --db-user="${db_user}" "${filesys}" "${part}" > "${key}_bbs-reducer_$$.log" 2>&1
 fi

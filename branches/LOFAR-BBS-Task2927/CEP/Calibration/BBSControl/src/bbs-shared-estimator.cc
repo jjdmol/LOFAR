@@ -1,5 +1,5 @@
-//# bbs-solver: Application that computes parameter estimates by merging normal
-//# equations supplied by multiple bbs-data-processor processes.
+//# bbs-shared-estimator: Application that computes parameter estimates by
+//# merging normal equations supplied by multiple bbs-reducer processes.
 //#
 //# Copyright (C) 2012
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -24,7 +24,7 @@
 #include <lofar_config.h>
 #include <BBSControl/Package__Version.h>
 #include <BBSControl/CalSession.h>
-#include <BBSControl/CommandProcessorSolver.h>
+#include <BBSControl/CommandHandlerEstimator.h>
 #include <BBSControl/OptionParser.h>
 #include <BBSControl/Util.h>
 
@@ -34,6 +34,9 @@ using namespace LOFAR::BBS;
 // Use a terminate handler that can produce a backtrace.
 Exception::TerminateHandler handler(Exception::terminate);
 
+int run(const ParameterSet &options, const OptionParser::ArgumentList &args);
+
+// Application entry point.
 int main(int argc, char *argv[])
 {
   const char* progName = basename(argv[0]);
@@ -79,7 +82,7 @@ int main(int argc, char *argv[])
       << endl
       << "This distributed LM solver is used in distributed calibration runs."
       " It combines" << endl
-      << "the normal equations from multiple bbs-data-processor processes and"
+      << "the normal equations from multiple bbs-reducer processes and"
       " computes" << endl
       << "new parameters estimates. On start-up the solver will try to join the"
       << endl
@@ -97,48 +100,78 @@ int main(int argc, char *argv[])
     return 1;
   }
 
-  string key = options.getString("Key");
-  CalSession session(key,
-      options.getString("Name"),
-      options.getString("User"),
-      options.getString("Password"),
-      options.getString("Host"),
-      options.getString("Port"));
-
-  pair<unsigned int, unsigned int> range =
-    parseRange(options.getString("Range"));
-  DistributedLMSolver::Ptr solver(new DistributedLMSolver(range.first,
-    options.getInt32("Backlog", 10), range.second - range.first + 1));
-
-  // Poll until Control is ready to accept workers.
-  LOG_INFO_STR("Waiting for Control...");
-  while(session.getState() == CalSession::WAITING_FOR_CONTROL) {
-    sleep(3);
+  try
+  {
+    int status = run(options, args);
+    if(status != 0)
+    {
+      LOG_ERROR_STR(progName << " terminated due to an error.");
+      return status;
+    }
   }
-
-  // Try to register as solver.
-  if(!session.registerAsSolver(solver->port())) {
-    LOG_ERROR_STR("Could not register as solver. There may be stale"
-      " state in the database for key: " << key);
+  catch(Exception &ex)
+  {
+    LOG_FATAL_STR(progName << " terminated due to an exception: " << ex);
+    return 1;
+  }
+  catch(...)
+  {
+    LOG_FATAL_STR(progName << " terminated due to an unknown exception.");
     return 1;
   }
 
+  LOG_INFO_STR(progName << " terminated successfully.");
+  return 0;
+}
+
+int run(const ParameterSet &options, const OptionParser::ArgumentList&)
+{
+  string key = options.getString("Key");
+  CalSession session(key, options.getString("Name"), options.getString("User"),
+    options.getString("Password"), options.getString("Host"),
+    options.getString("Port"));
+
+  pair<unsigned int, unsigned int> range =
+    parseRange(options.getString("Range"));
+  SharedEstimator::Ptr solver(new SharedEstimator(range.first,
+    options.getInt32("Backlog", 10), range.second - range.first + 1));
+
+  // Poll until control is ready to accept workers.
+  LOG_INFO_STR("Waiting for control...");
+  while(session.getState() == CalSession::WAITING_FOR_CONTROL)
+  {
+    sleep(5);
+  }
+
+  // Try to register.
+  LOG_INFO_STR("Trying to register as worker...");
+  if(!session.registerAsSolver(solver->port()))
+  {
+    LOG_ERROR_STR("Unable to register. There may be stale state in the database"
+      " for the session with session key: " << key);
+    return 1;
+  }
   LOG_INFO_STR("Registration OK.");
 
-  LOG_DEBUG_STR("Waiting for workers...");
-  // Wait for workers to register.
-  while(session.getState() <= CalSession::INITIALIZING) {
-    sleep(3);
+  // Poll until all workers have registered.
+  LOG_INFO_STR("Waiting for workers to register...");
+  while(session.getState() <= CalSession::INITIALIZING)
+  {
+    sleep(5);
   }
-  LOG_DEBUG_STR("Workers ready.");
+  LOG_INFO_STR("All workers have registered.");
 
-
-  CommandProcessorSolver processor(makeProcessGroup(session), solver);
-
+  // Process commands until finished.
   bool wait = false;
-  while(!processor.hasFinished()) {
-    if(wait) {
-      if(!session.waitForCommand()) {
+  CommandHandlerEstimator handler(makeProcessGroup(session), solver);
+
+  while(!handler.hasFinished())
+  {
+    // Wait for new commands (with timeout).
+    if(wait)
+    {
+      if(!session.waitForCommand())
+      {
         continue;
       }
 
@@ -146,28 +179,31 @@ int main(int argc, char *argv[])
     }
 
     pair<CommandId, shared_ptr<const Command> > command = session.getCommand();
-    if(command.second) {
-      LOG_DEBUG_STR("Executing a " << command.second->type()
-        << " command:" << endl << *(command.second));
+    if(command.second)
+    {
+      LOG_DEBUG_STR("Executing a " << command.second->type() << " command:"
+        << endl << *(command.second));
 
       // Try to execute the command.
-      CommandResult result = command.second->accept(processor);
+      CommandResult result = command.second->accept(handler);
 
-      // Report the result to the global controller.
+      // Report the result to the controller.
       session.postResult(command.first, result);
 
       // If an error occurred, log a descriptive message and exit.
-      if(result.is(CommandResult::ERROR)) {
+      if(result.is(CommandResult::ERROR))
+      {
         LOG_ERROR_STR("Error executing " << command.second->type()
           << " command: " << result.message());
         return 1;
       }
     }
-    else {
+    else
+    {
+      // No commands available, so start waiting.
       wait = true;
     }
   }
 
-  LOG_INFO_STR(progName << " terminated successfully.");
   return 0;
 }

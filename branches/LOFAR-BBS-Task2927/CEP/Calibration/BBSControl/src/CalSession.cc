@@ -622,12 +622,10 @@ ProcessId CalSession::getWorkerByIndex(WorkerType type, size_t index) const
     ASSERT(index <= static_cast<size_t>(std::numeric_limits<int32>::max()));
     syncWorkerRegister();
 
-    LOG_DEBUG_STR("looking for: index: " << index << " type: " << type);
     vector<Worker>::const_iterator it = itsRegister.begin();
     vector<Worker>::const_iterator itEnd = itsRegister.end();
     while(it != itEnd)
     {
-        LOG_DEBUG_STR("index: " << it->index << " type: " << it->type);
         if(it->type == type && it->index == static_cast<int32>(index))
         {
             return it->id;

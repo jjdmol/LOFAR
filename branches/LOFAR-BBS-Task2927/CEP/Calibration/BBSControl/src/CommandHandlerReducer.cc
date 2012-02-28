@@ -1,4 +1,4 @@
-//# CommandProcessorCore.cc: Controls execution of processing steps on (a part
+//# CommandHandlerReducer.cc: Controls execution of processing steps on (a part
 //# of) the visibility data.
 //#
 //# Copyright (C) 2012
@@ -22,7 +22,7 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <BBSControl/CommandProcessorCore.h>
+#include <BBSControl/CommandHandlerReducer.h>
 #include <BBSControl/GlobalSolveController.h>
 #include <BBSControl/Messages.h>
 #include <BBSControl/InitializeCommand.h>
@@ -58,52 +58,58 @@ namespace
   NextChunkCommand  cmd2;
 }
 
-CommandProcessorCore::CommandProcessorCore(const ProcessGroup &group,
+CommandHandlerReducer::CommandHandlerReducer(const ProcessGroup &group,
   const Measurement::Ptr &measurement, const ParmDB &parmDB,
-  const SourceDB &sourceDB)
+  const SourceDB &sourceDB, const casa::Path &logPath)
   : itsProcessGroup(group),
     itsMeasurement(measurement),
     itsParmDB(parmDB),
     itsSourceDB(sourceDB),
-    itsHasFinished(false)
+    itsLogPath(logPath),
+    itsHasFinished(false),
+    itsChunkCount(-1)
 {
 }
 
-bool CommandProcessorCore::hasFinished() const
+bool CommandHandlerReducer::hasFinished() const
 {
   return itsHasFinished;
 }
 
-CommandResult CommandProcessorCore::visit(const InitializeCommand &command)
+CommandResult CommandHandlerReducer::visit(const InitializeCommand &command)
 {
   if(command.useSolver())
   {
-    ASSERT(itsProcessGroup.getProcessCount(ProcessGroup::SOLVER) == 1);
+    if(itsProcessGroup.nProcesses(ProcessGroup::SHARED_ESTIMATOR) == 0)
+    {
+      return CommandResult(CommandResult::ERROR, "No shared estimator process"
+        " available to connect to.");
+    }
 
-    const Process solverProcess = itsProcessGroup.process(ProcessGroup::SOLVER,
-      0);
-    ProcessId solverId = solverProcess.id;
-    const size_t port = solverProcess.port;
-
-    LOG_DEBUG_STR("Defining connection: solver@" << solverId.hostname
+    const ProcessId &id = itsProcessGroup.id(ProcessGroup::SHARED_ESTIMATOR, 0);
+    const unsigned int port = itsProcessGroup.port(0);
+    LOG_DEBUG_STR("Defining connection: bbs-shared-estimator@" << id.hostname
       << ":" << port);
 
     // BlobStreamableConnection takes a 'port' argument of type string?
     ostringstream tmp;
     tmp << port;
-    itsSolverConnection.reset(new BlobStreamableConnection(solverId.hostname,
-      tmp.str(), Socket::TCP));
+    itsEstimatorConnection = shared_ptr<BlobStreamableConnection>
+      (new BlobStreamableConnection(id.hostname, tmp.str(), Socket::TCP));
 
-    if(!itsSolverConnection->connect())
+    if(!itsEstimatorConnection->connect())
     {
-      return CommandResult(CommandResult::ERROR, "Unable to connect to"
-        " solver.");
+      ostringstream oss;
+      oss << "Unable to connect to shared estimator process:"
+        " bbs-shared-estimator@" << id.hostname << ":" << port;
+      return CommandResult(CommandResult::ERROR, oss.str());
     }
 
-    // Make our process id known to the global solver.
-    itsSolverConnection->sendObject(ProcessIdMsg(ProcessId::id()));
+    // Make our process ID known to the shared estimator.
+    itsEstimatorConnection->sendObject(ProcessIdMsg(ProcessId::id()));
   }
 
+  itsChunkCount = -1;
   itsInputColumn = command.inputColumn();
 
   // Initialize the chunk selection.
@@ -117,13 +123,13 @@ CommandResult CommandProcessorCore::visit(const InitializeCommand &command)
   return CommandResult(CommandResult::OK);
 }
 
-CommandResult CommandProcessorCore::visit(const FinalizeCommand&)
+CommandResult CommandHandlerReducer::visit(const FinalizeCommand&)
 {
   itsHasFinished = true;
   return CommandResult(CommandResult::OK);
 }
 
-CommandResult CommandProcessorCore::visit(const NextChunkCommand &command)
+CommandResult CommandHandlerReducer::visit(const NextChunkCommand &command)
 {
   // Check preconditions. Currently it is assumed that each chunk spans the
   // frequency axis of the _entire_ observation.
@@ -168,49 +174,112 @@ CommandResult CommandProcessorCore::visit(const NextChunkCommand &command)
       + ex.message() + "]");
   }
 
+  ++itsChunkCount;
+
   // Display information about chunk.
   LOG_DEBUG_STR("Chunk dimensions: " << endl << itsBuffers["DATA"]->dims());
 
   return CommandResult(CommandResult::OK);
 }
 
-CommandResult CommandProcessorCore::visit(const RecoverCommand &command)
+CommandResult CommandHandlerReducer::visit(const RecoverCommand &command)
 {
   return unsupported(command);
 }
 
-CommandResult CommandProcessorCore::visit(const SynchronizeCommand &command)
+CommandResult CommandHandlerReducer::visit(const SynchronizeCommand &command)
 {
   return unsupported(command);
 }
 
-CommandResult CommandProcessorCore::visit(const MultiStep &command)
+CommandResult CommandHandlerReducer::visit(const MultiStep &command)
 {
   return unsupported(command);
 }
 
-CommandResult CommandProcessorCore::visit(const PredictStep &command)
+CommandResult CommandHandlerReducer::visit(const PredictStep &command)
 {
   return simulate(command, Evaluator::EQUATE);
 }
 
-CommandResult CommandProcessorCore::visit(const SubtractStep &command)
+CommandResult CommandHandlerReducer::visit(const SubtractStep &command)
 {
   return simulate(command, Evaluator::SUBTRACT);
 }
 
-CommandResult CommandProcessorCore::visit(const AddStep &command)
+CommandResult CommandHandlerReducer::visit(const AddStep &command)
 {
-//  return simulate(command, Evaluator::ADD);
-  return unsupported(command);
+  return simulate(command, Evaluator::ADD);
 }
 
-CommandResult CommandProcessorCore::visit(const CorrectStep &command)
+CommandResult CommandHandlerReducer::visit(const CorrectStep &command)
 {
-  return unsupported(command);
+  // Buffer to operate on.
+  VisBuffer::Ptr buffer(itsBuffers["DATA"]);
+  ASSERT(buffer);
+
+  // Load precomputed visibilities if required.
+  loadPrecomputedVis(command.modelConfig().getSources());
+
+  // Determine selected baselines and correlations.
+  BaselineMask blMask = itsMeasurement->asMask(command.baselines());
+  CorrelationMask crMask = makeCorrelationMask(command.correlations());
+
+  // Use the new algorithm that also updates the covariance matrix if
+  // possible.
+  if(buffer->nCorrelations() == 4
+    && buffer->correlations()[0] == Correlation::XX
+    && buffer->correlations()[1] == Correlation::XY
+    && buffer->correlations()[2] == Correlation::YX
+    && buffer->correlations()[3] == Correlation::YY)
+  {
+    StationExprLOFAR::Ptr expr;
+    try
+    {
+      StationExprLOFAR::Ptr expr(new StationExprLOFAR(itsSourceDB, itsBuffers,
+        command.modelConfig(), buffer, true));
+    }
+    catch(Exception &ex)
+    {
+      return CommandResult(CommandResult::ERROR, "Unable to construct the"
+        " model expression [" + ex.message() + "]");
+    }
+
+    ASSERT(expr);
+    apply(expr, buffer, blMask);
+  }
+  else
+  {
+    // Construct model expression.
+    MeasurementExprLOFAR::Ptr model;
+    try
+    {
+      model.reset(new MeasurementExprLOFAR(itsSourceDB, itsBuffers,
+        command.modelConfig(), buffer, blMask, true));
+    }
+    catch(Exception &ex)
+    {
+      return CommandResult(CommandResult::ERROR, "Unable to construct the"
+        " model expression [" + ex.message() + "]");
+    }
+
+    // Correct visibilities.
+    ASSERT(model);
+    Evaluator evaluator(buffer, model);
+    evaluator.setBaselineMask(blMask);
+    evaluator.setCorrelationMask(crMask);
+    evaluator.process();
+
+    // Dump processing statistics to the log.
+    ostringstream oss;
+    evaluator.dumpStats(oss);
+    LOG_DEBUG(oss.str());
+  }
+
+  return CommandResult(CommandResult::OK, "Ok.");
 }
 
-CommandResult CommandProcessorCore::visit(const SolveStep &command)
+CommandResult CommandHandlerReducer::visit(const SolveStep &command)
 {
   if(command.resample())
   {
@@ -326,8 +395,8 @@ CommandResult CommandProcessorCore::visit(const SolveStep &command)
     try
     {
       // Initialize controller.
-      GlobalSolveController controller(itsProcessGroup.getIndex(), equator,
-        itsSolverConnection);
+      GlobalSolveController controller(itsProcessGroup.index(), equator,
+        itsEstimatorConnection);
       controller.setSolutionGrid(solGrid);
       controller.setSolvables(command.parms(), command.exclParms());
       controller.setPropagateSolutions(command.propagate());
@@ -389,13 +458,10 @@ CommandResult CommandProcessorCore::visit(const SolveStep &command)
     options.setEpsilon(command.epsilon().begin(), command.epsilon().end());
 
     // Open solution log.
-//    casa::Path path(itsPath);
-//    path.append(command.logName());
-    casa::Path path(command.logName());
-//    ParmDBLog log(path.absoluteName(),
-//      ParmDBLoglevel(command.logLevel()).get(), itsChunkCount == 0);
-    ParmDBLog log(path.absoluteName(),
-      ParmDBLoglevel(command.logLevel()).get());
+    casa::Path path(itsLogPath);
+    path.append(command.logName());
+    ParmDBLog log(path.expandedName(), ParmDBLoglevel(command.logLevel()).get(),
+      itsChunkCount == 0);
 
     estimate(log, buffer, blMask, crMask, model, solGrid,
       ParmManager::instance().makeSubset(command.parms(),
@@ -415,24 +481,24 @@ CommandResult CommandProcessorCore::visit(const SolveStep &command)
   return CommandResult(CommandResult::OK, "Ok.");
 }
 
-CommandResult CommandProcessorCore::visit(const ShiftStep &command)
+CommandResult CommandHandlerReducer::visit(const ShiftStep &command)
 {
   return unsupported(command);
 }
 
-CommandResult CommandProcessorCore::visit(const RefitStep &command)
+CommandResult CommandHandlerReducer::visit(const RefitStep &command)
 {
   return unsupported(command);
 }
 
-CommandResult CommandProcessorCore::unsupported(const Command &command) const
+CommandResult CommandHandlerReducer::unsupported(const Command &command) const
 {
   ostringstream message;
   message << "Received unsupported command (" << command.type() << ")";
   return CommandResult(CommandResult::ERROR, message.str());
 }
 
-CommandResult CommandProcessorCore::simulate(const SingleStep &command,
+CommandResult CommandHandlerReducer::simulate(const SingleStep &command,
   Evaluator::Mode mode)
 {
   // Buffer to operate on.
@@ -442,8 +508,9 @@ CommandResult CommandProcessorCore::simulate(const SingleStep &command,
   // Load precomputed visibilities if required.
   loadPrecomputedVis(command.modelConfig().getSources());
 
-  // Determine selected baselines.
+  // Determine selected baselines and correlations.
   BaselineMask blMask = itsMeasurement->asMask(command.baselines());
+  CorrelationMask crMask = makeCorrelationMask(command.correlations());
 
   // Construct model expression.
   MeasurementExprLOFAR::Ptr model;
@@ -461,7 +528,7 @@ CommandResult CommandProcessorCore::simulate(const SingleStep &command,
   // Compute simulated visibilities.
   Evaluator evaluator(buffer, model);
   evaluator.setBaselineMask(blMask);
-  evaluator.setCorrelationMask(makeCorrelationMask(command.correlations()));
+  evaluator.setCorrelationMask(crMask);
   evaluator.setMode(mode);
   evaluator.process();
 
@@ -481,7 +548,7 @@ CommandResult CommandProcessorCore::simulate(const SingleStep &command,
 }
 
 CorrelationMask
-CommandProcessorCore::makeCorrelationMask(const vector<string> &selection) const
+CommandHandlerReducer::makeCorrelationMask(const vector<string> &selection) const
 {
   CorrelationMask mask;
 
@@ -504,7 +571,7 @@ CommandProcessorCore::makeCorrelationMask(const vector<string> &selection) const
   return (mask.empty() ? CorrelationMask(true) : mask);
 }
 
-void CommandProcessorCore::loadPrecomputedVis(const vector<string> &patches)
+void CommandHandlerReducer::loadPrecomputedVis(const vector<string> &patches)
 {
   for(vector<string>::const_iterator it = patches.begin(),
       end = patches.end(); it != end; ++it)
@@ -524,30 +591,28 @@ void CommandProcessorCore::loadPrecomputedVis(const vector<string> &patches)
 }
 
 Axis::ShPtr
-CommandProcessorCore::getCalGroupFreqAxis(const vector<uint32> &groups) const
+CommandHandlerReducer::getCalGroupFreqAxis(const vector<uint32> &groups) const
 {
-  unsigned int kernel = itsProcessGroup.getIndex();
-
   // Determine the calibration group to which this kernel process belongs,
   // and find the index of the first and last kernel process in that
   // calibration group.
-  unsigned int idx = 0, count = groups[0];
-  while(kernel >= count)
+  unsigned int processIndex = itsProcessGroup.index();
+  unsigned int groupIndex = 0, count = groups[0];
+  while(processIndex >= count)
   {
-    ++idx;
-    ASSERT(idx < groups.size());
-    count += groups[idx];
+    ++groupIndex;
+    ASSERT(groupIndex < groups.size());
+    count += groups[groupIndex];
   }
-  ASSERT(kernel < count);
-  LOG_DEBUG_STR("Calibration group index: " << idx);
+  ASSERT(processIndex < count);
+  LOG_DEBUG_STR("Calibration group index: " << groupIndex);
 
-  const Process &first = itsProcessGroup.process(ProcessGroup::KERNEL,
-    count - groups[idx]);
-  const Process &last = itsProcessGroup.process(ProcessGroup::KERNEL,
-    count - 1);
+  const Interval<double> &rangeFirst = itsProcessGroup.range(count
+    - groups[groupIndex], FREQ);
+  const Interval<double> &rangeLast = itsProcessGroup.range(count - 1, FREQ);
 
-  double freqStart = first.freqRange.start;
-  double freqEnd = last.freqRange.end;
+  double freqStart = rangeFirst.start;
+  double freqEnd = rangeLast.end;
 
   LOG_DEBUG_STR("Calibration group frequency range: [" << setprecision(15)
     << freqStart / 1e6 << "," << freqEnd / 1e6 << "] MHz");

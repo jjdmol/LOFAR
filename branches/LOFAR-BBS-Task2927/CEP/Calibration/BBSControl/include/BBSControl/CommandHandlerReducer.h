@@ -1,5 +1,5 @@
-//# CommandProcessorSolver.h: Controls execution of processing steps by a solver
-//# process.
+//# CommandHandlerReducer.h: Controls execution of processing steps on (a part
+//# of) the visibility data.
 //#
 //# Copyright (C) 2012
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -21,30 +21,41 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSCONTROL_COMMANDPROCESSORSOLVER_H
-#define LOFAR_BBSCONTROL_COMMANDPROCESSORSOLVER_H
+#ifndef LOFAR_BBSCONTROL_COMMANDHANDLERREDUCER_H
+#define LOFAR_BBSCONTROL_COMMANDHANDLERREDUCER_H
 
 // \file
-// Controls execution of processing steps by a solver process.
+// Controls execution of processing steps on (a part of) the visibility data.
 
 #include <BBSControl/Command.h>
 #include <BBSControl/CommandVisitor.h>
-#include <BBSControl/DistributedLMSolver.h>
 #include <BBSControl/ProcessGroup.h>
+#include <BBSControl/BlobStreamableConnection.h>
+#include <BBSKernel/Measurement.h>
+#include <BBSKernel/Evaluator.h>
+#include <ParmDB/ParmDB.h>
+#include <ParmDB/ParmDBLog.h>
+#include <ParmDB/SourceDB.h>
+#include <Common/lofar_map.h>
+#include <Common/lofar_string.h>
+#include <Common/lofar_vector.h>
+#include <casa/OS/Path.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
+class SingleStep;
 
 // \addtogroup BBSControl
 // @{
 
-class CommandProcessorSolver: public CommandVisitor
+class CommandHandlerReducer: public CommandVisitor
 {
 public:
-    CommandProcessorSolver(const ProcessGroup &group,
-      const DistributedLMSolver::Ptr &solver);
+    CommandHandlerReducer(const ProcessGroup &group,
+      const Measurement::Ptr &measurement, const ParmDB &parmDB,
+      const SourceDB &sourceDB, const casa::Path &logPath);
 
     // Returns true if a FinalizeCommand has been received.
     bool hasFinished() const;
@@ -68,10 +79,31 @@ public:
 
 private:
     CommandResult unsupported(const Command &command) const;
+    CommandResult simulate(const SingleStep &command, Evaluator::Mode mode);
 
-    bool                      itsHasFinished;
-    ProcessGroup              itsProcessGroup;
-    DistributedLMSolver::Ptr  itsSolver;
+    // Find the combined frequency axis of the calibration group the process
+    // belongs to, given the specified partition of processes into groups.
+    Axis::ShPtr getCalGroupFreqAxis(const vector<uint32> &groups) const;
+
+    // Create a CorrelationMask from the correlation selection specified in the
+    // parset.
+    CorrelationMask makeCorrelationMask(const vector<string> &selection) const;
+
+    // Create buffers and load precomputed visbilities on demand.
+    void loadPrecomputedVis(const vector<string> &patches);
+
+    ProcessGroup                          itsProcessGroup;
+    Measurement::Ptr                      itsMeasurement;
+    ParmDB                                itsParmDB;
+    SourceDB                              itsSourceDB;
+    casa::Path                            itsLogPath;
+
+    bool                                  itsHasFinished;
+    int                                   itsChunkCount;
+    string                                itsInputColumn;
+    VisSelection                          itsChunkSelection;
+    BufferMap                             itsBuffers;
+    shared_ptr<BlobStreamableConnection>  itsEstimatorConnection;
 };
 
 // @}

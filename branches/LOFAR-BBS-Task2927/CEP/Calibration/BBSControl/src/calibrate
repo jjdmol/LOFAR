@@ -495,14 +495,14 @@ if test ${dry} -eq 0; then
 fi
 
 if test ${solver} -eq 1; then
-    notice "execute bbs-solver"
+    notice "execute bbs-shared-estimator"
 
     if test ${verbose} -eq 1 -o ${dry} -eq 1; then
-        echo "bbs-solver --port-range=\"${port_range}\" --key=\"${key}\" --db-name=\"${db_name}\" --db-host=\"${db_host}\" ${port_option} --db-user=\"${db_user}\" > \"${key}_bbs-solver_$$.log\" 2>&1 &"
+        echo "bbs-shared-estimator --port-range=\"${port_range}\" --key=\"${key}\" --db-name=\"${db_name}\" --db-host=\"${db_host}\" ${port_option} --db-user=\"${db_user}\" > \"${key}_bbs-shared-estimator_$$.log\" 2>&1 &"
     fi
 
     if test ${dry} -eq 0; then
-        bbs-solver --port-range="${port_range}" --key="${key}" --db-name="${db_name}" --db-host="${db_host}" ${port_option} --db-user="${db_user}" > "${key}_bbs-solver_$$.log" 2>&1 &
+        bbs-shared-estimator --port-range="${port_range}" --key="${key}" --db-name="${db_name}" --db-host="${db_host}" ${port_option} --db-user="${db_user}" > "${key}_bbs-shared-estimator_$$.log" 2>&1 &
         pidlist="${pidlist} $!"
     fi
 fi
@@ -523,7 +523,7 @@ fi
 # EXECUTE REMOTE PROCESS(ES)
 #
 
-notice "execute remote bbs-data-processor processes"
+notice "execute remote bbs-reducer processes"
 if test ${verbose} -eq 1 -o ${dry} -eq 1; then
     echo "startdistproc -useenv -mode 0 -nomasterhost -dsn \"${observation}\" -cdn \"${cluster_desc}\" -logfile \"${key}_calibrate-part_$$.log\" \"${pgmpath}/calibrate-part\" \"${LOFARROOT}\" \"${wd}\" \"${key}\" \"${db_host}\" \"${db_port}\" \"${db_name}\" \"${db_user}\" \"${instrument_basename}\" \"${sky_basename}\" ${add_columns} dry"
 fi
@@ -533,7 +533,7 @@ if test ${dry} -eq 0; then
 
     if test $? -ne 0; then
         kill_all "${pidlist}"
-        error "remote bbs-data-processor process(es) terminated unexpectedly"
+        error "remote bbs-reducer process(es) terminated unexpectedly"
     fi
 fi
 
@@ -543,7 +543,7 @@ fi
 #
 
 status=0
-notice "waiting for bbs-controller/bbs-solver process(es): ${pidlist}"
+notice "waiting for bbs-controller/bbs-shared-estimator process(es): ${pidlist}"
 for pid in ${pidlist}; do
     if ! wait ${pid}; then
         status=1
@@ -551,7 +551,7 @@ for pid in ${pidlist}; do
 done
 
 if test ${status} -ne 0; then
-    error "bbs-controller/bbs-solver process(es) terminated unexpectedly"
+    error "bbs-controller/bbs-shared-estimator process(es) terminated unexpectedly"
 else
     echo "\033[1;32m`date` [OK] done!\033[m"
 fi

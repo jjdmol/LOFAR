@@ -1,4 +1,4 @@
-//# DistributedLMSolver.h: Manages connections to multiple (groups of) worker
+//# SharedEstimator.h: Manages connections to multiple (groups of) worker
 //# processes. Normal equations received from the worker processes are merged
 //# and new parameter estimates are computed by solving the normal equations.
 //# The parameter estimates are sent back to the worker processes and the cycle
@@ -25,8 +25,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSCONTROL_DISTRIBUTEDLMSOLVER_H
-#define LOFAR_BBSCONTROL_DISTRIBUTEDLMSOLVER_H
+#ifndef LOFAR_BBSCONTROL_SHAREDESTIMATOR_H
+#define LOFAR_BBSCONTROL_SHAREDESTIMATOR_H
 
 // \file
 // Manages connections to multiple (groups of) worker processes. Normal
@@ -51,18 +51,24 @@ class SolverOptions;
 // \addtogroup BBSControl
 // @{
 
-class DistributedLMSolver
+class SharedEstimator
 {
 public:
-    typedef shared_ptr<DistributedLMSolver>       Ptr;
-    typedef shared_ptr<const DistributedLMSolver> ConstPtr;
+    typedef shared_ptr<SharedEstimator>       Ptr;
+    typedef shared_ptr<const SharedEstimator> ConstPtr;
 
-    DistributedLMSolver(unsigned int port, unsigned int backlog,
-      unsigned int range = 1);
+    SharedEstimator(unsigned int port, unsigned int backlog,
+      unsigned int portRange = 1);
 
+    // Return the port to which worker process can connect.
     unsigned int port() const;
 
+    // Wait for all worker processes to connect and prepare for processing.
     void init(const ProcessGroup &group);
+
+    // Compute parameter estimates in a loop until convergence. Estimates are
+    // computed separately for each calibration group. The partition of worker
+    // processes into groups is controlled by \p parition.
     void run(const vector<unsigned int> &partition,
       const SolverOptions &options);
 

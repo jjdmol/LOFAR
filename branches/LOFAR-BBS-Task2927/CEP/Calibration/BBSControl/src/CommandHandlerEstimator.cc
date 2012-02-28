@@ -1,4 +1,4 @@
-//# CommandProcessorSolver.cc: Controls execution of processing steps by a
+//# CommandHandlerEstimator.cc: Controls execution of processing steps by a
 //# solver process.
 //#
 //# Copyright (C) 2012
@@ -22,7 +22,7 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <BBSControl/CommandProcessorSolver.h>
+#include <BBSControl/CommandHandlerEstimator.h>
 #include <BBSControl/Exceptions.h>
 #include <BBSControl/InitializeCommand.h>
 #include <BBSControl/FinalizeCommand.h>
@@ -52,24 +52,24 @@ namespace
   NextChunkCommand  cmd2;
 }
 
-CommandProcessorSolver::CommandProcessorSolver(const ProcessGroup &group,
-  const DistributedLMSolver::Ptr &solver)
+CommandHandlerEstimator::CommandHandlerEstimator(const ProcessGroup &group,
+  const SharedEstimator::Ptr &estimator)
   : itsHasFinished(false),
     itsProcessGroup(group),
-    itsSolver(solver)
+    itsEstimator(estimator)
 {
 }
 
-bool CommandProcessorSolver::hasFinished() const
+bool CommandHandlerEstimator::hasFinished() const
 {
   return itsHasFinished;
 }
 
-CommandResult CommandProcessorSolver::visit(const InitializeCommand&)
+CommandResult CommandHandlerEstimator::visit(const InitializeCommand&)
 {
   try
   {
-    itsSolver->init(itsProcessGroup);
+    itsEstimator->init(itsProcessGroup);
   }
   catch(const Exception &ex)
   {
@@ -79,53 +79,53 @@ CommandResult CommandProcessorSolver::visit(const InitializeCommand&)
   return CommandResult(CommandResult::OK);
 }
 
-CommandResult CommandProcessorSolver::visit(const FinalizeCommand&)
+CommandResult CommandHandlerEstimator::visit(const FinalizeCommand&)
 {
   itsHasFinished = true;
   return CommandResult(CommandResult::OK);
 }
 
-CommandResult CommandProcessorSolver::visit(const NextChunkCommand &command)
+CommandResult CommandHandlerEstimator::visit(const NextChunkCommand &command)
 {
   return unsupported(command);
 }
 
-CommandResult CommandProcessorSolver::visit(const RecoverCommand &command)
+CommandResult CommandHandlerEstimator::visit(const RecoverCommand &command)
 {
   return unsupported(command);
 }
 
-CommandResult CommandProcessorSolver::visit(const SynchronizeCommand &command)
+CommandResult CommandHandlerEstimator::visit(const SynchronizeCommand &command)
 {
   return unsupported(command);
 }
 
-CommandResult CommandProcessorSolver::visit(const MultiStep &command)
+CommandResult CommandHandlerEstimator::visit(const MultiStep &command)
 {
   return unsupported(command);
 }
 
-CommandResult CommandProcessorSolver::visit(const PredictStep &command)
+CommandResult CommandHandlerEstimator::visit(const PredictStep &command)
 {
   return unsupported(command);
 }
 
-CommandResult CommandProcessorSolver::visit(const SubtractStep &command)
+CommandResult CommandHandlerEstimator::visit(const SubtractStep &command)
 {
   return unsupported(command);
 }
 
-CommandResult CommandProcessorSolver::visit(const AddStep &command)
+CommandResult CommandHandlerEstimator::visit(const AddStep &command)
 {
   return unsupported(command);
 }
 
-CommandResult CommandProcessorSolver::visit(const CorrectStep &command)
+CommandResult CommandHandlerEstimator::visit(const CorrectStep &command)
 {
   return unsupported(command);
 }
 
-CommandResult CommandProcessorSolver::visit(const SolveStep &command)
+CommandResult CommandHandlerEstimator::visit(const SolveStep &command)
 {
   SolverOptions options;
   options.maxIter = command.maxIter();
@@ -138,7 +138,7 @@ CommandResult CommandProcessorSolver::visit(const SolveStep &command)
 
   try
   {
-    itsSolver->run(command.calibrationGroups(), options);
+    itsEstimator->run(command.calibrationGroups(), options);
   }
   catch(const Exception &ex)
   {
@@ -148,17 +148,17 @@ CommandResult CommandProcessorSolver::visit(const SolveStep &command)
   return CommandResult(CommandResult::OK);
 }
 
-CommandResult CommandProcessorSolver::visit(const ShiftStep &command)
+CommandResult CommandHandlerEstimator::visit(const ShiftStep &command)
 {
   return unsupported(command);
 }
 
-CommandResult CommandProcessorSolver::visit(const RefitStep &command)
+CommandResult CommandHandlerEstimator::visit(const RefitStep &command)
 {
   return unsupported(command);
 }
 
-CommandResult CommandProcessorSolver::unsupported(const Command &command) const
+CommandResult CommandHandlerEstimator::unsupported(const Command &command) const
 {
   ostringstream message;
   message << "Received unsupported command: " << command.type();

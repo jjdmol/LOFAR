@@ -9,12 +9,12 @@ set(SRC_LIST
   AddStep.h
   BlobStreamableConnection.h
   Command.h
-  CommandProcessorCore.h
-  CommandProcessorSolver.h
+  CommandHandlerReducer.h
+  CommandHandlerEstimator.h
   CommandResult.h
   CommandVisitor.h
   CorrectStep.h
-  DistributedLMSolver.h
+  SharedEstimator.h
   Exceptions.h
   FinalizeCommand.h
   GlobalSolveController.h
@@ -38,7 +38,10 @@ set(SRC_LIST
   SubtractStep.h
   SynchronizeCommand.h
   Types.h
-  Util.h)
+  Util.h
+  GlobalProcessControl.h
+  KernelProcessControl.h
+  SolverProcessControl.h)
 
 if(HAVE_PQXX)
   set(SRC_LIST ${SRC_LIST} CalSession.h CalSessionTransactors.h)

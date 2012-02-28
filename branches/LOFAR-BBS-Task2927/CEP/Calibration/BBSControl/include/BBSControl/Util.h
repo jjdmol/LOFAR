@@ -27,8 +27,10 @@
 // Miscellaneous utility functions.
 
 #include <BBSControl/Exceptions.h>
+#include <ParmDB/Axis.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_sstream.h>
+#include <Common/lofar_vector.h>
 #include <utility>
 
 #ifdef HAVE_PQXX
@@ -58,6 +60,12 @@ T as(const string &in);
 // separator, e.g. "1024:2048".
 pair<unsigned int, unsigned int> parseRange(const string &in);
 
+// Parse a time range selection given as either one (start time) or two strings
+// (start and end time). The range returned is the axis index range that
+// falls within the time range, or an invalid range (1,0) if the selection and
+// the axis do not overlap.
+pair<size_t, size_t> parseTimeRange(const Axis::ShPtr &axis,
+  const vector<string> &range);
 // @}
 
 template <typename T>

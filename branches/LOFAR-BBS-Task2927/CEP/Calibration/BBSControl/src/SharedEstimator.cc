@@ -1,4 +1,4 @@
-//# DistributedLMSolver.cc: Manages connections to multiple (groups of) worker
+//# SharedEstimator.cc: Manages connections to multiple (groups of) worker
 //# processes. Normal equations received from the worker processes are merged
 //# and new parameter estimates are computed by solving the normal equations.
 //# The parameter estimates are sent back to the worker processes and the cycle
@@ -26,7 +26,7 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <BBSControl/DistributedLMSolver.h>
+#include <BBSControl/SharedEstimator.h>
 #include <BBSControl/Exceptions.h>
 #include <BBSControl/Messages.h>
 #include <BBSControl/ProcessGroup.h>
@@ -39,15 +39,15 @@ namespace LOFAR
 namespace BBS
 {
 
-DistributedLMSolver::DistributedLMSolver(unsigned int port,
-  unsigned int backlog, unsigned int range)
+SharedEstimator::SharedEstimator(unsigned int port,
+  unsigned int backlog, unsigned int portRange)
   : itsPort(0)
 {
-  itsSocket.setName("DistributedLMSolver");
+  itsSocket.setName("bbs-shared-estimator");
 
   // Try to bind to a port from the specified range.
   int status = Socket::BIND;
-  unsigned int first = port, last = port + range;
+  unsigned int first = port, last = port + portRange;
   while(first < last)
   {
     // Socket::initServer takes port as a string.
@@ -67,21 +67,21 @@ DistributedLMSolver::DistributedLMSolver(unsigned int port,
   if(status != Socket::SK_OK)
   {
     THROW(IOException, "Unable to initialize server socket using a port from"
-      " the range [" << port << "," << port + range << ")");
+      " the range [" << port << "," << port + portRange << ")");
   }
 
   LOG_DEBUG_STR("Listening on port: " << first);
   itsPort = first;
 }
 
-unsigned int DistributedLMSolver::port() const
+unsigned int SharedEstimator::port() const
 {
   return itsPort;
 }
 
-void DistributedLMSolver::init(const ProcessGroup &group)
+void SharedEstimator::init(const ProcessGroup &group)
 {
-  const size_t nKernels = group.getProcessCount(ProcessGroup::KERNEL);
+  const size_t nKernels = group.nProcesses(ProcessGroup::REDUCER);
 
   // Close any existing connections and resize the vector of connections to the
   // appropiate size.
@@ -89,7 +89,7 @@ void DistributedLMSolver::init(const ProcessGroup &group)
   itsConnections.resize(nKernels);
 
   // Wait for all kernels to connect.
-  LOG_DEBUG_STR("Waiting for " << nKernels << " kernel(s) to connect...");
+  LOG_DEBUG_STR("Waiting for " << nKernels << " reducers(s) to connect...");
 
   // Create a TCP socket accepted by the listening socket.
   shared_ptr<BlobStreamableConnection> connection;
@@ -109,20 +109,19 @@ void DistributedLMSolver::init(const ProcessGroup &group)
       THROW(ProtocolException, "Expected a ProcessIdMsg.");
     }
 
-    ASSERT(group.is(msg->getProcessId(), ProcessGroup::KERNEL));
-
-    KernelIndex index = group.getIndex(msg->getProcessId());
+    ASSERT(group.type(msg->getProcessId()) == ProcessGroup::REDUCER);
+    KernelIndex index = group.index(msg->getProcessId());
     ASSERT(index >= 0 && static_cast<size_t>(index) < itsConnections.size());
     ASSERT(itsConnections[index].index() == -1);
 
     itsConnections[index] = KernelConnection(connection, index);
 
-    LOG_DEBUG_STR("Kernel " << i+1 << " of " << nKernels << " connected"
+    LOG_DEBUG_STR("Reducer " << i+1 << " of " << nKernels << " connected"
       " (index=" << index << ")");
   }
 }
 
-void DistributedLMSolver::run(const vector<unsigned int> &partition,
+void SharedEstimator::run(const vector<unsigned int> &partition,
   const SolverOptions &options)
 {
   // Sanity check
