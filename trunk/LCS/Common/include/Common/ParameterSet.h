@@ -201,6 +201,10 @@ public:
 	// type.
 	// @{
 
+        // Find a key.
+        iterator find (const string& searchKey);
+        const_iterator find (const string& searchKey) const;
+
 	// Checks if the given Key is defined in the ParameterSet.
 	bool	isDefined (const string& searchKey) const;
 
@@ -453,6 +457,16 @@ inline void	ParameterSet::replace(const KVpair& aPair)
 inline void	ParameterSet::remove (const string& aKey)
 {
 	itsSet->remove (aKey);
+}
+
+inline ParameterSet::iterator ParameterSet::find (const string& searchKey)
+{
+	return itsSet->find (searchKey);
+}
+
+inline ParameterSet::const_iterator ParameterSet::find (const string& searchKey) const
+{
+	return itsSet->find (searchKey);
 }
 
 inline bool	ParameterSet::isDefined (const string& searchKey) const
