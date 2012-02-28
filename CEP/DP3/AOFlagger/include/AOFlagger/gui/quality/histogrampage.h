@@ -107,6 +107,7 @@ class HistogramPage : public Gtk::HBox {
 		Gtk::Frame _functionFrame;
 		Gtk::VBox _functionBox;
 		Gtk::RadioButton _nsButton, _dndsButton;
+		Gtk::Entry _deltaSEntry;
 		
 		Gtk::Button _plotPropertiesButton, _dataExportButton;
 		

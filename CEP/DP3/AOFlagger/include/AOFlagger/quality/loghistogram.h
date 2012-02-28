@@ -291,6 +291,25 @@ class LogHistogram : public Serializable
 			return (double) sqrtl(sqErrorSum/(xsqErrorSum * (long double) (n-2)));
 		}
 		
+		double NormalizedSlopeStdDevBySampling(double startAmplitude, double endAmplitude, double slope, double stepFactor) const
+		{
+			long double sum = 0.0;
+			unsigned long n = 0;
+			if(stepFactor <= 1.0001) stepFactor = 1.0001;
+			while(startAmplitude < endAmplitude)
+			{
+				const double stepEnd = startAmplitude * stepFactor;
+				double sampledSlope = NormalizedSlope(startAmplitude, stepEnd);
+				double sampleError = sampledSlope - slope;
+				sum += sampleError * sampleError;
+				++n;
+				
+				startAmplitude = stepEnd;
+			}
+			
+			return (double) sqrtl(sum / ((long double) n*n - n));
+		}
+		
 		double PowerLawUpperLimit(double constrainingAmplitude, double exponent, double factor) const
 		{
 			const double count = NormalizedCountAbove(constrainingAmplitude);
