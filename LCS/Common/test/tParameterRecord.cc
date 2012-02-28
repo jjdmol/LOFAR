@@ -66,6 +66,12 @@ void testNested()
   ASSERT (rec.getString("k2b") == "3");
   ParameterValue pvkey (rec.get("key"));
   ASSERT (pvkey.isRecord());
+  {
+    // Test ParameterSet::getRecord
+    ParameterRecord prkey (rec.getRecord("key"));
+    ASSERT (prkey.size() == 1);
+    ASSERT (prkey.isDefined("k1"));
+  }
   ParameterRecord prkey (pvkey.getRecord());
   ParameterValue pvk1 (prkey.get("k1"));
   ASSERT (pvk1.isRecord());

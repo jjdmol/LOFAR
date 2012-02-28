@@ -217,6 +217,14 @@ public:
 	// e.g: a.b.c.d.param=xxxx --> fullModuleName(b.c)-->a.b.c
 	string	fullModuleName(const string&	shortName) const;
 
+	// Return the value of the key as a vector of values.
+        // This can only be done if the value is enclosed in square brackets.
+        vector<ParameterValue> getVector (const string& aKey) const;
+
+	// Return the value of the key as a parameter record.
+        // This can only be done if the value is enclosed in curly braces.
+        ParameterRecord getRecord (const string& aKey) const;
+
 	// Return scalar value.
 	// @{
 	bool	getBool  (const string& aKey) const;
@@ -482,6 +490,11 @@ inline string	ParameterSet::locateModule(const string&	shortName) const
 inline string	ParameterSet::fullModuleName(const string&	shortName) const
 {
 	return (itsSet->fullModuleName(shortName));
+}
+
+inline vector<ParameterValue> ParameterSet::getVector (const string& aKey) const
+{
+        return get(aKey).getVector();
 }
 
 //#	getBool(key)
