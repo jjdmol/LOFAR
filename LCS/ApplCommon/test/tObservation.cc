@@ -52,11 +52,11 @@ int main (int argc, char* argv[])
 
 		cout << ">>>" << endl;
 		ParameterSet parSet2("tObservation.in_parset2");
-		Observation  dualObs(&parSet2, false);
+		Observation  dualObs(&parSet2);
 		cout << dualObs << endl;
 
 		ParameterSet parSet1("tObservation.in_parset1");
-		Observation  obs1(&parSet1, false);
+		Observation  obs1(&parSet1);
 		cout << obs1 << endl;
 		cout << "<<<" << endl;
 
@@ -67,7 +67,7 @@ int main (int argc, char* argv[])
 		parSet1.add("ObsSW.Observation.Beam[1].directionType",  "AZEL");
 		parSet1.add("ObsSW.Observation.Beam[1].subbandList", 	"[4,3,102]");
 		parSet1.add("ObsSW.Observation.Beam[1].beamletList", 	"[15,16,18]");
-		Observation  obs2(&parSet1, false);
+		Observation  obs2(&parSet1);
 		cout << obs2 << endl;
 
                 // test storage node assignment
@@ -77,39 +77,39 @@ int main (int argc, char* argv[])
                 parSet1.add("ObsSW.Observation.DataProducts.Output_Beamformed.enabled", "true");
                 parSet1.add("ObsSW.Observation.DataProducts.Output_Beamformed.filenames", "[beam0.h5,beam1.h5]");
                 parSet1.add("ObsSW.Observation.DataProducts.Output_Beamformed.locations", "[/,/]");
-                Observation obs4(&parSet1, false);
+                Observation obs4(&parSet1);
 		ASSERTSTR(obs4.streamsToStorage.size() == 2, "Each file should have its own stream to storage");
 
 		cout << ">>>" << endl;
 		// test conflicts in clock
 		ParameterSet conflictPS1("tObservation.in_conflict1");
-		Observation  conflictObs1(&conflictPS1, false);
+		Observation  conflictObs1(&conflictPS1);
 		ASSERTSTR(obs2.conflicts(conflictObs1), "File 1 should have had a clock conflict");
 	
 		// test conflicts in receivers
 		ParameterSet conflictPS2("tObservation.in_conflict2");
-		Observation  conflictObs2(&conflictPS2, false);
+		Observation  conflictObs2(&conflictPS2);
 		ASSERTSTR(obs2.conflicts(conflictObs2), "File 2 should have had a receiver conflict");
 	
 		// test conflicts in beamlets
 		ParameterSet conflictPS3("tObservation.in_conflict3");
-		Observation  conflictObs3(&conflictPS3, false);
+		Observation  conflictObs3(&conflictPS3);
 		ASSERTSTR(obs2.conflicts(conflictObs3), "File 3 should have had a beamlet conflict");
 	
 		// test conflicts in nrSlotsPerFrame
 		ParameterSet conflictPS4("tObservation.in_conflict4");
-		Observation  conflictObs4(&conflictPS4, false);
+		Observation  conflictObs4(&conflictPS4);
 		ASSERTSTR(obs2.conflicts(conflictObs4), "File 4 should have had a nrSlotInFrame conflict");
 	
 		// everything conflict except the time
 		ParameterSet conflictPS5("tObservation.in_conflict5");
-		Observation  conflictObs5(&conflictPS5, false);
+		Observation  conflictObs5(&conflictPS5);
 		ASSERTSTR(!obs2.conflicts(conflictObs5), "File 5 should NOT have had a conflict");
 		cout << "<<<" << endl;
 		cout << "No conflict found in file 5 which is oke." << endl;
 
 		// basic test on RCU bitsets
-		Observation		obs3(&parSet1, false);
+		Observation		obs3(&parSet1);
 		cout << "getRCUbitset(96,48,'') = " << obs3.getRCUbitset(96,48,"") << endl;	// Europe
 		cout << "getRCUbitset(96,96,'') = " << obs3.getRCUbitset(96,96,"") << endl;	// Europe
 		cout << "getRCUbitset(96,48,LBA_XXX) = " << obs3.getRCUbitset(96,48,"LBA_XXX") << endl;	// Core

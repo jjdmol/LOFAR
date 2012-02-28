@@ -455,14 +455,8 @@ void GCFScheduler::handleEventQueue()
 				GCFEvent*			eventPtr;
 				GCFPortInterface*	portPtr;
 				while (task->unqueueTaskEvent(&eventPtr, &portPtr)) {
-					if ((eventPtr->signal == F_DATAIN || eventPtr->signal == F_DISCONNECTED) && 
-							_isInEventQueue(eventPtr, portPtr)) {
-						LOG_DEBUG_STR("Skipping injection of double deferred taskEvent "<< eventName(*eventPtr));
-					}
-					else {
-						LOG_DEBUG_STR("Injecting deferred taskEvent " << eventName(*eventPtr) << "into the event queue");
-						_injectEvent(task, *eventPtr, portPtr, false);	// false=don't copy event(it's already cloned)
-					}
+					LOG_DEBUG_STR("Injecting deferred taskEvent " << eventName(*eventPtr) << "into the event queue");
+					_injectEvent(task, *eventPtr, portPtr, false);	// false=don't copy event(it's already cloned)
 				}
 			}
 		}
