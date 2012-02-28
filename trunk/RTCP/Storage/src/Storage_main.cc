@@ -140,7 +140,7 @@ int main(int argc, char *argv[])
     setRTpriority();
     lockInMemory();
 
-    Observation obs(&parset,false);
+    Observation obs(&parset);
 
     for (OutputType outputType = FIRST_OUTPUT_TYPE; outputType < LAST_OUTPUT_TYPE; outputType ++) {
       for (unsigned streamNr = 0; streamNr < parset.nrStreams(outputType); streamNr ++) {
