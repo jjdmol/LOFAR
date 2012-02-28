@@ -52,8 +52,7 @@ class Observation
 public:
 	Observation();
 	~Observation();
-//	explicit	Observation (const ParameterSet*		aParSet, bool	hasDualHBA = false);
-	explicit	Observation (const ParameterSet*		aParSet, bool	hasDualHBA);
+	explicit	Observation (const ParameterSet*		aParSet, bool	hasDualHBA = false);
 
 	// global function for converting filtername to nyquist zone
 	static uint nyquistzoneFromFilter(const string&	filterName);
@@ -205,9 +204,6 @@ public:
 	string			storageNodeList;
 
 private:
-	bool			_isStationName(const string&	hostname) const;
-	bool 			_hasDataSlots (const ParameterSet*	aPS) const;
-
 	RCUset_t		RCUset;				// set with participating receivers, use getRCUbitset to get this value.
 
 	// many(!) vectors for dataslot allocation

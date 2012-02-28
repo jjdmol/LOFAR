@@ -113,7 +113,7 @@ Observation::Observation(const ParameterSet*		aParSet,
 
 	// auto select the right antennaArray when antennaSet variable is used.
 	if (!antennaSet.empty()) {
-		antennaArray = antennaSet.substr(0,3);	// LBA or HBA
+		antennaArray = antennaSet.substr(0,3);
 	}
 	splitterOn = ((antennaSet == "HBA_ZERO") || (antennaSet == "HBA_ONE") || (antennaSet == "HBA_DUAL"));
 	dualMode   = (antennaSet == "HBA_DUAL");
@@ -144,7 +144,7 @@ Observation::Observation(const ParameterSet*		aParSet,
 	}
 
 	// determine if DataslotLists are available in this parset
-	itsHasDataslots = _hasDataSlots(aParSet);
+	itsHasDataslots = !stations.empty() && aParSet->isDefined(prefix+str(format("Dataslots.%s%s.DataslotList") % stations[0] % getAntennaFieldName(itsStnHasDualHBA)));
 	if (itsHasDataslots) {
 		itsDataslotParset = aParSet->makeSubset(prefix+"Dataslots.");		// save subset for later
 	}
@@ -232,28 +232,26 @@ Observation::Observation(const ParameterSet*		aParSet,
 		}
 
 		// finally update vector with beamnumbers
-		if (_isStationName(myHostname(false))) {
-			int	nrSubbands = newBeam.subbands.size();
-			if (!itsHasDataslots) {		// old situation
-				BeamBeamlets = aParSet->getInt32Vector(beamPrefix+"beamletList", vector<int32>(), true);	// true:expandable
-				int nrBeamlets = BeamBeamlets.size();
-				ASSERTSTR(nrBeamlets == nrSubbands, "Number of beamlets(" << nrBeamlets << ") != nr of subbands(" << nrSubbands << ") for Beam " << beamIdx);
-				for (int  i = 0; i < nrBeamlets; ++i) {
-					if (beamlet2beams[BeamBeamlets[i]] != -1) {
-						stringstream	os;
-						os << "beamlet2beams   : "; writeVector(os, beamlet2beams,    ",", "[", "]"); os << endl;
-						LOG_ERROR_STR(os.str());
-						THROW (Exception, "beamlet " << i << "(" << BeamBeamlets[i] << ") of beam " << beamIdx << " clashes with beamlet of other beam"); 
-					}
-					beamlet2beams[BeamBeamlets[i]] = beamIdx;
-				} // for all beamlets
-			}
-			else { // new situation
-				for (int  i = 0; i < nrSubbands; ++i) {	// Note nrBeamlets=nrSubbands
-					itsBeamSlotList.push_back(beamIdx);
+		int	nrSubbands = newBeam.subbands.size();
+		if (!itsHasDataslots) {		// old situation
+			BeamBeamlets = aParSet->getInt32Vector(beamPrefix+"beamletList", vector<int32>(), true);	// true:expandable
+			int nrBeamlets = BeamBeamlets.size();
+			ASSERTSTR(nrBeamlets == nrSubbands, "Number of beamlets(" << nrBeamlets << ") != nr of subbands(" << nrSubbands << ") for Beam " << beamIdx);
+			for (int  i = 0; i < nrBeamlets; ++i) {
+				if (beamlet2beams[BeamBeamlets[i]] != -1) {
+					stringstream	os;
+					os << "beamlet2beams   : "; writeVector(os, beamlet2beams,    ",", "[", "]"); os << endl;
+					LOG_ERROR_STR(os.str());
+					THROW (Exception, "beamlet " << i << "(" << BeamBeamlets[i] << ") of beam " << beamIdx << " clashes with beamlet of other beam"); 
 				}
-			} // itsHasDataslots
-		} // on a station
+				beamlet2beams[BeamBeamlets[i]] = beamIdx;
+			} // for all beamlets
+		}
+		else { // new situation
+			for (int  i = 0; i < nrSubbands; ++i) {	// Note nrBeamlets=nrSubbands
+				itsBeamSlotList.push_back(beamIdx);
+			}
+		} // itsHasDataslots
 	} // for all digital beams
 
 	// loop over al analogue beams
@@ -354,8 +352,8 @@ Observation::Observation(const ParameterSet*		aParSet,
 			// pset, and then proceed to fill up the I/O nodes starting from
 			// the first pset. Each data product is treated individually.
 
-			vector<string> filenames = aParSet->getStringVector(prefix+str(format("DataProducts.Output_%s.filenames") % dataProductNames[d]), true);
-			vector<string> locations = aParSet->getStringVector(prefix+str(format("DataProducts.Output_%s.locations") % dataProductNames[d]), true);
+			vector<string> filenames = aParSet->getStringVector(prefix+str(format("DataProducts.Output_%s.filenames") % dataProductNames[d]));
+			vector<string> locations = aParSet->getStringVector(prefix+str(format("DataProducts.Output_%s.locations") % dataProductNames[d]));
 			vector<unsigned> &psets = dataProductPhases[d] == 2 ? phaseTwoPsets : phaseThreePsets;
 
 			unsigned numFiles = filenames.size();
@@ -490,6 +488,10 @@ vector<int> Observation::getBeamAllocation(const string& stationName) const
 {
 	vector<int>		b2b;
 
+	if (!itsHasDataslots) {
+		return (beamlet2beams);	// return old mapping so it keeps working
+	}
+
 	// construct stationname if not given by user.
 	string	station(stationName);
 	if (station.empty()) {
@@ -499,14 +501,6 @@ vector<int> Observation::getBeamAllocation(const string& stationName) const
 			station.erase(station.length()-1, 1);		// station.pop_back();
 		}
 	}
-	if (!_isStationName(station)) {					// called on a non-station machine?
-		return (b2b);									// return an empty vector
-	}
-
-	if (!itsHasDataslots) {
-		return (beamlet2beams);	// return old mapping so it keeps working
-	}
-
 	// is DSL for this station available?
 	string	fieldName = getAntennaFieldName(itsStnHasDualHBA);
 	string	dsl(str(format("%s%s.DataslotList") % station % fieldName));
@@ -548,6 +542,11 @@ vector<int>	Observation::getBeamlets (uint beamIdx, const string&	stationName) c
 	uint	parsetIdx = (dualMode && itsStnHasDualHBA) ? beamIdx/2 : beamIdx;
 	string	fieldName = getAntennaFieldName(itsStnHasDualHBA, beamIdx);
 
+	if (!itsHasDataslots) {
+		// both fields use the same beamlet mapping
+		return (itsDataslotParset.getInt32Vector(str(format("Beam[%d].beamletList") % parsetIdx), vector<int32>(), true));	// true:expandable
+	}
+
 	// construct stationname if not given by user.
 	string	station(stationName);
 	if (station.empty()) {
@@ -558,20 +557,11 @@ vector<int>	Observation::getBeamlets (uint beamIdx, const string&	stationName) c
 		}
 	}
 		
-	vector<int>	result;
-	if (!_isStationName(station)) {					// called on a non-station machine?
-		return (result);								// return an empty vector
-	}
-
-	if (!itsHasDataslots) {
-		// both fields use the same beamlet mapping
-		return (itsDataslotParset.getInt32Vector(str(format("Beam[%d].beamletList") % parsetIdx), vector<int32>(), true));	// true:expandable
-	}
-
 	// is DSL for this station available?
 	// both fields have their own beamlet mapping
 	string	dsl(str(format("%s%s.DataslotList") % station % fieldName));
 	string	rbl(str(format("%s%s.RSPBoardList") % station % fieldName));
+	vector<int>	result;
 	if (!itsDataslotParset.isDefined(dsl) || !itsDataslotParset.isDefined(rbl)) {
 		return (result);
 	}
@@ -629,41 +619,6 @@ string Observation::getBeamName(uint32	beamIdx) const
 string Observation::getAnaBeamName() const
 {
 	return (formatString("observation[%d]anabeam", obsID));
-}
-
-
-//
-// _isStationName(name)
-//
-bool Observation::_isStationName(const string&	hostname) const
-{
-	// allow AA999, AA999C and AA999T
-	if (hostname.length() != 5 && hostname.length() != 6) 
-		return (false);
-
-	// We make a rough guess about the vality of the hostname.
-	// If we want to check more secure we have to implement all allowed stationnames
-	return (isalpha(hostname[0]) && isalpha(hostname[1]) &&
-			isdigit(hostname[2]) && isdigit(hostname[3]) && isdigit(hostname[4]));
-}
-
-//
-// _hasDataSlots
-//
-bool Observation::_hasDataSlots(const ParameterSet*	aPS) const
-{
-	ParameterSet::const_iterator	iter = aPS->begin();
-	ParameterSet::const_iterator	end  = aPS->end();
-	while (iter != end) {
-		string::size_type	pos(iter->first.find("Dataslots."));
-		// if begin found, what is after it?
-		if (pos != string::npos && iter->first.find("Dataslots.DataslotInfo.") == string::npos) {	
-			return _isStationName((iter->first.substr(pos+10,5)));
-		}
-		iter++;	// try next line
-	}
-	
-	return (false);
 }
 
 //
