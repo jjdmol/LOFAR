@@ -11,7 +11,9 @@ import numpy as np
 import monetdb.sql as db
 import logging
 
-def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius, assoc_theta, bbsfile, storespectraplots=False, deruiter_radius=0.):
+def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius, assoc_theta, bbsfile, 
+                                 storespectraplots=False, deruiter_radius=0.,
+                                 vlss_flux_cutoff=None):
     """Search for VLSS, WENSS and NVSS sources that
     are in the given FoV. The FoV is set by its central position
     (ra_central, decl_central) out to a radius of fov_radius.
@@ -43,6 +45,8 @@ def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius, assoc_the
         "This will be implemented soon"
         raise BaseException("ra = %s > 360 degrees, not implemented yet" % str(ra_central + alpha(fov_radius, decl_central))) 
     
+    if vlss_flux_cutoff is None:
+        vlss_flux_cutoff = 0.
     skymodel = open(bbsfile, 'w')
     header = "# (Name, Type, Ra, Dec, I, Q, U, V, ReferenceFrequency='60e6',  SpectralIndex='[0.0]', MajorAxis, MinorAxis, Orientation) = format\n\n"
     skymodel.write(header)
@@ -309,6 +313,7 @@ SELECT t0.v_catsrcid
                     / (c1.decl_err * c1.decl_err + c2.decl_err * c2.decl_err))) < %s
        ) t3
     ON t0.v_catsrcid = t3.v_catsrcid
+ WHERE t0.v_flux >= %s
         """
         cursor.execute(query, (
                      decl_central, fov_radius, decl_central, fov_radius, decl_central, fov_radius, decl_central, fov_radius,
@@ -334,7 +339,8 @@ SELECT t0.v_catsrcid
                      decl_central, fov_radius, decl_central, fov_radius, decl_central, fov_radius, decl_central, fov_radius,
                      ra_central, fov_radius, decl_central,ra_central, fov_radius, decl_central, 
                      decl_central, ra_central, decl_central, ra_central, decl_central, fov_radius,
-                     assoc_theta, deRuiter_reduced
+                     assoc_theta, deRuiter_reduced,
+                     vlss_flux_cutoff
                               ))
         results = zip(*cursor.fetchall())
         if len(results) != 0:
