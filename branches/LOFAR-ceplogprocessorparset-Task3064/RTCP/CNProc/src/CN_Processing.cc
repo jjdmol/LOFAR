@@ -241,9 +241,11 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
       if (LOG_CONDITION)
         LOG_DEBUG_STR("Considering dedispersion for " << itsTotalNrPencilBeams << " pencil beams");
 
-      itsDMs.resize(itsTotalNrPencilBeams, 0.0);
+      itsCoherentDMs.resize(itsTotalNrPencilBeams, 0.0);
+      itsIncoherentDMs.resize(itsTotalNrPencilBeams, 0.0);
 
-      bool anyNonzeroDM = false;
+      bool dedisperseCoherent = false;
+      bool dedisperseIncoherent = false;
       unsigned i = 0;
       unsigned nrSAPs = parset.nrBeams();
 
@@ -252,18 +254,32 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
           double DM = parset.dispersionMeasure(sap, pencil);
           if(LOG_CONDITION) LOG_DEBUG_STR("DM for beam " << sap << " pencil " << pencil << " is " << DM);
 
-          if (DM != 0.0)
-            anyNonzeroDM = true;
+          if (DM != 0.0) {
+            if (parset.isCoherent(sap, pencil)) {
+              dedisperseCoherent = true;
+              itsCoherentDMs[i] = DM;
+            } else {
+              dedisperseIncoherent = true;
+              itsIncoherentDMs[i] = DM;
+            }
+          }
 
-          itsDMs[i++] = DM;
+          i++;
         }
       }
 
-      if (anyNonzeroDM) {
-        if(LOG_CONDITION) LOG_DEBUG("Doing dedispersion after beam forming");
-        itsDedispersionAfterBeamForming = new DedispersionAfterBeamForming(parset, itsBeamFormedData, itsCurrentSubband->list(), itsDMs);
+      if (dedisperseCoherent) {
+        if(LOG_CONDITION) LOG_DEBUG("Doing dedispersion for coherent data");
+        itsDedispersionAfterBeamForming = new DedispersionAfterBeamForming(parset, itsBeamFormedData, itsCurrentSubband->list(), itsCoherentDMs);
       } else {
-        if(LOG_CONDITION) LOG_DEBUG("NOT doing dedispersion after beam forming, because all DMs are 0");
+        if(LOG_CONDITION) LOG_DEBUG("NOT doing dedispersion for coherent data");
+      }
+
+      if (dedisperseIncoherent) {
+        if(LOG_CONDITION) LOG_DEBUG("Doing dedispersion for incoherent data");
+        itsDedispersionBeforeBeamForming = new DedispersionBeforeBeamForming(parset, itsFilteredData, itsCurrentSubband->list(), itsIncoherentDMs);
+      } else {
+        if(LOG_CONDITION) LOG_DEBUG("NOT doing dedispersion for incoherent data");
       }
 
       // Our assembly code (BeamFormerAsm) requires groups of beams it processes to
@@ -292,8 +308,10 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
       itsPreTransposeBeamFormedData.resize(itsMaxNrPencilBeams);
   }
 
-  if (itsHasPhaseTwo || itsHasPhaseThree)
-    itsStokes = new Stokes(itsNrChannels, itsNrSamplesPerIntegration);
+  if (itsHasPhaseTwo || itsHasPhaseThree) {
+    itsCoherentStokes   = new CoherentStokes(itsNrChannels, itsNrSamplesPerIntegration);
+    itsIncoherentStokes = new IncoherentStokes(itsNrChannels, itsNrSamplesPerIntegration, nrMergedStations, parset.nrChannelsPerSubband() / parset.incoherentStokesChannelsPerSubband(), itsDedispersionBeforeBeamForming, itsBigAllocator);
+  }
 
 #if defined HAVE_MPI
   if (itsHasPhaseOne || itsHasPhaseTwo)
@@ -392,7 +410,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transposeInput(
     phaseOneTimer.start();
 
     if (LOG_CONDITION)
-      LOG_DEBUG_STR(itsLogPrefix << "Start reading at t = " << blockAge());
+      LOG_DEBUG_STR(itsLogPrefix << "Start reading at " << MPI_Wtime());
     
     NSTimer asyncSendTimer("async send", LOG_CONDITION, true);
 
@@ -403,16 +421,16 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transposeInput(
       //unsigned subband = (*itsCurrentSubband % itsNrSubbandsPerPset) + (i * itsNrSubbandsPerPset);
 
       if (subband < itsNrSubbands) {
-        if (LOG_CONDITION) {
-	  LOG_DEBUG_STR("read subband " << subband << " from IO node at t = " << blockAge());
-        }
+        //if (LOG_CONDITION) {
+	//  LOG_DEBUG_STR("read subband " << subband << " from IO node");
+        //}
 	readTimer.start();
 	itsInputData->readOne(itsInputStream, i); // Synchronously read 1 subband from my IO node.
 	readTimer.stop();
 	asyncSendTimer.start();
-        if (LOG_CONDITION) {
-	  LOG_DEBUG_STR("transpose: send subband " << subband << " to pset id " << i << " at t = " << blockAge());
-        }
+        //if (LOG_CONDITION) {
+	//  LOG_DEBUG_STR("transpose: send subband " << subband << " to pset id " << i);
+        //}
 
 	itsAsyncTransposeInput->asyncSend(i, itsInputSubbandMetaData, itsInputData); // Asynchronously send one subband to another pset.
 	asyncSendTimer.stop();
@@ -560,24 +578,20 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
         ASSERT( itsPreTransposeBeamFormedData[beam].get() != NULL );
 
         if (info.coherent) {
-          if (itsDedispersionAfterBeamForming != 0) {
-            if(LOG_CONDITION)
-              LOG_DEBUG_STR(itsLogPrefix << "Dedispersing beam-formed data at t = " << blockAge());
-
-            dedisperseAfterBeamForming(i, itsDMs[beam]);
-          }
+          if (itsDedispersionAfterBeamForming != 0)
+            dedisperseAfterBeamForming(i, itsCoherentDMs[beam]);
 
           switch (info.stokesType) {
             case STOKES_I:
               if(LOG_CONDITION)
                 LOG_DEBUG_STR(itsLogPrefix << "Calculating coherent Stokes I at t = " << blockAge());
-              itsStokes->calculateCoherent<false>(itsBeamFormedData.get(), itsPreTransposeBeamFormedData[beam].get(), i, info);
+              itsCoherentStokes->calculate<false>(itsBeamFormedData.get(), itsPreTransposeBeamFormedData[beam].get(), i, info);
               break;
 
             case STOKES_IQUV:
               if(LOG_CONDITION)
                 LOG_DEBUG_STR(itsLogPrefix << "Calculating coherent Stokes IQUV at t = " << blockAge());
-              itsStokes->calculateCoherent<true>(itsBeamFormedData.get(), itsPreTransposeBeamFormedData[beam].get(), i, info);
+              itsCoherentStokes->calculate<true>(itsBeamFormedData.get(), itsPreTransposeBeamFormedData[beam].get(), i, info);
               break;
 
             case STOKES_XXYY:
@@ -591,17 +605,19 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
               break;
           }
         } else {  
+          // TODO: optimise dedispersion to only do the forwardFFT once
+
           switch (info.stokesType) {
             case STOKES_I:
               if(LOG_CONDITION)
                 LOG_DEBUG_STR(itsLogPrefix << "Calculating incoherent Stokes I at t = " << blockAge());
-              itsStokes->calculateIncoherent<false>(itsFilteredData.get(), itsPreTransposeBeamFormedData[beam].get(), itsBeamFormer->getStationMapping(), info);
+              itsIncoherentStokes->calculate<false>(itsFilteredData.get(), itsPreTransposeBeamFormedData[beam].get(), itsBeamFormer->getStationMapping(), info, subband, itsIncoherentDMs[beam]);
               break;
 
             case STOKES_IQUV:
               if(LOG_CONDITION)
                 LOG_DEBUG_STR(itsLogPrefix << "Calculating incoherent Stokes IQUV at t = " << blockAge());
-              itsStokes->calculateIncoherent<true>(itsFilteredData.get(), itsPreTransposeBeamFormedData[beam].get(), itsBeamFormer->getStationMapping(), info);
+              itsIncoherentStokes->calculate<true>(itsFilteredData.get(), itsPreTransposeBeamFormedData[beam].get(), itsBeamFormer->getStationMapping(), info, subband, itsIncoherentDMs[beam]);
               break;
 
             case STOKES_XXYY:
