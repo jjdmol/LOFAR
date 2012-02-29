@@ -358,6 +358,8 @@ Observation::Observation(const ParameterSet*		aParSet,
 			vector<string> locations = aParSet->getStringVector(prefix+str(format("DataProducts.Output_%s.locations") % dataProductNames[d]), true);
 			vector<unsigned> &psets = dataProductPhases[d] == 2 ? phaseTwoPsets : phaseThreePsets;
 
+			ASSERTSTR(filenames.size() == locations.size(), "Parset provides " << filenames.size() << " filenames but only " << locations.size() << " locations.");
+
 			unsigned numFiles = filenames.size();
 			unsigned filesPerPset = (numFiles + psets.size() - 1) / psets.size();
 
@@ -371,6 +373,8 @@ Observation::Observation(const ParameterSet*		aParSet,
 				a.sourcePset = psets[i / filesPerPset];
 
 				vector<string> locparts = StringUtil::split(locations[i],':');
+			    ASSERTSTR(locparts.size() == 2, "A DataProduct location must be of the format host:directory (but I found " << locations[i] << ")");
+
 				a.destStorageNode = locparts[0];
 				a.destDirectory = locparts[1];
 
