@@ -263,32 +263,52 @@ class LogHistogram : public Serializable
 			return (double) (sumOffset/(long double) n);
 		}
 		
-		double NormalizedSlopeStdDev(double startAmplitude, double endAmplitude, double slope, double offset) const
+		double NormalizedSlopeStdError(double startAmplitude, double endAmplitude, double slope) const
 		{
-			long double sqErrorSum = 0.0, xsqErrorSum = 0.0, xSum = 0.0;
+			long double ssxx = 0.0, ssxy = 0.0, ssyy = 0.0, xSum = 0.0, ySum = 0.0;
 			unsigned long n = 0;
-			// determine the 'average' x
+			// determine the 'average' x and y
 			for(const_iterator i=begin();i!=end();++i)
 			{
 				if(i.value() >= startAmplitude && i.value() < endAmplitude)
 				{
 					xSum += log10(i.value());
+					ySum += log10(i.normalizedCount());
 					++n;
 				}
 			}
-			const long double avgX = xSum / n;
+			const long double avgX = xSum / (long double) n, avgY = ySum / (long double) n;
 			for(const_iterator i=begin();i!=end();++i)
 			{
 				if(i.value() >= startAmplitude && i.value() < endAmplitude)
 				{
 					long double y = log10(i.normalizedCount());
 					long double x = log10(i.value());
-					long double ySlope = x*slope + offset;
-					sqErrorSum += (y-ySlope)*(y-ySlope);
-					xsqErrorSum += (x - avgX)*(x - avgX);
+					ssxx += (x-avgX)*(x-avgX);
+					ssxy += (x-avgX)*(y-avgY);
+					ssyy += (y-avgY)*(y-avgY);
 				}
 			}
-			return (double) sqrtl(sqErrorSum/(xsqErrorSum * (long double) (n-2)));
+			return (double) sqrtl((ssyy-slope*ssxy)/(ssxx * (long double) (n-2)));
+		}
+		
+		double NormalizedSlopeStdDevBySampling(double startAmplitude, double endAmplitude, double slope, double stepFactor) const
+		{
+			long double sum = 0.0;
+			unsigned long n = 0;
+			if(stepFactor <= 1.0001) stepFactor = 1.0001;
+			while(startAmplitude < endAmplitude)
+			{
+				const double stepEnd = startAmplitude * stepFactor;
+				double sampledSlope = NormalizedSlope(startAmplitude, stepEnd);
+				double sampleError = sampledSlope - slope;
+				sum += sampleError * sampleError;
+				++n;
+				
+				startAmplitude = stepEnd;
+			}
+			
+			return (double) sqrtl(sum / ((long double) n*n - n));
 		}
 		
 		double PowerLawUpperLimit(double constrainingAmplitude, double exponent, double factor) const

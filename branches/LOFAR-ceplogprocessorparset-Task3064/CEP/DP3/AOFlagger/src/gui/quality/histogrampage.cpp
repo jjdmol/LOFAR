@@ -44,10 +44,12 @@ HistogramPage::HistogramPage() :
 	_fitFrame("Fitting"),
 	_fitButton("Fit"),
 	_subtractFitButton("Subtract"),
+	_fitLogarithmicButton("Log fit"),
 	_fitAutoRangeButton("Auto range"),
 	_functionFrame("Function"),
 	_nsButton("N(S)"),
 	_dndsButton("dN(S)/dS"),
+	_deltaSEntry(),
 	_plotPropertiesButton("Properties"),
 	_dataExportButton("Data"),
 	_slopeFrame("Slope"),
@@ -96,6 +98,8 @@ HistogramPage::HistogramPage() :
 	_fitButton.signal_clicked().connect(sigc::mem_fun(*this, &HistogramPage::updatePlot));
 	_fitBox.pack_start(_subtractFitButton, Gtk::PACK_SHRINK);
 	_subtractFitButton.signal_clicked().connect(sigc::mem_fun(*this, &HistogramPage::updatePlot));
+	_fitBox.pack_start(_fitLogarithmicButton, Gtk::PACK_SHRINK);
+	_fitLogarithmicButton.signal_clicked().connect(sigc::mem_fun(*this, &HistogramPage::updatePlot));
 	_fitBox.pack_start(_fitAutoRangeButton, Gtk::PACK_SHRINK);
 	_fitAutoRangeButton.set_active(true);
 	_fitAutoRangeButton.signal_clicked().connect(sigc::mem_fun(*this, &HistogramPage::onAutoRangeClicked));
@@ -106,6 +110,7 @@ HistogramPage::HistogramPage() :
 	_fitBox.pack_start(_fitEndEntry, Gtk::PACK_SHRINK);
 	_fitEndEntry.set_sensitive(false);
 	_fitEndEntry.signal_activate().connect(sigc::mem_fun(*this, &HistogramPage::updatePlot));
+	_fitBox.pack_start(_fitTextView, Gtk::PACK_SHRINK);
 	
 	_fitFrame.add(_fitBox);
 	
@@ -119,6 +124,9 @@ HistogramPage::HistogramPage() :
 	_dndsButton.signal_clicked().connect(sigc::mem_fun(*this, &HistogramPage::updatePlot));
 	_dndsButton.set_group(group);
 	_nsButton.set_active(true);
+	_functionBox.pack_start(_deltaSEntry, Gtk::PACK_SHRINK);
+	_deltaSEntry.set_text("2");
+	_deltaSEntry.signal_activate().connect(sigc::mem_fun(*this, &HistogramPage::updatePlot));
 	
 	_functionFrame.add(_functionBox);
 	_sideBox.pack_start(_functionFrame, Gtk::PACK_SHRINK);
@@ -311,8 +319,9 @@ void HistogramPage::plotFit(const LogHistogram &histogram, const std::string &ti
 		minRange = atof(_fitStartEntry.get_text().c_str());
 		maxRange = atof(_fitEndEntry.get_text().c_str());
 	}
-	RayleighFitter fitter;
 	double sigma = sigmaEstimate, n = RayleighFitter::NEstimate(histogram, minRange, maxRange);
+	RayleighFitter fitter;
+	fitter.SetFitLogarithmic(_fitLogarithmicButton.get_active());
 	fitter.Fit(minRange, maxRange, histogram, sigma, n);
 	if(_fitButton.get_active())
 	{
@@ -324,18 +333,27 @@ void HistogramPage::plotFit(const LogHistogram &histogram, const std::string &ti
 		_plot.StartLine(title, "Amplitude in arbitrary units (log)", "Frequency (log)");
 		addRayleighDifferenceToPlot(histogram, sigma, n);
 	}
+
+	std::stringstream str;
+	str << "σ=1e" << log10(sigma) << ",n=1e" << log10(n) << '\n'
+		<< "n_t=1e" << log10(histogram.NormalizedTotalCount()) << '\n'
+		<< "mode=1e" << log10(histogram.AmplitudeWithMaxNormalizedCount()) << '\n'
+		<< "ε_R=" << RayleighFitter::ErrorOfFit(histogram, minRange, maxRange, sigma, n);
+	_fitTextView.get_buffer()->set_text(str.str());
 }
 
 void HistogramPage::addHistogramToPlot(const LogHistogram &histogram)
 {
 	const bool derivative = _dndsButton.get_active();
+	double deltaS = atof(_deltaSEntry.get_text().c_str());
+	if(deltaS <= 1.0001) deltaS = 1.0001;
 	for(LogHistogram::iterator i=histogram.begin();i!=histogram.end();++i)
 	{
 		if(derivative)
 		{
 			const double x = i.value();
 			const double logx = log10(x);
-			const double cslope = histogram.NormalizedSlope(x*0.5, x*2.0);
+			const double cslope = histogram.NormalizedSlope(x/deltaS, x*deltaS);
 			if(std::isfinite(logx) && std::isfinite(cslope))
 				_plot.PushDataPoint(logx, cslope);
 		} else {
@@ -451,8 +469,6 @@ void HistogramPage::onDataExportClicked()
 void HistogramPage::updateSlopeFrame(const LogHistogram &histogram)
 {
 	std::stringstream str;
-	str << "Slopes:";
-	
 	addSlopeText(str, histogram, true);
 	
 	_slopeTextView.get_buffer()->set_text(str.str());
@@ -460,6 +476,8 @@ void HistogramPage::updateSlopeFrame(const LogHistogram &histogram)
 
 void HistogramPage::addSlopeText(std::stringstream &str, const LogHistogram &histogram, bool updateRange)
 {
+	double deltaS = atof(_deltaSEntry.get_text().c_str());
+	if(deltaS <= 1.0001) deltaS = 1.0001;
 	double minRange, maxRange;
 	if(_slopeAutoRangeButton.get_active())
 	{
@@ -481,12 +499,13 @@ void HistogramPage::addSlopeText(std::stringstream &str, const LogHistogram &his
 	const double
 		slope = histogram.NormalizedSlope(minRange, maxRange),
 		offset = histogram.NormalizedSlopeOffset(minRange, maxRange, slope),
-		error = histogram.NormalizedSlopeStdDev(minRange, maxRange, slope, offset),
+		error = histogram.NormalizedSlopeStdError(minRange, maxRange, slope),
+		errorB = histogram.NormalizedSlopeStdDevBySampling(minRange, maxRange, slope, deltaS),
 		upperLimit = histogram.PowerLawUpperLimit(minRange, slope, pow10(offset)),
 		lowerLimit = histogram.PowerLawLowerLimit(minRange, slope, pow10(offset), rfiRatio),
 		lowerError = fabs(lowerLimit - histogram.PowerLawLowerLimit(minRange, slope - error, pow10(offset), rfiRatio)),
 		lowerLimit2 = histogram.PowerLawLowerLimit2(minRange, slope, pow10(offset), rfiRatio);
-	str << '\n' << slope << "±" << error << "\n["
+	str << '\n' << slope << "±" << error << "\n/±" << errorB << "\n["
 		<< log10(lowerLimit) << "±" << lowerError << ';' << log10(upperLimit) << ']' << '\n'
 		<< log10(lowerLimit2);
 }

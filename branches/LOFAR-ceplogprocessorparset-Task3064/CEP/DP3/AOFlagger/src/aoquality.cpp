@@ -438,8 +438,7 @@ void printRFISlopeForHistogram(const std::map<HistogramCollection::AntennaPair, 
 		double start, end;
 		histogram.GetRFIRegion(start, end);
 		double slope = histogram.NormalizedSlope(start, end);
-		double offset = histogram.NormalizedSlopeOffset(start, end, slope);
-		double stddev = histogram.NormalizedSlopeStdDev(start, end, slope, offset);
+		double stddev = histogram.NormalizedSlopeStdError(start, end, slope);
 		std::cout << polarizationSymbol << '\t' << a1 << '\t' << a2 << '\t' << length << '\t' << slope << '\t' << stddev << '\n';
 	}
 }

@@ -14,6 +14,7 @@ set(common_LIB_SRCS
   lofar_bitset.cc
   NewHandler.cc
   Numeric.cc
+  ParameterRecord.cc
   ParameterSet.cc
   ParameterSetImpl.cc
   ParameterValue.cc
