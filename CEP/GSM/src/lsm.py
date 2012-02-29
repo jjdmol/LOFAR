@@ -43,20 +43,20 @@ except db.Error, e:
 #ra_c = 286.87425
 #decl_c = 7.1466111111111115
 
-#ra_c = 70.0
-#decl_c = 33.0
-#fov_radius = 5.0
-#assoc_theta = 0.025
+ra_c = 70.0
+decl_c = 33.0
+fov_radius = 5.0
+assoc_theta = 0.025
 #fov_radius = 15.0
 #assoc_theta = 30./3600.
 
 # Test Adam Stewart, Tim Staley
-ra_c = (3.0*15.)
-decl_c = 90.0
-fov_radius = 15
-assoc_theta = (30./3600.)
+#ra_c = (3.0*15.)
+#decl_c = 90.0
+#fov_radius = 15
+#assoc_theta = (30./3600.)
 
-gsm.expected_fluxes_in_fov(conn, ra_c, decl_c, fov_radius, assoc_theta, 'bbs.skymodel.test', storespectraplots=False)
+gsm.expected_fluxes_in_fov(conn, ra_c, decl_c, fov_radius, assoc_theta, 'bbs.skymodel.test', storespectraplots=False, deruiter_radius=3.717, vlss_flux_cutoff=4.)
 
 conn.close()
 
