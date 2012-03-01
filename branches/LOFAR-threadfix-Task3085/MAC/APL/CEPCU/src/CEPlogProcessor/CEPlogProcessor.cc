@@ -400,7 +400,7 @@ void CEPlogProcessor::processParset( const std::string &observationID )
     string filename(formatString("/opt/lofar/share/Observation%s", observationID.c_str()));
 
     ParameterSet parset(filename);
-    Observation obs(&parset);
+    Observation obs(&parset,false);
 
     unsigned nrStreams = obs.streamsToStorage.size();
 

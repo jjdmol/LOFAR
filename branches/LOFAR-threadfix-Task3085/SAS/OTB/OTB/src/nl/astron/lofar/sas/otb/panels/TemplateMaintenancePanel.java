@@ -465,7 +465,7 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
                         if (itsSelectedNode.parentID() == aList.elementAt(i).parentID()) cnt++;
                     }
 
-                    if (aNode.index == -1 && cnt > 1) {
+                    if (aNode.index == -1 && cnt <= 1) {
                         buttonPanel1.setButtonEnabled("Delete", true);
                     } else if (aNode.index != -1 && aNode.instances == 1) {
                         buttonPanel1.setButtonEnabled("Delete", true);
