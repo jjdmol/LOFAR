@@ -22,6 +22,7 @@
 //# $Id:
 
 #include <lofar_config.h>
+#include <Common/SystemUtil.h>
 #include <BBSControl/Package__Version.h>
 #include <BBSControl/CalSession.h>
 #include <BBSControl/CommandHandlerEstimator.h>
@@ -39,7 +40,7 @@ int run(const ParameterSet &options, const OptionParser::ArgumentList &args);
 // Application entry point.
 int main(int argc, char *argv[])
 {
-  const char* progName = basename(argv[0]);
+  const string progName = LOFAR::basename(argv[0]);
   INIT_LOGGER(progName);
   LOG_INFO_STR(Version::getInfo<BBSControlVersion>(progName, "other"));
 
