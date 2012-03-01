@@ -6,6 +6,26 @@
 #--------------------------------------------------------------------------------------------------------
 node  DataProducts     4.0.2  development 'node constraint'  "Place holder for all data products"
 
+#
+# name				name of the parameter
+# direction			I: input only; O: changes will be logged during runtime; IO: both
+# type				parametertype: should exist in param_type table of OTDB (= ParamTypeConv)
+# unit				name of unit of parameter (should exist in unit table (= UnitConv)
+# pruninglevel		when parameter values are thrown away from the database. (NOT YET USED)
+# validationMoment	moment the parameter values is validated (NOT YET USED)
+# value				value(range) of the parameter.
+# constraint		script to run to check its value
+# description		what the parameter manages.
+#--------------------------------------------------------------------------------------------------------
+#    name                dir. type   unit   prun. vm   value                   constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  nrCorrelatedDP    	 I      int     -       10    0    0                      -     'Number of Correlated DataProducts'
+par  nrBeamFormedDP   	 I      int     -       10    0    0                      -     'Number of BeamFormed DataProducts'
+par  nrInstrumentModelDP I      int     -       10    0    0                      -     'Number of InstrumentModel DataProducts'
+par  nrSkyImageDP   	 I      int     -       10    0    0                      -     'Number of SkyImage DataProducts'
+
+
+
 
 #    name              dir.    type   unit     prun.   vm      value   constr. descr.
 #--------------------------------------------------------------------------------------------------------

@@ -3,3 +3,8 @@ Output_CoherentStokes
 Output_IncoherentStokes
 Output_Filtered
 Output_Correlated
+Output_Correlated_
+Output_Beamformed_
+Output_IntrumentModel_
+Output_SkyImage_
+
