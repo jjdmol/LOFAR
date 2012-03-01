@@ -106,8 +106,10 @@ template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::BeamletB
     itsBeamDirectionsAtBegin.resize(itsNrBeams, itsMaxNrPencilBeams + 1);
     itsBeamDirectionsAfterEnd.resize(itsNrBeams, itsMaxNrPencilBeams + 1);
 
-    if (itsDelayCompensation || itsMaxNrPencilBeams > 1)
+    if (itsDelayCompensation || itsMaxNrPencilBeams > 1) {
       itsDelays = new Delays(ps, stationName, itsCurrentTimeStamp);
+      itsDelays->start();
+    }  
 
     if (itsCorrectClocks)
       itsClockCorrectionTime = ps.clockCorrectionTime(stationName);

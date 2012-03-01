@@ -106,9 +106,14 @@ OutputThread::OutputThread(const Parset &parset, OutputType outputType, unsigned
   itsReceiveQueue(receiveQueue),
   itsBlocksWritten(0),
   itsBlocksDropped(0),
-  itsNextSequenceNumber(0),
-  itsThread(this, &OutputThread::mainLoop, itsLogPrefix)
+  itsNextSequenceNumber(0)
 {
+}
+
+
+void OutputThread::start()
+{
+  itsThread = new Thread(this, &OutputThread::mainLoop, itsLogPrefix);
 }
 
 

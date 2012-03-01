@@ -52,7 +52,7 @@ FastFileStream::~FastFileStream()
   if (remainder) {
     // pad with zeroes
     ensureBuffer(alignment);
-    memset(buffer + remainder, 0, alignment - remainder);
+    memset(buffer.get() + remainder, 0, alignment - remainder);
     forceWrite(buffer, alignment);
   }
 } 
