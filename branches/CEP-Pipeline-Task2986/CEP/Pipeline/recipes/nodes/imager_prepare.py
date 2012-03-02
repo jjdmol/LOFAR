@@ -38,8 +38,7 @@ class imager_prepare(LOFARnodeTCP):
         with log_time(self.logger):
             create_directory(working_dir)
             # TODO: Load the input file names ( will be performed by marcel code )
-            self.logger.info("Loading input map from {0}".format(
-                os.path.join(working_dir, "node_input.map")))
+            self.logger.info(eval(input_map_repr))
 
             input_map = eval(input_map_repr)
             target_dir_for_collected_ms = os.path.join(working_dir,
@@ -47,7 +46,7 @@ class imager_prepare(LOFARnodeTCP):
 
             #Copy the input files (caching included for testing purpose)
             missing_files = self._cached_copy_input_files(
-                            target_dir_for_collected_ms, input_map, True)
+                            target_dir_for_collected_ms, input_map, False)
             if len(missing_files): self.logger.info(repr(missing_files))
 
             #run dppp: collect indif frequencies into larger group
@@ -73,8 +72,10 @@ class imager_prepare(LOFARnodeTCP):
         For testing purpose the output, the missing_files can be saved
         allowing the skip of this copy 
         """
+        # TODO: Remove the cached copy for the real version
         missing_files = []
         temp_missing = os.path.join(target_dir_for_collected_ms, "temp_missing")
+        create_directory(target_dir_for_collected_ms)
         if not cached:
             #Collect all files and copy to current node
             missing_files = self._copy_input_files(target_dir_for_collected_ms,
@@ -150,13 +151,8 @@ class imager_prepare(LOFARnodeTCP):
                                           list(zip(*input_map_subgroup)[1]))
 
             #join with the group_measurement_directory
-            # TODO: Fixme the write of the ms is a layer to deep!! The current
-            # input location is incorrect after fix of the input file fix this 
-            # Remove addition x: due to incorrect path structure of source files
-            # maybee this should be data driven and not calculated??
-            # candidate for refactoring
             ndppp_input_ms = map(lambda x: os.path.join(working_dir,
-                         sets_dir, x, x), input_subgroups)
+                         sets_dir, x), input_subgroups)
 
             output_ms_name = "time_slice_{0}.dppp.ms".format(idx_time_slice)
             group_measurements_collected.append(
@@ -196,6 +192,9 @@ class imager_prepare(LOFARnodeTCP):
                 return 1
             finally:
                 os.unlink(temp_parset_filename)
+
+            # TODO: temp fix ger: allows aw imaging in later stages  
+            #pt.addImagingColumns(os.path.join(working_dir, group_dir, output_ms_name))
 
         return group_measurements_collected
 

@@ -7,29 +7,28 @@ import bdsm
 import pyrap.images as pim
 
 class imager_source_finding(LOFARnodeTCP):
+    """
+    The imager_source_finding 
+        
+    """
     def run(self, input_image, bdsm_parameter_run1_path,
             bdsm_parameter_run2x_path, catalog_output_path, image_output_path):
-        """
-        
-        """
+
         self.logger.info("Starting imager_source_finding")
 
         # Crop the image to remove artifacts at the border of the the image
-        # TODO: This must be implemented such that the requested image size 
-        # is resultant in this image!!
+        # TODO: This cropping will be performed in the awimager:
+        self.logger.info("************* {0}".format(input_image))
         img = pim.image(input_image)
-        #subimage(blc=(), trc=(), inc=(), dropdegenerate=True)
-        img_cropped = img.subimage(blc = (0, 0, 75, 75), trc = (0, 3, 437, 437), dropdegenerate = False)
+        img_cropped = img.subimage(blc = (0, 0, 35, 35), trc = (0, 3, 210, 210), dropdegenerate = False)
         input_image_cropped = input_image + ".cropped"
         img_cropped.saveas(input_image_cropped)
 
-
-
-        # default frequency is None (read from image)
+        # default frequency is None (read from image), save for later cycles
         frequency = None
         for idx in range(5):
             # The first iteration uses the input image, second and later use the 
-            # output of the previous iteration. The 1+ itteration have a 
+            # output of the previous iteration. The 1+ iteration have a 
             # seperate parameter set. 
             if idx == 0:
                 input_image_local = input_image_cropped

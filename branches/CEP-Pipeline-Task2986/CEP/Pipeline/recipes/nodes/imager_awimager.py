@@ -67,7 +67,11 @@ class imager_awimager(LOFARnodeTCP):
 
             # The command and parameters to be run
             cmd = [executable, temp_parset_filename]
-
+            self.logger.info("************************************** ")
+            self.logger.info(open(temp_parset_filename).read())
+            self.logger.info(" ".join(cmd))
+            self.logger.info("************************************** ")
+            return 1
             #run awimager
             try:
                 environment = read_initscript(self.logger, init_script)
@@ -99,7 +103,71 @@ class imager_awimager(LOFARnodeTCP):
         suplied argument
         
         '''
+#        TODO: This needs to be adapted to provide a size that is power1
+#        after cropping
         return int(pow(2, math.ceil(math.log(value, 2))))
+
+    def _field_of_view_and_station_diameter(self, measurement_set):
+        """
+        _field_of_view calculates the fov, which is dependend on the
+        station type, location and mode:
+        For details see:        
+        (1) http://www.astron.nl/radio-observatory/astronomers/lofar-imaging-capabilities-sensitivity/lofar-imaging-capabilities/lofar
+        
+        """
+        # Open the ms
+        t = pt.table(measurement_set)
+
+        # Get antenna name and observation mode
+        antenna = pt.table(t.getkeyword("ANTENNA"))
+        antenna_name = antenna.getcell('NAME', 0)
+        antenna.close()
+
+        observation = pt.table(t.getkeyword("OBSERVATION"))
+        antenna_set = observation.getcell('LOFAR_ANTENNA_SET', 0)
+        observation.close
+
+        #static parameters for the station diameters ref (1)     
+        hba_core_diameter = 30.8
+        hba_remote_diameter = 41.1
+        lba_inner = 32.3
+        lba_outer = 81.3
+
+        #use measurement set information to assertain antenna diameter
+        station_diameter = None
+        if antenna_name.count('HBA'):
+            if antenna_name.count('CS'):
+                station_diameter = hba_core_diameter
+            elif antenna_name.count('RS'):
+                station_diameter = hba_remote_diameter
+        elif antenna_name.count('LBA'):
+            if antenna_set.count('INNER'):
+                station_diameter = lba_inner
+            elif antenna_set.count('OUTER'):
+                station_diameter = lba_outer
+
+        #raise exception if the antenna is not of a supported type
+        if station_diameter == None:
+            self.logger.error('Unknown antenna type for antenna: {0} , {1}'.format(\
+                              antenna_name, antenna_set))
+            raise Exception("Unknown antenna type encountered in Measurement set")
+
+        #Get the wavelength
+        spectral_window_table = pt.table(t.getkeyword("SPECTRAL_WINDOW"))
+        freq = float(spectral_window_table.getcell("REF_FREQUENCY", 0))
+        wave_length = pt.taql('CALC C()') / freq
+
+        # Now calculate the FOV see ref (1)
+        # alpha_one is a magic parameter: The value 1.3 is representative for a 
+        # WSRT dish, where it depends on the dish illumination
+        alpha_one = 1.3
+
+        #alpha_one is in radians so transform to degrees for output
+        fwhm = alpha_one * (wave_length / station_diameter) * (180 / math.pi)
+        fov = fwhm / 2.0
+        t.close()
+
+        return fov, station_diameter
 
     def _calc_par_from_measurement(self, measurement_set, parset):
         """
@@ -113,8 +181,8 @@ class imager_awimager(LOFARnodeTCP):
         """
         baseline_limit = get_parset(parset).getInt('maxbaseline')
 
-        ard_sec_in_degree = 3600
-        arc_sec_in_rad = (180.0 / math.pi) * ard_sec_in_degree
+        arc_sec_in_degree = 3600
+        arc_sec_in_rad = (180.0 / math.pi) * arc_sec_in_degree
 
         # Calculate the cell_size         
         max_baseline = pt.taql('CALC sqrt(max([select sumsqr(UVW[:2]) from ' + \
@@ -134,25 +202,10 @@ class imager_awimager(LOFARnodeTCP):
 
         # Calculate the number of pixels in x and y dim
         #    fov and diameter depending on the antenna name
-        fov = None
-        station_diameter = None
-        antenna = pt.table(t.getkeyword("ANTENNA"))
-        antenna_name = antenna.getcell('NAME', 0)
-        antenna.close()
-        t.close()
+        fov, station_diameter = self._field_of_view_and_station_diameter(measurement_set)
 
-        if antenna_name.count('HBA'):
-            fov = 6  #(degrees)
-            station_diameter = 35 #(meters)
-        elif antenna_name.count('LBA'):
-            fov = 3
-            station_diameter = 30
-        else:
-            self.logger.error('unknow antenna type for antenna: {0}'.format(
-                                                antenna_name))
-            return 1
 
-        npix = (ard_sec_in_degree * fov) / cell_size
+        npix = (arc_sec_in_degree * fov) / cell_size
         npix = self._nearest_ceiled_power2(npix)
 
         # Get the max w with baseline < 10000

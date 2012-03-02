@@ -68,11 +68,14 @@ class imager_create_dbs(LOFARnodeTCP):
             self.logger.error("failed creating skymodel")
             return 1
 
-        #convert it to a sourcedb (casa table)
+        # TODO: Allow usage_of_sky_map
+        # convert it to a sourcedb (casa table)
         if self._create_source_db(temp_sky_path, sourcedb_target_path,
                                   init_script, working_directory, makesourcedb_path):
             self.logger.error("failed creating sourcedb")
             return 1
+        # TODo: The output of this step is a sky model
+        self.outputs["sky"] = sourcedb_target_path
 
         # for each slice_set, create a parmdb in the target path
         # slice_paths is string representation of am array, convert
@@ -81,6 +84,7 @@ class imager_create_dbs(LOFARnodeTCP):
                                            parmdb_suffix):
             self.logger.error("failed creating paramdb for slices")
             return 1
+
 
         return 0
 
@@ -106,7 +110,9 @@ class imager_create_dbs(LOFARnodeTCP):
         (pyraptable) 
         """
         # The command and parameters to be run
-        cmd = [executable, "in={0}".format(temp_sky_path), "out={0}".format(sourcedb_target_path), "format=<"]
+        cmd = [executable, "in={0}".format(temp_sky_path),
+               "out={0}".format(sourcedb_target_path),
+               "format=<"] # format according
 
         try:
             environment = read_initscript(self.logger, init_script)
@@ -227,13 +233,15 @@ class imager_create_dbs(LOFARnodeTCP):
         supplied time slices. The paramdb path = input path + suffix.
         returns 0 on succes 1 on failure:
         """
+        parmdbms = []
         for slice_path in slice_paths:
             #Create the paths based on the 'source ms'
             ms_parmdb_path = slice_path + suffix
+            parmdbms.append(ms_parmdb_path)
             #call parmdb return failure if a single create failed 
             if self._create_parmdb(parmdb_executable, ms_parmdb_path) != 0:
                 return 1
-
+        self.outputs["parmdbms"] = parmdbms
         return 0
 
 
