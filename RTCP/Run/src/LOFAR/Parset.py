@@ -606,12 +606,42 @@ class Parset(util.Parset.Parset):
           """ Round x to a multiple of y. """
           return max(int(round(x/y))*y,y)
 
-        cnIntegrationSteps = max(1, roundTo(nrSamplesPerSecond * cnIntegrationTime, lcmlist( [
+        def increase_factors(n):
+          # increase the factors of n; returns a value close to n (<10% off for n<=195312)
+          if n < 4: return n
+
+          factors = []
+
+          while n > 1:
+            for f in [2,3,5,7]:
+              if n % f == 0:
+                factors += [f]
+                n /= f
+                break
+            else:
+              n += 1
+              factors += [3]
+              n /= 3
+
+          prod = lambda l: reduce(lambda x,y: x*y,l,1)
+          return prod(factors)
+
+        # cnIntegrationSteps MUST be a multiple of these values
+        forced_factors = lcmlist( [
           16,
           int(self["OLAP.CNProc_CoherentStokes.timeIntegrationFactor"]),
           int(self["OLAP.CNProc_IncoherentStokes.timeIntegrationFactor"]),
           int(self.get("OLAP.CNProc.dedispersionFFTsize",1)),
-          ])))
+          ] )
+
+        if self.getBool("Observation.DataProducts.Output_Correlated.enabled"):
+          # if doing imaging, don't mess with the block size too much
+          cnIntegrationSteps = roundTo( nrSamplesPerSecond * cnIntegrationTime, forced_factors )
+        else:  
+          # make sure that the remainder is easily factorisable for easier post-processing
+          cnIntegrationSteps = forced_factors * increase_factors( int(round(nrSamplesPerSecond * cnIntegrationTime / forced_factors)) )
+
+        cnIntegrationSteps = max(1, cnIntegrationSteps)
 
         self.setdefault('OLAP.CNProc.integrationSteps', cnIntegrationSteps)
 
