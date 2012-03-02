@@ -26,3 +26,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 lofar_add_bin_program(PythonControl
   PythonControlMain.cc
   PythonControl.cc)
+
+install(PROGRAMS
+  startPython.sh
+  DESTINATION bin)
