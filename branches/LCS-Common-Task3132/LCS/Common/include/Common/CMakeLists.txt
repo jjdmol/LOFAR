@@ -64,6 +64,7 @@ install(FILES
   ParameterValue.h
   PrettyUnits.h
   Process.h
+  PropertyTree.h
   ReadLine.h
   RunOnNode.h
   Singleton.h

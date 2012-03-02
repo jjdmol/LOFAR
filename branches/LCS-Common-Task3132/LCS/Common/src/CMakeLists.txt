@@ -21,6 +21,7 @@ set(common_LIB_SRCS
   InputParSet.cc
   PrettyUnits.cc
   Process.cc
+  PropertyTree.cc
   ReadLine.cc
   RunOnNode.cc
   Stopwatch.cc
