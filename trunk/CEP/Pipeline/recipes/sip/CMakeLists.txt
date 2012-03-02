@@ -6,7 +6,6 @@ python_install(
   master/bbs.py
   master/cimager.py
   master/cep2_datamapper.py
-  master/calibrator_pipeline.py
   master/compression_pipeline.py
   master/count_timesteps.py
   master/datamapper.py
@@ -21,7 +20,6 @@ python_install(
   master/skymodel.py
   master/sourcedb.py
   master/storagemapper.py
-  master/target_pipeline.py
   master/vdsmaker.py
   master/vdsreader.py
   master/__init__.py
@@ -48,8 +46,35 @@ python_install(
   nodes/__init__.py
   DESTINATION lofarpipe/recipes)
 
+install(PROGRAMS
+  bin/msss_calibrator_pipeline.py
+  bin/msss_target_pipeline.py
+  bin/startPython.sh
+  DESTINATION bin)
+
 install(FILES
   pipeline.cfg
   tasks.cfg
-  DESTINATION share)
+  DESTINATION share/pipeline)
+
+install(FILES
+  demixing/bbs_CasA.parset
+  demixing/bbs_CasA_smoothcal.parset
+  demixing/bbs_CygA.parset
+  demixing/bbs_CygA_smoothcal.parset
+  demixing/bbs_HerA.parset
+  demixing/bbs_HerA_smoothcal.parset
+  demixing/bbs_HydA.parset
+  demixing/bbs_HydA_smoothcal.parset
+  demixing/bbs_TauA.parset
+  demixing/bbs_TauA_smoothcal.parset
+  demixing/bbs_VirA.parset
+  demixing/bbs_VirA_smoothcal.parset
+  DESTINATION share/pipeline/demixing)
+
+install(FILES
+  skymodels/3C196.skymodel
+  skymodels/3C48.skymodel
+  skymodels/Ateam_LBA_CC.skymodel
+  DESTINATION share/pipeline/skymodels)
 

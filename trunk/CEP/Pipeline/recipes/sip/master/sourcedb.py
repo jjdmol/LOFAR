@@ -7,16 +7,14 @@
 
 from __future__ import with_statement
 import os
-import collections
+import sys
 
-import lofarpipe.support.utilities as utilities
 import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
-from lofarpipe.support.clusterlogger import clusterlogger
-from lofarpipe.support.group_data import load_data_map
+from lofarpipe.support.group_data import load_data_map, store_data_map
+from lofarpipe.support.group_data import validate_data_maps
 from lofarpipe.support.remotecommand import ComputeJob
-from lofarpipe.support.parset import Parset
 
 class sourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
     """
@@ -34,7 +32,7 @@ class sourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
             '--executable',
             help="Full path to makesourcedb executable",
         ),
-        'skymodel': ingredient.FileField(
+        'skymodel': ingredient.StringField(
             '-s', '--skymodel',
             help="Input sky catalogue"
         ),
@@ -64,26 +62,45 @@ class sourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
         'mapfile': ingredient.FileField()
     }
 
+
     def go(self):
         self.logger.info("Starting sourcedb run")
         super(sourcedb, self).go()
 
         #                           Load file <-> compute node mapping from disk
         # ----------------------------------------------------------------------
-        self.logger.debug("Loading map from %s" % self.inputs['args'][0])
-        data = load_data_map(self.inputs['args'][0])
-
-        command = "python %s" % (self.__file__.replace('master', 'nodes'))
-        outnames = collections.defaultdict(list)
-        jobs = []
-        for host, ms in data:
-            outnames[host].append(
-                os.path.join(
+        args = self.inputs['args']
+        self.logger.debug("Loading input-data mapfile: %s" % args[0])
+        indata = load_data_map(args[0])
+        if len(args) > 1:
+            self.logger.debug("Loading output-data mapfile: %s" % args[1])
+            outdata = load_data_map(args[1])
+            if not validate_data_maps(indata, outdata):
+                self.logger.error(
+                    "Validation of input/output data mapfiles failed"
+                )
+                return 1
+        else:
+            outdata = [
+                (host,
+                 os.path.join(
                     self.inputs['working_directory'],
                     self.inputs['job_name'],
-                    os.path.basename(ms) + self.inputs['suffix']
-                )
+                    os.path.basename(infile) + self.inputs['suffix'])
+                ) for host, infile in indata
+            ]
+
+        # Check if input skymodel file exists. If not, make filename empty.
+        if not os.path.isfile(self.inputs['skymodel']):
+            self.logger.warn(
+                "Source catalog %s does not exist. Using an empty one." %
+                self.inputs['skymodel']
             )
+            self.inputs['skymodel'] = ""
+        
+        command = "python %s" % (self.__file__.replace('master', 'nodes'))
+        jobs = []
+        for host, outfile in outdata:
             jobs.append(
                 ComputeJob(
                     host,
@@ -91,7 +108,7 @@ class sourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
                     arguments=[
                         self.inputs['executable'],
                         self.inputs['skymodel'],
-                        outnames[host][-1]
+                        outfile
                     ]
                 )
             )
@@ -102,9 +119,10 @@ class sourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
         else:
             self.logger.debug("Writing sky map file: %s" % 
                               self.inputs['mapfile'])
-            Parset.fromDict(outnames).writeFile(self.inputs['mapfile'])
+            store_data_map(self.inputs['mapfile'], outdata)
             self.outputs['mapfile'] = self.inputs['mapfile']
             return 0
+
 
 if __name__ == '__main__':
     sys.exit(sourcedb().main())
