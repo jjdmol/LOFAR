@@ -1,7 +1,0 @@
-# ascii dump of database
-
-# DpValue
-ElementName	TypeName	_original.._value	_original.._status	_original.._stime
-__default_b_1.P1	TTypeB	100	0x101	25.05.2004 14:50:53.560
-__default_b_1.P2	TTypeB	\79	0x101	25.05.2004 14:53:26.847
-__default_b_1.P3	TTypeB	100.5	0x101	25.05.2004 14:53:56.908
