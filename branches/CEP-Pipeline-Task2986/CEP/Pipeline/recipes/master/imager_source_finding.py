@@ -1,4 +1,5 @@
 from __future__ import with_statement
+import sys
 import collections
 
 from lofarpipe.support.baserecipe import BaseRecipe
@@ -8,10 +9,10 @@ from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 
 class imager_source_finding(BaseRecipe, RemoteCommandRecipeMixIn):
     inputs = {
-        'job': ingredient.StringField(
-            '--job',
-            help = "Job name: used for storing  (intermediate) data products"
-        ),
+#        'job': ingredient.StringField(
+#            '--job',
+#            help = "Job name: used for storing  (intermediate) data products"
+#        ),
         'initscript': ingredient.FileField(
             '--initscript',
             help = "Initscript to source (ie, lofarinit.sh)"
@@ -25,7 +26,7 @@ class imager_source_finding(BaseRecipe, RemoteCommandRecipeMixIn):
             help = "Path to bdsm parameter set for the second and later" \
                    " sourcefinding runs"
         ),
-        'catalog_output_path': ingredient.FileField(
+        'catalog_output_path': ingredient.StringField(
             '--catalog-output-path',
             help = "Path to write the catalog created by bdsm)"
         ),
@@ -37,19 +38,16 @@ class imager_source_finding(BaseRecipe, RemoteCommandRecipeMixIn):
         super(imager_source_finding, self).go()
         outnames = collections.defaultdict(list)
 
-        input_map = [("locus040", "/data/scratch/klijn/TestImage.restored")]
+        input_map = eval(open(self.inputs['args'][0]).read())
 
-
-        bdsm_parameter_run1_path = "/home/klijn/build/preparation/bdsm_parameters.map"
-        bdsm_parameter_run2x_path = "/home/klijn/build/preparation/bdsm_parameters_2x.map"
-        catalog_output_path = "/data/scratch/klijn/bdsm_output_cat"
+        bdsm_parset_file_run1 = self.inputs["bdsm_parset_file_run1"]
+        bdsm_parset_file_run2x = self.inputs["bdsm_parset_file_run2x"]
+        catalog_output_path = self.inputs["catalog_output_path"]
 
         # TODO FIXME: This output path will be, in the testing phase a 
         # subdirectory of the actual output image.
         # This is the cropped image!!!
         image_output_path = "/data/scratch/klijn/bdsm_output.img" #This is not a
-
-
 
         node_command = " python %s" % (self.__file__.replace("master", "nodes"))
         jobs = []
@@ -58,8 +56,8 @@ class imager_source_finding(BaseRecipe, RemoteCommandRecipeMixIn):
             input_image = "/data/scratch/klijn/TestImage.restored.cropped" # data
             outnames[host].append(data)
             arguments = [data,
-                         bdsm_parameter_run1_path,
-                         bdsm_parameter_run2x_path,
+                         bdsm_parset_file_run1,
+                         bdsm_parset_file_run2x,
                          catalog_output_path,
                          image_output_path
                         ]
@@ -68,14 +66,12 @@ class imager_source_finding(BaseRecipe, RemoteCommandRecipeMixIn):
         # Hand over the job(s) to the pipeline scheduler
         self._schedule_jobs(jobs)
 
-
         # Test for errors
         if self.error.isSet():
-            self.logger.warn("Failed ImagerCreateDBs run detected")
+            self.logger.warn("Failed imager_source_finding run detected")
             return 1
         else:
             return 0
-
 
 
 if __name__ == '__main__':

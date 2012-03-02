@@ -29,8 +29,8 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
 
     """
     inputs = {
-        'ndppp': ingredient.ExecField(
-            '--ndppp',
+        'ndppp_path': ingredient.ExecField(
+            '--ndppp_path',
             help = "The full path to the ndppp executable"
         ),
         'initscript': ingredient.FileField(
@@ -40,20 +40,15 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         ),
         'parset': ingredient.FileField(
             '-p', '--parset',
-            help = "The full path to a PreparePhase configuration parset."
+            help = "The full path to a prepare parset (mainly ndppp)"
         ),
         'working_directory': ingredient.StringField(
             '-w', '--working-directory',
             help = "Working directory used by the nodes: local data"
         ),
-        'suffix': ingredient.StringField(
-            '--suffix',
-            default = ".prepare_imager",
-            help = "Added to the input filename to generate the output filename"
-        ),
-        'output_mapfile': ingredient.FileField(
-            '--output-mapfile',
-            help = "Contains the node and path to target files, defines the"\
+        'output_products_mapfile': ingredient.FileField(
+            '--output-products-mapfile',
+            help = "Contains the node and path to target product files, defines the"\
                " number of nodes the nodes will start on."
         ),
         'slices_per_image': ingredient.IntField(
@@ -95,7 +90,7 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         init_script = self.inputs['initscript']
         parset = self.inputs['parset']
         working_directory = self.inputs['working_directory']
-        ndppp_path = self.inputs['ndppp']
+        ndppp_path = self.inputs['ndppp_path']
         mapfile = self.inputs['mapfile']
         # Validate inputs:
         if len(input_map) != len(output_map) * \
@@ -109,10 +104,7 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         # TODO: candidate for refactoring
         # *********************************************************************
         # Compile the command to be executed on the remote machine, fi
-        nodeCommand = "bash -c '. ${APS_LOCAL}/login/loadpackage.bash LofIm' ; python %s" % (self.__file__.replace("master", "nodes"))
-        #nodeCommand = " bash -c '. /opt/cep/login/bashrc; use LofIm; python %s'" % (self.__file__.replace("master", "nodes"))
-        #TODO: the bash -c is at this location NOT ' limited!!!
-        #This is done very far down in the source code at: run_via_ssh (rematecommand.py) 
+        nodeCommand = " python %s" % (self.__file__.replace("master", "nodes"))
 
         outnames = collections.defaultdict(list)
         jobs = []
@@ -208,8 +200,8 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
 
         # The output locus also determines the computation node
         self.logger.debug("Loading output map:{0}".format(
-                                                self.inputs['output_mapfile']))
-        output_map = eval(open(self.inputs['output_mapfile']).read())
+                                                self.inputs['output_products_mapfile']))
+        output_map = eval(open(self.inputs['output_products_mapfile']).read())
         return input_map, output_map
 
 

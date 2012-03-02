@@ -109,7 +109,11 @@ class imager_bbs(BaseRecipe):
         'new_bbs_path': ingredient.FileField(
             '--new-bbs-path',
             help = "The full path to the new_bbs master script"
-        )
+        ),
+        'gvds_path': ingredient.StringField(
+            '--gvds-path',
+            help = "The full path to the dir where gvd files will be stored"
+        ),
     }
 #    outputs = {
 #        'mapfile': ingredient.FileField(
@@ -138,6 +142,7 @@ class imager_bbs(BaseRecipe):
         runtime_directory_bbs = os.path.join(
             self.inputs["runtime_directory"], "bbs_map_files")
 
+
         create_directory(runtime_directory_bbs)
         try:
             #        When one of our processes fails, we set the killswitch.
@@ -147,11 +152,7 @@ class imager_bbs(BaseRecipe):
 
             command = "python {0}".format(self.inputs["new_bbs_path"])
 
-            gvds_directory = os.path.join(
-                self.config.get("DEFAULT", "default_working_directory"),
-                    "gvds")
-            create_directory(gvds_directory)
-
+            gvds_path = self.inputs["gvds_path"]
             env = {
                 "LOFARROOT": utilities.read_initscript(self.logger, self.inputs['initscript'])["LOFARROOT"],
                 "PYTHONPATH": self.config.get('deploy', 'engine_ppath'),
@@ -187,12 +188,14 @@ class imager_bbs(BaseRecipe):
 
                     # location to save the gvds file
                     gvds_file_path = os.path.join(
-                        gvds_directory, "gvds_{0}".format(job_id))
+                        gvds_path, "gvds_{0}.gds".format(job_id))
 
-                    # Create path for gvds_input (used by, new_bbs)
+                    # Create path to save the input measurement set used by bbs
+                    # to create the gvds file
                     gvds_input_path = os.path.join(
-                        gvds_directory, "gvds_input_{0}".format(job_id))
+                        gvds_path, "input_for_gvds_{0}".format(job_id))
 
+                    # create unique key for the database
                     db_key = "{0}_{1}".format(self.inputs["db_key"], job_id)
 
                     # The actual new_bbs run is started as an seperate thread
@@ -214,7 +217,7 @@ class imager_bbs(BaseRecipe):
                                 "--db-host", self.inputs["db_host"],
                                 "--db-user", self.inputs["db_user"],
                                 "--db-key", db_key,
-                                "--gvds", gvds_file_path
+                                "--gvds", gvds_file_path,
                             )
                         )
                     )
@@ -320,7 +323,9 @@ class imager_bbs(BaseRecipe):
             self.logger.exception("new_BBS  failed to start")
             self.killswitch.set()
             return 1
+
         result = self._monitor_process(bbs_new_process, "new_BBS on %s" % host)
+        self.logger.info(result)
         sout, serr = bbs_new_process.communicate()
         serr = serr.replace("Connection to %s closed.\r\n" % host, "")
         log_process_output("SSH session (new_BBS)", sout, serr, self.logger)
@@ -359,6 +364,7 @@ class imager_bbs(BaseRecipe):
                 # An exception here is likely a ctrl-c or similar. Whatever it
                 # is, we bail out.
                 self.killswitch.set()
+
         return returncode
 
 if __name__ == '__main__':

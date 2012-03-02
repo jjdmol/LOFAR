@@ -12,7 +12,7 @@ import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
-from lofarpipe.support.group_data import load_data_map
+from lofarpipe.support.group_data import load_data_map, store_data_map
 
 class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
     """
@@ -77,6 +77,14 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
             '--slice-paths-mapfile',
             help = "Location of the mapfile containing the slice paths"
         ),
+        'parmdbs_path': ingredient.StringField(
+            '--parmdbs-path',
+            help = "Location of the mapfile to place the outputfile with the paths for each slice pardbm"
+        ),
+        'sky_path': ingredient.StringField(
+            '--sky-path',
+            help = "Location of the mapfile to place the outputfile with sky files (sky map)"
+        ),
         'parmdb_suffix': ingredient.StringField(
             '--parmdb-suffix',
             help = "suffix of the to be created paramdbs"
@@ -93,7 +101,13 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
              '--makesourcedb-path',
              help = "Path to makesourcedb executable."
         ),
-        }
+    }
+
+    outputs = {
+        'sky_path': ingredient.FileField(),
+        'parmdbs_path': ingredient.FileField()
+    }
+
 
 
     def __init__(self):
@@ -164,6 +178,33 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
 
         # Hand over the job(s) to the pipeline scheduler
         self._schedule_jobs(jobs)
+
+        #Collect the output of the node scripts write to (map) files
+        sky_files = []
+        parmdbs = []
+        # now parse the output append to lits
+        for job in jobs:
+            host = job.host
+            if job.results.has_key("sky"):
+                sky_files.append([host, job.results["sky"]])
+            else:
+                self.logger.warn("Warning ImagerCreateDBs run detected: No "
+                                 "skymap file created, {0} continue".format(host))
+
+            if job.results.has_key("parmdbms"):
+                for parmdb in job.results["parmdbms"]:
+                    parmdbs.append([host, parmdb])
+            else:
+                self.logger.warn("Failed ImagerCreateDBs run detected: No "
+                                 "parmdbms created{0} continue".format(host))
+
+        # write the mapfiles     
+        store_data_map(self.inputs["sky_path"], sky_files)
+        store_data_map(self.inputs["parmdbs_path"], parmdbs)
+
+        # return the output path names
+        self.outputs['sky_path'] = self.inputs["sky_path"]
+        self.outputs['parmdbs_path'] = self.inputs["parmdbs_path"]
 
         # Test for errors
         if self.error.isSet():
