@@ -127,7 +127,7 @@ class parameterset(PyParameterSet):
         return parameterset (ps, _copyObj=True)
 
     def keys(self):
-        """Get a sorted list of all parameter names."""
+        """Get the list of all parameter names."""
         return self.keywords()
 
     def dict(self):

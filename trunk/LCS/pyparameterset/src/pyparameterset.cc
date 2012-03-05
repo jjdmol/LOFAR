@@ -39,7 +39,7 @@ namespace LOFAR {
   class PyParameterValue;
 
   // Declare function to convert vector of ParameterValue to PyParameterValue.
-  vector<PyParameterValue> convertPVVector (const vector<ParameterValue>& vec);
+  vector<PyParameterValue> convertVectorPV (const vector<ParameterValue>& vec);
 
   //# Make a class PyParameterSet to be able to add the function version().
   //# We also need a PyParameterValue.
@@ -58,7 +58,7 @@ namespace LOFAR {
     PyParameterValue expand() const
       { return ParameterValue::expand(); }
     vector<PyParameterValue> getVector() const
-      { return convertPVVector (ParameterValue::getVector()); }
+      { return convertVectorPV (ParameterValue::getVector()); }
     PyParameterSet getRecord() const;
   };    
 
@@ -88,12 +88,12 @@ namespace LOFAR {
       { return ParameterSet::get (key); }
 
     vector<PyParameterValue> getVector (const string& key) const
-      { return convertPVVector (ParameterSet::getVector(key)); }
+      { return convertVectorPV (ParameterSet::getVector(key)); }
 
     PyParameterSet getRecord (const string& key)
       { return ParameterSet::getRecord (key); }
 
-    // Return a sorted list of keywords.
+    // Return the list of keywords.
     vector<string> keywords() const
     {
       vector<string> result;
@@ -101,7 +101,6 @@ namespace LOFAR {
       for (ParameterSet::const_iterator iter=begin(); iter!=end(); ++iter) {
         result.push_back (iter->first);
       }
-      std::sort (result.begin(), result.end());
       return result;
     }
   };
@@ -109,7 +108,7 @@ namespace LOFAR {
  inline PyParameterSet PyParameterValue::getRecord() const
     { return ParameterValue::getRecord(); }
 
-  vector<PyParameterValue> convertPVVector (const vector<ParameterValue>& vec)
+  vector<PyParameterValue> convertVectorPV (const vector<ParameterValue>& vec)
   {
     vector<PyParameterValue> out;
     out.reserve (vec.size());
