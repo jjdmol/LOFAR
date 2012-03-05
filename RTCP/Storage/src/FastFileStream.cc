@@ -31,6 +31,7 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <errno.h>
 #include <cstring>
 
 namespace LOFAR {
@@ -53,15 +54,25 @@ FastFileStream::FastFileStream(const std::string &name, int flags, int mode)
 
 FastFileStream::~FastFileStream()
 {
-  off_t curlen = lseek(fd, 0, SEEK_CUR); // NOT SEEK_END, because skip() might push us beyond the end
-  size_t origremainder = remainder;
+  // truncate the file to the exact right length
+  try {
+    errno = 0;
 
-  writeRemainder();
+    off_t curlen = lseek(fd, 0, SEEK_CUR); // NOT SEEK_END, because skip() might push us beyond the end
+    size_t origremainder = remainder;
 
-  if (curlen != (off_t)-1) {
-    // truncate the file to the exact right length
-    (void)ftruncate(fd, curlen + origremainder);
+    // lseek can return -1 as a valid file position, so check errno as well
+    if (curlen == (off_t)-1 && errno)
+      throw SystemCallException("lseek", errno, THROW_ARGS);
+
+    writeRemainder();
+
+    if (ftruncate(fd, curlen + origremainder) < 0)
+      throw SystemCallException("ftruncate", errno, THROW_ARGS);
+  } catch (Exception &ex) {
+    LOG_ERROR_STR("Exception in destructor: " << ex);
   }
+
 }
 
 size_t FastFileStream::writeRemainder()

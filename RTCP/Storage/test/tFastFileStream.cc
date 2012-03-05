@@ -40,7 +40,7 @@ class TempFile {
 public:
   TempFile( const string &dirname = "/tmp/") {
     char templ[1024];
-    snprintf(templ, sizeof templ, "%sFastFileStreamXXXXXX", dirname.c_str());
+    snprintf(templ, sizeof templ, "%stFastFileStreamXXXXXX", dirname.c_str());
 
     filename = mktemp(templ);
   }
