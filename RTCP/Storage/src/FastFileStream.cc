@@ -27,6 +27,7 @@
 #include <Interface/SmartPtr.h>
 #include <Interface/Exceptions.h>
 #include <Common/LofarLogger.h>
+#include <Common/SystemCallException.h>
 
 #include <sys/types.h>
 #include <fcntl.h>
