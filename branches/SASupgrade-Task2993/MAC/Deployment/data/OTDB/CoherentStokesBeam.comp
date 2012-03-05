@@ -1,6 +1,6 @@
-# -- DirectionCoordinate --
+# -- DataproductBeams --
 #
-# Component description of a DiractionCoordinate
+# Component descriptions of all DataproductBeams
 #
 # $Id$
 #
@@ -18,12 +18,11 @@
 #         versionnr is the minimal version the module schould have. (NOT YET IMPLEMENTED)
 #
 
-
 #########################################################################################################
-# -- DirectionAxis -- (LinearAxis- Axis)
+# -- Offset --
 #      name       	vers   qual  		constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node  DirectionAxis	4.0.0  development  	'node constraint'  "DirectionAxis specification"
+node  Offset	4.0.0  development  	'node constraint'  "Offset specification"
 
 #
 # name			name of the parameter
@@ -38,19 +37,17 @@ node  DirectionAxis	4.0.0  development  	'node constraint'  "DirectionAxis speci
 #--------------------------------------------------------------------------------------------------------
 #    name               dir. type   unit   prun. vm   value	constr.	descr.
 #--------------------------------------------------------------------------------------------------------
-par  number		O    uint   -      10    0    0      	- 	''
-par  name		O    text   -      10    0    ''      	- 	''
-par  units		O    text   -      10    0    ''      	- 	''
-par  length		O    uint   -      10    0    0      	- 	''
-par  increment 		O    dbl    -      10    0    0         -       ''
-par  referencePixel     O    dbl    -      10    0    0         -       ''
-par  referenceValue     O    dbl    -      10    0    0         -       ''
+par  equinox        	O    ptext  -      10    0    'B1950|J2000;BJ2000'      -       ''
+par  coordType        	O    ptext  -      10    0    'RA-DEC|AZI-ALT;RA-DEC'      -       ''
+par  coordVal0          O    dbl    -      10    0    0		-  	'RA or azimuth'
+par  coordVal1          O    dbl    -      10    0    0		-  	'DEC or altitude'
+
 
 #########################################################################################################
-# -- DirectionCoordinate --
+# -- CoherentStokesBeam_ --
 #      name       	vers   qual  		constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node  DirectionCoordinate	4.0.0  development  	'node constraint'  "DirectionCoordinate specification"
+node  CoherentStokesBeam	4.0.0  development  	'node constraint'  "CoherentStokesBeam specification"
 
 #
 # name			name of the parameter
@@ -63,20 +60,20 @@ node  DirectionCoordinate	4.0.0  development  	'node constraint'  "DirectionCoor
 # constraint		script to run to check its value
 # description		what the parameter manages.
 #--------------------------------------------------------------------------------------------------------
-#    name                 dir. type   unit   prun. vm   value	constr.	descr.
+#    name                  dir. type   unit   prun. vm   value	constr.	descr.
 #--------------------------------------------------------------------------------------------------------
-par  number	  	  O    uint   -      10    0    0      	        - 	''
-par  nrDirectionAxis      O    int    -      10    0    0               -     	'Number of DirectionAxis'
-par  PC0_0  		  O    dbl    -      10    0    0		-  	''
-par  PC0_1  		  O    dbl    -      10    0    0		-  	''
-par  PC1_0  		  O    dbl    -      10    0    0		-  	''
-par  PC1_1  		  O    dbl    -      10    0    0		-  	''
-par  equinox	      	  O    text -      10    0    ''              -       ''
-par  raDecSystem          O    ptext  -      10    0    'ICRS|FK5|FK4|FK4-NO-E|GAPPT;ICRS'      -       ''
-par  projectionParameters O    dbl    -      10    0    0		-  	''
-par  longitudePole	  O    dbl    -      10    0    0		-  	''
-par  latitudePole	  O    dbl    -      10    0    0		-  	''
+par  beamNumber 	   O    uint   -      10    0    0      	- 	''
+par  dispersionMeasure     O    dbl    -      10    0    0		-  	''
+par  numberOfSubbands      O    uint   _      10    0    0	        -	''
+par  stationSubbands	   O    vint   -      10    0    '[]'      	- 	''
+par  centralFrequencies	   O    vdbl   -      10    0    '[]'      	- 	''
+par  channelWidth  	   O    dbl    -      10    0    0		-  	'>>Obervation.channelWidth'
+par  channelsPerSubband    O    uint   -      10    0    0      	- 	'>>Obervation.channelPerSubband'
 
-#      name              vers   qual        constr.            descr.
+
+#      name              	vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-uses  DirectionAxis      4.0.0  development '1'		       "SpectralTabularAxis specification"
+uses  MeasurementIdentifier     4.0.0  development '1'		      "MeasurementIdentifier specification"
+uses  Pointing     		4.0.0  development '1'		      "Pointing specification"
+uses  Offset     		4.0.0  development '1'		      "Offset specification"
+

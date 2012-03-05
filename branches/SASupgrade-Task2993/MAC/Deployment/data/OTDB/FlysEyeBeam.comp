@@ -1,6 +1,6 @@
-# -- DirectionCoordinate --
+# -- FlysEyeBeam --
 #
-# Component description of a DiractionCoordinate
+# Component descriptions of FlysEyeBeam Dataproduct
 #
 # $Id$
 #
@@ -18,12 +18,11 @@
 #         versionnr is the minimal version the module schould have. (NOT YET IMPLEMENTED)
 #
 
-
 #########################################################################################################
-# -- DirectionAxis -- (LinearAxis- Axis)
+# -- Station --
 #      name       	vers   qual  		constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node  DirectionAxis	4.0.0  development  	'node constraint'  "DirectionAxis specification"
+node  Station	4.0.0  development  	'node constraint'  "Station specification"
 
 #
 # name			name of the parameter
@@ -38,19 +37,25 @@ node  DirectionAxis	4.0.0  development  	'node constraint'  "DirectionAxis speci
 #--------------------------------------------------------------------------------------------------------
 #    name               dir. type   unit   prun. vm   value	constr.	descr.
 #--------------------------------------------------------------------------------------------------------
-par  number		O    uint   -      10    0    0      	- 	''
-par  name		O    text   -      10    0    ''      	- 	''
-par  units		O    text   -      10    0    ''      	- 	''
-par  length		O    uint   -      10    0    0      	- 	''
-par  increment 		O    dbl    -      10    0    0         -       ''
-par  referencePixel     O    dbl    -      10    0    0         -       ''
-par  referenceValue     O    dbl    -      10    0    0         -       ''
+par  name       	O    text   -      10    0    ''      -       ''
+par  stationType        O    ptext  -      10    0    'Core|Remote|International;Core'      -       ''
+par  nrAntennaField 	O    uint   _      10    0    1	        -	'1 or 2 AntennaFields in use'
+par  nameAF0        	O    ptext  -      10    0    'LBA|HBA|HBA0|HBA1;LBA'      -       ''
+par  coordSystAF0       O    ptext  -      10    0    'WGS84|ITRF2000|ITRF2005;WG8S4'      -       ''
+par  coordVal0AF0       O    dbl    -      10    0    0		-  	''
+par  coordVal1AF0       O    dbl    -      10    0    0		-  	''
+par  coordVal2AF0       O    dbl    -      10    0    0		-  	''
+par  nameAF1        	O    ptext  -      10    0    'LBA|HBA|HBA0|HBA1;LBA'      -       ''
+par  coordSystAF1       O    ptext  -      10    0    'WGS84|ITRF2000|ITRF2005;WG8S4'      -       ''
+par  coordVal0AF1       O    dbl    -      10    0    0		-  	''
+par  coordVal1AF1       O    dbl    -      10    0    0		-  	''
+par  coordVal2AF1       O    dbl    -      10    0    0		-  	''
 
 #########################################################################################################
-# -- DirectionCoordinate --
+# -- FlysEyeBeam --
 #      name       	vers   qual  		constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node  DirectionCoordinate	4.0.0  development  	'node constraint'  "DirectionCoordinate specification"
+node  FlysEyeBeam	4.0.0  development  	'node constraint'  "FlysEyeBeam specification"
 
 #
 # name			name of the parameter
@@ -63,20 +68,17 @@ node  DirectionCoordinate	4.0.0  development  	'node constraint'  "DirectionCoor
 # constraint		script to run to check its value
 # description		what the parameter manages.
 #--------------------------------------------------------------------------------------------------------
-#    name                 dir. type   unit   prun. vm   value	constr.	descr.
+#    name                  dir. type   unit   prun. vm   value	constr.	descr.
 #--------------------------------------------------------------------------------------------------------
-par  number	  	  O    uint   -      10    0    0      	        - 	''
-par  nrDirectionAxis      O    int    -      10    0    0               -     	'Number of DirectionAxis'
-par  PC0_0  		  O    dbl    -      10    0    0		-  	''
-par  PC0_1  		  O    dbl    -      10    0    0		-  	''
-par  PC1_0  		  O    dbl    -      10    0    0		-  	''
-par  PC1_1  		  O    dbl    -      10    0    0		-  	''
-par  equinox	      	  O    text -      10    0    ''              -       ''
-par  raDecSystem          O    ptext  -      10    0    'ICRS|FK5|FK4|FK4-NO-E|GAPPT;ICRS'      -       ''
-par  projectionParameters O    dbl    -      10    0    0		-  	''
-par  longitudePole	  O    dbl    -      10    0    0		-  	''
-par  latitudePole	  O    dbl    -      10    0    0		-  	''
+par  beamNumber 	   O    uint   -      10    0    0      	- 	''
+par  dispersionMeasure     O    dbl    -      10    0    0		-  	''
+par  numberOfSubbands      O    uint   _      10    0    0	        -	''
+par  stationSubbands	   O    vint   -      10    0    '[]'      	- 	''
+par  centralFrequencies	   O    vdbl   -      10    0    '[]'      	- 	''
+par  channelWidth  	   O    dbl    -      10    0    0		-  	'>>Obervation.channelWidth'
+par  channelsPerSubband    O    uint   -      10    0    0      	- 	'>>Obervation.channelPerSubband'
 
-#      name              vers   qual        constr.            descr.
+#      name              	vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-uses  DirectionAxis      4.0.0  development '1'		       "SpectralTabularAxis specification"
+uses  MeasurementIdentifier     4.0.0  development '1'		      "MeasurementIdentifier specification"
+uses  Station     		4.0.0  development '1'		      "Station specification"

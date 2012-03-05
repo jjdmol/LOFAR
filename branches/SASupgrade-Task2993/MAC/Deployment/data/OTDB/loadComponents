@@ -66,11 +66,11 @@ solveNode()
 		nodeFile=`grep "^$nodeName " ${NODELISTFILE} | cut -d' ' -f2`
 		grep "^$nodeFile" ${REVERSORDERFILE} >> /dev/null
 		if [ $? == 1 ]; then
-#			echo $nodeName
+			echo $nodeName
 			echo $nodeFile >>${REVERSORDERFILE}
 			solveNode $nodeName
-#		else
-#			echo "Endnode: $nodeName , file=$nodeFile"
+		else
+			echo "Endnode: $nodeName , file=$nodeFile"
 		fi
 	done
 }
@@ -148,7 +148,7 @@ if [ -e $DIR/load_OTDB_comps ]; then
 
   # we now have a file with components (in reverse) order, swap the order
   tac ${REVERSORDERFILE} >${RESULTFILE}
-  rm -f ${NODELISTFILE} ${REVERSORDERFILE}
+#  rm -f ${NODELISTFILE} ${REVERSORDERFILE}
 
   # Construct commandline for load_OTDB_comps
   arguments=$DATABASE
@@ -168,7 +168,7 @@ if [ -e $DIR/load_OTDB_comps ]; then
   fi
 
   # Cleanup
-  rm -f ${UNUSEDFILES} ${RESULTFILE}
+#  rm -f ${UNUSEDFILES} ${RESULTFILE}
 else
   echo "Cannot execute $DIR/load_OTDB_comps (not there, or not executable)"
 fi

@@ -1,6 +1,6 @@
-# -- Output_SkyImage_ --
+# -- MeasurementIdentifier --
 #
-# Component description of a SkyImage Dataproduct
+# Component descriptions of MeasurementIdentifier
 #
 # $Id$
 #
@@ -19,10 +19,10 @@
 #
 
 #########################################################################################################
-# -- Output_SkyImage_ --
+# -- MeasurementIdentifier --
 #      name       	vers   qual  		constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node  Output_SkyImage_	4.0.0  development  	'node constraint'  "SkyImageDataProduct specification"
+node  MeasurementIdentifier	4.0.0  development  	'node constraint'  "MeasurementIdentifier specification"
 
 #
 # name			name of the parameter
@@ -35,23 +35,8 @@ node  Output_SkyImage_	4.0.0  development  	'node constraint'  "SkyImageDataProd
 # constraint		script to run to check its value
 # description		what the parameter manages.
 #--------------------------------------------------------------------------------------------------------
-#    name                  	  dir. type   unit   prun. vm   value	constr.	descr.
+#    name               dir. type   unit   prun. vm   value	constr.	descr.
 #--------------------------------------------------------------------------------------------------------
-par  size 	                  O    ulng   -      10    0    0      	- 	''
-par  fileFormat                   O    ptext  -      10    0    'FITS|Aips++CASA|HDF5;FITS'      -       ''
-par  numberOfAxes	          O    uint   -      10    0    0	        -	''
-par  nrOfDirectionCoordinates     O    uint   -      10    0    0	        -	''
-par  nrOfSpectralCoordinates      O    uint   -      10    0    0	        -	''
-par  nrOfPolarixzationCoordinates O    uint   -      10    0    0	        -	''
-par  coordinateTypes		  O    vtext  -      10    0    '[]'      -       'array to determine coordinate type order'
-par  locationFrame                O    ptext  -      10    0    'GEOCENTER|BARYCENTER|HELIOCENTER|TOPOCENTER|LSRK|LSRD|GALACTIC|LOCAL_GROUP|RELOCATABLE;GEOCENTER'      -       ''
-par  timeFrame	   	          O    text   -      10    0    ''      	- 	''
-
-
-#      name              	vers   qual        constr.       descr.
-#--------------------------------------------------------------------------------------------------------
-uses  Pointing     		4.0.0  development '1'		"Pointing specification"
-uses  DirectionCoordinate    	4.0.0  development '1'		"DirectionCoordinate specification"
-uses  SpectralCoordinate        4.0.0  development '1'		"SpectralCoordinate specification"
-uses  PolarizationCoordinate    4.0.0  development '1'		"PolarizationCoordinate specification"
-
+par  source		O    text   -      10    0    ''      	- 	''
+par  identifier		O    text   -      10    0    ''      	- 	''
+par  name		O    text   -      10    0    ''      	- 	''
