@@ -9,11 +9,11 @@ import monetdb
 import monetdb.sql as db
 import gsmutils as gsm 
 
-db_host = "napels"
+db_host = "ldb002"
 db_dbase = "gsm"
 db_user = "gsm"
 db_passwd = "msss"
-db_port = 60000
+db_port = 51000
 db_autocommit = True
 
 try:
