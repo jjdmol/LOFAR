@@ -92,6 +92,8 @@ node  SpectralCoordinate	4.0.0  development  	'node constraint'  "SpectralCoordi
 #--------------------------------------------------------------------------------------------------------
 par  number		O    uint   -      10    0    0      	- 	''
 par  spectralAxisType   O    ptext  -      10    0   'Tabular|Linear;Tabular' -  ''
+par  nrSpectralLinAxis	O    uint   -      10    0    0      	- 	''
+par  nrSpectralTabAxis	O    uint   -      10    0    0      	- 	''
 par  radioVelocity      O    dbl    -      10    0    0         -       ''
 par  opticalVelocity    O    dbl    -      10    0    0         -       ''
 par  redshift           O    dbl    -      10    0    0         -       ''
