@@ -532,7 +532,7 @@ bool ParentControl::_confirmState(uint16			signal,
 		return (true);
 	}
 
-	if (result != CT_RESULT_NO_ERROR) {		// error reaching a state?
+	if (F_ERR_NR(result) != 0) {			// error reaching a state?
 		parent->failed = true;				// report problem
 		LOG_INFO_STR(cntlrName << " DID NOT reach the " << cts.name(requestedState(signal)) << " state, error=" << result);
 		return (false);
