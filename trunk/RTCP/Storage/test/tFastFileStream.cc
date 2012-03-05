@@ -52,21 +52,21 @@ public:
   string filename;
 };
 
-ssize_t filesize(const string &filename)
+size_t filesize(const string &filename)
 {
   int fd = open(filename.c_str(), O_RDONLY);
   off_t len;
 
   if (fd < 0)
-    return -1;
+    return 0;
 
-  len = lseek(fd, 0, SEEK_END);  
-
-  if (len == (off_t)-1)
-    return -1;
+  len = lseek(fd, 0, SEEK_END);
 
   if (close(fd) < 0)
-    return -1;
+    return 0;
+
+  if (len == (off_t)-1)
+    return 0;
 
   return len;
 }
