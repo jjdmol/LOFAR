@@ -381,6 +381,7 @@ CREATE OR REPLACE FUNCTION instanciateVHtree(INT4, INT4)
 	  	vNewNodeID				VICtemplate.nodeID%TYPE;
 		vNewTreeID				OTDBtree.treeID%TYPE;
 		vOriginID				OTDBtree.treeID%TYPE;
+		vGroupID				OTDBtree.groupID%TYPE;
 		vAuthToken				ALIAS FOR $1;
 
 	BEGIN
@@ -393,8 +394,8 @@ CREATE OR REPLACE FUNCTION instanciateVHtree(INT4, INT4)
 	  END IF;
 
 	  -- get some info about the original tree
-	  SELECT momId, classif, campaign, state, description
-	  INTO	 vMomID, vClassif, vCampaign, vState, vDesc
+	  SELECT momId, classif, campaign, state, description, groupID
+	  INTO	 vMomID, vClassif, vCampaign, vState, vDesc, vGroupID
 	  FROM	 OTDBtree
 	  WHERE	 treeID = $2;
 	  -- note: tree exists, checked in authorisation check
@@ -414,6 +415,9 @@ CREATE OR REPLACE FUNCTION instanciateVHtree(INT4, INT4)
 	  SELECT setDescription($1, vNewTreeID, vDesc)
 	  INTO	 vResult;
 	  -- ignore result, not important.
+
+	  -- copy groupid.
+	  UPDATE OTDBtree set groupid = vGroupID where treeID = vNewTreeID;
 
 	  -- get topNode
 	  SELECT nodeID
