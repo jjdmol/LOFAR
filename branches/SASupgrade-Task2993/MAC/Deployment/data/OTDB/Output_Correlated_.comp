@@ -41,7 +41,7 @@ node  Output_Correlated_	4.0.0  development  	'node constraint'  "CorrelatedData
 par  size		O    uint   -      10    0    0      	- 	''
 par  fileFormat		O    ptext  -      10    0    'FITS|AIPS++/CASA|HDF5;FITS'	-  	''
 par  startTime		O    text   -      10    0    ''      	- 	''
-par  duration		O    uint   _	   10    0    0	        -	'Time in seconds'
+par  duration		O    uint   -	   10    0    0	        -	'Time in seconds'
 par  integrationInterval O   dbl    -      10    0    0		-  	''
 par  centralFrequency   O   dbl     MHz    10    0    0		-  	''
 par  channelWidth 	O   dbl     MHz    10    0    0		-  	''

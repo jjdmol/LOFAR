@@ -38,7 +38,7 @@ node  IncoherentStokesBeam	4.0.0  development  	'node constraint'  "IncoherentSt
 #--------------------------------------------------------------------------------------------------------
 par  beamNumber 	   O    uint   -      10    0    0      	- 	''
 par  dispersionMeasure     O    dbl    -      10    0    0		-  	''
-par  numberOfSubbands      O    uint   _      10    0    0	        -	''
+par  numberOfSubbands      O    uint   -      10    0    0	        -	''
 par  stationSubbands	   O    vint   -      10    0    '[]'      	- 	''
 par  centralFrequencies	   O    vdbl   -      10    0    '[]'      	- 	''
 par  channelWidth  	   O    dbl    -      10    0    0		-  	'>>Obervation.channelWidth'
