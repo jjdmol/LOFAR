@@ -90,20 +90,12 @@ CN_Processing_Base::~CN_Processing_Base()
 }
 
 
-#if defined CLUSTER_SCHEDULING
 template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const Parset &parset, const std::vector<SmartPtr<Stream> > &inputStreams, Stream *(*createStream)(unsigned, const LocationInfo &), const LocationInfo &locationInfo, Allocator &bigAllocator, unsigned firstBlock)
-#else
-template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const Parset &parset, Stream *inputStream, Stream *(*createStream)(unsigned, const LocationInfo &), const LocationInfo &locationInfo, Allocator &bigAllocator, unsigned firstBlock)
-#endif
 :
   itsBigAllocator(bigAllocator),
   itsBlock(firstBlock),
   itsParset(parset),
-#if defined CLUSTER_SCHEDULING
   itsInputStreams(inputStreams),
-#else
-  itsInputStream(inputStream),
-#endif
   itsLocationInfo(locationInfo),
 #if defined HAVE_MPI
   itsTranspose2Logic(parset.CN_transposeLogic(itsLocationInfo.psetNumber(), CN_Mapping::reverseMapCoreOnPset(itsLocationInfo.rankInPset(), itsLocationInfo.psetNumber())))
@@ -392,7 +384,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transposeInput(
 {
 #if defined HAVE_MPI
   if (itsHasPhaseOne)
-    itsInputSubbandMetaData->read(itsInputStream); // sync read the meta data
+    itsInputSubbandMetaData->read(itsInputStreams[0]); // sync read the meta data
 
   if (itsHasPhaseTwo && *itsCurrentSubband < itsNrSubbands) {
     NSTimer postAsyncReceives("post async receives", LOG_CONDITION, true);
@@ -425,7 +417,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transposeInput(
 	  LOG_DEBUG_STR("read subband " << subband << " from IO node at t = " << blockAge());
         }
 	readTimer.start();
-	itsInputData->readOne(itsInputStream, i); // Synchronously read 1 subband from my IO node.
+	itsInputData->readOne(itsInputStreams[0], i); // Synchronously read 1 subband from my IO node.
 	readTimer.stop();
 	asyncSendTimer.start();
         if (LOG_CONDITION) {
@@ -443,8 +435,8 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transposeInput(
   if (itsHasPhaseOne) {
     static NSTimer readTimer("receive timer", true, true);
     readTimer.start();
-    itsInputSubbandMetaData->read(itsInputStream);
-    itsInputData->read(itsInputStream, false);
+    itsInputSubbandMetaData->read(itsInputStreams[0]);
+    itsInputData->read(itsInputStreams[0], false);
     readTimer.stop();
   }
 #endif // HAVE_MPI
