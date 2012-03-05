@@ -47,6 +47,10 @@ class parametervalue(PyParameterValue):
         """Get the full parameter value."""
         return self.get()
 
+    def expand(self):
+        """Expand the value."""
+        return parametervalue(self._expand(), _copyObj=True)
+
     def getVector(self):
         """Get the value as a vector of values."""
         return [parametervalue(v, _copyObj=True) for v in self._getVector()]

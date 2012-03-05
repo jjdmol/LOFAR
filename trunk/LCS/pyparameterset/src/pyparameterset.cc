@@ -55,6 +55,8 @@ namespace LOFAR {
     PyParameterValue (const ParameterValue& pvalue)
       : ParameterValue (pvalue)
     {}
+    PyParameterValue expand() const
+      { return ParameterValue::expand(); }
     vector<PyParameterValue> getVector() const
       { return convertPVVector (ParameterValue::getVector()); }
     PyParameterSet getRecord() const;
@@ -181,7 +183,7 @@ namespace LOFAR {
       .def ("get",      &ParameterValue::get,
             return_value_policy < copy_const_reference> (),
             "Get the original value.")
-      .def ("expand",   &ParameterValue::expand,
+      .def ("_expand",   &PyParameterValue::expand,
             "Expand possible range and repeat values (using .. and *)")
       .def ("isVector", &ParameterValue::isVector,
             "Test if the value contains a vector (if enclosed in [])")
