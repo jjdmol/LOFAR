@@ -24,6 +24,7 @@
 
 #include <StreamMultiplexer.h>
 #include <Common/Thread/Cancellation.h>
+#include <Common/LofarLogger.h>
 
 #include <cstring>
 
@@ -114,7 +115,13 @@ void StreamMultiplexer::receiveThread()
 {
   while (1) {
     RequestMsg msg;
-    itsStream.read(&msg, sizeof msg);
+
+    try {
+      itsStream.read(&msg, sizeof msg);
+    } catch(Stream::EndOfStreamException &) {
+      LOG_FATAL("[StreamMultiplexer] Connection reset by peer");
+      return;
+    }
 
     switch (msg.type) {
       case RequestMsg::RECV_REQ : msg.reqPtr->msg = msg;
