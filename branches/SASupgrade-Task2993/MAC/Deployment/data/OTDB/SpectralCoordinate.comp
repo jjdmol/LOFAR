@@ -88,15 +88,12 @@ node  SpectralCoordinate	4.0.0  development  	'node constraint'  "SpectralCoordi
 # constraint		script to run to check its value
 # description		what the parameter manages.
 #--------------------------------------------------------------------------------------------------------
-#    name               dir. type   unit   prun. vm   value	constr.	descr.
+#    name               	dir. type   unit   prun. vm  value	constr.	descr.
 #--------------------------------------------------------------------------------------------------------
-par  number		O    uint   -      10    0    0      	- 	''
-par  spectralAxisType   O    ptext  -      10    0   'Tabular|Linear;Tabular' -  ''
-par  nrSpectralLinAxis	O    uint   -      10    0    0      	- 	''
-par  nrSpectralTabAxis	O    uint   -      10    0    0      	- 	''
-par  radioVelocity      O    dbl    -      10    0    0         -       ''
-par  opticalVelocity    O    dbl    -      10    0    0         -       ''
-par  redshift           O    dbl    -      10    0    0         -       ''
+par  number			O    uint   -      10    0   0      	- 	''
+par  spectralAxisType   	O    ptext  -      10    0   'Tabular|Linear;Linear' -  ''
+par  spectralQuantityType      	O    ptext  -      10    0   'Frequency|Energy|Wavenumber|VelocityRadio|VelocityOptical|VelocityAppRadial|Redshift|WavelengthVacuum|WavelengthAir|BetaFactor;VelocityRadio'         -       ''
+par  spectralQuantityValue    	O    dbl    -      10    0   0         -       ''
 
 #      name              vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------

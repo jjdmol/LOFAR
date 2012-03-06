@@ -38,7 +38,7 @@ node  Output_BeamFormed_	4.0.0  development  	'node constraint'  "BeamFormedData
 #    name                  dir. type   unit   prun. vm   value	constr.	descr.
 #--------------------------------------------------------------------------------------------------------
 par  size 	           O    ulng   -      10    0    0      	- 	''
-par  fileFormat            O    ptext  -      10    0    'FITS|Aips++CASA|HDF5;FITS'      -       ''
+par  fileFormat            O    ptext  -      10    0    'FITS|Aips++CASA|HDF5;HDF5'      -       ''
 par  nrOfCoherentStokesBeams	   O    uint   -      10    0    0	        -	''
 par  nrOfIncoherentStokesBeams	   O    uint   -      10    0    0	        -	''
 par  nrOfFlysEyeBeams	   O    uint   -      10    0    0	        -	''
