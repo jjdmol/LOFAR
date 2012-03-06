@@ -66,9 +66,14 @@ Delays::Delays(const Parset &parset, const string &stationName, const TimeStamp 
   itsNrSamplesPerSec(parset.nrSubbandSamples()),
   itsSampleDuration(parset.sampleDuration()),
   itsStationName(stationName),
-  itsDelayTimer("delay producer", true, true),
-  itsThread(this, &Delays::mainLoop, "[DelayCompensation] ")
+  itsDelayTimer("delay producer", true, true)
 {
+}
+
+
+void Delays::start()
+{
+  itsThread = new Thread(this, &Delays::mainLoop, "[DelayCompensation] ");
 }
 
 
@@ -190,6 +195,10 @@ void Delays::mainLoop()
       bufferUsed.up(itsNrCalcDelays);
     }
   } catch (AipsError &ex) {
+    // trigger getNextDelays and force it to stop
+    stop = true;
+    bufferUsed.up(1);
+
     THROW(IONProcException, "AipsError: " << ex.what());
   }
 
@@ -205,7 +214,12 @@ void Delays::getNextDelays(Matrix<MVDirection> &directions, Matrix<double> &dela
   ASSERTSTR(delays.num_elements() == itsNrBeams * (itsMaxNrPencilBeams + 1),
 	    delays.num_elements() << " == " << itsNrBeams << "*" << (itsMaxNrPencilBeams + 1));
 
+  ASSERT(itsThread);
+
   bufferUsed.down();
+
+  if (stop)
+    THROW(IONProcException, "Cannot obtain delays -- delay thread stopped running");
 
   // copy the directions at itsBuffer[head] into the provided buffer,
   // and calculate the respective delays

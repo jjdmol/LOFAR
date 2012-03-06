@@ -26,3 +26,9 @@
 
 
 ../src/finddproc tfinddproc.in_vd tfinddproc.in_cd
+echo
+../src/finddproc -dirs /usr/local/xyx0,/usr/local/xyx1 tfinddproc.in_cd
+echo
+../src/finddproc -ndir 1 -dirs /usr/local/xyx0,/usr/local/xyx1 tfinddproc.in_cd
+echo
+../src/finddproc -ndir 5 -dirs /usr/local/xyx0,/usr/local/xyx1 tfinddproc.in_cd

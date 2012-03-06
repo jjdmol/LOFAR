@@ -112,10 +112,11 @@ if __name__ == '__main__':
     
     print "\n%s    %s    %8.3f" %(str(sys.argv[1]).upper(), str(sys.argv[2]).upper(),float(sys.argv[3]))
     while (1):
-	record = cursor.fetchone()
+        record = cursor.fetchone()
         if record == None:
             print 'record even = None'
             break
+        #print record
         XEtrs = [float(record[4]),
                  float(record[5]),
                  float(record[6])]
@@ -123,7 +124,7 @@ if __name__ == '__main__':
         XItrs2000 = convert(XEtrs, date_years, trans)
         
         # write output to generated_coord ??
-        print "%d    %14.6f    %14.6f    %14.6f" %(record[2], XItrs2000[0], XItrs2000[1],XItrs2000[2])
+        print "%s %d    %14.6f    %14.6f    %14.6f" %(str(record[1]), record[2], XItrs2000[0], XItrs2000[1],XItrs2000[2])
         db2.query("select * from add_gen_coord('%s','%s',%s,%s,%s,%s,%s,'%s')" %\
                  (record[0], record[1], record[2], XItrs2000[0], XItrs2000[1], XItrs2000[2], date_years, 'ITRF2005'))
 	#record = None

@@ -113,6 +113,11 @@ if __name__ == "__main__":
       except OSError,msg:
         warning( "Failed to create symlink %s -> %s" % (symlinkName,obsDir) )
 
+      # save in separate location for IO nodes, to prevent contention for NFS drives with other processes
+      parset.setFilename( Locations.resolvePath( Locations.files["parset-ion"], parset ) )
+      info( "Saving parset to %s" % (parset.filename,) )
+      parset.save()
+
       info( "Sending parset %s to the correlator on partition %s" % (parset.filename,parset.partition) )
       try:
         sendCommand( options.partition, "parset %s" % (parset.filename,) )

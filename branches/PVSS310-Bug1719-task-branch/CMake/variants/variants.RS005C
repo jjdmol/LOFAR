@@ -7,6 +7,9 @@ set(PQ_ROOT_DIR /usr/local/pgsql)
 # Search Lapack in /usr first, because Lapack library in /usr/local is broken!
 set(CPPLAPACK_ROOT_DIR /usr)
 
+# log4cplus-1.0.4 root dir
+set(LOG4CPLUS_ROOT_DIR /usr/local/log4cplus)
+
 # Path to PVSS
 #set(PVSS_ROOT_DIR /opt/pvss/pvss2_v3.7)  set via /opt/pvss/pvssproj/VersInfo.mk
 set(PVSS_DEFINITIONS "-Wno-deprecated")
@@ -15,7 +18,7 @@ set(PVSS_DEFINITIONS "-Wno-deprecated")
 set(MATLAB_ROOT_DIR /usr/local/matlab-2008a)
 
 # Path to JAVA
-set(ENV{JAVA_HOME} /usr/local/jdk1.6.0_19)
+set(ENV{JAVA_HOME} /usr/local/jdk1.6.0_29)
 
 # Ignore warnings matching the following pattern(s)
 set(CTEST_CUSTOM_WARNING_EXCEPTION

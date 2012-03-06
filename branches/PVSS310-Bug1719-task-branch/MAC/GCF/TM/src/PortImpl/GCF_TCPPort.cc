@@ -61,6 +61,7 @@ GCFTCPPort::GCFTCPPort(GCFTask& 	 task,
 	itsAutoRetryTimer (0),
 	itsAutoRetries	  (0),
 	itsAutoRetryItv	  (0.0),
+	itsConnectTimer	  (0),
     _broker			  (0)
 {
 	if (SPP == getType() || MSPP == getType()) {
@@ -87,6 +88,7 @@ GCFTCPPort::GCFTCPPort()
 	itsAutoRetryTimer (0),
 	itsAutoRetries	  (0),
 	itsAutoRetryItv	  (0.0),
+	itsConnectTimer	  (0),
     _broker			  (0)
 {
 }
@@ -263,7 +265,9 @@ void GCFTCPPort::autoOpen(uint	nrRetries, double	timeout, double	reconnectInterv
 //
 void GCFTCPPort::_handleDisconnect()
 {
-	LOG_TRACE_COND_STR("_handleDisco:autoOpen=" << (itsAutoOpen ? "Yes" : "No") << ", nrRetries=" << itsAutoRetries << ", retryTimer=" << itsAutoRetryTimer << ", maxTimer=" << itsAutoOpenTimer);
+	LOG_TRACE_STAT_STR("_handleDisco:autoOpen=" << (itsAutoOpen ? "Yes" : "No") << 
+			", nrRetries=" << itsAutoRetries << ", retryTimer=" << itsAutoRetryTimer << 
+			", maxTimer=" << itsAutoOpenTimer << ", connTimer=" << itsConnectTimer);
 
     setState(S_DISCONNECTED);
 	LOG_TRACE_COND_STR("_state=" << _state);
@@ -298,6 +302,10 @@ void GCFTCPPort::_handleDisconnect()
 //
 void GCFTCPPort::_handleConnect()
 {
+	LOG_TRACE_STAT_STR("_handleConn:autoOpen=" << (itsAutoOpen ? "Yes" : "No") << 
+			", nrRetries=" << itsAutoRetries << ", retryTimer=" << itsAutoRetryTimer << 
+			", maxTimer=" << itsAutoOpenTimer << ", connTimer=" << itsConnectTimer);
+
 	// stop all related timers.
 	_pTimerHandler->cancelTimer(itsConnectTimer);
 	itsConnectTimer = 0;

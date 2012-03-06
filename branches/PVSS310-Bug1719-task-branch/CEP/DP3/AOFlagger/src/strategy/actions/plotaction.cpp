@@ -19,6 +19,8 @@
  ***************************************************************************/
 #include <boost/thread.hpp>
 
+#include <lofar_config.h>
+
 #include <AOFlagger/strategy/actions/plotaction.h>
 
 #include <AOFlagger/strategy/plots/antennaflagcountplot.h>
@@ -65,6 +67,9 @@ namespace rfiStrategy {
 				break;
 		}
 	}
+
+
+#ifdef HAVE_GTKMM
 
 	void PlotAction::plotAntennaFlagCounts(ArtifactSet &artifacts)
 	{
@@ -160,4 +165,30 @@ namespace rfiStrategy {
 			plot->Add(artifacts.ContaminatedData(), artifacts.MetaData());
 		}
 	}
+
+#else
+	void PlotAction::plotAntennaFlagCounts(ArtifactSet &)
+	{}
+
+	void PlotAction::plotFrequencyFlagCounts(ArtifactSet &)
+	{}
+
+	void PlotAction::plotFrequencyPower(ArtifactSet &)
+	{}
+
+	void PlotAction::plotTimeFlagCounts(ArtifactSet &)
+	{}
+
+	void PlotAction::plotSpectrumPerBaseline(ArtifactSet &)
+	{}
+
+	void PlotAction::plotPolarizationFlagCounts(ArtifactSet &)
+	{}
+
+	void PlotAction::plotBaselineRMS(ArtifactSet &)
+	{}
+	
+	void PlotAction::plotIterations(class ArtifactSet &)
+	{}
+#endif
 }

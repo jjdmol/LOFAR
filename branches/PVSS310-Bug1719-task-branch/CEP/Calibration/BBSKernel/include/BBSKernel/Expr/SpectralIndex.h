@@ -43,8 +43,8 @@ public:
     typedef shared_ptr<const SpectralIndex> ConstPtr;
 
     template <typename T_ITER>
-    SpectralIndex(const Expr<Scalar>::ConstPtr &refFreq,
-        const Expr<Scalar>::ConstPtr &refStokes, T_ITER first, T_ITER last);
+    SpectralIndex(double refFreq, const Expr<Scalar>::ConstPtr &refStokes,
+        T_ITER first, T_ITER last);
 
     virtual ~SpectralIndex();
 
@@ -56,11 +56,10 @@ protected:
         unsigned int grid) const;
 
     virtual const Scalar::View evaluateImpl(const Grid &grid,
-        const Scalar::View &refFreq, const Scalar::View &refStokes,
-        const vector<Scalar::View> &coeff) const;
+        const Scalar::View &refStokes, const vector<Scalar::View> &coeff) const;
 
 private:
-    Expr<Scalar>::ConstPtr          itsRefFreq;
+    double                          itsRefFreq;
     Expr<Scalar>::ConstPtr          itsRefStokes;
     vector<Expr<Scalar>::ConstPtr>  itsCoeff;
 };
@@ -72,20 +71,18 @@ private:
 // -------------------------------------------------------------------------- //
 
 template <typename T_ITER>
-SpectralIndex::SpectralIndex(const Expr<Scalar>::ConstPtr &refFreq,
+SpectralIndex::SpectralIndex(double refFreq,
     const Expr<Scalar>::ConstPtr &refStokes, T_ITER first, T_ITER last)
     :   itsRefFreq(refFreq),
         itsRefStokes(refStokes),
         itsCoeff(first, last)
 {
-    connect(itsRefFreq);
     connect(itsRefStokes);
     for(unsigned int i = 0; i < itsCoeff.size(); ++i)
     {
         connect(itsCoeff[i]);
     }
 }
-
 
 } //# namespace BBS
 } //# namespace LOFAR

@@ -41,7 +41,7 @@
 
 using namespace LOFAR::BBS;
 using namespace casa;
-using namespace askap;
+using namespace askap::accessors;
 using namespace askap::synthesis;
 
 namespace LOFAR

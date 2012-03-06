@@ -20,6 +20,9 @@ include(LofarPackageVersion)
 
 # Create symbolic links to include directory.
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/calibaccess
+  ${CMAKE_BINARY_DIR}/include/ASKAPsoft/calibaccess)
+execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
   ${CMAKE_CURRENT_SOURCE_DIR}/src/dataaccess
   ${CMAKE_BINARY_DIR}/include/ASKAPsoft/dataaccess)
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
@@ -28,6 +31,7 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 
 # Generate list of sources for library askap_accessors
 file(GLOB askap_accessors_SOURCES
+  src/calibaccess/*.cc
   src/dataaccess/*.cc
   src/imageaccess/*.cc)
 

@@ -27,9 +27,9 @@ Image2D *FFTTools::CreateFFTImage(const Image2D &original, FFTOutputMethod metho
 {
 	Image2D *image;
 	if(method == Both)
-	 image = Image2D::CreateEmptyImage(original.Width()+2, original.Height());
+	 image = Image2D::CreateUnsetImage(original.Width()+2, original.Height());
 	else
-	 image = Image2D::CreateEmptyImage(original.Width()/2+1, original.Height());
+	 image = Image2D::CreateUnsetImage(original.Width()/2+1, original.Height());
 	unsigned long n_in = original.Width() * original.Height();
 	unsigned long n_out = original.Width() * (original.Height()/2+1);
 	
@@ -127,10 +127,11 @@ void FFTTools::CreateFFTImage(const Image2D &real, const Image2D &imaginary, Ima
 	fftw_execute(plan);
 	
 	ptr = 0;
+	const num_t normFactor = 1.0/sqrtn((num_t) real.Width() * real.Height());
 	for(unsigned long y=0;y<real.Height();y++) {
 		for(unsigned long x=0;x<real.Width();x++) {
-			realOut.SetValue(x, y, out[ptr][0]);
-			imaginaryOut.SetValue(x, y, out[ptr][1]);
+			realOut.SetValue(x, y, out[ptr][0] * normFactor);
+			imaginaryOut.SetValue(x, y, out[ptr][1] * normFactor);
 			ptr++;
 		}
 	}
@@ -150,7 +151,7 @@ void FFTTools::CreateFFTImage(const Image2D &real, const Image2D &imaginary, Ima
 Image2D *FFTTools::CreateFullImageFromFFT(const Image2D &fft)
 {
 	int width = fft.Width()*2;
-	Image2D *image = Image2D::CreateEmptyImage(width, fft.Height());
+	Image2D *image = Image2D::CreateUnsetImage(width, fft.Height());
 	for(unsigned y=0;y<fft.Height();++y) {
 		for(unsigned x=0;x<fft.Width();++x) {
 			image->SetValue(x, y, fft.Value(fft.Width()-x-1, (y+fft.Height()/2)%fft.Height()));
@@ -162,7 +163,7 @@ Image2D *FFTTools::CreateFullImageFromFFT(const Image2D &fft)
 
 Image2D *FFTTools::CreateShiftedImageFromFFT(const Image2D &fft)
 {
-	Image2D *image = Image2D::CreateEmptyImage(fft.Width(), fft.Height());
+	Image2D *image = Image2D::CreateUnsetImage(fft.Width(), fft.Height());
 	for(unsigned y=0;y<fft.Height();++y) {
 		for(unsigned x=0;x<fft.Width();++x) {
 			image->SetValue(x, y, fft.Value((x+fft.Width()/2)%fft.Width(), (y+fft.Height()/2)%fft.Height()));
@@ -173,7 +174,7 @@ Image2D *FFTTools::CreateShiftedImageFromFFT(const Image2D &fft)
 
 Image2D *FFTTools::CreateAbsoluteImage(const Image2D &real, const Image2D &imaginary)
 {
-	Image2D *image = Image2D::CreateEmptyImage(real.Width(), real.Height());
+	Image2D *image = Image2D::CreateUnsetImage(real.Width(), real.Height());
 	for(unsigned y=0;y<real.Height();++y) {
 		for(unsigned x=0;x<real.Width();++x)
 			image->SetValue(x, y, sqrtl(real.Value(x,y)*real.Value(x,y) + imaginary.Value(x,y)*imaginary.Value(x,y)));
@@ -183,7 +184,7 @@ Image2D *FFTTools::CreateAbsoluteImage(const Image2D &real, const Image2D &imagi
 
 Image2DPtr FFTTools::CreatePhaseImage(Image2DCPtr real, Image2DCPtr imaginary)
 {
-	Image2DPtr image = Image2D::CreateEmptyImagePtr(real->Width(), real->Height());
+	Image2DPtr image = Image2D::CreateUnsetImagePtr(real->Width(), real->Height());
 	for(unsigned y=0;y<real->Height();++y) {
 		for(unsigned x=0;x<real->Width();++x)
 			image->SetValue(x, y, SinusFitter::Phase(real->Value(x,y), imaginary->Value(x,y)));
@@ -194,12 +195,12 @@ Image2DPtr FFTTools::CreatePhaseImage(Image2DCPtr real, Image2DCPtr imaginary)
 void FFTTools::FFTConvolve(const Image2D &realIn, const Image2D &imaginaryIn, const Image2D &realKernel, const Image2D &imaginaryKernel, Image2D &outReal, Image2D &outImaginary)
 {
 	Image2D
-		*realFFTIn = Image2D::CreateEmptyImage(realIn.Width(), realIn.Height()),
-		*imaginaryFFTIn = Image2D::CreateEmptyImage(imaginaryIn.Width(), imaginaryIn.Height());
+		*realFFTIn = Image2D::CreateUnsetImage(realIn.Width(), realIn.Height()),
+		*imaginaryFFTIn = Image2D::CreateUnsetImage(imaginaryIn.Width(), imaginaryIn.Height());
 	CreateFFTImage(realIn, imaginaryIn, *realFFTIn, *imaginaryFFTIn); 
 	Image2D
-		*realFFTKernel = Image2D::CreateEmptyImage(realKernel.Width(), realKernel.Height()),
-		*imaginaryFFTKernel = Image2D::CreateEmptyImage(imaginaryKernel.Width(), imaginaryKernel.Height());
+		*realFFTKernel = Image2D::CreateUnsetImage(realKernel.Width(), realKernel.Height()),
+		*imaginaryFFTKernel = Image2D::CreateUnsetImage(imaginaryKernel.Width(), imaginaryKernel.Height());
 	CreateFFTImage(realKernel, imaginaryKernel, *realFFTKernel, *imaginaryFFTKernel);
 
 	Multiply(*realFFTIn, *imaginaryFFTIn, *realFFTKernel, *imaginaryFFTKernel);
@@ -232,8 +233,8 @@ void FFTTools::FFTConvolve(const Image2D &realIn, const Image2D &imaginaryIn, co
 void FFTTools::FFTConvolveFFTKernel(const Image2D &realIn, const Image2D &imaginaryIn, const Image2D &realFFTKernel, const Image2D &imaginaryFFTKernel, Image2D &outReal, Image2D &outImaginary)
 {
 	Image2D
-		*realFFTIn = Image2D::CreateEmptyImage(realIn.Width(), realIn.Height()),
-		*imaginaryFFTIn = Image2D::CreateEmptyImage(imaginaryIn.Width(), imaginaryIn.Height());
+		*realFFTIn = Image2D::CreateUnsetImage(realIn.Width(), realIn.Height()),
+		*imaginaryFFTIn = Image2D::CreateUnsetImage(imaginaryIn.Width(), imaginaryIn.Height());
 	CreateFFTImage(realIn, imaginaryIn, *realFFTIn, *imaginaryFFTIn);
 
 	Multiply(*realFFTIn, *imaginaryFFTIn, realFFTKernel, imaginaryFFTKernel);
@@ -342,8 +343,8 @@ void FFTTools::CreateDynamicHorizontalFFTImage(Image2DPtr real, Image2DPtr imagi
 		imaginaryRow = SampleRow::CreateFromRowSum(imaginary, 0, imaginary->Height());
 
 	Image2DPtr
-		destReal = Image2D::CreateEmptyImagePtr(real->Width(), real->Height()),
-		destImag = Image2D::CreateEmptyImagePtr(real->Width(), real->Height());
+		destReal = Image2D::CreateUnsetImagePtr(real->Width(), real->Height()),
+		destImag = Image2D::CreateUnsetImagePtr(real->Width(), real->Height());
 	
 	unsigned long n_in = width;
 	fftw_complex *in = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * n_in);
@@ -392,7 +393,7 @@ void FFTTools::CreateDynamicHorizontalFFTImage(Image2DPtr real, Image2DPtr imagi
 Image2DPtr FFTTools::AngularTransform(Image2DCPtr image)
 {
 	size_t minDim = image->Width() > image->Height() ? image->Height() : image->Width(); 
-	Image2D *transformedImage = Image2D::CreateEmptyImage(minDim, minDim);
+	Image2D *transformedImage = Image2D::CreateUnsetImage(minDim, minDim);
 	numl_t
 		halfMinDim = (numl_t) minDim / 2.0,
 		halfWidth = (numl_t) image->Width()/2.0,

@@ -64,12 +64,12 @@ void IndirectBaselineReader::PerformReadRequests()
 	{
 		const ReadRequest request = _readRequests[i];
 		_results.push_back(Result());
-		const size_t width = ObservationTimes().size();
+		const size_t width = AllObservationTimes().size();
 		for(size_t p=0;p<PolarizationCount();++p)
 		{
 			if(ReadData()) {
-				_results[i]._realImages.push_back(Image2D::CreateEmptyImagePtr(width, FrequencyCount()));
-				_results[i]._imaginaryImages.push_back(Image2D::CreateEmptyImagePtr(width, FrequencyCount()));
+				_results[i]._realImages.push_back(Image2D::CreateZeroImagePtr(width, FrequencyCount()));
+				_results[i]._imaginaryImages.push_back(Image2D::CreateZeroImagePtr(width, FrequencyCount()));
 			}
 			if(ReadFlags()) {
 				// The flags should be initialized to true, as a baseline might
@@ -264,7 +264,7 @@ void IndirectBaselineReader::reorderMS()
 		double time = timeColumn(rowIndex);
 		if(time != prevTime)
 		{
-			timeIndex = ObservationTimes().find(time)->second;
+			timeIndex = AllObservationTimes().find(time)->second;
 			if(timeIndex != prevTimeIndex+1)
 			{
 				std::stringstream s;
@@ -525,7 +525,7 @@ void IndirectBaselineReader::updateOriginalMS()
 		if(time != prevTime)
 		{
 			// This row has a different time value, so search it up in the index table and do sanity check
-			timeIndex = ObservationTimes().find(time)->second;
+			timeIndex = AllObservationTimes().find(time)->second;
 			if(timeIndex != prevTimeIndex+1)
 			{
 				std::stringstream s;

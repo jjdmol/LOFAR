@@ -5,21 +5,15 @@ import shutil, os.path
 import sys
 
 class parmdb(LOFARnodeTCP):
-    def run(self, infile, pdb):
+    def run(self, pdb_in, pdb_out):
         with log_time(self.logger):
-            if os.path.exists(infile):
-                self.logger.info("Processing %s" % (infile))
-            else:
-                self.logger.error("Dataset %s does not exist" % (infile))
-                return 1
-
-            output = os.path.join(infile, os.path.basename(pdb))
+            self.logger.debug("Copying parmdb: %s --> %s" % (pdb_in, pdb_out))
 
             # Remove any old parmdb database
-            shutil.rmtree(output, ignore_errors=True)
+            shutil.rmtree(pdb_out, ignore_errors=True)
 
             # And copy the new one into place
-            shutil.copytree(pdb, output)
+            shutil.copytree(pdb_in, pdb_out)
 
         return 0
 

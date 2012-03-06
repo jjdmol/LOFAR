@@ -25,7 +25,6 @@
 #include <BBSKernel/ParmManager.h>
 #include <BBSKernel/Expr/ExprParm.h>
 #include <BBSKernel/Expr/ExprAdaptors.h>
-#include <BBSKernel/Expr/SpectralIndex.h>
 #include <BBSKernel/Expr/ShapeletCoherence.h>
 #include <BBSKernel/Expr/Scope.h>
 
@@ -45,39 +44,6 @@ ShapeletSource::ShapeletSource(const SourceInfo &source, Scope &scope)
 {
     ASSERT(source.getType() == SourceInfo::SHAPELET);
 
-    unsigned int degree =
-        static_cast<unsigned int>(ParmManager::instance().getDefaultValue(SKY,
-            "SpectralIndexDegree:" + name()));
-
-    // Reference frequency.
-    ExprParm::Ptr refFreq = scope(SKY, "ReferenceFrequency:" + name());
-
-    // Stokes parameter value at the reference frequency.
-    ExprParm::Ptr refStokes = scope(SKY, "I:" + name());
-
-    vector<Expr<Scalar>::Ptr> coeff;
-    coeff.reserve(degree + 1);
-    for(unsigned int i = 0; i <= degree; ++i)
-    {
-        ostringstream oss;
-        oss << "SpectralIndex:" << i << ":" << name();
-        coeff.push_back(scope(SKY, oss.str()));
-    }
-
-    Expr<Scalar>::Ptr stokesI = Expr<Scalar>::Ptr(new SpectralIndex(refFreq,
-        refStokes, coeff.begin(), coeff.end()));
-
-    ExprParm::Ptr stokesQ = scope(SKY, "Q:" + name());
-    ExprParm::Ptr stokesU = scope(SKY, "U:" + name());
-    ExprParm::Ptr stokesV = scope(SKY, "V:" + name());
-
-    AsExpr<Vector<4> >::Ptr stokes(new AsExpr<Vector<4> >());
-    stokes->connect(0, stokesI);
-    stokes->connect(1, stokesQ);
-    stokes->connect(2, stokesU);
-    stokes->connect(3, stokesV);
-    itsStokesVector = stokes;
-
     itsShapeletScaleI=source.getShapeletScaleI();
     itsShapeletScaleQ=source.getShapeletScaleQ();
     itsShapeletScaleU=source.getShapeletScaleU();
@@ -93,8 +59,7 @@ Expr<JonesMatrix>::Ptr
 ShapeletSource::coherence(const Expr<Vector<3> >::ConstPtr &uvwLHS,
     const Expr<Vector<3> >::ConstPtr &uvwRHS) const
 {
-
-    return Expr<JonesMatrix>::Ptr(new ShapeletCoherence(itsStokesVector,
+    return Expr<JonesMatrix>::Ptr(new ShapeletCoherence(stokes(),
         itsShapeletScaleI, itsShapeletCoeffI, uvwLHS, uvwRHS));
 }
 

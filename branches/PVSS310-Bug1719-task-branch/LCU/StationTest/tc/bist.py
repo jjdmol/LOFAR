@@ -75,9 +75,13 @@ tc.sleep(1000)
 #   ty st frlen blp rsp  pi rg  offset payld  seqnr  rsvd   Data ...
 #   02 00 14 00 0F  01   03 06  00 00  04 00  06 00  00 00  00 06 02 00  00 00 00 00  00 00 00 00  00 00 00 00
 #
-tst_interface = rsp.c_diag_dev_ri           # 0 = RI
-tst_mode      = rsp.c_diag_mode_bus         # 6 = mode bus is mode tx,rx
-selftest = [tst_interface, tst_mode, tst_duration, tst_lane]
+# - See rsp.py for c_diag constant definitions and diag result values (e.g. c_diag_res_ok = 0 and c_diag_res_word_err = 4)
+tst_interface = rsp.c_diag_dev_ri           # 0 = RI is 14 lanes LVDS Ring Interface: BP Tx -> Rx AP0 Tx -> Rx AP1 Tx -> Rx AP2 Tx -> Rx AP3 Tx -> Rx BP
+tst_mode      = rsp.c_diag_mode_lane_all    # 7 = test one lane LVDS (from 0:13 selected by test_lane), others carry zero and are verified for crosstalk
+tst_mode      = rsp.c_diag_mode_lane_single # 8 = test one lane LVDS (from 0:13 selected by test_lane), others carry zero and are not verified
+tst_mode      = rsp.c_diag_mode_bus         # 6 = test all 14 LVDS lanes with datagen words, mode bus is mode tx,rx
+tst_lane      = 0                           # select 0:13 when tst_mode=7 or 8, else for tst_mode 6 don't care choose 0
+selftest = [tst_interface, tst_mode, tst_duration,tst_lane]
 rsp.write_diag_selftest(tc, msg, selftest, fpgaId, rspId, 99)
 tc.sleep(1000)
   

@@ -35,12 +35,25 @@
 class MitigationTester{
 	public:
 		enum NoiseType { Gaussian, GaussianProduct, GaussianPartialProduct, Rayleigh };
+		enum BroadbandShape { UniformShape, GaussianShape, SinusoidalShape, BurstShape };
 	
-		MitigationTester();
-
-		~MitigationTester();
-
 		void GenerateNoise(size_t scanCount, size_t frequencyCount, bool independentComplex = false, double sigma=1.0, enum NoiseType noiseType=GaussianPartialProduct);
+		
+		static double shapeLevel(enum BroadbandShape shape, double x)
+		{
+			switch(shape)
+			{
+				default:
+				case UniformShape:
+					return 1.0;
+				case GaussianShape:
+					return exp(-x*x*3.0*3.0);
+				case SinusoidalShape:
+					return (1.0 + cos(x*M_PI*2.0*1.5)) * 0.5;
+				case BurstShape:
+					return RNG::Gaussian() * 0.6;
+			}
+		}
 
 		static class Image2D *CreateRayleighData(unsigned width, unsigned height);
 		static class Image2D *CreateGaussianData(unsigned width, unsigned height);
@@ -63,7 +76,8 @@ class MitigationTester{
 			AddBroadbandLine(data, rfi, lineStrength, startTime, duration, frequencyRatio, 0.5L - frequencyRatio/2.0L);
 		}
 		static void AddBroadbandLine(Image2DPtr data, Mask2DPtr rfi, double lineStrength, size_t startTime, size_t duration, double frequencyRatio, double frequencyOffsetRatio);
-		static void AddBroadbandLinePos(Image2DPtr data, Mask2DPtr rfi, double lineStrength, size_t startTime, size_t duration, unsigned frequencyStart, double frequencyEnd, bool gaussianStrength);
+		static void AddBroadbandLinePos(Image2DPtr data, Mask2DPtr rfi, double lineStrength, size_t startTime, size_t duration, unsigned frequencyStart, double frequencyEnd, enum BroadbandShape shape);
+		static void AddSlewedBroadbandLinePos(Image2DPtr data, Mask2DPtr rfi, double lineStrength, double slewrate, size_t startTime, size_t duration, unsigned frequencyStart, double frequencyEnd, enum BroadbandShape shape);
 		static void AddRfiPos(Image2DPtr data, Mask2DPtr rfi, double lineStrength, size_t startTime, size_t duration, unsigned frequencyPos);
 
 		void AddRFI(size_t &rfiCount);
@@ -82,12 +96,30 @@ class MitigationTester{
 
 		static std::string GetTestSetDescription(int number);
 		static Image2DPtr CreateTestSet(int number, Mask2DPtr rfi, unsigned width, unsigned height, int gaussianNoise = 1);
-
+		static void AddGaussianBroadbandToTestSet(Image2DPtr image, Mask2DPtr rfi)
+		{
+			AddBroadbandToTestSet(image, rfi, 1.0, 1.0, false, GaussianShape);
+		}
+		static void AddSinusoidalBroadbandToTestSet(Image2DPtr image, Mask2DPtr rfi)
+		{
+			AddBroadbandToTestSet(image, rfi, 1.0, 1.0, false, SinusoidalShape);
+		}
+		static void AddBurstBroadbandToTestSet(Image2DPtr image, Mask2DPtr rfi)
+		{
+			AddBroadbandToTestSet(image, rfi, 1.0, 1.0, false, BurstShape);
+		}
+		static void AddSlewedGaussianBroadbandToTestSet(Image2DPtr image, Mask2DPtr rfi)
+		{
+			AddSlewedBroadbandToTestSet(image, rfi, 1.0);
+		}
+		
 	private:
-		static void AddBroadbandToTestSet(Image2DPtr image, Mask2DPtr rfi, long double length, double strength=1.0, bool align=false, bool gaussianStrength=false);
+		static void AddBroadbandToTestSet(Image2DPtr image, Mask2DPtr rfi, long double length, double strength=1.0, bool align=false, enum BroadbandShape shape=UniformShape);
+		static void AddSlewedBroadbandToTestSet(Image2DPtr image, Mask2DPtr rfi, long double length, double strength=1.0, double slewrate=0.02, enum BroadbandShape shape=GaussianShape);
 		static void AddVarBroadbandToTestSet(Image2DPtr image, Mask2DPtr rfi);
 		static void AddModelData(Image2DPtr image, unsigned sources);
 		static void SubtractBackground(Image2DPtr image);
+		static Image2DPtr sampleRFIDistribution(unsigned width, unsigned height, double ig_over_rsq);
 
 		static double Rand(enum NoiseType type) {
 			switch(type) {
@@ -101,6 +133,9 @@ class MitigationTester{
 
 		Image2DPtr _real, _imaginary;
 		void Clear();
+		
+		MitigationTester();
+		~MitigationTester();
 };
 
 template<typename T1,typename T2>

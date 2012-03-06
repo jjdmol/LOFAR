@@ -21,6 +21,7 @@
 
 #include <lofar_config.h>
 #include <Common/ParameterSet.h>
+#include <Common/ParameterRecord.h>
 #include <pytools/PycExcp.h>
 #include <pytools/PycBasicData.h>
 #include <boost/python.hpp>
@@ -32,6 +33,34 @@
 using namespace boost::python;
 
 namespace LOFAR { 
+
+  //# Forward declarations.
+  class PyParameterSet;
+  class PyParameterValue;
+
+  // Declare function to convert vector of ParameterValue to PyParameterValue.
+  vector<PyParameterValue> convertVectorPV (const vector<ParameterValue>& vec);
+
+  //# Make a class PyParameterSet to be able to add the function version().
+  //# We also need a PyParameterValue.
+  class PyParameterValue: public ParameterValue
+  {
+  public:
+    PyParameterValue()
+      : ParameterValue()
+    {}
+    PyParameterValue (const string& value, bool trim=true)
+      : ParameterValue (value, trim)
+    {}
+    PyParameterValue (const ParameterValue& pvalue)
+      : ParameterValue (pvalue)
+    {}
+    PyParameterValue expand() const
+      { return ParameterValue::expand(); }
+    vector<PyParameterValue> getVector() const
+      { return convertVectorPV (ParameterValue::getVector()); }
+    PyParameterSet getRecord() const;
+  };    
 
   class PyParameterSet : public ParameterSet
   {
@@ -55,7 +84,16 @@ namespace LOFAR {
     PyParameterSet makeSubset (const string& baseKey, const string& prefix)
       { return ParameterSet::makeSubset (baseKey, prefix); }
 
-    // Return a sorted list of keywords.
+    PyParameterValue get (const string& key) const
+      { return ParameterSet::get (key); }
+
+    vector<PyParameterValue> getVector (const string& key) const
+      { return convertVectorPV (ParameterSet::getVector(key)); }
+
+    PyParameterSet getRecord (const string& key)
+      { return ParameterSet::getRecord (key); }
+
+    // Return the list of keywords.
     vector<string> keywords() const
     {
       vector<string> result;
@@ -63,10 +101,23 @@ namespace LOFAR {
       for (ParameterSet::const_iterator iter=begin(); iter!=end(); ++iter) {
         result.push_back (iter->first);
       }
-      std::sort (result.begin(), result.end());
       return result;
     }
   };
+ 
+ inline PyParameterSet PyParameterValue::getRecord() const
+    { return ParameterValue::getRecord(); }
+
+  vector<PyParameterValue> convertVectorPV (const vector<ParameterValue>& vec)
+  {
+    vector<PyParameterValue> out;
+    out.reserve (vec.size());
+    for (vector<ParameterValue>::const_iterator iter=vec.begin();
+         iter!=vec.end(); ++iter) {
+      out.push_back (*iter);
+    }
+    return out;
+  }
 
   // Define function pointers for overloaded functions to be able to tell
   // boost-python which function to take.
@@ -124,18 +175,23 @@ namespace LOFAR {
   // Define the python interface to ParameterValue.
   void pyparametervalue()
   {
-    class_<ParameterValue> ("ParameterValue",
-                            init<std::string, bool>())
+    class_<PyParameterValue> ("PyParameterValue")
 
+      .def (init<PyParameterValue>())
+      .def (init<std::string, bool>())
       .def ("get",      &ParameterValue::get,
             return_value_policy < copy_const_reference> (),
             "Get the original value.")
-      .def ("expand",   &ParameterValue::expand,
+      .def ("_expand",   &PyParameterValue::expand,
             "Expand possible range and repeat values (using .. and *)")
       .def ("isVector", &ParameterValue::isVector,
             "Test if the value contains a vector (if enclosed in [])")
-      .def ("getVector", &ParameterValue::getVector,
-            "Split the vector into its part and return as a list.")
+      .def ("isRecord", &ParameterValue::isRecord,
+            "Test if the value contains a record (if enclosed in {})")
+      .def ("_getVector", &PyParameterValue::getVector,
+            "Split the vector value into its parts and return as a list.")
+      .def ("_getRecord", &PyParameterValue::getRecord,
+            "Split the record value into its parts and return as a PyParameterSet.")
       .def ("getBool",   &ParameterValue::getBool,
             "Get the value as a boolean value.")
       .def ("getInt",    &ParameterValue::getInt,
@@ -196,16 +252,29 @@ namespace LOFAR {
              boost::python::arg("value")),
             "Replace the value of a parameter.")
       .def ("remove", &ParameterSet::remove,
- 	    (boost::python::arg("key")))
+ 	    (boost::python::arg("key")),
+            "Remove a parameter.")
       .def ("clear", &ParameterSet::clear,
             "Clear this parameterset object.")
+      .def ("locateModule", &ParameterSet::locateModule,
+ 	    (boost::python::arg("key")),
+            "Search for a module whose name ends in the given modulename.")
+      .def ("fullModuleName", &ParameterSet::fullModuleName,
+ 	    (boost::python::arg("key")),
+            "Search the module name or module hierarchy and return its full position.")
       .def ("isDefined", &ParameterSet::isDefined,
  	    (boost::python::arg("key")),
             "Does a parameter with the given name exist? ")
-      .def ("_get", &ParameterSet::get,
-            return_value_policy < copy_const_reference> (),
+      .def ("_get", &PyParameterSet::get,
+            ///            return_value_policy < copy_const_reference> (),
  	    (boost::python::arg("key")))
 
+      .def ("_getVector", &PyParameterSet::getVector,
+            (boost::python::arg("key")),
+            "Get a vector of parameter values. Exception if undefined.")
+      .def ("_getRecord", &PyParameterSet::getRecord,
+            (boost::python::arg("key")),
+            "Get a parameter record. Exception if undefined.")
       .def ("getBool", fgetbool1,
             (boost::python::arg("key")),
             "Get a boolean parameter value. Exception if undefined.")
@@ -289,7 +358,7 @@ BOOST_PYTHON_MODULE(_pyparameterset)
 {
   LOFAR::pytools::register_convert_excp();
   LOFAR::pytools::register_convert_basicdata();
-  LOFAR::pytools::register_convert_std_vector<LOFAR::ParameterValue>();
+  LOFAR::pytools::register_convert_std_vector<LOFAR::PyParameterValue>();
   LOFAR::pytools::register_convert_std_vector<bool>();
   LOFAR::pytools::register_convert_std_vector<int>();
   LOFAR::pytools::register_convert_std_vector<float>();

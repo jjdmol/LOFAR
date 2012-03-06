@@ -72,4 +72,30 @@ namespace LOFAR {
     rwTileBeamDirMeas_p.attach (msLofarField, "LOFAR_TILE_BEAM_DIR");
   }
 
+  void MSLofarFieldColumns::setDirectionRef(MDirection::Types ref)
+  {
+    rwTileBeamDirMeas_p.setDescRefCode (ref);
+    MSFieldColumns::setDirectionRef (ref);
+  }
+
+  void MSLofarFieldColumns::setDirectionRef(MDirection::Types ref,
+                                            MDirection::Types beamDirRef)
+  {
+    rwTileBeamDirMeas_p.setDescRefCode (beamDirRef);
+    MSFieldColumns::setDirectionRef (ref);
+  }
+
+  ///  void MSLofarFieldColumns::setDirectionOffset(const MDirection& offset)
+  ///  {
+  ///    rwTileBeamDirMeas_p.setDescOffset (offset);
+  ///    MSFieldColumns::setDirectionOffset (offset);
+  ///  }
+
+  ///  void MSLofarFieldColumns::setDirectionOffset(const MDirection& offset,
+  ///                                               const MDirection& beamDiroffset)
+  ///  {
+  ///    rwTileBeamDirMeas_p.setDescOffset (beamDirOffset);
+  ///    MSFieldColumns::setDirectionOffset (offset);
+  ///  }
+
 } //# end namespace

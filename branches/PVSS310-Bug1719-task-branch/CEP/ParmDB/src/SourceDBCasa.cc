@@ -161,7 +161,7 @@ namespace BBS {
     vector<string> result;
     while (!iter.pastEnd()) {
       if (iter.table().nrow() > 1) {
-        result.push_back (ROScalarColumn<String>(table, columnName)(0));
+        result.push_back (ROScalarColumn<String>(iter.table(), columnName)(0));
       }
       ++iter;
     }

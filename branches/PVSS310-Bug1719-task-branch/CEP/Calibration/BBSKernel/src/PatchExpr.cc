@@ -24,6 +24,7 @@
 
 #include <lofar_config.h>
 #include <BBSKernel/MeasurementExprLOFARUtil.h>
+#include <BBSKernel/Exceptions.h>
 #include <BBSKernel/PatchExpr.h>
 #include <BBSKernel/Expr/ExprVisData.h>
 #include <BBSKernel/Expr/EquatorialCentroid.h>
@@ -53,7 +54,7 @@ const string &PatchExpr::name() const
 {
     return itsName;
 }
-
+    
 Expr<Vector<2> >::Ptr PatchExpr::position() const
 {
     return itsPosition;
@@ -117,6 +118,12 @@ void PatchExpr::initSourceList(Scope &scope, SourceDB &sourceDB,
 {
     vector<SourceInfo> sources(sourceDB.getPatchSources(name));
 
+    if(sources.size() == 0)
+    {
+        THROW(BBSKernelException, "Patch " << name << " does not contain " 
+              << "any sources");
+    }
+    
     itsSourceList.reserve(sources.size());
     for(vector<SourceInfo>::const_iterator it = sources.begin(),
         end = sources.end(); it != end; ++it)

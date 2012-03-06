@@ -51,6 +51,21 @@ namespace LOFAR {
                  "freqstep and/or timestep must be specified when averaging");
     }
 
+    Averager::Averager (DPInput* input, const string& stepName,
+                        uint nchanAvg, uint ntimeAvg)
+      : itsInput     (input),
+        itsName      (stepName),
+        itsNChanAvg  (nchanAvg),
+        itsNTimeAvg  (ntimeAvg),
+        itsMinNPoint (1),
+        itsMinPerc   (0),
+        itsNTimes    (0),
+        itsTimeInterval (0)
+    {
+      ASSERTSTR (itsNChanAvg > 1  ||  itsNTimeAvg > 1,
+                 "freqstep and/or timestep must be specified when averaging");
+    }
+
     Averager::~Averager()
     {}
 
@@ -82,17 +97,23 @@ namespace LOFAR {
     {
       itsTimer.start();
       RefRows rowNrs(buf.getRowNrs());
+      // Sum the data in time applying the weights.
+      // The summing in channel and the averaging is done in function average.
       if (itsNTimes == 0) {
         // The first time we assign because that is faster than first clearing
         // and adding thereafter.
-        itsBuf.getUVW()     = itsInput->fetchUVW (buf, rowNrs);
-        itsBuf.getWeights() = itsInput->fetchWeights (buf, rowNrs);
+        itsBuf.getUVW()     = itsInput->fetchUVW (buf, rowNrs, itsTimer);
+        itsBuf.getWeights() = itsInput->fetchWeights (buf, rowNrs, itsTimer);
+        Cube<bool> fullResFlags(itsInput->fetchFullResFlags (buf, rowNrs,
+                                                             itsTimer));
         itsBuf.getData()    = buf.getData();
         IPosition shapeIn   = buf.getData().shape();
         itsNPoints.resize (shapeIn);
+        itsAvgAll.reference (buf.getData() * itsBuf.getWeights());
+        itsWeightAll.resize (shapeIn);
+        itsWeightAll = itsBuf.getWeights();
         // Take care of the fullRes flags.
         // We have to shape the output array and copy to a part of it.
-        Cube<bool> fullResFlags(itsInput->fetchFullResFlags (buf, rowNrs));
         IPosition ofShape = fullResFlags.shape();
         ofShape[1] *= itsNTimeAvg;      // more time entries, same chan and bl
         // Make it unique in case FullRes is referenced elsewhere.
@@ -132,19 +153,23 @@ namespace LOFAR {
         // For now we assume that all timeslots have the same nr of baselines,
         // so check if the buffer sizes are the same.
         ASSERT (itsBuf.getData().shape() == buf.getData().shape());
-        itsBuf.getUVW() += itsInput->fetchUVW (buf, rowNrs);
-        copyFullResFlags (itsInput->fetchFullResFlags(buf, rowNrs),
+        itsBuf.getUVW() += itsInput->fetchUVW (buf, rowNrs, itsTimer);
+        copyFullResFlags (itsInput->fetchFullResFlags(buf, rowNrs, itsTimer),
                           buf.getFlags(), itsNTimes);
-        Cube<float> weights(itsInput->fetchWeights(buf, rowNrs));
+        Cube<float> weights(itsInput->fetchWeights(buf, rowNrs, itsTimer));
         // Ignore flagged points.
         Array<Complex>::const_contiter indIter = buf.getData().cbegin();
         Array<float>::const_contiter   inwIter = weights.cbegin();
         Array<bool>::const_contiter    infIter = buf.getFlags().cbegin();
         Array<Complex>::contiter outdIter = itsBuf.getData().cbegin();
+        Array<Complex>::contiter alldIter = itsAvgAll.cbegin();
         Array<float>::contiter   outwIter = itsBuf.getWeights().cbegin();
-        Array<int>::contiter outnIter = itsNPoints.cbegin();
+        Array<float>::contiter   allwIter = itsWeightAll.cbegin();
+        Array<int>::contiter outnIter    = itsNPoints.cbegin();
         Array<int>::contiter outnIterEnd = itsNPoints.cend();
         while (outnIter != outnIterEnd) {
+          *alldIter += *indIter * *inwIter;
+          *allwIter += *inwIter;
           if (!*infIter) {
             *outdIter += *indIter * *inwIter;
             *outwIter += *inwIter;
@@ -154,7 +179,9 @@ namespace LOFAR {
           ++inwIter;
           ++infIter;
           ++outdIter;
+          ++alldIter;
           ++outwIter;
+          ++allwIter;
           ++outnIter;
         }
       }
@@ -203,7 +230,9 @@ namespace LOFAR {
       // GCC-4.3 only supports OpenMP 2.5 needing signed iteration variables.
       for (int k=0; k<nbl; ++k) {
         const Complex* indata = itsBuf.getData().data() + k*npin;
+        const Complex* inalld = itsAvgAll.data() + k*npin;
         const float* inwght = itsBuf.getWeights().data() + k*npin;
+        const float* inallw = itsWeightAll.data() + k*npin;
         const int* innp = itsNPoints.data() + k*npin;
         Complex* outdata = buf.getData().data() + k*npout;
         float* outwght = buf.getWeights().data() + k*npout;
@@ -213,21 +242,25 @@ namespace LOFAR {
           uint inxo = i;
           for (uint ch=0; ch<nchan; ++ch) {
             uint nch = std::min(itsNChanAvg, nchanin - ch*itsNChanAvg);
+            uint navgAll = nch * itsNTimes;
             Complex sumd;
-            float   sumw=0;
-            uint np = 0;
+            Complex sumad;
+            float   sumw  = 0;
+            float   sumaw = 0;
+            uint    np = 0;
             for (uint j=0; j<nch; ++j) {
-              sumd += indata[inxi];  // Note: weight is accounted for in process
-              sumw += inwght[inxi];
-              np   += innp[inxi];
-              inxi += ncorr;
+              sumd  += indata[inxi]; // Note: weight is accounted for in process
+              sumad += inalld[inxi];
+              sumw  += inwght[inxi];
+              sumaw += inallw[inxi];
+              np    += innp[inxi];
+              inxi  += ncorr;
             }
-            // Flag the point if insufficient data.
-            if (sumw == 0  ||  np < itsMinNPoint  ||
-                np < nch*itsNTimeAvg*itsMinPerc) {
-              outdata[inxo]  = Complex();
+            // Flag the point if insufficient unflagged data.
+            if (sumw == 0  ||  np < itsMinNPoint  || np < navgAll*itsMinPerc) {
+              outdata[inxo]  = (sumaw==0  ?  Complex() : sumad/sumaw);
               outflags[inxo] = true;
-              outwght[inxo]  = 0;
+              outwght[inxo]  = sumaw;
             } else {
               outdata[inxo]  = sumd / sumw;
               outflags[inxo] = false;

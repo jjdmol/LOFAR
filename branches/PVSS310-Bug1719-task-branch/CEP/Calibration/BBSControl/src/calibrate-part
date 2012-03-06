@@ -152,7 +152,11 @@ if test ${imcolumns} -eq 1; then
    echo "adding imaging columns to MS: addImagingColumns.py ${part}"
    if test "${dry}" != "dry"; then
       addImagingColumns.py ${part}           # use wrapper python script that adds imaging columns to that MS part
-   fi
+      if test $? -ne 0 ; then
+        echo "addImagingColumns.py ${part} failed"
+        exit 1
+      fi 
+  fi
 fi
 
 echo "execute KernelControl ${key}_kernel_$$.parset 0 > ${key}_kernel_$$.log 2>&1"

@@ -1,10 +1,19 @@
 #!/usr/bin/python
 
+## "nlStatus.py"
+## Print EC status of NL(dutch) station
+## can only be used on NL (dutch) LCU
+##
+## usage: ./nlStatus.py
+##
+## Author: Pieter Donker (ASTRON)
+## Last change: november 2011 
+
 from nlEcLib import *
 import sys
 import time
 
-VERSION = '1.0.0' # version of this script    
+VERSION = '1.1.0' # version of this script    
 
 # used variables
 version = 0   # EC version

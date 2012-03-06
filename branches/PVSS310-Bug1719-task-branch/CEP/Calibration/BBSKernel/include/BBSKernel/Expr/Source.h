@@ -54,6 +54,7 @@ public:
 
     const string &name() const;
     Expr<Vector<2> >::Ptr position() const;
+    Expr<Vector<4> >::Ptr stokes() const;
 
     virtual Expr<JonesMatrix>::Ptr
         coherence(const Expr<Vector<3> >::ConstPtr &uvwLHS,
@@ -64,6 +65,7 @@ protected:
 
     string                  itsName;
     Expr<Vector<2> >::Ptr   itsPosition;
+    Expr<Vector<4> >::Ptr   itsStokesVector;
 };
 
 // @}

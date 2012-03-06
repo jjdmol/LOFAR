@@ -52,14 +52,14 @@ namespace RTCP {
 template<typename SAMPLE_TYPE> const unsigned BeamletBufferToComputeNode<SAMPLE_TYPE>::itsMaximumDelay;
 
 
-template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::BeamletBufferToComputeNode(const Parset &ps, const std::vector<Stream *> &phaseOneTwoStreams, const std::vector<SmartPtr<BeamletBuffer<SAMPLE_TYPE> > > &beamletBuffers, unsigned psetNumber)
+template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::BeamletBufferToComputeNode(const Parset &ps, const std::vector<Stream *> &phaseOneTwoStreams, const std::vector<SmartPtr<BeamletBuffer<SAMPLE_TYPE> > > &beamletBuffers, unsigned psetNumber, unsigned firstBlockNumber)
 :
   itsPhaseOneTwoStreams(phaseOneTwoStreams),
   itsPS(ps),
   itsNrInputs(beamletBuffers.size()),
   itsPsetNumber(psetNumber),
   itsBeamletBuffers(beamletBuffers),
-  itsBlockNumber(0),
+  itsBlockNumber(firstBlockNumber),
   itsDelayTimer("delay consumer", true, true)
 {
   bool haveStationInput = itsNrInputs > 0;
@@ -76,17 +76,19 @@ template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::BeamletB
   itsMaxNrPencilBeams	      = ps.maxNrPencilBeams();
   itsNrPencilBeams	      = ps.nrPencilBeams();
   itsNrPhaseTwoPsets	      = ps.phaseTwoPsets().size();
-  itsCurrentPhaseOneTwoComputeCore = 0;
+  itsCurrentPhaseOneTwoComputeCore = (itsBlockNumber * itsNrSubbandsPerPset) % itsPhaseOneTwoStreams.size();
   itsSampleDuration	      = ps.sampleDuration();
   itsDelayCompensation	      = ps.delayCompensation();
   itsCorrectClocks	      = ps.correctClocks();
   itsNeedDelays               = (itsDelayCompensation || itsMaxNrPencilBeams > 1 || itsCorrectClocks) && itsNrInputs > 0;
   itsSubbandToSAPmapping      = ps.subbandToSAPmapping();
+
   if (haveStationInput) {
     itsSubbandToRSPboardMapping = ps.subbandToRSPboardMapping(stationName);
     itsSubbandToRSPslotMapping  = ps.subbandToRSPslotMapping(stationName);
   }
-  itsCurrentTimeStamp	      = TimeStamp(static_cast<int64>(ps.startTime() * itsSampleRate), ps.clockSpeed());
+
+  itsCurrentTimeStamp	      = TimeStamp(static_cast<int64>(ps.startTime() * itsSampleRate + itsBlockNumber * itsNrSamplesPerSubband), ps.clockSpeed());
   itsIsRealTime		      = ps.realTime();
   itsMaxNetworkDelay	      = ps.maxNetworkDelay();
   itsNrHistorySamples	      = ps.nrHistorySamples();
@@ -104,8 +106,10 @@ template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::BeamletB
     itsBeamDirectionsAtBegin.resize(itsNrBeams, itsMaxNrPencilBeams + 1);
     itsBeamDirectionsAfterEnd.resize(itsNrBeams, itsMaxNrPencilBeams + 1);
 
-    if (itsDelayCompensation || itsMaxNrPencilBeams > 1)
+    if (itsDelayCompensation || itsMaxNrPencilBeams > 1) {
       itsDelays = new Delays(ps, stationName, itsCurrentTimeStamp);
+      itsDelays->start();
+    }  
 
     if (itsCorrectClocks)
       itsClockCorrectionTime = ps.clockCorrectionTime(stationName);
@@ -232,8 +236,9 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::wri
 
     double currentTime  = tv.tv_sec + tv.tv_usec / 1e6;
     double expectedTime = itsCorrelationStartTime * itsSampleDuration;
+    double recordingTime = itsCurrentTimeStamp * itsSampleDuration;
 
-    logStr << ", late: " << PrettyTime(currentTime - expectedTime);
+    logStr << ", age: " << PrettyTime(currentTime - recordingTime) << ", late: " << PrettyTime(currentTime - expectedTime);
   }
 
   if (itsNeedDelays) {
@@ -262,8 +267,14 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::toC
       Stream *stream = itsPhaseOneTwoStreams[itsCurrentPhaseOneTwoComputeCore];
 
       // tell CN to process data
-LOG_DEBUG_STR(itsLogPrefix << "writing command PROCESS to stream " << stream);
-      command.write(stream);
+
+#if defined CLUSTER_SCHEDULING
+      if (itsPsetNumber == 0)
+#endif
+      {
+	//LOG_DEBUG_STR(itsLogPrefix << "writing command PROCESS to stream " << stream);
+	command.write(stream);
+      }
 
       if (itsNrInputs > 0) {
         // create and send all metadata in one "large" message, since initiating a message

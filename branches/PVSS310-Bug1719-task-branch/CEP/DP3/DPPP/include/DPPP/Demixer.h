@@ -29,8 +29,12 @@
 
 #include <DPPP/DPInput.h>
 #include <DPPP/DPBuffer.h>
-#include <DPPP/Averager.h>
+#include <DPPP/PhaseShift.h>
+#include <DPPP/BBSExpr.h>
+#include <ParmDB/Axis.h>
+
 #include <casa/Arrays/Cube.h>
+#include <measures/Measures/MDirection.h>
 
 namespace LOFAR {
 
@@ -76,27 +80,89 @@ namespace LOFAR {
       virtual void showTimings (std::ostream&, double duration) const;
 
     private:
-      // Demix and return the result.
-      DPBuffer demix() const;
+      casa::MDirection handleCenter(const vector<string> &center) const;
 
-      // Subtract sources and return the result.
-      DPBuffer subtract() const;
+      // Solve gains and subtract sources.
+      void demix();
+
+      // Add the decorrelation factor contribution for each time slot.
+      void addFactors (const DPBuffer& newBuf,
+                       casa::Array<casa::DComplex>& factorBuf);
+
+      // Calculate the decorrelation factors by averaging them.
+      // Apply the P matrix to deproject the sources without a model.
+      void makeFactors (const casa::Array<casa::DComplex>& bufIn,
+                        casa::Array<casa::DComplex>& bufOut,
+                        const casa::Cube<float>& weightSums,
+                        uint nchanOut);
+
+      // Deproject the sources without a model.
+      void deproject (casa::Array<casa::DComplex>& factors,
+                      vector<MultiResultStep*> avgResults,
+                      uint resultIndex);
+
+      // Calculate the P matrix telling how to deal with sources that will
+      // not be predicted.
+      // Those sources are the last columns in the demixing matrix.
+      vector<casa::Array<casa::DComplex> > getP
+      (const vector<casa::Array<casa::DComplex> >& factors, uint nsources);
+
+      // Make a BBS frequency axis for the given channel average factor.
+      BBS::Axis::ShPtr makeFreqAxis (uint nchanAvg);
 
       //# Data members.
-      DPInput*              itsInput;
-      string                itsName;
-      DPStep::ShPtr         itsAverager;
-      ResultStep*           itsAvgResult;
-      vector<DPStep::ShPtr> itsFirstSteps;
-      vector<DPStep::ShPtr> itsSecondSteps;
-      vector<ResultStep*>   itsDemixInputs;
-      vector<ResultStep*>   itsSubtractInputs;
-      vector<string>        itsSources;
-      uint                  itsNChanAvg;
-      uint                  itsNTimeAvg;
-      uint                  itsHalfWindow;
-      double                itsThreshold;
-      NSTimer               itsTimer;
+      DPInput*                 itsInput;
+      string                   itsName;
+      string                   itsSkyName;
+      string                   itsInstrumentName;
+      vector<PhaseShift*>      itsPhaseShifts;
+      vector<DPStep::ShPtr>    itsFirstSteps;   //# phaseshift/average steps
+      vector<MultiResultStep*> itsAvgResults;   //# result of phaseshift/average
+      DPStep::ShPtr            itsAvgSubtr;     //# average step for subtract
+      MultiResultStep*         itsAvgResultSubtr; //# result of subtract avg
+      BBSExpr                  itsBBSExpr;
+      string                   itsTarget;
+      vector<string>           itsSubtrSources;
+      vector<string>           itsModelSources;
+      vector<string>           itsExtraSources;
+      vector<string>           itsAllSources;
+      BBS::Axis::ShPtr         itsFreqAxisDemix;
+      BBS::Axis::ShPtr         itsFreqAxisSubtr;
+      double                   itsTimeStart;
+      double                   itsTimeInterval;
+      vector<double>           itsTimeCenters;
+      vector<double>           itsTimeWidths;
+      bool                     itsJointSolve;
+      bool                     itsCalcSubtr;    //# subtract averaging differs
+      uint                     itsNrDir;
+      uint                     itsNrModel;
+      uint                     itsNrBl;
+      uint                     itsNrCorr;
+      uint                     itsNChanIn;
+      uint                     itsNTimeIn;
+      uint                     itsNChanOutSubtr;
+      uint                     itsNChanAvgSubtr;
+      uint                     itsNTimeAvgSubtr;
+      uint                     itsNTimeChunkSubtr;
+      uint                     itsNTimeOutSubtr;
+      uint                     itsNChanOut;
+      uint                     itsNChanAvg;
+      uint                     itsNTimeAvg;
+      uint                     itsNTimeChunk;
+      uint                     itsNTimeOut;
+      double                   itsStartTimeChunk;
+      double                   itsTimeIntervalSubtr;
+      double                   itsTimeIntervalAvg;
+      casa::Array<casa::DComplex> itsFactorBuf; //# ncorr,nchan,nbl,ndir*ndir
+      vector<casa::Array<casa::DComplex> > itsFactors; //# demix factors/time
+      //# each Array is basically cube(ncorr,nchan,nbl) of matrix(ndir,ndir)
+      casa::Array<casa::DComplex> itsFactorBufSubtr; //# factors for subtract
+      vector<casa::Array<casa::DComplex> > itsFactorsSubtr;
+      NSTimer                  itsTimer;
+      NSTimer                  itsTimerPhaseShift;
+      NSTimer                  itsTimerDemix;
+      NSTimer                  itsTimerSolve;
+      NSTimer                  itsTimerSubtract;
     };
 
   } //# end namespace

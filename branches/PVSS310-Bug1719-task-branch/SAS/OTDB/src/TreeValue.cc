@@ -42,6 +42,7 @@ TreeValue::TreeValue (OTDBconnection* 	aConn,
 	ASSERTSTR(aConn, "Null pointer for connection not allowed");
 	ASSERTSTR(aTreeID, "TreeID may not be 0");
 
+	itsTreeID = aTreeID;
 	itsTree = itsConn->getTreeInfo(aTreeID);
 	ASSERTSTR(itsTree.treeID(), "Tree " << aTreeID << " not in the database");
 }
@@ -52,6 +53,16 @@ TreeValue::TreeValue (OTDBconnection* 	aConn,
 TreeValue::~TreeValue()
 {
 	// Do not delete the connection, we just borrowed it.
+}
+
+//
+// treeID()
+//
+// returns treeID (need this in for java jni interface
+//
+treeIDType TreeValue::treeID()
+{
+  return itsTreeID;
 }
 
 //
@@ -293,6 +304,63 @@ vector<OTDBvalue> TreeValue::getBrokenHardware(const ptime&	atTime)
 	return (resultVec);
 }
 
+
+//
+// getBrokenHardware([timestamp1], [timestamp2]) between startTime and endTime
+//
+vector<OTDBvalue> TreeValue::getFailedHardware(const ptime&	startTime, const ptime& endTime)
+{
+  vector<OTDBvalue>	resultVec;
+  
+  // Check connection
+  if (!itsConn->connect()) {
+      itsError = itsConn->errorMsg();
+      return (resultVec);
+  }
+  
+  LOG_TRACE_FLOW_STR("TV:getFailedHardware(" << to_simple_string(startTime) << ", "<< to_simple_string(endTime) << ")");
+  
+  // construct a query that calls a stored procedure.
+  work	xAction(*(itsConn->getConn()), "getBrokenHardware");
+  try {
+      string	query("SELECT * from getFailedHardware('" + to_simple_string(startTime) + "','" + to_simple_string(endTime) + "')");
+      result res = xAction.exec(query);
+      // check result
+      result::size_type	nrRecords = res.size();
+      if (!nrRecords) {
+          return (resultVec);
+      }
+      
+      // list contains single records [A]  or double records[B]:
+      // [A] value always > 10 : its still broken
+      // [B] 1st record value <= 10, 2nd record (always same name) always > 10
+      //     if timestamp 1st record < atTime 'its OK skip this and next line' else is broken skip this line
+      for (result::size_type	i = 0; i < nrRecords; ++i) {
+          OTDBvalue	theKVT(res[i]);
+          if (atoi(theKVT.value.c_str()) > 10) {	// [A]
+              resultVec.push_back(theKVT);
+          }
+          else {	// [B]
+              if (++i < nrRecords) {
+                  if (theKVT.time > endTime) {
+                      OTDBvalue	nextKVT(res[i]);
+                      ASSERTSTR(nextKVT.nodeID() == theKVT.nodeID(), 
+                                "Expected same paramID: " << nextKVT.nodeID() << "!=" << theKVT.nodeID());
+                      resultVec.push_back(nextKVT);
+                  }
+              }
+          }
+      } // for
+  } 
+  catch (std::exception&	ex) {
+      itsError = string("Exception during getBrokenHardware:") + ex.what();
+      LOG_FATAL(itsError);
+      vector<OTDBvalue>	empty;
+      return (empty);
+  }
+  
+  return (resultVec);
+}
 
 
   } // namespace OTDB

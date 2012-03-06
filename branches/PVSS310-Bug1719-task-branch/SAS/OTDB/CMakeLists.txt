@@ -9,3 +9,5 @@ lofar_find_package(PQXX REQUIRED)
 add_subdirectory(include/OTDB)
 add_subdirectory(src)
 add_subdirectory(test)
+add_subdirectory(bin)
+

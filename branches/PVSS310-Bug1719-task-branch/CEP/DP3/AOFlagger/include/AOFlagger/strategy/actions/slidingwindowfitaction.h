@@ -36,7 +36,6 @@ namespace rfiStrategy {
 			{
 				return "Sliding window fit";
 			}
-			virtual void Initialize() { }
 			virtual void Perform(class ArtifactSet &artifacts, class ProgressListener &listener);
 			virtual ActionType Type() const { return SlidingWindowFitActionType; }
 

@@ -1,13 +1,6 @@
 /* $Id$ */
 
 /*-------------------------------------------------------------------------*\
-|     Defines installation information                                      |
-\*-------------------------------------------------------------------------*/
-
-/* Define the destination root directory into which the software will be installed */
-#cmakedefine CMAKE_INSTALL_PREFIX "@CMAKE_INSTALL_PREFIX@"
-
-/*-------------------------------------------------------------------------*\
 |     Defines for the presence or absence of (system) header files          |
 \*-------------------------------------------------------------------------*/
 
@@ -126,6 +119,9 @@
 
 /* Define if LAM is installed */
 #cmakedefine HAVE_LAM 1
+
+/* Define if LDA is installed */
+#cmakedefine HAVE_LDA
 
 /* Define if LOG4CPLUS is installed */
 #cmakedefine HAVE_LOG4CPLUS 1

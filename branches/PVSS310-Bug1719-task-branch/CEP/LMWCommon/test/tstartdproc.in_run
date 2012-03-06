@@ -1,13 +1,13 @@
 #!/bin/sh
 
-pgmpath=`dirname $0`
+pgmpath=`dirname "$0"`
 
 # Get the envfile name and rank.
 rank=$5
-envfile=$9
+envfile="$9"
 
 # Source the envfile.
-. $envfile
+. "$envfile"
 
 # Start the test program and log its pid.
 # It will sleep for some seconds and return the given status.
@@ -20,7 +20,7 @@ envfile=$9
 # way the logged (and killed) process pid is the script and not the sleep command
 # which would become a zombie.
 if test $rank = 1; then
-  runlogpid $envfile $rank tstartdproc 5  1
+  runlogpid "$envfile" $rank tstartdproc 5  1
 else
-  runlogpid $envfile $rank tstartdproc 30 0
+  runlogpid "$envfile" $rank tstartdproc 30 0
 fi

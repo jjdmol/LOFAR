@@ -54,6 +54,7 @@ namespace rfiStrategy {
 		IterationBlockType,
 		PlotActionType,
 		QuickCalibrateActionType,
+		RawAppenderActionType,
 		ResamplingActionType,
 		SetFlaggingActionType,
 		SetImageActionType,

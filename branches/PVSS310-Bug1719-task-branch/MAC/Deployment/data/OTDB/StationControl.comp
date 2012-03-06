@@ -12,4 +12,4 @@ par  _hostname     I    vtext   -      10    100  '>>VirtualInstrument.stationLi
 
 #      name              vers   qual  constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-uses  TBBControl         4.0.0  development  'node constraint'  "TBBControl settings"
+uses  TBBControl         4.0.0  development  '1'  "TBBControl settings"

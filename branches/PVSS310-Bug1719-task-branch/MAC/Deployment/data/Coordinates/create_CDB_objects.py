@@ -33,7 +33,7 @@ def getStationList():
 # MAIN
 #
 if __name__ == '__main__':
-    print "Connecting to database coordtest"
+    print "Connecting to database ", dbName
     db = pg.connect(user="postgres", host=dbHost, dbname=dbName)
     
     pol = 2 # number of polarizations
@@ -42,17 +42,22 @@ if __name__ == '__main__':
         if (len(findStationInfo(station)) < 12):
             continue
         (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = findStationInfo(station)
-        if long != '0.0':
+        if height[0] != '0':
             print "updating %s to the coordinate database " % station
             for lba in xrange(0, int(nrLBA)*2):
                 db.query("select * from add_object('%s', '%s', %d)" % ( name, "LBA", lba ))
+            db.query("select * from add_object('%s', '%s', %d)" % ( name, "CLBA", -1 ))
             if HBAsplit == 'Yes':
                 for hba in xrange(0, int(nrHBA)):
                     db.query("select * from add_object('%s', '%s', %d)" % ( name, "HBA0", hba ))
+                db.query("select * from add_object('%s', '%s', %d)" % ( name, "CHBA0", -1 ))
                 for hba in xrange(int(nrHBA), int(nrHBA)*2):
                     db.query("select * from add_object('%s', '%s', %d)" % ( name, "HBA1", hba ))
+                db.query("select * from add_object('%s', '%s', %d)" % ( name, "CHBA1", -1 ))
             else:
                 for hba in xrange(0, int(nrHBA)*2):
                     db.query("select * from add_object('%s', '%s', %d)" % ( name, "HBA", hba ))
+                db.query("select * from add_object('%s', '%s', %d)" % ( name, "CHBA", -1 ))
+            
 
 # ... to be continued

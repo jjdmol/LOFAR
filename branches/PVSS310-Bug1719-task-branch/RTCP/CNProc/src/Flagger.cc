@@ -250,7 +250,6 @@ void Flagger::thresholdingFlagger2D(const MultiDimArray<float,2> &powers, MultiD
 }
 
 
-// TODO shouldn't threshold depend on median??? --Rob
 void Flagger::sumThresholdFlagger1D(std::vector<float>& powers, std::vector<bool>& flags, const float sensitivity) {
   float mean, stdDev, median;
   calculateStatistics(powers.data(), powers.size(), mean, median, stdDev);
@@ -265,7 +264,7 @@ void Flagger::sumThresholdFlagger1D(std::vector<float>& powers, std::vector<bool
   unsigned window = 1;
   for (unsigned iter = 1; iter <= MAX_ITERS; iter++) {
     float thresholdI = median + calcThresholdI(itsCutoffThreshold, iter, 1.5f) * factor;
-    LOG_DEBUG_STR("THRESHOLD in iter " << iter <<", window " << window << " = " << calcThresholdI(itsCutoffThreshold, iter, 1.5f) << ", becomes = " << thresholdI);
+//    LOG_DEBUG_STR("THRESHOLD in iter " << iter <<", window " << window << " = " << calcThresholdI(itsCutoffThreshold, iter, 1.5f) << ", becomes = " << thresholdI);
     sumThreshold(powers, flags, window, thresholdI);
     window *= 2;
   }
@@ -274,7 +273,7 @@ void Flagger::sumThresholdFlagger1D(std::vector<float>& powers, std::vector<bool
 
 void Flagger::sumThresholdFlaggerSmoothed1D(std::vector<float>& powers, std::vector<float>& smoothedPowers, std::vector<float>& powerDiffs, std::vector<bool>& flags) {
   // first do an insensitive sumthreshold
-  sumThresholdFlagger1D(powers, flags, 1.0f); // sets flags, and replaces flagged samples with threshold
+  sumThresholdFlagger1D(powers, flags, 1.0f * itsBaseSensitivity); // sets flags, and replaces flagged samples with threshold
 	
   // smooth
   oneDimensionalGausConvolution(powers.data(), powers.size(), smoothedPowers.data(), 0.5f); // last param is sigma, height of the gaussian curve
@@ -285,10 +284,10 @@ void Flagger::sumThresholdFlaggerSmoothed1D(std::vector<float>& powers, std::vec
   }
   
   // flag based on difference
-  sumThresholdFlagger1D(powerDiffs, flags, 1.0f); // sets additional flags
+  sumThresholdFlagger1D(powerDiffs, flags, 1.0f * itsBaseSensitivity); // sets additional flags
   
   // and one final, more sensitive pass on the flagged power
-  sumThresholdFlagger1D(powers, flags, 0.8f); // sets flags, and replaces flagged samples with threshold
+  sumThresholdFlagger1D(powers, flags, 0.8f * itsBaseSensitivity); // sets flags, and replaces flagged samples with threshold
 }
 
 

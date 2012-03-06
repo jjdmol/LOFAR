@@ -24,6 +24,7 @@
 #define LOFAR_LCS_STREAM_FILE_STREAM_H
 
 #include <Stream/FileDescriptorBasedStream.h>
+#include <string>
 
 
 namespace LOFAR {
@@ -31,13 +32,13 @@ namespace LOFAR {
 class FileStream : public FileDescriptorBasedStream
 {
   public:
-	    FileStream(const char *name); // read-only; existing file
-	    FileStream(const char *name, int mode); // rd/wr; create file
-	    FileStream(const char *name, int flags, int mode); // rd/wr; create file, use given flags
+	    FileStream(const std::string &name); // read-only; existing file
+	    FileStream(const std::string &name, int mode); // rd/wr; create file
+	    FileStream(const std::string &name, int flags, int mode); // rd/wr; create file, use given flags
 						   
     virtual ~FileStream();
 
-    void    skip( size_t bytes ); // seek ahead
+    virtual void skip( size_t bytes ); // seek ahead
 };
 
 } // namespace LOFAR

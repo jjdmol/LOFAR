@@ -25,9 +25,15 @@
 # $Id$
 #
 VERSION="v2.1 20100517"		# loading image 1 before starting RSPdriver
-BINDIR=/opt/lofar/bin
-LOGDIR=/opt/lofar/log
-ETCDIR=/opt/lofar/etc
+
+if [ "$LOFARROOT" == "" ]; then
+  # default value until all MAC controlled systems provide $LOFARROOT
+  LOFARROOT=/opt/lofar
+fi
+
+BINDIR=$LOFARROOT/bin
+LOGDIR=$LOFARROOT/log
+ETCDIR=$LOFARROOT/etc
 LEVELTABLE=${ETCDIR}/swlevel.conf
 
 # Make sure all files are user/group writeable (needed for Int. 
@@ -329,10 +335,13 @@ goto_level()
 		tac $LEVELTABLE | cut -d"#" -f1 | awk '{ if (NF>0) print $0 }' | \
 		grep "^${l}:" | grep ":d:" |  while read line
 		do
+                        (
 			asroot=`echo $line | cut -d":" -f4`
 			withmpi=`echo $line | cut -d":" -f5`
 			program=`echo $line | cut -d":" -f6`
 			stop_prog $program x$asroot x$withmpi
+                        ) <&- # cant have programs reading from stdin
+                              # as that would mess up 'while read line'
 		done
 	done
 
@@ -342,10 +351,13 @@ goto_level()
 		cat $LEVELTABLE | cut -d"#" -f1 | awk '{ if (NF>0) print $0 }' | \
 		grep "^${l}:" | grep ":u:" |  while read line
 		do
+                        (
 			asroot=`echo $line | cut -d":" -f4`
 			withmpi=`echo $line | cut -d":" -f5`
 			program=`echo $line | cut -d":" -f6`
 			start_prog $program x$asroot x$withmpi
+                        ) <&- # cant have programs reading from stdin
+                              # as that would mess up 'while read line'
 		done
 	done
 }
@@ -445,7 +457,7 @@ handle_args()
 
   if [ "$user" != "lofarsys" -a $level -gt 3 ]; then
       echo "Will only start up to level 3 as this appears to be local use"
-      $level=3
+      level=3
   fi
 
   # default image is 1
@@ -484,11 +496,9 @@ handle_args $*
 
 # All other options that act on the station status are for lofarsys only
 # Don't allow root to run swlevel because all logfile get root access.
-if [ "$user" != "lofarsys" ]; then
-    if [ "$group" != "local" ]; then 
-	echo "swlevel must be run by user lofarsys or group local members!"
-	exit
-    fi
+if [ "$LOFARROOT" == "/opt/lofar" -a "$user" != "lofarsys" -a "$group" != "local" ]; then 
+  echo "swlevel must be run by user lofarsys or group local members!"
+  exit
 fi
 
 # first power down to this level

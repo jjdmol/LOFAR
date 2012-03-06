@@ -31,7 +31,7 @@ namespace rfiStrategy {
 	*/
 	class ChangeResolutionAction : public ActionBlock {
 		public:
-			ChangeResolutionAction() : _timeDecreaseFactor(10), _frequencyDecreaseFactor(1), _restoreRevised(true), _restoreContaminated(false), _restoreMasks(false)
+			ChangeResolutionAction() : _timeDecreaseFactor(10), _frequencyDecreaseFactor(1), _restoreRevised(true), _restoreContaminated(false), _restoreMasks(false), _useMaskInAveraging(false)
 			{
 			}
 			~ChangeResolutionAction()
@@ -59,6 +59,9 @@ namespace rfiStrategy {
 
 			bool RestoreMasks() const { return _restoreMasks; }
 			void SetRestoreMasks(bool restoreMasks) { _restoreMasks = restoreMasks; }
+			
+			bool UseMaskInAveraging() const { return _useMaskInAveraging; }
+			void SetUseMaskInAveraging(bool useMask) { _useMaskInAveraging = useMask; }
 		private:
 			void PerformFrequencyChange(class ArtifactSet &artifacts, class ProgressListener &listener);
 
@@ -70,6 +73,8 @@ namespace rfiStrategy {
 
 			void DecreaseFrequency(TimeFrequencyData &data);
 			void IncreaseFrequency(TimeFrequencyData &originalData, TimeFrequencyData &changedData, bool restoreImage, bool restoreMask);
+			
+			void DecreaseTimeWithMask(TimeFrequencyData &data);
 
 			/**
 			 * If this is true, the subtasks of this task can change the revised image, and
@@ -85,6 +90,12 @@ namespace rfiStrategy {
 			 * This is like _restoreRevised, but for the masks.
 			 */
 			bool _restoreMasks;
+			
+			/**
+			 * If set, values which are partially flagged, will be averaged only over
+			 * non-flagged samples. This only changes the decreasing of resolution.
+			 */
+			bool _useMaskInAveraging;
 	};
 
 }

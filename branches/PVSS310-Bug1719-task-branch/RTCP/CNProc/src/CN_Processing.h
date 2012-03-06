@@ -25,6 +25,7 @@
 #define C_IMPLEMENTATION
 #endif
 
+#include <Interface/Allocator.h>
 #include <Interface/BeamFormedData.h>
 #include <Interface/Config.h>
 #include <Interface/CorrelatedData.h>
@@ -35,7 +36,6 @@
 #include <Interface/SubbandMetaData.h>
 #include <Interface/TransposedData.h>
 #include <Interface/TriggerData.h>
-#include <Interface/TransposeLogic.h>
 
 #include <Stream/Stream.h>
 
@@ -71,27 +71,25 @@ class CN_Processing_Base // untemplated helper class
 template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
 {
   public:
-			CN_Processing(const Parset &, Stream *inputStream, Stream *(*createStream)(unsigned, const LocationInfo &), const LocationInfo &);
+			CN_Processing(const Parset &, const std::vector<SmartPtr<Stream> > &inputStream, Stream *(*createStream)(unsigned, const LocationInfo &), const LocationInfo &, Allocator & = heapAllocator, unsigned firstBlock = 0);
 			~CN_Processing();
 
     virtual void	process(unsigned);
 
   private:
     double		blockAge(); // age of the current block, in seconds since it was observed by the stations
+#if defined CLUSTER_SCHEDULING
+    void		receiveInput();
+#else
     void		transposeInput();
+#endif
     int			transposeBeams(unsigned block);
     void		filter();
-    void		dedisperseBeforeBeamForming();
     void		dedisperseAfterBeamForming(unsigned beam, double dm);
     void		preCorrelationFlagging();
     void		mergeStations();
     void		formBeams(unsigned sap, unsigned firstBeam, unsigned nrBeams);
     void		receiveBeam(unsigned stream);
-    void		preTransposeBeams(unsigned inbeam, unsigned outbeam);
-    void		postTransposeBeams(unsigned subband);
-    void		postTransposeStokes(unsigned subband);
-    void		calculateCoherentStokes(unsigned inbeam, unsigned outbeam);
-    void		calculateIncoherentStokes();
     void		correlate();
     void		postCorrelationFlagging();
 
@@ -100,6 +98,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
     void		finishSendingBeams();
 
     std::string		itsLogPrefix;
+    Allocator           &itsBigAllocator;
 
     double		itsStartTime, itsIntegrationTime;
     unsigned		itsBlock;
@@ -107,6 +106,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
     unsigned		itsNrSubbands;
     std::vector<unsigned> itsSubbandToSAPmapping;
     std::vector<unsigned> itsNrPencilBeams;
+    unsigned		itsMaxNrPencilBeams, itsTotalNrPencilBeams;
     unsigned		itsNrSubbandsPerPset;
     unsigned		itsNrSubbandsPerPart;
     unsigned		itsNrChannels;
@@ -117,22 +117,19 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
 
     const Parset        &itsParset;
 
-    Stream		*itsInputStream;
-    SmartPtr<Stream>	itsFilteredDataStream;
+    const std::vector<SmartPtr<Stream> > &itsInputStreams;
     SmartPtr<Stream>	itsCorrelatedDataStream;
-    SmartPtr<Stream>	itsIncoherentStokesStream;
     SmartPtr<Stream>	itsFinalBeamFormedDataStream;
-    SmartPtr<Stream>	itsFinalCoherentStokesDataStream;
     SmartPtr<Stream>	itsTriggerDataStream;
 
     const LocationInfo	&itsLocationInfo;
-    const CN_Transpose2 itsTranspose2Logic;
+    const CN_Transpose2 &itsTranspose2Logic;
     std::vector<double> itsCenterFrequencies;
     SmartPtr<Ring>	itsFirstInputSubband, itsCurrentSubband;
-    std::vector<double> itsDMs;
+    std::vector<double> itsCoherentDMs;
+    std::vector<double> itsIncoherentDMs;
     bool		itsFakeInputData;
     bool		itsHasPhaseOne, itsHasPhaseTwo, itsHasPhaseThree;
-
 
 #if defined HAVE_MPI
     SmartPtr<AsyncTranspose<SAMPLE_TYPE> >	itsAsyncTransposeInput;
@@ -146,22 +143,30 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
     SmartPtr<FilteredData>			itsFilteredData;
     SmartPtr<CorrelatedData>			itsCorrelatedData;
     SmartPtr<BeamFormedData>			itsBeamFormedData;
-    SmartPtr<PreTransposeBeamFormedData>	itsPreTransposeBeamFormedData;
-    SmartPtr<StokesData>			itsIncoherentStokesData;
-    SmartPtr<StokesData>			itsCoherentStokesData;
-    SmartPtr<TransposedStokesData>		itsTransposedCoherentStokesData;
     SmartPtr<TransposedBeamFormedData>		itsTransposedBeamFormedData;
-    SmartPtr<FinalStokesData>			itsFinalCoherentStokesData;
     SmartPtr<FinalBeamFormedData>		itsFinalBeamFormedData;
     SmartPtr<TriggerData>			itsTriggerData;
 
+    std::vector<SmartPtr<PreTransposeBeamFormedData> > itsPreTransposeBeamFormedData;
+
+    struct autoDeallocate { // SmartPtr doesn't work with custom Allocators
+      void *ptr;
+      Allocator *allocator;
+
+      autoDeallocate(): ptr(0), allocator(0) {}
+      ~autoDeallocate() { if (ptr && allocator) allocator->deallocate(ptr); }
+    } itsBeamMemory;
+
+    SmartPtr<Arena>                             itsBeamArena;
+    SmartPtr<Allocator>                         itsBeamAllocator;
+
     SmartPtr<PPF<SAMPLE_TYPE> >			itsPPF;
     SmartPtr<BeamFormer>			itsBeamFormer;
-    SmartPtr<Stokes>				itsCoherentStokes;
-    SmartPtr<Stokes>				itsIncoherentStokes;
+    SmartPtr<CoherentStokes>			itsCoherentStokes;
+    SmartPtr<IncoherentStokes>			itsIncoherentStokes;
     SmartPtr<Correlator>			itsCorrelator;
-    SmartPtr<DedispersionBeforeBeamForming>	itsDedispersionBeforeBeamForming;
     SmartPtr<DedispersionAfterBeamForming>	itsDedispersionAfterBeamForming;
+    SmartPtr<DedispersionBeforeBeamForming>	itsDedispersionBeforeBeamForming;
     SmartPtr<PreCorrelationFlagger>		itsPreCorrelationFlagger;
     SmartPtr<PostCorrelationFlagger>		itsPostCorrelationFlagger;
     SmartPtr<Trigger>				itsTrigger;

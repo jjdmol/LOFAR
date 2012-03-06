@@ -32,11 +32,20 @@
 #include <Interface/PrintVector.h>
 #include <Interface/DataFactory.h>
 #include <Interface/FakeData.h>
+#include <Interface/Align.h>
 #include <complex>
 #include <cmath>
 #include <iomanip>
 #include <iostream>
 #include <map>
+
+#if defined HAVE_FFTW3
+#include <fftw3.h>
+#elif defined HAVE_FFTW2
+#include <fftw.h>
+#else
+#error Should have FFTW3 or FFTW2 installed
+#endif
 
 #if defined HAVE_BGP
 #include <common/bgp_personality_inlines.h>
@@ -54,7 +63,7 @@
 #define LOG_CONDITION	1
 #endif
 
-#define DEBUG_TRANSPOSE2
+//#define DEBUG_TRANSPOSE2
 
 
 // assertion handler for boost
@@ -81,20 +90,24 @@ CN_Processing_Base::~CN_Processing_Base()
 }
 
 
-template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const Parset &parset, Stream *inputStream, Stream *(*createStream)(unsigned, const LocationInfo &), const LocationInfo &locationInfo)
+template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const Parset &parset, const std::vector<SmartPtr<Stream> > &inputStreams, Stream *(*createStream)(unsigned, const LocationInfo &), const LocationInfo &locationInfo, Allocator &bigAllocator, unsigned firstBlock)
 :
+  itsBigAllocator(bigAllocator),
+  itsBlock(firstBlock),
   itsParset(parset),
-  itsInputStream(inputStream),
+  itsInputStreams(inputStreams),
   itsLocationInfo(locationInfo),
 #if defined HAVE_MPI
-  itsTranspose2Logic(parset, itsLocationInfo.psetNumber(),  CN_Mapping::reverseMapCoreOnPset(itsLocationInfo.rankInPset(), itsLocationInfo.psetNumber()) )
+  itsTranspose2Logic(parset.CN_transposeLogic(itsLocationInfo.psetNumber(), CN_Mapping::reverseMapCoreOnPset(itsLocationInfo.rankInPset(), itsLocationInfo.psetNumber())))
 #else
-  itsTranspose2Logic(parset, 0, 0 )
+  itsTranspose2Logic(parset.CN_transposeLogic(0, 0))
 #endif
 {
+#if defined DEBUG_TRANSPOSE2
   if(LOG_CONDITION)
     for (unsigned i = 0; i < itsTranspose2Logic.nrStreams(); i++)
       itsTranspose2Logic.streamInfo[i].log();
+#endif
 
 #if defined HAVE_MPI
   unsigned myPset	    = itsLocationInfo.psetNumber();
@@ -114,9 +127,13 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
   std::vector<unsigned> phaseTwoPsets = parset.phaseTwoPsets();
   std::vector<unsigned> phaseThreePsets = parset.phaseThreePsets();
 
-  itsHasPhaseOne             = parset.phaseOnePsetIndex( myPset ) >= 0   && parset.phaseOneCoreIndex( myCoreInPset ) >= 0;
-  itsHasPhaseTwo             = parset.phaseTwoPsetIndex( myPset ) >= 0   && parset.phaseTwoCoreIndex( myCoreInPset ) >= 0;
-  itsHasPhaseThree           = parset.phaseThreePsetIndex( myPset ) >= 0 && parset.phaseThreeCoreIndex( myCoreInPset ) >= 0;
+#if defined CLUSTER_SCHEDULING
+#define itsHasPhaseOne false
+#else
+  itsHasPhaseOne             = parset.phaseOnePsetIndex(myPset) >= 0   && parset.phaseOneCoreIndex(myCoreInPset) >= 0;
+#endif
+  itsHasPhaseTwo             = parset.phaseTwoPsetIndex(myPset) >= 0   && parset.phaseTwoCoreIndex(myCoreInPset) >= 0;
+  itsHasPhaseThree           = parset.phaseThreePsetIndex(myPset) >= 0 && parset.phaseThreeCoreIndex(myCoreInPset) >= 0;
 
   itsPhaseTwoPsetIndex       = itsHasPhaseTwo ? parset.phaseTwoPsetIndex( myPset ) : 0;
   itsPhaseThreePsetIndex     = itsHasPhaseThree ? parset.phaseThreePsetIndex( myPset ) : 0;
@@ -124,7 +141,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
   itsPhaseTwoPsetSize        = phaseTwoPsets.size();
   itsPhaseThreePsetSize      = phaseThreePsets.size();
 
-  itsPhaseThreeExists	     = parset.outputBeamFormedData() || parset.outputCoherentStokes() || parset.outputTrigger();
+  itsPhaseThreeExists	     = parset.outputBeamFormedData() || parset.outputTrigger();
   itsPhaseThreeDisjunct      = parset.phaseThreeDisjunct();
 
   itsLogPrefix = boost::str(boost::format("[obs %u phases %d%d%d] ") % parset.observationID() % (itsHasPhaseOne ? 1 : 0) % (itsHasPhaseTwo ? 1 : 0) % (itsHasPhaseThree ? 1 : 0));
@@ -134,10 +151,11 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
 
   itsNrStations	             = parset.nrStations();
   unsigned nrMergedStations  = parset.nrMergedStations();
-  unsigned nrPencilBeams     = parset.totalNrPencilBeams();
   itsNrSubbands              = parset.nrSubbands();
   itsSubbandToSAPmapping     = parset.subbandToSAPmapping();
   itsNrPencilBeams           = parset.nrPencilBeams();
+  itsMaxNrPencilBeams	     = parset.maxNrPencilBeams();
+  itsTotalNrPencilBeams	     = parset.totalNrPencilBeams();
   itsNrSubbandsPerPset       = parset.nrSubbandsPerPset();
   itsCenterFrequencies       = parset.subbandToFrequencyMapping();
   itsNrChannels		     = parset.nrChannelsPerSubband();
@@ -152,128 +170,159 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
 
   if (itsHasPhaseOne) {
     itsFirstInputSubband = new Ring(0, itsNrSubbandsPerPset, phaseTwoCoreIndex, phaseOneTwoCores.size());
-    itsInputData = new InputData<SAMPLE_TYPE>(itsPhaseTwoPsetSize, parset.nrSamplesToCNProc());
-    itsInputSubbandMetaData = new SubbandMetaData(phaseTwoPsets.size(), parset.maxNrPencilBeams() + 1);
+    itsInputData = new InputData<SAMPLE_TYPE>(itsPhaseTwoPsetSize, parset.nrSamplesToCNProc(), itsBigAllocator);
+    itsInputSubbandMetaData = new SubbandMetaData(itsPhaseTwoPsetSize, itsMaxNrPencilBeams + 1);
   }
 
   if (itsHasPhaseTwo || itsHasPhaseThree)
-    itsBeamFormer = new BeamFormer(parset, 4 / parset.nrCoherentStokes());
+    itsBeamFormer = new BeamFormer(parset);
 
   if (itsHasPhaseTwo) {
     itsCurrentSubband = new Ring(itsPhaseTwoPsetIndex, itsNrSubbandsPerPset, phaseTwoCoreIndex, phaseOneTwoCores.size());
-    itsTransposedSubbandMetaData = new SubbandMetaData(itsNrStations, nrPencilBeams + 1);
-    itsTransposedInputData = new TransposedData<SAMPLE_TYPE>(itsNrStations, parset.nrSamplesToCNProc());
+
+    // skip ahead to the first block
+    for( unsigned b = 0, core = 0; b < itsBlock; b++ ) {
+      for (unsigned sb = 0; sb < itsNrSubbandsPerPset; sb++) {
+        if (core == phaseTwoCoreIndex)
+          itsCurrentSubband->next();
+        
+        if (++core == phaseOneTwoCores.size())
+          core = 0;
+      }
+    }
+
+    itsTransposedSubbandMetaData = new SubbandMetaData(itsNrStations, itsTotalNrPencilBeams + 1);
+    itsTransposedInputData = new TransposedData<SAMPLE_TYPE>(itsNrStations, parset.nrSamplesToCNProc(), itsBigAllocator);
 
 #if defined HAVE_MPI
-    LOG_DEBUG_STR("Processes subbands " << itsCurrentSubband->list());
+    if (LOG_CONDITION)
+      LOG_DEBUG_STR("Processes subbands " << itsCurrentSubband->list());
 #endif // HAVE_MPI
 
-    itsPPF	    = new PPF<SAMPLE_TYPE>(itsNrStations, itsNrChannels, itsNrSamplesPerIntegration, parset.sampleRate() / itsNrChannels, parset.delayCompensation() || parset.totalNrPencilBeams() > 1 || parset.correctClocks(), parset.correctBandPass(), itsLocationInfo.rank() == 0);
-    itsFilteredData = (FilteredData*)newStreamableData(parset, FILTERED_DATA);
-
-    if (parset.outputFilteredData())
-      itsFilteredDataStream = createStream(FILTERED_DATA, itsLocationInfo);
+    itsPPF	    = new PPF<SAMPLE_TYPE>(itsNrStations, itsNrChannels, itsNrSamplesPerIntegration, parset.sampleRate() / itsNrChannels, parset.delayCompensation() || itsTotalNrPencilBeams > 1 || parset.correctClocks(), parset.correctBandPass(), itsLocationInfo.rank() == 0);
+    itsFilteredData = new FilteredData(parset.nrStations(), parset.nrChannelsPerSubband(), parset.CNintegrationSteps(), itsBigAllocator);
 
     if (parset.onlineFlagging() && parset.onlinePreCorrelationFlagging()) {
       itsPreCorrelationFlagger = new PreCorrelationFlagger(parset, itsNrStations, itsNrChannels, itsNrSamplesPerIntegration);
-      LOG_DEBUG_STR("Online PreCorrelation flagger enabled");
+      if (LOG_CONDITION)
+        LOG_DEBUG_STR("Online PreCorrelation flagger enabled");
     }
 
     if (parset.outputCorrelatedData()) {
       itsCorrelator	      = new Correlator(itsBeamFormer->getStationMapping(), itsNrChannels, itsNrSamplesPerIntegration);
-      itsCorrelatedData       = (CorrelatedData*)newStreamableData(parset, CORRELATED_DATA);
+      itsCorrelatedData       = (CorrelatedData*)newStreamableData(parset, CORRELATED_DATA, -1, itsBigAllocator);
       itsCorrelatedDataStream = createStream(CORRELATED_DATA, itsLocationInfo);
+    }  
 
     if (parset.onlineFlagging() && parset.onlinePostCorrelationFlagging()) {
       itsPostCorrelationFlagger = new PostCorrelationFlagger(parset, nrMergedStations, itsNrChannels);
-      LOG_DEBUG_STR("Online PostCorrelation flagger enabled");
+      if (LOG_CONDITION)
+        LOG_DEBUG_STR("Online PostCorrelation flagger enabled");
     }
 
     if (parset.onlineFlagging() && parset.onlinePostCorrelationFlagging() && parset.onlinePostCorrelationFlaggingDetectBrokenStations()) {
-      LOG_DEBUG_STR("Online PostCorrelation flagger Detect Broken Stations enabled");
+      if (LOG_CONDITION)
+        LOG_DEBUG_STR("Online PostCorrelation flagger Detect Broken Stations enabled");
     }
 
-
     }
 
-    if (parset.outputIncoherentStokes()) {
-      itsIncoherentStokes	= new Stokes(parset.nrIncoherentStokes(), itsNrChannels, itsNrSamplesPerIntegration, parset.incoherentStokesTimeIntegrationFactor(), parset.incoherentStokesChannelsPerSubband());
-      itsIncoherentStokesData	= (StokesData*)newStreamableData(parset, INCOHERENT_STOKES);
-      itsIncoherentStokesStream = createStream(INCOHERENT_STOKES, itsLocationInfo);
+    if (parset.outputBeamFormedData() || parset.outputTrigger()) {
+      itsBeamFormedData = new BeamFormedData(BeamFormer::BEST_NRBEAMS, itsNrChannels, itsNrSamplesPerIntegration, itsBigAllocator);
 
-      if (0) {
-        // todo
-        itsDMs.resize(0,0.0);
+      if (LOG_CONDITION)
+        LOG_DEBUG_STR("Considering dedispersion for " << itsTotalNrPencilBeams << " pencil beams");
 
-        itsDedispersionBeforeBeamForming = new DedispersionBeforeBeamForming(parset, itsFilteredData, itsCurrentSubband->list(), itsDMs);
-      }  
-    }
+      itsCoherentDMs.resize(itsTotalNrPencilBeams, 0.0);
+      itsIncoherentDMs.resize(itsTotalNrPencilBeams, 0.0);
 
-    if (parset.outputBeamFormedData() || parset.outputCoherentStokes() || parset.outputTrigger()) {
-      itsBeamFormedData = new BeamFormedData(BeamFormer::BEST_NRBEAMS, itsNrChannels, itsNrSamplesPerIntegration);
+      bool dedisperseCoherent = false;
+      bool dedisperseIncoherent = false;
+      unsigned i = 0;
+      unsigned nrSAPs = parset.nrBeams();
 
-      if (!itsDedispersionBeforeBeamForming) {
-        if(LOG_CONDITION) LOG_DEBUG_STR("Considering dedispersion for " << parset.totalNrPencilBeams() << " pencil beams");
+      for (unsigned sap = 0; sap < nrSAPs; sap++) {
+        for (unsigned pencil = 0; pencil < itsNrPencilBeams[sap]; pencil++) {
+          double DM = parset.dispersionMeasure(sap, pencil);
+          if(LOG_CONDITION) LOG_DEBUG_STR("DM for beam " << sap << " pencil " << pencil << " is " << DM);
 
-        itsDMs.resize(parset.totalNrPencilBeams(),0.0);
-
-        bool anyNonzeroDM = false;
-        unsigned i = 0;
-        unsigned nrSAPs = parset.nrBeams();
-
-        for (unsigned sap = 0; sap < nrSAPs; sap++) {
-          for (unsigned pencil = 0; pencil < itsNrPencilBeams[sap]; pencil++) {
-            double DM = parset.dispersionMeasure(sap, pencil);
-            if(LOG_CONDITION) LOG_DEBUG_STR("DM for beam " << sap << " pencil " << pencil << " is " << DM);
-
-            if (DM != 0.0)
-              anyNonzeroDM = true;
-
-            itsDMs[i++] = DM;
+          if (DM != 0.0) {
+            if (parset.isCoherent(sap, pencil)) {
+              dedisperseCoherent = true;
+              itsCoherentDMs[i] = DM;
+            } else {
+              dedisperseIncoherent = true;
+              itsIncoherentDMs[i] = DM;
+            }
           }
-        }
 
-        if (anyNonzeroDM) {
-          if(LOG_CONDITION) LOG_DEBUG("Doing dedispersion after beam forming");
-          itsDedispersionAfterBeamForming = new DedispersionAfterBeamForming(parset, itsBeamFormedData, itsCurrentSubband->list(), itsDMs);
-        } else {
-          if(LOG_CONDITION) LOG_DEBUG("NOT doing dedispersion after beam forming, because all DMs are 0");
+          i++;
         }
       }
-    }
 
-    if (parset.outputBeamFormedData() || parset.outputTrigger())
-      itsPreTransposeBeamFormedData = new PreTransposeBeamFormedData(itsTranspose2Logic.nrBeams, itsNrChannels, itsNrSamplesPerIntegration, parset.nrCoherentStokes(), 4 / parset.nrCoherentStokes());
+      if (dedisperseCoherent) {
+        if(LOG_CONDITION) LOG_DEBUG("Doing dedispersion for coherent data");
+        itsDedispersionAfterBeamForming = new DedispersionAfterBeamForming(parset, itsBeamFormedData, itsCurrentSubband->list(), itsCoherentDMs);
+      } else {
+        if(LOG_CONDITION) LOG_DEBUG("NOT doing dedispersion for coherent data");
+      }
+
+      if (dedisperseIncoherent) {
+        if(LOG_CONDITION) LOG_DEBUG("Doing dedispersion for incoherent data");
+        itsDedispersionBeforeBeamForming = new DedispersionBeforeBeamForming(parset, itsFilteredData, itsCurrentSubband->list(), itsIncoherentDMs);
+      } else {
+        if(LOG_CONDITION) LOG_DEBUG("NOT doing dedispersion for incoherent data");
+      }
+
+      // Our assembly code (BeamFormerAsm) requires groups of beams it processes to
+      // be consecutive, so store everything in one big block, controlling the offsets.
+
+      // determine total memory required to process one subband in each SAP
+      vector<size_t> totalsizes(parset.nrBeams(), 0);
+      for (unsigned i = 0; i < itsTranspose2Logic.nrStreams(); i++) {
+        const StreamInfo &info = itsTranspose2Logic.streamInfo[i];
+
+        // ignore multiple parts since we'll always only process one subband, and thus one part
+        if (info.part != 0)
+          continue;
+
+        totalsizes[info.sap] += align(itsTranspose2Logic.subbandSize(i), 32);
+      }
+
+      // allocate memory for the largest SAP
+      size_t max_totalsize = *std::max_element(totalsizes.begin(), totalsizes.end());
+
+      itsBeamMemory.allocator = &itsBigAllocator;
+      itsBeamMemory.ptr       = itsBigAllocator.allocate(max_totalsize, 32);
+      itsBeamArena      = new FixedArena(itsBeamMemory.ptr, max_totalsize);
+      itsBeamAllocator  = new SparseSetAllocator(*itsBeamArena.get()); // allocates consecutively
+
+      itsPreTransposeBeamFormedData.resize(itsMaxNrPencilBeams);
   }
 
-  if (itsHasPhaseTwo || itsHasPhaseThree)
-    itsCoherentStokes = new Stokes(parset.nrCoherentStokes(), itsNrChannels, itsNrSamplesPerIntegration, parset.coherentStokesTimeIntegrationFactor(), parset.coherentStokesChannelsPerSubband());
+  if (itsHasPhaseTwo || itsHasPhaseThree) {
+    itsCoherentStokes   = new CoherentStokes(itsNrChannels, itsNrSamplesPerIntegration);
+    itsIncoherentStokes = new IncoherentStokes(itsNrChannels, itsNrSamplesPerIntegration, nrMergedStations, parset.nrChannelsPerSubband() / parset.incoherentStokesChannelsPerSubband(), itsDedispersionBeforeBeamForming, itsBigAllocator);
+  }
 
 #if defined HAVE_MPI
   if (itsHasPhaseOne || itsHasPhaseTwo)
     itsAsyncTransposeInput = new AsyncTranspose<SAMPLE_TYPE>(itsHasPhaseOne, itsHasPhaseTwo, myCoreInPset, itsLocationInfo, phaseOnePsets, phaseTwoPsets);
 
   if (itsPhaseThreeExists && (itsHasPhaseTwo || itsHasPhaseThree))
-    itsAsyncTransposeBeams = new AsyncTransposeBeams(itsHasPhaseTwo, itsHasPhaseThree, itsNrSubbands, itsTranspose2Logic.nrStokesPerBeam, itsLocationInfo, phaseTwoPsets, phaseOneTwoCores, phaseThreePsets, phaseThreeCores);
+    itsAsyncTransposeBeams = new AsyncTransposeBeams(itsHasPhaseTwo, itsHasPhaseThree, itsNrSubbands, itsLocationInfo, phaseTwoPsets, phaseOneTwoCores, phaseThreePsets, phaseThreeCores);
 #endif // HAVE_MPI
 
   if (itsHasPhaseThree) {
     if (parset.outputBeamFormedData() || parset.outputTrigger()) {
-      itsTransposedBeamFormedData  = new TransposedBeamFormedData(itsNrSubbands, itsNrChannels, itsNrSamplesPerIntegration, 4 / parset.nrCoherentStokes() );
-      itsFinalBeamFormedData	   = (FinalBeamFormedData*)newStreamableData(parset, BEAM_FORMED_DATA);
+      itsTransposedBeamFormedData  = new TransposedBeamFormedData(itsTranspose2Logic.maxNrSubbands(), itsTranspose2Logic.maxNrChannels(), itsTranspose2Logic.maxNrSamples(), itsBigAllocator);
+      itsFinalBeamFormedData	   = (FinalBeamFormedData*)newStreamableData(parset, BEAM_FORMED_DATA, -1, itsBigAllocator);
       itsFinalBeamFormedDataStream = createStream(BEAM_FORMED_DATA, itsLocationInfo);
-    }
-
-    if (parset.outputCoherentStokes()) {
-      itsCoherentStokesData	       = new StokesData(true, parset.nrCoherentStokes(), itsTranspose2Logic.nrBeams, parset.coherentStokesChannelsPerSubband(), itsNrSamplesPerIntegration, parset.coherentStokesTimeIntegrationFactor());
-      itsTransposedCoherentStokesData  = new TransposedStokesData(itsNrSubbands, parset.coherentStokesChannelsPerSubband(), itsNrSamplesPerIntegration, parset.coherentStokesTimeIntegrationFactor());
-      itsFinalCoherentStokesData       = (FinalStokesData*)newStreamableData(parset, COHERENT_STOKES);
-      itsFinalCoherentStokesDataStream = createStream(COHERENT_STOKES, itsLocationInfo);
     }
 
     if (parset.outputTrigger()) {
       itsTrigger	   = new Trigger;
-      itsTriggerData	   = (TriggerData*)newStreamableData(parset, TRIGGER_DATA);
+      itsTriggerData	   = (TriggerData*)newStreamableData(parset, TRIGGER_DATA, -1, itsBigAllocator);
       itsTriggerDataStream = createStream(TRIGGER_DATA, itsLocationInfo);
     }
   }
@@ -284,6 +333,19 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::~CN_Processing()
 {
   if (LOG_CONDITION)
     LOG_INFO_STR(itsLogPrefix << "----- Observation finished");
+
+  // destruct all uses of itsBeamMemory so it can be freed properly
+  itsPreTransposeBeamFormedData.resize(0);
+  itsBeamAllocator = 0;
+  itsBeamArena = 0;
+
+  // don't accumulate plans in memory, as we might run out or create fragmentation
+#if defined HAVE_FFTW3
+  fftwf_forget_wisdom();
+  fftwf_cleanup();  
+#elif defined HAVE_FFTW2
+  fftw_forget_wisdom();
+#endif  
 }
 
 
@@ -300,11 +362,29 @@ template <typename SAMPLE_TYPE> double CN_Processing<SAMPLE_TYPE>::blockAge()
 }
 
 
+#if defined CLUSTER_SCHEDULING
+
+template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::receiveInput()
+{
+  SubbandMetaData metaData(1, itsMaxNrPencilBeams + 1);
+
+  for (unsigned stat = 0; stat < itsNrStations; stat ++) {
+    // receive meta data
+    metaData.read(itsInputStreams[stat]); // FIXME
+    memcpy(&itsTransposedSubbandMetaData->subbandInfo(stat), &metaData.subbandInfo(0), metaData.itsSubbandInfoSize);
+
+    // receive samples
+    itsInputStreams[stat]->read(itsTransposedInputData->samples[stat].origin(), itsTransposedInputData->samples[stat].num_elements() * sizeof(SAMPLE_TYPE));
+  }
+}
+
+#else
+
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transposeInput()
 {
 #if defined HAVE_MPI
   if (itsHasPhaseOne)
-    itsInputSubbandMetaData->read(itsInputStream); // sync read the meta data
+    itsInputSubbandMetaData->read(itsInputStreams[0]); // sync read the meta data
 
   if (itsHasPhaseTwo && *itsCurrentSubband < itsNrSubbands) {
     NSTimer postAsyncReceives("post async receives", LOG_CONDITION, true);
@@ -321,9 +401,8 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transposeInput(
 
     phaseOneTimer.start();
 
-    if (LOG_CONDITION) {
-      LOG_DEBUG_STR(itsLogPrefix << "Start reading at " << MPI_Wtime());
-    }
+    if (LOG_CONDITION)
+      LOG_DEBUG_STR(itsLogPrefix << "Start reading at t = " << blockAge());
     
     NSTimer asyncSendTimer("async send", LOG_CONDITION, true);
 
@@ -334,16 +413,16 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transposeInput(
       //unsigned subband = (*itsCurrentSubband % itsNrSubbandsPerPset) + (i * itsNrSubbandsPerPset);
 
       if (subband < itsNrSubbands) {
-        //if (LOG_CONDITION) {
-	//  LOG_DEBUG_STR("read subband " << subband << " from IO node");
-        //}
+        if (LOG_CONDITION) {
+	  LOG_DEBUG_STR("read subband " << subband << " from IO node at t = " << blockAge());
+        }
 	readTimer.start();
-	itsInputData->readOne(itsInputStream, i); // Synchronously read 1 subband from my IO node.
+	itsInputData->readOne(itsInputStreams[0], i); // Synchronously read 1 subband from my IO node.
 	readTimer.stop();
 	asyncSendTimer.start();
-        //if (LOG_CONDITION) {
-	//  LOG_DEBUG_STR("transpose: send subband " << subband << " to pset id " << i);
-        //}
+        if (LOG_CONDITION) {
+	  LOG_DEBUG_STR("transpose: send subband " << subband << " to pset id " << i << " at t = " << blockAge());
+        }
 
 	itsAsyncTransposeInput->asyncSend(i, itsInputSubbandMetaData, itsInputData); // Asynchronously send one subband to another pset.
 	asyncSendTimer.stop();
@@ -352,19 +431,18 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transposeInput(
 
     phaseOneTimer.stop();
   }
-
 #else // ! HAVE_MPI
-
   if (itsHasPhaseOne) {
     static NSTimer readTimer("receive timer", true, true);
     readTimer.start();
-    itsInputSubbandMetaData->read(itsInputStream);
-    itsInputData->read(itsInputStream,false);
+    itsInputSubbandMetaData->read(itsInputStreams[0]);
+    itsInputData->read(itsInputStreams[0], false);
     readTimer.stop();
   }
-
 #endif // HAVE_MPI
 }
+
+#endif
 
 
 template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(unsigned block)
@@ -372,27 +450,45 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
   int myStream          = itsTranspose2Logic.myStream( block );
   bool streamToProcess  = itsHasPhaseThree && myStream >= 0;
 
+  if (!streamToProcess) {
+    // check whether we really have nothing to process
+    unsigned myPset = itsTranspose2Logic.phaseThreePsetIndex;
+    unsigned myCore = itsTranspose2Logic.phaseThreeCoreIndex;
+
+    for (unsigned s = 0; s < itsTranspose2Logic.nrStreams(); s++) {
+      ASSERTSTR(!(myPset == itsTranspose2Logic.destPset(s, block) && myCore == itsTranspose2Logic.destCore(s, block)),
+       "I'm (" << myPset << ", " << myCore << ") and should process stream " << s << " for block " << block << " but myStream( ) does not return it.");
+    }
+  }
+
+  if (itsHasPhaseTwo && *itsCurrentSubband < itsNrSubbands) {
+    unsigned subband = *itsCurrentSubband;
+
+    ASSERTSTR((unsigned)itsTranspose2Logic.phaseThreePsetIndex == itsTranspose2Logic.sourcePset( subband, block ) && (unsigned)itsTranspose2Logic.phaseThreeCoreIndex == itsTranspose2Logic.sourceCore( subband, block ),
+     "I'm (" << itsTranspose2Logic.phaseThreePsetIndex << ", " << itsTranspose2Logic.phaseThreeCoreIndex << ") . For block " << block << ", I have subband " << subband << ", but the logic expects that subband from (" << itsTranspose2Logic.sourcePset( subband, block ) << ", " << itsTranspose2Logic.sourceCore( subband, block ) << ")" );
+  }
+
 #if defined HAVE_MPI
   if (streamToProcess) {
-    ASSERTSTR(itsTranspose2Logic.myPset == itsTranspose2Logic.destPset( myStream, block ) && itsTranspose2Logic.myCore == itsTranspose2Logic.destCore( myStream, block ),
-     "I'm (" << itsTranspose2Logic.myPset << ", " << itsTranspose2Logic.myCore << ") . According to the logic, for block " << block << ", I'm to handle stream " << myStream << ", yet that stream is to be handled by (" << itsTranspose2Logic.destPset( myStream, block ) << ", " << itsTranspose2Logic.destCore( myStream, block ) << ")" );
+    ASSERTSTR((unsigned)itsTranspose2Logic.phaseThreePsetIndex == itsTranspose2Logic.destPset( myStream, block ) && (unsigned)itsTranspose2Logic.phaseThreeCoreIndex == itsTranspose2Logic.destCore( myStream, block ),
+     "I'm (" << itsTranspose2Logic.phaseThreePsetIndex << ", " << itsTranspose2Logic.phaseThreeCoreIndex << ") . According to the logic, for block " << block << ", I'm to handle stream " << myStream << ", yet that stream is to be handled by (" << itsTranspose2Logic.destPset( myStream, block ) << ", " << itsTranspose2Logic.destCore( myStream, block ) << ")" );
 
     if (LOG_CONDITION)
-      LOG_DEBUG_STR(itsLogPrefix << "Phase 3");
+      LOG_DEBUG_STR(itsLogPrefix << "Phase 3 starting at t = " << blockAge());
+
+    const StreamInfo &info = itsTranspose2Logic.streamInfo[myStream];
+
+    itsTransposedBeamFormedData->setDimensions(info.subbands.size(), info.nrChannels, info.nrSamples);
+
+    if (itsFinalBeamFormedData != 0) {
+      itsFinalBeamFormedData->setDimensions(info.nrSamples, info.subbands.size(), info.nrChannels);
+    }  
 
     static NSTimer postAsyncReceives("post async beam receives", true, true);
     postAsyncReceives.start();
 
-    const std::vector<unsigned> &subbands = itsTranspose2Logic.subbands(myStream);
-    unsigned nrSubbands = subbands.size();
-
-    if (itsFinalBeamFormedData != 0)
-      itsFinalBeamFormedData->setNrSubbands(nrSubbands);
-    if (itsFinalCoherentStokesData != 0)
-      itsFinalCoherentStokesData->setNrSubbands(nrSubbands);
-
-    for (unsigned sb = 0; sb < nrSubbands; sb++) {
-      unsigned subband = subbands[sb];
+    for (unsigned sb = 0; sb < info.subbands.size(); sb++) {
+      unsigned subband = info.subbands[sb];
 
       unsigned pset = itsTranspose2Logic.sourcePset( subband, block );
       unsigned core = itsTranspose2Logic.sourceCore( subband, block );
@@ -400,10 +496,7 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
 #ifdef DEBUG_TRANSPOSE2      
       LOG_DEBUG_STR(itsLogPrefix << "transpose: (stream, subband, block) <- (pset, core): (" << myStream << ", " << subband << ", " << block << ") <- (" << pset << ", " << core << ")" );
 #endif        
-      if (itsTransposedCoherentStokesData != 0)
-        itsAsyncTransposeBeams->postReceive(itsTransposedCoherentStokesData.get(), sb, subband, myStream, pset, core);
-      else
-        itsAsyncTransposeBeams->postReceive(itsTransposedBeamFormedData.get(), sb, subband, myStream, pset, core);
+      itsAsyncTransposeBeams->postReceive(itsTransposedBeamFormedData.get(), sb, subband, myStream, pset, core);
     }
 
     postAsyncReceives.stop();
@@ -411,7 +504,7 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
 
   if (itsHasPhaseTwo && *itsCurrentSubband < itsNrSubbands) {
     if (LOG_CONDITION)
-      LOG_DEBUG_STR(itsLogPrefix << "Start sending beams at " << MPI_Wtime());
+      LOG_DEBUG_STR(itsLogPrefix << "Start sending beams at t = " << blockAge());
 
     static NSTimer asyncSendTimer("async beam send", true, true);
 
@@ -430,44 +523,125 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
     unsigned nrBeams = itsNrPencilBeams[sap];
     unsigned part = itsTranspose2Logic.myPart(subband);
 
-    LOG_DEBUG_STR("I process subband " << subband << " which belongs to sap " << sap << " part " << part);
-    
-    // form and send beams for this SAP, in groups of at most BeamFormer::BEST_NRBEAMS
-    for (unsigned beam = 0; beam < nrBeams;) { // beam is incremented in inner for-loop
-      unsigned groupSize = std::min(nrBeams - beam, +BeamFormer::BEST_NRBEAMS); // unary + to avoid requiring a reference
+    //LOG_DEBUG_STR("I process subband " << subband << " which belongs to sap " << sap << " part " << part);
 
-      formBeams(sap, beam, groupSize);
+    unsigned stream = 0;
+    
+    // form and send beams for this SAP
+    for (unsigned beam = 0; beam < nrBeams;) { // beam is incremented in inner for-loop
+      unsigned groupSize;
+
+      stream = itsTranspose2Logic.stream(sap, beam, 0, part, stream);
+      const StreamInfo &info = itsTranspose2Logic.streamInfo[stream];
+
+      if (info.coherent) {
+        // a coherent beam -- look BEST_NRBEAMS ahead to see if we can process them at the same time
+
+        groupSize = std::min(nrBeams - beam, +BeamFormer::BEST_NRBEAMS); // unary + to avoid requiring a reference
+        unsigned stream2 = stream;
+
+        // determine how many beams (up to groupSize) are coherent
+        for (unsigned i = 1; i < groupSize; i++ ) {
+          stream2 = itsTranspose2Logic.stream(sap, beam+i, 0, part, stream2);
+          const StreamInfo &info2 = itsTranspose2Logic.streamInfo[stream2];
+
+          if (!info2.coherent) {
+            groupSize = i;
+            break;
+          }
+        }
+
+        if(LOG_CONDITION)
+          LOG_DEBUG_STR(itsLogPrefix << "Forming beams " << beam << " .. " << (beam+groupSize-1) << " at t = " << blockAge());
+        formBeams(sap, beam, groupSize);
+      } else {
+        groupSize = 1;
+      }
 
       for (unsigned i = 0; i < groupSize; i ++, beam ++) {
-	if (itsDedispersionAfterBeamForming != 0)
-	  dedisperseAfterBeamForming(i, itsDMs[beam]);
+        stream = itsTranspose2Logic.stream(sap, beam, 0, part, stream);
 
-        if (itsCoherentStokesData != 0)
-          calculateCoherentStokes(i, beam);
-        else if (itsPreTransposeBeamFormedData != 0)
-          preTransposeBeams(i, beam);
+        const StreamInfo &info = itsTranspose2Logic.streamInfo[stream];
 
-#if 0
-      /* don't overlap computation and transpose */
-      }
-      for (unsigned i = 0; i < nrBeams; i ++, beam ++) {
-#endif
+        ASSERT( beam < itsPreTransposeBeamFormedData.size() );
+
+        itsPreTransposeBeamFormedData[beam] = new PreTransposeBeamFormedData(info.nrStokes, info.nrChannels, info.nrSamples, *itsBeamAllocator.get());
+
+        ASSERT( itsPreTransposeBeamFormedData[beam].get() != NULL );
+
+        if (info.coherent) {
+          if (itsDedispersionAfterBeamForming != 0) {
+            if(LOG_CONDITION)
+              LOG_DEBUG_STR(itsLogPrefix << "Dedispersing beam-formed data at t = " << blockAge());
+
+            dedisperseAfterBeamForming(i, itsCoherentDMs[beam]);
+          }
+
+          switch (info.stokesType) {
+            case STOKES_I:
+              if(LOG_CONDITION)
+                LOG_DEBUG_STR(itsLogPrefix << "Calculating coherent Stokes I at t = " << blockAge());
+              itsCoherentStokes->calculate<false>(itsBeamFormedData.get(), itsPreTransposeBeamFormedData[beam].get(), i, info);
+              break;
+
+            case STOKES_IQUV:
+              if(LOG_CONDITION)
+                LOG_DEBUG_STR(itsLogPrefix << "Calculating coherent Stokes IQUV at t = " << blockAge());
+              itsCoherentStokes->calculate<true>(itsBeamFormedData.get(), itsPreTransposeBeamFormedData[beam].get(), i, info);
+              break;
+
+            case STOKES_XXYY:
+              if(LOG_CONDITION)
+                LOG_DEBUG_STR(itsLogPrefix << "Calculating coherent Stokes XXYY at t = " << blockAge());
+              itsBeamFormer->preTransposeBeam(itsBeamFormedData.get(), itsPreTransposeBeamFormedData[beam].get(), i);
+              break;
+
+            case INVALID_STOKES:
+              ASSERT( false );
+              break;
+          }
+        } else {  
+          // TODO: optimise dedispersion to only do the forwardFFT once
+
+          switch (info.stokesType) {
+            case STOKES_I:
+              if(LOG_CONDITION)
+                LOG_DEBUG_STR(itsLogPrefix << "Calculating incoherent Stokes I at t = " << blockAge());
+              itsIncoherentStokes->calculate<false>(itsFilteredData.get(), itsPreTransposeBeamFormedData[beam].get(), itsBeamFormer->getStationMapping(), info, subband, itsIncoherentDMs[beam]);
+              break;
+
+            case STOKES_IQUV:
+              if(LOG_CONDITION)
+                LOG_DEBUG_STR(itsLogPrefix << "Calculating incoherent Stokes IQUV at t = " << blockAge());
+              itsIncoherentStokes->calculate<true>(itsFilteredData.get(), itsPreTransposeBeamFormedData[beam].get(), itsBeamFormer->getStationMapping(), info, subband, itsIncoherentDMs[beam]);
+              break;
+
+            case STOKES_XXYY:
+              ASSERT( false );
+              break;
+
+            case INVALID_STOKES:
+              ASSERT( false );
+              break;
+          }
+        }
+
+        if(LOG_CONDITION)
+          LOG_DEBUG_STR(itsLogPrefix << "Done calculating Stokes at t = " << blockAge());
 
         asyncSendTimer.start();
 
-        for (unsigned stokes = 0; stokes < itsTranspose2Logic.nrStokesPerBeam; stokes ++) {
+        for (unsigned stokes = 0; stokes < info.nrStokes; stokes ++) {
           // calculate which (pset,core) needs the beam part
-          unsigned stream = itsTranspose2Logic.stream(sap, beam, stokes, part);
+          stream = itsTranspose2Logic.stream(sap, beam, stokes, part, stream);
+
           unsigned pset = itsTranspose2Logic.destPset(stream, block);
           unsigned core = itsTranspose2Logic.destCore(stream, block);
 
 #ifdef DEBUG_TRANSPOSE2      
           LOG_DEBUG_STR(itsLogPrefix << "transpose: (stream, subband, block) -> (pset, core): (" << stream << ", " << *itsCurrentSubband << ", " << block << ") -> (" << pset << ", " << core << ")" );
 #endif
-          if (itsCoherentStokesData != 0)
-            itsAsyncTransposeBeams->asyncSend(pset, core, *itsCurrentSubband, i, stokes, stream, itsCoherentStokesData.get()); // Asynchronously send one beam to another pset.
-          else
-            itsAsyncTransposeBeams->asyncSend(pset, core, *itsCurrentSubband, i, stokes, stream, itsPreTransposeBeamFormedData.get()); // Asynchronously send one beam to another pset.
+          itsAsyncTransposeBeams->asyncSend(pset, core, *itsCurrentSubband, stokes, stream, itsPreTransposeBeamFormedData[beam].get()); // Asynchronously send one beam to another pset.
         }
 
         asyncSendTimer.stop();
@@ -482,9 +656,9 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
 
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::filter()
 {
-#if defined HAVE_MPI
+#if defined HAVE_MPI && !defined CLUSTER_SCHEDULING
   if (LOG_CONDITION)
-    LOG_DEBUG_STR(itsLogPrefix << "Start filtering at " << MPI_Wtime());
+    LOG_DEBUG_STR(itsLogPrefix << "Start filtering at t = " << blockAge());
 
   NSTimer asyncReceiveTimer("wait for any async receive", LOG_CONDITION, true);
   static NSTimer timer("filter timer", true, true);
@@ -502,38 +676,16 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::filter()
   }
 
   timer.stop();
-
-  if (itsFakeInputData) {
-    FakeData fd(itsParset);
-
-    fd.fill(itsFilteredData);
-  }
-
-#else // NO MPI
+#else
   for (unsigned stat = 0; stat < itsNrStations; stat ++) {
     computeTimer.start();
-    itsPPF->computeFlags(stat, itsTransposedSubbandMetaData, itsFilteredData);
-    itsPPF->filter(stat, itsCenterFrequencies[*itsCurrentSubband], itsTransposedSubbandMetaData, itsTransposedInputData, itsFilteredData);
+    itsPPF->doWork(stat, itsCenterFrequencies[*itsCurrentSubband], itsTransposedSubbandMetaData, itsTransposedInputData, itsFilteredData);
     computeTimer.stop();
   }
-#endif // HAVE_MPI
-}
-
-
-template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::dedisperseBeforeBeamForming()
-{
-#if defined HAVE_MPI
-  if (LOG_CONDITION)
-    LOG_DEBUG_STR(itsLogPrefix << "Start dedispersion at " << MPI_Wtime());
 #endif
 
-  static NSTimer timer("dedispersion (before BF) timer", true, true);
-
-  computeTimer.start();
-  timer.start();
-  //itsDedispersionBeforeBeamForming->dedisperse(itsFilteredData, *itsCurrentSubband);
-  timer.stop();
-  computeTimer.stop();
+  if (itsFakeInputData)
+    FakeData(itsParset).fill(itsFilteredData);
 }
 
 
@@ -541,14 +693,14 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::dedisperseAfter
 {
 #if defined HAVE_MPI
   if (LOG_CONDITION)
-    LOG_DEBUG_STR(itsLogPrefix << "Start dedispersion at " << MPI_Wtime());
+    LOG_DEBUG_STR(itsLogPrefix << "Start dedispersion of coherent data at t = " << blockAge());
 #endif
 
-  static NSTimer timer("dedispersion (after BF) timer", true, true);
+  static NSTimer timer("dedispersion (coherent) timer", true, true);
 
   computeTimer.start();
   timer.start();
-  itsDedispersionAfterBeamForming->dedisperse(itsBeamFormedData, *itsCurrentSubband, beam, dm);
+  itsDedispersionAfterBeamForming->dedisperse(itsBeamFormedData.get(), *itsCurrentSubband, beam, dm);
   timer.stop();
   computeTimer.stop();
 }
@@ -558,7 +710,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preCorrelationF
 {
 #if defined HAVE_MPI
   if (LOG_CONDITION)
-    LOG_DEBUG_STR(itsLogPrefix << "Start pre correlation flagger at " << MPI_Wtime());
+    LOG_DEBUG_STR(itsLogPrefix << "Start pre correlation flagger at t = " << blockAge());
 #endif // HAVE_MPI
 
   static NSTimer timer("pre correlation flagger", true, true);
@@ -575,7 +727,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::mergeStations()
 {
 #if defined HAVE_MPI
   if (LOG_CONDITION)
-    LOG_DEBUG_STR(itsLogPrefix << "Start merging stations at " << MPI_Wtime());
+    LOG_DEBUG_STR(itsLogPrefix << "Start merging stations at t = " << blockAge());
 #endif // HAVE_MPI
 
   static NSTimer timer("superstation forming timer", true, true);
@@ -607,93 +759,11 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::formBeams(unsig
 }
 
 
-template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preTransposeBeams(unsigned inbeam, unsigned outbeam)
-{
-  static NSTimer timer("pre-transpose beams reorder timer", true, true);
-
-  timer.start();
-  computeTimer.start();
-  itsBeamFormer->preTransposeBeams(itsBeamFormedData, itsPreTransposeBeamFormedData, inbeam, outbeam);
-  computeTimer.stop();
-  timer.stop();
-}
-
-
-template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::postTransposeBeams(unsigned subband)
-{
-  static NSTimer timer("post-transpose beams reorder timer", true, true);
-
-  timer.start();
-  computeTimer.start();
-  itsBeamFormer->postTransposeBeams(itsTransposedBeamFormedData, itsFinalBeamFormedData, subband);
-  computeTimer.stop();
-  timer.stop();
-}
-
-
-template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::postTransposeStokes(unsigned subband)
-{
-  static NSTimer timer("post-transpose stokes reorder timer", true, true);
-
-  timer.start();
-  computeTimer.start();
-  itsCoherentStokes->postTransposeStokes(itsTransposedCoherentStokesData, itsFinalCoherentStokesData, subband);
-  computeTimer.stop();
-  timer.stop();
-}
-
-
-template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::calculateIncoherentStokes()
-{
-#if defined HAVE_MPI
-  if (LOG_CONDITION)
-    LOG_DEBUG_STR(itsLogPrefix << "Start calculating incoherent Stokes at " << MPI_Wtime());
-#endif // HAVE_MPI
-
-  static NSTimer timer("incoherent stokes timer", LOG_CONDITION, true);
-
-  timer.start();
-  computeTimer.start();
-
-  if (itsParset.nrIncoherentStokes() == 4) {
-    itsIncoherentStokes->calculateIncoherent<true>(itsFilteredData, itsIncoherentStokesData, itsBeamFormer->getStationMapping());
-  } else {
-    itsIncoherentStokes->calculateIncoherent<false>(itsFilteredData, itsIncoherentStokesData, itsBeamFormer->getStationMapping());
-  }
-
-  computeTimer.stop();
-  timer.stop();
-}
-
-
-template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::calculateCoherentStokes(unsigned inbeam, unsigned outbeam)
-{
-#if defined HAVE_MPI
-  if (LOG_CONDITION)
-    LOG_DEBUG_STR(itsLogPrefix << "Start calculating coherent Stokes at " << MPI_Wtime());
-#endif // HAVE_MPI
-
-  static NSTimer timer("coherent stokes timer", true, true);
-
-  timer.start();
-  computeTimer.start();
-
-  if (itsTranspose2Logic.nrStokesPerBeam == 4) {
-    itsCoherentStokes->calculateCoherent<true>(itsBeamFormedData, itsCoherentStokesData, inbeam, outbeam);
-  } else {
-    itsCoherentStokes->calculateCoherent<false>(itsBeamFormedData, itsCoherentStokesData, inbeam, outbeam);
-  }
-
-  computeTimer.stop();
-  timer.stop();
-}
-
-
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::correlate()
 {
 #if defined HAVE_MPI
   if (LOG_CONDITION)
-    LOG_DEBUG_STR(itsLogPrefix << "Start correlating at " << MPI_Wtime());
+    LOG_DEBUG_STR(itsLogPrefix << "Start correlating at t = " << blockAge());
 #endif // HAVE_MPI
 
   computeTimer.start();
@@ -707,7 +777,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::postCorrelation
 {
 #if defined HAVE_MPI
   if (LOG_CONDITION)
-    LOG_DEBUG_STR(itsLogPrefix << "Start post correlation flagger at " << MPI_Wtime());
+    LOG_DEBUG_STR(itsLogPrefix << "Start post correlation flagger at t = " << blockAge());
 #endif // HAVE_MPI
 
   static NSTimer timer("post correlation flagger", true, true);
@@ -729,7 +799,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::sendOutput(Stre
 {
 #if defined HAVE_MPI
   if (LOG_CONDITION) {
-    LOG_DEBUG_STR(itsLogPrefix << "Start writing output "/* << outputNr <<*/ " at " << MPI_Wtime());
+    LOG_DEBUG_STR(itsLogPrefix << "Start writing output at t = " << blockAge());
   }
   //LOG_INFO_STR(itsLogPrefix << "Output " << outputNr << " has been processed " << blockAge() << " seconds after being observed.");
 #endif // HAVE_MPI
@@ -745,7 +815,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::finishSendingIn
 {
 #if defined HAVE_MPI
   if (LOG_CONDITION)
-    LOG_DEBUG_STR(itsLogPrefix << "Start waiting to finish sending input for transpose at " << MPI_Wtime());
+    LOG_DEBUG_STR(itsLogPrefix << "Start waiting to finish sending input for transpose at t = " << blockAge());
 
   static NSTimer waitAsyncSendTimer("wait for all async sends", true, true);
   waitAsyncSendTimer.start();
@@ -759,26 +829,33 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::finishSendingBe
 {
 #if defined HAVE_MPI
   if (LOG_CONDITION)
-    LOG_DEBUG_STR(itsLogPrefix << "Start waiting to finish sending beams for transpose at " << MPI_Wtime());
+    LOG_DEBUG_STR(itsLogPrefix << "Start waiting to finish sending beams for transpose at t = " << blockAge());
 
   static NSTimer waitAsyncSendTimer("wait for all async beam sends", true, true);
   waitAsyncSendTimer.start();
   itsAsyncTransposeBeams->waitForAllSends();
   waitAsyncSendTimer.stop();
 #endif
+
+  // free all pretranspose data that we just send, to make room for a different configuration
+  // (because the configuration depends on itsCurrentSubband)
+  for( unsigned i = 0; i < itsPreTransposeBeamFormedData.size(); i++ )
+    itsPreTransposeBeamFormedData[i] = 0;
 }
 
 
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::receiveBeam(unsigned stream)
 {
-  unsigned nrSubbands= itsTranspose2Logic.nrSubbands( stream );
-
 #if defined HAVE_MPI
+  const StreamInfo &info = itsTranspose2Logic.streamInfo[stream];
+  unsigned nrSubbands = info.subbands.size();
+  unsigned nrSamples = itsNrSamplesPerIntegration / info.timeIntFactor;
+
   static NSTimer asyncFirstReceiveTimer("wait for first async beam receive", true, true);
   static NSTimer asyncNonfirstReceiveTimer("wait for subsequent async beam receive", true, true);
 
   if (LOG_CONDITION)
-    LOG_DEBUG_STR(itsLogPrefix << "Starting to receive and process subbands at " << MPI_Wtime());
+    LOG_DEBUG_STR(itsLogPrefix << "Starting to receive and process subbands at t = " << blockAge());
 
   /* Overlap transpose and computations? */
   /* this makes timings better as this time we're waiting for data to come in
@@ -802,15 +879,18 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::receiveBeam(uns
   for (unsigned subband = 0; subband < nrSubbands; subband++) {
 #endif
 
-    if (itsFinalBeamFormedData != 0) {
-      postTransposeBeams(subband);
+    if (LOG_CONDITION && (i == 0 || i == 1 || i == nrSubbands - 2 || i == nrSubbands - 1))
+      LOG_DEBUG_STR(itsLogPrefix << "Starting to post process subband " << i << " / " << nrSubbands << " at t = " << blockAge());
 
-      if (itsTrigger != 0)
-        itsTrigger->compute(itsTriggerData);
-    } else if (itsFinalCoherentStokesData != 0) {
-      postTransposeStokes(subband);
-    }
+    if (itsFinalBeamFormedData != 0) {
+      itsBeamFormer->postTransposeBeam(itsTransposedBeamFormedData, itsFinalBeamFormedData, subband, info.nrChannels, nrSamples);
+    }  
+
+    if (itsTrigger != 0)
+      itsTrigger->compute(itsTriggerData);
   }
+#else  
+  (void)stream;
 #endif
 }
 
@@ -826,14 +906,20 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process(unsigne
 
   // PHASE ONE: Receive input data, and send it to the nodes participating in phase two.
 
+#if !defined CLUSTER_SCHEDULING
   if (itsHasPhaseOne || itsHasPhaseTwo)
     transposeInput();
+#endif
 
   // PHASE TWO: Perform (and possibly output) calculations per subband, and possibly transpose data for phase three.
 
   if (itsHasPhaseTwo && *itsCurrentSubband < itsNrSubbands) {
     if (LOG_CONDITION)
-      LOG_DEBUG_STR(itsLogPrefix << "Phase 2: Processing subband " << *itsCurrentSubband);
+      LOG_DEBUG_STR(itsLogPrefix << "Phase 2: Processing subband " << *itsCurrentSubband << " block " << itsBlock << " at t = " << blockAge());
+
+#if defined CLUSTER_SCHEDULING
+    receiveInput();
+#endif
 
     if (itsPPF != 0)
       filter();
@@ -861,20 +947,8 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process(unsigne
     if (itsPostCorrelationFlagger != 0)
       postCorrelationFlagging();
 
-    if (itsDedispersionBeforeBeamForming != 0)
-      dedisperseBeforeBeamForming();
-
-    if (itsIncoherentStokes != 0)
-      calculateIncoherentStokes();
-
-    if (itsFilteredDataStream != 0)
-      sendOutput(itsFilteredData, itsFilteredDataStream);
-
     if (itsCorrelatedDataStream != 0)
       sendOutput(itsCorrelatedData, itsCorrelatedDataStream);
-
-    if (itsIncoherentStokesStream != 0)
-      sendOutput(itsIncoherentStokesData, itsIncoherentStokesStream);
   } 
 
 #if defined HAVE_BGP
@@ -890,7 +964,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process(unsigne
   // a beam.
 
   if ((itsHasPhaseThree && itsPhaseThreeDisjunct) || (itsHasPhaseTwo && itsPhaseThreeExists)) {
-    int streamToProcess = transposeBeams(block);
+    int streamToProcess = transposeBeams(itsBlock);
     bool doPhaseThree = streamToProcess >= 0;
 
     if (doPhaseThree) {
@@ -901,9 +975,6 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process(unsigne
 
       if (itsTriggerDataStream != 0)
 	sendOutput(itsTriggerData, itsTriggerDataStream);
-
-      if (itsFinalCoherentStokesDataStream != 0)
-	sendOutput(itsFinalCoherentStokesData, itsFinalCoherentStokesDataStream);
     }
 
     if (itsHasPhaseTwo && *itsCurrentSubband < itsNrSubbands)
@@ -912,7 +983,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process(unsigne
 
 #if defined HAVE_MPI
   if ((itsHasPhaseOne || itsHasPhaseTwo || itsHasPhaseThree) && LOG_CONDITION)
-    LOG_DEBUG_STR(itsLogPrefix << "Start idling at " << MPI_Wtime());
+    LOG_DEBUG_STR(itsLogPrefix << "Start idling at t = " << blockAge());
 #endif // HAVE_MPI
 
 #if 0

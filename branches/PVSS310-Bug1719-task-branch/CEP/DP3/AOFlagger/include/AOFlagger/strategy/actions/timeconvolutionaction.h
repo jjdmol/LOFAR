@@ -183,7 +183,7 @@ private:
 				TimeFrequencyData data = artifacts.ContaminatedData();
 				Image2DCPtr image = data.GetSingleImage();
 				num_t *row = new num_t[image->Width()];
-				Image2DPtr newImage = Image2D::CreateEmptyImagePtr(image->Width(), image->Height());
+				Image2DPtr newImage = Image2D::CreateUnsetImagePtr(image->Width(), image->Height());
 				unsigned width = image->Width();
 
 				const BandInfo band = artifacts.MetaData()->Band();
@@ -219,7 +219,7 @@ private:
 				TimeFrequencyData data = artifacts.ContaminatedData();
 				Image2DCPtr image = data.GetSingleImage();
 				num_t *row = new num_t[image->Width()*3];
-				Image2DPtr newImage = Image2D::CreateEmptyImagePtr(image->Width(), image->Height());
+				Image2DPtr newImage = Image2D::CreateUnsetImagePtr(image->Width(), image->Height());
 				unsigned width = image->Width();
 				num_t sign;
 				if(data.IsImaginary())
@@ -261,7 +261,7 @@ private:
 			{
 				TimeFrequencyData data = artifacts.ContaminatedData();
 				Image2DCPtr image = data.GetSingleImage();
-				Image2DPtr newImage = Image2D::CreateEmptyImagePtr(image->Width(), image->Height());
+				Image2DPtr newImage = Image2D::CreateUnsetImagePtr(image->Width(), image->Height());
 				TimeFrequencyMetaDataCPtr metaData = artifacts.MetaData();
 
 				bool isImaginary = data.IsImaginary();

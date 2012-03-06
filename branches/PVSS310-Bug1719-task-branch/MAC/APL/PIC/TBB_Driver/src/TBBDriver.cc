@@ -348,10 +348,16 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
 					TPArpModeEvent arp;
 					arp.opcode = oc_ARPMODE;
 					arp.status = 0;
-					arp.mode=1; // set arp mode to auto
+					//arp.mode=1; // set arp mode to auto
+					arp.mode=0; // set arp mode to disabled
 					itsBoard[board].send(arp);
 					itsBoard[board].setTimer(TS->timeout());
-					LOG_INFO_STR("ARP = AUTO is send to port '" << itsBoard[board].getName() << "'");
+					if (arp.mode == 0) {
+					   LOG_INFO_STR("ARP = OFF is send to port '" << itsBoard[board].getName() << "'");
+					}
+					else {
+					   LOG_INFO_STR("ARP = AUTO is send to port '" << itsBoard[board].getName() << "'");
+					}
 					TS->setSetupCmdDone(board, false);
 					continue;
 				}
@@ -503,7 +509,7 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
 	if (TS->isSetupCmdDone(-1)) {
 		bool allDone = true;
 		for (int board = 0; board < TS->maxBoards(); board++) {
-			if (   (TS->getBoardState(board) > noBoard)
+			if (  (TS->getBoardState(board) > noBoard)
 				&& (TS->getBoardState(board) < boardReady) ) {
 				allDone = false;
 			}

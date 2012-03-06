@@ -96,10 +96,6 @@ void FakeData::check( const FinalBeamFormedData* /* data */, unsigned /* pol */)
 void FakeData::check( const StreamableData *data, OutputType outputType, unsigned streamNr ) const
 {
   switch (outputType) {
-    case FILTERED_DATA:
-      check( static_cast<const FilteredData *>(data) );
-      break;
-
     case BEAM_FORMED_DATA:
       check( static_cast<const FinalBeamFormedData *>(data), streamNr % NR_POLARIZATIONS );
       break;

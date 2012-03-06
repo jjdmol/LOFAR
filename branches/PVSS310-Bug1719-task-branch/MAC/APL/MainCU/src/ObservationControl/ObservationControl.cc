@@ -70,6 +70,7 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 	itsFullReport		(false),
 	itsChangeReport		(false),
 	itsState			(CTState::NOSTATE),
+	itsLastReportedState(CTState::NOSTATE),
 	itsNrControllers  	(0),
 	itsBusyControllers  (0),
 	itsQuitReason		(CT_RESULT_NO_ERROR),
@@ -97,14 +98,18 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 	itsClaimPeriod   = globalParameterSet()->getTime  ("Observation.claimPeriod");
 	itsPreparePeriod = globalParameterSet()->getTime  ("Observation.preparePeriod");
 
+	// Values from my conf file
+	itsLateLimit     = globalParameterSet()->getTime   ("ObservationControl.lateLimit", 15);
+	itsFailedLimit   = globalParameterSet()->getTime   ("ObservationControl.failedLimit", 30);
+	itsHeartBeatItv	 = globalParameterSet()->getTime   ("ObservationControl.heartbeatInterval", 10);
+	string reportType = globalParameterSet()->getString("ObservationControl.reportType", "Full");
+	if 		(reportType == "Full")		itsFullReport = true;
+	else if (reportType == "Changes")	itsChangeReport = true;
+
 	// My own parameters
 	itsTreePrefix   	 = globalParameterSet()->getString("prefix");
 	itsTreeID			 = globalParameterSet()->getUint32("_treeID");	// !!!
 	itsObsDPname		 = globalParameterSet()->getString("_DPname");
-	itsHeartBeatItv 	 = globalParameterSet()->getTime("heartbeatInterval", 10);
-	string reportType    = globalParameterSet()->getString("reportType", "Full");
-	if 		(reportType == "Full")		itsFullReport = true;
-	else if (reportType == "Changes")	itsChangeReport = true;
 
 	// The time I have to wait for the forced quit depends on the integration time of OLAP
 	string	OLAPpos = globalParameterSet()->locateModule("OLAP");
@@ -126,7 +131,7 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 	itsParentControl = ParentControl::instance();
 
 	// need port for timers.
-	itsTimerPort = new GCFTimerPort(*this, "TimerPort");
+	itsTimerPort = new GCFTimerPort(*this, "ObservationControlTimer");
 
 	// create a datapoint service for setting runstates and so on
 	itsDPservice = new DPservice(this);
@@ -747,12 +752,13 @@ void  ObservationControl::doHeartBeatTask()
 #if 1
 	// NOTE: [15122010] Sending respons when first child reached required state.
 	// NOTE: [15122010] WHEN nrChilds = 1 EACH TIME WE COME HERE A REPLY IS SENT!!!!!
-	if (itsBusyControllers == nrChilds-1) {	// first reply received?
+	if ((itsBusyControllers == nrChilds-1) && (itsLastReportedState != itsState)) {	// first reply received?
 		CTState		cts;					// report that state is reached.
 		LOG_INFO_STR("First controller reached required state " << cts.name(cts.stateAck(itsState)) << 
 					 ", informing SAS although it is too early!");
 		sendControlResult(*itsParentPort, cts.signal(cts.stateAck(itsState)), getName(), CT_RESULT_NO_ERROR);
 		setState(cts.stateAck(itsState));
+		itsLastReportedState = itsState;
 	}
 #endif
 
@@ -795,20 +801,24 @@ void ObservationControl::_updateChildInfo(const string& name, CTState::CTstateNr
 {
 	// make sure that quited (and by ChildControl already removed) controllers are updatd also.
 	if (!name.empty() && state != CTState::NOSTATE && itsChildInfo.find(name) != itsChildInfo.end()) {
-		itsChildInfo[name].state = state;
+		itsChildInfo[name].currentState = state;
 		CTState	CTS; 
 		LOG_DEBUG_STR("_updateChildInfo: FORCING " << name << " to " << CTS.name(state));
 		return;
 	}
 
+	// get latest status info
 	vector<ChildControl::StateInfo> childs = itsChildControl->getChildInfo(name, 0, CNTLRTYPE_NO_TYPE);
 	int	nrChilds = childs.size();
 	for (int i = 0; i < nrChilds; i++) {
 		if (itsChildInfo.find(childs[i].name) == itsChildInfo.end()) {	// not in map already?
-			itsChildInfo[childs[i].name] = ChildProc(childs[i].cntlrType, childs[i].currentState);
+			itsChildInfo[childs[i].name] = 
+				ChildProc(childs[i].cntlrType, childs[i].currentState, childs[i].requestedState, childs[i].requestTime);
 		}
 		else {
-			itsChildInfo[childs[i].name].state = (state != CTState::NOSTATE) ? state : childs[i].currentState;
+			itsChildInfo[childs[i].name].currentState   = (state != CTState::NOSTATE) ? state : childs[i].currentState;
+			itsChildInfo[childs[i].name].requestedState = childs[i].requestedState;
+			itsChildInfo[childs[i].name].requestTime    = childs[i].requestTime;
 		}
 	}
 }
@@ -825,15 +835,36 @@ void ObservationControl::_showChildInfo()
 	CTState		CTS;
 	map<string, ChildProc>::iterator	iter = itsChildInfo.begin();
 	map<string, ChildProc>::iterator	end  = itsChildInfo.end();
+	time_t		now(time(0));
 	while (iter != end) {
-		if (itsFullReport || (itsChangeReport && iter->second.state != iter->second.reportedState)) {
-			LOG_INFO(formatString("%-35.35s: %-10.10s", iter->first.c_str(), CTS.name(iter->second.state).c_str()));
-			iter->second.reportedState = iter->second.state;
+		ChildProc*	cp = &(iter->second);
+		LOG_DEBUG_STR(iter->first<<":cur="<<cp->currentState<<",req="<<cp->requestedState<<",rep="
+														<<cp->reportedState<<",late="<<now-cp->requestTime);
+		//    always      OR     child not in requested state       OR     current state not yet reported
+		if (itsFullReport || cp->currentState != cp->requestedState || cp->reportedState != cp->currentState) {
+			string	stateName = CTS.name(cp->currentState);
+			
+			// Selection of loglineType is based on 'late', while starting up correct late for scp timeout
+			// to prevent fault 'not responding' messages.
+			int32	late      = now - cp->requestTime - (cp->requestedState <= CTState::CLAIMED ? MAC_SCP_TIMEOUT : 0);
+			if (late > itsLateLimit && late < itsFailedLimit && cp->currentState < cp->requestedState) {
+				LOG_WARN(formatString("%-35.35s: IS LATE, state= %-10.10s", iter->first.c_str(), stateName.c_str()));
+			}
+			else if (late > itsFailedLimit && cp->reportedState != cp->requestedState && cp->currentState < cp->requestedState) {
+				LOG_FATAL(formatString("%-35.35s: IS NOT RESPONDING, state= %-10.10s", iter->first.c_str(), stateName.c_str()));
+				cp->reportedState = cp->currentState;
+			} 
+			else {
+				LOG_INFO(formatString("%-35.35s: %-10.10s", iter->first.c_str(), stateName.c_str()));
+				if (cp->currentState == cp->requestedState) {
+					cp->reportedState = cp->currentState;
+				}
+			}
 		}
 		iter++;
 	}
 }
-	
+
 //
 // _connectedHandler(port)
 //

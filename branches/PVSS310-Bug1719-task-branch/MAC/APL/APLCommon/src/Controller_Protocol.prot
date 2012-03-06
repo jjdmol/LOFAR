@@ -59,6 +59,7 @@ prelude = << PRELUDE_END
 // COMMON	 (string cntlrName)	// not a real signal, the common part of all signals
 // COMMON_ANSWER (string cntlrName, uint16 result)	// not a real signal, the common part of all signals
 //
+// ANNOUNCE  (string ObservationID)
 
 PRELUDE_END;
 
@@ -403,6 +404,18 @@ event = {
 	param = {
 		name = "result";
 		type = "uint16";
+	};
+};
+
+//
+// ANNOUNCE
+//
+event = {
+	signal = ANNOUNCE;
+	dir = IN; // from parent to child
+	param = {
+		name = "observationID";
+		type = "string";
 	};
 };
 

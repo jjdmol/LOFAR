@@ -39,15 +39,21 @@ InputThread::InputThread(const Parset &parset, OutputType outputType, unsigned s
   itsLogPrefix(logPrefix + "[InputThread] "),
   itsInputDescriptor(getStreamDescriptorBetweenIONandStorage(parset, outputType, streamNr)),
   itsFreeQueue(freeQueue),
-  itsReceiveQueue(receiveQueue),
-  itsThread(this, &InputThread::mainLoop, itsLogPrefix)
+  itsReceiveQueue(receiveQueue)
 {
+}
+
+
+void InputThread::start()
+{
+  itsThread = new Thread(this, &InputThread::mainLoop, itsLogPrefix);
 }
 
 
 void InputThread::cancel()
 {
-  itsThread.cancel();
+  if (itsThread)
+    itsThread->cancel();
 }
 
 

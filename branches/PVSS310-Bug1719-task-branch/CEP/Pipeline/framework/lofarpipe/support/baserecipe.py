@@ -183,8 +183,6 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
             import datetime
             self.inputs["start_time"] = datetime.datetime.utcnow().replace(microsecond=0).isoformat()
 
-        self.logger.debug("Pipeline start time: %s" % self.inputs['start_time'])
-
         # Config is passed in from spawning recipe. But if this is the start
         # of a pipeline, it won't have one.
         if not hasattr(self, "config"):
@@ -213,6 +211,14 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
                              ",".join(self.inputs["task_files"])
         self.task_definitions.read(self.inputs["task_files"])
 
+        # Specify the working directory on the compute nodes
+        if not self.inputs.has_key('working_directory'):
+            self.inputs['working_directory'] = self.config.get(
+                "DEFAULT", "working_directory"
+            )
+        else:
+            self.config.set("DEFAULT", "working_directory", self.inputs['working_directory'])
+            
         try:
             self.recipe_path = [
                 os.path.join(root, 'master') for root in utilities.string_to_list(
@@ -233,3 +239,6 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
         # Otherwise, our parent should have done it for us.
         if isinstance(self.logger.parent, logging.RootLogger):
             self._setup_logging()
+
+        self.logger.debug("Pipeline start time: %s" % self.inputs['start_time'])
+

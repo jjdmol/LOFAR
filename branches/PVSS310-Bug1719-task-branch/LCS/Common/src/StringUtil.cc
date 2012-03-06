@@ -126,13 +126,17 @@ const string timeString(time_t		aTime,
 
 uint lskipws (const string& value, uint st, uint end)
 {
-  for (; st<end && isspace(value[st]); ++st);
+  for (; st<end && isspace(value[st]); ++st)
+    ;
+
   return st;
 }
   
 uint rskipws (const string& value, uint st, uint end)
 {
-  for (; end>st && isspace(value[end-1]); --end);
+  for (; end>st && isspace(value[end-1]); --end)
+    ;
+
   return end;
 }
   
@@ -401,7 +405,7 @@ float strToFloat (const string& aString) throw(Exception)
   // Clear errno since strtof does not do it.
   errno = 0;
   double val = strtof (str+st, &endPtr);
-  ASSERTSTR (endPtr == str+end, aString << " is not an integer value");
+  ASSERTSTR (endPtr == str+end, aString << " is not a floating point value");
   ASSERTSTR (errno != ERANGE  &&  errno != EINVAL,
              aString << " is invalid or outside float range");
   return val;
@@ -416,7 +420,7 @@ double strToDouble (const string& aString) throw(Exception)
   // Clear errno since strtod does not do it.
   errno = 0;
   double val = strtod (str+st, &endPtr);
-  ASSERTSTR (endPtr == str+end, aString << " is not an integer value");
+  ASSERTSTR (endPtr == str+end, aString << " is not a floating point value");
   ASSERTSTR (errno != ERANGE  &&  errno != EINVAL,
              aString << " is invalid or outside double range");
   return val;

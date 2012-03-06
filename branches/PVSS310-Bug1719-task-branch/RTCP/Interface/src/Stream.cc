@@ -57,7 +57,11 @@ Stream *createStream(const std::string &descriptor, bool asServer)
   else if (split.size() == 3 && split[0] == "udpkey")
     return new SocketStream(split[1].c_str(), 0, SocketStream::UDP, asServer ? SocketStream::Server : SocketStream::Client, 30, split[2].c_str());
   else if (split.size() == 3 && split[0] == "tcpkey")
+#if defined CLUSTER_SCHEDULING
+    return new SocketStream(split[1].c_str(), 0, SocketStream::TCP, asServer ? SocketStream::Server : SocketStream::Client, 30000, split[2].c_str());
+#else
     return new SocketStream(split[1].c_str(), 0, SocketStream::TCP, asServer ? SocketStream::Server : SocketStream::Client, 30, split[2].c_str());
+#endif
   else if (split.size() == 2 && split[0] == "file")
     return asServer ? new FileStream(split[1].c_str()) : new FileStream(split[1].c_str(), 0666);
   else if (split.size() == 2 && split[0] == "pipe")
@@ -87,7 +91,7 @@ std::string getStreamDescriptorBetweenIONandCN(const char *streamType, unsigned 
     usleep(10000 * core); // do not connect all at the same time
 
     // FIXME: do not use fixed IP address
-    descriptor = str(format("tcpkey:10.149.5.24:ion-cn-%u-%u-%u") % pset % core % channel);
+    descriptor = str(format("tcpkey:10.149.5.23:ion-cn-%u-%u-%u") % pset % core % channel);
   } else if (strcmp(streamType, "PIPE") == 0) {
     descriptor = str(format("pipe:/tmp/ion-cn-%u-%u-%u") % pset % core % channel);
   } else {

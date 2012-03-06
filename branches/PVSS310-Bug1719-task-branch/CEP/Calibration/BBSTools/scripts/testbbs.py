@@ -7,7 +7,7 @@
 #
 # File:             testbbs.py
 # Date:             2011-07-27
-# Last change:      2011-07-27
+# Last change:      2012-02-21
 # Author:           Sven Duscha (duscha@astron.nl)
 
 
@@ -23,17 +23,16 @@ class testbbs(testsip):
 
     # Constructor of testbbs class which inherits from testsip baseclass
     #
-    def __init__(self, MS, parset, skymodel, wd='.', verbose=True):
-        testsip.__init__(self, MS, parset, wd, verbose)       # call baseclass constructor
+    def __init__(self, MS, parset, skymodel, wd='.', verbose=True, taql=True, key='tests'):
+        self.sip=testsip.__init__(self, MS, parset, wd, verbose, taql)   # call baseclass constructor
         self.skymodel = skymodel                              # BBS has in addition a skymodel
-
+        self.key=key
 
     def show(self):
-        testsip.show(self)                                    # call baseclass show() method first
+        self.sip.showCommon()                                 # call baseclass show() method first
         print "skymodel     = ", self.skymodel                # Then print BBS specific information
         print "dbserver     = ", self.dbserver
         print "parms        = ", self.parms
-
 
     # Read the output data columns, e.g CORRECTED_DATA etc. from the parset
     #
@@ -146,13 +145,10 @@ class testbbs(testsip):
     #
     def runBBS(self):    
         print bcolors.OKBLUE + "Running BBS through calibrate script." + bcolors.ENDC
-        arguments = '-v -f -n --clean --key bbstest --cluster-desc ' + self.clusterdesc + ' --db ' + self.dbserver + ' --db-user ' + self.dbuser + ' ' + self.gds + ' ' + self.parset + ' ' + self.skymodel + ' ' + self.wd
+        arguments = '-v -f -n --clean --key ' + self.key  + ' --cluster-desc ' + self.clusterdesc + ' --db ' + self.dbserver + ' --db-user ' + self.dbuser + ' ' + self.gds + ' ' + self.parset + ' ' + self.skymodel + ' ' + self.wd
         command = ['calibrate', arguments] # '-v', '-f', '--clean', '--key bbstest', '--cluster-desc ' + self.clusterdesc, 
 #        '--db ' + self.dbserver, '--db-user ' + self.dbuser, self.gds, self.parset, self.skymodel,  self.wd]
     
-        #print "arguments = ", arguments
-        #os.popen('calibrate' + ' ' + arguments)
-        
         proc = subprocess.Popen('calibrate ' + arguments, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         for line in proc.stdout.readlines():
             print line
@@ -169,31 +165,32 @@ class testbbs(testsip):
 
     # Execute the test sequence
     #
-    def executeTest(self, test="all", verbose=False, taql=False):
+    def executeTest(self, test="all", verbose=False, taql=False):    
         if self.verbose:
             print bcolors.WARNING + "Execute test " + bcolors.ENDC + sys.argv[0] 
 
-        self.copyOriginalFiles()
-        self.makeGDS()
+        self.sip.copyOriginalFiles()
+        self.sip.makeGDS()
         self.parms=self.getParmsFromParset()
         self.columns=self.getColumnsFromParset()
 
+        # How to call baseclass method?
         if self.verbose:
-            self.show()
+            self.sip.show()
 
         self.runBBS()
-        taql=True
         if test=="parms" or test=="all":
-            self.compareParms()
+            self.sip.compareParms()
         if test=="columns" or test=="all":
-            self.compareColumns(self.columns, taql)
+            print "executeTest() self.sip.taql = ", self.sip.taql     # DEBUG
+            self.sip.compareColumns(self.columns, self.sip.taql)
 
         if self.verbose:
-            self.printResults(self.results)
+            self.sip.printResults(self.results)
     
-        self.checkResults(self.results)
-        self.printResult()
-        self.deleteTestFiles()              # Clean up 
+        self.sip.checkResults(self.results)
+        self.sip.printResult()
+        self.sip.deleteTestFiles()              # Clean up 
 
 
 """

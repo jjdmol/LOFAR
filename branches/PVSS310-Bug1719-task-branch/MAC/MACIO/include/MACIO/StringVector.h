@@ -54,7 +54,12 @@ public:
 	unsigned int unpack(void	*buffer);
 	ostream& print (ostream& os) const;
 
-	//# --- PUBLIC Datamember ---
+	vector<string>&	operator()()
+		{ return (theVector); }
+
+
+	//# --- Datamember ---
+private:
 	vector<string>	theVector;
 };
 

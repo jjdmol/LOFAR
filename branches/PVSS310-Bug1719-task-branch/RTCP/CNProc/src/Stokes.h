@@ -3,8 +3,10 @@
 
 #include <Interface/FilteredData.h>
 #include <Interface/StreamableData.h>
-#include <Interface/StokesData.h>
+#include <Interface/BeamFormedData.h>
 #include <Interface/MultiDimArray.h>
+#include <Interface/Parset.h>
+#include <Dedispersion.h>
 
 #if 0 || !defined HAVE_BGP
 #define STOKES_C_IMPLEMENTATION
@@ -19,19 +21,33 @@ class Stokes
   public:
     static const float MAX_FLAGGED_PERCENTAGE = 0.9f;
 
-    Stokes(int nrStokes, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrSamplesPerOutputIntegration, unsigned nrStokesChannels);
+    Stokes(unsigned nrChannels, unsigned nrSamples);
 
-    template <bool ALLSTOKES> void calculateCoherent(const SampleData<> *sampleData, StokesData *stokesData, unsigned inbeam, unsigned outbeam);
-    template <bool ALLSTOKES> void calculateIncoherent(const SampleData<> *sampleData, StokesData *stokesData, const std::vector<unsigned> &stationMapping);
-
-    void postTransposeStokes(const TransposedStokesData *in, FinalStokesData *out, unsigned sb);
-
-  private:
+  protected:
     const unsigned          itsNrChannels;
-    const unsigned          itsNrSamplesPerIntegration;
-    const unsigned          itsNrSamplesPerStokesIntegration;
-    const unsigned          itsNrStokes;
-    const unsigned          itsNrChannelsPerIntegration;
+    const unsigned          itsNrSamples;
+};
+
+class CoherentStokes: public Stokes
+{
+  public:
+    CoherentStokes(unsigned nrChannels, unsigned nrSamples);
+
+    template <bool ALLSTOKES> void calculate(const SampleData<> *sampleData, PreTransposeBeamFormedData *stokesData, unsigned inbeam, const StreamInfo &info);
+};
+
+class IncoherentStokes: public Stokes
+{
+  public:
+    IncoherentStokes(unsigned nrChannels, unsigned nrSamples, unsigned nrStations, unsigned channelIntegrations, DedispersionBeforeBeamForming *dedispersion, Allocator &allocator);
+
+    template <bool ALLSTOKES> void calculate(const FilteredData *sampleData, PreTransposeBeamFormedData *stokesData, const std::vector<unsigned> &stationMapping, const StreamInfo &info, unsigned subband, double dm);
+
+  private:  
+    Allocator                     &itsAllocator;
+    SmartPtr<FilteredData>        itsDedispersedData;
+    DedispersionBeforeBeamForming *itsDedispersion;
+    const unsigned                itsMaxChannelIntegrations;
 };
 
 } // namespace RTCP

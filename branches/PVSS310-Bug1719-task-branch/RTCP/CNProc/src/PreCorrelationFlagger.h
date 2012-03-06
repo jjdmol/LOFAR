@@ -11,7 +11,9 @@ enum PreCorrelationFlaggerType {
   PRE_FLAGGER_THRESHOLD,
   PRE_FLAGGER_INTEGRATED_THRESHOLD,
   PRE_FLAGGER_SUM_THRESHOLD,
-  PRE_FLAGGER_INTEGRATED_SUM_THRESHOLD
+  PRE_FLAGGER_INTEGRATED_SUM_THRESHOLD,
+  PRE_FLAGGER_INTEGRATED_SMOOTHED_SUM_THRESHOLD,
+  PRE_FLAGGER_INTEGRATED_SMOOTHED_SUM_THRESHOLD_WITH_HISTORY
 };
 
 class PreCorrelationFlagger : public Flagger {
@@ -25,6 +27,10 @@ class PreCorrelationFlagger : public Flagger {
   // Does simple thresholding.
   void integratingThresholdingFlagger(const MultiDimArray<float,2> &powers, vector<float> &integratedPowers, vector<bool> &integratedFlags);
   void integratingSumThresholdFlagger(const MultiDimArray<float,2> &powers, vector<float> &integratedPowers, vector<bool> &integratedFlags);
+  void integratingSumThresholdFlaggerSmoothed(const MultiDimArray<float,2> &powers, vector<float> &integratedPowers, 
+					      vector<float> &smoothedPowers, vector<float> &powerDiffs, vector<bool> &integratedFlags);
+  void integratingSumThresholdFlaggerSmoothedWithHistory(const MultiDimArray<float,2> &powers, vector<float> &integratedPowers, 
+					      vector<float> &smoothedPowers, vector<float> &powerDiffs, vector<bool> &integratedFlags, HistoryList& history);
 
   void calculatePowers(unsigned station, unsigned pol, FilteredData* filteredData);
   void integratePowers(const MultiDimArray<float,2> &powers, vector<float> &integratedPowers);
@@ -48,6 +54,9 @@ class PreCorrelationFlagger : public Flagger {
   MultiDimArray<bool,2> itsFlags; // [itsNrChannels][itsNrSamplesPerIntegration]
   vector<bool> itsIntegratedFlags; // [itsNrChannels]
 
+  std::vector<float> itsSmoothedIntegratedPowers; // [itsNrChannels]
+  std::vector<float> itsIntegratedPowerDiffs; // [itsNrChannels]
+  HistoryList itsHistory;
 };
 
 } // namespace RTCP

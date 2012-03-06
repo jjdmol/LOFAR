@@ -31,6 +31,7 @@
 
 #include <iostream>
 #include <boost/format.hpp>
+#include <cstdio>
 
 using namespace std;
 using namespace LOFAR;
@@ -406,7 +407,14 @@ void PLCClient::mainLoop() {
 
         result = itsJob.define();
 
-        itsDefineCalled = true;
+        {
+          ScopedLock lock(itsMutex);
+
+          itsDefineCalled = true;
+
+          // signal our destructor that define() was called
+          itsCondition.broadcast();
+        }  
         break;
 
       case PCCmdInit:

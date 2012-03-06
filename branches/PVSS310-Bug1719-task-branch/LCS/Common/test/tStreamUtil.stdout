@@ -12,3 +12,5 @@ A vector of integers:
 A vector of strings:
 [aap,noot,mies,wim,zus,jet,teun,vuur,gijs,lam,kees,bok,weide,does,hok,duif,schapen]
 
+(<abc,1>...<ef,-3>)
+{<abc,1>, <ef,-3>}

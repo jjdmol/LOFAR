@@ -23,7 +23,6 @@ StokesImager::StokesImager() : _stokesI(0), _stokesQ(0), _stokesU(0), _stokesV(0
 {
 }
 
-
 StokesImager::~StokesImager()
 {
 	if(_stokesI) {
@@ -42,10 +41,10 @@ void StokesImager::Image(const Image2D &realXX, const Image2D &imaginaryXX, cons
 		delete _stokesU;
 		delete _stokesV;
 	}
-	_stokesI = Image2D::CreateEmptyImage(realXX.Width(), realXX.Height());
-	_stokesQ = Image2D::CreateEmptyImage(realXX.Width(), realXX.Height());
-	_stokesU = Image2D::CreateEmptyImage(realXX.Width(), realXX.Height());
-	_stokesV = Image2D::CreateEmptyImage(realXX.Width(), realXX.Height());
+	_stokesI = Image2D::CreateUnsetImage(realXX.Width(), realXX.Height());
+	_stokesQ = Image2D::CreateUnsetImage(realXX.Width(), realXX.Height());
+	_stokesU = Image2D::CreateUnsetImage(realXX.Width(), realXX.Height());
+	_stokesV = Image2D::CreateUnsetImage(realXX.Width(), realXX.Height());
 
 	for(unsigned long y = 0; y < realXX.Height(); ++y) {
 		for(unsigned long x = 0; x < realXX.Width(); ++x) {
@@ -66,7 +65,7 @@ void StokesImager::Image(const Image2D &realXX, const Image2D &imaginaryXX, cons
 
 Image2DPtr StokesImager::CreateStokesIAmplitude(Image2DCPtr realXX, Image2DCPtr imaginaryXX, Image2DCPtr realYY, Image2DCPtr imaginaryYY)
 {
-	Image2D *stokesI = Image2D::CreateEmptyImage(realXX->Width(), realXX->Height());
+	Image2D *stokesI = Image2D::CreateUnsetImage(realXX->Width(), realXX->Height());
 
 	for(unsigned long y = 0; y < realXX->Height(); ++y) {
 		for(unsigned long x = 0; x < realXX->Width(); ++x) {
@@ -81,7 +80,7 @@ Image2DPtr StokesImager::CreateStokesIAmplitude(Image2DCPtr realXX, Image2DCPtr 
 
 Image2DPtr StokesImager::CreateSum(Image2DCPtr left, Image2DCPtr right)
 {
-	Image2D *sum = Image2D::CreateEmptyImage(left->Width(), right->Height());
+	Image2D *sum = Image2D::CreateUnsetImage(left->Width(), right->Height());
 
 	for(unsigned long y = 0; y < left->Height(); ++y) {
 		for(unsigned long x = 0; x < right->Width(); ++x) {
@@ -96,7 +95,7 @@ Image2DPtr StokesImager::CreateSum(Image2DCPtr left, Image2DCPtr right)
 
 Image2DPtr StokesImager::CreateNegatedSum(Image2DCPtr left, Image2DCPtr right)
 {
-	Image2D *sum = Image2D::CreateEmptyImage(left->Width(), right->Height());
+	Image2D *sum = Image2D::CreateUnsetImage(left->Width(), right->Height());
 
 	for(unsigned long y = 0; y < left->Height(); ++y) {
 		for(unsigned long x = 0; x < right->Width(); ++x) {
@@ -111,7 +110,7 @@ Image2DPtr StokesImager::CreateNegatedSum(Image2DCPtr left, Image2DCPtr right)
 
 Image2DPtr StokesImager::CreateDifference(Image2DCPtr left, Image2DCPtr right)
 {
-	Image2D *difference = Image2D::CreateEmptyImage(left->Width(), right->Height());
+	Image2D *difference = Image2D::CreateUnsetImage(left->Width(), right->Height());
 
 	for(unsigned long y = 0; y < left->Height(); ++y) {
 		for(unsigned long x = 0; x < right->Width(); ++x) {
@@ -126,7 +125,7 @@ Image2DPtr StokesImager::CreateDifference(Image2DCPtr left, Image2DCPtr right)
 
 Image2DPtr StokesImager::CreateAvgPhase(Image2DCPtr xx, Image2DCPtr yy)
 {
-	Image2D *avgPhase = Image2D::CreateEmptyImage(xx->Width(), xx->Height());
+	Image2D *avgPhase = Image2D::CreateUnsetImage(xx->Width(), xx->Height());
 
 	for(unsigned long y = 0; y < xx->Height(); ++y) {
 		for(unsigned long x = 0; x < xx->Width(); ++x) {

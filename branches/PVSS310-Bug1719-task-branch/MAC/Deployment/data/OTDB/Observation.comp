@@ -37,7 +37,11 @@ par  antennaSet		     I    ptext  -      10    0      'LBA_INNER|LBA_OUTER|LBA_S
 par  longBaselines           I    pbool  -      10    0      'true|false;false'                               - 'Number of polarisations to use in this observation'
 
 # copy of the characterisation of the (template)
+par  topologyID              I    text   -      10    100    ''                       - 'topology ID for identifying and structuring data products'
 par  KSPType                 O    ptext  -      10    0      'eor|cosmicrays|surveys|transients|magnetism|solar;surveys'          -   'Key science project'
+
+# piggyback
+par  tbbPiggybackAllowed     I    bool   -      10    100    false   -   'TBB piggybacking allowed for this observation'
 
 # clock related info
 par  clockMode               I    pnode  -      10    0      '<<Clock160|<<Clock200;<<Clock200'        - 'Mode in which clock is running'

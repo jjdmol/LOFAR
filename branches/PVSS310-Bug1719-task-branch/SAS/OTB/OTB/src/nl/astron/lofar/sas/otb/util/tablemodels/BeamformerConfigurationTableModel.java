@@ -33,6 +33,7 @@
 
 package nl.astron.lofar.sas.otb.util.tablemodels;
 
+import java.util.ArrayList;
 import java.util.Vector;
 import org.apache.log4j.Logger;
 
@@ -47,6 +48,8 @@ public class BeamformerConfigurationTableModel extends javax.swing.table.Default
 
     private String itsTreeType;
     private boolean isChanged=false;
+
+    private int offset=1;
     
     /** Creates a new instance of BeamConfigurationTableModel */
     public BeamformerConfigurationTableModel() { 
@@ -60,7 +63,7 @@ public class BeamformerConfigurationTableModel extends javax.swing.table.Default
      *
      * @return True if succes else False
      */
-     public boolean fillTable(String treeType, Vector<String> stations) {
+     public boolean fillTable(String treeType, ArrayList<String> stations) {
          
         itsTreeType=treeType;
         
@@ -73,14 +76,13 @@ public class BeamformerConfigurationTableModel extends javax.swing.table.Default
         int length = stations.size();
         
         // need to skip first entry because it is the default (dummy) TBBsetting in other then VHTree's
-        int offset=1;
         if (itsTreeType.equals("VHtree")) {
             offset=0;
         }
         
         // need to skip first entry because it is the default (dummy) TBBsetting
         for (int i=0; i<length-offset; i++) {
-            String[]  newRow = { Integer.toString(i+1),stations.elementAt(i+offset)};
+            String[]  newRow = { Integer.toString(i+1),stations.get(i+offset)};
             
             this.addRow(newRow);
         }
@@ -96,17 +98,16 @@ public class BeamformerConfigurationTableModel extends javax.swing.table.Default
      *
      * @return True if succes else False
      */
-     public boolean getTable(Vector<String> stations) {
+     public boolean getTable(ArrayList<String> stations) {
          
         int length = stations.size();
         
         // need to skip first entry because it is the default (dummy) TBBsetting
-        // empty all elements except the default
-        stations.setSize(1);
         
-        for (int i=0; i<getRowCount(); i++) {
-            stations.addElement(getValueAt(i,1).toString());
+        for (int i=offset; i<getRowCount()+offset; i++) {
+            stations.add(getValueAt(i,1).toString());
         }
+
         return true;    
     }
      

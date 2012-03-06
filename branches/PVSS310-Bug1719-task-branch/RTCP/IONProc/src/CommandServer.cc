@@ -24,11 +24,10 @@
 #include <Common/Exceptions.h>
 #include <Common/LofarLogger.h>
 #include <Common/SystemCallException.h>
-#include <ION_main.h>
+#include <GlobalVars.h>
 #include <Job.h>
 #include <JobQueue.h>
 #include <Stream/SocketStream.h>
-#include <StreamMultiplexer.h>
 
 #include <string>
 
@@ -81,7 +80,11 @@ void CommandServer::commandMaster()
   for (unsigned ion = 1; ion < nrPsets; ion ++)
     ionStreams[ion] = new MultiplexedStream(*allIONstreamMultiplexers[ion], 0);
 
+#if defined HAVE_BGP
   SocketStream sk("0.0.0.0", 4000, SocketStream::TCP, SocketStream::Server);
+#else
+  SocketStream sk("0.0.0.0", 3999, SocketStream::TCP, SocketStream::Server);
+#endif
 
   LOG_INFO("Command server ready");
 
@@ -159,13 +162,18 @@ void CommandServer::jobCleanUpThread()
 
 CommandServer::CommandServer()
 :
-  itsQuit(false),
-  itsJobCleanUpThread(this, &CommandServer::jobCleanUpThread, "JobCleanUpThread", 65536)
+  itsQuit(false)
 {
   if (myPsetNumber == 0)
     commandMaster();
   else
     commandSlave();
+}
+
+
+void CommandServer::start()
+{
+  itsJobCleanUpThread = new Thread(this, &CommandServer::jobCleanUpThread, "JobCleanUpThread", 65536);
 }
 
 

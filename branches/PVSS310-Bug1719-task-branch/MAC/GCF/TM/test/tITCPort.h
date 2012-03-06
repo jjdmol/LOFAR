@@ -50,11 +50,22 @@ public:
 	GCFEvent::TResult wait4TCP (GCFEvent& e, GCFPortInterface& p);
 	GCFEvent::TResult test1 (GCFEvent& e, GCFPortInterface& p);
 	GCFEvent::TResult test2 (GCFEvent& e, GCFPortInterface& p);
+	GCFEvent::TResult test3A(GCFEvent& e, GCFPortInterface& p);
+	GCFEvent::TResult test3B(GCFEvent& e, GCFPortInterface& p);
+	GCFEvent::TResult test4A(GCFEvent& e, GCFPortInterface& p);
+	GCFEvent::TResult test4B(GCFEvent& e, GCFPortInterface& p);
+	GCFEvent::TResult test5A(GCFEvent& e, GCFPortInterface& p);
+	GCFEvent::TResult test5B(GCFEvent& e, GCFPortInterface& p);
+	GCFEvent::TResult forwardOverTCP(GCFEvent& e, GCFPortInterface& p);
+	GCFEvent::TResult delayedOverTCP(GCFEvent& e, GCFPortInterface& p);
+	GCFEvent::TResult forwardOverITC(GCFEvent& e, GCFPortInterface& p);
+	GCFEvent::TResult delayedOverITC(GCFEvent& e, GCFPortInterface& p);
 
 private:
 	GCFTCPPort*		itsClientTCP;
 	GCFITCPort*		itsITCPort;
 	GCFTimerPort*	itsTimerPort;
+	int				itsSendCount;
 };
 
 class tClient : public GCFTask

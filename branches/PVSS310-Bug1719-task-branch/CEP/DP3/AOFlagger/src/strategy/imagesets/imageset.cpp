@@ -24,6 +24,8 @@
 #include <AOFlagger/strategy/imagesets/msimageset.h>
 #include <AOFlagger/strategy/imagesets/noisestatimageset.h>
 #include <AOFlagger/strategy/imagesets/parmimageset.h>
+#include <AOFlagger/strategy/imagesets/rawimageset.h>
+#include <AOFlagger/strategy/imagesets/rawdescimageset.h>
 #include <AOFlagger/strategy/imagesets/rspimageset.h>
 #include <AOFlagger/strategy/imagesets/timefrequencystatimageset.h>
 
@@ -32,8 +34,12 @@ namespace rfiStrategy {
 	{
 		if(IsFitsFile(file))
 			return new FitsImageSet(file);
-		else if(IsRawFile(file))
+		else if(IsRCPRawFile(file))
 			return new RSPImageSet(file);
+		else if(IsTKPRawFile(file))
+			return new RawImageSet(file);
+		else if(IsRawDescFile(file))
+			return new RawDescImageSet(file);
 		else if(IsParmFile(file))
 			return new ParmImageSet(file);
 		else if(IsTimeFrequencyStatFile(file))
@@ -55,9 +61,19 @@ namespace rfiStrategy {
 		(file.size() > 5 && file.substr(file.size() - 5) == ".fits" );
 	}
 	
-	bool ImageSet::IsRawFile(const std::string &file)
+	bool ImageSet::IsRCPRawFile(const std::string &file)
 	{
 		return file.size() > 4 && file.substr(file.size()-4) == ".raw";
+	}
+	
+	bool ImageSet::IsTKPRawFile(const std::string &file)
+	{
+		return file.size() > 4 && file.substr(file.size()-4) == ".1ch";
+	}
+	
+	bool ImageSet::IsRawDescFile(const std::string &file)
+	{
+		return file.size() > 8 && file.substr(file.size()-8) == ".rawdesc";
 	}
 	
 	bool ImageSet::IsParmFile(const std::string &file)
@@ -82,6 +98,6 @@ namespace rfiStrategy {
 	
 	bool ImageSet::IsMSFile(const std::string &file)
 	{
-		return (!IsFitsFile(file)) && (!IsRawFile(file)) && (!IsParmFile(file)) && (!IsTimeFrequencyStatFile(file)) && (!IsNoiseStatFile(file));
+		return (!IsFitsFile(file)) && (!IsRCPRawFile(file)) && (!IsTKPRawFile(file)) && (!IsRawDescFile(file)) && (!IsParmFile(file)) && (!IsTimeFrequencyStatFile(file)) && (!IsNoiseStatFile(file));
 	}
 }

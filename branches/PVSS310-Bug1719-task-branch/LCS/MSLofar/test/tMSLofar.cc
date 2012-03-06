@@ -40,13 +40,15 @@ using namespace LOFAR;
 using namespace casa;
 using namespace std;
 
-void createMS()
+void createMS (MDirection::Types dirRef)
 {
   Timer timer;
   TableDesc td(MSLofar::requiredTableDesc());
   SetupNewTable setup("tMSLofar_tmp.ms", td, Table::New);
   MSLofar ms(setup);
   ms.createDefaultSubtables(Table::New);
+  MSLofarFieldColumns fieldCols(ms.field());
+  fieldCols.setDirectionRef (dirRef);
   ms.flush();
   timer.show("create");
 }
@@ -171,7 +173,7 @@ void checkMS (const MSLofar& ms)
   ASSERT (fld.flagRow()(0) == False);
   MDirection tileBeamDir = fld.tileBeamDirMeasCol()(0);
   tileBeamDir.print(cout);
-  cout<<endl;
+  cout << ' ' << tileBeamDir.getRefString() << endl;
 
   ASSERT (obs.telescopeName()(0) == "LOFAR");
   ASSERT (allEQ(obs.timeRange()(0), Vector<double>(2,10.)));
@@ -220,7 +222,13 @@ void checkMS (const MSLofar& ms)
 int main()
 {
   try {
-    createMS();
+    // Create for a J2000 direction.
+    createMS (MDirection::J2000);
+    openMS();
+    fillMS();
+    checkMS (MSLofar("tMSLofar_tmp.ms"));
+    // Create for a SUN direction.
+    createMS (MDirection::SUN);
     openMS();
     fillMS();
     checkMS (MSLofar("tMSLofar_tmp.ms"));

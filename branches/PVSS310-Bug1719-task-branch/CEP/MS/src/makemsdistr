@@ -22,10 +22,12 @@
 #
 # $Id$
 
+echo $#
+echo $*
 
 # Find the path used to start the script.
-pgmpath=`dirname $0`
-pgmpath=`cd $pgmpath > /dev/null 2>&1  &&  pwd`
+pgmpath=`dirname "$0"`
+pgmpath=`cd "$pgmpath" > /dev/null 2>&1  &&  pwd`
 
 hfn=
 # Handle possible options.
@@ -57,82 +59,80 @@ if test $# = 0  -o  $# = 1; then
   exit 1
 fi
 
-psn=$1
+psn="$1"
 shift
-cdn=$1
+cdn="$1"
 shift
-dirs=$*
+msdirs=
+if [ $# != 0 ]; then
+  msdirs="$1"
+  shift
+fi
+while [ $# != 0 ]
+do
+  msdirs="$msdirs,$1"
+  shift
+done
+
 test "$psn" = ""  &&  psn="makems.cfg"
-parsetcdn=`getparsetvalue $psn ClusterDescName 2>/dev/null` ||  parsetcdn=
-test "$cdn" = ""  &&  cdn=$parsetcdn
+parsetcdn=`getparsetvalue "$psn" ClusterDescName 2>/dev/null` ||  parsetcdn=
+test "$cdn" = ""  &&  cdn="$parsetcdn"
 if test "$cdn" = ""; then
   echo "No ClusterDescName given on command line nor parset file"
   exit 1
 fi
 
 # Find out the number of parts and the nodes to use.
-nparts=`getparsetvalue $psn NParts`  ||  exit 1
+nparts=`getparsetvalue "$psn" NParts`  ||  exit 1
 if test "$nparts" = "0"; then
   nparts=1
 fi
 if test "$dirs" = ""; then
-  dirs=`getparsetvalue $psn Dirs`   ||  dirs=
+  # Get dirs from parset and remove brackets and possible whitespace round comma
+  # Note that [][] in the pattern means ] or [.
+  dirs=`getparsetvalue "$psn" Dirs | sed -e 's/ *, */,/g' -e 's/ *[][] *//g'`  ||  dirs=
 fi
-
-# Get name of MS and path of VDS file.
-msname=`getparsetvalue $psn MSName` ||  exit 1
-# Use ms-path if no VDSPath given.
-mspath=`dirname $msname`
-# Create ms basename without a possible _.%d representing the seqnr.
-msbase=`basename $msname | sed -e 's/_[^_]*%d//'`
-msvdsp=`getparsetvalue $psn VDSPath` ||  msvdsp=$mspath
-# Make VDS-path absolute.
-msvdsp=`cd $msvdsp > /dev/null  &&  pwd`  ||  exit 1
-
-# Find all directories and turn it into a list separated by commas.
-# Possible whitespace and [] are removed.
-dirs=`echo "$dirs" | sed -e 's/\[//g' -e 's/]//g' -e 's/,/ /g' -e 's/"//g' -e "s/'//g"`
 if test "$dirs" = ""; then
   dirs=.
 fi
 
-# Make dirs nparts long.
-msdirs=
-np=0
-while test $np != $nparts
-do
-  for dir in $dirs
-  do
-    if test $np = 0; then
-      msdirs=$dir
-    else 
-      msdirs="$msdirs,$dir"
-    fi
-    np=`expr $np + 1`
-    if test $np = $nparts; then
-      break;
-    fi
-  done
-done
+# Get name of MS and path of VDS file.
+msname=`getparsetvalue "$psn" MSName` ||  exit 1
+# Use ms-path if no VDSPath given.
+mspath=`dirname "$msname"`
+# Create ms basename without a possible _.%d representing the seqnr.
+msbase=`basename "$msname" | sed -e 's/_[^_]*%d//'`
+msvdsp=`getparsetvalue "$psn" VDSPath` ||  msvdsp=$mspath
+# Make VDS-path absolute.
+msvdsp=`cd "$msvdsp" > /dev/null  &&  pwd`  ||  exit 1
 
 # Copy parset to the VDS-path that is certainly globally accessible.
-psname=$msvdsp/$msbase.$USER.$$.parset
-cp $psn $psname
+psname="$msvdsp/$msbase.$USER.$$.parset"
+cp "$psn" "$psname"
 # Make clusterdescname absolute.
-dn=`dirname $cdn`
-cdn=`cd $dn > /dev/null; pwd`/`basename $cdn`
+dn=`dirname "$cdn"`
+cdn=`cd "$dn" > /dev/null; pwd`/`basename "$cdn"`
 
 # Start the distributed processes.
 # They write the name of the created VDS-file into $msvdsp/$msbase.gds_*.
-rm -f $msvdsp/$msbase.gds_*
-echo "startdistproc -useenv -mode 0 -nomasterhost -dirs $msdirs -cdn $cdn -hfn '$hfn' $pgmpath/makemsdistr-part $psname $msvdsp $msvdsp/$msbase.gds $cdn"
-startdistproc -useenv -mode 0 -nomasterhost -dirs "$msdirs" -cdn $cdn -hfn "$hfn" $pgmpath/makemsdistr-part $psname $msvdsp $msvdsp/$msbase.gds $cdn
+rm -f "$msvdsp/$msbase".gds_*
+echo "startdistproc -useenv -mode 0 -nomasterhost -ndir "$nparts" -dirs '$msdirs' -cdn '$cdn' -hfn '$hfn' '$pgmpath/makemsdistr-part' '$psname' '$msvdsp' '$msvdsp/$msbase.gds' '$cdn'"
+startdistproc -useenv -mode 0 -nomasterhost -ndir "$nparts" -dirs "$msdirs" -cdn "$cdn" -hfn "$hfn" "$pgmpath/makemsdistr-part" "$psname" "$msvdsp" "$msvdsp/$msbase.gds" "$cdn"
 
 # Combine all VDS files.
-vdsnames=`cat $msvdsp/$msbase.gds_*`
-rm -f $msvdsp/$msbase.gds_*
-rm -f $psname
+rm -f "$psname"
+vdsnames=""
+cat "$msvdsp/$msbase".gds_* > "$msvdsp/$msbase.gdsall"
+while read name
+do
+  if test "$vdsnames" = ""; then
+    vdsnames="$name"
+  else
+    vdsnames="$vdsnames,$name"
+  fi
+done < "$msvdsp/$msbase.gdsall"
+rm -f "$msvdsp/$msbase".gds_* "$msvdsp/$msbase.gdsall"
 
-combinevds $msvdsp/$msbase.gds $vdsnames
+combinevds "$msvdsp/$msbase.gds" "$vdsnames"
 echo "Created $nparts distributed MS parts and their VDS files"
 echo "Created global VDS file $msvdsp/$msbase.gds"

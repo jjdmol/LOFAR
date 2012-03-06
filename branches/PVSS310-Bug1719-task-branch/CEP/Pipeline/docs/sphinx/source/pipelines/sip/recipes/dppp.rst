@@ -4,5 +4,5 @@
 DPPP
 ====
 
-.. autoclass:: new_dppp.new_dppp
+.. autoclass:: dppp.dppp
    :show-inheritance:

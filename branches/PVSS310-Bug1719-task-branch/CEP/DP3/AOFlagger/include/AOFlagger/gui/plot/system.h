@@ -30,7 +30,7 @@
 */
 class System {
 	public:
-		System()
+		System() : _includeZeroYAxis(false)
 		{
 		}
 
@@ -52,21 +52,29 @@ class System {
 			dimension->AdjustRanges(pointSet);
 		}
 
-		num_t XRangeMin(class Plot2DPointSet &pointSet) const
+		double XRangeMin(class Plot2DPointSet &pointSet) const
 		{
 			return _dimensions.find(pointSet.YUnits())->second->XRangeMin();
 		}
-		num_t XRangeMax(class Plot2DPointSet &pointSet) const
+		double XRangeMax(class Plot2DPointSet &pointSet) const
 		{
 			return _dimensions.find(pointSet.YUnits())->second->XRangeMax();
 		}
-		num_t YRangeMin(class Plot2DPointSet &pointSet) const
+		double YRangeMin(class Plot2DPointSet &pointSet) const
 		{
-			return _dimensions.find(pointSet.YUnits())->second->YRangeMin();
+			const double yMin = _dimensions.find(pointSet.YUnits())->second->YRangeMin();
+			if(yMin > 0.0 && _includeZeroYAxis)
+				return 0.0;
+			else
+				return yMin;
 		}
-		num_t YRangeMax(class Plot2DPointSet &pointSet) const
+		double YRangeMax(class Plot2DPointSet &pointSet) const
 		{
-			return _dimensions.find(pointSet.YUnits())->second->YRangeMax();
+			const double yMax = _dimensions.find(pointSet.YUnits())->second->YRangeMax();
+			if(yMax < 0.0 && _includeZeroYAxis)
+				return 0.0;
+			else
+				return yMax;
 		}
 		void Clear()
 		{
@@ -74,8 +82,10 @@ class System {
 				delete i->second;
 			_dimensions.clear();
 		}
+		void SetIncludeZeroYAxis(bool includeZeroYAxis) { _includeZeroYAxis = includeZeroYAxis; }
 	private:
 		std::map<std::string, Dimension*> _dimensions;
+		bool _includeZeroYAxis;
 };
 
 #endif

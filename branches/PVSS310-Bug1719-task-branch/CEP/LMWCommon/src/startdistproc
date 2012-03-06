@@ -34,8 +34,8 @@
 
 
 # Find the path used to start the script.
-pgmpath=`dirname $0`
-pgmpath=`cd $pgmpath > /dev/null 2>&1  &&  pwd`
+pgmpath=`dirname "$0"`
+pgmpath=`cd "$pgmpath" > /dev/null 2>&1  &&  pwd`
 
 # Set default options.
 
@@ -47,6 +47,7 @@ wait=1
 dsn=
 cdn=
 hfn=
+ndir=0
 dirs=
 fdp=
 master=localhost
@@ -74,7 +75,7 @@ do
       ;;
     *)
       # file name given
-      envfile=$1
+      envfile="$1"
       shift
       ;;
     esac
@@ -102,6 +103,10 @@ do
   elif [ "$1" = "-nohfn" ]; then
     shift
     hfn=
+  elif [ "$1" = "-ndir" ]; then
+    shift
+    ndir="$1"
+    shift
   elif [ "$1" = "-dirs" ]; then
     shift
     dirs="$1"
@@ -164,7 +169,7 @@ do
       ;;
     *)
       # A program name has been found, so stop parsing options.
-      program=$1
+      program="$1"
       shift
       break
       ;;
@@ -180,7 +185,7 @@ if [ $help = 1 ]; then
   echo 'Run as:'
   echo ' startdistproc [-useenv [envfilename]] [-wait] [-killonfail]'
   echo '               [-cdn clusterdescname] [-dsn datasetname]'
-  echo '               [-dirs directories] [-mode mode]'
+  echo '               [-ndir ndirectories] [-dirs directories] [-mode mode]'
   echo '               [-hfn hostfilename] [-fdp finddproc-path]'
   echo '               [-logfile logfilename] [-dry]'
   echo '               [-extrahosts "host1 host2 ..."] [-noextrahosts]'
@@ -204,6 +209,8 @@ if [ $help = 1 ]; then
   echo '                        This is useful if a distributed dataset has'
   echo '                        to be created for which no VDS file exists yet.'
   echo '                        -dsn and dirs cannot be given both.'
+  echo '  -ndir ndirectories    The number of directories to use. If more than'
+  echo '                        length of dirs, dirs is wrapped.'
   echo '  -hfn hostfilename     The name of the generated hostfile.'
   echo '                        It defaults to /tmp/machinefile_${USER}_$$'
   echo '  -fdp finddproc-path   Path where to find finddproc.'
@@ -249,8 +256,8 @@ if test "$cdn" = ""; then
   echo "Error: no clusterdesc name given (use -cdn)"
   exit 1
 fi
-if test $startmaster = 0; then
-  if test $modxx = "mpi"  -o  $modxx = "single"; then
+if test "$startmaster" = 0; then
+  if test "$modxx" = "mpi"  -o  "$modxx" = "single"; then
     echo "Error: -nostartmaster cannot be used with mode=mpi or single"
     exit 1
   fi
@@ -259,24 +266,24 @@ if test ! -f "$cdn"; then
   echo "Error: clusterdesc $cdn not found"
   exit 1
 fi
-hfnorg=$hfn
+hfnorg="$hfn"
 if test "$hfn" = ""; then
   hfn="/tmp/machinefile_${USER}_$$"
 fi
 if test "$fdp" != ""; then
   fdp="$fdp/"
 fi
-if test $modxx = "mpi"  -o  $modxx = "single"; then
+if test "$modxx" = "mpi"  -o  "$modxx" = "single"; then
   killfail=0
 fi
-if test $killfail = 1  -a  $useenv != 1; then
+if test "$killfail" = 1  -a  $useenv != 1; then
   echo "-useenv is mandatory if -killonfail is given"
   exit 1
 fi
 
 # Prepend the hosts with the master and extra hosts.
 # Only give a master if it needs to be started.
-masterh=$master
+masterh="$master"
 if test $startmaster = 0; then
   masterh=
 fi
@@ -286,45 +293,45 @@ if test "$dsn" != ""; then
     echo "Error: dataset $dsn not found"
     exit 1
   fi
-  ${fdp}finddproc $dsn $cdn $masterh $extra > $hfn || exit 1
+  "${fdp}finddproc" "$dsn" "$cdn" $masterh $extra > "$hfn" || exit 1
 else
-  ${fdp}finddproc -dirs "$dirs" $cdn $masterh $extra > $hfn || exit 1
+  "${fdp}finddproc" -ndir "$ndir" -dirs "$dirs" "$cdn" "$masterh" $extra > "$hfn" || exit 1
 fi  
-np=`wc -l $hfn | awk '{print $1}'`
+np=`wc -l "$hfn" | awk '{print $1}'`
 
 # Find all PATH and ROOT variables and store in a file with the pid in its name.
 # Note that $envfile is empty if $useenv is not set. That is exactly what we need
 # in the mpirun and socketrun lines.
 if [ "$useenv" = 1 ]; then
   if test "$envfile" = ""; then
-    envfile=$HOME/startdistproc_$$.envfile
+    envfile="$HOME/startdistproc_$$.envfile"
   fi
   grex='[^=]*(PATH|ROOT)'
-  printenv | egrep "^$grex=" | sed -e "s/^\([^=]*\)=\(.*\)/\1='\2'; export \1/;" > $envfile
+  printenv | egrep "^$grex=" | sed -e "s/^\([^=]*\)=\(.*\)/\1='\2'; export \1/;" > "$envfile"
 fi
 
 # Run the program as needed.
 if test "$modxx" = "mpi"; then
-  sed -e "s/#.*//" $hfn > ${hfn}_tmp
-  mv ${hfn}_tmp $hfn
+  sed -e "s/#.*//" "$hfn" > "${hfn}_tmp"
+  mv "${hfn}_tmp" "$hfn"
   echo "mpirun -np $np -machinefile $hfn $program $envfile" "$@"
-  if test $dry = 0; then
-    mpirun -np $np -machinefile $hfn $program $envfile "$@" || exit 1
+  if test "$dry" = 0; then
+    mpirun -np "$np" -machinefile "$hfn" "$program" "$envfile" "$@" || exit 1
   fi
 elif test "$modxx" = "single"; then
   echo "$program $@"
   if test $dry = 0; then
-    $program "$@" || exit 1
+    "$program" "$@" || exit 1
   fi
 else
   echo "socketrun $dry $hfn '$master' $modxx $wait $killfail $logfile $program $envfile" "$@"
-  $pgmpath/socketrun $dry $hfn "$master" $modxx $wait $killfail "$logfile" $program $envfile "$@" || exit 1
+  "$pgmpath/socketrun" "$dry" "$hfn" "$master" "$modxx" "$wait" "$killfail" "$logfile" "$program" "$envfile" "$@" || exit 1
 fi
 # The envfile can be deleted if it waited for the subprocesses to end.
-if test $wait = 1  -a  "$envfile" != ""; then
-  rm -f $envfile
+if test "$wait" = 1  -a  "$envfile" != ""; then
+  rm -f "$envfile"
 fi
 # Delete hfn if default name was used (it needs to be kept for tstartdproc).
 if test "$hfnorg" = ""; then
-  rm -f $hfn
+  rm -f "$hfn"
 fi

@@ -9,3 +9,4 @@ python_install(
     DESTINATION lofar/bbs) 
 
 install(PROGRAMS bbstests.sh DESTINATION bin)
+#install(PROGRAMS BBStiming.py DESTINATION bin)

@@ -83,7 +83,10 @@ class NumericTickSet : public TickSet
 				double pos = roundUpToNiceNumber(_min, tickWidth);
 				while(pos <= _max)
 				{
-					_ticks.push_back(pos);
+					if(fabs(pos) < tickWidth/100.0)
+						_ticks.push_back(0.0);
+					else
+						_ticks.push_back(pos);
 					pos += tickWidth;
 				}
 				while(_ticks.size() > sizeRequest)
@@ -125,7 +128,8 @@ class NumericTickSet : public TickSet
 			return roundUnit * ceil(number / roundUnit);
 		}
 		
-		double _min, _max, _sizeRequest;
+		double _min, _max;
+		unsigned _sizeRequest;
 		std::vector<double> _ticks;
 };
 
@@ -170,20 +174,91 @@ class LogarithmicTickSet : public TickSet
 				if(sizeRequest == 0)
 					sizeRequest = 1;
 				const double
-					tickStart = roundUpToBase10Number(_min),
-					tickEnd = roundDownToBase10Number(_max);
+					tickStart = roundUpToBase10Number(_min*0.999),
+					tickEnd = roundDownToBase10Number(_max*1.001);
 				_ticks.push_back(tickStart);
-				if(sizeRequest == 1 || tickEnd == tickStart)
+				if(sizeRequest == 1)
 					return;
-				const unsigned distance = (unsigned) log10(tickEnd / tickStart);
-				const unsigned step = (distance + sizeRequest - 1) / sizeRequest;
-				const double factor = exp10((double) step);
-				double pos = tickStart * factor;
-				while(pos <= tickEnd && _ticks.size() < sizeRequest)
+				if(tickEnd > tickStart)
 				{
-					_ticks.push_back(pos);
-					pos *= factor;
+					const unsigned distance = (unsigned) log10(tickEnd / tickStart);
+					const unsigned step = (distance + sizeRequest - 1) / sizeRequest;
+					const double factor = exp10((double) step);
+					double pos = tickStart * factor;
+					while(pos <= tickEnd && _ticks.size() < sizeRequest)
+					{
+						_ticks.push_back(pos);
+						pos *= factor;
+					}
 				}
+				// can we add two to nine?
+				if((_ticks.size()+1)*10 < sizeRequest)
+				{
+					double base = tickStart / 10.0;
+					do {
+						for(double i=2.0;i<9.5;++i)
+						{
+							double val = base * i;
+							if(val >= _min && val <= _max)
+								_ticks.push_back(val);
+						}
+						base *= 10.0;
+					} while(base < _max);
+				}
+				// can we add two, four, ... eight?
+				else if((_ticks.size()+1)*5 < sizeRequest)
+				{
+					double base = tickStart / 10.0;
+					do {
+						for(double i=2.0;i<9.0;i+=2.0)
+						{
+							double val = base * i;
+							if(val >= _min && val <= _max)
+								_ticks.push_back(val);
+						}
+						base *= 10.0;
+					} while(base < _max);
+				}
+				// can we add two and five?
+				else if((_ticks.size()+1)*3 < sizeRequest)
+				{
+					double base = tickStart / 10.0;
+					do {
+						for(double i=2.0;i<6.0;i+=3.0)
+						{
+							double val = base * i;
+							if(val >= _min && val <= _max)
+								_ticks.push_back(val);
+						}
+						base *= 10.0;
+					} while(base < _max);
+				}
+				// can we add two and five?
+				else if((_ticks.size()+1)*3 < sizeRequest)
+				{
+					double base = tickStart / 10.0;
+					do {
+						for(double i=2.0;i<6.0;i+=3.0)
+						{
+							double val = base * i;
+							if(val >= _min && val <= _max)
+								_ticks.push_back(val);
+						}
+						base *= 10.0;
+					} while(base < _max);
+				}
+				// can we add five?
+				else if((_ticks.size()+1)*2 < sizeRequest)
+				{
+					double base = tickStart / 10.0;
+					do {
+						double val = base * 5.0;
+						if(val >= _min && val <= _max)
+							_ticks.push_back(val);
+						base *= 10.0;
+					} while(base < _max);
+				}
+				std::sort(_ticks.begin(), _ticks.end());
 			}
 		}
 		
@@ -208,7 +283,8 @@ class LogarithmicTickSet : public TickSet
 			return roundUnit * ceil(number / roundUnit);
 		}
 		
-		double _min, _minLog10, _max, _maxLog10, _sizeRequest;
+		double _min, _minLog10, _max, _maxLog10;
+		unsigned _sizeRequest;
 		std::vector<double> _ticks;
 };
 
@@ -351,6 +427,55 @@ class TimeTickSet : public TickSet
 			return roundUnit * ceil(number / roundUnit);
 		}
 		
-		double _min, _max, _sizeRequest;
+		double _min, _max;
+		unsigned _sizeRequest;
 		std::vector<double> _ticks;
+};
+
+class TextTickSet : public TickSet
+{
+	public:
+		TextTickSet(const std::vector<std::string> &labels, unsigned sizeRequest) : _sizeRequest(sizeRequest), _labels(labels)
+		{
+			set(sizeRequest);
+		}
+		
+		virtual unsigned Size() const
+		{
+			return _ticks.size();
+		}
+		
+		virtual Tick GetTick(unsigned i) const
+		{
+			const size_t labelIndex = _ticks[i];
+			const double val = (_labels.size() == 1) ? 0.5 : (double) labelIndex / (double) (_labels.size() - 1);
+			return Tick(val, _labels[labelIndex]);
+		}
+		
+		virtual void Reset()
+		{
+			_ticks.clear();
+			set(_sizeRequest);
+		}
+		
+		virtual void Set(unsigned maxSize)
+		{
+			_ticks.clear();
+			set(maxSize);
+		}
+	private:
+		void set(unsigned sizeRequest)
+		{
+			if(sizeRequest > _labels.size())
+				sizeRequest = _labels.size();
+			const unsigned stepSize =
+				(unsigned) ceil((double) _labels.size() / (double) sizeRequest);
+			
+			for(size_t tick=0;tick<_labels.size();tick += stepSize)
+				_ticks.push_back(tick);
+		}
+		
+		unsigned _sizeRequest;
+		std::vector<std::string> _labels;
+		std::vector<size_t> _ticks;
 };

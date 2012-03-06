@@ -97,6 +97,12 @@ if(NOT DEFINED LOFAR_OPTIONS_INCLUDED)
     set(HAVE_OPENMP OFF)
   endif(USE_OPENMP)
 
+  if(USE_PQXX)
+    lofar_find_package(PQXX REQUIRED)
+  else(USE_PQXX)
+    set(HAVE_PQXX OFF)
+  endif(USE_PQXX)
+
   if(USE_SHMEM)
     set(HAVE_SHMEM 1)
   endif(USE_SHMEM)

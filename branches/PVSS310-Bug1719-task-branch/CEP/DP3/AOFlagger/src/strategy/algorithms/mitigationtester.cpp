@@ -60,8 +60,8 @@ void MitigationTester::GenerateNoise(size_t scanCount, size_t frequencyCount, bo
 {
 	Clear();
 
-	_real = Image2D::CreateEmptyImagePtr(scanCount, frequencyCount);
-	_imaginary = Image2D::CreateEmptyImagePtr(scanCount, frequencyCount);
+	_real = Image2D::CreateUnsetImagePtr(scanCount, frequencyCount);
+	_imaginary = Image2D::CreateUnsetImagePtr(scanCount, frequencyCount);
 
 	if(independentComplex) {
 		for(size_t f=0; f<frequencyCount;++f) {
@@ -86,24 +86,46 @@ void MitigationTester::AddBroadbandLine(Image2DPtr data, Mask2DPtr rfi, double l
 	size_t frequencyCount = data->Height();
 	unsigned fStart = (size_t) (frequencyOffsetRatio * frequencyCount);
 	unsigned fEnd = (size_t) ((frequencyOffsetRatio + frequencyRatio) * frequencyCount);
-	AddBroadbandLinePos(data, rfi, lineStrength, startTime, duration, fStart, fEnd, false);
+	AddBroadbandLinePos(data, rfi, lineStrength, startTime, duration, fStart, fEnd, UniformShape);
 }
 
-void MitigationTester::AddBroadbandLinePos(Image2DPtr data, Mask2DPtr rfi, double lineStrength, size_t startTime, size_t duration, unsigned frequencyStart, double frequencyEnd, bool gaussianStrength)
+void MitigationTester::AddBroadbandLinePos(Image2DPtr data, Mask2DPtr rfi, double lineStrength, size_t startTime, size_t duration, unsigned frequencyStart, double frequencyEnd, enum BroadbandShape shape)
 {
 	const double s = (frequencyEnd-frequencyStart);
 	for(size_t f=frequencyStart;f<frequencyEnd;++f) {	
+		// x will run from -1 to 1
+		const double x = (double) ((f-frequencyStart)*2)/s-1.0;
+		double factor = shapeLevel(shape, x);
 		for(size_t t=startTime;t<startTime+duration;++t) {
-			double factor = 1.0;
-			if(gaussianStrength)
-			{
-				const double x = (double) ((f-frequencyStart)*2)/s-1.0;
-				factor = exp(-x*x*9.0);
-			}
 			data->AddValue(t, f, lineStrength * factor);
 			if(lineStrength > 0.0)
 				rfi->SetValue(t, f, true);
 		}
+	}
+}
+
+void MitigationTester::AddSlewedBroadbandLinePos(Image2DPtr data, Mask2DPtr rfi, double lineStrength, double slewrate, size_t startTime, size_t duration, unsigned frequencyStart, double frequencyEnd, enum BroadbandShape shape)
+{
+	const double s = (frequencyEnd-frequencyStart);
+	for(size_t f=frequencyStart;f<frequencyEnd;++f) {	
+			// x will run from -1 to 1
+		const double x = (double) ((f-frequencyStart)*2)/s-1.0;
+		double factor = shapeLevel(shape, x);
+		double slew = slewrate * (double) f;
+		size_t slewInt = (size_t) slew;
+		double slewRest = slew - slewInt;
+		
+		data->AddValue(startTime+slewInt, f, lineStrength * factor * (1.0 - slewRest));
+		if(lineStrength > 0.0)
+			rfi->SetValue(startTime+slewInt, f, true);
+		for(size_t t=startTime+1;t<startTime+duration;++t) {
+			data->AddValue(t+slewInt, f, lineStrength * factor);
+			if(lineStrength > 0.0)
+				rfi->SetValue(t+slewInt, f, true);
+		}
+		data->AddValue(startTime+duration+slewInt, f, lineStrength * factor * slewRest);
+		if(lineStrength > 0.0)
+			rfi->SetValue(startTime+duration+slewInt, f, true);
 	}
 }
 
@@ -224,7 +246,7 @@ void MitigationTester::CountCorrectRFI(Image2DCPtr tresholdedReal, Image2DCPtr t
 
 Image2D *MitigationTester::CreateRayleighData(unsigned width, unsigned height)
 {
-	Image2D *image = Image2D::CreateEmptyImage(width, height);
+	Image2D *image = Image2D::CreateUnsetImage(width, height);
 	for(unsigned y=0;y<height;++y) {
 		for(unsigned x=0;x<width;++x) {
 			image->SetValue(x, y, RNG::Rayleigh());
@@ -235,7 +257,7 @@ Image2D *MitigationTester::CreateRayleighData(unsigned width, unsigned height)
 
 Image2D *MitigationTester::CreateGaussianData(unsigned width, unsigned height)
 {
-	Image2D *image = Image2D::CreateEmptyImage(width, height);
+	Image2D *image = Image2D::CreateUnsetImage(width, height);
 	for(unsigned y=0;y<height;++y) {
 		for(unsigned x=0;x<width;++x) {
 			image->SetValue(x, y, RNG::Gaussian());
@@ -284,12 +306,8 @@ Image2DPtr MitigationTester::CreateTestSet(int number, Mask2DPtr rfi, unsigned w
 		case 0: // Image of all zero's
 		return Image2D::CreateZeroImagePtr(width, height);
 		case 1: // Image of all ones
-		image = Image2D::CreateEmptyImagePtr(width, height);
-		for(unsigned y=0;y<height;++y) {
-			for(unsigned x=0;x<width;++x) {
-				image->SetValue( x, y, 1.0);
-			}
-		}
+		image = Image2D::CreateUnsetImagePtr(width, height);
+		image->SetAll(1.0);
 		break;
 		case 2: // Noise
 		return Image2DPtr(CreateNoise(width, height, gaussianNoise));
@@ -442,13 +460,37 @@ Image2DPtr MitigationTester::CreateTestSet(int number, Mask2DPtr rfi, unsigned w
 		break;
 		case 26: { // Several Gaussian broadband lines
 			image = Image2DPtr(CreateNoise(width, height, gaussianNoise));
-			AddBroadbandToTestSet(image, rfi, 1.0, 1.0, false, true);
+			AddBroadbandToTestSet(image, rfi, 1.0, 1.0, false, GaussianShape);
+		} break;
+		case 27: { // Several Sinusoidal broadband lines
+			image = Image2DPtr(CreateNoise(width, height, gaussianNoise));
+			AddBroadbandToTestSet(image, rfi, 1.0, 1.0, false, SinusoidalShape);
+		} break;
+		case 28: { // Several slewed Gaussian broadband lines
+			image = Image2DPtr(CreateNoise(width, height, gaussianNoise));
+			AddSlewedBroadbandToTestSet(image, rfi, 1.0);
+		} break;
+		case 29: { // Several bursty broadband lines
+			image = Image2DPtr(CreateNoise(width, height, gaussianNoise));
+			AddBurstBroadbandToTestSet(image, rfi);
+		} break;
+		case 30: { // noise + RFI ^-2 distribution
+			image = sampleRFIDistribution(width, height, 1.0);
+			rfi->SetAll<true>();
+		} break;
+		case 31: { // noise + RFI ^-2 distribution
+			image = sampleRFIDistribution(width, height, 0.1);
+			rfi->SetAll<true>();
+		} break;
+		case 32: { // noise + RFI ^-2 distribution
+			image = sampleRFIDistribution(width, height, 0.01);
+			rfi->SetAll<true>();
 		} break;
 	}
 	return image;
 }
 
-void MitigationTester::AddBroadbandToTestSet(Image2DPtr image, Mask2DPtr rfi, long double length, double strength, bool align, bool gaussianStrength)
+void MitigationTester::AddBroadbandToTestSet(Image2DPtr image, Mask2DPtr rfi, long double length, double strength, bool align, enum BroadbandShape shape)
 {
 	size_t frequencyCount = image->Height();
 	unsigned step = image->Width()/11;
@@ -490,18 +532,37 @@ void MitigationTester::AddBroadbandToTestSet(Image2DPtr image, Mask2DPtr rfi, lo
 	} else {
 		unsigned fStart = (unsigned) ((0.5 - length/2.0) * frequencyCount);
 		unsigned fEnd = (unsigned) ((0.5 + length/2.0) * frequencyCount);
-		AddBroadbandLinePos(image, rfi, 3.0*strength, step*1, 3, fStart, fEnd, gaussianStrength);
-		AddBroadbandLinePos(image, rfi, 2.5*strength, step*2, 3, fStart, fEnd, gaussianStrength);
-		AddBroadbandLinePos(image, rfi, 2.0*strength, step*3, 3, fStart, fEnd, gaussianStrength);
-		AddBroadbandLinePos(image, rfi, 1.8*strength, step*4, 3, fStart, fEnd, gaussianStrength);
-		AddBroadbandLinePos(image, rfi, 1.6*strength, step*5, 3, fStart, fEnd, gaussianStrength);
+		AddBroadbandLinePos(image, rfi, 3.0*strength, step*1, 3, fStart, fEnd, shape);
+		AddBroadbandLinePos(image, rfi, 2.5*strength, step*2, 3, fStart, fEnd, shape);
+		AddBroadbandLinePos(image, rfi, 2.0*strength, step*3, 3, fStart, fEnd, shape);
+		AddBroadbandLinePos(image, rfi, 1.8*strength, step*4, 3, fStart, fEnd, shape);
+		AddBroadbandLinePos(image, rfi, 1.6*strength, step*5, 3, fStart, fEnd, shape);
 
-		AddBroadbandLinePos(image, rfi, 3.0*strength, step*6, 1, fStart, fEnd, gaussianStrength);
-		AddBroadbandLinePos(image, rfi, 2.5*strength, step*7, 1, fStart, fEnd, gaussianStrength);
-		AddBroadbandLinePos(image, rfi, 2.0*strength, step*8, 1, fStart, fEnd, gaussianStrength);
-		AddBroadbandLinePos(image, rfi, 1.8*strength, step*9, 1, fStart, fEnd, gaussianStrength);
-		AddBroadbandLinePos(image, rfi, 1.6*strength, step*10, 1, fStart, fEnd, gaussianStrength);
+		AddBroadbandLinePos(image, rfi, 3.0*strength, step*6, 1, fStart, fEnd, shape);
+		AddBroadbandLinePos(image, rfi, 2.5*strength, step*7, 1, fStart, fEnd, shape);
+		AddBroadbandLinePos(image, rfi, 2.0*strength, step*8, 1, fStart, fEnd, shape);
+		AddBroadbandLinePos(image, rfi, 1.8*strength, step*9, 1, fStart, fEnd, shape);
+		AddBroadbandLinePos(image, rfi, 1.6*strength, step*10, 1, fStart, fEnd, shape);
 	}
+}
+
+void MitigationTester::AddSlewedBroadbandToTestSet(Image2DPtr image, Mask2DPtr rfi, long double length, double strength, double slewrate, enum BroadbandShape shape)
+{
+	size_t frequencyCount = image->Height();
+	unsigned step = image->Width()/11;
+	unsigned fStart = (unsigned) ((0.5 - length/2.0) * frequencyCount);
+	unsigned fEnd = (unsigned) ((0.5 + length/2.0) * frequencyCount);
+	AddSlewedBroadbandLinePos(image, rfi, 3.0*strength, slewrate, step*1, 3, fStart, fEnd, shape);
+	AddSlewedBroadbandLinePos(image, rfi, 2.5*strength, slewrate, step*2, 3, fStart, fEnd, shape);
+	AddSlewedBroadbandLinePos(image, rfi, 2.0*strength, slewrate, step*3, 3, fStart, fEnd, shape);
+	AddSlewedBroadbandLinePos(image, rfi, 1.8*strength, slewrate, step*4, 3, fStart, fEnd, shape);
+	AddSlewedBroadbandLinePos(image, rfi, 1.6*strength, slewrate, step*5, 3, fStart, fEnd, shape);
+
+	AddSlewedBroadbandLinePos(image, rfi, 3.0*strength, slewrate, step*6, 1, fStart, fEnd, shape);
+	AddSlewedBroadbandLinePos(image, rfi, 2.5*strength, slewrate, step*7, 1, fStart, fEnd, shape);
+	AddSlewedBroadbandLinePos(image, rfi, 2.0*strength, slewrate, step*8, 1, fStart, fEnd, shape);
+	AddSlewedBroadbandLinePos(image, rfi, 1.8*strength, slewrate, step*9, 1, fStart, fEnd, shape);
+	AddSlewedBroadbandLinePos(image, rfi, 1.6*strength, slewrate, step*10, 1, fStart, fEnd, shape);
 }
 
 void MitigationTester::AddVarBroadbandToTestSet(Image2DPtr image, Mask2DPtr rfi)
@@ -567,4 +628,17 @@ void MitigationTester::SubtractBackground(Image2DPtr image)
 			image->AddValue(x, y, 1.0); 
 		}
 	}
+}
+
+Image2DPtr MitigationTester::sampleRFIDistribution(unsigned width, unsigned height, double ig_over_rsq)
+{
+	Image2DPtr image = Image2D::CreateUnsetImagePtr(width, height);
+	const double sigma = 1.0;
+
+	for(size_t f=0; f<height;++f) {
+		for(size_t t=0; t<width;++t) {
+			image->SetValue(t, f, Rand(Gaussian)*sigma + ig_over_rsq / RNG::Uniform());
+		}
+	}
+	return image;
 }

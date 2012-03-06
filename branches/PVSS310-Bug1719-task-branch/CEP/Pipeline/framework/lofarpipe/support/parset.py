@@ -53,16 +53,16 @@ class Parset(parameterset):
             self.keys
         )
 
-    def makeSubset(self, baseKey, prefix=None):
-        newps = Parset()
-        for key in self.keys:
-            if key[:len(baseKey)] == baseKey:
-                if prefix:
-                    newkey = key.replace(baseKey, prefix)
-                else:
-                    newkey = key
-                newps.add(newkey, self[key].get())
-        return newps
+    #def makeSubset(self, baseKey, prefix=None):
+        #newps = Parset()
+        #for key in self.keys:
+            #if key[:len(baseKey)] == baseKey:
+                #if prefix:
+                    #newkey = key.replace(baseKey, prefix)
+                #else:
+                    #newkey = key
+                #newps.add(newkey, self[key].get())
+        #return newps
 
     def addStringVector(self, key, vector):
         super(Parset, self).add(key, "[ %s ]" % ", ".join(vector))
@@ -79,6 +79,22 @@ class Parset(parameterset):
     def __iter__(self):
         return iter(self.keys)
 
+    @classmethod
+    def fromDict(cls, kvm):
+        """
+        Create a parameterset object from the given dict `kvm`.
+        
+        Caution: although any value that can be converted to a string will be
+        written to the Parset, some values cannot be interpreted correctly by
+        the C++ Parameterset class (e.g., a python dict).
+        """
+        if not isinstance(kvm, dict):
+            raise TypeError("Input argument must be a dictionary")
+        obj = Parset()
+        for k in kvm:
+            obj.add(k, str(kvm[k]))
+        return obj
+
 def get_parset(parset_filename):
     """
     Returns an instance of Parset with the given file loaded.
@@ -89,8 +105,14 @@ def patch_parset(parset, data, output_dir=None):
     """
     Generate a parset file by adding the contents of the data dictionary to
     the specified parset object. Write it to file, and return the filename.
+
+    `parset` may either be the filename of a parset-file or an instance of
+    `lofar.parameterset.parameterset`.
     """
-    temp_parset = get_parset(parset)
+    if isinstance(parset, str):
+        temp_parset = parameterset(parset)
+    else:
+        temp_parset = parset.makeSubset('')  # a sneaky way to copy the parset
     for key, value in data.iteritems():
         temp_parset.replace(key, value)
     fd, output = mkstemp(dir=output_dir)

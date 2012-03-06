@@ -27,7 +27,9 @@
 
 class TestGroup : public TestItem {
 	public:
-		TestGroup(const std::string &name) : _name(name) { }
+		TestGroup(const std::string &name) : _name(name), _successes(0), _failures(0)
+		{
+		}
 		
 		virtual ~TestGroup()
 		{
@@ -67,6 +69,8 @@ class TestGroup : public TestItem {
 				{
 					std::cout << "Unit test '" << unitTest->Name() << "':\n";
 					unitTest->Run();
+					_successes += unitTest->Successes();
+					_failures += unitTest->Failures();
 				} else
 				{
 					throw std::runtime_error("Invalid item in test group");
@@ -79,9 +83,13 @@ class TestGroup : public TestItem {
 		{
 			return _name;
 		}
+		
+		unsigned Successes() const { return _successes; }
+		unsigned Failures() const { return _failures; }
 	private:
 		std::vector<TestItem *> _tests;
 		std::string _name;
+		unsigned _successes, _failures;
 };
 
 #endif

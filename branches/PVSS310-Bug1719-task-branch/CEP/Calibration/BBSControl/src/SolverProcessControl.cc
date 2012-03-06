@@ -104,8 +104,8 @@ namespace LOFAR
         // Initialize the calibration session.
         string key = ps->getString("BBDB.Key", "default");
         itsCalSession.reset(new CalSession(key,
-          ps->getString("BBDB.Name"),
-          ps->getString("BBDB.User"),
+          ps->getString("BBDB.Name", (getenv("USER") ? : "")),
+          ps->getString("BBDB.User", "postgres"),
           ps->getString("BBDB.Password", ""),
           ps->getString("BBDB.Host", "localhost"),
           ps->getString("BBDB.Port", "")));
@@ -323,13 +323,12 @@ namespace LOFAR
         scoped_ptr<const ProcessIdMsg>
           msg(dynamic_cast<ProcessIdMsg*>(connection->recvObject()));
         if(!msg) {
-          THROW(SolverControlException, "Protocol error. Expected a"
-            " ProcessIdMsg");
+          THROW(BBSControlException, "Protocol error. Expected a ProcessIdMsg");
         }
 
         if(!itsCalSession->isKernel(msg->getProcessId())) {
           connection.reset();
-          THROW(SolverControlException, "Process " << msg->getProcessId()
+          THROW(BBSControlException, "Process " << msg->getProcessId()
             << "is not a registered kernel process; disconnected");
         }
 
@@ -339,7 +338,7 @@ namespace LOFAR
           itsKernels.at(index) = KernelConnection(connection, index);
         } catch (std::out_of_range&) {
           connection.reset();
-          THROW(SolverControlException, "Kernel index (" << index << ") out of"
+          THROW(BBSControlException, "Kernel index (" << index << ") out of"
             " range; disconnected");
         }
 
@@ -493,7 +492,7 @@ namespace LOFAR
 
       // Sanity check
       if (itsKernels.size() < accumulate(groups.begin(), groups.end(), 0U)) {
-        THROW (SolverControlException,
+        THROW (BBSControlException,
                "Sum of kernels in subgroups exceeds total number of kernels");
       }
 

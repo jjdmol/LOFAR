@@ -30,6 +30,8 @@
 //# Includes
 #include <MACIO/GCF_Event.h>
 #include <MACIO/EventPort.h>
+#include <Common/lofar_vector.h>
+#include <Common/lofar_string.h>
 
 // Avoid 'using namespace' in headerfiles
 
@@ -55,7 +57,8 @@ public:
 	~KVTLogger();
 
 	// log()
-	void log(const string& key, const string& value, double secsEpoch1970);
+	bool log(const string& key, const string& value, double secsEpoch1970);
+	bool log(const vector<string> key, const vector<string> value, const vector<double> times);
 
 private:
 	KVTLogger();
@@ -69,7 +72,7 @@ private:
 	uint32			itsObsID;
 	string			itsRegisterName;
 	bool			itsLoggingEnabled;
-	uint32			itsSeqnr;
+	int32			itsSeqnr;
 	EventPort*		itsKVTport;
 };
 

@@ -128,7 +128,9 @@ namespace rfiStrategy {
 			}
 			static class ImageSet *Create(const std::string &file, bool indirectReader=false, bool readUVW=false);
 			static bool IsFitsFile(const std::string &file);
-			static bool IsRawFile(const std::string &file);
+			static bool IsRCPRawFile(const std::string &file);
+			static bool IsTKPRawFile(const std::string &file);
+			static bool IsRawDescFile(const std::string &file);
 			static bool IsParmFile(const std::string &file);
 			static bool IsTimeFrequencyStatFile(const std::string &file);
 			static bool IsMSFile(const std::string &file);

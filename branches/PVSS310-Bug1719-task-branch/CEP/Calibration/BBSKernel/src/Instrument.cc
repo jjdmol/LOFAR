@@ -37,7 +37,8 @@ namespace BBS
 AntennaField::AntennaField(const string &name, const Vector3 &position,
     const Vector3 &p, const Vector3 &q, const Vector3 &r)
     :   itsName(name),
-        itsPosition(position)
+        itsPosition(position),
+        itsActiveElementCount(0)
 {
     itsAxes[P] = p;
     itsAxes[Q] = q;
@@ -54,7 +55,7 @@ const Vector3 &AntennaField::position() const
     return itsPosition;
 }
 
-const Vector3 &AntennaField::axis(Axis axis)
+const Vector3 &AntennaField::axis(Axis axis) const
 {
     return itsAxes[axis];
 }
@@ -72,6 +73,11 @@ void AntennaField::appendTileElement(const Vector3 &offset)
 void AntennaField::appendElement(const Element &element)
 {
     itsElements.push_back(element);
+
+    if(!element.flag[0] || !element.flag[1])
+    {
+        ++itsActiveElementCount;
+    }
 }
 
 Station::Station(const string &name, const casa::MPosition &position)
@@ -115,6 +121,26 @@ bool Station::isPhasedArray() const
 unsigned int Station::nField() const
 {
     return itsFields.size();
+}
+
+size_t Station::nElement() const
+{
+    size_t count = 0;
+    for(unsigned int i = 0; i < nField(); ++i)
+    {
+        count += field(i)->nElement();
+    }
+    return count;
+}
+
+size_t Station::nActiveElement() const
+{
+    size_t count = 0;
+    for(unsigned int i = 0; i < nField(); ++i)
+    {
+        count += field(i)->nActiveElement();
+    }
+    return count;
 }
 
 AntennaField::ConstPtr Station::field(unsigned int i) const

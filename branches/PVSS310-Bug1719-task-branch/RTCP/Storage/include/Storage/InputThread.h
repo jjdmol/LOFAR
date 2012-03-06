@@ -44,6 +44,7 @@ class InputThread
   public:
 				     InputThread(const Parset &parset, OutputType index, unsigned streamNr, Queue<SmartPtr<StreamableData> > &freeQueue, Queue<SmartPtr<StreamableData> > &receiveQueue, const std::string &logPrefix);
 
+    void			     start();
     void			     cancel();
 
   private:
@@ -51,7 +52,7 @@ class InputThread
 
     const std::string		     itsLogPrefix, itsInputDescriptor;
     Queue<SmartPtr<StreamableData> > &itsFreeQueue, &itsReceiveQueue;
-    Thread			     itsThread;
+    SmartPtr<Thread>		     itsThread;
 };
 
 

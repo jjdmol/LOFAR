@@ -31,4 +31,5 @@ int main(int argc, char *argv[])
 
 	Application application;
 	application.Run(argc, argv);
+	return 0;
 }

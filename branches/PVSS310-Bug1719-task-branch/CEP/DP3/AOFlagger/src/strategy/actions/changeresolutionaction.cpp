@@ -22,6 +22,7 @@
 #include <AOFlagger/strategy/control/artifactset.h>
 
 #include <stdexcept>
+#include <AOFlagger/strategy/algorithms/thresholdtools.h>
 
 namespace rfiStrategy {
 	
@@ -91,19 +92,48 @@ namespace rfiStrategy {
 
 	void ChangeResolutionAction::DecreaseTime(TimeFrequencyData &timeFrequencyData)
 	{
-		size_t imageCount = timeFrequencyData.ImageCount();
-		for(size_t i=0;i<imageCount;++i)
+		if(_useMaskInAveraging)
 		{
-			Image2DCPtr image = timeFrequencyData.GetImage(i);
-			Image2DPtr newImage = image->ShrinkHorizontally(_timeDecreaseFactor);
-			timeFrequencyData.SetImage(i, newImage);
+			DecreaseTimeWithMask(timeFrequencyData);
 		}
-		size_t maskCount = timeFrequencyData.MaskCount();
+		else {
+			size_t imageCount = timeFrequencyData.ImageCount();
+			for(size_t i=0;i<imageCount;++i)
+			{
+				Image2DCPtr image = timeFrequencyData.GetImage(i);
+				Image2DPtr newImage = image->ShrinkHorizontally(_timeDecreaseFactor);
+				timeFrequencyData.SetImage(i, newImage);
+			}
+			size_t maskCount = timeFrequencyData.MaskCount();
+			for(size_t i=0;i<maskCount;++i)
+			{
+				Mask2DCPtr mask = timeFrequencyData.GetMask(i);
+				Mask2DPtr newMask = mask->ShrinkHorizontally(_timeDecreaseFactor);
+				timeFrequencyData.SetMask(i, newMask);
+			}
+		}
+	}
+	
+	void ChangeResolutionAction::DecreaseTimeWithMask(TimeFrequencyData &data)
+	{
+		size_t polCount = data.PolarisationCount();
+		for(size_t i=0;i<polCount;++i)
+		{
+			TimeFrequencyData *polData = data.CreateTFDataFromPolarisationIndex(i);
+			Mask2DCPtr mask = polData->GetSingleMask();
+			for(unsigned j=0;j<polData->ImageCount();++j)
+			{
+				Image2DCPtr image = polData->GetImage(j);
+				polData->SetImage(j, ThresholdTools::ShrinkHorizontally(_timeDecreaseFactor, image, mask));
+			}
+			delete polData;
+		}
+		size_t maskCount = data.MaskCount();
 		for(size_t i=0;i<maskCount;++i)
 		{
-			Mask2DCPtr mask = timeFrequencyData.GetMask(i);
-			Mask2DPtr newMask = mask->ShrinkHorizontally(_timeDecreaseFactor);
-			timeFrequencyData.SetMask(i, newMask);
+			Mask2DCPtr mask = data.GetMask(i);
+			Mask2DPtr newMask = mask->ShrinkHorizontallyForAveraging(_timeDecreaseFactor);
+			data.SetMask(i, newMask);
 		}
 	}
 

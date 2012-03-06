@@ -109,7 +109,7 @@ namespace rfiStrategy {
 					case Zero:
 					{
 						Image2DPtr zero =
-							Image2D::CreateEmptyImagePtr(artifacts.ContaminatedData().ImageWidth(), artifacts.ContaminatedData().ImageHeight());
+							Image2D::CreateZeroImagePtr(artifacts.ContaminatedData().ImageWidth(), artifacts.ContaminatedData().ImageHeight());
 						TimeFrequencyData data(artifacts.ContaminatedData());
 						for(unsigned i=0;i<data.ImageCount();++i)
 							data.SetImage(i, zero);
@@ -180,13 +180,14 @@ namespace rfiStrategy {
 					}
 					case InterpolateNans:
 					{
-						TimeFrequencyData contaminatedData = artifacts.ContaminatedData();
+						TimeFrequencyData &contaminatedData = artifacts.ContaminatedData();
 						Mask2DCPtr mask = contaminatedData.GetSingleMask();
 						unsigned imageCount = contaminatedData.ImageCount();
 						for(unsigned i=0;i<imageCount;++i)
 						{
-							InterpolateNansAlgorithms::InterpolateNans(contaminatedData.GetImage(i));
-							//artifacts.ContaminatedData().SetImage(i, image);
+							Image2DPtr image = Image2D::CreateCopy(contaminatedData.GetImage(i));
+							InterpolateNansAlgorithms::InterpolateFlags(image, mask);
+							contaminatedData.SetImage(i, image);
 						}
 						break;
 					}

@@ -38,7 +38,8 @@
 CREATE OR REPLACE FUNCTION getDefaultTemplates()
   RETURNS SETOF templateInfo AS $$
 	DECLARE
-		vRecord					RECORD;
+		vRecord		RECORD;
+		TSobsolete	CONSTANT	INT2 := 1200;
 
 	BEGIN
 	  -- do selection
@@ -48,7 +49,8 @@ CREATE OR REPLACE FUNCTION getDefaultTemplates()
 			   processType,
 			   processSubtype,
 			   strategy
-		FROM   OTDBtree where name IS NOT NULL
+		FROM   OTDBtree 
+		WHERE  name IS NOT NULL
 	  LOOP
 		RETURN NEXT vRecord;
 	  END LOOP;
@@ -71,6 +73,7 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION assignTemplateName(INT4, INT4, VARCHAR(32))
   RETURNS BOOLEAN AS $$
 	DECLARE
+		TSobsolete   		CONSTANT	INT2 := 1200;
 		TTtemplate  		CONSTANT	INT2 := 20;
 		TThierarchy 		CONSTANT	INT2 := 30;
 		vFunction   		CONSTANT	INT2 := 1;
@@ -108,14 +111,15 @@ CREATE OR REPLACE FUNCTION assignTemplateName(INT4, INT4, VARCHAR(32))
 		END IF;
 
 		-- check for double defaulttemplate entries
-		IF $3 IS NOT NULL THEN
+		IF $3 IS NOT NULL AND vProcessType != '' THEN
 			SELECT	treeID
 			INTO 	vDummy
 			FROM	OTDBtree
 			WHERE	processType = vProcessType
 			AND		processSubtype = vprocessSubtype
 			AND		strategy = vStrategy
-			AND		name IS NOT NULL;
+			AND		name IS NOT NULL
+			AND		state < TSobsolete;
 			IF FOUND AND vDummy != $2 THEN
 			  RAISE EXCEPTION 'There is already a defaultTemplate with the same processType setting.';
 			  RETURN FALSE;

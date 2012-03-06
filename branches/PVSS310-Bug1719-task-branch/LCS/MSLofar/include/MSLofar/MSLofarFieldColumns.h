@@ -106,6 +106,25 @@ namespace LOFAR {
       { return rwTileBeamDirMeas_p; }
     // </group>
 
+    // Set the direction reference type for all direction columns.
+    // This can only be done when the table has no rows.
+    // Trying to do so at other times will throw an exception.
+    void setDirectionRef(casa::MDirection::Types ref);
+
+    // Same as above, but the LOFAR_TILE_BEAM_DIR can have a different type.
+    void setDirectionRef(casa::MDirection::Types ref,
+                         casa::MDirection::Types tileBeamDirRef);
+
+    // Set the direction offset for all direction columns.
+    // This can only be done when the table has no rows.
+    // Trying to do so at other times will throw an exception.
+    ///  void setDirectionOffset(const MDirection& offset);
+
+    // Same as above, but the LOFAR_TILE_BEAM_DIR can have a different offset.
+    ///  void setDirectionOffset(const MDirection& offset,
+    ///  const MDirection& tileBeamDirOffset);
+
+
   protected:
     //# Default constructor creates a object that is not usable. Use the attach
     //# function correct this.

@@ -154,8 +154,12 @@ GCFEvent::TResult GCFITCPort::dispatch(GCFEvent& event)
 			if (pActualEvent!=0) {
 				// client timer expired? dispatch to slave
 				if (clientIt != itsToSlaveTimerId.end()) {
-					LOG_TRACE_CALC(formatString("GCFITCPort::dispatch calling clientTask.doEvent, event@%08X", pActualEvent));
+					LOG_TRACE_CALC(formatString("GCFITCPort::dispatch:Calling clientTask.doEvent, event@%08X", pActualEvent));
 					status = itsSlaveTask.doEvent(*pActualEvent, *this);
+					if (status == GCFEvent::NEXT_STATE) {
+						LOG_TRACE_STAT_STR("GCFITCPort::dispatch:Task returned NEXT_STATE, queing " << eventName(*pActualEvent));
+						itsSlaveTask.queueTaskEvent(*pActualEvent, *this);
+					}
 					// extra check to see if it still exists:
 					clientIt = itsToSlaveTimerId.find(timerEvent.id);
 					if (clientIt != itsToSlaveTimerId.end()) {
@@ -164,20 +168,20 @@ GCFEvent::TResult GCFITCPort::dispatch(GCFEvent& event)
 				}
 				// server timer expired? dispatch to server
 				else if (serverIt != itsToContainerTimerId.end()) {
-					LOG_TRACE_CALC(formatString("GCFITCPort::dispatch calling serverTask.doEvent, event@%08X", pActualEvent));
+					LOG_TRACE_CALC(formatString("GCFITCPort::dispatch:Calling serverTask.doEvent, event@%08X", pActualEvent));
 					LOG_TRACE_CALC_STR("event = " << *pActualEvent);
 					status = _pTask->doEvent(*pActualEvent, *this);
+					if (status == GCFEvent::NEXT_STATE) {
+						LOG_TRACE_STAT_STR("GCFITCPort::dispatch:Task returned NEXT_STATE, queing " << eventName(*pActualEvent));
+						_pTask->queueTaskEvent(*pActualEvent, *this);
+					}
 					// extra check to see if it still exists:
 					serverIt = itsToContainerTimerId.find(timerEvent.id);
 					if (serverIt != itsToContainerTimerId.end()) {
 						itsToContainerTimerId.erase(serverIt);
 					}
 				}        
-				if (status == GCFEvent::NEXT_STATE) {
-					LOG_TRACE_CALC("GCFITCPort::dispatch task returned NEXT_STATE, informing scheduler");
-					return (status);
-				}
-				LOG_TRACE_CALC(formatString("GCFITCPort::dispatch deleting event attached to timer (%08X)", pActualEvent));
+				LOG_TRACE_CALC(formatString("GCFITCPort::dispatch:Deleting event attached to timer (%08X)", pActualEvent));
 				delete pActualEvent;	// delete the buffer tied to the timer.
 				LOG_TRACE_CALC("GCFITCPort::dispatch attached event deleted");
 			} // with attached event

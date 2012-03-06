@@ -92,6 +92,15 @@ class ConsoleProgressHandler : public ProgressListener {
 #define RETURN_STRATEGY_PARSE_ERROR  20
 #define RETURN_UNHANDLED_EXCEPTION   30
 
+void checkRelease()
+{
+#ifndef NDEBUG
+		AOLogger::Warn
+			<< "This version of RFI console has been compiled as DEBUG version! (NDEBUG was not defined)\n"
+			<< "For better performance, recompile it as a RELEASE.\n\n";
+#endif
+}
+
 int main(int argc, char **argv)
 {
 	if(argc == 1)
@@ -108,6 +117,8 @@ int main(int argc, char **argv)
 		"  -uvw reads uvw values (some strategies require them)\n"
 		"  -column <NAME> specify column to flag\n"
 		"Execute 'rfistrategy' without parameters for help on creating RFIS strategies.\n";
+		
+		checkRelease();
 		
 		return RETURN_CMDLINE_ERROR;
 	}
@@ -186,6 +197,8 @@ int main(int argc, char **argv)
 			"or a console program called rfistrategy, and executes it on one or several .MS\n"
 			"directories.\n\n"
 			"Author: André Offringa (offringa@astro.rug.nl)\n\n";
+			
+		checkRelease();
 
 		if(threadCount.IsSet())
 			AOLogger::Debug << "Number of threads: " << threadCount.Value() << "\n";

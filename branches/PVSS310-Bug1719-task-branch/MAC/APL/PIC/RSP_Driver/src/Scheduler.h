@@ -26,10 +26,10 @@
 #define SCHEDULER_H_
 
 #include <queue>
-#include <GCF/TM/GCF_Control.h>
+#include <GCF/TM/GCF_PortInterface.h>
+#include <APL/RTCCommon/Timestamp.h>
 #include "Command.h"
 #include "SyncAction.h"
-#include <APL/RTCCommon/Timestamp.h>
 
 namespace LOFAR {
   namespace RSP {
@@ -75,6 +75,11 @@ public:
 	// client processes.
 	void enter(Ptr<Command> command, QueueID queue = LATER, bool immediateApplyAllowed = true);
 
+	// Register a RSPboard at the Scheduler.
+	void registerBoard(GCFPortInterface&	port) {
+		itsBoardErrCount[&port] = 0;
+	}
+
 	/*@{*/
 	// Set/get the current time (from the update triggering timeout event).
 	void setCurrentTime(long sec, long usec);
@@ -110,6 +115,8 @@ private:
 
 	std::map< GCFPortInterface*, std::vector<SyncAction*> > m_syncactions;
 	std::map< GCFPortInterface*, bool >  					m_sync_completed;
+	std::map< GCFPortInterface*, bool >  					itsSyncErrors;
+	std::map< GCFPortInterface*, int >  					itsBoardErrCount;
 
 	RTC::Timestamp 			m_current_time;
 };

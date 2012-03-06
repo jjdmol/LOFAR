@@ -2,20 +2,20 @@ status=0
 localhost#/usr/local/xyx0.ms,node1:/usr,/usr/local/xyx0.ms.vds
 localhost#/usr/local/xyx1.ms,node1:/usr,/usr/local/xyx1.ms.vds
 localhost#/usr/local/xyx2.ms,node1:/usr,/usr/local/xyx2.ms.vds
-startdistproc -useenv curdir/trundist_tmp.env -mode 0 -nomasterhost -dsn 'curdir/trundist.in_vd' -hfn 'curdir/trundist_tmp.hfn' -cdn 'curdir/trundist.in_cd' -logfile '' -dry curdir/trundist_tmp.sh '' -arg a b c d
+startdistproc -useenv 'curdir/trundist_tmp.env' -mode 0 -nomasterhost -dsn 'curdir/trundist.in_vd' -hfn 'curdir/trundist_tmp.hfn' -cdn 'curdir/trundist.in_cd' -logfile '' -dry 'curdir/trundist_tmp.sh' '' -arg a b c d
 socketrun 1 curdir/trundist_tmp.hfn '' 0 1 0  ssdir/rundist-part curdir/trundist_tmp.env curdir/trundist_tmp.sh  -arg a b c d
-ssh -x -n localhost ssdir/rundist-part socket localhost 0 3 0 '/usr/local/xyx0.ms' 'node1:/usr' '/usr/local/xyx0.ms.vds' 'curdir/trundist_tmp.env'  'curdir/trundist_tmp.sh' '' '-arg' 'a b c d'  &
-ssh -x -n localhost ssdir/rundist-part socket localhost 0 3 1 '/usr/local/xyx1.ms' 'node1:/usr' '/usr/local/xyx1.ms.vds' 'curdir/trundist_tmp.env'  'curdir/trundist_tmp.sh' '' '-arg' 'a b c d'  &
-ssh -x -n localhost ssdir/rundist-part socket localhost 0 3 2 '/usr/local/xyx2.ms' 'node1:/usr' '/usr/local/xyx2.ms.vds' 'curdir/trundist_tmp.env'  'curdir/trundist_tmp.sh' '' '-arg' 'a b c d'  &
+ssh -x -n 'localhost' 'ssdir/rundist-part' socket 'localhost' 0 3 0 '/usr/local/xyx0.ms' 'node1:/usr' '/usr/local/xyx0.ms.vds' 'curdir/trundist_tmp.env'  'curdir/trundist_tmp.sh' '' '-arg' 'a b c d'  &
+ssh -x -n 'localhost' 'ssdir/rundist-part' socket 'localhost' 0 3 1 '/usr/local/xyx1.ms' 'node1:/usr' '/usr/local/xyx1.ms.vds' 'curdir/trundist_tmp.env'  'curdir/trundist_tmp.sh' '' '-arg' 'a b c d'  &
+ssh -x -n 'localhost' 'ssdir/rundist-part' socket 'localhost' 0 3 2 '/usr/local/xyx2.ms' 'node1:/usr' '/usr/local/xyx2.ms.vds' 'curdir/trundist_tmp.env'  'curdir/trundist_tmp.sh' '' '-arg' 'a b c d'  &
 status=0
 localhost#/usr/local/xyx0.ms,node1:/usr,/usr/local/xyx0.ms.vds
 localhost#/usr/local/xyx1.ms,node1:/usr,/usr/local/xyx1.ms.vds
 localhost#/usr/local/xyx2.ms,node1:/usr,/usr/local/xyx2.ms.vds
-startdistproc -useenv curdir/trundist_tmp.env -mode 0 -nomasterhost -dsn 'curdir/trundist.in_vd' -hfn 'curdir/trundist_tmp.hfn' -cdn 'curdir/trundist.in_cd' -logfile 'trundist_tmp.logx'  curdir/trundist_tmp.sh '' -arg a b c d
+startdistproc -useenv 'curdir/trundist_tmp.env' -mode 0 -nomasterhost -dsn 'curdir/trundist.in_vd' -hfn 'curdir/trundist_tmp.hfn' -cdn 'curdir/trundist.in_cd' -logfile 'trundist_tmp.logx'  'curdir/trundist_tmp.sh' '' -arg a b c d
 socketrun 0 curdir/trundist_tmp.hfn '' 0 1 0 trundist_tmp.logx ssdir/rundist-part curdir/trundist_tmp.env curdir/trundist_tmp.sh  -arg a b c d
-ssh -x -n localhost ssdir/rundist-part socket localhost 0 3 0 '/usr/local/xyx0.ms' 'node1:/usr' '/usr/local/xyx0.ms.vds' 'curdir/trundist_tmp.env'  'curdir/trundist_tmp.sh' '' '-arg' 'a b c d'  &
-ssh -x -n localhost ssdir/rundist-part socket localhost 0 3 1 '/usr/local/xyx1.ms' 'node1:/usr' '/usr/local/xyx1.ms.vds' 'curdir/trundist_tmp.env'  'curdir/trundist_tmp.sh' '' '-arg' 'a b c d'  &
-ssh -x -n localhost ssdir/rundist-part socket localhost 0 3 2 '/usr/local/xyx2.ms' 'node1:/usr' '/usr/local/xyx2.ms.vds' 'curdir/trundist_tmp.env'  'curdir/trundist_tmp.sh' '' '-arg' 'a b c d'  &
+ssh -x -n 'localhost' 'ssdir/rundist-part' socket 'localhost' 0 3 0 '/usr/local/xyx0.ms' 'node1:/usr' '/usr/local/xyx0.ms.vds' 'curdir/trundist_tmp.env'  'curdir/trundist_tmp.sh' '' '-arg' 'a b c d'  &
+ssh -x -n 'localhost' 'ssdir/rundist-part' socket 'localhost' 0 3 1 '/usr/local/xyx1.ms' 'node1:/usr' '/usr/local/xyx1.ms.vds' 'curdir/trundist_tmp.env'  'curdir/trundist_tmp.sh' '' '-arg' 'a b c d'  &
+ssh -x -n 'localhost' 'ssdir/rundist-part' socket 'localhost' 0 3 2 '/usr/local/xyx2.ms' 'node1:/usr' '/usr/local/xyx2.ms.vds' 'curdir/trundist_tmp.env'  'curdir/trundist_tmp.sh' '' '-arg' 'a b c d'  &
 Creating global VDS file trundist.img
 argc=4
 argv=0 /usr/local/xyx0.ms -arg a b c d

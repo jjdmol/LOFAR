@@ -57,8 +57,8 @@ TimeFrequencyData SpatialTimeLoader::Load(unsigned channelIndex, bool fringeStop
 		masks[_polarizationCount];
 	for(unsigned p=0;p<_polarizationCount;++p)
 	{
-		realImages[p] = Image2D::CreateEmptyImagePtr(_timestepsCount, baselineCount);
-		imagImages[p] = Image2D::CreateEmptyImagePtr(_timestepsCount, baselineCount);
+		realImages[p] = Image2D::CreateUnsetImagePtr(_timestepsCount, baselineCount);
+		imagImages[p] = Image2D::CreateUnsetImagePtr(_timestepsCount, baselineCount);
 		masks[p] = Mask2D::CreateUnsetMaskPtr(_timestepsCount, baselineCount);
 	}
 	
