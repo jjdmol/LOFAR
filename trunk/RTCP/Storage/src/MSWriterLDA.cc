@@ -22,7 +22,6 @@
 
 #include <lofar_config.h>
 
-#include <AMCBase/Epoch.h>
 #include <Common/LofarLogger.h>
 #include <Common/SystemUtil.h>
 
