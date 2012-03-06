@@ -39,8 +39,10 @@ node  Output_BeamFormed_	4.0.0  development  	'node constraint'  "BeamFormedData
 #--------------------------------------------------------------------------------------------------------
 par  size 	           O    ulng   -      10    0    0      	- 	''
 par  fileFormat            O    ptext  -      10    0    'FITS|Aips++CASA|HDF5;FITS'      -       ''
-par  numberOfBeams	   O    uint   -      10    0    0	        -	''
-par  BeamTypes	   	   O    vtext  -      10    0    '[]'      	- 	'vector that indicates the beamtype order'
+par  nrOfCoherentStokesBeams	   O    uint   -      10    0    0	        -	''
+par  nrOfIncoherentStokesBeams	   O    uint   -      10    0    0	        -	''
+par  nrOfFlysEyeBeams	   O    uint   -      10    0    0	        -	''
+par  beamTypes	   	   O    vtext  -      10    0    '[]'      	- 	'vector that indicates the beamtype order'
 
 
 #      name              	vers   qual        constr.            descr.

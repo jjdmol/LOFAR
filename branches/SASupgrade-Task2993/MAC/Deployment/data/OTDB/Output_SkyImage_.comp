@@ -42,7 +42,7 @@ par  fileFormat                   O    ptext  -      10    0    'FITS|Aips++CASA
 par  numberOfAxes	          O    uint   -      10    0    0	        -	''
 par  nrOfDirectionCoordinates     O    uint   -      10    0    0	        -	''
 par  nrOfSpectralCoordinates      O    uint   -      10    0    0	        -	''
-par  nrOfPolarixzationCoordinates O    uint   -      10    0    0	        -	''
+par  nrOfPolarizationCoordinates  O    uint   -      10    0    0	        -	''
 par  coordinateTypes		  O    vtext  -      10    0    '[]'      -       'array to determine coordinate type order'
 par  locationFrame                O    ptext  -      10    0    'GEOCENTER|BARYCENTER|HELIOCENTER|TOPOCENTER|LSRK|LSRD|GALACTIC|LOCAL_GROUP|RELOCATABLE;GEOCENTER'      -       ''
 par  timeFrame	   	          O    text   -      10    0    ''      	- 	''

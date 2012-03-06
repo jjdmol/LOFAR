@@ -66,7 +66,7 @@ node  DirectionCoordinate	4.0.0  development  	'node constraint'  "DirectionCoor
 #    name                 dir. type   unit   prun. vm   value	constr.	descr.
 #--------------------------------------------------------------------------------------------------------
 par  number	  	  O    uint   -      10    0    0      	        - 	''
-par  nrDirectionAxis      O    int    -      10    0    0               -     	'Number of DirectionAxis'
+par  nrDirectionAxis      O    uint   -      10    0    0               -     	'Number of DirectionAxis'
 par  PC0_0  		  O    dbl    -      10    0    0		-  	''
 par  PC0_1  		  O    dbl    -      10    0    0		-  	''
 par  PC1_0  		  O    dbl    -      10    0    0		-  	''
