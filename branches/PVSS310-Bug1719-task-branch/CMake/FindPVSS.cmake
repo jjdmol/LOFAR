@@ -72,7 +72,7 @@ if(NOT PVSS_FOUND)
   # Use hard-coded value if version information file cannot be found.
   find_file(PVSS_VERSINFO_MK
     NAMES VersInfo.mk
-    HINTS /opt/pvss/pvssproj)
+    HINTS /opt/pvss/pvssproj
     PATH_SUFFIXES api)
   mark_as_advanced(PVSS_VERSINFO_MK)
   if(NOT PVSS_VERSINFO_MK)
