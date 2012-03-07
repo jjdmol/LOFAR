@@ -31,6 +31,7 @@
 #include <AOFlagger/msio/system.h>
 
 #include <AOFlagger/util/aologger.h>
+#include <AOFlagger/util/stopwatch.h>
 
 IndirectBaselineReader::IndirectBaselineReader(const std::string &msFile) : BaselineReader(msFile), _directReader(msFile), _msIsReordered(false), _removeReorderedFiles(false), _reorderedDataFilesHaveChanged(false), _reorderedFlagFilesHaveChanged(false), _maxMemoryUse(1024*1024*1024), _readUVW(false)
 {
@@ -63,12 +64,12 @@ void IndirectBaselineReader::PerformReadRequests()
 	{
 		const ReadRequest request = _readRequests[i];
 		_results.push_back(Result());
-		const size_t width = ObservationTimes().size();
+		const size_t width = AllObservationTimes().size();
 		for(size_t p=0;p<PolarizationCount();++p)
 		{
 			if(ReadData()) {
-				_results[i]._realImages.push_back(Image2D::CreateEmptyImagePtr(width, FrequencyCount()));
-				_results[i]._imaginaryImages.push_back(Image2D::CreateEmptyImagePtr(width, FrequencyCount()));
+				_results[i]._realImages.push_back(Image2D::CreateZeroImagePtr(width, FrequencyCount()));
+				_results[i]._imaginaryImages.push_back(Image2D::CreateZeroImagePtr(width, FrequencyCount()));
 			}
 			if(ReadFlags()) {
 				// The flags should be initialized to true, as a baseline might
@@ -263,7 +264,7 @@ void IndirectBaselineReader::reorderMS()
 		double time = timeColumn(rowIndex);
 		if(time != prevTime)
 		{
-			timeIndex = ObservationTimes().find(time)->second;
+			timeIndex = AllObservationTimes().find(time)->second;
 			if(timeIndex != prevTimeIndex+1)
 			{
 				std::stringstream s;
@@ -443,8 +444,8 @@ void IndirectBaselineReader::updateOriginalMS()
 		frequencyCount = FrequencyCount(),
 		polarizationCount = PolarizationCount();
 
+	// Initialize data buffer and files for reading
 	size_t bufferSize = _maxMemoryUse / (baselines.size() * frequencyCount * polarizationCount * (sizeof(float) * 2 + sizeof(bool)));
-
 	std::vector<std::vector<float *> > dataBuffers;
 	std::vector<std::vector<std::ifstream *> > dataFiles;
 	std::vector<std::vector<bool *> > flagBuffers;
@@ -487,12 +488,6 @@ void IndirectBaselineReader::updateOriginalMS()
 		}
 	}
 
-	size_t
-		prevTimeIndex = (size_t) (-1),
-		timeIndex = 0,
-		currentBufferBlockPtr = (size_t) (-1);
-	double prevTime = 0.0;
-
 	// read first chunk
 	AOLogger::Debug << 'R';
 	AOLogger::Debug.Flush();
@@ -516,12 +511,21 @@ void IndirectBaselineReader::updateOriginalMS()
 	AOLogger::Debug << 'W';
 	AOLogger::Debug.Flush();
 	
+	size_t
+		prevTimeIndex = (size_t) (-1),
+		timeIndex = 0,
+		currentBufferBlockPtr = (size_t) (-1);
+	double prevTime = 0.0;
+	
+	// This loop writes the chunks back to the MS and then reads the next chunks from the reordered file.
 	for(int rowIndex = 0;rowIndex < rowCount;++rowIndex)
 	{
+		// We only read entire time steps at a time, so as long as time does not change, don't check if buffer is empty
 		double time = timeColumn(rowIndex);
 		if(time != prevTime)
 		{
-			timeIndex = ObservationTimes().find(time)->second;
+			// This row has a different time value, so search it up in the index table and do sanity check
+			timeIndex = AllObservationTimes().find(time)->second;
 			if(timeIndex != prevTimeIndex+1)
 			{
 				std::stringstream s;
@@ -534,7 +538,7 @@ void IndirectBaselineReader::updateOriginalMS()
 
 			if(currentBufferBlockPtr >= bufferSize)
 			{
-				// buffer was written to MS, read next chunk
+				// entire buffer was written to MS, read next chunk from reordered files
 				AOLogger::Debug << 'R';
 				AOLogger::Debug.Flush();
 				for(std::vector<std::pair<size_t,size_t> >::const_iterator i=baselines.begin();i<baselines.end();++i)
@@ -560,7 +564,7 @@ void IndirectBaselineReader::updateOriginalMS()
 			}
 		}
 		
-		// Write the data
+		// Write the current row
 		if(UpdateData)
 		{
 			casa::Array<casa::Complex> data = (*dataColumn)(rowIndex);
@@ -627,7 +631,9 @@ void IndirectBaselineReader::updateOriginalMSData()
 
 void IndirectBaselineReader::updateOriginalMSFlags()
 {
+	Stopwatch watch(true);
 	AOLogger::Debug << "Flags were changed, need to update the original MS...\n";
 	updateOriginalMS<false, true>();
 	_reorderedFlagFilesHaveChanged = false;
+	AOLogger::Debug << "Storing flags toke: " << watch.ToString() << '\n';
 }

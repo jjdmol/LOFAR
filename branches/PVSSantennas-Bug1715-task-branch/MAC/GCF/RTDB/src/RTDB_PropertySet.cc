@@ -375,7 +375,7 @@ RTDBPropertySet::Property* RTDBPropertySet::_getProperty (const string& propName
 		return (PMiter->second);
 	}
 
-	ASSERTSTR(false, "Property " << propName << " not in the PropertySet"); //REO
+	ASSERTSTR(false, "Property " << propName << " not in the PropertySet " << itsScope); //REO
 
 	return (0);
 }

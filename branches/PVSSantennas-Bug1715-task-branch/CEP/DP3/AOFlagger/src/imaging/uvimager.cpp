@@ -320,13 +320,14 @@ void UVImager::Image(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr me
 
 void UVImager::ApplyWeightsToUV()
 {
+	double normFactor = _uvWeights->Sum() / ((num_t) _uvReal->Height() * _uvReal->Width());
 	for(size_t y=0;y<_uvReal->Height();++y) {
 		for(size_t x=0;x<_uvReal->Width();++x) {
 			num_t weight = _uvWeights->Value(x, y);
 			if(weight != 0.0)
 			{
-				_uvReal->SetValue(x, y, _uvReal->Value(x, y) / weight);
-				_uvImaginary->SetValue(x, y, _uvImaginary->Value(x, y) / weight);
+				_uvReal->SetValue(x, y, _uvReal->Value(x, y) * normFactor / weight);
+				_uvImaginary->SetValue(x, y, _uvImaginary->Value(x, y) * normFactor / weight);
 				_uvWeights->SetValue(x, y, 1.0);
 			} 
 		}
@@ -526,7 +527,7 @@ num_t UVImager::GetFringeCount(size_t timeIndexStart, size_t timeIndexEnd, unsig
 
 void UVImager::InverseImage(class MeasurementSet &prototype, unsigned /*band*/, const Image2D &/*uvReal*/, const Image2D &/*uvImaginary*/, unsigned antenna1Index, unsigned antenna2Index)
 {
-	_timeFreq = Image2D::CreateEmptyImage(prototype.MaxScanIndex()+1, prototype.FrequencyCount());
+	_timeFreq = Image2D::CreateZeroImage(prototype.MaxScanIndex()+1, prototype.FrequencyCount());
 	AntennaInfo antenna1, antenna2;
 	antenna1 = prototype.GetAntennaInfo(antenna1Index);
 	antenna2 = prototype.GetAntennaInfo(antenna2Index);

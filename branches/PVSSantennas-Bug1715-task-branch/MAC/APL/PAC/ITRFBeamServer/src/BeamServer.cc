@@ -83,7 +83,7 @@ BeamServer::BeamServer(const string& name, long	timestamp) :
 	itsHBAUpdateInterval	(0),
 	itsTestSingleShotTimestamp(timestamp)
 {
-//	LOG_INFO(Version::getInfo<ITRFBeamServerVersion>("ITRFBeamServer"));
+	LOG_INFO(Version::getInfo<ITRFBeamServerVersion>("ITRFBeamServer"));
 
 	// register protocols for debugging
 	registerProtocol(IBS_PROTOCOL, IBS_PROTOCOL_STRINGS);
@@ -791,13 +791,12 @@ GCFEvent::TResult BeamServer::beamfree_state(GCFEvent& event, GCFPortInterface& 
 		// it was stopped (CAL_STOP by SRG) then
 		// issue a warning but continue
 		if (ack.status != CAL_Protocol::CAL_SUCCESS) {
-			LOG_WARN("CAL_UNSUBSCRIBE failed");
+			LOG_WARN_STR("CAL_UNSUBSCRIBE failed, status = " << ack.status);
 		}
 
 		// send succesful ack
 		beamfreeack.status   = IBS_Protocol::IBS_NO_ERR;
 		beamfreeack.beamName = itsBeamTransaction.getBeam()->name();
-
 		itsBeamTransaction.getPort()->send(beamfreeack);
 
 		// destroy beam, updates itsBeamTransaction
@@ -826,7 +825,9 @@ GCFEvent::TResult BeamServer::beamfree_state(GCFEvent& event, GCFPortInterface& 
 			LOG_WARN("Lost connection, going back to 'enabled' state");
 			TRAN(BeamServer::enabled);
 		}
-		return (GCFEvent::NEXT_STATE);
+		queueTaskEvent(event, port);
+		return (GCFEvent::HANDLED);
+//		return (GCFEvent::NEXT_STATE);
 	}
 	break;
 
@@ -1380,7 +1381,7 @@ complex<double>	BeamServer::_getCalFactor(uint rcuMode, uint rcu, uint subbandNr
 		break;
 	}
 
-	LOG_DEBUG_STR("calFactor(" << rcuMode << "," << rcu << "," << subbandNr << ")=" << result);
+//	LOG_DEBUG_STR("calFactor(" << rcuMode << "," << rcu << "," << subbandNr << ")=" << result);
 	return (result);
 }
 
@@ -1488,11 +1489,11 @@ void BeamServer::compute_weights(Timestamp weightTime)
 			LOG_DEBUG_STR("No antennas defined in this field");
 			continue;
 		}
-		LOG_DEBUG_STR("ITRFRCUPos = " << rcuPosITRF);
+//		LOG_DEBUG_STR("ITRFRCUPos = " << rcuPosITRF);
 
 		// Get geographical location of subarray in ITRF
 		blitz::Array<double, 1> fieldCentreITRF = gAntField->Centre(fieldName);
-		LOG_DEBUG_STR("ITRF position antennaField: " << fieldCentreITRF);
+//		LOG_DEBUG_STR("ITRF position antennaField: " << fieldCentreITRF);
 
 		// convert ITRF position of all antennas to J2000 for timestamp t
 		blitz::Array<double,2>	rcuJ2000Pos; // [rcu, xyz]
@@ -1503,11 +1504,11 @@ void BeamServer::compute_weights(Timestamp weightTime)
 
 		// Lengths of the vector of the antennaPosition i.r.t. the fieldCentre,
 		blitz::Array<double,1>	rcuPosLengths = gAntField->RCULengths(fieldName);
-		LOG_DEBUG_STR("rcuPosLengths = " << rcuPosLengths);
+//		LOG_DEBUG_STR("rcuPosLengths = " << rcuPosLengths);
 
 		// denormalize length of vector
 		rcuJ2000Pos = rcuJ2000Pos(tensor::i, tensor::j) * rcuPosLengths(tensor::i);
-		LOG_DEBUG_STR("J2000RCUPos@fullLength=" << rcuJ2000Pos);
+//		LOG_DEBUG_STR("J2000RCUPos@fullLength=" << rcuJ2000Pos);
 
 		// for all beams using this field
 		map<string, DigitalBeam*>::iterator	beamIter = itsBeamPool.begin();

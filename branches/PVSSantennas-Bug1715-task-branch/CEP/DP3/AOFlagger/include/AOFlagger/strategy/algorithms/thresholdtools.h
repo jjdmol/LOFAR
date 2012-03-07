@@ -32,6 +32,7 @@
 class ThresholdTools {
 	public:
 		static void MeanAndStdDev(Image2DCPtr image, Mask2DCPtr mask, num_t &mean, num_t &stddev);
+		static numl_t Sum(Image2DCPtr image, Mask2DCPtr mask);
 		static numl_t RMS(Image2DCPtr image, Mask2DCPtr mask);
 		static num_t Mode(Image2DCPtr input, Mask2DCPtr mask);
 		static num_t WinsorizedMode(Image2DCPtr image, Mask2DCPtr mask);
@@ -48,30 +49,31 @@ class ThresholdTools {
 		static void CountMaskLengths(Mask2DCPtr mask, int *lengths, size_t lengthsSize);
 		
 		static void FilterConnectedSamples(Mask2DPtr mask, size_t minConnectedSampleArea, bool eightConnected=true);
-		static void FilterConnectedSample(Mask2DPtr mask, unsigned x, unsigned y, size_t minConnectedSampleArea, bool eightConnected=true);
+		static void FilterConnectedSample(Mask2DPtr mask, size_t x, size_t y, size_t minConnectedSampleArea, bool eightConnected=true);
 		static void UnrollPhase(Image2DPtr image);
+		static Image2DPtr ShrinkHorizontally(size_t factor, Image2DCPtr input, Mask2DCPtr mask);
 
-		static Image2DPtr FrequencyRectangularConvolution(Image2DCPtr source, unsigned convolutionSize)
+		static Image2DPtr FrequencyRectangularConvolution(Image2DCPtr source, size_t convolutionSize)
 		{
 			Image2DPtr image = Image2D::CreateCopy(source);
-			const unsigned upperWindowHalf = (convolutionSize+1) / 2;
+			const size_t upperWindowHalf = (convolutionSize+1) / 2;
 			for(size_t x=0;x<image->Width();++x)
 			{
 				num_t sum = 0.0;
-				for(unsigned y=0;y<upperWindowHalf;++y)
+				for(size_t y=0;y<upperWindowHalf;++y)
 					sum += image->Value(x, y);
-				for(unsigned y=upperWindowHalf;y<convolutionSize;++y)
+				for(size_t y=upperWindowHalf;y<convolutionSize;++y)
 				{
 					image->SetValue(x, y-upperWindowHalf, sum/(num_t) y);
 					sum += image->Value(x, y);
 				}
-				unsigned count = convolutionSize;
-				for(unsigned y=convolutionSize;y!=image->Height();++y)
+				size_t count = convolutionSize;
+				for(size_t y=convolutionSize;y!=image->Height();++y)
 				{
 					image->SetValue(x, y-upperWindowHalf, sum/(num_t) count);
 					sum += image->Value(x, y) - image->Value(x, y - convolutionSize);
 				}
-				for(unsigned y=image->Height();y!=image->Height() + upperWindowHalf;++y)
+				for(size_t y=image->Height();y!=image->Height() + upperWindowHalf;++y)
 				{
 					image->SetValue(x, y-upperWindowHalf, sum/(num_t) count);
 					sum -= image->Value(x, y - convolutionSize);
@@ -79,6 +81,19 @@ class ThresholdTools {
 				}
 			}
 			return image;
+		}
+		
+		static Mask2DPtr Threshold(Image2DCPtr image, num_t threshold)
+		{
+			Mask2DPtr mask = Mask2D::CreateUnsetMaskPtr(image->Width(), image->Height());
+			for(size_t y=0;y<image->Height();++y)
+			{
+				for(size_t x=0;x<image->Width();++x)
+				{
+					mask->SetValue(x, y, image->Value(x, y) >= threshold);
+				}
+			}
+			return mask;
 		}
 	private:
 		ThresholdTools() { }

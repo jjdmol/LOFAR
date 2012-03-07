@@ -74,6 +74,94 @@ void StatisticalFlagger::EnlargeFlags(Mask2DPtr mask, size_t timeSize, size_t fr
 	}
 }
 
+void StatisticalFlagger::DilateFlagsHorizontally(Mask2DPtr mask, size_t timeSize)
+{
+	if(timeSize != 0)
+	{
+		Mask2DPtr destination = Mask2D::CreateUnsetMaskPtr(mask->Width(), mask->Height());
+		if(timeSize > mask->Width()) timeSize = mask->Width();
+		const int intSize = (int) timeSize;
+		
+		for(size_t y=0;y<mask->Height();++y)
+		{
+			int dist = intSize + 1;
+			for(size_t x=0;x<timeSize;++x)
+			{
+				if(mask->Value(x, y))
+					dist = - intSize;
+				dist++;
+			}
+			for(size_t x=0;x<mask->Width() - timeSize;++x)
+			{
+				if(mask->Value(x + timeSize, y))
+					dist = -intSize;
+				if(dist <= intSize)
+				{
+					destination->SetValue(x, y, true);
+					dist++;
+				} else {
+					destination->SetValue(x, y, false);
+				}
+			}
+			for(size_t x=mask->Width() - timeSize;x<mask->Width();++x)
+			{
+				if(dist <= intSize)
+				{
+					destination->SetValue(x, y, true);
+					dist++;
+				} else {
+					destination->SetValue(x, y, false);
+				}
+			}
+		}
+		mask->Swap(destination);
+	}
+}
+
+void StatisticalFlagger::DilateFlagsVertically(Mask2DPtr mask, size_t frequencySize)
+{
+	if(frequencySize != 0)
+	{
+		Mask2DPtr destination = Mask2D::CreateUnsetMaskPtr(mask->Width(), mask->Height());
+		if(frequencySize > mask->Height()) frequencySize = mask->Height();
+		const int intSize = (int) frequencySize;
+		
+		for(size_t x=0;x<mask->Width();++x)
+		{
+			int dist = intSize + 1;
+			for(size_t y=0;y<frequencySize;++y)
+			{
+				if(mask->Value(x, y))
+					dist = - intSize;
+				dist++;
+			}
+			for(size_t y=0;y<mask->Height() - frequencySize;++y)
+			{
+				if(mask->Value(x, y + frequencySize))
+					dist = -intSize;
+				if(dist <= intSize)
+				{
+					destination->SetValue(x, y, true);
+					dist++;
+				} else {
+					destination->SetValue(x, y, false);
+				}
+			}
+			for(size_t y=mask->Height() - frequencySize;y<mask->Height();++y)
+			{
+				if(dist <= intSize)
+				{
+					destination->SetValue(x, y, true);
+					dist++;
+				} else {
+					destination->SetValue(x, y, false);
+				}
+			}
+		}
+		mask->Swap(destination);
+	}
+}
+
 void StatisticalFlagger::LineRemover(Mask2DPtr mask, size_t maxTimeContamination, size_t maxFreqContamination)
 {
 	for(size_t x=0;x<mask->Width();++x)
@@ -347,3 +435,129 @@ void StatisticalFlagger::DensityFrequencyFlagger(Mask2DPtr mask, num_t minimumGo
 	delete[] flagMarks;
 }
 
+void StatisticalFlagger::ScaleInvDilationFull(bool *flags, const unsigned n, num_t minimumGoodDataRatio)
+{
+	num_t width = 2.0;
+	bool reverse = false;
+	
+	int *sums = new int[n];
+	int *flagMarks = new int[n];
+	for(size_t x=0;x<n;++x)
+		flagMarks[x] = flags[x] ? 1 : 0;
+	
+	while(width < n)
+	{
+		// SumToLeft
+		if(reverse)
+		{
+			for(unsigned x=width;x<n;++x)
+			{
+				if(flags[x - ((unsigned) width)/2])
+					sums[x]++;
+			}
+		} else {
+			for(unsigned x=0;x<n - width;++x)
+			{
+				if(flags[x + ((unsigned) width)/2])
+					sums[x]++;
+			}
+		}
+		
+		const int maxFlagged = (int) floor((1.0-minimumGoodDataRatio)*(num_t)(width));
+		//ThresholdTime
+		int halfWidthL = (width-1) / 2;
+		int halfWidthR = (width-1) / 2;
+		for(unsigned x=halfWidthL;x<n - halfWidthR;++x)
+		{
+			if(sums[x] > maxFlagged)
+			{
+				const unsigned right = x+halfWidthR+1;
+				++flagMarks[x-halfWidthL];
+				if(right < n)
+					--flagMarks[right];
+			}
+		}
+	
+		++width;
+		reverse = !reverse;
+	}
+	
+	//ApplyMarksInTime
+	int startedCount = 0;
+	for(size_t x=0;x<n;++x)
+	{
+		startedCount += flagMarks[x];
+		if(startedCount > 0)
+			flags[x] = true;
+	}
+
+	delete[] sums;
+	delete[] flagMarks;
+}
+
+void StatisticalFlagger::ScaleInvDilationQuick(bool *flags, const unsigned n, num_t minimumGoodDataRatio)
+{
+	num_t width = 2.0;
+	unsigned iterations = 0, step = 1;
+	bool reverse = false;
+	
+	int *sums = new int[n];
+	int *flagMarks = new int[n];
+	for(size_t x=0;x<n;++x)
+		flagMarks[x] = flags[x] ? 1 : 0;
+	
+	while(width < n)
+	{
+		++iterations;
+		
+		// SumToLeft
+		if(reverse)
+		{
+			for(unsigned x=width;x<n;++x)
+			{
+				if(flags[x - ((unsigned) width)/2])
+					sums[x] += step;
+			}
+		} else {
+			for(unsigned x=0;x<n - width;++x)
+			{
+				if(flags[x + ((unsigned) width)/2])
+					sums[x] += step;
+			}
+		}
+		
+		const int maxFlagged = (int) floor((1.0-minimumGoodDataRatio)*(num_t)(width));
+		//ThresholdTime
+		int halfWidthL = (width-1) / 2;
+		int halfWidthR = (width-1) / 2;
+		for(unsigned x=halfWidthL;x<n - halfWidthR;++x)
+		{
+			if(sums[x] > maxFlagged)
+			{
+				const unsigned right = x+halfWidthR+1;
+				++flagMarks[x-halfWidthL];
+				if(right < n)
+					--flagMarks[right];
+			}
+		}
+	
+		num_t newWidth = width * 1.05;
+		if((unsigned) newWidth == width)
+			newWidth = width + 1.0;
+		step = (size_t) (newWidth - width);
+		width = newWidth;
+		reverse = !reverse;
+	}
+	
+	//ApplyMarksInTime
+	int startedCount = 0;
+	for(size_t x=0;x<n;++x)
+	{
+		startedCount += flagMarks[x];
+		if(startedCount > 0)
+			flags[x] = true;
+	}
+
+	delete[] sums;
+	delete[] flagMarks;
+}

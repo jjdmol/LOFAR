@@ -31,6 +31,7 @@
 
 #include <synthesis/MeasurementComponents/FTMachine.h>
 #include <casa/OS/File.h>
+#include <casa/OS/PrecTimer.h>
 #include <LofarFT/LofarVisResampler.h>
 #include <LofarFT/LofarConvolutionFunction.h>
 #include <LofarFT/LofarCFStore.h>
@@ -47,6 +48,7 @@
 #include <lattices/Lattices/LatticeCache.h>
 #include <lattices/Lattices/ArrayLattice.h>
 
+#include <Common/OpenMP.h>
 
 using namespace casa;
 
@@ -142,8 +144,26 @@ public:
 //	  String convType="SF", Float padding=1.0, Bool usezero=True, Bool useDoublePrec=False);
   LofarFTMachine(Long cachesize, Int tilesize,  CountedPtr<VisibilityResamplerBase>& visResampler, String convType, const MeasurementSet& ms,
                  Int nwPlanes,
-	 MPosition mLocation, Float padding=1.0, Bool usezero=True,
-                 Bool useDoublePrec=False, double wmax=500.);
+                 MPosition mLocation, Float padding, Bool usezero,
+                 Bool useDoublePrec, double wmax,
+                 Int verbose,
+                 Int maxsupport,
+                 Int oversample,
+                 const String& imageName,
+                 const Matrix<Bool>& gridMuellerMask,
+                 const Matrix<Bool>& degridMuellerMask,
+		 Double RefFreq,
+		 Bool Use_Linear_Interp_Gridder,
+		 Bool Use_EJones,
+		 int StepApplyElement,
+		 Double PBCut,
+		 Bool PredictFT,
+		 String PsfOnDisk,
+		 Bool UseMasksDegrid,
+		 Bool ReallyDoPSF,
+                 const casa::Record& parameters
+                );//,
+		 //Double FillFactor);
 //  LofarFTMachine(Long cachesize, Int tilesize,  CountedPtr<VisibilityResamplerBase>& visResampler,String convType,
 //	 MDirection mTangent, Float padding=1.0, Bool usezero=True,
 //	 Bool useDoublePrec=False);
@@ -166,6 +186,9 @@ public:
 
 
   ~LofarFTMachine();
+
+  // Show the relative timings of the various steps.
+  void showTimings (std::ostream&, double duration) const;
 
   // Initialize transform to Visibility plane using the image
   // as a template. The image is loaded and Fourier transformed.
@@ -195,6 +218,8 @@ public:
   void put(const VisBuffer& vb, Int row=-1, Bool dopsf=False,
            FTMachine::Type type=FTMachine::OBSERVED);
 
+  mutable Matrix<Float> itsAvgPB;
+  Bool its_Use_Linear_Interp_Gridder;
 
   // Make the entire image
   void makeImage(FTMachine::Type type,
@@ -207,7 +232,7 @@ public:
   ImageInterface<Complex>& getImage(Matrix<Float>&, Bool normalize=True);
 
   // Get the average primary beam.
-  const Matrix<Float>& getAveragePB() const;
+  virtual const Matrix<Float>& getAveragePB() const;
 
   // Get the spheroidal cut.
   const Matrix<Float>& getSpheroidCut() const
@@ -232,7 +257,7 @@ public:
     // size is not done.  If sumWt is not provided, normalization by
     // the sum of weights is also not done.
     //
-  
+
 
 
     virtual void makeSensitivityImage(Lattice<Complex>&,
@@ -279,18 +304,33 @@ public:
   virtual void setNoPadding(Bool nopad){noPadding_p=nopad;};
 
   virtual String name();
-  virtual void setMiscInfo(const Int qualifier){(void)qualifier;};
+  //virtual void setMiscInfo(const Int qualifier){(void)qualifier;};
+
+  //Cyr: The FTMachine has got to know the order of the Taylor term
+  virtual void setMiscInfo(const Int qualifier){thisterm_p=qualifier;};
   virtual void ComputeResiduals(VisBuffer&vb, Bool useCorrected);
 
-    void makeConjPolMap(const VisBuffer& vb, const Vector<Int> cfPolMap, Vector<Int>& conjPolMap);
-    //    Vector<Int> makeConjPolMap(const VisBuffer& vb);
-    void makeCFPolMap(const VisBuffer& vb, const Vector<Int>& cfstokes, Vector<Int>& polM);
 
+  void makeConjPolMap(const VisBuffer& vb, const Vector<Int> cfPolMap, Vector<Int>& conjPolMap);
+  //    Vector<Int> makeConjPolMap(const VisBuffer& vb);
+  void makeCFPolMap(const VisBuffer& vb, const Vector<Int>& cfstokes, Vector<Int>& polM);
+
+  String itsNamePsfOnDisk;
+  void setPsfOnDisk(String NamePsf){itsNamePsfOnDisk=NamePsf;}
+  virtual String GiveNamePsfOnDisk(){return itsNamePsfOnDisk;}
+  
 
 protected:
   // Padding in FFT
   Float padding_p;
-
+  Int thisterm_p;
+  Double itsRefFreq;
+  Bool itsPredictFT;
+  Int itsTotalStepsGrid;
+  Int itsTotalStepsDeGrid;
+  Bool itsMasksAllDone;
+  Bool its_UseMasksDegrid;
+  //Float its_FillFactor;
   // Get the appropriate data pointer
   Array<Complex>* getDataPointer(const IPosition&, Bool);
 
@@ -311,6 +351,65 @@ protected:
 
   // Gridder
   ConvolveGridder<Double, Complex>* gridder;
+
+  //Sum Grids
+  void SumGridsOMP(Array<Complex>& grid, const Array<Complex>& GridToAdd){
+    int y,ch,pol,dChan,dPol,dx;
+    int GridSize(grid.shape()[0]);
+    int NPol(grid.shape()[2]);
+    int NChan(grid.shape()[3]);
+    Complex* gridPtr;
+    const Complex* GridToAddPtr;
+    
+#pragma omp parallel for private(y,ch,pol,gridPtr,GridToAddPtr)
+    for(int x=0 ; x<grid.shape()[0] ; ++x){
+      for(ch=0 ; ch<NChan ; ++ch){
+	for(pol=0 ; pol<NPol ; ++pol){
+	  gridPtr = grid.data() + ch*NPol*GridSize*GridSize + pol*GridSize*GridSize+x*GridSize;
+	  GridToAddPtr = GridToAdd.data() + ch*NPol*GridSize*GridSize + pol*GridSize*GridSize+x*GridSize;
+	  for(y=0 ; y<grid.shape()[1] ; ++y){
+	    (*gridPtr++) += *GridToAddPtr++;
+	    //gridPtr++;
+	    //GridToAddPtr++;
+	  }
+	}
+      }
+    }
+    
+  }
+
+  void SumGridsOMP(Array<Complex>& grid, const vector< Array<Complex> >& GridToAdd0 ){
+
+    for(uInt vv=0; vv<GridToAdd0.size();vv++){
+      Array<Complex> GridToAdd(GridToAdd0[vv]);
+      int y,ch,pol,dChan,dPol,dx;
+      int GridSize(grid.shape()[0]);
+      int NPol(grid.shape()[2]);
+      int NChan(grid.shape()[3]);
+      Complex* gridPtr;
+      const Complex* GridToAddPtr;
+      
+#pragma omp parallel for private(y,ch,pol,gridPtr,GridToAddPtr)
+      for(int x=0 ; x<grid.shape()[0] ; ++x){
+	for(ch=0 ; ch<NChan ; ++ch){
+	  for(pol=0 ; pol<NPol ; ++pol){
+	    gridPtr = grid.data() + ch*NPol*GridSize*GridSize + pol*GridSize*GridSize+x*GridSize;
+	    GridToAddPtr = GridToAdd.data() + ch*NPol*GridSize*GridSize + pol*GridSize*GridSize+x*GridSize;
+	    for(y=0 ; y<grid.shape()[1] ; ++y){
+	      (*gridPtr++) += *GridToAddPtr++;
+	      //gridPtr++;
+	      //GridToAddPtr++;
+	    }
+	  }
+	}
+      }
+    }
+
+  }
+
+  
+  
+
 
   // Is this tiled?
   Bool isTiled;
@@ -334,15 +433,18 @@ protected:
 
   // Arrays for non-tiled gridding (one per thread).
   vector< Array<Complex> >  itsGriddedData;
+  Array<Complex> its_stacked_GriddedData;
+
   vector< Array<DComplex> > itsGriddedData2;
   vector< Matrix<Complex> > itsSumPB;
   vector< Matrix<Double> >  itsSumWeight;
   vector< double > itsSumCFWeight;
+
+
   ///Array<Complex>  griddedData;
   ///Array<DComplex> griddedData2;
   ///Matrix<Complex> itsSumPB;
   ///double itsSumWeight;
-  mutable Matrix<Float> itsAvgPB;
 
   Int priorCacheSize;
 
@@ -375,19 +477,45 @@ protected:
 
   LofarVisResampler visResamplers_p;
 
+  casa::Record       itsParameters;
   casa::MeasurementSet itsMS;
   Int itsNWPlanes;
   double itsWMax;
+  Double its_PBCut;
   int itsNThread;
-
+  Bool its_Use_EJones;
+  Bool its_Apply_Element;
+  Bool its_Already_Initialized;
+  Bool                its_reallyDoPSF;
   CountedPtr<LofarConvolutionFunction> itsConvFunc;
   Vector<Int> ConjCFMap_p, CFMap_p;
+  int itsVerbose;
+  int itsMaxSupport;
+  Int itsOversample;
+  Vector< Double >    itsListFreq;
+  String itsImgName;
+  Matrix<Bool> itsGridMuellerMask;
+  Matrix<Bool> itsDegridMuellerMask;
+  double itsGriddingTime;
+  double itsDegriddingTime;
+  double itsCFTime;
+  PrecTimer itsTotalTimer;
+  PrecTimer itsCyrilTimer;
+
+  double itsNextApplyTime;
+  int itsCounterTimes;
+  int itsStepApplyElement;
+  double itsTStartObs;
+  double itsDeltaTime;
+  Array<Complex> itsTmpStackedGriddedData;
+  Array<Complex> itsGridToDegrid;
+
 
 
       template <class T>
         void store(const Cube<T> &data, const string &name)
         {
-          
+
           CoordinateSystem csys;
           Matrix<Double> xform(2, 2);
           xform = 0.0;
@@ -406,7 +534,7 @@ protected:
           stokes(3) = Stokes::YY;
           csys.addCoordinate(StokesCoordinate(stokes));
           csys.addCoordinate(SpectralCoordinate(casa::MFrequency::TOPO, 60e6, 0.0, 0.0, 60e6));
-          
+
           PagedImage<T> im(TiledShape(IPosition(4, data.shape()(0), data.shape()(1), 4, 1)), csys, name);
           im.putSlice(data, IPosition(4, 0, 0, 0, 0));
         }

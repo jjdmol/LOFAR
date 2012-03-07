@@ -36,6 +36,7 @@ CREATE TYPE schedulerInfo AS (
 	predMaxTimeDif         VARCHAR(10),
 	predMinTimeDif         VARCHAR(10),
 	priority               FLOAT,
+	reason                 VARCHAR(40),
 	referenceFrame         INT4,
         reservation            INT4,
 	storageSelectionMode   INT4,
@@ -68,6 +69,7 @@ CREATE OR REPLACE FUNCTION getSchedulerInfo(INT4)
 	FETCH fieldList INTO vRecord.predMaxTimeDif;
 	FETCH fieldList INTO vRecord.predMinTimeDif;
 	FETCH fieldList INTO vRecord.priority;
+	FETCH fieldList INTO vRecord.reason;
         FETCH fieldList INTO vRecord.referenceFrame;
         FETCH fieldList INTO vRecord.reservation;
         FETCH fieldList INTO vRecord.storageSelectionMode;

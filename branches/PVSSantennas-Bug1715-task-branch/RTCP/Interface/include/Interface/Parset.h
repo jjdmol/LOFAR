@@ -37,7 +37,9 @@
 #include <Interface/BeamCoordinates.h>
 #include <Interface/Config.h>
 #include <Interface/OutputTypes.h>
+#include <Interface/SmartPtr.h>
 #include <Stream/Stream.h>
+#include <Interface/PrintVector.h>
 
 #include <algorithm>
 #include <numeric>
@@ -51,6 +53,25 @@
 namespace LOFAR {
 namespace RTCP {
 
+class Transpose2;
+class CN_Transpose2;
+
+enum StokesType { STOKES_I = 0, STOKES_IQUV, STOKES_XXYY, INVALID_STOKES = -1 };
+
+static StokesType stokesType( const std::string &name ) {
+  if (name == "I")
+    return STOKES_I;
+
+  if (name == "IQUV")
+    return STOKES_IQUV;
+
+  if (name == "XXYY")
+    return STOKES_XXYY;
+
+  return INVALID_STOKES;
+};
+    
+
 // The Parset class is a public struct that can be used as base-class
 // for holding Parset related information.
 // It can be instantiated with a parset containing Parset information.
@@ -58,8 +79,9 @@ class Parset: public ParameterSet
 {
   public:
     Parset();
-    Parset(const char *name);
+    Parset(const std::string &name);
     Parset(Stream *);
+
      
     std::string			name() const;
     void			check() const;
@@ -88,16 +110,15 @@ class Parset: public ParameterSet
     unsigned			IONintegrationSteps() const;
     unsigned			integrationSteps() const;
     unsigned			coherentStokesTimeIntegrationFactor() const;
+    unsigned			coherentStokesNrSubbandsPerFile() const; 
     unsigned			incoherentStokesTimeIntegrationFactor() const;
     unsigned			coherentStokesChannelsPerSubband() const;
     unsigned			incoherentStokesChannelsPerSubband() const;
-    std::vector<double>		incoherentStokesDedispersionMeasures() const;
+    unsigned			incoherentStokesNrSubbandsPerFile() const; 
     double			CNintegrationTime() const;
     double			IONintegrationTime() const;
     unsigned			nrSubbandSamples() const;
     unsigned			nrSubbandsPerPset() const; 
-    unsigned			nrSubbandsPerPart() const; 
-    unsigned			nrPartsPerStokes() const; 
     unsigned			nrPhase3StreamsPerPset() const; 
     unsigned			nrHistorySamples() const;
     unsigned			nrSamplesToCNProc() const;
@@ -141,10 +162,17 @@ class Parset: public ParameterSet
     bool			outputFilteredData() const;
     bool			outputCorrelatedData() const;
     bool			outputBeamFormedData() const;
-    bool			outputCoherentStokes() const;
-    bool			outputIncoherentStokes() const;
     bool			outputTrigger() const;
     bool			outputThisType(OutputType) const;
+
+    bool                        onlineFlagging() const;
+    bool                        onlinePreCorrelationFlagging() const;
+    bool                        onlinePostCorrelationFlagging() const;
+    bool                        onlinePostCorrelationFlaggingDetectBrokenStations() const;
+    std::string                 onlinePreCorrelationFlaggingType(std::string defaultVal) const;
+    std::string                 onlinePreCorrelationFlaggingStatisticsType(std::string defaultVal) const;
+    std::string                 onlinePostCorrelationFlaggingType(std::string defaultVal) const;
+    std::string                 onlinePostCorrelationFlaggingStatisticsType(std::string defaultVal) const;
 
     unsigned			nrStreams(OutputType, bool force=false) const;
     unsigned			maxNrStreamsPerPset(OutputType, bool force=false) const;
@@ -156,8 +184,8 @@ class Parset: public ParameterSet
     bool			fakeInputData() const;
     bool			checkFakeInputData() const;
 
-    unsigned			nrCoherentStokes() const;
-    unsigned			nrIncoherentStokes() const;
+    std::string			coherentStokes() const;
+    std::string			incoherentStokes() const;
     std::string			bandFilter() const;
     std::string			antennaSet() const;
 
@@ -165,6 +193,7 @@ class Parset: public ParameterSet
     std::vector<unsigned>	nrPencilBeams() const;
     unsigned			totalNrPencilBeams() const;
     unsigned			maxNrPencilBeams() const;
+    bool                        isCoherent(unsigned beam, unsigned pencil) const;
     BeamCoordinates		pencilBeams(unsigned beam) const;
     double			dispersionMeasure(unsigned beam=0,unsigned pencil=0) const;
     std::vector<std::string>	pencilBeamStationList(unsigned beam=0,unsigned pencil=0) const;
@@ -212,8 +241,14 @@ class Parset: public ParameterSet
     std::string                 AntennaFieldsDir() const;
     std::string                 HBADeltasDir() const;
 
+    const Transpose2            &transposeLogic() const;
+    const CN_Transpose2         &CN_transposeLogic( unsigned pset, unsigned core ) const;
+
 private:
     const std::string		itsName;
+
+    mutable SmartPtr<const Transpose2>     itsTransposeLogic;
+    mutable SmartPtr<const CN_Transpose2>  itsCN_TransposeLogic;
 
     void			checkVectorLength(const std::string &key, unsigned expectedSize) const;
     void			checkInputConsistency() const;
@@ -230,10 +265,301 @@ private:
     bool			disjointCores(const Parset &, std::stringstream &error) const;
 };
 
+//
+// All of the logic for the second transpose.
+//
+
+struct StreamInfo {
+  unsigned stream;
+
+  unsigned sap;
+  unsigned beam;
+
+  bool coherent;
+  unsigned nrChannels;     // channels per subband
+  unsigned timeIntFactor;  // time integration factor
+  unsigned nrStokes;       // total # stokes for this beam
+  StokesType stokesType;
+  unsigned nrSamples;      // # samples/channel, after temporal integration
+
+  unsigned stokes;
+  unsigned part;
+
+  std::vector<unsigned> subbands;
+
+  void log() const {
+    LOG_DEBUG_STR( "Stream " << stream << " is sap " << sap << " beam " << beam << " stokes " << stokes << " part " << part << " consisting of subbands " << subbands );
+  }
+};
+
+class Transpose2 {
+public:
+  Transpose2( const Parset &parset )
+  :
+    phaseThreeDisjunct( parset.phaseThreeDisjunct() ),
+
+    nrChannels( parset.nrChannelsPerSubband() ),
+    nrCoherentChannels( parset.coherentStokesChannelsPerSubband() ),
+    nrIncoherentChannels( parset.incoherentStokesChannelsPerSubband() ),
+    nrSamples( parset.CNintegrationSteps() ),
+    coherentTimeIntFactor( parset.coherentStokesTimeIntegrationFactor() ),
+    incoherentTimeIntFactor( parset.incoherentStokesTimeIntegrationFactor() ),
+
+    nrBeams( parset.totalNrPencilBeams() ),
+    coherentNrSubbandsPerFile( parset.coherentStokesNrSubbandsPerFile() ),
+    incoherentNrSubbandsPerFile( parset.incoherentStokesNrSubbandsPerFile() ),
+
+    nrPhaseTwoPsets( parset.phaseTwoPsets().size() ),
+    nrPhaseTwoCores( parset.phaseOneTwoCores().size() ),
+    nrPhaseThreePsets( parset.phaseThreePsets().size() ),
+    nrPhaseThreeCores( parset.phaseThreeCores().size() ),
+
+    nrSubbandsPerPset( parset.nrSubbandsPerPset() ),
+    streamInfo( generateStreamInfo(parset) ),
+    nrStreamsPerPset( divideRoundUp( nrStreams(), parset.phaseThreePsets().size() ) )
+  {
+  }
+
+  unsigned nrStreams() const { return streamInfo.size(); }
+
+  // compose and decompose a stream number
+  unsigned stream( unsigned sap, unsigned beam, unsigned stokes, unsigned part, unsigned startAt = 0) const {
+    for (unsigned i = startAt; i < streamInfo.size(); i++) {
+      const struct StreamInfo &info = streamInfo[i];
+
+      if (sap == info.sap && beam == info.beam && stokes == info.stokes && part == info.part)
+        return i;
+    }
+
+    // shouldn't reach this point
+    ASSERTSTR(false, "Requested non-existing sap " << sap << " beam " << beam << " stokes " << stokes << " part " << part);
+
+    return 0;
+  }
+
+  void decompose( unsigned stream, unsigned &sap, unsigned &beam, unsigned &stokes, unsigned &part ) const {
+    const struct StreamInfo &info = streamInfo[stream];
+
+    sap    = info.sap;
+    beam   = info.beam;
+    stokes = info.stokes;
+    part   = info.part;
+  }
+
+  std::vector<unsigned> subbands( unsigned stream ) const { ASSERT(stream < streamInfo.size()); return streamInfo[stream].subbands; }
+  unsigned nrSubbands( unsigned stream ) const { return stream >= streamInfo.size() ? 0 : subbands(stream).size(); }
+  unsigned maxNrSubbands() const { return streamInfo.size() == 0 ? 0 : std::max_element( streamInfo.begin(), streamInfo.end(), &streamInfoSubbandsComp )->subbands.size(); }
+  unsigned maxNrChannels() const { return streamInfo.size() == 0 ? 0 : std::max_element( streamInfo.begin(), streamInfo.end(), &streamInfoChannelsComp )->nrChannels; }
+  unsigned maxNrSamples() const { return streamInfo.size() == 0 ? 0 : std::max_element( streamInfo.begin(), streamInfo.end(), &streamInfoSamplesComp )->nrSamples; }
+
+  size_t subbandSize( unsigned stream ) const { const StreamInfo &info = streamInfo[stream]; return (size_t)info.nrChannels * (info.nrSamples|2) * sizeof(float); }
+
+  //unsigned maxNrSubbandsPerStream() const { return std::min(nrSubbands, nrSubbandsPerFile); }
+
+  // the pset/core which processes a certain block of a certain subband
+  // note: AsyncTransposeBeams applied the mapping of phaseThreePsets
+  unsigned sourceCore( unsigned subband, unsigned block ) const { return (block * nrSubbandsPerPset + subband % nrSubbandsPerPset) % nrPhaseTwoCores; }
+  unsigned sourcePset( unsigned subband, unsigned block ) const { (void)block; return subband / nrSubbandsPerPset; }
+
+  // the pset/core which processes a certain block of a certain stream
+  // note: AsyncTransposeBeams applied the mapping of phaseTwoPsets
+  unsigned destCore( unsigned stream, unsigned block ) const { return (block * phaseThreeGroupSize() + stream % nrStreamsPerPset) % nrPhaseThreeCores; }
+  unsigned destPset( unsigned stream, unsigned block ) const { (void)block; return stream / nrStreamsPerPset; }
+
+  // if phase2 == phase3, each block in phase3 is processed by more cores (more cores idle to align phases 2 and 3)
+  unsigned phaseThreeGroupSize() const {
+    return phaseThreeDisjunct ? nrStreamsPerPset : nrSubbandsPerPset;
+  }
+
+  const bool phaseThreeDisjunct;
+
+  const unsigned nrChannels;
+  const unsigned nrCoherentChannels;
+  const unsigned nrIncoherentChannels;
+  const unsigned nrSamples;
+  const unsigned coherentTimeIntFactor;
+  const unsigned incoherentTimeIntFactor;
+
+  const unsigned nrBeams;
+  const unsigned coherentNrSubbandsPerFile;
+  const unsigned incoherentNrSubbandsPerFile;
+
+  const unsigned nrPhaseTwoPsets;
+  const unsigned nrPhaseTwoCores;
+  const unsigned nrPhaseThreePsets;
+  const unsigned nrPhaseThreeCores;
+
+  const unsigned nrSubbandsPerPset;
+
+  const std::vector<struct StreamInfo> streamInfo;
+
+  const unsigned nrStreamsPerPset;
+private:
+
+  static bool streamInfoSubbandsComp( const struct StreamInfo &a, const struct StreamInfo &b ) {
+    return a.subbands.size() < b.subbands.size();
+  }
+
+  static bool streamInfoChannelsComp( const struct StreamInfo &a, const struct StreamInfo &b ) {
+    return a.nrChannels < b.nrChannels;
+  }
+
+  static bool streamInfoSamplesComp( const struct StreamInfo &a, const struct StreamInfo &b ) {
+    return a.nrSamples < b.nrSamples;
+  }
+
+  static unsigned divideRoundUp( unsigned a, unsigned b ) {
+    return b == 0 ? 0 : (a + b - 1) / b;
+  }
+
+  std::vector<struct StreamInfo> generateStreamInfo( const Parset &parset ) const {
+    // get all info from parset, since we will be called while constructing our members
+
+    // ParameterSets are SLOW, so cache any info we need repeatedly
+
+    std::vector<struct StreamInfo> infoset;
+    const std::vector<unsigned> sapMapping = parset.subbandToSAPmapping();
+    const unsigned nrSAPs             = parset.nrBeams();
+    const unsigned nrSubbands         = parset.nrSubbands();
+    const unsigned nrCoherentSubbandsPerFile    = parset.coherentStokesNrSubbandsPerFile();
+    const unsigned nrIncoherentSubbandsPerFile  = parset.incoherentStokesNrSubbandsPerFile();
+
+    const unsigned nrCoherentStokes          = parset.coherentStokes().size();
+    const StokesType coherentType            = stokesType( parset.coherentStokes() );
+    const unsigned nrCoherentChannels        = parset.coherentStokesChannelsPerSubband();
+    const unsigned nrCoherentTimeIntFactor   = parset.coherentStokesTimeIntegrationFactor();
+
+    const unsigned nrIncoherentStokes        = parset.incoherentStokes().size();
+    const StokesType incoherentType          = stokesType( parset.incoherentStokes() );
+    const unsigned nrIncoherentChannels      = parset.incoherentStokesChannelsPerSubband();
+    const unsigned nrIncoherentTimeIntFactor = parset.incoherentStokesTimeIntegrationFactor();
+
+    const unsigned nrSamples                 = parset.CNintegrationSteps();
+
+    struct StreamInfo info;
+    info.stream = 0;
+
+    for (unsigned sap = 0; sap < nrSAPs; sap++) {
+      const unsigned nrBeams = parset.nrPencilBeams(sap);
+
+      info.sap = sap;
+
+      std::vector<unsigned> sapSubbands;
+
+      for (unsigned sb = 0; sb < nrSubbands; sb++)
+        if (sapMapping[sb] == sap)
+          sapSubbands.push_back(sb);
+
+      for (unsigned beam = 0; beam < nrBeams; beam++) {
+        info.beam = beam;
+
+        const bool coherent = parset.isCoherent(sap, beam);
+        const unsigned nrStokes = coherent ? nrCoherentStokes : nrIncoherentStokes;
+
+        info.coherent       = coherent;
+        info.nrChannels     = coherent ? nrCoherentChannels : nrIncoherentChannels;
+        info.timeIntFactor  = coherent ? nrCoherentTimeIntFactor : nrIncoherentTimeIntFactor;
+        info.nrStokes       = nrStokes;
+        info.stokesType     = coherent ? coherentType : incoherentType;
+        info.nrSamples      = nrSamples / info.timeIntFactor;
+
+        const unsigned nrSubbandsPerFile = coherent ? nrCoherentSubbandsPerFile : nrIncoherentSubbandsPerFile;
+
+        for (unsigned stokes = 0; stokes < nrStokes; stokes++) {
+          info.stokes = stokes;
+          info.part   = 0;
+
+          // split into parts of at most nrSubbandsPerFile
+          for (unsigned sb = 0; sb < sapSubbands.size(); sb += nrSubbandsPerFile ) {
+            for (unsigned i = 0; sb + i < sapSubbands.size() && i < nrSubbandsPerFile; i++)
+              info.subbands.push_back(sapSubbands[sb + i]);
+
+            infoset.push_back(info);
+
+            info.subbands.clear();
+            info.part++;
+            info.stream++;
+          }
+        }  
+      }
+    }
+
+    return infoset;
+  }
+};
+
+class CN_Transpose2: public Transpose2 {
+public:
+  CN_Transpose2( const Parset &parset, unsigned myPset, unsigned myCore )
+  :
+    Transpose2( parset ),
+    myPset( myPset ),
+    myCore( myCore ),
+
+    phaseThreePsetIndex( parset.phaseThreePsetIndex(myPset) ),
+    phaseThreeCoreIndex( parset.phaseThreeCoreIndex(myCore) )
+  {
+  }
+
+  // the stream to process on (myPset, myCore)
+  int myStream( unsigned block ) const { 
+    unsigned first = phaseThreePsetIndex * nrStreamsPerPset;
+    unsigned blockShift = (phaseThreeGroupSize() * block) % nrPhaseThreeCores;
+    unsigned relative = (nrPhaseThreeCores + phaseThreeCoreIndex - blockShift) % nrPhaseThreeCores;
+
+    // such a stream does not exist
+    if (first + relative >= nrStreams())
+      return -1;
+
+    // we could handle this stream, but it's handled by a subsequent pset
+    if (relative >= nrStreamsPerPset)
+      return -1;
+
+    return first + relative;
+  }
+
+  // the part number of a subband with an absolute index
+  unsigned myPart( unsigned subband ) const {
+    for (unsigned i = 0; i < streamInfo.size(); i++) {
+      const struct StreamInfo &info = streamInfo[i];
+
+      if ( info.subbands[0] <= subband
+        && info.subbands[info.subbands.size()-1] >= subband )
+        return info.part;
+    }
+
+    // shouldn't reach this point
+    ASSERTSTR(false, "Requested part for unused subband " << subband);
+
+    return 0;
+  }
+
+  const unsigned myPset;
+  const unsigned myCore;
+
+  const int phaseThreePsetIndex;
+  const int phaseThreeCoreIndex;
+};
 
 inline std::string Parset::name() const
 {
   return itsName;
+}
+
+inline const Transpose2 &Parset::transposeLogic() const
+{
+  if (!itsTransposeLogic)
+    itsTransposeLogic = new Transpose2(*this);
+
+  return *itsTransposeLogic;  
+}
+
+inline const CN_Transpose2 &Parset::CN_transposeLogic( unsigned pset, unsigned core ) const
+{
+  if (!itsCN_TransposeLogic)
+    itsCN_TransposeLogic = new CN_Transpose2(*this, pset, core);
+
+  return *itsCN_TransposeLogic;  
 }
 
 
@@ -386,17 +712,32 @@ inline unsigned Parset::incoherentStokesTimeIntegrationFactor() const
 
 inline unsigned Parset::coherentStokesChannelsPerSubband() const
 {
-  return getUint32("OLAP.CNProc_CoherentStokes.channelsPerSubband");
+ unsigned numch = getUint32("OLAP.CNProc_CoherentStokes.channelsPerSubband");
+
+ if (numch == 0)
+   return nrChannelsPerSubband();
+ else
+   return numch;
 }
 
 inline unsigned Parset::incoherentStokesChannelsPerSubband() const
 {
-  return getUint32("OLAP.CNProc_IncoherentStokes.channelsPerSubband");
+ unsigned numch = getUint32("OLAP.CNProc_IncoherentStokes.channelsPerSubband");
+
+ if (numch == 0)
+   return nrChannelsPerSubband();
+ else
+   return numch;
 }
 
-inline std::vector<double> Parset::incoherentStokesDedispersionMeasures() const
+inline std::string Parset::coherentStokes() const
 {
-  return getDoubleVector("OLAP.CNProc_IncoherentStokes.dedispersionMeasures");
+  return getString("OLAP.CNProc_CoherentStokes.which");
+}
+
+inline std::string Parset::incoherentStokes() const
+{
+  return getString("OLAP.CNProc_IncoherentStokes.which");
 }
 
 inline bool Parset::outputFilteredData() const
@@ -414,16 +755,6 @@ inline bool Parset::outputBeamFormedData() const
   return getBool("Observation.DataProducts.Output_Beamformed.enabled", false);
 }
 
-inline bool Parset::outputCoherentStokes() const
-{
-  return getBool("Observation.DataProducts.Output_CoherentStokes.enabled", false);
-}
-
-inline bool Parset::outputIncoherentStokes() const
-{
-  return getBool("Observation.DataProducts.Output_IncoherentStokes.enabled", false);
-}
-
 inline bool Parset::outputTrigger() const
 {
   return getBool("Observation.DataProducts.Output_Trigger.enabled", false);
@@ -432,6 +763,46 @@ inline bool Parset::outputTrigger() const
 inline bool Parset::outputThisType(OutputType outputType) const
 {
   return getBool(keyPrefix(outputType) + ".enabled", false);
+}
+
+inline bool Parset::onlineFlagging() const
+{
+  return getBool("OLAP.CNProc.onlineFlagging", false);
+}
+
+inline bool Parset::onlinePreCorrelationFlagging() const
+{
+  return getBool("OLAP.CNProc.onlinePreCorrelationFlagging", false);
+}
+
+inline bool Parset::onlinePostCorrelationFlagging() const
+{
+  return getBool("OLAP.CNProc.onlinePostCorrelationFlagging", false);
+}
+
+inline string Parset::onlinePreCorrelationFlaggingType(std::string defaultVal) const
+{
+  return getString("OLAP.CNProc.onlinePreCorrelationFlaggingType", defaultVal);
+}
+
+inline string Parset::onlinePreCorrelationFlaggingStatisticsType(std::string defaultVal) const
+{
+  return getString("OLAP.CNProc.onlinePreCorrelationFlaggingStatisticsType", defaultVal);
+}
+
+inline string Parset::onlinePostCorrelationFlaggingType(std::string defaultVal) const
+{
+  return getString("OLAP.CNProc.onlinePostCorrelationFlaggingType", defaultVal);
+}
+
+inline string Parset::onlinePostCorrelationFlaggingStatisticsType(std::string defaultVal) const
+{
+  return getString("OLAP.CNProc.onlinePostCorrelationFlaggingStatisticsType", defaultVal);
+}
+
+inline bool Parset::onlinePostCorrelationFlaggingDetectBrokenStations() const
+{
+  return getBool("OLAP.CNProc.onlinePostCorrelationFlaggingDetectBrokenStations", false);
 }
 
 inline bool Parset::fakeInputData() const
@@ -487,19 +858,19 @@ inline unsigned Parset::nrSubbandsPerPset() const
   return (psets == 0 ? 0 : subbands + psets - 1) / psets;
 }
 
-inline unsigned Parset::nrSubbandsPerPart() const
+inline unsigned Parset::coherentStokesNrSubbandsPerFile() const
 {
-  return std::min( getUint32("OLAP.Storage.subbandsPerPart"), nrSubbands() );
+  return std::min( getUint32("OLAP.CNProc_CoherentStokes.subbandsPerFile"), nrSubbands() );
 }
 
-inline unsigned Parset::nrPartsPerStokes() const
+inline unsigned Parset::incoherentStokesNrSubbandsPerFile() const
 {
-  return getUint32("OLAP.Storage.partsPerStokes");
+  return std::min( getUint32("OLAP.CNProc_IncoherentStokes.subbandsPerFile"), nrSubbands() );
 }
 
 inline unsigned Parset::nrPhase3StreamsPerPset() const
 {
-  return maxNrStreamsPerPset(BEAM_FORMED_DATA) + maxNrStreamsPerPset(COHERENT_STOKES) + maxNrStreamsPerPset(TRIGGER_DATA);
+  return maxNrStreamsPerPset(BEAM_FORMED_DATA) + maxNrStreamsPerPset(TRIGGER_DATA);
 }
 
 inline unsigned Parset::nrPPFTaps() const

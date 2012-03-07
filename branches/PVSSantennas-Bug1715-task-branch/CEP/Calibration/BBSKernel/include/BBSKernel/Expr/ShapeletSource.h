@@ -51,8 +51,6 @@ public:
         const Expr<Vector<3> >::ConstPtr &uvwRHS) const;
 
 private:
-    Expr<Vector<4> >::Ptr   itsStokesVector;
-
     double                  itsShapeletScaleI;
     double                  itsShapeletScaleQ;
     double                  itsShapeletScaleU;

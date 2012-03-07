@@ -1,10 +1,19 @@
 #!/usr/bin/python
 
+## "isStatus.py"
+## Print EC status of IS (international station)
+## can only be used on IS LCU
+##
+## usage: ./isStatus.py
+##
+## Author: Pieter Donker (ASTRON)
+## Last change: november 2011 
+
 from isEcLib import *
 import sys
 import time
 
-VERSION = '1.0.0' # version of this script    
+VERSION = '1.1.0' # version of this script    
 
 # used variables
 version = 0   # EC version

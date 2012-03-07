@@ -45,15 +45,22 @@ namespace RTCP {
 LogThread::LogThread(unsigned nrRspBoards, std::string stationName)
 :
   itsCounters(nrRspBoards),
-  itsStationName(stationName),
-  itsThread(this, &LogThread::mainLoop, "[LogThread] ", 65536)
+  itsStationName(stationName)
 {
+}
+
+
+void LogThread::start()
+{
+  itsThread = new Thread(this, &LogThread::mainLoop, "[LogThread] ", 65536);
 }
 
 
 LogThread::~LogThread()
 {
-  itsThread.cancel();
+  if (itsThread)
+    itsThread->cancel();
+
   LOG_DEBUG_STR("[LogThread] finished");
 }
 
@@ -173,7 +180,7 @@ void LogThread::mainLoop()
 #endif
 
     LOG_INFO_STR(logStr.str());
-    sleep(1);
+    sleep(15);
   }
 
   //LOG_DEBUG("LogThread stopped");

@@ -51,6 +51,10 @@ class PlotWidget : public Gtk::DrawingArea {
 		{
 			_plot = 0;
 		}
+		void Update()
+		{
+			redraw();
+		}
 	private:
 		Plotable *_plot;
 

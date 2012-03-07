@@ -41,7 +41,7 @@ namespace rfiStrategy {
 		public:
 			enum Operation { SingleSincOperation, SincOperation, ProjectedSincOperation, ProjectedFTOperation, ExtrapolatedSincOperation, IterativeExtrapolatedSincOperation };
 			
-			TimeConvolutionAction() : Action(), _operation(IterativeExtrapolatedSincOperation), _sincSize(32.0), _directionRad(M_PI*(-86.7/180.0)), _etaParameter(0.2), _autoAngle(true), _isSincScaleInSamples(false), _alwaysRemove(false), _iterations(1), _channelAveragingSize(4)
+			TimeConvolutionAction() : Action(), _operation(IterativeExtrapolatedSincOperation), _sincSize(32.0), _directionRad(M_PI*(-86.7/180.0)), _etaParameter(0.2), _autoAngle(true), _isSincScaleInSamples(false), _alwaysRemove(false), _useHammingWindow(false), _iterations(1), _channelAveragingSize(4)
 			{
 			}
 			virtual std::string Description()
@@ -147,6 +147,9 @@ namespace rfiStrategy {
 			
 			bool AlwaysRemove() const { return _alwaysRemove; }
 			void SetAlwaysRemove(bool alwaysRemove) { _alwaysRemove = alwaysRemove; }
+			
+			bool UseHammingWindow() const { return _useHammingWindow; }
+			void SetUseHammingWindow(bool useHammingWindow) { _useHammingWindow = useHammingWindow; }
 private:
 			struct IterationData
 			{
@@ -180,7 +183,7 @@ private:
 				TimeFrequencyData data = artifacts.ContaminatedData();
 				Image2DCPtr image = data.GetSingleImage();
 				num_t *row = new num_t[image->Width()];
-				Image2DPtr newImage = Image2D::CreateEmptyImagePtr(image->Width(), image->Height());
+				Image2DPtr newImage = Image2D::CreateUnsetImagePtr(image->Width(), image->Height());
 				unsigned width = image->Width();
 
 				const BandInfo band = artifacts.MetaData()->Band();
@@ -195,7 +198,10 @@ private:
 					{
 						for(unsigned x=0;x<width;++x)
 							row[x] = image->Value(x, y);
-						Convolutions::OneDimensionalSincConvolution(row, width, 1.0 / sincScale);
+						if(_useHammingWindow)
+							Convolutions::OneDimensionalSincConvolutionHammingWindow(row, width, 1.0 / sincScale);
+						else
+							Convolutions::OneDimensionalSincConvolution(row, width, 1.0 / sincScale);
 						for(unsigned x=0;x<width;++x)
 							newImage->SetValue(x, y, row[x]);
 					} else {
@@ -213,7 +219,7 @@ private:
 				TimeFrequencyData data = artifacts.ContaminatedData();
 				Image2DCPtr image = data.GetSingleImage();
 				num_t *row = new num_t[image->Width()*3];
-				Image2DPtr newImage = Image2D::CreateEmptyImagePtr(image->Width(), image->Height());
+				Image2DPtr newImage = Image2D::CreateUnsetImagePtr(image->Width(), image->Height());
 				unsigned width = image->Width();
 				num_t sign;
 				if(data.IsImaginary())
@@ -235,7 +241,10 @@ private:
 							row[x+width] = image->Value(x, y);
 							row[x+2*width] = sign * image->Value(x, y);
 						}
-						Convolutions::OneDimensionalSincConvolution(row, width*3, 1.0 / sincScale);
+						if(_useHammingWindow)
+							Convolutions::OneDimensionalSincConvolutionHammingWindow(row, width*3, 1.0 / sincScale);
+						else
+							Convolutions::OneDimensionalSincConvolution(row, width*3, 1.0 / sincScale);
 						for(unsigned x=0;x<width;++x)
 							newImage->SetValue(x, y, row[x+width]);
 					} else {
@@ -252,7 +261,7 @@ private:
 			{
 				TimeFrequencyData data = artifacts.ContaminatedData();
 				Image2DCPtr image = data.GetSingleImage();
-				Image2DPtr newImage = Image2D::CreateEmptyImagePtr(image->Width(), image->Height());
+				Image2DPtr newImage = Image2D::CreateUnsetImagePtr(image->Width(), image->Height());
 				TimeFrequencyMetaDataCPtr metaData = artifacts.MetaData();
 
 				bool isImaginary = data.IsImaginary();
@@ -830,7 +839,7 @@ private:
 
 			enum Operation _operation;
 			num_t _sincSize, _directionRad, _etaParameter;
-			bool _autoAngle, _isSincScaleInSamples, _alwaysRemove;
+			bool _autoAngle, _isSincScaleInSamples, _alwaysRemove, _useHammingWindow;
 			unsigned _iterations, _channelAveragingSize;
 	};
 

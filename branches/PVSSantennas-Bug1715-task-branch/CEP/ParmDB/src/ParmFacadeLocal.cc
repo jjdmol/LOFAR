@@ -127,11 +127,11 @@ namespace LOFAR {
       }
       int nfreq, ntime;
       if (asStartEnd) {
-        nfreq = int((freqv2-freqv1) / freqStep + 0.5);
-        ntime = int((timev2-timev1) / timeStep + 0.5);
+        nfreq = std::max (1, int((freqv2-freqv1) / freqStep + 0.5));
+        ntime = std::max (1, int((timev2-timev1) / timeStep + 0.5));
       } else {
-        nfreq = int(freqv2 / freqStep + 0.5);
-        ntime = int(timev2 / timeStep + 0.5);
+        nfreq = std::max (1, int(freqv2 / freqStep + 0.5));
+        ntime = std::max (1, int(timev2 / timeStep + 0.5));
       }
       // Create the predict grid.
       Axis::ShPtr axisx (new RegularAxis(freqv1, freqv2, nfreq, asStartEnd));

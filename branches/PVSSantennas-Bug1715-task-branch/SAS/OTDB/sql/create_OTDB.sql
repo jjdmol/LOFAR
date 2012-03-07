@@ -31,6 +31,7 @@
 \i getPICparamDef_func.sql
 \i getPICitemList_func.sql
 \i searchPICinPeriod_func.sql
+\i getBrokenHardware_func.sql
 
 -- Events and Actions
 \i create_event_action.sql

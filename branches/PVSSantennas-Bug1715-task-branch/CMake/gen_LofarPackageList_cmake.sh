@@ -65,7 +65,7 @@ IFS='
 
 # Add a trailing slash to the directory path $lofar_root to ensure that, if
 # it is a symbolic link, it is translated to the directory it links to.
-for f in $(find $lofar_root/ -name CMakeLists.txt)
+for f in $(find $lofar_root/ -name CMakeLists.txt | sort)
 do
   # get directory name relative to $lofar_root
   bdir=$(dirname $f | sed "s|$lofar_root/\?||")

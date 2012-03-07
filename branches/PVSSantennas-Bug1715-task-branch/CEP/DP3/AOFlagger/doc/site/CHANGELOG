@@ -1,3 +1,24 @@
+Version 1.5.0
+2011-10-20	André Offringa <of...nga@astro.rug.nl>
+  * The main points of this release: Better performance, improved visualization and raw file support.
+  * The computational performance has been significantly improved (2x faster) using various optimizations, including rewriting algorithms to use the SSE instruction set.
+  * New feature: The time-frequency plots are customizable in various ways (View->Plot properties), and have been polished somewhat.
+  * New feature: Export visualizations as vector graphics (SVG, PDF) or bitmap (PNG).
+  * New feature: FITS export of image plane.
+  * New feature: Logarithmic colour scale (both in TF diagram and Image plane window).
+  * New feature: Tool tips in some windows.
+  * New feature: Raw files produced for the Transient Key Science project can now be read and written by the tools (format description from P. Zarka).
+  * The performance of the indirect reader has been improved (flags are also reordered during write).
+  * Added a different interpolation algorithm
+  * Menus in the gui have been restructured.
+  * New testset simulating sinusoidal RFI.
+  * Bugfix: Cairo behaved differently on some platforms, and did not show everything.
+  * Change resolution action can now optionally take flags into account.
+  * Fixed some issues with UV projection and simulation runs.
+  * RFI console now returns a status upon finishing, useful for automated pipelines (suggested by C. Coughlan).
+  * Heavy refactoring of visualization code.
+  * Better test coverage.
+
 Version 1.4.0
 2011-07-22	André Offringa <of...nga@astro.rug.nl>
 

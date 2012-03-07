@@ -47,6 +47,8 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeTypeConv_initTre
   try {
     OTDBconnection* aConn=getConnection(name);
     TreeTypeConv* aTTConv = new TreeTypeConv(aConn);
+
+    theirC_ObjectMap.erase(name+"_TreeTypeConv");
     theirC_ObjectMap[name+"_TreeTypeConv"]=(void*)aTTConv;
   } catch (exception &ex) {
     cout << "Exception during new TreeTypeConv::top" << ex.what() << endl; 

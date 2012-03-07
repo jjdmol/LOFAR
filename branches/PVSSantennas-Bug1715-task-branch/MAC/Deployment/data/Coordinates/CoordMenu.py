@@ -62,7 +62,7 @@ def load_normal_vectors():
         sys.exit()
     res = Popen(['./load_normal_vectors.py',filename]).wait()
     if (res != 0): sys.exit(1)
-    time.sleep(3)
+    #time.sleep(3)
     
 def load_rotation_matrices():
     print 'Loading rotation matrices'
@@ -75,7 +75,7 @@ def load_rotation_matrices():
         sys.exit()
     res = Popen(['./load_rotation_matrices.py',filename]).wait()
     if (res != 0): sys.exit(1)
-    time.sleep(3)
+    #time.sleep(3)
     
 def load_hba_rotations():
     print 'Loading hba field rotations'
@@ -88,11 +88,11 @@ def load_hba_rotations():
         sys.exit()
     res = Popen(['./load_hba_rotations.py',filename]).wait()
     if (res != 0): sys.exit(1)
-    time.sleep(3)
+    #time.sleep(3)
 
 def calculate_hba_deltas():
     print 'calculating hba-deltas'
-    time.sleep(3)
+    #time.sleep(3)
     res = Popen(['./calc_hba_deltas.py']).wait()
     if (res != 0): sys.exit(1)
     
@@ -133,16 +133,17 @@ def transform_all():
     
     for stationname in ref_stations:
         station = stationname[0]
-        res = Popen(['./calc_coordinates.py',station,"LBA",target]).wait()
-        if (res != 0): sys.exit(1)
-        if station[:1] == 'C': # core station
-            res = Popen(['./calc_coordinates.py',station,"HBA0",target]).wait()
-            if (res != 0): sys.exit(1)
-            res = Popen(['./calc_coordinates.py',station,"HBA1",target]).wait()
-            if (res != 0): sys.exit(1)
-        else: #remote or international station
-            res = Popen(['./calc_coordinates.py',station,"HBA",target]).wait()
-            if (res != 0): sys.exit(1)
+        if 0 != Popen(['./calc_coordinates.py',station,"LBA",target]).wait(): sys.exit(1)
+        if 0 != Popen(['./calc_coordinates.py',station,"CLBA",target]).wait(): sys.exit(1)
+        #if station[:1] == 'C': # core station
+        if 0 != Popen(['./calc_coordinates.py',station,"HBA0",target]).wait(): sys.exit(1)
+        if 0 != Popen(['./calc_coordinates.py',station,"CHBA0",target]).wait(): sys.exit(1)
+        if 0 != Popen(['./calc_coordinates.py',station,"HBA1",target]).wait(): sys.exit(1)
+        if 0 != Popen(['./calc_coordinates.py',station,"CHBA1",target]).wait(): sys.exit(1)
+        #else: #remote or international station
+        if 0 != Popen(['./calc_coordinates.py',station,"HBA",target]).wait(): sys.exit(1)
+        if 0 != Popen(['./calc_coordinates.py',station,"CHBA",target]).wait(): sys.exit(1)
+         
     db.close()
     missing_stations=list(set(all_stations) - set(ref_stations))
     for stationname in missing_stations:
@@ -153,7 +154,7 @@ def transform_all():
 def transform_one():
     print 'Transform ETRF coordinates to ITRF coordinates for given station and date'
     station = getInputWithDefault("Enter station       ","")
-    anttype = getInputWithDefault("Enter type (LBA|HBA|HBA0|HBA1)","")
+    anttype = getInputWithDefault("Enter type (LBA|HBA|HBA0|HBA1|CLBA|CHBA0|CHBA1|CHBA)","")
     target  = getInputWithDefault("Enter target_date   ",default_targetdate)
     res = Popen(['./calc_coordinates.py',station,anttype,target]).wait()
     if (res != 0): sys.exit(1)
@@ -166,7 +167,8 @@ def make_all_conf_files():
         station = stationname[0]
         res = Popen(['./make_conf_files.py',station,target]).wait()
         if (res != 0): sys.exit(1)
-
+    res = Popen(['./make_all_station_file.py',target]).wait()
+    if (res != 0): sys.exit(1)
     db.close()    
     
 def make_one_conf_file():

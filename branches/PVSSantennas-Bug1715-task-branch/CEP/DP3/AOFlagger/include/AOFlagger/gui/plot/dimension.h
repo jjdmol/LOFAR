@@ -51,14 +51,14 @@ class Dimension {
 			++_pointSets;
 		}
 
-		num_t XRangeMin() const { return _xRangeMin; }
-		num_t XRangeMax() const { return _xRangeMax; }
-		num_t YRangeMin() const { return _yRangeMin; }
-		num_t YRangeMax() const { return _yRangeMax; }
+		double XRangeMin() const { return _xRangeMin; }
+		double XRangeMax() const { return _xRangeMax; }
+		double YRangeMin() const { return _yRangeMin; }
+		double YRangeMax() const { return _yRangeMax; }
 	private:
 		size_t _pointSets;
-		num_t _xRangeMin, _xRangeMax;
-		num_t _yRangeMin, _yRangeMax;
+		double _xRangeMin, _xRangeMax;
+		double _yRangeMin, _yRangeMax;
 };
 
 #endif

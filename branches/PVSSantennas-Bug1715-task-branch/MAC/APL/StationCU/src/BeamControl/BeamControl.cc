@@ -442,7 +442,7 @@ GCFEvent::TResult BeamControl::allocBeams_state(GCFEvent& event, GCFPortInterfac
 	switch (event.signal) {
 	case F_ENTRY: 
 		itsTimerPort->cancelAllTimers();
-		itsTimerPort->setTimer(2.0);		// give CalControl + CalServer some time to allocated the beams.
+		itsTimerPort->setTimer(0.01);		// give CalControl + CalServer some time to allocated the beams.
 		break;
 
 	case F_TIMER: {
@@ -467,21 +467,22 @@ GCFEvent::TResult BeamControl::allocBeams_state(GCFEvent& event, GCFPortInterfac
 			StationConfig		sc;
 			beamAllocEvent.ringNr = ((sc.hasSplitters && (beamAllocEvent.antennaSet == "HBA_ONE")) ? 1 : 0);
 
-			if (itsObs->beams[beamIdx].subbands.size() != itsObs->beams[beamIdx].beamlets.size()) {
+			vector<int> beamBeamlets = itsObs->getBeamlets(beamIdx);
+			if (itsObs->beams[beamIdx].subbands.size() != beamBeamlets.size()) {
 				LOG_FATAL_STR("size of subbandList (" << itsObs->beams[beamIdx].subbands.size() << ") != " <<
-								"size of beamletList (" << itsObs->beams[beamIdx].beamlets.size() << ")");
+								"size of beamletList (" << beamBeamlets.size() << ")");
 				setState(CTState::CLAIMED);
 				sendControlResult(*itsParentPort, CONTROL_PREPARED, getName(), CT_RESULT_BEAMALLOC_FAILED);
 				TRAN(BeamControl::claimed_state);
 				return (GCFEvent::HANDLED);
 			}
 			LOG_DEBUG_STR("nr Subbands:" << itsObs->beams[beamIdx].subbands.size());
-			LOG_DEBUG_STR("nr Beamlets:" << itsObs->beams[beamIdx].beamlets.size());
+			LOG_DEBUG_STR("nr Beamlets:" << beamBeamlets.size());
 
 			// construct subband to beamlet map
-			vector<int32>::iterator beamletIt = itsObs->beams[beamIdx].beamlets.begin();
+			vector<int32>::iterator beamletIt = beamBeamlets.begin();
 			vector<int32>::iterator subbandIt = itsObs->beams[beamIdx].subbands.begin();
-			while (beamletIt != itsObs->beams[beamIdx].beamlets.end() && subbandIt != itsObs->beams[beamIdx].subbands.end()) {
+			while (beamletIt != beamBeamlets.end() && subbandIt != itsObs->beams[beamIdx].subbands.end()) {
 				LOG_DEBUG_STR("alloc[" << *beamletIt << "]=" << *subbandIt);
 				beamAllocEvent.allocation()[*beamletIt++] = *subbandIt++;
 			}
@@ -817,7 +818,7 @@ void BeamControl::beamsToPVSS()
 		writeVector(os, itsObs->beams[i].subbands);
 		subbandArr.push_back   (new GCFPVString  (os.str()));
 		os.clear();
-		writeVector(os, itsObs->beams[i].beamlets);
+		writeVector(os, itsObs->getBeamlets(i));
 		beamletArr.push_back   (new GCFPVString  (os.str()));
 		angle1Arr.push_back	   (new GCFPVDouble  (itsObs->beams[i].pointings[0].angle1));
 		angle2Arr.push_back	   (new GCFPVDouble  (itsObs->beams[i].pointings[0].angle2));

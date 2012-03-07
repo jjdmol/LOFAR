@@ -1,9 +1,19 @@
-## P.Donker ASTRON februari 2011
-## EC NL status module
+#!/usr/bin/python
+
+## "nlEcLib.py"
+## class to communicate with EC module
+## can only be used on NL (dutch) LCU
+##
+## usage: only used by other scrips
+##
+## Author: Pieter Donker (ASTRON)
+## Last change: november 2011 
 
 import socket
 import struct
 import time
+
+VERSION = '1.1.0' # version of this class
 
 def getIP():
     # get ip-adres of LCU

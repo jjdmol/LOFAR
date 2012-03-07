@@ -67,6 +67,6 @@ par restore_beam	I	vint	-	10	0	'[30,30,0]'					-	'beam in arcsec,arcsec,degrees'
 
 #      name     vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-uses  Gridder	4.0.0  development 'node constraint'  "Gridder settings"
-uses  Images    4.0.0  development 'node constraint'  "Imager settings"
-uses  Solver    4.0.0  development 'node constraint'  "Solver settings"
+uses  Gridder	4.0.0  development '1'  "Gridder settings"
+uses  Images    4.0.0  development '1'  "Imager settings"
+uses  Solver    4.0.0  development '1'  "Solver settings"

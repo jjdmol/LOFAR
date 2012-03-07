@@ -125,8 +125,10 @@ class MeasurementSet {
 			return _minScanIndex;
 		}
 		size_t GetPolarizationCount();
+		static size_t GetPolarizationCount(const std::string &filename);
 		size_t AntennaCount();
 		size_t FieldCount();
+		size_t BandCount();
 		struct AntennaInfo GetAntennaInfo(unsigned antennaId);
 		struct BandInfo GetBandInfo(unsigned bandIndex);
 		struct FieldInfo GetFieldInfo(unsigned fieldIndex);
@@ -156,6 +158,8 @@ class MeasurementSet {
 		bool HasRFIConsoleHistory();
 		void GetAOFlaggerHistory(std::ostream &stream);
 		void AddAOFlaggerHistory(const class rfiStrategy::Strategy &strategy, const std::string &commandline);
+		std::string GetStationName() const;
+		bool ChannelZeroIsRubish();
 	private:
 		void InitCacheData();
 		void CalculateScanCounts();

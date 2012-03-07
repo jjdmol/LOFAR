@@ -86,7 +86,9 @@ void plot(const BeamFormedData &beamFormedData, float r, float g, float b)
 
 int main()
 {
+#if defined HAVE_BGP
   INIT_LOGGER_WITH_SYSINFO("tDedispersion");
+#endif  
 
   Parset parset;
   init(parset);

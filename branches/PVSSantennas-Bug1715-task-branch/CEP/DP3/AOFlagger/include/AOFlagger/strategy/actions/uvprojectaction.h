@@ -79,11 +79,17 @@ namespace rfiStrategy {
 					throw std::runtime_error("UV Projection can be applied on single images only");
 				Image2DCPtr image = data.GetImage(0);
 
-				Image2DPtr
-					destination = Image2D::CreateEmptyImagePtr(image->Width(), image->Height()),
-					weights = Image2D::CreateEmptyImagePtr(image->Width(), image->Height());
+				Image2DPtr destination = Image2D::CreateZeroImagePtr(image->Width(), image->Height());
 					
-				UVProjection::ProjectImage(image, destination, weights, metaData, _directionRad, _etaParameter, data.IsImaginary());
+				if(_reverse)
+				{
+					UVProjection::InverseProjectImage(image, destination, metaData, _directionRad, _etaParameter, data.IsImaginary());
+				} else
+				{
+					Image2DPtr weights = Image2D::CreateZeroImagePtr(image->Width(), image->Height());
+				
+					UVProjection::ProjectImage(image, destination, weights, metaData, _directionRad, _etaParameter, data.IsImaginary());
+				}
 				
 				data.SetImage(0, destination);
 			}

@@ -79,6 +79,7 @@ class StrategyReader {
 		class Action *parseIterationBlock(xmlNode *node);
 		class Action *parsePlotAction(xmlNode *node);
 		class Action *parseQuickCalibrateAction(xmlNode *node);
+		class Action *parseRawAppenderAction(xmlNode *node);
 		class Action *parseSetFlaggingAction(xmlNode *node);
 		class Action *parseSetImageAction(xmlNode *node);
 		class Action *parseSlidingWindowFitAction(xmlNode *node);

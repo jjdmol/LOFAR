@@ -29,21 +29,21 @@ if test $# != 10; then
   echo "                           wd"
   exit 1
 fi
-envfile=$9
-wd=${10}
+envfile="$9"
+wd="${10}"
 
 # Initialize environment.
 if test "$envfile" != ""; then
-  . $envfile
+  . "$envfile"
 fi
 
 # cd to work directory and add . to PATH for test purposes (make check).
-if test -d $wd; then
-  cd $wd
-  PATH=.:$PATH
+if test -d "$wd"; then
+  cd "$wd"
+  PATH=".:$PATH"
   export PATH
 fi
 
-parmdbremote $2 $3 $6    # host,port,parmdb-part
+parmdbremote "$2" "$3" "$6"    # host,port,parmdb-part
 
-rm -f $envfile
+rm -f "$envfile"

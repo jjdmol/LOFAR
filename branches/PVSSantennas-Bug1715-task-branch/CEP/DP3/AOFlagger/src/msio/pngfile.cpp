@@ -25,7 +25,6 @@ PngFile::PngFile(const std::string &filename, unsigned width, unsigned height) :
 {
 }
 
-
 PngFile::~PngFile()
 {
 }
@@ -116,18 +115,16 @@ void PngFile::PlotDatapoint(unsigned x, unsigned y, int colorR, int colorG, int 
 	}
 }
 
-void PngFile::SetFromImage(const class Image2D &image, const class ColorMap &colorMap, long double normalizeFactor) throw(IOException)
+void PngFile::SetFromImage(const class Image2D &image, const class ColorMap &colorMap, long double normalizeFactor, long double zeroLevel) throw(IOException)
 {
 	png_bytep *row_pointers = RowPointers();
-	unsigned long dataptr = 0;
 	for(unsigned long y=0;y<image.Height();y++) {
 		for(unsigned long x=0;x<image.Width();x++) {
 			int xa = x * PixelSize();
-			row_pointers[y][xa]=colorMap.ValueToColorR(image.Value(dataptr) * normalizeFactor);
-			row_pointers[y][xa+1]=colorMap.ValueToColorG(image.Value(dataptr) * normalizeFactor);
-			row_pointers[y][xa+2]=colorMap.ValueToColorB(image.Value(dataptr) * normalizeFactor);
-			row_pointers[y][xa+3]=colorMap.ValueToColorA(image.Value(dataptr) * normalizeFactor);
-			++dataptr;
+			row_pointers[y][xa]=colorMap.ValueToColorR((image.Value(x, y) - zeroLevel) * normalizeFactor);
+			row_pointers[y][xa+1]=colorMap.ValueToColorG((image.Value(x, y) - zeroLevel) * normalizeFactor);
+			row_pointers[y][xa+2]=colorMap.ValueToColorB((image.Value(x, y) - zeroLevel) * normalizeFactor);
+			row_pointers[y][xa+3]=colorMap.ValueToColorA((image.Value(x, y) - zeroLevel) * normalizeFactor);
 		}
 	}
 }
@@ -144,11 +141,11 @@ void PngFile::Save(const Image2D &image, const std::string &filename, const Colo
 	Save(image, filename, colorMap, image.GetMaxMinNormalizationFactor());
 }
 
-void PngFile::Save(const Image2D &image, const std::string &filename, const ColorMap &colorMap, long double normalizeFactor) throw(IOException)
+void PngFile::Save(const Image2D &image, const std::string &filename, const ColorMap &colorMap, long double normalizeFactor, long double zeroLevel) throw(IOException)
 {
 	PngFile pngFile(filename, image.Width(), image.Height());
 	pngFile.BeginWrite();
-	pngFile.SetFromImage(image, colorMap, normalizeFactor);
+	pngFile.SetFromImage(image, colorMap, normalizeFactor, zeroLevel);
 	pngFile.Close();
 }
 
@@ -158,15 +155,13 @@ void PngFile::Save(const Image2D &image, const ColorMap &colorMap) throw(IOExcep
 	
 	png_bytep *row_pointers = RowPointers();
 	
-	unsigned long dataptr = 0;
 	for(unsigned long y=0;y<image.Height();++y) {
 		for(unsigned long x=0;x<image.Width();++x) {
 			int xa = x * PixelSize();
-			row_pointers[y][xa]=colorMap.ValueToColorR(image.Value(dataptr) * normalizeFactor);
-			row_pointers[y][xa+1]=colorMap.ValueToColorG(image.Value(dataptr) * normalizeFactor);
-			row_pointers[y][xa+2]=colorMap.ValueToColorB(image.Value(dataptr) * normalizeFactor);
-			row_pointers[y][xa+3]=colorMap.ValueToColorA(image.Value(dataptr) * normalizeFactor);
-			++dataptr;
+			row_pointers[y][xa]=colorMap.ValueToColorR(image.Value(x, y) * normalizeFactor);
+			row_pointers[y][xa+1]=colorMap.ValueToColorG(image.Value(x, y) * normalizeFactor);
+			row_pointers[y][xa+2]=colorMap.ValueToColorB(image.Value(x, y) * normalizeFactor);
+			row_pointers[y][xa+3]=colorMap.ValueToColorA(image.Value(x, y) * normalizeFactor);
 		}
 	}
 }

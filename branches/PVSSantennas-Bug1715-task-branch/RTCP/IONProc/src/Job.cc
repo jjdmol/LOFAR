@@ -24,12 +24,11 @@
 #include <Common/LofarLogger.h>
 #include <Interface/CN_Command.h>
 #include <Interface/Exceptions.h>
-#include <Interface/OutputTypes.h>
 #include <Interface/PrintVector.h>
 #include <Interface/RSPTimeStamp.h>
 #include <InputSection.h>
 #include <ION_Allocator.h>
-#include <ION_main.h>
+#include <GlobalVars.h>
 #include <Job.h>
 #include <OutputSection.h>
 #include <StreamMultiplexer.h>
@@ -40,6 +39,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <signal.h>
+#include <time.h>
 
 #include <boost/format.hpp>
 
@@ -71,14 +71,13 @@ Job::Job(const char *parsetName)
   itsLogPrefix = str(boost::format("[obs %d] ") % itsParset.observationID());
 
   if (LOG_CONDITION) {
-    LOG_INFO_STR(itsLogPrefix << "----- Creating new job");
-    LOG_DEBUG_STR(itsLogPrefix << "usedCoresInPset = " << itsParset.usedCoresInPset());
-
-    // Handle PVSS (CEPlogProcessor) communication
+    // Handle PVSS (CEPlogProcessor) communication -- report PVSS name in the first log line to allow CEPlogProcessor to resolve obsIDs
     if (itsParset.PVSS_TempObsName() != "")
       LOG_INFO_STR(itsLogPrefix << "PVSS name: " << itsParset.PVSS_TempObsName());
-  }
 
+    LOG_INFO_STR(itsLogPrefix << "----- Creating new job");
+    LOG_DEBUG_STR(itsLogPrefix << "usedCoresInPset = " << itsParset.usedCoresInPset());
+  }
 
   // Handle PLC communication
   if (myPsetNumber == 0) {
@@ -397,7 +396,7 @@ void Job::startStorageProcesses()
   std::string userName   = itsParset.getString("OLAP.Storage.userName");
   std::string sshKey     = itsParset.getString("OLAP.Storage.sshIdentityFile");
   std::string executable = itsParset.getString("OLAP.Storage.msWriter");
-  std::string parset     = itsParset.name();
+  std::string parset     = itsParset.getString("OLAP.Storage.parsetFilename", itsParset.name());
 
   char cwd[1024];
 
@@ -521,7 +520,7 @@ void Job::jobThread()
       if (canStart) {
         // PLC: INIT phase
         if (itsParset.realTime())
-          waitUntilCloseToStartOfObservation(10);
+          waitUntilCloseToStartOfObservation(20);
 
         // PLC: in practice, RUN must start here, because resources
         // can become available just before the observation starts.
@@ -545,6 +544,24 @@ void Job::jobThread()
 
     if (itsIsRunning) {
       // PLC: RUN phase
+
+      if (itsParset.realTime()) {
+        // if we started after itsParset.startTime(), we want to skip ahead to
+        // avoid data loss caused by having to catch up.
+        if (myPsetNumber == 0) {
+          time_t earliest_start = time(0L) + 5;
+
+          if (earliest_start > itsParset.startTime()) {
+            itsBlockNumber = static_cast<unsigned>((earliest_start - itsParset.startTime()) / itsParset.CNintegrationTime());
+
+            LOG_WARN_STR(itsLogPrefix << "Skipping the first " << itsBlockNumber << " blocks to catch up"); 
+          } else {
+            itsBlockNumber = 0;
+          }  
+        }
+
+        broadcast(itsBlockNumber);
+      }
 
       // each node is expected to:
       // 1. agree() on starting, to allow the compute nodes to complain in preprocess()
@@ -639,7 +656,7 @@ bool Job::configureCNs()
 {
   bool success = true;
 
-  CN_Command command(CN_Command::PREPROCESS);
+  CN_Command command(CN_Command::PREPROCESS, itsBlockNumber);
   
   LOG_DEBUG_STR(itsLogPrefix << "Configuring cores " << itsParset.usedCoresInPset() << " ...");
 
@@ -718,47 +735,49 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
     LOG_INFO_STR(itsLogPrefix << "----- Observation start");
 
   // first: send configuration to compute nodes so they know what to expect
+#if defined CLUSTER_SCHEDULING
+  if (myPsetNumber == 0)
+    configureCNs();
+#else
   if (!agree(configureCNs())) {
     unconfigureCNs();
 
     if (LOG_CONDITION)
       LOG_INFO_STR(itsLogPrefix << "----- Observation finished");
+
     return;
   }
+#endif
 
   if (itsHasPhaseOne)
     attachToInputSection<SAMPLE_TYPE>();
 
   if (itsHasPhaseTwo) {
-    if (itsParset.outputFilteredData())
-      outputSections.push_back(new FilteredDataOutputSection(itsParset, createCNstream));
-
     if (itsParset.outputCorrelatedData())
-      outputSections.push_back(new CorrelatedDataOutputSection(itsParset, createCNstream));
-
-    if (itsParset.outputIncoherentStokes())
-      outputSections.push_back(new IncoherentStokesOutputSection(itsParset, createCNstream));
+      outputSections.push_back(new CorrelatedDataOutputSection(itsParset, createCNstream, itsBlockNumber));
   }
 
   if (itsHasPhaseThree) {
     if (itsParset.outputBeamFormedData())
-      outputSections.push_back(new BeamFormedDataOutputSection(itsParset, createCNstream));
-
-    if (itsParset.outputCoherentStokes())
-      outputSections.push_back(new CoherentStokesOutputSection(itsParset, createCNstream));
+      outputSections.push_back(new BeamFormedDataOutputSection(itsParset, createCNstream, itsBlockNumber));
 
     if (itsParset.outputTrigger())
-      outputSections.push_back(new TriggerDataOutputSection(itsParset, createCNstream));
+      outputSections.push_back(new TriggerDataOutputSection(itsParset, createCNstream, itsBlockNumber));
   }
+
+  // start the threads
+  for (unsigned i = 0; i < outputSections.size(); i ++)
+    outputSections[i]->start();
 
   LOG_DEBUG_STR(itsLogPrefix << "doObservation processing input start");
 
   { // separate scope to ensure that the beamletbuffertocomputenode objects
     // only exist if the beamletbuffers exist in the inputsection
     std::vector<SmartPtr<BeamletBuffer<SAMPLE_TYPE> > > noInputs;
-    BeamletBufferToComputeNode<SAMPLE_TYPE>   beamletBufferToComputeNode(itsParset, itsPhaseOneTwoCNstreams, itsHasPhaseOne ? static_cast<InputSection<SAMPLE_TYPE> *>(theInputSection)->itsBeamletBuffers : noInputs, myPsetNumber);
+    BeamletBufferToComputeNode<SAMPLE_TYPE>   beamletBufferToComputeNode(itsParset, itsPhaseOneTwoCNstreams, itsHasPhaseOne ? static_cast<InputSection<SAMPLE_TYPE> *>(theInputSection)->itsBeamletBuffers : noInputs, myPsetNumber, itsBlockNumber);
 
-    ControlPhase3Cores controlPhase3Cores(itsParset, itsPhaseThreeCNstreams);
+    ControlPhase3Cores controlPhase3Cores(itsParset, itsPhaseThreeCNstreams, itsBlockNumber);
+    controlPhase3Cores.start(); // start the thread
 
     while (anotherRun()) {
       for (unsigned i = 0; i < outputSections.size(); i ++)
@@ -781,7 +800,10 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
   if (itsHasPhaseOne)
     detachFromInputSection<SAMPLE_TYPE>();
 
-  unconfigureCNs();
+#if defined CLUSTER_SCHEDULING
+  if (myPsetNumber == 0)
+#endif
+    unconfigureCNs();
  
   if (LOG_CONDITION)
     LOG_INFO_STR(itsLogPrefix << "----- Observation finished");

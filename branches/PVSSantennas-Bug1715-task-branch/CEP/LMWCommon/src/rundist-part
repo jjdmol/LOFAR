@@ -41,28 +41,28 @@ shift
 shift
 shift
 shift
-rank=$1
+rank="$1"
 shift
-dataset=$1
+dataset="$1"
 shift
 shift
 shift
-envfile=$1
+envfile="$1"
 shift
-prog=$1
+prog="$1"
 shift
-wd=$1
+wd="$1"
 shift
 
 
 # Initialize environment.
 if test "$envfile" != ""; then
-  . $envfile
+  . "$envfile"
 fi
 
 # Set the working directory.
-test "$wd" != ""  ||  wd=`dirname $dataset`
-cd $wd
+test "$wd" != ""  ||  wd=`dirname "$dataset"`
+cd "$wd"
 
 # Start the program with its arguments.
-$prog $rank $dataset "$@"
+"$prog" "$rank" "$dataset" "$@"

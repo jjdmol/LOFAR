@@ -19,6 +19,7 @@
 //#  $Id$
 
 #include <lofar_config.h>
+#include <GlobalVars.h>
 
 #include <CommandServer.h>
 #include <Common/LofarLogger.h>
@@ -121,12 +122,7 @@ void terminate_with_backtrace()
 namespace LOFAR {
 namespace RTCP {
 
-unsigned				  myPsetNumber, nrPsets, nrCNcoresInPset;
 static boost::multi_array<char, 2>	  ipAddresses;
-std::vector<SmartPtr<Stream> >		  allCNstreams, allIONstreams;
-std::vector<SmartPtr<StreamMultiplexer> > allIONstreamMultiplexers;
-
-static const char			  *cnStreamType;
 
 #if defined HAVE_FCNP && defined __PPC__ && !defined USE_VALGRIND
 static struct InitFCNP {
@@ -135,24 +131,10 @@ static struct InitFCNP {
 } initFCNP;
 #endif
 
-Stream *createCNstream(unsigned core, unsigned channel)
-{
-  // translate logical to physical core number
-  core = CN_Mapping::mapCoreOnPset(core, myPsetNumber);
-
-#if defined HAVE_FCNP && defined __PPC__ && !defined USE_VALGRIND
-  if (strcmp(cnStreamType, "FCNP") == 0)
-    return new FCNP_ServerStream(core, channel);
-#endif
-
-  string descriptor = getStreamDescriptorBetweenIONandCN(cnStreamType, myPsetNumber, core, nrPsets, nrCNcoresInPset, channel);
-
-  return createStream(descriptor, true);
-}
-
-
 static void createAllCNstreams()
 {
+  LOG_DEBUG_STR("Create streams to CN nodes ...");
+
   const char *streamType = getenv("CN_STREAM_TYPE");
 
   if (streamType != 0)
@@ -170,6 +152,8 @@ static void createAllCNstreams()
 
   for (unsigned core = 0; core < nrCNcoresInPset; core ++)
     allCNstreams[core] = createCNstream(core, 0);
+
+  LOG_DEBUG_STR("Create streams to CN nodes done");
 }
 
 
@@ -197,10 +181,12 @@ static void createAllIONstreams()
     for (unsigned ion = 1; ion < nrPsets; ion ++) {
       allIONstreams[ion] = new SocketStream(ipAddresses[ion].origin(), 4000 + ion, SocketStream::TCP, SocketStream::Client);
       allIONstreamMultiplexers[ion] = new StreamMultiplexer(*allIONstreams[ion]);
+      allIONstreamMultiplexers[ion]->start();
     }
   } else {
     allIONstreams.push_back(new SocketStream(ipAddresses[myPsetNumber].origin(), 4000 + myPsetNumber, SocketStream::TCP, SocketStream::Server));
     allIONstreamMultiplexers.push_back(new StreamMultiplexer(*allIONstreams[0]));
+    allIONstreamMultiplexers[0]->start();
   }
 
   LOG_DEBUG_STR("Create streams between I/O nodes: done");
@@ -305,8 +291,12 @@ static void master_thread()
 
     createAllCNstreams();
     createAllIONstreams();
-    { CommandServer(); }
-    stopCNs();
+    { CommandServer s; s.start(); }
+
+#if defined CLUSTER_SCHEDULING
+    if (myPsetNumber == 0)
+#endif
+      stopCNs();
 
 #if defined FLAT_MEMORY
     unmapFlatMemory();

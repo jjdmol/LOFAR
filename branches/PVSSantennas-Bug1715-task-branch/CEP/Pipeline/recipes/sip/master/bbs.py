@@ -120,6 +120,11 @@ class bbs(BaseRecipe):
         inputs = LOFARinput(self.inputs)
         inputs['args'] = self.inputs['args']
         inputs['executable'] = self.inputs['parmdbm']
+        inputs['working_directory'] = self.config.get(
+            "DEFAULT", "default_working_directory"
+        )
+        inputs['mapfile'] = self.task_definitions.get('parmdb','mapfile')
+        inputs['suffix'] = ".instrument"
         outputs = LOFARoutput(self.inputs)
         if self.cook_recipe('parmdb', inputs, outputs):
             self.logger.warn("parmdb reports failure")
@@ -127,6 +132,8 @@ class bbs(BaseRecipe):
         inputs['args'] = self.inputs['args']
         inputs['executable'] = self.inputs['makesourcedb']
         inputs['skymodel'] = self.inputs['skymodel']
+        inputs['mapfile'] = self.task_definitions.get('sourcedb','mapfile')
+        inputs['suffix'] = ".sky"
         outputs = LOFARoutput(self.inputs)
         if self.cook_recipe('sourcedb', inputs, outputs):
             self.logger.warn("sourcedb reports failure")
@@ -149,8 +156,8 @@ class bbs(BaseRecipe):
         inputs['nproc'] = self.inputs['nproc']
         inputs['directory'] = os.path.dirname(vds_file)
         outputs = LOFARoutput(self.inputs)
-        if self.cook_recipe('new_vdsmaker', inputs, outputs):
-            self.logger.warn("new_vdsmaker reports failure")
+        if self.cook_recipe('vdsmaker', inputs, outputs):
+            self.logger.warn("vdsmaker reports failure")
             return 1
         self.logger.debug("BBS GVDS is %s" % (vds_file,))
 

@@ -24,13 +24,14 @@ namespace LOFAR {
 namespace RTCP {
 
 
-Dedispersion::Dedispersion(const Parset &parset, const std::vector<unsigned> &subbandIndices, std::vector<double> &DMs)
+Dedispersion::Dedispersion(const Parset &parset, const std::vector<unsigned> &subbandIndices, std::vector<double> &DMs, Allocator &allocator)
 :
   itsNrChannels(parset.nrChannelsPerSubband()),
   itsNrSamplesPerIntegration(parset.CNintegrationSteps()),
   itsFFTsize(parset.dedispersionFFTsize()),
   itsChannelBandwidth(parset.sampleRate() / itsNrChannels),
-  itsFFTedBuffer(NR_POLARIZATIONS, itsFFTsize)
+  itsFFTedBuffer(NR_POLARIZATIONS, itsFFTsize),
+  itsAllocator(allocator)
 {
 #if defined HAVE_FFTW3
   itsFFTWforwardPlan = 0;
@@ -61,18 +62,18 @@ Dedispersion::Dedispersion(const Parset &parset, const std::vector<unsigned> &su
 }
 
 
-DedispersionBeforeBeamForming::DedispersionBeforeBeamForming(const Parset &parset, FilteredData *filteredData, const std::vector<unsigned> &subbandIndices, std::vector<double> &DMs)
+DedispersionBeforeBeamForming::DedispersionBeforeBeamForming(const Parset &parset, FilteredData *filteredData, const std::vector<unsigned> &subbandIndices, std::vector<double> &DMs, Allocator &allocator)
 :
-  Dedispersion(parset, subbandIndices, DMs),
+  Dedispersion(parset, subbandIndices, DMs, allocator),
   itsNrStations(parset.nrMergedStations())
 {
   initFFT(&filteredData->samples[0][0][0][0]);
 }
 
 
-DedispersionAfterBeamForming::DedispersionAfterBeamForming(const Parset &parset, BeamFormedData *beamFormedData, const std::vector<unsigned> &subbandIndices, std::vector<double> &DMs)
+DedispersionAfterBeamForming::DedispersionAfterBeamForming(const Parset &parset, BeamFormedData *beamFormedData, const std::vector<unsigned> &subbandIndices, std::vector<double> &DMs, Allocator &allocator)
 :
-  Dedispersion(parset, subbandIndices, DMs)
+  Dedispersion(parset, subbandIndices, DMs, allocator)
 {
   initFFT(&beamFormedData->samples[0][0][0][0]);
 }
@@ -114,7 +115,7 @@ void Dedispersion::initFFT(fcomplex *data)
 }
 
 
-void Dedispersion::forwardFFT(fcomplex *data)
+void Dedispersion::forwardFFT(const fcomplex *data)
 {
 #if defined HAVE_FFTW3
   fftwf_execute_dft(itsFFTWforwardPlan, (fftwf_complex *) data, (fftwf_complex *) &itsFFTedBuffer[0][0]);
@@ -148,7 +149,7 @@ void Dedispersion::initChirp(const Parset &parset, const std::vector<unsigned> &
       double   binWidth	       = itsChannelBandwidth / itsFFTsize;
       double   dmConst	       = dm * 2 * M_PI / 2.41e-16;
 
-      itsChirp[subbandIndex][dmIndex] = new Matrix<fcomplex>(itsNrChannels, itsFFTsize);
+      itsChirp[subbandIndex][dmIndex] = new Matrix<fcomplex>(itsNrChannels, itsFFTsize, 32, itsAllocator);
 
       for (unsigned channel = 0; channel < itsNrChannels; channel ++) {
         double channelFrequency = channel0frequency + channel * itsChannelBandwidth;
@@ -194,20 +195,18 @@ void Dedispersion::applyChirp(unsigned subbandIndex, unsigned dmIndex, unsigned 
 }
 
 
-void DedispersionBeforeBeamForming::dedisperse(FilteredData *filteredData, unsigned subbandIndex, double dm)
+void DedispersionBeforeBeamForming::dedisperse(const FilteredData *inData, FilteredData *outData, unsigned instat, unsigned outstat, unsigned firstch, unsigned numch, unsigned subbandIndex, double dm)
 {
   if (dm == 0.0)
     return;
 
   unsigned dmIndex = itsDMindices[dm];
 
-  for (unsigned channel = 0; channel < itsNrChannels; channel ++) {
-    for (unsigned station = 0; station < itsNrStations; station ++) {
-      for (unsigned block = 0; block < itsNrSamplesPerIntegration; block += itsFFTsize) {
-	forwardFFT(&filteredData->samples[channel][station][block][0]);
-	applyChirp(subbandIndex, dmIndex, channel);
-	backwardFFT(&filteredData->samples[channel][station][block][0]);
-      }
+  for (unsigned channel = 0; channel < numch; channel ++) {
+    for (unsigned block = 0; block < itsNrSamplesPerIntegration; block += itsFFTsize) {
+      forwardFFT(&inData->samples[firstch + channel][instat][block][0]);
+      applyChirp(subbandIndex, dmIndex, channel);
+      backwardFFT(&outData->samples[channel][outstat][block][0]);
     }
   }
 }

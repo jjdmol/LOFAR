@@ -51,13 +51,9 @@ class Locations:
   def setDefaults(self):
     # default build variants
     self.buildvars.update( {
-        "CNProc":  "bgpcn_opt",
-        "IONProc": "bgpion_opt",
         "Storage": "gnu_opt",
     } )
     self.executables.update( {
-        "CNProc":  "CN_Processing",
-        "IONProc": "ION_Processing",
         "Storage": "Storage_main",
     } )
 
@@ -67,7 +63,6 @@ class Locations:
 
         # the parset that will be written by us and read by the sections
         # the observation ID is included to allow parallel observations
-	"parset":  "${RUNDIR}/RTCP-${OBSID}.parset", 
 
         # where to store logs
 	"logdir":  "${BASEDIR}/D${TIMESTAMP}",
@@ -87,7 +82,8 @@ class Locations:
         "obssymlink": "${BASEDIR}/D${YEAR}_${OBSID}",
 
         # parset name mas
-        "parset": "${LOGSYMLINK}/L${OBSID}.parset",
+        "parset": "${LOGSYMLINK}/L${OBSID}.parset",     # for communication with Storage and offline pipelines
+        "parset-ion": "${LOGSYMLINK}/L${OBSID}.parset", # for communication with the I/O nodes
 
         # location of the observation id counter
 	"nextmsnumber": "/globalhome/lofarsystem/log/nextMSNumber",
@@ -102,8 +98,6 @@ class Locations:
 	"basedir": "${HOME}/production/lofar",
 
         # the locations of the main executables
-	"cnproc":  "${BASEDIR}/bgp_cn/bin/%s" % (self.executables["CNProc"],),
-	"ionproc": "${BASEDIR}/bgp_ion/bin/%s" % (self.executables["IONProc"],),
 	"storage": "/opt/storage/current/bin/%s" % (self.executables["Storage"],),
 
         # where to start the executables. rundir needs to be reachable
@@ -112,6 +106,9 @@ class Locations:
 
         # where to store logs
 	"logdir":  "${HOME}/log/L${TIMESTAMP}",
+
+	# where to save the parset
+	"parset-ion":  "/bghome0/lofarsys/parsets/RTCP-${OBSID}.parset", # for communication to the IO nodes 
 
         # where configuration files are kept
         "configdir": "${BASEDIR}/bgfen/etc",
@@ -126,11 +123,6 @@ class Locations:
         "ionsuppfile": "",
         "storagesuppfile": "",
       } )
-      
-      self.nodes.update( {
-        # default log server address
-        "logserver": "tcp:ccu001:24500",
-      } )
     else:
       self.files.update( {
         # the base directory most paths will be related to
@@ -140,18 +132,11 @@ class Locations:
         "configdir": "${BASEDIR}/RTCP/Run/src",
 	"storage_configdir": "${BASEDIR}/installed/%s/etc" % (self.buildvars["Storage"],),
 
-	"cnproc":  "${BASEDIR}/installed/%s/bin/%s" % (self.buildvars["CNProc"],self.executables["CNProc"]),
-	"ionproc": "${BASEDIR}/installed/%s/bin/%s" % (self.buildvars["IONProc"],self.executables["IONProc"]),
 	"storage": "${BASEDIR}/installed/%s/bin/%s" % (self.buildvars["Storage"],self.executables["Storage"]),
 
         # location of valgrind suppressions file
         "ionsuppfile": "${BASEDIR}/RTCP/IONProc/src/IONProc.supp",
         "storagesuppfile": "${BASEDIR}/RTCP/Storage/src/Storage.supp",
-      } )
-
-      self.nodes.update( {
-        # no external log server
-        "logserver": "",
       } )
 
     #if not os.path.isdir( self.files["configdir"] ):

@@ -81,18 +81,20 @@ void VdsMaker::getFreqInfo (MS& ms, vector<int>& nrchan,
   }
 }
 
-void VdsMaker::getFields (MS& ms, vector<double>& ra, vector<double>& dec)
+void VdsMaker::getFields (MS& ms, vector<double>& ra, vector<double>& dec,
+                          vector<string>& refType)
 {
   MSField mssub(ms.field());
   ROMSFieldColumns mssubc(mssub);
   int nrf = mssub.nrow();
   ra.resize  (nrf);
   dec.resize (nrf);
+  refType.resize (nrf);
   for (int i=0; i<nrf; ++i) {
-    Array<MDirection> mds = mssubc.delayDirMeasCol().convert
-      (i, MDirection::J2000);
-    ra[i]  = mds.data()->getValue().get()[0];
-    dec[i] = mds.data()->getValue().get()[1];
+    Array<MDirection> mds = mssubc.referenceDirMeasCol()(i);
+    ra[i]  = mds.data()[i].getValue().get()[0];
+    dec[i] = mds.data()[i].getValue().get()[1];
+    refType[i] = mds.data()[i].getRefString();
   }
 }
 
@@ -236,26 +238,31 @@ void VdsMaker::create (const string& msName, const string& outName,
   }
   // Write the field directions (in J2000).
   vector<double> ra, dec;
-  getFields (ms, ra, dec);
+  vector<string> refType;
+  getFields (ms, ra, dec, refType);
   int nrfield = ra.size();
-  ostringstream oss2a, oss2b;
+  ostringstream oss2a, oss2b, oss2c;
   oss2a << '[';
   oss2b << '[';
+  oss2c << '[';
   for (int i=0; i<nrfield; ++i) {
     if (i > 0) {
       oss2a << ',';
       oss2b << ',';
+      oss2c << ',';
     }
     oss2a << MVAngle::Format(MVAngle::TIME, 12)
 	  << MVAngle(Quantity(ra[i], "rad"));
     oss2b << MVAngle::Format(MVAngle::ANGLE, 12)
 	  << MVAngle(Quantity(dec[i], "rad"));
+    oss2c << refType[i];
   }
   oss2a << ']';
   oss2b << ']';
+  oss2c << ']';
   msd.addParm ("FieldDirectionRa",  oss2a.str());
   msd.addParm ("FieldDirectionDec", oss2b.str());
-  msd.addParm ("FieldDirectionType", "J2000");
+  msd.addParm ("FieldDirectionType", oss2c.str());
   // Fill in station names.
   vector<string> antNames;
   getAntNames (ms, antNames);
@@ -327,9 +334,10 @@ void VdsMaker::combine (const string& gdsName,
   double endTime = 0;
   vector<VdsPartDesc*> vpds;
   vpds.reserve (vdsNames.size());
-  for (uint i=0; i<vdsNames.size(); ++i) {
-    VdsPartDesc* vpd = new VdsPartDesc(ParameterSet(vdsNames[i]));
-    casa::Path path(vdsNames[i]);
+  for (uint j=0; j<vdsNames.size(); ++j) {
+    VdsPartDesc* vpd = new VdsPartDesc(ParameterSet(vdsNames[j]));
+    // Skip a VDS with an empty time (it has no data).
+    casa::Path path(vdsNames[j]);
     // File name gets the original MS name.
     // Name gets the name of the VDS file.
     vpd->setFileName (vpd->getName());
@@ -352,9 +360,16 @@ void VdsMaker::combine (const string& gdsName,
       globalvpd.addBand (nchan, sfreq, efreq);
     }
     // Get minimum/maximum time.
-    startTime = std::min (startTime, vpd->getStartTime());
-    endTime   = std::max (endTime, vpd->getEndTime());
+    if (vpd->getStartTime() == 0) {
+      LOG_INFO_STR ("Dataset " << vdsNames[j] << " is completely empty");
+    } else {
+      startTime = std::min (startTime, vpd->getStartTime());
+      endTime   = std::max (endTime, vpd->getEndTime());
+    }
   }
+  // Exit if no valid VDS files.
+  ASSERTSTR (!vpds.empty(), "No VDS files are given");
+  ASSERTSTR (startTime != 0, "All datasets seems to be empty");
 
   // Set the times in the global desc (using the first part).
   // Set the clusterdesc name.
@@ -387,7 +402,7 @@ void VdsMaker::combine (const string& gdsName,
         vpds[i]->getEndTime()   != globalvpd.getEndTime()    ||
         vpds[i]->getStepTime( ) != globalvpd.getStepTime()) {
       cerr << "The times of part " << i << " (" << vpds[i]->getName()
-           << " are different" << endl;
+           << ") are different" << endl;
     }
     delete vpds[i];
     vpds[i] = 0;

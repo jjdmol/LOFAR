@@ -31,7 +31,11 @@ def getSet(filename):
     f = open(filename,'r')
     s = f.read()
     f.close()
+    # op = number of open paranthesis
+    # cp = number of closed paranthesis
     op = cp = 0
+    # mah = matrix header
+    # ma  = matrix
     mah = ma = ''
     for ch in s:
         if ch == '(': op += 1
@@ -44,11 +48,13 @@ def getSet(filename):
                 vector = ma
                 vector = vector.replace(' ',', ')
                 
-            if mah.find('station-pqr-to-etrs-matrix') != -1:
+            elif mah.find('station-pqr-to-etrs-matrix') != -1:
                 matrix = ma
                 matrix = matrix.replace('d','e')
                 matrix = matrix.replace('\n',',').replace('  ','')
                 matrix = matrix.replace(' ',', ')
+            
+            # clear all and look for next
             op = cp = 0
             mah = ma = ''
     return(formatVector(vector),formatMatrix(matrix))

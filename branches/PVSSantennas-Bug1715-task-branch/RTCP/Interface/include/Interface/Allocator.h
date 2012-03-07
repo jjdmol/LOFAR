@@ -71,13 +71,14 @@ class SparseSetAllocator : public Allocator
     virtual void		*allocate(size_t size, size_t alignment);
     virtual void		deallocate(void *);
 
+    bool                        empty() { ScopedLock sl(mutex); return sizes.empty(); }
+
   private:
     Mutex                       mutex;
 
     SparseSet<void *>		freeList;
     std::map<void *, size_t>	sizes;
 };
-
 
 } // namespace RTCP
 } // namespace LOFAR

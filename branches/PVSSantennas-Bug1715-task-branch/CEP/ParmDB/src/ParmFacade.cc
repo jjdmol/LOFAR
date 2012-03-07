@@ -68,6 +68,10 @@ namespace LOFAR {
         etime = stime  + timev2;
       }
       vector<double> rng = getRange (parmNamePattern);
+      // No values if the range is null.
+      if (rng[0] == 0  &&  rng[1] == 0) {
+        return Record();
+      }
       if (sfreq < rng[0]) sfreq = rng[0];
       if (efreq > rng[1]) efreq = rng[1];
       if (stime < rng[2]) stime = rng[2];

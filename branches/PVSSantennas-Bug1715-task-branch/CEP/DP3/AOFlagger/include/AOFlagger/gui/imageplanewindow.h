@@ -24,6 +24,7 @@
 #include <gtkmm/box.h>
 #include <gtkmm/button.h>
 #include <gtkmm/buttonbox.h>
+#include <gtkmm/menu.h>
 #include <gtkmm/radiobutton.h>
 
 #include "../msio/timefrequencydata.h"
@@ -53,10 +54,12 @@ class ImagePlaneWindow : public Gtk::Window {
 		Gtk::Button _clearButton;
 		Gtk::Button _applyWeightsButton;
 		Gtk::Button _refreshCurrentButton, _memoryStoreButton, _memoryRecallButton, _memoryMultiplyButton, _memorySubtractButton, _sqrtButton;
-		Gtk::ToggleButton _fixScaleButton;
-		Gtk::Button _plotHorizontalButton, _plotVerticalButton, _angularTransformButton;
+		Gtk::Button _plotHorizontalButton, _plotVerticalButton, _angularTransformButton, _saveFitsButton, _propertiesButton;
 		Gtk::RadioButton _uvPlaneButton, _imagePlaneButton;
-		Gtk::RadioButton
+		Gtk::Menu _zoomMenu;
+		Gtk::Button _zoomMenuButton;
+		Gtk::RadioMenuItem::Group _zoomGroup;
+		Gtk::RadioMenuItem
 			_zoomXd4Button, _zoomXd2Button, _zoomX1Button, _zoomX2Button, _zoomX4Button, _zoomX8Button,
 			_zoomX16Button, _zoomX32Button, _zoomX64Button, _zoomX128Button;
 		long double _zoom;
@@ -64,11 +67,13 @@ class ImagePlaneWindow : public Gtk::Window {
 
 		bool _displayingUV;
 		Image2DCPtr _memory;
+		class ImagePropertiesWindow *_propertiesWindow;
 		
 		void onClearClicked();
 		void onApplyWeightsClicked();
 		void onUVPlaneButtonClicked();
 		void onImagePlaneButtonClicked();
+		void onZoomMenuButtonClicked();
 		void onZoomButtonClicked();
 		void onRefreshCurrentClicked();
 		void onMemoryStoreClicked();
@@ -76,11 +81,12 @@ class ImagePlaneWindow : public Gtk::Window {
 		void onMemoryMultiplyClicked();
 		void onMemorySubtractClicked();
 		void onSqrtClicked();
-		void onFixScaleClicked();
 		void onPlotHorizontally();
 		void onPlotVertically();
 		void onAngularTransformButton();
-		bool onButtonReleased(GdkEventButton *event);
+		void onSaveFitsButton();
+		void onPropertiesButton();
+		void onButtonReleased(size_t x, size_t y);
 
 		void printStats();
 };

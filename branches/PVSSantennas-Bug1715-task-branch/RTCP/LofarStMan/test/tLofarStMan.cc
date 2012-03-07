@@ -169,7 +169,7 @@ uInt nalign (uInt size, uInt alignment)
 
 void createData (uInt nseq, uInt nant, uInt nchan, uInt npol,
                  Double startTime, Double interval, const Complex& startValue,
-                 uInt alignment, Bool bigEndian, uInt myStManVersion=1, 
+                 uInt alignment, Bool bigEndian, uInt myStManVersion,
 		 uInt myNrBytesPerValidSamples=2)
 {
   // Create the baseline vectors (no autocorrelations).
@@ -180,12 +180,12 @@ void createData (uInt nseq, uInt nant, uInt nchan, uInt npol,
 
   for (uInt i=0; i<nant; ++i) {
     for (uInt j=0; j<nant; ++j) {
-      if (myStManVersion == 1) {
+      if (myStManVersion != 2) {
         // Use baselines 0,0, 0,1, 1,1 ... n,n
 	ant1[inx] = j;
 	ant2[inx] = i;
       } else {
-        // Use baselines 0,0, 1,0, 1,1 ... n,n
+        // Use baselines 0,0, 1,0, 1,1 ... n,n (will be swapped by LofarStMan)
 	ant1[inx] = i;
 	ant2[inx] = j;
       } 
@@ -200,14 +200,15 @@ void createData (uInt nseq, uInt nant, uInt nchan, uInt npol,
     }
     double maxNSample = 32768;
 
-    AlwaysAssertExit(myStManVersion <= 2);
+    AlwaysAssertExit(myStManVersion <= 3);
 
     AipsIO aio("tLofarStMan_tmp.data/table.f0meta", ByteIO::New);
-    aio.putstart ("LofarStMan", myStManVersion);     // version 1 or 2
+    aio.putstart ("LofarStMan", myStManVersion);     // version 1, 2, or 3
     aio << ant1 << ant2 << startTime << interval << nchan
         << npol << maxNSample << alignment << bigEndian;
-    if (myStManVersion == 2)
+    if (myStManVersion > 1) {
       aio << myNrBytesPerValidSamples;
+    }
     aio.close();
   }
   // Now create the data file.
@@ -258,8 +259,8 @@ void createData (uInt nseq, uInt nant, uInt nchan, uInt npol,
       cfile->write (align1.size(), align1.storage());
     }
     for (uInt j=0; j<nrbl; ++j) {
-      // The RTCP wrote the conj of the data for version 1.
-      if (myStManVersion == 1) {
+      // The RTCP wrote the conj of the data for version 1 and 2.
+      if (myStManVersion < 3) {
         Array<Complex> cdata = conj(data);
         cfile->write (data.size(), cdata.data());
       } else {
@@ -305,9 +306,9 @@ void createData (uInt nseq, uInt nant, uInt nchan, uInt npol,
   }
   delete cfile;
 
-  if (myStManVersion == 2) {
+  if (myStManVersion > 1) {
     TypeIO* sfile = 0;
-    // create seperate file for sequence numbers if version == 3
+    // create seperate file for sequence numbers if version > 1
     RegularFileIO file(RegularFile("tLofarStMan_tmp.data/table.f0seqnr"),
 		       ByteIO::New);
     // Write in canonical (big endian) or local format.
@@ -324,7 +325,7 @@ void createData (uInt nseq, uInt nant, uInt nchan, uInt npol,
 }
 
 
-void checkUVW (uInt row, uInt nant, Vector<Double> uvw, uInt myStManVersion)
+void checkUVW (uInt row, uInt nant, Vector<Double> uvw)
 {
   // Expected outcome of UVW for antenna 0-3 and seqnr 0-1
   static double uvwVals[] = {
@@ -368,25 +369,14 @@ void checkUVW (uInt row, uInt nant, Vector<Double> uvw, uInt myStManVersion)
   uInt ant2 = bl % nant;
   // Only check first two time stamps and first four antennae.
   if (seqnr < 2  &&  ant1 < 4  &&  ant2 < 4) {
-
-    if (myStManVersion == 1)
-      AlwaysAssertExit (near(uvw[0],
-			     uvwVals[3*(seqnr*16 + 4*ant2 + ant1)],
-			     1e-5))
-    else 
-	
-      AlwaysAssertExit (near(uvw[0],
-			     uvwVals[3*(seqnr*16 + 4*ant1 + ant2)],
-			     1e-5));
-
-
+    AlwaysAssertExit (near(uvw[0],
+                           uvwVals[3*(seqnr*16 + 4*ant2 + ant1)],
+                           1e-5))
   }
-
 }
 
 void readTable (uInt nseq, uInt nant, uInt nchan, uInt npol,
-                Double startTime, Double interval, const Complex& startValue, 
-		uInt myStManVersion=1)
+                Double startTime, Double interval, const Complex& startValue)
 {
   uInt nbasel = nant*nant;
   // Open the table and check if #rows is as expected.
@@ -425,18 +415,11 @@ void readTable (uInt nseq, uInt nant, uInt nchan, uInt npol,
   indgen (dataExp, startValue, Complex(0.01, 0.01));
   Array<Float> weightExp(IPosition(2,1,nchan));
   
-  if (myStManVersion < 3) {
-    indgen (weightExp, Float(0),Float(1./32768));
-  }
+  indgen (weightExp, Float(0),Float(1./32768));
   // Loop through all rows in the table and check the data.
   uInt row=0;
   for (uInt i=0; i<nseq; ++i) {
     
-    if (myStManVersion == 3 ) { 
-      indgen (weightExp, Float(i*2048*1./32768), Float(0.));
-      weightExp(IPosition(2, 0, 0)) = Float(0.);
-    }
-
     for (uInt j=0; j<nant; ++j) {
       for (uInt k=0; k<nant; ++k) {
 
@@ -471,20 +454,11 @@ void readTable (uInt nseq, uInt nant, uInt nchan, uInt npol,
         AlwaysAssertExit (allEQ (flagCol(row), flagExp));
         // Check ANTENNA1 and ANTENNA2
 
-	if (myStManVersion == 1) {
-	  AlwaysAssertExit (ant1Col(row) == int32(k));
-	  AlwaysAssertExit (ant2Col(row) == int32(j));
-	} else {
-	  AlwaysAssertExit (ant1Col(row) == int32(j));
-	  AlwaysAssertExit (ant2Col(row) == int32(k));
-	}
-
+        AlwaysAssertExit (ant1Col(row) == int32(k));
+        AlwaysAssertExit (ant2Col(row) == int32(j));
 
         dataExp += Complex(0.01, 0.02);
-
-        if (myStManVersion < 3) {
-          weightExp += Float(1./32768);
-        }
+        weightExp += Float(1./32768);
         ++row;
       }
     }
@@ -517,7 +491,7 @@ void readTable (uInt nseq, uInt nant, uInt nchan, uInt npol,
   AlwaysAssertExit (allEQ(flagrowCol.getColumn(), False));
   // Check the UVW coordinates.
   for (uInt i=0; i<nrow; ++i) {
-    checkUVW (i, nant, uvwCol(i), myStManVersion);
+    checkUVW (i, nant, uvwCol(i));
   }
   RefRows rownrs(0,2,1);
   Slicer slicer(IPosition(2,0,0), IPosition(2,1,1));
@@ -588,7 +562,7 @@ int main (int argc, char* argv[])
         istr >> npol;
       }
       // Test the various versions.
-      for (int v=1; v<3; ++v) {
+      for (int v=1; v<4; ++v) {
         cout << "Test version " << v << endl;
         // Create the table.
         createTable (nant);
@@ -600,24 +574,24 @@ int main (int argc, char* argv[])
         createData (nseq, nant, nchan, npol, startTime, interval,
                     Complex(0.1, 0.1), 512, True, v);
         readTable (nseq, nant, nchan, npol, startTime, interval,
-                   Complex(0.1, 0.1), v);
+                   Complex(0.1, 0.1));
         // Update the table and check again.
         updateTable (nchan, npol, Complex(-3.52, -20.3));
         readTable (nseq, nant, nchan, npol, startTime, interval,
-                   Complex(-3.52, -20.3), v);
+                   Complex(-3.52, -20.3));
         // Write data in local format and check it. No alignment.
         createData (nseq, nant, nchan, npol, startTime, interval,
                     Complex(3.1, -5.2), 0, False, v);
         readTable (nseq, nant, nchan, npol, startTime, interval,
-                   Complex(3.1, -5.2), v);
+                   Complex(3.1, -5.2));
         // Update the table and check again.
         updateTable (nchan, npol, Complex(3.52, 20.3));
         readTable (nseq, nant, nchan, npol, startTime, interval,
-                   Complex(3.52, 20.3), v);
+                   Complex(3.52, 20.3));
         copyTable();
       }
     }
-  } catch (AipsError x) {
+  } catch (AipsError& x) {
     cout << "Caught an exception: " << x.getMesg() << endl;
     return 1;
   } 

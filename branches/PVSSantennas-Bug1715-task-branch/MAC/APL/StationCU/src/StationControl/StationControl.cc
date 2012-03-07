@@ -1131,7 +1131,7 @@ uint16 StationControl::_addObservation(const string&	name)
 	LOG_DEBUG_STR("Trying to readfile " << filename);
 	try {
 		theObsPS.adoptFile(filename);
-		theObs = Observation(&theObsPS);
+		theObs = Observation(&theObsPS, itsHasSplitters);
 		LOG_DEBUG_STR("theOBS=" << theObs);
 	}
 	catch (Exception&	ex) {
@@ -1193,7 +1193,7 @@ LOG_DEBUG_STR("final receivers   =" << realReceivers);
 
 
 	// create an activeObservation object that will manage the child controllers.
-	ActiveObs*	theNewObs = new ActiveObs(name, (State)&ActiveObs::initial, &theObsPS, *this);
+	ActiveObs*	theNewObs = new ActiveObs(name, (State)&ActiveObs::initial, &theObsPS, itsHasSplitters, *this);
 	if (!theNewObs) {
 		LOG_FATAL_STR("Unable to create the Observation '" << name << "'");
 		return (CT_RESULT_UNSPECIFIED);

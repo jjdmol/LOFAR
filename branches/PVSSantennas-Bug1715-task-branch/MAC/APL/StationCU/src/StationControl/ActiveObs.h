@@ -60,10 +60,11 @@ namespace LOFAR {
 class ActiveObs : public GCFTask
 {
 public:
-	ActiveObs (const string&			name,
-			   State					initial,
+	ActiveObs (const string&	name,
+			   State			initial,
 			   ParameterSet*	aPS,
-			   GCFTask&					task);
+			   bool				hasSplitters,
+			   GCFTask&			task);
 	virtual ~ActiveObs();
 
 	void					start()		{ initFsm();	}

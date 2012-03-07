@@ -29,7 +29,7 @@ abc  type=polc
     pert=1e-06 pert_rel=y
 0 parms and 0 values found
 Deleted 1 parm defaultvalue records
-0 parms and 0 values found
+0 default parms and 0 values found
 abc  type=scalar
     domain:  freq=[1e-06 MHz +0.002 KHz] time=[1858/11/17/00:00:02 +2 sec]
     values:  -1,-2  shape=[2, 1]
@@ -133,7 +133,7 @@ def  type=polc
 parm1  type=scalar
     values:  3.1  shape=[1, 1]
     pert=1e-06 pert_rel=y
-2 parms and 2 values found
+2 default parms and 2 values found
 gh  type=scalar
     domain:  freq=[1e-06 MHz +0.002 KHz] time=[-5877631/01/18/00:00:00 +2e+30 sec]
     values:  -1  shape=[1, 1]

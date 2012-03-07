@@ -96,6 +96,19 @@ class MonochromeMap : public ColorMap {
 };
 
 /**
+ * ColorMap that turns a value into a gray scale value. High values represent whiter colors.
+ */
+class InvertedMap : public ColorMap {
+	public:
+		InvertedMap() { }
+		~InvertedMap() { }
+		unsigned char ValueToColorR(long double value) const { return (unsigned char) (127.5-value*127.5); }
+		unsigned char ValueToColorG(long double value) const { return (unsigned char) (127.5-value*127.5); }
+		unsigned char ValueToColorB(long double value) const { return (unsigned char) (127.5-value*127.5); }
+		unsigned char ValueToColorA(long double) const { return 255; }
+};
+
+/**
  * ColorMap that turns negative values into blue and positive values into red. Zero is represented with black.
  */
 class RedBlueMap : public ColorMap {
@@ -114,6 +127,35 @@ class RedBlueMap : public ColorMap {
 				return (unsigned char) (value*-255.0);
 			else
 				return 0;
+		}
+		unsigned char ValueToColorA(long double) const { return 255; }
+};
+
+/**
+ * ColorMap that turns negative values into red and positive values into black. Zero is represented with white.
+ */
+class BlackRedMap : public ColorMap {
+	public:
+		BlackRedMap() { }
+		~BlackRedMap() { }
+		unsigned char ValueToColorR(long double value) const {
+			if(value>0.0)
+				return (unsigned char) (255-value*255.0);
+			else
+				return 255;
+		}
+		unsigned char ValueToColorG(long double value) const
+		{
+			if(value>0.0)
+				return (unsigned char) (255-value*255.0);
+			else
+				return 255+value*255.0;
+		}
+		unsigned char ValueToColorB(long double value) const {
+			if(value>0.0)
+				return (unsigned char) (255-value*255.0);
+			else
+				return 255+value*255.0;
 		}
 		unsigned char ValueToColorA(long double) const { return 255; }
 };

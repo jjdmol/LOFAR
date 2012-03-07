@@ -108,7 +108,7 @@ namespace rfiStrategy {
 				}
 				unsigned width = times.size(), height = frequencies.size();
 				AOLogger::Debug << "Image size: " << width << 'x' << height << '\n';
-				Image2DPtr image = Image2D::CreateEmptyImagePtr(width, height);
+				Image2DPtr image = Image2D::CreateZeroImagePtr(width, height);
 				Mask2DPtr mask = Mask2D::CreateSetMaskPtr<true>(width, height);
 				
 				std::map<double, unsigned> timeIndices, frequencyIndices;
@@ -192,6 +192,8 @@ namespace rfiStrategy {
 				TimeFrequencyMetaDataPtr metaData = TimeFrequencyMetaDataPtr(new TimeFrequencyMetaData());
 				metaData->SetObservationTimes(observationTimes);
 				metaData->SetBand(bandInfo);
+				metaData->SetDataDescription(dataDescription());
+				metaData->SetDataUnits(units());
 				
 				// Return it structured.
 				TimeFrequencyData data(TimeFrequencyData::AmplitudePart, StokesIPolarisation, image);
@@ -200,6 +202,34 @@ namespace rfiStrategy {
 				return baselineData;
 			}
 		private:
+			virtual std::string units()
+			{
+				switch(_mode)
+				{
+					default:
+					case RFIPercentages:
+						return "%";
+					case TotalAmplitude:
+					case RFIAmplitude:
+					case NonRFIAmplitude:
+						return "";
+				}
+			}
+
+			virtual std::string dataDescription()
+			{
+				switch(_mode)
+				{
+					default:
+					case RFIPercentages:
+						return "RFI fraction";
+					case TotalAmplitude:
+					case RFIAmplitude:
+					case NonRFIAmplitude:
+						return "Amplitude";
+				}
+			}
+
 			std::string _path;
 			enum Mode _mode;
 	};

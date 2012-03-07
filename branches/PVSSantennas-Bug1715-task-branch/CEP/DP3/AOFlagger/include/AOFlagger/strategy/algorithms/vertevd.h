@@ -44,8 +44,8 @@ class VertEVD
 				<< skipped << " values of height " << (real->Height()) << " were skipped to create matrix size " << n << "\n.";
 			}
 			Image2DPtr
-				realMatrix = Image2D::CreateEmptyImagePtr(n, n),
-				imaginaryMatrix = Image2D::CreateEmptyImagePtr(n, n);
+				realMatrix = Image2D::CreateUnsetImagePtr(n, n),
+				imaginaryMatrix = Image2D::CreateUnsetImagePtr(n, n);
 			
 			if(timeIntegrated)
 			{

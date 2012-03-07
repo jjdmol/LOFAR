@@ -147,8 +147,8 @@ namespace rfiStrategy {
 				unsigned width = timeIndices.size(), height = frequencies.size();
 				AOLogger::Debug << "Image size: " << width << 'x' << height << '\n';
 				Image2DPtr
-					imageReal = Image2D::CreateEmptyImagePtr(width, height),
-					imageImag = Image2D::CreateEmptyImagePtr(width, height);
+					imageReal = Image2D::CreateZeroImagePtr(width, height),
+					imageImag = Image2D::CreateZeroImagePtr(width, height);
 				Mask2DPtr mask = Mask2D::CreateSetMaskPtr<true>(width, height);
 				index = 0;
 				
@@ -242,7 +242,10 @@ namespace rfiStrategy {
 				Image2DPtr images[data.ImageCount()];
 				for(unsigned i=0;i<data.ImageCount();++i)
 					images[i] = Image2D::CreateCopy(data.GetImage(i));
-				std::vector<double> observationTimes(metaData->ObservationTimes());
+				bool hasObsTimes = metaData != 0;
+				
+				std::vector<double> observationTimes;
+				if(hasObsTimes) observationTimes = metaData->ObservationTimes();
 				
 				unsigned x=0;
 				std::vector<unsigned> removedColumns;
@@ -289,11 +292,14 @@ namespace rfiStrategy {
 										const num_t val = images[i]->Value(mergeX, y);
 										images[i]->SetValue(x, y, val);
 									}
-									timeAvg += observationTimes[mergeX];
-									timeCount++;
+									if(hasObsTimes)
+									{
+										timeAvg += observationTimes[mergeX];
+										timeCount++;
+									}
 								}
 							}
-							if(timeCount > 0)
+							if(hasObsTimes && timeCount > 0)
 								observationTimes[x] = timeAvg / (double) timeCount;
 						}
 						for(unsigned removeX=x+1;removeX!=x+checkSize;++removeX)
@@ -309,34 +315,40 @@ namespace rfiStrategy {
 				Image2DPtr resizedImages[data.ImageCount()];
 				for(unsigned i=0;i<data.ImageCount();++i)
 				{
-					resizedImages[i] = Image2D::CreateEmptyImagePtr(newWidth, data.ImageHeight());
+					resizedImages[i] = Image2D::CreateUnsetImagePtr(newWidth, data.ImageHeight());
 				}
 				Mask2DPtr resizedMask = Mask2D::CreateUnsetMaskPtr(newWidth, data.ImageHeight());
 				
 				std::vector<unsigned>::const_iterator nextRemovedCol = removedColumns.begin();
-
-				unsigned xOfResized=0;
-				for(unsigned xOfOld=0;xOfOld<mask->Width();++xOfOld)
-				{
-					if(xOfOld == *nextRemovedCol)
-					{
-						++nextRemovedCol;
-						observationTimes.erase(observationTimes.begin()+xOfResized);
-					} else {
-						for(unsigned y=0;y<mask->Height();++y)
-						{
-							resizedMask->SetValue(xOfResized, y, mask->Value(xOfOld, y));
-							for(unsigned i=0;i<data.ImageCount();++i)
-								resizedImages[i]->SetValue(xOfResized, y, images[i]->Value(xOfOld, y));
-						}
-						++xOfResized;
-					}
-				}
 				
-				for(unsigned i=0;i<data.ImageCount();++i)
-					data.SetImage(i, resizedImages[i]);
-				data.SetGlobalMask(resizedMask);
-				metaData->SetObservationTimes(observationTimes);
+				if(nextRemovedCol != removedColumns.begin())
+				{
+					unsigned xOfResized=0;
+					for(unsigned xOfOld=0;xOfOld<mask->Width();++xOfOld)
+					{
+						if(xOfOld == *nextRemovedCol)
+						{
+							++nextRemovedCol;
+							if(hasObsTimes)
+								observationTimes.erase(observationTimes.begin()+xOfResized);
+						} else {
+							for(unsigned y=0;y<mask->Height();++y)
+							{
+								resizedMask->SetValue(xOfResized, y, mask->Value(xOfOld, y));
+								for(unsigned i=0;i<data.ImageCount();++i)
+									resizedImages[i]->SetValue(xOfResized, y, images[i]->Value(xOfOld, y));
+							}
+							++xOfResized;
+						}
+					}
+					
+					for(unsigned i=0;i<data.ImageCount();++i)
+						data.SetImage(i, resizedImages[i]);
+					data.SetGlobalMask(resizedMask);
+					
+					if(hasObsTimes)
+						metaData->SetObservationTimes(observationTimes);
+				}
 			}
 
 		private:

@@ -40,8 +40,10 @@ namespace RTCP {
 
 class ControlPhase3Cores {
   public:
-				ControlPhase3Cores(const Parset &, const std::vector<Stream *> &phaseThreeStreams);
+				ControlPhase3Cores(const Parset &, const std::vector<Stream *> &phaseThreeStreams, unsigned firstBlock);
 				~ControlPhase3Cores();
+
+    void                        start();                            
 
     void			addIterations(unsigned count);
   
@@ -52,6 +54,8 @@ class ControlPhase3Cores {
 
     const std::vector<Stream *>	&itsPhaseThreeStreams;
     const unsigned		itsMaxNrStreamsPerPset;
+    const unsigned              itsFirstBlock;
+    const bool                  itsAmNeeded;
 
     Semaphore			itsNrIterationsToDo;
     SmartPtr<Thread>		itsThread;

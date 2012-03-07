@@ -4,6 +4,7 @@
 #include <Common/lofar_complex.h>
 #include <Common/DataConvert.h>
 #include <Interface/Align.h>
+#include <Interface/Allocator.h>
 #include <Interface/MultiDimArray.h>
 #include <Interface/Config.h>
 #include <Interface/StreamableData.h>
@@ -22,7 +23,7 @@ template <typename SAMPLE_TYPE> class InputData: public SampleData<SAMPLE_TYPE,3
   public:
     typedef SampleData<SAMPLE_TYPE,3> SuperType;
 
-    InputData(const unsigned nrSubbands, const unsigned nrSamplesToCNProc);
+    InputData(unsigned nrSubbands, unsigned nrSamplesToCNProc, Allocator &allocator = heapAllocator);
 
     // used for asynchronous transpose
     void readOne(Stream *str, unsigned subbandPosition);
@@ -32,9 +33,9 @@ template <typename SAMPLE_TYPE> class InputData: public SampleData<SAMPLE_TYPE,3
 };
 
 
-template <typename SAMPLE_TYPE> inline InputData<SAMPLE_TYPE>::InputData(const unsigned nrSubbands, const unsigned nrSamplesToCNProc)
+template <typename SAMPLE_TYPE> inline InputData<SAMPLE_TYPE>::InputData(unsigned nrSubbands, unsigned nrSamplesToCNProc, Allocator &allocator)
 :
-  SuperType(boost::extents[nrSubbands][nrSamplesToCNProc][NR_POLARIZATIONS], 0)
+  SuperType(boost::extents[nrSubbands][nrSamplesToCNProc][NR_POLARIZATIONS], 0, allocator)
 {
 }
 

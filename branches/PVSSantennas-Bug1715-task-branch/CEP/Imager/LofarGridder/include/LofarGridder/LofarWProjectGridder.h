@@ -69,11 +69,11 @@ namespace LOFAR
 
   private:
     // Correct the visibilities before gridding or after degridding.
-    void correctVisibilities (askap::synthesis::IDataAccessor& acc,
+    void correctVisibilities (askap::accessors::IDataAccessor& acc,
                               bool forward);
 
     // Initialize the corrections.
-    void initCorrections (const askap::synthesis::IConstDataAccessor& acc);
+    void initCorrections (const askap::accessors::IConstDataAccessor& acc);
 
     // Form an Instrument object.
     BBS::Instrument makeInstrument (const casa::MeasurementSet& ms);

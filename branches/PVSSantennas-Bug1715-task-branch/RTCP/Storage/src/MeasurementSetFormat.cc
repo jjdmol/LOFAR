@@ -13,8 +13,6 @@
 #include <Storage/MeasurementSetFormat.h>
 #include <Storage/Package__Version.h>
 
-#include <AMCBase/Epoch.h>
-
 #include <string>
 #include <fstream>
 #include <iostream>
@@ -60,8 +58,6 @@
 #include <LofarStMan/LofarStMan.h>
 #include <Interface/Exceptions.h>
 
-#include <boost/thread/mutex.hpp>
-
 
 using namespace casa;
 
@@ -70,6 +66,14 @@ namespace RTCP {
 
 
 Mutex MeasurementSetFormat::sharedMutex;
+
+
+// unix time to mjd time (in seconds instead of days)
+static double toMJDs( double time )
+{
+  // 40587 modify Julian day number = 00:00:00 January 1, 1970, GMT
+  return 40587.0 + time;
+}
 
 
 MeasurementSetFormat::MeasurementSetFormat(const Parset &ps, unsigned alignment)
@@ -89,12 +93,7 @@ MeasurementSetFormat::MeasurementSetFormat(const Parset &ps, unsigned alignment)
 	      antPos.size() << " == " << 3 * itsPS.nrStations());
   }
 
-  {
-    ScopedLock scopedLock(sharedMutex);
-    AMC::Epoch epoch;
-    epoch.utc(itsPS.startTime());
-    itsStartTime = MVEpoch(epoch.mjd()).getTime().getValue("s");
-  }
+  itsStartTime = toMJDs(itsPS.startTime());
 
   itsTimeStep = itsPS.IONintegrationTime();
   itsNrTimes = 29030400;  /// equates to about one year, sets valid
@@ -206,7 +205,7 @@ void MeasurementSetFormat::fillAntenna(const Block<MPosition>& antMPos)
     msantCol.stationId().put(i, 0);
     msantCol.station().put(i, "LOFAR");
     msantCol.type().put(i, "GROUND-BASED");
-    msantCol.mount().put(i, "FIXED");
+    msantCol.mount().put(i, "X-Y");
     msantCol.positionMeas().put(i, antMPos[i]);
     msantCol.offset().put(i, antOffset);
     msantCol.dishDiameter().put(i, 0);
@@ -284,14 +283,18 @@ void MeasurementSetFormat::fillField(unsigned subarray)
   MSLofarFieldColumns msfieldCol(msfield);
 
   uInt rownr = msfield.nrow();
+  ASSERT(rownr == 0); // can only set directionType on first row, so only one field per MeasurementSet for now
+  msfieldCol.setDirectionRef(beamDirectionType);
   msfield.addRow();
   msfieldCol.name().put(rownr, "BEAM_" + String::toString(subarray));
   msfieldCol.code().put(rownr, "");
   msfieldCol.time().put(rownr, itsStartTime);
   msfieldCol.numPoly().put(rownr, 0);
+
   msfieldCol.delayDirMeasCol().put(rownr, outdir);
   msfieldCol.phaseDirMeasCol().put(rownr, outdir);
   msfieldCol.referenceDirMeasCol().put(rownr, outdir);
+
   msfieldCol.sourceId().put(rownr, -1);
   msfieldCol.flagRow().put(rownr, False);
 
@@ -301,6 +304,7 @@ void MeasurementSetFormat::fillField(unsigned subarray)
   				       Quantity(itsPS.getAnaBeamDirection()[1], "rad"));
     MDirection::Types anaBeamDirectionType; // By default this is J2000
     MDirection::getType(anaBeamDirectionType, itsPS.getAnaBeamDirectionType());
+    ASSERT(anaBeamDirectionType == beamDirectionType); // we can only have one type in the direction column, since it is stored in the header
     MDirection anaBeamDirection(radec_AnaBeamDirection, anaBeamDirectionType);
     msfieldCol.tileBeamDirMeasCol().put(rownr, anaBeamDirection);
   } else {

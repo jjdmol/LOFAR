@@ -4,12 +4,12 @@ include(LofarPackageVersion)
 
 lofar_add_library(storage 
   Package__Version.cc
+  FastFileStream.cc
   InputThread.cc
   OutputThread.cc
   SubbandWriter.cc
   MSWriter.cc
-  MSWriterDAL.cc
-  MSWriterHDF5.cc
+  MSWriterLDA.cc
   MSWriterNull.cc
   MSWriterFile.cc
   Format.cc

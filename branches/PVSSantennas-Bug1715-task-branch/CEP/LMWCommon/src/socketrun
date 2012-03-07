@@ -71,71 +71,81 @@
 # Thereafter the variable arguments (passed to socketrun) are given.
 
 
-dry=$1
+dry="$1"
 shift
-hfn=$1
+hfn="$1"
 shift
-masterhost=$1
+masterhost="$1"
 shift
-port=$1
+port="$1"
 shift
-wait=$1
+wait="$1"
 shift
-killfail=$1
+killfail="$1"
 shift
-logfile=$1
+logfile="$1"
 shift
-program=$1
+program="$1"
 shift
-envfile=$1
+envfile="$1"
 shift
 
-np=`wc -l $hfn | awk '{print $1}'`
+np=`wc -l "$hfn" | awk '{print $1}'`
 
 # The first host is the master one.
 pidlist=
 rank=0
-for inline in `cat $hfn`
+
+# Start a remote process for each line in the hfn file.
+while read inline
 do
-  host=`echo $inline | awk -F'#' '{print $1'}`
-  rest=`echo $inline | awk -F'#' '{print $2'}`
-  part=`echo $rest | awk -F',' '{print $1'}`
-  fsys=`echo $rest | awk -F',' '{print $2'}`
-  partvds=`echo $rest | awk -F',' '{print $3'}`
-  if test "$part" = ""; then
-    part=.
-  fi
-  if test "$fsys" = ""; then
-    fsys=.
-  fi
-  if test "$partvds" = ""; then
-    partvds=.
-  fi
-  if test "$masterhost" = ""; then
-    masterhost=$host
-  fi
-  # Quote all arguments ("$@" does not work over ssh).
-  arg=
-  for a in "$@"
-  do
-    arg="$arg '$a'"
-  done
-  echo "ssh -x -n $host $program socket $masterhost $port $np $rank '$part' '$fsys' '$partvds' '$envfile' $arg" " &"
-  if test "$dry" = 0; then
-    if test "$logfile" = ""; then
-      ssh -x -n $host $program socket $masterhost $port $np $rank "$part" "$fsys" "$partvds" $envfile $arg &
-    else
-      ssh -x -n $host $program socket $masterhost $port $np $rank "$part" "$fsys" "$partvds" $envfile $arg > $logfile-$rank 2>&1 &
+  if test "$inline" != ""; then
+    host=`echo $inline | awk -F'#' '{print $1'}`
+    rest=`echo $inline | awk -F'#' '{print $2'}`
+    part=`echo $rest | awk -F',' '{print $1'}`
+    fsys=`echo $rest | awk -F',' '{print $2'}`
+    partvds=`echo $rest | awk -F',' '{print $3'}`
+    if test "$part" = ""; then
+      part=.
     fi
-    pidlist="$pidlist $!"
+    if test "$fsys" = ""; then
+      fsys=.
+    fi
+    if test "$partvds" = ""; then
+      partvds=.
+    fi
+    if test "$masterhost" = ""; then
+      masterhost="$host"
+    fi
+    # Quote all arguments ("$@" does not work over ssh).
+    arg=
+    for a in "$@"
+    do
+      arg="$arg '$a'"
+    done
+    echo "ssh -x -n '$host' '$program' socket '$masterhost' $port $np $rank '$part' '$fsys' '$partvds' '$envfile' $arg" " &"
+    if test "$dry" = 0; then
+      if test "$logfile" = ""; then
+        # Use extra quotes in argument that might contain whitespace.
+        ssh -o NoHostAuthenticationForLocalhost=yes -o NumberOfPasswordPrompts=0 -x -n "$host" "'$program'" socket "'$masterhost'" "'$port'" "$np" "$rank" "'$part'" "'$fsys'" "'$partvds'" "'$envfile'" $arg &
+      else
+        ssh -o NoHostAuthenticationForLocalhost=yes -o NumberOfPasswordPrompts=0 -x -n "$host" "'$program'" socket "'$masterhost'" "'$port'" "$np" "$rank" "'$part'" "'$fsys'" "'$partvds'" "'$envfile'" $arg > "$logfile-$rank" 2>&1 &
+      fi
+      pidlist="$pidlist $!"
+    fi
+    rank=`expr $rank + 1`
   fi
-  rank=`expr $rank + 1`
-done
+done < "$hfn"
 
 # If needed, wait for the processes to end.
 # If a process ended unsuccessfully, kill the others if needed.
+status=0
+ignoreStatus=0
 if test "$wait" = 1; then
-  if test $killfail = 1; then
+  if test "$killfail" = 1; then
+    # After the kill the processes won't exist anymore, so accept status 127
+    # in the wait further on.
+    ignoreStatus=127
     # If killonfail, wait for the first process to end.
     # Poll every second.
     cont=1
@@ -152,24 +162,23 @@ if test "$wait" = 1; then
         seqnr=`expr $seqnr + 1`
       done
     done
-    status=0
-    if test -f $envfile.pid-$seqnr; then
-      status=`grep '^status=' $envfile.pid-$seqnr | sed -e 's/status=//'`
+    if test -f "$envfile.pid-$seqnr"; then
+      status=`grep '^status=' "$envfile.pid-$seqnr" | sed -e 's/status=//'`
     fi
     if test $status != 0; then
       echo "Remote process (pid=$pid) with rank $seqnr ended with error status $status"
       echo "Killing the other remote processes ..."
       rank=0
-      for inline in `cat $hfn`
+      for inline in `cat "$hfn"`
       do
-        if test $rank != $seqnr  -a  -f $envfile.pid-$rank; then
+        if test $rank != $seqnr  -a  -f "$envfile.pid-$rank"; then
           host=`echo $inline | awk -F'#' '{print $1'}`
-          rempid=`grep '^pid=' $envfile.pid-$rank | sed -e 's/pid=//'`
+          rempid=`grep '^pid=' "$envfile.pid-$rank" | sed -e 's/pid=//'`
           echo "ssh -x $host kill -9 $rempid"
           if test "$logfile" = ""; then
-            ssh -x $host kill -9 $rempid
+            ssh -x "$host" kill -9 "$rempid"
           else
-            ssh -x $host kill -9 $rempid >> $logfile-$rank
+            ssh -x "$host" kill -9 "$rempid" >> "$logfile-$rank"
           fi
         fi
         rank=`expr $rank + 1`
@@ -182,8 +191,8 @@ if test "$wait" = 1; then
   do
     wait $pid > /dev/null 2>&1
     stat=$?
-    if test $stat != 0  -a  $stat != 127; then
-      status=1
+    if test $stat != 0  -a  $stat != $ignoreStatus; then
+      status=$stat
     fi
   done
 fi

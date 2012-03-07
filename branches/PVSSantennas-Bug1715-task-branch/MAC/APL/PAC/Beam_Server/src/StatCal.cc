@@ -56,7 +56,7 @@ StatCal::~StatCal()
 
 void StatCal::makeFileName(int mode)
 {
-    sprintf(itsFileName,"CalTable_mode%d.dat", mode);
+    snprintf(itsFileName, sizeof itsFileName, "CalTable_mode%d.dat", mode);
 }
 
 void StatCal::readData()

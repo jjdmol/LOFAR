@@ -35,6 +35,14 @@
 
 namespace LOFAR { 
 
+  // Forward declaration.
+  class ParameterRecord;
+
+  // ParameterValue represent a value of a parameter.
+  // It can contain a single value, but also a vector of ParameterValues or
+  // a ParameterRecord.
+  //
+  // It contains various functions to obtain the value in the format desired.
   class ParameterValue
   {
   public:
@@ -53,12 +61,19 @@ namespace LOFAR {
     bool isVector() const
       { return itsValue[0] == '['; }
 
+    // Is the value a record?
+    bool isRecord() const
+      { return itsValue[0] == '{'; }
+
     // Get the value string.
     const string& get() const
       { return itsValue; }
 
-    // Split value into a vector of ParameterValues.
+    // Get the parameter value as a vector of ParameterValues.
     vector<ParameterValue> getVector() const;
+
+    // Get the parameter value as a ParameterRecord.
+    ParameterRecord getRecord() const;
 
     // Get the parameter value in the given type.
     // <group>
@@ -150,6 +165,11 @@ namespace LOFAR {
     // </group>
 
   private:
+    // Split itsValue into individual values using the comma as separator.
+    // It takes the commas in quoted strings or in compound values into
+    // account.
+    vector<ParameterValue> splitValue (uint st, uint last) const;
+
     // Return the position of the first non-whitespace character in itsValue
     // starting at st.
     uint lskipws (uint st, uint end) const

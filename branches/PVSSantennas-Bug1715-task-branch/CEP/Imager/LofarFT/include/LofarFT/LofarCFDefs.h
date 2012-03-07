@@ -37,6 +37,7 @@ namespace LOFAR
 {
   namespace LofarCFDefs { //# NAMESPACE CASA - BEGIN
     using namespace casa;
+    // freq, mueller_x, mueller_y
     typedef vector< vector< vector < Matrix<Complex> > > > CFTypeVec ;
     typedef Array<Complex> CFType ;
     typedef Array<Double> CFTypeReal ;

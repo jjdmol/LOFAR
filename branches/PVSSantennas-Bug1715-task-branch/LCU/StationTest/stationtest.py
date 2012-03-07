@@ -3,7 +3,7 @@
 #
 # Run the tests to test a LOFAR station
 # H. Meulman
-# Version 0.7                18-mrt-2011	SVN17798
+# Version 0.12                27-jan-2012	SVN*****
 
 # 24 sep: local log directory aangepast
 # 27 sept: 	- Toevoeging delay voor tbbdriver polling
@@ -22,13 +22,22 @@
 #		LBAtest(), HBAModemTest(), HBAtest() De laatste test werkt pas als transmitters geinstalleerd zijn.
 # 18 mrt 2011: Als alle LBA's niet werken, wordt error gelogd. (average < 4000000)
 # 30 mrt 2011: TBBversion_int.gold aangepast voor internationale stations.
+# 7 sep 2011: Bug removed. On the remote stations LBA mode 1 will now also be tested.
+# oct 2011: added CS028 and CS031
+# 22 nov 2011: TBB versie aanpassen naar 2.39
+# 22 nov 2011: Changed filename to not overwrite testdata subrack test
+# 12 jan 2012: Reject LBA antennas when signal differs more than 10dB up. These antennas shoeld not contribute to the average
+# 26 jan 2012: Reject LBA antennas when signal differs less than 3dB down. These antennas shoeld not contribute to the average
+# 27 jan 2012: Store logfiles in /localhome/stationtest/data in "local mode"
 
 # todo:
 # - Als meer dan 10 elementen geen rf signaal hebben, keur dan hele tile af
 # - als beamserver weer goed werkt deze weer toevoegen aan LBA test
 # - =='LOCKED' in 160 en 200 MHz clock test over een aantal keren!
-# TBB versie aanpassen naar 2.32
-# Code nog testen op NL stations
+# Loggen absolute waarden van alle antennes (LBH LBL eb HBA)
+# BIST toevoegen RSP boards
+# Cabinet temperatuur monitoren
+
 
 
 import sys
@@ -55,12 +64,12 @@ factor = 30	# station statistics fault window: Antenna average + and - factor = 
 
 InternationalStations = ('DE601C','DE602C','DE603C','DE604C','DE605C','FR606C','SE607C','UK608C')
 RemoteStations = ('CS302C','RS106C','RS205C','RS208C','RS306C','RS307C','RS406C','RS503C')
-CoreStations = ('CS001C','CS002C','CS003C','CS004C','CS005C','CS006C','CS007C','CS011C','CS017C','CS021C','CS024C','CS026C','CS030C','CS032C','CS101C','CS103C','CS201C','CS301C','CS401C','CS501C')
-NoHBAelementtestPossible = ('DE601C','DE602C','DE603C','DE604C','DE605C','FR606C','SE607C','UK608C')
+CoreStations = ('CS001C','CS002C','CS003C','CS004C','CS005C','CS006C','CS007C','CS011C','CS013C','CS017C','CS021C','CS024C','CS026C','CS028C','CS030C','CS031','CS032C','CS101C','CS103C','CS201C','CS301C','CS401C','CS501C')
+NoHBAelementtestPossible = ('DE601C','DE602C','DE603C','DE605C','FR606C','SE607C','UK608C')
 HBASubband = dict( 	DE601C=155,\
 			DE602C=155,\
 			DE603C=284,\
-			DE604C=155,\
+			DE604C=474,\
 			DE605C=479,\
 			FR606C=155,\
 			SE607C=155,\
@@ -93,18 +102,36 @@ if debug: print ('StationType = %d' % StationType)
 if StationType == 0: print ('Error: StationType = %d (Unknown station)' % StationType)
 
 # Path
-if StationType == International: 
-	RSPgoldfile=('/misc/home/etc/stationtest/gold/rsp_version_int.gold')
-	TBBgoldfile=('/misc/home/etc/stationtest/gold/tbb_version_int.gold')
-	TDS=[0,4,8,12,16,20]
+if os.path.exists('/globalhome'): 
+	print('ILT mode')
+	if StationType == International: 
+		RSPgoldfile=('/misc/home/etc/stationtest/gold/rsp_version_int.gold')
+		TBBgoldfile=('/misc/home/etc/stationtest/gold/tbb_version_int.gold')
+		TDS=[0,4,8,12,16,20]
+	else: 
+		RSPgoldfile=('/misc/home/etc/stationtest/gold/rsp_version.gold')
+		TBBgoldfile=('/misc/home/etc/stationtest/gold/tbb_version.gold')
+		TDS=[0,4,8]
+	TBBmgoldfile=('/misc/home/etc/stationtest/gold/tbb_memory.gold')
+	#LogPath=('/misc/home/log/')
+	TestLogPath=('/misc/home/log/')	# Logging remote (on Kis001)
+	#TestLogPath=('/opt/stationtest/data/')	# Logging local (on station)
+
 else: 
-	RSPgoldfile=('/misc/home/etc/stationtest/gold/rsp_version.gold')
-	TBBgoldfile=('/misc/home/etc/stationtest/gold/tbb_version.gold')
-	TDS=[0,4,8]
-TBBmgoldfile=('/misc/home/etc/stationtest/gold/tbb_memory.gold')
-#LogPath=('/misc/home/log/')
-TestLogPath=('/misc/home/log/')	# Logging remote (on Kis001)
-#TestLogPath=('/opt/stationtest/data/')	# Logging local (on station)
+	print('Local mode')
+	if StationType == International: 
+		RSPgoldfile=('/opt/stationtest/gold/rsp_version_int.gold')
+		TBBgoldfile=('/opt/stationtest/gold/tbb_version_int.gold')
+		TDS=[0,4,8,12,16,20]
+	else: 
+		RSPgoldfile=('/opt/stationtest/gold/rsp_version.gold')
+		TBBgoldfile=('/opt/stationtest/gold/tbb_version.gold')
+		TDS=[0,4,8]
+	TBBmgoldfile=('/opt/stationtest/gold/tbb_memory.gold')
+	#LogPath=('/misc/home/log/')
+	#TestLogPath=('/misc/home/log/')	# Logging remote (on Kis001)
+	TestLogPath=('/opt/stationtest/data/')	# Logging local (on station)
+	
 #HistLogPath=('/opt/stationtest/data/')	# Logging local (on station)
 HistLogPath=('/localhome/stationtest/data/')	# Logging local (on station)
 
@@ -180,8 +207,8 @@ if debug: print ('RspBrd = %s' % RspBrd)
 vlev = opts.verbosity
 testId = ''
 appLev = False
-logName = '/opt/stationtest/data/SUBR-%05d-%05d.dat' % (opts.rsp_nr, opts.tbb_nr)
-cli.command('rm -f /opt/stationtest/data/SUBR-%05d-%05d.dat', appLev) 
+logName = '/opt/stationtest/data/STAT-%05d-%05d.dat' % (opts.rsp_nr, opts.tbb_nr)
+cli.command('rm -f /opt/stationtest/data/STAT-%05d-%05d.dat', appLev) 
 sr = testlog.Testlog(vlev, testId, logName)
 
 sr.setResult('PASSED')
@@ -306,6 +333,8 @@ def GotoSwlevel2():
 					for line in res2:
 						print ('%s' % line.rstrip('\n'))
 				time.sleep(30)
+				res = os.popen3('rspctl --datastream=0')[1].readlines()
+				print res
 				time.sleep(90)  # Tijdelijk toe gevoegd voor nieuwe tbbdriver. Deze loopt vast tijdens pollen
 #				CheckTBB()	# Tijdelijk weg gelaten voor nieuwe tbbdriver. Deze loopt vast tijdens pollen
 #fromprg.close()
@@ -1241,6 +1270,7 @@ def LBAtest():
 	f_log = file('/opt/stationtest/test/hbatest/LBA_elements.log', 'w')
 	f_log.write(' ************ \n \n LOG File for LBA element test \n \n *************** \n')
 	f_logfac = file('/opt/stationtest/test/hbatest/LBA_factors.log', 'w')
+	f_loglin = file('/opt/stationtest/test/hbatest/LBA_lin.log', 'w')
 	f_logdown = file('/opt/stationtest/test/hbatest/LBA_down.log', 'w')	# log number that indicates if LBA antenna is falen over (down)
 # initialize data arrays
 	ref_data=range(0, num_rcu)
@@ -1255,7 +1285,7 @@ def LBAtest():
         rm_files(dir_name,'*')
         os.popen3("swlevel 2");
 	
-	if StationType == (Core or Remote):		# Test LBA's in mode1 of NL stations only
+	if StationType == Core or StationType == Remote:		# Test LBA's in mode1 of NL stations only
 		os.popen("rspctl --rcuenable=1")
 	        time.sleep(5)
 		res=os.popen3("rspctl --rcumode=1");
@@ -1285,14 +1315,18 @@ def LBAtest():
 	 	files = open_dir(dir_name)
 	
         	# start processing the element measurements
-		averagesum=0
+		averagesum=1
+		Rejected_antennas=0
 		for file_cnt in range(len(files)) :
 			f, frames_to_process, rcu_nr  = open_file(files, file_cnt)
         	       	if frames_to_process > 0 : 
 				sst_data = read_frame(f)
         	       		sst_subband = sst_data[subband_nr]
 				meet_data[rcu_nr] = sst_subband
-				averagesum=averagesum+sst_subband
+				if ((sst_subband>75000000) and (sst_subband<1500000000)): # average LCU is about 150.000.000. Reject antennes met grotere afwijking dan 10dB en kleiner dan 3dB
+					averagesum=averagesum+sst_subband
+				else:
+					Rejected_antennas=Rejected_antennas+1
 				if debug:
 		                	if rcu_nr==0:
         	               			print ' waarde sst_subband 0 is ' + str(sst_subband)
@@ -1300,17 +1334,26 @@ def LBAtest():
         	        			print ' waarde sst_subband 2 is ' + str(sst_subband)
 					if rcu_nr==50:
 						print ' waarde sst_subband 50 is ' + str(sst_subband)
+
 			f.close
-		average_lba=averagesum/num_rcu
+		if (num_rcu-Rejected_antennas) <> 0: average_lba=averagesum/(num_rcu-Rejected_antennas) # to avoid devide by zero when all antenna's are wrong!
+		else: average_lba = 0
 #		if debug: 
 		print 'average = ' + str(average_lba)
+		print 'Number of rejected antennas = ' + str(Rejected_antennas)
+		f_loglin.write('Number of rejected antennas for mode 1 = ' + str(Rejected_antennas) + '\n')  
 		if average_lba < 4000000:
 			print ('LBA levels to low in mode 1!!!')
 #			if Severity<SeverityOfThisTest: Severity=SeverityOfThisTest
 #			if Priority<PriorityOfThisTest: Priority=PriorityOfThisTest
 			st_log.write('LBAmd1>: Sv=%s Pr=%s, LBA levels to low!!!\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest]))
 			return
-		
+
+		for rcuind in range(num_rcu) :			# Log lineair value of data
+			print 'RCU: ' + str(rcuind) + ' factor: ' + str(meet_data[rcuind])
+		        f_loglin.write(str(rcuind) + ' ' + str(meet_data[rcuind]) + '\n')  
+
+	
 		f_log.write('\nrcumode 1: \n')
 		if average_lba <> 0:
 			for rcuind in range(num_rcu) :
@@ -1399,14 +1442,19 @@ def LBAtest():
  	files = open_dir(dir_name)
 
         # start processing the element measurements
-	averagesum=0
+	averagesum=1
+	Rejected_antennas=0
 	for file_cnt in range(len(files)) :
 		f, frames_to_process, rcu_nr  = open_file(files, file_cnt)
                	if frames_to_process > 0 : 
 			sst_data = read_frame(f)
                		sst_subband = sst_data[subband_nr]
 			meet_data[rcu_nr] = sst_subband
-			averagesum=averagesum+sst_subband
+			if ((sst_subband>75000000) and (sst_subband<1500000000)): # average LCU is 150.000.000. Reject antennes met grotere afwijking dan 10dB en kleiner dan 3dB
+				averagesum=averagesum+sst_subband
+			else:
+				Rejected_antennas=Rejected_antennas+1
+			#averagesum=averagesum+sst_subband
 			if debug:
 	                	if rcu_nr==0:
                        			print ' waarde sst_subband 0 is ' + str(sst_subband)
@@ -1415,9 +1463,12 @@ def LBAtest():
 				if rcu_nr==50:
 					print ' waarde sst_subband 50 is ' + str(sst_subband)
 		f.close
-	average_lba=averagesum/num_rcu
+	if (num_rcu-Rejected_antennas) <> 0: average_lba=averagesum/(num_rcu-Rejected_antennas) # to avoid devide by zero when all antenna's are wrong!
+	else: average_lba = 0
 #	if debug: 
 	print 'average = ' + str(average_lba)
+	print 'Number of rejected antennas = ' + str(Rejected_antennas)
+	f_loglin.write('Number of rejected antennas for mode 3 = ' + str(Rejected_antennas) + '\n')  
 	if average_lba < 4000000:
 		print ('LBA levels to low in mode 3!!!')
 #		if Severity<SeverityOfThisTest: Severity=SeverityOfThisTest
@@ -1425,6 +1476,10 @@ def LBAtest():
 		st_log.write('LBAmd3>: Sv=%s Pr=%s, LBA levels to low!!!\n' % (SeverityLevel[SeverityOfThisTest], PriorityLevel[PriorityOfThisTest]))
 		return
 			
+	for rcuind in range(num_rcu) :			# Log lineair value of data
+		print 'RCU: ' + str(rcuind) + ' factor: ' + str(meet_data[rcuind])
+	        f_loglin.write(str(rcuind) + ' ' + str(meet_data[rcuind]) + '\n')  
+	
 	f_log.write('\nrcumode 3: \n')
 	if average_lba <> 0:
 		for rcuind in range(num_rcu) :
@@ -1479,6 +1534,7 @@ def LBAtest():
 	
         f_log.close
 	f_logfac.close
+	f_loglin.close
 	rm_files(dir_name,'*')
 #	os.popen("killall beamctl")
 	if debug:
@@ -1773,7 +1829,7 @@ CheckTDSStatus200()		# Set clock to 200 MHz and check if locked
 CheckRSPStatus()		# Check status bits form the RSP ST
 GotoSwlevel2()			# Set system in software level 2 again (via level 1). Switching the clock will hold the TBBdriver
 #makeTBBVersionGold()		# make TBB Version ST
-CheckTBBVersion()		# CHeck TBB Version ST
+####CheckTBBVersion()		# CHeck TBB Version ST
 #makeTBBMemGold()		# make TBB Memory gold ST
 #CheckTBBMemory()		# Verify TBB memory modules on the TBB ST
 #CheckTBBSize()			# Verify the size of the TBB memory modules ST

@@ -19,14 +19,20 @@
  ***************************************************************************/
 #include <AOFlagger/gui/imageplanewindow.h>
 
-#include <AOFlagger/util/ffttools.h>
-#include <AOFlagger/util/plot.h>
-#include <AOFlagger/util/ffttools.h>
+#include <gtkmm/filechooserdialog.h>
+#include <gtkmm/stock.h>
+
+#include <AOFlagger/msio/fitsfile.h>
 
 #include <AOFlagger/strategy/algorithms/sinusfitter.h>
 
+#include <AOFlagger/util/ffttools.h>
+#include <AOFlagger/util/plot.h>
+#include <AOFlagger/util/ffttools.h>
+#include <AOFlagger/gui/imagepropertieswindow.h>
+
 ImagePlaneWindow::ImagePlaneWindow()
- : _imager(1536*2, 1536*2), _clearButton("Clear"),
+  : _imager(1536*2, 1536*2 /*1536, 1536*/), _clearButton("Clear"),
 	_applyWeightsButton("Apply weights"),
 	_refreshCurrentButton("R"),
 	_memoryStoreButton("MS"),
@@ -34,15 +40,19 @@ ImagePlaneWindow::ImagePlaneWindow()
 	_memoryMultiplyButton("Mx"),
 	_memorySubtractButton("M-"),
 	_sqrtButton("sqrt"),
-	_fixScaleButton("S"),
 	_plotHorizontalButton("H"), _plotVerticalButton("V"),
 	_angularTransformButton("AT"),
-	_uvPlaneButton("UV plane"), _imagePlaneButton("Image plane"),
-	_zoomXd4Button("x1/4"), _zoomXd2Button("x1/2"),
-	_zoomX1Button("x1"), _zoomX2Button("x2"), _zoomX4Button("x4"),
-	_zoomX8Button("x8"), _zoomX16Button("x16"), _zoomX32Button("x32"),
-	_zoomX64Button("x64"), _zoomX128Button("x128"),
-	_zoom(1.0L), _displayingUV(true)
+	_saveFitsButton("F"),
+	_propertiesButton("P"),
+	_uvPlaneButton("UV"), _imagePlaneButton("Image"),
+	_zoomMenuButton("zoom"),
+	_zoomXd4Button(_zoomGroup, "x1/4"), _zoomXd2Button(_zoomGroup, "x1/2"),
+	_zoomX1Button(_zoomGroup, "x1"), _zoomX2Button(_zoomGroup, "x2"), _zoomX4Button(_zoomGroup, "x4"),
+	_zoomX8Button(_zoomGroup, "x8"), _zoomX16Button(_zoomGroup, "x16"),
+	_zoomX32Button(_zoomGroup, "x32"), _zoomX64Button(_zoomGroup, "x64"),
+	_zoomX128Button(_zoomGroup, "x128"),
+	_zoom(1.0L), _displayingUV(true),
+	_propertiesWindow(0)
 {
 	set_default_size(400,400);
 
@@ -52,135 +62,120 @@ ImagePlaneWindow::ImagePlaneWindow()
 	_uvPlaneButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onUVPlaneButtonClicked));
 	_uvPlaneButton.set_group(group);
 	_uvPlaneButton.set_active(true);
-	_uvPlaneButton.show();
+	_uvPlaneButton.set_tooltip_text("Switch to the UV plane");
 
 	_topBox.pack_start(_imagePlaneButton, false, true);
 	_imagePlaneButton.set_group(group);
 	_imagePlaneButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onImagePlaneButtonClicked));
-	_imagePlaneButton.show();
+	_imagePlaneButton.set_tooltip_text("Switch to the image plane");
 
 	// Add the clear button
 	_topBox.pack_start(_clearButton, false, true);
 	_clearButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onClearClicked));
-	_clearButton.show();
+	_clearButton.set_tooltip_text("Sets the current images to zero (both image and uv plane)");
 
 	_topBox.pack_start(_applyWeightsButton, false, true);
 	_applyWeightsButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onApplyWeightsClicked));
-	_applyWeightsButton.show();
+	_applyWeightsButton.set_tooltip_text("Divides each pixel by the number of times a sample was added to the pixel");
 
 	// Add the zoom buttons
-	Gtk::RadioButtonGroup zoomGroup;
-	_topBox.pack_start(_zoomXd4Button, false, true);
-	_zoomXd4Button.set_group(zoomGroup);
-	_zoomXd4Button.set_active(true);
-	_zoomXd4Button.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
-	_zoomXd4Button.show();
+	_topBox.pack_start(_zoomMenuButton, false, true);
+	_zoomMenuButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomMenuButtonClicked));
+	
+	_zoomMenu.append(_zoomXd4Button);
+	_zoomXd4Button.signal_toggled().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
 
-	_topBox.pack_start(_zoomXd2Button, false, true);
-	_zoomXd2Button.set_group(zoomGroup);
-	_zoomXd2Button.set_active(true);
-	_zoomXd2Button.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
-	_zoomXd2Button.show();
+	_zoomMenu.append(_zoomXd2Button);
+	_zoomXd2Button.signal_toggled().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
 
-	_topBox.pack_start(_zoomX1Button, false, true);
-	_zoomX1Button.set_group(zoomGroup);
+	_zoomMenu.append(_zoomX1Button);
 	_zoomX1Button.set_active(true);
-	_zoomX1Button.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
-	_zoomX1Button.show();
+	_zoomX1Button.signal_toggled().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
 
-	_topBox.pack_start(_zoomX2Button, false, true);
-	_zoomX2Button.set_group(zoomGroup);
-	_zoomX2Button.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
-	_zoomX2Button.show();
+	_zoomMenu.append(_zoomX2Button);
+	_zoomX2Button.signal_toggled().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
 
-	_topBox.pack_start(_zoomX4Button, false, true);
-	_zoomX4Button.set_group(zoomGroup);
-	_zoomX4Button.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
-	_zoomX4Button.show();
+	_zoomMenu.append(_zoomX4Button);
+	_zoomX4Button.signal_toggled().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
 
-	_topBox.pack_start(_zoomX8Button, false, true);
-	_zoomX8Button.set_group(zoomGroup);
-	_zoomX8Button.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
-	_zoomX8Button.show();
+	_zoomMenu.append(_zoomX8Button);
+	_zoomX8Button.signal_toggled().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
 
-	_topBox.pack_start(_zoomX16Button, false, true);
-	_zoomX16Button.set_group(zoomGroup);
-	_zoomX16Button.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
-	_zoomX16Button.show();
+	_zoomMenu.append(_zoomX16Button);
+	_zoomX16Button.signal_toggled().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
 
-	_topBox.pack_start(_zoomX32Button, false, true);
-	_zoomX32Button.set_group(zoomGroup);
-	_zoomX32Button.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
-	_zoomX32Button.show();
+	_zoomMenu.append(_zoomX32Button);
+	_zoomX32Button.signal_toggled().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
 
-	_topBox.pack_start(_zoomX64Button, false, true);
-	_zoomX64Button.set_group(zoomGroup);
-	_zoomX64Button.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
-	_zoomX64Button.show();
+	_zoomMenu.append(_zoomX64Button);
+	_zoomX64Button.signal_toggled().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
 
-	_topBox.pack_start(_zoomX128Button, false, true);
-	_zoomX128Button.set_group(zoomGroup);
-	_zoomX128Button.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
-	_zoomX128Button.show();
+	_zoomMenu.append(_zoomX128Button);
+	_zoomX128Button.signal_toggled().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onZoomButtonClicked));
+	
+	_zoomMenu.show_all_children();
 
 	_topBox.pack_start(_refreshCurrentButton, false, true);
 	_refreshCurrentButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onRefreshCurrentClicked));
-	_refreshCurrentButton.show();
+	_refreshCurrentButton.set_tooltip_text("Refreshes the image so that it matches the current uv plane (any layout changes applied will be lost)");
 
 	_topBox.pack_start(_memoryStoreButton, false, true);
 	_memoryStoreButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onMemoryStoreClicked));
-	_memoryStoreButton.show();
+	_memoryStoreButton.set_tooltip_text("Store current visible image in the image memory");
 
 	_topBox.pack_start(_memoryRecallButton, false, true);
 	_memoryRecallButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onMemoryRecallClicked));
-	_memoryRecallButton.show();
+	_memoryRecallButton.set_tooltip_text("Recall a previously stored image from memory");
 
 	_topBox.pack_start(_memoryMultiplyButton, false, true);
 	_memoryMultiplyButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onMemoryMultiplyClicked));
-	_memoryMultiplyButton.show();
+	_memoryMultiplyButton.set_tooltip_text("Multiply the current visible image with the image in memory");
 
 	_topBox.pack_start(_memorySubtractButton, false, true);
 	_memorySubtractButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onMemorySubtractClicked));
-	_memorySubtractButton.show();
+	_memorySubtractButton.set_tooltip_text("Subtract current visible image from memory image");
 
 	_topBox.pack_start(_sqrtButton, false, true);
 	_sqrtButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onSqrtClicked));
-	_sqrtButton.show();
+	_sqrtButton.set_tooltip_text("Take the square root of all values");
 
-	_topBox.pack_start(_fixScaleButton, false, true);
-	_fixScaleButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onFixScaleClicked));
-	_fixScaleButton.show();
-	
 	_topBox.pack_start(_plotHorizontalButton, false, true);
 	_plotHorizontalButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onPlotHorizontally));
-	_plotHorizontalButton.show();
+	_plotHorizontalButton.set_tooltip_text("Make plot of amplitudes over x-axis");
 	
 	_topBox.pack_start(_plotVerticalButton, false, true);
 	_plotVerticalButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onPlotVertically));
-	_plotVerticalButton.show();
+	_plotVerticalButton.set_tooltip_text("Make plot of amplitudes over y-axis");
 	
 	_topBox.pack_start(_angularTransformButton, false, true);
 	_angularTransformButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onAngularTransformButton));
-	_angularTransformButton.show();
+	_angularTransformButton.set_tooltip_text("Perform an angular transform");
 	
-	// Show containers
+	_topBox.pack_start(_saveFitsButton, false, true);
+	_saveFitsButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onSaveFitsButton));
+	_saveFitsButton.set_tooltip_text("Save the current visible image in a FITS-file");
+	
+	_topBox.pack_start(_propertiesButton, false, true);
+	_propertiesButton.signal_clicked().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onPropertiesButton));
+	_propertiesButton.set_tooltip_text("Imaging properties...");
+	
 	_box.pack_start(_topBox, false, true);
-	_topBox.show();
-
+	
 	_box.pack_start(_imageWidget);
-	_imageWidget.show();
 	_imageWidget.add_events(Gdk::BUTTON_RELEASE_MASK | Gdk::BUTTON_PRESS_MASK);
-	_imageWidget.signal_button_release_event().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onButtonReleased));
+	_imageWidget.OnButtonReleasedEvent().connect(sigc::mem_fun(*this, &ImagePlaneWindow::onButtonReleased));
+	_imageWidget.SetRange(ImageWidget::MinMax);
 
 	add(_box);
-	_box.show();
+	_box.show_all();
 
 	onZoomButtonClicked();
 }
 
-
 ImagePlaneWindow::~ImagePlaneWindow()
 {
+	if(_propertiesWindow != 0)
+		delete _propertiesWindow;
 }
 
 void ImagePlaneWindow::AddData(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData)
@@ -243,7 +238,6 @@ void ImagePlaneWindow::Update()
 	{
 		if(_imager.HasUV()) {
 			_imageWidget.SetImage(Image2D::CreateCopyPtr(_imager.RealUVImage()));
-			_imageWidget.SetAutomaticMin();
 			_imageWidget.Update();
 			_displayingUV = true;
 		}
@@ -255,7 +249,6 @@ void ImagePlaneWindow::Update()
 
 		if(_imager.HasFFT()) {
 			_imageWidget.SetImage(Image2D::CreateCopyPtr(_imager.FTReal()));
-			_imageWidget.SetMin(0.0);
 			_imageWidget.Update();
 			printStats();
 			_displayingUV = false;
@@ -271,8 +264,7 @@ void ImagePlaneWindow::onApplyWeightsClicked()
 
 void ImagePlaneWindow::onRefreshCurrentClicked()
 {
-	_imageWidget.SetImage(Image2D::CreateCopyPtr(_imager.FTReal()));
-	_imageWidget.Update();
+	Update();
 }
 
 void ImagePlaneWindow::onMemoryStoreClicked()
@@ -288,122 +280,125 @@ void ImagePlaneWindow::onMemoryRecallClicked()
 
 void ImagePlaneWindow::onMemoryMultiplyClicked()
 {
-	Image2DPtr multiplied = Image2D::CreateCopy(_memory);
-	Image2DCPtr old = _imageWidget.Image();
-	for(size_t y=0;y<multiplied->Height();++y)
+	if(_memory != 0)
 	{
-		for(size_t x=0;x<multiplied->Width();++x)
+		Image2DPtr multiplied = Image2D::CreateCopy(_memory);
+		Image2DCPtr old = _imageWidget.Image();
+		for(size_t y=0;y<multiplied->Height();++y)
 		{
-			multiplied->SetValue(x, y, multiplied->Value(x, y) * old->Value(x, y));
+			for(size_t x=0;x<multiplied->Width();++x)
+			{
+				multiplied->SetValue(x, y, multiplied->Value(x, y) * old->Value(x, y));
+			}
 		}
+		_imageWidget.SetImage(multiplied);
+		_imageWidget.Update();
+		printStats();
 	}
-	_imageWidget.SetImage(multiplied);
-	_imageWidget.Update();
-	printStats();
 }
 
 void ImagePlaneWindow::onMemorySubtractClicked()
 {
-	Image2DPtr subtracted = Image2D::CreateCopy(_memory);
-	Image2DCPtr old = _imageWidget.Image();
-	for(size_t y=0;y<subtracted->Height();++y)
+	if(_memory != 0)
 	{
-		for(size_t x=0;x<subtracted->Width();++x)
+		Image2DPtr subtracted = Image2D::CreateCopy(_memory);
+		Image2DCPtr old = _imageWidget.Image();
+		for(size_t y=0;y<subtracted->Height();++y)
 		{
-			subtracted->SetValue(x, y, subtracted->Value(x, y) - old->Value(x, y));
+			for(size_t x=0;x<subtracted->Width();++x)
+			{
+				subtracted->SetValue(x, y, subtracted->Value(x, y) - old->Value(x, y));
+			}
 		}
+		_imageWidget.SetImage(subtracted);
+		_imageWidget.Update();
+		printStats();
 	}
-	_imageWidget.SetImage(subtracted);
-	_imageWidget.Update();
-	printStats();
 }
 
 void ImagePlaneWindow::onSqrtClicked()
 {
-	Image2DPtr sqrtImage = Image2D::CreateCopy(_imageWidget.Image());
-	FFTTools::SignedSqrt(sqrtImage);
-	_imageWidget.SetImage(sqrtImage);
-	_imageWidget.Update();
-	printStats();
-}
-
-void ImagePlaneWindow::onFixScaleClicked()
-{
-	if(_fixScaleButton.get_active())
-		_imageWidget.FixScale();
-	else
-		_imageWidget.SetAutomaticScale();
+	if(_imageWidget.HasImage())
+	{
+		Image2DPtr sqrtImage = Image2D::CreateCopy(_imageWidget.Image());
+		FFTTools::SignedSqrt(sqrtImage);
+		_imageWidget.SetImage(sqrtImage);
+		_imageWidget.Update();
+		printStats();
+	}
 }
 
 void ImagePlaneWindow::onPlotHorizontally()
 {
-	Plot plot("Image-horizontal-axis.pdf");
-	plot.SetXAxisText("RA index");
-	plot.SetYAxisText("Amplitude");
-	//plot.SetLogScale(false, true);
-	plot.StartLine();
-	Image2DCPtr image = _imageWidget.Image();
-	for(size_t x=0;x<image->Width();++x)
+	if(_imageWidget.HasImage())
 	{
-		num_t sum = 0.0;
-		for(size_t y=0;y<image->Height();++y)
+		Plot plot("Image-horizontal-axis.pdf");
+		plot.SetXAxisText("RA index");
+		plot.SetYAxisText("Amplitude");
+		//plot.SetLogScale(false, true);
+		plot.StartLine();
+		Image2DCPtr image = _imageWidget.Image();
+		for(size_t x=0;x<image->Width();++x)
 		{
-			sum += image->Value(x, y);
+			num_t sum = 0.0;
+			for(size_t y=0;y<image->Height();++y)
+			{
+				sum += image->Value(x, y);
+			}
+			plot.PushDataPoint(x, sum);
 		}
-		plot.PushDataPoint(x, sum);
+		plot.Close();
+		plot.Show();
 	}
-	plot.Close();
-	plot.Show();
 }
 
 void ImagePlaneWindow::onPlotVertically()
 {
-	Plot plot("Image-vertical-axis.pdf");
-	plot.SetXAxisText("Declination index");
-	plot.SetYAxisText("Amplitude");
-	//plot.SetLogScale(false, true);
-	plot.StartLine();
-	Image2DCPtr image = _imageWidget.Image();
-	for(size_t y=0;y<image->Height();++y)
+	if(_imageWidget.HasImage())
 	{
-		num_t sum = 0.0;
-		for(size_t x=0;x<image->Width();++x)
+		Plot plot("Image-vertical-axis.pdf");
+		plot.SetXAxisText("Declination index");
+		plot.SetYAxisText("Amplitude");
+		//plot.SetLogScale(false, true);
+		plot.StartLine();
+		Image2DCPtr image = _imageWidget.Image();
+		for(size_t y=0;y<image->Height();++y)
 		{
-			sum += image->Value(x, y);
+			num_t sum = 0.0;
+			for(size_t x=0;x<image->Width();++x)
+			{
+				sum += image->Value(x, y);
+			}
+			plot.PushDataPoint(y, sum);
 		}
-		plot.PushDataPoint(y, sum);
+		plot.Close();
+		plot.Show();
 	}
-	plot.Close();
-	plot.Show();
 }
 
 void ImagePlaneWindow::printStats()
 {
-	num_t topLeftRMS = _imageWidget.Image()->GetRMS(0, 0, _imageWidget.Image()->Width()/3, _imageWidget.Image()->Height()/3);
-	std::cout << "RMS=" << _imageWidget.Image()->GetRMS()
-		<< ", max=" << _imageWidget.Image()->GetMaximum()
-		<< ", min=" << _imageWidget.Image()->GetMinimum()
-		<< ", top left RMS=" << topLeftRMS
-		<< ", SNR=" << _imageWidget.Image()->GetMaximum()/topLeftRMS
-		<< std::endl;
+	if(_imageWidget.HasImage())
+	{
+		num_t topLeftRMS = _imageWidget.Image()->GetRMS(0, 0, _imageWidget.Image()->Width()/3, _imageWidget.Image()->Height()/3);
+		std::cout << "RMS=" << _imageWidget.Image()->GetRMS()
+			<< ", max=" << _imageWidget.Image()->GetMaximum()
+			<< ", min=" << _imageWidget.Image()->GetMinimum()
+			<< ", top left RMS=" << topLeftRMS
+			<< ", SNR=" << _imageWidget.Image()->GetMaximum()/topLeftRMS
+			<< std::endl;
+	}
 }
 
-bool ImagePlaneWindow::onButtonReleased(GdkEventButton *event)
+void ImagePlaneWindow::onButtonReleased(size_t x, size_t y)
 {
-	if(_imageWidget.IsInitialized())
+	if(_imageWidget.HasImage())
 	{
 		int 
 			width = _imageWidget.Image()->Width(),
-			height = _imageWidget.Image()->Height(),
-			posX = (size_t) roundl((long double) event->x * width / _imageWidget.get_width() - 0.5L),
-			posY = (size_t) roundl((long double) event->y * height / _imageWidget.get_height() - 0.5L);
+			height = _imageWidget.Image()->Height();
 			
-		if(posX >= width)
-			posX = width - 1;
-		if(posY >= height)
-			posY = height - 1;
-	
-		int left = posX - 3, right = posX + 3, top = posY - 3, bottom = posY + 3;
+		int left = x - 3, right = x + 3, top = y - 3, bottom = y + 3;
 		if(left < 0) left = 0;
 		if(right >= width) right = width - 1;
 		if(top < 0) top = 0;
@@ -413,7 +408,7 @@ bool ImagePlaneWindow::onButtonReleased(GdkEventButton *event)
 		num_t frequencyHz = band.channels[band.channelCount/2].frequencyHz;
 		num_t rms = _imageWidget.Image()->GetRMS(left, top, right-left, bottom-top);
 		num_t max = _imageWidget.Image()->GetMaximum(left, top, right-left, bottom-top);
-		num_t xRel = posX-width/2.0, yRel = posY-height/2.0;
+		num_t xRel = x-width/2.0, yRel = y-height/2.0;
 		const numl_t
 			dist = sqrtnl(xRel*xRel + yRel*yRel),
 			delayRa = _lastMetaData->Field().delayDirectionRA,
@@ -437,8 +432,6 @@ bool ImagePlaneWindow::onButtonReleased(GdkEventButton *event)
 		std::cout << "Delay = " << RightAscension::ToString(delayRa) << ", " << Declination::ToString(delayDec) << " (@" << dx << "," << dy << ")\n";
 		std::cout << "RA = " << RightAscension::ToString(ra) << ", DEC = " << Declination::ToString(dec) << "\n";
 	}
-
-	return true;
 }
 
 void ImagePlaneWindow::onAngularTransformButton()
@@ -448,3 +441,43 @@ void ImagePlaneWindow::onAngularTransformButton()
 	_imageWidget.Update();
 }
 
+void ImagePlaneWindow::onPropertiesButton()
+{
+	if(_propertiesWindow == 0)
+	{
+		_propertiesWindow = new ImagePropertiesWindow(_imageWidget, "Display properties for imager window");
+		_propertiesWindow->show();
+	} else {
+		_propertiesWindow->show();
+		_propertiesWindow->raise();
+	}
+}
+
+void ImagePlaneWindow::onSaveFitsButton()
+{
+	Gtk::FileChooserDialog dialog("Select a measurement set");
+	dialog.set_transient_for(*this);
+
+	//Add response buttons the the dialog:
+	dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+	dialog.add_button("Save", Gtk::RESPONSE_OK);
+
+	Gtk::FileFilter fitsFilter;
+	fitsFilter.set_name("Flexible Image Transport System (*.fits)");
+	fitsFilter.add_pattern("*.fits");
+	fitsFilter.add_mime_type("image/fits");
+	dialog.add_filter(fitsFilter);
+		
+	if(dialog.run() == Gtk::RESPONSE_OK)
+	{
+		const std::string filename = dialog.get_filename();
+		Image2DCPtr image = _imageWidget.Image();
+		image->SaveToFitsFile(filename);
+	}
+}
+
+void ImagePlaneWindow::onZoomMenuButtonClicked()
+{
+	//_zoomMenu.popup(0, gtk_get_current_event_time());
+	_zoomMenu.popup(0, 0);
+}

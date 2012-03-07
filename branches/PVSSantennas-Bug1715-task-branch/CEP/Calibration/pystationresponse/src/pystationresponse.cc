@@ -66,14 +66,6 @@ namespace LOFAR { namespace BBS  {
     // relevant only for HBA observations.
     void setRefTile(double ra, double dec);
 
-    // Set the orientation of the +X dipole (azimuth in the antenna field
-    // coordinate system). Antenna field azimuth is defined with respect to the
-    // positive Q axis, and positive azimuth runs from the positive Q axis to
-    // the positive P axis (roughly North over East, depending on the field).
-    // The orientation of the +Y dipole is assumed to be +90 degrees away from
-    // orientation of the +X dipole.
-    void setRefOrientation(double orientation);
-
     // Set the direction of interest in radians, J2000. Can and often will be
     // different than the delay and/or tile reference direction.
     void setDirection(double ra, double dec);
@@ -132,11 +124,6 @@ namespace LOFAR { namespace BBS  {
   {
     MVDirection radec(Quantity(ra,"rad"), Quantity(dec,"rad"));
     itsResponse->setRefTile(MDirection(radec, MDirection::J2000));
-  }
-
-  void PyStationResponse::setRefOrientation(double orientation)
-  {
-    itsResponse->setRefOrientation(orientation);
   }
 
   void PyStationResponse::setDirection(double ra, double dec)
@@ -243,22 +230,23 @@ namespace LOFAR { namespace BBS  {
     // Use first value of MDirection array in first row in FIELD subtable.
     itsResponse->setRefDelay(fieldCols.delayDirMeas(0));
 
-    // Set the tile reference direction using the LOFAR_TILE_BEAM_DIR field from
-    // the FIELD table, if present. If not present, the tile reference direction
-    // is set equal to the delay reference direction.
-    //
-    // NB. The MeasurementSet class does not support LOFAR specific columns, so
-    // we use ROArrayMeasColumn to read the tile beam reference direction.
+    // By default, the tile beam reference direction is assumed to be equal
+    // to the station beam reference direction (for backward compatibility,
+    // and for non-HBA measurements).
+    itsResponse->setRefTile(fieldCols.delayDirMeas(0));
+
+    // The MeasurementSet class does not support LOFAR specific columns, so we
+    // use ROArrayMeasColumn to read the tile beam reference direction.
     Table tab_field = ms.keywordSet().asTable("FIELD");
-    if(tab_field.tableDesc().isColumn("LOFAR_TILE_BEAM_DIR"))
+
+    static const String columnName = "LOFAR_TILE_BEAM_DIR";
+    if(tab_field.tableDesc().isColumn(columnName))
     {
-        ROArrayMeasColumn<MDirection> c_direction(tab_field,
-            "LOFAR_TILE_BEAM_DIR");
-        itsResponse->setRefTile(c_direction(0)(IPosition(1, 0)));
-    }
-    else
-    {
-        itsResponse->setRefTile(fieldCols.delayDirMeas(0));
+        ROArrayMeasColumn<MDirection> c_direction(tab_field, columnName);
+        if(c_direction.isDefined(0))
+        {
+            itsResponse->setRefTile(c_direction(0)(IPosition(1, 0)));
+        }
     }
 
     // Size the result array.
@@ -276,8 +264,6 @@ namespace LOFAR { namespace BBS  {
         (boost::python::arg("ra"), boost::python::arg("dec")))
       .def ("_setRefTile", &PyStationResponse::setRefTile,
         (boost::python::arg("ra"), boost::python::arg("dec")))
-      .def ("_setRefOrientation", &PyStationResponse::setRefOrientation,
-        (boost::python::arg("orientation")))
       .def ("_setDirection", &PyStationResponse::setDirection,
         (boost::python::arg("ra"), boost::python::arg("dec")))
       .def ("_evaluate0", &PyStationResponse::evaluate0,

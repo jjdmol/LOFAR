@@ -153,7 +153,7 @@ namespace rfiStrategy {
 				for(unsigned i=0;i<data.ImageCount();++i)
 				{
 					Image2DCPtr input = data.GetImage(i);
-					Image2DPtr output = Image2D::CreateEmptyImagePtr(input->Width(), input->Height());
+					Image2DPtr output = Image2D::CreateUnsetImagePtr(input->Width(), input->Height());
 					for(unsigned x=0;x<input->Width();++x)
 					{
 						for(unsigned y=0;y<input->Height();++y)
@@ -182,7 +182,7 @@ namespace rfiStrategy {
 				for(unsigned i=0;i<data.ImageCount();++i)
 				{
 					Image2DCPtr input = data.GetImage(i);
-					Image2DPtr output = Image2D::CreateEmptyImagePtr(input->Width(), input->Height());
+					Image2DPtr output = Image2D::CreateUnsetImagePtr(input->Width(), input->Height());
 					for(unsigned y=0;y<input->Height();++y)
 					{
 						for(unsigned x=0;x<input->Width();++x)

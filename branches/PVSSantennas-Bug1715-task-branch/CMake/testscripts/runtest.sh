@@ -101,10 +101,8 @@ if test -f "$srcdir/$1.py"; then
   \rm -f $1.py
   \cp "$srcdir/$1.py" .
 fi
-if test -f "$srcdir/$1.parset"; then
-  \rm -f $1.parset
-  \cp "$srcdir/$1.parset" .
-fi
+\rm -f $1.parset*
+\cp "$srcdir/$1.parset"* . > /dev/null 2>&1
 if test -f "$srcdir/$1.log_prop"; then
   \rm -f $1.log_prop
   \cp "$srcdir/$1.log_prop" .
@@ -119,6 +117,6 @@ fi
 STS=$?
 
 # Cleanup (mainly for make distcheck).
-\rm -f $1.stdout $1.run $1.py $1.in $1.parset $1.log_prop
+\rm -f $1.stdout $1.run $1.py $1.in $1.parset* $1.log_prop
 \rm -rf $1.in_*
 exit $STS

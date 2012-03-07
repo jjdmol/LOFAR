@@ -94,8 +94,7 @@ namespace LOFAR {
     {
       os << endl << "Flags set by UVWFlagger " << itsName;
       os << endl << "=======================" << endl;
-      itsFlagCounter.showBaseline (os, itsInput->getAnt1(),
-                                   itsInput->getAnt2(), itsNTimes);
+      itsFlagCounter.showBaseline (os, itsNTimes);
       itsFlagCounter.showChannel  (os, itsNTimes);
     }
 
@@ -139,7 +138,7 @@ namespace LOFAR {
       // Input uvw coordinates are only needed if no new phase center is used.
       Matrix<double> uvws;
       if (itsCenter.empty()) {
-        uvws.reference (itsInput->fetchUVW(buf, buf.getRowNrs()));
+        uvws.reference (itsInput->fetchUVW(buf, buf.getRowNrs(), itsTimer));
       }
       const double* uvwPtr = uvws.data();
       bool* flagPtr = flags.data();

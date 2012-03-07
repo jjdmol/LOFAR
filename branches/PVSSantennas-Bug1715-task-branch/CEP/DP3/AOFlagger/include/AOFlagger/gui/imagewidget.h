@@ -22,72 +22,214 @@
 
 #include <gtkmm/drawingarea.h>
 
+#include <cairomm/surface.h>
+
 #include <vector>
 
 #include "../msio/image2d.h"
+#include "../msio/timefrequencydata.h"
+#include "../msio/timefrequencymetadata.h"
+#include "../msio/segmentedimage.h"
 
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
 */
 class ImageWidget : public Gtk::DrawingArea {
 	public:
+		enum TFMap { BWMap, InvertedMap, HotColdMap, RedBlueMap, RedYellowBlueMap, BlackRedMap };
+		enum Range { MinMax, Winsorized, Specified };
+		enum ScaleOption { NormalScale, LogScale, ZeroSymmetricScale };
+		
 		ImageWidget();
 		~ImageWidget();
 
-		void Update();
+		bool ShowOriginalMask() const { return _showOriginalMask; }
+		void SetShowOriginalMask(bool newValue) { _showOriginalMask = newValue; }
+
+		bool ShowAlternativeMask() const { return _showAlternativeMask; }
+		void SetShowAlternativeMask(bool newValue) { _showAlternativeMask = newValue; }
+
+		TFMap GetColorMap() const { return _colorMap; }
+		void SetColorMap(TFMap colorMap) { _colorMap = colorMap; }
+		
+		void SetRange(enum Range range)
+		{
+			_range = range;
+		}
+		enum Range Range() const
+		{
+			return _range;
+		}
+		void SetScaleOption(ScaleOption option)
+		{
+			_scaleOption = option;
+		}
+		enum ScaleOption ScaleOption() const { return _scaleOption; }
+		
+		void Update(); 
+
+		Image2DCPtr Image() const { return _image; }
 		void SetImage(Image2DCPtr image) { _image = image; }
-		Image2DCPtr Image() { return _image; }
-		void Clear() { _image = Image2DCPtr(); _pixbuf=Glib::RefPtr<Gdk::Pixbuf>(); _isInitialized = false; } 
-		void SetMin(num_t min)
+
+		Mask2DCPtr OriginalMask() const { return _originalMask; }
+		void SetOriginalMask(Mask2DCPtr mask) { _originalMask = mask; }
+
+		Mask2DCPtr AlternativeMask() const { return _alternativeMask; }
+		void SetAlternativeMask(Mask2DCPtr mask) { _alternativeMask = mask; }
+
+		Mask2DCPtr GetActiveMask() const;
+
+		void SetHighlighting(bool newValue) { _highlighting = newValue; }
+		class ThresholdConfig &HighlightConfig() { return *_highlightConfig; }
+		bool HasImage() const { return _image != 0; }
+		void SetHorizontalDomain(double start, double end)
 		{
-			_automaticMin = false;
-			_min = min;
+			_startHorizontal = start;
+			_endHorizontal = end;
 		}
-		void SetAutomaticMin()
+		void SetVerticalDomain(double start, double end)
 		{
-			_automaticMin = true;
+			_startVertical = start;
+			_endVertical = end;
 		}
-		bool IsInitialized() const
+		void ResetDomains();
+		double StartHorizontal() const { return _startHorizontal; }
+		double EndHorizontal() const { return _endHorizontal; }
+		double StartVertical() const { return _startVertical; }
+		double EndVertical() const { return _endVertical; }
+		void SetSegmentedImage(SegmentedImageCPtr segmentedImage) { _segmentedImage = segmentedImage; }
+		TimeFrequencyMetaDataCPtr GetMetaData() { return _metaData; }
+		void SetMetaData(TimeFrequencyMetaDataCPtr metaData) { _metaData = metaData; }
+
+		sigc::signal<void, size_t, size_t> &OnMouseMovedEvent() { return _onMouseMoved; }
+		sigc::signal<void> &OnMouseLeaveEvent() { return _onMouseLeft; }
+		sigc::signal<void, size_t, size_t> &OnButtonReleasedEvent() { return _onButtonReleased; }
+		
+		num_t Max() const { return _max; }
+		num_t Min() const { return _min; }
+		
+		void SetMax(num_t max) { _max = max; }
+		void SetMin(num_t min) { _min = min; }
+		
+		void SavePdf(const std::string &filename);
+		void SaveSvg(const std::string &filename);
+		void SavePng(const std::string &filename);
+		
+		bool ShowXYAxes() const { return _showXYAxes; }
+		void SetShowXYAxes(bool showXYAxes)
 		{
-			return _isInitialized;
+			_showXYAxes = showXYAxes;
 		}
-		void SetAutomaticMax()
+		
+		bool ShowColorScale() const { return _showColorScale; }
+		void SetShowColorScale(bool showColorScale)
 		{
-			_automaticMax = true;
+			_showColorScale = showColorScale;
 		}
-		void FixScale()
+		
+		bool ShowXAxisDescription() const { return _showXAxisDescription; }
+		void SetShowXAxisDescription(bool showXAxisDescription)
 		{
-			if(_image != 0)
-			{
-				num_t min, max;
-				findMinMax(_image, min, max);
-				if(_automaticMin)
-					_min = min;
-				if(_automaticMax)
-					_max = max;
-				_automaticMin = false;
-				_automaticMax = false;
-			}
+			_showXAxisDescription = showXAxisDescription;
 		}
-		void SetAutomaticScale()
+		
+		bool ShowYAxisDescription() const { return _showYAxisDescription; }
+		void SetShowYAxisDescription(bool showYAxisDescription)
 		{
-			_automaticMax = true;
-			_automaticMin = true;
+			_showYAxisDescription = showYAxisDescription;
 		}
+		
+		bool ShowZAxisDescription() const { return _showZAxisDescription; }
+		void SetShowZAxisDescription(bool showZAxisDescription)
+		{
+			_showZAxisDescription = showZAxisDescription;
+		}
+		
+		void Clear();
+		
+		void SetCairoFilter(Cairo::Filter filter)
+		{
+			_cairoFilter = filter;
+		}
+		
+		void SetXAxisDescription(const std::string &description)
+		{
+			_xAxisDescription = description;
+		}
+		void SetYAxisDescription(const std::string &description)
+		{
+			_yAxisDescription = description;
+		}
+		void SetZAxisDescription(const std::string &description)
+		{
+			_zAxisDescription = description;
+		}
+		
+		bool ManualXAxisDescription() const { return _manualXAxisDescription; }
+		void SetManualXAxisDescription(bool manualDesc)
+		{
+			_manualXAxisDescription = manualDesc;
+		}
+		bool ManualYAxisDescription() const { return _manualYAxisDescription; }
+		void SetManualYAxisDescription(bool manualDesc)
+		{
+			_manualYAxisDescription = manualDesc;
+		}
+		bool ManualZAxisDescription() const { return _manualZAxisDescription; }
+		void SetManualZAxisDescription(bool manualDesc)
+		{
+			_manualZAxisDescription = manualDesc;
+		}
+
 	private:
-		void redraw();
-		void findMinMax(Image2DCPtr image, num_t &min, num_t &max);
+		void findMinMax(Image2DCPtr image, Mask2DCPtr mask, num_t &min, num_t &max);
+		void update(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, unsigned height);
+		void redrawWithoutChanges(Cairo::RefPtr<Cairo::Context> cairo, unsigned width, unsigned height);
+		void downsampleImageBuffer(unsigned newWidth, unsigned newHeight);
+		bool toUnits(double mouseX, double mouseY, int &posX, int &posY);
 		bool onExposeEvent(GdkEventExpose* ev);
+		bool onMotion(GdkEventMotion *event);
+		bool onLeave(GdkEventCrossing *event);
+		bool onButtonReleased(GdkEventButton *event);
+		class ColorMap *createColorMap();
 
+		bool _isInitialized;
+		unsigned _initializedWidth, _initializedHeight;
+		Cairo::RefPtr<Cairo::ImageSurface> _imageSurface;
 
-		Glib::RefPtr<Gdk::Pixbuf> _pixbuf;
+		bool _showOriginalMask, _showAlternativeMask;
+		enum TFMap _colorMap;
+		TimeFrequencyMetaDataCPtr _metaData;
 		Image2DCPtr _image;
+		Mask2DCPtr _originalMask, _alternativeMask;
+		bool _highlighting;
+		class ThresholdConfig *_highlightConfig;
+		double _leftBorderSize, _rightBorderSize, _topBorderSize, _bottomBorderSize;
 
-		bool _isInitialized, _winsorizedStretch;
-		bool _automaticMin;
-		bool _automaticMax;
+		double _startHorizontal, _endHorizontal;
+		double _startVertical, _endVertical;
+		SegmentedImageCPtr _segmentedImage;
+		class HorizontalPlotScale *_horiScale;
+		class VerticalPlotScale *_vertScale;
+		class ColorScale *_colorScale;
+		enum ScaleOption _scaleOption;
+		bool _showXYAxes;
+		bool _showColorScale;
+		bool _showXAxisDescription;
+		bool _showYAxisDescription;
+		bool _showZAxisDescription;
+		num_t _max, _min;
+		enum Range _range;
+		Cairo::Filter _cairoFilter;
+		std::string _xAxisDescription, _yAxisDescription, _zAxisDescription;
+		bool _manualXAxisDescription;
+		bool _manualYAxisDescription;
+		bool _manualZAxisDescription;
+		bool _mouseIsIn;
 
-		num_t _min, _max;
+		sigc::signal<void, size_t, size_t> _onMouseMoved;
+		sigc::signal<void> _onMouseLeft;
+		sigc::signal<void, size_t, size_t> _onButtonReleased;
 };
 
 #endif

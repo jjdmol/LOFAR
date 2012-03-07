@@ -22,7 +22,10 @@
 
 #include <lofar_config.h>
 #include <MS/VdsMaker.h>
-#include<stdexcept>
+#include <MS/Package__Version.h>
+#include <Common/LofarLogger.h>
+#include <Common/SystemUtil.h>
+#include <stdexcept>
 #include <iostream>
 
 using namespace LOFAR;
@@ -34,6 +37,8 @@ Exception::TerminateHandler t(Exception::terminate);
 int main(int argc, const char* argv[])
 {
   try {
+    TEST_SHOW_VERSION (argc, argv, MS);
+    INIT_LOGGER(basename(string(argv[0])));
     if (argc < 3  ||  argv[1][0] == '\0'  ||  argv[2][0] == '\0') {
       cout << "Run as:  makevds clusterdesc ms [msvds] [hostname] [writetimes]"
            << endl;
