@@ -450,7 +450,7 @@ std::string Parset::getBeamDirectionType(unsigned beam) const
   char buf[50];
   string beamDirType;
  
-  sprintf(buf,"Observation.Beam[%d].directionType", beam);
+  snprintf(buf, sizeof buf, "Observation.Beam[%d].directionType", beam);
   beamDirType = getString(buf);
 
   return beamDirType;
