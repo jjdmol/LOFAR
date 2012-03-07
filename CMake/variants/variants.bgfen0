@@ -14,8 +14,9 @@
 #list(APPEND LOFAR_BUILD_VARIANTS CN ION)
 
 # Options
-option(USE_LOG4CPLUS "Use Log4Cplus" OFF)
-option(USE_MPI       "Use MPI"       ON)
+option(USE_LOG4CPLUS            "Use Log4Cplus"               OFF)
+option(USE_MPI                  "Use MPI"                     ON)
+option(USE_PQXX                 "Use libpqxx"                 OFF)
 
 # Host specific paths to third party packages
 set(CASACORE_ROOT_DIR /globalhome/lofarsystem/packages/root/bgp_ion/casacore)
