@@ -14,7 +14,6 @@
 
 	<build>
 
-	test
 	
 		<sourceDirectory>src</sourceDirectory>
 
