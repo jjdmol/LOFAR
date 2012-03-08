@@ -201,6 +201,10 @@ public:
 	// type.
 	// @{
 
+        // Find a key.
+        iterator find (const string& searchKey);
+        const_iterator find (const string& searchKey) const;
+
 	// Checks if the given Key is defined in the ParameterSet.
 	bool	isDefined (const string& searchKey) const;
 
@@ -212,6 +216,14 @@ public:
 	// e.g: a.b.c.d.param=xxxx --> fullModuleName(d)-->a.b.c.d
 	// e.g: a.b.c.d.param=xxxx --> fullModuleName(b.c)-->a.b.c
 	string	fullModuleName(const string&	shortName) const;
+
+	// Return the value of the key as a vector of values.
+        // This can only be done if the value is enclosed in square brackets.
+        vector<ParameterValue> getVector (const string& aKey) const;
+
+	// Return the value of the key as a parameter record.
+        // This can only be done if the value is enclosed in curly braces.
+        ParameterRecord getRecord (const string& aKey) const;
 
 	// Return scalar value.
 	// @{
@@ -455,6 +467,16 @@ inline void	ParameterSet::remove (const string& aKey)
 	itsSet->remove (aKey);
 }
 
+inline ParameterSet::iterator ParameterSet::find (const string& searchKey)
+{
+	return itsSet->find (searchKey);
+}
+
+inline ParameterSet::const_iterator ParameterSet::find (const string& searchKey) const
+{
+	return itsSet->find (searchKey);
+}
+
 inline bool	ParameterSet::isDefined (const string& searchKey) const
 {
 	return itsSet->isDefined (searchKey);
@@ -468,6 +490,11 @@ inline string	ParameterSet::locateModule(const string&	shortName) const
 inline string	ParameterSet::fullModuleName(const string&	shortName) const
 {
 	return (itsSet->fullModuleName(shortName));
+}
+
+inline vector<ParameterValue> ParameterSet::getVector (const string& aKey) const
+{
+        return get(aKey).getVector();
 }
 
 //#	getBool(key)

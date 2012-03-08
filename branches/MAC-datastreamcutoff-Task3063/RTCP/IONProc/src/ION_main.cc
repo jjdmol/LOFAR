@@ -181,10 +181,12 @@ static void createAllIONstreams()
     for (unsigned ion = 1; ion < nrPsets; ion ++) {
       allIONstreams[ion] = new SocketStream(ipAddresses[ion].origin(), 4000 + ion, SocketStream::TCP, SocketStream::Client);
       allIONstreamMultiplexers[ion] = new StreamMultiplexer(*allIONstreams[ion]);
+      allIONstreamMultiplexers[ion]->start();
     }
   } else {
     allIONstreams.push_back(new SocketStream(ipAddresses[myPsetNumber].origin(), 4000 + myPsetNumber, SocketStream::TCP, SocketStream::Server));
     allIONstreamMultiplexers.push_back(new StreamMultiplexer(*allIONstreams[0]));
+    allIONstreamMultiplexers[0]->start();
   }
 
   LOG_DEBUG_STR("Create streams between I/O nodes: done");
@@ -289,7 +291,7 @@ static void master_thread()
 
     createAllCNstreams();
     createAllIONstreams();
-    { CommandServer(); }
+    { CommandServer s; s.start(); }
 
 #if defined CLUSTER_SCHEDULING
     if (myPsetNumber == 0)

@@ -427,6 +427,22 @@ void actionRemove(const std::string &filename)
 	formatter.RemoveAllQualityTables();
 }
 
+void printRFISlopeForHistogram(const std::map<HistogramCollection::AntennaPair, LogHistogram*> &histogramMap, char polarizationSymbol, const AntennaInfo *antennae)
+{
+	for(std::map<HistogramCollection::AntennaPair, LogHistogram*>::const_iterator i=histogramMap.begin(); i!=histogramMap.end();++i)
+	{
+		const unsigned a1 = i->first.first, a2 = i->first.second;
+		Baseline baseline(antennae[a1], antennae[a2]);
+		double length = baseline.Distance();
+		const LogHistogram &histogram = *i->second;
+		double start, end;
+		histogram.GetRFIRegion(start, end);
+		double slope = histogram.NormalizedSlope(start, end);
+		double stddev = histogram.NormalizedSlopeStdError(start, end, slope);
+		std::cout << polarizationSymbol << '\t' << a1 << '\t' << a2 << '\t' << length << '\t' << slope << '\t' << stddev << '\n';
+	}
+}
+
 void actionHistogram(const std::string &filename, const std::string &query)
 {
 	HistogramTablesFormatter histogramFormatter(filename);
@@ -454,19 +470,21 @@ void actionHistogram(const std::string &filename, const std::string &query)
 		for(size_t a=0;a<antennaCount;++a)
 			antennae[a] = set.GetAntennaInfo(a);
 		
+		HistogramCollection *summedCollection = collection.CreateSummedPolarizationCollection();
+		const std::map<HistogramCollection::AntennaPair, LogHistogram*> &histogramMap = summedCollection->GetRFIHistogram(0);
+		printRFISlopeForHistogram(histogramMap, '*', antennae);
+		delete summedCollection;
 		for(unsigned p=0;p<polarizationCount;++p)
 		{
 			const std::map<HistogramCollection::AntennaPair, LogHistogram*> &histogramMap = collection.GetRFIHistogram(p);
-			for(std::map<HistogramCollection::AntennaPair, LogHistogram*>::const_iterator i=histogramMap.begin(); i!=histogramMap.end();++i)
-			{
-				const unsigned a1 = i->first.first, a2 = i->first.second;
-				Baseline baseline(antennae[a1], antennae[a2]);
-				double length = baseline.Distance();
-				const LogHistogram &histogram = *i->second;
-				double slope = histogram.NormalizedSlopeInRFIRegion();
-				std::cout << p << '\t' << a1 << '\t' << a2 << '\t' << length << '\t' << slope << '\n';
-			}
+			printRFISlopeForHistogram(histogramMap, '0' + p, antennae);
 		}
+	} else if(query == "remove")
+	{
+		histogramFormatter.RemoveAll();
+	} else
+	{
+		std::cerr << "Unknown histogram command: " << query << "\n";
 	}
 }
 

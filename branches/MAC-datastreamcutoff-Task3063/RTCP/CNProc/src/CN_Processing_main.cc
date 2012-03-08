@@ -37,6 +37,12 @@
 #include <boost/lexical_cast.hpp>
 #include <execinfo.h>
 
+#if defined CLUSTER_SCHEDULING
+#define LOG_CONDITION 1
+#else
+#define LOG_CONDITION (locationInfo.rankInPset() == 0)
+#endif
+
 #if defined HAVE_MPI
 #define MPICH_IGNORE_CXX_SEEK
 #include <mpi.h>
@@ -193,27 +199,25 @@ int main(int argc, char **argv)
 
     getIONstreamType();
 
-#if defined CLUSTER_SCHEDULING
-    LOG_DEBUG("Creating connections to IONs ...");
+    if (LOG_CONDITION)
+      LOG_DEBUG("Creating connection to ION ...");
 
-    std::vector<SmartPtr<Stream> > ionStreams(locationInfo.nrPsets());
+    std::vector<SmartPtr<Stream> > ionStreams;
+
+#if defined CLUSTER_SCHEDULING
+    ionStreams.resize(locationInfo.nrPsets());
 
     for (unsigned ionode = 0; ionode < locationInfo.nrPsets(); ionode ++) {
       std::string descriptor = getStreamDescriptorBetweenIONandCN(ionStreamType, ionode, locationInfo.rankInPset(), locationInfo.nrPsets(), locationInfo.psetSize(), 0);
       ionStreams[ionode] = createStream(descriptor, false);
     }
-
-    LOG_DEBUG("Creating connections to IONs done");
-    SmartPtr<Stream> &ionStream = ionStreams[0];
 #else
-    if (locationInfo.rankInPset() == 0)
-      LOG_DEBUG("Creating connection to ION ...");
-
-    SmartPtr<Stream> ionStream(createIONstream(0, locationInfo));
-
-    if (locationInfo.rankInPset() == 0)
-      LOG_DEBUG("Creating connection to ION: done");
+   ionStreams.resize(1);
+   ionStreams[0] = createIONstream(0, locationInfo);
 #endif
+
+    if (LOG_CONDITION)
+      LOG_DEBUG("Creating connection to ION: done");
 
 
     // an allocator for our big memory structures
@@ -233,17 +237,16 @@ int main(int argc, char **argv)
 
     do {
       //LOG_DEBUG("Wait for command");
-      command.read(ionStream);
+      command.read(ionStreams[0]);
       //LOG_DEBUG_STR("Received command " << command.value());
 
       switch (command.value()) {
 	case CN_Command::PREPROCESS :	try {
                                           unsigned firstBlock = command.param();
 
-					  parset = new Parset(ionStream);
+					  parset = new Parset(ionStreams[0]);
 
 				          switch (parset->nrBitsPerSample()) {
-#if defined CLUSTER_SCHEDULING
                                             case 4:  proc = new CN_Processing<i4complex>(*parset, ionStreams, &createIONstream, locationInfo, bigAllocator, firstBlock);
                                                      break;
 
@@ -252,16 +255,6 @@ int main(int argc, char **argv)
 
                                             case 16: proc = new CN_Processing<i16complex>(*parset, ionStreams, &createIONstream, locationInfo, bigAllocator, firstBlock);
                                                      break;
-#else
-                                            case 4:  proc = new CN_Processing<i4complex>(*parset, ionStream, &createIONstream, locationInfo, bigAllocator, firstBlock);
-                                                     break;
-
-                                            case 8:  proc = new CN_Processing<i8complex>(*parset, ionStream, &createIONstream, locationInfo, bigAllocator, firstBlock);
-                                                     break;
-
-                                            case 16: proc = new CN_Processing<i16complex>(*parset, ionStream, &createIONstream, locationInfo, bigAllocator, firstBlock);
-                                                     break;
-#endif
                                           }
                                         } catch (Exception &ex) {
                                           LOG_ERROR_STR("Caught Exception: " << ex);

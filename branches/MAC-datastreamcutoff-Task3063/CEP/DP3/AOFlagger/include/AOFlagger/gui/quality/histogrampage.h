@@ -62,11 +62,11 @@ class HistogramPage : public Gtk::HBox {
 		void plotPolarization(const HistogramCollection &histogramCollection, unsigned polarization);
 		void plotPolarization(const class LogHistogram &totalHistogram, const class LogHistogram &rfiHistogram);
 		void plotFit(const class LogHistogram &histogram, const std::string &title);
-		void plotSlope(const class LogHistogram &histogram, const std::string &title);
+		void plotSlope(const class LogHistogram &histogram, const std::string &title, bool useLowerLimit2);
 		void onPlotPropertiesClicked();
 		void onDataExportClicked();
 		void readFromFile();
-		void updateSlopeFrame();
+		void updateSlopeFrame(const LogHistogram &histogram);
 		void addSlopeText(std::stringstream &str, const LogHistogram &histogram, bool updateRange);
 		void updateDataWindow();
 		
@@ -100,19 +100,21 @@ class HistogramPage : public Gtk::HBox {
 		
 		Gtk::Frame _fitFrame;
 		Gtk::VBox _fitBox;
-		Gtk::CheckButton _fitButton, _subtractFitButton, _fitAutoRangeButton;
+		Gtk::CheckButton _fitButton, _subtractFitButton, _fitLogarithmicButton, _fitAutoRangeButton;
 		Gtk::Entry _fitStartEntry, _fitEndEntry;
+		Gtk::TextView _fitTextView;
 		
 		Gtk::Frame _functionFrame;
 		Gtk::VBox _functionBox;
 		Gtk::RadioButton _nsButton, _dndsButton;
+		Gtk::Entry _deltaSEntry;
 		
 		Gtk::Button _plotPropertiesButton, _dataExportButton;
 		
 		Gtk::Frame _slopeFrame;
 		Gtk::VBox _slopeBox;
 		Gtk::TextView _slopeTextView;
-		Gtk::CheckButton _drawSlopeButton;
+		Gtk::CheckButton _drawSlopeButton, _drawSlope2Button;
 		Gtk::CheckButton _slopeAutoRangeButton;
 		Gtk::Entry _slopeStartEntry, _slopeEndEntry, _slopeRFIRatio;
 		

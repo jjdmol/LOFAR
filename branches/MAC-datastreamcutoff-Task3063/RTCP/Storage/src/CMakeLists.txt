@@ -4,6 +4,7 @@ include(LofarPackageVersion)
 
 lofar_add_library(storage 
   Package__Version.cc
+  FastFileStream.cc
   InputThread.cc
   OutputThread.cc
   SubbandWriter.cc

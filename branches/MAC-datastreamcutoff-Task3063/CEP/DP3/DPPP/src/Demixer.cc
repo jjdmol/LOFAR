@@ -61,7 +61,7 @@ namespace LOFAR {
         itsInstrumentName(parset.getString(prefix+"instrumentmodel",
                                            "instrument")),
         itsBBSExpr       (*input, itsSkyName, itsInstrumentName),
-        itsTarget        (parset.getString(prefix+"target", "target")),
+//        itsTarget        (parset.getString(prefix+"target", "target")),
         itsSubtrSources  (parset.getStringVector (prefix+"subtractsources")),
         itsModelSources  (parset.getStringVector (prefix+"modelsources",
                                                   vector<string>())),
@@ -79,10 +79,27 @@ namespace LOFAR {
         itsNTimeChunk    (parset.getUint  (prefix+"ntimechunk", 0)),
         itsNTimeOut      (0)
     {
+      // Get and set solver options.
+      itsSolveOpt.maxIter =
+        parset.getUint  (prefix+"Solve.Options.MaxIter", 300);
+      itsSolveOpt.epsValue =
+        parset.getDouble(prefix+"Solve.Options.EpsValue", 1e-9);
+      itsSolveOpt.epsDerivative =
+        parset.getDouble(prefix+"Solve.Options.EpsDerivative", 1e-9);
+      itsSolveOpt.colFactor =
+        parset.getDouble(prefix+"Solve.Options.ColFactor", 1e-9);
+      itsSolveOpt.lmFactor  =
+        parset.getDouble(prefix+"Solve.Options.LMFactor", 1.0);
+      itsSolveOpt.balancedEq =
+        parset.getBool  (prefix+"Solve.Options.BalancedEqs", false);
+      itsSolveOpt.useSVD  =
+        parset.getBool  (prefix+"Solve.Options.UseSVD", true);
+      itsBBSExpr.setOptions (itsSolveOpt);
       /// Maybe optionally a parset parameter directions to give the
       /// directions of unknown sources.
       /// Or make sources a vector of vectors like [name, ra, dec] where
       /// ra and dec are optional.
+
       // Default nr of time chunks is maximum number of threads.
       if (itsNTimeChunk == 0) {
         itsNTimeChunk = OpenMP::maxThreads();
@@ -99,13 +116,13 @@ namespace LOFAR {
       itsNrDir   = itsNrModel + itsExtraSources.size() + 1;
       itsAllSources.reserve (itsNrDir);
       itsAllSources.insert (itsAllSources.end(),
-                            itsModelSources.begin(), itsModelSources.end());
-      itsAllSources.insert (itsAllSources.end(),
                             itsSubtrSources.begin(), itsSubtrSources.end());
       itsAllSources.insert (itsAllSources.end(),
+                            itsModelSources.begin(), itsModelSources.end());
+      itsAllSources.insert (itsAllSources.end(),
                             itsExtraSources.begin(), itsExtraSources.end());
-//      itsAllSources.push_back("target"); //// probably not needed
-      itsAllSources.push_back(itsTarget);
+      itsAllSources.push_back("target");
+//      itsAllSources.push_back(itsTarget);
 
       // Size buffers.
       itsFactors.resize      (itsNTimeChunk);
@@ -129,7 +146,7 @@ namespace LOFAR {
         // The phasecenter can be given in a parameter. Its name is the default.
         // Note the PhaseShift knows about source names CygA, etc.
         PhaseShift* step1 = new PhaseShift (input, parset,
-                                            prefix + '.' + itsAllSources[i],
+                                            prefix + itsAllSources[i] + '.',
                                             itsAllSources[i]);
         itsFirstSteps.push_back (DPStep::ShPtr(step1));
         itsPhaseShifts.push_back (step1);
@@ -169,69 +186,18 @@ namespace LOFAR {
     {
     }
 
-    Axis::ShPtr Demixer::makeFreqAxis (uint nchanAvg)
-    {
-      casa::Vector<double> chanw = itsInput->chanWidths(nchanAvg);
-      double chanWidth = chanw[0];
-      ASSERT (allEQ (chanw, chanWidth));
-      return Axis::ShPtr
-        (new RegularAxis (itsInput->chanFreqs(nchanAvg)[0] - chanWidth*0.5,
-                          chanWidth, chanw.size()));
-    }
-
-/*
-    MDirection Demixer::handleCenter(const vector<string> &center) const
-    {
-      // A case-insensitive name can be given for a moving source (e.g. SUN)
-      // or a known source (e.g. CygA).
-      if (center.size() == 1) {
-        return MDirection::makeMDirection (center[0]);
-      }
-      // The phase center must be given in J2000 as two values (ra,dec).
-      // In the future time dependent frames can be done as in UVWFlagger.
-      ASSERTSTR (center.size() == 2,
-                 "2 values must be given in PhaseShift phasecenter");
-      ///ASSERTSTR (center.size() < 4,
-      ///"Up to 3 values can be given in UVWFlagger phasecenter");
-      MDirection phaseCenter;
-      if (center.size() == 1) {
-        string str = toUpper(center[0]);
-        MDirection::Types tp;
-        ASSERTSTR (MDirection::getType(tp, str),
-                   str << " is an invalid source type"
-                   " in UVWFlagger phasecenter");
-        return MDirection(tp);
-      }
-      Quantity q0, q1;
-      ASSERTSTR (MVAngle::read (q0, center[0]),
-                 center[0] << " is an invalid RA or longitude"
-                 " in UVWFlagger phasecenter");
-      ASSERTSTR (MVAngle::read (q1, center[1]),
-                 center[1] << " is an invalid DEC or latitude"
-                 " in UVWFlagger phasecenter");
-      MDirection::Types type = MDirection::J2000;
-      if (center.size() > 2) {
-        string str = toUpper(center[2]);
-        MDirection::Types tp;
-        ASSERTSTR (MDirection::getType(tp, str),
-                   str << " is an invalid direction type in UVWFlagger"
-                   " in UVWFlagger phasecenter");
-      }
-      return MDirection(q0, q1, type);
-    }
-*/
-
     void Demixer::updateInfo (DPInfo& info)
     {
       info.setNeedVisData();
       info.setNeedWrite();
+
       itsNChanIn = info.nchan();
       itsNrBl    = info.nbaselines();
       itsNrCorr  = info.ncorr();
       itsFactorBuf.resize (IPosition(4, itsNrBl, itsNChanIn, itsNrCorr,
                                      itsNrDir*(itsNrDir-1)/2));
       itsTimeInterval = info.timeInterval();
-      double refFreq = itsFreqAxisDemix->center(itsFreqAxisDemix->size() / 2);
+
       // Let the internal steps update their data.
       // Use a copy of the DPInfo, otherwise it is updated multiple times.
       DPInfo infocp;
@@ -244,9 +210,10 @@ namespace LOFAR {
         }
         // Create the BBS model expression for sources with a model.
         if (i < itsNrModel) {
-          itsBBSExpr.addModel (*itsInput, infocp, itsAllSources[i], refFreq);
+          itsBBSExpr.addModel (itsAllSources[i], infocp.phaseCenter());
         }
       }
+
       // Keep the averaged time interval.
       itsNChanOut = infocp.nchan();
       itsTimeIntervalAvg = infocp.timeInterval();
@@ -261,7 +228,7 @@ namespace LOFAR {
       os << "Demixer " << itsName << std::endl;
       os << "  skymodel:       " << itsSkyName << std::endl;
       os << "  instrumentmodel:" << itsInstrumentName << std::endl;
-      os << "  target:         " << itsTarget << std::endl;
+//      os << "  target:         " << itsTarget << std::endl;
       os << "  subtractsources:" << itsSubtrSources << std::endl;
       os << "  modelsources:   " << itsModelSources << std::endl;
       os << "  extrasources:   " << itsExtraSources << std::endl;
@@ -271,6 +238,13 @@ namespace LOFAR {
       os << "  demixfreqstep:  " << itsNChanAvg << std::endl;
       os << "  demixtimestep:  " << itsNTimeAvg << std::endl;
       os << "  timechunk:      " << itsNTimeChunk << std::endl;
+      os << "  Solve.Options.MaxIter:       " << itsSolveOpt.maxIter << endl;
+      os << "  Solve.Options.EpsValue:      " << itsSolveOpt.epsValue << endl;
+      os << "  Solve.Options.EpsDerivative: " << itsSolveOpt.epsDerivative << endl;
+      os << "  Solve.Options.ColFactor:     " << itsSolveOpt.colFactor << endl;
+      os << "  Solve.Options.LMFactor:      " << itsSolveOpt.lmFactor << endl;
+      os << "  Solve.Options.BalancedEqs:   " << itsSolveOpt.balancedEq << endl;
+      os << "  Solve.Options.UseSVD:        " << itsSolveOpt.useSVD <<endl;
     }
 
     void Demixer::showTimings (std::ostream& os, double duration) const
@@ -345,7 +319,7 @@ namespace LOFAR {
       }
       if (itsCalcSubtr) {
         // Subtract is done with different averaging parameters, so
-        // calculate the factors for it. 
+        // calculate the factors for it.
         addFactors (newBuf, itsFactorBufSubtr);
         if (itsNTimeIn % itsNTimeAvgSubtr == 0) {
           makeFactors (itsFactorBufSubtr, itsFactorsSubtr[itsNTimeOutSubtr],
@@ -401,6 +375,10 @@ namespace LOFAR {
           itsNTimeOutSubtr++;
         }
         itsTimerDemix.stop();
+
+        // Resize lists of mixing factors to the number of valid entries.
+        itsFactors.resize(itsNTimeOut);
+        itsFactorsSubtr.resize(itsCalcSubtr ? itsNTimeOutSubtr : itsNTimeOut);
 
         demix();
         itsTimer.stop();
@@ -586,7 +564,8 @@ namespace LOFAR {
     void Demixer::demix()
     {
       itsTimerSolve.start();
-      // Collect buffers for each direction.
+
+     // Collect buffers for each direction.
       vector<vector<DPBuffer> > buffers;
       size_t targetIndex = itsAvgResults.size() - 1;
       for (size_t i=0; i<itsAvgResults.size(); ++i) {
@@ -597,9 +576,8 @@ namespace LOFAR {
           itsAvgResults[i]->clear();
         }
       }
-      // Solve for the gains in the various directions.
-      itsBBSExpr.setSolvables();
-      // Make time axis and grid.
+
+      // Construct grids for parameter estimation.
       Axis::ShPtr timeAxis (new RegularAxis (itsStartTimeChunk,
                                              itsTimeIntervalAvg,
                                              itsNTimeOut));
@@ -608,26 +586,51 @@ namespace LOFAR {
       Grid solGrid(itsFreqAxisDemix->compress(itsFreqAxisDemix->size()),
                    timeAxis);
 
-      LOG_DEBUG_STR("SHAPES: " << itsFactors[0].shape() << " " << itsFreqAxisDemix->size() << " " << buffers[0][0].getData().shape());
-
       // Estimate model parameters.
+      LOG_DEBUG_STR("estimating....");
+      LOG_DEBUG_STR("SHAPES ESTIMATE: " << itsFactors[0].shape() << " " << itsFreqAxisDemix->size() << " " << buffers[0][0].getData().shape());
       itsBBSExpr.estimate(buffers, visGrid, solGrid, itsFactors);
       itsTimerSolve.stop();
-      // Subtract the modeled sources.
+
       itsTimerSubtract.start();
+      if (itsCalcSubtr) {
+        // Construct subtract grid if it differs from the grid used for
+        // parameter estimation.
+        Axis::ShPtr timeAxisSubtr (new RegularAxis (itsStartTimeChunk,
+                                                    itsTimeIntervalSubtr,
+                                                    itsNTimeOutSubtr));
+        visGrid = Grid(itsFreqAxisSubtr, timeAxisSubtr);
+      }
+
+      // Subtract the sources.
       LOG_DEBUG_STR("subtracting....");
+      LOG_DEBUG_STR("SHAPES SUBTRACT: " << itsFactorsSubtr[0].shape() << " " << itsFreqAxisSubtr->size() << " " << itsAvgResultSubtr->get()[0].getData().shape());
       itsBBSExpr.subtract (itsAvgResultSubtr->get(), visGrid, itsFactorsSubtr,
-                           itsNrDir-1, itsSubtrSources.size());
+                           targetIndex, itsSubtrSources.size());
       itsTimerSubtract.stop();
+
       // Let the next step process the data.
       itsTimer.stop();
-      for (uint i=0; i<itsNTimeOutSubtr; ++i) {
+      for (uint i=0; i<(itsCalcSubtr ? itsNTimeOutSubtr : itsNTimeOut); ++i) {
         getNextStep()->process (itsAvgResultSubtr->get()[i]);
         itsAvgResultSubtr->get()[i].clear();
         itsAvgResults[targetIndex]->get()[i].clear();
       }
+      itsAvgResultSubtr->get().clear();
+      itsAvgResults[targetIndex]->get().clear();
       itsTimer.start();
     }
+
+    Axis::ShPtr Demixer::makeFreqAxis (uint nchanAvg)
+    {
+      casa::Vector<double> freq = itsInput->chanFreqs(nchanAvg);
+      casa::Vector<double> width = itsInput->chanWidths(nchanAvg);
+      ASSERT (allEQ (width, width[0]));
+
+      return Axis::ShPtr(new RegularAxis (freq[0] - width[0] * 0.5, width[0],
+        freq.size()));
+    }
+
 
   } //# end namespace
 }

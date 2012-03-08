@@ -702,7 +702,7 @@ void BeamFormer::postTransposeBeam(const TransposedBeamFormedData *in, FinalBeam
 #if 1
   /* reference implementation */
   for (unsigned t = 0; t < nrSamples; t ++)
-    for (unsigned c = 0; c < itsNrChannels; c ++)
+    for (unsigned c = 0; c < nrChannels; c ++)
       out->samples[t][sb][c] = in->samples[sb][c][t];
 #else
 #endif

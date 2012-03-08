@@ -84,9 +84,10 @@ Job::Job(const char *parsetName)
     if (itsParset.PLC_controlled()) {
       // let the ApplController decide what we should do
       try {
-        itsPLCStream = new SocketStream(itsParset.PLC_Host().c_str(), itsParset.PLC_Port(), SocketStream::TCP, SocketStream::Client, 60);
+        itsPLCStream = new SocketStream(itsParset.PLC_Host(), itsParset.PLC_Port(), SocketStream::TCP, SocketStream::Client, 60);
 
         itsPLCClient = new PLCClient(*itsPLCStream, *this, itsParset.PLC_ProcID(), itsObservationID);
+        itsPLCClient->start();
       } catch (Exception &ex) {
         LOG_WARN_STR(itsLogPrefix << "Could not connect to ApplController on " << itsParset.PLC_Host() << ":" << itsParset.PLC_Port() << " as " << itsParset.PLC_ProcID() << " -- continuing on autopilot: " << ex);
       }
@@ -396,7 +397,7 @@ void Job::startStorageProcesses()
   std::string userName   = itsParset.getString("OLAP.Storage.userName");
   std::string sshKey     = itsParset.getString("OLAP.Storage.sshIdentityFile");
   std::string executable = itsParset.getString("OLAP.Storage.msWriter");
-  std::string parset     = itsParset.getString("OLAP.Storage.parsetFilename");
+  std::string parset     = itsParset.getString("OLAP.Storage.parsetFilename", itsParset.name());
 
   char cwd[1024];
 

@@ -121,7 +121,7 @@ namespace LOFAR {
       DPStep::ShPtr            itsAvgSubtr;     //# average step for subtract
       MultiResultStep*         itsAvgResultSubtr; //# result of subtract avg
       BBSExpr                  itsBBSExpr;
-      string                   itsTarget;
+//      string                   itsTarget;
       vector<string>           itsSubtrSources;
       vector<string>           itsModelSources;
       vector<string>           itsExtraSources;
@@ -158,6 +158,7 @@ namespace LOFAR {
       //# each Array is basically cube(ncorr,nchan,nbl) of matrix(ndir,ndir)
       casa::Array<casa::DComplex> itsFactorBufSubtr; //# factors for subtract
       vector<casa::Array<casa::DComplex> > itsFactorsSubtr;
+      BBS::SolverOptions       itsSolveOpt;
       NSTimer                  itsTimer;
       NSTimer                  itsTimerPhaseShift;
       NSTimer                  itsTimerDemix;

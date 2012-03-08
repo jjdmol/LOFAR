@@ -263,6 +263,54 @@ class LogHistogram : public Serializable
 			return (double) (sumOffset/(long double) n);
 		}
 		
+		double NormalizedSlopeStdError(double startAmplitude, double endAmplitude, double slope) const
+		{
+			long double ssxx = 0.0, ssxy = 0.0, ssyy = 0.0, xSum = 0.0, ySum = 0.0;
+			unsigned long n = 0;
+			// determine the 'average' x and y
+			for(const_iterator i=begin();i!=end();++i)
+			{
+				if(i.value() >= startAmplitude && i.value() < endAmplitude)
+				{
+					xSum += log10(i.value());
+					ySum += log10(i.normalizedCount());
+					++n;
+				}
+			}
+			const long double avgX = xSum / (long double) n, avgY = ySum / (long double) n;
+			for(const_iterator i=begin();i!=end();++i)
+			{
+				if(i.value() >= startAmplitude && i.value() < endAmplitude)
+				{
+					long double y = log10(i.normalizedCount());
+					long double x = log10(i.value());
+					ssxx += (x-avgX)*(x-avgX);
+					ssxy += (x-avgX)*(y-avgY);
+					ssyy += (y-avgY)*(y-avgY);
+				}
+			}
+			return (double) sqrtl((ssyy-slope*ssxy)/(ssxx * (long double) (n-2)));
+		}
+		
+		double NormalizedSlopeStdDevBySampling(double startAmplitude, double endAmplitude, double slope, double stepFactor) const
+		{
+			long double sum = 0.0;
+			unsigned long n = 0;
+			if(stepFactor <= 1.0001) stepFactor = 1.0001;
+			while(startAmplitude < endAmplitude)
+			{
+				const double stepEnd = startAmplitude * stepFactor;
+				double sampledSlope = NormalizedSlope(startAmplitude, stepEnd);
+				double sampleError = sampledSlope - slope;
+				sum += sampleError * sampleError;
+				++n;
+				
+				startAmplitude = stepEnd;
+			}
+			
+			return (double) sqrtl(sum / ((long double) n*n - n));
+		}
+		
 		double PowerLawUpperLimit(double constrainingAmplitude, double exponent, double factor) const
 		{
 			const double count = NormalizedCountAbove(constrainingAmplitude);
@@ -276,6 +324,14 @@ class LogHistogram : public Serializable
 			const double countTotal = NormalizedTotalCount() * rfiRatio;
 			const double term = (countPart - countTotal) * (exponent+1.0)/factor + pow(constrainingAmplitude, exponent+1.0);
 			return pow(term, 1.0/(exponent+1.0));
+		}
+		
+		double PowerLawLowerLimit2(double constrainingAmplitude, double exponent, double factor, double rfiRatio) const
+		{
+			const double countPart = NormalizedCountAbove(constrainingAmplitude);
+			const double countTotal = NormalizedTotalCount() * rfiRatio;
+			const double term = (countPart - countTotal) * (exponent+1.0)/factor + pow(constrainingAmplitude, exponent+1.0);
+			return pow(term/-exponent, 1.0/(exponent+1.0));
 		}
 		
 		void GetRFIRegion(double &start, double &end) const
