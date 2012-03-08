@@ -107,10 +107,10 @@ class MSWindow : public Gtk::Window {
 		void SetStrategy(rfiStrategy::Strategy *newStrategy) { _strategy = newStrategy; }
 
 		void onExecuteStrategyFinished();
+		void OpenPath(const std::string &path);
 	private:
 		void createToolbar();
 		void loadCurrentTFData();
-		void openPath(const std::string &path);
 		
 		void onLoadPrevious();
 		void onLoadNext();
