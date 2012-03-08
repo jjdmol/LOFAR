@@ -160,7 +160,7 @@ void MSWindow::onActionDirectoryOpen()
 
   if(result == Gtk::RESPONSE_OK)
 	{
-		openPath(dialog.get_filename());
+		OpenPath(dialog.get_filename());
 	}
 }
 
@@ -244,11 +244,11 @@ void MSWindow::onActionFileOpen()
 
   if(result == Gtk::RESPONSE_OK)
 	{
-		openPath(dialog.get_filename());
+		OpenPath(dialog.get_filename());
 	}
 }
 
-void MSWindow::openPath(const std::string &path)
+void MSWindow::OpenPath(const std::string &path)
 {
 	if(_optionWindow != 0)
 		delete _optionWindow;
