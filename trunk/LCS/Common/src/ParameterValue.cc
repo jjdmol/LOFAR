@@ -137,13 +137,31 @@ namespace LOFAR {
 
   string ParameterValue::getString() const
   {
-    // Remove possible quotes around the value.
-    uint sz = itsValue.size();
-    if (sz < 2  ||  (itsValue[0] != '"'  &&  itsValue[0] != '\'')) {
-      return itsValue;
+    // Remove possible quotes used to escape special chars in the value.
+    string result;
+    uint end = itsValue.size();
+    uint pos = 0;
+    uint stv = 0;
+    while (pos < end) {
+      if (itsValue[pos] == '"'  ||  itsValue[pos] == '\'') {
+        if (stv < pos) {
+          // Add unquoted part.
+          result += itsValue.substr(stv, pos-stv);
+        }
+        // Add quoted part without the quotes.
+        stv = pos+1;
+        pos = skipQuoted (itsValue, pos);
+        result += itsValue.substr(stv, pos-stv-1);
+        stv = pos;
+      } else {
+        pos++;
+      }
     }
-    ASSERT (itsValue[0] == itsValue[sz-1]);
-    return itsValue.substr(1, sz-2);
+    if (stv < end) {
+      // Add remaining part.
+      result += itsValue.substr (stv, end-stv);
+    }
+    return result;
   }
 
   vector<bool> ParameterValue::getBoolVector() const
