@@ -81,7 +81,8 @@ void GetDatastreamCmd::complete(CacheBuffer& cache)
 	RSPGetdatastreamackEvent ack;
 	ack.timestamp = getTimestamp();
 	ack.status = RSP_SUCCESS;
-	ack.switch_on = cache.isCepEnabled();
+	ack.switch_on0 = cache.isCepEnabled(0);
+	ack.switch_on1 = cache.isCepEnabled(1);
 	getPort()->send(ack);
 }
 
