@@ -163,8 +163,6 @@ int main()
     testExpand();
     testFind();
     testFile();
-    ParameterSet ps ("tps");
-    ParameterRecord rec(ps.getRecord ("key"));
   } catch (std::exception& x) {
     cout << "Unexpected exception: " << x.what() << endl;
     return 1;
