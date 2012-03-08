@@ -1223,7 +1223,7 @@ GCFEvent::TResult SICommand::ack(GCFEvent& e)
 //
 // DataStreamCommand
 //
-DataStreamCommand::DataStreamCommand(GCFPortInterface& port) : Command(port), itsStreamOn(true)
+DataStreamCommand::DataStreamCommand(GCFPortInterface& port) : Command(port), itsStream0On(true), itsStream1On(true)
 {
 }
 
@@ -1245,9 +1245,13 @@ void DataStreamCommand::send()
 
 		request.timestamp = Timestamp(0,0);
 		//request.rcumask   = getRSPMask();
-		request.switch_on = itsStreamOn;
+		request.switch_on0 = itsStream0On;
+		request.switch_on1 = gSplitter ? itsStream1On : false;
 
-		logMessage(cout,formatString("set datastream %s", request.switch_on?"on":"off"));
+		if (itsStream1On && !gSplitter) {
+			logMessage(cout,"Splitter is off, second datastream cannot be turned on!");
+		}
+		logMessage(cout,formatString("set datastream 0:%s 1:%s", request.switch_on0?"on":"off", request.switch_on1?"on":"off"));
 
 		m_rspport.send(request);
 	}
@@ -1270,7 +1274,7 @@ GCFEvent::TResult DataStreamCommand::ack(GCFEvent& e)
 			logMessage(cerr, "Error: RSP_GETDATASTREAM command failed.");
 			break;
 		}
-		cout << formatString("DataStream to CEP switched %s\n", ack.switch_on?"on":"off");
+		cout << formatString("Datastream to CEP switched 0:%s 1:%s\n", ack.switch_on0?"on":"off", ack.switch_on1?"on":"off");
 		cout << endl;
 	}
 	break;
@@ -1631,10 +1635,6 @@ void WGCommand::send()
 		wgset.timestamp = Timestamp(0,0);
 		wgset.rcumask   = getRCUMask();
 		wgset.settings().resize(1);
-
-		//wgset.settings()(0).freq = (uint32)((m_frequency * ((uint32)-1) / gSampleFrequency) + 0.5);
-		//wgset.settings()(0).freq = (uint32)round(m_frequency * ((uint64)1 << 32) / gSampleFrequency);
-		//wgset.settings()(0).freq    = m_frequency;
 
 		wgset.settings()(0).freq        = (uint32)round(itsFrequency * ((uint64)1 << 32) / gSampleFrequency);
 		wgset.settings()(0).phase       = m_phase;
@@ -3007,7 +3007,7 @@ static void usage(bool exportMode)
 	cout << "rspctl --hbadelays[=<list>] [--select=<set>]   # set or get the 16 delays of one or more HBA's" << endl;
 	cout << "rspctl --tbbmode[=transient | =subbands,<set>] # set or get TBB mode, 'transient' or 'subbands', if subbands then specify subband set" << endl;
 	cout << "rspctl --splitter[=0|1]                        # set or get the status of the Serdes splitter" << endl;
-	cout << "rspctl --datastream[=0|1]                      # set or get the status of data stream to cep" << endl;
+	cout << "rspctl --datastream[=0|1|2|3]                  # set or get the status of data stream to cep" << endl;
 	cout << "rspctl --swapxy[=0|1] [--select=<set>]         # set or get the status of xy swap, 0=normal, 1=swapped" << endl;
 	if (exportMode) {
 	cout << endl;
@@ -3686,7 +3686,9 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
 			if (optarg) {
 				datastreamCmd->setMode(false);
-				datastreamCmd->setStream(strncmp(optarg, "0", 1));
+				datastreamCmd->setStream(0,atoi(optarg)%2);
+				datastreamCmd->setStream(1,atoi(optarg)/2);
+				itsNeedSplitter = true;
 			}
 		}
 		break;
