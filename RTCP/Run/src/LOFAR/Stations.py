@@ -23,23 +23,9 @@ def overrideRack( stations, rack ):
       t.ionode = "%s.%s.%s.%s" % (octets[0],octets[1],rack,octets[3])
 
 def packetAnalysis( name, ip, port ):
-  # locate packetanalysis binary, since its location differs per usage, mainly because
-  # nobody runs these scripts from an installed environment
-  locations = map( os.path.abspath, [
-    "%s/../packetanalysis"    % os.path.dirname(__file__), # when running straight from a source tree
-    "%s/../../packetanalysis" % os.path.dirname(__file__), # when running in an installed environment
-    "%s/../../build/gnu/src/packetanalysis" % os.path.dirname(__file__), # when running straight from a source tree
+  location = os.popen("which packetanalysis").read().strip()
 
-    "/globalhome/mol/projects/LOFAR/RTCP/Run/src/packetanalysis", # fallback: Jan David's version
-  ] )
-  
-  location = None
-  for l in locations:
-    if os.path.exists( l ):
-      location = l
-      break
-
-  if location is None:
+  if not location:
     return "ERROR: Could not find `packetanalysis' binary"
 
   mainAnalysis = backquote( "ssh -tq %s %s %s" % (ip,location,port), 5)
