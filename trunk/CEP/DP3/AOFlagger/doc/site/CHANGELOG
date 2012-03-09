@@ -1,20 +1,20 @@
 Version 2.0.0
-2012-03-08  André Offringa <of...nga@astro.rug.nl>
+2012-03-08	André Offringa <of...nga@astro.rug.nl>
   * Main points of this release: no longer depence on pdfviewer & gnuplot for drawing plots and new tools for quality analysis. Strategy file format did not change, thus .rfis files from 1.5.0 can be opened without a problem in 2.0.0.
   * New tool: aoqplot, for very quick but superficial analysis of observations (see LOFAR Cookbook for info).
   * New tool: aoquality, for collecting statistics (also see Cookbook).
-	* New feature: An internal plot renderer was added, which is used for all plots in the plot menu. The plots are therefore much faster and better integrated within rfigui, and no longer require gnuplot and a pdf viewer.
-	* New feature: ticks and text for logarithmic colour scales are visualized in a more esthetically pleasing way.
-	* New feature: Text along x,y,z axes of time-frequency plot can be manually set.
-	* New feature: log-log distribution plot in rfigui, with various analysis possible (slope calculation, rayleigh fitter).
-	* New feature: rfigui will now immediately ask which baseline to load, instead of loading the first baseline (requested by Raymond Oonk).
-	* Bug fix: Baseline name disappeared in bottom status bar when moving mouse over time-frequency plot. Baseline name is now reported when mouse is moved outside time-frequency plot (requested by Raymond Oonk).
+  * New feature: An internal plot renderer was added, which is used for all plots in the plot menu. The plots are therefore much faster and better integrated within rfigui, and no longer require gnuplot and a pdf viewer.
+  * New feature: ticks and text for logarithmic colour scales are visualized in a more esthetically pleasing way.
+  * New feature: Text along x,y,z axes of time-frequency plot can be manually set.
+  * New feature: log-log distribution plot in rfigui, with various analysis possible (slope calculation, rayleigh fitter).
+  * New feature: rfigui will now immediately ask which baseline to load, instead of loading the first baseline (requested by Raymond Oonk).
+  * Bug fix: Baseline name disappeared in bottom status bar when moving mouse over time-frequency plot. Baseline name is now reported when mouse is moved outside time-frequency plot (requested by Raymond Oonk).
   * Bug fix: very large sets were not displayed correctly in the rfigui due to cairo limitations.
- 	* Bug fix: clicking on statistics button sometimes crashed the gui.
-	* Bug fix: Times along x-axis in rfigui were not correct when splitting the data (reported by Raymond Oonk).
-	* Performance of dilation algorithm improved (is not used in default strategy).
-	* Slight performance improvement of SSE SumThreshold method.
-	* New library interface: the statistics collector is used by NDPPP to accumulate statistics during averaging (NDPPP and AOFlagger remain independ though).
+  * Bug fix: clicking on statistics button sometimes crashed the gui.
+  * Bug fix: Times along x-axis in rfigui were not correct when splitting the data (reported by Raymond Oonk).
+  * Performance of dilation algorithm improved (is not used in default strategy).
+  * Slight performance improvement of SSE SumThreshold method.
+  * New library interface: the statistics collector is used by NDPPP to accumulate statistics during averaging (NDPPP and AOFlagger remain independ though).
 
 Version 1.5.0
 2011-10-20	André Offringa <of...nga@astro.rug.nl>
