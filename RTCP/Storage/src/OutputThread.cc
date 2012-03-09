@@ -119,6 +119,10 @@ void OutputThread::start()
 
 void OutputThread::createMS()
 {
+  // even the HDF5 writer accesses casacore, to perform conversions
+  ScopedLock sl(casacoreMutex);
+  ScopedDelayCancellation dc; // don't cancel casacore calls
+
   std::string directoryName = itsParset.getDirectoryName(itsOutputType, itsStreamNr);
   std::string fileName	    = itsParset.getFileName(itsOutputType, itsStreamNr);
   std::string path	    = directoryName + "/" + fileName;
@@ -127,9 +131,6 @@ void OutputThread::createMS()
 
   if (itsOutputType == CORRELATED_DATA) {
 #if defined HAVE_AIPSPP
-    ScopedLock sl(casacoreMutex);
-    ScopedDelayCancellation dc; // don't cancel casacore calls
-
     MeasurementSetFormat myFormat(itsParset, 512);
             
     /// Make MeasurementSet filestructures and required tables
