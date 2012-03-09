@@ -63,7 +63,8 @@ set(pvss_libraries
   Manager
   Messages 
   Datapoint 
-  Basics 
+  Basics
+  QtCore 
   bcm)
   
 if(NOT PVSS_FOUND)
