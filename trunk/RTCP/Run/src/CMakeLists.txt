@@ -1,7 +1,5 @@
 # $Id: CMakeLists.txt 14273 2009-10-16 10:08:29Z loose $
 
-lofar_add_bin_program(packetanalysis packetanalysis.c)
-
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/locations.sh.in
   ${CMAKE_CURRENT_BINARY_DIR}/locations.sh
@@ -33,3 +31,4 @@ install(FILES
 
 add_subdirectory(LOFAR)
 add_subdirectory(util)
+add_subdirectory(tools)
