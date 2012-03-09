@@ -25,7 +25,7 @@ def overrideRack( stations, rack ):
 def packetAnalysis( name, ip, port ):
   location = os.popen("which packetanalysis").read().strip()
 
-  if not location:
+  if not location or "no packetanalysis in" in location:
     return "ERROR: Could not find `packetanalysis' binary"
 
   mainAnalysis = backquote( "ssh -tq %s %s %s" % (ip,location,port), 5)
