@@ -72,7 +72,8 @@ COMMON_FLAGS += -DLOFAR_SVN_UPDATE=ON -DBUILD_TESTING=OFF
 ION_FLAGS +=
 CN_FLAGS +=
 BGFEN_FLAGS += -DUSE_LOG4CPLUS=ON
-STORAGE_FLAGS += -DLDA_ROOT_DIR=/globalhome/lofarsystem/packages/root/lhn/lda -DUSE_MPI=OFF -DUSE_LOG4CPLUS=ON -DUSE_DAL=ON
+#STORAGE_FLAGS += -DLDA_ROOT_DIR=/globalhome/lofarsystem/packages/root/lhn/lda -DUSE_MPI=OFF -DUSE_LOG4CPLUS=ON -DUSE_DAL=ON
+STORAGE_FLAGS += -DLDA_ROOT_DIR=/opt/cep/lda -DUSE_MPI=OFF -DUSE_LOG4CPLUS=ON
 
 # Extra powers for Storage_main
 STORAGE_CAPABILITIES = cap_sys_admin,cap_sys_nice,cap_ipc_lock
@@ -83,7 +84,7 @@ SVN_TRUNK = https://svn.astron.nl/LOFAR/trunk
 ifeq "${RELEASE}" "trunk"
   SVN_BRANCH = ${SVN_TRUNK}
 else  
-  SVN_BRANCH =  https://svn.astron.nl/LOFAR/branches/OLAP-${RELEASE}-1_0-release-branch
+  SVN_BRANCH ?= https://svn.astron.nl/LOFAR/branches/LOFAR-Release-${RELEASE}
 endif  
 
 # Directory structure
@@ -156,7 +157,7 @@ configure:		checkout
 	cd ${BUILD_DIR}/bgpcn_opt && cmake ${SOURCE_DIR}/LOFAR -DBUILD_PACKAGES=CNProc ${COMMON_FLAGS} ${CN_FLAGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/bgp_cn
 
 	mkdir -p ${BUILD_DIR}/bgfen/gnu_opt
-	cd ${BUILD_DIR}/bgfen/gnu_opt && cmake ${SOURCE_DIR}/LOFAR -DBUILD_PACKAGES="Appl_Controller;APLCommon;Log_Client;Run" ${COMMON_FLAGS} ${BGFEN_FLAGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/bgfen
+	cd ${BUILD_DIR}/bgfen/gnu_opt && cmake ${SOURCE_DIR}/LOFAR -DBUILD_PACKAGES="Appl_Controller;APLCommon;Run" ${COMMON_FLAGS} ${BGFEN_FLAGS} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/bgfen
 
 	mkdir -p ${BUILD_DIR}/lhn/gnu_opt
         # remove /data/sys: on lhn, /opt is a symlink for /data/sys/opt, which cmake resolves for us. However, on locus,
@@ -173,14 +174,14 @@ ${INSTALL_CN}:		configure
 
 # Build and install support software on bgfen
 ${INSTALL_BGFEN}:	configure
-	cd ${BUILD_DIR}/bgfen/gnu_opt && make -j1 install # needs -j1 to prevent errors in custom protocol file generation
+	cd ${BUILD_DIR}/bgfen/gnu_opt && make -j16 install
 	- cd ${HOME}/production && cp ${PREV_INSTALL}/bgfen/etc/*.debug ${INSTALL_DIR}/bgfen/etc
 	- ln -sfT ${HOME}/log ${INSTALL_DIR}/bgfen/log
 
 # Build and install Storage_main
 ${INSTALL_LHN}:		configure
 	ssh ${LHN_HOST} 'cd ${BUILD_DIR}/lhn/gnu_opt && make -j16 install'
-	ssh ${LHN_HOST} "cexec ${LOCUS_NODES} 'scp -rq ${LHN_HOST}:${LOCUS_DIR} `dirname ${LOCUS_DIR}` && sudo /sbin/setcap ${STORAGE_CAPABILITIES}=ep ${LOCUS_DIR}/bin/Storage_main'"
+	ssh ${LHN_HOST} "cexec ${LOCUS_NODES} 'time scp -rq ${LHN_HOST}:${LOCUS_DIR} `dirname ${LOCUS_DIR}` && sudo /sbin/setcap ${STORAGE_CAPABILITIES}=ep ${LOCUS_DIR}/bin/Storage_main'"
 
 # Activate the installation
 .PHONY:		activate_bgfen activate_locus
