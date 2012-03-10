@@ -314,6 +314,11 @@ if __name__ == "__main__":
 			action = "store_true",
 			default = False,
   			help = "check whether the station provide correct data" )
+  parser.add_option( "-a", "--analyze",
+  			dest = "analyze",
+			action = "store_true",
+			default = False,
+  			help = "run datarate analyzer (assumes 200 MHz clock, 61 subbands, 16 beamlets)" )
   parser.add_option( "-l", "--list",
   			dest = "list",
 			action = "store_true",
@@ -353,5 +358,10 @@ if __name__ == "__main__":
       for name,ip,port in allInputs( Stations[stationName] ):
         print "---- Packet analysis for %s %s:%s" % (name,ip,port)
         print packetAnalysis( name, ip, port )
+
+    if options.analyze:
+      # ssh 10.170.0.182 "echo 0.0.0.0:4346 0.0.0.0:4347 0.0.0.0:4348 0.0.0.0:4349 | xargs -n 1 -P 4 `which analyzer`" 2>&1 | awk '{ print "DE602LBA ",$0; }'
+      s = Stations[stationName][0]
+      os.system('ssh %s "echo %s | xargs -n 1 -P 4 `which analyzer`" 2>&1 | awk \'{ print "%s",$0; }\'' % (s.ionode, " ".join(s.inputs), s.name))
 
   sys.exit(int(errorOccurred))
