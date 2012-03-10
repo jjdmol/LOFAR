@@ -23,6 +23,7 @@
 
 #include <CommandServer.h>
 #include <Common/LofarLogger.h>
+#include <Common/CasaLogSink.h>
 #include <Common/NewHandler.h>
 #include <Common/SystemCallException.h>
 #include <Interface/CN_Command.h>
@@ -400,6 +401,8 @@ int main(int argc, char **argv)
 #else
   INIT_LOGGER_WITH_SYSINFO(str(boost::format("IONProc@%02d") % myPsetNumber));
 #endif
+
+  CasaLogSink::attach();
 
   master_thread();
 
