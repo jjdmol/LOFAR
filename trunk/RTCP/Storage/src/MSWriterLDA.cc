@@ -284,8 +284,9 @@ namespace LOFAR
       beam.create();
       beam.groupType()   .set("Beam");
 
-      beam.nofStations() .set(parset.nrStations());
-      beam.stationsList().set(parset.allStationNames()); // TODO: SS beamformer, support subsets of allStations
+      vector<string> beamStationList = parset.pencilBeamStationList(sapNr, beamNr);
+      beam.nofStations() .set(beamStationList.size());
+      beam.stationsList().set(beamStationList);
 
       //const char *trackingTypes[] = { "J2000", "LMN", "TBD" };
       //writeAttribute(         beam, "TRACKING",      "J2000" ); // TODO: support non-tracking
