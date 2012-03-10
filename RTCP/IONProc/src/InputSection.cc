@@ -73,7 +73,13 @@ template<typename SAMPLE_TYPE> void InputSection<SAMPLE_TYPE>::createInputStream
     if (station != inputs[0].station)
       THROW(IONProcException, "inputs from multiple stations on one I/O node not supported (yet)");
 
-    itsInputStreams[i] = createStream(streamName, true);
+    try {
+      itsInputStreams[i] = createStream(streamName, true);
+    } catch(SystemCallException &ex) {
+      LOG_ERROR_STR( "Could not open input stream " << streamName << ", using null stream instead: " << ex);
+
+      itsInputStreams[i] = createStream("null:", true);
+    }
 
     SocketStream *sstr = dynamic_cast<SocketStream *>(itsInputStreams[i].get());
 
