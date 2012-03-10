@@ -19,6 +19,10 @@
 #define  _GNU_SOURCE
 #include "common.h"
 
+// allow opening >2GB files on 32-bit architectures
+#define _FILE_OFFSET_BITS 64
+
+#include <features.h>
 #include <sched.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -46,21 +50,70 @@ enum proto input_proto, output_proto;
 char	   source[64], destination[64];
 
 int	   sk_in, sk_out;
-unsigned   nr_packets = 0, nr_bytes = 0;
+size_t     nr_packets = 0, nr_bytes = 0;
+
+struct speed {
+  struct timeval current_time;
+  struct timeval previous_time;
+};
+
+void init_speed( struct speed *s ) {
+  gettimeofday(&s->current_time, NULL);
+  s->previous_time = s->current_time;
+}
+
+void update_speed( struct speed *s, double *speedptr, const char **suffixptr, size_t bytes ) {
+  gettimeofday(&s->current_time, NULL);
+
+  double current = 1.0 * s->current_time.tv_sec + s->current_time.tv_usec / 1.0e6;
+  double prev    = 1.0 * s->previous_time.tv_sec + s->previous_time.tv_usec / 1.0e6;
+
+  double speed = current == prev ? 0.0 : 8.0 * bytes / (current - prev);
+  const char *suffix;
+
+  if( speed > 1000*1000*1000 ) {
+    speed /= 1000*1000*1000;
+    suffix = "Gbit/s";
+  } else if( speed > 1000*1000 ) {
+    speed /= 1000*1000;
+    suffix = "Mbit/s";
+  } else if( speed > 1000 ) {
+    speed /= 1000;
+    suffix = "Kbit/s";
+  } else {
+    suffix = "bit/s";
+  }
+
+  *speedptr = speed;
+  *suffixptr = suffix;
+
+  s->previous_time = s->current_time;
+}
 
 
 void *log_thread(void *arg)
 {
+  struct speed speed;
+  double speedval;
+  const char *suffix;
+
+  init_speed(&speed);
+
   while (1) {
     sleep(1);
 
-    if (nr_packets > 0) {
-      if (input_proto == UDP || input_proto == Eth)
-	fprintf(stderr, "copied %u bytes (= %u packets) from %s to %s\n", nr_bytes, nr_packets, source, destination);
-      else
-	fprintf(stderr, "copied %u bytes from %s to %s\n", nr_bytes, source, destination);
+    size_t bytes = nr_bytes;
+    size_t packets = nr_packets;
 
-      nr_packets = nr_bytes = 0;
+    nr_packets = nr_bytes = 0;
+
+    update_speed(&speed, &speedval, &suffix, bytes);
+
+    if (packets > 0) {
+      if (input_proto == UDP || input_proto == Eth)
+	fprintf(stderr, "copied %u bytes (= %u packets) from %s to %s (%.2f %s)\n", bytes, packets, source, destination, speedval, suffix);
+      else
+	fprintf(stderr, "copied %u bytes from %s to %s (%.2f %s)\n", bytes, source, destination, speedval, suffix);
     }
   }
 
@@ -96,7 +149,7 @@ int main(int argc, char **argv)
   time_t   previous_time = 0, current_time;
   unsigned i;
   char	   buffer[1024 * 1024] __attribute__ ((aligned(16)));
-  int      read_size, write_size;
+  size_t   read_size, write_size;
 
   init(argc, argv);
 
@@ -164,7 +217,7 @@ int main(int argc, char **argv)
     exit(1);
   }
 
-  size_t max_size = output_proto == UDP ? 8960 : 1024 * 1024;
+  size_t max_size = output_proto == UDP ? 8960 : sizeof buffer;
 
   while ((read_size = read(sk_in, buffer, max_size)) != 0) {
     if (read_size < 0) {
