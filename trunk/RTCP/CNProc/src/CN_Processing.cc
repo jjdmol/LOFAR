@@ -849,7 +849,6 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::receiveBeam(uns
 #if defined HAVE_MPI
   const StreamInfo &info = itsTranspose2Logic.streamInfo[stream];
   unsigned nrSubbands = info.subbands.size();
-  unsigned nrSamples = itsNrSamplesPerIntegration / info.timeIntFactor;
 
   static NSTimer asyncFirstReceiveTimer("wait for first async beam receive", true, true);
   static NSTimer asyncNonfirstReceiveTimer("wait for subsequent async beam receive", true, true);
@@ -883,7 +882,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::receiveBeam(uns
       LOG_DEBUG_STR(itsLogPrefix << "Starting to post process subband " << i << " / " << nrSubbands << " at t = " << blockAge());
 
     if (itsFinalBeamFormedData != 0) {
-      itsBeamFormer->postTransposeBeam(itsTransposedBeamFormedData, itsFinalBeamFormedData, subband, info.nrChannels, nrSamples);
+      itsBeamFormer->postTransposeBeam(itsTransposedBeamFormedData, itsFinalBeamFormedData, subband, info.nrChannels, info.nrSamples);
     }  
 
     if (itsTrigger != 0)
