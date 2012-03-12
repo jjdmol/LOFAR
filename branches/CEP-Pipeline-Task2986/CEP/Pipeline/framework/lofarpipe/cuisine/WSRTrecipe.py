@@ -111,26 +111,21 @@ class WSRTrecipe(object):
 
     def main(self):
         """This function is to be run in standalone mode."""
-        print "debug 2"
         import os.path
         self.name = os.path.splitext(os.path.basename(sys.argv[0]))[0]
         status = self.main_init()
-        print "debug 3"
         if not status:
-            print "debug5"
             status = self.run(self.name)
             self.main_result()
         else:
             self.help()
         logging.shutdown()
-        print "debug 2"
         return status
 
     def run(self, name):
         """This code will run if all inputs are valid, and wraps the actual
         functionality in self.go() with some exception handling, might need
         another name, like try_execute, because it's to similar to go()."""
-        print "debug4"
         self.name = name
         self.logger.info('recipe ' + name + ' started')
         try:
@@ -212,13 +207,8 @@ class WSRTrecipe(object):
     ## Problem is you might need all of them in a recipe describing a pipeline
     def cook_recipe(self, recipe, inputs, outputs):
         """Execute another recipe/pipeline as part of this one"""
-        print "debug 20"
-        print inputs
-
         c = cook.PipelineCook(recipe, inputs, outputs, self.logger, self.recipe_path)
-        print "debug 21"
         c.spawn()
-        print "debug 22"
 
     def cook_system(self, command, options):
         """Execute an arbitrairy system call, returns it's exitstatus"""
