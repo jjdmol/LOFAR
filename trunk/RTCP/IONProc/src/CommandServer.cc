@@ -164,16 +164,17 @@ CommandServer::CommandServer()
 :
   itsQuit(false)
 {
-  if (myPsetNumber == 0)
-    commandMaster();
-  else
-    commandSlave();
 }
 
 
 void CommandServer::start()
 {
   itsJobCleanUpThread = new Thread(this, &CommandServer::jobCleanUpThread, "JobCleanUpThread", 65536);
+
+  if (myPsetNumber == 0)
+    commandMaster();
+  else
+    commandSlave();
 }
 
 
