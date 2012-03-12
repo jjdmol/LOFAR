@@ -19,6 +19,8 @@ python_install(
   master/imager_create_dbs.py
   master/imager_pipeline.py
   master/imager_prepare.py
+  master/imager_bbs.py
+  master/imager_source_finding.py
   master/make_flaggable.py
   master/new_bbs.py
   master/parmdb.py
@@ -42,6 +44,7 @@ python_install(
   nodes/imager_awimager.py
   nodes/imager_create_dbs.py
   nodes/imager_prepare.py
+  nodes/imager_source_finding.py
   nodes/parmdb.py
   nodes/parmexportcal.py
   nodes/rficonsole.py
