@@ -46,7 +46,7 @@ class imager_source_finding(BaseRecipe, RemoteCommandRecipeMixIn):
 
         # TODO FIXME: This output path will be, in the testing phase a 
         # subdirectory of the actual output image.
-        # This is the cropped image!!!
+        # This is the cropped image!!! TODO
         image_output_path = "/data/scratch/klijn/bdsm_output.img" #This is not a
 
         node_command = " python %s" % (self.__file__.replace("master", "nodes"))

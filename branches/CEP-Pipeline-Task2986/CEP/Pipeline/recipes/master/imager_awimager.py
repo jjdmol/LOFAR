@@ -14,7 +14,7 @@ import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
-from lofarpipe.support.group_data import load_data_map
+from lofarpipe.support.group_data import load_data_map, store_data_map
 
 class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
     """
@@ -45,7 +45,16 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
             '--suffix',
             default = ".awimager",
             help = "Added to the input filename to generate the output filename"
-        )
+        ),
+        'mapfile': ingredient.StringField(
+            '--mapfile',
+            help = "Full path of mapfile; contains a list of the"
+                 "successfully generated images"
+        ),
+    }
+
+    outputs = {
+        'mapfile': ingredient.StringField()
     }
 
     def go(self):
@@ -61,11 +70,6 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
         working_dir = self.inputs['working_directory']
 #        job_name = self.inputs['job_name']
         suffix = self.inputs['suffix']
-
-        #Get the base output fileneam from the parset
-        parset_datamap = load_data_map(parset)
-
-        self.logger.info(repr(parset_datamap))
 
         # Compile the command to be executed on the remote machine
         node_command = "python %s" % (self.__file__.replace("master", "nodes"))
@@ -83,14 +87,19 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
         # Hand over the job(s) to the pipeline scheduler
         self._schedule_jobs(jobs)
 
-        # Test for errors
-        #TODO: Er moeten nog tests worden gegeven.
-        #TODO: Er is nog geen output
+        created_awimages = []
+        for job in  jobs:
+            if job.results.has_key("image"):
+                created_awimages.append((job.host, job.results["image"]))
+            #TODO else: aw imager failed 
+
         if self.error.isSet():
             self.logger.warn("Failed awimager run detected")
             return 1
-        else:
-            return 0
+
+        store_data_map(self.inputs['mapfile'], created_awimages)
+        self.outputs["mapfile"] = self.inputs['mapfile']
+        return 0
 
 
 if __name__ == "__main__":

@@ -1,67 +1,31 @@
 # LOFAR IMAGING PIPELINE
 # imager_bbs: start isolated master/node new_bss runs on compute nodes
-# For seperate processing of timeslice
-# currently reuses bbs functionality might be improved
-
+# For seperate processing of timeslices
 #                                                         LOFAR IMAGING PIPELINE
 #
 #                                                BBS (BlackBoard Selfcal) recipe
-#                                                         John Swinbank, 2009-10
-#                                                      swinbank@transientskp.org
+#                                                         Wouter Klijn
+#                                                         klijn@astron.nl
 # ------------------------------------------------------------------------------
-
 from __future__ import with_statement
-import subprocess
 import sys
-import os
-import threading
-import tempfile
-import shutil
-import time
-import signal
+import collections
 
-from lofar.parameterset import parameterset
-
+from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.baserecipe import BaseRecipe
-from lofarpipe.support.group_data import load_data_map, store_data_map
-from lofarpipe.support.lofarexceptions import PipelineException
-from lofarpipe.support.pipelinelogging import CatchLog4CPlus
-from lofarpipe.support.pipelinelogging import log_process_output
-from lofarpipe.support.remotecommand import run_remote_command
-from lofarpipe.support.remotecommand import ComputeJob
-from lofarpipe.support.jobserver import job_server
-import lofarpipe.support.utilities as utilities
+from lofarpipe.support.group_data import load_data_map, store_data_map, validate_data_maps
 import lofarpipe.support.lofaringredient as ingredient
-from lofarpipe.support.utilities import create_directory
+from lofarpipe.support.remotecommand import ComputeJob
+from lofarpipe.support.parset import Parset
 
-
-class imager_bbs(BaseRecipe):
+class imager_bbs(BaseRecipe, RemoteCommandRecipeMixIn):
     """
-    The bbs recipe coordinates running BBS on a group of MeasurementSets. It
-    runs both GlobalControl and KernelControl; as yet, SolverControl has not
-    been integrated.
-
-
 
     **Arguments**
 
     A mapfile describing the data to be processed.
     """
     inputs = {
-        'job': ingredient.StringField(
-            '--job',
-            dest = "control_exec",
-            help = "Job name: used for storing  (intermediate) data products"
-        ),
-        'control_exec': ingredient.ExecField(
-            '--control-exec',
-            dest = "control_exec",
-        ),
-        'kernel_exec': ingredient.ExecField(
-            '--kernel-exec',
-            dest = "kernel_exec",
-            help = "BBS Kernel executable"
-        ),
         'initscript': ingredient.FileField(
             '--initscript',
             dest = "initscript",
@@ -71,26 +35,6 @@ class imager_bbs(BaseRecipe):
             '-p', '--parset',
             dest = "parset",
             help = "BBS configuration parset"
-        ),
-        'db_key': ingredient.StringField(
-            '--db-key',
-            dest = "db_key",
-            help = "Key to identify BBS session"
-        ),
-        'db_host': ingredient.StringField(
-            '--db-host',
-            dest = "db_host",
-            help = "Database host with optional port (e.g. ldb001:5432)"
-        ),
-        'db_user': ingredient.StringField(
-            '--db-user',
-            dest = "db_user",
-            help = "Database user"
-        ),
-        'db_name': ingredient.StringField(
-            '--db-name',
-            dest = "db_name",
-            help = "Database name"
         ),
         'instrument_mapfile': ingredient.FileField(
             '--instrument-mapfile',
@@ -106,266 +50,61 @@ class imager_bbs(BaseRecipe):
             '--runtime-directory',
             help = "Full path to the runtime directory shared between nodes "
         ),
-        'new_bbs_path': ingredient.FileField(
-            '--new-bbs-path',
-            help = "The full path to the new_bbs master script"
-        ),
-        'gvds_path': ingredient.StringField(
-            '--gvds-path',
-            help = "The full path to the dir where gvd files will be stored"
+        'mapfile': ingredient.StringField(
+            '--mapfile',
+            help = "Full path to the file containing the output data products"
         ),
     }
-#    outputs = {
-#        'mapfile': ingredient.FileField(
-#            help = "Full path to a mapfile describing the processed data"
-#        )
-#    }
+
+    outputs = {
+        'mapfile': ingredient.FileField(
+            help = "Full path to a mapfile describing the processed data"
+        )
+    }
 
 
     def go(self):
-        self.logger.info("Starting imager_BBS run")
+        self.logger.info("Starting imager_bbs run")
         super(imager_bbs, self).go()
-        # The imager_bbs has but a single task:
-        # parsing of the input files and launch a single new_bbs master script for 
-        # each of the parsed triplet files!!
 
-        #parse the inputs and get a list of host:triplets
-        bbs_map = self._make_bbs_map()
-        env = {
-                "LOFARROOT": utilities.read_initscript(self.logger, self.inputs['initscript'])["LOFARROOT"],
-                "PYTHONPATH": self.config.get('deploy', 'engine_ppath'),
-                "LD_LIBRARY_PATH": self.config.get('deploy', 'engine_lpath')
-            }
-        self.logger.debug(env)
+        # Load the data
+        ms_map = load_data_map(self.inputs['args'][0])
+        parmdb_map = load_data_map(self.inputs['instrument_mapfile'])
+        sky_map = load_data_map(self.inputs['sky_mapfile'])
+        self.logger.debug(ms_map)
+        self.logger.debug(parmdb_map)
+        self.logger.debug(sky_map)
 
-        # create the directory and path for save-ing individual map files
-        runtime_directory_bbs = os.path.join(
-            self.inputs["runtime_directory"], "bbs_map_files")
-
-
-        create_directory(runtime_directory_bbs)
-        try:
-            #        When one of our processes fails, we set the killswitch.
-            self.killswitch = threading.Event()
-            self.killswitch.clear()
-            signal.signal(signal.SIGTERM, self.killswitch.set)
-
-            command = "python {0}".format(self.inputs["new_bbs_path"])
-
-            gvds_path = self.inputs["gvds_path"]
-            env = {
-                "LOFARROOT": utilities.read_initscript(self.logger, self.inputs['initscript'])["LOFARROOT"],
-                "PYTHONPATH": self.config.get('deploy', 'engine_ppath'),
-                "LD_LIBRARY_PATH": self.config.get('deploy', 'engine_lpath')
-            }
-
-            jobpool = {}
-            new_bbs_runs = []
-            with job_server(self.logger, jobpool, self.error) as (jobhost, jobport):
-                self.logger.debug("Job server at %s:%d" % (jobhost, jobport))
-                self.logger.debug(bbs_map)
-                for job_id, details in enumerate(bbs_map):
-                    host, files = details
-                    # sCreate individual mapfiles containing individual files to
-                    # process, Use the job_id to create unique files 
-                    input_mapfile_path = os.path.join(
-                        runtime_directory_bbs,
-                        "new_bbs_input_{0}.map".format(job_id))
-                    self._write_mapfile_with_key_value_pair(
-                        input_mapfile_path, host, files[0])
-
-                    instrument_mapfile_path = os.path.join(
-                        runtime_directory_bbs,
-                        "new_bbs_instrument_{0}.map".format(job_id))
-                    self._write_mapfile_with_key_value_pair(
-                        instrument_mapfile_path, host, files[1])
-
-                    sky_mapfile_path = os.path.join(
-                        runtime_directory_bbs,
-                        "new_bbs_sky_{0}.map".format(job_id))
-                    self._write_mapfile_with_key_value_pair(
-                        sky_mapfile_path, host, files[2])
-
-                    # location to save the gvds file
-                    gvds_file_path = os.path.join(
-                        gvds_path, "gvds_{0}.gds".format(job_id))
-
-                    # Create path to save the input measurement set used by bbs
-                    # to create the gvds file
-                    gvds_input_path = os.path.join(
-                        gvds_path, "input_for_gvds_{0}".format(job_id))
-
-                    # create unique key for the database
-                    db_key = "{0}_{1}".format(self.inputs["db_key"], job_id)
-
-                    # The actual new_bbs run is started as an seperate thread
-                    new_bbs_runs.append(
-                        threading.Thread(
-                            target = self._run_new_bbs,
-                            args = (host, command, env,
-                                input_mapfile_path,
-                                "--job", self.inputs["job"],
-                                "--config", self.inputs["config"],
-                                "--initscript", self.inputs["initscript"],
-                                "--parset", self.inputs["parset"],
-                                "--sky-mapfile", sky_mapfile_path,
-                                "--instrument-mapfile", instrument_mapfile_path,
-                                "--data-mapfile", gvds_input_path,
-                                "--kernel-exec", self.inputs["kernel_exec"],
-                                "--control-exec", self.inputs["control_exec"],
-                                "--db-name", self.inputs["db_name"],
-                                "--db-host", self.inputs["db_host"],
-                                "--db-user", self.inputs["db_user"],
-                                "--db-key", db_key,
-                                "--gvds", gvds_file_path,
-                            )
-                        )
-                    )
-
-                # possible place for creating a serial version
-                self.logger.info("Starting %d threads" % len(new_bbs_runs))
-                for thread in new_bbs_runs:
-                    thread.start()
-
-                self.logger.debug("Waiting for all kernels to complete")
-                for thread in new_bbs_runs:
-                    thread.join()
-
-
-        finally:
-            if self.killswitch.isSet():
-                #  If killswitch is set the fail
-                return 1
-
-        # TODO: Deze moet dus nog met de juiste data worden gevond??
-        # mischien is het een idee om hier de gvds in te stoppen/ 
-        #self.outputs['mapfile'] = "tets"
-
-        return 0
-
-    def _write_mapfile_with_key_value_pair(self, path, key, value):
-        fp = open(path, "w")
-        data_line = "{0}={1}\n".format(key, value)
-        fp.write(data_line)
-        fp.close()
-
-
-    def _make_bbs_map(self):
-        """
-        This method bundles the contents of three different map-files.
-        All three map-files contain a per-node list of filenames as parset.
-        The contents of these files are related. The elements of the lists
-        form triplets of MS-file, its associated instrument model and its
-        associated sky model.
-
-        The returned data structure `bbs_map` is a list of tuples, where
-        each tuple is a pair of hostname and the aforementioned triplet.
-
-        For example:
-        bbs_map[0] = ('locus001',
-            ('/data/L29697/L29697_SAP000_SB000_uv.MS',
-            '/data/scratch/loose/L29697/L29697_SAP000_SB000_uv.MS.instrument',
-            '/data/scratch/loose/L29697/L29697_SAP000_SB000_uv.MS.sky')
-        )
-        """
-        self.logger.debug("Creating BBS map-file using: %s, %s, %s" %
-                          (self.inputs['args'][0],
-                           self.inputs['instrument_mapfile'],
-                           self.inputs['sky_mapfile']))
-        data_map = parameterset(self.inputs['args'][0])
-        instrument_map = parameterset(self.inputs['instrument_mapfile'])
-        sky_map = parameterset(self.inputs['sky_mapfile'])
-        bbs_map = []
-        for host in data_map.keys():
-            data = data_map.getStringVector(host, [])
-            instrument = instrument_map.getStringVector(host, [])
-            sky = sky_map.getStringVector(host, [])
-            triplets = zip(data, instrument, sky)
-            for triplet in triplets:
-                bbs_map.append((host, triplet))
-            # Error handling and reporting
-            if not len(data) == len(instrument) == len(sky):
-                self.logger.warn(
-                    "Number of data files (%d) does not match with number of "
-                    "instrument files (%d) or number of skymodel files (%d) "
-                    "on %s" % (len(data), len(instrument), len(sky), host))
-                if len(triplets) > 0:
-                    msg = "The following triplets will be used: "
-                    msg += ", ".join([str(t) for t in triplets])
-                    self.logger.warn(msg)
-                if len(triplets) < len(data):
-                    msg = "The following data files will not be processed: "
-                    msg += ", ".join([str(t) for t in data[len(triplets):]])
-                    self.logger.warn(msg)
-
-        return bbs_map
-
-    def _run_new_bbs(self, host, command, env, *arguments):
-        """
-        Run command with arguments on the specified host using ssh. Return its
-        return code.
-
-        The resultant process is monitored for failure; see
-        _monitor_process() for details.
-        
-        TODO:  Candidate for refactoring
-        """
-        try:
-            bbs_new_process = run_remote_command(
-                self.config,
-                self.logger,
-                host,
-                command,
-                env,
-                arguments = arguments
-            )
-        except Exception, e:
-            self.logger.exception("new_BBS  failed to start")
-            self.killswitch.set()
+        #Check if the input has equal length and the same nodes
+        if not validate_data_maps(ms_map, parmdb_map, sky_map):
+            self.logger.error("The mapfile supplied are not correct!")
             return 1
 
-        result = self._monitor_process(bbs_new_process, "new_BBS on %s" % host)
-        self.logger.info(result)
-        sout, serr = bbs_new_process.communicate()
-        serr = serr.replace("Connection to %s closed.\r\n" % host, "")
-        log_process_output("SSH session (new_BBS)", sout, serr, self.logger)
-        return result
+        # Create the jobs
+        jobs = []
+        outnames = collections.defaultdict(list)
+        node_command = " python %s" % (self.__file__.replace("master", "nodes"))
+        for (ms, parmdb, sky) in zip(ms_map, parmdb_map, sky_map):
+            #host is same for each entry (validate_data_maps)
+            (host, ms_list) = ms
+            (host, parmdb_list) = parmdb
+            (host, sky_list) = sky
 
+            # Save the ms set that has been processed: output
+            outnames[host].extend(ms_list)
+            arguments = ["/opt/cep/LofIm/daily/Mon/lofar/bin/bbs-reducer",
+                         "/home/klijn/build/preparation/bbs_standalone.par",
+                         ms_list, parmdb_list, sky_list]
+            jobs.append(ComputeJob(host, node_command, arguments))
 
-    def _monitor_process(self, process, name = "Monitored process"):
-        """
-        Monitor a process for successful exit. If it fails, set the kill
-        switch, so everything else gets killed too. If the kill switch is set,
-        then kill this process off.
+        # start and wait till all are finished
+        self._schedule_jobs(jobs)
 
-        Name is an optional parameter used only for identification in logs.
-        TODO:  Candidate for refactoring
-        """
-        while True:
-            try:
-                returncode = process.poll()
-                if returncode == None:                   # Process still running
-                    time.sleep(1)
-                elif returncode != 0:                           # Process broke!
-                    self.logger.warn(
-                        "%s returned code %d; aborting run" % (name, returncode)
-                    )
-                    self.killswitch.set()
-                    break
-                else:                                   # Process exited cleanly
-                    self.logger.info("%s clean shutdown" % (name))
-                    break
-                if self.killswitch.isSet():        # Other process failed; abort
-                    self.logger.warn("Killing %s" % (name))
-                    process.kill()
-                    returncode = process.wait()
-                    break
-            except:
-                # An exception here is likely a ctrl-c or similar. Whatever it
-                # is, we bail out.
-                self.killswitch.set()
+        # return the output: The measurement set that are calibrated
+        store_data_map(self.inputs['mapfile'], outnames.items())
+        self.outputs['mapfile'] = self.inputs['mapfile']
+        return 0
 
-        return returncode
 
 if __name__ == '__main__':
     sys.exit(imager_bbs().main())

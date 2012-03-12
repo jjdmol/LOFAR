@@ -20,6 +20,7 @@ import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
+from lofarpipe.support.group_data import store_data_map
 
 class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
     """
@@ -46,10 +47,10 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
             '-w', '--working-directory',
             help = "Working directory used by the nodes: local data"
         ),
-        'output_products_mapfile': ingredient.FileField(
-            '--output-products-mapfile',
+        'output_mapfile': ingredient.StringField(
+            '--output-mapfile',
             help = "Contains the node and path to target product files, defines the"\
-               " number of nodes the nodes will start on."
+               " number of nodes the script will start on."
         ),
         'slices_per_image': ingredient.IntField(
             '--slices-per-image',
@@ -61,13 +62,17 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         ),
         'mapfile': ingredient.StringField(
             '--mapfile',
-            help = "Full path of mapfile to produce; contains a list of the"
+            help = "Full path of mapfile; contains a list of the"
                  "successfully generated and concatenated sub-band groups:"
+        ),
+        'slices_mapfile': ingredient.StringField(
+            '--slices-mapfile',
+            help = "node to Path map field containing the produced time slices"
         )
     }
 
     outputs = {
-        'mapfile': ingredient.FileField()
+        'mapfile': ingredient.StringField()
     }
 
     def go(self):
@@ -92,6 +97,8 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         working_directory = self.inputs['working_directory']
         ndppp_path = self.inputs['ndppp_path']
         mapfile = self.inputs['mapfile']
+        slices_mapfile = self.inputs['slices_mapfile']
+
         # Validate inputs:
         if len(input_map) != len(output_map) * \
                                    (slices_per_image * subbands_per_image):
@@ -135,6 +142,7 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         # *********************************************************************
         # Test for any errors
         fp = open(mapfile, "w")
+        slices = []
         if self.error.isSet():
             self.logger.warn("Failed prepare_imager run detected: Generating "
                              "new mapfile without failed runs!")
@@ -143,6 +151,8 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
             for ((host, output_measurement_set), job) in zip(output_map, jobs):
                 if job.results.has_key("completed"):
                     new_output_mapfile.append((host, output_measurement_set))
+                    if job.results.has_key("time_slices"):
+                        slices.append((host, job.results["time_slices"]))
                 else:
                     self.logger.warn("Failed run on {0}. NOT Created: {1} ".format(
                         host, output_measurement_set))
@@ -152,9 +162,13 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         else:
             #Copy output map from input mapfile and return
             fp.write(repr(output_map))
-
+            for ((host, output_measurement_set), job) in zip(output_map, jobs):
+                if job.results.has_key("time_slices"):
+                    slices.append((host, job.results["time_slices"]))
         fp.close()
-        self.logger.info("debug: end of master script")
+        store_data_map(slices_mapfile, slices)
+        self.logger.info("imager_prepare script end")
+
         self.outputs['mapfile'] = self.inputs['mapfile']
         return 0
 
@@ -200,8 +214,8 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
 
         # The output locus also determines the computation node
         self.logger.debug("Loading output map:{0}".format(
-                                                self.inputs['output_products_mapfile']))
-        output_map = eval(open(self.inputs['output_products_mapfile']).read())
+                                                self.inputs['output_mapfile']))
+        output_map = eval(open(self.inputs['output_mapfile']).read())
         return input_map, output_map
 
 
