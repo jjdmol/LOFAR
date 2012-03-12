@@ -67,11 +67,7 @@ class imager_awimager(LOFARnodeTCP):
 
             # The command and parameters to be run
             cmd = [executable, temp_parset_filename]
-            self.logger.info("************************************** ")
-            self.logger.info(open(temp_parset_filename).read())
-            self.logger.info(" ".join(cmd))
-            self.logger.info("************************************** ")
-            return 1
+
             #run awimager
             try:
                 environment = read_initscript(self.logger, init_script)
@@ -95,6 +91,7 @@ class imager_awimager(LOFARnodeTCP):
                 # Cleanup of temporary parameterset
                 os.unlink(temp_parset_filename)
 
+        self.outputs["image"] = get_parset(parset).getString('image')
         return 0
 
     def _nearest_ceiled_power2(self, value):

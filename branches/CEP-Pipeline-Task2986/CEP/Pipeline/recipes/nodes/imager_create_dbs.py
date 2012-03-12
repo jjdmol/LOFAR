@@ -21,7 +21,7 @@ import sys
 import subprocess
 import math
 import tempfile
-
+import shutil
 import pyrap.tables as pt                                                       #@UnresolvedImport
 import os
 
@@ -109,11 +109,21 @@ class imager_create_dbs(LOFARnodeTCP):
         _create_source_db consumes a skymap text file and produces a source db
         (pyraptable) 
         """
+        if os.path.isdir(sourcedb_target_path):
+            self.logger.info("Removing existing sky model: {0}".format(
+                                                        sourcedb_target_path))
+            try:
+                #always remove existing sourcedbs
+                shutil.rmtree(sourcedb_target_path)
+            except:
+                self.logger.error(
+                    "failed removing an existing sky model: {0}".format(
+                                                        sourcedb_target_path))
+
         # The command and parameters to be run
         cmd = [executable, "in={0}".format(temp_sky_path),
                "out={0}".format(sourcedb_target_path),
                "format=<"] # format according
-
         try:
             environment = read_initscript(self.logger, init_script)
             with CatchLog4CPlus(working_directory,
@@ -183,7 +193,7 @@ class imager_create_dbs(LOFARnodeTCP):
         #Get the wavelength
         spectral_window_table = pt.table(t.getkeyword("SPECTRAL_WINDOW"))
         freq = float(spectral_window_table.getcell("REF_FREQUENCY", 0))
-        wave_length = pt.taql('CALC C()') / freq
+        wave_length = pt.taql('CALC C()')[0] / freq
 
         # Now calculate the FOV see ref (1)
         # alpha_one is a magic parameter: The value 1.3 is representative for a 
@@ -236,6 +246,7 @@ class imager_create_dbs(LOFARnodeTCP):
         parmdbms = []
         for slice_path in slice_paths:
             #Create the paths based on the 'source ms'
+ 
             ms_parmdb_path = slice_path + suffix
             parmdbms.append(ms_parmdb_path)
             #call parmdb return failure if a single create failed 
@@ -317,12 +328,9 @@ class imager_create_dbs(LOFARnodeTCP):
         # communications with Bart Sheers
         if assoc_theta == None:
             assoc_theta = 90.0 / 3600
-
         try:
-            self.gsm.expected_fluxes_in_fov(conn, float(ra_c) * (180 / 3.14) ,
-                        float(decl_c) * (180 / 3.14) , float(fov_radius),
-                        float(assoc_theta), path_output_skymap,
-                        storespectraplots = False)
+            ra_c = float(ra_c) * (180 / 3.14) + 360.0  #prevent negative values: add 360
+            decl_c = float(decl_c) * (180 / 3.14)
         except Exception, e:
             self.logger.error("expected_fluxes_in_fov raise exception: " +
                               str(e))

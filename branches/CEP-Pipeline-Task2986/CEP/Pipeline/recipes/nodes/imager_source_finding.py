@@ -18,9 +18,9 @@ class imager_source_finding(LOFARnodeTCP):
 
         # Crop the image to remove artifacts at the border of the the image
         # TODO: This cropping will be performed in the awimager:
-        self.logger.info("************* {0}".format(input_image))
+
         img = pim.image(input_image)
-        img_cropped = img.subimage(blc = (0, 0, 35, 35), trc = (0, 3, 210, 210), dropdegenerate = False)
+        img_cropped = img.subimage(blc = (0, 0, 35, 35), trc = (0, 0, 210, 210), dropdegenerate = False)
         input_image_cropped = input_image + ".cropped"
         img_cropped.saveas(input_image_cropped)
 
@@ -40,7 +40,7 @@ class imager_source_finding(LOFARnodeTCP):
                 bdsm_parameter_local = parameterset(bdsm_parameter_run2x_path)
 
             # parse the parameters and convert to python if possible 
-            # this is needed for pybdsm
+            # this is needed for pybdsm (parset function TODO)
             bdsm_parameters = {}
             for key in bdsm_parameter_local.keys():
                 parameter_value = bdsm_parameter_local.getStringVector(key)[0]
@@ -61,7 +61,7 @@ class imager_source_finding(LOFARnodeTCP):
 
             #export the catalog and the image with gausians substracted
             img.write_catalog(outfile = catalog_output_path + "_{0}".format(str(idx)),
-                              catalog_type = 'srl', clobber = True, format = "ascii")
+                              catalog_type = 'gaul', clobber = True, format = "ascii")
             img.export_image(outfile = image_output_path_local,
                              img_type = 'gaus_resid', clobber = True,
                              img_format = "fits")

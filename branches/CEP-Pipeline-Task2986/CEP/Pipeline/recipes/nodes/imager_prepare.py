@@ -46,7 +46,7 @@ class imager_prepare(LOFARnodeTCP):
 
             #Copy the input files (caching included for testing purpose)
             missing_files = self._cached_copy_input_files(
-                            target_dir_for_collected_ms, input_map, False)
+                            target_dir_for_collected_ms, input_map, True)
             if len(missing_files): self.logger.info(repr(missing_files))
 
             #run dppp: collect indif frequencies into larger group
@@ -55,11 +55,17 @@ class imager_prepare(LOFARnodeTCP):
                     input_map, subbands_per_image, missing_files, collected_ms_dir,
                     parset, ndppp, init_script, log4CPlusName)
 
+            # Add imaging columns to each timeslice
+            # ndppp fails if not present
+            for ms in group_measurements_collected:
+                pt.addImagingColumns(ms)                                        #@UnresolvedImport
+
             # Perform the (virtual) concatenation of the timeslices
             self._concat_timeslices(group_measurements_collected,
                                     output_measurement_set)
 
             #return succes
+            self.outputs["time_slices"] = group_measurements_collected
             self.outputs["completed"] = "true"
 
         return 0
