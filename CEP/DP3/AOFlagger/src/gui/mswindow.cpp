@@ -1215,7 +1215,7 @@ void MSWindow::onPlotComplexPlanePressed()
 	if(HasImage()) {
 		if(_plotComplexPlaneWindow != 0)
 			delete _plotComplexPlaneWindow;
-		_plotComplexPlaneWindow = new ComplexPlanePlotWindow(*this);
+		_plotComplexPlaneWindow = new ComplexPlanePlotWindow(*this, _plotManager);
 		_plotComplexPlaneWindow->show();
 	}
 }
