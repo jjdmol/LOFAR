@@ -22,9 +22,9 @@
 
 #include <lofar_config.h>
 
-#ifdef HAVE_lDA
+#ifdef HAVE_LDA
 
-#include <lda/lda_version.h>
+#include <lda_version.h>
 #include <iostream>
 #include <string>
 

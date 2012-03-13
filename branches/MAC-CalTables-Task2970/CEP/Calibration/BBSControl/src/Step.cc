@@ -157,8 +157,6 @@ namespace LOFAR
         ps.add(prefix + "Model.Beam.Mode", BeamConfig::asString(config.mode()));
         ps.add(prefix + "Model.Beam.ConjugateAF",
           toString(config.conjugateAF()));
-        ps.add(prefix + "Model.Beam.Element.Path",
-          config.getElementPath().originalName());
       }
 
       ps.add(prefix + "Model.DirectionalTEC.Enable",
@@ -243,18 +241,7 @@ namespace LOFAR
         bool conjugateAF = ps.getBool("Model.Beam.ConjugateAF",
             parentConfig.conjugateAF());
 
-        string defaultPath;
-        if(itsModelConfig.useBeam()) {
-          defaultPath = parentConfig.getElementPath().originalName();
-        } else {
-          defaultPath = "$LOFARROOT/share";
-        }
-
-        string elementPath = ps.getString("Model.Beam.Element.Path",
-          defaultPath);
-
-        itsModelConfig.setBeamConfig(BeamConfig(mode, conjugateAF,
-          casa::Path(elementPath)));
+        itsModelConfig.setBeamConfig(BeamConfig(mode, conjugateAF));
       } else {
         itsModelConfig.clearBeamConfig();
       }

@@ -71,11 +71,7 @@ class CN_Processing_Base // untemplated helper class
 template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
 {
   public:
-#if defined CLUSTER_SCHEDULING
 			CN_Processing(const Parset &, const std::vector<SmartPtr<Stream> > &inputStream, Stream *(*createStream)(unsigned, const LocationInfo &), const LocationInfo &, Allocator & = heapAllocator, unsigned firstBlock = 0);
-#else
-			CN_Processing(const Parset &, Stream *inputStream, Stream *(*createStream)(unsigned, const LocationInfo &), const LocationInfo &, Allocator & = heapAllocator, unsigned firstBlock = 0);
-#endif
 			~CN_Processing();
 
     virtual void	process(unsigned);
@@ -121,11 +117,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
 
     const Parset        &itsParset;
 
-#if defined CLUSTER_SCHEDULING
     const std::vector<SmartPtr<Stream> > &itsInputStreams;
-#else
-    Stream		*itsInputStream;
-#endif
     SmartPtr<Stream>	itsCorrelatedDataStream;
     SmartPtr<Stream>	itsFinalBeamFormedDataStream;
     SmartPtr<Stream>	itsTriggerDataStream;
@@ -134,7 +126,8 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
     const CN_Transpose2 &itsTranspose2Logic;
     std::vector<double> itsCenterFrequencies;
     SmartPtr<Ring>	itsFirstInputSubband, itsCurrentSubband;
-    std::vector<double> itsDMs;
+    std::vector<double> itsCoherentDMs;
+    std::vector<double> itsIncoherentDMs;
     bool		itsFakeInputData;
     bool		itsHasPhaseOne, itsHasPhaseTwo, itsHasPhaseThree;
 
@@ -169,9 +162,11 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
 
     SmartPtr<PPF<SAMPLE_TYPE> >			itsPPF;
     SmartPtr<BeamFormer>			itsBeamFormer;
-    SmartPtr<Stokes>				itsStokes;
+    SmartPtr<CoherentStokes>			itsCoherentStokes;
+    SmartPtr<IncoherentStokes>			itsIncoherentStokes;
     SmartPtr<Correlator>			itsCorrelator;
     SmartPtr<DedispersionAfterBeamForming>	itsDedispersionAfterBeamForming;
+    SmartPtr<DedispersionBeforeBeamForming>	itsDedispersionBeforeBeamForming;
     SmartPtr<PreCorrelationFlagger>		itsPreCorrelationFlagger;
     SmartPtr<PostCorrelationFlagger>		itsPostCorrelationFlagger;
     SmartPtr<Trigger>				itsTrigger;

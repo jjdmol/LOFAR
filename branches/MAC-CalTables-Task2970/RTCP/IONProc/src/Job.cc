@@ -84,13 +84,21 @@ Job::Job(const char *parsetName)
     if (itsParset.PLC_controlled()) {
       // let the ApplController decide what we should do
       try {
-        itsPLCStream = new SocketStream(itsParset.PLC_Host().c_str(), itsParset.PLC_Port(), SocketStream::TCP, SocketStream::Client, 60);
+        itsPLCStream = new SocketStream(itsParset.PLC_Host(), itsParset.PLC_Port(), SocketStream::TCP, SocketStream::Client, 60);
 
         itsPLCClient = new PLCClient(*itsPLCStream, *this, itsParset.PLC_ProcID(), itsObservationID);
+        itsPLCClient->start();
       } catch (Exception &ex) {
         LOG_WARN_STR(itsLogPrefix << "Could not connect to ApplController on " << itsParset.PLC_Host() << ":" << itsParset.PLC_Port() << " as " << itsParset.PLC_ProcID() << " -- continuing on autopilot: " << ex);
       }
+    }
+
+    if (!itsPLCClient) {
+      // we are either not PLC controlled, or we're supposed to be but can't connect to
+      // the ApplController
+      LOG_INFO_STR(itsLogPrefix << "Not controlled by ApplController");
     }  
+
   }
 
   // check enough parset settings just to get to the coordinated check in jobThread safely
@@ -396,7 +404,7 @@ void Job::startStorageProcesses()
   std::string userName   = itsParset.getString("OLAP.Storage.userName");
   std::string sshKey     = itsParset.getString("OLAP.Storage.sshIdentityFile");
   std::string executable = itsParset.getString("OLAP.Storage.msWriter");
-  std::string parset     = itsParset.getString("OLAP.Storage.parsetFilename");
+  std::string parset     = itsParset.getString("OLAP.Storage.parsetFilename", itsParset.name());
 
   char cwd[1024];
 
@@ -503,18 +511,10 @@ void Job::jobThread()
         canStart = false;
       }
 
-      if (!itsPLCClient) {
-        // we are either not PLC controlled, or we're supposed to be but can't connect to
-        // the ApplController
-        LOG_INFO_STR(itsLogPrefix << "Not controlled by ApplController");
-
-        // perform some functions which ApplController would have us do
-
-        // obey the stop time in the parset -- the first anotherRun() will broadcast it
-        if (!pause(itsParset.stopTime())) {
-          LOG_ERROR_STR(itsLogPrefix << "Could not set observation stop time");
-          canStart = false;
-        }
+      // obey the stop time in the parset -- the first anotherRun() will broadcast it
+      if (!pause(itsParset.stopTime())) {
+        LOG_ERROR_STR(itsLogPrefix << "Could not set observation stop time");
+        canStart = false;
       }
 
       if (canStart) {
@@ -712,16 +712,17 @@ bool Job::anotherRun()
     broadcast(itsStopTime);
   }
 
+  // move on to the next block
+  itsBlockNumber ++;
+
   bool done = !itsIsRunning;
 
   if (itsStopTime > 0.0) {
-    // start time of last processed block
-    double currentTime = itsParset.startTime() + itsBlockNumber * itsParset.CNintegrationTime();
+    // the end time of this block must still be within the observation
+    double currentTime = itsParset.startTime() + (itsBlockNumber + 1) * itsParset.CNintegrationTime();
 
     done = done || currentTime >= itsStopTime;
   }
-
-  itsBlockNumber ++;
 
   return !done;
 }

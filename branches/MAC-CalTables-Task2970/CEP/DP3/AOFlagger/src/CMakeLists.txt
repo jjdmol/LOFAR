@@ -75,6 +75,7 @@ set(GUI_FILES
   gui/progresswindow.cpp
   gui/rawoptionwindow.cpp
   gui/tfstatoptionwindow.cpp
+  gui/quality/datawindow.cpp
   gui/quality/histogrampage.cpp
   ${GUI_PLOT_FILES})
 
@@ -100,7 +101,6 @@ set(MSIO_FILES
   msio/timestepaccessor.cpp)
   
 set(QUALITY_FILES
-  quality/histogramcollection.cpp
   quality/histogramtablesformatter.cpp
 	quality/rayleighfitter.cpp
   quality/qualitytablesformatter.cpp)
@@ -152,6 +152,9 @@ set(STRATEGY_PLOTS_FILES
   strategy/plots/rfiplots.cpp
   strategy/plots/timeflagcountplot.cpp
   util/multiplot.cpp)
+set(QUALITY_FILES 
+  ${QUALITY_FILES} 
+  quality/histogramcollection.cpp)
 else()
  set(STRATEGY_PLOTS_FILES)
 endif(GTKMM_FOUND)
@@ -223,6 +226,7 @@ if(GTKMM_FOUND)
 		gui/plot/plotpropertieswindow.cpp
 		gui/quality/aoqplotwindow.cpp
 		gui/quality/baselineplotpage.cpp
+		gui/quality/datawindow.cpp
 		gui/quality/grayscaleplotpage.cpp
 		gui/quality/histogrampage.cpp
 		gui/quality/timefrequencyplotpage.cpp

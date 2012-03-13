@@ -23,23 +23,9 @@ def overrideRack( stations, rack ):
       t.ionode = "%s.%s.%s.%s" % (octets[0],octets[1],rack,octets[3])
 
 def packetAnalysis( name, ip, port ):
-  # locate packetanalysis binary, since its location differs per usage, mainly because
-  # nobody runs these scripts from an installed environment
-  locations = map( os.path.abspath, [
-    "%s/../packetanalysis"    % os.path.dirname(__file__), # when running straight from a source tree
-    "%s/../../packetanalysis" % os.path.dirname(__file__), # when running in an installed environment
-    "%s/../../build/gnu/src/packetanalysis" % os.path.dirname(__file__), # when running straight from a source tree
+  location = os.popen("which packetanalysis").read().strip()
 
-    "/globalhome/mol/projects/LOFAR/RTCP/Run/src/packetanalysis", # fallback: Jan David's version
-  ] )
-  
-  location = None
-  for l in locations:
-    if os.path.exists( l ):
-      location = l
-      break
-
-  if location is None:
+  if not location or "no packetanalysis in" in location:
     return "ERROR: Could not find `packetanalysis' binary"
 
   mainAnalysis = backquote( "ssh -tq %s %s %s" % (ip,location,port), 5)
@@ -328,6 +314,11 @@ if __name__ == "__main__":
 			action = "store_true",
 			default = False,
   			help = "check whether the station provide correct data" )
+  parser.add_option( "-a", "--analyze",
+  			dest = "analyze",
+			action = "store_true",
+			default = False,
+  			help = "run datarate analyzer (assumes 200 MHz clock, 61 subbands, 16 beamlets)" )
   parser.add_option( "-l", "--list",
   			dest = "list",
 			action = "store_true",
@@ -367,5 +358,10 @@ if __name__ == "__main__":
       for name,ip,port in allInputs( Stations[stationName] ):
         print "---- Packet analysis for %s %s:%s" % (name,ip,port)
         print packetAnalysis( name, ip, port )
+
+    if options.analyze:
+      # ssh 10.170.0.182 "echo 0.0.0.0:4346 0.0.0.0:4347 0.0.0.0:4348 0.0.0.0:4349 | xargs -n 1 -P 4 `which analyzer`" 2>&1 | awk '{ print "DE602LBA ",$0; }'
+      s = Stations[stationName][0]
+      os.system('ssh %s "echo %s | xargs -n 1 -P 4 `which analyzer`" 2>&1 | awk \'{ print "%s",$0; }\'' % (s.ionode, " ".join(s.inputs), s.name))
 
   sys.exit(int(errorOccurred))

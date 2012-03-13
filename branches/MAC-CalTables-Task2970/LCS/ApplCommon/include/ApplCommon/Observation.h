@@ -52,7 +52,8 @@ class Observation
 public:
 	Observation();
 	~Observation();
-	explicit	Observation (const ParameterSet*		aParSet, bool	hasDualHBA = false);
+//	explicit	Observation (const ParameterSet*		aParSet, bool	hasDualHBA = false);
+	explicit	Observation (const ParameterSet*		aParSet, bool	hasDualHBA);
 
 	// global function for converting filtername to nyquist zone
 	static uint nyquistzoneFromFilter(const string&	filterName);
@@ -66,8 +67,6 @@ public:
 
 	// Returns a bitset containing the RCU's requested by the observation.
 	bitset<MAX_RCUS> getRCUbitset(int nrLBAs, int nrHBAs, const string& anAntennaSet);
-	// TEMP HACK
-	string getAntennaArrayName(bool hasSplitters) const;
 
 	// Support for dynamic dataslot allocation
 	vector<int>	getBeamAllocation(const string&	stationName = "") const;
@@ -75,6 +74,9 @@ public:
 
 	// for operator <<
 	ostream& print (ostream&	os) const;
+
+	// TEMP HACK
+	string getAntennaFieldName(bool hasSplitters, uint32 beamIdx = 0) const;
 
 	// data types
 	typedef bitset<MAX_RCUS> 	  RCUset_t;
@@ -203,6 +205,9 @@ public:
 	string			storageNodeList;
 
 private:
+	bool			_isStationName(const string&	hostname) const;
+	bool 			_hasDataSlots (const ParameterSet*	aPS) const;
+
 	RCUset_t		RCUset;				// set with participating receivers, use getRCUbitset to get this value.
 
 	// many(!) vectors for dataslot allocation

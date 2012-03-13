@@ -13,8 +13,6 @@
 #include <Storage/MeasurementSetFormat.h>
 #include <Storage/Package__Version.h>
 
-#include <AMCBase/Epoch.h>
-
 #include <string>
 #include <fstream>
 #include <iostream>
@@ -60,8 +58,6 @@
 #include <LofarStMan/LofarStMan.h>
 #include <Interface/Exceptions.h>
 
-#include <boost/thread/mutex.hpp>
-
 
 using namespace casa;
 
@@ -70,6 +66,14 @@ namespace RTCP {
 
 
 Mutex MeasurementSetFormat::sharedMutex;
+
+
+// unix time to mjd time (in seconds instead of days)
+static double toMJDs( double time )
+{
+  // 40587 modify Julian day number = 00:00:00 January 1, 1970, GMT
+  return 40587.0 + time;
+}
 
 
 MeasurementSetFormat::MeasurementSetFormat(const Parset &ps, unsigned alignment)
@@ -89,12 +93,7 @@ MeasurementSetFormat::MeasurementSetFormat(const Parset &ps, unsigned alignment)
 	      antPos.size() << " == " << 3 * itsPS.nrStations());
   }
 
-  {
-    ScopedLock scopedLock(sharedMutex);
-    AMC::Epoch epoch;
-    epoch.utc(itsPS.startTime());
-    itsStartTime = MVEpoch(epoch.mjd()).getTime().getValue("s");
-  }
+  itsStartTime = toMJDs(itsPS.startTime());
 
   itsTimeStep = itsPS.IONintegrationTime();
   itsNrTimes = 29030400;  /// equates to about one year, sets valid

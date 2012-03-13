@@ -2248,7 +2248,11 @@ event = {
     userdefined;
   };
   param = {
-    name = "switch_on";
+    name = "switch_on0";
+    type = "bool";
+  };
+  param = {
+    name = "switch_on1";
     type = "bool";
   };
 };
@@ -2294,7 +2298,11 @@ event = {
     type = "int16";
   };
   param = {
-    name = "switch_on";
+    name = "switch_on0";
+    type = "bool";
+  };
+  param = {
+    name = "switch_on1";
     type = "bool";
   };
 };

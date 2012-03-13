@@ -2,7 +2,7 @@
 
 include(LofarPackageVersion)
 
-add_subdirectory(Contrib)
+#add_subdirectory(Contrib)
 
 lofar_add_library(bbskernel
   Package__Version.cc
@@ -31,7 +31,9 @@ lofar_add_library(bbskernel
   VisDimensions.cc
   VisEquator.cc
   VisSelection.cc
-  Expr/AntennaFieldAzEl.cc
+  Expr/AntennaElementLBA.cc
+  Expr/AntennaElementHBA.cc
+  Expr/AntennaFieldThetaPhi.cc
   Expr/AzEl.cc
   Expr/CachePolicy.cc
   Expr/Cache.cc
@@ -52,7 +54,6 @@ lofar_add_library(bbskernel
   Expr/FlagArray.cc
   Expr/GaussianCoherence.cc
   Expr/GaussianSource.cc
-  Expr/HamakerDipole.cc
   Expr/IonPhaseShift.cc
   Expr/ITRFDirection.cc
   Expr/LinearToCircularRL.cc
@@ -69,6 +70,7 @@ lofar_add_library(bbskernel
   Expr/MatrixRep.cc
   Expr/MatrixSum.cc
   Expr/MatrixTmp.cc
+  Expr/ParallacticRotation.cc
   Expr/PhaseShift.cc
   Expr/PiercePoint.cc
   Expr/PointCoherence.cc
@@ -91,4 +93,4 @@ lofar_add_library(bbskernel
   Expr/Timer.cc)
 
 # Because we're using dlopen()
-target_link_libraries(bbskernel ${CMAKE_DL_LIBS})
+#target_link_libraries(bbskernel ${CMAKE_DL_LIBS})

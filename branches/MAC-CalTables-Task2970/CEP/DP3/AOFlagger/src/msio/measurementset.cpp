@@ -323,7 +323,12 @@ void MeasurementSet::InitCacheData()
 
 size_t MeasurementSet::GetPolarizationCount()
 {
-	casa::MeasurementSet ms(Location());
+	return GetPolarizationCount(Location());
+}
+
+size_t MeasurementSet::GetPolarizationCount(const std::string &filename)
+{
+	casa::MeasurementSet ms(filename);
 	casa::Table polTable = ms.polarization();
 	casa::ROArrayColumn<int> corTypeColumn(polTable, "CORR_TYPE"); 
 	casa::Array<int> corType = corTypeColumn(0);

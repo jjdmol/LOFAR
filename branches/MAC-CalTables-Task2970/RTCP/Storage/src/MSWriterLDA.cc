@@ -22,7 +22,6 @@
 
 #include <lofar_config.h>
 
-#include <AMCBase/Epoch.h>
 #include <Common/LofarLogger.h>
 #include <Common/SystemUtil.h>
 
@@ -126,7 +125,7 @@ namespace LOFAR
 
       itsTransposeLogic.decompose( fileno, sapNr, beamNr, stokesNr, partNr );
 
-      unsigned nrBlocks = ceil((parset.stopTime() - parset.startTime()) / parset.CNintegrationTime());
+      unsigned nrBlocks = floor((parset.stopTime() - parset.startTime()) / parset.CNintegrationTime());
       unsigned nrSubbands = itsInfo.subbands.size();
       const vector<unsigned> &subbandIndices = itsInfo.subbands;
       const vector<unsigned> allSubbands = parset.subbandList();
@@ -285,8 +284,9 @@ namespace LOFAR
       beam.create();
       beam.groupType()   .set("Beam");
 
-      beam.nofStations() .set(parset.nrStations());
-      beam.stationsList().set(parset.allStationNames()); // TODO: SS beamformer, support subsets of allStations
+      vector<string> beamStationList = parset.pencilBeamStationList(sapNr, beamNr);
+      beam.nofStations() .set(beamStationList.size());
+      beam.stationsList().set(beamStationList);
 
       //const char *trackingTypes[] = { "J2000", "LMN", "TBD" };
       //writeAttribute(         beam, "TRACKING",      "J2000" ); // TODO: support non-tracking

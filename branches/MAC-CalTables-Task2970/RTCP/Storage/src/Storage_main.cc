@@ -10,6 +10,7 @@
 #include <lofar_config.h>
 
 #include <Common/LofarLogger.h>
+#include <Common/CasaLogSink.h>
 #include <Common/StringUtil.h>
 #include <Common/Exceptions.h>
 #include <Common/NewHandler.h>
@@ -118,6 +119,8 @@ int main(int argc, char *argv[])
   INIT_LOGGER_WITH_SYSINFO(str(boost::format("Storage@%02d") % (argc > 1 ? atoi(argv[1]) : -1)));
 #endif
 
+  CasaLogSink::attach();
+
   try {
     if (argc != 4)
       throw StorageException(str(boost::format("usage: %s rank parset is_bigendian") % argv[0]), THROW_ARGS);
@@ -140,7 +143,7 @@ int main(int argc, char *argv[])
     setRTpriority();
     lockInMemory();
 
-    Observation obs(&parset);
+    Observation obs(&parset, false);
 
     for (OutputType outputType = FIRST_OUTPUT_TYPE; outputType < LAST_OUTPUT_TYPE; outputType ++) {
       for (unsigned streamNr = 0; streamNr < parset.nrStreams(outputType); streamNr ++) {

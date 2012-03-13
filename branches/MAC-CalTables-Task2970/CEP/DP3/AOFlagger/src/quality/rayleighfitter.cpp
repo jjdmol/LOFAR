@@ -17,23 +17,25 @@ static int fit_f(const gsl_vector *xvec, void *data, gsl_vector *f)
 	
 	size_t t = 0;
 	RayleighFitter &fitter = *(RayleighFitter *) data;
-	LogHistogram &hist = *fitter._hist;
+	const LogHistogram &hist = *fitter._hist;
 	const double minVal = fitter._minVal;
 	const double maxVal = fitter._maxVal;
   
-	for (LogHistogram::iterator i=hist.begin(); i!=hist.end(); ++i)
+	for (LogHistogram::const_iterator i=hist.begin(); i!=hist.end(); ++i)
 	{
 		const double x = i.value();
 		if(x >= minVal && x < maxVal && std::isfinite(x))
 		{
 			const double val = i.normalizedCount();
-			const double logval = log(val);
-			const double weight = logval;
+			//const double logval = log(val);
+			//const double weight = logval;
 			
 			double sigmaP2 = sigma*sigma;
 			double Yi = x * exp(-(x*x)/(2*sigmaP2)) * n / sigmaP2;
-			gsl_vector_set (f, t, (log(Yi) - logval)*weight);
-			
+			if(fitter.FitLogarithmic())
+				gsl_vector_set(f, t, log(Yi) - log(val));
+			else
+				gsl_vector_set(f, t, (Yi - val));
 			++t;
 		}
 	}
@@ -48,27 +50,33 @@ int fit_df(const gsl_vector *xvec, void *data, gsl_matrix *J)
 	
 	size_t t = 0;
 	RayleighFitter &fitter = *(RayleighFitter *) data;
-	LogHistogram &hist = *fitter._hist;
+	const LogHistogram &hist = *fitter._hist;
 	const double minVal = fitter._minVal;
 	const double maxVal = fitter._maxVal;
-	const double sigma2P2 = 2.0*sigma*sigma;
+	const double sigmaP2 = sigma*sigma;
   const double sigmaP3 = sigma*sigma*sigma;
-	for (LogHistogram::iterator i=hist.begin(); i!=hist.end(); ++i)
+	for (LogHistogram::const_iterator i=hist.begin(); i!=hist.end(); ++i)
 	{
 		const double x = i.value();
 		if(x >= minVal && x < maxVal && std::isfinite(x))
 		{
 			const double val = i.normalizedCount();
-			const double weight = log(val);
+			//const double weight = log(val);
 
-			const double dfdsigma = (x*x-sigma2P2)/sigmaP3;
-			const double dfdn = 1.0/n;
-
+			double dfdsigma, dfdn;
+			if(fitter.FitLogarithmic())
+			{
+				dfdsigma = (x*x-2.0*sigmaP2)/sigmaP3;
+				dfdn = 1.0/n;
+			} else {
+				dfdsigma = -n * 2.0*x*x*x / (sigmaP3 * sigmaP3) * exp(-x*x/(2.0*sigmaP2));
+				dfdn = x * exp(-(x*x)/(2*sigmaP2)) / sigmaP2;
+			}
 			
 			// diff to sigma
-			gsl_matrix_set (J, t, 0, dfdsigma*weight); 
+			gsl_matrix_set (J, t, 0, dfdsigma); 
 			// diff to n
-			gsl_matrix_set (J, t, 1, dfdn*weight);
+			gsl_matrix_set (J, t, 1, dfdn);
 			
 			++t;
 		}
@@ -92,7 +100,7 @@ void print_state(size_t iter, gsl_multifit_fdfsolver *s)
 	std::cout << "iteration " << iter << ", sigma=" << sigma << ", N=" << N << "\n";
 }
 
-void RayleighFitter::Fit(double minVal, double maxVal, LogHistogram &hist, double &sigma, double &n)
+void RayleighFitter::Fit(double minVal, double maxVal, const LogHistogram &hist, double &sigma, double &n)
 {
 	unsigned int iter = 0;
 	const size_t nVars = 2;
@@ -154,7 +162,7 @@ void RayleighFitter::Fit(double minVal, double maxVal, LogHistogram &hist, doubl
 
 #else // No gsl...
 
-void RayleighFitter::Fit(double minVal, double maxVal, LogHistogram &hist, double &sigma, double &n)
+void RayleighFitter::Fit(double minVal, double maxVal, const LogHistogram &hist, double &sigma, double &n)
 {
 	sigma = 1.0;
 	n = 1.0;
@@ -162,18 +170,9 @@ void RayleighFitter::Fit(double minVal, double maxVal, LogHistogram &hist, doubl
 
 #endif
 
-double RayleighFitter::SigmaEstimate(LogHistogram &hist)
+double RayleighFitter::SigmaEstimate(const LogHistogram &hist)
 {
-	double maxCount = 0.0, maxPosition = 0.0;
-	for (LogHistogram::iterator i=hist.begin(); i!=hist.end(); ++i)
-	{
-		if(i.normalizedCount() > maxCount && i.value() > 0 && std::isfinite(i.value()))
-		{
-			maxCount = i.normalizedCount();
-			maxPosition = i.value();
-		}
-	}
-	return maxPosition;
+	return hist.AmplitudeWithMaxNormalizedCount();
 }
 
 void RayleighFitter::FindFitRangeUnderRFIContamination(double minPositiveAmplitude, double sigmaEstimate, double &minValue, double &maxValue)
@@ -183,11 +182,33 @@ void RayleighFitter::FindFitRangeUnderRFIContamination(double minPositiveAmplitu
 	std::cout << "Found range " << minValue << " -- " << maxValue << "\n";
 }
 
-double RayleighFitter::NEstimate(LogHistogram &hist, double rangeStart, double rangeEnd)
+double RayleighFitter::ErrorOfFit(const LogHistogram &histogram, double rangeStart, double rangeEnd, double sigma, double n)
+{
+	double sum = 0.0;
+	size_t count = 0;
+	for (LogHistogram::const_iterator i=histogram.begin(); i!=histogram.end(); ++i)
+	{
+		const double x = i.value();
+		if(x >= rangeStart && x < rangeEnd && std::isfinite(x))
+		{
+			const double val = i.normalizedCount();
+			
+			double sigmaP2 = sigma*sigma;
+			double Yi = x * exp(-(x*x)/(2*sigmaP2)) * n / sigmaP2;
+			
+			double error = (Yi - val)*(Yi - val);
+			sum += error;
+			++count;
+		}
+	}
+	return sum / (double) count;
+}
+
+double RayleighFitter::NEstimate(const LogHistogram &hist, double rangeStart, double rangeEnd)
 {
 	double rangeSum = 0.0;
 	size_t count = 0;
-	for (LogHistogram::iterator i=hist.begin(); i!=hist.end(); ++i)
+	for (LogHistogram::const_iterator i=hist.begin(); i!=hist.end(); ++i)
 	{
 		if(i.value() > rangeStart && i.value() < rangeEnd && std::isfinite(i.value()))
 		{

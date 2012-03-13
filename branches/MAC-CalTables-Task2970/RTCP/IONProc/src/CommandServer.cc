@@ -28,7 +28,6 @@
 #include <Job.h>
 #include <JobQueue.h>
 #include <Stream/SocketStream.h>
-#include <StreamMultiplexer.h>
 
 #include <string>
 
@@ -163,9 +162,15 @@ void CommandServer::jobCleanUpThread()
 
 CommandServer::CommandServer()
 :
-  itsQuit(false),
-  itsJobCleanUpThread(this, &CommandServer::jobCleanUpThread, "JobCleanUpThread", 65536)
+  itsQuit(false)
 {
+}
+
+
+void CommandServer::start()
+{
+  itsJobCleanUpThread = new Thread(this, &CommandServer::jobCleanUpThread, "JobCleanUpThread", 65536);
+
   if (myPsetNumber == 0)
     commandMaster();
   else
