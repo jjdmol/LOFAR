@@ -253,7 +253,6 @@ class MSWindow : public Gtk::Window {
 			_gaussianTestSetsButton, _rayleighTestSetsButton, _zeroTestSetsButton,
 			_ncpSetButton, _b1834SetButton, _emptySetButton,
 			_sim16ChannelsButton, _sim64ChannelsButton, _sim256ChannelsButton;
-		//std::vector<Gtk::Window*> _subWindows;
 		class ImagePlaneWindow *_imagePlaneWindow;
 		class HistogramWindow *_histogramWindow;
 		Gtk::Window
