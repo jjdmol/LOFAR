@@ -34,7 +34,7 @@ ThreadMap globalThreadMap;
 void ThreadMap::report() {
   ScopedLock sl(mutex);
 
-  unsigned nr = map.size() + 1;
+  unsigned nr = map.size();
 
   for(mapType::const_iterator i = map.begin(); i != map.end(); --nr, ++i) {
     const pthread_t &id = (*i).first;
