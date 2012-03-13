@@ -24,6 +24,8 @@
 #include <Common/Thread/Thread.h>
 #include <Common/LofarLogger.h>
 #include <iostream>
+#include <sys/types.h>
+#include <unistd.h>
 
 namespace LOFAR {
 
@@ -34,16 +36,14 @@ ThreadMap globalThreadMap;
 void ThreadMap::report() {
   ScopedLock sl(mutex);
 
-  unsigned nr = map.size();
+  LOG_INFO_STR("Thread list for pid " << getpid());
 
-  for(mapType::const_iterator i = map.begin(); i != map.end(); --nr, ++i) {
+  for(mapType::const_iterator i = map.begin(); i != map.end();  ++i) {
     const pthread_t &id = (*i).first;
     const std::string &desc = (*i).second;
 
-    LOG_INFO_STR("Thread " << nr << ": 0x" << std::hex << id << " = " << desc);
+    LOG_INFO_STR("Thread 0x" << std::hex << id << " = " << desc);
   }
-
-  LOG_INFO_STR("Thread 0: main thread");
 }
 
 #endif
