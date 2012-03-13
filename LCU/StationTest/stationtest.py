@@ -335,10 +335,10 @@ def GotoSwlevel2():
 				if debug:
 					for line in res2:
 						print ('%s' % line.rstrip('\n'))
-				time.sleep(30)
+				time.sleep(120)
 				res = os.popen3('rspctl --datastream=0')[1].readlines()
 				print res
-				time.sleep(90)  # Tijdelijk toe gevoegd voor nieuwe tbbdriver. Deze loopt vast tijdens pollen
+				#time.sleep(90)  # Tijdelijk toe gevoegd voor nieuwe tbbdriver. Deze loopt vast tijdens pollen
 #				CheckTBB()	# Tijdelijk weg gelaten voor nieuwe tbbdriver. Deze loopt vast tijdens pollen
 #fromprg.close()
 				break
