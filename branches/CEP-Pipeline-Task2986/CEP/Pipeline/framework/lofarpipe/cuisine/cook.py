@@ -24,9 +24,6 @@ class PipelineCook(WSRTCook):
     def __init__(self, task, inputs, outputs, logger, recipe_path):
         super(PipelineCook, self).__init__(task, inputs, outputs, logger)
         # Ensures the recipe to be run can be imported from the recipe path
-
-        print "debug 100"
-        print inputs
         try:
             try:
                 module_details = imp.find_module(task, recipe_path)
@@ -54,7 +51,6 @@ class PipelineCook(WSRTCook):
         """Ensure inputs are available to the recipe to be run"""
         for k in self.inputs.keys():
             self.recipe.inputs[k] = self.inputs[k]
-        print "debug 33"
 
     def copy_outputs(self):
         """Pass outputs from the recipe back to the rest of the pipeline"""
@@ -66,11 +62,9 @@ class PipelineCook(WSRTCook):
 
     def spawn(self):
         """Copy inputs to the target recipe then run it"""
-        print "debug 30"
         self.copy_inputs()
-        print "debug 31"
         self.try_running()
-        print "debug 32"
+
 
 class SystemCook(WSRTCook):
     """Based on Parseltongue cody by Mark Kettenis (JIVE)
