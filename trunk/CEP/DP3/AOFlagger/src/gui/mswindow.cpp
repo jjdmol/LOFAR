@@ -117,6 +117,9 @@ MSWindow::MSWindow() : _imagePlaneWindow(0), _histogramWindow(0), _optionWindow(
 
 MSWindow::~MSWindow()
 {
+	while(!_actionGroup->get_actions().empty())
+		_actionGroup->remove(*_actionGroup->get_actions().begin());
+	
 	delete _imagePlaneWindow;
 	if(_histogramWindow != 0)
 		delete _histogramWindow;
