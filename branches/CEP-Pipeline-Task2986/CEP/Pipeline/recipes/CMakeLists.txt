@@ -41,6 +41,7 @@ python_install(
   nodes/flag_baseline.py
   nodes/make_flaggable.py
   nodes/new_bbs.py
+  nodes/imager_bbs.py
   nodes/imager_awimager.py
   nodes/imager_create_dbs.py
   nodes/imager_prepare.py
