@@ -91,7 +91,14 @@ Job::Job(const char *parsetName)
       } catch (Exception &ex) {
         LOG_WARN_STR(itsLogPrefix << "Could not connect to ApplController on " << itsParset.PLC_Host() << ":" << itsParset.PLC_Port() << " as " << itsParset.PLC_ProcID() << " -- continuing on autopilot: " << ex);
       }
+    }
+
+    if (!itsPLCClient) {
+      // we are either not PLC controlled, or we're supposed to be but can't connect to
+      // the ApplController
+      LOG_INFO_STR(itsLogPrefix << "Not controlled by ApplController");
     }  
+
   }
 
   // check enough parset settings just to get to the coordinated check in jobThread safely
@@ -504,18 +511,10 @@ void Job::jobThread()
         canStart = false;
       }
 
-      if (!itsPLCClient) {
-        // we are either not PLC controlled, or we're supposed to be but can't connect to
-        // the ApplController
-        LOG_INFO_STR(itsLogPrefix << "Not controlled by ApplController");
-
-        // perform some functions which ApplController would have us do
-
-        // obey the stop time in the parset -- the first anotherRun() will broadcast it
-        if (!pause(itsParset.stopTime())) {
-          LOG_ERROR_STR(itsLogPrefix << "Could not set observation stop time");
-          canStart = false;
-        }
+      // obey the stop time in the parset -- the first anotherRun() will broadcast it
+      if (!pause(itsParset.stopTime())) {
+        LOG_ERROR_STR(itsLogPrefix << "Could not set observation stop time");
+        canStart = false;
       }
 
       if (canStart) {
