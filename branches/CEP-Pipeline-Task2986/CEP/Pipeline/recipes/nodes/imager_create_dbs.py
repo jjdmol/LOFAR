@@ -31,6 +31,7 @@ from lofarpipe.support.pipelinelogging import log_process_output
 from lofarpipe.support.pipelinelogging import CatchLog4CPlus
 from lofarpipe.support.utilities import read_initscript
 from lofarpipe.support.utilities import catch_segfaults
+from lofarpipe.support.group_data import load_data_map
 
 #TODO: A better place for this template
 template_parmdb = """
@@ -50,7 +51,7 @@ quit
 class imager_create_dbs(LOFARnodeTCP):
     def run(self, concatenated_measurement_set, sourcedb_target_path,
             monet_db_hostname, monet_db_port, monet_db_name, monet_db_user,
-            monet_db_password, assoc_theta, parmdb_executable, slice_paths,
+            monet_db_password, assoc_theta, parmdb_executable, host_slice_map,
             parmdb_suffix, monetdb_path, gsm_path, init_script,
             working_directory, makesourcedb_path):
         """
@@ -68,19 +69,15 @@ class imager_create_dbs(LOFARnodeTCP):
             self.logger.error("failed creating skymodel")
             return 1
 
-        # TODO: Allow usage_of_sky_map
         # convert it to a sourcedb (casa table)
         if self._create_source_db(temp_sky_path, sourcedb_target_path,
                                   init_script, working_directory, makesourcedb_path):
             self.logger.error("failed creating sourcedb")
             return 1
-        # TODo: The output of this step is a sky model
         self.outputs["sky"] = sourcedb_target_path
 
-        # for each slice_set, create a parmdb in the target path
-        # slice_paths is string representation of am array, convert
-        slice_paths = eval(slice_paths)
-        if self._create_parmdb_for_timeslices(parmdb_executable, slice_paths,
+        #host_slice_map is mapfile(only first index is set
+        if self._create_parmdb_for_timeslices(parmdb_executable, host_slice_map[0][1],
                                            parmdb_suffix):
             self.logger.error("failed creating paramdb for slices")
             return 1
@@ -246,7 +243,6 @@ class imager_create_dbs(LOFARnodeTCP):
         parmdbms = []
         for slice_path in slice_paths:
             #Create the paths based on the 'source ms'
- 
             ms_parmdb_path = slice_path + suffix
             parmdbms.append(ms_parmdb_path)
             #call parmdb return failure if a single create failed 
