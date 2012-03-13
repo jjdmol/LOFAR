@@ -118,6 +118,7 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
         super(imager_create_dbs, self).go()
         suffix = self.inputs["suffix"]
 
+
         # collect and assign the parameters for the         
         # Monet database 
         monetdb_hostname = self.inputs["monetdb_hostname"]
@@ -154,6 +155,8 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
         for (input_ms, slice_paths)  in zip(input_map, slice_paths_map):
             host_ms, concatenated_measurement_set = input_ms
             host_slice, slice_paths = slice_paths
+
+            #Check if inputs are correct.
             if host_ms != host_slice:
                 self.logger.error("Host found in the timeslice and input ms are different")
                 self.logger.error(input_map)
@@ -161,7 +164,12 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
                 return 1
 
             #create string representation of the array of paths
-            slice_paths = repr(slice_paths)
+
+            host_slice_map = [("paths", slice_paths)]
+#            self.logger.info(slice_paths)
+#            self.logger.info(host_slice_map)
+#            host_slice_map_path = 
+#            store_data_map("slice_path_{0}".format(host_slice), host_slice_map)
             host = host_ms
             #Create the parameters depending on the input_map
             if self.inputs["sourcedb_target_path"] != "":
@@ -176,7 +184,7 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
             arguments = [ concatenated_measurement_set, sourcedb_target_path,
                          monetdb_hostname, monetdb_port, monetdb_name,
                          monetdb_user, monetdb_password, assoc_theta,
-                         parmdb_executable, slice_paths, parmdb_suffix,
+                         parmdb_executable, host_slice_map, parmdb_suffix,
                          monetdb_path, gsm_path, init_script, working_directory,
                          makesourcedb_path]
             jobs.append(ComputeJob(host, node_command, arguments))
