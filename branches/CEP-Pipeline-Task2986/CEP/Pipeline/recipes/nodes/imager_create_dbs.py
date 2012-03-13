@@ -117,10 +117,14 @@ class imager_create_dbs(LOFARnodeTCP):
                     "failed removing an existing sky model: {0}".format(
                                                         sourcedb_target_path))
 
+
+
         # The command and parameters to be run
         cmd = [executable, "in={0}".format(temp_sky_path),
                "out={0}".format(sourcedb_target_path),
-               "format=<"] # format according
+               "format=<"] # format according to Ger 
+
+
         try:
             environment = read_initscript(self.logger, init_script)
             with CatchLog4CPlus(working_directory,
@@ -327,6 +331,11 @@ class imager_create_dbs(LOFARnodeTCP):
         try:
             ra_c = float(ra_c) * (180 / 3.14) + 360.0  #prevent negative values: add 360
             decl_c = float(decl_c) * (180 / 3.14)
+
+            self.gsm.expected_fluxes_in_fov(conn, ra_c ,
+                        decl_c, float(fov_radius),
+                        float(assoc_theta), path_output_skymap,
+                        storespectraplots = False)
         except Exception, e:
             self.logger.error("expected_fluxes_in_fov raise exception: " +
                               str(e))
