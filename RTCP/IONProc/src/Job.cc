@@ -712,16 +712,17 @@ bool Job::anotherRun()
     broadcast(itsStopTime);
   }
 
+  // move on to the next block
+  itsBlockNumber ++;
+
   bool done = !itsIsRunning;
 
   if (itsStopTime > 0.0) {
-    // start time of last processed block
-    double currentTime = itsParset.startTime() + itsBlockNumber * itsParset.CNintegrationTime();
+    // the end time of this block must still be within the observation
+    double currentTime = itsParset.startTime() + (itsBlockNumber + 1) * itsParset.CNintegrationTime();
 
     done = done || currentTime >= itsStopTime;
   }
-
-  itsBlockNumber ++;
 
   return !done;
 }
