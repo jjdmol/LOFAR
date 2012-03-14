@@ -56,7 +56,8 @@ void repoint(casa::MDirection &phaseDirection, casa::MPosition &position, const 
 	uvwVector[1] = v;
 	uvwVector[2] = w;
 	//std::cout << "In: " << u << ',' << v << ',' << w << '\n';
-	//std::cout << "Phase shift: " << uvwConverter.getPhase(uvwVector) << '\n';
+	phaseRotation = uvwConverter.getPhase(uvwVector);
+	//std::cout << "Phase shift: " << phaseRotation << '\n';
 	//uvwConverter.convertUVW(uvwVector); // getPhase already does that!
 	u = uvwVector[0];
 	v = uvwVector[1];

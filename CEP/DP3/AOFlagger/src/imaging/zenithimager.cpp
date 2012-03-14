@@ -69,8 +69,11 @@ void ZenithImager::add(const BandInfo &band, double r, double i, double u, doubl
 	
 	const double centre = (double) (_resolution + 1.0) * 0.5;
 	
-	int uPos = (int) round(u + centre);
-	int vPos = (int) round(v + centre);
+	// Calculate the pixel indices. Because we want the image domain to
+	// have a range of -1 to 1 (which is the horizon), the uv-domain should
+	// go from 1/-1 to 1/1. Hence, the u needs to be multiplied by two.
+	int uPos = (int) round(u*2.0 + centre);
+	int vPos = (int) round(v*2.0 + centre);
 	
 	if(uPos >= 0 && vPos >= 0 && uPos < (int) _resolution && vPos < (int) _resolution)
 	{
