@@ -7,10 +7,6 @@ include(LofarFindPackage)
 lofar_find_package(Boost REQUIRED)
 lofar_find_package(Casacore REQUIRED COMPONENTS casa measures)
 lofar_find_package(PQXX)
- 
-if(HAVE_PQXX)
-  add_definitions(-DHAVE_PQXX)
-endif(HAVE_PQXX)
 
 add_subdirectory(include/BBSControl)
 add_subdirectory(src)
