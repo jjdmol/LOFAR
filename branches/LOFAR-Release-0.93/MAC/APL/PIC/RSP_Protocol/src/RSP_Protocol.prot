@@ -1193,8 +1193,12 @@ event = {
     type = "int16";
   };
   param = {
-    name = "max_rspboards"; // used to be n_tdboards
+    name = "max_rspboards";
     type = "int16";
+  };
+  param = {
+    name = "hasSplitter";
+    type = "bool";
   };
 };
 
