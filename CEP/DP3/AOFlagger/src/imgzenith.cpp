@@ -43,10 +43,13 @@ void repoint(casa::MDirection &phaseDirection, casa::MPosition &position, const 
 	
 	casa::MeasFrame timeAndLocation(obstime, position);
 	
-	casa::MDirection::Ref refApparent(casa::MDirection::APP, timeAndLocation);
+	casa::MDirection::Ref refApparent(casa::MDirection::AZEL, timeAndLocation);
 	
 	// Calculate zenith
-	casa::MDirection outDirection(casa::Quantity(M_PI, radUnit), casa::Quantity(0.0, radUnit), refApparent);
+	casa::MDirection outDirection(
+		casa::Quantity(0.0, radUnit),   // Az
+		casa::Quantity(M_PI, radUnit),  // El
+	refApparent);
 	//std::cout << "Out=" << outDirection.getValue() << '\n';
 	
 	// Construct a CASA UVW converter
@@ -69,11 +72,15 @@ void repoint(casa::MDirection &phaseDirection, casa::MPosition &position, const 
 int main(int argc, char *argv[])
 {
 	std::string filename(argv[1]);
-	size_t integrationSteps;
+	size_t integrationSteps, resolution;
 	if(argc >= 3)
 		integrationSteps = atoi(argv[2]);
 	else
 		integrationSteps = 60;
+	if(argc >= 4)
+		resolution = atoi(argv[3]);
+	else
+		resolution = 2048;
 	
 	std::cout << "Opening " << filename << "...\n";
 	
@@ -112,7 +119,7 @@ int main(int argc, char *argv[])
 
 	unsigned row = 0;
 	ZenithImager imager;
-	imager.Initialize(2048);
+	imager.Initialize(resolution);
 	size_t timeStep = 0;
 	while(row<table.nrow())
 	{
@@ -164,9 +171,10 @@ int main(int argc, char *argv[])
 			if(timeStep < 100) s << '0';
 			if(timeStep < 10) s << '0';
 			s << timeStep << ".png";
+			BlackRedMap map;
 			std::cout << "Saving " << s.str() << "... " << std::flush;
-			PngFile::Save(*real, std::string("zen/") + s.str());
-			PngFile::Save(*imager.UVReal(), std::string("zen-uv/") + s.str());
+			PngFile::Save(*real, std::string("zen/") + s.str(), map);
+			PngFile::Save(*imager.UVReal(), std::string("zen-uv/") + s.str(), map);
 			imager.Clear();
 			std::cout << "Done.\n";
 		}
