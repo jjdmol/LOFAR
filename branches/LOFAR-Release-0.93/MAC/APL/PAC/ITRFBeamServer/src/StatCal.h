@@ -44,7 +44,11 @@ public:
 	std::complex<double> calFactor(uint	rcuNr, uint subbandNr) const;
 	bool	isValid() const { return (itsIsValid); }
 
+	// operator()
 	const blitz::Array<std::complex<double>,3>& operator()() const;
+
+	// operator <<
+	ostream& print(ostream& os) const;
 
 private:
 	// Don't allow copying this object.
@@ -52,7 +56,10 @@ private:
 	StatCal (const StatCal&);            // not implemented
 	StatCal& operator= (const StatCal&); // not implemented
 
-	void _readData(uint	mode);
+	// helper functions
+	bool _readData       (uint	mode);
+	bool _readHeaderInfo (FILE*	file);
+	bool _checkHeaderInfo(uint	mode) const;
 	
 	uint 	itsNantennas;
 	uint 	itsNpols;
@@ -60,6 +67,22 @@ private:
 	uint 	itsMode;
 	string 	itsFileName;
 	bool	itsIsValid;
+
+	class headerinfo {
+	public:
+		headerinfo() : mode(-1) {};
+		// datamembers
+		string	station;
+		int		mode;
+		string	source;
+		string	date;
+		string	calVersion;
+		string	calName;
+		string	calDate;
+		string	calPPSdelay;
+		string	comment;
+	};
+	headerinfo		itsHI;
 
 	// two 
 	blitz::Array<std::complex<double>, 3> itsStaticCalibration;  // 
@@ -70,6 +93,12 @@ private:
 inline const blitz::Array<std::complex<double>, 3>& StatCal::operator()() const
 {
 	return (itsStaticCalibration);
+}
+
+//# operator<<
+inline ostream& operator<< (ostream& os, const StatCal&  sc)
+{
+	return (sc.print(os));
 }
 
   } //# namepsace BS
