@@ -126,11 +126,12 @@ class MeasurementSet {
 		}
 		size_t GetPolarizationCount();
 		static size_t GetPolarizationCount(const std::string &filename);
+		static struct BandInfo GetBandInfo(const std::string &filename, unsigned bandIndex);
 		size_t AntennaCount();
 		size_t FieldCount();
 		size_t BandCount();
 		struct AntennaInfo GetAntennaInfo(unsigned antennaId);
-		struct BandInfo GetBandInfo(unsigned bandIndex);
+		struct BandInfo GetBandInfo(unsigned bandIndex) {return GetBandInfo(_location, bandIndex);}
 		struct FieldInfo GetFieldInfo(unsigned fieldIndex);
 		void DataMerge(const MeasurementSet &source);
 		std::string Location() const throw() { return _location; }

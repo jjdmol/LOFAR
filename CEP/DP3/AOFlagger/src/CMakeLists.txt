@@ -248,6 +248,7 @@ lofar_add_bin_program(msinfo msinfo.cpp)
 lofar_add_bin_program(ns2bbs ns2bbs.cpp)
 lofar_add_bin_program(colormapper colormapper.cpp)
 lofar_add_bin_program(versionaoflagger versionaoflagger.cc Package__Version.cc)
+lofar_add_bin_program(imgzenith imgzenith.cpp imaging/zenithimager.cpp)
 
 if(BOOST_ASIO_H_FOUND AND SIGCXX_FOUND)
   lofar_add_bin_program(aoquality aoquality.cpp ${REMOTE_FILES})

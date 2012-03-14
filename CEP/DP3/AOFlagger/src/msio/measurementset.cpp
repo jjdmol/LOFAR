@@ -198,10 +198,10 @@ struct AntennaInfo MeasurementSet::GetAntennaInfo(unsigned antennaId)
 	return info;
 }
 
-struct BandInfo MeasurementSet::GetBandInfo(unsigned bandIndex)
+BandInfo MeasurementSet::GetBandInfo(const std::string &filename, unsigned bandIndex)
 {
 	BandInfo band;
-	casa::MeasurementSet ms(_location);
+	casa::MeasurementSet ms(filename);
 	casa::Table spectralWindowTable = ms.spectralWindow();
 	casa::ROScalarColumn<int> numChanCol(spectralWindowTable, "NUM_CHAN");
 	casa::ROArrayColumn<double> frequencyCol(spectralWindowTable, "CHAN_FREQ");
