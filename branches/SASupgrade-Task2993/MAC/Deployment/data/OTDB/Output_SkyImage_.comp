@@ -39,6 +39,9 @@ node  Output_SkyImage_	4.0.0  development  	'node constraint'  "SkyImageDataProd
 #--------------------------------------------------------------------------------------------------------
 par  size 	                  O    ulng   -      10    0    0      	- 	''
 par  fileFormat                   O    ptext  -      10    0    'FITS|Aips++CASA|HDF5;AIPS++/CASA'      -       ''
+par  filename                     O    text   -      10    0    ''      	-       ''
+par  location                     O    text   -      10    0    ''      	-       ''
+par  percentageWritten            O    uint   -      10    0    0      	-       ''
 par  numberOfAxes	          O    uint   -      10    0    0	        -	''
 par  nrOfDirectionCoordinates     O    uint   -      10    0    0	        -	''
 par  nrOfSpectralCoordinates      O    uint   -      10    0    0	        -	''

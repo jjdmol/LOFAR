@@ -39,4 +39,7 @@ node  Output_InstrumentModel_	4.0.0  development  	'node constraint'  "Instrumen
 #--------------------------------------------------------------------------------------------------------
 par  size 	                O    ulng   -      10    0    0      	- 	''
 par  fileFormat                 O    ptext  -      10    0    'FITS|Aips++CASA|HDF5;AIPS++/CASA'      -       ''
+par  filename                   O    text   -      10    0    ''      	-       ''
+par  location                   O    text   -      10    0    ''      	-       ''
+par  percentageWritten          O    uint   -      10    0    0      	-       ''
 
