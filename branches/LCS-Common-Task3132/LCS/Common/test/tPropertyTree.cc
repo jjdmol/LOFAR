@@ -23,9 +23,6 @@
 //# Always #inlcude <lofar_config.h> first!
 #include <lofar_config.h>
 #include <Common/PropertyTree.h>
-#include <Common/lofar_fstream.h>
-#include <Common/lofar_iostream.h>
-#include <Common/lofar_string.h>
 
 using namespace LOFAR;
 
@@ -33,7 +30,8 @@ int main()
 {
   PropertyTree pt;
   pt.readParset("tPropertyTree.in_parset");
-  ofstream ofs("tPropertyTree.out_parset");
-  pt.writeParset(ofs);
+  pt.writeParset("tPropertyTree.out_parset");
+  pt.writeJSON("tPropertyTree.out_json");
+  pt.writeXML("tPropertyTree.out_xml");
   return 0;
 }

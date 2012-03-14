@@ -29,6 +29,9 @@
 #include <Common/lofar_sstream.h>
 #include <Common/lofar_string.h>
 
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/xml_parser.hpp>
+
 namespace LOFAR
 {
   using namespace boost::property_tree;
@@ -40,7 +43,8 @@ namespace LOFAR
   {
     string value = pt.get_value<string>();
     if(!value.empty()) {
-      os << key << "=" << value << endl;
+      // If value matches "#", the we've got an empty leaf, remove its value.
+      os << key << "=" << (value == "#" ? "" : value) << endl;
     }
     for(ptree::const_iterator it = pt.begin(); it != pt.end(); ++it) {
       doWriteParset(os, it->second,
@@ -65,9 +69,24 @@ namespace LOFAR
     ParameterSet ps;
     ps.adoptBuffer(oss.str());
 #endif
-    boost::property_tree::ptree pt;
+    ptree pt;
     for(ParameterSet::const_iterator it = ps.begin(); it != ps.end(); ++it) {
-      pt.put(it->first, it->second);
+      if(it->second.isVector()) {
+//        cout << it->first << " is a vector" << endl;
+      }
+      else if(it->second.isRecord()) {
+//        cout << it->first << " is a record" << endl;
+      }
+      else {
+//        cout << it->first << " is a value" << endl;
+      }
+      // To discriminate between a leaf with an empty value and a node (which,
+      // by definition, has an empty value), we assign "#" to an empty leaf.
+      pt.put(it->first, (it->second.get().empty() ? "#" : it->second.get()));
+    }
+    // Debug
+    for(ptree::const_iterator it = pt.begin(); it != pt.end(); ++it) {
+      cout << it->first << " -> " << it->second.data() << endl;
     }
     swap(pt, itsPT);
   }
@@ -95,41 +114,58 @@ namespace LOFAR
 
   void PropertyTree::readJSON(istream &is)
   {
+    json_parser::read_json(is, itsPT);
   }
 
 
   void PropertyTree::readJSON(const string &fn)
   {
+    json_parser::read_json(fn, itsPT);
   }
 
 
   void PropertyTree::writeJSON(ostream &os, bool pretty) const
   {
+    json_parser::write_json(os, itsPT, pretty);
   }
 
 
   void PropertyTree::writeJSON(const string &fn, bool pretty) const
   {
+    json_parser::write_json(fn, itsPT, std::locale(), pretty);
   }
 
 
   void PropertyTree::readXML(istream &is)
   {
+    xml_parser::read_xml(is, itsPT);
   }
 
 
   void PropertyTree::readXML(const string &fn)
   {
+    xml_parser::read_xml(fn, itsPT);
   }
 
 
   void PropertyTree::writeXML(ostream &os, bool pretty) const
   {
+    if(pretty) {
+      xml_parser::write_xml(os, itsPT, xml_writer_make_settings(' ', 2));
+    } else {
+      xml_parser::write_xml(os, itsPT);
+    }
   }
 
 
   void PropertyTree::writeXML(const string &fn, bool pretty) const
   {
+    if(pretty) {
+      xml_parser::write_xml(fn, itsPT, std::locale(), 
+                            xml_writer_make_settings(' ', 2));
+    } else {
+      xml_parser::write_xml(fn, itsPT);
+    }
   }
 
 } // namespace LOFAR
