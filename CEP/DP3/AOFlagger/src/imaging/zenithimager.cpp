@@ -65,13 +65,13 @@ void ZenithImager::add(const BandInfo &band, double r, double i, double u, doubl
 	u *= factor;
 	v *= factor;
 	//w *= factor;
-	phaseRotation *= factor * 2 * M_PI;
+	phaseRotation *= factor * 2.0 * M_PI;
 	
 	const double centre = (double) (_resolution + 1.0) * 0.5;
 	
 	// Calculate the pixel indices. Because we want the image domain to
 	// have a range of -1 to 1 (which is the horizon), the uv-domain should
-	// go from 1/-1 to 1/1. Hence, the u needs to be multiplied by two.
+	// go from 1/-1 to 1/1. Hence, the u&v need to be multiplied by two.
 	int uPos = (int) round(u*2.0 + centre);
 	int vPos = (int) round(v*2.0 + centre);
 	
@@ -85,8 +85,8 @@ void ZenithImager::add(const BandInfo &band, double r, double i, double u, doubl
 		_imaginary->AddValue(uPos, vPos, rotatedI);
 		_weights->AddValue(uPos, vPos, 1.0);
 		
-		int uPos2 = (int) round(centre - u);
-		int vPos2 = (int) round(centre - v);
+		int uPos2 = (int) round(centre - u*2.0);
+		int vPos2 = (int) round(centre - v*2.0);
 		if(uPos2 >= 0 && vPos2 >= 0 && uPos2 < (int) _resolution && vPos2 < (int) _resolution)
 		{
 			_real->AddValue(uPos2, vPos2, rotatedR);
