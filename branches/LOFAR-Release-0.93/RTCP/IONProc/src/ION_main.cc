@@ -402,7 +402,7 @@ int main(int argc, char **argv)
   INIT_LOGGER_WITH_SYSINFO(str(boost::format("IONProc@%02d") % myPsetNumber));
 #endif
 
-  CasaLogSink::attach();
+  //CasaLogSink::attach();
 
   master_thread();
 
