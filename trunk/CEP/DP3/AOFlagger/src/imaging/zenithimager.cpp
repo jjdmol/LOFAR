@@ -61,22 +61,23 @@ void ZenithImager::Add(const BandInfo &band, const std::complex<float> *samples,
 
 void ZenithImager::add(const BandInfo &band, double r, double i, double u, double v, double w, double phaseRotation, double wavelength)
 {
+	const double norm = 2.0*M_PI; //sqrt(u*u + v*v + w*w) / sqrt(u*u + v*v);
 	const double factor = 1.0 / wavelength;
-	u *= factor;
-	v *= factor;
+	u *= factor * norm;
+	v *= factor * norm;
 	//w *= factor;
-	phaseRotation *= factor * 2.0 * M_PI;
 	
-	const double centre = (double) (_resolution + 1.0) * 0.5;
+	const double dcpixel = (double) _resolution * 0.5;
 	
 	// Calculate the pixel indices. Because we want the image domain to
 	// have a range of -1 to 1 (which is the horizon), the uv-domain should
 	// go from 1/-1 to 1/1. Hence, the u&v need to be multiplied by two.
-	int uPos = (int) round(u*2.0 + centre);
-	int vPos = (int) round(v*2.0 + centre);
+	int uPos = (int) round(u*2.0 + dcpixel);
+	int vPos = (int) round(v*2.0 + dcpixel);
 	
 	if(uPos >= 0 && vPos >= 0 && uPos < (int) _resolution && vPos < (int) _resolution)
 	{
+		phaseRotation *= factor * 2.0 * M_PI;
 		const double sinR = sin(phaseRotation), cosR = cos(phaseRotation);
 		const double rotatedR = r * cosR - i * sinR;
 		const double rotatedI = r * sinR + i * cosR;
@@ -85,8 +86,8 @@ void ZenithImager::add(const BandInfo &band, double r, double i, double u, doubl
 		_imaginary->AddValue(uPos, vPos, rotatedI);
 		_weights->AddValue(uPos, vPos, 1.0);
 		
-		int uPos2 = (int) round(centre - u*2.0);
-		int vPos2 = (int) round(centre - v*2.0);
+		int uPos2 = (int) round(dcpixel - u*2.0);
+		int vPos2 = (int) round(dcpixel - v*2.0);
 		if(uPos2 >= 0 && vPos2 >= 0 && uPos2 < (int) _resolution && vPos2 < (int) _resolution)
 		{
 			_real->AddValue(uPos2, vPos2, rotatedR);
@@ -102,7 +103,7 @@ void ZenithImager::add(const BandInfo &band, double r, double i, double u, doubl
 
 void ZenithImager::FourierTransform(Image2DPtr &real, Image2DPtr &imaginary)
 {
-	std::cout << "Performing FT of " << _totalCount << " samples, " << _outsideCount << " fell outside uv area... " << std::flush;
+	std::cout << "Performing FT of " << _totalCount << " samples, " << _outsideCount << " (" << round(100.0*(double) _outsideCount/(double) _totalCount) << "%) fell outside uv area... " << std::flush;
 	
 	double normFactor = _weights->Sum() / ((num_t) _real->Height() * _real->Width());
 	for(size_t y=0;y<_real->Height();++y) {

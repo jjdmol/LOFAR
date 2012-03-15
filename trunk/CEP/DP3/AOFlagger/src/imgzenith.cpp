@@ -48,7 +48,7 @@ void repoint(casa::MDirection &phaseDirection, casa::MPosition &position, const 
 	// Calculate zenith
 	casa::MDirection outDirection(
 		casa::Quantity(0.0, radUnit),   // Az
-		casa::Quantity(M_PI, radUnit),  // El
+		casa::Quantity(0.5*M_PI, radUnit),  // El
 	refApparent);
 	//std::cout << "Out=" << outDirection.getValue() << '\n';
 	
