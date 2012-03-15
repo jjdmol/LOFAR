@@ -1209,9 +1209,13 @@ namespace LOFAR
               istart += 0.5; //If number of pixel odd then 0th order at the center, shifted by one otherwise
             }
             for (Int jj=0; jj<Npix_out2; ++jj) {
-              for (Int ii=0; ii<Npix_out2; ++ii) {
-                Complex gain = result_non_padded[0][i][j](ii,jj);
-                Stack_PB_CF(istart+ii,istart+jj) += gain*weight_sqsq;
+	      if (istart+jj>=0 && istart+jj<m_shape[0]) {
+		for (Int ii=0; ii<Npix_out2; ++ii) {
+		  if (istart+ii>=0 && istart+ii<m_shape[0]) {
+		    Complex gain = result_non_padded[0][i][j](ii,jj);
+		    Stack_PB_CF(istart+ii,istart+jj) += gain*weight_sqsq;
+		  }
+		}
               }
             }
             sum_weight_square += weight_sqsq;
