@@ -122,18 +122,21 @@ public:
 	// Adds the Key-Values pair in the given file to the current
 	// collection. Each key will be prefixed with the optional argument \a
 	// thePrefix.
+        // <br> Note that no dot is added to the prefix.
 	void	adoptFile      (const string&               theFilename,
 				const string&               thePrefix = "");
 
 	// Adds the Key-Values pair in the given buffer to the current
 	// collection. Each key will be prefixed with the optional argument \a
 	// thePrefix.
+        // <br> Note that no dot is added to the prefix.
 	void	adoptBuffer    (const string&               theBuffer,
 				const string&               thePrefix = "");
 
 	// Adds the Key-Values pair in the given collection to the current 
 	// collection. Each key will be prefixed with the optional argument \a
 	// thePrefix.
+        // <br> Note that no dot is added to the prefix.
         // <br>If theCollection is this collection, nothing will be done.
 	void	adoptCollection(const ParameterSet&         theCollection,
 				const string&               thePrefix = "");
@@ -165,12 +168,16 @@ public:
 	// parameters that start with the given baseKey. The baseKey is cut off 
 	// from the Keynames in the created subset, the optional prefix is put
 	// before all keys in the subset.
+        // <br>It is important to note that no dot is added to the prefix, so
+        // it has to be given explicitly. So when giving a prefix like "pre",
+        // a key "pre.key" gets ".key" and "prefix.key" get "fix.key".
 	ParameterSet	makeSubset(const string& baseKey,
 								   const string& prefix = "") const;
 
 	// Subtract a subset from the current ParameterSet. Every parameter
 	// whose key starts with the given name will be removed from the
 	// ParameterSet.
+        // <br> Similarly to makeSubset, no dot is added to the prefix.
 	void	subtractSubset(const string& fullPrefix);
 	// @}
 
