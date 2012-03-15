@@ -40,7 +40,6 @@ namespace RTCP {
 
 
 OutputSection::OutputSection(const Parset &parset,
-			     Stream * (*createStreamFromCN)(unsigned, unsigned),
 			     OutputType outputType,
                              unsigned firstBlockNumber,
 			     const std::vector<unsigned> &cores,
@@ -95,7 +94,7 @@ OutputSection::OutputSection(const Parset &parset,
   LOG_DEBUG_STR(itsLogPrefix << "] Creating streams between compute nodes and OutputSection...");
 
   for (unsigned i = 0; i < cores.size(); i ++)
-    itsStreamsFromCNs[i] = createStreamFromCN(cores[i], outputType);
+    itsStreamsFromCNs[i] = createCNstream(myPsetNumber, cores[i], outputType);
 
   LOG_DEBUG_STR(itsLogPrefix << "] Creating streams between compute nodes and OutputSection: done");
 
@@ -108,11 +107,10 @@ void OutputSection::start()
 }
 
 
-PhaseTwoOutputSection::PhaseTwoOutputSection(const Parset &parset, Stream * (*createStreamFromCN)(unsigned, unsigned), OutputType outputType, unsigned firstBlockNumber, bool integratable)
+PhaseTwoOutputSection::PhaseTwoOutputSection(const Parset &parset, OutputType outputType, unsigned firstBlockNumber, bool integratable)
 :
   OutputSection(
     parset,
-    createStreamFromCN,
     outputType,
     firstBlockNumber,
     parset.phaseOneTwoCores(),
@@ -124,11 +122,10 @@ PhaseTwoOutputSection::PhaseTwoOutputSection(const Parset &parset, Stream * (*cr
 }
 
 
-PhaseThreeOutputSection::PhaseThreeOutputSection(const Parset &parset, Stream * (*createStreamFromCN)(unsigned, unsigned), OutputType outputType, unsigned firstBlockNumber)
+PhaseThreeOutputSection::PhaseThreeOutputSection(const Parset &parset, OutputType outputType, unsigned firstBlockNumber)
 :
   OutputSection(
     parset,
-    createStreamFromCN,
     outputType,
     firstBlockNumber,
     parset.phaseThreeCores(),
@@ -140,23 +137,23 @@ PhaseThreeOutputSection::PhaseThreeOutputSection(const Parset &parset, Stream * 
 }
 
 
-CorrelatedDataOutputSection::CorrelatedDataOutputSection(const Parset &parset, Stream * (*createStreamFromCN)(unsigned, unsigned), unsigned firstBlockNumber)
+CorrelatedDataOutputSection::CorrelatedDataOutputSection(const Parset &parset, unsigned firstBlockNumber)
 :
-  PhaseTwoOutputSection(parset, createStreamFromCN, CORRELATED_DATA, firstBlockNumber, true)
+  PhaseTwoOutputSection(parset, CORRELATED_DATA, firstBlockNumber, true)
 {
 }
 
 
-BeamFormedDataOutputSection::BeamFormedDataOutputSection(const Parset &parset, Stream * (*createStreamFromCN)(unsigned, unsigned), unsigned firstBlockNumber)
+BeamFormedDataOutputSection::BeamFormedDataOutputSection(const Parset &parset, unsigned firstBlockNumber)
 :
-  PhaseThreeOutputSection(parset, createStreamFromCN, BEAM_FORMED_DATA, firstBlockNumber)
+  PhaseThreeOutputSection(parset, BEAM_FORMED_DATA, firstBlockNumber)
 {
 }
 
 
-TriggerDataOutputSection::TriggerDataOutputSection(const Parset &parset, Stream * (*createStreamFromCN)(unsigned, unsigned), unsigned firstBlockNumber)
+TriggerDataOutputSection::TriggerDataOutputSection(const Parset &parset, unsigned firstBlockNumber)
 :
-  PhaseThreeOutputSection(parset, createStreamFromCN, TRIGGER_DATA, firstBlockNumber)
+  PhaseThreeOutputSection(parset, TRIGGER_DATA, firstBlockNumber)
 {
 }
 
@@ -198,7 +195,9 @@ void OutputSection::readData( Stream *stream, StreamableData *data, unsigned str
     data->setDimensions(info.nrSamples, info.subbands.size(), info.nrChannels); 
   }  
 
+  LOG_DEBUG_STR("Reading data for stream " << streamNr << "...");
   data->read(stream, false);
+  LOG_DEBUG_STR("Reading data for stream " << streamNr << " done");
 }
 
 
@@ -248,7 +247,7 @@ void OutputSection::mainLoop()
     // core (to stay in sync with other psets).
     for (unsigned i = 0; i < itsNrCoresPerIteration; i ++) {
       if (i < itsNrStreams) {
-        //LOG_DEBUG_STR(itsLogPrefix << "] Reading data from core " << itsCurrentComputeCore);
+        LOG_DEBUG_STR(itsLogPrefix << "] Reading data from core " << itsCurrentComputeCore);
         
         if (lastTime) {
           if (itsIsRealTime && itsOutputThreads[i]->itsFreeQueue.empty()) {

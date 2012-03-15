@@ -71,7 +71,7 @@ class CN_Processing_Base // untemplated helper class
 template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
 {
   public:
-			CN_Processing(const Parset &, const std::vector<SmartPtr<Stream> > &inputStream, Stream *(*createStream)(unsigned, const LocationInfo &), const LocationInfo &, Allocator & = heapAllocator, unsigned firstBlock = 0);
+			CN_Processing(const Parset &, const std::vector<SmartPtr<Stream> > &inputStreams, Stream *(*createStream)(unsigned, const LocationInfo &), const LocationInfo &, Allocator & = heapAllocator, unsigned firstBlock = 0);
 			~CN_Processing();
 
     virtual void	process(unsigned);
