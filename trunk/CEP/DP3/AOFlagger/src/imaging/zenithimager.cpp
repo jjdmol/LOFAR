@@ -61,7 +61,7 @@ void ZenithImager::Add(const BandInfo &band, const std::complex<float> *samples,
 
 void ZenithImager::add(const BandInfo &band, double r, double i, double u, double v, double w, double phaseRotation, double wavelength)
 {
-	const double norm = 2.0*M_PI; //sqrt(u*u + v*v + w*w) / sqrt(u*u + v*v);
+	const double norm = 1.1; //2.0*M_PI; //sqrt(u*u + v*v + w*w) / sqrt(u*u + v*v);
 	const double factor = 1.0 / wavelength;
 	u *= factor * norm;
 	v *= factor * norm;

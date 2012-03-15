@@ -22,6 +22,8 @@
 
 #include <measures/Measures/UVWMachine.h>
 #include <measures/Measures/MEpoch.h>
+#include <measures/Measures/MBaseline.h>
+#include <measures/Measures/MCBaseline.h>
 
 #include <ms/MeasurementSets/MeasurementSet.h>
 
@@ -33,34 +35,38 @@
 
 const casa::Unit radUnit("rad");
 const casa::Unit dayUnit("d");
+const casa::Unit degUnit("deg");
 
-void repoint(casa::MDirection &phaseDirection, casa::MPosition &position, const casa::MEpoch &obstime, double &u, double &v, double &w, double &phaseRotation)
+void repoint(casa::MDirection &phaseDirection, casa::MPosition &position, const casa::MEpoch &obstime, double &u, double &v, double &w, double &phaseRotation, casa::MPosition &a1, casa::MPosition &a2, bool verbose)
 {
 	//MPosition location(MVPosition(Quantity(1, "km"), Quantity(150, "deg"), Quantity(20, "deg")), MPosition::WGS84);
 	
 	//casa::MEpoch obstime(casa::Quantity(t, dayUnit), casa::MEpoch::UTC);
-	//std::cout << "Time=" << obstime.getValue() << '\n';
-	
+	//if(verbose)
+	//	std::cout << "Time=" << obstime.getValue() << '\n';
 	casa::MeasFrame timeAndLocation(obstime, position);
 	
 	casa::MDirection::Ref refApparent(casa::MDirection::AZEL, timeAndLocation);
 	
 	// Calculate zenith
 	casa::MDirection outDirection(
-		casa::Quantity(0.0, radUnit),   // Az
+		casa::Quantity(0.0, radUnit),       // Az
 		casa::Quantity(0.5*M_PI, radUnit),  // El
 	refApparent);
-	//std::cout << "Out=" << outDirection.getValue() << '\n';
+	casa::MDirection j2000Direction =
+		casa::MDirection::Convert(outDirection, casa::MDirection::J2000)();
+	if(verbose)
+		std::cout << "Zenith=" << j2000Direction.getAngle().getValue(degUnit) << '\n';
 	
 	// Construct a CASA UVW converter
-	casa::UVWMachine uvwConverter(outDirection, phaseDirection);
+	casa::UVWMachine uvwConverter(j2000Direction, phaseDirection);
 	casa::Vector<double> uvwVector(3);
 	uvwVector[0] = u;
 	uvwVector[1] = v;
 	uvwVector[2] = w;
 	//std::cout << "In: " << u << ',' << v << ',' << w << '\n';
 	phaseRotation = uvwConverter.getPhase(uvwVector);
-	//std::cout << "Phase shift: " << phaseRotation << '\n';
+	// std::cout << "Phase shift: " << phaseRotation << '\n';
 	//uvwConverter.convertUVW(uvwVector); // getPhase already does that!
 	u = uvwVector[0];
 	v = uvwVector[1];
@@ -69,10 +75,27 @@ void repoint(casa::MDirection &phaseDirection, casa::MPosition &position, const 
 	//std::cout << "Phase centre: " << uvwConverter.phaseCenter().getValue() << '\n';
 }
 
+
+void repoint(casa::MDirection &phaseDirection, casa::MDirection &newDirection, double &u, double &v, double &w, double &phaseRotation)
+{
+	// Construct a CASA UVW converter
+	casa::UVWMachine uvwConverter(newDirection, phaseDirection);
+	casa::Vector<double> uvwVector(3);
+	uvwVector[0] = u;
+	uvwVector[1] = v;
+	uvwVector[2] = w;
+	phaseRotation = uvwConverter.getPhase(uvwVector);
+	u = uvwVector[0];
+	v = uvwVector[1];
+	w = uvwVector[2];
+}
+
+
 int main(int argc, char *argv[])
 {
 	std::string filename(argv[1]);
-	size_t integrationSteps, resolution;
+	size_t integrationSteps, resolution, startTimeIndex;
+	bool useFlags;
 	if(argc >= 3)
 		integrationSteps = atoi(argv[2]);
 	else
@@ -80,7 +103,15 @@ int main(int argc, char *argv[])
 	if(argc >= 4)
 		resolution = atoi(argv[3]);
 	else
-		resolution = 2048;
+		resolution = 1024;
+	if(argc >= 5)
+		startTimeIndex = atoi(argv[4]);
+	else
+		startTimeIndex = 0;
+	if(argc >= 6)
+		useFlags = atoi(argv[4])==1;
+	else
+		useFlags = true;
 	
 	std::cout << "Opening " << filename << "...\n";
 	
@@ -100,14 +131,20 @@ int main(int argc, char *argv[])
 	casa::Table antennaTable(table.antenna());
 	casa::MPosition::ROScalarColumn antPositionColumn(antennaTable, "POSITION");
 	casa::ROScalarColumn<casa::String> antNameColumn(antennaTable, "NAME");
-	casa::MPosition position  = antPositionColumn(antennaIndex);
+	casa::MPosition antennaPositions[antennaTable.nrow()];
+	for(unsigned i = 0;i<antennaTable.nrow();++i)
+	{
+		antennaPositions[i] = antPositionColumn(i);
+	}
+	casa::MPosition position = antennaPositions[0];
+	std::cout << "Frame of reference of antennae: " << position.getRefString() << '\n';
 	std::cout << "Imaging zenith of antenna " << antNameColumn(antennaIndex)
 		<< ", pos=" << position.getValue() << '\n';
 		
 	casa::Table fieldTable(table.field());
 	casa::MDirection::ROArrayColumn phaseDirColumn(fieldTable, "PHASE_DIR");
 	casa::MDirection phaseDirection = *phaseDirColumn(0).begin();
-	std::cout << "Phase direction: " << phaseDirection.getValue() << '\n';
+	std::cout << "Phase direction: " << phaseDirection.getAngle().getValue(degUnit) << '\n';
 
 	std::complex<float> *samples[polarizationCount];
 	bool *isRFI[polarizationCount];
@@ -121,12 +158,43 @@ int main(int argc, char *argv[])
 	ZenithImager imager;
 	imager.Initialize(resolution);
 	size_t timeStep = 0;
+	bool directionIsSet = false;
+	
+	casa::MEpoch curT = timeColumn(0);
+	while(row<table.nrow() && timeStep < startTimeIndex)
+	{
+		if(timeColumn(row).getValue() != curT.getValue())
+		{
+			++timeStep;
+			curT = timeColumn(row);
+		}
+		++row;
+	}
+	
 	while(row<table.nrow())
 	{
 		const casa::MEpoch t = timeColumn(row);
+		casa::MDirection j2000Direction;
+		
+		if(!directionIsSet)
+		{
+			// Calculate zenith for this time range
+			casa::MeasFrame timeAndLocation(t, position);
+			casa::MDirection::Ref refApparent(casa::MDirection::AZEL, timeAndLocation);
+			casa::MDirection outDirection(
+				casa::Quantity(0.0, radUnit),       // Az
+				casa::Quantity(0.5*M_PI, radUnit),  // El
+			refApparent);
+			j2000Direction =
+				casa::MDirection::Convert(outDirection, casa::MDirection::J2000)();
+			std::cout << "Zenith=" << j2000Direction.getAngle().getValue(degUnit) << '\n';
+			directionIsSet = true;
+		}
+		
 		do
 		{
-			if(ant1Column(row) != ant2Column(row))
+			int a1 = ant1Column(row), a2 = ant2Column(row);
+			if(a1 != a2)
 			{
 				casa::Array<double> uvw = uvwColumn(row);
 				casa::Array<double>::const_iterator uvw_i = uvw.begin();
@@ -134,7 +202,7 @@ int main(int argc, char *argv[])
 				double v = *uvw_i; ++uvw_i;
 				double w = *uvw_i;
 				double phaseRotation;
-				repoint(phaseDirection, position, t, u, v, w, phaseRotation);
+				repoint(phaseDirection, j2000Direction, u, v, w, phaseRotation);
 				
 				const casa::Array<casa::Complex> dataArray = dataColumn(row);
 				const casa::Array<bool> flagArray = flagColumn(row);
@@ -147,13 +215,15 @@ int main(int argc, char *argv[])
 					for(unsigned p = 0; p < polarizationCount; ++p)
 					{
 						samples[p][channel] = *dataIter;
-						isRFI[p][channel] = *flagIter;
+						if(useFlags)
+							isRFI[p][channel] = *flagIter;
+						else
+							isRFI[p][channel] = false;
 						
 						++dataIter;
 						++flagIter;
 					}
 				}
-				
 				imager.Add(band, samples[0], isRFI[0], u, v, w, phaseRotation);
 			}
 			++row;
@@ -177,6 +247,7 @@ int main(int argc, char *argv[])
 			PngFile::Save(*imager.UVReal(), std::string("zen-uv/") + s.str(), map);
 			imager.Clear();
 			std::cout << "Done.\n";
+			directionIsSet = false;
 		}
 	}
 }
