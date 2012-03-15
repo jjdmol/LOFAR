@@ -47,7 +47,7 @@ class OutputSection
     void				   noMoreIterations();
 
   protected:
-					   OutputSection(const Parset &, Stream * (*createStream)(unsigned, unsigned), OutputType, unsigned firstBlockNumber, const std::vector<unsigned> &cores, int psetIndex, bool integratable, bool variableNrSubbands);
+					   OutputSection(const Parset &, OutputType, unsigned firstBlockNumber, const std::vector<unsigned> &cores, int psetIndex, bool integratable, bool variableNrSubbands);
 
   private:
 
@@ -92,35 +92,35 @@ class OutputSection
 class PhaseTwoOutputSection : public OutputSection
 {
   protected:
-    PhaseTwoOutputSection(const Parset &, Stream * (*createStream)(unsigned, unsigned), OutputType, unsigned firstBlockNumber, bool integratable);
+    PhaseTwoOutputSection(const Parset &, OutputType, unsigned firstBlockNumber, bool integratable);
 };
 
 
 class PhaseThreeOutputSection : public OutputSection
 {
   protected:
-    PhaseThreeOutputSection(const Parset &, Stream * (*createStream)(unsigned, unsigned), OutputType, unsigned firstBlockNumber);
+    PhaseThreeOutputSection(const Parset &, OutputType, unsigned firstBlockNumber);
 };
 
 
 class CorrelatedDataOutputSection : public PhaseTwoOutputSection
 {
   public:
-    CorrelatedDataOutputSection(const Parset &, Stream * (*createStream)(unsigned, unsigned), unsigned firstBlockNumber);
+    CorrelatedDataOutputSection(const Parset &, unsigned firstBlockNumber);
 };
 
 
 class BeamFormedDataOutputSection : public PhaseThreeOutputSection
 {
   public:
-    BeamFormedDataOutputSection(const Parset &, Stream * (*createStream)(unsigned, unsigned), unsigned firstBlockNumber);
+    BeamFormedDataOutputSection(const Parset &, unsigned firstBlockNumber);
 };
 
 
 class TriggerDataOutputSection : public PhaseThreeOutputSection
 {
   public:
-    TriggerDataOutputSection(const Parset &, Stream * (*createStream)(unsigned, unsigned), unsigned firstBlockNumber);
+    TriggerDataOutputSection(const Parset &, unsigned firstBlockNumber);
 };
 
 

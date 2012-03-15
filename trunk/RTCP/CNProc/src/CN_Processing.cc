@@ -286,18 +286,23 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
         if (info.part != 0)
           continue;
 
-        totalsizes[info.sap] += align(itsTranspose2Logic.subbandSize(i), 32);
+        totalsizes[info.sap] += align(itsTranspose2Logic.subbandSize(i), StreamableData::alignment);
       }
 
       // allocate memory for the largest SAP
       size_t max_totalsize = *std::max_element(totalsizes.begin(), totalsizes.end());
 
       itsBeamMemory.allocator = &itsBigAllocator;
-      itsBeamMemory.ptr       = itsBigAllocator.allocate(max_totalsize, 32);
+      itsBeamMemory.ptr       = itsBigAllocator.allocate(max_totalsize, StreamableData::alignment);
       itsBeamArena      = new FixedArena(itsBeamMemory.ptr, max_totalsize);
       itsBeamAllocator  = new SparseSetAllocator(*itsBeamArena.get()); // allocates consecutively
 
       itsPreTransposeBeamFormedData.resize(itsMaxNrPencilBeams);
+
+      if (LOG_CONDITION) {
+        LOG_DEBUG_STR("MaxNrPencilBeams = " << itsMaxNrPencilBeams << ", TotalNrPencilBeams = " << itsTotalNrPencilBeams);
+        LOG_DEBUG_STR("Allocated " << max_totalsize << " bytes for beam forming.");
+      }
   }
 
   if (itsHasPhaseTwo || itsHasPhaseThree) {
@@ -369,6 +374,9 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::receiveInput()
   SubbandMetaData metaData(1, itsMaxNrPencilBeams + 1);
 
   for (unsigned stat = 0; stat < itsNrStations; stat ++) {
+    if (LOG_CONDITION)
+      LOG_DEBUG_STR(itsLogPrefix << "Receiving input of station " << stat);
+
     // receive meta data
     metaData.read(itsInputStreams[stat]); // FIXME
     memcpy(&itsTransposedSubbandMetaData->subbandInfo(stat), &metaData.subbandInfo(0), metaData.itsSubbandInfoSize);
@@ -564,6 +572,7 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
         const StreamInfo &info = itsTranspose2Logic.streamInfo[stream];
 
         ASSERT( beam < itsPreTransposeBeamFormedData.size() );
+        ASSERT( itsPreTransposeBeamFormedData[beam].get() == 0 );
 
         itsPreTransposeBeamFormedData[beam] = new PreTransposeBeamFormedData(info.nrStokes, info.nrChannels, info.nrSamples, *itsBeamAllocator.get());
 
@@ -808,6 +817,10 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::sendOutput(Stre
   writeTimer.start();
   outputData->write(stream, false);
   writeTimer.stop();
+
+  if (LOG_CONDITION) {
+    LOG_DEBUG_STR(itsLogPrefix << "Done writing output at t = " << blockAge());
+  }
 }
 
 

@@ -27,6 +27,7 @@
 #include <InputSection.h>
 #include <Interface/Parset.h>
 #include <Interface/SmartPtr.h>
+#include <Interface/MultiDimArray.h>
 #include <JobQueue.h>
 #include <Stream/Stream.h>
 #include <WallClockTime.h>
@@ -103,7 +104,8 @@ class Job : public PLCRunnable
     std::vector<std::string>		 itsStorageHostNames;
     std::vector<int>			 itsStoragePIDs;
 
-    std::vector<Stream *>		 itsCNstreams, itsPhaseOneTwoCNstreams, itsPhaseThreeCNstreams;
+    std::vector<Stream *>		 itsCNstreams, itsPhaseThreeCNstreams;
+    Matrix<Stream *>			 itsPhaseOneTwoCNstreams;
     std::vector<SmartPtr<Stream> >	 itsIONstreams;
     bool				 itsHasPhaseOne, itsHasPhaseTwo, itsHasPhaseThree;
     bool				 itsIsRunning, itsDoCancel;

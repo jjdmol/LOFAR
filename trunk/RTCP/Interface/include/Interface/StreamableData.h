@@ -42,6 +42,11 @@ class StreamableData
 {
   public:
     static const uint32_t magic  = 0xda7a;
+#ifdef HAVE_BGP
+    static const size_t alignment = 32;
+#else
+    static const size_t alignment = 512;
+#endif
 
     // the CPU which fills the datastructure sets the peerMagicNumber,
     // because other CPUs will overwrite it with a read(s,true) call from
@@ -150,11 +155,7 @@ inline void StreamableData::write(Stream *str, bool withSequenceNumber, unsigned
 
 template <typename T, unsigned DIM> inline SampleData<T,DIM>::SampleData(const ExtentList &extents, unsigned nrFlags, Allocator &allocator)
 :
-#ifdef HAVE_BGP
-  samples(extents, 32, allocator),
-#else  
-  samples(extents, 512, allocator),
-#endif  
+  samples(extents, alignment, allocator),
   flags(nrFlags)
   //itsHaveWarnedLittleEndian(false)
 {

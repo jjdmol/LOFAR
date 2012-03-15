@@ -75,7 +75,7 @@ Stream *createStream(const std::string &descriptor, bool asServer)
 }
 
 
-std::string getStreamDescriptorBetweenIONandCN(const char *streamType, unsigned pset, unsigned core, unsigned numpsets, unsigned numcores, unsigned channel)
+std::string getStreamDescriptorBetweenIONandCN(const char *streamType, unsigned ionode, unsigned pset, unsigned core, unsigned numpsets, unsigned numcores, unsigned channel)
 {
   std::string descriptor;
 
@@ -91,14 +91,14 @@ std::string getStreamDescriptorBetweenIONandCN(const char *streamType, unsigned 
     usleep(10000 * core); // do not connect all at the same time
 
     // FIXME: do not use fixed IP address
-    descriptor = str(format("tcpkey:10.149.5.23:ion-cn-%u-%u-%u") % pset % core % channel);
+    descriptor = str(format("tcpkey:10.149.5.23:ion-cn-%u-%u-%u-%u") % ionode % pset % core % channel);
   } else if (strcmp(streamType, "PIPE") == 0) {
-    descriptor = str(format("pipe:/tmp/ion-cn-%u-%u-%u") % pset % core % channel);
+    descriptor = str(format("pipe:/tmp/ion-cn-%u-%u-%u-%u") % ionode % pset % core % channel);
   } else {
     THROW(InterfaceException, "unknown Stream type between ION and CN");
   }
 
-  LOG_DEBUG_STR("Creating stream " << descriptor << " for pset " << pset << " core " << core << " channel " << channel);
+  LOG_DEBUG_STR("Creating stream " << descriptor << " from ionode " << ionode << " to pset " << pset << " core " << core << " channel " << channel);
 
   return descriptor;
 }

@@ -134,7 +134,7 @@ static Stream *createIONstream(unsigned channel, const LocationInfo &locationInf
   unsigned psetNumber = locationInfo.psetNumber();
   unsigned rankInPset = locationInfo.rankInPset();
 
-  std::string descriptor = getStreamDescriptorBetweenIONandCN(ionStreamType, psetNumber, rankInPset, nrPsets, psetSize, channel);
+  std::string descriptor = getStreamDescriptorBetweenIONandCN(ionStreamType, psetNumber, psetNumber, rankInPset, nrPsets, psetSize, channel);
 
   return createStream(descriptor, false);
 }
@@ -208,12 +208,16 @@ int main(int argc, char **argv)
     ionStreams.resize(locationInfo.nrPsets());
 
     for (unsigned ionode = 0; ionode < locationInfo.nrPsets(); ionode ++) {
-      std::string descriptor = getStreamDescriptorBetweenIONandCN(ionStreamType, ionode, locationInfo.rankInPset(), locationInfo.nrPsets(), locationInfo.psetSize(), 0);
+      std::string descriptor = getStreamDescriptorBetweenIONandCN(ionStreamType, ionode, locationInfo.psetNumber(), locationInfo.rankInPset(), locationInfo.nrPsets(), locationInfo.psetSize(), 0);
       ionStreams[ionode] = createStream(descriptor, false);
     }
+
+    Stream *controlStream = ionStreams[locationInfo.psetNumber()].get();
 #else
-   ionStreams.resize(1);
-   ionStreams[0] = createIONstream(0, locationInfo);
+    ionStreams.resize(1);
+    ionStreams[0] = createIONstream(0, locationInfo);
+
+    Stream *controlStream = ionStreams[0].get();
 #endif
 
     if (LOG_CONDITION)
@@ -236,15 +240,14 @@ int main(int argc, char **argv)
     CN_Command			 command;
 
     do {
-      //LOG_DEBUG("Wait for command");
-      command.read(ionStreams[0]);
-      //LOG_DEBUG_STR("Received command " << command.value());
+      command.read(controlStream);
+      //LOG_DEBUG_STR("Received command " << command.value() << " = " << command.name());
 
       switch (command.value()) {
 	case CN_Command::PREPROCESS :	try {
                                           unsigned firstBlock = command.param();
 
-					  parset = new Parset(ionStreams[0]);
+					  parset = new Parset(controlStream);
 
 				          switch (parset->nrBitsPerSample()) {
                                             case 4:  proc = new CN_Processing<i4complex>(*parset, ionStreams, &createIONstream, locationInfo, bigAllocator, firstBlock);

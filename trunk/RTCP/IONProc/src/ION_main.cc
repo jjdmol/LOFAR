@@ -149,10 +149,16 @@ static void createAllCNstreams()
     cnStreamType = "TCPKEY";
 #endif
 
-  allCNstreams.resize(nrCNcoresInPset);
+  allCNstreams.resize(nrPsets,nrCNcoresInPset);
 
+#ifdef CLUSTER_SCHEDULING
+  for (unsigned pset = 0; pset < nrPsets; pset ++)
+    for (unsigned core = 0; core < nrCNcoresInPset; core ++)
+      allCNstreams[pset][core] = createCNstream(pset, core, 0);
+#else
   for (unsigned core = 0; core < nrCNcoresInPset; core ++)
-    allCNstreams[core] = createCNstream(core, 0);
+    allCNstreams[myPsetNumber][core] = createCNstream(myPsetNumber, core, 0);
+#endif
 
   LOG_DEBUG_STR("Create streams to CN nodes done");
 }
@@ -165,7 +171,7 @@ static void stopCNs()
   CN_Command command(CN_Command::STOP);
 
   for (unsigned core = 0; core < nrCNcoresInPset; core ++)
-    command.write(allCNstreams[core]);
+    command.write(allCNstreams[myPsetNumber][core]);
 
   LOG_DEBUG_STR("Stopping " << nrCNcoresInPset << " cores: done");
 }
@@ -280,24 +286,28 @@ static void master_thread()
       setenv("AIPSPATH", "/globalhome/lofarsystem/packages/root/bgp_ion/", 0);
 
 #if defined HAVE_BGP
-    nrCNcoresInPset = 64; // TODO: how to figure this out?
+    // TODO: how to figure these out?
+    nrPsets = 0; // unused
+    nrCNcoresInPset = 64;
 #else
-    const char *str = getenv("PSET_SIZE");
+    const char *nr_psets  = getenv("NR_PSETS");
+    const char *pset_size = getenv("PSET_SIZE");
 
-    if (str == 0)
+    if (nr_psets == 0)
+      throw IONProcException("environment variable NR_PSETS must be defined", THROW_ARGS);
+
+    if (pset_size == 0)
       throw IONProcException("environment variable PSET_SIZE must be defined", THROW_ARGS);
 
-    nrCNcoresInPset = boost::lexical_cast<unsigned>(str);
+    nrPsets = boost::lexical_cast<unsigned>(nr_psets);
+    nrCNcoresInPset = boost::lexical_cast<unsigned>(pset_size);
 #endif
 
     createAllCNstreams();
     createAllIONstreams();
     { CommandServer s; s.start(); }
 
-#if defined CLUSTER_SCHEDULING
-    if (myPsetNumber == 0)
-#endif
-      stopCNs();
+    stopCNs();
 
 #if defined FLAT_MEMORY
     unmapFlatMemory();

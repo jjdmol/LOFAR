@@ -610,15 +610,22 @@ void Job::createCNstreams()
   itsCNstreams.resize(usedCoresInPset.size());
 
   for (unsigned core = 0; core < usedCoresInPset.size(); core ++)
-    itsCNstreams[core] = allCNstreams[usedCoresInPset[core]];
+    itsCNstreams[core] = allCNstreams[myPsetNumber][usedCoresInPset[core]];
 
   if (itsHasPhaseOne || itsHasPhaseTwo) {
     std::vector<unsigned> phaseOneTwoCores = itsParset.phaseOneTwoCores();
 
-    itsPhaseOneTwoCNstreams.resize(phaseOneTwoCores.size());
+    itsPhaseOneTwoCNstreams.resize(nrPsets, phaseOneTwoCores.size());
 
-    for (unsigned core = 0; core < phaseOneTwoCores.size(); core ++)
-      itsPhaseOneTwoCNstreams[core] = allCNstreams[phaseOneTwoCores[core]];
+#ifdef CLUSTER_SCHEDULING
+    for (unsigned pset = 0; pset < nrPsets; pset ++)
+#else
+    unsigned pset = myPsetNumber;
+#endif
+    {
+      for (unsigned core = 0; core < phaseOneTwoCores.size(); core ++)
+        itsPhaseOneTwoCNstreams[pset][core] = allCNstreams[pset][phaseOneTwoCores[core]];
+    }
   }
 
   if (itsHasPhaseThree) {
@@ -627,7 +634,7 @@ void Job::createCNstreams()
     itsPhaseThreeCNstreams.resize(phaseThreeCores.size());
 
     for (unsigned core = 0; core < phaseThreeCores.size(); core ++)
-      itsPhaseThreeCNstreams[core] = allCNstreams[phaseThreeCores[core]];
+      itsPhaseThreeCNstreams[core] = allCNstreams[myPsetNumber][phaseThreeCores[core]];
   }
 }
 
@@ -736,10 +743,6 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
     LOG_INFO_STR(itsLogPrefix << "----- Observation start");
 
   // first: send configuration to compute nodes so they know what to expect
-#if defined CLUSTER_SCHEDULING
-  if (myPsetNumber == 0)
-    configureCNs();
-#else
   if (!agree(configureCNs())) {
     unconfigureCNs();
 
@@ -748,22 +751,21 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
 
     return;
   }
-#endif
 
   if (itsHasPhaseOne)
     attachToInputSection<SAMPLE_TYPE>();
 
   if (itsHasPhaseTwo) {
     if (itsParset.outputCorrelatedData())
-      outputSections.push_back(new CorrelatedDataOutputSection(itsParset, createCNstream, itsBlockNumber));
+      outputSections.push_back(new CorrelatedDataOutputSection(itsParset, itsBlockNumber));
   }
 
   if (itsHasPhaseThree) {
     if (itsParset.outputBeamFormedData())
-      outputSections.push_back(new BeamFormedDataOutputSection(itsParset, createCNstream, itsBlockNumber));
+      outputSections.push_back(new BeamFormedDataOutputSection(itsParset, itsBlockNumber));
 
     if (itsParset.outputTrigger())
-      outputSections.push_back(new TriggerDataOutputSection(itsParset, createCNstream, itsBlockNumber));
+      outputSections.push_back(new TriggerDataOutputSection(itsParset, itsBlockNumber));
   }
 
   // start the threads
@@ -801,10 +803,7 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
   if (itsHasPhaseOne)
     detachFromInputSection<SAMPLE_TYPE>();
 
-#if defined CLUSTER_SCHEDULING
-  if (myPsetNumber == 0)
-#endif
-    unconfigureCNs();
+  unconfigureCNs();
  
   if (LOG_CONDITION)
     LOG_INFO_STR(itsLogPrefix << "----- Observation finished");
