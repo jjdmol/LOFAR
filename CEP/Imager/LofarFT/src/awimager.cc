@@ -685,7 +685,6 @@ int main (Int argc, char** argv)
     // cout<<"timerange"<<timerange.timerange()<<endl;
     Vector<Int> wind(window.nrow());
     for(uInt iii=0;iii<window.nrow();++iii){wind(iii)=iii;};
-    cout<<"... Windows is shit"<<endl;
 
     ROArrayColumn<Double> chfreq(window.chanFreq());
 
