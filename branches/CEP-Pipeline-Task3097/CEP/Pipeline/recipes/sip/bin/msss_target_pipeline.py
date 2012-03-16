@@ -15,7 +15,6 @@ from lofarpipe.support.group_data import store_data_map, validate_data_maps
 from lofarpipe.support.group_data import tally_data_map
 from lofarpipe.support.utilities import create_directory
 from lofar.parameterset import parameterset
-from lofar.mstools import findFiles
 
 class msss_target_pipeline(control):
     """
