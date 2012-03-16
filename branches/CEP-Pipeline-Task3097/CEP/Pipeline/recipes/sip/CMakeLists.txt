@@ -3,9 +3,10 @@
 include(PythonInstall)
 
 python_install(
+  master/__init__.py
   master/bbs.py
-  master/cimager.py
   master/cep2_datamapper.py
+  master/cimager.py
   master/compression_pipeline.py
   master/count_timesteps.py
   master/datamapper.py
@@ -22,28 +23,28 @@ python_install(
   master/storagemapper.py
   master/vdsmaker.py
   master/vdsreader.py
-  master/__init__.py
+  nodes/__init__.py
   nodes/bbs.py
   nodes/cimager.py
   nodes/count_timesteps.py
-  nodes/demixing.py
-  nodes/dppp.py
-  nodes/flag_baseline.py
-  nodes/make_flaggable.py
-  nodes/new_bbs.py
-  nodes/parmdb.py
-  nodes/parmexportcal.py
-  nodes/rficonsole.py
-  nodes/sourcedb.py
-  nodes/vdsmaker.py
   nodes/demix/demixing.py
   nodes/demix/find_a_team.py
   nodes/demix/median_filter.py
   nodes/demix/shiftphasecenter.py
   nodes/demix/smoothdemix.py
   nodes/demix/subtract_from_averaged.py
+  nodes/demixing.py
+  nodes/dppp.py
+  nodes/flag_baseline.py
   nodes/imager_create_dbs.py
-  nodes/__init__.py
+  nodes/make_flaggable.py
+  nodes/metadata/collect.py
+  nodes/new_bbs.py
+  nodes/parmdb.py
+  nodes/parmexportcal.py
+  nodes/rficonsole.py
+  nodes/sourcedb.py
+  nodes/vdsmaker.py
   DESTINATION lofarpipe/recipes)
 
 install(PROGRAMS
