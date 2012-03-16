@@ -287,7 +287,7 @@ static void master_thread()
 
 #if defined HAVE_BGP
     // TODO: how to figure these out?
-    nrPsets = 0; // unused
+    nrPsets = 64;
     nrCNcoresInPset = 64;
 #else
     const char *nr_psets  = getenv("NR_PSETS");
