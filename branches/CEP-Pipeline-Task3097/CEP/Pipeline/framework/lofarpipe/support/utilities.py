@@ -51,6 +51,19 @@ def create_directory(dirname):
         if failure.errno != errno.EEXIST:
             raise
 
+def disk_usage(*paths):
+    """
+    Return the disk usage in bytes by the file(s) in ``paths``.
+    """
+    cmd = ['du', '-s', '-b']
+    proc = Popen(cmd + list(paths), stdout=PIPE, stderr=PIPE)
+    sout = proc.communicate()[0]
+    if proc.returncode != 0:
+        raise CalledProcessError(proc.returncode, cmd[0])
+    return sum([int(s.split('\t')[0]) 
+        for s in sout.strip().split('\n')])
+
+
 #                                                    IPython Dependency Checking
 # ------------------------------------------------------------------------------
 
