@@ -19,6 +19,8 @@
  ***************************************************************************/
 #include <AOFlagger/strategy/control/strategyreader.h>
 
+#include <AOFlagger/util/numberparser.h>
+
 #include <AOFlagger/strategy/actions/absthresholdaction.h>
 #include <AOFlagger/strategy/actions/action.h>
 #include <AOFlagger/strategy/actions/adapter.h>
@@ -100,19 +102,23 @@ Strategy *StrategyReader::CreateStrategyFromFile(const std::string &filename)
 			xmlChar *formatVersionCh = xmlGetProp(curNode, BAD_CAST "format-version");
 			if(formatVersionCh == 0)
 				throw StrategyReaderError("Missing attribute 'format-version'");
-			double formatVersion = atof((const char*) formatVersionCh);
+			double formatVersion = NumberParser::ToDouble((const char*) formatVersionCh);
 			xmlFree(formatVersionCh);
 
 			xmlChar *readerVersionRequiredCh = xmlGetProp(curNode, BAD_CAST "reader-version-required");
 			if(readerVersionRequiredCh == 0)
 				throw StrategyReaderError("Missing attribute 'reader-version-required'");
-			double readerVersionRequired = atof((const char*) readerVersionRequiredCh);
+			double readerVersionRequired = NumberParser::ToDouble((const char*) readerVersionRequiredCh);
 			xmlFree(readerVersionRequiredCh);
 			
 			if(readerVersionRequired > STRATEGY_FILE_FORMAT_VERSION)
 				throw StrategyReaderError("This file requires a newer software version");
 			if(formatVersion < STRATEGY_FILE_FORMAT_VERSION_REQUIRED)
-				throw StrategyReaderError("This file is too old for the software, please recreate the strategy");
+			{
+				std::stringstream s;
+				s << "This file is too old for the software, please recreate the strategy. File format version: " << formatVersion << ", oldest version that this software understands: " << STRATEGY_FILE_FORMAT_VERSION_REQUIRED << " (these versions are numbered differently from the software).";
+				throw StrategyReaderError(s.str());
+			}
 			
 			strategy = parseRootChildren(curNode);
 		}
@@ -213,7 +219,7 @@ int StrategyReader::getInt(xmlNode *node, const char *name) const
 double StrategyReader::getDouble(xmlNode *node, const char *name) const 
 {
 	xmlNode *valNode = getTextNode(node, name);
-	return atof((const char *) valNode->content);
+	return NumberParser::ToDouble((const char *) valNode->content);
 }
 
 std::string StrategyReader::getString(xmlNode *node, const char *name) const 

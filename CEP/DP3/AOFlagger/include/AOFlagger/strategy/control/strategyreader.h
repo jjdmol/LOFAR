@@ -1,6 +1,6 @@
 /***************************************************************************
- *   Copyright (C) 2008 by A.R. Offringa   *
- *   offringa@astro.rug.nl   *
+ *   Copyright (C) 2012 by A.R. Offringa                                   *
+ *   offringa@astro.rug.nl                                                 *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
