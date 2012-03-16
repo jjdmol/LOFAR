@@ -89,14 +89,7 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
             '--parmdb-suffix',
             help = "suffix of the to be created paramdbs"
         ),
-        'monetdb_path': ingredient.StringField(
-            '--monetdb-path',
-            help = "initializing for the monetdb"
-        ),
-        'gsm_path': ingredient.StringField(
-            '--gsm-path',
-            help = "Path to gsm files"
-        ),
+
         'makesourcedb_path': ingredient.ExecField(
              '--makesourcedb-path',
              help = "Path to makesourcedb executable."
@@ -109,25 +102,19 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
     }
 
 
-
     def __init__(self):
         super(imager_create_dbs, self).__init__()
 
     def go(self):
-        # TODO: We need output
         super(imager_create_dbs, self).go()
-        suffix = self.inputs["suffix"]
+        suffix = self.inputs["suffix"]  #TODO is deze nog nodig?
 
-
-        # collect and assign the parameters for the         
-        # Monet database 
+        # collect and assign the parameters for the Monet database 
         monetdb_hostname = self.inputs["monetdb_hostname"]
         monetdb_port = self.inputs["monetdb_port"]
         monetdb_name = self.inputs["monetdb_name"]
         monetdb_user = self.inputs["monetdb_user"]
         monetdb_password = self.inputs["monetdb_password"]
-        monetdb_path = self.inputs["monetdb_path"]
-        gsm_path = self.inputs["gsm_path"]
 
         if self.inputs["assoc_theta"] == "":
             assoc_theta = None
@@ -141,10 +128,13 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
         slice_paths_map = load_data_map(self.inputs["slice_paths_mapfile"])
         parmdb_suffix = self.inputs["parmdb_suffix"]
         init_script = self.inputs["initscript"]
+
         working_directory = self.inputs["working_directory"]
         makesourcedb_path = self.inputs["makesourcedb_path"]
         # Parse the input map
+
         input_map = eval(open(self.inputs['args'][0]).read())
+        self.logger.info(slice_paths_map)
 
         # Compile the command to be executed on the remote machine
         node_command = " python %s" % (self.__file__.replace("master", "nodes"))
@@ -163,13 +153,7 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
                 self.logger.error(slice_paths_map)
                 return 1
 
-            #create string representation of the array of paths
-
             host_slice_map = [("paths", slice_paths)]
-#            self.logger.info(slice_paths)
-#            self.logger.info(host_slice_map)
-#            host_slice_map_path = 
-#            store_data_map("slice_path_{0}".format(host_slice), host_slice_map)
             host = host_ms
             #Create the parameters depending on the input_map
             if self.inputs["sourcedb_target_path"] != "":
@@ -178,14 +162,13 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
                 sourcedb_target_path = os.path.join(
                         concatenated_measurement_set + ".sky")
 
-
             #construct and save the output name
             outnames[host_ms].append(concatenated_measurement_set + suffix)
             arguments = [ concatenated_measurement_set, sourcedb_target_path,
                          monetdb_hostname, monetdb_port, monetdb_name,
                          monetdb_user, monetdb_password, assoc_theta,
                          parmdb_executable, host_slice_map, parmdb_suffix,
-                         monetdb_path, gsm_path, init_script, working_directory,
+                         init_script, working_directory,
                          makesourcedb_path]
             jobs.append(ComputeJob(host, node_command, arguments))
 

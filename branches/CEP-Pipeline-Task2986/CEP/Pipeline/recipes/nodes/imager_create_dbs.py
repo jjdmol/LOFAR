@@ -32,6 +32,8 @@ from lofarpipe.support.pipelinelogging import CatchLog4CPlus
 from lofarpipe.support.utilities import read_initscript
 from lofarpipe.support.utilities import catch_segfaults
 from lofarpipe.support.group_data import load_data_map
+import monetdb.sql as db
+import lofar.gsmutils as gsm
 
 #TODO: A better place for this template
 template_parmdb = """
@@ -52,15 +54,12 @@ class imager_create_dbs(LOFARnodeTCP):
     def run(self, concatenated_measurement_set, sourcedb_target_path,
             monet_db_hostname, monet_db_port, monet_db_name, monet_db_user,
             monet_db_password, assoc_theta, parmdb_executable, host_slice_map,
-            parmdb_suffix, monetdb_path, gsm_path, init_script,
+            parmdb_suffix, init_script,
             working_directory, makesourcedb_path):
         """
         
         """
         self.logger.info("Starting imager_create_dbs Node")
-
-        self._perform_imports(monetdb_path, gsm_path)
-
         #create a temporary file to contain the skymap
         temp_sky_path = sourcedb_target_path + ".temp"
         if self._get_sky_model(concatenated_measurement_set,
@@ -84,21 +83,6 @@ class imager_create_dbs(LOFARnodeTCP):
 
 
         return 0
-
-
-    def _perform_imports(self, monet_DB_path, gsm_path):
-        """
-        _perform_imports receives the initscript (con-
-        taining doMonetDB script) and uses path to import monetdb
-        """
-        sys.path.insert(0, monet_DB_path)
-        import monetdb.sql as db
-        self.db = db
-
-        sys.path.insert(0, gsm_path)
-        import gsmutils as gsm
-        self.gsm = gsm
-
 
     def _create_source_db(self, temp_sky_path, sourcedb_target_path, init_script,
                           working_directory, executable):
@@ -263,10 +247,10 @@ class imager_create_dbs(LOFARnodeTCP):
         failed and log the error. Returns the connection if succeed.
         """
         try:
-            conn = self.db.connect(hostname = hostname, database = database,
+            conn = db.connect(hostname = hostname, database = database,
                                        username = username, password = password,
                                        port = port)
-        except self.db.Error, e:
+        except db.Error, e:
             self.logger.error("Failed to create a monetDB connection: "
                               "{0}".format(str(e)))
             raise e
@@ -329,10 +313,12 @@ class imager_create_dbs(LOFARnodeTCP):
         if assoc_theta == None:
             assoc_theta = 90.0 / 3600
         try:
-            ra_c = float(ra_c) * (180 / 3.14) + 360.0  #prevent negative values: add 360
+            ra_c = float(ra_c) * (180 / 3.14)
+            if ra_c < 0:  #gsm utils break when using negative ra_c ergo add 360
+                ra_c += 360.0
             decl_c = float(decl_c) * (180 / 3.14)
 
-            self.gsm.expected_fluxes_in_fov(conn, ra_c ,
+            gsm.expected_fluxes_in_fov(conn, ra_c ,
                         decl_c, float(fov_radius),
                         float(assoc_theta), path_output_skymap,
                         storespectraplots = False)
