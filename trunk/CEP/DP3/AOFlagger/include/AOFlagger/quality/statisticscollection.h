@@ -127,6 +127,11 @@ class StatisticsCollection : public Serializable
 			loadBaseline<false>(qualityData);
 		}
 		
+		void LoadTimeStatisticsOnly(QualityTablesFormatter &qualityData)
+		{
+			loadTime<false>(qualityData);
+		}
+		
 		void Add(QualityTablesFormatter &qualityData)
 		{
 			loadTime<true>(qualityData);
