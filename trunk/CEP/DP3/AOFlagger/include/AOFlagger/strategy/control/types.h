@@ -83,7 +83,8 @@ class Observatorium;
 // 3.4 : Renamed ThresholdAction to SumThresholdAction
 // 3.5 : Added the AbsThresholdAction
 // 3.6 : Added the DirectionProfileAction and the EigenValueVerticalAction.
-#define STRATEGY_FILE_FORMAT_VERSION 3.6
+// 3.7 : Added the NormalizeVarianceAction
+#define STRATEGY_FILE_FORMAT_VERSION 3.7
 
 // The earliest format version which can be read by this version of the software
 #define STRATEGY_FILE_FORMAT_VERSION_REQUIRED 3.4
