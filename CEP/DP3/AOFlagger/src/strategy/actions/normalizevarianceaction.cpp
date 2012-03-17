@@ -33,20 +33,58 @@
 #include <AOFlagger/quality/statisticsderivator.h>
 
 namespace rfiStrategy {
+
+NormalizeVarianceAction::~NormalizeVarianceAction()
+{
+}
+
+void NormalizeVarianceAction::initializeStdDevs(ArtifactSet &artifacts)
+{
+	// The thread that calls this function first will initialize the
+	// std dev. When a new measurement set is read, Initialize or Finalize
+	// will be called, causing a clean().
 	
+	boost::mutex::scoped_lock lock(_mutex);
+	if(!_isInitialized)
+	{
+		if(!artifacts.HasImageSet())
+			throw std::runtime_error("Normalize variance called without image set");
+		ImageSet *imageSet = artifacts.ImageSet();
+		MSImageSet *msImageSet = dynamic_cast<MSImageSet*>(imageSet);
+		if(msImageSet == 0)
+			throw std::runtime_error("Normalize variance actions needs measurement set");
+		std::string filename = msImageSet->Reader()->Set().Location();
+		QualityTablesFormatter qtables(filename);
+		StatisticsCollection statCollection(msImageSet->Reader()->Set().GetPolarizationCount());
+		statCollection.LoadTimeStatisticsOnly(qtables);
+		statCollection.IntegrateTimeToOneChannel();
+		_isInitialized = true;
+		
+		// Calculate all stddevs
+		const std::map<double, DefaultStatistics> &statMap = statCollection.TimeStatistics();
+		_stddevs.clear();
+		std::map<double, double>::iterator pos = _stddevs.begin();
+		for(std::map<double, DefaultStatistics>::const_iterator i = statMap.begin();
+				i != statMap.end(); ++i)
+		{
+			double stddev = StatisticsDerivator::GetStatisticAmplitude(
+				QualityTablesFormatter::DStandardDeviationStatistic,
+				i->second.ToSinglePolarization(), 0);
+			pos = _stddevs.insert(pos, std::pair<double, double>(i->first, stddev));
+		}
+	}
+}
+
+void NormalizeVarianceAction::clean()
+{
+	boost::mutex::scoped_lock lock(_mutex);
+	_isInitialized = false;
+	_stddevs.clear(); // frees a bit of memory.
+}
+
 void NormalizeVarianceAction::Perform(ArtifactSet &artifacts, ProgressListener &progress)
 {
-	if(!artifacts.HasImageSet())
-		throw std::runtime_error("Normalize variance called without image set");
-	ImageSet *imageSet = artifacts.ImageSet();
-	MSImageSet *msImageSet = dynamic_cast<MSImageSet*>(imageSet);
-	if(msImageSet == 0)
-		throw std::runtime_error("Normalize variance actions needs measurement set");
-	std::string filename = msImageSet->Reader()->Set().Location();
-	QualityTablesFormatter qtables(filename);
-	StatisticsCollection statCollection(msImageSet->Reader()->Set().GetPolarizationCount());
-	statCollection.LoadTimeStatisticsOnly(qtables);
-	statCollection.IntegrateTimeToOneChannel();
+	initializeStdDevs(artifacts);
 	
 	TimeFrequencyData &original = artifacts.OriginalData();
 	const std::vector<double> &observationTimes = artifacts.MetaData()->ObservationTimes();
@@ -57,22 +95,10 @@ void NormalizeVarianceAction::Perform(ArtifactSet &artifacts, ProgressListener &
 	for(unsigned img=0;img<original.ImageCount();++img)
 		data.push_back(Image2D::CreateCopy(original.GetImage(img)));
 		
-	// Calculate all stddevs
-	const std::map<double, DefaultStatistics> &statMap = statCollection.TimeStatistics();
-	std::map<double, double> stddevs;
-	for(std::map<double, DefaultStatistics>::const_iterator i = statMap.begin();
-			i != statMap.end(); ++i)
-	{
-		double stddev = StatisticsDerivator::GetStatisticAmplitude(
-			QualityTablesFormatter::DStandardDeviationStatistic,
-			i->second.ToSinglePolarization(), 0);
-		stddevs.insert(std::pair<double, double>(i->first, stddev));
-	}
-	
 	// Add the first half of the window
 	const double halfWindowTime = _medianFilterSizeInS * 0.5;
 	MedianWindow<double> window;
-	std::map<double, double>::const_iterator windowRightSideIterator = stddevs.begin();
+	std::map<double, double>::const_iterator windowRightSideIterator = _stddevs.begin();
 	const double startTime = windowRightSideIterator->first;
 	do {
 		window.Add(windowRightSideIterator->second);
@@ -81,7 +107,7 @@ void NormalizeVarianceAction::Perform(ArtifactSet &artifacts, ProgressListener &
 	
 	// Add the second half, and start correcting the data
 	size_t dataTimeIndex = 0;
-	while(windowRightSideIterator != stddevs.end() &&
+	while(windowRightSideIterator != _stddevs.end() &&
 		windowRightSideIterator->first - startTime < _medianFilterSizeInS)
 	{
 		correctDataUpTo(data, dataTimeIndex, windowRightSideIterator->first, observationTimes, window.Median());
@@ -90,9 +116,9 @@ void NormalizeVarianceAction::Perform(ArtifactSet &artifacts, ProgressListener &
 	}
 	
 	// Slide window until right side hits end
-	std::map<double, double>::const_iterator windowLeftSideIterator = stddevs.begin();
-	const double endTime = stddevs.rbegin()->first;
-	while(windowRightSideIterator != stddevs.end() && windowRightSideIterator->first < endTime)
+	std::map<double, double>::const_iterator windowLeftSideIterator = _stddevs.begin();
+	const double endTime = _stddevs.rbegin()->first;
+	while(windowRightSideIterator != _stddevs.end() && windowRightSideIterator->first < endTime)
 	{
 		correctDataUpTo(data, dataTimeIndex, windowRightSideIterator->first, observationTimes, window.Median());
 		
@@ -136,7 +162,6 @@ void NormalizeVarianceAction::correctDataUpTo(std::vector<Image2DPtr> &data, siz
 
 void NormalizeVarianceAction::correctData(std::vector<Image2DPtr> &data, size_t timeStep, double stddev)
 {
-	AOLogger::Debug << "Scaling timestep " << timeStep << " with " << stddev << '\n';
 	num_t oneOverStddev = 1.0 / stddev;
 	
 	for(std::vector<Image2DPtr>::iterator i=data.begin();i!=data.end();++i)
