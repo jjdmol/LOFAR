@@ -219,10 +219,29 @@ static void enableCoreDumps()
 }
 
 
-static void ignoreSigPipe()
+static void abortHandler(int sig)
 {
+  (void)sig;
+
+  abort();
+}
+
+
+static void installSigHandlers()
+{
+  // ignore SIGPIPE
   if (signal(SIGPIPE, SIG_IGN) < 0)
     perror("warning: ignoring SIGPIPE failed");
+
+  // force abort() on a few signals, as OpenMPI appears to be broken in this regard
+  if (signal(SIGBUS, abortHandler) < 0)
+    perror("warning: rerouting SIGBUS failed");
+  if (signal(SIGSEGV, abortHandler) < 0)
+    perror("warning: rerouting SIGSEGV failed");
+  if (signal(SIGILL, abortHandler) < 0)
+    perror("warning: rerouting SIGILL failed");
+  if (signal(SIGFPE, abortHandler) < 0)
+    perror("warning: rerouting SIGFPE failed");
 }
 
 
@@ -272,7 +291,7 @@ static void master_thread()
   LOG_DEBUG("Master thread running");
 
   enableCoreDumps();
-  ignoreSigPipe();
+  installSigHandlers();
 
 #if defined CATCH_EXCEPTIONS
   try {
