@@ -56,8 +56,9 @@ public:
 
     StationExprLOFAR(SourceDB &sourceDB, const BufferMap &buffers,
         const ModelConfig &config, const Instrument::ConstPtr &instrument,
-        double refFreq, const casa::MDirection &refDelay,
-        const casa::MDirection &refTile, bool inverse = false);
+        double refFreq, const casa::MDirection &refPhase,
+        const casa::MDirection &refDelay, const casa::MDirection &refTile,
+        bool inverse = false);
 
     StationExprLOFAR(SourceDB &sourceDB, const BufferMap &buffers,
         const ModelConfig &config, const VisBuffer::Ptr &buffer,
@@ -84,8 +85,9 @@ public:
 private:
     void initialize(SourceDB &sourceDB, const BufferMap &buffers,
         const ModelConfig &config, const Instrument::Ptr &instrument,
-        double refFreq, const casa::MDirection &refDelay,
-        const casa::MDirection &refTile, bool inverse);
+        double refFreq, const casa::MDirection &refPhase,
+        const casa::MDirection &refDelay, const casa::MDirection &refTile,
+        bool inverse);
 
     vector<Source::Ptr> makeSourceList(SourceDB &sourceDB,
         const BufferMap &buffers, const vector<string> &patterns);

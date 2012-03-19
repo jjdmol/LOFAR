@@ -146,14 +146,24 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
 
     LOG_DEBUG_STR("Building expression tree...");
 
-    // Make a list of patches matching the selection criteria specified by the
-    // user.
-    vector<Source::Ptr> sources = makeSourceList(sourceDB, buffers,
-        config.getSources());
+    vector<Expr<JonesMatrix>::Ptr> stationExpr;
+    if(config.getSources().empty())
+    {
+        stationExpr = makeStationExpr(itsScope, buffer->getPhaseReference(),
+            buffer->instrument(), config, buffer->getReferenceFreq(),
+            buffer->getDelayReference(), buffer->getTileReference());
+    }
+    else
+    {
+        // Make a list of patches matching the selection criteria specified by
+        // the user.
+        vector<Source::Ptr> sources = makeSourceList(sourceDB, buffers,
+            config.getSources());
 
-    vector<Expr<JonesMatrix>::Ptr> stationExpr = makeStationExpr(itsScope,
-        sources, buffer->instrument(), config, buffer->getReferenceFreq(),
-        buffer->getDelayReference(), buffer->getTileReference());
+        stationExpr = makeStationExpr(itsScope, sources, buffer->instrument(),
+            config, buffer->getReferenceFreq(), buffer->getDelayReference(),
+            buffer->getTileReference());
+    }
 
     itsExpr = vector<Expr<JonesMatrix>::Ptr>(itsBaselines.size());
     for(size_t i = 0; i < itsBaselines.size(); ++i)

@@ -33,6 +33,7 @@
 #include <BBSControl/MultiStep.h>
 #include <BBSControl/Exceptions.h>
 #include <BBSControl/StreamUtil.h>
+#include <Common/StringUtil.h>
 #include <Common/ParameterSet.h>
 #include <Common/Exceptions.h>
 #include <Common/LofarLogger.h>
@@ -51,7 +52,6 @@ namespace LOFAR
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
     }
-
 
     string Step::fullName() const
     {
@@ -105,7 +105,6 @@ namespace LOFAR
       return step;
     }
 
-
     //##--------   P r o t e c t e d   m e t h o d s   --------##//
 
     Step::Step(const string& name, const Step* parent)
@@ -122,7 +121,6 @@ namespace LOFAR
       itsName = name;
       itsParent = parent;
     }
-
 
     void Step::write(ParameterSet& ps) const
     {
@@ -158,9 +156,9 @@ namespace LOFAR
         toString(itsModelConfig.useDirectionalGain()));
       if(itsModelConfig.useDirectionalGain()) {
         ps.add(prefix + "Model.DirectionalGain.Patches",
-            itsPartitionDirectionalGain);
+          itsPartitionDirectionalGain);
         ps.add(prefix + "Model.DirectionalGain.Phasors",
-            toString(itsModelConfig.getDirectionalGainConfig().phasors()));
+          toString(itsModelConfig.getDirectionalGainConfig().phasors()));
       }
 
       ps.add(prefix + "Model.Beam.Enable", toString(itsModelConfig.useBeam()));
@@ -179,14 +177,14 @@ namespace LOFAR
         toString(itsModelConfig.useDirectionalTEC()));
       if(itsModelConfig.useDirectionalTEC()) {
         ps.add(prefix + "Model.DirectionalTEC.Patches",
-            itsPartitionDirectionalTEC);
+          itsPartitionDirectionalTEC);
       }
 
       ps.add(prefix + "Model.FaradayRotation.Enable",
         toString(itsModelConfig.useFaradayRotation()));
       if(itsModelConfig.useFaradayRotation()) {
         ps.add(prefix + "Model.FaradayRotation.Patches",
-            itsPartitionFaradayRotation);
+          itsPartitionFaradayRotation);
       }
 
       ps.add(prefix + "Model.Ionosphere.Enable",
@@ -218,7 +216,6 @@ namespace LOFAR
 
       LOG_TRACE_VAR_STR("\nContents of ParameterSet ps:\n" << ps);
     }
-
 
     void Step::read(const ParameterSet& ps)
     {
@@ -253,9 +250,9 @@ namespace LOFAR
         const DirectionalGainConfig &parentConfig =
           itsModelConfig.getDirectionalGainConfig();
 
-        string defaultPartition("[*]");
+        string defaultPartition("*");
         if(itsModelConfig.useDirectionalGain()) {
-            defaultPartition = itsPartitionDirectionalGain;
+          defaultPartition = itsPartitionDirectionalGain;
         }
         itsPartitionDirectionalGain =
             ps.getString("Model.DirectionalGain.Patches", defaultPartition);
@@ -264,7 +261,7 @@ namespace LOFAR
             parentConfig.phasors());
 
         DirectionalGainConfig config(phasors);
-        config.setPartition(makePartition(itsPartitionDirectionalGain));
+        config.setPartition(parsePartition(itsPartitionDirectionalGain));
         itsModelConfig.setDirectionalGainConfig(config);
       }
       else {
@@ -274,15 +271,14 @@ namespace LOFAR
       if(ps.getBool("Model.Beam.Enable", itsModelConfig.useBeam())) {
         const BeamConfig &parentConfig = itsModelConfig.getBeamConfig();
 
-        string defaultPartition("[*]");
+        string defaultPartition("*");
         if(itsModelConfig.useBeam()) {
-            defaultPartition = itsPartitionBeam;
+          defaultPartition = itsPartitionBeam;
         }
         itsPartitionBeam = ps.getString("Model.Beam.Patches", defaultPartition);
 
         string modeString = ps.getString("Model.Beam.Mode",
           BeamConfig::asString(parentConfig.mode()));
-
         BeamConfig::Mode mode = BeamConfig::asMode(modeString);
         if(!BeamConfig::isDefined(mode)) {
           THROW(BBSControlException, "Invalid beam model mode specified: "
@@ -290,7 +286,7 @@ namespace LOFAR
         }
 
         bool conjugateAF = ps.getBool("Model.Beam.ConjugateAF",
-            parentConfig.conjugateAF());
+          parentConfig.conjugateAF());
 
         string defaultPath;
         if(itsModelConfig.useBeam()) {
@@ -302,7 +298,7 @@ namespace LOFAR
           defaultPath);
 
         BeamConfig config(mode, conjugateAF, casa::Path(elementPath));
-        config.setPartition(makePartition(itsPartitionBeam));
+        config.setPartition(parsePartition(itsPartitionBeam));
         itsModelConfig.setBeamConfig(config);
       } else {
         itsModelConfig.clearBeamConfig();
@@ -311,15 +307,15 @@ namespace LOFAR
       if(ps.getBool("Model.DirectionalTEC.Enable",
         itsModelConfig.useDirectionalTEC())) {
 
-        string defaultPartition("[*]");
+        string defaultPartition("*");
         if(itsModelConfig.useDirectionalTEC()) {
-            defaultPartition = itsPartitionDirectionalTEC;
+          defaultPartition = itsPartitionDirectionalTEC;
         }
         itsPartitionDirectionalTEC =
-            ps.getString("Model.DirectionalTEC.Patches", defaultPartition);
+          ps.getString("Model.DirectionalTEC.Patches", defaultPartition);
 
         DDEConfig config;
-        config.setPartition(makePartition(itsPartitionDirectionalTEC));
+        config.setPartition(parsePartition(itsPartitionDirectionalTEC));
         itsModelConfig.setDirectionalTECConfig(config);
       }
       else {
@@ -329,15 +325,15 @@ namespace LOFAR
       if(ps.getBool("Model.FaradayRotation.Enable",
         itsModelConfig.useFaradayRotation())) {
 
-        string defaultPartition("[*]");
+        string defaultPartition("*");
         if(itsModelConfig.useFaradayRotation()) {
-            defaultPartition = itsPartitionFaradayRotation;
+          defaultPartition = itsPartitionFaradayRotation;
         }
         itsPartitionFaradayRotation =
-            ps.getString("Model.FaradayRotation.Patches", defaultPartition);
+          ps.getString("Model.FaradayRotation.Patches", defaultPartition);
 
         DDEConfig config;
-        config.setPartition(makePartition(itsPartitionFaradayRotation));
+        config.setPartition(parsePartition(itsPartitionFaradayRotation));
         itsModelConfig.setFaradayRotationConfig(config);
       }
       else {
@@ -350,12 +346,12 @@ namespace LOFAR
         const IonosphereConfig &parentConfig =
           itsModelConfig.getIonosphereConfig();
 
-        string defaultPartition("[*]");
+        string defaultPartition("*");
         if(itsModelConfig.useIonosphere()) {
-            defaultPartition = itsPartitionIonosphere;
+          defaultPartition = itsPartitionIonosphere;
         }
         itsPartitionIonosphere = ps.getString("Model.Ionosphere.Patches",
-            defaultPartition);
+          defaultPartition);
 
         string modelTypeString;
         if(itsModelConfig.useIonosphere()) {
@@ -381,7 +377,7 @@ namespace LOFAR
         }
 
         IonosphereConfig config(modelType, degree);
-        config.setPartition(makePartition(itsPartitionIonosphere));
+        config.setPartition(parsePartition(itsPartitionIonosphere));
         itsModelConfig.setIonosphereConfig(config);
       } else {
         itsModelConfig.clearIonosphereConfig();
@@ -408,7 +404,6 @@ namespace LOFAR
         itsModelConfig.getSources()));
     }
 
-
     void Step::print(ostream& os) const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
@@ -421,21 +416,89 @@ namespace LOFAR
         << endl << indent << itsModelConfig;
     }
 
-    DDEPartition Step::makePartition(const string &specification) const
+    DDEPartition Step::parsePartition(const string &in) const
     {
-        ParameterValue tmp(specification);
-        ASSERT(tmp.isVector());
-
-        DDEPartition partition;
-        vector<ParameterValue> clauses = tmp.getVector();
-        for(vector<ParameterValue>::const_iterator it = clauses.begin(),
-            end = clauses.end(); it != end; ++it)
+        ParameterValue tmp(in);
+        DDEPartition partition = makePartition(tmp.getStringVector());
+        if(partition.empty())
         {
-            vector<string> clause = it->getStringVector();
-            partition.append(clause.begin(), clause.end(), it->isVector());
+            THROW(BBSControlException, "Invalid patch specification: " << in);
         }
 
         return partition;
+    }
+
+    DDEPartition Step::makePartition(const vector<string> &in) const
+    {
+        DDEPartition partition;
+
+        size_t count = in.size();
+        if(count > 0)
+        {
+            // Special case for "*" at the end of the definition. Will match all
+            // remaining sources in this case.
+            pair<string, string> back = split(in.back());
+            ASSERT(!back.second.empty());
+            if(back.second == "*")
+            {
+                if(back.first.empty())
+                {
+                    partition.matchRemainder();
+                }
+                else
+                {
+                    partition.matchRemainderAsGroup(back.first);
+                }
+
+                --count;
+            }
+        }
+
+        // Process the rest of the definition.
+        for(size_t i = 0; i < count; ++i)
+        {
+            pair<string, string> current = split(in[i]);
+            ASSERT(!current.second.empty());
+
+            if(current.first.empty())
+            {
+                partition.append(current.second);
+            }
+            else
+            {
+                partition.append(current.first, current.second);
+            }
+        }
+
+        return partition;
+    }
+
+    pair<string, string> Step::split(const string &in) const
+    {
+        pair<string, string> result;
+
+        size_t pos = in.find(':');
+        if(pos == string::npos)
+        {
+            result.second = in;
+        }
+        else
+        {
+            result.first = in.substr(0, pos);
+
+            if(in.size() > pos + 1)
+            {
+                result.second = in.substr(pos + 1);
+            }
+        }
+
+        ltrim(result.first);
+        rtrim(result.first);
+
+        ltrim(result.second);
+        rtrim(result.second);
+
+        return result;
     }
 
     //##--------   G l o b a l   m e t h o d s   --------##//
@@ -446,7 +509,6 @@ namespace LOFAR
       bs.print(os);
       return os;
     }
-
 
   } // namespace BBS
 

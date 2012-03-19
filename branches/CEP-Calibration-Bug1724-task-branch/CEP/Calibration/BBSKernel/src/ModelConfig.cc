@@ -23,6 +23,7 @@
 #include <lofar_config.h>
 #include <BBSKernel/ModelConfig.h>
 #include <Common/StreamUtil.h>
+#include <Common/StringUtil.h>
 #include <Common/lofar_algorithm.h>
 #include <Common/lofar_iomanip.h>
 
@@ -47,6 +48,99 @@ bool GainConfig::phasors() const
 }
 
 // -------------------------------------------------------------------------- //
+// - CasaStringFilter implementation                                        - //
+// -------------------------------------------------------------------------- //
+
+CasaStringFilter::CasaStringFilter(const string &filter)
+{
+//    LOG_DEBUG_STR("Create filter: " << filter);
+    size_t last = 0;
+    while(last < filter.size())
+    {
+//        LOG_DEBUG_STR("last: " << last << " find: " << filter.find(';', last));
+        size_t pos = filter.find(';', last);
+        if(pos == string::npos)
+        {
+            pos = filter.size();
+        }
+
+        ASSERTSTR(pos >= last, "pos: " << pos << " last: " << last);
+        string term = filter.substr(last, pos - last);
+        ltrim(term);
+        rtrim(term);
+
+        if(!term.empty())
+        {
+            if(term[0] != '!')
+            {
+                itsRegEx.push_back(casa::Regex(casa::Regex::fromPattern(term)));
+                itsInverted.push_back(false);
+            }
+            else if(term.size() > 1)
+            {
+                term = term.substr(1);
+                ltrim(term);
+                rtrim(term);
+
+                if(!term.empty())
+                {
+                    itsRegEx.push_back(casa::Regex(casa::Regex::fromPattern(term)));
+                    itsInverted.push_back(true);
+                }
+            }
+        }
+
+        last = pos + 1;
+    }
+}
+
+bool CasaStringFilter::matches(const string &in) const
+{
+    casa::String tmp(in);
+
+    size_t i = 0, end = itsInverted.size();
+    while(i < end)
+    {
+        if(itsInverted[i])
+        {
+            ++i;
+            continue;
+        }
+
+        if(!tmp.matches(itsRegEx[i]))
+        {
+            ++i;
+            continue;
+        }
+
+        ++i;
+        bool accept = true;
+        while(i < end && itsInverted[i])
+        {
+            if(tmp.matches(itsRegEx[i]))
+            {
+                accept = false;
+                break;
+            }
+
+            ++i;
+        }
+
+        if(accept)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool CasaStringFilter::operator()(const string &in) const
+{
+    return matches(in);
+}
+
+// -------------------------------------------------------------------------- //
 // - DDEPartition implementation                                            - //
 // -------------------------------------------------------------------------- //
 
@@ -57,19 +151,36 @@ unsigned int DDEPartition::size() const
 
 bool DDEPartition::matches(unsigned int i, const string &name) const
 {
-    casa::String tmp(name);
-    return tmp.matches(itsRegEx[i]);
+//    casa::String tmp(name);
+//    return tmp.matches(itsRegEx[i]);
+    return itsRegEx[i].matches(name);
 }
 
 bool DDEPartition::group(unsigned int i) const
 {
-    return itsGroupFlag[i];
+//    return itsGroupFlag[i];
+    return !itsGroupName[i].empty();
 }
 
-void DDEPartition::append(const string &pattern, bool group)
+string DDEPartition::name(unsigned int i) const
 {
-    itsRegEx.push_back(casa::Regex(casa::Regex::fromPattern(pattern)));
-    itsGroupFlag.push_back(group);
+    return itsGroupName[i];
+}
+
+void DDEPartition::append(const string &pattern)
+{
+//    itsRegEx.push_back(casa::Regex(casa::Regex::fromPattern(pattern)));
+//    itsGroupFlag.push_back(group);
+    itsGroupName.push_back(string());
+    itsRegEx.push_back(CasaStringFilter(pattern));
+}
+
+void DDEPartition::append(const string &name, const string &pattern)
+{
+//    itsRegEx.push_back(casa::Regex(casa::Regex::fromPattern(pattern)));
+//    itsGroupFlag.push_back(group);
+    itsGroupName.push_back(name);
+    itsRegEx.push_back(CasaStringFilter(pattern));
 }
 
 // -------------------------------------------------------------------------- //
@@ -455,32 +566,64 @@ ostream &operator<<(ostream &out, const GainConfig &obj)
     return out;
 }
 
-ostream &operator<<(ostream &out, const DDEPartition &obj)
+ostream &operator<<(ostream &out, const CasaStringFilter &obj)
 {
-    if(obj.size() == 0)
+    for(unsigned int i = 0; i < obj.itsInverted.size(); ++i)
     {
-        out << indent << "[]";
-        return out;
+        if(obj.itsInverted[i])
+        {
+            out << "!";
+        }
+
+        out << obj.itsRegEx[i].regexp();
+
+        if(obj.itsInverted.size() > i + 1)
+        {
+            out << ";";
+        }
     }
 
-    out << indent << "[";
+    return out;
+}
+
+ostream &operator<<(ostream &out, const DDEPartition &obj)
+{
+    out << "[";
     for(unsigned int i = 0; i < obj.size(); ++i)
     {
         if(obj.group(i))
         {
-            out << "[" << obj.itsRegEx[i].regexp() << "]";
+            out << obj.name(i) << ":" << obj.itsRegEx[i];
         }
         else
         {
-            out << obj.itsRegEx[i].regexp();
+            out << obj.itsRegEx[i];
         }
 
-        if(i < obj.size() - 1)
+        if(obj.size() > i + 1)
         {
             out << ", ";
         }
     }
+
+    if(obj.matchesRemainder())
+    {
+        if(obj.size() > 0)
+        {
+            out << ", ";
+        }
+
+        if(obj.groupRemainder())
+        {
+            out << obj.remainderGroupName() << ":*";
+        }
+        else
+        {
+            out << "*";
+        }
+    }
     out << "]";
+
     return out;
 }
 

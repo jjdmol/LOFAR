@@ -51,6 +51,12 @@ makeMeasurementExpr(Scope &scope, const vector<Source::Ptr> &sources,
     bool circular = false);
 
 vector<Expr<JonesMatrix>::Ptr>
+makeStationExpr(Scope &scope, const casa::MDirection &direction,
+    const Instrument::Ptr &instrument, const ModelConfig &config,
+    double refFreq, const casa::MDirection &refDelay,
+    const casa::MDirection &refTile, bool inverse = true);
+
+vector<Expr<JonesMatrix>::Ptr>
 makeStationExpr(Scope &scope, const vector<Source::Ptr> &sources,
     const Instrument::Ptr &instrument, const ModelConfig &config,
     double refFreq, const casa::MDirection &refDelay,

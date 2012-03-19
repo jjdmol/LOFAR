@@ -34,33 +34,43 @@ namespace BBS
 
 StationExprLOFAR::StationExprLOFAR(SourceDB &sourceDB, const BufferMap &buffers,
     const ModelConfig &config, const Instrument::ConstPtr &instrument,
-    double refFreq, const casa::MDirection &refDelay,
-    const casa::MDirection &refTile, bool inverse)
+    double refFreq, const casa::MDirection &refPhase,
+    const casa::MDirection &refDelay, const casa::MDirection &refTile,
+    bool inverse)
 {
-    initialize(sourceDB, buffers, config, instrument, refFreq, refDelay,
-        refTile, inverse);
+    initialize(sourceDB, buffers, config, instrument, refFreq, refPhase,
+        refDelay, refTile, inverse);
 }
 
 StationExprLOFAR::StationExprLOFAR(SourceDB &sourceDB, const BufferMap &buffers,
     const ModelConfig &config, const VisBuffer::Ptr &buffer, bool inverse)
 {
     initialize(sourceDB, buffers, config, buffer->instrument(),
-        buffer->getReferenceFreq(), buffer->getDelayReference(),
-        buffer->getTileReference(), inverse);
+        buffer->getReferenceFreq(), buffer->getPhaseReference(),
+        buffer->getDelayReference(), buffer->getTileReference(), inverse);
 }
 
 void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
     const ModelConfig &config, const Instrument::Ptr &instrument,
-    double refFreq, const casa::MDirection &refDelay,
-    const casa::MDirection &refTile, bool inverse)
+    double refFreq, const casa::MDirection &refPhase,
+    const casa::MDirection &refDelay, const casa::MDirection &refTile,
+    bool inverse)
 {
-    // Make a list of patches matching the selection criteria specified by the
-    // user.
-    vector<Source::Ptr> sources = makeSourceList(sourceDB, buffers,
-        config.getSources());
+    if(config.getSources().empty())
+    {
+        itsExpr = makeStationExpr(itsScope, refPhase, instrument, config,
+            refFreq, refDelay, refTile, inverse);
+    }
+    else
+    {
+        // Make a list of patches matching the selection criteria specified by
+        // the user.
+        vector<Source::Ptr> sources = makeSourceList(sourceDB, buffers,
+            config.getSources());
 
-    itsExpr = makeStationExpr(itsScope, sources, instrument, config, refFreq,
-        refDelay, refTile, inverse);
+        itsExpr = makeStationExpr(itsScope, sources, instrument, config,
+            refFreq, refDelay, refTile, inverse);
+    }
 
     // Set caching policy.
     itsCachePolicy = CachePolicy::Ptr(new DefaultCachePolicy());

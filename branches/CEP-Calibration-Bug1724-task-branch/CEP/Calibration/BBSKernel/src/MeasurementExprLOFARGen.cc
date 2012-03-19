@@ -22,6 +22,7 @@
 //# $Id$
 
 #include <lofar_config.h>
+#include <BBSKernel/Exceptions.h>
 #include <BBSKernel/MeasurementExprLOFARGen.h>
 #include <BBSKernel/MeasurementExprLOFARUtil.h>
 #include <BBSKernel/Expr/ConditionNumber.h>
@@ -45,6 +46,7 @@ namespace LOFAR
 {
 namespace BBS
 {
+
 namespace
 {
 using LOFAR::operator<<;
@@ -61,18 +63,6 @@ enum DDE
     FARADAY_ROTATION,
     IONOSPHERE,
     N_DDE
-};
-
-class DDEMask
-{
-public:
-    DDEMask();
-    bool enabled(DDE dde) const;
-    void enable(DDE dde);
-    void disable(DDE dde);
-
-private:
-    uint32  itsMask;
 };
 
 class DDEIndex
@@ -122,14 +112,7 @@ ostream &operator<<(ostream &os, const DDEIndex &obj);
 // comparison operator...
 bool operator<(const DDEIndex &lhs, const DDEIndex &rhs);
 
-typedef map<SourceGroup, DDEMask> DDEMap;
-
-void buildDDEMap(DDE dde, const DDEPartition &partition,
-    const vector<Source::Ptr> &sources, DDEMap &map);
-
-
 ExprDDE::Ptr compose(const ExprDDE::Ptr &lhs, const ExprDDE::Ptr &rhs);
-
 
 void applyDDE(const ExprDDE::Ptr &dde, const BaselineSeq &baselines, vector<Expr<JonesMatrix>::Ptr> &expr);
 
@@ -171,6 +154,100 @@ string makeName(const vector<Source::Ptr> sources,
 Expr<Vector<2> >::Ptr makePositionExpr(const vector<Source::Ptr> sources,
     const SourceGroup &group);
 
+
+// -----------------------------------------------------------------------------
+class ClusterDescriptor
+{
+public:
+    ClusterDescriptor()
+    {
+        fill(enabled, enabled + N_DDE, false);
+    }
+
+    bool                enabled[N_DDE];
+    string              label[N_DDE];
+};
+
+typedef set<unsigned int>   ClusterID;
+typedef map<ClusterID, ClusterDescriptor> ClusterMap;
+typedef vector<Source::Ptr> SourceList;
+
+void buildClusterMap(DDE dde, const DDEPartition &partition,
+    const SourceList &sources, ClusterMap &map)
+{
+    vector<bool> assigned(sources.size(), false);
+    for(unsigned int i = 0; i < partition.size(); ++i)
+    {
+        ClusterID groupID;
+        for(unsigned int j = 0; j < sources.size(); ++j)
+        {
+            if(partition.matches(i, sources[j]->name()))
+            {
+                ASSERTSTR(!assigned[j], "Source already assigned to patch: "
+                    << sources[j]->name());
+                assigned[j] = true;
+
+//                LOG_DEBUG_STR("pattern: " << i << " matched: " << sources[j]->name());
+                if(partition.group(i))
+                {
+                    groupID.insert(j);
+                }
+                else
+                {
+                    ClusterID id;
+                    id.insert(j);
+
+                    ClusterDescriptor &descriptor = map[id];
+                    descriptor.label[dde] = sources[j]->name();
+                    descriptor.enabled[dde] = true;
+                }
+            }
+        }
+
+        if(!groupID.empty())
+        {
+            ASSERT(partition.group(i));
+            ClusterDescriptor &descriptor = map[groupID];
+            descriptor.label[dde] = partition.name(i);
+            descriptor.enabled[dde] = true;
+        }
+    }
+
+    if(partition.matchesRemainder())
+    {
+//        LOG_DEBUG_STR("MATCHING REMAINDER...");
+        ClusterID groupID;
+        for(unsigned int i = 0; i < sources.size(); ++i)
+        {
+            if(!assigned[i])
+            {
+                if(partition.groupRemainder())
+                {
+                    groupID.insert(i);
+                }
+                else
+                {
+                    ClusterID id;
+                    id.insert(i);
+
+                    ClusterDescriptor &descriptor = map[id];
+                    descriptor.label[dde] = sources[i]->name();
+                    descriptor.enabled[dde] = true;
+                }
+            }
+        }
+
+        if(!groupID.empty())
+        {
+//            LOG_DEBUG_STR("REMAINDER IS GROUPED");
+            ASSERT(partition.groupRemainder());
+            ClusterDescriptor &descriptor = map[groupID];
+            descriptor.label[dde] = partition.remainderGroupName();
+            descriptor.enabled[dde] = true;
+        }
+    }
+}
+
 } //# unnamed namespace
 
 vector<Expr<JonesMatrix>::Ptr>
@@ -180,17 +257,19 @@ makeMeasurementExpr(Scope &scope, const vector<Source::Ptr> &sources,
     const casa::MDirection &refDelay, const casa::MDirection &refTile,
     bool circular)
 {
-    DDEMap mapDDE;
-    buildDDEMap(DIRECTIONAL_GAIN,
-        config.getDirectionalGainConfig().partition(), sources, mapDDE);
-    buildDDEMap(BEAM, config.getBeamConfig().partition(), sources, mapDDE);
-    buildDDEMap(DIRECTIONAL_TEC, config.getDirectionalTECConfig().partition(),
-        sources, mapDDE);
-    buildDDEMap(FARADAY_ROTATION, config.getFaradayRotationConfig().partition(),
-        sources, mapDDE);
-    buildDDEMap(IONOSPHERE, config.getIonosphereConfig().partition(), sources,
-        mapDDE);
-    LOG_DEBUG_STR("#unique directions: " << mapDDE.size());
+    ClusterMap clusters;
+    LOG_DEBUG_STR("Building patch map...");
+    buildClusterMap(DIRECTIONAL_GAIN,
+        config.getDirectionalGainConfig().partition(), sources, clusters);
+    buildClusterMap(BEAM, config.getBeamConfig().partition(), sources, clusters);
+    buildClusterMap(DIRECTIONAL_TEC, config.getDirectionalTECConfig().partition(),
+        sources, clusters);
+    buildClusterMap(FARADAY_ROTATION, config.getFaradayRotationConfig().partition(),
+        sources, clusters);
+    buildClusterMap(IONOSPHERE, config.getIonosphereConfig().partition(), sources,
+        clusters);
+    LOG_DEBUG_STR("Building patch map... done.");
+    LOG_DEBUG_STR("No. of unique patches: " << clusters.size());
 
     vector<DDEIndex> index;
     for(unsigned int i = 0; i < sources.size(); i++)
@@ -240,25 +319,27 @@ makeMeasurementExpr(Scope &scope, const vector<Source::Ptr> &sources,
 
     // Direction dependent effects (DDE).
     vector<ExprDDE::Ptr> exprDDE;
-    for(DDEMap::const_iterator it = mapDDE.begin(), end = mapDDE.end();
+    for(ClusterMap::const_iterator it = clusters.begin(), end = clusters.end();
         it != end; ++it)
     {
-        string name = makeName(sources, it->first);
+//        string name = makeName(sources, it->first);
         Expr<Vector<2> >::Ptr exprPosition = makePositionExpr(sources,
             it->first);
 
-        DDEMask mask = it->second;
+//        DDEMask mask = it->second;
+        const ClusterDescriptor &descriptor = it->second;
 
         // Directional gain.
-        if(mask.enabled(DIRECTIONAL_GAIN))
+        if(descriptor.enabled[DIRECTIONAL_GAIN])
         {
-            exprDDE.push_back(makeDirectionalGainExpr(scope, instrument, name,
+            exprDDE.push_back(makeDirectionalGainExpr(scope, instrument,
+                descriptor.label[DIRECTIONAL_GAIN],
                 config.getDirectionalGainConfig()));
             updateIndex(index, it->first, DIRECTIONAL_GAIN, exprDDE.size() - 1);
         }
 
         // Beam.
-        if(mask.enabled(BEAM))
+        if(descriptor.enabled[BEAM])
         {
             exprDDE.push_back(makeBeamExpr(scope, instrument, exprPosition,
                 refFreq, exprRefDelayITRF, exprRefTileITRF,
@@ -267,21 +348,23 @@ makeMeasurementExpr(Scope &scope, const vector<Source::Ptr> &sources,
         }
 
         // Directional TEC.
-        if(mask.enabled(DIRECTIONAL_TEC))
+        if(descriptor.enabled[DIRECTIONAL_TEC])
         {
-            exprDDE.push_back(makeDirectionalTECExpr(scope, instrument, name));
+            exprDDE.push_back(makeDirectionalTECExpr(scope, instrument,
+                descriptor.label[DIRECTIONAL_TEC]));
             updateIndex(index, it->first, DIRECTIONAL_TEC, exprDDE.size() - 1);
         }
 
         // Faraday rotation.
-        if(mask.enabled(FARADAY_ROTATION))
+        if(descriptor.enabled[FARADAY_ROTATION])
         {
-            exprDDE.push_back(makeFaradayRotationExpr(scope, instrument, name));
+            exprDDE.push_back(makeFaradayRotationExpr(scope, instrument,
+                descriptor.label[FARADAY_ROTATION]));
             updateIndex(index, it->first, FARADAY_ROTATION, exprDDE.size() - 1);
         }
 
         // Ionosphere.
-        if(mask.enabled(IONOSPHERE))
+        if(descriptor.enabled[IONOSPHERE])
         {
             exprDDE.push_back(makeIonosphereExpr(scope, instrument,
                 exprPosition, exprIonosphere));
@@ -353,23 +436,162 @@ makeMeasurementExpr(Scope &scope, const vector<Source::Ptr> &sources,
 }
 
 vector<Expr<JonesMatrix>::Ptr>
+makeStationExpr(Scope &scope, const casa::MDirection &direction,
+    const Instrument::Ptr &instrument, const ModelConfig &config,
+    double refFreq, const casa::MDirection &refDelay,
+    const casa::MDirection &refTile, bool inverse)
+{
+    if(config.useDirectionalGain() || config.useDirectionalTEC()
+        || config.useFaradayRotation())
+    {
+        THROW(BBSKernelException, "Cannot generate an expression for"
+            " DirectionalGain, DirectionalTEC, and/or FaradayRotation in an"
+            " (unnamed) direction.");
+    }
+
+    // Position of interest on the sky.
+    Expr<Vector<2> >::Ptr exprDirection = makeDirectionExpr(direction);
+    Expr<Vector<3> >::Ptr exprDirectionITRF =
+        makeITRFExpr(instrument->position(), exprDirection);
+
+    // Beam reference position on the sky.
+    Expr<Vector<2> >::Ptr exprRefDelay = makeDirectionExpr(refDelay);
+    Expr<Vector<3> >::Ptr exprRefDelayITRF =
+        makeITRFExpr(instrument->position(), exprRefDelay);
+
+    // Tile beam reference position on the sky.
+    Expr<Vector<2> >::Ptr exprRefTile = makeDirectionExpr(refTile);
+    Expr<Vector<3> >::Ptr exprRefTileITRF =
+        makeITRFExpr(instrument->position(), exprRefTile);
+
+    HamakerBeamCoeff coeffLBA, coeffHBA;
+    if(config.useBeam())
+    {
+        // Read LBA beam model coefficients.
+        casa::Path path;
+        path = config.getBeamConfig().getElementPath();
+        path.append("element_beam_HAMAKER_LBA.coeff");
+        coeffLBA.init(path);
+
+        // Read HBA beam model coefficients.
+        path = config.getBeamConfig().getElementPath();
+        path.append("element_beam_HAMAKER_HBA.coeff");
+        coeffHBA.init(path);
+    }
+
+    IonosphereExpr::Ptr exprIonosphere;
+    if(config.useIonosphere())
+    {
+        exprIonosphere = IonosphereExpr::create(config.getIonosphereConfig(),
+            scope);
+    }
+
+    Expr<Scalar>::Ptr exprOne(new Literal(1.0));
+    Expr<JonesMatrix>::Ptr exprIdentity(new AsDiagonalMatrix(exprOne, exprOne));
+
+    vector<Expr<JonesMatrix>::Ptr> expr(instrument->nStations());
+    for(unsigned int i = 0; i < instrument->nStations(); ++i)
+    {
+        // Create a clock delay expression per station.
+        if(config.useClock())
+        {
+            expr[i] = compose(expr[i],
+                makeClockExpr(scope, instrument->station(i)));
+        }
+
+        // Bandpass.
+        if(config.useBandpass())
+        {
+            expr[i] = compose(expr[i],
+                makeBandpassExpr(scope, instrument->station(i)));
+        }
+
+        // Create a direction independent gain expression per station.
+        if(config.useGain())
+        {
+            expr[i] = compose(expr[i],
+                makeGainExpr(scope, instrument->station(i),
+                config.getGainConfig()));
+        }
+
+        // Create a direction independent TEC expression per station.
+        if(config.useTEC())
+        {
+            expr[i] = compose(expr[i],
+                makeTECExpr(scope, instrument->station(i)));
+        }
+
+        // Beam.
+        if(config.useBeam())
+        {
+            expr[i] = compose(expr[i], makeBeamExpr(scope,
+                instrument->station(i), refFreq, exprDirectionITRF,
+                exprRefDelayITRF, exprRefTileITRF, config.getBeamConfig(),
+                coeffLBA, coeffHBA));
+        }
+
+        // Ionosphere.
+        if(config.useIonosphere())
+        {
+            // Create an (az, el) expression for the direction of interest.
+            Expr<Vector<2> >::Ptr exprAzEl =
+                makeAzElExpr(instrument->station(i)->position(), exprDirection);
+
+            expr[i] = compose(expr[i], makeIonosphereExpr(scope,
+                instrument->station(i), instrument->position(), exprAzEl,
+                exprIonosphere));
+        }
+
+        if(expr[i])
+        {
+            if(config.useFlagger())
+            {
+                const FlaggerConfig &flagConfig = config.getFlaggerConfig();
+
+                Expr<Scalar>::Ptr exprCond =
+                    Expr<Scalar>::Ptr(new ConditionNumber(expr[i]));
+                Expr<Scalar>::Ptr exprThreshold(makeFlagIf(exprCond,
+                    std::bind2nd(std::greater_equal<double>(),
+                    flagConfig.threshold())));
+
+                typedef MergeFlags<JonesMatrix, Scalar> T_MERGEFLAGS;
+                expr[i] = T_MERGEFLAGS::Ptr(new T_MERGEFLAGS(expr[i],
+                    exprThreshold));
+            }
+
+            if(inverse)
+            {
+                expr[i] = Expr<JonesMatrix>::Ptr(new MatrixInverse(expr[i]));
+            }
+        }
+        else
+        {
+            expr[i] = exprIdentity;
+        }
+    }
+
+    return expr;
+}
+
+vector<Expr<JonesMatrix>::Ptr>
 makeStationExpr(Scope &scope, const vector<Source::Ptr> &sources,
     const Instrument::Ptr &instrument, const ModelConfig &config,
     double refFreq, const casa::MDirection &refDelay,
     const casa::MDirection &refTile, bool inverse)
 {
-    DDEMap mapDDE;
-    buildDDEMap(DIRECTIONAL_GAIN,
-        config.getDirectionalGainConfig().partition(), sources, mapDDE);
-    buildDDEMap(BEAM, config.getBeamConfig().partition(), sources, mapDDE);
-    buildDDEMap(DIRECTIONAL_TEC, config.getDirectionalTECConfig().partition(),
-        sources, mapDDE);
-    buildDDEMap(FARADAY_ROTATION, config.getFaradayRotationConfig().partition(),
-        sources, mapDDE);
-    buildDDEMap(IONOSPHERE, config.getIonosphereConfig().partition(), sources,
-        mapDDE);
-
-    LOG_DEBUG_STR("#unique directions: " << mapDDE.size());
+    ClusterMap clusters;
+    LOG_DEBUG_STR("Building patch map...");
+    buildClusterMap(DIRECTIONAL_GAIN,
+        config.getDirectionalGainConfig().partition(), sources, clusters);
+    buildClusterMap(BEAM, config.getBeamConfig().partition(), sources, clusters);
+    buildClusterMap(DIRECTIONAL_TEC, config.getDirectionalTECConfig().partition(),
+        sources, clusters);
+    buildClusterMap(FARADAY_ROTATION, config.getFaradayRotationConfig().partition(),
+        sources, clusters);
+    buildClusterMap(IONOSPHERE, config.getIonosphereConfig().partition(), sources,
+        clusters);
+    LOG_DEBUG_STR("Building patch map... done.");
+    LOG_DEBUG_STR("No. of unique patches: " << clusters.size());
 
     // Beam reference position on the sky.
     Expr<Vector<2> >::Ptr exprRefDelay = makeDirectionExpr(refDelay);
@@ -404,25 +626,27 @@ makeStationExpr(Scope &scope, const vector<Source::Ptr> &sources,
     }
 
     vector<ExprDDE::Ptr> exprDDE(N_DDE);
-    for(DDEMap::const_iterator it = mapDDE.begin(), end = mapDDE.end();
+    for(ClusterMap::const_iterator it = clusters.begin(), end = clusters.end();
         it != end; ++it)
     {
-        string name = makeName(sources, it->first);
+//        string name = makeName(sources, it->first);
         Expr<Vector<2> >::Ptr exprPosition = makePositionExpr(sources,
             it->first);
 
-        DDEMask mask = it->second;
+//        DDEMask mask = it->second;
+        const ClusterDescriptor &descriptor = it->second;
 
         // Directional gain.
-        if(mask.enabled(DIRECTIONAL_GAIN))
+        if(descriptor.enabled[DIRECTIONAL_GAIN])
         {
             ASSERT(!exprDDE[DIRECTIONAL_GAIN]);
             exprDDE[DIRECTIONAL_GAIN] = makeDirectionalGainExpr(scope,
-                instrument, name, config.getDirectionalGainConfig());
+                instrument, descriptor.label[DIRECTIONAL_GAIN],
+                config.getDirectionalGainConfig());
         }
 
         // Beam.
-        if(mask.enabled(BEAM))
+        if(descriptor.enabled[BEAM])
         {
             ASSERT(!exprDDE[BEAM]);
             exprDDE[BEAM] = makeBeamExpr(scope, instrument, exprPosition,
@@ -431,23 +655,23 @@ makeStationExpr(Scope &scope, const vector<Source::Ptr> &sources,
         }
 
         // Directional TEC.
-        if(mask.enabled(DIRECTIONAL_TEC))
+        if(descriptor.enabled[DIRECTIONAL_TEC])
         {
             ASSERT(!exprDDE[DIRECTIONAL_TEC]);
             exprDDE[DIRECTIONAL_TEC] = makeDirectionalTECExpr(scope, instrument,
-                name);
+                descriptor.label[DIRECTIONAL_TEC]);
         }
 
         // Faraday rotation.
-        if(mask.enabled(FARADAY_ROTATION))
+        if(descriptor.enabled[FARADAY_ROTATION])
         {
             ASSERT(!exprDDE[FARADAY_ROTATION]);
             exprDDE[FARADAY_ROTATION] = makeFaradayRotationExpr(scope,
-                instrument, name);
+                instrument, descriptor.label[FARADAY_ROTATION]);
         }
 
         // Ionosphere.
-        if(mask.enabled(IONOSPHERE))
+        if(descriptor.enabled[IONOSPHERE])
         {
             ASSERT(!exprDDE[IONOSPHERE]);
             exprDDE[IONOSPHERE] = makeIonosphereExpr(scope, instrument,
@@ -455,10 +679,13 @@ makeStationExpr(Scope &scope, const vector<Source::Ptr> &sources,
         }
     }
 
-    ExprDDE::Ptr exprDDEComposition(new ExprDDE(instrument->nStations()));
+    ExprDDE::Ptr exprDDEComposition;
     for(unsigned int i = 0; i < N_DDE; ++i)
     {
-        compose(exprDDEComposition, exprDDE[i]);
+        if(exprDDE[i])
+        {
+            exprDDEComposition = compose(exprDDEComposition, exprDDE[i]);
+        }
     }
 
     // Direction independent effects (DIE).
@@ -468,8 +695,6 @@ makeStationExpr(Scope &scope, const vector<Source::Ptr> &sources,
     vector<Expr<JonesMatrix>::Ptr> expr(instrument->nStations());
     for(unsigned int i = 0; i < instrument->nStations(); ++i)
     {
-        expr[i] = exprDDEComposition->expr(i);
-
         // Create a clock delay expression per station.
         if(config.useClock())
         {
@@ -497,6 +722,12 @@ makeStationExpr(Scope &scope, const vector<Source::Ptr> &sources,
         {
             expr[i] = compose(expr[i],
                 makeTECExpr(scope, instrument->station(i)));
+        }
+
+        // Right multiply by the composition of direction dependent effects.
+        if(exprDDEComposition)
+        {
+            expr[i] = compose(expr[i], exprDDEComposition->expr(i));
         }
 
         if(expr[i])
@@ -532,26 +763,6 @@ makeStationExpr(Scope &scope, const vector<Source::Ptr> &sources,
 
 namespace
 {
-
-DDEMask::DDEMask()
-    :   itsMask(0)
-{
-}
-
-bool DDEMask::enabled(DDE dde) const
-{
-    return itsMask & (uint32(1) << dde);
-}
-
-void DDEMask::enable(DDE dde)
-{
-    itsMask |= (uint32(1) << dde);
-}
-
-void DDEMask::disable(DDE dde)
-{
-    itsMask &= ~(uint32(1) << dde);
-}
 
 DDEIndex::DDEIndex(unsigned int id)
     :   itsId(id)
@@ -601,58 +812,8 @@ ostream &operator<<(ostream &os, const DDEIndex &obj)
     return os;
 }
 
-typedef map<SourceGroup, DDEMask> DDEMap;
-
-void buildDDEMap(DDE dde, const DDEPartition &partition,
-    const vector<Source::Ptr> &sources, DDEMap &map)
-{
-    list<unsigned int> unassigned;
-    for(unsigned int i = 0; i < sources.size(); ++i)
-    {
-        unassigned.push_back(i);
-    }
-
-    // loop over partitions
-    for(unsigned int i = 0; i < partition.size(); ++i)
-    {
-        SourceGroup group;
-
-        // loop over (remaining) sources
-        list<unsigned int>::iterator it = unassigned.begin(),
-            end = unassigned.end();
-        while(it != unassigned.end())
-        {
-            unsigned int id = *it;
-
-            if(!partition.matches(i, sources[id]->name()))
-            {
-                ++it;
-                continue;
-            }
-
-            if(partition.group(i))
-            {
-                group.insert(id);
-            }
-            else
-            {
-                SourceGroup tmp;
-                tmp.insert(id);
-                map[tmp].enable(dde);
-            }
-
-            it = unassigned.erase(it);
-        }
-
-        if(!group.empty())
-        {
-            map[group].enable(dde);
-        }
-    }
-}
-
 ExprDDE::ExprDDE(unsigned int size)
-    : itsExpr(size)
+    :   itsExpr(size)
 {
 }
 
@@ -673,6 +834,7 @@ Expr<JonesMatrix>::Ptr ExprDDE::expr(unsigned int i) const
 
 ExprDDE::Ptr compose(const ExprDDE::Ptr &lhs, const ExprDDE::Ptr &rhs)
 {
+    ASSERT(rhs);
     if(lhs)
     {
         unsigned int size = std::min(lhs->size(), rhs->size());

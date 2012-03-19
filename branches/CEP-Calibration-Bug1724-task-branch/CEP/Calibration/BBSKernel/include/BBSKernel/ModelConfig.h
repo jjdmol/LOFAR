@@ -54,6 +54,21 @@ private:
     bool    itsPhasors;
 };
 
+class CasaStringFilter
+{
+public:
+    CasaStringFilter(const string &filter);
+
+    bool matches(const string &in) const;
+    bool operator()(const string &in) const;
+
+private:
+    friend ostream &operator<<(ostream &out, const CasaStringFilter &obj);
+
+    vector<bool>        itsInverted;
+    vector<casa::Regex> itsRegEx;
+};
+
 // Specification of a partition of sources into groups based on wildcard
 // (shell-like) patterns that define the groups. Each pattern can be flagged as
 // defining a group, in which case all sources matching the pattern form a
@@ -62,20 +77,60 @@ private:
 class DDEPartition
 {
 public:
+    DDEPartition() { ignoreRemainder(); }
+
     unsigned int size() const;
     bool matches(unsigned int i, const string &name) const;
     bool group(unsigned int i) const;
+    string name(unsigned int i) const;
+    bool empty() const
+    {
+        return itsRegEx.empty() && !itsRemainderMatch;
+    }
 
-    template <typename T>
-    void append(T first, T last, bool group = true);
+    void matchRemainderAsGroup(const string &name)
+    {
+        itsRemainderMatch = true;
+        itsRemainderName = name;
+    }
 
-    void append(const string &pattern, bool group = false);
+    void matchRemainder()
+    {
+        itsRemainderMatch = true;
+        itsRemainderName = string();
+    }
 
-    friend ostream &operator<<(ostream &out, const DDEPartition &obj);
+    void ignoreRemainder()
+    {
+        itsRemainderMatch = false;
+        itsRemainderName = string();
+    }
+
+    bool matchesRemainder() const
+    {
+        return itsRemainderMatch;
+    }
+
+    bool groupRemainder() const
+    {
+        return !itsRemainderName.empty();
+    }
+
+    string remainderGroupName() const
+    {
+        return itsRemainderName;
+    }
+
+    void append(const string &pattern);
+    void append(const string &name, const string &pattern);
 
 private:
-    vector<bool>        itsGroupFlag;
-    vector<casa::Regex> itsRegEx;
+    friend ostream &operator<<(ostream &out, const DDEPartition &obj);
+
+    vector<string>              itsGroupName;
+    vector<CasaStringFilter>    itsRegEx;
+    bool                        itsRemainderMatch;
+    string                      itsRemainderName;
 };
 
 // Configuration options specific to direction dependent models.
@@ -263,32 +318,6 @@ ostream &operator<<(ostream &out, const FlaggerConfig &obj);
 ostream &operator<<(ostream &out, const ModelConfig &obj);
 
 // @}
-
-// -------------------------------------------------------------------------- //
-// - DDEConfig implementation                                               - //
-// -------------------------------------------------------------------------- //
-
-template <typename T>
-void DDEPartition::append(T first, T last, bool group)
-{
-    if(first == last)
-    {
-        return;
-    }
-
-    casa::String regex("(");
-    regex += casa::Regex::fromPattern(*first++);
-    for(; first != last; ++first)
-    {
-        regex += ")|(";
-        regex += casa::Regex::fromPattern(*first);
-    }
-    regex += ")";
-
-    itsRegEx.push_back(casa::Regex(regex));
-    itsGroupFlag.push_back(group);
-    ASSERT(itsRegEx.back().OK());
-}
 
 } //# namespace BBS
 } //# namespace LOFAR
