@@ -3,6 +3,8 @@
 source locations.sh
 
 function start() {
+  set_psetinfo
+
   TMPDIR="`mktemp -d`"
   PIDFILE="$TMPDIR/pid"
 
@@ -23,6 +25,8 @@ function start() {
 }
 
 function stop() {
+  set_psetinfo
+
   # graceful exit
   alarm 10 gracefullyStopBGProcessing.sh
 
