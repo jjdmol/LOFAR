@@ -84,6 +84,9 @@ namespace LOFAR {
     PyParameterSet makeSubset (const string& baseKey, const string& prefix)
       { return ParameterSet::makeSubset (baseKey, prefix); }
 
+    void adoptCollection (const PyParameterSet& parset, const string& prefix)
+      { return ParameterSet::adoptCollection (parset, prefix); }
+
     PyParameterValue get (const string& key) const
       { return ParameterSet::get (key); }
 
@@ -238,7 +241,13 @@ namespace LOFAR {
       .def ("adoptFile", &ParameterSet::adoptFile,
  	    (boost::python::arg("filename"),
  	     boost::python::arg("prefix")=""),
-            "Add the parameters in the parset file with the given prefix.")
+            "Add the parameters from a parset file and prefix their names "
+            "with the given prefix.")
+      .def ("adoptCollection", &PyParameterSet::adoptCollection,
+ 	    (boost::python::arg("parameterset"),
+ 	     boost::python::arg("prefix")=""),
+            "Add the parameters from a parset object and prefix their names "
+            "with the given prefix.")
       .def ("writeFile", &ParameterSet::writeFile,
  	    (boost::python::arg("filename"),
              boost::python::arg("append")=false),
