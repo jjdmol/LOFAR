@@ -195,9 +195,7 @@ void OutputSection::readData( Stream *stream, StreamableData *data, unsigned str
     data->setDimensions(info.nrSamples, info.subbands.size(), info.nrChannels); 
   }  
 
-  LOG_DEBUG_STR("Reading data for stream " << streamNr << "...");
   data->read(stream, false);
-  LOG_DEBUG_STR("Reading data for stream " << streamNr << " done");
 }
 
 
