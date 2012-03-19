@@ -20,7 +20,8 @@ def overrideRack( stations, rack ):
   for s in stations:
     for t in stations[s]:
       octets = t.ionode.split(".")
-      t.ionode = "%s.%s.%s.%s" % (octets[0],octets[1],rack,octets[3])
+      if octets[0] == "10" and octets[1] == "170": # only process stations connected to BG/P
+        t.ionode = "%s.%s.%s.%s" % (octets[0],octets[1],rack,octets[3])
 
 def packetAnalysis( name, ip, port ):
   location = os.popen("which packetanalysis").read().strip()
@@ -278,9 +279,6 @@ def defineStations( s ):
 
   # Special stations, one-time stations, etc.
   s.update( {
-   "Pulsar": [Station('Pulsar', '10.170.0.30', ['0.0.0.0:4346'])],
-   "twoears":  [Station('CS302HBA0', '10.170.0.133', ['0.0.0.0:4346']),
-                Station('CS302HBA1', '10.170.0.134', ['0.0.0.0:4347'])],
   } )
 
   # Standard configurations
@@ -337,7 +335,8 @@ if __name__ == "__main__":
     parser.print_help()
     sys.exit(0)
 
-  overrideRack( Stations, int(options.partition[2]) )
+  if options.partition != "R00R01":
+    overrideRack( Stations, int(options.partition[2]) )
 
   for stationName in args:
     # print the inputs of a single station

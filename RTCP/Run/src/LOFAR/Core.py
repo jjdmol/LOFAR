@@ -43,7 +43,7 @@ def buildParset( parset = None, args = "", olapparset = "OLAP.parset", partition
   assert "run" not in defaultObsParams
 
   # always assume the stations will be sending to the rack we will be using
-  if partition:
+  if partition and partition != "R00R01":
     overrideRack( Stations, int(partition[2]) )
 
   # ========== Observations
