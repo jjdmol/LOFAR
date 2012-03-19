@@ -3,6 +3,8 @@
 source locations.sh
 
 function start() {
+  set_psetinfo
+
   # create a new log dir
   rm -f "$LOGSYMLINK" || true
   mkdir -p "$LOGDIR"
