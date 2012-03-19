@@ -40,7 +40,7 @@ function stop() {
 
     # kill -9 is the last resort
     kill -9 "$PID"
-  ) && sleep 5
+  ) && sleep 10
 
   # wait for job to die
   while true
