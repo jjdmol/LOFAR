@@ -6,6 +6,8 @@ include(LofarFindPackage)
 lofar_find_package(Boost REQUIRED)
 lofar_find_package(Casacore REQUIRED COMPONENTS 
   casa measures ms scimath tables images)
+lofar_find_package(Casarest REQUIRED COMPONENTS
+  synthesis)
 
 # Uncomment to check for unsafe conversions (gcc), for example conversion of
 # size_t to unsigned int (truncation).
