@@ -130,7 +130,7 @@ void NormalizeVarianceAction::Perform(ArtifactSet &artifacts, ProgressListener &
 	}
 	
 	// Slide until window center hits end
-	while(windowRightSideIterator->first + halfWindowTime < endTime)
+	while(windowLeftSideIterator != _stddevs.end() && windowLeftSideIterator->first + halfWindowTime < endTime)
 	{
 		correctDataUpTo(data, dataTimeIndex, windowLeftSideIterator->first + _medianFilterSizeInS, observationTimes, window.Median());
 		window.Remove(windowLeftSideIterator->second);
