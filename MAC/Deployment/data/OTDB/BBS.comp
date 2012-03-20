@@ -258,6 +258,9 @@ par  Operation              I    text    -      10   0    ''                   -
 #--------------------------------------------------------------------------------------------------------
 node Step             4.0.0  development 'node constraint' 'BBS Step Container'
 uses DefaultBBSStep   4.0.0  development 1                 'BBS Template Step'
+#    name                   dir. type   unit   prun. vm   value                constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  nrOfDefaultBBSStep     I    uint    -      10    0    0                    -        'Number of DefaultBBSSteps'
 
 # -- BBS
 #
