@@ -15,13 +15,15 @@ par  runtimeDirectory        I    text   -      100	0	'/home/pipeline/runtime/${
 par  resultDirectory         I    text   -      100	0	'lexar001:/data/${MSNUMBER}/output'		-	"Where to store the results"
 par  workingDirectory	     I    text   -      100	0	'/data/scratch/${MSNUMBER}/work'		-	"Where to store temporarely files"
 par  observationDirectory    I    text   -      100	0	'/data/L${OBSID}'				-	"Subdirectory where the datafiles were stored by the online processes."
-par  canCommunicate          I    bool   -      10	0	'true'			-	"Temp flag to tell MAC if the current PythonController can respond to CONTROL_xxx messages"
+par  canCommunicate          I    bool   -      10	0	'true'						-	"Temp flag to tell MAC if the current PythonController can respond to CONTROL_xxx messages"
+par  nrOfBBS		     I    uint   -      100	0	0 						-	"number of BBS instances"
+par  nrOfBDSM		     I    uint   -      100	0	0 						-	"number of BDSM instances"
 
-#uses  ApplCtrl    4.0.0  development 	1	"The ACC controller"
-#uses  Flagger	   4.0.0  development 	1	"Flagger"
 uses  DPPP	   4.0.0  development 	1	"DPcube"
 uses  BBS  	   4.0.0  development 	1	"Blackboard System"
-uses  Imager 	   4.0.0  development 	1	"Imager"
-uses Calibration   4.0.0  development   1   "Calibration"
+uses  Imaging 	   4.0.0  development 	1	"Imaging"
+uses  GSM 	   4.0.0  development 	1	"GSM"
+uses  BDSM 	   4.0.0  development 	1	"BDSM"
+uses Calibration   4.0.0  development   1   	"Calibration"
 
 
