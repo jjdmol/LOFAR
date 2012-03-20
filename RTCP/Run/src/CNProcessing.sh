@@ -43,6 +43,8 @@ function stop() {
   ) && sleep 10
 
   # wait for job to die
+  TIMEOUT=10
+
   while true
   do
     JOBSTATUS=`bgjobs -u $USER -s | awk "/$PARTITION/ { print \\$6; }"`
@@ -59,10 +61,18 @@ function stop() {
         sleep 1
         continue ;;
 
-      *)
-        echo "Failed to kill BG/P job $JOBID. Status is $JOBSTATUS"
-        break ;;
+      running)
+        sleep 1
+
+        if [ $((--TIMEOUT)) -ge 0 ]
+        then
+          continue
+        fi
+        ;;
     esac
+
+    echo "Failed to kill BG/P job $JOBID. Status is $JOBSTATUS"
+    break
   done
 }
 
