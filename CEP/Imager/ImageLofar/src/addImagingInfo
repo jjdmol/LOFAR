@@ -21,7 +21,6 @@ def addSubTable (image, msName, subName, removeColumns=[]):
     if len(subNameOut) < 6  or  subNameOut[:6] != "LOFAR_":
         subNameOut = "LOFAR_" + subNameOut
     subtab = sel.copy (image.name() + "/" + subNameOut, deep=True)
-    print subtab.name()
     image.putkeyword ("ATTRGROUPS." + subNameOut, subtab)
     print "Added subtable", subNameOut, "containing", subtab.nrows(), "rows"
     subtab.close()
@@ -33,7 +32,6 @@ def addQualityTable (image):
     tab = pt.taql ("create table '" + image.name() + "/LOFAR_QUALITY' " + 
                    "QUALITY_MEASURE string, VALUE string, FLAG_ROW bool")
     tab.flush()
-    print tab.name()
     image.putkeyword ("ATTRGROUPS." + "LOFAR_QUALITY", tab)
     tab.close()
     print "Added subtable LOFAR_QUALITY containing 0 rows"
