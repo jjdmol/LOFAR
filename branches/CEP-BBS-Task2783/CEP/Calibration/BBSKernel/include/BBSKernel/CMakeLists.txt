@@ -24,6 +24,7 @@ install(FILES
   MeasurementExprLOFAR.h
   MeasurementExprLOFARUtil.h
   ModelConfig.h
+  ModelImageConvolutionFunction.h
   ModelImageFFT.h
   ParmManager.h
   ParmProxy.h

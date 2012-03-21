@@ -39,6 +39,7 @@ typedef struct ModelImageOptions
     casa::Int Nwplanes;                     // number of w-projection planes (default: 0)
     double wmax;                            // maximum w value to use
     casa::MPosition Mlocation;              // location of array on earth
+    casa::MDirection PhaseDir;              // phase direction of uvw data
     casa::Float padding;                    // padding used in gridding
     casa::Int verbose;                      // verbosity level
     casa::Int maxSupport;                   // maximum support
@@ -76,6 +77,7 @@ class ModelImageFft
     void setAprojection(bool mode=true);
     void setNwplanes(casa::uInt nwplanes);
     void setMlocation(casa::MPosition &location);
+    void setPhaseDir(const casa::MDirection &phasedir);
     void setPadding(casa::Float padding);
     void setVerbose(casa::uInt verbose);
     void setMaxSupport(casa::Int maxsupport);
@@ -92,6 +94,7 @@ class ModelImageFft
     inline casa::Int       getNwplanes() const { return itsOptions.Nwplanes; }
     inline double          getWmax() const { return itsOptions.wmax; }
     inline casa::MPosition getMlocation() const { return itsOptions.Mlocation; }
+    inline casa::MDirection getPhaseDir() const { return itsOptions.PhaseDir; }
     inline casa::Float     getPadding() const { return itsOptions.padding; }
     inline casa::uInt      getVerbose() const { return itsOptions.verbose; }
     inline casa::uInt      getMaxSupport() const { return itsOptions.maxSupport; }
@@ -131,13 +134,14 @@ class ModelImageFft
     ModelImageOptions itsOptions;                   // struct containing all options
     double itsGriddingTime;                         // variable to keep track of timing of steps
 
+    //-----------------------------------------------------------------  
+    // Image functions
+    void fftImage();                               // perform FFT on image
+    void getImagePhaseDirection();                 // get the phase direction of the image
 
     //-----------------------------------------------------------------  
     // FTmachine functions
-    void fftImage();                               // perform FFT on image
-
-    void initializeToVis( ImageInterface<Complex>& iimage,
-                          const VisBuffer& vb);
+    void initializeToVis( ImageInterface<Complex>& iimage);
 
     // Gridder functions
 //    LofarVisResampler visResamplers_p;

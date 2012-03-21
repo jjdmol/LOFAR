@@ -19,6 +19,7 @@ lofar_add_library(bbskernel
   MeasurementExprLOFAR.cc
   MeasurementExprLOFARUtil.cc
   ModelConfig.cc
+  ModelImageConvolutionFunction.cc
   ModelImageFFT.cc
   ParmManager.cc
   ParmProxy.cc

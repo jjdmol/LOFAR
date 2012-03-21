@@ -55,7 +55,7 @@ ModelImageFft::ModelImageFft( const casa::String &name,
                               unsigned int nwplanes, 
                               bool aprojection)
 {
-//  ImageInterface<Complex>& iimage;
+//  ImageInterface<Complex>& iimage;    // load image from disk
   
   setDefaults();
   setWmax(wmax);
@@ -70,7 +70,7 @@ ModelImageFft::ModelImageFft( const casa::String &name,
     setWmax(wmax);
     setNwplanes(nwplanes);
   }
-
+  setPhaseDir(phasedir);
   setAprojection(aprojection);
 }
 
@@ -139,6 +139,11 @@ void ModelImageFft::setNwplanes(casa::uInt nwplanes)
 void ModelImageFft::setMlocation(casa::MPosition &location)
 {
   itsOptions.Mlocation=location;
+}
+
+void ModelImageFft::setPhaseDir(const casa::MDirection &phasedir)
+{
+  itsOptions.PhaseDir=phasedir;
 }
 
 void ModelImageFft::setPadding(casa::Float padding)
@@ -218,7 +223,7 @@ void ModelImageFft::setNThread(unsigned int nthread)
 void ModelImageFft::computeConvolutionFunctions()
 {
   itsConvolutionFunctions.resize(itsOptions.Nwplanes);  // do we really have a conv function per w-plane?
-  for(unsigned int i=0; i<itsOptions.Nwplanes; i++)
+  for(int i=0; i<itsOptions.Nwplanes; i++)
   {
     itsConvolutionFunctions[i]; // call LofarConvolutionFunction constructor here
   }
@@ -253,8 +258,7 @@ void ModelImageFft::computeConvolutionFunctions()
 
 // Initialize for a transform from the Sky domain. This means that
 // we grid-correct, and FFT the image
-void ModelImageFft::initializeToVis(ImageInterface<Complex>& iimage,
-                                    const VisBuffer& vb)
+void ModelImageFft::initializeToVis(ImageInterface<Complex>& iimage)
 {
   if (itsOptions.verbose > 0) {
     cout<<"---------------------------> initializeToVis"<<endl;
@@ -406,7 +410,7 @@ void ModelImageFft::init()
   }
   assert(padded_shape(0)!=image->shape()(0));
   
-  // How to do this without the MS?
+  // How to do this without the MS? using modified ModelImageConvolutionFunction class
   /*
   itsConvFunc = new LofarConvolutionFunction( padded_shape,
                                               image->coordinates().directionCoordinate (image->coordinates().findCoordinate(Coordinate::DIRECTION)),
@@ -414,6 +418,21 @@ void ModelImageFft::init()
                                               itsOversample, itsBeamPath,
 					                                    itsVerbose, itsMaxSupport,
                                               itsImgName);
+
+    // Compute the convolution function for all channel, for the polarisations
+    // specified in the Mueller_mask matrix
+    // Also specify weither to compute the Mueller matrix for the forward or
+    // the backward step. A dirty way to calculate the average beam has been
+    // implemented, by specifying the beam correcting to the given baseline
+    // and timeslot.
+    // RETURNS in a LofarCFStore: result[channel][Mueller row][Mueller column]
+    LofarCFStore makeConvolutionFunction(uInt stationA, uInt stationB,
+                                         Double time, Double w,
+                                         const Matrix<bool>& Mask_Mueller,
+                                         bool degridding_step,
+                                         double Append_average_PB_CF,
+                                         Matrix<Complex>& Stack_PB_CF,
+                                         double& sum_weight_square);
   */
 }
 
