@@ -70,7 +70,7 @@ class demixing(LOFARnodeTCP):
 
     def run(self, infile, working_dir, initscript, remove, target,
             clusterdesc, timestep, freqstep, half_window, threshold,
-            demixdir, skymodel):
+            demixdir, skymodel, db_host):
 
         with log_time(self.logger):
             if os.path.exists(infile):
@@ -91,6 +91,7 @@ class demixing(LOFARnodeTCP):
             self.logger.debug("threshold = %f", threshold)
             self.logger.debug("demixdir = %s", demixdir)
             self.logger.debug("skymodel = %s", skymodel)
+            self.logger.debug("db_host= %s", db_host)
 
             # Initialise environment
             self.environment = read_initscript(self.logger, initscript)
@@ -221,7 +222,7 @@ class demixing(LOFARnodeTCP):
                          '-f',
                          '--key', key,
                          '--cluster-desc', clusterdesc,
-                         '--db', 'ldb001',
+                         '--db', db_host,
                          '--db-user', 'postgres',
                           gds_file,
                           os.path.join(demixdir, 'bbs_'+i+'.parset'),
@@ -250,7 +251,7 @@ class demixing(LOFARnodeTCP):
                          '--instrument-name', 'instrument_smoothed',
                          '--key', key,
                          '--cluster-desc', clusterdesc,
-                         '--db', 'ldb001',
+                         '--db', db_host,
                          '--db-user', 'postgres',
                          gds_file,
                          os.path.join(demixdir, 'bbs_'+i+'_smoothcal.parset'),
