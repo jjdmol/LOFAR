@@ -62,6 +62,8 @@
 
 namespace LOFAR
 {
+namespace BBS
+{
 
   LofarConvolutionFunction::LofarConvolutionFunction
   (const IPosition& shape,
@@ -1030,5 +1032,5 @@ namespace LOFAR
     os << std::setw(3) << perc/10 << '.' << perc%10 << '%';
   }
 
-
-} //# end namespace casa
+} //# end namespace BBS
+} //# end namespace LOFAR

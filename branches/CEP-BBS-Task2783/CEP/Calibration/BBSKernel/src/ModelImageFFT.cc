@@ -33,6 +33,7 @@
 #include <Common/Exception.h>
 #include <Common/LofarLogger.h>   // for ASSERT and ASSERTSTR?
 #include <BBSKernel/Exceptions.h>
+#include <BBSKernel/ModelImageConvolutionFunction.h>
 #include <BBSKernel/ModelImageFFT.h>
 
 #define DORES True                // why on earth is this done in LofarFTMachine?
@@ -213,6 +214,10 @@ void ModelImageFft::setNThread(unsigned int nthread)
   itsOptions.NThread=nthread;
 }
 
+void ModelImageFft::setStoreConvFunctions(bool store)
+{
+  itsOptions.storeConvFunctions=store;
+}
 
 //*********************************************
 //
@@ -418,7 +423,37 @@ void ModelImageFft::init()
                                               itsOversample, itsBeamPath,
 					                                    itsVerbose, itsMaxSupport,
                                               itsImgName);
+  */
+  // For (streaming) BBS predict we don't have a MS available
+  itsConvFunc = new LOFAR::BBS::LofarConvolutionFunction(padded_shape,
+                                            image->coordinates().directionCoordinate (image->coordinates().findCoordinate(Coordinate::DIRECTION)),
+                                            itsOptions.refFrequency,
+                                            itsOptions.Nwplanes,
+                                            itsOptions.wmax,
+                                            itsOptions.oversample,
+                                            itsOptions.verbose,
+                                            itsOptions.maxSupport,
+                                            itsOptions.imageName);      
 
+  // If it was requested to save the convolution functions to disk, do it
+  if(getStoreConvFunctions())
+  {
+    // save LofarConvolutionFunctions as paged images on disk
+  }
+
+  // From ModelImageConvolutionFunction.h
+  /*
+ LofarConvolutionFunction::LofarConvolutionFunction
+  (const IPosition& shape,
+   const DirectionCoordinate& coordinates,
+   Double refFrequency,
+   uInt nW, double Wmax,
+   uInt oversample,
+   Int verbose,
+   Int maxsupport,
+   const String& imgName)      
+  */
+  /*
     // Compute the convolution function for all channel, for the polarisations
     // specified in the Mueller_mask matrix
     // Also specify weither to compute the Mueller matrix for the forward or
@@ -440,6 +475,11 @@ void ModelImageFft::init()
 void ModelImageFft::fftImage()
 {
     LatticeFFT::cfft2d(*lattice);       // Now do the FFT2D in place
+}
+
+void storeFFTImage(void)
+{
+
 }
 
 // LOFAR specific rewritten function initialize polarization (polmap)

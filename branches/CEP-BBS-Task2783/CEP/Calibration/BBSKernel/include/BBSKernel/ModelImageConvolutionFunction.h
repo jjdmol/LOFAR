@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFARFT_LOFARCONVOLUTIONFUNCTION_H
-#define LOFARFT_LOFARCONVOLUTIONFUNCTION_H
+#ifndef BBSKERNEL_MODELIMAGECONVOLUTIONFUNCTION_H
+#define BBSKERNEL_MODELIMAGECONVOLUTIONFUNCTION_H
 
 #include <LofarFT/LofarATerm.h>
 #include <LofarFT/LofarWTerm.h>
@@ -49,7 +49,8 @@ using namespace casa;
 
 namespace LOFAR
 {
-
+namespace BBS
+{
   // Functions to store a 2D or 3D array in an PagedImage file.
   template <class T>
   void store(const DirectionCoordinate &dir, const Matrix<T> &data, const string &name);
@@ -321,6 +322,7 @@ namespace LOFAR
     im.putSlice(data, IPosition(4, 0, 0, 0, 0));
   }
 
-} //# end namespace casa
+} //# end namespace BBS
+} //# end namespace LOFAR
 
 #endif
