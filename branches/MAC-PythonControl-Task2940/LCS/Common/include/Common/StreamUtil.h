@@ -30,6 +30,7 @@
 #include <Common/LofarTypes.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
+#include <Common/lofar_map.h>
 #include <Common/lofar_iosfwd.h>
 
 namespace LOFAR
@@ -57,22 +58,6 @@ namespace LOFAR
     static const string tok;
   };
 
-
-  // Write a vector to an ostream with a given separator, prefix and postfix.
-  template<class T>
-  void writeVector (std::ostream& os, const std::vector<T>& vec,
-		    const char* separator=",",
-		    const char* prefix="[", const char* postfix="]")
-  {
-    os << prefix;
-    for (uint i = 0; i < vec.size(); i++) {
-      if (i > 0) os << separator;
-      os << vec[i];
-    }
-    os << postfix;
-  }
-
-
   // Print an indentation that depends on the number of Indent objects
   // currently in existence.
   inline ostream& indent(ostream& os) 
@@ -84,6 +69,42 @@ namespace LOFAR
   }
 
 
+  // Write a std::pair.
+  template <typename T, typename U>
+  inline ostream& operator<< (ostream& os, const std::pair<T,U>& p)
+  {
+    os << '<' << p.first << ',' << p.second << '>';
+    return os;
+  }
+
+  // Write any container to the given ostream.
+  template<typename ITER>
+  inline void print (std::ostream& os, ITER begin, ITER end, 
+                     const char* separator=",",
+                     const char* prefix="[", const char* postfix="]")
+  {
+    os << prefix;
+    if (begin != end) {
+      os << *begin;
+      ++begin;
+    }
+    for (; begin!=end; ++begin) {
+      os << separator << *begin;
+    }
+    os << postfix;
+  }
+
+
+  // Write a vector to an ostream with a given separator, prefix and postfix.
+  template<class T>
+  void writeVector (std::ostream& os, const std::vector<T>& vec,
+		    const char* separator=",",
+		    const char* prefix="[", const char* postfix="]")
+  {
+    print (os, vec.begin(), vec.end(), separator, prefix, postfix);
+  }
+
+
   // Print the contents of a vector enclosed in square brackets, using a comma
   // as separator.
   // \note operator<<() must be defined for type \c T.
@@ -91,6 +112,17 @@ namespace LOFAR
   inline ostream& operator<<(ostream& os, const vector<T>& v)
   {
     writeVector(os, v, ",", "[", "]");
+    return os;
+  }
+
+
+  // Print the contents of a map enclosed in braces, using a comma
+  // as separator.
+  // \note operator<<() must be defined for type \c T.
+  template<typename T, typename U>
+  inline ostream& operator<<(ostream& os, const map<T,U>& m)
+  {
+    print (os, m.begin(), m.end(), ", ", "{", "}");
     return os;
   }
 

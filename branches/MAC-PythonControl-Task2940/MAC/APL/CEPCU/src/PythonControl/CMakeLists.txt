@@ -27,6 +27,8 @@ lofar_add_bin_program(PythonControl
   PythonControlMain.cc
   PythonControl.cc)
 
+lofar_add_executable(tMDparser tMDparser.cc)
+
 install(PROGRAMS
   startPython.sh
   DESTINATION bin)

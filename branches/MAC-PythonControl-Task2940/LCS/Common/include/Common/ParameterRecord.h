@@ -1,6 +1,6 @@
-//# lofar_datetime.h: namespace wrapper for Boost.Date_Time Posix classes
+//# ParameterRecord.h: A record of parameter values
 //#
-//# Copyright (C) 2002
+//# Copyright (C) 2012
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -20,31 +20,36 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_COMMON_DATETIME_H
-#define LOFAR_COMMON_DATETIME_H
+#ifndef LOFAR_COMMON_PARAMETERRECORD_H
+#define LOFAR_COMMON_PARAMETERRECORD_H
 
 // \file
-// namespace wrapper for Boost.Date_Time Posix classes
+// A record of parameter values
 
-#if !defined(HAVE_BOOST)
-#error Boost.Date_Time is required.
-#endif
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
+//# Includes
+#include <Common/ParameterSet.h>
 
-#include <boost/date_time/posix_time/posix_time.hpp>
+namespace LOFAR { 
 
-namespace LOFAR
-{
-  using namespace boost::posix_time;
+  class ParameterRecord: public ParameterSet
+  {
+  public:
+    // Define the iterators for this class.
+    typedef ParameterSet::iterator       iterator;
+    typedef ParameterSet::const_iterator const_iterator;
 
-	inline time_t to_time_t(ptime aPtime) {
-          ptime epoch(boost::gregorian::date(1970, 1, 1));
-          time_duration diff(aPtime - epoch);
-          return diff.total_seconds();
-	}
+    // Default constructor creates empty record.
+    ParameterRecord()
+    {}
 
-	inline ptime from_ustime_t(double	secsEpoch1970) {
-		return (from_time_t((time_t)trunc(secsEpoch1970)) + microseconds((int64_t)((secsEpoch1970-trunc(secsEpoch1970))*1000000)));
-	}
+    // Try to get a value from the record or from a nested record.
+    bool getRecursive (const string& key, ParameterValue& value) const;
+
+    // Put to ostream.
+    friend ostream& operator<< (ostream& os, const ParameterRecord&);
+  };
+
 }
 
 #endif

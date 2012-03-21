@@ -28,6 +28,7 @@
 //#include <Common/lofar_vector.h>
 //#include <Common/lofar_string.h>
 #include <Common/ParameterSet.h>
+#include <Common/ParameterRecord.h>
 #include <Common/Exceptions.h>
 #include <Common/SystemUtil.h>
 #include <ApplCommon/StationInfo.h>
@@ -647,14 +648,43 @@ void PythonControl::_passMetadatToOTDB()
 		return;
 	}
 
+	// read parameterset
 	ParameterSet	metadata;
 	metadata.adoptFile(itsFeedbackFile);
 
+	// Loop over the parameterset and send the information to the KVTlogger.
+	// During the transition phase from parameter-based to record-based storage in OTDB the
+	// nodenames ending in '_' are implemented both as parameter and as record.
 	ParameterSet::iterator		iter = metadata.begin();
 	ParameterSet::iterator		end  = metadata.end();
 	while (iter != end) {
-		LOG_DEBUG_STR("Sending: " << iter->first << " = " << iter->second);
-		myLogger.log(iter->first, iter->second);
+		string	key(iter->first);	// make destoyable copy
+		rtrim(key, "[]0123456789");
+		bool	doubleStorage(key[key.size()-1] == '_');
+		bool	isRecord(iter->second.isRecord());
+		//   isRecord  doubleStorage
+		// --------------------------------------------------------------
+		//      Y          Y           store as record and as parameters
+		//      Y          N           store as parameters
+		//      N          *           store parameter
+		if (!isRecord) {
+			LOG_DEBUG_STR("BASIC: " << iter->first << " = " << iter->second);
+			myLogger.log(iter->first, iter->second);
+		}
+		else {
+			if (doubleStorage) {
+				LOG_DEBUG_STR("RECORD: " << iter->first << " = " << iter->second);
+				myLogger.log(iter->first, iter->second);
+			}
+			ParameterRecord	pr(iter->second.getRecord());
+			ParameterRecord::const_iterator	prIter = pr.begin();
+			ParameterRecord::const_iterator	prEnd  = pr.end();
+			while (prIter != prEnd) {
+				LOG_DEBUG_STR("ELEMENT: " << iter->first+"."+prIter->first << " = " << prIter->second);
+				myLogger.log(iter->first+"."+prIter->first, prIter->second);
+				prIter++;
+			}
+		}
 		iter++;
 	}
 	LOG_INFO_STR(metadata.size() << " metadata values send to SAS");
