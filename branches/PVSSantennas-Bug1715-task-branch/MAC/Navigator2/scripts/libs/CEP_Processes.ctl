@@ -57,7 +57,7 @@ bool CEP_Processes_initList() {
   int z;
   dyn_dyn_anytype tab;
   //PermSW + PermSW_Daemons
-  dpQuery("SELECT '_original.._value' FROM 'LOFAR_PermSW_*.status.state' REMOTE 'CCU001:'", tab);
+  dpQuery("SELECT '_original.._value' FROM 'LOFAR_PermSW_*.status.state' REMOTE '"+CEPDBName+"'", tab);
   LOG_TRACE("CEP_Processes.ctl:initList|Found: "+ tab);
   
   dyn_string aDS=navFunct_getDynString(tab, 2,1);
@@ -174,15 +174,15 @@ bool CEP_Processes_UpdateProcessesList() {
     if (strtok(CEP_selectedStation,":") < 0) { 
       CEP_selectedStation+=":";
     }
-    if (strpos(CEPObsDP,"CCU001") < 0) {     
-      CEPObsDP="CCU001:"+dpSubStr(CEPObsDP,DPSUB_DP);
+    if (strpos(CEPObsDP,CEPDBName) < 0) {     
+      CEPObsDP=CEPDBName+dpSubStr(CEPObsDP,DPSUB_DP);
     }    
     CEP_obsBaseDP = CEPObsDP;
     // add Observation 
     dynAppend(list,","+CEP_selectedObservation+","+CEPObsDP);
 
     //select all Ctrl under CEP:LOFAR_ObsSW_'CEP_selectedObservation'
-    string query="SELECT '_original.._value' FROM '"+CEPObsDP+"_*.status.state' REMOTE 'CCU001:'";
+    string query="SELECT '_original.._value' FROM '"+CEPObsDP+"_*.status.state' REMOTE '"+CEPDBName+"'";
     LOG_DEBUG("CEP_Processes.ctl:updateProcessesList|Query: "+ query);
     dpQuery(query, tab);
     LOG_TRACE("CEP_Processes.ctl:updateProcessesList|CEP Controllers Found: "+ tab);
@@ -258,8 +258,8 @@ CEP_Processes_ActiveObsCallback(string dp1, dyn_string activeObservations) {
     }
   }
   
-  if (strpos(newSelection,"CCU001") < 0) {     
-      CEP_obsBaseDP="CCU001:"+dpSubStr(newSelection,DPSUB_DP);
+  if (strpos(newSelection,CEPDBName) < 0) {     
+      CEP_obsBaseDP=CEPDBName+dpSubStr(newSelection,DPSUB_DP);
   } else {   
       CEP_obsBaseDP = newSelection;
     }

@@ -770,7 +770,7 @@ string navFunct_getDPFromTypePath(dyn_string typeList,int choice) {
       }
       newDatapoint +=splitted[i];
     }
-  } else if (systemName == "CCU001:") {
+  } else if (systemName == CEPDBName) {
     //determine breakpoint in typeList
     int cepLofarIdx = dynContains(typeList,"CEPLOFAR");
     // check if backwards will leave CEP
@@ -2048,7 +2048,7 @@ bool navFunct_isOnline(int syst) {
 string navFunct_stationNameToIONode(string name) {
  
   dyn_dyn_anytype tab;
-  dpQuery("SELECT '_original.._value' FROM 'R0*-*.station' REMOTE 'CCU001:' WHERE _DPT =  \"BGPConnectionInfo\"",tab);
+  dpQuery("SELECT '_original.._value' FROM 'R0*-*.station' REMOTE '"+CEPDBName+"' WHERE _DPT =  \"BGPConnectionInfo\"",tab);
   
   for(int z=2;z<=dynlen(tab);z++) {
     if (tab[z][2] == name) return dpSubStr(tab[z][1],DPSUB_DP);
