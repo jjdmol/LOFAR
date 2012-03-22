@@ -12,8 +12,7 @@ then
   IONPROC=$HOME/production/lofar/bgp_ion/bin/ION_Processing
   ETCDIR=/opt/lofar/etc
 
-  LOGDIR=$HOME/log/L$TIMESTAMP
-  LOGSYMLINK=$HOME/log/latest
+  LOGDIR=$HOME/log
   LOGPARAMS="-s ccu001:24500"
 else
   ISPRODUCTION=0
@@ -22,8 +21,7 @@ else
   IONPROC=$HOME/projects/LOFAR/installed/bgpion_opt/bin/ION_Processing
   ETCDIR=@CMAKE_INSTALL_PREFIX@/etc
 
-  LOGDIR=$HOME/projects/LOFAR/L$TIMESTAMP
-  LOGSYMLINK=$HOME/projects/LOFAR/log
+  LOGDIR=$HOME/projects/LOFAR/log
   LOGPARAMS="-v"
 fi
 

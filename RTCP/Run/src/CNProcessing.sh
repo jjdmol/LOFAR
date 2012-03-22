@@ -5,6 +5,9 @@ source locations.sh
 function start() {
   set_psetinfo
 
+  # make sure the log dir exists
+  mkdir -p "$LOGDIR"
+
   TMPDIR="`mktemp -d`"
   PIDFILE="$TMPDIR/pid"
 
@@ -12,7 +15,7 @@ function start() {
   mkfifo "$PIDFILE"
 
   (mpirun -mode VN -partition "$PARTITION" -env DCMF_COLLECTIVES=0 -env BG_MAPPING=XYZT -env LD_LIBRARY_PATH=/bgsys/drivers/ppcfloor/comm/lib:/bgsys/drivers/ppcfloor/runtime/SPI:/globalhome/romein/lib.bgp -cwd "$LOGSYMLINK" -exe "$CNPROC" 2>&1 &
-  echo $! > "$PIDFILE") | LOFAR/Logger.py $LOGPARAMS "$LOGSYMLINK/CNProc.log" &
+  echo $! > "$PIDFILE") | LOFAR/Logger.py $LOGPARAMS "$LOGDIR/CNProc.log" &
 
   PID=`cat "$PIDFILE"`
   rm -f "$PIDFILE"

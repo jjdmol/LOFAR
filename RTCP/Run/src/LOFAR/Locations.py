@@ -65,25 +65,14 @@ class Locations:
         # the observation ID is included to allow parallel observations
 
         # where to store logs
-	"logdir":  "${BASEDIR}/D${TIMESTAMP}",
+	"logdir":  "${BASEDIR}/log",
 
         # where configuration files are kept
         "configdir": ".",
-        "storage_configdir": ".",
-
-        # where to start the executables. rundir needs to be reachable
-        # for all sections.
-	"rundir":  "${BASEDIR}/D${TIMESTAMP}",
-
-        # symlink to create to latest log dir
-        "logsymlink": "${BASEDIR}/log",
-
-        # symlink for each observation to relevant log dir
-        "obssymlink": "${BASEDIR}/D${YEAR}_${OBSID}",
 
         # parset name mas
-        "parset": "${LOGSYMLINK}/L${OBSID}.parset",     # for communication with Storage and offline pipelines
-        "parset-ion": "${LOGSYMLINK}/L${OBSID}.parset", # for communication with the I/O nodes
+        "parset": "${LOGDIR}/L${OBSID}.parset",     # for communication with Storage and offline pipelines
+        "parset-ion": "${LOGDIR}/L${OBSID}.parset", # for communication with the I/O nodes
 
         # location of the observation id counter
 	"nextmsnumber": "/globalhome/lofarsystem/log/nextMSNumber",
@@ -100,24 +89,14 @@ class Locations:
         # the locations of the main executables
 	"storage": "/opt/storage/current/bin/%s" % (self.executables["Storage"],),
 
-        # where to start the executables. rundir needs to be reachable
-        # for all sections.
-	"rundir":  "${HOME}/log/L${TIMESTAMP}",
-
         # where to store logs
-	"logdir":  "${HOME}/log/L${TIMESTAMP}",
+	"logdir":  "${HOME}/log",
 
 	# where to save the parset
 	"parset-ion":  "/bghome0/lofarsys/parsets/RTCP-${OBSID}.parset", # for communication to the IO nodes 
 
         # where configuration files are kept
         "configdir": "${BASEDIR}/bgfen/etc",
-        "storage_configdir": "/opt/storage/current/etc",
-
-        # symlink for each observation to relevant log dir
-        "obssymlink": "${HOME}/log/L${OBSID}",
-
-        "logsymlink": "${HOME}/log/latest",
 
         # location of valgrind suppressions file
         "ionsuppfile": "",
@@ -130,7 +109,6 @@ class Locations:
 
         # where configuration files are kept
         "configdir": "${BASEDIR}/RTCP/Run/src",
-	"storage_configdir": "${BASEDIR}/installed/%s/etc" % (self.buildvars["Storage"],),
 
 	"storage": "${BASEDIR}/installed/%s/bin/%s" % (self.buildvars["Storage"],self.executables["Storage"]),
 
