@@ -206,7 +206,7 @@ void MainCU_Processes_UpdateProcessesList() {
     } else {
       // if choosen observation gather all involved processes on chosen station and CEP
       // get the real name from the selected Observation
-      obsDP="MCU001:"+claimManager_nameToRealName("LOFAR_ObsSW_"+selectedObservation); 
+      obsDP=MainDBName+claimManager_nameToRealName("LOFAR_ObsSW_"+selectedObservation); 
       //select all Ctrl under LOFAR_PermSW_'selectedObservation'
       dpQuery("SELECT '_original.._value' FROM '"+obsDP+"_*.status.state' ", tab);
       LOG_TRACE("MainCU_Processes:updateProcessesList|MainCu controllers Found: "+ tab);

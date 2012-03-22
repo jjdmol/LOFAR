@@ -98,6 +98,12 @@ void navigator_handleEventInitialize()
   if (getSystemName() != MainDBName) {
     MainDBName         = getSystemName();
     MainDBID           = getSystemId();
+    CEPDBName          = MainDBName;
+    strreplace(CEPDBName,"MCU","CCU");
+    //the Database name & number for the Mainsystem (== MainCU)
+    global string   MainDBName        = "MCU001:";
+    global string   CEPDBName         = "CCU001:";
+global unsigned MainDBID          = 61;
     g_standAlone       = true;    // can be used to check if we are in standalone mode (== station only mode)
     g_currentDatapoint      = MainDBName+"LOFAR";
     g_lastHardwareDatapoint = MainDBName+"LOFAR";
