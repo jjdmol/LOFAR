@@ -306,8 +306,9 @@ static void master_thread()
 
 #if defined HAVE_BGP
     // TODO: how to figure these out?
-    nrPsets = 64;
     nrCNcoresInPset = 64;
+
+    // nrPsets is communicated by MPI
 #else
     const char *nr_psets  = getenv("NR_PSETS");
     const char *pset_size = getenv("PSET_SIZE");
