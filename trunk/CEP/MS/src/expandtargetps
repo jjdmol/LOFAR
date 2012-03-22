@@ -7,10 +7,23 @@ if __name__ == "__main__":
     if len(sys.argv) < 3:
         print ''
         print 'Insufficient arguments; run as:'
-        print '    expandtargetps parsetin parsetout'
+        print '    expandtargetps parsetin parsetout [mspattern [pdbpattern [outname]]]'
         print ''
         sys.exit(1)
+    # See if the MS pattern is given.
+    msname = 'msin'
+    if len(sys.argv) > 3  and  len(sys.argv[3]) > 0:
+        msname = [sys.argv[3]]
+    # See if the ParmDB pattern is given.
+    pdbname = 'pdbin'
+    if len(sys.argv) > 4  and  len(sys.argv[4]) > 0:
+        pdbname = [sys.argv[4]]
+    # See if the MS output name is given.
+    outname = 'msout'
+    if len(sys.argv) > 5  and  len(sys.argv[5]) > 0:
+        outname = [sys.argv[5]]
+    # Expand the parset.
     lmt.expandps (sys.argv[1], sys.argv[2],
-                  {'in': [['msin', 'Input_Correlated'],
-                          ['pbin', 'Input_InstrumentModel']],
-                   'out': [['msout', 'Output_Correlated']]})
+                  {'in': [[msname, 'Input_Correlated'],
+                          [pdbname, 'Input_InstrumentModel']],
+                   'out': [[outname, 'Output_Correlated']]})
