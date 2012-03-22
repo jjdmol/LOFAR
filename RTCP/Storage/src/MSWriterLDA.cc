@@ -295,9 +295,9 @@ namespace LOFAR
       BeamCoordinates pbeamDirs = parset.pencilBeams(sapNr);
       BeamCoord3D pbeamDir = pbeamDirs[beamNr];
       beam.pointRA()       .set((beamDir[0] + pbeamDir[0]) * 180.0 / M_PI);
-      beam.pointDEC()      .set((beamDir[0] + pbeamDir[0]) * 180.0 / M_PI);
+      beam.pointDEC()      .set((beamDir[1] + pbeamDir[1]) * 180.0 / M_PI);
       beam.pointOffsetRA() .set(pbeamDir[0] * 180.0 / M_PI);
-      beam.pointOffsetDEC().set(pbeamDir[0] * 180.0 / M_PI);
+      beam.pointOffsetDEC().set(pbeamDir[1] * 180.0 / M_PI);
 
       vector<double> beamCenterFrequencies(nrSubbands, 0.0);
 
