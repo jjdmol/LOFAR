@@ -7,9 +7,34 @@ if __name__ == "__main__":
     if len(sys.argv) < 3:
         print ''
         print 'Insufficient arguments; run as:'
-        print '    expandcalps parsetin parsetout'
+        print '    expandcalps parsetin parsetout [mspattern, [pdbname]]'
+        print ''
+        print ' If an mspattern is given, it must be the name of a directory'
+        print ' containing the MeasurementSets or a glob-pattern matching the'
+        print ' MeasurementSets to process. If a directory name is given, the'
+        print ' *.MS will be added to make it a glob pattern.'
+        print ' If no or an empty mspattern is given, it means that the msin'
+        print ' parameter in the input parset defines the glob-pattern for'
+        print ' the MeasurementSets to process.'
+        print ''
+        print ' If a pdbname is given, it must define the names of the output'
+        print ' ParmDBs using placeholders like <BN>.'
+        print ' If no or an empty pdbname is given, the pdbout parameter in the'
+        print ' input parset defines the output names'
         print ''
         sys.exit(1)
+    # See if the MS pattern is given.
+    inname = 'msin'
+    if len(sys.argv) > 3  and  len(sys.argv[3]) > 0:
+        # Add *.MS if no glob pattern given. Turn it into a list.
+        inname = [lmt.addfileglob (sys.argv[3], '*.MS')]
+    # See if the ParmDB name is given.
+    outname = 'pdbout'
+    if len(sys.argv) > 4  and  len(sys.argv[4]) > 0:
+        outname = [sys.argv[4]]
+    # Expand the parset.
+    print inname, outname
+    exit
     lmt.expandps (sys.argv[1], sys.argv[2],
-                  {'in': [['msin', 'Input_Correlated']],
-                   'out': [['pbout', 'Output_InstrumentModel']]})
+                  {'in': [(inname, 'Input_Correlated')],
+                   'out': [(outname, 'Output_InstrumentModel')]})

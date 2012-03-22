@@ -142,6 +142,28 @@ def movemss (srcPattern, dstPattern, userName, bandsPerBeam=80, dryrun=False):
                     os.system (cmd)
     print nInPlace, "source files are already on the correct destination mode"
 
+def addfileglob (filename, pattern):
+    """ If needed, add the glob pattern to the filename
+
+    If the basename of the filename does not contain glob characters
+    (*, ?, [], or {}), the glob pattern is added.
+
+    """
+    hasglob = False
+    if filename[-1] == '/':
+        filename = filename[:-1]
+    else:
+        import os
+        bname = os.path.basename(filename)
+        hasglob = False
+        for c in '*?[{':
+            if c in bname:
+                hasglob = True
+                break
+    if hasglob:
+        return filename
+    return filename + '/' + pattern
+
 def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0):
     """ Expand dataset names in a parset file
 
@@ -166,15 +188,21 @@ def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0):
         The parameter in the input parset defines one or more filename glob
         patterns. Usually one pattern will be used, but multiple are needed
         for e.g. the imaging pipeline (a pattern per observation slice).
+        Instead of a parameter name, it is also possible to directly give a
+        list of glob patterns directly. Thus passing a string means a parameter
+        name, while a list means glob patterns.
       | 'out' maps to a list of pairs. Each pair defines the names of the
         parameter in the input and output parset. The parameter value in the
-        input parset can contain the following cexecms-like place holders:
+        input parset must define the location of the output. It can contain
+        the following cexecms-like placeholders:
         | <DN>  is the directory name of the input dataset
         | <BN>  is the basename of the input dataset
         | <BN.> is the basename till the first dot (thus without the extension)
         | <.BN> is the basename after the first dot (thus the extension)
         | <SEQ> is a 3 digit sequence number (000, 001, ...) useful for the
                 imaging pipeline.
+        Instead of an input parameter name, it is possible to directly give
+        the output location. by passing it as a list containing one element.
      nsubbands
       If > 0, the number of subbands in a subband group
       (i.e., the number of subbands to combine in an image).
@@ -238,10 +266,10 @@ def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0):
     # Open parset and get all keywords.
     ps = lofar.parameterset.parameterset (parsetin)
     pskeys = ps.keys()
-    # Write nsubbands parameter if given; otherwise set to 1.
-    if nsubbands > 0:
-        ps.add ('nsubbands', str(nsubbands));
-    else:
+    # See if nsubbands parameter is given; otherwise set to 1.
+    havesubbands = true
+    if nsubbands <= 0:
+        havesubbands = false
         nsubbands = 1
         # Check and initialize.
     if nodeindex < 0  or  nodeindex >= nsubbands:
@@ -255,11 +283,15 @@ def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0):
     inkeys = keymap["in"]
     nrproc = 1
     for (keyin,keyout) in inkeys:
-        # Find keyin in the parset
-        if keyin not in pskeys:
-            raise KeyError, "keyword " + keyin + " not found in parset " + parsetin
-        # Get the file name patterns/
-        patterns = ps.getStringVector(keyin)
+        # If a string, find keyin in the parset.
+        # Otherwise it defines the glob patterns.
+        if isinstance(keyin, str):
+            if keyin not in pskeys:
+                raise KeyError, "keyword " + keyin + " not found in parset " + parsetin
+            # Get the file name pattern
+            patterns = ps.getStringVector(keyin)
+        else:
+            patterns = keyin
         locs  = []
         names = []
         for patt in patterns:
@@ -285,6 +317,11 @@ def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0):
         ps.add (newkey + '.filenames', str(names));
         ps.remove (keyin)
 
+    # Write nsubbands if needed.
+    if havesubbands:
+        ps.add ('subbands_per_image', str(nsubbands));
+        ps.add ('slices_per_image', str(nslice));
+
     # Process output keywords if they are present.
     if 'out' in keymap:
         if len(filenames) == 0:
@@ -292,9 +329,14 @@ def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0):
         inkeys = keymap["out"]
         nrproc += 1
         for (keyin,keyout) in inkeys:
-            if keyin not in pskeys:
-                raise KeyError, "keyword " + keyin + " not found in parset " + parsetin
-            name = ps.getString(keyin)
+            if isinstance(keyin, str):
+                if keyin not in pskeys:
+                    raise KeyError, "keyword " + keyin + " not found in parset " + parsetin
+                name = ps.getString(keyin)
+            else:
+                if len(keyin) != 1:
+                    raise KeyError, "Output key " + keyin + " is not a string, thus should be a sequence of length 1"
+                name = keyin[0];
             locs  = []
             names = []
             # Create output for all input names replacing tags like <BN>.
