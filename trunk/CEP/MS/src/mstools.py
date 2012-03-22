@@ -267,9 +267,9 @@ def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0):
     ps = lofar.parameterset.parameterset (parsetin)
     pskeys = ps.keys()
     # See if nsubbands parameter is given; otherwise set to 1.
-    havesubbands = true
+    havesubbands = True
     if nsubbands <= 0:
-        havesubbands = false
+        havesubbands = False
         nsubbands = 1
         # Check and initialize.
     if nodeindex < 0  or  nodeindex >= nsubbands:
@@ -290,13 +290,14 @@ def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0):
                 raise KeyError, "keyword " + keyin + " not found in parset " + parsetin
             # Get the file name pattern
             patterns = ps.getStringVector(keyin)
+            ps.remove (keyin)
         else:
             patterns = keyin
         locs  = []
         names = []
         for patt in patterns:
             # Get all nodes and file names
-            (nodes,files) = findDirs(ps.getString(keyin))
+            (nodes,files) = findDirs(patt)
             ##(nodes,files) = (['locus1','locus2'], ['/data/L1/L1a.MS','/data/L1/L1b.MS'])
             # Split into location (node:dir/) and basename.
             for i in range(len(files)):
@@ -315,7 +316,6 @@ def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0):
         newkey = 'ObsSW.Observation.DataProducts.' + keyout
         ps.add (newkey + '.locations', str(locs));
         ps.add (newkey + '.filenames', str(names));
-        ps.remove (keyin)
 
     # Write nsubbands if needed.
     if havesubbands:
@@ -333,6 +333,7 @@ def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0):
                 if keyin not in pskeys:
                     raise KeyError, "keyword " + keyin + " not found in parset " + parsetin
                 name = ps.getString(keyin)
+                ps.remove (keyin)
             else:
                 if len(keyin) != 1:
                     raise KeyError, "Output key " + keyin + " is not a string, thus should be a sequence of length 1"
@@ -361,7 +362,6 @@ def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0):
             newkey = 'ObsSW.Observation.DataProducts.' + keyout
             ps.add (newkey + '.locations', str(locs));
             ps.add (newkey + '.filenames', str(names));
-            ps.remove (keyin)
 
     # Check if all keymap keywords have been processed.
     if nrproc != len(keymap):
