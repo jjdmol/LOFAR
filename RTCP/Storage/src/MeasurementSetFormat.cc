@@ -272,11 +272,16 @@ void MeasurementSetFormat::fillField(unsigned subarray)
   // Beam direction
   MVDirection radec(Quantity(itsPS.getBeamDirection(subarray)[0], "rad"), 
 		    Quantity(itsPS.getBeamDirection(subarray)[1], "rad"));
-  MDirection::Types beamDirectionType; // By default this is J2000
+  MDirection::Types beamDirectionType;
   MDirection::getType(beamDirectionType, itsPS.getBeamDirectionType(subarray));
   MDirection indir(radec, beamDirectionType);
   casa::Vector<MDirection> outdir(1);
   outdir(0) = indir;
+
+  // AnaBeam direction type
+  MDirection::Types anaBeamDirectionType;
+  if (itsPS.haveAnaBeam())
+    MDirection::getType(anaBeamDirectionType, itsPS.getAnaBeamDirectionType());
 
   // Put the direction into the FIELD subtable.
   MSLofarField msfield = itsMS->field();
@@ -284,7 +289,12 @@ void MeasurementSetFormat::fillField(unsigned subarray)
 
   uInt rownr = msfield.nrow();
   ASSERT(rownr == 0); // can only set directionType on first row, so only one field per MeasurementSet for now
-  msfieldCol.setDirectionRef(beamDirectionType);
+
+  if (itsPS.haveAnaBeam())
+    msfieldCol.setDirectionRef(beamDirectionType, anaBeamDirectionType);
+  else
+    msfieldCol.setDirectionRef(beamDirectionType);
+
   msfield.addRow();
   msfieldCol.name().put(rownr, "BEAM_" + String::toString(subarray));
   msfieldCol.code().put(rownr, "");
@@ -302,9 +312,6 @@ void MeasurementSetFormat::fillField(unsigned subarray)
     // Analog beam direction
     MVDirection radec_AnaBeamDirection(Quantity(itsPS.getAnaBeamDirection()[0], "rad"),
   				       Quantity(itsPS.getAnaBeamDirection()[1], "rad"));
-    MDirection::Types anaBeamDirectionType; // By default this is J2000
-    MDirection::getType(anaBeamDirectionType, itsPS.getAnaBeamDirectionType());
-    ASSERT(anaBeamDirectionType == beamDirectionType); // we can only have one type in the direction column, since it is stored in the header
     MDirection anaBeamDirection(radec_AnaBeamDirection, anaBeamDirectionType);
     msfieldCol.tileBeamDirMeasCol().put(rownr, anaBeamDirection);
   } else {
