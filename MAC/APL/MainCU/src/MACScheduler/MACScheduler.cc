@@ -470,7 +470,7 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 
 		// update our administration
 		LOG_DEBUG_STR("Removing observation " << quitedEvent.cntlrName << " from activeList");
-//		_removeActiveObservation(quitedEvent.cntlrName);
+		itsControllerMap.erase(quitedEvent.cntlrName);
 		break;
 	}
 

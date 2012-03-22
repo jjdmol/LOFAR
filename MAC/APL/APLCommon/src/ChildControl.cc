@@ -711,6 +711,7 @@ void ChildControl::_processActionList()
 		case CTState::CONNECTED: 	// start program, wait for CONNECTED msgs of child
 			{
 				// first check if connection with StartDaemon is made
+				_printStartDaemonMap("Search");
 				SDiter	startDaemon = itsStartDaemonMap.find(action->hostname);
 				if (startDaemon == itsStartDaemonMap.end() || 
 											!startDaemon->second->isConnected()) {
@@ -723,7 +724,9 @@ void ChildControl::_processActionList()
 														MAC_SVCMASK_STARTDAEMON,
 														GCFPortInterface::SAP, 
 														STARTDAEMON_PROTOCOL);
+						ASSERTSTR(itsStartDaemonMap[action->hostname], "No startDaemonPort for host " << action->hostname);
 						itsStartDaemonMap[action->hostname]->setHostName(action->hostname);
+						_printStartDaemonMap("Added");
 					}
 					itsStartDaemonMap[action->hostname]->open();
 					// leave action in list until connection with SD is made
@@ -883,6 +886,22 @@ void ChildControl::_startDaemonOffline(const string&	hostname)
 	return;
 }
 
+//
+// _printStartDaemonMap()
+//
+void ChildControl::_printStartDaemonMap(const string& actionName)
+{
+	LOG_DEBUG_STR("_printStartDaemonMap(" << actionName <<")");
+
+	SDiter	iter  = itsStartDaemonMap.begin();
+	SDiter	SDend = itsStartDaemonMap.end();
+	while (iter != SDend) {
+		GCFTCPPort*	port = iter->second;
+		LOG_DEBUG_STR("SD("<< port->getName() << "):" << iter->second->getPortNumber() << "@" 
+				<< iter->second->getHostName() << (port->isConnected() ? "" : " NOT") << " connected");
+		++iter;
+	}
+}
 
 //
 // _setEstablishedState (name, state, time)
@@ -1203,6 +1222,7 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 			}
 #endif
 			// DISCONNECT can also be of a StartDaemon we can't reach
+			_printStartDaemonMap("Disconnect");
 			SDiter	startDaemon = itsStartDaemonMap.begin();
 			SDiter	SDend	 	= itsStartDaemonMap.end();
 			while (startDaemon != SDend) {
