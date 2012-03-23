@@ -27,7 +27,6 @@
 
 #include <AOFlagger/quality/defaultstatistics.h>
 #include <AOFlagger/quality/histogramcollection.h>
-#include <AOFlagger/quality/histogramtablesformatter.h>
 #include <AOFlagger/quality/qualitytablesformatter.h>
 #include <AOFlagger/quality/statisticscollection.h>
 #include <AOFlagger/quality/statisticsderivator.h>
@@ -40,14 +39,190 @@
 
 #ifdef HAS_LOFARSTMAN
 #include <LofarStMan/Register.h>
+#include <AOFlagger/quality/histogramtablesformatter.h>
 #endif // HAS_LOFARSTMAN                                                       
+
+void reportProgress(unsigned step, unsigned totalSteps)
+{
+	const unsigned twoPercent = (totalSteps+49)/50;
+	if((step%twoPercent)==0)
+	{
+		if(((step/twoPercent)%5)==0)
+			std::cout << (100*step/totalSteps) << std::flush;
+		else
+			std::cout << '.' << std::flush;
+	}
+}
+
+enum CollectingMode
+{
+	CollectDefault,
+	CollectHistograms
+};
 
 void actionCollect(const std::string &filename, enum CollectingMode mode, StatisticsCollection &statisticsCollection, HistogramCollection &histogramCollection)
 {
+	MeasurementSet *ms = new MeasurementSet(filename);
+	const unsigned polarizationCount = ms->GetPolarizationCount();
+	const unsigned bandCount = ms->BandCount();
+	const bool ignoreChannelZero = ms->ChannelZeroIsRubish();
+	const std::string stationName = ms->GetStationName();
+	BandInfo *bands = new BandInfo[bandCount];
+	double **frequencies = new double*[bandCount];
+	unsigned totalChannels = 0;
+	for(unsigned b=0;b<bandCount;++b)
+	{
+		bands[b] = ms->GetBandInfo(b);
+		frequencies[b] = new double[bands[b].channelCount];
+		totalChannels += bands[b].channelCount;
+		for(unsigned c=0;c<bands[b].channelCount;++c)
+		{
+			frequencies[b][c] = bands[b].channels[c].frequencyHz;
+		}
+	}
+	delete ms;
+	
+	std::cout
+		<< "Polarizations: " << polarizationCount << '\n'
+		<< "Bands: " << bandCount << '\n'
+		<< "Channels/band: " << (totalChannels / bandCount) << '\n'
+		<< "Name of obseratory: " << stationName << '\n';
+	if(ignoreChannelZero)
+		std::cout << "Channel zero will be ignored, as this looks like a LOFAR data set with bad channel 0.\n";
+	else
+		std::cout << "Channel zero will be included in the statistics, as it seems that channel 0 is okay.\n";
+	
+	// Initialize statisticscollection
+	statisticsCollection.SetPolarizationCount(polarizationCount);
+	if(mode == CollectDefault)
+	{
+		for(unsigned b=0;b<bandCount;++b)
+		{
+			if(ignoreChannelZero)
+				statisticsCollection.InitializeBand(b, (frequencies[b]+1), bands[b].channelCount-1);
+			else
+				statisticsCollection.InitializeBand(b, frequencies[b], bands[b].channelCount);
+		}
+	}
+	// Initialize Histograms collection
+	histogramCollection.SetPolarizationCount(polarizationCount);
+
+	// get columns
+	casa::Table table(filename, casa::Table::Update);
+	const char *dataColumnName = "DATA";
+	casa::ROArrayColumn<casa::Complex> dataColumn(table, dataColumnName);
+	casa::ROArrayColumn<bool> flagColumn(table, "FLAG");
+	casa::ROScalarColumn<double> timeColumn(table, "TIME");
+	casa::ROScalarColumn<int> antenna1Column(table, "ANTENNA1"); 
+	casa::ROScalarColumn<int> antenna2Column(table, "ANTENNA2");
+	casa::ROScalarColumn<int> windowColumn(table, "DATA_DESC_ID");
+	
+	std::cout << "Collecting statistics..." << std::endl;
+	
+	const unsigned nrow = table.nrow();
+	for(unsigned row = 0; row!=nrow; ++row)
+	{
+		const double time = timeColumn(row);
+		const unsigned antenna1Index = antenna1Column(row);
+		const unsigned antenna2Index = antenna2Column(row);
+		const unsigned bandIndex = windowColumn(row);
+		
+		const BandInfo &band = bands[bandIndex];
+		
+		const casa::Array<casa::Complex> dataArray = dataColumn(row);
+		const casa::Array<bool> flagArray = flagColumn(row);
+		
+		std::complex<float> *samples[polarizationCount];
+		bool *isRFI[polarizationCount];
+		for(unsigned p = 0; p < polarizationCount; ++p)
+		{
+			isRFI[p] = new bool[band.channelCount];
+			samples[p] = new std::complex<float>[band.channelCount];
+		}
+		
+		casa::Array<casa::Complex>::const_iterator dataIter = dataArray.begin();
+		casa::Array<bool>::const_iterator flagIter = flagArray.begin();
+		const unsigned startChannel = ignoreChannelZero ? 1 : 0;
+		if(ignoreChannelZero)
+		{
+			for(unsigned p = 0; p < polarizationCount; ++p)
+			{
+				++dataIter;
+				++flagIter;
+			}
+		}
+		for(unsigned channel = startChannel ; channel<band.channelCount; ++channel)
+		{
+			for(unsigned p = 0; p < polarizationCount; ++p)
+			{
+				samples[p][channel - startChannel] = *dataIter;
+				isRFI[p][channel - startChannel] = *flagIter;
+				
+				++dataIter;
+				++flagIter;
+			}
+		}
+		
+		for(unsigned p = 0; p < polarizationCount; ++p)
+		{
+			switch(mode)
+			{
+				case CollectDefault:
+					{
+						const bool origFlags = false;
+						statisticsCollection.Add(antenna1Index, antenna2Index, time, bandIndex, p, &samples[p]->real(), &samples[p]->imag(), isRFI[p], &origFlags, band.channelCount - startChannel, 2, 1, 0);
+					}
+					break;
+				case CollectHistograms:
+					histogramCollection.Add(antenna1Index, antenna2Index, p, samples[p], isRFI[p], band.channelCount - startChannel);
+					break;
+			}
+		}
+
+		for(unsigned p = 0; p < polarizationCount; ++p)
+		{
+			delete[] isRFI[p];
+			delete[] samples[p];
+		}
+		
+		reportProgress(row, nrow);
+	}
+	
+	for(unsigned b=0;b<bandCount;++b)
+		delete[] frequencies[b];
+	delete[] frequencies;
+	delete[] bands;
+	std::cout << "100\n";
 }
 
 void actionCollect(const std::string &filename, enum CollectingMode mode)
 {
+	StatisticsCollection statisticsCollection;
+	HistogramCollection histogramCollection;
+	
+	actionCollect(filename, mode, statisticsCollection, histogramCollection);
+	
+	switch(mode)
+	{
+		case CollectDefault:
+			{
+				std::cout << "Writing quality tables..." << std::endl;
+				
+				QualityTablesFormatter qualityData(filename);
+				statisticsCollection.Save(qualityData);
+			}
+			break;
+		case CollectHistograms:
+			{
+				std::cout << "Writing histogram tables..." << std::endl;
+				
+				HistogramTablesFormatter histograms(filename);
+				histogramCollection.Save(histograms);
+			}
+			break;
+	}
+	
+	std::cout << "Done.\n";
 }
 
 void actionCollectHistogram(const std::string &filename, HistogramCollection &histogramCollection)
