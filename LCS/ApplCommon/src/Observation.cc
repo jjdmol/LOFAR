@@ -77,7 +77,6 @@ Observation::Observation(const ParameterSet*		aParSet,
 	realPVSSdatapoint = aParSet->getString("_DPname","NOT_THE_REAL_DPNAME");
 
 	// Start and stop times
-#if !defined HAVE_BGL
 	try {
 		if (aParSet->isDefined(prefix+"startTime")) {
 			startTime = to_time_t(time_from_string(aParSet->getString(prefix+"startTime")));
@@ -92,7 +91,6 @@ Observation::Observation(const ParameterSet*		aParSet,
 	} catch( boost::bad_lexical_cast ) {
 		THROW( Exception, prefix << "stopTime cannot be parsed as a valid time string. Please use YYYY-MM-DD HH:MM:SS[.hhh]." );
 	}
-#endif
 
 	// stationlist(s)
 	if (aParSet->isDefined(prefix+"VirtualInstrument.stationList")) {
@@ -194,7 +192,6 @@ Observation::Observation(const ParameterSet*		aParSet,
 		newPt.directionType = aParSet->getString(beamPrefix+"directionType", "");
 		newPt.duration	    = aParSet->getInt	(beamPrefix+"duration", 0);
 		newPt.startTime 	= startTime;	// assume time of observation itself
-#if !defined HAVE_BGL
 		try {
 			string	timeStr = aParSet->getString(beamPrefix+"startTime","");
 			if (!timeStr.empty() && timeStr != "0") {
@@ -203,7 +200,6 @@ Observation::Observation(const ParameterSet*		aParSet,
 		} catch (boost::bad_lexical_cast) {
 			LOG_ERROR_STR("Starttime of pointing of beam " << beamIdx << " not valid, using starttime of observation");
 		}
-#endif
 		newBeam.pointings.push_back(newPt);
 
 		// Add TiedArrayBeam information
@@ -281,7 +277,6 @@ Observation::Observation(const ParameterSet*		aParSet,
 		newPt.directionType = aParSet->getString(beamPrefix+"directionType", "");
 		newPt.duration	    = aParSet->getInt   (beamPrefix+"duration", 0);
 		newPt.startTime 	= startTime;	// assume time of observation itself
-#if !defined HAVE_BGL
 		try {
 			string	timeStr = aParSet->getString(beamPrefix+"startTime","");
 			if (!timeStr.empty() && timeStr != "0") {
@@ -290,7 +285,6 @@ Observation::Observation(const ParameterSet*		aParSet,
 		} catch (boost::bad_lexical_cast) {
 			LOG_ERROR_STR("Starttime of pointing of analogue beam " << beamIdx << " not valid, using starttime of observation");
 		}
-#endif
 		newBeam.pointings.push_back(newPt);
 		
 		// add beam to the analogue beam vector
@@ -402,11 +396,6 @@ Observation::~Observation()
 // check if the given Observation conflicts with this one
 bool	Observation::conflicts(const	Observation&	other) const
 {
-#if defined HAVE_BGL
-	LOG_WARN("BG/P code cannot check for conflicts between observations!!!");
-	return (false);
-#endif
-
 	// if observations don't overlap they don't conflict per definition.
 	if ((other.stopTime <= startTime) || (other.startTime >= stopTime)) {
 		return (false);
@@ -707,10 +696,8 @@ ostream& Observation::print (ostream&	os) const
 	os << endl;
 	os << "Observation  : " << name << endl;
     os << "ObsID        : " << obsID << endl;
-#if !defined HAVE_BGL
     os << "starttime    : " << to_simple_string(from_time_t(startTime)) << endl;
     os << "stoptime     : " << to_simple_string(from_time_t(stopTime)) << endl;
-#endif
     os << "stations     : " << stations << endl;
 //    os << "stations     : "; writeVector(os, stations, ",", "[", "]"); os << endl;
     os << "antennaArray : " << antennaArray << endl;
@@ -737,12 +724,8 @@ ostream& Observation::print (ostream&	os) const
 		os << "nrPointings : " << beams[b].pointings.size() << endl;
 		for (size_t p = 0; p < beams[b].pointings.size(); ++p) {
 			const Pointing*		pt = &(beams[b].pointings[p]);
-#if defined HAVE_BGL
-			os << formatString("Beam[%d].pointing[%d]: %f, %f, %s\n", b, p, pt->angle1, pt->angle2, pt->directionType.c_str());
-#else
 			os << formatString("Beam[%d].pointing[%d]: %f, %f, %s, %s\n", b, p, pt->angle1, pt->angle2, 
 				pt->directionType.c_str(), to_simple_string(from_time_t(pt->startTime)).c_str());
-#endif
 		}
 		os << "nrTABs      : " << beams[b].nrTABs << endl;
 		os << "nrTABrings  : " << beams[b].nrTABrings << endl;

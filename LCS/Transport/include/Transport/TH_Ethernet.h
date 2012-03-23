@@ -24,7 +24,6 @@
 #ifndef LOFAR_TRANSPORT_TH_ETHERNET_H
 #define LOFAR_TRANSPORT_TH_ETHERNET_H
 
-#ifndef HAVE_BGL
 #ifndef USE_NO_TH_ETHERNET
 
 // \file
@@ -136,7 +135,6 @@ inline void TH_Ethernet::reset()
 
 }
 
-#endif
 #endif
 
 #endif
