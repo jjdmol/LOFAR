@@ -276,7 +276,7 @@ class LogHistogram : public Serializable
 					termCount += count;
 				}
 			}
-			return (double) ((expEstimator - 1.0L) / sqrtl(termCount));
+			return (double) ((-expEstimator - 1.0L) / sqrtl(termCount));
 		}
 		
 		double NormalizedSlopeOffset(double startAmplitude, double endAmplitude, double slope) const
@@ -391,6 +391,18 @@ class LogHistogram : public Serializable
 				const double b = (i->binStart + i->binEnd) * 0.5; // TODO somewhat inefficient...
 				getBin(getCentralAmplitude(b)).count = (unsigned long) i->count;
 			}
+		}
+		
+		void Rescale(double factor)
+		{
+			std::map<double, AmplitudeBin> newAmplitudes;
+			std::map<double, AmplitudeBin>::iterator position = newAmplitudes.begin();
+			for(std::map<double, AmplitudeBin>::const_iterator i=_amplitudes.begin();
+					i!=_amplitudes.end();++i)
+			{
+				position = newAmplitudes.insert(position, std::pair<double, AmplitudeBin>(i->first * factor, i->second));
+			}
+			_amplitudes = newAmplitudes;
 		}
 		
 		class const_iterator

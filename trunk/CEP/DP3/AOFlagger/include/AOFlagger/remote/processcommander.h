@@ -57,6 +57,7 @@ class ProcessCommander
 			_histogramCollection = destHistogram;
 		}
 		void PushReadAntennaTablesTask() { _tasks.push_back(ReadAntennaTablesTask); }
+		void SetCorrectHistograms(bool correctHistograms) { _correctHistograms = correctHistograms; }
 	private:
 		enum Task { NoTask, ReadQualityTablesTask, ReadAntennaTablesTask };
 		
@@ -81,6 +82,7 @@ class ProcessCommander
 		HistogramCollection *_histogramCollection;
 		std::vector<AntennaInfo> _antennas;
 		const ClusteredObservation _observation;
+		bool _correctHistograms;
 		
 		std::vector<std::string> _errors;
 		std::deque<enum Task> _tasks;
