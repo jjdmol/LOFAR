@@ -6,7 +6,7 @@
 #
 
 # cron jobs don't set $PATH, so construct our own.
-if [ -z "$PATH"]
+if [ -z "$PATH" ]
 then
   export PATH=/bin:/usr/bin:/opt/lofar/bin
 fi
@@ -15,23 +15,38 @@ source locations.sh
 
 # source and destination for archiving
 SRCDIR="$LOGDIR"
-DESTDIR="$HOME/log-backups"
+DESTDIR="$LOGBACKUPDIR"
 
 # which file patterns to archive
 PATTERNS=("CNProg.log.*" "IONProc.log.*" "*.parset")
 
-# how old the last change to the file has to be
-MINAGE="24 * 60 * 60"
+# how old the last change to the file has to be (seconds)
+MINAGE="7 * 24 * 60 * 60"
+
+
+
 
 # expand patterns like "foo.*" to nothing if no file matches it
 shopt -s nullglob
 
-# make sure the destination exists
+# create a sane environment
+if [ "$SRCDIR" == "$DESTDIR" ]
+then
+  echo "Nothing to do: SRCDIR == DESTDIR == $SRCDIR"
+  exit
+fi
+
 mkdir -p $DESTDIR || exit
 
 # make a staging directory to avoid racing
 # conditions if this script runs twice simultaneously
 STAGEDIR=`mktemp -d "$SRCDIR/LogArchiver.sh-staging-XXXXXX"`
+
+if [ -z "$STAGEDIR" ]
+then
+  echo "Could not create staging directory inside $SRCDIR"
+  exit
+fi
 
 function age {
   # prints the age of the provided file, in seconds
