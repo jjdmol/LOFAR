@@ -101,7 +101,8 @@ void NormalizeVarianceAction::Perform(ArtifactSet &artifacts, ProgressListener &
 	std::map<double, double>::const_iterator windowRightSideIterator = _stddevs.begin();
 	const double startTime = windowRightSideIterator->first;
 	do {
-		window.Add(windowRightSideIterator->second);
+		if(std::isfinite(windowRightSideIterator->second))
+			window.Add(windowRightSideIterator->second);
 		++windowRightSideIterator;
 	} while(windowRightSideIterator->first - startTime < halfWindowTime);
 	
@@ -111,7 +112,8 @@ void NormalizeVarianceAction::Perform(ArtifactSet &artifacts, ProgressListener &
 		windowRightSideIterator->first - startTime < _medianFilterSizeInS)
 	{
 		correctDataUpTo(data, dataTimeIndex, windowRightSideIterator->first, observationTimes, window.Median());
-		window.Add(windowRightSideIterator->second);
+		if(std::isfinite(windowRightSideIterator->second))
+			window.Add(windowRightSideIterator->second);
 		++windowRightSideIterator;
 	}
 	
@@ -122,8 +124,10 @@ void NormalizeVarianceAction::Perform(ArtifactSet &artifacts, ProgressListener &
 	{
 		correctDataUpTo(data, dataTimeIndex, windowRightSideIterator->first, observationTimes, window.Median());
 		
-		window.Add(windowRightSideIterator->second);
-		window.Remove(windowLeftSideIterator->second);
+		if(std::isfinite(windowRightSideIterator->second))
+			window.Add(windowRightSideIterator->second);
+		if(std::isfinite(windowLeftSideIterator->second))
+			window.Remove(windowLeftSideIterator->second);
 		
 		++windowRightSideIterator;
 		++windowLeftSideIterator;
@@ -133,7 +137,8 @@ void NormalizeVarianceAction::Perform(ArtifactSet &artifacts, ProgressListener &
 	while(windowLeftSideIterator != _stddevs.end() && windowLeftSideIterator->first + halfWindowTime < endTime)
 	{
 		correctDataUpTo(data, dataTimeIndex, windowLeftSideIterator->first + _medianFilterSizeInS, observationTimes, window.Median());
-		window.Remove(windowLeftSideIterator->second);
+		if(std::isfinite(windowLeftSideIterator->second))
+			window.Remove(windowLeftSideIterator->second);
 		++windowLeftSideIterator;
 	}
 	
