@@ -19,7 +19,7 @@ if __name__ == "__main__":
         print ''
         print ' If an instrname is given, it must define the names of the'
         print ' output instrument model tables. It can contain the placeholders'
-        print ' <DN>, <BN>, <BN.>, <BN_.>, <.BN>, and/or <SEQ>.'
+        print ' <DN>, <BN>, <BN.>, <.BN>, <SEQ>, <OBSID>, <SAP>, <SB>, <TYPE>.'
         print ' If no or an empty instrname is given, the instrout parameter in'
         print ' the input parset defines the output names'
         print ''
