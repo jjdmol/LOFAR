@@ -106,7 +106,7 @@ def movemss (srcPattern, dstPattern, userName, bandsPerBeam=80, dryrun=False):
     # One dict per name-node, one dict only per name.
     srcNodeMap = {}
     srcMap = {}
-    nInPlace = 0;
+    nInPlace = 0
     for i in range(len(srcFiles)):
         srcNodeMap[srcHosts[i] + '-' + srcFiles[i]] = i
         srcMap[srcFiles[i]] = i
@@ -311,7 +311,7 @@ def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0):
             # Split into location (node:dir/) and basename.
             for (file,dir,node) in filesnodes:
                 locs.append  (node + ':' + dir + '/')
-                names.append (file);
+                names.append (file)
         nf = len(names)
         if nfiles < 0:
             # First input keyword
@@ -323,13 +323,13 @@ def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0):
             raise ValueError, "Number of files found for " + key + " differs from previous key with input names"
         # Add prefix to output parameter name
         newkey = 'ObsSW.Observation.DataProducts.' + keyout
-        ps.add (newkey + '.locations', str(locs));
-        ps.add (newkey + '.filenames', str(names));
+        ps.add (newkey + '.locations', str(locs))
+        ps.add (newkey + '.filenames', str(names))
 
     # Write nsubbands if needed.
     if havesubbands:
-        ps.add ('subbands_per_image', str(nsubbands));
-        ps.add ('slices_per_image', str(nslice));
+        ps.add ('subbands_per_image', str(nsubbands))
+        ps.add ('slices_per_image', str(nslice))
 
     # Process output keywords if they are present.
     if 'out' in keymap:
@@ -346,19 +346,19 @@ def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0):
             else:
                 if len(keyin) != 1:
                     raise KeyError, "Output key " + keyin + " is not a string, thus should be a sequence of length 1"
-                name = keyin[0];
+                name = keyin[0]
             locs  = []
             names = []
             # Create output for all input names replacing tags like <BN>.
-            re0 = re.compile ('<DN>');
-            re1 = re.compile ('<BN>');
-            re2 = re.compile ('<BN\.>');
-            re3 = re.compile ('<\.BN>');
-            re4 = re.compile ('<SEQ>');
-            re5 = re.compile ('<OBSID>');
-            re6 = re.compile ('<SAP>');
-            re7 = re.compile ('<SB>');
-            re8 = re.compile ('<TYPE>');
+            re0 = re.compile ('<DN>')
+            re1 = re.compile ('<BN>')
+            re2 = re.compile ('<BN\.>')
+            re3 = re.compile ('<\.BN>')
+            re4 = re.compile ('<SEQ>')
+            re5 = re.compile ('<OBSID>')
+            re6 = re.compile ('<SAP>')
+            re7 = re.compile ('<SB>')
+            re8 = re.compile ('<TYPE>')
             for i in range(len(filenames) / (nslice*nsubbands)):
                 inx = i*nslice*nsubbands + nodeindex
                 locparts = locations[inx].split(':', 1)
@@ -384,8 +384,8 @@ def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0):
                 names.append (os.path.basename(nm))
                 locs.append (locparts[0] + ':' + os.path.dirname(nm) + '/')
             newkey = 'ObsSW.Observation.DataProducts.' + keyout
-            ps.add (newkey + '.locations', str(locs));
-            ps.add (newkey + '.filenames', str(names));
+            ps.add (newkey + '.locations', str(locs))
+            ps.add (newkey + '.filenames', str(names))
 
     # Check if all keymap keywords have been processed.
     if nrproc != len(keymap):
