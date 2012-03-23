@@ -9,6 +9,7 @@ install(PROGRAMS
   BGPPartition.sh
   CNProcessing.sh
   IONProcessing.sh
+  LogArchiver.sh
   controller.sh
   gracefullyStopBGProcessing.sh
   ${CMAKE_CURRENT_BINARY_DIR}/locations.sh
