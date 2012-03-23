@@ -13,6 +13,7 @@ then
   ETCDIR=/opt/lofar/etc
 
   LOGDIR=$HOME/log
+  LOGBACKUPDIR=/globalhome/lofarsystem/log
   LOGPARAMS="-s ccu001:24500"
 else
   ISPRODUCTION=0
@@ -22,6 +23,7 @@ else
   ETCDIR=@CMAKE_INSTALL_PREFIX@/etc
 
   LOGDIR=$HOME/projects/LOFAR/log
+  LOGBACKUPDIR=$LOGDIR
   LOGPARAMS="-v"
 fi
 
