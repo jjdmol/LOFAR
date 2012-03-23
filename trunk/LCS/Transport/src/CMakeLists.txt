@@ -4,7 +4,6 @@ include(LofarPackageVersion)
 
 lofar_add_library(transport
   Package__Version.cc
-  BGLConnection.cc
   Connection.cc
   ConnectionPool.cc
   CSConnection.cc
