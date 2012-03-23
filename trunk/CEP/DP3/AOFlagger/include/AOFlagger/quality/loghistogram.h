@@ -400,7 +400,7 @@ class LogHistogram : public Serializable
 			for(std::map<double, AmplitudeBin>::const_iterator i=_amplitudes.begin();
 					i!=_amplitudes.end();++i)
 			{
-				position = newAmplitudes.insert(position, std::pair<double, AmplitudeBin>(i->first * factor, i->second));
+				position = newAmplitudes.insert(position, std::pair<double, AmplitudeBin>(getCentralAmplitude(i->first * factor), i->second));
 			}
 			_amplitudes = newAmplitudes;
 		}
