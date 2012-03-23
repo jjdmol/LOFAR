@@ -378,9 +378,9 @@ def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0):
                 if len(bnparts) > 1:
                     nm = re6.sub(bnparts[1], nm) # <SAP> = basename till next _
                 if len(bnparts) > 2:
-                    nm = re6.sub(bnparts[2], nm) # <SB>  = basename till next _
+                    nm = re7.sub(bnparts[2], nm) # <SB>  = basename till next _
                 if len(bnparts) > 3:
-                    nm = re6.sub(bnparts[3], nm) # <TYPE> = rest of basename
+                    nm = re8.sub(bnparts[3], nm) # <TYPE> = rest of basename
                 names.append (os.path.basename(nm))
                 locs.append (locparts[0] + ':' + os.path.dirname(nm) + '/')
             newkey = 'ObsSW.Observation.DataProducts.' + keyout

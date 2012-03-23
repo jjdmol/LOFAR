@@ -28,18 +28,19 @@ if __name__ == "__main__":
         print ''
         print 'Insufficient arguments; run as:'
         print '    expandimageps -n nsubbands -i nodeindex'
-        print '                  parsetin parsetout [mspattern [imageout]]'
+        print '                  parsetin parsetout [mspatterns [imageout]]'
         print '        nsubbands    number of subbands in a single image'
         print '                     default = 10'
         print '        nodeindex    subband whose node to use to run the imaging pipeline on'
         print '                     default = 0'
         print ''
-        print ' If an mspattern is given, it must be the name of a directory'
-        print ' containing the MeasurementSets or a glob-pattern matching the'
+        print ' mspatterns is a list of one or more names separated by commas'
+        print ' If given, it must be the name(s) of directories containing'
+        print ' the MeasurementSets and/or glob-patterns matching the'
         print ' MeasurementSets to process. If a directory name is given,'
         print ' *.MS will be added to make it a glob pattern.'
         print ' If no or an empty mspattern is given, it means that the msin'
-        print ' parameter in the input parset defines the glob-pattern for'
+        print ' parameter in the input parset defines the glob-patterns for'
         print ' the MeasurementSets to process.'
         print ''
         print ' If an outname is given, it must define the names of the'
@@ -60,13 +61,15 @@ if __name__ == "__main__":
     # See if the MS pattern is given.
     msname = 'msin'
     if len(sys.argv)-starg > 2  and  len(sys.argv[starg+2]) > 0:
-        # Add *.MS if no glob pattern given. Turn it into a list.
-        msname = [lmt.addfileglob (sys.argv[starg+2], '*.MS')]
+        # Split into parts.
+        names = sys.argv[starg+2].split(',')
+        # Add *.MS if no glob pattern given.
+        msnames = [lmt.addfileglob(name, '*.MS') for name in names]
     # See if the MS output name is given.
     outname = 'imgout'
     if len(sys.argv)-starg > 3  and  len(sys.argv[starg+3]) > 0:
         outname = [sys.argv[starg+3]]
     lmt.expandps (sys.argv[starg], sys.argv[starg+1],
-                  {'in': [[msname, 'Input_Correlated']],
+                  {'in': [[msnames, 'Input_Correlated']],
                    'out': [[outname, 'Output_SkyImage']]},
                    nsubbands, nodeindex)
