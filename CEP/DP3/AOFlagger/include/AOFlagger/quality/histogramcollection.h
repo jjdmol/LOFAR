@@ -172,6 +172,21 @@ class HistogramCollection : public Serializable
 				newCollection->add(*this, p, 0);
 			return newCollection;
 		}
+		
+		void Rescale(double factor)
+		{
+			for(unsigned p=0;p<_polarizationCount;++p)
+			{
+				for(std::map<AntennaPair, LogHistogram*>::iterator i=_totalHistograms[p].begin(); i!=_totalHistograms[p].end(); ++i)
+				{
+					i->second->Rescale(factor);
+				}
+				for(std::map<AntennaPair, LogHistogram*>::iterator i=_rfiHistograms[p].begin(); i!=_rfiHistograms[p].end(); ++i)
+				{
+					i->second->Rescale(factor);
+				}
+			}
+		}
 	private:
 		unsigned _polarizationCount;
 		std::map<AntennaPair, LogHistogram*> *_totalHistograms;
