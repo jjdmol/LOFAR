@@ -198,10 +198,13 @@ def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0):
         | <DN>  is the directory name of the input dataset
         | <BN>  is the basename of the input dataset
         | <BN.> is the basename till the first dot (thus without the extension)
-        | <BN_.> is the basename till last underscore before first dot
         | <.BN> is the basename after the first dot (thus the extension)
         | <SEQ> is a 3 digit sequence number (000, 001, ...) useful for the
                 imaging pipeline.
+        | <OBSID> is the obsid part of <BN.> (till first _)
+        | <SAP> is the SAP part of <BN.> (till next _)
+        | <SB> is the obsid part of <BN.> (till next _)
+        | <TYPE> is the obsid part of <BN.> (after last _)
         Instead of an input parameter name, it is possible to directly give
         the output location. by passing it as a list containing one element.
      nsubbands
@@ -300,10 +303,15 @@ def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0):
             # Get all nodes and file names
             (nodes,files) = findDirs(patt)
             ##(nodes,files) = (['locus1','locus2'], ['/data/L1/L1a.MS','/data/L1/L1b.MS'])
+            # Turn into a list of pairs (instead of pair of lists) and sort
+            filesnodes = [(os.path.basename(files[i]),
+                           os.path.dirname(files[i]),
+                           nodes[i]) for i in range(len(files))]
+            filesnodes.sort()
             # Split into location (node:dir/) and basename.
-            for i in range(len(files)):
-                locs.append  (nodes[i] + ':' + os.path.dirname(files[i]) + '/')
-                names.append (os.path.basename(files[i]));
+            for (file,dir,node) in filesnodes:
+                locs.append  (node + ':' + dir + '/')
+                names.append (file);
         nf = len(names)
         if nfiles < 0:
             # First input keyword
@@ -345,25 +353,34 @@ def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0):
             re0 = re.compile ('<DN>');
             re1 = re.compile ('<BN>');
             re2 = re.compile ('<BN\.>');
-            re3 = re.compile ('<BN_\.>');
-            re4 = re.compile ('<\.BN>');
-            re5 = re.compile ('<SEQ>');
+            re3 = re.compile ('<\.BN>');
+            re4 = re.compile ('<SEQ>');
+            re5 = re.compile ('<OBSID>');
+            re6 = re.compile ('<SAP>');
+            re7 = re.compile ('<SB>');
+            re8 = re.compile ('<TYPE>');
             for i in range(len(filenames) / (nslice*nsubbands)):
                 inx = i*nslice*nsubbands + nodeindex
                 locparts = locations[inx].split(':', 1)
                 filparts = filenames[inx].split('.', 1)
                 if len(filparts) == 1:
                     filparts.append('')
-                # Find part till last underscore in basename
-                # Entire string if no underscore found.
-                inx = filparts[0].rfind('_')
-                undpart = filparts[0][:inx]
+                # Find OBSID, SAP, SB, and TYPE (as in L12345_SAP000_SB000_uv)
+                bnparts = filparts[0].split('_', 3)
+                if len(bnparts) == 1:
+                    bnparts.append('')
                 nm = re0.sub(locparts[1], name) # <DN>  = directory name
                 nm = re1.sub(filenames[i], nm)  # <BN>  = basename
                 nm = re2.sub(filparts[0], nm)   # <BN.> = basename till first .
-                nm = re3.sub(undpart, nm)       # <BN_.>= basename till last _
-                nm = re4.sub(filparts[1], nm)   # <.BN> = basename after first .
-                nm = re5.sub('%03i'%i, nm)      # <SEQ> = seqnr
+                nm = re3.sub(filparts[1], nm)   # <.BN> = basename after first .
+                nm = re4.sub('%03i'%i, nm)      # <SEQ> = seqnr
+                nm = re5.sub(bnparts[0], nm)    # <OBSID> = basename till _
+                if len(bnparts) > 1:
+                    nm = re6.sub(bnparts[1], nm) # <SAP> = basename till next _
+                if len(bnparts) > 2:
+                    nm = re6.sub(bnparts[2], nm) # <SB>  = basename till next _
+                if len(bnparts) > 3:
+                    nm = re6.sub(bnparts[3], nm) # <TYPE> = rest of basename
                 names.append (os.path.basename(nm))
                 locs.append (locparts[0] + ':' + os.path.dirname(nm) + '/')
             newkey = 'ObsSW.Observation.DataProducts.' + keyout
