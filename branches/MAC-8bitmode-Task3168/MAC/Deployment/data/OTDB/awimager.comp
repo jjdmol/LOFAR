@@ -9,9 +9,9 @@
 
 #    name                    dir. type   unit   prun. vm   value                         constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-node   msin        	 4.0.0  development 'node constraint'  "Input MeasurementSet"
-par	autoweight	I		bool	-	10		0	FALSE	-		"Calculate weights from auto-correlations?"
+node AWimager 4.0.0  development 'node constraint'  "awimager parameters"
 
+par	autoweight	I		bool	-	10		0	FALSE	-		"Calculate weights from auto-correlations?"
 par PBCut I flt - 10 0 1e-2 - "Level below which the dirty images will be set to zero. Expressed in units of peak primary beam."
 par PsfImage I text - 10 0 "" - "Input PSF image for the cleaning"
 par RefFreq I flt Hz 10 0 "" - "Reference Frequency (Hz)"

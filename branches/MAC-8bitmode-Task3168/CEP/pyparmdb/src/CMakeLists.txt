@@ -26,8 +26,4 @@ lofar_add_bin_program(versionpyparmdb versionpyparmdb.cc)
 
 # Install Python modules
 python_install(__init__.py DESTINATION lofar/parmdb)
-python_install(gsmutils.py DESTINATION lofar)
 
-install(PROGRAMS
-  gsm.py
-  DESTINATION bin)

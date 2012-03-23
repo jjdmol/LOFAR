@@ -106,7 +106,7 @@ def movemss (srcPattern, dstPattern, userName, bandsPerBeam=80, dryrun=False):
     # One dict per name-node, one dict only per name.
     srcNodeMap = {}
     srcMap = {}
-    nInPlace = 0;
+    nInPlace = 0
     for i in range(len(srcFiles)):
         srcNodeMap[srcHosts[i] + '-' + srcFiles[i]] = i
         srcMap[srcFiles[i]] = i
@@ -142,6 +142,28 @@ def movemss (srcPattern, dstPattern, userName, bandsPerBeam=80, dryrun=False):
                     os.system (cmd)
     print nInPlace, "source files are already on the correct destination mode"
 
+def addfileglob (filename, pattern):
+    """ If needed, add the glob pattern to the filename
+
+    If the basename of the filename does not contain glob characters
+    (*, ?, [], or {}), the glob pattern is added.
+
+    """
+    hasglob = False
+    if filename[-1] == '/':
+        filename = filename[:-1]
+    else:
+        import os
+        bname = os.path.basename(filename)
+        hasglob = False
+        for c in '*?[{':
+            if c in bname:
+                hasglob = True
+                break
+    if hasglob:
+        return filename
+    return filename + '/' + pattern
+
 def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0):
     """ Expand dataset names in a parset file
 
@@ -166,15 +188,25 @@ def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0):
         The parameter in the input parset defines one or more filename glob
         patterns. Usually one pattern will be used, but multiple are needed
         for e.g. the imaging pipeline (a pattern per observation slice).
+        Instead of a parameter name, it is also possible to directly give a
+        list of glob patterns directly. Thus passing a string means a parameter
+        name, while a list means glob patterns.
       | 'out' maps to a list of pairs. Each pair defines the names of the
         parameter in the input and output parset. The parameter value in the
-        input parset can contain the following cexecms-like place holders:
+        input parset must define the location of the output. It can contain
+        the following cexecms-like placeholders:
         | <DN>  is the directory name of the input dataset
         | <BN>  is the basename of the input dataset
         | <BN.> is the basename till the first dot (thus without the extension)
         | <.BN> is the basename after the first dot (thus the extension)
         | <SEQ> is a 3 digit sequence number (000, 001, ...) useful for the
                 imaging pipeline.
+        | <OBSID> is the obsid part of <BN.> (till first _)
+        | <SAP> is the SAP part of <BN.> (till next _)
+        | <SB> is the obsid part of <BN.> (till next _)
+        | <TYPE> is the obsid part of <BN.> (after last _)
+        Instead of an input parameter name, it is possible to directly give
+        the output location. by passing it as a list containing one element.
      nsubbands
       If > 0, the number of subbands in a subband group
       (i.e., the number of subbands to combine in an image).
@@ -238,10 +270,10 @@ def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0):
     # Open parset and get all keywords.
     ps = lofar.parameterset.parameterset (parsetin)
     pskeys = ps.keys()
-    # Write nsubbands parameter if given; otherwise set to 1.
-    if nsubbands > 0:
-        ps.add ('nsubbands', str(nsubbands));
-    else:
+    # See if nsubbands parameter is given; otherwise set to 1.
+    havesubbands = True
+    if nsubbands <= 0:
+        havesubbands = False
         nsubbands = 1
         # Check and initialize.
     if nodeindex < 0  or  nodeindex >= nsubbands:
@@ -255,21 +287,31 @@ def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0):
     inkeys = keymap["in"]
     nrproc = 1
     for (keyin,keyout) in inkeys:
-        # Find keyin in the parset
-        if keyin not in pskeys:
-            raise KeyError, "keyword " + keyin + " not found in parset " + parsetin
-        # Get the file name patterns/
-        patterns = ps.getStringVector(keyin)
+        # If a string, find keyin in the parset.
+        # Otherwise it defines the glob patterns.
+        if isinstance(keyin, str):
+            if keyin not in pskeys:
+                raise KeyError, "keyword " + keyin + " not found in parset " + parsetin
+            # Get the file name pattern
+            patterns = ps.getStringVector(keyin)
+            ps.remove (keyin)
+        else:
+            patterns = keyin
         locs  = []
         names = []
         for patt in patterns:
             # Get all nodes and file names
-            (nodes,files) = findDirs(ps.getString(keyin))
+            (nodes,files) = findDirs(patt)
             ##(nodes,files) = (['locus1','locus2'], ['/data/L1/L1a.MS','/data/L1/L1b.MS'])
+            # Turn into a list of pairs (instead of pair of lists) and sort
+            filesnodes = [(os.path.basename(files[i]),
+                           os.path.dirname(files[i]),
+                           nodes[i]) for i in range(len(files))]
+            filesnodes.sort()
             # Split into location (node:dir/) and basename.
-            for i in range(len(files)):
-                locs.append  (nodes[i] + ':' + os.path.dirname(files[i]) + '/')
-                names.append (os.path.basename(files[i]));
+            for (file,dir,node) in filesnodes:
+                locs.append  (node + ':' + dir + '/')
+                names.append (file)
         nf = len(names)
         if nfiles < 0:
             # First input keyword
@@ -281,9 +323,13 @@ def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0):
             raise ValueError, "Number of files found for " + key + " differs from previous key with input names"
         # Add prefix to output parameter name
         newkey = 'ObsSW.Observation.DataProducts.' + keyout
-        ps.add (newkey + '.locations', str(locs));
-        ps.add (newkey + '.filenames', str(names));
-        ps.remove (keyin)
+        ps.add (newkey + '.locations', str(locs))
+        ps.add (newkey + '.filenames', str(names))
+
+    # Write nsubbands if needed.
+    if havesubbands:
+        ps.add ('subbands_per_image', str(nsubbands))
+        ps.add ('slices_per_image', str(nslice))
 
     # Process output keywords if they are present.
     if 'out' in keymap:
@@ -292,34 +338,54 @@ def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0):
         inkeys = keymap["out"]
         nrproc += 1
         for (keyin,keyout) in inkeys:
-            if keyin not in pskeys:
-                raise KeyError, "keyword " + keyin + " not found in parset " + parsetin
-            name = ps.getString(keyin)
+            if isinstance(keyin, str):
+                if keyin not in pskeys:
+                    raise KeyError, "keyword " + keyin + " not found in parset " + parsetin
+                name = ps.getString(keyin)
+                ps.remove (keyin)
+            else:
+                if len(keyin) != 1:
+                    raise KeyError, "Output key " + keyin + " is not a string, thus should be a sequence of length 1"
+                name = keyin[0]
             locs  = []
             names = []
             # Create output for all input names replacing tags like <BN>.
-            re0 = re.compile ('<DN>');
-            re1 = re.compile ('<BN>');
-            re2 = re.compile ('<BN\.>');
-            re3 = re.compile ('<\.BN>');
-            re4 = re.compile ('<SEQ>');
+            re0 = re.compile ('<DN>')
+            re1 = re.compile ('<BN>')
+            re2 = re.compile ('<BN\.>')
+            re3 = re.compile ('<\.BN>')
+            re4 = re.compile ('<SEQ>')
+            re5 = re.compile ('<OBSID>')
+            re6 = re.compile ('<SAP>')
+            re7 = re.compile ('<SB>')
+            re8 = re.compile ('<TYPE>')
             for i in range(len(filenames) / (nslice*nsubbands)):
                 inx = i*nslice*nsubbands + nodeindex
                 locparts = locations[inx].split(':', 1)
                 filparts = filenames[inx].split('.', 1)
                 if len(filparts) == 1:
                     filparts.append('')
+                # Find OBSID, SAP, SB, and TYPE (as in L12345_SAP000_SB000_uv)
+                bnparts = filparts[0].split('_', 3)
+                if len(bnparts) == 1:
+                    bnparts.append('')
                 nm = re0.sub(locparts[1], name) # <DN>  = directory name
                 nm = re1.sub(filenames[i], nm)  # <BN>  = basename
                 nm = re2.sub(filparts[0], nm)   # <BN.> = basename till first .
                 nm = re3.sub(filparts[1], nm)   # <.BN> = basename after first .
                 nm = re4.sub('%03i'%i, nm)      # <SEQ> = seqnr
+                nm = re5.sub(bnparts[0], nm)    # <OBSID> = basename till _
+                if len(bnparts) > 1:
+                    nm = re6.sub(bnparts[1], nm) # <SAP> = basename till next _
+                if len(bnparts) > 2:
+                    nm = re7.sub(bnparts[2], nm) # <SB>  = basename till next _
+                if len(bnparts) > 3:
+                    nm = re8.sub(bnparts[3], nm) # <TYPE> = rest of basename
                 names.append (os.path.basename(nm))
                 locs.append (locparts[0] + ':' + os.path.dirname(nm) + '/')
             newkey = 'ObsSW.Observation.DataProducts.' + keyout
-            ps.add (newkey + '.locations', str(locs));
-            ps.add (newkey + '.filenames', str(names));
-            ps.remove (keyin)
+            ps.add (newkey + '.locations', str(locs))
+            ps.add (newkey + '.filenames', str(names))
 
     # Check if all keymap keywords have been processed.
     if nrproc != len(keymap):

@@ -102,6 +102,7 @@ if __name__ == "__main__":
     parset.save()
 
     if not options.norun:
+      """
       try:
         obsDir = os.path.dirname( os.path.realpath( parset.filename ) )
         symlinkName = Locations.resolvePath( Locations.files["obssymlink"], parset )
@@ -112,6 +113,7 @@ if __name__ == "__main__":
         warning( "Failed to create symlink %s -> %s" % (symlinkName,obsDir) )
       except OSError,msg:
         warning( "Failed to create symlink %s -> %s" % (symlinkName,obsDir) )
+      """
 
       # save in separate location for IO nodes, to prevent contention for NFS drives with other processes
       parset.setFilename( Locations.resolvePath( Locations.files["parset-ion"], parset ) )

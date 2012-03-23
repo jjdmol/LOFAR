@@ -1,7 +1,6 @@
 # List of header files that will be installed.
 set(inst_HEADERS
   BaseSim.h
-  BGLConnection.h
   Connection.h
   ConnectionPool.h
   CSConnection.h

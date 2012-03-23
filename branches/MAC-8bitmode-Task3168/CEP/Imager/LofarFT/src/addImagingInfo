@@ -21,7 +21,7 @@ def addSubTable (image, msName, subName, removeColumns=[]):
     if len(subNameOut) < 6  or  subNameOut[:6] != "LOFAR_":
         subNameOut = "LOFAR_" + subNameOut
     subtab = sel.copy (image.name() + "/" + subNameOut, deep=True)
-    image.putkeyword (subNameOut, subtab)
+    image.putkeyword ("ATTRGROUPS." + subNameOut, subtab)
     print "Added subtable", subNameOut, "containing", subtab.nrows(), "rows"
     subtab.close()
     sel.close()
@@ -31,7 +31,8 @@ def addQualityTable (image):
     # Create the table using TaQL.
     tab = pt.taql ("create table '" + image.name() + "/LOFAR_QUALITY' " + 
                    "QUALITY_MEASURE string, VALUE string, FLAG_ROW bool")
-    image.putkeyword ("LOFAR_QUALITY", tab)
+    tab.flush()
+    image.putkeyword ("ATTRGROUPS." + "LOFAR_QUALITY", tab)
     tab.close()
     print "Added subtable LOFAR_QUALITY containing 0 rows"
 
@@ -63,7 +64,7 @@ def addOriginTable (image, msNames):
     subtab = pt.table (image.name() + "/" + "LOFAR_ORIGIN", readonly=False,
                        ack=False)
     obstab.close()
-    image.putkeyword ("LOFAR_ORIGIN", subtab)
+    image.putkeyword ("ATTRGROUPS." + "LOFAR_ORIGIN", subtab)
     # Set the correct units of columns to update.
     subtab.putcolkeyword ("CHANNEL_WIDTH", "QuantumUnits", ["Hz"])
     subtab.putcolkeyword ("EXPOSURE", "QuantumUnits", ["s"])
@@ -76,7 +77,6 @@ def addOriginTable (image, msNames):
     # Get SUBBAND from MS name.
     for i in range(len(msNames)):
         t = pt.table(msNames[i], ack=False)
-        print "opened",msNames[i]
         subtab.putcell ("EXPOSURE", i, t.getcell("EXPOSURE", 0))
         t1 = pt.table(t.getkeyword("SPECTRAL_WINDOW"), ack=False)
         numchan = t1.getcell("NUM_CHAN", 0)
@@ -126,7 +126,8 @@ def addSourceTable (image, sourcedbName, times):
     tab.putcolkeyword ("SHAPE", "QuantumUnits", ["rad", "rad", "rad"])
     tab.putcolkeyword ("TIME", "MEASINFO", {"Ref":"UTC", "type":"epoch"})
     tab.putcolkeyword ("DIRECTION", "MEASINFO", {"Ref":"J2000", "type":"direction"})
-    image.putkeyword ("LOFAR_SOURCE", tab)
+    tab.flush()
+    image.putkeyword ("ATTRGROUPS." + "LOFAR_SOURCE", tab)
     # Get all parameters from the source parmdb.
     midtime = (times[0] + times[1]) / 2
     inttime = times[1] - times[0]
@@ -160,7 +161,6 @@ def addSourceTable (image, sourcedbName, times):
         tab.putcell ("SPINX", row, vals[6]);
         tab.putcell ("REF_FREQUENCY", row, vals[7]);
         tab.putcell ("SHAPE", row, vals[8:11]);
-        print name, vals
         row += 1
     # Ready.
     tab.close()
@@ -186,7 +186,7 @@ def updateObsTable (image, msName, minbl, maxbl):
     obstab.putcell ("OBSERVATION_END", 0, maxtime[0]);
     obstab.putcell ("TIME_RANGE", 0, (mintime[0], maxtime[0]));
     obstab.putcell ("FILENAME", 0, os.path.basename(image.name()))
-    obstab.putcell ("FILETYPE", 0, "img")
+    obstab.putcell ("FILETYPE", 0, "sky")
     pt.taql ("update '" + obstab.name() + "' set FILEDATE = mjd(date()), " +
              "RELEASE_DATE = mjd(date()+365)")
     # Determine minimum and maximum baseline length
@@ -217,6 +217,11 @@ def updateObsTable (image, msName, minbl, maxbl):
 """ Add all imaging info """
 def addImagingInfo (imageName, msNames, sourcedbName, minbl=0., maxbl=0.):
     image = pt.table (imageName, readonly=False, ack=False)
+    # Check if ATTRGROUPS already exists.
+    # If not, add it as an empty dict.
+    if "ATTRGROUPS" in image.fieldnames():
+        raise Exception("addImagingInfo already done (keyword ATTRGROUPS already exists)")
+    image.putkeyword ("ATTRGROUPS", {})
     # Add all subtables while removing obsolete columns
     addSubTable (image, msNames[0], "POINTING")
     addSubTable (image, msNames[0], "FIELD")

@@ -6,7 +6,6 @@
 # ------------------------------------------------------------------------------
 
 import sys, string
-import pylab
 import numpy as np
 import monetdb.sql as db
 import logging
@@ -456,6 +455,7 @@ SELECT t0.v_catsrcid
         cursor.close()
 
 def plotSpectrum(x, y, p, f):
+    import pylab
     expflux = "Exp. flux: " + str(round(10**p(0),3)) + " Jy"
     fig = pylab.figure()
     ax = fig.add_subplot(111)
