@@ -34,8 +34,7 @@
 */
 class DataWindow : public Gtk::Window {
 	public:
-		DataWindow() :
-			_comboBox(false)
+		DataWindow()
 		{
 			_box.pack_start(_comboBox, Gtk::PACK_SHRINK);
 			_comboListStore = Gtk::ListStore::create(_comboColumnRecord);
