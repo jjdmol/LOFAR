@@ -28,12 +28,15 @@ void DataWindow::SetData(const Plot2D &plot)
 {
 	_plot = &plot;
 	int selectedIndex = _comboBox.get_active_row_number();
-	_comboBox.remove_all();
+	if(selectedIndex < 0)
+		selectedIndex = 0;
+	_comboListStore->clear();
 	for(size_t i=0;i<plot.PointSetCount();++i)
 	{
 		std::stringstream str;
 		str << (i+1) << ". " << plot.GetPointSet(i).Label();
-		_comboBox.append_text(str.str());
+		Gtk::TreeModel::Row row = *_comboListStore->append();
+		row[_comboColumnRecord._comboListNameColumn] = str.str();
 	}
 	if(selectedIndex < (int) plot.PointSetCount())
 		_comboBox.set_active(selectedIndex);
@@ -47,6 +50,8 @@ void DataWindow::onComboChange()
 	int active = _comboBox.get_active_row_number();
 	if(active >= 0)
 		loadData(active);
+	else
+		loadData(_plot->PointSetCount());
 }
 
 void DataWindow::loadData(size_t plotSetIndex)
