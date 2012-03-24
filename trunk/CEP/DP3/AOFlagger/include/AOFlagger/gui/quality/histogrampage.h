@@ -26,6 +26,7 @@
 #include <gtkmm/box.h>
 #include <gtkmm/checkbutton.h>
 #include <gtkmm/entry.h>
+#include <gtkmm/expander.h>
 #include <gtkmm/frame.h>
 #include <gtkmm/textview.h>
 
@@ -88,6 +89,7 @@ class HistogramPage : public Gtk::HBox {
 				updatePlot();
 		}
 		
+		Gtk::Expander _expander;
 		Gtk::VBox _sideBox;
 		
 		Gtk::Frame _histogramTypeFrame;
