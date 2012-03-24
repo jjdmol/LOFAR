@@ -71,6 +71,7 @@ GrayScalePlotPage::GrayScalePlotPage() :
 	_imageWidget.SetRange(ImageWidget::MinMax);
 	_imageWidget.SetScaleOption(ImageWidget::LogScale);
 	_imageWidget.SetZAxisDescription("Statistical value");
+	_imageWidget.SetManualZAxisDescription(true);
 	_imageWidget.set_size_request(300, 300);
 	
 	pack_start(_imageWidget);

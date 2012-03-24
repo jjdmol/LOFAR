@@ -23,19 +23,24 @@
 #include <string>
 
 #include <gtkmm/box.h>
-#include <gtkmm/comboboxtext.h>
-#include <gtkmm/window.h>
-#include <gtkmm/textview.h>
+#include <gtkmm/combobox.h>
+#include <gtkmm/liststore.h>
 #include <gtkmm/scrolledwindow.h>
+#include <gtkmm/textview.h>
+#include <gtkmm/window.h>
 
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
 */
 class DataWindow : public Gtk::Window {
 	public:
-		DataWindow()
+		DataWindow() :
+			_comboBox(false)
 		{
 			_box.pack_start(_comboBox, Gtk::PACK_SHRINK);
+			_comboListStore = Gtk::ListStore::create(_comboColumnRecord);
+			_comboBox.set_model(_comboListStore);
+			_comboBox.pack_start(_comboColumnRecord._comboListNameColumn);
 			_comboBox.signal_changed().connect(sigc::mem_fun(*this, &DataWindow::onComboChange));
 			_comboBox.show();
 			
@@ -62,8 +67,15 @@ class DataWindow : public Gtk::Window {
 		void onComboChange();
 		void loadData(size_t plotSetIndex);
 		
+		class ComboColumnRecord : public Gtk::TreeModel::ColumnRecord
+		{
+		public:
+			ComboColumnRecord() { add(_comboListNameColumn); }
+			Gtk::TreeModelColumn<Glib::ustring> _comboListNameColumn;
+		} _comboColumnRecord;
 		Gtk::VBox _box;
-		Gtk::ComboBoxText _comboBox;
+		Gtk::ComboBox _comboBox;
+		Glib::RefPtr<Gtk::ListStore> _comboListStore;
 		Gtk::ScrolledWindow _scrolledWindow;
 		Gtk::TextView _textView;
 		const class Plot2D *_plot;
