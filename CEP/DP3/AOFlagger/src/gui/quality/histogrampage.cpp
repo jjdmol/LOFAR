@@ -32,6 +32,7 @@
 #include <AOFlagger/quality/rayleighfitter.h>
 
 HistogramPage::HistogramPage() :
+	_expander("Side bar"),
 	_histogramTypeFrame("Histogram"),
 	_totalHistogramButton("Total"),
 	_rfiHistogramButton("RFI"),
@@ -160,7 +161,9 @@ HistogramPage::HistogramPage() :
 	_slopeFrame.add(_slopeBox);
 	_sideBox.pack_start(_slopeFrame, Gtk::PACK_SHRINK);
 	
-	pack_start(_sideBox, Gtk::PACK_SHRINK);
+	_expander.add(_sideBox);
+	
+	pack_start(_expander, Gtk::PACK_SHRINK);
 	
 	_plotWidget.SetPlot(_plot);
 	pack_start(_plotWidget, Gtk::PACK_EXPAND_WIDGET);

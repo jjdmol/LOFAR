@@ -31,6 +31,7 @@
 #include <AOFlagger/gui/plot/plotpropertieswindow.h>
 
 TwoDimensionalPlotPage::TwoDimensionalPlotPage() :
+	_expander("Side bar"),
 	_statisticFrame("Statistics"),
 	_countButton("Count"),
 	_meanButton("Mean"),
@@ -66,7 +67,8 @@ TwoDimensionalPlotPage::TwoDimensionalPlotPage() :
 	initPhaseButtons();
 	initPlotButtons();
 	
-	pack_start(_sideBox, Gtk::PACK_SHRINK);
+	_expander.add(_sideBox);
+	pack_start(_expander, Gtk::PACK_SHRINK);
 	
 	_plotWidget.SetPlot(_plot);
 	pack_start(_plotWidget, Gtk::PACK_EXPAND_WIDGET);

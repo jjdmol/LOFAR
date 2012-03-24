@@ -63,6 +63,8 @@ class DataWindow : public Gtk::Window {
 		}
 		void SetData(const class Plot2D &plot);
 	private:
+		DataWindow(const DataWindow &dataWindow) { }
+		
 		void onComboChange();
 		void loadData(size_t plotSetIndex);
 		
