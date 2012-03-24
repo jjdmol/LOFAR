@@ -22,6 +22,8 @@
 
 #include <string>
 
+#include <gtkmm/box.h>
+#include <gtkmm/comboboxtext.h>
 #include <gtkmm/window.h>
 #include <gtkmm/textview.h>
 #include <gtkmm/scrolledwindow.h>
@@ -33,11 +35,19 @@ class DataWindow : public Gtk::Window {
 	public:
 		DataWindow()
 		{
+			_box.pack_start(_comboBox, Gtk::PACK_SHRINK);
+			_comboBox.signal_changed().connect(sigc::mem_fun(*this, &DataWindow::onComboChange));
+			_comboBox.show();
+			
 			_scrolledWindow.add(_textView);
 			_textView.show();
 			
-			add(_scrolledWindow);
+			_box.pack_end(_scrolledWindow);
 			_scrolledWindow.show();
+			
+			add(_box);
+			_box.show();
+			
 			set_default_size(300, 400);
 		}
     ~DataWindow()
@@ -49,8 +59,14 @@ class DataWindow : public Gtk::Window {
 		}
 		void SetData(const class Plot2D &plot);
 	private:
+		void onComboChange();
+		void loadData(size_t plotSetIndex);
+		
+		Gtk::VBox _box;
+		Gtk::ComboBoxText _comboBox;
 		Gtk::ScrolledWindow _scrolledWindow;
 		Gtk::TextView _textView;
+		const class Plot2D *_plot;
 };
 
 #endif

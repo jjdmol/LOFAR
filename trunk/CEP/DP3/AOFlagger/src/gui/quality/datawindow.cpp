@@ -26,11 +26,36 @@
 
 void DataWindow::SetData(const Plot2D &plot)
 {
+	_plot = &plot;
+	int selectedIndex = _comboBox.get_active_row_number();
+	_comboBox.remove_all();
+	for(size_t i=0;i<plot.PointSetCount();++i)
+	{
+		std::stringstream str;
+		str << (i+1) << ". " << plot.GetPointSet(i).Label();
+		_comboBox.append_text(str.str());
+	}
+	if(selectedIndex < (int) plot.PointSetCount())
+		_comboBox.set_active(selectedIndex);
+	else if(plot.PointSetCount() > 0)
+		_comboBox.set_active(0);
+	onComboChange();
+}
+
+void DataWindow::onComboChange()
+{
+	int active = _comboBox.get_active_row_number();
+	if(active >= 0)
+		loadData(active);
+}
+
+void DataWindow::loadData(size_t plotSetIndex)
+{
 	std::stringstream _dataStream;
 	_dataStream << std::setprecision(14);
-	if(plot.PointSetCount() != 0)
+	if(_plot->PointSetCount() > plotSetIndex)
 	{
-		const Plot2DPointSet &pointSet = plot.GetPointSet(0);
+		const Plot2DPointSet &pointSet = _plot->GetPointSet(plotSetIndex);
 		const size_t valueCount = pointSet.Size();
 		for(size_t i=0; i<valueCount; ++i)
 		{
