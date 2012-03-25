@@ -39,6 +39,7 @@ MSOptionWindow::MSOptionWindow(MSWindow &msWindow, const std::string &filename) 
 	_polarisationFrame("Polarisation to read"),
 	_partitioningFrame("Partitioning"),
 	_observedDataButton("Observed"), _correctedDataButton("Corrected"), _modelDataButton("Model"), _residualDataButton("Residual"),
+	_otherColumnButton("Other:"),
 	_allDipolePolarisationButton("Dipole (xx,xy,yx,yy separately)"),
 	_autoDipolePolarisationButton("Dipole auto-correlations (xx and yy)"),
 	_stokesIPolarisationButton("Stokes I"),
@@ -57,25 +58,20 @@ MSOptionWindow::MSOptionWindow(MSWindow &msWindow, const std::string &filename) 
 
 	_openButton.signal_clicked().connect(sigc::mem_fun(*this, &MSOptionWindow::onOpen));
 	_bottomButtonBox.pack_start(_openButton);
-	_openButton.show();
 
 	_leftVBox.pack_start(_indirectReadButton);
-	_indirectReadButton.show();
 
 	_leftVBox.pack_start(_readUVWButton);
 	_readUVWButton.set_active(true);
-	_readUVWButton.show();
 
 	_leftVBox.pack_start(_bottomButtonBox);
-	_bottomButtonBox.show();
 
 	_topHBox.pack_start(_leftVBox);
-	_leftVBox.show();
 
 	initPartitioningButtons();
 
 	add(_topHBox);
-	_topHBox.show();
+	show_all();
 }
 
 MSOptionWindow::~MSOptionWindow()
@@ -88,24 +84,20 @@ void MSOptionWindow::initDataTypeButtons()
 	_correctedDataButton.set_group(group);
 	_modelDataButton.set_group(group);
 	_residualDataButton.set_group(group);
+	_otherColumnButton.set_group(group);
 
 	_dataKindBox.pack_start(_observedDataButton);
 	_dataKindBox.pack_start(_correctedDataButton);
 	_dataKindBox.pack_start(_modelDataButton);
 	_dataKindBox.pack_start(_residualDataButton);
+	
+	_otherColumnBox.pack_start(_otherColumnButton);
+	_otherColumnBox.pack_start(_otherColumnEntry);
+	_dataKindBox.pack_start(_otherColumnBox);
 
-	_dataKindBox.show();
 	_dataKindFrame.add(_dataKindBox);
 
-	_dataKindFrame.show();
 	_leftVBox.pack_start(_dataKindFrame);
-
-	_observedDataButton.show();
-	_correctedDataButton.show();
-	_modelDataButton.show();
-	_residualDataButton.show();
-
-	_dataKindFrame.show();
 }
 
 void MSOptionWindow::initPolarisationButtons()
@@ -120,12 +112,6 @@ void MSOptionWindow::initPolarisationButtons()
 
 	_polarisationFrame.add(_polarisationBox);
 	_leftVBox.pack_start(_polarisationFrame);
-
-	_allDipolePolarisationButton.show();
-	_autoDipolePolarisationButton.show();
-	_stokesIPolarisationButton.show();
-	_polarisationBox.show();
-	_polarisationFrame.show();
 }
 
 void MSOptionWindow::initPartitioningButtons()
@@ -177,6 +163,8 @@ void MSOptionWindow::onOpen()
 				msImageSet->SetDataColumnName("DATA");
 				msImageSet->SetSubtractModel(true);
 			}
+			else if(_otherColumnButton.get_active())
+				msImageSet->SetDataColumnName(_otherColumnEntry.get_text());
 	
 			if(_allDipolePolarisationButton.get_active())
 				msImageSet->SetReadAllPolarisations();
