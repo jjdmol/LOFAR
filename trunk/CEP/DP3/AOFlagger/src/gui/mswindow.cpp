@@ -1583,7 +1583,18 @@ void MSWindow::showPhasePart(enum TimeFrequencyData::PhaseRepresentation phaseRe
 			_timeFrequencyWidget.Update();
 		} catch(std::exception &e)
 		{
-			showError(e.what());
+			std::stringstream errstr;
+			errstr
+				<< "The data that was currently in memory could not be converted to the requested "
+				   "type. The error given by the converter was:\n"
+				<< e.what()
+				<< "\n\n"
+				<< "Note that if the original data should be convertable to this type, but "
+				   "you have already used one of the 'Keep ..' buttons, you first need to reload "
+					 "the full data with Goto -> Load.\n\n"
+					 "(alternatively, if loading takes a lot of time, you can use the Store and Recall"
+					 " options in the Data menu)";
+			showError(errstr.str());
 		}
 	}
 }
@@ -1600,7 +1611,18 @@ void MSWindow::showPolarisation(enum PolarisationType polarisation)
 			_timeFrequencyWidget.Update();
 		} catch(std::exception &e)
 		{
-			showError(e.what());
+			std::stringstream errstr;
+			errstr
+				<< "The data that was currently in memory could not be converted to the requested "
+				   "polarization. The error given by the converter was:\n"
+				<< e.what()
+				<< "\n\n"
+				<< "Note that if the original data should be convertable to this polarization, but "
+				   "you have already used one of the 'Keep ..' buttons, you first need to reload "
+					 "the full data with Goto -> Load.\n\n"
+					 "(alternatively, if loading takes a lot of time, you can use the Store and Recall"
+					 " options in the Data menu)";
+			showError(errstr.str());
 		}
 	}
 }
