@@ -382,6 +382,28 @@ void actionSummarize(const std::string &filename)
 	printStatistics(statistics);
 }
 
+void actionSummarizeRFI(const std::string &filename)
+{
+	MeasurementSet *ms = new MeasurementSet(filename);
+	const unsigned polarizationCount = ms->GetPolarizationCount();
+	const BandInfo band = ms->GetBandInfo(0);
+	delete ms;
+	
+	StatisticsCollection statisticsCollection;
+	statisticsCollection.SetPolarizationCount(polarizationCount);
+	QualityTablesFormatter qualityData(filename);
+	statisticsCollection.Load(qualityData);
+	DefaultStatistics statistics(statisticsCollection.PolarizationCount());
+	statisticsCollection.GetGlobalCrossBaselineStatistics(statistics);
+	DefaultStatistics singlePolStat = statistics.ToSinglePolarization();
+	
+	double start = band.channels.begin()->frequencyHz;
+	double end = band.channels.rbegin()->frequencyHz;
+	std::cout << "Start:\t" << round(start/10000.0)/100.0 << "\tEnd:\t" << round(end/10000.0)/100.0
+		<<  "\tRFIPercentange:\t"
+		<< StatisticsDerivator::GetStatisticAmplitude(QualityTablesFormatter::RFIPercentageStatistic, singlePolStat, 0) << '\n';
+}
+
 void actionCombine(const std::string outFilename, const std::vector<std::string> inFilenames)
 {
 	if(!inFilenames.empty())
@@ -504,7 +526,8 @@ void printSyntax(std::ostream &stream, char *argv[])
 		"\tquery_b     - Query baselines.\n"
 		"\tquery_t     - Query time.\n"
 		"\tremove      - Remove all quality tables.\n"
-		"\tsummarize   - Give a summary of the statistics currently in the quality tables.\n";
+		"\tsummarize   - Give a summary of the statistics currently in the quality tables.\n"
+		"\tsummarizerfi- Give a summary of the rfi statistics.\n";
 }
 
 int main(int argc, char *argv[])
@@ -633,6 +656,17 @@ int main(int argc, char *argv[])
 			}
 			else {
 				actionSummarize(argv[2]);
+			}
+		}
+		else if(action == "summarizerfi")
+		{
+			if(argc != 3)
+			{
+				std::cerr << "summarizerfi actions needs one parameter (the measurement set)\n";
+				return -1;
+			}
+			else {
+				actionSummarizeRFI(argv[2]);
 			}
 		}
 		else if(action == "query_b")
