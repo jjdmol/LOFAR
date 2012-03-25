@@ -373,6 +373,9 @@ void actionSummarize(const std::string &filename)
 	statisticsCollection.GetGlobalCrossBaselineStatistics(statistics);
 	std::cout << "\nCross-correlated baseline statistics: \n";
 	printStatistics(statistics);
+	
+	DefaultStatistics singlePolStat = statistics.ToSinglePolarization();
+	std::cout << "RFIPercentange: " << StatisticsDerivator::GetStatisticAmplitude(QualityTablesFormatter::RFIPercentageStatistic, singlePolStat, 0) << '\n';
 
 	statisticsCollection.GetGlobalAutoBaselineStatistics(statistics);
 	std::cout << "\nAuto-correlated baseline: \n";
