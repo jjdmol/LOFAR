@@ -278,6 +278,33 @@ void printStatistics(const DefaultStatistics &statistics)
 	std::cout << '\n';
 }
 
+void actionQueryGlobalStat(const std::string &kindName, const std::string &filename)
+{
+	MeasurementSet *ms = new MeasurementSet(filename);
+	const unsigned polarizationCount = ms->GetPolarizationCount();
+	const BandInfo band = ms->GetBandInfo(0);
+	delete ms;
+	
+	const QualityTablesFormatter::StatisticKind kind = QualityTablesFormatter::NameToKind(kindName);
+	
+	QualityTablesFormatter formatter(filename);
+	StatisticsCollection collection(polarizationCount);
+	collection.Load(formatter);
+	DefaultStatistics statistics(polarizationCount);
+	collection.GetGlobalCrossBaselineStatistics(statistics);
+	StatisticsDerivator derivator(collection);
+	
+	double start = band.channels.begin()->frequencyHz;
+	double end = band.channels.rbegin()->frequencyHz;
+	std::cout << round(start/10000.0)/100.0 << '\t' << round(end/10000.0)/100.0;
+	for(unsigned p=0;p<polarizationCount;++p)
+	{
+		long double val = derivator.GetStatisticAmplitude(kind, statistics, p);
+		std::cout << '\t' << val;
+	}
+	std::cout << '\n';
+}
+
 void actionQueryBaselines(const std::string &kindName, const std::string &filename)
 {
 	MeasurementSet *ms = new MeasurementSet(filename);
@@ -525,6 +552,7 @@ void printSyntax(std::ostream &stream, char *argv[])
 		"\thistogram   - Various histogram actions.\n"
 		"\tquery_b     - Query baselines.\n"
 		"\tquery_t     - Query time.\n"
+		"\tquery_g     - Query single global statistic.\n"
 		"\tremove      - Remove all quality tables.\n"
 		"\tsummarize   - Give a summary of the statistics currently in the quality tables.\n"
 		"\tsummarizerfi- Give a summary of the rfi statistics.\n";
@@ -582,6 +610,11 @@ int main(int argc, char *argv[])
 				{
 					std::cout << "Syntax: " << argv[0] << " query_t <kind> <ms>\n\n"
 						"Print the given statistic for each time step.\n";
+				}
+				else if(helpAction == "query_g")
+				{
+					std::cout << "Syntax " << argv[0] << " query_g <kind> <ms>\n\n"
+						"Print the given statistic for this measurement set.\n";
 				}
 				else if(helpAction == "combine")
 				{
@@ -667,6 +700,17 @@ int main(int argc, char *argv[])
 			}
 			else {
 				actionSummarizeRFI(argv[2]);
+			}
+		}
+		else if(action == "query_g")
+		{
+			if(argc != 4)
+			{
+				std::cerr << "Syntax for query global stat: 'aoquality query_g <KIND> <MS>'\n";
+				return -1;
+			}
+			else {
+				actionQueryGlobalStat(argv[2], argv[3]);
 			}
 		}
 		else if(action == "query_b")
