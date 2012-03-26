@@ -510,7 +510,8 @@ void HistogramPage::addSlopeText(std::stringstream &str, const LogHistogram &his
 		lowerLimit = histogram.PowerLawLowerLimit(minRange, slope, pow10(offset), rfiRatio),
 		lowerError = fabs(lowerLimit - histogram.PowerLawLowerLimit(minRange, slope - error, pow10(offset), rfiRatio)),
 		lowerLimit2 = histogram.PowerLawLowerLimit2(minRange, slope, pow10(offset), rfiRatio);
-	str << slope << "±" << error << "\n/±" << errorB << "\nPL:"
+	str << slope << "±" << error << "\n/±" << errorB << "\nb=" << pow10(offset)
+		<< "\nPL:"
 		<< powerLawExp << "±" << powerLawExpError << "\n["
 		<< log10(lowerLimit) << "±" << lowerError << ';' << log10(upperLimit) << ']' << '\n'
 		<< log10(lowerLimit2);
