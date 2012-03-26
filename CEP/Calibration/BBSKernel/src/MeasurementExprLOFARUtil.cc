@@ -317,8 +317,22 @@ makeBeamExpr(Scope&,
 
     if(station->nField() == 1)
     {
+        if(config.useChannelFreq())
+        {
+            return Expr<JonesMatrix>::Ptr(new StationBeamFormer(exprITRF,
+                exprRefDelayITRF, exprElementBeam[0], station,
+                config.conjugateAF()));
+        }
+
         return Expr<JonesMatrix>::Ptr(new StationBeamFormer(exprITRF,
             exprRefDelayITRF, exprElementBeam[0], station, refFreq,
+            config.conjugateAF()));
+    }
+
+    if(config.useChannelFreq())
+    {
+        return Expr<JonesMatrix>::Ptr(new StationBeamFormer(exprITRF,
+            exprRefDelayITRF, exprElementBeam[0], exprElementBeam[1], station,
             config.conjugateAF()));
     }
 

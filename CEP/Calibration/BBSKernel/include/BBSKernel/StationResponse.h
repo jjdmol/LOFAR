@@ -99,7 +99,7 @@ public:
 
     StationResponse(const casa::MeasurementSet &ms, bool inverse = false,
         bool useElementBeam = true, bool useArrayFactor = true,
-        bool conjugateAF = false);
+        bool useChannelFreq = false, bool conjugateAF = false);
 
     // Set the delay reference direction (used by the station beamformer).
     void setRefDelay(const casa::MDirection &reference);
