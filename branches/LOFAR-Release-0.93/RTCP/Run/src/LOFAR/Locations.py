@@ -69,7 +69,6 @@ class Locations:
 
         # where configuration files are kept
         "configdir": ".",
-        "storage_configdir": ".",
 
         # where to start the executables. rundir needs to be reachable
         # for all sections.
@@ -98,7 +97,7 @@ class Locations:
 	"basedir": "${HOME}/production/lofar",
 
         # the locations of the main executables
-	"storage": "/opt/storage/current/bin/%s" % (self.executables["Storage"],),
+	"storage": "/data/home/lofarsys/production/lofar/bin/%s" % (self.executables["Storage"],),
 
         # where to start the executables. rundir needs to be reachable
         # for all sections.
@@ -112,7 +111,6 @@ class Locations:
 
         # where configuration files are kept
         "configdir": "${BASEDIR}/bgfen/etc",
-        "storage_configdir": "/opt/storage/current/etc",
 
         # symlink for each observation to relevant log dir
         "obssymlink": "${HOME}/log/L${OBSID}",
@@ -130,7 +128,6 @@ class Locations:
 
         # where configuration files are kept
         "configdir": "${BASEDIR}/RTCP/Run/src",
-	"storage_configdir": "${BASEDIR}/installed/%s/etc" % (self.buildvars["Storage"],),
 
 	"storage": "${BASEDIR}/installed/%s/bin/%s" % (self.buildvars["Storage"],self.executables["Storage"]),
 
