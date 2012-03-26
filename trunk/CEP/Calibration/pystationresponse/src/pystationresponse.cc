@@ -52,7 +52,7 @@ namespace LOFAR { namespace BBS  {
   public:
     PyStationResponse(const string& msName, bool inverse = false,
         bool useElementBeam = true, bool useArrayFactor = true,
-        bool conjugateAF = false);
+        bool useChannelFreq = false, bool conjugateAF = false);
 
     // Get the software version.
     string version(const string& type) const;
@@ -86,7 +86,7 @@ namespace LOFAR { namespace BBS  {
 
     // Initialize.
     void init(const MeasurementSet& ms, bool inverse, bool useElementBeam,
-        bool useArrayFactor, bool conjugateAF);
+        bool useArrayFactor, bool useChannelFreq, bool conjugateAF);
 
     //# Data members.
     StationResponse::Ptr    itsResponse;
@@ -101,11 +101,13 @@ namespace LOFAR { namespace BBS  {
 
 
   PyStationResponse::PyStationResponse(const string& msName, bool inverse,
-    bool useElementBeam, bool useArrayFactor, bool conjugateAF)
+    bool useElementBeam, bool useArrayFactor, bool useChannelFreq,
+    bool conjugateAF)
     : itsTime    (-1)
   {
     MeasurementSet ms(msName);
-    init(ms, inverse, useElementBeam, useArrayFactor, conjugateAF);
+    init(ms, inverse, useElementBeam, useArrayFactor, useChannelFreq,
+      conjugateAF);
   }
 
   string PyStationResponse::version(const string& type) const
@@ -200,7 +202,8 @@ namespace LOFAR { namespace BBS  {
   }
 
   void PyStationResponse::init(const MeasurementSet& ms, bool inverse,
-    bool useElementBeam, bool useArrayFactor, bool conjugateAF)
+    bool useElementBeam, bool useArrayFactor, bool useChannelFreq,
+    bool conjugateAF)
   {
     // Get the time interval.
     ROMSColumns msCol(ms);
@@ -220,7 +223,7 @@ namespace LOFAR { namespace BBS  {
 
     // Create the StationResponse object.
     itsResponse = StationResponse::Ptr(new StationResponse(ms, inverse,
-      useElementBeam, useArrayFactor, conjugateAF));
+      useElementBeam, useArrayFactor, useChannelFreq, conjugateAF));
 
     // Set the direction of interest equal to the phase center direction.
     ROMSFieldColumns fieldCols(ms.field());
@@ -257,7 +260,7 @@ namespace LOFAR { namespace BBS  {
   void pystationresponse()
   {
     class_<PyStationResponse> ("StationResponse",
-                               init<std::string, bool, bool, bool, bool>())
+        init<std::string, bool, bool, bool, bool, bool>())
       .def ("_version", &PyStationResponse::version,
         (boost::python::arg("type")="other"))
       .def ("_setRefDelay", &PyStationResponse::setRefDelay,

@@ -48,7 +48,8 @@ namespace BBS
 {
 
 StationResponse::StationResponse(const casa::MeasurementSet &ms,
-    bool inverse, bool useElementBeam, bool useArrayFactor, bool conjugateAF)
+    bool inverse, bool useElementBeam, bool useArrayFactor, bool useChannelFreq,
+    bool conjugateAF)
     :   itsRefDelay(new Dummy<Vector<2> >()),
         itsRefTile(new Dummy<Vector<2> >()),
         itsDirection(new Dummy<Vector<2> >())
@@ -163,15 +164,33 @@ StationResponse::StationResponse(const casa::MeasurementSet &ms,
         }
         else if(station->nField() == 1)
         {
-            exprBeam = Expr<JonesMatrix>::Ptr(new StationBeamFormer(exprDirITRF,
-                exprRefDelayITRF, exprElementBeam[0], station, refFreq,
-                conjugateAF));
+            if(useChannelFreq)
+            {
+                exprBeam = Expr<JonesMatrix>::Ptr(new StationBeamFormer
+                    (exprDirITRF, exprRefDelayITRF, exprElementBeam[0], station,
+                    conjugateAF));
+            }
+            else
+            {
+                exprBeam = Expr<JonesMatrix>::Ptr(new StationBeamFormer
+                    (exprDirITRF, exprRefDelayITRF, exprElementBeam[0], station,
+                    refFreq, conjugateAF));
+            }
         }
         else
         {
-            exprBeam = Expr<JonesMatrix>::Ptr(new StationBeamFormer(exprDirITRF,
-                exprRefDelayITRF, exprElementBeam[0], exprElementBeam[1],
-                station, refFreq, conjugateAF));
+            if(useChannelFreq)
+            {
+                exprBeam = Expr<JonesMatrix>::Ptr(new StationBeamFormer
+                    (exprDirITRF, exprRefDelayITRF, exprElementBeam[0],
+                    exprElementBeam[1], station, conjugateAF));
+            }
+            else
+            {
+                exprBeam = Expr<JonesMatrix>::Ptr(new StationBeamFormer
+                    (exprDirITRF, exprRefDelayITRF, exprElementBeam[0],
+                    exprElementBeam[1], station, refFreq, conjugateAF));
+            }
         }
 
         if(inverse)
