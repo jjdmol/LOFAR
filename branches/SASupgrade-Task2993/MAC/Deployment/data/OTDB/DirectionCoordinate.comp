@@ -38,7 +38,6 @@ node  DirectionAxis	4.0.0  development  	'node constraint'  "DirectionAxis speci
 #--------------------------------------------------------------------------------------------------------
 #    name               dir. type   unit   prun. vm   value	constr.	descr.
 #--------------------------------------------------------------------------------------------------------
-par  number		O    uint   -      10    0    0      	- 	''
 par  name		O    text   -      10    0    ''      	- 	''
 par  units		O    text   -      10    0    ''      	- 	''
 par  length		O    uint   -      10    0    0      	- 	''
@@ -65,14 +64,13 @@ node  DirectionCoordinate	4.0.0  development  	'node constraint'  "DirectionCoor
 #--------------------------------------------------------------------------------------------------------
 #    name                 dir. type   unit   prun. vm   value	constr.	descr.
 #--------------------------------------------------------------------------------------------------------
-par  number	  	  O    uint   -      10    0    0      	        - 	''
-par  nrDirectionAxis      O    uint   -      10    0    0               -     	'Number of DirectionAxis'
+par  nrOfDirectionAxes    O    uint   -      10    0    0               -     	'Number of DirectionAxis instantations'
 par  PC0_0  		  O    dbl    -      10    0    0		-  	''
 par  PC0_1  		  O    dbl    -      10    0    0		-  	''
 par  PC1_0  		  O    dbl    -      10    0    0		-  	''
 par  PC1_1  		  O    dbl    -      10    0    0		-  	''
 par  equinox	      	  O    text -      10    0    ''              -       ''
-par  raDecSystem          O    ptext  -      10    0    'ICRS|FK5|FK4|FK4-NO-E|GAPPT;FK5'      -       ''
+par  raDecSystem          O    ptext  -      10    0    'ICRS|FK5|FK4|FK4-NO-E|GAPPT;ICRS'      -       ''
 par  projection	      	  O    text -      10    0    ''              -       ''
 par  projectionParameters O    vdbl    -      10    0    []		-  	''
 par  longitudePole	  O    dbl    -      10    0    0		-  	''

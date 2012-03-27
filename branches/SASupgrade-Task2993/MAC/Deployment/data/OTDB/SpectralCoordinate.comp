@@ -38,7 +38,6 @@ node  SpectralTabularAxis	4.0.0  development  	'node constraint'  "SpectralTabul
 #--------------------------------------------------------------------------------------------------------
 #    name               dir. type   unit   prun. vm   value	constr.	descr.
 #--------------------------------------------------------------------------------------------------------
-par  number		O    uint   -      10    0    0      	- 	''
 par  name		O    text   -      10    0    ''      	- 	''
 par  units		O    text   -      10    0    ''      	- 	''
 par  length		O    uint   -      10    0    0      	- 	''
@@ -63,7 +62,6 @@ node  SpectralLinearAxis	4.0.0  development  	'node constraint'  "SpectralLinear
 #--------------------------------------------------------------------------------------------------------
 #    name               dir. type   unit   prun. vm   value	constr.	descr.
 #--------------------------------------------------------------------------------------------------------
-par  number		O    uint   -      10    0    0      	- 	''
 par  name		O    text   -      10    0    ''      	- 	''
 par  units		O    text   -      10    0    ''      	- 	''
 par  length		O    uint   -      10    0    0      	- 	''
@@ -90,9 +88,8 @@ node  SpectralCoordinate	4.0.0  development  	'node constraint'  "SpectralCoordi
 #--------------------------------------------------------------------------------------------------------
 #    name               	dir. type   unit   prun. vm  value	constr.	descr.
 #--------------------------------------------------------------------------------------------------------
-par  number			O    uint   -      10    0   0      	- 	''
 par  spectralAxisType   	O    ptext  -      10    0   'Tabular|Linear;Linear' -  ''
-par  spectralQuantityType      	O    ptext  -      10    0   'Frequency|Energy|Wavenumber|VelocityRadio|VelocityOptical|VelocityAppRadial|Redshift|WavelengthVacuum|WavelengthAir|BetaFactor;VelocityRadio'         -       ''
+par  spectralQuantityType      	O    ptext  -      10    0   'Frequency|Energy|Wavenumber|VelocityRadio|VelocityOptical|VelocityAppRadial|Redshift|WavelengthVacuum|WavelengthAir|BetaFactor;Frequency'         -       ''
 par  spectralQuantityValue    	O    dbl    -      10    0   0         -       ''
 
 #      name              vers   qual        constr.            descr.

@@ -32,5 +32,5 @@ par  nrOfOutput_SkyImage_   	 I      int     -       10    0    0               
 uses  @dataproduct@   		4.0.2  development 'node constraint'  "Storage settings for @dataproduct@ type"
 uses  Output_Correlated_	4.0.0  development 'node constraint'  "Storage settings for Correlated dataProduct type"
 uses  Output_BeamFormed_	4.0.0  development 'node constraint'  "Storage settings for BeamFormed dataProduct type"
-uses  Output_InstrumentModel_	4.0.0  development 'node constraint'  "Storage settings for InstrumentModel dataProduct type"
-uses  Output_SkyImage_		4.0.0  development 'node constraint'  "Storage settings for SkyImage dataProduct type"
+uses  Output_InstrumentModels_	4.0.0  development 'node constraint'  "Storage settings for InstrumentModel dataProduct type"
+uses  Output_SkyImages_		4.0.0  development 'node constraint'  "Storage settings for SkyImage dataProduct type"

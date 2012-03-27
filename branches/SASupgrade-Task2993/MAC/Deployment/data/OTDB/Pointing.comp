@@ -39,5 +39,5 @@ node  Pointing	4.0.0  development  	'node constraint'  "Pointing specification"
 #--------------------------------------------------------------------------------------------------------
 par  equinox        	O    ptext  -      10    0    'B1950|J2000;J2000'      -       ''
 par  coordType        	O    ptext  -      10    0    'RA-DEC|AZI-ALT;RA-DEC'      -       ''
-par  coordVal0          O    dbl    -      10    0    0		-  	'RA or azimuth in radians'
-par  coordVal1          O    dbl    -      10    0    0		-  	'DEC or altitude in radians'
+par  angle1   	       	O    dbl    -      10    0    0		-  	'RA or azimuth in radians'
+par  angle2   	       	O    dbl    -      10    0    0		-  	'DEC or altitude in radians'

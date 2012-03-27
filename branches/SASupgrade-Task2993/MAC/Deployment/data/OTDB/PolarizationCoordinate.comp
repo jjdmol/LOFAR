@@ -38,7 +38,6 @@ node  PolarizationTabularAxis	4.0.0  development  	'node constraint'  "Polarizat
 #--------------------------------------------------------------------------------------------------------
 #    name               dir. type   unit   prun. vm   value	constr.	descr.
 #--------------------------------------------------------------------------------------------------------
-par  number		O    uint   -      10    0    0      	- 	''
 par  name		O    text   -      10    0    ''      	- 	''
 par  units		O    text   -      10    0    ''      	- 	''
 par  length		O    uint   -      10    0    0      	- 	''
@@ -63,7 +62,6 @@ node  PolarizationCoordinate	4.0.0  development  	'node constraint'  "Polarizati
 #--------------------------------------------------------------------------------------------------------
 #    name               dir. type   unit   prun. vm   value	constr.	descr.
 #--------------------------------------------------------------------------------------------------------
-par  number		O    uint   -      10    0    0      	- 	''
 par  polarizationType	O    vtext  -      10    0    '["XX","XY","YX","YY"]'      	- 	''
 
 #      name              vers   qual        constr.            descr.
