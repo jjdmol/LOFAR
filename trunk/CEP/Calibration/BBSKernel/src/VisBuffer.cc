@@ -223,8 +223,7 @@ void VisBuffer::flagsNaN()
     typedef boost::multi_array<flag_t, 4>::element* flagsIterator;
     flagsIterator flagsIt=flags.data();
         
-    for(samplesIterator samplesIt = samples.data(), end = samples.data() + samples.num_elements();
-        samplesIt != end; ++samplesIt)
+    for(samplesIterator samplesIt = samples.data(), end = samples.data() + samples.num_elements(); samplesIt != end;)
     {   
         // If any of the correlations is a NaN, flag all correlations
         for(unsigned int i=0; i<nCorrelations(); i++)
@@ -237,9 +236,9 @@ void VisBuffer::flagsNaN()
             }
           }
           break;
-        }
-        flagsIt=flagsIt+nCorrelations()-1;
-        samplesIt=samplesIt+nCorrelations()-1;
+        }      
+        flagsIt=flagsIt+nCorrelations();
+        samplesIt=samplesIt+nCorrelations();
     }
 }
 
