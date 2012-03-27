@@ -1,24 +1,35 @@
 Output_Correlated_[0] = {
     size: 0, 
-    fileFormat: "AIPS++/CASA", 
+    fileFormat: "AIPS++/CASA",
+    filename: "foo_uv.MS", 
+    location: "bar:/baz"
+    percentageWritten: 0,
     startTime: "not-a-datetime",
     duration: 0.0,
     integrationInterval: 0.0,
     centralFrequency: 0.0,
     channelWidth: 0.0,
-    channelsPerSubband: 0
+    channelsPerSubband: 0,
+    subband: 0,
+    stationSubband: 0
 }
 
 
 Output_InstrumentModel_[0] = {
     size: 0,
-    fileFormat: "AIPS++/CASA"
+    fileFormat: "AIPS++/CASA",
+    filename: "foo_inst.INST",
+    location: "bar:/baz"
+    percentageWritten: 0
 }
 
 
 Output_SkyImage_[0] = {
     size: 0,
     fileFormat: "AIPS++/CASA",
+    filename: "foo_sky.IM",
+    location: "bar:/baz",
+    percentageWritten: 0,
     numberOfAxes: 0,
     nrOfDirectionCoordinates: 0,
     nrOfSpectralCoordinates: 0,
