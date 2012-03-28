@@ -3,6 +3,8 @@
 include(PythonInstall)
 
 python_install(
+  helpers/__init__.py
+  helpers/metadata.py
   master/__init__.py
   master/bbs.py
   master/cep2_datamapper.py
@@ -38,7 +40,6 @@ python_install(
   nodes/flag_baseline.py
   nodes/imager_create_dbs.py
   nodes/make_flaggable.py
-  nodes/metadata/collect.py
   nodes/new_bbs.py
   nodes/parmdb.py
   nodes/parmexportcal.py
