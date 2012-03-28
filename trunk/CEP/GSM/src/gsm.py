@@ -3,20 +3,13 @@
 # Interpret the arguments and do the selection.
 def gsmMain (name, argv):
 
-    import sys, os, time
+    import sys
 
     import monetdb
     import monetdb.sql as db
     import lofar.gsm.gsmutils as gsm 
 
-    db_host = "ldb002"
-    db_dbase = "gsm"
-    db_user = "gsm"
-    db_passwd = "msss"
-    db_port = 51000
-    db_autocommit = True
-
-    if len(argv) < 5:
+    if len(argv) < 4:
         print ''
         print 'Insufficient arguments given; run as:'
         print ''
@@ -34,22 +27,36 @@ def gsmMain (name, argv):
         print '                   default = 0.025'
         print ''
         return False
+
     # Get the arguments.
-    outfile = argv[1]
-    ra      = float(argv[2])
-    dec     = float(argv[3])
-    radius  = float(argv[4])
+    outfile = argv[0]
+    ra      = float(argv[1])
+    dec     = float(argv[2])
+    radius  = float(argv[3])
     cutoff  = 4.
     theta   = 0.025
-    if len(argv) >= 5:
+    if len(argv) > 4:
+        cutoff = float(argv[4])
+    if len(argv) > 5:
         cutoff = float(argv[5])
-    if len(argv) >= 6:
-        cutoff = float(argv[6])
 
+    db_host = "ldb002"
+    db_dbase = "gsm"
+    db_user = "gsm"
+    db_passwd = "msss"
+    db_port = 51000
+    db_autocommit = True
+
+    try:
+        conn = db.connect(hostname=db_host, database=db_dbase, username=db_user,
+                          password=db_passwd, port=db_port, autocommit=db_autocommit)
         gsm.expected_fluxes_in_fov (conn, ra, dec, radius, theta, outfile,
                                     storespectraplots=False,
                                     deruiter_radius=3.717,
                                     vlss_flux_cutoff=cutoff)
+    except db.Error, e:
+        raise
+
 
 # This is the main entry.
 if __name__ == "__main__":

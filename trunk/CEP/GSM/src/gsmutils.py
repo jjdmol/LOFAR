@@ -36,7 +36,7 @@ def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius, assoc_the
         try:
             from tkp.config import config
             DERUITER_R = config['source_association']['deruiter_radius']
-            print "DERUITER_R =",DERUITER_R
+            ##print "DERUITER_R =",DERUITER_R
         except:
             DERUITER_R=3.717
 
@@ -369,10 +369,10 @@ SELECT t0.v_catsrcid
             decl = results[23]
         spectrumfiles = []
         for i in range(len(vlss_catsrcid)):
-            print "\ni = ", i
+            ##print "\ni = ", i
             bbsrow = ""
             # Here we check the cases for the degree of the polynomial spectral index fit
-            print vlss_catsrcid[i], wenssm_catsrcid[i], wenssp_catsrcid[i], nvss_catsrcid[i]
+            ##print vlss_catsrcid[i], wenssm_catsrcid[i], wenssp_catsrcid[i], nvss_catsrcid[i]
             #print "VLSS",vlss_name[i]
             bbsrow += vlss_name[i] + ", "
             # According to Jess, only sources that have values for all
@@ -404,7 +404,7 @@ SELECT t0.v_catsrcid
             f = ""
             for j in range(len(logflux)):
                 f += str(10**logflux[j]) + "; "
-            print f
+            ##print f
             #print "len(lognu) = ",len(lognu), "nvss_catsrcid[",i,"] =", nvss_catsrcid[i]
             # Here we write the expected flux values at 60 MHz, and the fitted spectral index and
             # and curvature term
