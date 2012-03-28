@@ -86,7 +86,7 @@ class DataProduct(object):
     Base class for data product metadata.
     """
     def __init__(self):
-        self.data = {
+        self._data = {
             'size' : 0,
             'fileFormat' : "",
             'filename' : "",
@@ -95,18 +95,21 @@ class DataProduct(object):
         }
 
 
+    def data(self):
+        """Return the current metadata."""
+        return self._data
+        
+        
     def as_parameterset(self):
-        """
-        Return the current data product into a LOFAR parameterset
-        """
-        return to_parset(self.data)
+        """Return the current data product into a LOFAR parameterset."""
+        return to_parset(self._data)
 
 
     def collect(self, filename):
         """
         Collect the metadata that is part of the DataProduct base class.
         """
-        self.data.update({
+        self._data.update({
             'size' : disk_usage(filename),
             'fileFormat' : "AIPS++/CASA",
             'filename' : os.path.basename(filename),
@@ -115,8 +118,8 @@ class DataProduct(object):
             )
         })
         # Set percentageWritten to an arbitrary 50, if filesize is non-zero.
-        if self.data['size'] > 0:
-            self.data['percentageWritten'] = 50
+        if self._data['size'] > 0:
+            self._data['percentageWritten'] = 50
 
 
 
@@ -127,7 +130,7 @@ class Correlated(DataProduct):
     """
     def __init__(self, filename=None):
         super(Correlated, self).__init__()
-        self.data.update({
+        self._data.update({
             'startTime' : "not-a-datetime",
             'duration' : 0.0,
             'integrationInterval' : 0.0,
@@ -152,7 +155,7 @@ class Correlated(DataProduct):
             exposure = main.getcell('EXPOSURE', 0)
             startTime = main.getcell('TIME', 0) - 0.5 * exposure
             endTime = main.getcell('TIME', main.nrows() - 1) + 0.5 * exposure
-            self.data.update({
+            self._data.update({
                 'percentageWritten' : 100,
                 'startTime' : startTime,
                 'duration' : endTime - startTime,
@@ -189,7 +192,7 @@ class InstrumentModel(DataProduct):
         Collect instrument model metadata from the Measurement Set `filename`.
         """
         super(InstrumentModel, self).collect(filename)
-        self.data['percentageWritten'] = 100
+        self._data['percentageWritten'] = 100
 
 
 
@@ -203,7 +206,7 @@ class SkyImage(DataProduct):
         CASA Image containing the sky image.
         """
         DataProduct.__init__(self)
-        self.data.update({
+        self._data.update({
             'numberOfAxes' : 0,
             'nrOfDirectionCoordinates' : 0,
             'nrOfSpectralCoordinates' : 0,
@@ -226,24 +229,24 @@ class SkyImage(DataProduct):
             coord = image.coordinates()
             if 'direction' in coord._names:
                 direction = coord.get_coordinate('direction')
-                self.data.update({
+                self._data.update({
                     'nrOfDirectionCoordinates' : 1,
                     'DirectionCoordinate' : self._get_direction_coord(direction)
                 })
             if 'spectral' in coord._names:
                 spectral = coord.get_coordinate('spectral')
-                self.data.update({
+                self._data.update({
                     'locationFrame' : spectral.get_frame(),  ### CORRECT ??? ###
                     'nrOfSpectralCoordinates' : 1,
                     'SpectralCoordinate' : self._get_spectral_coord(spectral)
                 })
             if 'stokes' in coord._names:
                 stokes = coord.get_coordinate('stokes')
-                self.data.update({
+                self._data.update({
                     'nrOfPolarizationCoordinates' : 1,
                     'PolarizationCoordinate' : self._get_stokes_coord(stokes)                
                 })
-            self.data.update({
+            self._data.update({
                 'percentageWritten' : 100,
                 'numberOfAxes' : len(coord.get_axes()),
                 'coordinateTypes' : coord._names,
@@ -340,7 +343,7 @@ class SkyImage(DataProduct):
 
 
 if __name__ == "__main__":
-    Correlated('../sample_uv.MS').as_parameterset().writeFile('Correlated.parset')
-    InstrumentModel('../sample_inst.INST').as_parameterset().writeFile('InstrumentModel.parset')
-    SkyImage('../sample_sky.IM').as_parameterset().writeFile('SkyImage.parset')
-    
+#    Correlated('../sample_uv.MS').as_parameterset().writeFile('Correlated.parset')
+#    InstrumentModel('../sample_inst.INST').as_parameterset().writeFile('InstrumentModel.parset')
+#    SkyImage('../sample_sky.IM').as_parameterset().writeFile('SkyImage.parset')
+    print Correlated('../sample_uv.MS').data()

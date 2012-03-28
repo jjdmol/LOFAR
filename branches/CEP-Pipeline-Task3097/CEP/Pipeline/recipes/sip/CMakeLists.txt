@@ -15,6 +15,7 @@ python_install(
   master/demixing.py
   master/dppp.py
   master/flag_baseline.py
+  master/get_metadata.py
   master/make_flaggable.py
   master/new_bbs.py
   master/parmdb.py
@@ -38,6 +39,7 @@ python_install(
   nodes/demixing.py
   nodes/dppp.py
   nodes/flag_baseline.py
+  nodes/get_metadata.py
   nodes/imager_create_dbs.py
   nodes/make_flaggable.py
   nodes/new_bbs.py
