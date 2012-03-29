@@ -133,10 +133,14 @@ void GCFCWD_connectWD(string dp1, dyn_int systemID,
     }
     if (dynlen(upTime) >= i) {
       g_connections[ "UPTIME" ][iPos]   = upTime[i];
-      g_connections[ "DOWNTIME" ][iPos] = downTime[i];
     } else {
       time t;
       g_connections[ "UPTIME" ][iPos]   = t;
+    }
+    if (dynlen(downTime) >= i) {
+      g_connections[ "DOWNTIME" ][iPos] = downTime[i];
+    } else {
+      time t;
       g_connections[ "DOWNTIME" ][iPos] = t;        
     }    
     // we need to reflect the status of the stations up/down also in the "MainDBName+LOFAR_PIC_[Ring].status.childState
