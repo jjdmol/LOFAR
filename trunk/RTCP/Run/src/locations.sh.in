@@ -13,7 +13,7 @@ then
   ETCDIR=/opt/lofar/etc
 
   LOGDIR=/localhome/log
-  LOGBACKUPDIR=/globalhome/lofarsystem/log
+  LOGBACKUPDIR=/globalhome/lofarsystem/log-archive
   LOGPARAMS="-s ccu001:24500"
 else
   ISPRODUCTION=0
