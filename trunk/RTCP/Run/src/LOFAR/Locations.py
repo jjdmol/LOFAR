@@ -22,22 +22,15 @@ def lofarRoot():
 
 class Locations:
   def __init__(self):
-    self.isproduction = isProduction()
-
-    self.files = {}
-
-    self.files.update( {
-        # the parset that will be written by us and read by the sections
-        # the observation ID is included to allow parallel observations
-
+    self.files = {
         # where configuration files are kept
         "configdir": "%s/etc" % (lofarRoot(),),
 
         # location of the observation id counter
 	"nextmsnumber": "/globalhome/lofarsystem/log/nextMSNumber",
-    } )
+    }
 
-    if self.isproduction:
+    if isProduction():
       self.files.update( {
         # the location of the Storage executable
 	"storage": "/data/home/lofarsys/production/lofar/bin/Storage_main",
@@ -58,9 +51,6 @@ class Locations:
         "parset":     "${BASEDIR}/parsets/L${OBSID}.parset",     # for communication with Storage and offline pipelines
         "parset-ion": "${BASEDIR}/parsets/L${OBSID}.parset", # for communication with the I/O nodes
       } )
-
-  def setFilename(self,name,path):
-    self.files[name] = path 
 
   def resolvePath(self,path,parset=None):
     """ Resolve a path by replacing ${BASEDIR} by self["basedir"], etc.
@@ -90,10 +80,6 @@ class Locations:
       path = parset.parseMask( path )
 
     return path	
-
-  def resolveAllPaths(self, parset = None):
-    for name,path in self.files.iteritems():
-      self.files[name] = self.resolvePath( path, parset )
 
 Locations = Locations()
 

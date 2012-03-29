@@ -10,7 +10,7 @@ sys.path += [(os.path.dirname(__file__) or ".")+"/.."]
 
 from util.Commands import backquote
 
-__all__ = ["packetAnalysis","stationInPartition","Stations","overrideRack"]
+__all__ = ["packetAnalysis","Stations","overrideRack"]
 
 def overrideRack( stations, rack ):
   """ Set the rack that will be used (0,1,2) for all stations provided. """
@@ -103,22 +103,6 @@ def allInputs( station ):
       if ip in ["0.0.0.0","0"]:
         ip = ionode
       yield (name,ip,port)
-
-def stationInPartition( station, partition ):
-  """ Returns a list of stations that are not received within the given partition.
-  
-      Returns (True,[]) if the station is received correctly.
-      Returns (False,missingInputs) if some inputs are missing, where missingInputs is a list of (name,ip:port) pairs.
-  """
-
-  notfound = []
-
-  for name,ip,port in allInputs( station ):  
-    if ip not in PartitionPsets[partition]:
-      notfound.append( (name,"%s:%s" % (ip,port)) )
-    
-  return (not notfound, notfound)	
-
 
 class UnknownStationError(StandardError):
     pass
