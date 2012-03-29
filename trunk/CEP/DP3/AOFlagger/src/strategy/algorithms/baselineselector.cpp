@@ -198,6 +198,25 @@ void BaselineSelector::Search(std::vector<BaselineSelector::SingleBaselineInfo> 
 	} while(foundMoreBaselines);
 }
 
+void BaselineSelector::ImplyStations(const std::vector<BaselineSelector::SingleBaselineInfo> &markedBaselines, double maxRatio, std::set<unsigned> &badStations) const
+{
+	std::map<unsigned, unsigned> stations;
+	for(std::vector<BaselineSelector::SingleBaselineInfo>::const_iterator i=markedBaselines.begin();i!=markedBaselines.end();++i)
+	{
+		stations[i->antenna1]++;
+		stations[i->antenna2]++;
+	}
+	
+	for(std::map<unsigned, unsigned>::const_iterator i=stations.begin();i!=stations.end();++i)
+	{
+		double ratio = (double) i->second / (double) stations.size();
+		if(ratio > maxRatio)
+		{
+			badStations.insert(i->first);
+		}
+	}
+}
+
 double BaselineSelector::smoothedValue(double length) const
 {
 	double logLength = log(length);
