@@ -165,14 +165,6 @@ OLAP.maxNetworkDelay = 0.5
 OLAP.OLAP_Conn.IONProc_Storage_Transport = TCP
 #OLAP.OLAP_Conn.IONProc_Storage_Ports = [6300..7291] # only define this if you want specific ports to be used
 
-OLAP.Storage.AntennaSetsConf  = ${STORAGE_CONFIGDIR}/AntennaSets.conf
-OLAP.Storage.AntennaFieldsDir = ${STORAGE_CONFIGDIR}/StaticMetaData
-OLAP.Storage.HBADeltasDir     = ${STORAGE_CONFIGDIR}/StaticMetaData
-
-# ----- Global internals
-OLAP.log2SasMac = F
-OLAP.OLAP_Conn.log2SasMacOutputs = [tcp:0.0.0.0:24500]
-
 # ----- Coordinates of common sources
 #Observation.Beam[0].angle1 = 0                  # NCP
 #Observation.Beam[0].angle2 = 1.570796327

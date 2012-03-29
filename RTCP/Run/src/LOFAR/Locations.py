@@ -25,32 +25,7 @@ class Locations:
     self.files = {
         # where configuration files are kept
         "configdir": "%s/etc" % (lofarRoot(),),
-
-        # location of the observation id counter
-	"nextmsnumber": "/globalhome/lofarsystem/log/nextMSNumber",
     }
-
-    if isProduction():
-      self.files.update( {
-        # the location of the Storage executable
-	"storage": "/data/home/lofarsys/production/lofar/bin/Storage_main",
-
-	# where to save the parset
-        "parset":      "/globalhome/lofarsystem/parsets/L${OBSID}.parset", # for communication with Storage and offline pipelines
-	"parset-ion":  "/bghome0/lofarsys/parsets/L${OBSID}.parset", # for communication to the IO nodes 
-      } )
-    else:
-      self.files.update( {
-        # the base directory most paths will be related to
-	"basedir":    "%s/projects/LOFAR" % (homeDir(),),
-
-        # the location of the Storage executable
-	"storage":    "${BASEDIR}/installed/gnu_opt/bin/Storage_main",
-
-	# where to save the parset
-        "parset":     "${BASEDIR}/parsets/L${OBSID}.parset",     # for communication with Storage and offline pipelines
-        "parset-ion": "${BASEDIR}/parsets/L${OBSID}.parset", # for communication with the I/O nodes
-      } )
 
   def resolvePath(self,path,parset=None):
     """ Resolve a path by replacing ${BASEDIR} by self["basedir"], etc.
