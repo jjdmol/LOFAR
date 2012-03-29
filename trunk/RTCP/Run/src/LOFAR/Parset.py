@@ -12,8 +12,7 @@ import getpass
 import os
 from itertools import count
 from Partitions import PartitionPsets
-from Locations import Locations
-from Stations import Stations
+from Stations import Stations, overrideRack
 from RingCoordinates import RingCoordinates
 from util.dateutil import parse,format,parseDuration,timestamp
 from logging import error,warn
@@ -119,6 +118,9 @@ class Parset(util.Parset.Parset):
         partition = self.distillPartition()
         if partition:
           self.setPartition( partition )
+
+        if self.partition and self.partition != "R00R01":  
+          overrideRack( Stations, int(partition[2]) )
 
         # storage nodes
         storagenodes = self.distillStorageNodes() or []
@@ -341,28 +343,12 @@ class Parset(util.Parset.Parset):
           self["Observation.DataProducts.Output_Beamformed.enabled"] = True
 
 
-    def addStorageKeys(self):
-	self["OLAP.Storage.userName"] = getpass.getuser()
-	self["OLAP.Storage.sshIdentityFile"]  = "%s/.ssh/id_rsa" % (os.environ["HOME"],)
-	self["OLAP.Storage.msWriter"] = Locations.resolvePath( Locations.files["storage"], self )
-	self["OLAP.Storage.parsetFilename"] = self.filename
-
-        self.setdefault("OLAP.Storage.AntennaSetsConf",  "${STORAGE_CONFIGDIR}/AntennaSets.conf");
-        self.setdefault("OLAP.Storage.AntennaFieldsDir", "${STORAGE_CONFIGDIR}/StaticMetaData");
-        self.setdefault("OLAP.Storage.HBADeltasDir",     "${STORAGE_CONFIGDIR}/StaticMetaData");
-
-        for p in ["OLAP.Storage.AntennaSetsConf",
-                  "OLAP.Storage.AntennaFieldsDir",
-                  "OLAP.Storage.HBADeltasDir"]:
-          self[p] = Locations.resolvePath( self[p], self )          
-
     def preWrite(self):
         """ Derive some final keys and finalise any parameters necessary
 	    before writing the parset to disk. """
 
         self.convertSASkeys();
         self.addMissingKeys();
-	self.addStorageKeys();
 
         # Versioning info
         self["OLAP.BeamsAreTransposed"] = True
@@ -930,6 +916,24 @@ if __name__ == "__main__":
   # parse the command line
   parser = OptionParser( "usage: %prog [options] parset [parset ...]" )
 
+  opgroup = OptionGroup( parser, "Request" )
+  opgroup.add_option( "-k", "--key",
+                     dest="key",
+                     type="string",
+                     default="",
+                     help="print the given key from the resulting parset" )
+  opgroup.add_option( "-p", "--partition",
+                     dest="partition",
+                     type="string",
+                     default=os.environ["PARTITION"] or "",
+                     help="use this partition [%default%]" )
+  opgroup.add_option( "-r", "--runtime",
+                     dest="runtime",
+                     type="string",
+                     default="",
+                     help="starttime,runtime" )
+  parser.add_option_group( opgroup )
+
   # parse arguments
   (options, args) = parser.parse_args()
   
@@ -942,8 +946,21 @@ if __name__ == "__main__":
   for files in args:
     parset.readFile( files )
 
+  if options.partition:
+    parset.setPartition( options.partition )
+
+  if options.runtime:
+    starttime, runtime = options.runtime.split(",")
+    parset.setStartRunTime( starttime, runtime )
+
   parset.postRead()
   parset.preWrite()
-  parset.writeFile( "-" )  
+
+  if options.key:
+    print parset[options.key]
+  else:
+    # default: print whole parset
+    parset.writeFile( "-" )  
 
   sys.exit(0)
+
