@@ -72,6 +72,7 @@ void checkStations(const std::string &filename)
 	rfiStrategy::BaselineSelector selector;
 	selector.SetUseLog(true);
 	
+	statisticsCollection.IntegrateBaselinesToOneChannel();
 	const BaselineStatisticsMap &baselineMap = statisticsCollection.BaselineStatistics();
 	const std::vector<std::pair<unsigned, unsigned> > list = baselineMap.BaselineList();
 	for(std::vector<std::pair<unsigned, unsigned> >::const_iterator i=list.begin();i!=list.end();++i)
@@ -82,7 +83,16 @@ void checkStations(const std::string &filename)
 		selector.Add(statistic, antennae[a1], antennae[a2]);
 	}
 	std::vector<rfiStrategy::BaselineSelector::SingleBaselineInfo> markedBaselines;
+	std::set<unsigned> badStations;
+	
 	selector.Search(markedBaselines);
+	selector.ImplyStations(markedBaselines, 0.3, badStations);
+	
+	std::cout << "List of " << badStations.size() << " bad stations:\n";
+	for(std::set<unsigned>::const_iterator i=badStations.begin();i!=badStations.end();++i)
+	{
+		std::cout << antennae[*i].name << " (" << *i << ")\n";
+	}
 }
 
 void printSyntax(std::ostream &stream, char *argv[])

@@ -22,6 +22,8 @@
 #define BASELINE_SELECTOR_H
 
 #include <string>
+#include <set>
+#include <vector>
 
 #include <boost/thread/mutex.hpp>
 
@@ -84,6 +86,7 @@ namespace rfiStrategy {
 
 			typedef std::vector<SingleBaselineInfo> BaselineVector;
 			void Search(std::vector<BaselineSelector::SingleBaselineInfo> &markedBaselines);
+			void ImplyStations(const std::vector<BaselineSelector::SingleBaselineInfo> &markedBaselines, double maxRatio, std::set<unsigned> &badStations) const;
 			void Add(Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData);
 			void Add(class DefaultStatistics &baselineStat, class AntennaInfo &antenna1, class AntennaInfo &antenna2);
 			
