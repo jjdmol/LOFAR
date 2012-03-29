@@ -6,6 +6,8 @@ configure_file(
   @ONLY)
 
 install(PROGRAMS 
+  startBGL.sh
+  stopBGL.sh
   BGPPartition.sh
   CNProcessing.sh
   IONProcessing.sh

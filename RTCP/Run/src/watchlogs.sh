@@ -14,7 +14,7 @@ ERRORLOGS=
 
 if [ $ISPRODUCTION -eq 1 ]
 then
-  for l in $LOGDIR/BlueGeneControl.log $LOGDIR/runParset.py.log
+  for l in $LOGDIR/BlueGeneControl.log $LOGDIR/startBGL.log
   do
     echo Reading additional error log $l
     ERRORLOGS="$ERRORLOGS $FLAGS -cS olap -fr errors -I $l"
