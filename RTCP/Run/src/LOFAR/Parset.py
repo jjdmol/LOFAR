@@ -4,11 +4,7 @@ import sys,os
 # allow ../util to be found, a bit of a hack
 sys.path += [(os.path.dirname(__file__) or ".")+"/.."]
 
-import datetime
-import time
-import socket
 import util.Parset
-import getpass
 import os
 from itertools import count
 from Partitions import PartitionPsets
@@ -183,6 +179,10 @@ class Parset(util.Parset.Parset):
         delIfEmpty( "OLAP.CNProc.phaseOnePsets" )
         delIfEmpty( "OLAP.CNProc.phaseTwoPsets" )
         delIfEmpty( "OLAP.CNProc.phaseThreePsets" )
+
+        # make sure these values will be recalculated in finalise()
+        del self['OLAP.IONProc.integrationSteps']
+        del self['OLAP.CNProc.integrationSteps']
 
         # convert pencil rings and fly's eye to more coordinates
         for b in count():
@@ -671,17 +671,6 @@ class Parset(util.Parset.Parset):
     def getNrUsedStorageNodes(self):
         return len(self.storagenodes)
 
-    def disableCNProc(self):
-        self["OLAP.OLAP_Conn.IONProc_CNProc_Transport"] = "NULL"
-
-    def disableIONProc(self):
-        self["OLAP.OLAP_Conn.IONProc_Storage_Transport"] = "NULL"
-        self["OLAP.OLAP_Conn.IONProc_CNProc_Transport"] = "NULL"
-
-    def disableStorage(self):
-        self["OLAP.OLAP_Conn.IONProc_Storage_Transport"] = "NULL"
-        self.setStorageNodes([])
-
     def parseMask( self, mask, sap = 0, subband = 0, beam = 0, stokes = 0, part = 0 ):
       """ Fills a mask. """
 
@@ -718,16 +707,6 @@ class Parset(util.Parset.Parset):
 
       self["Observation.startTime"] = format( start )
       self["Observation.stopTime"] = format( stop )
-
-    def setClock( self, mhz ):
-      self['Observation.sampleClock'] = int( mhz )
-
-    def setIntegrationTime( self, integrationTime ):
-      self["OLAP.Correlator.integrationTime"] = integrationTime
-
-      # make sure these values will be recalculated in finalise()
-      del self['OLAP.IONProc.integrationSteps']
-      del self['OLAP.CNProc.integrationSteps']
 
     def getNrSAPs( self ):
       return int(self["Observation.nrBeams"])
