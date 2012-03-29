@@ -17,7 +17,6 @@ install(PROGRAMS
   ${CMAKE_CURRENT_BINARY_DIR}/locations.sh
   watchlogs.sh
   commandOLAP.py
-  runParset.py
   DESTINATION bin)
 
 install(FILES
