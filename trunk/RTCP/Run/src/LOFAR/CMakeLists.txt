@@ -3,7 +3,6 @@
 install(PROGRAMS 
   __init__.py
   CommandClient.py
-  Core.py
   Locations.py
   Logger.py
   LogValidators.py
