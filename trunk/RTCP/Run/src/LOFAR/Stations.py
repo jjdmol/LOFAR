@@ -3,7 +3,6 @@
 from Partitions import PartitionPsets
 import os
 import sys
-from Locations import Locations
 
 # allow ../util to be found, a bit of a hack
 sys.path += [(os.path.dirname(__file__) or ".")+"/.."]
@@ -181,9 +180,8 @@ def defineStations( s ):
     "RSP_1": ["HBA1"],
   }
 
-  # TODO: reolsve only after Locations.files have been finalised
-  # adter processing command-line parameters
-  configdir = Locations.resolvePath( Locations.files["configdir"] )
+  lofarroot = os.environ["LOFARROOT"] or "/opt/lofar"
+  configdir = "%s/etc" % (lofarroot,)
 
   # parse hostname <-> ip translation, since not all hostnames
   # are ionodes (foreign stations send to a router)
