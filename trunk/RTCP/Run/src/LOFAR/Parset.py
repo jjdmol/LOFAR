@@ -642,21 +642,6 @@ class Parset(util.Parset.Parset):
 	
 	self.stations = sorted( stations, cmp=lambda x,y: cmp(name(x),name(y)) )
 
-    def forceStations(self,stations):
-	""" Override the set of stations to use (from the command line). """
-
-	self.setStations(stations)
-
-        def name( s ):
-          try:
-            return s.name
-          except:
-            return s
-
-        self['OLAP.storageStationNames'] = map( name, self.stations )
-        del self['Observation.VirtualInstrument.stationList']
-        #del self['Observation.antennaSet']
-        
     def setPartition(self,partition):
 	""" Define the partition to use. """
 
