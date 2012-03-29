@@ -127,6 +127,7 @@ set(STRATEGY_ACTION_FILES
   strategy/actions/writeflagsaction.cpp)
 
 set(STRATEGY_ALGORITHMS_FILES
+  strategy/algorithms/baselineselector.cpp
   strategy/algorithms/eigenvalue.cpp
   strategy/algorithms/fringestoppingfitter.cpp
   strategy/algorithms/fringetestcreater.cpp
@@ -235,7 +236,9 @@ if(GTKMM_FOUND)
 		gui/imagewidget.cpp
 		gui/imagepropertieswindow.cpp
 		)
+		lofar_add_bin_program(badstations badstations.cpp ${REMOTE_FILES})
 		target_link_libraries(aoqplot ${GTKMM_LIBRARIES})
+		target_link_libraries(badstations ${GTKMM_LIBRARIES})
 	endif(BOOST_ASIO_H_FOUND AND SIGCXX_FOUND)
 else()
   message(WARNING " The graphical user interface library GTKMM was not found; rfigui and aoqplot will not be compiled.")

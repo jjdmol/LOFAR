@@ -33,7 +33,6 @@
 #include <AOFlagger/msio/segmentedimage.h>
 #include <AOFlagger/msio/spatialmatrixmetadata.h>
 
-#include <AOFlagger/strategy/actions/baselineselectionaction.h>
 #include <AOFlagger/strategy/actions/strategyaction.h>
 
 #include <AOFlagger/strategy/control/artifactset.h>
@@ -44,6 +43,7 @@
 #include <AOFlagger/strategy/imagesets/spatialmsimageset.h>
 #include <AOFlagger/strategy/imagesets/spatialtimeimageset.h>
 
+#include <AOFlagger/strategy/algorithms/baselineselector.h>
 #include <AOFlagger/strategy/algorithms/mitigationtester.h>
 #include <AOFlagger/strategy/algorithms/morphology.h>
 #include <AOFlagger/strategy/algorithms/fringetestcreater.h>
@@ -384,7 +384,7 @@ void MSWindow::onExecuteStrategyPressed()
 	artifacts.SetIterationsPlot(new IterationsPlot());
 	
 	artifacts.SetPolarizationStatistics(new PolarizationStatistics());
-	artifacts.SetBaselineSelectionInfo(new rfiStrategy::BaselineSelectionInfo());
+	artifacts.SetBaselineSelectionInfo(new rfiStrategy::BaselineSelector());
 	artifacts.SetImager(_imagePlaneWindow->GetImager());
 
 	if(HasImage())
