@@ -148,7 +148,7 @@ if [ -e $DIR/load_OTDB_comps ]; then
   echo "."
 
   # we now have a file with components (in reverse) order, swap the order
-  tac ${REVERSORDERFILE} | uniq >${RESULTFILE}
+ # tac ${REVERSORDERFILE} | uniq >${RESULTFILE}
 #  rm -f ${NODELISTFILE} ${REVERSORDERFILE}
 
   # Construct commandline for load_OTDB_comps

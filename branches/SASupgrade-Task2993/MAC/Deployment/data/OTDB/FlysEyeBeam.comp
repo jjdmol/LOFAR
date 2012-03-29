@@ -48,5 +48,4 @@ par  channelsPerSubband    	O    uint   -      10    0    0      	- 	'>>Obervati
 
 #      name              	vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-uses  MeasurementIdentifier     4.0.0  development '1'		      "MeasurementIdentifier specification"
 uses  Station     		4.0.0  development '1'		      "Station specification"
