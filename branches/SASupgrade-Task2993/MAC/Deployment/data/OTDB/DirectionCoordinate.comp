@@ -20,10 +20,10 @@
 
 
 #########################################################################################################
-# -- DirectionAxis -- (LinearAxis- Axis)
+# -- DirectionLinearAxis -- (LinearAxis- Axis)
 #      name       	vers   qual  		constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node  DirectionAxis	4.0.0  development  	'node constraint'  "DirectionAxis specification"
+node  DirectionLinearAxis	4.0.0  development  	'node constraint'  "DirectionLinearAxis specification"
 
 #
 # name			name of the parameter
@@ -64,7 +64,7 @@ node  DirectionCoordinate	4.0.0  development  	'node constraint'  "DirectionCoor
 #--------------------------------------------------------------------------------------------------------
 #    name                 dir. type   unit   prun. vm   value	constr.	descr.
 #--------------------------------------------------------------------------------------------------------
-par  nrOfDirectionAxes    O    uint   -      10    0    0               -     	'Number of DirectionAxis instantations'
+par  nrOfDirectionLinearAxes    O    uint   -      10    0    0               -     	'Number of DirectionLinearAxis instantations'
 par  PC0_0  		  O    dbl    -      10    0    0		-  	''
 par  PC0_1  		  O    dbl    -      10    0    0		-  	''
 par  PC1_0  		  O    dbl    -      10    0    0		-  	''
@@ -78,4 +78,4 @@ par  latitudePole	  O    dbl    -      10    0    0		-  	''
 
 #      name              vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-uses  DirectionAxis      4.0.0  development '1'		       "SpectralTabularAxis specification"
+uses  DirectionLinearAxis      4.0.0  development '1'		       "DirectionLinearAxis specification"
