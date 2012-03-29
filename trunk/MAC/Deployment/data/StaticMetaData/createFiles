@@ -652,7 +652,7 @@ if (sys.argv[1] == "localhost"):
             createHBADeltasFile    (resultDir, stationName, dataDir)
             createiHBADeltasFile   (resultDir, stationName, dataDir)
 #            createPPSFile          (resultDir, stationName, dataDir)
-            createCalTableFile     (resultDir, stationName, dataDir)
+#            createCalTableFile     (resultDir, stationName, dataDir)
             createHardwareMonitorFile(resultDir, stationName, dataDir)
             de601Exceptions        (resultDir, stationName, dataDir)
     else:
@@ -707,7 +707,7 @@ else:
         createiHBADeltasFile   (resultDir, stationName, dataDir)
 #        createPPSFile          (resultDir, stationName, dataDir)
         createHardwareMonitorFile(resultDir, stationName, dataDir)
-        createCalTableFile     (resultDir, stationName, dataDir)
+#        createCalTableFile     (resultDir, stationName, dataDir)
         de601Exceptions        (resultDir, stationName, dataDir)
         
 if len(warnings) > 0:
