@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-__all__ = ["Locations","Hosts","isProduction","isDevelopment","homeDir"]
+__all__ = ["Locations","isProduction","isDevelopment","homeDir","lofarRoot"]
 
 import os
 import time
@@ -17,62 +17,21 @@ def isDevelopment():
 def homeDir():
   return os.environ["HOME"]
 
-class Hosts:
-  def __init__(self):
-    self.hostnames = {}
-
-  def add(self,hostname,ip,interface="external"):
-    ips = self.hostnames.get( hostname, {} );
-    ips[interface] = ip
-
-    self.hostnames[hostname] = ips
-
-  def resolve(self,hostname,interface="external"):
-    if hostname in self.hostnames:
-      ips = self.hostnames[hostname]
-
-      if interface in ips:
-        return ips[interface]
-
-    # fallback
-    return gethostbyname( hostname )
+def lofarRoot():
+  return os.environ["LOFARROOT"] or "/opt/lofar"
 
 class Locations:
   def __init__(self):
     self.isproduction = isProduction()
 
-    self.buildvars = {}
-    self.executables = {}
     self.files = {}
-    self.nodes = {}
-
-    self.setDefaults()
-
-  def setDefaults(self):
-    # default build variants
-    self.buildvars.update( {
-        "Storage": "gnu_opt",
-    } )
-    self.executables.update( {
-        "Storage": "Storage_main",
-    } )
 
     self.files.update( {
-        # allows ${HOME} to be resolved in other paths
-        "home":    homeDir(),
-
         # the parset that will be written by us and read by the sections
         # the observation ID is included to allow parallel observations
 
-        # where to store logs
-	"logdir":  "${BASEDIR}/log",
-
         # where configuration files are kept
-        "configdir": ".",
-
-        # parset name mas
-        "parset": "${LOGDIR}/L${OBSID}.parset",     # for communication with Storage and offline pipelines
-        "parset-ion": "${LOGDIR}/L${OBSID}.parset", # for communication with the I/O nodes
+        "configdir": "%s/etc" % (lofarRoot(),),
 
         # location of the observation id counter
 	"nextmsnumber": "/globalhome/lofarsystem/log/nextMSNumber",
@@ -80,46 +39,25 @@ class Locations:
 
     if self.isproduction:
       self.files.update( {
-        # fix the homedir, for systems which link to /cephome, /localhome, /home. etc
-        "home":    "/globalhome/lofarsystem",
-
-        # the base directory most paths will be related to
-	"basedir": "${HOME}/production/lofar",
-
-        # the locations of the main executables
-	"storage": "/opt/storage/current/bin/%s" % (self.executables["Storage"],),
-
-        # where to store logs
-	"logdir":  "${HOME}/log",
+        # the location of the Storage executable
+	"storage": "/data/home/lofarsys/production/lofar/bin/Storage_main",
 
 	# where to save the parset
-	"parset-ion":  "/bghome0/lofarsys/parsets/RTCP-${OBSID}.parset", # for communication to the IO nodes 
-
-        # where configuration files are kept
-        "configdir": "${BASEDIR}/bgfen/etc",
-
-        # location of valgrind suppressions file
-        "ionsuppfile": "",
-        "storagesuppfile": "",
+        "parset":      "/globalhome/lofarsystem/parsets/L${OBSID}.parset", # for communication with Storage and offline pipelines
+	"parset-ion":  "/bghome0/lofarsys/parsets/L${OBSID}.parset", # for communication to the IO nodes 
       } )
     else:
       self.files.update( {
         # the base directory most paths will be related to
-	"basedir": "${HOME}/projects/LOFAR",
+	"basedir":    "%s/projects/LOFAR" % (homeDir(),),
 
-        # where configuration files are kept
-        "configdir": "${BASEDIR}/RTCP/Run/src",
+        # the location of the Storage executable
+	"storage":    "${BASEDIR}/installed/gnu_opt/bin/Storage_main",
 
-	"storage": "${BASEDIR}/installed/%s/bin/%s" % (self.buildvars["Storage"],self.executables["Storage"]),
-
-        # location of valgrind suppressions file
-        "ionsuppfile": "${BASEDIR}/RTCP/IONProc/src/IONProc.supp",
-        "storagesuppfile": "${BASEDIR}/RTCP/Storage/src/Storage.supp",
+	# where to save the parset
+        "parset":     "${BASEDIR}/parsets/L${OBSID}.parset",     # for communication with Storage and offline pipelines
+        "parset-ion": "${BASEDIR}/parsets/L${OBSID}.parset", # for communication with the I/O nodes
       } )
-
-    #if not os.path.isdir( self.files["configdir"] ):
-    #  # fall back to default config dir
-    #  self.files["configdir"] = os.path.dirname(__file__)+"/.."
 
   def setFilename(self,name,path):
     self.files[name] = path 
@@ -158,5 +96,4 @@ class Locations:
       self.files[name] = self.resolvePath( path, parset )
 
 Locations = Locations()
-Hosts = Hosts()
 

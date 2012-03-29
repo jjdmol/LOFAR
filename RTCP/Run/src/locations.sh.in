@@ -12,7 +12,7 @@ then
   IONPROC=$HOME/production/lofar/bgp_ion/bin/ION_Processing
   ETCDIR=/opt/lofar/etc
 
-  LOGDIR=$HOME/log
+  LOGDIR=/localhome/log
   LOGBACKUPDIR=/globalhome/lofarsystem/log
   LOGPARAMS="-s ccu001:24500"
 else

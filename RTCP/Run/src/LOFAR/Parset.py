@@ -12,7 +12,7 @@ import getpass
 import os
 from itertools import count
 from Partitions import PartitionPsets
-from Locations import Hosts,Locations
+from Locations import Locations
 from Stations import Stations
 from RingCoordinates import RingCoordinates
 from util.dateutil import parse,format,parseDuration,timestamp
