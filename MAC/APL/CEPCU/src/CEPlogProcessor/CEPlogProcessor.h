@@ -87,6 +87,9 @@ private:
     void     processParset      (const std::string &observationID);
 
     struct logline {
+      // original log line
+      const char *fullmsg;
+
       // info straight from splitting log line
       const char *process;
       const char *host;
@@ -108,6 +111,8 @@ private:
 
     // Return the observation ID, or -1 if none can be found
     int _getParam(const char *msg,const char *param) const;
+
+    bool _recordLogMsg(const struct logline &logline) const;
 
     // Return the temporary obs name to use in PVSS. Also registers the temporary obs name
     // if the provided log line announces it.
