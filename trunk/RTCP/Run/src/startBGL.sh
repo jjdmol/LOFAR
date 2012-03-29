@@ -19,10 +19,6 @@ OBSID=$5
 source /opt/lofar/bin/locations.sh
 
 (
-# Remove values which should be derived
-sed -i 's/.*OLAP.CNProc.integrationSteps.*//' $PARSET
-sed -i 's/.*OLAP.IONProc.integrationSteps.*//' $PARSET
-
 # Convert keys where needed
 /opt/lofar/bin/LOFAR/Parset.py $PARSET /opt/lofar/etc/OLAP.parset <(echo "$EXTRA_KEYS") > $IONPROC_PARSET
 
