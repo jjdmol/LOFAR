@@ -69,7 +69,6 @@ class imager_awimager(LOFARnodeTCP):
                                'mask':mask_file_path
                                }
 
-            return 0
             # save the parset at the target dir for the image            
             temp_parset_filename = patch_parset(parset, patch_dictionary)
             calculated_parset_path = os.path.join(image_path_head, "parset.par")
