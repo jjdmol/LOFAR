@@ -13,8 +13,8 @@ import gsmutils as gsm
 from logger import logger
 
 
-from lofarpipe.support.utilities import create_directory                        #@UnresolvedImport
-from lofarpipe.recipes.nodes.imager_create_dbs import imager_create_dbs         #@UnresolvedImport
+from support.utilities import create_directory                        #@UnresolvedImport
+from nodes.imager_create_dbs import imager_create_dbs         #@UnresolvedImport
 
 
 
@@ -30,6 +30,10 @@ class ImagerCreateDBsTestWrapper(imager_create_dbs):
         self.logger = logger()
         self.db = db
         self.gsm = gsm
+
+        self.outputs = {}
+        self.outputs['parmdbs'] = "default value, uncalled"
+        self.outputs['sky'] = "default value, uncalled"
 
 class ImagerCreateDBsTest(unittest.TestCase):
     """
@@ -323,7 +327,7 @@ class ImagerCreateDBsTest(unittest.TestCase):
         except:
             pass
 
-        os.rmdir(tempdir)
+        #os.rmdir(tempdir)
 
     def test__create_bbs_sky_model_theta(self):
         """
@@ -367,7 +371,7 @@ class ImagerCreateDBsTest(unittest.TestCase):
         except:
             pass
 
-        os.rmdir(tempdir)
+        #os.rmdir(tempdir)
 
 
 if __name__ == "__main__":
