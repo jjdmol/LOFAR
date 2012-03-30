@@ -3,14 +3,15 @@
 # The create dbs recipe is responcible for settings up database
 # for subsequenty imaging steps. It creates two databases in three steps
 #   1. sourcedb. 
-#      This db will in a later stage contain all the sources found by bbs in the
+#      On the first major imaging cycle filled by the gsm. sourcefinding in the 
+#      in the later steps sources found are append to the current list
 #      Current patch of the sky. It is filled with an initial started set of
 #      sources created by  the Global Sky Model (GSM). 
 #      The GSM does not create a sourceDB. It creates a text file which is con-
 #      sumed by makesourcedb resulting in a sourceDB (casa table)
 #      There is a single sourcedb for a measurement set
 #   2. parmdb
-#      Each individual timeslice needs a place to collect paramters: This is
+#      Each individual timeslice needs a place to collect parameters: This is
 #      done in the paramdb. 
 # 
 # Wouter Klijn 2012
@@ -33,7 +34,7 @@ from lofarpipe.support.utilities import read_initscript
 from lofarpipe.support.utilities import catch_segfaults
 from lofarpipe.support.group_data import load_data_map
 import monetdb.sql as db
-import lofar.gsmutils as gsm
+import lofar.gsm.gsmutils as gsm                                                    #@UnresolvedImport
 
 #TODO: A better place for this template
 template_parmdb = """
@@ -54,27 +55,37 @@ class imager_create_dbs(LOFARnodeTCP):
     def run(self, concatenated_measurement_set, sourcedb_target_path,
             monet_db_hostname, monet_db_port, monet_db_name, monet_db_user,
             monet_db_password, assoc_theta, parmdb_executable, host_slice_map,
-            parmdb_suffix, init_script,
-            working_directory, makesourcedb_path):
+            parmdb_suffix, init_script, working_directory, makesourcedb_path,
+            source_list_path_extern):
         """
         
         """
         self.logger.info("Starting imager_create_dbs Node")
-        #create a temporary file to contain the skymap
-        temp_sky_path = sourcedb_target_path + ".temp"
-        if self._get_sky_model(concatenated_measurement_set,
-                 temp_sky_path, monet_db_hostname, monet_db_port,
-                 monet_db_name, monet_db_user, monet_db_password, assoc_theta):
-            self.logger.error("failed creating skymodel")
-            return 1
+
+        # If a (local) sourcelist is received use it else
+        # construct one
+        if source_list_path_extern == "":
+            #create a temporary file to contain the skymap
+            source_list = sourcedb_target_path + ".temp"
+            if self._get_sky_model(concatenated_measurement_set,
+                     source_list, monet_db_hostname, monet_db_port,
+                     monet_db_name, monet_db_user, monet_db_password, assoc_theta):
+                self.logger.error("failed creating skymodel")
+                return 1
+            append = False
+        else:
+            source_list = source_list_path_extern
+            append = True
 
         # convert it to a sourcedb (casa table)
-        if self._create_source_db(temp_sky_path, sourcedb_target_path,
-                                  init_script, working_directory, makesourcedb_path):
+        if self._create_source_db(source_list, sourcedb_target_path,
+                                  init_script, working_directory,
+                                  makesourcedb_path, append):
             self.logger.error("failed creating sourcedb")
             return 1
         self.outputs["sky"] = sourcedb_target_path
 
+        # TODO:
         #host_slice_map is mapfile(only first index is set
         if self._create_parmdb_for_timeslices(parmdb_executable, host_slice_map[0][1],
                                            parmdb_suffix):
@@ -85,29 +96,30 @@ class imager_create_dbs(LOFARnodeTCP):
         return 0
 
     def _create_source_db(self, temp_sky_path, sourcedb_target_path, init_script,
-                          working_directory, executable):
+                          working_directory, executable, append = False):
         """
         _create_source_db consumes a skymap text file and produces a source db
         (pyraptable) 
         """
-        if os.path.isdir(sourcedb_target_path):
+        #remove existing sourcedb if not appending
+        if (append == False) and os.path.isdir(sourcedb_target_path):
             self.logger.info("Removing existing sky model: {0}".format(
                                                         sourcedb_target_path))
             try:
-                #always remove existing sourcedbs
                 shutil.rmtree(sourcedb_target_path)
             except:
                 self.logger.error(
                     "failed removing an existing sky model: {0}".format(
                                                         sourcedb_target_path))
-
-
+                # fail: stale sourcedb will make bbs fail in a later step
+                return 1
 
         # The command and parameters to be run
         cmd = [executable, "in={0}".format(temp_sky_path),
                "out={0}".format(sourcedb_target_path),
-               "format=<"] # format according to Ger 
-
+               "format=<", # format according to Ger
+               # Always set append flag: no effect on non exist db
+               "append=true"]
 
         try:
             environment = read_initscript(self.logger, init_script)

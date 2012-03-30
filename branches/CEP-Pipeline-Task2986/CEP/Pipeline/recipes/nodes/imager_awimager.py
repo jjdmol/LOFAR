@@ -28,55 +28,64 @@ from lofarpipe.support.utilities import patch_parset
 from lofarpipe.support.utilities import get_parset
 from lofarpipe.support.utilities import read_initscript
 from lofarpipe.support.utilities import catch_segfaults
-from lofar.parameterset import parameterset #@UnresolvedImport #marcel new im
+from lofar.parameterset import parameterset #@UnresolvedImport
 import pyrap.tables as pt                   #@UnresolvedImport
 from subprocess import CalledProcessError
-
+from lofarpipe.support.utilities import create_directory
+from lofarpipe.support.parset import Parset
+import pyrap.images as pi                   #@UnresolvedImport
+import lofar.parmdb                          #@UnresolvedImport
+import numpy as np
 
 class imager_awimager(LOFARnodeTCP):
-    def run(self, executable, init_script, parset, working_dir, concatenated_measurement_set):
+    def run(self, executable, init_script, parset, working_directory,
+            output_image, concatenated_measurement_set, sourcedb_path, mask_patch_size):
         self.logger.info("Start imager_awimager  run: client")
-
         log4CPlusName = "imager_awimager"
-        if not os.access(executable, os.X_OK):
-            self.logger.error("Could not find executable: {0}".format(
-                                                             executable))
-            return 1
-
-        # Time execution of this job
         with log_time(self.logger):
             # Calculate awimager parameters that depend on measurement set                 
             cell_size, npix, w_max, w_proj_planes = \
                 self._calc_par_from_measurement(concatenated_measurement_set, parset)
 
-            # Update the parset with calculated parameters
+
+            # Get the target image location from the parset. Create target dir
+            # if it not exists
+            (image_path_head, tail) = os.path.split(output_image)
+            if not os.path.exists(image_path_head):
+                create_directory(image_path_head)
+
+            mask_file_path = self._create_mask(npix, cell_size, output_image,
+                         concatenated_measurement_set, init_script, executable,
+                         working_directory, log4CPlusName, sourcedb_path, mask_patch_size)
+
+            # Update the parset with calculated parameters, and output image
             patch_dictionary = {'uselogger': 'True', # enables log4cpluscd log
                                'ms': concatenated_measurement_set,
                                'cellsize': cell_size,
                                'npix': npix,
                                'wmax': w_max,
-                               'wprojplanes':w_proj_planes
+                               'wprojplanes':w_proj_planes,
+                               'image':output_image,
+                               'mask':mask_file_path
                                }
-            try:
-                temp_parset_filename = patch_parset(parset, patch_dictionary)
-            except Exception, e:
-                self.logger.error("failed loading and updating the parset: {0}". \
-                                  format(parset))
-                self.logger.error(e)
-                return 1
+
+            return 0
+            # save the parset at the target dir for the image            
+            temp_parset_filename = patch_parset(parset, patch_dictionary)
+            calculated_parset_path = os.path.join(image_path_head, "parset.par")
+            shutil.copy(temp_parset_filename, calculated_parset_path)
+            os.unlink(temp_parset_filename)
 
             # The command and parameters to be run
-            cmd = [executable, temp_parset_filename]
-
-            #run awimager
+            cmd = [executable, calculated_parset_path]
             try:
                 environment = read_initscript(self.logger, init_script)
-                with CatchLog4CPlus(working_dir,
+                with CatchLog4CPlus(working_directory,
                         self.logger.name + "." + os.path.basename(log4CPlusName),
                         os.path.basename(executable)
                 ) as logger:
-                    catch_segfaults(cmd, working_dir, environment,
-                                            logger, cleanup = None)
+                    catch_segfaults(cmd, working_directory, environment,
+                                            logger)
 
             # Thrown by catch_segfault
             except CalledProcessError, e:
@@ -87,12 +96,164 @@ class imager_awimager(LOFARnodeTCP):
                 self.logger.error(str(e))
                 return 1
 
-            finally:
-                # Cleanup of temporary parameterset
-                os.unlink(temp_parset_filename)
 
-        self.outputs["image"] = get_parset(parset).getString('image')
+        self.outputs["image"] = output_image
         return 0
+
+    def _create_mask(self, npix, cell_size, output_image,
+                     concatenated_measurement_set, init_script, executable,
+                     working_directory, log4CPlusName, sourcedb_path, mask_patch_size):
+		# TODO: Mode to a dir with standalone pipeline parts
+        #Create an empty mask using awimager
+        # Create the parset used to make a mask
+        mask_file_path = output_image + ".mask"
+        mask_parset = Parset()
+        mask_patch_dictionary = {"npix":npix,
+                                 "cellsize":cell_size,
+                                 "image":mask_file_path,
+                                 "ms":concatenated_measurement_set,
+                                 "operation":"empty",
+                                 "stokes":"'I'"
+                                 }
+        mask_parset_filename = patch_parset(mask_parset, mask_patch_dictionary)
+
+        # The command and parameters to be run
+        cmd = [executable, mask_parset_filename]
+        try:
+            environment = read_initscript(self.logger, init_script)
+            with CatchLog4CPlus(working_directory,
+                    self.logger.name + "." + os.path.basename(log4CPlusName),
+                    os.path.basename(executable)
+            ) as logger:
+                catch_segfaults(cmd, working_directory, environment,
+                                        logger)
+        # Thrown by catch_segfault
+        except CalledProcessError, e:
+            self.logger.error(str(e))
+            return 1
+        except Exception, e:
+            self.logger.error(str(e))
+            return 1
+
+        # create the actual mask
+        self._msss_mask(mask_file_path, sourcedb_path, mask_patch_size)
+        return mask_file_path
+
+    def _msss_mask(self, mask_file_path, sourcedb_path, mask_patch_size = 1.0):
+        """
+        Fill a mask based on skymodel
+        Usage: ./msss_mask.py mask-file skymodel
+        inputs:wenss-2048-15.mask skymodel.dat
+        Bugs: fdg@mpa-garching.mpg.de
+              pipeline implementation klijn@astron.nl
+        version 0.3
+        
+         Edited by JDS, 2012-03-16:
+         * Properly convert maj/minor axes to half length
+         * Handle empty fields in sky model by setting them to 0
+         * Fix off-by-one error at mask boundary
+        
+         FIXED BUG
+         * if a source is outside the mask, the script ignores it
+         * if a source is on the border, the script draws only the inner part
+         * can handle skymodels with different headers
+        
+         KNOWN BUG
+         * not works with single line skymodels, workaround: add a fake source outside the field
+         * mask patched display large amounts of aliasing. A possible sollution would
+           be normalizing to pixel centre. ( int(normalize_x * npix) / npix + (0.5 /npix)) 
+           ideally the patch would increment in pixel radiuses
+             
+         Version 0.3  (Wouter Klijn, klijn@astron.nl)
+         * Usage of sourcedb instead of txt document as 'source' of sources
+           This allows input from different source sources
+         Version 0.31  (Wouter Klijn, klijn@astron.nl)  
+         * Adaptable patch size (patch size needs specification)
+        """
+        pad = 500. # increment in maj/minor axes [arcsec]
+
+        # open mask
+        mask = pi.image(mask_file_path, overwrite = True)
+        mask_data = mask.getdata()
+        xlen, ylen = mask.shape()[2:]
+        freq, stokes, null, null = mask.toworld([0, 0, 0, 0])
+
+
+        #Open the sourcedb:
+        table = pt.table(sourcedb_path + "::SOURCES")
+        pdb = lofar.parmdb.parmdb(sourcedb_path)
+
+        # Get the data of interest
+        source_list = table.getcol("SOURCENAME")
+        source_type_list = table.getcol("SOURCETYPE")
+        all_values_dict = pdb.getDefValues()  # All date in the format valuetype:sourcename
+
+        # Loop the sources
+        for source, source_type in zip(source_list, source_type_list):
+            if source_type == 1:
+                type_string = "Gaussian"
+            else:
+                type_string = "Point"
+            self.logger.info("processing: {0} ({1})".format(source, type_string))
+
+            # Get de ra and dec (already in radians)
+            ra = all_values_dict["Ra:" + source][0, 0]
+            dec = all_values_dict["Dec:" + source][0, 0]
+            if source_type == 1:
+                # Get the raw values from the db
+                maj_raw = all_values_dict["MajorAxis:" + source][0, 0]
+                min_raw = all_values_dict["MinorAxis:" + source][0, 0]
+                pa_raw = all_values_dict["Orientation:" + source][0, 0]
+                #convert to radians (conversion is copy paste JDS)
+                maj = (((maj_raw + pad)) / 3600.) * np.pi / 180. # major radius (+pad) in rad
+                minor = (((min_raw + pad)) / 3600.) * np.pi / 180. # minor radius (+pad) in rad
+                pa = pa_raw * np.pi / 180.
+                if maj == 0 or minor == 0: # wenss writes always 'GAUSSIAN' even for point sources -> set to wenss beam+pad
+                    maj = ((54. + pad) / 3600.) * np.pi / 180.
+                    minor = ((54. + pad) / 3600.) * np.pi / 180.
+            elif source_type == 0: # set to wenss beam+pad
+                maj = (((54. + pad) / 2.) / 3600.) * np.pi / 180.
+                minor = (((54. + pad) / 2.) / 3600.) * np.pi / 180.
+                pa = 0.
+            else:
+                self.logger.info("WARNING: unknown source source_type ({0}), ignoring it.".format(source_type))
+                continue
+
+            #print "Maj = ", maj*180*3600/np.pi, " - Min = ", minor*180*3600/np.pi # DEBUG
+
+            # define a small square around the source to look for it
+            null, null, y1, x1 = mask.topixel([freq, stokes, dec - maj, ra - maj / np.cos(dec - maj)])
+            null, null, y2, x2 = mask.topixel([freq, stokes, dec + maj, ra + maj / np.cos(dec + maj)])
+            xmin = np.int(np.floor(np.min([x1, x2])))
+            xmax = np.int(np.ceil(np.max([x1, x2])))
+            ymin = np.int(np.floor(np.min([y1, y2])))
+            ymax = np.int(np.ceil(np.max([y1, y2])))
+
+            if xmin > xlen or ymin > ylen or xmax < 0 or ymax < 0:
+                self.logger.info("WARNING: source {0} falls outside the mask, ignoring it.".format(source))
+                continue
+
+            if xmax > xlen or ymax > ylen or xmin < 0 or ymin < 0:
+                self.logger.info("WARNING: source {0} falls across map edge.".format(source))
+                pass
+
+
+            for x in xrange(xmin, xmax):
+                for y in xrange(ymin, ymax):
+                    # skip pixels outside the mask field
+                    if x >= xlen or y >= ylen or x < 0 or y < 0:
+                        continue
+                    # get pixel ra and dec in rad
+                    null, null, pix_dec, pix_ra = mask.toworld([0, 0, y, x])
+
+                    X = (pix_ra - ra) * np.sin(pa) + (pix_dec - dec) * np.cos(pa); # Translate and rotate coords.
+                    Y = -(pix_ra - ra) * np.cos(pa) + (pix_dec - dec) * np.sin(pa); # to align with ellipse
+                    if (((X ** 2) / (maj ** 2)) +
+                        ((Y ** 2) / (minor ** 2))) < mask_patch_size:
+                        mask_data[0, 0, y, x] = 1
+        null = null
+        mask.putdata(mask_data)
+        table.close()
 
     def _nearest_ceiled_power2(self, value):
         '''
@@ -186,8 +347,6 @@ class imager_awimager(LOFARnodeTCP):
             '{0} where sumsqr(UVW[:2]) <{1} giving as memory]))'.format(\
             measurement_set, baseline_limit *
             baseline_limit))[0]
-
-        #waveLength = pt.taql('CALC C()/REF_FREQUENCY from {0}/SPECTRAL_WINDOW'.format(measurement_set))[0]
 
         t = pt.table(measurement_set)
         t1 = pt.table(t.getkeyword("SPECTRAL_WINDOW"))
