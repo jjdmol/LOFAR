@@ -103,7 +103,7 @@ CREATE OR REPLACE FUNCTION dupVTleafNode(INT4, INT4, INT2)
 	  -- Is a real table connected to this node?
 	  IF vOrgnode.tablename != '' THEN
 		vTablename := vOrgNode.tablename;
-		vRecordID := createNewRecord(vTablename);
+		vRecordID := createNewRecord(vTablename, vOrgNode.treeID, vOrgNode.name);
 	  ELSE
 		vTablename := '';
 		vRecordID := 0;

@@ -34,7 +34,7 @@
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION newTree(INT4, INT4, INT4, INT2, INT2, INT2, INT4)
-  RETURNS INT4 AS '
+  RETURNS INT4 AS $$
 	DECLARE
 		vFunction		INT2 := 1;
 		vNewTreeID		OTDBtree.treeID%TYPE;
@@ -56,7 +56,7 @@ CREATE OR REPLACE FUNCTION newTree(INT4, INT4, INT4, INT2, INT2, INT2, INT4)
 		INTO   vCreatorID;
 
 		-- Finally create tree entry
-		vNewTreeID := nextval(\'OTDBtreeID\');
+		vNewTreeID := nextval('OTDBtreeID');
 		INSERT INTO OTDBtree (treeID,
 							  originid,
 							  momID,
@@ -79,9 +79,9 @@ CREATE OR REPLACE FUNCTION newTree(INT4, INT4, INT4, INT2, INT2, INT2, INT4)
 		IF NOT FOUND THEN
 		  RETURN 0;
 		ELSE
-		  PERFORM addTreeState(vNewTreeID, $3, $6, vCreatorID, \'\');
+		  PERFORM addTreeState(vNewTreeID, $3, $6, vCreatorID, '');
 		  RETURN vNewTreeID;
 		END IF;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 

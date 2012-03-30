@@ -38,7 +38,7 @@
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION addKVT (INT, VARCHAR(150), VARCHAR(150), VARCHAR(20))
-  RETURNS BOOLEAN AS '
+  RETURNS BOOLEAN AS $$
 	DECLARE
 		vParRefID	PICparamref.paramID%TYPE;
 		vTime		timestamp := NULL;
@@ -46,7 +46,7 @@ CREATE OR REPLACE FUNCTION addKVT (INT, VARCHAR(150), VARCHAR(150), VARCHAR(20))
 	BEGIN
 	  -- convert timestamp
 	  IF LENGTH($4) > 0 THEN
-		  vTime := to_timestamp($4, \'YYYY-Mon-DD HH24:MI:SS.US\');
+		  vTime := to_timestamp($4, 'YYYY-Mon-DD HH24:MI:SS.US');
 	  END IF;
 	  IF vTime IS NULL THEN
 		vTime := now();
@@ -73,5 +73,5 @@ CREATE OR REPLACE FUNCTION addKVT (INT, VARCHAR(150), VARCHAR(150), VARCHAR(20))
 
 	  RETURN TRUE;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 

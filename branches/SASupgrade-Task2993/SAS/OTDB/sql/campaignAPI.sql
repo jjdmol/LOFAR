@@ -34,7 +34,7 @@
 -- Types:	campaign
 --
 CREATE OR REPLACE FUNCTION getCampaign(INT4)
-  RETURNS campaignInfo AS '
+  RETURNS campaignInfo AS $$
 	DECLARE
 		vCampaign	RECORD;
 
@@ -44,12 +44,12 @@ CREATE OR REPLACE FUNCTION getCampaign(INT4)
 		FROM	campaign
 		WHERE	ID = $1;
 		IF NOT FOUND THEN
-		  RAISE EXCEPTION \'Campaign % does not exist\', $1;
+		  RAISE EXCEPTION 'Campaign % does not exist', $1;
 		END IF;
 
 		RETURN vCampaign;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 --
 -- getCampaign(campaignname)
@@ -63,7 +63,7 @@ CREATE OR REPLACE FUNCTION getCampaign(INT4)
 -- Types:	campaign
 --
 CREATE OR REPLACE FUNCTION getCampaign(VARCHAR(20))
-  RETURNS campaignInfo AS '
+  RETURNS campaignInfo AS $$
 	DECLARE
 		vCampaign	RECORD;
 
@@ -73,12 +73,12 @@ CREATE OR REPLACE FUNCTION getCampaign(VARCHAR(20))
 		FROM	campaign
 		WHERE	name = $1;
 		IF NOT FOUND THEN
-		  RAISE EXCEPTION \'Campaign % does not exist\', $1;
+		  RAISE EXCEPTION 'Campaign % does not exist', $1;
 		END IF;
 
 		RETURN vCampaign;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 --
 -- getCampaignList ()
@@ -92,7 +92,7 @@ CREATE OR REPLACE FUNCTION getCampaign(VARCHAR(20))
 -- Types:   campaign
 --
 CREATE OR REPLACE FUNCTION getCampaignList()
-  RETURNS SETOF campaignInfo AS '
+  RETURNS SETOF campaignInfo AS $$
     DECLARE
         vRecord     RECORD;
 
@@ -106,7 +106,7 @@ CREATE OR REPLACE FUNCTION getCampaignList()
       END LOOP;
       RETURN;
     END
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 --
 -- saveCampaign (ID, name, title, PI, CO_I, contact)
@@ -120,7 +120,7 @@ CREATE OR REPLACE FUNCTION getCampaignList()
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION saveCampaign(INT4, VARCHAR(30), VARCHAR(100), VARCHAR(80), VARCHAR(80), VARCHAR(120))
-  RETURNS INT4 AS '
+  RETURNS INT4 AS $$
 	DECLARE
 		vID			campaign.ID%TYPE;
 		vName		TEXT;
@@ -131,11 +131,11 @@ CREATE OR REPLACE FUNCTION saveCampaign(INT4, VARCHAR(30), VARCHAR(100), VARCHAR
 
 	BEGIN
 		-- remove single quotes
-		vName    := replace($2, \'\\\'\', \'\');
-		vTitle   := replace($3, \'\\\'\', \'\');
-		vPI      := replace($4, \'\\\'\', \'\');
-		vCO_I    := replace($5, \'\\\'\', \'\');
-		vContact := replace($6, \'\\\'\', \'\');
+		vName    := replace($2, E'\'', '');
+		vTitle   := replace($3, E'\'', '');
+		vPI      := replace($4, E'\'', '');
+		vCO_I    := replace($5, E'\'', '');
+		vContact := replace($6, E'\'', '');
 
 		-- check if node exists
 		IF $1 = 0 THEN
@@ -151,7 +151,7 @@ CREATE OR REPLACE FUNCTION saveCampaign(INT4, VARCHAR(30), VARCHAR(100), VARCHAR
 		END IF;
 		IF (NOT FOUND) THEN
 		  -- create new node
-		  vID := nextval(\'campaignID\');
+		  vID := nextval('campaignID');
 		  INSERT INTO campaign (id, name, title, PI, CO_I, contact)
 		  VALUES	(vID, $2, $3, $4, $5, $6);
 		ELSE
@@ -166,13 +166,13 @@ CREATE OR REPLACE FUNCTION saveCampaign(INT4, VARCHAR(30), VARCHAR(100), VARCHAR
 		END IF;
 
 		IF NOT FOUND THEN
-		  RAISE EXCEPTION \'Node % could not be saved\', $4;
+		  RAISE EXCEPTION 'Node % could not be saved', $4;
 		  RETURN 0;
 		END IF;
 
 		RETURN vID;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 --
 -- exportCampaign(treeID, prefixLen))

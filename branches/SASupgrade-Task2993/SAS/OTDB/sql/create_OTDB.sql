@@ -5,7 +5,7 @@
 \i create_security.sql
 \i create_tree_table.sql
 \i create_types.sql
-\i create_Dataproduct_table.sql
+--\i create_Dataproduct_table.sql
 
 \i create_log_system.sql
 
@@ -63,6 +63,7 @@
 -- VIChierarchy
 \i getVHitemList_func.sql
 \i exportTree_func.sql
+\i exportResultTree_func.sql
 \i searchVHinPeriod_func.sql
 \i setSchedule_func.sql
 

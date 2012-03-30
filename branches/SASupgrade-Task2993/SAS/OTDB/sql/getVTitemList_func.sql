@@ -34,7 +34,7 @@
 -- Types:	OTDBnode
 --
 CREATE OR REPLACE FUNCTION getVTitemList(INT4, VARCHAR(150))
-  RETURNS SETOF OTDBnode AS '
+  RETURNS SETOF OTDBnode AS $$
 	DECLARE
 		vRecord		RECORD;
 
@@ -43,12 +43,12 @@ CREATE OR REPLACE FUNCTION getVTitemList(INT4, VARCHAR(150))
 	    SELECT t.nodeid,
 			   t.parentid, 
 			   t.originid,
-			   t.name, 
+			   t.name::VARCHAR(150), 
 			   t.index, 
 			   t.leaf,
 			   t.instances,
 			   t.limits,
-			   \'\'::text
+			   ''::text
 --			   n.description	-- TODO: join depends on t.leaf
 		FROM   VICtemplate t
 --			   INNER JOIN VICnodedef n on n.nodeID = t.originID
@@ -61,5 +61,5 @@ CREATE OR REPLACE FUNCTION getVTitemList(INT4, VARCHAR(150))
 
 	  RETURN;
 	END
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 

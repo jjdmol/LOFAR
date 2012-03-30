@@ -32,7 +32,7 @@
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION setDescription(INT4, INT4, TEXT)
-  RETURNS BOOLEAN AS '
+  RETURNS BOOLEAN AS $$
 	DECLARE
 		vFunction				INT2 := 1;
 		vIsAuth					BOOLEAN;
@@ -46,16 +46,16 @@ CREATE OR REPLACE FUNCTION setDescription(INT4, INT4, TEXT)
 		SELECT isAuthorized(vAuthToken, $2, vFunction, 0) 
 		INTO   vIsAuth;
 		IF NOT vIsAuth THEN
-			RAISE EXCEPTION \'Not authorized.\';
+			RAISE EXCEPTION 'Not authorized.';
 			RETURN FALSE;
 		END IF;
 
 		-- update the tree
-		vDescription := replace($3, \'\\\'\', \'\');
+		vDescription := replace($3, E'\'', '');
 		UPDATE	OTDBtree
 		SET		description = vDescription
 		WHERE	treeID = $2;
 
 		RETURN TRUE;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;

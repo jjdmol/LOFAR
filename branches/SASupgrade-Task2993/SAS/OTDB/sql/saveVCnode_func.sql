@@ -36,7 +36,7 @@
 --
 CREATE OR REPLACE FUNCTION saveVCnode(INT4, INT4, VARCHAR(150), INT4, 
 										INT2, TEXT, TEXT, TEXT)
-  RETURNS INT4 AS '
+  RETURNS INT4 AS $$
 	DECLARE
 		vNodeID			VICnodedef.nodeID%TYPE;
 		vName			VICnodedef.name%TYPE;
@@ -45,6 +45,7 @@ CREATE OR REPLACE FUNCTION saveVCnode(INT4, INT4, VARCHAR(150), INT4,
 		vAuthToken		ALIAS FOR $1;
 		vConstraints	TEXT;
 		vDescription	TEXT;
+		vRec			RECORD;
 
 	BEGIN
 		-- check authorisation(authToken, tree, func, parameter)
@@ -52,13 +53,13 @@ CREATE OR REPLACE FUNCTION saveVCnode(INT4, INT4, VARCHAR(150), INT4,
 		SELECT isAuthorized(vAuthToken, 0, vFunction, 0) 
 		INTO   vIsAuth;
 		IF NOT vIsAuth THEN
-			RAISE EXCEPTION \'Not authorized\';
+			RAISE EXCEPTION 'Not authorized';
 			RETURN FALSE;
 		END IF;
 
-		vName := rtrim(translate($3, \'.\', \' \'));	-- replace dot w space
-		vConstraints := replace($6, \'\\\'\', \'\');	-- remove single quotes
-		vDescription := replace($7, \'\\\'\', \'\');
+		vName := rtrim(translate($3, '.', ' '));	-- replace dot w space
+		vConstraints := replace($6, E'\'', '');	-- remove single quotes
+		vDescription := replace($7, E'\'', '');
 
 		-- check if node exists
 		SELECT	nodeID
@@ -68,24 +69,35 @@ CREATE OR REPLACE FUNCTION saveVCnode(INT4, INT4, VARCHAR(150), INT4,
 		AND		version = $4
 		AND		classif = $5;
 		IF NOT FOUND THEN
-		  vNodeID := nextval(\'VICnodedefID\');
+		  vNodeID := nextval('VICnodedefID');
 		  -- create new node
 		  INSERT INTO VICnodedef
 		  VALUES	(vNodeID, vName, $4, $5, vConstraints, vDescription, $8);
+		  -- copy possible relations when storage is in a separate table.
+		  IF $8 != '' THEN
+		    FOR vRec in 
+			  SELECT p.* FROM vicparamdef p, vicnodedef n WHERE n.name=$8 AND p.nodeid=n.nodeid AND p.name LIKE '#%'
+			  LOOP
+			    INSERT INTO vicparamdef (nodeid,name,par_type,unit,pruning,validmoment,rtmod,limits,description)
+					   VALUES(vNodeID,vRec.name,vRec.par_type,vRec.unit,vRec.pruning,
+                              vRec.validmoment,vRec.rtmod,vRec.limits,vRec.description);
+			  END LOOP;
+		  END IF;
+          RETURN vNodeID;
 		ELSE
 		  -- update node
 		  UPDATE VICnodedef
 		  SET	 constraints = vConstraints,
 				 description = vDescription
 		  WHERE	 nodeID = vNodeID;
-		END IF;
 
-		IF NOT FOUND THEN
-		  RAISE EXCEPTION \'Node % could not be saved\', $4;
-		  RETURN 0;
+		  IF NOT FOUND THEN
+		    RAISE EXCEPTION 'Node % could not be saved', $3;
+		    RETURN 0;
+		  END IF;
 		END IF;
 
 		RETURN vNodeID;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 

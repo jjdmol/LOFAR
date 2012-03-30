@@ -35,14 +35,14 @@
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION addTreeState (INT4, INT4, INT2, INT4, VARCHAR(20))
-  RETURNS VOID AS '
+  RETURNS VOID AS $$
 	DECLARE
 		vTime		timestamp := NULL;
 
 	BEGIN
 	  -- convert timestamp
 	  IF LENGTH($5) > 0 THEN
-		  vTime := to_timestamp($5, \'YYYY-Mon-DD HH24:MI:SS.US\');
+		  vTime := to_timestamp($5, 'YYYY-Mon-DD HH24:MI:SS.US');
 	  END IF;
 	  IF vTime IS NULL THEN
 		vTime := now();
@@ -53,5 +53,5 @@ CREATE OR REPLACE FUNCTION addTreeState (INT4, INT4, INT2, INT4, VARCHAR(20))
   	  VALUES ($1, $2, $3, $4, vTime);
 	  RETURN;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 

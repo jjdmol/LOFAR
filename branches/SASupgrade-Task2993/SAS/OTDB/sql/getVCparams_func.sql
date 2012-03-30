@@ -34,7 +34,7 @@
 -- Types:	OTDBparamDef
 --
 CREATE OR REPLACE FUNCTION getVCparams(INT4)
-  RETURNS SETOF OTDBparamDef AS '
+  RETURNS SETOF OTDBparamDef AS $$
 	DECLARE
 		vRecord		RECORD;
 
@@ -59,5 +59,5 @@ CREATE OR REPLACE FUNCTION getVCparams(INT4)
 
 	  RETURN;
 	END
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 

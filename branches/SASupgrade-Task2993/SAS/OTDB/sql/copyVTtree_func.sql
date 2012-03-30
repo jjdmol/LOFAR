@@ -95,7 +95,7 @@ CREATE OR REPLACE FUNCTION copyVTleafNode(INT4, INT4, INT4)
 
       IF vNode.tablename != '' THEN
         vTablename := vNode.tablename;
-        vRecordID  := createNewRecord(vNode.tablename);
+        vRecordID  := createNewRecord(vNode.tablename, $2, vNode.name);
       ELSE
         vTablename := '';
         vRecordID := 0;

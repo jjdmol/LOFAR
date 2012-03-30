@@ -35,7 +35,7 @@
 -- Types:	OTDBnode
 --
 CREATE OR REPLACE FUNCTION getVHitemList(INT4, INT4, INT4)
-  RETURNS SETOF OTDBnode AS '
+  RETURNS SETOF OTDBnode AS $$
 	DECLARE
 		vRecord		RECORD;
 		vFullname	VARCHAR(250);
@@ -52,42 +52,42 @@ CREATE OR REPLACE FUNCTION getVHitemList(INT4, INT4, INT4)
 	  WHERE	 nodeID = $2;
 
 	  IF vLeaf = TRUE AND $3 = 0 THEN
-		vQuery := \'=\' || chr(39) || vFullname || chr(39) 
-				  || \' AND h.leaf=true \';
+		vQuery := '=' || chr(39) || vFullname || chr(39) 
+				  || ' AND h.leaf=true ';
 	  ELSE
 	    -- construct query
-		vFullname = replace(vFullname, \'[\', \'\\\\\\\\[\');
-		vFullname = replace(vFullname, \']\', \'\\\\\\\\]\');
-	    vQuery := \'similar to \' || chr(39) || vFullname;
+		vFullname = replace(vFullname, '[', '\\\\\\\\[');
+		vFullname = replace(vFullname, ']', '\\\\\\\\]');
+	    vQuery := 'similar to ' || chr(39) || vFullname;
 	    FOR i in 1..$3 LOOP
-		  vQuery := vQuery || \'.[^\\\\\\\\.]+\';
+		  vQuery := vQuery || '.[^\\\\\\\\.]+';
 	    END LOOP;
 	    vQuery := vQuery || chr(39);
 	  END IF;
 
 	  -- finally get result
-	  FOR vRecord IN EXECUTE \'
+	  FOR vRecord IN EXECUTE E'
 	    SELECT h.nodeid,
 			   h.parentid, 
 			   h.paramrefid,
-			   h.name, 
+			   h.name::VARCHAR(150), 
 			   h.index, 
 			   h.leaf,
 			   1::int2,
 			   h.value,
-			   \\\'\\\'::text	-- n.description 
+			   \'\'::text	-- n.description 
 		FROM   VIChierarchy h
  --			   TODO: join depends on leaf; see getNode function
  --			   INNER JOIN VICnodedef n ON n.nodeID = h.paramrefID
-		WHERE  h.treeID = \' || $1 || \'
-	    AND	   h.name \' || vQuery || \'
-		ORDER BY h.leaf, h.name, h.index \'
+		WHERE  h.treeID = ' || $1 || '
+	    AND	   h.name ' || vQuery || '
+		ORDER BY h.leaf, h.name, h.index '
 	  LOOP
 		RETURN NEXT vRecord;
 	  END LOOP;
 	  RETURN;
 	END
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 --
 -- getVHitemList (treeID, namefragment)
@@ -102,7 +102,7 @@ CREATE OR REPLACE FUNCTION getVHitemList(INT4, INT4, INT4)
 -- Types:	OTDBnode
 --
 CREATE OR REPLACE FUNCTION getVHitemList(INT4, VARCHAR(120))
-  RETURNS SETOF OTDBnode AS '
+  RETURNS SETOF OTDBnode AS $$
 	DECLARE
 		vRecord		RECORD;
 
@@ -111,12 +111,12 @@ CREATE OR REPLACE FUNCTION getVHitemList(INT4, VARCHAR(120))
 	    SELECT h.nodeid,
 			   h.parentid, 
 			   h.paramrefid,
-			   h.name, 
+			   h.name::VARCHAR(150), 
 			   h.index, 
 			   h.leaf,
 			   1::int2,
 			   h.value,
-			   \'\'::text -- n.description 
+			   ''::text -- n.description 
 		FROM   VIChierarchy h
  --			   TODO: join depends on leaf; see getNode function
  --			   INNER JOIN VICnodedef n ON n.nodeID = h.paramrefID
@@ -128,7 +128,5 @@ CREATE OR REPLACE FUNCTION getVHitemList(INT4, VARCHAR(120))
 	  END LOOP;
 	  RETURN;
 	END
-' LANGUAGE plpgsql;
-
-
+$$ LANGUAGE plpgsql;
 

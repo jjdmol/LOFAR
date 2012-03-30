@@ -38,7 +38,7 @@ CREATE TYPE schedulerInfo AS (
 	priority               FLOAT,
 	reason                 VARCHAR(40),
 	referenceFrame         INT4,
-        reservation            INT4,
+    reservation            INT4,
 	storageSelectionMode   INT4,
 	taskDuration           INT4,
 	taskID                 INT4,
@@ -49,10 +49,10 @@ CREATE TYPE schedulerInfo AS (
 );
 
 CREATE OR REPLACE FUNCTION getSchedulerInfo(INT4)
-  RETURNS schedulerInfo AS '
+  RETURNS schedulerInfo AS $$
     DECLARE	vRecord	schedulerInfo;
 	DECLARE fieldList CURSOR FOR
-      SELECT limits FROM getvhitemlist($1, \'%Observation.Scheduler.%\') ORDER BY name ASC;
+      SELECT limits FROM getvhitemlist($1, '%Observation.Scheduler.%') ORDER BY name ASC;
 
 	BEGIN
       	OPEN fieldList;
@@ -81,4 +81,4 @@ CREATE OR REPLACE FUNCTION getSchedulerInfo(INT4)
 	FETCH fieldList INTO vRecord.windowMinimumTime;
       RETURN vRecord;
     END;
-' language plpgsql;
+$$ language plpgsql;

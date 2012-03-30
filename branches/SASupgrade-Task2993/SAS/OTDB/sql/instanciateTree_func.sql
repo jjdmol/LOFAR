@@ -36,7 +36,7 @@
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION getTemplateOrigin(INT4)
-  RETURNS INT4 AS '
+  RETURNS INT4 AS $$
 	DECLARE
 		vTemplateID		INT4;
 		vName			OTDBtree.name%TYPE;
@@ -60,7 +60,7 @@ CREATE OR REPLACE FUNCTION getTemplateOrigin(INT4)
 		END IF;
 		RETURN $1;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 
 --
@@ -76,7 +76,7 @@ CREATE OR REPLACE FUNCTION getTemplateOrigin(INT4)
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION resolveVHparam(INT4, TEXT)
-  RETURNS TEXT AS '
+  RETURNS TEXT AS $$
 	DECLARE
 		vDotpos		INTEGER;
 		vNodeName	VARCHAR(200);
@@ -90,24 +90,24 @@ CREATE OR REPLACE FUNCTION resolveVHparam(INT4, TEXT)
 		vRecord		RECORD;
 
 	BEGIN
---RAISE WARNING \'resolve(%,%)\', $1, $2;
-		vDotpos    := strpos($2, \'.\');					-- >>a.b.c or <<a
+--RAISE WARNING 'resolve(%,%)', $1, $2;
+		vDotpos    := strpos($2, '.');					-- >>a.b.c or <<a
 		IF vDotpos < 1 THEN
 			RETURN $2;
 		END IF;
 		vNodeName  := substr($2, 3, vDotpos-3);				-- a
 		vParamName := substr($2, vDotpos+1);				-- b.c
-		vDotpos    := strpos(vParamName, \'.\');
+		vDotpos    := strpos(vParamName, '.');
 		IF vDotpos > 0 THEN
 		  vRemainder := substr(vParamName, vDotPos);		-- .c
 		  vParamName := substr(vParamName, 1, vDotPos-1);	-- b
 		ELSE
-		  vRemainder := \'\';
+		  vRemainder := '';
 		END IF;
 		-- does paramname end in [] ?
-		IF rtrim(vParamName, \'[] \') != vParamName THEN
+		IF rtrim(vParamName, '[] ') != vParamName THEN
 			vIsArray := true;
-			vParamName := rtrim(vParamName, \'[] \');
+			vParamName := rtrim(vParamName, '[] ');
 		ELSE
 			vIsArray := false;
 		END IF;
@@ -118,39 +118,39 @@ CREATE OR REPLACE FUNCTION resolveVHparam(INT4, TEXT)
 		FROM	getVICNodeDef ($1, vNodeName, vParamName);
 	
 		IF NOT FOUND THEN
-			RAISE EXCEPTION \'Parameter % from Node % not found\', vNodeName, vParamName;
+			RAISE EXCEPTION 'Parameter % from Node % not found', vNodeName, vParamName;
 		END IF;
 
 		IF vIsArray THEN
-			IF vRemainder = \'\' THEN
+			IF vRemainder = '' THEN
 				-- calc size of array
 				RETURN	calcArraySize(vRecord.limits);
 			ELSE
 				-- reference array
 				-- create an array with same size as current vRecord.limits array
 				-- while rereferencing the elements of the vRecord.limits array.
-				vAnswer := \'[\';
-				vOrgArray := btrim(vRecord.limits, \'[] \');
+				vAnswer := '[';
+				vOrgArray := btrim(vRecord.limits, '[] ');
 				vSize := calcArraySize(vRecord.limits);
 				FOR i IN 1..vSize LOOP
 					-- get clean name of element
-					vElem := btrim(split_part(vOrgArray, \',\', i), \' \');
+					vElem := btrim(split_part(vOrgArray, ',', i), ' ');
 					-- make sure it begins with <<
-					IF substr(vElem,1,2) != \'>>\' THEN
-						vElem := \'>>\' || vElem;
+					IF substr(vElem,1,2) != '>>' THEN
+						vElem := '>>' || vElem;
 					END IF;
 					-- resolve value
 					vElem := resolveVHparam($1, vElem || vRemainder);
 					-- add to array
-					vAnswer := vAnswer || vElem || \',\';
---RAISE WARNING \'anwser=%\', vAnswer;
+					vAnswer := vAnswer || vElem || ',';
+--RAISE WARNING 'anwser=%', vAnswer;
 				END LOOP;
 				-- finish array and return result.
-				vAnswer := rtrim(vAnswer, \',\') || \']\';
+				vAnswer := rtrim(vAnswer, ',') || ']';
 				RETURN	vAnswer;
 			END IF;
 		ELSE
-			IF vRemainder = \'\' THEN
+			IF vRemainder = '' THEN
 				RETURN	vRecord.limits;
 			ELSE
 				vRecord.limits := vRecord.limits || vRemainder;
@@ -158,7 +158,7 @@ CREATE OR REPLACE FUNCTION resolveVHparam(INT4, TEXT)
 			END IF;
 		END IF;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 
 --
@@ -176,7 +176,7 @@ CREATE OR REPLACE FUNCTION resolveVHparam(INT4, TEXT)
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION instanciateVHparams(INT4, INT4, INT4, TEXT)
-  RETURNS VOID AS '
+  RETURNS VOID AS $$
 	DECLARE
 		vParam	RECORD;
 
@@ -186,7 +186,7 @@ CREATE OR REPLACE FUNCTION instanciateVHparams(INT4, INT4, INT4, TEXT)
 		FROM 	VICtemplate
 		WHERE	parentID = $1
 		AND		leaf = TRUE
-		AND		name NOT like \'\\\\%%\'
+		AND		name NOT like '\\\\%%'
 	  LOOP
 		IF isReference(vParam.limits) THEN
 		  vParam.limits := resolveVHparam(vParam.treeID, vParam.limits);
@@ -198,7 +198,7 @@ CREATE OR REPLACE FUNCTION instanciateVHparams(INT4, INT4, INT4, TEXT)
 	  END LOOP;
 	  RETURN;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 --
 -- helper function
@@ -233,18 +233,17 @@ CREATE OR REPLACE FUNCTION instanciateVHleafNode(INT4, INT4, INT4, INT2, TEXT)
 		RETURN 0;
 	  END IF;
 
+	  IF $4 != -1 THEN
+		vNode.name := vNode.name || '[' || $4 || ']';
+	  END IF;
+
       IF vNode.tablename != '' THEN
         vTablename := vNode.tablename;
-        vRecordID  := createNewRecord(vNode.tablename);
+        vRecordID  := createNewRecord(vNode.tablename, $2, vNode.name);
       ELSE
         vTablename := '';
         vRecordID := 0;
       END IF;
-
-	  vNewNodeID := NEXTVAL('VIChierarchID');
-	  IF $4 != -1 THEN
-		vNode.name := vNode.name || '[' || $4 || ']';
-	  END IF;
 
 	  -- special case: this function was designed for creating VIC trees from template trees,
 	  -- but is now also used by the scheduler for adding NEW nodes to an existing VIC tree.
@@ -259,6 +258,7 @@ CREATE OR REPLACE FUNCTION instanciateVHleafNode(INT4, INT4, INT4, INT2, TEXT)
 	  END IF;
 	  -- RAISE WARNING 'iVHleaf(%,%)', vFullName,$4;
 
+	  vNewNodeID := NEXTVAL('VIChierarchID');
 	  INSERT
 	  INTO	 VIChierarchy(treeID, nodeID, parentID, paramrefID, name, 
 					index, leaf, value, recordid, tablename)
@@ -287,7 +287,7 @@ $$ LANGUAGE plpgsql;
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION instanciateVHsubTree(INT4, INT4, INT4, TEXT)
-  RETURNS INT4 AS '
+  RETURNS INT4 AS $$
 	DECLARE
 	  vNode				RECORD;
 	  vVTnode			RECORD;
@@ -301,11 +301,11 @@ CREATE OR REPLACE FUNCTION instanciateVHsubTree(INT4, INT4, INT4, TEXT)
 	  vSpecialisation	BOOL;
 
 	BEGIN
---RAISE WARNING \'iVHst(%,%,%,%)\', $1,$2,$3,$4;
+--RAISE WARNING 'iVHst(%,%,%,%)', $1,$2,$3,$4;
 	  -- Append dot to basename if not topnode
 	  vBasename := $4;
 	  IF length(vBasename) != 0 THEN
-		vBasename := vBasename || \'.\';
+		vBasename := vBasename || '.';
 	  END IF;
 
 	  -- get orgnode (master record: index = -1)
@@ -313,7 +313,7 @@ CREATE OR REPLACE FUNCTION instanciateVHsubTree(INT4, INT4, INT4, TEXT)
 	  INTO	 vNode
 	  FROM	 VICtemplate
 	  WHERE	 nodeID = $1;
---RAISE WARNING \'%:[%]\', vNode.name, vNode.instances;
+--RAISE WARNING '%:[%]', vNode.name, vNode.instances;
 	  
 	  -- loop through nr of instances
 	  -- check each instance if is was specialized.
@@ -338,7 +338,7 @@ CREATE OR REPLACE FUNCTION instanciateVHsubTree(INT4, INT4, INT4, TEXT)
 		  vOwnname := vBasename || vNode.name;
 		ELSE
 		  vIndexnr := vIndexCounter;
-		  vOwnname := vBasename || vNode.name || \'[\' || vIndexCounter || \']\';
+		  vOwnname := vBasename || vNode.name || '[' || vIndexCounter || ']';
 		END IF;
 
 		-- instanciate node itself
@@ -358,7 +358,7 @@ CREATE OR REPLACE FUNCTION instanciateVHsubTree(INT4, INT4, INT4, TEXT)
 
 	  RETURN vNewNodeID;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 
 --

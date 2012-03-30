@@ -113,9 +113,8 @@ CREATE OR REPLACE FUNCTION exportTemplateSubTree(INT4, INT4, TEXT)
 		IF vRow.tablename != '' THEN
 		  EXECUTE 'SELECT * FROM export' || vRow.tablename || '(' || vRow.recordid || ')' INTO vTableRow;
 		  vResult := vResult || vBaseName || vRow.name || '=' || vTableRow || chr(10);
-		ELSE
-		  vResult := vResult || exportTemplateSubTree($1, vRow.nodeID, vBasename || vRow.name);
 		END IF;
+	  vResult := vResult || exportTemplateSubTree($1, vRow.nodeID, vBasename || vRow.name);
 	  END LOOP;
 
 	  RETURN vResult;
@@ -155,6 +154,7 @@ CREATE OR REPLACE FUNCTION exportVICSubTree(INT4, INT4, INT4)
 	  LOOP
 		vResult := vResult || substr(vRow.name,$3) || '=' || vRow.value || chr(10);
 	  END LOOP;
+RAISE WARNING 'exportTree(%,%)', $2, vRow.name;
 
 	  -- call myself for all the children
 	  FOR vRow IN
@@ -167,17 +167,16 @@ CREATE OR REPLACE FUNCTION exportVICSubTree(INT4, INT4, INT4)
 	  LOOP
 		IF vRow.tablename != '' THEN
 			-- export definition before first record
-			IF vRow.tablename != vLastTable THEN
-				EXECUTE 'SELECT * FROM export' || vRow.tablename || 'Definition()' INTO vDefinition;
-				vResult:= vResult || substring(substr(vRow.name,$3) from '([^\\[]+)\\[.*') || 
-						'._Definition=' || vDefinition || chr(10);
-				vLastTable := vRow.tablename;
-			END IF;
+---			IF vRow.tablename != vLastTable THEN
+---				EXECUTE 'SELECT * FROM export' || vRow.tablename || 'Definition()' INTO vDefinition;
+--				vResult:= vResult || substring(substr(vRow.name,$3) from E'([^\[]+)\[.*') || 
+--						'._Definition=' || vDefinition || chr(10);
+---				vLastTable := vRow.tablename;
+---			END IF;
 			EXECUTE 'SELECT * FROM export' || vRow.tablename || '(' || vRow.recordID || ')' INTO vTableRow;
 			vResult := vResult || substr(vRow.name,$3) || '=' || vTableRow || chr(10);
-		ELSE
-			vResult := vResult || exportVICSubTree($1, vRow.nodeID, $3);
 		END IF;
+		vResult := vResult || exportVICSubTree($1, vRow.nodeID, $3);
 	  END LOOP;
 
 	  RETURN vResult;

@@ -37,7 +37,7 @@
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION addComponentToVT(INT4, INT4, INT4, INT4, VARCHAR(150))
-  RETURNS INT4 AS '
+  RETURNS INT4 AS $$
 	DECLARE
 	  vFunction  		CONSTANT INT2 := 1;
 	  TTtemplate 		CONSTANT INT2 := 20;
@@ -58,7 +58,7 @@ CREATE OR REPLACE FUNCTION addComponentToVT(INT4, INT4, INT4, INT4, VARCHAR(150)
 	  SELECT isAuthorized(vAuthToken, $3, vFunction, 0)
 	  INTO	 vIsAuth;
 	  IF NOT vIsAuth THEN
-		RAISE EXCEPTION \'Not authorized\';
+		RAISE EXCEPTION 'Not authorized';
 	  END IF;
 
 	  -- check tree type
@@ -67,10 +67,10 @@ CREATE OR REPLACE FUNCTION addComponentToVT(INT4, INT4, INT4, INT4, VARCHAR(150)
 	  FROM	 OTDBtree
 	  WHERE	 treeID = $3;
 	  IF NOT FOUND THEN
-		RAISE EXCEPTION \'Tree % does not exist\', $3;
+		RAISE EXCEPTION 'Tree % does not exist', $3;
 	  END IF;
 	  IF vTreeType <> TTtemplate THEN
-		RAISE EXCEPTION \'Tree % is not a template tree\', $3;
+		RAISE EXCEPTION 'Tree % is not a template tree', $3;
 	  END IF;
 
 	  -- check if parent node exist when not adding top node
@@ -81,10 +81,10 @@ CREATE OR REPLACE FUNCTION addComponentToVT(INT4, INT4, INT4, INT4, VARCHAR(150)
 	    WHERE  treeID = $3
 	    AND	   nodeID = $4;
 	    IF NOT FOUND THEN
-		  RAISE EXCEPTION \'Node % does not exist in tree %\', $4, $3;
+		  RAISE EXCEPTION 'Node % does not exist in tree %', $4, $3;
 	    END IF;
 	    IF vLeaf = TRUE THEN
-		  RAISE EXCEPTION \'Node % is a parameter, not a node.\', $4;
+		  RAISE EXCEPTION 'Node % is a parameter, not a node.', $4;
 	    END IF;
 	  END IF;
 
@@ -94,7 +94,7 @@ CREATE OR REPLACE FUNCTION addComponentToVT(INT4, INT4, INT4, INT4, VARCHAR(150)
 	  FROM	 VICnodeDef
 	  WHERE	 nodeid = $2;
 	  IF NOT FOUND THEN
-		RAISE EXCEPTION \'Original node not found in components.\';
+		RAISE EXCEPTION 'Original node not found in components.';
 	  END IF;
 
 	  -- check if this node may be a child from the parent.
@@ -112,7 +112,7 @@ CREATE OR REPLACE FUNCTION addComponentToVT(INT4, INT4, INT4, INT4, VARCHAR(150)
 		WHERE  nodeID = vParentRefID
 		AND	   name = childNodeName(vNodeName, vVersion);
 		IF NOT FOUND THEN
-		  RAISE EXCEPTION \'Node % cannot be a child from parent %\', 
+		  RAISE EXCEPTION 'Node % cannot be a child from parent %', 
 							vNodeName, $4;
 		END IF;
 	  END IF;
@@ -130,5 +130,5 @@ CREATE OR REPLACE FUNCTION addComponentToVT(INT4, INT4, INT4, INT4, VARCHAR(150)
 
 	  RETURN vNewNodeID;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 

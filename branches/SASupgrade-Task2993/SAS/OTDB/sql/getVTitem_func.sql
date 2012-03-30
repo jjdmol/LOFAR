@@ -45,27 +45,27 @@ CREATE OR REPLACE FUNCTION getVTitemRecursive(INT4, VARCHAR(150), INT4)
 --      The database [March 2011] has parameters with index=1 and index=-1
 --      that is due to a change in the code used to load the components
 --		As long as that is the case we have to work with 2 index values
-		vIndex2			INTEGER;
+		vIndex2			VARCHAR(50);
 
 	BEGIN
 	  -- strip off first part of name and try if it has an index
 	  vParentName := split_part(aFullName, '.', 1);
-	  vIndex := substring(vParentName from '.*\\[([0-9])\\]$');
+	  vIndex := substring(vParentName from E'.*\\[([0-9])\\]$');
 	  IF vIndex IS NULL THEN
 		vIndex := -1;
 		vIndex2 := 1;
 	  ELSE
 		vIndex2 := vIndex;
-		vParentName := substring(vParentName from '([^\\[]+)\\[.*');
+		vParentName := substring(vParentName from E'([^\\[]+)\\[.*');
 	  END IF;
 	  -- remember the remainder of the name
-	  vChildName := substring(aFullName from '[^\\.]+\\.(.*)');
+	  vChildName := substring(aFullName from E'[^\\.]+\\.(.*)');
 
 	  IF aParentID = 0 THEN
         SELECT nodeid,
                parentid,
                originid,
-               name,
+               name::VARCHAR(150),
                index,
                leaf,
                instances,
@@ -75,12 +75,12 @@ CREATE OR REPLACE FUNCTION getVTitemRecursive(INT4, VARCHAR(150), INT4)
         FROM   VICtemplate
         WHERE  treeID = $1
         AND    name   = vParentName
-	    AND    (index = vIndex OR index = vIndex2);
+	    AND    (index::VARCHAR(50) = vIndex OR index::VARCHAR(50) = vIndex2);
 	  ELSE
         SELECT nodeid,
                parentid,
                originid,
-               name,
+               name::VARCHAR(150),
                index,
                leaf,
                instances,
@@ -90,7 +90,7 @@ CREATE OR REPLACE FUNCTION getVTitemRecursive(INT4, VARCHAR(150), INT4)
         FROM   VICtemplate
         WHERE  treeID = $1
         AND    name   = vParentName
-	    AND    (index = vIndex OR index = vIndex2)
+	    AND    (index::VARCHAR(50) = vIndex OR index::VARCHAR(50) = vIndex2)
         AND    parentid = aParentID;
 	  END IF;
 

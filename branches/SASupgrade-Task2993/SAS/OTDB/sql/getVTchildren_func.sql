@@ -43,11 +43,11 @@ CREATE OR REPLACE FUNCTION getVTChildren(INT4, TEXT)
 	BEGIN
 
 	  -- get result: first retrieve table related nodes
-	  FOR vRecord IN EXECUTE '
+	  FOR vRecord IN EXECUTE E'
 	    SELECT t.nodeid,
 			   t.parentid, 
 			   t.originid,
-			   t.name, 
+			   t.name::VARCHAR(150), 
 			   t.index, 
 			   t.leaf,
 			   t.instances,

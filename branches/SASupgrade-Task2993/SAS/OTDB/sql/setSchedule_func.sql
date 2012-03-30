@@ -32,7 +32,7 @@
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION setSchedule(INT4, INT4, TIMESTAMP, TIMESTAMP)
-  RETURNS BOOLEAN AS '
+  RETURNS BOOLEAN AS $$
 	DECLARE
 		vFunction				INT2 := 1;
 		TSactive				CONSTANT INT2 := 600;
@@ -49,7 +49,7 @@ CREATE OR REPLACE FUNCTION setSchedule(INT4, INT4, TIMESTAMP, TIMESTAMP)
 		SELECT isAuthorized(vAuthToken, $2, vFunction, 0) 
 		INTO   vIsAuth;
 		IF NOT vIsAuth THEN
-			RAISE EXCEPTION \'Not authorized.\';
+			RAISE EXCEPTION 'Not authorized.';
 			RETURN FALSE;
 		END IF;
 		
@@ -60,11 +60,11 @@ CREATE OR REPLACE FUNCTION setSchedule(INT4, INT4, TIMESTAMP, TIMESTAMP)
 		WHERE	treeID = $2;
 
         IF vTreeType <> TThierarchy  THEN
-		  RAISE EXCEPTION \'Only VH trees can be scheduled.\';
+		  RAISE EXCEPTION 'Only VH trees can be scheduled.';
 		END IF;
 
 		IF vState = TSactive THEN
-		  RAISE EXCEPTION \'Tree may not be active\';
+		  RAISE EXCEPTION 'Tree may not be active';
 		END IF;
 
 		-- Finally update tree
@@ -76,14 +76,14 @@ CREATE OR REPLACE FUNCTION setSchedule(INT4, INT4, TIMESTAMP, TIMESTAMP)
 		UPDATE	vicHierarchy
 		SET		value = $3
 		WHERE	treeID = $2
-		AND		name LIKE \'%.Observation.startTime\';
+		AND		name LIKE '%.Observation.startTime';
 
 		UPDATE	vicHierarchy
 		SET		value = $4
 		WHERE	treeID = $2
-		AND		name LIKE \'%.Observation.stopTime\';
+		AND		name LIKE '%.Observation.stopTime';
 
 		RETURN TRUE;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 

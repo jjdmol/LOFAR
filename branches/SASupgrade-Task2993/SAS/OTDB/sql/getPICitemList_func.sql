@@ -35,7 +35,7 @@
 -- Types:	OTDBnode
 --
 CREATE OR REPLACE FUNCTION getPICitemList(INT4, INT4, INT4)
-  RETURNS SETOF OTDBnode AS '
+  RETURNS SETOF OTDBnode AS $$
 	DECLARE
 		vRecord		RECORD;
 		vFullname	VARCHAR(150);
@@ -53,38 +53,38 @@ CREATE OR REPLACE FUNCTION getPICitemList(INT4, INT4, INT4)
 	  WHERE	 nodeID = $2;
 
 	  IF vLeaf = TRUE AND $3 = 0 THEN
-		vQuery := \'=\' || chr(39) || vFullname || chr(39)
-					|| \' AND h.leaf=true \';
+		vQuery := '=' || chr(39) || vFullname || chr(39)
+					|| ' AND h.leaf=true ';
 	  ELSE
 	    -- construct query
-	    vQuery := \'similar to \' || chr(39) || vFullname;
+	    vQuery := 'similar to ' || chr(39) || vFullname;
 	    FOR i in 1..$3 LOOP
-		  vQuery := vQuery || \'.[^\\\\\\\\.]+\';
+		  vQuery := vQuery || '.[^\\\\\\\\.]+';
 	    END LOOP;
 	    vQuery := vQuery || chr(39);
 	  END IF;
 
 	  -- finally get result
-	  FOR vRecord IN EXECUTE \'
+	  FOR vRecord IN EXECUTE E'
 	    SELECT h.nodeid,
 			   h.parentid, 
 			   h.paramrefid,
-			   h.name, 
+			   h.name::VARCHAR(150), 
 			   h.index, 
 			   h.leaf,
 			   1::int2,
-			   \\\'\\\'::text,
+			   \'\'::text,
 			   r.description 
 		FROM   PIChierarchy h
 			   INNER JOIN PICparamRef r ON r.paramid = h.paramrefID
-		WHERE  h.treeID = \' || $1 || \'
-	    AND	   h.name \' || vQuery 
+		WHERE  h.treeID = ' || $1 || '
+	    AND	   h.name ' || vQuery 
 	  LOOP
 		RETURN NEXT vRecord;
 	  END LOOP;
 	  RETURN;
 	END
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 --
 -- getPICitemList (treeID, namefragment)
@@ -99,7 +99,7 @@ CREATE OR REPLACE FUNCTION getPICitemList(INT4, INT4, INT4)
 -- Types:	OTDBnode
 --
 CREATE OR REPLACE FUNCTION getPICitemList(INT4, VARCHAR(150))
-  RETURNS SETOF OTDBnode AS '
+  RETURNS SETOF OTDBnode AS $$
 	DECLARE
 		vRecord		RECORD;
 
@@ -108,11 +108,11 @@ CREATE OR REPLACE FUNCTION getPICitemList(INT4, VARCHAR(150))
 	    SELECT h.nodeid,
 			   h.parentid, 
 			   h.paramrefid,
-			   h.name, 
+			   h.name::VARCHAR(150), 
 			   h.index, 
 			   h.leaf,
 			   1::int2,
-			   \'\'::text,
+			   ''::text,
 			   r.description 
 		FROM   PICparamref r
 			   INNER JOIN PIChierarchy h ON r.paramid = h.paramrefID
@@ -123,7 +123,7 @@ CREATE OR REPLACE FUNCTION getPICitemList(INT4, VARCHAR(150))
 	  END LOOP;
 	  RETURN;
 	END
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 
 

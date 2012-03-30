@@ -100,16 +100,15 @@ CREATE OR REPLACE FUNCTION instanciateVTleafNode(INT4, INT4, INT4, VARCHAR(150))
 	  INTO		vNode
 	  FROM 		VICnodeDef
 	  WHERE		nodeID = $1;
+	  IF $4 != '' THEN
+		vNode.name := $4;
+	  END IF;
 	  IF vNode.tablename != '' THEN
 		vTablename := vNode.tablename;
-		vRecordID  := createNewRecord(vNode.tablename);
+		vRecordID  := createNewRecord(vNode.tablename, $2, vNode.name);
 	  ELSE
 		vTablename := '';
 		vRecordID := 0;
-	  END IF;
-
-	  IF $4 != '' THEN
-		vNode.name := $4;
 	  END IF;
 
 	  vNewNodeID := nextval('VICtemplateID');
@@ -196,7 +195,7 @@ $$ LANGUAGE plpgsql;
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION instanciateVTtree(INT4, INT4, INT2)
-  RETURNS INT4 AS '
+  RETURNS INT4 AS $$
 	DECLARE
 		vFunction   CONSTANT	INT2 := 1;
 		TTtemplate  CONSTANT	INT2 := 20;
@@ -213,14 +212,14 @@ CREATE OR REPLACE FUNCTION instanciateVTtree(INT4, INT4, INT2)
 	  SELECT isAuthorized(vAuthToken, 0, vFunction, 0)
 	  INTO	 vIsAuth;
 	  IF NOT vIsAuth THEN
-		RAISE EXCEPTION \'Not authorized\';
+		RAISE EXCEPTION 'Not authorized';
 	  END IF;
 
 	  -- create a new tree(auth, ..., classif, treetype, campaign)
 	  SELECT newTree($1, 0, 0, $3, TTtemplate, TSbeingspec, 0)
 	  INTO	 vNewTreeID;
 	  IF vNewTreeID = 0 THEN
-		RAISE EXCEPTION \'Tree can not be created\';
+		RAISE EXCEPTION 'Tree can not be created';
 	  END IF;
 
 	  -- get topNode
@@ -229,7 +228,7 @@ CREATE OR REPLACE FUNCTION instanciateVTtree(INT4, INT4, INT2)
 	  FROM	 VICnodeDef
 	  WHERE	 nodeID = $2;
 	  IF NOT FOUND THEN
-		RAISE EXCEPTION \'Component % is unknown\', $2;
+		RAISE EXCEPTION 'Component % is unknown', $2;
 	  END IF;
 
 	  -- recursively instanciate the tree
@@ -237,5 +236,5 @@ CREATE OR REPLACE FUNCTION instanciateVTtree(INT4, INT4, INT2)
 
 	  RETURN vNewTreeID;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 

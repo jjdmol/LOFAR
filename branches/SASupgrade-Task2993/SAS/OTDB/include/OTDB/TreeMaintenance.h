@@ -187,6 +187,10 @@ public:
 						const formatType	outputFormat = FtKVList,
 						bool				folded = false);
 
+	// Export a VIC (sub)tree with reported metadata to a file.
+	bool	exportResultTree (treeIDType		aTreeID,
+							  nodeIDType		topItem,
+							  const string&		filename);
 
 	//# --- Finally some general tree maintenance ---
 	// Delete a tree (of any kind) from the database.

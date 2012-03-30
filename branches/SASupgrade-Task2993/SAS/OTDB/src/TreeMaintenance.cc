@@ -979,6 +979,50 @@ bool	TreeMaintenance::exportTree (treeIDType			aTreeID,
 	return (false);
 }
 
+//
+// exportResultTree(treeID, nodeID, filename): bool
+//
+// Export a VIC (sub)tree to a file. 
+bool TreeMaintenance::exportResultTree (treeIDType			aTreeID,
+									    nodeIDType			topItem,
+									    const string&		filename)
+{
+	// Check connection
+	if (!itsConn->connect()) {
+		itsError = itsConn->errorMsg();
+		return (false);
+	}
+
+	LOG_TRACE_FLOW_STR("TM:exportResultTree(" << aTreeID << "," << topItem << "," << filename << ")");
+	work	xAction(*(itsConn->getConn()), "exportResultFile");
+	try {
+		ofstream	outFile;
+		outFile.open (filename.c_str());
+		if (!outFile) {
+			LOG_ERROR_STR ("Cannot open exportfile: " << filename);
+			return (false);
+		}
+
+		result	res = xAction.exec("SELECT * from exportResultTree(" +
+								    toString(itsConn->getAuthToken()) + "," +
+									toString(aTreeID) + "," +
+									toString(topItem) + ")");
+		// Get result
+		string		params;
+		res[0]["exportresulttree"].to(params);
+		outFile << params;
+		outFile.close();
+		return (true);
+	}
+	catch (std::exception&	ex) {
+		itsError = string("Exception during exportResultTree:") + ex.what();
+		LOG_FATAL(itsError);
+		return (false);
+	}
+
+	return (false);
+}
+
 //# --- Finally some general tree maintenance ---
 // Delete a tree (of any kind) from the database.
 bool	TreeMaintenance::deleteTree(treeIDType		aTreeID)
