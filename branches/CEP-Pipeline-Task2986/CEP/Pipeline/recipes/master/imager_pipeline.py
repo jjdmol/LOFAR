@@ -74,7 +74,7 @@ class imager_pipeline(control):
         target_mapfile = "/home/klijn/build/preparation/output.map"
         input_mapfile = self.inputs['input_mapfile']
         concat_ms_map_path, timeslice_map_path = self._prepare_phase(
-                input_mapfile, target_mapfile, skip = True)
+                input_mapfile, target_mapfile, skip = False)
 
 
         #We start with an empty source_list
@@ -92,12 +92,12 @@ class imager_pipeline(control):
             parmdbs_path, sky_path = self._create_dbs(
                         concat_ms_map_path, timeslice_map_path,
                         source_list = source_list,
-                        skip_create_dbs = True)
+                        skip_create_dbs = False)
 
             # *****************************************************************
             # (3)  bbs_imager recipe
             bbs_output = self._bbs(timeslice_map_path, parmdbs_path, sky_path,
-                        skip = True)
+                        skip = False)
 
 
             # ******************************************************************
@@ -106,7 +106,6 @@ class imager_pipeline(control):
                         idx_loop,
                         skip = False)
 
-            return 0
             # *****************************************************************
             # (5 )Source finding 
             source_list = self._source_finding(awimager_output_mapfile,
