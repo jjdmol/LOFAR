@@ -26,7 +26,7 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
     inputs = {
         'executable': ingredient.ExecField(
             '--executable',
-            help = "The full path to the relevant awimager executable"
+            help = "The full path to the  awimager executable"
         ),
         'initscript': ingredient.FileField(
             '--initscript',
@@ -39,17 +39,24 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
         ),
         'working_directory': ingredient.StringField(
             '-w', '--working-directory',
-            help = "Working directory used on outpuconfigt nodes. Results location"
+            help = "Working directory used on output nodes. Results location"
         ),
-        'suffix': ingredient.StringField(
-            '--suffix',
-            default = ".awimager",
-            help = "Added to the input filename to generate the output filename"
+        'output_image': ingredient.StringField(
+            '--output-image',
+            help = "Path of the image to be create by the awimager"
         ),
         'mapfile': ingredient.StringField(
             '--mapfile',
             help = "Full path of mapfile; contains a list of the"
                  "successfully generated images"
+        ),
+        'sourcedb_path': ingredient.StringField(
+            '--sourcedb-path',
+            help = "Full path of sourcedb used to create a mask for known sources"
+        ),
+        'mask_patch_size': ingredient.FloatField(
+            '--mask-patch-size',
+            help = "Full path of sourcedb used to create a mask for known sources"
         ),
     }
 
@@ -62,15 +69,14 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
         self.logger.info("Starting imager_awimager run")
 
         #collect the inputs        
-        # TODO:  input_map to be merged with change marcel
-        input_map = eval(open(self.inputs['args'][0]).read())
+        input_map = load_data_map(self.inputs['args'][0])
         executable = self.inputs['executable']
         init_script = self.inputs['initscript']
         parset = self.inputs['parset']
-        working_dir = self.inputs['working_directory']
-#        job_name = self.inputs['job_name']
-        suffix = self.inputs['suffix']
-
+        output_image = self.inputs['output_image']
+        working_directory = self.inputs['working_directory']
+        sourcedb_path = self.inputs['sourcedb_path']
+        mask_patch_size = self.inputs['mask_patch_size']
         # Compile the command to be executed on the remote machine
         node_command = "python %s" % (self.__file__.replace("master", "nodes"))
         # Create the jobs
@@ -78,9 +84,9 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
         outnames = collections.defaultdict(list)
         for host, measurement_set in input_map:
             #construct and save the output name
-            outnames[host].append(measurement_set + suffix)
-            arguments = [executable, init_script, parset, working_dir,
-                       measurement_set]
+            outnames[host].append(measurement_set)
+            arguments = [executable, init_script, parset, working_directory, output_image,
+                       measurement_set, sourcedb_path, mask_patch_size]
 
             jobs.append(ComputeJob(host, node_command, arguments))
 

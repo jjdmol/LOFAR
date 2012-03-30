@@ -1,4 +1,5 @@
 from __future__ import with_statement
+import os
 import sys
 import collections
 
@@ -9,10 +10,6 @@ from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 
 class imager_source_finding(BaseRecipe, RemoteCommandRecipeMixIn):
     inputs = {
-#        'job': ingredient.StringField(
-#            '--job',
-#            help = "Job name: used for storing  (intermediate) data products"
-#        ),
         'initscript': ingredient.FileField(
             '--initscript',
             help = "Initscript to source (ie, lofarinit.sh)"
@@ -46,9 +43,7 @@ class imager_source_finding(BaseRecipe, RemoteCommandRecipeMixIn):
 
         # TODO FIXME: This output path will be, in the testing phase a 
         # subdirectory of the actual output image.
-        # This is the cropped image!!! TODO
-        image_output_path = "/data/scratch/klijn/bdsm_output.img" #This is not a
-
+        image_output_path = os.path.join(self.config.get("DEFAULT", "default_working_directory"), "bdsm_output.img")
         node_command = " python %s" % (self.__file__.replace("master", "nodes"))
         jobs = []
         for host, data in input_map:

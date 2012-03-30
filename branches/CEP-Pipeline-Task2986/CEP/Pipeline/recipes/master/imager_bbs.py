@@ -36,6 +36,10 @@ class imager_bbs(BaseRecipe, RemoteCommandRecipeMixIn):
             dest = "parset",
             help = "BBS configuration parset"
         ),
+        'bbs_executable': ingredient.StringField(
+            '--bbs-executable',
+            help = "BBS standalone executable (bbs-reducer)"
+        ),
         'instrument_mapfile': ingredient.FileField(
             '--instrument-mapfile',
             help = "Full path to the mapfile containing the names of the "
@@ -71,9 +75,6 @@ class imager_bbs(BaseRecipe, RemoteCommandRecipeMixIn):
         ms_map = load_data_map(self.inputs['args'][0])
         parmdb_map = load_data_map(self.inputs['instrument_mapfile'])
         sky_map = load_data_map(self.inputs['sky_mapfile'])
-        self.logger.debug(ms_map)
-        self.logger.debug(parmdb_map)
-        self.logger.debug(sky_map)
 
         #Check if the input has equal length and the same nodes
         if not validate_data_maps(ms_map, parmdb_map, sky_map):
@@ -92,13 +93,19 @@ class imager_bbs(BaseRecipe, RemoteCommandRecipeMixIn):
 
             # Save the ms set that has been processed: output
             outnames[host].extend(ms_list)
-            arguments = ["/opt/cep/LofIm/daily/Mon/lofar/bin/bbs-reducer",
-                         "/home/klijn/build/preparation/bbs_standalone.par",
+            arguments = [self.inputs['bbs_executable'],
+                         self.inputs['parset'],
                          ms_list, parmdb_list, sky_list]
             jobs.append(ComputeJob(host, node_command, arguments))
 
         # start and wait till all are finished
         self._schedule_jobs(jobs)
+
+        if self.error.isSet():   #if one of the nodes failed
+            return 1
+
+
+        # TODO; Check for correct functioning, output validating
 
         # return the output: The measurement set that are calibrated
         store_data_map(self.inputs['mapfile'], outnames.items())

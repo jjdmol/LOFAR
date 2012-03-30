@@ -32,17 +32,10 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
             '-p', '--parset',
             help = "The full path to a bbs_imager configuration parset."
         ),
-        'suffix': ingredient.StringField(
-            '--suffix',
-            default = ".ImagerCreateDBs",
-            help = "Added to the input filename to generate the output filename"
-        ),
-
-        # recipe specific inputs
-        'sourcedb_target_path': ingredient.StringField(
-            '--sourcedb-target-path',
-            default = "",
-            help = "location to save the sourcedb"
+        'sourcedb_suffix': ingredient.StringField(
+            '--sourcedb-suffix',
+            default = ".sky",
+            help = "suffix for created sourcedbs"
         ),
         'monetdb_hostname': ingredient.StringField(
             '--monetdb-hostname',
@@ -77,23 +70,28 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
             '--slice-paths-mapfile',
             help = "Location of the mapfile containing the slice paths"
         ),
-        'parmdbs_path': ingredient.StringField(
-            '--parmdbs-path',
-            help = "Location of the mapfile to place the outputfile with the paths for each slice pardbm"
-        ),
-        'sky_path': ingredient.StringField(
-            '--sky-path',
-            help = "Location of the mapfile to place the outputfile with sky files (sky map)"
-        ),
         'parmdb_suffix': ingredient.StringField(
             '--parmdb-suffix',
             help = "suffix of the to be created paramdbs"
         ),
-
         'makesourcedb_path': ingredient.ExecField(
              '--makesourcedb-path',
              help = "Path to makesourcedb executable."
         ),
+        'source_list_path': ingredient.StringField(
+             '--source-list-path',
+             help = "Path to sourcelist from external source (eg. bdsm) "\
+             "use an empty string for gsm generated data"
+        ),
+        'parmdbs_path': ingredient.StringField(
+            '--parmdbs-path',
+            help = "path to mapfile containing produced sky files"
+        ),
+        'sky_path': ingredient.StringField(
+            '--sky-path',
+            help = "path to mapfile containing produced sky files"
+        ),
+
     }
 
     outputs = {
@@ -107,9 +105,9 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
 
     def go(self):
         super(imager_create_dbs, self).go()
-        suffix = self.inputs["suffix"]  #TODO is deze nog nodig?
 
-        # collect and assign the parameters for the Monet database 
+        # ********************************************************************
+        # collect the inputs into local variables
         monetdb_hostname = self.inputs["monetdb_hostname"]
         monetdb_port = self.inputs["monetdb_port"]
         monetdb_name = self.inputs["monetdb_name"]
@@ -122,26 +120,20 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
             assoc_theta = self.inputs["assoc_theta"]
 
         parmdb_executable = self.inputs["parmdb_executable"]
-
-        #Parse the mapfile containing the timeslices: get the actual
-        #paths and collect in an array.
-        slice_paths_map = load_data_map(self.inputs["slice_paths_mapfile"])
         parmdb_suffix = self.inputs["parmdb_suffix"]
         init_script = self.inputs["initscript"]
-
         working_directory = self.inputs["working_directory"]
         makesourcedb_path = self.inputs["makesourcedb_path"]
-        # Parse the input map
+        source_list_path = self.inputs["source_list_path"]
 
-        input_map = eval(open(self.inputs['args'][0]).read())
-        self.logger.info(slice_paths_map)
+        # Get the input data
+        slice_paths_map = load_data_map(self.inputs["slice_paths_mapfile"])
+        input_map = load_data_map(self.inputs['args'][0])
 
         # Compile the command to be executed on the remote machine
         node_command = " python %s" % (self.__file__.replace("master", "nodes"))
-
-        # Create the jobs
+        # create jobs
         jobs = []
-        outnames = collections.defaultdict(list)
         for (input_ms, slice_paths)  in zip(input_map, slice_paths_map):
             host_ms, concatenated_measurement_set = input_ms
             host_slice, slice_paths = slice_paths
@@ -155,21 +147,18 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
 
             host_slice_map = [("paths", slice_paths)]
             host = host_ms
-            #Create the parameters depending on the input_map
-            if self.inputs["sourcedb_target_path"] != "":
-                sourcedb_target_path = self.inputs["sourcedb_target_path"]
-            else:
-                sourcedb_target_path = os.path.join(
-                        concatenated_measurement_set + ".sky")
 
-            #construct and save the output name
-            outnames[host_ms].append(concatenated_measurement_set + suffix)
+            #Create the parameters depending on the input_map
+            sourcedb_target_path = os.path.join(
+                  concatenated_measurement_set + self.inputs["sourcedb_suffix"])
+
+            #The actual call for the node script
             arguments = [ concatenated_measurement_set, sourcedb_target_path,
                          monetdb_hostname, monetdb_port, monetdb_name,
                          monetdb_user, monetdb_password, assoc_theta,
                          parmdb_executable, host_slice_map, parmdb_suffix,
                          init_script, working_directory,
-                         makesourcedb_path]
+                         makesourcedb_path, source_list_path]
             jobs.append(ComputeJob(host, node_command, arguments))
 
         # Hand over the job(s) to the pipeline scheduler
@@ -179,7 +168,7 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
         sky_files = []
         parmdbs = []
 
-        # now parse the output append to lits
+        # now parse the node output append to list
         for job in jobs:
             host = job.host
             if job.results.has_key("sky"):
@@ -198,16 +187,10 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
         store_data_map(self.inputs["sky_path"], sky_files)
         store_data_map(self.inputs["parmdbs_path"], parmdbs)
 
-        # return the output path names
+        # Set the outputs
         self.outputs['sky_path'] = self.inputs["sky_path"]
         self.outputs['parmdbs_path'] = self.inputs["parmdbs_path"]
-
-        # Test for errors
-        if self.error.isSet():
-            self.logger.warn("Failed ImagerCreateDBs run detected")
-            return 1
-        else:
-            return 0
+        return 0
 
 
 if __name__ == "__main__":

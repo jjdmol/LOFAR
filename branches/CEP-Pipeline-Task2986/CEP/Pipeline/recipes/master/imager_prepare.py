@@ -1,37 +1,47 @@
 # LOFAR IMAGING PIPELINE
-#
-# Prepare phase of the imager pipeline: master node (also see node recipe)
+# Prepare phase master
 # 
 # 1. Create input files for individual nodes based on the structured input mapfile
 # 2. Perform basic input parsing and input validation
 # 3. Call the node scripts with correct input
-# 4. validate performance (minimal in the current implementation)
+# 4. validate performance
 #
 # Wouter Klijn 
 # 2012
 # klijn@astron.nl
 # ------------------------------------------------------------------------------
-
-
+from __future__ import with_statement
 import os
 import sys
-import collections
 import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
-from lofarpipe.support.group_data import store_data_map
+from lofarpipe.support.group_data import store_data_map, load_data_map
+from lofarpipe.support.utilities import create_directory
 
 class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
     """
-    Run the AWImager on the nodes and the data files suplied in the mapfile
+    Prepare phase master
+ 
+    1. Create input files for individual nodes based on the structured input mapfile
+    2. Perform basic input parsing and input validation
+    3. Call the node scripts with correct input
+    4. validate performance
+    
+    node functionality:
+    
+    1. Collect the Measurement Sets (MSs): copy to the  current node
+    2. Start dppp: Combines the data from subgroups into single timeslice
+    3. Add addImagingColumns to the casa images
+    4. Concatenate the time slice measurment sets, to a virtual ms 
+    
     **Arguments**
-    A mapfile containing node->datafile pairs
 
     """
     inputs = {
-        'ndppp_path': ingredient.ExecField(
-            '--ndppp_path',
+        'ndppp_exec': ingredient.ExecField(
+            '--ndppp-exec',
             help = "The full path to the ndppp executable"
         ),
         'initscript': ingredient.FileField(
@@ -47,8 +57,8 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
             '-w', '--working-directory',
             help = "Working directory used by the nodes: local data"
         ),
-        'output_mapfile': ingredient.StringField(
-            '--output-mapfile',
+        'target_mapfile': ingredient.StringField(
+            '--target-mapfile',
             help = "Contains the node and path to target product files, defines the"\
                " number of nodes the script will start on."
         ),
@@ -59,6 +69,18 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         'subbands_per_image': ingredient.IntField(
             '--subbands-per-image',
             help = "The number of subbands to be collected in each output image"
+        ),
+        'asciistat_executable': ingredient.ExecField(
+            '--asciistat-executable',
+            help = "full path to the ascii stat executable"
+        ),
+        'statplot_executable': ingredient.ExecField(
+            '--statplot-executable',
+            help = "full path to the statplot executable"
+        ),
+        'msselect_executable': ingredient.ExecField(
+            '--msselect-executable',
+            help = "full path to the msselect executable "
         ),
         'mapfile': ingredient.StringField(
             '--mapfile',
@@ -72,104 +94,94 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
     }
 
     outputs = {
-        'mapfile': ingredient.StringField()
+        'mapfile': ingredient.FileField(),
+        'slices_mapfile': ingredient.FileField()
     }
 
     def go(self):
         """
         Main function for recipe: Called by the pipeline framework
         """
-        self.logger.info("Starting imager_prepare run")
         super(imager_prepare, self).go()
-        self.outputs['mapfile'] = self.inputs['mapfile']
-        #return 0
-        # *********************************************************************
-        # Load inputs, validate
-        # *********************************************************************        
-        # load mapfiles
-        input_map, output_map = self._load_map_files()
+        self.logger.info("Starting imager_prepare run")
 
-        # Environment variables
+        # *********************************************************************
+        # input data     
+        input_map = load_data_map(self.inputs['args'][0])
+        output_map = load_data_map(self.inputs['target_mapfile'])
         slices_per_image = self.inputs['slices_per_image']
         subbands_per_image = self.inputs['subbands_per_image']
+        # Validate input
+        if self._validate_input_map(input_map, output_map, slices_per_image,
+                            subbands_per_image):
+            return 1
+
+        # outputs
+        output_ms_mapfile_path = self.inputs['mapfile']
+        output_slices_mapfile_path = self.inputs['slices_mapfile']
+
+        # Environment parameters
         init_script = self.inputs['initscript']
         parset = self.inputs['parset']
         working_directory = self.inputs['working_directory']
-        ndppp_path = self.inputs['ndppp_path']
-        mapfile = self.inputs['mapfile']
-        slices_mapfile = self.inputs['slices_mapfile']
-
-        # Validate inputs:
-        if len(input_map) != len(output_map) * \
-                                   (slices_per_image * subbands_per_image):
-            self.logger.warn("ERROR: incorrect number of input ms for " +
-                              "supplied parameters")
-            return 1
-
+        ndppp_exec = self.inputs['ndppp_exec']
+        asciistat_executable = self.inputs['asciistat_executable']
+        statplot_executable = self.inputs['statplot_executable']
+        msselect_executable = self.inputs['msselect_executable']
         # *********************************************************************            
-        # construct command and create variables for running on remote nodes
-        # TODO: candidate for refactoring
-        # *********************************************************************
-        # Compile the command to be executed on the remote machine, fi
+        # schule the actual work
         nodeCommand = " python %s" % (self.__file__.replace("master", "nodes"))
 
-        outnames = collections.defaultdict(list)
         jobs = []
         n_subband_groups = len(output_map)
         for idx_sb_group, (host, output_measurement_set) in enumerate(output_map):
-            #construct and save the output name
-            input_map_for_subband = self._create_input_map_for_subband(
+            #create the input files for this node
+            inputs_for_image_mapfile_path = self._create_input_map_for_subband(
                                 slices_per_image, n_subband_groups,
                                 subbands_per_image, idx_sb_group, input_map)
 
-            outnames[host].append(output_measurement_set)
-
-
             arguments = [init_script, parset, working_directory,
-                        ndppp_path, output_measurement_set,
+                        ndppp_exec, output_measurement_set,
                         slices_per_image, subbands_per_image,
-                        repr(input_map_for_subband)]
-            # TODO: The size of input_map_for_subband could surpass the command line
-            # length: Use rar instead.
+                        inputs_for_image_mapfile_path, asciistat_executable,
+                        statplot_executable, msselect_executable]
 
             jobs.append(ComputeJob(host, nodeCommand, arguments))
 
         # Hand over the job(s) to the pipeline scheduler
         self._schedule_jobs(jobs)
 
+
         # *********************************************************************
-        # validate performance, cleanup, create output
-        # *********************************************************************
-        # Test for any errors
-        fp = open(mapfile, "w")
+        # validate the output, cleanup, return output
         slices = []
-        if self.error.isSet():
+        if self.error.isSet():   #if one of the nodes failed
             self.logger.warn("Failed prepare_imager run detected: Generating "
-                             "new mapfile without failed runs!")
-            new_output_mapfile = []
+                             "new output_ms_mapfile_path without failed runs!")
+            concatenated_timeslices = []
             #scan the return dict for completed key
             for ((host, output_measurement_set), job) in zip(output_map, jobs):
                 if job.results.has_key("completed"):
-                    new_output_mapfile.append((host, output_measurement_set))
+                    concatenated_timeslices.append((host, output_measurement_set))
+
+                    #only save the slices if the node has completed succesfull
                     if job.results.has_key("time_slices"):
                         slices.append((host, job.results["time_slices"]))
                 else:
                     self.logger.warn("Failed run on {0}. NOT Created: {1} ".format(
                         host, output_measurement_set))
+            store_data_map(output_ms_mapfile_path, concatenated_timeslices)
 
-            fp.write(repr(new_output_mapfile))
-
-        else:
-            #Copy output map from input mapfile and return
-            fp.write(repr(output_map))
+        else: #Copy output map from input output_ms_mapfile_path and return           
+            store_data_map(output_ms_mapfile_path, output_map)
             for ((host, output_measurement_set), job) in zip(output_map, jobs):
                 if job.results.has_key("time_slices"):
                     slices.append((host, job.results["time_slices"]))
-        fp.close()
-        store_data_map(slices_mapfile, slices)
-        self.logger.info("imager_prepare script end")
+        store_data_map(output_slices_mapfile_path, slices)
 
-        self.outputs['mapfile'] = self.inputs['mapfile']
+        # Set the outputs
+        self.outputs['mapfile'] = self.inputs["mapfile"]
+        self.outputs['slices_mapfile'] = self.inputs["slices_mapfile"]
         return 0
 
 
@@ -180,7 +192,8 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         This is a subset of the complete input_mapfile based on the subband 
         details suplied: The input_mapfile is structured: First all subbands for
         a complete timeslice and the the next timeslice. The result value 
-        contains all the information needed for a single subband
+        contains all the information needed for a single subband to be computed 
+        on a single compute node
         """
         inputs_for_image = []
         # collect the inputs: first step over the time slices
@@ -194,29 +207,39 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
             #extend inputs with the files for the current time slice
             inputs_for_image.extend(input_mapfile[line_idx_start: line_idx_end])
 
-        return inputs_for_image
+        job_directory = self.config.get(
+                            "layout", "job_directory")
+
+        inputs_for_image_mapfile_path = os.path.join(
+            job_directory, "mapfiles", "raw_ms_input_map_{0}".format(idx_sb_group))
+
+        store_data_map(inputs_for_image_mapfile_path, inputs_for_image)
+        return inputs_for_image_mapfile_path
 
 
-    def _load_map_files(self):
+    def _validate_input_map(self, input_map, output_map, slices_per_image,
+                            subbands_per_image):
         """
-        Load datafiles containing node --> dataset pairs
-        The input mapfile is structured each line contains:
-        node name , measurement set
-        
-        the input mapfile measurement sets are sorted first timeslice and the 
-        sub sorted on subbands eg:   slice1_SB001
-                                     slice1_SB002
-                                     slice2_SB001
-                                     etc
+        Return 1 if the inputs supplied are incorrect, the number if inputs and 
+        output does not match. Return 0 if correct  
         """
-        self.logger.debug("Loading input map: {0}".format(self.inputs['args']))
-        input_map = eval(open(self.inputs['args'][0]).read())
+        # The output_map contains a number of path/node pairs. The final data 
+        # dataproduct of the prepare phase: The 'input' for each of these pairs
+        # is a number of raw measurement sets: The number of time slices times
+        # the number of subbands collected into each of these time slices.
+        # The total length of the input map should match this.
+        self.logger.info(len(input_map))
+        self.logger.info((len(output_map)))
+        self.logger.info((slices_per_image))
+        self.logger.info((subbands_per_image))
 
-        # The output locus also determines the computation node
-        self.logger.debug("Loading output map:{0}".format(
-                                                self.inputs['output_mapfile']))
-        output_map = eval(open(self.inputs['output_mapfile']).read())
-        return input_map, output_map
+        if len(input_map) != len(output_map) * \
+                                   (slices_per_image * subbands_per_image):
+            self.logger.error("incorrect number of input ms for " +
+                              "supplied parameters")
+            return 1
+
+        return 0
 
 
 if __name__ == "__main__":
