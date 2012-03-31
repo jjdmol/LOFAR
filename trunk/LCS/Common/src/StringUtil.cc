@@ -70,7 +70,22 @@ vector<string> StringUtil::split(const string& s, char c)
 		i = j + 1;
     }
     return (v);
-  }
+}
+
+vector<string> StringUtil::tokenize(const string& str, const string& delim) {
+    vector<string>    tokens;
+    string::size_type pos = 0;
+    string::size_type pos0;
+
+    while ( (pos0 = str.find_first_not_of(delim, pos)) != string::npos ) {
+        pos = str.find_first_of(delim, pos0 + 1);
+        if (pos - pos0 > 0) { // If pos == string::npos then substr() clamps.
+            tokens.push_back(str.substr(pos0, pos - pos0));
+        }
+    }
+
+    return tokens;
+}
 
 //
 // formatString(format, ...) --> string up to 10Kb
