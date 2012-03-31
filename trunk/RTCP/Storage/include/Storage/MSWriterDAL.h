@@ -23,8 +23,8 @@
 //////////////////////////////////////////////////////////////////////
 
 
-#ifndef LOFAR_STORAGE_MSWRITERLDA_H
-#define LOFAR_STORAGE_MSWRITERLDA_H
+#ifndef LOFAR_STORAGE_MSWRITERDAL_H
+#define LOFAR_STORAGE_MSWRITERDAL_H
 
 //# Includes
 #include <Common/LofarTypes.h>
@@ -42,11 +42,11 @@ namespace LOFAR
 
   namespace RTCP
   {
-    template<typename T, unsigned DIM> class MSWriterLDA : public MSWriterFile
+    template<typename T, unsigned DIM> class MSWriterDAL : public MSWriterFile
     {
     public:
-      MSWriterLDA(const string &filename, const Parset &parset, unsigned fileno, bool isBigEndian);
-      ~MSWriterLDA();
+      MSWriterDAL(const string &filename, const Parset &parset, unsigned fileno, bool isBigEndian);
+      ~MSWriterDAL();
       virtual void write(StreamableData *data);
     private:
       const Transpose2 &itsTransposeLogic;
