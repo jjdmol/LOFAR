@@ -1,6 +1,6 @@
-//# MSWriterLDA: an implementation of MSWriter using the LDA to write HDF5
+//# MSWriterDAL: an implementation of MSWriter using the DAL to write HDF5
 //#
-//#  Copyright (C) 2001
+//#  Copyright (C) 2011
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -26,11 +26,11 @@
 #include <Common/SystemUtil.h>
 
 #include <Storage/MSWriter.h>
-#include <Storage/MSWriterLDA.h>
+#include <Storage/MSWriterDAL.h>
 
 #include <lofar/BF_File.h>
 
-using namespace LDA;
+using namespace DAL;
 using namespace std;
 
 #include <Common/Thread/Mutex.h>
@@ -101,7 +101,7 @@ namespace LOFAR
     // uses global locks too anyway.
     static Mutex HDF5Mutex;
 
-    template <typename T,unsigned DIM> MSWriterLDA<T,DIM>::MSWriterLDA (const string &filename, const Parset &parset, unsigned fileno, bool isBigEndian)
+    template <typename T,unsigned DIM> MSWriterDAL<T,DIM>::MSWriterDAL (const string &filename, const Parset &parset, unsigned fileno, bool isBigEndian)
     :
       MSWriterFile(forceextension(string(filename),".raw"),false),
       itsTransposeLogic(parset.transposeLogic()),
@@ -157,11 +157,11 @@ namespace LOFAR
           break;
 
         case INVALID_STOKES:
-          LOG_ERROR("MSWriterLDA asked to write INVALID_STOKES");
+          LOG_ERROR("MSWriterDAL asked to write INVALID_STOKES");
           return;
       }    
 
-      LOG_DEBUG_STR("MSWriterLDA: opening " << filename);
+      LOG_DEBUG_STR("MSWriterDAL: opening " << filename);
 
       // create the top structure
       BF_File file(h5filename, BF_File::CREATE);
@@ -408,11 +408,11 @@ namespace LOFAR
       stokesDS.nofSamples()     .set(dims[0]);
     }
 
-    template <typename T,unsigned DIM> MSWriterLDA<T,DIM>::~MSWriterLDA()
+    template <typename T,unsigned DIM> MSWriterDAL<T,DIM>::~MSWriterDAL()
     {
     }
 
-    template <typename T,unsigned DIM> void MSWriterLDA<T,DIM>::write(StreamableData *data)
+    template <typename T,unsigned DIM> void MSWriterDAL<T,DIM>::write(StreamableData *data)
     {
       SampleData<T,DIM> *sdata = dynamic_cast<SampleData<T,DIM> *>(data);
 
@@ -434,7 +434,7 @@ namespace LOFAR
     }
 
     // specialisation for FinalBeamFormedData
-    template class MSWriterLDA<float,3>;
+    template class MSWriterDAL<float,3>;
 
   } // namespace RTCP
 } // namespace LOFAR
