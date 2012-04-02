@@ -58,8 +58,8 @@ namespace LOFAR
     vector<string> split(const string& str, char c);
 
     // Tokenize the string \c str using any character in \c delim as a separation character.
-    // The result does not contain empty strings; consecutive \c delim characters count as a single delimiter.
-    // Any delimiter characters at the beginning or end of \c str are ignored.
+    // The result does not contain empty strings; consecutive delimiter occurrences count as a single delimiter.
+    // Any delimiter occurrences at the beginning or end of \c str are ignored.
     // 
     // For example:
     // \code
@@ -71,7 +71,7 @@ namespace LOFAR
     //    tokens[0] = "aa"
     //    tokens[1] = "bb"
     // \endverbatim
-    vector<string> tokenize(const string& str, const string& delim);
+    vector<string> tokenize(const string& str, const string& delims);
 
 
     // Functor to compare two strings. Strings can be compared case sensitive

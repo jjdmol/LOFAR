@@ -62,8 +62,8 @@
 #include <Common/Thread/Thread.h>
 #include <Common/Exceptions.h>
 #include <Common/NewHandler.h>
-#include <ApplCommon/TBB_StaticMapping.h>
 
+#include <Storage/TBB_StaticMapping.h>
 #include <Storage/TBB_Writer.h>
 #include <Storage/IOPriority.h>
 

@@ -7,8 +7,7 @@ set(inst_HEADERS
   Observation.h
   StationConfig.h
   StationDatatypes.h
-  StationInfo.h
-  TBB_StaticMapping.h)
+  StationInfo.h)
 
 # Create symbolic link to include directory.
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink 

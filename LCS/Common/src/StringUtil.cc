@@ -72,13 +72,13 @@ vector<string> StringUtil::split(const string& s, char c)
     return (v);
 }
 
-vector<string> StringUtil::tokenize(const string& str, const string& delim) {
+vector<string> StringUtil::tokenize(const string& str, const string& delims) {
     vector<string>    tokens;
     string::size_type pos = 0;
     string::size_type pos0;
 
-    while ( (pos0 = str.find_first_not_of(delim, pos)) != string::npos ) {
-        pos = str.find_first_of(delim, pos0 + 1);
+    while ( (pos0 = str.find_first_not_of(delims, pos)) != string::npos ) {
+        pos = str.find_first_of(delims, pos0 + 1);
         if (pos - pos0 > 0) { // If pos == string::npos then substr() clamps.
             tokens.push_back(str.substr(pos0, pos - pos0));
         }
