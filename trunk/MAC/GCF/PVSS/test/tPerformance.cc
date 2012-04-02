@@ -1,4 +1,3 @@
-//
 //  tPerformance.cc: Test program to test the majority of the GSA Service class.
 //
 //  Copyright (C) 2007
@@ -388,7 +387,8 @@ int main(int argc, char* argv[])
 	case 2:		NR_OF_DPS = atoi(argv[1]);
 				break;
 	default:	cout << "Syntax: " << argv[0] << " number_of_datapoints" << endl;
-				exit(1);
+				cout << " USING 10 DATAPOINT FOR THIS TEST!" << endl;
+				NR_OF_DPS = 10;
 	}
 
 	if (!NR_OF_DPS) {

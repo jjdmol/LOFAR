@@ -438,7 +438,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 			itsChildResult   = CT_RESULT_NO_ERROR;
 			itsChildsInError = 0;
 			itsClaimTimer    = 0;
-			LOG_DEBUG("Requesting all childs to execute the CLAIM state");
+			LOG_INFO("Requesting all childs to execute the CLAIM state");
 			itsChildControl->requestState(CTState::CLAIMED, "");
 			itsBusyControllers = itsChildControl->countChilds(0, CNTLRTYPE_NO_TYPE);
 		}
@@ -447,7 +447,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 			itsChildResult   = CT_RESULT_NO_ERROR;
 			itsChildsInError = 0;
 			itsPrepareTimer  = 0;
-			LOG_DEBUG("Requesting all childs to execute the PREPARE state");
+			LOG_INFO("Requesting all childs to execute the PREPARE state");
 			itsChildControl->requestState(CTState::PREPARED, "");
 			itsBusyControllers = itsChildControl->countChilds(0, CNTLRTYPE_NO_TYPE);
 		}
@@ -456,7 +456,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 			itsChildResult   = CT_RESULT_NO_ERROR;
 			itsChildsInError = 0;
 			itsStartTimer    = 0;
-			LOG_DEBUG("Requesting all childs to go operation state");
+			LOG_INFO("Requesting all childs to go operation state");
 			itsChildControl->requestState(CTState::RESUMED, "");
 			itsBusyControllers = itsChildControl->countChilds(0, CNTLRTYPE_NO_TYPE);
 		}
@@ -465,7 +465,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 			itsChildResult   = itsQuitReason;
 			itsChildsInError = 0;
 			itsStopTimer     = 0;
-			LOG_DEBUG("Requesting all childs to quit");
+			LOG_INFO("Requesting all childs to quit");
 			itsChildControl->requestState(CTState::QUITED, "");
 			itsBusyControllers = itsChildControl->countChilds(0, CNTLRTYPE_NO_TYPE);
 			// reschedule forced-quit timer for safety.
@@ -736,9 +736,10 @@ void  ObservationControl::doHeartBeatTask()
 	// TODO: add criteria to SAS database and test those iso this foolish criteria.
 	if (nrChilds != itsNrControllers) {
 		LOG_WARN_STR("Only " << nrChilds << " out of " << itsNrControllers << " controllers still available.");
-		// if no more children left while we are not in the quit-phase (stoptimer still running)
-		if (itsStopTimer && itsChildControl->countChilds(0, CNTLRTYPE_STATIONCTRL)==0) {
-//		if (!nrChilds && itsStopTimer) {
+		// if no more children left while we are not in the quit-phase
+		time_t	now   = to_time_t(second_clock::universal_time());
+		time_t	stop  = to_time_t(itsStopTime);
+		if (now < stop && itsChildControl->countChilds(0, CNTLRTYPE_STATIONCTRL)==0) {
 			LOG_FATAL("Too less stations left, FORCING QUIT OF OBSERVATION");
 			if (itsState < CTState::RESUME) {
 				itsQuitReason = CT_RESULT_LOST_CONNECTION;

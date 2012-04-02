@@ -90,8 +90,9 @@ endif
 # Directory structure
 SOURCE_DIR = ${HOME}/source/lofar-${RELEASE}
 BUILD_DIR = ${HOME}/build/lofar-${RELEASE}
-LOCUS_DIR = /opt/storage/lofar-${RELEASE}
 INSTALL_DIR ?= ${HOME}/production/lofar-${RELEASE}
+LOCUS_HOME = /data/home/lofarsys
+LOCUS_INSTALL_DIR ?= ${LOCUS_HOME}/production/lofar-${RELEASE}
 
 # Host names
 LHN_HOST = lhn001.cep2.lofar
@@ -162,7 +163,7 @@ configure:		checkout
 	mkdir -p ${BUILD_DIR}/lhn/gnu_opt
         # remove /data/sys: on lhn, /opt is a symlink for /data/sys/opt, which cmake resolves for us. However, on locus,
         # we really need it as /opt. 
-	ssh ${LHN_HOST} 'cd ${BUILD_DIR}/lhn/gnu_opt && cmake ${SOURCE_DIR}/LOFAR -DBUILD_PACKAGES="Storage;Deployment" ${COMMON_FLAGS} ${STORAGE_FLAGS} -DCMAKE_INSTALL_PREFIX=${LOCUS_DIR} && sed -i s#/data/sys##g CMakeCache.txt'
+	ssh ${LHN_HOST} 'cd ${BUILD_DIR}/lhn/gnu_opt && cmake ${SOURCE_DIR}/LOFAR -DBUILD_PACKAGES="Storage;Deployment" ${COMMON_FLAGS} ${STORAGE_FLAGS} -DCMAKE_INSTALL_PREFIX=${LOCUS_INSTALL_DIR} && sed -i s#/data/sys##g CMakeCache.txt'
 
 # Build and install ION_Processing
 ${INSTALL_ION}:		configure
@@ -181,7 +182,7 @@ ${INSTALL_BGFEN}:	configure
 # Build and install Storage_main
 ${INSTALL_LHN}:		configure
 	ssh ${LHN_HOST} 'cd ${BUILD_DIR}/lhn/gnu_opt && make -j16 install'
-	ssh ${LHN_HOST} "cexec ${LOCUS_NODES} 'time scp -rq ${LHN_HOST}:${LOCUS_DIR} `dirname ${LOCUS_DIR}` && sudo /sbin/setcap ${STORAGE_CAPABILITIES}=ep ${LOCUS_DIR}/bin/Storage_main'"
+	ssh ${LHN_HOST} "cexec ${LOCUS_NODES} 'time scp -rq ${LHN_HOST}:${LOCUS_INSTALL_DIR} `dirname ${LOCUS_INSTALL_DIR}` && sudo /sbin/setcap ${STORAGE_CAPABILITIES}=ep ${LOCUS_INSTALL_DIR}/bin/Storage_main'"
 
 # Activate the installation
 .PHONY:		activate_bgfen activate_locus
@@ -193,11 +194,12 @@ endif
 
 activate_locus:		install_lhn
 ifneq "${CURRENT_INSTALL}" "${MY_INSTALL}"
-	ssh ${LHN_HOST} cexec ${LOCUS_NODES} ln -sfT /opt/storage/`basename ${CURRENT_INSTALL}` /opt/storage/prev
-	ssh ${LHN_HOST} cexec ${LOCUS_NODES} ln -sfT /opt/storage/`basename ${MY_INSTALL}` /opt/storage/current
+	ssh ${LHN_HOST} cexec ${LOCUS_NODES} ln -sfT ${LOCUS_HOME}/production/`basename ${CURRENT_INSTALL}` ${LOCUS_HOME}/production/lofar-prev
+	ssh ${LHN_HOST} cexec ${LOCUS_NODES} ln -sfT ${LOCUS_HOME}/production/`basename ${MY_INSTALL}` ${LOCUS_HOME}/production/lofar
+
 else        
-	ssh ${LHN_HOST} cexec ${LOCUS_NODES} ln -sfT /opt/storage/`basename ${PREV_INSTALL}` /opt/storage/prev
-	ssh ${LHN_HOST} cexec ${LOCUS_NODES} ln -sfT /opt/storage/`basename ${CURRENT_INSTALL}` /opt/storage/current
+	ssh ${LHN_HOST} cexec ${LOCUS_NODES} ln -sfT ${LOCUS_HOME}/production/`basename ${PREV_INSTALL}` ${LOCUS_HOME}/production/lofar-prev
+	ssh ${LHN_HOST} cexec ${LOCUS_NODES} ln -sfT ${LOCUS_HOME}/production/`basename ${CURRENT_INSTALL}` ${LOCUS_HOME}/production/lofar
 endif
 
 # Swap previous and current release
@@ -207,6 +209,6 @@ prev_bgfen:
 	ln -sfT ${PREV_INSTALL} ${HOME}/production/lofar
 
 prev_locus:
-	ssh ${LHN_HOST} cexec ${LOCUS_NODES} ln -sfT /opt/storage/`basename ${CURRENT_INSTALL}` /opt/storage/prev
-	ssh ${LHN_HOST} cexec ${LOCUS_NODES} ln -sfT /opt/storage/`basename ${PREV_INSTALL}` /opt/storage/current
+	ssh ${LHN_HOST} cexec ${LOCUS_NODES} ln -sfT ${LOCUS_HOME}/production/`basename ${CURRENT_INSTALL}` ${LOCUS_HOME}/production/lofar-prev
+	ssh ${LHN_HOST} cexec ${LOCUS_NODES} ln -sfT ${LOCUS_HOME}/production/`basename ${PREV_INSTALL}` ${LOCUS_HOME}/production/lofar
 

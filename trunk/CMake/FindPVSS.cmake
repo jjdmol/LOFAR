@@ -72,7 +72,7 @@ if(NOT PVSS_FOUND)
   # Use hard-coded value if version information file cannot be found.
   find_file(PVSS_VERSINFO_MK
     NAMES VersInfo.mk
-    HINTS ${PVSS_PROJ_DIR}
+    HINTS /opt/pvss/pvssproj
     PATH_SUFFIXES api)
   mark_as_advanced(PVSS_VERSINFO_MK)
   if(NOT PVSS_VERSINFO_MK)
@@ -83,6 +83,8 @@ if(NOT PVSS_FOUND)
     string(REGEX REPLACE "^.*= *([^ ]+)$" "\\1" pvss_version_main ${match})
     file(STRINGS ${PVSS_VERSINFO_MK} match REGEX "^PVSS_VERSION_BUILD")
     string(REGEX REPLACE "^.*= *([^ ]+)$" "\\1" pvss_version_build ${match})
+    file(STRINGS ${PVSS_VERSINFO_MK} match REGEX "^PVSS_ROOT_DIR")
+    string(REGEX REPLACE "^.*= *([^ ]+)$" "\\1" pvss_root_dir ${match})
     set(pvss_version "V${pvss_version_main}_${pvss_version_build}")
     file(STRINGS ${PVSS_VERSINFO_MK} match REGEX "^PVSS_ROOT_DIR")
     string(REGEX REPLACE "^.*= *([^ ]+)$" "\\1" pvss_root ${match})
