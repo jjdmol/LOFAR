@@ -183,9 +183,7 @@ public:
 	// the tree is exported: HTML, KeyValue List.
 	bool	exportTree (treeIDType			aTreeID,
 						nodeIDType			topItem,
-						const string&		filename,
-						const formatType	outputFormat = FtKVList,
-						bool				folded = false);
+						const string&		filename);
 
 	// Export a VIC (sub)tree with reported metadata to a file.
 	bool	exportResultTree (treeIDType		aTreeID,

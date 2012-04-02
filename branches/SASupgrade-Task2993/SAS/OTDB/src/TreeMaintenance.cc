@@ -926,18 +926,13 @@ bool	TreeMaintenance::pruneTree(treeIDType	TODO_aTreeID,
 }
 
 //
-// exportTree(treeID, nodeID, filename, formattype, folded): bool
+// exportTree(treeID, nodeID, filename): bool
 //
-// Export a VIC (sub)tree to a file. The user may choose in which format
-// the tree is exported: HTML, KeyValue List.
+// Export a VIC (sub)tree to a file.
 bool	TreeMaintenance::exportTree (treeIDType			aTreeID,
 									 nodeIDType			topItem,
-									 const string&		filename,
-									 const formatType	TODO_outputFormat,
-									 bool				TODO_folded)
+									 const string&		filename)
 {
-	// TODO: implement outputformat and folded parameters
-
 	// Check connection
 	if (!itsConn->connect()) {
 		itsError = itsConn->errorMsg();
@@ -946,9 +941,7 @@ bool	TreeMaintenance::exportTree (treeIDType			aTreeID,
 
 	LOG_TRACE_FLOW_STR("TM:exportTree(" << aTreeID << ","
 										<< topItem << ","
-										<< filename << ","
-										<< TODO_outputFormat << ","
-										<< toString(TODO_folded) << ")");
+										<< filename << ")");
 
 	work	xAction(*(itsConn->getConn()), "exportFile");
 	try {
