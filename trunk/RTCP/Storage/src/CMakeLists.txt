@@ -13,7 +13,8 @@ lofar_add_library(storage
   MSWriterNull.cc
   MSWriterFile.cc
   Format.cc
-  MeasurementSetFormat.cc)
+  MeasurementSetFormat.cc
+  TBB_StaticMapping.cc)
 #  TBB_Writer_main.cc
 #  TBB_Writer.cc)
 

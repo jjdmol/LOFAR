@@ -22,7 +22,7 @@
 
 #include <lofar_config.h>
 
-#include <ApplCommon/TBB_StaticMapping.h>
+#include <Storage/TBB_StaticMapping.h>
 #include <Common/StringUtil.h>
 #include <Common/Exceptions.h>
 
@@ -50,8 +50,7 @@ void TBB_StaticMapping::parseStaticMapping(const string& filename) {
 	while (ifile.getline(buf, parseBufSize).good()) {
 		string sbuf(buf);
 
-		// Cut off possible comments starting with '#' before tokenizing.
-		size_t pos = sbuf.find('#');
+		size_t pos = sbuf.find('#'); // line comments
 		sbuf = sbuf.substr(0, pos);
 		vector<string> tokens(StringUtil::tokenize(sbuf, ws));
 

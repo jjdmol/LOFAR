@@ -26,24 +26,33 @@
 #include <iostream>
 
 #include <Common/Exceptions.h>
-#include <ApplCommon/TBB_StaticMapping.h>
+#include <Storage/TBB_StaticMapping.h>
 
 using namespace std;
 using namespace LOFAR;
 
-int main() {
-	try {
-		// Locate TBB connection mapping file.
-		string tbbMappingFilename;
+int main(int argc, char *argv[]) {
+	// Locate TBB connection mapping file.
+	// Select from either: argv[1], $LOFARROOT/etc/StaticMetaData/TBBConnections.dat, or ./TBBConnections.dat
+	string tbbMappingFilename;
+	if (argc > 1) {
+		tbbMappingFilename = argv[1];
+	} else {
 		const string defaultTbbMappingFilename("TBBConnections.dat");
 		char* lrpath = getenv("LOFARROOT");
 		if (lrpath != NULL) {
 			tbbMappingFilename = string(lrpath) + "/etc/StaticMetaData/";
 		}
 		tbbMappingFilename.append(defaultTbbMappingFilename);
+	}
 
+	try {
 		// Open and read in.
 		TBB_StaticMapping tsm(tbbMappingFilename);
+
+		if (tsm.empty()) {
+			throw Exception("Opened tbb static mapping file, but list of station names is empty");
+		}
 
 		// Show all.
 		cout << "Found " << tsm.size() << " nodes with the following station and board names:" << endl;
@@ -68,7 +77,7 @@ int main() {
 		}
 		cout << endl;
 
-	} catch (IOException& exc) {
+	} catch (Exception& exc) {
 		cerr << exc.what() << endl;
 		return 1;
 	}
