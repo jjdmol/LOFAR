@@ -29,7 +29,7 @@
 #include <scimath/Mathematics/ConvolveGridder.h>
 #include <LofarFT/LofarCFStore.h>
 #include <LofarFT/LofarVisResampler.h>
-//#include <LofarFT/LofarConvolutionFunction.h>
+#include <msvis/MSVis/VisBuffer.h>
 #include <BBSKernel/ModelImageConvolutionFunction.h>
 
 namespace LOFAR
@@ -57,9 +57,12 @@ typedef struct ModelImageOptions
   casa::Matrix<Bool> degridMuellerMask;   // degridding Mueller mask, LofarFTMachine needs this
   unsigned int NThread;                   // number of threads used
   bool storeConvFunctions;                // save all convolution functions into images
+
+  uInt nchan;                             // number of channels
+  Vector<Double> frequencies;             // vector with channel frequencies
 };
 
-class ModelImageFft
+class ModelImageFft : public casa::FTMachine
 {
 public:
   ModelImageFft();
@@ -125,9 +128,11 @@ public:
 private:
   casa::ImageInterface<Complex> *image;
   casa::LatticeCache<Complex> *imageCache;        // Image / FFT of image (ffted in place)
+  casa::VisBuffer itsDummyVb;   // dummy VisBuffer needed for interface
 
   void init();                  // initialize LofarFTMachine (might change to all-in-one init)
-  void initMaps(void);          // init polarization and channel maps
+  void initVb(uInt npol, uInt nchan, bool circularPol=False);
+  void initMaps();             // init polarization and channel maps
 
   // Pre-computed convolution functions for w-projection (indexed by w-plane number)
   CountedPtr<LOFAR::BBS::LofarConvolutionFunction> itsConvFunc;
@@ -145,17 +150,22 @@ private:
   // mTangent is specified then the uvw rotation is done for
   // that location iso the image center.
   // <group>
-  ModelImageOptions itsOptions;                   // struct containing all options
-  double itsGriddingTime;                         // variable to keep track of timing of steps
+
+  // Timers
+  double itsGriddingTime;                        // variable to keep track of timing of steps
+  PrecTimer itsTotalTimer;
+  double itsCFTime;
 
   //-----------------------------------------------------------------  
   // Image functions
+  ModelImageOptions itsOptions;                  // struct containing all options
   void fftImage();                               // perform FFT on image
   void getImagePhaseDirection();                 // get the phase direction of the image
 
   //-----------------------------------------------------------------  
   // FTmachine functions
   void initializeToVis( ImageInterface<Complex>& iimage);
+  void get(VisBuffer& vb, Int row);
 
   // Gridder functions
 //    LofarVisResampler visResamplers_p;
@@ -172,13 +182,19 @@ private:
   // Arrays for non-tiled gridding (one per thread).
   Array<Complex>  itsGriddedData;
   Array<DComplex> itsGriddedData2;
-  IPosition padded_shape;                // Shape of the padded image
+  vector< Matrix<Complex> > itsSumPB;
+  vector< Matrix<Double> >  itsSumWeight;
+  vector< double > itsSumCFWeight;
 
+  // Grid and padding
+  IPosition padded_shape;                // Shape of the padded image
   Bool useDoubleGrid_p;                  // use double precision grid
   Bool canComputeResiduals_p;
   Bool noPadding_p;                      //force no padding
   Float padding_p;                       // Padding in FFT
+  Bool usezero_p;                        // use zero padding
 
+  // Channel and Stokes mapping
   Vector<Int> chanMap_p, polMap_p;       // channel map, polarization map
   Vector<Int> ConjCFMap_p, CFMap_p;
   Int nx,ny;                             // where else does this come from?
