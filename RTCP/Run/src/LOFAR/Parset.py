@@ -43,15 +43,16 @@ class Parset(util.Parset.Parset):
       elif antennaset in ["LBA_INNER","LBA_OUTER","LBA_X","LBA_Y","LBA_SPARSE_EVEN","LBA_SPARSE_ODD"]:
         suffix = ["LBA"]
       elif station.startswith("CS"):
-        if antennaset == "HBA_ZERO":
+        if antennaset in ["HBA_ZERO","HBA_ZERO_INNER"]:
           suffix = ["HBA0"]
-        elif antennaset == "HBA_ONE":  
+        elif antennaset in ["HBA_ONE","HBA_ONE_INNER"]:
           suffix = ["HBA1"]
-        elif antennaset == "HBA_JOINED":  
+        elif antennaset in ["HBA_JOINED","HBA_JOINED_INNER"]:
           suffix = ["HBA"]
-        else: 
-          assert antennaset == "HBA_DUAL", "Unknown antennaSet: %s" % (antennaset,)
+        elif antennaset in ["HBA_DUAL","HBA_DUAL_INNER"]:
           suffix = ["HBA0","HBA1"]
+        else: 
+          assert false, "Unknown antennaSet: %s" % (antennaset,)
       else:  
         suffix = ["HBA"]
 
