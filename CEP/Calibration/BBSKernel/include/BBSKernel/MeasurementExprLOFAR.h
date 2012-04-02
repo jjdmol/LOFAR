@@ -76,7 +76,8 @@ public:
         const ModelConfig &config,
         const VisBuffer::Ptr &buffer,
         const BaselineMask &mask,
-        bool inverse = false);
+        bool inverse = false,
+        double sigmaMMSE = 0.0);
 
     // \name MeasurementExpr interface implementation
     // These methods form an implementation of the MeasurementExpr interface
@@ -114,7 +115,8 @@ private:
     void makeInverseExpr(SourceDB &sourceDB,
         const BufferMap &buffers,
         const ModelConfig &config,
-        const VisBuffer::Ptr &buffer);
+        const VisBuffer::Ptr &buffer,
+        double sigmaMMSE);
 
     void setCorrelations(bool circular);
 

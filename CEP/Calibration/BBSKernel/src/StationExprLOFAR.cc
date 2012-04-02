@@ -34,6 +34,7 @@
 #include <BBSKernel/Expr/ITRFDirection.h>
 #include <BBSKernel/Expr/Literal.h>
 #include <BBSKernel/Expr/MatrixInverse.h>
+#include <BBSKernel/Expr/MatrixInverseMMSE.h>
 #include <BBSKernel/Expr/MatrixMul2.h>
 #include <BBSKernel/Expr/ScalarMatrixMul.h>
 #include <BBSKernel/Expr/StationBeamFormer.h>
@@ -48,25 +49,27 @@ StationExprLOFAR::StationExprLOFAR(SourceDB &sourceDB, const BufferMap &buffers,
     const ModelConfig &config, const Instrument::ConstPtr &instrument,
     double refFreq, const casa::MDirection &refPhase,
     const casa::MDirection &refDelay, const casa::MDirection &refTile,
-    bool inverse)
+    bool inverse, double sigmaMMSE)
 {
     initialize(sourceDB, buffers, config, instrument, refFreq, refPhase,
-        refDelay, refTile, inverse);
+        refDelay, refTile, inverse, sigmaMMSE);
 }
 
 StationExprLOFAR::StationExprLOFAR(SourceDB &sourceDB, const BufferMap &buffers,
-    const ModelConfig &config, const VisBuffer::Ptr &buffer, bool inverse)
+    const ModelConfig &config, const VisBuffer::Ptr &buffer, bool inverse,
+    double sigmaMMSE)
 {
     initialize(sourceDB, buffers, config, buffer->instrument(),
         buffer->getReferenceFreq(), buffer->getPhaseReference(),
-        buffer->getDelayReference(), buffer->getTileReference(), inverse);
+        buffer->getDelayReference(), buffer->getTileReference(), inverse,
+        sigmaMMSE);
 }
 
 void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
     const ModelConfig &config, const Instrument::ConstPtr &instrument,
     double refFreq, const casa::MDirection &refPhase,
     const casa::MDirection &refDelay, const casa::MDirection &refTile,
-    bool inverse)
+    bool inverse, double sigmaMMSE)
 {
     // Allocate space for the station response expressions.
     itsExpr.resize(instrument->nStations());
@@ -255,7 +258,17 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
 
         if(inverse)
         {
-            itsExpr[i] = Expr<JonesMatrix>::Ptr(new MatrixInverse(itsExpr[i]));
+            if(sigmaMMSE > 0.0)
+            {
+                itsExpr[i] =
+                    Expr<JonesMatrix>::Ptr(new MatrixInverseMMSE(itsExpr[i],
+                    sigmaMMSE));
+            }
+            else
+            {
+                itsExpr[i] =
+                    Expr<JonesMatrix>::Ptr(new MatrixInverse(itsExpr[i]));
+            }
         }
     }
 

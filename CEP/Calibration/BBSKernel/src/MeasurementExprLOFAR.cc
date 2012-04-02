@@ -32,6 +32,7 @@
 #include <BBSKernel/Expr/FlagIf.h>
 #include <BBSKernel/Expr/LinearToCircularRL.h>
 #include <BBSKernel/Expr/MatrixInverse.h>
+#include <BBSKernel/Expr/MatrixInverseMMSE.h>
 #include <BBSKernel/Expr/MatrixSum.h>
 #include <BBSKernel/Expr/MergeFlags.h>
 #include <BBSKernel/Expr/Request.h>
@@ -74,7 +75,8 @@ MeasurementExprLOFAR::MeasurementExprLOFAR(SourceDB &sourceDB,
 
 MeasurementExprLOFAR::MeasurementExprLOFAR(SourceDB &sourceDB,
     const BufferMap &buffers, const ModelConfig &config,
-    const VisBuffer::Ptr &buffer, const BaselineMask &mask, bool inverse)
+    const VisBuffer::Ptr &buffer, const BaselineMask &mask, bool inverse,
+    double sigmaMMSE)
     :   itsBaselines(filter(buffer->baselines(), mask)),
         itsCachePolicy(new DefaultCachePolicy())
 {
@@ -85,7 +87,7 @@ MeasurementExprLOFAR::MeasurementExprLOFAR(SourceDB &sourceDB,
 
     if(inverse)
     {
-        makeInverseExpr(sourceDB, buffers, config, buffer);
+        makeInverseExpr(sourceDB, buffers, config, buffer, sigmaMMSE);
     }
     else
     {
@@ -347,7 +349,7 @@ void MeasurementExprLOFAR::makeForwardExpr(SourceDB &sourceDB,
 
 void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
     const BufferMap &buffers, const ModelConfig &config,
-    const VisBuffer::Ptr &buffer)
+    const VisBuffer::Ptr &buffer, double sigmaMMSE)
 {
     NSTimer timer;
     timer.start();
@@ -597,8 +599,17 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
                     exprThreshold));
             }
 
-            stationExpr[i] =
-                Expr<JonesMatrix>::Ptr(new MatrixInverse(stationExpr[i]));
+            if(sigmaMMSE > 0.0)
+            {
+                stationExpr[i] =
+                    Expr<JonesMatrix>::Ptr(new MatrixInverseMMSE(stationExpr[i],
+                    sigmaMMSE));
+            }
+            else
+            {
+                stationExpr[i] =
+                    Expr<JonesMatrix>::Ptr(new MatrixInverse(stationExpr[i]));
+            }
         }
     }
 

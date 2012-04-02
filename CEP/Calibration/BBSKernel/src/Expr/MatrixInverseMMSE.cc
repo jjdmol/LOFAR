@@ -1,6 +1,6 @@
-//# MatrixInverse.cc: The inverse of an expression returning a Jones matrix.
+//# MatrixInverseMMSE.cc: Robust matrix inverse suggested by Sarod Yatawatta.
 //#
-//# Copyright (C) 2005
+//# Copyright (C) 2012
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -22,37 +22,38 @@
 
 #include <lofar_config.h>
 
-#include <BBSKernel/Expr/MatrixInverse.h>
-
-// Inverse of a 2x2 matrix:
-//
-//        (a b)                      ( d -b)
-// If A = (   ) then inverse(A)   =  (     ) / (ad - bc)
-//        (c d)                      (-c  a)
+#include <BBSKernel/Expr/MatrixInverseMMSE.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
 
-MatrixInverse::MatrixInverse(const Expr<JonesMatrix>::ConstPtr &expr)
-    :   BasicUnaryExpr<JonesMatrix, JonesMatrix>(expr)
+MatrixInverseMMSE::MatrixInverseMMSE(const Expr<JonesMatrix>::ConstPtr &expr,
+    double sigma)
+    :   BasicUnaryExpr<JonesMatrix, JonesMatrix>(expr),
+        itsSigma(sigma)
 {
 }
 
-const JonesMatrix::View MatrixInverse::evaluateImpl(const Grid&,
+const JonesMatrix::View MatrixInverseMMSE::evaluateImpl(const Grid&,
     const JonesMatrix::View &arg0) const
 {
     JonesMatrix::View result;
 
-    Matrix invDet(1.0 / (arg0(0, 0) * arg0(1, 1) - arg0(0, 1) * arg0(1, 0)));
-    result.assign(0, 0, arg0(1, 1) * invDet);
+    // Add the sigma of the noise to the elements on the diagonal.
+    Matrix diag0 = arg0(0, 0) + itsSigma;
+    Matrix diag1 = arg0(1, 1) + itsSigma;
+
+    // Compute inverse in the usual way.
+    Matrix invDet(1.0 / (diag0 * diag1 - arg0(0, 1) * arg0(1, 0)));
+    result.assign(0, 0, diag1 * invDet);
     result.assign(0, 1, arg0(0, 1) * -invDet);
     result.assign(1, 0, arg0(1, 0) * -invDet);
-    result.assign(1, 1, arg0(0, 0) * invDet);
+    result.assign(1, 1, diag0 * invDet);
 
     return result;
 }
 
-} // namespace BBS
-} // namespace LOFAR
+} //# namespace BBS
+} //# namespace LOFAR
