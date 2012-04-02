@@ -63,6 +63,7 @@ lofar_add_library(bbskernel
   Expr/MatrixComplexArr.cc
   Expr/MatrixComplexSca.cc
   Expr/MatrixInverse.cc
+  Expr/MatrixInverseMMSE.cc
   Expr/MatrixMul2.cc
   Expr/MatrixMul3.cc
   Expr/MatrixRealArr.cc

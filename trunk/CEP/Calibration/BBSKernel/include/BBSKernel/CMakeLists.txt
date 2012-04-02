@@ -74,6 +74,7 @@ install(FILES
   Expr/MatrixComplexArr.h
   Expr/MatrixComplexSca.h
   Expr/MatrixInverse.h
+  Expr/MatrixInverseMMSE.h
   Expr/MatrixMul2.h
   Expr/MatrixMul3.h
   Expr/MatrixRealArr.h
