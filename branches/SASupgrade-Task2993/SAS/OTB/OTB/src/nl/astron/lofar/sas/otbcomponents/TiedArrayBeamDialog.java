@@ -23,7 +23,7 @@ package nl.astron.lofar.sas.otbcomponents;
 import javax.swing.border.TitledBorder;
 import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.sas.otb.MainFrame;
-import nl.astron.lofar.sas.otb.objects.AnaBeam;
+import nl.astron.lofar.sas.otb.objects.TiedArrayBeam;
 import org.apache.log4j.Logger;
 
 
@@ -35,8 +35,8 @@ import org.apache.log4j.Logger;
  *
  * @version $Id$
  */
-public class AnaBeamDialog extends javax.swing.JDialog {
-    static Logger logger = Logger.getLogger(AnaBeamDialog.class);
+public class TiedArrayBeamDialog extends javax.swing.JDialog {
+    static Logger logger = Logger.getLogger(TiedArrayBeamDialog.class);
     static String name = "AnaBeamDialog";
     
     /** Creates new form BeanForm
@@ -48,19 +48,18 @@ public class AnaBeamDialog extends javax.swing.JDialog {
      * @param   rankChoices             String with all possible choices + default for combobox
      * @param   edit                    indicates edit or add mode
      */
-    public AnaBeamDialog(java.awt.Frame parent, boolean modal,AnaBeam anAnaBeam,boolean edit ) {
+    public TiedArrayBeamDialog(java.awt.Frame parent, boolean modal,TiedArrayBeam aTAB, boolean edit ) {
 
         super(parent, modal);
         initComponents();
-        LofarUtils.setPopupComboChoices(inputDirectionType,anAnaBeam.getDirectionTypeChoices());
-        LofarUtils.setPopupComboChoices(inputRank,anAnaBeam.getRankChoices());
-        itsAnaBeam = anAnaBeam;
-        if (!itsAnaBeam.getMaximizeDuration().equals("Missing")) {
-            inputMaxDur.setVisible(true);
-            inputMaxDur.setSelected(LofarUtils.StringToBoolean(itsAnaBeam.getMaximizeDuration()));
-        } else {
-            inputMaxDur.setVisible(false);
+        if (aTAB == null) {
+            isChanged=false;
+            setVisible(false);
+            dispose();            
         }
+        itsTAB = aTAB;
+        LofarUtils.setPopupComboChoices(inputDirectionType,itsTAB.getDirectionTypeChoices());
+        inputCoherent.setSelected(LofarUtils.StringToBoolean(itsTAB.getCoherent()));
 
         editting=edit;
         initialize();
@@ -69,17 +68,12 @@ public class AnaBeamDialog extends javax.swing.JDialog {
 
     private void initialize() {
 
-        inputDirectionType.setSelectedItem(itsAnaBeam.getDirectionType());
-        inputAngle1.setText(itsAnaBeam.getAngle1());
-        inputAngle2.setText(itsAnaBeam.getAngle2());
-        coordTypeChange.setSelectedItem(itsAnaBeam.getCoordType());
-        if (itsAnaBeam.getMaximizeDuration().equals("")) {
-            inputMaxDur.setVisible(true);
-            inputMaxDur.setSelected(LofarUtils.StringToBoolean(itsAnaBeam.getMaximizeDuration()));
-        } else {
-            inputMaxDur.setVisible(false);
-        }
-        inputRank.setSelectedItem(itsAnaBeam.getRank());
+        inputDirectionType.setSelectedItem(itsTAB.getDirectionType());
+        inputAngle1.setText(itsTAB.getAngle1());
+        inputAngle2.setText(itsTAB.getAngle2());
+        coordTypeChange.setSelectedItem(itsTAB.getCoordType());
+        inputCoherent.setSelected(LofarUtils.StringToBoolean(itsTAB.getCoherent()));
+        inputDispersionMeasure.setText(itsTAB.getDispersionMeasure());
     }
     
     public boolean hasChanged() {
@@ -109,13 +103,13 @@ public class AnaBeamDialog extends javax.swing.JDialog {
         inputAngle1 = new javax.swing.JTextField();
         labelAngle2 = new javax.swing.JLabel();
         inputAngle2 = new javax.swing.JTextField();
-        labelRank = new javax.swing.JLabel();
+        labelDispersionMeasure = new javax.swing.JLabel();
         cancelButton = new javax.swing.JButton();
         saveButton = new javax.swing.JButton();
         labelDirectionType = new javax.swing.JLabel();
-        inputRank = new javax.swing.JComboBox();
         coordTypeChange = new javax.swing.JComboBox();
-        inputMaxDur = new javax.swing.JCheckBox();
+        inputCoherent = new javax.swing.JCheckBox();
+        inputDispersionMeasure = new javax.swing.JTextField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("LOFAR View TreeInfo");
@@ -125,7 +119,7 @@ public class AnaBeamDialog extends javax.swing.JDialog {
         setResizable(false);
         getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
-        jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(), "Edit/Add Analog Beam", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
+        jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(), "Edit/Add Tied Array Beam", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
 
         inputDirectionType.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1" }));
 
@@ -133,7 +127,7 @@ public class AnaBeamDialog extends javax.swing.JDialog {
 
         labelAngle2.setText("Angle 2 :");
 
-        labelRank.setText("Rank :");
+        labelDispersionMeasure.setText("Dispersion Measure:");
 
         cancelButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_cancel.png"))); // NOI18N
         cancelButton.setText("Cancel");
@@ -153,8 +147,6 @@ public class AnaBeamDialog extends javax.swing.JDialog {
 
         labelDirectionType.setText("directionTypes :");
 
-        inputRank.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1" }));
-
         coordTypeChange.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "rad", "deg", "hmsdms", "dmsdms" }));
         coordTypeChange.setToolTipText("set to alternative coordinates");
         coordTypeChange.addActionListener(new java.awt.event.ActionListener() {
@@ -163,43 +155,41 @@ public class AnaBeamDialog extends javax.swing.JDialog {
             }
         });
 
-        inputMaxDur.setText("Maximize  Duration");
+        inputCoherent.setText("coherent");
 
         org.jdesktop.layout.GroupLayout jPanel1Layout = new org.jdesktop.layout.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(jPanel1Layout.createSequentialGroup()
-                .addContainerGap()
-                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
                     .add(jPanel1Layout.createSequentialGroup()
+                        .addContainerGap()
                         .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING, false)
-                                .add(org.jdesktop.layout.GroupLayout.LEADING, labelAngle2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .add(org.jdesktop.layout.GroupLayout.LEADING, labelAngle1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                            .add(labelDirectionType))
-                        .add(20, 20, 20)
-                        .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
-                            .add(inputDirectionType, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 75, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                            .add(inputAngle2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 185, Short.MAX_VALUE)
-                            .add(inputAngle1))
-                        .add(26, 26, 26)
-                        .add(coordTypeChange, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                        .addContainerGap())
-                    .add(jPanel1Layout.createSequentialGroup()
-                        .add(cancelButton)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(saveButton)
-                        .addContainerGap(270, Short.MAX_VALUE))
-                    .add(jPanel1Layout.createSequentialGroup()
-                        .add(labelRank, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 93, Short.MAX_VALUE)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(inputRank, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 75, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                        .add(266, 266, 266))
-                    .add(jPanel1Layout.createSequentialGroup()
-                        .add(97, 97, 97)
-                        .add(inputMaxDur)
-                        .addContainerGap(226, Short.MAX_VALUE))))
+                            .add(jPanel1Layout.createSequentialGroup()
+                                .add(cancelButton)
+                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                .add(saveButton))
+                            .add(jPanel1Layout.createSequentialGroup()
+                                .add(labelDispersionMeasure, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 111, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                .add(18, 18, 18)
+                                .add(inputDispersionMeasure, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 125, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                            .add(jPanel1Layout.createSequentialGroup()
+                                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                    .add(labelAngle1)
+                                    .add(labelDirectionType)
+                                    .add(labelAngle2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 52, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                                .add(20, 20, 20)
+                                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
+                                    .add(inputDirectionType, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 75, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                    .add(inputAngle2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 185, Short.MAX_VALUE)
+                                    .add(inputAngle1))
+                                .add(26, 26, 26)
+                                .add(coordTypeChange, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))))
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel1Layout.createSequentialGroup()
+                        .add(135, 135, 135)
+                        .add(inputCoherent, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 145, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                .add(168, 168, 168))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -216,20 +206,20 @@ public class AnaBeamDialog extends javax.swing.JDialog {
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                             .add(labelAngle2)
-                            .add(inputAngle2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                        .add(6, 6, 6)
-                        .add(inputMaxDur)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                            .add(inputRank, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                            .add(labelRank))
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 35, Short.MAX_VALUE)
-                        .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                            .add(cancelButton)
-                            .add(saveButton)))
+                            .add(inputAngle2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
                     .add(jPanel1Layout.createSequentialGroup()
                         .add(35, 35, 35)
                         .add(coordTypeChange, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(inputCoherent)
+                .add(6, 6, 6)
+                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(labelDispersionMeasure)
+                    .add(inputDispersionMeasure, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 39, Short.MAX_VALUE)
+                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(cancelButton)
+                    .add(saveButton))
                 .addContainerGap())
         );
 
@@ -246,44 +236,39 @@ public class AnaBeamDialog extends javax.swing.JDialog {
     }//GEN-LAST:event_saveButtonActionPerformed
     
     private void checkChanged() {
-        if (!itsAnaBeam.getDirectionType().equals(inputDirectionType.getSelectedItem().toString())) {
+        if (!itsTAB.getDirectionType().equals(inputDirectionType.getSelectedItem().toString())) {
             isChanged=true;
         }
-        if (!itsAnaBeam.getAngle1().equals(inputAngle1.getText())) {
+        if (!itsTAB.getAngle1().equals(inputAngle1.getText())) {
             isChanged=true;
         }
-        if (!itsAnaBeam.getAngle2().equals(inputAngle2.getText())) {
+        if (!itsTAB.getAngle2().equals(inputAngle2.getText())) {
             isChanged=true;
         }
-        if (!itsAnaBeam.getCoordType().equals(coordTypeChange.getSelectedItem().toString())) {
+        if (!itsTAB.getCoordType().equals(coordTypeChange.getSelectedItem().toString())) {
             isChanged=true;
         }
-        if (inputMaxDur.isVisible()) {
-            if (!itsAnaBeam.getMaximizeDuration().equals(LofarUtils.BooleanToString(inputMaxDur.isSelected()))) {
-                isChanged=true;
-            }
+        if (!itsTAB.getCoherent().equals(LofarUtils.BooleanToString(inputCoherent.isSelected()))) {
+            isChanged=true;
         }
-        if (!itsAnaBeam.getRank().equals(inputRank.getSelectedItem().toString())) {
+        if (!itsTAB.getDispersionMeasure().equals(inputDispersionMeasure.getText())) {
             isChanged=true;
         }
     }
     
-    public AnaBeam getAnaBeam() {
+    public TiedArrayBeam getTiedArrayBeam() {
 
-        String aS= "Missing";
-        if(!itsAnaBeam.getMaximizeDuration().equals("Missing")) {
-            aS=LofarUtils.BooleanToString(inputMaxDur.isSelected());
-        }
-               
-        itsAnaBeam.setDirectionType(inputDirectionType.getSelectedItem().toString());
-        itsAnaBeam.setAngle1(inputAngle1.getText());
-        itsAnaBeam.setAngle2(inputAngle2.getText());
-        itsAnaBeam.setCoordType(coordTypeChange.getSelectedItem().toString());
-        itsAnaBeam.setMaximizeDuration(aS);
-        itsAnaBeam.setRank(inputRank.getSelectedItem().toString());
+        String aS=LofarUtils.BooleanToString(inputCoherent.isSelected());
+            
+        itsTAB.setDirectionType(inputDirectionType.getSelectedItem().toString());
+        itsTAB.setAngle1(inputAngle1.getText());
+        itsTAB.setAngle2(inputAngle2.getText());
+        itsTAB.setCoordType(coordTypeChange.getSelectedItem().toString());
+        itsTAB.setCoherent(aS);
+        itsTAB.setDispersionMeasure(inputDispersionMeasure.getText());
 
         
-        return itsAnaBeam;
+        return itsTAB;
     }
     
     private void cancelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelButtonActionPerformed
@@ -297,8 +282,8 @@ public class AnaBeamDialog extends javax.swing.JDialog {
         if (evt.getActionCommand().equals("comboBoxChanged")) {
             String ch = coordTypeChange.getSelectedItem().toString();
             String tmpch = ch;
-            String tmpcoord = itsAnaBeam.getCoordType();
-            if ((inputAngle1.getText().isEmpty() && inputAngle1.getText().isEmpty()) || ch.equals(itsAnaBeam.getCoordType())) {
+            String tmpcoord = itsTAB.getCoordType();
+            if ((inputAngle1.getText().isEmpty() && inputAngle1.getText().isEmpty()) || ch.equals(itsTAB.getCoordType())) {
                 return;
             }
             try {
@@ -311,7 +296,7 @@ public class AnaBeamDialog extends javax.swing.JDialog {
                             tmpch = "hms";
                             break;
                     }
-                    switch (itsAnaBeam.getCoordType()) {
+                    switch (itsTAB.getCoordType()) {
                         case "hmsdms":
                             tmpcoord = "hms";
                             break;
@@ -325,12 +310,12 @@ public class AnaBeamDialog extends javax.swing.JDialog {
                     if (ch.equals("dmsdms") || ch.equals("hmsdms")) {
                         tmpch = "dms";
                     }
-                    if (itsAnaBeam.getCoordType().equals("hmsdms") || itsAnaBeam.getCoordType().equals("dmsdms")) {
+                    if (itsTAB.getCoordType().equals("hmsdms") || itsTAB.getCoordType().equals("dmsdms")) {
                         tmpcoord = "dms";
                     }
                     inputAngle2.setText(LofarUtils.changeCoordinate(tmpcoord, tmpch, inputAngle2.getText()));
                 }
-                itsAnaBeam.setCoordType(ch);
+                itsTAB.setCoordType(ch);
             } catch (NumberFormatException ex) {
                 String aS = "Error in angle input format :" + ex;
                 logger.error(aS);
@@ -342,7 +327,7 @@ public class AnaBeamDialog extends javax.swing.JDialog {
         
     private MainFrame itsMainFrame = null;
     private boolean   isChanged=false;
-    private AnaBeam   itsAnaBeam;
+    private TiedArrayBeam   itsTAB;
     private boolean   editting          = false;
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -350,14 +335,14 @@ public class AnaBeamDialog extends javax.swing.JDialog {
     private javax.swing.JComboBox coordTypeChange;
     private javax.swing.JTextField inputAngle1;
     private javax.swing.JTextField inputAngle2;
+    private javax.swing.JCheckBox inputCoherent;
     private javax.swing.JComboBox inputDirectionType;
-    private javax.swing.JCheckBox inputMaxDur;
-    private javax.swing.JComboBox inputRank;
+    private javax.swing.JTextField inputDispersionMeasure;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JLabel labelAngle1;
     private javax.swing.JLabel labelAngle2;
     private javax.swing.JLabel labelDirectionType;
-    private javax.swing.JLabel labelRank;
+    private javax.swing.JLabel labelDispersionMeasure;
     private javax.swing.JButton saveButton;
     // End of variables declaration//GEN-END:variables
     
