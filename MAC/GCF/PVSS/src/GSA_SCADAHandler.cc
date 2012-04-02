@@ -22,10 +22,9 @@
 //#  $Id$
 
 #include <lofar_config.h>
-#include <Common/LofarLogger.h>
-
 #include "GSA_SCADAHandler.h"
 #include <GSA_Resources.h>
+#include <Common/LofarLogger.h>		// MUST be after GSA file because of namespace clash
 #include <GCF/TM/GCF_Scheduler.h>
 //#include <Common/ParameterSet.h>
 

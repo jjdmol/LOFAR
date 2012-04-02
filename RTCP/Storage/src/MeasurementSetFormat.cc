@@ -72,7 +72,7 @@ Mutex MeasurementSetFormat::sharedMutex;
 static double toMJDs( double time )
 {
   // 40587 modify Julian day number = 00:00:00 January 1, 1970, GMT
-  return 40587.0 + time;
+  return 40587.0 * 24 * 60 * 60 + time;
 }
 
 
