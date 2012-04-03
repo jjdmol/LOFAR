@@ -745,7 +745,7 @@ string CEPlogProcessor::getTempObsName(int obsID, const char *msg)
 
 
 // returns true if the given logline should be recorded in process.logMsg
-bool CEPlogProcessor::_recordLogMsg(const struct logline &logline)
+bool CEPlogProcessor::_recordLogMsg(const struct logline &logline) const
 {
     if (!strcmp(logline.loglevel, "INFO"))
       return true;
