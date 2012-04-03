@@ -27,6 +27,7 @@ then
   STORAGE=/data/home/lofarsys/production/lofar/bin/Storage_main
 
   LOGDIR=/localhome/log
+  RUNDIR=/globalhome/lofarsystem
   LOGBACKUPDIR=/globalhome/lofarsystem/log-archive
   LOGPARAMS="-s ccu001:24500"
 
@@ -52,6 +53,7 @@ else
   STORAGE=$HOME/projects/LOFAR/installed/gnu_opt/bin/Storage_main
 
   LOGDIR=$HOME/projects/LOFAR/log
+  RUNDIR=$LOGDIR
   LOGBACKUPDIR=$LOGDIR
   LOGPARAMS="-v"
 
