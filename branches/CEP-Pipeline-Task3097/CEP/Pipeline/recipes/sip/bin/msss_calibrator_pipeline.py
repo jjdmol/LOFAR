@@ -157,7 +157,7 @@ class msss_calibrator_pipeline(control):
         self.logger.debug("Wrote output mapfile: %s" % instrument_mapfile)
 
         if len(self.input_data) == 0:
-            self.logger.warn("No input data files to process. Bailing out")
+            self.logger.warn("No input data files to process. Bailing out!")
             return 0
 
         self.logger.debug("Processing: %s" % 
@@ -222,6 +222,7 @@ class msss_calibrator_pipeline(control):
             parset_file=py_parset.getString('metadataFeedbackFile'),
             parset_prefix=self.parset.fullModuleName('DataProducts'),
             product_type="InstrumentModel")
-            
+
+
 if __name__ == '__main__':
     sys.exit(msss_calibrator_pipeline().main())

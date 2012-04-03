@@ -126,7 +126,6 @@ class msss_target_pipeline(control):
                         self.input_data['instrument'], inst_mask
                     ) if not m
                 )
-            
             )
 
         # Set the IO data mask
@@ -190,7 +189,7 @@ class msss_target_pipeline(control):
         )
         
         if len(self.input_data['data']) == 0:
-            self.logger.warn("No input data files to process. Bailing out")
+            self.logger.warn("No input data files to process. Bailing out!")
             return 0
 
         self.logger.debug("Processing: %s" % 
@@ -248,6 +247,12 @@ class msss_target_pipeline(control):
             suffix='',
             parset=ndppp_parset
         )
+
+        # Create a parset-file containing the metadata for MAC/SAS
+        self.run_task("get_metadata", corrected_mapfile,
+            parset_file=py_parset.getString('metadataFeedbackFile'),
+            parset_prefix=self.parset.fullModuleName('DataProducts'),
+            product_type="Correlated")
 
 
 if __name__ == '__main__':
