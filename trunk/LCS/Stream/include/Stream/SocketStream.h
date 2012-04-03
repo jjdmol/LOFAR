@@ -47,8 +47,10 @@ class SocketStream : public FileDescriptorBasedStream
       Client, Server
     };
 
-  	    SocketStream(const string &hostname, uint16 _port, Protocol, Mode, time_t timeout = 0, const string &nfskey = "");
+  	    SocketStream(const string &hostname, uint16 _port, Protocol, Mode, time_t timeout = 0, const string &nfskey = "", bool doAccept = true);
     virtual ~SocketStream();
+
+    FileDescriptorBasedStream *detach();
 
     void    reaccept(time_t timeout = 0); // only for TCP server socket
     void    setReadBufferSize(size_t size);

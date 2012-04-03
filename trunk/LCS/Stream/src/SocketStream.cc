@@ -65,7 +65,7 @@ static struct RandomState {
 } randomState;
 
 
-SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol protocol, Mode mode, time_t timeout, const std::string &nfskey)
+SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol protocol, Mode mode, time_t timeout, const std::string &nfskey, bool doAccept)
 :
   protocol(protocol),
   mode(mode),
@@ -155,7 +155,10 @@ SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol p
             if (listen(listen_sk, 5) < 0)
               throw BindException("listen", errno, THROW_ARGS);
 
-            accept(timeout);  
+            if (doAccept)
+              accept(timeout);
+            else
+              break;
           }
         }
 
@@ -194,6 +197,18 @@ SocketStream::~SocketStream()
       LOG_ERROR_STR("Exception in destructor: " << ex);
     }
   }
+}
+
+
+FileDescriptorBasedStream *SocketStream::detach()
+{
+  ASSERT( mode == Server );
+
+  FileDescriptorBasedStream *client = new FileDescriptorBasedStream(fd);
+
+  fd = -1;
+
+  return client;
 }
 
 
