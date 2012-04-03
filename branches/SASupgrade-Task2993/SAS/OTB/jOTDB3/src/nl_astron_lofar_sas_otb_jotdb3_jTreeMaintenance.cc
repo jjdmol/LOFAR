@@ -925,7 +925,7 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_
  * Method:    exportResultTree
  * Signature: (IILjava/lang/String;)Z
  */
-JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_exportResultTree__IILjava_lang_String (JNIEnv *env, jobject jTreeMaintenance, jint treeID, jint topItem, jstring aName) {
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_exportResultTree (JNIEnv *env, jobject jTreeMaintenance, jint treeID, jint topItem, jstring aName) {
 
   jboolean isCopy;
   jboolean succes;
