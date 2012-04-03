@@ -254,6 +254,15 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         aMenuItem.setActionCommand("Create ParSet File");
         aPopupMenu.add(aMenuItem);
             
+        aMenuItem=new JMenuItem("Create ParSetMeta File");        
+        aMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                popupMenuHandler(evt);
+            }
+        });
+        aMenuItem.setActionCommand("Create ParSetMeta File");
+        aPopupMenu.add(aMenuItem);
         
         aPopupMenu.setOpaque(true);
         aPopupMenu.show(aComponent, x, y );       
@@ -269,46 +278,93 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
      */
     @Override
     public void popupMenuHandler(java.awt.event.ActionEvent evt) {
-         if (evt.getActionCommand().equals("Create ParSet File")) {
-            logger.trace("Create ParSet File");
-            int aTreeID=itsMainFrame.getSharedVars().getTreeID();
-            if (fc == null) {
-                fc = new JFileChooser();
-                fc.setApproveButtonText("Save");
-            }
-            // try to get a new filename to write the parsetfile to
-            if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-                try {
-                    File aFile = fc.getSelectedFile();
-                    
-                    // create filename that can be used at the remote site    
-                    String aRemoteFileName="/tmp/"+aTreeID+"-"+itsNode.name+"_"+itsMainFrame.getUserAccount().getUserName()+".ParSet";
-                    
-                    // write the parset
-                    OtdbRmi.getRemoteMaintenance().exportTree(aTreeID,itsNode.nodeID(),aRemoteFileName,2,false); 
-                    
-                    //obtain the remote file
-                    byte[] dldata = OtdbRmi.getRemoteFileTrans().downloadFile(aRemoteFileName);
-                    try (BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(aFile))) {
-                        output.write(dldata,0,dldata.length);
-                        output.flush();
+        switch (evt.getActionCommand()) {
+            case "Create ParSet File":
+                {
+                    logger.trace("Create ParSet File");
+                    int aTreeID=itsMainFrame.getSharedVars().getTreeID();
+                    if (fc == null) {
+                        fc = new JFileChooser();
+                        fc.setApproveButtonText("Save");
                     }
-                    logger.trace("File written to: " + aFile.getPath());
-                } catch (RemoteException ex) {
-                    String aS="exportTree failed : " + ex;
-                    logger.error(aS);
-                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
-                } catch (FileNotFoundException ex) {
-                    String aS="Error during newPICTree creation: "+ ex;
-                    logger.error(aS);
-                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
-                } catch (IOException ex) {
-                    String aS="Error during newPICTree creation: "+ ex;
-                    logger.error(aS);
-                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                    // try to get a new filename to write the parsetfile to
+                    if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+                        try {
+                            File aFile = fc.getSelectedFile();
+                            
+                            // create filename that can be used at the remote site    
+                            String aRemoteFileName="/tmp/"+aTreeID+"-"+itsNode.name+"_"+itsMainFrame.getUserAccount().getUserName()+".ParSet";
+                            
+                            // write the parset
+                            OtdbRmi.getRemoteMaintenance().exportTree(aTreeID,itsNode.nodeID(),aRemoteFileName); 
+                            
+                            //obtain the remote file
+                            byte[] dldata = OtdbRmi.getRemoteFileTrans().downloadFile(aRemoteFileName);
+                            try (BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(aFile))) {
+                                output.write(dldata,0,dldata.length);
+                                output.flush();
+                            }
+                            logger.trace("File written to: " + aFile.getPath());
+                        } catch (RemoteException ex) {
+                            String aS="exportTree failed : " + ex;
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                        } catch (FileNotFoundException ex) {
+                            String aS="Error during newPICTree creation: "+ ex;
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                        } catch (IOException ex) {
+                            String aS="Error during newPICTree creation: "+ ex;
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                        }
+                    }
+                    break;
                 }
-            }
-        }       
+            case "Create ParSetMeta File":
+                {
+                    logger.trace("Create ParSet File");
+                    int aTreeID=itsMainFrame.getSharedVars().getTreeID();
+                    if (fc == null) {
+                        fc = new JFileChooser();
+                        fc.setApproveButtonText("Save");
+                    }
+                    // try to get a new filename to write the parsetfile to
+                    if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+                        try {
+                            File aFile = fc.getSelectedFile();
+                            
+                            // create filename that can be used at the remote site    
+                            String aRemoteFileName="/tmp/"+aTreeID+"-"+itsNode.name+"_"+itsMainFrame.getUserAccount().getUserName()+".ParSetMeta";
+                            
+                            // write the parset
+                            OtdbRmi.getRemoteMaintenance().exportResultTree(aTreeID,itsNode.nodeID(),aRemoteFileName); 
+                            
+                            //obtain the remote file
+                            byte[] dldata = OtdbRmi.getRemoteFileTrans().downloadFile(aRemoteFileName);
+                            try (BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(aFile))) {
+                                output.write(dldata,0,dldata.length);
+                                output.flush();
+                            }
+                            logger.trace("File written to: " + aFile.getPath());
+                        } catch (RemoteException ex) {
+                            String aS="exportResultTree failed : " + ex;
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                        } catch (FileNotFoundException ex) {
+                            String aS="Error during newPICTree creation: "+ ex;
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                        } catch (IOException ex) {
+                            String aS="Error during newPICTree creation: "+ ex;
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                        }
+                    }
+                    break;
+                }
+        }
+       
     }
     
      /** 

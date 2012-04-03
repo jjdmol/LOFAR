@@ -73,6 +73,7 @@ public class NodeViewPanel extends javax.swing.JPanel implements IViewPanel{
         initComponents();
     }
     
+    @Override
     public void setMainFrame(MainFrame aMainFrame) {
         if (aMainFrame != null) {
             itsMainFrame=aMainFrame;
@@ -81,22 +82,27 @@ public class NodeViewPanel extends javax.swing.JPanel implements IViewPanel{
         }
     }
     
+    @Override
     public String getShortName() {
         return name;
     }
     
+    @Override
     public void setContent(Object anObject) {
         itsNode = (jOTDBnode)anObject;
         initPanel();
     }
 
+    @Override
     public boolean hasPopupMenu() {
         return true;
     }
+    @Override
     public boolean isSingleton() {
         return false;
     }
     
+    @Override
     public JPanel getInstance() {
         return new NodeViewPanel();
     }
@@ -118,26 +124,38 @@ public class NodeViewPanel extends javax.swing.JPanel implements IViewPanel{
      *
      *  aPopupMenu.show(aComponent, x, y );        
      */
+    @Override
     public void createPopupMenu(Component aComponent,int x, int y) {
         JPopupMenu aPopupMenu=null;
         JMenuItem  aMenuItem=null;
         
         aPopupMenu= new JPopupMenu();
         // For VIC trees
-        if (itsTreeType.equals("VHtree")) {
-            //  Fill in menu as in the example above
-            aMenuItem=new JMenuItem("Create ParSet File");        
-            aMenuItem.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
-                    popupMenuHandler(evt);
-                }
-            });
-            aMenuItem.setActionCommand("Create ParSet File");
-            aPopupMenu.add(aMenuItem);
-            
-        // For template trees
-        } else if (itsTreeType.equals("VItemplate")) {
-                
+        switch (itsTreeType) {
+            case "VHtree":
+                //  Fill in menu as in the example above
+                aMenuItem=new JMenuItem("Create ParSet File");
+                aMenuItem.addActionListener(new java.awt.event.ActionListener() {
+                    @Override
+                    public void actionPerformed(java.awt.event.ActionEvent evt) {
+                        popupMenuHandler(evt);
+                    }
+                });
+                aMenuItem.setActionCommand("Create ParSet File");
+                aPopupMenu.add(aMenuItem);
+                aMenuItem=new JMenuItem("Create ParSetMeta File");
+                aMenuItem.addActionListener(new java.awt.event.ActionListener() {
+                    @Override
+                    public void actionPerformed(java.awt.event.ActionEvent evt) {
+                        popupMenuHandler(evt);
+                    }
+                });
+                aMenuItem.setActionCommand("Create ParSetMeta File");
+                aPopupMenu.add(aMenuItem);
+            // For template trees
+                break;
+            case "VItemplate":
+                break;
         }
         
         aPopupMenu.setOpaque(true);
@@ -152,46 +170,91 @@ public class NodeViewPanel extends javax.swing.JPanel implements IViewPanel{
      *          perform action
      *      }  
      */
+    @Override
     public void popupMenuHandler(java.awt.event.ActionEvent evt) {
-        if (evt.getActionCommand().equals("Create ParSet File")) {
-            logger.debug("Create ParSet File");
-            int aTreeID=itsMainFrame.getSharedVars().getTreeID();
-            if (fc == null) {
-                fc = new JFileChooser();
-            }
-            // try to get a new filename to write the parsetfile to
-            if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-                try {
-                    File aFile = fc.getSelectedFile();
-                    
-                    // create filename that can be used at the remote site    
-                    String aRemoteFileName="/tmp/"+aTreeID+"-"+itsNode.name+"_"+itsMainFrame.getUserAccount().getUserName()+".ParSet";
-                    
-                    // write the parset
-                    OtdbRmi.getRemoteMaintenance().exportTree(aTreeID,itsNode.nodeID(),aRemoteFileName,2,false); 
-                    
-                    //obtain the remote file
-                    byte[] dldata = OtdbRmi.getRemoteFileTrans().downloadFile(aRemoteFileName);
-
-                    BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(aFile));
-                    output.write(dldata,0,dldata.length);
-                    output.flush();
-                    output.close();
-                    logger.debug("File written to: " + aFile.getPath());
-                } catch (RemoteException ex) {
-                    String aS="Error during exportTree failed : " + ex;
-                    logger.error(aS);
-                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
-                } catch (FileNotFoundException ex) {
-                    String aS="Error during newPICTree creation: "+ ex;
-                    logger.error(aS);
-                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
-                } catch (IOException ex) {
-                    String aS="Error during newPICTree creation: "+ ex;
-                    logger.error(aS);
-                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+        switch (evt.getActionCommand()) {
+            case "Create ParSet File":
+                {
+                    logger.debug("Create ParSet File");
+                    int aTreeID=itsMainFrame.getSharedVars().getTreeID();
+                    if (fc == null) {
+                        fc = new JFileChooser();
+                    }
+                    // try to get a new filename to write the parsetfile to
+                    if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+                        try {
+                            File aFile = fc.getSelectedFile();
+                            
+                            // create filename that can be used at the remote site    
+                            String aRemoteFileName="/tmp/"+aTreeID+"-"+itsNode.name+"_"+itsMainFrame.getUserAccount().getUserName()+".ParSet";
+                            
+                            // write the parset
+                            OtdbRmi.getRemoteMaintenance().exportTree(aTreeID,itsNode.nodeID(),aRemoteFileName); 
+                            
+                            //obtain the remote file
+                            byte[] dldata = OtdbRmi.getRemoteFileTrans().downloadFile(aRemoteFileName);
+                    try (BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(aFile))) {
+                        output.write(dldata,0,dldata.length);
+                        output.flush();
+                    }
+                            logger.debug("File written to: " + aFile.getPath());
+                        } catch (RemoteException ex) {
+                            String aS="Error during exportTree failed : " + ex;
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                        } catch (FileNotFoundException ex) {
+                            String aS="Error during newPICTree creation: "+ ex;
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                        } catch (IOException ex) {
+                            String aS="Error during newPICTree creation: "+ ex;
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                        }
+                    }
+                    break;
                 }
-            }
+            case "Create ParSetMeta File":
+                {
+                    logger.debug("Create ParSetMeta File");
+                    int aTreeID=itsMainFrame.getSharedVars().getTreeID();
+                    if (fc == null) {
+                        fc = new JFileChooser();
+                    }
+                    // try to get a new filename to write the parsetfile to
+                    if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+                        try {
+                            File aFile = fc.getSelectedFile();
+                            
+                            // create filename that can be used at the remote site    
+                            String aRemoteFileName="/tmp/"+aTreeID+"-"+itsNode.name+"_"+itsMainFrame.getUserAccount().getUserName()+".ParSetMeta";
+                            
+                            // write the parset
+                            OtdbRmi.getRemoteMaintenance().exportResultTree(aTreeID,itsNode.nodeID(),aRemoteFileName); 
+                            
+                            //obtain the remote file
+                            byte[] dldata = OtdbRmi.getRemoteFileTrans().downloadFile(aRemoteFileName);
+                    try (BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(aFile))) {
+                        output.write(dldata,0,dldata.length);
+                        output.flush();
+                    }
+                            logger.debug("File written to: " + aFile.getPath());
+                        } catch (RemoteException ex) {
+                            String aS="Error during exportResultTree failed : " + ex;
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                        } catch (FileNotFoundException ex) {
+                            String aS="Error during newPICTree creation: "+ ex;
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                        } catch (IOException ex) {
+                            String aS="Error during newPICTree creation: "+ ex;
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                        }
+                    }
+                    break;
+                }
         }
     }
     
@@ -310,6 +373,7 @@ public class NodeViewPanel extends javax.swing.JPanel implements IViewPanel{
      *
      * @param   enabled     true/false enabled/disabled
      */
+    @Override
     public void enableButtons(boolean enabled) {
         this.NodeApplyButton.setEnabled(enabled);
         this.NodeCancelButton.setEnabled(enabled);
@@ -319,6 +383,7 @@ public class NodeViewPanel extends javax.swing.JPanel implements IViewPanel{
      *
      * @param   visible     true/false visible/invisible
      */
+    @Override
     public void setButtonsVisible(boolean visible) {
         this.NodeApplyButton.setVisible(visible);
         this.NodeCancelButton.setVisible(visible);
@@ -328,6 +393,7 @@ public class NodeViewPanel extends javax.swing.JPanel implements IViewPanel{
      *
      * @param   enabled     true/false enabled/disabled
      */
+    @Override
     public void setAllEnabled(boolean enabled) {
         enableNodeName(enabled);
         enableIndex(enabled);
@@ -553,6 +619,7 @@ public class NodeViewPanel extends javax.swing.JPanel implements IViewPanel{
      * Registers ActionListener to receive events.
      * @param listener The listener to register.
      */
+    @Override
     public synchronized void addActionListener(java.awt.event.ActionListener listener) {
 
         if (myListenerList == null ) {
@@ -565,6 +632,7 @@ public class NodeViewPanel extends javax.swing.JPanel implements IViewPanel{
      * Removes ActionListener from the list of listeners.
      * @param listener The listener to remove.
      */
+    @Override
     public synchronized void removeActionListener(java.awt.event.ActionListener listener) {
 
         myListenerList.remove (java.awt.event.ActionListener.class, listener);

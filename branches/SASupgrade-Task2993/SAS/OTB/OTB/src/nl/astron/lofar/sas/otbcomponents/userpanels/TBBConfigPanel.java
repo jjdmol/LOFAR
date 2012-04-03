@@ -30,6 +30,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Enumeration;
 import java.util.Vector;
@@ -111,17 +112,11 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         try {
             
             //we need to get all the childs from this node.
-            Vector childs = OtdbRmi.getRemoteMaintenance().getItemList(itsNode.treeID(), itsNode.nodeID(), 1);
+            ArrayList<jOTDBnode> childs = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(itsNode.treeID(), itsNode.nodeID(), 1));
             
-            // first element is the default Node we should keep it.
-            itsDefaultNode = (jOTDBnode)childs.elementAt(0);
-            
-            // get all the params per child
-            Enumeration e = childs.elements();
-            while( e.hasMoreElements()  ) {
+            for (jOTDBnode aNode: childs) {
                 aParam=null;
                 
-                jOTDBnode aNode = (jOTDBnode)e.nextElement();
                 String parentName=LofarUtils.keyName(aNode.name);
                 
                 // We need to keep all the nodes needed by this panel
@@ -178,20 +173,30 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         
         aPopupMenu= new JPopupMenu();
         // For VIC trees
-        if (itsTreeType.equals("VHtree")) {
-            //  Fill in menu as in the example above
-            aMenuItem=new JMenuItem("Create ParSet File");
-            aMenuItem.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
-                    popupMenuHandler(evt);
-                }
-            });
-            aMenuItem.setActionCommand("Create ParSet File");
-            aPopupMenu.add(aMenuItem);
-            
-            // For template trees
-        } else if (itsTreeType.equals("VItemplate")) {
-            
+        switch (itsTreeType) {
+            case "VHtree":
+                //  Fill in menu as in the example above
+                aMenuItem=new JMenuItem("Create ParSet File");
+                aMenuItem.addActionListener(new java.awt.event.ActionListener() {
+                    public void actionPerformed(java.awt.event.ActionEvent evt) {
+                        popupMenuHandler(evt);
+                    }
+                });
+                aMenuItem.setActionCommand("Create ParSet File");
+                aPopupMenu.add(aMenuItem);
+                
+                aMenuItem=new JMenuItem("Create ParSetMeta File");
+                aMenuItem.addActionListener(new java.awt.event.ActionListener() {
+                    public void actionPerformed(java.awt.event.ActionEvent evt) {
+                        popupMenuHandler(evt);
+                    }
+                });
+                aMenuItem.setActionCommand("Create ParSetMeta File");
+                aPopupMenu.add(aMenuItem);
+                // For template trees
+                break;
+            case "VItemplate":
+                break;
         }
         
         aPopupMenu.setOpaque(true);
@@ -207,46 +212,91 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
      *      }
      */
     public void popupMenuHandler(java.awt.event.ActionEvent evt) {
-        if (evt.getActionCommand().equals("Create ParSet File")) {
-            logger.trace("Create ParSet File");
-            int aTreeID=itsMainFrame.getSharedVars().getTreeID();
-            if (fc == null) {
-                fc = new JFileChooser();
-                fc.setApproveButtonText("Apply");
-            }
-            // try to get a new filename to write the parsetfile to
-            if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-                try {
-                    File aFile = fc.getSelectedFile();
-                    
-                    // create filename that can be used at the remote site
-                    String aRemoteFileName="/tmp/"+aTreeID+"-"+itsNode.name+"_"+itsMainFrame.getUserAccount().getUserName()+".ParSet";
-                    
-                    // write the parset
-                    OtdbRmi.getRemoteMaintenance().exportTree(aTreeID,itsNode.nodeID(),aRemoteFileName,2,false);
-                    
-                    //obtain the remote file
-                    byte[] dldata = OtdbRmi.getRemoteFileTrans().downloadFile(aRemoteFileName);
-                    
-                    BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(aFile));
-                    output.write(dldata,0,dldata.length);
-                    output.flush();
-                    output.close();
-                    logger.trace("File written to: " + aFile.getPath());
-                } catch (RemoteException ex) {
-                    String aS="exportTree failed : " + ex;
-                    logger.error(aS);
-                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
-                } catch (FileNotFoundException ex) {
-                    String aS="Error during newPICTree creation: "+ ex;
-                    logger.error(aS);
-                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
-                } catch (IOException ex) {
-                    String aS="Error during newPICTree creation: "+ ex;
-                    logger.error(aS);
-                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+        switch (evt.getActionCommand()) {
+            case "Create ParSet File":
+                {
+                    logger.trace("Create ParSet File");
+                    int aTreeID=itsMainFrame.getSharedVars().getTreeID();
+                    if (fc == null) {
+                        fc = new JFileChooser();
+                        fc.setApproveButtonText("Apply");
+                    }
+                    // try to get a new filename to write the parsetfile to
+                    if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+                        try {
+                            File aFile = fc.getSelectedFile();
+                            
+                            // create filename that can be used at the remote site
+                            String aRemoteFileName="/tmp/"+aTreeID+"-"+itsNode.name+"_"+itsMainFrame.getUserAccount().getUserName()+".ParSet";
+                            
+                            // write the parset
+                            OtdbRmi.getRemoteMaintenance().exportTree(aTreeID,itsNode.nodeID(),aRemoteFileName);
+                            
+                            //obtain the remote file
+                            byte[] dldata = OtdbRmi.getRemoteFileTrans().downloadFile(aRemoteFileName);
+                            try (BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(aFile))) {
+                                output.write(dldata,0,dldata.length);
+                                output.flush();
+                            }
+                            logger.trace("File written to: " + aFile.getPath());
+                        } catch (RemoteException ex) {
+                            String aS="exportTree failed : " + ex;
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                        } catch (FileNotFoundException ex) {
+                            String aS="Error during newPICTree creation: "+ ex;
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                        } catch (IOException ex) {
+                            String aS="Error during newPICTree creation: "+ ex;
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                        }
+                    }
+                    break;
                 }
-            }
+            case "Create ParSetMeta File":
+                {
+                    logger.trace("Create ParSetMeta File");
+                    int aTreeID=itsMainFrame.getSharedVars().getTreeID();
+                    if (fc == null) {
+                        fc = new JFileChooser();
+                        fc.setApproveButtonText("Apply");
+                    }
+                    // try to get a new filename to write the parsetfile to
+                    if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+                        try {
+                            File aFile = fc.getSelectedFile();
+                            
+                            // create filename that can be used at the remote site
+                            String aRemoteFileName="/tmp/"+aTreeID+"-"+itsNode.name+"_"+itsMainFrame.getUserAccount().getUserName()+".ParSetMeta";
+                            
+                            // write the parset
+                            OtdbRmi.getRemoteMaintenance().exportResultTree(aTreeID,itsNode.nodeID(),aRemoteFileName);
+                            
+                            //obtain the remote file
+                            byte[] dldata = OtdbRmi.getRemoteFileTrans().downloadFile(aRemoteFileName);
+                    try (BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(aFile))) {
+                        output.write(dldata,0,dldata.length);
+                        output.flush();
+                    }
+                            logger.trace("File written to: " + aFile.getPath());
+                        } catch (RemoteException ex) {
+                            String aS="exportResultTree failed : " + ex;
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                        } catch (FileNotFoundException ex) {
+                            String aS="Error during newPICTree creation: "+ ex;
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                        } catch (IOException ex) {
+                            String aS="Error during newPICTree creation: "+ ex;
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                        }
+                    }
+                    break;
+                }
         }
     }
     
@@ -383,13 +433,11 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             jOTDBparam aParam=null;
             // add original top node to list to be able to delete/change it later
             itsTBBsettings.add(aNode);
-            Vector HWchilds = OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
+            ArrayList<jOTDBnode> HWchilds = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1));
             // get all the params per child
-            Enumeration e1 = HWchilds.elements();
-            while( e1.hasMoreElements()  ) {
-                
-                jOTDBnode aHWNode = (jOTDBnode)e1.nextElement();
-                aParam=null;
+
+            for (jOTDBnode aHWNode: HWchilds) {
+                    aParam=null;
                 // We need to keep all the params needed by this panel
                 if (aHWNode.leaf) {
                     aParam = OtdbRmi.getRemoteMaintenance().getParam(aHWNode);
@@ -432,179 +480,182 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             logger.error(aS);
             LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
         }
-        
-        if (aKeyName.equals("operatingMode")) {
-            // OperatingMode
-            if (!isInitialized) {
-               inputOperatingMode.setToolTipText(aParam.description);
-               LofarUtils.setPopupComboChoices(inputOperatingMode,aParam.limits);
-            }
-            itsOperatingModes.add(aNode.limits);
-            
-        } else if (aKeyName.equals("triggerMode")) {
-            // TriggerMode
-            if (!isInitialized) {
-               inputTriggerMode.setToolTipText(aParam.description);
-               LofarUtils.setPopupComboChoices(inputTriggerMode,aParam.limits);
-            }
-            itsTriggerModes.add(aNode.limits);
-        } else if (aKeyName.equals("baselevel")) {
-            // Baselevel
-            if (!isInitialized) {
-               inputBaselevel.setToolTipText(aParam.description);
-            }
-            if (isRef && aParam != null) {
-                itsBaselevels.add(aNode.limits + " : " + aParam.limits);
-            } else {
-                itsBaselevels.add(aNode.limits);
-            }
-            
-        } else if (aKeyName.equals("startlevel")) {
-            // startlevel
-            if (!isInitialized) {
-               inputStartlevel.setToolTipText(aParam.description);
-            }
-            if (isRef && aParam != null) {
-                itsStartlevels.add(aNode.limits + " : " + aParam.limits);
-            } else {
-                itsStartlevels.add(aNode.limits);
-            }
-
-         } else if (aKeyName.equals("stoplevel")) {
-            // stoplevel
-            if (!isInitialized) {
-               inputStoplevel.setToolTipText(aParam.description);
-            }
-            if (isRef && aParam != null) {
-                itsStoplevels.add(aNode.limits + " : " + aParam.limits);
-            } else {
-                itsStoplevels.add(aNode.limits);
-            }
-
-        } else if (aKeyName.equals("filter")) {
-            // filter
-            if (!isInitialized) {
-               inputFilter.setToolTipText(aParam.description);
-               LofarUtils.setPopupComboChoices(inputFilter,aParam.limits);
-            }
-            itsFilters.add(aNode.limits);
-            
-        } else if (aKeyName.equals("window")) {
-            // window
-            if (!isInitialized) {
-               inputWindow.setToolTipText(aParam.description);
-               LofarUtils.setPopupComboChoices(inputWindow,aParam.limits);
-            }
-            itsWindows.add(aNode.limits);
-
-        } else if (aKeyName.equals("filter0_coeff0")) {
-            // Coeff0
-            if (!isInitialized) {
-               inputFilter0Coeff0.setToolTipText(aParam.description);
-            }
-            if (isRef && aParam != null) {
-                itsFilter0Coeff0s.add(aNode.limits + " : " + aParam.limits);
-            } else {
-                itsFilter0Coeff0s.add(aNode.limits);
-            }
-            
-        } else if (aKeyName.equals("filter0_coeff1")) {
-            // Coeff1
-            if (!isInitialized) {
-               inputFilter0Coeff1.setToolTipText(aParam.description);
-            }
-            if (isRef && aParam != null) {
-                itsFilter0Coeff1s.add(aNode.limits + " : " + aParam.limits);
-            } else {
-                itsFilter0Coeff1s.add(aNode.limits);
-            }
-            
-        } else if (aKeyName.equals("filter0_coeff2")) {
-            // Coeff2
-            if (!isInitialized) {
-               inputFilter0Coeff2.setToolTipText(aParam.description);
-            }
-            if (isRef && aParam != null) {
-                itsFilter0Coeff2s.add(aNode.limits + " : " + aParam.limits);
-            } else {
-                itsFilter0Coeff2s.add(aNode.limits);
-            }
-            
-        } else if (aKeyName.equals("filter0_coeff3")) {
-            // Coeff3
-            if (!isInitialized) {
-               inputFilter0Coeff3.setToolTipText(aParam.description);
-            }
-            if (isRef && aParam != null) {
-                itsFilter0Coeff3s.add(aNode.limits + " : " + aParam.limits);
-            } else {
-                itsFilter0Coeff3s.add(aNode.limits);
-            }
-
-         } else if (aKeyName.equals("filter1_coeff0")) {
-            // Coeff0
-            if (!isInitialized) {
-               inputFilter1Coeff0.setToolTipText(aParam.description);
-            }
-            if (isRef && aParam != null) {
-                itsFilter1Coeff0s.add(aNode.limits + " : " + aParam.limits);
-            } else {
-                itsFilter1Coeff0s.add(aNode.limits);
-            }
-
-        } else if (aKeyName.equals("filter1_coeff1")) {
-            // Coeff1
-            if (!isInitialized) {
-               inputFilter1Coeff1.setToolTipText(aParam.description);
-            }
-            if (isRef && aParam != null) {
-                itsFilter1Coeff1s.add(aNode.limits + " : " + aParam.limits);
-            } else {
-                itsFilter1Coeff1s.add(aNode.limits);
-            }
-
-        } else if (aKeyName.equals("filter1_coeff2")) {
-            // Coeff2
-            if (!isInitialized) {
-               inputFilter1Coeff2.setToolTipText(aParam.description);
-            }
-            if (isRef && aParam != null) {
-                itsFilter1Coeff2s.add(aNode.limits + " : " + aParam.limits);
-            } else {
-                itsFilter1Coeff2s.add(aNode.limits);
-            }
-
-        } else if (aKeyName.equals("filter1_coeff3")) {
-            // Coeff3
-            if (!isInitialized) {
-               inputFilter1Coeff3.setToolTipText(aParam.description);
-            }
-            if (isRef && aParam != null) {
-                itsFilter1Coeff3s.add(aNode.limits + " : " + aParam.limits);
-            } else {
-                itsFilter1Coeff3s.add(aNode.limits);
-            }
-           
-        } else if (aKeyName.equals("RCUs")) {
-            // RCUs
-            if (!isInitialized) {
-               inputRCUs.setToolTipText(aParam.description);
-            }
-            if (isRef && aParam != null) {
-                itsRCUs.add(aNode.limits + " : " + aParam.limits);
-            } else {
-                itsRCUs.add(aNode.limits);
-            }
-        } else if (aKeyName.equals("subbandList")) {
-            // SubbandList
-            if (!isInitialized) {
-               inputSubbandList.setToolTipText(aParam.description);
-            }
-            if (isRef && aParam != null) {
-                itsSubbandList.add(aNode.limits + " : " + aParam.limits);
-            } else {
-                itsSubbandList.add(aNode.limits);
-            }
+        switch (aKeyName) {
+            case "operatingMode":
+                // OperatingMode
+                if (!isInitialized) {
+                   inputOperatingMode.setToolTipText(aParam.description);
+                   LofarUtils.setPopupComboChoices(inputOperatingMode,aParam.limits);
+                }
+                itsOperatingModes.add(aNode.limits);
+                break;
+            case "triggerMode":
+                // TriggerMode
+                if (!isInitialized) {
+                   inputTriggerMode.setToolTipText(aParam.description);
+                   LofarUtils.setPopupComboChoices(inputTriggerMode,aParam.limits);
+                }
+                itsTriggerModes.add(aNode.limits);
+                break;
+            case "baselevel":
+                // Baselevel
+                if (!isInitialized) {
+                   inputBaselevel.setToolTipText(aParam.description);
+                }
+                if (isRef && aParam != null) {
+                    itsBaselevels.add(aNode.limits + " : " + aParam.limits);
+                } else {
+                    itsBaselevels.add(aNode.limits);
+                }
+                break;
+            case "startlevel":
+                // startlevel
+                if (!isInitialized) {
+                   inputStartlevel.setToolTipText(aParam.description);
+                }
+                if (isRef && aParam != null) {
+                    itsStartlevels.add(aNode.limits + " : " + aParam.limits);
+                } else {
+                    itsStartlevels.add(aNode.limits);
+                }
+                break;
+            case "stoplevel":
+                // stoplevel
+                if (!isInitialized) {
+                   inputStoplevel.setToolTipText(aParam.description);
+                }
+                if (isRef && aParam != null) {
+                    itsStoplevels.add(aNode.limits + " : " + aParam.limits);
+                } else {
+                    itsStoplevels.add(aNode.limits);
+                }
+                break;
+            case "filter":
+                // filter
+                if (!isInitialized) {
+                   inputFilter.setToolTipText(aParam.description);
+                   LofarUtils.setPopupComboChoices(inputFilter,aParam.limits);
+                }
+                itsFilters.add(aNode.limits);
+                break;
+            case "window":
+                // window
+                if (!isInitialized) {
+                   inputWindow.setToolTipText(aParam.description);
+                   LofarUtils.setPopupComboChoices(inputWindow,aParam.limits);
+                }
+                itsWindows.add(aNode.limits);
+                break;
+            case "filter0_coeff0":
+                // Coeff0
+                if (!isInitialized) {
+                   inputFilter0Coeff0.setToolTipText(aParam.description);
+                }
+                if (isRef && aParam != null) {
+                    itsFilter0Coeff0s.add(aNode.limits + " : " + aParam.limits);
+                } else {
+                    itsFilter0Coeff0s.add(aNode.limits);
+                }
+                break;
+            case "filter0_coeff1":
+                // Coeff1
+                if (!isInitialized) {
+                   inputFilter0Coeff1.setToolTipText(aParam.description);
+                }
+                if (isRef && aParam != null) {
+                    itsFilter0Coeff1s.add(aNode.limits + " : " + aParam.limits);
+                } else {
+                    itsFilter0Coeff1s.add(aNode.limits);
+                }
+                break;
+            case "filter0_coeff2":
+                // Coeff2
+                if (!isInitialized) {
+                   inputFilter0Coeff2.setToolTipText(aParam.description);
+                }
+                if (isRef && aParam != null) {
+                    itsFilter0Coeff2s.add(aNode.limits + " : " + aParam.limits);
+                } else {
+                    itsFilter0Coeff2s.add(aNode.limits);
+                }
+                break;
+            case "filter0_coeff3":
+                // Coeff3
+                if (!isInitialized) {
+                   inputFilter0Coeff3.setToolTipText(aParam.description);
+                }
+                if (isRef && aParam != null) {
+                    itsFilter0Coeff3s.add(aNode.limits + " : " + aParam.limits);
+                } else {
+                    itsFilter0Coeff3s.add(aNode.limits);
+                }
+                break;
+            case "filter1_coeff0":
+                // Coeff0
+                if (!isInitialized) {
+                   inputFilter1Coeff0.setToolTipText(aParam.description);
+                }
+                if (isRef && aParam != null) {
+                    itsFilter1Coeff0s.add(aNode.limits + " : " + aParam.limits);
+                } else {
+                    itsFilter1Coeff0s.add(aNode.limits);
+                }
+                break;
+            case "filter1_coeff1":
+                // Coeff1
+                if (!isInitialized) {
+                   inputFilter1Coeff1.setToolTipText(aParam.description);
+                }
+                if (isRef && aParam != null) {
+                    itsFilter1Coeff1s.add(aNode.limits + " : " + aParam.limits);
+                } else {
+                    itsFilter1Coeff1s.add(aNode.limits);
+                }
+                break;
+            case "filter1_coeff2":
+                // Coeff2
+                if (!isInitialized) {
+                   inputFilter1Coeff2.setToolTipText(aParam.description);
+                }
+                if (isRef && aParam != null) {
+                    itsFilter1Coeff2s.add(aNode.limits + " : " + aParam.limits);
+                } else {
+                    itsFilter1Coeff2s.add(aNode.limits);
+                }
+                break;
+            case "filter1_coeff3":
+                // Coeff3
+                if (!isInitialized) {
+                   inputFilter1Coeff3.setToolTipText(aParam.description);
+                }
+                if (isRef && aParam != null) {
+                    itsFilter1Coeff3s.add(aNode.limits + " : " + aParam.limits);
+                } else {
+                    itsFilter1Coeff3s.add(aNode.limits);
+                }
+                break;
+            case "RCUs":
+                // RCUs
+                if (!isInitialized) {
+                   inputRCUs.setToolTipText(aParam.description);
+                }
+                if (isRef && aParam != null) {
+                    itsRCUs.add(aNode.limits + " : " + aParam.limits);
+                } else {
+                    itsRCUs.add(aNode.limits);
+                }
+                break;
+            case "subbandList":
+                // SubbandList
+                if (!isInitialized) {
+                   inputSubbandList.setToolTipText(aParam.description);
+                }
+                if (isRef && aParam != null) {
+                    itsSubbandList.add(aNode.limits + " : " + aParam.limits);
+                } else {
+                    itsSubbandList.add(aNode.limits);
+                }
+                break;
         }
     }
     
@@ -630,7 +681,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
     private void setDefaultInput() {
         
         // if no entries in lists we can exit again
-        if (itsOperatingModes.size() == 0) {
+        if (itsOperatingModes.isEmpty()) {
             logger.error("ERROR setInputDefaults,  null entry found");
         }
         
@@ -952,46 +1003,62 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                         // store new duplicate in itsTBBsettings.
                         itsTBBsettings.add(aNode);
 
-                        Vector HWchilds = OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
+                        ArrayList<jOTDBnode> HWchilds = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1));
                         // get all the params per child
-                        Enumeration e1 = HWchilds.elements();
-                        while( e1.hasMoreElements()  ) {
-                            jOTDBnode aHWNode = (jOTDBnode)e1.nextElement();
+                        for (jOTDBnode aHWNode: HWchilds) {
                             String aKeyName = LofarUtils.keyName(aHWNode.name);
-                            if (aKeyName.equals("operatingMode")) {
-                                aHWNode.limits=itsOperatingModes.elementAt(i);
-                            } else if (aKeyName.equals("triggerMode")) {
-                                aHWNode.limits=itsTriggerModes.elementAt(i);
-                            } else if (aKeyName.equals("baselevel")) {
-                                aHWNode.limits=itsBaselevels.elementAt(i);
-                            } else if (aKeyName.equals("startlevel")) {
-                                aHWNode.limits=itsStartlevels.elementAt(i);
-                            } else if (aKeyName.equals("stoplevel")) {
-                                aHWNode.limits=itsStoplevels.elementAt(i);
-                            } else if (aKeyName.equals("filter")) {
-                                aHWNode.limits=itsFilters.elementAt(i);
-                            } else if (aKeyName.equals("window")) {
-                                aHWNode.limits=itsWindows.elementAt(i);
-                            } else if (aKeyName.equals("filter0_coeff0")) {
-                                aHWNode.limits=itsFilter0Coeff0s.elementAt(i);
-                            } else if (aKeyName.equals("filter0_coeff1")) {
-                                aHWNode.limits=itsFilter0Coeff1s.elementAt(i);
-                            } else if (aKeyName.equals("filter0_coeff2")) {
-                                aHWNode.limits=itsFilter0Coeff2s.elementAt(i);
-                            } else if (aKeyName.equals("filter0_coeff3")) {
-                                aHWNode.limits=itsFilter0Coeff3s.elementAt(i);
-                            } else if (aKeyName.equals("filter1_coeff0")) {
-                                aHWNode.limits=itsFilter1Coeff0s.elementAt(i);
-                            } else if (aKeyName.equals("filter1_coeff1")) {
-                                aHWNode.limits=itsFilter1Coeff1s.elementAt(i);
-                            } else if (aKeyName.equals("filter1_coeff2")) {
-                                aHWNode.limits=itsFilter1Coeff2s.elementAt(i);
-                            } else if (aKeyName.equals("filter1_coeff3")) {
-                                aHWNode.limits=itsFilter1Coeff3s.elementAt(i);
-                            } else if (aKeyName.equals("RCUs")) {
-                                aHWNode.limits=itsRCUs.elementAt(i);
-                            } else if (aKeyName.equals("subbandList")) {
-                                aHWNode.limits=itsSubbandList.elementAt(i);
+                            switch (aKeyName) {
+                                case "operatingMode":
+                                    aHWNode.limits=itsOperatingModes.elementAt(i);
+                                    break;
+                                case "triggerMode":
+                                    aHWNode.limits=itsTriggerModes.elementAt(i);
+                                    break;
+                                case "baselevel":
+                                    aHWNode.limits=itsBaselevels.elementAt(i);
+                                    break;
+                                case "startlevel":
+                                    aHWNode.limits=itsStartlevels.elementAt(i);
+                                    break;
+                                case "stoplevel":
+                                    aHWNode.limits=itsStoplevels.elementAt(i);
+                                    break;
+                                case "filter":
+                                    aHWNode.limits=itsFilters.elementAt(i);
+                                    break;
+                                case "window":
+                                    aHWNode.limits=itsWindows.elementAt(i);
+                                    break;
+                                case "filter0_coeff0":
+                                    aHWNode.limits=itsFilter0Coeff0s.elementAt(i);
+                                    break;
+                                case "filter0_coeff1":
+                                    aHWNode.limits=itsFilter0Coeff1s.elementAt(i);
+                                    break;
+                                case "filter0_coeff2":
+                                    aHWNode.limits=itsFilter0Coeff2s.elementAt(i);
+                                    break;
+                                case "filter0_coeff3":
+                                    aHWNode.limits=itsFilter0Coeff3s.elementAt(i);
+                                    break;
+                                case "filter1_coeff0":
+                                    aHWNode.limits=itsFilter1Coeff0s.elementAt(i);
+                                    break;
+                                case "filter1_coeff1":
+                                    aHWNode.limits=itsFilter1Coeff1s.elementAt(i);
+                                    break;
+                                case "filter1_coeff2":
+                                    aHWNode.limits=itsFilter1Coeff2s.elementAt(i);
+                                    break;
+                                case "filter1_coeff3":
+                                    aHWNode.limits=itsFilter1Coeff3s.elementAt(i);
+                                    break;
+                                case "RCUs":
+                                    aHWNode.limits=itsRCUs.elementAt(i);
+                                    break;
+                                case "subbandList":
+                                    aHWNode.limits=itsSubbandList.elementAt(i);
+                                    break;
                             }
                             saveNode(aHWNode);
                         }
@@ -1493,18 +1560,22 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
-        if(evt.getActionCommand().equals("Apply")) {
-            itsMainFrame.setHourglassCursor();
+        switch (evt.getActionCommand()) {
+            case "Apply":
+                itsMainFrame.setHourglassCursor();
                 save();
-            // save the input from the AntennaConfig Panel
-            this.tbbControlPanel.saveInput();
-            // reset all buttons, flags and tables to initial start position. So the panel now reflects the new, saved situation
-            initPanel();
-            itsMainFrame.setNormalCursor();
-        } else if(evt.getActionCommand().equals("Restore")) {
-            itsMainFrame.setHourglassCursor();
-            restore();
-            itsMainFrame.setNormalCursor();        }
+                // save the input from the AntennaConfig Panel
+                this.tbbControlPanel.saveInput();
+                // reset all buttons, flags and tables to initial start position. So the panel now reflects the new, saved situation
+                initPanel();
+                itsMainFrame.setNormalCursor();
+                break;
+            case "Restore":
+                itsMainFrame.setHourglassCursor();
+                restore();
+                itsMainFrame.setNormalCursor();
+                break;
+        }
     }//GEN-LAST:event_buttonPanel1ActionPerformed
     
     private void cancelEditButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelEditButtonActionPerformed
@@ -1584,25 +1655,25 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
 
     
     // TBBsettings
-    private Vector<jOTDBnode> itsTBBsettings = new Vector<jOTDBnode>();
+    private Vector<jOTDBnode> itsTBBsettings = new Vector<>();
     // All TBBsetting nodes
-    private Vector<String>    itsOperatingModes = new Vector<String>();
-    private Vector<String>    itsTriggerModes = new Vector<String>();
-    private Vector<String>    itsBaselevels= new Vector<String>();
-    private Vector<String>    itsStartlevels= new Vector<String>();
-    private Vector<String>    itsStoplevels= new Vector<String>();
-    private Vector<String>    itsFilters= new Vector<String>();
-    private Vector<String>    itsWindows= new Vector<String>();
-    private Vector<String>    itsFilter0Coeff0s= new Vector<String>();
-    private Vector<String>    itsFilter0Coeff1s= new Vector<String>();
-    private Vector<String>    itsFilter0Coeff2s= new Vector<String>();
-    private Vector<String>    itsFilter0Coeff3s= new Vector<String>();
-    private Vector<String>    itsFilter1Coeff0s= new Vector<String>();
-    private Vector<String>    itsFilter1Coeff1s= new Vector<String>();
-    private Vector<String>    itsFilter1Coeff2s= new Vector<String>();
-    private Vector<String>    itsFilter1Coeff3s= new Vector<String>();
-    private Vector<String>    itsRCUs= new Vector<String>();
-    private Vector<String>    itsSubbandList= new Vector<String>();
+    private Vector<String>    itsOperatingModes = new Vector<>();
+    private Vector<String>    itsTriggerModes = new Vector<>();
+    private Vector<String>    itsBaselevels= new Vector<>();
+    private Vector<String>    itsStartlevels= new Vector<>();
+    private Vector<String>    itsStoplevels= new Vector<>();
+    private Vector<String>    itsFilters= new Vector<>();
+    private Vector<String>    itsWindows= new Vector<>();
+    private Vector<String>    itsFilter0Coeff0s= new Vector<>();
+    private Vector<String>    itsFilter0Coeff1s= new Vector<>();
+    private Vector<String>    itsFilter0Coeff2s= new Vector<>();
+    private Vector<String>    itsFilter0Coeff3s= new Vector<>();
+    private Vector<String>    itsFilter1Coeff0s= new Vector<>();
+    private Vector<String>    itsFilter1Coeff1s= new Vector<>();
+    private Vector<String>    itsFilter1Coeff2s= new Vector<>();
+    private Vector<String>    itsFilter1Coeff3s= new Vector<>();
+    private Vector<String>    itsRCUs= new Vector<>();
+    private Vector<String>    itsSubbandList= new Vector<>();
     
     
     // Variables declaration - do not modify//GEN-BEGIN:variables

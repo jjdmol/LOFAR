@@ -28,8 +28,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.rmi.RemoteException;
-import java.util.Enumeration;
-import java.util.Vector;
+import java.util.ArrayList;
 import javax.swing.JFileChooser;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
@@ -79,6 +78,7 @@ public class ImagerPanel extends javax.swing.JPanel implements IViewPanel{
         initialize();
     }
     
+    @Override
     public void setMainFrame(MainFrame aMainFrame) {
         if (aMainFrame != null) {
             itsMainFrame=aMainFrame;
@@ -87,25 +87,25 @@ public class ImagerPanel extends javax.swing.JPanel implements IViewPanel{
         }
     }
     
+    @Override
     public String getShortName() {
         return name;
     }
     
+    @Override
     public void setContent(Object anObject) {   
         itsNode=(jOTDBnode)anObject;
         jOTDBparam aParam=null;
         try {
          
             //we need to get all the childs from this node.    
-            Vector childs = OtdbRmi.getRemoteMaintenance().getItemList(itsNode.treeID(), itsNode.nodeID(), 1);
+            ArrayList<jOTDBnode> childs = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(itsNode.treeID(), itsNode.nodeID(), 1));
             
             // get all the params per child
-            Enumeration e = childs.elements();
-            while( e.hasMoreElements()  ) {
+            for (jOTDBnode aNode: childs) {
                 aParam=null;
             
-                jOTDBnode aNode = (jOTDBnode)e.nextElement();
-                        
+                       
                 // We need to keep all the nodes needed by this panel
                 // if the node is a leaf we need to get the pointed to value via Param.
                 if (aNode.leaf) {
@@ -128,14 +128,17 @@ public class ImagerPanel extends javax.swing.JPanel implements IViewPanel{
         initPanel();
     }
     
+    @Override
     public boolean isSingleton() {
         return false;
     }
     
+    @Override
     public JPanel getInstance() {
         return new ImagerPanel();
     }
     
+    @Override
     public boolean hasPopupMenu() {
         return true;
     }
@@ -163,20 +166,29 @@ public class ImagerPanel extends javax.swing.JPanel implements IViewPanel{
         
         aPopupMenu= new JPopupMenu();
         // For VIC trees
-        if (itsTreeType.equals("VHtree")) {
-            //  Fill in menu as in the example above
-            aMenuItem=new JMenuItem("Create ParSet File");        
-            aMenuItem.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
-                    popupMenuHandler(evt);
-                }
-            });
-            aMenuItem.setActionCommand("Create ParSet File");
-            aPopupMenu.add(aMenuItem);
-            
-        // For template trees
-        } else if (itsTreeType.equals("VItemplate")) {
-                
+        switch (itsTreeType) {
+            case "VHtree":
+                //  Fill in menu as in the example above
+                aMenuItem=new JMenuItem("Create ParSet File");
+                aMenuItem.addActionListener(new java.awt.event.ActionListener() {
+                    public void actionPerformed(java.awt.event.ActionEvent evt) {
+                        popupMenuHandler(evt);
+                    }
+                });
+                aMenuItem.setActionCommand("Create ParSet File");
+                aPopupMenu.add(aMenuItem);
+                aMenuItem=new JMenuItem("Create ParSetMeta File");
+                aMenuItem.addActionListener(new java.awt.event.ActionListener() {
+                    public void actionPerformed(java.awt.event.ActionEvent evt) {
+                        popupMenuHandler(evt);
+                    }
+                });
+                aMenuItem.setActionCommand("Create ParSetMeta File");
+                aPopupMenu.add(aMenuItem);
+            // For template trees
+                break;
+            case "VItemplate":
+                break;
         }
         
         aPopupMenu.setOpaque(true);
@@ -192,47 +204,92 @@ public class ImagerPanel extends javax.swing.JPanel implements IViewPanel{
      *      }  
      */
     public void popupMenuHandler(java.awt.event.ActionEvent evt) {
-         if (evt.getActionCommand().equals("Create ParSet File")) {
-            logger.trace("Create ParSet File");
-            int aTreeID=itsMainFrame.getSharedVars().getTreeID();
-            if (fc == null) {
-                fc = new JFileChooser();
-                fc.setApproveButtonText("Apply");
-            }
-            // try to get a new filename to write the parsetfile to
-            if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-                try {
-                    File aFile = fc.getSelectedFile();
-                    
-                    // create filename that can be used at the remote site    
-                    String aRemoteFileName="/tmp/"+aTreeID+"-"+itsNode.name+"_"+itsMainFrame.getUserAccount().getUserName()+".ParSet";
-                    
-                    // write the parset
-                    OtdbRmi.getRemoteMaintenance().exportTree(aTreeID,itsNode.nodeID(),aRemoteFileName,2,false); 
-                    
-                    //obtain the remote file
-                    byte[] dldata = OtdbRmi.getRemoteFileTrans().downloadFile(aRemoteFileName);
-
-                    BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(aFile));
-                    output.write(dldata,0,dldata.length);
-                    output.flush();
-                    output.close();
-                    logger.info("File written to: " + aFile.getPath());
-                } catch (RemoteException ex) {
-                    String aS="exportTree failed : " + ex;
-                    logger.error(aS);
-                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
-                } catch (FileNotFoundException ex) {
-                    String aS="Error during newPICTree creation: "+ ex;
-                    logger.error(aS);
-                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
-                } catch (IOException ex) {
-                    String aS="Error during newPICTree creation: "+ ex;
-                    logger.error(aS);
-                    LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+        switch (evt.getActionCommand()) {
+            case "Create ParSet File":
+                {
+                    logger.trace("Create ParSet File");
+                    int aTreeID=itsMainFrame.getSharedVars().getTreeID();
+                    if (fc == null) {
+                        fc = new JFileChooser();
+                        fc.setApproveButtonText("Apply");
+                    }
+                    // try to get a new filename to write the parsetfile to
+                    if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+                        try {
+                            File aFile = fc.getSelectedFile();
+                            
+                            // create filename that can be used at the remote site    
+                            String aRemoteFileName="/tmp/"+aTreeID+"-"+itsNode.name+"_"+itsMainFrame.getUserAccount().getUserName()+".ParSet";
+                            
+                            // write the parset
+                            OtdbRmi.getRemoteMaintenance().exportTree(aTreeID,itsNode.nodeID(),aRemoteFileName); 
+                            
+                            //obtain the remote file
+                            byte[] dldata = OtdbRmi.getRemoteFileTrans().downloadFile(aRemoteFileName);
+                    try (BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(aFile))) {
+                        output.write(dldata,0,dldata.length);
+                        output.flush();
+                    }
+                            logger.info("File written to: " + aFile.getPath());
+                        } catch (RemoteException ex) {
+                            String aS="exportTree failed : " + ex;
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                        } catch (FileNotFoundException ex) {
+                            String aS="Error during newPICTree creation: "+ ex;
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                        } catch (IOException ex) {
+                            String aS="Error during newPICTree creation: "+ ex;
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                        }
+                    }
+                    break;
                 }
-            }
-        }       
+            case "Create ParSetMeta File":
+                {
+                    logger.trace("Create ParSetMeta File");
+                    int aTreeID=itsMainFrame.getSharedVars().getTreeID();
+                    if (fc == null) {
+                        fc = new JFileChooser();
+                        fc.setApproveButtonText("Apply");
+                    }
+                    // try to get a new filename to write the parsetfile to
+                    if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+                        try {
+                            File aFile = fc.getSelectedFile();
+                            
+                            // create filename that can be used at the remote site    
+                            String aRemoteFileName="/tmp/"+aTreeID+"-"+itsNode.name+"_"+itsMainFrame.getUserAccount().getUserName()+".ParSetMeta";
+                            
+                            // write the parset
+                            OtdbRmi.getRemoteMaintenance().exportResultTree(aTreeID,itsNode.nodeID(),aRemoteFileName); 
+                            
+                            //obtain the remote file
+                            byte[] dldata = OtdbRmi.getRemoteFileTrans().downloadFile(aRemoteFileName);
+                    try (BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(aFile))) {
+                        output.write(dldata,0,dldata.length);
+                        output.flush();
+                    }
+                            logger.info("File written to: " + aFile.getPath());
+                        } catch (RemoteException ex) {
+                            String aS="exportResultTree failed : " + ex;
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                        } catch (FileNotFoundException ex) {
+                            String aS="Error during newPICTree creation: "+ ex;
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                        } catch (IOException ex) {
+                            String aS="Error during newPICTree creation: "+ ex;
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                        }
+                    }
+                    break;
+                }
+        }
     }
     
      /** 
@@ -243,12 +300,9 @@ public class ImagerPanel extends javax.swing.JPanel implements IViewPanel{
     private void retrieveAndDisplayChildDataForNode(jOTDBnode aNode){
         jOTDBparam aParam=null;
         try {
-            Vector HWchilds = OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
+            ArrayList<jOTDBnode> HWchilds = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1));
             // get all the params per child
-            Enumeration e1 = HWchilds.elements();
-            while( e1.hasMoreElements()  ) {
-                
-                jOTDBnode aHWNode = (jOTDBnode)e1.nextElement();
+            for (jOTDBnode aHWNode: HWchilds) {
                 aParam=null;
                 // We need to keep all the params needed by this panel
                 if (aHWNode.leaf) {
@@ -296,113 +350,131 @@ public class ImagerPanel extends javax.swing.JPanel implements IViewPanel{
             logger.error(aS);
             LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
         }        
-
-        // Imager Specific parameters    
-        if(parentName.equals("Imager")){        
-            if (aKeyName.equals("dataset")) {
-                inputDataset.setToolTipText(aParam.description);
-               itsDataSet=aNode;
-                if (isRef && aParam != null) {
-                    this.inputDatasetDeRef.setVisible(true);
-                    inputDataset.setText(aNode.limits);
-                    inputDatasetDeRef.setText(aParam.limits);
-                } else {
-                    this.inputDatasetDeRef.setVisible(false);
-                    inputDatasetDeRef.setText("");
-                    inputDataset.setText(aNode.limits);
+        // Imager Specific parameters
+        switch (parentName) {
+            case "Imager":
+                switch (aKeyName) {
+                    case "dataset":
+                        inputDataset.setToolTipText(aParam.description);
+                        itsDataSet=aNode;
+                        if (isRef && aParam != null) {
+                            this.inputDatasetDeRef.setVisible(true);
+                            inputDataset.setText(aNode.limits);
+                            inputDatasetDeRef.setText(aParam.limits);
+                        } else {
+                            this.inputDatasetDeRef.setVisible(false);
+                            inputDatasetDeRef.setText("");
+                            inputDataset.setText(aNode.limits);
+                        }
+                        break;
+                    case "datacolumn":
+                        inputDatacolumn.setToolTipText(aParam.description);
+                        LofarUtils.setPopupComboChoices(inputDatacolumn,aParam.limits);
+                        if (!aNode.limits.equals("")) {
+                            inputDatacolumn.setSelectedItem(aNode.limits);            
+                        }
+                        itsDataColumn=aNode;
+                        break;
+                    case "minUV":
+                        inputMinUV.setToolTipText(aParam.description);
+                        itsMinUV=aNode;
+                        if (isRef && aParam != null) {
+                            inputMinUV.setText(aNode.limits + " : " + aParam.limits);
+                        } else {
+                            inputMinUV.setText(aNode.limits);
+                        }
+                        break;
+                 }
+                 break;
+// Gridder
+            case "Gridder":
+                switch (aKeyName) {
+                    case "type":
+                        inputType.setToolTipText(aParam.description);
+                        LofarUtils.setPopupComboChoices(inputType,aParam.limits);
+                        if (!aNode.limits.equals("")) {
+                            inputType.setSelectedItem(aNode.limits);            
+                        }
+                        itsType=aNode;
+                        break;
+                    case "wmax":
+                        inputWmax.setToolTipText(aParam.description);
+                        itsWMax=aNode;
+                        if (isRef && aParam != null) {
+                            inputWmax.setText(aNode.limits + " : " + aParam.limits);
+                        } else {
+                            inputWmax.setText(aNode.limits);
+                        }
+                        break;
+                    case "nwplanes":
+                        inputNWPlanes.setToolTipText(aParam.description);
+                        itsNWPlanes=aNode;
+                        if (isRef && aParam != null) {
+                            inputNWPlanes.setText(aNode.limits + " : " + aParam.limits);
+                        } else {
+                            inputNWPlanes.setText(aNode.limits);
+                        }
+                        break;
+                    case "oversample":
+                        inputOversample.setToolTipText(aParam.description);
+                        itsOverSample=aNode;
+                        if (isRef && aParam != null) {
+                            inputOversample.setText(aNode.limits + " : " + aParam.limits);
+                        } else {
+                         inputOversample.setText(aNode.limits);
+                        }
+                        break;
+                    case "cutoff":
+                        inputCutOff.setToolTipText(aParam.description);
+                        itsCutOff=aNode;
+                        if (isRef && aParam != null) {
+                            inputCutOff.setText(aNode.limits + " : " + aParam.limits);
+                        } else {
+                            inputCutOff.setText(aNode.limits);
+                        }
+                        break;
+                    case "nfacets":
+                        inputNFacets.setToolTipText(aParam.description);
+                        itsNFacets=aNode;
+                        if (isRef && aParam != null) {
+                            inputNFacets.setText(aNode.limits + " : " + aParam.limits);
+                        } else {
+                            inputNFacets.setText(aNode.limits);
+                        }
+                        break;
                 }
-            } else if (aKeyName.equals("datacolumn")) {        
-                inputDatacolumn.setToolTipText(aParam.description);
-                LofarUtils.setPopupComboChoices(inputDatacolumn,aParam.limits);
-                if (!aNode.limits.equals("")) {
-                    inputDatacolumn.setSelectedItem(aNode.limits);            
+                // Gridder
+                break;
+            case "Images":
+                switch (aKeyName) {
+                    case "stokes":
+                        inputUseI.setToolTipText(aParam.description);
+                        inputUseQ.setToolTipText(aParam.description);
+                     inputUseU.setToolTipText(aParam.description);
+                        inputUseV.setToolTipText(aParam.description);
+                        itsStokes=aNode;
+                        setStokes();
+                        break;
+                    case "shape":
+                        inputShape.setToolTipText(aParam.description);
+                        itsShape=aNode;
+                        if (isRef && aParam != null) {
+                            inputShape.setText(aNode.limits + " : " + aParam.limits);
+                        } else {
+                            inputShape.setText(aNode.limits);
+                        }
+                        break;
+                    case "cellSize":
+                        inputCellSize.setToolTipText(aParam.description);
+                        itsCellSize=aNode;
+                        if (isRef && aParam != null) {
+                            inputCellSize.setText(aNode.limits + " : " + aParam.limits);
+                        } else {
+                            inputCellSize.setText(aNode.limits);
+                        }
+                        break;
                 }
-                itsDataColumn=aNode;
-            } else if (aKeyName.equals("minUV")) {
-                inputMinUV.setToolTipText(aParam.description);
-               itsMinUV=aNode;
-                if (isRef && aParam != null) {
-                    inputMinUV.setText(aNode.limits + " : " + aParam.limits);
-                } else {
-                    inputMinUV.setText(aNode.limits);
-                }
-            }
-        // Gridder    
-        } else if(parentName.equals("Gridder")){
-            if (aKeyName.equals("type")) {     
-                inputType.setToolTipText(aParam.description);
-                LofarUtils.setPopupComboChoices(inputType,aParam.limits);
-                if (!aNode.limits.equals("")) {
-                    inputType.setSelectedItem(aNode.limits);            
-                }
-                itsType=aNode;
-            } else if (aKeyName.equals("wmax")) {
-                inputWmax.setToolTipText(aParam.description);
-                itsWMax=aNode;
-                if (isRef && aParam != null) {
-                    inputWmax.setText(aNode.limits + " : " + aParam.limits);
-                } else {
-                    inputWmax.setText(aNode.limits);
-                }        
-            } else if (aKeyName.equals("nwplanes")) {
-                inputNWPlanes.setToolTipText(aParam.description);
-                itsNWPlanes=aNode;
-                if (isRef && aParam != null) {
-                    inputNWPlanes.setText(aNode.limits + " : " + aParam.limits);
-                } else {
-                    inputNWPlanes.setText(aNode.limits);
-                }        
-            } else if (aKeyName.equals("oversample")) {
-                inputOversample.setToolTipText(aParam.description);
-                itsOverSample=aNode;
-                if (isRef && aParam != null) {
-                    inputOversample.setText(aNode.limits + " : " + aParam.limits);
-                } else {
-                    inputOversample.setText(aNode.limits);
-                }        
-            } else if (aKeyName.equals("cutoff")) {
-                inputCutOff.setToolTipText(aParam.description);
-                itsCutOff=aNode;
-                if (isRef && aParam != null) {
-                    inputCutOff.setText(aNode.limits + " : " + aParam.limits);
-                } else {
-                    inputCutOff.setText(aNode.limits);
-                }        
-            } else if (aKeyName.equals("nfacets")) {
-                inputNFacets.setToolTipText(aParam.description);
-                itsNFacets=aNode;
-                if (isRef && aParam != null) {
-                    inputNFacets.setText(aNode.limits + " : " + aParam.limits);
-                } else {
-                    inputNFacets.setText(aNode.limits);
-                }        
-            } 
-        // Gridder    
-        } else if(parentName.equals("Images")){
-            if (aKeyName.equals("stokes")) {
-                inputUseI.setToolTipText(aParam.description);
-                inputUseQ.setToolTipText(aParam.description);
-                inputUseU.setToolTipText(aParam.description);
-                inputUseV.setToolTipText(aParam.description);
-                itsStokes=aNode;
-                setStokes();
-            } else if (aKeyName.equals("shape")) {
-                inputShape.setToolTipText(aParam.description);
-                itsShape=aNode;
-                if (isRef && aParam != null) {
-                    inputShape.setText(aNode.limits + " : " + aParam.limits);
-                } else {
-                    inputShape.setText(aNode.limits);
-                }        
-            } else if (aKeyName.equals("cellSize")) {
-                inputCellSize.setToolTipText(aParam.description);
-                itsCellSize=aNode;
-                if (isRef && aParam != null) {
-                    inputCellSize.setText(aNode.limits + " : " + aParam.limits);
-                } else {
-                    inputCellSize.setText(aNode.limits);
-                }        
-            }
+                break;
         }
     }
     
@@ -910,10 +982,13 @@ public class ImagerPanel extends javax.swing.JPanel implements IViewPanel{
     }// </editor-fold>//GEN-END:initComponents
 
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
-        if(evt.getActionCommand().equals("Apply")) {
-            saveInput();
-        } else if(evt.getActionCommand().equals("Restore")) {
-            restore();
+        switch (evt.getActionCommand()) {
+            case "Apply":
+                saveInput();
+                break;
+            case "Restore":
+                restore();
+                break;
         }
 
     }//GEN-LAST:event_buttonPanel1ActionPerformed
