@@ -42,6 +42,8 @@ namespace LOFAR {
 
 class PortBroker: protected SocketStream {
   public:
+    static const unsigned DEFAULT_PORT = 5000;
+
     virtual ~PortBroker();
 
     static void createInstance( uint16 port );
