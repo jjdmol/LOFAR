@@ -51,7 +51,9 @@ class msss_calibrator_pipeline(control):
         Get input- and output-data product specifications from the
         parset-file, and do some sanity checks.
         """
-        odp = self.parset.makeSubset('ObsSW.Observation.DataProducts.')
+        odp = self.parset.makeSubset(
+            self.parset.fullModuleName('DataProducts') + '.'
+        )
         self.input_data = [tuple(''.join(x).split(':')) for x in zip(
             odp.getStringVector('Input_Correlated.locations', []),
             odp.getStringVector('Input_Correlated.filenames', []))
@@ -132,7 +134,8 @@ class msss_calibrator_pipeline(control):
 
         # Create a parameter-subset containing only python-control stuff.
         py_parset = self.parset.makeSubset(
-            'ObsSW.Observation.ObservationControl.PythonControl.')
+            self.parset.fullModuleName('PythonControl') + '.'
+        )
 
         # Get input/output-data products specifications.
         self._get_io_product_specs()
@@ -214,6 +217,11 @@ class msss_calibrator_pipeline(control):
         # the results in the files specified in the instrument mapfile.
         self.run_task("parmexportcal", (parmdb_mapfile, instrument_mapfile))
 
-
+        # Create a parset-file containing the metadata for MAC/SAS
+        self.run_task("get_metadata", instrument_mapfile,
+            parset_file=py_parset.getString('metadataFeedbackFile'),
+            parset_prefix=self.parset.fullModuleName('DataProducts'),
+            product_type="InstrumentModel")
+            
 if __name__ == '__main__':
     sys.exit(msss_calibrator_pipeline().main())

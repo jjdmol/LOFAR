@@ -163,7 +163,8 @@ class Correlated(DataProduct):
                 'centralFrequency' : spw.getcell('REF_FREQUENCY', 0),
                 'channelWidth' : spw.getcell('RESOLUTION', 0)[0],
                 'channelsPerSubband' : spw.getcell('NUM_CHAN', 0),
-                'subband' : 0,               ### NOT CORRECT! ###
+                # Assume subband name has format 'SB-nn'
+                'subband' : int(spw.getcell('NAME', 0)[3:]),
                 'stationSubband' : 0         ### NOT CORRECT! ###
             })
         except RuntimeError, error:
@@ -227,6 +228,11 @@ class SkyImage(DataProduct):
         try:
             image = pyrap.images.image(filename)
             coord = image.coordinates()
+            self._data.update({
+                'numberOfAxes' : image.ndim(),
+                'coordinateTypes' : coord._names,
+                'timeFrame' : coord.get_obsdate()['refer'],
+            })
             if 'direction' in coord._names:
                 direction = coord.get_coordinate('direction')
                 self._data.update({
@@ -236,7 +242,7 @@ class SkyImage(DataProduct):
             if 'spectral' in coord._names:
                 spectral = coord.get_coordinate('spectral')
                 self._data.update({
-                    'locationFrame' : spectral.get_frame(),  ### CORRECT ??? ###
+                    'locationFrame' : spectral.get_frame(),
                     'nrOfSpectralCoordinates' : 1,
                     'SpectralCoordinate' : self._get_spectral_coord(spectral)
                 })
@@ -247,11 +253,8 @@ class SkyImage(DataProduct):
                     'PolarizationCoordinate' : self._get_stokes_coord(stokes)                
                 })
             self._data.update({
-                'percentageWritten' : 100,
-                'numberOfAxes' : len(coord.get_axes()),
-                'coordinateTypes' : coord._names,
-                'timeFrame' : coord.get_obsdate()['refer'],  ### CORRECT ??? ###
-                'Pointing' : self._get_pointing()
+                'Pointing' : self._get_pointing(image),
+                'percentageWritten' : 100
             })
         except RuntimeError, error:
             print >> sys.stderr, (
@@ -260,12 +263,13 @@ class SkyImage(DataProduct):
 
 
     @staticmethod
-    def _get_pointing():
+    def _get_pointing(image):
+        angles = list(image.getattr('LOFAR_FIELD', 'PHASE_DIR')[0][0])
         data = {
-            'equinox' : "??",
-            'coordType' : "??",
-            'coordVal0' : "??",
-            'coordVal1' : "??",
+            'equinox' : image.getattrmeas('LOFAR_FIELD', 'PHASE_DIR')[1],
+            'coordType' : "RA-DEC",     ### Correct? ###
+            'angle1' : angles[0],
+            'angle2' : angles[1]
         }
         return data
 
@@ -273,22 +277,22 @@ class SkyImage(DataProduct):
     @staticmethod
     def _get_direction_coord(direction):
         data = {
-            'nrDirectionAxis' : len(direction.get_axes()),
+            'nrDirectionLinearAxis' : len(direction.get_axes()),
             'PC0_0' : direction._coord['pc'][0][0],
             'PC0_1' : direction._coord['pc'][0][1],
             'PC1_0' : direction._coord['pc'][1][0],
             'PC1_1' : direction._coord['pc'][1][1],
             'equinox' : direction.get_frame(),
-            'raDecSystem' : "FK5",                   ### CORRECT ??? ###
+            'raDecSystem' : "ICRS",
             'projection' : direction.get_projection(),
             'projectionParameters' : list(direction._coord['projection_parameters']),
             'longitudePole' : direction._coord['longpole'],
             'latitudePole' : direction._coord['latpole'],
-            'directionAxis' : [
+            'DirectionLinearAxis' : [
                 {
                     'name' : direction.get_axes()[n],
                     'units' : direction.get_unit()[n],
-    #                    'length' : "??",
+                    'length' : direction.get_axis_size(n),
                     'increment' : direction.get_increment()[n],
                     'referencePixel' : direction.get_referencepixel()[n],
                     'referenceValue' : direction.get_referencevalue()[n]
@@ -302,15 +306,16 @@ class SkyImage(DataProduct):
     @staticmethod
     def _get_spectral_coord(spectral):
         data = {
-            'spectralQuantityType' : "VelocityRadio",  ### CORRECT ??? ###
-            'spectralQuantityValue' : "??"
+            'spectralQuantityType' : "Frequency",
+            'spectralQuantityValue' : spectral.get_referencevalue()
         }
         _axis = {
             'name' : spectral._coord['name'],
             'units' : spectral.get_unit(),
-    #        'length' : "??"
+            'length' : spectral.get_axis_size(n)
         }
-        if spectral._coord['wcs']:      ## Linear if coord.spectral.wcs exists 
+        # Assume spectral linear axis if spectral._coord['wcs'] exists 
+        if spectral._coord['wcs']:
             _axis.update({
                 'increment' : spectral.get_increment(),
                 'referencePixel' : spectral.get_referencepixel(),
@@ -343,7 +348,7 @@ class SkyImage(DataProduct):
 
 
 if __name__ == "__main__":
-#    Correlated('../sample_uv.MS').as_parameterset().writeFile('Correlated.parset')
-#    InstrumentModel('../sample_inst.INST').as_parameterset().writeFile('InstrumentModel.parset')
-#    SkyImage('../sample_sky.IM').as_parameterset().writeFile('SkyImage.parset')
-    print Correlated('../sample_uv.MS').data()
+    Correlated('sample_uv.MS').as_parameterset().writeFile('Correlated.parset')
+    InstrumentModel('sample_inst.INST').as_parameterset().writeFile('InstrumentModel.parset')
+    SkyImage('sample_sky.IM').as_parameterset().writeFile('SkyImage.parset')
+

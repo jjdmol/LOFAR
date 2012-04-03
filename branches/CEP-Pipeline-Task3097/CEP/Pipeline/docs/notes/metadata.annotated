@@ -45,18 +45,18 @@ Output_SkyImage_[0] = {     # LOFAR Sky Image:
     },
     DirectionCoordinate : {
         number: 0,                  ## coords.direction<number>
-        nrDirectionAxis: 0,         # len(direction.get_axes())
+        nrDirectionLinearAxis: 0,   # len(direction.get_axes())
         PC0_0: 0.0,                 # direction.dict()['pc'][0][0]
         PC0_1: 0.0,                 # direction.dict()['pc'][0][1]
         PC1_0: 0.0,                 # direction.dict()['pc'][1][0]
         PC1_1: 0.0,                 # direction.dict()['pc'][1][1]
         equinox: "",                # direction.get_frame()
-        raDecSystem: "FK5",
+        raDecSystem: "ICRS",
         projection: "",             # direction.get_projection()
         projectionParameters: [],   # direction.dict()['projection_parameters']
         longitudePole: 0.0,         # direction.dict()['longpole']
         latitudePole: 0.0,          # direction.dict()['latpole']
-        DirectionAxis[n] : {        # n=[0..1]
+        DirectionLinearAxis[n] : {  # n=[0..1]
             number: 0,                  ## coords.pixelmap<DirectionCoordinate.number>
             name: "",                   # direction.get_axes()[n]
             units: "",                  # direction.get_unit()[n]

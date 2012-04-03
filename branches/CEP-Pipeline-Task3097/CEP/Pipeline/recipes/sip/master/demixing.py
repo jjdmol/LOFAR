@@ -42,6 +42,11 @@ class demixing(BaseRecipe, RemoteCommandRecipeMixIn):
             dest='demixdir',
             help="Directory containing the demixing parset-files",
         ),
+        'db_host': ingredient.StringField(
+            '--db-host',
+            dest="db_host",
+            help="Database host with optional port (e.g. ldb001)"
+        ),
         'skymodel': ingredient.FileField(
             '--skymodel',
             help="File containing the sky model to use",
@@ -145,7 +150,8 @@ class demixing(BaseRecipe, RemoteCommandRecipeMixIn):
                         self.inputs['half_window'],
                         self.inputs['threshold'],
                         self.inputs['demix_parset_dir'],
-                        self.inputs['skymodel']
+                        self.inputs['skymodel'],
+                        self.inputs['db_host']
                    ]
                 )
             )
