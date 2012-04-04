@@ -273,15 +273,25 @@ void BeamTables::writeElements (MSAntennaFieldColumns& columns,
     offset(2,i) = elemOff(2,0,i) + off2;
   }
   // Clear flag for the present dipoles.
+  // Note that elemPresent defines which elements are used for a mode.
+  // -1 means not used.
+  // If >=0, the value is normally equal to the vector's index.
+  // However, for HBA_ONE this is not the case. It has first 48 -1 values, and
+  // thereafter value 0..47. SAS/MAC/BeamServer needs it this way.
+  // Therefore the code adds the nr of -1 values if value != index to get
+  // the proper flag index (which is the RCU number).
   Bool* flagPtr = flag.data();
   int nskip = 0;
-  for (vector<int16>::const_iterator iter=elemPresent.begin();
-       iter!=elemPresent.end(); ++iter) {
-    if (*iter < 0) {
+  for (uint i=0; i<elemPresent.size(); ++i) {
+    if (elemPresent[i] < 0) {
       nskip++;
     } else {
-      int index = *iter + nskip;
-      ASSERT (index < int16(flag.size()));
+      int index = elemPresent[i];
+      if (index != int(i)) {
+        index += nskip;
+        ASSERT (index == int(i));
+      }
+      ASSERT (index < int(flag.size()));
       flagPtr[index] = False;
     }
   }
