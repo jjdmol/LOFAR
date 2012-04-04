@@ -38,7 +38,7 @@ def gsmMain (name, argv):
     if len(argv) > 4:
         cutoff = float(argv[4])
     if len(argv) > 5:
-        cutoff = float(argv[5])
+        theta = float(argv[5])
 
     db_host = "ldb002"
     db_dbase = "gsm"
