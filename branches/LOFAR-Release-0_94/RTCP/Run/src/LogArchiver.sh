@@ -85,7 +85,7 @@ function archive {
     if [ `shouldarchive "$f"` -eq 1 ]
     then
       echo "++++" archiving: $f
-      mv "$f" "$STAGEDIR" && mv "$STAGEDIR/`basename "$f"`" "$DESTDIR"
+      mv "$f" "$STAGEDIR" && gzip "$STAGEDIR/`basename "$f"`" && mv "$STAGEDIR/`basename "$f"`.gz" "$DESTDIR"
     else
       echo "----" not archiving: $f
     fi  

@@ -32,7 +32,7 @@ then
   LOGPARAMS="-s ccu001:24500"
 
   IONPROC_PARSET="/bghome0/lofarsys/parsets/L$OBSID.parset"
-  STORAGE_PARSET="/globalhome/lofarsystem/parsets/L$OBSID.parset"
+  STORAGE_PARSET="/globalhome/lofarsystem/log/L$OBSID/L$OBSID.parset"
   EXTRA_KEYS="
 OLAP.Storage.parsetFilename = $STORAGE_PARSET
 OLAP.Storage.userName = lofarsys

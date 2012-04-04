@@ -23,6 +23,7 @@ source /opt/lofar/bin/locations.sh
 /opt/lofar/bin/LOFAR/Parset.py -P $PARTITION $PARSET /opt/lofar/etc/OLAP.parset <(echo "$EXTRA_KEYS") > $IONPROC_PARSET &&
 
 # Distribute the parset to the storage nodes
+mkdir -p `dirname $STORAGE_PARSET` &&
 cp $IONPROC_PARSET $STORAGE_PARSET &&
 
 # Inject the parset into the correlator
