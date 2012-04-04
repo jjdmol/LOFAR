@@ -1061,23 +1061,17 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
       try{
 
       // compute average weight for baseline for CF averaging
-	double average_weight=0.;
-      uInt Nvis=0;
+      double sum_weight=0.;
       for(Int j=ist; j<iend; ++j){
         uInt row=blIndex[j];
         if(!vbs.rowFlag()[row]){
-          Nvis+=1;
           for(uInt k=0; k<Nchannels; ++k) {
-            average_weight=average_weight+vbs.imagingWeight()(k,row);
+            sum_weight +=vbs.imagingWeight()(k,row);
           }
         }
       }
-      if(Nvis>0){
-	average_weight=average_weight/Nvis;
-      } else {average_weight=0.;}
-      ///        itsSumWeight += average_weight * average_weight;
       if (itsVerbose > 1) {
-        cout<<"average weights= "<<average_weight<<", Nvis="<<Nvis<<endl;
+        cout << "sum weights= " << sum_weight << endl;
       }
 
       int threadNum = OpenMP::threadNum();
@@ -1097,16 +1091,11 @@ void LofarFTMachine::put(const VisBuffer& vb, Int row, Bool dopsf,
         itsConvFunc->makeConvolutionFunction (ant1[ist], ant2[ist], time,
                                               Wmean,
                                               itsGridMuellerMask, false,
-                                              average_weight,
-                                              itsSumPB[threadNum],
-                                              itsSumCFWeight[threadNum],
-					      spw,thisterm_p,itsRefFreq
-					      );
-      
+                                              sum_weight,
+                                              spw,thisterm_p,itsRefFreq );
 
-
-      //cfTimer.stop();
-      CyrilTimer2conv.stop();
+      cfTimer.stop();
+      //CyrilTimer2conv.stop();
 
       Int nConvX = (*(cfStore.vdata))[0][0][0].shape()[0];
       //cout<<ant1[ist]<<" "<<ant2[ist]<<" " <<nConvX/5<<endl;
@@ -1454,23 +1443,21 @@ void LofarFTMachine::get(VisBuffer& vb, Int row)
       Int iend = blIndex[blEnd[i]];
       if(done[i]==true){continue;};
       try {
-      int threadNum = OpenMP::threadNum();
-      // Get the convolution function for degridding.
-     if (itsVerbose > 1) {
-        cout<<"ANTENNA "<<ant1[ist]<<" "<<ant2[ist]<<endl;
-     }
-      cfTimer.start();
-      CyrilConv.start();
+        int threadNum = OpenMP::threadNum();
+        // Get the convolution function for degridding.
+        if (itsVerbose > 1) {
+          cout<<"ANTENNA "<<ant1[ist]<<" "<<ant2[ist]<<endl;
+        }
+        cfTimer.start();
+        CyrilConv.start();
 
-      LofarCFStore cfStore =
-        itsConvFunc->makeConvolutionFunction (ant1[ist], ant2[ist], time,
-                                              0.5*(vbs.uvw()(2,ist) + vbs.uvw()(2,iend)),
-                                              itsDegridMuellerMask,
-                                              true,
-                                              0.0,
-                                              itsSumPB[threadNum],
-                                              itsSumCFWeight[threadNum]
-					      ,spw,thisterm_p,itsRefFreq);
+        LofarCFStore cfStore =
+          itsConvFunc->makeConvolutionFunction (ant1[ist], ant2[ist], time,
+                                                0.5*(vbs.uvw()(2,ist) + vbs.uvw()(2,iend)),
+                                                itsDegridMuellerMask,
+                                                true,
+                                                0.0,
+                                                spw,thisterm_p,itsRefFreq);
       cfTimer.stop();
 
       CyrilConv.stop();
@@ -1536,7 +1523,15 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
   AlwaysAssert(image, AipsError);
   logIO() << LogOrigin("LofarFTMachine", "getImage") << LogIO::NORMAL;
 
-  itsAvgPB.reference (itsConvFunc->Compute_avg_pb(itsSumPB[0], itsSumCFWeight[0]));
+  cout << "1" << endl;
+  cout << itsAvgPB.shape() << endl;
+  itsAvgPB.reference (itsConvFunc->Compute_avg_pb(lattice->shape()));
+  cout << lattice->shape() << endl;
+  cout << "2" << endl;
+  cout << itsAvgPB.shape() << endl;
+  cout << "3" << endl;
+  cout << lattice->shape() << endl;
+  cout << "4" << endl;
 
   //cout<<"weights.shape() "<<weights.shape()<<"  "<<sumWeight<<endl;
 
@@ -1607,12 +1602,12 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
       LatticeIterator<Complex> lix(*lattice, lsx);
       for(lix.reset();!lix.atEnd();lix++) {
         Int pol=lix.position()(2);
-	//cout<<"pol "<<pol<<endl;
+        //cout<<"pol "<<pol<<endl;
         Int chan=lix.position()(3);
         if(weights(pol, chan)!=0.0) {
-          //gridder->correctX1D(correction, lix.position()(1));
+//           gridder->correctX1D(correction, lix.position()(1));
 	  //cout<<"correction "<<correction<<endl;
-          //lix.rwVectorCursor()/=correction;
+//           lix.rwVectorCursor()/=correction;
           if(normalize) {
             Complex rnorm(Float(inx)*Float(iny)/weights(pol,chan));
             lix.rwCursor()*=rnorm;
@@ -1669,41 +1664,59 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
     //====================================================================================================================
     // Cyr: Normalisation by the beam!!!!!
     //cout<<"lattice shape: "<<lattice->shape()<<endl;
+    
+    
     IPosition pos(4,lattice->shape()[0],lattice->shape()[1],1,1);
     uInt shapeout(floor(lattice->shape()[0]/padding_p));
     uInt istart(floor((lattice->shape()[0]-shapeout)/2.));
     Cube<Complex> tempimage(IPosition(3,shapeout,shapeout,lattice->shape()[2]));
+
 
     pos[3]=0.;
     double minPB(1e10);
     double maxPB(0.);
     for(uInt i=0;i<shapeout;++i){
       for(uInt j=0;j<shapeout;++j){
-	double pixel(itsAvgPB(i+istart,j+istart));
-	if(abs(pixel)>maxPB){maxPB=abs(pixel);};
-	if(abs(pixel)<minPB){minPB=abs(pixel);};
+//         for(uInt k=0;k<itsAvgPB.shape()(2);++k){
+//           for(uInt l=0;l<itsAvgPB.shape()(3);++l){
+        for(uInt k=0;k<1;++k){
+          for(uInt l=0;l<1;++l){
+	    double pixel(itsAvgPB(IPosition(4,i+istart,j+istart,k,l)));
+	    if(abs(pixel)>maxPB) maxPB=abs(pixel);
+	    if(abs(pixel)<minPB) minPB=abs(pixel);
+          }
+        }
       }
     }
+    
+    double PBcut = maxPB * 1e-6;
+    cout << PBcut << endl;
 
     const Matrix<Float>& sphe = getSpheroidCut();
-
     //maxPB=1.;
-    for(Int k=0;k<lattice->shape()[2];++k){
-      for(uInt i=0;i<shapeout;++i){
-    	for(uInt j=0;j<shapeout;++j){
-    	  pos[0]=i+istart;
-    	  pos[1]=j+istart;
-    	  pos[2]=k;
-    	  Complex pixel(lattice->getAt(pos));
-
-    	  pixel*=sqrt(maxPB)/sqrt(itsAvgPB(i+istart,j+istart));
-
-
-	  //if(itsAvgPB(pos)<1e-6*maxPB){pixel=0.;}
-	  if((sqrt(itsAvgPB(pos))/sphe(pos)<its_PBCut)||(itsAvgPB(pos)<2.*minPB)){pixel=0.;}
-    	  lattice->putAt(pixel,pos);
-    	  tempimage(i,j,k)=pixel;///weights(0,0);
-    	}
+    for(uInt i=0;i<shapeout;++i){
+      for(uInt j=0;j<shapeout;++j){
+        for(uInt k=0;k<itsAvgPB.shape()(2);++k){
+          for(uInt l=0;l<itsAvgPB.shape()(3);++l){
+            pos[0]=i+istart;
+            pos[1]=j+istart;
+            pos[2]=k;
+            pos[3]=l;
+          
+            Complex pixel(lattice->getAt(pos));
+            Float scale(sphe(i,j) * itsAvgPB(pos));
+            if(scale<PBcut) {
+//               cout << "pixel set to zero because " << itsAvgPB(pos) << "<" << PBcut << endl;
+              pixel=0.;
+            } else { 
+//               cout << "pixel was: " << pixel << " beam is:" << itsAvgPB(pos) << endl;
+//               pixel /= itsAvgPB(pos);
+              pixel /= scale;
+//               cout << "pixel now is: " << pixel << endl;
+            }
+            lattice->putAt(pixel,pos);
+          }
+        }
       }
     }
 

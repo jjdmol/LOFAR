@@ -47,6 +47,9 @@
 #include <lattices/Lattices/ArrayLattice.h>
 #include <lattices/Lattices/LatticeFFT.h>
 
+// Svdt: included for debugging purposes
+#include <tables/Tables/Table.h>
+
 using namespace casa;
 
 namespace LOFAR
@@ -89,7 +92,7 @@ namespace LOFAR
 //      ~LofarConvolutionFunction ()
 //      {
 //      }
-
+    
     // Show the relative timings of the various steps.
     void showTimings (std::ostream&, double duration, double timeCF) const;
 
@@ -124,20 +127,17 @@ namespace LOFAR
                                          Double time, Double w,
                                          const Matrix<bool>& Mask_Mueller,
                                          bool degridding_step,
-                                         double Append_average_PB_CF,
-                                         Matrix<Complex>& Stack_PB_CF,
-                                         double& sum_weight_square,
+                                         double sum_weight,
 					 uInt spw, Int TaylorTerm, double RefFreq);
 
     Array<Complex>  ApplyElementBeam(Array<Complex> input_grid, Double time, uInt spw, const Matrix<bool>& Mask_Mueller_in, bool degridding_step);
     Array<Complex>  ApplyElementBeam2(Array<Complex>& input_grid, Double time, uInt spw, const Matrix<bool>& Mask_Mueller_in, bool degridding_step, Int UsedMask=-1);
     
     // Returns the average Primary Beam from the disk
-    Matrix<float> Give_avg_pb();
+    Cube<Float> Give_avg_pb();
 
     // Compute the average Primary Beam from the Stack of convolution functions
-    Matrix<Float> Compute_avg_pb(Matrix<Complex> &Sum_Stack_PB_CF,
-                                 double sum_weight_square);
+    Array<Float> Compute_avg_pb(const IPosition shape);
 
     // Zero padding of a Cube
     Cube<Complex> zero_padding(const Cube<Complex>& Image, int Npixel_Out);
@@ -261,6 +261,25 @@ namespace LOFAR
       for (uInt i=0; i<size; ++i) {
         for (uInt j=0; j<size; ++j) {
           function(j, i) *= x[i] * x[j];
+        }
+      }
+    }
+
+    // Unapply a spheroidal taper to the input function.
+    template <typename T>
+    void untaper (Matrix<T> &function) const
+    {
+      AlwaysAssert(function.shape()[0] == function.shape()[1], SynthesisError);
+      uInt size = function.shape()[0];
+      Double halfSize = (size-1) / 2.0;
+      Vector<Double> x(size);
+      for (uInt i=0; i<size; ++i) {
+        x[i] = spheroidal(abs(i - halfSize) / halfSize);
+      }
+      for (uInt i=0; i<size; ++i) {
+        for (uInt j=0; j<size; ++j) {
+          if ((x[i]>1.0e-12) && (x[j]>1.0e-12)) function(j, i) /= (x[i] * x[j]);
+          else function(j, i) = 0;
         }
       }
     }
@@ -519,7 +538,8 @@ namespace LOFAR
     map<Double, vector< vector< Cube<Complex> > > > m_AtermStore_element;
     map<Double, vector< vector< Cube<Complex> > > > m_AtermStore_station;
     //# Average primary beam
-    Matrix<Float>       Im_Stack_PB_CF0;
+    Array<Float>         itsSumPB;
+    Double              itsSumWeight;
     Int                 itsVerbose;
     Int                 itsMaxSupport;
     //    Int                 itsTaylorTerm;
@@ -549,6 +569,9 @@ namespace LOFAR
       {
         return m_logIO;
       }
+// SvdT: added for debugging purposes
+    Table itsLoggingTable;
+
   };
 
 

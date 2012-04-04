@@ -218,7 +218,7 @@ public:
   void put(const VisBuffer& vb, Int row=-1, Bool dopsf=False,
            FTMachine::Type type=FTMachine::OBSERVED);
 
-  mutable Matrix<Float> itsAvgPB;
+  mutable Array<Float> itsAvgPB;
   Bool its_Use_Linear_Interp_Gridder;
 
   // Make the entire image
