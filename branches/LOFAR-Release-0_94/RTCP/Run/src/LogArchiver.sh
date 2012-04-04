@@ -18,7 +18,7 @@ SRCDIR="$LOGDIR"
 DESTDIR="$LOGBACKUPDIR"
 
 # which file patterns to archive
-PATTERNS=("CNProg.log.*" "IONProc.log.*" "startBGL.log.*" "*.parset")
+PATTERNS=("CNProc.log.*" "IONProc.log.*" "startBGL.log.*" "*.parset")
 
 # how old the last change to the file has to be (seconds)
 MINAGE="7 * 24 * 60 * 60"
