@@ -1,6 +1,7 @@
 # $Id$
 
 include(LofarPackageVersion)
+include(PythonInstall)
 
 lofar_add_library(lofarft
   Package__Version.cc
@@ -28,3 +29,8 @@ lofar_add_bin_program(fillRootImageGroup fillRootImageGroup.cc)
 install(PROGRAMS
   addImagingInfo
   DESTINATION bin)
+
+# Python modules.
+python_install(
+  addImagingInfo.py 
+  DESTINATION lofar)
