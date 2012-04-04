@@ -44,7 +44,7 @@ if __name__ == "__main__":
     # See if the ParmDB pattern is given.
     instrname = 'instrin'
     if len(sys.argv) > 4  and  len(sys.argv[4]) > 0:
-        msname = [lmt.addfileglob (sys.argv[4], '*.instr')]
+        instrname = [lmt.addfileglob (sys.argv[4], '*.instr')]
     # See if the MS output name is given.
     outname = 'msout'
     if len(sys.argv) > 5  and  len(sys.argv[5]) > 0:
