@@ -276,7 +276,7 @@ void BeamTables::writeElements (MSAntennaFieldColumns& columns,
   // Note that elemPresent defines which elements are used for a mode.
   // -1 means not used.
   // If >=0, the value is normally equal to the vector's index.
-  // However, for HBA_ONE this is not the case. It has first 48 -1 values, and
+  // However, for HBA_ONE this is not the case. It has 48 -1 values, and
   // thereafter value 0..47. SAS/MAC/BeamServer needs it this way.
   // Therefore the code adds the nr of -1 values if value != index to get
   // the proper flag index (which is the RCU number).
