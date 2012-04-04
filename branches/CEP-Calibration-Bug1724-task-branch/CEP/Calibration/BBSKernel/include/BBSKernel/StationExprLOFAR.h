@@ -91,6 +91,7 @@ private:
 
     vector<Source::Ptr> makeSourceList(SourceDB &sourceDB,
         const BufferMap &buffers, const vector<string> &patterns);
+    vector<string> findSources(SourceDB &sourceDB, const string &pattern);
 
     Request                         itsRequest;
     Cache                           itsCache;

@@ -380,7 +380,7 @@ vector<Source::Ptr> MeasurementExprLOFAR::makeSourceList(SourceDB &sourceDB,
     vector<string> names;
     if(patterns.empty())
     {
-        names = sourceDB.getPatches(-1, "*");
+        names = findSources(sourceDB, "*");
     }
     else
     {
@@ -398,7 +398,7 @@ vector<Source::Ptr> MeasurementExprLOFAR::makeSourceList(SourceDB &sourceDB,
             }
             else
             {
-                vector<string> match(sourceDB.getPatches(-1, *it));
+                vector<string> match = findSources(sourceDB, *it);
                 names.insert(names.end(), match.begin(), match.end());
             }
         }
@@ -431,6 +431,21 @@ vector<Source::Ptr> MeasurementExprLOFAR::makeSourceList(SourceDB &sourceDB,
     }
 
     return sources;
+}
+
+vector<string> MeasurementExprLOFAR::findSources(SourceDB &sourceDB,
+    const string &pattern)
+{
+    vector<SourceInfo> match = sourceDB.getSources(pattern);
+
+    vector<string> result;
+    result.reserve(match.size());
+    for(vector<SourceInfo>::const_iterator it = match.begin(),
+        end = match.end(); it != end; ++it)
+    {
+        result.push_back(it->getName());
+    }
+    return result;
 }
 
 } // namespace BBS
