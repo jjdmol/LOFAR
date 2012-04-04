@@ -56,9 +56,9 @@ GTMTimer::GTMTimer(GCFRawPort& port,
 void GTMTimer::decreaseTime()
 {
 	int64 uSec = getElapsedTime();
-	if (_port.getName() == "childControlTimer") {
-		LOG_TRACE_STAT(formatString("Timer %d(%s): Telapsed= %lld, Tleft=%llu", _id, _port.getName().c_str(), uSec, _timeLeft));
-	}
+//	if (_port.getName() == "childControlTimer") {
+//		LOG_TRACE_STAT(formatString("Timer %d(%s): Telapsed= %lld, Tleft=%llu", _id, _port.getName().c_str(), uSec, _timeLeft));
+//	}
 
 	// REO: uSec < 0 ??? 
 	if ((uSec < (int64)(_timeLeft)) || (uSec < 0)) {
@@ -66,9 +66,9 @@ void GTMTimer::decreaseTime()
 		if (uSec < 0) {
 			LOG_WARN(formatString("Elapsed time of timer %d (%s) is NEGATIVE!: %llu", _id, _port.getName().c_str(), uSec));
 		}
-		if (_port.getName() == "childControlTimer") {
-			LOG_TRACE_STAT(formatString("Timer %d(%s): Tleft=>%llu", _id, _port.getName().c_str(), _timeLeft));
-		}
+//		if (_port.getName() == "childControlTimer") {
+//			LOG_TRACE_STAT(formatString("Timer %d(%s): Tleft=>%llu", _id, _port.getName().c_str(), _timeLeft));
+//		}
 		return;
 	}
 
