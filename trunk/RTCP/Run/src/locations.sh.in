@@ -22,9 +22,18 @@ if isproduction
 then
   ISPRODUCTION=1
 
+  if [ "`basename $HOME`" == "lofartest" ]
+  then
+    ISTESTENV=1
+    STORAGE_HOME=/data/home/lofartest
+  else
+    ISTESTENV=0
+    STORAGE_HOME=/data/home/lofarsys
+  fi
+
   CNPROC=$HOME/production/lofar/bgp_cn/bin/CN_Processing
   IONPROC=$HOME/production/lofar/bgp_ion/bin/ION_Processing
-  STORAGE=/data/home/lofarsys/production/lofar/bin/Storage_main
+  STORAGE=$STORAGE_HOME/production/lofar/bin/Storage_main
 
   LOGDIR=/localhome/log
   RUNDIR=/globalhome/lofarsystem
@@ -38,9 +47,9 @@ OLAP.Storage.parsetFilename = $STORAGE_PARSET
 OLAP.Storage.userName = lofarsys
 OLAP.Storage.sshIdentityFile = /globalhome/lofarsystem/.ssh/id_rsa
 OLAP.Storage.msWriter=$STORAGE
-OLAP.Storage.AntennaSetsConf = /data/home/lofarsys/production/lofar/etc/AntennaSets.conf
-OLAP.Storage.AntennaFieldsDir = /data/home/lofarsys/production/lofar/etc/StaticMetaData
-OLAP.Storage.HBADeltasDir = /data/home/lofarsys/production/lofar/etc/StaticMetaData
+OLAP.Storage.AntennaSetsConf = $STORAGE_HOME/production/lofar/etc/AntennaSets.conf
+OLAP.Storage.AntennaFieldsDir = $STORAGE_HOME/production/lofar/etc/StaticMetaData
+OLAP.Storage.HBADeltasDir = $STORAGE_HOME/production/lofar/etc/StaticMetaData
 
 OLAP.IONProc.PLC_controlled = T
 OLAP.CNProc.partition = $PARTITION
