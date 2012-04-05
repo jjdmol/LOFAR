@@ -153,7 +153,6 @@ void Parset::checkInputConsistency() const
   }
 }
 
-
 void Parset::check() const
 {
   //checkPsetAndCoreConfiguration();
@@ -171,6 +170,13 @@ void Parset::check() const
 
   if (CNintegrationSteps() % dedispersionFFTsize() != 0)
     THROW(InterfaceException, "OLAP.CNProc.integrationSteps (" << CNintegrationSteps() << ") must be divisible by OLAP.CNProc.dedispersionFFTsize (" << dedispersionFFTsize() << ')');
+
+  if (outputThisType(BEAM_FORMED_DATA) || outputThisType(TRIGGER_DATA)) {
+    // second transpose is performed
+
+    if (nrSubbands() > phaseTwoPsets().size() * phaseOneTwoCores().size() )
+      THROW(InterfaceException, "For the second transpose to function, there need to be at least nrSubbands cores in phase 2 (requested: " << nrSubbands() << " subbands on " << (phaseTwoPsets().size() * phaseOneTwoCores().size()) << " cores)");
+  }
 }
 
 
