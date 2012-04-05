@@ -322,7 +322,7 @@ def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0):
             filenames = names
         elif nf != nfiles:
             inputOK = False
-            print "Error: " + str(nf) + " of files found for " + patterns + " differs from first pattern for which " + str(nfiles) + " files were found"
+            print "Error: " + str(nf) + " of files found for " + str(patterns) + " differs from first pattern for which " + str(nfiles) + " files were found"
         # Add prefix to output parameter name
         newkey = 'ObsSW.Observation.DataProducts.' + keyout
         ps.replace (newkey + '.locations', str(locs));
