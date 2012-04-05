@@ -609,8 +609,10 @@ void Job::createCNstreams()
 
   itsCNstreams.resize(usedCoresInPset.size());
 
-  for (unsigned core = 0; core < usedCoresInPset.size(); core ++)
+  for (unsigned core = 0; core < usedCoresInPset.size(); core ++) {
+    ASSERT(usedCoresInPset[core] < nrCNcoresInPset);
     itsCNstreams[core] = allCNstreams[myPsetNumber][usedCoresInPset[core]];
+  }
 
   if (itsHasPhaseOne || itsHasPhaseTwo) {
     std::vector<unsigned> phaseOneTwoCores = itsParset.phaseOneTwoCores();
@@ -623,8 +625,10 @@ void Job::createCNstreams()
     unsigned pset = myPsetNumber;
 #endif
     {
-      for (unsigned core = 0; core < phaseOneTwoCores.size(); core ++)
+      for (unsigned core = 0; core < phaseOneTwoCores.size(); core ++) {
+        ASSERT(phaseOneTwoCores[core] < nrCNcoresInPset);
         itsPhaseOneTwoCNstreams[pset][core] = allCNstreams[pset][phaseOneTwoCores[core]];
+      }
     }
   }
 
@@ -633,8 +637,10 @@ void Job::createCNstreams()
 
     itsPhaseThreeCNstreams.resize(phaseThreeCores.size());
 
-    for (unsigned core = 0; core < phaseThreeCores.size(); core ++)
+    for (unsigned core = 0; core < phaseThreeCores.size(); core ++) {
+      ASSERT(phaseThreeCores[core] < nrCNcoresInPset);
       itsPhaseThreeCNstreams[core] = allCNstreams[myPsetNumber][phaseThreeCores[core]];
+    }
   }
 }
 
