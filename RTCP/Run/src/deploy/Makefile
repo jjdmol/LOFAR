@@ -61,6 +61,10 @@ ifneq "${HOST}" "bgfen0"
   endif
 endif
 
+ifeq "$(shell basename ${HOME})" "lofartest"
+  TESTENV := 1
+endif
+
 # The developer under which a release is branched off
 DEVELOPER ?= mol
 
@@ -91,12 +95,22 @@ endif
 SOURCE_DIR = ${HOME}/source/lofar-${RELEASE}
 BUILD_DIR = ${HOME}/build/lofar-${RELEASE}
 INSTALL_DIR ?= ${HOME}/production/lofar-${RELEASE}
-LOCUS_HOME = /data/home/lofarsys
+
+ifdef TESTENV
+  LOCUS_HOME = /data/home/lofartest
+else
+  LOCUS_HOME = /data/home/lofarsys
+endif
+
 LOCUS_INSTALL_DIR ?= ${LOCUS_HOME}/production/lofar-${RELEASE}
 
 # Host names
 LHN_HOST = lhn001.cep2.lofar
-LOCUS_NODES ?= locus:
+ifeq "${HOST}" "bgfen0"
+  LOCUS_NODES ?= locus:0-93
+else
+  LOCUS_NODES ?= locus:94-99
+endif
 
 # Determine if the requested release is already active
 CURRENT_INSTALL := $(shell readlink -f ${HOME}/production/lofar)
@@ -182,7 +196,7 @@ ${INSTALL_BGFEN}:	configure
 # Build and install Storage_main
 ${INSTALL_LHN}:		configure
 	ssh ${LHN_HOST} 'cd ${BUILD_DIR}/lhn/gnu_opt && make -j16 install'
-	ssh ${LHN_HOST} "cexec ${LOCUS_NODES} 'time scp -rq ${LHN_HOST}:${LOCUS_INSTALL_DIR} `dirname ${LOCUS_INSTALL_DIR}` && sudo /sbin/setcap ${STORAGE_CAPABILITIES}=ep ${LOCUS_INSTALL_DIR}/bin/Storage_main'"
+	ssh ${LHN_HOST} "cexec ${LOCUS_NODES} 'mkdir -p `dirname ${LOCUS_INSTALL_DIR}` && time scp -rq ${LHN_HOST}:${LOCUS_INSTALL_DIR} `dirname ${LOCUS_INSTALL_DIR}` && sudo /sbin/setcap ${STORAGE_CAPABILITIES}=ep ${LOCUS_INSTALL_DIR}/bin/Storage_main'"
 
 # Activate the installation
 .PHONY:		activate_bgfen activate_locus
