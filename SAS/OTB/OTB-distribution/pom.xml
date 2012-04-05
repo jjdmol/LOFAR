@@ -9,7 +9,7 @@
 
 	<groupId>nl.astron.lofar.sas</groupId>
 	<artifactId>OTB-distribution</artifactId>
-	<version>1.0.0</version>
+	<version>0.94</version>
 
 	<organization>
 		<name>Astron</name>

@@ -887,10 +887,10 @@ if __name__ == "__main__":
                      type="string",
                      default="",
                      help="print the given key from the resulting parset" )
-  opgroup.add_option( "-p", "--partition",
+  opgroup.add_option( "-P", "--partition",
                      dest="partition",
                      type="string",
-                     default=os.environ["PARTITION"] or "",
+                     default=os.environ.get("PARTITION",""),
                      help="use this partition [%default%]" )
   opgroup.add_option( "-r", "--runtime",
                      dest="runtime",

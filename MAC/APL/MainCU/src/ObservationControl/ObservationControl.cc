@@ -258,6 +258,14 @@ void	ObservationControl::setState(CTState::CTstateNr		newState)
 //
 void ObservationControl::registerResultMessage(const string& cntlrName, int	result, CTState::CTstateNr	state)
 {
+	// always handle a quited-msg from a controller.
+	if (state == CTState::QUITED) {
+		_updateChildInfo(cntlrName, state);
+		if (result != CT_RESULT_NO_ERROR) {
+			itsQuitReason = result;
+		}
+	}
+
 	// does the message belong to the current state?
 	CTState		cts;
 	CTState::CTstateNr	expectedState(cts.stateAck(itsState));
@@ -270,12 +278,6 @@ void ObservationControl::registerResultMessage(const string& cntlrName, int	resu
 			LOG_WARN_STR("Controller " << cntlrName << " sent a " << cts.name(state) << " message iso a " 
 					<< cts.name(cts.stateAck(itsState)) << " message.");
 			itsBusyControllers--;	// [15122010] see note in doHeartBeatTask!
-		}
-		if (state == CTState::QUITED) {
-			_updateChildInfo(cntlrName, state);
-			if (result != CT_RESULT_NO_ERROR) {
-				itsQuitReason = result;
-			}
 		}
 		return;
 	}
@@ -804,7 +806,7 @@ void ObservationControl::_updateChildInfo(const string& name, CTState::CTstateNr
 	if (!name.empty() && state != CTState::NOSTATE && itsChildInfo.find(name) != itsChildInfo.end()) {
 		itsChildInfo[name].currentState = state;
 		CTState	CTS; 
-		LOG_DEBUG_STR("_updateChildInfo: FORCING " << name << " to " << CTS.name(state));
+		LOG_DEBUG_STR("_updateChildInfo: " << name << " says it is in state " << CTS.name(state));
 		return;
 	}
 
@@ -816,11 +818,32 @@ void ObservationControl::_updateChildInfo(const string& name, CTState::CTstateNr
 			itsChildInfo[childs[i].name] = 
 				ChildProc(childs[i].cntlrType, childs[i].currentState, childs[i].requestedState, childs[i].requestTime);
 		}
-		else {
+		else { // its in the map, update the info.
 			itsChildInfo[childs[i].name].currentState   = (state != CTState::NOSTATE) ? state : childs[i].currentState;
 			itsChildInfo[childs[i].name].requestedState = childs[i].requestedState;
 			itsChildInfo[childs[i].name].requestTime    = childs[i].requestTime;
 		}
+	}
+
+	// we might still have controllers that are already removed by the childcontrol because they closed
+	// the connection. Update those also.
+	map<string, ChildProc>::iterator	iter = itsChildInfo.begin();			// own admin
+	map<string, ChildProc>::iterator	end  = itsChildInfo.end();
+	vector<ChildControl::StateInfo>::const_iterator	vFirst = childs.begin();	// childcontrol admin
+	vector<ChildControl::StateInfo>::const_iterator	vLast  = childs.end();
+	while (iter != end) {
+		// not in childcontrol info anymore?
+		if (iter->second.currentState != CTState::QUITED) {
+			vector<ChildControl::StateInfo>::const_iterator vIter = vFirst;
+			while ((vIter != vLast) && (vIter->name != iter->first)) {
+				vIter++;
+			}
+			if (vIter == vLast) {		// not found?
+				LOG_INFO_STR(iter->first << " not in the ChildControl admin anymore, assuming it quited");
+				iter->second.currentState = CTState::QUITED;
+			}
+		}
+		iter++;
 	}
 }
 
