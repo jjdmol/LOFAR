@@ -25,13 +25,17 @@
 
 #include <casa/Arrays/Matrix.h>
 
+#include <synthesis/MeasurementComponents/GridFT.h>       // GridFT machine for simple FT
 #include <synthesis/MeasurementComponents/Utils.h>
 #include <synthesis/MeasurementComponents/ComponentFTMachine.h>   // rotateUVW
 #include <synthesis/MeasurementComponents/FTMachine.h>
+#include <measures/Measures/UVWMachine.h>   // phase shift, rotate uvw etc.
 #include <LofarFT/LofarFTMachine.h>
 #include <LofarFT/LofarCFStore.h>
 #include <LofarFT/LofarVbStore.h>
 //#include <LofarFT/LofarVisibilityResamplerBase.h>
+#include <images/Images/PagedImage.h>
+#include <images/Images/ImageInterface.h>
 
 #include <Common/OpenMP.h>
 
@@ -59,7 +63,8 @@ ModelImageFft::ModelImageFft( const casa::String &name,
                               const casa::MDirection phasedir,
                               double wmax, 
                               unsigned int nwplanes, 
-                              bool aprojection)
+                              bool aprojection,
+                              uInt stationA, uInt stationB)
 {
   setDefaults();
   setWmax(wmax);
@@ -87,6 +92,47 @@ ModelImageFft::~ModelImageFft(void)
   // TODO: Release memory of LatticeCache?
 }
 
+// Get UVW data for Expresion Tree
+//
+boost::multi_array<dcomplex, 4>  ModelImageFft::getUVW(Double time)
+{
+  boost::multi_array<dcomplex, 4> uvw;    // uvw data to be returned
+
+  // initMaps()
+  
+  // initializeToVis()
+
+  // get()
+
+  // resize uvw buffer accordingly and copy into it
+  
+  return uvw;
+}
+
+bool ModelImageFft::isLinear() const
+{
+  if(itsOptions.polarization == LINEAR)
+  {
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+
+bool ModelImageFft::isCircular() const
+{
+  if(itsOptions.polarization == CIRCULAR)
+  {
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+
 //*********************************************
 //
 // Setter functions for options
@@ -110,6 +156,10 @@ void ModelImageFft::setDefaults()
     itsOptions.imageName="";                    // name of ModelImage
 
     Matrix<Bool> muellerMask(4,4);
+    muellerMask[0]=1;
+    muellerMask[1]=1;
+    muellerMask[2]=1;
+    muellerMask[3]=1;
 
     itsOptions.gridMuellerMask=muellerMask;
     itsOptions.degridMuellerMask=muellerMask;
@@ -190,7 +240,7 @@ void ModelImageFft::setImageName(const casa::String &imagename)
   itsOptions.imageName=imagename;
 }
 
-void setGridMuellerMask(casa::Matrix<Bool> muellerMask)
+void setGridMuellerMask(const casa::Matrix<Bool> &muellerMask)
 {
   if(muellerMask.nrow() != 4 && muellerMask.ncolumn() != 4)
   {
@@ -203,7 +253,7 @@ void setGridMuellerMask(casa::Matrix<Bool> muellerMask)
   }
 }
 
-void setDegridMuellerMask(casa::Matrix<Bool> muellerMask)
+void setDegridMuellerMask(const casa::Matrix<Bool> &muellerMask)
 {
   if(muellerMask.nrow() != 4 && muellerMask.ncolumn() != 4)
   {
@@ -225,6 +275,22 @@ void ModelImageFft::setStoreConvFunctions(bool store)
   itsOptions.storeConvFunctions=store;
 }
 
+void ModelImageFft::setStations(uInt stationA, uInt stationB)
+{
+  itsOptions.stationA=stationA;
+  itsOptions.stationB=stationB;
+}
+
+void ModelImageFft::setFrequencies(const Vector<Double> &frequencies)
+{
+  itsOptions.frequencies=frequencies;
+}
+
+void ModelImageFft::setPolarization(polType polarization)
+{
+  itsOptions.polarization=polarization;
+}
+
 //*********************************************
 //
 // LofarFtMachine functions
@@ -233,11 +299,13 @@ void ModelImageFft::setStoreConvFunctions(bool store)
 
 void ModelImageFft::computeConvolutionFunctions()
 {
+/*
   itsConvolutionFunctions.resize(itsOptions.Nwplanes);  // do we really have a conv function per w-plane?
   for(int i=0; i<itsOptions.Nwplanes; i++)
   {
     itsConvolutionFunctions[i]; // call LofarConvolutionFunction constructor here
   }
+*/
   /*
   // Constructor (needs MS, so not much use)
   LofarConvolutionFunction(const IPosition& shape,
@@ -345,20 +413,21 @@ void ModelImageFft::initializeToVis(ImageInterface<Complex>& iimage)
   // Cyr: I have commeneted that part which does the spheroidal correction of the clean components in the image plane.
   // We do this based on our estimate of the spheroidal function, stored in an image
   // Do the Grid-correction.
-    // {
-    //   Vector<Complex> correction(nx);
-    //   correction=Complex(1.0, 0.0);
-    //   // Do the Grid-correction
-    //   IPosition cursorShape(4, nx, 1, 1, 1);
-    //   IPosition axisPath(4, 0, 1, 2, 3);
-    //   LatticeStepper lsx(lattice->shape(), cursorShape, axisPath);
-    //   LatticeIterator<Complex> lix(*lattice, lsx);
-    //   for(lix.reset();!lix.atEnd();lix++) {
-    //     gridder->correctX1D(correction, lix.position()(1));
-    // 	lix.rwVectorCursor()/=correction;
-    //   }
-    // }
+  {
+    Vector<Complex> correction(nx);
+    correction=Complex(1.0, 0.0);
+    // Do the Grid-correction
+    IPosition cursorShape(4, nx, 1, 1, 1);
+    IPosition axisPath(4, 0, 1, 2, 3);
+    LatticeStepper lsx(lattice->shape(), cursorShape, axisPath);
+    LatticeIterator<Complex> lix(*lattice, lsx);
+    for(lix.reset();!lix.atEnd();lix++) {
+      gridder->correctX1D(correction, lix.position()(1));
+      lix.rwVectorCursor()/=correction;
+    }
+  }
 
+  LOG_INFO_STR("Finished grid correction of image.");
 }
 
 void ModelImageFft::init() 
@@ -421,15 +490,6 @@ void ModelImageFft::init()
   }
   assert(padded_shape(0)!=image->shape()(0));
   
-  // How to do this without the MS? using modified ModelImageConvolutionFunction class
-  /*
-  itsConvFunc = new LofarConvolutionFunction( padded_shape,
-                                              image->coordinates().directionCoordinate (image->coordinates().findCoordinate(Coordinate::DIRECTION)),
-                                              itsMS, itsNWPlanes, itsWMax,
-                                              itsOversample, itsBeamPath,
-					                                    itsVerbose, itsMaxSupport,
-                                              itsImgName);
-  */
   // For (streaming) BBS predict we don't have a MS available
   itsConvFunc = new LOFAR::BBS::LofarConvolutionFunction(padded_shape,
                                             image->coordinates().directionCoordinate (image->coordinates().findCoordinate(Coordinate::DIRECTION)),
@@ -460,48 +520,109 @@ void ModelImageFft::init()
    Int maxsupport,
    const String& imgName)      
   */
-  /*
-    // Compute the convolution function for all channel, for the polarisations
-    // specified in the Mueller_mask matrix
-    // Also specify weither to compute the Mueller matrix for the forward or
-    // the backward step. A dirty way to calculate the average beam has been
-    // implemented, by specifying the beam correcting to the given baseline
-    // and timeslot.
-    // RETURNS in a LofarCFStore: result[channel][Mueller row][Mueller column]
-    LofarCFStore makeConvolutionFunction(uInt stationA, uInt stationB,
+  
+  // Compute the convolution function for all channel, for the polarisations
+  // specified in the Mueller_mask matrix
+  // Also specify weither to compute the Mueller matrix for the forward or
+  // the backward step. A dirty way to calculate the average beam has been
+  // implemented, by specifying the beam correcting to the given baseline
+  // and timeslot.
+  // RETURNS in a LofarCFStore: result[channel][Mueller row][Mueller column]
+
+  // TODO: How to deal with and without A-term here?
+  if(itsOptions.Wprojection)
+  {
+    /*
+    LofarCFStore makeConvolutionFunction(itsOptions.stationA, itsOptions.stationB,
                                          Double time, Double w,
                                          const Matrix<bool>& Mask_Mueller,
                                          bool degridding_step,
                                          double Append_average_PB_CF,
                                          Matrix<Complex>& Stack_PB_CF,
-                                         double& sum_weight_square);
-  */
-  
-  initVb(npol, itsOptions.nchan);   // init dummy VisBuffer
+                                         double& sum_weight_square);  
+    */
+  }
+  else if(itsOptions.Aprojection)
+  {
+  }
+  else    // use normal GridFT function
+  {
+    GridFT(4000000, 16, itsOptions.ConvType, itsOptions.PhaseDir, itsOptions.padding, 
+           usezero_p, useDoubleGrid_p);
+  }
 }
 
 
-void ModelImageFft::initVb(uInt npol, uInt nchan, bool circularPol)
+void ModelImageFft::initChannels()
 {
-//  itsDummyVb.corrType_p.resize(npol);
-  if(circularPol==False)
-  {
-  
-  }
-  else
-  {
-  
-  }
+    chanMap.resize(nvischan);
+    chanMap.set(-1);
+/*    
+    Vector<Double> lsrFreq(0);
+    Bool condoo=False;
+    
+    
+    if(freqFrameValid_p){
+      vb.lsrFrequency(spw, lsrFreq, condoo);
+      doConversion_p[spw]=condoo;
+    }
+    else{
+      lsrFreq=vb.frequency();
+      doConversion_p[spw]=False;
+    }
+    if(lsrFreq.nelements() ==0){
+      return False;
+    }
+    lsrFreq_p.resize(lsrFreq.nelements());
+    lsrFreq_p=lsrFreq;
+*/
+    Vector<Double> c(1);
+    c=0.0;
+    Vector<Double> f(1);
+    Int nFound=0;   
+    
+
+    //cout.precision(10);
+    for (Int chan=0;chan<nvischan;chan++) 
+    {
+//      f(0)=lsrFreq[chan];
+      if(spectralCoord_p.toPixel(c, f)) 
+      {
+        Int pixel=Int(floor(c(0)+0.5));  // round to chan freq at chan center 
+        //cout << "spw " << spw << " f " << f(0) << " pixel "<< c(0) << "  " << pixel << endl;
+        /////////////
+        //c(0)=pixel;
+        //spectralCoord_p.toWorld(f, c);
+        // cout << "f1 " << f(0) << " pixel "<< c(0) << "  " << pixel << endl;
+        ////////////////
+        if(pixel>-1&&pixel<nchan)
+        {
+          chanMap(chan)=pixel;
+          nFound++;
+          if(nvischan>1&&(chan==0||chan==nvischan-1)) 
+          {
+            logIO() << LogIO::DEBUGGING
+              << "Selected visibility channel : " << chan+1
+              << " has frequency "
+              <<  MFrequency(Quantity(f(0), "Hz")).get("GHz").getValue()
+              << " GHz and maps to image pixel " << pixel+1 << LogIO::POST;
+          }
+        }
+      }
+    }
+//    multiChanMap_p[spw].resize();
+//    multiChanMap_p[spw]=chanMap;
 }
 
 void ModelImageFft::fftImage()
 {
+  LOG_INFO_STR("ModelImageFft::fftImage ffting image");
   LatticeFFT::cfft2d(*lattice);       // Now do the FFT2D in place
 }
 
 void storeFFTImage(void)
 {
-
+  LOG_INFO_STR("ModelImageFft::storeFFTImage storing ffted image");
 }
 
 // LOFAR specific rewritten function initialize polarization (polmap)
@@ -510,18 +631,207 @@ void storeFFTImage(void)
 //void ModelImageFft::initMaps(const casa::VisBuffer &)
 void ModelImageFft::initMaps(void)
 {
-  // Initialize polarization map
+  LOG_INFO_STR("ModelImageFft::initMaps()");
+
+  // Set the frame for the UVWMachine
+  mFrame_p=MeasFrame(MEpoch(Quantity(getTime(), "s")), mLocation_p);
+    
+  // First get the CoordinateSystem for the image and then find
+  // the DirectionCoordinate
+  CoordinateSystem coords=image->coordinates();
+  Int directionIndex=coords.findCoordinate(Coordinate::DIRECTION);
+  AlwaysAssert(directionIndex>=0, AipsError);
+  DirectionCoordinate directionCoord=coords.directionCoordinate(directionIndex);
+
+  // get the first position of moving source
+  if(fixMovingSource_p)
+  {   
+    //First convert to HA-DEC or AZEL for parallax correction
+    MDirection::Ref outref1(MDirection::AZEL, mFrame_p);
+    MDirection tmphadec=MDirection::Convert(movingDir_p, outref1)();
+    MDirection::Ref outref(directionCoord.directionType(), mFrame_p);
+    firstMovingDir_p=MDirection::Convert(tmphadec, outref)();    
+  }
+
+  // Decide if uvwrotation is not necessary, if phasecenter and
+  // image center are with in one pixel distance; Save some 
+  //  computation time especially for spectral cubes.
+  {
+    Vector<Double> equal= (mImage_p.getAngle()-
+         getPhaseDir().getAngle()).getValue();
+    if((abs(equal(0)) < abs(directionCoord.increment()(0))) 
+        && (abs(equal(1)) < abs(directionCoord.increment()(1))))
+    {
+      doUVWRotation_p=False;
+    }
+    else
+    {
+      doUVWRotation_p=True;
+    }
+  }
+  // Get the object distance in meters
+  Record info(image->miscInfo());
+  if(info.isDefined("distance"))
+  {
+    info.get("distance", distance_p);
+    if(abs(distance_p)>0.0)
+    {
+      LOG_INFO_STR("Distance to object is set to " << distance_p/1000.0
+      << "km: applying focus correction");
+    }
+  }
   
-  // Initialize channel map
+  // Set up the UVWMachine. 
+  uvwMachine_p=new UVWMachine(mImage_p, getPhaseDir(), mFrame_p, False, True);
+  AlwaysAssert(uvwMachine_p, AipsError);
   
+// TODO: do we need this?
+//    lastFieldId_p=vb.fieldId();
+//    lastMSId_p=vb.msId();
+
+  // Now we need MDirection of the image phase center. This is
+  // what we define it to be. So we define it to be the
+  // center pixel. So we have to do the conversion here.
+  // This is independent of padding since we just want to know 
+  // what the world coordinates are for the phase center
+  // pixel
+  {
+    Vector<Double> pixelPhaseCenter(2);
+    pixelPhaseCenter(0) = Double( image->shape()(0) / 2 );
+    pixelPhaseCenter(1) = Double( image->shape()(1) / 2 );
+    directionCoord.toWorld(mImage_p, pixelPhaseCenter);
+  }
+
+  // Set up maps
+  Int spectralIndex=coords.findCoordinate(Coordinate::SPECTRAL);
+  AlwaysAssert(spectralIndex>-1, AipsError);
+  spectralCoord_p=coords.spectralCoordinate(spectralIndex);
+  
+  //Store the image/grid channels freq values
+  {
+    Int chanNumbre=image->shape()(3);
+    Vector<Double> pixindex(chanNumbre);
+    imageFreq_p.resize(chanNumbre);
+    Vector<Double> tempStorFreq(chanNumbre);
+    indgen(pixindex);
+    //    pixindex=pixindex+1.0; 
+    for (Int ll=0; ll< chanNumbre; ++ll)
+    {
+      if( !spectralCoord_p.toWorld(tempStorFreq(ll), pixindex(ll)))
+      {
+        logIO() << "Cannot get imageFreq " << LogIO::EXCEPTION;  
+      }
+    }
+    convertArray(imageFreq_p,tempStorFreq);
+  }
+  
+  //Destroy any conversion layer Freq coord if freqframe is not valid
+  if(!freqFrameValid_p)
+  {
+    MFrequency::Types imageFreqType=spectralCoord_p.frequencySystem();
+    spectralCoord_p.setFrequencySystem(imageFreqType);   
+    spectralCoord_p.setReferenceConversion(imageFreqType, 
+             MEpoch(Quantity(getTime(), "s")),
+             mLocation_p,
+             mImage_p);
+  }
+  
+  // Channel map: do this properly by looking up the frequencies
+  // If a visibility channel does not map onto an image
+  // pixel then we set the corresponding chanMap to -1.
+  // This means that put and get must always check for this
+  // value (see e.g. GridFT)
+  
+  nvischan  = itsOptions.frequencies.size();
+  interpVisFreq_p.resize();
+  interpVisFreq_p=getFrequencies();
+/*
+  if(selectedSpw_p.nelements() < 1){
+//    Vector<Int> myspw(1);
+//      myspw[0]=vb.spectralWindow();
+//      setSpw(myspw, freqFrameValid_p);
+  }
+*/
+//    matchAllSpwChans(vb);
+  /*
+  chanMap.resize();
+  
+  //  cout << "VBSPW " << vb.spectralWindow() << "  " << multiChanMap_p[vb.spectralWindow()] << endl;
+  chanMap=multiChanMap_p[vb.spectralWindow()];
+  */
+  
+  initChannels();
+  if(chanMap.nelements() == 0)
+    chanMap=Vector<Int>(itsOptions.frequencies.size(), -1);
+  {
+    LOG_DEBUG_STR("Channel Map: " << chanMap);
+  }
+  // Should never get here
+  if(max(chanMap)>=nchan||min(chanMap)<-1) {
+    LOG_DEBUG_STR("Illegal Channel Map: " << chanMap);
+  }
+
+  multiChanMap_p[0]=chanMap;
+
   //  logIO() << LogOrigin("LofarFTMachine", "init")  << LogIO::NORMAL;
-  LOG_INFO_STR("ModelImagefft initMaps()");
+  LOG_INFO_STR("ModelImagefft::initMaps() done");
 }
 
+// Initialise polarization info
+//
+void initPolInfo()
+{
+
+/*
+  void FTMachine::initPolInfo(const VisBuffer& vb)
+  {
+    //
+    // Need to figure out where to compute the following arrays/ints
+    // in the re-factored code.
+    // ----------------------------------------------------------------
+    {
+      polInUse_p = 0;
+      uInt N=0;
+      for(uInt i=0;i<polMap.nelements();i++) if (polMap(i) > -1) polInUse_p++;
+      cfStokes_p.resize(polInUse_p);
+      for(uInt i=0;i<polMap.nelements();i++) 
+	if (polMap(i) > -1) {cfStokes_p(N) = vb.corrType()(i);N++;}
+    }
+  }
+*/
+
+
+}
+
+Vector<Int> ModelImageFft::getCorrType()
+{
+  Vector<Int> corrType(4);
+
+  if(isLinear())
+  {
+    corrType[0]=Stokes::I;
+    corrType[1]=Stokes::Q;
+    corrType[2]=Stokes::U;
+    corrType[3]=Stokes::V;
+  }
+  else
+  {
+    corrType[0]=Stokes::RR;
+    corrType[1]=Stokes::RL;
+    corrType[2]=Stokes::LR;
+    corrType[3]=Stokes::LL;  
+  }
+  return corrType;
+}
 
 // Degrid
+// TODO: make this independent of vb!
+//
+/*
 void ModelImageFft::get(VisBuffer& vb, Int row)
 {
+  LOG_INFO_STR("ModelImageFft::get()");
+
   if (itsOptions.verbose > 0) {
     cout<<"///////////////////// GET!!!!!!!!!!!!!!!!!!"<<endl;
   }
@@ -545,7 +855,8 @@ void ModelImageFft::get(VisBuffer& vb, Int row)
   refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
 
   //Check if ms has changed then cache new spw and chan selection
-  if(vb.newMS())  matchAllSpwChans(vb);
+  // SD: We don't need this (assume match) - don't want to patch images
+//  if(vb.newMS())  matchAllSpwChans(vb);
 
 
   //Channel matching for the actual spectral window of buffer
@@ -641,9 +952,11 @@ void ModelImageFft::get(VisBuffer& vb, Int row)
   // Write the last end index if applicable.
   if (usebl  &&  !allFlagged) {
     double Wmean(0.5*(vb.uvw()[blIndex[lastIndex]](2) + vb.uvw()[blIndex[blnr.size()-1]](2)));
-    if (abs(Wmean) <= itsOptions.wmax) {
-      if (itsOptions.verbose > 1) {
-	cout<<"...using w="<<Wmean<<endl;
+    if (abs(Wmean) <= itsOptions.wmax) 
+    {
+      if (itsOptions.verbose > 1)
+      {
+      	cout<<"...using w="<<Wmean<<endl;
       }
       blStart.push_back (lastIndex);
       blEnd.push_back (blnr.size()-1);
@@ -655,9 +968,11 @@ void ModelImageFft::get(VisBuffer& vb, Int row)
   double time = 0.5 * (times[times.size()-1] + times[0]);
   //ROVisIter& via(vb.iter());
 
-  // Don't do A-Term for the moment
   // First compute the A-terms for all stations (if needed).
-//  itsConvFunc->computeAterm (time);
+  if(getAprojection())
+  {
+    itsConvFunc->computeAterm (time);
+  }
 
   itsTotalTimer.start();
 #pragma omp parallel
@@ -675,8 +990,9 @@ void ModelImageFft::get(VisBuffer& vb, Int row)
       Int iend = blIndex[blEnd[i]];
       int threadNum = OpenMP::threadNum();
       // Get the convolution function for degridding.
-      if (itsOptions.verbose > 1) {
-	cout<<"ANTENNA "<<ant1[ist]<<" "<<ant2[ist]<<endl;
+      if (itsOptions.verbose > 1)
+      {
+      	cout<<"ANTENNA "<<ant1[ist]<<" "<<ant2[ist]<<endl;
       }
       cfTimer.start();
       LofarCFStore cfStore =
@@ -706,3 +1022,4 @@ void ModelImageFft::get(VisBuffer& vb, Int row)
   itsTotalTimer.stop();
   interpolateFrequencyFromgrid(vb, data, FTMachine::MODEL);
 }
+*/

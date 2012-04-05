@@ -29,13 +29,21 @@
 #include <scimath/Mathematics/ConvolveGridder.h>
 #include <LofarFT/LofarCFStore.h>
 #include <LofarFT/LofarVisResampler.h>
-#include <msvis/MSVis/VisBuffer.h>
+//#include <msvis/MSVis/VisBuffer.h>
 #include <BBSKernel/ModelImageConvolutionFunction.h>
+
+#include <boost/multi_array.hpp>
 
 namespace LOFAR
 {
 namespace BBS
 {
+
+enum polType
+{
+  LINEAR,
+  CIRCULAR
+};
 
 // Options for the ModelImageFFT
 typedef struct ModelImageOptions
@@ -47,6 +55,7 @@ typedef struct ModelImageOptions
   double wmax;                            // maximum w value to use
   casa::MPosition Mlocation;              // location of array on earth
   casa::MDirection PhaseDir;              // phase direction of uvw data
+  Double time;                            // time to request uvw data for
   double refFrequency;                    // reference frequency of uvw data
   casa::Float padding;                    // padding used in gridding
   casa::Int verbose;                      // verbosity level
@@ -58,8 +67,14 @@ typedef struct ModelImageOptions
   unsigned int NThread;                   // number of threads used
   bool storeConvFunctions;                // save all convolution functions into images
 
+  uInt stationA;                          // station A index for A-Term projection
+  uInt stationB;                          // station B index for A-Term projection
+
   uInt nchan;                             // number of channels
   Vector<Double> frequencies;             // vector with channel frequencies
+  polType polarization;                   // its polarization LINEAR or CIRCULAR
+  bool linearPolarized;                   // uvw data is linearly polarized
+  bool circularPolarized;                 // uvw data is circularly polarized
 };
 
 class ModelImageFft : public casa::FTMachine
@@ -70,7 +85,15 @@ public:
                 const casa::MDirection phasedir=0,
                 double wmax=0, 
                 unsigned int nwplanes=1, 
+                bool aprojection=false,
+                uInt stationA=0, uInt stationB=0);
+  /*
+  ModelImageFft(const casa::String &name,
+                const casa::MDirection phasedir=0,
+                double wmax=0, 
+                unsigned int nwplanes=1, 
                 bool aprojection=false);
+  */
 //    void ModelImageFft(const casa::String &name, double nwmax=0);
   ~ModelImageFft();
 
@@ -97,10 +120,14 @@ public:
   void setMaxSupport(casa::Int maxsupport);
   void setOversample(casa::uInt oversample);
   void setImageName(const casa::String &imagename);
-  void setGridMuellerMask(casa::Matrix<Bool> muellerMask);
-  void setDegridMuellerMask(casa::Matrix<Bool> muellerMask);
+  void setGridMuellerMask(const casa::Matrix<Bool> &muellerMask);
+  void setDegridMuellerMask(const casa::Matrix<Bool> &muellerMask);
   void setNThread(unsigned int nthread);
   void setStoreConvFunctions(bool store);
+
+  void setStations(uInt stationA, uInt stationB);
+  void setFrequencies(const casa::Vector<casa::Double> &frequencies);
+  void setPolarization(polType pol);
 
   // Getter functions for individual options
   inline casa::String    getConvType() const { return itsOptions.ConvType; }
@@ -110,6 +137,7 @@ public:
   inline double          getWmax() const { return itsOptions.wmax; }
   inline casa::MPosition getMlocation() const { return itsOptions.Mlocation; }
   inline casa::MDirection getPhaseDir() const { return itsOptions.PhaseDir; }
+  inline casa::Double    getTime() const { return itsOptions.time; }
   inline casa::Float     getPadding() const { return itsOptions.padding; }
   inline casa::uInt      getVerbose() const { return itsOptions.verbose; }
   inline casa::uInt      getMaxSupport() const { return itsOptions.maxSupport; }
@@ -118,6 +146,12 @@ public:
   inline unsigned int    getNThread() const { return itsOptions.NThread; }
   inline bool            getStoreConvFunctions() const { return itsOptions.storeConvFunctions; }
 
+  inline casa::uInt      getStationA() const { return itsOptions.stationA; }
+  inline casa::uInt      getStationB() const { return itsOptions.stationB; }
+
+  inline casa::uInt      getNchan() const { return itsOptions.frequencies.size(); }
+  inline casa::Vector<casa::Double>  getFrequencies() const { return itsOptions.frequencies; }
+
   // Show the relative timings of the various steps.
   void showTimings (std::ostream&, double duration) const;
   static casa::Int determineNWplanes();      // determine No. of wplanes from baselines   
@@ -125,20 +159,28 @@ public:
   bool wprojection() const { return itsOptions.Wprojection; }     // return if it uses w-projection
   bool aprojection() const { return itsOptions.Aprojection; }     // return if it uses A-projection
   
+  // Polarization types
+  polType polarization() const { return itsOptions.polarization; }
+  bool isLinear() const;    // { return itsOptions.linearlyPolarized; }
+  bool isCircular() const;  // { return itsOptions.circularlyPolarized; }
+  
+  // Data access function
+  boost::multi_array<dcomplex, 4> getUVW(Double time=0);
+  
 private:
   casa::ImageInterface<Complex> *image;
-  casa::LatticeCache<Complex> *imageCache;        // Image / FFT of image (ffted in place)
-  casa::VisBuffer itsDummyVb;   // dummy VisBuffer needed for interface
+  //casa::LatticeCache<Complex> *imageCache;        // Image / FFT of image (ffted in place)
+//  casa::VisBuffer itsDummyVb;   // dummy VisBuffer needed for interface
 
   void init();                  // initialize LofarFTMachine (might change to all-in-one init)
-  void initVb(uInt npol, uInt nchan, bool circularPol=False);
+//  void initVb(uInt npol, uInt nchan, bool circularPol=False);
+  void initChannels();
   void initMaps();             // init polarization and channel maps
 
   // Pre-computed convolution functions for w-projection (indexed by w-plane number)
   CountedPtr<LOFAR::BBS::LofarConvolutionFunction> itsConvFunc;
-  Vector<CountedPtr<LOFAR::BBS::LofarConvolutionFunction> > itsConvolutionFunctions;
-  // LOFAR::LofarConvolutionFunction itsConvFunc;
 //    Vector<casa::PagedImage *> itsConvolutionFunctionsImages;
+//  Vector<CountedPtr<LOFAR::BBS::LofarConvolutionFunction> > itsConvolutionFunctions;
 
   // Constructor: cachesize is the size of the cache in words
   // (e.g. a few million is a good number), tilesize is the
@@ -151,8 +193,8 @@ private:
   // that location iso the image center.
   // <group>
 
-  // Timers
-  double itsGriddingTime;                        // variable to keep track of timing of steps
+  // Timers to keep track of timing of steps
+  double itsGriddingTime; 
   PrecTimer itsTotalTimer;
   double itsCFTime;
 
@@ -161,11 +203,12 @@ private:
   ModelImageOptions itsOptions;                  // struct containing all options
   void fftImage();                               // perform FFT on image
   void getImagePhaseDirection();                 // get the phase direction of the image
+  casa::Vector<casa::Int> getCorrType();         // get correlation type the class is set to 
 
   //-----------------------------------------------------------------  
   // FTmachine functions
   void initializeToVis( ImageInterface<Complex>& iimage);
-  void get(VisBuffer& vb, Int row);
+//  void get(VisBuffer& vb, Int row);
 
   // Gridder functions
 //    LofarVisResampler visResamplers_p;
@@ -195,6 +238,7 @@ private:
   Bool usezero_p;                        // use zero padding
 
   // Channel and Stokes mapping
+  Vector<Int> chanMap, polMap;           // Maps of channels and polarization
   Vector<Int> chanMap_p, polMap_p;       // channel map, polarization map
   Vector<Int> ConjCFMap_p, CFMap_p;
   Int nx,ny;                             // where else does this come from?
