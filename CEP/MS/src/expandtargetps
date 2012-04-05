@@ -41,10 +41,10 @@ if __name__ == "__main__":
     if len(sys.argv) > 3  and  len(sys.argv[3]) > 0:
         # Add *.MS if no glob pattern given. Turn it into a list.
         msname = [lmt.addfileglob (sys.argv[3], '*.MS')]
-    # See if the ParmDB pattern is given.
+    # See if the instrument ParmDB pattern is given.
     instrname = 'instrin'
     if len(sys.argv) > 4  and  len(sys.argv[4]) > 0:
-        instrname = [lmt.addfileglob (sys.argv[4], '*.instr')]
+        instrname = [lmt.addfileglob (sys.argv[4], '*.INST')]
     # See if the MS output name is given.
     outname = 'msout'
     if len(sys.argv) > 5  and  len(sys.argv[5]) > 0:
