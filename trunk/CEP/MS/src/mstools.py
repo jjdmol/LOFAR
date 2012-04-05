@@ -282,6 +282,7 @@ def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0):
     nslice = -1
     locations=[]
     filenames=[]
+    inputOK = True
 
     # Process input keywords. They must be present.
     inkeys = keymap["in"]
@@ -320,16 +321,17 @@ def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0):
             locations = locs
             filenames = names
         elif nf != nfiles:
-            raise ValueError, "Number of files found for " + key + " differs from previous key with input names"
+            inputOK = False
+            print "Error: " + str(nf) + " of files found for " + patterns + " differs from first pattern for which " + str(nfiles) + " files were found"
         # Add prefix to output parameter name
         newkey = 'ObsSW.Observation.DataProducts.' + keyout
-        ps.add (newkey + '.locations', str(locs))
-        ps.add (newkey + '.filenames', str(names))
+        ps.replace (newkey + '.locations', str(locs));
+        ps.replace (newkey + '.filenames', str(names));
 
     # Write nsubbands if needed.
     if havesubbands:
-        ps.add ('subbands_per_image', str(nsubbands))
-        ps.add ('slices_per_image', str(nslice))
+        ps.replace ('subbands_per_image', str(nsubbands));
+        ps.replace ('slices_per_image', str(nslice));
 
     # Process output keywords if they are present.
     if 'out' in keymap:
@@ -384,8 +386,8 @@ def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0):
                 names.append (os.path.basename(nm))
                 locs.append (locparts[0] + ':' + os.path.dirname(nm) + '/')
             newkey = 'ObsSW.Observation.DataProducts.' + keyout
-            ps.add (newkey + '.locations', str(locs))
-            ps.add (newkey + '.filenames', str(names))
+            ps.replace (newkey + '.locations', str(locs));
+            ps.replace (newkey + '.filenames', str(names));
 
     # Check if all keymap keywords have been processed.
     if nrproc != len(keymap):
@@ -393,4 +395,5 @@ def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0):
     # Write the resulting parset.
     ps.writeFile (parsetout)
     print "Created output parset " + parsetout
-
+    if not inputOK:
+        raise ValueError, "Number of files found for input patterns mismatches"
