@@ -100,7 +100,7 @@ unsigned int SubArrayNC::unpack(void*	buffer) {
 
 } // namespace LOFAR
 
-int main (int	argc, char*	argv[])
+int main (int	/*argc*/, char*	/*argv[]*/)
 {
 	// string test
 	string	tstString("Dit is een teststring");
