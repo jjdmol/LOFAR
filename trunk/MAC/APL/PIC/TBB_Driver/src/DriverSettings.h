@@ -24,12 +24,13 @@
 #define LOFAR_RSP_STATIONSETTINGS_H
 
 #include <APL/TBB_Protocol/TBB_Protocol.ph>
-#include "TP_Protocol.ph"
 #include <GCF/TM/GCF_Control.h>
 #include <Common/LofarLogger.h>
 #include <Common/LofarTypes.h>
+#include <Common/StringUtil.h>
 #include <time.h>
 
+#include "TP_Protocol.ph"
 
 namespace LOFAR {
 	using GCF::TM::GCFPortInterface;

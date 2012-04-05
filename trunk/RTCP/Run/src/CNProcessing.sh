@@ -14,7 +14,7 @@ function start() {
   # use a fifo to avoid race conditions
   mkfifo "$PIDFILE"
 
-  (mpirun -mode VN -partition "$PARTITION" -env DCMF_COLLECTIVES=0 -env BG_MAPPING=XYZT -env LD_LIBRARY_PATH=/bgsys/drivers/ppcfloor/comm/lib:/bgsys/drivers/ppcfloor/runtime/SPI:/globalhome/romein/lib.bgp -cwd "$LOGSYMLINK" -exe "$CNPROC" 2>&1 &
+  (mpirun -mode VN -partition "$PARTITION" -env DCMF_COLLECTIVES=0 -env BG_MAPPING=XYZT -env LD_LIBRARY_PATH=/bgsys/drivers/ppcfloor/comm/lib:/bgsys/drivers/ppcfloor/runtime/SPI:/globalhome/romein/lib.bgp -cwd "$RUNDIR" -exe "$CNPROC" 2>&1 &
   echo $! > "$PIDFILE") | LOFAR/Logger.py $LOGPARAMS "$LOGDIR/CNProc.log" &
 
   PID=`cat "$PIDFILE"`
