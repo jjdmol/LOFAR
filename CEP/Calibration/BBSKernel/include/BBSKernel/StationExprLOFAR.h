@@ -58,11 +58,11 @@ public:
         const ModelConfig &config, const Instrument::ConstPtr &instrument,
         double refFreq, const casa::MDirection &refPhase,
         const casa::MDirection &refDelay, const casa::MDirection &refTile,
-        bool inverse = false, double sigmaMMSE = 0.0);
+        bool inverse = false, bool useMMSE = false, double sigmaMMSE = 0.0);
 
     StationExprLOFAR(SourceDB &sourceDB, const BufferMap &buffers,
         const ModelConfig &config, const VisBuffer::Ptr &buffer,
-        bool inverse = false, double sigmaMMSE = 0.0);
+        bool inverse = false, bool useMMSE = false, double sigmaMMSE = 0.0);
 
     // \name ExprSet interface implementation
     // These methods form an implementation of the ExprSet interface.
@@ -92,6 +92,7 @@ private:
         const casa::MDirection &refDelay,
         const casa::MDirection &refTile,
         bool inverse,
+        bool useMMSE,
         double sigmaMMSE);
 
     PatchExprBase::Ptr makePatchExpr(const string &name,

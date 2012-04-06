@@ -26,6 +26,7 @@
 #include <BBSControl/Exceptions.h>
 #include <BBSControl/StreamUtil.h>
 #include <Common/LofarLogger.h>
+#include <Common/lofar_iomanip.h>
 #include <Common/ParameterSet.h>
 
 namespace LOFAR
@@ -71,7 +72,13 @@ namespace LOFAR
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       SingleStep::print(os);
       Indent id;
-      os << endl << indent << "MMSE noise variance: " << itsSigmaMMSE;
+      os << endl << indent << "Use MMSE: " << boolalpha << itsUseMMSE
+        << noboolalpha;
+      if(itsUseMMSE)
+      {
+        Indent id;
+        os << endl << indent << "Sigma: " << itsSigmaMMSE;
+      }
     }
 
 
@@ -88,6 +95,12 @@ namespace LOFAR
     }
 
 
+    bool CorrectStep::useMMSE() const
+    {
+      return itsUseMMSE;
+    }
+
+
     double CorrectStep::sigmaMMSE() const
     {
       return itsSigmaMMSE;
@@ -100,8 +113,9 @@ namespace LOFAR
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       SingleStep::write(ps);
-      const string prefix("Step." + name() + ".");
-      ps.replace(prefix + "NoiseVarianceMMSE", toString(itsSigmaMMSE));
+      const string prefix("Step." + name() + ".Correct.");
+      ps.replace(prefix + "MMSE.Enable", toString(itsUseMMSE));
+      ps.replace(prefix + "MMSE.Sigma", toString(itsSigmaMMSE));
       LOG_TRACE_VAR_STR("\nContents of ParameterSet ps:\n" << ps);
     }
 
@@ -110,10 +124,12 @@ namespace LOFAR
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       SingleStep::read(ps);
-      itsSigmaMMSE = ps.getDouble("NoiseVarianceMMSE", 0.0);
+      ParameterSet pss(ps.makeSubset("Correct."));
+      itsUseMMSE = pss.getBool("MMSE.Enable", itsUseMMSE);
+      itsSigmaMMSE = pss.getDouble("MMSE.Sigma", itsSigmaMMSE);
       if(itsSigmaMMSE < 0.0)
       {
-        THROW(BBSControlException, "Noise variance should be positive: "
+        THROW(BBSControlException, "MMSE.Sigma should be positive: "
           << itsSigmaMMSE);
       }
     }

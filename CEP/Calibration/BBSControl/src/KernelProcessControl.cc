@@ -679,7 +679,7 @@ namespace LOFAR
         try
         {
           StationExprLOFAR::Ptr expr(new StationExprLOFAR(*itsSourceDB,
-            itsBuffers, command.modelConfig(), chunk, true,
+            itsBuffers, command.modelConfig(), chunk, true, command.useMMSE(),
             command.sigmaMMSE()));
           apply(expr, chunk, blMask);
         }
@@ -696,7 +696,8 @@ namespace LOFAR
         try
         {
           model.reset(new MeasurementExprLOFAR(*itsSourceDB, itsBuffers,
-            command.modelConfig(), chunk, blMask, true, command.sigmaMMSE()));
+            command.modelConfig(), chunk, blMask, true, command.useMMSE(),
+            command.sigmaMMSE()));
         }
         catch(Exception &ex)
         {
