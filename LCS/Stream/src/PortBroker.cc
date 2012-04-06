@@ -54,7 +54,8 @@ PortBroker &PortBroker::instance()
 
 PortBroker::PortBroker( uint16 port )
 :
-  SocketStream( "0.0.0.0", port, TCP, Server, 0, "", false )
+  SocketStream( "0.0.0.0", port, TCP, Server, 0, "", false ),
+  itsDone(false)
 {
 }
 
@@ -65,11 +66,19 @@ PortBroker::~PortBroker()
   // break serverLoop explicitly
   itsThread->cancel();
 
-  // release all unfulfilled requests
-  for( requestMapType::iterator it = itsRequestMap.begin(); it != itsRequestMap.end(); ++it ) {
-    LOG_DEBUG_STR( "PortBroker request: discarding " << it->first );
-    delete it->second;
-  }
+  {
+    ScopedLock sl(itsMutex);
+
+    // release all unfulfilled requests
+    for( requestMapType::iterator it = itsRequestMap.begin(); it != itsRequestMap.end(); ++it ) {
+      LOG_DEBUG_STR( "PortBroker request: discarding " << it->first );
+      delete it->second;
+    }
+
+    // break any waitForClient conditional waits
+    itsDone = true;
+    itsCondition.broadcast();
+  }  
 }
 
 
@@ -122,7 +131,7 @@ void PortBroker::PortRequest::write( Stream &stream )
 
 void PortBroker::serverLoop()
 {
-  while(1) {
+  while(!itsDone) {
     // wait for new client to arrive
     reaccept();
 
@@ -150,6 +159,12 @@ void PortBroker::serverLoop()
 }
 
 
+bool PortBroker::serverStarted()
+{
+  return pbInstance.get() != NULL && pbInstance->itsThread.get() != NULL;
+}
+
+
 FileDescriptorBasedStream *PortBroker::waitForClient( const string &resource, time_t timeout ) {
   struct timespec deadline = { time(0L) + timeout, 0 };
 
@@ -162,7 +177,7 @@ FileDescriptorBasedStream *PortBroker::waitForClient( const string &resource, ti
 
   ScopedLock sl(itsMutex);
 
-  while(1) {
+  while(!itsDone) {
     requestMapType::iterator it = itsRequestMap.find(key);
 
     if (it != itsRequestMap.end()) {
@@ -180,6 +195,8 @@ FileDescriptorBasedStream *PortBroker::waitForClient( const string &resource, ti
       itsCondition.wait(itsMutex);
     }
   }
+
+  return 0;
 }
 
 
@@ -194,6 +211,8 @@ void PortBroker::requestResource(Stream &stream, const string &resource)
 
 PortBroker::ServerStream::ServerStream( const string &resource )
 {
+  ASSERTSTR( serverStarted(), "PortBroker service is not started" );
+
   // wait for client to request our service
   auto_ptr<FileDescriptorBasedStream> stream(PortBroker::instance().waitForClient(resource));
 
@@ -209,7 +228,7 @@ PortBroker::ClientStream::ClientStream( const string &hostname, uint16 port, con
   SocketStream(hostname, port, SocketStream::TCP, SocketStream::Client)
 {
   // request service
-  PortBroker::instance().requestResource(*this, resource);
+  PortBroker::requestResource(*this, resource);
 }
 
 
