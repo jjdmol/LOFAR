@@ -245,6 +245,12 @@ std::string Parset::getDirectoryName(OutputType outputType, unsigned streamNr) c
 }
 
 
+uint16 Parset::getStorageBrokerPort() const
+{
+  return 8000 + observationID() % 1000;
+}
+
+
 unsigned Parset::nrStreams(OutputType outputType, bool force) const
 {
   if (!outputThisType(outputType) && !force)

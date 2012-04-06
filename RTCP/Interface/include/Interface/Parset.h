@@ -180,6 +180,7 @@ class Parset: public ParameterSet
     std::string			getHostName(OutputType, unsigned streamNr) const;
     std::string			getFileName(OutputType, unsigned streamNr) const;
     std::string			getDirectoryName(OutputType, unsigned streamNr) const;
+    uint16                      getStorageBrokerPort() const;
 
     bool			fakeInputData() const;
     bool			checkFakeInputData() const;

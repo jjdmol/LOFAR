@@ -18,6 +18,7 @@
 #include <Interface/Exceptions.h>
 #include <Interface/Parset.h>
 #include <Common/Thread/Thread.h>
+#include <Stream/PortBroker.h>
 #include <Storage/SubbandWriter.h>
 #include <Storage/IOPriority.h>
 #include <Storage/Package__Version.h>
@@ -144,6 +145,8 @@ int main(int argc, char *argv[])
     lockInMemory();
 
     Observation obs(&parset, false);
+
+    PortBroker::createInstance(parset.getStorageBrokerPort());
 
     for (OutputType outputType = FIRST_OUTPUT_TYPE; outputType < LAST_OUTPUT_TYPE; outputType ++) {
       for (unsigned streamNr = 0; streamNr < parset.nrStreams(outputType); streamNr ++) {
