@@ -138,7 +138,7 @@
 		<dependency>
 			<groupId>org.netbeans.external</groupId>
 			<artifactId>AbsoluteLayout</artifactId>
-			<version>RELEASE701</version>
+			<version>RELEASE711</version>
 		</dependency>
 
 	</dependencies>
