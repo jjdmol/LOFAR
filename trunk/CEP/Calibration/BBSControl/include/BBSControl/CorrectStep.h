@@ -68,8 +68,11 @@ namespace LOFAR
       // Return the operation type of \c *this as a string.
       virtual const string& operation() const;
 
-      // Return the approximated noise variance to use when computing the
-      // inverse of a Jones matrix.
+      // Returns true if MMSE is enabled.
+      bool useMMSE() const;
+
+      // Return the approximated standard deviation of the nuisance term to use
+      // when computing the inverse of a Jones matrix for correction.
       double sigmaMMSE() const;
 
     private:
@@ -81,8 +84,11 @@ namespace LOFAR
       // object.
       virtual void read(const ParameterSet& ps);
 
-      // Approximation of the variance of the noise. Used for computing a robust
-      // inverse of the cummulative Jones matrices.
+      // Flag to turn MMSE correction on / off.
+      bool itsUseMMSE;
+
+      // Approximation of the standard deviation of the nuisance term. Used for
+      // computing a robust inverse of the cummulative Jones matrices.
       double itsSigmaMMSE;
     };
 

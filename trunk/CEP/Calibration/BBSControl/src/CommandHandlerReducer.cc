@@ -237,7 +237,8 @@ CommandResult CommandHandlerReducer::visit(const CorrectStep &command)
     try
     {
       expr = StationExprLOFAR::Ptr(new StationExprLOFAR(itsSourceDB, itsBuffers,
-        command.modelConfig(), buffer, true, command.sigmaMMSE()));
+        command.modelConfig(), buffer, true, command.useMMSE(),
+        command.sigmaMMSE()));
     }
     catch(Exception &ex)
     {
@@ -255,7 +256,8 @@ CommandResult CommandHandlerReducer::visit(const CorrectStep &command)
     try
     {
       model.reset(new MeasurementExprLOFAR(itsSourceDB, itsBuffers,
-        command.modelConfig(), buffer, blMask, true, command.sigmaMMSE()));
+        command.modelConfig(), buffer, blMask, true, command.useMMSE(),
+        command.sigmaMMSE()));
     }
     catch(Exception &ex)
     {

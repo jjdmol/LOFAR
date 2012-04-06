@@ -49,27 +49,27 @@ StationExprLOFAR::StationExprLOFAR(SourceDB &sourceDB, const BufferMap &buffers,
     const ModelConfig &config, const Instrument::ConstPtr &instrument,
     double refFreq, const casa::MDirection &refPhase,
     const casa::MDirection &refDelay, const casa::MDirection &refTile,
-    bool inverse, double sigmaMMSE)
+    bool inverse, bool useMMSE, double sigmaMMSE)
 {
     initialize(sourceDB, buffers, config, instrument, refFreq, refPhase,
-        refDelay, refTile, inverse, sigmaMMSE);
+        refDelay, refTile, inverse, useMMSE, sigmaMMSE);
 }
 
 StationExprLOFAR::StationExprLOFAR(SourceDB &sourceDB, const BufferMap &buffers,
     const ModelConfig &config, const VisBuffer::Ptr &buffer, bool inverse,
-    double sigmaMMSE)
+    bool useMMSE, double sigmaMMSE)
 {
     initialize(sourceDB, buffers, config, buffer->instrument(),
         buffer->getReferenceFreq(), buffer->getPhaseReference(),
         buffer->getDelayReference(), buffer->getTileReference(), inverse,
-        sigmaMMSE);
+        useMMSE, sigmaMMSE);
 }
 
 void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
     const ModelConfig &config, const Instrument::ConstPtr &instrument,
     double refFreq, const casa::MDirection &refPhase,
     const casa::MDirection &refDelay, const casa::MDirection &refTile,
-    bool inverse, double sigmaMMSE)
+    bool inverse, bool useMMSE, double sigmaMMSE)
 {
     // Allocate space for the station response expressions.
     itsExpr.resize(instrument->nStations());
@@ -258,7 +258,7 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
 
         if(inverse)
         {
-            if(sigmaMMSE > 0.0)
+            if(useMMSE && sigmaMMSE > 0.0)
             {
                 itsExpr[i] =
                     Expr<JonesMatrix>::Ptr(new MatrixInverseMMSE(itsExpr[i],

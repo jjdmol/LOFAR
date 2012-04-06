@@ -76,7 +76,7 @@ MeasurementExprLOFAR::MeasurementExprLOFAR(SourceDB &sourceDB,
 MeasurementExprLOFAR::MeasurementExprLOFAR(SourceDB &sourceDB,
     const BufferMap &buffers, const ModelConfig &config,
     const VisBuffer::Ptr &buffer, const BaselineMask &mask, bool inverse,
-    double sigmaMMSE)
+    bool useMMSE, double sigmaMMSE)
     :   itsBaselines(filter(buffer->baselines(), mask)),
         itsCachePolicy(new DefaultCachePolicy())
 {
@@ -87,7 +87,7 @@ MeasurementExprLOFAR::MeasurementExprLOFAR(SourceDB &sourceDB,
 
     if(inverse)
     {
-        makeInverseExpr(sourceDB, buffers, config, buffer, sigmaMMSE);
+        makeInverseExpr(sourceDB, buffers, config, buffer, useMMSE, sigmaMMSE);
     }
     else
     {
@@ -349,7 +349,7 @@ void MeasurementExprLOFAR::makeForwardExpr(SourceDB &sourceDB,
 
 void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
     const BufferMap &buffers, const ModelConfig &config,
-    const VisBuffer::Ptr &buffer, double sigmaMMSE)
+    const VisBuffer::Ptr &buffer, bool useMMSE, double sigmaMMSE)
 {
     NSTimer timer;
     timer.start();
@@ -599,7 +599,7 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
                     exprThreshold));
             }
 
-            if(sigmaMMSE > 0.0)
+            if(useMMSE && sigmaMMSE > 0.0)
             {
                 stationExpr[i] =
                     Expr<JonesMatrix>::Ptr(new MatrixInverseMMSE(stationExpr[i],
