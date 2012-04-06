@@ -32,6 +32,7 @@
 #include <Stream/FileStream.h>
 #include <Stream/NullStream.h>
 #include <Stream/SocketStream.h>
+#include <Stream/PortBroker.h>
 #include <Stream/NamedPipeStream.h>
 
 #include <boost/format.hpp>
@@ -56,6 +57,10 @@ Stream *createStream(const std::string &descriptor, bool asServer)
     return new SocketStream(split[1].c_str(), boost::lexical_cast<short>(split[2]), SocketStream::TCP, asServer ? SocketStream::Server : SocketStream::Client, 30);
   else if (split.size() == 3 && split[0] == "udpkey")
     return new SocketStream(split[1].c_str(), 0, SocketStream::UDP, asServer ? SocketStream::Server : SocketStream::Client, 30, split[2].c_str());
+#ifdef USE_THREADS    
+  else if (split.size() == 4 && split[0] == "tcpbroker") 
+    return asServer ? static_cast<Stream*>(new PortBroker::ServerStream(split[3])) : static_cast<Stream*>(new PortBroker::ClientStream(split[1], boost::lexical_cast<short>(split[2]), split[3]));
+#endif    
   else if (split.size() == 3 && split[0] == "tcpkey")
 #if defined CLUSTER_SCHEDULING
     return new SocketStream(split[1].c_str(), 0, SocketStream::TCP, asServer ? SocketStream::Server : SocketStream::Client, 30000, split[2].c_str());
@@ -111,8 +116,14 @@ std::string getStreamDescriptorBetweenIONandStorage(const Parset &parset, Output
   if (connectionType == "NULL") {
     return "null:";
   } else if (connectionType == "TCP") {
+#if defined USE_THREADS
+    std::string host = parset.getHostName(outputType, streamNr);
+    uint16 port = parset.getStorageBrokerPort();
+    return str(format("tcpbroker:%s:%u:ion-storage-obs-%u-type-%u-stream-%u") % host % port % parset.observationID() % outputType % streamNr);
+#else    
     std::string host = parset.getHostName(outputType, streamNr);
     return str(format("tcpkey:%s:ion-storage-obs-%u-type-%u-stream-%u") % host % parset.observationID() % outputType % streamNr);
+#endif    
   } else if (connectionType == "FILE") {
     return str(format("file:out-obs-%u-type-%u-stream-%u") % parset.observationID() % outputType % streamNr);
   } else {
