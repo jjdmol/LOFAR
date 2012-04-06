@@ -64,7 +64,7 @@ class PortBroker: protected SocketStream {
     };
 
   protected:
-    void requestResource( Stream &stream, const std::string &resource );
+    static void requestResource( Stream &stream, const std::string &resource );
     FileDescriptorBasedStream *waitForClient( const std::string &resource, time_t timeout = 0 );
 
   private:
@@ -81,6 +81,7 @@ class PortBroker: protected SocketStream {
     };
 
     std::auto_ptr<Thread> itsThread;
+    bool itsDone;
 
     mutable Mutex itsMutex;
     Condition itsCondition;
@@ -88,6 +89,7 @@ class PortBroker: protected SocketStream {
     typedef std::map<string, FileDescriptorBasedStream*> requestMapType;
     requestMapType itsRequestMap;
 
+    static bool serverStarted();
     void serverLoop();
 };
 
