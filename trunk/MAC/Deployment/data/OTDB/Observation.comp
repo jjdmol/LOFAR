@@ -33,7 +33,7 @@ par  existingStations        I    vtext   -      10    100    '["CS001","CS002",
 par  existingAntennaFields   I    vtext   -      10    100    '["LBA","HBA","HBA0","HBA1"]'  - 'Constant value: names of all antennafields'
 
 # new way of selection the receivers and the antennaArray at once
-par  antennaSet		     I    ptext  -      10    0      'LBA_INNER|LBA_OUTER|LBA_SPARSE_EVEN|LBA_SPARSE_ODD|LBA_X|LBA_Y|HBA_ZERO|HBA_ONE|HBA_DUAL|HBA_JOINED;LBA_INNER'    - 'Which part of the antennas should be used'
+par  antennaSet		     I    ptext  -      10    0      'LBA_INNER|LBA_OUTER|LBA_SPARSE_EVEN|LBA_SPARSE_ODD|LBA_X|LBA_Y|HBA_ZERO|HBA_ONE|HBA_DUAL|HBA_JOINED|HBA_ZERO_INNER|HBA_ONE_INNER|HBA_DUAL_INNER|HBA_JOINED_INNER;LBA_INNER'    - 'Which part of the antennas should be used'
 par  longBaselines           I    pbool  -      10    0      'true|false;false'                               - 'Number of polarisations to use in this observation'
 
 # copy of the characterisation of the (template)
