@@ -21,8 +21,7 @@
 
 package nl.astron.lofar.sas.otbcomponents;
 import java.rmi.RemoteException;
-import java.util.Enumeration;
-import java.util.Vector;
+import java.util.ArrayList;
 import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb3.jOTDBnode;
@@ -58,7 +57,7 @@ public class MultiEditDialog extends javax.swing.JDialog {
         setTree(treeIDs);
     }
     
-    public void setTree(int [] treeIDs) {
+    public final void setTree(int [] treeIDs) {
         itsTreeIDs = treeIDs;
         topLabel.setText("-- MULTIPLE TREE SELECTION -- Only first Tree's info is shown \n" +
                          "Changes will be applied to all involved trees");
@@ -103,14 +102,13 @@ public class MultiEditDialog extends javax.swing.JDialog {
 
                 //We are looking for:
                 // VirtualInstrument.stationList
-                Vector<jOTDBnode> node = OtdbRmi.getRemoteMaintenance().getItemList(itsTreeIDs[0], "VirtualInstrument");
+                ArrayList<jOTDBnode> node = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(itsTreeIDs[0], "VirtualInstrument"));
                 if (node.size() > 0) {
-                    jOTDBnode aNode = node.firstElement();
-                    Vector<jOTDBnode> childs = OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
+                    
+                    jOTDBnode aNode = node.get(0);
+                    ArrayList<jOTDBnode> childs = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1));
                     // get all the params per child
-                    Enumeration e = childs.elements();
-                    while (e.hasMoreElements()) {
-                        jOTDBnode anotherNode = (jOTDBnode) e.nextElement();
+                    for (jOTDBnode anotherNode: childs) {
                         aParam = null;
                         // We need to keep all the params needed by this panel
                         if (anotherNode.leaf) {
@@ -284,12 +282,16 @@ public class MultiEditDialog extends javax.swing.JDialog {
         if (!stations.equals("")) {
             String[] aS = stations.split("\\,");
             for (int i = 0; i < aS.length; i++) {
-                if (aS[i].substring(0,2).equals("CS") ) {
-                    itsUsedCoreStations.add(aS[i]);
-                } else if (aS[i].substring(0,2).equals("RS")) {
-                    itsUsedRemoteStations.add(aS[i]);
-                } else {
-                    itsUsedEuropeStations.add(aS[i]);
+                switch (aS[i].substring(0,2)) {
+                    case "CS":
+                        itsUsedCoreStations.add(aS[i]);
+                        break;
+                    case "RS":
+                        itsUsedRemoteStations.add(aS[i]);
+                        break;
+                    default:
+                        itsUsedEuropeStations.add(aS[i]);
+                        break;
                 }
             }
             this.coreStationSelectionPanel.setUsedStationList(itsUsedCoreStations);
@@ -506,14 +508,13 @@ public class MultiEditDialog extends javax.swing.JDialog {
         jOTDBparam aParam = null;
 
         try {
-            Vector<jOTDBnode> node = OtdbRmi.getRemoteMaintenance().getItemList(aTreeID, "VirtualInstrument");
+            ArrayList <jOTDBnode> node = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(aTreeID, "VirtualInstrument"));
             if (node.size() > 0) {
-                jOTDBnode aNode = node.firstElement();
-                Vector<jOTDBnode> childs = OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
+                jOTDBnode aNode = node.get(0);
+                ArrayList<jOTDBnode> childs = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1));
                 // get all the params per child
-                Enumeration e = childs.elements();
-                while (e.hasMoreElements()) {
-                    jOTDBnode anotherNode = (jOTDBnode) e.nextElement();
+                
+                for (jOTDBnode anotherNode:childs) {
                     aParam = null;
                     // We need to keep all the params needed by this panel
                     if (anotherNode.leaf) {
@@ -541,14 +542,13 @@ public class MultiEditDialog extends javax.swing.JDialog {
         jOTDBparam aParam = null;
 
         try {
-            Vector<jOTDBnode> node = OtdbRmi.getRemoteMaintenance().getItemList(aTreeID, "Observation");
+            ArrayList<jOTDBnode> node = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(aTreeID, "Observation"));
             // get all the params per child
             if (node.size() > 0) {
-                jOTDBnode aNode = node.firstElement();
-                Vector<jOTDBnode> childs = OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
-                Enumeration e = childs.elements();
-                while (e.hasMoreElements()) {
-                    jOTDBnode anotherNode = (jOTDBnode) e.nextElement();
+                jOTDBnode aNode = node.get(0);
+                ArrayList<jOTDBnode> childs = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1));
+
+                for (jOTDBnode anotherNode: childs ) {
                     aParam = null;
                     // We need to keep all the params needed by this panel
                     if (anotherNode.leaf) {
@@ -610,9 +610,9 @@ public class MultiEditDialog extends javax.swing.JDialog {
 
 
     // Changeable values
-    private Vector<String>    itsUsedCoreStations      = new Vector<String>();
-    private Vector<String>    itsUsedRemoteStations    = new Vector<String>();
-    private Vector<String>    itsUsedEuropeStations    = new Vector<String>();
+    private ArrayList<String>    itsUsedCoreStations      = new ArrayList<>();
+    private ArrayList<String>    itsUsedRemoteStations    = new ArrayList<>();
+    private ArrayList<String>    itsUsedEuropeStations    = new ArrayList<>();
 
     // Observation Virtual Instrument parameters
     private jOTDBnode itsStationList=null;

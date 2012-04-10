@@ -23,8 +23,8 @@
 package nl.astron.lofar.sas.otbcomponents;
 
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.Vector;
 import javax.swing.DefaultListModel;
 import javax.swing.border.TitledBorder;
 import nl.astron.lofar.lofarutils.LofarUtils;
@@ -60,7 +60,7 @@ public class StationSelectionPanel extends javax.swing.JPanel {
     }
     
 
-    public void setTitle(String aName) {
+    public final void setTitle(String aName) {
         itsName=aName;
         String aTitle = aName+" Station Selection";
         ((TitledBorder)this.getBorder()).setTitle(aTitle);       
@@ -90,19 +90,19 @@ public class StationSelectionPanel extends javax.swing.JPanel {
     private DefaultListModel itsUsedModel             = new DefaultListModel();
     private DefaultListModel itsAvailableModel        = new DefaultListModel();
     private jOTDBtree itsTree                         = null;
-    private Vector<String> itsStationList             = new Vector<String>();
-    private Vector<String> itsUsedStationList         = new Vector<String>();
-    private Vector<String> itsAvailableStationList    = new Vector<String>();
+    private ArrayList<String> itsStationList          = new ArrayList<>();
+    private ArrayList<String> itsUsedStationList       = new ArrayList<>();
+    private ArrayList<String> itsAvailableStationList = new ArrayList<>();
 
     
     public void init() {
         AvailableStationList.setModel(itsAvailableModel);
         UsedStationList.setModel(itsUsedModel);
         try {
-            Vector aTreeList = OtdbRmi.getRemoteOTDB().getTreeList(OtdbRmi.getRemoteTypes().getTreeType("hardware"),
-                    OtdbRmi.getRemoteTypes().getClassif("operational"));
+            ArrayList<jOTDBtree> aTreeList = new ArrayList(OtdbRmi.getRemoteOTDB().getTreeList(OtdbRmi.getRemoteTypes().getTreeType("hardware"),
+                    OtdbRmi.getRemoteTypes().getClassif("operational")));
            for (int k = 0; k < aTreeList.size(); k++) {
-                jOTDBtree tInfo = (jOTDBtree) aTreeList.elementAt(k);
+                jOTDBtree tInfo = aTreeList.get(k);
                 if (OtdbRmi.getTreeState().get(tInfo.state).equals("active")) {
                     itsTree = tInfo;
                     break;
@@ -117,17 +117,13 @@ public class StationSelectionPanel extends javax.swing.JPanel {
 
             // Now we have the operational PIC tree, we need to search for the Ring Node to find
             // all available  stations for that ring
-            Vector stations = OtdbRmi.getRemoteMaintenance().getItemList(itsTree.treeID(), "LOFAR_PIC_"+itsName);
-            Enumeration e = stations.elements();
-            while (e.hasMoreElements()) {
+            ArrayList<jOTDBnode> stations = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(itsTree.treeID(), "LOFAR_PIC_"+itsName));
+            
+            for (jOTDBnode aRingNode: stations) {
+                ArrayList<jOTDBnode> childs = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(itsTree.treeID() ,aRingNode.nodeID(), 1));
+            
+                for (jOTDBnode aNode: childs) {
                 
-                jOTDBnode aRingNode = (jOTDBnode) e.nextElement();
-                Vector childs = OtdbRmi.getRemoteMaintenance().getItemList(itsTree.treeID() ,aRingNode.nodeID(), 1);
-
-                Enumeration ec = childs.elements();
-                while (ec.hasMoreElements()) {
-                   jOTDBnode aNode = (jOTDBnode) ec.nextElement();
-                 
                    if (!aNode.leaf) {
                        // split the name
                        String aName=LofarUtils.keyName(aNode.name);
@@ -159,7 +155,7 @@ public class StationSelectionPanel extends javax.swing.JPanel {
         // loop over UsedStationList and check if the mentioned Stations are (still) in the PIC generated stationList
         // if a station is in the selection list while it is not in the available station List,
         // pop up a warning and remove that station from the list
-        Vector<String> removeStationList = new Vector<String>();
+        ArrayList<String> removeStationList = new ArrayList<>();
         for (int i=0; i< getUsedStationList().size();i++) {
             if (!itsStationList.contains(itsUsedStationList.get(i))) {
                 itsUsedModel.removeElement(getUsedStationList().get(i));
@@ -169,7 +165,7 @@ public class StationSelectionPanel extends javax.swing.JPanel {
         }
 
         for (int i=0; i< removeStationList.size();i++) {
-            itsStationList.removeElement(removeStationList.get(i));
+            itsStationList.remove(i);
         }
         removeStationList.clear();
 
@@ -426,14 +422,14 @@ public class StationSelectionPanel extends javax.swing.JPanel {
     /**
      * @return the itsUsedStationList
      */
-    public Vector<String> getUsedStationList() {
+    public ArrayList<String> getUsedStationList() {
         return itsUsedStationList;
     }
 
     /**
      * @param itsUsedStationList the itsUsedStationList to set
      */
-    public void setUsedStationList(Vector<String> stationList) {
+    public void setUsedStationList(ArrayList<String> stationList) {
         this.itsUsedStationList = stationList;
         this.itsUsedModel.clear();
         for (int i=0; i<stationList.size();i++) {
