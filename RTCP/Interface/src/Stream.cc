@@ -41,13 +41,14 @@
 #include <vector>
 
 using boost::format;
+using namespace std;
 
 namespace LOFAR {
 namespace RTCP {
 
-Stream *createStream(const std::string &descriptor, bool asServer)
+Stream *createStream(const string &descriptor, bool asServer)
 {
-  std::vector<std::string> split = StringUtil::split(descriptor, ':');
+  vector<string> split = StringUtil::split(descriptor, ':');
 
   if (descriptor == "null:")
     return new NullStream;
@@ -80,9 +81,9 @@ Stream *createStream(const std::string &descriptor, bool asServer)
 }
 
 
-std::string getStreamDescriptorBetweenIONandCN(const char *streamType, unsigned ionode, unsigned pset, unsigned core, unsigned numpsets, unsigned numcores, unsigned channel)
+string getStreamDescriptorBetweenIONandCN(const char *streamType, unsigned ionode, unsigned pset, unsigned core, unsigned numpsets, unsigned numcores, unsigned channel)
 {
-  std::string descriptor;
+  string descriptor;
 
   if (strcmp(streamType, "NULL") == 0) {
     descriptor = "null:";
@@ -108,20 +109,31 @@ std::string getStreamDescriptorBetweenIONandCN(const char *streamType, unsigned 
   return descriptor;
 }
 
-
-std::string getStreamDescriptorBetweenIONandStorage(const Parset &parset, OutputType outputType, unsigned streamNr)
+uint16 storageBrokerPort(int observationID)
 {
-  std::string connectionType = parset.getString("OLAP.OLAP_Conn.IONProc_Storage_Transport");
+  return 8000 + observationID % 1000;
+}
+
+
+string getStorageControlDescription(int observationID, int rank)
+{
+  return str(format("[obs %d rank %d] control") % observationID % rank);
+}
+
+
+string getStreamDescriptorBetweenIONandStorage(const Parset &parset, OutputType outputType, unsigned streamNr)
+{
+  string connectionType = parset.getString("OLAP.OLAP_Conn.IONProc_Storage_Transport");
 
   if (connectionType == "NULL") {
     return "null:";
   } else if (connectionType == "TCP") {
 #if defined USE_THREADS
-    std::string host = parset.getHostName(outputType, streamNr);
-    uint16 port = parset.getStorageBrokerPort();
+    string host = parset.getHostName(outputType, streamNr);
+    uint16 port = storageBrokerPort(parset.observationID());
     return str(format("tcpbroker:%s:%u:ion-storage-obs-%u-type-%u-stream-%u") % host % port % parset.observationID() % outputType % streamNr);
 #else    
-    std::string host = parset.getHostName(outputType, streamNr);
+    string host = parset.getHostName(outputType, streamNr);
     return str(format("tcpkey:%s:ion-storage-obs-%u-type-%u-stream-%u") % host % parset.observationID() % outputType % streamNr);
 #endif    
   } else if (connectionType == "FILE") {

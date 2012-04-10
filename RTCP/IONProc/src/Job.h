@@ -87,12 +87,32 @@ class Job : public PLCRunnable
     template <typename SAMPLE_TYPE> void attachToInputSection();
     template <typename SAMPLE_TYPE> void detachFromInputSection();
 
-    static void				 execSSH(const char *sshKey, const char *userName, const char *hostName, const char *executable, const char *rank, const char *parset, const char *cwd, const char *isBigEndian);
-    static void				 forkSSH(const char *sshKey, const char *userName, const char *hostName, const char *executable, const char *rank, const char *parset, const char *cwd, const char *isBigEndian, int &storagePID);
-    void				 joinSSH(int childPID, const std::string &hostName, unsigned &timeout);
-
     void				 startStorageProcesses();
     void				 stopStorageProcesses();
+
+    class StorageProcess {
+    public:
+      StorageProcess( const Parset &parset, const string &logPrefix, int rank, const string &hostname );
+      ~StorageProcess();
+
+      void start();
+      void stop( unsigned &timeout );
+    private:
+      void                               controlThread();
+
+      void			         execSSH(const char *sshKey, const char *userName, const char *hostName, const char *executable, const char *rank, const char *cwd, const char *isBigEndian);
+      void			         forkSSH(const char *sshKey, const char *userName, const char *hostName, const char *executable, const char *rank, const char *cwd, const char *isBigEndian);
+      void				 joinSSH(unsigned &timeout);
+
+      const Parset &itsParset;
+      const std::string itsLogPrefix;
+
+      const int itsRank;
+      const std::string itsHostname;
+
+      int itsPID;
+      SmartPtr<Thread> itsThread;
+    };
 
     void				 waitUntilCloseToStartOfObservation(time_t secondsPriorToStart);
 
@@ -101,8 +121,7 @@ class Job : public PLCRunnable
 
     std::string                          itsLogPrefix;
 
-    std::vector<std::string>		 itsStorageHostNames;
-    std::vector<int>			 itsStoragePIDs;
+    std::vector<SmartPtr<StorageProcess> > itsStorageProcesses;
 
     std::vector<Stream *>		 itsCNstreams, itsPhaseThreeCNstreams;
     Matrix<Stream *>			 itsPhaseOneTwoCNstreams;
