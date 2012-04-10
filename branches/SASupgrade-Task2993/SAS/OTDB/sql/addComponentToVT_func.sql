@@ -51,6 +51,7 @@ CREATE OR REPLACE FUNCTION addComponentToVT(INT4, INT4, INT4, INT4, VARCHAR(150)
 	  vParentRefID		VICtemplate.originID%TYPE;
 	  vDummy			VICparamDef.paramID%TYPE;
 	  vNewName			VARCHAR(150);
+	  vInstances			INT4;
 
 	BEGIN
 	  -- check authorisation(authToken, treeID, func, dummy)
