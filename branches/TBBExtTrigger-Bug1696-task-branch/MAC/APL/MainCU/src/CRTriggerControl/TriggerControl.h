@@ -84,10 +84,17 @@ private:
 	void _presetAdministration();
 	void _cleanupAdministration();
 	bool _addObservation(int obsID);
+    
 	void _handleQueryEvent(GCFEvent& event);
    	void _connectedHandler(GCFPortInterface& port);
    	void _disconnectedHandler(GCFPortInterface& port);
    	void _databaseEventHandler(GCFEvent& answer);
+    
+    void _CRstopHandler(GCFEvent& event, GCFPortInterface& port);
+    void _CRreadHandler(GCFEvent& event, GCFPortInterface& port);
+    void _CRrecordHandler(GCFEvent& event, GCFPortInterface& port);
+    void _CRstopDumpsHandler(GCFEvent& event, GCFPortInterface& port);
+    void _CRcepSpeedHandler(GCFEvent& event, GCFPortInterface& port);
 
 	// ----- data members -----
    	RTDBPropertySet*		itsPropertySet;			// my own propset.
@@ -105,7 +112,6 @@ private:
 		ptime			stopTime;
 	} ObsInfo;
 	map <int /*obsID*/, ObsInfo>		itsObservations;
-
 };
 
   };//MainCU

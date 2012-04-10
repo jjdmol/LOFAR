@@ -36,7 +36,7 @@ namespace LOFAR {
 	using GCF::TM::GCFPortInterface;
 	namespace TBB {
 
-static const int DRIVER_VERSION = 241;
+static const int DRIVER_VERSION = 250;
 
 enum BoardStateT {noBoard,
 				  setImage1, image1Set,
@@ -249,8 +249,9 @@ public:
 	uint32 getImageNr(int32 boardnr);
 	void setImageNr(int32 boardnr, uint32 image);
 	
+	uint32 getImageState(int32 boardnr);
 	uint32 getConfigState(int32 boardnr);
-	void setConfigState(int32 boardnr, uint32 state);
+	void setFlashState(int32 boardnr, uint32 state);
 	
 	bool getFreeToReset(int32 boardnr);
 	void setFreeToReset(int32 boardnr, bool reset);
@@ -474,8 +475,9 @@ inline	uint32 TbbSettings::getMemorySize(int32 boardnr) { return (itsBoardInfo[b
 inline	void TbbSettings::setMemorySize(int32 boardnr,uint32 pages) { itsBoardInfo[boardnr].memorySize = pages; }
 inline	uint32 TbbSettings::getImageNr(int32 boardnr) { return (itsBoardInfo[boardnr].imageNr); }
 inline	void TbbSettings::setImageNr(int32 boardnr,uint32 image) { itsBoardInfo[boardnr].imageNr = image; }
-inline	uint32 TbbSettings::getConfigState(int32 boardnr) { return (itsBoardInfo[boardnr].configState); }
-inline	void TbbSettings::setConfigState(int32 boardnr,uint32 state) { itsBoardInfo[boardnr].configState = state; }
+inline	uint32 TbbSettings::getImageState(int32 boardnr) { return (itsBoardInfo[boardnr].configState & 0x1); }
+inline	uint32 TbbSettings::getConfigState(int32 boardnr) { return ((itsBoardInfo[boardnr].configState >> 1) & 0x3); }
+inline	void TbbSettings::setFlashState(int32 boardnr,uint32 state) { itsBoardInfo[boardnr].configState = state; }
 inline	bool TbbSettings::getFreeToReset(int32 boardnr) { return (itsBoardInfo[boardnr].freeToReset); }
 inline	void TbbSettings::setFreeToReset(int32 boardnr, bool reset) { itsBoardInfo[boardnr].freeToReset = reset; }
 inline	bool TbbSettings::isBoardReady(int32 boardnr) { return(itsBoardInfo[boardnr].boardState == boardReady); }

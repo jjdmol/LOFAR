@@ -1278,7 +1278,6 @@ StationControl::ObsIter StationControl::_searchObsByTimerID(uint32	timerID)
 			return (iter);
 		++iter;
 	}
-
 	return (iter);
 }
 

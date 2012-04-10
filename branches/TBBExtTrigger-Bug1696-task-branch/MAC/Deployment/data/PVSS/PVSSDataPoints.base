@@ -89,6 +89,7 @@ StnPermSW			-		S	N	LOFAR_PermSW
 # Note: the next 2 lines are neccesary for PVSS2SAS to create the PIC tree.
 Cluster				-		S	N	LOFAR_PermSW_@cluster@
 Node				-		S	Y	LOFAR_PermSW_@cluster@_@node@
+CRTriggerControl		CRT		S	Y	LOFAR_PermSW_CRTriggerControl
 Daemons				-		S	N	LOFAR_PermSW_Daemons
 PVSS00pmon			-		S	Y	LOFAR_PermSW_Daemons_PVSS00pmon
 LogProcessor			LGP		S	Y	LOFAR_PermSW_Daemons_LogProcessor

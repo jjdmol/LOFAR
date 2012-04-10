@@ -38,7 +38,7 @@ prelude = << PRELUDE_END
 // STOP_DUMPS_ACK  	(triggerID, result);
 //
 
-#define PSN_CR_TRIGGERPORT		"CRTriggerPort"
+#define PSN_CR_TRIGGERPORT		"LOFAR_TBBControl"
 
 PRELUDE_END;
 
@@ -53,6 +53,11 @@ error = {
 error = {
 	id = TIME;
 	msg = "Time errors, given time in past";
+};
+
+error = {
+	id = OBSERVATION;
+	msg = "Observation errors, given observation not active";
 };
 
 //
@@ -172,6 +177,14 @@ event = {
 		type = "uint32";
 	};
 	param = {
+		name = "observationID";
+		type = "uint32";
+	};
+	param = {
+		name = "stationList";
+		type = "string";
+	};
+	param = {
 		name = "cepDelay";
 		type = "uint32";
 	};
@@ -207,7 +220,7 @@ event = {
 		type = "uint32";
 	};
 	param = {
-		name = "stations";
+		name = "stationList";
 		type = "string";
 	};
 };

@@ -5,8 +5,8 @@ lofar_add_bin_program(TBBControl
   TBBControl.cc
   TBBObservation.cc)
 
-lofar_add_bin_program(etrigctl 
-  etrigctl.cc)
+lofar_add_bin_program(trigctl 
+  trigctl.cc)
 
 install(FILES
   TBBControl.conf

@@ -30,7 +30,7 @@ using namespace LOFAR;
 using namespace GCF::TM;
 using namespace TBB_Protocol;
 using namespace TP_Protocol;
-using	namespace TBB;
+using namespace TBB;
 
 //--Constructors for a ImageInfoCmd object.----------------------------------------
 ImageInfoCmd::ImageInfoCmd():
@@ -141,7 +141,7 @@ void ImageInfoCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
 	TBBImageInfoAckEvent tbb_ack;
 	tbb_ack.board = itsBoard;
-	tbb_ack.active_image = TS->getImageNr(getBoardNr());
+	tbb_ack.active_image = TS->getImageNr(itsBoard);
 	
 	for (int image = 0; image < MAX_N_IMAGES; image++) {
 		tbb_ack.image_version[image] = itsImageVersion[image];	  

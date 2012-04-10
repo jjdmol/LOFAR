@@ -5,3 +5,7 @@
 lofar_add_bin_program(CRTriggerControl
   TriggerControlMain.cc
   TriggerControl.cc)
+
+lofar_add_bin_program(crctl
+  crctl.cc)
+  
