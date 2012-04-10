@@ -223,6 +223,35 @@ $$ LANGUAGE plpgsql IMMUTABLE;
 
 
 --
+-- strippedNodeName (name)
+--
+-- Returns the basic node name without its namespace:
+-- # is stripped of at begin and trailing {xx} is removed.
+-- 
+-- Authorisation: n/a
+--
+-- Tables:	none
+--
+-- Types:	none
+--
+CREATE OR REPLACE FUNCTION strippedNodeName(VARCHAR(150))
+  RETURNS TEXT AS $$
+	DECLARE
+		vColonPos	INT;
+		vName		VARCHAR(150);
+	BEGIN
+		vName     := cleanNodeName($1);
+		vColonPos := position(':' in vName);
+		IF vColonPos > 0 THEN
+			RETURN(substr(vName,vColonPos+1));
+		ELSE
+			RETURN(vName);
+		END IF;
+	END;
+$$ LANGUAGE plpgsql IMMUTABLE;
+
+
+--
 -- isReference (name)
 --
 -- Authorisation: n/a
