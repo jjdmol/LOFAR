@@ -24,8 +24,10 @@
 #include <lofar_config.h>
 
 #include <Common/LofarLogger.h>
+#include <Common/DataConvert.h>
 #include <Common/lofar_datetime.h>
 #include <Interface/Parset.h>
+#include <Interface/SmartPtr.h>
 #include <Interface/Exceptions.h>
 #include <Interface/PrintVector.h>
 #include <Interface/SetOperations.h>
@@ -61,8 +63,12 @@ Parset::Parset(const string &name)
 
 Parset::Parset(Stream *stream)
 {
-  size_t size;
+  uint64 size;
   stream->read(&size, sizeof size);
+
+#if !defined WORDS_BIGENDIAN
+  dataConvert(LittleEndian, &size, 1);
+#endif
 
   std::vector<char> tmp(size + 1);
   stream->read(&tmp[0], size);
@@ -77,9 +83,16 @@ void Parset::write(Stream *stream) const
 {
   std::string buffer;
   writeBuffer(buffer);
-  size_t size = buffer.size();
+  uint64 size = buffer.size();
 
+#if !defined WORDS_BIGENDIAN
+  uint64 size_be = size;
+  dataConvert(BigEndian, &size_be, 1);
+  stream->write(&size_be, sizeof size_be);
+#else  
   stream->write(&size, sizeof size);
+#endif
+
   stream->write(buffer.data(), size);
 }
 
@@ -242,12 +255,6 @@ std::string Parset::getFileName(OutputType outputType, unsigned streamNr) const
 std::string Parset::getDirectoryName(OutputType outputType, unsigned streamNr) const
 {
   return StringUtil::split(getStringVector(keyPrefix(outputType) + ".locations", true)[streamNr], ':')[1];
-}
-
-
-uint16 Parset::getStorageBrokerPort() const
-{
-  return 8000 + observationID() % 1000;
 }
 
 

@@ -41,9 +41,7 @@ then
   LOGPARAMS="-s ccu001:24500"
 
   IONPROC_PARSET="/bghome0/lofarsys/parsets/L$OBSID.parset"
-  STORAGE_PARSET="/globalhome/lofarsystem/log/L$OBSID/L$OBSID.parset"
   EXTRA_KEYS="
-OLAP.Storage.parsetFilename = $STORAGE_PARSET
 OLAP.Storage.userName = lofarsys
 OLAP.Storage.sshIdentityFile = /globalhome/lofarsystem/.ssh/id_rsa
 OLAP.Storage.msWriter=$STORAGE
@@ -67,9 +65,7 @@ else
   LOGPARAMS="-v"
 
   IONPROC_PARSET="$LOGDIR/L$OBSID.parset"
-  STORAGE_PARSET="$LOGDIR/L$OBSID.parset"
   EXTRA_KEYS="
-OLAP.Storage.parsetFilename = $STORAGE_PARSET
 OLAP.Storage.userName = $USER
 OLAP.Storage.sshIdentityFile = $HOME/.ssh/id_rsa
 OLAP.Storage.msWriter = $STORAGE
