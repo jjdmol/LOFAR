@@ -35,7 +35,7 @@
 #include <LofarFT/LofarVbStore.h>
 //#include <LofarFT/LofarVisibilityResamplerBase.h>
 #include <images/Images/PagedImage.h>
-#include <images/Images/ImageInterface.h>
+//#include <images/Images/ImageInterface.h>
 
 #include <Common/OpenMP.h>
 
@@ -83,7 +83,8 @@ ModelImageFft::ModelImageFft( const casa::String &name,
   setAprojection(aprojection);
 
   setImageName(name);
-  //  ImageInterface<Complex>& iimage;    // load image from disk
+  
+  image=new PagedImage<Complex>(name);    // load image from disk
 }
 
 ModelImageFft::~ModelImageFft(void)
@@ -92,17 +93,33 @@ ModelImageFft::~ModelImageFft(void)
   // TODO: Release memory of LatticeCache?
 }
 
-// Get UVW data for Expresion Tree
+// Only do GridFT without w-projection on the visibility grid
 //
-boost::multi_array<dcomplex, 4>  ModelImageFft::getUVW(Double time)
+boost::multi_array<dcomplex, 4>  ModelImageFft::getUVW(const Grid &visGrid)
 {
   boost::multi_array<dcomplex, 4> uvw;    // uvw data to be returned
 
-  // initMaps()
-  
-  // initializeToVis()
+  itsGridder=new GridFT(4000000, 16, itsOptions.ConvType, itsOptions.PhaseDir, 
+                        itsOptions.padding, usezero_p, useDoubleGrid_p);
 
-  // get()
+//  itsGridder->initializeToVis();
+
+  return uvw;
+}
+
+// Get UVW-baseline of stationA and stationB data for Grid
+//
+boost::multi_array<dcomplex, 4>  ModelImageFft::getUVW( uInt stationA, 
+                                                        uInt stationB, 
+                                                        const Grid &visGrid)
+{
+  boost::multi_array<dcomplex, 4> uvw;    // uvw data to be returned
+
+  initMaps();
+  
+  initializeToVis();  // this now works directly on the image in the class attributes
+
+//  get();    // get the resampled uvw-data on the grid
 
   // resize uvw buffer accordingly and copy into it
   
@@ -164,6 +181,10 @@ void ModelImageFft::setDefaults()
     itsOptions.gridMuellerMask=muellerMask;
     itsOptions.degridMuellerMask=muellerMask;
     itsOptions.NThread=1;                       // number of threads used
+
+    itsOptions.polarization=LINEAR;
+//    itsOptions.linearPolarized=true;
+//    itsOptions.circularPolarized=true;
 }
 
 void ModelImageFft::setConvType(const casa::String type)
@@ -293,7 +314,7 @@ void ModelImageFft::setPolarization(polType polarization)
 
 //*********************************************
 //
-// LofarFtMachine functions
+// LofarFtMachine functions re-innovated
 //
 //*********************************************
 
@@ -337,12 +358,13 @@ void ModelImageFft::computeConvolutionFunctions()
 
 // Initialize for a transform from the Sky domain. This means that
 // we grid-correct, and FFT the image
-void ModelImageFft::initializeToVis(ImageInterface<Complex>& iimage)
+//void ModelImageFft::initializeToVis(casa::ImageInterface<casa::Complex>& iimage)
+void ModelImageFft::initializeToVis()
 {
   if (itsOptions.verbose > 0) {
     cout<<"---------------------------> initializeToVis"<<endl;
   }
-  image=&iimage;
+//  image=&iimage;    // we have direct access to the class variable
 
 //  ok();   // don't do this
   init();
@@ -352,9 +374,13 @@ void ModelImageFft::initializeToVis(ImageInterface<Complex>& iimage)
 //  initMaps(vb);
   initMaps();
 
-  visResamplers_p.init(useDoubleGrid_p);
-  visResamplers_p.setMaps(chanMap_p, polMap_p);
-  visResamplers_p.setCFMaps(CFMap_p, ConjCFMap_p);
+  // With W-projection or A-projection use visResampler
+  if(wprojection()==true || aprojection()==true)
+  {
+    visResamplers_p.init(useDoubleGrid_p);
+    visResamplers_p.setMaps(chanMap_p, polMap_p);
+    visResamplers_p.setCFMaps(CFMap_p, ConjCFMap_p);
+  }
 
   // Need to reset nx, ny for padding
   // Padding is possible only for non-tiled processing
@@ -547,8 +573,8 @@ void ModelImageFft::init()
   }
   else    // use normal GridFT function
   {
-    GridFT(4000000, 16, itsOptions.ConvType, itsOptions.PhaseDir, itsOptions.padding, 
-           usezero_p, useDoubleGrid_p);
+    GridFT *itsGridder=new GridFT( 4000000, 16, itsOptions.ConvType, itsOptions.PhaseDir, 
+                                  itsOptions.padding, usezero_p, useDoubleGrid_p);
   }
 }
 
@@ -781,6 +807,8 @@ void ModelImageFft::initMaps(void)
 //
 void initPolInfo()
 {
+  // get correlation types from our own dummy function
+  ;
 
 /*
   void FTMachine::initPolInfo(const VisBuffer& vb)
@@ -803,16 +831,18 @@ void initPolInfo()
 
 }
 
+// Set up correlations vector depending on linear or circular polarization
+//
 Vector<Int> ModelImageFft::getCorrType()
 {
   Vector<Int> corrType(4);
 
   if(isLinear())
   {
-    corrType[0]=Stokes::I;
-    corrType[1]=Stokes::Q;
-    corrType[2]=Stokes::U;
-    corrType[3]=Stokes::V;
+    corrType[0]=Stokes::XX;
+    corrType[1]=Stokes::XY;
+    corrType[2]=Stokes::YX;
+    corrType[3]=Stokes::YY;
   }
   else
   {
@@ -1023,3 +1053,79 @@ void ModelImageFft::get(VisBuffer& vb, Int row)
   interpolateFrequencyFromgrid(vb, data, FTMachine::MODEL);
 }
 */
+
+// Check that input model image has Jy/pixel flux
+//
+bool ModelImageFft::validModelImage(const casa::String &imageName, string &error)
+{
+  size_t pos=string::npos;
+  bool valid=false;
+  bool validName=false, validUnit=false;
+
+  if((pos=imageName.find(".model")) != string::npos)   // Check filename extension
+  {
+    validName=true;
+  }
+  else if((pos=imageName.find(".img")) != string::npos)
+  {
+    error="Image filename ";
+    error.append(imageName).append(" must have .model extension.");
+    validName=false;    
+  }
+  else if((pos=imageName.find(".image")) != string::npos)
+  {
+    error="Image filename ";
+    error.append(imageName).append(" must have .model extension.");
+    validName=false;
+  }
+  else    // no extension is acceptable
+  {
+    validName=true;     // can we accept no extension?
+  }
+
+  // Look for Jy/beam entry in file table keywords "unit"
+  Table image(imageName);                                       // open image-table as read-only
+  const TableRecord &imageKeywords(image.keywordSet());
+  RecordFieldId unitsId("units");
+  string units=imageKeywords.asString(unitsId);
+  if(units=="Jy/pixel")
+  {
+    validUnit=true;
+  }
+  else
+  {
+    error="Image ";
+    error.append(imageName).append(" must have flux unit Jy/pixel.");
+    validUnit=false;
+  }
+
+  if(validName && validUnit)    // Determine final validity
+  {
+    valid=true;
+  }
+  else
+  {
+    valid=false;
+  }
+  return valid;
+}
+
+// Get the patch direction, i.e. RA/Dec of the central image pixel
+//
+casa::MDirection ModelImageFft::getPatchDirection(const ImageInterface<Complex> &image)
+{
+  casa::IPosition imageShape;                             // shape of image
+  casa::Vector<casa::Double> Pixel(2);                    // pixel coords vector of image centre
+  casa::MDirection MDirWorld(casa::MDirection::J2000);   // astronomical direction in J2000
+//  casa::PagedImage<casa::Float> image(patchName);         // open image
+    
+  imageShape=image.shape();                               // get centre pixel
+  Pixel[0]=floor(imageShape[0]/2);
+  Pixel[1]=floor(imageShape[1]/2);
+
+  // Determine DirectionCoordinate
+  casa::DirectionCoordinate dir(image.coordinates().directionCoordinate (image.coordinates().findCoordinate(casa::Coordinate::DIRECTION)));
+  dir.toWorld(MDirWorld, Pixel);
+
+  return MDirWorld;
+}

@@ -30,6 +30,7 @@
 #include <LofarFT/LofarCFStore.h>
 #include <LofarFT/LofarVisResampler.h>
 //#include <msvis/MSVis/VisBuffer.h>
+#include <ParmDB/Grid.h>
 #include <BBSKernel/ModelImageConvolutionFunction.h>
 
 #include <boost/multi_array.hpp>
@@ -73,8 +74,8 @@ typedef struct ModelImageOptions
   uInt nchan;                             // number of channels
   Vector<Double> frequencies;             // vector with channel frequencies
   polType polarization;                   // its polarization LINEAR or CIRCULAR
-  bool linearPolarized;                   // uvw data is linearly polarized
-  bool circularPolarized;                 // uvw data is circularly polarized
+//  bool linearPolarized;                   // uvw data is linearly polarized
+//  bool circularPolarized;                 // uvw data is circularly polarized
 };
 
 class ModelImageFft : public casa::FTMachine
@@ -164,11 +165,27 @@ public:
   bool isLinear() const;    // { return itsOptions.linearlyPolarized; }
   bool isCircular() const;  // { return itsOptions.circularlyPolarized; }
   
-  // Data access function
-  boost::multi_array<dcomplex, 4> getUVW(Double time=0);
-  
+  // Data access functions
+  boost::multi_array<dcomplex, 4>  getUVW(const Grid &visGrid);
+  boost::multi_array<dcomplex, 4>  getUVW(uInt stationA, 
+                                          uInt stationB, 
+                                          const Grid &grid);
+
+/*
+void VisDimensions::setCorrelations(const CorrelationSeq &axis)
+{
+    itsCorrelationAxis = axis;
+}
+*/  
+
 private:
+//  CorrelationSeq itsCorrelations;
+
   casa::ImageInterface<Complex> *image;
+  GridFT *itsGridder;           // gridder for simple GridFT
+
+  bool validModelImage(const casa::String &imageName, string &error);  // validate model image
+
   //casa::LatticeCache<Complex> *imageCache;        // Image / FFT of image (ffted in place)
 //  casa::VisBuffer itsDummyVb;   // dummy VisBuffer needed for interface
 
@@ -203,11 +220,13 @@ private:
   ModelImageOptions itsOptions;                  // struct containing all options
   void fftImage();                               // perform FFT on image
   void getImagePhaseDirection();                 // get the phase direction of the image
+  casa::MDirection getPatchDirection(const ImageInterface<Complex> &image);
   casa::Vector<casa::Int> getCorrType();         // get correlation type the class is set to 
 
   //-----------------------------------------------------------------  
   // FTmachine functions
-  void initializeToVis( ImageInterface<Complex>& iimage);
+//  void initializeToVis(casa::ImageInterface<casa::Complex>& iimage);
+  void initializeToVis();
 //  void get(VisBuffer& vb, Int row);
 
   // Gridder functions
@@ -244,7 +263,7 @@ private:
   Int nx,ny;                             // where else does this come from?
   Int nchan, npol;                       // where else does this come from?
   
-  CFStore cfs_p, cfwts_p;
+  CFStore cfs_p, cfwts_p; 
 };
 
 } //# namespace BBS
