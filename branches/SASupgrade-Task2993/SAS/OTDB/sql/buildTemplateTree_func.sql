@@ -93,10 +93,11 @@ CREATE OR REPLACE FUNCTION instanciateVTleafNode(INT4, INT4, INT4, VARCHAR(150))
 		vNewNodeID	VICtemplate.nodeID%TYPE;
 		vTablename	VICtemplate.tablename%TYPE;
 		vRecordID	VICtemplate.recordID%TYPE;
+		vInstances	INT2;
 
 	BEGIN
 --RAISE WARNING 'leafNode:%,%,%', $1, $2, $3, $4;
-	  SELECT	nodeID, name, constraints, tablename
+	  SELECT	nodeID, name, version, constraints, tablename
 	  INTO		vNode
 	  FROM 		VICnodeDef
 	  WHERE		nodeID = $1;
@@ -111,11 +112,24 @@ CREATE OR REPLACE FUNCTION instanciateVTleafNode(INT4, INT4, INT4, VARCHAR(150))
 		vRecordID := 0;
 	  END IF;
 
+	  BEGIN
+		SELECT        CAST(limits AS INT2)
+		INTO          vInstances
+		FROM          VICparamdef
+		WHERE         name = childNodeName(vNode.name, vNode.version);
+		IF NOT FOUND THEN
+		  vInstances := 1;
+		END IF;
+	  EXCEPTION
+		WHEN invalid_text_representation THEN
+		  vInstances := 1;
+	  END;
+
 	  vNewNodeID := nextval('VICtemplateID');
 	  INSERT 
 	  INTO	 VICtemplate(treeID, nodeID, parentID, originID, name, leaf, instances, 
 				limits, recordID, tablename)
-	  VALUES ($2, vNewNodeID, $3, vNode.nodeID,  vNode.name, false, 1, 
+	  VALUES ($2, vNewNodeID, $3, vNode.nodeID, strippedNodeName(vNode.name), false, 1, 
 				dataValue(vNode.constraints, vRecordID, vTablename), vRecordID, vTablename);
 	  -- note: nodeId and index are defaulted.
 
