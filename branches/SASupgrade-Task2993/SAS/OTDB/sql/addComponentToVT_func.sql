@@ -98,24 +98,35 @@ CREATE OR REPLACE FUNCTION addComponentToVT(INT4, INT4, INT4, INT4, VARCHAR(150)
 	  END IF;
 
 	  -- check if this node may be a child from the parent.
-	  IF $4 <> 0 THEN
-	    -- first get definition of parent
-		SELECT originID
-		INTO   vParentRefID
-		FROM   VICtemplate
-		WHERE  nodeID = $4;
-		-- we assume it exists, because it was added before!
+      BEGIN
+	    IF $4 <> 0 THEN
+	      -- first get definition of parent
+		  SELECT originID
+		  INTO   vParentRefID
+		  FROM   VICtemplate
+		  WHERE  nodeID = $4;
+		  -- we assume it exists, because it was added before!
 
-		SELECT paramid
-		INTO   vDummy
-		FROM   VICparamDef
-		WHERE  nodeID = vParentRefID
-		AND	   name = childNodeName(vNodeName, vVersion);
-		IF NOT FOUND THEN
-		  RAISE EXCEPTION 'Node % cannot be a child from parent %', 
+		  -- note: limits contains `instances` default.
+		  SELECT paramid,CAST(limits AS INT2)
+		  INTO   vDummy,vInstances
+		  FROM   VICparamDef
+		  WHERE  nodeID = vParentRefID
+		  AND	   name = childNodeName(vNodeName, vVersion);
+		  IF NOT FOUND THEN
+		    RAISE EXCEPTION 'Node % cannot be a child from parent %', 
 							vNodeName, $4;
-		END IF;
-	  END IF;
+		  END IF;
+	    ELSE -- $4 == 0: top node
+		  SELECT CAST(limits AS INT2)
+		  INTO   vInstances
+		  FROM   VICparamDef
+		  WHERE  name = childNodeName(vNodeName, vVersion);
+	    END IF;
+	  EXCEPTION  -- catch possible exception of cast
+		WHEN invalid_text_representation THEN
+		  vInstances := 1;
+	  END;
 
 	  -- if no newname was specified use existing one
 	  IF length($5) < 2 THEN

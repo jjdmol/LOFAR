@@ -142,7 +142,7 @@ CREATE TABLE VICtemplate (
 	instances	INT2			NOT NULL DEFAULT 1,
 	limits		TEXT,			-- interpreted by GUI: range, enum, default
 	recordID	INT4,			-- when value is in a separate table
-	tablename	VARCHAR(40),	-- when value is in a separate table
+	tablename	VARCHAR(40)		DEFAULT '',	-- when value is in a separate table
 
 	CONSTRAINT 	VTempl_PK 		PRIMARY KEY (treeID, nodeID),
 	CONSTRAINT	VTemplNode_uniqin_tree	UNIQUE(treeID, nodeID)
@@ -193,7 +193,7 @@ CREATE TABLE VIChierarchy (
 	leaf		BOOLEAN			DEFAULT TRUE,
 	value		TEXT,			-- empty for nodes, filled for params
 	recordID	INT4,			-- when value is in a separate table
-	tablename	VARCHAR(40),	-- when value is in a separate table
+	tablename	VARCHAR(40)		DEFAULT '',  -- when value is in a separate table
 
 	CONSTRAINT      VIChierarchy_PK		PRIMARY KEY (treeid, nodeid),
 	CONSTRAINT	Vparam_uniq_in_tree	UNIQUE(treeID, nodeID)
