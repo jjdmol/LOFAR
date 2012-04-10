@@ -4,7 +4,7 @@
 #
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node  DataProducts     4.0.2  development 'node constraint'  "Place holder for all data products"
+node  DataProducts     4.0.2  development 'node constraint'  "Place holder for all ouput data products"
 
 #
 # name				name of the parameter
@@ -17,12 +17,12 @@ node  DataProducts     4.0.2  development 'node constraint'  "Place holder for a
 # constraint		script to run to check its value
 # description		what the parameter manages.
 #--------------------------------------------------------------------------------------------------------
-#    name                dir. type   unit   prun. vm   value                   constr.  descr.
+#    name                         dir. type   unit   prun. vm   value                   constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par  nrOfOutput_Correlated_    	 I      int     -       10    0    0                      -     'Number of Correlated DataProducts'
-par  nrOfOutput_BeamFormed_   	 I      int     -       10    0    0                      -     'Number of BeamFormed DataProducts'
-par  nrOfOutput_InstrumentModel_ I      int     -       10    0    0                      -     'Number of InstrumentModel DataProducts'
-par  nrOfOutput_SkyImage_   	 I      int     -       10    0    0                      -     'Number of SkyImage DataProducts'
+par  nrOfOutput_Correlated_    	  I      int     -       10    0    0                      -     'Number of Correlated DataProducts'
+par  nrOfOutput_BeamFormed_   	  I      int     -       10    0    0                      -     'Number of BeamFormed DataProducts'
+par  nrOfOutput_InstrumentModels_ I      int     -       10    0    0                      -     'Number of InstrumentModel DataProducts'
+par  nrOfOutput_SkyImages_   	  I      int     -       10    0    0                      -     'Number of SkyImage DataProducts'
 
 
 
@@ -32,5 +32,5 @@ par  nrOfOutput_SkyImage_   	 I      int     -       10    0    0               
 uses  @dataproduct@   		4.0.2  development 'node constraint'  "Storage settings for @dataproduct@ type"
 uses  Output_Correlated_	4.0.0  development 'node constraint'  "Storage settings for Correlated dataProduct type"
 uses  Output_BeamFormed_	4.0.0  development 'node constraint'  "Storage settings for BeamFormed dataProduct type"
-uses  Output_InstrumentModels_	4.0.0  development 'node constraint'  "Storage settings for InstrumentModel dataProduct type"
-uses  Output_SkyImages_		4.0.0  development 'node constraint'  "Storage settings for SkyImage dataProduct type"
+uses  Output_InstrumentModel_	4.0.0  development 'node constraint'  "Storage settings for InstrumentModel dataProduct type"
+uses  Output_SkyImage_		4.0.0  development 'node constraint'  "Storage settings for SkyImage dataProduct type"

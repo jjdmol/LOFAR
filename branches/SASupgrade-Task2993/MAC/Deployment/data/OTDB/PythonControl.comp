@@ -1,6 +1,6 @@
 # -- PythonControl--
 #
-# $Id: PythonControl.comp2 14475 2009-11-17 14:49:28Z coolen $
+# $Id$
 #
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
@@ -18,10 +18,12 @@ par  observationDirectory	I    text   -	100		0	'/data/L${YEAR}_${MSNUMBER}'			-	
 par  canCommunicate	 		I    bool   -	10		0	'true'			-	"Temp flag to tell MAC if the current PythonController can respond to CONTROL_xxx messages"
 par  metadataFeedbackFile 	I    text   -	10		0	''			-	"File that the Python framework can use for feedback after processing is ready."
 
-#uses  ApplCtrl    4.0.0  development 	1	"The ACC controller"
-#uses  Flagger	   4.0.0  development 	1	"Flagger"
-uses  DPPP	   4.0.0  development 	1	"DPcube"
-uses  BBS  	   4.0.0  development 	1	"Blackboard System"
-uses  Imager 	   4.0.0  development 	1	"Imager"
+uses DPPP	   4.0.0  development 	1	"DPcube"
+uses BBS  	   4.0.0  development 	1	"Blackboard System"
+uses Imaging 	   4.0.0  development 	1	"Imaging"
+uses AWimager      4.0.0  development   1       "awimager"
+uses GSM 	   4.0.0  development 	1	"GSM"
+uses BDSM 	   4.0.0  development 	1	"BDSM"
+uses Calibration   4.0.0  development   1   	"Calibration"
 
 
