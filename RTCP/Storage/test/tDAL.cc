@@ -1,4 +1,4 @@
-//# tLDA: Test HDF5 routines through LDA
+//# tDAL: Test HDF5 routines through DAL
 //#
 //#  Copyright (C) 2011
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,18 +22,18 @@
 
 #include <lofar_config.h>
 
-#ifdef HAVE_LDA
+#ifdef HAVE_DAL
 
-#include <lda_version.h>
+#include <dal_version.h>
 #include <iostream>
 #include <string>
 
 using namespace std;
-using namespace LDA;
+using namespace DAL;
 
 int main() {
   if (!check_hdf5_versions()) {
-    cerr << "HDF5 version mismatch. LDA was compiled with " << get_lda_hdf5_version() << ", our headers are " << get_current_hdf5_header_version() << ", our library is " << get_current_hdf5_lib_version() << endl;
+    cerr << "HDF5 version mismatch. DAL was compiled with " << get_dal_hdf5_version() << ", our headers are " << get_current_hdf5_header_version() << ", our library is " << get_current_hdf5_lib_version() << endl;
     return 1;
   }
   
