@@ -196,6 +196,7 @@ ${INSTALL_BGFEN}:	configure
 # Build and install Storage_main
 ${INSTALL_LHN}:		configure
 	ssh ${LHN_HOST} 'cd ${BUILD_DIR}/lhn/gnu_opt && make -j16 install'
+	ssh ${LHN_HOST} 'for d in `ldd ${LOCUS_INSTALL_DIR}/bin/Storage_main | awk "/=> \// { print \\$$3; }"`; do echo "Scanning dependency $$d"; if [ "`stat -f -c %T $$d`" == "nfs" ]; then echo "Copying dependency $$d from NFS to local disk"; cp $$d ${LOCUS_INSTALL_DIR}/lib; fi; done'
 	ssh ${LHN_HOST} "cexec ${LOCUS_NODES} 'mkdir -p `dirname ${LOCUS_INSTALL_DIR}` && time scp -rq ${LHN_HOST}:${LOCUS_INSTALL_DIR} `dirname ${LOCUS_INSTALL_DIR}` && sudo /sbin/setcap ${STORAGE_CAPABILITIES}=ep ${LOCUS_INSTALL_DIR}/bin/Storage_main'"
 
 # Activate the installation
