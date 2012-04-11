@@ -9,7 +9,7 @@ lofar_add_library(storage
   OutputThread.cc
   SubbandWriter.cc
   MSWriter.cc
-  MSWriterLDA.cc
+  MSWriterDAL.cc
   MSWriterNull.cc
   MSWriterFile.cc
   Format.cc
