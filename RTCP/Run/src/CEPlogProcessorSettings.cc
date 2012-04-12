@@ -5,6 +5,6 @@
 
 int main()
 {
-  std::cout << "host: " << "ccu001" << std::endl;
-  std::cout << "port: " << CEP_LOGPROC_LOGGING << std::endl;
+  std::cout << "production: " << "ccu001:" << CEP_LOGPROC_LOGGING << std::endl;
+  std::cout << "test: " << "ccu099:" << CEP_LOGPROC_LOGGING << std::endl;
 }
