@@ -264,9 +264,9 @@ class SkyImage(DataProduct):
 
     @staticmethod
     def _get_pointing(image):
-        angles = list(image.getattr('LOFAR_FIELD', 'PHASE_DIR')[0][0])
+        angles = list(image.attrget('LOFAR_FIELD', 'PHASE_DIR', 0)[0])
         data = {
-            'equinox' : image.getattrmeas('LOFAR_FIELD', 'PHASE_DIR')[1],
+            'equinox' : image.attrgetmeas('LOFAR_FIELD', 'PHASE_DIR')[1],
             'coordType' : "RA-DEC",     ### Correct? ###
             'angle1' : angles[0],
             'angle2' : angles[1]
@@ -312,7 +312,7 @@ class SkyImage(DataProduct):
         _axis = {
             'name' : spectral._coord['name'],
             'units' : spectral.get_unit(),
-            'length' : spectral.get_axis_size(n)
+            'length' : spectral.get_axis_size()
         }
         # Assume spectral linear axis if spectral._coord['wcs'] exists 
         if spectral._coord['wcs']:
