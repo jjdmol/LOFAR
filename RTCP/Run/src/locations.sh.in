@@ -26,9 +26,15 @@ then
   then
     ISTESTENV=1
     STORAGE_HOME=/data/home/lofartest
+
+    IONPROC_PARSET="/bghome0/lofarsys/parsets/T$OBSID.parset"
+    LOGPARAMS="-s ccu099:23900"
   else
     ISTESTENV=0
     STORAGE_HOME=/data/home/lofarsys
+
+    IONPROC_PARSET="/bghome0/lofarsys/parsets/L$OBSID.parset"
+    LOGPARAMS="-s ccu001:23900"
   fi
 
   CNPROC=$HOME/production/lofar/bgp_cn/bin/CN_Processing
@@ -38,9 +44,7 @@ then
   LOGDIR=/localhome/log
   RUNDIR=/globalhome/lofarsystem
   LOGBACKUPDIR=/globalhome/lofarsystem/log-archive
-  LOGPARAMS="-s ccu001:24500"
 
-  IONPROC_PARSET="/bghome0/lofarsys/parsets/L$OBSID.parset"
   EXTRA_KEYS="
 OLAP.Storage.userName = lofarsys
 OLAP.Storage.sshIdentityFile = /globalhome/lofarsystem/.ssh/id_rsa
