@@ -29,7 +29,8 @@ par  nrOfOutput_SkyImages_   	  I      int     -       10    0    0             
 
 #    name              		dir.    type   unit     prun.   vm      value   constr. descr.
 #--------------------------------------------------------------------------------------------------------
-uses  @dataproduct@   		4.0.2  development 'node constraint'  "Storage settings for @dataproduct@ type"
+uses  @inputdataproduct@        4.0.2  development 'node constraint'  "Storage settings for @inputdataproduct@ type"
+uses  @outputdataproduct@       4.0.2  development 'node constraint'  "Storage settings for @outputdataproduct@ type"
 uses  Output_Correlated_	4.0.0  development 'node constraint'  "Storage settings for Correlated dataProduct type"
 uses  Output_BeamFormed_	4.0.0  development 'node constraint'  "Storage settings for BeamFormed dataProduct type"
 uses  Output_InstrumentModel_	4.0.0  development 'node constraint'  "Storage settings for InstrumentModel dataProduct type"
