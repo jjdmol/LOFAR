@@ -70,6 +70,7 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
 
         #collect the inputs        
         input_map = load_data_map(self.inputs['args'][0])
+
         executable = self.inputs['executable']
         init_script = self.inputs['initscript']
         parset = self.inputs['parset']
@@ -81,8 +82,17 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
         node_command = "python %s" % (self.__file__.replace("master", "nodes"))
         # Create the jobs
         jobs = []
+        sourcedb_path_map = load_data_map(sourcedb_path)
         outnames = collections.defaultdict(list)
-        for host, measurement_set in input_map:
+        for ms, source in zip(input_map, sourcedb_path_map):
+            # both the sourcedb and the measurement are in a map
+            # unpack both
+            host , measurement_set = ms
+            host2 , sourcedb_path = source
+            #sanity check:
+            if host != host2:
+                self.logger.warn("sourcedb and measurement set host do not match")
+                return 1
             #construct and save the output name
             outnames[host].append(measurement_set)
             arguments = [executable, init_script, parset, working_directory, output_image,
@@ -100,7 +110,7 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
             #TODO else: aw imager failed 
 
         if self.error.isSet():
-            self.logger.warn("Failed awimager run detected")
+            self.logger.warn("Failed awimager node run detected")
             return 1
 
         store_data_map(self.inputs['mapfile'], created_awimages)
