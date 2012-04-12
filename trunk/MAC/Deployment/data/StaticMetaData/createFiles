@@ -751,29 +751,34 @@ if (sys.argv[1] == "localhost" or sys.argv[1] == "test" ):
                     partitionName = sys.argv[2];
             else:
                 partitionName = "R00";
-            if (sys.argv[1] == "test"):
-                print "Setting up station "+stationName+" for TEST use"
-            elif (ilt_local == 0):
-                print "Setting up station "+stationName+" for ILT use"
+            if (stationName[0:3].upper() == "CCU"):
+                # CCU needs RSPConnections.dat for CEP in PVSS
                 print "Using BG/P partition " + partitionName + " for creating destination MAC addresses"
+                createRSPConnectionsFile(resultDir, dataDir, partitionName)
             else:
-                print "Setting up station "+stationName+" for LOCAL use"
+                if (sys.argv[1] == "test"):
+                    print "Setting up station "+stationName+" for TEST use"
+                elif (ilt_local == 0):
+                    print "Setting up station "+stationName+" for ILT use"
+                    print "Using BG/P partition " + partitionName + " for creating destination MAC addresses"
+                else:
+                    print "Setting up station "+stationName+" for LOCAL use"
 
-            if (sys.argv[1] == "test"):
-                createRSPDriverFile_Test(resultDir, stationName, dataDir, alias)
-            else:
-                createRSPDriverFile    (resultDir, stationName, dataDir, partitionName,ilt_local) 
-            createTBBDriverFile    (resultDir, stationName, dataDir)
-            createRemoteStationFile(resultDir, stationName, dataDir)
-            createAntennaArraysFile(resultDir, stationName, dataDir)
-            createAntennaFieldFile (resultDir, stationName, dataDir)
-            createCableDelaysFile  (resultDir, stationName, dataDir)
-            createHBADeltasFile    (resultDir, stationName, dataDir)
-            createiHBADeltasFile   (resultDir, stationName, dataDir)
-#            createPPSFile          (resultDir, stationName, dataDir)
-#            createCalTableFile     (resultDir, stationName, dataDir)
-            createHardwareMonitorFile(resultDir, stationName, dataDir)
-            de601Exceptions        (resultDir, stationName, dataDir)
+                if (sys.argv[1] == "test"):
+                    createRSPDriverFile_Test(resultDir, stationName, dataDir, alias)
+                else:
+                    createRSPDriverFile    (resultDir, stationName, dataDir, partitionName,ilt_local) 
+                createTBBDriverFile    (resultDir, stationName, dataDir)
+                createRemoteStationFile(resultDir, stationName, dataDir)
+                createAntennaArraysFile(resultDir, stationName, dataDir)
+                createAntennaFieldFile (resultDir, stationName, dataDir)
+                createCableDelaysFile  (resultDir, stationName, dataDir)
+                createHBADeltasFile    (resultDir, stationName, dataDir)
+                createiHBADeltasFile   (resultDir, stationName, dataDir)
+    #            createPPSFile          (resultDir, stationName, dataDir)
+    #            createCalTableFile     (resultDir, stationName, dataDir)
+                createHardwareMonitorFile(resultDir, stationName, dataDir)
+                de601Exceptions        (resultDir, stationName, dataDir)
     else:
         print "Cannot determine stationname"
         sys.exit(1)
