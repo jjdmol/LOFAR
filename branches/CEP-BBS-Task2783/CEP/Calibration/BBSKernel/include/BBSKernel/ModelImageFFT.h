@@ -24,16 +24,19 @@
 #ifndef LOFAR_BBSKERNEL_MODELIMAGEFFT_H
 #define LOFAR_BBSKERNEL_MODELIMAGEFFT_H
 
+#include <synthesis/MeasurementComponents/VBStore.h>
+//#include <>
 #include <coordinates/Coordinates/DirectionCoordinate.h>    // DirectionCoordinate needed for patch direction
 #include <casa/OS/PrecTimer.h>
 #include <scimath/Mathematics/ConvolveGridder.h>
-#include <LofarFT/LofarCFStore.h>
-#include <LofarFT/LofarVisResampler.h>
+//#include <LofarFT/LofarCFStore.h>
+//#include <LofarFT/LofarVisResampler.h>
 //#include <msvis/MSVis/VisBuffer.h>
 #include <ParmDB/Grid.h>
 #include <BBSKernel/ModelImageConvolutionFunction.h>
+#include <BBSKernel/ModelImageVisibilityResampler.h>
 
-#include <boost/multi_array.hpp>
+//#include <boost/multi_array.hpp>
 
 namespace LOFAR
 {
@@ -166,38 +169,28 @@ public:
   bool isCircular() const;  // { return itsOptions.circularlyPolarized; }
   
   // Data access functions
-  boost::multi_array<dcomplex, 4>  getUVW(const Grid &visGrid);
-  boost::multi_array<dcomplex, 4>  getUVW(uInt stationA, 
-                                          uInt stationB, 
-                                          const Grid &grid);
+  void getUVW(const Matrix<double>& uvw, const Vector<Int>& chanMap, size_t bufSize, 
+              DComplex* xx, DComplex* xy, DComplex* yx, DComplex* yy);
 
-/*
-void VisDimensions::setCorrelations(const CorrelationSeq &axis)
-{
-    itsCorrelationAxis = axis;
-}
-*/  
+  // VisibilityResampler from casarest
+  //void DataToGrid(Array<DComplex>& griddedData, VBStore& vbs, 
+  //                Matrix<Double>& sumwt, const Bool& dopsf);
 
 private:
 //  CorrelationSeq itsCorrelations;
 
   casa::ImageInterface<Complex> *image;
-  GridFT *itsGridder;           // gridder for simple GridFT
+//  GridFT *itsGridder;           // gridder for simple GridFT
 
   bool validModelImage(const casa::String &imageName, string &error);  // validate model image
 
-  //casa::LatticeCache<Complex> *imageCache;        // Image / FFT of image (ffted in place)
-//  casa::VisBuffer itsDummyVb;   // dummy VisBuffer needed for interface
-
   void init();                  // initialize LofarFTMachine (might change to all-in-one init)
-//  void initVb(uInt npol, uInt nchan, bool circularPol=False);
   void initChannels();
-  void initMaps();             // init polarization and channel maps
+  void initMaps();              // init polarization and channel maps
+  void initPolMap();            // init polarization map
 
-  // Pre-computed convolution functions for w-projection (indexed by w-plane number)
-  CountedPtr<LOFAR::BBS::LofarConvolutionFunction> itsConvFunc;
-//    Vector<casa::PagedImage *> itsConvolutionFunctionsImages;
-//  Vector<CountedPtr<LOFAR::BBS::LofarConvolutionFunction> > itsConvolutionFunctions;
+  ModelImageVisibilityResampler::ModelImageVisibilityResampler itsVisResampler;
+  casa::CFStore itsConvFunc;
 
   // Constructor: cachesize is the size of the cache in words
   // (e.g. a few million is a good number), tilesize is the
@@ -211,7 +204,7 @@ private:
   // <group>
 
   // Timers to keep track of timing of steps
-  double itsGriddingTime; 
+//  double itsGriddingTime; 
   PrecTimer itsTotalTimer;
   double itsCFTime;
 
@@ -223,44 +216,41 @@ private:
   casa::MDirection getPatchDirection(const ImageInterface<Complex> &image);
   casa::Vector<casa::Int> getCorrType();         // get correlation type the class is set to 
 
-  //-----------------------------------------------------------------  
-  // FTmachine functions
-//  void initializeToVis(casa::ImageInterface<casa::Complex>& iimage);
-  void initializeToVis();
-//  void get(VisBuffer& vb, Int row);
+  CountedPtr<Lattice<Complex> > lattice;
+
 
   // Gridder functions
-//    LofarVisResampler visResamplers_p;
-//    CountedPtr<LOFAR::VisibilityResamplerBase> visResampler_p;         // visibility resampler
-  LOFAR::LofarVisResampler visResamplers_p;
-  LOFAR::ConvolveGridder<casa::Double, casa::Complex>* gridder;      // Gridder
-  CountedPtr<casa::Lattice<casa::Complex> > arrayLattice;            // Array lattice
+
+//  CountedPtr<LOFAR::VisibilityResampler> itsVisResampler;        // visibility resampler
+
   // Lattice. For non-tiled gridding, this will point to arrayLattice,
   //  whereas for tiled gridding, this points to the image (TODO: tidy up, we don't tile at all)
-  CountedPtr<Lattice<Complex> > lattice;
+  // This was all high-level stuff, can most likely go
+//  CountedPtr<casa::Lattice<casa::Complex> > arrayLattice;            // Array lattice
+
   IPosition centerLoc, offsetLoc;         // Useful IPositions
   Vector<Double> uvScale, uvOffset;       // Image Scaling and offset
 
   // Arrays for non-tiled gridding (one per thread).
-  Array<Complex>  itsGriddedData;
-  Array<DComplex> itsGriddedData2;
-  vector< Matrix<Complex> > itsSumPB;
-  vector< Matrix<Double> >  itsSumWeight;
-  vector< double > itsSumCFWeight;
+//  Array<Complex>  itsGriddedData;
+//  Array<DComplex> itsGriddedData2;
+//  vector< Matrix<Complex> > itsSumPB;
+//  vector< Matrix<Double> >  itsSumWeight;
+//  vector< double > itsSumCFWeight;
 
   // Grid and padding
-  IPosition padded_shape;                // Shape of the padded image
-  Bool useDoubleGrid_p;                  // use double precision grid
-  Bool canComputeResiduals_p;
-  Bool noPadding_p;                      //force no padding
-  Float padding_p;                       // Padding in FFT
-  Bool usezero_p;                        // use zero padding
+//  IPosition padded_shape;                // Shape of the padded image
+//  Bool useDoubleGrid_p;                  // use double precision grid
+//  Bool canComputeResiduals_p;
+//  Bool noPadding_p;                      //force no padding
+//  Float padding_p;                       // Padding in FFT
+//  Bool usezero_p;                        // use zero padding
 
   // Channel and Stokes mapping
   Vector<Int> chanMap, polMap;           // Maps of channels and polarization
-  Vector<Int> chanMap_p, polMap_p;       // channel map, polarization map
-  Vector<Int> ConjCFMap_p, CFMap_p;
-  Int nx,ny;                             // where else does this come from?
+//  Vector<Int> chanMap_p, polMap_p;       // channel map, polarization map
+//  Vector<Int> ConjCFMap_p, CFMap_p;
+//  Int nx,ny;                             // where else does this come from?
   Int nchan, npol;                       // where else does this come from?
   
   CFStore cfs_p, cfwts_p; 
