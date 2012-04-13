@@ -162,6 +162,10 @@ void fill (const String& imageName)
                   obsRec.asString("PIPELINE_NAME"));
   rootRec.define ("PIPELINE_VERSION",
                   obsRec.asString("PIPELINE_VERSION"));
+  rootRec.define ("ICD_NUMBER",
+                  "7");
+  rootRec.define ("ICD_VERSION",
+                  "0.03.00");
   rootRec.define ("NOTES",
                   String());
   HDF5Record::doWriteRecord (hfile, rootRec);
