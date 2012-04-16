@@ -31,7 +31,6 @@ import lofarpipe.support.lofaringredient as ingredient
 
 class bbs(BaseRecipe):
     """
-    
     The bbs recipe coordinates running BBS on a group of MeasurementSets. It
     runs both GlobalControl and KernelControl; as yet, SolverControl has not
     been integrated.
@@ -43,76 +42,75 @@ class bbs(BaseRecipe):
 
     A mapfile describing the data to be processed.
     """
-    {
-      inputs = {
+    inputs = {
         'control_exec': ingredient.ExecField(
             '--control-exec',
-            dest = "control_exec",
-            help = "BBS Control executable"
+            dest="control_exec",
+            help="BBS Control executable"
         ),
         'kernel_exec': ingredient.ExecField(
             '--kernel-exec',
-            dest = "kernel_exec",
-            help = "BBS Kernel executable"
+            dest="kernel_exec",
+            help="BBS Kernel executable"
         ),
         'initscript': ingredient.FileField(
             '--initscript',
-            dest = "initscript",
-            help = "Initscript to source (ie, lofarinit.sh)"
+            dest="initscript",
+            help="Initscript to source (ie, lofarinit.sh)"
         ),
         'parset': ingredient.FileField(
             '-p', '--parset',
-            dest = "parset",
-            help = "BBS configuration parset"
+            dest="parset",
+            help="BBS configuration parset"
         ),
         'key': ingredient.StringField(
             '--key',
-            dest = "key",
-            help = "Key to identify BBS session"
+            dest="key",
+            help="Key to identify BBS session"
         ),
         'db_host': ingredient.StringField(
             '--db-host',
-            dest = "db_host",
-            help = "Database host with optional port"
+            dest="db_host",
+            help="Database host with optional port"
         ),
         'db_user': ingredient.StringField(
             '--db-user',
-            dest = "db_user",
-            help = "Database user"
+            dest="db_user",
+            help="Database user"
         ),
         'db_name': ingredient.StringField(
             '--db-name',
-            dest = "db_name",
-            help = "Database name"
+            dest="db_name",
+            help="Database name"
         ),
         'makevds': ingredient.ExecField(
             '--makevds',
-            help = "makevds executable"
+            help="makevds executable"
         ),
         'combinevds': ingredient.ExecField(
             '--combinevds',
-            help = "combinevds executable"
+            help="combinevds executable"
         ),
         'nproc': ingredient.IntField(
             '--nproc',
-            help = "Maximum number of simultaneous processes per compute node",
-            default = 8
+            help="Maximum number of simultaneous processes per compute node",
+            default=8
         ),
         'makesourcedb': ingredient.ExecField(
             '--makesourcedb',
-            help = "makesourcedb executable"
+            help="makesourcedb executable"
         ),
         'parmdbm': ingredient.ExecField(
             '--parmdbm',
-            help = "parmdbm executable"
+            help="parmdbm executable"
         ),
         'skymodel': ingredient.FileField(
             '-s', '--skymodel',
-            dest = "skymodel",
-            help = "Input sky catalogue"
+            dest="skymodel",
+            help="Input sky catalogue"
         )
-      }
     }
+
     def go(self):
         self.logger.info("Starting BBS run")
         super(bbs, self).go()
@@ -126,7 +124,7 @@ class bbs(BaseRecipe):
             "DEFAULT", "default_working_directory"
         )
         inputs['mapfile'] = os.path.join(
-            self.config.get("layout", "job_directory"),
+            self.config.get("layout", "job_directory"), 
             "parsets", "parmdb_mapfile"
         )
         outputs = LOFARoutput(self.inputs)
@@ -179,9 +177,9 @@ class bbs(BaseRecipe):
             )
             with closing(
                 psycopg2.connect(
-                    host = self.inputs["db_host"],
-                    user = self.inputs["db_user"],
-                    database = self.inputs["db_name"]
+                    host=self.inputs["db_host"],
+                    user=self.inputs["db_user"],
+                    database=self.inputs["db_name"]
                 )
             ) as db_connection:
                 db_connection.set_isolation_level(
@@ -245,8 +243,8 @@ class bbs(BaseRecipe):
                 run_flag = threading.Event()
                 run_flag.clear()
                 bbs_control = threading.Thread(
-                    target = self._run_bbs_control,
-                    args = (bbs_parset, run_flag)
+                    target=self._run_bbs_control,
+                    args=(bbs_parset, run_flag)
                 )
                 bbs_control.start()
                 run_flag.wait()    # Wait for control to start before proceeding
@@ -273,7 +271,7 @@ class bbs(BaseRecipe):
                         host, file, vds = details
                         jobpool[job_id] = ComputeJob(
                             host, command,
-                            arguments = [
+                            arguments=[
                                 self.inputs['kernel_exec'],
                                 self.inputs['initscript'],
                                 file,
@@ -285,8 +283,8 @@ class bbs(BaseRecipe):
                         )
                         bbs_kernels.append(
                             threading.Thread(
-                                target = self._run_bbs_kernel,
-                                args = (host, command, env, job_id,
+                                target=self._run_bbs_kernel,
+                                args=(host, command, env, job_id,
                                     jobhost, str(jobport)
                                 )
                             )
@@ -327,7 +325,7 @@ class bbs(BaseRecipe):
                 host,
                 command,
                 env,
-                arguments = arguments
+                arguments=arguments
             )
         except Exception, e:
             self.logger.exception("BBS Kernel failed to start")
@@ -361,8 +359,8 @@ class bbs(BaseRecipe):
                             "0"
                         ],
                         self.logger,
-                        cwd = working_dir,
-                        env = env
+                        cwd=working_dir,
+                        env=env
                     )
                     # _monitor_process() needs a convenient kill() method.
                     bbs_control_process.kill = lambda : os.kill(bbs_control_process.pid, signal.SIGKILL)
@@ -383,7 +381,7 @@ class bbs(BaseRecipe):
         )
         return returncode
 
-    def _monitor_process(self, process, name = "Monitored process"):
+    def _monitor_process(self, process, name="Monitored process"):
         """
         Monitor a process for successful exit. If it fails, set the kill
         switch, so everything else gets killed too. If the kill switch is set,
