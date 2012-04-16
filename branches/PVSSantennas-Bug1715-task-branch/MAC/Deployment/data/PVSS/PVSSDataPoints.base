@@ -65,6 +65,7 @@ SoftwareMonitor			-		C	Y	LOFAR_PermSW_SoftwareMonitor
 Daemons				-		C	N	LOFAR_PermSW_Daemons
 PVSS00pmon			-		C	Y	LOFAR_PermSW_Daemons_PVSS00pmon
 LogProcessor			-		C	Y	LOFAR_PermSW_Daemons_LogProcessor
+CEPlogProcessor			-		C	Y	LOFAR_PermSW_Daemons_CEPlogProcessor
 ServiceBroker			- 		C	Y	LOFAR_PermSW_Daemons_ServiceBroker
 CTStartDaemon			-		C	Y	LOFAR_PermSW_CTStartDaemon
 SASGateway			-		C	Y	LOFAR_PermSW_Daemons_SASGateway

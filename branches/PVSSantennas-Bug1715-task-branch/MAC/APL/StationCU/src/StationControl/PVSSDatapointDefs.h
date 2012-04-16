@@ -433,6 +433,8 @@
 #define	PN_OBS_CLAIM_CLAIM_DATE	"claim.claimDate"
 #define	PN_OBS_CLAIM_NAME	"claim.name"
 #define PN_OBS_RECEIVER_BITMAP	"receiverBitmap"
+#define PN_OBS_LBA_BITMAP	"LBAbitmap"
+#define PN_OBS_HBA_BITMAP	"HBAbitmap"
 
 // BeamControl
 #define PSN_BEAM_CONTROL	"LOFAR_ObsSW_@observation@_BeamControl"

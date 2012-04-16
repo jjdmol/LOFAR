@@ -1164,6 +1164,26 @@ uint16 StationControl::_addObservation(const string&	name)
 LOG_DEBUG_STR("definedReceivers =" << definedReceivers);
 LOG_DEBUG_STR("userReceivers    =" << userReceivers);
 LOG_DEBUG_STR("def&userReceivers=" << realReceivers);
+	// Before optionally applying the current hardware status make bitmap strings for PVSS.
+	string		LBAbitmap;
+	string		HBAbitmap;
+	LBAbitmap.resize(config.nrLBAs,'0');
+	HBAbitmap.resize(config.nrHBAs,'0');
+	if (onLBAField) {
+		for (int i(0); i < config.nrLBAs; i++) {
+			if (realReceivers[2*i] || realReceivers[2*i+1]) {
+				LBAbitmap[i] ='1';
+			}
+		}
+	} 
+	else  {
+		for (int i(0); i < config.nrHBAs; i++) {
+			if (realReceivers[2*i] || realReceivers[2*i+1]) {
+				HBAbitmap[i] ='1';
+			}
+		}
+	}
+
 	// apply the current state of the hardware to the desired selection when user likes that.
 	if (itsUseHWinfo) {
 		vector<int>		*mappingPtr = onLBAField ? &itsLBAmapping : &itsHBAmapping;
@@ -1193,7 +1213,7 @@ LOG_DEBUG_STR("final receivers   =" << realReceivers);
 
 
 	// create an activeObservation object that will manage the child controllers.
-	ActiveObs*	theNewObs = new ActiveObs(name, (State)&ActiveObs::initial, &theObsPS, itsHasSplitters, *this);
+	ActiveObs*	theNewObs = new ActiveObs(name, (State)&ActiveObs::initial, &theObsPS, LBAbitmap, HBAbitmap, itsHasSplitters, *this);
 	if (!theNewObs) {
 		LOG_FATAL_STR("Unable to create the Observation '" << name << "'");
 		return (CT_RESULT_UNSPECIFIED);

@@ -63,6 +63,8 @@ public:
 	ActiveObs (const string&	name,
 			   State			initial,
 			   ParameterSet*	aPS,
+			   const string&	LBAbitmap,
+			   const string&	HBAbitmap,
 			   bool				hasSplitters,
 			   GCFTask&			task);
 	virtual ~ActiveObs();
@@ -109,6 +111,8 @@ private:
 	bool						itsReadyFlag;
 	CTState::CTstateNr			itsReqState;
 	CTState::CTstateNr			itsCurState;
+	string						itsLBAs;
+	string						itsHBAs;
 };
 
 //#
