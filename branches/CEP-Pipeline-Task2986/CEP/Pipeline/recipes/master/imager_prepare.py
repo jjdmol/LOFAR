@@ -228,15 +228,18 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         # is a number of raw measurement sets: The number of time slices times
         # the number of subbands collected into each of these time slices.
         # The total length of the input map should match this.
-        self.logger.info(len(input_map))
-        self.logger.info((len(output_map)))
-        self.logger.info((slices_per_image))
-        self.logger.info((subbands_per_image))
-
         if len(input_map) != len(output_map) * \
                                    (slices_per_image * subbands_per_image):
-            self.logger.error("incorrect number of input ms for " +
-                              "supplied parameters")
+            self.logger.error(
+                "Incorrect number of input ms for supplied parameters:\n\t"
+                "len(input_map) = {0}\n\t"
+                "len(output_map) * slices_per_image * subbands_per_image = "
+                "{1} * {2} * {3} = {4}".format(
+                    len(input_map), len(output_map), 
+                    slices_per_image, subbands_per_image, 
+                    len(output_map) * slices_per_image * subbands_per_image
+                )
+            )
             return 1
 
         return 0
