@@ -22,9 +22,12 @@
 
 #include <string>
 
-#include <gtkmm/window.h>
-#include <gtkmm/textview.h>
+#include <gtkmm/box.h>
+#include <gtkmm/combobox.h>
+#include <gtkmm/liststore.h>
 #include <gtkmm/scrolledwindow.h>
+#include <gtkmm/textview.h>
+#include <gtkmm/window.h>
 
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
@@ -33,11 +36,22 @@ class DataWindow : public Gtk::Window {
 	public:
 		DataWindow()
 		{
+			_box.pack_start(_comboBox, Gtk::PACK_SHRINK);
+			_comboListStore = Gtk::ListStore::create(_comboColumnRecord);
+			_comboBox.set_model(_comboListStore);
+			_comboBox.pack_start(_comboColumnRecord._comboListNameColumn);
+			_comboBox.signal_changed().connect(sigc::mem_fun(*this, &DataWindow::onComboChange));
+			_comboBox.show();
+			
 			_scrolledWindow.add(_textView);
 			_textView.show();
 			
-			add(_scrolledWindow);
+			_box.pack_end(_scrolledWindow);
 			_scrolledWindow.show();
+			
+			add(_box);
+			_box.show();
+			
 			set_default_size(300, 400);
 		}
     ~DataWindow()
@@ -49,8 +63,23 @@ class DataWindow : public Gtk::Window {
 		}
 		void SetData(const class Plot2D &plot);
 	private:
+		DataWindow(const DataWindow &dataWindow) { }
+		
+		void onComboChange();
+		void loadData(size_t plotSetIndex);
+		
+		class ComboColumnRecord : public Gtk::TreeModel::ColumnRecord
+		{
+		public:
+			ComboColumnRecord() { add(_comboListNameColumn); }
+			Gtk::TreeModelColumn<Glib::ustring> _comboListNameColumn;
+		} _comboColumnRecord;
+		Gtk::VBox _box;
+		Gtk::ComboBox _comboBox;
+		Glib::RefPtr<Gtk::ListStore> _comboListStore;
 		Gtk::ScrolledWindow _scrolledWindow;
 		Gtk::TextView _textView;
+		const class Plot2D *_plot;
 };
 
 #endif

@@ -50,6 +50,8 @@ for R in xrange(3):
   # a rack
   PartitionPsets[rack] = PartitionPsets["%s-M0" % rack] + PartitionPsets["%s-M1" % rack]
 
+PartitionPsets["R00R01"] = PartitionPsets["R00"] + PartitionPsets["R01"]  
+
 if __name__ == "__main__":
   from optparse import OptionParser,OptionGroup
   import sys

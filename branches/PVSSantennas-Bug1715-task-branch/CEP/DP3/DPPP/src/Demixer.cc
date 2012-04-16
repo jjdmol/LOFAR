@@ -29,6 +29,7 @@
 #include <DPPP/DPInfo.h>
 #include <DPPP/ParSet.h>
 #include <ParmDB/Axis.h>
+#include <ParmDB/SourceDB.h>
 #include <Common/LofarLogger.h>
 #include <Common/StreamUtil.h>
 #include <Common/OpenMP.h>
@@ -61,13 +62,13 @@ namespace LOFAR {
         itsInstrumentName(parset.getString(prefix+"instrumentmodel",
                                            "instrument")),
         itsBBSExpr       (*input, itsSkyName, itsInstrumentName),
-//        itsTarget        (parset.getString(prefix+"target", "target")),
+        itsTargetSource  (parset.getString(prefix+"targetsource", string())),
         itsSubtrSources  (parset.getStringVector (prefix+"subtractsources")),
         itsModelSources  (parset.getStringVector (prefix+"modelsources",
                                                   vector<string>())),
         itsExtraSources  (parset.getStringVector (prefix+"othersources",
                                                   vector<string>())),
-        itsJointSolve    (parset.getBool  (prefix+"jointsolve", true)),
+///        itsJointSolve    (parset.getBool  (prefix+"jointsolve", true)),
         itsNTimeIn       (0),
         itsNChanAvgSubtr (parset.getUint  (prefix+"freqstep", 1)),
         itsNTimeAvgSubtr (parset.getUint  (prefix+"timestep", 1)),
@@ -79,10 +80,27 @@ namespace LOFAR {
         itsNTimeChunk    (parset.getUint  (prefix+"ntimechunk", 0)),
         itsNTimeOut      (0)
     {
+      // Get and set solver options.
+      itsSolveOpt.maxIter =
+        parset.getUint  (prefix+"Solve.Options.MaxIter", 300);
+      itsSolveOpt.epsValue =
+        parset.getDouble(prefix+"Solve.Options.EpsValue", 1e-9);
+      itsSolveOpt.epsDerivative =
+        parset.getDouble(prefix+"Solve.Options.EpsDerivative", 1e-9);
+      itsSolveOpt.colFactor =
+        parset.getDouble(prefix+"Solve.Options.ColFactor", 1e-9);
+      itsSolveOpt.lmFactor  =
+        parset.getDouble(prefix+"Solve.Options.LMFactor", 1.0);
+      itsSolveOpt.balancedEq =
+        parset.getBool  (prefix+"Solve.Options.BalancedEqs", false);
+      itsSolveOpt.useSVD  =
+        parset.getBool  (prefix+"Solve.Options.UseSVD", true);
+      itsBBSExpr.setOptions (itsSolveOpt);
       /// Maybe optionally a parset parameter directions to give the
       /// directions of unknown sources.
       /// Or make sources a vector of vectors like [name, ra, dec] where
       /// ra and dec are optional.
+
       // Default nr of time chunks is maximum number of threads.
       if (itsNTimeChunk == 0) {
         itsNTimeChunk = OpenMP::maxThreads();
@@ -91,9 +109,6 @@ namespace LOFAR {
       ASSERTSTR ((itsNTimeChunk * itsNTimeAvg) % itsNTimeAvgSubtr == 0,
                  "time window should fit final averaging integrally");
       itsNTimeChunkSubtr = (itsNTimeChunk * itsNTimeAvg) / itsNTimeAvgSubtr;
-      // See if averaging in demix and subtract differs.
-      itsCalcSubtr = (itsNChanAvg != itsNChanAvgSubtr  ||
-                      itsNTimeAvg != itsNTimeAvgSubtr);
       // Collect all source names.
       itsNrModel = itsSubtrSources.size() + itsModelSources.size();
       itsNrDir   = itsNrModel + itsExtraSources.size() + 1;
@@ -104,9 +119,15 @@ namespace LOFAR {
                             itsModelSources.begin(), itsModelSources.end());
       itsAllSources.insert (itsAllSources.end(),
                             itsExtraSources.begin(), itsExtraSources.end());
-      itsAllSources.push_back("target");
-//      itsAllSources.push_back(itsTarget);
-
+      itsAllSources.push_back (itsTargetSource);
+      // If the target source is given, add it to the model.
+      // Because the target source has to be the last direction, it means
+      // that (for the time being) no extra sources can be given.
+      if (! itsTargetSource.empty()) {
+        itsNrModel++;
+        ASSERTSTR (itsExtraSources.empty(), "Currently no extrasources can "
+                   "be given if the targetsource is given");
+      }
       // Size buffers.
       itsFactors.resize      (itsNTimeChunk);
       itsFactorsSubtr.resize (itsNTimeChunkSubtr);
@@ -114,6 +135,8 @@ namespace LOFAR {
       itsFirstSteps.reserve  (itsNrDir);
       itsAvgResults.reserve  (itsNrDir);
 
+      // Get the patch names and positions from the SourceDB table.
+      SourceDB sdb(ParmDBMeta("casa", itsSkyName));
       // Create the steps for the sources to be removed.
       // Demixing consists of the following steps:
       // - phaseshift data to each demix source
@@ -127,10 +150,17 @@ namespace LOFAR {
         // First make the phaseshift and average steps for each demix source.
         // The resultstep gets the result.
         // The phasecenter can be given in a parameter. Its name is the default.
-        // Note the PhaseShift knows about source names CygA, etc.
+        // Look up the source direction in the patch table.
+        // If found, turn it into a vector of strings.
+        vector<PatchInfo> patchInfo (sdb.getPatchInfo (-1, itsAllSources[i]));
+        vector<string> sourceVec (1, itsAllSources[i]);
+        if (! patchInfo.empty()) {
+          sourceVec[0] = toString(patchInfo[0].getRa());
+          sourceVec.push_back (toString(patchInfo[0].getDec()));
+        }
         PhaseShift* step1 = new PhaseShift (input, parset,
                                             prefix + itsAllSources[i] + '.',
-                                            itsAllSources[i]);
+                                            sourceVec);
         itsFirstSteps.push_back (DPStep::ShPtr(step1));
         itsPhaseShifts.push_back (step1);
         DPStep::ShPtr step2 (new Averager(input, parset, prefix));
@@ -140,6 +170,7 @@ namespace LOFAR {
         // There is a single demix factor step which needs to get all results.
         itsAvgResults.push_back (step3);
       }
+
       // Now create the step to average the data themselves.
       DPStep::ShPtr targetAvg(new Averager(input, prefix,
                                            itsNChanAvg, itsNTimeAvg));
@@ -148,21 +179,12 @@ namespace LOFAR {
       targetAvg->setNextStep (DPStep::ShPtr(targetAvgRes));
       itsAvgResults.push_back (targetAvgRes);
 
-      // Do the same for the subtract if it has different averaging.
-      if (itsCalcSubtr) {
-        itsAvgSubtr = DPStep::ShPtr (new Averager(input, prefix,
-                                                  itsNChanAvgSubtr,
-                                                  itsNTimeAvgSubtr));
-        itsAvgResultSubtr = new MultiResultStep(itsNTimeChunk);
-        itsAvgSubtr->setNextStep (DPStep::ShPtr(itsAvgResultSubtr));
-      } else {
-        // Same averaging, so use demix averaging for the subtract.
-        itsAvgSubtr = DPStep::ShPtr (new NullStep());
-        itsAvgResultSubtr = targetAvgRes;
-      }
-      // Construct frequency axis for the demix and subtract averaging.
-      itsFreqAxisDemix = makeFreqAxis (itsNChanAvg);
-      itsFreqAxisSubtr = makeFreqAxis (itsNChanAvgSubtr);
+      // Do the same for the subtract.
+      itsAvgSubtr = DPStep::ShPtr (new Averager(input, prefix,
+                                                itsNChanAvgSubtr,
+                                                itsNTimeAvgSubtr));
+      itsAvgResultSubtr = new MultiResultStep(itsNTimeChunk);
+      itsAvgSubtr->setNextStep (DPStep::ShPtr(itsAvgResultSubtr));
     }
 
     Demixer::~Demixer()
@@ -171,19 +193,24 @@ namespace LOFAR {
 
     void Demixer::updateInfo (DPInfo& info)
     {
-      info.setNeedVisData();
-      info.setNeedWrite();
-
-      itsNChanIn = info.nchan();
-      itsNrBl    = info.nbaselines();
-      itsNrCorr  = info.ncorr();
+      // Get size info.
+      itsNChanIn  = info.nchan();
+      itsNrBl     = info.nbaselines();
+      itsNrCorr   = info.ncorr();
       itsFactorBuf.resize (IPosition(4, itsNrBl, itsNChanIn, itsNrCorr,
                                      itsNrDir*(itsNrDir-1)/2));
+      itsFactorBufSubtr.resize (IPosition(4, itsNrBl, itsNChanIn, itsNrCorr,
+                                          itsNrDir*(itsNrDir-1)/2));
       itsTimeInterval = info.timeInterval();
 
-      // Let the internal steps update their data.
+      // Adapt averaging to available nr of channels and times.
       // Use a copy of the DPInfo, otherwise it is updated multiple times.
-      DPInfo infocp;
+      DPInfo infocp(info);
+      itsNTimeAvg = std::min (itsNTimeAvg, infocp.ntime());
+      itsNChanAvg = infocp.update (itsNChanAvg, itsNTimeAvg);
+      // Let the internal steps update their data.
+      infocp = info;
+      itsAvgSubtr->updateInfo (infocp);
       for (uint i=0; i<itsFirstSteps.size(); ++i) {
         infocp = info;
         DPStep::ShPtr step = itsFirstSteps[i];
@@ -196,14 +223,19 @@ namespace LOFAR {
           itsBBSExpr.addModel (itsAllSources[i], infocp.phaseCenter());
         }
       }
-
       // Keep the averaged time interval.
       itsNChanOut = infocp.nchan();
       itsTimeIntervalAvg = infocp.timeInterval();
       // Update the info of this object.
-      info.update (itsNChanAvgSubtr, itsNTimeAvgSubtr);
+      info.setNeedVisData();
+      info.setNeedWrite();
+      itsNTimeAvgSubtr = std::min (itsNTimeAvgSubtr, info.ntime());
+      itsNChanAvgSubtr = info.update (itsNChanAvgSubtr, itsNTimeAvgSubtr);
       itsNChanOutSubtr = info.nchan();
       itsTimeIntervalSubtr = info.timeInterval();
+      // Construct frequency axis for the demix and subtract averaging.
+      itsFreqAxisDemix = makeFreqAxis (itsNChanAvg);
+      itsFreqAxisSubtr = makeFreqAxis (itsNChanAvgSubtr);
     }
 
     void Demixer::show (std::ostream& os) const
@@ -211,16 +243,23 @@ namespace LOFAR {
       os << "Demixer " << itsName << std::endl;
       os << "  skymodel:       " << itsSkyName << std::endl;
       os << "  instrumentmodel:" << itsInstrumentName << std::endl;
-//      os << "  target:         " << itsTarget << std::endl;
+      os << "  targetsource:   " << itsTargetSource << std::endl;
       os << "  subtractsources:" << itsSubtrSources << std::endl;
       os << "  modelsources:   " << itsModelSources << std::endl;
       os << "  extrasources:   " << itsExtraSources << std::endl;
-      os << "  jointsolve:     " << itsJointSolve << std::endl;
+///      os << "  jointsolve:     " << itsJointSolve << std::endl;
       os << "  freqstep:       " << itsNChanAvgSubtr << std::endl;
       os << "  timestep:       " << itsNTimeAvgSubtr << std::endl;
       os << "  demixfreqstep:  " << itsNChanAvg << std::endl;
       os << "  demixtimestep:  " << itsNTimeAvg << std::endl;
-      os << "  timechunk:      " << itsNTimeChunk << std::endl;
+      os << "  ntimechunk:     " << itsNTimeChunk << std::endl;
+      os << "  Solve.Options.MaxIter:       " << itsSolveOpt.maxIter << endl;
+      os << "  Solve.Options.EpsValue:      " << itsSolveOpt.epsValue << endl;
+      os << "  Solve.Options.EpsDerivative: " << itsSolveOpt.epsDerivative << endl;
+      os << "  Solve.Options.ColFactor:     " << itsSolveOpt.colFactor << endl;
+      os << "  Solve.Options.LMFactor:      " << itsSolveOpt.lmFactor << endl;
+      os << "  Solve.Options.BalancedEqs:   " << itsSolveOpt.balancedEq << endl;
+      os << "  Solve.Options.UseSVD:        " << itsSolveOpt.useSVD <<endl;
     }
 
     void Demixer::showTimings (std::ostream& os, double duration) const
@@ -265,7 +304,7 @@ namespace LOFAR {
       }
       if (newBuf.getFullResFlags().empty()) {
         newBuf.setFullResFlags(itsInput->fetchFullResFlags(newBuf, refRows,
-                                                            itsTimer));
+                                                           itsTimer));
       }
 
       // Do the initial steps (phaseshift and average).
@@ -274,6 +313,7 @@ namespace LOFAR {
       for (int i=0; i<int(itsFirstSteps.size()); ++i) {
         itsFirstSteps[i]->process(newBuf);
       }
+      itsAvgSubtr->process(newBuf);
       itsTimerPhaseShift.stop();
 
       // For each itsNTimeAvg times, calculate the
@@ -284,26 +324,20 @@ namespace LOFAR {
         makeFactors (itsFactorBuf, itsFactors[itsNTimeOut],
                      itsAvgResults[0]->get()[itsNTimeOut].getWeights(),
                      itsNChanOut);
-        // If needed, keep the original factors for subtraction.
-        if (!itsCalcSubtr) {
-          itsFactorsSubtr[itsNTimeOut].reference (itsFactors[itsNTimeOut].copy());
-        }
         // Deproject sources without a model.
         deproject (itsFactors[itsNTimeOut], itsAvgResults, itsNTimeOut);
         itsFactorBuf = Complex();   // clear summation buffer
         itsNTimeOut++;
       }
-      if (itsCalcSubtr) {
-        // Subtract is done with different averaging parameters, so
-        // calculate the factors for it.
-        addFactors (newBuf, itsFactorBufSubtr);
-        if (itsNTimeIn % itsNTimeAvgSubtr == 0) {
-          makeFactors (itsFactorBufSubtr, itsFactorsSubtr[itsNTimeOutSubtr],
-                       itsAvgResultSubtr->get()[itsNTimeOutSubtr].getWeights(),
-                       itsNChanOutSubtr);
-          itsFactorBufSubtr = Complex();   // clear summation buffer
-          itsNTimeOutSubtr++;
-        }
+      // Subtract is done with different averaging parameters, so
+      // calculate the factors for it.
+      addFactors (newBuf, itsFactorBufSubtr);
+      if (itsNTimeIn % itsNTimeAvgSubtr == 0) {
+        makeFactors (itsFactorBufSubtr, itsFactorsSubtr[itsNTimeOutSubtr],
+                     itsAvgResultSubtr->get()[itsNTimeOutSubtr].getWeights(),
+                     itsNChanOutSubtr);
+        itsFactorBufSubtr = Complex();   // clear summation buffer
+        itsNTimeOutSubtr++;
       }
       itsTimerDemix.stop();
 
@@ -331,31 +365,29 @@ namespace LOFAR {
         for (int i=0; i<int(itsFirstSteps.size()); ++i) {
           itsFirstSteps[i]->finish();
         }
+        itsAvgSubtr->finish();
         itsTimerPhaseShift.stop();
-
+        // Only average if there is some data.
         itsTimerDemix.start();
-        makeFactors (itsFactorBuf, itsFactors[itsNTimeOut],
-                     itsAvgResults[0]->get()[itsNTimeOut].getWeights(),
-                     itsNChanOut);
-        // Deproject sources without a model.
-        // If needed, keep the original factors for subtraction.
-        if (!itsCalcSubtr) {
-          itsFactorsSubtr[itsNTimeOut].reference (itsFactors[itsNTimeOut].copy());
+        if (itsNTimeIn % itsNTimeAvg != 0) {
+          makeFactors (itsFactorBuf, itsFactors[itsNTimeOut],
+                       itsAvgResults[0]->get()[itsNTimeOut].getWeights(),
+                       itsNChanOut);
+          // Deproject sources without a model.
+          deproject (itsFactors[itsNTimeOut], itsAvgResults, itsNTimeOut);
+          itsNTimeOut++;
         }
-        deproject (itsFactors[itsNTimeOut], itsAvgResults, itsNTimeOut);
-        itsNTimeOut++;
-        if (itsCalcSubtr) {
+        if (itsNTimeIn % itsNTimeAvgSubtr != 0) {
           makeFactors (itsFactorBufSubtr, itsFactorsSubtr[itsNTimeOutSubtr],
                        itsAvgResultSubtr->get()[itsNTimeOutSubtr].getWeights(),
                        itsNChanOutSubtr);
           itsNTimeOutSubtr++;
         }
         itsTimerDemix.stop();
-
         // Resize lists of mixing factors to the number of valid entries.
         itsFactors.resize(itsNTimeOut);
-        itsFactorsSubtr.resize(itsCalcSubtr ? itsNTimeOutSubtr : itsNTimeOut);
-
+        itsFactorsSubtr.resize(itsNTimeOutSubtr);
+        // Demix the source directions.
         demix();
         itsTimer.stop();
       }
@@ -366,6 +398,8 @@ namespace LOFAR {
     void Demixer::addFactors (const DPBuffer& newBuf,
                               Array<DComplex>& factorBuf)
     {
+      // Nothing to do if only target direction.
+      if (itsNrDir <= 1) return;
 ///#pragma omp parallel
       {
 ///#pragma omp for
@@ -425,6 +459,8 @@ namespace LOFAR {
                                const Cube<float>& weightSums,
                                uint nchanOut)
     {
+      // Nothing to do if only target direction.
+      if (itsNrDir <= 1) return;
       ASSERT (! weightSums.empty());
       bufOut.resize (IPosition(5, itsNrDir, itsNrDir,
                                itsNrCorr, nchanOut, itsNrBl));
@@ -461,6 +497,8 @@ namespace LOFAR {
                              vector<MultiResultStep*> avgResults,
                              uint resultIndex)
     {
+      // Nothing to do if only target direction or if all sources are modeled.
+      if (itsNrDir <= 1  ||  itsNrDir == itsNrModel) return;
       // Get pointers to the data for the various directions.
       vector<Complex*> resultPtr(itsNrDir);
       for (uint j=0; j<itsNrDir; ++j) {
@@ -539,55 +577,59 @@ namespace LOFAR {
 
     void Demixer::demix()
     {
-      itsTimerSolve.start();
-
-     // Collect buffers for each direction.
-      vector<vector<DPBuffer> > buffers;
       size_t targetIndex = itsAvgResults.size() - 1;
-      for (size_t i=0; i<itsAvgResults.size(); ++i) {
-        buffers.push_back (itsAvgResults[i]->get());
-        // Do not clear target buffer, because it is shared with
-        // itsAvgResultSubtr if averaging of demix and subtract is the same.
-        if (i != targetIndex) {
-          itsAvgResults[i]->clear();
+
+      // Only solve and subtract if multiple directions.
+      if (itsNrDir > 1) {
+        // Collect buffers for each direction.
+        vector<vector<DPBuffer> > buffers;
+        for (size_t i=0; i<itsAvgResults.size(); ++i) {
+          buffers.push_back (itsAvgResults[i]->get());
+          // Do not clear target buffer, because it is shared with
+          // itsAvgResultSubtr if averaging of demix and subtract is the same.
+          if (i != targetIndex) {
+            itsAvgResults[i]->clear();
+          }
         }
-      }
 
-      // Construct grids for parameter estimation.
-      Axis::ShPtr timeAxis (new RegularAxis (itsStartTimeChunk,
-                                             itsTimeIntervalAvg,
-                                             itsNTimeOut));
-      Grid visGrid(itsFreqAxisDemix, timeAxis);
-      // Solve for each time slot over all channels.
-      Grid solGrid(itsFreqAxisDemix->compress(itsFreqAxisDemix->size()),
-                   timeAxis);
+        itsTimerSolve.start();
+        // Construct grids for parameter estimation.
+        Axis::ShPtr timeAxis (new RegularAxis (itsStartTimeChunk,
+                                               itsTimeIntervalAvg,
+                                               itsNTimeOut));
+        Grid visGrid(itsFreqAxisDemix, timeAxis);
+        // Solve for each time slot over all channels.
+        Grid solGrid(itsFreqAxisDemix->compress(itsFreqAxisDemix->size()),
+                     timeAxis);
 
-      // Estimate model parameters.
-      LOG_DEBUG_STR("estimating....");
-      LOG_DEBUG_STR("SHAPES ESTIMATE: " << itsFactors[0].shape() << " " << itsFreqAxisDemix->size() << " " << buffers[0][0].getData().shape());
-      itsBBSExpr.estimate(buffers, visGrid, solGrid, itsFactors);
-      itsTimerSolve.stop();
+        // Estimate model parameters.
+        LOG_DEBUG_STR("estimating....");
+        LOG_DEBUG_STR("SHAPES ESTIMATE: " << itsFactors[0].shape() << " "
+                      << itsFreqAxisDemix->size() << " "
+                      << buffers[0][0].getData().shape());
+        itsBBSExpr.estimate(buffers, visGrid, solGrid, itsFactors);
+        itsTimerSolve.stop();
 
-      itsTimerSubtract.start();
-      if (itsCalcSubtr) {
+        itsTimerSubtract.start();
         // Construct subtract grid if it differs from the grid used for
         // parameter estimation.
         Axis::ShPtr timeAxisSubtr (new RegularAxis (itsStartTimeChunk,
                                                     itsTimeIntervalSubtr,
                                                     itsNTimeOutSubtr));
         visGrid = Grid(itsFreqAxisSubtr, timeAxisSubtr);
+        // Subtract the sources.
+        LOG_DEBUG_STR("subtracting....");
+        LOG_DEBUG_STR("SHAPES SUBTRACT: " << itsFactorsSubtr[0].shape() << " "
+                      << itsFreqAxisSubtr->size() << " "
+                      << itsAvgResultSubtr->get()[0].getData().shape());
+        itsBBSExpr.subtract (itsAvgResultSubtr->get(), visGrid, itsFactorsSubtr,
+                             targetIndex, itsSubtrSources.size());
+        itsTimerSubtract.stop();
       }
-
-      // Subtract the sources.
-      LOG_DEBUG_STR("subtracting....");
-      LOG_DEBUG_STR("SHAPES SUBTRACT: " << itsFactorsSubtr[0].shape() << " " << itsFreqAxisSubtr->size() << " " << itsAvgResultSubtr->get()[0].getData().shape());
-      itsBBSExpr.subtract (itsAvgResultSubtr->get(), visGrid, itsFactorsSubtr,
-                           targetIndex, itsSubtrSources.size());
-      itsTimerSubtract.stop();
 
       // Let the next step process the data.
       itsTimer.stop();
-      for (uint i=0; i<(itsCalcSubtr ? itsNTimeOutSubtr : itsNTimeOut); ++i) {
+      for (uint i=0; i<itsNTimeOutSubtr; ++i) {
         getNextStep()->process (itsAvgResultSubtr->get()[i]);
         itsAvgResultSubtr->get()[i].clear();
         itsAvgResults[targetIndex]->get()[i].clear();
@@ -607,6 +649,12 @@ namespace LOFAR {
         freq.size()));
     }
 
+    string Demixer::toString (double value) const
+    {
+      ostringstream os;
+      os << setprecision(16) << value;
+      return os.str();
+    }
 
   } //# end namespace
 }

@@ -3,10 +3,10 @@
 source locations.sh
 
 function start() {
-  # create a new log dir
-  rm -f "$LOGSYMLINK" || true
+  set_psetinfo
+
+  # make sure the log dir exists
   mkdir -p "$LOGDIR"
-  ln -s "$LOGDIR" "$LOGSYMLINK"
 
   TMPDIR=`mktemp -d`
   PIDFILE="$TMPDIR/pid"
@@ -14,8 +14,8 @@ function start() {
   # use a fifo to avoid race conditions
   mkfifo "$PIDFILE"
 
-  (/bgsys/LOFAR/openmpi-ion/bin/mpirun -host "$PSETS"  --pernode -wd "$LOGDIR" "$IONPROC" "$ISPRODUCTION" 2>&1 &
-  echo $! > "$PIDFILE") | LOFAR/Logger.py $LOGPARAMS "$LOGSYMLINK/IONProc.log" &
+  (/bgsys/LOFAR/openmpi-ion/bin/mpirun -host "$PSETS"  --pernode -wd "$RUNDIR" "$IONPROC" "$ISPRODUCTION" 2>&1 &
+  echo $! > "$PIDFILE") | LOFAR/Logger.py $LOGPARAMS "$LOGDIR/IONProc.log" &
 
   PID=`cat $PIDFILE`
   rm -f "$PIDFILE"

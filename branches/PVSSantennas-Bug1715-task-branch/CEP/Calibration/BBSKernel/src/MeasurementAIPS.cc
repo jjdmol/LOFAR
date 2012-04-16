@@ -1071,7 +1071,7 @@ Slicer MeasurementAIPS::getCovarianceSlicer(const VisSelection &selection,
     ROTableColumn info(itsMS, column);
     ASSERTSTR(info.shapeColumn().isEqual(IPosition(3, nCorrelations(),
         nCorrelations(), nFreq())), "Covariance column has unexpected shape: "
-        << column << " shape: " << shape);
+        << column << " shape: " << info.shapeColumn());
 
     Interval<size_t> range(getChannelRange(selection));
     return Slicer(IPosition(3, 0, 0, range.start), IPosition(3,

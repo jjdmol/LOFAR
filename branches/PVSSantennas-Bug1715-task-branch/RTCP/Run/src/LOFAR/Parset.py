@@ -4,16 +4,11 @@ import sys,os
 # allow ../util to be found, a bit of a hack
 sys.path += [(os.path.dirname(__file__) or ".")+"/.."]
 
-import datetime
-import time
-import socket
 import util.Parset
-import getpass
 import os
 from itertools import count
 from Partitions import PartitionPsets
-from Locations import Hosts,Locations
-from Stations import Stations
+from Stations import Stations, overrideRack
 from RingCoordinates import RingCoordinates
 from util.dateutil import parse,format,parseDuration,timestamp
 from logging import error,warn
@@ -48,15 +43,16 @@ class Parset(util.Parset.Parset):
       elif antennaset in ["LBA_INNER","LBA_OUTER","LBA_X","LBA_Y","LBA_SPARSE_EVEN","LBA_SPARSE_ODD"]:
         suffix = ["LBA"]
       elif station.startswith("CS"):
-        if antennaset == "HBA_ZERO":
+        if antennaset in ["HBA_ZERO","HBA_ZERO_INNER"]:
           suffix = ["HBA0"]
-        elif antennaset == "HBA_ONE":  
+        elif antennaset in ["HBA_ONE","HBA_ONE_INNER"]:
           suffix = ["HBA1"]
-        elif antennaset == "HBA_JOINED":  
+        elif antennaset in ["HBA_JOINED","HBA_JOINED_INNER"]:
           suffix = ["HBA"]
-        else: 
-          assert antennaset == "HBA_DUAL", "Unknown antennaSet: %s" % (antennaset,)
+        elif antennaset in ["HBA_DUAL","HBA_DUAL_INNER"]:
           suffix = ["HBA0","HBA1"]
+        else: 
+          assert false, "Unknown antennaSet: %s" % (antennaset,)
       else:  
         suffix = ["HBA"]
 
@@ -120,6 +116,9 @@ class Parset(util.Parset.Parset):
         if partition:
           self.setPartition( partition )
 
+        if self.partition and self.partition != "R00R01":  
+          overrideRack( Stations, int(partition[2]) )
+
         # storage nodes
         storagenodes = self.distillStorageNodes() or []
         self.setStorageNodes( storagenodes )
@@ -181,6 +180,10 @@ class Parset(util.Parset.Parset):
         delIfEmpty( "OLAP.CNProc.phaseOnePsets" )
         delIfEmpty( "OLAP.CNProc.phaseTwoPsets" )
         delIfEmpty( "OLAP.CNProc.phaseThreePsets" )
+
+        # make sure these values will be recalculated in finalise()
+        del self['OLAP.IONProc.integrationSteps']
+        del self['OLAP.CNProc.integrationSteps']
 
         # convert pencil rings and fly's eye to more coordinates
         for b in count():
@@ -341,28 +344,12 @@ class Parset(util.Parset.Parset):
           self["Observation.DataProducts.Output_Beamformed.enabled"] = True
 
 
-    def addStorageKeys(self):
-	self["OLAP.Storage.userName"] = getpass.getuser()
-	self["OLAP.Storage.sshIdentityFile"]  = "%s/.ssh/id_rsa" % (os.environ["HOME"],)
-	self["OLAP.Storage.msWriter"] = Locations.resolvePath( Locations.files["storage"], self )
-	self["OLAP.Storage.parsetFilename"] = self.filename
-
-        self.setdefault("OLAP.Storage.AntennaSetsConf",  "${STORAGE_CONFIGDIR}/AntennaSets.conf");
-        self.setdefault("OLAP.Storage.AntennaFieldsDir", "${STORAGE_CONFIGDIR}/StaticMetaData");
-        self.setdefault("OLAP.Storage.HBADeltasDir",     "${STORAGE_CONFIGDIR}/StaticMetaData");
-
-        for p in ["OLAP.Storage.AntennaSetsConf",
-                  "OLAP.Storage.AntennaFieldsDir",
-                  "OLAP.Storage.HBADeltasDir"]:
-          self[p] = Locations.resolvePath( self[p], self )          
-
     def preWrite(self):
         """ Derive some final keys and finalise any parameters necessary
 	    before writing the parset to disk. """
 
         self.convertSASkeys();
         self.addMissingKeys();
-	self.addStorageKeys();
 
         # Versioning info
         self["OLAP.BeamsAreTransposed"] = True
@@ -656,21 +643,6 @@ class Parset(util.Parset.Parset):
 	
 	self.stations = sorted( stations, cmp=lambda x,y: cmp(name(x),name(y)) )
 
-    def forceStations(self,stations):
-	""" Override the set of stations to use (from the command line). """
-
-	self.setStations(stations)
-
-        def name( s ):
-          try:
-            return s.name
-          except:
-            return s
-
-        self['OLAP.storageStationNames'] = map( name, self.stations )
-        del self['Observation.VirtualInstrument.stationList']
-        #del self['Observation.antennaSet']
-        
     def setPartition(self,partition):
 	""" Define the partition to use. """
 
@@ -699,17 +671,6 @@ class Parset(util.Parset.Parset):
 
     def getNrUsedStorageNodes(self):
         return len(self.storagenodes)
-
-    def disableCNProc(self):
-        self["OLAP.OLAP_Conn.IONProc_CNProc_Transport"] = "NULL"
-
-    def disableIONProc(self):
-        self["OLAP.OLAP_Conn.IONProc_Storage_Transport"] = "NULL"
-        self["OLAP.OLAP_Conn.IONProc_CNProc_Transport"] = "NULL"
-
-    def disableStorage(self):
-        self["OLAP.OLAP_Conn.IONProc_Storage_Transport"] = "NULL"
-        self.setStorageNodes([])
 
     def parseMask( self, mask, sap = 0, subband = 0, beam = 0, stokes = 0, part = 0 ):
       """ Fills a mask. """
@@ -747,16 +708,6 @@ class Parset(util.Parset.Parset):
 
       self["Observation.startTime"] = format( start )
       self["Observation.stopTime"] = format( stop )
-
-    def setClock( self, mhz ):
-      self['Observation.sampleClock'] = int( mhz )
-
-    def setIntegrationTime( self, integrationTime ):
-      self["OLAP.Correlator.integrationTime"] = integrationTime
-
-      # make sure these values will be recalculated in finalise()
-      del self['OLAP.IONProc.integrationSteps']
-      del self['OLAP.CNProc.integrationSteps']
 
     def getNrSAPs( self ):
       return int(self["Observation.nrBeams"])
@@ -930,6 +881,24 @@ if __name__ == "__main__":
   # parse the command line
   parser = OptionParser( "usage: %prog [options] parset [parset ...]" )
 
+  opgroup = OptionGroup( parser, "Request" )
+  opgroup.add_option( "-k", "--key",
+                     dest="key",
+                     type="string",
+                     default="",
+                     help="print the given key from the resulting parset" )
+  opgroup.add_option( "-P", "--partition",
+                     dest="partition",
+                     type="string",
+                     default=os.environ.get("PARTITION",""),
+                     help="use this partition [%default%]" )
+  opgroup.add_option( "-r", "--runtime",
+                     dest="runtime",
+                     type="string",
+                     default="",
+                     help="starttime,runtime" )
+  parser.add_option_group( opgroup )
+
   # parse arguments
   (options, args) = parser.parse_args()
   
@@ -942,8 +911,21 @@ if __name__ == "__main__":
   for files in args:
     parset.readFile( files )
 
+  if options.partition:
+    parset.setPartition( options.partition )
+
+  if options.runtime:
+    starttime, runtime = options.runtime.split(",")
+    parset.setStartRunTime( starttime, runtime )
+
   parset.postRead()
   parset.preWrite()
-  parset.writeFile( "-" )  
+
+  if options.key:
+    print parset[options.key]
+  else:
+    # default: print whole parset
+    parset.writeFile( "-" )  
 
   sys.exit(0)
+

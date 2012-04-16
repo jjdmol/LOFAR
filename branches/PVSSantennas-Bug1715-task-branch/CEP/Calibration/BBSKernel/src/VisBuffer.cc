@@ -213,34 +213,33 @@ void VisBuffer::flagsNot()
 
 void VisBuffer::flagsNaN()
 {
-    if(!hasFlags())
+  if(!hasFlags())
+  {
+    return;
+  }
+  
+  // Loop over all samples: nSamples()
+  typedef boost::multi_array<dcomplex, 4>::element* samplesIterator;
+  typedef boost::multi_array<flag_t, 4>::element* flagsIterator;
+  flagsIterator flagsIt=flags.data();
+  
+  for(samplesIterator samplesIt = samples.data(), end = samples.data() + samples.num_elements(); samplesIt != end;)
+  {   
+    // If any of the correlations is a NaN, flag all correlations
+    for(unsigned int i=0; i<nCorrelations(); i++)
     {
-      return;
-    }
-
-    // Loop over all samples: nSamples()
-    typedef boost::multi_array<dcomplex, 4>::element* samplesIterator;
-    typedef boost::multi_array<flag_t, 4>::element* flagsIterator;
-    flagsIterator flagsIt=flags.data();
-        
-    for(samplesIterator samplesIt = samples.data(), end = samples.data() + samples.num_elements();
-        samplesIt != end; ++samplesIt)
-    {   
-        // If any of the correlations is a NaN, flag all correlations
-        for(unsigned int i=0; i<nCorrelations(); i++)
+      if(casa::isNaN(*(samplesIt+i)))
+      {
+        for(unsigned int j=0; j<nCorrelations(); j++)
         {
-          if(casa::isNaN(*(samplesIt+i)))
-          {
-            for(unsigned int j=0; j<nCorrelations(); j++)
-            {
-              *(flagsIt+j) = *(flagsIt+j) | 1;
-            }
-          }
-          break;
+          *(flagsIt+j) = *(flagsIt+j) | 1;
         }
-        flagsIt=flagsIt+nCorrelations()-1;
-        samplesIt=samplesIt+nCorrelations()-1;
-    }
+        break;
+      }
+    }      
+    flagsIt=flagsIt+nCorrelations();
+    samplesIt=samplesIt+nCorrelations();
+  }
 }
 
 } //# namespace BBS

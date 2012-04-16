@@ -41,7 +41,7 @@ OTDBconnection::OTDBconnection (const string&	username,
 								const string&	passwd,
 								const string&	database,
 								const string&	hostname,
-								const string &  port):
+								const string&	port):
 	itsUser		  (username),
 	itsPassword	  (passwd),
 	itsDatabase	  (database),
@@ -459,6 +459,49 @@ vector<OTDBtree> OTDBconnection::getTreesInPeriod(
 
 	vector<OTDBtree> 	empty;
 	return (empty);
+}
+
+//
+// getMomID2treeIDMap(): map[momID]
+//
+// Get a map to convert a MomID to a treeID
+//
+map<uint, uint>	OTDBconnection::getMomID2treeIDMap()
+{
+	map<uint, uint>	theMap;
+	if (!itsIsConnected && !connect()) {
+		return (theMap); 
+	}
+
+	LOG_TRACE_FLOW_STR ("OTDB:getMomID2treeIDMap()");
+	try {
+		// construct a query that calls a stored procedure.
+		work	xAction(*itsConnection, "getMomID2treeIDMap");
+		string	query("SELECT * from getMomID2treeID()");
+
+		// execute query
+		result	res = xAction.exec(query);
+
+		// any records found?
+		if (res.empty()) {
+			return (theMap); 
+		}
+	
+		// construct map
+		result::size_type	nrRecords = res.size();
+		for (result::size_type i = 0; i < nrRecords; ++i) {
+			uint treeID;
+			res[i][0].to(treeID);
+			uint MomID;
+			res[i][1].to(MomID);
+			theMap[MomID] = treeID;
+		}
+	}
+	catch (std::exception&	ex) {
+		itsError = string("Exception during getMoID2treeID:") + ex.what();
+	}
+
+	return (theMap);
 }
 
 //

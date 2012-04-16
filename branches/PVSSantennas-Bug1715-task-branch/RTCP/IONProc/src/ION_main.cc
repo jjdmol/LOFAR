@@ -23,6 +23,7 @@
 
 #include <CommandServer.h>
 #include <Common/LofarLogger.h>
+#include <Common/CasaLogSink.h>
 #include <Common/NewHandler.h>
 #include <Common/SystemCallException.h>
 #include <Interface/CN_Command.h>
@@ -148,10 +149,16 @@ static void createAllCNstreams()
     cnStreamType = "TCPKEY";
 #endif
 
-  allCNstreams.resize(nrCNcoresInPset);
+  allCNstreams.resize(nrPsets,nrCNcoresInPset);
 
+#ifdef CLUSTER_SCHEDULING
+  for (unsigned pset = 0; pset < nrPsets; pset ++)
+    for (unsigned core = 0; core < nrCNcoresInPset; core ++)
+      allCNstreams[pset][core] = createCNstream(pset, core, 0);
+#else
   for (unsigned core = 0; core < nrCNcoresInPset; core ++)
-    allCNstreams[core] = createCNstream(core, 0);
+    allCNstreams[myPsetNumber][core] = createCNstream(myPsetNumber, core, 0);
+#endif
 
   LOG_DEBUG_STR("Create streams to CN nodes done");
 }
@@ -164,7 +171,7 @@ static void stopCNs()
   CN_Command command(CN_Command::STOP);
 
   for (unsigned core = 0; core < nrCNcoresInPset; core ++)
-    command.write(allCNstreams[core]);
+    command.write(allCNstreams[myPsetNumber][core]);
 
   LOG_DEBUG_STR("Stopping " << nrCNcoresInPset << " cores: done");
 }
@@ -212,10 +219,29 @@ static void enableCoreDumps()
 }
 
 
-static void ignoreSigPipe()
+static void abortHandler(int sig)
 {
+  (void)sig;
+
+  abort();
+}
+
+
+static void installSigHandlers()
+{
+  // ignore SIGPIPE
   if (signal(SIGPIPE, SIG_IGN) < 0)
     perror("warning: ignoring SIGPIPE failed");
+
+  // force abort() on a few signals, as OpenMPI appears to be broken in this regard
+  if (signal(SIGBUS, abortHandler) < 0)
+    perror("warning: rerouting SIGBUS failed");
+  if (signal(SIGSEGV, abortHandler) < 0)
+    perror("warning: rerouting SIGSEGV failed");
+  if (signal(SIGILL, abortHandler) < 0)
+    perror("warning: rerouting SIGILL failed");
+  if (signal(SIGFPE, abortHandler) < 0)
+    perror("warning: rerouting SIGFPE failed");
 }
 
 
@@ -265,7 +291,7 @@ static void master_thread()
   LOG_DEBUG("Master thread running");
 
   enableCoreDumps();
-  ignoreSigPipe();
+  installSigHandlers();
 
 #if defined CATCH_EXCEPTIONS
   try {
@@ -279,24 +305,29 @@ static void master_thread()
       setenv("AIPSPATH", "/globalhome/lofarsystem/packages/root/bgp_ion/", 0);
 
 #if defined HAVE_BGP
-    nrCNcoresInPset = 64; // TODO: how to figure this out?
-#else
-    const char *str = getenv("PSET_SIZE");
+    // TODO: how to figure these out?
+    nrCNcoresInPset = 64;
 
-    if (str == 0)
+    // nrPsets is communicated by MPI
+#else
+    const char *nr_psets  = getenv("NR_PSETS");
+    const char *pset_size = getenv("PSET_SIZE");
+
+    if (nr_psets == 0)
+      throw IONProcException("environment variable NR_PSETS must be defined", THROW_ARGS);
+
+    if (pset_size == 0)
       throw IONProcException("environment variable PSET_SIZE must be defined", THROW_ARGS);
 
-    nrCNcoresInPset = boost::lexical_cast<unsigned>(str);
+    nrPsets = boost::lexical_cast<unsigned>(nr_psets);
+    nrCNcoresInPset = boost::lexical_cast<unsigned>(pset_size);
 #endif
 
     createAllCNstreams();
     createAllIONstreams();
     { CommandServer s; s.start(); }
 
-#if defined CLUSTER_SCHEDULING
-    if (myPsetNumber == 0)
-#endif
-      stopCNs();
+    stopCNs();
 
 #if defined FLAT_MEMORY
     unmapFlatMemory();
@@ -400,6 +431,8 @@ int main(int argc, char **argv)
 #else
   INIT_LOGGER_WITH_SYSINFO(str(boost::format("IONProc@%02d") % myPsetNumber));
 #endif
+
+  //CasaLogSink::attach();
 
   master_thread();
 

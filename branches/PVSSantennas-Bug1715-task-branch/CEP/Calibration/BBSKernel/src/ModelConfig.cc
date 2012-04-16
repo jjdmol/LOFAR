@@ -92,12 +92,14 @@ const string &BeamConfig::asString(Mode in)
 
 BeamConfig::BeamConfig()
     :   itsMode(DEFAULT),
+        itsUseChannelFreq(false),
         itsConjugateAF(false)
 {
 }
 
-BeamConfig::BeamConfig(Mode mode, bool conjugateAF)
+BeamConfig::BeamConfig(Mode mode, bool useChannelFreq, bool conjugateAF)
     :   itsMode(mode),
+        itsUseChannelFreq(useChannelFreq),
         itsConjugateAF(conjugateAF)
 {
 }
@@ -105,6 +107,11 @@ BeamConfig::BeamConfig(Mode mode, bool conjugateAF)
 BeamConfig::Mode BeamConfig::mode() const
 {
     return itsMode;
+}
+
+bool BeamConfig::useChannelFreq() const
+{
+    return itsUseChannelFreq;
 }
 
 bool BeamConfig::conjugateAF() const
@@ -413,6 +420,8 @@ ostream &operator<<(ostream &out, const IonosphereConfig &obj)
 ostream &operator<<(ostream &out, const BeamConfig &obj)
 {
     out << indent << "Mode: " << BeamConfig::asString(obj.mode())
+        << endl << indent << "Use channel frequency: " << boolalpha
+        << obj.useChannelFreq() << noboolalpha
         << endl << indent << "Conjugate array factor: " << boolalpha
         << obj.conjugateAF() << noboolalpha;
     return out;

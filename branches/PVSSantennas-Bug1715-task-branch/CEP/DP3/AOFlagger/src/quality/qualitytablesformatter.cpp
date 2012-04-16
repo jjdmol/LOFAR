@@ -67,7 +67,7 @@ const std::string QualityTablesFormatter::ColumnNameValue     = "VALUE";
 
 enum QualityTablesFormatter::StatisticKind QualityTablesFormatter::NameToKind(const std::string &kindName)
 {
-	for(unsigned i=0;i<20;++i)
+	for(unsigned i=0;i<37;++i)
 	{
 		if(kindName == _kindToNameTable[i])
 			return (QualityTablesFormatter::StatisticKind) i;

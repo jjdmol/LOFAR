@@ -28,7 +28,10 @@
 //# Includes
 #include <lofar_config.h>
 #include <LofarFT/LofarImager.h>
+#include <LofarFT/Package__Version.h>
 #include <Common/InputParSet.h>
+#include <Common/LofarLogger.h>
+#include <Common/SystemUtil.h>
 
 #include <images/Images/PagedImage.h>
 #include <images/Images/HDF5Image.h>
@@ -47,7 +50,13 @@
 #include <casa/sstream.h>
 
 using namespace casa;
+using namespace LOFAR;
 
+// Define handler that tries to print a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
+
+
+// Define some common functions.
 IPosition handlePos (const IPosition& pos, const IPosition& def)
 {
   if (pos.nelements() == 0) {
@@ -251,12 +260,16 @@ void correctImages (const String& restoName, const String& modelName,
 }
 
 
-int main (Int argc, char** argv)
+int main(int argc, char *argv[])
 {
-  try {
+  try
+  {
+    TEST_SHOW_VERSION (argc, argv, LofarFT);
+    INIT_LOGGER(basename(string(argv[0])));
+    Version::show<LofarFTVersion> (cout);
     LOFAR::InputParSet inputs;
     // define the input structure
-    inputs.setVersion("2011Oct05-CT/SvdT/JvZ/GvD");
+    ///    inputs.setVersion("2012Mar-CT/SvdT/JvZ/GvD");
     inputs.create ("ms", "",
 		   "Name of input MeasurementSet",
 		   "string");
@@ -618,6 +631,8 @@ int main (Int argc, char** argv)
     if (weight == "briggsabs") {
       weight = "briggs";
       rmode  = "abs";
+    } else if (weight == "uniform") {
+      rmode = "none";
     }
     bool doShift = False;
     MDirection phaseCenter;
@@ -626,7 +641,9 @@ int main (Int argc, char** argv)
       phaseCenter = readDirection (phasectr);
     }
     operation.downcase();
-    AlwaysAssertExit (operation=="empty" || operation=="image" || operation=="csclean"|| operation=="msmfs"||operation=="predict"||operation=="psf");
+    AlwaysAssertExit (operation=="empty" || operation=="image" ||
+                      operation=="csclean" || operation=="msmfs" ||
+                      operation=="predict" || operation=="psf");
     ///AlwaysAssertExit (operation=="empty" || operation=="image" || operation=="hogbom" || operation=="clark" || operation=="csclean" || operation=="multiscale" || operation =="entropy");
     IPosition maskBlc, maskTrc;
     Quantity threshold;
@@ -685,7 +702,6 @@ int main (Int argc, char** argv)
     // cout<<"timerange"<<timerange.timerange()<<endl;
     Vector<Int> wind(window.nrow());
     for(uInt iii=0;iii<window.nrow();++iii){wind(iii)=iii;};
-    cout<<"... Windows is shit"<<endl;
 
     ROArrayColumn<Double> chfreq(window.chanFreq());
 

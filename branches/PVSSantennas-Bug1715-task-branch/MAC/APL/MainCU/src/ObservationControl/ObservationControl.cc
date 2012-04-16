@@ -258,6 +258,14 @@ void	ObservationControl::setState(CTState::CTstateNr		newState)
 //
 void ObservationControl::registerResultMessage(const string& cntlrName, int	result, CTState::CTstateNr	state)
 {
+	// always handle a quited-msg from a controller.
+	if (state == CTState::QUITED) {
+		_updateChildInfo(cntlrName, state);
+		if (result != CT_RESULT_NO_ERROR) {
+			itsQuitReason = result;
+		}
+	}
+
 	// does the message belong to the current state?
 	CTState		cts;
 	CTState::CTstateNr	expectedState(cts.stateAck(itsState));
@@ -270,12 +278,6 @@ void ObservationControl::registerResultMessage(const string& cntlrName, int	resu
 			LOG_WARN_STR("Controller " << cntlrName << " sent a " << cts.name(state) << " message iso a " 
 					<< cts.name(cts.stateAck(itsState)) << " message.");
 			itsBusyControllers--;	// [15122010] see note in doHeartBeatTask!
-		}
-		if (state == CTState::QUITED) {
-			_updateChildInfo(cntlrName, state);
-			if (result != CT_RESULT_NO_ERROR) {
-				itsQuitReason = result;
-			}
 		}
 		return;
 	}
@@ -438,7 +440,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 			itsChildResult   = CT_RESULT_NO_ERROR;
 			itsChildsInError = 0;
 			itsClaimTimer    = 0;
-			LOG_DEBUG("Requesting all childs to execute the CLAIM state");
+			LOG_INFO("Requesting all childs to execute the CLAIM state");
 			itsChildControl->requestState(CTState::CLAIMED, "");
 			itsBusyControllers = itsChildControl->countChilds(0, CNTLRTYPE_NO_TYPE);
 		}
@@ -447,7 +449,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 			itsChildResult   = CT_RESULT_NO_ERROR;
 			itsChildsInError = 0;
 			itsPrepareTimer  = 0;
-			LOG_DEBUG("Requesting all childs to execute the PREPARE state");
+			LOG_INFO("Requesting all childs to execute the PREPARE state");
 			itsChildControl->requestState(CTState::PREPARED, "");
 			itsBusyControllers = itsChildControl->countChilds(0, CNTLRTYPE_NO_TYPE);
 		}
@@ -456,7 +458,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 			itsChildResult   = CT_RESULT_NO_ERROR;
 			itsChildsInError = 0;
 			itsStartTimer    = 0;
-			LOG_DEBUG("Requesting all childs to go operation state");
+			LOG_INFO("Requesting all childs to go operation state");
 			itsChildControl->requestState(CTState::RESUMED, "");
 			itsBusyControllers = itsChildControl->countChilds(0, CNTLRTYPE_NO_TYPE);
 		}
@@ -465,7 +467,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 			itsChildResult   = itsQuitReason;
 			itsChildsInError = 0;
 			itsStopTimer     = 0;
-			LOG_DEBUG("Requesting all childs to quit");
+			LOG_INFO("Requesting all childs to quit");
 			itsChildControl->requestState(CTState::QUITED, "");
 			itsBusyControllers = itsChildControl->countChilds(0, CNTLRTYPE_NO_TYPE);
 			// reschedule forced-quit timer for safety.
@@ -736,9 +738,10 @@ void  ObservationControl::doHeartBeatTask()
 	// TODO: add criteria to SAS database and test those iso this foolish criteria.
 	if (nrChilds != itsNrControllers) {
 		LOG_WARN_STR("Only " << nrChilds << " out of " << itsNrControllers << " controllers still available.");
-		// if no more children left while we are not in the quit-phase (stoptimer still running)
-		if (itsStopTimer && itsChildControl->countChilds(0, CNTLRTYPE_STATIONCTRL)==0) {
-//		if (!nrChilds && itsStopTimer) {
+		// if no more children left while we are not in the quit-phase
+		time_t	now   = to_time_t(second_clock::universal_time());
+		time_t	stop  = to_time_t(itsStopTime);
+		if (now < stop && itsChildControl->countChilds(0, CNTLRTYPE_STATIONCTRL)==0) {
 			LOG_FATAL("Too less stations left, FORCING QUIT OF OBSERVATION");
 			if (itsState < CTState::RESUME) {
 				itsQuitReason = CT_RESULT_LOST_CONNECTION;
@@ -803,7 +806,7 @@ void ObservationControl::_updateChildInfo(const string& name, CTState::CTstateNr
 	if (!name.empty() && state != CTState::NOSTATE && itsChildInfo.find(name) != itsChildInfo.end()) {
 		itsChildInfo[name].currentState = state;
 		CTState	CTS; 
-		LOG_DEBUG_STR("_updateChildInfo: FORCING " << name << " to " << CTS.name(state));
+		LOG_DEBUG_STR("_updateChildInfo: " << name << " says it is in state " << CTS.name(state));
 		return;
 	}
 
@@ -815,11 +818,32 @@ void ObservationControl::_updateChildInfo(const string& name, CTState::CTstateNr
 			itsChildInfo[childs[i].name] = 
 				ChildProc(childs[i].cntlrType, childs[i].currentState, childs[i].requestedState, childs[i].requestTime);
 		}
-		else {
+		else { // its in the map, update the info.
 			itsChildInfo[childs[i].name].currentState   = (state != CTState::NOSTATE) ? state : childs[i].currentState;
 			itsChildInfo[childs[i].name].requestedState = childs[i].requestedState;
 			itsChildInfo[childs[i].name].requestTime    = childs[i].requestTime;
 		}
+	}
+
+	// we might still have controllers that are already removed by the childcontrol because they closed
+	// the connection. Update those also.
+	map<string, ChildProc>::iterator	iter = itsChildInfo.begin();			// own admin
+	map<string, ChildProc>::iterator	end  = itsChildInfo.end();
+	vector<ChildControl::StateInfo>::const_iterator	vFirst = childs.begin();	// childcontrol admin
+	vector<ChildControl::StateInfo>::const_iterator	vLast  = childs.end();
+	while (iter != end) {
+		// not in childcontrol info anymore?
+		if (iter->second.currentState != CTState::QUITED) {
+			vector<ChildControl::StateInfo>::const_iterator vIter = vFirst;
+			while ((vIter != vLast) && (vIter->name != iter->first)) {
+				vIter++;
+			}
+			if (vIter == vLast) {		// not found?
+				LOG_INFO_STR(iter->first << " not in the ChildControl admin anymore, assuming it quited");
+				iter->second.currentState = CTState::QUITED;
+			}
+		}
+		iter++;
 	}
 }
 

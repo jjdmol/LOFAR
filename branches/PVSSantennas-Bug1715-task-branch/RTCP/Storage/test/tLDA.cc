@@ -1,6 +1,6 @@
-//# tHDF5: Test HDF5 routines
+//# tLDA: Test HDF5 routines through LDA
 //#
-//#  Copyright (C) 2001
+//#  Copyright (C) 2011
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#

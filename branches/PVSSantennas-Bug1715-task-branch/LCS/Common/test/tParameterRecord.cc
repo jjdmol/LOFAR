@@ -141,6 +141,19 @@ void testFind()
   ASSERT (! rec.getRecursive("k1.k2.k6", pv));
 }
 
+void testFile()
+{
+  ParameterSet ps("tParameterRecord.in");
+  ParameterRecord pr0 (ps.getRecord ("key"));
+  ASSERT (pr0.getInt("size") == -1);
+  cout << pr0.getString("fileFormat") << endl;
+  ASSERT (pr0.getString("fileFormat") == "AIPS++=/CASA");
+  ParameterRecord pr1 (ps.getRecord ("key 1"));
+  ASSERT (pr1.getInt("size") == 10);
+  cout << pr1.getString("fileFormat") << endl;
+  ASSERT (pr1.getString("fileFormat") == "AIPS++=/CASA defg\"h klm'n");
+}
+
 int main()
 {
   try {
@@ -149,6 +162,7 @@ int main()
     testNested();
     testExpand();
     testFind();
+    testFile();
   } catch (std::exception& x) {
     cout << "Unexpected exception: " << x.what() << endl;
     return 1;

@@ -8,13 +8,13 @@ enum OutputType
 {
   CORRELATED_DATA = 1,
   BEAM_FORMED_DATA,
-  TRIGGER_DATA
+  TRIGGER_DATA,
+
+  // define LAST and FIRST in the enum to make them valid values within the
+  // allocated range for the enum (=minimal number of bits to store all values)
+  LAST_OUTPUT_TYPE,
+  FIRST_OUTPUT_TYPE = 1
 };
-
-
-const OutputType FIRST_OUTPUT_TYPE = static_cast<OutputType>(1);
-const OutputType LAST_OUTPUT_TYPE  = static_cast<OutputType>(4); // exclusive
-
 
 inline OutputType operator ++ (OutputType &outputType) // prefix ++
 {

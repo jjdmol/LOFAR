@@ -668,6 +668,7 @@ void CEPlogProcessor::_processLogLine(const char *cString)
     logline.date      = &date[0];
     logline.time      = &time[0];
     logline.loglevel  = &loglevel[0];
+    logline.fullmsg   = cString;
 
     if (sscanf(&msg[0], "[%[^]]] %[^\n]", &target[0], &tail[0]) == 2) {
       logline.target = &target[0];
@@ -742,6 +743,24 @@ string CEPlogProcessor::getTempObsName(int obsID, const char *msg)
   return itsTempObsMapping.lookup(obsID);
 }
 
+
+// returns true if the given logline should be recorded in process.logMsg
+bool CEPlogProcessor::_recordLogMsg(const struct logline &logline) const
+{
+    if (!strcmp(logline.loglevel, "INFO"))
+      return true;
+    if (!strcmp(logline.loglevel, "WARN"))
+      return true;
+    if (!strcmp(logline.loglevel, "ERROR"))
+      return true;
+    if (!strcmp(logline.loglevel, "FATAL"))
+      return true;
+    if (!strcmp(logline.loglevel, "EXCEPTION"))
+      return true;
+
+    return false;  
+}
+
 //
 // _processIONProcLine(cstring)
 //
@@ -760,6 +779,10 @@ void CEPlogProcessor::_processIONProcLine(const struct logline &logline)
     }
 
     RTDBPropertySet *inputBuffer = itsInputBuffers[processNr];
+
+    if (_recordLogMsg(logline)) {
+        inputBuffer->setValue("process.logMsg", GCFPVString(logline.fullmsg), logline.timestamp, true);
+    }
 
     char*   result;
 
@@ -954,6 +977,10 @@ void CEPlogProcessor::_processStorageLine(const struct logline &logline)
     if (writerNr >= 0) {
       int writerIndex = hostNr * itsNrWriters + writerNr;
       RTDBPropertySet *writer = itsWriters[writerIndex];
+
+      if (_recordLogMsg(logline)) {
+          writer->setValue("process.logMsg", GCFPVString(logline.fullmsg), logline.timestamp, true);
+      }
 
       // Storage_main@locus088 10-02-12 13:20:01.056 INFO  [obs 45784 type 2 stream  12 writer   0] [OutputThread] Written block with seqno = 479, 480 blocks written, 0 blocks dropped
       if ((result = strstr(logline.msg, "Written block"))) {

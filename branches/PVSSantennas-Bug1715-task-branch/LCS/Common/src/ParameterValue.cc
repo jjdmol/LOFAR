@@ -70,12 +70,12 @@ namespace LOFAR {
         } else if (itsValue[i] == ')') {
           nrpar--;
         } else if (itsValue[i] == '[') {
-          ASSERT (nrpar == 0);
+          ASSERTSTR (nrpar == 0, "Unbalanced () om '" << itsValue << '\'');
           nrbracket++;
         } else if (itsValue[i] == ']') {
           nrbracket--;
         } else if (itsValue[i] == '{') {
-          ASSERT (nrpar == 0);
+          ASSERTSTR (nrpar == 0, "Unbalanced () om '" << itsValue << '\'');
           nrbrace++;
         } else if (itsValue[i] == '}') {
           nrbrace--;
@@ -85,12 +85,14 @@ namespace LOFAR {
             st = i+1;
           }
         }
-        ASSERT (nrpar >= 0  &&  nrbracket >= 0);
+        ASSERTSTR (nrpar >= 0  &&  nrbracket >= 0  &&  nrbrace >= 0,
+                   "Unbalanced () [] or {} in '" << itsValue << '\'');
         i++;
       }
     }
     result.push_back (ParameterValue(substr(st, last)));
-    ASSERT (nrpar == 0  &&  nrbracket == 0  &&  nrbrace == 0);
+    ASSERTSTR (nrpar == 0  &&  nrbracket == 0  &&  nrbrace == 0,
+               "Unbalanced () [] or {} in '" << itsValue << '\'');
     return result;
   }
 
@@ -102,8 +104,10 @@ namespace LOFAR {
     if (itsValue.empty() || !(itsValue[0] == '['  &&  itsValue[last] == ']')) {
       return vector<ParameterValue> (1, *this);
     }
-    ASSERT (itsValue.size() >= 2  &&  itsValue[0] == '['  &&
-            itsValue[last] == ']');
+    ASSERTSTR (itsValue.size() >= 2  &&  itsValue[0] == '['  &&
+               itsValue[last] == ']',
+               "Invalid vector specification in value '"
+               << itsValue << '\'');
     return splitValue (st, last);
   }
 
@@ -111,8 +115,10 @@ namespace LOFAR {
   {
     uint st   = 1;
     uint last = itsValue.size() - 1;
-    ASSERT (itsValue.size() >= 2  &&  itsValue[0] == '{'  &&
-            itsValue[last] == '}');
+    ASSERTSTR (itsValue.size() >= 2  &&  itsValue[0] == '{'  &&
+               itsValue[last] == '}',
+               "Invalid record specification in value '"
+               << itsValue << '\'');
     vector<ParameterValue> values (splitValue (st, last));
     // Loop over all values and split in names and values.
     ParameterRecord result;
@@ -124,7 +130,8 @@ namespace LOFAR {
         st = skipQuoted (str, 0);
       }
       string::size_type pos = str.find(':', st);
-      ASSERT (pos != string::npos);
+      ASSERTSTR (pos != string::npos, "Invalid record specification in value '"
+                 << str << '\'');
       // Get name and value.
       // ParameterValue is used to remove possible whitespace.
       // getString also removes quotes in case the name was quoted.
@@ -137,13 +144,31 @@ namespace LOFAR {
 
   string ParameterValue::getString() const
   {
-    // Remove possible quotes around the value.
-    uint sz = itsValue.size();
-    if (sz < 2  ||  (itsValue[0] != '"'  &&  itsValue[0] != '\'')) {
-      return itsValue;
+    // Remove possible quotes used to escape special chars in the value.
+    string result;
+    uint end = itsValue.size();
+    uint pos = 0;
+    uint stv = 0;
+    while (pos < end) {
+      if (itsValue[pos] == '"'  ||  itsValue[pos] == '\'') {
+        if (stv < pos) {
+          // Add unquoted part.
+          result += itsValue.substr(stv, pos-stv);
+        }
+        // Add quoted part without the quotes.
+        stv = pos+1;
+        pos = skipQuoted (itsValue, pos);
+        result += itsValue.substr(stv, pos-stv-1);
+        stv = pos;
+      } else {
+        pos++;
+      }
     }
-    ASSERT (itsValue[0] == itsValue[sz-1]);
-    return itsValue.substr(1, sz-2);
+    if (stv < end) {
+      // Add remaining part.
+      result += itsValue.substr (stv, end-stv);
+    }
+    return result;
   }
 
   vector<bool> ParameterValue::getBoolVector() const

@@ -64,6 +64,8 @@ class SocketStream : public FileDescriptorBasedStream
 
     void accept(time_t timeout);
 
+    static void syncNFS();
+
     static std::string readkey(const string &nfskey, time_t &timeout);
     static void writekey(const string &nfskey, uint16 port);
     static void deletekey(const string &nfskey);

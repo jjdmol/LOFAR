@@ -26,6 +26,7 @@
 
 #include <AOFlagger/quality/statisticscollection.h>
 #include <AOFlagger/quality/histogramcollection.h>
+#include <AOFlagger/quality/statisticsderivator.h>
 
 namespace aoRemote {
 
@@ -193,6 +194,17 @@ void ProcessCommander::onConnectionFinishReadQualityTables(ServerConnectionPtr s
 	
 	if(!histogramCollection.Empty())
 	{
+		if(_correctHistograms)
+		{
+			DefaultStatistics thisStat(statisticsCollection.PolarizationCount());
+			statisticsCollection.GetGlobalCrossBaselineStatistics(thisStat);
+			DefaultStatistics singlePol = thisStat.ToSinglePolarization();
+			double stddev = StatisticsDerivator::GetStatisticAmplitude(QualityTablesFormatter::DStandardDeviationStatistic, singlePol, 0);
+			
+			std::cout << "Scaling with " << 1.0 / stddev << ".\n";
+			histogramCollection.Rescale(1.0 / stddev);
+		}
+		
 		if(_histogramCollection->PolarizationCount() == 0)
 			_histogramCollection->SetPolarizationCount(histogramCollection.PolarizationCount());
 		

@@ -84,13 +84,21 @@ Job::Job(const char *parsetName)
     if (itsParset.PLC_controlled()) {
       // let the ApplController decide what we should do
       try {
-        itsPLCStream = new SocketStream(itsParset.PLC_Host().c_str(), itsParset.PLC_Port(), SocketStream::TCP, SocketStream::Client, 60);
+        itsPLCStream = new SocketStream(itsParset.PLC_Host(), itsParset.PLC_Port(), SocketStream::TCP, SocketStream::Client, 60);
 
         itsPLCClient = new PLCClient(*itsPLCStream, *this, itsParset.PLC_ProcID(), itsObservationID);
+        itsPLCClient->start();
       } catch (Exception &ex) {
         LOG_WARN_STR(itsLogPrefix << "Could not connect to ApplController on " << itsParset.PLC_Host() << ":" << itsParset.PLC_Port() << " as " << itsParset.PLC_ProcID() << " -- continuing on autopilot: " << ex);
       }
+    }
+
+    if (!itsPLCClient) {
+      // we are either not PLC controlled, or we're supposed to be but can't connect to
+      // the ApplController
+      LOG_INFO_STR(itsLogPrefix << "Not controlled by ApplController");
     }  
+
   }
 
   // check enough parset settings just to get to the coordinated check in jobThread safely
@@ -503,18 +511,10 @@ void Job::jobThread()
         canStart = false;
       }
 
-      if (!itsPLCClient) {
-        // we are either not PLC controlled, or we're supposed to be but can't connect to
-        // the ApplController
-        LOG_INFO_STR(itsLogPrefix << "Not controlled by ApplController");
-
-        // perform some functions which ApplController would have us do
-
-        // obey the stop time in the parset -- the first anotherRun() will broadcast it
-        if (!pause(itsParset.stopTime())) {
-          LOG_ERROR_STR(itsLogPrefix << "Could not set observation stop time");
-          canStart = false;
-        }
+      // obey the stop time in the parset -- the first anotherRun() will broadcast it
+      if (!pause(itsParset.stopTime())) {
+        LOG_ERROR_STR(itsLogPrefix << "Could not set observation stop time");
+        canStart = false;
       }
 
       if (canStart) {
@@ -610,15 +610,22 @@ void Job::createCNstreams()
   itsCNstreams.resize(usedCoresInPset.size());
 
   for (unsigned core = 0; core < usedCoresInPset.size(); core ++)
-    itsCNstreams[core] = allCNstreams[usedCoresInPset[core]];
+    itsCNstreams[core] = allCNstreams[myPsetNumber][usedCoresInPset[core]];
 
   if (itsHasPhaseOne || itsHasPhaseTwo) {
     std::vector<unsigned> phaseOneTwoCores = itsParset.phaseOneTwoCores();
 
-    itsPhaseOneTwoCNstreams.resize(phaseOneTwoCores.size());
+    itsPhaseOneTwoCNstreams.resize(nrPsets, phaseOneTwoCores.size());
 
-    for (unsigned core = 0; core < phaseOneTwoCores.size(); core ++)
-      itsPhaseOneTwoCNstreams[core] = allCNstreams[phaseOneTwoCores[core]];
+#ifdef CLUSTER_SCHEDULING
+    for (unsigned pset = 0; pset < nrPsets; pset ++)
+#else
+    unsigned pset = myPsetNumber;
+#endif
+    {
+      for (unsigned core = 0; core < phaseOneTwoCores.size(); core ++)
+        itsPhaseOneTwoCNstreams[pset][core] = allCNstreams[pset][phaseOneTwoCores[core]];
+    }
   }
 
   if (itsHasPhaseThree) {
@@ -627,7 +634,7 @@ void Job::createCNstreams()
     itsPhaseThreeCNstreams.resize(phaseThreeCores.size());
 
     for (unsigned core = 0; core < phaseThreeCores.size(); core ++)
-      itsPhaseThreeCNstreams[core] = allCNstreams[phaseThreeCores[core]];
+      itsPhaseThreeCNstreams[core] = allCNstreams[myPsetNumber][phaseThreeCores[core]];
   }
 }
 
@@ -712,16 +719,17 @@ bool Job::anotherRun()
     broadcast(itsStopTime);
   }
 
+  // move on to the next block
+  itsBlockNumber ++;
+
   bool done = !itsIsRunning;
 
   if (itsStopTime > 0.0) {
-    // start time of last processed block
-    double currentTime = itsParset.startTime() + itsBlockNumber * itsParset.CNintegrationTime();
+    // the end time of this block must still be within the observation
+    double currentTime = itsParset.startTime() + (itsBlockNumber + 1) * itsParset.CNintegrationTime();
 
     done = done || currentTime >= itsStopTime;
   }
-
-  itsBlockNumber ++;
 
   return !done;
 }
@@ -735,10 +743,6 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
     LOG_INFO_STR(itsLogPrefix << "----- Observation start");
 
   // first: send configuration to compute nodes so they know what to expect
-#if defined CLUSTER_SCHEDULING
-  if (myPsetNumber == 0)
-    configureCNs();
-#else
   if (!agree(configureCNs())) {
     unconfigureCNs();
 
@@ -747,22 +751,21 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
 
     return;
   }
-#endif
 
   if (itsHasPhaseOne)
     attachToInputSection<SAMPLE_TYPE>();
 
   if (itsHasPhaseTwo) {
     if (itsParset.outputCorrelatedData())
-      outputSections.push_back(new CorrelatedDataOutputSection(itsParset, createCNstream, itsBlockNumber));
+      outputSections.push_back(new CorrelatedDataOutputSection(itsParset, itsBlockNumber));
   }
 
   if (itsHasPhaseThree) {
     if (itsParset.outputBeamFormedData())
-      outputSections.push_back(new BeamFormedDataOutputSection(itsParset, createCNstream, itsBlockNumber));
+      outputSections.push_back(new BeamFormedDataOutputSection(itsParset, itsBlockNumber));
 
     if (itsParset.outputTrigger())
-      outputSections.push_back(new TriggerDataOutputSection(itsParset, createCNstream, itsBlockNumber));
+      outputSections.push_back(new TriggerDataOutputSection(itsParset, itsBlockNumber));
   }
 
   // start the threads
@@ -800,10 +803,7 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
   if (itsHasPhaseOne)
     detachFromInputSection<SAMPLE_TYPE>();
 
-#if defined CLUSTER_SCHEDULING
-  if (myPsetNumber == 0)
-#endif
-    unconfigureCNs();
+  unconfigureCNs();
  
   if (LOG_CONDITION)
     LOG_INFO_STR(itsLogPrefix << "----- Observation finished");

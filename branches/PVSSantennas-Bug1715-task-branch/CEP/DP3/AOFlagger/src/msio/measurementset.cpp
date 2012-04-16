@@ -198,10 +198,10 @@ struct AntennaInfo MeasurementSet::GetAntennaInfo(unsigned antennaId)
 	return info;
 }
 
-struct BandInfo MeasurementSet::GetBandInfo(unsigned bandIndex)
+BandInfo MeasurementSet::GetBandInfo(const std::string &filename, unsigned bandIndex)
 {
 	BandInfo band;
-	casa::MeasurementSet ms(_location);
+	casa::MeasurementSet ms(filename);
 	casa::Table spectralWindowTable = ms.spectralWindow();
 	casa::ROScalarColumn<int> numChanCol(spectralWindowTable, "NUM_CHAN");
 	casa::ROArrayColumn<double> frequencyCol(spectralWindowTable, "CHAN_FREQ");
@@ -286,38 +286,36 @@ MSIterator::~MSIterator()
 
 void MeasurementSet::InitCacheData()
 {
-	AOLogger::Debug << "Initializing ms cache data...\n"; 
-	MSIterator iterator(*this, false);
-	size_t antenna1=0xFFFFFFFF, antenna2 = 0xFFFFFFFF;
-	double time = nan("");
-	for(size_t row=0;row<iterator.TotalRows();++row)
+	if(!_cacheInitialized)
 	{
-		size_t cur_a1 = iterator.Antenna1();
-		size_t cur_a2 = iterator.Antenna2();
-		double cur_time = iterator.Time();
-		if(cur_a1 != antenna1 || cur_a2 != antenna2)
+		AOLogger::Debug << "Initializing ms cache data...\n"; 
+		std::set<double>::iterator obsTimePos = _observationTimes.end();
+		MSIterator iterator(*this, false);
+		size_t antenna1=0xFFFFFFFF, antenna2 = 0xFFFFFFFF;
+		double time = nan("");
+		std::set<std::pair<size_t, size_t> > baselineSet;
+		for(size_t row=0;row<iterator.TotalRows();++row)
 		{
-			bool exists = false;
-			for(vector<pair<size_t,size_t> >::const_iterator i=_baselines.begin();i!=_baselines.end();++i)
+			size_t cur_a1 = iterator.Antenna1();
+			size_t cur_a2 = iterator.Antenna2();
+			double cur_time = iterator.Time();
+			if(cur_a1 != antenna1 || cur_a2 != antenna2)
 			{
-				if(i->first == cur_a1 && i->second == cur_a2)
-				{
-					exists = true;
-					break;
-				}
+				baselineSet.insert(std::pair<size_t,size_t>(cur_a1, cur_a2));
+				antenna1 = cur_a1;
+				antenna2 = cur_a2;
 			}
-			if(!exists)
-				_baselines.push_back(std::pair<size_t,size_t>(cur_a1, cur_a2));
-			antenna1 = cur_a1;
-			antenna2 = cur_a2;
+			if(cur_time != time)
+			{
+				obsTimePos = _observationTimes.insert(obsTimePos, cur_time);
+				time = cur_time;
+			}
+			++iterator;
 		}
-		if(cur_time != time)
-		{
-			_observationTimes.insert(cur_time);
-			time = cur_time;
-		}
-		++iterator;
+		for(std::set<std::pair<size_t, size_t> >::const_iterator i=baselineSet.begin(); i!=baselineSet.end(); ++i)
+			_baselines.push_back(*i);
 	}
+	
 	_cacheInitialized = true;
 }
 

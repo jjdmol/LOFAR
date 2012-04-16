@@ -33,7 +33,6 @@
 #include <AOFlagger/msio/segmentedimage.h>
 #include <AOFlagger/msio/spatialmatrixmetadata.h>
 
-#include <AOFlagger/strategy/actions/baselineselectionaction.h>
 #include <AOFlagger/strategy/actions/strategyaction.h>
 
 #include <AOFlagger/strategy/control/artifactset.h>
@@ -44,6 +43,7 @@
 #include <AOFlagger/strategy/imagesets/spatialmsimageset.h>
 #include <AOFlagger/strategy/imagesets/spatialtimeimageset.h>
 
+#include <AOFlagger/strategy/algorithms/baselineselector.h>
 #include <AOFlagger/strategy/algorithms/mitigationtester.h>
 #include <AOFlagger/strategy/algorithms/morphology.h>
 #include <AOFlagger/strategy/algorithms/fringetestcreater.h>
@@ -117,6 +117,9 @@ MSWindow::MSWindow() : _imagePlaneWindow(0), _histogramWindow(0), _optionWindow(
 
 MSWindow::~MSWindow()
 {
+	while(!_actionGroup->get_actions().empty())
+		_actionGroup->remove(*_actionGroup->get_actions().begin());
+	
 	delete _imagePlaneWindow;
 	if(_histogramWindow != 0)
 		delete _histogramWindow;
@@ -160,7 +163,7 @@ void MSWindow::onActionDirectoryOpen()
 
   if(result == Gtk::RESPONSE_OK)
 	{
-		openPath(dialog.get_filename());
+		OpenPath(dialog.get_filename());
 	}
 }
 
@@ -244,11 +247,11 @@ void MSWindow::onActionFileOpen()
 
   if(result == Gtk::RESPONSE_OK)
 	{
-		openPath(dialog.get_filename());
+		OpenPath(dialog.get_filename());
 	}
 }
 
-void MSWindow::openPath(const std::string &path)
+void MSWindow::OpenPath(const std::string &path)
 {
 	if(_optionWindow != 0)
 		delete _optionWindow;
@@ -381,7 +384,7 @@ void MSWindow::onExecuteStrategyPressed()
 	artifacts.SetIterationsPlot(new IterationsPlot());
 	
 	artifacts.SetPolarizationStatistics(new PolarizationStatistics());
-	artifacts.SetBaselineSelectionInfo(new rfiStrategy::BaselineSelectionInfo());
+	artifacts.SetBaselineSelectionInfo(new rfiStrategy::BaselineSelector());
 	artifacts.SetImager(_imagePlaneWindow->GetImager());
 
 	if(HasImage())
@@ -1212,7 +1215,7 @@ void MSWindow::onPlotComplexPlanePressed()
 	if(HasImage()) {
 		if(_plotComplexPlaneWindow != 0)
 			delete _plotComplexPlaneWindow;
-		_plotComplexPlaneWindow = new ComplexPlanePlotWindow(*this);
+		_plotComplexPlaneWindow = new ComplexPlanePlotWindow(*this, _plotManager);
 		_plotComplexPlaneWindow->show();
 	}
 }
@@ -1580,7 +1583,18 @@ void MSWindow::showPhasePart(enum TimeFrequencyData::PhaseRepresentation phaseRe
 			_timeFrequencyWidget.Update();
 		} catch(std::exception &e)
 		{
-			showError(e.what());
+			std::stringstream errstr;
+			errstr
+				<< "The data that was currently in memory could not be converted to the requested "
+				   "type. The error given by the converter was:\n"
+				<< e.what()
+				<< "\n\n"
+				<< "Note that if the original data should be convertable to this type, but "
+				   "you have already used one of the 'Keep ..' buttons, you first need to reload "
+					 "the full data with Goto -> Load.\n\n"
+					 "(alternatively, if loading takes a lot of time, you can use the Store and Recall"
+					 " options in the Data menu)";
+			showError(errstr.str());
 		}
 	}
 }
@@ -1597,7 +1611,18 @@ void MSWindow::showPolarisation(enum PolarisationType polarisation)
 			_timeFrequencyWidget.Update();
 		} catch(std::exception &e)
 		{
-			showError(e.what());
+			std::stringstream errstr;
+			errstr
+				<< "The data that was currently in memory could not be converted to the requested "
+				   "polarization. The error given by the converter was:\n"
+				<< e.what()
+				<< "\n\n"
+				<< "Note that if the original data should be convertable to this polarization, but "
+				   "you have already used one of the 'Keep ..' buttons, you first need to reload "
+					 "the full data with Goto -> Load.\n\n"
+					 "(alternatively, if loading takes a lot of time, you can use the Store and Recall"
+					 " options in the Data menu)";
+			showError(errstr.str());
 		}
 	}
 }

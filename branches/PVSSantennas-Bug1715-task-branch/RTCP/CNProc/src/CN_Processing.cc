@@ -286,18 +286,23 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
         if (info.part != 0)
           continue;
 
-        totalsizes[info.sap] += align(itsTranspose2Logic.subbandSize(i), 32);
+        totalsizes[info.sap] += align(itsTranspose2Logic.subbandSize(i), StreamableData::alignment);
       }
 
       // allocate memory for the largest SAP
       size_t max_totalsize = *std::max_element(totalsizes.begin(), totalsizes.end());
 
       itsBeamMemory.allocator = &itsBigAllocator;
-      itsBeamMemory.ptr       = itsBigAllocator.allocate(max_totalsize, 32);
+      itsBeamMemory.ptr       = itsBigAllocator.allocate(max_totalsize, StreamableData::alignment);
       itsBeamArena      = new FixedArena(itsBeamMemory.ptr, max_totalsize);
       itsBeamAllocator  = new SparseSetAllocator(*itsBeamArena.get()); // allocates consecutively
 
       itsPreTransposeBeamFormedData.resize(itsMaxNrPencilBeams);
+
+      if (LOG_CONDITION) {
+        LOG_DEBUG_STR("MaxNrPencilBeams = " << itsMaxNrPencilBeams << ", TotalNrPencilBeams = " << itsTotalNrPencilBeams);
+        LOG_DEBUG_STR("Allocated " << max_totalsize << " bytes for beam forming.");
+      }
   }
 
   if (itsHasPhaseTwo || itsHasPhaseThree) {
@@ -369,6 +374,9 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::receiveInput()
   SubbandMetaData metaData(1, itsMaxNrPencilBeams + 1);
 
   for (unsigned stat = 0; stat < itsNrStations; stat ++) {
+    if (LOG_CONDITION)
+      LOG_DEBUG_STR(itsLogPrefix << "Receiving input of station " << stat);
+
     // receive meta data
     metaData.read(itsInputStreams[stat]); // FIXME
     memcpy(&itsTransposedSubbandMetaData->subbandInfo(stat), &metaData.subbandInfo(0), metaData.itsSubbandInfoSize);
@@ -413,16 +421,10 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::transposeInput(
       //unsigned subband = (*itsCurrentSubband % itsNrSubbandsPerPset) + (i * itsNrSubbandsPerPset);
 
       if (subband < itsNrSubbands) {
-        if (LOG_CONDITION) {
-	  LOG_DEBUG_STR("read subband " << subband << " from IO node at t = " << blockAge());
-        }
 	readTimer.start();
 	itsInputData->readOne(itsInputStreams[0], i); // Synchronously read 1 subband from my IO node.
 	readTimer.stop();
 	asyncSendTimer.start();
-        if (LOG_CONDITION) {
-	  LOG_DEBUG_STR("transpose: send subband " << subband << " to pset id " << i << " at t = " << blockAge());
-        }
 
 	itsAsyncTransposeInput->asyncSend(i, itsInputSubbandMetaData, itsInputData); // Asynchronously send one subband to another pset.
 	asyncSendTimer.stop();
@@ -564,6 +566,7 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
         const StreamInfo &info = itsTranspose2Logic.streamInfo[stream];
 
         ASSERT( beam < itsPreTransposeBeamFormedData.size() );
+        ASSERT( itsPreTransposeBeamFormedData[beam].get() == 0 );
 
         itsPreTransposeBeamFormedData[beam] = new PreTransposeBeamFormedData(info.nrStokes, info.nrChannels, info.nrSamples, *itsBeamAllocator.get());
 
@@ -808,6 +811,10 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::sendOutput(Stre
   writeTimer.start();
   outputData->write(stream, false);
   writeTimer.stop();
+
+  if (LOG_CONDITION) {
+    LOG_DEBUG_STR(itsLogPrefix << "Done writing output at t = " << blockAge());
+  }
 }
 
 
@@ -849,7 +856,6 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::receiveBeam(uns
 #if defined HAVE_MPI
   const StreamInfo &info = itsTranspose2Logic.streamInfo[stream];
   unsigned nrSubbands = info.subbands.size();
-  unsigned nrSamples = itsNrSamplesPerIntegration / info.timeIntFactor;
 
   static NSTimer asyncFirstReceiveTimer("wait for first async beam receive", true, true);
   static NSTimer asyncNonfirstReceiveTimer("wait for subsequent async beam receive", true, true);
@@ -883,7 +889,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::receiveBeam(uns
       LOG_DEBUG_STR(itsLogPrefix << "Starting to post process subband " << i << " / " << nrSubbands << " at t = " << blockAge());
 
     if (itsFinalBeamFormedData != 0) {
-      itsBeamFormer->postTransposeBeam(itsTransposedBeamFormedData, itsFinalBeamFormedData, subband, info.nrChannels, nrSamples);
+      itsBeamFormer->postTransposeBeam(itsTransposedBeamFormedData, itsFinalBeamFormedData, subband, info.nrChannels, info.nrSamples);
     }  
 
     if (itsTrigger != 0)

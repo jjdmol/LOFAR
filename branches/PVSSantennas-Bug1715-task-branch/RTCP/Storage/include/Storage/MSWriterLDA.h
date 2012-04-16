@@ -1,6 +1,6 @@
-//  MSMriterDAL.h: implementation of MSWriter using the DAL to write HDF5
+//  MSMriterLDA.h: implementation of MSWriter using the LDA to write HDF5
 //
-//  Copyright (C) 2001
+//  Copyright (C) 2011
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
 //  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //
@@ -18,7 +18,7 @@
 //  along with this program; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
-//  $Id: MSWriterImpl.h 11891 2008-10-14 13:43:51Z gels $
+//  $Id: MSWriterLDA.h 11891 2011-10-14 13:43:51Z gels $
 //
 //////////////////////////////////////////////////////////////////////
 

@@ -1,6 +1,6 @@
 //# MSWriterLDA: an implementation of MSWriter using the LDA to write HDF5
 //#
-//#  Copyright (C) 2001
+//#  Copyright (C) 2011
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -125,7 +125,7 @@ namespace LOFAR
 
       itsTransposeLogic.decompose( fileno, sapNr, beamNr, stokesNr, partNr );
 
-      unsigned nrBlocks = ceil((parset.stopTime() - parset.startTime()) / parset.CNintegrationTime());
+      unsigned nrBlocks = floor((parset.stopTime() - parset.startTime()) / parset.CNintegrationTime());
       unsigned nrSubbands = itsInfo.subbands.size();
       const vector<unsigned> &subbandIndices = itsInfo.subbands;
       const vector<unsigned> allSubbands = parset.subbandList();
@@ -284,8 +284,9 @@ namespace LOFAR
       beam.create();
       beam.groupType()   .set("Beam");
 
-      beam.nofStations() .set(parset.nrStations());
-      beam.stationsList().set(parset.allStationNames()); // TODO: SS beamformer, support subsets of allStations
+      vector<string> beamStationList = parset.pencilBeamStationList(sapNr, beamNr);
+      beam.nofStations() .set(beamStationList.size());
+      beam.stationsList().set(beamStationList);
 
       //const char *trackingTypes[] = { "J2000", "LMN", "TBD" };
       //writeAttribute(         beam, "TRACKING",      "J2000" ); // TODO: support non-tracking
@@ -294,9 +295,9 @@ namespace LOFAR
       BeamCoordinates pbeamDirs = parset.pencilBeams(sapNr);
       BeamCoord3D pbeamDir = pbeamDirs[beamNr];
       beam.pointRA()       .set((beamDir[0] + pbeamDir[0]) * 180.0 / M_PI);
-      beam.pointDEC()      .set((beamDir[0] + pbeamDir[0]) * 180.0 / M_PI);
+      beam.pointDEC()      .set((beamDir[1] + pbeamDir[1]) * 180.0 / M_PI);
       beam.pointOffsetRA() .set(pbeamDir[0] * 180.0 / M_PI);
-      beam.pointOffsetDEC().set(pbeamDir[0] * 180.0 / M_PI);
+      beam.pointOffsetDEC().set(pbeamDir[1] * 180.0 / M_PI);
 
       vector<double> beamCenterFrequencies(nrSubbands, 0.0);
 

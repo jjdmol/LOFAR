@@ -10,6 +10,7 @@
 #include <lofar_config.h>
 
 #include <Common/LofarLogger.h>
+#include <Common/CasaLogSink.h>
 #include <Common/StringUtil.h>
 #include <Common/Exceptions.h>
 #include <Common/NewHandler.h>
@@ -117,6 +118,8 @@ int main(int argc, char *argv[])
 #else
   INIT_LOGGER_WITH_SYSINFO(str(boost::format("Storage@%02d") % (argc > 1 ? atoi(argv[1]) : -1)));
 #endif
+
+  CasaLogSink::attach();
 
   try {
     if (argc != 4)

@@ -261,23 +261,29 @@ void SocketStream::setReadBufferSize(size_t size)
 }
 
 
+void SocketStream::syncNFS()
+{
+  // sync NFS
+  DIR *dir = opendir(".");
+
+  if (!dir)
+    throw SystemCallException("opendir", errno, THROW_ARGS);
+
+  if (!readdir(dir))
+    throw SystemCallException("readdir", errno, THROW_ARGS);
+
+  if (closedir(dir) != 0)
+    throw SystemCallException("closedir", errno, THROW_ARGS);
+}
+
+
 std::string SocketStream::readkey(const std::string &nfskey, time_t &timeout)
 {
   for(;;) {
-    // sync NFS
-    DIR *dir = opendir(".");
-
-    if (!dir)
-      throw SystemCallException("opendir", errno, THROW_ARGS);
-
-    if (!readdir(dir))
-      throw SystemCallException("readdir", errno, THROW_ARGS);
-
-    if (closedir(dir) != 0)
-      throw SystemCallException("closedir", errno, THROW_ARGS);
-
     char portStr[16];
     ssize_t len;
+
+    syncNFS();
 
     len = readlink(nfskey.c_str(), portStr, sizeof portStr - 1); // reserve 1 character to insert \0 below
 
@@ -313,6 +319,8 @@ void SocketStream::writekey(const std::string &nfskey, uint16 port)
 
 void SocketStream::deletekey(const std::string &nfskey)
 {
+  syncNFS();
+
   if (unlink(nfskey.c_str()) < 0)
     throw SystemCallException("unlink", errno, THROW_ARGS);
 }

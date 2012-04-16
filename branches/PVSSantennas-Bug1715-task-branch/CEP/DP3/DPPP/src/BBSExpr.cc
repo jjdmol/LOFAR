@@ -53,7 +53,7 @@ namespace LOFAR {
         ParmManager::instance().initCategory(SKY, itsSourceDB->getParmDB());
       } catch (Exception &e) {
         THROW(Exception, "Failed to open sky model parameter database: "
-              << skyName);
+          << skyName);
       }
 
       try {
@@ -62,7 +62,7 @@ namespace LOFAR {
                                                                instrumentName)));
       } catch (Exception &e) {
         THROW(Exception, "Failed to open instrument model parameter database: "
-              << instrumentName);
+          << instrumentName);
       }
 
       // Create Instrument instance using the information present in DPInput.
@@ -91,24 +91,23 @@ namespace LOFAR {
       itsCorrelations.append(Correlation::XY);
       itsCorrelations.append(Correlation::YX);
       itsCorrelations.append(Correlation::YY);
-
-      // Initialize parameter estimation options.
-      SolverOptions lsqOptions;
-      lsqOptions.maxIter = 50;
-      lsqOptions.epsValue = 1e-9;
-      lsqOptions.epsDerivative = 1e-9;
-      lsqOptions.colFactor = 1e-9;
-      lsqOptions.lmFactor = 1.0;
-      lsqOptions.balancedEq = false;
-      lsqOptions.useSVD = true;
-
-      itsOptions = EstimateOptions(EstimateOptions::COMPLEX,
-                                   EstimateOptions::L2, false, 0, true,
-                                   ~flag_t(0), flag_t(4), lsqOptions);
     }
 
     BBSExpr::~BBSExpr()
     {
+    }
+
+    void BBSExpr::setOptions (const SolverOptions& lsqOptions)
+    {
+      // Initialize parameter estimation options.
+      itsOptions = EstimateOptions(EstimateOptions::COMPLEX,
+                                   EstimateOptions::L2,
+                                   false,
+                                   0,
+                                   false,
+                                   ~flag_t(0),
+                                   flag_t(4),
+                                   lsqOptions);
     }
 
     void BBSExpr::addModel (const string &source, const MDirection &phaseRef)

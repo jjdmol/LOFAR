@@ -52,9 +52,10 @@ public:
     };
 
     BeamConfig();
-    BeamConfig(Mode mode, bool conjugateAF);
+    BeamConfig(Mode mode, bool useChannelFreq, bool conjugateAF);
 
     Mode mode() const;
+    bool useChannelFreq() const;
     bool conjugateAF() const;
 
     static bool isDefined(Mode in);
@@ -63,6 +64,7 @@ public:
 
 private:
     Mode            itsMode;
+    bool            itsUseChannelFreq;
     bool            itsConjugateAF;
 };
 
