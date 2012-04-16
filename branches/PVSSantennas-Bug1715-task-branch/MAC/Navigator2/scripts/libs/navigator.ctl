@@ -93,19 +93,19 @@ void navigator_handleEventInitialize()
   LOG_TRACE("navigator.ctl:navigator_handleEventInitialize|entered");
   g_initializing = true;
   
-
+  MainDBName         = getSystemName();
+  MainDBID           = getSystemId();
   // first we need to check if we are on the MainCU or a stationDB, if we are on a stationDB we are in standalone mode
-  if (getSystemName() != MainDBName) {
-    MainDBName         = getSystemName();
-    MainDBID           = getSystemId();
+  if (strpos(MainDBName,"MCU") >= 0) {
     CEPDBName          = MainDBName;
     strreplace(CEPDBName,"MCU","CCU");
+    } else {
     g_standAlone       = true;    // can be used to check if we are in standalone mode (== station only mode)
-    g_currentDatapoint      = MainDBName+"LOFAR";
-    g_lastHardwareDatapoint = MainDBName+"LOFAR";
-    g_lastProcessesDatapoint = MainDBName+"LOFAR_PermSW";
-    g_lastObservationsDatapoint = MainDBName+"LOFAR_ObsSW";
   }
+  g_currentDatapoint      = MainDBName+"LOFAR";
+  g_lastHardwareDatapoint = MainDBName+"LOFAR";
+  g_lastProcessesDatapoint = MainDBName+"LOFAR_PermSW";
+  g_lastObservationsDatapoint = MainDBName+"LOFAR_ObsSW";
     
   // Set the global statecolors/colornames, we need to do this before we 
   //start the rest of the framework, because the other processes need these
