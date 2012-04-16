@@ -274,31 +274,31 @@ LANG:1 0
 LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
  4 275 984 464
-EE 1 0 1 5 8 "Direction" 5 1 0 "s" 1
+EE 1 0 1 4 8 "Direction" 8 1 0 "s" 1
 LANG:1 9 Direction
 E
 1
 LANG:1 0 
 
-65 "Angle1" 4 1 0 "s" 1
+100 "Angle1" 8 1 0 "s" 1
 LANG:1 6 Angle1
 E
 1
 LANG:1 0 
 
-60 "Angle2" 4 1 0 "s" 1
+100 "Angle2" 8 1 0 "s" 1
 LANG:1 6 Angle2
 E
 1
 LANG:1 0 
 
-60 "subbands" 35 1 0 "s" 1
+100 "subbands" 60 1 0 "s" 1
 LANG:1 8 subbands
 E
 1
 LANG:1 0 
 
-395 
+672 
 18 18 "" 1 1
 LANG:1 2 #8
 "" 1 1
