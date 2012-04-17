@@ -29,7 +29,6 @@ class imager_source_finding(BaseRecipe, RemoteCommandRecipeMixIn):
         ),
     }
 
-
     def go(self):
         self.logger.info("Starting imager_source_finding run")
         super(imager_source_finding, self).go()

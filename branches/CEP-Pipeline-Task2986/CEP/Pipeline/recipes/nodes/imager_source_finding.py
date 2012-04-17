@@ -12,8 +12,7 @@ import pyrap.images as pim #@UnresolvedImport
 
 class imager_source_finding(LOFARnodeTCP):
     """
-    The imager_source_finding 
-        
+    The imager_source_finding    
     """
     def run(self, input_image, bdsm_parameter_run1_path,
             bdsm_parameter_run2x_path, catalog_output_path, image_output_path):
@@ -22,6 +21,7 @@ class imager_source_finding(LOFARnodeTCP):
         # default frequency is None (read from image), save for later cycles
         frequency = None
         number_of_sourcefind_itterations = None
+        sources_found = False
         max_sourcefind_itter = 5  # TODO: Dit moet eigenlijkj controleerbaar zijn van buiten af
         for idx in range(max_sourcefind_itter):
             # The first iteration uses the input image, second and later use the 
@@ -55,8 +55,10 @@ class imager_source_finding(LOFARnodeTCP):
             # break the loop
             if img.nsrc == 0:
                 number_of_sourcefind_itterations = idx
-                self.logger.info("debug itterations = {0}".format(idx))
                 break
+            else:
+                # We have at least found a single source!
+                sources_found = True
 
             #export the catalog and the image with gausians substracted
             img.write_catalog(outfile = catalog_output_path + "_{0}".format(str(idx)),
@@ -74,125 +76,15 @@ class imager_source_finding(LOFARnodeTCP):
             number_of_sourcefind_itterations = max_sourcefind_itter
 
         # The produced catalogs now need to be concatenated into a single list
-        # Call with the number of loops and the path to the files
-        self._combine_source_lists(number_of_sourcefind_itterations,
+        # Call with the number of loops and the path to the files, only combine
+        # if we found sources
+        if sources_found:
+            self._combine_source_lists(number_of_sourcefind_itterations,
                                    catalog_output_path)
 
-        # **********************************************************************
-        # TODO: Copy dataproducts to goal location 
-        # This should be done in a seperate recipe (or in the frame work)
-        # **********************************************************************
-        return self._save_output_products(input_image, number_of_sourcefind_itterations)
+        # TODO: return the sourcedb??
 
-
-    def _save_output_products(self, input_image_cropped, number_of_sourcefind_itterations):
-        # TODO: Deze f unctie moet echt op een beter plaats (eigen recept?)
-        # De extra input die nodig is voor deze step heeft echt geen plaats in 
-        # dit recept
-
-        # create a dir to save the files!\
-        working_dir = "/data/scratch/klijn/jobs/Pipeline"
-        create_directory(os.path.join(working_dir, "major_loop_0"))
-
-        #**********************************************************************
-        # Deep copy of the concat.ms
-        command = ["msselect",
-                   "in={0}".format(os.path.join(working_dir, "concat.ms")),
-                    "out={0}".format(os.path.join(working_dir, "major_loop_0", "concat.ms")),
-                    "baseline='*'",
-                    "deep=true"]
-        #Spawn a subprocess and connect the pipes
-        copy_process = subprocess.Popen(
-                        command,
-                        stdin = subprocess.PIPE,
-                        stdout = subprocess.PIPE,
-                        stderr = subprocess.PIPE)
-
-        (stdoutdata, stderrdata) = copy_process.communicate()
-        self.logger.info(stdoutdata)
-
-        exit_status = copy_process.returncode
-        #if copy failed log the missing file
-        if  exit_status != 0:
-            self.logger.info("Copying data failed:")
-            self.logger.info(stderrdata)
-
-            return 1
-
-        #**********************************************************************
-        # Deep copy of the final awimager output
-        command = ["cp",
-                   "-r",
-                   "{0}".format(os.path.join(working_dir, "TestImage.restored.cropped")),
-                    "{0}".format(os.path.join(working_dir, "major_loop_0", "TestImage.restored.cropped")),
-                    ]
-        #Spawn a subprocess and connect the pipes
-        copy_process = subprocess.Popen(
-                        command,
-                        stdin = subprocess.PIPE,
-                        stdout = subprocess.PIPE,
-                        stderr = subprocess.PIPE)
-
-        (stdoutdata, stderrdata) = copy_process.communicate()
-        self.logger.info(stdoutdata)
-
-        exit_status = copy_process.returncode
-        #if copy failed log the missing file
-        if  exit_status != 0:
-            self.logger.info("Copying data failed:")
-            self.logger.info(stderrdata)
-            return 1
-
-        #**********************************************************************
-        # intermedate sourcefinder images
-        for idx_source_find in range(number_of_sourcefind_itterations):
-            command = ["cp",
-                   "-r",
-                   "{0}".format(os.path.join(working_dir,
-                                 "bdsm_output.img_{0}".format(idx_source_find))),
-                    "{0}".format(os.path.join(working_dir, "major_loop_0",
-                                "bdsm_output.img_{0}".format(idx_source_find))),
-                    ]
-        #Spawn a subprocess and connect the pipes
-            copy_process = subprocess.Popen(
-                        command,
-                        stdin = subprocess.PIPE,
-                        stdout = subprocess.PIPE,
-                        stderr = subprocess.PIPE)
-
-            (stdoutdata, stderrdata) = copy_process.communicate()
-            self.logger.info(stdoutdata)
-
-            exit_status = copy_process.returncode
-        #if copy failed log the missing file
-            if  exit_status != 0:
-                self.logger.info("Copying data failed:")
-                self.logger.info(stderrdata)
-                return 1
-
-        #**********************************************************************
-        command = ["cp",
-                   "-r",
-                   "{0}".format(os.path.join(working_dir, "bdsm_output_cat")),
-                    "{0}".format(os.path.join(working_dir, "major_loop_0", "bdsm_output_cat")),
-                    ]
-        #Spawn a subprocess and connect the pipes
-        copy_process = subprocess.Popen(
-                        command,
-                        stdin = subprocess.PIPE,
-                        stdout = subprocess.PIPE,
-                        stderr = subprocess.PIPE)
-
-        (stdoutdata, stderrdata) = copy_process.communicate()
-        self.logger.info(stdoutdata)
-
-        exit_status = copy_process.returncode
-        #if copy failed log the missing file
-        if  exit_status != 0:
-            self.logger.info("Copying data failed:")
-            self.logger.info(stderrdata)
-
-            return 1
+        return 0
 
 
 
@@ -213,8 +105,6 @@ class imager_source_finding(LOFARnodeTCP):
         source_list_lines = []
 
         format_line = None
-        self.logger.info("*"*30)
-        self.logger.info(number_of_sourcefind_itterations)
         for idx_source_file in range(number_of_sourcefind_itterations):
             fp = open(catalog_output_path + "_{0}".format(idx_source_file))
             #**************************************************

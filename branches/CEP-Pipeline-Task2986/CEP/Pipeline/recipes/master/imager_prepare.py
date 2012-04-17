@@ -34,11 +34,12 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
     1. Collect the Measurement Sets (MSs): copy to the  current node
     2. Start dppp: Combines the data from subgroups into single timeslice
     3. Add addImagingColumns to the casa images
-    4. Concatenate the time slice measurment sets, to a virtual ms 
+    4. Concatenate the time slice measurement sets, to a virtual ms 
     
     **Arguments**
 
     """
+
     inputs = {
         'ndppp_exec': ingredient.ExecField(
             '--ndppp-exec',
@@ -59,7 +60,7 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         ),
         'target_mapfile': ingredient.StringField(
             '--target-mapfile',
-            help = "Contains the node and path to target product files, defines the"\
+            help = "Contains the node and path to target product files, defines the"
                " number of nodes the script will start on."
         ),
         'slices_per_image': ingredient.IntField(
@@ -93,13 +94,17 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         ),
         'slices_mapfile': ingredient.StringField(
             '--slices-mapfile',
-            help = "node to Path map field containing the produced time slices"
+            help = "Path to mapfile containing the produced subband groups"
         )
     }
 
     outputs = {
-        'mapfile': ingredient.FileField(),
-        'slices_mapfile': ingredient.FileField()
+        'mapfile': ingredient.FileField(
+            help = "path to a mapfile Which contains a list of the"
+                 "successfully generated and concatenated measurement set"
+            ),
+        'slices_mapfile': ingredient.FileField(
+            help = "Path to mapfile containing the produced subband groups")
     }
 
     def go(self):
@@ -135,14 +140,14 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         rficonsole_executable = self.inputs['rficonsole_executable']
         
         # *********************************************************************            
-        # schule the actual work
+        # schedule the actual work
         nodeCommand = " python %s" % (self.__file__.replace("master", "nodes"))
 
         jobs = []
         n_subband_groups = len(output_map)
         for idx_sb_group, (host, output_measurement_set) in enumerate(output_map):
             #create the input files for this node
-            inputs_for_image_mapfile_path = self._create_input_map_for_subband(
+            inputs_for_image_mapfile_path = self._create_input_map_for_subband_group(
                                 slices_per_image, n_subband_groups,
                                 subbands_per_image, idx_sb_group, input_map)
 
@@ -192,14 +197,14 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         return 0
 
 
-    def _create_input_map_for_subband(self, slices_per_image, n_subband_groups,
+    def _create_input_map_for_subband_group(self, slices_per_image, n_subband_groups,
                         subbands_per_image, idx_sb_group, input_mapfile):
         """
-        _create_input_map_for_subband() Creates an input mapfile representation:
+        _create_input_map_for_subband_group() Creates an input mapfile representation:
         This is a subset of the complete input_mapfile based on the subband 
         details suplied: The input_mapfile is structured: First all subbands for
         a complete timeslice and the the next timeslice. The result value 
-        contains all the information needed for a single subband to be computed 
+        contains all the information needed for a single subbandgroup to be computed 
         on a single compute node
         """
         inputs_for_image = []

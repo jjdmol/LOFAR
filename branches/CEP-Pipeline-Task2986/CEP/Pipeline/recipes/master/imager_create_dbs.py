@@ -14,6 +14,7 @@ from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
 from lofarpipe.support.group_data import load_data_map, store_data_map
 
+
 class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
     """
 
@@ -27,10 +28,6 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
             '--initscript',
             help = '''The full path to an (Bourne) shell script which will\
              intialise the environment (ie, ``lofarinit.sh``)'''
-        ),
-        'parset': ingredient.FileField(
-            '-p', '--parset',
-            help = "The full path to a bbs_imager configuration parset."
         ),
         'sourcedb_suffix': ingredient.StringField(
             '--sourcedb-suffix',
@@ -135,6 +132,7 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
         # create jobs
         jobs = []
         for (input_ms, slice_paths)  in zip(input_map, slice_paths_map):
+            self.logger.info(slice_paths)
             host_ms, concatenated_measurement_set = input_ms
             host_slice, slice_paths = slice_paths
 
@@ -156,7 +154,7 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
             arguments = [ concatenated_measurement_set, sourcedb_target_path,
                          monetdb_hostname, monetdb_port, monetdb_name,
                          monetdb_user, monetdb_password, assoc_theta,
-                         parmdb_executable, host_slice_map, parmdb_suffix,
+                         parmdb_executable, slice_paths, parmdb_suffix,
                          init_script, working_directory,
                          makesourcedb_path, source_list_path]
             jobs.append(ComputeJob(host, node_command, arguments))

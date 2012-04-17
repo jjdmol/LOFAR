@@ -14,7 +14,7 @@ import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
-from lofarpipe.support.group_data import load_data_map, store_data_map
+from lofarpipe.support.group_data import load_data_map, store_data_map, validate_data_maps
 
 class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
     """
@@ -56,7 +56,7 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
         ),
         'mask_patch_size': ingredient.FloatField(
             '--mask-patch-size',
-            help = "Full path of sourcedb used to create a mask for known sources"
+            help = "Scale factor for patches in the awimager mask"
         ),
     }
 
@@ -82,17 +82,21 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
         node_command = "python %s" % (self.__file__.replace("master", "nodes"))
         # Create the jobs
         jobs = []
-        sourcedb_path_map = load_data_map(sourcedb_path)
+        sourcedb_map = load_data_map(sourcedb_path)
         outnames = collections.defaultdict(list)
-        for ms, source in zip(input_map, sourcedb_path_map):
+
+        if not validate_data_maps(input_map, sourcedb_map):
+            self.logger.error("the supplied input_ms mapfile and sourcedb mapfile"
+                              "are incorrect. Aborting")
+            self.logger.error(repr(input_map))
+            self.logger.error(repr(sourcedb_map))
+
+        for ms, source in zip(input_map, sourcedb_map):
             # both the sourcedb and the measurement are in a map
             # unpack both
             host , measurement_set = ms
             host2 , sourcedb_path = source
-            #sanity check:
-            if host != host2:
-                self.logger.warn("sourcedb and measurement set host do not match")
-                return 1
+
             #construct and save the output name
             outnames[host].append(measurement_set)
             arguments = [executable, init_script, parset, working_directory, output_image,
@@ -107,7 +111,9 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
         for job in  jobs:
             if job.results.has_key("image"):
                 created_awimages.append((job.host, job.results["image"]))
-            #TODO else: aw imager failed 
+            #TODO else: aw imager failed. Currently partial runs cannot be
+            # restarted: for the next lofar version the framework needs to 
+            # be expanded with a partial rerun capability 
 
         if self.error.isSet():
             self.logger.warn("Failed awimager node run detected")

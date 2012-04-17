@@ -102,7 +102,7 @@ class imager_pipeline(control):
         This method will be invoked by the base-class's `go()` method.
         """
         self.logger.info("Starting imager pipeline")
-        
+
 #        # Create a parameter-subset containing only python-control stuff.
 #        py_parset = self.parset.makeSubset(
 ##            self.parset.fullModuleName('PythonControl') + '.'
@@ -119,7 +119,7 @@ class imager_pipeline(control):
         # Write input- and output data map-files.
         create_directory(parset_dir)
         create_directory(mapfile_dir)
-        
+
         # ******************************************************************
         # (1) prepare phase: copy and collect the ms
         # TODO: some smart python-foo to get temp outputfilenames
@@ -146,7 +146,7 @@ class imager_pipeline(control):
 #            self.parset.fullModuleName('PythonControl') + '.'
             'ObsSW.Observation.ObservationControl.PythonControl.'
         )
-        
+
         concat_ms_map_path, timeslice_map_path = self._prepare_phase(
                 input_mapfile, target_mapfile, skip = False)
 
@@ -169,6 +169,9 @@ class imager_pipeline(control):
 
             # *****************************************************************
             # (3)  bbs_imager recipe
+            # bbs is performed on the timeslices: corrected-data column is
+            # filled. The timeslice are virtually concatenated to the files 
+            # at concat_ms_map_path
             bbs_output = self._bbs(timeslice_map_path, parmdbs_path, sky_path,
                         skip = False)
 
@@ -182,7 +185,7 @@ class imager_pipeline(control):
             # *****************************************************************
             # (5 )Source finding 
             source_list = self._source_finding(awimager_output_mapfile,
-                        skip = True)
+                                    idx_loop, skip = False)
             #should the output be a sourcedb? instead of a sourcelist
 
         return 0
@@ -215,7 +218,7 @@ class imager_pipeline(control):
         self.logger.debug("%d Output_SkyImage data products specified" %
                           len(self.output_data))
         # Sanity checks on input- and output data product specifications
-        if not(validate_data_maps(self.input_data) and 
+        if not(validate_data_maps(self.input_data) and
                validate_data_maps(self.output_data)):
             raise PipelineException(
                 "Validation of input/output data product specification failed!"
@@ -224,7 +227,7 @@ class imager_pipeline(control):
         # MS per image. It must be stored on the same host as the final image.
         for host, path in self.output_data:
             self.target_data.append((
-                host, 
+                host,
                 os.path.join(
                     self.config.get('DEFAULT', 'default_working_directory'),
                     'concat.ms'
@@ -242,7 +245,7 @@ class imager_pipeline(control):
                           test = "blabblabllabla")
 
 
-    def _source_finding(self, image_map_path, skip = True):
+    def _source_finding(self, image_map_path, major_cycle, skip = True):
         bdsm_parset_pass_1 = self.parset.makeSubset("Sourcefinding.Firstpass.")
         parset_path_pass_1 = self._write_parset_to_file(bdsm_parset_pass_1, "pybdsm_first_pass.par")
         bdsm_parset_pass_2 = self.parset.makeSubset("Sourcefinding.second_pass.")
@@ -261,20 +264,26 @@ class imager_pipeline(control):
         image_map_appended_path = image_map_path + image_postfix
         store_data_map(image_map_appended_path, corrected_image_map)
 
+
+        catalog_path = os.path.join(self.config.get("DEFAULT", \
+                                    "default_working_directory"),
+                                  "awimage_cycle_{0}".format(major_cycle),
+                                   "bdsm_catalog")
+
         # Run the sourcefinder
         if skip:
-            return '/data/scratch/klijn/jobs/Pipeline/bdsm_output_cat'
+            return catalog_path
         else:
-            return self.run_task("imager_source_finding",
+            self.run_task("imager_source_finding",
                         image_map_appended_path,
                         bdsm_parset_file_run1 = parset_path_pass_1,
                         bdsm_parset_file_run2x = parset_path_pass_2,
                         #TODO: deze moet dus nog dynamisch
-                        catalog_output_path = "/data/scratch/klijn/jobs/Pipeline/bdsm_output_cat"
-                        )
+                        catalog_output_path = catalog_path)
+            return catalog_path
 
 
-    def _bbs(self, timeslice_map_path, parmdbs_path, sky_path, skip = False):
+    def _bbs(self, timeslice_map_path, parmdbs_map_path, sky_path, skip = False):
         #create parset for recipe
         parset = self.parset.makeSubset("Bbs.BbsControl.")
         parset_path = self._write_parset_to_file(parset, "bbs")
@@ -288,7 +297,7 @@ class imager_pipeline(control):
         # The sky map contains a single sky file while imager_bbs expects a sky
         # file for each 'pardbm ms set combination'. 
         sky_map = load_data_map(sky_path)
-        parmdbs_map = load_data_map(parmdbs_path)
+        parmdbs_map = load_data_map(parmdbs_map_path)
         sky_parmdb_map = []
         for (sky, parmdbs) in zip(sky_map, parmdbs_map):
             (host_sky, sky_entry) = sky
@@ -298,7 +307,7 @@ class imager_pipeline(control):
                 self.logger.error("The input files for bbs do not contain "
                                   "matching host names for each entry")
                 self.logger.error(repr(sky_map))
-                self.logger.error(repr(parmdbs_path))
+                self.logger.error(repr(parmdbs_map_path))
 
             #add the entries but with skymap multiplied with len (parmds list)
             sky_parmdb_map.append((host_sky, [sky_entry] * len(parmdbs_entries)))
@@ -308,7 +317,7 @@ class imager_pipeline(control):
         self.run_task("imager_bbs",
                       timeslice_map_path,
                       parset = parset_path,
-                      instrument_mapfile = parmdbs_path,
+                      instrument_mapfile = parmdbs_map_path,
                       sky_mapfile = sky_parmdb_map_path,
                       mapfile = output_mapfile)
 
@@ -383,7 +392,6 @@ class imager_pipeline(control):
             pass
         else:
             self.run_task("imager_create_dbs", input_map_path,
-                        parset = parset_path,
                         monetdb_hostname = parset.getString("monetdb_hostname"),
                         monetdb_port = parset.getInt("monetdb_port"),
                         monetdb_name = parset.getString("monetdb_name"),
@@ -426,8 +434,8 @@ class imager_pipeline(control):
         Write the suplied the suplied map to the mapfile  
         directory in the jobs dir with the filename suplied in mapfile_name.
         Return the full path to the created file.  
-        Id supllied data is None then the file is touched, but not filled with 
-        data
+        Id supllied data is None then the file is touched if not existing, but
+        existing files are kept as is
         """
 
         mapfile_dir = os.path.join(

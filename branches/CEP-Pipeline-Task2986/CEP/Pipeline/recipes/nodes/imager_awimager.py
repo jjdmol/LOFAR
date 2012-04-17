@@ -28,12 +28,13 @@ from lofarpipe.support.utilities import patch_parset
 from lofarpipe.support.utilities import get_parset
 from lofarpipe.support.utilities import read_initscript
 from lofarpipe.support.utilities import catch_segfaults
+from lofarpipe.support.lofarexceptions import PipelineException
 from lofar.parameterset import parameterset #@UnresolvedImport
 import pyrap.tables as pt                   #@UnresolvedImport
 from subprocess import CalledProcessError
 from lofarpipe.support.utilities import create_directory
+import pyrap.images as pim                   #@UnresolvedImport
 from lofarpipe.support.parset import Parset
-import pyrap.images as pi                   #@UnresolvedImport
 import lofar.parmdb                          #@UnresolvedImport
 import numpy as np
 
@@ -43,30 +44,34 @@ class imager_awimager(LOFARnodeTCP):
         self.logger.info("Start imager_awimager  run: client")
         log4CPlusName = "imager_awimager"
         with log_time(self.logger):
+            size_converter = 1.0 #TODO debugging tool scale the image and cellsize to allow quicker running of the awimager
             # Calculate awimager parameters that depend on measurement set                 
             cell_size, npix, w_max, w_proj_planes = \
-                self._calc_par_from_measurement(concatenated_measurement_set, parset)
+                self._calc_par_from_measurement(concatenated_measurement_set, parset, size_converter)
 
+            npix = int(float(npix) / size_converter)
 
-            # Get the target image location from the parset. Create target dir
+            # Get the target image location from the mapfile for the parset.
+            # Create target dir
             # if it not exists
-            (image_path_head, tail) = os.path.split(output_image)
-            if not os.path.exists(image_path_head):
-                create_directory(image_path_head)
+            image_path_head = os.path.dirname(output_image)
+            create_directory(image_path_head)
 
             mask_file_path = self._create_mask(npix, cell_size, output_image,
                          concatenated_measurement_set, init_script, executable,
-                         working_directory, log4CPlusName, sourcedb_path, mask_patch_size)
+                         working_directory, log4CPlusName, sourcedb_path,
+                          mask_patch_size, image_path_head)
 
             # Update the parset with calculated parameters, and output image
             patch_dictionary = {'uselogger': 'True', # enables log4cpluscd log
-                               'ms': concatenated_measurement_set,
-                               'cellsize': cell_size,
-                               'npix': npix,
-                               'wmax': w_max,
-                               'wprojplanes':w_proj_planes,
-                               'image':output_image,
-                               'mask':mask_file_path
+                               'ms': str(concatenated_measurement_set),
+                               'cellsize': str(cell_size),
+                               'npix': str(npix),
+                               'wmax': str(w_max),
+                               'wprojplanes':str(w_proj_planes),
+                               'image':str(output_image),
+                               'maxsupport':str(npix),
+                               #'mask':str(mask_file_path),  #TODO REINTRODUCE MASK
                                }
 
             # save the parset at the target dir for the image            
@@ -101,23 +106,34 @@ class imager_awimager(LOFARnodeTCP):
 
     def _create_mask(self, npix, cell_size, output_image,
                      concatenated_measurement_set, init_script, executable,
-                     working_directory, log4CPlusName, sourcedb_path, mask_patch_size):
-		# TODO: Mode to a dir with standalone pipeline parts
+                     working_directory, log4CPlusName, sourcedb_path, mask_patch_size, image_path_image_cycle):
+        """
+        _create_mask creates a casa image containing an mask blocking out the
+        sources in the provided sourcedb.
+        It expects the ms for which the mask will be created. enviroment 
+        parameters for running within the catchsegfault framework and
+        finaly the size of the mask_pach.
+        To create a mask, first a empty measurement set is created using
+        awimager: ready to be filled with mask data        
+        """
         #Create an empty mask using awimager
         # Create the parset used to make a mask
         mask_file_path = output_image + ".mask"
-        mask_parset = Parset()
-        mask_patch_dictionary = {"npix":npix,
-                                 "cellsize":cell_size,
-                                 "image":mask_file_path,
-                                 "ms":concatenated_measurement_set,
+
+        mask_patch_dictionary = {"npix":str(npix),
+                                 "cellsize":str(cell_size),
+                                 "image":str(mask_file_path),
+                                 "ms":str(concatenated_measurement_set),
                                  "operation":"empty",
                                  "stokes":"'I'"
                                  }
-        mask_parset_filename = patch_parset(mask_parset, mask_patch_dictionary)
+        mask_parset = Parset.fromDict(mask_patch_dictionary)
+        mask_parset_path = os.path.join(image_path_image_cycle, "mask.par")
+        mask_parset.writeFile(mask_parset_path)
 
         # The command and parameters to be run
-        cmd = [executable, mask_parset_filename]
+        cmd = [executable, mask_parset_path]
+        self.logger.info(" ".join(cmd))
         try:
             environment = read_initscript(self.logger, init_script)
             with CatchLog4CPlus(working_directory,
@@ -134,6 +150,7 @@ class imager_awimager(LOFARnodeTCP):
             self.logger.error(str(e))
             return 1
 
+        self.logger.info("mask_patch_size: {0}".format(mask_patch_size))
         # create the actual mask
         self._msss_mask(mask_file_path, sourcedb_path, mask_patch_size)
         return mask_file_path
@@ -172,10 +189,10 @@ class imager_awimager(LOFARnodeTCP):
         pad = 500. # increment in maj/minor axes [arcsec]
 
         # open mask
-        mask = pi.image(mask_file_path, overwrite = True)
+        mask = pim.image(mask_file_path, overwrite = True)
         mask_data = mask.getdata()
         xlen, ylen = mask.shape()[2:]
-        freq, stokes, null, null = mask.toworld([0, 0, 0, 0])
+        freq, stokes, null, null = mask.toworld([0, 0, 0, 0]) #@UnusedVariable
 
 
         #Open the sourcedb:
@@ -282,7 +299,7 @@ class imager_awimager(LOFARnodeTCP):
 
         observation = pt.table(t.getkeyword("OBSERVATION"))
         antenna_set = observation.getcell('LOFAR_ANTENNA_SET', 0)
-        observation.close
+        observation.close()
 
         #static parameters for the station diameters ref (1)     
         hba_core_diameter = 30.8
@@ -307,12 +324,13 @@ class imager_awimager(LOFARnodeTCP):
         if station_diameter == None:
             self.logger.error('Unknown antenna type for antenna: {0} , {1}'.format(\
                               antenna_name, antenna_set))
-            raise Exception("Unknown antenna type encountered in Measurement set")
+            raise PipelineException("Unknown antenna type encountered in Measurement set")
 
         #Get the wavelength
         spectral_window_table = pt.table(t.getkeyword("SPECTRAL_WINDOW"))
         freq = float(spectral_window_table.getcell("REF_FREQUENCY", 0))
         wave_length = pt.taql('CALC C()') / freq
+        spectral_window_table.close()
 
         # Now calculate the FOV see ref (1)
         # alpha_one is a magic parameter: The value 1.3 is representative for a 
@@ -326,7 +344,7 @@ class imager_awimager(LOFARnodeTCP):
 
         return fov, station_diameter
 
-    def _calc_par_from_measurement(self, measurement_set, parset):
+    def _calc_par_from_measurement(self, measurement_set, parset, size_converter):
         """
         calculate and format some parameters that are determined runtime based
         on values in the measurement set:
@@ -345,7 +363,7 @@ class imager_awimager(LOFARnodeTCP):
         max_baseline = pt.taql('CALC sqrt(max([select sumsqr(UVW[:2]) from ' + \
             '{0} where sumsqr(UVW[:2]) <{1} giving as memory]))'.format(\
             measurement_set, baseline_limit *
-            baseline_limit))[0]
+            baseline_limit))[0]  #ask ger van diepen for details if ness.
 
         t = pt.table(measurement_set)
         t1 = pt.table(t.getkeyword("SPECTRAL_WINDOW"))
@@ -374,7 +392,7 @@ class imager_awimager(LOFARnodeTCP):
         if w_proj_planes > 511:
             raise Exception("The number of projections planes for the current" +
                             "measurement set is to large.")  #FIXME: Ask george 
-        cell_size_formatted = str(int(round(cell_size))) + 'arcsec'
+        cell_size_formatted = str(int(round(cell_size * size_converter))) + 'arcsec'
         return cell_size_formatted, str(npix), str(w_max), str(w_proj_planes)
 
 

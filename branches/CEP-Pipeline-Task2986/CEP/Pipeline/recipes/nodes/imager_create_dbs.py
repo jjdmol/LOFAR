@@ -32,7 +32,6 @@ from lofarpipe.support.pipelinelogging import log_process_output
 from lofarpipe.support.pipelinelogging import CatchLog4CPlus
 from lofarpipe.support.utilities import read_initscript
 from lofarpipe.support.utilities import catch_segfaults
-from lofarpipe.support.group_data import load_data_map
 import monetdb.sql as db
 import lofar.gsmutils as gsm                                                    #@UnresolvedImport
 
@@ -54,7 +53,7 @@ quit
 class imager_create_dbs(LOFARnodeTCP):
     def run(self, concatenated_measurement_set, sourcedb_target_path,
             monet_db_hostname, monet_db_port, monet_db_name, monet_db_user,
-            monet_db_password, assoc_theta, parmdb_executable, host_slice_map,
+            monet_db_password, assoc_theta, parmdb_executable, slice_paths,
             parmdb_suffix, init_script, working_directory, makesourcedb_path,
             source_list_path_extern):
         """
@@ -85,9 +84,7 @@ class imager_create_dbs(LOFARnodeTCP):
             return 1
         self.outputs["sky"] = sourcedb_target_path
 
-        # TODO:
-        #host_slice_map is mapfile(only first index is set
-        if self._create_parmdb_for_timeslices(parmdb_executable, host_slice_map[0][1],
+        if self._create_parmdb_for_timeslices(parmdb_executable, slice_paths,
                                            parmdb_suffix):
             self.logger.error("failed creating paramdb for slices")
             return 1
@@ -105,14 +102,8 @@ class imager_create_dbs(LOFARnodeTCP):
         if (append == False) and os.path.isdir(sourcedb_target_path):
             self.logger.info("Removing existing sky model: {0}".format(
                                                         sourcedb_target_path))
-            try:
-                shutil.rmtree(sourcedb_target_path)
-            except:
-                self.logger.error(
-                    "failed removing an existing sky model: {0}".format(
-                                                        sourcedb_target_path))
-                # fail: stale sourcedb will make bbs fail in a later step
-                return 1
+            shutil.rmtree(sourcedb_target_path)
+
 
         # The command and parameters to be run
         cmd = [executable, "in={0}".format(temp_sky_path),
@@ -132,10 +123,16 @@ class imager_create_dbs(LOFARnodeTCP):
 
         # Thrown by catch_segfault
         except CalledProcessError, e:
+            self.logger.error("Execution of external failed:")
+            self.logger.error(" ".join(cmd))
+            self.logger.error("exception details:")
             self.logger.error(str(e))
             return 1
 
         except Exception, e:
+            self.logger.error("Execution of external failed:")
+            self.logger.error(" ".join(cmd))
+            self.logger.error("exception details:")
             self.logger.error(str(e))
             return 1
 
@@ -147,60 +144,67 @@ class imager_create_dbs(LOFARnodeTCP):
         _field_of_view calculates the fov, which is dependend on the
         station type, location and mode:
         For details see:        
-        (1) http://www.astron.nl/radio-observatory/astronomers/lofar-imaging-capabilities-sensitivity/lofar-imaging-capabilities/lofa
+        (1) http://www.astron.nl/radio-observatory/astronomers/lofar-imaging-capabilities-sensitivity/lofar-imaging-capabilities/lofar
         
         """
         # Open the ms
-        t = pt.table(measurement_set)
+        try:
+            t = pt.table(measurement_set)
 
-        # Get antenna name and observation mode
-        antenna = pt.table(t.getkeyword("ANTENNA"))
-        antenna_name = antenna.getcell('NAME', 0)
-        antenna.close()
+            # Get antenna name and observation mode
+            antenna = pt.table(t.getkeyword("ANTENNA"))
+            antenna_name = antenna.getcell('NAME', 0)
 
-        observation = pt.table(t.getkeyword("OBSERVATION"))
-        antenna_set = observation.getcell('LOFAR_ANTENNA_SET', 0)
-        observation.close
+            observation = pt.table(t.getkeyword("OBSERVATION"))
+            antenna_set = observation.getcell('LOFAR_ANTENNA_SET', 0)
+            observation.close
 
-        #static parameters for the station diameters ref (1)     
-        hba_core_diameter = 30.8
-        hba_remote_diameter = 41.1
-        lba_inner = 32.3
-        lba_outer = 81.3
+            #static parameters for the station diameters ref (1)     
+            hba_core_diameter = 30.8
+            hba_remote_diameter = 41.1
+            lba_inner = 32.3
+            lba_outer = 81.3
 
-        #use measurement set information to assertain antenna diameter
-        station_diameter = None
-        if antenna_name.count('HBA'):
-            if antenna_name.count('CS'):
-                station_diameter = hba_core_diameter
-            elif antenna_name.count('RS'):
-                station_diameter = hba_remote_diameter
-        elif antenna_name.count('LBA'):
-            if antenna_set.count('INNER'):
-                station_diameter = lba_inner
-            elif antenna_set.count('OUTER'):
-                station_diameter = lba_outer
+            #use measurement set information to assertain antenna diameter
+            station_diameter = None
+            if antenna_name.count('HBA'):
+                if antenna_name.count('CS'):
+                    station_diameter = hba_core_diameter
+                elif antenna_name.count('RS'):
+                    station_diameter = hba_remote_diameter
+            elif antenna_name.count('LBA'):
+                if antenna_set.count('INNER'):
+                    station_diameter = lba_inner
+                elif antenna_set.count('OUTER'):
+                    station_diameter = lba_outer
 
-        #raise exception if the antenna is not of a supported type
-        if station_diameter == None:
-            self.logger.error('Unknown antenna type for antenna: {0} , {1}'.format(\
-                              antenna_name, antenna_set))
-            raise Exception("Unknown antenna type encountered in Measurement set")
+            #raise exception if the antenna is not of a supported type
+            if station_diameter == None:
+                self.logger.error('Unknown antenna type for antenna: {0} , {1}'.format(
+                                  antenna_name, antenna_set))
+                raise Exception("Unknown antenna type encountered in Measurement set")
 
-        #Get the wavelength
-        spectral_window_table = pt.table(t.getkeyword("SPECTRAL_WINDOW"))
-        freq = float(spectral_window_table.getcell("REF_FREQUENCY", 0))
-        wave_length = pt.taql('CALC C()')[0] / freq
+            #Get the wavelength
+            spectral_window_table = pt.table(t.getkeyword("SPECTRAL_WINDOW"))
+            freq = float(spectral_window_table.getcell("REF_FREQUENCY", 0))
+            wave_length = pt.taql('CALC C()')[0] / freq
 
-        # Now calculate the FOV see ref (1)
-        # alpha_one is a magic parameter: The value 1.3 is representative for a 
-        # WSRT dish, where it depends on the dish illumination
-        alpha_one = 1.3
+            # Now calculate the FOV see ref (1)
+            # alpha_one is a magic parameter: The value 1.3 is representative for a 
+            # WSRT dish, where it depends on the dish illumination
+            # For LOFAR it will depend on the final tapering of the station.
+            # For the LBA probably no tapering will be applied. In that case it
+            # is expected that the value of a1 will turn out to be between 1.2 
+            # and 1.4. For reference, the value for the LOFAR Initial Test 
+            # Station (ITS) was 1.42. 
+            alpha_one = 1.3
 
-        #alpha_one is in radians so transform to degrees for output
-        fwhm = alpha_one * (wave_length / station_diameter) * (180 / math.pi)
-        fov = fwhm / 2.0
-        t.close()
+            #alpha_one is in radians so transform to degrees for output
+            fwhm = alpha_one * (wave_length / station_diameter) * (180 / math.pi)
+            fov = fwhm / 2.0
+        finally:
+            antenna.close()
+            t.close()
 
         return fov
 
@@ -273,7 +277,7 @@ class imager_create_dbs(LOFARnodeTCP):
     def _get_ra_and_decl_from_ms(self, measurement_set):
         """
         This function uses pyrap to read the ra and declanation from a 
-        measurement set (used by exprected_fluxes_in_fov). This is a position 
+        measurement set (used by expected_fluxes_in_fov). This is a position 
         in the sky. These values are stored in the field.phase_dir in the first
         row. All exceptions thrown are caught and logged, return None if reading
         failed
@@ -283,8 +287,7 @@ class imager_create_dbs(LOFARnodeTCP):
             t = pt.table(measurement_set)
             t1 = pt.table(t.getkeyword("FIELD"))
             ra_and_decl = t1.getcell("PHASE_DIR", 0)[0]
-            t1.close()
-            t.close()
+
         except Exception, e:
 
             #catch all exceptions and log
@@ -293,10 +296,15 @@ class imager_create_dbs(LOFARnodeTCP):
                                                                 str(e)))
             raise e
 
+        finally:
+            t1.close()
+            t.close()
+
         # Return the ra and decl
         if len(ra_and_decl) != 2:
             self.logger.error("returned PHASE_DIR data did not contain two values")
             return None
+
 
         return (ra_and_decl[0], ra_and_decl[1])
 
@@ -325,10 +333,10 @@ class imager_create_dbs(LOFARnodeTCP):
         if assoc_theta == None:
             assoc_theta = 90.0 / 3600
         try:
-            ra_c = float(ra_c) * (180 / 3.14)
+            ra_c = float(ra_c) * (180 / math.pi)
             if ra_c < 0:  #gsm utils break when using negative ra_c ergo add 360
                 ra_c += 360.0
-            decl_c = float(decl_c) * (180 / 3.14)
+            decl_c = float(decl_c) * (180 / math.pi)
 
             gsm.expected_fluxes_in_fov(conn, ra_c ,
                         decl_c, float(fov_radius),
