@@ -10,7 +10,7 @@ lofar_add_library(dppp
   UVWCalculator.cc
   MSReader.cc MultiMSReader.cc MSWriter.cc MSUpdater.cc Counter.cc
   Averager.cc MedFlagger.cc AORFlagger.cc PreFlagger.cc UVWFlagger.cc
-  PhaseShift.cc Demixer.cc BBSExpr.cc EstimateNDPPP.cc
+  PhaseShift.cc Demixer.cc BBSExpr.cc EstimateNDPPP.cc EstimateNew.cc
   FlaggerStatistics.cc
 # The following is old IDPPP stuff.
 #  MsInfo.cc

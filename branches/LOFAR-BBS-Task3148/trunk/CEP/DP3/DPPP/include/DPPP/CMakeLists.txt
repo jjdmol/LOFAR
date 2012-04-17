@@ -7,7 +7,7 @@ set(inst_HEADERS
   UVWCalculator.h
   MSReader.h MSWriter.h MSUpdater.h Counter.h
   Averager.h MedFlagger.h PreFlagger.h UVWFlagger.h AORFlagger.h
-  PhaseShift.h Demixer.h EstimateNDPPP.h
+  PhaseShift.h Demixer.h EstimateNDPPP.h EstimateNew.h
   FlaggerStatistics.h
   MsInfo.h
   MsFile.h

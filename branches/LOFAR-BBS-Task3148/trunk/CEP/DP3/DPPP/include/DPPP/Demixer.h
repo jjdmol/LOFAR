@@ -36,6 +36,11 @@
 #include <casa/Arrays/Cube.h>
 #include <measures/Measures/MDirection.h>
 
+// TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
+#include <BBSKernel/VisDimensions.h>
+#include <DPPP/EstimateNew.h>
+// TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
+
 namespace LOFAR {
 
   namespace DPPP {
@@ -117,6 +122,8 @@ namespace LOFAR {
       // The default input unit is degrees.
       double getAngle (const casa::String& value) const;
 
+      void dumpSolutions();
+
       //# Data members.
       DPInput*                 itsInput;
       string                   itsName;
@@ -171,6 +178,13 @@ namespace LOFAR {
       NSTimer                  itsTimerDemix;
       NSTimer                  itsTimerSolve;
       NSTimer                  itsTimerSubtract;
+
+// TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
+      BBS::BaselineSeq         itsBaselines;
+      EstimateState            itsState;
+      size_t                   itsStationCount;
+      size_t                   itsTimeCount;
+// TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
     };
 
   } //# end namespace

@@ -44,9 +44,12 @@
 #include <measures/Measures/MCDirection.h>
 #include <measures/Measures/MCPosition.h>
 #include <casa/Quanta/MVAngle.h>
+#include <casa/Quanta/Quantum.h>
 
 #include <iostream>
 #include <iomanip>
+
+#include <BBSKernel/ParmManager.h>
 
 using namespace casa;
 using namespace LOFAR::BBS;
@@ -80,7 +83,11 @@ namespace LOFAR {
         itsNTimeAvg      (parset.getUint  (prefix+"demixtimestep",
                                            itsNTimeAvgSubtr)),
         itsNTimeChunk    (parset.getUint  (prefix+"ntimechunk", 0)),
-        itsNTimeOut      (0)
+        itsNTimeOut      (0),
+// TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
+        itsStationCount  (input->antennaNames().size()),
+        itsTimeCount     (0)
+// TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
     {
       // Get and set solver options.
       itsSolveOpt.maxIter =
@@ -187,10 +194,30 @@ namespace LOFAR {
                                                 itsNTimeAvgSubtr));
       itsAvgResultSubtr = new MultiResultStep(itsNTimeChunk);
       itsAvgSubtr->setNextStep (DPStep::ShPtr(itsAvgResultSubtr));
+
+// TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
+      __init_source_list();
+
+      ASSERT(input->getAnt1().size() == input->getAnt2().size());
+      for(size_t i=0; i<input->getAnt1().size(); ++i) {
+        int ant1 = input->getAnt1()[i];
+        int ant2 = input->getAnt2()[i];
+        itsBaselines.append(BBS::baseline_t(ant1, ant2));
+      }
+// TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
     }
 
     Demixer::~Demixer()
     {
+// TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
+#ifdef ESTIMATE_TIMER
+        LOG_DEBUG_STR("tTot: " << itsState.tTot);
+        LOG_DEBUG_STR("tSim: " << itsState.tSim);
+        LOG_DEBUG_STR("tEq: " << itsState.tEq);
+        LOG_DEBUG_STR("tLM: " << itsState.tLM);
+        LOG_DEBUG_STR("tSub: " << itsState.tSub);
+#endif
+// TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
     }
 
     void Demixer::updateInfo (DPInfo& info)
@@ -223,6 +250,13 @@ namespace LOFAR {
         // Create the BBS model expression for sources with a model.
         if (i < itsNrModel) {
           itsBBSExpr.addModel (itsAllSources[i], infocp.phaseCenter());
+
+// TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
+          MDirection dirJ2000(MDirection::Convert(infocp.phaseCenter(),
+              MDirection::J2000)());
+          casa::Quantum<casa::Vector<casa::Double> > angles = dirJ2000.getAngle();
+          __init_lmn(i, angles.getBaseValue()(0), angles.getBaseValue()(1));
+// TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
         }
       }
       // Keep the averaged time interval.
@@ -238,6 +272,13 @@ namespace LOFAR {
       // Construct frequency axis for the demix and subtract averaging.
       itsFreqAxisDemix = makeFreqAxis (itsNChanAvg);
       itsFreqAxisSubtr = makeFreqAxis (itsNChanAvgSubtr);
+
+// TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
+      LOG_DEBUG_STR("#stations: " << itsStationCount);
+      LOG_DEBUG_STR("#times: " << info.ntime());
+      itsState.init(itsStationCount, info.ntime(), itsBaselines,
+        itsFreqAxisDemix->center(0), itsSolveOpt);
+// TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
     }
 
     void Demixer::show (std::ostream& os) const
@@ -349,6 +390,9 @@ namespace LOFAR {
         itsNTimeIn       = 0;
         itsNTimeOut      = 0;
         itsNTimeOutSubtr = 0;
+// TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
+        itsTimeCount += itsNTimeChunk;
+// TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
       }
 
       itsTimer.stop();
@@ -609,24 +653,29 @@ namespace LOFAR {
         LOG_DEBUG_STR("SHAPES ESTIMATE: " << itsFactors[0].shape() << " "
                       << itsFreqAxisDemix->size() << " "
                       << buffers[0][0].getData().shape());
-        itsBBSExpr.estimate(buffers, visGrid, solGrid, itsFactors);
+//        itsBBSExpr.estimate(buffers, visGrid, solGrid, itsFactors);
+// TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
+//        estimate(buffers, itsFactors, itsState, itsTimeCount);
+//        estimate(itsAvgResultSubtr->get(), buffers, itsFactorsSubtr, itsState);
+        estimate(itsAvgResultSubtr->get(), buffers, itsFactors, itsFactorsSubtr, itsState, itsTimeCount);
+// TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
         itsTimerSolve.stop();
 
-        itsTimerSubtract.start();
-        // Construct subtract grid if it differs from the grid used for
-        // parameter estimation.
-        Axis::ShPtr timeAxisSubtr (new RegularAxis (itsStartTimeChunk,
-                                                    itsTimeIntervalSubtr,
-                                                    itsNTimeOutSubtr));
-        visGrid = Grid(itsFreqAxisSubtr, timeAxisSubtr);
-        // Subtract the sources.
-        LOG_DEBUG_STR("subtracting....");
-        LOG_DEBUG_STR("SHAPES SUBTRACT: " << itsFactorsSubtr[0].shape() << " "
-                      << itsFreqAxisSubtr->size() << " "
-                      << itsAvgResultSubtr->get()[0].getData().shape());
-        itsBBSExpr.subtract (itsAvgResultSubtr->get(), visGrid, itsFactorsSubtr,
-                             targetIndex, itsSubtrSources.size());
-        itsTimerSubtract.stop();
+//        itsTimerSubtract.start();
+//        // Construct subtract grid if it differs from the grid used for
+//        // parameter estimation.
+//        Axis::ShPtr timeAxisSubtr (new RegularAxis (itsStartTimeChunk,
+//                                                    itsTimeIntervalSubtr,
+//                                                    itsNTimeOutSubtr));
+//        Grid visGrid = Grid(itsFreqAxisSubtr, timeAxisSubtr);
+//        // Subtract the sources.
+//        LOG_DEBUG_STR("subtracting....");
+//        LOG_DEBUG_STR("SHAPES SUBTRACT: " << itsFactorsSubtr[0].shape() << " "
+//                      << itsFreqAxisSubtr->size() << " "
+//                      << itsAvgResultSubtr->get()[0].getData().shape());
+//        itsBBSExpr.subtract (itsAvgResultSubtr->get(), visGrid, itsFactorsSubtr,
+//                             targetIndex, itsSubtrSources.size());
+//        itsTimerSubtract.stop();
       }
 
       // Let the next step process the data.
@@ -674,5 +723,84 @@ namespace LOFAR {
       return angle;
     }
 
+    void Demixer::dumpSolutions()
+    {
+      LOG_DEBUG_STR("writing solutions...");
+
+      // Construct grids for parameter estimation.
+      Axis::ShPtr timeAxis(new RegularAxis(itsInput->startTime()
+        - itsInput->timeInterval() * 0.5, itsTimeIntervalAvg, itsState.nTime));
+
+      // Solve for each time slot over all channels.
+      Grid solGrid(itsFreqAxisDemix->compress(itsFreqAxisDemix->size()),
+        timeAxis);
+
+      // Set parameter domain.
+      ParmManager::instance().setDomain(solGrid.getBoundingBox());
+
+
+      vector<string> dirs;
+      dirs.push_back("CasA");
+      dirs.push_back("CygA");
+      const size_t nDirs = dirs.size();
+
+      vector<string> names;
+      const casa::Vector<casa::String> &tmp = itsInput->antennaNames();
+      for(size_t i = 0; i < tmp.size(); ++i)
+      {
+         names.push_back(tmp(i));
+      }
+      const size_t nStat = names.size();
+      LOG_DEBUG_STR("#stations: " << names.size());
+
+      vector<ParmProxy::Ptr> parms;
+      BBS::ParmGroup group;
+      for(size_t st = 0; st < nStat; ++st)
+      {
+        for(size_t dr = 0; dr < nDirs; ++dr)
+        {
+          parms.push_back(ParmManager::instance().get(INSTRUMENT,
+            "DirectionalGain:0:0:Real:" + names[st] + ":" + dirs[dr]));
+          parms.push_back(ParmManager::instance().get(INSTRUMENT,
+            "DirectionalGain:0:0:Imag:" + names[st] + ":" + dirs[dr]));
+
+          parms.push_back(ParmManager::instance().get(INSTRUMENT,
+            "DirectionalGain:0:1:Real:" + names[st] + ":" + dirs[dr]));
+          parms.push_back(ParmManager::instance().get(INSTRUMENT,
+            "DirectionalGain:0:1:Imag:" + names[st] + ":" + dirs[dr]));
+
+          parms.push_back(ParmManager::instance().get(INSTRUMENT,
+            "DirectionalGain:1:0:Real:" + names[st] + ":" + dirs[dr]));
+          parms.push_back(ParmManager::instance().get(INSTRUMENT,
+            "DirectionalGain:1:0:Imag:" + names[st] + ":" + dirs[dr]));
+
+          parms.push_back(ParmManager::instance().get(INSTRUMENT,
+            "DirectionalGain:1:1:Real:" + names[st] + ":" + dirs[dr]));
+          parms.push_back(ParmManager::instance().get(INSTRUMENT,
+            "DirectionalGain:1:1:Imag:" + names[st] + ":" + dirs[dr]));
+        }
+      }
+
+      vector<string> incl(1, "DirectionalGain:*"), excl;
+      ParmGroup solvables = ParmManager::instance().makeSubset(incl, excl);
+      LOG_DEBUG_STR("#parms in group: " << solvables.size());
+
+      // Assign solution grid to solvables.
+      ParmManager::instance().setGrid(solGrid, solvables);
+//      ParmManager::instance().setGrid(solGrid);
+
+      LOG_DEBUG_STR("#parms: " << parms.size());
+      for(size_t ts = 0; ts < itsState.nTime; ++ts)
+      {
+        double *offset = &(itsState.J[ts][0][0][0]);
+        for(size_t i = 0; i < parms.size(); ++i)
+        {
+          parms[i]->setCoeff(BBS::Location(0, ts), offset + i, 1);
+        }
+      }
+
+      // Flush solutions to disk.
+      ParmManager::instance().flush();
+    }
   } //# end namespace
 }
