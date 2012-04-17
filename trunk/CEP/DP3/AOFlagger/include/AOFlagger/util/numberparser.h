@@ -22,6 +22,12 @@
 
 #include <cmath>
 
+//# pow10 seems to be undefined on OS-X
+#ifdef __APPLE__
+# define pow10(x) pow(10., (x))
+#endif
+
+
 class NumberParsingException : public std::runtime_error
 {
 	public:
