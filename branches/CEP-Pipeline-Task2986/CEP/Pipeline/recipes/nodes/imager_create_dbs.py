@@ -34,7 +34,7 @@ from lofarpipe.support.utilities import read_initscript
 from lofarpipe.support.utilities import catch_segfaults
 from lofarpipe.support.group_data import load_data_map
 import monetdb.sql as db
-import lofar.gsm.gsmutils as gsm                                                    #@UnresolvedImport
+import lofar.gsmutils as gsm                                                    #@UnresolvedImport
 
 #TODO: A better place for this template
 template_parmdb = """

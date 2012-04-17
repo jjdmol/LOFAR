@@ -114,7 +114,8 @@ class SubProcessGroup(object):
 class imager_prepare(LOFARnodeTCP):
     def run(self, init_script, parset, working_dir, ndppp, output_measurement_set,
             slices_per_image, subbands_per_image, inputs_for_image_mapfile_path,
-            asciistat_executable, statplot_executable, msselect_executable):
+            asciistat_executable, statplot_executable, msselect_executable,
+            rficonsole_executable):
         with log_time(self.logger):
             input_map = load_data_map(inputs_for_image_mapfile_path)
 
@@ -149,7 +150,7 @@ class imager_prepare(LOFARnodeTCP):
 
             #***********************************************************
             # rficonsole -indirect-read ${combined}
-            self._run_rficonsole(group_measurements_collected)
+            self._run_rficonsole(rficonsole_executable, group_measurements_collected)
 
             #******************************************************************
             # Add imaging columns to each timeslice
@@ -319,7 +320,7 @@ class imager_prepare(LOFARnodeTCP):
                                output_file_path, concatTime = True)
 
 
-    def _run_rficonsole(self, group_measurements_collected):
+    def _run_rficonsole(self, executable, group_measurements_collected):
         #loop all measurement sets
         temp_dir_path = tempfile.mkdtemp()
         try:
@@ -327,7 +328,7 @@ class imager_prepare(LOFARnodeTCP):
             for (idx, group_set) in enumerate(group_measurements_collected):
                 # construct copy command
                 self.logger.info(group_set)
-                command = ["rficonsole", "-indirect-read",
+                command = [executable, "-indirect-read",
                             group_set]
                 self.logger.info(command)
                 #Spawn a subprocess and connect the pipes

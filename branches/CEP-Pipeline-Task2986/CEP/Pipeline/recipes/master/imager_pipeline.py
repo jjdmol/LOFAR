@@ -11,9 +11,11 @@ import sys
 
 from lofarpipe.support.control import control
 from lofar.parameterset import parameterset #@UnresolvedImport
-import lofarpipe.support.lofaringredient as ingredient
+#import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.utilities import create_directory
+from lofarpipe.support.lofarexceptions import PipelineException
 from lofarpipe.support.group_data import load_data_map, store_data_map
+from lofarpipe.support.group_data import validate_data_maps
 
 
 class imager_pipeline(control):
@@ -54,12 +56,45 @@ class imager_pipeline(control):
     """
 
 
-    inputs = {
-        'input_mapfile': ingredient.FileField(
-            '--input-mapfile',
-            help = "mapfile with inputs specific to this node script"
-        )
-    }
+#    inputs = {
+#        'input_mapfile': ingredient.FileField(
+#            '--input-mapfile',
+#            help = "mapfile with inputs specific to this node script"
+#        )
+#    }
+
+
+    def __init__(self):
+        control.__init__(self)
+        self.parset = parameterset()
+        self.input_data = []
+        self.target_data = []
+        self.output_data = []
+
+
+    def usage(self):
+        print >> sys.stderr, "Usage: %s <parset-file>  [options]" % sys.argv[0]
+        return 1
+
+
+    def go(self):
+        """
+        Read the parset-file that was given as input argument, and set the
+        jobname before calling the base-class's `go()` method.
+        """
+        try:
+            parset_file = self.inputs['args'][0]
+        except IndexError:
+            return self.usage()
+        self.parset.adoptFile(parset_file)
+        # Set job-name to basename of parset-file w/o extension, if it's not
+        # set on the command-line with '-j' or '--job-name'
+        if not self.inputs.has_key('job_name'):
+            self.inputs['job_name'] = (
+                os.path.splitext(os.path.basename(parset_file))[0]
+            )
+        super(imager_pipeline, self).go()
+
 
     def pipeline_logic(self):
         """
@@ -67,15 +102,51 @@ class imager_pipeline(control):
         This method will be invoked by the base-class's `go()` method.
         """
         self.logger.info("Starting imager pipeline")
+        
+#        # Create a parameter-subset containing only python-control stuff.
+#        py_parset = self.parset.makeSubset(
+##            self.parset.fullModuleName('PythonControl') + '.'
+#            'ObsSW.Observation.ObservationControl.PythonControl.'
+#        )
+
+        # Get input/output-data products specifications.
+        self._get_io_product_specs()
+
+        job_dir = self.config.get("layout", "job_directory")
+        parset_dir = os.path.join(job_dir, "parsets")
+        mapfile_dir = os.path.join(job_dir, "mapfiles")
+
+        # Write input- and output data map-files.
+        create_directory(parset_dir)
+        create_directory(mapfile_dir)
+        
         # ******************************************************************
         # (1) prepare phase: copy and collect the ms
-        # TODO: inputs to this step are not ready for automation: need input 
-        # marcel: The inputs are retrieved from the parset
         # TODO: some smart python-foo to get temp outputfilenames
-        target_mapfile = "/home/klijn/build/preparation/band6_output2.map"
-        input_mapfile = self.inputs['input_mapfile']
 
+        input_mapfile = os.path.join(mapfile_dir, "uvdata.mapfile")
+        store_data_map(input_mapfile, self.input_data)
+        self.logger.debug(
+            "Wrote input UV-data mapfile: %s" % input_mapfile
+        )
+        target_mapfile = os.path.join(mapfile_dir, "target.mapfile")
+        store_data_map(target_mapfile, self.target_data)
+        self.logger.debug(
+            "Wrote target mapfile: %s" % target_mapfile
+        )
+        awimager_output_mapfile = os.path.join(mapfile_dir, "images.mapfile")
+        store_data_map(awimager_output_mapfile, self.output_data)
+        self.logger.debug(
+            "Wrote output sky-image mapfile: %s" % awimager_output_mapfile
+        )
 
+        # TODO: quick and dirty way to get the proper self.parset by just
+        #       making re-assigning it the subset of all PythonControl keys.
+        self.parset = self.parset.makeSubset(
+#            self.parset.fullModuleName('PythonControl') + '.'
+            'ObsSW.Observation.ObservationControl.PythonControl.'
+        )
+        
         concat_ms_map_path, timeslice_map_path = self._prepare_phase(
                 input_mapfile, target_mapfile, skip = False)
 
@@ -122,6 +193,44 @@ class imager_pipeline(control):
 
 
         return 0
+
+
+
+    def _get_io_product_specs(self):
+        """
+        Get input- and output-data product specifications from the
+        parset-file, and do some sanity checks.
+        """
+        odp = self.parset.makeSubset('ObsSW.Observation.DataProducts.')
+        self.input_data = [tuple(os.path.join(*x).split(':')) for x in zip(
+            odp.getStringVector('Input_Correlated.locations', []),
+            odp.getStringVector('Input_Correlated.filenames', []))
+        ]
+        self.logger.debug("%d Input_Correlated data products specified" %
+                          len(self.input_data))
+        self.output_data = [tuple(os.path.join(*x).split(':')) for x in zip(
+            odp.getStringVector('Output_SkyImage.locations', []),
+            odp.getStringVector('Output_SkyImage.filenames', []))
+        ]
+        self.logger.debug("%d Output_SkyImage data products specified" %
+                          len(self.output_data))
+        # Sanity checks on input- and output data product specifications
+        if not(validate_data_maps(self.input_data) and 
+               validate_data_maps(self.output_data)):
+            raise PipelineException(
+                "Validation of input/output data product specification failed!"
+            )
+        # Target data is basically scratch data, consisting of one concatenated
+        # MS per image. It must be stored on the same host as the final image.
+        for host, path in self.output_data:
+            self.target_data.append((
+                host, 
+                os.path.join(
+                    self.config.get('DEFAULT', 'default_working_directory'),
+                    'concat.ms'
+                ))
+            )
+
 
     def _finalize(self, awimager_output_mapfile, source_list, target_mapfile,
                   skip = False):
@@ -222,7 +331,7 @@ class imager_pipeline(control):
                           mapfile = output_mapfile,
                           output_image = image_path,
                           mask_patch_size = mask_patch_size,
-                          sourcedb_path = "/data/scratch/klijn/jobs/Pipeline8/concat.ms.sky")
+                          sourcedb_path = sky_path)
 
 
         return output_mapfile
@@ -337,37 +446,6 @@ class imager_pipeline(control):
                 open(mapfile_path, 'w').close()
 
         return mapfile_path
-
-
-    def __init__(self):
-        control.__init__(self)
-        self.parset = parameterset()
-        self.input_data = {}
-        self.output_data = {}
-
-
-    def usage(self):
-        print >> sys.stderr, "Usage: %s <parset-file>  [options]" % sys.argv[0]
-        return 1
-
-
-    def go(self):
-        """
-        Read the parset-file that was given as input argument, and set the
-        jobname before calling the base-class's `go()` method.
-        """
-        try:
-            parset_file = self.inputs['args'][0]
-        except IndexError:
-            return self.usage()
-        self.parset.adoptFile(parset_file)
-        # Set job-name to basename of parset-file w/o extension, if it's not
-        # set on the command-line with '-j' or '--job-name'
-        if not self.inputs.has_key('job_name'):
-            self.inputs['job_name'] = (
-                os.path.splitext(os.path.basename(parset_file))[0]
-            )
-        super(imager_pipeline, self).go()
 
 
 if __name__ == '__main__':

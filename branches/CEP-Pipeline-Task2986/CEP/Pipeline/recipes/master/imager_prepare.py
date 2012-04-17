@@ -82,6 +82,10 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
             '--msselect-executable',
             help = "full path to the msselect executable "
         ),
+        'rficonsole_executable': ingredient.ExecField(
+            '--rficonsole-executable',
+            help = "full path to the rficonsole executable "
+        ),
         'mapfile': ingredient.StringField(
             '--mapfile',
             help = "Full path of mapfile; contains a list of the"
@@ -128,6 +132,8 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         asciistat_executable = self.inputs['asciistat_executable']
         statplot_executable = self.inputs['statplot_executable']
         msselect_executable = self.inputs['msselect_executable']
+        rficonsole_executable = self.inputs['rficonsole_executable']
+        
         # *********************************************************************            
         # schule the actual work
         nodeCommand = " python %s" % (self.__file__.replace("master", "nodes"))
@@ -144,7 +150,8 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
                         ndppp_exec, output_measurement_set,
                         slices_per_image, subbands_per_image,
                         inputs_for_image_mapfile_path, asciistat_executable,
-                        statplot_executable, msselect_executable]
+                        statplot_executable, msselect_executable,
+                        rficonsole_executable]
 
             jobs.append(ComputeJob(host, nodeCommand, arguments))
 
