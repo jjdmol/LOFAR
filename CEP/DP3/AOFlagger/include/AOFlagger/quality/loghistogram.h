@@ -29,6 +29,12 @@
 
 #include <AOFlagger/util/serializable.h>
 
+//# pow10 seems to be undefined on OS-X
+#ifdef __APPLE__
+# define pow10(x) pow(10., (x))
+#endif
+
+
 class LogHistogram : public Serializable
 {
 	private:
