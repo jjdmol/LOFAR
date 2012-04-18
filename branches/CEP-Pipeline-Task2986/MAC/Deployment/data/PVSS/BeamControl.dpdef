@@ -2,7 +2,6 @@
 connected		bool
 subArray		string
 subbandList		stringArr
-beamletList		stringArr
 angle1			doubleArr
 angle2			doubleArr
 directionType	stringArr

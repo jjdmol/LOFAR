@@ -1,4 +1,4 @@
-#ObservationControl.dpdef
+#Observation.dpdef
 claim				:Claim
 
 claimPeriod			int
@@ -10,7 +10,7 @@ nyquistzone			int
 antennaArray		string
 receiverList		string
 sampleClock			int
-runState		string
+runState			string
 measurementSet		string
 
 stationList			string
@@ -20,7 +20,12 @@ storageNodeList		string
 
 Beams.angle1		doubleArr
 Beams.angle2		doubleArr
-#Beams.angleTimes	uintArr
 Beams.directionType	stringArr
-Beams.beamletList	stringArr
 Beams.subbandList	stringArr
+
+TiedArrayBeams.beamIndex		intArr
+TiedArrayBeams.angle1			doubleArr
+TiedArrayBeams.angle2			doubleArr
+TiedArrayBeams.directionType 	stringArr
+TiedArrayBeams.dispersion		doubleArr
+TiedArrayBeams.coherent	       	boolArr

@@ -27,6 +27,13 @@ arg_reg    = arg_hba_server_reg
 # Get rcuId
 rcuId = [arg_rcu]
 
+# Determine rcuNr when accessing only one RCU-Y HBA client
+if len(rspId)==1 and len(blpId)==1:
+  rspNr = int(rspId[0][3:])
+  blpNr = int(blpId[0][3:])
+  rcuY = rspNr*8 + blpNr*4 + 1;  # access HBA client via RCU-Y, so +1
+  rcuX = rspNr*8 + blpNr*4;     # Turn on power via RCU-X
+
 # Adapt access format
 if arg_access == 'bc':
   str_access = 'broadcast'
@@ -191,8 +198,14 @@ else:
 # - Testcase initializations
 
 # - Set RCU in HBA mode and enable the data path
-rsp.rspctl(tc, '--rcumode=5')
-rsp.rspctl(tc, '--rcuenable=1')
+if len(rspId)==1 and len(blpId)==1:
+  # access only one RCU-Y HBA client
+  rsp.rspctl(tc, '--rcumode=5' + ' --sel=%d,%d' % (rcuX,rcuY))
+  rsp.rspctl(tc, '--rcuenable=1' + ' --sel=%d,%d' % (rcuX,rcuY))
+else:
+  # default access multiple RCU-Y HBA clients
+  rsp.rspctl(tc, '--rcumode=5')
+  rsp.rspctl(tc, '--rcuenable=1')
 tc.sleep(2010)
 
 # - Use external sync to trigger the RCUH protocol list

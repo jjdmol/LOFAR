@@ -50,6 +50,7 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_init
   try {
     OTDBconnection* aConn=getConnection(name);
     TreeMaintenance* aTM = new TreeMaintenance(aConn);
+    theirC_ObjectMap.erase(name+"_TreeMaintenance");
     theirC_ObjectMap[name+"_TreeMaintenance"]=(void*)aTM;
 
   } catch (exception &ex) {

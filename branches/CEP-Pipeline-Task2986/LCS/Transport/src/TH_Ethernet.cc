@@ -22,7 +22,6 @@
 
 #include <lofar_config.h>
 
-#ifndef HAVE_BGL
 #ifndef __APPLE__
 #ifndef USE_NO_TH_ETHERNET
 
@@ -443,6 +442,5 @@ void TH_Ethernet::bindToIF(){
 
 }
 
-#endif
 #endif
 #endif

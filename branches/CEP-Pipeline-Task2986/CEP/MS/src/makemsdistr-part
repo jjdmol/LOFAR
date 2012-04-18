@@ -24,8 +24,8 @@
 
 
 # Find the path used to start the script.
-pgmpath=`dirname $0`
-pgmpath=`cd $pgmpath > /dev/null 2>&1  &&  pwd`
+pgmpath=`dirname "$0"`
+pgmpath=`cd "$pgmpath" > /dev/null 2>&1  &&  pwd`
 
 if test $# != 13; then
   echo "run as:   makemsdistr-part dummy dummy dummy dummy rank"
@@ -38,20 +38,22 @@ shift
 shift
 shift
 shift
-seqnr=$1
-msn=$2
-envfile=$5
-psn=$6
-vdspath=$7
-vdsout=$8
-cdn=$9
+seqnr="$1"
+msn="$2"
+envfile="$5"
+psn="$6"
+vdspath="$7"
+vdsout="$8"
+cdn="$9"
 
 # Initialize environment.
 if test "$envfile" != ""; then
-  . $envfile
+  . "$envfile"
 fi
 
+echo "PATH=$PATH"
+pwd
 # Create the MS.
 # Grep the VDSname from the result.
-echo "$pgmpath/makems $psn $seqnr $msn $vdspath $cdn > ${vdsout}_$seqnr"
-$pgmpath/makems $psn $seqnr $msn $vdspath $cdn | grep "vds=" | sed -e 's/vds=//' > ${vdsout}_$seqnr 
+echo "makems $psn $seqnr $msn $vdspath $cdn > ${vdsout}_$seqnr"
+"makems" "$psn" "$seqnr" "$msn" "$vdspath" "$cdn" | grep "vds=" | sed -e 's/vds=//' > "${vdsout}_$seqnr" 

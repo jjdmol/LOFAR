@@ -27,10 +27,12 @@ package nl.astron.lofar.sas.otb;
 import com.darwinsys.lang.GetOpt;
 import com.darwinsys.lang.GetOptDesc;
 import java.awt.GraphicsEnvironment;
+import java.awt.HeadlessException;
 import java.awt.Rectangle;
 import java.io.File;
 import java.util.Iterator;
 import java.util.Map;
+import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.sas.otb.exceptions.NoServerConnectionException;
 import nl.astron.lofar.sas.otb.exceptions.NotLoggedInException;
 import org.apache.log4j.Logger;
@@ -55,11 +57,15 @@ public class Main {
             @Override
       public void run() {
         System.out.println("Shutting down OTB");
+        // uninstall tab selector
+        LofarUtils.TextSelector.uninstall();
         if (itsMainFrame != null)  itsMainFrame.exit();
       }
     });
 
   }
+    
+
 
     /**
      * @param args the command line arguments
@@ -117,7 +123,10 @@ public class Main {
             }
             if (errs) {
                 System.err.println("Usage: OTB.jar [-s server] [-p port] [-d database] [-u username] [-l logFile] [-h]");
-            }         
+            }   
+            // install tab focus
+            LofarUtils.TextSelector.install();
+
 
             File f = new File(logConfig);
             if (f.exists()) {
@@ -129,8 +138,11 @@ public class Main {
                     PropertyConfigurator.configure(logConfig);
                 } else {
                     logger.error("OTB.log_prop not found.");
-                }
+                    }
             }
+            // install tab focus
+            LofarUtils.TextSelector.install();
+
             logger.info("OTB started");
 
             try {
@@ -150,7 +162,7 @@ public class Main {
                 logger.error(ex);
             }
         }
-        catch(Exception e) {
+        catch(IllegalStateException | HeadlessException e) {
             // catch all exceptions and create a fatal error message, including 
             // a stack trace.
             logger.fatal("Fatal exception, OTB halted",e);

@@ -22,7 +22,7 @@
 
 #include <gtkmm/box.h>
 #include <gtkmm/checkbutton.h>
-#include <gtkmm/window.h>
+#include <gtkmm/expander.h>
 #include <gtkmm/frame.h>
 
 #include <AOFlagger/quality/qualitytablesformatter.h>
@@ -69,6 +69,10 @@ class TwoDimensionalPlotPage : public Gtk::HBox {
 		
 		virtual void StartLine(Plot2D &plot, const std::string &name, const std::string &yAxisDesc) = 0;
 		
+		virtual void processPlot(Plot2D &plot)
+		{
+		}
+		
 		virtual void addCustomPlotButtons(Gtk::VBox &container)
 		{
 		}
@@ -109,6 +113,7 @@ class TwoDimensionalPlotPage : public Gtk::HBox {
 		void onPlotPropertiesClicked();
 		void onDataExportClicked();
 		
+		Gtk::Expander _expander;
 		Gtk::VBox _sideBox;
 		
 		Gtk::Frame _statisticFrame;

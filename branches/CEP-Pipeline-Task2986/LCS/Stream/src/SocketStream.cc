@@ -65,7 +65,7 @@ static struct RandomState {
 } randomState;
 
 
-SocketStream::SocketStream(const char *hostname, uint16 _port, Protocol protocol, Mode mode, time_t timeout, const char *nfskey)
+SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol protocol, Mode mode, time_t timeout, const std::string &nfskey, bool doAccept)
 :
   protocol(protocol),
   mode(mode),
@@ -97,7 +97,7 @@ SocketStream::SocketStream(const char *hostname, uint16 _port, Protocol protocol
         int  retval;
         struct addrinfo *result;
 
-        if (mode == Client && nfskey)
+        if (mode == Client && nfskey != "")
           port = boost::lexical_cast<uint16>(readkey(nfskey, timeout));
 
         if (mode == Server && autoPort)
@@ -105,7 +105,7 @@ SocketStream::SocketStream(const char *hostname, uint16 _port, Protocol protocol
 
         snprintf(portStr, sizeof portStr, "%hu", port);
 
-        if ((retval = getaddrinfo(hostname, portStr, &hints, &result)) != 0)
+        if ((retval = getaddrinfo(hostname.c_str(), portStr, &hints, &result)) != 0)
           throw SystemCallException("getaddrinfo", retval, THROW_ARGS);
 
         // make sure result will be freed
@@ -155,7 +155,10 @@ SocketStream::SocketStream(const char *hostname, uint16 _port, Protocol protocol
             if (listen(listen_sk, 5) < 0)
               throw BindException("listen", errno, THROW_ARGS);
 
-            accept(timeout);  
+            if (doAccept)
+              accept(timeout);
+            else
+              break;
           }
         }
 
@@ -197,6 +200,18 @@ SocketStream::~SocketStream()
 }
 
 
+FileDescriptorBasedStream *SocketStream::detach()
+{
+  ASSERT( mode == Server );
+
+  FileDescriptorBasedStream *client = new FileDescriptorBasedStream(fd);
+
+  fd = -1;
+
+  return client;
+}
+
+
 void SocketStream::reaccept( time_t timeout )
 {
   ASSERT( mode == Server );
@@ -210,13 +225,13 @@ void SocketStream::reaccept( time_t timeout )
 
 void SocketStream::accept( time_t timeout )
 {
-  if (nfskey)
+  if (nfskey != "")
     writekey(nfskey, port);
 
   // make sure the key will be deleted
   struct D {
     ~D() {
-      if (nfskey) {
+      if (nfskey != "") {
         ScopedDelayCancellation dc; // unlink is a cancellation point
 
         try {
@@ -227,7 +242,7 @@ void SocketStream::accept( time_t timeout )
       }  
     }
 
-    const char *nfskey;
+    const std::string &nfskey;
   } onDestruct = { nfskey };
   (void)onDestruct;
 
@@ -261,25 +276,31 @@ void SocketStream::setReadBufferSize(size_t size)
 }
 
 
-std::string SocketStream::readkey(const char *nfskey, time_t &timeout)
+void SocketStream::syncNFS()
+{
+  // sync NFS
+  DIR *dir = opendir(".");
+
+  if (!dir)
+    throw SystemCallException("opendir", errno, THROW_ARGS);
+
+  if (!readdir(dir))
+    throw SystemCallException("readdir", errno, THROW_ARGS);
+
+  if (closedir(dir) != 0)
+    throw SystemCallException("closedir", errno, THROW_ARGS);
+}
+
+
+std::string SocketStream::readkey(const std::string &nfskey, time_t &timeout)
 {
   for(;;) {
-    // sync NFS
-    DIR *dir = opendir(".");
-
-    if (!dir)
-      throw SystemCallException("opendir", errno, THROW_ARGS);
-
-    if (!readdir(dir))
-      throw SystemCallException("readdir", errno, THROW_ARGS);
-
-    if (closedir(dir) != 0)
-      throw SystemCallException("closedir", errno, THROW_ARGS);
-
     char portStr[16];
     ssize_t len;
 
-    len = readlink(nfskey, portStr, sizeof portStr);
+    syncNFS();
+
+    len = readlink(nfskey.c_str(), portStr, sizeof portStr - 1); // reserve 1 character to insert \0 below
 
     if (len >= 0) {
       portStr[len] = 0;
@@ -300,20 +321,22 @@ std::string SocketStream::readkey(const char *nfskey, time_t &timeout)
   }
 }
 
-void SocketStream::writekey(const char *nfskey, uint16 port)
+void SocketStream::writekey(const std::string &nfskey, uint16 port)
 {
   char portStr[16];
 
   snprintf(portStr, sizeof portStr, "%hu", port);
 
   // Symlinks can be atomically created over NFS
-  if (symlink(portStr, nfskey) < 0)
+  if (symlink(portStr, nfskey.c_str()) < 0)
     throw SystemCallException("symlink", errno, THROW_ARGS);
 }
 
-void SocketStream::deletekey(const char *nfskey)
+void SocketStream::deletekey(const std::string &nfskey)
 {
-  if (unlink(nfskey) < 0)
+  syncNFS();
+
+  if (unlink(nfskey.c_str()) < 0)
     throw SystemCallException("unlink", errno, THROW_ARGS);
 }
 

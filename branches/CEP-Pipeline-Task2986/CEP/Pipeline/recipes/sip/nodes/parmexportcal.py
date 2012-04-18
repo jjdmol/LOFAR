@@ -13,7 +13,7 @@ import tempfile
 from lofarpipe.support.lofarnode import LOFARnodeTCP
 from lofarpipe.support.pipelinelogging import CatchLog4CPlus
 from lofarpipe.support.pipelinelogging import log_time
-from lofarpipe.support.utilities import read_initscript
+from lofarpipe.support.utilities import read_initscript, create_directory
 from lofarpipe.support.utilities import catch_segfaults
 
 
@@ -35,6 +35,9 @@ class ParmExportCal(LOFARnodeTCP):
             self.logger.error("Executable %s not found" % executable)
             return 1
 
+        # Create output directory (if it doesn't already exist)
+        create_directory(os.path.dirname(outfile))
+        
         # Initialize environment
         env = read_initscript(self.logger, initscript)
 

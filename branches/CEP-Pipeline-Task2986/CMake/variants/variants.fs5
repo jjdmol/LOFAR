@@ -16,10 +16,10 @@
 set(GNU_CXX_FLAGS "-W -Wall -Woverloaded-virtual -Wno-unknown-pragmas -fopenmp -DCLUSTER_SCHEDULING")
 
 # Options
-#option(USE_BLITZ     "Use BLITZ"     OFF)
-option(USE_LOG4CPLUS "Use Log4Cplus" OFF)
-option(USE_MPI       "Use MPI"       ON)
 option(USE_HDF5      "Use HDF5"      OFF)
+option(USE_LOG4CPLUS            "Use Log4Cplus"               OFF)
+option(USE_MPI                  "Use MPI"                     ON)
+option(USE_PQXX                 "Use libpqxx"                 OFF)
 
 # Host specific paths to third party packages
 set(BLA_VENDOR ACML)

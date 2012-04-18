@@ -28,7 +28,6 @@ import java.awt.Color;
 import java.awt.Cursor;
 import java.rmi.RemoteException;
 import java.util.*;
-import java.util.logging.Level;
 import javax.swing.*;
 import nl.astron.lofar.lofarutils.LofarUtils;
 import org.apache.log4j.Logger;
@@ -44,7 +43,7 @@ import nl.astron.lofar.sas.otbcomponents.*;
  * @version $Id$
  * @updated 
  */
-public class MainFrame extends javax.swing.JFrame {
+public final class MainFrame extends javax.swing.JFrame {
 
     // Create a Log4J logger instance
     static Logger logger = Logger.getLogger(MainFrame.class);
@@ -112,7 +111,7 @@ public class MainFrame extends javax.swing.JFrame {
         itsDBName=database;
         itsUserName=user;
 
-        itsPlugins = new HashMap<String,PluginPanelInfo>();
+        itsPlugins = new HashMap<>();
 
         itsSharedVars = new SharedVars(this);
         itsStorageLocation = new StorageLocation(SharedVars.getOTDBrmi());
@@ -138,19 +137,16 @@ public class MainFrame extends javax.swing.JFrame {
         
 
         
-        
-        
             showPanel(MainPanel.getFriendlyNameStatic());
         } catch(NoServerConnectionException ex ) {
             String aS="No Server Connection "+ex;
             logger.error(aS);
-            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+            LofarUtils.showErrorPanel(this.getOwner(),aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             exit();
             throw ex;
         } catch (NotLoggedInException ex ) {
             String aS="Not logged in "+ex;
             logger.error(aS);
-            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             exit();
             throw ex;
         }
@@ -247,7 +243,7 @@ public class MainFrame extends javax.swing.JFrame {
 
             return p;
         }
-        catch(Exception e) {
+        catch(ClassNotFoundException | InstantiationException | IllegalAccessException e) {
             String aS= e.getMessage();
             logger.fatal(aS);
             LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_death.gif")));
@@ -637,7 +633,7 @@ public class MainFrame extends javax.swing.JFrame {
             public void run() {
                 try {
                     new MainFrame("","","","").setVisible(true);
-                } catch (Exception e) {
+                } catch (NoServerConnectionException | NotLoggedInException e) {
                     System.out.println(e);
                 } finally {
                     System.out.println("We really need to go");

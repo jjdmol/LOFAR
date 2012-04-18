@@ -25,7 +25,7 @@
 
 #include <Common/StringUtil.h>
 #include <Storage/MSWriterFile.h>
-#include <Storage/MSWriterLDA.h>
+#include <Storage/MSWriterDAL.h>
 #include <Storage/MSWriterNull.h>
 #include <Storage/MeasurementSetFormat.h>
 #include <Storage/OutputThread.h>
@@ -35,6 +35,7 @@
 #include <boost/format.hpp>
 
 #include <errno.h>
+#include <time.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -105,14 +106,23 @@ OutputThread::OutputThread(const Parset &parset, OutputType outputType, unsigned
   itsReceiveQueue(receiveQueue),
   itsBlocksWritten(0),
   itsBlocksDropped(0),
-  itsNextSequenceNumber(0),
-  itsThread(this, &OutputThread::mainLoop, itsLogPrefix)
+  itsNextSequenceNumber(0)
 {
+}
+
+
+void OutputThread::start()
+{
+  itsThread = new Thread(this, &OutputThread::mainLoop, itsLogPrefix);
 }
 
 
 void OutputThread::createMS()
 {
+  // even the HDF5 writer accesses casacore, to perform conversions
+  ScopedLock sl(casacoreMutex);
+  ScopedDelayCancellation dc; // don't cancel casacore calls
+
   std::string directoryName = itsParset.getDirectoryName(itsOutputType, itsStreamNr);
   std::string fileName	    = itsParset.getFileName(itsOutputType, itsStreamNr);
   std::string path	    = directoryName + "/" + fileName;
@@ -121,9 +131,6 @@ void OutputThread::createMS()
 
   if (itsOutputType == CORRELATED_DATA) {
 #if defined HAVE_AIPSPP
-    ScopedLock sl(casacoreMutex);
-    ScopedDelayCancellation dc; // don't cancel casacore calls
-
     MeasurementSetFormat myFormat(itsParset, 512);
             
     /// Make MeasurementSet filestructures and required tables
@@ -149,22 +156,15 @@ void OutputThread::createMS()
   LOG_INFO_STR(itsLogPrefix << "Writing to " << path);
 
   try {
-#ifdef USE_LDA
     // HDF5 writer requested
     switch (itsOutputType) {
-      case COHERENT_STOKES:
-        itsWriter = new MSWriterLDA<float,3>(path.c_str(), itsParset, itsOutputType, itsStreamNr, itsIsBigEndian);
-        break;
       case BEAM_FORMED_DATA:
-        itsWriter = new MSWriterLDA<float,4>(path.c_str(), itsParset, itsOutputType, itsStreamNr, itsIsBigEndian);
+        itsWriter = new MSWriterDAL<float,3>(path.c_str(), itsParset, itsStreamNr, itsIsBigEndian);
         break;
       default:
-        itsWriter = new MSWriterFile(path, itsOutputType == COHERENT_STOKES || itsOutputType == BEAM_FORMED_DATA || itsOutputType == INCOHERENT_STOKES);
+        itsWriter = new MSWriterFile(path, itsOutputType == BEAM_FORMED_DATA);
         break;
     }
-#else
-    itsWriter = new MSWriterFile(path, itsOutputType == COHERENT_STOKES || itsOutputType == BEAM_FORMED_DATA || itsOutputType == INCOHERENT_STOKES);
-#endif    
   } catch (SystemCallException &ex) {
     LOG_ERROR_STR(itsLogPrefix << "Cannot open " << path << ": " << ex);
     itsWriter = new MSWriterNull;
@@ -216,6 +216,8 @@ static Semaphore writeSemaphore(300);
 
 void OutputThread::doWork()
 {
+  time_t prevlog = 0;
+
   for (SmartPtr<StreamableData> data; (data = itsReceiveQueue.remove()) != 0; itsFreeQueue.append(data.release())) {
     //NSTimer writeTimer("write data", false, false);
 
@@ -235,7 +237,18 @@ void OutputThread::doWork()
 
     writeSemaphore.up();
     //writeTimer.stop();
-    LOG_INFO_STR(itsLogPrefix << "Written block with seqno = " << data->sequenceNumber());
+
+    time_t now = time(0L);
+
+    if (now > prevlog + 5) {
+      // print info every 5 seconds
+      LOG_INFO_STR(itsLogPrefix << "Written block with seqno = " << data->sequenceNumber() << ", " << itsBlocksWritten << " blocks written, " << itsBlocksDropped << " blocks dropped");
+
+      prevlog = now;
+    } else {
+      // print debug info for the other blocks
+      LOG_DEBUG_STR(itsLogPrefix << "Written block with seqno = " << data->sequenceNumber() << ", " << itsBlocksWritten << " blocks written, " << itsBlocksDropped << " blocks dropped");
+    }
   }
 }
 
@@ -245,7 +258,7 @@ void OutputThread::cleanUp()
 
   float dropPercent = itsBlocksWritten + itsBlocksDropped == 0 ? 0.0 : (100.0 * itsBlocksDropped) / (itsBlocksWritten + itsBlocksDropped);
 
-  LOG_INFO_STR(itsLogPrefix << itsBlocksWritten << " blocks written, " << itsBlocksDropped << " blocks dropped: " << std::setprecision(3) << dropPercent << "% lost" );
+  LOG_INFO_STR(itsLogPrefix << "Finished writing: " << itsBlocksWritten << " blocks written, " << itsBlocksDropped << " blocks dropped: " << std::setprecision(3) << dropPercent << "% lost" );
 }
 
 

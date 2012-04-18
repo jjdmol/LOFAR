@@ -197,7 +197,7 @@ namespace rfiStrategy {
 			{
 				_polarizationStatistics = statistics;
 			}
-			class BaselineSelectionInfo *BaselineSelectionInfo()
+			class BaselineSelector *BaselineSelectionInfo()
 			{
 				return _baselineSelectionInfo;
 			}
@@ -209,7 +209,7 @@ namespace rfiStrategy {
 			{
 				return _iterationsPlot;
 			}
-			void SetBaselineSelectionInfo(class BaselineSelectionInfo *baselineSelectionInfo)
+			void SetBaselineSelectionInfo(class BaselineSelector *baselineSelectionInfo)
 			{
 				_baselineSelectionInfo = baselineSelectionInfo;
 			}
@@ -262,7 +262,7 @@ namespace rfiStrategy {
 			class IterationsPlot *_iterationsPlot;
 			
 			class PolarizationStatistics *_polarizationStatistics;
-			class BaselineSelectionInfo *_baselineSelectionInfo;
+			class BaselineSelector *_baselineSelectionInfo;
 			class Observatorium *_observatorium;
 			class Model *_model;
 			std::vector<num_t> _horizontalProfile, _verticalProfile;

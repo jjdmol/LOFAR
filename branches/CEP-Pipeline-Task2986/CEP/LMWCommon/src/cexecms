@@ -15,7 +15,8 @@ showhelp()
   echo '    cexecms [-c cluster] [-d] [-s script] [-w workdir] command nameglob [arg1 arg2 ...]'
   echo ''
   echo '      -c cluster    Cluster name as defined for cexec.'
-  echo '                    default is lce: if run on an lfe node, otherwise locus:'
+  echo '                    default is lce: if run on an lfe node,'
+  echo '                               test: if run on lce072, otherwise locus:'
   echo '      -d            Do a dryrun.'
   echo '                    (do not execute, but only print the command/script)'
   echo '      -i ids        List of ids to replace <ID> in the nameglob argument.'
@@ -64,6 +65,7 @@ showhelp()
   echo '                   giving /data/scratch/diepen/<BN.>_sel.MS'"'"'"'
   echo '             "/data/scratch/pipeline/L2011_22663/*SB0##*"'
   echo ' Note that quotes have to be used abundantly.'
+  echo ' Also note that (t)csh requires a ! to be escaped with a backslash.'
   echo ''
   echo ' Sometimes a command can be dangerous or take a long time to run.'
   echo ' In such a case it makes sense to execute it first with the -d option.'
@@ -138,6 +140,7 @@ shift
 if test "$cluster" = ""; then
   cluster="locus:"
   case "$HOSTNAME" in
+    lce072) cluster="test:";;
     lfe*) cluster="lce:";;
   esac
 fi

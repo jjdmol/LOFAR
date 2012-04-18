@@ -101,19 +101,23 @@ class DefaultStatistics : public Serializable
 			return *this;
 		}
 		
-		DefaultStatistics &operator*=(const long double factor)
+		DefaultStatistics ToSinglePolarization() const
 		{
+			if(_polarizationCount == 1)
+				return *this;
+			
+			DefaultStatistics singlePol(1);
 			for(unsigned p=0;p<_polarizationCount;++p)
 			{
-				rfiCount[p] *= factor;
-				count[p] *= factor;
-				sum[p] *= factor;
-				sumP2[p] *= factor;
-				dCount[p] *= factor;
-				dSum[p] *= factor;
-				dSumP2[p] *= factor;
+				singlePol.rfiCount[0] += rfiCount[p];
+				singlePol.count[0] += count[p];
+				singlePol.sum[0] += sum[p];
+				singlePol.sumP2[0] += sumP2[p];
+				singlePol.dCount[0] += dCount[p];
+				singlePol.dSum[0] += dSum[p];
+				singlePol.dSumP2[0] += dSumP2[p];
 			}
-			return *this;
+			return singlePol;
 		}
 		
 		virtual void Serialize(std::ostream &stream) const

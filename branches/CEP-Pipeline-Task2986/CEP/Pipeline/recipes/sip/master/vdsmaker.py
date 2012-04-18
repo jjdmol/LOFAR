@@ -8,11 +8,8 @@
 from __future__ import with_statement
 import sys
 import os
-import tempfile
-import errno
 import subprocess
 
-import lofarpipe.support.utilities as utilities
 import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.utilities import create_directory
 from lofarpipe.support.baserecipe import BaseRecipe
@@ -34,29 +31,29 @@ class vdsmaker(BaseRecipe, RemoteCommandRecipeMixIn):
     inputs = {
         'gvds': ingredient.StringField(
             '-g', '--gvds',
-            help = "File name for output GVDS file"
+            help="File name for output GVDS file"
         ),
         'directory': ingredient.DirectoryField(
             '--directory',
-            help = "Directory for output GVDS file"
+            help="Directory for output GVDS file"
         ),
         'makevds': ingredient.ExecField(
             '--makevds',
-            help = "Full path to makevds executable"
+            help="Full path to makevds executable"
         ),
         'combinevds': ingredient.ExecField(
             '--combinevds',
-            help = "Full path to combinevds executable"
+            help="Full path to combinevds executable"
         ),
         'unlink': ingredient.BoolField(
             '--unlink',
-            help = "Unlink VDS files after combining",
-            default = True
+            help="Unlink VDS files after combining",
+            default=True
         ),
         'nproc': ingredient.IntField(
             '--nproc',
-            help = "Maximum number of simultaneous processes per compute node",
-            default = 8
+            help="Maximum number of simultaneous processes per compute node",
+            default=8
         )
     }
 
@@ -69,23 +66,26 @@ class vdsmaker(BaseRecipe, RemoteCommandRecipeMixIn):
 
         #                           Load file <-> compute node mapping from disk
         # ----------------------------------------------------------------------
-        self.logger.debug("Loading map from %s" % self.inputs['args'][0])
-        data = load_data_map(self.inputs['args'][0])
+        args = self.inputs['args']
+        self.logger.debug("Loading input-data mapfile: %s" % args[0])
+        data = load_data_map(args[0])
+
+        vdsnames = [
+            os.path.join(
+                self.inputs['directory'], os.path.basename(x[1]) + '.vds'
+            ) for x in data
+        ]
 
         command = "python %s" % (self.__file__.replace('master', 'nodes'))
         jobs = []
-        vdsnames = []
-        for host, ms in data:
-            vdsnames.append(
-                "%s/%s.vds" % (self.inputs['directory'], os.path.basename(ms.rstrip('/')))
-            )
+        for host, infile, outfile in (x+(y,) for x, y in zip(data, vdsnames)):
             jobs.append(
                 ComputeJob(
                     host, command,
                     arguments=[
-                        ms,
+                        infile,
                         self.config.get('cluster', 'clusterdesc'),
-                        vdsnames[-1],
+                        outfile,
                         self.inputs['makevds']
                     ]
                 )
@@ -103,31 +103,36 @@ class vdsmaker(BaseRecipe, RemoteCommandRecipeMixIn):
         gvds_out = self.inputs['gvds']
         # Create the gvds directory for output files, needed for combine
         create_directory(os.path.dirname(gvds_out))
-
+ 
         try:
             command = [executable, gvds_out] + vdsnames
             combineproc = subprocess.Popen(
                 command,
-                close_fds = True,
-                stdout = subprocess.PIPE,
-                stderr = subprocess.PIPE
+                close_fds=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
             )
             sout, serr = combineproc.communicate()
             log_process_output(executable, sout, serr, self.logger)
             if combineproc.returncode != 0:
-                raise subprocess.CalledProcessError(combineproc.returncode, command)
+                raise subprocess.CalledProcessError(
+                    combineproc.returncode, command
+                )
             self.outputs['gvds'] = gvds_out
+            self.logger.info("Wrote combined VDS file: %s" % gvds_out)
         except subprocess.CalledProcessError, cpe:
-            self.logger.exception("combinevds failed with status %d: %s" % (cpe.returncode, serr))
+            self.logger.exception(
+                "combinevds failed with status %d: %s" % (cpe.returncode, serr)
+            )
             failure = True
-        except OSError, e:
-            self.logger.error("Failed to spawn combinevds (%s)" % str(e))
+        except OSError, err:
+            self.logger.error("Failed to spawn combinevds (%s)" % str(err))
             failure = True
         finally:
             if self.inputs["unlink"]:
                 self.logger.debug("Unlinking temporary files")
-                for file in vdsnames:
-                    os.unlink(file)
+                for name in vdsnames:
+                    os.unlink(name)
             self.logger.info("vdsmaker done")
         if failure:
             self.logger.info("Failure was set")
@@ -136,6 +141,7 @@ class vdsmaker(BaseRecipe, RemoteCommandRecipeMixIn):
             self.logger.info("Outputs incomplete")
         else:
             return 0
+
 
 if __name__ == '__main__':
     sys.exit(vdsmaker().main())

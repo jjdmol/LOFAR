@@ -31,6 +31,7 @@
 #include <DPPP/DPBuffer.h>
 #include <DPPP/PhaseShift.h>
 #include <DPPP/BBSExpr.h>
+#include <ParmDB/Axis.h>
 
 #include <casa/Arrays/Cube.h>
 #include <measures/Measures/MDirection.h>
@@ -79,52 +80,96 @@ namespace LOFAR {
       virtual void showTimings (std::ostream&, double duration) const;
 
     private:
+      casa::MDirection handleCenter(const vector<string> &center) const;
+
       // Solve gains and subtract sources.
       void demix();
 
-      // Do the subtraction.
-      void subtract();
-
       // Add the decorrelation factor contribution for each time slot.
-      void addFactors (const DPBuffer& newBuf);
+      void addFactors (const DPBuffer& newBuf,
+                       casa::Array<casa::DComplex>& factorBuf);
 
       // Calculate the decorrelation factors by averaging them.
-      void averageFactors();
+      // Apply the P matrix to deproject the sources without a model.
+      void makeFactors (const casa::Array<casa::DComplex>& bufIn,
+                        casa::Array<casa::DComplex>& bufOut,
+                        const casa::Cube<float>& weightSums,
+                        uint nchanOut);
+
+      // Deproject the sources without a model.
+      void deproject (casa::Array<casa::DComplex>& factors,
+                      vector<MultiResultStep*> avgResults,
+                      uint resultIndex);
+
+      // Calculate the P matrix telling how to deal with sources that will
+      // not be predicted.
+      // Those sources are the last columns in the demixing matrix.
+      vector<casa::Array<casa::DComplex> > getP
+      (const vector<casa::Array<casa::DComplex> >& factors, uint nsources);
+
+      // Make a BBS frequency axis for the given channel average factor.
+      BBS::Axis::ShPtr makeFreqAxis (uint nchanAvg);
+
+      // Convert a double value to a string (with sufficient precision).
+      string toString (double value) const;
+
+      // Convert a angle string with an optional unit to radians.
+      // The default input unit is degrees.
+      double getAngle (const casa::String& value) const;
 
       //# Data members.
       DPInput*                 itsInput;
       string                   itsName;
+      string                   itsSkyName;
+      string                   itsInstrumentName;
+      double                   itsElevCutoff;   //# min source elevation (rad)
       vector<PhaseShift*>      itsPhaseShifts;
       vector<DPStep::ShPtr>    itsFirstSteps;   //# phaseshift/average steps
-      vector<MultiResultStep*> itsAvgResults;
-      vector<BBSExpr::ShPtr>   itsBBSExpr;
-      vector<BBS::MeasurementExprLOFAR::Ptr> itsModels;
-      vector<string>           itsSources;
+      vector<MultiResultStep*> itsAvgResults;   //# result of phaseshift/average
+      DPStep::ShPtr            itsAvgSubtr;     //# average step for subtract
+      MultiResultStep*         itsAvgResultSubtr; //# result of subtract avg
+      BBSExpr                  itsBBSExpr;
+      string                   itsTargetSource; //# empty if no target model
+      vector<string>           itsSubtrSources;
+      vector<string>           itsModelSources;
       vector<string>           itsExtraSources;
       vector<string>           itsAllSources;
-      vector<DPBuffer>         itsBuf;
-      bool                     itsJointSolve;
+      BBS::Axis::ShPtr         itsFreqAxisDemix;
+      BBS::Axis::ShPtr         itsFreqAxisSubtr;
+      double                   itsTimeStart;
+      double                   itsTimeInterval;
+      vector<double>           itsTimeCenters;
+      vector<double>           itsTimeWidths;
+///      bool                     itsJointSolve;
       uint                     itsNrDir;
+      uint                     itsNrModel;
       uint                     itsNrBl;
       uint                     itsNrCorr;
-      uint                     itsNrChanIn;
-      uint                     itsNrChanOut;
+      uint                     itsNChanIn;
+      uint                     itsNTimeIn;
+      uint                     itsNChanOutSubtr;
+      uint                     itsNChanAvgSubtr;
+      uint                     itsNTimeAvgSubtr;
+      uint                     itsNTimeChunkSubtr;
+      uint                     itsNTimeOutSubtr;
+      uint                     itsNChanOut;
       uint                     itsNChanAvg;
       uint                     itsNTimeAvg;
-      uint                     itsResChanAvg;
-      uint                     itsResTimeAvg;
       uint                     itsNTimeChunk;
-      uint                     itsNTimeIn;
       uint                     itsNTimeOut;
+      double                   itsStartTimeChunk;
+      double                   itsTimeIntervalSubtr;
       double                   itsTimeIntervalAvg;
-      double                   itsTimeIntervalRes;
       casa::Array<casa::DComplex> itsFactorBuf; //# ncorr,nchan,nbl,ndir*ndir
       vector<casa::Array<casa::DComplex> > itsFactors; //# demix factors/time
       //# each Array is basically cube(ncorr,nchan,nbl) of matrix(ndir,ndir)
+      casa::Array<casa::DComplex> itsFactorBufSubtr; //# factors for subtract
+      vector<casa::Array<casa::DComplex> > itsFactorsSubtr;
+      BBS::SolverOptions       itsSolveOpt;
       NSTimer                  itsTimer;
       NSTimer                  itsTimerPhaseShift;
       NSTimer                  itsTimerDemix;
-      NSTimer                  itsTimerBBS;
+      NSTimer                  itsTimerSolve;
       NSTimer                  itsTimerSubtract;
     };
 

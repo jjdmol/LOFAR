@@ -8,6 +8,7 @@ lofar_add_library(stream
   FileStream.cc
   NamedPipeStream.cc
   NullStream.cc
+  PortBroker.cc
   SocketStream.cc
   Stream.cc)
 

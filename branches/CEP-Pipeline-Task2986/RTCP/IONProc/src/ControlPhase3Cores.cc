@@ -35,26 +35,36 @@ namespace LOFAR {
 namespace RTCP {
 
 
-ControlPhase3Cores::ControlPhase3Cores(const Parset &parset, const std::vector<Stream *> &phaseThreeStreams)
+ControlPhase3Cores::ControlPhase3Cores(const Parset &parset, const std::vector<Stream *> &phaseThreeStreams, unsigned firstBlock)
 :
   itsLogPrefix(str(format("[obs %u] ") % parset.observationID())),
   itsPhaseThreeStreams(phaseThreeStreams),
-  itsMaxNrStreamsPerPset(parset.nrPhase3StreamsPerPset())
+  itsMaxNrStreamsPerPset(parset.nrPhase3StreamsPerPset()),
+  itsFirstBlock(firstBlock),
+  itsAmNeeded(!itsPhaseThreeStreams.empty() && parset.phaseThreeDisjunct())
 {
-  if (!itsPhaseThreeStreams.empty() && parset.phaseThreeDisjunct()) {
-    // psets dedicated to phase 3 have a different schedule -- they iterate over
-    // beams instead of subbands, and never need station data as input
+  // psets dedicated to phase 3 have a different schedule -- they iterate over
+  // beams instead of subbands, and never need station data as input
 
-    // Psets with both phase 2 and phase 3 either use different cores for both phases, or
-    // have phase 2 automatically transition into phase 3 for all cores.
+  // Psets with both phase 2 and phase 3 either use different cores for both phases, or
+  // have phase 2 automatically transition into phase 3 for all cores.
 
-    // If different cores are used, both sets need to be sent a PROCESS command. Also,
-    // this command must be sent AFTER phase 2 cores are activated, because communication
-    // with the compute cores is synchronous, but cores for phase 3 might not be ready yet
-    // even though phase 2 cores can already be started.
-    
-    // If the same cores are used for phases 2 and 3, only the cores in phase 2 need to be
-    // sent a PROCESS command, which is done in BeamletBufferToComputeNode.cc.
+  // If different cores are used, both sets need to be sent a PROCESS command. Also,
+  // this command must be sent AFTER phase 2 cores are activated, because communication
+  // with the compute cores is synchronous, but cores for phase 3 might not be ready yet
+  // even though phase 2 cores can already be started.
+  
+  // If the same cores are used for phases 2 and 3, only the cores in phase 2 need to be
+  // sent a PROCESS command, which is done in BeamletBufferToComputeNode.cc.
+}
+
+
+void ControlPhase3Cores::start()
+{
+  // starting needs to be deferred, because our thread will access *this immediately, which is
+  // not valid until after the constructor
+
+  if (itsAmNeeded) {
     itsThread = new Thread(this, &ControlPhase3Cores::mainLoop, "[ControlPhase3Cores] ", 65536);
   }  
 }
@@ -74,9 +84,9 @@ void ControlPhase3Cores::addIterations(unsigned count)
 
 void ControlPhase3Cores::mainLoop()
 {
-  unsigned block			= 0;
-  unsigned currentPhaseThreeComputeCore = 0;
+  unsigned block			= itsFirstBlock;
   unsigned nrPhaseThreeComputeCores	= itsPhaseThreeStreams.size();
+  unsigned currentPhaseThreeComputeCore = block % nrPhaseThreeComputeCores;
 
   while (itsNrIterationsToDo.down()) {
     CN_Command command(CN_Command::PROCESS, block ++);

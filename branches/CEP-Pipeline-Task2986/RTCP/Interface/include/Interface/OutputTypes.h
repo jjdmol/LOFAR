@@ -6,18 +6,15 @@ namespace RTCP {
 
 enum OutputType
 {
-  FILTERED_DATA = 1,
-  CORRELATED_DATA,
-  INCOHERENT_STOKES,
+  CORRELATED_DATA = 1,
   BEAM_FORMED_DATA,
-  COHERENT_STOKES,
-  TRIGGER_DATA
+  TRIGGER_DATA,
+
+  // define LAST and FIRST in the enum to make them valid values within the
+  // allocated range for the enum (=minimal number of bits to store all values)
+  LAST_OUTPUT_TYPE,
+  FIRST_OUTPUT_TYPE = 1
 };
-
-
-const OutputType FIRST_OUTPUT_TYPE = static_cast<OutputType>(1);
-const OutputType LAST_OUTPUT_TYPE  = static_cast<OutputType>(7); // exclusive
-
 
 inline OutputType operator ++ (OutputType &outputType) // prefix ++
 {
@@ -27,7 +24,7 @@ inline OutputType operator ++ (OutputType &outputType) // prefix ++
 
 inline OutputType operator ++ (OutputType &outputType, int) // postfix ++
 {
-  return (outputType = static_cast<OutputType>(outputType + 1));
+  return static_cast<OutputType>((outputType = static_cast<OutputType>(outputType + 1)) - 1);
 }
 
 } // namespace RTCP

@@ -240,6 +240,10 @@ namespace LOFAR
         vector<double>(defEpsilon, defEpsilon + 3));
 
       itsParms = pss.getStringVector("Parms");
+      if (itsParms.empty()) {
+        THROW(BBSControlException, "Key Solve.Parms contains no solvable "
+              "parameters for step \"" << name() << "\"");
+      }
       itsExclParms = pss.getStringVector("ExclParms", vector<string>());
       itsCalibrationGroups = pss.getUint32Vector("CalibrationGroups",
         vector<uint32>());

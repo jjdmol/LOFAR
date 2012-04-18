@@ -31,10 +31,8 @@ lofar_add_bin_program(ACuserMenu ACuserMenu.cc)
 
 install(PROGRAMS 
   startAP.sh
-  startBGL.sh
   startMPI.sh
   stopAP.sh
-  stopBGL.sh 
   stopMPI.sh
   DESTINATION bin)
   

@@ -32,6 +32,7 @@
 #include <OTDB/TreeState.h>
 #include <OTDB/DefaultTemplate.h>
 #include <Common/lofar_vector.h>
+#include <Common/lofar_map.h>
 
 using namespace pqxx;
 
@@ -55,7 +56,8 @@ public:
 	OTDBconnection (const string&	username,
 					const string&	passwd,
 					const string&	database,
-					const string&	hostname);
+					const string&	hostname,
+					const string &  port="5432");
 
 	virtual ~OTDBconnection ();
 
@@ -104,6 +106,9 @@ public:
 									   const ptime& endDate   = ptime(max_date_time));
 
 
+	// Get a map to translate MoMIds to treeID's
+    map<uint, uint> getMomID2treeIDMap();
+
 	// Get a new unique groupID
 	uint32	newGroupID();
 
@@ -126,6 +131,7 @@ private:
 	string		itsPassword;
 	string		itsDatabase;
 	string		itsHost;
+	string		itsPort;
 	bool		itsIsConnected;
 	connection*	itsConnection;
 	uint32		itsAuthToken;

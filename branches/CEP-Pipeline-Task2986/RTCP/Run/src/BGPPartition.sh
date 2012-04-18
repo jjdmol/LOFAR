@@ -14,9 +14,9 @@ function getpid() {
   STATUS=`bgpartstatus $PARTITION </dev/null`
 
   case $STATUS in
-    busy) PID=UP
+    busy) PID="UP [$PARTITION]"
           ;;
-    *)    PID=DOWN
+    *)    PID="DOWN [$PARTITION]"
           ;;
   esac        
 }

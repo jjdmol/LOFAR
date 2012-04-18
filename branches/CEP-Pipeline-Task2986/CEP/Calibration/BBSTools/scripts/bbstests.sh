@@ -5,14 +5,15 @@
 # File:         bbstests.sh
 # Author:       Sven Duscha (duscha@astron.nl)
 # Date:         2011-07-21
-# Last change:  2011-08-24
+# Last change:  2012-02-21
 
 
 
 #bbstestdir='/globaldata/bbs/tests'
-wd='/data/scratch/bbstests'     # working directory to copy tests to
+wd='/data/scratch/bbstests'     # default working directory to copy tests to
 verbosity=0                     # verbosity of test scripts
 taql=False                      # use TaQl to compare columns
+key='tests'                     # BBS database key to run in
 
 usage()
 {
@@ -20,7 +21,8 @@ usage()
   echo "<options> are "
   echo "--verbosity   display verbose information on test progress"
   echo "--wd <dir>    set working directory to execute tests in (default=/data/scratch/bbstests)"
-  echo "--taql <bool> use TaQL for casa table comparison"
+  echo "--taql <1/0>  use TaQL for casa table comparison"
+  echo "--key <dbkey> BBS database key to run in"
   echo "--help        show this help information"
   echo "<tests> to perform"
   echo "calibration   perform a gain calibration on 3C196"
@@ -63,7 +65,7 @@ setBBSTestdir()
     bbstestdir='/globaldata/bbs/tests'
   elif [ ${CEPCLUSTER} == "Sven-Duschas-Macbook-Pro" ]
   then
-    bbstestdir='/Users/duscha/Cluster/Test'
+    bbstestdir='/Users/duscha/Cluster/BBSTests'
   else
 #    bbstestdir=''
     echo "bbstests.sh: Unknown host environment. Exiting..."
@@ -76,14 +78,7 @@ setBBSTestdir()
 args=$@     # keep the arguments
 while test $# -ne 0
 do
-  if test ${1} = "--wd"; then
-    if test $# -le 1; then
-        error "${1} needs an additional argument"
-    fi
-    shift
-    wd=$1
-    shift
-  elif test ${1} = "-v" -o "${1}" = "--verbose"; then
+  if test ${1} = "-v" -o "${1}" = "--verbose"; then
     verbosity=1
     shift
   elif test ${1} = "-w" -o "${1}" = "--wd"; then
@@ -92,6 +87,13 @@ do
     fi
     shift
     wd=${1}
+    shift
+  elif test ${1} = "-k" -o "${1}" = "--key"; then
+    if test $# -le 1; then
+        error "${1} needs an additional argument"
+    fi
+    shift
+    key=${1}
     shift
   elif test ${1} = "-t" -o "${1}" = "--taql"; then
     taql=True
@@ -185,43 +187,45 @@ for arg in ${args}
 do
   if [ ${arg} = "all" ]; then
     if [ ${verbosity} == 1 ]; then 
-      echo "${wd}/calibration/testBBS_3C196_calibration.py --verbose --wd ${wd} --taql ${taql}" 
-      echo "${wd}/simulation/testBBS_3C196_simulation.py --verbose --wd ${wd} --taql ${taql}"
-      echo "${wd}/directional/testBBS_3C196_direction.py --verbose --wd ${wd} --taql ${taql}"
-      ${wd}/simulation/testBBS_3C196_simulation.py --verbose --wd ${wd} --taql ${taql}
-      ${wd}/calibration/testBBS_3C196_calibration.py --verbose --wd ${wd} --taql ${taql}
-      ${wd}/directional/testBBS_3C196_direction.py --verbose --wd ${wd} --taql ${taql}
+      echo "${wd}/calibration/testBBS_3C196_calibration.py --verbose --wd ${wd} --taql ${taql} --key ${key}" 
+      echo "${wd}/simulation/testBBS_3C196_simulation.py --verbose --wd ${wd} --taql ${taql} --key ${key}"
+      echo "${wd}/directional/testBBS_3C196_direction.py --verbose --wd ${wd} --taql ${taql} --key ${key}"
+      ${wd}/simulation/testBBS_3C196_simulation.py --verbose --wd ${wd} --taql ${taql} --key ${key}
+      ${wd}/calibration/testBBS_3C196_calibration.py --verbose --wd ${wd} --taql ${taql} --key ${key}
+      ${wd}/directional/testBBS_3C196_direction.py --verbose --wd ${wd} --taql ${taql} --key ${key}
     fi
-    ${wd}/simulation/testBBS_3C196_simulation.py --wd ${wd} --taql ${taql}
-    ${wd}/calibration/testBBS_3C196_calibration.py --wd ${wd} --taql ${taql}
-    ${wd}/directional/testBBS_3C196_direction.py --wd ${wd} --taql ${taql}
+    ${wd}/simulation/testBBS_3C196_simulation.py --wd ${wd} --taql ${taql} --key ${key}
+    ${wd}/calibration/testBBS_3C196_calibration.py --wd ${wd} --taql ${taql} --key ${key}
+    ${wd}/directional/testBBS_3C196_direction.py --wd ${wd} --taql ${taql} --key ${key}
     break
   elif [ ${arg} == "calibration" ]; then
     if [ ${verbosity} == 1 ]; then 
-      echo "${wd}/calibration/testBBS_3C196_calibration.py --verbose --wd ${wd} --taql ${taql}"
-      ${wd}/calibration/testBBS_3C196_calibration.py --verbose --wd ${wd} --taql ${taql}
+      echo "${wd}/calibration/testBBS_3C196_calibration.py --verbose --wd ${wd} --taql ${taql} --key ${key}"
+      ${wd}/calibration/testBBS_3C196_calibration.py --verbose --wd ${wd} --taql ${taql} --key ${key}
     else
-      ${wd}/calibration/testBBS_3C196_calibration.py --verbose --wd ${wd} --taql ${taql}
+      ${wd}/calibration/testBBS_3C196_calibration.py --verbose --wd ${wd} --taql ${taql} --key ${key}
     fi
   elif [ ${arg} == "simulation" ]; then
     if [ ${verbosity} == 1 ]; then 
-      echo "${wd}/simulation/testBBS_3C196_simulation.py --verbose --wd ${wd} --taql ${taql}"
-      ${wd}/simulation/testBBS_3C196_simulation.py --verbose --wd ${wd} --taql ${taql}
+      echo "${wd}/simulation/testBBS_3C196_simulation.py --verbose --wd ${wd} --taql ${taql} --key ${key}"
+      ${wd}/simulation/testBBS_3C196_simulation.py --verbose --wd ${wd} --taql ${taql} --key ${key}
     else
       ${wd}/simulation/testBBS_3C196_simulation.py
     fi
   elif [ ${arg} == "directional" ]; then
     if [ ${verbosity} == 1 ]; then 
-      echo "${wd}/directional/testBBS_3C196_direction.py --verbose --wd ${wd} --taql ${taql}" 
-      ${wd}/directional/testBBS_3C196_direction.py --verbose --wd ${wd} --taql ${taql}
+      echo "${wd}/directional/testBBS_3C196_direction.py --verbose --wd ${wd} --taql ${taql} --key ${key}" 
+      ${wd}/directional/testBBS_3C196_direction.py --verbose --wd ${wd} --taql ${taql} --key ${key}
     else
-      ${wd}/directional/testBBS_3C196_direction.py --verbose --wd ${wd} --taql ${taql}
+      ${wd}/directional/testBBS_3C196_direction.py --verbose --wd ${wd} --taql ${taql} --key ${key}
     fi
   fi
 done
 
 
 # Cleanup and finish
+rm ${wd}/${key}_*                   # delete local kernel log and parset files
 if [ ${verbosity} == 1 ]; then 
+  echo "rm ${wd}/${key}_*"
   echo "bbstest.sh finished."
 fi
