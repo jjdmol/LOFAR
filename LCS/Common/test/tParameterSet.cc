@@ -102,7 +102,6 @@ int doIt(KeyCompare::Mode mode)
     ASSERT(myPS.getTime("Time", 15) == 15);
     ASSERT(myPS.getTime("Time", 18000) == 18000);
     ASSERT(myPS["emptyvec"].getVector().size() == 0);
-    ASSERT(myPS.getVector("emptyvec").size() == 0);
     ASSERT(myPS.getUint32Vector("emptyvec").size() == 0);
 
     {
@@ -227,36 +226,11 @@ int doIt(KeyCompare::Mode mode)
 
     // Iterate through all keys.
     cout << endl << "Iterate over all keys ..." << endl;
-    for (ParameterSet::iterator iter = myPS.begin(); iter != myPS.end(); iter++) {
+    for (ParameterSet::iterator iter = myPS.begin();
+	 iter != myPS.end();
+	 iter++) {
       cout << iter->first << endl;
     }
-	cout << endl;
-
-	cout << "locateModule('g')   : " << myPS.locateModule("g")    << endl;
-	cout << "locateModule('F')   : " << myPS.locateModule("F")    << endl;
-	cout << "locateModule('F.g') : " << myPS.locateModule("F.g")  << endl;
-	cout << "locateModule('e.g') : " << myPS.locateModule("e.g")  << endl;
-	cout << "locateModule('3.4') : " << myPS.locateModule("3.4")  << endl;
-	cout << "locateModule('4.5') : " << myPS.locateModule("4.5")  << endl;
-	cout << "locateModule('33.4'): " << myPS.locateModule("33.4") << endl;
-	cout << "locateModule('3.44'): " << myPS.locateModule("3.44") << endl;
-	cout << "locateModule('abc.def'): " << myPS.locateModule("abc.def") << endl;
-	cout << "locateModule('abc.de'): " << myPS.locateModule("abc.de") << endl;
-	cout << "locateModule('bc.def'): " << myPS.locateModule("bc.def") << endl;
-	cout << "locateModule('pietje.puk'): " << myPS.locateModule("pietje.puk") << endl;
-
-	cout << "fullModuleName('g')   : " << myPS.fullModuleName("g")    << endl;
-	cout << "fullModuleName('F')   : " << myPS.fullModuleName("F")    << endl;
-	cout << "fullModuleName('F.g') : " << myPS.fullModuleName("F.g")  << endl;
-	cout << "fullModuleName('e.g') : " << myPS.fullModuleName("e.g")  << endl;
-	cout << "fullModuleName('3.4') : " << myPS.fullModuleName("3.4")  << endl;
-	cout << "fullModuleName('4.5') : " << myPS.fullModuleName("4.5")  << endl;
-	cout << "fullModuleName('33.4'): " << myPS.fullModuleName("33.4") << endl;
-	cout << "fullModuleName('3.44'): " << myPS.fullModuleName("3.44") << endl;
-	cout << "fullModuleName('abc.def'): " << myPS.fullModuleName("abc.def") << endl;
-	cout << "fullModuleName('abc.de'): " << myPS.fullModuleName("abc.de") << endl;
-	cout << "fullModuleName('bc.def'): " << myPS.fullModuleName("bc.def") << endl;
-	cout << "fullModuleName('pietje.puk'): " << myPS.fullModuleName("pietje.puk") << endl;
 
     // Adopt itself with a prefix should work.
     int nrKeys = myPS.size();

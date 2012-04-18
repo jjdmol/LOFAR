@@ -4,11 +4,16 @@ import sys,os
 # allow ../util to be found, a bit of a hack
 sys.path += [(os.path.dirname(__file__) or ".")+"/.."]
 
+import datetime
+import time
+import socket
 import util.Parset
+import getpass
 import os
 from itertools import count
 from Partitions import PartitionPsets
-from Stations import Stations, overrideRack
+from Locations import Hosts,Locations
+from Stations import Stations
 from RingCoordinates import RingCoordinates
 from util.dateutil import parse,format,parseDuration,timestamp
 from logging import error,warn
@@ -22,6 +27,8 @@ PERFORMANCE_TEST = False
 NRRSPBOARDS=4
 NRBOARBEAMLETS=61
 
+NRCVSTOKES=2 # 2: X and Y, 4: Xr, Xi, Yr, Yi
+
 class Parset(util.Parset.Parset):
     def __init__(self):
         util.Parset.Parset.__init__(self)
@@ -32,32 +39,6 @@ class Parset(util.Parset.Parset):
 	self.psets = []
 
         self.filename = ""
-
-    def applyAntennaSet( self, station, antennaset = None ):
-      if antennaset is None:
-        antennaset = self["Observation.antennaSet"]
-
-      if antennaset == "":
-        # useful for manually entered complete station names like CS302HBA1
-        suffix = [""]
-      elif antennaset in ["LBA_INNER","LBA_OUTER","LBA_X","LBA_Y","LBA_SPARSE_EVEN","LBA_SPARSE_ODD"]:
-        suffix = ["LBA"]
-      elif station.startswith("CS"):
-        if antennaset in ["HBA_ZERO","HBA_ZERO_INNER"]:
-          suffix = ["HBA0"]
-        elif antennaset in ["HBA_ONE","HBA_ONE_INNER"]:
-          suffix = ["HBA1"]
-        elif antennaset in ["HBA_JOINED","HBA_JOINED_INNER"]:
-          suffix = ["HBA"]
-        elif antennaset in ["HBA_DUAL","HBA_DUAL_INNER"]:
-          suffix = ["HBA0","HBA1"]
-        else: 
-          assert false, "Unknown antennaSet: %s" % (antennaset,)
-      else:  
-        suffix = ["HBA"]
-
-      return "+".join(["%s%s" % (station,s) for s in suffix])
-
 
     def setFilename( self, filename ):
         self.filename = filename
@@ -77,7 +58,28 @@ class Parset(util.Parset.Parset):
         # translate station name + antenna set to CEP comprehensable names
         antennaset = self["Observation.antennaSet"]
 
-        return "+".join( [self.applyAntennaSet(s) for s in self[key]] )
+        def applyAntennaSet( station, antennaset ):
+          if antennaset == "":
+            # useful for manually entered complete station names like CS302HBA1
+            suffix = [""]
+          elif antennaset in ["LBA_INNER","LBA_OUTER","LBA_X","LBA_Y","LBA_SPARSE_EVEN","LBA_SPARSE_ODD"]:
+            suffix = ["LBA"]
+          elif station.startswith("CS"):
+            if antennaset == "HBA_ZERO":
+              suffix = ["HBA0"]
+            elif antennaset == "HBA_ONE":  
+              suffix = ["HBA1"]
+            elif antennaset == "HBA_JOINED":  
+              suffix = ["HBA"]
+            else: 
+              assert antennaset == "HBA_DUAL", "Unknown antennaSet: %s" % (antennaset,)
+              suffix = ["HBA0","HBA1"]
+          else:  
+            suffix = ["HBA"]
+
+          return "+".join(["%s%s" % (station,s) for s in suffix])
+
+        return "+".join( [applyAntennaSet(s, self["Observation.antennaSet"]) for s in self[key]] )
 
     def distillPartition(self, key="OLAP.CNProc.partition"):
         """ Distill partition to use from the parset file and return it. """
@@ -93,7 +95,7 @@ class Parset(util.Parset.Parset):
         if key in self:
           return self.getStringVector(key)
   
-        outputnames = ["Correlated","Beamformed","Trigger"] + ["CoherentStokes","IncoherentStokes"] # still parse Coherent and Incoherent because the scheduler still sets them. While we collapse them into Beamformed later on, this code is needed before that
+        outputnames = ["Filtered","Correlated","Beamformed","IncoherentStokes","CoherentStokes","Trigger"]
         locationkeys = ["Observation.DataProducts.Output_%s.locations" % p for p in outputnames]
 
         storagenodes = set()
@@ -115,9 +117,6 @@ class Parset(util.Parset.Parset):
         partition = self.distillPartition()
         if partition:
           self.setPartition( partition )
-
-        if self.partition and self.partition != "R00R01":  
-          overrideRack( Stations, int(self.partition[2]) )
 
         # storage nodes
         storagenodes = self.distillStorageNodes() or []
@@ -147,13 +146,19 @@ class Parset(util.Parset.Parset):
         for k in ["OLAP.CNProc_CoherentStokes.channelsPerSubband", "OLAP.CNProc_IncoherentStokes.channelsPerSubband"]:
           if k not in self or int(self[k]) == 0:
             self[k] = self["Observation.channelsPerSubband"]
+        self.setdefault('Observation.DataProducts.Output_Filtered.namemask','L${OBSID}_SB${SUBBAND}.filtered')
         self.setdefault('Observation.DataProducts.Output_Beamformed.namemask','L${OBSID}_SAP${SAP}_B${BEAM}_S${STOKES}_P${PART}_bf.raw')
         self.setdefault('Observation.DataProducts.Output_Correlated.namemask','L${OBSID}_SB${SUBBAND}_uv.MS')
+        self.setdefault('Observation.DataProducts.Output_CoherentStokes.namemask','L${OBSID}_SAP${SAP}_B${BEAM}_S${STOKES}_P${PART}_bf.raw')
+        self.setdefault('Observation.DataProducts.Output_IncoherentStokes.namemask','L${OBSID}_SB${SUBBAND}_bf.incoherentstokes')
         self.setdefault('Observation.DataProducts.Output_Trigger.namemask','L${OBSID}_SAP${SAP}_B${BEAM}_S${STOKES}_P${PART}_bf.trigger')
 	self.setdefault('OLAP.dispersionMeasure', 0);
 
+        self.setdefault('Observation.DataProducts.Output_Filtered.dirmask','L${YEAR}_${OBSID}')
         self.setdefault('Observation.DataProducts.Output_Beamformed.dirmask','L${YEAR}_${OBSID}')
         self.setdefault('Observation.DataProducts.Output_Correlated.dirmask','L${YEAR}_${OBSID}')
+        self.setdefault('Observation.DataProducts.Output_CoherentStokes.dirmask','L${YEAR}_${OBSID}')
+        self.setdefault('Observation.DataProducts.Output_IncoherentStokes.dirmask','L${YEAR}_${OBSID}')
         self.setdefault('Observation.DataProducts.Output_Trigger.dirmask','L${YEAR}_${OBSID}')
 
         # default beamlet settings, derived from subbandlist, for development
@@ -169,29 +174,15 @@ class Parset(util.Parset.Parset):
 	self.setdefault("Observation.rspBoardList", [s//slots for s in xrange(nrSubbands)])
 	self.setdefault("Observation.rspSlotList",  [s%slots  for s in xrange(nrSubbands)])
 
-    def convertSASkeys(self):
-        """ Convert keys generated by SAS to those used by OLAP. """
-
-        def delIfEmpty( k ):
-          if k in self and not self[k]:
-            del self[k]
-
-        # SAS cannot omit keys, so assume that empty keys means 'use default'
-        delIfEmpty( "OLAP.CNProc.phaseOnePsets" )
-        delIfEmpty( "OLAP.CNProc.phaseTwoPsets" )
-        delIfEmpty( "OLAP.CNProc.phaseThreePsets" )
-
-        # make sure these values will be recalculated in finalise()
-        del self['OLAP.IONProc.integrationSteps']
-        del self['OLAP.CNProc.integrationSteps']
-
         # convert pencil rings and fly's eye to more coordinates
         for b in count():
           if "Observation.Beam[%s].angle1" % (b,) not in self:
             break
-
           self.setdefault("Observation.Beam[%s].nrTabRings" % (b,),0)
           self.setdefault("Observation.Beam[%s].TabRingSize" % (b,),0.0)
+
+          self.setdefault("Observation.Beam[%s].nrTabRings" % (b,), 0);
+          self.setdefault("Observation.Beam[%s].TabRingSize" % (b,), 0);
 
           dirtype = self["Observation.Beam[%s].directionType" % (b,)]  
           dm = int(self.get("OLAP.dispersionMeasure",0))
@@ -206,7 +197,6 @@ class Parset(util.Parset.Parset):
               "dispersionMeasure": dm,
               "stationList": [],
               "specificationType": "ring",
-              "coherent": True,
             } for (angle1,angle2) in ringcoordinates.coordinates()
           ]
 
@@ -223,7 +213,6 @@ class Parset(util.Parset.Parset):
                   "dispersionMeasure": dm,
                   "stationList": [s],
                   "specificationType": "flyseye",
-                  "coherent": True,
                 }
               )
 
@@ -240,12 +229,11 @@ class Parset(util.Parset.Parset):
                 "dispersionMeasure": self["Observation.Beam[%s].TiedArrayBeam[%s].dispersionMeasure" % (b,m)],
                 "stationList": [],
                 "specificationType": "manual",
-                "coherent": self["Observation.Beam[%s].TiedArrayBeam[%s].coherent" % (b,m)],
               }
             )
 
           # first define the rings, then the manual beams (which thus get shifted in number!)
-          allsets = manualset + ringset + flyseyeset
+          allsets = ringset + flyseyeset + manualset
           for m,s in enumerate(allsets):
             prefix = "Observation.Beam[%s].TiedArrayBeam[%s]" % (b,m)
 
@@ -254,106 +242,139 @@ class Parset(util.Parset.Parset):
 
           self["Observation.Beam[%s].nrTiedArrayBeams" % (b,)] = len(allsets)    
 
+          if self.getBool("Observation.DataProducts.Output_Beamformed.enabled"):
+            if NRCVSTOKES == 4:
+              self["OLAP.CNProc_CoherentStokes.which"] = "XXYY"
+            else: 
+              self["OLAP.CNProc_CoherentStokes.which"] = "XY"
+
+
+    def convertDepricatedKeys(self):
+        """ Converts some new keys to old ones to help old CEP code cope with new SAS code or vice-versa. """
+
+        convertmap = [
+          # ("old","new")
+          ("OLAP.Stokes.which", "OLAP.CNProc_CoherentStokes.which"),
+          ("OLAP.Stokes.which", "OLAP.CNProc_IncoherentStokes.which"),
+
+          ("OLAP.Stokes.integrationSteps", "OLAP.CNProc_CoherentStokes.timeIntegrationFactor"),
+          ("OLAP.Stokes.integrationSteps", "OLAP.CNProc_IncoherentStokes.timeIntegrationFactor"),
+
+          ("OLAP.Stokes.channelsPerSubband", "OLAP.CNProc_CoherentStokes.channelsPerSubband"),
+          ("OLAP.Stokes.channelsPerSubband", "OLAP.CNProc_IncoherentStokes.channelsPerSubband"),
+
+          ("OLAP.PencilInfo.ringSize", "Observation.Beam[0].TabRingSize"),
+          ("OLAP.PencilInfo.nrRings",  "Observation.Beam[0].nrTabRings"),
+        ]
+
+        for (k,v) in convertmap:
+          if k in self and v not in self:
+            self[v] = self[k]
+
+        # convert pencil beams (assign them to station beam 0)
+        pbkeys = [ "angle1", "angle2", "directionType", "dispersionMeasure" ]
+        pbdefaults = {
+          "angle1": 0.0,
+          "angle2": 0.0,
+          "directionType": "J2000",
+          "dispersionMeasure": 0,
+        }  
+
+        old_prefix = "OLAP.Pencil"
+        new_prefix = "Observation.Beam[0].TiedArrayBeam"
+        new_nr     = "Observation.Beam[0].nrTiedArrayBeams"
+        
+        for b in count():
+          if "%s[%s].%s" % (old_prefix,b,pbkeys[0]) not in self:
+            break
+
+          for k in pbkeys:
+            old_key = "%s[%s].%s" % (old_prefix,b,k)
+            new_key = "%s[%s].%s" % (new_prefix,b,k)
+
+            if new_key not in self:
+              if old_key in self:
+                self[new_key] = self[old_key]
+              else:
+                self[new_key] = pbdefaults[k]
+
+        self.setdefault(new_nr,b)
+
+    def convertSASkeys(self):
+        """ Convert keys generated by SAS to those used by OLAP. """
+
+        def delIfEmpty( k ):
+          if k in self and not self[k]:
+            del self[k]
+
+        # SAS cannot omit keys, so assume that empty keys means 'use default'
+        delIfEmpty( "OLAP.CNProc.phaseOnePsets" )
+        delIfEmpty( "OLAP.CNProc.phaseTwoPsets" )
+        delIfEmpty( "OLAP.CNProc.phaseThreePsets" )
+
         # SAS specifies beams differently
         if "Observation.subbandList" not in self:
           # convert beam configuration
-          allSubbands = []
+          allSubbands = {}
 
 	  for b in count():
             if "Observation.Beam[%s].angle1" % (b,) not in self:
               break
 
 	    beamSubbands = self.getInt32Vector("Observation.Beam[%s].subbandList" % (b,)) # the actual subband number (0..511)
+            beamBeamlets = self.getInt32Vector("Observation.Beam[%s].beamletList" % (b,)) # the bebamlet index (0..247)
 
-            for subband in beamSubbands:
-              allSubbands.append( {
+            assert len(beamSubbands) == len(beamBeamlets), "Beam %d has %d subbands but %d beamlets defined" % (b,len(beamSubbands),len(beamBeamlets))
+
+            for subband,beamlet in zip(beamSubbands,beamBeamlets):
+              assert beamlet not in allSubbands, "Beam %d and %d both use beamlet %d" % (allSubbands[beamlet]["beam"],b,beamlet)
+
+              allSubbands[beamlet] = {
                 "beam":     b,
                 "subband":  subband,
-              } )
+                "beamlet":  beamlet,
+
+                # assign rsp board and slot according to beamlet id
+                "rspboard": beamlet // NRBOARBEAMLETS,
+                "rspslot":  beamlet % NRBOARBEAMLETS,
+              }
 
 
           # order subbands according to beamlet id, for more human-friendly reading
-          sortedSubbands = sorted( allSubbands )
+          sortedSubbands = [allSubbands[x] for x in sorted( allSubbands )]
 
           # populate OLAP lists
 	  self["Observation.subbandList"]  = [s["subband"] for s in sortedSubbands]
 	  self["Observation.beamList"]     = [s["beam"] for s in sortedSubbands]
-	  self["Observation.rspBoardList"] = [0 for s in sortedSubbands]
-	  self["Observation.rspSlotList"]  = [0 for s in sortedSubbands]
+	  self["Observation.rspBoardList"] = [s["rspboard"] for s in sortedSubbands]
+	  self["Observation.rspSlotList"]  = [s["rspslot"] for s in sortedSubbands]
 
-        # The Scheduler creates three lists of files (for beamformed, coherent and incoherent),
-        # but we collapse this into one list (beamformed)
+    def addStorageKeys(self):
+	self["OLAP.Storage.userName"] = getpass.getuser()
+	self["OLAP.Storage.sshIdentityFile"]  = "%s/.ssh/id_rsa" % (os.environ["HOME"],)
+	self["OLAP.Storage.msWriter"] = Locations.resolvePath( Locations.files["storage"], self )
+	self["OLAP.Storage.parsetFilename"] = self.filename
 
-        def getlist( dataproduct ):
-          enabled = self.getBool("Observation.DataProducts.Output_%s.enabled" % (dataproduct,), False)
+        self.setdefault("OLAP.Storage.AntennaSetsConf",  "${STORAGE_CONFIGDIR}/AntennaSets.conf");
+        self.setdefault("OLAP.Storage.AntennaFieldsDir", "${STORAGE_CONFIGDIR}/StaticMetaData");
+        self.setdefault("OLAP.Storage.HBADeltasDir",     "${STORAGE_CONFIGDIR}/StaticMetaData");
 
-          if True or enabled: # scheduler can still set filenames without the corresponding enabled flag
-            filenames = self.get("Observation.DataProducts.Output_%s.filenames" % (dataproduct,), [])
-            locations = self.get("Observation.DataProducts.Output_%s.locations" % (dataproduct,), [])
-          else:
-            filenames = []
-            locations = []
-
-          return (filenames, locations)
-
-        beamformedFiles  = getlist("Beamformed")
-        coherentFiles    = getlist("CoherentStokes")
-        incoherentFiles  = getlist("IncoherentStokes")
-
-        # either coherent or beamformed are set as they are mutually exclusive
-        if coherentFiles == ([], []):
-          coherentFiles = beamformedFiles
-
-        # if nothing is set, the filenames and locations are generated preWrite
-        if coherentFiles != ([], []) or incoherentFiles != ([], []):
-          # this will be the final list
-          beamformedFiles = ([], [])  
-
-          # reconstruct the full list  
-          for b in count():
-            if "Observation.Beam[%s].angle1" % (b,) not in self:
-              break
-
-            for t in count():
-              if "Observation.Beam[%s].TiedArrayBeam[%s].angle1" % (b,t) not in self:
-                break
-
-              coherent = self.getBool("Observation.Beam[%s].TiedArrayBeam[%s].coherent" % (b,t))
-
-              nrstokes = self.getNrStokes(coherent)
-              nrparts  = self.getNrParts(b, coherent)
-
-              for s in xrange(nrstokes):
-                for p in xrange(nrparts):
-                  if coherent:
-                    filename = coherentFiles[0].pop(0)
-                    location = coherentFiles[1].pop(0)
-                  else:
-                    filename = incoherentFiles[0].pop(0)
-                    location = incoherentFiles[1].pop(0)
-
-                  beamformedFiles[0].append(filename)
-                  beamformedFiles[1].append(location)
-
-          self["Observation.DataProducts.Output_Beamformed.enabled"] = True
-          self["Observation.DataProducts.Output_Beamformed.filenames"] = beamformedFiles[0]
-          self["Observation.DataProducts.Output_Beamformed.locations"] = beamformedFiles[1]
-
-        if beamformedFiles != ([], []):
-          # fix a scheduler bug causing this boolean not to be set
-          self["Observation.DataProducts.Output_Beamformed.enabled"] = True
-
+        for p in ["OLAP.Storage.AntennaSetsConf",
+                  "OLAP.Storage.AntennaFieldsDir",
+                  "OLAP.Storage.HBADeltasDir"]:
+          self[p] = Locations.resolvePath( self[p], self )          
 
     def preWrite(self):
         """ Derive some final keys and finalise any parameters necessary
 	    before writing the parset to disk. """
 
         self.convertSASkeys();
+        self.convertDepricatedKeys();
         self.addMissingKeys();
+	self.addStorageKeys();
 
         # Versioning info
         self["OLAP.BeamsAreTransposed"] = True
-        self["OLAP.IncoherentStokesAreTransposed"] = True
 
 	# TODO: we use self.setdefault, but this can create inconsistencies if we
 	# set one value but not the other in a pair of interdependent parameters.
@@ -361,48 +382,46 @@ class Parset(util.Parset.Parset):
 	# sloppy to let it pass through here unnoticed.
 
 	# tied-array beam forming
-        superStations = []
+        tiedArrayStationList = []
+	tabList = []
+	beamFormedStations = []
 
         for index in count():
           if "Observation.Beamformer[%s].stationList" % (index,) not in self:
             break
 
-	  stations = self.getStringVector('Observation.Beamformer[%s].stationList' % (index,))
+	  curlist = self.getString('Observation.Beamformer[%s].stationList' % (index,))
 
-          stations = [self.applyAntennaSet(st) for st in stations]
+          # remove any initial or trailing "
+	  curlist = curlist.strip('"').rstrip('"')
 
-          superStations.append(stations)
+          # transform , to +
+	  curlist = curlist.replace(',','+')
+
+	  tiedArrayStationList.append(curlist)
+
+          # extract the individual stations
+	  beamFormedStations += curlist.split('+')
 	
-	if superStations != []:
+	if index > 0:
 	  # tied-array beamforming will occur
 
 	  # add remaining stations to the list
 	  allStationNames = [st.getName() for st in self.stations]
-          beamFormedStations = sum(superStations, [])
-          individualStations = [st for st in allStationNames if st not in beamFormedStations]
+	  tiedArrayStationList += filter( lambda st: st not in beamFormedStations, allStationNames )
 
+          # create a list of indices for all the stations, which by definition occur in
+	  # the tiedArrayStationList
+	  def findTabStation( s ):
+	    for nr,tab in enumerate(tiedArrayStationList):
+	      for st in tab.split('+'):
+	        if s.getName() == st:
+	          return nr
 
-          allTabs = superStations + [[st] for st in individualStations]
-          # sorting is important: because the original station list is sorted, a sorted tabList makes sure that no slot is overwritten before it is needed (data is always generated before or at the slot of the source station)
-          allTabs.sort()
-
-	  def findTabStation( st ):
-	    for nr,tab in enumerate(allTabs):
-              if st in tab:
-                return nr
-
-	  tabList = map( findTabStation, allStationNames )
-
-          # make sure this tabList can be processed by going from element 0 to n-1 (dest slot is always at or after source slot)
-          for st,nr in enumerate(tabList):
-            assert st >= nr, "Station %s is at position %u in the station list but at position %u in the tab list, which could lead to data corruption" % (allStationNames[st],st,nr)
+	  tabList = map( findTabStation, self.stations )
 	   
-	  self.setdefault('OLAP.tiedArrayStationNames', ["+".join(x) for x in allTabs])
-	  self.setdefault('OLAP.CNProc.tabList', tabList)
-        else:
-          # no super-station beam forming
-	  self.setdefault('OLAP.tiedArrayStationNames', [])
-	  self.setdefault('OLAP.CNProc.tabList', [])
+	self.setdefault('OLAP.tiedArrayStationNames', tiedArrayStationList)
+	self.setdefault('OLAP.CNProc.tabList', tabList)
 
 	# input flow configuration
 	for station in self.stations:
@@ -442,6 +461,12 @@ class Parset(util.Parset.Parset):
 	# Pset configuration
 	self['OLAP.CNProc.partition'] = self.partition
         self['OLAP.IONProc.psetList'] = self.psets
+
+        self.setdefault('OLAP.Storage.subbandsPerPart', nrSubbands);
+	if nrSubbands > 0:
+          self['OLAP.Storage.partsPerStokes'] = int( math.ceil( 1.0 * nrSubbands / int(self["OLAP.Storage.subbandsPerPart"]) ) )
+        else:
+          self['OLAP.Storage.partsPerStokes'] = 0
 
 	nrPsets = len(self.psets)
 	nrStorageNodes = self.getNrUsedStorageNodes()
@@ -487,12 +512,12 @@ class Parset(util.Parset.Parset):
 
 	self.setdefault('OLAP.PencilInfo.storageNodeList',[_sn(i,beamsPerPset,nrBeamFiles) for i in xrange(nrBeamFiles)])
 
-        self.setdefault('OLAP.Storage.targetDirectory','/data')
+        self.setdefault('OLAP.Storage.targetDirectory','/data1')
 
         # generate filenames to produce - phase 2
         nodelist = self.getInt32Vector( "OLAP.storageNodeList" );
-        products = ["Correlated"]
-        outputkeys = ["Correlated"]
+        products = ["Filtered","Correlated","IncoherentStokes"]
+        outputkeys = ["Filtered","Correlated","IncoherentStokes"]
 
         for p,o in zip(products,outputkeys):
           outputkey    = "Observation.DataProducts.Output_%s.enabled" % (o,)
@@ -521,8 +546,8 @@ class Parset(util.Parset.Parset):
 
         # generate filenames to produce - phase 3
         nodelist = self.getInt32Vector( "OLAP.PencilInfo.storageNodeList" );
-        products = ["Beamformed","Trigger"]
-        outputkeys = ["Beamformed","Trigger"]
+        products = ["Beamformed","CoherentStokes","Trigger"]
+        outputkeys = ["Beamformed","CoherentStokes","Trigger"]
 
         for p,o in zip(products,outputkeys):
           outputkey    = "Observation.DataProducts.Output_%s.enabled" % (o,)
@@ -539,12 +564,7 @@ class Parset(util.Parset.Parset):
 
           # python iterates over last 'for' first!
           # this is the order generated by the IO nodes (see IONProc/src/Job.cc)
-          paths = [ self.parseMask( mask, sap = sap, beam = b, stokes = s, part = p )
-                    for sap in xrange(self.getNrSAPs())
-                    for b in xrange(self.getNrBeams(sap))
-                    for s in xrange(self.getNrStokes(self.isCoherent(sap, b)))
-                    for p in xrange(self.getNrParts(sap, self.isCoherent(sap, b)))
-                  ]
+          paths = [ self.parseMask( mask, sap = sap, beam = b, stokes = s, part = p ) for sap in xrange(self.getNrSAPs()) for b in xrange(self.getNrBeams(sap)) for s in xrange(self.getNrCoherentStokes()) for p in xrange(self.getNrParts(sap))]
           filenames = map( os.path.basename, paths )
           dirnames = map( os.path.dirname, paths )
 
@@ -562,13 +582,11 @@ class Parset(util.Parset.Parset):
         # maximum amount of time CNProc can integrate due to memory constraints
         if self.phaseThreeExists():
           maxCnIntegrationTime = 0.33
-          defaultCnIntegrationTime = 0.33
         else:
           maxCnIntegrationTime = 1.2
-          defaultCnIntegrationTime = 1.0
 
         # (minimal) number of times the IONProc will have to integrate
-        integrationtime = float( self["OLAP.Correlator.integrationTime"] ) or defaultCnIntegrationTime
+        integrationtime = float( self["OLAP.Correlator.integrationTime"] )
         ionIntegrationSteps = int(math.ceil(integrationtime / maxCnIntegrationTime))
         self.setdefault('OLAP.IONProc.integrationSteps', ionIntegrationSteps)
 
@@ -582,8 +600,6 @@ class Parset(util.Parset.Parset):
           return a
 
         def lcm( a, b ):
-          if b == 0: return a
-          if a == 0: return b
           return a * b / gcd(a, b)
 
         def lcmlist( l ):
@@ -593,44 +609,21 @@ class Parset(util.Parset.Parset):
           """ Round x to a multiple of y. """
           return max(int(round(x/y))*y,y)
 
-        def increase_factors(n):
-          # increase the factors of n; returns a value close to n (<10% off for n<=195312)
-          if n < 4: return n
-
-          factors = []
-
-          while n > 1:
-            for f in [2,3,5,7]:
-              if n % f == 0:
-                factors += [f]
-                n /= f
-                break
-            else:
-              n += 1
-              factors += [3]
-              n /= 3
-
-          prod = lambda l: reduce(lambda x,y: x*y,l,1)
-          return prod(factors)
-
-        # cnIntegrationSteps MUST be a multiple of these values
-        forced_factors = lcmlist( [
+        cnIntegrationSteps = max(1, roundTo(nrSamplesPerSecond * cnIntegrationTime, lcmlist( [
           16,
           int(self["OLAP.CNProc_CoherentStokes.timeIntegrationFactor"]),
           int(self["OLAP.CNProc_IncoherentStokes.timeIntegrationFactor"]),
           int(self.get("OLAP.CNProc.dedispersionFFTsize",1)),
-          ] )
-
-        if self.getBool("Observation.DataProducts.Output_Correlated.enabled"):
-          # if doing imaging, don't mess with the block size too much
-          cnIntegrationSteps = roundTo( nrSamplesPerSecond * cnIntegrationTime, forced_factors )
-        else:  
-          # make sure that the remainder is easily factorisable for easier post-processing
-          cnIntegrationSteps = forced_factors * increase_factors( int(round(nrSamplesPerSecond * cnIntegrationTime / forced_factors)) )
-
-        cnIntegrationSteps = max(1, cnIntegrationSteps)
+          ])))
 
         self.setdefault('OLAP.CNProc.integrationSteps', cnIntegrationSteps)
+
+        if self.getBool( "OLAP.realTime" ):
+          earliest_start = time.time() + 15 # allow a 15-second overhead
+          if timestamp(parse(self["Observation.startTime"])) < earliest_start < timestamp(parse(self["Observation.stopTime"])):
+            # remove the start of the observation that we missed
+            warn("The start time of the observation has already passed. Moving it from %s to %s." % (self["Observation.startTime"],format(earliest_start)))
+            self["Observation.startTime"] = format(earliest_start)
 
     def setStations(self,stations):
 	""" Set the array of stations to use (used internally). """
@@ -643,6 +636,21 @@ class Parset(util.Parset.Parset):
 	
 	self.stations = sorted( stations, cmp=lambda x,y: cmp(name(x),name(y)) )
 
+    def forceStations(self,stations):
+	""" Override the set of stations to use (from the command line). """
+
+	self.setStations(stations)
+
+        def name( s ):
+          try:
+            return s.name
+          except:
+            return s
+
+        self['OLAP.storageStationNames'] = map( name, self.stations )
+        del self['Observation.VirtualInstrument.stationList']
+        #del self['Observation.antennaSet']
+        
     def setPartition(self,partition):
 	""" Define the partition to use. """
 
@@ -671,6 +679,17 @@ class Parset(util.Parset.Parset):
 
     def getNrUsedStorageNodes(self):
         return len(self.storagenodes)
+
+    def disableCNProc(self):
+        self["OLAP.OLAP_Conn.IONProc_CNProc_Transport"] = "NULL"
+
+    def disableIONProc(self):
+        self["OLAP.OLAP_Conn.IONProc_Storage_Transport"] = "NULL"
+        self["OLAP.OLAP_Conn.IONProc_CNProc_Transport"] = "NULL"
+
+    def disableStorage(self):
+        self["OLAP.OLAP_Conn.IONProc_Storage_Transport"] = "NULL"
+        self.setStorageNodes([])
 
     def parseMask( self, mask, sap = 0, subband = 0, beam = 0, stokes = 0, part = 0 ):
       """ Fills a mask. """
@@ -709,24 +728,24 @@ class Parset(util.Parset.Parset):
       self["Observation.startTime"] = format( start )
       self["Observation.stopTime"] = format( stop )
 
+    def setClock( self, mhz ):
+      self['Observation.sampleClock'] = int( mhz )
+
+    def setIntegrationTime( self, integrationTime ):
+      self["OLAP.Correlator.integrationTime"] = integrationTime
+
+      # make sure these values will be recalculated in finalise()
+      del self['OLAP.IONProc.integrationSteps']
+      del self['OLAP.CNProc.integrationSteps']
+
     def getNrSAPs( self ):
       return int(self["Observation.nrBeams"])
 
     def getNrSubbands( self, sap ):
       return sum([1 for s in self.getInt32Vector("Observation.beamList") if s == sap])
 
-    def isCoherent( self, sap, tab ):
-      return self.getBool("Observation.Beam[%s].TiedArrayBeam[%s].coherent" % (sap, tab))
-
-    def getNrParts( self, sap, coherent ):
-      if coherent:
-        prefix = "OLAP.CNProc_CoherentStokes"
-      else:  
-        prefix = "OLAP.CNProc_IncoherentStokes"
-
-      subbands = self.getNrSubbands(sap)
-      subbandsPerFile = int(self.get("%s.subbandsPerFile" % (prefix,),subbands))
-      return int(math.ceil(1.0 * subbands / subbandsPerFile))
+    def getNrParts( self, sap ):
+      return int(math.ceil(1.0 * self.getNrSubbands(sap) / int(self["OLAP.Storage.subbandsPerPart"])))
 
     def getNrBeams( self, sap ):
       return self["Observation.Beam[%u].nrTiedArrayBeams" % (sap,)]
@@ -739,27 +758,24 @@ class Parset(util.Parset.Parset):
 
       return max(tabList) + 1  
 
-    def getNrStokes( self, coherent ):
-      if coherent:
-        prefix = "OLAP.CNProc_CoherentStokes"
-      else:  
-        prefix = "OLAP.CNProc_IncoherentStokes"
-
-      return len(self["%s.which" % (prefix,)]) # todo: recombine Xi+Xr and Yi+Yr for trigger
+    def getNrCoherentStokes( self ):  
+      if self.getBool("Observation.DataProducts.Output_Beamformed.enabled"):
+        return len(self["OLAP.CNProc_CoherentStokes.which"])
+      elif self.getBool("Observation.DataProducts.Output_Trigger.enabled"):
+        return len(self["OLAP.CNProc_CoherentStokes.which"]) # todo: recombine Xi+Xr and Yi+Yr
+      elif self.getBool("Observation.DataProducts.Output_CoherentStokes.enabled"):
+        return len(self["OLAP.CNProc_CoherentStokes.which"])
+      else:
+        return 0
 
     def getNrBeamFiles( self ):
-      files = 0
-      for sap in xrange(self.getNrSAPs()):
-        for tab in xrange(self.getNrBeams(sap)):
-          coherent = self.isCoherent(sap, tab)
-
-          files += self.getNrStokes(coherent) * self.getNrParts(sap, coherent)
-
-      return files
+      return sum([self.getNrBeams(sap) * self.getNrCoherentStokes() * self.getNrParts(sap) for sap in xrange(self.getNrSAPs())])
 
     def phaseThreeExists( self ):  
+      # NO support for mixing with Observation.mode and Observation.outputIncoherentStokesI
       output_keys = [
         "Observation.DataProducts.Output_Beamformed.enabled",
+        "Observation.DataProducts.Output_CoherentStokes.enabled",
         "Observation.DataProducts.Output_Trigger.enabled",
       ]
 
@@ -796,12 +812,16 @@ class Parset(util.Parset.Parset):
 
     def outputPrefixes( self ):
       return [
+        "Observation.DataProducts.Output_Filtered",
         "Observation.DataProducts.Output_Correlated",
         "Observation.DataProducts.Output_Beamformed",
+        "Observation.DataProducts.Output_CoherentStokes",
+        "Observation.DataProducts.Output_IncoherentStokes",
         "Observation.DataProducts.Output_Trigger",
       ]
 
     def getNrOutputs( self ):
+      # NO support for mixing with Observation.mode and Observation.outputIncoherentStokesI
       output_keys = [ "%s.enabled" % (p,) for p in self.outputPrefixes() ]
 
       return sum( (1 for k in output_keys if k in self and self.getBool(k)) )
@@ -835,12 +855,11 @@ class Parset(util.Parset.Parset):
           for p in psets:
             assert p < nrPsets, "Use of pset %d requested in key %s, but only psets [0..%d] are available" % (p,k,nrPsets-1)
 
-        # restrictions on #samples and integration in beam forming modes
-        if self.getBool("Observation.DataProducts.Output_Beamformed.enabled"):
-          if self["OLAP.CNProc_CoherentStokes.which"] == "XXYY":
-            assert int(self["OLAP.CNProc_CoherentStokes.timeIntegrationFactor"]) == 1, "Cannot integrate complex voltages (stokes XXYY) but temporal integration was requested"
-            assert int(self["OLAP.CNProc_CoherentStokes.channelsPerSubband"]) in [0, int(self["Observation.channelsPerSubband"])], "Cannot integrate complex voltages (stokes XXYY) but channel collapse was requested"
+        # no both bf complex voltages and stokes
+        assert not (getBool("Observation.DataProducts.Output_Beamformed.enabled") and getBool("Observation.DataProducts.Output_CoherentStokes.enabled")), "Cannot output both complex voltages and coherent stokes."
 
+        # restrictions on #samples and integration in beam forming modes
+        if self.getBool("Observation.DataProducts.Output_Beamformed.enabled") or self.getBool("Observation.DataProducts.Output_CoherentStokes.enabled"):
           # beamforming needs a multiple of 16 samples
           assert int(self["OLAP.CNProc.integrationSteps"]) % 16 == 0, "OLAP.CNProc.integrationSteps should be dividable by 16"
 
@@ -852,6 +871,9 @@ class Parset(util.Parset.Parset):
           # create at least 1 beam
           #assert self.getNrBeams( True ) > 0, "Beam forming requested, but no beams defined. Add at least one beam."
 
+        if self.getBool("Observation.DataProducts.Output_CoherentStokes.enabled"):
+          assert int(self["OLAP.CNProc.integrationSteps"]) >= 4, "OLAP.CNProc.integrationSteps should be at least 4 if coherent stokes are requested"
+
         assert int(self["OLAP.CNProc_CoherentStokes.channelsPerSubband"]) <= int(self["Observation.channelsPerSubband"]), "Coherent Stokes should have the same number or fewer channels than specified for the full observation."
         assert int(self["Observation.channelsPerSubband"]) % int(self["OLAP.CNProc_CoherentStokes.channelsPerSubband"]) == 0, "Coherent Stokes channels should be a whole fraction of the total number of channels."
 
@@ -860,6 +882,9 @@ class Parset(util.Parset.Parset):
 
         # verify start/stop times
         assert self["Observation.startTime"] < self["Observation.stopTime"], "Start time (%s) must be before stop time (%s)" % (self["Observation.startTime"],self["Observation.stopTime"])
+
+        if self.getBool( "OLAP.realTime" ):
+          assert timestamp(parse(self["Observation.startTime"])) > time.time(), "Observation.realTime is set, so start time (%s) should be later than now (%s)" % (self["Observation.startTime"],format(time.time()))
 
         # verify stations
         for s in self.stations:
@@ -881,24 +906,6 @@ if __name__ == "__main__":
   # parse the command line
   parser = OptionParser( "usage: %prog [options] parset [parset ...]" )
 
-  opgroup = OptionGroup( parser, "Request" )
-  opgroup.add_option( "-k", "--key",
-                     dest="key",
-                     type="string",
-                     default="",
-                     help="print the given key from the resulting parset" )
-  opgroup.add_option( "-P", "--partition",
-                     dest="partition",
-                     type="string",
-                     default=os.environ.get("PARTITION",""),
-                     help="use this partition [%default%]" )
-  opgroup.add_option( "-r", "--runtime",
-                     dest="runtime",
-                     type="string",
-                     default="",
-                     help="starttime,runtime" )
-  parser.add_option_group( opgroup )
-
   # parse arguments
   (options, args) = parser.parse_args()
   
@@ -911,21 +918,8 @@ if __name__ == "__main__":
   for files in args:
     parset.readFile( files )
 
-  if options.partition:
-    parset.setPartition( options.partition )
-
-  if options.runtime:
-    starttime, runtime = options.runtime.split(",")
-    parset.setStartRunTime( starttime, runtime )
-
   parset.postRead()
   parset.preWrite()
-
-  if options.key:
-    print parset[options.key]
-  else:
-    # default: print whole parset
-    parset.writeFile( "-" )  
+  parset.writeFile( "-" )  
 
   sys.exit(0)
-

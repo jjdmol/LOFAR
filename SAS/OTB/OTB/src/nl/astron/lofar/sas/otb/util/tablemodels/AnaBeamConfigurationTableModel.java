@@ -33,8 +33,8 @@
 
 package nl.astron.lofar.sas.otb.util.tablemodels;
 
-import java.util.ArrayList;
-import nl.astron.lofar.sas.otb.objects.AnaBeam;
+import java.util.Vector;
+import javax.swing.table.TableColumn;
 import org.apache.log4j.Logger;
 
 /**
@@ -47,7 +47,15 @@ public class AnaBeamConfigurationTableModel extends javax.swing.table.DefaultTab
     static String name = "AnaBeamConfigurationTableModel";
 
     private String itsTreeType;
-    private ArrayList<AnaBeam> itsAnaBeams = new ArrayList<>();
+    private Vector<String> itsDirTypes          = new Vector<String>();
+    private Vector<String>itsTargets            = new Vector<String>();
+    private Vector<String>itsAngles1            = new Vector<String>();
+    private Vector<String>itsAngles2            = new Vector<String>();
+    private Vector<String>itsCoordTypes         = new Vector<String>();
+    private Vector<String>itsDurations          = new Vector<String>();
+    private Vector<String>itsMaximizeDurations  = new Vector<String>();
+    private Vector<String>itsStartTimes         = new Vector<String>();
+    private Vector<String>itsRanks              = new Vector<String>();
 
     private int offset=1;
 
@@ -66,45 +74,66 @@ public class AnaBeamConfigurationTableModel extends javax.swing.table.DefaultTab
     
     /** fills the table with the initial settings
      *
-     * @param treeType    VIC or Template
+     * @param  aDirTypes   Vector<String> of all direction Types
+     * @param  aTargets    Vector<String> of all target names
+     * @param  anAngles1   Vector<String> of all direction 1 angles
+     * @param  anAngles2   Vector<String> of all direction 2 angles
+     * @param  aCoordType  Vector<String> of all coordinate types
+     * @param  aDurations  Vector<String> of all durations
+     * @param  aMaxDur     Vector<String> of all Maximize Duration setting
+     * @param  aStartTimes Vector<String> of all startTimes
+     * @param  aRanks      Vector<String> of all ranks
      * @param  refill     false for initial fill, true for refill
      *
      * @return True if succes else False
      */
-     public boolean fillTable(String treeType, ArrayList<AnaBeam> anAnaBeamList,boolean refill) {
+     public boolean fillTable(String treeType, Vector<String> aDirTypes, Vector<String> aTargets, Vector<String> anAngles1, Vector<String> anAngles2,
+                             Vector<String> aCoordType,Vector<String> aDurations, Vector<String> aMaxDur, Vector<String> aStartTimes, Vector<String> aRanks,boolean refill) {
          
         // "clear" the table
         setRowCount(0);
-        if (anAnaBeamList==null) {
+        if (aDirTypes==null||aTargets==null||anAngles1==null||anAngles2==null||aCoordType==null||aDurations==null|| aMaxDur == null||aStartTimes==null||aRanks==null) {
             logger.error("Error in fillTable, null value in input found.");
             return false;
         }
 
         itsTreeType=treeType;
-        
+        int length = aDirTypes.size();
+
         removeAllRows();
 
+
+        for (int i=0;i<length;i++) {
+            itsDirTypes.add(aDirTypes.get(i));
+            itsTargets.add(aTargets.get(i));
+            itsAngles1.add(anAngles1.get(i));
+            itsAngles2.add(anAngles2.get(i));
+            itsCoordTypes.add(aCoordType.get(i));
+            itsDurations.add(aDurations.get(i));
+            itsMaximizeDurations.add(aMaxDur.get(i));
+            itsStartTimes.add(aStartTimes.get(i));
+            itsRanks.add(aRanks.get(i));
+        }
+        
+       
         // need to skip first entry because it is the default (dummy) TBBsetting in other then VHTree's
         if (itsTreeType.equals("VHtree")) {
             offset=0;
         }
         
-        ArrayList<AnaBeam> testList = new ArrayList<>(anAnaBeamList);
-
         // need to skip first entry because it is the default (dummy) TBBsetting
-        boolean skip = false;
-        if (offset!=0) {
-            skip = true;
+        for (int i=0; i<length-offset; i++) {
+            String[]  newRow = { aDirTypes.elementAt(i+offset),
+                                 anAngles1.elementAt(i+offset),
+                                 anAngles2.elementAt(i+offset),
+                                 aCoordType.elementAt(i+offset),
+                                 aMaxDur.elementAt(i+offset),
+                                 aRanks.elementAt(i+offset)
+            };
+            
+            this.addRow(newRow);
         }
-        for (AnaBeam b : testList ) {
-            if (skip) {
-                skip = false;
-                itsAnaBeams.add(b);
-                continue;
-            }
-            this.addRow(b);
-        }
-
+        
         isChanged=refill;
         fireTableDataChanged();
         return true;    
@@ -112,36 +141,85 @@ public class AnaBeamConfigurationTableModel extends javax.swing.table.DefaultTab
  
     /** fills the table with the initial settings
      *
+     * @param  aDirTypes   Vector<String> of all direction Types
+     * @param  aTargets   Vector<String> of all Target names
+     * @param  anAngles1   Vector<String> of all direction 1 angles
+     * @param  anAngels2   Vector<String> of all direction 2 angles
+     * @param  aCoordType  Vector<String> of all coordinate types
+     * @param  aDuration   Vector<String> of all Durations
+     * @param  aMaxDur     Vector<String> of all Maximize Durations settings
+     * @param  aStartTime  Vector<String> of all StartTimes
+     * @param  aRanks   Vector<String> of all ranks
      *
      * @return True if succes else False
      */
-     public ArrayList<AnaBeam> getTable() {
-         return itsAnaBeams;    
+     public boolean getTable(Vector<String> aDirTypes,Vector<String> aTargets,Vector<String> anAngles1,Vector<String> anAngles2,
+                             Vector<String> aCoordType,Vector<String> aDurations,Vector<String> aMaxDur,Vector<String> aStartTimes,Vector<String> aRanks) {
+         
+        int length = aDirTypes.size();
+        
+        // need to skip first entry because it is the default (dummy) TBBsetting
+        // empty all elements except the default
+        aDirTypes.setSize(offset);
+        aTargets.setSize(offset);
+        anAngles1.setSize(offset);
+        anAngles2.setSize(offset);
+        aCoordType.setSize(offset);
+        aDurations.setSize(offset);
+        aMaxDur.setSize(offset);
+        aStartTimes.setSize(offset);
+        aRanks.setSize(offset);
+        
+        for (int i=0; i<getRowCount(); i++) {
+            aDirTypes.addElement((String)getValueAt(i,0));
+            aTargets.addElement(itsTargets.get(i+offset));
+            anAngles1.addElement((String)getValueAt(i,1));
+            anAngles2.addElement((String)getValueAt(i,2));
+            aCoordType.addElement((String)getValueAt(i,3));
+            aMaxDur.addElement((String)getValueAt(i,4));
+            aDurations.addElement(itsDurations.get(i+offset));
+            aStartTimes.addElement(itsStartTimes.get(i+offset));
+            aRanks.addElement((String)getValueAt(i,5));
+        }
+        return true;    
     }
      
      
     /**  Add an entry to the tableModel
      *
+     * @param  aDirTypes   direction Type
+     * @param  aTarget     TargetNames
+     * @param  anAngles1   direction 1 angle
+     * @param  anAngels2   direction 2 angle
+     * @param  aCoordType  Coordinate Types
+     * @param  aDurations  Durations involved
+     * @param  aMaxDur     Maximize duration  setting
+     * @param  aStartTimes StartTimes involved
+     * @param  aRank      Ranks involved
      *
      * @return True if succes else False
      */
-    public boolean addRow(AnaBeam anAnaBeam) {
+    public boolean addRow(String aDirType,String aTarget,String anAngle1,String anAngle2, String aCoordType,String aDuration, String aMaxDur,
+            String aStartTime,String aRank) {
       
-        if (anAnaBeam==null) {
+        if (aDirType==null||aTarget==null||anAngle1==null||anAngle2==null||aCoordType==null||aDuration==null || aMaxDur==null||
+                aStartTime==null||aRank==null) {
             logger.error("Error in addRow, null value in input found.");
             return false;
         }
 
-        itsAnaBeams.add(anAnaBeam);
+        itsDirTypes.add(aDirType);
+        itsTargets.add(aTarget);
+        itsAngles1.add(anAngle1);
+        itsAngles2.add(anAngle2);
+        itsCoordTypes.add(aCoordType);
+        itsDurations.add(aDuration);
+        itsMaximizeDurations.add(aDuration);
+        itsStartTimes.add(aStartTime);
+        itsRanks.add(aRank);
 
-        String[]  newRow = { anAnaBeam.getDirectionType(),
-                             anAnaBeam.getAngle1(),
-                             anAnaBeam.getAngle2(),
-                             anAnaBeam.getCoordType(),
-                             anAnaBeam.getMaximizeDuration(),
-                             anAnaBeam.getRank()};
+        String[]  newRow = { aDirType,anAngle1,anAngle2,aCoordType,aMaxDur,aRank};
         this.addRow(newRow);
-        itsAnaBeams.trimToSize();
 
         isChanged=true;
         return true;
@@ -152,21 +230,36 @@ public class AnaBeamConfigurationTableModel extends javax.swing.table.DefaultTab
      * @param   newRow  String[] that contains all values as they should be for this row
      * @param   row     int with the rownumber.
      */
-    public boolean updateRow(AnaBeam aNewAnaBeam,int row) {
+    public boolean updateRow(String[] newRow,int row) {
         if (row < this.getRowCount() && row >= 0) {
-            itsAnaBeams.set(row+offset, aNewAnaBeam);
+            //DirType
+            this.setValueAt(newRow[0],row,0);
+            itsDirTypes.setElementAt(newRow[0], row+offset);
+            //Target
+            itsTargets.setElementAt(newRow[1], row+offset);
+            //Angle1
+            this.setValueAt(newRow[2],row,1);
+            itsAngles1.setElementAt(newRow[2], row+offset);
+            //Angle2
+            this.setValueAt(newRow[3],row,2);
+            itsAngles2.setElementAt(newRow[3], row+offset);
+            //Coordinate Type
+            this.setValueAt(newRow[4],row,3);
+            itsCoordTypes.setElementAt(newRow[4], row+offset);
+            //Duration
+            itsDurations.setElementAt(newRow[5], row+offset);
+            //Maximize Duration
+            this.setValueAt(newRow[6],row,4);
+            itsMaximizeDurations.setElementAt(newRow[6], row+offset);
+            //StartTime
+            itsStartTimes.setElementAt(newRow[7], row+offset);
+            //Rank
+            this.setValueAt(newRow[8],row,5);
+            itsRanks.setElementAt(newRow[8], row+offset);
         } else {
             logger.error("Error in updateRow, illegal rownumber supplied");
             return false;
         }
-        
-        this.setValueAt(aNewAnaBeam.getDirectionType(),row,0);
-        this.setValueAt(aNewAnaBeam.getAngle1(),row,1);
-        this.setValueAt(aNewAnaBeam.getAngle2(),row,2);
-        this.setValueAt(aNewAnaBeam.getCoordType(),row,3);
-        this.setValueAt(aNewAnaBeam.getMaximizeDuration(),row,4);
-        this.setValueAt(aNewAnaBeam.getRank(),row,5);
-        
         isChanged=true;
         fireTableDataChanged();
         return true;
@@ -178,22 +271,36 @@ public class AnaBeamConfigurationTableModel extends javax.swing.table.DefaultTab
      *
      * @return  String[] containing all values from the given row
      */
-    public AnaBeam getSelection(int row) {
+    public String[] getSelection(int row) {
         if (row < this.getRowCount() && row >= 0) {
-            if (itsAnaBeams != null) {
-                return itsAnaBeams.get(row+offset);
-            }
+            String[] selection = { (String)this.getValueAt(row,0),
+                                   itsTargets.get(row+offset),
+                                   (String)this.getValueAt(row,1),
+                                   (String)this.getValueAt(row,2),
+                                   (String)this.getValueAt(row,3),
+                                   itsDurations.get(row+offset),
+                                   (String)this.getValueAt(row,4),
+                                   itsStartTimes.get(row+offset),
+                                   (String)this.getValueAt(row,5)};
+            return selection;
+        } else {
+            return null;
         }
-        return null;
                                
     }
 
     public void removeAllRows() {
         this.setRowCount(0);
-        if (itsAnaBeams != null) {
-            itsAnaBeams.clear();
-            itsAnaBeams.trimToSize();
-        }
+
+        itsDirTypes.removeAllElements();
+        itsTargets.removeAllElements();
+        itsAngles1.removeAllElements();
+        itsAngles2.removeAllElements();
+        itsCoordTypes.removeAllElements();
+        itsDurations.removeAllElements();
+        itsMaximizeDurations.removeAllElements();
+        itsStartTimes.removeAllElements();
+        itsRanks.removeAllElements();
         isChanged=true;
     }
 
@@ -202,10 +309,15 @@ public class AnaBeamConfigurationTableModel extends javax.swing.table.DefaultTab
     @Override
     public void removeRow(int row) {
         super.removeRow(row);
-        if (itsAnaBeams != null) {
-            itsAnaBeams.remove(row+offset);
-            itsAnaBeams.trimToSize();
-        }
+        itsDirTypes.remove(row+offset);
+        itsTargets.remove(row+offset);
+        itsAngles1.remove(row+offset);
+        itsAngles2.remove(row+offset);
+        itsCoordTypes.remove(row+offset);
+        itsDurations.remove(row+offset);
+        itsMaximizeDurations.remove(row+offset);
+        itsStartTimes.remove(row+offset);
+        itsRanks.remove(row+offset);
         isChanged=true;
     }
 

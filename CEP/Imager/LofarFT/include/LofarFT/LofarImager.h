@@ -26,7 +26,6 @@
 #define LOFAR_LOFARFT_LOFARIMAGER_H
 
 #include <LofarFT/LofarFTMachine.h>
-#include <LofarFT/LofarFTMachineOld.h>
 #include <synthesis/MeasurementEquations/Imager.h>
 #include <casa/Containers/Record.h>
 
@@ -51,20 +50,19 @@ namespace LOFAR
 
     // Get the average primary beam.
     const Matrix<Float>& getAveragePB() const
-    { return itsMachine ? itsMachine->getAveragePB() : itsMachineOld->getAveragePB(); }
+      { return itsMachine->getAveragePB(); }
 
     // Get the spheroidal cut.
     const Matrix<Float>& getSpheroidCut() const
-    { return itsMachine ? itsMachine->getSpheroidCut() : itsMachineOld->getSpheroidCut(); }
+      { return itsMachine->getSpheroidCut(); }
 
     // Show the relative timings of the various steps.
     void showTimings (std::ostream&, double duration) const;
 
   private:
     //# Data members.
-    casa::Record       itsParameters;
-    LofarFTMachine*    itsMachine;
-    LofarFTMachineOld* itsMachineOld;
+    casa::Record    itsParameters;
+    LofarFTMachine* itsMachine;
   };
 
 } //# end namespace

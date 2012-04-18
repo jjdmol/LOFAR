@@ -27,7 +27,6 @@
 #include <Common/lofar_algorithm.h>
 
 #include <casa/BasicSL/Constants.h>
-#include <measures/Measures/MPosition.h>
 
 namespace LOFAR
 {
@@ -35,49 +34,16 @@ namespace BBS
 {
 using LOFAR::min;
 
-namespace
-{
-void makeFieldArrayFactorAtReferenceFreq(const Grid &grid,
-    const AntennaField::ConstPtr &field, const casa::MPosition &refPosition,
-    double refFrequency, const Vector<3>::View &direction,
-    const Vector<3>::View &refDirection, Matrix (&AF)[2]);
-
-void makeFieldArrayFactorAtChannelFreq(const Grid &grid,
-    const AntennaField::ConstPtr &field, const casa::MPosition &refPosition,
-    const Vector<3>::View &direction, const Vector<3>::View &refDirection,
-    Matrix (&AF)[2]);
-} //# unnamed namespace
-
 StationBeamFormer::StationBeamFormer
     (const Expr<Vector<3> >::ConstPtr &direction,
     const Expr<Vector<3> >::ConstPtr &reference,
     const Expr<JonesMatrix>::ConstPtr &beam0,
-    const Station::ConstPtr &station, bool conjugate)
+    const Station::ConstPtr &station,
+    double referenceFreq, bool conjugate)
     :   itsDirection(direction),
         itsReference(reference),
         itsStation(station),
-        itsUseChannelFreq(true),
-        itsConjugateFlag(conjugate)
-{
-    ASSERT(itsStation->nField() == 1);
-
-    connect(itsDirection);
-    connect(itsReference);
-
-    itsElementBeam.push_back(beam0);
-    connect(beam0);
-}
-
-StationBeamFormer::StationBeamFormer
-    (const Expr<Vector<3> >::ConstPtr &direction,
-    const Expr<Vector<3> >::ConstPtr &reference,
-    const Expr<JonesMatrix>::ConstPtr &beam0,
-    const Station::ConstPtr &station, double refFrequency, bool conjugate)
-    :   itsDirection(direction),
-        itsReference(reference),
-        itsStation(station),
-        itsUseChannelFreq(false),
-        itsRefFrequency(refFrequency),
+        itsReferenceFreq(referenceFreq),
         itsConjugateFlag(conjugate)
 {
     ASSERT(itsStation->nField() == 1);
@@ -94,36 +60,12 @@ StationBeamFormer::StationBeamFormer
     const Expr<Vector<3> >::ConstPtr &reference,
     const Expr<JonesMatrix>::ConstPtr &beam0,
     const Expr<JonesMatrix>::ConstPtr &beam1,
-    const Station::ConstPtr &station, bool conjugate)
+    const Station::ConstPtr &station,
+    double referenceFreq, bool conjugate)
     :   itsDirection(direction),
         itsReference(reference),
         itsStation(station),
-        itsUseChannelFreq(true),
-        itsConjugateFlag(conjugate)
-{
-    ASSERT(itsStation->nField() == 2);
-
-    connect(itsDirection);
-    connect(itsReference);
-
-    itsElementBeam.push_back(beam0);
-    connect(beam0);
-
-    itsElementBeam.push_back(beam1);
-    connect(beam1);
-}
-
-StationBeamFormer::StationBeamFormer
-    (const Expr<Vector<3> >::ConstPtr &direction,
-    const Expr<Vector<3> >::ConstPtr &reference,
-    const Expr<JonesMatrix>::ConstPtr &beam0,
-    const Expr<JonesMatrix>::ConstPtr &beam1,
-    const Station::ConstPtr &station, double refFrequency, bool conjugate)
-    :   itsDirection(direction),
-        itsReference(reference),
-        itsStation(station),
-        itsUseChannelFreq(false),
-        itsRefFrequency(refFrequency),
+        itsReferenceFreq(referenceFreq),
         itsConjugateFlag(conjugate)
 {
     ASSERT(itsStation->nField() == 2);
@@ -253,6 +195,7 @@ const JonesMatrix::View StationBeamFormer::evaluateImpl(const Grid &grid,
     const Vector<3>::View &direction, const Vector<3>::View &reference,
     const vector<JonesMatrix::View> &beam) const
 {
+    const size_t nFreq = grid[FREQ]->size();
     const size_t nTime = grid[TIME]->size();
 
     // Check preconditions.
@@ -271,222 +214,125 @@ const JonesMatrix::View StationBeamFormer::evaluateImpl(const Grid &grid,
         && static_cast<size_t>(reference(2).ny()) == nTime);
     ASSERT(beam.size() == itsStation->nField());
 
+    // Compute angular reference frequency.
+    const double omega0 = casa::C::_2pi * itsReferenceFreq;
+
     // Allocate result (initialized at 0+0i).
     Matrix E[2][2];
+    Matrix AF(makedcomplex(0.0, 0.0), nFreq, nTime);
+
+    size_t countX = 0, countY = 0;
     for(size_t i = 0; i < itsStation->nField(); ++i)
     {
-        // Compute field array factor.
-        Matrix AF[2];
-        if(itsUseChannelFreq)
+        AntennaField::ConstPtr field = itsStation->field(i);
+
+        // Account for the case where the delay center is not equal to the
+        // field center (only applies to core HBA fields).
+        const Vector3 &fieldCenter = field->position();
+        casa::MVPosition delayCenter = itsStation->position().getValue();
+        Vector3 offsetShift = {{fieldCenter[0] - delayCenter(0),
+            fieldCenter[1] - delayCenter(1),
+            fieldCenter[2] - delayCenter(2)}};
+
+        // Compute array factors.
+        Matrix AFX(makedcomplex(0.0, 0.0), nFreq, nTime);
+        Matrix AFY(makedcomplex(0.0, 0.0), nFreq, nTime);
+        for(size_t j = 0; j < field->nElement(); ++j)
         {
-            makeFieldArrayFactorAtChannelFreq(grid, itsStation->field(i),
-                itsStation->position(), direction, reference, AF);
-        }
-        else
-        {
-            makeFieldArrayFactorAtReferenceFreq(grid, itsStation->field(i),
-                itsStation->position(), itsRefFrequency, direction, reference,
-                AF);
+            const AntennaField::Element &element = field->element(j);
+            if(element.flag[0] && element.flag[1])
+            {
+                continue;
+            }
+
+            // Compute the offset relative to the delay center.
+            Vector3 offset = {{element.offset[0] + offsetShift[0],
+                element.offset[1] + offsetShift[1],
+                element.offset[2] + offsetShift[2]}};
+
+            // Compute the delay for a plane wave approaching from the direction
+            // of interest with respect to the phase center of the element.
+            Matrix delay = (direction(0) * offset[0] + direction(1) * offset[1]
+                + direction(2) * offset[2]) / casa::C::c;
+
+            // Compute the delay for a plane wave approaching from the phase
+            // reference direction with respect to the phase center of the
+            // element.
+            Matrix delay0 = (reference(0) * offset[0] + reference(1) * offset[1]
+                + reference(2) * offset[2]) / casa::C::c;
+
+            // Compute array factor contribution for this element.
+            double *p_re, *p_im;
+            AF.dcomplexStorage(p_re, p_im);
+            const double *p_delay = delay.doubleStorage();
+            const double *p_delay0 = delay0.doubleStorage();
+            for(size_t t = 0; t < nTime; ++t)
+            {
+                const double delay_t = *p_delay++;
+                const double shift0 = omega0 * (*p_delay0++);
+
+                for(size_t f = 0; f < nFreq; ++f)
+                {
+                    const double shift = casa::C::_2pi * grid[FREQ]->center(f)
+                        * delay_t - shift0;
+                    *p_re = std::cos(shift);
+                    *p_im = std::sin(shift);
+                    ++p_re;
+                    ++p_im;
+                }
+            }
+
+            if(!element.flag[0])
+            {
+                AFX += AF;
+                ++countX;
+            }
+
+            if(!element.flag[1])
+            {
+                AFY += AF;
+                ++countY;
+            }
         }
 
-        // Normalize.
-        const size_t nActiveElement = itsStation->nActiveElement();
-        if(nActiveElement > 0)
-        {
-            AF[0] /= nActiveElement;
-            AF[1] /= nActiveElement;
-        }
-
-        // Conjugate array factor if required.
+        // Conjugate array factors if required.
         if(itsConjugateFlag)
         {
-            AF[0] = conj(AF[0]);
-            AF[1] = conj(AF[1]);
+            AFX = conj(AFX);
+            AFY = conj(AFY);
         }
 
-        // Multiply array factor with (tile) element response and add.
         if(i == 0)
         {
-            E[0][0] = AF[0] * beam[i](0, 0);
-            E[0][1] = AF[0] * beam[i](0, 1);
-            E[1][0] = AF[1] * beam[i](1, 0);
-            E[1][1] = AF[1] * beam[i](1, 1);
+            E[0][0] = AFX * beam[i](0, 0);
+            E[0][1] = AFX * beam[i](0, 1);
+            E[1][0] = AFY * beam[i](1, 0);
+            E[1][1] = AFY * beam[i](1, 1);
         }
         else
         {
-            E[0][0] += AF[0] * beam[i](0, 0);
-            E[0][1] += AF[0] * beam[i](0, 1);
-            E[1][0] += AF[1] * beam[i](1, 0);
-            E[1][1] += AF[1] * beam[i](1, 1);
+            E[0][0] += AFX * beam[i](0, 0);
+            E[0][1] += AFX * beam[i](0, 1);
+            E[1][0] += AFY * beam[i](1, 0);
+            E[1][1] += AFY * beam[i](1, 1);
         }
+    }
+
+    // Normalize.
+    if(countX > 0)
+    {
+        E[0][0] /= countX;
+        E[0][1] /= countX;
+    }
+
+    if(countY > 0)
+    {
+        E[1][0] /= countY;
+        E[1][1] /= countY;
     }
 
     return JonesMatrix::View(E[0][0], E[0][1], E[1][0], E[1][1]);
 }
-
-namespace
-{
-void makeFieldArrayFactorAtReferenceFreq(const Grid &grid,
-    const AntennaField::ConstPtr &field, const casa::MPosition &refPosition,
-    double refFrequency, const Vector<3>::View &direction,
-    const Vector<3>::View &refDirection, Matrix (&AF)[2])
-{
-    const size_t nFreq = grid[FREQ]->size();
-    const size_t nTime = grid[TIME]->size();
-
-    // Account for the case where the station phase center is not equal to the
-    // antenna field center (only applies to core HBA fields).
-    const Vector3 &fieldCenter = field->position();
-    casa::MVPosition stationCenter = refPosition.getValue();
-    Vector3 offsetShift = {{fieldCenter[0] - stationCenter(0),
-        fieldCenter[1] - stationCenter(1),
-        fieldCenter[2] - stationCenter(2)}};
-
-    // Angular reference frequency.
-    const double omega0 = casa::C::_2pi * refFrequency;
-
-    // Compute array factor.
-    Matrix shift(makedcomplex(0.0, 0.0), nFreq, nTime);
-    AF[0] = Matrix(makedcomplex(0.0, 0.0), nFreq, nTime);
-    AF[1] = Matrix(makedcomplex(0.0, 0.0), nFreq, nTime);
-    for(size_t i = 0; i < field->nElement(); ++i)
-    {
-        const AntennaField::Element &element = field->element(i);
-        if(element.flag[0] && element.flag[1])
-        {
-            continue;
-        }
-
-        // Compute the offset relative to the delay center.
-        Vector3 offset = {{element.offset[0] + offsetShift[0],
-            element.offset[1] + offsetShift[1],
-            element.offset[2] + offsetShift[2]}};
-
-        // Compute the delay for a plane wave approaching from the direction
-        // of interest with respect to the phase center of the element.
-        Matrix delay = (direction(0) * offset[0] + direction(1) * offset[1]
-            + direction(2) * offset[2]) / casa::C::c;
-
-        // Compute the delay for a plane wave approaching from the phase
-        // reference direction with respect to the phase center of the
-        // element.
-        Matrix delay0 = (refDirection(0) * offset[0]
-            + refDirection(1) * offset[1] + refDirection(2) * offset[2])
-            / casa::C::c;
-
-        // Compute array factor contribution for this element.
-        double *p_re, *p_im;
-        shift.dcomplexStorage(p_re, p_im);
-        const double *p_delay = delay.doubleStorage();
-        const double *p_delay0 = delay0.doubleStorage();
-        for(size_t t = 0; t < nTime; ++t)
-        {
-            const double delay_t = *p_delay++;
-            const double phase0 = omega0 * (*p_delay0++);
-
-            for(size_t f = 0; f < nFreq; ++f)
-            {
-                const double phase = casa::C::_2pi * grid[FREQ]->center(f)
-                    * delay_t - phase0;
-                *p_re = std::cos(phase);
-                *p_im = std::sin(phase);
-                ++p_re;
-                ++p_im;
-            }
-        }
-
-        if(!element.flag[0])
-        {
-            AF[0] += shift;
-        }
-
-        if(!element.flag[1])
-        {
-            AF[1] += shift;
-        }
-    }
-}
-
-void makeFieldArrayFactorAtChannelFreq(const Grid &grid,
-    const AntennaField::ConstPtr &field, const casa::MPosition &refPosition,
-    const Vector<3>::View &direction, const Vector<3>::View &refDirection,
-    Matrix (&AF)[2])
-{
-    const size_t nFreq = grid[FREQ]->size();
-    const size_t nTime = grid[TIME]->size();
-
-    // Instead of computing a phase shift for the pointing direction and a phase
-    // shift for the direction of interest and then computing the difference,
-    // compute the resultant phase shift in one go. Here we make use of the
-    // relation a . b + a . c = a . (b + c). The sign of k is related to the
-    // sign of the phase shift.
-    Matrix k[3];
-    k[0] = direction(0) - refDirection(0);
-    k[1] = direction(1) - refDirection(1);
-    k[2] = direction(2) - refDirection(2);
-
-    // Account for the case where the station phase center is not equal to the
-    // antenna field center (only applies to core HBA fields).
-    const Vector3 &fieldCenter = field->position();
-    casa::MVPosition stationCenter = refPosition.getValue();
-    Vector3 offsetShift = {{fieldCenter[0] - stationCenter(0),
-        fieldCenter[1] - stationCenter(1),
-        fieldCenter[2] - stationCenter(2)}};
-
-    // Compute array factor.
-    Matrix shift(makedcomplex(0.0, 0.0), nFreq, nTime);
-    AF[0] = Matrix(makedcomplex(0.0, 0.0), nFreq, nTime);
-    AF[1] = Matrix(makedcomplex(0.0, 0.0), nFreq, nTime);
-    for(size_t i = 0; i < field->nElement(); ++i)
-    {
-        const AntennaField::Element &element = field->element(i);
-        if(element.flag[0] && element.flag[1])
-        {
-            continue;
-        }
-
-        // Compute the offset relative to the delay center.
-        Vector3 offset = {{element.offset[0] + offsetShift[0],
-            element.offset[1] + offsetShift[1],
-            element.offset[2] + offsetShift[2]}};
-
-        // Compute the effective delay for a plane wave approaching from the
-        // direction of interest with respect to the phase center of the element
-        // when beam forming in the reference direction.
-        Matrix delay = (k[0] * offset[0] + k[1] * offset[1] + k[2] * offset[2])
-            / casa::C::c;
-
-        // Compute array factor contribution for this element.
-        double *p_re, *p_im;
-        shift.dcomplexStorage(p_re, p_im);
-        const double *p_delay = delay.doubleStorage();
-        for(size_t t = 0; t < nTime; ++t)
-        {
-            const double delay_t = *p_delay++;
-
-            for(size_t f = 0; f < nFreq; ++f)
-            {
-                const double phase = casa::C::_2pi * grid[FREQ]->center(f)
-                    * delay_t;
-                *p_re = std::cos(phase);
-                *p_im = std::sin(phase);
-                ++p_re;
-                ++p_im;
-            }
-        }
-
-        if(!element.flag[0])
-        {
-            AF[0] += shift;
-        }
-
-        if(!element.flag[1])
-        {
-            AF[1] += shift;
-        }
-    }
-}
-} //# unnamed namespace
 
 } //# namespace BBS
 } //# namespace LOFAR

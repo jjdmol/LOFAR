@@ -133,7 +133,6 @@ public class jOTDBaccess implements jOTDBaccessInterface
     }
 
 
-    @Override
     public void logout(String name) throws RemoteException {
         logger.info("jOTDBaccess: logout");
 
@@ -224,16 +223,7 @@ public class jOTDBaccess implements jOTDBaccessInterface
                     return false;
                 }
             } else {
-//                Set s = connection.entrySet();
-//                Iterator it = s.iterator();
-//                while (it.hasNext()) {
-//                    Map.Entry m = (Map.Entry)it.next();
-//                    String key=(String)m.getKey();
-//                    jOTDBconnection value = (jOTDBconnection)m.getValue();
-//                    System.out.println(key +" -> "+ value.getItsName());
-//                }
-                        
-                return true;
+                return false;
             }
         } catch (NoSuchObjectException ex) {
             logger.error(ex);
@@ -280,19 +270,14 @@ public class jOTDBaccess implements jOTDBaccessInterface
             // get TreeMaintenance from mapping
             jTreeMaintenanceInterface aTM = treeMaintenance.get(serviceName);
 
-            if (aTM != null) {
-                itsLocalRegistry.unbind(serviceName);
-                if (UnicastRemoteObject.unexportObject(aTM, false)) {
-                    logger.info("jOTDBserver removed " + serviceName + " from local registry...");
-                    treeMaintenance.remove(serviceName);
-                    return true;
-                } else {
-                    logger.info("removing " + serviceName + " from local registry FAILED");
-                    return false;
-                }
-             } else {
-                    treeMaintenance.remove(serviceName);
-                    return true;
+            itsLocalRegistry.unbind(serviceName);
+            if (UnicastRemoteObject.unexportObject(aTM, false)) {
+                logger.info("jOTDBserver removed " + serviceName + " from local registry...");
+                treeMaintenance.remove(serviceName);
+                return true;
+            } else {
+                logger.info("removing " + serviceName + " from local registry FAILED");
+                return false;
             }
         } catch (NoSuchObjectException ex) {
             logger.error(ex);
@@ -338,19 +323,14 @@ public class jOTDBaccess implements jOTDBaccessInterface
             // get Campaign from mapping
             jCampaignInterface aC = campaign.get(serviceName);
 
-            if (aC != null) {
-                itsLocalRegistry.unbind(serviceName);
-                if (UnicastRemoteObject.unexportObject(aC, false)) {
-                    logger.info("jOTDBserver removed " + serviceName + " from local registry...");
-                    campaign.remove(serviceName);
-                    return true;
-                } else {
-                    logger.info("removing " + serviceName + " from local registry FAILED");
-                    return false;
-                }
-            } else {
+            itsLocalRegistry.unbind(serviceName);
+            if (UnicastRemoteObject.unexportObject(aC, false)) {
+                logger.info("jOTDBserver removed " + serviceName + " from local registry...");
                 campaign.remove(serviceName);
-                return true;    
+                return true;
+            } else {
+                logger.info("removing " + serviceName + " from local registry FAILED");
+                return false;
             }
         } catch (NoSuchObjectException ex) {
             logger.error(ex);
@@ -396,19 +376,14 @@ public class jOTDBaccess implements jOTDBaccessInterface
             // get TreeValue from mapping
             jTreeValueInterface aTV = treeValue.get(serviceName);
 
-            if (aTV != null) {
-                itsLocalRegistry.unbind(serviceName);
-                if (UnicastRemoteObject.unexportObject(aTV, false)) {
-                    logger.info("jOTDBserver removed " + serviceName + " from local registry...");
-                    treeValue.remove(serviceName);
-                    return true;
-              } else {
-                    logger.info("removing " + serviceName + " from local registry FAILED");
-                    return false;
-                }
-            } else {
+            itsLocalRegistry.unbind(serviceName);
+            if (UnicastRemoteObject.unexportObject(aTV, false)) {
+                logger.info("jOTDBserver removed " + serviceName + " from local registry...");
                 treeValue.remove(serviceName);
-                return true;                
+                return true;
+            } else {
+                logger.info("removing " + serviceName + " from local registry FAILED");
+                return false;
             }
         } catch (NoSuchObjectException ex) {
             logger.error(ex);
@@ -454,19 +429,14 @@ public class jOTDBaccess implements jOTDBaccessInterface
             // get Converter from mapping
             jConverterInterface aC = converter.get(serviceName);
 
-            if (aC != null) {
-                itsLocalRegistry.unbind(serviceName);
-                if (UnicastRemoteObject.unexportObject(aC, false)) {
-                    logger.info("jOTDBserver removed " + serviceName + " from local registry...");
-                    converter.remove(serviceName);
-                    return true;
-              } else {
-                    logger.info("removing " + serviceName + " from local registry FAILED");
-                    return false;
-                }
-            } else {
+            itsLocalRegistry.unbind(serviceName);
+            if (UnicastRemoteObject.unexportObject(aC, false)) {
+                logger.info("jOTDBserver removed " + serviceName + " from local registry...");
                 converter.remove(serviceName);
-                return true;                
+                return true;
+            } else {
+                logger.info("removing " + serviceName + " from local registry FAILED");
+                return false;
             }
         } catch (NoSuchObjectException ex) {
             logger.error(ex);
@@ -512,19 +482,14 @@ public class jOTDBaccess implements jOTDBaccessInterface
             // get TreeMaintenance from mapping
             remoteFileInterface aRF = aRemoteFile.get(serviceName);
 
-            if (aRF != null) {
-                itsLocalRegistry.unbind(serviceName);
-                if (UnicastRemoteObject.unexportObject(aRF, false)) {
-                    logger.info("jOTDBserver removed " + serviceName + " from local registry...");
-                    aRemoteFile.remove(serviceName);
-                    return true;
-                } else {
-                    logger.info("removing " + serviceName + " from local registry FAILED");
-                    return false;
-                }
-            } else {
+            itsLocalRegistry.unbind(serviceName);
+            if (UnicastRemoteObject.unexportObject(aRF, false)) {
+                logger.info("jOTDBserver removed " + serviceName + " from local registry...");
                 aRemoteFile.remove(serviceName);
-                return true;                
+                return true;
+            } else {
+                logger.info("removing " + serviceName + " from local registry FAILED");
+                return false;
             }
         } catch (NoSuchObjectException ex) {
             logger.error(ex);

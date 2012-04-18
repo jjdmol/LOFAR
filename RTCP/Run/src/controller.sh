@@ -23,8 +23,7 @@ type getpid >&/dev/null || function getpid() {
 }
 
 function isstarted() {
-  # assume started if "DOWN" does not appear in $PID
-  PID=$PID </dev/null awk 'END { exit !(index(ENVIRON["PID"],"DOWN") == 0) }'
+  [ "DOWN" != "$PID" ]
 }
 
 type setpid >&/dev/null || function setpid() {

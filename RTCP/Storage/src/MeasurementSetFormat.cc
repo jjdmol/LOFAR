@@ -13,6 +13,8 @@
 #include <Storage/MeasurementSetFormat.h>
 #include <Storage/Package__Version.h>
 
+#include <AMCBase/Epoch.h>
+
 #include <string>
 #include <fstream>
 #include <iostream>
@@ -58,6 +60,8 @@
 #include <LofarStMan/LofarStMan.h>
 #include <Interface/Exceptions.h>
 
+#include <boost/thread/mutex.hpp>
+
 
 using namespace casa;
 
@@ -66,14 +70,6 @@ namespace RTCP {
 
 
 Mutex MeasurementSetFormat::sharedMutex;
-
-
-// unix time to mjd time (in seconds instead of days)
-static double toMJDs( double time )
-{
-  // 40587 modify Julian day number = 00:00:00 January 1, 1970, GMT
-  return 40587.0 * 24 * 60 * 60 + time;
-}
 
 
 MeasurementSetFormat::MeasurementSetFormat(const Parset &ps, unsigned alignment)
@@ -93,7 +89,12 @@ MeasurementSetFormat::MeasurementSetFormat(const Parset &ps, unsigned alignment)
 	      antPos.size() << " == " << 3 * itsPS.nrStations());
   }
 
-  itsStartTime = toMJDs(itsPS.startTime());
+  {
+    ScopedLock scopedLock(sharedMutex);
+    AMC::Epoch epoch;
+    epoch.utc(itsPS.startTime());
+    itsStartTime = MVEpoch(epoch.mjd()).getTime().getValue("s");
+  }
 
   itsTimeStep = itsPS.IONintegrationTime();
   itsNrTimes = 29030400;  /// equates to about one year, sets valid
@@ -272,16 +273,11 @@ void MeasurementSetFormat::fillField(unsigned subarray)
   // Beam direction
   MVDirection radec(Quantity(itsPS.getBeamDirection(subarray)[0], "rad"), 
 		    Quantity(itsPS.getBeamDirection(subarray)[1], "rad"));
-  MDirection::Types beamDirectionType;
+  MDirection::Types beamDirectionType; // By default this is J2000
   MDirection::getType(beamDirectionType, itsPS.getBeamDirectionType(subarray));
   MDirection indir(radec, beamDirectionType);
   casa::Vector<MDirection> outdir(1);
   outdir(0) = indir;
-
-  // AnaBeam direction type
-  MDirection::Types anaBeamDirectionType;
-  if (itsPS.haveAnaBeam())
-    MDirection::getType(anaBeamDirectionType, itsPS.getAnaBeamDirectionType());
 
   // Put the direction into the FIELD subtable.
   MSLofarField msfield = itsMS->field();
@@ -289,12 +285,7 @@ void MeasurementSetFormat::fillField(unsigned subarray)
 
   uInt rownr = msfield.nrow();
   ASSERT(rownr == 0); // can only set directionType on first row, so only one field per MeasurementSet for now
-
-  if (itsPS.haveAnaBeam())
-    msfieldCol.setDirectionRef(beamDirectionType, anaBeamDirectionType);
-  else
-    msfieldCol.setDirectionRef(beamDirectionType);
-
+  msfieldCol.setDirectionRef(beamDirectionType);
   msfield.addRow();
   msfieldCol.name().put(rownr, "BEAM_" + String::toString(subarray));
   msfieldCol.code().put(rownr, "");
@@ -312,6 +303,9 @@ void MeasurementSetFormat::fillField(unsigned subarray)
     // Analog beam direction
     MVDirection radec_AnaBeamDirection(Quantity(itsPS.getAnaBeamDirection()[0], "rad"),
   				       Quantity(itsPS.getAnaBeamDirection()[1], "rad"));
+    MDirection::Types anaBeamDirectionType; // By default this is J2000
+    MDirection::getType(anaBeamDirectionType, itsPS.getAnaBeamDirectionType());
+    ASSERT(anaBeamDirectionType == beamDirectionType); // we can only have one type in the direction column, since it is stored in the header
     MDirection anaBeamDirection(radec_AnaBeamDirection, anaBeamDirectionType);
     msfieldCol.tileBeamDirMeasCol().put(rownr, anaBeamDirection);
   } else {

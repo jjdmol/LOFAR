@@ -24,17 +24,15 @@ import com.toedter.components.JSpinField;
 import java.rmi.RemoteException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.TimeZone;
 import java.util.TreeMap;
+import java.util.Vector;
 import javax.swing.DefaultComboBoxModel;
-import javax.swing.Icon;
 import javax.swing.JOptionPane;
-import javax.swing.JTextField;
 import nl.astron.lofar.lofarutils.DateTimeChooser;
 import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.sas.otb.MainFrame;
@@ -119,8 +117,10 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                     // Get all Beams (if any) from this observation and try to determine the longest duration
                     // try to set the dates
                     itsMaxBeamDuration=0;
-                    ArrayList<jOTDBnode> beams = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(itsTree.treeID(), "%.Beam[%.duration"));
-                    for (jOTDBnode aNode: beams) {
+                    Vector<jOTDBnode> beams = OtdbRmi.getRemoteMaintenance().getItemList(itsTree.treeID(), "%.Beam[%.duration");
+                    Iterator<jOTDBnode> itr = beams.iterator();
+                    while (itr.hasNext()){
+                        jOTDBnode aNode=itr.next();
                         try {
                             if (Integer.parseInt(aNode.limits) > itsMaxBeamDuration) {
                                 itsMaxBeamDuration=Integer.parseInt(aNode.limits);
@@ -204,36 +204,36 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     public void composeTimeString(String time) {
         // Set the dateformat OTDB takes
         SimpleDateFormat id = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss",itsLocale);
-        switch (time) {
-            case "start":
-                if (itsStartDate != null) {
-                  startTimeInput.setText(id.format(itsStartDate));
-                  if (stopTimeInput.getText().equals("") ||
-                          stopTimeInput.getText().equals("not-a-date-time") ||
-                          itsStartDate.after(itsStopDate)) {
-                    stopTimeInput.setText(id.format(itsStartDate));
-                    itsStopDate=itsStartDate;
-                  }
-                  itsStarttime=startTimeInput.getText();
-                } else {
-                    startTimeInput.setText("not-a-date-time");
-                }
-                break;
-            case "stop":
-                if (itsStopDate != null) {
-                    stopTimeInput.setText(id.format(itsStopDate));
-                    itsStoptime=stopTimeInput.getText();
-                    saveButton.setEnabled(true);
-                } else {
-                    stopTimeInput.setText("not-a-date-time");
-                    saveButton.setEnabled(false);
-                }
-                if (itsStartDate != null && itsStartDate.after(itsStopDate)) {
-                    startTimeInput.setText(id.format(itsStopDate));
-                    itsStartDate=itsStopDate;
+        if (time.equals("start")) {
+            if (itsStartDate != null) {
+              startTimeInput.setText(id.format(itsStartDate));
+              if (stopTimeInput.getText().equals("") ||
+                      stopTimeInput.getText().equals("not-a-date-time") ||
+                      itsStartDate.after(itsStopDate)) {
+                stopTimeInput.setText(id.format(itsStartDate));
+                itsStopDate=itsStartDate;
+              }
+              itsStarttime=startTimeInput.getText();
+            } else {
+                startTimeInput.setText("not-a-date-time");
+            }
+            
+              
+        } else if (time.equals("stop")) {
+            if (itsStopDate != null) {
+                stopTimeInput.setText(id.format(itsStopDate));
+                itsStoptime=stopTimeInput.getText();
+                saveButton.setEnabled(true);
+            } else {
+                stopTimeInput.setText("not-a-date-time");
+                saveButton.setEnabled(false);
+            }
 
-                }
-                break;
+            if (itsStartDate != null && itsStartDate.after(itsStopDate)) {
+                startTimeInput.setText(id.format(itsStopDate));
+                itsStartDate=itsStopDate;
+
+            }
         }
     }
 
@@ -364,108 +364,106 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     }
     
     private void initFocus() {
+        
+            
         // PIC
-        switch (itsTreeType) {
-            case "hardware":
-                momIDLabel.setVisible(false);
-                momIDInput.setVisible(false);
-                nameLabel.setVisible(false);
-                nameInput.setVisible(false);
-                setNameButton.setVisible(false);
-                originalTreeIDLabel.setVisible(false);
-                originalTreeIDInput.setVisible(false);
-                campaignLabel.setVisible(false);
-                campaignInput.setVisible(false);
-                showCampaignButton.setVisible(false);
-                startTimeLabel.setVisible(false);
-                startTimeInput.setVisible(false);
-                durationLabel.setVisible(false);
-                durationDayLabel.setVisible(false);
-                durationHourLabel.setVisible(false);
-                durationMinuteLabel.setVisible(false);
-                durationSecondLabel.setVisible(false);
-                inputDurationDays.setVisible(false);
-                inputDurationHours.setVisible(false);
-                inputDurationMinutes.setVisible(false);
-                inputDurationSeconds.setVisible(false);
-                setDurationButton.setVisible(false);
-                stopTimeLabel.setVisible(false);
-                stopTimeInput.setVisible(false);
-                setStartDateButton.setVisible(false);
-                setStopDateButton.setVisible(false);
-                descriptionInput.setEnabled(true);
-                // VICtemplate
-                break;
-            case "VItemplate":
-                campaignLabel.setVisible(false);
-                campaignInput.setVisible(false);
-                showCampaignButton.setVisible(false);
-                startTimeLabel.setVisible(false);
-                startTimeInput.setVisible(false);
-                durationLabel.setVisible(false);
-                durationDayLabel.setVisible(false);
-                durationHourLabel.setVisible(false);
-                durationMinuteLabel.setVisible(false);
-                durationSecondLabel.setVisible(false);
-                inputDurationDays.setVisible(false);
-                inputDurationHours.setVisible(false);
-                inputDurationMinutes.setVisible(false);
-                inputDurationSeconds.setVisible(false);
-                setDurationButton.setVisible(false);
-                stopTimeLabel.setVisible(false);
-                stopTimeInput.setVisible(false);
-                setStartDateButton.setVisible(false);
-                setStopDateButton.setVisible(false);
-                descriptionInput.setEnabled(true);
-                
-            // VIC
-                break;
-            case "VHtree":
-                nameLabel.setVisible(false);
-                nameInput.setVisible(false);
-                setNameButton.setVisible(false);
-                campaignLabel.setVisible(true);
-                campaignInput.setVisible(true);
-                showCampaignButton.setVisible(true);
-                startTimeLabel.setVisible(true);
-                startTimeInput.setVisible(true);
-                durationLabel.setVisible(true);
-                durationDayLabel.setVisible(true);
-                durationHourLabel.setVisible(true);
-                durationMinuteLabel.setVisible(true);
-                durationSecondLabel.setVisible(true);
-                inputDurationDays.setVisible(true);
-                inputDurationHours.setVisible(true);
-                inputDurationMinutes.setVisible(true);
-                inputDurationSeconds.setVisible(true);
-                setDurationButton.setVisible(true);
-                stopTimeLabel.setVisible(true);
-                stopTimeInput.setVisible(true);
-                setStartDateButton.setVisible(true);
-                setStopDateButton.setVisible(true);
-                if (itsMultiple) {
-                    descriptionInput.setEnabled(false);
-                    inputDurationDays.setEnabled(false);
-                    inputDurationHours.setEnabled(false);
-                    inputDurationMinutes.setEnabled(false);
-                    inputDurationSeconds.setEnabled(false);
-                    setDurationButton.setEnabled(false);
-                    setStartDateButton.setEnabled(false);
-                    setStopDateButton.setEnabled(false);
-                    showCampaignButton.setEnabled(false);
+        if (itsTreeType.equals("hardware")) {
+            momIDLabel.setVisible(false);
+            momIDInput.setVisible(false);
+            nameLabel.setVisible(false);
+            nameInput.setVisible(false);
+            setNameButton.setVisible(false);
+            originalTreeIDLabel.setVisible(false);
+            originalTreeIDInput.setVisible(false);
+            campaignLabel.setVisible(false);
+            campaignInput.setVisible(false);
+            showCampaignButton.setVisible(false);
+            startTimeLabel.setVisible(false);
+            startTimeInput.setVisible(false);
+            durationLabel.setVisible(false);
+            durationDayLabel.setVisible(false);
+            durationHourLabel.setVisible(false);
+            durationMinuteLabel.setVisible(false);
+            durationSecondLabel.setVisible(false);
+            inputDurationDays.setVisible(false);
+            inputDurationHours.setVisible(false);
+            inputDurationMinutes.setVisible(false);
+            inputDurationSeconds.setVisible(false);
+            setDurationButton.setVisible(false);
+            stopTimeLabel.setVisible(false);
+            stopTimeInput.setVisible(false);
+            setStartDateButton.setVisible(false);
+            setStopDateButton.setVisible(false);
+            descriptionInput.setEnabled(true);
+            // VICtemplate    
+        } else if (itsTreeType.equals("VItemplate")) {
+            campaignLabel.setVisible(false);
+            campaignInput.setVisible(false);        
+            showCampaignButton.setVisible(false);
+            startTimeLabel.setVisible(false);
+            startTimeInput.setVisible(false);
+            durationLabel.setVisible(false);
+            durationDayLabel.setVisible(false);
+            durationHourLabel.setVisible(false);
+            durationMinuteLabel.setVisible(false);
+            durationSecondLabel.setVisible(false);
+            inputDurationDays.setVisible(false);
+            inputDurationHours.setVisible(false);
+            inputDurationMinutes.setVisible(false);
+            inputDurationSeconds.setVisible(false);
+            setDurationButton.setVisible(false);
+            stopTimeLabel.setVisible(false);
+            stopTimeInput.setVisible(false);
+            setStartDateButton.setVisible(false);
+            setStopDateButton.setVisible(false);
+            descriptionInput.setEnabled(true);
+            
+        // VIC
+        } else if (itsTreeType.equals("VHtree")) {
+            nameLabel.setVisible(false);
+            nameInput.setVisible(false);
+            setNameButton.setVisible(false);
+            campaignLabel.setVisible(true);
+            campaignInput.setVisible(true);
+            showCampaignButton.setVisible(true);
+            startTimeLabel.setVisible(true);
+            startTimeInput.setVisible(true);
+            durationLabel.setVisible(true);
+            durationDayLabel.setVisible(true);
+            durationHourLabel.setVisible(true);
+            durationMinuteLabel.setVisible(true);
+            durationSecondLabel.setVisible(true);
+            inputDurationDays.setVisible(true);
+            inputDurationHours.setVisible(true);
+            inputDurationMinutes.setVisible(true);
+            inputDurationSeconds.setVisible(true);
+            setDurationButton.setVisible(true);
+            stopTimeLabel.setVisible(true);
+            stopTimeInput.setVisible(true);
+            setStartDateButton.setVisible(true);
+            setStopDateButton.setVisible(true);
+            if (itsMultiple) {
+                descriptionInput.setEnabled(false);
+                inputDurationDays.setEnabled(false);
+                inputDurationHours.setEnabled(false);
+                inputDurationMinutes.setEnabled(false);
+                inputDurationSeconds.setEnabled(false);
+                setDurationButton.setEnabled(false);
+                setStartDateButton.setEnabled(false);
+                setStopDateButton.setEnabled(false);
+                showCampaignButton.setEnabled(false);
 
-                } else {
-                    descriptionInput.setEnabled(true);
-                    inputDurationDays.setEnabled(true);
-                    inputDurationHours.setEnabled(true);
-                    inputDurationMinutes.setEnabled(true);
-                    inputDurationSeconds.setEnabled(true);
-                    setDurationButton.setEnabled(true);
-                    setStartDateButton.setEnabled(true);
-                    setStopDateButton.setEnabled(true);
-                    showCampaignButton.setEnabled(true);
-                }
-                break;
+            } else {
+                descriptionInput.setEnabled(true);
+                inputDurationDays.setEnabled(true);
+                inputDurationHours.setEnabled(true);
+                inputDurationMinutes.setEnabled(true);
+                inputDurationSeconds.setEnabled(true);
+                setDurationButton.setEnabled(true);
+                setStartDateButton.setEnabled(true);
+                setStopDateButton.setEnabled(true);
+                showCampaignButton.setEnabled(true);
+            }
         }
         if (isAdministrator) {
             classificationInput.setEnabled(true);
@@ -505,7 +503,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         // check if the found tree is a defaulttree
         if (itsTreeType.equals("VItemplate")) {
             try {
-                itsDefaultTemplateList = new ArrayList(OtdbRmi.getRemoteOTDB().getDefaultTemplates());
+                itsDefaultTemplateList = OtdbRmi.getRemoteOTDB().getDefaultTemplates();
                 Iterator<jDefaultTemplate> anI = itsDefaultTemplateList.iterator();
                 while (anI.hasNext()) {
                     // found DefaultTemplate
@@ -1034,7 +1032,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         try {
             return aD.parse(aS);
         } catch (ParseException ex) {
-            logger.error("Parse Exception in time: ", ex);
+            ex.printStackTrace();
         }        
         return aGMTDate;
         
@@ -1048,7 +1046,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                 SimpleDateFormat aD = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", itsLocale);
                 initialDate = aD.parse(aS);
             } catch (ParseException ex) {
-                logger.error("Parse Exception in time: ", ex);
+                ex.printStackTrace();
             }
         }
         DateTimeChooser chooser = new DateTimeChooser(initialDate);
@@ -1069,7 +1067,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                 SimpleDateFormat aD = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss",itsLocale);
                 initialDate = aD.parse(aS);
             } catch (ParseException ex) {
-                logger.error("Parse Exception in time: ", ex);
+                ex.printStackTrace();
             }
         } else {
         }
@@ -1195,30 +1193,19 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     }//GEN-LAST:event_showCampaignButtonMouseClicked
 
     private void setNameButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_setNameButtonActionPerformed
-        String aName = (String)JOptionPane.showInputDialog(this, 
-                "Give Name for DefaultTree.\n\n !!!!!! Keep in mind that only Default templates who's names are known to MoM can be used by MoM !!!!!!! \n\n",
-                "DefaultTree Name", 
-                JOptionPane.QUESTION_MESSAGE,
-                null,
-                null,
-                nameInput.getText());
-        
-        // cancelled
-        if (aName == null) {
-            return;
-        }
-        
-        if (aName.equals("")) {
-            nameInput.setText("") ;
+        String aName=JOptionPane.showInputDialog(this, "Give Name for DefaultTree.\n\n !!!!!! Keep in mind that only Default templates who's names are known to MoM can be used by MoM !!!!!!! \n\n","DefaultTree Name", JOptionPane.QUESTION_MESSAGE);
+        if (aName == null || aName.equals("") ){
+            nameInput.setText("");
             return;
         }
 
         if (!aName.equals(nameInput.getText())) {
             boolean found=false;
             try {
-                ArrayList<jDefaultTemplate> aDFList = new ArrayList(OtdbRmi.getRemoteOTDB().getDefaultTemplates());
-                for (jDefaultTemplate it: aDFList) {
-                    if (it.name.equals(aName)) {
+                Vector<jDefaultTemplate> aDFList = OtdbRmi.getRemoteOTDB().getDefaultTemplates();
+                Iterator<jDefaultTemplate> it=aDFList.iterator();
+                while (it.hasNext()) {
+                    if (it.next().name.equals(aName)) {
                         found=true;
                     }
                 }
@@ -1264,7 +1251,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     private boolean   isInitialized=false;
     private CampaignInfoDialog campaignInfoDialog=null;
     private int       itsMaxBeamDuration=0;
-    private ArrayList<jDefaultTemplate> itsDefaultTemplateList=null;
+    private Vector<jDefaultTemplate> itsDefaultTemplateList=null;
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField campaignInput;

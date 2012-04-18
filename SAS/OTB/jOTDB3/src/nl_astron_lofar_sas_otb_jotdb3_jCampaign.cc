@@ -52,7 +52,6 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jCampaign_initCampaig
   try {
     OTDBconnection* aConn=getConnection(name);
     Campaign* aCampaign = new Campaign(aConn);
-    theirC_ObjectMap.erase(name+"_Campaign");
     theirC_ObjectMap[name+"_Campaign"]=(void*)aCampaign;
 
   } catch (exception &ex) {

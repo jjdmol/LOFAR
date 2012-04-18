@@ -59,8 +59,11 @@ public:
 	// GTMTopologyService classes.
 	// @param accs Reference to the global ACC's. These ACC's are shared between
 	// the calibration algorithm and the ACMProxy class.
-	CalServer(const string& name, ACCs& accs);
+	CalServer(const string& name, ACCs& accs, int argc, char** argv);
 	virtual ~CalServer();
+
+	// Adopt the commandline switches
+	void parseOptions(int argc, char** argv);
 
 	// The undertaker method deletes dead clients on the m_dead_clients list.
 	void undertaker();
@@ -93,10 +96,6 @@ public:
 	// Write ACC to file if configured to do so.
 	void write_acc();
 
-	// Helper functions
-	bool _dataOnRing(uint	ringNr)	const;
-	void _updateDataStream(uint	delay);
-
 private:
 	// ----- DATA MEMBERS -----
 	string						itsDataDir;		// directory to store the interim data files in.
@@ -116,12 +115,11 @@ private:
 	double m_sampling_frequency;
 
 	// remember number of RSP boards and number of rcus
-	uint 	m_n_rspboards;
-	uint 	m_n_rcus;
-	bool	itsHasSecondRing;			// station has splitter to create two rings
-	bool	itsSecondRingActive;		// second ring is activated.
-	bool	itsFirstRingOn;
-	bool	itsSecondRingOn;
+	int m_n_rspboards;
+	int m_n_rcus;
+
+	// Which instance of the services we should use.
+	int32 m_instancenr;
 
 	vector<int>		itsRCUcounts;		// in how many observations an RCU participates
 

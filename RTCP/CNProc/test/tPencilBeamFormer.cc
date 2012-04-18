@@ -102,7 +102,7 @@ void test_flyseye() {
 
   // form beams
   Parset p = createParset();
-  BeamFormer f = BeamFormer(p);
+  BeamFormer f = BeamFormer(p, 1);
   SubbandMetaData m = createSubbandMetaData(p);
   f.mergeStations( &in );
 
@@ -150,7 +150,7 @@ void test_stationmerger() {
 
   // form beams
   Parset p = createParset();
-  BeamFormer f = BeamFormer(p);
+  BeamFormer f = BeamFormer(p, 1);
   f.mergeStations( &in );
 
   // check merged data
@@ -216,7 +216,7 @@ void test_beamformer() {
 
   // form beams
   Parset p = createParset();
-  BeamFormer f = BeamFormer(p);
+  BeamFormer f = BeamFormer(p, 1);
 
   f.mergeStations( &in );
 
@@ -270,28 +270,28 @@ void test_beamformer() {
 void test_posttranspose()
 {
   std::vector<unsigned> stationMapping(0);
-  TransposedBeamFormedData in( NRSUBBANDS, NRCHANNELS, NRSAMPLES );
-  FinalBeamFormedData out( NRSAMPLES, NRSUBBANDS, NRCHANNELS );
+  TransposedBeamFormedData in( NRSUBBANDS, NRCHANNELS, NRSAMPLES, 1 );
+  FinalBeamFormedData out( NRSUBBANDS, NRCHANNELS, NRSAMPLES, 1 );
   Parset p = createParset();
-  BeamFormer f = BeamFormer(p);
+  BeamFormer f = BeamFormer(p, 1);
 
   // fill input data
   for( unsigned sb = 0; sb < NRSUBBANDS; sb++ ) {
     for( unsigned c = 0; c < NRCHANNELS; c++ ) {
       for( unsigned i = 0; i < NRSAMPLES; i++ ) {
-        in.samples[sb][c][i] = 1.0f * (sb + c * NRSUBBANDS + i * NRSUBBANDS * NRCHANNELS +1);
+        in.samples[sb][i][c][0] = 1.0f * (sb + c * NRSUBBANDS + i * NRSUBBANDS * NRCHANNELS +1);
       }
     }
 
-    f.postTransposeBeam( &in, &out, sb, NRCHANNELS, NRSAMPLES );
+    f.postTransposeBeams( &in, &out, sb );
   }  
 
   for( unsigned sb = 0; sb < NRSUBBANDS; sb++ ) {
     for( unsigned c = 0; c < NRCHANNELS; c++ ) {
       for( unsigned i = 0; i < NRSAMPLES; i++ ) {
-        float &x = out.samples[i][sb][c];
+        float &x = out.samples[i][sb][c][0];
 
-        if( !same(x, in.samples[sb][i][c]) ) {
+        if( !same(x,in.samples[sb][i][c][0]) ) {
           std::cerr << "postTransposeBeams: Sample doesn't match for subband " << sb << " channel " << c << " sample " << i << std::endl;
           exit(1);
         }

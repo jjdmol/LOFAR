@@ -41,7 +41,7 @@ struct EarthPosition : public Serializable {
 		s.width(16);
 		s.precision(16);
 		s << x << "," << y << "," << z << " (alt " << sqrtl(x*x+y*y+z*z) << "), or "
-		<< "N" << Latitude()*180/M_PI << " E" << Longitude()*180/M_PI;
+		<< "N" << Lattitude()*180/M_PI << " E" << Longitude()*180/M_PI;
 		return s.str();
 	}
 	EarthPosition FromITRS(long double x, long double y, long double z);
@@ -50,28 +50,13 @@ struct EarthPosition : public Serializable {
 	{
 		return atan2l(y, x);
 	}
-	
-	long double LongitudeL() const
-	{
-		return atan2l(y, x);
-	}
 
-	double Latitude() const
-	{
-		return atan2l(z, sqrtl((long double) x*x + y*y));
-	}
-	
-	long double LatitudeL() const
+	double Lattitude() const
 	{
 		return atan2l(z, sqrtl((long double) x*x + y*y));
 	}
 	
 	double Altitude() const
-	{
-		return sqrtl((long double) x*x+y*y+z*z);
-	}
-	
-	double AltitudeL() const
 	{
 		return sqrtl((long double) x*x+y*y+z*z);
 	}

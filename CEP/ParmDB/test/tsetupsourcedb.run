@@ -26,11 +26,11 @@
 # Set srcdir if undefined (if run outside 'make check')
 wd=`pwd`
 if test "$srcdir" = ""; then
-  srcdir=../../../../../LOFAR/CEP/ParmDB/test
+  srcdir=$wd/../../../src
 fi
 
 # Add current (test) and source directory to PATH.
-PATH="$wd:$wd/../src:$srcdir/../src:$PATH"
+PATH=$wd:$wd/../src:$srcdir:$PATH
 export PATH
 
 # Create directories to create the sourcedb-s in.
@@ -46,7 +46,7 @@ mkdir tsetupsourcedb_tmp.ms2
 # Use _tmp name for the gds, so the resulting sourcedb also gets a _tmp name.
 cp tsetupsourcedb.in_gds tsetupsourcedb_tmp.gds
 echo ">>>"
-"$srcdir/../src/setupsourcedb" -overwrite tsetupsourcedb_tmp.gds tsetupsourcedb.in "" "" tsetupsourcedb_tmp.log 0 tsetupsourcedb_tmp.hfn "$wd"
+$srcdir/../src/setupsourcedb -overwrite tsetupsourcedb_tmp.gds tsetupsourcedb.in "" "" tsetupsourcedb_tmp.log 0 tsetupsourcedb_tmp.hfn $wd
 echo "<<<"
 
 # Append the three log files to the output.

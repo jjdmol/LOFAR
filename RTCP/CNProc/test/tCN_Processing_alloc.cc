@@ -57,20 +57,19 @@ int main(int argc, char **argv) {
   LocationInfo locationInfo;
   CN_Processing_Base *proc;
   Parset parset;
-  std::vector<SmartPtr<Stream> > inputStreams(1);
-  inputStreams[0] = new NullStream;
+  NullStream inputStream;
 
   parset.adoptFile("tCN_Processing_alloc.parset");
 
   // preprocess
   switch (parset.nrBitsPerSample()) {
-    case 4:  proc = new CN_Processing<i4complex>(parset, inputStreams, &createIONstream, locationInfo);
+    case 4:  proc = new CN_Processing<i4complex>(parset, &inputStream, &createIONstream, locationInfo);
              break;
 
-    case 8:  proc = new CN_Processing<i8complex>(parset, inputStreams, &createIONstream, locationInfo);
+    case 8:  proc = new CN_Processing<i8complex>(parset, &inputStream, &createIONstream, locationInfo);
              break;
 
-    case 16: proc = new CN_Processing<i16complex>(parset, inputStreams, &createIONstream, locationInfo);
+    case 16: proc = new CN_Processing<i16complex>(parset, &inputStream, &createIONstream, locationInfo);
              break;
 
     default: return 1;         

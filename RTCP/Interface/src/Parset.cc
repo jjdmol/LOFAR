@@ -24,10 +24,8 @@
 #include <lofar_config.h>
 
 #include <Common/LofarLogger.h>
-#include <Common/DataConvert.h>
 #include <Common/lofar_datetime.h>
 #include <Interface/Parset.h>
-#include <Interface/SmartPtr.h>
 #include <Interface/Exceptions.h>
 #include <Interface/PrintVector.h>
 #include <Interface/SetOperations.h>
@@ -63,12 +61,8 @@ Parset::Parset(const string &name)
 
 Parset::Parset(Stream *stream)
 {
-  uint64 size;
+  size_t size;
   stream->read(&size, sizeof size);
-
-#if !defined WORDS_BIGENDIAN
-  dataConvert(LittleEndian, &size, 1);
-#endif
 
   std::vector<char> tmp(size + 1);
   stream->read(&tmp[0], size);
@@ -83,16 +77,9 @@ void Parset::write(Stream *stream) const
 {
   std::string buffer;
   writeBuffer(buffer);
-  uint64 size = buffer.size();
+  size_t size = buffer.size();
 
-#if !defined WORDS_BIGENDIAN
-  uint64 size_be = size;
-  dataConvert(BigEndian, &size_be, 1);
-  stream->write(&size_be, sizeof size_be);
-#else  
   stream->write(&size, sizeof size);
-#endif
-
   stream->write(buffer.data(), size);
 }
 
@@ -166,6 +153,7 @@ void Parset::checkInputConsistency() const
   }
 }
 
+
 void Parset::check() const
 {
   //checkPsetAndCoreConfiguration();
@@ -183,13 +171,6 @@ void Parset::check() const
 
   if (CNintegrationSteps() % dedispersionFFTsize() != 0)
     THROW(InterfaceException, "OLAP.CNProc.integrationSteps (" << CNintegrationSteps() << ") must be divisible by OLAP.CNProc.dedispersionFFTsize (" << dedispersionFFTsize() << ')');
-
-  if (outputThisType(BEAM_FORMED_DATA) || outputThisType(TRIGGER_DATA)) {
-    // second transpose is performed
-
-    if (nrSubbands() > phaseTwoPsets().size() * phaseOneTwoCores().size() )
-      THROW(InterfaceException, "For the second transpose to function, there need to be at least nrSubbands cores in phase 2 (requested: " << nrSubbands() << " subbands on " << (phaseTwoPsets().size() * phaseOneTwoCores().size()) << " cores)");
-  }
 }
 
 
@@ -232,8 +213,11 @@ string Parset::getInputStreamName(const string &stationName, unsigned rspBoardNu
 std::string Parset::keyPrefix(OutputType outputType)
 {
   switch (outputType) {
+    case FILTERED_DATA:     return "Observation.DataProducts.Output_FilteredData";
     case CORRELATED_DATA:   return "Observation.DataProducts.Output_Correlated";
+    case INCOHERENT_STOKES: return "Observation.DataProducts.Output_IncoherentStokes";
     case BEAM_FORMED_DATA:  return "Observation.DataProducts.Output_Beamformed";
+    case COHERENT_STOKES:   return "Observation.DataProducts.Output_CoherentStokes";
     case TRIGGER_DATA:	    return "Observation.DataProducts.Output_Trigger";
     default:		    THROW(InterfaceException, "Unknown output type");
   }
@@ -263,10 +247,25 @@ unsigned Parset::nrStreams(OutputType outputType, bool force) const
   if (!outputThisType(outputType) && !force)
     return 0;
 
+  // accumulate the number of parts for each SAP, and multiply them with the number of
+  // pencil beams in each SAP
+  std::vector<unsigned> mapping = subbandToSAPmapping();
+  unsigned nrParts = 0;
+
+  for (unsigned sap = 0; sap < nrBeams(); sap++) {
+    unsigned nrSubbands = std::count( mapping.begin(), mapping.end(), sap );
+    unsigned nrSapParts = (nrSubbands + nrSubbandsPerPart() - 1) / nrSubbandsPerPart();
+
+    nrParts += nrCoherentStokes() * nrPencilBeams(sap) * nrSapParts;
+  }
+
   switch (outputType) {
-    case CORRELATED_DATA :   return nrSubbands();
+    case FILTERED_DATA :	    // FALL THROUGH
+    case CORRELATED_DATA :
+    case INCOHERENT_STOKES : return nrSubbands();
     case BEAM_FORMED_DATA :         // FALL THROUGH
-    case TRIGGER_DATA :      return transposeLogic().nrStreams();
+    case COHERENT_STOKES :
+    case TRIGGER_DATA :      return nrParts;
     default:		     THROW(InterfaceException, "Unknown output type");
   }
 }
@@ -278,10 +277,13 @@ unsigned Parset::maxNrStreamsPerPset(OutputType outputType, bool force) const
   unsigned nrPsets;
 
   switch (outputType) {
-    case CORRELATED_DATA :   nrPsets = phaseTwoPsets().size();
+    case FILTERED_DATA :	    // FALL THROUGH
+    case CORRELATED_DATA :
+    case INCOHERENT_STOKES : nrPsets = phaseTwoPsets().size();
 			     break;
 
     case BEAM_FORMED_DATA :         // FALL THROUGH
+    case COHERENT_STOKES :
     case TRIGGER_DATA :	     nrPsets = phaseThreePsets().size();
 			     break;
 
@@ -290,6 +292,36 @@ unsigned Parset::maxNrStreamsPerPset(OutputType outputType, bool force) const
 
   return nrPsets == 0 ? 0 : (nrOutputStreams + nrPsets - 1) / nrPsets;
 }
+
+
+unsigned Parset::nrCoherentStokes() const
+{
+  std::string which = getString("OLAP.CNProc_CoherentStokes.which");
+
+  if (which == "I")
+    return 1;
+  else if (which == "XY")
+    return 2;
+  else if (which == "XXYY")
+    return 4;
+  else if (which == "IQUV")
+    return 4;
+  else
+    THROW(InterfaceException, "Parset key \"OLAP.CNProc_CoherentStokes.which\" should be I, IQUV, XY, or XXYY");
+}  
+
+
+unsigned Parset::nrIncoherentStokes() const
+{
+  std::string which = getString("OLAP.CNProc_IncoherentStokes.which", "I");
+
+  if (which == "I")
+    return 1;
+  else if (which == "IQUV")
+    return 4;
+  else
+    THROW(InterfaceException, "Parset key \"OLAP.CNProc_IncoherentStokes.which\" should be \"I\" or \"IQUV\"");
+}  
 
 
 unsigned Parset::nyquistZone() const
@@ -418,22 +450,18 @@ std::vector<double> Parset::getPencilBeam(unsigned beam, unsigned pencil) const
 }
 
 
-bool Parset::isCoherent(unsigned beam, unsigned pencil) const
-{
-  string key = str(boost::format("Observation.Beam[%u].TiedArrayBeam[%u].coherent") % beam % pencil);
-
-  return getBool(key, true);
-}
-
-
 double Parset::dispersionMeasure(unsigned beam, unsigned pencil) const
 {
-  if (!getBool("OLAP.coherentDedisperseChannels",true))
+  if (!getBool("OLAP.coherentDedispersion",true))
     return 0.0;
 
   string key = str(boost::format("Observation.Beam[%u].TiedArrayBeam[%u].dispersionMeasure") % beam % pencil);
 
-  return getDouble(key, 0.0);
+  // backward compatibility
+  if (!isDefined(key))
+    key = "OLAP.dispersionMeasure";
+
+  return getDouble(key);
 }
 
 
@@ -469,7 +497,7 @@ std::string Parset::getBeamDirectionType(unsigned beam) const
   char buf[50];
   string beamDirType;
  
-  snprintf(buf, sizeof buf, "Observation.Beam[%d].directionType", beam);
+  sprintf(buf,"Observation.Beam[%d].directionType", beam);
   beamDirType = getString(buf);
 
   return beamDirType;

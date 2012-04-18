@@ -30,8 +30,6 @@
 //# Includes
 #include <MACIO/GCF_Event.h>
 #include <MACIO/EventPort.h>
-#include <Common/lofar_vector.h>
-#include <Common/lofar_string.h>
 
 // Avoid 'using namespace' in headerfiles
 

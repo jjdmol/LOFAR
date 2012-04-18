@@ -14,7 +14,6 @@ set(common_LIB_SRCS
   lofar_bitset.cc
   NewHandler.cc
   Numeric.cc
-  ParameterRecord.cc
   ParameterSet.cc
   ParameterSetImpl.cc
   ParameterValue.cc
@@ -33,8 +32,7 @@ set(common_LIB_SRCS
   Version.cc
   Net/FdSet.cc
   Net/Socket.cc
-  Thread/Cancellation.cc
-  Thread/Thread.cc)
+  Thread/Cancellation.cc)
 
 set(common_PROGRAMS
   getparsetvalue

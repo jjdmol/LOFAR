@@ -150,7 +150,9 @@ namespace rfiStrategy {
 				const BandCombinedSetIndex &bcIndex = static_cast<const BandCombinedSetIndex&>(index);
 				TimeFrequencyMetaDataPtr metaData(new TimeFrequencyMetaData());
 				
-				metaData->SetObservationTimes(_sets[0]->ObservationTimesVector(index));
+				std::vector<double> *obsTimes = _sets[0]->CreateObservationTimesVector();
+				metaData->SetObservationTimes(*obsTimes);
+				delete obsTimes;
 				
 				BandInfo bandInfo;
 				bandInfo.windowIndex = 0;

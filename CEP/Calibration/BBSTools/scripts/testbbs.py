@@ -7,7 +7,7 @@
 #
 # File:             testbbs.py
 # Date:             2011-07-27
-# Last change:      2012-02-21
+# Last change:      2011-07-27
 # Author:           Sven Duscha (duscha@astron.nl)
 
 
@@ -23,10 +23,10 @@ class testbbs(testsip):
 
     # Constructor of testbbs class which inherits from testsip baseclass
     #
-    def __init__(self, MS, parset, skymodel, wd='.', verbose=True, taql=True, key='tests'):
-        self.sip=testsip.__init__(self, MS, parset, wd, verbose, taql)   # call baseclass constructor
+    def __init__(self, MS, parset, skymodel, wd='.', verbose=True, taql=True):
+        self.sip=testsip.__init__(self, MS, parset, wd, verbose)   # call baseclass constructor
         self.skymodel = skymodel                              # BBS has in addition a skymodel
-        self.key=key
+
 
     def show(self):
         self.sip.showCommon()                                 # call baseclass show() method first
@@ -145,10 +145,13 @@ class testbbs(testsip):
     #
     def runBBS(self):    
         print bcolors.OKBLUE + "Running BBS through calibrate script." + bcolors.ENDC
-        arguments = '-v -f -n --clean --key ' + self.key  + ' --cluster-desc ' + self.clusterdesc + ' --db ' + self.dbserver + ' --db-user ' + self.dbuser + ' ' + self.gds + ' ' + self.parset + ' ' + self.skymodel + ' ' + self.wd
+        arguments = '-v -f -n --clean --key bbstest --cluster-desc ' + self.clusterdesc + ' --db ' + self.dbserver + ' --db-user ' + self.dbuser + ' ' + self.gds + ' ' + self.parset + ' ' + self.skymodel + ' ' + self.wd
         command = ['calibrate', arguments] # '-v', '-f', '--clean', '--key bbstest', '--cluster-desc ' + self.clusterdesc, 
 #        '--db ' + self.dbserver, '--db-user ' + self.dbuser, self.gds, self.parset, self.skymodel,  self.wd]
     
+        #print "arguments = ", arguments
+        #os.popen('calibrate' + ' ' + arguments)
+        
         proc = subprocess.Popen('calibrate ' + arguments, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         for line in proc.stdout.readlines():
             print line
@@ -182,7 +185,6 @@ class testbbs(testsip):
         if test=="parms" or test=="all":
             self.sip.compareParms()
         if test=="columns" or test=="all":
-            print "executeTest() self.sip.taql = ", self.sip.taql     # DEBUG
             self.sip.compareColumns(self.columns, self.sip.taql)
 
         if self.verbose:

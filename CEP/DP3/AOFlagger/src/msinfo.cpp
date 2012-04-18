@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
 			cout.width(16);
 			cout.precision(16);
 			const AntennaInfo antenna = set.GetAntennaInfo(i);
-			cout << antenna.id << '\t' << antenna.position.Latitude()*180.0/M_PI << '\t' << antenna.position.Longitude()*180.0/M_PI << '\t' << antenna.position.Altitude() << '\n';
+			cout << antenna.id << '\t' << antenna.position.Lattitude()*180.0/M_PI << '\t' << antenna.position.Longitude()*180.0/M_PI << '\t' << antenna.position.Altitude() << '\n';
 		}
 	}
 	else {

@@ -27,7 +27,6 @@
 #include <Common/LofarLogger.h>
 #include <Common/lofar_fstream.h>
 #include <Common/lofar_datetime.h>
-#include <Common/SystemUtil.h>
 #include <OTDB/OTDBconnection.h>
 #include <OTDB/ParamTypeConv.h>
 
@@ -39,7 +38,7 @@ using namespace LOFAR::OTDB;
 //
 int main (int	argc, char*	argv[]) {
 
-	INIT_LOGGER(LOFAR::basename(argv[0]));
+	INIT_LOGGER(basename(argv[0]));
 	LOG_INFO_STR("Starting " << argv[0]);
 
 	if (argc != 1) {

@@ -75,7 +75,6 @@ bool GTMTCPServerSocket::open(unsigned int portNumber)
 		LOG_WARN(formatString (
 					"Error on setting socket options SO_REUSEADDR: %s",
 					strerror(errno)));
-		::close(socketFD);
 		return false;
 	}
 
@@ -83,7 +82,6 @@ bool GTMTCPServerSocket::open(unsigned int portNumber)
 		LOG_WARN(formatString (
 					"Error on setting socket options SO_LINGER: %s",
 					strerror(errno)));
-		::close(socketFD);
 		return false;
 	}
 
@@ -91,23 +89,23 @@ bool GTMTCPServerSocket::open(unsigned int portNumber)
 	address.sin_addr.s_addr = htonl(INADDR_ANY);
 	address.sin_port = htons(portNumber);
 	addrLen = sizeof(address);
-	if (::bind(socketFD, (struct sockaddr*)&address, addrLen) == -1) {
+	if (bind(socketFD, (struct sockaddr*)&address, addrLen) == -1) {
 		LOG_WARN(formatString ( "::bind, error: %s", strerror(errno)));
-		::close(socketFD);
+		close();
 		return (false);
 	}
 
-	if (::listen(socketFD, 5) == -1) {    
+	if (listen(socketFD, 5) == -1) {    
 		LOG_WARN(formatString ( "::listen, error: %s", strerror(errno)));
-		::close(socketFD);
+		close();
 		return (false);
 	}
 
 	setFD(socketFD);
-	if (::fcntl(socketFD, F_SETFL, FNDELAY) != 0) {
+	if (fcntl(socketFD, F_SETFL, FNDELAY) != 0) {
 		close();
 		return (false);
-	}
+	}    
 
 	return (true);
 }
@@ -196,7 +194,7 @@ bool GTMTCPServerSocket::close()
 		_pDataSocket = 0;
 	}
 	if (result) {
-		result = GTMTCPSocket::close();
+		result = GTMFile::close();
 	}
 
 	return result;

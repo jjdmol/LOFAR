@@ -43,6 +43,8 @@ namespace LOFAR
 {
 namespace BBS
 {
+class HamakerBeamCoeff;
+
 // \addtogroup BBSKernel
 // @{
 
@@ -96,17 +98,15 @@ makeDirectionalGainExpr(Scope &scope,
     bool phasors);
 
 Expr<JonesMatrix>::Ptr
-makeElevationCutExpr(const Expr<Vector<2> >::Ptr &exprAzEl,
-    const ElevationCutConfig &config);
-
-Expr<JonesMatrix>::Ptr
 makeBeamExpr(Scope &scope,
     const Station::ConstPtr &station,
     double refFreq,
     const Expr<Vector<3> >::Ptr &exprITRF,
     const Expr<Vector<3> >::Ptr &exprRefDelayITRF,
     const Expr<Vector<3> >::Ptr &exprRefTileITRF,
-    const BeamConfig &config);
+    const BeamConfig &config,
+    const HamakerBeamCoeff &coeffLBA,
+    const HamakerBeamCoeff &coeffHBA);
 
 Expr<JonesMatrix>::Ptr
 makeDirectionalTECExpr(Scope &scope,

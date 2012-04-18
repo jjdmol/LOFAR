@@ -43,10 +43,10 @@ namespace LOFAR {
 	static const int N_HBA_ELEM_PER_TILE	  = 16;						// Number of High Band antenna per tile
 
 	static const int MAX_ANTENNAS			  = 96;						// Max number antenna's of each type.
-	static const int MAX_RCUS				  = (MAX_ANTENNAS * N_POL);	// Max number of RCU's in one station
+	static const int MAX_RCUS				  = MAX_ANTENNAS * N_POL;	// Max number of RCU's in one station
 	static const int MAX_SUBBANDS			  = 512;					// Number of subbands that are created
 	static const int MAX_BEAMLETS_PER_RSP	  = 61;						// Max number of beamlets comming from one RSPboard
-	static const int MAX_BEAMLETS			  = (4 * MAX_BEAMLETS_PER_RSP);	// Max number of beamlets comming from one station
+	static const int MAX_BEAMLETS			  = 4 * MAX_BEAMLETS_PER_RSP;	// Max number of beamlets comming from one station
 	static const int MAX_RSPBOARDS			  = (MAX_RCUS / NR_RCUS_PER_RSPBOARD);
 
 	static const int NR_RCU_MODES			  = 7;

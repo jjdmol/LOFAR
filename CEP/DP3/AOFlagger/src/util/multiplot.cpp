@@ -19,8 +19,8 @@
  ***************************************************************************/
 #include <AOFlagger/util/multiplot.h>
 
-MultiPlot::MultiPlot(Plot2D &plot, size_t plotCount)
-	: _plotCount(plotCount), _plot(plot)
+MultiPlot::MultiPlot(const std::string &pdfFile, size_t plotCount)
+	: Plot(pdfFile), _plotCount(plotCount)
 {
 	_points = new PointList*[plotCount];
 	for(size_t i=0;i<plotCount;++i)
@@ -40,13 +40,14 @@ void MultiPlot::Finish()
 {
 	for(size_t i=0;i<_plotCount;++i)
 	{
-		_plot.StartLine(_legends[i], _xAxisText, _yAxisText, false, Plot2DPointSet::DrawPoints);
+		StartScatter(_legends[i]);
 		PointList &list = *_points[i];
 		for(PointList::const_iterator p=list.begin();p!=list.end();++p)
 		{
-			_plot.PushDataPoint(p->x, p->y);
+			PushDataPoint(p->x, p->y);
 		}
 		list.clear();
 	}
+	Close();
 }
 

@@ -545,7 +545,7 @@ void LogClient::_saveAdmin(const string&	filename)
 	LOG_DEBUG ("Saving administration");
 
 	char	line [MAX_ADMINLINE_LEN];
-	snprintf(line, sizeof line, "%s|%d|%s|%d", itsSurvivalFile.c_str(), itsSurvivalLinenr, 
+	sprintf(line, "%s|%d|%s|%d", itsSurvivalFile.c_str(), itsSurvivalLinenr, 
 								 itsDrainFile.c_str(), itsDrainLinenr);
 
 	admFile.write(line, strlen(line));

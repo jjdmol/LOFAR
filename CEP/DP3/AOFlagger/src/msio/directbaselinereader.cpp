@@ -117,7 +117,7 @@ void DirectBaselineReader::PerformReadRequests()
 		addRequestRows(_readRequests[i], i, rows);
 	std::sort(rows.begin(), rows.end());
 	
-	size_t timeCount = AllObservationTimes().size();
+	size_t timeCount = ObservationTimes().size();
 
 	AOLogger::Debug << "Reading " << _readRequests.size() << " requests with " << rows.size() << " rows total, flags=" << ReadFlags() << ", " << PolarizationCount() << " polarizations.\n";
 	
@@ -180,7 +180,7 @@ void DirectBaselineReader::PerformReadRequests()
 		
 		double time = timeColumn(rowIndex);
 		size_t
-			timeIndex = AllObservationTimes().find(time)->second,
+			timeIndex = ObservationTimes().find(time)->second,
 			startIndex = _readRequests[requestIndex].startIndex,
 			endIndex = _readRequests[requestIndex].endIndex;
 		bool timeIsSelected = timeIndex>=startIndex && timeIndex<endIndex;
@@ -222,7 +222,7 @@ std::vector<UVW> DirectBaselineReader::ReadUVW(unsigned antenna1, unsigned anten
 	initialize();
 	initBaselineCache();
 
-	const std::map<double, size_t> &allObservationTimes = AllObservationTimes();
+	const std::map<double, size_t> &observationTimes = ObservationTimes();
 
 	// Each element contains (row number, corresponding request index)
 	std::vector<std::pair<size_t, size_t> > rows;
@@ -231,11 +231,11 @@ std::vector<UVW> DirectBaselineReader::ReadUVW(unsigned antenna1, unsigned anten
 	request.antenna2 = antenna2;
 	request.spectralWindow = spectralWindow;
 	request.startIndex = 0;
-	request.endIndex = allObservationTimes.size();
+	request.endIndex = observationTimes.size();
 	addRequestRows(request, 0, rows);
 	std::sort(rows.begin(), rows.end());
 	
-	size_t width = allObservationTimes.size();
+	size_t width = observationTimes.size();
 
 	casa::Table &table = *Table();
 	casa::ROScalarColumn<double> timeColumn(table, "TIME");
@@ -249,7 +249,7 @@ std::vector<UVW> DirectBaselineReader::ReadUVW(unsigned antenna1, unsigned anten
 		
 		double time = timeColumn(rowIndex);
 		size_t
-			timeIndex = allObservationTimes.find(time)->second;
+			timeIndex = observationTimes.find(time)->second;
 
 		casa::Array<double> arr = uvwColumn(rowIndex);
 		casa::Array<double>::const_iterator i = arr.begin();
@@ -302,7 +302,7 @@ void DirectBaselineReader::PerformFlagWriteRequests()
 		size_t rowIndex = i->first;
 		WriteRequest &request = _writeRequests[i->second];
 		double time = timeColumn(rowIndex);
-		size_t timeIndex = AllObservationTimes().find(time)->second;
+		size_t timeIndex = ObservationTimes().find(time)->second;
 		if(timeIndex >= request.startIndex + request.leftBorder && timeIndex < request.endIndex - request.rightBorder)
 		{
 			casa::Array<bool> flag = flagColumn(rowIndex);

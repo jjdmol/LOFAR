@@ -26,14 +26,12 @@
 
 #include <vector>
 
-#include <AOFlagger/gui/plot/plotmanager.h>
-
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
 */
-class MultiPlot {
+class MultiPlot : public Plot {
 	public:
-		MultiPlot(Plot2D &plot, size_t plotCount);
+		MultiPlot(const std::string &pdfFile, size_t plotCount);
 		~MultiPlot();
 
 		void AddPoint(size_t plotIndex, num_t x, num_t y)
@@ -45,15 +43,6 @@ class MultiPlot {
 			_legends[index] = title;
 		}
 		void Finish();
-		Plot2D &Plot() { return _plot; }
-		void SetXAxisText(const std::string text)
-		{
-			_xAxisText = text;
-		}
-		void SetYAxisText(const std::string text)
-		{
-			_yAxisText = text;
-		}
 	private:
 		struct Point {
 			Point(num_t _x, num_t _y) : x(_x), y(_y) { } 
@@ -63,8 +52,6 @@ class MultiPlot {
 		std::string *_legends;
 		PointList **_points;
 		size_t _plotCount;
-		Plot2D &_plot;
-		std::string _xAxisText, _yAxisText;
 };
 
 #endif

@@ -84,13 +84,7 @@ namespace LOFAR {
 #else
 # define INIT_LOGGER_AND_WATCH(filename,watchinterval) INIT_LOGGER(filename)
 #endif
-
-// Each new thread might need a partial reinitialisation in the logger
-#define LOGGER_NEWTHREAD()                      \
-  do {                                          \
-    ::LOFAR::initNDC();                         \
-  } while(0)  
-
+  
 //@}
 
 //# -------------------- Log Levels for the Operator messages ------------------

@@ -1,7 +1,7 @@
 # $Id$
 
 lofar_package(IONProc 1.0
-  DEPENDS Common ApplCommon Stream Interface FCNP)
+  DEPENDS Common Stream Interface FCNP)
 
 include(LofarFindPackage)
 lofar_find_package(Boost REQUIRED)

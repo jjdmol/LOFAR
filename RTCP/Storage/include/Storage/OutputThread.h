@@ -46,8 +46,6 @@ class OutputThread
   public:
 				     OutputThread(const Parset &, OutputType, unsigned streamNr, Queue<SmartPtr<StreamableData> > &freeQueue, Queue<SmartPtr<StreamableData> > &receiveQueue, const std::string &logPrefix, bool isBigEndian);
 
-    void			     start();
-
   private:
     void			     createMS();
     void			     flushSequenceNumbers();
@@ -71,7 +69,7 @@ class OutputThread
     std::vector<unsigned>	     itsSequenceNumbers;
     SmartPtr<FileStream>	     itsSequenceNumbersFile;
     SmartPtr<MSWriter>		     itsWriter;
-    SmartPtr<Thread>		     itsThread;
+    Thread			     itsThread;
 };
 
 

@@ -40,14 +40,11 @@ def createNewDefaultTemplate(orgTmplID, newMasterTmplID, orgTmplInfo):
     newTmplID = otdb.query("select * from copyTree(1, %s)" % newMasterTmplID).getresult()[0][0]
     print "   copy has ID: %s" % newTmplID
     otdb.query("select * from setDescription(1, %s, '%s')" % (newTmplID, orgTmplInfo['description']))
-    otdb.query("select * from classify(1, %s, '%s')" % (newTmplID, orgTmplInfo['classification']))
     # set the old default template state to obsolete (1200)
     otdb.query("select * from settreestate(1, %s, '1200')" % (orgTmplID))
     # rename the old template with a '# ' before its original name
-    otdb.query("select * from assignTemplateName(1, %s, '#%-.31s')" % (orgTmplID, orgTmplInfo['treeName']))
+    otdb.query("select * from assignTemplateName(1, %s, '#%-31.31s')" % (orgTmplID, orgTmplInfo['treeName']))
     otdb.query("select * from assignTemplateName(1, %s, '%s')" % (newTmplID, orgTmplInfo['treeName']))
-    otdb.query("select * from assignProcessType (1, %s, '#%-.19s', '#%-.49s', '#%-.29s')" % (orgTmplID, orgTmplInfo['processType'], orgTmplInfo['processSubtype'], orgTmplInfo['strategy']))
-    otdb.query("select * from assignProcessType (1, %s, '%s', '%s', '%s')" % (newTmplID, orgTmplInfo['processType'], orgTmplInfo['processSubtype'], orgTmplInfo['strategy']))
 
     # loop over all values that were changed in the old template
     treeIdentification = "%s%d" % (orgTmplInfo['nodeName'], orgTmplInfo['version'])
@@ -79,8 +76,8 @@ def createNewDefaultTemplate(orgTmplID, newMasterTmplID, orgTmplInfo):
 
     # get a list with the removed items
     parentNodes = {}
-    command = """comm -13 dfltTree%s MasterTree_%s | cut -d'=' -f1 | sort >diff1 ; 
-                 comm -23 dfltTree%s MasterTree_%s | cut -d'=' -f1 | sort >diff2 ; 
+    command = """comm -13 dfltTree%s MasterTree_%s | cut -d'=' -f1 >diff1 ; 
+                 comm -23 dfltTree%s MasterTree_%s | cut -d'=' -f1 >diff2 ; 
                  comm -23 diff1 diff2 ; rm diff1 diff2
               """ % (orgTmplID, treeIdentification, orgTmplID, treeIdentification)
     # loop over the list: when the NODE(=parent) of this parameter was removed in the ORIGINAL default template
@@ -168,20 +165,16 @@ if __name__ == '__main__':
     for dfltTemplate in dfltTemplateIDs:
         state       = otdb.query("select state from getTreeInfo(%s, 'false')" % dfltTemplate['treeid']).getresult()[0][0]
         if state != 1200 :
-            treeInfo  = otdb.query("select classification,description from getTreeInfo(%s, 'false')" % dfltTemplate['treeid']).getresult()[0]
-            nodeDefID = otdb.query("select * from getTopNode(%s)" % dfltTemplate['treeid']).dictresult()[0]
-            nodeInfo  = otdb.query("select * from getVICnodedef(%s)" % nodeDefID['paramdefid']).dictresult()
+            description = otdb.query("select description from getTreeInfo(%s, 'false')" % dfltTemplate['treeid']).getresult()[0][0]
+            nodeDefID   = otdb.query("select * from getTopNode(%s)" % dfltTemplate['treeid']).dictresult()[0]
+            nodeInfo    = otdb.query("select * from getVICnodedef(%s)" % nodeDefID['paramdefid']).dictresult()
             dfltTmplInfo[dfltTemplate['treeid']] = \
-                    {'componentID'    : nodeDefID['paramdefid'], \
-                     'nodeID'         : nodeDefID['nodeid'], \
-                     'nodeName'       : nodeDefID['name'], \
-                     'version'        : nodeInfo[0]['version'], \
-                     'treeName'       : dfltTemplate['name'], \
-                     'processType'    : dfltTemplate['processtype'], \
-                     'processSubtype' : dfltTemplate['processsubtype'], \
-                     'strategy'       : dfltTemplate['strategy'], \
-                     'classification' : treeInfo[0], \
-                     'description'    : treeInfo[1]}
+                    {'componentID' : nodeDefID['paramdefid'], \
+                     'nodeID'      : nodeDefID['nodeid'], \
+                     'nodeName'    : nodeDefID['name'], \
+                     'version'     : nodeInfo[0]['version'], \
+                     'treeName'    : dfltTemplate['name'], \
+                     'description' : description}
             print "   DefaultTemplate %s starts at %s (version %d) : %s" % \
                    (dfltTemplate['treeid'], nodeDefID['name'], nodeInfo[0]['version'], dfltTemplate['name'])
 

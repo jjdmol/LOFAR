@@ -25,7 +25,7 @@
 #include <BBSKernel/MeasurementAIPS.h>
 #include <BBSKernel/Exceptions.h>
 
-//#include <cstring>
+#include <cstring>
 #include <Common/Timer.h>
 #include <Common/lofar_algorithm.h>
 #include <Common/LofarLogger.h>
@@ -79,16 +79,6 @@ namespace LOFAR
 namespace BBS
 {
 
-namespace
-{
-    bool hasColumn(const Table &table, const string &column);
-    bool hasSubTable(const Table &table, const string &name);
-    Table getSubTable(const Table &table, const string &name);
-
-    Station::Ptr readStation(const Table &table, unsigned int id,
-        const string &name, const MPosition &position);
-}
-
 MeasurementAIPS::MeasurementAIPS(const string &filename,
     unsigned int idObservation, unsigned int idField,
     unsigned int idDataDescription)
@@ -99,7 +89,7 @@ MeasurementAIPS::MeasurementAIPS(const string &filename,
         itsIdDataDescription(idDataDescription)
 {
     // Get information about the telescope (instrument).
-    itsInstrument = readInstrument(itsMS, itsIdObservation);
+    initInstrument();
 
     // Get the reference directions for the selected field (i.e. phase center,
     // delay center, tile delay center).
@@ -137,7 +127,7 @@ VisBuffer::Ptr MeasurementAIPS::read(const VisSelection &selection,
     // Find the column with covariance information associated with the specified
     // column.
     string columnCov = getLinkedCovarianceColumn(column,
-        hasColumn(itsMS, "WEIGHT_SPECTRUM") ? "WEIGHT_SPECTRUM" : "WEIGHT");
+        hasColumn("WEIGHT_SPECTRUM") ? "WEIGHT_SPECTRUM" : "WEIGHT");
 
     // Create cell slicers for array columns.
     Slicer slicer = getCellSlicer(selection);
@@ -319,7 +309,7 @@ void MeasurementAIPS::write(VisBuffer::Ptr buffer,
     ASSERT(itsMS.isWritable());
 
     // Add visbility column if it does not exist.
-    if(!hasColumn(itsMS, column))
+    if(!hasColumn(column))
     {
         LOG_INFO_STR("Creating visibility column: " << column);
         createVisibilityColumn(column);
@@ -337,7 +327,7 @@ void MeasurementAIPS::write(VisBuffer::Ptr buffer,
         setLinkedCovarianceColumn(column, columnCov);
 
         // Add covariance column if it does not exist.
-        if(!hasColumn(itsMS, columnCov))
+        if(!hasColumn(columnCov))
         {
             LOG_INFO_STR("Creating covariance column: " << columnCov);
             createCovarianceColumn(columnCov);
@@ -520,7 +510,7 @@ void MeasurementAIPS::write(VisBuffer::Ptr buffer,
 
 void MeasurementAIPS::writeHistory(const ParameterSet &parset) const
 {
-    Table tab_history = getSubTable(itsMS, "HISTORY");
+    Table tab_history = getSubTable("HISTORY");
     tab_history.reopenRW();
 
     ScalarColumn<double> c_time(tab_history, "TIME");
@@ -602,14 +592,182 @@ BaselineMask MeasurementAIPS::asMask(const string &filter) const
     return mask;
 }
 
+void MeasurementAIPS::initInstrument()
+{
+    // Get station names and positions in ITRF coordinates.
+    ROMSAntennaColumns antenna(itsMS.antenna());
+    ROMSObservationColumns observation(itsMS.observation());
+
+    ASSERT(observation.nrow() > itsIdObservation);
+    ASSERT(!observation.flagRow()(itsIdObservation));
+
+    // Get instrument name.
+    string name(observation.telescopeName()(itsIdObservation));
+
+    // Get station positions.
+    MVPosition centroid;
+    vector<Station::Ptr> stations(antenna.nrow());
+    for(unsigned int i = 0; i < stations.size(); ++i)
+    {
+        // Get station name and ITRF position.
+        MPosition position = MPosition::Convert(antenna.positionMeas()(i),
+            MPosition::ITRF)();
+
+        // Store station information.
+        stations[i] = initStation(i, antenna.name()(i), position);
+
+        // Update ITRF centroid.
+        centroid += position.getValue();
+    }
+
+    // Get the instrument position in ITRF coordinates, or use the centroid
+    // of the station positions if the instrument position is unknown.
+    MPosition position;
+    if(MeasTable::Observatory(position, name))
+    {
+        position = MPosition::Convert(position, MPosition::ITRF)();
+    }
+    else
+    {
+        LOG_WARN("Instrument position unknown; will use centroid of stations.");
+        ASSERT(antenna.nrow() != 0);
+        centroid *= 1.0 / static_cast<double>(antenna.nrow());
+        position = MPosition(centroid, MPosition::ITRF);
+    }
+
+    itsInstrument = Instrument::Ptr(new Instrument(name, position,
+        stations.begin(), stations.end()));
+}
+
+Station::Ptr MeasurementAIPS::initStation(unsigned int id, const string &name,
+    const MPosition &position) const
+{
+    if(!hasSubTable("LOFAR_ANTENNA_FIELD"))
+    {
+        return Station::Ptr(new Station(name, position));
+    }
+
+    Table tab_field = getSubTable("LOFAR_ANTENNA_FIELD");
+    tab_field = tab_field(tab_field.col("ANTENNA_ID") == static_cast<Int>(id));
+
+    const size_t nFields = tab_field.nrow();
+    if(nFields < 1 || nFields > 2)
+    {
+        LOG_WARN_STR("Antenna " << name << " consists of an incompatible number"
+            " of antenna fields. Beam model simulation will not work for this"
+            " antenna.");
+        return Station::Ptr(new Station(name, position));
+    }
+
+    ROScalarColumn<String> c_name(tab_field, "NAME");
+    ROArrayQuantColumn<Double> c_position(tab_field, "POSITION", "m");
+    ROArrayQuantColumn<Double> c_axes(tab_field, "COORDINATE_AXES", "m");
+    ROArrayQuantColumn<Double> c_tile_offset(tab_field, "TILE_ELEMENT_OFFSET",
+        "m");
+    ROArrayQuantColumn<Double> c_offset(tab_field, "ELEMENT_OFFSET", "m");
+    ROArrayColumn<Bool> c_flag(tab_field, "ELEMENT_FLAG");
+
+    AntennaField::Ptr field[2];
+    for(size_t i = 0; i < nFields; ++i)
+    {
+        // Read antenna field center (ITRF).
+        Vector<Quantum<Double> > aips_position = c_position(i);
+        ASSERT(aips_position.size() == 3);
+
+        Vector3 position = {{aips_position(0).getValue(),
+            aips_position(1).getValue(), aips_position(2).getValue()}};
+
+        // Read antenna field coordinate axes (ITRF).
+        Matrix<Quantum<Double> > aips_axes = c_axes(i);
+        ASSERT(aips_axes.shape().isEqual(IPosition(2, 3, 3)));
+
+        Vector3 P = {{aips_axes(0, 0).getValue(), aips_axes(1, 0).getValue(),
+            aips_axes(2, 0).getValue()}};
+        Vector3 Q = {{aips_axes(0, 1).getValue(), aips_axes(1, 1).getValue(),
+            aips_axes(2, 1).getValue()}};
+        Vector3 R = {{aips_axes(0, 2).getValue(), aips_axes(1, 2).getValue(),
+            aips_axes(2, 2).getValue()}};
+
+        // Store information as AntennaField.
+        field[i] = AntennaField::Ptr(new AntennaField(c_name(i), position, P,
+            Q, R));
+
+        // Read offsets (ITRF) of the dipoles within a tile for HBA antenna
+        // fields.
+        if(c_name(i) != "LBA")
+        {
+            // Read tile configuration for HBA antenna fields.
+            Matrix<Quantum<Double> > aips_offset = c_tile_offset(i);
+            ASSERT(aips_offset.nrow() == 3);
+
+            const size_t nElement = aips_offset.ncolumn();
+            for(size_t j = 0; j < nElement; ++j)
+            {
+                Vector3 offset = {{aips_offset(0, j).getValue(),
+                    aips_offset(1, j).getValue(),
+                    aips_offset(2, j).getValue()}};
+
+                field[i]->appendTileElement(offset);
+            }
+        }
+
+        // Read element offsets and flags.
+        Matrix<Quantum<Double> > aips_offset = c_offset(i);
+        Matrix<Bool> aips_flag = c_flag(i);
+
+        const size_t nElement = aips_offset.ncolumn();
+        ASSERT(aips_offset.shape().isEqual(IPosition(2, 3, nElement)));
+        ASSERT(aips_flag.shape().isEqual(IPosition(2, 2, nElement)));
+
+        for(size_t j = 0; j < nElement; ++j)
+        {
+            AntennaField::Element element;
+            element.offset[0] = aips_offset(0, j).getValue();
+            element.offset[1] = aips_offset(1, j).getValue();
+            element.offset[2] = aips_offset(2, j).getValue();
+            element.flag[0] = aips_flag(0, j);
+            element.flag[1] = aips_flag(1, j);
+
+            field[i]->appendElement(element);
+        }
+    }
+
+    return (nFields == 1 ? Station::Ptr(new Station(name, position, field[0]))
+        : Station::Ptr(new Station(name, position, field[0], field[1])));
+}
+
 void MeasurementAIPS::initReferenceDirections()
 {
-    itsPhaseReference = MDirection::Convert(readPhaseReference(itsMS,
-        itsIdField), MDirection::J2000)();
-    itsDelayReference = MDirection::Convert(readDelayReference(itsMS,
-        itsIdField), MDirection::J2000)();
-    itsTileReference = MDirection::Convert(readTileReference(itsMS,
-        itsIdField), MDirection::J2000)();
+    // Get phase center as RA and DEC (J2000).
+    ROMSFieldColumns field(itsMS.field());
+    ASSERT(field.nrow() > itsIdField);
+    ASSERT(!field.flagRow()(itsIdField));
+
+    itsPhaseReference = MDirection::Convert(field.phaseDirMeas(itsIdField),
+        MDirection::J2000)();
+    itsDelayReference = MDirection::Convert(field.delayDirMeas(itsIdField),
+        MDirection::J2000)();
+
+    // By default, the tile beam reference direction is assumed to be equal
+    // to the station beam reference direction (for backward compatibility,
+    // and for non-HBA measurements).
+    itsTileReference = itsDelayReference;
+
+    // The MeasurementSet class does not support LOFAR specific columns, so we
+    // use ROArrayMeasColumn to read the tile beam reference direction.
+    Table tab_field = getSubTable("FIELD");
+
+    static const String columnName = "LOFAR_TILE_BEAM_DIR";
+    if(hasColumn(tab_field, columnName))
+    {
+        ROArrayMeasColumn<MDirection> c_direction(tab_field, columnName);
+        if(c_direction.isDefined(itsIdField))
+        {
+            itsTileReference =
+                MDirection::Convert(c_direction(itsIdField)(IPosition(1, 0)),
+                MDirection::J2000)();
+        }
+    }
 }
 
 void MeasurementAIPS::initDimensions()
@@ -728,6 +886,16 @@ void MeasurementAIPS::initDimensions()
     itsDims.setCorrelations(correlations);
 }
 
+bool MeasurementAIPS::hasColumn(const string &column) const
+{
+    return hasColumn(itsMS, column);
+}
+
+bool MeasurementAIPS::hasColumn(const Table &table, const string &column) const
+{
+    return table.tableDesc().isColumn(column);
+}
+
 void MeasurementAIPS::createVisibilityColumn(const string &name)
 {
     // Added column should get the same shape as the other data columns in
@@ -780,7 +948,7 @@ void MeasurementAIPS::createCovarianceColumn(const string &name)
     itsMS.addColumn(columnDescriptor, storageManager);
 
     // Figure out which column to use as input.
-    bool hasSpectrum = hasColumn(itsMS, "WEIGHT_SPECTRUM");
+    bool hasSpectrum = hasColumn("WEIGHT_SPECTRUM");
     string weightColumn = hasSpectrum ? "WEIGHT_SPECTRUM" : "WEIGHT";
 
     // Initialize the covariance column using the weight (assumed to equal one
@@ -882,6 +1050,16 @@ void MeasurementAIPS::createCovarianceColumn(const string &name)
             == static_cast<Int>(itsIdField)
         && itsMS.col("DATA_DESC_ID")
             == static_cast<Int>(itsIdDataDescription));
+}
+
+bool MeasurementAIPS::hasSubTable(const string &table) const
+{
+    return itsMS.keywordSet().isDefined(table);
+}
+
+Table MeasurementAIPS::getSubTable(const string &table) const
+{
+    return itsMS.keywordSet().asTable(table);
 }
 
 MDirection MeasurementAIPS::getColumnPhaseReference(const string &column) const
@@ -988,7 +1166,7 @@ BaselineMask MeasurementAIPS::getBaselineMask(const VisSelection &selection)
     return asMask("*&&");
 }
 
-// NOTE: OPTIMIZATION OPPORTUNITY: When reading all channels, do not use a
+// NOTE: OPTIMIZATION OPPORTUNITY: when reading all channels, do not use a
 // slicer at all.
 Interval<size_t>
 MeasurementAIPS::getChannelRange(const VisSelection &selection) const
@@ -1071,7 +1249,7 @@ Slicer MeasurementAIPS::getCovarianceSlicer(const VisSelection &selection,
     ROTableColumn info(itsMS, column);
     ASSERTSTR(info.shapeColumn().isEqual(IPosition(3, nCorrelations(),
         nCorrelations(), nFreq())), "Covariance column has unexpected shape: "
-        << column << " shape: " << info.shapeColumn());
+        << column << " shape: " << shape);
 
     Interval<size_t> range(getChannelRange(selection));
     return Slicer(IPosition(3, 0, 0, range.start), IPosition(3,
@@ -1283,229 +1461,6 @@ VisDimensions MeasurementAIPS::getDimensionsImpl(const Table &tab_selection,
 
     return dims;
 }
-
-Instrument::Ptr readInstrument(const MeasurementSet &ms,
-  unsigned int idObservation)
-{
-    ROMSObservationColumns observation(ms.observation());
-    ASSERT(observation.nrow() > idObservation);
-    ASSERT(!observation.flagRow()(idObservation));
-
-    // Get station names and positions in ITRF coordinates.
-    ROMSAntennaColumns antenna(ms.antenna());
-
-    // Get station positions.
-    MVPosition centroid;
-    vector<Station::Ptr> stations(antenna.nrow());
-    for(unsigned int i = 0; i < stations.size(); ++i)
-    {
-        // Get station name and ITRF position.
-        MPosition position = MPosition::Convert(antenna.positionMeas()(i),
-            MPosition::ITRF)();
-
-        // Store station information.
-        stations[i] = readStation(ms, i, antenna.name()(i), position);
-
-        // Update ITRF centroid.
-        centroid += position.getValue();
-    }
-
-    // Get the instrument position in ITRF coordinates, or use the centroid
-    // of the station positions if the instrument position is unknown.
-    MPosition position;
-
-    // Read observatory name and try to look-up its position.
-    const string observatory = observation.telescopeName()(idObservation);
-    if(MeasTable::Observatory(position, observatory))
-    {
-        position = MPosition::Convert(position, MPosition::ITRF)();
-    }
-    else
-    {
-        LOG_WARN("Instrument position unknown; will use centroid of stations.");
-        ASSERT(antenna.nrow() != 0);
-        centroid *= 1.0 / static_cast<double>(antenna.nrow());
-        position = MPosition(centroid, MPosition::ITRF);
-    }
-
-    return Instrument::Ptr(new Instrument(observatory, position,
-      stations.begin(), stations.end()));
-}
-
-MDirection readPhaseReference(const MeasurementSet &ms, unsigned int idField)
-{
-    ROMSFieldColumns field(ms.field());
-    ASSERT(field.nrow() > idField);
-    ASSERT(!field.flagRow()(idField));
-
-    return field.phaseDirMeas(idField);
-}
-
-MDirection readDelayReference(const MeasurementSet &ms, unsigned int idField)
-{
-    ROMSFieldColumns field(ms.field());
-    ASSERT(field.nrow() > idField);
-    ASSERT(!field.flagRow()(idField));
-
-    return field.delayDirMeas(idField);
-}
-
-MDirection readTileReference(const MeasurementSet &ms, unsigned int idField)
-{
-    // The MeasurementSet class does not support LOFAR specific columns, so we
-    // use ROArrayMeasColumn to read the tile beam reference direction.
-    Table tab_field = getSubTable(ms, "FIELD");
-
-    static const String columnName = "LOFAR_TILE_BEAM_DIR";
-    if(hasColumn(tab_field, columnName))
-    {
-        ROArrayMeasColumn<MDirection> c_direction(tab_field, columnName);
-        if(c_direction.isDefined(idField))
-        {
-            return c_direction(idField)(IPosition(1, 0));
-        }
-    }
-
-    // By default, the tile beam reference direction is assumed to be equal
-    // to the station beam reference direction (for backward compatibility,
-    // and for non-HBA measurements).
-    return readDelayReference(ms, idField);
-}
-
-double readFreqReference(const MeasurementSet &ms,
-    unsigned int idDataDescription)
-{
-    // Read spectral window id.
-    ROMSDataDescColumns desc(ms.dataDescription());
-    ASSERT(desc.nrow() > idDataDescription);
-    ASSERT(!desc.flagRow()(idDataDescription));
-
-    const unsigned int idWindow = desc.spectralWindowId()(idDataDescription);
-
-    // Read reference frequency.
-    ROMSSpWindowColumns window(ms.spectralWindow());
-    ASSERT(window.nrow() > idWindow);
-    ASSERT(!window.flagRow()(idWindow));
-
-    return window.refFrequency()(idWindow);
-}
-
-namespace
-{
-
-bool hasColumn(const Table &table, const string &column)
-{
-    return table.tableDesc().isColumn(column);
-}
-
-bool hasSubTable(const Table &table, const string &name)
-{
-    return table.keywordSet().isDefined(name);
-}
-
-Table getSubTable(const Table &table, const string &name)
-{
-    return table.keywordSet().asTable(name);
-}
-
-Station::Ptr readStation(const Table &table, unsigned int id,
-    const string &name, const MPosition &position)
-{
-    if(!hasSubTable(table, "LOFAR_ANTENNA_FIELD"))
-    {
-        return Station::Ptr(new Station(name, position));
-    }
-
-    Table tab_field = getSubTable(table, "LOFAR_ANTENNA_FIELD");
-    tab_field = tab_field(tab_field.col("ANTENNA_ID") == static_cast<Int>(id));
-
-    const size_t nFields = tab_field.nrow();
-    if(nFields < 1 || nFields > 2)
-    {
-        LOG_WARN_STR("Antenna " << name << " consists of an incompatible number"
-            " of antenna fields. Beam model simulation will not work for this"
-            " antenna.");
-        return Station::Ptr(new Station(name, position));
-    }
-
-    ROScalarColumn<String> c_name(tab_field, "NAME");
-    ROArrayQuantColumn<Double> c_position(tab_field, "POSITION", "m");
-    ROArrayQuantColumn<Double> c_axes(tab_field, "COORDINATE_AXES", "m");
-    ROArrayQuantColumn<Double> c_tile_offset(tab_field, "TILE_ELEMENT_OFFSET",
-        "m");
-    ROArrayQuantColumn<Double> c_offset(tab_field, "ELEMENT_OFFSET", "m");
-    ROArrayColumn<Bool> c_flag(tab_field, "ELEMENT_FLAG");
-
-    AntennaField::Ptr field[2];
-    for(size_t i = 0; i < nFields; ++i)
-    {
-        // Read antenna field center (ITRF).
-        Vector<Quantum<Double> > aips_position = c_position(i);
-        ASSERT(aips_position.size() == 3);
-
-        Vector3 position = {{aips_position(0).getValue(),
-            aips_position(1).getValue(), aips_position(2).getValue()}};
-
-        // Read antenna field coordinate axes (ITRF).
-        Matrix<Quantum<Double> > aips_axes = c_axes(i);
-        ASSERT(aips_axes.shape().isEqual(IPosition(2, 3, 3)));
-
-        Vector3 P = {{aips_axes(0, 0).getValue(), aips_axes(1, 0).getValue(),
-            aips_axes(2, 0).getValue()}};
-        Vector3 Q = {{aips_axes(0, 1).getValue(), aips_axes(1, 1).getValue(),
-            aips_axes(2, 1).getValue()}};
-        Vector3 R = {{aips_axes(0, 2).getValue(), aips_axes(1, 2).getValue(),
-            aips_axes(2, 2).getValue()}};
-
-        // Store information as AntennaField.
-        field[i] = AntennaField::Ptr(new AntennaField(c_name(i), position, P,
-            Q, R));
-
-        // Read offsets (ITRF) of the dipoles within a tile for HBA antenna
-        // fields.
-        if(c_name(i) != "LBA")
-        {
-            // Read tile configuration for HBA antenna fields.
-            Matrix<Quantum<Double> > aips_offset = c_tile_offset(i);
-            ASSERT(aips_offset.nrow() == 3);
-
-            const size_t nElement = aips_offset.ncolumn();
-            for(size_t j = 0; j < nElement; ++j)
-            {
-                Vector3 offset = {{aips_offset(0, j).getValue(),
-                    aips_offset(1, j).getValue(),
-                    aips_offset(2, j).getValue()}};
-
-                field[i]->appendTileElement(offset);
-            }
-        }
-
-        // Read element offsets and flags.
-        Matrix<Quantum<Double> > aips_offset = c_offset(i);
-        Matrix<Bool> aips_flag = c_flag(i);
-
-        const size_t nElement = aips_offset.ncolumn();
-        ASSERT(aips_offset.shape().isEqual(IPosition(2, 3, nElement)));
-        ASSERT(aips_flag.shape().isEqual(IPosition(2, 2, nElement)));
-
-        for(size_t j = 0; j < nElement; ++j)
-        {
-            AntennaField::Element element;
-            element.offset[0] = aips_offset(0, j).getValue();
-            element.offset[1] = aips_offset(1, j).getValue();
-            element.offset[2] = aips_offset(2, j).getValue();
-            element.flag[0] = aips_flag(0, j);
-            element.flag[1] = aips_flag(1, j);
-
-            field[i]->appendElement(element);
-        }
-    }
-
-    return (nFields == 1 ? Station::Ptr(new Station(name, position, field[0]))
-        : Station::Ptr(new Station(name, position, field[0], field[1])));
-}
-
-} //# namespace unnamed
 
 } //# namespace BBS
 } //# namespace LOFAR

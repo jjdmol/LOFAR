@@ -1193,12 +1193,8 @@ event = {
     type = "int16";
   };
   param = {
-    name = "max_rspboards";
+    name = "max_rspboards"; // used to be n_tdboards
     type = "int16";
-  };
-  param = {
-    name = "hasSplitter";
-    type = "bool";
   };
 };
 
@@ -2252,11 +2248,7 @@ event = {
     userdefined;
   };
   param = {
-    name = "switch_on0";
-    type = "bool";
-  };
-  param = {
-    name = "switch_on1";
+    name = "switch_on";
     type = "bool";
   };
 };
@@ -2302,11 +2294,7 @@ event = {
     type = "int16";
   };
   param = {
-    name = "switch_on0";
-    type = "bool";
-  };
-  param = {
-    name = "switch_on1";
+    name = "switch_on";
     type = "bool";
   };
 };

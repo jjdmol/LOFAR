@@ -1,5 +1,5 @@
 [license]
-code          = "CS401C 40501009571"
+code          = "CS401C 92464652419"
 version       = 30800002
 comment       = "Core Station CS401"
 sn            = "471_3031_2_Astron_Gen_II_1_38"

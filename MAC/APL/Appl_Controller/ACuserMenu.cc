@@ -313,7 +313,7 @@ void showMenu()
 	cout << "Enter letter of your choice: ";
 }
 
-int main (int /*argc*/, char *argv[]) {
+int main (int argc, char *argv[]) {
 	ConfigLocator	aCL;
 	string			progName(basename(argv[0]));
 #ifdef HAVE_LOG4CPLUS

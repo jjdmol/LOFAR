@@ -28,6 +28,7 @@
 #include <Job.h>
 #include <JobQueue.h>
 #include <Stream/SocketStream.h>
+#include <StreamMultiplexer.h>
 
 #include <string>
 
@@ -59,8 +60,6 @@ void CommandServer::handleCommand(const std::string &command)
     itsNrJobsCreated.up();
   } else if (command == "quit") {
     itsQuit = true;
-  } else if (command == "threads") {
-    globalThreadMap.report();
 #if defined HAVE_BGP    
   } else if (command == "debug") {
     LOGCOUT_SETLEVEL(8);
@@ -164,15 +163,9 @@ void CommandServer::jobCleanUpThread()
 
 CommandServer::CommandServer()
 :
-  itsQuit(false)
+  itsQuit(false),
+  itsJobCleanUpThread(this, &CommandServer::jobCleanUpThread, "JobCleanUpThread", 65536)
 {
-}
-
-
-void CommandServer::start()
-{
-  itsJobCleanUpThread = new Thread(this, &CommandServer::jobCleanUpThread, "JobCleanUpThread", 65536);
-
   if (myPsetNumber == 0)
     commandMaster();
   else

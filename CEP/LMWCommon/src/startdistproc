@@ -47,7 +47,6 @@ wait=1
 dsn=
 cdn=
 hfn=
-ndir=0
 dirs=
 fdp=
 master=localhost
@@ -103,10 +102,6 @@ do
   elif [ "$1" = "-nohfn" ]; then
     shift
     hfn=
-  elif [ "$1" = "-ndir" ]; then
-    shift
-    ndir="$1"
-    shift
   elif [ "$1" = "-dirs" ]; then
     shift
     dirs="$1"
@@ -185,7 +180,7 @@ if [ $help = 1 ]; then
   echo 'Run as:'
   echo ' startdistproc [-useenv [envfilename]] [-wait] [-killonfail]'
   echo '               [-cdn clusterdescname] [-dsn datasetname]'
-  echo '               [-ndir ndirectories] [-dirs directories] [-mode mode]'
+  echo '               [-dirs directories] [-mode mode]'
   echo '               [-hfn hostfilename] [-fdp finddproc-path]'
   echo '               [-logfile logfilename] [-dry]'
   echo '               [-extrahosts "host1 host2 ..."] [-noextrahosts]'
@@ -209,8 +204,6 @@ if [ $help = 1 ]; then
   echo '                        This is useful if a distributed dataset has'
   echo '                        to be created for which no VDS file exists yet.'
   echo '                        -dsn and dirs cannot be given both.'
-  echo '  -ndir ndirectories    The number of directories to use. If more than'
-  echo '                        length of dirs, dirs is wrapped.'
   echo '  -hfn hostfilename     The name of the generated hostfile.'
   echo '                        It defaults to /tmp/machinefile_${USER}_$$'
   echo '  -fdp finddproc-path   Path where to find finddproc.'
@@ -295,7 +288,7 @@ if test "$dsn" != ""; then
   fi
   "${fdp}finddproc" "$dsn" "$cdn" $masterh $extra > "$hfn" || exit 1
 else
-  "${fdp}finddproc" -ndir "$ndir" -dirs "$dirs" "$cdn" "$masterh" $extra > "$hfn" || exit 1
+  "${fdp}finddproc" -dirs "$dirs" "$cdn" "$masterh" $extra > "$hfn" || exit 1
 fi  
 np=`wc -l "$hfn" | awk '{print $1}'`
 

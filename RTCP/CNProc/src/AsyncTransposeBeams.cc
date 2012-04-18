@@ -33,7 +33,7 @@ union Tag {
 };
 
 AsyncTransposeBeams::AsyncTransposeBeams(
-  bool isTransposeInput, bool isTransposeOutput, unsigned nrSubbands,
+  bool isTransposeInput, bool isTransposeOutput, unsigned nrSubbands, unsigned nrSubbeams,
   const LocationInfo &locationInfo,
   const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &inputCores, const std::vector<unsigned> &outputPsets, const std::vector<unsigned> &outputCores )
 :
@@ -46,7 +46,8 @@ AsyncTransposeBeams::AsyncTransposeBeams(
   itsOutputCores(outputCores),
   itsLocationInfo(locationInfo),
   itsCommHandles(itsNrCommunications,nrSubbands),
-  itsLocalSubbands(nrSubbands)
+  itsLocalSubbands(nrSubbands),
+  itsNrSubbeams(nrSubbeams)
 {
 }
 
@@ -123,7 +124,7 @@ unsigned AsyncTransposeBeams::waitForAnyReceive()
 }
 
 
-template <typename T, unsigned DIM> void AsyncTransposeBeams::asyncSend(unsigned outputPsetIndex, unsigned coreIndex, unsigned subband, unsigned stokes, unsigned globalBeam, const SampleData<T,DIM> *inputData)
+template <typename T, unsigned DIM> void AsyncTransposeBeams::asyncSend(unsigned outputPsetIndex, unsigned coreIndex, unsigned subband, unsigned localBeam, unsigned subbeam, unsigned globalBeam, const SampleData<T,DIM> *inputData)
 {
   unsigned pset = itsOutputPsets[outputPsetIndex];
   unsigned core = itsOutputCores[coreIndex];
@@ -134,7 +135,7 @@ template <typename T, unsigned DIM> void AsyncTransposeBeams::asyncSend(unsigned
     const void   *ptr;
     const size_t size;
   } toWrite[itsNrCommunications] = {
-    { inputData->samples[stokes].origin(), inputData->samples[stokes].num_elements() * sizeof(T) }
+    { inputData->samples[localBeam][subbeam].origin(), inputData->samples[localBeam][subbeam].num_elements() * sizeof(T) }
   };
 
   // write it
@@ -147,14 +148,17 @@ template <typename T, unsigned DIM> void AsyncTransposeBeams::asyncSend(unsigned
     t.info.beam       = globalBeam;
 
 #ifdef DEBUG
-    LOG_DEBUG_STR( "Sending beam " << globalBeam << " (local: stokes " << stokes << ") subband " << subband << " to pset " << pset << " core " << core << " = rank " << rank << ", tag " << t.nr );
+    LOG_DEBUG_STR( "Sending beam " << globalBeam << " (local: beam " << localBeam << " subbeam " << subbeam << ") subband " << subband << " to pset " << pset << " core " << core << " = rank " << rank << ", tag " << t.nr );
 #endif
     itsAsyncComm.asyncWrite(toWrite[h].ptr, toWrite[h].size, rank, t.nr);
   }
 }
 
 template void AsyncTransposeBeams::postReceive(SampleData<float,3> *, unsigned, unsigned, unsigned, unsigned, unsigned);
-template void AsyncTransposeBeams::asyncSend(unsigned, unsigned, unsigned, unsigned, unsigned, const SampleData<float,3> *);
+template void AsyncTransposeBeams::asyncSend(unsigned, unsigned, unsigned, unsigned, unsigned, unsigned, const SampleData<float,4> *);
+
+template void AsyncTransposeBeams::postReceive(SampleData<float,4> *, unsigned, unsigned, unsigned, unsigned, unsigned);
+template void AsyncTransposeBeams::asyncSend(unsigned, unsigned, unsigned, unsigned, unsigned, unsigned, const SampleData<float,5> *);
 
 void AsyncTransposeBeams::waitForAllSends()
 {

@@ -21,14 +21,15 @@
 //#  $Id$
 
 #include <lofar_config.h>
+
+#include <GCF/PVSS/PVSSinfo.h>
+#include <GCF/PVSS/PVSSservice.h>
+#include <GCF/PVSS/PVSSresult.h>
 #include <Manager.hxx>
 #include <Datapoint.hxx>
 #include <DpContainer.hxx>
 #include <DpIdentification.hxx>
 #include <Common/StringUtil.h>
-#include <GCF/PVSS/PVSSinfo.h>
-#include <GCF/PVSS/PVSSservice.h>
-#include <GCF/PVSS/PVSSresult.h>
 
 namespace LOFAR {
  namespace GCF {
@@ -121,11 +122,11 @@ bool PVSSinfo::typeExists (const string& dpTypeName)
 	DpTypeId 	dpTypeId; 
 	if (Manager::getTypeId(pvssTypeName, dpTypeId) == PVSS_TRUE) {
 		LOG_TRACE_VAR_STR("typeExists(" << dpTypeName << "): FALSE");
-		return (true);
+		return (false);
 	}
 
 	LOG_TRACE_VAR_STR("typeExists(" << dpTypeName << "): OK");
-	return (false);
+	return (true);
 }
 
 //

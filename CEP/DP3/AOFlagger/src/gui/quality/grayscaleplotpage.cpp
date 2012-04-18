@@ -28,7 +28,6 @@
 #include <AOFlagger/quality/statisticsderivator.h>
 
 GrayScalePlotPage::GrayScalePlotPage() :
-	_expander("Side bar"),
 	_statisticKindFrame("Statistic kind"),
 	_countButton("Count"),
 	_meanButton("Mean"),
@@ -65,15 +64,13 @@ GrayScalePlotPage::GrayScalePlotPage() :
 	initPhaseButtons();
 	initPlotOptions();
 	
-	_expander.add(_sideBox);
-	pack_start(_expander, Gtk::PACK_SHRINK);
+	pack_start(_sideBox, Gtk::PACK_SHRINK);
 	
 	_imageWidget.SetCairoFilter(Cairo::FILTER_NEAREST);
 	_imageWidget.SetColorMap(ImageWidget::HotColdMap);
 	_imageWidget.SetRange(ImageWidget::MinMax);
 	_imageWidget.SetScaleOption(ImageWidget::LogScale);
 	_imageWidget.SetZAxisDescription("Statistical value");
-	_imageWidget.SetManualZAxisDescription(true);
 	_imageWidget.set_size_request(300, 300);
 	
 	pack_start(_imageWidget);

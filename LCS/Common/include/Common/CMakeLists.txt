@@ -58,10 +58,9 @@ install(FILES
   Numeric.h
   ObjectFactory.h
   OpenMP.h
-  ParameterRecord.h
+  ParameterValue.h
   ParameterSet.h
   ParameterSetImpl.h
-  ParameterValue.h
   PrettyUnits.h
   Process.h
   ReadLine.h

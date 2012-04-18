@@ -23,19 +23,19 @@
 # $Id$
 
 # Find the path used to start the script.
-pgmpath=`dirname "$0"`
-pgmpath=`cd "$pgmpath" > /dev/null 2>&1  &&  pwd`
+pgmpath=`dirname $0`
+pgmpath=`cd $pgmpath > /dev/null 2>&1  &&  pwd`
 
 # Determine the host name to be used. Default is result of hostname.
 # Try if a connection can be made. If not, set it to localhost.
 # This is merely to run the test tParmFacadeDistr.run on all possible systems.
 host=`hostname`
-ssh -o "ConnectTimeout=10" "$host" date > /dev/null 2>&1
+ssh -o "ConnectTimeout=10" $host date > /dev/null 2>&1
 if test $? != 0; then
   echo "localhost is used because $host is unreachable"
   host=localhost
 fi
 
 # Start parmdbremote for each part.
-startdistproc -useenv -mode "$1" -nowait -masterhost "$host" -nostartmaster \
-              -cdn "$2" -dsn "$3" "$pgmpath/parmdbremote-scr" "`pwd`"
+startdistproc -useenv -mode "$1" -nowait -masterhost $host -nostartmaster \
+              -cdn "$2" -dsn "$3" $pgmpath/parmdbremote-scr `pwd`

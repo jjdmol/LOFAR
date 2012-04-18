@@ -323,12 +323,13 @@ namespace LOFAR
         scoped_ptr<const ProcessIdMsg>
           msg(dynamic_cast<ProcessIdMsg*>(connection->recvObject()));
         if(!msg) {
-          THROW(BBSControlException, "Protocol error. Expected a ProcessIdMsg");
+          THROW(SolverControlException, "Protocol error. Expected a"
+            " ProcessIdMsg");
         }
 
         if(!itsCalSession->isKernel(msg->getProcessId())) {
           connection.reset();
-          THROW(BBSControlException, "Process " << msg->getProcessId()
+          THROW(SolverControlException, "Process " << msg->getProcessId()
             << "is not a registered kernel process; disconnected");
         }
 
@@ -338,7 +339,7 @@ namespace LOFAR
           itsKernels.at(index) = KernelConnection(connection, index);
         } catch (std::out_of_range&) {
           connection.reset();
-          THROW(BBSControlException, "Kernel index (" << index << ") out of"
+          THROW(SolverControlException, "Kernel index (" << index << ") out of"
             " range; disconnected");
         }
 
@@ -492,7 +493,7 @@ namespace LOFAR
 
       // Sanity check
       if (itsKernels.size() < accumulate(groups.begin(), groups.end(), 0U)) {
-        THROW (BBSControlException,
+        THROW (SolverControlException,
                "Sum of kernels in subgroups exceeds total number of kernels");
       }
 

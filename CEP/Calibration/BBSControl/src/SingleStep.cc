@@ -91,7 +91,7 @@ namespace LOFAR
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       Step::read(ps);
       itsOutputColumn = ps.getString("Output.Column", "");
-      itsWriteFlags = ps.getBool("Output.WriteFlags", true);
+      itsWriteFlags = ps.getBool("Output.WriteFlags", false);
       itsWriteCov = ps.getBool("Output.WriteCovariance", false);
     }
 

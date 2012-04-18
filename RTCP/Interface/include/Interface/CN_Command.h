@@ -24,7 +24,6 @@
 #define LOFAR_INTERFACE_CN_COMMAND_H
 
 #include <Stream/Stream.h>
-#include <string>
 
 
 namespace LOFAR {
@@ -48,8 +47,6 @@ class CN_Command
 
     void	 read(Stream *);
     void	 write(Stream *) const;
-
-    std::string  name() const;
 
   private:
     struct MarshalledData
@@ -88,18 +85,6 @@ inline void CN_Command::read(Stream *str)
 inline void CN_Command::write(Stream *str) const
 {
   str->write(&itsMarshalledData, sizeof itsMarshalledData);
-}
-
-inline std::string CN_Command::name() const
-{
-  switch(itsMarshalledData.value) {
-    case PREPROCESS:  return "PREPROCESS";
-    case PROCESS:     return "PROCESS";
-    case POSTPROCESS: return "POSTPROCESS";
-    case STOP:        return "STOP";
-  }
-
-  return "BAD COMMAND";
 }
 
 

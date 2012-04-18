@@ -29,81 +29,73 @@ class BeamFormedData: public SampleData<fcomplex,4>
   public:
     typedef SampleData<fcomplex,4> SuperType;
 
-    BeamFormedData(unsigned nrBeams, unsigned nrChannels, unsigned nrSamples, Allocator &allocator = heapAllocator);
+    BeamFormedData(unsigned nrBeams, unsigned nrChannels, unsigned nrSamplesPerIntegration, Allocator &allocator = heapAllocator);
 };
 
 
-class PreTransposeBeamFormedData: public SampleData<float,3> 
+class PreTransposeBeamFormedData: public SampleData<float,5> 
 {
   public:
-    typedef SampleData<float,3> SuperType;
+    typedef SampleData<float,5> SuperType;
 
-    PreTransposeBeamFormedData(unsigned nrStokes, unsigned nrChannels, unsigned nrSamples, Allocator &allocator = heapAllocator);
+    PreTransposeBeamFormedData(unsigned nrBeams, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrStokes, unsigned nrValuesPerStokes, Allocator &allocator = heapAllocator);
 };
 
 
-class TransposedBeamFormedData: public SampleData<float,3>
+class TransposedBeamFormedData: public SampleData<float,4>
 {
   public:
-    typedef SampleData<float,3> SuperType;
+    typedef SampleData<float,4> SuperType;
 
-    TransposedBeamFormedData(unsigned nrSubbands, unsigned nrChannels, unsigned nrSamples, Allocator &allocator = heapAllocator);
-
-    virtual void setDimensions(unsigned nrSubbands, unsigned nrChannels, unsigned nrSamples);
+    TransposedBeamFormedData(unsigned nrSubbands, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrValuesPerStokes, Allocator &allocator = heapAllocator);
 };
 
 
-class FinalBeamFormedData: public SampleData<float,3>
+class FinalBeamFormedData: public SampleData<float,4>
 {
   public:
-    typedef SampleData<float,3> SuperType;
+    typedef SampleData<float,4> SuperType;
 
-    FinalBeamFormedData(unsigned nrSamples, unsigned nrSubbands, unsigned nrChannels, Allocator & = heapAllocator);
+    FinalBeamFormedData(unsigned nrSubbands, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrValuesPerStokes, Allocator & = heapAllocator);
 
-    virtual void setDimensions(unsigned nrSamples, unsigned nrSubbands, unsigned nrChannels);
+    virtual void setNrSubbands(unsigned nrSubbands);
 };
 
 
-inline BeamFormedData::BeamFormedData(unsigned nrBeams, unsigned nrChannels, unsigned nrSamples, Allocator &allocator)
+inline BeamFormedData::BeamFormedData(unsigned nrBeams, unsigned nrChannels, unsigned nrSamplesPerIntegration, Allocator &allocator)
   // The "| 2" significantly improves transpose speeds for particular
   // numbers of stations due to cache conflict effects.  The extra memory
   // is not used.
 :
-  SuperType::SampleData(boost::extents[nrBeams][nrChannels][nrSamples | 2][NR_POLARIZATIONS], nrBeams, allocator)
+  SuperType::SampleData(boost::extents[nrBeams][nrChannels][nrSamplesPerIntegration | 2][NR_POLARIZATIONS], nrBeams, allocator)
 {
 }
 
 
-inline PreTransposeBeamFormedData::PreTransposeBeamFormedData(unsigned nrStokes, unsigned nrChannels, unsigned nrSamples, Allocator &allocator)
+inline PreTransposeBeamFormedData::PreTransposeBeamFormedData(unsigned nrBeams, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrStokes, unsigned nrValuesPerStokes, Allocator &allocator)
 :
-  SuperType::SampleData(boost::extents[nrStokes][nrChannels][nrSamples  | 2], 1, allocator)
+  SuperType::SampleData(boost::extents[nrBeams][nrStokes][nrSamplesPerIntegration | 2][nrChannels][nrValuesPerStokes], nrBeams, allocator)
 {
 }
 
 
-inline TransposedBeamFormedData::TransposedBeamFormedData(unsigned nrSubbands, unsigned nrChannels, unsigned nrSamples, Allocator &allocator)
+inline TransposedBeamFormedData::TransposedBeamFormedData(unsigned nrSubbands, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrValuesPerStokes, Allocator &allocator)
 :
-  SuperType(boost::extents[nrSubbands][nrChannels][nrSamples | 2], nrSubbands, allocator)
+  SuperType(boost::extents[nrSubbands][nrSamplesPerIntegration | 2][nrChannels][nrValuesPerStokes], nrSubbands, allocator)
 {
 }
 
 
-inline void TransposedBeamFormedData::setDimensions(unsigned nrSubbands, unsigned nrChannels, unsigned nrSamples)
-{
-  samples.resizeInplace(boost::extents[nrSubbands][nrChannels][nrSamples | 2]);
-}
-
-
-inline FinalBeamFormedData::FinalBeamFormedData(unsigned nrSamples, unsigned nrSubbands, unsigned nrChannels, Allocator &allocator)
+inline FinalBeamFormedData::FinalBeamFormedData(unsigned nrSubbands, unsigned nrChannels, unsigned nrSamplesPerIntegration, unsigned nrValuesPerStokes, Allocator &allocator)
 :
-  SuperType(boost::extents[nrSamples  | 2][nrSubbands][nrChannels], nrSubbands, allocator)
+  SuperType(boost::extents[nrSamplesPerIntegration | 2][nrSubbands][nrChannels][nrValuesPerStokes], nrSubbands, allocator)
 {
 }
 
 
-inline void FinalBeamFormedData::setDimensions(unsigned nrSamples, unsigned nrSubbands, unsigned nrChannels)
+inline void FinalBeamFormedData::setNrSubbands(unsigned nrSubbands)
 {
-  samples.resizeInplace(boost::extents[nrSamples | 2][nrSubbands][nrChannels]);
+  samples.resizeOneDimensionInplace(1, nrSubbands);
 }
 
 } // namespace RTCP

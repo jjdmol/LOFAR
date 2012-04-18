@@ -47,19 +47,11 @@ class Plot2D : public Plotable {
 			Plot2DPointSet *newSet = new Plot2DPointSet();
 			newSet->SetLabel(label);
 			newSet->SetXIsTime(xIsTime);
-			newSet->SetXDesc(xDesc);
-			newSet->SetYDesc(yDesc);
+			newSet->SetXUnits(xDesc);
+			newSet->SetYUnits(yDesc);
 			newSet->SetDrawingStyle(drawingStyle);
 			_pointSets.push_back(newSet);
 			return *newSet;
-		}
-		Plot2DPointSet &StartLine(const std::string &label, enum Plot2DPointSet::DrawingStyle drawingStyle)
-		{
-			return StartLine(label, "x", "y", false, drawingStyle);
-		}
-		Plot2DPointSet &StartLine()
-		{
-			return StartLine("", "x", "y", false, Plot2DPointSet::DrawLines);
 		}
 		void PushDataPoint(double x, double y)
 		{
@@ -69,7 +61,6 @@ class Plot2D : public Plotable {
 				throw std::runtime_error("Trying to push a data point into a plot without point sets (call StartLine first).");
 		}
 		size_t PointSetCount() const { return _pointSets.size(); }
-		Plot2DPointSet &GetPointSet(size_t index) { return *_pointSets[index]; }
 		const Plot2DPointSet &GetPointSet(size_t index) const { return *_pointSets[index]; }
 		virtual void Render(Gtk::DrawingArea &drawingArea);
 		void SetIncludeZeroYAxis(bool includeZeroAxis)
@@ -133,7 +124,6 @@ class Plot2D : public Plotable {
 		bool ShowAxisDescriptions() const {
 			return _showAxisDescriptions;
 		}
-		void SetTitle(const std::string &title) { }
 		void SavePdf(const std::string &filename);
 		void SaveSvg(const std::string &filename);
 		void SavePng(const std::string &filename);

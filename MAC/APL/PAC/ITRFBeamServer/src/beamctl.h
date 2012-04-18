@@ -56,7 +56,6 @@ public:
 	GCFEvent::TResult create_subarray(GCFEvent& e, GCFPortInterface &p);
 	GCFEvent::TResult create_beam	 (GCFEvent& e, GCFPortInterface &p);
 	GCFEvent::TResult sendPointings	 (GCFEvent& e, GCFPortInterface &p);
-	GCFEvent::TResult askCalInfo	 (GCFEvent& e, GCFPortInterface &p);
 	GCFEvent::TResult final		     (GCFEvent& e, GCFPortInterface &p);
 	/*@}*/
 
@@ -85,7 +84,6 @@ private:
 	int				itsRCUmode;
 	list<Pointing>	itsDigPointings;
 	list<Pointing>	itsAnaPointings;
-	bool			itsCalInfo;			// request for calibrationinformation
 
 	int 	itsSkyScanTotalTime;
 	int 	itsSkyScanPointTime;

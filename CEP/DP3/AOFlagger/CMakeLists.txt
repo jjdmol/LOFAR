@@ -7,7 +7,6 @@ pkg_check_modules(GTKMM gtkmm-2.4)
 pkg_check_modules(SIGCXX sigc++-2.0)
 
 include(LofarFindPackage)
-lofar_find_package(GSL)
 lofar_find_package(LibXml2 REQUIRED)
 lofar_find_package(PNG REQUIRED)
 lofar_find_package(Casacore REQUIRED COMPONENTS ms tables)

@@ -1,6 +1,6 @@
 # $Id$
 
-lofar_package(ElementResponse 0.1 DEPENDS Common)
+lofar_package(ElementResponse 0.1)
 
 # Uncomment to check for unsafe conversions (gcc), for example conversion of
 # size_t to unsigned int (truncation).

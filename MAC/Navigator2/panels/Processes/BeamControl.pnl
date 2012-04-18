@@ -19,12 +19,13 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
                                     baseDP + \".angle1\",
                                     baseDP + \".angle2\",
                                     baseDP + \".subbandList\",
+                                    baseDP + \".beamletList\",
                                     baseDP + \".connected:_online.._invalid\") == -1) {
       LOG_ERROR(\"BeamControl.pnl:main|Couldn'tconnect to: \"+baseDP);
     }
     if (!navFunct_dpReachable(baseDP)) {
       updateBeamControl(\"\",false,\"\",\"\",\"\",makeDynString(),\"\",makeDynFloat(),\"\",makeDynFloat(),
-                     \"\",makeDynString(),\"\",true);
+                     \"\",makeDynString(),\"\",makeDynString(),\"\",true);
     }
   } else {
     LOG_ERROR(\"BeamControl.pnl:main|Couldn't find DP to connect to: \"+baseDP);
@@ -42,7 +43,8 @@ updateBeamControl(string dp1, bool connected,
                string dp5, dyn_float angle1,
                string dp6, dyn_float angle2,
                string dp7, dyn_string subbandList,
-               string dp8, bool invalid)
+               string dp8, dyn_string beamletList, 
+               string dp9, bool invalid)
 {
   LOG_TRACE(\"BeamControl.pnl:updateBeamControl|entered\");
   beamTable.deleteAllLines();
@@ -57,7 +59,7 @@ updateBeamControl(string dp1, bool connected,
     setValue(\"subArrayText\", \"text\", subArray);
     for (int i=1; i<= dynlen(beamName); i++) {
       beamTable.appendLine(\"Name\",beamName[i],\"Direction\",directionType[i],\"Angle1\",angle1[i],\"Angle2\",angle2[i],
-                           \"subbands\",subbandList[i]);
+                           \"subbands\",subbandList[i],\"beamlets\",beamletList[i]);
     }
     
   } else {
@@ -272,37 +274,43 @@ LANG:1 0
 LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
  28 388 992 577
-EE 1 0 1 5 8 "Name" 6 1 0 "s" 1
+EE 1 0 1 6 8 "Name" 6 1 0 "s" 1
 LANG:1 4 Name
 E
 1
 LANG:1 0 
 
-100 "Direction" 5 1 0 "s" 1
+80 "Direction" 5 1 0 "s" 1
 LANG:1 9 Direction
 E
 1
 LANG:1 0 
 
-85 "Angle1" 4 1 0 "s" 1
+65 "Angle1" 4 1 0 "s" 1
 LANG:1 6 Angle1
 E
 1
 LANG:1 0 
 
-100 "Angle2" 4 1 0 "s" 1
+60 "Angle2" 4 1 0 "s" 1
 LANG:1 6 Angle2
 E
 1
 LANG:1 0 
 
-100 "subbands" 30 1 0 "s" 1
+60 "subbands" 30 1 0 "s" 1
 LANG:1 8 subbands
 E
 1
 LANG:1 0 
 
-570 
+347 "beamlets" 30 1 0 "s" 1
+LANG:1 8 beamlets
+E
+1
+LANG:1 0 
+
+347 
 18 18 "" 1 1
 LANG:1 2 #8
 "" 1 1

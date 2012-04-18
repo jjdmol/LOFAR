@@ -58,16 +58,13 @@ ImageWidget::ImageWidget() :
 	_cairoFilter(Cairo::FILTER_BEST),
 	_manualXAxisDescription(false),
 	_manualYAxisDescription(false),
-	_manualZAxisDescription(false),
-	_mouseIsIn(false)
+	_manualZAxisDescription(false)
 {
 	_highlightConfig = new ThresholdConfig();
 	_highlightConfig->InitializeLengthsSingleSample();
 
-	add_events(Gdk::POINTER_MOTION_MASK | Gdk::BUTTON_RELEASE_MASK |
-		   Gdk::BUTTON_PRESS_MASK | Gdk::LEAVE_NOTIFY_MASK);
+	add_events(Gdk::POINTER_MOTION_MASK | Gdk::BUTTON_RELEASE_MASK | Gdk::BUTTON_PRESS_MASK);
 	signal_motion_notify_event().connect(sigc::mem_fun(*this, &ImageWidget::onMotion));
-	signal_leave_notify_event().connect(sigc::mem_fun(*this, &ImageWidget::onLeave));
 	signal_button_release_event().connect(sigc::mem_fun(*this, &ImageWidget::onButtonReleased));
 	signal_expose_event().connect(sigc::mem_fun(*this, &ImageWidget::onExposeEvent) );
 }
@@ -623,23 +620,7 @@ bool ImageWidget::onMotion(GdkEventMotion *event)
 	{
 		int posX, posY;
 		if(toUnits(event->x, event->y, posX, posY))
-		{
-			_mouseIsIn = true;
 			_onMouseMoved(posX, posY);
-		} else if(_mouseIsIn) {
-			_onMouseLeft();
-			_mouseIsIn = false;
-		}
-	}
-	return true;
-}
-
-bool ImageWidget::onLeave(GdkEventCrossing *event)
-{
-	if(_mouseIsIn)
-	{
-		_onMouseLeft();
-		_mouseIsIn = false;
 	}
 	return true;
 }

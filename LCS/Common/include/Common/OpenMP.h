@@ -22,13 +22,9 @@
 //#
 //# @author Ger van Diepen <diepen at astron dot nl>
 
-#ifndef LOFAR_COMMON_OPENMP_H
-#define LOFAR_COMMON_OPENMP_H
-
 #ifdef _OPENMP
-#include <omp.h>
+# include <omp.h>
 #endif
-
 #include <Common/LofarTypes.h>
 
 namespace LOFAR {
@@ -71,5 +67,3 @@ namespace LOFAR {
 
   } // end namespace
 } // end namespace
-
-#endif

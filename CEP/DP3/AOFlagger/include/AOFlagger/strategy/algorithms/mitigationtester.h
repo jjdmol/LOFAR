@@ -119,7 +119,6 @@ class MitigationTester{
 		static void AddVarBroadbandToTestSet(Image2DPtr image, Mask2DPtr rfi);
 		static void AddModelData(Image2DPtr image, unsigned sources);
 		static void SubtractBackground(Image2DPtr image);
-		static Image2DPtr sampleRFIDistribution(unsigned width, unsigned height, double ig_over_rsq);
 
 		static double Rand(enum NoiseType type) {
 			switch(type) {

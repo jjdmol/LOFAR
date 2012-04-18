@@ -135,7 +135,6 @@ namespace rfiStrategy {
 			static bool IsTimeFrequencyStatFile(const std::string &file);
 			static bool IsMSFile(const std::string &file);
 			static bool IsNoiseStatFile(const std::string &file);
-			static bool IsHarishFile(const std::string &file);
 
 			virtual void AddReadRequest(const ImageSetIndex &index) = 0;
 			virtual void PerformReadRequests() = 0;

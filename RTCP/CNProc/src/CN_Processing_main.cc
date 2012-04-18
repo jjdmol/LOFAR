@@ -37,12 +37,6 @@
 #include <boost/lexical_cast.hpp>
 #include <execinfo.h>
 
-#if defined CLUSTER_SCHEDULING
-#define LOG_CONDITION 1
-#else
-#define LOG_CONDITION (locationInfo.rankInPset() == 0)
-#endif
-
 #if defined HAVE_MPI
 #define MPICH_IGNORE_CXX_SEEK
 #include <mpi.h>
@@ -134,7 +128,7 @@ static Stream *createIONstream(unsigned channel, const LocationInfo &locationInf
   unsigned psetNumber = locationInfo.psetNumber();
   unsigned rankInPset = locationInfo.rankInPset();
 
-  std::string descriptor = getStreamDescriptorBetweenIONandCN(ionStreamType, psetNumber, psetNumber, rankInPset, nrPsets, psetSize, channel);
+  std::string descriptor = getStreamDescriptorBetweenIONandCN(ionStreamType, psetNumber, rankInPset, nrPsets, psetSize, channel);
 
   return createStream(descriptor, false);
 }
@@ -199,29 +193,27 @@ int main(int argc, char **argv)
 
     getIONstreamType();
 
-    if (LOG_CONDITION)
-      LOG_DEBUG("Creating connection to ION ...");
-
-    std::vector<SmartPtr<Stream> > ionStreams;
-
 #if defined CLUSTER_SCHEDULING
-    ionStreams.resize(locationInfo.nrPsets());
+    LOG_DEBUG("Creating connections to IONs ...");
+
+    std::vector<SmartPtr<Stream> > ionStreams(locationInfo.nrPsets());
 
     for (unsigned ionode = 0; ionode < locationInfo.nrPsets(); ionode ++) {
-      std::string descriptor = getStreamDescriptorBetweenIONandCN(ionStreamType, ionode, locationInfo.psetNumber(), locationInfo.rankInPset(), locationInfo.nrPsets(), locationInfo.psetSize(), 0);
+      std::string descriptor = getStreamDescriptorBetweenIONandCN(ionStreamType, ionode, locationInfo.rankInPset(), locationInfo.nrPsets(), locationInfo.psetSize(), 0);
       ionStreams[ionode] = createStream(descriptor, false);
     }
 
-    Stream *controlStream = ionStreams[locationInfo.psetNumber()].get();
+    LOG_DEBUG("Creating connections to IONs done");
+    SmartPtr<Stream> &ionStream = ionStreams[0];
 #else
-    ionStreams.resize(1);
-    ionStreams[0] = createIONstream(0, locationInfo);
+    if (locationInfo.rankInPset() == 0)
+      LOG_DEBUG("Creating connection to ION ...");
 
-    Stream *controlStream = ionStreams[0].get();
-#endif
+    SmartPtr<Stream> ionStream(createIONstream(0, locationInfo));
 
-    if (LOG_CONDITION)
+    if (locationInfo.rankInPset() == 0)
       LOG_DEBUG("Creating connection to ION: done");
+#endif
 
 
     // an allocator for our big memory structures
@@ -240,24 +232,34 @@ int main(int argc, char **argv)
     CN_Command			 command;
 
     do {
-      command.read(controlStream);
-      //LOG_DEBUG_STR("Received command " << command.value() << " = " << command.name());
+      //LOG_DEBUG("Wait for command");
+      command.read(ionStream);
+      //LOG_DEBUG_STR("Received command " << command.value());
 
       switch (command.value()) {
 	case CN_Command::PREPROCESS :	try {
-                                          unsigned firstBlock = command.param();
-
-					  parset = new Parset(controlStream);
+					  parset = new Parset(ionStream);
 
 				          switch (parset->nrBitsPerSample()) {
-                                            case 4:  proc = new CN_Processing<i4complex>(*parset, ionStreams, &createIONstream, locationInfo, bigAllocator, firstBlock);
+#if defined CLUSTER_SCHEDULING
+                                            case 4:  proc = new CN_Processing<i4complex>(*parset, ionStreams, &createIONstream, locationInfo, bigAllocator);
                                                      break;
 
-                                            case 8:  proc = new CN_Processing<i8complex>(*parset, ionStreams, &createIONstream, locationInfo, bigAllocator, firstBlock);
+                                            case 8:  proc = new CN_Processing<i8complex>(*parset, ionStreams, &createIONstream, locationInfo, bigAllocator);
                                                      break;
 
-                                            case 16: proc = new CN_Processing<i16complex>(*parset, ionStreams, &createIONstream, locationInfo, bigAllocator, firstBlock);
+                                            case 16: proc = new CN_Processing<i16complex>(*parset, ionStreams, &createIONstream, locationInfo, bigAllocator);
                                                      break;
+#else
+                                            case 4:  proc = new CN_Processing<i4complex>(*parset, ionStream, &createIONstream, locationInfo, bigAllocator);
+                                                     break;
+
+                                            case 8:  proc = new CN_Processing<i8complex>(*parset, ionStream, &createIONstream, locationInfo, bigAllocator);
+                                                     break;
+
+                                            case 16: proc = new CN_Processing<i16complex>(*parset, ionStream, &createIONstream, locationInfo, bigAllocator);
+                                                     break;
+#endif
                                           }
                                         } catch (Exception &ex) {
                                           LOG_ERROR_STR("Caught Exception: " << ex);
@@ -282,11 +284,6 @@ int main(int argc, char **argv)
 	case CN_Command::POSTPROCESS :	// proc == 0 if PREPROCESS threw an exception, after which all cores receive a POSTPROCESS message
 					delete proc.release();
 					delete parset.release();
-
-#if defined HAVE_BGP // only SparseAllocator keeps track of its allocations
-                                        if (!bigAllocator.empty())
-                                          LOG_ERROR("Memory leak detected in bigAllocator");
-#endif
 					break;
 
 	case CN_Command::STOP :		break;

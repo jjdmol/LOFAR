@@ -25,14 +25,13 @@
 
 # Set srcdir if undefined (if run outside 'make check')
 if test "$srcdir" = ""; then
-  srcdir=../../../../../LOFAR/CEP/ParmDB/test
+  srcdir=../../../src
 fi
 
-# Add src and LMWCommon directory to PATH (to find parmdbm).
-PATH="../src:$srcdir/../src:$PATH"
+# Add src directory to PATH (to find parmdb).
+PATH=../src:$PATH
 export PATH
 which parmdbm
-which startdistproc
 
 # Create directories to create the parmdb-s in.
 # They must match the FileName in in_ms*.vds.
@@ -47,7 +46,7 @@ mkdir tsetupparmdb_tmp.ms2
 # Use _tmp name for the gds, so the resulting parmdb also gets a _tmp name.
 cp tsetupparmdb.in_gds tsetupparmdb_tmp.gds
 echo ">>>"
-"$srcdir/../src/setupparmdb" -overwrite tsetupparmdb_tmp.gds "" "" "" tsetupparmdb_tmp.log 0 tsetupparmdb_tmp.hfn "`pwd`"  ||  exit 1
+$srcdir/../src/setupparmdb -overwrite tsetupparmdb_tmp.gds "" "" "" tsetupparmdb_tmp.log 0 tsetupparmdb_tmp.hfn `pwd`  ||  exit 1
 echo "<<<"
 
 # Append the three log files to the output.

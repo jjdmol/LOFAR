@@ -115,7 +115,7 @@ void Dedispersion::initFFT(fcomplex *data)
 }
 
 
-void Dedispersion::forwardFFT(const fcomplex *data)
+void Dedispersion::forwardFFT(fcomplex *data)
 {
 #if defined HAVE_FFTW3
   fftwf_execute_dft(itsFFTWforwardPlan, (fftwf_complex *) data, (fftwf_complex *) &itsFFTedBuffer[0][0]);
@@ -195,18 +195,20 @@ void Dedispersion::applyChirp(unsigned subbandIndex, unsigned dmIndex, unsigned 
 }
 
 
-void DedispersionBeforeBeamForming::dedisperse(const FilteredData *inData, FilteredData *outData, unsigned instat, unsigned outstat, unsigned firstch, unsigned numch, unsigned subbandIndex, double dm)
+void DedispersionBeforeBeamForming::dedisperse(FilteredData *filteredData, unsigned subbandIndex, double dm)
 {
   if (dm == 0.0)
     return;
 
   unsigned dmIndex = itsDMindices[dm];
 
-  for (unsigned channel = 0; channel < numch; channel ++) {
-    for (unsigned block = 0; block < itsNrSamplesPerIntegration; block += itsFFTsize) {
-      forwardFFT(&inData->samples[firstch + channel][instat][block][0]);
-      applyChirp(subbandIndex, dmIndex, channel);
-      backwardFFT(&outData->samples[channel][outstat][block][0]);
+  for (unsigned channel = 0; channel < itsNrChannels; channel ++) {
+    for (unsigned station = 0; station < itsNrStations; station ++) {
+      for (unsigned block = 0; block < itsNrSamplesPerIntegration; block += itsFFTsize) {
+	forwardFFT(&filteredData->samples[channel][station][block][0]);
+	applyChirp(subbandIndex, dmIndex, channel);
+	backwardFFT(&filteredData->samples[channel][station][block][0]);
+      }
     }
   }
 }

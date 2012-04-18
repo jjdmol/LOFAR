@@ -1,9 +1,19 @@
-## P.Donker ASTRON februari 2011
-## EC NL status module
+#!/usr/bin/python
+
+## "nlEcLib.py"
+## class to communicate with EC module
+## can only be used on NL (dutch) LCU
+##
+## usage: only used by other scrips
+##
+## Author: Pieter Donker (ASTRON)
+## Last change: november 2011 
 
 import socket
 import struct
 import time
+
+VERSION = '1.1.0' # version of this class
 
 def getIP():
     # get ip-adres of LCU
@@ -168,10 +178,6 @@ class EC:
             (stationType[type], wxt520Text[wxt520]))
         return type, wxt520
     #---------------------------------------
-    def getStatusData(self):
-        self.sendCmd(self.EC_STATUS)
-        (cmdId, status, PL2) = self.recvAck()
-        return PL2
     
     def getStatus(self):
         ec_mode = ('OFF','ON','AUTO','MANUAL','STARTUP','AUTO-SEEK','ABSENT')

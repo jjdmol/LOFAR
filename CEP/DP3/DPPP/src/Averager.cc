@@ -74,8 +74,6 @@ namespace LOFAR {
       info.setNeedVisData();
       info.setNeedWrite();
       itsTimeInterval = info.timeInterval();
-      // Adapt averaging to available nr of channels and times.
-      itsNTimeAvg = std::min (itsNTimeAvg, info.ntime());
       itsNChanAvg = info.update (itsNChanAvg, itsNTimeAvg);
     }
 

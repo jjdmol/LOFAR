@@ -22,15 +22,15 @@
 
 #include <libgen.h>
 
+#include <AOFlagger/strategy/actions/baselineselectionaction.h>
 #include <AOFlagger/strategy/actions/foreachmsaction.h>
 #include <AOFlagger/strategy/actions/strategyaction.h>
-
-#include <AOFlagger/strategy/algorithms/baselineselector.h>
-#include <AOFlagger/strategy/algorithms/polarizationstatistics.h>
 
 #include <AOFlagger/strategy/plots/antennaflagcountplot.h>
 #include <AOFlagger/strategy/plots/frequencyflagcountplot.h>
 #include <AOFlagger/strategy/plots/timeflagcountplot.h>
+
+#include <AOFlagger/strategy/algorithms/polarizationstatistics.h>
 
 #include <AOFlagger/strategy/control/artifactset.h>
 #include <AOFlagger/strategy/control/strategyreader.h>
@@ -263,7 +263,7 @@ int main(int argc, char **argv)
 		artifacts.SetFrequencyFlagCountPlot(new FrequencyFlagCountPlot());
 		artifacts.SetTimeFlagCountPlot(new TimeFlagCountPlot());
 		artifacts.SetPolarizationStatistics(new PolarizationStatistics());
-		artifacts.SetBaselineSelectionInfo(new rfiStrategy::BaselineSelector());
+		artifacts.SetBaselineSelectionInfo(new rfiStrategy::BaselineSelectionInfo());
 		
 		ConsoleProgressHandler progress;
 

@@ -241,25 +241,6 @@ int main (int	argc, char*	argv[]) {
 
 			cout << DTlist.size() << " records" << endl << endl;
 		}
-
-		LOG_INFO("=== Testing MoM 2 treeID converter ===");
-	 	LOG_INFO("getMomID2treeID()");
-		map<uint, uint> theMap = conn.getMomID2treeIDMap();
-		if (theMap.size() == 0) {
-			LOG_INFO_STR("Error:" << conn.errorMsg());
-		}
-		else {
-			cout << "   MoMID |  treeID" << endl;
-			cout << "---------+--------" << endl;
-			map<uint,uint>::const_iterator   end  = theMap.end();
-			map<uint,uint>::const_iterator   iter = theMap.begin();
-			while (iter != end) {
-				string row(formatString("%8d |%8d", iter->first, iter->second));
-				cout << row << endl;
-				iter++;
-			}
-			cout << theMap.size() << " records" << endl << endl;
-		}
 	}
 	catch (std::exception&	ex) {
 		LOG_FATAL_STR("Unexpected exception: " << ex.what());

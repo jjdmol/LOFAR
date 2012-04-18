@@ -34,25 +34,6 @@ using LOFAR::operator<<;
 
 
 // -------------------------------------------------------------------------- //
-// - ElevationCutConfig implementation                                      - //
-// -------------------------------------------------------------------------- //
-
-ElevationCutConfig::ElevationCutConfig()
-    :   itsThreshold(0.0)
-{
-}
-
-ElevationCutConfig::ElevationCutConfig(double threshold)
-    :   itsThreshold(threshold)
-{
-}
-
-double ElevationCutConfig::threshold() const
-{
-    return itsThreshold;
-}
-
-// -------------------------------------------------------------------------- //
 // - BeamConfig implementation                                              - //
 // -------------------------------------------------------------------------- //
 
@@ -92,15 +73,15 @@ const string &BeamConfig::asString(Mode in)
 
 BeamConfig::BeamConfig()
     :   itsMode(DEFAULT),
-        itsUseChannelFreq(false),
         itsConjugateAF(false)
 {
 }
 
-BeamConfig::BeamConfig(Mode mode, bool useChannelFreq, bool conjugateAF)
+BeamConfig::BeamConfig(Mode mode, bool conjugateAF,
+    const casa::Path &elementPath)
     :   itsMode(mode),
-        itsUseChannelFreq(useChannelFreq),
-        itsConjugateAF(conjugateAF)
+        itsConjugateAF(conjugateAF),
+        itsElementPath(elementPath)
 {
 }
 
@@ -109,14 +90,14 @@ BeamConfig::Mode BeamConfig::mode() const
     return itsMode;
 }
 
-bool BeamConfig::useChannelFreq() const
-{
-    return itsUseChannelFreq;
-}
-
 bool BeamConfig::conjugateAF() const
 {
     return itsConjugateAF;
+}
+
+const casa::Path &BeamConfig::getElementPath() const
+{
+    return itsElementPath;
 }
 
 // -------------------------------------------------------------------------- //
@@ -192,7 +173,7 @@ FlaggerConfig::FlaggerConfig(double threshold)
 {
 }
 
-double FlaggerConfig::threshold() const
+double FlaggerConfig::getThreshold() const
 {
     return itsThreshold;
 }
@@ -234,16 +215,6 @@ bool ModelConfig::useTEC() const
 bool ModelConfig::useDirectionalGain() const
 {
     return itsModelOptions[DIRECTIONAL_GAIN];
-}
-
-bool ModelConfig::useElevationCut() const
-{
-    return itsModelOptions[ELEVATION_CUT];
-}
-
-const ElevationCutConfig &ModelConfig::getElevationCutConfig() const
-{
-    return itsConfigElevationCut;
 }
 
 bool ModelConfig::useBeam() const
@@ -321,18 +292,6 @@ void ModelConfig::setDirectionalGain(bool value)
     itsModelOptions[DIRECTIONAL_GAIN] = value;
 }
 
-void ModelConfig::setElevationCutConfig(const ElevationCutConfig &config)
-{
-    itsModelOptions[ELEVATION_CUT] = true;
-    itsConfigElevationCut = config;
-}
-
-void ModelConfig::clearElevationCutConfig()
-{
-    itsConfigElevationCut = ElevationCutConfig();
-    itsModelOptions[ELEVATION_CUT] = false;
-}
-
 void ModelConfig::setBeamConfig(const BeamConfig &config)
 {
     itsModelOptions[BEAM] = true;
@@ -389,7 +348,7 @@ void ModelConfig::setSources(const vector<string> &sources)
     itsSources = sources;
 }
 
-const vector<string> &ModelConfig::sources() const
+const vector<string> &ModelConfig::getSources() const
 {
     return itsSources;
 }
@@ -400,7 +359,7 @@ const vector<string> &ModelConfig::sources() const
 
 ostream &operator<<(ostream &out, const FlaggerConfig &obj)
 {
-    out << indent << "Threshold: " << obj.threshold();
+    out << indent << "Threshold: " << obj.getThreshold();
     return out;
 }
 
@@ -420,16 +379,10 @@ ostream &operator<<(ostream &out, const IonosphereConfig &obj)
 ostream &operator<<(ostream &out, const BeamConfig &obj)
 {
     out << indent << "Mode: " << BeamConfig::asString(obj.mode())
-        << endl << indent << "Use channel frequency: " << boolalpha
-        << obj.useChannelFreq() << noboolalpha
         << endl << indent << "Conjugate array factor: " << boolalpha
-        << obj.conjugateAF() << noboolalpha;
-    return out;
-}
-
-ostream &operator<<(ostream &out, const ElevationCutConfig &obj)
-{
-    out << indent << "Threshold: " << obj.threshold() << " (deg)";
+        << obj.conjugateAF() << noboolalpha
+        << endl << indent << "Element model path: "
+        << obj.getElementPath().originalName();
     return out;
 }
 
@@ -450,14 +403,6 @@ ostream& operator<<(ostream &out, const ModelConfig &obj)
         << obj.useTEC() << noboolalpha;
     out << endl << indent << "Direction dependent gain enabled: " << boolalpha
         << obj.useDirectionalGain() << noboolalpha;
-
-    out << endl << indent << "Elevation cut enabled: " << boolalpha
-        << obj.useElevationCut() << noboolalpha;
-    if(obj.useElevationCut())
-    {
-        Indent id;
-        out << endl << obj.getElevationCutConfig();
-    }
 
     out << endl << indent << "Beam enabled: " << boolalpha << obj.useBeam()
         << noboolalpha;
@@ -491,7 +436,7 @@ ostream& operator<<(ostream &out, const ModelConfig &obj)
     out << endl << indent << "Cache enabled: " << boolalpha << obj.useCache()
         << noboolalpha;
 
-    out << endl << indent << "Sources: " << obj.sources();
+    out << endl << indent << "Sources: " << obj.getSources();
     return out;
 }
 

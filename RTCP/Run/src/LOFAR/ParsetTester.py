@@ -87,13 +87,13 @@ class ParsetTester:
     self.parset.forceStations( stations )
 
 
-  def setNrPencilBeams( self, nrBeams, sap = 0 ):
+  def setNrPencilBeams( self, nrBeams ):
     """ Use nrBeams fake beams. """
 
-    self.parset["Observation.Beam[%d].nrTiedArrayBeams" % (sap,)] = nrBeams
+    self.parset["OLAP.nrPencils"] = nrBeams
     for n in xrange(nrBeams):
-      self.parset["Observation.Beam[%d].TiedArrayBeam[%d].angle1" % (sap,n)] = 0
-      self.parset["Observation.Beam[%d].TiedArrayBeam[%d].angle2" % (sap,n)] = n
+      self.parset["OLAP.Pencil[%d].angle1" % (n,)] = 0
+      self.parset["OLAP.Pencil[%d].angle2" % (n,)] = 0
 
   def runParset( self, starttimeout = 30, runtime = 60, stoptimeout = 120, parsetstartdelay = 30 ):
     # finalise and check parset BEFORE we start doing anything fancy

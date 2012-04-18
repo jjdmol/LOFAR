@@ -34,7 +34,6 @@ class StatisticsCollectionTest : public UnitTest {
 		{
 			AddTest(TestConstructor(), "Class constructor");
 			AddTest(TestStatisticsCollecting(), "Collecting statistics");
-			AddTest(TestStatisticsCollectingSpeed(), "Speed of collecting");
 		}
 	private:
 		static void AssertZero(const DefaultStatistics &statistics, Asserter &asserter, const char *description)
@@ -78,10 +77,6 @@ class StatisticsCollectionTest : public UnitTest {
 			void operator()();
 		};
 		struct TestStatisticsCollecting : public Asserter
-		{
-			void operator()();
-		};
-		struct TestStatisticsCollectingSpeed : public Asserter
 		{
 			void operator()();
 		};
@@ -167,10 +162,6 @@ void StatisticsCollectionTest::TestStatisticsCollecting::operator()()
 	AssertEquals(statistics.count[0], 3ul, "count");
 	AssertEquals(statistics.rfiCount[0], 3ul, "rfi count");
 	AssertEquals(statistics.sum->real(), 6.0, "real sum");
-}
-
-void StatisticsCollectionTest::TestStatisticsCollectingSpeed::operator()()
-{
 }
 
 #endif

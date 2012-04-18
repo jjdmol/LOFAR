@@ -23,7 +23,8 @@
 package nl.astron.lofar.sas.otbcomponents;
 
 import java.rmi.RemoteException;
-import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Vector;
 import javax.swing.JOptionPane;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb3.jDefaultTemplate;
@@ -41,18 +42,18 @@ import nl.astron.lofar.sas.otb.util.OtdbRmi;
 public class CreateDefaultTemplateDialog extends javax.swing.JDialog {
     
     /** Creates new form LoginDialog */
-    public CreateDefaultTemplateDialog(boolean modal, ArrayList<jDefaultTemplate> aList, jOTDBtree aTree, MainFrame aMainFrame) {
+    public CreateDefaultTemplateDialog(boolean modal, Vector<jDefaultTemplate> aList, jOTDBtree aTree, MainFrame aMainFrame) {
         super(aMainFrame, modal);
         initComponents();
         getRootPane().setDefaultButton(jButtonOK);
-        itsDFList=(ArrayList)aList.clone();
+        itsDFList=(Vector)aList.clone();
         itsTree = aTree;
         init();
         ok = true;
     }
 
-    public void setNew(ArrayList<jDefaultTemplate> aList, jOTDBtree aTree) {
-        itsDFList=(ArrayList)aList.clone();
+    public void setNew(Vector<jDefaultTemplate> aList, jOTDBtree aTree) {
+        itsDFList=(Vector)aList.clone();
         itsTree = aTree;
         init();
     }
@@ -173,9 +174,14 @@ public class CreateDefaultTemplateDialog extends javax.swing.JDialog {
             JOptionPane.showMessageDialog(this, "Empty ProcessType Field", "Empty Name error", JOptionPane.ERROR_MESSAGE);
             return false;
         }
-        for (jDefaultTemplate it: itsDFList) {
-            if (it.name.equals(nameInput.getText())) {
-                JOptionPane.showMessageDialog(this, "Duplicate ProcessTypename", "Duplicate Name error", JOptionPane.ERROR_MESSAGE);
+        if (this.processSubtypeInput.getText().equals("")) {
+            JOptionPane.showMessageDialog(this, "Empty ProcessSubtype Field", "Empty Name error", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+        Iterator<jDefaultTemplate> it = itsDFList.iterator();
+        while (it.hasNext()) {
+            if (it.next().name.equals(nameInput.getText())) {
+                JOptionPane.showMessageDialog(this, "Empty ProcessType Field", "Empty Name error", JOptionPane.ERROR_MESSAGE);
                 return false;
             }
         }
@@ -225,7 +231,7 @@ public class CreateDefaultTemplateDialog extends javax.swing.JDialog {
      * Holds value of property ok.
      */
     private boolean ok;
-    ArrayList<jDefaultTemplate> itsDFList;
+    Vector<jDefaultTemplate> itsDFList;
     jOTDBtree itsTree;
 
     /**

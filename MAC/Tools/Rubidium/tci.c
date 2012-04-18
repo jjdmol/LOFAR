@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
 
   if (argc == 2)
     {
-      snprintf(sendBuf, sizeof sendBuf, "%s\r", *++argv);
+      sprintf(sendBuf,"%s\r", *++argv);
     }
 
   bufLen = strlen(sendBuf);

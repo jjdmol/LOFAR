@@ -20,7 +20,6 @@
 #include <iostream>
 
 #include <gtkmm/stock.h>
-#include <gtkmm/messagedialog.h>
 
 #include <AOFlagger/strategy/actions/iterationaction.h>
 #include <AOFlagger/strategy/actions/strategyaction.h>
@@ -518,17 +517,11 @@ void EditStrategyWindow::onOpenClicked()
 		StrategyReader reader;
 		std::string filename(dialog.get_filename());
 		Strategy *oldStrategy = _strategy;
-		try {
-			_strategy = reader.CreateStrategyFromFile(filename);
-			_msWindow.SetStrategy(_strategy);
-			delete oldStrategy;
-			_store->clear();
-			fillStore();
-		} catch(std::exception &e)
-		{
-			Gtk::MessageDialog dialog(*this, e.what(), false, Gtk::MESSAGE_ERROR);
-			dialog.run();
-		}
+		_strategy = reader.CreateStrategyFromFile(filename);
+		_msWindow.SetStrategy(_strategy);
+		delete oldStrategy;
+		_store->clear();
+		fillStore();
 	}
 }
 

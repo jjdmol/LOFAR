@@ -47,7 +47,6 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jUnitConv_initUnitCon
   try {
     OTDBconnection* aConn=getConnection(name);
     UnitConv* aUConv = new UnitConv(aConn);
-    theirC_ObjectMap.erase(name+"_UnitConv");
     theirC_ObjectMap[name+"_UnitConv"]=(void*)aUConv;
   } catch (exception &ex) {
     cout << "Exception during new UnitConv" << ex.what() << endl; 

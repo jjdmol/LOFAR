@@ -20,17 +20,62 @@
 #ifndef RFIBASELINESELECTIONACTION_H
 #define RFIBASELINESELECTIONACTION_H
 
-#include <vector>
-
 #include <boost/thread/mutex.hpp>
 
 #include <AOFlagger/msio/types.h>
 
 #include <AOFlagger/strategy/actions/action.h>
 
-#include <AOFlagger/strategy/algorithms/baselineselector.h>
-
 namespace rfiStrategy {
+
+	struct BaselineSelectionInfo
+	{
+		struct SingleBaselineInfo
+		{
+			SingleBaselineInfo() : marked(false) { }
+
+			SingleBaselineInfo(const SingleBaselineInfo &source) :
+				antenna1(source.antenna1),
+				antenna2(source.antenna2),
+				antenna1Name(source.antenna1Name),
+				antenna2Name(source.antenna2Name),
+				band(source.band),
+				length(source.length),
+				rfiCount(source.rfiCount),
+				totalCount(source.totalCount),
+				marked(source.marked)
+			{
+			}
+			void operator=(const SingleBaselineInfo &source)
+			{
+				antenna1 = source.antenna1;
+				antenna2 = source.antenna2;
+				antenna1Name = source.antenna1Name;
+				antenna2Name = source.antenna2Name;
+				band = source.band;
+				length = source.length;
+				rfiCount = source.rfiCount;
+				totalCount = source.totalCount;
+				marked = source.marked;
+			}
+			bool operator<(const SingleBaselineInfo &rhs) const
+			{
+				return length < rhs.length;
+			}
+				
+			int antenna1, antenna2;
+			std::string antenna1Name, antenna2Name;
+			int band;
+			double length;
+			unsigned long rfiCount, totalCount;
+			bool marked;
+		};
+
+		typedef std::vector<SingleBaselineInfo> BaselineVector;
+
+		boost::mutex mutex;
+		BaselineVector baselines;
+	};
 
 	class BaselineSelectionAction : public Action
 	{
@@ -73,7 +118,13 @@ namespace rfiStrategy {
 		private:
 			void prepare(class ArtifactSet &artifacts, class ProgressListener &listener);
 			void mark(class ArtifactSet &artifacts, class ProgressListener &listener);
-			void flagBaselines(ArtifactSet &artifacts, const std::vector<BaselineSelector::SingleBaselineInfo> &baselines);
+			void flagBaselines(ArtifactSet &artifacts, std::vector<BaselineSelectionInfo::SingleBaselineInfo> baselines);
+
+			double smoothedValue(const BaselineSelectionInfo &info, double length);
+			double smoothedValue(const BaselineSelectionInfo &info, const BaselineSelectionInfo::SingleBaselineInfo &baseline)
+			{
+				return smoothedValue(info, baseline.length);
+			}
 
 			bool _preparationStep;
 			bool _flagBadBaselines;

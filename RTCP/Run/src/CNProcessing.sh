@@ -3,19 +3,14 @@
 source locations.sh
 
 function start() {
-  set_psetinfo
-
-  # make sure the log dir exists
-  mkdir -p "$LOGDIR"
-
   TMPDIR="`mktemp -d`"
   PIDFILE="$TMPDIR/pid"
 
   # use a fifo to avoid race conditions
   mkfifo "$PIDFILE"
 
-  (mpirun -noallocate -mode VN -partition "$PARTITION" -env DCMF_COLLECTIVES=0 -env BG_MAPPING=XYZT -env LD_LIBRARY_PATH=/bgsys/drivers/ppcfloor/comm/lib:/bgsys/drivers/ppcfloor/runtime/SPI:/globalhome/romein/lib.bgp -cwd "$RUNDIR" -exe "$CNPROC" 2>&1 &
-  echo $! > "$PIDFILE") | LOFAR/Logger.py $LOGPARAMS "$LOGDIR/CNProc.log" &
+  (mpirun -mode VN -partition "$PARTITION" -env DCMF_COLLECTIVES=0 -env BG_MAPPING=XYZT -env LD_LIBRARY_PATH=/bgsys/drivers/ppcfloor/comm/lib:/bgsys/drivers/ppcfloor/runtime/SPI:/globalhome/romein/lib.bgp -cwd "$LOGSYMLINK" -exe "$CNPROC" 2>&1 &
+  echo $! > "$PIDFILE") | LOFAR/Logger.py $LOGPARAMS "$LOGSYMLINK/CNProc.log" &
 
   PID=`cat "$PIDFILE"`
   rm -f "$PIDFILE"
@@ -28,8 +23,6 @@ function start() {
 }
 
 function stop() {
-  set_psetinfo
-
   # graceful exit
   alarm 10 gracefullyStopBGProcessing.sh
 
@@ -43,11 +36,9 @@ function stop() {
 
     # kill -9 is the last resort
     kill -9 "$PID"
-  ) && sleep 10
+  ) && sleep 5
 
   # wait for job to die
-  TIMEOUT=10
-
   while true
   do
     JOBSTATUS=`bgjobs -u $USER -s | awk "/$PARTITION/ { print \\$6; }"`
@@ -64,18 +55,10 @@ function stop() {
         sleep 1
         continue ;;
 
-      running)
-        sleep 1
-
-        if [ $((--TIMEOUT)) -ge 0 ]
-        then
-          continue
-        fi
-        ;;
+      *)
+        echo "Failed to kill BG/P job $JOBID. Status is $JOBSTATUS"
+        break ;;
     esac
-
-    echo "Failed to kill BG/P job $JOBID. Status is $JOBSTATUS"
-    break
   done
 }
 

@@ -43,11 +43,11 @@ using std::pair;
 typedef uint8                   flag_t;
 typedef pair<uint32, uint32>    baseline_t;
 
-enum AxisType
+enum AxisName
 {
     FREQ,
     TIME,
-    N_AxisType
+    N_AxisName
 };
 
 enum ParmCategory

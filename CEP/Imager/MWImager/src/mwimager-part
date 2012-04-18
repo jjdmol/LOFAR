@@ -26,8 +26,8 @@
 
 
 # Find the path used to start the script.
-pgmpath=`dirname "$0"`
-pgmpath=`cd "$pgmpath" > /dev/null 2>&1  &&  pwd`
+pgmpath=`dirname $0`
+pgmpath=`cd $pgmpath > /dev/null 2>&1  &&  pwd`
 
 if test $# != 13; then
   echo "run as:   mwimager-part dummy dummy dummy dummy rank"
@@ -40,20 +40,20 @@ shift
 shift
 shift
 shift
-seqnr="$1"
-msn="$2"
-vds="$4"
-envfile="$5"
-psn="$6"
-img="$7"
-wd="$8"
-dry="$9"
+seqnr=$1
+msn=$2
+vds=$4
+envfile=$5
+psn=$6
+img=$7
+wd=$8
+dry=$9
 
-psnbase=`basename "$psn"`
+psnbase=`basename $psn`
 
 # Initialize environment.
 if test "$envfile" != ""; then
-  . "$envfile"
+  . $envfile
 fi
 
 # Get the data set name and the directory name of it.
@@ -62,19 +62,19 @@ if test "$wd" = ""  -o  "$wd" = "..."; then
 fi
 
 # Set to working directory.
-cd "$wd"  ||  exit 1
+cd $wd  ||  exit 1
 
 # If an MS name is given, create a temporary description file for it.
 if test -d "$vds"  -a  -e "$vds/table.dat"; then
   makevds "" "$vds" "$vds.tmpvds"  ||  exit 1
-  msn="$vds"
+  msn=$vds
   vds="$msn.tmpvds"
 fi
 
 if test "$img" = "casa"; then
-  "$pgmpath/mwimager-casa" "$psn" "$seqnr" "$msn" "$vds" "$dry" || exit 1
+  $pgmpath/mwimager-casa $psn $seqnr $msn $vds $dry || exit 1
 else
-  "$pgmpath/mwimager-askap" "$psn" "$seqnr" "$msn" "$vds" "$dry" || exit 1
+  $pgmpath/mwimager-askap $psn $seqnr $msn $vds $dry || exit 1
 fi
 
 # Convert to FITS.

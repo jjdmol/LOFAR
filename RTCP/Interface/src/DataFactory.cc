@@ -27,6 +27,7 @@
 #include <Interface/CorrelatedData.h>
 #include <Interface/DataFactory.h>
 #include <Interface/FilteredData.h>
+#include <Interface/StokesData.h>
 #include <Interface/TriggerData.h>
 
 
@@ -36,19 +37,23 @@ namespace RTCP {
 
 StreamableData *newStreamableData(const Parset &parset, OutputType outputType, int streamNr, Allocator &allocator)
 {
+  const Transpose2 &beamFormLogic = parset.transposeLogic();
+
   switch (outputType) {
+    case FILTERED_DATA     : return new FilteredData(parset.nrStations(), parset.nrChannelsPerSubband(), parset.CNintegrationSteps(), allocator);
+
     case CORRELATED_DATA   : return new CorrelatedData(parset.nrMergedStations(), parset.nrChannelsPerSubband(), parset.integrationSteps(), allocator);
 
-    case BEAM_FORMED_DATA  : {
-      const Transpose2 &beamFormLogic = parset.transposeLogic();
+    case INCOHERENT_STOKES : return new StokesData(false, parset.nrIncoherentStokes(), 1, parset.incoherentStokesChannelsPerSubband(), parset.CNintegrationSteps(), parset.incoherentStokesTimeIntegrationFactor(), allocator);
 
-      unsigned nrSubbands    = streamNr == -1 ? beamFormLogic.maxNrSubbands() : beamFormLogic.streamInfo[streamNr].subbands.size();
-      unsigned nrChannels    = streamNr == -1 ? beamFormLogic.maxNrChannels() : beamFormLogic.streamInfo[streamNr].nrChannels;
-      unsigned nrSamples     = streamNr == -1 ? beamFormLogic.maxNrSamples()  : beamFormLogic.streamInfo[streamNr].nrSamples;
-
-      return new FinalBeamFormedData(nrSamples, nrSubbands, nrChannels, allocator);
-    }
-
+  case BEAM_FORMED_DATA  : {
+    unsigned nrTransposedSubbands = streamNr == -1 ? beamFormLogic.maxNrSubbands() : beamFormLogic.nrSubbands(streamNr);
+    return new FinalBeamFormedData(nrTransposedSubbands, parset.nrChannelsPerSubband(), parset.CNintegrationSteps(), 4 / parset.nrCoherentStokes(), allocator);
+  }
+  case COHERENT_STOKES   : {
+    unsigned nrTransposedSubbands = streamNr == -1 ? beamFormLogic.maxNrSubbands() : beamFormLogic.nrSubbands(streamNr);
+return new FinalStokesData(true, nrTransposedSubbands, parset.coherentStokesChannelsPerSubband(), parset.CNintegrationSteps(), parset.coherentStokesTimeIntegrationFactor(), allocator);
+  }
     case TRIGGER_DATA      : return new TriggerData;
 
     default		   : THROW(InterfaceException, "unsupported output type");

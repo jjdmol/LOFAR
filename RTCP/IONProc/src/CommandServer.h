@@ -28,7 +28,6 @@
 
 #include <Common/Thread/Semaphore.h>
 #include <Common/Thread/Thread.h>
-#include <Interface/SmartPtr.h>
 
 
 namespace LOFAR {
@@ -40,8 +39,6 @@ class CommandServer
 	      CommandServer();
 	      ~CommandServer();
 
-    void      start();
-
   private:
     void      commandMaster(), commandSlave();
     void      handleCommand(const std::string &);
@@ -50,8 +47,11 @@ class CommandServer
 
     bool      itsQuit;
     Semaphore itsNrJobsCreated;
-    SmartPtr<Thread> itsJobCleanUpThread;
+    Thread    itsJobCleanUpThread;
 };
+
+
+extern CommandServer commandServer;
 
 } // namespace RTCP
 } // namespace LOFAR

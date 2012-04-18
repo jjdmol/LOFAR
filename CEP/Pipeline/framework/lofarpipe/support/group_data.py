@@ -39,7 +39,7 @@ def group_files(logger, clusterdesc, node_directory, group_size, filenames):
                 "-print0"
                 ]
             logger.debug("Executing: %s" % (" ".join(exec_string)))
-            my_process = subprocess.Popen(exec_string, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            my_process = subprocess.Popen(exec_string, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
             sout, serr = my_process.communicate()
             data[node] = sout.split('\x00')
             data[node] = utilities.group_iterable(
@@ -56,7 +56,7 @@ def group_files(logger, clusterdesc, node_directory, group_size, filenames):
                 if node_data: to_process.extend(node_data)
             yield to_process
 
-def gvds_iterator(gvds_file, nproc=4):
+def gvds_iterator(gvds_file, nproc = 4):
     """
     Reads a GVDS file.
 
@@ -70,7 +70,7 @@ def gvds_iterator(gvds_file, nproc=4):
     for part in range(parset.getInt('NParts')):
         host = parset.getString("Part%d.FileSys" % part).split(":")[0]
         file = parset.getString("Part%d.FileName" % part)
-        vds  = parset.getString("Part%d.Name" % part)
+        vds = parset.getString("Part%d.Name" % part)
         data[host].append((file, vds))
 
     for host, values in data.iteritems():
@@ -135,15 +135,15 @@ def validate_data_maps(*args):
     # Check if all lists have equal length. We do this by creating a set
     # from a tuple of lenghts of `args`. The set must have length 1.
     if len(set(len(arg) for arg in args)) != 1: return False
-    
+
     # Next, check if the data products in `args`, when matched by index,
     # reside on the same node. We can use the same trick as before, by
     # checking the size of a set created from a tuple of hostnames.
     for i in xrange(len(args[0])):
         if len(set(arg[i][0] for arg in args)) != 1: return False
-    
+
     return True
-    
+
 
 def load_data_map(filename):
     """
@@ -168,7 +168,7 @@ def store_data_map(filename, data):
     file.close()
 
 
-def tally_data_map(data, glob, logger=None):
+def tally_data_map(data, glob, logger = None):
     """
     Verify that the files specified in the data map `data` exist on the cluster.
     The glob pattern `glob` should contain the pattern to be used in the search.
@@ -177,7 +177,7 @@ def tally_data_map(data, glob, logger=None):
     """
     # Check that `data` is in the correct format
     validate_data_maps(data)
-    
+
     # Determine the directories to search. Get unique directory names from
     # `data` by creating a set first.
     dirs = list(set(os.path.dirname(d[1]) for d in data))
@@ -190,7 +190,7 @@ def tally_data_map(data, glob, logger=None):
     if logger:
         logger.debug("Searching for files: %s" % glob)
     found = zip(*findFiles(glob, '-1d'))
-    
+
     # Return a mask containing True if file exists, False otherwise
     return [f in found for f in data]
 

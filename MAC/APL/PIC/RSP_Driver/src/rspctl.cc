@@ -100,8 +100,7 @@ do { \
 #define DEFAULT_SAMPLE_FREQUENCY 160.0e6
 double  gSampleFrequency = DEFAULT_SAMPLE_FREQUENCY;
 bool    g_getclock       = false;
-bool    gSplitterOn        = false;
-bool    gHasSplitter     = false;
+bool    gSplitter        = false;
 bool    gClockChanged    = false;
 
 #define PAIR 2
@@ -1224,7 +1223,7 @@ GCFEvent::TResult SICommand::ack(GCFEvent& e)
 //
 // DataStreamCommand
 //
-DataStreamCommand::DataStreamCommand(GCFPortInterface& port) : Command(port), itsStream0On(true), itsStream1On(true)
+DataStreamCommand::DataStreamCommand(GCFPortInterface& port) : Command(port), itsStreamOn(true)
 {
 }
 
@@ -1246,18 +1245,9 @@ void DataStreamCommand::send()
 
 		request.timestamp = Timestamp(0,0);
 		//request.rcumask   = getRSPMask();
-		request.switch_on0 = itsStream0On;
-		request.switch_on1 = gSplitterOn ? itsStream1On : false;
+		request.switch_on = itsStreamOn;
 
-		if (itsStream1On && !gSplitterOn) {
-			logMessage(cout,"Splitter is off, second datastream cannot be turned on!");
-		}
-		if (gHasSplitter) {
-			logMessage(cout,formatString("set datastream 0:%s 1:%s", request.switch_on0?"on":"off", request.switch_on1?"on":"off"));
-		}
-		else {
-			logMessage(cout,formatString("set datastream %s", request.switch_on0?"on":"off"));
-		}
+		logMessage(cout,formatString("set datastream %s", request.switch_on?"on":"off"));
 
 		m_rspport.send(request);
 	}
@@ -1271,21 +1261,26 @@ GCFEvent::TResult DataStreamCommand::ack(GCFEvent& e)
 	case RSP_GETDATASTREAMACK: {
 		RSPGetdatastreamackEvent ack(e);
 
+		std::ostringstream msg;
+		msg << "getdatastreamack.timestamp=" << ack.timestamp;
+		logMessage(cout, msg.str());
+		msg.seekp(0);
+
 		if (ack.status != RSP_SUCCESS) {
 			logMessage(cerr, "Error: RSP_GETDATASTREAM command failed.");
 			break;
 		}
-		if (gHasSplitter) {
-			cout << formatString("Datastream to CEP switched 0:%s 1:%s\n", ack.switch_on0?"on":"off", ack.switch_on1?"on":"off");
-		}
-		else {
-			cout << formatString("Datastream to CEP switched %s\n", ack.switch_on0?"on":"off");
-		}
+		cout << formatString("DataStream to CEP switched %s\n", ack.switch_on?"on":"off");
+		cout << endl;
 	}
 	break;
 
 	case RSP_SETDATASTREAMACK: {
 		RSPSetdatastreamackEvent ack(e);
+
+		std::ostringstream msg;
+		msg << "Setdatastreamack.timestamp=" << ack.timestamp;
+		logMessage(cout, msg.str());
 
 		if (ack.status != RSP_SUCCESS) {
 			logMessage(cerr, "Error: RSP_SETDATASTREAM command failed.");
@@ -1636,6 +1631,10 @@ void WGCommand::send()
 		wgset.timestamp = Timestamp(0,0);
 		wgset.rcumask   = getRCUMask();
 		wgset.settings().resize(1);
+
+		//wgset.settings()(0).freq = (uint32)((m_frequency * ((uint32)-1) / gSampleFrequency) + 0.5);
+		//wgset.settings()(0).freq = (uint32)round(m_frequency * ((uint64)1 << 32) / gSampleFrequency);
+		//wgset.settings()(0).freq    = m_frequency;
 
 		wgset.settings()(0).freq        = (uint32)round(itsFrequency * ((uint64)1 << 32) / gSampleFrequency);
 		wgset.settings()(0).phase       = m_phase;
@@ -2054,7 +2053,7 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 
 
 	time_t seconds = timestamp.sec();
-	if (gSplitterOn) {
+	if (gSplitter) {
 		strftime(plotcmd, 255, "set title \"Ring 0 %s - %a, %d %b %Y %H:%M:%S  %z\"\n", gmtime(&seconds));
 	}
 	else {
@@ -2073,7 +2072,7 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 	int count = 0;
 
 	startrcu = 0;
-	if (gSplitterOn) {
+	if (gSplitter) {
 		stoprcu = get_ndevices() / 2;
 	}
 	else {
@@ -2104,7 +2103,7 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 	}
 	gnuplot_cmd(handle, "\n");
 
-	if (gSplitterOn) {
+	if (gSplitter) {
 		gnuplot_write_matrix(handle, stats(Range(0,(n_firstIndex/2)-1), Range::all()));
 	}
 	else {
@@ -2112,13 +2111,13 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 	}
 
 	// if splitter is now OFF but the second screen is still shown, remove this window
-	if (handle2 && !gSplitterOn) {
+	if (handle2 && !gSplitter) {
 		gnuplot_close(handle2);
 		handle2=0;
 	}
 
 	// if Splitter is active plot another graphics
-	if (gSplitterOn) {
+	if (gSplitter) {
 		if (!handle2) {
 			handle2 = gnuplot_init();
 			if (!handle2) return;
@@ -2616,7 +2615,6 @@ GCFEvent::TResult RSPCtl::initial(GCFEvent& e, GCFPortInterface& port)
 		itsNantennas   = ack.n_rcus / N_POL;
 		m_nrspboards   = ack.n_rspboards;
 		m_maxrspboards = ack.max_rspboards;
-		gHasSplitter   = ack.hasSplitter;
 		LOG_DEBUG_STR(formatString("n_rcus    =%d",m_nrcus));
 		LOG_DEBUG_STR(formatString("n_rspboards=%d of %d",  m_nrspboards, m_maxrspboards));
 
@@ -2789,8 +2787,8 @@ GCFEvent::TResult RSPCtl::sub2Splitter(GCFEvent& e, GCFPortInterface& port)
 
 	case RSP_UPDSPLITTER: {
 		RSPUpdsplitterEvent  updateEvent(e);
-		gSplitterOn = updateEvent.splitter[0];
-		logMessage(cerr, formatString("The splitter is currently %s", gSplitterOn ? "ON" : "OFF"));
+		gSplitter = updateEvent.splitter[0];
+		logMessage(cerr, formatString("The splitter is currently %s", gSplitter ? "ON" : "OFF"));
 		TRAN(RSPCtl::doCommand);
 	}
 	break;
@@ -2885,8 +2883,8 @@ GCFEvent::TResult RSPCtl::doCommand(GCFEvent& e, GCFPortInterface& port)
 
 	case RSP_UPDSPLITTER: {
 		RSPUpdsplitterEvent  updateEvent(e);
-		gSplitterOn = updateEvent.splitter[0];
-		logMessage(cerr, formatString("NOTE: The splitter switched to %s", gSplitterOn ? "ON" : "OFF"));
+		gSplitter = updateEvent.splitter[0];
+		logMessage(cerr, formatString("NOTE: The splitter switched to %s", gSplitter ? "ON" : "OFF"));
 	}
 	break;
 
@@ -3009,7 +3007,7 @@ static void usage(bool exportMode)
 	cout << "rspctl --hbadelays[=<list>] [--select=<set>]   # set or get the 16 delays of one or more HBA's" << endl;
 	cout << "rspctl --tbbmode[=transient | =subbands,<set>] # set or get TBB mode, 'transient' or 'subbands', if subbands then specify subband set" << endl;
 	cout << "rspctl --splitter[=0|1]                        # set or get the status of the Serdes splitter" << endl;
-	cout << "rspctl --datastream[=0|1|2|3]                  # set or get the status of data stream to cep" << endl;
+	cout << "rspctl --datastream[=0|1]                      # set or get the status of data stream to cep" << endl;
 	cout << "rspctl --swapxy[=0|1] [--select=<set>]         # set or get the status of xy swap, 0=normal, 1=swapped" << endl;
 	if (exportMode) {
 	cout << endl;
@@ -3688,9 +3686,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
 			if (optarg) {
 				datastreamCmd->setMode(false);
-				datastreamCmd->setStream(0,atoi(optarg)%2);
-				datastreamCmd->setStream(1,atoi(optarg)/2);
-				itsNeedSplitter = true;
+				datastreamCmd->setStream(strncmp(optarg, "0", 1));
 			}
 		}
 		break;

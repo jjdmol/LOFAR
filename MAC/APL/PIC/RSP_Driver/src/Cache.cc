@@ -265,8 +265,7 @@ void CacheBuffer::reset(void)
 	// set Splitter not active
 	itsSplitterActive = false;
 	// set CEP port enabled
-	itsCepEnabled0 = false;
-	itsCepEnabled1 = false;
+	itsCepEnabled = false;
 	
 	// Latency status
 	itsLatencys().resize(StationSettings::instance()->nrRspBoards());

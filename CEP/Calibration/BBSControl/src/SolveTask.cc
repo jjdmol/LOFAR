@@ -58,13 +58,7 @@ namespace LOFAR
           LOG_TRACE_STAT_STR("Kernel #" << i << " (index=" <<
                              itsKernels[i].index() << ") : recvObject()");
           shared_ptr<const KernelMessage> msg(itsKernels[i].recvMessage());
-
-          if (!msg) {
-            THROW(IOException, "Read error on connection to kernel #" << i
-              << " (index=" << itsKernels[i].index() << ")");
-          }
-
-          msg->passTo(*this);
+          if (msg) msg->passTo(*this);
         }
       }
 

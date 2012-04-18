@@ -45,10 +45,6 @@ void Application::Run(int argc, char *argv[])
 
 	Gtk::Main kit(argc, argv);
 	MSWindow window;
-	if(argc > 1)
-	{
-		window.OpenPath(argv[1]);
-	}
 	kit.run(window);
 }
 

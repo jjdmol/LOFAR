@@ -30,7 +30,6 @@
 #include <Interface/Parset.h>
 #include <Interface/RSPTimeStamp.h>
 #include <Interface/SmartPtr.h>
-#include <Interface/SubbandMetaData.h>
 #include <Stream/Stream.h>
 #include <BeamletBuffer.h>
 #include <Delays.h>
@@ -49,7 +48,7 @@ namespace RTCP {
 
 template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
   public:
-    BeamletBufferToComputeNode(const Parset &ps, const Matrix<Stream *> &phaseOneTwoStreams, const std::vector<SmartPtr<BeamletBuffer<SAMPLE_TYPE> > > &beamletBuffers, unsigned psetNumber, unsigned firstBlockNumber);
+    BeamletBufferToComputeNode(const Parset &ps, const std::vector<Stream *> &phaseOneTwoStreams, const std::vector<SmartPtr<BeamletBuffer<SAMPLE_TYPE> > > &beamletBuffers, unsigned psetNumber);
     ~BeamletBufferToComputeNode();
   
     void			 process();
@@ -60,10 +59,6 @@ template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
     static void			 limitFlagsLength(SparseSet<unsigned> &flags);
 
     void			 computeDelays(), computeNextDelays();
-
-    void                         setMetaData( SubbandMetaData &metaData, unsigned psetIndex, unsigned subband );
-    void                         sendSubband( Stream *stream, unsigned subband );
-    
 
     void			 startTransaction();
     void			 writeLogMessage() const;
@@ -80,8 +75,7 @@ template <typename SAMPLE_TYPE> class BeamletBufferToComputeNode {
     std::vector<unsigned>	 itsSubbandToRSPboardMapping;
     std::vector<unsigned>	 itsSubbandToRSPslotMapping;
 
-    const Matrix<Stream *>       &itsPhaseOneTwoStreams;
-    const unsigned               itsNrPhaseOneTwoCoresPerPset;
+    const std::vector<Stream *>  &itsPhaseOneTwoStreams;
     
     const Parset		 &itsPS;
     

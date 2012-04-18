@@ -269,19 +269,13 @@ PLCClient::PLCClient( Stream &s, PLCRunnable &job, const std::string &procID, un
   itsStartTime( time(0L) ),
   itsDefineCalled( false ),
   itsDone( false ),
-  itsLogPrefix( str(format("[obs %u] [PLC] ") % observationID) )
+  itsLogPrefix( str(format("[obs %u] [PLC] ") % observationID) ),
+  itsThread(new Thread(this, &PLCClient::mainLoop, "[PLC] ", 65535))
 {
-}
-
-void PLCClient::start()
-{
-  itsThread = new Thread(this, &PLCClient::mainLoop, "[PLC] ", 65535);
 }
 
 PLCClient::~PLCClient()
 {
-  ASSERT(itsThread);
-
   // wait until ApplController called define(), so that invalid parsets are reported
   // as such before the connection is terminated
   struct timespec disconnectAt = { itsStartTime + defineWaitTimeout, 0 };

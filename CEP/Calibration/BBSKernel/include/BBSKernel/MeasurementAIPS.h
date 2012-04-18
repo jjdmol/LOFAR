@@ -72,14 +72,23 @@ public:
     virtual void writeHistory(const ParameterSet &parset) const;
 
     virtual BaselineMask asMask(const string &filter) const;
+
     // @}
 
 private:
+    void initInstrument();
+    Station::Ptr initStation(unsigned int id, const string &name,
+        const casa::MPosition &position) const;
     void initReferenceDirections();
     void initDimensions();
 
+    bool hasColumn(const string &column) const;
+    bool hasColumn(const casa::Table &table, const string &column) const;
     void createVisibilityColumn(const string &name);
     void createCovarianceColumn(const string &name);
+
+    bool hasSubTable(const string &table) const;
+    casa::Table getSubTable(const string &table) const;
 
     casa::MDirection getColumnPhaseReference(const string &column) const;
 
@@ -117,16 +126,6 @@ private:
     unsigned int            itsIdDataDescription;
 };
 
-Instrument::Ptr readInstrument(const casa::MeasurementSet &ms,
-    unsigned int idObservation = 0);
-casa::MDirection readPhaseReference(const casa::MeasurementSet &ms,
-    unsigned int idField = 0);
-casa::MDirection readDelayReference(const casa::MeasurementSet &ms,
-    unsigned int idField = 0);
-casa::MDirection readTileReference(const casa::MeasurementSet &ms,
-    unsigned int idField = 0);
-double readFreqReference(const casa::MeasurementSet &ms,
-    unsigned int idDataDescription = 0);
 // @}
 
 } //# namespace BBS

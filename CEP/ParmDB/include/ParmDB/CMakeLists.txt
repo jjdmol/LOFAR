@@ -19,7 +19,6 @@ set(inst_HEADERS
   ParmFacadeLocal.h
   ParmFacadeDistr.h
   ParmFacade.h
-  PatchInfo.h
   SourceInfo.h
   SourceDB.h
   SourceDBCasa.h)

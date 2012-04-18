@@ -470,7 +470,7 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 
 		// update our administration
 		LOG_DEBUG_STR("Removing observation " << quitedEvent.cntlrName << " from activeList");
-		itsControllerMap.erase(quitedEvent.cntlrName);
+//		_removeActiveObservation(quitedEvent.cntlrName);
 		break;
 	}
 
@@ -767,7 +767,7 @@ void MACScheduler::_updateFinishedList()
 	GCFPValueArray	finishedArr;
 	int32	freeSpace = MAX_CONCURRENT_OBSERVATIONS - itsNrPlanned - itsNrActive;
 	int32	idx       = finishedDBlist.size() - 1;
-	int32	limit     = idx - (MIN2(MIN2(finishedDBlist.size(), itsMaxFinished), (uint32)freeSpace) - 1);
+	int32	limit     = idx - (MIN2(MIN2(finishedDBlist.size(), itsMaxFinished), freeSpace) - 1);
 	while (idx >= limit)  {
 		// construct name and timings info for observation
 		string		obsName(observationName(finishedDBlist[idx].treeID()));

@@ -1233,7 +1233,7 @@ if [ "$DBTYPE" == "S" -a "$DBTYPENAME" == "LOCALHOST" ]; then
    cd $DESTDIR
    echo "Making files for station $STNNAME in $DESTDIR"
 elif [ "$DBTYPE" == "M" ]; then 
-   if [ "$HOSTNAME" == "MCU001" -o "$HOSTNAME" == "MCU099" ]; then  
+   if [[ $HOSTNAME =~ MCU001 ]]; then  
      configdir="/opt/lofar/etc/"
      dpdefdir="/opt/pvss/dpdef/"
      DESTDIR=$dpdefdir
@@ -1244,18 +1244,13 @@ elif [ "$DBTYPE" == "M" ]; then
      configdir=".."
      dpdefdir=""
    fi    
-elif [ "$DBTYPE" == "C" ]; then 
-   if [ "$HOSTNAME" == "CCU001" -o "$HOSTNAME" == "CCU099" ]; then  
-     configdir="/opt/lofar/etc/"
-     dpdefdir="/opt/pvss/dpdef/"
-     DESTDIR=$dpdefdir
-     STNNAME=$DBTYPENAME
-     cd $DESTDIR
-     echo "Making files for $STNNAME in $DESTDIR"
-   else
-     configdir=".."
-     dpdefdir=""
-   fi    
+elif [ "$DBTYPE" == "C" -a "$HOSTNAME" == "CCU001" ]; then  
+   configdir="/opt/lofar/etc/"
+   dpdefdir="/opt/pvss/dpdef/"
+   DESTDIR=$dpdefdir
+   STNNAME=$DBTYPENAME
+   cd $DESTDIR
+   echo "Making files for $STNNAME in $DESTDIR"
 else
    configdir=".."
    dpdefdir=""

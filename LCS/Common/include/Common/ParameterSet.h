@@ -122,21 +122,18 @@ public:
 	// Adds the Key-Values pair in the given file to the current
 	// collection. Each key will be prefixed with the optional argument \a
 	// thePrefix.
-        // <br> Note that no dot is added to the prefix.
 	void	adoptFile      (const string&               theFilename,
 				const string&               thePrefix = "");
 
 	// Adds the Key-Values pair in the given buffer to the current
 	// collection. Each key will be prefixed with the optional argument \a
 	// thePrefix.
-        // <br> Note that no dot is added to the prefix.
 	void	adoptBuffer    (const string&               theBuffer,
 				const string&               thePrefix = "");
 
 	// Adds the Key-Values pair in the given collection to the current 
 	// collection. Each key will be prefixed with the optional argument \a
 	// thePrefix.
-        // <br> Note that no dot is added to the prefix.
         // <br>If theCollection is this collection, nothing will be done.
 	void	adoptCollection(const ParameterSet&         theCollection,
 				const string&               thePrefix = "");
@@ -168,16 +165,12 @@ public:
 	// parameters that start with the given baseKey. The baseKey is cut off 
 	// from the Keynames in the created subset, the optional prefix is put
 	// before all keys in the subset.
-        // <br>It is important to note that no dot is added to the prefix, so
-        // it has to be given explicitly. So when giving a prefix like "pre",
-        // a key "pre.key" gets ".key" and "prefix.key" get "fix.key".
 	ParameterSet	makeSubset(const string& baseKey,
 								   const string& prefix = "") const;
 
 	// Subtract a subset from the current ParameterSet. Every parameter
 	// whose key starts with the given name will be removed from the
 	// ParameterSet.
-        // <br> Similarly to makeSubset, no dot is added to the prefix.
 	void	subtractSubset(const string& fullPrefix);
 	// @}
 
@@ -208,29 +201,12 @@ public:
 	// type.
 	// @{
 
-        // Find a key.
-        iterator find (const string& searchKey);
-        const_iterator find (const string& searchKey) const;
-
 	// Checks if the given Key is defined in the ParameterSet.
 	bool	isDefined (const string& searchKey) const;
 
-	// Searches for a module whose name end in the given modulename.
-	// e.g: a.b.c.d.param=xxxx --> locateModule(d)-->a.b.c.
-	string	locateModule  (const string&	shortName) const;
-
-	// Searches the module name or module hierarchy and returns its fullposition.
-	// e.g: a.b.c.d.param=xxxx --> fullModuleName(d)-->a.b.c.d
-	// e.g: a.b.c.d.param=xxxx --> fullModuleName(b.c)-->a.b.c
-	string	fullModuleName(const string&	shortName) const;
-
-	// Return the value of the key as a vector of values.
-        // This can only be done if the value is enclosed in square brackets.
-        vector<ParameterValue> getVector (const string& aKey) const;
-
-	// Return the value of the key as a parameter record.
-        // This can only be done if the value is enclosed in curly braces.
-        ParameterRecord getRecord (const string& aKey) const;
+	// Searches for a module whose short nam is given and returns it position
+	// in the parameterSet.
+	string	locateModule(const string&	shortName) const;
 
 	// Return scalar value.
 	// @{
@@ -474,16 +450,6 @@ inline void	ParameterSet::remove (const string& aKey)
 	itsSet->remove (aKey);
 }
 
-inline ParameterSet::iterator ParameterSet::find (const string& searchKey)
-{
-	return itsSet->find (searchKey);
-}
-
-inline ParameterSet::const_iterator ParameterSet::find (const string& searchKey) const
-{
-	return itsSet->find (searchKey);
-}
-
 inline bool	ParameterSet::isDefined (const string& searchKey) const
 {
 	return itsSet->isDefined (searchKey);
@@ -492,16 +458,6 @@ inline bool	ParameterSet::isDefined (const string& searchKey) const
 inline string	ParameterSet::locateModule(const string&	shortName) const
 {
 	return (itsSet->locateModule(shortName));
-}
-
-inline string	ParameterSet::fullModuleName(const string&	shortName) const
-{
-	return (itsSet->fullModuleName(shortName));
-}
-
-inline vector<ParameterValue> ParameterSet::getVector (const string& aKey) const
-{
-        return get(aKey).getVector();
 }
 
 //#	getBool(key)

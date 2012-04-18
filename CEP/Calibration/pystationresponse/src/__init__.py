@@ -27,7 +27,7 @@ class stationresponse(StationResponse):
     """
 
     def __init__ (self, msname, inverse = False, useElementBeam = True,
-        useArrayFactor = True, useChannelFreq = False, conjugateAF = False):
+        useArrayFactor = True, conjugateAF = False):
         """Create a stationresponse object that can be used to evaluate the
         LOFAR beam for the given Measurement Set.
 
@@ -44,12 +44,6 @@ class stationresponse(StationResponse):
         `useArrayFactor`
           Include the effect of the station and tile array factor (default
           True).
-        `useChannelFreq`
-          Compute the phase shift for the station beamformer using the channel
-          frequency instead of the subband reference frequency. This option
-          should be enabled for Measurement Sets that contain multiple subbands
-          compressed to single channels inside a single spectral window
-          (default: False).
         `conjugateAF`
           Conjugate the station and tile array factors (default False).
 
@@ -67,7 +61,7 @@ class stationresponse(StationResponse):
             print time, response.evaluateChannel(time, 0, 0)
         """
         StationResponse.__init__ (self, msname, inverse, useElementBeam,
-          useArrayFactor, useChannelFreq, conjugateAF)
+          useArrayFactor, conjugateAF)
 
     def version (self, type='other'):
         """Show the software version."""
@@ -96,6 +90,20 @@ class stationresponse(StationResponse):
           Declination (in radians, J2000)
         """
         self._setRefTile(ra, dec)
+
+    def setRefOrientation (self, orientation):
+        """Set the orientation of the +X dipole (azimuth in the antenna field
+        coordinate system). Antenna field azimuth is defined with respect to the
+        positive Q axis, and positive azimuth runs from the positive Q axis to
+        the positive P axis (roughly North over East, depending on the field).
+        The orientation of the +Y dipole is assumed to be +90 degrees away from
+        orientation of the +X dipole.
+
+        `orientation`
+          Orientation of the +X dipole as azimuth North over East, in radians.
+          Defaults to SW, or an azimuth of 3/4*pi.
+        """
+        self._setRefOrientation(orientation)
 
     def setDirection (self, ra, dec):
         """Set the direction of interest (can be and often will be different

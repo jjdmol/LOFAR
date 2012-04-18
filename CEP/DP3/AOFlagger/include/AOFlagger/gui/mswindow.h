@@ -107,10 +107,10 @@ class MSWindow : public Gtk::Window {
 		void SetStrategy(rfiStrategy::Strategy *newStrategy) { _strategy = newStrategy; }
 
 		void onExecuteStrategyFinished();
-		void OpenPath(const std::string &path);
 	private:
 		void createToolbar();
 		void loadCurrentTFData();
+		void openPath(const std::string &path);
 		
 		void onLoadPrevious();
 		void onLoadNext();
@@ -168,9 +168,6 @@ class MSWindow : public Gtk::Window {
 		void onOpenTestSetSinusoidalBroadband() { openTestSet(27); }
 		void onOpenTestSetSlewedGaussianBroadband() { openTestSet(28); }
 		void onOpenTestSetBurstBroadband() { openTestSet(29); }
-		void onOpenTestSetRFIDistributionLow() { openTestSet(32); }
-		void onOpenTestSetRFIDistributionMid() { openTestSet(31); }
-		void onOpenTestSetRFIDistributionHigh() { openTestSet(30); }
 		void onGaussianTestSets() { _gaussianTestSets = 1; }
 		void onRayleighTestSets() { _gaussianTestSets = 0; }
 		void onZeroTestSets() { _gaussianTestSets = 2; }
@@ -181,7 +178,6 @@ class MSWindow : public Gtk::Window {
 		void onSetToOnePlusI();
 		void onShowStats();
 		void onPlotDistPressed();
-		void onPlotLogLogDistPressed();
 		void onPlotComplexPlanePressed();
 		void onPlotPowerSpectrumPressed();
 		void onPlotPowerSpectrumComparisonPressed();
@@ -223,7 +219,6 @@ class MSWindow : public Gtk::Window {
 		void onTimeMergeUnsetValues();
 		
 		void showError(const std::string &description);
-		void setSetNameInStatusBar();
 		
 		DefaultModels::SetLocation getSetLocation(bool empty = false);
 		void loadDefaultModel(DefaultModels::Distortion distortion, bool withNoise, bool empty = false);
@@ -253,8 +248,8 @@ class MSWindow : public Gtk::Window {
 			_gaussianTestSetsButton, _rayleighTestSetsButton, _zeroTestSetsButton,
 			_ncpSetButton, _b1834SetButton, _emptySetButton,
 			_sim16ChannelsButton, _sim64ChannelsButton, _sim256ChannelsButton;
+		//std::vector<Gtk::Window*> _subWindows;
 		class ImagePlaneWindow *_imagePlaneWindow;
-		class HistogramWindow *_histogramWindow;
 		Gtk::Window
 			*_optionWindow, *_editStrategyWindow,
 			*_gotoWindow,

@@ -82,8 +82,6 @@ public:
 class PLCClient {
 public:
   PLCClient( Stream &s, PLCRunnable &job, const std::string &procID, unsigned observationID );
-  void start();
-
   virtual ~PLCClient();
 
   bool isDone() const {

@@ -41,26 +41,14 @@ namespace LOFAR
     class CorrectStep : public SingleStep
     {
     public:
-      // Default constructor. Construct an empty CorrectStep object and make
-      // it a child of the Step object \a parent.
-      CorrectStep(const Step* parent = 0);
+      CorrectStep(const Step* parent = 0) :
+        SingleStep(parent)
+      {
+      }
 
-      // Construct a CorrectStep having the name \a name. Configuration
-      // information for this step can be retrieved from the parameter set \a
-      // parset, by searching for keys <tt>Step.\a name</tt>. \a parent
-      // is a pointer to the Step object that is the parent of \c *this.
       CorrectStep(const string& name,
                   const ParameterSet& parSet,
                   const Step* parent);
-
-      virtual ~CorrectStep();
-
-      // Return the command type of \c *this as a string.
-      virtual const string& type() const;
-
-      // Print the contents of \c *this in human readable form into the output
-      // stream \a os.
-      virtual void print(ostream& os) const;
 
       // Accept a CommandVisitor that wants to process \c *this.
       virtual CommandResult accept(CommandVisitor &visitor) const;
@@ -68,28 +56,8 @@ namespace LOFAR
       // Return the operation type of \c *this as a string.
       virtual const string& operation() const;
 
-      // Returns true if MMSE is enabled.
-      bool useMMSE() const;
-
-      // Return the approximated standard deviation of the nuisance term to use
-      // when computing the inverse of a Jones matrix for correction.
-      double sigmaMMSE() const;
-
-    private:
-      // Write the contents of \c *this into the ParameterSet \a ps.
-      virtual void write(ParameterSet& ps) const;
-
-      // Read the contents from the ParameterSet \a ps into \c *this,
-      // overriding the default values, "inherited" from the parent step
-      // object.
-      virtual void read(const ParameterSet& ps);
-
-      // Flag to turn MMSE correction on / off.
-      bool itsUseMMSE;
-
-      // Approximation of the standard deviation of the nuisance term. Used for
-      // computing a robust inverse of the cummulative Jones matrices.
-      double itsSigmaMMSE;
+      // Return the command type of \c *this as a string.
+      virtual const string& type() const;
     };
 
     // @}

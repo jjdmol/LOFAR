@@ -36,12 +36,13 @@ PANEL,-1 -1 995 561 N "_3DFace" 0
                                    baseDP + \".Beams.angle1\",
                                    baseDP + \".Beams.angle2\",
                                    baseDP + \".Beams.subbandList\",
+                                   baseDP + \".Beams.beamletList\",
                                    baseDP + \".runState\",
                                    baseDP + \".stationList:_online.._invalid\") == -1) {
       LOG_ERROR(\"Observation_overview.pnl:main|Couldn't connect to : \"+baseDP);
     } 
     if (!navFunct_dpReachable(baseDP)) {
-      updateObservationControl(\"\",0,\"\",0,\"\",\"\",\"\",\"\",\"\",\"\",0,\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",makeDynString(),\"\",makeDynFloat(),
+      updateObservationControl(\"\",0,\"\",0,\"\",\"\",\"\",\"\",\"\",\"\",0,\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",makeDynString(),\"\",makeDynFloat(),
                     \"\",makeDynFloat(),\"\",makeDynString(),\"\",makeDynString(),\"\",true);
     }
   } else {
@@ -84,7 +85,8 @@ updateObservationControl(string dp1, int claimPeriod,
               string dp16,dyn_float angle1,
               string dp17,dyn_float angle2,
               string dp18,dyn_string subbandList,
-              string dp19,string runState,
+              string dp19,dyn_string beamletList, 
+              string dp20,string runState,
               string dp20, bool invalid)
 {
   LOG_TRACE(\"Observation_overview.pnl:updateObservationControl|entered\");
@@ -110,7 +112,7 @@ updateObservationControl(string dp1, int claimPeriod,
    
     for (int i=1; i<= dynlen(directionType); i++) {
       beamTable.appendLine(\"Direction\",directionType[i],\"Angle1\",angle1[i],\"Angle2\",angle2[i],
-                           \"subbands\",subbandList[i]);
+                           \"subbands\",subbandList[i],\"beamlets\",beamletList[i]);
     }
     
   } else {
@@ -274,31 +276,37 @@ LANG:1 0
 LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
  4 275 984 464
-EE 1 0 1 4 8 "Direction" 8 1 0 "s" 1
+EE 1 0 1 5 8 "Direction" 5 1 0 "s" 1
 LANG:1 9 Direction
 E
 1
 LANG:1 0 
 
-100 "Angle1" 8 1 0 "s" 1
+65 "Angle1" 4 1 0 "s" 1
 LANG:1 6 Angle1
 E
 1
 LANG:1 0 
 
-100 "Angle2" 8 1 0 "s" 1
+60 "Angle2" 4 1 0 "s" 1
 LANG:1 6 Angle2
 E
 1
 LANG:1 0 
 
-100 "subbands" 60 1 0 "s" 1
+60 "subbands" 35 1 0 "s" 1
 LANG:1 8 subbands
 E
 1
 LANG:1 0 
 
-672 
+395 "beamlets" 35 1 0 "s" 1
+LANG:1 8 beamlets
+E
+1
+LANG:1 0 
+
+395 
 18 18 "" 1 1
 LANG:1 2 #8
 "" 1 1

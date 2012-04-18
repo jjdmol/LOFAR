@@ -30,11 +30,11 @@
 #include <BeamletBuffer.h>
 #include <ION_Allocator.h>
 #include <Scheduling.h>
-#include <GlobalVars.h>
 #include <Interface/AlignedStdAllocator.h>
 #include <Interface/CN_Command.h>
 #include <Interface/CN_Mapping.h>
 #include <Interface/Stream.h>
+#include <Interface/SubbandMetaData.h>
 #include <Interface/Exceptions.h>
 
 #include <sys/time.h>
@@ -52,15 +52,14 @@ namespace RTCP {
 template<typename SAMPLE_TYPE> const unsigned BeamletBufferToComputeNode<SAMPLE_TYPE>::itsMaximumDelay;
 
 
-template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::BeamletBufferToComputeNode(const Parset &ps, const Matrix<Stream *> &phaseOneTwoStreams, const std::vector<SmartPtr<BeamletBuffer<SAMPLE_TYPE> > > &beamletBuffers, unsigned psetNumber, unsigned firstBlockNumber)
+template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::BeamletBufferToComputeNode(const Parset &ps, const std::vector<Stream *> &phaseOneTwoStreams, const std::vector<SmartPtr<BeamletBuffer<SAMPLE_TYPE> > > &beamletBuffers, unsigned psetNumber)
 :
   itsPhaseOneTwoStreams(phaseOneTwoStreams),
-  itsNrPhaseOneTwoCoresPerPset(phaseOneTwoStreams[0].size()),
   itsPS(ps),
   itsNrInputs(beamletBuffers.size()),
   itsPsetNumber(psetNumber),
   itsBeamletBuffers(beamletBuffers),
-  itsBlockNumber(firstBlockNumber),
+  itsBlockNumber(0),
   itsDelayTimer("delay consumer", true, true)
 {
   bool haveStationInput = itsNrInputs > 0;
@@ -77,7 +76,7 @@ template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::BeamletB
   itsMaxNrPencilBeams	      = ps.maxNrPencilBeams();
   itsNrPencilBeams	      = ps.nrPencilBeams();
   itsNrPhaseTwoPsets	      = ps.phaseTwoPsets().size();
-  itsCurrentPhaseOneTwoComputeCore = (itsBlockNumber * itsNrSubbandsPerPset) % itsNrPhaseOneTwoCoresPerPset;
+  itsCurrentPhaseOneTwoComputeCore = 0;
   itsSampleDuration	      = ps.sampleDuration();
   itsDelayCompensation	      = ps.delayCompensation();
   itsCorrectClocks	      = ps.correctClocks();
@@ -89,7 +88,7 @@ template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::BeamletB
     itsSubbandToRSPslotMapping  = ps.subbandToRSPslotMapping(stationName);
   }
 
-  itsCurrentTimeStamp	      = TimeStamp(static_cast<int64>(ps.startTime() * itsSampleRate + itsBlockNumber * itsNrSamplesPerSubband), ps.clockSpeed());
+  itsCurrentTimeStamp	      = TimeStamp(static_cast<int64>(ps.startTime() * itsSampleRate), ps.clockSpeed());
   itsIsRealTime		      = ps.realTime();
   itsMaxNetworkDelay	      = ps.maxNetworkDelay();
   itsNrHistorySamples	      = ps.nrHistorySamples();
@@ -107,10 +106,8 @@ template<typename SAMPLE_TYPE> BeamletBufferToComputeNode<SAMPLE_TYPE>::BeamletB
     itsBeamDirectionsAtBegin.resize(itsNrBeams, itsMaxNrPencilBeams + 1);
     itsBeamDirectionsAfterEnd.resize(itsNrBeams, itsMaxNrPencilBeams + 1);
 
-    if (itsDelayCompensation || itsMaxNrPencilBeams > 1) {
+    if (itsDelayCompensation || itsMaxNrPencilBeams > 1)
       itsDelays = new Delays(ps, stationName, itsCurrentTimeStamp);
-      itsDelays->start();
-    }  
 
     if (itsCorrectClocks)
       itsClockCorrectionTime = ps.clockCorrectionTime(stationName);
@@ -237,9 +234,8 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::wri
 
     double currentTime  = tv.tv_sec + tv.tv_usec / 1e6;
     double expectedTime = itsCorrelationStartTime * itsSampleDuration;
-    double recordingTime = itsCurrentTimeStamp * itsSampleDuration;
 
-    logStr << ", age: " << PrettyTime(currentTime - recordingTime) << ", late: " << PrettyTime(currentTime - expectedTime);
+    logStr << ", late: " << PrettyTime(currentTime - expectedTime);
   }
 
   if (itsNeedDelays) {
@@ -256,77 +252,28 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::wri
   LOG_INFO(logStr.str());
 }
 
-
-template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::setMetaData( SubbandMetaData &metaData, unsigned psetIndex, unsigned subband )
-{
-  unsigned rspBoard = itsSubbandToRSPboardMapping[subband];
-  unsigned beam     = itsSubbandToSAPmapping[subband];
-
-  if (itsNeedDelays) {
-    for (unsigned p = 0; p < itsNrPencilBeams[beam] + 1; p ++) {
-      struct SubbandMetaData::beamInfo &beamInfo = metaData.beams(psetIndex)[p];
-
-      beamInfo.delayAtBegin   = itsFineDelaysAtBegin[beam][p];
-      beamInfo.delayAfterEnd  = itsFineDelaysAfterEnd[beam][p];
-
-      // extract the carthesian coordinates
-      const casa::Vector<double> &beamDirBegin = itsBeamDirectionsAtBegin[beam][p].getValue();
-      const casa::Vector<double> &beamDirEnd   = itsBeamDirectionsAfterEnd[beam][p].getValue();
-
-      for (unsigned i = 0; i < 3; i ++) {
-        beamInfo.beamDirectionAtBegin[i]  = beamDirBegin[i];
-        beamInfo.beamDirectionAfterEnd[i] = beamDirEnd[i];
-      }
-    }
-  }
-
-  metaData.alignmentShift(psetIndex) = itsBeamletBuffers[rspBoard]->alignmentShift(beam);
-  metaData.setFlags(psetIndex, itsFlags[rspBoard][beam]);
-}
-
-
-template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::sendSubband( Stream *stream, unsigned subband )
-{
-  unsigned rspBoard = itsSubbandToRSPboardMapping[subband];
-  unsigned rspSlot  = itsSubbandToRSPslotMapping[subband];
-  unsigned beam     = itsSubbandToSAPmapping[subband];
-
-  itsBeamletBuffers[rspBoard]->sendSubband(stream, rspSlot, beam);
-}
-
-
 template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::toComputeNodes()
 {
   CN_Command command(CN_Command::PROCESS, itsBlockNumber ++);
 
-  if (itsNrPhaseOneTwoCoresPerPset > 0) {
+  if (!itsPhaseOneTwoStreams.empty()) {
     // If the total number of subbands is not dividable by the nrSubbandsPerPset,
     // we may have to send dummy process commands, without sending subband data.
 
     for (unsigned subbandBase = 0; subbandBase < itsNrSubbandsPerPset; subbandBase ++) {
-      Stream *controlStream = itsPhaseOneTwoStreams[myPsetNumber][itsCurrentPhaseOneTwoComputeCore];
+      Stream *stream = itsPhaseOneTwoStreams[itsCurrentPhaseOneTwoComputeCore];
 
       // tell CN to process data
-      command.write(controlStream);
+
+#if defined CLUSTER_SCHEDULING
+      if (itsPsetNumber == 0)
+#endif
+      {
+	//LOG_DEBUG_STR(itsLogPrefix << "writing command PROCESS to stream " << stream);
+	command.write(stream);
+      }
 
       if (itsNrInputs > 0) {
-#ifdef CLUSTER_SCHEDULING
-        // transpose the data and send it to the correct compute nodes directly
-        for (unsigned psetIndex = 0; psetIndex < itsNrPhaseTwoPsets; psetIndex ++) {
-          unsigned subband = itsNrSubbandsPerPset * psetIndex + subbandBase;
-          if (subband >= itsNrSubbands)
-            continue;
-
-          Stream *stream = itsPhaseOneTwoStreams[psetIndex][itsCurrentPhaseOneTwoComputeCore];
-
-          SubbandMetaData metaData(1, itsMaxNrPencilBeams + 1);
-
-          setMetaData(metaData, 0, subband);
-          metaData.write(stream);
-          sendSubband(stream, subband);
-        }
-      }
-#else
         // create and send all metadata in one "large" message, since initiating a message
         // has significant overhead in FCNP.
         SubbandMetaData metaData(itsNrPhaseTwoPsets, itsMaxNrPencilBeams + 1);
@@ -334,27 +281,50 @@ template<typename SAMPLE_TYPE> void BeamletBufferToComputeNode<SAMPLE_TYPE>::toC
         for (unsigned psetIndex = 0; psetIndex < itsNrPhaseTwoPsets; psetIndex ++) {
           unsigned subband = itsNrSubbandsPerPset * psetIndex + subbandBase;
 
-          if (subband >= itsNrSubbands)
-            continue;
+          if (subband < itsNrSubbands) {
+            unsigned rspBoard = itsSubbandToRSPboardMapping[subband];
+            unsigned beam     = itsSubbandToSAPmapping[subband];
 
-          setMetaData(metaData, psetIndex, subband);
+            if (itsNeedDelays) {
+              for (unsigned p = 0; p < itsNrPencilBeams[beam] + 1; p ++) {
+                struct SubbandMetaData::beamInfo &beamInfo = metaData.beams(psetIndex)[p];
+
+                beamInfo.delayAtBegin   = itsFineDelaysAtBegin[beam][p];
+                beamInfo.delayAfterEnd  = itsFineDelaysAfterEnd[beam][p];
+
+                // extract the carthesian coordinates
+                const casa::Vector<double> &beamDirBegin = itsBeamDirectionsAtBegin[beam][p].getValue();
+                const casa::Vector<double> &beamDirEnd   = itsBeamDirectionsAfterEnd[beam][p].getValue();
+
+                for (unsigned i = 0; i < 3; i ++) {
+                  beamInfo.beamDirectionAtBegin[i]  = beamDirBegin[i];
+                  beamInfo.beamDirectionAfterEnd[i] = beamDirEnd[i];
+                }
+              }  
+            }  
+
+            metaData.alignmentShift(psetIndex) = itsBeamletBuffers[rspBoard]->alignmentShift(beam);
+            metaData.setFlags(psetIndex, itsFlags[rspBoard][beam]);
+          }
         }
 
-        metaData.write(controlStream);
+        metaData.write(stream);
 
         // now send all subband data
         for (unsigned psetIndex = 0; psetIndex < itsNrPhaseTwoPsets; psetIndex ++) {
           unsigned subband = itsNrSubbandsPerPset * psetIndex + subbandBase;
 
-          if (subband >= itsNrSubbands)
-            continue;
+          if (subband < itsNrSubbands) {
+            unsigned rspBoard = itsSubbandToRSPboardMapping[subband];
+            unsigned rspSlot  = itsSubbandToRSPslotMapping[subband];
+            unsigned beam     = itsSubbandToSAPmapping[subband];
 
-          sendSubband(controlStream, subband);
+            itsBeamletBuffers[rspBoard]->sendSubband(stream, rspSlot, beam);
+          }
         }
       }
-#endif
 
-      if (++ itsCurrentPhaseOneTwoComputeCore == itsNrPhaseOneTwoCoresPerPset)
+      if (++ itsCurrentPhaseOneTwoComputeCore == itsPhaseOneTwoStreams.size())
         itsCurrentPhaseOneTwoComputeCore = 0;
     }
   }

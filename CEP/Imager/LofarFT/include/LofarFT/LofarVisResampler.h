@@ -110,20 +110,6 @@ namespace LOFAR { //# NAMESPACE CASA - BEGIN
                           const Bool& dopsf, LofarCFStore& cfs)
     {DataToGridImpl_p(griddedData, vbs, rows, rbeg, rend, sumwt,dopsf,cfs);}
 
-    void lofarDataToGrid_linear (Array<Complex>& griddedData, LofarVBStore& vbs,
-                          const Vector<uInt>& rows,
-                          Int rbeg, Int rend,
-                          Matrix<Double>& sumwt,
-                          const Bool& dopsf, LofarCFStore& cfs)
-    {DataToGridImpl_linear_p(griddedData, vbs, rows, rbeg, rend, sumwt,dopsf,cfs);}
-    void lofarDataToGrid_linear (Array<DComplex>& griddedData, LofarVBStore& vbs,
-                          const Vector<uInt>& rows,
-                          Int rbeg, Int rend,
-                          Matrix<Double>& sumwt,
-                          const Bool& dopsf, LofarCFStore& cfs)
-    {DataToGridImpl_linear_p(griddedData, vbs, rows, rbeg, rend, sumwt,dopsf,cfs);}
-
-
     void lofarGridToData(LofarVBStore& vbs,
                          const Array<Complex>& grid,
                          const Vector<uInt>& rows,
@@ -175,13 +161,6 @@ namespace LOFAR { //# NAMESPACE CASA - BEGIN
     //
     template <class T>
     void DataToGridImpl_p(Array<T>& griddedData, LofarVBStore& vb,
-                          const Vector<uInt>& rows,
-                          Int rbeg, Int rend,
-			  Matrix<Double>& sumwt,const Bool& dopsf,
-                          LofarCFStore& cfs);
-
-    template <class T>
-    void DataToGridImpl_linear_p(Array<T>& griddedData, LofarVBStore& vb,
                           const Vector<uInt>& rows,
                           Int rbeg, Int rend,
 			  Matrix<Double>& sumwt,const Bool& dopsf,

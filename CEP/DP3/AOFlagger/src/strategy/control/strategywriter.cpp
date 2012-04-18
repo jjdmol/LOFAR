@@ -40,7 +40,6 @@
 #include <AOFlagger/strategy/actions/fringestopaction.h>
 #include <AOFlagger/strategy/actions/imageraction.h>
 #include <AOFlagger/strategy/actions/iterationaction.h>
-#include <AOFlagger/strategy/actions/normalizevarianceaction.h>
 #include <AOFlagger/strategy/actions/plotaction.h>
 #include <AOFlagger/strategy/actions/quickcalibrateaction.h>
 #include <AOFlagger/strategy/actions/rawappenderaction.h>
@@ -161,9 +160,6 @@ namespace rfiStrategy {
 				break;
 			case IterationBlockType:
 				writeIterationBlock(static_cast<const IterationBlock&>(action));
-				break;
-			case NormalizeVarianceActionType:
-				writeNormalizeVarianceAction(static_cast<const NormalizeVarianceAction&>(action));
 				break;
 			case PlotActionType:
 				writePlotAction(static_cast<const PlotAction&>(action));
@@ -403,13 +399,7 @@ namespace rfiStrategy {
 		writeContainerItems(action);
 	}
 
-	void StrategyWriter::writeNormalizeVarianceAction(const NormalizeVarianceAction &action)
-	{
-		Attribute("type", "NormalizeVarianceAction");
-		Write<double>("median-filter-size-in-s", action.MedianFilterSizeInS());
-	}
-
-	void StrategyWriter::writePlotAction(const PlotAction &action)
+	void StrategyWriter::writePlotAction(const class PlotAction &action)
 	{
 		Attribute("type", "PlotAction");
 		Write<int>("plot-kind", action.PlotKind());

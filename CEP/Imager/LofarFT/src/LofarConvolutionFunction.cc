@@ -25,16 +25,12 @@
 #include <Common/LofarLogger.h>
 #include <Common/OpenMP.h>
 
-#include <BBSKernel/MeasurementAIPS.h>
-
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogOrigin.h>
 #include <casa/Arrays/Cube.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/MatrixMath.h>
 #include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayUtil.h>
-#include <casa/Arrays/ArrayIter.h>
 
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <measures/Measures/MDirection.h>
@@ -63,12 +59,6 @@
 #include <casa/sstream.h>
 #include <iomanip>
 
-#include <lattices/Lattices/ArrayLattice.h>
-#include <lattices/Lattices/LatticeFFT.h>
-
-// SvdT: to get rid of warnings for unused variables
-#define UNUSED(expr) (void)(expr);
-
 namespace LOFAR
 {
 
@@ -78,20 +68,13 @@ namespace LOFAR
    const MeasurementSet& ms,
    uInt nW, double Wmax,
    uInt oversample,
+   const String& beamElementPath,
    Int verbose,
    Int maxsupport,
-   const String& imgName,
-   Bool Use_EJones,
-   Bool Apply_Element,
-   const casa::Record& parameters
-  )
-  // ,
-  //Int TaylorTerm,
-    //Double RefFreq
+   const String& imgName)
     : m_shape(shape),
       m_coordinates(coordinates),
-      itsParameters(parameters),
-      m_aTerm(ms, parameters),
+      m_aTerm(ms, beamElementPath),
       m_maxW(Wmax), //maximum W set by ft machine to flag the w>wmax
       m_nWPlanes(nW),
       m_oversampling(oversample),
@@ -109,6 +92,7 @@ namespace LOFAR
       itsTimeCFpar(0),
       itsTimeCFfft(0),
       itsTimeCFcnt(0)
+      //Not sure how useful that is
   {
     if (itsVerbose > 0) {
       cout<<"LofarConvolutionFunction:shape  "<<shape<<endl;
@@ -117,29 +101,17 @@ namespace LOFAR
 
     //    m_maxCFSupport=0; //need this parameter to stack all the CF for average PB estimate
 
-    //itsTaylorTerm=TaylorTerm;
-    //itsRefFreq=RefFreq;
-    //cout<<"itsTaylorTerm itsRefFreq "<<itsTaylorTerm<<" "<<itsRefFreq<<endl;
-      m_wScale = WScale(m_maxW, m_nWPlanes);
+    m_wScale = WScale(m_maxW, m_nWPlanes);
     MEpoch start = observationStartTime(ms, 0);
 
-    m_refFrequency = BBS::readFreqReference(ms, 0);
-    its_Use_EJones=Use_EJones;
-    its_Apply_Element=Apply_Element;
-    its_count_time=0;
-    //if(!its_Use_EJones){cout<<"Not using the beam in the calculation of the CFs...."<<endl;}
+    m_refFrequency = observationReferenceFreq(ms, 0);
+
     if (m_oversampling%2 == 0) {
       // Make OverSampling an odd number
       m_oversampling++;
     }
 
-    //list_freq   = Vector<Double>(1, m_refFrequency);
-    ROMSSpWindowColumns window(ms.spectralWindow());
-    list_freq.resize(window.nrow());
-    for(uInt i=0; i<window.nrow();++i){
-      list_freq[i]=window.refFrequency()(i);
-    };
-
+    list_freq   = Vector<Double>(1, m_refFrequency);
     m_nChannel  = list_freq.size();
     ROMSAntennaColumns antenna(ms.antenna());
     m_nStations = antenna.nrow();
@@ -159,35 +131,6 @@ namespace LOFAR
 
     // Precalculate the Wtwerm fft for all w-planes.
     store_all_W_images();
-    itsFilledVectorMasks=false;
-
-    // Build the cutted spheroidal for the element beam image
-    Double pixelSize = abs(m_coordinates.increment()[0]);
-    Double imageDiameter = pixelSize * m_shape(0);
-    DirectionCoordinate coordinate = m_coordinates;
-    Double aPixelAngSize = min(m_pixelSizeSpheroidal,
-    			       estimateAResolution(m_shape, m_coordinates));
-    //Double aPixelAngSize = estimateAResolution(m_shape, m_coordinates, 30);
-    Int nPixelsConv = imageDiameter / aPixelAngSize;
-    
-    Matrix<Complex> spheroid_cut_element(IPosition(2,nPixelsConv,nPixelsConv),1.);
-    taper(spheroid_cut_element);
-    //Matrix<Complex> spheroid_cut_element_fft=give_normalized_fft_lapack(spheroid_cut_element, true);
-    normalized_fft(spheroid_cut_element, true);
-    spheroid_cut_element_fft=spheroid_cut_element;
-    Matrix<Complex> spheroid_cut_element_padfft(zero_padding(spheroid_cut_element_fft, m_shape(0)));
-    //Matrix<Complex> spheroid_cut_element_padfft_fft=give_normalized_fft_lapack (spheroid_cut_element_padfft, false);
-    normalized_fft (spheroid_cut_element_padfft, false);
-    Matrix<Complex> spheroid_cut_element_padfft_fft(spheroid_cut_element_padfft);
-    float threshold = 1.e-6;
-    for (Int jj=0; jj<m_shape[1]; ++jj) {
-      for (Int ii=0; ii<m_shape[0]; ++ii) {
-	Float absVal = abs(spheroid_cut_element_padfft_fft(ii,jj));
-	spheroid_cut_element_padfft_fft(ii,jj) = std::max (absVal, threshold);
-      }
-    }
-    Spheroid_cut_im_element.reference (real(spheroid_cut_element_padfft_fft));
-    store(m_coordinates,Spheroid_cut_im_element,"Spheroid_cut_im_element.img");
   }
 
   //      ~LofarConvolutionFunction ()
@@ -197,7 +140,6 @@ namespace LOFAR
   // Precalculate all W-terms in the fourier domain
   void LofarConvolutionFunction::store_all_W_images()
   {
-    logIO()<<"LofarConvolutionFunction::store_all_W_images() "<<"Computing the Wterms..."<< LogIO::POST;//<<endl;
     PrecTimer wTimer;
     wTimer.start();
     Double pixelSize = abs(m_coordinates.increment()[0]);
@@ -221,11 +163,10 @@ namespace LOFAR
                                    estimateWResolution(m_shape,
                                                        pixelSize, w));
         Int nPixelsConv = imageDiameter / wPixelAngSize;
-        nPixelsConv *= 2; // SvdT : temporary hack for testing
         if (itsVerbose > 0) {
           cout<<"Number of pixel in the "<<i<<"-wplane: "<<nPixelsConv
               <<"  (w="<<w<<")"<<endl;
-	}
+        }
         if (nPixelsConv > itsMaxSupport) {
           nPixelsConv = itsMaxSupport;
         }
@@ -253,17 +194,8 @@ namespace LOFAR
 #pragma omp atomic
       itsTimeWpar += ptime;
     } // end omp parallel
-
-    its_MaxWSupport=0;
-    for (uInt i=0; i<m_nWPlanes; ++i) {
-      if(m_WplanesStore[i].shape()[0]>its_MaxWSupport){its_MaxWSupport=m_WplanesStore[i].shape()[0];};
-    }
-
-
-
     wTimer.stop();
     itsTimeW = wTimer.getReal();
-    logIO()<<"LofarConvolutionFunction::store_all_W_images() "<<"... Done!"<< LogIO::POST;//<<endl;
   }
 
 
@@ -272,9 +204,6 @@ namespace LOFAR
   // Put it in a map object with a (double time) key.
   void LofarConvolutionFunction::computeAterm (Double time)
   {
-    //logIO()<<"LofarConvolutionFunction::computeAterm "<<"Computing the Aterms for t="<<time<<", and maximum Wupport="<<its_MaxWSupport<< LogIO::POST;//<<endl;
-    PrecTimer timerCyril;
-    timerCyril.start();
     if (m_AtermStore.find(time) != m_AtermStore.end()) {
       // Already done.
       return;
@@ -286,173 +215,73 @@ namespace LOFAR
     // Try to avoid making copies when inserting elements in vector or map.
     // Therefore first create the elements and resize them.
     m_AtermStore[time] = vector< vector< Cube<Complex> > >();
-    m_AtermStore_element[time] = vector< vector< Cube<Complex> > >();
-    m_AtermStore_station[time] = vector< vector< Cube<Complex> > >();
     vector< vector< Cube<Complex> > >& aTermList = m_AtermStore[time];
-    vector< vector< Cube<Complex> > >& aTermList_element = m_AtermStore_element[time];
-    vector< vector< Cube<Complex> > >& aTermList_station = m_AtermStore_station[time];
     // Calculate the A-term and fill the vector for all stations.
     aTermList.resize (m_nStations);
-    aTermList_element.resize (m_nStations);
-    aTermList_station.resize (m_nStations);
     ///#pragma omp parallel
     {
       // Thread private variables.
       PrecTimer timerFFT;
       PrecTimer timerPar;
-
       ///#pragma omp for
-      DirectionCoordinate coordinate = m_coordinates;
-      Double aPixelAngSize = min(m_pixelSizeSpheroidal, estimateAResolution(m_shape, m_coordinates));
-      Int nPixelsConv = imageDiameter / aPixelAngSize;
-      if (nPixelsConv > itsMaxSupport) {
-	nPixelsConv = itsMaxSupport;
-      }
-      // Make odd and optimal.
-      nPixelsConv = FFTCMatrix::optimalOddFFTSize (nPixelsConv);
-      aPixelAngSize = imageDiameter / nPixelsConv;
-      IPosition shape(2, nPixelsConv, nPixelsConv);
-      Vector<Double> increment_old(coordinate.increment());
-      Vector<Double> increment(2);
-      increment[0] = aPixelAngSize*sign(increment_old[0]);
-      increment[1] = aPixelAngSize*sign(increment_old[1]);
-      coordinate.setIncrement(increment);
-      Vector<Double> refpix(2, 0.5*(nPixelsConv-1));
-      coordinate.setReferencePixel(refpix);
-      
-      DirectionCoordinate coordinate_element = m_coordinates;
-      //Double aPixelAngSize_element = estimateAResolution(m_shape, m_coordinates, 30.);
-      Double aPixelAngSize_element = min(m_pixelSizeSpheroidal, estimateAResolution(m_shape, m_coordinates));
-      Int nPixelsConv_element = imageDiameter / aPixelAngSize_element;
-      //cout<<"Element_beam size:"<<"1 "<<nPixelsConv_element<<", 2 "<<aPixelAngSize_element<<endl;
-      nPixelsConv_element = FFTCMatrix::optimalOddFFTSize (nPixelsConv_element);
-      aPixelAngSize_element = imageDiameter / nPixelsConv_element;
-      //cout<<"Element_beam size:"<<"1 "<<nPixelsConv_element<<", 2 "<<aPixelAngSize_element<<endl;
-      IPosition shape_element(2, nPixelsConv_element, nPixelsConv_element);
-      Vector<Double> increment_element(2);
-      increment_element[0] = aPixelAngSize_element*sign(increment_old[0]);
-      increment_element[1] = aPixelAngSize_element*sign(increment_old[1]);
-      coordinate_element.setIncrement(increment_element);
-      Vector<Double> refpix_element(2, 0.5*(nPixelsConv_element-1));
-      coordinate_element.setReferencePixel(refpix_element);
-      
-      //hier is het
-      
-      m_aTerm.setDirection(coordinate, shape);
-      
-      MEpoch binEpoch;
-      binEpoch.set(Quantity(time, "s"));
-      
-      m_aTerm.setEpoch(binEpoch);
-//       LofarATerm::ITRFDirectionMap dirMap = m_aTerm.makeDirectionMap(coordinate, shape, binEpoch);
-
       for (uInt i=0; i<m_nStations; ++i) {
         timerPar.start();
+	DirectionCoordinate coordinate = m_coordinates;
+        Double aPixelAngSize = min(m_pixelSizeSpheroidal,
+                                   estimateAResolution(m_shape, m_coordinates));
+        Int nPixelsConv = imageDiameter / aPixelAngSize;
+        if (nPixelsConv > itsMaxSupport) {
+          nPixelsConv = itsMaxSupport;
+        }
+        // Make odd and optimal.
+        nPixelsConv = FFTCMatrix::optimalOddFFTSize (nPixelsConv);
+        aPixelAngSize = imageDiameter / nPixelsConv;
+        if (itsVerbose > 0) {
+          cout.precision(20);
+          cout<<"Number of pixel in the Aplane of "<<i<<": "<<nPixelsConv
+              <<", time="<<fixed<<time<<endl;
+        }
+        IPosition shape(2, nPixelsConv, nPixelsConv);
+        Vector<Double> increment_old(coordinate.increment());
+        Vector<Double> increment(2);
+        increment[0] = aPixelAngSize*sign(increment_old[0]);
+        increment[1] = aPixelAngSize*sign(increment_old[1]);
+        coordinate.setIncrement(increment);
+        Vector<Double> refpix(2, 0.5*(nPixelsConv-1));
+        coordinate.setReferencePixel(refpix);
 
         //======================================
-        // Separated element and station
+        // Disable the beam
         //======================================
-	vector< Cube<Complex> > aTermA_element;
-	vector< Cube<Complex> > aTermA_array;
-
-	vector< Matrix<Complex> > aTermA_array_plane(m_aTerm.evaluateStationScalarFactor(i, list_freq , list_freq , true));
-	aTermA_array.resize(m_nChannel);
-        for (uInt ch=0; ch<m_nChannel; ++ch) {
-	  aTermA_array[ch].resize(IPosition(3,shape[0],shape[0],4));
-	  aTermA_array[ch]=0.;
-	}
-        for (uInt ch=0; ch<m_nChannel; ++ch) {
-	  Matrix<Complex> plane(aTermA_array[ch].xyPlane(0));
-	  plane=aTermA_array_plane[ch].copy();
-	  Matrix<Complex> plane2(aTermA_array[ch].xyPlane(3));
-	  plane2=aTermA_array_plane[ch].copy();
-	}
-
-	aTermA_element=m_aTerm.evaluateElementResponse(i, 0, list_freq, true);
-
-	//store(coordinate,aTermA_element[0],"aTermA_element."+String::toString(i)+".img");
-	//store(coordinate,aTermA_array[0],"aTermA_array."+String::toString(i)+".img");
-
-        //vector< Cube<Complex> > aTermA = m_aTerm.evaluate(i, dirMap, list_freq, list_freq, false);
-	//store(coordinate,aTermA[0],"aTermA."+String::toString(i)+".orig.img");
-
-//	aTermAtmp = m_aTerm.evaluateSeparated(shape_element,
-//					   coordinate_element,
-//					   i, binEpoch,
-//					   list_freq, true);
-//	aTermA_element=aTermAtmp[0];
-//	aTermAtmp2 = m_aTerm.evaluateSeparated(shape,
-//					   coordinate,
-//					   i, binEpoch,
-//					   list_freq, true);
-//	aTermA_station=aTermAtmp2[1];
-	//store(aTermA_element[0],"aTermA_element.img");
-	//store(aTermA_station[0],"aTermA_station.img");
-
-	//vector< Cube<Complex> > aTermA;
-	// if(!its_Use_EJones){
-
-        // for (uInt ch=0; ch<m_nChannel; ++ch) {
-	//   Matrix<Complex> slice0=aTermA_element[ch].xyPlane(0);
-	//   slice0=1.;
-	//   Matrix<Complex> slice1=aTermA_element[ch].xyPlane(1);
-	//   slice1=0.;
-	//   Matrix<Complex> slice2=aTermA_element[ch].xyPlane(2);
-	//   slice2=0.;
-	//   Matrix<Complex> slice3=aTermA_element[ch].xyPlane(3);
-	//   slice3=1.;
-	// }
-        // for (uInt ch=0; ch<m_nChannel; ++ch) {
-	//   Matrix<Complex> slice0=aTermA_array[ch].xyPlane(0);
-	//   slice0=1.;
-	//   Matrix<Complex> slice1=aTermA_array[ch].xyPlane(1);
-	//   slice1=0.;
-	//   Matrix<Complex> slice2=aTermA_array[ch].xyPlane(2);
-	//   slice2=0.;
-	//   Matrix<Complex> slice3=aTermA_array[ch].xyPlane(3);
-	//   slice3=1.;
-	// }
-
-	// }
-	// else{
+        //Cube<Complex> aterm_cube(IPosition(3,nPixels_Conv,nPixels_Conv,4),1.);
+        //for (uInt iiii=0;iiii<nPixels_Conv;++iiii) {
+        //  for (uInt iiiii=0;iiiii<nPixels_Conv;++iiiii) {
+        //    aterm_cube(iiii,iiiii,1)=0.;
+        //    aterm_cube(iiii,iiiii,2)=0.;
+        //  }
+        //}
+        //vector< Cube<Complex> > aTermA;
+        //aTermA.push_back(aterm_cube);
         //======================================
         // Enable the beam
         //======================================
-//	aTermA = m_aTerm.evaluate(shape,
-//				  coordinate,
-//				  i, binEpoch,
-//				  list_freq, true);
-	// }
-
-
-//        // JVZ: Direction map should be computed only once for all stations.
-//        // However, this requires the DirectionCoordinate instance and shape to
-//        // be exactly equal for all stations.
-
-//        vector< Cube<Complex> > aTermA = m_aTerm.evaluate(i, dirMap, list_freq,
-//          list_freq, true);
-
+        MEpoch binEpoch;
+        binEpoch.set(Quantity(time, "s"));
+        vector< Cube<Complex> > aTermA = m_aTerm.evaluate(shape,
+                                                          coordinate,
+                                                          i, binEpoch,
+                                                          list_freq, true);
         // Compute the fft on the beam
-	vector< Cube<Complex> > aTermAs;
-	aTermAs.resize(m_nChannel);
-	aTermAs[0].resize(IPosition(3,its_MaxWSupport,its_MaxWSupport,4));
         for (uInt ch=0; ch<m_nChannel; ++ch) {
           for (uInt pol=0; pol<4; ++pol) {
-
-            Matrix<Complex> plane1 (aTermA_array[ch].xyPlane(pol));
-	    //Matrix< Complex > plane0int = LinearInterpol2(plane1,200.);
-            normalized_fft (timerFFT, plane1);
-
-
+            Matrix<Complex> plane (aTermA[ch].xyPlane(pol));
+            AlwaysAssert (plane.contiguousStorage(), AipsError);
+            normalized_fft (timerFFT, plane);
           }
         }
-	// store(coordinate,aTermA_array[0],"aTermA_array.fft."+String::toString(i)+".img");
-
         // Note that push_back uses the copy constructor, so for the Cubes
         // in the vector the copy constructor is called too (which is cheap).
-        //aTermList[i] = aTermA;
-        aTermList_element[i] = aTermA_element;
-        aTermList_station[i] = aTermA_array;
+        aTermList[i] = aTermA;
         timerPar.stop();
       } // end omp for
       // Update the timing info.
@@ -468,426 +297,7 @@ namespace LOFAR
     } // end omp parallel
     aTimer.stop();
     itsTimeA = aTimer.getReal();
-    //logIO()<<"LofarConvolutionFunction::computeAterm "<<"...Done!"<< LogIO::POST;//<<endl;
-    timerCyril.stop();
-    //cout.precision(20);
-    //cout<<"For time: "<<time<<endl;
-    //assert(false);
-    //timerCyril.show(cout,"LofarConvolutionFunction::computeAterm");
   }
-
-
-  Array<Complex> LofarConvolutionFunction::ApplyElementBeam(Array<Complex> input_grid, Double time, uInt spw, const Matrix<bool>& Mask_Mueller_in, bool degridding_step)
-  {
-
-    map<Double, vector< vector< Cube<Complex> > > >::const_iterator aiter_element = m_AtermStore_element.find(time);
-    AlwaysAssert (aiter_element!=m_AtermStore_element.end(), AipsError);
-    const vector< vector< Cube<Complex> > >& aterm_element = aiter_element->second;
-
-
-
-    vector< vector< IPosition > > Mueller_Coordinates;
-    Mueller_Coordinates.resize(4);
-    for(uInt i=0;i<4;++i){
-      Mueller_Coordinates[i].resize(4);
-      IPosition pos(2,2,1);
-      for(uInt j=0;j<4;++j){
-	Mueller_Coordinates[i][j]=pos;
-      }
-    }
-
-
-    uInt ind0;
-    uInt ind1;
-    uInt ii = 0;
-    IPosition cfShape;
-    Bool allElem = True;
-    UNUSED(allElem);
-    for (uInt row0=0; row0<=1; ++row0) {
-      for (uInt col0=0; col0<=1; ++col0) {
-	vector < Matrix<Complex> > Row(4);
-	vector < Matrix<Complex> > Row_non_padded(4);
-	uInt jj = 0;
-	for (uInt row1=0; row1<=1; ++row1) {
-	  for (uInt col1=0; col1<=1; ++col1) {
-	    // This Mueller ordering is for polarisation given as XX,XY,YX YY
-	    ind0 = row0 + 2*row1;
-	    ind1 = col0 + 2*col1;
-	    IPosition pos(2,2,1);
-	    pos[0]=ind0;
-	    pos[1]=ind1;
-	    Mueller_Coordinates[ii][jj]=pos;
-	    ++jj;
-	  }
-	}
-	++ii;
-      }
-    }
-
-
-
-    vector< vector< Matrix<Complex> > > vec_element_product;
-    vec_element_product.resize(4);
-    vector< vector< Matrix<Complex> > > vec_plane_product;
-    vec_plane_product.resize(4);
-    if (!degridding_step) {
-      for (uInt i=0; i<4; ++i) {
-    	for (uInt j=i; j<4; ++j) {
-	  IPosition pos_tmp(Mueller_Coordinates[i][j]);
-	  Mueller_Coordinates[i][j]=Mueller_Coordinates[j][i];
-	  Mueller_Coordinates[j][i]=pos_tmp;
-        }
-      }
-    }
-
-    uInt nx(input_grid.shape()[0]);
-    uInt ny(input_grid.shape()[1]);
-    UNUSED(ny);
-    uInt npol(input_grid.shape()[2]);
-
-    Cube<Complex> aTermA(aterm_element[0][spw].copy());
-    Array<Complex> grid_out(input_grid.shape(),0.);
-
-
-    if(!degridding_step){
-
-      logIO() <<"LofarConvolutionFunction::ApplyElementBeam "<<"FFT of the gridded data for this timeslot" << LogIO::POST;//<<endl;
-
-      for(uInt channel=0;channel< input_grid.shape()[3];++channel){
-	{
-#pragma omp parallel for
-	for(uInt jj=0;jj<npol;++jj){
-	  //cout<<"jj="<<jj<<endl;
-	  Matrix<Complex> plane_array_in  = input_grid(Slicer(IPosition(4, 0, 0, jj, 0),
-							      IPosition(4, nx, nx, 1, 1))).nonDegenerate();
-	  //store(plane_array_in,"plane_array_in"+String::toString(jj)+".img");
-	  normalized_fft (plane_array_in, false);
-	  //store(plane_array_in,"plane_array_in"+String::toString(jj)+".img");
-	}
-	}
-      }
-    }
-
-
-
-    //cout<<"LofarConvolutionFunction::ApplyElementBeam "<<"Calculate element beams"<<endl;
-    logIO()<<"LofarConvolutionFunction::ApplyElementBeam "<<"Calculate element beams"<< LogIO::POST;//<<endl;
-    for(uInt ii=0;ii<4;++ii){
-      vec_element_product[ii].resize(4);
-      vec_plane_product[ii].resize(4);
-      for(uInt jj=0;jj<4;++jj){
-	if(Mask_Mueller_in(ii,jj)==true){
-	  vec_element_product[ii][jj].resize(IPosition(2, nx, nx));
-	  vec_plane_product[ii][jj].resize(aTermA.xyPlane(0).shape());
-	  vec_plane_product[ii][jj]=aTermA.xyPlane((Mueller_Coordinates[ii][jj])[0]) * aTermA.xyPlane((Mueller_Coordinates[ii][jj])[1]);
-	  taper(vec_plane_product[ii][jj]);
-	  if(!degridding_step){vec_plane_product[ii][jj]=conj(vec_plane_product[ii][jj]);};
-	}
-	//store(vec_plane_product[ii][jj],"vec_plane_product"+String::toString(ii)+String::toString(jj)+".img");
-      }
-    }
-
-
-    logIO()<<"LofarConvolutionFunction::ApplyElementBeam "<<"FFT - Zero Pad - IFFT"<< LogIO::POST;//<<endl;
-    //#pragma omp parallel
-    {
-      Int ii;
-      Int jj;
-#pragma omp parallel for private(ii,jj)
-      for(uInt iii=0;iii<16;++iii){
-	jj=floor(float(iii)/4.);
-	ii=floor((float(iii)/4.-jj)*4.);
-	//cout<<"iii"<<iii<<" "<<ii<<" "<<jj<<endl;
-	if(Mask_Mueller_in(ii,jj)==true){
-	  normalized_fft (vec_plane_product[ii][jj], true);
-	  vec_element_product[ii][jj]=zero_padding(vec_plane_product[ii][jj], nx);
-	  normalized_fft (vec_element_product[ii][jj], false);
-	  //store(vec_element_product[ii][jj],"vec_element_product"+String::toString(ii)+String::toString(jj)+".img");
-	}
-
-      }
-    }
-
-    //    assert(false);
-
-
-    //#pragma omp parallel
-    if(npol==4)
-      {
-	logIO()<<"LofarConvolutionFunction::ApplyElementBeam "<<"Multiply element and data in the image plane"<< LogIO::POST;//<<endl;
-	int y=0;
-	uInt ii=0;
-	uInt jj=0;
-#pragma omp parallel for private(y,ii,jj)
-	for(int x=0 ; x<nx ; ++x){
-	  //cout<<"x="<<x<<endl;
-	  for(y=0 ; y<nx ; ++y){
-
-	    for(ii=0;ii<4;++ii){
-	      for(jj=0;jj<4;++jj){
-		if(Mask_Mueller_in(ii,jj)==true){
-		  grid_out(IPosition(4,x,y,jj,0)) += vec_element_product[ii][jj](x,y) * input_grid(IPosition(4,x,y,ii,0))/Spheroid_cut_im_element(x,y);
-
-		}
-	      }
-	    }
-	  }
-	}
-      }
-
-    if(npol==1)
-      {
-	logIO()<<"LofarConvolutionFunction::ApplyElementBeam "<<"Multiply element and data in the image plane"<< LogIO::POST;//<<endl;
-	int y=0;
-	uInt ii=0;
-	uInt jj=0;
-#pragma omp parallel for private(y,ii,jj)
-	for(int x=0 ; x<nx ; ++x){
-	  //cout<<"x="<<x<<endl;
-	  for(y=0 ; y<nx ; ++y){
-
-	    for(ii=0;ii<4;++ii){
-	      for(jj=0;jj<4;++jj){
-		if(Mask_Mueller_in(ii,jj)==true){
-		  grid_out(IPosition(4,x,y,0,0)) += vec_element_product[ii][jj](x,y) * input_grid(IPosition(4,x,y,0,0))/(2.*Spheroid_cut_im_element(x,y));
-		}
-	      }
-	    }
-	  }
-	}
-
-      }
-
-    logIO()<<"LofarConvolutionFunction::ApplyElementBeam "<<"Shapes InputGrid:"<<input_grid.shape()<<", Shapes OutputGrid:"<< LogIO::POST;//<<grid_out.shape()<<endl;
-
-
-    return grid_out;
-
-  }
-
-  //==================================================================
-  //==================================================================
-  Array<Complex> LofarConvolutionFunction::ApplyElementBeam2(Array<Complex>& input_grid, Double time, uInt spw, const Matrix<bool>& Mask_Mueller_in2, bool degridding_step, Int UsedMask)
-  {
-
-    Matrix<bool> Mask_Mueller_in(Mask_Mueller_in2.copy());
-    for(uInt i=0;i<4;++i){
-      for(uInt j=0;j<4;++j){
-    	Mask_Mueller_in(i,j)=true;
-      }
-    }
-    map<Double, vector< vector< Cube<Complex> > > >::const_iterator aiter_element = m_AtermStore_element.find(time);
-    AlwaysAssert (aiter_element!=m_AtermStore_element.end(), AipsError);
-    const vector< vector< Cube<Complex> > >& aterm_element = aiter_element->second;
-
-
-
-    vector< vector< IPosition > > Mueller_Coordinates;
-    Mueller_Coordinates.resize(4);
-    for(uInt i=0;i<4;++i){
-      Mueller_Coordinates[i].resize(4);
-      IPosition pos(2,2,1);
-      for(uInt j=0;j<4;++j){
-	Mueller_Coordinates[i][j]=pos;
-      }
-    }
-
-    {
-    uInt ind0;
-    uInt ind1;
-    uInt ii = 0;
-    IPosition cfShape;
-    Bool allElem = True;
-    UNUSED(allElem);
-    for (uInt row0=0; row0<=1; ++row0) {
-      for (uInt col0=0; col0<=1; ++col0) {
-	vector < Matrix<Complex> > Row(4);
-	vector < Matrix<Complex> > Row_non_padded(4);
-	uInt jj = 0;
-	for (uInt row1=0; row1<=1; ++row1) {
-	  for (uInt col1=0; col1<=1; ++col1) {
-	    // This Mueller ordering is for polarisation given as XX,XY,YX YY
-	    ind0 = row0 + 2*row1;
-	    ind1 = col0 + 2*col1;
-	    //ind0 = 2.*row0 + row1;
-	    //ind1 = 2.*col0 + col1;
-	    IPosition pos(2,2,1);
-	    pos[0]=ind0;
-	    pos[1]=ind1;
-	    Mueller_Coordinates[ii][jj]=pos;
-	    ++jj;
-	  }
-	}
-	++ii;
-      }
-    }
-    }
-
-    if (!degridding_step) {
-      for (uInt i=0; i<4; ++i) {
-	for (uInt j=i; j<4; ++j) {
-	  IPosition pos_tmp(Mueller_Coordinates[i][j]);
-	  Mueller_Coordinates[i][j]=Mueller_Coordinates[j][i];
-	  Mueller_Coordinates[j][i]=pos_tmp;
-	  Bool bool_tmp(Mask_Mueller_in(i,j));
-	  Mask_Mueller_in(i,j)=Mask_Mueller_in(j,i);
-	  Mask_Mueller_in(i,j)=bool_tmp;
-	}
-      }
-    }
-
-    Cube<Complex> aTermA(aterm_element[0][spw].copy());
-    Array<Complex> grid_out(input_grid.shape(),0.);
-    Int nx(input_grid.shape()[0]);
-    Int ny(input_grid.shape()[1]);
-    UNUSED(ny);
-    Int npol(input_grid.shape()[2]);
-
-    vector< vector< Matrix<Complex> > > vec_plane_product;
-    vec_plane_product.resize(4);
-
-
-    //logIO()<<"LofarConvolutionFunction::ApplyElementBeam "<<"Calculate element beams"<< LogIO::POST;//<<endl;
-    for(uInt ii=0;ii<4;++ii){
-      vec_plane_product[ii].resize(4);
-      for(uInt jj=0;jj<4;++jj){
-	if(Mask_Mueller_in(ii,jj)==true){
-	  vec_plane_product[ii][jj].resize(aTermA.xyPlane(0).shape());
-	  vec_plane_product[ii][jj]=aTermA.xyPlane((Mueller_Coordinates[ii][jj])[0]) * conj(aTermA.xyPlane((Mueller_Coordinates[ii][jj])[1]));
-	  taper(vec_plane_product[ii][jj]);
-	  if(!degridding_step){vec_plane_product[ii][jj]=conj(vec_plane_product[ii][jj]);};
-	  //store(vec_plane_product[ii][jj],"vec_plane_product."+String::toString(ii)+"."+String::toString(jj)+".img");
-	  normalized_fft(vec_plane_product[ii][jj],true);
-	}
-      }
-    }
-
-    //assert(false);
-    //#pragma omp parallel
-    if(GridsMueller.size()==0){
-      //logIO()<<"LofarConvolutionFunction::ApplyElementBeam "<<"...Declare GridsMueller Matrix"<< LogIO::POST;//<<endl;
-      GridsMueller.resize(4);
-      for(uInt ii=0;ii<4;++ii){
-	GridsMueller[ii].resize(4);
-	for(uInt jj=0;jj<4;++jj){
-	  if(Mask_Mueller_in(ii,jj)==true){
-	    GridsMueller[ii][jj].resize(IPosition(2,nx,nx));
-	    GridsMueller[ii][jj]=Complex();
-	  }
-	}
-      }
-    } else {
-      for(uInt ii=0;ii<4;++ii){
-    	for(uInt jj=0;jj<4;++jj){
-    	  if(Mask_Mueller_in(ii,jj)==true){
-    	    GridsMueller[ii][jj]=Complex();
-    	  }
-    	}
-      }
-    }
-
-    //logIO()<<"LofarConvolutionFunction::ApplyElementBeam "<<"Convolve..."<< LogIO::POST;//<<endl;
-    {
-      Int ii;
-      Int jj;
-#pragma omp parallel for private(ii,jj)
-      for(uInt iii=0;iii<16;++iii){
-	ii=floor(float(iii)/4.);
-	jj=floor((float(iii)/4.-ii)*4.);
-	//cout<<"iii"<<iii<<" "<<ii<<" "<<jj<<" M="<<Mask_Mueller_in(jj,ii)<<endl;
-	if(Mask_Mueller_in(ii,jj)==true){
-	  Matrix<Complex> ConvFunc(vec_plane_product[ii][jj]);
-
-	  //ConvolveGerArray(input_grid, ii, GridsMueller[ii][jj], ConvFunc);
-
-	  if(npol==1){
-	    if(!(UsedMask>-1)){
-	      ConvolveGerArray(input_grid, 0, GridsMueller[ii][jj], ConvFunc);
-	    } else {
-	      ConvolveGerArrayMask(input_grid, 0, GridsMueller[ii][jj], ConvFunc, UsedMask);
-	    }
-	  }
-	  if(npol==4){
-	    if(!(UsedMask>-1)){
-	      ConvolveGerArray(input_grid, ii, GridsMueller[ii][jj], ConvFunc);
-	    } else {
-	      ConvolveGerArrayMask(input_grid, ii, GridsMueller[ii][jj], ConvFunc, UsedMask);
-	    }
-	  }
-
-
-	}
-
-      }
-    }
-
-    //logIO()<<"LofarConvolutionFunction::ApplyElementBeam "<<"Convolve ... Done!"<< LogIO::POST;//<<endl;
-    // Int ii;
-    // Int jj;
-    // for(uInt iii=0;iii<16;++iii){
-    //   jj=floor(float(iii)/4.);
-    //   ii=floor((float(iii)/4.-jj)*4.);
-    //   //cout<<"iii"<<iii<<" "<<ii<<" "<<jj<<endl;
-    //   if(Mask_Mueller_in(ii,jj)==true){
-    // 	store(GridsMueller[ii][jj],"grid_out"+String::toString(ii)+String::toString(jj)+".img");
-    //   }
-    // }
-
-
-
-
-
-    //    #pragma omp parallel
-    if(npol==4)
-      {
-	int y=0;
-	uInt ii=0;
-	uInt jj=0;
-	#pragma omp parallel for private(y,ii,jj)
-	for(int x=0 ; x<nx ; ++x){
-	  //cout<<"x="<<x<<endl;
-	  for(y=0 ; y<nx ; ++y){
-
-	    for(ii=0;ii<4;++ii){
-	      for(jj=0;jj<4;++jj){
-		//if(Mask_Mueller_in(ii,jj)==true){
-		  grid_out(IPosition(4,x,y,jj,0)) += GridsMueller[ii][jj](x,y) ;///Spheroid_cut_im_element(x,y);
-
-		//}
-	      }
-	    }
-	  }
-	}
-      }
-
-
-    if(npol==1)
-      {
-    	int y=0;
-    	uInt ii=0;
-    	#pragma omp parallel for private(y,ii)
-    	for(int x=0 ; x<nx ; ++x){
-    	  for(y=0 ; y<nx ; ++y){
-    	    for(ii=0;ii<4;++ii){
-    	      grid_out(IPosition(4,x,y,0,0)) += 0.5*(GridsMueller[0][ii](x,y) + GridsMueller[3][ii](x,y));///Spheroid_cut_im_element(x,y);
-
-    	    }
-    	  }
-    	}
-      }
-
-
-
-    //logIO()<<"LofarConvolutionFunction::ApplyElementBeam "<<"Shapes InputGrid:"<<input_grid.shape()<<", Shapes OutputGrid:"<< LogIO::POST;//<<grid_out.shape()<<endl;
-
-
-    return grid_out;
-  }
-
-  //==================================================================
-  //==================================================================
-
-
 
   //================================================
   // Compute the convolution function for all channel, for the polarisations specified in the Mueller_mask matrix
@@ -897,52 +307,34 @@ namespace LOFAR
 
   LofarCFStore LofarConvolutionFunction::makeConvolutionFunction
   (uInt stationA, uInt stationB, Double time, Double w,
-   const Matrix<bool>& /*Mask_Mueller_in*/, bool degridding_step,
+   const Matrix<bool>& Mask_Mueller, bool degridding_step,
    double Append_average_PB_CF, Matrix<Complex>& Stack_PB_CF,
-   double& sum_weight_square, uInt spw, Int /*TaylorTerm*/, double /*RefFreq*/)
+   double& sum_weight_square)
   {
     // Initialize timers.
     PrecTimer timerFFT;
     PrecTimer timerPar;
-    PrecTimer timerCyril;
     timerPar.start();
-
-    Matrix<bool> Mask_Mueller(IPosition(2,4,4),false);
-    Mask_Mueller(0,0)=true;
 
     // Stack_PB_CF should be called Sum_PB_CF (it is a sum, no stack).
     CountedPtr<CFTypeVec> res (new vector< vector< vector < Matrix<Complex> > > >());
     CFTypeVec& result = *res;
     vector< vector< vector < Matrix<Complex> > > > result_non_padded;
 
-
     // Stack the convolution function if averagepb.img don't exist
-    //Matrix<Complex> Stack_PB_CF_fft(IPosition(2,m_shape(0),m_shape(0)),0.);
+    Matrix<Complex> Stack_PB_CF_fft(IPosition(2,m_shape(0),m_shape(0)),0.);
     Bool Stack = (Append_average_PB_CF != 0.);
 
-
-
     // If the beam is not in memory, compute it
-
-    // map<Double, vector< vector< Cube<Complex> > > >::const_iterator aiter =
-    //   m_AtermStore.find(time);
-    // AlwaysAssert (aiter!=m_AtermStore.end(), AipsError);
-    // const vector< vector< Cube<Complex> > >& aterm = aiter->second;
-
-
-    map<Double, vector< vector< Cube<Complex> > > >::const_iterator aiter_station =
-      m_AtermStore_station.find(time);
-    AlwaysAssert (aiter_station!=m_AtermStore_station.end(), AipsError);
-    const vector< vector< Cube<Complex> > >& aterm_station = aiter_station->second;
-
-
-
-
+        
+    map<Double, vector< vector< Cube<Complex> > > >::const_iterator aiter =
+      m_AtermStore.find(time);
+    AlwaysAssert (aiter!=m_AtermStore.end(), AipsError);
+    const vector< vector< Cube<Complex> > >& aterm = aiter->second;
     ///        if(m_AtermStore.find(time)==m_AtermStore.end()){computeAterm(time);}
 
     // Load the Wterm
-    double ratio_freqs=list_freq[0]/list_freq[spw];
-    uInt w_index = m_wScale.plane(w*ratio_freqs);
+    uInt w_index = m_wScale.plane(w);
     Matrix<Complex> wTerm;
     wTerm = m_WplanesStore[w_index];
     Int Npix_out = 0;
@@ -961,36 +353,17 @@ namespace LOFAR
       wTerm.reference (conj(wTerm));
     }
 
-    uInt ch(spw);
-    //for (uInt ch=0; ch<m_nChannel; ++ch) {
+    for (uInt ch=0; ch<m_nChannel; ++ch) {
       // Load the Aterm
-    //const Cube<Complex> aTermA(aterm_station[stationA][ch].copy());
-    Cube<Complex> aTermA(aterm_station[stationA][ch].copy());
-
-
-    //const Cube<Complex>& aTermB(aterm_station[stationB][ch]);
-    Cube<Complex> aTermB(aterm_station[stationB][ch].copy());
-      //==============================
-      //==============================
-      // Cyr: MFS
-      //==============================
-      //==============================
-      // if( TaylorTerm > 0 )
-      // 	{
-      // 	  Float freq=0.0,mulfactor=1.0;
-      // 	  freq = list_freq[ch];
-      // 	  mulfactor = ((freq-RefFreq)/RefFreq);
-      // 	  //cout<<"mulfactor "<<mulfactor<<endl;
-      // 	  Cube<Complex> slice(aTermA);
-      // 	  slice *= pow(mulfactor,TaylorTerm);//mulfactor;
-      // 	}
-      //==============================
-      //==============================
+      const Cube<Complex>& aTermA(aterm[stationA][ch]);
+      const Cube<Complex>& aTermB(aterm[stationB][ch]);
       // Determine maximum support of A, W, and Spheroidal function for zero padding
       Npix_out = std::max(std::max(aTermA.shape()[0], aTermB.shape()[0]),
                           std::max(wTerm.shape()[0], Spheroid_cut.shape()[0]));
-
-      //cout << "CF Shapes, Wterm:" << wTerm.shape()[0] << ", Beam " << aTermA.shape()[0] << ", Spheroid: " << Spheroid_cut.shape()[0] << endl;
+      if (itsVerbose > 0) {
+        cout<<"Number of pixel in the final conv function for baseline ["<< stationA<<", "<<stationB<<"] = "<<Npix_out
+            <<" "<<aTermA.shape()[0]<<" "<<aTermB.shape()[0]<<" "<<wTerm.shape()[0]<<endl;
+      }
 
       // Zero pad to make the image planes of the A1, A2, and W term have the same resolution in the image plane
       Matrix<Complex> Spheroid_cut_paddedf(zero_padding(Spheroid_cut,Npix_out));
@@ -1005,9 +378,10 @@ namespace LOFAR
         cout << "fft shapes " << wTerm_paddedf.shape() << ' ' << Spheroid_cut_paddedf.shape()
              << ' ' << aTermA_padded.shape() << ' ' << aTermB_padded.shape() << endl;
       }
-
-
       for (uInt i=0; i<4; ++i) {
+        //Matrix<Complex> planeAf(aTermA_padded.xyPlane(i));
+        //Matrix<Complex> planeBf(aTermB_padded.xyPlane(i));
+        // AlwaysAssert(planeAf.contiguousStorage(), AipsError);
         // Make a matrix referencing the data in the cube's plane.
         Matrix<Complex> planeAf(aTermA_padded.xyPlane(i));
         Matrix<Complex> planeBf(aTermB_padded.xyPlane(i));
@@ -1016,62 +390,30 @@ namespace LOFAR
         normalized_fft (timerFFT, planeBf, false);
       }
 
-      //if (itsVerbose > 0) {
-      // if((stationA==3)&( stationB==0)){
-      //   cout<<"Number of pixel in the final conv function for baseline ["<< stationA<<", "<<stationB<<"] = "<<Npix_out
-      //       <<" "<<aTermA.shape()[0]<<" "<<aTermB.shape()[0]<<" "<<wTerm.shape()[0]<<endl;
-      // 	store(aTermA,"aTermAfft."+String::toString(its_count_time)+".img");
-      // 	store(aTermB,"aTermBfft."+String::toString(its_count_time)+".img");
-      // 	store(aTermA_padded,"aTermAfft."+String::toString(its_count_time)+".fft.img");
-      // 	store(aTermB_padded,"aTermBfft."+String::toString(its_count_time)+".fft.img");
-      // 	its_count_time+=1;
-      // 	//assert(false);
-      // }
       // Create the vectors of Matrices giving the convolution functions
       // for each Mueller element.
       vector< vector < Matrix<Complex> > > Kron_Product;
       Kron_Product.reserve(4);
 
-      // timerCyril.reset();
-      // timerCyril.start();
-      // //TEST!!!!
-      // Matrix<Complex> Spheroid_cut_paddedf(LinearInterpol(Spheroid_cut,Npix_out));
-      // Matrix<Complex> wTerm_paddedf(LinearInterpol(wTerm, Npix_out));
-      // Cube<Complex> aTermA_padded(IPosition(3,Npix_out,Npix_out,4),0.);
-      // Cube<Complex> aTermB_padded(IPosition(3,Npix_out,Npix_out,4),0.);
-      // for (uInt i=0; i<4; ++i) {
-      // 	Matrix<Complex> planeAf=aTermA_padded.xyPlane(i);
-      // 	Matrix<Complex> planeAf=aTermA_padded.xyPlane(i);
-      //   planeAf=LinearInterpol(aTermA.xyPlane(i), Npix_out);
-      //   planeBf=LinearInterpol(aTermA.xyPlane(i), Npix_out);
-      // }
-      // timerCyril.stop();
-      // timerCyril.show(cout,"linear");
-
-
-
-     // Something I still don't completely understand: for the average PB calculation.
+      // Something I still don't completely understand: for the average PB calculation.
       // The convolution functions padded with a higher value than the minimum one give a
       // better result in the end. If you try Npix_out2=Npix_out, then the average PB shows
       // structure like aliasing, producing high values in the devided disrty map... This
       // is likely to be due to the way fft works?...
-      // FIX: I now do the average of the PB by stacking the CF, FFT the result and square
-      // it in the end. This is not the way to do in principle but the result is almost the
+      // FIX: I now do the average of the PB by stacking the CF, FFT the result and square 
+      // it in the end. This is not the way to do in principle but the result is almost the 
       // same. It should pose no problem I think.
       Matrix<Complex> Spheroid_cut_padded2f;
-      Matrix<Complex> spheroid_cut_element_fft2;
       Cube<Complex> aTermA_padded2;
       Cube<Complex> aTermB_padded2;
 
       // Keep the non-padded convolution functions for average PB calculation.
       vector< vector < Matrix<Complex> > > Kron_Product_non_padded;
       Kron_Product_non_padded.reserve(4);
-
+	    
       if (Stack) {
         Npix_out2 = Npix_out;
         Spheroid_cut_padded2f = zero_padding(Spheroid_cut, Npix_out2);
-	spheroid_cut_element_fft2 = zero_padding(spheroid_cut_element_fft, Npix_out2);
-	normalized_fft (timerFFT, spheroid_cut_element_fft2, false);
         aTermA_padded2 = zero_padding(aTermA, Npix_out2);
         aTermB_padded2 = zero_padding(aTermB, Npix_out2);
         normalized_fft (timerFFT, Spheroid_cut_padded2f, false);
@@ -1102,16 +444,13 @@ namespace LOFAR
               // Compute the convolution function for the given Mueller element
               if (Mask_Mueller(ii,jj)) {
                 // Padded version for oversampling the convolution function
-
-                Matrix<Complex> plane_product (conj(aTermB_padded.xyPlane(ind0)) *
+                Matrix<Complex> plane_product (aTermB_padded.xyPlane(ind0) *
                                                aTermA_padded.xyPlane(ind1));
                 plane_product *= wTerm_paddedf;
                 plane_product *= Spheroid_cut_paddedf;
-
                 Matrix<Complex> plane_product_paddedf
                   (zero_padding(plane_product,
                                 plane_product.shape()[0] * m_oversampling));
-
                 normalized_fft (timerFFT, plane_product_paddedf);
 
                 plane_product_paddedf *= static_cast<Float>(m_oversampling *
@@ -1132,7 +471,6 @@ namespace LOFAR
                   Matrix<Complex> plane_productf(aTermB_padded2.xyPlane(ind0)*
                                                  aTermA_padded2.xyPlane(ind1));
                   plane_productf *= Spheroid_cut_padded2f;
-		  if(its_Apply_Element){plane_productf *= spheroid_cut_element_fft2;}
                   normalized_fft (timerFFT, plane_productf);
                   Row_non_padded[jj].reference (plane_productf);
                 }
@@ -1155,12 +493,7 @@ namespace LOFAR
       if (degridding_step) {
         for (uInt i=0; i<4; ++i) {
           for (uInt j=i; j<4; ++j) {
-            //AlwaysAssert (Mask_Mueller(i,j) == Mask_Mueller(j,i), AipsError);
-	    if ((Mask_Mueller(i,j)==false)&&(Mask_Mueller(j,i)==true)){
-	      Matrix<Complex> a(Kron_Product[i][j].copy());
-	      a=0.;
-	      Kron_Product[i][j]=a.copy();
-	    };
+            AlwaysAssert (Mask_Mueller(i,j) == Mask_Mueller(j,i), AipsError);
             if (Mask_Mueller(i,j)) {
               if (i!=j) {
                 Matrix<Complex> conj_product(conj(Kron_Product[i][j]));
@@ -1190,8 +523,8 @@ namespace LOFAR
       if (Stack) {
         result_non_padded.push_back(Kron_Product_non_padded);
       }
-      //}
-
+    }
+          
     // Stacks the weighted quadratic sum of the convolution function of
     // average PB estimate (!!!!! done for channel 0 only!!!)
     if (Stack) {
@@ -1209,13 +542,9 @@ namespace LOFAR
               istart += 0.5; //If number of pixel odd then 0th order at the center, shifted by one otherwise
             }
             for (Int jj=0; jj<Npix_out2; ++jj) {
-	      if (istart+jj>=0 && istart+jj<m_shape[0]) {
-		for (Int ii=0; ii<Npix_out2; ++ii) {
-		  if (istart+ii>=0 && istart+ii<m_shape[0]) {
-		    Complex gain = result_non_padded[0][i][j](ii,jj);
-		    Stack_PB_CF(istart+ii,istart+jj) += gain*weight_sqsq;
-		  }
-		}
+              for (Int ii=0; ii<Npix_out2; ++ii) {
+                Complex gain = result_non_padded[0][i][j](ii,jj);
+                Stack_PB_CF(istart+ii,istart+jj) += gain*weight_sqsq;
               }
             }
             sum_weight_square += weight_sqsq;
@@ -1223,7 +552,7 @@ namespace LOFAR
         }
       }
     }
-
+	
     // Put the resulting vec(vec(vec))) in a LofarCFStore object
     CoordinateSystem csys;
     Vector<Float> samp(2, m_oversampling);
@@ -1246,14 +575,12 @@ namespace LOFAR
 #pragma omp atomic
     itsTimeCFpar += ptime;
 
-
     return LofarCFStore (res, csys, samp,  xsup, ysup, maxXSup, maxYSup,
                          PA, mosPointing, Mask_Mueller);
   }
 
-
   //================================================
-
+      
   // Returns the average Primary Beam from the disk
   Matrix<Float> LofarConvolutionFunction::Give_avg_pb()
   {
@@ -1288,35 +615,21 @@ namespace LOFAR
         cout<<"..... Compute average PB"<<endl;
       }
       Sum_Stack_PB_CF /= float(sum_weight_square);
-      //store(Sum_Stack_PB_CF,"Stack_PB_CF.img");
+      //store(Stack_PB_CF,"Stack_PB_CF.img");
 
       normalized_fft(Sum_Stack_PB_CF, false);
-      //store(Sum_Stack_PB_CF,"Im_Stack_PB_CF00.img");
-      //store(Sum_Stack_PB_CF, itsImgName + ".before");
+      //store(Im_Stack_PB_CF00,"Im_Stack_PB_CF00.img");
       Im_Stack_PB_CF0.resize (IPosition(2, m_shape[0], m_shape[1]));
-
-      float maxPB(0.);
-      float maxPB_noabs(0.);
-      UNUSED(maxPB_noabs);
-      for(uInt i=0;i<m_shape[1];++i){
-	for(uInt j=0;j<m_shape[1];++j){
-	    Complex pixel(Sum_Stack_PB_CF(i,j));
-	    if(abs(pixel)>maxPB){
-	      maxPB=abs(pixel);
-	      //maxPB_noabs=pixel;
-	    };
-	}
-      }
-      float threshold = 1.e-8;
+	
+      float threshold = 1.e-6;
       for (Int jj=0; jj<m_shape[1]; ++jj) {
         for (Int ii=0; ii<m_shape[0]; ++ii) {
           Float absVal = abs(Sum_Stack_PB_CF(ii,jj));
-          Im_Stack_PB_CF0(ii,jj) = std::max (absVal*absVal, threshold*maxPB);
-	  //Im_Stack_PB_CF0(ii,jj) = sqrt(Im_Stack_PB_CF0(ii,jj))*sign(maxPB_noabs);
+          Im_Stack_PB_CF0(ii,jj) = std::max (absVal*absVal, threshold);
         }
       }
       // Make it persistent.
-      store(m_coordinates,Im_Stack_PB_CF0, itsImgName + ".avgpb");
+      store(Im_Stack_PB_CF0, itsImgName + ".avgpb");
     }
     return Im_Stack_PB_CF0;
   }
@@ -1329,17 +642,15 @@ namespace LOFAR
     if (Image.shape()[0] == Npixel_Out) {
       return Image.copy();
     }
-
-    // if ((Npixel_Out%2) != 1) {
-    //   Npixel_Out++;
-    // }
-
+    if ((Npixel_Out%2) != 1) {
+      Npixel_Out++;
+    }
     Cube<Complex> Image_Enlarged(Npixel_Out,Npixel_Out,Image.shape()[2]);
     uInt Dii = Image.shape()(0)/2;
     uInt Start_image_enlarged=Npixel_Out/2-Dii; //Is an even number, Assume square image
-    // if ((Start_image_enlarged-floor(Start_image_enlarged))!=0.) {
-    //   Start_image_enlarged += 0.5; //If number of pixel odd then 0th order at the center, shifted by one otherwise
-    // }
+    if ((Start_image_enlarged-floor(Start_image_enlarged))!=0.) {
+      Start_image_enlarged += 0.5; //If number of pixel odd then 0th order at the center, shifted by one otherwise
+    }
     /* cout<<Start_image_enlarged<<"  "<<floor(Start_image_enlarged)<<endl; */
     /* if((Start_image_enlarged-floor(Start_image_enlarged))!=0.){ */
     /*   cout<<"Not even!!!"<<endl; */
@@ -1370,6 +681,9 @@ namespace LOFAR
     if (Image.shape()[0] == Npixel_Out) {
       return Image.copy();
     }
+    if (Npixel_Out%2 != 1) {
+      Npixel_Out++;
+    }
     IPosition shape_im_out(2, Npixel_Out, Npixel_Out);
     Matrix<Complex> Image_Enlarged(shape_im_out, 0.);
 
@@ -1381,9 +695,9 @@ namespace LOFAR
     uInt Start_image_enlarged = shape_im_out[0]/2-Dii;
     //Is an even number, Assume square image
     //If number of pixel odd then 0th order at the center, shifted by one otherwise
-    // if ((Start_image_enlarged-floor(Start_image_enlarged))!=0.) {
-    //   Start_image_enlarged += 0.5;
-    // }
+    if ((Start_image_enlarged-floor(Start_image_enlarged))!=0.) {
+      Start_image_enlarged += 0.5;
+    }
 
     /* cout<<Start_image_enlarged<<"  "<<floor(Start_image_enlarged)<<endl; */
     /* if((Start_image_enlarged-floor(Start_image_enlarged))!=0.){ */
@@ -1391,7 +705,7 @@ namespace LOFAR
     /*   Start_image_enlarged+=0.5;} */
     for (Int jj=0; jj<Image.shape()[1]; ++jj) {
       for (Int ii=0; ii<Image.shape()[0]; ++ii) {
-        Image_Enlarged(Start_image_enlarged+ii,Start_image_enlarged+jj) =
+        Image_Enlarged(Start_image_enlarged+ii,Start_image_enlarged+jj) = 
           ratio*Image(ii,jj);
       }
     }
@@ -1402,7 +716,6 @@ namespace LOFAR
   void LofarConvolutionFunction::normalized_fft
   (Matrix<Complex> &im, bool toFreq)
   {
-    //cout<<" "<<im.ncolumn()<<" "<<im.nrow()<<" "<<im.size()<<" "<<im.contiguousStorage()<<endl;
     AlwaysAssert (im.ncolumn() == im.nrow()  &&  im.size() > 0  &&
                   im.contiguousStorage(), AipsError);
     int tnr = OpenMP::threadNum();
@@ -1431,6 +744,28 @@ namespace LOFAR
     AlwaysAssert(!observation.flagRow()(idObservation), SynthesisError);
 
     return observation.timeRangeMeas()(0)(IPosition(1, 0));
+  }
+
+  //=================================================
+  Double LofarConvolutionFunction::observationReferenceFreq
+  (const MeasurementSet &ms, uInt idDataDescription)
+  {
+    // Read polarization id and spectral window id.
+    ROMSDataDescColumns desc(ms.dataDescription());
+    AlwaysAssert(desc.nrow() > idDataDescription, SynthesisError);
+    AlwaysAssert(!desc.flagRow()(idDataDescription), SynthesisError);
+
+    const uInt idWindow = desc.spectralWindowId()(idDataDescription);
+
+    /*        logIO() << LogOrigin("LofarATerm", "initReferenceFreq") << LogIO::NORMAL
+              << "spectral window: " << desc.spectralWindowId()(idDataDescription) << LogIO::POST;*/
+    //            << "spectral window: " << desc.spectralWindowId() << LogIO::POST;
+    // Get spectral information.
+    ROMSSpWindowColumns window(ms.spectralWindow());
+    AlwaysAssert(window.nrow() > idWindow, SynthesisError);
+    AlwaysAssert(!window.flagRow()(idWindow), SynthesisError);
+
+    return window.refFrequency()(idWindow);
   }
 
   //=================================================
@@ -1481,7 +816,7 @@ namespace LOFAR
     store(Spheroid_cut_im, itsImgName + ".spheroid_cut_im");
     if (itsVerbose > 0) {
       store(Spheroid_cut, itsImgName + ".spheroid_cut");
-    }
+    }	
     return Pixel_Size_Spheroidal;
   }
 
@@ -1534,12 +869,12 @@ namespace LOFAR
   // Return the angular resolution required for making the image of the angular size determined by
   // coordinates and shape. The resolution is assumed to be the same on both direction axes.
   Double LofarConvolutionFunction::estimateAResolution
-  (const IPosition &shape, const DirectionCoordinate &coordinates, double station_diam) const
+  (const IPosition &shape, const DirectionCoordinate &coordinates) const
   {
     Double res_ini=abs(coordinates.increment()(0));                      // pixel size in image in radian
     Double diam_image=res_ini*shape(0);                                  // image diameter in radian
-    //Double station_diam = 70.;                                           // station diameter in meters: To be adapted to the individual station size.
-    Double Res_beam_image= 0.5*((C::c/m_refFrequency)/station_diam)/2.;      // pixel size in A-term image in radian
+    Double station_diam = 70.;                                           // station diameter in meters: To be adapted to the individual station size.
+    Double Res_beam_image= ((C::c/m_refFrequency)/station_diam)/2.;      // pixel size in A-term image in radian
     uInt Npix=floor(diam_image/Res_beam_image);                         // Number of pixel size in A-term image
     Res_beam_image=diam_image/Npix;
     if (Npix%2 != 1) {
@@ -1585,7 +920,7 @@ namespace LOFAR
       bot += Q[part][k] * delnusqPow;
       delnusqPow *= delnusq;
     }
-
+	
     double result = (bot == 0  ?  0 : (1.0 - nusq) * (top / bot));
     //if(result<1.e-3){result=1.e-3;}
     return result;

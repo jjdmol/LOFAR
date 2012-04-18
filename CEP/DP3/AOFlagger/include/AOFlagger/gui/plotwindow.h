@@ -35,8 +35,6 @@ class PlotWindow : public Gtk::Window {
 		PlotWindow(PlotManager &plotManager) : _plotManager(plotManager)
 		{
 			plotManager.OnUpdate() = boost::bind(&PlotWindow::handleUpdate, this);
-			add(_plotWidget);
-			_plotWidget.show();
 		}
 		~PlotWindow()
 		{
@@ -45,11 +43,7 @@ class PlotWindow : public Gtk::Window {
 	private:
 		void handleUpdate()
 		{
-			const std::vector<Plot2D*> &plots = _plotManager.Items();
-			Plot2D &lastPlot = **plots.rbegin();
-			_plotWidget.SetPlot(lastPlot);
 			show();
-			raise();
 		}
 		
 		PlotWidget _plotWidget;

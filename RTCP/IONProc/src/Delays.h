@@ -83,8 +83,6 @@ class Delays
     Delays(const Parset &ps, const string &stationName, const TimeStamp &startTime);
     ~Delays();
 
-    void start();
-
     // get the set of directions (ITRF) and delays for the beams, for the next CN integration time
     // Both matrices must have dimensions [itsNrBeams][itsMaxNrPencilBeams+1]
     void getNextDelays(Matrix<casa::MVDirection> &directions, Matrix<double> &delays);
@@ -157,7 +155,7 @@ class Delays
     
     NSTimer				itsDelayTimer;
 
-    SmartPtr<Thread>			itsThread;
+    Thread				itsThread;
 };
 
 } // namespace RTCP

@@ -11,10 +11,10 @@ class CookError(Exception):
 
 class WSRTCook(object):
     def __init__(self, task, inputs, outputs, logger):
-        self.inputs   = inputs
-        self.outputs  = outputs
-        self.task     = task.strip()
-        self.logger   = logger
+        self.inputs = inputs
+        self.outputs = outputs
+        self.task = task.strip()
+        self.logger = logger
 
 class PipelineCook(WSRTCook):
     """
@@ -41,7 +41,7 @@ class PipelineCook(WSRTCook):
 
     def try_running(self):
         """Run the recipe, inputs should already have been checked."""
-        self.recipe.name     = self.task
+        self.recipe.name = self.task
         if not self.recipe.run(self.task):
             self.copy_outputs()
         else:
@@ -65,16 +65,17 @@ class PipelineCook(WSRTCook):
         self.copy_inputs()
         self.try_running()
 
+
 class SystemCook(WSRTCook):
     """Based on Parseltongue cody by Mark Kettenis (JIVE)
     and subProcess from: Padraig Brady at www.pixelbeat.org
     and Pexpect from: Noah Spurrier on sourceforge"""
     def __init__(self, task, inputs, outputs, logger):
         super(SystemCook, self).__init__(task, inputs, outputs, logger)
-        self._pid      = None ## spawned process ID
+        self._pid = None ## spawned process ID
         self._child_fd = None ## child output file descriptor
-        self._expect   = []
-        self._fd_eof   = self._pipe_eof = 0
+        self._expect = []
+        self._fd_eof = self._pipe_eof = 0
         ## We can only have a pipe for stderr as otherwise stdio changes it's
         ## buffering strategy
         (self._errorpipe_end, self._errorpipe_front) = os.pipe()
@@ -87,7 +88,7 @@ class SystemCook(WSRTCook):
     def set_expect(self, expectlist):
         self._expect = expectlist
 
-    def spawn(self, env=None):
+    def spawn(self, env = None):
         """Try to start the task."""
         try:
             (self._pid, self._child_fd) = pty.fork()
@@ -125,7 +126,7 @@ class SystemCook(WSRTCook):
 
     def handle_messages(self):
         """Read messages."""
-        tocheck=[]
+        tocheck = []
         if not self._fd_eof:
             tocheck.append(self._child_fd)
         if not self._pipe_eof:
@@ -143,8 +144,8 @@ class SystemCook(WSRTCook):
                         returntext = x[1](text)
                         if returntext:
                             os.write(file, returntext)
-                text.replace('\r','\n') ## a pty returns '\r\n' even on Unix
-                text.replace('\n\n','\n')
+                text.replace('\r', '\n') ## a pty returns '\r\n' even on Unix
+                text.replace('\n\n', '\n')
                 for line in text.split('\n'): ## still have odd behaviour for gear output
                     if file == self._child_fd:
                         self.logger.info(self.StripNoPrint(line))
@@ -152,7 +153,7 @@ class SystemCook(WSRTCook):
                         self.logger.warn(self.StripNoPrint(line))
             else:
                 if file == self._child_fd:
-                    self._fd_eof   = 1
+                    self._fd_eof = 1
                 elif file == self._errorpipe_end:
                     self._pipe_eof = 1
             return 1
@@ -219,7 +220,7 @@ class SystemCook(WSRTCook):
           (pid, status) = os.waitpid(self._pid, os.WNOHANG) ## clean up the zombie
           assert(pid == self._pid)
           if os.WIFEXITED(status) or os.WIFSIGNALED(status):
-              self._pid       = 0
+              self._pid = 0
               self.exitstatus = status
           assert(self.finished())
           del self._pid

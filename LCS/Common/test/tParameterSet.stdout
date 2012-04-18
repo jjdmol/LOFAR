@@ -24,8 +24,6 @@ a.b.time2=900
 a.b.time3=54000
 
 The main ParameterSet contains:
-1.2.3.44.5=dubbel 4
-1.2.33.4.5=dubbel 3
 a.b=0
 a.b.c=700
 a.b.c.d.e.f.g.h='tjee wat een levels!'
@@ -35,7 +33,6 @@ a.b.time1=15 s
 a.b.time2=15m
 a.b.time3=15 hour
 a.c.a=nog een afkorting
-abc.def.par=something
 e.g=een voorbeeld
 egg=een ei
 emptyvec=[]
@@ -63,7 +60,6 @@ time3=15 hour
 
 Trying to read a non-existing key
 >>>
-DEBUG [tParameterSet@RS005C]LCS.Common.EXCEPTION - Key is.er.niet unknown
 <<<
 Told you the key didn't exist.
 
@@ -79,8 +75,6 @@ trying to read single int as vector
 700,
 
 Iterate over all keys ...
-1.2.3.44.5
-1.2.33.4.5
 a.b
 a.b.c
 a.b.c.d.e.f.g.h
@@ -90,36 +84,10 @@ a.b.time1
 a.b.time2
 a.b.time3
 a.c.a
-abc.def.par
 e.g
 egg
 emptyvec
 vtest.intVector1Dim
-
-locateModule('g')   : a.b.c.d.e.f.
-locateModule('F')   : 
-locateModule('F.g') : 
-locateModule('e.g') : 
-locateModule('3.4') : 
-locateModule('4.5') : 
-locateModule('33.4'): 
-locateModule('3.44'): 
-locateModule('abc.def'): 
-locateModule('abc.de'): 
-locateModule('bc.def'): 
-locateModule('pietje.puk'): 
-fullModuleName('g')   : a.b.c.d.e.f.g
-fullModuleName('F')   : 
-fullModuleName('F.g') : 
-fullModuleName('e.g') : 
-fullModuleName('3.4') : 
-fullModuleName('4.5') : 
-fullModuleName('33.4'): 1.2.33.4
-fullModuleName('3.44'): 1.2.3.44
-fullModuleName('abc.def'): abc.def
-fullModuleName('abc.de'): 
-fullModuleName('bc.def'): 
-fullModuleName('pietje.puk'): 
 
 >>>
 Reading in parameterfile 'tParameterSet.in_param_nocase'
@@ -146,8 +114,6 @@ a.b.time2=900
 a.b.time3=54000
 
 The main ParameterSet contains:
-1.2.3.44.5=dubbel 4
-1.2.33.4.5=dubbel 3
 A.B=0
 a.B.c=700
 a.B.c.D.e.F.g.H='tjee wat een levels!'
@@ -157,7 +123,6 @@ A.b.time1=15 s
 a.B.time2=15m
 a.b.TIME3=15 hour
 A.c.a=nog een afkorting
-abc.def.par=something
 e.g=een voorbeeld
 Egg=een ei
 emptyvec=[]
@@ -185,7 +150,6 @@ TIME3=15 hour
 
 Trying to read a non-existing key
 >>>
-DEBUG [tParameterSet@RS005C]LCS.Common.EXCEPTION - Key is.er.niet unknown
 <<<
 Told you the key didn't exist.
 
@@ -201,8 +165,6 @@ trying to read single int as vector
 700,
 
 Iterate over all keys ...
-1.2.3.44.5
-1.2.33.4.5
 A.B
 a.B.c
 a.B.c.D.e.F.g.H
@@ -212,33 +174,7 @@ A.b.time1
 a.B.time2
 a.b.TIME3
 A.c.a
-abc.def.par
 e.g
 Egg
 emptyvec
 VTest.IntVector1Dim
-
-locateModule('g')   : a.B.c.D.e.F.
-locateModule('F')   : 
-locateModule('F.g') : 
-locateModule('e.g') : 
-locateModule('3.4') : 
-locateModule('4.5') : 
-locateModule('33.4'): 
-locateModule('3.44'): 
-locateModule('abc.def'): 
-locateModule('abc.de'): 
-locateModule('bc.def'): 
-locateModule('pietje.puk'): 
-fullModuleName('g')   : a.B.c.D.e.F.g
-fullModuleName('F')   : a.B.c.D.e.F
-fullModuleName('F.g') : a.B.c.D.e.F.g
-fullModuleName('e.g') : 
-fullModuleName('3.4') : 
-fullModuleName('4.5') : 
-fullModuleName('33.4'): 1.2.33.4
-fullModuleName('3.44'): 1.2.3.44
-fullModuleName('abc.def'): abc.def
-fullModuleName('abc.de'): 
-fullModuleName('bc.def'): 
-fullModuleName('pietje.puk'): 

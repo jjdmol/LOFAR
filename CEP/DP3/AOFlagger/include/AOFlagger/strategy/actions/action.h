@@ -52,7 +52,6 @@ namespace rfiStrategy {
 		FringeStopActionType,
 		ImagerActionType,
 		IterationBlockType,
-		NormalizeVarianceActionType,
 		PlotActionType,
 		QuickCalibrateActionType,
 		RawAppenderActionType,

@@ -51,7 +51,7 @@ class BeamFormer
     // ideal number of beams that can be calculated in one go
     static const unsigned BEST_NRBEAMS = 3;
 
-    BeamFormer(const Parset &parset);
+    BeamFormer(const Parset &parset, unsigned nrValuesPerStokes );
 
     // merges stations into superstations in sampleData
     void mergeStations( SampleData<> *sampleData );
@@ -60,10 +60,10 @@ class BeamFormer
     void formBeams( const SubbandMetaData *metaData, SampleData<> *sampleData, BeamFormedData *beamFormedData, double centerFrequency, unsigned sap, unsigned firstBeam, unsigned nrBeams );
 
     // rearrange dimensions in preparation for transpose
-    void preTransposeBeam( const BeamFormedData *in, PreTransposeBeamFormedData *out, unsigned inbeam );
+    void preTransposeBeams( const BeamFormedData *in, PreTransposeBeamFormedData *out, unsigned inbeam, unsigned outbeam );
 
     // rearrange dimensions into final order after transpose
-    void postTransposeBeam( const TransposedBeamFormedData *in, FinalBeamFormedData *out, unsigned sb, unsigned nrChannels, unsigned nrSamples );
+    void postTransposeBeams( const TransposedBeamFormedData *in, FinalBeamFormedData *out, unsigned subband );
 
     // return the station mapping
     std::vector<unsigned> &getStationMapping();
@@ -98,7 +98,7 @@ class BeamFormer
 
     Vector<std::vector<unsigned> > itsValidStations;
     const unsigned          itsNrChannels;
-    const unsigned          itsNrSamples;
+    const unsigned          itsNrSamplesPerIntegration;
     const double            itsChannelBandwidth;
 
     // a station is 'valid' if the samples do not contain too much flagged data. invalid stations
@@ -108,6 +108,8 @@ class BeamFormer
     std::vector<unsigned>               itsMergeDestStations;          // [i] = a => beam i is stored at a
     std::vector<std::vector<unsigned> > itsValidMergeSourceStations;   // subset of itsMergeSourceStations,
                                                                        // containing only valid stations
+
+    const unsigned          itsNrValuesPerStokes;
 };
 
 inline dcomplex BeamFormer::phaseShift( const double frequency, const double delay ) const

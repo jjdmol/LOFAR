@@ -74,7 +74,6 @@ namespace LOFAR {
       itsUseFlags         = parset.getBool   (prefix+"useflag", true);
       itsDataColName      = parset.getString (prefix+"datacolumn", "DATA");
       itsAutoWeight       = parset.getBool   (prefix+"autoweight", false);
-      itsAutoWeightForce  = parset.getBool   (prefix+"forceautoweight", false);
       itsNeedSort         = parset.getBool   (prefix+"sort", false);
       itsSelBL            = parset.getString (prefix+"baseline", string());
       // Try to open the MS and get its full name.
@@ -445,21 +444,15 @@ namespace LOFAR {
       // If so, we know it is in time order.
       // (sorting on TIME with LofarStMan can be expensive).
       bool needSort = itsNeedSort;
-      bool useRaw   = false;
-      Record dminfo = itsMS.dataManagerInfo();
-      for (unsigned i=0; i<dminfo.nfields(); ++i) {
-        Record subrec = dminfo.subRecord(i);
-        if (subrec.asString("TYPE") == "LofarStMan") {
-          needSort = false;
-          useRaw   = true;
-          break;
+      if (needSort) {
+        Record dminfo = itsMS.dataManagerInfo();
+        for (unsigned i=0; i<dminfo.nfields(); ++i) {
+          Record subrec = dminfo.subRecord(i);
+          if (subrec.asString("TYPE") == "LofarStMan") {
+            needSort = false;
+            break;
+          }
         }
-      }
-      // Give an error if autoweight is used for a non-raw MS.
-      if (itsAutoWeightForce) {
-        itsAutoWeight = true;
-      } else if (!useRaw && itsAutoWeight) {
-        THROW (Exception, "Using autoweight=true cannot be done on DPPP-ed MS");
       }
       // If not in order, sort the main table (also on baseline).
       Table sortms(itsMS);

@@ -28,7 +28,6 @@
 
 
 #include <Common/Thread/Thread.h>
-#include <Interface/SmartPtr.h>
 
 #include <vector>
 #include <string>
@@ -43,8 +42,6 @@ class LogThread
     LogThread(unsigned nrRspBoards, std::string stationName);
     ~LogThread();
 
-    void start();
-
     struct Counters {
       unsigned received, badTimeStamp, badSize;
       unsigned pad[5]; // pad to cache line size to avoid false sharing 
@@ -57,7 +54,7 @@ class LogThread
 
     std::string itsStationName;
   
-    SmartPtr<Thread>	itsThread;
+    Thread	itsThread;
 
 #if defined HAVE_BGP_ION
     struct CPUload {

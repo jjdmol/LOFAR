@@ -4,7 +4,6 @@ set (inst_HEADERS
   FileStream.h
   NamedPipeStream.h
   NullStream.h
-  PortBroker.h
   SocketStream.h
   Stream.h)
 

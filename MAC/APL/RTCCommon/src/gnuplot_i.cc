@@ -92,9 +92,9 @@ char * gnuplot_get_program_path(const char * pname)
     static char buf[PATH_MAXNAMESZ];
 
     /* Trivial case: try in CWD */
-    snprintf(buf, sizeof buf, "./%s", pname) ;
+    sprintf(buf, "./%s", pname) ;
     if (access(buf, X_OK)==0) {
-        snprintf(buf, sizeof buf, ".");
+        sprintf(buf, ".");
         return buf ;
     }
     /* Try out in all paths given in the PATH variable */
@@ -168,7 +168,7 @@ gnuplot_ctrl * gnuplot_init(const char* display_)
 
     if (display_ != NULL) {
       static char cmd[80];
-      snprintf(cmd, sizeof cmd, "gnuplot -geometry 480x360 -display %s",display_);
+      sprintf(cmd, "gnuplot -geometry 480x360 -display %s",display_);
 
       handle->gnucmd = popen(cmd,"w");
     } else {
@@ -245,7 +245,7 @@ void gnuplot_cmd(gnuplot_ctrl *  handle, const char *  cmd, ...)
     char    local_cmd[GP_CMD_SIZE];
 
     va_start(ap, cmd);
-    vsnprintf(local_cmd, sizeof local_cmd, cmd, ap);
+    vsprintf(local_cmd, cmd, ap);
     va_end(ap);
 
     //strcat(local_cmd, "\n");
@@ -313,7 +313,7 @@ void gnuplot_set_xlabel(gnuplot_ctrl * h, const char * label)
 {
     char    cmd[GP_CMD_SIZE] ;
 
-    snprintf(cmd, sizeof cmd, "set xlabel \"%s\"\n", label) ;
+    sprintf(cmd, "set xlabel \"%s\"\n", label) ;
     gnuplot_cmd(h, cmd) ;
     return ;
 }
@@ -334,7 +334,7 @@ void gnuplot_set_ylabel(gnuplot_ctrl * h, const char * label)
 {
     char    cmd[GP_CMD_SIZE] ;
 
-    snprintf(cmd, sizeof cmd, "set ylabel \"%s\"\n", label) ;
+    sprintf(cmd, "set ylabel \"%s\"\n", label) ;
     gnuplot_cmd(h, cmd) ;
     return ;
 }
@@ -422,7 +422,7 @@ void gnuplot_plot_x(
     }
 
     /* Open temporary file for output   */
-	snprintf(name, sizeof name, "%s/gnuplot-i-XXXXXX", P_tmpdir);
+	sprintf(name, "%s/gnuplot-i-XXXXXX", P_tmpdir);
     if ((tmpfd=mkstemp(name))==-1) {
         fprintf(stderr,"cannot create temporary file: exiting plot") ;
         return ;
@@ -433,7 +433,7 @@ void gnuplot_plot_x(
     handle->ntmp ++ ;
     /* Write data to this file  */
     for (i=0 ; i<n ; i++) {
-		snprintf(line, sizeof line, "%g\n", d[i]);
+		sprintf(line, "%g\n", d[i]);
 		write(tmpfd, line, strlen(line));
     }
     close(tmpfd) ;
@@ -446,9 +446,9 @@ void gnuplot_plot_x(
     }
     
     if (title == NULL) {
-        snprintf(line, sizeof line, "%s \"%s\" with %s\n", cmd, name, handle->pstyle) ;
+        sprintf(line, "%s \"%s\" with %s\n", cmd, name, handle->pstyle) ;
     } else {
-        snprintf(line, sizeof line, "%s \"%s\" title \"%s\" with %s\n", cmd, name,
+        sprintf(line, "%s \"%s\" title \"%s\" with %s\n", cmd, name,
                       title, handle->pstyle) ;
     }
 
@@ -514,9 +514,9 @@ void gnuplot_plot_xy(
   }
 
   if (title == NULL) {
-    snprintf(line, sizeof line, "%s \"%s\" with %s\n", cmd, "-", handle->pstyle) ;
+    sprintf(line, "%s \"%s\" with %s\n", cmd, "-", handle->pstyle) ;
   } else {
-    snprintf(line, sizeof line, "%s \"%s\" title \"%s\" with %s\n", cmd, "-",
+    sprintf(line, "%s \"%s\" title \"%s\" with %s\n", cmd, "-",
 	    title, handle->pstyle) ;
   }
 
@@ -641,15 +641,14 @@ void gnuplot_plot_slope(
     if (title == NULL) {
         strcpy(stitle, "no title") ;
     } else {
-        strncpy(stitle, title, sizeof stitle) ;
-        stitle[sizeof stitle - 1] = 0;
+        strcpy(stitle, title) ;
     }
 
     if (handle->nplots > 0) {
-        snprintf(cmd, sizeof cmd, "replot %g * x + %g title \"%s\" with %s\n",
+        sprintf(cmd, "replot %g * x + %g title \"%s\" with %s\n",
                       a, b, title, handle->pstyle) ;
     } else {
-        snprintf(cmd, sizeof cmd, "plot %g * x + %g title \"%s\" with %s\n",
+        sprintf(cmd, "plot %g * x + %g title \"%s\" with %s\n",
                       a, b, title, handle->pstyle) ;
     }
     gnuplot_cmd(handle, cmd) ;
@@ -696,8 +695,7 @@ void gnuplot_plot_equation(
     if (title == NULL) {
         strcpy(title_str, "no title") ;
     } else {
-        strncpy(title_str, title, sizeof title_str) ;
-        title_str[sizeof title_str - 1] = 0;
+        strcpy(title_str, title) ;
     }
     if (h->nplots > 0) {
         strcpy(plot_str, "replot") ;
@@ -705,7 +703,7 @@ void gnuplot_plot_equation(
         strcpy(plot_str, "plot") ;
     }
 
-    snprintf(cmd, sizeof cmd, "%s %s title \"%s\" with %s\n", 
+    sprintf(cmd, "%s %s title \"%s\" with %s\n", 
                   plot_str, equation, title_str, h->pstyle) ;
     gnuplot_cmd(h, cmd) ;
     h->nplots++ ;

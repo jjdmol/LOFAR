@@ -37,7 +37,7 @@ template <typename T> class SmartPtrDelete;
 template <typename T, class D = SmartPtrDelete<T> > class SmartPtr
 {
   public:
-    SmartPtr(T * = NULL);
+    SmartPtr(T * = 0);
     SmartPtr(const SmartPtr<T,D> &orig); // WARNING: move semantics; orig no longer contains pointer
 
     ~SmartPtr();

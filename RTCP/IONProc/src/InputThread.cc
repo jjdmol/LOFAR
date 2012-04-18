@@ -31,7 +31,6 @@
 #include <Common/Timer.h>
 #include <Interface/AlignedStdAllocator.h>
 #include <Interface/Exceptions.h>
-#include <Interface/SmartPtr.h>
 #include <Stream/NullStream.h>
 #include <Stream/SocketStream.h>
 #include <BeamletBuffer.h>
@@ -51,24 +50,17 @@ namespace RTCP {
 
 template <typename SAMPLE_TYPE> InputThread<SAMPLE_TYPE>::InputThread(ThreadArgs args /* call by value! */)
 :
-  itsArgs(args)
+  itsArgs(args),
+  itsThread(this, &InputThread<SAMPLE_TYPE>::mainLoop, itsArgs.logPrefix + "[InputThread] ", 65536)
 {
   LOG_DEBUG_STR(itsArgs.logPrefix << "InputThread::InputThread(...)");
-}
-
-
-template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::start()
-{
-  itsThread = new Thread(this, &InputThread<SAMPLE_TYPE>::mainLoop, itsArgs.logPrefix + "[InputThread] ", 65536);
 }
 
 
 template <typename SAMPLE_TYPE> InputThread<SAMPLE_TYPE>::~InputThread()
 {
   LOG_DEBUG_STR(itsArgs.logPrefix << "InputThread::~InputThread()");
-
-  if (itsThread)
-    itsThread->cancel();
+  itsThread.cancel();
 }
 
 

@@ -16,65 +16,66 @@ class Discover():
     #TODO: ordering of suites is not controlled atm.   
     #TODO: maybe it should be expanded with multi path input?? 
     suite = unittest.TestSuite()
-    
-    def __init__(self,path,pattern):
-        
+
+    def __init__(self, path, pattern):
+
         #match with all (used for a filename matches with expression: all individual test must be loaded
         allMatcher = re.compile(".*")
         #matcher for the expression
         patternMatcher = re.compile(pattern)
         #matcher for hidden dirs
         hiddenMatcher = re.compile(".*/\..*")
-        
-        for root, dirs, files in os.walk(path):  
+
+        for root, dirs, files in os.walk(path):
             #skip hidden directories
             if hiddenMatcher.match(root):
-                continue         
-             
+                continue
+
             dirSuite = unittest.TestSuite()
-            for name in files:                 
+            for name in files:
                 fileNameParts = name.split('.')
                 #assert correct file extention 
-                if (len(fileNameParts) == 1) or (fileNameParts[1] !=  'py'):
+                if (len(fileNameParts) == 1) or (fileNameParts[1] != 'py'):
                     continue
 
                 #try loading as a module
-                try: 
-                    module = self.import_path(root, fileNameParts[0])  #use import including path
-                except BaseException:
-                    continue          
-                
+                #try: 
+                module = self.import_path(root, fileNameParts[0])  #use import including path
+                #except BaseException:
+                #    continue          
+
                 #the expression mechanism
                 testMatcher = None
                 if patternMatcher.match(name):
                     testMatcher = allMatcher      #if current dir matches with expression include all tests
                 else:
-                    testMatcher = patternMatcher                                
+                    testMatcher = patternMatcher
+
+
                 #create a test suite
                 fileSuite = unittest.TestSuite()
                 testnames = dir(module)
-                
+
+
+
                 #add all cases ending with test and match the regexp search string
                 for testName in testnames:
                     if testName.endswith('Test') or testName.endswith('test'):
-                        try:
-                            testClass = getattr(module, testName)    #load attribute
-                            if inspect.isclass(testClass):           #if class 
-                                if not testMatcher.match(testName):  #Continue of current testname does not match supplied expression
-                                    continue 
-                                fileSuite.addTest(unittest.makeSuite(testClass))
-                        except:
-                            pass
-                        
+                        testClass = getattr(module, testName)    #load attribute
+                        if inspect.isclass(testClass):           #if class 
+                            if not testMatcher.match(testName):  #Continue of current testname does not match supplied expression
+                                continue
+                            fileSuite.addTest(unittest.makeSuite(testClass))
+
                 #if tests found add the file suite to the directory suite
                 if fileSuite.countTestCases() != 0:
                     dirSuite.addTest(fileSuite)
-                    
+
             #add to top level suite
             if dirSuite.countTestCases() != 0:
                 self.suite.addTest(dirSuite)
 
-            
+
     def import_path(self, path, filename):
         """ 
         Import a file with full path specification. Allows one to
@@ -102,6 +103,14 @@ class UnitTesterTest(unittest.TestCase):
         """
         self.assertTrue(self.tester == "A test string")
 
+    def test_daily_build_exists(self):
+        """
+        Performs a simple import to check if the daily is created
+        """
+        path = "/opt/cep/LofIm/daily/lofar/lofarinit.sh"
+        self.assertTrue(os.path.exists(path), "Daily build has failed:"
+                        " lofarinit.sh is missing!")
+
 
 def usage():
     """
@@ -125,24 +134,24 @@ if __name__ == "__main__":
     path = '.'
     expression = '.*'
     xml = ""
-    
+
     #parse command lines and set parameters for Discover function
-    try:         
-        opts, args = getopt.getopt(sys.argv[1:], "p:e:hx:m:", ["path=", "exp=", "help", "xml=","matchword="])                       
-    except getopt.GetoptError:          
-        usage()                         
-        sys.exit(2)  
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "p:e:hx:m:", ["path=", "exp=", "help", "xml=", "matchword="])
+    except getopt.GetoptError:
+        usage()
+        sys.exit(2)
     for opt, arg in opts:
         if opt in ("-h", "--help"):
             usage()
             sys.exit()
-        elif opt in ( "-p", "--path"):
+        elif opt in ("-p", "--path"):
             path = arg
         elif opt in ("-e", "--exp"):
             expression = arg
         elif opt in ("-x", "--xml"):
-            xml =  arg
-        elif opt in ("-m","--matchword"):
+            xml = arg
+        elif opt in ("-m", "--matchword"):
             expression = ".*{0}.*".format(arg)
 
     #Collect tests from files and paths    
@@ -151,10 +160,10 @@ if __name__ == "__main__":
     #decide on unit testrunner to use, run it and save the results
     if xml:
         import xmlrunner
-        result = xmlrunner.XMLTestRunner(output=xml).run(test.suite)
+        result = xmlrunner.XMLTestRunner(output = xml).run(test.suite)
     else:
-        result = unittest.TextTestRunner(verbosity=2).run(test.suite)
-    
+        result = unittest.TextTestRunner(verbosity = 2).run(test.suite)
+
     #collect the numeric results using expressions
     FailedTestMatcher = re.compile(".*run=(\d+).*errors=(\d+).*failures=(\d+)")
     matches = FailedTestMatcher.match(str(result))
@@ -164,4 +173,4 @@ if __name__ == "__main__":
     failingTests = int(runErrorFailures[1]) + int(runErrorFailures[2])
 
     #provide number of failing tests as exit value
-    sys.exit(failingTests)  
+    sys.exit(failingTests)

@@ -21,9 +21,8 @@
 #define GUI_QUALITY__GRAYSCALEPLOTPAGE_H
 
 #include <gtkmm/box.h>
-#include <gtkmm/expander.h>
-#include <gtkmm/frame.h>
 #include <gtkmm/window.h>
+#include <gtkmm/frame.h>
 #include <gtkmm/radiobutton.h>
 
 #include <AOFlagger/gui/imagewidget.h>
@@ -83,7 +82,6 @@ class GrayScalePlotPage : public Gtk::HBox {
 		void setToSelectedPolarization(TimeFrequencyData &data);
 		void setToSelectedPhase(TimeFrequencyData &data);
 		
-		Gtk::Expander _expander;
 		Gtk::VBox _sideBox;
 		
 		Gtk::Frame _statisticKindFrame;

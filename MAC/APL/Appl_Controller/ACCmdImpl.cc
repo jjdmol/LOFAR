@@ -129,10 +129,10 @@ bool	ACCmdImpl::reinit (const time_t		scheduleTime,
 	return (true);
 }
 
-bool	ACCmdImpl::replace	 (const time_t		/*scheduleTime*/,
-						      const string&		/*processList*/,
-						      const string&		/*nodeList*/,
-						      const string&		/*configID*/) const
+bool	ACCmdImpl::replace	 (const time_t		scheduleTime,
+						      const string&		processList,
+						      const string&		nodeList,
+						      const string&		configID) const
 {
 	// TODO
 	return (true);
@@ -145,7 +145,7 @@ bool	ACCmdImpl::cancelCmdQueue () const
 }
 
 // Define a generic way to exchange info between client and server.
-string	ACCmdImpl::askInfo   (const string& 	/*keylist*/) const
+string	ACCmdImpl::askInfo   (const string& 	keylist) const
 {
 	// TODO
 	return ("ACCmdImpl: askInfo not yet implemented");

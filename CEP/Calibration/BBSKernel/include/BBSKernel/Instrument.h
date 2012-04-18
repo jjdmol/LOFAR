@@ -50,8 +50,8 @@ namespace BBS
 class AntennaField
 {
 public:
-    typedef shared_ptr<AntennaField>        Ptr;
-    typedef shared_ptr<const AntennaField>  ConstPtr;
+    typedef shared_ptr<AntennaField>    Ptr;
+    typedef shared_ptr<AntennaField>    ConstPtr;
 
     enum Axis
     {
@@ -72,7 +72,7 @@ public:
 
     const string &name() const;
     const Vector3 &position() const;
-    const Vector3 &axis(Axis axis) const;
+    const Vector3 &axis(Axis axis);
 
     bool isHBA() const;
 
@@ -82,13 +82,11 @@ public:
 
     void appendElement(const Element &element);
     inline size_t nElement() const;
-    inline size_t nActiveElement() const;
     inline const Element &element(size_t i) const;
 
 private:
     string                  itsName;
     Vector3                 itsPosition;
-    size_t                  itsActiveElementCount;
     Vector3                 itsAxes[N_Axis];
     vector<Vector3>         itsTileElements;
     vector<Element>         itsElements;
@@ -97,8 +95,8 @@ private:
 class Station
 {
 public:
-    typedef shared_ptr<Station>       Ptr;
-    typedef shared_ptr<const Station> ConstPtr;
+    typedef shared_ptr<Station> Ptr;
+    typedef shared_ptr<Station> ConstPtr;
 
     Station(const string &name, const casa::MPosition &position);
     Station(const string &name, const casa::MPosition &position,
@@ -111,9 +109,6 @@ public:
 
     bool isPhasedArray() const;
     unsigned int nField() const;
-    size_t nElement() const;
-    size_t nActiveElement() const;
-
     AntennaField::ConstPtr field(unsigned int i) const;
 
 private:
@@ -125,8 +120,8 @@ private:
 class Instrument
 {
 public:
-    typedef shared_ptr<Instrument>        Ptr;
-    typedef shared_ptr<const Instrument>  ConstPtr;
+    typedef shared_ptr<Instrument>  Ptr;
+    typedef shared_ptr<Instrument>  ConstPtr;
 
     Instrument(const string &name, const casa::MPosition &position);
 
@@ -169,11 +164,6 @@ const Vector3 &AntennaField::tileElement(size_t i) const
 inline size_t AntennaField::nElement() const
 {
     return itsElements.size();
-}
-
-inline size_t AntennaField::nActiveElement() const
-{
-    return itsActiveElementCount;
 }
 
 inline const AntennaField::Element &AntennaField::element(size_t i) const

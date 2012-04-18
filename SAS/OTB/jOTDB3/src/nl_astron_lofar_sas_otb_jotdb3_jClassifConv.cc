@@ -47,7 +47,6 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jClassifConv_initClas
   try {
     OTDBconnection* aConn=getConnection(name);
     ClassifConv* aCConv = new ClassifConv(aConn);
-    theirC_ObjectMap.erase(name+"_ClassifConv");
     theirC_ObjectMap[name+"_ClassifConv"]=(void*)aCConv;
   } catch (exception &ex) {
     cout << "Exception during new ClassifConv " << ex.what() << endl;

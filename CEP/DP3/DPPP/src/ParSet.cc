@@ -22,7 +22,6 @@
 //# @author Ger van Diepen
 
 #include <DPPP/ParSet.h>
-#include <Common/ParameterRecord.h>
 #include <set>
 
 namespace LOFAR {
@@ -192,12 +191,6 @@ namespace LOFAR {
     {
       itsAskedParms.insert (aKey);
       return itsParSet.getStringVector (aKey, aValue, expandable);
-    }
-
-    ParameterRecord ParSet::getRecord(const string& aKey) const
-    {
-      itsAskedParms.insert (aKey);
-      return itsParSet.getRecord (aKey);
     }
 
     vector<string> ParSet::unusedKeys() const

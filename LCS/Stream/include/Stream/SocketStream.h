@@ -47,10 +47,8 @@ class SocketStream : public FileDescriptorBasedStream
       Client, Server
     };
 
-  	    SocketStream(const string &hostname, uint16 _port, Protocol, Mode, time_t timeout = 0, const string &nfskey = "", bool doAccept = true);
+  	    SocketStream(const char *hostname, uint16 _port, Protocol, Mode, time_t timeout = 0, const char *nfskey = 0);
     virtual ~SocketStream();
-
-    FileDescriptorBasedStream *detach();
 
     void    reaccept(time_t timeout = 0); // only for TCP server socket
     void    setReadBufferSize(size_t size);
@@ -59,18 +57,16 @@ class SocketStream : public FileDescriptorBasedStream
     const Mode mode;
 
   private:
-    const string hostname;
+    const char *hostname;
     uint16 port;
-    const string nfskey;
+    const char *nfskey;
     int     listen_sk;
 
     void accept(time_t timeout);
 
-    static void syncNFS();
-
-    static std::string readkey(const string &nfskey, time_t &timeout);
-    static void writekey(const string &nfskey, uint16 port);
-    static void deletekey(const string &nfskey);
+    static std::string readkey(const char *nfskey, time_t &timeout);
+    static void writekey(const char *nfskey, uint16 port);
+    static void deletekey(const char *nfskey);
 };
 
 } // namespace LOFAR

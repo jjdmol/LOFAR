@@ -27,7 +27,6 @@
 #include <Common/LofarLogger.h>
 #include <Common/lofar_bitset.h>
 #include <Common/lofar_map.h>
-#include <Common/lofar_vector.h>
 #include <Common/hexdump.h>
 #include <MACIO/Marshalling.h>
 #include "tMarshalling.h"
@@ -100,7 +99,7 @@ unsigned int SubArrayNC::unpack(void*	buffer) {
 
 } // namespace LOFAR
 
-int main (int	/*argc*/, char*	/*argv[]*/)
+int main (int	argc, char*	argv[])
 {
 	// string test
 	string	tstString("Dit is een teststring");

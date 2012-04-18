@@ -5,7 +5,6 @@ install(FILES
   config.maincu
   config.standalone.station
   config.dist.station
-  config.dist_test.station
   progs.ccu
   progs.maincu
   progs.standalone.station

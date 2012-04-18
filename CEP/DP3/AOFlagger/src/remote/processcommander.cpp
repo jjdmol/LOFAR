@@ -25,8 +25,6 @@
 #include <AOFlagger/remote/serverconnection.h>
 
 #include <AOFlagger/quality/statisticscollection.h>
-#include <AOFlagger/quality/histogramcollection.h>
-#include <AOFlagger/quality/statisticsderivator.h>
 
 namespace aoRemote {
 
@@ -96,9 +94,8 @@ void ProcessCommander::continueReadQualityTablesTask(ServerConnectionPtr serverC
 		{
 			const std::string msFilename = items.front().LocalPath();
 			items.pop_front();
-			StatisticsCollection *statisticsCollection = new StatisticsCollection();
-			HistogramCollection *histogramCollection = new HistogramCollection();
-			serverConnection->ReadQualityTables(msFilename, *statisticsCollection, *histogramCollection);
+			StatisticsCollection *collection = new StatisticsCollection();
+			serverConnection->ReadQualityTables(msFilename, *collection);
 		}
 	}
 }
@@ -180,39 +177,19 @@ void ProcessCommander::onConnectionAwaitingCommand(ServerConnectionPtr serverCon
 	}
 }
 
-void ProcessCommander::onConnectionFinishReadQualityTables(ServerConnectionPtr serverConnection, StatisticsCollection &statisticsCollection, HistogramCollection &histogramCollection)
+void ProcessCommander::onConnectionFinishReadQualityTables(ServerConnectionPtr serverConnection, StatisticsCollection &collection)
 {
 	boost::mutex::scoped_lock lock(_mutex);
-	if(statisticsCollection.PolarizationCount() == 0)
+	if(collection.PolarizationCount() == 0)
 		throw std::runtime_error("Client sent StatisticsCollection with 0 polarizations.");
 	
 	// If the collection is still empty, we need to set its polarization count
-	if(_statisticsCollection->PolarizationCount() == 0)
-		_statisticsCollection->SetPolarizationCount(statisticsCollection.PolarizationCount());
-	
-	_statisticsCollection->Add(statisticsCollection);
-	
-	if(!histogramCollection.Empty())
+	if(_collection->PolarizationCount() == 0)
 	{
-		if(_correctHistograms)
-		{
-			DefaultStatistics thisStat(statisticsCollection.PolarizationCount());
-			statisticsCollection.GetGlobalCrossBaselineStatistics(thisStat);
-			DefaultStatistics singlePol = thisStat.ToSinglePolarization();
-			double stddev = StatisticsDerivator::GetStatisticAmplitude(QualityTablesFormatter::DStandardDeviationStatistic, singlePol, 0);
-			
-			std::cout << "Scaling with " << 1.0 / stddev << ".\n";
-			histogramCollection.Rescale(1.0 / stddev);
-		}
-		
-		if(_histogramCollection->PolarizationCount() == 0)
-			_histogramCollection->SetPolarizationCount(histogramCollection.PolarizationCount());
-		
-		_histogramCollection->Add(histogramCollection);
+		_collection->SetPolarizationCount(collection.PolarizationCount());
 	}
-	
-	delete &statisticsCollection;
-	delete &histogramCollection;
+	_collection->Add(collection);
+	delete &collection;
 }
 
 void ProcessCommander::onConnectionFinishReadAntennaTables(ServerConnectionPtr serverConnection, std::vector<AntennaInfo> &antennas)

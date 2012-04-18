@@ -39,7 +39,6 @@
 
 #ifdef HAS_LOFARSTMAN
 #include <LofarStMan/Register.h>
-#include <AOFlagger/quality/histogramtablesformatter.h>
 #endif // HAS_LOFARSTMAN                                                       
 
 void reportProgress(unsigned step, unsigned totalSteps)
@@ -60,7 +59,7 @@ enum CollectingMode
 	CollectHistograms
 };
 
-void actionCollect(const std::string &filename, enum CollectingMode mode, StatisticsCollection &statisticsCollection, HistogramCollection &histogramCollection)
+void actionCollect(const std::string &filename, enum CollectingMode mode)
 {
 	MeasurementSet *ms = new MeasurementSet(filename);
 	const unsigned polarizationCount = ms->GetPolarizationCount();
@@ -93,19 +92,19 @@ void actionCollect(const std::string &filename, enum CollectingMode mode, Statis
 		std::cout << "Channel zero will be included in the statistics, as it seems that channel 0 is okay.\n";
 	
 	// Initialize statisticscollection
-	statisticsCollection.SetPolarizationCount(polarizationCount);
+	StatisticsCollection collection(polarizationCount);
 	if(mode == CollectDefault)
 	{
 		for(unsigned b=0;b<bandCount;++b)
 		{
 			if(ignoreChannelZero)
-				statisticsCollection.InitializeBand(b, (frequencies[b]+1), bands[b].channelCount-1);
+				collection.InitializeBand(b, (frequencies[b]+1), bands[b].channelCount-1);
 			else
-				statisticsCollection.InitializeBand(b, frequencies[b], bands[b].channelCount);
+				collection.InitializeBand(b, frequencies[b], bands[b].channelCount);
 		}
 	}
 	// Initialize Histograms collection
-	histogramCollection.SetPolarizationCount(polarizationCount);
+	HistogramCollection histogramCollection(polarizationCount);
 
 	// get columns
 	casa::Table table(filename, casa::Table::Update);
@@ -170,7 +169,7 @@ void actionCollect(const std::string &filename, enum CollectingMode mode, Statis
 				case CollectDefault:
 					{
 						const bool origFlags = false;
-						statisticsCollection.Add(antenna1Index, antenna2Index, time, bandIndex, p, &samples[p]->real(), &samples[p]->imag(), isRFI[p], &origFlags, band.channelCount - startChannel, 2, 1, 0);
+						collection.Add(antenna1Index, antenna2Index, time, bandIndex, p, &samples[p]->real(), &samples[p]->imag(), isRFI[p], &origFlags, band.channelCount - startChannel, 2, 1, 0);
 					}
 					break;
 				case CollectHistograms:
@@ -193,14 +192,6 @@ void actionCollect(const std::string &filename, enum CollectingMode mode, Statis
 	delete[] frequencies;
 	delete[] bands;
 	std::cout << "100\n";
-}
-
-void actionCollect(const std::string &filename, enum CollectingMode mode)
-{
-	StatisticsCollection statisticsCollection;
-	HistogramCollection histogramCollection;
-	
-	actionCollect(filename, mode, statisticsCollection, histogramCollection);
 	
 	switch(mode)
 	{
@@ -209,26 +200,78 @@ void actionCollect(const std::string &filename, enum CollectingMode mode)
 				std::cout << "Writing quality tables..." << std::endl;
 				
 				QualityTablesFormatter qualityData(filename);
-				statisticsCollection.Save(qualityData);
+				collection.Save(qualityData);
 			}
 			break;
 		case CollectHistograms:
+			const std::map<HistogramCollection::AntennaPair, LogHistogram*> &map = histogramCollection.GetHistograms(0);
+			Plot plotSlopes("histogram-slopes.pdf");
+			plotSlopes.SetYRange(-10.0, 10.0);
+			Plot plotHistograms("histograms.pdf");
+			for(std::map<HistogramCollection::AntennaPair, LogHistogram*>::const_iterator i = map.begin(); i != map.end(); ++i)
 			{
-				std::cout << "Writing histogram tables..." << std::endl;
-				
-				HistogramTablesFormatter histograms(filename);
-				histogramCollection.Save(histograms);
+				if(i->first.first != i->first.second)
+				{
+					const LogHistogram *histogram = i->second;
+					double rangeCentre = histogram->MinPositiveAmplitude();
+					rangeCentre = exp2(floor(log2(rangeCentre)));
+					const double maxAmplitude = histogram->MaxAmplitude();
+					std::cout << "Antennae " << i->first.first << " x " << i->first.second << "\n";
+					std::stringstream s;
+					s << i->first.first << " x " << i->first.second;
+					//plotSlopes.StartLine(s.str());
+					//plotHistograms.StartLine(s.str());
+					plotSlopes.StartLine();
+					plotSlopes.SetLogScale(true, false);
+					plotHistograms.StartLine();
+					plotHistograms.SetLogScale(true, true);
+					while(rangeCentre < maxAmplitude && rangeCentre > 0.0)
+					{
+						const double rangeStart = rangeCentre * 0.75;
+						const double rangeEnd = rangeCentre * 1.5;
+						const double slope = histogram->NormalizedSlope(rangeStart, rangeEnd, LogHistogram::TotalAmplitudeHistogram);
+						std::cout << rangeStart << "-" << rangeEnd << ": " << slope << "\n";
+						rangeCentre *= 2.0;
+						plotSlopes.PushDataPoint(rangeCentre, slope);
+						const double count = histogram->NormalizedCount(rangeStart, rangeEnd, LogHistogram::TotalAmplitudeHistogram);
+						if(count > 0 && std::isfinite(count))
+							plotHistograms.PushDataPoint(rangeCentre, count);
+					}
+				}
+			}
+			Plot plotFine("histogram-fine.pdf");
+			Plot plotGlobalSlopes("histogram-gslopes.pdf");
+			plotFine.SetLogScale(true, true);
+			plotGlobalSlopes.SetLogScale(true, false);
+			plotGlobalSlopes.SetYRange(-5.0, 5.0);
+			LogHistogram intHistogram;
+			histogramCollection.GetHistogramForCrossCorrelations(0, intHistogram);
+			
+			plotFine.StartLine("Total");
+			plotGlobalSlopes.StartLine("Total");
+			for(LogHistogram::iterator i=intHistogram.begin(); i!=intHistogram.end(); ++i)
+			{
+				plotFine.PushDataPoint(i.value(), i.normalizedCount(LogHistogram::TotalAmplitudeHistogram));
+				plotGlobalSlopes.PushDataPoint(i.value(), intHistogram.NormalizedSlope(i.value()*0.5, i.value()*2.0, LogHistogram::TotalAmplitudeHistogram));
+			}
+			plotFine.StartLine("RFI");
+			plotGlobalSlopes.StartLine("RFI");
+			for(LogHistogram::iterator i=intHistogram.begin(); i!=intHistogram.end(); ++i)
+			{
+				plotFine.PushDataPoint(i.value(), i.normalizedCount(LogHistogram::RFIAmplitudeHistogram));
+				plotGlobalSlopes.PushDataPoint(i.value(), intHistogram.NormalizedSlope(i.value()*0.5, i.value()*2.0, LogHistogram::RFIAmplitudeHistogram));
+			}
+			plotFine.StartLine("Data");
+			plotGlobalSlopes.StartLine("Data");
+			for(LogHistogram::iterator i=intHistogram.begin(); i!=intHistogram.end(); ++i)
+			{
+				plotFine.PushDataPoint(i.value(), i.normalizedCount(LogHistogram::DataAmplitudeHistogram));
+				plotGlobalSlopes.PushDataPoint(i.value(), intHistogram.NormalizedSlope(i.value()*0.5, i.value()*2.0, LogHistogram::DataAmplitudeHistogram));
 			}
 			break;
 	}
 	
 	std::cout << "Done.\n";
-}
-
-void actionCollectHistogram(const std::string &filename, HistogramCollection &histogramCollection)
-{
-	StatisticsCollection tempCollection;
-	actionCollect(filename, CollectHistograms, tempCollection, histogramCollection);
 }
 
 void printStatistics(std::complex<long double> *complexStat, unsigned count)
@@ -278,33 +321,6 @@ void printStatistics(const DefaultStatistics &statistics)
 	std::cout << '\n';
 }
 
-void actionQueryGlobalStat(const std::string &kindName, const std::string &filename)
-{
-	MeasurementSet *ms = new MeasurementSet(filename);
-	const unsigned polarizationCount = ms->GetPolarizationCount();
-	const BandInfo band = ms->GetBandInfo(0);
-	delete ms;
-	
-	const QualityTablesFormatter::StatisticKind kind = QualityTablesFormatter::NameToKind(kindName);
-	
-	QualityTablesFormatter formatter(filename);
-	StatisticsCollection collection(polarizationCount);
-	collection.Load(formatter);
-	DefaultStatistics statistics(polarizationCount);
-	collection.GetGlobalCrossBaselineStatistics(statistics);
-	StatisticsDerivator derivator(collection);
-	
-	double start = band.channels.begin()->frequencyHz;
-	double end = band.channels.rbegin()->frequencyHz;
-	std::cout << round(start/10000.0)/100.0 << '\t' << round(end/10000.0)/100.0;
-	for(unsigned p=0;p<polarizationCount;++p)
-	{
-		long double val = derivator.GetStatisticAmplitude(kind, statistics, p);
-		std::cout << '\t' << val;
-	}
-	std::cout << '\n';
-}
-
 void actionQueryBaselines(const std::string &kindName, const std::string &filename)
 {
 	MeasurementSet *ms = new MeasurementSet(filename);
@@ -338,7 +354,10 @@ void actionQueryBaselines(const std::string &kindName, const std::string &filena
 
 void actionQueryTime(const std::string &kindName, const std::string &filename)
 {
-	const unsigned polarizationCount = MeasurementSet::GetPolarizationCount(filename);
+	MeasurementSet *ms = new MeasurementSet(filename);
+	const unsigned polarizationCount = ms->GetPolarizationCount();
+	delete ms;
+	
 	const QualityTablesFormatter::StatisticKind kind = QualityTablesFormatter::NameToKind(kindName);
 	
 	QualityTablesFormatter formatter(filename);
@@ -367,13 +386,12 @@ void actionQueryTime(const std::string &kindName, const std::string &filename)
 void actionSummarize(const std::string &filename)
 {
 	bool remote = aoRemote::ClusteredObservation::IsClusteredFilename(filename);
-	StatisticsCollection statisticsCollection;
-	HistogramCollection histogramCollection;
+	StatisticsCollection collection;
 	if(remote)
 	{
 		aoRemote::ClusteredObservation *observation = aoRemote::ClusteredObservation::Load(filename);
 		aoRemote::ProcessCommander commander(*observation);
-		commander.PushReadQualityTablesTask(&statisticsCollection, &histogramCollection);
+		commander.PushReadQualityTablesTask(&collection);
 		commander.Run();
 		delete observation;
 	}
@@ -382,53 +400,28 @@ void actionSummarize(const std::string &filename)
 		const unsigned polarizationCount = ms->GetPolarizationCount();
 		delete ms;
 		
-		statisticsCollection.SetPolarizationCount(polarizationCount);
+		collection.SetPolarizationCount(polarizationCount);
 		QualityTablesFormatter qualityData(filename);
-		statisticsCollection.Load(qualityData);
+		collection.Load(qualityData);
 	}
 	
-	DefaultStatistics statistics(statisticsCollection.PolarizationCount());
+	DefaultStatistics statistics(collection.PolarizationCount());
 	
-	statisticsCollection.GetGlobalTimeStatistics(statistics);
+	collection.GetGlobalTimeStatistics(statistics);
 	std::cout << "Time statistics: \n";
 	printStatistics(statistics);
 	
-	statisticsCollection.GetGlobalFrequencyStatistics(statistics);
+	collection.GetGlobalFrequencyStatistics(statistics);
 	std::cout << "\nFrequency statistics: \n";
 	printStatistics(statistics);
 
-	statisticsCollection.GetGlobalCrossBaselineStatistics(statistics);
+	collection.GetGlobalCrossBaselineStatistics(statistics);
 	std::cout << "\nCross-correlated baseline statistics: \n";
 	printStatistics(statistics);
-	
-	DefaultStatistics singlePolStat = statistics.ToSinglePolarization();
-	std::cout << "RFIPercentange: " << StatisticsDerivator::GetStatisticAmplitude(QualityTablesFormatter::RFIPercentageStatistic, singlePolStat, 0) << '\n';
 
-	statisticsCollection.GetGlobalAutoBaselineStatistics(statistics);
+	collection.GetGlobalAutoBaselineStatistics(statistics);
 	std::cout << "\nAuto-correlated baseline: \n";
 	printStatistics(statistics);
-}
-
-void actionSummarizeRFI(const std::string &filename)
-{
-	MeasurementSet *ms = new MeasurementSet(filename);
-	const unsigned polarizationCount = ms->GetPolarizationCount();
-	const BandInfo band = ms->GetBandInfo(0);
-	delete ms;
-	
-	StatisticsCollection statisticsCollection;
-	statisticsCollection.SetPolarizationCount(polarizationCount);
-	QualityTablesFormatter qualityData(filename);
-	statisticsCollection.Load(qualityData);
-	DefaultStatistics statistics(statisticsCollection.PolarizationCount());
-	statisticsCollection.GetGlobalCrossBaselineStatistics(statistics);
-	DefaultStatistics singlePolStat = statistics.ToSinglePolarization();
-	
-	double start = band.channels.begin()->frequencyHz;
-	double end = band.channels.rbegin()->frequencyHz;
-	std::cout << "Start:\t" << round(start/10000.0)/100.0 << "\tEnd:\t" << round(end/10000.0)/100.0
-		<<  "\tRFIPercentange:\t"
-		<< StatisticsDerivator::GetStatisticAmplitude(QualityTablesFormatter::RFIPercentageStatistic, singlePolStat, 0) << '\n';
 }
 
 void actionCombine(const std::string outFilename, const std::vector<std::string> inFilenames)
@@ -445,30 +438,29 @@ void actionCombine(const std::string outFilename, const std::vector<std::string>
 		{
 			if(remote)
 			{
-				/*aoRemote::ClusteredObservation *observation = aoRemote::ClusteredObservation::Load(firstInFilename);
-				aoRemote::ProcessCommander commander(*observation);
-				commander.PushReadAntennaTablesTask();
-				commander.PushReadQualityTablesTask();
-				commander.Run();
-				QualityTablesFormatter formatter(outFilename);
-				commander.Statistics().Save(formatter);
-				delete observation;*/
-			} else {
-				// TODO read antenna tables from "firstInFilename"
-				// TODO read quality tables from all inFilenames
+				throw std::runtime_error("Can't yet create a new set with clustered observations -- make output filename yourself");
 			}
-			// TODO: create main table
-			//casa::SetupNewTable mainTableSetup(outFilename, templateSet.tableDesc(), casa::Table::New);
-			//casa::Table mainOutputTable(mainTableSetup);
+			casa::Table templateSet(firstInFilename);
+			casa::Table templateAntennaTable = templateSet.keywordSet().asTable("ANTENNA");
 			
-			// TODO: create antenna table			
-			//casa::SetupNewTable antennaTableSetup(outFilename + "/ANTENNA", templateAntennaTable.tableDesc(), casa::Table::New);
-			//casa::Table antennaOutputTable(antennaTableSetup);
-			//mainOutputTable.rwKeywordSet().defineTable("ANTENNA", antennaOutputTable);
+			casa::SetupNewTable mainTableSetup(outFilename, templateSet.tableDesc(), casa::Table::New);
+			casa::Table mainOutputTable(mainTableSetup);
 			
-			// TODO fill antenna table
+			casa::SetupNewTable antennaTableSetup(outFilename + "/ANTENNA", templateAntennaTable.tableDesc(), casa::Table::New);
+			casa::Table antennaOutputTable(antennaTableSetup);
+			mainOutputTable.rwKeywordSet().defineTable("ANTENNA", antennaOutputTable);
 			
-			// TODO fill quality table
+			casa::TableCopy::copyRows(antennaOutputTable, templateAntennaTable);
+		}
+		
+		if(remote)
+		{
+			aoRemote::ClusteredObservation *observation = aoRemote::ClusteredObservation::Load(firstInFilename);
+			aoRemote::ProcessCommander commander(*observation);
+			commander.Run();
+			QualityTablesFormatter formatter(outFilename);
+			commander.Statistics().Save(formatter);
+			delete observation;
 		}
 	}
 }
@@ -479,67 +471,6 @@ void actionRemove(const std::string &filename)
 	formatter.RemoveAllQualityTables();
 }
 
-void printRFISlopeForHistogram(const std::map<HistogramCollection::AntennaPair, LogHistogram*> &histogramMap, char polarizationSymbol, const AntennaInfo *antennae)
-{
-	for(std::map<HistogramCollection::AntennaPair, LogHistogram*>::const_iterator i=histogramMap.begin(); i!=histogramMap.end();++i)
-	{
-		const unsigned a1 = i->first.first, a2 = i->first.second;
-		Baseline baseline(antennae[a1], antennae[a2]);
-		double length = baseline.Distance();
-		const LogHistogram &histogram = *i->second;
-		double start, end;
-		histogram.GetRFIRegion(start, end);
-		double slope = histogram.NormalizedSlope(start, end);
-		double stddev = histogram.NormalizedSlopeStdError(start, end, slope);
-		std::cout << polarizationSymbol << '\t' << a1 << '\t' << a2 << '\t' << length << '\t' << slope << '\t' << stddev << '\n';
-	}
-}
-
-void actionHistogram(const std::string &filename, const std::string &query)
-{
-	HistogramTablesFormatter histogramFormatter(filename);
-	const unsigned polarizationCount = MeasurementSet::GetPolarizationCount(filename);
-	if(query == "rfislope")
-	{
-		HistogramCollection collection(polarizationCount);
-		collection.Load(histogramFormatter);
-		MeasurementSet set(filename);
-		std::cout << set.GetBandInfo(0).CenterFrequencyHz();
-		for(unsigned p=0;p<polarizationCount;++p)
-		{
-			LogHistogram histogram;
-			collection.GetRFIHistogramForCrossCorrelations(p, histogram);
-			std::cout <<  '\t' << histogram.NormalizedSlopeInRFIRegion();
-		}
-		std::cout << '\n';
-	} else if(query == "rfislope-per-baseline")
-	{
-		HistogramCollection collection;
-		actionCollectHistogram(filename, collection);
-		MeasurementSet set(filename);
-		size_t antennaCount = set.AntennaCount();
-		AntennaInfo antennae[antennaCount];
-		for(size_t a=0;a<antennaCount;++a)
-			antennae[a] = set.GetAntennaInfo(a);
-		
-		HistogramCollection *summedCollection = collection.CreateSummedPolarizationCollection();
-		const std::map<HistogramCollection::AntennaPair, LogHistogram*> &histogramMap = summedCollection->GetRFIHistogram(0);
-		printRFISlopeForHistogram(histogramMap, '*', antennae);
-		delete summedCollection;
-		for(unsigned p=0;p<polarizationCount;++p)
-		{
-			const std::map<HistogramCollection::AntennaPair, LogHistogram*> &histogramMap = collection.GetRFIHistogram(p);
-			printRFISlopeForHistogram(histogramMap, '0' + p, antennae);
-		}
-	} else if(query == "remove")
-	{
-		histogramFormatter.RemoveAll();
-	} else
-	{
-		std::cerr << "Unknown histogram command: " << query << "\n";
-	}
-}
-
 void printSyntax(std::ostream &stream, char *argv[])
 {
 	stream << "Syntax: " << argv[0] <<
@@ -548,14 +479,11 @@ void printSyntax(std::ostream &stream, char *argv[])
 		"\thelp        - Get more info about an action (usage: '" << argv[0] << " help <action>')\n"
 		"\tcollect     - Processes the entire measurement set, collects the statistics\n"
 		"\t              and writes them in the quality tables.\n"
-		"\tcombine     - Combine several tables.\n"
-		"\thistogram   - Various histogram actions.\n"
+		"\\tcombine     - Combine several tables.\n"
 		"\tquery_b     - Query baselines.\n"
 		"\tquery_t     - Query time.\n"
-		"\tquery_g     - Query single global statistic.\n"
 		"\tremove      - Remove all quality tables.\n"
-		"\tsummarize   - Give a summary of the statistics currently in the quality tables.\n"
-		"\tsummarizerfi- Give a summary of the rfi statistics.\n";
+		"\tsummarize   - Give a summary of the statistics currently in the quality tables.\n";
 }
 
 int main(int argc, char *argv[])
@@ -611,24 +539,12 @@ int main(int argc, char *argv[])
 					std::cout << "Syntax: " << argv[0] << " query_t <kind> <ms>\n\n"
 						"Print the given statistic for each time step.\n";
 				}
-				else if(helpAction == "query_g")
-				{
-					std::cout << "Syntax " << argv[0] << " query_g <kind> <ms>\n\n"
-						"Print the given statistic for this measurement set.\n";
-				}
 				else if(helpAction == "combine")
 				{
 					std::cout << "Syntax: " << argv[0] << " combine <target_ms> [<in_ms> [<in_ms> ..]]\n\n"
 						"This will read all given input measurement sets, combine the statistics and \n"
 						"write the results to a target measurement set. The target measurement set should\n"
 						"not exist beforehand.\n";
-				}
-				else if(helpAction == "histogram")
-				{
-					std::cout << "Syntax: " << argv[0] << " histogram <query> <ms>]\n\n"
-						"Query can be:\n"
-						"\trfislope - performs linear regression on the part of the histogram that should contain the RFI.\n"
-						"\t           Reports one value per polarisation.\n";
 				}
 				else if(helpAction == "remove")
 				{
@@ -644,7 +560,7 @@ int main(int argc, char *argv[])
 		}
 		else if(action == "collect")
 		{
-			if(argc != 3 && !(argc == 4 && std::string(argv[2]) == "-h") )
+			if(argc != 3 && !(argc == 4 && std::string(argv[2]) == "-a") )
 			{
 				std::cerr << "collect actions needs one or two parameters (the measurement set)\n";
 				return -1;
@@ -669,17 +585,6 @@ int main(int argc, char *argv[])
 				actionCombine(outFilename, inFilenames);
 			}
 		}
-		else if(action == "histogram")
-		{
-			if(argc != 4)
-			{
-				std::cerr << "histogram actions needs two parameters (the query and the measurement set)\n";
-				return -1;
-			}
-			else {
-				actionHistogram(argv[3], argv[2]);
-			}
-		}
 		else if(action == "summarize")
 		{
 			if(argc != 3)
@@ -689,28 +594,6 @@ int main(int argc, char *argv[])
 			}
 			else {
 				actionSummarize(argv[2]);
-			}
-		}
-		else if(action == "summarizerfi")
-		{
-			if(argc != 3)
-			{
-				std::cerr << "summarizerfi actions needs one parameter (the measurement set)\n";
-				return -1;
-			}
-			else {
-				actionSummarizeRFI(argv[2]);
-			}
-		}
-		else if(action == "query_g")
-		{
-			if(argc != 4)
-			{
-				std::cerr << "Syntax for query global stat: 'aoquality query_g <KIND> <MS>'\n";
-				return -1;
-			}
-			else {
-				actionQueryGlobalStat(argv[2], argv[3]);
 			}
 		}
 		else if(action == "query_b")

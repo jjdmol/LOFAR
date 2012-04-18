@@ -20,6 +20,7 @@ set(inst_HEADERS
   SparseSet.h
   Exceptions.h
   StreamableData.h
+  StokesData.h
   TransposedData.h
   TriggerData.h
   InverseFilteredData.h

@@ -93,8 +93,8 @@ public:
 	bool isSplitterActive() { return(itsSplitterActive); }
 	void setSplitterActive(bool active) { itsSplitterActive = active; }
 
-	bool isCepEnabled (int ringNr) { return(ringNr ? itsCepEnabled1 : itsCepEnabled0); }
-	void setCepEnabled(int ringNr, bool enable) { if (ringNr) itsCepEnabled1 = enable; else itsCepEnabled0 = enable; }
+	bool isCepEnabled() { return(itsCepEnabled); }
+	void setCepEnabled(bool enable) { itsCepEnabled = enable; }
 
     bool isSwappedXY(int antenna){ return (itsSwappedXY.test(antenna)); }
     void setSwappedXY(bitset<MAX_ANTENNAS> antennamask) { itsSwappedXY = antennamask; }
@@ -148,8 +148,7 @@ private:
 	SerdesBuffer					itsSdsWriteBuffer;
 	SerdesBuffer					itsSdsReadBuffer[MAX_RSPBOARDS];
 	bool							itsSplitterActive;
-	bool							itsCepEnabled0;
-	bool							itsCepEnabled1;
+	bool							itsCepEnabled;
 	RSP_Protocol::Latency			itsLatencys;
 	bitset<MAX_ANTENNAS>            itsSwappedXY;
 	

@@ -1,9 +1,19 @@
-## P.Donker ASTRON februari 2011
-## EC IS status module
+#!/usr/bin/python
+
+## "isEcLib.py"
+## class to communicate with EC module
+## can only be used on IS (international) LCU
+##
+## usage: only used by other scrips
+##
+## Author: Pieter Donker (ASTRON)
+## Last change: november 2011 
 
 import socket
 import struct
 import time
+
+VERSION = '1.1.0' # version of this class
 
 def getIP():
     # get ip-adres of LCU
@@ -183,11 +193,6 @@ class EC:
         return version, versionstr
 
     #---------------------------------------
-    def getStatusData(self):
-        self.sendCmd(self.EC_STATUS)
-        (cmdId, status, PL2) = self.recvAck()
-        return PL2
-
     def getStatus(self):
         onoff = ('OFF','ON')
         badok = ('N.A.','OK')

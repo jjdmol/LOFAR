@@ -22,8 +22,7 @@ file(GLOB staticmeta_data
   iHBADeltas/*.conf
   AntennaFields/*.conf
   PPSDelays/*.conf
-#  CalTables/*.dat
-  TBBConnections.dat)
+  CalTables/*.dat)
 install(FILES
   ${staticmeta_data}
   DESTINATION etc/StaticMetaData)

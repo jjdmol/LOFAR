@@ -28,6 +28,6 @@ int main(int argc, char *argv[])
 	AOQPlotWindow window;
 	if(argc>1)
 		window.Open(argv[1]);
-	kit.run();
+	kit.run(window);
 	return 0;
 }

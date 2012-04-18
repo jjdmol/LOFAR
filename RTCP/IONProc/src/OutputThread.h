@@ -42,9 +42,7 @@ namespace RTCP {
 class OutputThread
 {
   public:
-			    OutputThread(const Parset &, OutputType outputType, unsigned streamNr, unsigned adderNr);
-
-    void                    start();
+			    OutputThread(const Parset &, OutputType outputType, unsigned streamNr);
 
     static const unsigned   maxSendQueueSize = 3; // use 2 if you run out of memory, but test carefully to avoid data loss
 
@@ -57,7 +55,7 @@ class OutputThread
     const std::string       itsOutputDescriptor;
 
   public:
-    SmartPtr<Thread>	    itsThread;
+    Thread		    itsThread;
 };
 
 } // namespace RTCP

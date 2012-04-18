@@ -602,13 +602,11 @@ public:
 	virtual ~DataStreamCommand() {}
 	virtual void send();
 	virtual GCFEvent::TResult ack(GCFEvent& e);
-	void setStream(int ringNr, bool streamOn) {
-		if (!ringNr) itsStream0On = streamOn;
-		else itsStream1On = streamOn;
+	void setStream(bool streamOn) {
+		itsStreamOn = streamOn;
 	}
 private:
-	bool itsStream0On;
-	bool itsStream1On;
+	bool itsStreamOn;
 };
 
 //

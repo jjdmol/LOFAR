@@ -31,7 +31,6 @@
 #include <AOFlagger/util/autoarray.h>
 
 #include <AOFlagger/quality/statisticscollection.h>
-#include <AOFlagger/quality/histogramcollection.h>
 
 namespace aoRemote
 {
@@ -92,10 +91,9 @@ void ServerConnection::StopClient()
 	boost::asio::write(_socket, boost::asio::buffer(&requestBlock, sizeof(requestBlock)));
 }
 
-void ServerConnection::ReadQualityTables(const std::string &msFilename, StatisticsCollection &collection, HistogramCollection &histogramCollection)
+void ServerConnection::ReadQualityTables(const std::string &msFilename, StatisticsCollection &collection)
 {
 	_collection = &collection;
-	_histogramCollection = &histogramCollection;
 	
 	std::stringstream reqBuffer;
 	
@@ -191,14 +189,8 @@ void ServerConnection::onReceiveQualityTablesResponseData(size_t dataSize)
 	
 	std::cout << "Received quality table of size " << dataSize << "." << std::endl;
 	_collection->Unserialize(stream);
-	if(stream.tellg() != (std::streampos) dataSize)
-	{
-		size_t histogramTablesSize = dataSize - stream.tellg();
-		std::cout << "Processing histogram tables of size " << histogramTablesSize << "." << std::endl;
-		_histogramCollection->Unserialize(stream);
-	}
 
-	_onFinishReadQualityTables(shared_from_this(), *_collection, *_histogramCollection);
+	_onFinishReadQualityTables(shared_from_this(), *_collection);
 	_onAwaitingCommand(shared_from_this());
 }
 

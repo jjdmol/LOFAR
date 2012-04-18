@@ -42,7 +42,6 @@
 #include <AOFlagger/strategy/actions/fringestopaction.h>
 #include <AOFlagger/strategy/actions/imageraction.h>
 #include <AOFlagger/strategy/actions/iterationaction.h>
-#include <AOFlagger/strategy/actions/normalizevarianceaction.h>
 #include <AOFlagger/strategy/actions/plotaction.h>
 #include <AOFlagger/strategy/actions/quickcalibrateaction.h>
 #include <AOFlagger/strategy/actions/rawappenderaction.h>
@@ -86,7 +85,6 @@ const std::vector<std::string> ActionFactory::GetActionList()
 	list.push_back("Fringe stopping recovery");
 	list.push_back("Image");
 	list.push_back("Iteration");
-	list.push_back("Normalize variance");
 	list.push_back("Phase adapter");
 	list.push_back("Plot");
 	list.push_back("Quickly calibrate");
@@ -151,8 +149,6 @@ Action *ActionFactory::CreateAction(const std::string &action)
 		return new ImagerAction();
 	else if(action == "Iteration")
 		return new IterationBlock();
-	else if(action == "Normalize variance")
-		return new NormalizeVarianceAction();
 	else if(action == "Phase adapter")
 		return new Adapter();
 	else if(action == "Plot")

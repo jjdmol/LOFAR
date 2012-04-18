@@ -64,7 +64,7 @@ void IndirectBaselineReader::PerformReadRequests()
 	{
 		const ReadRequest request = _readRequests[i];
 		_results.push_back(Result());
-		const size_t width = AllObservationTimes().size();
+		const size_t width = ObservationTimes().size();
 		for(size_t p=0;p<PolarizationCount();++p)
 		{
 			if(ReadData()) {
@@ -127,6 +127,48 @@ void IndirectBaselineReader::PerformFlagWriteRequests()
 		performFlagWriteTask(request.flags, request.antenna1, request.antenna2 /* TODO, request.spectralWindow, request.startIndex, request.endIndex, request.leftBorder, request.rightBorder */);
 	}
 	_writeRequests.clear();
+}
+
+void IndirectBaselineReader::performFlagWriteTask(std::vector<Mask2DCPtr> flags, int antenna1, int antenna2)
+{
+	initialize();
+
+	const size_t polarizationCount = PolarizationCount();
+	
+	if(flags.size() != polarizationCount)
+		throw std::runtime_error("PerformDataWriteTask: input format did not match number of polarizations in measurement set");
+	
+	for(size_t i=1;i<flags.size();++i)
+	{
+		if(flags[0]->Width() != flags[i]->Width() || flags[0]->Height() != flags[i]->Height())
+		throw std::runtime_error("PerformDataWriteTask: width and/or height of input images did not match");
+	}
+	
+	if(!_msIsReordered) initializeReorderedMS();
+	
+	const size_t width = flags[0]->Width();
+	const size_t bufferSize = FrequencyCount() * PolarizationCount();
+	
+	const std::string flagFilename = FlagFilename(antenna1, antenna2);
+	std::ofstream flagFile(flagFilename.c_str(), std::ofstream::binary | std::ofstream::trunc);
+	
+	for(size_t x=0;x<width;++x)
+	{
+		bool flagBuffer[bufferSize];
+		
+		size_t flagBufferPtr = 0;
+		for(size_t f=0;f<FrequencyCount();++f) {
+			for(size_t p=0;p<PolarizationCount();++p)
+			{
+				flagBuffer[flagBufferPtr] = flags[p]->Value(x, f);
+				++flagBufferPtr;
+			}
+		}
+
+		flagFile.write(reinterpret_cast<char*>(flagBuffer), bufferSize * sizeof(bool));
+	}
+	
+	_reorderedFlagFilesHaveChanged = true;
 }
 
 void IndirectBaselineReader::initializeReorderedMS()
@@ -205,12 +247,8 @@ void IndirectBaselineReader::reorderMS()
 		const std::string flagFilename = FlagFilename(i->first, i->second);
 		dataBuffers[i->first][i->second] = new float[2 * bufferSize * frequencyCount * polarizationCount];
 		dataFiles[i->first][i->second] = new std::ofstream(dataFilename.c_str(), std::ofstream::binary);
-		if(dataFiles[i->first][i->second]->fail())
-			throw std::runtime_error("Error: failed to open temporary data files for writing! Check access rights and free disk space.");
 		flagBuffers[i->first][i->second] = new bool[bufferSize * frequencyCount * polarizationCount];
 		flagFiles[i->first][i->second] = new std::ofstream(flagFilename.c_str(), std::ofstream::binary);
-		if(flagFiles[i->first][i->second]->fail())
-			throw std::runtime_error("Error: failed to open temporary data files for writing! Check access rights and free disk space.");
 	}
 
 	size_t
@@ -226,7 +264,7 @@ void IndirectBaselineReader::reorderMS()
 		double time = timeColumn(rowIndex);
 		if(time != prevTime)
 		{
-			timeIndex = AllObservationTimes().find(time)->second;
+			timeIndex = ObservationTimes().find(time)->second;
 			if(timeIndex != prevTimeIndex+1)
 			{
 				std::stringstream s;
@@ -250,11 +288,7 @@ void IndirectBaselineReader::reorderMS()
 					std::ofstream *dataFile = dataFiles[i->first][i->second];
 					std::ofstream *flagFile = flagFiles[i->first][i->second];
 					dataFile->write(reinterpret_cast<char*>(dataBuffer), sampleCount * 2 * sizeof(float));
-					if(dataFile->fail())
-						throw std::runtime_error("Error: failed to write temporary data files! Check access rights and free disk space.");
 					flagFile->write(reinterpret_cast<char*>(flagBuffer), sampleCount * sizeof(bool));
-					if(flagFile->fail())
-						throw std::runtime_error("Error: failed to write temporary flag files! Check access rights and free disk space.");
 				}
 
 				AOLogger::Debug << 'R';
@@ -299,13 +333,10 @@ void IndirectBaselineReader::reorderMS()
 		std::ofstream *dataFile = dataFiles[i->first][i->second];
 		std::ofstream *flagFile = flagFiles[i->first][i->second];
 		dataFile->write(reinterpret_cast<char*>(dataBuffer), sampleCount * 2 * sizeof(float));
-		if(dataFile->fail())
-			throw std::runtime_error("Error: failed to write temporary data files! Check access rights and free disk space.");
 		flagFile->write(reinterpret_cast<char*>(flagBuffer), sampleCount * sizeof(bool));
-		if(flagFile->fail())
-			throw std::runtime_error("Error: failed to write temporary flag files! Check access rights and free disk space.");
 	}
 
+	AOLogger::Debug << "\nFreeing the data\n";
 	for(std::vector<std::pair<size_t,size_t> >::const_iterator i=baselines.begin();i<baselines.end();++i)
 	{
 		delete[] dataBuffers[i->first][i->second];
@@ -386,57 +417,11 @@ void IndirectBaselineReader::PerformDataWriteTask(std::vector<Image2DCPtr> _real
 		}
 
 		dataFile.write(reinterpret_cast<char*>(dataBuffer), bufferSize * sizeof(float) * 2);
-		if(dataFile.bad())
-			throw std::runtime_error("Error: failed to update temporary data files! Check access rights and free disk space.");
 	}
 	
 	_reorderedDataFilesHaveChanged = true;
 	
 	AOLogger::Debug << "Done writing.\n";
-}
-
-void IndirectBaselineReader::performFlagWriteTask(std::vector<Mask2DCPtr> flags, int antenna1, int antenna2)
-{
-	initialize();
-
-	const size_t polarizationCount = PolarizationCount();
-	
-	if(flags.size() != polarizationCount)
-		throw std::runtime_error("PerformDataWriteTask: input format did not match number of polarizations in measurement set");
-	
-	for(size_t i=1;i<flags.size();++i)
-	{
-		if(flags[0]->Width() != flags[i]->Width() || flags[0]->Height() != flags[i]->Height())
-		throw std::runtime_error("PerformDataWriteTask: width and/or height of input images did not match");
-	}
-	
-	if(!_msIsReordered) initializeReorderedMS();
-	
-	const size_t width = flags[0]->Width();
-	const size_t bufferSize = FrequencyCount() * PolarizationCount();
-	
-	const std::string flagFilename = FlagFilename(antenna1, antenna2);
-	std::ofstream flagFile(flagFilename.c_str(), std::ofstream::binary | std::ofstream::trunc);
-	
-	for(size_t x=0;x<width;++x)
-	{
-		bool flagBuffer[bufferSize];
-		
-		size_t flagBufferPtr = 0;
-		for(size_t f=0;f<FrequencyCount();++f) {
-			for(size_t p=0;p<PolarizationCount();++p)
-			{
-				flagBuffer[flagBufferPtr] = flags[p]->Value(x, f);
-				++flagBufferPtr;
-			}
-		}
-
-		flagFile.write(reinterpret_cast<char*>(flagBuffer), bufferSize * sizeof(bool));
-		if(flagFile.bad())
-			throw std::runtime_error("Error: failed to update temporary flag files! Check access rights and free disk space.");
-	}
-	
-	_reorderedFlagFilesHaveChanged = true;
 }
 
 template<bool UpdateData, bool UpdateFlags>
@@ -513,16 +498,12 @@ void IndirectBaselineReader::updateOriginalMS()
 		{
 			float *dataBuffer = dataBuffers[i->first][i->second];
 			std::ifstream *dataFile = dataFiles[i->first][i->second];
-			if(dataFile->fail())
-				throw std::runtime_error("Error: failed to read temporary data files!");
 			dataFile->read(reinterpret_cast<char*>(dataBuffer), sampleCount * 2 * sizeof(float));
 		}
 		if(UpdateFlags)
 		{
 			bool *flagBuffer = flagBuffers[i->first][i->second];
 			std::ifstream *flagFile = flagFiles[i->first][i->second];
-			if(flagFile->fail())
-				throw std::runtime_error("Error: failed to read temporary data files!");
 			flagFile->read(reinterpret_cast<char*>(flagBuffer), sampleCount * sizeof(bool));
 		}
 	}
@@ -544,7 +525,7 @@ void IndirectBaselineReader::updateOriginalMS()
 		if(time != prevTime)
 		{
 			// This row has a different time value, so search it up in the index table and do sanity check
-			timeIndex = AllObservationTimes().find(time)->second;
+			timeIndex = ObservationTimes().find(time)->second;
 			if(timeIndex != prevTimeIndex+1)
 			{
 				std::stringstream s;
@@ -567,16 +548,12 @@ void IndirectBaselineReader::updateOriginalMS()
 					{
 						float *dataBuffer = dataBuffers[i->first][i->second];
 						std::ifstream *dataFile = dataFiles[i->first][i->second];
-						if(dataFile->fail())
-							throw std::runtime_error("Error: failed to read temporary data files!");
 						dataFile->read(reinterpret_cast<char*>(dataBuffer), sampleCount * 2 * sizeof(float));
 					}
 					if(UpdateFlags)
 					{
 						bool *flagBuffer = flagBuffers[i->first][i->second];
 						std::ifstream *flagFile = flagFiles[i->first][i->second];
-						if(flagFile->fail())
-							throw std::runtime_error("Error: failed to read temporary flag files!");
 						flagFile->read(reinterpret_cast<char*>(flagBuffer), sampleCount * sizeof(bool));
 					}
 				}

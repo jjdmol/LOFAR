@@ -28,7 +28,6 @@
 #include <Common/Thread/Mutex.h>
 #include <Common/Thread/Semaphore.h>
 #include <Common/Thread/Thread.h>
-#include <Interface/SmartPtr.h>
 
 #include <map>
 
@@ -43,8 +42,6 @@ class StreamMultiplexer
   public:
 	   StreamMultiplexer(Stream &);
 	   ~StreamMultiplexer();
-
-    void   start();       
 
     void   registerChannel(MultiplexedStream *, unsigned channel);
 
@@ -88,7 +85,7 @@ class StreamMultiplexer
 
     Map<unsigned, Request *> itsOutstandingRegistrations;
 
-    SmartPtr<Thread>	     itsReceiveThread;
+    Thread		     itsReceiveThread;
 };
 
 

@@ -69,13 +69,7 @@ class BaselineReader {
 
 		MeasurementSet &Set() { return _measurementSet; }
 
-		const std::map<double,size_t> &AllObservationTimes() const { return _observationTimes; }
-		
-		std::vector<double> ObservationTimes(size_t startIndex, size_t endIndex) const {
-			std::vector<double> times;
-			times.insert(times.begin(), _observationTimesVector.begin()+startIndex, _observationTimesVector.begin()+endIndex);
-			return times;
-		}
+		const std::map<double,size_t> &ObservationTimes() const { return _observationTimes; }
 
 		void AddReadRequest(size_t antenna1, size_t antenna2, size_t spectralWindow);
 		void AddReadRequest(size_t antenna1, size_t antenna2, size_t spectralWindow, size_t startIndex, size_t endIndex)
@@ -216,7 +210,6 @@ class BaselineReader {
 		bool _readData, _readFlags;
 		
 		std::map<double,size_t> _observationTimes;
-		std::vector<double> _observationTimesVector;
 		size_t _polarizationCount;
 		size_t _frequencyCount;
 };

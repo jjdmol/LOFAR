@@ -458,14 +458,8 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
                 try {
                     // only deletion possible when no instances left
                     Vector<jOTDBnode> aList = OtdbRmi.getRemoteMaintenance().getItemList(itsTreeID, itsSelectedNode.name);
-                    
-                    // count all found nodes with then same parentid as the selected node
-                    int cnt=0;
-                    for ( int i=0; i < aList.size(); i++ ) {
-                        if (itsSelectedNode.parentID() == aList.elementAt(i).parentID()) cnt++;
-                    }
 
-                    if (aNode.index == -1 && cnt <= 1) {
+                    if (aNode.index == -1 && aList != null && aList.size() <= 1 ) {
                         buttonPanel1.setButtonEnabled("Delete", true);
                     } else if (aNode.index != -1 && aNode.instances == 1) {
                         buttonPanel1.setButtonEnabled("Delete", true);

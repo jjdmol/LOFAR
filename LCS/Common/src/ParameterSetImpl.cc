@@ -244,35 +244,45 @@ void ParameterSetImpl::readStream (istream& inputStream,
   getline (inputStream, line);
   while (inputStream) {
     // Skip leading and trailing whitespace.
-    uint st = lskipws (line, 0, line.size());
+    uint st  = lskipws (line, 0, line.size());
     if (line[st] != '#') {                         // skip if only comment
       uint end = rskipws (line, st, line.size());
       if (st < end) {                              // skip empty line
-        uint nonbl = st;               // Position of last non-blank character
-        uint stval = st;               // Start of value
-        while (st<end) {
-          if (line[st] == '"'  ||  line[st] == '\'') {
-            st = skipQuoted (line, st);
-            nonbl = st-1;                       // last char of quoted string
-          } else if (line[st] == '#') {
-            end = rskipws(line, stval, st);     // A comment ends the line
-          } else {
-            if (line[st] == '=') {
+        bool squote = false;            // In a single quoted string?
+        bool dquote = false;            // In a double quoted string?
+        bool quote  = false;            // In a quoted string?
+        uint nonbl  = st;               // Position of last non-blank character
+        uint stval  = st;               // Start of value
+        for (uint i=st; i<end; ++i) {
+          if (!dquote) {
+            if (line[i] == '\'') {
+              squote = !squote;
+              quote  = squote;
+            }
+          }
+          if (!squote) {
+            if (line[i] == '"') {
+              dquote = !dquote;
+              quote  = dquote;
+            }
+          }
+          if (!quote) {
+            if (line[i] == '#') {
+              end = rskipws(line, st, i);         // A comment ends the line
+            } else if (line[i] == '=') {
               if (! key.empty()) {
                 addMerge (key, value, merge);   // Add previous key/value to map
                 value.erase();
               }
-              // Use ParameterValue to get the key without possible quotes.
-              ParameterValue pvkey(line.substr(stval, nonbl-stval+1), false);
-              key = pvkey.getString();
-              ASSERTSTR (!key.empty(), "Empty key given in line " << line);
-              key = prefix + key;
-              stval = st+1;
-            } else if (line[st] != ' '  &&  line[st] != '\t') {
-              nonbl = st;                        // Position of last non-blank
+              key = prefix + line.substr (st, nonbl-st+1);   // New key
+              stval = i+1;
+            } else if (line[i] != ' '  &&  line[i] != '\t') {
+              nonbl = i;                        // Position of last non-blank
             }
-            st++;
           }
+        }
+        if (quote) {
+          THROW (APSException, "Unbalanced quotes in " + line);
         }
         // Skip possible whitespace before the value.
         // A trailing backslash is processed for backward compatibility.
@@ -285,11 +295,22 @@ void ParameterSetImpl::readStream (istream& inputStream,
           if (value.empty()) {
             value = line.substr(stval, end-stval);
           } else {
-            // Add a blank if the continuation line is not quoted.
-            if (line[stval] != '"'  &&  line[stval] != '\'') {
-              value += ' ';
+            // If both quoted, remove last and first quote.
+            // This is just like C where continuated strings have to be
+            // enclosed in quotes on all lines.
+            // Give an error if one is quoted and the other not.
+            if ((line[stval] == '"'          || line[stval] == '\'')  !=
+                (value[value.size()-1] =='"' || value[value.size()-1] =='\'')) {
+              THROW (APSException, "All value lines need to be quoted around "
+                     "continuation line " + line);
             }
-            value += line.substr(stval, end-stval);
+            if (line[stval] == '"'  ||  line[stval] == '\'') {
+              value = value.substr (0, value.size()-1) +
+                line.substr(stval+1, end-stval-1);
+            } else {
+              value += ' ';
+              value += line.substr(stval, end-stval);
+            }
           }
         }
       }
@@ -308,7 +329,7 @@ void ParameterSetImpl::addMerge (const string& key,
                                  const string& value,
                                  bool merge)
 {
-  // remove any existing value and insert this value
+  // remove any existed value and insert this value
   if ((erase(key) > 0)  &&  !merge) {
     LOG_WARN ("Key " + key + " is defined twice; ignoring first value");
   }
@@ -605,7 +626,7 @@ int32 	indexValue (const string&	label, const char	indexMarker[2])
 // locateModule(shortKey)
 //
 // Searches for a key ending in the given 'shortkey' and returns it full name.
-// e.g: a.b.c.d.param=xxxx --> locateModule(d)-->a.b.c.
+// e.g: a.b.c.d.param=xxxx --> locateKey(d)-->a.b.c.
 string	ParameterSetImpl::locateModule(const string&	shortKey) const
 {
 	const_iterator		iter = begin();
@@ -617,34 +638,6 @@ string	ParameterSetImpl::locateModule(const string&	shortKey) const
 				prefix += ".";
 			}
 			return (prefix);
-		}
-		iter++;
-	}
-	return ("");
-}
-
-//
-// fullModuleName(shortKey)
-//
-// Searches for a key ending in the given 'shortkey' and returns it full name.
-// e.g: a.b.c.d.param=xxxx --> fullModuleName(d)      --> a.b.c.d
-// e.g: a.b.c.d.param=xxxx --> fullModuleName(b.c)    --> a.b.c
-// e.g: a.b.c.d.param=xxxx --> fullModuleName(d.param)-->
-string	ParameterSetImpl::fullModuleName(const string&	shortKey) const
-{
-	const_iterator		iter = begin();
-	const_iterator		eom  = end();
-	while ((iter != eom)) {
-		string::size_type	start = moduleName(iter->first).rfind(shortKey);
-		if (start != string::npos) {
-			string::size_type	keyLen = shortKey.length();
-			string::size_type	last = start+keyLen;
-			string::size_type	iterLen = (iter->first).length();
-			if ((last == iterLen || (last < iterLen && (iter->first)[last] == '.')) &&
-				(start == 0 || (start > 0 && (iter->first)[start-1] == '.'))) {
-				string prefix = iter->first.substr(0, start);
-				return (prefix+shortKey);
-			}
 		}
 		iter++;
 	}

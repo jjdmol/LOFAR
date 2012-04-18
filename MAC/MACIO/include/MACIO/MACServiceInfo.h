@@ -42,10 +42,6 @@ namespace LOFAR {
 #define	MAC_CODELOGGING_PORT			23999
 #define	MAC_SERVICEBROKER_PORT			24000
 
-// CEPlogprocessor needs fixed ports
-#define CEP_LOGPROC_LOGGING				23900
-#define CEP_LOGPROC_CONTROL				23901
-
 // Define names for the services
 #define MAC_SVCMASK_RSPDRIVER			"RSPDriver%s:acceptor_v3.1"
 #define	MAC_SVCMASK_CALSERVER			"CalServer%s:acceptor_v2"
@@ -57,8 +53,6 @@ namespace LOFAR {
 #define MAC_SVCMASK_SERVICEBROKER		"ServiceBroker%s:v1.0"
 #define MAC_SVCMASK_STARTDAEMON			"StartDaemon%s:v1.0"
 #define	MAC_SVCMASK_LOGPROC				"LogProcessor%s:v1.0"
-#define	MAC_SVCMASK_CEPLOGPROC			"BGPlogger%s:v1.0"
-#define	MAC_SVCMASK_CEPLOGCONTROL		"CEPlogControl%s:v1.0"
 #define MAC_SVCMASK_KVTLOGGER			"KVTLogger%s:v1.0"
 
 // Define names for all controllers

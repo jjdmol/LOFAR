@@ -37,7 +37,7 @@
 */
 class ComplexPlanePlotWindow : public Gtk::Window {
 	public:
-		ComplexPlanePlotWindow(class MSWindow &_msWindow, class PlotManager &plotManager);
+		ComplexPlanePlotWindow(class MSWindow &_msWindow);
 		~ComplexPlanePlotWindow();
 	private:
 		size_t XStart() const throw() { return (size_t) _xPositionScale.get_value(); }
@@ -74,7 +74,6 @@ class ComplexPlanePlotWindow : public Gtk::Window {
 		void setDetailsLabel();
 
 		class MSWindow &_msWindow;
-		class PlotManager &_plotManager;
 		Gtk::Frame _detailsFrame;
 		Gtk::VBox _mainBox, _detailsBox;
 		Gtk::Label

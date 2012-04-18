@@ -45,9 +45,6 @@ prelude = << PRELUDE_END
 // GETTYPES				();
 // GETTYPESACK			(vector<string>);
 //
-// GETCALINFO			();
-// GETCALINFOACK		(infostring)
-//
 // pointing            : angle1, angle2, coord.type, timestamp, duration
 // beamletAllocationMap: map<beamletnr, subbandnr>
 //
@@ -311,7 +308,6 @@ event = {
 	};
 };
 
-// GETTYPES
 event = {
 	signal = GETTYPES;
 	dir = IN;
@@ -325,21 +321,6 @@ event = {
 		type = "MACIO::StringVector";
 		userdefined;
 		printable;
-	};
-};
-
-// GETCALINFO
-event = {
-	signal = GETCALINFO;
-	dir = IN;
-};
-
-event = {
-	signal = GETCALINFOACK;
-	dir = OUT;
-	param = {
-		name = "info";
-		type = "string";
 	};
 };
 
