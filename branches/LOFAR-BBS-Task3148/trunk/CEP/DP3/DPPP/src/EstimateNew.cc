@@ -97,6 +97,13 @@ void estimateImpl2(DPBuffer &target,
     EstimateState &state,
     size_t ts);
 
+void estimateImpl3(DPBuffer &target,
+    const vector<DPBuffer> &buffers,
+    const casa::Array<casa::DComplex> &coeff,
+    const casa::Array<casa::DComplex> &coeffSub,
+    EstimateState &state,
+    size_t ts);
+
 void estimate(vector<DPPP::DPBuffer> &target,
     const vector<vector<DPPP::DPBuffer> > &buffers,
     const vector<casa::Array<casa::DComplex> > &coeff,
@@ -139,7 +146,7 @@ void estimate(vector<DPPP::DPBuffer> &target,
 //#pragma omp parallel for
     for(size_t i = 0; i < nTime; ++i)
     {
-        estimateImpl2(target[i], buffersT[i], coeff[i], coeffSub[i], state, ts + i);
+        estimateImpl3(target[i], buffersT[i], coeff[i], coeffSub[i], state, ts + i);
 
 //        // DOES NOT WORK MT, AND IF NT == NTHREADS NOT NEEDED...
 //        if(nTimeslot > i + 1)
@@ -835,324 +842,374 @@ void estimateImpl2(DPBuffer &target,
 #endif
 }
 
-//void estimateImpl2(DPBuffer &target,
-//    const vector<DPBuffer> &buffers,
-//    const casa::Array<casa::DComplex> &coeff,
-//    const casa::Array<casa::DComplex> &coeffSub,
-//    EstimateState &state,
-//    size_t ts)
-//{
-//    LOG_DEBUG_STR("thread: " << OpenMP::threadNum() << " timeslot: " << ts
-//        << " processing...");
+void estimateImpl3(DPBuffer &target,
+    const vector<DPBuffer> &buffers,
+    const casa::Array<casa::DComplex> &coeff,
+    const casa::Array<casa::DComplex> &coeffSub,
+    EstimateState &state,
+    size_t ts)
+{
+#ifdef ESTIMATE_TIMER
+    state.tTot.start();
+#endif
 
-//    const size_t nBl = state.baselines.size();
-//    const size_t nModels = __nDir;
-//    const size_t nTargets = buffers.size();
-//    const size_t threadID = OpenMP::threadNum();
+    LOG_DEBUG_STR("thread: " << OpenMP::threadNum() << " timeslot: " << ts
+        << " processing...");
 
-//    // Simulate visibilities for each direction.
-//    const double _2pi_lambda = casa::C::_2pi * state.freq / casa::C::c;
-//    for(size_t i = 0; i < nModels; ++i)
-//    {
-//        const casa::Matrix<double> &uvw = buffers[i].getUVW();
+    const size_t nBl = state.baselines.size();
+    const size_t nModels = __nDir;
+    const size_t nTargets = buffers.size();
+    const size_t threadID = OpenMP::threadNum();
+    const size_t nSt = state.nStat;
 
-//        const vector<source> &sources = __patches[i];
-//        const size_t nSources = sources.size();
-////        LOG_DEBUG_STR("dir: " << i << " #sources: " << nSources);
+#ifdef ESTIMATE_TIMER
+    state.tSim.start();
+#endif
 
-//        const vector<vec3> &lmn = __lmn[i];
+    boost::multi_array<double, 2> uvw_split(boost::extents[nSt][3]);
+    boost::multi_array<bool, 1> flag(boost::extents[nSt]);
+    boost::multi_array<dcomplex, 1> shift(boost::extents[nSt]);
 
-//        for(size_t j = 0; j < nBl; ++j)
-//        {
-//            if(state.baselines[j].first == state.baselines[j].second)
-//            {
-//                continue;
-//            }
+    // Simulate visibilities for each direction.
+    fill(state.sim.data() + threadID * 2 * nBl * 4,
+        state.sim.data() + (threadID + 1) * 2 * nBl * 4,
+        dcomplex(0.0, 0.0));
 
-//            const double &u = uvw(0, j);
-//            const double &v = uvw(1, j);
-//            const double &w = uvw(2, j);
+    const double _2pi_lambda = casa::C::_2pi * state.freq / casa::C::c;
+    for(size_t i = 0; i < nModels; ++i)
+    {
+        // Split UVW.
+        const casa::Matrix<double> &uvw = buffers[i].getUVW();
 
-//            dcomplex &PP = state.sim[threadID][i][j][0];
-//            dcomplex &PQ = state.sim[threadID][i][j][1];
-//            dcomplex &QP = state.sim[threadID][i][j][2];
-//            dcomplex &QQ = state.sim[threadID][i][j][3];
+        size_t found = 1, last = 0;
+        fill(flag.data(), flag.data() + flag.num_elements(), false);
+        uvw_split[0][0] = 0.0;
+        uvw_split[0][1] = 0.0;
+        uvw_split[0][2] = 0.0;
+        flag[0] = true;
 
-//            PP = 0.0;
-//            PQ = 0.0;
-//            QP = 0.0;
-//            QQ = 0.0;
+        while(found < nSt && found > last)
+        {
+            last = found;
+            for(size_t j = 0; j < nBl; ++j)
+            {
+                const size_t p = state.baselines[j].first;
+                const size_t q = state.baselines[j].second;
 
-//            for(size_t k = 0; k < nSources; ++k)
-//            {
-//                const dcomplex XX(sources[k].stokes[0] + sources[k].stokes[1], 0.0);
-//                const dcomplex XY(sources[k].stokes[2], sources[k].stokes[3]);
-//                const dcomplex YX(sources[k].stokes[2], -sources[k].stokes[3]);
-//                const dcomplex XX(sources[k].stokes[0] - sources[k].stokes[1], 0.0);
-//                const double phase = (u * lmn[k][0] + v * lmn[k][1]
-//                    + w * (lmn[k][2] - 1.0)) * _2pi_lambda;
-//                const dcomplex shift(cos(phase), sin(phase));
+                if(p == q || flag[p] == flag[q])
+                {
+                    continue;
+                }
 
-//                PP += shift * XX;
-//                PQ += shift * XY;
-//                QP += shift * YX;
-//                QQ += shift * YY;
-//            }
-//        }
-//    }
+                if(flag[p])
+                {
+                    uvw_split[q][0] = uvw(0, j) + uvw_split[p][0];
+                    uvw_split[q][1] = uvw(1, j) + uvw_split[p][1];
+                    uvw_split[q][2] = uvw(2, j) + uvw_split[p][2];
+                    flag[q] = true;
+                }
+                else
+                {
+                    uvw_split[p][0] = -uvw(0, j) + uvw_split[q][0];
+                    uvw_split[p][1] = -uvw(1, j) + uvw_split[q][1];
+                    uvw_split[p][2] = -uvw(2, j) + uvw_split[q][2];
+                    flag[p] = true;
+                }
 
-//    // Estimate parameters.
-//    const size_t nCoeff = nModels * state.nStat * 4 * 2;
-//    casa::uInt rank;
-//    casa::LSQFit solver(static_cast<casa::uInt>(nCoeff));
-//    configLSQSolver(solver, state.lsqOptions);
+                ++found;
+            }
+            LOG_DEBUG_STR("last: " << last << " found: " << found);
+        }
+        ASSERTSTR(found == nSt, "Could not split UVW, found: " << found);
 
-//    // Only two Jones matrix elements per station per direction are used per
-//    // correlation, so divide by two here. (This is because all sources are
-//    // unpolarized, so XY = YX = 0 for the model.)
-//    const unsigned int nDerivative = nModels * 16 / 2;
-//    boost::multi_array<dcomplex, 1> model(boost::extents[nModels]);
-//    boost::multi_array<dcomplex, 2> partial(boost::extents[nModels][4]);
-//    vector<double> dR(nDerivative, 0);
-//    vector<double> dI(nDerivative, 0);
-////    boost::multi_array<double, 1> dR(boost::extents[nDerivative]);
-////    boost::multi_array<double, 1> dI(boost::extents[nDerivative]);
-//    boost::multi_array<unsigned int, 1> dIndex(boost::extents[nDerivative]);
+        const vector<source> &sources = __patches[i];
+        const size_t nSources = sources.size();
+//        LOG_DEBUG_STR("dir: " << i << " #sources: " << nSources);
 
-//    const unsigned int theCR = 5;
+        const vector<vec3> &lmn = __lmn[i];
 
-//    size_t nIterations = 0;
-//    while(!solver.isReady() && nIterations < 50)
-//    {
-//        for(size_t bl = 0; bl < nBl; ++bl)
-//        {
-//            const size_t p = state.baselines[bl].first;
-//            const size_t q = state.baselines[bl].second;
+        for(size_t k = 0; k < nSources; ++k)
+        {
+            const dcomplex XX = dcomplex(sources[k].stokes[0] + sources[k].stokes[1], 0.0);
+            const dcomplex XY = dcomplex(sources[k].stokes[2], sources[k].stokes[3]);
+            const dcomplex YX = dcomplex(sources[k].stokes[2], -sources[k].stokes[3]);
+            const dcomplex YY = dcomplex(sources[k].stokes[0] - sources[k].stokes[1], 0.0);
 
-//            if(p == q)
-//            {
-//                continue;
-//            }
+            for(size_t j = 0; j < nSt; ++j)
+            {
+                const double phase = (uvw_split[j][0] * lmn[k][0] + uvw_split[j][1] * lmn[k][1]
+                    + uvw_split[j][2] * (lmn[k][2] - 1.0)) * _2pi_lambda;
+                shift[j] = dcomplex(cos(phase), sin(phase));
+            }
 
-//            if(theCR < 4){ LOG_DEBUG_STR("baseline: " << p << " - " << q); }
+            for(size_t j = 0; j < nBl; ++j)
+            {
+                const size_t p = state.baselines[j].first;
+                const size_t q = state.baselines[j].second;
 
-//            // loop over correlations
-//            for(size_t cr = 0; cr < 4; ++cr)
-//            {
-////                if(cr == 0)
-////                {
-////                    for(size_t dr = 0; dr < nModels; ++dr)
-////                    {
-////                        LOG_DEBUG_STR("SIM NO GAIN dir: " << dr << " value: " << state.sim[dr][bl][0] << " " << state.sim[dr][bl][1]);
-////                    }
-////                }
+                if(p == q)
+                {
+                    continue;
+                }
 
-//                const size_t elp = (cr / 2) * 4;
-//                const size_t elq = (cr & 1) * 4;
+                const dcomplex blShift = shift[q] * conj(shift[p]);
+                state.sim[threadID][i][j][0] += blShift * XX;
+                state.sim[threadID][i][j][1] += blShift * XY;
+                state.sim[threadID][i][j][2] += blShift * YX;
+                state.sim[threadID][i][j][3] += blShift * YY;
+            }
+        }
+    }
 
-//                dcomplex Jp, Jq;
-//                for(size_t dr = 0; dr < nModels; ++dr)
-//                {
-//                    Jp = dcomplex(state.J[ts][p][dr][elp], state.J[ts][p][dr][elp + 1]);
-//                    Jq = dcomplex(state.J[ts][q][dr][elq], -state.J[ts][q][dr][elq + 1]);
-//                    if(cr == theCR){ LOG_DEBUG_STR("dir: " << dr << " Jpxx: " << Jp << " Jqxx: " << Jq); }
+#ifdef ESTIMATE_TIMER
+    state.tSim.stop();
+#endif
 
-//                    model[dr] = Jp * Jq * state.sim[threadID][dr][bl][0];
-//                    partial[dr][0] = Jq * state.sim[threadID][dr][bl][0];
-//                    partial[dr][1] = Jp * state.sim[threadID][dr][bl][0];
+    // Estimate parameters.
+    const size_t nCoeff = nModels * state.nStat * 4 * 2;
+    casa::uInt rank;
+    casa::LSQFit solver(static_cast<casa::uInt>(nCoeff));
+    configLSQSolver(solver, state.lsqOptions);
 
-//                    Jp = dcomplex(state.J[ts][p][dr][elp + 2], state.J[ts][p][dr][elp + 3]);
-//                    Jq = dcomplex(state.J[ts][q][dr][elq + 2], -state.J[ts][q][dr][elq + 3]);
-//                    if(cr == theCR){ LOG_DEBUG_STR("dir: " << dr << " Jpxy: " << Jp << " Jqxy: " << Jq); }
+    // Only two Jones matrix elements per station per direction are used per
+    // correlation.
+    const unsigned int nDerivative = nModels * 16 / 2;
+    boost::multi_array<dcomplex, 2> M(boost::extents[nModels][4]);
+    boost::multi_array<dcomplex, 3> dM(boost::extents[nModels][4][4]);
+    boost::multi_array<double, 1> dR(boost::extents[nDerivative]);
+    boost::multi_array<double, 1> dI(boost::extents[nDerivative]);
+    boost::multi_array<unsigned int, 1> dIndex(boost::extents[nDerivative]);
 
-//                    model[dr] += Jp * Jq * state.sim[threadID][dr][bl][1];
-//                    partial[dr][2] = Jq * state.sim[threadID][dr][bl][1];
-//                    partial[dr][3] = Jp * state.sim[threadID][dr][bl][1];
+    dcomplex Jp_00, Jp_01, Jp_10, Jp_11;
+    dcomplex Jq_00, Jq_01, Jq_10, Jq_11;
+    dcomplex Jp_00_s0, Jp_10_s0, Jp_00_s1, Jp_10_s1, Jp_01_s2, Jp_11_s2, Jp_01_s3, Jp_11_s3;
+    dcomplex Jq_00_s0, Jq_10_s0, Jq_01_s1, Jq_11_s1, Jq_00_s2, Jq_10_s2, Jq_01_s3, Jq_11_s3;
 
-//                    // construct coefficient index.
-//                    dIndex[dr * 8] = p * nModels * 8 + dr * 8 + elp;
-//                    dIndex[dr * 8 + 1] = p * nModels * 8 + dr * 8 + elp + 1;
-//                    dIndex[dr * 8 + 2] = q * nModels * 8 + dr * 8 + elq;
-//                    dIndex[dr * 8 + 3] = q * nModels * 8 + dr * 8 + elq + 1;
-//                    dIndex[dr * 8 + 4] = p * nModels * 8 + dr * 8 + elp + 2;
-//                    dIndex[dr * 8 + 5] = p * nModels * 8 + dr * 8 + elp + 3;
-//                    dIndex[dr * 8 + 6] = q * nModels * 8 + dr * 8 + elq + 2;
-//                    dIndex[dr * 8 + 7] = q * nModels * 8 + dr * 8 + elq + 3;
-//                }
+    size_t nIterations = 0;
+    while(!solver.isReady() && nIterations < 50)
+    {
+#ifdef ESTIMATE_TIMER
+        state.tEq.start();
+#endif
 
-////                if(cr == 0)
-////                {
-////                    for(size_t dr = 0; dr < nModels; ++dr)
-////                    {
-////                        LOG_DEBUG_STR("SIM GAIN dir: " << dr << " value: " << model[dr]);
-////                        vector<double> tmpdR(16, 0);
-////                        vector<double> tmpdI(16, 0);
+        for(size_t bl = 0; bl < nBl; ++bl)
+        {
+            const size_t p = state.baselines[bl].first;
+            const size_t q = state.baselines[bl].second;
 
+            if(p == q)
+            {
+                continue;
+            }
 
-////                    }
+            for(size_t dr = 0; dr < nModels; ++dr)
+            {
+                Jp_00 = dcomplex(state.J[ts][p][dr][0], state.J[ts][p][dr][1]);
+                Jp_01 = dcomplex(state.J[ts][p][dr][2], state.J[ts][p][dr][3]);
+                Jp_10 = dcomplex(state.J[ts][p][dr][4], state.J[ts][p][dr][5]);
+                Jp_11 = dcomplex(state.J[ts][p][dr][6], state.J[ts][p][dr][7]);
 
-////                }
+                Jq_00 = dcomplex(state.J[ts][q][dr][0], state.J[ts][q][dr][1]);
+                Jq_01 = dcomplex(state.J[ts][q][dr][2], state.J[ts][q][dr][3]);
+                Jq_10 = dcomplex(state.J[ts][q][dr][4], state.J[ts][q][dr][5]);
+                Jq_11 = dcomplex(state.J[ts][q][dr][6], state.J[ts][q][dr][7]);
 
-//                for(size_t tg = 0; tg < nTargets; ++tg)
-//                {
-//                    dcomplex V = 0.0;
-//                    dcomplex tmp;
-//                    for(size_t dr = 0; dr < nModels; ++dr)
-//                    {
-//                        dcomplex weight = coeff(casa::IPosition(5, tg, dr, cr, 0, bl));
-//                        V += model[dr] * weight;
+                Jp_00_s0 = Jp_00 * state.sim[threadID][dr][bl][0];
+                Jp_10_s0 = Jp_10 * state.sim[threadID][dr][bl][0];
+                Jq_00_s0 = Jq_00 * state.sim[threadID][dr][bl][0];
+                Jq_10_s0 = Jq_10 * state.sim[threadID][dr][bl][0];
 
-//                        tmp = partial[dr][0] * weight;
-//                        dR[dr * 8] = real(tmp);
-//                        dI[dr * 8] = imag(tmp);
-//                        dR[dr * 8 + 1] = -imag(tmp);
-//                        dI[dr * 8 + 1] = real(tmp);
+                Jp_00_s1 = Jp_00 * state.sim[threadID][dr][bl][1];
+                Jp_10_s1 = Jp_10 * state.sim[threadID][dr][bl][1];
+                Jq_01_s1 = Jq_01 * state.sim[threadID][dr][bl][1];
+                Jq_11_s1 = Jq_11 * state.sim[threadID][dr][bl][1];
 
-//                        tmp = partial[dr][1] * weight;
-//                        dR[dr * 8 + 2] = real(tmp);
-//                        dI[dr * 8 + 2] = imag(tmp);
-//                        dR[dr * 8 + 3] = imag(tmp);
-//                        dI[dr * 8 + 3] = -real(tmp);
+                Jp_01_s2 = Jp_01 * state.sim[threadID][dr][bl][2];
+                Jp_11_s2 = Jp_11 * state.sim[threadID][dr][bl][2];
+                Jq_00_s2 = Jq_00 * state.sim[threadID][dr][bl][2];
+                Jq_10_s2 = Jq_10 * state.sim[threadID][dr][bl][2];
 
-//                        tmp = partial[dr][2] * weight;
-//                        dR[dr * 8 + 4] = real(tmp);
-//                        dI[dr * 8 + 4] = imag(tmp);
-//                        dR[dr * 8 + 5] = -imag(tmp);
-//                        dI[dr * 8 + 5] = real(tmp);
+                Jp_01_s3 = Jp_01 * state.sim[threadID][dr][bl][3];
+                Jp_11_s3 = Jp_11 * state.sim[threadID][dr][bl][3];
+                Jq_01_s3 = Jq_01 * state.sim[threadID][dr][bl][3];
+                Jq_11_s3 = Jq_11 * state.sim[threadID][dr][bl][3];
 
-//                        tmp = partial[dr][3] * weight;
-//                        dR[dr * 8 + 6] = real(tmp);
-//                        dI[dr * 8 + 6] = imag(tmp);
-//                        dR[dr * 8 + 7] = imag(tmp);
-//                        dI[dr * 8 + 7] = -real(tmp);
-//                    }
+                M[dr][0] = Jp_00 * (Jq_00_s0 + Jq_01_s1)
+                    + Jp_01 * (Jq_00_s2 + Jq_01_s3);
+                dM[dr][0][0] = Jq_00_s0 + Jq_01_s1;
+                dM[dr][0][1] = Jq_00_s2 + Jq_01_s3;
+                dM[dr][0][2] = Jp_00_s0 + Jp_01_s2;
+                dM[dr][0][3] = Jp_00_s1 + Jp_01_s3;
 
-//                    if(cr == theCR)
-//                    {
-//                        vector<double> tmpdR(nDerivative * 2, 0);
-//                        vector<double> tmpdI(nDerivative * 2, 0);
+                M[dr][1] = Jp_00 * (Jq_10_s0 + Jq_11_s1)
+                    + Jp_01 * (Jq_10_s2 + Jq_11_s3);
+                dM[dr][1][0] = Jq_10_s0 + Jq_11_s1;
+                dM[dr][1][1] = Jq_10_s2 + Jq_11_s3;
+                dM[dr][1][2] = Jp_00_s0 + Jp_01_s2; // = dM[dr][0][2];
+                dM[dr][1][3] = Jp_00_s1 + Jp_01_s3; // = dM[dr][0][3];
 
-//                        for(size_t dr = 0; dr < nModels; ++dr)
-//                        {
-//                            tmpdR[dr * 16 + 0] = dR[dr * 8 + 0];
-//                            tmpdR[dr * 16 + 1] = dR[dr * 8 + 1];
-//                            tmpdR[dr * 16 + 2] = dR[dr * 8 + 4];
-//                            tmpdR[dr * 16 + 3] = dR[dr * 8 + 5];
+                M[dr][2] = Jp_10 * (Jq_00_s0 + Jq_01_s1)
+                    + Jp_11 * (Jq_00_s2 + Jq_01_s3);
+                dM[dr][2][0] = Jq_00_s0 + Jq_01_s1; // = dM[dr][0][0];
+                dM[dr][2][1] = Jq_00_s2 + Jq_01_s3; // = dM[dr][0][1];
+                dM[dr][2][2] = Jp_10_s0 + Jp_11_s2;
+                dM[dr][2][3] = Jp_10_s1 + Jp_11_s3;
 
-//                            tmpdR[dr * 16 + 8] = dR[dr * 8 + 2];
-//                            tmpdR[dr * 16 + 9] = dR[dr * 8 + 3];
-//                            tmpdR[dr * 16 + 10] = dR[dr * 8 + 6];
-//                            tmpdR[dr * 16 + 11] = dR[dr * 8 + 7];
+                M[dr][3] = Jp_10 * (Jq_10_s0 + Jq_11_s1)
+                    + Jp_11 * (Jq_10_s2 + Jq_11_s3);
+                dM[dr][3][0] = Jq_10_s0 + Jq_11_s1; // = dM[dr][1][0];
+                dM[dr][3][1] = Jq_10_s2 + Jq_11_s3; // = dM[dr][1][1];
+                dM[dr][3][2] = Jp_10_s0 + Jp_11_s2; // = dM[dr][2][2];
+                dM[dr][3][3] = Jp_10_s1 + Jp_11_s3; // = dM[dr][2][3];
+            }
 
-//                            tmpdI[dr * 16 + 0] = dI[dr * 8 + 0];
-//                            tmpdI[dr * 16 + 1] = dI[dr * 8 + 1];
-//                            tmpdI[dr * 16 + 2] = dI[dr * 8 + 4];
-//                            tmpdI[dr * 16 + 3] = dI[dr * 8 + 5];
+            for(size_t cr = 0; cr < 4; ++cr)
+            {
+                for(size_t tg = 0; tg < nTargets; ++tg)
+                {
+                    dcomplex V_sim = 0.0;
+                    dcomplex tmp;
+                    for(size_t dr = 0; dr < nModels; ++dr)
+                    {
+                        dcomplex weight = coeff(casa::IPosition(5, tg, dr, cr, 0, bl));
+                        V_sim += M[dr][cr] * weight;
 
-//                            tmpdI[dr * 16 + 8] = dI[dr * 8 + 2];
-//                            tmpdI[dr * 16 + 9] = dI[dr * 8 + 3];
-//                            tmpdI[dr * 16 + 10] = dI[dr * 8 + 6];
-//                            tmpdI[dr * 16 + 11] = dI[dr * 8 + 7];
-//                        }
+                        tmp = dM[dr][cr][0] * weight;
+                        dR[dr * 8] = real(tmp);
+                        dI[dr * 8] = imag(tmp);
+                        dR[dr * 8 + 1] = -imag(tmp);
+                        dI[dr * 8 + 1] = real(tmp);
 
-//                        LOG_DEBUG_STR("SIM MIXED target: " << tg << " mixed: " << V);
-//                        LOG_DEBUG_STR("PARTIALS  target: " << tg << endl << "dR: " << tmpdR << endl << "dI: " << tmpdI);
-//                    }
+                        tmp = dM[dr][cr][1] * weight;
+                        dR[dr * 8 + 2] = real(tmp);
+                        dI[dr * 8 + 2] = imag(tmp);
+                        dR[dr * 8 + 3] = -imag(tmp);
+                        dI[dr * 8 + 3] = real(tmp);
 
-//                    const casa::Cube<casa::Complex> &obsData = buffers[tg].getData();
-//                    const casa::Cube<float> &obsWeight = buffers[tg].getWeights();
+                        tmp = dM[dr][cr][2] * weight;
+                        dR[dr * 8 + 4] = real(tmp);
+                        dI[dr * 8 + 4] = imag(tmp);
+                        dR[dr * 8 + 5] = imag(tmp);
+                        dI[dr * 8 + 5] = -real(tmp);
 
-//                    casa::Complex Vobs = obsData(cr, 0, bl);
-//                    double reResidual = real(Vobs) - real(V);
-//                    double imResidual = imag(Vobs) - imag(V);
-//                    double obsw = obsWeight(cr, 0, bl);
+                        tmp = dM[dr][cr][3] * weight;
+                        dR[dr * 8 + 6] = real(tmp);
+                        dI[dr * 8 + 6] = imag(tmp);
+                        dR[dr * 8 + 7] = imag(tmp);
+                        dI[dr * 8 + 7] = -real(tmp);
+                    }
 
-//                    // Update the normal equations.
-//                    solver.makeNorm(nDerivative, &(dIndex[0]), &(dR[0]), obsw, reResidual);
-//                    solver.makeNorm(nDerivative, &(dIndex[0]), &(dI[0]), obsw, imResidual);
-////                    solver.makeNorm(&(dR[0]), obsw, reResidual);
-////                    solver.makeNorm(&(dI[0]), obsw, imResidual);
-//                } // target directions
-//            } // correlations
-//        } // baselines
+                    const casa::Cube<casa::Complex> &obsData = buffers[tg].getData();
+                    const casa::Cube<float> &obsWeight = buffers[tg].getWeights();
 
-//        // Do solve iteration.
-//        bool status = solver.solveLoop(rank, &(state.J[ts][0][0][0]), true);
-//        ASSERT(status);
+                    casa::Complex V_obs = obsData(cr, 0, bl);
+                    double reResidual = real(V_obs) - real(V_sim);
+                    double imResidual = imag(V_obs) - imag(V_sim);
+                    double obsw = obsWeight(cr, 0, bl);
 
-//        // Update iteration count.
-//        ++nIterations;
-//    }
+                    // Update the normal equations.
+                    solver.makeNorm(nDerivative, &(state.dIndex[bl][cr][0]), &(dR[0]), obsw, reResidual);
+                    solver.makeNorm(nDerivative, &(state.dIndex[bl][cr][0]), &(dI[0]), obsw, imResidual);
+                } // target directions
+            } // correlations
+        } // baselines
 
-//    bool converged = (solver.isReady() == casa::LSQFit::SOLINCREMENT
-//        || solver.isReady() == casa::LSQFit::DERIVLEVEL);
-//    LOG_DEBUG_STR("thread: " << OpenMP::threadNum() << " timeslot: " << ts
-//        << " #iterations: " << nIterations << " converged: " << boolalpha
-//        << converged);
+#ifdef ESTIMATE_TIMER
+        state.tEq.stop();
+#endif
 
+#ifdef ESTIMATE_TIMER
+        state.tLM.start();
+#endif
+        // Do solve iteration.
+        bool status = solver.solveLoop(rank, &(state.J[ts][0][0][0]), true);
+        ASSERT(status);
 
-//    // Subtract...
-//    casa::Cube<casa::Complex> &obsData = target.getData();
+#ifdef ESTIMATE_TIMER
+        state.tLM.stop();
+#endif
 
-//    for(size_t bl = 0; bl < nBl; ++bl)
-//    {
-//        const size_t p = state.baselines[bl].first;
-//        const size_t q = state.baselines[bl].second;
+        // Update iteration count.
+        ++nIterations;
+    }
 
-//        if(p == q)
-//        {
-//            continue;
-//        }
+    bool converged = (solver.isReady() == casa::LSQFit::SOLINCREMENT
+        || solver.isReady() == casa::LSQFit::DERIVLEVEL);
+    LOG_DEBUG_STR("thread: " << OpenMP::threadNum() << " timeslot: " << ts
+        << " #iterations: " << nIterations << " converged: " << boolalpha
+        << converged);
 
-//        // loop over correlations
-//        for(size_t cr = 0; cr < 4; ++cr)
-//        {
-//            const size_t elp = (cr / 2) * 4;
-//            const size_t elq = (cr & 1) * 4;
+#ifdef ESTIMATE_TIMER
+    state.tSub.start();
+#endif
 
-//            dcomplex Jp, Jq, V = 0.0, tmp;
-//            for(size_t dr = 0; dr < nModels; ++dr)
-//            {
-//                Jp = dcomplex(state.J[ts][p][dr][elp], state.J[ts][p][dr][elp + 1]);
-//                Jq = dcomplex(state.J[ts][q][dr][elq], -state.J[ts][q][dr][elq + 1]);
-//                tmp = Jp * Jq * state.sim[threadID][dr][bl][0];
+    // Subtract...
+    casa::Cube<casa::Complex> &tgData = target.getData();
 
-//                Jp = dcomplex(state.J[ts][p][dr][elp + 2], state.J[ts][p][dr][elp + 3]);
-//                Jq = dcomplex(state.J[ts][q][dr][elq + 2], -state.J[ts][q][dr][elq + 3]);
-//                tmp += Jp * Jq * state.sim[threadID][dr][bl][1];
+    for(size_t bl = 0; bl < nBl; ++bl)
+    {
+        const size_t p = state.baselines[bl].first;
+        const size_t q = state.baselines[bl].second;
 
-//                // index: target, dir, cr, ch, bl
-//                V += tmp * coeffSub(casa::IPosition(5, nTargets - 1, dr, cr, 0, bl));
-//            } // model directions
+        if(p == q)
+        {
+            continue;
+        }
 
-//            obsData(cr, 0, bl) -= V;
-//        } // correlations
-//    } // baselines
-//}
+        for(size_t dr = 0; dr < nModels; ++dr)
+        {
+            Jp_00 = dcomplex(state.J[ts][p][dr][0], state.J[ts][p][dr][1]);
+            Jp_01 = dcomplex(state.J[ts][p][dr][2], state.J[ts][p][dr][3]);
+            Jp_10 = dcomplex(state.J[ts][p][dr][4], state.J[ts][p][dr][5]);
+            Jp_11 = dcomplex(state.J[ts][p][dr][6], state.J[ts][p][dr][7]);
 
+            Jq_00 = dcomplex(state.J[ts][q][dr][0], state.J[ts][q][dr][1]);
+            Jq_01 = dcomplex(state.J[ts][q][dr][2], state.J[ts][q][dr][3]);
+            Jq_10 = dcomplex(state.J[ts][q][dr][4], state.J[ts][q][dr][5]);
+            Jq_11 = dcomplex(state.J[ts][q][dr][6], state.J[ts][q][dr][7]);
 
-//    // Set or get the visibility data per corr,chan,baseline.
-//    casa::Cube<casa::Complex> &data = target->getData();
-//    LOG_DEBUG_STR("data shape: " << data.shape());
-//    for(size_t i = 0; i < nBl; ++i)
-//    {
-//        data(0, 0, i) = 0.0;
-//        data(1, 0, i) = 0.0;
-//        data(2, 0, i) = 0.0;
-//        data(3, 0, i) = 0.0;
+            Jq_00_s0 = Jq_00 * state.sim[threadID][dr][bl][0];
+            Jq_10_s0 = Jq_10 * state.sim[threadID][dr][bl][0];
+            Jq_01_s1 = Jq_01 * state.sim[threadID][dr][bl][1];
+            Jq_11_s1 = Jq_11 * state.sim[threadID][dr][bl][1];
+            Jq_00_s2 = Jq_00 * state.sim[threadID][dr][bl][2];
+            Jq_10_s2 = Jq_10 * state.sim[threadID][dr][bl][2];
+            Jq_01_s3 = Jq_01 * state.sim[threadID][dr][bl][3];
+            Jq_11_s3 = Jq_11 * state.sim[threadID][dr][bl][3];
 
-//        // target, dir, cr, ch, bl
-//        for(size_t j = 0; j < __nDir; ++j)
-//        {
-//            data(0, 0, i) += coeff(casa::IPosition(5, 2, j, 0, 0, i))
-//                * state.sim[j][i][0];
-//            data(3, 0, i) += coeff(casa::IPosition(5, 2, j, 3, 0, i))
-//                * state.sim[j][i][1];
-////            data(0, 0, i) += state.sim[j][i][0];
-////            data(3, 0, i) += state.sim[j][i][1];
-//        }
-//    }
-//}
+            M[dr][0] = Jp_00 * (Jq_00_s0 + Jq_01_s1)
+                + Jp_01 * (Jq_00_s2 + Jq_01_s3);
+
+            M[dr][1] = Jp_00 * (Jq_10_s0 + Jq_11_s1)
+                + Jp_01 * (Jq_10_s2 + Jq_11_s3);
+
+            M[dr][2] = Jp_10 * (Jq_00_s0 + Jq_01_s1)
+                + Jp_11 * (Jq_00_s2 + Jq_01_s3);
+
+            M[dr][3] = Jp_10 * (Jq_10_s0 + Jq_11_s1)
+                + Jp_11 * (Jq_10_s2 + Jq_11_s3);
+        }
+
+        for(size_t cr = 0; cr < 4; ++cr)
+        {
+            dcomplex V_sim = 0.0;
+            for(size_t dr = 0; dr < nModels; ++dr)
+            {
+                V_sim += M[dr][cr] * coeffSub(casa::IPosition(5, nTargets - 1, dr, cr, 0, bl));
+            } // model directions
+
+            tgData(cr, 0, bl) -= V_sim;
+        } // correlations
+    } // baselines
+
+#ifdef ESTIMATE_TIMER
+    state.tSub.stop();
+#endif
+
+#ifdef ESTIMATE_TIMER
+    state.tTot.stop();
+#endif
+}
 
 void __init_lmn(unsigned int dir, double pra, double pdec)
 {

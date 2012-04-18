@@ -71,16 +71,18 @@ struct EstimateState
 
         this->lsqOptions = options;
 
-        size_t nThread = OpenMP::maxThreads();
-//        sim.resize(boost::extents[nThread][2][baselines.size()][2]);
-        sim.resize(boost::extents[nThread][2][baselines.size()][4]);
+        size_t nBl = baselines.size();
+        size_t nCr = 4;
+        size_t nDr = 2;
 
-        J.resize(boost::extents[nTime][nStat][2][4*2]);
+        size_t nThread = OpenMP::maxThreads();
+        sim.resize(boost::extents[nThread][nDr][nBl][nCr]);
+
+        J.resize(boost::extents[nTime][nStat][nDr][4 * 2]);
         typedef boost::multi_array<double, 4>::element* iterator;
         for(iterator it = J.data(), end = J.data() + J.num_elements();
             it != end;)
         {
-//            *it = dcomplex(1.0, 0.0);
             *it++ = 1.0;
             *it++ = 0.0;
             *it++ = 0.0;
@@ -90,15 +92,50 @@ struct EstimateState
             *it++ = 1.0;
             *it++ = 0.0;
         }
+
+        dIndex.resize(boost::extents[baselines.size()][nCr][nDr * 8]);
+        for(size_t bl = 0; bl < nBl; ++bl)
+        {
+            const size_t p = baselines[bl].first;
+            const size_t q = baselines[bl].second;
+
+            if(p == q)
+            {
+                continue;
+            }
+
+            for(size_t cr = 0; cr < nCr; ++cr)
+            {
+                const size_t elp = (cr / 2) * 4;
+                const size_t elq = (cr & 1) * 4;
+
+                size_t offset;
+                for(size_t dr = 0; dr < nDr; ++dr)
+                {
+                    offset = p * nDr * 8 + dr * 8;
+                    dIndex[bl][cr][dr * 8] = offset + elp;
+                    dIndex[bl][cr][dr * 8 + 1] = offset + elp + 1;
+                    dIndex[bl][cr][dr * 8 + 2] = offset + elp + 2;
+                    dIndex[bl][cr][dr * 8 + 3] = offset + elp + 3;
+
+                    offset = q * nDr * 8 + dr * 8;
+                    dIndex[bl][cr][dr * 8 + 4] = offset + elq;
+                    dIndex[bl][cr][dr * 8 + 5] = offset + elq + 1;
+                    dIndex[bl][cr][dr * 8 + 6] = offset + elq + 2;
+                    dIndex[bl][cr][dr * 8 + 7] = offset + elq + 3;
+                }
+            }
+        }
     }
 
-    size_t                          nStat;
-    size_t                          nTime;
-    double                          freq;
-    BBS::BaselineSeq                baselines;
-    boost::multi_array<dcomplex, 4> sim;
-    boost::multi_array<double, 4>   J;
-    BBS::SolverOptions              lsqOptions;
+    size_t                              nStat;
+    size_t                              nTime;
+    double                              freq;
+    BBS::BaselineSeq                    baselines;
+    boost::multi_array<dcomplex, 4>     sim;
+    boost::multi_array<double, 4>       J;
+    boost::multi_array<unsigned int, 3> dIndex;
+    BBS::SolverOptions                  lsqOptions;
 
 #ifdef ESTIMATE_TIMER
     NSTimer                         tTot, tSim, tEq, tLM, tSub;
