@@ -41,11 +41,13 @@ class OutputSection
   public:
                                            ~OutputSection();
 
+    void                                   start();
+
     void				   addIterations(unsigned count);
     void				   noMoreIterations();
 
   protected:
-					   OutputSection(const Parset &, Stream * (*createStream)(unsigned, unsigned), OutputType, const std::vector<unsigned> &cores, int psetIndex, bool integratable, bool variableNrSubbands);
+					   OutputSection(const Parset &, OutputType, unsigned firstBlockNumber, const std::vector<unsigned> &cores, int psetIndex, bool integratable, bool variableNrSubbands);
 
   private:
 
@@ -57,7 +59,7 @@ class OutputSection
     void				   notDroppingData(unsigned subband);
 
     const std::string              	   itsLogPrefix;
-    const bool                             itsVariableNrSubbands;
+    const bool                             itsVariableDataSize;
     const Transpose2                       &itsTranspose2Logic;
 
     const unsigned			   itsNrComputeCores;
@@ -66,10 +68,12 @@ class OutputSection
 
     const unsigned			   itsNrIntegrationSteps;
     unsigned				   itsCurrentIntegrationStep;
+    const unsigned			   itsNrSamplesPerIntegration;
     unsigned				   itsSequenceNumber;
 
     const bool                		   itsIsRealTime;
     std::vector<unsigned>		   itsDroppedCount; // [subband]
+    std::vector<unsigned>		   itsTotalDroppedCount; // [subband]
     std::vector<SmartPtr<OutputThread> >   itsOutputThreads; // [subband]
 
     std::vector<SmartPtr<Stream> >	   itsStreamsFromCNs;
@@ -80,62 +84,43 @@ class OutputSection
     Semaphore				   itsNrIterationsToDo;
 
     SmartPtr<Thread>			   itsThread;
+
+    std::vector<unsigned>		   itsAdders; // [subband]
 };
 
 
 class PhaseTwoOutputSection : public OutputSection
 {
   protected:
-    PhaseTwoOutputSection(const Parset &, Stream * (*createStream)(unsigned, unsigned), OutputType, bool integratable);
+    PhaseTwoOutputSection(const Parset &, OutputType, unsigned firstBlockNumber, bool integratable);
 };
 
 
 class PhaseThreeOutputSection : public OutputSection
 {
   protected:
-    PhaseThreeOutputSection(const Parset &, Stream * (*createStream)(unsigned, unsigned), OutputType);
-};
-
-
-class FilteredDataOutputSection : public PhaseTwoOutputSection
-{
-  public:
-    FilteredDataOutputSection(const Parset &, Stream * (*createStream)(unsigned, unsigned));
+    PhaseThreeOutputSection(const Parset &, OutputType, unsigned firstBlockNumber);
 };
 
 
 class CorrelatedDataOutputSection : public PhaseTwoOutputSection
 {
   public:
-    CorrelatedDataOutputSection(const Parset &, Stream * (*createStream)(unsigned, unsigned));
-};
-
-
-class IncoherentStokesOutputSection : public PhaseTwoOutputSection
-{
-  public:
-    IncoherentStokesOutputSection(const Parset &, Stream * (*createStream)(unsigned, unsigned));
+    CorrelatedDataOutputSection(const Parset &, unsigned firstBlockNumber);
 };
 
 
 class BeamFormedDataOutputSection : public PhaseThreeOutputSection
 {
   public:
-    BeamFormedDataOutputSection(const Parset &, Stream * (*createStream)(unsigned, unsigned));
-};
-
-
-class CoherentStokesOutputSection : public PhaseThreeOutputSection
-{
-  public:
-    CoherentStokesOutputSection(const Parset &, Stream * (*createStream)(unsigned, unsigned));
+    BeamFormedDataOutputSection(const Parset &, unsigned firstBlockNumber);
 };
 
 
 class TriggerDataOutputSection : public PhaseThreeOutputSection
 {
   public:
-    TriggerDataOutputSection(const Parset &, Stream * (*createStream)(unsigned, unsigned));
+    TriggerDataOutputSection(const Parset &, unsigned firstBlockNumber);
 };
 
 

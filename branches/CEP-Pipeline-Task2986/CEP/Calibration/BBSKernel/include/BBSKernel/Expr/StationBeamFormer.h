@@ -49,7 +49,13 @@ public:
         const Expr<Vector<3> >::ConstPtr &reference,
         const Expr<JonesMatrix>::ConstPtr &beam0,
         const Station::ConstPtr &station,
-        double referenceFreq,
+        bool conjugate = false);
+
+    StationBeamFormer(const Expr<Vector<3> >::ConstPtr &direction,
+        const Expr<Vector<3> >::ConstPtr &reference,
+        const Expr<JonesMatrix>::ConstPtr &beam0,
+        const Station::ConstPtr &station,
+        double refFrequency,
         bool conjugate = false);
 
     StationBeamFormer(const Expr<Vector<3> >::ConstPtr &direction,
@@ -57,7 +63,14 @@ public:
         const Expr<JonesMatrix>::ConstPtr &beam0,
         const Expr<JonesMatrix>::ConstPtr &beam1,
         const Station::ConstPtr &station,
-        double referenceFreq,
+        bool conjugate = false);
+
+    StationBeamFormer(const Expr<Vector<3> >::ConstPtr &direction,
+        const Expr<Vector<3> >::ConstPtr &reference,
+        const Expr<JonesMatrix>::ConstPtr &beam0,
+        const Expr<JonesMatrix>::ConstPtr &beam1,
+        const Station::ConstPtr &station,
+        double refFrequency,
         bool conjugate = false);
 
     virtual ~StationBeamFormer();
@@ -79,7 +92,8 @@ private:
     vector<Expr<JonesMatrix>::ConstPtr> itsElementBeam;
 
     Station::ConstPtr                   itsStation;
-    double                              itsReferenceFreq;
+    bool                                itsUseChannelFreq;
+    double                              itsRefFrequency;
     bool                                itsConjugateFlag;
 };
 

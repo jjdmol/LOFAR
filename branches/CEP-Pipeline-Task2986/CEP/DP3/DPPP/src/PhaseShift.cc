@@ -51,11 +51,10 @@ namespace LOFAR {
 
     PhaseShift::PhaseShift (DPInput* input,
                             const ParSet& parset, const string& prefix,
-                            const string& defVal)
+                            const vector<string>& defVal)
       : itsInput   (input),
         itsName    (prefix),
-        itsCenter  (parset.getStringVector(prefix+"phasecenter",
-                                           vector<string>(1, defVal)))
+        itsCenter  (parset.getStringVector(prefix+"phasecenter", defVal))
     {}
 
     PhaseShift::~PhaseShift()
@@ -89,7 +88,7 @@ namespace LOFAR {
       itsXYZ[0] = tt(0,0);
       itsXYZ[1] = tt(0,1);
       itsXYZ[2] = tt(0,2);
-      cout << itsXYZ[0]<<' '<<itsXYZ[1]<<' '<<itsXYZ[2]<<" ps"<<endl;
+      ///      cout << itsXYZ[0]<<' '<<itsXYZ[1]<<' '<<itsXYZ[2]<<" ps"<<endl;
 
       info.setPhaseCenter (newDir, original);
       // Calculate 2*pi*freq/C to get correct phase term (in wavelengths).

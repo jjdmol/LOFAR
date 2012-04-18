@@ -4,15 +4,19 @@ include(LofarPackageVersion)
 
 lofar_add_library(storage 
   Package__Version.cc
+  FastFileStream.cc
   InputThread.cc
   OutputThread.cc
   SubbandWriter.cc
   MSWriter.cc
-  MSWriterLDA.cc
+  MSWriterDAL.cc
   MSWriterNull.cc
   MSWriterFile.cc
   Format.cc
-  MeasurementSetFormat.cc)
+  MeasurementSetFormat.cc
+  TBB_StaticMapping.cc)
+#  TBB_Writer_main.cc
+#  TBB_Writer.cc)
 
 install(PROGRAMS
   gnuplotMS.sh
@@ -25,3 +29,4 @@ install(FILES
 lofar_add_bin_program(Storage_main Storage_main.cc)
 lofar_add_bin_program(plotMS plotMS.cc)
 lofar_add_bin_program(versionstorage versionstorage.cc)
+#lofar_add_bin_program(TBB_Writer_main TBB_Writer_main.cc)

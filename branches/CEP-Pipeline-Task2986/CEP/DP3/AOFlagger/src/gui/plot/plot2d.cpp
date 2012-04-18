@@ -218,7 +218,7 @@ void Plot2D::render(Cairo::RefPtr<Cairo::Context> cr, Plot2DPointSet &pointSet)
 	bool hasPrevPoint = false;
 	
 	unsigned iterationCount = pointSet.Size();
-	if(pointSet.DrawingStyle() == Plot2DPointSet::DrawLines)
+	if(pointSet.DrawingStyle() == Plot2DPointSet::DrawLines && iterationCount!=0)
 		--iterationCount;
 
 	for(size_t i=0;i<iterationCount;++i)
@@ -238,7 +238,7 @@ void Plot2D::render(Cairo::RefPtr<Cairo::Context> cr, Plot2DPointSet &pointSet)
 				y2Val = (log10(pointSet.GetY(i+1)) - minYLog10) / (maxYLog10 - minYLog10);
 		} else {
 			y1Val = (pointSet.GetY(i) - yMin) / (yMax - yMin);
-			y2Val = (pointSet.GetY(i) - yMin) / (yMax - yMin);
+			y2Val = (pointSet.GetY(i+1) - yMin) / (yMax - yMin);
 		}
 		if(y1Val < 0.0) y1Val = 0.0;
 		if(y1Val > 1.0) y1Val = 1.0;

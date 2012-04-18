@@ -29,6 +29,7 @@
 
 //# Includes
 #include <ParmDB/SourceInfo.h>
+#include <ParmDB/PatchInfo.h>
 #include <ParmDB/ParmDBMeta.h>
 #include <ParmDB/ParmDB.h>
 #include <Common/lofar_vector.h>
@@ -127,6 +128,12 @@ namespace BBS {
     virtual vector<string> getPatches (int category, const string& pattern,
                                        double minBrightness,
                                        double maxBrightness) = 0;
+
+    // Get the info of selected patches (default all patches).
+    virtual vector<PatchInfo> getPatchInfo (int category,
+                                            const string& pattern,
+                                            double minBrightness,
+                                            double maxBrightness) = 0;
 
     // Get the sources belonging to the given patch.
     virtual vector<SourceInfo> getPatchSources (const string& patchName) = 0;
@@ -244,21 +251,31 @@ namespace BBS {
     // Get patch names in order of category and decreasing apparent flux.
     // category < 0 means all categories.
     // A brightness < 0 means no test on brightness.
-    vector<string> getPatches (int category=-1, const string& pattern="",
-                               double minBrightness=-1, double maxBrightness=-1)
-     { return itsRep->getPatches (category, pattern,
-                                  minBrightness, maxBrightness); }
+    vector<string> getPatches (int category = -1,
+                               const string& pattern = string(),
+                               double minBrightness = -1,
+                               double maxBrightness = -1) const
+      { return itsRep->getPatches (category, pattern,
+                                   minBrightness, maxBrightness); }
+
+    // Get the info of all patches (name, ra, dec).
+    vector<PatchInfo> getPatchInfo (int category = -1,
+                                    const string& pattern = string(),
+                                    double minBrightness = -1,
+                                    double maxBrightness = -1) const
+      { return itsRep->getPatchInfo (category, pattern,
+                                     minBrightness, maxBrightness); }
 
     // Get the info of the sources belonging to the given patch.
-    vector<SourceInfo> getPatchSources (const string& patchName)
+    vector<SourceInfo> getPatchSources (const string& patchName) const
       { return itsRep->getPatchSources (patchName); }
 
     // Get the source info of the given source.
-    SourceInfo getSource (const string& sourceName)
+    SourceInfo getSource (const string& sourceName) const
       { return itsRep->getSource (sourceName); }
 
     // Get the info of all sources matching the given (filename like) pattern.
-    vector<SourceInfo> getSources (const string& sourceNamePattern)
+    vector<SourceInfo> getSources (const string& sourceNamePattern) const
       { return itsRep->getSources (sourceNamePattern); }
 
     // Delete the sources records matching the given (filename like) pattern.

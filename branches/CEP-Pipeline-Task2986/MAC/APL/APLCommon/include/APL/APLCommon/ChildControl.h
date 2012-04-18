@@ -152,6 +152,7 @@ private:
 							   uint16				result);
 	void _removeAction		  (const string&		aName,
 							   CTState::CTstateNr	requestedState);
+	void _printStartDaemonMap(const string& actionname);
 
 	#define	findController(cntlrName)	\
 			ControllerAdmin::instance()->findController(cntlrName)

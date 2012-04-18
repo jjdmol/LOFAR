@@ -106,8 +106,36 @@ node	averager		4.0.0	development	'node constraint'	"Average"
 par	type		I		text	-	10		0	"averager"		-	"Type of the averager, do not change"
 par	freqstep	I		int	-	10		0	4				-	"Number of channels to average."
 par	timestep	I		int	-	10		0	1				-	"Number of time slots to average."
-par	minpoints	I		int	-	10		0	0				-	"If fewer unflagged input points are available, the averaged point is flagged."
-par	minperc		I		flt	-	10		0	0.0				-	"Like minpoints, but expressed as a percentage of timestep*freqstep"
+par	minpoints	I      	int	-	10		0	0				-	"If fewer unflagged input points are available, the averaged point is flagged."
+par	minperc		I	flt	-	10		0	0.0				-	"Like minpoints, but expressed as a percentage of timestep*freqstep"
+
+node Options          4.0.0  development 1                 'Solver configuration'
+par  MaxIter                 I    int    -      10    0    0                    -        'Number of iterations'
+par  EpsValue                I    dbl    -      10    0    1e-9                 -        'Convergence criterion on epsilon'
+par  EpsDerivative           I    dbl    -      10    0    1e-9                 -        'Convergence criterion on derivative of epsilon'
+par  ColFactor               I    dbl    -      10    0    1e-9                 -        'Colinearity factor, tests for solvability of normal equations'
+par  LMFactor                I    dbl    -      10    0    1.0                 -        'Initial Levenberg-Marquardt factor'
+par  BalancedEqs             I    bool   -      10    0    F                    -        'Add LM-factor to diagonal elements'
+par  UseSVD                  I    bool   -      10    0    T                    -        'Use Singular Value Decomposition to compute solution'
+
+node Solve            4.0.0  development 'node constraint' 'Template Solve Operation'
+uses Options         4.0.0  development 1                 'Solver configuration'
+
+node	demixer		4.0.0	development	'node constraint'	"Demix"
+par	type		I		text	-	10		0	"demixer"		-	"Type of the demixer, do not change"
+par	freqstep	I		int	-	10		0	1				-	"Number of channels to average in result."
+par	timestep	I		int	-	10		0	1				-	"Number of time slots to average in result."
+par	demixfreqstep	I	int	-	10		0	1				-	"Number of channels to average in demixing."
+par	demixtimestep     I	int	-	10		0	1				-	"Number of time slots to average in demixing."
+par	ntimechunk      I	int	-	10		0	0                              -	"Number of time chunks to solve jointly (<=0 means nr of cores)."
+par	skymodel	I	text	-	10		0	"sky"			-	"Name of the skymodel table."
+par	instrumentmodel I	text	-	10		0	"instrument"		-	"Name of the instrumentmodel table."
+par	elevationcutoff I	text	-	10		0	"0.0deg"			-	"Ignore data below this elevation (default unit is deg)."
+par	targetsource     I	text -	10		0	""                              -	"Name of optional target source to use when solving."
+par	subtractsources I	vtext -	10		0	""                              -	"Names of the sources to subtract."
+par	modelsources I	vtext -	10		0	'[]'                              -	"Names of the sources to take into account when solving."
+par	othersources    I	 vtext -	10		0	'[]'                              -	"Names of the sources to project away when solving."
+uses Solve         4.0.0  development 1                 'Solver attributes'
 
 node	uvwflagger	4.0.0	development	'node constraint'	"UVW flagger"
 par	type		I		text	-	10		0	"uvwflagger"	-	"Type of the flagger, do not change"

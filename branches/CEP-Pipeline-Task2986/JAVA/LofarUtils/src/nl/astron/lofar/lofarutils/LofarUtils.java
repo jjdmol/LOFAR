@@ -24,6 +24,9 @@ package nl.astron.lofar.lofarutils;
 
 
 import java.awt.Component;
+import java.awt.KeyboardFocusManager;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.text.Collator;
 import java.util.BitSet;
 import java.util.regex.Pattern;
@@ -32,6 +35,7 @@ import javax.swing.Icon;
 import javax.swing.JComboBox;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
+import javax.swing.text.JTextComponent;
 
 /**
  * This panel contains a TreePanel and some textfields that display information
@@ -479,7 +483,6 @@ public abstract class LofarUtils {
 
         } catch (Exception ex) {
             System.out.println("Error in CompactedArrayString: " + ex.getMessage());
-            ex.printStackTrace();
             return orgStr;
         }
 
@@ -533,7 +536,6 @@ public abstract class LofarUtils {
             }
         } catch (Exception ex) {
             System.out.println("Error in CompactedArrayString: " + ex.getMessage());
-            ex.printStackTrace();
             return orgStr;
         }
 
@@ -877,4 +879,54 @@ public abstract class LofarUtils {
             return "";
         }
     }
-}
+    
+        static public class TextSelector {
+
+            private static FocusHandler installedInstance;
+
+            /**
+             * Install an PropertyChangeList listener to the default focus manager
+             * and selects text when a text component is focused.       
+             */
+            public static void install() {
+                //already installed
+                if (installedInstance != null) {
+                    return;
+                }
+
+                installedInstance = new FocusHandler();
+
+                KeyboardFocusManager kfm = KeyboardFocusManager.getCurrentKeyboardFocusManager();
+
+
+
+                kfm.addPropertyChangeListener("focusOwner", installedInstance);
+            }
+
+            public static void uninstall() {
+                if (installedInstance != null) {
+                    KeyboardFocusManager kfm = KeyboardFocusManager.getCurrentKeyboardFocusManager();
+                    kfm.removePropertyChangeListener("focusOwner", installedInstance);
+                }
+            }
+
+            private static class FocusHandler implements PropertyChangeListener {
+
+            @Override
+                public void propertyChange(PropertyChangeEvent evt) {
+                    if (evt.getNewValue() instanceof JTextComponent) {
+                        JTextComponent text = (JTextComponent) evt.getNewValue();
+                       //select text if the component is editable
+                        //and the caret is at the end of the text
+                        if (text.isEditable()) {
+//                                && text.getDocument().getLength() == text.getCaretPosition()) {
+
+                            text.select(0,text.getDocument().getLength());
+                        }
+                    }
+                }
+            }
+        }
+
+
+}   

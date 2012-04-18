@@ -54,7 +54,7 @@ const string &PatchExpr::name() const
 {
     return itsName;
 }
-    
+
 Expr<Vector<2> >::Ptr PatchExpr::position() const
 {
     return itsPosition;
@@ -120,10 +120,10 @@ void PatchExpr::initSourceList(Scope &scope, SourceDB &sourceDB,
 
     if(sources.size() == 0)
     {
-        THROW(BBSKernelException, "Patch " << name << " does not contain " 
-              << "any sources");
+        THROW(BBSKernelException, "Patch " << name << " does not contain any"
+            " sources");
     }
-    
+
     itsSourceList.reserve(sources.size());
     for(vector<SourceInfo>::const_iterator it = sources.begin(),
         end = sources.end(); it != end; ++it)

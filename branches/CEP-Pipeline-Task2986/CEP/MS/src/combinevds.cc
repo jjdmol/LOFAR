@@ -24,6 +24,7 @@
 #include <MS/VdsMaker.h>
 #include <MS/Package__Version.h>
 #include <Common/LofarLogger.h>
+#include <Common/StringUtil.h>
 #include <Common/SystemUtil.h>
 #include <stdexcept>
 #include <iostream>
@@ -48,7 +49,9 @@ int main (int argc, const char* argv[])
     vector<string> vdsNames;
     vdsNames.reserve (argc-2);
     for (int i=2; i<argc; ++i) {
-      vdsNames.push_back (argv[i]);
+      // Multiple names can be given separated by commas.
+      vector<string> names = StringUtil::split (string(argv[i]), ',');
+      vdsNames.insert (vdsNames.end(), names.begin(), names.end());
     }
     // Combine them.
     VdsMaker::combine (argv[1], vdsNames);

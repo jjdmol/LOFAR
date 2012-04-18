@@ -28,36 +28,11 @@
 
 
 #include <Storage/MSWriter.h>
-#include <Stream/FileStream.h>
-#include <Interface/SmartPtr.h>
+#include <Storage/FastFileStream.h>
 
 
 namespace LOFAR {
 namespace RTCP {
-
-class FastFileStream : public FileStream
-{
-  public:
-    FastFileStream(const string &name, int flags, int mode); // rd/wr; create file
-						   
-    virtual size_t tryWrite(const void *ptr, size_t size);
-    virtual ~FastFileStream();
-
-    static const unsigned alignment = 512;
-  private:  
-    // we only support writing
-    virtual size_t tryRead(void *, size_t size) { return size; }
-
-    // enlarge the buffer if needed
-    void ensureBuffer(size_t newsize);
-
-    // use the FileStream to force these data to disk
-    void forceWrite(const void *ptr, size_t size);
-
-    size_t bufsize;
-    SmartPtr<char, SmartPtrFree<char> > buffer;
-    size_t remainder;
-};
 
 
 class MSWriterFile : public MSWriter

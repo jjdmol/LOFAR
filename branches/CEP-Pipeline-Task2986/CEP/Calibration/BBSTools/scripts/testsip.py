@@ -11,7 +11,7 @@
 #
 # File:             testsip.py
 # Date:             2011-07-27
-# Last change:      2011-08-22
+# Last change:      2012-02-20
 # Author:           Sven Duscha (duscha@astron.nl)
 
 
@@ -33,7 +33,7 @@ class testsip:
 
     # Create a testBBS class with MS, parset, skymodel and optional working directory
     #
-    def __init__(self, MS, parset, wd='.', verbose=True, taql=True):
+    def __init__(self, MS, parset, wd='.', verbose=True, taql=True, key="tests", clusterdesc=""):
         self.wd = wd    
         self.passed = False
         self.MS = MS
@@ -43,14 +43,19 @@ class testsip:
         self.gds = ""
         self.host = gethostname()
         self.dbserver = "ldb001"
-        self.clusterdesc = self.getClusterDescription()
+        if clusterdesc=="":
+          self.clusterdesc = self.getClusterDescription()
+        else:
+          self.clusterdesc = clusterdesc
         self.dbuser = "postgres"
+        self.key = key              # database key to be used during test run
         
         self.parms = []
         self.columns = []
-        self.acceptancelimit = 1e-3
+        self.acceptancelimit = 1e-3   # modify this to how accurate you expect your tests to mimic the reference
         self.results = {}                
         self.verbose = verbose
+        self.debug = True             # currently have to set this manually, not visible to the outside
         self.taql = taql              # use TaQL to compare columns
         
         return self
@@ -344,9 +349,8 @@ class testsip:
             columnnames=self.columns
     
         for column in columnnames:
-            ret = self.compareColumn(column, taql)            
+            ret = self.compareColumn(column, taql) # need, taql           
             self.results[column] = ret
-            #print "self.results[" + column + "] = " + str(ret)       # DEBUG
             
     
     # Compare a particular MS column with the reference
@@ -354,46 +358,59 @@ class testsip:
     #
     def compareColumn(self, columnname, taql=False):
         if self.verbose:
-            print "Comparing "+  bcolors.OKBLUE + columnname + bcolors.ENDC + " columns."             # DEBUG
+            print "Comparing "+  bcolors.OKBLUE + columnname + bcolors.ENDC + " columns." # DEBUG
 
         passed=False
         errorcount=0                                # counter that counts rows with differying columns
 
         if taql==False:                             # If taql is not to be used for comparison, use numpy difference
-            reftab=pt.table(self.MS)                # Open reference MS in readonly mode
-            testtab=pt.table(self.test_MS)          # Open test MS in readonly mode     
-       
-            tc_test=testtab.col(columnname)         # get column in test table as numpy array
-            tc_ref=reftab.col(columnname)           # get column in reference table as numpy array
+          if self.debug:
+            print "compareColumn() using numpy" 
 
-            nrows=testtab.nrows()
-            for i in progressbar( range(0, nrows-1), "comparing " + columnname + " ", 60):
-                difference = abs(tc_test[i] - tc_ref[i])    # Use numpy's ability to substract arrays from each other
-                sum=numpy.sum(difference)
-                if sum > (self.acceptancelimit/len(difference)):     # determine if this failed the test
-                    passed=False
-                else:
-                    passed=True
-
-            reftab.close()
-            testtab.close()
+          reftab=pt.table(self.MS)                # Open reference MS in readonly mode
+          testtab=pt.table(self.test_MS)          # Open test MS in readonly mode     
+     
+          tc_ref=reftab.col(columnname)           # get column in reference table as numpy array
+          tc_test=testtab.col(columnname)         # get column in test table as numpy array
+  
+          nrows=testtab.nrows()                  
+          for i in progressbar( range(0, nrows-1), "comparing " + columnname + " ", 60):
+              difference = numpy.max(abs(tc_test[i] - tc_ref[i]))    # Use numpy's ability to substract arrays from each other
+              #sum=numpy.sum(difference)
+              
+              #if sum > (self.acceptancelimit/len(difference)):     # determine if this failed the test
+              if difference > self.acceptancelimit:                 # determine if this failed the test
+                  passed=False
+              else:
+                  passed=True
+  
+          reftab.close()
+          testtab.close()
         else:
+            if self.debug:
+              print "compareColumn() using TaQL"          # DEBUG
+  
             self.addRefColumnToTesttab(columnname)      # add reference table column as forward column
         
             testcolumnname = "test_" + columnname       # create name which is used in test_MS if refcolum was added
         
             # Loop over columns, compute and check difference (must be within self.acceptancelimit)            
             # use TaQL for this? How to select from two tables? TODO: check this!
-            taqlcmd = "SELECT * FROM '" + self.test_MS + "' WHERE !all(NEAR(Real("+columnname+"), Real("+testcolumnname+")) AND NEAR(Imag("+columnname+"), Imag("+testcolumnname+")))"
             
-            result = pt.taql(taqlcmd)
-            errorcount = result.nrows()
+#            taqlcmd = "SELECT * FROM '" + self.test_MS + "' WHERE !all(NEAR(Real("+columnname+"), Real("+testcolumnname+")) AND NEAR(Imag("+columnname+"), Imag("+testcolumnname+")))"
+#            errorcount = result.nrows()
+            taqlcmd = "SELECT * FROM '" + self.test_MS + "' WHERE !all(NEARABS(Real("+columnname+"), Real("+testcolumnname+")," + str(self.acceptancelimit) + ") AND NEARABS(Imag("+columnname+"), Imag("+testcolumnname+"),"+ str(self.acceptancelimit) +"))"
+#            print "taqlcmd = ", taqlcmd     # DEBUG
+            errorcount=pt.taql(taqlcmd).nrows()            
             
+            if self.verbose or self.debug:
+              print "errorcount = ", errorcount         # display number of errors=No. of rows
+
+            # If test_MS COLUMN and reference COLUMN have any discrepancy...            
             if errorcount > 0:
-                passed=False
+                passed=False      # ... the test is failed
             else:
                 passed=True
-       
         return passed
 
  
@@ -531,6 +548,15 @@ class testsip:
                   columns.append(column)
   
         return columns
+
+    # Cleanup logfiles generated by calibrate script
+    #
+    def cleanUpLogs(self):
+      if self.debug:
+        print "cleanUpLogs()"      # DEBUG
+
+      logfiles=self.key + "*log*"
+      os.remove(logfiles)
 
     """
   

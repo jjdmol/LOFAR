@@ -19,7 +19,6 @@
  ***************************************************************************/
 
 #include <limits>
-#include <sstream>
 
 #include <boost/bind.hpp>
 
@@ -32,6 +31,7 @@
 #include <AOFlagger/gui/plot/plotpropertieswindow.h>
 
 TwoDimensionalPlotPage::TwoDimensionalPlotPage() :
+	_expander("Side bar"),
 	_statisticFrame("Statistics"),
 	_countButton("Count"),
 	_meanButton("Mean"),
@@ -67,7 +67,8 @@ TwoDimensionalPlotPage::TwoDimensionalPlotPage() :
 	initPhaseButtons();
 	initPlotButtons();
 	
-	pack_start(_sideBox, Gtk::PACK_SHRINK);
+	_expander.add(_sideBox);
+	pack_start(_expander, Gtk::PACK_SHRINK);
 	
 	_plotWidget.SetPlot(_plot);
 	pack_start(_plotWidget, Gtk::PACK_EXPAND_WIDGET);
@@ -80,6 +81,8 @@ TwoDimensionalPlotPage::TwoDimensionalPlotPage() :
 TwoDimensionalPlotPage::~TwoDimensionalPlotPage()
 {
 	delete _dataWindow;
+	if(_plotPropertiesWindow != 0)
+		delete _plotPropertiesWindow;
 }
 
 unsigned TwoDimensionalPlotPage::selectedKindCount() const
@@ -118,6 +121,9 @@ void TwoDimensionalPlotPage::updatePlot()
 			plotStatistic(QualityTablesFormatter::RFIPercentageStatistic);
 		if(_snrButton.get_active())
 			plotStatistic(QualityTablesFormatter::SignalToNoiseStatistic);
+		
+		processPlot(_plot);
+		
 		_plotWidget.Update();
 		
 		if(_dataWindow->get_visible())
@@ -334,27 +340,8 @@ void TwoDimensionalPlotPage::onPlotPropertiesClicked()
 
 void TwoDimensionalPlotPage::updateDataWindow()
 {
-	std::stringstream _dataStream;
-	 _dataStream << std::setprecision(14);
-	if(_plot.PointSetCount() != 0)
-	{
-		const Plot2DPointSet &pointSet = _plot.GetPointSet(0);
-		const size_t valueCount = pointSet.Size();
-		for(size_t i=0; i<valueCount; ++i)
-		{
-			const double
-				x = pointSet.GetX(i),
-				y = pointSet.GetY(i);
-			if(pointSet.HasTickLabels())
-			{
-				std::string label = pointSet.TickLabels()[i];
-				_dataStream << i << '\t' << label << '\t' << y << '\n';
-			}
-			else
-				_dataStream << i << '\t' << x << '\t' << y << '\n';
-		}
-	}
-	_dataWindow->SetData(_dataStream.str());
+	if(_dataWindow->is_visible())
+		_dataWindow->SetData(_plot);
 }
 
 void TwoDimensionalPlotPage::onDataExportClicked()

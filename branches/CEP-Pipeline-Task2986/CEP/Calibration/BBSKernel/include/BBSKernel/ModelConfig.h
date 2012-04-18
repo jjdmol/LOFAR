@@ -31,8 +31,6 @@
 #include <Common/lofar_vector.h>
 #include <Common/lofar_iosfwd.h>
 
-#include <casa/OS/Path.h>
-
 namespace LOFAR
 {
 namespace BBS
@@ -54,11 +52,11 @@ public:
     };
 
     BeamConfig();
-    BeamConfig(Mode mode, bool conjugateAF, const casa::Path &elementPath);
+    BeamConfig(Mode mode, bool useChannelFreq, bool conjugateAF);
 
     Mode mode() const;
+    bool useChannelFreq() const;
     bool conjugateAF() const;
-    const casa::Path &getElementPath() const;
 
     static bool isDefined(Mode in);
     static Mode asMode(const string &in);
@@ -66,8 +64,8 @@ public:
 
 private:
     Mode            itsMode;
+    bool            itsUseChannelFreq;
     bool            itsConjugateAF;
-    casa::Path      itsElementPath;
 };
 
 // Configuration options specific to the ionospheric model.
@@ -96,6 +94,19 @@ private:
     unsigned int    itsDegree;
 };
 
+// Configuration options specific to the elevation cut-off.
+class ElevationCutConfig
+{
+public:
+    ElevationCutConfig();
+    ElevationCutConfig(double threshold);
+
+    double threshold() const;
+
+private:
+    double itsThreshold;
+};
+
 // Configuration options specific to the condition number flagger.
 class FlaggerConfig
 {
@@ -103,7 +114,7 @@ public:
     FlaggerConfig();
     FlaggerConfig(double threshold);
 
-    double getThreshold() const;
+    double threshold() const;
 
 private:
     double itsThreshold;
@@ -133,6 +144,11 @@ public:
     bool useDirectionalGain() const;
     void setDirectionalGain(bool value = true);
 
+    bool useElevationCut() const;
+    void setElevationCutConfig(const ElevationCutConfig &config);
+    const ElevationCutConfig &getElevationCutConfig() const;
+    void clearElevationCutConfig();
+
     bool useBeam() const;
     void setBeamConfig(const BeamConfig &config);
     const BeamConfig &getBeamConfig() const;
@@ -158,7 +174,7 @@ public:
     void setCache(bool value = true);
 
     void setSources(const vector<string> &sources);
-    const vector<string> &getSources() const;
+    const vector<string> &sources() const;
 
 private:
     enum ModelOptions
@@ -169,6 +185,7 @@ private:
         GAIN,
         TEC,
         DIRECTIONAL_GAIN,
+        ELEVATION_CUT,
         BEAM,
         DIRECTIONAL_TEC,
         FARADAY_ROTATION,
@@ -180,6 +197,7 @@ private:
 
     bool                itsModelOptions[N_ModelOptions];
 
+    ElevationCutConfig  itsConfigElevationCut;
     BeamConfig          itsConfigBeam;
     IonosphereConfig    itsConfigIonosphere;
     FlaggerConfig       itsConfigFlagger;
@@ -190,6 +208,7 @@ private:
 ostream &operator<<(ostream &out, const FlaggerConfig &obj);
 ostream &operator<<(ostream &out, const IonosphereConfig &obj);
 ostream &operator<<(ostream &out, const BeamConfig &obj);
+ostream &operator<<(ostream &out, const ElevationCutConfig &obj);
 ostream &operator<<(ostream &out, const ModelConfig &obj);
 
 // @}

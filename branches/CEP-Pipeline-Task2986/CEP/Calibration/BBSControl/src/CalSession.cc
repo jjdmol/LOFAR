@@ -25,24 +25,14 @@
 #include <BBSControl/CalSession.h>
 #include <BBSControl/CalSessionTransactors.h>
 #include <BBSControl/Exceptions.h>
-
+#include <BBSControl/Step.h>
 #include <LMWCommon/VdsDesc.h>
-
 #include <Common/LofarLogger.h>
 #include <Common/lofar_numeric.h>
 #include <Common/lofar_string.h>
-
 #include <Common/ParameterSet.h>
-#include <BBSControl/Step.h>
-
-// gethostname() and getpid()
-#include <unistd.h>
-
-// numeric_limits<int32>
-// TODO: Create lofar_limits.h in Common.
-#include <limits>
-
 #include <pqxx/except>
+#include <limits>
 
 // Now here's an ugly kludge: libpqxx defines four different top-level
 // exception classes. In order to avoid a lot of code duplication we clumped
@@ -104,14 +94,9 @@ ostream& operator<<(ostream& os, const ProcessId &obj)
 
 CalSession::CalSession(const string &key, const string &db, const string &user,
     const string &password, const string &host, const string &port)
-    :   itsSessionId(-1)
+    :   itsSessionId(-1),
+        itsProcessId(ProcessId::id())
 {
-    // Determine the ProcessId of this worker.
-    char hostname[512];
-    int status = gethostname(hostname, 512);
-    ASSERT(status == 0);
-    itsProcessId = ProcessId(string(hostname), getpid());
-
     // Build connection string.
     string opts("dbname='" + db + "' user='" + user + "' host='" + host + "'");
     if(!port.empty()) {
@@ -386,7 +371,8 @@ void CalSession::postResult(const CommandId &id, const CommandResult &result)
     }
 }
 
-CommandStatus CalSession::getCommandStatus(const CommandId &id) const
+CalSession::CommandStatus CalSession::getCommandStatus(const CommandId &id)
+  const
 {
     int32 status = -1;
     WorkerType addressee;

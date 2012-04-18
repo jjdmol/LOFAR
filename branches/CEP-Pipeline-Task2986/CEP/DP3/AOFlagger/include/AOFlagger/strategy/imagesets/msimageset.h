@@ -197,13 +197,15 @@ namespace rfiStrategy {
 			{
 				return _set.GetBandInfo(bandIndex);
 			}
-			const std::set<double> &GetObservationTimesSet()
+			/*const std::set<double> &GetObservationTimesSet(const ImageSetIndex &index)
 			{
-				return _set.GetObservationTimesSet();
-			}
-			std::vector<double> *CreateObservationTimesVector()
+				const MSImageSetIndex &msIndex = static_cast<const MSImageSetIndex &>(index);
+				return _reader->ObservationTimes(StartIndex(index), EndIndex(index));
+			}*/
+			std::vector<double> ObservationTimesVector(const ImageSetIndex &index)
 			{
-				return _set.CreateObservationTimesVector();
+				const MSImageSetIndex &msIndex = static_cast<const MSImageSetIndex &>(index);
+				return _reader->ObservationTimes(StartIndex(msIndex), EndIndex(msIndex));
 			}
 			const std::vector<std::pair<size_t,size_t> > &Baselines() const { return _baselines; }
 			size_t BandCount() const { return _bandCount; }

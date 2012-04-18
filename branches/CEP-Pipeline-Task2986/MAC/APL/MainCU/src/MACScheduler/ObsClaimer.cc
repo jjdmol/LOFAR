@@ -233,11 +233,9 @@ GCFEvent::TResult ObsClaimer::preparePVSS_state (GCFEvent& event, GCFPortInterfa
 														itsCurrentObs->second->obsName.c_str()));
 			ParameterSet	obsPS(obsPSFilename);
 			try {
-				Observation			theObs(&obsPS);
+				Observation			theObs(&obsPS, false);
 
 				RTDBPropertySet*	theObsPS = itsCurrentObs->second->propSet;
-//				theObsPS->setValue(PN_OBS_CLAIM_PERIOD,		GCFPVInteger(itsClaimPeriod), 0.0, false);
-//				theObsPS->setValue(PN_OBS_PREPARE_PERIOD,	GCFPVInteger(itsPreparePeriod), 0.0, false);
 				theObsPS->setValue(PN_OBS_RUN_STATE,		GCFPVString(""), 0.0, false);
 				theObsPS->setValue(PN_OBS_START_TIME,		GCFPVString (to_simple_string(from_time_t(theObs.startTime))), 0.0, false);
 				theObsPS->setValue(PN_OBS_STOP_TIME,		GCFPVString (to_simple_string(from_time_t(theObs.stopTime))), 0.0, false);
@@ -246,17 +244,18 @@ GCFEvent::TResult ObsClaimer::preparePVSS_state (GCFEvent& event, GCFPortInterfa
 				theObsPS->setValue(PN_OBS_ANTENNA_ARRAY,	GCFPVString (theObs.antennaArray), 	  0.0, false);
 				theObsPS->setValue(PN_OBS_RECEIVER_LIST, 	GCFPVString (theObs.receiverList), 	  0.0, false);
 				theObsPS->setValue(PN_OBS_SAMPLE_CLOCK, 	GCFPVInteger(theObs.sampleClock), 	  0.0, false);
-				theObsPS->setValue(PN_OBS_MEASUREMENT_SET, 	GCFPVString (theObs.MSNameMask), 	  0.0, false);
-				stringstream	oss;
-				writeVector(oss, theObs.stations);
-				theObsPS->setValue(PN_OBS_STATION_LIST, 	GCFPVString (oss.str()),		 	  0.0, false);
-//				theObsPS->setValue(PN_OBS_STATION_LIST, 	GCFPVString (theObs.stationList), 	  0.0, false);
-				theObsPS->setValue(PN_OBS_BGL_NODE_LIST, 	GCFPVString (theObs.BGLNodeList), 	  0.0, false);
-				theObsPS->setValue(PN_OBS_STORAGE_NODE_LIST,GCFPVString (theObs.storageNodeList), 0.0, false);
+				stringstream	osl;
+				writeVector(osl, theObs.stations);
+				theObsPS->setValue(PN_OBS_STATION_LIST, 	GCFPVString (osl.str()),		 	  0.0, false);
+				stringstream	obnl;
+				writeVector(obnl, theObs.stations);
+				theObsPS->setValue(PN_OBS_STATION_LIST, 	GCFPVString (obnl.str()),		 	  0.0, false);
+				stringstream	osnl;
+				writeVector(osnl, theObs.stations);
+				theObsPS->setValue(PN_OBS_STATION_LIST, 	GCFPVString (osnl.str()),		 	  0.0, false);
 
 				// for the beams we have to construct dyn arrays first.
 				GCFPValueArray		subbandArr;
-				GCFPValueArray		beamletArr;
 				GCFPValueArray		angle1Arr;
 				GCFPValueArray		angle2Arr;
 				GCFPValueArray		dirTypesArr;
@@ -264,9 +263,6 @@ GCFEvent::TResult ObsClaimer::preparePVSS_state (GCFEvent& event, GCFPortInterfa
 					stringstream		os1;
 					writeVector(os1, theObs.beams[i].subbands);
 					subbandArr.push_back  (new GCFPVString(os1.str()));
-					stringstream		os2;
-					writeVector(os2, theObs.getBeamlets(i));
-					beamletArr.push_back  (new GCFPVString(os2.str()));
 					angle1Arr.push_back	  (new GCFPVDouble(theObs.beams[i].pointings[0].angle1));
 					angle2Arr.push_back	  (new GCFPVDouble(theObs.beams[i].pointings[0].angle2));
 					dirTypesArr.push_back (new GCFPVString(theObs.beams[i].pointings[0].directionType));
@@ -274,10 +270,35 @@ GCFEvent::TResult ObsClaimer::preparePVSS_state (GCFEvent& event, GCFPortInterfa
 
 				// Finally we can write those value to PVSS as well.
 				theObsPS->setValue(PN_OBS_BEAMS_SUBBAND_LIST,	GCFPVDynArr(LPT_DYNSTRING, subbandArr),  0.0, false);
-				theObsPS->setValue(PN_OBS_BEAMS_BEAMLET_LIST,	GCFPVDynArr(LPT_DYNSTRING, beamletArr),  0.0, false);
 				theObsPS->setValue(PN_OBS_BEAMS_ANGLE1,			GCFPVDynArr(LPT_DYNDOUBLE, angle1Arr),   0.0, false);
 				theObsPS->setValue(PN_OBS_BEAMS_ANGLE2,			GCFPVDynArr(LPT_DYNDOUBLE, angle2Arr),   0.0, false);
 				theObsPS->setValue(PN_OBS_BEAMS_DIRECTION_TYPE,	GCFPVDynArr(LPT_DYNSTRING, dirTypesArr), 0.0, false);
+
+				// for the TiedArrayBeams we have to construct dyn arrays first.
+				GCFPValueArray		beamIndexArr;
+				GCFPValueArray		TABangle1Arr;
+				GCFPValueArray		TABangle2Arr;
+				GCFPValueArray		TABdirTypesArr;
+				GCFPValueArray		dispersionArr;
+				GCFPValueArray		coherentArr;
+				for (uint32	b(0); b < theObs.beams.size(); b++) {
+					for (uint32 t(0); t < theObs.beams[b].TABs.size(); t++) {
+						beamIndexArr.push_back  (new GCFPVInteger(b));
+						TABangle1Arr.push_back	  	(new GCFPVDouble(theObs.beams[b].TABs[t].angle1));
+						TABangle2Arr.push_back	  	(new GCFPVDouble(theObs.beams[b].TABs[t].angle2));
+						TABdirTypesArr.push_back 	(new GCFPVString(theObs.beams[b].TABs[t].directionType));
+						dispersionArr.push_back (new GCFPVDouble(theObs.beams[b].TABs[t].dispersionMeasure));
+						coherentArr.push_back	(new GCFPVBool(theObs.beams[b].TABs[t].coherent));
+					}
+				}
+
+				// Finally we can write those value to PVSS as well.
+				theObsPS->setValue(PN_OBS_TIED_ARRAY_BEAMS_BEAM_INDEX,		GCFPVDynArr(LPT_DYNINTEGER, beamIndexArr),  0.0, false);
+				theObsPS->setValue(PN_OBS_TIED_ARRAY_BEAMS_ANGLE1,			GCFPVDynArr(LPT_DYNDOUBLE, TABangle1Arr),   0.0, false);
+				theObsPS->setValue(PN_OBS_TIED_ARRAY_BEAMS_ANGLE2,			GCFPVDynArr(LPT_DYNDOUBLE, TABangle2Arr),   0.0, false);
+				theObsPS->setValue(PN_OBS_TIED_ARRAY_BEAMS_DIRECTION_TYPE,	GCFPVDynArr(LPT_DYNSTRING, TABdirTypesArr), 0.0, false);
+				theObsPS->setValue(PN_OBS_TIED_ARRAY_BEAMS_DISPERSION,		GCFPVDynArr(LPT_DYNDOUBLE, dispersionArr),  0.0, false);
+				theObsPS->setValue(PN_OBS_TIED_ARRAY_BEAMS_COHERENT,		GCFPVDynArr(LPT_DYNBOOL, coherentArr),  0.0, false);
 				theObsPS->flush();
 
 				setObjectState("MACScheduler: registration", itsCurrentObs->second->DPname, RTDB_OBJ_STATE_OFF, true);
@@ -297,10 +318,17 @@ GCFEvent::TResult ObsClaimer::preparePVSS_state (GCFEvent& event, GCFPortInterfa
 				// release claimed memory.
 				for (int i = subbandArr.size()-1; i >=0; i--) {
 					delete	subbandArr[i];
-					delete	beamletArr[i];
 					delete	angle1Arr[i];
 					delete	angle2Arr[i];
 					delete	dirTypesArr[i];
+				}
+				for (int i = beamIndexArr.size()-1; i >=0; i--) {
+					delete	beamIndexArr[i];
+					delete	TABangle1Arr[i];
+					delete	TABangle2Arr[i];
+					delete	TABdirTypesArr[i];
+					delete	dispersionArr[i];
+					delete	coherentArr[i];
 				}
 
 			} catch (Exception	&e) {	

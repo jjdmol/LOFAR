@@ -45,16 +45,19 @@ class ProcessCommander
 		void Run();
 		
 		static std::string GetHostName();
-		const StatisticsCollection &Statistics() const { return *_collection; }
+		const StatisticsCollection &Statistics() const { return *_statisticsCollection; }
+		const HistogramCollection &Histograms() const { return *_histogramCollection; }
 		const std::vector<AntennaInfo> &Antennas() const { return _antennas; }
 		const std::vector<std::string> &Errors() const { return _errors; }
 		
-		void PushReadQualityTablesTask(StatisticsCollection *dest)
+		void PushReadQualityTablesTask(StatisticsCollection *dest, HistogramCollection *destHistogram)
 		{
 			_tasks.push_back(ReadQualityTablesTask);
-			_collection = dest;
+			_statisticsCollection = dest;
+			_histogramCollection = destHistogram;
 		}
 		void PushReadAntennaTablesTask() { _tasks.push_back(ReadAntennaTablesTask); }
+		void SetCorrectHistograms(bool correctHistograms) { _correctHistograms = correctHistograms; }
 	private:
 		enum Task { NoTask, ReadQualityTablesTask, ReadAntennaTablesTask };
 		
@@ -66,7 +69,7 @@ class ProcessCommander
 		void makeNodeMap(const ClusteredObservation &observation);
 		void onConnectionCreated(ServerConnectionPtr serverConnection, bool &acceptConnection);
 		void onConnectionAwaitingCommand(ServerConnectionPtr serverConnection);
-		void onConnectionFinishReadQualityTables(ServerConnectionPtr serverConnection, StatisticsCollection &collection);
+		void onConnectionFinishReadQualityTables(ServerConnectionPtr serverConnection, StatisticsCollection &statisticsCollection, HistogramCollection &histogramCollection);
 		void onConnectionFinishReadAntennaTables(ServerConnectionPtr serverConnection, std::vector<AntennaInfo> &antennas);
 		void onError(ServerConnectionPtr connection, const std::string &error);
 		void onProcessFinished(RemoteProcess &process, bool error, int status);
@@ -75,9 +78,11 @@ class ProcessCommander
 		typedef std::map<std::string, std::deque<ClusteredObservationItem> > NodeMap;
 		NodeMap _nodeMap;
 		std::vector<RemoteProcess *> _processes;
-		StatisticsCollection *_collection;
+		StatisticsCollection *_statisticsCollection;
+		HistogramCollection *_histogramCollection;
 		std::vector<AntennaInfo> _antennas;
 		const ClusteredObservation _observation;
+		bool _correctHistograms;
 		
 		std::vector<std::string> _errors;
 		std::deque<enum Task> _tasks;
