@@ -218,10 +218,9 @@ GCFEvent::TResult beamctl::create_subarray(GCFEvent& event, GCFPortInterface& po
 	switch (event.signal) {
 	case F_ENTRY: {
 		CALStartEvent start;
-		AntennaSets*	AS(globalAntennaSets());
 		start.name   = BEAMCTL_BEAM + formatString("_%d", getpid());
-		start.parent = AS->antennaField(itsAntSet);
-		start.subset = getRCUMask();
+		start.parent = globalAntennaSets()->antennaField(itsAntSet);
+		start.subset = getRCUMask() & globalAntennaSets()->RCUallocation(itsAntSet);
 		start.rcumode().resize(1);
 		start.rcumode()(0).setMode((RSP_Protocol::RCUSettings::Control::RCUMode)itsRCUmode);
 
@@ -275,7 +274,7 @@ GCFEvent::TResult beamctl::create_beam(GCFEvent& event, GCFPortInterface& port)
 		IBSBeamallocEvent 	alloc;
 		alloc.beamName	   = BEAMCTL_BEAM + formatString("_%d", getpid());
 		alloc.antennaSet   = itsAntSet;
-		alloc.rcumask	   = getRCUMask();
+		alloc.rcumask	   = getRCUMask() & globalAntennaSets()->RCUallocation(itsAntSet);
 		// assume beamletnumbers are right so the ring can be extracted from those numbers.
 		// when the user did this wrong the BeamServer will complain.
 		alloc.ringNr	   = itsBeamlets.front() >= BEAMLET_RING_OFFSET;
@@ -693,6 +692,7 @@ bool beamctl::parseOptions(int	myArgc, char** myArgv)
 		{ "anadir", 	 required_argument, 0, 'A' },
 		{ "subbands",  	 required_argument, 0, 's' },
 		{ "beamlets",  	 required_argument, 0, 'b' },
+		{ "remotehost",  required_argument, 0, 'J' },
 		{ "calinfo",  	 no_argument,       0, 'c' },
 		{ "help",      	 no_argument,       0, 'h' },
 		{ 0, 0, 0, 0 },
@@ -775,6 +775,12 @@ bool beamctl::parseOptions(int	myArgc, char** myArgv)
 			itsBeamlets = strtolist(optarg, BEAMLET_RING_OFFSET + LOFAR::MAX_BEAMLETS);
 			cout << "beamlets : "; printList(itsBeamlets);
 		}
+		break;
+
+		case 'J': 
+			cout << "remotehost : " << optarg << endl;
+			itsCalServer->setHostName (optarg);
+			itsBeamServer->setHostName(optarg);
 		break;
 
 		case 'c':
