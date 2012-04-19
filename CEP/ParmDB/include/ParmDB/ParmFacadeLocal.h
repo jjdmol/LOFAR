@@ -29,11 +29,13 @@
 //# Includes
 #include <ParmDB/ParmFacadeRep.h>
 #include <ParmDB/ParmDB.h>
-#include <casa/Containers/Record.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_map.h>
 #include <Common/lofar_set.h>
 #include <Common/lofar_string.h>
+
+#include <casa/Containers/Record.h>
+#include <casa/Arrays/Vector.h>
 
 
 namespace LOFAR { namespace BBS {
@@ -63,8 +65,8 @@ namespace LOFAR { namespace BBS {
   class ParmFacadeLocal : public ParmFacadeRep
   {
   public:
-    // Make a connection to the given ParmTable.
-    ParmFacadeLocal (const string& tableName);
+    // Make a connection to a new or existing ParmTable.
+    ParmFacadeLocal (const string& tableName, bool create=false);
 
     // The destructor disconnects.
     virtual ~ParmFacadeLocal();
@@ -85,6 +87,12 @@ namespace LOFAR { namespace BBS {
 
     // Get the default values of parameters matching the pattern.
     virtual casa::Record getDefValues (const string& parmNamePattern) const;
+
+    // Add one or more default values.
+    virtual void addDefValues (const casa::Record&, bool check);
+
+    // Delete the default value records for the given parameters.
+    virtual void deleteDefValues (const string& parmNamePattern);
 
     // Get the values of the given parameters on the given regular grid
     // where v1/v2 represents center/width or start/end.
@@ -123,6 +131,35 @@ namespace LOFAR { namespace BBS {
                                    double timev1, double timev2,
                                    bool asStartEnd);
 
+    // Clear the tables, thus remove all parameter values and default values.
+    virtual void clearTables();
+
+    // Flush the possible changes to disk.
+    virtual void flush (bool fsync);
+
+    // Writelock and unlock the database tables.
+    // The user does not need to lock/unlock, but it can increase performance
+    // if many small accesses have to be done.
+    // <group>
+    virtual void lock (bool lockForWrite);
+    virtual void unlock();
+    // </group>
+
+    // Get the default step values for the axes.
+    virtual vector<double> getDefaultSteps() const;
+
+    // Set the default step values.
+    virtual void setDefaultSteps (const vector<double>&);
+
+    // Add the values for the given parameter names and domain.
+    virtual void addValues (const casa::Record& rec);
+
+    // Delete the records for the given parameters and domain.
+    virtual void deleteValues (const string& parmNamePattern,
+                               double freqv1, double freqv2,
+                               double timev1, double timev2,
+                               bool asStartEnd);
+
   private:
     // Get the values for the given predict grid
     casa::Record doGetValues (const string& parmNamePattern,
@@ -134,6 +171,23 @@ namespace LOFAR { namespace BBS {
 
     // Collect funklet coeff and errors in the record.
     casa::Record getFunkletCoeff (const ParmValueSet& pvset);
+
+    // Add the default value for a single parm.
+    void addDefValue (const string& parmName, const casa::Record& value,
+                      bool check);
+
+    // Add the value for a single parm.
+    void addValue (const string& parmName, const casa::Record& value);
+
+    // Construct the Grid object from the record.
+    Grid record2Grid (const casa::Record& rec) const;
+
+    // Make a RegularAxis or OrderedAxis.
+    Axis::ShPtr makeAxis (const casa::Vector<double>& centers,
+                          const casa::Vector<double>& widths, uint n) const;
+
+    // Convert the string to a funklet type.
+    int getType (const string& str) const;
 
 
     //# Data members

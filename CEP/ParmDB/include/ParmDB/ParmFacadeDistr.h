@@ -71,7 +71,18 @@ namespace LOFAR { namespace BBS {
                   GetValues,
                   GetValuesVec,
                   GetValuesGrid,
-                  GetCoeff};
+                  GetCoeff,
+                  GetDefaultSteps,
+                  Flush,
+                  Lock,
+                  Unlock,
+                  ClearTables,
+                  SetDefaultSteps,
+                  AddDefValues,
+                  DeleteDefValues,
+                  AddValues,
+                  DeleteValues,
+    };
 
     // Make a connection to the given distributed ParmTable.
     // It starts the remote processes which connect to this object.
@@ -98,6 +109,12 @@ namespace LOFAR { namespace BBS {
     // Get the default values of parameters matching the pattern.
     virtual casa::Record getDefValues (const string& parmNamePattern) const;
 
+    // Add one or more default values to all underlying ParmTables.
+    virtual void addDefValues (const casa::Record&, bool check);
+
+    // Delete the default value records for the given parameters.
+    virtual void deleteDefValues (const string& parmNamePattern);
+
     // Get the values of the given parameters on the given regular grid
     // where v1/v2 represents center/width or start/end.
     // The Record contains a map of parameter name to Array<double>.
@@ -116,7 +133,7 @@ namespace LOFAR { namespace BBS {
                                     const vector<double>& freqv2,
                                     const vector<double>& timev1,
                                     const vector<double>& timev2,
-                                    bool asStartEnd=false);
+                                    bool asStartEnd);
 
     // Get the values of the given parameters for the given domain.
     // The Record contains a map of parameter name to Array<value>.
@@ -127,13 +144,46 @@ namespace LOFAR { namespace BBS {
     virtual casa::Record getValuesGrid (const string& parmNamePattern,
                                         double freqv1, double freqv2,
                                         double timev1, double timev2,
-                                        bool asStartEnd=false);
+                                        bool asStartEnd);
 
     // Get coefficients, errors, and domains they belong to.
     virtual casa::Record getCoeff (const string& parmNamePattern,
                                    double freqv1, double freqv2,
                                    double timev1, double timev2,
                                    bool asStartEnd);
+
+    // Flush possible changes to disk.
+    virtual void flush (bool fsync);
+
+    // Writelock and unlock the database tables.
+    // The user does not need to lock/unlock, but it can increase performance
+    // if many small accesses have to be done.
+    // <group>
+    virtual void lock (bool lockForWrite);
+    virtual void unlock();
+    // </group>
+
+    // Clear the tables, thus remove all parameter values and default values.
+    virtual void clearTables();
+
+    // Set the default step values.
+    virtual void setDefaultSteps (const vector<double>&);
+
+    // Delete the records for the given parameters and domain.
+    virtual void deleteValues (const string& parmNamePattern,
+                               double freqv1, double freqv2,
+                               double timev1, double timev2,
+                               bool asStartEnd);
+
+
+    // The following functions are not implemented for a distributed ParmDB
+    // and throw an exception.
+
+    // Get the default step values for the axes.
+    virtual vector<double> getDefaultSteps() const;
+
+    // Add the values for the given parameter names and domain.
+    virtual void addValues (const casa::Record& rec);
 
   private:
     // Send all workers a quit message.
@@ -147,6 +197,9 @@ namespace LOFAR { namespace BBS {
 
     // Read a Record from the BlobStream.
     void getRecord (BlobIStream& bis, casa::Record& rec);
+
+    // Write a Record into the BlobStream.
+    void putRecord (BlobOStream& bis, const casa::Record& rec);
 
     // Check if the names of remote client inx are equal to the first one.
     void checkNames (const vector<string>& firstNames,
