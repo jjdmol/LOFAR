@@ -29,6 +29,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
 #include <casa/Utilities/Regex.h>
+#include <casa/Arrays/ArrayMath.h>
 
 using namespace std;
 using namespace casa;
@@ -42,8 +43,8 @@ using namespace casa;
 namespace LOFAR {
   namespace BBS {
 
-    ParmFacadeLocal::ParmFacadeLocal (const string& tableName)
-      : itsPDB(ParmDBMeta("casa", tableName))
+    ParmFacadeLocal::ParmFacadeLocal (const string& tableName, bool create)
+      : itsPDB(ParmDBMeta("casa", tableName), create)
     {}
 
     ParmFacadeLocal::~ParmFacadeLocal()
@@ -111,6 +112,60 @@ namespace LOFAR {
       return result;
     }
 
+    void ParmFacadeLocal::addDefValues (const Record& rec,
+                                        bool check)
+    {
+      itsPDB.lock();
+      for (uInt i=0; i<rec.nfields(); ++i) {
+        addDefValue (rec.name(i), rec.subRecord(i), check);
+      }
+      itsPDB.unlock();
+    }
+
+    void ParmFacadeLocal::addDefValue (const string& parmName,
+                                       const Record& rec,
+                                       bool check)
+    {
+      // Create the default value.
+      Array<double> value (rec.toArrayDouble("value"));
+      ParmValue pval(value.data()[0]);
+      // Get the type.
+      int type = -1;
+      if (rec.isDefined("type")) {
+        type = getType (rec.asString("type"));
+      }
+      // Set coefficients if no scalar or multiple values.
+      if (type > 0  ||  value.size() > 1) {
+        pval.setCoeff (value);
+        // In this case default type is Polc.
+        if (type<0) type = ParmValue::Polc;
+      } else {
+        type = ParmValue::Scalar;
+      }
+      double pert = 1e-6;
+      if (rec.isDefined ("perturbation")) {
+        pert = rec.asDouble("perturbation");
+      }
+      bool pertRel = true;
+      if (rec.isDefined ("pertrel")) {
+        pertRel = rec.asBool("pertrel");
+      }
+      // Create the default value.
+      ParmValueSet pvset(pval, ParmValue::FunkletType(type), pert, pertRel);
+      if (rec.isDefined("mask")) {
+        Array<bool> mask(rec.toArrayBool("mask"));
+        if (mask.size() > 0) {
+          pvset.setSolvableMask (mask);
+        }
+      }
+      itsPDB.putDefValue (parmName, pvset, check);
+    }
+
+    void ParmFacadeLocal::deleteDefValues (const string& parmNamePattern)
+    {
+      itsPDB.deleteDefValues (parmNamePattern);
+    }
+
     Record ParmFacadeLocal::getValues (const string& parmNamePattern,
                                        double freqv1, double freqv2,
                                        double freqStep,
@@ -150,6 +205,158 @@ namespace LOFAR {
       Axis::ShPtr axisx (new OrderedAxis(freqv1, freqv2, asStartEnd));
       Axis::ShPtr axisy (new OrderedAxis(timev1, timev2, asStartEnd));
       return doGetValues (parmNamePattern, Grid(axisx, axisy));
+    }
+
+    void ParmFacadeLocal::clearTables()
+    {
+      itsPDB.clearTables();
+    }
+
+    void ParmFacadeLocal::flush (bool fsync)
+    {
+      itsPDB.flush (fsync);
+    }
+
+    void ParmFacadeLocal::lock (bool lockForWrite)
+    {
+      itsPDB.lock (lockForWrite);
+    }
+
+    void ParmFacadeLocal::unlock()
+    {
+      itsPDB.unlock();
+    }
+
+    vector<double> ParmFacadeLocal::getDefaultSteps() const
+    {
+      return itsPDB.getDefaultSteps();
+    }
+
+    void ParmFacadeLocal::setDefaultSteps (const vector<double>& steps)
+    {
+      itsPDB.setDefaultSteps (steps);
+    }
+
+    void ParmFacadeLocal::addValues (const Record& rec)
+    {
+      itsPDB.lock();
+      for (uInt i=0; i<rec.nfields(); ++i) {
+        addValue (rec.name(i), rec.subRecord(i));
+      }
+      itsPDB.unlock();
+    }
+
+    void ParmFacadeLocal::addValue (const string& parmName,
+                                    const Record& rec)
+    {
+      // Get the new values and shape. Make 2D if a single value.
+      Array<double> values(rec.toArrayDouble("values"));
+      if (values.size() == 1) {
+        values.reference (values.reform (IPosition(2,1,1)));
+      }
+      // Check if values is 2D.
+      ASSERTSTR (values.ndim() == 2, "Values of parameter " << parmName
+                 << " must be a scalar or 2-dim array");
+      const IPosition& nshape = values.shape();
+      // Form the grid from the record fields.
+      Grid grid (record2Grid(rec));
+      Box domain(grid.getBoundingBox());
+      // Read the values of parameter and domain from the ParmDB.
+      ParmSet parmset;
+      ParmId parmid = parmset.addParm (itsPDB, parmName);
+      ParmCache cache (parmset, domain);
+      ParmValueSet& pvset = cache.getValueSet(parmid);
+      // Assure no value exists yet.
+      ASSERTSTR (pvset.size() == 0,
+                 "Value for this parameter/domain " + parmName +
+                 " already exists");
+      // Check if the parm already exists (for another domain).
+      // If so, only the values can be set (but not the meta info).
+      // Check type and shape.
+      bool isOldParm = cache.getParmSet().isInParmDB(parmid);
+      // Set current values as the meta defaults.
+      ParmValue defval(pvset.getFirstParmValue());
+      int type = pvset.getType();
+      double pert = pvset.getPerturbation();
+      bool pertrel = pvset.getPertRel();
+      Array<Bool> mask = pvset.getSolvableMask();
+      IPosition shape = defval.getValues().shape();
+      // Get possible new meta values.
+      if (!isOldParm) {
+        shape.resize (0);
+        shape = nshape;
+        if (rec.isDefined("type")) {
+          type = getType(rec.asString("type"));
+        }
+        if (rec.isDefined("mask")  &&  type != ParmValue::Scalar) {
+          mask.reference (rec.toArrayBool("mask"));
+        }
+      } else {
+        if (rec.isDefined("type")) {
+          int newType =  getType(rec.asString("type"));
+          ASSERTSTR (newType == type, "New type " << newType << " of parameter "
+                     << parmName << " mismatches existing type " << type);
+        }
+      }
+      // Check sizes.
+      if (type == ParmValue::Scalar) {
+        // Turn a single axis value into a regular axis.
+        Axis::ShPtr freqAxis = grid[0];
+        Axis::ShPtr timeAxis = grid[1];
+        if (grid.nx() == 1  &&  nshape[0] > 1) {
+          freqAxis = makeAxis (freqAxis->centers(), freqAxis->widths(),
+                               nshape[0]);
+        }
+        if (grid.ny() == 1  &&  nshape[1] > 1) {
+          timeAxis = makeAxis (timeAxis->centers(), timeAxis->widths(),
+                               nshape[1]);
+        }
+        grid = Grid(freqAxis, timeAxis);
+        ASSERTSTR (int(grid.nx()) == nshape[0]  &&  int(grid.ny()) == nshape[1],
+                   "Mismatch in shape of coeff and grid for scalar parameter "
+                   << parmName);
+      } else {
+        ASSERTSTR (nshape.isEqual(shape),
+                   "Non-scalar parameter " << parmName <<
+                   " is used before; coeff shape cannot be changed");
+        ASSERTSTR (grid.size() == 1, "Grid of non-scalar parameter "
+                   << parmName << " should contain 1 element");
+        if (! mask.empty()) {
+          ASSERTSTR (nshape.isEqual(mask.shape()),
+                                    "Coeff and mask of non-scalar parameter "
+                                    << parmName << " have different shapes");
+        }
+      }
+      shape.resize(0);
+      shape = nshape;
+      // Create the parm value.
+      ParmValue::ShPtr pval(new ParmValue);
+      if (type == ParmValue::Scalar) {
+        pval->setScalars (grid, values);
+      } else {
+        pval->setCoeff (values);
+      }
+      // Set the errors if given.
+      if (rec.isDefined ("errors")) {
+        Array<double> errs = rec.toArrayDouble("errors");
+        pval->setErrors (errs);
+      }
+      // Create the ParmValueSet.
+      vector<ParmValue::ShPtr> pvalvec (1, pval);
+      vector<Box> domains(1, domain);
+      pvset = ParmValueSet (Grid(domains), pvalvec, defval,
+                            ParmValue::FunkletType(type), pert, pertrel);
+      pvset.setDirty();
+      cache.flush();
+    }
+
+    void ParmFacadeLocal::deleteValues (const string& parmNamePattern,
+                                        double freqv1, double freqv2,
+                                        double timev1, double timev2,
+                                        bool asStartEnd)
+    {
+      Box domain(freqv1, freqv2, timev1, timev2, asStartEnd);
+      itsPDB.deleteValues (parmNamePattern, domain);
     }
 
     Record ParmFacadeLocal::doGetValues (const string& parmNamePattern,
@@ -257,10 +464,10 @@ namespace LOFAR {
     }
 
     // Get coefficients, errors, and domains they belong to.
-    casa::Record ParmFacadeLocal::getCoeff (const string& parmNamePattern,
-                                            double freqv1, double freqv2,
-                                            double timev1, double timev2,
-                                            bool asStartEnd)
+    Record ParmFacadeLocal::getCoeff (const string& parmNamePattern,
+                                      double freqv1, double freqv2,
+                                      double timev1, double timev2,
+                                      bool asStartEnd)
     {
       Box domain (freqv1, freqv2, timev1, timev2, asStartEnd);
       ParmMap result;
@@ -330,6 +537,47 @@ namespace LOFAR {
       vals.define ("freqwidths", Vector<double>(axisx.widths()));
       vals.define ("timewidths", Vector<double>(axisy.widths()));
       return vals;
+    }
+
+    Grid ParmFacadeLocal::record2Grid (const Record& rec) const
+    {
+      Array<double> freqs = rec.toArrayDouble("freqs");
+      Array<double> freqw = rec.toArrayDouble("freqwidths");
+      Array<double> times = rec.toArrayDouble("times");
+      Array<double> timew = rec.toArrayDouble("timewidths");
+      ASSERT (freqs.size() == freqw.size());
+      ASSERT (times.size() == timew.size());
+      return Grid (makeAxis (freqs, freqw, freqs.size()),
+                   makeAxis (times, timew, times.size()));
+    }
+
+    Axis::ShPtr ParmFacadeLocal::makeAxis (const Vector<double>& centers,
+                                           const Vector<double>& widths,
+                                           uint n) const
+    {
+      if (centers.size() == 1) {
+        return Axis::ShPtr(new RegularAxis (centers[0] - 0.5*widths[0],
+                                            widths[0], n));
+      }
+      // Convert from center/width to start/end.
+      vector<double> low, upp;
+      (centers - 0.5*widths).tovector(low);
+      (centers + 0.5*widths).tovector(upp);
+      return Axis::makeAxis (low, upp);
+    }
+
+    int ParmFacadeLocal::getType (const string& str) const
+    {
+      String strc(str);
+      strc.downcase();
+      if (strc == "scalar") {
+        return ParmValue::Scalar;
+      } else if (strc == "polc") {
+        return ParmValue::Polc;
+      } else if (strc == "polclog") {
+        return ParmValue::PolcLog;
+      }
+      throw Exception (strc + " is an unknown funklet type");
     }
 
   } // namespace ParmDB

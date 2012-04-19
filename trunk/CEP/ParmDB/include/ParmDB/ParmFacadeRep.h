@@ -68,8 +68,8 @@ namespace LOFAR { namespace BBS {
     // The destructor disconnects.
     virtual ~ParmFacadeRep();
 
-    // Get the domain range (as startx,endx,starty,endy) of the given
-    // parameters in the table.
+    // Get the domain range (as startfreq,endfreq,starttime,endtime)
+    // of the given parameters in the table.
     // This is the minimum start value and maximum end value for all parameters.
     // An empty name pattern is the same as * (all parm names).
     virtual vector<double> getRange (const string& parmNamePattern) const = 0;
@@ -84,6 +84,15 @@ namespace LOFAR { namespace BBS {
 
     // Get the default values of parameters matching the pattern.
     virtual casa::Record getDefValues (const string& parmNamePattern) const = 0;
+
+    // Add one or more default values.
+    // The name of each field in the record is the parameter name.
+    // The values are subrecords containing the parameter values, etc.
+    // <br>By default it checks if the name does not exist.
+    virtual void addDefValues (const casa::Record&, bool check=true) = 0;
+
+    // Delete the default value records for the given parameters.
+    virtual void deleteDefValues (const string& parmNamePattern) = 0;
 
     // Get the values of the given parameters on the given regular grid
     // where v1/v2 represents center/width or start/end.
@@ -121,7 +130,42 @@ namespace LOFAR { namespace BBS {
                                    double freqv1, double freqv2,
                                    double timev1, double timev2,
                                    bool asStartEnd) = 0;
-   };
+
+    // Flush possible changes to disk.
+    virtual void flush (bool fsync) = 0;
+
+    // Writelock and unlock the database tables.
+    // The user does not need to lock/unlock, but it can increase performance
+    // if many small accesses have to be done.
+    // <group>
+    virtual void lock (bool lockForWrite) = 0;
+    virtual void unlock() = 0;
+    // </group>
+
+    // Clear the tables, thus remove all parameter values and default values.
+    virtual void clearTables() = 0;
+
+    // Set the default step values.
+    virtual void setDefaultSteps (const vector<double>&) = 0;
+
+    // Delete the records for the given parameters and domain.
+    virtual void deleteValues (const string& parmNamePattern,
+                               double freqv1, double freqv2,
+                               double timev1, double timev2,
+                               bool asStartEnd) = 0;
+
+    // The following functions are only implemented for a local ParmDB.
+    // The ParmFacadeDistr functions throw an exception.
+
+    // Get the default step values for the axes.
+    virtual vector<double> getDefaultSteps() const = 0;
+
+    // Add the values for the given parameter names and domain.
+    // The name of each field in the record is the parameter name.
+    // The values are subrecords containing the domains, parameter values, etc.
+    // <br>It checks if no values exist for the parameters and domains yet.
+    virtual void addValues (const casa::Record&) = 0;
+  };
 
   // @}
 
