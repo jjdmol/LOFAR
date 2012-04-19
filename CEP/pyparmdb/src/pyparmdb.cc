@@ -40,8 +40,8 @@ namespace LOFAR { namespace BBS  {
   class PyParmDB : public ParmFacade
   {
   public:
-    PyParmDB (const string& tableName)
-      : ParmFacade (tableName)
+    PyParmDB (const string& tableName, bool create)
+      : ParmFacade (tableName, create)
     {}
     string version (const string& type) const
     { return Version::getInfo<pyparmdbVersion> ("parmdb", type); }
@@ -65,7 +65,7 @@ namespace LOFAR { namespace BBS  {
   void pyparmdb()
   {
     class_<PyParmDB> ("ParmDB",
-                      init<std::string>())
+                      init<std::string, bool>())
 
       .def ("_version", &PyParmDB::version,
             (boost::python::arg("type")="other"))
@@ -114,6 +114,30 @@ namespace LOFAR { namespace BBS  {
 	     boost::python::arg("stime")=-1e30,
 	     boost::python::arg("etime")= 1e30,
 	     boost::python::arg("asStartEnd")=true))
+      .def ("_clearTables", &ParmFacade::clearTables)
+      .def ("_flush", &ParmFacade::flush,
+ 	    (boost::python::arg("fsync")))
+      .def ("_lock", &ParmFacade::lock)
+      .def ("_unlock", &ParmFacade::unlock,
+ 	    (boost::python::arg("lockForWrite")))
+      .def ("_getDefaultSteps", &ParmFacade::getDefaultSteps)
+      .def ("_setDefaultSteps", &ParmFacade::setDefaultSteps,
+            (boost::python::arg("steps")))
+      .def ("_addDefValues", &ParmFacade::addDefValues,
+            (boost::python::arg("nameValue"),
+             boost::python::arg("check")))
+      .def ("_deleteDefValues", &ParmFacade::deleteDefValues,
+            (boost::python::arg("parmNamePattern")))
+      .def ("_deleteValues", &ParmFacade::deleteValues,
+            (boost::python::arg("parmNamePattern"),
+	     boost::python::arg("sfreq"),
+	     boost::python::arg("efreq"),
+	     boost::python::arg("stime"),
+	     boost::python::arg("etime"),
+	     boost::python::arg("asStartEnd")))
+      .def  ("_addValues", &ParmFacade::addValues,
+             (boost::python::arg("nameValue")))
+
       ;
   }
     
