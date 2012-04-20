@@ -7,6 +7,7 @@ from lofarpipe.support.baserecipe import BaseRecipe
 import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.remotecommand import ComputeJob
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
+from lofarpipe.support.group_data import load_data_map
 
 class imager_source_finding(BaseRecipe, RemoteCommandRecipeMixIn):
     inputs = {
@@ -32,9 +33,8 @@ class imager_source_finding(BaseRecipe, RemoteCommandRecipeMixIn):
     def go(self):
         self.logger.info("Starting imager_source_finding run")
         super(imager_source_finding, self).go()
-        outnames = collections.defaultdict(list)
 
-        input_map = eval(open(self.inputs['args'][0]).read())
+        input_map = load_data_map(self.inputs['args'][0])
 
         bdsm_parset_file_run1 = self.inputs["bdsm_parset_file_run1"]
         bdsm_parset_file_run2x = self.inputs["bdsm_parset_file_run2x"]
@@ -42,13 +42,12 @@ class imager_source_finding(BaseRecipe, RemoteCommandRecipeMixIn):
 
         # TODO FIXME: This output path will be, in the testing phase a 
         # subdirectory of the actual output image.
-        image_output_path = os.path.join(self.config.get("DEFAULT", "default_working_directory"), "bdsm_output.img")
+        image_output_path = os.path.join(
+            self.inputs["working_directory"], "bdsm_output.img"
+        )
         node_command = " python %s" % (self.__file__.replace("master", "nodes"))
         jobs = []
         for host, data in input_map:
-            #construct and save the output name
-            input_image = "/data/scratch/klijn/TestImage.restored.cropped" # data
-            outnames[host].append(data)
             arguments = [data,
                          bdsm_parset_file_run1,
                          bdsm_parset_file_run2x,

@@ -222,7 +222,6 @@ class imager_prepare(LOFARnodeTCP):
 
         #loop all measurement sets
         for idx, (node, path) in enumerate(input_map):
-            self.logger.info("copy file: {0}".format(path))
             # construct copy command
             command = ["rsync", "-r", "{0}:{1}".format(node, path) ,
                                "{0}".format(target_dir_for_collected_ms)]
@@ -259,7 +258,7 @@ class imager_prepare(LOFARnodeTCP):
         Call with log for cplus and catch segfaults. Actual parameters are located in 
         temp_parset_filename
         """
-        # TODOW: function is to long: refactor into smaller bits
+        # TODO: function is to long: refactor into smaller bits
 
         time_slice_path_collected = []
 

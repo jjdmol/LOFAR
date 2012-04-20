@@ -33,7 +33,7 @@ from lofarpipe.support.pipelinelogging import CatchLog4CPlus
 from lofarpipe.support.utilities import read_initscript
 from lofarpipe.support.utilities import catch_segfaults
 import monetdb.sql as db
-import lofar.gsmutils as gsm                                                    #@UnresolvedImport
+import lofar.gsm.gsmutils as gsm                                                    #@UnresolvedImport
 
 #TODO: A better place for this template
 template_parmdb = """

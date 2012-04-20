@@ -17,7 +17,6 @@ python_install(
   master/flag_baseline.py
   master/imager_awimager.py
   master/imager_create_dbs.py
-  master/imager_pipeline.py
   master/imager_prepare.py
   master/imager_bbs.py
   master/imager_source_finding.py
@@ -63,6 +62,7 @@ python_install(
 
 install(PROGRAMS
   bin/msss_calibrator_pipeline.py
+  bin/msss_imager_pipeline.py
   bin/msss_target_pipeline.py
   bin/startPython.sh
   DESTINATION bin)
