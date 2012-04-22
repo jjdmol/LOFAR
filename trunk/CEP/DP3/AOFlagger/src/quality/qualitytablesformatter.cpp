@@ -153,15 +153,15 @@ void QualityTablesFormatter::addFrequencyColumn(casa::TableDesc &tableDesc)
 	quantDesc.write(tableDesc);
 }
 
-void QualityTablesFormatter::addValueColumn(casa::TableDesc &tableDesc)
+void QualityTablesFormatter::addValueColumn(casa::TableDesc &tableDesc, unsigned polarizationCount)
 {
 	casa::IPosition shape(1);
-	shape[0] = 4;
+	shape[0] = polarizationCount;
 	casa::ArrayColumnDesc<casa::Complex> valDesc(ColumnNameValue, "Value of statistic", shape, casa::ColumnDesc::Direct);
 	tableDesc.addColumn(valDesc);
 }
 
-void QualityTablesFormatter::createTimeStatisticTable()
+void QualityTablesFormatter::createTimeStatisticTable(unsigned polarizationCount)
 {
 	casa::TableDesc tableDesc("QUALITY_TIME_STATISTIC_TYPE", QUALITY_TABLES_VERSION_STR, casa::TableDesc::Scratch);
 	tableDesc.comment() = "Statistics over time";
@@ -169,7 +169,7 @@ void QualityTablesFormatter::createTimeStatisticTable()
 	addTimeColumn(tableDesc);
 	addFrequencyColumn(tableDesc);
 	tableDesc.addColumn(casa::ScalarColumnDesc<int>(ColumnNameKind, "Index of the statistic kind"));
-	addValueColumn(tableDesc);
+	addValueColumn(tableDesc, polarizationCount);
 
 	casa::SetupNewTable newTableSetup(TableToFilename(TimeStatisticTable), tableDesc, casa::Table::New);
 	casa::Table newTable(newTableSetup);
@@ -177,14 +177,14 @@ void QualityTablesFormatter::createTimeStatisticTable()
 	_measurementSet->rwKeywordSet().defineTable(TableToName(TimeStatisticTable), newTable);
 }
 
-void QualityTablesFormatter::createFrequencyStatisticTable()
+void QualityTablesFormatter::createFrequencyStatisticTable(unsigned polarizationCount)
 {
 	casa::TableDesc tableDesc("QUALITY_FREQUENCY_STATISTIC_TYPE", QUALITY_TABLES_VERSION_STR, casa::TableDesc::Scratch);
 	tableDesc.comment() = "Statistics over frequency";
 	
 	addFrequencyColumn(tableDesc);
 	tableDesc.addColumn(casa::ScalarColumnDesc<int>(ColumnNameKind, "Index of the statistic kind"));
-	addValueColumn(tableDesc);
+	addValueColumn(tableDesc, polarizationCount);
 
 	casa::SetupNewTable newTableSetup(TableToFilename(FrequencyStatisticTable), tableDesc, casa::Table::New);
 	casa::Table newTable(newTableSetup);
@@ -192,7 +192,7 @@ void QualityTablesFormatter::createFrequencyStatisticTable()
 	_measurementSet->rwKeywordSet().defineTable(TableToName(FrequencyStatisticTable), newTable);
 }
 
-void QualityTablesFormatter::createBaselineStatisticTable()
+void QualityTablesFormatter::createBaselineStatisticTable(unsigned polarizationCount)
 {
 	casa::TableDesc tableDesc("QUALITY_BASELINE_STATISTIC_TYPE", QUALITY_TABLES_VERSION_STR, casa::TableDesc::Scratch);
 	tableDesc.comment() = "Statistics per baseline";
@@ -201,7 +201,7 @@ void QualityTablesFormatter::createBaselineStatisticTable()
 	tableDesc.addColumn(casa::ScalarColumnDesc<int>(ColumnNameAntenna2, "Index of second antenna"));
 	addFrequencyColumn(tableDesc);
 	tableDesc.addColumn(casa::ScalarColumnDesc<int>(ColumnNameKind, "Index of the statistic kind"));
-	addValueColumn(tableDesc);
+	addValueColumn(tableDesc, polarizationCount);
 
 	casa::SetupNewTable newTableSetup(TableToFilename(BaselineStatisticTable), tableDesc, casa::Table::New);
 	casa::Table newTable(newTableSetup);
@@ -209,7 +209,7 @@ void QualityTablesFormatter::createBaselineStatisticTable()
 	_measurementSet->rwKeywordSet().defineTable(TableToName(BaselineStatisticTable), newTable);
 }
 
-void QualityTablesFormatter::createBaselineTimeStatisticTable()
+void QualityTablesFormatter::createBaselineTimeStatisticTable(unsigned polarizationCount)
 {
 	casa::TableDesc tableDesc("QUALITY_BASELINE_TIME_STATISTIC_TYPE", QUALITY_TABLES_VERSION_STR, casa::TableDesc::Scratch);
 	tableDesc.comment() = "Statistics per baseline";
@@ -219,7 +219,7 @@ void QualityTablesFormatter::createBaselineTimeStatisticTable()
 	tableDesc.addColumn(casa::ScalarColumnDesc<int>(ColumnNameAntenna2, "Index of second antenna"));
 	addFrequencyColumn(tableDesc);
 	tableDesc.addColumn(casa::ScalarColumnDesc<int>(ColumnNameKind, "Index of the statistic kind"));
-	addValueColumn(tableDesc);
+	addValueColumn(tableDesc, polarizationCount);
 
 	casa::SetupNewTable newTableSetup(TableToFilename(BaselineTimeStatisticTable), tableDesc, casa::Table::New);
 	casa::Table newTable(newTableSetup);

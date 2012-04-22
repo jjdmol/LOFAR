@@ -190,26 +190,26 @@ class QualityTablesFormatter {
 			return hasOneEntry(table, kindIndex);
 		}
 		
-		void InitializeEmptyStatistic(enum StatisticDimension dimension, enum StatisticKind kind)
+		void InitializeEmptyStatistic(enum StatisticDimension dimension, enum StatisticKind kind, unsigned polarizationCount)
 		{
 			if(!TableExists(KindNameTable))
-				InitializeEmptyTable(KindNameTable);
+				createKindNameTable();
 			
 			QualityTable table = DimensionToTable(dimension);
 			if(!TableExists(table))
-				InitializeEmptyTable(table);
+				InitializeEmptyTable(table, polarizationCount);
 			else
 			{
 				removeStatisticFromStatTable(table, kind);
 			}
 		}
 		
-		void InitializeEmptyTable(enum QualityTable table)
+		void InitializeEmptyTable(enum QualityTable table, unsigned polarizationCount)
 		{
 			if(TableExists(table))
 				removeEntries(table);
 			else
-				createTable(table);
+				createTable(table, polarizationCount);
 		}
 		
 		void RemoveTable(enum QualityTable table)
@@ -218,8 +218,10 @@ class QualityTablesFormatter {
 			{
 				Close();
 				openMainTable(true);
-				_measurementSet->rwKeywordSet().removeField(TableToName(table));
-				casa::Table::deleteTable(TableToFilename(table));
+				if(_measurementSet->keywordSet().isDefined(TableToName(table)))
+					_measurementSet->rwKeywordSet().removeField(TableToName(table));
+				if(_measurementSet->isReadable(TableToFilename(table)))
+					casa::Table::deleteTable(TableToFilename(table));
 			}
 		}
 		
@@ -295,26 +297,26 @@ class QualityTablesFormatter {
 		
 		void addTimeColumn(casa::TableDesc &tableDesc);
 		void addFrequencyColumn(casa::TableDesc &tableDesc);
-		void addValueColumn(casa::TableDesc &tableDesc);
+		void addValueColumn(casa::TableDesc &tableDesc, unsigned polarizationCount);
 		
-		void createTable(enum QualityTable table)
+		void createTable(enum QualityTable table, unsigned polarizationCount)
 		{
 			switch(table)
 			{
 				case KindNameTable:              createKindNameTable(); break;
-				case TimeStatisticTable:         createTimeStatisticTable(); break;
-				case FrequencyStatisticTable:    createFrequencyStatisticTable(); break;
-				case BaselineStatisticTable:     createBaselineStatisticTable(); break;
-				case BaselineTimeStatisticTable: createBaselineTimeStatisticTable(); break;
+				case TimeStatisticTable:         createTimeStatisticTable(polarizationCount); break;
+				case FrequencyStatisticTable:    createFrequencyStatisticTable(polarizationCount); break;
+				case BaselineStatisticTable:     createBaselineStatisticTable(polarizationCount); break;
+				case BaselineTimeStatisticTable: createBaselineTimeStatisticTable(polarizationCount); break;
 				default: break;
 			}
 		}
 		
 		void createKindNameTable();
-		void createTimeStatisticTable();
-		void createFrequencyStatisticTable();
-		void createBaselineStatisticTable();
-		void createBaselineTimeStatisticTable();
+		void createTimeStatisticTable(unsigned polarizationCount);
+		void createFrequencyStatisticTable(unsigned polarizationCount);
+		void createBaselineStatisticTable(unsigned polarizationCount);
+		void createBaselineTimeStatisticTable(unsigned polarizationCount);
 		unsigned findFreeKindIndex(casa::Table &kindTable);
 		
 		void openMainTable(bool needWrite);
