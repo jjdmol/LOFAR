@@ -36,9 +36,11 @@ namespace BBS
 // Options for the ModelImageFFT
 typedef struct ModelImageOptions
 {
+  casa::String name;                            // name of image
   casa::String ConvType;                        // convolution type
   casa::Vector<casa::Double> frequencies;       // vector with channel frequencies
   casa::Int verbose;                            // verbosity level
+  unsigned int oversampling;                    // oversample factor
   double uvscaleX, uvscaleY;                    // pixel size in wavelengths conversion
   casa::Matrix<casa::Bool> degridMuellerMask;   // degridding Mueller mask
 };
@@ -46,20 +48,24 @@ typedef struct ModelImageOptions
 class ModelImageFft
 {
 public:
-  ModelImageFft( const casa::String &name, const casa::Vector<casa::Double> &frequencies,
-                  int oversampling=1, double uvscaleX=1.0, double uvscaleY=1.0);
+  ModelImageFft(const casa::String &name, const casa::Vector<casa::Double> &frequencies,
+                unsigned int oversampling=1, double uvscaleX=1.0, double uvscaleY=1.0);
   ~ModelImageFft();
 
   // Setter functions for individual options
   void setConvType(const casa::String type="SF");
   void setVerbose(casa::uInt verbose=0);
   void setUVscale(double uvscaleX, double uvscaleY);
-  void setOversampling(int oversampling);
-  //void setDegridMuellerMask(const casa::Matrix<casa::Bool> &muellerMask);
+  void setOversampling(unsigned int oversampling);
+  void setDegridMuellerMask(const casa::Matrix<casa::Bool> &muellerMask);
+
   // Getter functions for individual options
-  inline casa::String    getConvType() const { return itsOptions.ConvType; }
-  inline casa::Vector<casa::Double>  getFrequencies() const { return itsOptions.frequencies; }
-  inline casa::uInt      getVerbose() const { return itsOptions.verbose; }
+  inline casa::String     name() const { return itsOptions.name; }
+  inline casa::String     convType() const { return itsOptions.ConvType; }
+  inline casa::Vector<casa::Double>  frequencies() const { return itsOptions.frequencies; }
+  inline casa::uInt       verbose() const { return itsOptions.verbose; }
+  inline double           uvscaleX() const { return itsOptions.uvscaleX; }
+  inline double           uvscaleY() const { return itsOptions.uvscaleY; }
 
   // Function to get degridded data into raw pointers
   void getUVW(const boost::multi_array<double, 3> &uvwBaseline, 
@@ -75,10 +81,11 @@ public:
   */
   
 private:
-  casa::Array<casa::Complex> image;              // keep fft'ed image in memory
-//  casa::CFStore itsConvFunc;
+  casa::Array<casa::DComplex> itsImage;    // keep fft'ed image in memory
+//  casa::CFStore itsConvFunc;                // convolution function for VisResampler
+//  casa::CFStore itsConvFunc;           // w-projection convolution ftns
 
-  ModelImageOptions itsOptions;                  // struct containing all options
+  ModelImageOptions itsOptions;          // struct containing all options
 };
 
 } // end namespace BBS

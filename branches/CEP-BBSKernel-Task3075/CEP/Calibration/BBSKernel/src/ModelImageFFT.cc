@@ -23,14 +23,15 @@
 
 #include <lofar_config.h>
 
+#include <lattices/Lattices/LatticeFFT.h>
+#include <images/Images/PagedImage.h>
 #include <BBSKernel/Exceptions.h>
 #include <BBSKernel/ModelImageFFT.h>
 
 using namespace std;
-using namespace casa;
-
 using namespace LOFAR;
 using namespace BBS;
+using namespace casa;
 
 //*********************************************
 //
@@ -40,15 +41,31 @@ using namespace BBS;
 
 ModelImageFft::ModelImageFft( const casa::String &name,
                               const casa::Vector<casa::Double> &frequencies,
-                              int oversampling,
+                              unsigned int oversampling,
                               double uvscaleX, double uvscaleY)
 {
+  // set options
+  itsOptions.name=name;
+  itsOptions.frequencies=frequencies;
+  itsOptions.oversampling=oversampling;
+  itsOptions.uvscaleX=uvscaleX;
+  itsOptions.uvscaleY=uvscaleY;
 
+  PagedImage<DComplex> *image=new PagedImage<DComplex>(name);   // Open image as paged image
+  LatticeFFT::cfft2d(*image);     // FFT image in place 
+  itsImage=image->get();          // store in array attribute
 }
 
 ModelImageFft::~ModelImageFft(void)
 {
+  // don't have to do anything
 }
+
+//**********************************************
+//
+// Setter functions for attributes
+//
+//**********************************************
 
 void ModelImageFft::setConvType(const casa::String type)
 {
@@ -62,12 +79,30 @@ void ModelImageFft::setConvType(const casa::String type)
   }
 }
 
-void setUVscale(double uvscaleX, double uvscaleY)
+void ModelImageFft::setVerbose(casa::uInt verbose)
 {
-
+  itsOptions.verbose=verbose;
 }
 
-void setDegridMuellerMask(const casa::Matrix<Bool> &muellerMask)
+void ModelImageFft::setUVscale(double uvscaleX, double uvscaleY)
+{
+  if(uvscaleX < 0 || uvscaleY < 0)
+  {
+    THROW(BBSKernelException, "uvscale values must be > 0");    
+  }
+  else
+  {
+  itsOptions.uvscaleX=uvscaleX;
+  itsOptions.uvscaleY=uvscaleY;
+  }
+}
+
+void ModelImageFft::setOversampling(unsigned int oversampling)
+{
+  itsOptions.oversampling=oversampling;
+}
+
+void ModelImageFft::setDegridMuellerMask(const casa::Matrix<Bool> &muellerMask)
 {
   if(muellerMask.nrow() != 4 && muellerMask.ncolumn() != 4)
   {
@@ -77,4 +112,19 @@ void setDegridMuellerMask(const casa::Matrix<Bool> &muellerMask)
   {
     setDegridMuellerMask(muellerMask);
   }
+}
+
+//**********************************************
+//
+// Degridding functions
+//
+//**********************************************
+
+void ModelImageFft::getUVW( const boost::multi_array<double, 3> &uvwBaseline, 
+                            size_t timeslots, size_t nchans, 
+                            casa::DComplex *XX , casa::DComplex *XY, 
+                            casa::DComplex *YX , casa::DComplex *YY)
+{
+
+
 }
