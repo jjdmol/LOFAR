@@ -181,4 +181,5 @@ uses	averager		4.0.0	development	1	"Averager"
 uses	uvwflagger	4.0.0	development	1	"UVW flagger"
 uses	phaseshift	4.0.0	development	1	"Phase shift"
 uses	counter		4.0.0	development	1	"Count flags"
+uses	demixer		4.0.0	development	1	"Demix"
 
