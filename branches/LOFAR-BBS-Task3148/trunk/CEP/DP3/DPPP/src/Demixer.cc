@@ -66,7 +66,7 @@ namespace LOFAR {
                                            "instrument")),
         itsElevCutoff    (getAngle(parset.getString(prefix+"elevationcutoff",
                                                     "0."))),
-        itsBBSExpr       (*input, itsSkyName, itsInstrumentName, itsElevCutoff),
+//        itsBBSExpr       (*input, itsSkyName, itsInstrumentName, itsElevCutoff),
         itsTargetSource  (parset.getString(prefix+"targetsource", string())),
         itsSubtrSources  (parset.getStringVector (prefix+"subtractsources")),
         itsModelSources  (parset.getStringVector (prefix+"modelsources",
@@ -104,7 +104,7 @@ namespace LOFAR {
         parset.getBool  (prefix+"Solve.Options.BalancedEqs", false);
       itsSolveOpt.useSVD  =
         parset.getBool  (prefix+"Solve.Options.UseSVD", true);
-      itsBBSExpr.setOptions (itsSolveOpt);
+//      itsBBSExpr.setOptions (itsSolveOpt);
       /// Maybe optionally a parset parameter directions to give the
       /// directions of unknown sources.
       /// Or make sources a vector of vectors like [name, ra, dec] where
@@ -249,7 +249,7 @@ namespace LOFAR {
         }
         // Create the BBS model expression for sources with a model.
         if (i < itsNrModel) {
-          itsBBSExpr.addModel (itsAllSources[i], infocp.phaseCenter());
+//          itsBBSExpr.addModel (itsAllSources[i], infocp.phaseCenter());
 
 // TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
           MDirection dirJ2000(MDirection::Convert(infocp.phaseCenter(),
@@ -437,6 +437,11 @@ namespace LOFAR {
         demix();
         itsTimer.stop();
       }
+
+// TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
+      dumpSolutions();
+// TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
+
       // Let the next steps finish.
       getNextStep()->finish();
     }
@@ -727,6 +732,14 @@ namespace LOFAR {
     {
       LOG_DEBUG_STR("writing solutions...");
 
+      try {
+        ParmManager::instance().initCategory(INSTRUMENT,
+          ParmDB(ParmDBMeta("casa", itsInstrumentName)));
+      } catch (Exception &e) {
+        THROW(Exception, "Failed to open instrument model parameter database: "
+          << itsInstrumentName);
+      }
+
       // Construct grids for parameter estimation.
       Axis::ShPtr timeAxis(new RegularAxis(itsInput->startTime()
         - itsInput->timeInterval() * 0.5, itsTimeIntervalAvg, itsState.nTime));
@@ -737,7 +750,6 @@ namespace LOFAR {
 
       // Set parameter domain.
       ParmManager::instance().setDomain(solGrid.getBoundingBox());
-
 
       vector<string> dirs;
       dirs.push_back("CasA");

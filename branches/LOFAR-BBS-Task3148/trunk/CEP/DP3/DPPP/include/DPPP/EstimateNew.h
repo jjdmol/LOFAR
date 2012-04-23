@@ -36,7 +36,7 @@
 #include <BBSKernel/Solver.h>
 #include <Common/OpenMP.h>
 
-#define ESTIMATE_TIMER 1
+//#define ESTIMATE_TIMER 1
 
 #ifdef ESTIMATE_TIMER
 #include <Common/Timer.h>

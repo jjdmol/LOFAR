@@ -135,7 +135,7 @@ namespace LOFAR {
       vector<MultiResultStep*> itsAvgResults;   //# result of phaseshift/average
       DPStep::ShPtr            itsAvgSubtr;     //# average step for subtract
       MultiResultStep*         itsAvgResultSubtr; //# result of subtract avg
-      BBSExpr                  itsBBSExpr;
+//      BBSExpr                  itsBBSExpr;
       string                   itsTargetSource; //# empty if no target model
       vector<string>           itsSubtrSources;
       vector<string>           itsModelSources;

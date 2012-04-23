@@ -143,7 +143,7 @@ void estimate(vector<DPPP::DPBuffer> &target,
         }
     }
 
-//#pragma omp parallel for
+#pragma omp parallel for
     for(size_t i = 0; i < nTime; ++i)
     {
         estimateImpl3(target[i], buffersT[i], coeff[i], coeffSub[i], state, ts + i);
@@ -528,7 +528,7 @@ void estimateImpl2(DPBuffer &target,
 
                 ++found;
             }
-            LOG_DEBUG_STR("last: " << last << " found: " << found);
+//            LOG_DEBUG_STR("last: " << last << " found: " << found);
         }
         ASSERTSTR(found == nSt, "Could not split UVW, found: " << found);
 
@@ -881,44 +881,38 @@ void estimateImpl3(DPBuffer &target,
         // Split UVW.
         const casa::Matrix<double> &uvw = buffers[i].getUVW();
 
-        size_t found = 1, last = 0;
+        size_t found = 1;
         fill(flag.data(), flag.data() + flag.num_elements(), false);
         uvw_split[0][0] = 0.0;
         uvw_split[0][1] = 0.0;
         uvw_split[0][2] = 0.0;
         flag[0] = true;
 
-        while(found < nSt && found > last)
+        for(size_t j = 0; j < nBl; ++j)
         {
-            last = found;
-            for(size_t j = 0; j < nBl; ++j)
+            const size_t p = state.baselines[j].first;
+            const size_t q = state.baselines[j].second;
+
+            if(p == q || flag[p] == flag[q])
             {
-                const size_t p = state.baselines[j].first;
-                const size_t q = state.baselines[j].second;
-
-                if(p == q || flag[p] == flag[q])
-                {
-                    continue;
-                }
-
-                if(flag[p])
-                {
-                    uvw_split[q][0] = uvw(0, j) + uvw_split[p][0];
-                    uvw_split[q][1] = uvw(1, j) + uvw_split[p][1];
-                    uvw_split[q][2] = uvw(2, j) + uvw_split[p][2];
-                    flag[q] = true;
-                }
-                else
-                {
-                    uvw_split[p][0] = -uvw(0, j) + uvw_split[q][0];
-                    uvw_split[p][1] = -uvw(1, j) + uvw_split[q][1];
-                    uvw_split[p][2] = -uvw(2, j) + uvw_split[q][2];
-                    flag[p] = true;
-                }
-
-                ++found;
+                continue;
             }
-            LOG_DEBUG_STR("last: " << last << " found: " << found);
+
+            if(flag[p])
+            {
+                uvw_split[q][0] = uvw(0, j) + uvw_split[p][0];
+                uvw_split[q][1] = uvw(1, j) + uvw_split[p][1];
+                uvw_split[q][2] = uvw(2, j) + uvw_split[p][2];
+                flag[q] = true;
+            }
+            else
+            {
+                uvw_split[p][0] = -uvw(0, j) + uvw_split[q][0];
+                uvw_split[p][1] = -uvw(1, j) + uvw_split[q][1];
+                uvw_split[p][2] = -uvw(2, j) + uvw_split[q][2];
+                flag[p] = true;
+            }
+            ++found;
         }
         ASSERTSTR(found == nSt, "Could not split UVW, found: " << found);
 
@@ -1009,10 +1003,10 @@ void estimateImpl3(DPBuffer &target,
                 Jp_10 = dcomplex(state.J[ts][p][dr][4], state.J[ts][p][dr][5]);
                 Jp_11 = dcomplex(state.J[ts][p][dr][6], state.J[ts][p][dr][7]);
 
-                Jq_00 = dcomplex(state.J[ts][q][dr][0], state.J[ts][q][dr][1]);
-                Jq_01 = dcomplex(state.J[ts][q][dr][2], state.J[ts][q][dr][3]);
-                Jq_10 = dcomplex(state.J[ts][q][dr][4], state.J[ts][q][dr][5]);
-                Jq_11 = dcomplex(state.J[ts][q][dr][6], state.J[ts][q][dr][7]);
+                Jq_00 = dcomplex(state.J[ts][q][dr][0], -state.J[ts][q][dr][1]);
+                Jq_01 = dcomplex(state.J[ts][q][dr][2], -state.J[ts][q][dr][3]);
+                Jq_10 = dcomplex(state.J[ts][q][dr][4], -state.J[ts][q][dr][5]);
+                Jq_11 = dcomplex(state.J[ts][q][dr][6], -state.J[ts][q][dr][7]);
 
                 Jp_00_s0 = Jp_00 * state.sim[threadID][dr][bl][0];
                 Jp_10_s0 = Jp_10 * state.sim[threadID][dr][bl][0];
