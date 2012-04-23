@@ -61,7 +61,7 @@ class SocketStream : public FileDescriptorBasedStream
   private:
     const std::string hostname;
     uint16 port;
-    const string nfskey;
+    const std::string nfskey;
     int listen_sk;
 
     void accept(time_t timeout);
