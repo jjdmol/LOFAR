@@ -24,6 +24,7 @@
 #ifndef LOFAR_BBSKERNEL_MODELIMAGEVISIBILITYRESAMPLER_H 
 #define LOFAR_BBSKERNEL_MODELIMAGEVISIBILITYRESAMPLER_H
 
+#include <BBSKernel/ModelImageCFStore.h>
 #include <casa/Arrays/Matrix.h>
 
 namespace LOFAR {   //# NAMESPACE LOFAR BEGIN
@@ -38,7 +39,7 @@ public:
 
 //  void DataToGrid(casa::Array<casa::DComplex>& griddedData, casa::VBStore& vbs, 
 //                  casa::Matrix<casa::Double>& sumwt, const casa::Bool& dopsf);
-  void DataToGrid(casa::Array<casa::DComplex>& griddedData, casa::VBStore& vbs);
+  void DataToGrid(casa::Array<casa::DComplex>& griddedData);
 
   void setParams( const casa::Vector<casa::Double>& uvwScale, 
                   const casa::Vector<casa::Double>& offset,

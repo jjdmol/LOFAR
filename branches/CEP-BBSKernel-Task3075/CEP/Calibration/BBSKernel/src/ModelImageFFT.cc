@@ -29,6 +29,7 @@
 #include <images/Images/PagedImage.h>
 #include <BBSKernel/Exceptions.h>
 #include <BBSKernel/ModelImageFFT.h>
+#include <BBSKernel/ModelImageVisibilityResampler.h>
 
 using namespace std;
 using namespace LOFAR;
@@ -138,6 +139,12 @@ void ModelImageFft::degrid( const boost::multi_array<double, 3> &uvwBaseline,
   }
   
   itsOptions.lambdas=convertToLambdas(itsOptions.frequencies);  // convert to lambdas
+
+  // convert uvwBaseline to VisResampler format
+
+  // create VisResampler
+  
+  // call VisResampler
 }
 
 // Convert a Vector of frequencies to lambdas
@@ -146,8 +153,7 @@ Vector<Double> ModelImageFft::convertToLambdas(const Vector<Double> &frequencies
   Vector<Double> lambdas(frequencies.size());
   for(uInt i=0; i<frequencies.size(); i++)
   {
-    lambdas[i]=casa::C::c/frequencies[i];
+    //lambdas[i]=(casa::C::c)/frequencies[i];
   }
-
   return lambdas;
 }

@@ -78,8 +78,7 @@ public:
               casa::DComplex *XY , casa::DComplex *YY);
   // Function to get degridded data into BBS::Matrix
   /*
-  void getUVW(const boost::multi_array<double, 3> &uvw1, 
-              const boost::multi_array<double, 3> &uvw2,
+  void getUVW(const boost::multi_array<double, 3> &uvwBaseline, 
               const casa::Vector<casa::Double> &frequencies 
               casa::Array<DComplex> XX , casa::Array<DComplex> XY, 
               casa::Array<DComplex> XY , casa::Array<DComplex> YY);
@@ -88,7 +87,7 @@ public:
 private:
   casa::Array<casa::DComplex> itsImage; // keep fft'ed image in memory
 //  casa::CFStore itsConvFunc;          // convolution function for VisResampler
-//  casa::CFStore itsConvFunc;          // w-projection convolution ftns
+//  casa::CFStore itsConvFunc;          // w-projection convolution ftns (LofarConv?)
 
   ModelImageOptions itsOptions;         // struct containing all options
   casa::Vector<casa::Double> convertToLambdas(const casa::Vector<casa::Double> &frequencies);   // convert frequencies to lambda

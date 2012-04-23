@@ -27,7 +27,7 @@
 using namespace LOFAR::BBS
 using namespace casa
 
-void VisibilityResampler::DataToGrid(Array<DComplex>& grid,  VBStore& vbs)
+void VisibilityResampler::DataToGrid(Array<DComplex>& grid)
 {
   Int nDataChan, nDataPol, nGridPol, nGridChan, nx, ny;
   Int achan, apol, rbeg, rend;
