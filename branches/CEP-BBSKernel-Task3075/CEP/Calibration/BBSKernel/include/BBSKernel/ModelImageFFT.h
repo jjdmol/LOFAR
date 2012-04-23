@@ -39,6 +39,7 @@ typedef struct ModelImageOptions
   casa::String name;                            // name of image
   casa::String ConvType;                        // convolution type
   casa::Vector<casa::Double> frequencies;       // vector with channel frequencies
+  casa::Vector<casa::Double> lambdas;           // vector with converted lambdas
   casa::Int verbose;                            // verbosity level
   unsigned int oversampling;                    // oversample factor
   double uvscaleX, uvscaleY;                    // pixel size in wavelengths conversion
@@ -48,8 +49,10 @@ typedef struct ModelImageOptions
 class ModelImageFft
 {
 public:
-  ModelImageFft(const casa::String &name, const casa::Vector<casa::Double> &frequencies,
-                unsigned int oversampling=1, double uvscaleX=1.0, double uvscaleY=1.0);
+//  ModelImageFft(const casa::String &name, const casa::Vector<casa::Double> &frequencies,
+//                unsigned int oversampling=1, double uvscaleX=1.0, double uvscaleY=1.0);
+  ModelImageFft(const casa::String &name, unsigned int oversampling=1, 
+                double uvscaleX=1.0, double uvscaleY=1.0);
   ~ModelImageFft();
 
   // Setter functions for individual options
@@ -68,24 +71,27 @@ public:
   inline double           uvscaleY() const { return itsOptions.uvscaleY; }
 
   // Function to get degridded data into raw pointers
-  void getUVW(const boost::multi_array<double, 3> &uvwBaseline, 
-              size_t timeslots, size_t nchans, 
+  void degrid(const boost::multi_array<double, 3> &uvwBaseline, 
+              size_t timeslots, size_t nchans,
+              double *frequencies, 
               casa::DComplex *XX , casa::DComplex *XY, 
               casa::DComplex *XY , casa::DComplex *YY);
   // Function to get degridded data into BBS::Matrix
   /*
   void getUVW(const boost::multi_array<double, 3> &uvw1, 
-              const boost::multi_array<double, 3> &uvw2, 
+              const boost::multi_array<double, 3> &uvw2,
+              const casa::Vector<casa::Double> &frequencies 
               casa::Array<DComplex> XX , casa::Array<DComplex> XY, 
               casa::Array<DComplex> XY , casa::Array<DComplex> YY);
   */
   
 private:
-  casa::Array<casa::DComplex> itsImage;    // keep fft'ed image in memory
-//  casa::CFStore itsConvFunc;                // convolution function for VisResampler
-//  casa::CFStore itsConvFunc;           // w-projection convolution ftns
+  casa::Array<casa::DComplex> itsImage; // keep fft'ed image in memory
+//  casa::CFStore itsConvFunc;          // convolution function for VisResampler
+//  casa::CFStore itsConvFunc;          // w-projection convolution ftns
 
-  ModelImageOptions itsOptions;          // struct containing all options
+  ModelImageOptions itsOptions;         // struct containing all options
+  casa::Vector<casa::Double> convertToLambdas(const casa::Vector<casa::Double> &frequencies);   // convert frequencies to lambda
 };
 
 } // end namespace BBS

@@ -23,6 +23,8 @@
 
 #include <lofar_config.h>
 
+#include <casa/BasicSL/Constants.h>
+#include <casa/Arrays/VectorIter.h>
 #include <lattices/Lattices/LatticeFFT.h>
 #include <images/Images/PagedImage.h>
 #include <BBSKernel/Exceptions.h>
@@ -38,15 +40,18 @@ using namespace casa;
 // Constructors and destructor
 //
 //*********************************************
-
+/*
 ModelImageFft::ModelImageFft( const casa::String &name,
                               const casa::Vector<casa::Double> &frequencies,
+                              unsigned int oversampling,
+                              double uvscaleX, double uvscaleY)
+*/                            
+ModelImageFft::ModelImageFft( const casa::String &name,
                               unsigned int oversampling,
                               double uvscaleX, double uvscaleY)
 {
   // set options
   itsOptions.name=name;
-  itsOptions.frequencies=frequencies;
   itsOptions.oversampling=oversampling;
   itsOptions.uvscaleX=uvscaleX;
   itsOptions.uvscaleY=uvscaleY;
@@ -92,8 +97,8 @@ void ModelImageFft::setUVscale(double uvscaleX, double uvscaleY)
   }
   else
   {
-  itsOptions.uvscaleX=uvscaleX;
-  itsOptions.uvscaleY=uvscaleY;
+    itsOptions.uvscaleX=uvscaleX;
+    itsOptions.uvscaleY=uvscaleY;
   }
 }
 
@@ -120,11 +125,29 @@ void ModelImageFft::setDegridMuellerMask(const casa::Matrix<Bool> &muellerMask)
 //
 //**********************************************
 
-void ModelImageFft::getUVW( const boost::multi_array<double, 3> &uvwBaseline, 
+void ModelImageFft::degrid( const boost::multi_array<double, 3> &uvwBaseline, 
                             size_t timeslots, size_t nchans, 
+                            double *frequencies,
                             casa::DComplex *XX , casa::DComplex *XY, 
                             casa::DComplex *YX , casa::DComplex *YY)
 {
+  Vector<Double> lamdbdas(nchans);        // vector with wavelengths
+  for(unsigned int i=0; i<nchans; i++)
+  {
+    itsOptions.frequencies[i]=frequencies[i];
+  }
+  
+  itsOptions.lambdas=convertToLambdas(itsOptions.frequencies);  // convert to lambdas
+}
 
+// Convert a Vector of frequencies to lambdas
+Vector<Double> ModelImageFft::convertToLambdas(const Vector<Double> &frequencies)
+{
+  Vector<Double> lambdas(frequencies.size());
+  for(uInt i=0; i<frequencies.size(); i++)
+  {
+    lambdas[i]=casa::C::c/frequencies[i];
+  }
 
+  return lambdas;
 }
