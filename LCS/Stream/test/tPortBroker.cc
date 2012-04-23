@@ -25,6 +25,7 @@
 
 //# Includes
 #include <Stream/PortBroker.h>
+#include <Stream/SocketStream.h>
 #include <Common/Thread/Thread.h>
 #include <Common/LofarLogger.h>
 #include <string>
@@ -35,11 +36,29 @@
 using namespace LOFAR;
 using namespace std;
 
-const uint16 PORT = 4000;
+uint16 first_port = 4000;
+uint16 last_port  = 5000;
+uint16 PORT;
 
 void start()
 {
-  PortBroker::createInstance(PORT);
+  ASSERT( first_port < last_port );
+
+  for (PORT = first_port; PORT < last_port; ++PORT) {
+    try {
+      PortBroker::createInstance(PORT);
+
+      // found a valid port
+      LOG_DEBUG_STR( "using TCP port " << PORT );
+      break;
+    } catch( SocketStream::BindException& ) {
+      // port is in use -- try the next one
+      continue;
+    }
+  }
+
+  if (PORT >= last_port)
+    ASSERTSTR( false, "Could not find a free TCP port between " << first_port << " and " << last_port );
 }
 
 class OneRequest
