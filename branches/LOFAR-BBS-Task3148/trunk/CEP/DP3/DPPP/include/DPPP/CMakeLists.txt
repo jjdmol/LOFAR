@@ -8,6 +8,7 @@ set(inst_HEADERS
   MSReader.h MSWriter.h MSUpdater.h Counter.h
   Averager.h MedFlagger.h PreFlagger.h UVWFlagger.h AORFlagger.h
   PhaseShift.h Demixer.h EstimateNDPPP.h EstimateNew.h
+#  SourceList.h
   FlaggerStatistics.h
   MsInfo.h
   MsFile.h
@@ -23,7 +24,7 @@ set(inst_HEADERS
   Pipeline.h)
 
 # Create symbolic link to include directory.
-execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink 
+execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_BINARY_DIR}/include/${PACKAGE_NAME})
 

@@ -28,6 +28,7 @@
 #include <Common/StreamUtil.h>
 #include <casa/BasicSL/Constants.h>
 #include <Common/lofar_iomanip.h>
+#include <Common/lofar_fstream.h>
 
 namespace LOFAR
 {
@@ -64,13 +65,13 @@ struct source
     double  position[2];
 };
 
-static const size_t __nDir = 2;
-static vector<source> __patches[__nDir];
-static vector<vec3> __lmn[__nDir];
+size_t __NDIR;
+vector<vector<source> > __patches;
+vector<vector<vec3> > __lmn;
 
 void propagate(EstimateState &state, size_t from, size_t to)
 {
-    size_t nSol = state.nStat * __nDir * 8;
+    size_t nSol = state.nStat * __NDIR * 8;
     LOG_DEBUG_STR("propagating " << nSol << " coefficients from cell: "
         << from << " to: " << to);
 
@@ -111,6 +112,7 @@ void estimate(vector<DPPP::DPBuffer> &target,
     EstimateState &state,
     size_t ts)
 {
+    LOG_DEBUG_STR("sizeof(source): " << sizeof(source));
     LOG_DEBUG_STR("buffers #dir: " << buffers.size() << " #time: "
         << buffers[0].size());
     LOG_DEBUG_STR("coeff #time: " << coeff.size() << " shape: "
@@ -118,7 +120,7 @@ void estimate(vector<DPPP::DPBuffer> &target,
 //    LOG_DEBUG_STR("grid shape #freq: " << visGrid[0]->size() << " #time:"
 //        << visGrid[1]->size());
 
-    ASSERT(buffers.size() == __nDir + 1);
+    ASSERT(buffers.size() == __NDIR + 1);
     const size_t nTime = buffers[0].size();
 //    ASSERT(target.size() == nTime);
     ASSERT(buffers[1].size() == nTime);
@@ -168,7 +170,7 @@ void estimateImpl(DPBuffer &target,
         << " processing...");
 
     const size_t nBl = state.baselines.size();
-    const size_t nModels = __nDir;
+    const size_t nModels = __NDIR;
     const size_t nTargets = buffers.size();
     const size_t threadID = OpenMP::threadNum();
 
@@ -469,7 +471,7 @@ void estimateImpl2(DPBuffer &target,
         << " processing...");
 
     const size_t nBl = state.baselines.size();
-    const size_t nModels = __nDir;
+    const size_t nModels = __NDIR;
     const size_t nTargets = buffers.size();
     const size_t nSt = state.nStat;
 
@@ -860,7 +862,7 @@ void estimateImpl3(DPBuffer &target,
         << " processing...");
 
     const size_t nBl = state.baselines.size();
-    const size_t nModels = __nDir;
+    const size_t nModels = __NDIR;
     const size_t nTargets = buffers.size();
     const size_t nSt = state.nStat;
 
@@ -1235,6 +1237,45 @@ void __init_lmn(unsigned int dir, double pra, double pdec)
     }
 }
 
+void __init_source_list(const string &fname)
+{
+    ifstream inf(fname.c_str());
+    LOG_DEBUG_STR("Loading source models from: " << fname);
+
+    if(!(inf >> __NDIR))
+    {
+        ASSERT(false);
+    }
+
+    LOG_DEBUG_STR("NDIR: " << __NDIR);
+    __patches.resize(__NDIR);
+    __lmn.resize(__NDIR);
+
+    for(size_t i = 0; i < __NDIR; ++i)
+    {
+        size_t nSources;
+
+        if(!(inf >> nSources))
+        {
+            ASSERT(false);
+        }
+        LOG_DEBUG_STR("DIR: " << i << " NSOURCES: " << nSources);
+
+        __patches[i].reserve(nSources);
+        double ra, dec, I, Q, U, V;
+        for(size_t j = 0; j < nSources; ++j)
+        {
+            if(!(inf >> ra >> dec >> I >> Q >> U >> V))
+            {
+                ASSERT(false);
+            }
+
+            __patches[i].push_back(source(ra, dec, I, Q, U, V));
+        }
+        LOG_DEBUG_STR("DIR: " << i << " LAST: " << ra << " " << dec << " " << I << " " << Q << " " << U << " " << V);
+    }
+}
+
 /*
 void __init_source_list()
 {
@@ -1251,7 +1292,7 @@ void __init_source_list()
 }
 */
 
-
+/*
 void __init_source_list()
 {
     __patches[0].push_back(source(6.122555, 1.026502, 43.210000));
@@ -5452,7 +5493,7 @@ void __init_source_list()
     __patches[1].push_back(source(5.234038, 0.710965, -1.597000));
     __patches[1].push_back(source(5.233047, 0.711014, -1.559000));
 }
-
+*/
 
 } //# namespace DPPP
 } //# namespace LOFAR

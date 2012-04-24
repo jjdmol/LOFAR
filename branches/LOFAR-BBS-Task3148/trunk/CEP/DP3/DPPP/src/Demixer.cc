@@ -199,7 +199,7 @@ namespace LOFAR {
       itsAvgSubtr->setNextStep (DPStep::ShPtr(itsAvgResultSubtr));
 
 // TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
-      __init_source_list();
+      __init_source_list("demixer.mdl");
 
       ASSERT(input->getAnt1().size() == input->getAnt2().size());
       for(size_t i=0; i<input->getAnt1().size(); ++i) {
@@ -277,9 +277,10 @@ namespace LOFAR {
       itsFreqAxisSubtr = makeFreqAxis (itsNChanAvgSubtr);
 
 // TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
+      LOG_DEBUG_STR("#directions: " << itsNrModel);
       LOG_DEBUG_STR("#stations: " << itsStationCount);
       LOG_DEBUG_STR("#times: " << info.ntime());
-      itsState.init(itsStationCount, info.ntime(), itsBaselines,
+      itsState.init(itsNrModel, itsStationCount, info.ntime(), itsBaselines,
         itsFreqAxisDemix->center(0), itsSolveOpt);
 // TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
     }

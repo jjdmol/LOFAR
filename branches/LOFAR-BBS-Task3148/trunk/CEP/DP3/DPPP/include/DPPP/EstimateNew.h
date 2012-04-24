@@ -35,8 +35,9 @@
 
 #include <BBSKernel/Solver.h>
 #include <Common/OpenMP.h>
+//#include <DPPP/SourceList.h>
 
-#define ESTIMATE_TIMER 1
+//#define ESTIMATE_TIMER 1
 
 #ifdef ESTIMATE_TIMER
 #include <Common/Timer.h>
@@ -50,7 +51,7 @@ namespace DPPP
 // \addtogroup NDPPP
 // @{
 
-void __init_source_list();
+void __init_source_list(const string &fname);
 void __init_lmn(unsigned int dir, double pra, double pdec);
 
 
@@ -60,7 +61,7 @@ struct EstimateState
     {
     }
 
-    void init(size_t nStat, size_t nTime,
+    void init(size_t nDir, size_t nStat, size_t nTime,
         const BBS::BaselineSeq &baselines,
         double freq, const BBS::SolverOptions &options)
     {
@@ -73,16 +74,18 @@ struct EstimateState
 
         size_t nBl = baselines.size();
         size_t nCr = 4;
-        size_t nDr = 2;
+        size_t nDr = nDir;
 
         size_t nThread = OpenMP::maxThreads();
         sim.resize(boost::extents[nThread][nDr][nBl][nCr]);
 
+#ifdef ESTIMATE_TIMER
         tTot.resize(nThread);
         tSim.resize(nThread);
         tEq.resize(nThread);
         tLM.resize(nThread);
         tSub.resize(nThread);
+#endif
 
         J.resize(boost::extents[nTime][nStat][nDr][4 * 2]);
         typedef boost::multi_array<double, 4>::element* iterator;
@@ -142,10 +145,8 @@ struct EstimateState
     boost::multi_array<double, 4>       J;
     boost::multi_array<unsigned int, 3> dIndex;
     BBS::SolverOptions                  lsqOptions;
-    vector<NSTimer>                     tTot, tSim, tEq, tLM, tSub;
-
 #ifdef ESTIMATE_TIMER
-//    NSTimer                         tTot, tSim, tEq, tLM, tSub;
+    vector<NSTimer>                     tTot, tSim, tEq, tLM, tSub;
 #endif
 };
 
