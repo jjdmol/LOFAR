@@ -459,8 +459,10 @@ void estimateImpl2(DPBuffer &target,
     EstimateState &state,
     size_t ts)
 {
+    const size_t threadID = OpenMP::threadNum();
+
 #ifdef ESTIMATE_TIMER
-    state.tTot.start();
+    state.tTot[threadID].start();
 #endif
 
     LOG_DEBUG_STR("thread: " << OpenMP::threadNum() << " timeslot: " << ts
@@ -469,11 +471,10 @@ void estimateImpl2(DPBuffer &target,
     const size_t nBl = state.baselines.size();
     const size_t nModels = __nDir;
     const size_t nTargets = buffers.size();
-    const size_t threadID = OpenMP::threadNum();
     const size_t nSt = state.nStat;
 
 #ifdef ESTIMATE_TIMER
-    state.tSim.start();
+    state.tSim[threadID].start();
 #endif
 
     boost::multi_array<double, 2> uvw_split(boost::extents[nSt][3]);
@@ -574,7 +575,7 @@ void estimateImpl2(DPBuffer &target,
     }
 
 #ifdef ESTIMATE_TIMER
-    state.tSim.stop();
+    state.tSim[threadID].stop();
 #endif
 
 //    for(size_t i = 0; i < nModels; ++i)
@@ -610,7 +611,7 @@ void estimateImpl2(DPBuffer &target,
     while(!solver.isReady() && nIterations < 50)
     {
 #ifdef ESTIMATE_TIMER
-        state.tEq.start();
+        state.tEq[threadID].start();
 #endif
 
         for(size_t bl = 0; bl < nBl; ++bl)
@@ -766,11 +767,11 @@ void estimateImpl2(DPBuffer &target,
         } // baselines
 
 #ifdef ESTIMATE_TIMER
-        state.tEq.stop();
+        state.tEq[threadID].stop();
 #endif
 
 #ifdef ESTIMATE_TIMER
-        state.tLM.start();
+        state.tLM[threadID].start();
 #endif
 
         // Do solve iteration.
@@ -778,7 +779,7 @@ void estimateImpl2(DPBuffer &target,
         ASSERT(status);
 
 #ifdef ESTIMATE_TIMER
-        state.tLM.stop();
+        state.tLM[threadID].stop();
 #endif
 
         // Update iteration count.
@@ -792,7 +793,7 @@ void estimateImpl2(DPBuffer &target,
         << converged);
 
 #ifdef ESTIMATE_TIMER
-    state.tSub.start();
+    state.tSub[threadID].start();
 #endif
 
     // Subtract...
@@ -834,11 +835,11 @@ void estimateImpl2(DPBuffer &target,
     } // baselines
 
 #ifdef ESTIMATE_TIMER
-    state.tSub.stop();
+    state.tSub[threadID].stop();
 #endif
 
 #ifdef ESTIMATE_TIMER
-    state.tTot.stop();
+    state.tTot[threadID].stop();
 #endif
 }
 
@@ -849,8 +850,10 @@ void estimateImpl3(DPBuffer &target,
     EstimateState &state,
     size_t ts)
 {
+    const size_t threadID = OpenMP::threadNum();
+
 #ifdef ESTIMATE_TIMER
-    state.tTot.start();
+    state.tTot[threadID].start();
 #endif
 
     LOG_DEBUG_STR("thread: " << OpenMP::threadNum() << " timeslot: " << ts
@@ -859,11 +862,10 @@ void estimateImpl3(DPBuffer &target,
     const size_t nBl = state.baselines.size();
     const size_t nModels = __nDir;
     const size_t nTargets = buffers.size();
-    const size_t threadID = OpenMP::threadNum();
     const size_t nSt = state.nStat;
 
 #ifdef ESTIMATE_TIMER
-    state.tSim.start();
+    state.tSim[threadID].start();
 #endif
 
     boost::multi_array<double, 2> uvw_split(boost::extents[nSt][3]);
@@ -956,7 +958,7 @@ void estimateImpl3(DPBuffer &target,
     }
 
 #ifdef ESTIMATE_TIMER
-    state.tSim.stop();
+    state.tSim[threadID].stop();
 #endif
 
     // Estimate parameters.
@@ -983,7 +985,7 @@ void estimateImpl3(DPBuffer &target,
     while(!solver.isReady() && nIterations < 50)
     {
 #ifdef ESTIMATE_TIMER
-        state.tEq.start();
+        state.tEq[threadID].start();
 #endif
 
         for(size_t bl = 0; bl < nBl; ++bl)
@@ -1061,6 +1063,11 @@ void estimateImpl3(DPBuffer &target,
             {
                 for(size_t tg = 0; tg < nTargets; ++tg)
                 {
+                    if(buffers[tg].getFlags()(cr, 0, bl))
+                    {
+                        continue;
+                    }
+
                     dcomplex V_sim = 0.0;
                     dcomplex tmp;
                     for(size_t dr = 0; dr < nModels; ++dr)
@@ -1109,18 +1116,18 @@ void estimateImpl3(DPBuffer &target,
         } // baselines
 
 #ifdef ESTIMATE_TIMER
-        state.tEq.stop();
+        state.tEq[threadID].stop();
 #endif
 
 #ifdef ESTIMATE_TIMER
-        state.tLM.start();
+        state.tLM[threadID].start();
 #endif
         // Do solve iteration.
         bool status = solver.solveLoop(rank, &(state.J[ts][0][0][0]), true);
         ASSERT(status);
 
 #ifdef ESTIMATE_TIMER
-        state.tLM.stop();
+        state.tLM[threadID].stop();
 #endif
 
         // Update iteration count.
@@ -1134,7 +1141,7 @@ void estimateImpl3(DPBuffer &target,
         << converged);
 
 #ifdef ESTIMATE_TIMER
-    state.tSub.start();
+    state.tSub[threadID].start();
 #endif
 
     // Subtract...
@@ -1197,11 +1204,11 @@ void estimateImpl3(DPBuffer &target,
     } // baselines
 
 #ifdef ESTIMATE_TIMER
-    state.tSub.stop();
+    state.tSub[threadID].stop();
 #endif
 
 #ifdef ESTIMATE_TIMER
-    state.tTot.stop();
+    state.tTot[threadID].stop();
 #endif
 }
 

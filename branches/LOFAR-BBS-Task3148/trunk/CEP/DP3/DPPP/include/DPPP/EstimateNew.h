@@ -36,7 +36,7 @@
 #include <BBSKernel/Solver.h>
 #include <Common/OpenMP.h>
 
-//#define ESTIMATE_TIMER 1
+#define ESTIMATE_TIMER 1
 
 #ifdef ESTIMATE_TIMER
 #include <Common/Timer.h>
@@ -77,6 +77,12 @@ struct EstimateState
 
         size_t nThread = OpenMP::maxThreads();
         sim.resize(boost::extents[nThread][nDr][nBl][nCr]);
+
+        tTot.resize(nThread);
+        tSim.resize(nThread);
+        tEq.resize(nThread);
+        tLM.resize(nThread);
+        tSub.resize(nThread);
 
         J.resize(boost::extents[nTime][nStat][nDr][4 * 2]);
         typedef boost::multi_array<double, 4>::element* iterator;
@@ -136,9 +142,10 @@ struct EstimateState
     boost::multi_array<double, 4>       J;
     boost::multi_array<unsigned int, 3> dIndex;
     BBS::SolverOptions                  lsqOptions;
+    vector<NSTimer>                     tTot, tSim, tEq, tLM, tSub;
 
 #ifdef ESTIMATE_TIMER
-    NSTimer                         tTot, tSim, tEq, tLM, tSub;
+//    NSTimer                         tTot, tSim, tEq, tLM, tSub;
 #endif
 };
 

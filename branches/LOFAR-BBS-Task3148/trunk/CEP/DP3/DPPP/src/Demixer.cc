@@ -50,12 +50,15 @@
 #include <iomanip>
 
 #include <BBSKernel/ParmManager.h>
+#include <Common/StreamUtil.h>
 
 using namespace casa;
 using namespace LOFAR::BBS;
 
 namespace LOFAR {
   namespace DPPP {
+
+    using LOFAR::operator<<;
 
     Demixer::Demixer (DPInput* input,
                       const ParSet& parset, const string& prefix)
