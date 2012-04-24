@@ -21,7 +21,7 @@ lofar_add_library(bbskernel
   ModelConfig.cc
   ModelImageFFT.cc
   ModelImageCFStore.cc
-#  ModelImageVisibilityResampler.cc
+  ModelImageVisibilityResampler.cc
   ParmManager.cc
   ParmProxy.cc
   PatchExpr.cc

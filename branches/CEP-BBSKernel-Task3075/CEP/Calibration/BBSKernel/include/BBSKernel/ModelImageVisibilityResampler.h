@@ -33,6 +33,7 @@ namespace BBS {     //# NAMESPACE BBS BEBGIN
 class ModelImageVisibilityResampler
 {
 public:
+  friend class ModelImageFft;
 
   ModelImageVisibilityResampler();
   ~ModelImageVisibilityResampler();

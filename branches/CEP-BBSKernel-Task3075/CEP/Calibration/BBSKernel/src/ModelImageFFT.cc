@@ -60,6 +60,8 @@ ModelImageFft::ModelImageFft( const casa::String &name,
   PagedImage<DComplex> *image=new PagedImage<DComplex>(name);   // Open image as paged image
   LatticeFFT::cfft2d(*image);     // FFT image in place 
   itsImage=image->get();          // store in array attribute
+
+  initPolmap();                   // initialize polMap_p
 }
 
 ModelImageFft::~ModelImageFft(void)
@@ -140,12 +142,20 @@ void ModelImageFft::degrid( const boost::multi_array<double, 3> &uvwBaseline,
   
   itsOptions.lambdas=convertToLambdas(itsOptions.frequencies);  // convert to lambdas
 
-  // convert uvwBaseline to VisResampler format
-
   // create VisResampler
-  
+
+  // set up chanMap
+
+  // convert uvwBaseline to VisResampler format
+ 
   // call VisResampler
 }
+
+//**********************************************
+//
+// Helper functions
+//
+//**********************************************
 
 // Convert a Vector of frequencies to lambdas
 Vector<Double> ModelImageFft::convertToLambdas(const Vector<Double> &frequencies)
@@ -153,7 +163,49 @@ Vector<Double> ModelImageFft::convertToLambdas(const Vector<Double> &frequencies
   Vector<Double> lambdas(frequencies.size());
   for(uInt i=0; i<frequencies.size(); i++)
   {
-    //lambdas[i]=(casa::C::c)/frequencies[i];
+    lambdas[i]=(casa::C::c)/frequencies[i];
   }
   return lambdas;
+}
+
+void ModelImageFft::initPolmap()
+{
+  itsVisResampler.polMap_p.resize(4);
+  itsVisResampler.polMap_p[0]=1;
+  itsVisResampler.polMap_p[1]=1;
+  itsVisResampler.polMap_p[2]=1;
+  itsVisResampler.polMap_p[3]=1;
+}
+
+void ModelImageFft::initChanmap(const Vector<Double> &frequencies)
+{
+  itsVisResampler.chanMap_p.resize(frequencies.size());
+
+  chanMap_p.set(-1);    // reset chanMap to -1 for all channels
+  // Find nearest Image frequency for frequencies
+
+   for (Int chan=0;chan<nvischan;chan++) {
+      f(0)=lsrFreq[chan];
+      if(spectralCoord_p.toPixel(c, f)) {
+	Int pixel=Int(floor(c(0)+0.5));  // round to chan freq at chan center 
+	//cout << "spw " << spw << " f " << f(0) << " pixel "<< c(0) << "  " << pixel << endl;
+	/////////////
+	//c(0)=pixel;
+	//spectralCoord_p.toWorld(f, c);
+	// cout << "f1 " << f(0) << " pixel "<< c(0) << "  " << pixel << endl;
+	////////////////
+	if(pixel>-1&&pixel<nchan) {
+	  chanMap(chan)=pixel;
+	  nFound++;
+	  if(nvischan>1&&(chan==0||chan==nvischan-1)) {
+	    logIO() << LogIO::DEBUGGING
+		    << "Selected visibility channel : " << chan+1
+		    << " has frequency "
+		    <<  MFrequency(Quantity(f(0), "Hz")).get("GHz").getValue()
+		    << " GHz and maps to image pixel " << pixel+1 << LogIO::POST;
+	  }
+	}
+      }
+    }
+
 }

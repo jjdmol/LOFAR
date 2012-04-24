@@ -29,6 +29,8 @@
 #include <casa/Arrays/Vector.h>
 #include <images/Images/ImageInterface.h>
 
+#include <BBSKernel/ModelImageVisibilityResampler.h>
+
 namespace LOFAR
 {
 namespace BBS
@@ -77,20 +79,22 @@ public:
               casa::DComplex *XX , casa::DComplex *XY, 
               casa::DComplex *XY , casa::DComplex *YY);
   // Function to get degridded data into BBS::Matrix
-  /*
   void getUVW(const boost::multi_array<double, 3> &uvwBaseline, 
-              const casa::Vector<casa::Double> &frequencies 
+              const casa::Vector<casa::Double> &frequencies,
               casa::Array<DComplex> XX , casa::Array<DComplex> XY, 
               casa::Array<DComplex> XY , casa::Array<DComplex> YY);
-  */
-  
+
 private:
-  casa::Array<casa::DComplex> itsImage; // keep fft'ed image in memory
+  casa::Array<casa::DComplex> itsImage;           // keep fft'ed image in memory
+  ModelImageVisibilityResampler itsVisResampler;  // modified casarest VisResampler
 //  casa::CFStore itsConvFunc;          // convolution function for VisResampler
 //  casa::CFStore itsConvFunc;          // w-projection convolution ftns (LofarConv?)
 
   ModelImageOptions itsOptions;         // struct containing all options
   casa::Vector<casa::Double> convertToLambdas(const casa::Vector<casa::Double> &frequencies);   // convert frequencies to lambda
+
+  void initPolmap();    // initialize polarization map
+  void initChanmap(const Vector<Double> &frequencies);
 };
 
 } // end namespace BBS

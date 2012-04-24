@@ -24,10 +24,16 @@
 
 #include <BBSKernel/ModelImageVisibilityResampler.h>
 
-using namespace LOFAR::BBS
-using namespace casa
+using namespace LOFAR::BBS;
+using namespace casa;
 
-void VisibilityResampler::DataToGrid(Array<DComplex>& grid)
+
+ModelImageVisibilityResampler::ModelImageVisibilityResampler()
+{
+  
+}
+
+void ModelImageVisibilityResampler::DataToGrid(Array<DComplex>& grid)
 {
   Int nDataChan, nDataPol, nGridPol, nGridChan, nx, ny;
   Int achan, apol, rbeg, rend;
@@ -41,6 +47,7 @@ void VisibilityResampler::DataToGrid(Array<DComplex>& grid)
   Double norm=0, wt, imgWt;
   Complex phasor, nvalue;
 
+/*
   rbeg = vbs.beginRow_p;
   rend = vbs.endRow_p;
   //    cerr << rbeg << " " << rend << " " << vbs.nRow() << endl;
@@ -152,6 +159,7 @@ for(Int ichan=0; ichan< nDataChan; ichan++){ // For all channels
   }
   T *tt=(T *)gridStore;
   grid.putStorage(tt,gDummy);
+      */
 }
 
 /*
