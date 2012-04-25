@@ -27,7 +27,8 @@
 // Accurate timer (based on NSTimer).
 
 #include <cstdlib>
-#include <iostream>
+#include <Common/lofar_iostream.h>
+#include <Common/lofar_iomanip.h>
 
 #if defined __ia64__ && defined __INTEL_COMPILER
 #include <ia64regs.h>
@@ -90,8 +91,9 @@ private:
 
 inline ostream &operator<<(ostream &os, const HWTimer &obj)
 {
-    os << "timer: " << obj.ticks() << "/" << obj.count() << "/"
-        << (static_cast<double>(obj.ticks()) / obj.count()) << " tot/cnt/avg";
+    os << "timer: " << setprecision(17) << (obj.ticks() / 1e9) << "/"
+        << obj.count() << "/" << (obj.ticks() / (obj.count() * 1e9))
+        << " tot/cnt/avg";
     return os;
 }
 
