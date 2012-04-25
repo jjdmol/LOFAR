@@ -49,6 +49,7 @@
 
 namespace LOFAR {
   namespace DPPP {
+    using LOFAR::operator<<;
 
     void DPRun::execute (const string& parsetName)
     {

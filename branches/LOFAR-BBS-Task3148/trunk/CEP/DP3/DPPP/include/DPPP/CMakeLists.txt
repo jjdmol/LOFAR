@@ -21,7 +21,8 @@ set(inst_HEADERS
   DataBuffer.h
   TimeBuffer.h
   RunDetails.h
-  Pipeline.h)
+  Pipeline.h
+  HWTimer.h)
 
 # Create symbolic link to include directory.
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink

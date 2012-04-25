@@ -279,8 +279,8 @@ namespace LOFAR {
 // TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
       LOG_DEBUG_STR("#directions: " << itsNrModel);
       LOG_DEBUG_STR("#stations: " << itsStationCount);
-      LOG_DEBUG_STR("#times: " << info.ntime());
-      itsState.init(itsNrModel, itsStationCount, info.ntime(), itsBaselines,
+      LOG_DEBUG_STR("#times: " << infocp.ntime());
+      itsState.init(itsNrModel, itsStationCount, infocp.ntime(), itsBaselines,
         itsFreqAxisDemix->center(0), itsSolveOpt);
 // TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
     }
@@ -666,7 +666,8 @@ namespace LOFAR {
 // TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
 //        estimate(buffers, itsFactors, itsState, itsTimeCount);
 //        estimate(itsAvgResultSubtr->get(), buffers, itsFactorsSubtr, itsState);
-        estimate(itsAvgResultSubtr->get(), buffers, itsFactors, itsFactorsSubtr, itsState, itsTimeCount);
+        estimate(itsAvgResultSubtr->get(), buffers, itsFactors, itsFactorsSubtr,
+            itsState, itsTimeCount);
 // TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
         itsTimerSolve.stop();
 
@@ -755,10 +756,12 @@ namespace LOFAR {
       // Set parameter domain.
       ParmManager::instance().setDomain(solGrid.getBoundingBox());
 
-      vector<string> dirs;
-      dirs.push_back("CasA");
-      dirs.push_back("CygA");
-      const size_t nDirs = dirs.size();
+//      vector<string> dirs;
+//      dirs.push_back("CasA");
+//      dirs.push_back("CygA");
+//      const size_t nDirs = dirs.size();
+
+      LOG_DEBUG_STR("#directions: " << itsNrModel);
 
       vector<string> names;
       const casa::Vector<casa::String> &tmp = itsInput->antennaNames();
@@ -773,27 +776,27 @@ namespace LOFAR {
       BBS::ParmGroup group;
       for(size_t st = 0; st < nStat; ++st)
       {
-        for(size_t dr = 0; dr < nDirs; ++dr)
+        for(size_t dr = 0; dr < itsNrModel; ++dr)
         {
           parms.push_back(ParmManager::instance().get(INSTRUMENT,
-            "DirectionalGain:0:0:Real:" + names[st] + ":" + dirs[dr]));
+            "DirectionalGain:0:0:Real:" + names[st] + ":" + itsAllSources[dr]));
           parms.push_back(ParmManager::instance().get(INSTRUMENT,
-            "DirectionalGain:0:0:Imag:" + names[st] + ":" + dirs[dr]));
+            "DirectionalGain:0:0:Imag:" + names[st] + ":" + itsAllSources[dr]));
 
           parms.push_back(ParmManager::instance().get(INSTRUMENT,
-            "DirectionalGain:0:1:Real:" + names[st] + ":" + dirs[dr]));
+            "DirectionalGain:0:1:Real:" + names[st] + ":" + itsAllSources[dr]));
           parms.push_back(ParmManager::instance().get(INSTRUMENT,
-            "DirectionalGain:0:1:Imag:" + names[st] + ":" + dirs[dr]));
+            "DirectionalGain:0:1:Imag:" + names[st] + ":" + itsAllSources[dr]));
 
           parms.push_back(ParmManager::instance().get(INSTRUMENT,
-            "DirectionalGain:1:0:Real:" + names[st] + ":" + dirs[dr]));
+            "DirectionalGain:1:0:Real:" + names[st] + ":" + itsAllSources[dr]));
           parms.push_back(ParmManager::instance().get(INSTRUMENT,
-            "DirectionalGain:1:0:Imag:" + names[st] + ":" + dirs[dr]));
+            "DirectionalGain:1:0:Imag:" + names[st] + ":" + itsAllSources[dr]));
 
           parms.push_back(ParmManager::instance().get(INSTRUMENT,
-            "DirectionalGain:1:1:Real:" + names[st] + ":" + dirs[dr]));
+            "DirectionalGain:1:1:Real:" + names[st] + ":" + itsAllSources[dr]));
           parms.push_back(ParmManager::instance().get(INSTRUMENT,
-            "DirectionalGain:1:1:Imag:" + names[st] + ":" + dirs[dr]));
+            "DirectionalGain:1:1:Imag:" + names[st] + ":" + itsAllSources[dr]));
         }
       }
 
