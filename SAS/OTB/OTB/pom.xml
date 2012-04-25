@@ -7,7 +7,7 @@
 	<groupId>nl.astron.lofar.sas</groupId>
 	<artifactId>OTB</artifactId>
 	<name>Object Tree Browser GUI</name>
-	<version>1.0.0</version>
+	<version>1.0.1-SNAPSHOT</version>
 
 	<organization>
 		<name>Astron</name>
@@ -145,19 +145,19 @@
 		<dependency>
 			<groupId>nl.astron.lofar.sas</groupId>
 			<artifactId>jOTDB3</artifactId>
-			<version>1.0.0</version>
+			<version>1.0.1-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>
 			<groupId>nl.astron.lofar.gui</groupId>
 			<artifactId>plotter</artifactId>
-			<version>1.0.0</version>
+			<version>1.0.1-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>
 			<groupId>nl.astron.lofar.cep</groupId>
 			<artifactId>jParmFacade</artifactId>
-			<version>1.0.0</version>
+			<version>1.0.1-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>
@@ -181,6 +181,14 @@
 			<url>http://bits.netbeans.org/maven2</url>
 		</repository>
 	</repositories>
+	
+	<distributionManagement>
+		<snapshotRepository>
+			<id>snapshots</id>
+			<name>Astron Nexus Repository</name>
+			<url>https://support.astron.nl/nexus/content/repositories/snapshots/</url>
+		</snapshotRepository>
+	</distributionManagement>
 
 </project>
 
