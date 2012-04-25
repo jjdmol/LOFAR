@@ -891,6 +891,7 @@ void ChildControl::_startDaemonOffline(const string&	hostname)
 //
 void ChildControl::_printStartDaemonMap(const string& actionName)
 {
+#if 0
 	LOG_DEBUG_STR("_printStartDaemonMap(" << actionName <<")");
 
 	SDiter	iter  = itsStartDaemonMap.begin();
@@ -901,6 +902,7 @@ void ChildControl::_printStartDaemonMap(const string& actionName)
 				<< iter->second->getHostName() << (port->isConnected() ? "" : " NOT") << " connected");
 		++iter;
 	}
+#endif
 }
 
 //
@@ -1043,7 +1045,7 @@ void ChildControl::_doGarbageCollection()
 		// 1: port == 0: inform main task about removal after retry interval expired
 		// 2: port == -1: remove from list
 		// This is necc. because main task may poll childcontrol for results.
-		if (!iter->port && (iter->requestedState != CTState::CONNECTED)) {
+		if (!iter->port) {
 			if ((time(0)-iter->requestTime) >= int32(MAC_SCP_TIMEOUT+(itsStartupRetryInterval*itsMaxStartupRetries))) {
 				LOG_DEBUG_STR ("Controller " << iter->cntlrName << " is still unreachable, informing main task");
 				_setEstablishedState(iter->cntlrName, CTState::QUITED, time(0), CT_RESULT_LOST_CONNECTION);
@@ -1160,9 +1162,11 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 		break;
 
 	case F_CONNECTED:
+			_printStartDaemonMap("Connected");
 		break;
 
 	case F_DISCONNECTED: {
+			_printStartDaemonMap("Disconnected");
 			// 170507: in one way or another the controllerport is not recognized here
 			//		   anymore. So the code of cleaning up the admin is moved to the
 			// 		   reception of the QUITED event.
