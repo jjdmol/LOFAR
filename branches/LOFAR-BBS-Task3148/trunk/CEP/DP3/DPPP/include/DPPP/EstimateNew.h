@@ -62,11 +62,14 @@ struct EstimateState
 
     void init(size_t nDir, size_t nStat, size_t nTime,
         const BBS::BaselineSeq &baselines,
-        double freq, const BBS::SolverOptions &options)
+        const BBS::Axis::ShPtr &demix,
+        const BBS::Axis::ShPtr &residual,
+        const BBS::SolverOptions &options)
     {
         this->nStat = nStat;
         this->nTime = nTime;
-        this->freq = freq;
+        this->axisDemix = demix;
+        this->axisResidual = residual;
         this->baselines = baselines;
 
         this->lsqOptions = options;
@@ -138,7 +141,7 @@ struct EstimateState
 
     size_t                              nStat;
     size_t                              nTime;
-    double                              freq;
+    BBS::Axis::ShPtr                    axisDemix, axisResidual;
     BBS::BaselineSeq                    baselines;
     boost::multi_array<dcomplex, 4>     sim;
     boost::multi_array<double, 4>       J;

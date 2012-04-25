@@ -281,7 +281,7 @@ namespace LOFAR {
       LOG_DEBUG_STR("#stations: " << itsStationCount);
       LOG_DEBUG_STR("#times: " << infocp.ntime());
       itsState.init(itsNrModel, itsStationCount, infocp.ntime(), itsBaselines,
-        itsFreqAxisDemix->center(0), itsSolveOpt);
+        itsFreqAxisDemix, itsFreqAxisSubtr, itsSolveOpt);
 // TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
     }
 
