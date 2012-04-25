@@ -35,12 +35,11 @@
 
 #include <BBSKernel/Solver.h>
 #include <Common/OpenMP.h>
-//#include <DPPP/SourceList.h>
 
-//#define ESTIMATE_TIMER 1
+#define ESTIMATE_TIMER 1
 
 #ifdef ESTIMATE_TIMER
-#include <Common/Timer.h>
+#include <DPPP/HWTimer.h>
 #endif
 
 namespace LOFAR
@@ -146,7 +145,7 @@ struct EstimateState
     boost::multi_array<unsigned int, 3> dIndex;
     BBS::SolverOptions                  lsqOptions;
 #ifdef ESTIMATE_TIMER
-    vector<NSTimer>                     tTot, tSim, tEq, tLM, tSub;
+    vector<HWTimer>                     tTot, tSim, tEq, tLM, tSub;
 #endif
 };
 
