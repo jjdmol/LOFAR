@@ -199,5 +199,7 @@ def _test():
   return doctest.testmod(num_py_test)
     
 if __name__ == "__main__":
-  _test()
+  import sys
+  fails, tests = _test()
+  sys.exit(fails > 0)
 
