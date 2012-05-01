@@ -141,7 +141,7 @@ class msss_imager_pipeline(control):
                 input_mapfile, target_mapfile, skip = False)
 
         #We start with an empty source_list
-        source_list = ""
+        sourcelist_list = []
         number_of_major_cycles = self.parset.getInt("number_of_major_cycles")
         for idx_loop in range(number_of_major_cycles):
             # TODO: Remove debugging skip code
@@ -168,20 +168,20 @@ class msss_imager_pipeline(control):
 
             # ******************************************************************
             # (4) Get parameters awimager from the prepare_parset and inputs
-            awimager_output_mapfile = self._aw_imager(concat_ms_map_path,
+            awimager_output_mapfile, maxbaseline = self._aw_imager(concat_ms_map_path,
                         idx_loop, sky_path,
                         skip = False)
 
             # *****************************************************************
             # (5) Source finding 
-            source_list = self._source_finding(awimager_output_mapfile,
-                                    idx_loop, skip = False)
+            sourcelist_list.append(self._source_finding(awimager_output_mapfile,
+                                    idx_loop, skip = False))
             #should the output be a sourcedb? instead of a sourcelist
 
         return 0
         # The output does not contain the intermediate values
         #
-        self._finalize(awimager_output_mapfile, source_list, target_mapfile)
+        self._finalize(awimager_output_mapfile, sourcelist_list, target_mapfile)
 
 
 
@@ -315,6 +315,7 @@ class msss_imager_pipeline(control):
     def _aw_imager(self, prepare_phase_output, major_cycle, sky_path, skip = False):
         parset = self.parset.makeSubset("Awimager.")
         mask_patch_size = parset.getInt("mask_patch_size")
+
         parset_path = self._write_parset_to_file(parset,
                             "awimager_cycle_{0}".format(major_cycle))
         image_path = os.path.join(
@@ -334,7 +335,7 @@ class msss_imager_pipeline(control):
                           working_directory = self.scratch_directory)
 
 
-        return output_mapfile
+        return output_mapfile, parset.getInt("maxbaseline")
 
 
     def _prepare_phase(self, input_ms_map_path, target_mapfile, skip = False):
@@ -353,7 +354,7 @@ class msss_imager_pipeline(control):
         if skip:
             pass
         else:
-            self.run_task("imager_prepare", input_ms_map_path,
+            outputs = self.run_task("imager_prepare", input_ms_map_path,
                     parset = ndppp_parset_path,
                     target_mapfile = target_mapfile,
                     slices_per_image = prepare_parset.getInt("slices_per_image"),
@@ -361,10 +362,11 @@ class msss_imager_pipeline(control):
                     mapfile = output_mapfile,
                     slices_mapfile = time_slices_mapfile,
                     working_directory = self.scratch_directory)
+            raw_ms_per_image_map_path = eval(outputs["raw_ms_per_image"])
 
 
         # If all is ok output_mapfile == target_mapfile
-        return output_mapfile, time_slices_mapfile
+        return output_mapfile, time_slices_mapfile, raw_ms_per_image_map_path
 
 
     def _create_dbs(self, input_map_path, timeslice_map_path, source_list = "" , skip_create_dbs = False):

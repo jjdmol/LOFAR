@@ -104,7 +104,10 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
                  "successfully generated and concatenated measurement set"
             ),
         'slices_mapfile': ingredient.FileField(
-            help = "Path to mapfile containing the produced subband groups")
+            help = "Path to mapfile containing the produced subband groups"),
+
+        'raw_ms_per_image': ingredient.StringField(
+            help = "List of mapfile per target image containing the source ms")
     }
 
     def go(self):
@@ -138,18 +141,22 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         statplot_executable = self.inputs['statplot_executable']
         msselect_executable = self.inputs['msselect_executable']
         rficonsole_executable = self.inputs['rficonsole_executable']
-        
+
         # *********************************************************************            
         # schedule the actual work
         nodeCommand = " python %s" % (self.__file__.replace("master", "nodes"))
 
         jobs = []
+        inputs_for_image_mapfile_path_list = []
         n_subband_groups = len(output_map)
         for idx_sb_group, (host, output_measurement_set) in enumerate(output_map):
             #create the input files for this node
             inputs_for_image_mapfile_path = self._create_input_map_for_subband_group(
                                 slices_per_image, n_subband_groups,
                                 subbands_per_image, idx_sb_group, input_map)
+            #save the (input) ms, as a list of  
+            inputs_for_image_mapfile_path_list.append(
+                                                inputs_for_image_mapfile_path)
 
             arguments = [init_script, parset, working_directory,
                         ndppp_exec, output_measurement_set,
@@ -194,6 +201,7 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         # Set the outputs
         self.outputs['mapfile'] = self.inputs["mapfile"]
         self.outputs['slices_mapfile'] = self.inputs["slices_mapfile"]
+        self.outputs['raw_ms_per_image'] = repr(inputs_for_image_mapfile_path_list)
         return 0
 
 
@@ -247,8 +255,8 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
                 "len(input_map) = {0}\n\t"
                 "len(output_map) * slices_per_image * subbands_per_image = "
                 "{1} * {2} * {3} = {4}".format(
-                    len(input_map), len(output_map), 
-                    slices_per_image, subbands_per_image, 
+                    len(input_map), len(output_map),
+                    slices_per_image, subbands_per_image,
                     len(output_map) * slices_per_image * subbands_per_image
                 )
             )
