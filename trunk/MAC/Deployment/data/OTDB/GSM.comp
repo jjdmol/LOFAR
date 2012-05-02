@@ -42,6 +42,4 @@ par  monetdb_name           I    text   -      10    100    "gsm"          -    
 par  monetdb_user           I    text   -      10    100    "gsm"          -     ''
 par  monetdb_password       I    text   -      10    100    "msss"         -     ''
 par  assoc_theta            I    text   -      10    100    ""             -     ''
-par  sourcedb_target_path   I    text   -      10    100    ""             -     ''
-par  parmdb_suffix          I    text   -      10    100    ".parmdbm"     -     ''
 
