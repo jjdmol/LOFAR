@@ -18,6 +18,12 @@ class imager_source_finding(LOFARnodeTCP):
             bdsm_parameter_run2x_path, catalog_output_path, image_output_path):
 
         self.logger.info("Starting imager_source_finding")
+#        self.logger.debug("input_image = %s" % input_image)
+#        self.logger.debug("bdsm_parameter_run1_path = %s" % bdsm_parameter_run1_path)
+#        self.logger.debug("bdsm_parameter_run2x_path = %s" % bdsm_parameter_run2x_path)
+#        self.logger.debug("catalog_output_path = %s" % catalog_output_path)
+#        self.logger.debug("image_output_path = %s" % image_output_path)
+            
         # default frequency is None (read from image), save for later cycles
         frequency = None
         number_of_sourcefind_itterations = None
@@ -79,6 +85,9 @@ class imager_source_finding(LOFARnodeTCP):
         # Call with the number of loops and the path to the files, only combine
         # if we found sources
         if sources_found:
+            self.logger.info(
+                "Writing source list to file: %s" % catalog_output_path
+            )
             self._combine_source_lists(number_of_sourcefind_itterations,
                                    catalog_output_path)
 
