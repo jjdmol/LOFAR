@@ -437,8 +437,12 @@ def processMS(absPath, output,overwrite,stats,column,timeslots,channels,antennas
     for stat in statslist:
         if stat.count('_'):
             sfields = stat.split('_')
-            complexcoordinates.append(sfields[0])
-            statparams.append(sfields[1])
+            if len(sfields) == 2:
+                complexcoordinates.append(sfields[0])
+                statparams.append(sfields[1])
+    if len(complexcoordinates) == 0:
+        print 'Error: check specified stats format'
+        return
     for complexcoord in complexcoordinates:
         if complexcoord not in ('amp','phase','real','imag','phaserate'):
             print 'Error: check specified stats format'
@@ -578,6 +582,7 @@ def main(opts):
         exit()
     output = os.path.abspath(output)
     if input.endswith('gds') or input.endswith('GDS'):
+        print 'GDS as input is untested.'
         (absPaths,nodes) = gdsToPathNode(input)
     else:
         # We assume single MS
