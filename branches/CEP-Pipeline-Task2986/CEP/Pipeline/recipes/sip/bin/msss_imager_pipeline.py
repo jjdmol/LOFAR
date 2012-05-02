@@ -137,14 +137,8 @@ class msss_imager_pipeline(control):
             self.parset.fullModuleName('PythonControl') + '.'
         )
 
-        concat_ms_map_path, timeslice_map_path, raw_ms_input_map_paths = (
-            self._prepare_phase(input_mapfile, target_mapfile, skip = False)
-        )
-        
-        self.logger.info("concat_ms_map_path = %s" % concat_ms_map_path)
-        self.logger.info("timeslice_map_path = %s" % timeslice_map_path)
-        self.logger.info("raw_ms_input_map_paths = %s" % raw_ms_input_map_paths)
-        return 1
+        concat_ms_map_path, timeslice_map_path = self._prepare_phase(
+                input_mapfile, target_mapfile, skip = False)
 
         #We start with an empty source_list
         sourcelist_list = []
