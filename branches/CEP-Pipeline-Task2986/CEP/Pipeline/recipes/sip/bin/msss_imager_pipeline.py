@@ -137,11 +137,12 @@ class msss_imager_pipeline(control):
             self.parset.fullModuleName('PythonControl') + '.'
         )
 
-        concat_ms_map_path, timeslice_map_path = self._prepare_phase(
-                input_mapfile, target_mapfile, skip = False)
-
+        concat_ms_map_path, timeslice_map_path, raw_ms_input_map_paths = (
+            self._prepare_phase(input_mapfile, target_mapfile, skip = False)
+        )
+        
         #We start with an empty source_list
-        sourcelist_list = []
+        source_list = ""
         number_of_major_cycles = self.parset.getInt("number_of_major_cycles")
         for idx_loop in range(number_of_major_cycles):
             # TODO: Remove debugging skip code
@@ -224,12 +225,11 @@ class msss_imager_pipeline(control):
     def _finalize(self, awimager_output_mapfile, source_list, target_mapfile,
                   skip = False):
         if skip:
-            return
-
-        # First we need to create a SourceDB from the source list.
-        #run the imager finalize recipe
-        self.run_task("imager_finalize", target_mapfile,
-                      test = "blabblabllabla")
+            pass
+        else:
+            #run the awimager recipe
+            self.run_task("imager_finalize", target_mapfile,
+                          test = "blabblabllabla")
 
 
     def _source_finding(self, image_map_path, major_cycle, skip = True):
@@ -363,6 +363,7 @@ class msss_imager_pipeline(control):
                     slices_mapfile = time_slices_mapfile,
                     working_directory = self.scratch_directory)
             raw_ms_per_image_map_path = eval(outputs["raw_ms_per_image"])
+
 
         # If all is ok output_mapfile == target_mapfile
         return output_mapfile, time_slices_mapfile, raw_ms_per_image_map_path
