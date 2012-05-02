@@ -36,5 +36,7 @@ node  Imaging         4.0.0  development  'node constraint'  "Imaging"
 #--------------------------------------------------------------------------------------------------------
 #   name                    dir. type   unit   prun. vm   value     constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par number_of_major_cycles  I    uint    -     10    0    3           -      ''
+par number_of_major_cycles  I    uint    -     10    0    3           -      'Number of major cycles'
+par slices_per_image        I    uint    -     10    0    1           -      'Number of time slices per image'
+par subbands_per_image      I    uint    -     10    0    1           -      'Number of frequency subbands per image'
 
