@@ -1,13 +1,12 @@
 from __future__ import with_statement
 import os
 import sys
-import collections
 
 from lofarpipe.support.baserecipe import BaseRecipe
 import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.remotecommand import ComputeJob
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
-from lofarpipe.support.group_data import load_data_map
+from lofarpipe.support.group_data import load_data_map, store_data_map
 
 class imager_source_finding(BaseRecipe, RemoteCommandRecipeMixIn):
     inputs = {
@@ -28,6 +27,17 @@ class imager_source_finding(BaseRecipe, RemoteCommandRecipeMixIn):
             '--catalog-output-path',
             help = "Path to write the catalog created by bdsm)"
         ),
+        'mapfile': ingredient.StringField(
+            '--mapfile',
+            help = "Full path of mapfile; containing the succesfull generated"
+            "source list"
+        ),
+    }
+
+    outputs = {
+        'mapfile': ingredient.StringField(
+        help = "Full path of mapfile; containing the succesfull generated"
+            )
     }
 
     def go(self):
@@ -47,6 +57,7 @@ class imager_source_finding(BaseRecipe, RemoteCommandRecipeMixIn):
         )
         node_command = " python %s" % (self.__file__.replace("master", "nodes"))
         jobs = []
+        created_sourcelists = []
         for host, data in input_map:
             arguments = [data,
                          bdsm_parset_file_run1,
@@ -54,6 +65,7 @@ class imager_source_finding(BaseRecipe, RemoteCommandRecipeMixIn):
                          catalog_output_path,
                          image_output_path
                         ]
+            created_sourcelists.append((host, catalog_output_path))
             jobs.append(ComputeJob(host, node_command, arguments))
 
         # Hand over the job(s) to the pipeline scheduler
@@ -63,8 +75,10 @@ class imager_source_finding(BaseRecipe, RemoteCommandRecipeMixIn):
         if self.error.isSet():
             self.logger.warn("Failed imager_source_finding run detected")
             return 1
-        else:
-            return 0
+
+        self.logger.info(created_sourcelists)
+        store_data_map(self.inputs['mapfile'], created_sourcelists)
+        self.outputs["mapfile"] = self.inputs['mapfile']
 
 
 if __name__ == '__main__':

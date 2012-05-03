@@ -25,9 +25,8 @@ from lofarpipe.support.group_data import load_data_map
 from argparse import ArgumentError
 
 # Some constant settings for the recipe
-log4CPlusName = "imager_prepare_node"
 time_slice_dir_name = "time_slices"
-collected_ms_dir_name = "subbands"
+collected_ms_dir_name = "s"
 
 class SubProcessGroup(object):
         """
@@ -118,7 +117,8 @@ class imager_prepare(LOFARnodeTCP):
        remove these completely from the dataset
     6. Concatenate the time slice measurment sets, to a virtual ms 
     """
-    def run(self, init_script, parset, working_dir, ndppp_executable, output_measurement_set,
+    def run(self, init_script, parset, working_dir, processed_ms_dir,
+             ndppp_executable, output_measurement_set,
             time_slices_per_image, subbands_per_group, raw_ms_mapfile,
             asciistat_executable, statplot_executable, msselect_executable,
             rficonsole_executable):
@@ -126,9 +126,8 @@ class imager_prepare(LOFARnodeTCP):
             input_map = load_data_map(raw_ms_mapfile)
 
             #******************************************************************
-            # Create the directories used in this recipe
-            collected_ms_dir = os.path.join(working_dir, collected_ms_dir_name)
-            create_directory(collected_ms_dir)
+            # Create the directories used in this recipe            
+            create_directory(processed_ms_dir)
 
             # time slice dir: assure empty directory: Stale data is a problem
             time_slice_dir = os.path.join(working_dir, time_slice_dir_name)
@@ -142,7 +141,7 @@ class imager_prepare(LOFARnodeTCP):
             #******************************************************************
             #Copy the input files (caching included for testing purpose)
             missing_files = self._cached_copy_input_files(
-                            collected_ms_dir, input_map,
+                            processed_ms_dir, input_map,
                             skip_copy = False)
             if len(missing_files) != 0:
                 self.logger.warn("A number of measurement sets could not be"
@@ -152,8 +151,8 @@ class imager_prepare(LOFARnodeTCP):
             #run dppp: collect frequencies into larger group
             time_slices = \
                 self._run_dppp(working_dir, time_slice_dir, time_slices_per_image,
-                    input_map, subbands_per_group, collected_ms_dir,
-                    parset, ndppp_executable, init_script, log4CPlusName)
+                    input_map, subbands_per_group, processed_ms_dir,
+                    parset, ndppp_executable, init_script)
 
             self.logger.info(time_slices)
             #***********************************************************
@@ -184,7 +183,7 @@ class imager_prepare(LOFARnodeTCP):
 
         return 0
 
-    def _cached_copy_input_files(self, target_dir_for_collected_ms,
+    def _cached_copy_input_files(self, processed_ms_dir,
                                  input_map, skip_copy = False):
         """
         Perform a optionally skip_copy copy of the input ms:
@@ -193,11 +192,11 @@ class imager_prepare(LOFARnodeTCP):
         """
         # TODO: Remove the skip_copy copy for the real version
         missing_files = []
-        temp_missing = os.path.join(target_dir_for_collected_ms, "temp_missing")
+        temp_missing = os.path.join(processed_ms_dir, "temp_missing")
 
         if not skip_copy:
             #Collect all files and copy to current node
-            missing_files = self._copy_input_files(target_dir_for_collected_ms,
+            missing_files = self._copy_input_files(processed_ms_dir,
                                                    input_map)
 
             fp = open(temp_missing, 'w')
@@ -211,7 +210,7 @@ class imager_prepare(LOFARnodeTCP):
         return missing_files
 
 
-    def _copy_input_files(self, target_dir_for_collected_ms, input_map):
+    def _copy_input_files(self, processed_ms_dir, input_map):
         """
         Collect all the measurement sets in a single directory:
         The measurement sets are located on different nodes on the cluster.
@@ -224,7 +223,7 @@ class imager_prepare(LOFARnodeTCP):
         for idx, (node, path) in enumerate(input_map):
             # construct copy command
             command = ["rsync", "-r", "{0}:{1}".format(node, path) ,
-                               "{0}".format(target_dir_for_collected_ms)]
+                               "{0}".format(processed_ms_dir)]
 
             self.logger.info(" ".join(command))
             #Spawn a subprocess and connect the pipes
@@ -242,8 +241,8 @@ class imager_prepare(LOFARnodeTCP):
             if  exit_status != 0:
                 missing_files.append(path)
                 self.logger.info("Failed loading file: {0}".format(path))
-                self.logger.info(stdoutdata)
-                self.logger.info(stderrdata)
+            self.logger.info(stderrdata)
+            self.logger.info(stdoutdata)
 
         # return the missing files (for 'logging')
         return set(missing_files)
@@ -251,7 +250,7 @@ class imager_prepare(LOFARnodeTCP):
 
     def _run_dppp(self, working_dir, time_slice_dir_path, slices_per_image,
                   input_map, subbands_per_image, collected_ms_dir_name, parset,
-                  ndppp, init_script, log4CPlusName):
+                  ndppp, init_script):
         """
         Run NDPPP:  
         Create dir for grouped measurements, assure clean workspace
@@ -309,7 +308,7 @@ class imager_prepare(LOFARnodeTCP):
             try:
                 environment = read_initscript(self.logger, init_script)
                 with CatchLog4CPlus(working_dir, self.logger.name +
-                                    "." + os.path.basename(log4CPlusName),
+                                    "." + os.path.basename("imager_prepare_ndppp"),
                                     os.path.basename(ndppp)) as logger:
                         catch_segfaults(cmd, working_dir, environment,
                                         logger, cleanup = None)

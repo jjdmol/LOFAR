@@ -95,6 +95,15 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         'slices_mapfile': ingredient.StringField(
             '--slices-mapfile',
             help = "Path to mapfile containing the produced subband groups"
+        ),
+        'raw_ms_per_image_mapfile': ingredient.StringField(
+            '--raw-ms-per-image-mapfile',
+            help = "Path to mapfile containing the raw ms for each produced"
+                "image"
+        ),
+        'processed_ms_dir': ingredient.StringField(
+            '--processed-ms-dir',
+            help = "Path to directory for processed measurment sets"
         )
     }
 
@@ -106,8 +115,9 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         'slices_mapfile': ingredient.FileField(
             help = "Path to mapfile containing the produced subband groups"),
 
-        'raw_ms_per_image': ingredient.StringField(
-            help = "List of mapfile per target image containing the source ms")
+        'raw_ms_per_image_mapfile': ingredient.FileField(
+            help = "Path to mapfile containing the raw ms for each produced"
+                "image")
     }
 
     def go(self):
@@ -131,6 +141,7 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         # outputs
         output_ms_mapfile_path = self.inputs['mapfile']
         output_slices_mapfile_path = self.inputs['slices_mapfile']
+        processed_ms_dir = self.inputs['processed_ms_dir']
 
         # Environment parameters
         init_script = self.inputs['initscript']
@@ -141,6 +152,7 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         statplot_executable = self.inputs['statplot_executable']
         msselect_executable = self.inputs['msselect_executable']
         rficonsole_executable = self.inputs['rficonsole_executable']
+
 
         # *********************************************************************            
         # schedule the actual work
@@ -155,10 +167,11 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
                                 slices_per_image, n_subband_groups,
                                 subbands_per_image, idx_sb_group, input_map)
             #save the (input) ms, as a list of  
-            inputs_for_image_mapfile_path_list.append(
-                                                inputs_for_image_mapfile_path)
+            inputs_for_image_mapfile_path_list.append((host,
+                                            inputs_for_image_mapfile_path))
 
             arguments = [init_script, parset, working_directory,
+                        processed_ms_dir,
                         ndppp_exec, output_measurement_set,
                         slices_per_image, subbands_per_image,
                         inputs_for_image_mapfile_path, asciistat_executable,
@@ -197,11 +210,12 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
                 if job.results.has_key("time_slices"):
                     slices.append((host, job.results["time_slices"]))
         store_data_map(output_slices_mapfile_path, slices)
-
+        store_data_map(self.inputs["raw_ms_per_image_mapfile"],
+                       inputs_for_image_mapfile_path_list)
         # Set the outputs
         self.outputs['mapfile'] = self.inputs["mapfile"]
         self.outputs['slices_mapfile'] = self.inputs["slices_mapfile"]
-        self.outputs['raw_ms_per_image'] = repr(inputs_for_image_mapfile_path_list)
+        self.outputs['raw_ms_per_image_mapfile'] = self.inputs["raw_ms_per_image_mapfile"]
         return 0
 
 
@@ -231,7 +245,7 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
                             "layout", "job_directory")
 
         inputs_for_image_mapfile_path = os.path.join(
-            job_directory, "mapfiles", "raw_ms_input_map_{0}".format(idx_sb_group))
+            job_directory, "mapfiles", "ms_per_image_{0}".format(idx_sb_group))
 
         store_data_map(inputs_for_image_mapfile_path, inputs_for_image)
         return inputs_for_image_mapfile_path

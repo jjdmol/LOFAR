@@ -17,6 +17,7 @@ python_install(
   master/flag_baseline.py
   master/imager_awimager.py
   master/imager_create_dbs.py
+  master/imager_finalize.py
   master/imager_prepare.py
   master/imager_bbs.py
   master/imager_source_finding.py
@@ -51,6 +52,7 @@ python_install(
   nodes/imager_bbs.py
   nodes/imager_awimager.py
   nodes/imager_create_dbs.py
+  nodes/imager_finalize.py
   nodes/imager_prepare.py
   nodes/imager_source_finding.py
   nodes/parmdb.py

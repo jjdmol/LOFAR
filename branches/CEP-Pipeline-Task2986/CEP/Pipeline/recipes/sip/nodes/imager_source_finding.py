@@ -53,6 +53,9 @@ class imager_source_finding(LOFARnodeTCP):
                     pass  #do nothing
                 bdsm_parameters[key] = parameter_value
 
+            self.logger.info(
+                "Starting sourcefinder bdsm on {0} using parameters:".format(input_image_local))
+            self.logger.info(repr(bdsm_parameters))
             img = bdsm.process_image(bdsm_parameters,
                         filename = input_image_local, frequency = frequency)
 
@@ -60,11 +63,14 @@ class imager_source_finding(LOFARnodeTCP):
             # If no more matching of sources with gausians is possible (nsrc==0)
             # break the loop
             if img.nsrc == 0:
+                self.logger.info("No sources found: exiting")
                 number_of_sourcefind_itterations = idx
                 break
             else:
                 # We have at least found a single source!
+                self.logger.info("Number of source found: {0}".format(img.nsrc))
                 sources_found = True
+
 
             #export the catalog and the image with gausians substracted
             img.write_catalog(outfile = catalog_output_path + "_{0}".format(str(idx)),
@@ -92,6 +98,7 @@ class imager_source_finding(LOFARnodeTCP):
                                    catalog_output_path)
 
         # TODO: return the sourcedb??
+        # ik denk van niet: als er een fout op treed eindigd deze script
 
         return 0
 
