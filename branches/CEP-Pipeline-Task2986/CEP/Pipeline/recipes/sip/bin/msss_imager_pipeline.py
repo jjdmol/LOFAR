@@ -143,7 +143,7 @@ class msss_imager_pipeline(control):
         processed_ms_dir = os.path.join(self.scratch_directory, "subbands")
         concat_ms_map_path, timeslice_map_path, raw_ms_per_image_map_path = \
             self._prepare_phase(input_mapfile, target_mapfile, processed_ms_dir,
-                                 skip = True)
+                                 skip = False)
 
         #We start with an empty source_list
         sourcelist_map = None
@@ -161,24 +161,24 @@ class msss_imager_pipeline(control):
             parmdbs_path, sky_path = self._create_dbs(
                         concat_ms_map_path, timeslice_map_path,
                         source_list = source_list,
-                        skip_create_dbs = True)
+                        skip_create_dbs = False)
 
             # *****************************************************************
             # (3)  bbs_imager recipe
             bbs_output = self._bbs(timeslice_map_path, parmdbs_path, sky_path,
-                        skip = True)
+                        skip = False)
 
 
             # ******************************************************************
             # (4) Get parameters awimager from the prepare_parset and inputs
             aw_image_mapfile, maxbaseline = self._aw_imager(concat_ms_map_path,
                         idx_loop, sky_path,
-                        skip = True)
+                        skip = False)
 
             # *****************************************************************
             # (5) Source finding 
             sourcelist_map = self._source_finding(aw_image_mapfile,
-                                    idx_loop, skip = True)
+                                    idx_loop, skip = False)
             #should the output be a sourcedb? instead of a sourcelist
 
 
