@@ -22,7 +22,7 @@
 # %> ./setup.db.batch localhost test1 test1 test1 50000                       #
 ###############################################################################
 
-MONETDBSIPHOME=/export/scratch2/bscheers/sip-code/trunk/CEP/GSM/db
+MONETDBSIPHOME=/home/amints/prog/LOFAR_trunk/CEP/GSM/db
 
 if [ -z "$*" ]
 then
