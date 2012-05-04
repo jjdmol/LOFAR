@@ -45,15 +45,14 @@ class imager_finalize(LOFARnodeTCP):
                     # save the path
                     processed_ms_paths.append(os.path.join(processed_ms_dir,
                                                             raw_ms_file_name))
-            error = None #@UnusedVariable
             #add the information the image
             try:
                 addimg.addImagingInfo (awimager_output, processed_ms_paths,
                     sourcelist, minbaseline, maxbaseline)
 
-            except Exception as error:
-                self.logger.info("addImagingInfo Threw Exception:")
-                self.logger.info(error)
+            except Exception, error:
+                self.logger.error("addImagingInfo Threw Exception:")
+                self.logger.error(error)
                 # Catch raising of already done error: allows for rerunning
                 # of the recipe
                 if "addImagingInfo already done" in str(error):
@@ -71,7 +70,7 @@ class imager_finalize(LOFARnodeTCP):
                 #im.saveas(output_image, hdf5 = True)
                 # TODO: HDF5 version of PIM is different to the system version
                 # dunno the solution: the script breaks.
-            except Exception as error:
+            except Exception, error:
                 self.logger.error(
                     "Exception raised inside pyrap.images: {0}".format(str(error)))
                 raise Exception(str(error))

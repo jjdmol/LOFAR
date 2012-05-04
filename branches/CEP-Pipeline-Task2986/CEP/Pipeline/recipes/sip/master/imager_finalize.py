@@ -65,16 +65,6 @@ class imager_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
 
     def go(self):
         super(imager_finalize, self).go()
-        # debug
-        self.logger.info(self.inputs["awimager_output_map"])
-        self.logger.info(self.inputs["raw_ms_per_image_map"])
-        self.logger.info(self.inputs["sourcelist_map"])
-        self.logger.info(self.inputs["target_mapfile"])
-        self.logger.info(self.inputs["output_image_mapfile"])
-
-        self.logger.info(self.inputs["minbaseline"])
-        self.logger.info(self.inputs["maxbaseline"])
-        # debug
 
         awimager_output_map = load_data_map(self.inputs["awimager_output_map"])
         raw_ms_per_image_map = load_data_map(self.inputs["raw_ms_per_image_map"])
@@ -83,28 +73,35 @@ class imager_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
         output_image_mapfile = load_data_map(self.inputs["output_image_mapfile"])
         processed_ms_dir = self.inputs["processed_ms_dir"]
         fillRootImageGroup_exec = self.inputs["fillrootimagegroup_exec"]
-        #chech validity of the maps: all on same node with the same length
-        validate_data_maps(awimager_output_map, raw_ms_per_image_map,
-                sourcelist_map, target_mapfile, output_image_mapfile)
-        # debug
-        self.logger.info(awimager_output_map)
-        self.logger.info(raw_ms_per_image_map)
-        self.logger.info(sourcelist_map)
-        self.logger.info(target_mapfile)
-        self.logger.info(output_image_mapfile)
-        # debug
+        # chech validity of the maps: all on same node with the same length
+        if not validate_data_maps(awimager_output_map, raw_ms_per_image_map,
+                sourcelist_map, target_mapfile, output_image_mapfile):
+            self.logger.error("The suplied datamaps for the imager_finalize"
+                              "are incorrect.")
+            self.logger.error("awimager_output_map: {0}".format(
+                                                        awimager_output_map))
+            self.logger.error("raw_ms_per_image_map: {0}".format(
+                                                        raw_ms_per_image_map))
+            self.logger.error("sourcelist_map: {0}".format(
+                                                        sourcelist_map))
+            self.logger.error("target_mapfile: {0}".format(
+                                                        target_mapfile))
+            self.logger.error("output_image_mapfile: {0}".format(
+                                                        output_image_mapfile))
+            return 1
+
         nodeCommand = " python %s" % (self.__file__.replace("master", "nodes"))
         jobs = []
         for  (awimager_output_pair, raw_ms_per_image_pair, sourcelist_pair,
               target_pair, output_image_pair) in zip(
                 awimager_output_map, raw_ms_per_image_map, sourcelist_map,
                 target_mapfile, output_image_mapfile):
+            # collect the data
             (host, awimager_output) = awimager_output_pair
             (host, raw_ms_per_image) = raw_ms_per_image_pair
             (host, sourcelist) = sourcelist_pair
             (host, target) = target_pair
             (host, output_image) = output_image_pair
-
 
             arguments = [awimager_output, raw_ms_per_image, sourcelist,
                         target, output_image, self.inputs["minbaseline"],
@@ -112,8 +109,9 @@ class imager_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
                         fillRootImageGroup_exec]
             self.logger.info(arguments)
             jobs.append(ComputeJob(host, nodeCommand, arguments))
-
         self._schedule_jobs(jobs)
+
+        #TODO: validatable output data??
         return 0
 
 

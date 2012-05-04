@@ -163,9 +163,12 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         n_subband_groups = len(output_map)
         for idx_sb_group, (host, output_measurement_set) in enumerate(output_map):
             #create the input files for this node
+            self.logger.debug("Creating input data subset for processing"
+                              "on: {0}".format(host))
             inputs_for_image_mapfile_path = self._create_input_map_for_subband_group(
                                 slices_per_image, n_subband_groups,
                                 subbands_per_image, idx_sb_group, input_map)
+
             #save the (input) ms, as a list of  
             inputs_for_image_mapfile_path_list.append((host,
                                             inputs_for_image_mapfile_path))
@@ -189,7 +192,8 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         slices = []
         if self.error.isSet():   #if one of the nodes failed
             self.logger.warn("Failed prepare_imager run detected: Generating "
-                             "new output_ms_mapfile_path without failed runs!")
+                             "new output_ms_mapfile_path without failed runs:"
+                             " {0}".format(output_ms_mapfile_path))
             concatenated_timeslices = []
             #scan the return dict for completed key
             for ((host, output_measurement_set), job) in zip(output_map, jobs):
@@ -202,16 +206,29 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
                 else:
                     self.logger.warn("Failed run on {0}. NOT Created: {1} ".format(
                         host, output_measurement_set))
+            if len(concatenated_timeslices) == 0:
+                self.logger.error("None of the started compute node finished:"
+                    "The current recipe produced no output, aborting")
+                return 1
+
             store_data_map(output_ms_mapfile_path, concatenated_timeslices)
+            self.logger.debug(
+                "Wrote target mapfile: {0}".format(output_ms_mapfile_path))
 
         else: #Copy output map from input output_ms_mapfile_path and return           
             store_data_map(output_ms_mapfile_path, output_map)
             for ((host, output_measurement_set), job) in zip(output_map, jobs):
                 if job.results.has_key("time_slices"):
                     slices.append((host, job.results["time_slices"]))
+
         store_data_map(output_slices_mapfile_path, slices)
+        self.logger.debug(
+                "Wrote Time_slice mapfile: {0}".format(output_ms_mapfile_path))
         store_data_map(self.inputs["raw_ms_per_image_mapfile"],
                        inputs_for_image_mapfile_path_list)
+        self.logger.debug(
+                "Wrote mapfile containing (raw) input ms: {0}".format(
+                    self.inputs["raw_ms_per_image_mapfile"]))
         # Set the outputs
         self.outputs['mapfile'] = self.inputs["mapfile"]
         self.outputs['slices_mapfile'] = self.inputs["slices_mapfile"]
@@ -247,6 +264,8 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         inputs_for_image_mapfile_path = os.path.join(
             job_directory, "mapfiles", "ms_per_image_{0}".format(idx_sb_group))
 
+        self.logger.debug("Storing inputmap on location: {0}".format(
+                                    inputs_for_image_mapfile_path))
         store_data_map(inputs_for_image_mapfile_path, inputs_for_image)
         return inputs_for_image_mapfile_path
 

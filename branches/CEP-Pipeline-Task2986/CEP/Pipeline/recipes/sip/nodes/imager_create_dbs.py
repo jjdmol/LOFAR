@@ -1,19 +1,5 @@
 # LOFAR AUTOMATIC IMAGING PIPELINE
-# create dbs
-# The create dbs recipe is responcible for settings up database
-# for subsequenty imaging steps. It creates two databases in three steps
-#   1. sourcedb. 
-#      On the first major imaging cycle filled by the gsm. sourcefinding in the 
-#      in the later steps sources found are append to the current list
-#      Current patch of the sky. It is filled with an initial started set of
-#      sources created by  the Global Sky Model (GSM). 
-#      The GSM does not create a sourceDB. It creates a text file which is con-
-#      sumed by makesourcedb resulting in a sourceDB (casa table)
-#      There is a single sourcedb for a measurement set
-#   2. parmdb
-#      Each individual timeslice needs a place to collect parameters: This is
-#      done in the paramdb. 
-# 
+# imager_create_dbs (node)
 # Wouter Klijn 2012
 # klijn@astron.nl
 # -----------------------------------------------------------------------------
@@ -21,7 +7,6 @@ from __future__ import with_statement
 import sys
 import subprocess
 import math
-import tempfile
 import shutil
 import pyrap.tables as pt                                                       #@UnresolvedImport
 import os
@@ -33,7 +18,7 @@ from lofarpipe.support.pipelinelogging import CatchLog4CPlus
 from lofarpipe.support.utilities import read_initscript
 from lofarpipe.support.utilities import catch_segfaults
 import monetdb.sql as db
-import lofar.gsm.gsmutils as gsm                                                    #@UnresolvedImport
+import lofar.gsm.gsmutils as gsm                                                #@UnresolvedImport
 
 #TODO: A better place for this template
 template_parmdb = """
@@ -51,14 +36,28 @@ quit
 """
 
 class imager_create_dbs(LOFARnodeTCP):
+    """
+    create dbs
+    The create dbs recipe is responcible for settings up database
+    for subsequenty imaging steps. It creates two databases in three steps
+    1. sourcedb. 
+      On the first major imaging cycle filled by the gsm. sourcefinding in the 
+      in the later steps sources found are append to the current list
+      Current patch of the sky. It is filled with an initial started set of
+      sources created by  the Global Sky Model (GSM). 
+      The GSM does not create a sourceDB. It creates a text file which is con-
+      sumed by makesourcedb resulting in a sourceDB (casa table)
+      There is a single sourcedb for a measurement set
+   2. parmdb
+      Each individual timeslice needs a place to collect parameters: This is
+      done in the paramdb. 
+    """
     def run(self, concatenated_measurement_set, sourcedb_target_path,
             monet_db_hostname, monet_db_port, monet_db_name, monet_db_user,
             monet_db_password, assoc_theta, parmdb_executable, slice_paths,
             parmdb_suffix, init_script, working_directory, makesourcedb_path,
             source_list_path_extern):
-        """
-        
-        """
+
         self.logger.info("Starting imager_create_dbs Node")
 
         # If a (local) sourcelist is received use it else
@@ -66,9 +65,10 @@ class imager_create_dbs(LOFARnodeTCP):
         if source_list_path_extern == "":
             #create a temporary file to contain the skymap
             source_list = sourcedb_target_path + ".temp"
-            if self._get_sky_model(concatenated_measurement_set,
-                     source_list, monet_db_hostname, monet_db_port,
-                     monet_db_name, monet_db_user, monet_db_password, assoc_theta):
+            if self._fill_soucelist_based_on_gsm_sky_model(
+                    concatenated_measurement_set,
+                    source_list, monet_db_hostname, monet_db_port,
+                    monet_db_name, monet_db_user, monet_db_password, assoc_theta):
                 self.logger.error("failed creating skymodel")
                 return 1
             append = False
@@ -82,7 +82,8 @@ class imager_create_dbs(LOFARnodeTCP):
                                   makesourcedb_path, append):
             self.logger.error("failed creating sourcedb")
             return 1
-        self.outputs["sky"] = sourcedb_target_path
+
+        self.outputs["sourcedb"] = sourcedb_target_path
 
         if self._create_parmdb_for_timeslices(parmdb_executable, slice_paths,
                                            parmdb_suffix):
@@ -100,17 +101,15 @@ class imager_create_dbs(LOFARnodeTCP):
         """
         #remove existing sourcedb if not appending
         if (append == False) and os.path.isdir(sourcedb_target_path):
-            self.logger.info("Removing existing sky model: {0}".format(
-                                                        sourcedb_target_path))
             shutil.rmtree(sourcedb_target_path)
-
+            self.logger.debug("Removed existing sky model: {0}".format(
+                                            sourcedb_target_path))
 
         # The command and parameters to be run
         cmd = [executable, "in={0}".format(temp_sky_path),
                "out={0}".format(sourcedb_target_path),
-               "format=<", # format according to Ger
-               # Always set append flag: no effect on non exist db
-               "append=true"]
+               "format=<", # format according to Ger van Diepen
+               "append=true"] # Always set append flag: no effect on non exist db
 
         try:
             environment = read_initscript(self.logger, init_script)
@@ -120,14 +119,6 @@ class imager_create_dbs(LOFARnodeTCP):
             ) as logger:
                     catch_segfaults(cmd, working_directory, environment,
                                             logger, cleanup = None)
-
-        # Thrown by catch_segfault
-        except CalledProcessError, e:
-            self.logger.error("Execution of external failed:")
-            self.logger.error(" ".join(cmd))
-            self.logger.error("exception details:")
-            self.logger.error(str(e))
-            return 1
 
         except Exception, e:
             self.logger.error("Execution of external failed:")
@@ -289,7 +280,6 @@ class imager_create_dbs(LOFARnodeTCP):
             ra_and_decl = t1.getcell("PHASE_DIR", 0)[0]
 
         except Exception, e:
-
             #catch all exceptions and log
             self.logger.error("Error loading FIELD/PHASE_DIR from "
                               "measurementset {0} : {1}".format(measurement_set,
@@ -305,34 +295,39 @@ class imager_create_dbs(LOFARnodeTCP):
             self.logger.error("returned PHASE_DIR data did not contain two values")
             return None
 
-
         return (ra_and_decl[0], ra_and_decl[1])
 
 
-    def _get_sky_model(self, measurement_set, path_output_skymap,
+    def _fill_soucelist_based_on_gsm_sky_model(self, measurement_set, sourcelist,
                               monet_db_host, monet_db_port, monet_db_name,
                               monet_db_user, monet_db_password,
                               assoc_theta = None):
         """
         Create a bbs sky model. Based on the measurement (set) suplied
-        The skymap is created at the path_output_skymap
+        The skymap is created at the sourcelist
         """
-
         # Create monetdb connection
         conn = self._create_monet_db_connection(monet_db_host, monet_db_name,
                  monet_db_user, monet_db_password, monet_db_port)
+        self.logger.debug("Connected to monet db at: {0}:{1}  {2}".format(
+                monet_db_host, monet_db_port, monet_db_name))
 
         # get position of the target in the sky
         (ra_c, decl_c) = self._get_ra_and_decl_from_ms(measurement_set)
+        self.logger.debug("ra and dec from measurement set: {0}, {1}".format(
+                    ra_c, decl_c))
 
         # Get the Fov: sources in this fov should be included in the skumodel
         fov_radius = self._field_of_view(measurement_set)
+        self.logger.debug("Using the folowing calculated field of view: {0}".format(
+                    fov_radius))
 
         # !!magic constant!! This value is calculated based on        
         # communications with Bart Sheers
         if assoc_theta == None:
             assoc_theta = 90.0 / 3600
         try:
+            # Transform the ra and decl to rad
             ra_c = float(ra_c) * (180 / math.pi)
             if ra_c < 0:  #gsm utils break when using negative ra_c ergo add 360
                 ra_c += 360.0
@@ -340,7 +335,7 @@ class imager_create_dbs(LOFARnodeTCP):
 
             gsm.expected_fluxes_in_fov(conn, ra_c ,
                         decl_c, float(fov_radius),
-                        float(assoc_theta), path_output_skymap,
+                        float(assoc_theta), sourcelist,
                         storespectraplots = False)
         except Exception, e:
             self.logger.error("expected_fluxes_in_fov raise exception: " +

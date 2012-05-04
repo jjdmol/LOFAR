@@ -1,33 +1,43 @@
-#                                                         LOFAR IMAGING PIPELINE
-#
-#  imager_create_dbs (master)
-#
-#                                                          Wouter Klijn, 2012
-#                                                                klijn@astron.nl
+# LOFAR AUTOMATIC IMAGING PIPELINE
+# imager_create_dbs (master)
+# Wouter Klijn, 2012
+# klijn@astron.nl
 # ------------------------------------------------------------------------------
 import os
 import sys
-import collections
+
 import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
-from lofarpipe.support.group_data import load_data_map, store_data_map
-
+from lofarpipe.support.group_data import load_data_map, store_data_map, validate_data_maps
+from lofarpipe.support.lofarexceptions import PipelineException
 
 class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
     """
-
+    imager_create_dbs (master) is the script responsible for creating a number 
+    of databases needed by imaging pipeline.
+    1. Using pointing extracted from the input measurement set a database is 
+    created of sources based on information in the global sky model (gsm)
+    One source db is created for each image/node
+      a. The pointing is supplied to to GSM database resulting in a sourcelist
+      b. This sourcelist is converted into a source db
+      c. Possible additional sourcelist from external sources are added to this 
+         source list
+    2. For each of the timeslice in image a parmdb is created. Each timeslice is 
+      recorded on a different time and needs its own calibration and therefore
+      instrument parameters. 
     """
+
     inputs = {
         'working_directory': ingredient.StringField(
             '-w', '--working-directory',
-            help = "Working directory used on outpuconfigt nodes. Results location"
+            help = "Working directory used on nodes. Results location"
         ),
          'initscript': ingredient.FileField(
             '--initscript',
             help = '''The full path to an (Bourne) shell script which will\
-             intialise the environment (ie, ``lofarinit.sh``)'''
+             initialise the environment (ie, ``lofarinit.sh``)'''
         ),
         'sourcedb_suffix': ingredient.StringField(
             '--sourcedb-suffix',
@@ -80,22 +90,24 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
              help = "Path to sourcelist from external source (eg. bdsm) "\
              "use an empty string for gsm generated data"
         ),
-        'parmdbs_path': ingredient.StringField(
-            '--parmdbs-path',
-            help = "path to mapfile containing produced sky files"
+        'parmdbs_map_path': ingredient.StringField(
+            '--parmdbs-map-path',
+            help = "path to mapfile containing produced parmdb files"
         ),
-        'sky_path': ingredient.StringField(
-            '--sky-path',
-            help = "path to mapfile containing produced sky files"
+        'sourcedb_map_path': ingredient.StringField(
+            '--sourcedb-map-path',
+            help = "path to mapfile containing produced sourcedb files"
         ),
-
     }
 
     outputs = {
-        'sky_path': ingredient.FileField(),
-        'parmdbs_path': ingredient.FileField()
+        'sourcedb_map_path': ingredient.FileField(
+            help = "On succes contains path to mapfile containing produced "
+            "sourcedb files"),
+        'parmdbs_map_path': ingredient.FileField(
+            help = "On succes contains path to mapfile containing produced"
+            "parmdb files")
     }
-
 
     def __init__(self):
         super(imager_create_dbs, self).__init__()
@@ -126,54 +138,55 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
         # Get the input data
         slice_paths_map = load_data_map(self.inputs["slice_paths_mapfile"])
         input_map = load_data_map(self.inputs['args'][0])
+        try:
+            if not validate_data_maps(slice_paths_map, input_map):
+                raise PipelineException("Mapfile Validation failed")
+        except (PipelineException, AssertionError), e :
+            self.logger.error(str(e))
+            self.logger.error("Incorrect data specification:")
+            self.logger.error("The supplied input datamaps are {0} and {1}".format(
+                 self.inputs["slice_paths_mapfile"], self.inputs['args'][0]))
+            self.logger.error("content input_map:")
+            self.logger.error(input_map)
+            self.logger.error("content slice_paths_map:")
+            self.logger.error(slice_paths_map)
+            return 1
 
         # Compile the command to be executed on the remote machine
         node_command = " python %s" % (self.__file__.replace("master", "nodes"))
         # create jobs
         jobs = []
         for (input_ms, slice_paths)  in zip(input_map, slice_paths_map):
-            self.logger.info(slice_paths)
             host_ms, concatenated_measurement_set = input_ms
             host_slice, slice_paths = slice_paths
-
-            #Check if inputs are correct.
-            if host_ms != host_slice:
-                self.logger.error("Host found in the timeslice and input ms are different")
-                self.logger.error(input_map)
-                self.logger.error(slice_paths_map)
-                return 1
-
-            host_slice_map = [("paths", slice_paths)]
             host = host_ms
 
-            #Create the parameters depending on the input_map
+            # Create the parameters depending on the input_map
             sourcedb_target_path = os.path.join(
                   concatenated_measurement_set + self.inputs["sourcedb_suffix"])
 
-            #The actual call for the node script
-            arguments = [ concatenated_measurement_set, sourcedb_target_path,
+            # The actual call for the node script
+            arguments = [concatenated_measurement_set, sourcedb_target_path,
                          monetdb_hostname, monetdb_port, monetdb_name,
                          monetdb_user, monetdb_password, assoc_theta,
                          parmdb_executable, slice_paths, parmdb_suffix,
                          init_script, working_directory,
                          makesourcedb_path, source_list_path]
             jobs.append(ComputeJob(host, node_command, arguments))
-
-        # Hand over the job(s) to the pipeline scheduler
         self._schedule_jobs(jobs)
 
-        #Collect the output of the node scripts write to (map) files
-        sky_files = []
+        # Collect the output of the node scripts write to (map) files
+        sourcedb_files = []
         parmdbs = []
-
         # now parse the node output append to list
         for job in jobs:
             host = job.host
-            if job.results.has_key("sky"):
-                sky_files.append((host, job.results["sky"]))
+            if job.results.has_key("sourcedb"):
+                sourcedb_files.append((host, job.results["sourcedb"]))
             else:
-                self.logger.warn("Warning failed ImagerCreateDBs run detected: No "
-                                 "skymap file created, {0} continue".format(host))
+                self.logger.warn("Warning failed ImagerCreateDBs run "
+                    "detected: No sourcedb file created, {0} continue".format(
+                                                                        host))
 
             if job.results.has_key("parmdbms"):
                 parmdbs.append((host, job.results["parmdbms"]))
@@ -181,13 +194,24 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
                 self.logger.warn("Failed ImagerCreateDBs run detected: No "
                                  "parmdbms created{0} continue".format(host))
 
+        # Fail if none of the nodes returned all data
+        if len(sourcedb_files) == 0 or len(parmdbs) == 0:
+            self.logger.error("The creation of dbs on the nodes failed:")
+            self.logger.error("Not a single node produces all needed data")
+            self.logger.error("products. sourcedb_files: {0}    ".format(
+                                                        sourcedb_files))
+            self.logger.error("parameter dbs: {0}".format(parmdbs))
+            return 1
+
         # write the mapfiles     
-        store_data_map(self.inputs["sky_path"], sky_files)
-        store_data_map(self.inputs["parmdbs_path"], parmdbs)
+        store_data_map(self.inputs["sourcedb_map_path"], sourcedb_files)
+        store_data_map(self.inputs["parmdbs_map_path"], parmdbs)
+        self.logger.debug("Wrote sourcedb dataproducts: {0} \n {1}".format(
+            self.inputs["sourcedb_map_path"], self.inputs["parmdbs_map_path"]))
 
         # Set the outputs
-        self.outputs['sky_path'] = self.inputs["sky_path"]
-        self.outputs['parmdbs_path'] = self.inputs["parmdbs_path"]
+        self.outputs['sourcedb_map_path'] = self.inputs["sourcedb_map_path"]
+        self.outputs['parmdbs_map_path'] = self.inputs["parmdbs_map_path"]
         return 0
 
 

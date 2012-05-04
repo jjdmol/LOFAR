@@ -52,6 +52,7 @@ class imager_source_finding(BaseRecipe, RemoteCommandRecipeMixIn):
 
         # TODO FIXME: This output path will be, in the testing phase a 
         # subdirectory of the actual output image.
+        # This might be a bug: dunno
         image_output_path = os.path.join(
             self.inputs["working_directory"], "bdsm_output.img"
         )
@@ -78,6 +79,8 @@ class imager_source_finding(BaseRecipe, RemoteCommandRecipeMixIn):
 
         self.logger.info(created_sourcelists)
         store_data_map(self.inputs['mapfile'], created_sourcelists)
+        self.logger.debug("Wrote datamap with created sourcelists: {0}".format(
+                                                created_sourcelists))
         self.outputs["mapfile"] = self.inputs['mapfile']
 
 

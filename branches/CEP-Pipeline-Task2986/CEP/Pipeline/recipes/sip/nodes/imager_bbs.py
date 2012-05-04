@@ -1,29 +1,32 @@
 # LOFAR AUTOMATIC IMAGING PIPELINE
-# create dbs
+# imager_bbs
 # Wouter Klijn 2012
 # klijn@astron.nl
 # -----------------------------------------------------------------------------
 from __future__ import with_statement
-
 import sys
 import time
 import subprocess
+
 from lofarpipe.support.lofarnode import LOFARnodeTCP
 from lofarpipe.support.pipelinelogging import log_process_output
 from lofarpipe.support.group_data import load_data_map
 
 class imager_bbs(LOFARnodeTCP):
+    """
+    imager_bbs node performs a bbs based on the supplied parset it is a shallow
+    wrapper around bbs
+    It starts bbs on a new subprocess and logs the output aborting on failure   
+    """
     def run(self, bbs_executable, parset, ms_list_path, parmdb_list_path,
              sky_list_path):
-        """        
-        """
-
-        #read in the mapfiles to data maps
+        # read in the mapfiles to data maps: The master recipe added the single
+        # path to a mapfilem which allows usage of default data methods (load_data_map)
         node, ms_list = load_data_map(ms_list_path)[0]
         node, parmdb_list = load_data_map(parmdb_list_path)[0]
         node, sky_list = load_data_map(sky_list_path)[0]
 
-        self.logger.info("Starting imager_bbs Node")
+        self.logger.debug("Starting imager_bbs Node")
         try:
             process_list = []
             # *****************************************************************

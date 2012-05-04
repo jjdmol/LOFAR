@@ -14,9 +14,7 @@
 # klijn@astron.nl
 # -----------------------------------------------------------------------------
 from __future__ import with_statement
-import os
 import sys
-import tempfile
 import shutil
 import os.path
 import math
@@ -29,7 +27,6 @@ from lofarpipe.support.utilities import get_parset
 from lofarpipe.support.utilities import read_initscript
 from lofarpipe.support.utilities import catch_segfaults
 from lofarpipe.support.lofarexceptions import PipelineException
-from lofar.parameterset import parameterset #@UnresolvedImport
 import pyrap.tables as pt                   #@UnresolvedImport
 from subprocess import CalledProcessError
 from lofarpipe.support.utilities import create_directory
@@ -44,7 +41,6 @@ class imager_awimager(LOFARnodeTCP):
         self.logger.info("Start imager_awimager  run: client")
         log4CPlusName = "imager_awimager"
         with log_time(self.logger):
-
             size_converter = 4.0 #TODO debugging tool scale the image and cellsize to allow quicker running of the awimager
             # Calculate awimager parameters that depend on measurement set                 
             cell_size, npix, w_max, w_proj_planes = \
@@ -57,6 +53,8 @@ class imager_awimager(LOFARnodeTCP):
             # if it not exists
             image_path_head = os.path.dirname(output_image)
             create_directory(image_path_head)
+            self.logger.debug("Created directory to place awimager output"
+                              " files: {0}".format(image_path_head))
 
             mask_file_path = self._create_mask(npix, cell_size, output_image,
                          concatenated_measurement_set, init_script, executable,
@@ -72,7 +70,7 @@ class imager_awimager(LOFARnodeTCP):
                                'wprojplanes':str(w_proj_planes),
                                'image':str(output_image),
                                'maxsupport':str(npix),
-                               #'mask':str(mask_file_path),  #TODO REINTRODUCE MASK
+                               #'mask':str(mask_file_path),  #TODO REINTRODUCE MASK, excluded to speed up in this debug stage
                                }
 
             # save the parset at the target dir for the image            
@@ -80,6 +78,8 @@ class imager_awimager(LOFARnodeTCP):
             calculated_parset_path = os.path.join(image_path_head, "parset.par")
             shutil.copy(temp_parset_filename, calculated_parset_path)
             os.unlink(temp_parset_filename)
+            self.logger.debug("Wrote parset for awimager run: {0}".format(
+                                                    calculated_parset_path))
 
             # The command and parameters to be run
             cmd = [executable, calculated_parset_path]
@@ -107,7 +107,8 @@ class imager_awimager(LOFARnodeTCP):
 
     def _create_mask(self, npix, cell_size, output_image,
                      concatenated_measurement_set, init_script, executable,
-                     working_directory, log4CPlusName, sourcedb_path, mask_patch_size, image_path_image_cycle):
+                     working_directory, log4CPlusName, sourcedb_path,
+                     mask_patch_size, image_path_image_cycle):
         """
         _create_mask creates a casa image containing an mask blocking out the
         sources in the provided sourcedb.
@@ -131,6 +132,8 @@ class imager_awimager(LOFARnodeTCP):
         mask_parset = Parset.fromDict(mask_patch_dictionary)
         mask_parset_path = os.path.join(image_path_image_cycle, "mask.par")
         mask_parset.writeFile(mask_parset_path)
+        self.logger.debug("Write parset for awimager mask creation: {0}".format(
+                                                      mask_parset_path))
 
         # The command and parameters to be run
         cmd = [executable, mask_parset_path]
@@ -151,9 +154,11 @@ class imager_awimager(LOFARnodeTCP):
             self.logger.error(str(e))
             return 1
 
-        self.logger.info("mask_patch_size: {0}".format(mask_patch_size))
+        self.logger.debug("Started mask creation using mask_patch_size:"
+                          " {0}".format(mask_patch_size))
         # create the actual mask
         self._msss_mask(mask_file_path, sourcedb_path, mask_patch_size)
+        self.logger.debug("Fished mask creation")
         return mask_file_path
 
     def _msss_mask(self, mask_file_path, sourcedb_path, mask_patch_size = 1.0):
@@ -365,7 +370,8 @@ class imager_awimager(LOFARnodeTCP):
             '{0} where sumsqr(UVW[:2]) <{1} giving as memory]))'.format(\
             measurement_set, baseline_limit *
             baseline_limit))[0]  #ask ger van diepen for details if ness.
-
+        self.logger.debug("Calculated maximum baseline: {0}".format(
+                                                            max_baseline))
         t = pt.table(measurement_set)
         t1 = pt.table(t.getkeyword("SPECTRAL_WINDOW"))
         freq = t1.getcell("REF_FREQUENCY", 0)
@@ -373,11 +379,14 @@ class imager_awimager(LOFARnodeTCP):
         t1.close()
 
         cell_size = (1.0 / 3) * (waveLength / float(max_baseline)) * arc_sec_in_rad
+        self.logger.debug("Calculated cellsize baseline: {0}".format(
+                                                            cell_size))
 
         # Calculate the number of pixels in x and y dim
         #    fov and diameter depending on the antenna name
         fov, station_diameter = self._field_of_view_and_station_diameter(measurement_set)
-
+        self.logger.debug("Calculated fov and station diameter baseline:"
+                          " {0} , {1}".format(fov, station_diameter))
 
         npix = (arc_sec_in_degree * fov) / cell_size
         npix = self._nearest_ceiled_power2(npix)
@@ -390,6 +399,9 @@ class imager_awimager(LOFARnodeTCP):
         # Calculate number of projection planes
         w_proj_planes = (max_baseline * waveLength) / (station_diameter ** 2)
         w_proj_planes = int(round(w_proj_planes))
+        self.logger.debug("Calculated w_max and the number pf projection plances:"
+                          " {0} , {1}".format(w_max, w_proj_planes))
+
         if w_proj_planes > 511:
             raise Exception("The number of projections planes for the current" +
                             "measurement set is to large.")  #FIXME: Ask george 

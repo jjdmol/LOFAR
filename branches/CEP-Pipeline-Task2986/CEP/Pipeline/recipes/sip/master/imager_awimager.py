@@ -103,8 +103,6 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
                        measurement_set, sourcedb_path, mask_patch_size]
 
             jobs.append(ComputeJob(host, node_command, arguments))
-
-        # Hand over the job(s) to the pipeline scheduler
         self._schedule_jobs(jobs)
 
         created_awimages = []
@@ -120,6 +118,8 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
             return 1
 
         store_data_map(self.inputs['mapfile'], created_awimages)
+        self.logger.debug("Wrote mapfile containing produces awimages: {0}".format(
+                           self.inputs['mapfile']))
         self.outputs["mapfile"] = self.inputs['mapfile']
         return 0
 

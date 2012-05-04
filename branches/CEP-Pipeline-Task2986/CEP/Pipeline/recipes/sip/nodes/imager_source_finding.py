@@ -16,14 +16,7 @@ class imager_source_finding(LOFARnodeTCP):
     """
     def run(self, input_image, bdsm_parameter_run1_path,
             bdsm_parameter_run2x_path, catalog_output_path, image_output_path):
-
         self.logger.info("Starting imager_source_finding")
-#        self.logger.debug("input_image = %s" % input_image)
-#        self.logger.debug("bdsm_parameter_run1_path = %s" % bdsm_parameter_run1_path)
-#        self.logger.debug("bdsm_parameter_run2x_path = %s" % bdsm_parameter_run2x_path)
-#        self.logger.debug("catalog_output_path = %s" % catalog_output_path)
-#        self.logger.debug("image_output_path = %s" % image_output_path)
-            
         # default frequency is None (read from image), save for later cycles
         frequency = None
         number_of_sourcefind_itterations = None
@@ -53,9 +46,10 @@ class imager_source_finding(LOFARnodeTCP):
                     pass  #do nothing
                 bdsm_parameters[key] = parameter_value
 
-            self.logger.info(
-                "Starting sourcefinder bdsm on {0} using parameters:".format(input_image_local))
-            self.logger.info(repr(bdsm_parameters))
+            self.logger.debug(
+                "Starting sourcefinder bdsm on {0} using parameters:".format(
+                                                        input_image_local))
+            self.logger.debug(repr(bdsm_parameters))
             img = bdsm.process_image(bdsm_parameters,
                         filename = input_image_local, frequency = frequency)
 
@@ -63,21 +57,27 @@ class imager_source_finding(LOFARnodeTCP):
             # If no more matching of sources with gausians is possible (nsrc==0)
             # break the loop
             if img.nsrc == 0:
-                self.logger.info("No sources found: exiting")
+                self.logger.debug("No sources found: exiting")
                 number_of_sourcefind_itterations = idx
                 break
             else:
                 # We have at least found a single source!
-                self.logger.info("Number of source found: {0}".format(img.nsrc))
+                self.logger.debug("Number of source found: {0}".format(img.nsrc))
                 sources_found = True
 
 
             #export the catalog and the image with gausians substracted
             img.write_catalog(outfile = catalog_output_path + "_{0}".format(str(idx)),
                               catalog_type = 'gaul', clobber = True, format = "bbs")
+
+            self.logger.debug("Wrote list of sources to file at: {0})".format(
+                                                        catalog_output_path))
             img.export_image(outfile = image_output_path_local,
                              img_type = 'gaus_resid', clobber = True,
                              img_format = "fits")
+            self.logger.debug("Wrote fits image with substracted sources"
+                              " at: {0})".format(catalog_output_path))
+            #img does not have close()
 
             # Save the frequency from image header of the original input file,
             # This information is not written by pybdsm to the exported image
@@ -91,7 +91,7 @@ class imager_source_finding(LOFARnodeTCP):
         # Call with the number of loops and the path to the files, only combine
         # if we found sources
         if sources_found:
-            self.logger.info(
+            self.logger.debug(
                 "Writing source list to file: %s" % catalog_output_path
             )
             self._combine_source_lists(number_of_sourcefind_itterations,
@@ -151,6 +151,8 @@ class imager_source_finding(LOFARnodeTCP):
 
         fp.write("\n")
         fp.close()
+        self.logger.debug("Wrote concatenated sourcelist to: {0}".format(
+                                                catalog_output_path))
 
 
 if __name__ == "__main__":
