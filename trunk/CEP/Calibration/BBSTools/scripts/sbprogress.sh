@@ -33,10 +33,11 @@ debug=0              # debug mode
 # Help: display usage info
 function usage()
 {
-echo "usage: sbprogress.sh <options>\n"
+echo "usage: sbprogress.sh <options>"
 echo "Due to file permission restrictions, you can only watch your on processes through -p <pid>"
 echo "Note: The remaining time is only accurate, if the average over a couple of chunks"
 echo "      has been calculated.\n"
+echo ""
 echo "Options:"
 echo "-u <update time>   update interval in seconds"
 echo "-p <pid>           watch particular process id, can use \`pgrep <procname>\` if its unique"
