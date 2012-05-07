@@ -5,7 +5,7 @@
 # File:         sbprogress.sh
 # Author:       Sven Duscha (duscha at astron.nl)
 # Date:         2012-05-04
-# Last change:  2012-05-06
+# Last change:  2012-05-07
 #
 # Parameters:
 # -u update time    update interval
@@ -21,11 +21,14 @@
 interval=30            # update every 30 seconds
 network=0            # don't wait for network connection
 key=""               # don't look for session key in db
-logfile="bbs.log"    # default log file to log for
+logfile=""           # default log file to log for
 port=32000           # default port if listening for network connection
 a=1                  # look for all user's processes
 silent=0             # silent mode default off
 verbosity=0          # verbose mode default off
+
+# Need to set time LOCAL to "C" to correctly interprete date and time stamps
+LC_ALL=C
 
 # Parse command line arguments
 while getopts "u:p:k:l:n:av" opt
@@ -50,7 +53,7 @@ do
     a)
       all=1
       ;;            
-    a)
+    v)
       verbosity=1
       ;;            
     :)
@@ -62,30 +65,22 @@ do
   esac
 done
 
-# DEBUG on OS X, no pid given
-#if [ "${pid}" == "" ]
-#then
-#  pid=`pgrep bbs-reducer`
-#  if "${pid"}==""
-#  then
-#    echo "OS X pid = ${pid}"    
-#  else
-#    echo "process not found. Exiting."
-#    exit 1
-#  fi
-#fi
+# Check which system we are on
+system=`uname`
+
 
 # Display parameters used
 if [ ${verbosity} -eq 1 ]
 then
   echo "Using the following options:"
+  echo "system             = ${system}"
   echo "pid                = ${pid}"
   echo "update interval    = ${interval}"
   echo "logfile            = ${logfile}"
   echo "network connection = ${network}"
   echo "port               = ${network}"
   echo "key                = ${key}"
-  echo "verbosity           = ${verbosity}"
+  echo "verbosity          = ${verbosity}"
 fi
 
 # TODO:
@@ -101,13 +96,20 @@ then
     exit 1
   fi
   # If no logfile was given on the command line, look for it
-  logfile=`ls -l  /proc/$pid/fd | grep .log | awk '{print $10}'`
+  if [ "${system}" == "Darwin" ]
+  then
+    logfile=`/usr/sbin/lsof | grep  $(pgrep bbs-reducer) | grep '.log$' | gawk '{print $9}'`
+  else
+    logfile=`ls -l  /proc/$pid/fd | grep .log | gawk '{print $10}'`
+  fi
 fi
 
+#echo "logfile = ${logfile}"   # DEBUG
+
 # Check if logfile exists and has size>0 
-if [ ! -s ${logfile} ]
+if [ ! -s "${logfile}" ]
 then
-  echo "${logfile} for ${pid }doesn't exist. Exiting"
+  echo "${logfile} for ${pid} doesn't exist. Exiting"
   exit 1
 fi
 if [ ${verbosity} -eq 1 ]
@@ -126,21 +128,27 @@ starttime=`head -n 40 ${logfile} | grep -i "Time          : "| gawk '{print $3}'
 endtime=`head -n 40 ${logfile} | grep -i "Time          : "| gawk '{print $5}'`
 
 # Convert starttime and endtime to seconds
-starttimes=`date -jf '%Y/%m/%d/%H:%M:%S' ${starttime} +%s`
-endtimes=`date -jf '%Y/%m/%d/%H:%M:%S' ${endtime} +%s`
+if [ "${system}" == "Darwin" ]
+then
+  starttimes=`date -jf '%Y/%m/%d/%H:%M:%S' ${starttime} +%s`
+  endtimes=`date -jf '%Y/%m/%d/%H:%M:%S' ${endtime} +%s`
+else
+  starttimes=`date -d "$(echo ${starttime} | sed 's,/, ,3')" +%s`
+  endtimes=`date -d "$(echo ${endtime} | sed 's,/, ,3')" +%s`
+fi
 
 #echo "starttimes = ${starttimes}"   # DEBUG
 #echo "endtimes = ${endtimes}"   # DEBUG
 
 # Mac OS DEBUG mode
-if [ -z ${pid} ]
-then 
-  pid=`pgrep -U ${USER} bbs-reducer`
-  if [ ${verbosity} -eq 1 ]
-  then
-    echo "pid = ${pid}"    # DEBUG
-  fi
-fi
+#if [ -z ${pid} ]
+#then 
+#  pid=`pgrep -U ${USER} bbs-reducer`
+#  if [ ${verbosity} -eq 1 ]
+#  then
+#    echo "pid = ${pid}"    # DEBUG
+#  fi
+#fi
 
 #start=`date +%s`    # get start NOT NEEDED anymore
 # Loop while process is alive
@@ -150,7 +158,10 @@ do
   timeline=`tail -n 200 ${logfile} | grep "Time:"`
   stepline=`tail -n 200 ${logfile} | grep "Step:"`
 
-  if [ "-z ${timeline}" -a "-z {$stepline}" ]
+#  echo "timeline = ${timeline}"   # DEBUG
+#  echo "stepline = ${stepline}"   # DEBUG
+
+  if [ -z "${timeline}" ]
   then
     sleep 1
     continue
@@ -160,7 +171,6 @@ do
 #  echo "stepline = ${stepline}"               # DEBUG
   step=`echo ${stepline} | gawk '{print $2}'`
 #  echo "step= ${step}"                        # DEBUG
-#  chunkline=`tail -n 150 ${logfile} | grep "Chunk"`
   
   # Do we need this for chunk statistics?
   startchunk=`echo ${timeline} | gawk '{print $2}'`   # catch the start time of the chunk
@@ -169,8 +179,14 @@ do
 #  echo "startchunk = ${startchunk}"   # DEBUG
 #  echo "endchunk = ${endchunk}"       # DEBUG
   # Convert to seconds
-  startchunks="`date -jf '%Y/%m/%d/%H:%M:%S' ${startchunk} +%s`"
-  endchunks="`date -jf '%Y/%m/%d/%H:%M:%S' ${endchunk} +%s`"
+  if [ "${system}" == "Darwin" ]
+  then
+    startchunks=`date -jf '%Y/%m/%d/%H:%M:%S' ${startchunk} +%s`
+    endchunks=`date -jf '%Y/%m/%d/%H:%M:%S' ${endchunk} +%s`
+  else
+    startchunks=`date -d "$(echo ${startchunk} | sed 's,/, ,3')" +%s`
+    endchunks=`date -d "$(echo ${endchunk} | sed 's,/, ,3')" +%s`
+  fi
 #  echo "startchunks = ${startchunks}"  # DEBUG
 #  echo "endchunks = ${endchunks}"      # DEBUG
 
@@ -183,12 +199,15 @@ do
 
   # calculate chunks done
   nchunks=`echo "(${endtimes} - ${starttimes})/(${endchunks} - ${startchunks})" | bc`
+#  echo "nchunks = ${nchunks}"                   # DEBUG
 
   # calculate chunks done
   chunk=`echo "(${endchunks}-${starttimes})/(${endchunks} - ${startchunks})"   | bc`
   remainingchunks=`echo "${nchunks}-${chunk}" | bc`
+#  echo "chunk = ${chunk}"                       # DEBUG
+#  echo "remaining chunks = ${remainingchunks}"  # DEBUG
 
-  percentage=`echo "scale=2; (100*${chunk})/${nchunks}" | bc`
+  percentage=`echo "scale=0; (100*${chunk})/${nchunks}" | bc`
 #  echo "percentage = ${percentage}"
   if [ "! -z ${nchunks}" -a   "! -z ${chunk}" -a "! -z ${percentage}" ]
   then
@@ -197,13 +216,13 @@ do
     #   echo "remainingtime = ${remainingtime}"  # DEBUG
   
     # get terminal width
-    rim=34            # rim for information around progress bar
+    rim=30            # rim for information around progress bar
     width=`tput cols`
     nblocks=`echo "scale=0;  (${width}-${rim})*${percentage}*0.01" | bc`
     nblocks=`printf %0.f ${nblocks}`      # round to integer
 #    echo "nblocks = ${nblocks}"   # DEBUG
     pblocks=`for((i=1;i<=${nblocks};i++));do printf "%s" "#";done;`
-    nspaces=`echo "scale=0; ${width}-${rim}-${nblocks}" | bc`
+    nspaces=`echo "scale=0; ${width}-${rim}-${nblocks}-${#step}" | bc`
     nspaces=`printf %0.f ${nspaces}`      # round to integer
 #   echo "nspaces = ${nspaces}"    # DEBUG
     pspaces=`for((i=1;i<=${nspaces};i++));do printf "%s" " ";done`
@@ -212,13 +231,13 @@ do
     if [ `echo "${remainingtime} > 3600.0" | bc` -eq 1 ]
     then 
       remainingtime=`echo "scale=1; ${remainingtime}/60.0" | bc`
-      echo -ne "Chunk ${chunk}/${nchunks} [${pblocks}${pspaces} ${percentage}%] ${remainingtime} hours\r"   
+      echo -ne "Chunk ${chunk}/${nchunks} [${pblocks} ${step}${pspaces} ${percentage}%] ${remainingtime} hours\r"   
     elif [ `echo "${remainingtime} > 60.0" | bc` -eq 1 ]
     then
       remainingtime=`echo "scale=1; ${remainingtime}/60.0" | bc`
-      echo -ne "Chunk ${chunk}/${nchunks} [${pblocks}${pspaces} ${percentage}%] ${remainingtime}  min\r"   
+      echo -ne "Chunk ${chunk}/${nchunks} [${pblocks} ${step}${pspaces} ${percentage}%] ${remainingtime}  min\r"   
     else
-      echo -ne "Chunk ${chunk}/${nchunks} [${pblocks}${pspaces} ${percentage}%] ${remainingtime}  sec\r"   
+      echo -ne "Chunk ${chunk}/${nchunks} [${pblocks} ${step}${pspaces} ${percentage}%] ${remainingtime}  sec\r"   
     fi
   fi
   
