@@ -224,21 +224,40 @@ do
   then
     startchunks=`date -jf '%Y/%m/%d/%H:%M:%S' ${startchunk} +%s`
     endchunks=`date -jf '%Y/%m/%d/%H:%M:%S' ${endchunk} +%s`
-    now=$(date -j +%s)
+    #now=$(date -j +%s)
   else
     startchunks=`date -d "$(echo ${startchunk} | sed 's,/, ,3')" +%s`
     endchunks=`date -d "$(echo ${endchunk} | sed 's,/, ,3')" +%s`
-    now=$(date +%s)
+    #now=$(date +%s)
   fi
 
   # Get time elapsed from process manager 
-  mins=`ps -o etime ${pid} | gawk 'NR < 2 { next };{print $1}' | gawk 'BEGIN{FS=":"}; {print $1}'`
-  secs=`ps -o etime ${pid} | gawk 'NR < 2 { next };{print $1}' | gawk 'BEGIN{FS=":"}; {print $2}'`
+  ncolon=$(ps -o etime ${pid} | gawk 'NR < 2 { next };{print $1}' | grep -c ':')
+  
+#  echo "ncolon = ${ncolon}"   # DEBUG
+#  continue
+  if [ ${ncolon} -eq 1 ]  # if we have only mm:ss
+  then  
+    #hours=`ps -o etime ${pid} | gawk 'NR < 2 { next };{print $1}' | gawk 'BEGIN{FS=":"}; {print $1}'`  
+    mins=`ps -o etime ${pid} | gawk 'NR < 2 { next };{print $1}' | gawk 'BEGIN{FS=":"}; {print $1}'`
+    secs=`ps -o etime ${pid} | gawk 'NR < 2 { next };{print $1}' | gawk 'BEGIN{FS=":"}; {print $2}'`
+    timeelapsed=`echo "scale=10; ${mins}*60+${secs}" | bc`  # elapsed wall clock time
+  else                    # otherwise hh:mm:ss
+    hours=`ps -o etime ${pid} | gawk 'NR < 2 { next };{print $1}' | gawk 'BEGIN{FS=":"}; {print $1}'`  
+    mins=`ps -o etime ${pid} | gawk 'NR < 2 { next };{print $1}' | gawk 'BEGIN{FS=":"}; {print $2}'`
+    secs=`ps -o etime ${pid} | gawk 'NR < 2 { next };{print $1}' | gawk 'BEGIN{FS=":"}; {print $3}'`
+    timeelapsed=`echo "scale=10; ${hours}*3600+${mins}*60+${secs}" | bc`  # elapsed wall clock time
+  fi
+
+  if [ ${debug} -eq 1 ]; then
+    echo "hours = ${hours}" # DEBUG
+    echo "mins = ${mins}"   # DEBUG
+    echo "secs = ${secs}"   # DEBUG  
+  fi
 
   # Get time that has passed (timeelapsed is only CPU time, now use wallclocktime)  
   # wallclocktime=$(echo "${now} - ${creationtime}" | bc)
   #timeelapsed=$(ps -oetime -p ${pid} | gawk 'NR < 2 { next };{print $1}')
-  timeelapsed=`echo "scale=10; ${mins}*60+${secs}" | bc`  # elapsed CPU time
 
 
   if [ ${debug} -eq 1 ]; then
@@ -276,7 +295,7 @@ do
       echo "remainingtime = ${remainingtime}"  # DEBUG
     fi
   
-    # get terminal width
+    # get terminal width and determine variables for progress bar
     rim=31            # rim for information around progress bar
     width=`tput cols`
     nblocks=`echo "scale=0;  (${width}-${rim})*${percentage}*0.01" | bc`
@@ -285,11 +304,10 @@ do
     nspaces=`echo "scale=0; ${width}-${rim}-${nblocks}-${#step}" | bc`
     nspaces=`printf %0.f ${nspaces}`      # round to integer
     pspaces=`for((i=1;i<=${nspaces};i++));do printf "%s" " ";done`
-    
-    compgreater=`echo "${remainingtime} > 60.0" | bc`
+ 
     if [ `echo "${remainingtime} > 3600.0" | bc` -eq 1 ]
     then 
-      remainingtime=`echo "scale=1; ${remainingtime}/60.0" | bc`
+      remainingtime=`echo "scale=1; ${remainingtime}/3600.0" | bc`
       echo -ne "Chunk ${chunk}/${nchunks} [${pblocks} ${step}${pspaces} ${percentage}%] ${remainingtime} h\r"   
     elif [ `echo "${remainingtime} > 60.0" | bc` -eq 1 ]
     then
