@@ -101,9 +101,9 @@ class testbbs(testsip):
                     
                         for i in range(0, len(testparms['values'])):
                             difference.append(abs(testparms['values'][i] - refparms['values'][i]))
-                            
-                            if sum(difference) > self.acceptancelimit/len(difference):
-                                print bcolors.FAIL + "Parameter " + parm + " differs more than " + str(difference) + bcolors.ENDC
+                            max=numpy.max(difference)
+                            if max > self.acceptancelimit:
+                                print bcolors.FAIL + "Parameter " + parm + " differs more than " + str(max) + bcolors.ENDC
                                 self.passed = False
                                 self.end()
                             else:
