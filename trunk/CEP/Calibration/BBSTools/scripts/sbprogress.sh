@@ -234,8 +234,9 @@ do
   # Get time elapsed from process manager 
   ncolon=$(ps -o etime ${pid} | gawk 'NR < 2 { next };{print $1}' | grep -c ':')
   
-#  echo "ncolon = ${ncolon}"   # DEBUG
-#  continue
+  #echo "$(ps -o etime ${pid} | gawk 'NR < 2 { next };{print $1}')"    # DEBUG
+  ncolon="$(ps -o etime ${pid} | gawk 'NR < 2 { next };{print $1}' | grep -o ":" | wc -l | sed s/\ //g)"
+  
   if [ ${ncolon} -eq 1 ]  # if we have only mm:ss
   then  
     #hours=`ps -o etime ${pid} | gawk 'NR < 2 { next };{print $1}' | gawk 'BEGIN{FS=":"}; {print $1}'`  
