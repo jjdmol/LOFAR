@@ -77,6 +77,9 @@ do
     a)
       all=1
       ;;            
+    s)
+      silent=1            # silent mode, only return status
+      ;;
     v)
       verbosity=1
       ;;            
@@ -113,6 +116,7 @@ then
   echo "port                = ${network}"
   echo "key                 = ${key}"
   echo "verbosity           = ${verbosity}"
+  echo "silent              = ${silent}"
   echo "debug               = ${debug}"
 fi
 
@@ -159,6 +163,15 @@ fi
 # Time          : 2011/10/30/02:30:00 - 2011/10/30/11:50:01
 starttime=`head -n 30 ${logfile} | grep -i "Time          : "| gawk '{print $3}'`
 endtime=`head -n 30 ${logfile} | grep -i "Time          : "| gawk '{print $5}'`
+
+# Get process start time from creation time of logfile
+if [ "${system}" == "Darwin" ]
+then
+  creationtime=$(stat -r ${logfile} | gawk '{print $12}')
+else
+  creationtime=$(stat -c %y%h ${logfile} | gawk '{print $1 " "$2}' | date -d - +%s)
+fi
+
 
 # Convert starttime and endtime to seconds
 if [ "${system}" == "Darwin" ]
@@ -211,15 +224,30 @@ do
   then
     startchunks=`date -jf '%Y/%m/%d/%H:%M:%S' ${startchunk} +%s`
     endchunks=`date -jf '%Y/%m/%d/%H:%M:%S' ${endchunk} +%s`
+    now=$(date -j +%s)
   else
     startchunks=`date -d "$(echo ${startchunk} | sed 's,/, ,3')" +%s`
     endchunks=`date -d "$(echo ${endchunk} | sed 's,/, ,3')" +%s`
+    now=$(date +%s)
   fi
 
   # Get time elapsed from process manager 
-  mins=`ps -o time ${pid} | gawk 'NR < 2 { next };{print $1}' | gawk 'BEGIN{FS=":"}; {print $1}'`
-  secs=`ps -o time ${pid} | gawk 'NR < 2 { next };{print $1}' | gawk 'BEGIN{FS=":"}; {print $2}'`
-  timeelapsed=`echo "scale=10; ${mins}*60+${secs}" | bc`
+  mins=`ps -o etime ${pid} | gawk 'NR < 2 { next };{print $1}' | gawk 'BEGIN{FS=":"}; {print $1}'`
+  secs=`ps -o etime ${pid} | gawk 'NR < 2 { next };{print $1}' | gawk 'BEGIN{FS=":"}; {print $2}'`
+
+  # Get time that has passed (timeelapsed is only CPU time, now use wallclocktime)  
+  # wallclocktime=$(echo "${now} - ${creationtime}" | bc)
+  #timeelapsed=$(ps -oetime -p ${pid} | gawk 'NR < 2 { next };{print $1}')
+  timeelapsed=`echo "scale=10; ${mins}*60+${secs}" | bc`  # elapsed CPU time
+
+
+  if [ ${debug} -eq 1 ]; then
+    #echo "creationtime  = ${creationtime}"  # DEBUG
+    #echo "wallclocktime = ${wallclocktime}"   # DEBUG
+    #echo "now           = ${now}"           # DEBUG
+    echo "timeelapsed   = ${timeelapsed}"   # DEBUG
+  fi
+
   # calculate chunks done
   nchunks=`echo "(${endtimes} - ${starttimes})/(${endchunks} - ${startchunks})" | bc`
 
@@ -232,14 +260,17 @@ do
   remainingchunks=`echo "${nchunks}-${chunk}" | bc`
   percentage=`echo "scale=0; (100*${chunk})/${nchunks}" | bc`
 
-#  echo "chunk = ${chunk}"                       # DEBUG
-#  echo "remaining chunks = ${remainingchunks}"  # DEBUG
-#  echo "percentage = ${percentage}"
+  if [ ${debug} -eq 1 ]; then  
+    echo "chunk = ${chunk}"                       # DEBUG
+    echo "remaining chunks = ${remainingchunks}"  # DEBUG
+    echo "percentage = ${percentage}"
+  fi
 
   if [ "! -z ${nchunks}" -a   "! -z ${chunk}" -a "! -z ${percentage}" ]
   then
     # estimate remaining time
     remainingtime=`echo "scale=2; (${timeelapsed}/${chunk})*(${remainingchunks})" | bc`  
+#    remainingtime=`echo "scale=2; (${wallclocktime}/${chunk})*(${remainingchunks})" | bc`  
     
     if [ ${debug} -eq 1 ]; then
       echo "remainingtime = ${remainingtime}"  # DEBUG
