@@ -16,22 +16,45 @@
 # -a                display all user's bbs-reducers progress
 # -s                silent mode, only return percentage progress
 # -v                turn verbose messages on
+# -d                turn debug messages on
 
 # Set default values:
-interval=30            # update every 30 seconds
+interval=30          # update every 30 seconds
 network=0            # don't wait for network connection
 key=""               # don't look for session key in db
 logfile=""           # default log file to log for
 port=32000           # default port if listening for network connection
-a=1                  # look for all user's processes
+a=0                  # look for all user's processes
 silent=0             # silent mode default off
 verbosity=0          # verbose mode default off
+debug=0              # debug mode
+
+
+# Help: display usage info
+function usage()
+{
+echo "usage: sbprogress.sh <options>\n"
+echo "Due to file permission restrictions, you can only watch your on processes through -p <pid>"
+echo "Note: The remaining time is only accurate, if the average over a couple of chunks"
+echo "      has been calculated.\n"
+echo "Options:"
+echo "-u <update time>   update interval in seconds"
+echo "-p <pid>           watch particular process id, can use \`pgrep <procname>\` if its unique"
+echo "-k <key>           monitor progress of db-based calibrate [NOT SUPPORTED YET]"
+echo "-l logfile         if an alternative log should be watched, instead of -p <pid>"
+echo "-n port            open network listening for gds file-based central display [NOT SUPPORTED YET]"
+echo "-a                 display all user's bbs-reducers progress [NOT SUPPORTED YET]"
+echo "-s                 silent mode, only return percentage progress [NOT SUPPORTED YET]"
+echo "-v                 turn verbose messages on"
+echo "-d                 turn debug messages on"
+echo "-h                 display this help info"
+}
 
 # Need to set time LOCAL to "C" to correctly interprete date and time stamps
 LC_ALL=C
 
 # Parse command line arguments
-while getopts "u:p:k:l:n:av" opt
+while getopts "u:p:k:l:n:avdh" opt
 do
   case ${opt} in
     u) 
@@ -48,7 +71,7 @@ do
       ;;        
     n)
       network=1
-      port=${OPTARG}                    # set port
+      port=${OPTARG}      # set listening port
       ;;        
     a)
       all=1
@@ -56,7 +79,15 @@ do
     v)
       verbosity=1
       ;;            
+    d)
+      debug=1
+      ;;            
+    h)
+      usage
+      exit 0
+      ;;
     :)
+      usage
       exit 1
       ;;
     \?)
@@ -73,14 +104,15 @@ system=`uname`
 if [ ${verbosity} -eq 1 ]
 then
   echo "Using the following options:"
-  echo "system             = ${system}"
-  echo "pid                = ${pid}"
-  echo "update interval    = ${interval}"
-  echo "logfile            = ${logfile}"
-  echo "network connection = ${network}"
-  echo "port               = ${network}"
-  echo "key                = ${key}"
-  echo "verbosity          = ${verbosity}"
+  echo "system              = ${system}"
+  echo "pid                 = ${pid}"
+  echo "update interval     = ${interval}"
+  echo "logfile             = ${logfile}"
+  echo "network connection  = ${network}"
+  echo "port                = ${network}"
+  echo "key                 = ${key}"
+  echo "verbosity           = ${verbosity}"
+  echo "debug               = ${debug}"
 fi
 
 # TODO:
@@ -144,17 +176,28 @@ fi
 while [ ${pid} ]
 do
   # tail the provided BBS log and grep for "Time: "
-  timeline=`tail -n 100 ${logfile} | grep "Time:"`
-  stepline=`tail -n 100 ${logfile} | grep "Step:"`
+  timeline=`tail -n 70 ${logfile} | grep "Time:"`
+  stepline=`tail -n 70 ${logfile} | grep "Step:"`
 
-#  echo "timeline = ${timeline}"   # DEBUG
-#  echo "stepline = ${stepline}"   # DEBUG
+  if [ ${debug} -eq 1 ]; then
+    echo "timeline = ${timeline}"   # DEBUG
+    echo "stepline = ${stepline}"   # DEBUG
+  fi
 
+  if [ -z "${timeline}" ]     # Retry with longer "tail"
+  then
+    timeline=`tail -n 140 ${logfile} | grep "Time:"`
+  fi
+  if [ -z "${stepline}" ]     # Retry with longer "tail"  
+  then
+    stepline=`tail -n 140 ${logfile} | grep "Step:"`
+  fi
   if [ -z "${timeline}" ]
   then
     sleep 1
     continue
   fi
+
 
   # Do we need this for chunk statistics?
   startchunk=`echo ${timeline} | gawk '{print $2}'`   # catch the start time of the chunk
@@ -174,12 +217,13 @@ do
   # Get time elapsed from process manager 
   mins=`ps -o time ${pid} | gawk 'NR < 2 { next };{print $1}' | gawk 'BEGIN{FS=":"}; {print $1}'`
   secs=`ps -o time ${pid} | gawk 'NR < 2 { next };{print $1}' | gawk 'BEGIN{FS=":"}; {print $2}'`
-
   timeelapsed=`echo "scale=10; ${mins}*60+${secs}" | bc`
-
   # calculate chunks done
   nchunks=`echo "(${endtimes} - ${starttimes})/(${endchunks} - ${startchunks})" | bc`
-#  echo "nchunks = ${nchunks}"                   # DEBUG
+
+  if [ ${debug} -eq 1 ]; then
+    echo "nchunks = ${nchunks}"                   # DEBUG
+  fi
 
   # calculate chunks done
   chunk=`echo "(${endchunks}-${starttimes})/(${endchunks} - ${startchunks})"   | bc`
@@ -194,10 +238,13 @@ do
   then
     # estimate remaining time
     remainingtime=`echo "scale=2; (${timeelapsed}/${chunk})*(${remainingchunks})" | bc`  
-    #   echo "remainingtime = ${remainingtime}"  # DEBUG
+    
+    if [ ${debug} -eq 1 ]; then
+      echo "remainingtime = ${remainingtime}"  # DEBUG
+    fi
   
     # get terminal width
-    rim=30            # rim for information around progress bar
+    rim=31            # rim for information around progress bar
     width=`tput cols`
     nblocks=`echo "scale=0;  (${width}-${rim})*${percentage}*0.01" | bc`
     nblocks=`printf %0.f ${nblocks}`      # round to integer
