@@ -93,7 +93,7 @@ class imager_create_dbs(LOFARnodeTCP):
 
         return 0
 
-    def _create_source_db(self, temp_sky_path, sourcedb_target_path, init_script,
+    def _create_source_db(self, source_list, sourcedb_target_path, init_script,
                           working_directory, executable, append = False):
         """
         _create_source_db consumes a skymap text file and produces a source db
@@ -106,7 +106,7 @@ class imager_create_dbs(LOFARnodeTCP):
                                             sourcedb_target_path))
 
         # The command and parameters to be run
-        cmd = [executable, "in={0}".format(temp_sky_path),
+        cmd = [executable, "in={0}".format(source_list),
                "out={0}".format(sourcedb_target_path),
                "format=<", # format according to Ger van Diepen
                "append=true"] # Always set append flag: no effect on non exist db

@@ -28,7 +28,8 @@ class imager_finalize(LOFARnodeTCP):
     3. Filling of the HDF5 root group
     """
     def run(self, awimager_output, raw_ms_per_image, sourcelist, target,
-            output_image, minbaseline, maxbaseline, processed_ms_dir, fillRootImageGroup_exec):
+            output_image, minbaseline, maxbaseline, processed_ms_dir,
+            fillRootImageGroup_exec):
         with log_time(self.logger):
             raw_ms_per_image_map = load_data_map(raw_ms_per_image)
             self.logger.info(repr(raw_ms_per_image_map))
@@ -67,7 +68,7 @@ class imager_finalize(LOFARnodeTCP):
             try:
                 self.logger.info("Saving image in HDF5 Format to: {0}" .format(
                                 output_image))
-                #im.saveas(output_image, hdf5 = True)
+                im.saveas(output_image, hdf5 = True)
                 # TODO: HDF5 version of PIM is different to the system version
                 # dunno the solution: the script breaks.
             except Exception, error:
@@ -93,13 +94,14 @@ class imager_finalize(LOFARnodeTCP):
             self.logger.error(stderrdata)
 
             #if copy failed log the missing file
-            if  exit_status != 1:
+            if  exit_status != 0:
                 self.logger.error("Error using the fillRootImageGroup command"
                     "see above lines. Exit status: {0}".format(exit_status))
 
                 return 1
 
         return 0
+
 
 if __name__ == "__main__":
 

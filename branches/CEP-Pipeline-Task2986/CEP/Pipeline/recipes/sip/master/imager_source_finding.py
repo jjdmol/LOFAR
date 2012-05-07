@@ -32,11 +32,32 @@ class imager_source_finding(BaseRecipe, RemoteCommandRecipeMixIn):
             help = "Full path of mapfile; containing the succesfull generated"
             "source list"
         ),
+        'working_directory': ingredient.StringField(
+            '--working-directory',
+            help = "Working directory used by the nodes: local data"
+        ),
+        'sourcedb_target_path': ingredient.StringField(
+            '--sourcedb-target-path',
+            help = "Target path for the sourcedb created based on the found sources"
+        ),
+        'makesourcedb_path': ingredient.ExecField(
+             '--makesourcedb-path',
+             help = "Path to makesourcedb executable."
+        ),
+        'sourcedb_map_path': ingredient.StringField(
+            '--sourcedb-map-path',
+            help = "Full path of mapfile; containing the succesfull generated"
+            "sourcedbs"
+        ),
+
     }
 
     outputs = {
         'mapfile': ingredient.StringField(
         help = "Full path of mapfile; containing the succesfull generated"
+            ),
+        'sourcedb_map_path': ingredient.StringField(
+        help = "Full path of mapfile; containing the succesfull generated sourcedbs"
             )
     }
 
@@ -59,14 +80,20 @@ class imager_source_finding(BaseRecipe, RemoteCommandRecipeMixIn):
         node_command = " python %s" % (self.__file__.replace("master", "nodes"))
         jobs = []
         created_sourcelists = []
+        created_sourcedbs = []
         for host, data in input_map:
             arguments = [data,
                          bdsm_parset_file_run1,
                          bdsm_parset_file_run2x,
                          catalog_output_path,
-                         image_output_path
+                         image_output_path,
+                         self.inputs['sourcedb_target_path'],
+                         self.inputs['initscript'],
+                         self.inputs['working_directory'],
+                         self.inputs['makesourcedb_path']
                         ]
             created_sourcelists.append((host, catalog_output_path))
+            created_sourcedbs.append((host, self.inputs['sourcedb_target_path']))
             jobs.append(ComputeJob(host, node_command, arguments))
 
         # Hand over the job(s) to the pipeline scheduler
@@ -80,9 +107,14 @@ class imager_source_finding(BaseRecipe, RemoteCommandRecipeMixIn):
         self.logger.info(created_sourcelists)
         store_data_map(self.inputs['mapfile'], created_sourcelists)
         self.logger.debug("Wrote datamap with created sourcelists: {0}".format(
-                                                created_sourcelists))
-        self.outputs["mapfile"] = self.inputs['mapfile']
+                                                self.inputs['mapfile']))
 
+        store_data_map(self.inputs['sourcedb_map_path'], created_sourcedbs)
+        self.logger.debug("Wrote datamap with created sourcedbs: {0}".format(
+                                             self.inputs['sourcedb_map_path']))
+
+        self.outputs["mapfile"] = self.inputs['mapfile']
+        self.outputs["sourcedb_map_path"] = self.inputs['sourcedb_map_path']
 
 if __name__ == '__main__':
     sys.exit(imager_source_finding().main())

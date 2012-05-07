@@ -1,13 +1,15 @@
 from __future__ import with_statement
 import sys
 import os
-import subprocess
+import shutil
 
 from lofar.parameterset import parameterset
 from lofarpipe.support.lofarnode import LOFARnodeTCP
-from lofarpipe.support.utilities import create_directory
 import bdsm #@UnresolvedImport
-import pyrap.images as pim #@UnresolvedImport
+
+from lofarpipe.support.utilities import read_initscript
+from lofarpipe.support.pipelinelogging import CatchLog4CPlus
+from lofarpipe.support.utilities import catch_segfaults
 
 
 class imager_source_finding(LOFARnodeTCP):
@@ -15,7 +17,8 @@ class imager_source_finding(LOFARnodeTCP):
     The imager_source_finding    
     """
     def run(self, input_image, bdsm_parameter_run1_path,
-            bdsm_parameter_run2x_path, catalog_output_path, image_output_path):
+            bdsm_parameter_run2x_path, catalog_output_path, image_output_path,
+            sourcedb_target_path, init_script, working_directory, executable):
         self.logger.info("Starting imager_source_finding")
         # default frequency is None (read from image), save for later cycles
         frequency = None
@@ -100,8 +103,10 @@ class imager_source_finding(LOFARnodeTCP):
         # TODO: return the sourcedb??
         # ik denk van niet: als er een fout op treed eindigd deze script
 
-        return 0
+        self._create_source_db(catalog_output_path, sourcedb_target_path,
+                init_script, working_directory, executable, False)
 
+        return 0
 
 
     def _combine_source_lists(self, number_of_sourcefind_itterations,
@@ -154,6 +159,43 @@ class imager_source_finding(LOFARnodeTCP):
         self.logger.debug("Wrote concatenated sourcelist to: {0}".format(
                                                 catalog_output_path))
 
+
+    def _create_source_db(self, source_list, sourcedb_target_path, init_script,
+                          working_directory, executable, append = False):
+        """
+        _create_source_db consumes a skymap text file and produces a source db
+        (pyraptable) 
+        """
+        #remove existing sourcedb if not appending
+        if (append == False) and os.path.isdir(sourcedb_target_path):
+            shutil.rmtree(sourcedb_target_path)
+            self.logger.debug("Removed existing sky model: {0}".format(
+                                            sourcedb_target_path))
+
+        # The command and parameters to be run
+        cmd = [executable, "in={0}".format(source_list),
+               "out={0}".format(sourcedb_target_path),
+               "format=<", # format according to Ger van Diepen
+               "append=true"] # Always set append flag: no effect on non exist db
+        self.logger.info(' '.join(cmd))
+
+        try:
+            environment = read_initscript(self.logger, init_script)
+            with CatchLog4CPlus(working_directory,
+                 self.logger.name + "." + os.path.basename("makesourcedb"),
+                 os.path.basename(executable)
+            ) as logger:
+                    catch_segfaults(cmd, working_directory, environment,
+                                            logger, cleanup = None)
+
+        except Exception, e:
+            self.logger.error("Execution of external failed:")
+            self.logger.error(" ".join(cmd))
+            self.logger.error("exception details:")
+            self.logger.error(str(e))
+            return 1
+
+        return 0
 
 if __name__ == "__main__":
     jobid, jobhost, jobport = sys.argv[1:4]

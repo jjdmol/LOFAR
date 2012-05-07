@@ -140,7 +140,7 @@ class msss_imager_pipeline(control):
         processed_ms_dir = os.path.join(self.scratch_directory, "subbands")
         concat_ms_map_path, timeslice_map_path, raw_ms_per_image_map_path = \
             self._prepare_phase(input_mapfile, target_mapfile, processed_ms_dir,
-                                 skip = True)
+                                 skip = False)
 
         #We start with an empty source_list
         source_list = ""  #This variable contains possible 'new' star locations from 
@@ -154,24 +154,24 @@ class msss_imager_pipeline(control):
             parmdbs_path, sourcedb_map_path = self._create_dbs(
                         concat_ms_map_path, timeslice_map_path,
                         source_list = source_list,
-                        skip_create_dbs = True)
+                        skip_create_dbs = False)
 
             # *****************************************************************
             # (3)  bbs_imager recipe.
             bbs_output = self._bbs(timeslice_map_path, parmdbs_path, sourcedb_map_path,
-                        skip = True)
+                        skip = False)
 
 
             # ******************************************************************
             # (4) Get parameters awimager from the prepare_parset and inputs
             aw_image_mapfile, maxbaseline = self._aw_imager(concat_ms_map_path,
                         idx_loop, sourcedb_map_path,
-                        skip = True)
+                        skip = False)
 
             # *****************************************************************
             # (5) Source finding 
-            sourcelist_map = self._source_finding(aw_image_mapfile,
-                                    idx_loop, skip = True)
+            sourcelist_map, found_sourcedb_path = self._source_finding(aw_image_mapfile,
+                                    idx_loop, skip = False)
             #should the output be a sourcedb? instead of a sourcelist
 
 
@@ -179,8 +179,9 @@ class msss_imager_pipeline(control):
         #
         minbaseline = 0
 
+
         self._finalize(aw_image_mapfile, processed_ms_dir,
-                       raw_ms_per_image_map_path, sourcelist_map,
+                       raw_ms_per_image_map_path, found_sourcedb_path,
                        minbaseline, maxbaseline, target_mapfile,
                        output_image_mapfile)
 
@@ -256,16 +257,23 @@ class msss_imager_pipeline(control):
              "source_finding_outputs")
         self.logger.debug("Touched mapfile for sourcefinding output: {0}".format(
                                                         source_list_map))
-
+        sourcedb_map_path = self._write_datamap_to_file(None,
+             "source_dbs_outputs")
+        self.logger.debug("Touched mapfile for sourcedb based in found sources: {0}".format(
+                                                        sourcedb_map_path))
         catalog_path = os.path.join(
             self.scratch_directory,
             "awimage_cycle_{0}".format(major_cycle),
             "bdsm_catalog"
         )
-
+        sourcedb_path = os.path.join(
+            self.scratch_directory,
+            "awimage_cycle_{0}".format(major_cycle),
+            "bdsm_sourcedb"
+        )
         # Run the sourcefinder
         if skip:
-            return source_list_map
+            return source_list_map, sourcedb_map_path
         else:
             self.run_task("imager_source_finding",
                         image_map_path,
@@ -273,9 +281,12 @@ class msss_imager_pipeline(control):
                         bdsm_parset_file_run2x = parset_path_pass_2,
                         working_directory = self.scratch_directory,
                         catalog_output_path = catalog_path,
-                        mapfile = source_list_map)
+                        mapfile = source_list_map,
+                        sourcedb_target_path = sourcedb_path,
+                        sourcedb_map_path = sourcedb_map_path
+                         )
 
-            return source_list_map
+            return source_list_map, sourcedb_map_path
 
 
     def _bbs(self, timeslice_map_path, parmdbs_map_path, sourcedb_map_path, skip = False):
