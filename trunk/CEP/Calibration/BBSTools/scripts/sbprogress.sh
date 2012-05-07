@@ -124,8 +124,8 @@ fi
 
 # Get start and end time of MS from log
 # Time          : 2011/10/30/02:30:00 - 2011/10/30/11:50:01
-starttime=`head -n 40 ${logfile} | grep -i "Time          : "| gawk '{print $3}'`
-endtime=`head -n 40 ${logfile} | grep -i "Time          : "| gawk '{print $5}'`
+starttime=`head -n 30 ${logfile} | grep -i "Time          : "| gawk '{print $3}'`
+endtime=`head -n 30 ${logfile} | grep -i "Time          : "| gawk '{print $5}'`
 
 # Convert starttime and endtime to seconds
 if [ "${system}" == "Darwin" ]
@@ -140,23 +140,12 @@ fi
 #echo "starttimes = ${starttimes}"   # DEBUG
 #echo "endtimes = ${endtimes}"   # DEBUG
 
-# Mac OS DEBUG mode
-#if [ -z ${pid} ]
-#then 
-#  pid=`pgrep -U ${USER} bbs-reducer`
-#  if [ ${verbosity} -eq 1 ]
-#  then
-#    echo "pid = ${pid}"    # DEBUG
-#  fi
-#fi
-
-#start=`date +%s`    # get start NOT NEEDED anymore
 # Loop while process is alive
 while [ ${pid} ]
 do
   # tail the provided BBS log and grep for "Time: "
-  timeline=`tail -n 200 ${logfile} | grep "Time:"`
-  stepline=`tail -n 200 ${logfile} | grep "Step:"`
+  timeline=`tail -n 100 ${logfile} | grep "Time:"`
+  stepline=`tail -n 100 ${logfile} | grep "Step:"`
 
 #  echo "timeline = ${timeline}"   # DEBUG
 #  echo "stepline = ${stepline}"   # DEBUG
@@ -167,17 +156,11 @@ do
     continue
   fi
 
-#  echo "timeline = ${timeline}"               # DEBUG
-#  echo "stepline = ${stepline}"               # DEBUG
-  step=`echo ${stepline} | gawk '{print $2}'`
-#  echo "step= ${step}"                        # DEBUG
-  
   # Do we need this for chunk statistics?
   startchunk=`echo ${timeline} | gawk '{print $2}'`   # catch the start time of the chunk
   endchunk=`echo ${timeline} | gawk '{print $4}'`    # catch the end time of the chunk
+  step=`echo ${stepline} | gawk '{print $2}'`
 
-#  echo "startchunk = ${startchunk}"   # DEBUG
-#  echo "endchunk = ${endchunk}"       # DEBUG
   # Convert to seconds
   if [ "${system}" == "Darwin" ]
   then
@@ -187,15 +170,12 @@ do
     startchunks=`date -d "$(echo ${startchunk} | sed 's,/, ,3')" +%s`
     endchunks=`date -d "$(echo ${endchunk} | sed 's,/, ,3')" +%s`
   fi
-#  echo "startchunks = ${startchunks}"  # DEBUG
-#  echo "endchunks = ${endchunks}"      # DEBUG
 
   # Get time elapsed from process manager 
   mins=`ps -o time ${pid} | gawk 'NR < 2 { next };{print $1}' | gawk 'BEGIN{FS=":"}; {print $1}'`
   secs=`ps -o time ${pid} | gawk 'NR < 2 { next };{print $1}' | gawk 'BEGIN{FS=":"}; {print $2}'`
 
   timeelapsed=`echo "scale=10; ${mins}*60+${secs}" | bc`
-#  echo "time elapsed = ${timeelapsed}"    # DEBUG
 
   # calculate chunks done
   nchunks=`echo "(${endtimes} - ${starttimes})/(${endchunks} - ${startchunks})" | bc`
@@ -204,11 +184,12 @@ do
   # calculate chunks done
   chunk=`echo "(${endchunks}-${starttimes})/(${endchunks} - ${startchunks})"   | bc`
   remainingchunks=`echo "${nchunks}-${chunk}" | bc`
+  percentage=`echo "scale=0; (100*${chunk})/${nchunks}" | bc`
+
 #  echo "chunk = ${chunk}"                       # DEBUG
 #  echo "remaining chunks = ${remainingchunks}"  # DEBUG
-
-  percentage=`echo "scale=0; (100*${chunk})/${nchunks}" | bc`
 #  echo "percentage = ${percentage}"
+
   if [ "! -z ${nchunks}" -a   "! -z ${chunk}" -a "! -z ${percentage}" ]
   then
     # estimate remaining time
@@ -220,18 +201,16 @@ do
     width=`tput cols`
     nblocks=`echo "scale=0;  (${width}-${rim})*${percentage}*0.01" | bc`
     nblocks=`printf %0.f ${nblocks}`      # round to integer
-#    echo "nblocks = ${nblocks}"   # DEBUG
     pblocks=`for((i=1;i<=${nblocks};i++));do printf "%s" "#";done;`
     nspaces=`echo "scale=0; ${width}-${rim}-${nblocks}-${#step}" | bc`
     nspaces=`printf %0.f ${nspaces}`      # round to integer
-#   echo "nspaces = ${nspaces}"    # DEBUG
     pspaces=`for((i=1;i<=${nspaces};i++));do printf "%s" " ";done`
     
     compgreater=`echo "${remainingtime} > 60.0" | bc`
     if [ `echo "${remainingtime} > 3600.0" | bc` -eq 1 ]
     then 
       remainingtime=`echo "scale=1; ${remainingtime}/60.0" | bc`
-      echo -ne "Chunk ${chunk}/${nchunks} [${pblocks} ${step}${pspaces} ${percentage}%] ${remainingtime} hours\r"   
+      echo -ne "Chunk ${chunk}/${nchunks} [${pblocks} ${step}${pspaces} ${percentage}%] ${remainingtime} h\r"   
     elif [ `echo "${remainingtime} > 60.0" | bc` -eq 1 ]
     then
       remainingtime=`echo "scale=1; ${remainingtime}/60.0" | bc`
@@ -241,10 +220,8 @@ do
     fi
   fi
   
-  # display @Chunk x/X 
-  # wait for update period
-  sleep ${interval}
-  pid=`pgrep bbs-reducer`
+  sleep ${interval}         # wait for update period
+#  pid=`pgrep bbs-reducer`
 done
 
 exit 0
