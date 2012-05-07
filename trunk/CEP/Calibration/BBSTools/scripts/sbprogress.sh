@@ -173,7 +173,8 @@ fi
 #echo "endtimes = ${endtimes}"   # DEBUG
 
 # Loop while process is alive
-while [ ${pid} ]
+pid=$(ps -p ${pid} | gawk 'NR < 2 { next };{print $1}')
+while [ !"-z ${pid}" ]
 do
   # tail the provided BBS log and grep for "Time: "
   timeline=`tail -n 70 ${logfile} | grep "Time:"`
@@ -267,8 +268,14 @@ do
     fi
   fi
   
-  sleep ${interval}         # wait for update period
-#  pid=`pgrep bbs-reducer`
+  # Exit when complete
+  if [ ${chunk} -eq ${nchunks} ]
+  then
+    break
+  else  
+    sleep ${interval}         # wait for update period
+    pid=$(ps -p ${pid} | gawk 'NR < 2 { next };{print $1}')  # get pid if process is still alive
+  fi
 done
 
 exit 0
