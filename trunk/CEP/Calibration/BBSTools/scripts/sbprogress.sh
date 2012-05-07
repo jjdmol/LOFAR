@@ -55,7 +55,7 @@ echo "-h                 display this help info"
 LC_ALL=C
 
 # Parse command line arguments
-while getopts "u:p:k:l:n:avdh" opt
+while getopts "u:p:k:l:n:asvdh" opt
 do
   case ${opt} in
     u) 
@@ -319,6 +319,11 @@ do
     fi
   fi
   
+  if [ ${silent} -eq 1 ]      # in silent mode only return one progress information
+  then
+    echo ""   # put a return
+    break
+  fi
   # Exit when complete
   if [ ${chunk} -eq ${nchunks} ]
   then
