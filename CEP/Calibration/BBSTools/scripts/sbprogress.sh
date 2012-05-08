@@ -130,6 +130,7 @@ if ! [[ "${pid}" =~ ^[0-9]+$ ]]
 then
   exit 1
 fi
+# From
 #[[ ${pid} =~ "^[0-9]+$" ]] && echo "pid exists" || echo "pid doesn't exist" && exit 1
 
 if [ "${logfile}" == "" ]   # check if we have already been given an over-ride logfile
@@ -141,16 +142,16 @@ then
   # If no logfile was given on the command line, look for it
   if [ "${system}" == "Darwin" ]
   then
-    logfile=`/usr/sbin/lsof | grep  $(pgrep bbs-reducer) | grep '.log$' | gawk '{print $9}'`
+    logfile=`/usr/sbin/lsof | grep  ${pid} | grep '.log$' | gawk '{print $9}'`
   else
-    logfile=`ls -l  /proc/$pid/fd | grep .log | gawk '{print $10}'`
+    logfile=`ls -l  /proc/${pid}/fd | grep .log | gawk '{print $10}'`
   fi
 fi
 
 #echo "logfile = ${logfile}"   # DEBUG
 
 # Check if logfile exists and has size>0 
-if [ ! -s "${logfile}" ]
+if [ ! -e "${logfile}" ]
 then
   echo "${logfile} for ${pid} doesn't exist. Exiting"
   exit 1
@@ -171,17 +172,21 @@ starttime=`head -n 30 ${logfile} | grep -i "Time          : "| gawk '{print $3}'
 endtime=`head -n 30 ${logfile} | grep -i "Time          : "| gawk '{print $5}'`
 
 # Get process start time from creation time of logfile
-if [ "${system}" == "Darwin" ]
-then
-  creationtime=$(stat -r ${logfile} | gawk '{print $12}')
-else
-  creationtime=$(stat -c %y%h ${logfile} | gawk '{print $1 " "$2}' | date -d - +%s)
-fi
+#if [ "${system}" == "Darwin" ]
+#then
+#  creationtime=$(stat -r ${logfile} | gawk '{print $12}')
+#else
+#  creationtime=$(stat -c %y%h ${logfile} | gawk '{print $1 " "$2}' | date -d - +%s)
+#fi
 
+#echo "starttime = ${starttime}"   # DEBUG
+#echo "endtime = ${endtime}"   # DEBUG
 
 # Convert starttime and endtime to seconds
 if [ "${system}" == "Darwin" ]
 then
+#  starttimes=`date -jf '%Y/%m/%d/%H:%M:%S' "$(echo ${starttime} | sed 's,/, ,3')" +%s`
+#  endtimes=`date -jf '%Y/%m/%d/%H:%M:%S' "$(echo ${starttime} | sed 's,/, ,3')" +%s`
   starttimes=`date -jf '%Y/%m/%d/%H:%M:%S' ${starttime} +%s`
   endtimes=`date -jf '%Y/%m/%d/%H:%M:%S' ${endtime} +%s`
 else
@@ -194,11 +199,11 @@ fi
 
 # Loop while process is alive
 pid=$(ps -p ${pid} | gawk 'NR < 2 { next };{print $1}')
-while [ !"-z ${pid}" ]
+while [ ! -z "${pid}" ]
 do
   # tail the provided BBS log and grep for "Time: "
-  timeline=`tail -n 70 ${logfile} | grep "Time:"`
-  stepline=`tail -n 70 ${logfile} | grep "Step:"`
+  timeline=`tail -n 30 ${logfile} | grep "Time:"`
+  stepline=`tail -n 30 ${logfile} | grep "Step:"`
 
   if [ ${debug} -eq 1 ]; then
     echo "timeline = ${timeline}"   # DEBUG
@@ -207,11 +212,11 @@ do
 
   if [ -z "${timeline}" ]     # Retry with longer "tail"
   then
-    timeline=`tail -n 140 ${logfile} | grep "Time:"`
+    timeline=`tail -n 100 ${logfile} | grep "Time:"`
   fi
   if [ -z "${stepline}" ]     # Retry with longer "tail"  
   then
-    stepline=`tail -n 140 ${logfile} | grep "Step:"`
+    stepline=`tail -n 100 ${logfile} | grep "Step:"`
   fi
   if [ -z "${timeline}" ]
   then
@@ -304,7 +309,7 @@ do
   
     # get terminal width and determine variables for progress bar
     rim=31            # rim for information around progress bar
-    width=`tput -T xterm-color cols`
+    width=`tput cols -T xterm-color`
     nblocks=`echo "scale=0;  (${width}-${rim})*${percentage}*0.01" | bc`
     nblocks=`printf %0.f ${nblocks}`      # round to integer
     pblocks=`for((i=1;i<=${nblocks};i++));do printf "%s" "#";done;`
@@ -336,7 +341,7 @@ do
     break
   else  
     sleep ${interval}         # wait for update period
-    pid=$(ps -p ${pid} | gawk 'NR < 2 { next };{print $1}')  # get pid if process is still alive
+    #pid=$(ps -p ${pid} | gawk 'NR < 2 { next };{print $1}')  # get pid if process is still alive
   fi
 done
 
