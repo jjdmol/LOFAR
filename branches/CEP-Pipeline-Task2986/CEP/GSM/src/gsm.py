@@ -24,7 +24,7 @@ def gsmMain (name, argv):
         print '   vlssFluxCutoff  minimum flux (Jy) of VLSS sources to use'
         print '                   default = 4'
         print '   assocTheta      uncertainty in matching     (degrees)'
-        print '                   default = 0.025'
+        print '                   default = 0.00278  (10 arcsec)'
         print ''
         return False
 
@@ -34,7 +34,7 @@ def gsmMain (name, argv):
     dec     = float(argv[2])
     radius  = float(argv[3])
     cutoff  = 4.
-    theta   = 0.025
+    theta   = 0.00278
     if len(argv) > 4:
         cutoff = float(argv[4])
     if len(argv) > 5:

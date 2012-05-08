@@ -424,13 +424,13 @@ class StatisticsCollection : public Serializable
 		
 		void initializeEmptyStatistics(QualityTablesFormatter &qualityData, QualityTablesFormatter::StatisticDimension dimension) const
 		{
-			qualityData.InitializeEmptyStatistic(dimension, QualityTablesFormatter::RFICountStatistic);
-			qualityData.InitializeEmptyStatistic(dimension, QualityTablesFormatter::CountStatistic);
-			qualityData.InitializeEmptyStatistic(dimension, QualityTablesFormatter::SumStatistic);
-			qualityData.InitializeEmptyStatistic(dimension, QualityTablesFormatter::SumP2Statistic);
-			qualityData.InitializeEmptyStatistic(dimension, QualityTablesFormatter::DCountStatistic);
-			qualityData.InitializeEmptyStatistic(dimension, QualityTablesFormatter::DSumStatistic);
-			qualityData.InitializeEmptyStatistic(dimension, QualityTablesFormatter::DSumP2Statistic);
+			qualityData.InitializeEmptyStatistic(dimension, QualityTablesFormatter::RFICountStatistic, _polarizationCount);
+			qualityData.InitializeEmptyStatistic(dimension, QualityTablesFormatter::CountStatistic, _polarizationCount);
+			qualityData.InitializeEmptyStatistic(dimension, QualityTablesFormatter::SumStatistic, _polarizationCount);
+			qualityData.InitializeEmptyStatistic(dimension, QualityTablesFormatter::SumP2Statistic, _polarizationCount);
+			qualityData.InitializeEmptyStatistic(dimension, QualityTablesFormatter::DCountStatistic, _polarizationCount);
+			qualityData.InitializeEmptyStatistic(dimension, QualityTablesFormatter::DSumStatistic, _polarizationCount);
+			qualityData.InitializeEmptyStatistic(dimension, QualityTablesFormatter::DSumP2Statistic, _polarizationCount);
 		}
 		
 		void saveEachStatistic(StatisticSaver &saver, const DefaultStatistics &stat, const Indices &indices) const

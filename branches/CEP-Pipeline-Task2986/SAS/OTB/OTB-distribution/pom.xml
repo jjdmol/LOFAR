@@ -9,7 +9,7 @@
 
 	<groupId>nl.astron.lofar.sas</groupId>
 	<artifactId>OTB-distribution</artifactId>
-	<version>0.94</version>
+	<version>0.96-SNAPSHOT</version>
 
 	<organization>
 		<name>Astron</name>
@@ -37,14 +37,14 @@
 								<artifactItem>
 									<groupId>nl.astron.lofar.sas</groupId>
 									<artifactId>jOTDB3</artifactId>
-									<version>1.0.0</version>
+									<version>1.0.1-SNAPSHOT</version>
 									<type>tar.gz</type>
 								</artifactItem>
 
 								<artifactItem>
 									<groupId>nl.astron.lofar.sas</groupId>
 									<artifactId>OTB</artifactId>
-									<version>1.0.0</version>
+									<version>1.0.1-SNAPSHOT</version>
 									<type>tar.gz</type>
 								</artifactItem>
 
@@ -77,6 +77,14 @@
 			
 		</plugins>
 	</build>
+	
+	<distributionManagement>
+		<snapshotRepository>
+			<id>snapshots</id>
+			<name>Astron Nexus Repository</name>
+			<url>https://support.astron.nl/nexus/content/repositories/snapshots/</url>
+		</snapshotRepository>
+	</distributionManagement>
 
 </project>
 

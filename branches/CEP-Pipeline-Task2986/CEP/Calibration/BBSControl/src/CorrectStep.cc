@@ -125,8 +125,8 @@ namespace LOFAR
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       SingleStep::read(ps);
       ParameterSet pss(ps.makeSubset("Correct."));
-      itsUseMMSE = pss.getBool("MMSE.Enable", itsUseMMSE);
-      itsSigmaMMSE = pss.getDouble("MMSE.Sigma", itsSigmaMMSE);
+      itsUseMMSE = pss.getBool("MMSE.Enable", false);
+      itsSigmaMMSE = pss.getDouble("MMSE.Sigma", 0.0);
       if(itsSigmaMMSE < 0.0)
       {
         THROW(BBSControlException, "MMSE.Sigma should be positive: "

@@ -54,6 +54,9 @@ namespace BBS {
 
     virtual ~ParmDBCasa();
 
+    // Flush possible changes to disk.
+    virtual void flush (bool fsync);
+
     // Writelock and unlock the table.
     // It is not necessary to do this, but it can be useful if many
     // small accesses have to be done.

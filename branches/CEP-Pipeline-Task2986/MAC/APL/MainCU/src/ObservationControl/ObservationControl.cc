@@ -115,7 +115,7 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 	string	OLAPpos = globalParameterSet()->locateModule("OLAP");
 	LOG_DEBUG(OLAPpos+"OLAP.IONProc.integrationSteps");
 	itsForcedQuitDelay = 15 + globalParameterSet()->getUint32(OLAPpos+"OLAP.IONProc.integrationSteps",0);
-	LOG_DEBUG_STR ("Timer for forcing quit is " << itsForcedQuitDelay << " seconds");
+	LOG_INFO_STR ("Timer for forcing quit is " << itsForcedQuitDelay << " seconds");
 
 	// Inform Logging manager who we are
 	LOG_INFO_STR("MACProcessScope: " << createPropertySetName(PSN_OBSERVATION_CONTROL, getName(), itsObsDPname));
@@ -516,7 +516,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 	case CONTROL_STARTED: {
 		CONTROLStartedEvent	msg(event);
 		if (msg.successful) {
-			LOG_DEBUG_STR("Start of " << msg.cntlrName << " was successful");
+			LOG_INFO_STR("Start of " << msg.cntlrName << " was successful");
 		}
 		else {
 			LOG_WARN_STR("Start of " << msg.cntlrName << " was NOT successful");
@@ -656,11 +656,11 @@ void ObservationControl::setObservationTimers(double	minimalDelay)
 	if (itsState < CTState::CLAIM) { 				// claim state not done yet?
 		if (sec2claim > 0) {
 			itsClaimTimer = itsTimerPort->setTimer((sec2claim < minimalDelay) ? minimalDelay : 1.0 * sec2claim);
-			LOG_DEBUG_STR ("Claimperiod starts over " << sec2claim << " seconds");
+			LOG_INFO_STR ("Claimperiod starts over " << sec2claim << " seconds");
 		}
 		else {
 			assumedState = CTState::CLAIM;
-			LOG_DEBUG_STR ("Claimperiod started " << -sec2claim << " seconds AGO!");
+			LOG_INFO_STR ("Claimperiod started " << -sec2claim << " seconds AGO!");
 		}
 	}
 		
@@ -668,11 +668,11 @@ void ObservationControl::setObservationTimers(double	minimalDelay)
 	if (itsState < CTState::PREPARE) { 				// prepare state not done yet?
 		if (sec2prepare > 0) {
 			itsPrepareTimer = itsTimerPort->setTimer((sec2prepare < minimalDelay) ? minimalDelay : 1.0 * sec2prepare);
-			LOG_DEBUG_STR ("PreparePeriod starts over " << sec2prepare << " seconds");
+			LOG_INFO_STR ("PreparePeriod starts over " << sec2prepare << " seconds");
 		}
 		else {
 			assumedState = CTState::PREPARE;
-			LOG_DEBUG_STR ("PreparePeriod started " << -sec2prepare << " seconds AGO!");
+			LOG_INFO_STR ("PreparePeriod started " << -sec2prepare << " seconds AGO!");
 		}
 	}
 
@@ -680,11 +680,11 @@ void ObservationControl::setObservationTimers(double	minimalDelay)
 	if (itsState < CTState::RESUME) { 				// not yet active?
 		if (sec2start > 0) {
 			itsStartTimer = itsTimerPort->setTimer((sec2start < minimalDelay) ? minimalDelay : 1.0 * sec2start);
-			LOG_DEBUG_STR ("Observation starts over " << sec2start << " seconds");
+			LOG_INFO_STR ("Observation starts over " << sec2start << " seconds");
 		}
 		else {
 			assumedState = CTState::RESUME;
-			LOG_DEBUG_STR ("Observation started " << -sec2start << " seconds AGO!");
+			LOG_INFO_STR ("Observation started " << -sec2start << " seconds AGO!");
 		}
 	}
 
@@ -694,11 +694,11 @@ void ObservationControl::setObservationTimers(double	minimalDelay)
 			itsStopTimer = itsTimerPort->setTimer((sec2stop < minimalDelay) ? minimalDelay : 1.0 * sec2stop);
 			// make sure we go down 30 seconds after quit was requested.
 			itsForcedQuitTimer = itsTimerPort->setTimer(sec2stop + (1.0 * itsForcedQuitDelay));
-			LOG_DEBUG_STR ("Observation stops over " << sec2stop << " seconds");
+			LOG_INFO_STR ("Observation stops over " << sec2stop << " seconds");
 		}
 		else {
 			assumedState = CTState::RELEASE;
-			LOG_DEBUG_STR ("Observation should have been stopped " << -sec2start << 
+			LOG_INFO_STR ("Observation should have been stopped " << -sec2start << 
 							" seconds AGO!");
 		}
 	}
@@ -715,7 +715,7 @@ void ObservationControl::setObservationTimers(double	minimalDelay)
 	default:	break;	// satisfy compiler
 	}
 
-	LOG_DEBUG_STR ("Observation ends at " << to_simple_string(itsStopTime));
+	LOG_INFO_STR ("Observation ends at " << to_simple_string(itsStopTime));
 }
 
 //
@@ -969,7 +969,7 @@ void ObservationControl::_databaseEventHandler(GCFEvent& event)
 				newTime = time_from_string(newVal);
 			}
 			catch (std::exception&	e) {
-				LOG_DEBUG_STR(newVal << " is not a legal time!!!");
+				LOG_ERROR_STR(newVal << " is not a legal time!!!");
 				return;
 			}
 			if (strstr(dpEvent.DPname.c_str(), PN_OBS_START_TIME) != 0) { 

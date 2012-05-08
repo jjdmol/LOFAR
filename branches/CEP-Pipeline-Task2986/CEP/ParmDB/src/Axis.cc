@@ -355,6 +355,7 @@ namespace BBS {
   Axis::ShPtr Axis::makeAxis (const vector<double>& low,
                               const vector<double>& upp)
   {
+    ASSERT (low.size() == upp.size()  &&  low.size() > 0);
     // Check if the width is constant, thus if the result is a regular axis.
     double width = upp[0] - low[0];
     for (uint i=1; i<low.size(); ++i) {

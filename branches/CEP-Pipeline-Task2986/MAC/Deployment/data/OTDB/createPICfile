@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# $Id: $
+# $Id$
 #
 # Syntax: createFiles ( -a | stationname [stationame ...])
 #

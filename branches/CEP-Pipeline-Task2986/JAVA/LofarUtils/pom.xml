@@ -9,7 +9,7 @@
 	<groupId>nl.astron.lofar</groupId>
 	<artifactId>lofarutils</artifactId>
 	<name>Lofar Utils</name>
-	<version>1.0.0</version>
+	<version>1.0.1-SNAPSHOT</version>
 
 	<organization>
 		<name>Astron</name>
@@ -22,9 +22,7 @@
 	</properties>
 
 	<build>
-
 		<sourceDirectory>src</sourceDirectory>
-
 		<resources>
 			<resource>
 				<directory>src</directory>
@@ -45,17 +43,22 @@
 				</configuration>
 			</plugin>
 		</plugins>
-
 	</build>
 
 	<dependencies>
-
 		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
 			<version>1.2.16</version>
 		</dependency>
-
 	</dependencies>
+	
+	<distributionManagement>
+		<snapshotRepository>
+			<id>snapshots</id>
+			<name>Astron Nexus Repository</name>
+			<url>https://support.astron.nl/nexus/content/repositories/snapshots/</url>
+		</snapshotRepository>
+	</distributionManagement>
 
 </project>

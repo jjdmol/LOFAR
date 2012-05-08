@@ -59,6 +59,9 @@ namespace BBS {
   ParmDBRep::~ParmDBRep()
   {}
 
+  void ParmDBRep::flush (bool)
+  {}
+
   void ParmDBRep::lock (bool)
   {}
 

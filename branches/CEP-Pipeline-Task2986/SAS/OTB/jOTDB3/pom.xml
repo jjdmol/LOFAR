@@ -9,7 +9,7 @@
 	<groupId>nl.astron.lofar.sas</groupId>
 	<artifactId>jOTDB3</artifactId>
 	<name>lib Object Tree Browser</name>
-	<version>1.0.0</version>
+	<version>1.0.1-SNAPSHOT</version>
 
 	<organization>
 		<name>Astron</name>
@@ -193,7 +193,7 @@
 		<dependency>
 			<groupId>nl.astron.lofar</groupId>
 			<artifactId>lofarutils</artifactId>
-			<version>1.0.0</version>
+			<version>1.0.1-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>
@@ -203,5 +203,13 @@
 		</dependency>
 
 	</dependencies>
+	
+	<distributionManagement>
+		<snapshotRepository>
+			<id>snapshots</id>
+			<name>Astron Nexus Repository</name>
+			<url>https://support.astron.nl/nexus/content/repositories/snapshots/</url>
+		</snapshotRepository>
+	</distributionManagement>
 
 </project>
