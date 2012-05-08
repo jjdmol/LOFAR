@@ -181,11 +181,22 @@ fi
 
 # Get start and end time of MS from log
 # Time          : 2011/10/30/02:30:00 - 2011/10/30/11:50:01
-while [ `cat ${logfile} | grep -c -m 1 -i "Time          : "` -ne 1 ]
+#while [ `cat ${logfile} | grep -c -m 1 -i "Time          : "` -ne 1 ]
+#do
+#  echo "line = ${line}"   # DEBUG
+#starttime=`head -n 30 ${logfile} | grep -m 1 -i "Time          : "| gawk '{print $3}'`
+#endtime=`head -n 30 ${logfile} | grep -m 1 -i "Time          : "| gawk '{print $5}'`
+#done
+while ${starttime}=="" -a ${endtime}==""
 do
-  starttime=`cat ${logfile} | grep -m 1 -i "Time          : "| gawk '{print $3}'`
-  endtime=`cat ${logfile} | grep -m 1 -i "Time          : "| gawk '{print $5}'`
+  starttime=`head -n 30 ${logfile} | grep -m 1 -i "Time          : "| gawk '{print $3}'`
+  endtime=`head -n 30 ${logfile} | grep -m 1 -i "Time          : "| gawk '{print $5}'`
 done
+
+if [ ${debug} -eq 1 ]; then
+  echo "starttime = ${starttime}"
+  echo "endtime = ${endtime}"
+fi
 
 # Get process start time from creation time of logfile
 #if [ "${system}" == "Darwin" ]
@@ -209,7 +220,11 @@ fi
 pid=$(ps -p ${pid} | gawk 'NR < 2 { next };{print $1}')
 while [ ! -z "${pid}" ]
 do 
-  if [ "${system}" == "Darwin" ]
+  if [ $(uname -n)=="Sven-Duschas-Macbook-Pro" ]
+  then
+    timeline=`tac ${logfile} | grep -m 1 "Time:"`
+    stepline=`tac ${logfile} | grep -m 1 "Step:"`  
+  elif [ "${system}" == "Darwin" ]
   then
     # tail the provided BBS log and grep for "Time: "
     timeline=`tail -n 30 ${logfile} | grep "Time:"`
@@ -309,6 +324,7 @@ do
     echo "hours = ${hours}" # DEBUG
     echo "mins = ${mins}"   # DEBUG
     echo "secs = ${secs}"   # DEBUG  
+    echo "timeelapsed   = ${timeelapsed}"   # DEBUG
   fi
 
   # Get time that has passed (timeelapsed is only CPU time, now use wallclocktime)  
@@ -316,10 +332,10 @@ do
   #timeelapsed=$(ps -oetime -p ${pid} | gawk 'NR < 2 { next };{print $1}')
 
   if [ ${debug} -eq 1 ]; then
-    #echo "creationtime  = ${creationtime}"  # DEBUG
-    #echo "wallclocktime = ${wallclocktime}"   # DEBUG
-    #echo "now           = ${now}"           # DEBUG
-    echo "timeelapsed   = ${timeelapsed}"   # DEBUG
+    echo "starttimes = ${starttimes}"
+    echo "endtimes = ${endtimes}"
+    echo "startchunks = ${startchunks}"
+    echo "endchunks = ${endchunks}"
   fi
 
   # calculate chunks done
