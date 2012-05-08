@@ -128,7 +128,9 @@ fi
 #echo "pid = ${pid}"
 if ! [[ "${pid}" =~ ^[0-9]+$ ]]
 then
-  echo "Invalid pid: ${pid}. Exiting."
+  if [ ! ${silent} ]; then           # avoid PID error message in silent mode
+    echo "Invalid pid: ${pid}. Exiting."
+  fi
   exit 1
 fi
 # From
@@ -139,7 +141,9 @@ then
   pid=$(ps -p ${pid} | gawk 'NR < 2 { next };{print $1}')
   if ! [[ "${pid}" =~ ^[0-9]+$ ]]
   then
-    echo "Process ${pid} is not running. Exiting."
+    if [ ! ${silent} ]; then           # avoid PID error message in silent mode    
+      echo "Process ${pid} is not running. Exiting."
+    fi
     exit 1  
   fi
 #  if [ ! -z "${pid}" ]    # Check if process is running
@@ -177,8 +181,11 @@ fi
 
 # Get start and end time of MS from log
 # Time          : 2011/10/30/02:30:00 - 2011/10/30/11:50:01
-starttime=`head -n 30 ${logfile} | grep -i "Time          : "| gawk '{print $3}'`
-endtime=`head -n 30 ${logfile} | grep -i "Time          : "| gawk '{print $5}'`
+while [ `cat ${logfile} | grep -c -m 1 -i "Time          : "` -ne 1 ]
+do
+  starttime=`cat ${logfile} | grep -m 1 -i "Time          : "| gawk '{print $3}'`
+  endtime=`cat ${logfile} | grep -m 1 -i "Time          : "| gawk '{print $5}'`
+done
 
 # Get process start time from creation time of logfile
 #if [ "${system}" == "Darwin" ]
@@ -188,14 +195,9 @@ endtime=`head -n 30 ${logfile} | grep -i "Time          : "| gawk '{print $5}'`
 #  creationtime=$(stat -c %y%h ${logfile} | gawk '{print $1 " "$2}' | date -d - +%s)
 #fi
 
-#echo "starttime = ${starttime}"   # DEBUG
-#echo "endtime = ${endtime}"   # DEBUG
-
 # Convert starttime and endtime to seconds
 if [ "${system}" == "Darwin" ]
 then
-#  starttimes=`date -jf '%Y/%m/%d/%H:%M:%S' "$(echo ${starttime} | sed 's,/, ,3')" +%s`
-#  endtimes=`date -jf '%Y/%m/%d/%H:%M:%S' "$(echo ${starttime} | sed 's,/, ,3')" +%s`
   starttimes=`date -jf '%Y/%m/%d/%H:%M:%S' ${starttime} +%s`
   endtimes=`date -jf '%Y/%m/%d/%H:%M:%S' ${endtime} +%s`
 else
@@ -203,41 +205,74 @@ else
   endtimes=`date -d "$(echo ${endtime} | sed 's,/, ,3')" +%s`
 fi
 
-#echo "starttimes = ${starttimes}"   # DEBUG
-#echo "endtimes = ${endtimes}"   # DEBUG
-
 # Loop while process is alive
 pid=$(ps -p ${pid} | gawk 'NR < 2 { next };{print $1}')
 while [ ! -z "${pid}" ]
-do
-  # tail the provided BBS log and grep for "Time: "
-  timeline=`tail -n 30 ${logfile} | grep "Time:"`
-  stepline=`tail -n 30 ${logfile} | grep "Step:"`
+do 
+  if [ "${system}" == "Darwin" ]
+  then
+    # tail the provided BBS log and grep for "Time: "
+    timeline=`tail -n 30 ${logfile} | grep "Time:"`
+    stepline=`tail -n 30 ${logfile} | grep "Step:"`  
+  else  
+    # get rid of tail -n mess by reverse searching, if possible (tac is GNU only :-/) 
+    if [ `tac ${logfile} | grep -c -m 1 "Time:"` -eq 1 ]
+    then
+      timeline=`tac ${logfile} | grep -m 1 "Time:"`
+      stepline=`tac ${logfile} | grep -m 1 "Step:"`
+    else
+      if [ ${silent} -eq 1 ]    # if silent mode, return with error
+      then
+        echo "Logfile ${logfile} of pid ${pid} could not be parsed for progress info."
+        exit 1
+      else                      # progress mode, wait and try again
+        sleep 1
+        continue
+      fi
+    fi
+  fi
 
   if [ ${debug} -eq 1 ]; then
     echo "timeline = ${timeline}"   # DEBUG
     echo "stepline = ${stepline}"   # DEBUG
   fi
 
-  if [ -z "${timeline}" ]     # Retry with longer "tail"
-  then
-    timeline=`tail -n 100 ${logfile} | grep "Time:"`
-  fi
-  if [ -z "${stepline}" ]     # Retry with longer "tail"  
-  then
-    stepline=`tail -n 100 ${logfile} | grep "Step:"`
-  fi
-  if [ -z "${timeline}" ]
-  then
-    sleep 1
-    continue
-  fi
-
+#  if [ -z "${timeline}" ]     # Retry with longer "tail"
+#  then
+#    timeline=`tail -n 100 ${logfile} | grep "Time:"`
+#  fi
+#  if [ -z "${stepline}" ]     # Retry with longer "tail"  
+#  then
+#    stepline=`tail -n 100 ${logfile} | grep "Step:"`
+#  fi
+#  if [ -z "${timeline}" ]
+#  then
+#    sleep 1
+#    continue
+#  fi
 
   # Do we need this for chunk statistics?
   startchunk=`echo ${timeline} | gawk '{print $2}'`   # catch the start time of the chunk
-  endchunk=`echo ${timeline} | gawk '{print $4}'`    # catch the end time of the chunk
-  step=`echo ${stepline} | gawk '{print $2}'`
+  endchunk=`echo ${timeline} | gawk '{print $4}'`     # catch the end time of the chunk
+  step=`echo ${stepline} | gawk '{print $2}'`         # catch current step
+
+  # Check matches:
+  #echo "startchunk = ${startchunk}"   # DEBUG
+  #echo "endchunk = ${endchunk}"       # DEBUG
+  #echo "step = ${step}"               # DEBUG
+
+  if [[ ! ${startchunk} =~ [0-9]* ]] # -o [[ ! ${endchunk} =~ [0-9]* ]] ]
+  then
+    echo "silent = ${silent}"   # DEBUG
+    if [ ${silent} -eq 1 ]      # if we are in silent mode, return with error
+    then
+      echo "Could not correctly parse ${logfile} of ${pid} for progress information. Exiting."
+      exit 1
+    else
+      sleep 0.5
+      continue
+    fi
+  fi
 
   # Convert to seconds
   if [ "${system}" == "Darwin" ]
@@ -280,7 +315,6 @@ do
   # wallclocktime=$(echo "${now} - ${creationtime}" | bc)
   #timeelapsed=$(ps -oetime -p ${pid} | gawk 'NR < 2 { next };{print $1}')
 
-
   if [ ${debug} -eq 1 ]; then
     #echo "creationtime  = ${creationtime}"  # DEBUG
     #echo "wallclocktime = ${wallclocktime}"   # DEBUG
@@ -290,7 +324,6 @@ do
 
   # calculate chunks done
   nchunks=`echo "(${endtimes} - ${starttimes})/(${endchunks} - ${startchunks})" | bc`
-
   if [ ${debug} -eq 1 ]; then
     echo "nchunks = ${nchunks}"                   # DEBUG
   fi
