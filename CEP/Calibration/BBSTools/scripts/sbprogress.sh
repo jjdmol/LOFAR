@@ -156,22 +156,31 @@ then
   then
     logfile=`/usr/sbin/lsof | grep  ${pid} | grep '.log$' | gawk '{print $9}'`
   else
-    #logfile=`ls -l  /proc/${pid}/fd | grep .log | gawk '{print $10}'`
-    logfile=`ls -l  /proc/${pid}/fd | grep '.log' | gawk 'NR==1 { next };{print $10}'`
+    logfile=`ls -l  /proc/${pid}/fd | grep .log | gawk '{print $10}'`
+    #logfile=`ls -l  /proc/${pid}/fd | grep '.log' | gawk 'NR==1 { next };{print $10}'`
   fi
 fi
 
-#echo "logfile = ${logfile}"   # DEBUG
+if [ ${debug} -eq 1 ]; then
+  echo "logfile = ${logfile}"   # DEBUG
+fi
 
 # Check if logfile exists and has size>0 
-if [ ! "-e ${logfile}" ]
+if [[ ! -e ${logfile} ]]
 then
   echo "${logfile} for ${pid} doesn't exist. Exiting"
   exit 1
+else
+  if [ ${verbosity} -eq 1 ]
+  then
+    echo "Found logfile for ${pid}: ${logfile}"
+  fi
 fi
-if [ ${verbosity} -eq 1 ]
+# Test if logfile has size > 0
+if [[ ! -s ${logfile} ]]
 then
-  echo "Found logfile for ${pid}: ${logfile}"
+  echo "Logfile ${logfile} has size 0. Wait for update on log output. Exiting."
+  exit 1
 fi
 
 # TODO
@@ -181,17 +190,8 @@ fi
 
 # Get start and end time of MS from log
 # Time          : 2011/10/30/02:30:00 - 2011/10/30/11:50:01
-#while [ `cat ${logfile} | grep -c -m 1 -i "Time          : "` -ne 1 ]
-#do
-#  echo "line = ${line}"   # DEBUG
-#starttime=`head -n 30 ${logfile} | grep -m 1 -i "Time          : "| gawk '{print $3}'`
-#endtime=`head -n 30 ${logfile} | grep -m 1 -i "Time          : "| gawk '{print $5}'`
-#done
-#while ${starttime}=="" -a ${endtime}==""
-#do
-  starttime=`head -n 30 ${logfile} | grep -m 1 -i "Time          : "| gawk '{print $3}'`
-  endtime=`head -n 30 ${logfile} | grep -m 1 -i "Time          : "| gawk '{print $5}'`
-#done
+starttime=`cat ${logfile} | grep -m 1 -i "Time          : "| gawk '{print $3}'`
+endtime=`cat ${logfile} | grep -m 1 -i "Time          : "| gawk '{print $5}'`
 
 if [ ${debug} -eq 1 ]; then
   echo "starttime = ${starttime}"
