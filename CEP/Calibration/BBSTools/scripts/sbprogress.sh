@@ -125,11 +125,17 @@ fi
 # pids=`pgrep bbs-reducer -u ${USER}`
 
 # Check command parameters
+#echo "pid = ${pid}"
+if ! [[ "${pid}" =~ ^[0-9]+$ ]]
+then
+  exit 1
+fi
+#[[ ${pid} =~ "^[0-9]+$" ]] && echo "pid exists" || echo "pid doesn't exist" && exit 1
+
 if [ "${logfile}" == "" ]   # check if we have already been given an over-ride logfile
 then 
   if [ -z "${pid}" ]    # Check if process is running
   then
-    echo "Process ${pid} is not running. Exiting."
     exit 1
   fi
   # If no logfile was given on the command line, look for it
@@ -298,7 +304,7 @@ do
   
     # get terminal width and determine variables for progress bar
     rim=31            # rim for information around progress bar
-    width=`tput cols`
+    width=`tput -T xterm-color cols`
     nblocks=`echo "scale=0;  (${width}-${rim})*${percentage}*0.01" | bc`
     nblocks=`printf %0.f ${nblocks}`      # round to integer
     pblocks=`for((i=1;i<=${nblocks};i++));do printf "%s" "#";done;`
