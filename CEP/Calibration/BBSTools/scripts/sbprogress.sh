@@ -187,11 +187,11 @@ fi
 #starttime=`head -n 30 ${logfile} | grep -m 1 -i "Time          : "| gawk '{print $3}'`
 #endtime=`head -n 30 ${logfile} | grep -m 1 -i "Time          : "| gawk '{print $5}'`
 #done
-while ${starttime}=="" -a ${endtime}==""
-do
+#while ${starttime}=="" -a ${endtime}==""
+#do
   starttime=`head -n 30 ${logfile} | grep -m 1 -i "Time          : "| gawk '{print $3}'`
   endtime=`head -n 30 ${logfile} | grep -m 1 -i "Time          : "| gawk '{print $5}'`
-done
+#done
 
 if [ ${debug} -eq 1 ]; then
   echo "starttime = ${starttime}"
