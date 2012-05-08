@@ -309,7 +309,12 @@ do
   
     # get terminal width and determine variables for progress bar
     rim=31            # rim for information around progress bar
-    width=`tput cols -T xterm-color`
+    if [ ${silent} -eq 1 ]
+    then
+      width=`tput cols -T xterm-color`
+    else
+        width=`tput cols`
+    fi
     nblocks=`echo "scale=0;  (${width}-${rim})*${percentage}*0.01" | bc`
     nblocks=`printf %0.f ${nblocks}`      # round to integer
     pblocks=`for((i=1;i<=${nblocks};i++));do printf "%s" "#";done;`
