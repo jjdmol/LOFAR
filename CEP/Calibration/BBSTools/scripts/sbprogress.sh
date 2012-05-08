@@ -45,7 +45,7 @@ echo "-k <key>           monitor progress of db-based calibrate [NOT SUPPORTED Y
 echo "-l logfile         if an alternative log should be watched, instead of -p <pid>"
 echo "-n port            open network listening for gds file-based central display [NOT SUPPORTED YET]"
 echo "-a                 display all user's bbs-reducers progress [NOT SUPPORTED YET]"
-echo "-s                 silent mode, only return percentage progress [NOT SUPPORTED YET]"
+echo "-s                 silent mode, only return percentage progress (e.g. for cexec)"
 echo "-v                 turn verbose messages on"
 echo "-d                 turn debug messages on"
 echo "-h                 display this help info"
