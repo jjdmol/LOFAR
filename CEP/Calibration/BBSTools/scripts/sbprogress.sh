@@ -128,6 +128,7 @@ fi
 #echo "pid = ${pid}"
 if ! [[ "${pid}" =~ ^[0-9]+$ ]]
 then
+  echo "Invalid pid: ${pid}. Exiting."
   exit 1
 fi
 # From
@@ -135,23 +136,31 @@ fi
 
 if [ "${logfile}" == "" ]   # check if we have already been given an over-ride logfile
 then 
-  if [ -z "${pid}" ]    # Check if process is running
+  pid=$(ps -p ${pid} | gawk 'NR < 2 { next };{print $1}')
+  if ! [[ "${pid}" =~ ^[0-9]+$ ]]
   then
-    exit 1
+    echo "Process ${pid} is not running. Exiting."
+    exit 1  
   fi
+#  if [ ! -z "${pid}" ]    # Check if process is running
+#  then
+#    echo "Process ${pid} is not running. Exiting."
+#    exit 1
+#  fi
   # If no logfile was given on the command line, look for it
   if [ "${system}" == "Darwin" ]
   then
     logfile=`/usr/sbin/lsof | grep  ${pid} | grep '.log$' | gawk '{print $9}'`
   else
-    logfile=`ls -l  /proc/${pid}/fd | grep .log | gawk '{print $10}'`
+    #logfile=`ls -l  /proc/${pid}/fd | grep .log | gawk '{print $10}'`
+    logfile=`ls -l  /proc/${pid}/fd | grep '.log' | gawk 'NR==1 { next };{print $10}'`
   fi
 fi
 
 #echo "logfile = ${logfile}"   # DEBUG
 
 # Check if logfile exists and has size>0 
-if [ ! -e "${logfile}" ]
+if [ ! "-e ${logfile}" ]
 then
   echo "${logfile} for ${pid} doesn't exist. Exiting"
   exit 1
