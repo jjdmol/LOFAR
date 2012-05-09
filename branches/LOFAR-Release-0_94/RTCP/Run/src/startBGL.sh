@@ -26,6 +26,9 @@ source /opt/lofar/bin/locations.sh
 mkdir -p `dirname $STORAGE_PARSET` &&
 cp $IONPROC_PARSET $STORAGE_PARSET &&
 
+# Make the /opt/lofar/log/latest symlink
+(ln -sfT `dirname $STORAGE_PARSET` /opt/lofar/log/latest || true) &&
+
 # Inject the parset into the correlator
 /opt/lofar/bin/commandOLAP.py -P $PARTITION parset $IONPROC_PARSET
 
