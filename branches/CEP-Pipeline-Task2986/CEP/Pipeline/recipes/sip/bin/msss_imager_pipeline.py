@@ -96,7 +96,9 @@ class msss_imager_pipeline(control):
         self.logger.info("Starting imager pipeline")
 
         # Define scratch directory to be used by the compute nodes.
-        self.scratch_directory = self.inputs['working_directory']
+        self.scratch_directory = os.path.join(
+            self.inputs['working_directory'], self.inputs['job_name']
+        )
 
         # Get input/output-data products specifications.
         self._get_io_product_specs()
