@@ -507,9 +507,9 @@ tFlt  = ["flt",  "vflt",  "pflt",  "dbl",  "vdbl",  "pdbl" ]
 compfiles = [cf for cf in os.listdir('.') if cf.endswith(".comp")]
 DBfiles = grep("^table.",compfiles)
 for DBfile in DBfiles:
-  tablename = lgrep("table", open(DBfile).readlines())[0].split()[1]
+  tablename = lgrep("^table", open(DBfile).readlines())[0].split()[1]
   print "tablename="+tablename
-  fieldLines = lgrep("field", open(DBfile).readlines())
+  fieldLines = lgrep("^field", open(DBfile).readlines())
 
   file = open(tablename+".cc", "w")
   genHeader                (file, tablename)
