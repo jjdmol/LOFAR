@@ -69,9 +69,9 @@ CTStartDaemon			-		C	Y	LOFAR_PermSW_CTStartDaemon
 SASGateway			-		C	Y	LOFAR_PermSW_Daemons_SASGateway
 CEPObsSW			-		C	N	LOFAR_ObsSW
 CEPObservation			-		C	N	LOFAR_ObsSW_@observation@
-OnlineControl			-		C	N	LOFAR_ObsSW_@observation@_OnlineControl
+OnlineControl			ONC		C	N	LOFAR_ObsSW_@observation@_OnlineControl
 StorageAppl			-		C	Y	LOFAR_ObsSW_@observation@_OnlineControl_StorageAppl
-BGPAppl				-		C	N	LOFAR_ObsSW_@observation@_OnlineControl_BGPAppl
+BGPAppl				BGPA		C	N	LOFAR_ObsSW_@observation@_OnlineControl_BGPAppl
 BGPProc				-		C	Y	LOFAR_ObsSW_@observation@_OnlineControl_BGPAppl_BGPProc
 BGPConnectionInfo		-		C	N	
 #
