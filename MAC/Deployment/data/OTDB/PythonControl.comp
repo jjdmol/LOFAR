@@ -17,6 +17,7 @@ par  workingDirectory	     I    text   -      100	0	'/data/scratch/${MSNUMBER}/w
 par  observationDirectory    I    text   -      100	0	'/data/L${OBSID}'				-	"Subdirectory where the datafiles were stored by the online processes."
 par  canCommunicate          I    bool   -      10	0	'true'						-	"Temp flag to tell MAC if the current PythonController can respond to CONTROL_xxx messages"
 par  steps                   I    vtext  -      100	0	'[]'                   				-       "Steporder"
+par  metadataFeedbackFile    I    text   -	10	0	''			                        - 	"File that the Python framework can use for feedback after processing is ready."
 
 uses DPPP	   4.0.0  development 	1	"DPcube"
 uses BBS  	   4.0.0  development 	1	"Blackboard System"
