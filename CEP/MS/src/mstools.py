@@ -164,7 +164,7 @@ def addfileglob (filename, pattern):
         return filename
     return filename + '/' + pattern
 
-def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0):
+def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0, nodes=[]):
     """ Expand dataset names in a parset file
 
     The names of the input and possible output datasets are expanded to create
@@ -213,6 +213,9 @@ def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0):
      nodeindex
       The index of the subband in a subband group whose node will be used
       to do the imaging on (default is 0).
+     nodes
+      List of node names to use instead of using the nodeindex.
+      If empty, nodeindex will be used.
 
 
     For example, for a calibration pipeline one can use::
@@ -302,12 +305,12 @@ def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0):
         names = []
         for patt in patterns:
             # Get all nodes and file names
-            (nodes,files) = findDirs(patt)
-            ##(nodes,files) = (['locus1','locus2'], ['/data/L1/L1a.MS','/data/L1/L1b.MS'])
+            (fnodes,files) = findDirs(patt)
+            ##(fnodes,files) = (['locus1','locus2'], ['/data/L1/L1a.MS','/data/L1/L1b.MS'])
             # Turn into a list of pairs (instead of pair of lists) and sort
             filesnodes = [(os.path.basename(files[i]),
                            os.path.dirname(files[i]),
-                           nodes[i]) for i in range(len(files))]
+                           fnodes[i]) for i in range(len(files))]
             filesnodes.sort()
             # Split into location (node:dir/) and basename.
             for (file,dir,node) in filesnodes:
@@ -364,25 +367,29 @@ def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0):
             for i in range(len(filenames) / (nslice*nsubbands)):
                 inx = i*nslice*nsubbands + nodeindex
                 locparts = locations[inx].split(':', 1)
+                locparts.append('')   # make sure at least 2 entries
                 filparts = filenames[inx].split('.', 1)
-                if len(filparts) == 1:
-                    filparts.append('')
+                filparts.append('')   # make sure at least 2 entries
+                # If given, use nodes to find the node to run on.
+                if len(nodes) > 0:
+                    if i >= len(nodes):
+                        raise ValueError, "Image seqnr " + str(i) + " beyond nodes list"
+                    locparts[0] = nodes[i]
                 # Find OBSID, SAP, SB, and TYPE (as in L12345_SAP000_SB000_uv)
+                # Make sure at least 4 entries.
                 bnparts = filparts[0].split('_', 3)
-                if len(bnparts) == 1:
-                    bnparts.append('')
+                bnparts.append('')
+                bnparts.append('')
+                bnparts.append('')
                 nm = re0.sub(locparts[1], name) # <DN>  = directory name
                 nm = re1.sub(filenames[i], nm)  # <BN>  = basename
                 nm = re2.sub(filparts[0], nm)   # <BN.> = basename till first .
                 nm = re3.sub(filparts[1], nm)   # <.BN> = basename after first .
                 nm = re4.sub('%03i'%i, nm)      # <SEQ> = seqnr
                 nm = re5.sub(bnparts[0], nm)    # <OBSID> = basename till _
-                if len(bnparts) > 1:
-                    nm = re6.sub(bnparts[1], nm) # <SAP> = basename till next _
-                if len(bnparts) > 2:
-                    nm = re7.sub(bnparts[2], nm) # <SB>  = basename till next _
-                if len(bnparts) > 3:
-                    nm = re8.sub(bnparts[3], nm) # <TYPE> = rest of basename
+                nm = re6.sub(bnparts[1], nm)    # <SAP> = basename till next _
+                nm = re7.sub(bnparts[2], nm)    # <SB>  = basename till next _
+                nm = re8.sub(bnparts[3], nm)    # <TYPE> = rest of basename
                 names.append (os.path.basename(nm))
                 locs.append (locparts[0] + ':' + os.path.dirname(nm) + '/')
             newkey = 'ObsSW.Observation.DataProducts.' + keyout
