@@ -95,6 +95,7 @@ private:
 	OnlineControl(const OnlineControl&);
    	OnlineControl& operator=(const OnlineControl&);
 
+	void	_setupBGPmappingTables();
 	void	_doBoot();
 	void	_doQuit();
 	void   	_finishController	 (uint16_t 				result);
