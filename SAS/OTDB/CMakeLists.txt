@@ -1,6 +1,7 @@
 # $Id$
 
 lofar_package(OTDB 1.0 DEPENDS Common)
+lofar_add_package(OTDB_COMPS REQUIRED)
 
 include(LofarFindPackage)
 lofar_find_package(Boost REQUIRED COMPONENTS date_time)
@@ -10,4 +11,4 @@ add_subdirectory(include/OTDB)
 add_subdirectory(src)
 add_subdirectory(test)
 add_subdirectory(bin)
-
+add_subdirectory(sql)
