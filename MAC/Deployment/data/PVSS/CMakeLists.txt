@@ -1,5 +1,7 @@
 # $Id$
 
+lofar_package(PVSS_Datapoints 1.0)
+
 install(PROGRAMS 
   create_db_files
   DESTINATION sbin)
