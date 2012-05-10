@@ -149,7 +149,9 @@ class msss_imager_pipeline(control):
         # found in the pipeline or external to use in the calibration and imaging
         # filled at least at the end of the major cycle.
 
-        number_of_major_cycles = self.parset.getInt("number_of_major_cycles")
+        number_of_major_cycles = self.parset.getInt(
+            "Imaging.number_of_major_cycles"
+        )
         for idx_loop in range(number_of_major_cycles):
             # ******************************************************************
             # (2) Create dbs and sky model
@@ -346,7 +348,7 @@ class msss_imager_pipeline(control):
         
         """
         parset = self.parset.makeSubset("AWimager.")
-        mask_patch_size = self.parset.getInt("mask_patch_size")
+        mask_patch_size = self.parset.getInt("Imaging.mask_patch_size")
 
         parset_path = self._write_parset_to_file(parset,
                             "awimager_cycle_{0}".format(major_cycle))
@@ -399,8 +401,12 @@ class msss_imager_pipeline(control):
             outputs = self.run_task("imager_prepare", input_ms_map_path,
                     parset = ndppp_parset_path,
                     target_mapfile = target_mapfile,
-                    slices_per_image = self.parset.getInt("slices_per_image"),
-                    subbands_per_image = self.parset.getInt("subbands_per_image"),
+                    slices_per_image = self.parset.getInt(
+                        "Imaging.slices_per_image"
+                    ),
+                    subbands_per_image = self.parset.getInt(
+                        "Imaging.subbands_per_image"
+                    ),
                     mapfile = output_mapfile,
                     slices_mapfile = time_slices_mapfile,
                     raw_ms_per_image_mapfile = raw_ms_per_image_mapfile,
