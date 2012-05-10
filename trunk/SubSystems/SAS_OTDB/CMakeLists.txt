@@ -1,4 +1,4 @@
 # $Id$
 
 lofar_package(SAS_OTDB 
-  DEPENDS OTB Deployment)
+  DEPENDS Deployment OTDB_Comps OTDB_SQL)
