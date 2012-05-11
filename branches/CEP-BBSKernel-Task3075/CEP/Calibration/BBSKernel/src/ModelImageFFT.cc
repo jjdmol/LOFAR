@@ -26,6 +26,8 @@
 #include <casa/BasicSL/Constants.h>
 #include <casa/Arrays/VectorIter.h>
 #include <lattices/Lattices/LatticeFFT.h>
+#include <coordinates/Coordinates/CoordinateSystem.h> //for spectral coord
+#include <coordinates/Coordinates/Coordinate.h>
 #include <images/Images/PagedImage.h>
 #include <BBSKernel/Exceptions.h>
 #include <BBSKernel/ModelImageFFT.h>
@@ -54,14 +56,21 @@ ModelImageFft::ModelImageFft( const casa::String &name,
   // set options
   itsOptions.name=name;
   itsOptions.oversampling=oversampling;
-  itsOptions.uvscaleX=uvscaleX;
-  itsOptions.uvscaleY=uvscaleY;
+  itsOptions.uvScale[0]=uvscaleX;
+  itsOptions.uvScale[1]=uvscaleY;
 
   PagedImage<DComplex> *image=new PagedImage<DComplex>(name);   // Open image as paged image
+
+  // Get image properties
+  // TODO
   LatticeFFT::cfft2d(*image);     // FFT image in place 
   itsImage=image->get();          // store in array attribute
 
-  initPolmap();                   // initialize polMap_p
+// OLD casarest stuff
+//  initPolmap();                   // initialize polMap_p
+//  initChanmap();                  // initialize chanMap_p
+//  itsVisResampler.setMaps(chanMap_p, polMap_p);   // set them in VisResampler
+//  itsVisResampler.setParams(itsOptions.uvScale, itsOptions.offset, dphase_p); 
 }
 
 ModelImageFft::~ModelImageFft(void)
@@ -92,7 +101,21 @@ void ModelImageFft::setVerbose(casa::uInt verbose)
   itsOptions.verbose=verbose;
 }
 
-void ModelImageFft::setUVscale(double uvscaleX, double uvscaleY)
+void ModelImageFft::setUVScale(const Vector<Double> &uvscale)
+{
+  if(uvscale[0] < 0 || uvscale[1] < 0)
+  {
+    THROW(BBSKernelException, "uvscale values must be > 0");    
+  }
+  else
+  {
+    itsOptions.uvScale.resize(2);
+    itsOptions.uvScale[0]=uvscale[0];
+    itsOptions.uvScale[1]=uvscale[1];
+  }
+}
+
+void ModelImageFft::setUVScale(double uvscaleX, double uvscaleY)
 {
   if(uvscaleX < 0 || uvscaleY < 0)
   {
@@ -100,8 +123,9 @@ void ModelImageFft::setUVscale(double uvscaleX, double uvscaleY)
   }
   else
   {
-    itsOptions.uvscaleX=uvscaleX;
-    itsOptions.uvscaleY=uvscaleY;
+    itsOptions.uvScale.resize(2);
+    itsOptions.uvScale[0]=uvscaleX;
+    itsOptions.uvScale[1]=uvscaleY;
   }
 }
 
@@ -124,13 +148,55 @@ void ModelImageFft::setDegridMuellerMask(const casa::Matrix<Bool> &muellerMask)
 
 //**********************************************
 //
+// Image property functions
+//
+//**********************************************
+
+void ModelImageFft::getImageProperties(PagedImage<DComplex> *image)
+{
+  CoordinateSystem coordSys=image->coordinates();
+  uInt SpectralCoordInd=coordSys.findCoordinate(Coordinate::SPECTRAL);
+  uInt StokesCoordInd=coordSys.findCoordinate(Coordinate::STOKES);
+  
+//  IPosition shape=image->shape();
+//  nchan=shape(SpectralCoordInd);
+//  npol=shape(StokesCoordInd);
+  spectralCoord_p=image->coordinates().spectralCoordinate(0);  
+}
+
+
+//**********************************************
+//
 // Degridding functions
 //
 //**********************************************
 
+void ModelImageFft::degrid( const double *uvwBaseline, 
+                            size_t timeslots, size_t nchans, 
+                            const double *frequencies,
+                            casa::DComplex *XX , casa::DComplex *XY, 
+                            casa::DComplex *YX , casa::DComplex *YY)
+{
+  Vector<Double> lamdbdas(nchans);        // vector with wavelengths
+  for(unsigned int i=0; i<nchans; i++)
+  {
+    itsOptions.frequencies[i]=frequencies[i];
+  }
+  
+  itsOptions.lambdas=convertToLambdas(itsOptions.frequencies);  // convert to lambdas
+
+  // create VisResampler
+
+  // set up chanMap
+
+  // convert uvwBaseline to VisResampler format
+ 
+  // call VisResampler
+}
+
 void ModelImageFft::degrid( const boost::multi_array<double, 3> &uvwBaseline, 
                             size_t timeslots, size_t nchans, 
-                            double *frequencies,
+                            const double *frequencies,
                             casa::DComplex *XX , casa::DComplex *XY, 
                             casa::DComplex *YX , casa::DComplex *YY)
 {
@@ -168,44 +234,64 @@ Vector<Double> ModelImageFft::convertToLambdas(const Vector<Double> &frequencies
   return lambdas;
 }
 
+
+/* OLD casarest stuff
 void ModelImageFft::initPolmap()
 {
-  itsVisResampler.polMap_p.resize(4);
-  itsVisResampler.polMap_p[0]=1;
-  itsVisResampler.polMap_p[1]=1;
-  itsVisResampler.polMap_p[2]=1;
-  itsVisResampler.polMap_p[3]=1;
+  polMap_p.resize(4);
+  polMap_p[0]=1;
+  polMap_p[1]=1;
+  polMap_p[2]=1;
+  polMap_p[3]=1;
 }
 
-void ModelImageFft::initChanmap(const Vector<Double> &frequencies)
+//void ModelImageFft::initChanmap(const Vector<Double> &frequencies)
+void ModelImageFft::initChanmap()
 {
-  itsVisResampler.chanMap_p.resize(frequencies.size());
-
+  chanMap_p.resize(itsOptions.frequencies.size());
   chanMap_p.set(-1);    // reset chanMap to -1 for all channels
-  // Find nearest Image frequency for frequencies
 
-   for (Int chan=0;chan<nvischan;chan++) {
-      f(0)=lsrFreq[chan];
-      if(spectralCoord_p.toPixel(c, f)) {
-	Int pixel=Int(floor(c(0)+0.5));  // round to chan freq at chan center 
-	//cout << "spw " << spw << " f " << f(0) << " pixel "<< c(0) << "  " << pixel << endl;
-	/////////////
-	//c(0)=pixel;
-	//spectralCoord_p.toWorld(f, c);
-	// cout << "f1 " << f(0) << " pixel "<< c(0) << "  " << pixel << endl;
-	////////////////
-	if(pixel>-1&&pixel<nchan) {
-	  chanMap(chan)=pixel;
-	  nFound++;
-	  if(nvischan>1&&(chan==0||chan==nvischan-1)) {
-	    logIO() << LogIO::DEBUGGING
-		    << "Selected visibility channel : " << chan+1
-		    << " has frequency "
-		    <<  MFrequency(Quantity(f(0), "Hz")).get("GHz").getValue()
-		    << " GHz and maps to image pixel " << pixel+1 << LogIO::POST;
-	  }
-	}
+  // Find nearest Image frequency for frequencies
+  Vector<Double> c(1);    // channel frequency
+  c=0.0;
+  Vector<Double> f(1);    // vector of frequencies neede for spectral pixel conversion
+  Int nFound=0;           // number of found channels?
+  unsigned int nvischan=itsOptions.frequencies.size();
+
+  // Check if with have only an one channel image
+  if(nchan==1)
+  {
+    chanMap_p.set(0);   // set all channels to pixel 0
+  }
+  else
+  {
+    // otherwise match channels
+    for(uInt chan=0;chan<nvischan;chan++)
+    {
+    //  f(0)=lsrFreq[chan];
+      if(spectralCoord_p.toPixel(c, f))
+      {
+        Int pixel=uInt(floor(c(0)+0.5));  // round to chan freq at chan center 
+        //cout << "spw " << spw << " f " << f(0) << " pixel "<< c(0) << "  " << pixel << endl;
+        /////////////
+        //c(0)=pixel;
+        //spectralCoord_p.toWorld(f, c);
+        // cout << "f1 " << f(0) << " pixel "<< c(0) << "  " << pixel << endl;
+        ////////////////
+        if(pixel>-1 && pixel<nchan)
+        {
+          chanMap_p(chan)=pixel;
+          nFound++;
+          if(nvischan>1&&(chan==0||chan==nvischan-1))
+          {
+            LOG_DEBUG_STR("Selected visibility channel : " << chan+1
+                          << " has frequency " 
+                          <<  MFrequency(Quantity(f(0), "Hz")).get("GHz").getValue()
+                          << " GHz and maps to image pixel " << pixel+1);
+          }
+        }
       }
     }
-
+  }
 }
+*/

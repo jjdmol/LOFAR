@@ -24,8 +24,10 @@
 #ifndef LOFAR_BBSKERNEL_MODELIMAGEVISIBILITYRESAMPLER_H 
 #define LOFAR_BBSKERNEL_MODELIMAGEVISIBILITYRESAMPLER_H
 
+//#include <BBSKernel/ModelImageFft.h>
 #include <BBSKernel/ModelImageCFStore.h>
 #include <casa/Arrays/Matrix.h>
+#include <coordinates/Coordinates/SpectralCoordinate.h>
 
 namespace LOFAR {   //# NAMESPACE LOFAR BEGIN
 namespace BBS {     //# NAMESPACE BBS BEBGIN
@@ -33,9 +35,10 @@ namespace BBS {     //# NAMESPACE BBS BEBGIN
 class ModelImageVisibilityResampler
 {
 public:
-  friend class ModelImageFft;
+//  friend class ModelImageFft;
 
   ModelImageVisibilityResampler();
+  ModelImageVisibilityResampler(const vector<double> &frequencies);
   ~ModelImageVisibilityResampler();
 
 //  void DataToGrid(casa::Array<casa::DComplex>& griddedData, casa::VBStore& vbs, 
@@ -66,10 +69,24 @@ public:
   void setCFMaps( const casa::Vector<casa::Int>& cfMap, 
                   const casa::Vector<casa::Int>& conjCFMap);
 
+  void sgrid( Int& ndim, 
+    	        Double* __restrict__  pos, 
+	            Int* __restrict__  loc, 
+	            Int* __restrict__  off, 
+    	        Complex& phasor, const Int& irow, 
+	            const Double* __restrict__  uvw, 
+    	        const Double& dphase, const Double& freq, 
+    	        const Double* __restrict__  scale, 
+	            const Double* __restrict__  offset,
+    	        const Float* __restrict__  sampling);
+
 protected:
+  vector<double> itsFrequencies;
+  SpectralCoordinate spectralCoord_p;
   casa::Vector<casa::Double> uvwScale_p, offset_p, dphase_p;
-  casa::Vector<casa::Int> chanMap_p, polMap_p;
   CFStore convFuncStore_p;
+  casa::Vector<casa::Int> chanMap_p, polMap_p;
+  Int nDataChan, nDataPol, nGridPol, nGridChan, nx, ny;
 };
 
 }  //# NAMESPACE LOFAR END

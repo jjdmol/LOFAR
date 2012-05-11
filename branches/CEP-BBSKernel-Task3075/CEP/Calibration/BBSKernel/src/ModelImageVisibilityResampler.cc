@@ -27,8 +27,11 @@
 using namespace LOFAR::BBS;
 using namespace casa;
 
-
 ModelImageVisibilityResampler::ModelImageVisibilityResampler()
+{
+}
+
+ModelImageVisibilityResampler::ModelImageVisibilityResampler(const vector<double> &frequencies)
 {
   
 }
@@ -51,16 +54,19 @@ void ModelImageVisibilityResampler::DataToGrid(Array<DComplex>& grid)
   rbeg = vbs.beginRow_p;
   rend = vbs.endRow_p;
   //    cerr << rbeg << " " << rend << " " << vbs.nRow() << endl;
+*/
   nx       = grid.shape()[0]; ny        = grid.shape()[1];
   nGridPol = grid.shape()[2]; nGridChan = grid.shape()[3];
 
-  nDataPol  = vbs.flagCube_p.shape()[0];
-  nDataChan = vbs.flagCube_p.shape()[1];
+//  nDataPol  = vbs.flagCube_p.shape()[0];
+//  nDataChan = vbs.flagCube_p.shape()[1];
+  nDataPol = polMap_p.size();
+  nDataChan = itsFrequencies.size();
 
   sampling[0] = sampling[1] = convFuncStore_p.sampling[0];
   support(0) = convFuncStore_p.xSupport[0];
   support(1) = convFuncStore_p.ySupport[0];
-
+/*
   Bool Dummy, gDummy;
   T __restrict__ *gridStore = grid.getStorage(gDummy);
   Int * __restrict__ iPosPtr = igrdpos.getStorage(Dummy);
@@ -86,19 +92,24 @@ void ModelImageVisibilityResampler::DataToGrid(Array<DComplex>& grid)
 
   //    cacheAxisIncrements(nx,ny,nGridPol, nGridChan);
   cacheAxisIncrements(grid.shape().asVector());
+*/
+  Int nDim=;   // nTimeslots*3 ?
 
-  for(Int irow=rbeg; irow < rend; irow++){          // For all rows
-    
-    if(!rowFlag[irow]){                        // If the row is not flagged
+  for(Int irow=rbeg; irow < rend; irow++)         // For all rows
+  {  
+// We don't have flags  
+//    if(!rowFlag[irow]){                         // If the row is not flagged
 
-for(Int ichan=0; ichan< nDataChan; ichan++){ // For all channels
+for(Int ichan=0; ichan< nDataChan; ichan++)       // For all channels
+{
   
   //	  if (vbs.imagingWeight(ichan,irow)!=0.0) {  // If weights are not zero
-  if (imagingWeight[ichan+irow*nDataChan]!=0.0) {  // If weights are not zero
+//  if (imagingWeight[ichan+irow*nDataChan]!=0.0)     // If weights are not zero
+//  {
     achan=chanMap_p(ichan);
     
-    if((achan>=0) && (achan<nGridChan)) {   // If selected channels are valid
-      
+    if((achan>=0) && (achan<nGridChan))      // If selected channels are valid
+    {  
       // sgrid(pos,loc,off, phasor, irow, 
       // 	    vbs.uvw,dphase_p[irow], vbs.freq[ichan], 
       // 	    uvwScale_p, offset_p, sampling);
@@ -106,11 +117,14 @@ for(Int ichan=0; ichan< nDataChan; ichan++){ // For all channels
       uvw,dphase_p[irow], freq[ichan], 
       scale, offset, samplingPtr);
 
-      if (onGrid(nx, ny, loc, support)) {   // If the data co-ords. are with-in the grid
-  
-  for(Int ipol=0; ipol< nDataPol; ipol++) { // For all polarizations
-    // if((!vbs.flagCube(ipol,ichan,irow))){   // If the pol. & chan. specific
-    if((!flagCube[ipol+ichan*nDataPol+irow*nDataChan*nDataPol])){
+      if (onGrid(nx, ny, loc, support))    // If the data co-ords. are with-in the grid
+      {
+  /*
+  for(Int ipol=0; ipol< nDataPol; ipol++)  // For all polarizations
+  {
+    // if((!vbs.flagCube(ipol,ichan,irow)))   // If the pol. & chan. specific
+    if((!flagCube[ipol+ichan*nDataPol+irow*nDataChan*nDataPol]))
+    {
       apol=polMap_p(ipol);
       if ((apol>=0) && (apol<nGridPol)) {
         //	      igrdpos(2)=apol; igrdpos(3)=achan;
@@ -153,14 +167,52 @@ for(Int ichan=0; ichan< nDataChan; ichan++){ // For all channels
   }
       }
     }
+    */
   }
 }
     }
   }
+  /*
   T *tt=(T *)gridStore;
   grid.putStorage(tt,gDummy);
-      */
+  */
 }
+
+void ModelImageVisibilityResampler::sgrid(Int& uvwDim,
+          Double* __restrict__ pos, 
+          Int* __restrict__ loc, 
+          Int* __restrict__ off, 
+          Complex& phasor, const Int& irow,
+          // const Matrix<Double>& __restrict__ uvw, 
+          const Double* __restrict__ uvw, 
+          const Double&  dphase, 
+          const Double&  freq, 
+          const Double* __restrict__ scale, 
+          const Double* __restrict__ offset,
+          const Float* __restrict__ sampling) __restrict__ 
+{
+  Double phase;
+  Int ndim=2;
+
+  for(Int idim=0;idim<ndim;idim++)
+  {
+    pos[idim]=scale[idim]*uvw[idim+irow*uvwDim]*freq/C::c+offset[idim];
+    loc[idim]=(Int)std::floor(pos[idim]+0.5);
+    off[idim]=(Int)std::floor(((loc[idim]-pos[idim])*sampling[idim])+0.5);
+  }
+
+  if (dphase != 0.0)
+  {
+    phase=-2.0*C::pi*dphase*freq/C::c;
+    phasor=Complex(cos(phase), sin(phase));
+  }
+  else
+  {
+    phasor=Complex(1.0);
+  }
+}
+
+
 
 /*
 void VisibilityResampler::DataToGrid(Array<DComplex>& grid,  VBStore& vbs, const Bool& dopsf,

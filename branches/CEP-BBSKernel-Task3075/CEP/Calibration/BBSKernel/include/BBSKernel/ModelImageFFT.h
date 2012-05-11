@@ -27,9 +27,10 @@
 #include <ParmDB/Grid.h>
 #include <boost/multi_array.hpp>
 #include <casa/Arrays/Vector.h>
+#include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <images/Images/ImageInterface.h>
 
-#include <BBSKernel/ModelImageVisibilityResampler.h>
+//#include <BBSKernel/ModelImageVisibilityResampler.h>
 
 namespace LOFAR
 {
@@ -44,7 +45,9 @@ typedef struct ModelImageOptions
   casa::Vector<casa::Double> lambdas;           // vector with converted lambdas
   casa::Int verbose;                            // verbosity level
   unsigned int oversampling;                    // oversample factor
-  double uvscaleX, uvscaleY;                    // pixel size in wavelengths conversion
+  casa::Vector<casa::Double> uvScale;           // uvscale in u and v direction
+//  double uvscaleX, uvscaleY;                    // pixel size in wavelengths conversion
+  casa::Vector<casa::Double> offset;            // uv offset
   casa::Matrix<casa::Bool> degridMuellerMask;   // degridding Mueller mask
 };
 
@@ -57,10 +60,13 @@ public:
                 double uvscaleX=1.0, double uvscaleY=1.0);
   ~ModelImageFft();
 
+  void getImageProperties(PagedImage<DComplex> *image);
+
   // Setter functions for individual options
   void setConvType(const casa::String type="SF");
   void setVerbose(casa::uInt verbose=0);
-  void setUVscale(double uvscaleX, double uvscaleY);
+  void setUVScale(const casa::Vector<casa::Double> &uvscale);
+  void setUVScale(double uvscaleX, double uvscaleY);
   void setOversampling(unsigned int oversampling);
   void setDegridMuellerMask(const casa::Matrix<casa::Bool> &muellerMask);
 
@@ -69,13 +75,19 @@ public:
   inline casa::String     convType() const { return itsOptions.ConvType; }
   inline casa::Vector<casa::Double>  frequencies() const { return itsOptions.frequencies; }
   inline casa::uInt       verbose() const { return itsOptions.verbose; }
-  inline double           uvscaleX() const { return itsOptions.uvscaleX; }
-  inline double           uvscaleY() const { return itsOptions.uvscaleY; }
+  inline casa::Vector<casa::Double> uvScale() const { return itsOptions.uvScale; }
+  inline double           uvScaleX() const { return itsOptions.uvScale[0]; }
+  inline double           uvScaleY() const { return itsOptions.uvScale[1]; }
 
   // Function to get degridded data into raw pointers
-  void degrid(const boost::multi_array<double, 3> &uvwBaseline, 
+  void degrid(const double *uvwBaseline, 
               size_t timeslots, size_t nchans,
-              double *frequencies, 
+              const double *frequencies, 
+              casa::DComplex *XX , casa::DComplex *XY, 
+              casa::DComplex *XY , casa::DComplex *YY);
+  void degrid(const boost::multi_array<double, 3> &uvwBaseline,
+              size_t timeslots, size_t nchans,
+              const double *frequencies, 
               casa::DComplex *XX , casa::DComplex *XY, 
               casa::DComplex *XY , casa::DComplex *YY);
   // Function to get degridded data into BBS::Matrix
@@ -85,16 +97,26 @@ public:
               casa::Array<DComplex> XY , casa::Array<DComplex> YY);
 
 private:
-  casa::Array<casa::DComplex> itsImage;           // keep fft'ed image in memory
-  ModelImageVisibilityResampler itsVisResampler;  // modified casarest VisResampler
+  casa::Array<casa::DComplex> itsImage;   // keep fft'ed image in memory
+  ModelImageOptions itsOptions;           // struct containing all options
+  casa::Vector<casa::Double> convertToLambdas(const casa::Vector<casa::Double> &frequencies);   // convert frequencies to lambda
+
+  // Image properties
+  uInt nx, ny;                                  // pixel dimension of image
+  uInt nchan , npol;                            // No. of channels and polarizations in image
+  SpectralCoordinate spectralCoord_p;           // spectral coordinate of image
+
+  // Old casarest stuff
+//  ModelImageVisibilityResampler itsVisResampler;  // modified casarest VisResampler
 //  casa::CFStore itsConvFunc;          // convolution function for VisResampler
 //  casa::CFStore itsConvFunc;          // w-projection convolution ftns (LofarConv?)
 
-  ModelImageOptions itsOptions;         // struct containing all options
-  casa::Vector<casa::Double> convertToLambdas(const casa::Vector<casa::Double> &frequencies);   // convert frequencies to lambda
-
-  void initPolmap();    // initialize polarization map
-  void initChanmap(const Vector<Double> &frequencies);
+//  casa::SpectralCoordinate spectralCoord_p;         // spectral coordinate of image
+//  casa::Vector<casa::Int> polMap_p, chanMap_p;  // polarization map and channel map
+//  casa::Vector<casa::Double> dphase_p;
+//  void initPolmap();    // initialize polarization map
+//  void initChanmap();   // initialize channel map
+//  void initChanmap(const Vector<Double> &frequencies);
 };
 
 } // end namespace BBS
