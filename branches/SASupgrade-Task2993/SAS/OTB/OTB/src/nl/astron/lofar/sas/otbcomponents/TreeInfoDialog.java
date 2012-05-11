@@ -769,7 +769,6 @@ public class TreeInfoDialog extends javax.swing.JDialog {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("LOFAR View TreeInfo");
-        setAlwaysOnTop(true);
         setModal(true);
         setName("loadFileDialog"); // NOI18N
         setResizable(false);
@@ -881,7 +880,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
 
         topLabel.setColumns(20);
         topLabel.setEditable(false);
-        topLabel.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        topLabel.setFont(new java.awt.Font("Tahoma", 1, 11));
         topLabel.setRows(2);
         topLabel.setText("Tree Meta Data");
         topLabel.setOpaque(false);
