@@ -30,6 +30,21 @@
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <images/Images/ImageInterface.h>
 
+// From tConvolveBLAS.cc
+#include <iostream>
+#include <cmath>
+#include <ctime>
+#include <complex>
+#include <vector>
+#include <algorithm>
+
+#ifdef USEBLAS
+#ifdef __APPLE_CC__
+#include <vecLib/cblas.h>
+#endif
+
+#endif
+
 //#include <BBSKernel/ModelImageVisibilityResampler.h>
 
 namespace LOFAR
@@ -95,6 +110,73 @@ public:
               const casa::Vector<casa::Double> &frequencies,
               casa::Array<DComplex> XX , casa::Array<DComplex> XY, 
               casa::Array<DComplex> XY , casa::Array<DComplex> YY);
+
+  /////////////////////////////////////////////////////////////////////////////////
+  // The next two functions are the kernel of the gridding/degridding.
+  // The data are presented as a vector. Offsets for the convolution function
+  // and for the grid location are precalculated so that the kernel does
+  // not need to know anything about world coordinates or the shape of
+  // the convolution function. The ordering of cOffset and iu, iv is
+  // random - some presorting might be advantageous.
+  //
+  // Perform gridding
+  //
+  // data - values to be gridded in a 1D vector
+  // support - Total width of convolution function=2*support+1
+  // C - convolution function shape: (2*support+1, 2*support+1, *)
+  // cOffset - offset into convolution function per data point
+  // iu, iv - integer locations of grid points
+  // grid - Output grid: shape (gSize, *)
+  // gSize - size of one axis of grid
+  //
+  void gridKernel(const std::vector<std::complex<float> >& data, const int support,
+                  const std::vector<std::complex<float> >& C, 
+                  const std::vector<unsigned int>& cOffset,
+                  const std::vector<unsigned int>& iu, 
+                  const std::vector<unsigned int>& iv,
+                  std::vector<std::complex<float> >& grid, const int gSize);
+  // Perform degridding
+  void degridKernel(const std::vector<std::complex<float> >& grid, const int gSize, 
+                    const int support, const std::vector<std::complex<float> >& C, 
+                    const std::vector<unsigned int>& cOffset,
+                    const std::vector<unsigned int>& iu, 
+                    const std::vector<unsigned int>& iv,
+                    std::vector<std::complex<float> >& data);
+
+  /////////////////////////////////////////////////////////////////////////////////
+  
+  // Initialize W project convolution function 
+  // - This is application specific and should not need any changes.
+  //
+  // nSamples - number of visibility samples
+  // freq - temporal frequency (inverse wavelengths)
+  // cellSize - size of one grid cell in wavelengths
+  // gSize - size of grid in pixels (per axis)
+  // support - Total width of convolution function=2*support+1
+  // wCellSize - size of one w grid cell in wavelengths
+  // wSize - Size of lookup table in w
+  void initC( const int nSamples, const std::vector<double>& w,
+              const std::vector<double>& freq, const double cellSize, 
+              const double baseline,  const int wSize, const int gSize, 
+              int& support, int& overSample, double& wCellSize, 
+              std::vector<std::complex<float> >& C);
+
+  // Initialize Lookup function
+  // - This is application specific and should not need any changes.
+  //
+  // nSamples - number of visibility samples
+  // freq - temporal frequency (inverse wavelengths)
+  // cellSize - size of one grid cell in wavelengths
+  // gSize - size of grid in pixels (per axis)
+  // support - Total width of convolution function=2*support+1
+  // wCellSize - size of one w grid cell in wavelengths
+  // wSize - Size of lookup table in w
+  void initCOffset(const std::vector<double>& u, const std::vector<double>& v,
+      const std::vector<double>& w, const std::vector<double>& freq,
+      const double cellSize, const double wCellSize, const double baseline,
+      const int wSize, const int gSize, const int support, const int overSample,
+      std::vector<unsigned int>& cOffset, std::vector<unsigned int>& iu,
+      std::vector<unsigned int>& iv);
 
 private:
   casa::Array<casa::DComplex> itsImage;   // keep fft'ed image in memory
