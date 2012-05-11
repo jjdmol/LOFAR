@@ -8,6 +8,7 @@
 
 import os
 import sys
+import shutil
 
 from lofarpipe.support.control import control
 from lofar.parameterset import parameterset #@UnresolvedImport
@@ -15,6 +16,7 @@ from lofarpipe.support.utilities import create_directory
 from lofarpipe.support.lofarexceptions import PipelineException
 from lofarpipe.support.group_data import load_data_map, store_data_map
 from lofarpipe.support.group_data import validate_data_maps
+from lofarpipe.support.utilities import patch_parset
 
 
 class msss_imager_pipeline(control):
@@ -132,6 +134,7 @@ class msss_imager_pipeline(control):
 
         # reset the parset to a 'parset' subset containing only leafs without 
         # prepending node names
+        full_parset = self.parset
         self.parset = self.parset.makeSubset(
             self.parset.fullModuleName('PythonControl') + '.'
         )
@@ -183,12 +186,20 @@ class msss_imager_pipeline(control):
         #
         minbaseline = 0
 
-
-        self._finalize(aw_image_mapfile, processed_ms_dir,
+        # *********************************************************************
+        # (6) Finalize:
+        placed_data_image_map = self._finalize(aw_image_mapfile, processed_ms_dir,
                        raw_ms_per_image_map_path, found_sourcedb_path,
                        minbaseline, maxbaseline, target_mapfile,
                        output_image_mapfile)
 
+        # *********************************************************************
+        # (7) Get metadata
+        # Create a parset-file containing the metadata for MAC/SAS
+        self.run_task("get_metadata", aw_image_mapfile,
+            parset_file = self.parset.getString('metadataFeedbackFile'),
+            parset_prefix = full_parset.fullModuleName('DataProducts'),
+            product_type = "SkyImage")
         return 0
 
 
@@ -229,21 +240,27 @@ class msss_imager_pipeline(control):
                   maxbaseline, target_mapfile,
                   output_image_mapfile, skip = False):
 
+        placed_image_mapfile = self._write_datamap_to_file(None,
+             "placed_image")
+        self.logger.debug("Touched mapfile for correctly placed"
+                        " hdf images: {0}".format(placed_image_mapfile))
+
         if skip:
-            pass
+            return placed_image_mapfile
         else:
             #run the awimager recipe
-            self.run_task("imager_finalize", target_mapfile,
-                          awimager_output_map = awimager_output_map,
-                          raw_ms_per_image_map = raw_ms_per_image_map,
-                          sourcelist_map = sourcelist_map,
-                          minbaseline = minbaseline,
-                          maxbaseline = maxbaseline,
-                          target_mapfile = target_mapfile,
-                          output_image_mapfile = output_image_mapfile,
-                          processed_ms_dir = processed_ms_dir)
+            placed_image_mapfile = self.run_task("imager_finalize", target_mapfile,
+                    awimager_output_map = awimager_output_map,
+                    raw_ms_per_image_map = raw_ms_per_image_map,
+                    sourcelist_map = sourcelist_map,
+                    minbaseline = minbaseline,
+                    maxbaseline = maxbaseline,
+                    target_mapfile = target_mapfile,
+                    output_image_mapfile = output_image_mapfile,
+                    processed_ms_dir = processed_ms_dir,
+                    placed_image_mapfile = placed_image_mapfile)["placed_image_mapfile"]
 
-        return 0
+        return placed_image_mapfile
 
     def _source_finding(self, image_map_path, major_cycle, skip = True):
         bdsm_parset_pass_1 = self.parset.makeSubset("BDSM[0].")
@@ -348,18 +365,28 @@ class msss_imager_pipeline(control):
         
         """
         parset = self.parset.makeSubset("AWimager.")
-        mask_patch_size = self.parset.getInt("Imaging.mask_patch_size")
 
-        parset_path = self._write_parset_to_file(parset,
-                            "awimager_cycle_{0}".format(major_cycle))
-        self.logger.debug("Wrote parset for awimager: {0}".format(
-                                      parset_path))
+        #add the baseline parameter from the head parset node: TODO: pass as parameter
+        patch_dictionary = {"maxbaseline":self.parset.getInt("Imaging.maxbaseline")}
+        temp_parset_filename = patch_parset(parset, patch_dictionary)
+        # Now create the correct parset path
+        parset_path = os.path.join(
+            self.config.get("layout", "job_directory"), "parsets",
+            "awimager_cycle_{0}".format(major_cycle))
+        # copy
+        shutil.copy(temp_parset_filename, parset_path)
+        os.unlink(temp_parset_filename) # delete old file
+
         image_path = os.path.join(
             self.scratch_directory, "awimage_cycle_{0}".format(major_cycle),
                 "image")
+
         output_mapfile = self._write_datamap_to_file(None, "awimager")
         self.logger.debug("Touched output map for awimager recipe: {0}".format(
                                       output_mapfile))
+
+
+        mask_patch_size = self.parset.getInt("Imaging.mask_patch_size")
         if skip:
             pass
         else:
