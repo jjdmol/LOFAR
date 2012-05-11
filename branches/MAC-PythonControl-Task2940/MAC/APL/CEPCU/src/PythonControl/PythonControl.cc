@@ -40,6 +40,7 @@
 #include <GCF/RTDB/DP_Protocol.ph>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/APLUtilities.h>
+#include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/CTState.h>
 
@@ -85,9 +86,6 @@ PythonControl::PythonControl(const string&	cntlrName) :
 	// Readin some parameters from the conf-file.
 	itsFeedbackWaittime = globalParameterSet()->getFloat ("FeedbackWaittime", 1.0);
 	itsKVTLoggerHost    = globalParameterSet()->getString("KVTLoggerHost", "localhost");
-
-	// Readin parameters from the obsercationfile.
-	itsFeedbackFile = globalParameterSet()->getString("metadataFeedbackFile", "");
 
 	// attach to parent control task
 	itsParentControl = ParentControl::instance();
@@ -205,6 +203,10 @@ bool PythonControl::_startPython(const string&	pythonProg,
 
 	int32	result = system (startCmd.c_str());
 	LOG_INFO_STR ("Result of start = " << result);
+
+	// Readin parameters from the obsercationfile.
+	itsFeedbackFile = observationParset(obsID)+"_feedback";
+	LOG_INFO_STR ("Expecting metadata in file " << itsFeedbackFile);
 
 	if (result == -1) {
 		return (false);
@@ -672,16 +674,20 @@ void PythonControl::_passMetadatToOTDB()
 			myLogger.log(iter->first, iter->second);
 		}
 		else {
-			if (doubleStorage) {
-				LOG_DEBUG_STR("RECORD: " << iter->first << " = " << iter->second);
-				myLogger.log(iter->first, iter->second);
-			}
+//			if (doubleStorage) {
+//				LOG_DEBUG_STR("RECORD: " << iter->first << " = " << iter->second);
+//				myLogger.log(iter->first, iter->second);
+//			}
+			// to store is a node/param values the last _ should be stipped of
+			key = iter->first;		// destroyable copy
+//			string::size_type pos = key.find_last_of('_');
+//			key.erase(pos,1);
 			ParameterRecord	pr(iter->second.getRecord());
 			ParameterRecord::const_iterator	prIter = pr.begin();
 			ParameterRecord::const_iterator	prEnd  = pr.end();
 			while (prIter != prEnd) {
-				LOG_DEBUG_STR("ELEMENT: " << iter->first+"."+prIter->first << " = " << prIter->second);
-				myLogger.log(iter->first+"."+prIter->first, prIter->second);
+				LOG_DEBUG_STR("ELEMENT: " << key+"."+prIter->first << " = " << prIter->second);
+				myLogger.log(key+"."+prIter->first, prIter->second);
 				prIter++;
 			}
 		}
