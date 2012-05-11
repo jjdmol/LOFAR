@@ -50,6 +50,7 @@ ModelImageFft::ModelImageFft( const casa::String &name,
                               double uvscaleX, double uvscaleY)
 */                            
 ModelImageFft::ModelImageFft( const casa::String &name,
+                              unsigned int nwplanes,
                               unsigned int oversampling,
                               double uvscaleX, double uvscaleY)
 {
@@ -132,6 +133,11 @@ void ModelImageFft::setUVScale(double uvscaleX, double uvscaleY)
 void ModelImageFft::setOversampling(unsigned int oversampling)
 {
   itsOptions.oversampling=oversampling;
+}
+
+void ModelImageFft::setNwplanes(unsigned int nwplanes)
+{
+  itsOptions.nwplanes=nwplanes;
 }
 
 void ModelImageFft::setDegridMuellerMask(const casa::Matrix<Bool> &muellerMask)
