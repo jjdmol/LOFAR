@@ -62,6 +62,7 @@ typedef struct ModelImageOptions
   unsigned int oversampling;                    // oversample factor
   casa::Vector<casa::Double> uvScale;           // uvscale in u and v direction
 //  double uvscaleX, uvscaleY;                    // pixel size in wavelengths conversion
+  casa::Int nwplanes;                           // number of w-planes to use
   casa::Vector<casa::Double> offset;            // uv offset
   casa::Matrix<casa::Bool> degridMuellerMask;   // degridding Mueller mask
 };
@@ -83,6 +84,7 @@ public:
   void setUVScale(const casa::Vector<casa::Double> &uvscale);
   void setUVScale(double uvscaleX, double uvscaleY);
   void setOversampling(unsigned int oversampling);
+  void setNwplanes(unsigned int nwplanes);
   void setDegridMuellerMask(const casa::Matrix<casa::Bool> &muellerMask);
 
   // Getter functions for individual options
@@ -93,6 +95,8 @@ public:
   inline casa::Vector<casa::Double> uvScale() const { return itsOptions.uvScale; }
   inline double           uvScaleX() const { return itsOptions.uvScale[0]; }
   inline double           uvScaleY() const { return itsOptions.uvScale[1]; }
+  casa::Vector<casa::Double> offset() const { return itsOptions.offset; }
+  inline unsigned int     nWplanes() const { return itsOptions.nwplanes; }
 
   // Function to get degridded data into raw pointers
   void degrid(const double *uvwBaseline, 
