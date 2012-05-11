@@ -233,6 +233,12 @@ Vector<Double> ModelImageFft::convertToLambdas(const Vector<Double> &frequencies
   return lambdas;
 }
 
+//***************************************************************************
+//
+// Gridding and degridding functions J.Romein/T.Cornwell: tConvolveBLAS.cc
+//
+//***************************************************************************
+
 /////////////////////////////////////////////////////////////////////////////////
 // The next two functions are the kernel of the gridding/degridding.
 // The data are presented as a vector. Offsets for the convolution function
