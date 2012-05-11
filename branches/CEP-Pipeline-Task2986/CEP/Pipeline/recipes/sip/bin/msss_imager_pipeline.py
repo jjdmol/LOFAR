@@ -369,7 +369,7 @@ class msss_imager_pipeline(control):
         parset = self.parset.makeSubset("AWimager.")
 
         #add the baseline parameter from the head parset node: TODO: pass as parameter
-        patch_dictionary = {"maxbaseline":self.parset.getInt("Imaging.maxbaseline")}
+        patch_dictionary = {"maxbaseline":str(self.parset.getInt("Imaging.maxbaseline"))}
         temp_parset_filename = patch_parset(parset, patch_dictionary)
         # Now create the correct parset path
         parset_path = os.path.join(
