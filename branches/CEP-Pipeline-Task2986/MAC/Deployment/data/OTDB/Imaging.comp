@@ -40,4 +40,4 @@ par number_of_major_cycles  I    uint    -     10    0    3           -      'Nu
 par slices_per_image        I    uint    -     10    0    1           -      'Number of time slices per image'
 par subbands_per_image      I    uint    -     10    0    1           -      'Number of frequency subbands per image'
 par mask_patch_size         I    uint    -     10    0    1           -      'Size of extension of source patches (in pixels)'
-
+par maxbaseline             I    uint    -     10    0    10000       -      'the maximum baseline length in meters'

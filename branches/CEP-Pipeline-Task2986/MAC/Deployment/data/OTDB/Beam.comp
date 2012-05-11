@@ -20,7 +20,7 @@
 
 
 #########################################################################################################
-# -- Pencil --
+# -- TiedArrayBeam --
 #      name                      vers   qual  constr.            descr.
 #--------------------------------------------------------------------------------------------------------
 node  TiedArrayBeam    4.0.0  development  'node constraint'  "Tied-array (pencil) beam specification"

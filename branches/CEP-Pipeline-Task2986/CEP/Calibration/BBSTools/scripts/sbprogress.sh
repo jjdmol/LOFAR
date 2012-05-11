@@ -128,36 +128,59 @@ fi
 #echo "pid = ${pid}"
 if ! [[ "${pid}" =~ ^[0-9]+$ ]]
 then
+  if [ ! ${silent} ]; then           # avoid PID error message in silent mode
+    echo "Invalid pid: ${pid}. Exiting."
+  fi
   exit 1
 fi
+# From
 #[[ ${pid} =~ "^[0-9]+$" ]] && echo "pid exists" || echo "pid doesn't exist" && exit 1
 
 if [ "${logfile}" == "" ]   # check if we have already been given an over-ride logfile
 then 
-  if [ -z "${pid}" ]    # Check if process is running
+  pid=$(ps -p ${pid} | gawk 'NR < 2 { next };{print $1}')
+  if ! [[ "${pid}" =~ ^[0-9]+$ ]]
   then
-    exit 1
+    if [ ! ${silent} ]; then           # avoid PID error message in silent mode    
+      echo "Process ${pid} is not running. Exiting."
+    fi
+    exit 1  
   fi
+#  if [ ! -z "${pid}" ]    # Check if process is running
+#  then
+#    echo "Process ${pid} is not running. Exiting."
+#    exit 1
+#  fi
   # If no logfile was given on the command line, look for it
   if [ "${system}" == "Darwin" ]
   then
-    logfile=`/usr/sbin/lsof | grep  $(pgrep bbs-reducer) | grep '.log$' | gawk '{print $9}'`
+    logfile=`/usr/sbin/lsof | grep  ${pid} | grep '.log$' | gawk '{print $9}'`
   else
-    logfile=`ls -l  /proc/$pid/fd | grep .log | gawk '{print $10}'`
+    logfile=`ls -l  /proc/${pid}/fd | grep .log | gawk '{print $10}'`
+    #logfile=`ls -l  /proc/${pid}/fd | grep '.log' | gawk 'NR==1 { next };{print $10}'`
   fi
 fi
 
-#echo "logfile = ${logfile}"   # DEBUG
+if [ ${debug} -eq 1 ]; then
+  echo "logfile = ${logfile}"   # DEBUG
+fi
 
 # Check if logfile exists and has size>0 
-if [ ! -s "${logfile}" ]
+if [[ ! -e ${logfile} ]]
 then
   echo "${logfile} for ${pid} doesn't exist. Exiting"
   exit 1
+else
+  if [ ${verbosity} -eq 1 ]
+  then
+    echo "Found logfile for ${pid}: ${logfile}"
+  fi
 fi
-if [ ${verbosity} -eq 1 ]
+# Test if logfile has size > 0
+if [[ ! -s ${logfile} ]]
 then
-  echo "Found logfile for ${pid}: ${logfile}"
+  echo "Logfile ${logfile} has size 0. Wait for update on log output. Exiting."
+  exit 1
 fi
 
 # TODO
@@ -167,17 +190,21 @@ fi
 
 # Get start and end time of MS from log
 # Time          : 2011/10/30/02:30:00 - 2011/10/30/11:50:01
-starttime=`head -n 30 ${logfile} | grep -i "Time          : "| gawk '{print $3}'`
-endtime=`head -n 30 ${logfile} | grep -i "Time          : "| gawk '{print $5}'`
+starttime=`cat ${logfile} | grep -m 1 -i "Time          : "| gawk '{print $3}'`
+endtime=`cat ${logfile} | grep -m 1 -i "Time          : "| gawk '{print $5}'`
 
-# Get process start time from creation time of logfile
-if [ "${system}" == "Darwin" ]
-then
-  creationtime=$(stat -r ${logfile} | gawk '{print $12}')
-else
-  creationtime=$(stat -c %y%h ${logfile} | gawk '{print $1 " "$2}' | date -d - +%s)
+if [ ${debug} -eq 1 ]; then
+  echo "starttime = ${starttime}"
+  echo "endtime = ${endtime}"
 fi
 
+# Get process start time from creation time of logfile
+#if [ "${system}" == "Darwin" ]
+#then
+#  creationtime=$(stat -r ${logfile} | gawk '{print $12}')
+#else
+#  creationtime=$(stat -c %y%h ${logfile} | gawk '{print $1 " "$2}' | date -d - +%s)
+#fi
 
 # Convert starttime and endtime to seconds
 if [ "${system}" == "Darwin" ]
@@ -189,41 +216,78 @@ else
   endtimes=`date -d "$(echo ${endtime} | sed 's,/, ,3')" +%s`
 fi
 
-#echo "starttimes = ${starttimes}"   # DEBUG
-#echo "endtimes = ${endtimes}"   # DEBUG
-
 # Loop while process is alive
 pid=$(ps -p ${pid} | gawk 'NR < 2 { next };{print $1}')
-while [ !"-z ${pid}" ]
-do
-  # tail the provided BBS log and grep for "Time: "
-  timeline=`tail -n 70 ${logfile} | grep "Time:"`
-  stepline=`tail -n 70 ${logfile} | grep "Step:"`
+while [ ! -z "${pid}" ]
+do 
+  if [ $(uname -n)=="Sven-Duschas-Macbook-Pro" ]
+  then
+    timeline=`tac ${logfile} | grep -m 1 "Time:"`
+    stepline=`tac ${logfile} | grep -m 1 "Step:"`  
+  elif [ "${system}" == "Darwin" ]
+  then
+    # tail the provided BBS log and grep for "Time: "
+    timeline=`tail -n 30 ${logfile} | grep "Time:"`
+    stepline=`tail -n 30 ${logfile} | grep "Step:"`  
+  else  
+    # get rid of tail -n mess by reverse searching, if possible (tac is GNU only :-/) 
+    if [ `tac ${logfile} | grep -c -m 1 "Time:"` -eq 1 ]
+    then
+      timeline=`tac ${logfile} | grep -m 1 "Time:"`
+      stepline=`tac ${logfile} | grep -m 1 "Step:"`
+    else
+      if [ ${silent} -eq 1 ]    # if silent mode, return with error
+      then
+        echo "Logfile ${logfile} of pid ${pid} could not be parsed for progress info."
+        exit 1
+      else                      # progress mode, wait and try again
+        sleep 1
+        continue
+      fi
+    fi
+  fi
 
   if [ ${debug} -eq 1 ]; then
     echo "timeline = ${timeline}"   # DEBUG
     echo "stepline = ${stepline}"   # DEBUG
   fi
 
-  if [ -z "${timeline}" ]     # Retry with longer "tail"
-  then
-    timeline=`tail -n 140 ${logfile} | grep "Time:"`
-  fi
-  if [ -z "${stepline}" ]     # Retry with longer "tail"  
-  then
-    stepline=`tail -n 140 ${logfile} | grep "Step:"`
-  fi
-  if [ -z "${timeline}" ]
-  then
-    sleep 1
-    continue
-  fi
-
+#  if [ -z "${timeline}" ]     # Retry with longer "tail"
+#  then
+#    timeline=`tail -n 100 ${logfile} | grep "Time:"`
+#  fi
+#  if [ -z "${stepline}" ]     # Retry with longer "tail"  
+#  then
+#    stepline=`tail -n 100 ${logfile} | grep "Step:"`
+#  fi
+#  if [ -z "${timeline}" ]
+#  then
+#    sleep 1
+#    continue
+#  fi
 
   # Do we need this for chunk statistics?
   startchunk=`echo ${timeline} | gawk '{print $2}'`   # catch the start time of the chunk
-  endchunk=`echo ${timeline} | gawk '{print $4}'`    # catch the end time of the chunk
-  step=`echo ${stepline} | gawk '{print $2}'`
+  endchunk=`echo ${timeline} | gawk '{print $4}'`     # catch the end time of the chunk
+  step=`echo ${stepline} | gawk '{print $2}'`         # catch current step
+
+  # Check matches:
+  #echo "startchunk = ${startchunk}"   # DEBUG
+  #echo "endchunk = ${endchunk}"       # DEBUG
+  #echo "step = ${step}"               # DEBUG
+
+  if [[ ! ${startchunk} =~ [0-9]* ]] # -o [[ ! ${endchunk} =~ [0-9]* ]] ]
+  then
+    echo "silent = ${silent}"   # DEBUG
+    if [ ${silent} -eq 1 ]      # if we are in silent mode, return with error
+    then
+      echo "Could not correctly parse ${logfile} of ${pid} for progress information. Exiting."
+      exit 1
+    else
+      sleep 0.5
+      continue
+    fi
+  fi
 
   # Convert to seconds
   if [ "${system}" == "Darwin" ]
@@ -260,23 +324,22 @@ do
     echo "hours = ${hours}" # DEBUG
     echo "mins = ${mins}"   # DEBUG
     echo "secs = ${secs}"   # DEBUG  
+    echo "timeelapsed   = ${timeelapsed}"   # DEBUG
   fi
 
   # Get time that has passed (timeelapsed is only CPU time, now use wallclocktime)  
   # wallclocktime=$(echo "${now} - ${creationtime}" | bc)
   #timeelapsed=$(ps -oetime -p ${pid} | gawk 'NR < 2 { next };{print $1}')
 
-
   if [ ${debug} -eq 1 ]; then
-    #echo "creationtime  = ${creationtime}"  # DEBUG
-    #echo "wallclocktime = ${wallclocktime}"   # DEBUG
-    #echo "now           = ${now}"           # DEBUG
-    echo "timeelapsed   = ${timeelapsed}"   # DEBUG
+    echo "starttimes = ${starttimes}"
+    echo "endtimes = ${endtimes}"
+    echo "startchunks = ${startchunks}"
+    echo "endchunks = ${endchunks}"
   fi
 
   # calculate chunks done
   nchunks=`echo "(${endtimes} - ${starttimes})/(${endchunks} - ${startchunks})" | bc`
-
   if [ ${debug} -eq 1 ]; then
     echo "nchunks = ${nchunks}"                   # DEBUG
   fi
@@ -304,7 +367,12 @@ do
   
     # get terminal width and determine variables for progress bar
     rim=31            # rim for information around progress bar
-    width=`tput -T xterm-color cols`
+    if [ ${silent} -eq 1 ]
+    then
+      width=`tput cols -T xterm-color`
+    else
+        width=`tput cols`
+    fi
     nblocks=`echo "scale=0;  (${width}-${rim})*${percentage}*0.01" | bc`
     nblocks=`printf %0.f ${nblocks}`      # round to integer
     pblocks=`for((i=1;i<=${nblocks};i++));do printf "%s" "#";done;`
@@ -336,7 +404,7 @@ do
     break
   else  
     sleep ${interval}         # wait for update period
-    pid=$(ps -p ${pid} | gawk 'NR < 2 { next };{print $1}')  # get pid if process is still alive
+    #pid=$(ps -p ${pid} | gawk 'NR < 2 { next };{print $1}')  # get pid if process is still alive
   fi
 done
 
