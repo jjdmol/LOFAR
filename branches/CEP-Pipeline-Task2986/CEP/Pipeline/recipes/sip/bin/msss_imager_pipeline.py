@@ -199,7 +199,7 @@ class msss_imager_pipeline(control):
         # (7) Get metadata
         # Create a parset-file containing the metadata for MAC/SAS
         self.run_task("get_metadata", aw_image_mapfile,
-            parset_file=self.parset_feedback_file,
+            parset_file = self.parset_feedback_file,
             parset_prefix = full_parset.fullModuleName('DataProducts'),
             product_type = "SkyImage")
         return 0
@@ -402,7 +402,7 @@ class msss_imager_pipeline(control):
                           working_directory = self.scratch_directory)
 
 
-        return output_mapfile, parset.getInt("maxbaseline")
+        return output_mapfile, parset.getInt("Imaging.maxbaseline")
 
 
     def _prepare_phase(self, input_ms_map_path, target_mapfile, processed_ms_dir,
