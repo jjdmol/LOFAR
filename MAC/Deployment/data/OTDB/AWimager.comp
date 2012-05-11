@@ -51,7 +51,7 @@ par mode I ptext - 10 0 mfs|channel|velocity;mfs - "Imaging mode (mfs, channel, 
 par model I text - 10 0 "" - "Name of model image file (default is <imagename>.model"
 par ms I text - 10 0 "" - "Name of input MeasurementSet"
 par muellerdegrid I ptext - 10 0 all|diagonal|band1|band2;all - "Mueller elements to use when degridding (all,diagonal,band1,band2)"
-par muellergrid I text - 10 0 all|diagonal|band1|band2;all - "Mueller elements to use when gridding (all,diagonal,band1,band2)"
+par muellergrid I ptext - 10 0 all|diagonal|band1|band2;all - "Mueller elements to use when gridding (all,diagonal,band1,band2)"
 par nchan I vint - 10 0 1 - "number of frequency channels to select from each spectral window (one number per spw)"
 par nfacets I int - 10 0 1 - "number of facets in x or y"
 par niter I int - 10 0 1000 - "Number of clean iterations"
