@@ -2,7 +2,7 @@
 #
 # loadComponents : loads all components in an OTDB database
 #
-# Copyright (C) 2006-2011
+# Copyright (C) 2006-2012
 # ASTRON (Netherlands Foundation for Research in Astronomy)
 # P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 #
@@ -24,7 +24,7 @@
 #
 # $Id$
 #
-VERSION="v2.0"		# Implemented complete new algorithm that works top down iso bottom up.
+VERSION="v2.1"		# Implemented complete new algorithm that works top down iso bottom up.
 
 # SyntaxError msg
 #
@@ -45,30 +45,79 @@ SyntaxError()
 }
 
 #
-# Recursive solve the childs of the current node and construct a order-file
-# during the descent into the tree.
+# Construct a file that contains node-childnode relations and the file it is mentioned in
+# Syntax: componentname file | componentname.childname file
+#
+makeRelationsFile()
+{
+	# grep all 'node' and 'uses' lines in all (g)comp files and pipe them through an awk filter
+	# that print the 'node' lines as 'node file' and the 'uses' lines as 'parent child uses'
+	egrep "^(node|table|uses)[[:space:]]" *comp | sed "s/comp:/comp /" | sed "s/ table[[:space:]]/ node /" | awk '
+		/comp node/,/comp node/	{ print $3,$1; parent=$3; next }
+								{ print parent,$3,$2 }
+	' | while read first second marker
+	do
+		if [ "$marker" == "uses" ]; then
+			# first=parentname, second=childname
+			# childname can be plain name or table reference like InputFile<Dataproduct>
+			# in that case we need the table name
+			# note that the original name is returned in the next line if the < and > are not used.
+			nodeName=`echo $second | cut -d'<' -f2 | cut -d'>' -f1`
+			newFile=`egrep "^(node|table)[[:space:]]+$nodeName[[:space:]]+" *comp | cut -d':' -f1`
+			echo "$first.$nodeName $newFile" >> ${RELATIONFILE}
+		else
+			echo "$first $second" >>${RELATIONFILE}
+			echo -n "."
+		fi
+	done
+	echo "."
+}
+
+#
+# Recursive solve the childs of the current node and construct a level-file
+# with syntax: levelnr componentname file
 # 
+# solveNode(nodename, level)
 solveNode() 
 {
 	echo -n "." 
-	nodeFile=`grep "^$1 " ${NODELISTFILE} | cut -d' ' -f2`
-
-	# update file admin
-	grep -v ^${nodeFile} ${UNUSEDFILES} >${WORKFILE}
-	mv ${WORKFILE} ${UNUSEDFILES}
-
-	grep "^uses" $nodeFile | sed "s/\\t/ /g" | sed "s/   / /g" | sed "s/  / /g" | cut -d' ' -f2 | while read nodeName
+	egrep "^$1[ \.]" ${RELATIONFILE} | while read node file
 	do
-		nodeFile=`grep "^$nodeName " ${NODELISTFILE} | cut -d' ' -f2`
-		grep "^$nodeFile" ${REVERSORDERFILE} >> /dev/null
-		if [ $? == 1 ]; then
-#			echo $nodeName
-			echo $nodeFile >>${REVERSORDERFILE}
-			solveNode $nodeName
-#		else
-#			echo "Endnode: $nodeName , file=$nodeFile"
+		if [ "$node" == "$1" ]; then		# node itself
+			echo $2 $node $file >>${LEVELFILE}
+		else	# its a child
+			let childlevel=$2+1
+			childnode=`echo $node | cut -d'.' -f2`
+			solveNode $childnode $childlevel
 		fi
 	done
+}
+
+#
+# Construct the orderfile based on the levelfile, in the mean time construct a list on non used files
+# Syntax: file
+#
+makeOrderFile()
+{
+	prevLevel=0
+	>${ORDERFILE}
+	# list file, remove componentname, sort reverse on numbers, skip doubles
+	cat ${LEVELFILE} | awk '{ print $1, $3 }' | sort -rn | uniq | while read level file
+	do
+		if [ "$prevLevel" != "$level" ]; then
+			echo -n "$level "
+			prevLevel=$level
+		fi
+		
+		# update file admin
+		grep -v ^${file} ${UNUSEDFILES} >${WORKFILE}
+		mv ${WORKFILE} ${UNUSEDFILES}
+		egrep ^${file} ${ORDERFILE} >/dev/null
+		if [ $? == 1 ]; then # found?
+			echo $file >>${ORDERFILE}
+		fi
+	done
+	echo ""
 }
 
 #
@@ -121,34 +170,38 @@ fi
 
 if [ -e $DIR/load_OTDB_comps ]; then 
   # We use a lot of tmpfile to make life easier.
-  NODELISTFILE=/tmp/nodeList
-  REVERSORDERFILE=/tmp/reverseOrder
-  RESULTFILE=/tmp/fileOrder
+  RELATIONFILE=/tmp/relations
+  LEVELFILE=/tmp/levels
+  ORDERFILE=/tmp/fileOrder
   UNUSEDFILES=/tmp/unusedFiles
   WORKFILE=/tmp/tmpFile4load_components
 
   # First construct gcompfile using .base-files.
   ./create_OTDB_comps
 
-  # construct a file with 'node file' relations
-  grep "^node" *comp | sed "s/:/ /" | sed "s/\\t/ /g" | sed "s/   / /g" | sed "s/  / /g" | cut -d' ' -f1,3 | awk '{ print $2" "$1 }' >${NODELISTFILE}
+  # cleanup old stuff
+  rm -f ${RELATIONFILE} ${LEVELFILE} ${ORDERFILE} ${UNUSEDFILES}
+
+  # construct new relationsfile
+  echo -n "Analysing relations: "
+  makeRelationsFile
+
+  # strip off layer for layer
+  echo -n "Analysing dependancy levels: "
+  solveNode LOFAR 1
+  echo "."
 
   # construct a file with all componentfiles
   ls -1 *comp >${UNUSEDFILES}
 
-  # strip off layer for layer
+  # Finally construct the load-order file
   echo -n "Analysing load order: "
-  echo LOFAR.comp >${REVERSORDERFILE}
-  solveNode LOFAR
-  echo "."
-
-  # we now have a file with components (in reverse) order, swap the order
-  tac ${REVERSORDERFILE} >${RESULTFILE}
-  rm -f ${NODELISTFILE} ${REVERSORDERFILE}
+  makeOrderFile
+  rm -f ${RELATIONSFILE} ${LEVELFILE}
 
   # Construct commandline for load_OTDB_comps
   arguments=$DATABASE
-  arguments=$arguments" "${RESULTFILE}
+  arguments=$arguments" "${ORDERFILE}
   arguments=$arguments" -v "$VERSION 
   arguments=$arguments" -h "$HOST
   if [ "$QUAL" != "" ]; then 
@@ -164,7 +217,7 @@ if [ -e $DIR/load_OTDB_comps ]; then
   fi
 
   # Cleanup
-  rm -f ${UNUSEDFILES} ${RESULTFILE}
+  rm -f ${UNUSEDFILES} ${ORDERFILE}
 else
   echo "Cannot execute $DIR/load_OTDB_comps (not there, or not executable)"
 fi
