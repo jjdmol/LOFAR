@@ -39,6 +39,7 @@ class msss_calibrator_pipeline(control):
         self.input_data = []
         self.output_data = []
         self.io_data_mask = []
+        self.parset_feedback_file = None
 
 
     def usage(self):
@@ -112,10 +113,11 @@ class msss_calibrator_pipeline(control):
         base-class's `go()` method.
         """
         try:
-            parset_file = self.inputs['args'][0]
+            parset_file = os.path.abspath(self.inputs['args'][0])
         except IndexError:
             return self.usage()
         self.parset.adoptFile(parset_file)
+        self.parset_feedback_file = parset_file + "_feedback"
         # Set job-name to basename of parset-file w/o extension, if it's not
         # set on the command-line with '-j' or '--job-name'
         if not self.inputs.has_key('job_name'):
@@ -219,7 +221,7 @@ class msss_calibrator_pipeline(control):
 
         # Create a parset-file containing the metadata for MAC/SAS
         self.run_task("get_metadata", instrument_mapfile,
-            parset_file=py_parset.getString('metadataFeedbackFile'),
+            parset_file=self.parset_feedback_file,
             parset_prefix=self.parset.fullModuleName('DataProducts'),
             product_type="InstrumentModel")
 
