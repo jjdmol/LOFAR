@@ -64,6 +64,7 @@ class msss_imager_pipeline(control):
         self.target_data = []
         self.output_data = []
         self.scratch_directory = None
+        self.parset_feedback_file = None
 
 
     def usage(self):
@@ -77,10 +78,11 @@ class msss_imager_pipeline(control):
         jobname before calling the base-class's `go()` method.
         """
         try:
-            parset_file = self.inputs['args'][0]
+            parset_file = os.path.abspath(self.inputs['args'][0])
         except IndexError:
             return self.usage()
         self.parset.adoptFile(parset_file)
+        self.parset_feedback_file = parset_file + "_feedback"
         # Set job-name to basename of parset-file w/o extension, if it's not
         # set on the command-line with '-j' or '--job-name'
         if not self.inputs.has_key('job_name'):
@@ -197,7 +199,7 @@ class msss_imager_pipeline(control):
         # (7) Get metadata
         # Create a parset-file containing the metadata for MAC/SAS
         self.run_task("get_metadata", aw_image_mapfile,
-            parset_file = self.parset.getString('metadataFeedbackFile'),
+            parset_file=self.parset_feedback_file,
             parset_prefix = full_parset.fullModuleName('DataProducts'),
             product_type = "SkyImage")
         return 0
