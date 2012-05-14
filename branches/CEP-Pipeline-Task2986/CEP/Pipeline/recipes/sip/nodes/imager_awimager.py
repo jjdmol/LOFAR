@@ -191,6 +191,7 @@ class imager_awimager(LOFARnodeTCP):
            This allows input from different source sources
          Version 0.31  (Wouter Klijn, klijn@astron.nl)  
          * Adaptable patch size (patch size needs specification)
+         * Patch size and geometry is broken: needs some astronomer magic to fix it, problem with afine transformation prol.
         """
         pad = 500. # increment in maj/minor axes [arcsec]
 
@@ -397,7 +398,12 @@ class imager_awimager(LOFARnodeTCP):
             measurement_set, baseline_limit * baseline_limit))[0]
 
         # Calculate number of projection planes
-        w_proj_planes = (max_baseline * waveLength) / (station_diameter ** 2)
+        # For number of wplanes, I guess it should be auto calculated with:
+        # nwplanes = min(257,(maximum baseline in m)*(field of view in radians)/(wavelength in m))
+        # where B is the maximum baseline in m, theta is the field of view in radians, and lambda is the wavelength in m. I believe Wouter already had that in the pipeline code(?)
+        # #Old version: w_proj_planes = (max_baseline * waveLength) / (station_diameter ** 2)
+        w_proj_planes = min(257, int(math.floor((max_baseline * fov) /
+                                                 waveLength)))
         w_proj_planes = int(round(w_proj_planes))
         self.logger.debug("Calculated w_max and the number pf projection plances:"
                           " {0} , {1}".format(w_max, w_proj_planes))
