@@ -7,7 +7,7 @@ from lofarpipe.support.utilities import create_directory
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
-from lofarpipe.support.group_data import load_data_map, validate_data_maps
+from lofarpipe.support.group_data import load_data_map, validate_data_maps, store_data_map
 from lofarpipe.support.pipelinelogging import log_process_output
 
 class imager_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
@@ -60,7 +60,15 @@ class imager_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
         'fillrootimagegroup_exec': ingredient.ExecField(
             '--fillrootimagegroup_exec',
             help = '''Full path to the fillRootImageGroup executable'''
+        ),
+        'placed_image_mapfile': ingredient.FileField(
+            '--placed-image-mapfile',
+            help = '''location of mapfile with proced and correctly placed, hdf5 images'''
         )
+    }
+
+    outputs = {
+        'placed_image_mapfile': ingredient.StringField()
     }
 
     def go(self):
@@ -111,7 +119,20 @@ class imager_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
             jobs.append(ComputeJob(host, nodeCommand, arguments))
         self._schedule_jobs(jobs)
 
-        #TODO: validatable output data??
+        placed_image_ = []
+        for job in  jobs:
+            if job.results.has_key("hdf5"):
+                placed_image_.append((job.host, job.results["image"]))
+
+        if self.error.isSet():
+            self.logger.warn("Failed finalizer node run detected")
+            return 1
+
+        store_data_map(self.inputs['placed_image_mapfile'], placed_image_)
+        self.logger.debug("Wrote mapfile containing placed hdf5 images: {0}".format(
+                           self.inputs['placed_image_mapfile']))
+        self.outputs["placed_image_mapfile"] = self.inputs['placed_image_mapfile']
+
         return 0
 
 

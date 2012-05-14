@@ -10,7 +10,7 @@ import subprocess
 import os
 
 from lofarpipe.support.lofarnode import LOFARnodeTCP
-from lofarpipe.support.utilities import log_time
+from lofarpipe.support.utilities import log_time, create_directory
 import lofar.addImagingInfo as addimg #@UnresolvedImport
 import pyrap.images as pim #@UnresolvedImport
 from lofarpipe.support.group_data import load_data_map
@@ -68,6 +68,9 @@ class imager_finalize(LOFARnodeTCP):
             try:
                 self.logger.info("Saving image in HDF5 Format to: {0}" .format(
                                 output_image))
+                # Create the output directory
+                create_directory(os.path.split(output_image)[0])
+                # save the image
                 im.saveas(output_image, hdf5 = True)
                 # TODO: HDF5 version of PIM is different to the system version
                 # dunno the solution: the script breaks.
