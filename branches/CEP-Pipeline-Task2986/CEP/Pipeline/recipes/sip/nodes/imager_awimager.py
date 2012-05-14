@@ -398,12 +398,9 @@ class imager_awimager(LOFARnodeTCP):
             measurement_set, baseline_limit * baseline_limit))[0]
 
         # Calculate number of projection planes
-        # For number of wplanes, I guess it should be auto calculated with:
-        # nwplanes = min(257,(maximum baseline in m)*(field of view in radians)/(wavelength in m))
-        # where B is the maximum baseline in m, theta is the field of view in radians, and lambda is the wavelength in m. I believe Wouter already had that in the pipeline code(?)
-        # #Old version: w_proj_planes = (max_baseline * waveLength) / (station_diameter ** 2)
-        w_proj_planes = min(257, int(math.floor((max_baseline * fov) /
-                                                 waveLength)))
+        w_proj_planes = min(257, math.floor((max_baseline * waveLength) /
+                                             (station_diameter ** 2)))
+
         w_proj_planes = int(round(w_proj_planes))
         self.logger.debug("Calculated w_max and the number pf projection plances:"
                           " {0} , {1}".format(w_max, w_proj_planes))
