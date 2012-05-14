@@ -25,8 +25,8 @@ install(FILES
   MeasurementExprLOFARUtil.h
   ModelConfig.h
   ModelImageFFT.h
-  ModelImageCFStore.h
-  ModelImageVisibilityResampler.h
+#  ModelImageCFStore.h
+#  ModelImageVisibilityResampler.h
   ParmManager.h
   ParmProxy.h
   PatchExpr.h

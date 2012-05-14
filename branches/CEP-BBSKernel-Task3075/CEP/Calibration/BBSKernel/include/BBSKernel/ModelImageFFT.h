@@ -64,7 +64,7 @@ typedef struct ModelImageOptions
 //  double uvscaleX, uvscaleY;                    // pixel size in wavelengths conversion
   casa::Int nwplanes;                           // number of w-planes to use
   casa::Vector<casa::Double> offset;            // uv offset
-  casa::Matrix<casa::Bool> degridMuellerMask;   // degridding Mueller mask
+//  casa::Matrix<casa::Bool> degridMuellerMask;   // degridding Mueller mask
 };
 
 class ModelImageFft
@@ -72,7 +72,9 @@ class ModelImageFft
 public:
 //  ModelImageFft(const casa::String &name, const casa::Vector<casa::Double> &frequencies,
 //                unsigned int oversampling=1, double uvscaleX=1.0, double uvscaleY=1.0);
-  ModelImageFft(const casa::String &name, unsigned int oversampling=1, 
+  ModelImageFft(const casa::String &name, 
+                unsigned int nwplanes, 
+                unsigned int oversampling=1, 
                 double uvscaleX=1.0, double uvscaleY=1.0);
   ~ModelImageFft();
 
@@ -85,7 +87,7 @@ public:
   void setUVScale(double uvscaleX, double uvscaleY);
   void setOversampling(unsigned int oversampling);
   void setNwplanes(unsigned int nwplanes);
-  void setDegridMuellerMask(const casa::Matrix<casa::Bool> &muellerMask);
+//  void setDegridMuellerMask(const casa::Matrix<casa::Bool> &muellerMask);
 
   // Getter functions for individual options
   inline casa::String     name() const { return itsOptions.name; }

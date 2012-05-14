@@ -126,7 +126,8 @@ for(Int ichan=0; ichan< nDataChan; ichan++)       // For all channels
     if((!flagCube[ipol+ichan*nDataPol+irow*nDataChan*nDataPol]))
     {
       apol=polMap_p(ipol);
-      if ((apol>=0) && (apol<nGridPol)) {
+      if ((apol>=0) && (apol<nGridPol)) 
+      {
         //	      igrdpos(2)=apol; igrdpos(3)=achan;
         iPosPtr[2]=apol; iPosPtr[3]=achan;
         norm=0.0;
@@ -138,7 +139,7 @@ for(Int ichan=0; ichan< nDataChan; ichan++)       // For all channels
          (visCube[ipol+ichan*nDataPol+irow*nDataPol*nDataChan]*phasor);
 
         for(Int iy=-supportPtr[1]; iy <= supportPtr[1]; iy++) 
-    {
+        {
       ilocPtr[1]=abs((int)(samplingPtr[1]*iy+offPtr[1]));
       //			  igrdpos(1)=loc(1)+iy;
       iPosPtr[1]=locPtr[1]+iy;

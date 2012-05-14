@@ -140,6 +140,7 @@ void ModelImageFft::setNwplanes(unsigned int nwplanes)
   itsOptions.nwplanes=nwplanes;
 }
 
+/*
 void ModelImageFft::setDegridMuellerMask(const casa::Matrix<Bool> &muellerMask)
 {
   if(muellerMask.nrow() != 4 && muellerMask.ncolumn() != 4)
@@ -151,6 +152,7 @@ void ModelImageFft::setDegridMuellerMask(const casa::Matrix<Bool> &muellerMask)
     setDegridMuellerMask(muellerMask);
   }
 }
+*/
 
 //**********************************************
 //
@@ -190,13 +192,11 @@ void ModelImageFft::degrid( const double *uvwBaseline,
   
   itsOptions.lambdas=convertToLambdas(itsOptions.frequencies);  // convert to lambdas
 
-  // create VisResampler
+  // write baseline uvw into vector
 
-  // set up chanMap
-
-  // convert uvwBaseline to VisResampler format
- 
-  // call VisResampler
+  // call Cornwell degrid
+  
+  // assign return arrays to vector addresses
 }
 
 void ModelImageFft::degrid( const boost::multi_array<double, 3> &uvwBaseline, 
