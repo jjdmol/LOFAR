@@ -15,7 +15,7 @@ from lofarpipe.support.remotecommand import ComputeJob
 from lofarpipe.support.group_data import load_data_map
 from lofarpipe.recipes.helpers import metadata
 from lofar.parameterset import parameterset
-
+from lofarpipe.support.utilities import create_directory
 class get_metadata(BaseRecipe, RemoteCommandRecipeMixIn):
     """
     Get the metadata from the given data products and return them as a LOFAR
@@ -98,8 +98,7 @@ class get_metadata(BaseRecipe, RemoteCommandRecipeMixIn):
             )
         dir_path = os.path.dirname(self.inputs['parset_file'])
         #assure existence of containing directory
-        if not os.path.exists(dir_path):
-            os.makedirs(dir_path)
+        create_directory(dir_path)
 
         parset.writeFile(self.inputs['parset_file'])
 
