@@ -85,18 +85,6 @@ ModelImageFft::~ModelImageFft(void)
 //
 //**********************************************
 
-void ModelImageFft::setConvType(const casa::String type)
-{
-  if(type=="SF" || type=="BOX")
-  {
-    itsOptions.ConvType=type;
-  }
-  else
-  {
-    THROW(BBSKernelException, "Convolution type " << type << " is unknown.");
-  }
-}
-
 void ModelImageFft::setVerbose(casa::uInt verbose)
 {
   itsOptions.verbose=verbose;
@@ -139,20 +127,6 @@ void ModelImageFft::setNwplanes(unsigned int nwplanes)
 {
   itsOptions.nwplanes=nwplanes;
 }
-
-/*
-void ModelImageFft::setDegridMuellerMask(const casa::Matrix<Bool> &muellerMask)
-{
-  if(muellerMask.nrow() != 4 && muellerMask.ncolumn() != 4)
-  {
-    setDegridMuellerMask(muellerMask);
-  }
-  else
-  {
-    setDegridMuellerMask(muellerMask);
-  }
-}
-*/
 
 //**********************************************
 //
@@ -212,10 +186,6 @@ void ModelImageFft::degrid( const boost::multi_array<double, 3> &uvwBaselines,
   }
   
   itsOptions.lambdas=convertToLambdas(itsOptions.frequencies);  // convert to lambdas
-
-  // create VisResampler
-
-  // set up chanMap
 
   // convert uvwBaseline to Cornwell degrid format, vector
   

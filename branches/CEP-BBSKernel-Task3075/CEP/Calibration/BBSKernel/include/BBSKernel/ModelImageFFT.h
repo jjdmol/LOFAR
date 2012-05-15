@@ -84,7 +84,7 @@ public:
   void getImageProperties(PagedImage<DComplex> *image);
 
   // Setter functions for individual options
-  void setConvType(const casa::String type="SF");
+//  void setConvType(const casa::String type="SF");
   void setVerbose(casa::uInt verbose=0);
   void setUVScale(const casa::Vector<casa::Double> &uvscale);
   void setUVScale(double uvscaleX, double uvscaleY);
@@ -94,7 +94,7 @@ public:
 
   // Getter functions for individual options
   inline casa::String     name() const { return itsOptions.name; }
-  inline casa::String     convType() const { return itsOptions.ConvType; }
+//  inline casa::String     convType() const { return itsOptions.ConvType; }
   inline casa::Vector<casa::Double>  frequencies() const { return itsOptions.frequencies; }
   inline casa::uInt       verbose() const { return itsOptions.verbose; }
   inline casa::Vector<casa::Double> uvScale() const { return itsOptions.uvScale; }
