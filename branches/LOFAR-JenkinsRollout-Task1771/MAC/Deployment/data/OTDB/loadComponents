@@ -128,7 +128,7 @@ makeOrderFile()
 # check invocation syntax
 
 DATABASE=
-VERSION=`svn info | grep Revision | awk '{print $2}'`
+VERSION=
 QUAL=
 HOST=`hostname -s`
 DIR="/opt/lofar/bin"
@@ -173,6 +173,17 @@ if [[ -z $DATABASE ]]; then
   exit
 fi
 
+# Determine SVN version of build or check out, needed for versioning comp.
+
+if [[ -z $VERSION ]]; then 
+  if [ $localUse = 0 ]; then 
+    branchname=`cat /opt/lofar/Version.txt | cut -d_ -f3`
+    VERSION=`versionotdb|grep "overall revision" | awk -F"= " '{print $2}'`
+  else
+    VERSION=`svn info  | grep Revision | awk '{print $2}'`
+  fi
+fi 
+
 if [ -e $DIR/load_OTDB_comps ]; then 
   cd $wdir
 
@@ -185,7 +196,7 @@ if [ -e $DIR/load_OTDB_comps ]; then
 
   # First construct gcompfile using .base-files.
   if [ $localUse = 1 ]; then 
-    create_OTDB_comps -l
+    ./create_OTDB_comps -l
   else
     create_OTDB_comps
   fi
@@ -218,14 +229,21 @@ if [ -e $DIR/load_OTDB_comps ]; then
   if [ "$QUAL" != "" ]; then 
     arguments=$arguments" -q "$QUAL 
   fi
-  echo "Executing: load_OTDB_comps $arguments 2>&1 | tee /opt/lofar/log/load_components.log"
-  load_OTDB_comps $arguments 2>&1 | tee /opt/lofar/log/load_components.log
+  if [ $localUse = 0 ]; then
+    logfile="/opt/lofar/log/loadComponents.log"
+  else
+    logfile="./loadComponents.log"
+  fi
+
+  echo "Executing: load_OTDB_comps $arguments 2>&1 1>$logfile"
+  load_OTDB_comps $arguments 2>&1 1>$logfile
   # when there are files we didn't use report that to the user
   if [ -s ${UNUSEDFILES} ]; then
 	echo
 	echo "  The following files are NOT LOADED into the database because they are NOT part of the current defined LOFAR tree:"
 	cat ${UNUSEDFILES}
   fi
+  echo "Done; Logfile is $logfile"
 
   # Cleanup
   rm -f ${UNUSEDFILES} ${ORDERFILE}

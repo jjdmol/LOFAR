@@ -1,4 +1,4 @@
-#!/usr/bin/ksh -x
+#!/usr/bin/ksh 
 #
 # create_OTDB_comps : Expand all base-file to gcomp files.
 #
@@ -146,7 +146,7 @@ expand_storagemarker      ()
 substitute_station()
 {
 	# expand the nodes
-	cleanlist ../StaticMetaData/StationInfo.dat | while read nodename ID stnType rest
+	cleanlist ${wdir}/StationInfo.dat | while read nodename ID stnType rest
 	do
 		if [ "${stnType}" != $1 ]; then
 			continue
@@ -166,7 +166,7 @@ substitute_station()
 	done
 
 	> /tmp/foo.list
-	cleanlist ${wdir}/StaticMetaData/StationInfo.dat | while read nodename ID stnType rest
+	cleanlist ${wdir}/StationInfo.dat | while read nodename ID stnType rest
 	do
 		if [ "${stnType}" != $1 ]; then
 			continue
@@ -248,13 +248,19 @@ if [ "${INDIR}" = "." ]; then
   otdbdir="."
   pvssdir="../PVSS"
 else
-  wdir="/opt/lofar/etc/otdb"
+  wdir="/opt/lofar/etc"
   otdbdir="/opt/lofar/etc/otdb"
-  pvssdir="/opt/lofar/pvss"
+  pvssdir="/opt/lofar/pvss/dpdef"
 fi 
 
 cd $wdir
 cat -s StationInfo.dat | grep -v -e '.*0\.0.*' -e '#' -e'^$' | cut -c1-5 >>${DESTDIR}/Stations.list
+
+if [ "$wdir" = "/opt/lofar/etc" ]; then 
+  cd $wdir/otdb # location of all component files, etc.
+else
+  cd $wdir/../OTDB
+fi
 
 for file in `ls -1 *.base | grep -v Node`
 do
