@@ -178,7 +178,7 @@ void ModelImageFft::getImageProperties(PagedImage<DComplex> *image)
 //
 //**********************************************
 
-void ModelImageFft::degrid( const double *uvwBaseline, 
+void ModelImageFft::degrid( const double *uvwBaselines, 
                             size_t timeslots, size_t nchans, 
                             const double *frequencies,
                             casa::DComplex *XX , casa::DComplex *XY, 
@@ -199,7 +199,7 @@ void ModelImageFft::degrid( const double *uvwBaseline,
   // assign return arrays to vector addresses
 }
 
-void ModelImageFft::degrid( const boost::multi_array<double, 3> &uvwBaseline, 
+void ModelImageFft::degrid( const boost::multi_array<double, 3> &uvwBaselines, 
                             size_t timeslots, size_t nchans, 
                             const double *frequencies,
                             casa::DComplex *XX , casa::DComplex *XY, 
@@ -217,9 +217,35 @@ void ModelImageFft::degrid( const boost::multi_array<double, 3> &uvwBaseline,
 
   // set up chanMap
 
+  // convert uvwBaseline to Cornwell degrid format, vector
+  
+  // assign output array parameter to vector
+ 
+}
+
+void ModelImageFft::degrid( const boost::multi_array<double, 3> &uvwBaselines, 
+                            const vector<double> &frequencies,
+                            Vector<casa::DComplex> &XX , Vector<casa::DComplex> &XY, 
+                            Vector<casa::DComplex> &YX , Vector<casa::DComplex> &YY)
+{
+  unsigned int nchans=frequencies.size();     // get number of channels
+  Vector<Double> lamdbdas(nchans);            // vector for wavelengths conversion
+  for(unsigned int i=0; i<nchans; i++)
+  {
+    itsOptions.frequencies[i]=frequencies[i];
+  }
+  
+  itsOptions.lambdas=convertToLambdas(itsOptions.frequencies);  // convert to lambdas
+
+  // create VisResampler
+
+  // set up chanMap
+
   // convert uvwBaseline to VisResampler format
  
   // call VisResampler
+  
+  // Distribute output to correlation vectors
 }
 
 //**********************************************
@@ -308,6 +334,48 @@ void ModelImageFft::gridKernel(const std::vector<std::complex<float> >& data,
 	printf("\n");
     }
 */
+}
+
+// Perform degridding
+void ModelImageFft::degridKernel(const std::vector<std::complex<float> >& grid, 
+                                const int gSize, const int support,
+                                const std::vector<std::complex<float> >& C,
+                                const std::vector<unsigned int>& cOffset,
+                                const std::vector<unsigned int>& iu, 
+                                const std::vector<unsigned int>& iv,
+                                std::vector<std::complex<float> >& data)
+{
+
+  int sSize=2*support+1;
+
+  for (unsigned int dind=0; dind<data.size(); dind++)
+  {
+
+    data[dind]=0.0;
+
+    // Nearly all the L2 cache misses originate here in the next
+    // two statements
+    // The actual grid point from which we offset
+    int gind=iu[dind]+gSize*iv[dind]-support;
+    // The Convoluton function point from which we offset
+    int cind=cOffset[dind];
+    
+    for (int suppv=0; suppv<sSize; suppv++)
+    {
+#ifdef USEBLAS
+      std::complex<float>  dot;
+      cblas_cdotu_sub(sSize, &grid[gind], 1, &C[cind], 1, &dot);
+      data[dind]+=dot;
+#else
+      for (int suppu=0; suppu<sSize; suppu++)
+      {
+        data[dind]+=grid[gind+suppu]*C[cind+suppu];
+      }
+#endif
+      gind+=gSize;
+      cind+=sSize;
+    }
+  }
 }
 
 /////////////////////////////////////////////////////////////////////////////////

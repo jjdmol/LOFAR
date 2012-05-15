@@ -24,10 +24,13 @@
 #ifndef LOFAR_BBSKERNEL_MODELIMAGEFFT_H
 #define LOFAR_BBSKERNEL_MODELIMAGEFFT_H
 
-#include <ParmDB/Grid.h>
+//#include <ParmDB/Grid.h>
+#include <boost/smart_ptr/shared_ptr.hpp>  // ????
 #include <boost/multi_array.hpp>
+
 #include <casa/Arrays/Vector.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
+#include <images/Images/PagedImage.h>
 #include <images/Images/ImageInterface.h>
 
 // From tConvolveBLAS.cc
@@ -101,18 +104,22 @@ public:
   inline unsigned int     nWplanes() const { return itsOptions.nwplanes; }
 
   // Function to get degridded data into raw pointers
-  void degrid(const double *uvwBaseline, 
+  void degrid(const double *uvwBaselines, 
               size_t timeslots, size_t nchans,
               const double *frequencies, 
               casa::DComplex *XX , casa::DComplex *XY, 
               casa::DComplex *XY , casa::DComplex *YY);
-  void degrid(const boost::multi_array<double, 3> &uvwBaseline,
+  void degrid(const boost::multi_array<double, 3> &uvwBaselines,
               size_t timeslots, size_t nchans,
               const double *frequencies, 
               casa::DComplex *XX , casa::DComplex *XY, 
               casa::DComplex *XY , casa::DComplex *YY);
+  void degrid(const boost::multi_array<double, 3> &uvwBaselines, 
+              const vector<double> &frequencies,
+              Vector<casa::DComplex> &XX , Vector<casa::DComplex> &XY, 
+              Vector<casa::DComplex> &YX , Vector<casa::DComplex> &YY);              
   // Function to get degridded data into BBS::Matrix
-  void getUVW(const boost::multi_array<double, 3> &uvwBaseline, 
+  void getUVW(const boost::multi_array<double, 3> &uvwBaselines, 
               const casa::Vector<casa::Double> &frequencies,
               casa::Array<DComplex> XX , casa::Array<DComplex> XY, 
               casa::Array<DComplex> XY , casa::Array<DComplex> YY);
