@@ -237,13 +237,9 @@ void ModelImageFft::degrid( const boost::multi_array<double, 3> &uvwBaselines,
   
   itsOptions.lambdas=convertToLambdas(itsOptions.frequencies);  // convert to lambdas
 
-  // create VisResampler
-
-  // set up chanMap
-
-  // convert uvwBaseline to VisResampler format
+  // convert uvwBaseline to ConvolveBlas format
  
-  // call VisResampler
+  // call degrid
   
   // Distribute output to correlation vectors
 }
@@ -345,13 +341,11 @@ void ModelImageFft::degridKernel(const std::vector<std::complex<float> >& grid,
                                 const std::vector<unsigned int>& iv,
                                 std::vector<std::complex<float> >& data)
 {
-
   int sSize=2*support+1;
 
   for (unsigned int dind=0; dind<data.size(); dind++)
   {
-
-    data[dind]=0.0;
+   data[dind]=0.0;
 
     // Nearly all the L2 cache misses originate here in the next
     // two statements
@@ -411,7 +405,6 @@ void ModelImageFft::initC(const int nSamples, const std::vector<double>& w,
   // by Fourier transformation. Here we take an approximation that
   // is good enough.
   int sSize=2*support+1;
-
   int cCenter=(sSize-1)/2;
 
   C.resize(sSize*sSize*overSample*overSample*wSize);
@@ -490,7 +483,6 @@ void ModelImageFft::initCOffset(const std::vector<double>& u, const std::vector<
 {
   const int nSamples = u.size();
   const int nChan = freq.size();
-
   int sSize=2*support+1;
 
   // Now calculate the offset for each visibility point
@@ -531,64 +523,3 @@ void ModelImageFft::initCOffset(const std::vector<double>& u, const std::vector<
     }
   }
 }
-
-/* OLD casarest stuff
-void ModelImageFft::initPolmap()
-{
-  polMap_p.resize(4);
-  polMap_p[0]=1;
-  polMap_p[1]=1;
-  polMap_p[2]=1;
-  polMap_p[3]=1;
-}
-
-//void ModelImageFft::initChanmap(const Vector<Double> &frequencies)
-void ModelImageFft::initChanmap()
-{
-  chanMap_p.resize(itsOptions.frequencies.size());
-  chanMap_p.set(-1);    // reset chanMap to -1 for all channels
-
-  // Find nearest Image frequency for frequencies
-  Vector<Double> c(1);    // channel frequency
-  c=0.0;
-  Vector<Double> f(1);    // vector of frequencies neede for spectral pixel conversion
-  Int nFound=0;           // number of found channels?
-  unsigned int nvischan=itsOptions.frequencies.size();
-
-  // Check if with have only an one channel image
-  if(nchan==1)
-  {
-    chanMap_p.set(0);   // set all channels to pixel 0
-  }
-  else
-  {
-    // otherwise match channels
-    for(uInt chan=0;chan<nvischan;chan++)
-    {
-    //  f(0)=lsrFreq[chan];
-      if(spectralCoord_p.toPixel(c, f))
-      {
-        Int pixel=uInt(floor(c(0)+0.5));  // round to chan freq at chan center 
-        //cout << "spw " << spw << " f " << f(0) << " pixel "<< c(0) << "  " << pixel << endl;
-        /////////////
-        //c(0)=pixel;
-        //spectralCoord_p.toWorld(f, c);
-        // cout << "f1 " << f(0) << " pixel "<< c(0) << "  " << pixel << endl;
-        ////////////////
-        if(pixel>-1 && pixel<nchan)
-        {
-          chanMap_p(chan)=pixel;
-          nFound++;
-          if(nvischan>1&&(chan==0||chan==nvischan-1))
-          {
-            LOG_DEBUG_STR("Selected visibility channel : " << chan+1
-                          << " has frequency " 
-                          <<  MFrequency(Quantity(f(0), "Hz")).get("GHz").getValue()
-                          << " GHz and maps to image pixel " << pixel+1);
-          }
-        }
-      }
-    }
-  }
-}
-*/
