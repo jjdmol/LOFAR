@@ -34,17 +34,19 @@ SyntaxError()
 
 	[ -z "${Msg}" ] || echo "ERROR: ${Msg}"
 	echo ""
-	echo "Syntax: $(basename $0) -D databasename [-H databaseserver] [-D directory]"
+	echo "Syntax: $(basename $0) -D databasename [-H databaseserver] [-D directory] [-l]"
 	echo "        - databasename is always needed"
         echo "        - directory is path to executables PVSS2SAS and load_PICtree [/opt/lofar/bin]"
+	echo "        - Option -l indicates local usage from a checked out SVN tree"
 	echo
 }
 
 DATABASE=
 HOST=`hostname -s`
 DIR="/opt/lofar/bin"
+wdir="/opt/lofar/etc"
 
-while getopts "hD:v:q:H:d:" OPTION
+while getopts "hD:v:q:H:d:l" OPTION
 do
      case $OPTION in
 
@@ -61,6 +63,8 @@ do
 	 d)
 	     DIR=$OPTARG
 	     ;;
+         l)  localUse=1
+             wdir="."
 	 ?)
              SyntaxError
              exit 1
@@ -74,6 +78,8 @@ if [[ -z $DATABASE ]]; then
   exit
 fi
 
+cd $wdir
+
 #
 # MAIN
 #
@@ -82,7 +88,7 @@ if [[ -e $DIR/PVSS2SAS ]] && [[ -e $DIR/load_PICtree ]]; then
   RESULTFILE=OTDBDatapoints.out
   rm -f ${RESULTFILE}
   echo "Creating PIC file..."
-  ./createPICfile | $DIR/PVSS2SAS >${RESULTFILE}
+  createPICfile | $DIR/PVSS2SAS >${RESULTFILE}
   # create commandline for load_PICtree
   arguments=$DATABASE
   arguments=$arguments" "$HOST

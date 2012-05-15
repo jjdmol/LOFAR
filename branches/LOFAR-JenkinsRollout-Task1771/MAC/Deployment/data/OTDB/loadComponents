@@ -35,12 +35,13 @@ SyntaxError()
 	[ -z "${Msg}" ] || echo "ERROR: ${Msg}"
 	echo ""
 	echo "Syntax: $(basename $0) -D databasename [-v versionnr] [-q qualifier]" 
-	echo "                       [-H hostname] [-d directory]"
+	echo "                       [-H hostname] [-d directory] [-l]"
 	echo "        - databasename is always needed"
 	echo "        - versionnumber is svn revision number (max 6 digits) [Current]"
 	echo "        - qualifier can be development|test|operational|example []"
 	echo "        - hostname is the hostname of the database server [sas001]" 
 	echo "        - directory is the path to the executable load_OTDB_comps [/opt/lofar/bin]"
+        echo "        - Option -l says this is run locally in a checked out SVN tree"
 	echo ""
 }
 
@@ -131,8 +132,9 @@ VERSION=`svn info | grep Revision | awk '{print $2}'`
 QUAL=
 HOST=`hostname -s`
 DIR="/opt/lofar/bin"
-
-while getopts "hD:v:q:H:d:" OPTION
+localUse=0
+wdir="/opt/lofar/etc/otdb" # default location of comp, gcomp files 
+while getopts "hD:v:q:H:d:l" OPTION
 do
      case $OPTION in
 
@@ -153,7 +155,10 @@ do
 	     HOST=$OPTARG
 	     ;;
 	 d)
-	     DIR=$OPTARG
+	     DIR=$OPTARG      
+	     ;;
+         l)  localUse=1
+             wdir="." 
 	     ;;
 	 ?)
              SyntaxError
@@ -169,6 +174,8 @@ if [[ -z $DATABASE ]]; then
 fi
 
 if [ -e $DIR/load_OTDB_comps ]; then 
+  cd $wdir
+
   # We use a lot of tmpfile to make life easier.
   RELATIONFILE=/tmp/relations
   LEVELFILE=/tmp/levels
@@ -177,7 +184,11 @@ if [ -e $DIR/load_OTDB_comps ]; then
   WORKFILE=/tmp/tmpFile4load_components
 
   # First construct gcompfile using .base-files.
-  ./create_OTDB_comps
+  if [ $localUse = 1 ]; then 
+    create_OTDB_comps -l
+  else
+    create_OTDB_comps
+  fi
 
   # cleanup old stuff
   rm -f ${RELATIONFILE} ${LEVELFILE} ${ORDERFILE} ${UNUSEDFILES}
@@ -207,8 +218,8 @@ if [ -e $DIR/load_OTDB_comps ]; then
   if [ "$QUAL" != "" ]; then 
     arguments=$arguments" -q "$QUAL 
   fi
-  echo "Executing: $DIR/load_OTDB_comps $arguments 2>&1 | tee load_components.log"
-  $DIR/load_OTDB_comps $arguments 2>&1 | tee load_components.log
+  echo "Executing: load_OTDB_comps $arguments 2>&1 | tee /opt/lofar/log/load_components.log"
+  load_OTDB_comps $arguments 2>&1 | tee /opt/lofar/log/load_components.log
   # when there are files we didn't use report that to the user
   if [ -s ${UNUSEDFILES} ]; then
 	echo
@@ -219,7 +230,7 @@ if [ -e $DIR/load_OTDB_comps ]; then
   # Cleanup
   rm -f ${UNUSEDFILES} ${ORDERFILE}
 else
-  echo "Cannot execute $DIR/load_OTDB_comps (not there, or not executable)"
+  echo "Cannot execute load_OTDB_comps (not there, or not executable)"
 fi
 
 exit
