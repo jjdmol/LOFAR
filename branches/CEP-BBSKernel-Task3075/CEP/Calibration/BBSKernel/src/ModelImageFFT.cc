@@ -29,9 +29,16 @@
 #include <coordinates/Coordinates/CoordinateSystem.h> //for spectral coord
 #include <coordinates/Coordinates/Coordinate.h>
 #include <images/Images/PagedImage.h>
+
+#include <Common/LofarLogger.h>   // for ASSERT and ASSERTSTR?
+#include <Common/SystemUtil.h>    // needed for basename
+#include <Common/Exception.h>     // THROW macro for exceptions
+
 #include <BBSKernel/Exceptions.h>
 #include <BBSKernel/ModelImageFFT.h>
 #include <BBSKernel/ModelImageVisibilityResampler.h>
+
+
 
 using namespace std;
 using namespace LOFAR;
@@ -54,18 +61,29 @@ ModelImageFft::ModelImageFft( const casa::String &name,
                               unsigned int oversampling,
                               double uvscaleX, double uvscaleY)
 {
+  bool valid=false;
+
   // set options
   itsOptions.name=name;
+  itsOptions.nwplanes=nwplanes;
   itsOptions.oversampling=oversampling;
   itsOptions.uvScale[0]=uvscaleX;
   itsOptions.uvScale[1]=uvscaleY;
 
-  PagedImage<DComplex> *image=new PagedImage<DComplex>(name);   // Open image as paged image
+  valid=validImage(name);
+  if(!valid)
+  {
+    THROW(BBSKernelException, "Invalid image.");
+  }
 
-  // Get image properties
+  PagedImage<DComplex> *image=new PagedImage<DComplex>(name);   // Open image as paged image
+  this->getImageProperties(image);      // get image properties
+
   // TODO
   LatticeFFT::cfft2d(*image);     // FFT image in place 
-  itsImage=image->get();          // store in array attribute
+  itsImage=image->get();          // store FFT'ed image in array attribute
+  delete image;                   // don't need the intermediate image anymore
+
 
 // OLD casarest stuff
 //  initPolmap();                   // initialize polMap_p
@@ -136,15 +154,88 @@ void ModelImageFft::setNwplanes(unsigned int nwplanes)
 
 void ModelImageFft::getImageProperties(PagedImage<DComplex> *image)
 {
-  CoordinateSystem coordSys=image->coordinates();
-  uInt SpectralCoordInd=coordSys.findCoordinate(Coordinate::SPECTRAL);
-  uInt StokesCoordInd=coordSys.findCoordinate(Coordinate::STOKES);
-  
+  CoordinateSystem coordSys=image->coordinates();   // get coordinate system of image
+
+  uInt nPixelAxes=coordSys.nPixelAxes();
+  if(nPixelAxes != 2)
+  {
+    THROW(BBSKernelException, "Model image does not have required 2 pixel axes, but "
+          << nPixelAxes << " instead.");
+  }
   IPosition shape=image->shape();
-  nchan=shape(SpectralCoordInd);
-  npol=shape(StokesCoordInd);
+  Int nCoord=coordSys.nCoordinates();
+  Int XCoordInd=coordSys.findCoordinate(Coordinate::DIRECTION);
+  Int YCoordInd=coordSys.findCoordinate(Coordinate::DIRECTION, XCoordInd);
+
+  if(XCoordInd != -1 && YCoordInd!=-1)
+  {
+    nx=shape(XCoordInd);
+    ny=shape(YCoordInd);
+    LOG_INFO_STR("Image " << itsOptions.name << " has dimensions nx = " << nx << " ny = " << ny << ".");
+//    LOG_INFO_STR("Image has dimensions nx = " << nx << " ny = " << ny << ".");
+  }
+  else
+  {
+    THROW(BBSKernelException, "No DIRECTION coordinate in image " << itsOptions.name);
+  }
+  Int SpectralCoordInd=coordSys.findCoordinate(Coordinate::SPECTRAL);
+  if(SpectralCoordInd != -1)
+  {
+    nchan=shape(SpectralCoordInd);    
+    LOG_INFO_STR("Image has " << nchan << " frequency channels.");
+  }
+  else
+  {
+    nchan=1;
+  }
+  Int StokesCoordInd=coordSys.findCoordinate(Coordinate::STOKES);
+  if(StokesCoordInd != -1)
+  {
+    npol=shape(StokesCoordInd);
+    LOG_INFO_STR("Image has " << npol << " polarizations.");
+
+    if(npol!=1 || npol!=4)
+    {
+      THROW(BBSKernelException, "Number of polarizations must be 1 or 4.");    
+    }
+  }
+  else
+  {
+    npol=1;
+  }
+
+  // DEBUG
+  cout << "nCoord = " << nCoord << endl;
+  cout << "XCoordInd = " << XCoordInd << endl;
+  cout << "YCoordInd = " << YCoordInd << endl;
+  cout << "SpectralCoordInd = " << SpectralCoordInd << endl;
+  cout << "StokesCoordInd = " << StokesCoordInd << endl;
+  
   spectralCoord_p=image->coordinates().spectralCoordinate(0);  
 }
+
+// Check that input model image has Jy/pixel flux
+//
+bool ModelImageFft::validImage(const casa::String &imageName)
+{
+  bool valid=false;
+
+  // Look for Jy/beam entry in file table keywords "unit"
+  Table image(imageName);                                       // open image-table as read-only
+  const TableRecord &imageKeywords(image.keywordSet());
+  RecordFieldId unitsId("units");
+  string units=imageKeywords.asString(unitsId);
+  if(units=="Jy/pixel")
+  {
+    valid=true;
+  }
+  else
+  {
+    valid=false;
+  }
+  return valid;
+}
+
 
 //**********************************************
 //
@@ -167,6 +258,11 @@ void ModelImageFft::degrid( const double *uvwBaselines,
   itsOptions.lambdas=convertToLambdas(itsOptions.frequencies);  // convert to lambdas
 
   // write baseline uvw into vector
+  vector<double> uswBaselinesVec(timeslots);
+  for(unsigned int i=0; i<timeslots; i++)
+  {
+    uswBaselinesVec[i]=*(uvwBaselines+i);
+  }
 
   // call Cornwell degrid
   

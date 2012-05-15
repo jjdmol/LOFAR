@@ -82,6 +82,7 @@ public:
   ~ModelImageFft();
 
   void getImageProperties(PagedImage<DComplex> *image);
+  bool validImage(const casa::String &imageName);
 
   // Setter functions for individual options
 //  void setConvType(const casa::String type="SF");
