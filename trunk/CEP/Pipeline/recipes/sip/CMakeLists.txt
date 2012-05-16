@@ -15,6 +15,12 @@ python_install(
   master/demixing.py
   master/dppp.py
   master/flag_baseline.py
+  master/imager_awimager.py
+  master/imager_create_dbs.py
+  master/imager_finalize.py
+  master/imager_prepare.py
+  master/imager_bbs.py
+  master/imager_source_finding.py
   master/get_metadata.py
   master/make_flaggable.py
   master/new_bbs.py
@@ -43,6 +49,12 @@ python_install(
   nodes/imager_create_dbs.py
   nodes/make_flaggable.py
   nodes/new_bbs.py
+  nodes/imager_bbs.py
+  nodes/imager_awimager.py
+  nodes/imager_create_dbs.py
+  nodes/imager_finalize.py
+  nodes/imager_prepare.py
+  nodes/imager_source_finding.py
   nodes/parmdb.py
   nodes/parmexportcal.py
   nodes/rficonsole.py
@@ -52,8 +64,11 @@ python_install(
 
 install(PROGRAMS
   bin/msss_calibrator_pipeline.py
+  bin/msss_imager_pipeline.py
   bin/msss_target_pipeline.py
   bin/startPython.sh
+  external/bad_station_detection/asciistats.py
+  external/bad_station_detection/statsplot.py
   DESTINATION bin)
 
 install(FILES
