@@ -29,7 +29,9 @@
 #include <boost/multi_array.hpp>
 
 #include <casa/Arrays/Vector.h>
+//#include <coordinates/Coordinates/Coordinate.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
+#include <coordinates/Coordinates/DirectionCoordinate.h>    // DirectionCoordinate needed for patch direction
 #include <images/Images/PagedImage.h>
 #include <images/Images/ImageInterface.h>
 
@@ -58,7 +60,8 @@ namespace BBS
 typedef struct ModelImageOptions
 {
   casa::String name;                            // name of image
-  casa::String ConvType;                        // convolution type
+  casa::MDirection imageDirection;              // centre patch direction of image
+//  casa::String ConvType;                        // convolution type
   casa::Vector<casa::Double> frequencies;       // vector with channel frequencies
   casa::Vector<casa::Double> lambdas;           // vector with converted lambdas
   casa::Int verbose;                            // verbosity level
@@ -81,8 +84,13 @@ public:
                 double uvscaleX=1.0, double uvscaleY=1.0);
   ~ModelImageFft();
 
+  // Image property functions
   void getImageProperties(PagedImage<DComplex> *image);
   bool validImage(const casa::String &imageName);
+  casa::MDirection getPatchDirection(const PagedImage<casa::DComplex> &image);
+
+  Vector<Double> imageFrequencies(PagedImage<DComplex> *image);
+  Vector<Int> matchChannels(const vector<double> frequencies);
 
   // Setter functions for individual options
 //  void setConvType(const casa::String type="SF");
@@ -95,6 +103,7 @@ public:
 
   // Getter functions for individual options
   inline casa::String     name() const { return itsOptions.name; }
+  inline casa::MDirection imageDirection() const { return itsOptions.imageDirection; }
 //  inline casa::String     convType() const { return itsOptions.ConvType; }
   inline casa::Vector<casa::Double>  frequencies() const { return itsOptions.frequencies; }
   inline casa::uInt       verbose() const { return itsOptions.verbose; }
@@ -105,12 +114,7 @@ public:
   inline unsigned int     nWplanes() const { return itsOptions.nwplanes; }
 
   // Function to get degridded data into raw pointers
-  void degrid(const double *uvwBaselines, 
-              size_t timeslots, size_t nchans,
-              const double *frequencies, 
-              casa::DComplex *XX , casa::DComplex *XY, 
-              casa::DComplex *XY , casa::DComplex *YY);
-  void degrid(const boost::multi_array<double, 3> &uvwBaselines,
+  void degrid(const double *uvwBaselines[3], 
               size_t timeslots, size_t nchans,
               const double *frequencies, 
               casa::DComplex *XX , casa::DComplex *XY, 
@@ -120,7 +124,7 @@ public:
               Vector<casa::DComplex> &XX , Vector<casa::DComplex> &XY, 
               Vector<casa::DComplex> &YX , Vector<casa::DComplex> &YY);              
   // Function to get degridded data into BBS::Matrix
-  void getUVW(const boost::multi_array<double, 3> &uvwBaselines, 
+  void degrid(const boost::multi_array<double, 3> &uvwBaselines, 
               const casa::Vector<casa::Double> &frequencies,
               casa::Array<DComplex> XX , casa::Array<DComplex> XY, 
               casa::Array<DComplex> XY , casa::Array<DComplex> YY);
@@ -200,7 +204,7 @@ private:
   // Image properties
   uInt nx, ny;                                  // pixel dimension of image
   uInt nchan , npol;                            // No. of channels and polarizations in image
-  SpectralCoordinate spectralCoord_p;           // spectral coordinate of image
+  casa::SpectralCoordinate spectralCoord_p;     // spectral coordinate of image
 
   // Old casarest stuff
 //  ModelImageVisibilityResampler itsVisResampler;  // modified casarest VisResampler

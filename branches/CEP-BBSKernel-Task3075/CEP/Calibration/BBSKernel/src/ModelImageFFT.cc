@@ -167,32 +167,36 @@ void ModelImageFft::getImageProperties(PagedImage<DComplex> *image)
   Int XCoordInd=coordSys.findCoordinate(Coordinate::DIRECTION);
   Int YCoordInd=coordSys.findCoordinate(Coordinate::DIRECTION, XCoordInd);
 
+  // DIRECTION coordinates
   if(XCoordInd != -1 && YCoordInd!=-1)
   {
     nx=shape(XCoordInd);
     ny=shape(YCoordInd);
     LOG_INFO_STR("Image " << itsOptions.name << " has dimensions nx = " << nx << " ny = " << ny << ".");
-//    LOG_INFO_STR("Image has dimensions nx = " << nx << " ny = " << ny << ".");
   }
   else
   {
     THROW(BBSKernelException, "No DIRECTION coordinate in image " << itsOptions.name);
   }
+  // SPECTRAL coordinate
   Int SpectralCoordInd=coordSys.findCoordinate(Coordinate::SPECTRAL);
   if(SpectralCoordInd != -1)
   {
     nchan=shape(SpectralCoordInd);    
     LOG_INFO_STR("Image has " << nchan << " frequency channels.");
+
+    spectralCoord_p=image->coordinates().spectralCoordinate(0);   // casarest stuff
   }
   else
   {
     nchan=1;
   }
+  // STOKES coordinate
   Int StokesCoordInd=coordSys.findCoordinate(Coordinate::STOKES);
   if(StokesCoordInd != -1)
   {
     npol=shape(StokesCoordInd);
-    LOG_INFO_STR("Image has " << npol << " polarizations.");
+    LOG_INFO_STR("Image " << itsOptions.name << " has " << npol << " polarizations.");
 
     if(npol!=1 || npol!=4)
     {
@@ -209,9 +213,7 @@ void ModelImageFft::getImageProperties(PagedImage<DComplex> *image)
   cout << "XCoordInd = " << XCoordInd << endl;
   cout << "YCoordInd = " << YCoordInd << endl;
   cout << "SpectralCoordInd = " << SpectralCoordInd << endl;
-  cout << "StokesCoordInd = " << StokesCoordInd << endl;
-  
-  spectralCoord_p=image->coordinates().spectralCoordinate(0);  
+  cout << "StokesCoordInd = " << StokesCoordInd << endl;  
 }
 
 // Check that input model image has Jy/pixel flux
@@ -236,6 +238,58 @@ bool ModelImageFft::validImage(const casa::String &imageName)
   return valid;
 }
 
+// Get the patch direction, i.e. RA/Dec of the central image pixel
+//
+//casa::MDirection ModelImageFft::getPatchDirection(const string &patchName)
+casa::MDirection ModelImageFft::getPatchDirection(const PagedImage<DComplex> &image)
+{
+  casa::IPosition imageShape;                             // shape of image
+  casa::Vector<casa::Double> Pixel(2);                    // pixel coords vector of image centre
+  casa::MDirection MDirWorld(casa::MDirection::J2000);    // astronomical direction in J2000
+//  casa::PagedImage<casa::Float> image(patchName);         // open image
+    
+  imageShape=image.shape();                               // get centre pixel
+  Pixel[0]=floor(imageShape[0]/2);
+  Pixel[1]=floor(imageShape[1]/2);
+
+  // Determine DirectionCoordinate
+  casa::DirectionCoordinate dir(image.coordinates().directionCoordinate (image.coordinates().findCoordinate(casa::Coordinate::DIRECTION)));
+  dir.toWorld(MDirWorld, Pixel);
+
+  return MDirWorld;
+}
+
+
+// Get channel frequencies from image
+// TODO
+Vector<Double> ModelImageFft::imageFrequencies(PagedImage<DComplex> *image)
+{
+  vector<double> frequencies(nchan);    // set up vector of number of image channels
+  for(unsigned int i=0; i<nchan;i++)
+  {
+  
+  }
+//  frequencies=spectralCoord_p;  // get frequencies from image spectral coordinate
+  
+  return frequencies;
+}
+
+// Find nearest frequency to match requested channel with image frequency channels
+//
+//void ModelImageFft::matchChannels(const vector<double> frequencies, vector<int> &channels)
+Vector<Int>  ModelImageFft::matchChannels(const vector<double> frequencies)
+{
+  unsigned int nfreqs=frequencies.size();
+  Vector<Int> channels(nfreqs);
+//  channels.resize(nfreqs);      // resize output vector to number of requested frequencies
+
+  for(unsigned int i=0; i<nfreqs; i++)
+  {
+  
+  }
+  
+  return channels;
+}
 
 //**********************************************
 //
@@ -243,6 +297,7 @@ bool ModelImageFft::validImage(const casa::String &imageName)
 //
 //**********************************************
 
+/*
 void ModelImageFft::degrid( const double *uvwBaselines, 
                             size_t timeslots, size_t nchans, 
                             const double *frequencies,
@@ -268,8 +323,9 @@ void ModelImageFft::degrid( const double *uvwBaselines,
   
   // assign return arrays to vector addresses
 }
+*/
 
-void ModelImageFft::degrid( const boost::multi_array<double, 3> &uvwBaselines, 
+void ModelImageFft::degrid( const double *uvwBaselines[3], 
                             size_t timeslots, size_t nchans, 
                             const double *frequencies,
                             casa::DComplex *XX , casa::DComplex *XY, 
@@ -283,9 +339,22 @@ void ModelImageFft::degrid( const boost::multi_array<double, 3> &uvwBaselines,
   
   itsOptions.lambdas=convertToLambdas(itsOptions.frequencies);  // convert to lambdas
 
-  // convert uvwBaseline to Cornwell degrid format, vector
+  // convert uvwBaseline to Cornwell degrid format, 1-D data vector
+  uInt nsamples=timeslots*nchans*npol;                          // number of samples
+  LOG_INFO_STR("degridding " << nsamples << " samples.");
+  vector<complex<double> > data(nsamples);
+
+  // Lover image
+  for(uInt x=0; x<nx; x++)
+    for(uInt y=0; y<ny; y++)
+      for(uInt chan=0; chan<nchans; chan++)
+        for(uInt pol=0; pol<npol; pol++)
+        {
+//          data[x+y+chan+pol]=itsImage();  // how to index into multi-dim image?
+        }
+
   
-  // assign output array parameter to vector
+  // assign output array parameter to vector to match outside interface
  
 }
 
