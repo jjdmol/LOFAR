@@ -263,36 +263,65 @@ casa::MDirection ModelImageFft::getPatchDirection(const PagedImage<DComplex> &im
   return MDirWorld;
 }
 
-
 // Get channel frequencies from image
-// TODO
-Vector<Double> ModelImageFft::imageFrequencies(PagedImage<DComplex> *image)
+//
+vector<double> ModelImageFft::getImageFrequencies()
 {
-  vector<double> frequencies(nchan);    // set up vector of number of image channels
-  for(unsigned int i=0; i<nchan;i++)
+  vector<double> frequencies(nchan);
+  Vector<Double> frequenciesVec(nchan);                // set up vector of number of image channels
+  Vector<Double> pixels(nchan);
+  for(unsigned int i=0; i<nchan; i++)
   {
-  
+    pixels[i]=i;
   }
-//  frequencies=spectralCoord_p;  // get frequencies from image spectral coordinate
+  spectralCoord_p.toWorld(frequenciesVec, pixels);    // get frequencies from spectralCoord attribute
+  
+  for(unsigned int i=0; i<nchan; i++)
+    frequencies[i]=frequenciesVec(i);
   
   return frequencies;
 }
 
 // Find nearest frequency to match requested channel with image frequency channels
-//
+// returns chanMap index vector into image frequencies
 //void ModelImageFft::matchChannels(const vector<double> frequencies, vector<int> &channels)
-Vector<Int>  ModelImageFft::matchChannels(const vector<double> frequencies)
+Vector<Int>  ModelImageFft::chanMap(const vector<double> frequencies)
 {
   unsigned int nfreqs=frequencies.size();
-  Vector<Int> channels(nfreqs);
-//  channels.resize(nfreqs);      // resize output vector to number of requested frequencies
+
+  vector<double> imageFreqs=getImageFrequencies();
+  Vector<Int> chanMap(nfreqs);      // channel map to return
 
   for(unsigned int i=0; i<nfreqs; i++)
   {
+    double lower=-1, upper=-1;
+    double val=frequencies[i];     // search nearest neighbour for this frequency
   
+    std::vector<double>::iterator it;
+    it = lower_bound(imageFreqs.begin(), imageFreqs.end(), val);
+    if (it == imageFreqs.begin())
+    {
+      upper = *it;              // no smaller value than val in vector
+    }
+    else if (it == imageFreqs.end())
+    {
+      lower = *(it-1);          // no bigger value than val in vector
+    }
+    else 
+    {
+      lower = *(it-1);    // lower neighbour in image channels
+      upper = *it;        // upper neighbour in image channels
+      if(abs(lower-val) < abs(val-upper))   // find nearest neighbour
+      {
+        chanMap[i]=lower;
+      }
+      else
+      {
+        chanMap[i]=upper;
+      }
+    }
   }
-  
-  return channels;
+  return chanMap;
 }
 
 //**********************************************
@@ -344,7 +373,7 @@ void ModelImageFft::degrid( const double *uvwBaselines[3],
   itsOptions.lambdas=convertToLambdas(itsOptions.frequencies);  // convert to lambdas
 
   // convert uvwBaseline to Cornwell degrid format, 1-D data vector
-  uInt nsamples=timeslots*nchans*npol;                          // number of samples
+  uInt nsamples=timeslots*nchans*npol;                  // number of samples
   LOG_INFO_STR("degridding " << nsamples << " samples.");
   vector<complex<double> > data(nsamples);
 

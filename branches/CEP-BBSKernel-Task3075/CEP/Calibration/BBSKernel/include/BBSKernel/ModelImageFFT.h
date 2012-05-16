@@ -90,8 +90,8 @@ public:
   bool validImage(const casa::String &imageName);
   casa::MDirection getPatchDirection(const PagedImage<casa::DComplex> &image);
 
-  Vector<Double> imageFrequencies(PagedImage<DComplex> *image);
-  Vector<Int> matchChannels(const vector<double> frequencies);
+  vector<double> getImageFrequencies();
+  Vector<Int> chanMap(const vector<double> frequencies);
 
   // Setter functions for individual options
   void setPhaseDirection(const casa::MDirection &phaseDir);
