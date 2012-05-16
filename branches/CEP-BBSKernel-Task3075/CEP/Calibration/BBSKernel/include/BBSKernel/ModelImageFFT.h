@@ -61,6 +61,7 @@ typedef struct ModelImageOptions
 {
   casa::String name;                            // name of image
   casa::MDirection imageDirection;              // centre patch direction of image
+  casa::MDirection phaseDirection;              // phase direction of MS
 //  casa::String ConvType;                        // convolution type
   casa::Vector<casa::Double> frequencies;       // vector with channel frequencies
   casa::Vector<casa::Double> lambdas;           // vector with converted lambdas
@@ -85,7 +86,7 @@ public:
   ~ModelImageFft();
 
   // Image property functions
-  void getImageProperties(PagedImage<DComplex> *image);
+  void getImageProperties(const PagedImage<DComplex> &image);
   bool validImage(const casa::String &imageName);
   casa::MDirection getPatchDirection(const PagedImage<casa::DComplex> &image);
 
@@ -93,7 +94,8 @@ public:
   Vector<Int> matchChannels(const vector<double> frequencies);
 
   // Setter functions for individual options
-//  void setConvType(const casa::String type="SF");
+  void setPhaseDirection(const casa::MDirection &phaseDir);
+  //  void setConvType(const casa::String type="SF");
   void setVerbose(casa::uInt verbose=0);
   void setUVScale(const casa::Vector<casa::Double> &uvscale);
   void setUVScale(double uvscaleX, double uvscaleY);
@@ -104,6 +106,7 @@ public:
   // Getter functions for individual options
   inline casa::String     name() const { return itsOptions.name; }
   inline casa::MDirection imageDirection() const { return itsOptions.imageDirection; }
+  inline casa::MDirection phaseDirection() const { return itsOptions.phaseDirection; }
 //  inline casa::String     convType() const { return itsOptions.ConvType; }
   inline casa::Vector<casa::Double>  frequencies() const { return itsOptions.frequencies; }
   inline casa::uInt       verbose() const { return itsOptions.verbose; }

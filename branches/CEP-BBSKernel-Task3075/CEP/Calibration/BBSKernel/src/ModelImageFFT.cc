@@ -77,7 +77,7 @@ ModelImageFft::ModelImageFft( const casa::String &name,
   }
 
   PagedImage<DComplex> *image=new PagedImage<DComplex>(name);   // Open image as paged image
-  this->getImageProperties(image);      // get image properties
+  this->getImageProperties(*image);      // get image properties
 
   // TODO
   LatticeFFT::cfft2d(*image);     // FFT image in place 
@@ -102,6 +102,11 @@ ModelImageFft::~ModelImageFft(void)
 // Setter functions for attributes
 //
 //**********************************************
+
+void ModelImageFft::setPhaseDirection(const casa::MDirection &phaseDir)
+{
+  itsOptions.phaseDirection=phaseDir;
+}
 
 void ModelImageFft::setVerbose(casa::uInt verbose)
 {
@@ -152,9 +157,9 @@ void ModelImageFft::setNwplanes(unsigned int nwplanes)
 //
 //**********************************************
 
-void ModelImageFft::getImageProperties(PagedImage<DComplex> *image)
+void ModelImageFft::getImageProperties(const PagedImage<DComplex> &image)
 {
-  CoordinateSystem coordSys=image->coordinates();   // get coordinate system of image
+  CoordinateSystem coordSys=image.coordinates();   // get coordinate system of image
 
   uInt nPixelAxes=coordSys.nPixelAxes();
   if(nPixelAxes != 2)
@@ -162,7 +167,7 @@ void ModelImageFft::getImageProperties(PagedImage<DComplex> *image)
     THROW(BBSKernelException, "Model image does not have required 2 pixel axes, but "
           << nPixelAxes << " instead.");
   }
-  IPosition shape=image->shape();
+  IPosition shape=image.shape();
   Int nCoord=coordSys.nCoordinates();
   Int XCoordInd=coordSys.findCoordinate(Coordinate::DIRECTION);
   Int YCoordInd=coordSys.findCoordinate(Coordinate::DIRECTION, XCoordInd);
@@ -185,7 +190,7 @@ void ModelImageFft::getImageProperties(PagedImage<DComplex> *image)
     nchan=shape(SpectralCoordInd);    
     LOG_INFO_STR("Image has " << nchan << " frequency channels.");
 
-    spectralCoord_p=image->coordinates().spectralCoordinate(0);   // casarest stuff
+    spectralCoord_p=image.coordinates().spectralCoordinate(0);   // casarest stuff
   }
   else
   {
@@ -246,7 +251,6 @@ casa::MDirection ModelImageFft::getPatchDirection(const PagedImage<DComplex> &im
   casa::IPosition imageShape;                             // shape of image
   casa::Vector<casa::Double> Pixel(2);                    // pixel coords vector of image centre
   casa::MDirection MDirWorld(casa::MDirection::J2000);    // astronomical direction in J2000
-//  casa::PagedImage<casa::Float> image(patchName);         // open image
     
   imageShape=image.shape();                               // get centre pixel
   Pixel[0]=floor(imageShape[0]/2);
