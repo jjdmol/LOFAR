@@ -200,8 +200,19 @@ class msss_imager_pipeline(control):
         # Create a parset-file containing the metadata for MAC/SAS
         self.run_task("get_metadata", aw_image_mapfile,
             parset_file = self.parset_feedback_file,
-            parset_prefix = full_parset.fullModuleName('DataProducts'),
+            parset_prefix=(
+                self.parset.getString('prefix') + 
+                self.parset.fullModuleName('DataProducts')
+            ),
             product_type = "SkyImage")
+            
+        # And now the dirtiest of all hacks. Copy the feedback file back to
+        # the CCU001. Actually, MAC should pick up this file, but it doesn't
+        # do that at the moment :(
+        from subprocess import check_call
+        cmd = "scp %s ccu001:%s" % tuple([self.parset_feedback_file]*2)
+        check_call(cmd.split())
+            
         return 0
 
 

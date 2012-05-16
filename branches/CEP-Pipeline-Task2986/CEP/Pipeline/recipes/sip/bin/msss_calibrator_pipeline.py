@@ -222,7 +222,10 @@ class msss_calibrator_pipeline(control):
         # Create a parset-file containing the metadata for MAC/SAS
         self.run_task("get_metadata", instrument_mapfile,
             parset_file=self.parset_feedback_file,
-            parset_prefix=self.parset.fullModuleName('DataProducts'),
+            parset_prefix=(
+                self.parset.getString('prefix') + 
+                self.parset.fullModuleName('DataProducts')
+            ),
             product_type="InstrumentModel")
 
         # And now the dirtiest of all hacks. Copy the feedback file back to
