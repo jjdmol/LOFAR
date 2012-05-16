@@ -235,25 +235,6 @@ event = {
 	};
 };
 
-// set used clockfreq
-event = {
-	signal = CLOCK;
-	dir = IN;
-	param = {
-		name = "clock";
-		type = "int32";
-	};
-};
-
-event = {
-	signal = CLOCK_ACK;
-	dir = OUT;
-	param = {
-		name = "status_mask";
-		type = "uint32";
-	};
-};
-
 // data recording
 event = {
 	signal = ALLOC;

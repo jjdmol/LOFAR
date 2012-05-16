@@ -52,13 +52,19 @@ error = {
 
 error = {
 	id = TIME;
-	msg = "Time errors, given time in past";
+	msg = "Time error, given time in past";
 };
 
 error = {
 	id = OBSERVATION;
-	msg = "Observation errors, given observation not active";
+	msg = "Observation error, given observation not active";
 };
+
+error = {
+	id = BUSY;
+	msg = "Busy error, dumping data to cep not ready";
+};
+
 
 //
 // CR events
@@ -237,5 +243,43 @@ event = {
 		type = "uint32";
 	};
 };
+
+// VHECR_STATE
+event = {
+	signal = VHECR_STATE;
+	dir = IN;
+	param = {
+		name = "triggerID";
+		type = "uint32";
+	};
+	param = {
+		name = "observationID";
+		type = "uint32";
+	};
+	param = {
+		name = "stationList";
+		type = "string";
+	};
+	param = {
+		name = "state";
+		type = "uint32";
+	};
+};
+
+event = {
+	signal = VHECR_STATE_ACK;
+	dir = OUT;
+	param = {
+		name = "triggerID";
+		type = "uint32";
+	};
+	param = {
+		name = "result";
+		type = "uint32";
+	};
+};
+
+
+
 
 

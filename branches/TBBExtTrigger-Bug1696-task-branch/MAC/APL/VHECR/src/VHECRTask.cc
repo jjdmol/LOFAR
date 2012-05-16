@@ -806,7 +806,18 @@ namespace LOFAR {
     int nrAntennas, nrPolarizations, nrDirections;
     //casa::Vector<MVPosition> all_positions;
     //casa::Vector<MVPosition> selected_positions;
-    do{antennaFile >> temp;} while(temp != antennaSelection);
+    
+    do {
+        antennaFile >> temp;
+    } while((temp != antennaSelection) && !antennaFile.eof());
+    
+    if (antennaFile.eof()) {
+      LOG_FATAL("Failed to find antennaSelection!");
+      //cerr << "VHECRTask: Failed to open Antenna Positions file!" << endl;
+      itsSettings->doDirectionFit = 0;
+      return;
+    };
+    
     antennaFile >> temp; antennaFile >> temp; antennaFile >> temp; antennaFile >> temp; antennaFile >> temp;
     antennaFile >> temp; antennaFile >> nrAntennas; cout << " nr. antennas: " << nrAntennas << endl;
     antennaFile >> temp; antennaFile >> nrPolarizations; cout << " nr. polarizations: " << nrPolarizations << endl;

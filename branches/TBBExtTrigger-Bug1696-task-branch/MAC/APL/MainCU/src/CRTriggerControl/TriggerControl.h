@@ -102,6 +102,7 @@ private:
 	int						itsSubscriptionID;
 	GCFRTDBPort*			itsPublisher;
 	GCFTCPPort*				itsListener;
+	GCFTCPPort*             itsClient;
 	GCFTimerPort*			itsTimerPort;
 
 	typedef struct ObsInfo {

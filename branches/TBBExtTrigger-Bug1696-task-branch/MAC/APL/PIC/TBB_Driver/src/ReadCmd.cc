@@ -181,6 +181,11 @@ void ReadCmd::sendTpEvent()
 			TS->boardPort(getBoardNr()).send(tp_event);
 			TS->setBoardUsed(getBoardNr());
 			TS->boardPort(getBoardNr()).setTimer(TS->timeout());
+			LOG_INFO_STR(formatString("DATA->>CEP rcu %d : time=%lf  timebefore=%lf  timeafter=%lf",
+				                       TS->convertChanToRcu(getChannelNr()),
+				                       (double)itsTimestamp,
+				                       (double)itsTimeBefore,
+				                       (double)itsTimeAfter));
 		} break;
 	}
 }
@@ -233,6 +238,11 @@ void ReadCmd::saveTpAckEvent(GCFEvent& event)
 			LOG_DEBUG_STR(formatString("startTimestamp =  %lu seconds  %lu nseconds", startTimestamp.sec(), startTimestamp.nsec()));
 			LOG_DEBUG_STR(formatString("stopTimestamp  =  %lu seconds  %lu nseconds", stopTimestamp.sec(), stopTimestamp.nsec()));
 				#endif
+                
+                // to get last part of recording				
+				if (itsTimestamp == 0.0) {
+				    itsTimestamp = lastSampleTime;
+				}
 				
 				// check if center time in memory
 				if ((itsTimestamp >= firstSampleTime) && (itsTimestamp <= lastSampleTime)) {
@@ -256,7 +266,10 @@ void ReadCmd::saveTpAckEvent(GCFEvent& event)
                     LOG_WARN_STR(formatString("requested time = %lf, in memory [%lf .. %lf]", (double)itsTimestamp, (double)firstSampleTime, (double)lastSampleTime)); 
 					setDone(true);
 				} 
-
+                
+                itsTimeBefore = itsTimestamp - startTimestamp;
+                itsTimeAfter =  stopTimestamp - itsTimestamp;
+                
 				// convert it to board units
 				
 				itsSecondstime = (uint32)itsTimestamp.sec();
@@ -300,12 +313,15 @@ void ReadCmd::saveTpAckEvent(GCFEvent& event)
 		LOG_INFO_STR("              page-offset    :" << tp_ack.page_offset);
 		*/
 		if (tp_ack.status == 0xfd) {
-			LOG_DEBUG_STR(formatString("TBB busy, %d pages left, trying until free", tp_ack.pages_left));
+			LOG_INFO_STR(formatString("TBB busy, %d pages left", tp_ack.pages_left));
+			usleep(1000); // wait for some time and try again
 		}
-		if (tp_ack.status != 0) {
-			setStatus(0, (tp_ack.status << 24));
+		else { 
+		    if (tp_ack.status != 0) {
+			    setStatus(0, (tp_ack.status << 24));
+			}
+			setDone(true);
 		}
-		setDone(true);
 	}
 }
 

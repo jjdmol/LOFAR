@@ -138,6 +138,8 @@ TBBControl::TBBControl(const string&    cntlrName) :
     itsMaxCepDatapaths = 1;
     itsActiveCepDatapaths = 0;
     itsCepDelay = 0;
+    itsAutoRecord = true;
+    itsVhecrTaskActive = true;
     //itsBoardCepActive.resize(itsNrTBBs, false);
     
     RcuInfo rcuinfo;
@@ -673,7 +675,9 @@ GCFEvent::TResult TBBControl::active_state(GCFEvent& event, GCFPortInterface& po
             if (&port == itsVHECRtimer) {
                 clock_t nexttime = clock()  + (long)(VHECR_INTERVAL * CLOCKS_PER_SEC); 
                 vector<TBBReadCmd>  readCommandVector;
-                itsVHECRTask->getReadCmd(readCommandVector);
+                if (itsVhecrTaskActive) {
+                    itsVHECRTask->getReadCmd(readCommandVector);
+                }
                 
                 if (!readCommandVector.empty()) {
                     readCmdToRequests(readCommandVector);
@@ -725,7 +729,9 @@ GCFEvent::TResult TBBControl::active_state(GCFEvent& event, GCFPortInterface& po
         // -------------------- EVENTS RECEIVED FROM TBBDRIVER --------------------
     // TODO TBB
         case TBB_TRIGGER:{
-            status = handleTriggerEvent(event);
+            if (itsVhecrTaskActive) {
+                status = handleTriggerEvent(event);
+            }
         } break;
 
         case TBB_TRIG_RELEASE_ACK: {
@@ -743,6 +749,7 @@ GCFEvent::TResult TBBControl::active_state(GCFEvent& event, GCFPortInterface& po
             cmdStatus = handleRecordAck(event);
             if (cmdStatus == SUCCESS) {
                 sendRcuInfoCmd();
+                itsVHECRtimer->setTimer(VHECR_INTERVAL);
             }
         } break;
         
@@ -764,6 +771,7 @@ GCFEvent::TResult TBBControl::active_state(GCFEvent& event, GCFPortInterface& po
             
             int rcuNr;
             int boardNr;
+            double readTime = 0;
             
             vector<ReadRequest> requests(itsReadRequests);
             itsReadRequests.clear();
@@ -793,6 +801,9 @@ GCFEvent::TResult TBBControl::active_state(GCFEvent& event, GCFPortInterface& po
                 }
                 
                 // send new read request
+                if (readTime == 0) {
+                    readTime = (double)(request.timeBefore + request.timeAfter) * 4.0;
+                }
                 request.readActive = true;
                 sendReadCmd(request);
                 itsReadRequests.push_back(request); // add request back to itsReadRequests
@@ -801,13 +812,17 @@ GCFEvent::TResult TBBControl::active_state(GCFEvent& event, GCFPortInterface& po
             }
             
             if (itsActiveCepDatapaths > 0) { // dumping not ready
-                itsCepTimer->setTimer(0.01);
+                if (readTime == 0) {
+                    readTime = 0.01;
+                }
+                itsCepTimer->setTimer(readTime);
             }
             else {
-                // all dumping done, set rcu's in recording state
-                sendRecordCmd(itsObs->allRCUset);
-                // start periodic timer to call VHECR task
-                itsVHECRtimer->setTimer(VHECR_INTERVAL);
+                if (itsAutoRecord) {
+                    // all dumping done, set rcu's in recording state
+                    usleep(500); // if pages left == 0, TBB can be busy sending last page
+                    sendRecordCmd(itsObs->allRCUset);
+                }
             }
         } break;
         
@@ -833,43 +848,53 @@ GCFEvent::TResult TBBControl::active_state(GCFEvent& event, GCFPortInterface& po
         // ------------ EVENTS RECEIVED FROM RTDB external trigger port -----------
         case CR_STOP:{
             // stop recording for selected rcu's on given time
-            CRStopEvent stopevent(event);
+            CRStopEvent e(event);
+            CRStopAckEvent ack;
+            
+            ack.triggerID = e.triggerID;
+            ack.result = CR_NO_ERR;
+            
             StopRequest stopRequest;
             vector<CRstopRequest>::iterator iter;
-            for (iter = stopevent.stopVector.requests.begin(); iter != stopevent.stopVector.requests.end(); iter++) {
+            for (iter = e.stopVector.requests.begin(); iter != e.stopVector.requests.end(); iter++) {
                 // check if this station is in stationlist, if empty list select all
                 string station_list(toUpper((*iter).stationList));
                 // empty station_list looks like "[]"
                 if ((station_list.length() == 2) || (station_list.find(PVSSDatabaseName(""), 0) != string::npos)) {
-                    LOG_DEBUG_STR("CR_Trig. Stop recording");
+                    LOG_INFO_STR("CR_Trig. Stop recording");
                     stopRequest.rcuSet = strToBitset((*iter).rcuList);
                     stopRequest.stopTime = (*iter).stopTime;
+                    
                     itsStopRequests.push_back(stopRequest);
-                    LOG_DEBUG_STR("CR_Trig. rcuSet=" << stopRequest.rcuSet);
-                    LOG_DEBUG_STR("CR_Trig. stopTime=" << stopRequest.stopTime);
+                    LOG_INFO_STR("CR_Trig. rcuSet=" << stopRequest.rcuSet);
+                    LOG_INFO_STR("CR_Trig. stopTime=" << stopRequest.stopTime);
                 }
             }
             
             if (!itsStopRequests.empty()) {
+                itsVHECRtimer->cancelAllTimers();
                 itsStopTimer->setTimer(0.0);
             }
             
             // send ack to triggerbox
-            CRStopAckEvent ack;
-            ack.triggerID = stopevent.triggerID;
-            ack.result = CR_NO_ERR;
             itsTriggerPort->send(ack);
         } break;
         
         case CR_READ:{
+            itsAutoRecord = false;
             // send read commamd for given rcu's
-            CRReadEvent readevent(event);
+            CRReadEvent e(event);
+            CRReadAckEvent ack;
+
             ReadRequest readRequest;
             RCUset_t rcuSet;
             rcuSet.reset();
+
+            ack.triggerID = e.triggerID;
+            ack.result = CR_NO_ERR;
             
             vector<CRreadRequest>::iterator iter;
-            for (iter = readevent.readVector.requests.begin(); iter != readevent.readVector.requests.end(); iter++) {
+            for (iter = e.readVector.requests.begin(); iter != e.readVector.requests.end(); iter++) {
                 // check if this station is in stationlist
                 string station_list(toUpper((*iter).stationList));
                 // empty station_list looks like "[]"
@@ -880,7 +905,7 @@ GCFEvent::TResult TBBControl::active_state(GCFEvent& event, GCFPortInterface& po
                     readRequest.timeAfter = (*iter).timeAfter;
                     
                     rcuSet = strToBitset((*iter).rcuList);
-                    LOG_DEBUG_STR("CR_Trig. rcuSet=" << rcuSet);
+                    LOG_INFO_STR("CR_Trig. rcuSet=" << rcuSet);
                     for (int rcu = 0; rcu < itsNrRCUs; rcu++) {
                         if (rcuSet.test(rcu) == true) {
                             readRequest.rcuNr = rcu;
@@ -895,62 +920,73 @@ GCFEvent::TResult TBBControl::active_state(GCFEvent& event, GCFPortInterface& po
             }
             
             // send acknowledge to triggerbox
-            CRReadAckEvent ack;
-            ack.triggerID = readevent.triggerID;
-            ack.result = CR_NO_ERR;
             itsTriggerPort->send(ack);
         } break;
         
         case CR_RECORD:{
-            // send record command for given rcu's
-            CRRecordEvent recordevent(event);
+            
+            CRRecordEvent e(event);
+            CRRecordAckEvent ack;
             RCUset_t rcuSet;
             rcuSet.reset();
             
-            LOG_INFO_STR("CR_Trig. Start recording");
+            ack.triggerID = e.triggerID;
+            ack.result = CR_NO_ERR;
+            
+            
             vector<CRrecordRequest>::iterator iter;
-            for (iter = recordevent.recordVector.requests.begin(); iter != recordevent.recordVector.requests.end(); iter++) {
+            for (iter = e.recordVector.requests.begin(); iter != e.recordVector.requests.end(); iter++) {
                 // check if this station is in stationlist
                 string station_list(toUpper((*iter).stationList));
                 // empty station_list looks like "[]"
                 if ((station_list.length() == 2) || (station_list.find(PVSSDatabaseName(""), 0) != string::npos)) {
                     rcuSet |= strToBitset((*iter).rcuList);
-                    LOG_DEBUG_STR("CR_Trig. rcuSet=" << rcuSet);
                 }
             }
             
             if (rcuSet.count() > 0) {
-                sendRecordCmd(rcuSet);
+                // turn on recording, check first if dumping is done
+                if (itsReadRequests.empty()) { 
+                    LOG_INFO_STR("CR_Trig. Start recording");
+                    LOG_INFO_STR("CR_Trig. rcuSet=" << rcuSet);
+                    sendRecordCmd(rcuSet);
+                }
+                else {
+                    // busy dumping, start recording when ready 
+                    LOG_INFO_STR("CR_Trig. Auto recording turned on");
+                    itsAutoRecord = true;
+                }
             }
-            
-            CRRecordAckEvent ack;
-            ack.triggerID = recordevent.triggerID;
-            ack.result = CR_NO_ERR;
             itsTriggerPort->send(ack);
         } break;
         
         case CR_CEP_SPEED:{
-            CRCepSpeedEvent cepspeedevent(event);
+            CRCepSpeedEvent e(event);
+            CRCepSpeedAckEvent ack;
+
+            ack.triggerID = e.triggerID;
+            ack.result = CR_NO_ERR;
             
-            string station_list(toUpper(cepspeedevent.stationList));
+            string station_list(toUpper(e.stationList));
             // empty station_list looks like "[]"
             if ((station_list.length() == 2) || (station_list.find(PVSSDatabaseName(""), 0) != string::npos)) {
-                itsCepDelay = cepspeedevent.cepDelay;
-                itsMaxCepDatapaths = cepspeedevent.cepDatapaths;
+                itsCepDelay = e.cepDelay;
+                itsMaxCepDatapaths = e.cepDatapaths;
                 LOG_INFO_STR(formatString("CR_Trig. CEP speed changed: delay= %d nsec, number of datapaths= %d", itsCepDelay*5, itsMaxCepDatapaths));
                 sendCepDelayCmd();
             }
             
-            CRCepSpeedAckEvent ack;
-            ack.triggerID = cepspeedevent.triggerID;
-            ack.result = CR_NO_ERR;
             itsTriggerPort->send(ack);
         } break;
         
         case CR_STOP_DUMPS:{
-            CRStopDumpsEvent stopdumpsevent(event);
+            CRStopDumpsEvent e(event);
+            CRStopDumpsAckEvent ack;
+
+            ack.triggerID = e.triggerID;
+            ack.result = CR_NO_ERR;
             
-            string station_list(toUpper(stopdumpsevent.stationList));
+            string station_list(toUpper(e.stationList));
             // empty station_list looks like "[]"
             if ((station_list.length() == 2) || (station_list.find(PVSSDatabaseName(""), 0) != string::npos)) {
                 LOG_INFO_STR("CR_Trig. Stop dumping CEP data");
@@ -959,11 +995,31 @@ GCFEvent::TResult TBBControl::active_state(GCFEvent& event, GCFPortInterface& po
                 sendStopCepCmd();
             }
             
-            CRStopDumpsAckEvent ack;
-            ack.triggerID = stopdumpsevent.triggerID;
-            ack.result = CR_NO_ERR;
             itsTriggerPort->send(ack);
         } break;
+        
+        case CR_VHECR_STATE:{
+            CRVhecrStateEvent e(event);
+            CRVhecrStateAckEvent ack;
+
+            ack.triggerID = e.triggerID;
+            ack.result = CR_NO_ERR;
+            
+            string station_list(toUpper(e.stationList));
+            // empty station_list looks like "[]"
+            if ((station_list.length() == 2) || (station_list.find(PVSSDatabaseName(""), 0) != string::npos)) {
+                LOG_INFO_STR(formatString("CR_Trig. VHECR state=%u", e.state));
+                if (e.state == 1) {
+                    itsVhecrTaskActive = true;
+                }
+                else {
+                    itsVhecrTaskActive = false;
+                }
+            }
+            
+            itsTriggerPort->send(ack);
+        } break;
+        
         
         default: {
             status = _defaultEventHandler(event, port);
@@ -1125,6 +1181,7 @@ GCFEvent::TResult TBBControl::handleTriggerEvent(GCFEvent& event)
 //------------------------------------------------------------------------------
 void TBBControl::sendRecordCmd(RCUset_t RCUset)
 {
+    itsAutoRecord = true;
     TBBRecordEvent cmd;
     cmd.rcu_mask = RCUset;
     LOG_DEBUG_STR("send TBB_RECORD cmd");
@@ -1215,7 +1272,7 @@ void TBBControl::sendStopCmd()
     struct timeval tv;
     gettimeofday(&tv, NULL);
     double timeNow = tv.tv_sec + (tv.tv_usec / 1000000.);
-    double nextStop = timeNow + 0.05;
+    double nextStop = timeNow + 3600.0;
     bool sendStop = false;
     
     vector<StopRequest> requests(itsStopRequests);
@@ -1225,31 +1282,41 @@ void TBBControl::sendStopCmd()
     while (!requests.empty()) {
         request = requests.back();
         requests.pop_back();
+        LOG_INFO_STR(formatString("request stop time = %lf, timenow = %lf" , 
+                     (double)request.stopTime, timeNow ));
         
+        cmd.rcu_mask.reset();
         for (int i = 0; i < itsNrRCUs; i++) {
             if (request.rcuSet.test(i)) {
-                if (((double)request.stopTime == 0.) || ((double)request.stopTime) > (timeNow - itsRcuInfo.at(i).bufferTime)) {
+                if ((double)request.stopTime == 0.) {
                     cmd.rcu_mask.set(i);
-                    request.rcuSet.reset(i);
                     sendStop = true;
                 }
-                else {
-                    // check next stop time
-                    if ((double)request.stopTime < nextStop) {
-                        nextStop = (double)request.stopTime;
+                else if ((double)request.stopTime <= timeNow) { 
+                    if ((double)request.stopTime > (timeNow - itsRcuInfo.at(i).bufferTime)) { 
+                        cmd.rcu_mask.set(i);
+                        sendStop = true;
                     }
                 }
             }
         }
-        if (sendStop) {
-            LOG_DEBUG_STR("send TBB_STOP cmd");
-            LOG_DEBUG_STR("rcuSet=" << request.rcuSet);
-            itsTBBDriver->send(cmd);
-            if (request.rcuSet.count() > 0) {
-                itsStopRequests.push_back(request);
-            }
+        
+        if (cmd.rcu_mask.count() > 0) {
+            request.rcuSet.reset();
         }
-    
+
+        if (request.rcuSet.count() > 0) {
+            if ((double)request.stopTime < nextStop) {
+                nextStop = (double)request.stopTime;
+            }
+            itsStopRequests.push_back(request);
+        }
+
+        if (sendStop) {
+            LOG_INFO_STR("send TBB_STOP cmd");
+            LOG_INFO_STR("rcuSet=" << cmd.rcu_mask);
+            itsTBBDriver->send(cmd);
+        }
     }
         
     if (!itsStopRequests.empty()) {
@@ -1260,7 +1327,7 @@ void TBBControl::sendStopCmd()
 //------------------------------------------------------------------------------
 // handleStopAck(event)
 //
-// handle RSP_TBB_STOP_ACK cmd from the TBBDriver
+// handle TBB_STOP_ACK cmd from the TBBDriver
 //------------------------------------------------------------------------------
 int TBBControl::handleStopAck(GCFEvent& event)
 {
@@ -1725,7 +1792,7 @@ int TBBControl::handleRcuInfoAck(GCFEvent& event)
         for (int i = 0; i < itsNrRCUs; i++) {
             if (itsRcuInfo.at(i).rcuNr == i) {
                 itsRcuInfo.at(i).boardNr = ack.rcu_on_board[i];
-                itsRcuInfo.at(i).bufferTime = (double)ack.rcu_pages[i] * itsObs->sampleTime;
+                itsRcuInfo.at(i).bufferTime = (double)ack.rcu_pages[i] * 1024 * itsObs->sampleTime;
                 itsRcuInfo.at(i).rcuState = ack.rcu_state[i];
             }
             else {
@@ -2031,7 +2098,7 @@ RCUset_t TBBControl::strToBitset(string inputstring)
     while(start) {
         long val = strtol(start, &end, 10); // read decimal numbers
         start = (end ? (*end ? end + 1 : 0) : 0); // determine next start
-        if (val >= MAX_RCUS || val < 0) {
+        if (val >= itsNrRCUs || val < 0) {
             // Error: value out of range
             resultset.reset();
             return(resultset);
@@ -2043,7 +2110,7 @@ RCUset_t TBBControl::strToBitset(string inputstring)
                 case 0: {
                     if (range) {
                         if (0 == prevval && 0 == val) {
-                            val = MAX_RCUS - 1;
+                            val = itsNrRCUs - 1;
                         }
                         if (val < prevval) {
                             // Error: invalid range specification

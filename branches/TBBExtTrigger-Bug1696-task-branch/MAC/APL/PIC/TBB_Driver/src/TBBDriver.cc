@@ -32,6 +32,8 @@
 #include <getopt.h>
 #include <string>
 
+
+
 #include "TBBDriver.h"
 #include "RawEvent.h"
 
@@ -80,6 +82,7 @@ using namespace LOFAR;
 using namespace GCF::TM;
 using namespace MACIO;
 using namespace TBB;
+using namespace std;
 
 static bool   itsDaemonize  = false;
 static int32  itsInstancenr = -1;
@@ -126,6 +129,7 @@ void parseOptions(int argc, char** argv)
 TBBDriver::TBBDriver(string name)
     : GCFTask((State)&TBBDriver::init_state, name)
 {
+    sleep(5);
     // use TS->getXXX() tot get settings of the driver
     TS  = TbbSettings::instance();
 
@@ -136,12 +140,14 @@ TBBDriver::TBBDriver(string name)
     //itsNewBoards = 0;
     itsAliveCheck = false;
     itsResetCount = 0;
+    itsClockSubscription = 0;
 
     // tell broker we are here
     LOG_DEBUG_STR("Registering protocols");
 
-    registerProtocol (TBB_PROTOCOL,      TBB_PROTOCOL_STRINGS);
-    registerProtocol (TP_PROTOCOL,      TP_PROTOCOL_STRINGS);
+    registerProtocol (TBB_PROTOCOL,   TBB_PROTOCOL_STRINGS);
+    registerProtocol (TP_PROTOCOL,    TP_PROTOCOL_STRINGS);
+    registerProtocol (RSP_PROTOCOL,   RSP_PROTOCOL_STRINGS);
 
     // open client port
     LOG_DEBUG_STR("Opening listener for clients");
@@ -178,12 +184,16 @@ TBBDriver::TBBDriver(string name)
 
     TS->setActiveBoardsMask(0);
 
+    // prepare TCP port to RSPDriver.
+	itsRSPDriver = new GCFTCPPort(*this, MAC_SVCMASK_RSPDRIVER, GCFPortInterface::SAP, RSP_PROTOCOL);
+	ASSERTSTR(itsRSPDriver, "Cannot allocate TCPport to RSPDriver");
+
     itsAliveTimer = new GCFTimerPort(*this, "AliveTimer");
     itsSetupTimer = new GCFTimerPort(*this, "SetupTimer");
     itsCmdTimer = new GCFTimerPort(*this, "CmdTimer");
     itsQueueTimer = new GCFTimerPort(*this, "QueueTimer");
     itsTriggerTimer = new GCFTimerPort(*this, "TriggerTimer");
-        
+
     // create cmd & msg handler
     LOG_DEBUG_STR("initializing handlers");
     itsCmdHandler = new BoardCmdHandler(itsCmdTimer);
@@ -196,12 +206,15 @@ TBBDriver::TBBDriver(string name)
     LOG_DEBUG_STR("initializing TbbQueue");
     itsTbbQueue = new deque<TbbEvent*>(100);
     itsTbbQueue->clear();
+    LOG_INFO_STR("class init done");
 }
 
 //-----------------------------------------------------------------------------
 TBBDriver::~TBBDriver()
-{
+{   
+    cancelClockSubscription();
     delete [] itsBoard;
+    delete itsRSPDriver;
     delete itsAliveTimer;
     delete itsSetupTimer;
     delete itsCmdTimer;
@@ -225,6 +238,9 @@ GCFEvent::TResult TBBDriver::init_state(GCFEvent& event, GCFPortInterface& port)
             if (itsAcceptor.isConnected()) {
                 itsAcceptor.close();
             }
+            if (itsRSPDriver->isConnected()) {
+                itsRSPDriver->close();
+            }
         } break;
 
         case F_EXIT: {
@@ -236,44 +252,58 @@ GCFEvent::TResult TBBDriver::init_state(GCFEvent& event, GCFPortInterface& port)
 
         case F_CONNECTED: {
             LOG_DEBUG_STR("CONNECTED: port " << port.getName());
-            
+
             if (&port == &itsAcceptor) {
                 if (itsAcceptor.isConnected()) {
-                    openBoards();    
+                    itsRSPDriver->open();
                 }
             }
-            else {    
+            else if (&port == itsRSPDriver) {
+                if (itsRSPDriver->isConnected()) {
+                    openBoards();
+                }
+            }
+            else {
                 if (boardsConnected()) {
-                    // send watchdog = clk, so the boards will be reset by clock change
-                    setWatchdogMode(TP_WATCHDOG_CLK);
-                    // RSP set clock 22 seconds afther start
-                    // reconfig takes 8 seconds
-                    // so wait 30 seconds
-                    // wait 2 seconds for TP_WATCHDOG_ACK's
-                    itsAliveTimer->setTimer(2.0);
+                    // take subscription on clock changes
+                    itsAliveTimer->setTimer(0.0);
                 }
             }
+
         } break;
 
         case F_DATAIN: {
             status = RawEvent::dispatch(*this, port);
         } break;
-        
-        case TP_WATCHDOG_ACK: {
-            LOG_DEBUG_STR ("received watchdog ack in init state @ :" << port.getName());
-            // do nothing
-        } break;
 
         case F_TIMER: {
             if (&port == itsAliveTimer) {
-                // start trigger reset timer
-                itsTriggerTimer->setTimer(90.0, 1.0);  // first start over 60 seconds, then every 1 Sec
-                // shedule an alive command and go to idle state
-                itsAliveTimer->setTimer(30.0);
-                TRAN(TBBDriver::idle_state);
+                requestClockSubscription();
             }
         } break;
 
+        case RSP_SUBCLOCKACK: {
+    		RSPSubclockackEvent	ack(event);
+    		if (ack.status != RSP_SUCCESS) {
+    			LOG_WARN ("Could not get subscription on clock, retry in 2 seconds.");
+    			//itsOwnPropertySet->setValue(PN_FSM_ERROR, GCFPVString("subscribe failed"));
+    			itsAliveTimer->setTimer(2.0);
+    			break;
+    		}
+    		itsClockSubscription = ack.handle;
+    		LOG_INFO("Subscription on the clock successful. going to operational mode");
+    		//itsOwnPropertySet->setValue(PN_CLC_ACTUAL_CLOCK,GCFPVInteger(itsClock));
+    		
+    		// start trigger reset timer
+            itsTriggerTimer->setTimer(90.0, 0.1);  // first start over 90 seconds, then every 0.1 Sec
+    		itsAliveTimer->setTimer(45.0);
+    		TRAN(TBBDriver::idle_state);
+    	} break;
+        
+        case RSP_UPDCLOCK: {
+            setClockState(event);
+        } break;
+        
         default: {
             if (addTbbCommandToQueue(event, port)) {
                 LOG_DEBUG_STR("init_state: received TBB cmd, and put on queue");
@@ -353,49 +383,8 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
                     continue;
                 }
 
-                if ((TS->getBoardState(board) == setWatchdog) ||
-                    (TS->getBoardState(board) == boardCleared)) {//||
-                     //(TS->getBoardState(board) == image1Set)) {
-
-                    TPWatchdogEvent watchdog;
-                    watchdog.opcode = oc_WATCHDOG;
-                    watchdog.status = 0;
-                    //watchdog.mode = TP_WATCHDOG_ETH; // watchdog is set to eth port
-                    watchdog.mode = TP_WATCHDOG_CLK; // watchdog is set to clock
-                    itsBoard[board].send(watchdog);
-                    itsBoard[board].setTimer(TS->timeout());
-                    if (watchdog.mode == TP_WATCHDOG_ETH) {
-                         LOG_INFO_STR("WATCHDOG = ETH is send to port '" << itsBoard[board].getName() << "'");
-                    }
-                    else {
-                         LOG_INFO_STR("WATCHDOG = CLK is send to port '" << itsBoard[board].getName() << "'");
-                    }
-                    TS->setSetupCmdDone(board, false);
-                    continue;
-                }
-
-                if ((TS->getBoardState(board) == setArp) ||
-                     (TS->getBoardState(board) == statusChecked) ||
-                    (TS->getBoardState(board) == watchdogSet)) {
-
-                    TPArpModeEvent arp;
-                    arp.opcode = oc_ARPMODE;
-                    arp.status = 0;
-                    //arp.mode=1; // set arp mode to auto
-                    arp.mode=TP_ARP_DISABLE; // set arp mode to disabled
-                    itsBoard[board].send(arp);
-                    itsBoard[board].setTimer(TS->timeout());
-                    if (arp.mode == TP_ARP_DISABLE) {
-                        LOG_INFO_STR("ARP = OFF is send to port '" << itsBoard[board].getName() << "'");
-                    }
-                    else {
-                        LOG_INFO_STR("ARP = AUTO is send to port '" << itsBoard[board].getName() << "'");
-                    }
-                    TS->setSetupCmdDone(board, false);
-                    continue;
-                }
-
                 if ((TS->getBoardState(board) == freeBoard) ||
+                    (TS->getBoardState(board) == statusChecked) ||
                     (TS->getBoardState(board) == arpSet)) {
 
                     TPFreeEvent free;
@@ -419,9 +408,14 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
             port.close();
 
             if (&port == &itsAcceptor) {
-                LOG_FATAL_STR("Failed to start listening for client connections.");
+                LOG_FATAL_STR("Client port closed.");
                 exit(EXIT_FAILURE);
-            } 
+            }
+            else if (&port == itsRSPDriver) {
+                port.close();
+                LOG_FATAL_STR("RSPDriver port closed.");
+                exit(EXIT_FAILURE);
+            }
             else {
                 itsClientList.remove(&port);
                 itsMsgHandler->removeTriggerClient(port);
@@ -487,28 +481,7 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
             TS->setSetupCmdDone(board, true);
         } break;
 
-        case TP_WATCHDOG_ACK: {
-            int board = TS->port2Board(&port); // get board nr
-            itsBoard[board].cancelAllTimers();
-            TPWatchdogAckEvent ack(event);
-            LOG_INFO_STR(formatString("Received WatchdogAck from boardnr[%d], status=%d", board, ack.status));
-            if (ack.status == TBB_SUCCESS) {
-                TS->setBoardState(board, watchdogSet);
-            }
-            TS->setSetupCmdDone(board, true);
-        } break;
-
-        case TP_ARP_MODE_ACK: {
-            int board = TS->port2Board(&port); // get board nr
-            itsBoard[board].cancelAllTimers();
-            TPArpAckEvent ack(event);
-            LOG_INFO_STR(formatString("Received ArpAck from boardnr[%d], status=%d", board, ack.status));
-            if (ack.status == TBB_SUCCESS) {
-                TS->setBoardState(board,arpSet);
-            }
-            TS->setSetupCmdDone(board, true);
-        } break;
-
+    
         case TP_FREE_ACK: {
             int board = TS->port2Board(&port); // get board nr
             itsBoard[board].cancelAllTimers();
@@ -526,17 +499,17 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
             TPStatusAckEvent ack(event);
             if (ack.status == TBB_SUCCESS) {
                 // bit 0: // 0=image-0, 1=user-image
-                // bit 1..2: 00=by-power, 01=by-user, 10=by watchdog, 11=by-reset-button 
-                TS->setFlashState(board, ((ack.info[5] >> 11) & 0x0007)); 
+                // bit 1..2: 00=by-power, 01=by-user, 10=by watchdog, 11=by-reset-button
+                TS->setFlashState(board, ((ack.info[5] >> 11) & 0x0007));
                 if (TS->getConfigState(board) != 1) {  // config not done by user
                     TS->setImageNr(board, 0);
                     LOG_WARN_STR("Image 1 NOT loaded");
-                    TS->setBoardState(board,setImage1);
+                    TS->setBoardState(board, setImage1);
                 }
                 else {
-                    TS->setBoardState(board,statusChecked);
+                    TS->setBoardState(board, statusChecked);
                 }
-                
+
                 LOG_INFO_STR(formatString("Received StatusAck from boardnr[%d], status=%d, imagenr=%d, configState=%d",
                                           board, ack.status, TS->getImageNr(board), TS->getConfigState(board)));
             }
@@ -554,17 +527,16 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
             }
             TS->setSetupCmdDone(board, true);
         } break;
-        
-        // tp_trigger message is handled in raw event
+
+
         case TP_TRIGGER: {
-            for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
-                if (&port == &TS->boardPort(boardnr)) {
-                    itsMsgHandler->sendTrigger(event, boardnr);
-                    break;
-                }
-            }
+            // tp_trigger message is handled in raw event
         } break;
 
+        case RSP_UPDCLOCK: {
+            setClockState(event);
+        } break;
+        
         default: {
             if (addTbbCommandToQueue(event, port)) {
                 LOG_DEBUG_STR("setup_state: received TBB cmd, and put on queue");
@@ -619,10 +591,12 @@ GCFEvent::TResult TBBDriver::idle_state(GCFEvent& event, GCFPortInterface& port)
         } break;
 
         case F_ENTRY: {
-            // Setup needed can be set by reset or clear cmd
-            if ((TS->isSetupNeeded() && !itsAliveCheck)) {
-                  itsAliveTimer->cancelAllTimers();
-                  itsAliveTimer->setTimer(0.0);
+            // Setup needed can be set by reset, clear cmd or clock change
+            if (TS->isSetupNeeded()) {
+                TS->setSetupNeeded(false);
+                itsAliveCheck = false;
+                itsAliveTimer->cancelAllTimers();
+                itsAliveTimer->setTimer(1.0);
             }
 
             LOG_DEBUG_STR("Entering idle_state");
@@ -655,9 +629,15 @@ GCFEvent::TResult TBBDriver::idle_state(GCFEvent& event, GCFPortInterface& port)
             port.close();
 
             if (&port == &itsAcceptor) {
-                LOG_FATAL_STR("Failed to start listening for client connections.");
+                LOG_FATAL_STR("Client port closed.");
                 exit(EXIT_FAILURE);
-            } else {
+            }
+            else if (&port == itsRSPDriver) {
+                port.close();
+                LOG_FATAL_STR("RSPDriver port closed.");
+                exit(EXIT_FAILURE);
+            }
+            else {
                 itsClientList.remove(&port);
                 itsMsgHandler->removeTriggerClient(port);
                 itsMsgHandler->removeHardwareClient(port);
@@ -726,22 +706,13 @@ GCFEvent::TResult TBBDriver::idle_state(GCFEvent& event, GCFPortInterface& port)
             port.send(unsubscribeack);
         } break;
 
-        case TBB_CLOCK: {
-            TBBClockEvent clockevent(event);
-            TS->setClockFreq(clockevent.clock);
-            TBBClockAckEvent clockack;
-            clockack.status_mask = 0;
-            port.send(clockack);
+        case RSP_UPDCLOCK: {
+            setClockState(event);
         } break;
         
-        // tp_trigger message is handled in raw event
+
         case TP_TRIGGER: {
-            for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
-                if (&port == &TS->boardPort(boardnr)) {
-                    itsMsgHandler->sendTrigger(event, boardnr);
-                    break;
-                }
-            }
+            // tp_trigger message is handled in raw event
         } break;
 
         case TP_ERROR: {
@@ -820,9 +791,14 @@ GCFEvent::TResult TBBDriver::busy_state(GCFEvent& event, GCFPortInterface& port)
             LOG_DEBUG_STR("DISCONNECTED: port '" << port.getName() << "'");
             if (&port == &itsAcceptor) {
                 port.close();
-                LOG_FATAL_STR("Failed to start listening for client connections.");
+                LOG_FATAL_STR("Client port closed.");
                 exit(EXIT_FAILURE);
-            } 
+            }
+            else if (&port == itsRSPDriver) {
+                port.close();
+                LOG_FATAL_STR("RSPDriver port closed.");
+                exit(EXIT_FAILURE);
+            }
             else {
                 port.close();
                 itsClientList.remove(&port);
@@ -899,14 +875,8 @@ GCFEvent::TResult TBBDriver::busy_state(GCFEvent& event, GCFPortInterface& port)
             status = itsCmdHandler->doEvent(event,port);
         } break;
         
-        // tp_trigger message is handled in raw event
         case TP_TRIGGER: {
-            for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
-                if (&port == &TS->boardPort(boardnr)) {
-                    itsMsgHandler->sendTrigger(event, boardnr);
-                    break;
-                }
-            }
+            // tp_trigger message is handled in raw event
         } break;
 
         case TP_ERROR: {
@@ -953,7 +923,11 @@ GCFEvent::TResult TBBDriver::busy_state(GCFEvent& event, GCFPortInterface& port)
         {
             status = itsCmdHandler->doEvent(event,port); // dispatch ack from boards
         } break;
-
+        
+        case RSP_UPDCLOCK: {
+            setClockState(event);
+        } break;
+        
         default: {
             if (addTbbCommandToQueue(event, port)) {
                 LOG_DEBUG_STR("busy_state: received TBB cmd, and put on queue");
@@ -963,24 +937,6 @@ GCFEvent::TResult TBBDriver::busy_state(GCFEvent& event, GCFPortInterface& port)
         } break;
     }
     return(status);
-}
-
-//-----------------------------------------------------------------------------
-// setWatchdogToETH()
-// mode=0 --> clock
-// mode=1 --> eth
-void TBBDriver::setWatchdogMode(int mode)
-{
-    LOG_DEBUG_STR(formatString("set watchdog=%s for all boards", mode?"ETH":"CLOCK"));
-    TPWatchdogEvent watchdog;
-    watchdog.opcode = oc_WATCHDOG;
-    watchdog.status = 0;
-    watchdog.mode = mode;
-
-    for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
-        if (itsBoard[boardnr].isConnected())
-            itsBoard[boardnr].send(watchdog);
-    }
 }
 
 //-----------------------------------------------------------------------------
@@ -1095,7 +1051,7 @@ bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
                         // new image loaded, auto reconfigure is now possible again
                         TS->setFreeToReset(boardnr, true);
                         if (TS->getImageNr(boardnr) != 0) {
-                            TS->setBoardState(boardnr,setWatchdog);
+                            TS->setBoardState(boardnr, freeBoard);
                         }
                     }
                     boardreset = true;
@@ -1175,6 +1131,43 @@ bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
         }
     }
     return(!itsAliveCheck);
+}
+
+//-----------------------------------------------------------------------------
+void TBBDriver::setClockState(GCFEvent& event)
+{
+    /*
+    After a clock change the TB Boards are in a unknown state, a clear is needed to solve this.
+    First clock change event is received, after that the clock is changed by the RSPDriver.
+    
+    changing clock will take about 25 seconds, so wait first before clearing the boards
+    */
+    
+    RSPUpdclockEvent	e(event);
+	if (e.status != RSP_SUCCESS) {
+		LOG_WARN ("Received and INVALID clock update, WHAT IS THE CLOCK?");
+		return;
+	}
+
+	if (TS->getClockFreq() == 0) { // my clock still uninitialized?
+		LOG_INFO_STR("My clock is still not initialized. StationClock is " << e.clock << " adopting this value");
+		TS->setClockFreq((int32)e.clock);
+	}
+
+	else if ((int32)e.clock != TS->getClockFreq()) {
+		LOG_WARN_STR ("CLOCK WAS CHANGED TO " << e.clock << "MHz, RESET NEEDED (wait 80 secs for done)");
+		for (int bnr = 0; bnr < TS->maxBoards(); bnr++) {
+		    TS->setBoardState(bnr, setImage1);
+	    }
+		TS->setClockFreq((int32)e.clock);
+		
+		itsSetupTimer->cancelAllTimers();
+        itsSetupTimer->setTimer(60.0, 1.0);
+		
+		itsAliveCheck = false;
+		itsAliveTimer->cancelAllTimers();
+		itsAliveTimer->setTimer(90.0);
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -1616,6 +1609,32 @@ bool TBBDriver::SetTbbCommand(unsigned short signal)
     return (true);
 }
 
+//
+// requestClockSubscription()
+//
+void TBBDriver::requestClockSubscription()
+{
+	LOG_INFO ("Taking subscription on clock settings");
+
+	RSPSubclockEvent		msg;
+//	msg.timestamp = 0;
+	msg.period = 1;				// let RSPdriver check every second
+	itsRSPDriver->send(msg);
+}
+
+//
+// cancelClockSubscription()
+//
+void TBBDriver::cancelClockSubscription()
+{
+	LOG_INFO ("Canceling subscription on clock settings");
+
+	RSPUnsubclockEvent		msg;
+	msg.handle = itsClockSubscription;
+	itsClockSubscription = 0;
+	itsRSPDriver->send(msg);
+}
+
     //} // end namespace TBB
 //} // end namespace LOFAR
 
@@ -1626,7 +1645,7 @@ bool TBBDriver::SetTbbCommand(unsigned short signal)
 int main(int argc, char** argv)
 {
     LOFAR::GCF::TM::GCFScheduler::instance()->init(argc, argv, "TBBDriver");    // initializes log system
-     GCFScheduler::instance()->disableQueue();                  // run as fast as possible
+    GCFScheduler::instance()->disableQueue();                  // run as fast as possible
 
     // Inform Logprocessor who we are
     LOG_INFO("MACProcessScope: LOFAR_PermSW_TBBDriver");

@@ -300,7 +300,7 @@ GCFEvent::TResult TriggerControl::openPublisher(GCFEvent& event, GCFPortInterfac
 GCFEvent::TResult TriggerControl::operational_state(GCFEvent& event, GCFPortInterface& port)
 {
     LOG_DEBUG_STR ("operational:" << eventName(event) << "@" << port.getName());
-
+    
     switch (event.signal) {
         case F_ENTRY: {
             itsTimerPort->setTimer(5.0);
@@ -311,7 +311,13 @@ GCFEvent::TResult TriggerControl::operational_state(GCFEvent& event, GCFPortInte
             itsPropertySet->setValue(PN_FSM_ERROR,GCFPVString(""));
         } break;
 
-        case F_ACCEPT_REQ:
+        case F_ACCEPT_REQ: {
+            GCFTCPPort* itsClient = new GCFTCPPort();
+            itsClient->init(*this, "client", GCFPortInterface::SPP, CR_PROTOCOL);
+            itsListener->accept(*itsClient);
+            LOG_INFO_STR("NEW CLIENT CONNECTED");
+        } break;
+        
         case F_CONNECTED: {
             if (&port == itsListener) {
                 LOG_INFO("TCP Listener started successful");
@@ -322,7 +328,10 @@ GCFEvent::TResult TriggerControl::operational_state(GCFEvent& event, GCFPortInte
         case F_DISCONNECTED: {
             // TODO: CHECK FOR OUR OWN PORTS
             port.close();
-            if (&port == itsListener) {
+            if (&port == itsClient) {
+                LOG_INFO_STR("CLIENT DISCONNECTED");
+            }
+            else if (&port == itsListener) {
                 LOG_FATAL("Failed to  start TCP Listener");
             }
         } break;
@@ -552,7 +561,7 @@ bool TriggerControl::_addObservation(int    obsID)
     LOG_DEBUG_STR("Trying to readfile " << filename);
     try {
         theObsPS.adoptFile(filename);
-        theObs = Observation(&theObsPS);
+        theObs = Observation(&theObsPS, false);
         LOG_DEBUG_STR("theOBS=" << theObs);
     }
     catch (Exception&   ex) {
@@ -651,7 +660,7 @@ void TriggerControl::_CRstopHandler(GCFEvent& event, GCFPortInterface& port)
 void TriggerControl::_CRreadHandler(GCFEvent& event, GCFPortInterface& port)
 {
     CRReadEvent e(event);
-    CRStopAckEvent ack;
+    CRReadAckEvent ack;
     ack.triggerID = e.triggerID;
     ack.result = CR_OBSERVATION_ERR;
 
@@ -690,7 +699,7 @@ void TriggerControl::_CRreadHandler(GCFEvent& event, GCFPortInterface& port)
 void TriggerControl::_CRrecordHandler(GCFEvent& event, GCFPortInterface& port)
 {
     CRRecordEvent e(event);
-    CRStopAckEvent ack;
+    CRRecordAckEvent ack;
     ack.triggerID = e.triggerID;
     ack.result = CR_OBSERVATION_ERR;
 
@@ -719,7 +728,7 @@ void TriggerControl::_CRrecordHandler(GCFEvent& event, GCFPortInterface& port)
 void TriggerControl::_CRstopDumpsHandler(GCFEvent& event, GCFPortInterface& port)
 {
     CRStopDumpsEvent e(event);
-    CRStopAckEvent ack;
+    CRStopDumpsAckEvent ack;
     ack.triggerID = e.triggerID;
     ack.result = CR_OBSERVATION_ERR;
 
@@ -741,7 +750,7 @@ void TriggerControl::_CRstopDumpsHandler(GCFEvent& event, GCFPortInterface& port
 void TriggerControl::_CRcepSpeedHandler(GCFEvent& event, GCFPortInterface& port)
 {
     CRCepSpeedEvent e(event);
-    CRStopAckEvent ack;
+    CRCepSpeedAckEvent ack;
     ack.triggerID = e.triggerID;
     ack.result = CR_OBSERVATION_ERR;
 

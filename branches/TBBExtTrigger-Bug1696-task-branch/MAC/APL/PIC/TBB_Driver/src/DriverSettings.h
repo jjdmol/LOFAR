@@ -24,13 +24,14 @@
 #define LOFAR_RSP_STATIONSETTINGS_H
 
 #include <APL/TBB_Protocol/TBB_Protocol.ph>
-#include "TP_Protocol.ph"
 #include <GCF/TM/GCF_Control.h>
 #include <Common/LofarLogger.h>
 #include <Common/LofarTypes.h>
+#include <Common/StringUtil.h>
 #include <time.h>
 #include <APL/RTCCommon/NsTimestamp.h>
 
+#include "TP_Protocol.ph"
 
 namespace LOFAR {
 	using GCF::TM::GCFPortInterface;
@@ -195,8 +196,8 @@ public:
 	bool isSetupCmdDone(int32 boardnr);
 	void setSetupCmdDone(int32 boardnr, bool state);
 	
-	bool boardSetupNeeded();
-	void clearBoardSetup();
+	//bool boardSetupNeeded();
+	//void clearBoardSetup();
 	void setActiveBoardsMask (uint32 activeboardsmask);
 	void setActiveBoard (int32 boardnr);
 	void resetActiveBoard (int32 boardnr);
@@ -224,6 +225,7 @@ public:
 	
 	void setClockFreq(int32 clock);
 	int32 getClockFreq();
+	bool isClockFreqChanged();
 	double getSampleTime();
 	
 	void clearRcuSettings(int32 boardnr);
@@ -297,9 +299,9 @@ private:
 	ChannelInfo *itsChannelInfo;
 	
 	uint32 itsClockFreq; // freq in MHz
+	bool   itsClockChanged;
 	double itsSampleTime; // sample time in nsec
 	
-	bool        itsBoardSetup;
 	string      itsIfName;
 	bool        itsSetupNeeded;
 	TriggerInfo *itsTriggerInfo;
@@ -324,8 +326,6 @@ inline	int32 TbbSettings::maxRetries()	{ return (itsMaxRetries);   }
 inline	double TbbSettings::timeout()	{ return (itsTimeOut);   }
 inline	GCFPortInterface& TbbSettings::boardPort(int32 boardnr)	{ return (*itsBoardInfo[boardnr].port); }
 inline	BoardStateT TbbSettings::getBoardState(int32 boardnr) { return (itsBoardInfo[boardnr].boardState); }
-inline  bool TbbSettings::boardSetupNeeded() { return (itsBoardSetup); }
-inline  void TbbSettings::clearBoardSetup() { itsBoardSetup = false; }
 
 inline  int32 TbbSettings::getSetupWaitTime(int32 boardnr) { 
 			if (time(NULL) >= itsBoardInfo[boardnr].setupWaitTime) { return(0); }
@@ -390,14 +390,14 @@ inline  void TbbSettings::resetTriggersLeft() {
             int missed = 0;
             for (int bnr = 0; bnr < itsMaxBoards; bnr++) {
                 if (itsBoardInfo[bnr].triggersLeft < 0) {  
-                    missed += itsBoardInfo[bnr].triggersLeft;
-                    LOG_DEBUG_STR(formatString("missed %d triggers on board %d",
+                    missed += (itsBoardInfo[bnr].triggersLeft * -1);
+                    LOG_DEBUG_STR(formatString("missed %d triggers on board %d last 100mSec",
                                  (itsBoardInfo[bnr].triggersLeft*-1), bnr));
                 }
                 itsBoardInfo[bnr].triggersLeft = itsMaxTriggersPerInterval;
             }
             if (missed != 0) {
-                LOG_INFO_STR(formatString("missed %d triggers", (missed*-1)));
+                LOG_INFO_STR(formatString("missed %d triggers last 100mSec", (missed)));
             }
         }
 inline  bool TbbSettings::isTriggersLeft(int32 boardnr) { 
@@ -491,10 +491,18 @@ inline  void TbbSettings::resetBoardUsed() {
 inline  void TbbSettings::setSetupNeeded(bool state) { itsSetupNeeded = state; }
 inline  bool TbbSettings::isSetupNeeded() { return(itsSetupNeeded); }
 inline  void TbbSettings::setClockFreq(int32 clock) {
+            itsClockChanged = true;
             itsClockFreq = clock; // sample clock freq in Mhz
             itsSampleTime = 1000./clock; // sample time = 1/clock in nsec
         }
 inline  int32 TbbSettings::getClockFreq() { return(itsClockFreq); }
+inline  bool TbbSettings::isClockFreqChanged() { 
+            if (itsClockChanged) {
+                itsClockChanged = false;
+                return(true);
+            }
+            return(false);
+        }
 inline  double TbbSettings::getSampleTime() { return(itsSampleTime); }
     
 	} // namespace TBB

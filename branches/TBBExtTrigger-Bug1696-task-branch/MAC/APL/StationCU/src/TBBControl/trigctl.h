@@ -86,36 +86,14 @@ public:
        itsRcuStr.append("["+optarg+"]");
     }
     
-    void setStationStr(string optarg)
-    {
-       itsStationStr.clear();
-       itsStationStr.append("["+optarg+"]");
-    }
-    
-    void setOnservationID(uint32 id)
-    {
-        itsObservationID = id;
-    }
-    
-    bool isSetObservationID()
-    {
-        if (itsObservationID == 0) {
-            return(false);
-        }
-        return(true);
-    }
-    
 protected:
     explicit Command(GCF::RTDB::GCFRTDBPort& port, GCFTimerPort& timer) :
     itsPort(port),
     itsTimer(timer),
-    itsCmdDone(false),
-    itsObservationID(0)
+    itsCmdDone(false)
     {
         itsRcuStr.clear();
         itsRcuStr.append("[]");
-        itsStationStr.clear();
-        itsStationStr.append("[]");
     }
     Command(); // no default construction allowed
 
@@ -123,9 +101,7 @@ protected:
     GCF::RTDB::GCFRTDBPort& itsPort;
     GCFTimerPort& itsTimer;
     bool itsCmdDone;
-    uint32 itsObservationID;
     string itsRcuStr;
-    string itsStationStr;
 
 private:
 
@@ -182,7 +158,7 @@ public:
     virtual void send();
     virtual GCFEvent::TResult ack(GCFEvent& e);
     void setDelay(uint32 delay) { itsDelay = delay; }
-   void setDatapaths(uint32 datapaths) { itsDatapaths = datapaths; }
+    void setDatapaths(uint32 datapaths) { itsDatapaths = datapaths; }
 private:
     uint32 itsDelay;
     uint32 itsDatapaths;
@@ -198,6 +174,20 @@ public:
     virtual GCFEvent::TResult ack(GCFEvent& e);
 private:
 };
+
+//-----------------------------------------------------------------------------
+class VhecrEnableCmd : public Command
+{
+public:
+    VhecrEnableCmd(GCF::RTDB::GCFRTDBPort& port, GCFTimerPort& timer);
+    virtual ~VhecrEnableCmd() { }
+    virtual void send();
+    virtual GCFEvent::TResult ack(GCFEvent& e);
+    void setState(uint32 state) { itsState = state; }
+private:
+    uint32 itsState;
+};
+
 
 //-----------------------------------------------------------------------------
 // Controller class for etrigctl

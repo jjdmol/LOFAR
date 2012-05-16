@@ -28,7 +28,7 @@
 #include <APL/CR_Protocol/CR_Protocol.ph>
 #include <APL/RTCCommon/NsTimestamp.h>
 #include <GCF/TM/GCF_Control.h>
-#include <GCF/RTDB/GCF_RTDBPort.h>
+#include <GCF/TM/GCF_DevicePort.h>
 #include <GCF/TM/GCF_TimerPort.h>
 #include <Common/lofar_bitset.h>
 #include <Common/lofar_list.h>
@@ -116,7 +116,7 @@ public:
     }
     
 protected:
-    explicit Command(GCF::RTDB::GCFRTDBPort& port, GCFTimerPort& timer) :
+    explicit Command(GCFPortInterface& port, GCFTimerPort& timer) :
     itsPort(port),
     itsTimer(timer),
     itsCmdDone(false),
@@ -131,7 +131,7 @@ protected:
     Command(); // no default construction allowed
 
 protected:
-    GCF::RTDB::GCFRTDBPort& itsPort;
+    GCFPortInterface& itsPort;
     GCFTimerPort& itsTimer;
     bool itsCmdDone;
     uint32 itsObservationID;
@@ -147,7 +147,7 @@ private:
 class StopCmd : public Command
 {
 public:
-    StopCmd(GCF::RTDB::GCFRTDBPort& port, GCFTimerPort& timer);
+    StopCmd(GCFPortInterface& port, GCFTimerPort& timer);
     virtual ~StopCmd() { }
     virtual void send();
     virtual GCFEvent::TResult ack(GCFEvent& e);
@@ -160,7 +160,7 @@ private:
 class ReadCmd : public Command
 {
 public:
-    ReadCmd(GCF::RTDB::GCFRTDBPort& port, GCFTimerPort& timer);
+    ReadCmd(GCFPortInterface& port, GCFTimerPort& timer);
     virtual ~ReadCmd() { }
     virtual void send();
     virtual GCFEvent::TResult ack(GCFEvent& e);
@@ -177,7 +177,7 @@ private:
 class RecordCmd : public Command
 {
 public:
-    RecordCmd(GCF::RTDB::GCFRTDBPort& port, GCFTimerPort& timer);
+    RecordCmd(GCFPortInterface& port, GCFTimerPort& timer);
     virtual ~RecordCmd() { }
     virtual void send();
     virtual GCFEvent::TResult ack(GCFEvent& e);
@@ -188,7 +188,7 @@ private:
 class CepSpeedCmd : public Command
 {
 public:
-    CepSpeedCmd(GCF::RTDB::GCFRTDBPort& port, GCFTimerPort& timer);
+    CepSpeedCmd(GCFPortInterface& port, GCFTimerPort& timer);
     virtual ~CepSpeedCmd() { }
     virtual void send();
     virtual GCFEvent::TResult ack(GCFEvent& e);
@@ -203,7 +203,7 @@ private:
 class StopDumpsCmd : public Command
 {
 public:
-    StopDumpsCmd(GCF::RTDB::GCFRTDBPort& port, GCFTimerPort& timer);
+    StopDumpsCmd(GCFPortInterface& port, GCFTimerPort& timer);
     virtual ~StopDumpsCmd() { }
     virtual void send();
     virtual GCFEvent::TResult ack(GCFEvent& e);
@@ -259,9 +259,9 @@ private:
     void logMessage(ostream& stream, const string& message);
     void commandHelp();
 private:
-    GCF::RTDB::GCFRTDBPort*  itsRTDBPort;
-    GCFTimerPort*            itsTimerPort;
-    Command*                 itsCommand; // the command to execute
+    GCFPortInterface*  itsCRTrigPort;
+    GCFTimerPort*      itsTimerPort;
+    Command*           itsCommand; // the command to execute
 
     // commandline parameters
     int    itsArgc;

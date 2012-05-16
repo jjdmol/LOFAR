@@ -75,50 +75,21 @@ void MsgHandler::removeHardwareClient(GCFPortInterface& port)
 	itsClientHardwareMsgList.remove(&port);	// remove client from list
 }
 
-
-//-----------------------------------------------------------------------------
-void MsgHandler::sendTrigger(GCFEvent& event, int boardnr)
-{
-	TPTriggerEvent	tp_event(event);
-	TBBTriggerEvent tbb_event;
-	
-	int channel = tp_event.trigger.channel + (boardnr * TS->nrChannelsOnBoard());	
-	TS->convertCh2Rcu(channel, &tbb_event.rcu);
-	uint32 t_sec  = tp_event.trigger.time;
-	uint32 t_nsec = (uint32)((double)tp_event.trigger.sample_nr * TS->getSampleTime());
-	RTC::NsTimestamp nstimestamp(t_sec, t_nsec);
-	tbb_event.nstimestamp     = nstimestamp;
-	tbb_event.trigger_sum     = tp_event.trigger.sum;
-	tbb_event.trigger_samples = tp_event.trigger.samples;
-	tbb_event.peak_value      = tp_event.trigger.peak;
-	tbb_event.power_before    = tp_event.trigger.pwr_bt_at & 0x0000FFFF;
-	tbb_event.power_after     = (tp_event.trigger.pwr_bt_at & 0xFFFF0000) >> 16;
-	tbb_event.missed          = tp_event.trigger.missed & 0x0000FFFF;
-				
-	sendTriggerMessage(tbb_event);
-	
-	// save trigger messages to a file
-	if (TS->saveTriggersToFile()) {
-	    //LOG_DEBUG_STR(formatString("write saved trigger from board %d to file", boardnr));
-		writeTriggerToFile(&tbb_event);
-	}
-	TS->setChTriggered(channel, true);
-}
-
 //-----------------------------------------------------------------------------
 void MsgHandler::sendSavedTrigger()
 {
 	//LOG_DEBUG_STR(formatString("send saved trigger from board %d to client", boardnr));
 	TBBTriggerEvent tbb_event;
+	TriggerInfo *triggerInfo = TS->getTriggerInfo();
 		
-	tbb_event.rcu             = TS->getTriggerInfo()->rcu;
-	tbb_event.nstimestamp     = TS->getTriggerInfo()->ns_timestamp;
-	tbb_event.trigger_sum     = TS->getTriggerInfo()->trigger_sum;
-	tbb_event.trigger_samples = TS->getTriggerInfo()->trigger_samples;
-	tbb_event.peak_value      = TS->getTriggerInfo()->peak_value;
-	tbb_event.power_before    = TS->getTriggerInfo()->power_before;
-	tbb_event.power_after     = TS->getTriggerInfo()->power_after;
-	tbb_event.missed          = TS->getTriggerInfo()->missed & 0x00FFFFFF;
+	tbb_event.rcu             = triggerInfo->rcu;
+	tbb_event.nstimestamp     = triggerInfo->ns_timestamp;
+	tbb_event.trigger_sum     = triggerInfo->trigger_sum;
+	tbb_event.trigger_samples = triggerInfo->trigger_samples;
+	tbb_event.peak_value      = triggerInfo->peak_value;
+	tbb_event.power_before    = triggerInfo->power_before;
+	tbb_event.power_after     = triggerInfo->power_after;
+	tbb_event.missed          = triggerInfo->missed & 0x00FFFFFF;
 				
 	sendTriggerMessage(tbb_event);
 	

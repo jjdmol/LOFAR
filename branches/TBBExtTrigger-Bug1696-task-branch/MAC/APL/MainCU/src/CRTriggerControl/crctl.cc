@@ -62,7 +62,7 @@ static const double DELAY = 60.0;
 static CRCtl *thisCRCtl = 0;
 
 //---- STOP  ----------------------------------------------------------------
-StopCmd::StopCmd(GCF::RTDB::GCFRTDBPort& port, GCFTimerPort& timer) : Command(port, timer)
+StopCmd::StopCmd(GCFPortInterface& port, GCFTimerPort& timer) : Command(port, timer)
 {
     cout << endl;
     cout << "== RTDB ================================================= stop tbb recording ====" << endl;
@@ -95,7 +95,7 @@ GCFEvent::TResult StopCmd::ack(GCFEvent& e)
         cout << "recording stopped at: " << (double)itsStopTime << " sec" << endl;
     }
     else {
-        cout << "Error in STOP command" << endl;
+        cout << "Error in STOP command" << errorName(ack.result) << endl;
     }
     setCmdDone(true);
 
@@ -103,10 +103,10 @@ GCFEvent::TResult StopCmd::ack(GCFEvent& e)
 }
 
 //---- READ  ----------------------------------------------------------------
-ReadCmd::ReadCmd(GCF::RTDB::GCFRTDBPort& port, GCFTimerPort& timer) : Command(port, timer)
+ReadCmd::ReadCmd(GCFPortInterface& port, GCFTimerPort& timer) : Command(port, timer)
 {
     cout << endl;
-    cout << "== RTDB ================================================= read tbb data(cep) ====" << endl;
+    cout << "== CRTriggerControl =============================== read tbb data(cep) ====" << endl;
     cout << endl;
 }
 
@@ -142,7 +142,7 @@ GCFEvent::TResult ReadCmd::ack(GCFEvent& e)
         cout << "time after : " << (double)itsTimeAfter << " sec" << endl;
     }
     else {
-        cout << "Error in READ command" << endl;
+        cout << "Error in READ command" << errorName(ack.result) << endl;
     }
     setCmdDone(true);
 
@@ -150,10 +150,10 @@ GCFEvent::TResult ReadCmd::ack(GCFEvent& e)
 }
 
 //---- RECORD  ----------------------------------------------------------------
-RecordCmd::RecordCmd(GCF::RTDB::GCFRTDBPort& port, GCFTimerPort& timer) : Command(port, timer)
+RecordCmd::RecordCmd(GCFPortInterface& port, GCFTimerPort& timer) : Command(port, timer)
 {
     cout << endl;
-    cout << "== RTDB ================================================= start record ====" << endl;
+    cout << "== CRTriggerControl ===================================== start record ====" << endl;
     cout << endl;
 }
 
@@ -183,7 +183,7 @@ GCFEvent::TResult RecordCmd::ack(GCFEvent& e)
         cout << "for RCU    : " << itsRcuStr << endl;
     }
     else {
-        cout << "Error in RECORD command" << endl;
+        cout << "Error in RECORD command" << errorName(ack.result) << endl;
     }
     setCmdDone(true);
 
@@ -191,10 +191,10 @@ GCFEvent::TResult RecordCmd::ack(GCFEvent& e)
 }
 
 //---- CEPSPEED  ----------------------------------------------------------------
-CepSpeedCmd::CepSpeedCmd(GCF::RTDB::GCFRTDBPort& port, GCFTimerPort& timer) : Command(port, timer)
+CepSpeedCmd::CepSpeedCmd(GCFPortInterface& port, GCFTimerPort& timer) : Command(port, timer)
 {
     cout << endl;
-    cout << "== RTDB ================================================= set cep speed ====" << endl;
+    cout << "== CRTriggerControl ==================================== set cep speed ====" << endl;
     cout << endl;
 }
 
@@ -225,7 +225,7 @@ GCFEvent::TResult CepSpeedCmd::ack(GCFEvent& e)
         cout << "for Station: " << itsStationStr << endl;
     }
     else {
-        cout << "Error in CEPSPEED command" << endl;
+        cout << "Error in CEPSPEED command" << errorName(ack.result) << endl;
     }
     setCmdDone(true);
 
@@ -233,10 +233,10 @@ GCFEvent::TResult CepSpeedCmd::ack(GCFEvent& e)
 }
 
 //---- STOPDUMPS  ----------------------------------------------------------------
-StopDumpsCmd::StopDumpsCmd(GCF::RTDB::GCFRTDBPort& port, GCFTimerPort& timer) : Command(port, timer)
+StopDumpsCmd::StopDumpsCmd(GCFPortInterface& port, GCFTimerPort& timer) : Command(port, timer)
 {
     cout << endl;
-    cout << "== RTDB ================================================= stop dumps ====" << endl;
+    cout << "== CRTriggerControl ======================================= stop dumps ====" << endl;
     cout << endl;
 }
 
@@ -264,7 +264,7 @@ GCFEvent::TResult StopDumpsCmd::ack(GCFEvent& e)
         cout << "for Station: " << itsStationStr << endl;
     }
     else {
-        cout << "Error in STOPDUMPS command" << endl;
+        cout << "Error in STOPDUMPS command" << errorName(ack.result) << endl;
     }
     setCmdDone(true);
 
@@ -314,8 +314,8 @@ CRCtl::CRCtl(string name, int argc, char** argv): GCFTask((State)&CRCtl::initial
     itsCommand(0),itsArgc(argc),itsArgv(argv)
 {
     registerProtocol (CR_PROTOCOL, CR_PROTOCOL_STRINGS);
-    itsRTDBPort     = new GCF::RTDB::GCFRTDBPort(*this, "RTDBControlPort", "LOFAR_TBBControl");
-    ASSERTSTR(itsRTDBPort, "Can't allocate RTDBPort");
+    itsCRTrigPort   = new GCFTCPPort(*this, MAC_SVCMASK_TRIGGERCTRL, GCFPortInterface::SAP, CR_PROTOCOL);
+    ASSERTSTR(itsCRTrigPort, "Can't allocate itsCRTrigPort");
     
     itsTimerPort = new GCFTimerPort(*this, "timerPort");
 }
@@ -324,7 +324,7 @@ CRCtl::CRCtl(string name, int argc, char** argv): GCFTask((State)&CRCtl::initial
 CRCtl::~CRCtl()
 {
     if (itsCommand) { delete itsCommand; }
-    if (itsRTDBPort) { delete itsRTDBPort; }
+    if (itsCRTrigPort) { delete itsCRTrigPort; }
     if (itsTimerPort) { delete itsTimerPort; }
 }
 
@@ -345,7 +345,7 @@ void CRCtl::sigintHandler(int signum)
 //
 void CRCtl::finish()
 {
-    cout << "tbbctl stopped by user" << endl;
+    cout << "crctl stopped by user" << endl;
     sleep(1);
     GCFScheduler::instance()->stop();
     //TRAN(StationControl::finishing_state);
@@ -361,8 +361,8 @@ GCFEvent::TResult CRCtl::initial(GCFEvent& e, GCFPortInterface& port)
         } break;
 
         case F_ENTRY: {
-            if (!itsRTDBPort->isConnected()) {
-                itsRTDBPort->open();
+            if (!itsCRTrigPort->isConnected()) {
+                itsCRTrigPort->open();
                 itsTimerPort->setTimer(5.0);
             }
             // first redirect signalHandler to our finishing state to leave PVSS
@@ -373,7 +373,7 @@ GCFEvent::TResult CRCtl::initial(GCFEvent& e, GCFPortInterface& port)
         } break;
 
         case F_CONNECTED: {
-            if (itsRTDBPort->isConnected()) {
+            if (itsCRTrigPort->isConnected()) {
                 itsTimerPort->cancelAllTimers();
                 cout << "connected, execute command" << endl;
                 TRAN(CRCtl::docommand);
@@ -387,7 +387,7 @@ GCFEvent::TResult CRCtl::initial(GCFEvent& e, GCFPortInterface& port)
         case F_TIMER: {
             // try again
             cout << "   =x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=" << endl;
-            cout << "   =x=           RTDB is NOT responding              =x=" << endl;
+            cout << "   =x=      CRTriggerControl is NOT responding       =x=" << endl;
             cout << "   =x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=" << endl;
             exit(EXIT_FAILURE);
         } break;
@@ -402,7 +402,7 @@ GCFEvent::TResult CRCtl::initial(GCFEvent& e, GCFPortInterface& port)
 //-----------------------------------------------------------------------------
 GCFEvent::TResult CRCtl::docommand(GCFEvent& e, GCFPortInterface& port)
 {
-    cout << "docommand signal:" << eventName(e) << endl;
+    //cout << "docommand signal:" << eventName(e) << endl;
     GCFEvent::TResult status = GCFEvent::HANDLED;
 
     switch (e.signal) {
@@ -550,7 +550,7 @@ Command* CRCtl::parse_options(int argc, char** argv)
             
             case 'b': {   // --stop
                 if (command) delete command;
-                StopCmd* cmd = new StopCmd(*itsRTDBPort, *itsTimerPort);
+                StopCmd* cmd = new StopCmd(*itsCRTrigPort, *itsTimerPort);
                 command = cmd;
                 
                 double stopTime = 0.;
@@ -568,7 +568,7 @@ Command* CRCtl::parse_options(int argc, char** argv)
 
             case 'c': {   // --read
                 if (command) delete command;
-                ReadCmd* cmd = new ReadCmd(*itsRTDBPort, *itsTimerPort);
+                ReadCmd* cmd = new ReadCmd(*itsCRTrigPort, *itsTimerPort);
                 command = cmd;
                 
                 double time = 0.;
@@ -590,13 +590,13 @@ Command* CRCtl::parse_options(int argc, char** argv)
 
             case 'd': {   // --record
                 if (command) delete command;
-                RecordCmd* cmd = new RecordCmd(*itsRTDBPort, *itsTimerPort);
+                RecordCmd* cmd = new RecordCmd(*itsCRTrigPort, *itsTimerPort);
                 command = cmd;
             } break;
 
             case 'e': {   // --cepspeed
                 if (command) delete command;
-                CepSpeedCmd* cmd = new CepSpeedCmd(*itsRTDBPort, *itsTimerPort);
+                CepSpeedCmd* cmd = new CepSpeedCmd(*itsCRTrigPort, *itsTimerPort);
                 command = cmd;
                 uint32 delay = 0;
                 uint32 datapaths = 0;
@@ -618,7 +618,7 @@ Command* CRCtl::parse_options(int argc, char** argv)
             
             case 'f': {   // --stopdumps
                 if (command) delete command;
-                StopDumpsCmd* cmd = new StopDumpsCmd(*itsRTDBPort, *itsTimerPort);
+                StopDumpsCmd* cmd = new StopDumpsCmd(*itsCRTrigPort, *itsTimerPort);
                 command = cmd;
             } break;
 

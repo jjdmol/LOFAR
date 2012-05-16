@@ -82,9 +82,8 @@ TbbSettings::TbbSettings() :
 	itsActiveBoardsMask(0),            // mask with active boards
 	itsBoardInfo(0),
 	itsChannelInfo(0),                  // Struct with channel info
-	itsClockFreq(200),
+	itsClockFreq(0),
 	itsSampleTime(5.0),
-	itsBoardSetup(false),
 	itsIfName(""),
 	itsSetupNeeded(false),
 	itsTriggerInfo(0)
@@ -236,8 +235,6 @@ void TbbSettings::setMaxBoards (int32 maxboards)
 		itsChannelInfo[ch].dstMacCep.clear();
 	}
 	
-	itsBoardSetup  = false;
-		
 	if (itsBoardInfo) delete itsBoardInfo;
 	itsBoardInfo = new BoardInfo[itsMaxBoards];
 	
@@ -264,7 +261,6 @@ void TbbSettings::setBoardState(int32 boardnr, BoardStateT boardstate)
 {
 	itsBoardInfo[boardnr].boardState = boardstate; 
 	if ((boardstate > noBoard) && (boardstate < boardReady)) {
-		itsBoardSetup = true;
 		itsBoardInfo[boardnr].used = false;
 	}
 }

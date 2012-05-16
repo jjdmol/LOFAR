@@ -77,7 +77,7 @@ void StopCmd::send()
     CRStopEvent event;
     
     event.triggerID = 50001;
-    event.stopVector.requests.push_back(CRstopRequest(itsStationStr, itsRcuStr, itsStopTime));
+    event.stopVector.requests.push_back(CRstopRequest("[]", itsRcuStr, itsStopTime));
 
     itsPort.send(event);
     itsTimer.setTimer(DELAY);
@@ -90,7 +90,6 @@ GCFEvent::TResult StopCmd::ack(GCFEvent& e)
     
     if (ack.result == CR_NO_ERR) {
         cout << "STOP command arrived add TBBControl" << endl;
-        cout << "for Station: " << itsStationStr << endl;
         cout << "for RCU    : " << itsRcuStr << endl;
         cout << "recording stopped at: " << (double)itsStopTime << " sec" << endl;
     }
@@ -116,7 +115,7 @@ void ReadCmd::send()
     CRReadEvent event;
     
     event.triggerID = 50001;
-    event.readVector.requests.push_back(CRreadRequest(itsStationStr,
+    event.readVector.requests.push_back(CRreadRequest("[]",
                                                       itsRcuStr,
                                                       itsReadTime,
                                                       itsTimeBefore,
@@ -132,7 +131,6 @@ GCFEvent::TResult ReadCmd::ack(GCFEvent& e)
     
     if (ack.result == CR_NO_ERR) {
         cout << "READ command arrived add TBBControl" << endl;
-        cout << "for Station: " << itsStationStr << endl;
         cout << "for RCU    : " << itsRcuStr << endl;
         cout << "read time  : " << (double)itsReadTime << " sec" << endl;
         cout << "time before: " << (double)itsTimeBefore << " sec" << endl;
@@ -160,7 +158,7 @@ void RecordCmd::send()
     CRRecordEvent event;
     
     event.triggerID = 50001;
-    event.recordVector.requests.push_back(CRrecordRequest(itsStationStr,
+    event.recordVector.requests.push_back(CRrecordRequest("[]",
                                                           itsRcuStr) );
 
     itsPort.send(event);
@@ -174,7 +172,6 @@ GCFEvent::TResult RecordCmd::ack(GCFEvent& e)
     
     if (ack.result == CR_NO_ERR) {
         cout << "RECORD command arrived add TBBControl" << endl;
-        cout << "for Station: " << itsStationStr << endl;
         cout << "for RCU    : " << itsRcuStr << endl;
     }
     else {
@@ -199,7 +196,7 @@ void CepSpeedCmd::send()
     CRCepSpeedEvent event;
     
     event.triggerID = 50001;
-    event.stationList = itsStationStr;
+    event.stationList = "[]";
     event.cepDelay = itsDelay;
     event.cepDatapaths = itsDatapaths;
 
@@ -214,7 +211,6 @@ GCFEvent::TResult CepSpeedCmd::ack(GCFEvent& e)
     
     if (ack.result == CR_NO_ERR) {
         cout << "CEPSPEED command arrived add TBBControl" << endl;
-        cout << "for Station: " << itsStationStr << endl;
     }
     else {
         cout << "Error in CEPSPEED command" << endl;
@@ -239,7 +235,7 @@ void StopDumpsCmd::send()
     CRStopDumpsEvent event;
     
     event.triggerID = 50001;
-    event.stationList = itsStationStr;
+    event.stationList = "[]";
     
     itsPort.send(event);
     itsTimer.setTimer(DELAY);
@@ -252,10 +248,47 @@ GCFEvent::TResult StopDumpsCmd::ack(GCFEvent& e)
     
     if (ack.result == CR_NO_ERR) {
         cout << "STOPDUMPS command arrived add TBBControl" << endl;
-        cout << "for Station: " << itsStationStr << endl;
     }
     else {
         cout << "Error in STOPDUMPS command" << endl;
+    }
+    setCmdDone(true);
+
+    return(GCFEvent::HANDLED);
+}
+
+//---- SET VHECR MODE  ----------------------------------------------------------------
+VhecrEnableCmd::VhecrEnableCmd(GCF::RTDB::GCFRTDBPort& port, GCFTimerPort& timer) : Command(port, timer)
+{
+    cout << endl;
+    cout << "== RTDB ================================================= set VHECR state ====" << endl;
+    cout << endl;
+}
+
+//-----------------------------------------------------------------------------
+
+void VhecrEnableCmd::send()
+{
+    CRVhecrStateEvent event;
+    
+    event.triggerID = 50001;
+    event.stationList = "[]";
+    event.state = itsState;
+    
+    itsPort.send(event);
+    itsTimer.setTimer(DELAY);
+}
+
+//-----------------------------------------------------------------------------
+GCFEvent::TResult VhecrEnableCmd::ack(GCFEvent& e)
+{
+    CRVhecrStateAckEvent ack(e);
+    
+    if (ack.result == CR_NO_ERR) {
+        cout << "VHECRSTATE command arrived add TBBControl" << endl;
+    }
+    else {
+        cout << "Error in VHECRSTATE command" << endl;
     }
     setCmdDone(true);
 
@@ -277,21 +310,23 @@ void TRIGCtl::commandHelp()
     cout << " #  --command --select=<...set> : only information for all selected boards or rcu's is displayed" << endl;
     cout << " #    Example: --select=0,1,4  or  --select=0..6  or  --select=0,1,2,8..11" << endl;
     cout << endl;
-    cout << " trigctl --stop=time --obsid=observationId [--station=<stations>][--rcu=<rcuset>]" << endl;
-    cout << "         # stop recording at given time for selected observation" << endl;
-    cout << " trigctl --read=time,timebefore, timeafter --obsid=observationId [--station=<stations>][--select=<rcuset>]" << endl;
+    cout << " trigctl --stop=time [--rcu=<rcuset>]" << endl;
+    cout << "         # stop recording at given time for selected rcus" << endl;
+    cout << " trigctl --read=time,timebefore, timeafter [--select=<rcuset>]" << endl;
     cout << "         # start dumping data to cep for given time and span" << endl;
-    cout << " trigctl --record --obsid=observationId [--station=<stations>][--rcu=<rcuset>]" << endl;
-    cout << "         # start recording for selected observation" << endl;
-    cout << " trigctl --cepspeed=delay,datapaths --obsid=observationId [--station=<stations>]" << endl;
-    cout << "         # set cep speed settings for selected observation" << endl;
+    cout << " trigctl --record [--rcu=<rcuset>]" << endl;
+    cout << "         # start recording for selected rcus" << endl;
+    cout << " trigctl --cepspeed=delay,datapaths " << endl;
+    cout << "         # set cep speed settings" << endl;
     cout << "         # delay = delay between frames in nSec (1=5nSec)" << endl;
     cout << "         # datapaths = number of datapaths to use 1..6" << endl;
-    cout << " trigctl --stopdumps --obsid=observationId [--station=<stations>]" << endl;
-    cout << "         # stop dumping data to cep for selected observation" << endl;
+    cout << " trigctl --stopdumps" << endl;
+    cout << "         # stop dumping data to cep" << endl;
+    cout << " trigctl --vhecrenable=1|0" << endl;
+    cout << "         # turn on/off VHECRTask, 1 = on, 0 = off" << endl;
+    
     cout << endl;
-    cout << " for all optional arguments:  if [--station=<stations>] is not used all stations are selected" << endl;
-    cout << "                              if [--rcu=<rcus>] is not used all rcus are selected" << endl;
+    cout << " for all optional arguments:  if [--rcu=<rcus>] is not used all rcus are selected" << endl;
       
     cout << " trigctl --help                                                # this help screen" << endl;
     cout << "< < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < < " << endl;
@@ -393,7 +428,7 @@ GCFEvent::TResult TRIGCtl::initial(GCFEvent& e, GCFPortInterface& port)
 //-----------------------------------------------------------------------------
 GCFEvent::TResult TRIGCtl::docommand(GCFEvent& e, GCFPortInterface& port)
 {
-    cout << "docommand signal:" << eventName(e) << endl;
+    //cout << "docommand signal:" << eventName(e) << endl;
     GCFEvent::TResult status = GCFEvent::HANDLED;
 
     switch (e.signal) {
@@ -433,7 +468,8 @@ GCFEvent::TResult TRIGCtl::docommand(GCFEvent& e, GCFPortInterface& port)
         case CR_READ_ACK:
         case CR_RECORD_ACK:
         case CR_CEP_SPEED_ACK:
-        case CR_STOP_DUMPS_ACK: {
+        case CR_STOP_DUMPS_ACK:
+        case CR_VHECR_STATE_ACK: {
             itsTimerPort->cancelAllTimers();
             status = itsCommand->ack(e); // handle the acknowledgement
             if (!itsCommand->isCmdDone()) {
@@ -468,19 +504,18 @@ Command* TRIGCtl::parse_options(int argc, char** argv)
     while(1) {
         static struct option long_options[] = {
             { "rcu",        required_argument, 0, 'a' },
-            { "station",    required_argument, 0, 'g' },
-            { "obsid",      required_argument, 0, 'h' },
             { "stop",       required_argument, 0, 'b' },
             { "read",       required_argument, 0, 'c' },
             { "record",     no_argument,       0, 'd' },
             { "cepspeed",   required_argument, 0, 'e' },
             { "stopdumps",  no_argument,       0, 'f' },
+            { "vhecrenable",required_argument, 0, 'g' },
             { 0,            0,                 0,  0 },
         };
 
         int option_index = 0;
         int c = getopt_long( argc, argv,
-                                    "a:g:h:b:c:d:e:f:",
+                                    "a:b:c:d:e:f:g:",
                                     long_options,
                                     &option_index );
     
@@ -504,47 +539,12 @@ Command* TRIGCtl::parse_options(int argc, char** argv)
                 }
             } break;
 
-            case 'g': {    // --station
-                if (optarg) {
-                    if (!command) {
-                        cout << "Error: 'command' argument should come before --station argument" << endl;
-                        exit(EXIT_FAILURE);
-                    }
-                    command->setStationStr(optarg);
-                }
-                else {
-                    cout << "Error: option '--station' requires an argument" << endl;
-                    exit(EXIT_FAILURE);
-                }
-            } break;
-            
-            case 'h': {    // --obsid
-                if (optarg) {
-                    if (!command) {
-                        cout << "Error: 'command' argument should come before --station argument" << endl;
-                        exit(EXIT_FAILURE);
-                    }
-                    uint32 obsid;
-                    int numitems = sscanf(optarg, "%u",&obsid);
-                    if ( numitems < 1 || numitems == EOF) {
-                        cout << "Error: invalid number of arguments. Should be of the format " << endl;
-                        cout << "       '--obsid=id' (use int value)" << endl;
-                        exit(EXIT_FAILURE);
-                    }
-                    command->setOnservationID(obsid);
-                }
-                else {
-                    cout << "Error: option '--onsid' requires an argument" << endl;
-                    exit(EXIT_FAILURE);
-                }
-            } break; 
-
             case 'b': {   // --stop
                 if (command) delete command;
                 StopCmd* cmd = new StopCmd(*itsRTDBPort, *itsTimerPort);
                 command = cmd;
                 
-                double stopTime = 0.;
+                double stopTime = -1.;
                 if (optarg) {
                     int numitems = sscanf(optarg, "%lf",&stopTime);
                     // check if valid arguments
@@ -613,6 +613,24 @@ Command* TRIGCtl::parse_options(int argc, char** argv)
                 command = cmd;
             } break;
 
+            case 'g': {   // --vhecrenable
+                if (command) delete command;
+                VhecrEnableCmd* cmd = new VhecrEnableCmd(*itsRTDBPort, *itsTimerPort);
+                command = cmd;
+                uint32 state = 0;
+                if (optarg) {
+                    int numitems = sscanf(optarg, "%u",&state);
+                    // check if valid arguments
+                    if ( numitems < 1 || numitems == EOF) {
+                        cout << "Error: invalid number of arguments. Should be of the format " << endl;
+                        cout << "       '--vhecrenable=state' (state = 0/1)" << endl;
+                        cout << "          state=0: VHECRTask disabled, state=1: VHECRTask enabled" << endl;
+                        exit(EXIT_FAILURE);
+                    }
+                }
+                cmd->setState(state);
+            } break;
+
             case 'L':
             case '?': {
                 commandHelp();
@@ -626,12 +644,6 @@ Command* TRIGCtl::parse_options(int argc, char** argv)
         }
     }
 
-    if (command) {
-        if (!command->isSetObservationID()) {
-            cout << "Warning, ObservationID not set" << endl;
-            exit(EXIT_FAILURE);
-        }
-    }
   return(command);
 }
 
