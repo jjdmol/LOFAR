@@ -99,7 +99,8 @@ namespace LOFAR {
       void makeFactors (const casa::Array<casa::DComplex>& bufIn,
                         casa::Array<casa::DComplex>& bufOut,
                         const casa::Cube<float>& weightSums,
-                        uint nchanOut);
+                        uint nChanOut,
+                        uint nChanAvg);
 
       // Deproject the sources without a model.
       void deproject (casa::Array<casa::DComplex>& factors,
@@ -133,7 +134,7 @@ namespace LOFAR {
       vector<PhaseShift*>      itsPhaseShifts;
       vector<DPStep::ShPtr>    itsFirstSteps;   //# phaseshift/average steps
       vector<MultiResultStep*> itsAvgResults;   //# result of phaseshift/average
-      DPStep::ShPtr            itsAvgSubtr;     //# average step for subtract
+//      DPStep::ShPtr            itsAvgSubtr;     //# average step for subtract
       MultiResultStep*         itsAvgResultSubtr; //# result of subtract avg
 //      BBSExpr                  itsBBSExpr;
       string                   itsTargetSource; //# empty if no target model
@@ -184,6 +185,7 @@ namespace LOFAR {
       EstimateState            itsState;
       size_t                   itsStationCount;
       size_t                   itsTimeCount;
+      PatchList                itsPatchList;
 // TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
     };
 

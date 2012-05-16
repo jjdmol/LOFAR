@@ -36,6 +36,8 @@
 #include <BBSKernel/Solver.h>
 #include <Common/OpenMP.h>
 
+#include <ParmDB/SourceDB.h>
+
 #define ESTIMATE_TIMER 1
 
 #ifdef ESTIMATE_TIMER
@@ -46,13 +48,242 @@ namespace LOFAR
 {
 namespace DPPP
 {
+using BBS::SourceDB;
+using BBS::ParmDB;
+using BBS::ParmValue;
+using BBS::ParmValueSet;
+using BBS::SourceInfo;
 
 // \addtogroup NDPPP
 // @{
 
-void __init_source_list(const string &fname);
-void __init_lmn(unsigned int dir, double pra, double pdec);
+//void __init_source_list(const string &fname);
+//void __init_lmn(unsigned int dir, double pra, double pdec);
 
+
+class Position
+{
+public:
+    Position()
+    {
+        fill(itsPosition, itsPosition + 2, 0.0);
+    }
+
+    Position(double alpha, double delta)
+    {
+        itsPosition[0] = alpha;
+        itsPosition[1] = delta;
+    }
+
+    const double &operator[](size_t i) const
+    {
+        return itsPosition[i];
+    }
+
+    double &operator[](size_t i)
+    {
+        return itsPosition[i];
+    }
+
+private:
+    double  itsPosition[2];
+};
+
+class Stokes
+{
+public:
+    Stokes()
+    :   I(0.0),
+        Q(0.0),
+        U(0.0),
+        V(0.0)
+    {
+    }
+
+    double  I, Q, U, V;
+};
+
+class Source
+{
+public:
+    Source()
+        :   itsRefFreq(0.0),
+            itsPolarizedFraction(0.0),
+            itsPolarizationAngle(0.0),
+            itsRotationMeasure(0.0)
+    {
+    }
+
+    Source(const Position &position)
+        :   itsPosition(position),
+            itsRefFreq(0.0),
+            itsPolarizedFraction(0.0),
+            itsPolarizationAngle(0.0),
+            itsRotationMeasure(0.0)
+    {
+    }
+
+    Source(const Position &position, const Stokes &stokes)
+        :   itsPosition(position),
+            itsStokes(stokes),
+            itsRefFreq(0.0),
+            itsPolarizedFraction(0.0),
+            itsPolarizationAngle(0.0),
+            itsRotationMeasure(0.0)
+    {
+    }
+
+    void setPosition(const Position &position)
+    {
+        itsPosition = position;
+    }
+
+    void setStokes(const Stokes &stokes)
+    {
+        itsStokes = stokes;
+    }
+
+    template <typename T>
+    void setSpectralIndex(double refFreq, T first, T last)
+    {
+        itsRefFreq = refFreq;
+        itsSpectralIndex.clear();
+        itsSpectralIndex.insert(itsSpectralIndex.begin(), first, last);
+    }
+
+    void setPolarizedFraction(double fraction)
+    {
+        itsPolarizedFraction = fraction;
+    }
+
+    void setPolarizationAngle(double angle)
+    {
+        itsPolarizationAngle = angle;
+    }
+
+    void setRotationMeasure(double rm)
+    {
+        itsRotationMeasure = rm;
+    }
+
+    const Position &position() const
+    {
+        return itsPosition;
+    }
+
+    Stokes stokes(double freq) const
+    {
+        Stokes stokes(itsStokes);
+
+        if(hasSpectralIndex())
+        {
+            // Compute spectral index as:
+            // (v / v0) ^ (c0 + c1 * log10(v / v0) + c2 * log10(v / v0)^2 + ...)
+            // Where v is the frequency and v0 is the reference frequency.
+
+            // Compute log10(v / v0).
+            double base = log10(freq) - log10(itsRefFreq);
+
+            // Compute c0 + log10(v / v0) * c1 + log10(v / v0)^2 * c2 + ...
+            // using Horner's rule.
+            double exponent = 0.0;
+            typedef vector<double>::const_reverse_iterator iterator_type;
+            for(iterator_type it = itsSpectralIndex.rbegin(),
+                end = itsSpectralIndex.rend(); it != end; ++it)
+            {
+                exponent = exponent * base + *it;
+            }
+
+            // Compute I * (v / v0) ^ exponent, where I is the value of Stokes
+            // I at the reference frequency.
+            stokes.I *= pow10(base * exponent);
+        }
+
+        if(hasRotationMeasure())
+        {
+            double lambda = casa::C::c / freq;
+            double chi = 2.0 * (itsPolarizationAngle + itsRotationMeasure
+                * lambda * lambda);
+            double stokesQU = stokes.I * itsPolarizedFraction;
+            stokes.Q = stokesQU * cos(chi);
+            stokes.U = stokesQU * sin(chi);
+        }
+
+        return stokes;
+    }
+
+private:
+    bool hasSpectralIndex() const
+    {
+        return itsSpectralIndex.size() > 0;
+    }
+
+    bool hasRotationMeasure() const
+    {
+        return itsRotationMeasure > 0.0;
+    }
+
+    Position        itsPosition;
+    Stokes          itsStokes;
+    double          itsRefFreq;
+    vector<double>  itsSpectralIndex;
+    double          itsPolarizedFraction;
+    double          itsPolarizationAngle;
+    double          itsRotationMeasure;
+};
+
+struct Patch
+{
+    typedef vector<Source>::const_iterator const_iterator;
+
+    string          name;
+    Position        position;
+    vector<Source>  sources;
+
+    size_t size() const { return sources.size(); }
+    const Source &operator[](size_t i) const
+    {
+        return sources[i];
+    }
+
+    const_iterator begin() const
+    {
+        return sources.begin();
+    }
+
+    const_iterator end() const
+    {
+        return sources.end();
+    }
+
+    void syncPos()
+    {
+        Position position = sources.front().position();
+        double cosDec = cos(position[1]);
+        double x = cos(position[0]) * cosDec;
+        double y = sin(position[0]) * cosDec;
+        double z = sin(position[1]);
+
+        for(unsigned int i = 1; i < sources.size(); ++i)
+        {
+            position = sources[i].position();
+            cosDec = cos(position[1]);
+            x += cos(position[0]) * cosDec;
+            y += sin(position[0]) * cosDec;
+            z += sin(position[1]);
+        }
+
+        x /= size();
+        y /= size();
+        z /= size();
+
+        this->position[0] = atan2(y, x);
+        this->position[1] = asin(z);
+    }
+};
+
+//typedef vector<Source>  Patch;
+typedef vector<Patch>   PatchList;
 
 struct EstimateState
 {
@@ -64,6 +295,7 @@ struct EstimateState
         const BBS::BaselineSeq &baselines,
         const BBS::Axis::ShPtr &demix,
         const BBS::Axis::ShPtr &residual,
+        double ra, double dec,
         const BBS::SolverOptions &options)
     {
         this->nStat = nStat;
@@ -71,7 +303,8 @@ struct EstimateState
         this->axisDemix = demix;
         this->axisResidual = residual;
         this->baselines = baselines;
-
+        this->ra = ra;
+        this->dec = dec;
         this->lsqOptions = options;
 
         size_t nBl = baselines.size();
@@ -79,7 +312,7 @@ struct EstimateState
         size_t nDr = nDir;
 
         size_t nThread = OpenMP::maxThreads();
-        sim.resize(boost::extents[nThread][nDr][nBl][nCr]);
+//        sim.resize(boost::extents[nThread][nDr][nBl][nCr]);
 
 #ifdef ESTIMATE_TIMER
         tTot.resize(nThread);
@@ -87,9 +320,10 @@ struct EstimateState
         tEq.resize(nThread);
         tLM.resize(nThread);
         tSub.resize(nThread);
+        tSimNew.resize(nThread);
 #endif
 
-        J.resize(boost::extents[nTime][nStat][nDr][4 * 2]);
+        J.resize(boost::extents[nTime][nDr][nStat][4 * 2]);
         typedef boost::multi_array<double, 4>::element* iterator;
         for(iterator it = J.data(), end = J.data() + J.num_elements();
             it != end;)
@@ -143,14 +377,19 @@ struct EstimateState
     size_t                              nTime;
     BBS::Axis::ShPtr                    axisDemix, axisResidual;
     BBS::BaselineSeq                    baselines;
-    boost::multi_array<dcomplex, 4>     sim;
+//    boost::multi_array<dcomplex, 4>     sim;
     boost::multi_array<double, 4>       J;
     boost::multi_array<unsigned int, 3> dIndex;
+    double                              ra, dec;
     BBS::SolverOptions                  lsqOptions;
+//    Patch                               patch;
+//    Position                            patchPos;
 #ifdef ESTIMATE_TIMER
-    vector<HWTimer>                     tTot, tSim, tEq, tLM, tSub;
+    vector<HWTimer>                     tTot, tSim, tEq, tLM, tSub, tSimNew;
 #endif
 };
+
+Patch makePatch(SourceDB &sourceDB, const string &name);
 
 void estimate(vector<DPPP::DPBuffer> &target,
     const vector<vector<DPPP::DPBuffer> > &buffers,
@@ -158,6 +397,18 @@ void estimate(vector<DPPP::DPBuffer> &target,
     const vector<casa::Array<casa::DComplex> > &coeffSub,
     EstimateState &state,
     size_t ts);
+//    const PatchList &patches);
+
+void demix2(vector<DPPP::DPBuffer> &target,
+    const vector<vector<DPPP::DPBuffer> > &streams,
+    const vector<casa::Array<casa::DComplex> > &coeff,
+    const vector<casa::Array<casa::DComplex> > &coeffRes,
+    EstimateState &state,
+    size_t ts,
+    size_t nTime,
+    size_t timeFactor,
+    const PatchList &patches);
+
 
 // @}
 
