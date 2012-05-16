@@ -11,7 +11,7 @@ import os
 import subprocess
 
 import lofarpipe.support.lofaringredient as ingredient
-
+from lofarpipe.support.utilities import create_directory
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
@@ -101,6 +101,9 @@ class vdsmaker(BaseRecipe, RemoteCommandRecipeMixIn):
         self.logger.info("Combining VDS files")
         executable = self.inputs['combinevds']
         gvds_out = self.inputs['gvds']
+        # Create the gvds directory for output files, needed for combine
+        create_directory(os.path.dirname(gvds_out))
+ 
         try:
             command = [executable, gvds_out] + vdsnames
             combineproc = subprocess.Popen(

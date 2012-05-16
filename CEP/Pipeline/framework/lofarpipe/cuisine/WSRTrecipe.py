@@ -33,29 +33,29 @@ class WSRTrecipe(object):
     override main_results."""
     def __init__(self):
         ## List of inputs, self.inputs[key] != True is considered valid input
-        self.inputs   = ingredient.WSRTingredient()
+        self.inputs = ingredient.WSRTingredient()
         ## List of outputs, should only be filled on succesful execution
-        self.outputs  = ingredient.WSRTingredient()
+        self.outputs = ingredient.WSRTingredient()
         ## All of these should do something sensible in their __str__ for
         ## simple print output
 
         ## Try using the standard Python system for handling options
         self.optionparser = OptionParser(
-            usage="usage: %prog [options]"
+            usage = "usage: %prog [options]"
         )
         self.optionparser.remove_option('-h')
         self.optionparser.add_option(
-            '-h', '--help', action="store_true"
+            '-h', '--help', action = "store_true"
         )
         self.optionparser.add_option(
             '-v', '--verbose',
-            action="callback", callback=self.__setloglevel,
-            help="verbose [Default: %default]"
+            action = "callback", callback = self.__setloglevel,
+            help = "verbose [Default: %default]"
         )
         self.optionparser.add_option(
             '-d', '--debug',
-            action="callback", callback=self.__setloglevel,
-            help="debug [Default: %default]"
+            action = "callback", callback = self.__setloglevel,
+            help = "debug [Default: %default]"
         )
 
         self.helptext = """LOFAR/WSRT pipeline framework"""
@@ -177,7 +177,7 @@ class WSRTrecipe(object):
             results = self.get_run_info(directory)
             if not results: return
             if not results[self.name]: return
-            self.inputs  = results[self.name]['inputs']
+            self.inputs = results[self.name]['inputs']
             self.outputs = results[self.name]['outputs']
             self.run(name)
         except Exception, e:
