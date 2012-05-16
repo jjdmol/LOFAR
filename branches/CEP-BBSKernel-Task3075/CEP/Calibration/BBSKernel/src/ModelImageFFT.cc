@@ -276,7 +276,7 @@ vector<double> ModelImageFft::getImageFrequencies()
   }
   spectralCoord_p.toWorld(frequenciesVec, pixels);    // get frequencies from spectralCoord attribute
   
-  for(unsigned int i=0; i<nchan; i++)
+  for(unsigned int i=0; i<nchan; i++)   // convert to std::vector, can this be done better?
     frequencies[i]=frequenciesVec(i);
   
   return frequencies;
