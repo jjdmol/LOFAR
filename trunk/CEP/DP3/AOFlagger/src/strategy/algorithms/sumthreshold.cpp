@@ -6,6 +6,7 @@
 
 #include <AOFlagger/strategy/algorithms/thresholdmitigater.h>
 #include <AOFlagger/util/aologger.h>
+#include <boost/concept_check.hpp>
 
 /**
  * The SSE version of the Vertical SumThreshold algorithm using intrinsics.
@@ -144,9 +145,19 @@ void ThresholdMitigater::VerticalSumThresholdLargeSSE(Image2DCPtr input, Mask2DP
 	delete maskCopy;
 }
 
-/*template<size_t Length>
+template<size_t Length>
 void ThresholdMitigater::HorizontalSumThresholdLargeSSE(Image2DCPtr input, Mask2DPtr mask, num_t threshold)
 {
+	// The idea of the horizontal SSE version is to read four ('y') rows and
+	// process them simultaneously. 
+	
+	// Currently, this SSE horizontal version is not significant faster
+	// (less than ~3%) than the
+	// Non-SSE horizontal version. This has probably to do with 
+	// rather randomly reading through the set (first (0,0)-(0,3), then (1,0)-(1,3), etc)
+	// this introduces cache misses and/or many smaller reading requests
+	
+	
 	Mask2D *maskCopy = Mask2D::CreateCopy(*mask);
 	const size_t width = mask->Width(), height = mask->Height();
 	const __m128 zero4 = _mm_set_ps(0.0, 0.0, 0.0, 0.0);
@@ -156,169 +167,169 @@ void ThresholdMitigater::HorizontalSumThresholdLargeSSE(Image2DCPtr input, Mask2
 	const __m128 threshold4Neg = _mm_set1_ps(-threshold); 
 	if(Length <= width)
 	{
-		for(size_t y=0;y<width;y += 4)
+		for(size_t y=0;y<height;y += 4)
 		{
-			__m128
-				sum4A = _mm_set_ps(0.0, 0.0, 0.0, 0.0),
-				sum4B = _mm_set_ps(0.0, 0.0, 0.0, 0.0),
-				sum4C = _mm_set_ps(0.0, 0.0, 0.0, 0.0),
-				sum4D = _mm_set_ps(0.0, 0.0, 0.0, 0.0);
-			__m128i
-				count4A = _mm_set_epi32(0, 0, 0, 0),
-				count4B = _mm_set_epi32(0, 0, 0, 0),
-				count4C = _mm_set_epi32(0, 0, 0, 0),
-				count4D = _mm_set_epi32(0, 0, 0, 0);
+			__m128 sum4 = _mm_set_ps(0.0, 0.0, 0.0, 0.0);
+			__m128i count4 = _mm_set_epi32(0, 0, 0, 0);
 			size_t xRight;
 			
+			const bool
+				*rFlagPtrA = mask->ValuePtr(0, y+3),
+				*rFlagPtrB = mask->ValuePtr(0, y+2),
+				*rFlagPtrC = mask->ValuePtr(0, y+1),
+				*rFlagPtrD = mask->ValuePtr(0, y);
+			const num_t
+				*rValPtrA = input->ValuePtr(0, y+3),
+				*rValPtrB = input->ValuePtr(0, y+2),
+				*rValPtrC = input->ValuePtr(0, y+1),
+				*rValPtrD = input->ValuePtr(0, y);
+				
 			for(xRight=0;xRight<Length-1;++xRight)
 			{
-				const bool
-					*rowPtrA = mask->ValuePtr(xRight, y),
-					*rowPtrB = mask->ValuePtr(xRight, y+1),
-					*rowPtrC = mask->ValuePtr(xRight, y+2),
-					*rowPtrD = mask->ValuePtr(xRight, y+3);
-				
 				// Assign each integer to one bool in the mask
 				// Convert true to 0xFFFFFFFF and false to 0
-				__m128 conditionMaskA = _mm_castsi128_ps(
-					_mm_cmpeq_epi32(_mm_set_epi32(rowPtrD[0], rowPtrC[0], rowPtrB[0], rowPtrA[0]),
-													zero4i));
-				__m128 conditionMaskB = _mm_castsi128_ps(
-					_mm_cmpeq_epi32(_mm_set_epi32(rowPtrD[1], rowPtrC[1], rowPtrB[1], rowPtrA[1]),
-													zero4i));
-				__m128 conditionMaskC = _mm_castsi128_ps(
-					_mm_cmpeq_epi32(_mm_set_epi32(rowPtrD[2], rowPtrC[2], rowPtrB[2], rowPtrA[2]),
-													zero4i));
-				__m128 conditionMaskD = _mm_castsi128_ps(
-					_mm_cmpeq_epi32(_mm_set_epi32(rowPtrD[3], rowPtrC[3], rowPtrB[3], rowPtrA[3]),
+				__m128 conditionMask = _mm_castsi128_ps(
+					_mm_cmpeq_epi32(_mm_set_epi32(*rFlagPtrA, *rFlagPtrB, *rFlagPtrC, *rFlagPtrD),
 													zero4i));
 				
-				// Conditionally increment counters
-				count4A = _mm_add_epi32(count4A, _mm_and_si128(_mm_castps_si128(conditionMaskA), ones4));
-				count4B = _mm_add_epi32(count4B, _mm_and_si128(_mm_castps_si128(conditionMaskB), ones4));
-				count4C = _mm_add_epi32(count4C, _mm_and_si128(_mm_castps_si128(conditionMaskC), ones4));
-				count4D = _mm_add_epi32(count4D, _mm_and_si128(_mm_castps_si128(conditionMaskD), ones4));
+				// Conditionally increment counters (nr unflagged samples)
+				count4 = _mm_add_epi32(count4, _mm_and_si128(_mm_castps_si128(conditionMask), ones4));
+				
+				// Load 4 samples
+				__m128 v = _mm_set_ps(*rValPtrA,
+															*rValPtrB,
+															*rValPtrC,
+															*rValPtrD);
 				
 				// Add values with conditional move
-				__m128
-					a = _mm_load_ps(input->ValuePtr(xRight, y)),
-					b = _mm_load_ps(input->ValuePtr(xRight, y+1)),
-					c = _mm_load_ps(input->ValuePtr(xRight, y+2)),
-					d = _mm_load_ps(input->ValuePtr(xRight, y+3));
-					
-				_MM_TRANSPOSE4_PS(a,b,c,d);
+				sum4 = _mm_add_ps(sum4, _mm_or_ps(_mm_and_ps(v, conditionMask),
+																					_mm_andnot_ps(conditionMask, zero4)));
 				
-				sum4A = _mm_add_ps(sum4A, _mm_or_ps(_mm_and_ps(a, conditionMaskA), _mm_andnot_ps(conditionMaskA, zero4)));
-				sum4B = _mm_add_ps(sum4B, _mm_or_ps(_mm_and_ps(b, conditionMaskA), _mm_andnot_ps(conditionMaskA, zero4)));
-				sum4C = _mm_add_ps(sum4C, _mm_or_ps(_mm_and_ps(c, conditionMaskA), _mm_andnot_ps(conditionMaskA, zero4)));
-				sum4D = _mm_add_ps(sum4D, _mm_or_ps(_mm_and_ps(d, conditionMaskA), _mm_andnot_ps(conditionMaskA, zero4)));
+				++rFlagPtrA;
+				++rFlagPtrB;
+				++rFlagPtrC;
+				++rFlagPtrD;
+
+				++rValPtrA;
+				++rValPtrB;
+				++rValPtrC;
+				++rValPtrD;
 			}
 			
 			size_t xLeft = 0;
-			while(xRight< width)
-			{
-				// ** Add the 4 sample at the right **
+			const bool
+				*lFlagPtrA = mask->ValuePtr(0, y+3),
+				*lFlagPtrB = mask->ValuePtr(0, y+2),
+				*lFlagPtrC = mask->ValuePtr(0, y+1),
+				*lFlagPtrD = mask->ValuePtr(0, y);
+			const num_t
+				*lValPtrA = input->ValuePtr(0, y+3),
+				*lValPtrB = input->ValuePtr(0, y+2),
+				*lValPtrC = input->ValuePtr(0, y+1),
+				*lValPtrD = input->ValuePtr(0, y);
 				
-				const bool
-					*rowPtrA = mask->ValuePtr(xRight, y),
-					*rowPtrB = mask->ValuePtr(xRight, y+1),
-					*rowPtrC = mask->ValuePtr(xRight, y+2),
-					*rowPtrD = mask->ValuePtr(xRight, y+3);
+			while(xRight < width)
+			{
+				// ** Add the sample at the right **
 				
 				// Assign each integer to one bool in the mask
 				// Convert true to 0xFFFFFFFF and false to 0
-				__m128 conditionMaskA = _mm_castsi128_ps(
-					_mm_cmpeq_epi32(_mm_set_epi32(rowPtrD[0], rowPtrC[0], rowPtrB[0], rowPtrA[0]),
-													zero4i));
-				__m128 conditionMaskB = _mm_castsi128_ps(
-					_mm_cmpeq_epi32(_mm_set_epi32(rowPtrD[1], rowPtrC[1], rowPtrB[1], rowPtrA[1]),
-													zero4i));
-				__m128 conditionMaskC = _mm_castsi128_ps(
-					_mm_cmpeq_epi32(_mm_set_epi32(rowPtrD[2], rowPtrC[2], rowPtrB[2], rowPtrA[2]),
-													zero4i));
-				__m128 conditionMaskD = _mm_castsi128_ps(
-					_mm_cmpeq_epi32(_mm_set_epi32(rowPtrD[3], rowPtrC[3], rowPtrB[3], rowPtrA[3]),
+				__m128 conditionMask = _mm_castsi128_ps(
+					_mm_cmpeq_epi32(_mm_set_epi32(*rFlagPtrA, *rFlagPtrB, *rFlagPtrC, *rFlagPtrD),
 													zero4i));
 				
 				// Conditionally increment counters
-				count4A = _mm_add_epi32(count4A, _mm_and_si128(_mm_castps_si128(conditionMaskA), ones4));
-				count4B = _mm_add_epi32(count4B, _mm_and_si128(_mm_castps_si128(conditionMaskB), ones4));
-				count4C = _mm_add_epi32(count4C, _mm_and_si128(_mm_castps_si128(conditionMaskC), ones4));
-				count4D = _mm_add_epi32(count4D, _mm_and_si128(_mm_castps_si128(conditionMaskD), ones4));
+				count4 = _mm_add_epi32(count4, _mm_and_si128(_mm_castps_si128(conditionMask), ones4));
 				
-				// Add values with conditional move
-				sum4A = _mm_add_ps(sum4A,
-					_mm_or_ps(_mm_and_ps(_mm_load_ps(input->ValuePtr(xRight, y)), conditionMaskA),
-										_mm_andnot_ps(conditionMaskA, zero4)));
-				sum4B = _mm_add_ps(sum4B,
-					_mm_or_ps(_mm_and_ps(_mm_load_ps(input->ValuePtr(xRight, y)), conditionMaskB),
-										_mm_andnot_ps(conditionMaskB, zero4)));
-				sum4C = _mm_add_ps(sum4C,
-					_mm_or_ps(_mm_and_ps(_mm_load_ps(input->ValuePtr(xRight, y)), conditionMaskC),
-										_mm_andnot_ps(conditionMaskC, zero4)));
-				sum4D = _mm_add_ps(sum4D,
-					_mm_or_ps(_mm_and_ps(_mm_load_ps(input->ValuePtr(xRight, y)), conditionMaskD),
-										_mm_andnot_ps(conditionMaskD, zero4)));
+				// Load 4 samples
+				__m128 v = _mm_set_ps(*rValPtrA,
+															*rValPtrB,
+															*rValPtrC,
+															*rValPtrD);
+				
+				// Add values with conditional move (sum4 += (v & m) | (m & ~0) ).
+				sum4 = _mm_add_ps(sum4, _mm_or_ps(_mm_and_ps(v, conditionMask), 
+																					_mm_andnot_ps(conditionMask, zero4)));
 				
 				// ** Check sum **
 				
 				// if sum/count > threshold || sum/count < -threshold
-				__m128
-					count4AsSingleA = _mm_cvtepi32_ps(count4A),
-					count4AsSingleB = _mm_cvtepi32_ps(count4B),
-					count4AsSingleC = _mm_cvtepi32_ps(count4C),
-					count4AsSingleD = _mm_cvtepi32_ps(count4D);
-				const unsigned
-					flagConditionsA =
-					_mm_movemask_ps(_mm_cmpgt_ps(_mm_div_ps(sum4A, count4AsSingleA), threshold4Pos)) |
-					_mm_movemask_ps(_mm_cmplt_ps(_mm_div_ps(sum4A, count4AsSingleA), threshold4Neg)),
-					flagConditionsB =
-					_mm_movemask_ps(_mm_cmpgt_ps(_mm_div_ps(sum4B, count4AsSingleB), threshold4Pos)) |
-					_mm_movemask_ps(_mm_cmplt_ps(_mm_div_ps(sum4B, count4AsSingleB), threshold4Neg)),
-					flagConditionsC =
-					_mm_movemask_ps(_mm_cmpgt_ps(_mm_div_ps(sum4C, count4AsSingleC), threshold4Pos)) |
-					_mm_movemask_ps(_mm_cmplt_ps(_mm_div_ps(sum4C, count4AsSingleC), threshold4Neg)),
-					flagConditionsD =
-					_mm_movemask_ps(_mm_cmpgt_ps(_mm_div_ps(sum4D, count4AsSingleD), threshold4Pos)) |
-					_mm_movemask_ps(_mm_cmplt_ps(_mm_div_ps(sum4D, count4AsSingleD), threshold4Neg));
+				__m128 count4AsSingle = _mm_cvtepi32_ps(count4);
+				const unsigned flagConditions =
+					_mm_movemask_ps(_mm_cmpgt_ps(_mm_div_ps(sum4, count4AsSingle), threshold4Pos)) |
+					_mm_movemask_ps(_mm_cmplt_ps(_mm_div_ps(sum4, count4AsSingle), threshold4Neg));
 				
-				if(flagConditions & 1 != 0)
+				/*if((flagConditions & 8) != 0)
+				{
+					float vf;
+					_mm_store_ss(&vf, v);
+					std::cout << vf << "=" << input->Value(xRight, y+3) << '|';
+					float fsum;
+					_mm_store_ss(&fsum, sum4);
+					float f;
+					_mm_store_ss(&f, _mm_div_ps(sum4, count4AsSingle));
+					std::cout << xLeft << ":" << input->Value(xRight-1, y+3) << '+' << input->Value(xRight, y+3) << '=' << fsum << "/..=" << f << ',';
+				}*/
+					
+				if((flagConditions & 1) != 0)
 					maskCopy->SetHorizontalValues(xLeft, y, true, Length);
-				if(flagConditions & 2 != 0)
-					maskCopy->SetHorizontalValues(xLeft, y, true, Length);
-				if(flagConditions & 4 != 0)
-					maskCopy->SetHorizontalValues(xLeft, y, true, Length);
-				if(flagConditions & 8 != 0)
-					maskCopy->SetHorizontalValues(xLeft, y, true, Length);
+				if((flagConditions & 2) != 0)
+					maskCopy->SetHorizontalValues(xLeft, y+1, true, Length);
+				if((flagConditions & 4) != 0)
+					maskCopy->SetHorizontalValues(xLeft, y+2, true, Length);
+				if((flagConditions & 8) != 0)
+					maskCopy->SetHorizontalValues(xLeft, y+3, true, Length);
 				
-				// ** Subtract the sample at the top **
-				
-				// get a ptr
-				const bool *tRowPtr = mask->ValuePtr(xLeft, y);
+				// ** Subtract the sample at the left **
 				
 				// Assign each integer to one bool in the mask
 				// Convert true to 0xFFFFFFFF and false to 0
 				conditionMask = _mm_castsi128_ps(
-					_mm_cmpeq_epi32(_mm_set_epi32(tRowPtr[3], tRowPtr[2], tRowPtr[1], tRowPtr[0]),
+					_mm_cmpeq_epi32(_mm_set_epi32(*lFlagPtrA, *lFlagPtrB, *lFlagPtrC, *lFlagPtrD),
 													zero4i));
 				
 				// Conditionally decrement counters
 				count4 = _mm_sub_epi32(count4, _mm_and_si128(_mm_castps_si128(conditionMask), ones4));
 				
+				// Load 4 samples
+				v = _mm_set_ps(*lValPtrA,
+											 *lValPtrB,
+											 *lValPtrC,
+											 *lValPtrD);
+				
 				// Subtract values with conditional move
 				sum4 = _mm_sub_ps(sum4,
-					_mm_or_ps(_mm_and_ps(_mm_load_ps(input->ValuePtr(xLeft, y)), conditionMask),
-										_mm_andnot_ps(conditionMask, zero4)));
+					_mm_or_ps(_mm_and_ps(v, conditionMask), _mm_andnot_ps(conditionMask, zero4)));
 				
 				// ** Next... **
 				++xLeft;
 				++xRight;
+				
+				++rFlagPtrA;
+				++rFlagPtrB;
+				++rFlagPtrC;
+				++rFlagPtrD;
+				
+				++lFlagPtrA;
+				++lFlagPtrB;
+				++lFlagPtrC;
+				++lFlagPtrD;
+
+				++rValPtrA;
+				++rValPtrB;
+				++rValPtrC;
+				++rValPtrD;
+				
+				++lValPtrA;
+				++lValPtrB;
+				++lValPtrC;
+				++lValPtrD;
 			}
 		}
 	}
 	mask->Swap(*maskCopy);
 	delete maskCopy;
-}*/
+}
 
 template
 void ThresholdMitigater::VerticalSumThresholdLargeSSE<1>(Image2DCPtr input, Mask2DPtr mask, num_t threshold);
@@ -338,3 +349,23 @@ template
 void ThresholdMitigater::VerticalSumThresholdLargeSSE<128>(Image2DCPtr input, Mask2DPtr mask, num_t threshold);
 template
 void ThresholdMitigater::VerticalSumThresholdLargeSSE<256>(Image2DCPtr input, Mask2DPtr mask, num_t threshold);
+
+
+template
+void ThresholdMitigater::HorizontalSumThresholdLargeSSE<1>(Image2DCPtr input, Mask2DPtr mask, num_t threshold);
+template
+void ThresholdMitigater::HorizontalSumThresholdLargeSSE<2>(Image2DCPtr input, Mask2DPtr mask, num_t threshold);
+template
+void ThresholdMitigater::HorizontalSumThresholdLargeSSE<4>(Image2DCPtr input, Mask2DPtr mask, num_t threshold);
+template
+void ThresholdMitigater::HorizontalSumThresholdLargeSSE<8>(Image2DCPtr input, Mask2DPtr mask, num_t threshold);
+template
+void ThresholdMitigater::HorizontalSumThresholdLargeSSE<16>(Image2DCPtr input, Mask2DPtr mask, num_t threshold);
+template
+void ThresholdMitigater::HorizontalSumThresholdLargeSSE<32>(Image2DCPtr input, Mask2DPtr mask, num_t threshold);
+template
+void ThresholdMitigater::HorizontalSumThresholdLargeSSE<64>(Image2DCPtr input, Mask2DPtr mask, num_t threshold);
+template
+void ThresholdMitigater::HorizontalSumThresholdLargeSSE<128>(Image2DCPtr input, Mask2DPtr mask, num_t threshold);
+template
+void ThresholdMitigater::HorizontalSumThresholdLargeSSE<256>(Image2DCPtr input, Mask2DPtr mask, num_t threshold);

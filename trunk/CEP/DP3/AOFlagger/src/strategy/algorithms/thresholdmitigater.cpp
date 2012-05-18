@@ -22,18 +22,6 @@
 #include <AOFlagger/strategy/algorithms/thresholdmitigater.h>
 #include <AOFlagger/strategy/algorithms/thresholdtools.h>
 
-/*void ThresholdMitigater::Threshold(Image2D &image, num_t threshold)
-{
-	for(size_t y=0;y<image.Height();++y) {
-		for(size_t x=0;x<image.Width();++x) {
-			if(image.Value(x, y) > threshold)
-				image.SetValue(x, y, 1.0);
-			else
-				image.SetValue(x, y, 0.0);
-		}
-	}
-}*/
-
 template<size_t Length>
 void ThresholdMitigater::HorizontalSumThreshold(Image2DCPtr input, Mask2DPtr mask, num_t threshold)
 {
@@ -183,7 +171,7 @@ void ThresholdMitigater::VerticalSumThresholdLarge(Image2DCPtr input, Mask2DPtr 
 	mask->Swap(maskCopy);
 }
 
-void ThresholdMitigater::HorizontalSumThresholdLarge(Image2DCPtr input, Mask2DPtr mask, size_t length, num_t threshold)
+void ThresholdMitigater::HorizontalSumThresholdLargeReference(Image2DCPtr input, Mask2DPtr mask, size_t length, num_t threshold)
 {
 	switch(length)
 	{
@@ -234,6 +222,23 @@ void ThresholdMitigater::VerticalSumThresholdLargeSSE(Image2DCPtr input, Mask2DP
 	}	
 }
 
+void ThresholdMitigater::HorizontalSumThresholdLargeSSE(Image2DCPtr input, Mask2DPtr mask, size_t length, num_t threshold)
+{
+	switch(length)
+	{
+		case 1: HorizontalSumThreshold<1>(input, mask, threshold); break;
+		case 2: HorizontalSumThresholdLargeSSE<2>(input, mask, threshold); break;
+		case 4: HorizontalSumThresholdLargeSSE<4>(input, mask, threshold); break;
+		case 8: HorizontalSumThresholdLargeSSE<8>(input, mask, threshold); break;
+		case 16: HorizontalSumThresholdLargeSSE<16>(input, mask, threshold); break;
+		case 32: HorizontalSumThresholdLargeSSE<32>(input, mask, threshold); break;
+		case 64: HorizontalSumThresholdLargeSSE<64>(input, mask, threshold); break;
+		case 128: HorizontalSumThresholdLargeSSE<128>(input, mask, threshold); break;
+		case 256: HorizontalSumThresholdLargeSSE<256>(input, mask, threshold); break;
+		default: throw BadUsageException("Invalid value for length");
+	}	
+}
+
 void ThresholdMitigater::HorizontalVarThreshold(Image2DCPtr input, Mask2DPtr mask, size_t length, num_t threshold)
 {
 	size_t width = input->Width()-length+1;
@@ -279,14 +284,3 @@ void ThresholdMitigater::VarThreshold(Image2DCPtr input, Mask2DPtr mask, size_t 
 	HorizontalVarThreshold(input, mask, length, threshold);
 	VerticalVarThreshold(input, mask, length, threshold);
 }
-
-/*void ThresholdMitigater::OptimalThreshold(Image2DCPtr input, Mask2DPtr mask, bool additive, num_t sensitivity) {
-	num_t mean, stddev;
-	ThresholdTools::WinsorizedMeanAndStdDev(input, mask, mean, stddev);
-	if(!additive)
-		mask->SetAll<false>();
-	ThresholdMitigater::SumThreshold(input, mask, 1, sensitivity * stddev);
-	ThresholdMitigater::SumThreshold(input, mask, 2, sensitivity * stddev * 1.4 * 1.2);
-	ThresholdMitigater::SumThreshold(input, mask, 4, sensitivity * stddev * 2.0 * 1.4);
-	ThresholdMitigater::SumThreshold(input, mask, 8, sensitivity * stddev * 2.8 * 2.0);
-}*/
