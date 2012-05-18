@@ -326,6 +326,20 @@ class Mask2D {
 					SetValue(x, y, source->Value(x-destX, y-destY));
 			}
 		}
+		
+		void SwapXY()
+		{
+			Mask2D *tempMask = new Mask2D(_height, _width);
+			for(size_t y=0;y<_height;++y)
+			{
+				for(size_t x=0;x<_width;++x)
+				{
+					tempMask->SetValue(y, x, Value(x, y));
+				}
+			}
+			Swap(*tempMask);
+			delete tempMask;
+		}
 	private:
 		Mask2D(size_t width, size_t height);
 

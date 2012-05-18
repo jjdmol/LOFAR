@@ -29,23 +29,29 @@
 #include <AOFlagger/strategy/algorithms/thresholdmitigater.h>
 
 #include <AOFlagger/test/testingtools/asserter.h>
+#include <AOFlagger/test/testingtools/maskasserter.h>
 #include <AOFlagger/test/testingtools/unittest.h>
 
 class SumThresholdTest : public UnitTest {
 	public:
 		SumThresholdTest() : UnitTest("Sumthreshold")
 		{
-			AddTest(SumThresholdSSE(), "SumThreshold optimized SSE version");
+			AddTest(VerticalSumThresholdSSE(), "SumThreshold optimized SSE version (vertical)");
+			AddTest(HorizontalSumThresholdSSE(), "SumThreshold optimized SSE version (horizontal)");
 		}
 		
 	private:
-		struct SumThresholdSSE : public Asserter
+		struct VerticalSumThresholdSSE : public Asserter
+		{
+			void operator()();
+		};
+		struct HorizontalSumThresholdSSE : public Asserter
 		{
 			void operator()();
 		};
 };
 
-void SumThresholdTest::SumThresholdSSE::operator()()
+void SumThresholdTest::VerticalSumThresholdSSE::operator()()
 {
 	const unsigned
 		width = 2048,
@@ -77,6 +83,47 @@ void SumThresholdTest::SumThresholdSSE::operator()()
 		std::stringstream s;
 		s << "Equal SSE and reference masks produced by SumThreshold length " << length;
 		AssertTrue(mask1->Equals(mask2), s.str());
+	}
+}
+
+void SumThresholdTest::HorizontalSumThresholdSSE::operator()()
+{
+	const unsigned
+		width = 2048,
+		height = 256;
+	Mask2DPtr
+		mask1 = Mask2D::CreateUnsetMaskPtr(width, height),
+		mask2 = Mask2D::CreateUnsetMaskPtr(width, height);
+	Image2DPtr
+		real = MitigationTester::CreateTestSet(26, mask1, width, height),
+		imag = MitigationTester::CreateTestSet(26, mask2, width, height);
+		
+	mask1->SwapXY();
+	mask2->SwapXY();
+	real->SwapXY();
+	imag->SwapXY();
+		
+	TimeFrequencyData data(XXPolarisation, real, imag);
+	Image2DCPtr image = data.GetSingleImage();
+
+	ThresholdConfig config;
+	config.InitializeLengthsDefault(9);
+	num_t mode = image->GetMode();
+	config.InitializeThresholdsFromFirstThreshold(6.0 * mode, ThresholdConfig::Rayleigh);
+	for(unsigned i=0;i<9;++i)
+	{
+		mask1->SetAll<false>();
+		mask2->SetAll<false>();
+		
+		const unsigned length = config.GetHorizontalLength(i);
+		const double threshold = config.GetHorizontalThreshold(i);
+		
+		ThresholdMitigater::HorizontalSumThresholdLargeReference(image, mask1, length, threshold);
+		ThresholdMitigater::HorizontalSumThresholdLargeSSE(image, mask2, length, threshold);
+		
+		std::stringstream s;
+		s << "Equal SSE and reference masks produced by SumThreshold length " << length << ", threshold " << threshold;
+		MaskAsserter::AssertEqualMasks(mask2, mask1, s.str());
 	}
 }
 
