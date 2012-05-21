@@ -143,8 +143,8 @@ int main (int argc, char* argv[])
         cout << "  use msregularize in pyrap.tables to make it regular" << endl;
       }
       cout << "   nrows=" << ms.nrow() << "   ntimes=" << nrtime
-           << "   nband=" << nrdd << "   nbaselines=" << nrbl
-           << " (incl. " << nrauto << " autocorr)" << endl;
+           << "   nbands=" << nrdd << "   nbaselines=" << nrbl
+           << " (" << nrauto << " autocorr)" << endl;
     }
     cout << endl;
 
