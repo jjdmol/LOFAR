@@ -613,8 +613,12 @@ void demix2(vector<DPPP::DPBuffer> &target,
     // Copy solutions from global solution array to thread private solution
     // array (solution propagation between chunks).
     boost::multi_array<double, 2> unknowns(boost::extents[nThread][nDr * nSt * 8]);
-    copy(&(state.J[ts][0][0][0]), &(state.J[ts][0][0][0]) + min(nTime, nThread)
-        * nDr * nSt * 8, &(unknowns[0][0]));
+    const size_t nSlot = min(nTime, nThread);
+    const size_t tSource = (ts == 0 ? 0 : ts - 1);
+    for(size_t i = 0; i < nSlot; ++i)
+    {
+        copy(&(state.J[tSource][0][0][0]), &(state.J[tSource][0][0][0]) + nDr * nSt * 8, &(unknowns[i][0]));
+    }
 
     boost::multi_array<double, 3> uvw(boost::extents[nThread][nSt][3]);
     boost::multi_array<dcomplex, 5> buffer(boost::extents[nThread][nDr][nBl][nCh]
