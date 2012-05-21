@@ -13,7 +13,7 @@ import gsmutils as gsm
 from logger import logger
 
 
-from support.utilities import create_directory                        #@UnresolvedImport
+#from support.utilities import create_directory                        #@UnresolvedImport
 from nodes.imager_create_dbs import imager_create_dbs         #@UnresolvedImport
 
 
@@ -107,103 +107,103 @@ class ImagerCreateDBsTest(unittest.TestCase):
         tb.table.variable_dictionary = variable_dictionary
         self.assertRaises(Exception, self.imager_create_dbs._field_of_view, "MS_name")
 
-    def test__create_parmdb(self):
-        """
-        Test the correct functioning of the create parmdbs function
-        1. test if dir is created
-        2. test if dir contains files (content tests omitted: thats a parmdbs 
-            unit test.
-        3. correct return value
-         
-        """
-        path_to_create = os.path.join(self.test_path, "testParmdb")
-        create_directory(path_to_create)
-
-        parmdb_output = os.path.join(path_to_create, "parmdbs")
-        parmdb_executable = "/opt/cep/LofIm/daily/lofar/bin/parmdbm" #TODO: static
-        self.assertTrue(0 == self.imager_create_dbs._create_parmdb(parmdb_executable,
-                                                            parmdb_output),
-                        self.imager_create_dbs.logger._log[-1])
-
-        self.assertTrue(os.path.exists(parmdb_output), "targer dir to be"
-                        "created by parmdb does not exist")
-        table_data_file_path = os.path.join(parmdb_output, "table.dat")
-        self.assertTrue(os.path.exists(table_data_file_path),
-                        "Creation of table.dat failed")
-
-
-        shutil.rmtree(path_to_create)
-
-    def test__create_parmdb_missing_exec(self):
-        """
-        Test the correct functioning of the create parmdbs function
-        
-        """
-        path_to_create = os.path.join(self.test_path, "testParmdb")
-        create_directory(path_to_create)
-
-        parmdb_output = os.path.join(path_to_create, "parmdbs")
-        parmdb_executable = "/opt/cep/LofIm/daily/lofar/bin/incorrectExecutable"
-        self.assertTrue(1 == self.imager_create_dbs._create_parmdb(parmdb_executable,
-                                                            parmdb_output),
-                        self.imager_create_dbs.logger.last())
-
-
-        self.assertFalse(os.path.exists(parmdb_output), "target dir to be"
-                        "created by parmdb does exist, while it should not")
-
-        shutil.rmtree(path_to_create)
-
-    def test__create_parmdb_for_timeslices(self):
-        """
-        Test the correct functioning of the _create_parmdb_for_timeslices
-        Creating paramdbs for multiple measurement sets         
-        """
-        path_to_create = os.path.join(self.test_path, "testParmdb")
-        parmdb_ms_output = os.path.join(path_to_create, "parmdbs")
-        create_directory(parmdb_ms_output)
-        parmdb_executable = "/opt/cep/LofIm/daily/lofar/bin/parmdbm"
-
-        #Create a number of paths to supply to the create function
-        ms_paths = []
-        for idx in range(5):
-            ms_paths.append(os.path.join(parmdb_ms_output, str(idx)))
-
-
-        #test output
-        self.assertTrue(
-            0 == self.imager_create_dbs._create_parmdb_for_timeslices(parmdb_executable,
-                 ms_paths, ".parmdb"),
-            self.imager_create_dbs.logger.last())
-
-        #test creation of parmdb
-        final_ms_path = os.path.join(parmdb_ms_output, "4.parmdb")
-        self.assertTrue(os.path.exists(final_ms_path))
-        final_ms_table = os.path.join(final_ms_path, "table.dat")
-        self.assertTrue(os.path.exists(final_ms_table))
-
-    def test__create_parmdb_for_timeslices_except(self):
-        """
-        Test the errorous functioning of the _create_parmdb_for_timeslices
-        with missing executable should return 1 and no created directories         
-        """
-        path_to_create = os.path.join(self.test_path, "testParmdb")
-        parmdb_ms_output = os.path.join(path_to_create, "parmdbs")
-        create_directory(parmdb_ms_output)
-        parmdb_executable = "/opt/cep/LofIm/daily/lofar/bin/missingExcecutable"
-
-        #Create a number of paths to supply to the create function
-        ms_paths = []
-        for idx in range(5):
-            ms_paths.append(os.path.join(parmdb_ms_output, str(idx)))
-
-
-        self.assertTrue(
-            1 == self.imager_create_dbs._create_parmdb_for_timeslices(parmdb_executable,
-                 ms_paths, ".parmdb"),
-            self.imager_create_dbs.logger.last())
-        final_ms_path = os.path.join(parmdb_ms_output, "time_slice_8.dppp.ms.parmdb")
-        self.assertFalse(os.path.exists(final_ms_path))
+#    def test__create_parmdb(self):
+#        """
+#        Test the correct functioning of the create parmdbs function
+#        1. test if dir is created
+#        2. test if dir contains files (content tests omitted: thats a parmdbs 
+#            unit test.
+#        3. correct return value
+#         
+#        """
+#        path_to_create = os.path.join(self.test_path, "testParmdb")
+#        create_directory(path_to_create)
+#
+#        parmdb_output = os.path.join(path_to_create, "parmdbs")
+#        parmdb_executable = "/opt/cep/LofIm/daily/lofar/bin/parmdbm" #TODO: static
+#        self.assertTrue(0 == self.imager_create_dbs._create_parmdb(parmdb_executable,
+#                                                            parmdb_output),
+#                        self.imager_create_dbs.logger._log[-1])
+#
+#        self.assertTrue(os.path.exists(parmdb_output), "targer dir to be"
+#                        "created by parmdb does not exist")
+#        table_data_file_path = os.path.join(parmdb_output, "table.dat")
+#        self.assertTrue(os.path.exists(table_data_file_path),
+#                        "Creation of table.dat failed")
+#
+#
+#        shutil.rmtree(path_to_create)
+#
+#    def test__create_parmdb_missing_exec(self):
+#        """
+#        Test the correct functioning of the create parmdbs function
+#        
+#        """
+#        path_to_create = os.path.join(self.test_path, "testParmdb")
+#        create_directory(path_to_create)
+#
+#        parmdb_output = os.path.join(path_to_create, "parmdbs")
+#        parmdb_executable = "/opt/cep/LofIm/daily/lofar/bin/incorrectExecutable"
+#        self.assertTrue(1 == self.imager_create_dbs._create_parmdb(parmdb_executable,
+#                                                            parmdb_output),
+#                        self.imager_create_dbs.logger.last())
+#
+#
+#        self.assertFalse(os.path.exists(parmdb_output), "target dir to be"
+#                        "created by parmdb does exist, while it should not")
+#
+#        shutil.rmtree(path_to_create)
+#
+#    def test__create_parmdb_for_timeslices(self):
+#        """
+#        Test the correct functioning of the _create_parmdb_for_timeslices
+#        Creating paramdbs for multiple measurement sets         
+#        """
+#        path_to_create = os.path.join(self.test_path, "testParmdb")
+#        parmdb_ms_output = os.path.join(path_to_create, "parmdbs")
+#        create_directory(parmdb_ms_output)
+#        parmdb_executable = "/opt/cep/LofIm/daily/lofar/bin/parmdbm"
+#
+#        #Create a number of paths to supply to the create function
+#        ms_paths = []
+#        for idx in range(5):
+#            ms_paths.append(os.path.join(parmdb_ms_output, str(idx)))
+#
+#
+#        #test output
+#        self.assertTrue(
+#            0 == self.imager_create_dbs._create_parmdb_for_timeslices(parmdb_executable,
+#                 ms_paths, ".parmdb"),
+#            self.imager_create_dbs.logger.last())
+#
+#        #test creation of parmdb
+#        final_ms_path = os.path.join(parmdb_ms_output, "4.parmdb")
+#        self.assertTrue(os.path.exists(final_ms_path))
+#        final_ms_table = os.path.join(final_ms_path, "table.dat")
+#        self.assertTrue(os.path.exists(final_ms_table))
+#
+#    def test__create_parmdb_for_timeslices_except(self):
+#        """
+#        Test the errorous functioning of the _create_parmdb_for_timeslices
+#        with missing executable should return 1 and no created directories         
+#        """
+#        path_to_create = os.path.join(self.test_path, "testParmdb")
+#        parmdb_ms_output = os.path.join(path_to_create, "parmdbs")
+#        create_directory(parmdb_ms_output)
+#        parmdb_executable = "/opt/cep/LofIm/daily/lofar/bin/missingExcecutable"
+#
+#        #Create a number of paths to supply to the create function
+#        ms_paths = []
+#        for idx in range(5):
+#            ms_paths.append(os.path.join(parmdb_ms_output, str(idx)))
+#
+#
+#        self.assertTrue(
+#            1 == self.imager_create_dbs._create_parmdb_for_timeslices(parmdb_executable,
+#                 ms_paths, ".parmdb"),
+#            self.imager_create_dbs.logger.last())
+#        final_ms_path = os.path.join(parmdb_ms_output, "time_slice_8.dppp.ms.parmdb")
+#        self.assertFalse(os.path.exists(final_ms_path))
 
     def test__create_monet_db_connection(self):
         """
