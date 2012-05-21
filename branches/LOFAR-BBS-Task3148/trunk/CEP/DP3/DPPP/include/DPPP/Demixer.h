@@ -29,8 +29,10 @@
 
 #include <DPPP/DPInput.h>
 #include <DPPP/DPBuffer.h>
+#include <DPPP/Patch.h>
 #include <DPPP/PhaseShift.h>
 #include <DPPP/BBSExpr.h>
+#include <DPPP/Baseline.h>
 #include <ParmDB/Axis.h>
 
 #include <casa/Arrays/Cube.h>
@@ -38,7 +40,7 @@
 
 // TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
 #include <BBSKernel/VisDimensions.h>
-#include <DPPP/EstimateNew.h>
+//#include <DPPP/EstimateNew.h>
 // TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
 
 namespace LOFAR {
@@ -47,6 +49,8 @@ namespace LOFAR {
     class ParSet;
 
     // @ingroup NDPPP
+
+    typedef vector<Patch>   PatchList;
 
     // This class is a DPStep class to subtract the strong A-team sources.
     // It is based on the demixing.py script made by Bas vd Tol and operates
@@ -85,7 +89,7 @@ namespace LOFAR {
       virtual void showTimings (std::ostream&, double duration) const;
 
     private:
-      casa::MDirection handleCenter(const vector<string> &center) const;
+      void initUnknowns();
 
       // Solve gains and subtract sources.
       void demix();
@@ -107,15 +111,6 @@ namespace LOFAR {
                       vector<MultiResultStep*> avgResults,
                       uint resultIndex);
 
-      // Calculate the P matrix telling how to deal with sources that will
-      // not be predicted.
-      // Those sources are the last columns in the demixing matrix.
-      vector<casa::Array<casa::DComplex> > getP
-      (const vector<casa::Array<casa::DComplex> >& factors, uint nsources);
-
-      // Make a BBS frequency axis for the given channel average factor.
-      BBS::Axis::ShPtr makeFreqAxis (uint nchanAvg);
-
       // Convert a double value to a string (with sufficient precision).
       string toString (double value) const;
 
@@ -134,16 +129,12 @@ namespace LOFAR {
       vector<PhaseShift*>      itsPhaseShifts;
       vector<DPStep::ShPtr>    itsFirstSteps;   //# phaseshift/average steps
       vector<MultiResultStep*> itsAvgResults;   //# result of phaseshift/average
-//      DPStep::ShPtr            itsAvgSubtr;     //# average step for subtract
       MultiResultStep*         itsAvgResultSubtr; //# result of subtract avg
-//      BBSExpr                  itsBBSExpr;
       string                   itsTargetSource; //# empty if no target model
       vector<string>           itsSubtrSources;
       vector<string>           itsModelSources;
       vector<string>           itsExtraSources;
       vector<string>           itsAllSources;
-      BBS::Axis::ShPtr         itsFreqAxisDemix;
-      BBS::Axis::ShPtr         itsFreqAxisSubtr;
       double                   itsTimeStart;
       double                   itsTimeInterval;
       vector<double>           itsTimeCenters;
@@ -180,13 +171,15 @@ namespace LOFAR {
       NSTimer                  itsTimerSolve;
       NSTimer                  itsTimerSubtract;
 
-// TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
-      BBS::BaselineSeq         itsBaselines;
-      EstimateState            itsState;
-      size_t                   itsStationCount;
-      size_t                   itsTimeCount;
+      uint                     itsTimeCount;
       PatchList                itsPatchList;
-// TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
+      vector<Baseline>         itsBaselines;
+      casa::Vector<double>     itsFreqDemix;
+      casa::Vector<double>     itsFreqSubtr;
+      uint                     itsNTimeDemix;
+      uint                     itsNStation;
+      Position                 itsPhaseRef;
+      casa::Array<double>      itsUnknowns;
     };
 
   } //# end namespace

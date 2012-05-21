@@ -28,15 +28,18 @@
 // Experimental parameter estimation using a flattened expression tree.
 
 #include <DPPP/DPBuffer.h>
-#include <BBSKernel/VisDimensions.h>
-#include <ParmDB/Grid.h>
+#include <DPPP/Position.h>
+#include <DPPP/Stokes.h>
+#include <DPPP/Patch.h>
+
 #include <Common/lofar_vector.h>
 #include <boost/multi_array.hpp>
 
+#include <ParmDB/Grid.h>
+#include <BBSKernel/VisDimensions.h>
 #include <BBSKernel/Solver.h>
 #include <Common/OpenMP.h>
 
-#include <ParmDB/SourceDB.h>
 
 #define ESTIMATE_TIMER 1
 
@@ -48,241 +51,12 @@ namespace LOFAR
 {
 namespace DPPP
 {
-using BBS::SourceDB;
-using BBS::ParmDB;
-using BBS::ParmValue;
-using BBS::ParmValueSet;
-using BBS::SourceInfo;
-
 // \addtogroup NDPPP
 // @{
 
 //void __init_source_list(const string &fname);
 //void __init_lmn(unsigned int dir, double pra, double pdec);
 
-
-class Position
-{
-public:
-    Position()
-    {
-        fill(itsPosition, itsPosition + 2, 0.0);
-    }
-
-    Position(double alpha, double delta)
-    {
-        itsPosition[0] = alpha;
-        itsPosition[1] = delta;
-    }
-
-    const double &operator[](size_t i) const
-    {
-        return itsPosition[i];
-    }
-
-    double &operator[](size_t i)
-    {
-        return itsPosition[i];
-    }
-
-private:
-    double  itsPosition[2];
-};
-
-class Stokes
-{
-public:
-    Stokes()
-    :   I(0.0),
-        Q(0.0),
-        U(0.0),
-        V(0.0)
-    {
-    }
-
-    double  I, Q, U, V;
-};
-
-class Source
-{
-public:
-    Source()
-        :   itsRefFreq(0.0),
-            itsPolarizedFraction(0.0),
-            itsPolarizationAngle(0.0),
-            itsRotationMeasure(0.0)
-    {
-    }
-
-    Source(const Position &position)
-        :   itsPosition(position),
-            itsRefFreq(0.0),
-            itsPolarizedFraction(0.0),
-            itsPolarizationAngle(0.0),
-            itsRotationMeasure(0.0)
-    {
-    }
-
-    Source(const Position &position, const Stokes &stokes)
-        :   itsPosition(position),
-            itsStokes(stokes),
-            itsRefFreq(0.0),
-            itsPolarizedFraction(0.0),
-            itsPolarizationAngle(0.0),
-            itsRotationMeasure(0.0)
-    {
-    }
-
-    void setPosition(const Position &position)
-    {
-        itsPosition = position;
-    }
-
-    void setStokes(const Stokes &stokes)
-    {
-        itsStokes = stokes;
-    }
-
-    template <typename T>
-    void setSpectralIndex(double refFreq, T first, T last)
-    {
-        itsRefFreq = refFreq;
-        itsSpectralIndex.clear();
-        itsSpectralIndex.insert(itsSpectralIndex.begin(), first, last);
-    }
-
-    void setPolarizedFraction(double fraction)
-    {
-        itsPolarizedFraction = fraction;
-    }
-
-    void setPolarizationAngle(double angle)
-    {
-        itsPolarizationAngle = angle;
-    }
-
-    void setRotationMeasure(double rm)
-    {
-        itsRotationMeasure = rm;
-    }
-
-    const Position &position() const
-    {
-        return itsPosition;
-    }
-
-    Stokes stokes(double freq) const
-    {
-        Stokes stokes(itsStokes);
-
-        if(hasSpectralIndex())
-        {
-            // Compute spectral index as:
-            // (v / v0) ^ (c0 + c1 * log10(v / v0) + c2 * log10(v / v0)^2 + ...)
-            // Where v is the frequency and v0 is the reference frequency.
-
-            // Compute log10(v / v0).
-            double base = log10(freq) - log10(itsRefFreq);
-
-            // Compute c0 + log10(v / v0) * c1 + log10(v / v0)^2 * c2 + ...
-            // using Horner's rule.
-            double exponent = 0.0;
-            typedef vector<double>::const_reverse_iterator iterator_type;
-            for(iterator_type it = itsSpectralIndex.rbegin(),
-                end = itsSpectralIndex.rend(); it != end; ++it)
-            {
-                exponent = exponent * base + *it;
-            }
-
-            // Compute I * (v / v0) ^ exponent, where I is the value of Stokes
-            // I at the reference frequency.
-            stokes.I *= pow10(base * exponent);
-        }
-
-        if(hasRotationMeasure())
-        {
-            double lambda = casa::C::c / freq;
-            double chi = 2.0 * (itsPolarizationAngle + itsRotationMeasure
-                * lambda * lambda);
-            double stokesQU = stokes.I * itsPolarizedFraction;
-            stokes.Q = stokesQU * cos(chi);
-            stokes.U = stokesQU * sin(chi);
-        }
-
-        return stokes;
-    }
-
-private:
-    bool hasSpectralIndex() const
-    {
-        return itsSpectralIndex.size() > 0;
-    }
-
-    bool hasRotationMeasure() const
-    {
-        return itsRotationMeasure > 0.0;
-    }
-
-    Position        itsPosition;
-    Stokes          itsStokes;
-    double          itsRefFreq;
-    vector<double>  itsSpectralIndex;
-    double          itsPolarizedFraction;
-    double          itsPolarizationAngle;
-    double          itsRotationMeasure;
-};
-
-struct Patch
-{
-    typedef vector<Source>::const_iterator const_iterator;
-
-    string          name;
-    Position        position;
-    vector<Source>  sources;
-
-    size_t size() const { return sources.size(); }
-    const Source &operator[](size_t i) const
-    {
-        return sources[i];
-    }
-
-    const_iterator begin() const
-    {
-        return sources.begin();
-    }
-
-    const_iterator end() const
-    {
-        return sources.end();
-    }
-
-    void syncPos()
-    {
-        Position position = sources.front().position();
-        double cosDec = cos(position[1]);
-        double x = cos(position[0]) * cosDec;
-        double y = sin(position[0]) * cosDec;
-        double z = sin(position[1]);
-
-        for(unsigned int i = 1; i < sources.size(); ++i)
-        {
-            position = sources[i].position();
-            cosDec = cos(position[1]);
-            x += cos(position[0]) * cosDec;
-            y += sin(position[0]) * cosDec;
-            z += sin(position[1]);
-        }
-
-        x /= size();
-        y /= size();
-        z /= size();
-
-        this->position[0] = atan2(y, x);
-        this->position[1] = asin(z);
-    }
-};
-
-//typedef vector<Source>  Patch;
 typedef vector<Patch>   PatchList;
 
 struct EstimateState
@@ -389,8 +163,6 @@ struct EstimateState
 #endif
 };
 
-Patch makePatch(SourceDB &sourceDB, const string &name);
-
 void estimate(vector<DPPP::DPBuffer> &target,
     const vector<vector<DPPP::DPBuffer> > &buffers,
     const vector<casa::Array<casa::DComplex> > &coeff,
@@ -408,7 +180,6 @@ void demix2(vector<DPPP::DPBuffer> &target,
     size_t nTime,
     size_t timeFactor,
     const PatchList &patches);
-
 
 // @}
 
