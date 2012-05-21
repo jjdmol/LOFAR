@@ -177,7 +177,7 @@ void MsgHandler::writeTriggerToFile(TBBTriggerEvent *trigger_event)
 			itsStartFilePos = ftell(itsFile);
 		}
 	
-		err = fprintf(itsFile,"%d %lu %lu %lu %lu %lu %u %u %lu \n",
+		err = fprintf(itsFile,"%d %lu %lu %u %u %u %u %u %u \n",
 				trigger_event->rcu,
 				trigger_event->nstimestamp.sec(),
 				trigger_event->nstimestamp.nsec(),
