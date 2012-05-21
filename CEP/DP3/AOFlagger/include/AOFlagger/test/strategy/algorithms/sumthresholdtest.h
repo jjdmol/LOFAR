@@ -38,6 +38,7 @@ class SumThresholdTest : public UnitTest {
 		{
 			AddTest(VerticalSumThresholdSSE(), "SumThreshold optimized SSE version (vertical)");
 			AddTest(HorizontalSumThresholdSSE(), "SumThreshold optimized SSE version (horizontal)");
+			AddTest(Stability(), "SumThreshold stability");
 		}
 		
 	private:
@@ -46,6 +47,10 @@ class SumThresholdTest : public UnitTest {
 			void operator()();
 		};
 		struct HorizontalSumThresholdSSE : public Asserter
+		{
+			void operator()();
+		};
+		struct Stability : public Asserter
 		{
 			void operator()();
 		};
@@ -124,6 +129,36 @@ void SumThresholdTest::HorizontalSumThresholdSSE::operator()()
 		std::stringstream s;
 		s << "Equal SSE and reference masks produced by SumThreshold length " << length << ", threshold " << threshold;
 		MaskAsserter::AssertEqualMasks(mask2, mask1, s.str());
+	}
+}
+
+void SumThresholdTest::Stability::operator()()
+{
+	Mask2DPtr
+		maskA = Mask2D::CreateSetMaskPtr<false>(1, 1),
+		maskB = Mask2D::CreateSetMaskPtr<false>(2, 2),
+		maskC = Mask2D::CreateSetMaskPtr<false>(3, 3),
+		maskD = Mask2D::CreateSetMaskPtr<false>(4, 4);
+	Image2DPtr
+		realA = Image2D::CreateZeroImagePtr(1, 1),
+		realB = Image2D::CreateZeroImagePtr(2, 2),
+		realC = Image2D::CreateZeroImagePtr(3, 3),
+		realD = Image2D::CreateZeroImagePtr(4, 4);
+		
+	ThresholdConfig config;
+	config.InitializeLengthsDefault(9);
+	config.InitializeThresholdsFromFirstThreshold(6.0, ThresholdConfig::Rayleigh);
+	for(unsigned i=0;i<9;++i)
+	{
+		const unsigned length = config.GetHorizontalLength(i);
+		ThresholdMitigater::HorizontalSumThresholdLargeSSE(realA, maskA, length, 1.0);
+		ThresholdMitigater::VerticalSumThresholdLargeSSE(realA, maskA, length, 1.0);
+		ThresholdMitigater::HorizontalSumThresholdLargeSSE(realA, maskB, length, 1.0);
+		ThresholdMitigater::VerticalSumThresholdLargeSSE(realA, maskB, length, 1.0);
+		ThresholdMitigater::HorizontalSumThresholdLargeSSE(realA, maskC, length, 1.0);
+		ThresholdMitigater::VerticalSumThresholdLargeSSE(realA, maskC, length, 1.0);
+		ThresholdMitigater::HorizontalSumThresholdLargeSSE(realA, maskD, length, 1.0);
+		ThresholdMitigater::VerticalSumThresholdLargeSSE(realA, maskD, length, 1.0);
 	}
 }
 

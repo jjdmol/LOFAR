@@ -124,6 +124,9 @@ class NumberParser
 				return val;
 		}
 		
+		/**
+		 * @throws NumberParsingException when @c str can not be parsed.
+		 */
 		template<typename T>
 		static T toSignedInteger(const char *str)
 		{
