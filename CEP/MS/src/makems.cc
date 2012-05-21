@@ -55,6 +55,7 @@ Matrix<double> itsAntPos;
 bool   itsWriteAutoCorr;
 bool   itsWriteImagerCol;
 bool   itsDoSinglePart;
+int    itsNCorr;
 int    itsNPart;
 int    itsNBand;
 int    itsNFreq;
@@ -94,6 +95,7 @@ void readParms (const string& parset)
     ASSERT (MVAngle::read (qn, decStr[i], true));
     itsDec.push_back (qn.getValue ("rad"));
   }
+  itsNCorr = params.getInt32 ("NPolarizations", 4);
   itsNBand = params.getInt32 ("NBands");
   itsNFreq = params.getInt32 ("NFrequencies");
   itsNTime = params.getInt32 ("NTimes");
@@ -106,6 +108,7 @@ void readParms (const string& parset)
   itsTileSizeFreq = params.getInt32 ("TileSizeFreq", -1);
   itsTileSize = params.getInt32 ("TileSize", -1);
   // Determine nr of bands per part.
+  ASSERT (itsNCorr==1 || itsNCorr==2 || itsNCorr==4);
   ASSERT (itsNPart > 0);
   ASSERT (itsNBand > 0);
   if (itsNBand > itsNPart) {
@@ -167,14 +170,14 @@ void readParms (const string& parset)
 void createMS (int nband, int bandnr, const string& msName)
 {
   int nfpb = itsNFreq/itsNBand;
-  MSCreate msmaker(msName, itsStartTime, itsStepTime, nfpb, 4,
+  MSCreate msmaker(msName, itsStartTime, itsStepTime, nfpb, itsNCorr,
                    itsAntPos, itsAntennaTableName, itsWriteAutoCorr,
 		   itsTileSizeFreq, itsTileSize, itsFlagColumn, itsNFlags,
                    itsMapFlagBits);
   for (int i=0; i<nband; ++i) {
     // Determine middle of band.
     double freqRef = itsStartFreq[bandnr] + nfpb*itsStepFreq[bandnr]/2;
-    msmaker.addBand (4, nfpb, freqRef, itsStepFreq[bandnr]);
+    msmaker.addBand (itsNCorr, nfpb, freqRef, itsStepFreq[bandnr]);
     ++bandnr;
   }
   for (uint i=0; i<itsRa.size(); ++i) {
