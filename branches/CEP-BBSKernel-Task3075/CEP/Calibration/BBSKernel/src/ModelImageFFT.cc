@@ -100,30 +100,6 @@ ModelImageFft::~ModelImageFft(void)
   // don't have to do anything
 }
 
-Vector<Bool> ModelImageFft::getFourierAxes(const ImageInterface<Float> &image)
-{
-  CoordinateSystem coordSys=image.coordinates();   // get coordinate system of image
-  IPosition shape=image.shape();
-  uInt XCoordInd=coordSys.findCoordinate(Coordinate::DIRECTION);
-  uInt YCoordInd=coordSys.findCoordinate(Coordinate::DIRECTION, XCoordInd);
-
-  // 2D-FFT the image per channel
-  Vector<Bool> FourierAxes(image.shape().size());   // axes to Fourier transform
-  for(uInt i; i<FourierAxes.size(); i++)
-  {
-    if(i==XCoordInd || i==YCoordInd)    // for the Direction axes set Fourier Transform to true
-    {
-      FourierAxes[i]=True;
-    }
-    else
-    {
-      FourierAxes[i]=False;      // otherwise don't transform spectral and polarization axes
-    }
-  }
-
-  return FourierAxes;
-}
-
 //**********************************************
 //
 // Setter functions for attributes
@@ -304,6 +280,33 @@ casa::MDirection ModelImageFft::getPatchDirection(const ImageInterface<Float> &i
   dir.toWorld(MDirWorld, Pixel);
 
   return MDirWorld;
+}
+
+// Determine directional coordinate indices which are the axes which should be
+// FFT-ed and set to True in Vector<Bool>
+//
+Vector<Bool> ModelImageFft::getFourierAxes(const ImageInterface<Float> &image)
+{
+  CoordinateSystem coordSys=image.coordinates();   // get coordinate system of image
+  IPosition shape=image.shape();
+  uInt XCoordInd=coordSys.findCoordinate(Coordinate::DIRECTION);
+  uInt YCoordInd=coordSys.findCoordinate(Coordinate::DIRECTION, XCoordInd);
+
+  // 2D-FFT the image per channel
+  Vector<Bool> FourierAxes(image.shape().size());   // axes to Fourier transform
+  for(uInt i; i<FourierAxes.size(); i++)
+  {
+    if(i==XCoordInd || i==YCoordInd)    // for the Direction axes set Fourier Transform to true
+    {
+      FourierAxes[i]=True;
+    }
+    else
+    {
+      FourierAxes[i]=False;      // otherwise don't transform spectral and polarization axes
+    }
+  }
+
+  return FourierAxes;
 }
 
 // Get channel frequencies from image

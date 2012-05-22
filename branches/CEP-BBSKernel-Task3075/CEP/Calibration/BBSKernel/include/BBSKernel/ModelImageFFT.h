@@ -83,7 +83,7 @@ public:
 //  ModelImageFft(const casa::String &name, const casa::Vector<casa::Double> &frequencies,
 //                unsigned int oversampling=1, double uvscaleX=1.0, double uvscaleY=1.0);
   ModelImageFft(const casa::String &name, 
-                unsigned int nwplanes, 
+                unsigned int nwplanes=1, 
                 unsigned int oversampling=1, 
                 double uvscaleX=1.0, double uvscaleY=1.0);
   ~ModelImageFft();
@@ -91,7 +91,6 @@ public:
   // Image property functions
   void getImageProperties(const ImageInterface<Float> &image);
   bool validImage(const casa::String &imageName);
-//  casa::MDirection getPatchDirection(const PagedImage<casa::DComplex> &image);
   casa::MDirection getPatchDirection(const ImageInterface<Float> &image);
 
   Vector<Double> getImageFrequencies();
