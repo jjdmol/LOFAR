@@ -89,14 +89,15 @@ public:
   ~ModelImageFft();
 
   // Image property functions
-  void getImageProperties(const PagedImage<DComplex> &image);
+  void getImageProperties(const ImageInterface<Float> &image);
   bool validImage(const casa::String &imageName);
-  casa::MDirection getPatchDirection(const PagedImage<casa::DComplex> &image);
+//  casa::MDirection getPatchDirection(const PagedImage<casa::DComplex> &image);
+  casa::MDirection getPatchDirection(const ImageInterface<Float> &image);
 
   Vector<Double> getImageFrequencies();
   Vector<Int> chanMap(const vector<double> frequencies);
   Vector<Int> getStokes(const PagedImage<DComplex> &image);
-
+  Vector<Bool> getFourierAxes(const ImageInterface<Float> &image);
 
   // Setter functions for individual options
   void setPhaseDirection(const casa::MDirection &phaseDir);
@@ -207,7 +208,8 @@ public:
       std::vector<unsigned int>& iv);
 
 private:
-  casa::Array<casa::DComplex> itsImage;   // keep fft'ed image in memory
+//  casa::Array<casa::DComplex> itsImage;   // keep fft'ed image in memory
+  casa::ImageInterface<casa::Complex> *itsImage;  // keep fft'ed image in memory
   ModelImageOptions itsOptions;           // struct containing all options
   casa::Vector<casa::Double> convertToLambdas(const casa::Vector<casa::Double> &frequencies);   // convert frequencies to lambda
 

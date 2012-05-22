@@ -29,7 +29,9 @@
 #include <lattices/Lattices/LatticeFFT.h>
 #include <coordinates/Coordinates/CoordinateSystem.h> //for spectral coord
 #include <coordinates/Coordinates/Coordinate.h>
-#include <images/Images/PagedImage.h>
+//#include <images/Images/PagedImage.h>
+#include <images/Images/ImageOpener.h>
+#include <images/Images/ImageFFT.h>
 
 #include <Common/LofarLogger.h>   // for ASSERT and ASSERTSTR?
 #include <Common/SystemUtil.h>    // needed for basename
@@ -78,27 +80,48 @@ ModelImageFft::ModelImageFft( const casa::String &name,
     THROW(BBSKernelException, "Invalid image.");
   }
 
-//  PagedImage<DComplex> *image=new PagedImage<DComplex>(name);   // Open image as paged image
-  PagedImage<DComplex> *image=new PagedImage<DComplex>(name);   // Open image as paged image
-  this->getImageProperties(*image);      // get image properties
-  this->getImageFrequencies();
+  LatticeBase *baseLattice=ImageOpener::openImage(name);
+  ImageInterface<Float> *image=dynamic_cast<ImageInterface<Float>* >(baseLattice);
 
-  // TODO
-  LatticeFFT::cfft2d(*image);     // FFT image in place 
-  itsImage=image->get();          // store FFT'ed image in array attribute
+  ASSERT(image);
+
+  this->getImageProperties(*image);     // get image properties
+  this->getImageFrequencies();          // get image frequencies and save them in options
+
+  // 2D-FFT every image plane along their Direction axes
+  ImageFFT imgFFT;
+  imgFFT.fft(*image, getFourierAxes(*image));
+  imgFFT.getComplex(*itsImage);
   delete image;                   // don't need the intermediate image anymore
-
-
-// OLD casarest stuff
-//  initPolmap();                   // initialize polMap_p
-//  initChanmap();                  // initialize chanMap_p
-//  itsVisResampler.setMaps(chanMap_p, polMap_p);   // set them in VisResampler
-//  itsVisResampler.setParams(itsOptions.uvScale, itsOptions.offset, dphase_p); 
 }
 
 ModelImageFft::~ModelImageFft(void)
 {
   // don't have to do anything
+}
+
+Vector<Bool> ModelImageFft::getFourierAxes(const ImageInterface<Float> &image)
+{
+  CoordinateSystem coordSys=image.coordinates();   // get coordinate system of image
+  IPosition shape=image.shape();
+  uInt XCoordInd=coordSys.findCoordinate(Coordinate::DIRECTION);
+  uInt YCoordInd=coordSys.findCoordinate(Coordinate::DIRECTION, XCoordInd);
+
+  // 2D-FFT the image per channel
+  Vector<Bool> FourierAxes(image.shape().size());   // axes to Fourier transform
+  for(uInt i; i<FourierAxes.size(); i++)
+  {
+    if(i==XCoordInd || i==YCoordInd)    // for the Direction axes set Fourier Transform to true
+    {
+      FourierAxes[i]=True;
+    }
+    else
+    {
+      FourierAxes[i]=False;      // otherwise don't transform spectral and polarization axes
+    }
+  }
+
+  return FourierAxes;
 }
 
 //**********************************************
@@ -161,7 +184,8 @@ void ModelImageFft::setNwplanes(unsigned int nwplanes)
 //
 //**********************************************
 
-void ModelImageFft::getImageProperties(const PagedImage<DComplex> &image)
+//void ModelImageFft::getImageProperties(const PagedImage<DComplex> &image)
+void ModelImageFft::getImageProperties(const ImageInterface<Float>&image)
 {
   CoordinateSystem coordSys=image.coordinates();   // get coordinate system of image
 
@@ -179,7 +203,7 @@ void ModelImageFft::getImageProperties(const PagedImage<DComplex> &image)
   // DIRECTION coordinates
   if(XCoordInd != -1 && YCoordInd!=-1)
   {
-    nx=shape(XCoordInd);
+    nx=shape(XCoordInd);  // Direction shapes
     ny=shape(YCoordInd);
     LOG_INFO_STR("Image " << itsOptions.name << " has dimensions nx = " << nx << " ny = " << ny << ".");
   }
@@ -264,7 +288,8 @@ bool ModelImageFft::validImage(const casa::String &imageName)
 // Get the patch direction, i.e. RA/Dec of the central image pixel
 //
 //casa::MDirection ModelImageFft::getPatchDirection(const string &patchName)
-casa::MDirection ModelImageFft::getPatchDirection(const PagedImage<DComplex> &image)
+//casa::MDirection ModelImageFft::getPatchDirection(const PagedImage<DComplex> &image)
+casa::MDirection ModelImageFft::getPatchDirection(const ImageInterface<Float> &image)
 {
   casa::IPosition imageShape;                             // shape of image
   casa::Vector<casa::Double> Pixel(2);                    // pixel coords vector of image centre
