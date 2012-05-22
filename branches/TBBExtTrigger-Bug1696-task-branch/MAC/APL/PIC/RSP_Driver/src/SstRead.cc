@@ -40,7 +40,7 @@ using namespace RSP_Protocol;
 using namespace RTC;
 
 SstRead::SstRead(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::SST_N_FRAGMENTS)
+  : SyncAction(board_port, board_id, NR_BLPS_PER_RSPBOARD * MEPHeader::SST_N_FRAGMENTS)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -102,7 +102,7 @@ GCFEvent::TResult SstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
 
   EPASstStatsEvent ack(event);
 
-  uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + (getCurrentIndex() / MEPHeader::SST_N_FRAGMENTS);
+  uint8 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) + (getCurrentIndex() / MEPHeader::SST_N_FRAGMENTS);
 
   if (!ack.hdr.isValidAck(m_hdr))
   {

@@ -16,5 +16,6 @@ lofar_add_library(gcfrtdb
   DPservice.cc
   DPanswer.cc
   GCF_RTDBPort.cc)
+add_dependencies(gcfrtdb GCFRTDB-DP_Protocol)
 
 lofar_add_bin_program(versiongcfrtdb versiongcfrtdb.cc)

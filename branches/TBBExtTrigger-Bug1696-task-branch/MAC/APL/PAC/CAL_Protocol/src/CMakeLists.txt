@@ -18,5 +18,6 @@ lofar_add_library(cal_protocol
   SpectralWindow.cc
   SubArray.cc
   ACC.cc)
+add_dependencies(cal_protocol CAL_Protocol-CAL_Protocol)
 
 lofar_add_bin_program(versioncal_protocol versioncal_protocol.cc)

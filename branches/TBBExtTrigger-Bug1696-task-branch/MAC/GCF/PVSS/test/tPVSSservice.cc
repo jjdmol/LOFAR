@@ -78,7 +78,7 @@ GCFEvent::TResult tGSAService::initial(GCFEvent& e, GCFPortInterface& /*p*/)
 		itsService = new PVSSservice(itsResponse);
 
 		// test PVSSInfo class
-		int	sysID;
+		int8	sysID;
 		string	sysName;
 		LOG_DEBUG_STR("LocalSystemName: " << PVSSinfo::getLocalSystemName());
 		LOG_DEBUG_STR("LocalSystemID  : " << (sysID = PVSSinfo::getLocalSystemId()));
@@ -646,7 +646,8 @@ GCFEvent::TResult tGSAService::testWriteDynArray(GCFEvent& e, GCFPortInterface& 
 			dpeValues.push_back(new GCFPVString("aap"));
 			dpeValues.push_back(new GCFPVString("noot"));
 			dpeValues.push_back(new GCFPVString("mies"));
-			result = itsService->dpeSet("testDP.stringArr", GCFPVDynArr(dpeValues));
+			result = itsService->dpeSet("testDP.stringArr", 
+										GCFPVDynArr(LPT_DYNSTRING, dpeValues));
 		}
 		catch (Exception& except) {
 			LOG_INFO_STR ("Writing multiple values at once returned result: " 

@@ -1,4 +1,4 @@
-# $Id: CMakeLists.txt 14466 2009-11-17 08:58:28Z schoenmakers $
+# $Id$
 
 include(LofarCTest)
 

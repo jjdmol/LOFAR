@@ -1,4 +1,4 @@
-# $Id: CMakeLists.txt 14273 2009-10-16 10:08:29Z loose $
+# $Id$
 
 include(LofarPackageVersion)
 
@@ -15,5 +15,6 @@ lofar_add_library(ical_protocol
   AntennaGains.cc
   SpectralWindow.cc
   SubArray.cc)
+add_dependencies(ical_protocol ICAL_Protocol-ICAL_Protocol)
 
 lofar_add_bin_program(versionical_protocol versionical_protocol.cc)

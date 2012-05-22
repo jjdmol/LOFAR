@@ -22,12 +22,14 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/StringUtil.h>
 
 #define LOFARLOGGER_SUBPACKAGE "Timer"
 
 #include <Timer/GTM_TimerHandler.h>
 #include <Timer/GTM_Timer.h>
 #include <GCF/TM/GCF_Task.h>
+#include <GCF/TM/GCF_RawPort.h>
 
 namespace LOFAR {
  namespace GCF {
@@ -89,6 +91,8 @@ void GTMTimerHandler::workProc()
     pCurTimer = iter->second;
     ASSERT(pCurTimer);
     if (pCurTimer->isElapsed() || pCurTimer->isCanceled()) {
+	  LOG_TRACE_STAT(formatString("Deleting timer %d(%s),elapse=%c,cancel=%c", iter->first, pCurTimer->getPort().getName().c_str(),
+						(pCurTimer->isElapsed() ? 'Y' : 'N'), (pCurTimer->isCanceled() ? 'Y' : 'N')));
       delete pCurTimer;
       _timers.erase(iter->first);
     }
@@ -125,25 +129,30 @@ unsigned long GTMTimerHandler::setTimer(GCFRawPort& port,
 
 int GTMTimerHandler::cancelTimer(unsigned long timerid, void** arg)
 {
-  int result(0);
-  GTMTimer* pCurTimer(0);
-  TTimers::iterator iter = _timers.find(timerid);
-  if (arg) {
-	*arg = 0;
-  }
-  if (iter == _timers.end()) {
-    return result;
-  }
-  pCurTimer = iter->second;
+	// allow timerid 0
+	if (!timerid) {
+		return (0);
+	}
 
-  ASSERT(pCurTimer);
-  result = 1;
-  if (arg) {
-	*arg = pCurTimer->getTimerArg();
-  }
-  pCurTimer->cancel();		// Note: sets internal flag in Timer.
-  
-  return result;
+	// clear argument if any
+	if (arg) {
+		*arg = 0;
+	}
+
+	// search timer
+	TTimers::iterator iter = _timers.find(timerid);
+	if (iter == _timers.end()) {
+		return (0);
+	}
+	GTMTimer* 	pCurTimer(iter->second);
+	ASSERT(pCurTimer);
+
+	if (arg) {
+		*arg = pCurTimer->getTimerArg();
+	}
+	pCurTimer->cancel();		// Note: sets internal flag in Timer.
+
+	return (1);
 }
 
 int GTMTimerHandler::cancelAllTimers(GCFRawPort& port)

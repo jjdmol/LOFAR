@@ -11,6 +11,8 @@ node  OnlineControl   4.0.2  development 'node constraint'  "Controller for the 
 par  _hostname          I    text   -      10    0    'CCU001'                            -     "Machine this controller should run on."
 par  applications       I    vtext  -      10    0    ["CorrAppl"]    -     "The applications the controller should manage."
 par  applOrder          I    vtext  -      10    0    ["CorrAppl"]    -     "The application depencies if any!"
+par  inspectionProgram 	I    text   -     100	0	'launch-msplots.sh'		-	"Script to start the inspection"
+par  inspectionHost	    I    text   -     100	0	'lhn001'				-	"Machine the inspection-script should be started"
 
 
 uses  ApplCtrl      4.0.0  development 1                  "The ACC controller"

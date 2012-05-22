@@ -37,6 +37,14 @@ updateController(string dp1, string error,
 {
   if (! invalid) {
     myTable.deleteAllLines();
+    // check if error == \"Not running\";
+    // if true then the name of the process is red, otherwise black
+    if (error == \"Not running\") {
+      name.foreCol() = \"Lofar_broken\";
+    } else {
+      name.foreCol() = \"_3DText\";
+    }
+    
     myTable.appendLine(\"error\",error,\"currentAction\",currentAction,\"logMsg\",navFunct_getLogColor(logMsg,navFunct_getLogLevel(logMsg)));  
   }
 }" 0
@@ -215,7 +223,7 @@ LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,
 2 6
 "name"
 ""
-1 31 10 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 31 9 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
  "main()
 {
   rClick();
@@ -237,8 +245,8 @@ E "main()
 {
   click();
 }" 0
- 0 1 1 2 1 E U  1 E 31 10 61 24
-0 2 2 "0s" 0 0 0 192 0 0  31 10 1
+ 0 1 1 2 1 E U  1 E 31 9 61 23
+0 2 2 "0s" 0 0 0 192 0 0  31 9 1
 1
 LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""

@@ -1,8 +1,7 @@
 V 10
 1
 LANG:1 14 CircularBuffer
-PANEL,-1 -1 640 211 N "_3DFace" 2
-"$KSPType"
+PANEL,-1 -1 640 211 N "_3DFace" 1
 "$objectNumber"
 "main()
 {
@@ -13,7 +12,6 @@ PANEL,-1 -1 640 211 N "_3DFace" 2
   
   
   panelName=\"CircularBuffer\";
-  ksp=$KSPType;
   
   // check if the required datapoint for this view are enabled and accessible
   if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + \".updateTrigger.objectName\") ){
@@ -39,19 +37,21 @@ void updateTrigger( string dp1, string objectName,
   
     // determine inputBufferNumber
     objectNr=$objectNumber;
+    DebugN(\"objectNr found: \",objectNr);
   
     int bufNr = -1;
     LOG_DEBUG(\"circularBuffer.pnl:updateTrigger|dynlen paramList: \"+dynlen(paramList)+\" objectNr: \"+objectNr+\" paramList[1+objectNr]: \"+paramList[1+objectNr]);
     if (dynlen(paramList) <= (1+objectNr)) {
       bufNr=paramList[1+objectNr];
-      if (bufNr > 127) {
+      DebugN(\"bufNr calculated:\" , bufNr);
+      if (bufNr > 63) {
         LOG_ERROR(\"circularBuffer.pnl:updateTrigger|invalid InputBufferDP\");
         return;
       }
       LOG_DEBUG(\"circularBuffer.pnl:updateTrigger| found bufNr: \" + bufNr);
       inputBufferDP=database+\"InputBuffer\"+bufNr;
     
-  
+      DebugN(\"Looking for DP: \",inputBufferDP);
       // connect to the inputBuffer values  
       // check if the requiered datapoint for this view are enabled and accessible
       if (dpExists(inputBufferDP + \".stationName\")) {

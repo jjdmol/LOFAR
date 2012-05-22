@@ -265,7 +265,8 @@ void CacheBuffer::reset(void)
 	// set Splitter not active
 	itsSplitterActive = false;
 	// set CEP port enabled
-	itsCepEnabled = false;
+	itsCepEnabled0 = false;
+	itsCepEnabled1 = false;
 	
 	// Latency status
 	itsLatencys().resize(StationSettings::instance()->nrRspBoards());
@@ -312,7 +313,7 @@ Cache::Cache() : m_front(0), m_back(0)
 					StationSettings::instance()->nrRcus());
 
 	// start by writing the correct clock setting
-	Sequencer::getInstance().startSequence(Sequencer::SETCLOCK);
+	Sequencer::getInstance().startSequence(Sequencer::SEQ_SETCLOCK);
 }
 
 Cache::~Cache()

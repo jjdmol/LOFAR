@@ -73,58 +73,73 @@ GTMSBTCPPort::~GTMSBTCPPort()
 bool GTMSBTCPPort::open()
 {
 	if (isConnected()) {
-		LOG_ERROR(formatString ("Port %s already open.", makeServiceName().c_str()));
-		return false;
-	}
-
-	if (getState() == S_CONNECTING) {
-		LOG_DEBUG(formatString ("Opening of port %s already in progress.", makeServiceName().c_str()));
-		return false;
+		LOG_INFO(formatString ("Port %s already open.", makeServiceName().c_str()));
+		return (false);
 	}
 
 	if (!_pSocket) {
-		if (isSlave()) {
-			LOG_ERROR(formatString ("Port %s not initialised.", makeServiceName().c_str()));
-			return false;
-		}
-
-		if (SPP == getType() || MSPP == getType()) {
-			_pSocket = new GTMTCPServerSocket(*this, (MSPP == getType()));
-		}
-		else if (SAP == getType()) {
-			_pSocket = new GTMTCPSocket(*this);
-		}
+		_pSocket = new GTMTCPSocket(*this);
+		ASSERTSTR(_pSocket, "Could not create GTMTCPSocket for SBtask");
+		_pSocket->setBlocking(false);
 	}
 
 	uint32	sbPortNumber(MAC_SERVICEBROKER_PORT);
 
-	if (_pSocket->open(sbPortNumber)) { 
-		if (SAP == getType()) {   
-			if (_pSocket->connect(sbPortNumber, getHostName())) {
-				setState(S_CONNECTING);        
-				schedule_connected();
-			}
-			else {
-				setState(S_DISCONNECTING);
-				schedule_disconnected();
-			}
-		} 
-		else if (MSPP == getType()) {
-			setState(S_CONNECTING);        
-			schedule_connected();
-		}
+	setState(S_CONNECTING);
+	if (!_pSocket->open(sbPortNumber)) { 
+		_handleDisconnect();
+		return (false);
 	}
-	else {
-		setState(S_DISCONNECTING);
-		if (SAP == getType()) {
-			schedule_disconnected();
+
+	switch (_pSocket->connect(sbPortNumber, getHostName())) {
+	case -1: _handleDisconnect();  break; 
+	case 0:		// in progress
+		LOG_INFO_STR("GTMSBTCPPort:connect(" << getHostName() << ") still in progress");
+		if (!itsConnectTimer) {
+//			itsConnectTimer = setTimer(*this, (uint64)(1000000.0), (uint64)(1000000.0), &itsConnectTimer);
+			itsConnectTimer = setTimer(1.0, 1.0, &itsConnectTimer);
 		}
-		else {
-			return false;
-		}
+		break;
+	case 1: 
+		_handleConnect();
+		return (true);
 	}
-	return true;
+	return (false);
 }
+
+void GTMSBTCPPort::_handleDisconnect()
+{
+	setState(S_DISCONNECTING);
+	cancelTimer(itsConnectTimer);
+	itsConnectTimer = 0;
+	_pSocket->setBlocking(true);
+	schedule_disconnected();
+}
+	
+void GTMSBTCPPort::_handleConnect()
+{
+	cancelTimer(itsConnectTimer);
+	itsConnectTimer = 0;
+	_pSocket->setBlocking(true);
+	schedule_connected();
+}
+
+//
+// dispatch(event)
+//
+GCFEvent::TResult GTMSBTCPPort::dispatch(GCFEvent&	event) {
+	if (event.signal == F_TIMER) {
+		GCFTimerEvent	*TEptr = static_cast<GCFTimerEvent*>(&event);
+		if (TEptr->arg == &itsConnectTimer) {
+			open();
+			return (GCFEvent::HANDLED);
+		}
+	}
+
+	return (GCFTCPPort::dispatch(event));
+}
+
+	
   } // namespace SB
  } // namespace GCF
 } // namespace LOFAR

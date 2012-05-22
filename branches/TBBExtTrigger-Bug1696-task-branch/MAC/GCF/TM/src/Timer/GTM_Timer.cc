@@ -50,15 +50,25 @@ GTMTimer::GTMTimer(GCFRawPort& port,
   _arg(arg), _elapsed(false), _canceled(false)
 {
   saveTime();
+  LOG_DEBUG(formatString("Creation of timer %d of port %s", id, port.getName().c_str()));
 }
  
 void GTMTimer::decreaseTime()
 {
 	int64 uSec = getElapsedTime();
+//	if (_port.getName() == "childControlTimer") {
+//		LOG_TRACE_STAT(formatString("Timer %d(%s): Telapsed= %lld, Tleft=%llu", _id, _port.getName().c_str(), uSec, _timeLeft));
+//	}
 
 	// REO: uSec < 0 ??? 
-	if ((uint64) uSec < _timeLeft || uSec < 0) {
+	if ((uSec < (int64)(_timeLeft)) || (uSec < 0)) {
 		_timeLeft -= uSec;
+		if (uSec < 0) {
+			LOG_WARN(formatString("Elapsed time of timer %d (%s) is NEGATIVE!: %llu", _id, _port.getName().c_str(), uSec));
+		}
+//		if (_port.getName() == "childControlTimer") {
+//			LOG_TRACE_STAT(formatString("Timer %d(%s): Tleft=>%llu", _id, _port.getName().c_str(), _timeLeft));
+//		}
 		return;
 	}
 
@@ -75,20 +85,22 @@ void GTMTimer::decreaseTime()
 
 	if (_intervalTime == 0) {
 		_elapsed = true;
+		LOG_TRACE_STAT(formatString("Timer %d(%s): elapsed", _id, _port.getName().c_str()));
 		return;
 	}
 
 	uint64 timeoverflow = uSec - _timeLeft;
 	if (_intervalTime < timeoverflow) {
 		LOG_ERROR(formatString(
-		"Timerinterval %fsec of timer %d is to small for performance reasons (tdelta: %lld, tleft: %llu).",
-		((double) _intervalTime) / 1000000.0, _id, uSec, _timeLeft));
+			"Timerinterval %fsec of timer %d is to small for performance reasons (tdelta: %lld, tleft: %llu).",
+			((double) _intervalTime) / 1000000.0, _id, uSec, _timeLeft));
 		do {
 		  timeoverflow -= _intervalTime;
 		} while (_intervalTime < timeoverflow);        
 	}
 
 	_timeLeft = _intervalTime - timeoverflow;
+	LOG_TRACE_STAT(formatString("RepTimer %d(%s): Tleft=>%llu", _id, _port.getName().c_str(), _timeLeft));
 }
 
 void GTMTimer::saveTime()
@@ -111,6 +123,16 @@ int64 GTMTimer::getElapsedTime()
 
 	return (uSecDiff);
 }
+
+#if 0
+void GTMTimer::cancel()
+{
+	_canceled = true;
+	if (_port.getName() == "childControlTimer") {
+		LOG_TRACE_STAT(formatString("Cancel timer %d(childControlTimer)", _id));
+	}
+}
+#endif
 
   } // namespace TM
  } // namespace GCF

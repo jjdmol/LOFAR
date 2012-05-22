@@ -41,15 +41,10 @@ typedef vector<GCFPValue*> GCFPValueArray;
 
 class GCFPVDynArr : public GCFPValue
 {
-public:
-	// create empty DynArray
-    explicit GCFPVDynArr(TMACValueType itemType);		
-// 	GCFPVDynArr(TMACValueType itemType, const GCFPValueArray& val);
+  public:
+    explicit GCFPVDynArr(TMACValueType itemType);
+  	GCFPVDynArr(TMACValueType itemType, const GCFPValueArray& val);
 
-	// create filled DynArray
-  	explicit GCFPVDynArr(const GCFPValueArray& val);	// vector<GCFValue*>
-
-	// create copy
     GCFPVDynArr (const GCFPVDynArr& valArray) : GCFPValue(valArray.getType())
       { setValue(valArray.getValue()); }
 
@@ -82,7 +77,7 @@ public:
     virtual bool operator==(const GCFPValue& that) const;
     virtual bool operator!=(const GCFPValue& that) const { return (!(*this == that)); }
  
-private:
+  private:
     /// @see GCFPValue::unpack()
     unsigned int unpackConcrete(const char* valBuf);
 
@@ -92,11 +87,11 @@ private:
     /// @see GCFPValue::getSize()
     unsigned int getConcreteSize() const;
     
-private: // help members
+  private: // help members
     /** cleanup the array item objects */
     void cleanup();
     
-	// Private attributes
+  private: // Private attributes
     /**  The values*/
     GCFPValueArray _values;			// vector<GCFValue*>
 };

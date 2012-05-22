@@ -61,7 +61,7 @@ ChildControl* ChildControl::instance()
 ChildControl::ChildControl() :
 	GCFTask			 		((State)&ChildControl::initial, "ChildControl"),
 	itsListener		 		(0),
-	itsTimerPort			(*this, "TimerPort"),
+	itsTimerPort			(*this, "childControlTimer"),
 	itsStartDaemonMap		(),
 	itsStartupRetryInterval	(10),
 	itsMaxStartupRetries	(5),
@@ -177,7 +177,9 @@ bool ChildControl::startChild (uint16				aCntlrType,
 									". Skipping creation of observation-based parset.");
 		// just copy the base-file if child runs on another system
 		if (hostname != myHostname(false)  && hostname != myHostname(true)) {
-			remoteCopy(baseSetName, hostname, baseSetName, MAC_SCP_TIMEOUT);
+		  remoteCopy(baseSetName, hostname, baseSetName, 10);
+		  // Used to be:
+		  //remoteCopy(baseSetName, hostname, baseSetName, MAC_SCP_TIMEOUT);
 			onRemoteMachine = true;
 		}
 	}
@@ -228,8 +230,13 @@ bool ChildControl::startChild (uint16				aCntlrType,
 		// When program must run on another system scp file to that system
 		if (hostname != myHostname(false)  && 
 			hostname != myHostname(true)) {
-			remoteCopy(cntlrSetName, hostname, cntlrSetName, MAC_SCP_TIMEOUT);
-			remoteCopy(baseSetName, hostname, baseSetName, MAC_SCP_TIMEOUT);
+			remoteCopy(cntlrSetName, hostname, cntlrSetName, 10);
+			// Used to be:
+			//remoteCopy(cntlrSetName, hostname, cntlrSetName, MAC_SCP_TIMEOUT);
+
+			remoteCopy(baseSetName, hostname, baseSetName, 10);
+			//Used to be:
+			//remoteCopy(baseSetName, hostname, baseSetName, MAC_SCP_TIMEOUT);
 			onRemoteMachine = true;
 		}
 	}
@@ -358,6 +365,11 @@ bool ChildControl::requestState	(CTState::CTstateNr	aState,
 			iter->result		 = CT_RESULT_NO_ERROR;
 			iter->nrRetries		 = 0;
 			iter->retryTime		 = 0;
+			// when quit is requested and there is still no connection, clear action list first
+			if (aState >= CTState::QUIT && !iter->port) {
+				_removeAction(iter->cntlrName, CTState::ANYSTATE);
+				iter->port = (GCFPortInterface*) -1;
+			}
 			itsActionList.push_back(*iter);
 		}
 			
@@ -657,21 +669,21 @@ void ChildControl::_processActionList()
 			continue;
 		}
 
-		// is there a connection with this controller?
-		if (action->requestedState > CTState::CONNECTED && !controller->port) {
-			LOG_DEBUG_STR("parking:" << action->cntlrName << "->" << 
-					cts.name(action->requestedState) << " until connection is made");
-			itsActionList.push_back(*action);	// add at back
+		// did the connection with this controller failed?
+		if (controller->port == (GCFPortInterface*)-1) {
+			LOG_DEBUG_STR("ActionList:removing  " << action->cntlrName << "->" << 
+					cts.name(action->requestedState) << " because connection failed");
 			action++;							// hop to next
 			itsActionList.pop_front();			// remove at front.
 			nrActions--;						// one less to handle.
 			continue;
 		}
 
-		// did the connection with this controller failed?
-		if (controller->port == (GCFPortInterface*)-1) {
-			LOG_DEBUG_STR("ActionList:removing  " << action->cntlrName << "->" << 
-					cts.name(action->requestedState) << " because connection failed");
+		// is there a connection with this controller?
+		if (action->requestedState > CTState::CONNECTED && !controller->port) {
+			LOG_DEBUG_STR("parking:" << action->cntlrName << "->" << 
+					cts.name(action->requestedState) << " until connection is made");
+			itsActionList.push_back(*action);	// add at back
 			action++;							// hop to next
 			itsActionList.pop_front();			// remove at front.
 			nrActions--;						// one less to handle.
@@ -699,6 +711,7 @@ void ChildControl::_processActionList()
 		case CTState::CONNECTED: 	// start program, wait for CONNECTED msgs of child
 			{
 				// first check if connection with StartDaemon is made
+				_printStartDaemonMap("Search");
 				SDiter	startDaemon = itsStartDaemonMap.find(action->hostname);
 				if (startDaemon == itsStartDaemonMap.end() || 
 											!startDaemon->second->isConnected()) {
@@ -711,7 +724,9 @@ void ChildControl::_processActionList()
 														MAC_SVCMASK_STARTDAEMON,
 														GCFPortInterface::SAP, 
 														STARTDAEMON_PROTOCOL);
+						ASSERTSTR(itsStartDaemonMap[action->hostname], "No startDaemonPort for host " << action->hostname);
 						itsStartDaemonMap[action->hostname]->setHostName(action->hostname);
+						_printStartDaemonMap("Added");
 					}
 					itsStartDaemonMap[action->hostname]->open();
 					// leave action in list until connection with SD is made
@@ -720,7 +735,7 @@ void ChildControl::_processActionList()
 				}
 
 				// There is an connection with the startDaemon
-				if (action->nrRetries < itsMaxStartupRetries) {	// retries left?
+				if ((int)action->nrRetries < itsMaxStartupRetries) {	// retries left?
 					LOG_DEBUG_STR("Requesting start of " << action->cntlrName << " at " 
 																	<< action->hostname);
 					STARTDAEMONCreateEvent		startRequest;
@@ -834,7 +849,7 @@ void ChildControl::_removeAction (const string&			aName,
 	const_CIiter	end  = itsActionList.end();
 
 	while (iter != end) {
-		if (iter->cntlrName == aName && iter->requestedState == requestedState) {
+		if (iter->cntlrName == aName && (iter->requestedState == requestedState || requestedState == CTState::ANYSTATE)) {
 			itsActionList.erase(iter);
 			return;
 		}
@@ -871,6 +886,24 @@ void ChildControl::_startDaemonOffline(const string&	hostname)
 	return;
 }
 
+//
+// _printStartDaemonMap()
+//
+void ChildControl::_printStartDaemonMap(const string& actionName)
+{
+#if 0
+	LOG_DEBUG_STR("_printStartDaemonMap(" << actionName <<")");
+
+	SDiter	iter  = itsStartDaemonMap.begin();
+	SDiter	SDend = itsStartDaemonMap.end();
+	while (iter != SDend) {
+		GCFTCPPort*	port = iter->second;
+		LOG_DEBUG_STR("SD("<< port->getName() << "):" << iter->second->getPortNumber() << "@" 
+				<< iter->second->getHostName() << (port->isConnected() ? "" : " NOT") << " connected");
+		++iter;
+	}
+#endif
+}
 
 //
 // _setEstablishedState (name, state, time)
@@ -1013,13 +1046,13 @@ void ChildControl::_doGarbageCollection()
 		// 2: port == -1: remove from list
 		// This is necc. because main task may poll childcontrol for results.
 		if (!iter->port) {
-			restartTimer = true;
-			LOG_DEBUG_STR(time(0)<<"-"<<iter->requestTime<<">="<<itsStartupRetryInterval<<"*"<<itsMaxStartupRetries<<"?");
-			if ((uint32(time(0)-iter->requestTime)) >= itsStartupRetryInterval*itsMaxStartupRetries) {
+			if ((time(0)-iter->requestTime) >= int32(MAC_SCP_TIMEOUT+(itsStartupRetryInterval*itsMaxStartupRetries))) {
 				LOG_DEBUG_STR ("Controller " << iter->cntlrName << " is still unreachable, informing main task");
 				_setEstablishedState(iter->cntlrName, CTState::QUITED, time(0), CT_RESULT_LOST_CONNECTION);
 				iter->port = (GCFPortInterface*) -1;
+				restartTimer = true;
 			}
+
 			iter++;
 		} else if (iter->port == (GCFPortInterface*)-1) {
 			LOG_DEBUG_STR ("Removing controller " << iter->cntlrName << " from the controller list");
@@ -1129,9 +1162,11 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 		break;
 
 	case F_CONNECTED:
+			_printStartDaemonMap("Connected");
 		break;
 
 	case F_DISCONNECTED: {
+			_printStartDaemonMap("Disconnected");
 			// 170507: in one way or another the controllerport is not recognized here
 			//		   anymore. So the code of cleaning up the admin is moved to the
 			// 		   reception of the QUITED event.
@@ -1165,7 +1200,6 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 					_setEstablishedState(controller->cntlrName, CTState::ANYSTATE, 
 													time(0), CT_RESULT_LOST_CONNECTION);
 					controller->port = 0;
-
 #if 0
 					// Try to restart the controller over 5 seconds
 					// Add it to the action list.
@@ -1173,7 +1207,6 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 					itsListener->cancelTimer(itsActionTimer);
 					itsActionTimer = itsListener->setTimer(1.0);
 					itsActionList.push_back(*controller);
-
 #endif
 				}
 
@@ -1193,6 +1226,7 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 			}
 #endif
 			// DISCONNECT can also be of a StartDaemon we can't reach
+			_printStartDaemonMap("Disconnect");
 			SDiter	startDaemon = itsStartDaemonMap.begin();
 			SDiter	SDend	 	= itsStartDaemonMap.end();
 			while (startDaemon != SDend) {
@@ -1343,8 +1377,10 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 			else {
 				// found controller, close port
 				LOG_DEBUG_STR("Removing " << controller->cntlrName << " from the controllerlist");
-				controller->port->close();
-				delete controller->port;
+				if (controller->port) {
+					controller->port->close();
+					delete controller->port;
+				}
 				itsCntlrList->erase(controller);			// just remove
 			}
 		}

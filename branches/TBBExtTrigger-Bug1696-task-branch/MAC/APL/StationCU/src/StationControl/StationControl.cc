@@ -524,7 +524,7 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 		// update PVSS
 		if (!itsParentInitialized) {
 			LOG_DEBUG ("All initialisation done, enabling ParentControl task");
-			itsParentPort = itsParentControl->registerTask(this);
+			itsParentPort = itsParentControl->registerTask(this, true);
 
 			itsOwnPropSet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("Active"));
 			itsOwnPropSet->setValue(PN_FSM_ERROR,GCFPVString(""));
@@ -644,27 +644,6 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 //			return (GCFEvent::NEXT_STATE);
 		}
 
-		// TODO: CLEAN UP THE CODE BELOW
-
-#if 0
-		// before passing a new state request from the ObsController to the 
-		// activeObs, make sure the last state is reached.
-LOG_DEBUG_STR(formatString("event.signal = %04X", event.signal));
-LOG_DEBUG_STR("F_INDIR = " << F_INDIR(event.signal));
-LOG_DEBUG_STR("F_OUTDIR = " << F_OUTDIR(event.signal));
-LOG_DEBUG_STR("inSync = " << (theObs->second->inSync() ? "true" : "false"));
-		if (F_OUTDIR(event.signal) && !theObs->second->inSync()) {
-			// TODO
-			CTState		cts;
-			LOG_FATAL_STR("Ignoring change to state " << cts.name(cts.signal2stateNr(event.signal)) << 
-						" for observation " << treeID << " because obs is still in state " << 
-						cts.name(theObs->second->curState()));
-			sendControlResult(*itsParentPort, event.signal, cntlrName, 
-																CT_RESULT_OUT_OF_SYNC);
-			break;
-			
-		}
-#endif
 		// pass event to observation FSM
 		LOG_TRACE_FLOW("Dispatch to observation FSM's");
 		theObs->second->doEvent(event, port);
@@ -701,6 +680,10 @@ LOG_TRACE_FLOW_STR("There are " << cntlrStates.size() << " busy controllers");
 							  " failed with error " << cntlrStates[i].result);
 				sendControlResult(*itsParentPort, event.signal, cntlrName, 
 														cntlrStates[i].result);
+				LOG_ERROR_STR("Initiating QUIT sequence for observation " << theObs->second->getName());
+				CONTROLQuitEvent    quitevent;
+				quitevent.cntlrName = theObs->second->getName();
+				theObs->second->doEvent(quitevent, port);
 				break;
 			}
 			LOG_TRACE_COND_STR ("Still waiting for " << cntlrStates[i].name);
@@ -1077,7 +1060,7 @@ uint16 StationControl::_addObservation(const string&	name)
 	LOG_DEBUG_STR("Trying to readfile " << filename);
 	try {
 		theObsPS.adoptFile(filename);
-		theObs = Observation(&theObsPS);
+		theObs = Observation(&theObsPS, itsHasSplitters);
 		LOG_DEBUG_STR("theOBS=" << theObs);
 	}
 	catch (Exception&	ex) {
@@ -1126,7 +1109,7 @@ LOG_DEBUG_STR("def&userReceivers=" << realReceivers);
 
 
 	// create an activeObservation object that will manage the child controllers.
-	ActiveObs*	theNewObs = new ActiveObs(name, (State)&ActiveObs::initial, &theObsPS, *this);
+	ActiveObs*	theNewObs = new ActiveObs(name, (State)&ActiveObs::initial, &theObsPS, itsHasSplitters, *this);
 	if (!theNewObs) {
 		LOG_FATAL_STR("Unable to create the Observation '" << name << "'");
 		return (CT_RESULT_UNSPECIFIED);
@@ -1278,6 +1261,7 @@ StationControl::ObsIter StationControl::_searchObsByTimerID(uint32	timerID)
 			return (iter);
 		++iter;
 	}
+
 	return (iter);
 }
 
@@ -1296,7 +1280,7 @@ void StationControl::_updateObsListInPVSS()
 		obsArr.push_back(new GCFPVString(iter->first));
 		++iter;
 	}
-	itsOwnPropSet->setValue(PN_SC_ACTIVE_OBSERVATIONS, GCFPVDynArr(obsArr));
+	itsOwnPropSet->setValue(PN_SC_ACTIVE_OBSERVATIONS, GCFPVDynArr(LPT_DYNSTRING, obsArr));
 }
 
 //

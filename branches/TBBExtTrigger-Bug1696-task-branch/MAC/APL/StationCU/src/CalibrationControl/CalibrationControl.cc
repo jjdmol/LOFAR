@@ -238,7 +238,7 @@ GCFEvent::TResult CalibrationControl::initial_state(GCFEvent& event,
 			itsPropertySet->setValue(PN_FSM_CURRENT_ACTION,	GCFPVString ("initial"));
 			itsPropertySet->setValue(PN_FSM_ERROR,			GCFPVString (""));
 			itsPropertySet->setValue(PN_CC_CONNECTED,		GCFPVBool   (false));
-			itsPropertySet->setValue(PN_CC_BEAM_NAMES,		GCFPVDynArr (beamNameArr));
+			itsPropertySet->setValue(PN_CC_BEAM_NAMES,		GCFPVDynArr (LPT_DYNSTRING, beamNameArr));
 			itsPropertySet->setValue(PN_CC_ANTENNA_ARRAY,	GCFPVString (""));
 			itsPropertySet->setValue(PN_CC_FILTER,			GCFPVString (""));
 			itsPropertySet->setValue(PN_CC_NYQUISTZONE,		GCFPVInteger(0));
@@ -378,7 +378,7 @@ GCFEvent::TResult CalibrationControl::claimed_state(GCFEvent& 		  event,
 		// update PVSS
 		GCFPValueArray		beamNameArr;
 		itsPropertySet->setValue(PN_FSM_ERROR, 			GCFPVString (""));
-		itsPropertySet->setValue(PN_CC_BEAM_NAMES,	 	GCFPVDynArr (beamNameArr));
+		itsPropertySet->setValue(PN_CC_BEAM_NAMES,	 	GCFPVDynArr (LPT_DYNSTRING, beamNameArr));
 		itsPropertySet->setValue(PN_CC_ANTENNA_ARRAY,	GCFPVString (""));
 		itsPropertySet->setValue(PN_CC_FILTER,		 	GCFPVString (""));
 		itsPropertySet->setValue(PN_CC_NYQUISTZONE,	 	GCFPVInteger(0));
@@ -660,7 +660,7 @@ bool	CalibrationControl::startCalibration()
 	} // for all beams
 
 	// inform operator about these values.
-	itsPropertySet->setValue(PN_CC_BEAM_NAMES,	 GCFPVDynArr(beamNameArr));
+	itsPropertySet->setValue(PN_CC_BEAM_NAMES,	 GCFPVDynArr(LPT_DYNSTRING, beamNameArr));
 	itsPropertySet->setValue(PN_CC_ANTENNA_ARRAY,GCFPVString(itsObsPar->antennaArray));
 	itsPropertySet->setValue(PN_CC_FILTER,		 GCFPVString(itsObsPar->filter));
 	itsPropertySet->setValue(PN_CC_NYQUISTZONE,	 GCFPVInteger(itsObsPar->nyquistZone));

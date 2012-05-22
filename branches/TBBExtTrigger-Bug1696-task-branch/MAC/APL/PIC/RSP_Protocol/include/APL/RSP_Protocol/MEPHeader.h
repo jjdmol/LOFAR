@@ -158,9 +158,10 @@ public:
 	static const uint8 RCU_PROTOCOLY    = 0x03;
 	static const uint8 RCU_RESULTY      = 0x04;
 
-	static const uint8 CR_SOFTCLEAR     = 0x00;
+	static const uint8 CR_SOFTRESET     = 0x00;
 	static const uint8 CR_SOFTSYNC      = 0x01;
 	static const uint8 CR_SYNCDISABLE   = 0x02;
+	static const uint8 CR_SYNCDELAY     = 0x03;
 
 	// Cross correlation registers.
 	static const uint8 XST_STATS    = 0x00;
@@ -393,7 +394,10 @@ public:
 	static const FieldsType RCU_PROTOCOLY_HDR;
 	static const FieldsType RCU_RESULTY_HDR;
 
-	static const FieldsType CR_CONTROL_HDR;
+	static const FieldsType CR_SOFTRESET_HDR;
+	static const FieldsType CR_SOFTSYNC_HDR;
+	static const FieldsType CR_SYNCDISABLE_HDR;
+	static const FieldsType CR_SYNCDELAY_HDR;
 
 	static const FieldsType XST_STATS_HDR;
 

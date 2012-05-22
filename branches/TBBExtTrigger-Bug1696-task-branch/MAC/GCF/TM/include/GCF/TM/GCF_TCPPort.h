@@ -136,6 +136,7 @@ private:
 	unsigned int			itsAutoRetryTimer;
 	int						itsAutoRetries;
 	double					itsAutoRetryItv;
+	unsigned int			itsConnectTimer;
     SB::ServiceBrokerTask*	_broker;
 };
 

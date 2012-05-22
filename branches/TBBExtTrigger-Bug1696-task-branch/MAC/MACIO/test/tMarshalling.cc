@@ -27,9 +27,11 @@
 #include <Common/LofarLogger.h>
 #include <Common/lofar_bitset.h>
 #include <Common/lofar_map.h>
+#include <Common/lofar_vector.h>
 #include <Common/hexdump.h>
-#include <APL/RTCCommon/Marshalling.h>
+#include <MACIO/Marshalling.h>
 #include "tMarshalling.h"
+
 
 using namespace LOFAR;
 
@@ -98,7 +100,7 @@ unsigned int SubArrayNC::unpack(void*	buffer) {
 
 } // namespace LOFAR
 
-int main (int	argc, char*	argv[])
+int main (int	/*argc*/, char*	/*argv[]*/)
 {
 	// string test
 	string	tstString("Dit is een teststring");
@@ -137,44 +139,6 @@ int main (int	argc, char*	argv[])
 	offset = 0;
 	MSH_UNPACK_BITSET(buf, offset, bs2);
 	cout << "unpacked: " << bs2 << endl;
-
-	// blitz array <double>
-	blitz::Array<double, 2>		ba1(2,4);
-	ba1 = 	10,	11,
-			20, 21,
-			30, 31,
-			40, 41;
-	cout << "Testing blitz::Array<double, 2>" << ba1 << endl;
-	
-	cout << "size = " << MSH_ARRAY_SIZE(ba1, double) << endl;
-
-	bzero(buf, 4096);
-	offset = 0;
-	MSH_PACK_ARRAY(buf, offset, ba1, double);
-	cout << "packed:" << endl;
-	hexdump(buf, offset);
-
-	blitz::Array<double, 2>		ba2(2,4);
-	offset = 0;
-	MSH_UNPACK_ARRAY(buf, offset, ba2, double, 2);
-	cout << "unpacked: " << ba2 << endl;
-
-	// blitz array <int>
-	blitz::Array<int, 2>		emptyArr;
-	cout << "Testing EMPTY blitz::Array<int, 2>" << emptyArr << endl;
-	
-	cout << "size = " << MSH_ARRAY_SIZE(emptyArr, int) << endl;
-
-	bzero(buf, 4096);
-	offset = 0;
-	MSH_PACK_ARRAY(buf, offset, emptyArr, int);
-	cout << "packed:" << endl;
-	hexdump(buf, offset);
-
-	blitz::Array<int, 2>		empty2;
-	offset = 0;
-	MSH_UNPACK_ARRAY(buf, offset, empty2, int, 2);
-	cout << "unpacked: " << empty2 << endl;
 
 	// SubArray		
 	SubArray		SA1(25, 3.14, "stringetje");
@@ -305,6 +269,44 @@ int main (int	argc, char*	argv[])
 		cout << "vector[" << i << "]:" << *itersv << endl;
 		i++;
 		itersv++;
+	}
+
+	// vector<double>
+	vector<double>		dv1;
+	dv1.push_back(3.145926);
+	dv1.push_back(0.0);
+	dv1.push_back(0.00004567);
+	cout << "Testing vector<double>" << endl;
+	vector<double>::iterator	iterdv = dv1.begin();
+	vector<double>::iterator	enddv  = dv1.end();
+	i = 0;
+	while (iterdv != enddv) {
+		cout << "vector[" << i << "]:" << *iterdv << endl;
+		i++;
+		iterdv++;
+	}
+
+	unsigned int	dvsize;
+	MSH_SIZE_VECTOR_DOUBLE(dvsize, dv1);
+	cout << "size = " << dvsize << endl;
+
+	bzero(buf, 4096);
+	offset = 0;
+	MSH_PACK_VECTOR_DOUBLE(buf, offset, dv1);
+	cout << "packed:" << endl;
+	hexdump(buf, dvsize);
+
+	vector<double>	dv2;
+	offset = 0;
+	MSH_UNPACK_VECTOR_DOUBLE(buf, offset, dv2);
+	cout << "Unpacked vector<double>" << endl;
+	iterdv = dv2.begin();
+	enddv  = dv2.end();
+	i = 0;
+	while (iterdv != enddv) {
+		cout << "vector[" << i << "]:" << *iterdv << endl;
+		i++;
+		iterdv++;
 	}
 
 	return (0);

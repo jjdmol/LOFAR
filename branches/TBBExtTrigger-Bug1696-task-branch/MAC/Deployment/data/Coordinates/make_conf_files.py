@@ -55,6 +55,7 @@ def writeHBADeltas(station,deltas):
 ## write header to antennaField file
 ##
 def writeAntennaFieldHeader(station,frame):
+    # add to Station config file
     dataStr = ''
     fileName = '../StaticMetaData/AntennaFields/'+ station + '-AntennaField.conf'
     file = open(fileName, 'w')
@@ -66,6 +67,7 @@ def writeAntennaFieldHeader(station,frame):
     dataStr += '#\n'
     file.write(dataStr)
     file.close()
+    
     return
 
 ##
@@ -80,6 +82,7 @@ def writeNormalVector(station, anttype):
         dataStr = ''
         fileName = '../StaticMetaData/AntennaFields/'+ station + '-AntennaField.conf'
         file = open(fileName, 'a')
+        
         if len(anttype) > 0:
             dataStr += '\nNORMAL_VECTOR '+str(anttype)+'\n'
 
@@ -91,6 +94,7 @@ def writeNormalVector(station, anttype):
             dataStr += ' x ' + str(Shape[dim])
 
         dataStr += ' [ %10.6f %10.6f %10.6f ]\n' %(vector[0], vector[1], vector[2])
+        
         file.write(dataStr)
         file.close()
     except:
@@ -181,69 +185,78 @@ if __name__ == '__main__':
     frame = ''
     
     # from database select all antennas for given station and target-date
-    cursor.execute("select * from get_gen_coord(%s, %f)", (station, float(sys.argv[2])))
+    # The ''order by'' statement is needed to prevent mixup of even/odd pairs
+    # as was seen on sas001 (Arno)
+    cursor.execute("select * from get_gen_coord(%s, %f) order by objtype, number", (station, float(sys.argv[2])))
     
     # start with empty arrays
     aPosL = np.zeros((0,2,3))
     aPosH = np.zeros((0,2,3))
     
+    aRefL  = [0.0,0.0,0.0]
+    aRefH0 = [0.0,0.0,0.0]
+    aRefH1 = [0.0,0.0,0.0]
+    aRefH  = [0.0,0.0,0.0]
     # loop over all antennas
     while (1):
-        # get coordinates for even antenna(X)
         record = cursor.fetchone()
         if record == None:
             break
-        even = [record[4],record[5],record[6]]
-        
-        # get coordinates for odd antenna(Y)
-        record = cursor.fetchone()
-        if record == None:
-            break
-        odd = [record[4],record[5],record[6]]  
-        
-        # get used frame for translation
-        frame = str(record[3])                  
+        #print record
+        # handle center coordinates
+        if record[1] == 'CLBA':
+            aRefL = [record[4],record[5],record[6]]
+        elif  record[1] == 'CHBA0':
+            aRefH0 = [record[4],record[5],record[6]]
+        elif  record[1] == 'CHBA1':
+            aRefH1 = [record[4],record[5],record[6]]
+        elif  record[1] == 'CHBA':
+            aRefH = [record[4],record[5],record[6]]
+        else:
+            # get coordinates for even antenna(X)
+            even = [record[4],record[5],record[6]]
+            
+            # get coordinates for odd antenna(Y)
+            record = cursor.fetchone()
+            if record == None:
+                break
+            odd = [record[4],record[5],record[6]]  
+            
+            # get used frame for translation
+            frame = str(record[3])                  
+      
+            if record[1] == 'LBA':
+                aPosL = np.concatenate((aPosL, [[even,odd]]), axis=0)
+            
+            elif record[1] == 'HBA' or record[1] == 'HBA0' or record[1] == 'HBA1':
+                aPosH = np.concatenate((aPosH, [[even,odd]]), axis=0)
 
-        if record[1] == 'LBA':
-            aPosL = np.concatenate((aPosL, [[even,odd]]), axis=0)
-        else: # must be HBA, HBA0 or HBA1
-            aPosH = np.concatenate((aPosH, [[even,odd]]), axis=0)
-    
     if int(np.shape(aPosL)[0]) == 0 or int(np.shape(aPosH)[0]) == 0:
         print 'ERR, no data found for %s' %(station)
         exit(1)
          
     # do somthing with the data
-    print 'Making %s-AntennaField.conf with LBA shape=%s  HBA shape=%s' %(station, np.shape(aPosL), np.shape(aPosL))
+    print 'Making %s-AntennaField.conf with LBA shape=%s  HBA shape=%s' %(station, np.shape(aPosL), np.shape(aPosH))
      
     aRef = None
     
     ## write positions to *.conf file
     writeAntennaFieldHeader(station,frame)
     
+    # write LBA information to AntennaPos.conf
     writeNormalVector(station, 'LBA')
     writeRotationMatrix(station, 'LBA')
-    
-    # center position of all LBA is equal to RCU-0/1
-    aRefL = aPosL[0,0]
     writeAntennaField(station, 'LBA', aRefL)
     aOffset = aPosL - [[aRefL,aRefL]]
-    # write Antenne offset to center to AntennaPos.conf
     writeAntennaField(station, '', aOffset)
     
+    # write HBA information to AntennaPos.conf   
     # if not a core station
     if station[0] != 'C':
         writeNormalVector(station, 'HBA')
         writeRotationMatrix(station, 'HBA')
- 
-    # center position of all HBA is the arithmic mean off all (X,Y,Z)
-    aRefH = [aPosH[:,:,0].mean(),
-             aPosH[:,:,1].mean(),
-             aPosH[:,:,2].mean()]
-       
     writeAntennaField(station, 'HBA', aRefH)
     aOffset = aPosH - [[aRefH,aRefH]]
-    # write Antenne offset to center to AntennaPos.conf
     writeAntennaField(station, '', aOffset)
     
     
@@ -252,30 +265,12 @@ if __name__ == '__main__':
         # write information for HBA0
         writeNormalVector(station, 'HBA0')
         writeRotationMatrix(station, 'HBA0')
-
-        # calculate center position off HBA-0
-        h0 = 0
-        h1 = (np.shape(aPosH)[0] / 2)
-        aRef = [aPosH[h0:h1,:,0].mean(),
-                aPosH[h0:h1,:,1].mean(),
-                aPosH[h0:h1,:,2].mean()]
-        # write center pos to AntennaPos.conf
-        writeAntennaField(station, 'HBA0', aRef)
+        writeAntennaField(station, 'HBA0', aRefH0)
         
         # write information for HBA1
         writeNormalVector(station, 'HBA1')
         writeRotationMatrix(station, 'HBA1')
-
-        # calculate center position off HBA-1
-        h0 = np.shape(aPosH)[0] / 2
-        h1 = np.shape(aPosH)[0]
-        aRef = [aPosH[h0:h1,:,0].mean(),
-                aPosH[h0:h1,:,1].mean(),
-                aPosH[h0:h1,:,2].mean()]
-        # write center pos to AntennaPos.conf
-        writeAntennaField(station, 'HBA1', aRef)
-    
-    
+        writeAntennaField(station, 'HBA1', aRefH1)
     
     
     ## get HBADeltas and write to file

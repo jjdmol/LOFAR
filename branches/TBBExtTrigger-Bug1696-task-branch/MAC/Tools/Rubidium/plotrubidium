@@ -1,6 +1,14 @@
 #!/usr/bin/gnuplot
 set grid ytics
-plot "/var/log/ntpstats/rubidium_log" using 5; set autoscale; set title "Rubidium clock vs gps ns"
-pause 30
+set xtics 7200
+set mxtics 4
+set autoscale
+#set title "Hier komt datum"
+set ylabel "difference between GPS and Rubidium [nsec]"
+set xlabel "date-time (UT)"
+set timefmt "%Y-%m-%dT%H:%M:%S"
+set xdata time
+set format x "%d %b-%H:%M"
+plot "/var/log/ntpstats/rubidium_log" using 1:5 every 20 notitle; 
+pause 300
 reread
-

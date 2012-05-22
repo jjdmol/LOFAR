@@ -317,14 +317,16 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
     g_alarms[ "MESSAGE" ][iPos] = message;
     g_alarms[ "STATUS"  ][iPos] = aStatus;
     changed=true;
+    // check if the alarm was a suspicious_came or an alarm_came
+    // if this is true then we need to send an email to the observers
+    if (state == SUSPICIOUS_CAME ) {
+      sendMail("SUSPICIOUS_CAME",aDP,aTime,message);
+    } else if (state == BROKEN_CAME) {
+      sendMail("BROKEN_CAME",aDP,aTime,message);        
+    }
   }
   // store all alarms if changed
   if (changed) {
-    // check if tyhe alarm was a suspicious_came or an alarm_came
-    // if this is true then we need to send an email to the observers
-    if (state == SUSPICIOUS_CAME || State == BROKEN_CAME) {
-      sendMail(aDP,aTime,message);
-    } 
     storeAlarms();
   }
   occupied = false;
@@ -366,6 +368,13 @@ void resetTriggered(string dp1, dyn_string aDPList,
               g_alarms["STATE"][iPos]=aStateList[i];
               g_alarms["MESSAGE"][iPos]=aMsgList[i];
               g_alarms["STATUS"][iPos]=stateToStatus(aStateList[i]);
+              // check if the alarm was a suspicious_came or an alarm_came
+              // if this is true then we need to send an email to the observers
+              if (aStateList[i] == SUSPICIOUS_CAME ) {
+                sendMail("SUSPICIOUS_CAME",aDPList[i],aTime,aMsgList[i]);
+              } else if (aStateList[i] == BROKEN_CAME) {
+                sendMail("BROKEN_CAME",aDPList[i],aTime,aMsgList[i]);        
+              }
               changed=true;
             }   
           }
@@ -375,6 +384,13 @@ void resetTriggered(string dp1, dyn_string aDPList,
           g_alarms["STATE"][iPos]=aStateList[i];
           g_alarms["MESSAGE"][iPos]=aMsgList[i];
           g_alarms["STATUS"][iPos]=stateToStatus(aStateList[i]);
+          // check if the alarm was a suspicious_came or an alarm_came
+          // if this is true then we need to send an email to the observers
+          if (aStateList[i] == SUSPICIOUS_CAME ) {
+            sendMail("SUSPICIOUS_CAME",aDPList[i],aTime,aMsgList[i]);
+          } else if (aStateList[i] == BROKEN_CAME) {
+            sendMail("BROKEN_CAME",aDPList[i],aTime,aMsgList[i]);        
+          }
           changed=true;
         }
       } else {
@@ -391,13 +407,6 @@ void resetTriggered(string dp1, dyn_string aDPList,
     }  
     
     if (changed) {
-      // check if tyhe alarm was a suspicious_came or an alarm_came
-      // if this is true then we need to send an email to the observers
-      if (state == SUSPICIOUS_CAME ) {
-        sendMail("SUSPICIOUS_CAME",aDP,aTime,message);
-      } else if (state == BROKEN_CAME) {
-        sendMail("BROKEN_CAME",aDP,aTime,message);        
-      }
       storeAlarms();
     }
     occupied = false;  
@@ -443,17 +452,21 @@ private void sendMail(string state, string aDP,time aTime,string message) {
 
   int ret;
   dyn_string email_cont;
+  string aS="";
+  
+  string t = formatTime("%c",aTime);
 
-  //email_cont[1] = "xxx@etm-ag.com";     // either
-  email_cont[1] = "observer@astron.nl";  // or
-  email_cont[2] = "lofar@astron.nl";
-  email_cont[3] = "LOFAR ALARM";
-  email_cont[4] = "This is a generated message, replies won't be read\n\n" +
-                  aTime+" there was a "+state+" ALARM for datapoint " + aDP +" Message: "+message;
+  email_cont[1] = "observer@astron.nl";
+  email_cont[2] = "lofarsys@control.lofar";
+  aS="LOFAR_ALARM "+dpSubStr(aDP,DPSUB_SYS)+" "+message+" "+state;
+  email_cont[3] = aS;
+  aS="This is a generated message, replying is useless.\n\n New alarm from LOFAR: \n\n time     : "+t+"\n status   : "+state+"\n datapoint: "+aDP+"\n message  : "+message; 
+  email_cont[4] = aS;
+  
 
   // sending the message
-
-  //emSendMail ("prj1", "eiwnt004.etm.at", email_cont, ret); either
-  emSendMail ("smtp.lofar.eu","mcu001.control.lofar", email_cont, ret);           // or
+  if (bDebug) DebugTN("sending msg to observer: ");
+  emSendMail ("smtp.lofar.eu","mcu001.control.lofar", email_cont, ret);
+  if (bDebug) DebugTN("SendMail return value: "+ret);
   
 }

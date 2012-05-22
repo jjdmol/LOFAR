@@ -21,16 +21,13 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <Common/lofar_string.h>
-#include <Common/StringUtil.h>
-
+#include <Manager.hxx>
 #include <DpMsgAnswer.hxx>
 #include <DpMsgHotLink.hxx>
 #include <DpHLGroup.hxx>
 #include <DpVCItem.hxx>
 #include <ErrHdl.hxx>
 #include <ErrClass.hxx>
-#include <Manager.hxx>
 #include <FloatVar.hxx>
 #include <CharVar.hxx>
 #include <TextVar.hxx>
@@ -41,15 +38,17 @@
 #include <AnyTypeVar.hxx>
 #include <DpIdentifierVar.hxx>
 
+#include <Common/lofar_string.h>
+#include <Common/StringUtil.h>
+
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/PVSS/PVSSservice.h>
 #include <GCF/PVSS/PVSSresponse.h>
 #include <GCF/PVSS/PVSSresult.h>
 #include <GCF/PVSS/PVSSinfo.h>
 
-#include "GSA_WaitForAnswer.h"
 #include "GSA_SCADAHandler.h"
-#include "GCF_DynTypes.h"
+#include "GSA_WaitForAnswer.h"
 
 namespace LOFAR {
 	namespace GCF {
@@ -57,7 +56,6 @@ namespace LOFAR {
 
 static const char*	SALErrors[]  = {
 	"No error",						//  SA_NO_ERROR
-	"Request is scheduled",			//  SA_SCHEDULED
 	"Propertyname is missing",		//  SA_PROPNAME_MISSING
 	"Datapointtype unknown",		//  SA_DPTYPE_UNKNOWN
 	"MAC variabletype unknown",		//  SA_MACTYPE_UNKNOWN
@@ -72,8 +70,7 @@ static const char*	SALErrors[]  = {
 	"PVSS datbase not running",		//  SA_SCADA_NOT_AVAILABLE
 	"DP does not exist",			//  SA_PROP_DOES_NOT_EXIST
 	"DP already exists",			//  SA_PROP_ALREADY_EXIST
-	"MAC variabletype mismatch",	//  SA_MACTYPE_MISMATCH
-	"Element(s) not found"			//  SA_ELEMENTS_MISSING
+	"MAC variabletype mismatch"		//  SA_MACTYPE_MISMATCH
 };
 
 //
@@ -257,7 +254,7 @@ void PVSSservice::handleHotLink(const DpMsgAnswer& answer, const GSAWaitForAnswe
 
 	if (!handled) { 
 		MsgType mt = answer.isAnswerOn();
-		LOG_ERROR(formatString ("Message %s is not handled!!", Msg::getMsgName(mt)));
+		LOG_DEBUG(formatString ("Answer on: %d is not handled", mt));
 	}
 	PVSSinfo::_lastTimestamp.tv_sec = 0;
 	PVSSinfo::_lastTimestamp.tv_usec = 0;
@@ -296,11 +293,8 @@ void PVSSservice::handleHotLink(const DpHLGroup& group, const GSAWaitForAnswer& 
 	// When the group.getIdentifier is set the group contains the result of a query or a
 	// query subscription. The identifier is than the ID of the query that was returned
 	// when the query was send. When the identifier is 0 the group contains a couple of changed DPs.
-#if 1
 	if (group.getNumberOfItems() != 2) {
-#else
-	if (group.getIdentifier() == 0) { 
-#endif
+//	if (group.getIdentifier() == 0) { 
 		// A group consists of pairs of DpIdentifier and values called items.
 		// There is exactly one item for all configs we are connected.
 		PVSSinfo::_lastTimestamp.tv_sec  = ts.getSeconds();
@@ -434,9 +428,9 @@ void PVSSservice::_processQueryResult(Variable*		firstVar,
 	// when query is empty as least return an empty answer.
 	if (nrOfRows == 1) {	// query is empty
 		itsResponse->dpQueryChanged(queryID, result, 
-									GCFPVDynArr(LPT_STRING),
-									GCFPVDynArr(LPT_STRING),
-									GCFPVDynArr(LPT_DATETIME));
+									GCFPVDynArr(LPT_DYNSTRING, DPnames),
+									GCFPVDynArr(LPT_DYNSTRING, DPvalues),
+									GCFPVDynArr(LPT_DYNDATETIME, DPtimes));
 		return;
 	}
 
@@ -466,7 +460,7 @@ void PVSSservice::_processQueryResult(Variable*		firstVar,
 			return;
 		}
 
-		// Pass each result seperate of as a bunch of vectors?
+		// Pass each rresult seperate of as a bunch of vectors?
 		if (passSeperate) {
 			convAndForwardValueChange(pDpId->getValue(), *pTempVar);
 			continue;
@@ -535,9 +529,9 @@ void PVSSservice::_processQueryResult(Variable*		firstVar,
 
 	if (!passSeperate) {
 		itsResponse->dpQueryChanged(queryID, result, 
-									GCFPVDynArr(DPnames),
-									GCFPVDynArr(DPvalues),
-									GCFPVDynArr(DPtimes));
+									GCFPVDynArr(LPT_DYNSTRING, DPnames),
+									GCFPVDynArr(DPvalues[0]->getType(), DPvalues),
+									GCFPVDynArr(LPT_DYNDATETIME, DPtimes));
 		// free used memory
 		int		nrElems = DPnames.size();
 		for (int i = 0; i < nrElems; ++i) {
@@ -785,9 +779,9 @@ PVSSresult PVSSservice::dpeUnsubscribe(const string& propName)
 								propName.c_str()));
 	}
 
-//	if (result != SA_NO_ERROR) {	--> in comment because there is no WfA involved!!!
+	if (result != SA_NO_ERROR) {
 		itsResponse->dpeUnsubscribed(propName, result);
-//	}
+	}
 	return result;
 }
 
@@ -1187,7 +1181,7 @@ PVSSresult PVSSservice::dpQueryUnsubscribe(uint32 queryId)
 	if ((result = itsSCADAHandler->isOperational()) != SA_NO_ERROR) {
 		LOG_FATAL (formatString("Unable to unsubscribe: '%d'", queryId));
 	}
-	else if (!Manager::dpQueryDisconnect(queryId, itsWFA, PVSS_FALSE)) {
+	else if (!Manager::dpQueryDisconnect(queryId, itsWFA)) {
 		ErrHdl::error(ErrClass::PRIO_SEVERE,		// It is a severe error
 					  ErrClass::ERR_PARAM,			// wrong name: blame others
 					  ErrClass::UNEXPECTEDSTATE,	// fits all
@@ -1269,7 +1263,6 @@ PVSSresult PVSSservice::convertPVSSToMAC(const Variable& variable,
 		case DYNBLOB_VAR: 		type = LPT_DYNBLOB; break;
 		default: break;
 		}
-LOG_DEBUG_STR("convertPVSSToMAC: DYNTEXT_VAR of type: " << type);
 
 		if (type != NO_LPT) {
 			const DynVar* pDynVar = (const DynVar*) (&variable);
@@ -1304,19 +1297,19 @@ LOG_DEBUG_STR("convertPVSSToMAC: DYNTEXT_VAR of type: " << type);
 					break;
 				}
 				arrayTo.push_back(pItemValue);
-LOG_DEBUG_STR("pItemValue = " << pItemValue->getValueAsString());
 			} // for
 
-			*pMacValue = new GCFPVDynArr(arrayTo);
+			*pMacValue = new GCFPVDynArr(type, arrayTo);
 			for (GCFPValueArray::iterator iter = arrayTo.begin(); iter != arrayTo.end(); ++iter) {
 				delete *iter;
 			}
-		} // if LPT_DYN... type defined
+		} // if
 		} // DYN_XXXvar
 		break;
 	default:
 		result = SA_DPTYPE_UNKNOWN;
-		LOG_ERROR(formatString("DPE type %s not supported (yet)!", Variable::getTypeName(variable.isA())));
+		LOG_ERROR(formatString("DPE type %s not supported (yet)!", 
+				Variable::getTypeName(variable.isA())));
 		break;
 	}
 
@@ -1381,7 +1374,7 @@ PVSSresult PVSSservice::convertMACToPVSS(const GCFPValue& macValue,
 //			*pVar = new Bit32Var(((GCFPVBit32 *)&macValue)->getValue());
 //		break;
 	default:
-		if ((macValue.getType() & LPT_DYNARR) && (macValue.getType()& ~LPT_DYNARR) < END_LPT) {
+		if (macValue.getType() > LPT_DYNARR && macValue.getType() < END_DYNLPT) {
 			Variable* pItemValue(0);
 			VariableType type(NOTYPE_VAR);
 			// the type for the new FPValue must be determined 

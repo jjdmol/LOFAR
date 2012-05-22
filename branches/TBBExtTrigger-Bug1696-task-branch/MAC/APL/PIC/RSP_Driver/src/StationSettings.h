@@ -52,12 +52,9 @@ public:
 	static StationSettings* instance();
 
 	int32 maxRspBoards();	// RS.N_RSPBOARDS
-	int32 nrBlpsPerBoard();	// MEPHeader::N_BLPS
-	int32 nrRcusPerBoard();	// MEPHeader::N_BLPS * N_POL
-
 	int32 nrRspBoards();	// 1 | RS.N_RSPBOARDS depending on OPERATION_MODE
-	int32 nrBlps();			// nrRspBoards * nrBlpsPerBoard
-	int32 nrRcus();			// nrRspBoards * nrRcusPerBoard
+	int32 nrBlps();			// nrRspBoards * NR_BLPS_PER_RSPBOARD
+	int32 nrRcus();			// nrRspBoards * NR_RCUS_PER_RSPBOARD
 
 	bool  hasSplitter();
 
@@ -66,7 +63,6 @@ public:
 	friend class RSPDriver;
 
 protected:	// note RSPDriver must be able to set them
-	void setNrBlpsPerBoard(int32 nrBlps);
 	void setNrRspBoards   (int32 nrBlps);
 	void setMaxRspBoards  (int32 nrBlps);
 	void setSplitter      (bool hasSplitter) { itsHasSplitter = hasSplitter; }
@@ -78,9 +74,6 @@ private:
 
 	//# --- Datamembers ---
 	int32	itsMaxRspBoards;	// constants
-	int32	itsNrBlpsPerBoard;
-	int32	itsNrRcusPerBoard;
-
 	int32	itsNrRspBoards;		// values depend on OPERATION_MODE
 	int32	itsNrBlps;
 	int32	itsNrRcus;
@@ -92,9 +85,6 @@ private:
 
 //# --- inline functions ---
 inline	int32 StationSettings::maxRspBoards()	{ return (itsMaxRspBoards);   }
-inline	int32 StationSettings::nrBlpsPerBoard() { return (itsNrBlpsPerBoard); }
-inline	int32 StationSettings::nrRcusPerBoard() { return (itsNrRcusPerBoard); }
-
 inline	int32 StationSettings::nrRspBoards()	{ return (itsNrRspBoards); }
 inline	int32 StationSettings::nrBlps()			{ return (itsNrBlps); }
 inline	int32 StationSettings::nrRcus()			{ return (itsNrRcus); }

@@ -32,5 +32,6 @@ lofar_add_library(ibs_protocol
   IBS_Protocol.cc
   Beamlet2SubbandMap.cc
   Pointing.cc)
+add_dependencies(ibs_protocol IBS_Protocol-IBS_Protocol)
 
 lofar_add_bin_program(versionibs_protocol versionibs_protocol.cc)

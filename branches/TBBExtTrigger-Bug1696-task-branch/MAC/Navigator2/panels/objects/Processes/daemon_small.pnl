@@ -18,6 +18,7 @@ PANEL,-1 -1 1019 43 N "_3DFace" 1
   // check if the required datapoint for this view are enabled and accessible
   if (dpExists(baseDP+\".process.processID\")) {
     if (dpConnect(\"updateDaemon\", baseDP +\".process.processID:_online.._value\",
+                                  baseDP +\".process.error:_online.._value\",
                                   baseDP +\".process.logMsg:_online.._value\",
                                   baseDP +\".process.processID:_online.._invalid\") == -1) {
       LOG_ERROR($name+\"_small.pnl:main|Couldn't connect to: \"+baseDP+ \" \"+ getLastError());
@@ -36,8 +37,9 @@ PANEL,-1 -1 1019 43 N "_3DFace" 1
 }
 
 updateDaemon(string dp1, unsigned processID,
-             string dp2, string logMsg,
-             string dp3, bool invalid)
+             string dp2, string error,
+             string dp3, string logMsg,
+             string dp4, bool invalid)
 {
   string col=\"Lofar_operational\";
   if (invalid) {
@@ -48,6 +50,13 @@ updateDaemon(string dp1, unsigned processID,
     }
   } else if (processID == 0) {
     col = \"Lofar_off\";
+  }
+  // check if error == \"Not running\";
+  // if true then the name of the process is red, otherwise black
+  if (error == \"Not running\") {
+    name.foreCol() = \"Lofar_broken\";
+  } else {
+    name.foreCol() = \"_3DText\";
   }
   myTable.deleteAllLines();
   myTable.appendLine(\"logMsg\",navFunct_getLogColor(logMsg,navFunct_getLogLevel(logMsg,navFunct_getLogLevel(logMsg))));  

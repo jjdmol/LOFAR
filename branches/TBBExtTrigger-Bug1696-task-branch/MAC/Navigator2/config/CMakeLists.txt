@@ -1,8 +1,13 @@
 # $Id$
 
 install(FILES
+  config.ccu
   config.maincu
-  config.station
+  config.standalone.station
+  config.dist.station
+  config.dist_test.station
+  progs.ccu
   progs.maincu
-  progs.station
+  progs.standalone.station
+  progs.dist.station
   DESTINATION pvss/config)

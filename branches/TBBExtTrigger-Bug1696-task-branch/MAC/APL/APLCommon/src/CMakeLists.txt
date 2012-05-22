@@ -19,6 +19,10 @@ lofar_add_library(aplcommon
   ChildControl.cc
   ParentControl.cc)
 
+add_dependencies(aplcommon 
+  APLCommon-Controller_Protocol
+  APLCommon-StartDaemon_Protocol)
+
 lofar_add_bin_program(versionaplcommon versionaplcommon.cc)
 
 install(PROGRAMS

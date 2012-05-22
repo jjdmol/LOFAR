@@ -34,7 +34,7 @@ using namespace RSP;
 using namespace EPA_Protocol;
 
 VersionsRead::VersionsRead(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, StationSettings::instance()->nrBlpsPerBoard() + 1 /* BP */)
+  : SyncAction(board_port, board_id, NR_BLPS_PER_RSPBOARD + 1 /* BP */)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -102,7 +102,7 @@ GCFEvent::TResult VersionsRead::handleack(GCFEvent& event, GCFPortInterface& /*p
     }
 
     if (ap_index >= 0) {
-      Cache::getInstance().getBack().getVersions().ap()((getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + ap_index)
+      Cache::getInstance().getBack().getVersions().ap()((getBoardId() * NR_BLPS_PER_RSPBOARD) + ap_index)
 	= ack.version;  
     }
   }

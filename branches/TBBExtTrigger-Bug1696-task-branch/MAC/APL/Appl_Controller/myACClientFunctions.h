@@ -37,7 +37,7 @@ namespace ACC {
 // Description of class.
 class myACClientFunctions : public ACClientFunctions
 {
-	string	supplyInfoFunc(const string&	keyList)
+	string	supplyInfoFunc(const string&	/*keyList*/)
 		{ return ("myACClientFunctions::supplyInfo from ACClient was called"); }
 
 	void	handleAnswerMsg(const string&	answer)

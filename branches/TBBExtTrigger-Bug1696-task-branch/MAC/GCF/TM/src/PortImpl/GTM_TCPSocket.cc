@@ -140,31 +140,41 @@ bool GTMTCPSocket::open(unsigned int /*portNumber*/)
 //
 // connect(portnr, host)
 //
-bool GTMTCPSocket::connect(unsigned int portNumber, const string& host)  
+// Return: -1:error, 0:wait, 1:ok
+//
+int GTMTCPSocket::connect(unsigned int portNumber, const string& host)  
 {
-	LOG_TRACE_COND_STR("connect:fd=" << _fd << ", port=" << _port.getName());
+	LOG_TRACE_COND_STR(_port.getName() << ":connect(" << portNumber << "," << host << "),fd=" << _fd);
 
+	// try to resolve hostaddress/name
 	struct sockaddr_in serverAddr;
 	struct hostent *hostinfo;
 	hostinfo = gethostbyname(host.c_str());
-	ASSERTSTR(hostinfo, "Hostname " << host << " could not be resolved, error = " << errno);
+	ASSERTSTR(hostinfo, _port.getName() << ":hostname " << host << " could not be resolved, error = " << errno);
 
+	// try to connect
 	serverAddr.sin_family = AF_INET;
 	serverAddr.sin_addr = *(struct in_addr *) *hostinfo->h_addr_list;
 	serverAddr.sin_port = htons(portNumber);
-	if (::connect(_fd, (struct sockaddr *)&serverAddr, sizeof(struct sockaddr_in)) != 0) {
-		if (errno != EISCONN) {		// already connected is OK
-			LOG_WARN_STR("connect(" << host << "," << portNumber << "), error: " <<
-							strerror(errno));
-			close();
-			return (false);	
-		}
+	errno = 0;
+	if ((::connect(_fd, (struct sockaddr *)&serverAddr, sizeof(struct sockaddr_in)) == 0) || (errno == EISCONN)) {
+		// connect succesfull, register filedescriptor
+		ASSERT(_pHandler);
+		_pHandler->registerFile(*this);
+		return (1);
 	}
 
-	ASSERT(_pHandler);
-	_pHandler->registerFile(*this);
+	// socket should be in 'non-blocking' mode so several errors are allowed
+	if (errno != EINPROGRESS && errno != EALREADY) {
+		// serious error
+		LOG_WARN_STR(_port.getName() << ":connect(" << host << "," << portNumber << "), error: " << strerror(errno));
+		::close(_fd);
+		_fd = -1;
+		return (-1);	
+	}
 
-	return (true);
+	LOG_DEBUG_STR(_port.getName() << ": still waiting for connection");
+	return(0);
 } 
 
   } // namespace TM

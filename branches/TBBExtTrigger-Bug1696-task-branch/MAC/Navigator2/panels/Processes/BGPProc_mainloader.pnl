@@ -19,23 +19,17 @@ PANEL,-1 -1 980 746 N "_3DFace" 0
     // empty the paramList
     dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".panelParamList\",\"\");
   } else {
-    LOG_WARN(\"navCtrl.ctl:navCtrl_handleLocatorEvent| Error: no dp \" + DPNAME_NAVIGATOR + g_navigatorID+\".panelParam\");
+    LOG_WARN(\"navCtrl.ctl:navCtrl_handleLocatorEvent| Error: no dp \" + DPNAME_NAVIGATOR + g_navigatorID+\".panelParamList\");
   }
-
-  
-  // get BGLAppl path to obtain the KSPType
+ 
+  // get BGLAppl path to obtain the inputbufferList and the outputbufferList
   BGLApplDP              = navFunct_getPathLessOne(baseDP);
   
-  string KSPType;
-  string inputBufferList;
-  string adderList;
+  dyn_string stationList;
+  dyn_string inputBufferList;
+  dyn_string adderList;
   
-  if ( dpExists(BGLApplDP+\".KSPType\") ) {
-    dpGet(BGLApplDP+\".KSPType\",KSPType);
-  } else {
-    LOG_ERROR(\"BGPProc_mainloader.pnl:main|Error getting KSPType value\");
-  }
-  
+ 
   if ( dpExists(BGLApplDP+\".inputBufferList\") ) {
     dpGet(BGLApplDP+\".inputBufferList\",inputBufferList);
   } else {
@@ -48,34 +42,23 @@ PANEL,-1 -1 980 746 N "_3DFace" 0
     LOG_ERROR(\"BGPProc_mainloader.pnl:main|Error getting adderList value\");
   }
    
-  if(KSPType == \"eor\") {
-    addPanelName=\"objects/Processes/BGPProc_eor.pnl\";
-    addPanelValues = makeDynString();
-  } else if (KSPType == \"cosmicrays\") {
-    addPanelName=\"objects/Processes/BGPProc_cosmicrays.pnl\";
-    addPanelValues = makeDynString();
-  } else if (KSPType == \"surveys\") {
-    addPanelName=\"objects/Processes/BGPProc_surveys.pnl\";
-    dynClear(addPanelValues);
-    dynAppend(addPanelValues,\"$KSPType:\"+KSPType);
-    dynAppend(addPanelValues,\"$inputBufferList:\"+inputBufferList);
-    dynAppend(addPanelValues,\"$adderList:\"+adderList);
-    dynAppend(addPanelValues,\"$station:\"+var);
-  } else if (KSPType == \"transients\") {
-    addPanelName=\"objects/Processes/BGPProc_transients.pnl\";
-    addPanelValues = makeDynString();
-  } else if (KSPType == \"magnetism\") {
-    addPanelName=\"objects/Processes/BGPProc_magnetism.pnl\";
-    addPanelValues = makeDynString();
-  } else if (KSPType == \"solar\") {
-    addPanelName=\"objects/Processes/BGPProc_solar.pnl\";
-    addPanelValues = makeDynString();
+  if ( dpExists(BGLApplDP+\".stationList\") ) {
+    dpGet(BGLApplDP+\".stationList\",stationList);
+  } else {
+    LOG_ERROR(\"BGPProc_mainloader.pnl:main|Error getting stationList value\");
   }
 
+  addPanelName=\"objects/Processes/BGPProc.pnl\";
+  dynClear(addPanelValues);
+  dynAppend(addPanelValues,\"$stationList:\"+stationList);
+  dynAppend(addPanelValues,\"$inputBufferList:\"+inputBufferList);
+  dynAppend(addPanelValues,\"$adderList:\"+adderList);
+  dynAppend(addPanelValues,\"$station:\"+var);
+  
   if (  addSymbol(  strModuleName,        // Stay in this module
 	     	    \"\",                   // Name of this panel
 		    addPanelName,         // Panel to add
-		    KSPType,              // Ref of the addedPanel
+		    \"BGPProc\",              // Ref of the addedPanel
 		    addPanelValues,       // Define all $values of particular addedpanel
 		    0,                    // Xpos of the AddedSymbol
 		    0,                    // Ypos of the AddedSymbol

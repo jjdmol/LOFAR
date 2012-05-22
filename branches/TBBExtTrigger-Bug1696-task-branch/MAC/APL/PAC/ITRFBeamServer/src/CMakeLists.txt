@@ -1,4 +1,4 @@
-# $Id: CMakeLists.txt 14273 2009-10-16 10:08:29Z loose $
+# $Id$
 
 include(LofarPackageVersion)
 
@@ -10,8 +10,8 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 # Add the directory where the generated C++ headers are stored to the -I path.
 #include_directories(${CMAKE_BINARY_DIR}/include/MAC)
 
-#lofar_add_bin_program(versionitrfbeamserver versionitrfbeamserver.cc)
-lofar_add_bin_program(BeamServer BeamServerMain.cc BeamServer.cc Beam.cc DigitalBeam.cc AnalogueBeam.cc AnaBeamMgr.cc StatCal.cc)
+lofar_add_bin_program(versionitrfbeamserver versionitrfbeamserver.cc Package__Version.cc)
+lofar_add_bin_program(BeamServer BeamServerMain.cc BeamServer.cc Beam.cc DigitalBeam.cc AnalogueBeam.cc AnaBeamMgr.cc StatCal.cc Package__Version.cc)
 lofar_add_bin_program(beamctl beamctl.cc)
 
 configure_file(

@@ -41,9 +41,8 @@ GetStatsCmd::GetStatsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper
 {
   m_event = new RSPGetstatsEvent(event);
 
-  m_n_devices = ((m_event->type <= Statistics::SUBBAND_POWER)
-		 ? StationSettings::instance()->nrBlpsPerBoard() : 1)
-    * StationSettings::instance()->nrRspBoards() * N_POL;
+  m_n_devices = ((m_event->type <= Statistics::SUBBAND_POWER) ? NR_BLPS_PER_RSPBOARD : 1)
+												* StationSettings::instance()->nrRspBoards() * N_POL;
 }
 
 GetStatsCmd::~GetStatsCmd()

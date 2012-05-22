@@ -14,6 +14,8 @@ lofar_add_bin_program(HardwareMonitor
   ECMonitor.cc
   EC_Protocol.cc)
 
+add_dependencies(HardwareMonitor StationCU-EC_Protocol)
+
 install(FILES
   HardwareMonitor.conf
   DESTINATION etc)

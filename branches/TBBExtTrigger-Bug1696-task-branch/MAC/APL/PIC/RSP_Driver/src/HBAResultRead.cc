@@ -41,7 +41,7 @@ using namespace EPA_Protocol;
 using namespace blitz;
 
 HBAResultRead::HBAResultRead(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, StationSettings::instance()->nrBlpsPerBoard())
+  : SyncAction(board_port, board_id, NR_BLPS_PER_RSPBOARD)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -53,7 +53,7 @@ HBAResultRead::~HBAResultRead()
 
 void HBAResultRead::sendrequest()
 {
-	uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + getCurrentIndex();
+	uint8 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) + getCurrentIndex();
 	//LOG_DEBUG_STR("HBA request result for " << (int) global_blp);
 
 	// skip update if the RCU settings have not been applied yet
@@ -85,7 +85,7 @@ GCFEvent::TResult HBAResultRead::handleack(GCFEvent& event, GCFPortInterface& /*
 	}
   
 	EPARcuResultEvent ack(event);
-	uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + getCurrentIndex();
+	uint8 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) + getCurrentIndex();
 
 #if 0
 	string received, expected;

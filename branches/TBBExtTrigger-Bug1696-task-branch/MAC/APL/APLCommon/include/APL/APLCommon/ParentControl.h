@@ -69,7 +69,7 @@ public:
 
 	// Main controller task should identify itself at ParentControlTask.
 	// Its gets an ITCport pointer in return.
-	GCFITCPort* registerTask (GCFTask*			mainTask);
+	GCFITCPort* registerTask (GCFTask*	mainTask, bool standAlone = false);
 
 	// Let ParentControlTask watch for start- and stop-time of observation.
 	// When the given time is reached the ParentControlTask generates a 
@@ -140,6 +140,8 @@ private:
 	GCFITCPort*					itsMainTaskPort;	// gateway to main task
 
 	GCFTimerPort				itsTimerPort;		// for internal timers
+
+	uint32						itsFirstConnectTimerID;	// ID of timer used to guard the first connect
 
 	string						itsServiceName;		// serviceinfo of program
 	uint32						itsInstanceNr;

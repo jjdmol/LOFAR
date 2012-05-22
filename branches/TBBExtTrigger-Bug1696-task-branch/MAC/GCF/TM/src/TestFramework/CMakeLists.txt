@@ -1,4 +1,4 @@
-# $Id: CMakeLists.txt 14273 2009-10-16 10:08:29Z loose $
+# $Id$
 
 # Add current source directory to -I path. This is needed because GCFTM uses
 # angle brackets for internal header files, instead of quotes.
@@ -14,4 +14,4 @@ mac_add_protocol(TestFW_Protocol "${MACIO_SOURCE_DIR}/autogen")
 lofar_add_library(testFW
   TestFW_Protocol.cc
   TestTask.cc)
-
+add_dependencies(testFW GCFTM-TestFW_Protocol)

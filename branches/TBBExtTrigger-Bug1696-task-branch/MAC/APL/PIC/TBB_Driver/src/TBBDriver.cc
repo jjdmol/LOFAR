@@ -384,8 +384,7 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
                 }
 
                 if ((TS->getBoardState(board) == freeBoard) ||
-                    (TS->getBoardState(board) == statusChecked) ||
-                    (TS->getBoardState(board) == arpSet)) {
+                    (TS->getBoardState(board) == statusChecked)) {
 
                     TPFreeEvent free;
                     free.opcode = oc_FREE;

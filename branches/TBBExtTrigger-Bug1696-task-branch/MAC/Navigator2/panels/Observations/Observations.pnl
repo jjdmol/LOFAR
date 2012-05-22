@@ -35,7 +35,7 @@ void prepareObservationsList() {
       LOG_ERROR(\"Observations.pnl:prepareObservationsList| Couldn't connect to\" + baseDP+\".plannedObservations\");
     }
   } else {
-    LOG_ERROR(\"Observation_small.pnl:prepareObservationsList|\"+baseDP+\".plannedObservations doesn't exist\");
+    if (!isStandalone()) LOG_ERROR(\"Observations.pnl:prepareObservationsList|\"+baseDP+\".plannedObservations doesn't exist\");
   }	
 }
 

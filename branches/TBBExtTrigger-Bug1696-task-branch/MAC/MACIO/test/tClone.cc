@@ -68,12 +68,12 @@ int main (int	/*argc*/, char* argv[])
 
 	LOG_INFO("Cloning an event with a stringVector");
 	CloneVectorEvent	theOrgVector;
-	theOrgVector.SV.theVector.push_back("aap");
-	theOrgVector.SV.theVector.push_back("noot");
-	theOrgVector.SV.theVector.push_back("mies");
-	theOrgVector.SV.theVector.push_back("wim");
-	theOrgVector.SV.theVector.push_back("zus");
-	theOrgVector.SV.theVector.push_back("jet");
+	theOrgVector.SV().push_back("aap");
+	theOrgVector.SV().push_back("noot");
+	theOrgVector.SV().push_back("mies");
+	theOrgVector.SV().push_back("wim");
+	theOrgVector.SV().push_back("zus");
+	theOrgVector.SV().push_back("jet");
 	LOG_INFO_STR(theOrgVector);
 
 	CloneVectorEvent*	theClonedVector = theOrgVector.clone();

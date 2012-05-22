@@ -1,4 +1,4 @@
-# $Id: CMakeLists.txt 15028 2010-02-19 09:18:56Z donker $
+# $Id$
 
 include(LofarMatlab)
 include(LofarPackageVersion)

@@ -152,19 +152,6 @@ void    BeamControl::setState(CTState::CTstateNr     newState)
 
 
 //
-// convertDirection(string) : int32
-//
-int32 BeamControl::convertDirection(const string&	typeName)
-{
-  LOG_INFO_STR ("Receiving DirectionType: " << typeName );	
-  if (typeName == "J2000") 	{ return (1); }
-  if (typeName == "AZEL") 	{ return (2); }
-  if (typeName == "LMN")	{ return (3); }
-  LOG_WARN_STR ("Unknown DirectionType : " << typeName << " Will use J2000");
-  return (1);
-}
-
-//
 // initial_state(event, port)
 //
 // Connect to PVSS and report state back to startdaemon
@@ -172,7 +159,7 @@ int32 BeamControl::convertDirection(const string&	typeName)
 GCFEvent::TResult BeamControl::initial_state(GCFEvent& event, 
 													GCFPortInterface& port)
 {
-	LOG_INFO_STR ("initial:" << eventName(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("initial:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -225,13 +212,13 @@ GCFEvent::TResult BeamControl::initial_state(GCFEvent& event,
 			itsPropertySet->setValue(PN_FSM_ERROR,	GCFPVString(""));
 			itsPropertySet->setValue(PN_BC_CONNECTED,		GCFPVBool  (false));
 			itsPropertySet->setValue(PN_BC_SUB_ARRAY,		GCFPVString(""));
-			itsPropertySet->setValue(PN_BC_SUBBAND_LIST,	GCFPVDynArr(dpeValues));
-			itsPropertySet->setValue(PN_BC_BEAMLET_LIST,	GCFPVDynArr(dpeValues));
-			itsPropertySet->setValue(PN_BC_ANGLE1,			GCFPVDynArr(dpeValues));
-			itsPropertySet->setValue(PN_BC_ANGLE2,			GCFPVDynArr(dpeValues));
-//			itsPropertySet->setValue(PN_BC_ANGLETIMES,		GCFPVDynArr(dpeValues));
-			itsPropertySet->setValue(PN_BC_DIRECTION_TYPE,	GCFPVDynArr(dpeValues));
-			itsPropertySet->setValue(PN_BC_BEAM_NAME,		GCFPVDynArr(dpeValues));
+			itsPropertySet->setValue(PN_BC_SUBBAND_LIST,	GCFPVDynArr(LPT_DYNSTRING, dpeValues));
+			itsPropertySet->setValue(PN_BC_BEAMLET_LIST,	GCFPVDynArr(LPT_DYNSTRING, dpeValues));
+			itsPropertySet->setValue(PN_BC_ANGLE1,			GCFPVDynArr(LPT_DYNDOUBLE, dpeValues));
+			itsPropertySet->setValue(PN_BC_ANGLE2,			GCFPVDynArr(LPT_DYNDOUBLE, dpeValues));
+//			itsPropertySet->setValue(PN_BC_ANGLETIMES,		GCFPVDynArr(LPT_DYNUNSIGNED, dpeValues));
+			itsPropertySet->setValue(PN_BC_DIRECTION_TYPE,	GCFPVDynArr(LPT_DYNSTRING, dpeValues));
+			itsPropertySet->setValue(PN_BC_BEAM_NAME,		GCFPVDynArr(LPT_DYNSTRING, dpeValues));
 		  
 			// Start ParentControl task
 			LOG_DEBUG ("Enabling ParentControl task and wait for my name");
@@ -285,7 +272,7 @@ GCFEvent::TResult BeamControl::initial_state(GCFEvent& event,
 //
 GCFEvent::TResult BeamControl::started_state(GCFEvent& event, GCFPortInterface& port)
 {
-	LOG_INFO_STR ("started:" << eventName(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("started:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -358,7 +345,7 @@ GCFEvent::TResult BeamControl::started_state(GCFEvent& event, GCFPortInterface& 
 //
 GCFEvent::TResult BeamControl::claimed_state(GCFEvent& event, GCFPortInterface& port)
 {
-	LOG_INFO_STR ("claimed:" << eventName(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("claimed:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -447,7 +434,7 @@ GCFEvent::TResult BeamControl::allocBeams_state(GCFEvent& event, GCFPortInterfac
 //	static string	curBeamName(allocatingDigitalBeams ? itsObs->beams[beamIdx].name : itsObs->anaBeams[beamIdx].name);
 	static string	curBeamName(itsObs->beams[beamIdx].name);
 
-	LOG_INFO_STR("allocBeams:" << eventName(event) << "@" << port.getName());
+	LOG_DEBUG_STR("allocBeams:" << eventName(event) << "@" << port.getName());
 
 	//
 	// Create a new subarray
@@ -455,7 +442,7 @@ GCFEvent::TResult BeamControl::allocBeams_state(GCFEvent& event, GCFPortInterfac
 	switch (event.signal) {
 	case F_ENTRY: 
 		itsTimerPort->cancelAllTimers();
-		itsTimerPort->setTimer(2.0);		// give CalControl + CalServer some time to allocated the beams.
+		itsTimerPort->setTimer(0.01);		// give CalControl + CalServer some time to allocated the beams.
 		break;
 
 	case F_TIMER: {
@@ -478,23 +465,24 @@ GCFEvent::TResult BeamControl::allocBeams_state(GCFEvent& event, GCFPortInterfac
 		// digital part
 		if (!itsObs->beams.empty()) {			// fill digital part if any
 			StationConfig		sc;
-			beamAllocEvent.ringNr = ((sc.hasSplitters && (beamAllocEvent.antennaSet == "HBA_ONE")) ? 1 : 0);
+			beamAllocEvent.ringNr = ((sc.hasSplitters && (beamAllocEvent.antennaSet.substr(0,7) == "HBA_ONE")) ? 1 : 0);
 
-			if (itsObs->beams[beamIdx].subbands.size() != itsObs->beams[beamIdx].beamlets.size()) {
+			vector<int> beamBeamlets = itsObs->getBeamlets(beamIdx);
+			if (itsObs->beams[beamIdx].subbands.size() != beamBeamlets.size()) {
 				LOG_FATAL_STR("size of subbandList (" << itsObs->beams[beamIdx].subbands.size() << ") != " <<
-								"size of beamletList (" << itsObs->beams[beamIdx].beamlets.size() << ")");
+								"size of beamletList (" << beamBeamlets.size() << ")");
 				setState(CTState::CLAIMED);
 				sendControlResult(*itsParentPort, CONTROL_PREPARED, getName(), CT_RESULT_BEAMALLOC_FAILED);
 				TRAN(BeamControl::claimed_state);
 				return (GCFEvent::HANDLED);
 			}
 			LOG_DEBUG_STR("nr Subbands:" << itsObs->beams[beamIdx].subbands.size());
-			LOG_DEBUG_STR("nr Beamlets:" << itsObs->beams[beamIdx].beamlets.size());
+			LOG_DEBUG_STR("nr Beamlets:" << beamBeamlets.size());
 
 			// construct subband to beamlet map
-			vector<int32>::iterator beamletIt = itsObs->beams[beamIdx].beamlets.begin();
+			vector<int32>::iterator beamletIt = beamBeamlets.begin();
 			vector<int32>::iterator subbandIt = itsObs->beams[beamIdx].subbands.begin();
-			while (beamletIt != itsObs->beams[beamIdx].beamlets.end() && subbandIt != itsObs->beams[beamIdx].subbands.end()) {
+			while (beamletIt != beamBeamlets.end() && subbandIt != itsObs->beams[beamIdx].subbands.end()) {
 				LOG_DEBUG_STR("alloc[" << *beamletIt << "]=" << *subbandIt);
 				beamAllocEvent.allocation()[*beamletIt++] = *subbandIt++;
 			}
@@ -565,7 +553,7 @@ GCFEvent::TResult BeamControl::sendPointings_state(GCFEvent& event, GCFPortInter
 				sendingDigitalPts ? itsObs->beams[beamIdx].pointings.begin() : itsObs->anaBeams[beamIdx].pointings.begin();
 	static string	curBeamName(sendingDigitalPts ? itsObs->beams[beamIdx].name : itsObs->anaBeams[beamIdx].name);
 
-	LOG_INFO_STR("sendPointings:" << eventName(event) << "@" << port.getName());
+	LOG_DEBUG_STR("sendPointings:" << eventName(event) << "@" << port.getName());
 
 	//
 	// Create a new subarray
@@ -671,7 +659,7 @@ GCFEvent::TResult BeamControl::sendPointings_state(GCFEvent& event, GCFPortInter
 //
 GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& port)
 {
-	LOG_INFO_STR ("active:" << eventName(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("active:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -772,7 +760,7 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 //
 GCFEvent::TResult BeamControl::quiting_state(GCFEvent& event, GCFPortInterface& port)
 {
-	LOG_INFO_STR ("quiting:" << eventName(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("quiting:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -830,7 +818,7 @@ void BeamControl::beamsToPVSS()
 		writeVector(os, itsObs->beams[i].subbands);
 		subbandArr.push_back   (new GCFPVString  (os.str()));
 		os.clear();
-		writeVector(os, itsObs->beams[i].beamlets);
+		writeVector(os, itsObs->getBeamlets(i));
 		beamletArr.push_back   (new GCFPVString  (os.str()));
 		angle1Arr.push_back	   (new GCFPVDouble  (itsObs->beams[i].pointings[0].angle1));
 		angle2Arr.push_back	   (new GCFPVDouble  (itsObs->beams[i].pointings[0].angle2));
@@ -838,11 +826,11 @@ void BeamControl::beamsToPVSS()
 		beamIDArr.push_back	   (new GCFPVString  (""));
 	}
 
-	itsPropertySet->setValue(PN_BC_SUBBAND_LIST,	GCFPVDynArr(subbandArr));
-	itsPropertySet->setValue(PN_BC_BEAMLET_LIST,	GCFPVDynArr(beamletArr));
-	itsPropertySet->setValue(PN_BC_ANGLE1,			GCFPVDynArr(angle1Arr));
-	itsPropertySet->setValue(PN_BC_ANGLE2,			GCFPVDynArr(angle2Arr));
-	itsPropertySet->setValue(PN_BC_DIRECTION_TYPE,	GCFPVDynArr(dirTypesArr));
+	itsPropertySet->setValue(PN_BC_SUBBAND_LIST,	GCFPVDynArr(LPT_DYNSTRING, subbandArr));
+	itsPropertySet->setValue(PN_BC_BEAMLET_LIST,	GCFPVDynArr(LPT_DYNSTRING, beamletArr));
+	itsPropertySet->setValue(PN_BC_ANGLE1,			GCFPVDynArr(LPT_DYNDOUBLE, angle1Arr));
+	itsPropertySet->setValue(PN_BC_ANGLE2,			GCFPVDynArr(LPT_DYNDOUBLE, angle2Arr));
+	itsPropertySet->setValue(PN_BC_DIRECTION_TYPE,	GCFPVDynArr(LPT_DYNSTRING, dirTypesArr));
 }
 
 //
@@ -922,12 +910,15 @@ GCFEvent::TResult BeamControl::_defaultEventHandler(GCFEvent&			event,
 		case CONTROL_RESUME:
 		case CONTROL_SUSPEND:
 		case CONTROL_RELEASE:
-		case CONTROL_QUIT:
 			 if (sendControlResult(port, event.signal, getName(), CT_RESULT_NO_ERROR)) {
 				result = GCFEvent::HANDLED;
 			}
 			break;
 		
+		case CONTROL_QUIT:
+			TRAN(BeamControl::quiting_state);
+			break;
+		break;
 		case CONTROL_CONNECTED:
 		case CONTROL_RESYNCED:
 		case CONTROL_SCHEDULED:

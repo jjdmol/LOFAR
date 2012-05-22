@@ -138,14 +138,18 @@ private:
 	uint32				itsFinishedItv;			// interval to update the finished obs list
 	uint32				itsPlannedPeriod;		// period a planned observation is visible
 	uint32				itsFinishedPeriod;		// period a finished observation is visible
+	uint32				itsMaxPlanned;			// max number of planned observation is visible
+	uint32				itsMaxFinished;			// max number of finished observation is visible
 
 	int32				itsNextPlannedTime;		// time to update the planned obs list again
 	int32				itsNextActiveTime;		// time to update the active obs list again
 	int32				itsNextFinishedTime;	// time to update the finished obs list again
 
+	int32				itsNrPlanned;			// nr of currently displayed planned observations
+	int32				itsNrActive;			// nr of currently displayed active observations
+
 	// Scheduling settings
 	uint32				itsQueuePeriod;			// period between queueing and start
-	uint32				itsClaimPeriod;			// period between claiming and start
       
 	// OTDB related variables.
    	OTDB::OTDBconnection*	itsOTDBconnection;		// connection to the database

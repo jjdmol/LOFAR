@@ -64,7 +64,7 @@ void SetClocksCmd::apply(CacheBuffer& cache, bool setModFlag)
   LOG_INFO_STR(formatString("Setting clock to %d MHz @ ", m_event->clock) << getTimestamp());
 
   if (setModFlag) {
-    Sequencer::getInstance().startSequence(Sequencer::SETCLOCK);
+    Sequencer::getInstance().startSequence(Sequencer::SEQ_SETCLOCK);
   }
 }
 

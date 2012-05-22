@@ -1,5 +1,7 @@
 # $Id$
 
+lofar_package(StaticMetaData 1.0)
+
 install(PROGRAMS 
   createFiles 
   DESTINATION sbin)
@@ -21,7 +23,8 @@ file(GLOB staticmeta_data
   HBADeltas/*.conf
   iHBADeltas/*.conf
   AntennaFields/*.conf
-  CalTables/*.dat)
+  PPSDelays/*.conf
+  TBBConnections.dat)
 install(FILES
   ${staticmeta_data}
   DESTINATION etc/StaticMetaData)

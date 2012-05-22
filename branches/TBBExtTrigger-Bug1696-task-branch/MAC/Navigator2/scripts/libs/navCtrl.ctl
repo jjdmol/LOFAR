@@ -597,7 +597,7 @@ void navCtrl_handleDetailSelectionEvent(string dp,string value,string target){
       if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + ".panelParamList")) {
         dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".panelParamList",var);
       } else {
-        LOG_WARN("navCtrl.ctl:navCtrl_handleLocatorEvent| Error: no dp " + DPNAME_NAVIGATOR + g_navigatorID+".panelParam");
+        LOG_WARN("navCtrl.ctl:navCtrl_handleLocatorEvent| Error: no dp " + DPNAME_NAVIGATOR + g_navigatorID+".panelParamList");
       }
     }
       

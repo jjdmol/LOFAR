@@ -216,7 +216,7 @@ void CDOWrite::sendrequest()
 					
 			// settings
 			cdo.control.enable = GET_CONFIG("RSPDriver.CDO_ENABLE", i);
-			if (Cache::getInstance().getBack().isCepEnabled() == false) {
+			if (Cache::getInstance().getBack().isCepEnabled(output_lane >= 10 ? 1 : 0) == false) {
 				cdo.control.enable = 0;
 			}
 			cdo.control.lane       = lane;

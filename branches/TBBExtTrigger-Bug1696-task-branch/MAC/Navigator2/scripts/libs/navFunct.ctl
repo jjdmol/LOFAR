@@ -171,7 +171,7 @@ void navFunct_queryConnectObservations()
       }
     } 
   } else {
-    LOG_ERROR( "navFunct.ctl:QueryConnectObservations|ERROR: MACScheduler points don't exist!!!");
+    if (!isStandalone()) LOG_ERROR( "navFunct.ctl:QueryConnectObservations|ERROR: MACScheduler points don't exist!!!");
     if (g_initializing) {
       writeInitProcess("queryConnectObservationsFinished");
     }

@@ -110,7 +110,8 @@ lofar_add_bin_program(RSPDriver
   SerdesWrite.cc
   SerdesRead.cc
   UpdSplitterCmd.cc
-  LatencyRead.cc)
+  LatencyRead.cc
+  CRSyncWrite.cc)
  
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/rspctl.conf.in

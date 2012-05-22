@@ -22,7 +22,7 @@
 #
 # Syntax: loadPICtree databasename
 #
-# $Id: loadPICtree 10344 2007-07-05 08:56:48Z overeem $
+# $Id$
 #
 VERSION="v1.0"
 

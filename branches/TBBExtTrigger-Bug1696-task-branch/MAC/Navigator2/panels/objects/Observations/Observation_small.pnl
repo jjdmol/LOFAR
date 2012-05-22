@@ -20,7 +20,7 @@ PANEL,-1 -1 999 293 N "_3DFace" 1
       LOG_ERROR(\"Observation_small.pnl:main|Couldn't connect to: \"+baseDP);
     }
   } else {
-    LOG_ERROR(\"Observation_small.pnl:main|Couldn't find DP to connect to: \"+baseDP);
+    if (!isStandalone()) LOG_ERROR(\"Observation_small.pnl:main|Couldn't find DP to connect to: \"+baseDP);
   }	
 
 }

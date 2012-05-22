@@ -50,25 +50,12 @@ StationSettings* StationSettings::instance()
 //
 StationSettings::StationSettings() :
 	itsMaxRspBoards(0),
-	itsNrBlpsPerBoard(0),
-	itsNrRcusPerBoard(0),
 	itsNrRspBoards(0),
 	itsNrBlps(0),
 	itsNrRcus(0),
 	itsHasSplitter(false)
 {
 
-}
-
-//
-// setNrBlpsPerBoard
-//
-void StationSettings::setNrBlpsPerBoard (int32 nrBlps)
-{
-	itsNrBlpsPerBoard = nrBlps;
-	itsNrRcusPerBoard = itsNrBlpsPerBoard * N_POL;
-	itsNrBlps         = itsNrBlpsPerBoard * itsNrRspBoards;
-	itsNrRcus         = itsNrRcusPerBoard * itsNrRspBoards;
 }
 
 //
@@ -81,8 +68,8 @@ void StationSettings::setNrRspBoards    (int32 nrRspBoards)
 			formatString("Range conflict in nr of RSP boards (%d<=%d)",
 			itsNrRspBoards, itsMaxRspBoards));
 
-	itsNrBlps      = itsNrBlpsPerBoard * itsNrRspBoards;
-	itsNrRcus      = itsNrRcusPerBoard * itsNrRspBoards;
+	itsNrBlps = NR_BLPS_PER_RSPBOARD * itsNrRspBoards;
+	itsNrRcus = NR_RCUS_PER_RSPBOARD * itsNrRspBoards;
 }
 
 //
@@ -92,8 +79,7 @@ void StationSettings::setMaxRspBoards   (int32 nrRspBoards)
 {
 	itsMaxRspBoards = nrRspBoards;
 	ASSERTSTR (itsNrRspBoards <= itsMaxRspBoards, 
-			formatString("Rangeconflict in nr of RSP boards (%d<=%d)",
-			itsNrRspBoards, itsMaxRspBoards));
+			formatString("Rangeconflict in nr of RSP boards (%d<=%d)", itsNrRspBoards, itsMaxRspBoards));
 }
 
 //
@@ -103,8 +89,6 @@ ostream& StationSettings::print (ostream& os) const
 {
 	os << "Max RSPboards: " << itsMaxRspBoards   << endl;
 	os << "Nr RSPboards : " << itsNrRspBoards    << endl;
-	os << "Nr BLPs/board: " << itsNrBlpsPerBoard << endl;
-	os << "Nr RCUs/board: " << itsNrRcusPerBoard << endl;
 	os << "Nr BLPs      : " << itsNrBlps         << endl;
 	os << "Nr RCUs      : " << itsNrRcus         << endl;
 	os << "Splitters    : " << (itsHasSplitter ? "Yes" : "No") << endl;

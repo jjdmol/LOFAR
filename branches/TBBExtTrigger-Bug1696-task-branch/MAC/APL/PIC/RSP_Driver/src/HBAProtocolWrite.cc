@@ -265,8 +265,8 @@ namespace LOFAR {
 #define N_WRITES 2 // 2 writes, one for protocol register, one to clear results register
 
 HBAProtocolWrite::HBAProtocolWrite(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, StationSettings::instance()->nrBlpsPerBoard() * N_WRITES)
-  // using nrBlpsPerBoard() because only the Y RCU's (odd numbered 1,3,5,...)
+  : SyncAction(board_port, board_id, NR_BLPS_PER_RSPBOARD * N_WRITES)
+  // using NR_BLPS_PER_RSPBOARD because only the Y RCU's (odd numbered 1,3,5,...)
   // control both the X and Y delays of HBA
 {
 	static	bool	i2c_tables_patched = false;
@@ -299,7 +299,7 @@ HBAProtocolWrite::~HBAProtocolWrite()
 
 void HBAProtocolWrite::sendrequest()
 {
-	uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + (getCurrentIndex() / N_WRITES);
+	uint8 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) + (getCurrentIndex() / N_WRITES);
 	AllRegisterState&	regStates = Cache::getInstance().getState();
 
 	// only update if rcuprotocol is not being updated and one of hbaprotocol needs updating
@@ -397,7 +397,7 @@ GCFEvent::TResult HBAProtocolWrite::handleack(GCFEvent& event, GCFPortInterface&
 
 	EPAWriteackEvent ack(event);
 
-	uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + (getCurrentIndex() / N_WRITES);
+	uint8 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) + (getCurrentIndex() / N_WRITES);
 
 //	LOG_INFO_STR("hba[" << (int)(global_blp) << "]: handleAck");
 	if (!ack.hdr.isValidAck(m_hdr)) {
