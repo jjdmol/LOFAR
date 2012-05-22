@@ -24,17 +24,15 @@
 #ifndef LOFAR_BBSKERNEL_MODELIMAGEFFT_H
 #define LOFAR_BBSKERNEL_MODELIMAGEFFT_H
 
-//#include <ParmDB/Grid.h>
 #include <boost/smart_ptr/shared_ptr.hpp>  // ????
 #include <boost/multi_array.hpp>
 
+#include <Common/lofar_iostream.h>
 #include <casa/Arrays/Vector.h>
-//#include <coordinates/Coordinates/Coordinate.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>    // DirectionCoordinate needed for patch direction
 #include <coordinates/Coordinates/StokesCoordinate.h>
 #include <measures/Measures/Stokes.h>
-//#include <images/Images/PagedImage.h>
 #include <images/Images/ImageInterface.h>
 
 // From tConvolveBLAS.cc
@@ -65,7 +63,7 @@ typedef struct ModelImageOptions
   casa::MDirection imageDirection;              // centre patch direction of image
   casa::MDirection phaseDirection;              // phase direction of MS
   vector<double> imageFrequencies;              // channel frequencies of image
-  casa::Vector<casa::Int> imageStokes;          // Stokes present in image (Stokes::StokesTypes)
+//  casa::Vector<casa::Int> imageStokes;          // Stokes present in image (Stokes::StokesTypes)
   casa::Vector<casa::Double> frequencies;       // vector with channel frequencies
   casa::Vector<casa::Double> lambdas;           // vector with converted lambdas
   casa::Int verbose;                            // verbosity level
@@ -77,7 +75,19 @@ typedef struct ModelImageOptions
 
 typedef struct ImageProperties
 {
+  casa::String name;                            // name of image
+  // Shape and coordinate indices               // needed for image plane and Stokes access
+  casa::IPosition shape;
+  casa::uInt XcoordInd, YcoordInd;              // Direction indices into shape
+  casa::uInt SpectralCoordInd, StokesCoordInd;
+  casa::uInt nx, ny;                              // pixel dimension of image
+  casa::uInt nchan , npol;                        // No. of channels and polarizations in image
+  casa::Vector<casa::Int> stokes;
+  
+  casa::SpectralCoordinate spectralCoord_p;       // spectral coordinate of image
+  //casa::StokesCoordinate stokesCoord_p;         // Stokes coordinate
 
+  bool I, Q, U, V;                                // present Stokes parameters
 };
 
 class ModelImageFft
@@ -93,13 +103,16 @@ public:
 
   // Image property functions
   void getImageProperties(const casa::ImageInterface<casa::Float> &image);
-  bool validImage(const casa::String &imageName);
+  bool validUnits(const casa::String &imageName);
+  bool validStokes(casa::Vector<casa::Int> stokes);
   casa::MDirection getPatchDirection(const casa::ImageInterface<casa::Float> &image);
 
   casa::Vector<casa::Double> getImageFrequencies();
-  casa::Vector<casa::Int> chanMap(const vector<double> frequencies);
   casa::Vector<casa::Int> getStokes(const casa::ImageInterface<casa::Float> &image);
   casa::Vector<casa::Bool> getFourierAxes(const casa::ImageInterface<casa::Float> &image);
+  casa::Vector<casa::Int> chanMap(const vector<double> frequencies);
+
+  void printImageProperties();
 
   // Setter functions for individual options
   void setPhaseDirection(const casa::MDirection &phaseDir);
@@ -114,7 +127,7 @@ public:
   inline casa::MDirection imageDirection() const { return itsOptions.imageDirection; }
   inline casa::MDirection phaseDirection() const { return itsOptions.phaseDirection; }
   inline vector<double> imageFrequencies() const { return itsOptions.imageFrequencies; }
-  inline casa::Vector<casa::Int> imageStokes() const { return itsOptions.imageStokes; }
+//  inline casa::Vector<casa::Int> imageStokes() const { return itsOptions.imageStokes; }
   inline casa::Vector<casa::Double>  frequencies() const { return itsOptions.frequencies; }
   inline casa::uInt       verbose() const { return itsOptions.verbose; }
   inline casa::Vector<casa::Double> uvScale() const { return itsOptions.uvScale; }
@@ -122,6 +135,10 @@ public:
   inline double           uvScaleY() const { return itsOptions.uvScale[1]; }
   casa::Vector<casa::Double> offset() const { return itsOptions.offset; }
   inline unsigned int     nWplanes() const { return itsOptions.nwplanes; }
+
+  // ImageProperties getter functions
+  inline casa::Vector<casa::Int> stokes() const { return itsImageProperties.stokes; }
+  inline ImageProperties imageOptions() const { return itsImageProperties; }
 
   // Function to get degridded data into raw pointers
   void degrid(const double *uvwBaselines[3], 
@@ -209,26 +226,10 @@ public:
 private:
 //  casa::Array<casa::DComplex> itsImage;   // keep fft'ed image in memory
   casa::ImageInterface<casa::Complex> *itsImage;  // keep fft'ed image in memory
-  ModelImageOptions itsOptions;           // struct containing all options
+  ModelImageOptions itsOptions;           // struct containing all FFT options
+  ImageProperties itsImageProperties;     // struct containing image properties
+
   casa::Vector<casa::Double> convertToLambdas(const casa::Vector<casa::Double> &frequencies);   // convert frequencies to lambda
-
-  // Image properties
-  casa::uInt nx, ny;                              // pixel dimension of image
-  casa::uInt nchan , npol;                        // No. of channels and polarizations in image
-  casa::SpectralCoordinate spectralCoord_p;       // spectral coordinate of image
-  //casa::StokesCoordinate stokesCoord_p;         // Stokes coordinate
-  
-  // Old casarest stuff
-//  ModelImageVisibilityResampler itsVisResampler;  // modified casarest VisResampler
-//  casa::CFStore itsConvFunc;          // convolution function for VisResampler
-//  casa::CFStore itsConvFunc;          // w-projection convolution ftns (LofarConv?)
-
-//  casa::SpectralCoordinate spectralCoord_p;         // spectral coordinate of image
-//  casa::Vector<casa::Int> polMap_p, chanMap_p;  // polarization map and channel map
-//  casa::Vector<casa::Double> dphase_p;
-//  void initPolmap();    // initialize polarization map
-//  void initChanmap();   // initialize channel map
-//  void initChanmap(const Vector<Double> &frequencies);
 };
 
 } // end namespace BBS
