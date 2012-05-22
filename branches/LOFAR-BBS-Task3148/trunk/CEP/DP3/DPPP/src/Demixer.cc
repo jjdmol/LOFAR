@@ -74,14 +74,16 @@ namespace LOFAR {
         itsSkyName       (parset.getString(prefix+"skymodel", "sky")),
         itsInstrumentName(parset.getString(prefix+"instrumentmodel",
                                            "instrument")),
-        itsElevCutoff    (getAngle(parset.getString(prefix+"elevationcutoff",
-                                                    "0."))),
+//        itsElevCutoff    (getAngle(parset.getString(prefix+"elevationcutoff",
+//                                                    "0."))),
         itsTargetSource  (parset.getString(prefix+"targetsource", string())),
         itsSubtrSources  (parset.getStringVector (prefix+"subtractsources")),
         itsModelSources  (parset.getStringVector (prefix+"modelsources",
                                                   vector<string>())),
         itsExtraSources  (parset.getStringVector (prefix+"othersources",
                                                   vector<string>())),
+        itsCutOffs       (parset.getUintVector (prefix+"elevationcutoffs",
+                                                  vector<uint>())),
 ///        itsJointSolve    (parset.getBool  (prefix+"jointsolve", true)),
         itsNTimeIn       (0),
         itsNChanAvgSubtr (parset.getUint  (prefix+"freqstep", 1)),
@@ -246,24 +248,48 @@ namespace LOFAR {
         itsBaselines.push_back(Baseline(input->getAnt1()[i],
           input->getAnt2()[i]));
       }
+
+      while(itsCutOffs.size() < itsNrModel) {
+        itsCutOffs.push_back(0);
+      }
+      itsCutOffs.resize(itsNrModel);
+      LOG_DEBUG_STR("Elevation cutoffs: " << itsCutOffs);
+
+      itsFrames.reserve(OpenMP::maxThreads());
+      itsConverters.reserve(OpenMP::maxThreads());
+      for(size_t i = 0; i < OpenMP::maxThreads(); ++i) {
+//        casa::Quantum<casa::Double> qEpoch(0.0, "s");
+//        casa::MEpoch mEpoch(qEpoch, casa::MEpoch::UTC);
+
+        // Create and initialize a frame.
+        casa::MeasFrame frame;
+        frame.set(input->arrayPos());
+        frame.set(casa::MEpoch());
+        itsFrames.push_back(frame);
+
+        // TODO: Do we need to use AZEL or AZELGEO here?
+        itsConverters.push_back(casa::MDirection::Convert(casa::MDirection::Ref(casa::MDirection::J2000),
+          casa::MDirection::Ref(casa::MDirection::AZELGEO, itsFrames.back())));
+      }
     }
 
     void Demixer::initUnknowns()
     {
       itsUnknowns.resize(IPosition(4, 8, itsNStation, itsNrModel,
         itsNTimeDemix));
-      for(uint ts = 0; ts < itsNTimeDemix; ++ts) {
-        for(uint dr = 0; dr < itsNrModel; ++dr) {
-          for(uint st = 0; st < itsNStation; ++st) {
-            itsUnknowns(IPosition(4, 0, st, dr, ts)) = 1.0;
-            itsUnknowns(IPosition(4, 1, st, dr, ts)) = 0.0;
-            itsUnknowns(IPosition(4, 2, st, dr, ts)) = 0.0;
-            itsUnknowns(IPosition(4, 3, st, dr, ts)) = 0.0;
-            itsUnknowns(IPosition(4, 4, st, dr, ts)) = 0.0;
-            itsUnknowns(IPosition(4, 5, st, dr, ts)) = 0.0;
-            itsUnknowns(IPosition(4, 6, st, dr, ts)) = 1.0;
-            itsUnknowns(IPosition(4, 7, st, dr, ts)) = 0.0;
-          }
+      itsUnknowns = 0.0;
+
+      itsLastKnowns.resize(IPosition(3, 8, itsNStation, itsNrModel));
+      for(uint dr = 0; dr < itsNrModel; ++dr) {
+        for(uint st = 0; st < itsNStation; ++st) {
+          itsLastKnowns(IPosition(3, 0, st, dr)) = 1.0;
+          itsLastKnowns(IPosition(3, 1, st, dr)) = 0.0;
+          itsLastKnowns(IPosition(3, 2, st, dr)) = 0.0;
+          itsLastKnowns(IPosition(3, 3, st, dr)) = 0.0;
+          itsLastKnowns(IPosition(3, 4, st, dr)) = 0.0;
+          itsLastKnowns(IPosition(3, 5, st, dr)) = 0.0;
+          itsLastKnowns(IPosition(3, 6, st, dr)) = 1.0;
+          itsLastKnowns(IPosition(3, 7, st, dr)) = 0.0;
         }
       }
     }
@@ -756,29 +782,6 @@ namespace LOFAR {
 
         itsTimerSolve.start();
 
-//        // Construct grids for parameter estimation.
-//        Axis::ShPtr timeAxis (new RegularAxis (itsStartTimeChunk,
-//                                               itsTimeIntervalAvg,
-//                                               itsNTimeOut));
-//        Grid visGrid(itsFreqAxisDemix, timeAxis);
-//        // Solve for each time slot over all channels.
-//        Grid solGrid(itsFreqAxisDemix->compress(itsFreqAxisDemix->size()),
-//                     timeAxis);
-
-        // Estimate model parameters.
-//        LOG_DEBUG_STR("estimating....");
-//        itsBBSExpr.estimate(buffers, visGrid, solGrid, itsFactors);
-// TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
-//        estimate(buffers, itsFactors, itsState, itsTimeCount);
-//        estimate(itsAvgResultSubtr->get(), buffers, itsFactorsSubtr, itsState);
-//        estimate(itsAvgResultSubtr->get(), buffers, itsFactors, itsFactorsSubtr,
-//            itsState, itsTimeCount);
-//        ASSERTSTR(itsNTimeAvgSubtr <= itsNTimeAvg && itsNTimeAvg % itsNTimeAvgSubtr == 0, "Subtr: " << itsNTimeAvgSubtr << " Demix: " << itsNTimeAvg);
-//        demix2(itsAvgResultSubtr->get(), buffers, itsFactors, itsFactorsSubtr,
-//          itsState, itsTimeCount, buffers[0].size(), itsNTimeAvg
-//          / itsNTimeAvgSubtr, itsPatchList);
-// TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
-
         const size_t nTime = streams[0].size();
 
         LOG_DEBUG_STR("#models: " << itsNrModel);
@@ -802,13 +805,15 @@ namespace LOFAR {
 
         // Copy solutions from global solution array to thread private solution
         // array (solution propagation between chunks).
+        boost::multi_array<int, 2> last(boost::extents[nDr][nThread]);
+        fill(&(last[0][0]), &(last[0][0]) + nDr * nThread, -1);
+
         boost::multi_array<double, 2> unknowns(boost::extents[nThread][nDr * nSt * 8]);
-        const size_t nSlot = min(nTime, nThread);
-        const size_t tSource = (itsTimeCount == 0 ? 0 : itsTimeCount - 1);
-        for(size_t i = 0; i < nSlot; ++i) {
-          copy(&(itsUnknowns(IPosition(4, 0, 0, 0, tSource))),
-            &(itsUnknowns(IPosition(4, 0, 0, 0, tSource))) + nDr * nSt * 8,
-            &(unknowns[i][0]));
+        for(size_t i = 0; i < nThread; ++i)
+        {
+            copy(&(itsLastKnowns(IPosition(3, 0, 0, 0))),
+                &(itsLastKnowns(IPosition(3, 0, 0, 0))) + nDr * nSt * 8,
+                &(unknowns[i][0]));
         }
 
         boost::multi_array<double, 3> uvw(boost::extents[nThread][nSt][3]);
@@ -822,10 +827,33 @@ namespace LOFAR {
         {
             const size_t thread = OpenMP::threadNum();
 
-            // compute elevation and determine which sources are visible.
-                // NB. carefully consider makeNorm() indices!!
+            // Compute elevation and determine which sources are visible.
+            vector<size_t> drUp;
+            casa::Quantum<casa::Double> qEpoch(streams[0][i].getTime(), "s");
+            casa::MEpoch mEpoch(qEpoch, casa::MEpoch::UTC);
+            itsFrames[thread].set(mEpoch);
 
-            // zero solutions for non-visible sources.
+            for(size_t dr = 0; dr < nDr; ++dr)
+            {
+                casa::MVDirection drJ2000(itsPatchList[dr].position[0], itsPatchList[dr].position[1]);
+                casa::MVDirection mvAzel(itsConverters[thread](drJ2000).getValue());
+                casa::Vector<casa::Double> azel = mvAzel.getAngle("deg").getValue();
+
+                if(azel(1) >= itsCutOffs[dr])
+                {
+                    drUp.push_back(dr);
+                    last[dr][thread] = i;
+                }
+            }
+
+            const size_t nDrUp = drUp.size();
+            LOG_DEBUG_STR("thread: " << thread << " directions: " << drUp);
+
+            if(nDrUp == 0)
+            {
+               LOG_DEBUG_STR("thread: " << thread << " SKIPPING");
+               continue;
+            }
 
             // Simulate.
             size_t strides[3] = {1, nCr, nCh * nCr};
@@ -836,25 +864,25 @@ namespace LOFAR {
             const_cursor<double> cr_freqRes(&(itsFreqSubtr[0]));
 
             cursor<double> cr_split(&(uvw[thread][0][0]), 2, strides_split);
-            for(size_t dr = 0; dr < nDr; ++dr)
+            for(size_t dr = 0; dr < nDrUp; ++dr)
             {
                 fill(&(buffer[thread][dr][0][0][0]),
                     &(buffer[thread][dr][0][0][0]) + nBl * nCh * nCr, dcomplex());
 
-                const_cursor<double> cr_uvw = casa_const_cursor(streams[dr][i].getUVW());
+                const_cursor<double> cr_uvw = casa_const_cursor(streams[drUp[dr]][i].getUVW());
                 splitUVW(nSt, nBl, cr_baseline, cr_uvw, cr_split);
 
                 cursor<dcomplex> cr_model(&(buffer[thread][dr][0][0][0]), 3, strides);
-                simulate(itsPatchList[dr].position, itsPatchList[dr], nSt, nBl, nCh,
+                simulate(itsPatchList[drUp[dr]].position, itsPatchList[drUp[dr]], nSt, nBl, nCh,
                     cr_baseline, cr_freq, cr_split, cr_model);
             }
 
             // Estimate.
-            vector<const_cursor<fcomplex> > cr_data(nDr);
-            vector<const_cursor<dcomplex> > cr_model(nDr);
-            for(size_t dr = 0; dr < nDr; ++dr)
+            vector<const_cursor<fcomplex> > cr_data(nDrUp);
+            vector<const_cursor<dcomplex> > cr_model(nDrUp);
+            for(size_t dr = 0; dr < nDrUp; ++dr)
             {
-                cr_data[dr] = casa_const_cursor(streams[dr][i].getData());
+                cr_data[dr] = casa_const_cursor(streams[drUp[dr]][i].getData());
                 cr_model[dr] = const_cursor<dcomplex>(&(buffer[thread][dr][0][0][0]),
                     3, strides);
             }
@@ -866,8 +894,10 @@ namespace LOFAR {
 
             size_t strides_unknowns[3] = {1, 8, nSt * 8};
             cursor<double> cr_unknowns(&(unknowns[thread][0]), 3, strides_unknowns);
-            estimate(nDr, nSt, nBl, nCh, cr_data, cr_model, cr_baseline,
-                cr_flag, cr_weight, cr_mix, cr_unknowns);
+//            estimate(nDr, nSt, nBl, nCh, cr_data, cr_model, cr_baseline,
+//                cr_flag, cr_weight, cr_mix, cr_unknowns);
+            estimate2(nSt, nBl, nCh, drUp, itsBaselines, cr_data,
+                cr_model, cr_flag, cr_weight, cr_mix, cr_unknowns);
 
             // Tweak solutions.
             const size_t nTimeResidual = min(timeFactor, target.size() - i * timeFactor);
@@ -881,8 +911,14 @@ namespace LOFAR {
 
             for(size_t j = 0; j < nTimeResidual; ++j)
             {
-                for(size_t dr = 0; dr < nDrRes; ++dr)
+                for(size_t dr = 0; dr < nDrUp; ++dr)
                 {
+                    const size_t drIdx = drUp[dr];
+                    if(drIdx >= nDrRes)
+                    {
+                        break;
+                    }
+
                     // Re-simulate for residual if required.
                     if(timeFactor != 1 || nCh != nChRes)
                     {
@@ -893,9 +929,9 @@ namespace LOFAR {
                         const_cursor<double> cr_uvw = casa_const_cursor(target[i * timeFactor + j].getUVW());
                         splitUVW(nSt, nBl, cr_baseline, cr_uvw, cr_split);
 
-                        rotateUVW(itsPhaseRef, itsPatchList[dr].position, nSt, cr_split);
+                        rotateUVW(itsPhaseRef, itsPatchList[drIdx].position, nSt, cr_split);
 
-                        simulate(itsPatchList[dr].position, itsPatchList[dr], nSt, nBl, nChRes,
+                        simulate(itsPatchList[drIdx].position, itsPatchList[drIdx], nSt, nBl, nChRes,
                             cr_baseline, cr_freqRes, cr_split, cr_model_res);
                     }
                     else
@@ -905,28 +941,49 @@ namespace LOFAR {
 
                     // Apply solutions.
                     size_t strides_coeff[2] = {1, 8};
-                    const_cursor<double> cr_coeff(&(unknowns[thread][dr * nSt * 8]), 2, strides_coeff);
+                    const_cursor<double> cr_coeff(&(unknowns[thread][drIdx * nSt * 8]), 2, strides_coeff);
                     apply(nBl, nChRes, cr_baseline, cr_coeff, cr_model_res);
 
                     // Subtract.
                     cursor<fcomplex> cr_residual = casa_cursor(target[i * timeFactor + j].getData());
 
                     const casa::IPosition tmp_strides_mix_res = itsFactorsSubtr[i * timeFactor + j].steps();
-                    LOG_DEBUG_STR("nDrRes: " << nDrRes << " itsNrDir: " << itsNrDir << " " << tmp_strides_mix_res[2] << " " << tmp_strides_mix_res[3] << " " << tmp_strides_mix_res[4]);
+//                    LOG_DEBUG_STR("nDrRes: " << nDrRes << " itsNrDir: " << itsNrDir << " " << tmp_strides_mix_res[2] << " " << tmp_strides_mix_res[3] << " " << tmp_strides_mix_res[4]);
                     ASSERT(static_cast<size_t>(tmp_strides_mix_res[2]) == (itsNrDir) * (itsNrDir)
                         && static_cast<size_t>(tmp_strides_mix_res[3]) == nCr * (itsNrDir) * (itsNrDir)
                         && static_cast<size_t>(tmp_strides_mix_res[4]) == nChRes * nCr * (itsNrDir) * (itsNrDir));
 
                     // The target direction is always last, and therefore it has index itsNrDir - 1.
-                    // The directions to subtract are always first, and therefore have indices 0..nDrRes.
-                    const_cursor<dcomplex> cr_mix(&(itsFactorsSubtr[i * timeFactor + j](casa::IPosition(5, itsNrDir - 1, dr, 0, 0, 0))), 3, tmp_strides_mix_res.storage() + 2);
+                    // The directions to subtract are always first, and therefore have indices [0, nDrRes).
+                    const_cursor<dcomplex> cr_mix(&(itsFactorsSubtr[i * timeFactor + j](casa::IPosition(5, itsNrDir - 1, drIdx, 0, 0, 0))), 3, tmp_strides_mix_res.storage() + 2);
                     subtract(nBl, nChRes, cr_baseline, cr_residual, cr_model_res, cr_mix);
                 }
             }
 
             // Copy solutions to global solution array.
-            copy(&(unknowns[thread][0]), &(unknowns[thread][0]) + nDr * nSt * 8,
-                &(itsUnknowns(IPosition(4, 0, 0, 0, itsTimeCount + i))));
+            for(size_t dr = 0; dr < nDrUp; ++dr)
+            {
+                size_t idx = drUp[dr];
+                copy(&(unknowns[thread][idx * nSt * 8]), &(unknowns[thread][idx * nSt * 8]) + nSt * 8,
+                   &(itsUnknowns(IPosition(4, 0, 0, idx, itsTimeCount + i))));
+            }
+        }
+
+        // Store last known solutions.
+        for(size_t dr = 0; dr < nDr; ++dr)
+        {
+            int idx = last[dr][0];
+            for(size_t i = 1; i < nThread; ++i)
+            {
+                idx = max(idx, last[dr][i]);
+            }
+
+            if(idx >= 0)
+            {
+                copy(&(itsUnknowns(IPosition(4, 0, 0, dr, itsTimeCount + idx))),
+                    &(itsUnknowns(IPosition(4, 0, 0, dr, itsTimeCount + idx))) + nSt * 8,
+                    &(itsLastKnowns(IPosition(3, 0, 0, dr))));
+            }
         }
 
         itsTimerSolve.stop();

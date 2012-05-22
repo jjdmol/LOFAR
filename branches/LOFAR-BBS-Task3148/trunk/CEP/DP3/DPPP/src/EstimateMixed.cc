@@ -38,6 +38,358 @@ namespace LOFAR
 namespace DPPP
 {
 
+void estimate2(size_t nStation, size_t nBaseline, size_t nChannel,
+    const vector<size_t> &directions, const vector<Baseline> &baselines,
+    vector<const_cursor<fcomplex> > data, vector<const_cursor<dcomplex> > model,
+    const_cursor<bool> flag, const_cursor<float> weight,
+    const_cursor<dcomplex> mix, cursor<double> unknowns)
+{
+    const size_t nDirection = directions.size();
+
+    ASSERT(data.size() == nDirection && model.size() == nDirection);
+    LOG_DEBUG_STR("#dr: " << nDirection << " #st: " << nStation << " #bl: "
+        << nBaseline << " #ch: " << nChannel << " #cr: " << 4);
+    LOG_DEBUG_STR("directions: " << directions);
+    LOG_DEBUG_STR("#unknowns: " << nDirection * nStation * 4 * 2);
+
+    casa::LSQFit solver(nDirection * nStation * 4 * 2);
+
+    // Each visibility provides information about two (complex) unknowns per
+    // station per direction. A visibility is measured by a specific
+    // interferometer, which is the combination of two stations. Thus, in total
+    // each visibility provides information about (no. of directions) x 2 x 2
+    // x 2 (scalar) unknowns = (no. of directions) x 8. For each of these
+    // unknowns the value of the partial derivative of the model with respect
+    // to the unknow has to be computed.
+    const unsigned int nPartial = nDirection * 8;
+
+    // Pack unknowns.
+    boost::multi_array<double, 1> unknowns_flat(boost::extents[nDirection * nStation * 4 * 2]);
+    size_t idx_uf = 0;
+    for(size_t dr = 0; dr < nDirection; ++dr)
+    {
+        unknowns.forward(2, directions[dr]);
+        for(size_t st = 0; st < nStation; ++st)
+        {
+            for(size_t el = 0; el < 8; ++el)
+            {
+                unknowns_flat[idx_uf] = *unknowns;
+                ++unknowns;
+                ++idx_uf;
+            }
+            unknowns -= 8;
+            unknowns.forward(1);
+        }
+        unknowns.backward(1, nStation);
+        unknowns.backward(2, directions[dr]);
+    }
+
+    // Construct partial derivative index template for each correlation.
+    boost::multi_array<unsigned int, 2> dIndexTemplate(boost::extents[4]
+        [nPartial]);
+    for(size_t cr = 0; cr < 4; ++cr)
+    {
+        size_t idx0 = (cr / 2) * 4;
+        size_t idx1 = (cr & 1) * 4;
+
+        for(size_t dr = 0; dr < nDirection; ++dr)
+        {
+            dIndexTemplate[cr][dr * 8 + 0] = idx0 + 0;
+            dIndexTemplate[cr][dr * 8 + 1] = idx0 + 1;
+            dIndexTemplate[cr][dr * 8 + 2] = idx0 + 2;
+            dIndexTemplate[cr][dr * 8 + 3] = idx0 + 3;
+            dIndexTemplate[cr][dr * 8 + 4] = idx1 + 0;
+            dIndexTemplate[cr][dr * 8 + 5] = idx1 + 1;
+            dIndexTemplate[cr][dr * 8 + 6] = idx1 + 2;
+            dIndexTemplate[cr][dr * 8 + 7] = idx1 + 3;
+            idx0 += nStation * 8;
+            idx1 += nStation * 8;
+        }
+    }
+
+    // Allocate space for intermediate results.
+    boost::multi_array<dcomplex, 2> M(boost::extents[nDirection][4]);
+    boost::multi_array<dcomplex, 3> dM(boost::extents[nDirection][4][4]);
+    boost::multi_array<double, 1> dR(boost::extents[nPartial]);
+    boost::multi_array<double, 1> dI(boost::extents[nPartial]);
+    boost::multi_array<unsigned int, 2> dIndex(boost::extents[4][nPartial]);
+
+    dcomplex coherence;
+    dcomplex Jp_00, Jp_01, Jp_10, Jp_11;
+    dcomplex Jq_00, Jq_01, Jq_10, Jq_11;
+    dcomplex Jp_00_s0, Jp_10_s0, Jp_00_s1, Jp_10_s1, Jp_01_s2, Jp_11_s2,
+        Jp_01_s3, Jp_11_s3;
+    dcomplex Jq_00_s0, Jq_10_s0, Jq_01_s1, Jq_11_s1, Jq_00_s2, Jq_10_s2,
+        Jq_01_s3, Jq_11_s3;
+
+// DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
+    vector<const_cursor<fcomplex> > c_data(data);
+    vector<const_cursor<dcomplex> > c_model(model);
+    const_cursor<bool> c_flag = flag;
+    const_cursor<float> c_weight = weight;
+    const_cursor<dcomplex> c_mix = mix;
+// DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
+
+    // Iterate until convergence.
+    size_t nIterations = 0;
+    while(!solver.isReady() && nIterations < 50)
+    {
+        for(size_t bl = 0; bl < nBaseline; ++bl)
+        {
+            const size_t p = baselines[bl].first;
+            const size_t q = baselines[bl].second;
+
+            if(p != q)
+            {
+                // Update partial derivative index for current baseline.
+                const size_t offsetP = p * 8;
+                const size_t offsetQ = q * 8;
+                for(size_t cr = 0; cr < 4; ++cr)
+                {
+                    for(size_t dr = 0; dr < nDirection; ++dr)
+                    {
+                        dIndex[cr][dr * 8 + 0] = dIndexTemplate[cr][dr * 8 + 0] + offsetP;
+                        dIndex[cr][dr * 8 + 1] = dIndexTemplate[cr][dr * 8 + 1] + offsetP;
+                        dIndex[cr][dr * 8 + 2] = dIndexTemplate[cr][dr * 8 + 2] + offsetP;
+                        dIndex[cr][dr * 8 + 3] = dIndexTemplate[cr][dr * 8 + 3] + offsetP;
+                        dIndex[cr][dr * 8 + 4] = dIndexTemplate[cr][dr * 8 + 4] + offsetQ;
+                        dIndex[cr][dr * 8 + 5] = dIndexTemplate[cr][dr * 8 + 5] + offsetQ;
+                        dIndex[cr][dr * 8 + 6] = dIndexTemplate[cr][dr * 8 + 6] + offsetQ;
+                        dIndex[cr][dr * 8 + 7] = dIndexTemplate[cr][dr * 8 + 7] + offsetQ;
+                    }
+                }
+
+                for(size_t ch = 0; ch < nChannel; ++ch)
+                {
+                    for(size_t dr = 0; dr < nDirection; ++dr)
+                    {
+                        const double *hoeiP = &(unknowns_flat[dr * nStation * 8 + p * 8]);
+                        Jp_00 = dcomplex(hoeiP[0], hoeiP[1]);
+                        Jp_01 = dcomplex(hoeiP[2], hoeiP[3]);
+                        Jp_10 = dcomplex(hoeiP[4], hoeiP[5]);
+                        Jp_11 = dcomplex(hoeiP[6], hoeiP[7]);
+
+                        const double *hoeiQ = &(unknowns_flat[dr * nStation * 8 + q * 8]);
+                        Jq_00 = dcomplex(hoeiQ[0], -hoeiQ[1]);
+                        Jq_01 = dcomplex(hoeiQ[2], -hoeiQ[3]);
+                        Jq_10 = dcomplex(hoeiQ[4], -hoeiQ[5]);
+                        Jq_11 = dcomplex(hoeiQ[6], -hoeiQ[7]);
+
+                        coherence = (model[dr][0]);
+                        Jp_00_s0 = Jp_00 * coherence;
+                        Jp_10_s0 = Jp_10 * coherence;
+                        Jq_00_s0 = Jq_00 * coherence;
+                        Jq_10_s0 = Jq_10 * coherence;
+
+                        coherence = (model[dr][1]);
+                        Jp_00_s1 = Jp_00 * coherence;
+                        Jp_10_s1 = Jp_10 * coherence;
+                        Jq_01_s1 = Jq_01 * coherence;
+                        Jq_11_s1 = Jq_11 * coherence;
+
+                        coherence = (model[dr][2]);
+                        Jp_01_s2 = Jp_01 * coherence;
+                        Jp_11_s2 = Jp_11 * coherence;
+                        Jq_00_s2 = Jq_00 * coherence;
+                        Jq_10_s2 = Jq_10 * coherence;
+
+                        coherence = (model[dr][3]);
+                        Jp_01_s3 = Jp_01 * coherence;
+                        Jp_11_s3 = Jp_11 * coherence;
+                        Jq_01_s3 = Jq_01 * coherence;
+                        Jq_11_s3 = Jq_11 * coherence;
+
+                        M[dr][0] = Jp_00 * (Jq_00_s0 + Jq_01_s1)
+                            + Jp_01 * (Jq_00_s2 + Jq_01_s3);
+                        dM[dr][0][0] = Jq_00_s0 + Jq_01_s1;
+                        dM[dr][0][1] = Jq_00_s2 + Jq_01_s3;
+                        dM[dr][0][2] = Jp_00_s0 + Jp_01_s2;
+                        dM[dr][0][3] = Jp_00_s1 + Jp_01_s3;
+
+                        M[dr][1] = Jp_00 * (Jq_10_s0 + Jq_11_s1)
+                            + Jp_01 * (Jq_10_s2 + Jq_11_s3);
+                        dM[dr][1][0] = Jq_10_s0 + Jq_11_s1;
+                        dM[dr][1][1] = Jq_10_s2 + Jq_11_s3;
+                        dM[dr][1][2] = Jp_00_s0 + Jp_01_s2; // = dM[dr][0][2];
+                        dM[dr][1][3] = Jp_00_s1 + Jp_01_s3; // = dM[dr][0][3];
+
+                        M[dr][2] = Jp_10 * (Jq_00_s0 + Jq_01_s1)
+                            + Jp_11 * (Jq_00_s2 + Jq_01_s3);
+                        dM[dr][2][0] = Jq_00_s0 + Jq_01_s1; // = dM[dr][0][0];
+                        dM[dr][2][1] = Jq_00_s2 + Jq_01_s3; // = dM[dr][0][1];
+                        dM[dr][2][2] = Jp_10_s0 + Jp_11_s2;
+                        dM[dr][2][3] = Jp_10_s1 + Jp_11_s3;
+
+                        M[dr][3] = Jp_10 * (Jq_10_s0 + Jq_11_s1)
+                            + Jp_11 * (Jq_10_s2 + Jq_11_s3);
+                        dM[dr][3][0] = Jq_10_s0 + Jq_11_s1; // = dM[dr][1][0];
+                        dM[dr][3][1] = Jq_10_s2 + Jq_11_s3; // = dM[dr][1][1];
+                        dM[dr][3][2] = Jp_10_s0 + Jp_11_s2; // = dM[dr][2][2];
+                        dM[dr][3][3] = Jp_10_s1 + Jp_11_s3; // = dM[dr][2][3];
+                    }
+
+                    for(size_t cr = 0; cr < 4; ++cr)
+                    {
+                        if(!flag[cr])
+                        {
+                            for(size_t tg = 0; tg < nDirection; ++tg)
+                            {
+                                // Move to target direction.
+                                mix.forward(0, directions[tg]);
+
+                                dcomplex model = 0.0, partial;
+                                for(size_t dr = 0; dr < nDirection; ++dr)
+                                {
+                                    // Move to source direction.
+                                    mix.forward(1, directions[dr]);
+
+                                    // Look-up mixing term.
+                                    const dcomplex term = *mix;
+
+                                    // Update model visibility.
+                                    model += term * M[dr][cr];
+
+                                    // Compute partial derivatives.
+                                    partial = term * dM[dr][cr][0];
+                                    dR[dr * 8] = real(partial);
+                                    dI[dr * 8] = imag(partial);
+                                    dR[dr * 8 + 1] = -imag(partial);
+                                    dI[dr * 8 + 1] = real(partial);
+
+                                    partial = term * dM[dr][cr][1];
+                                    dR[dr * 8 + 2] = real(partial);
+                                    dI[dr * 8 + 2] = imag(partial);
+                                    dR[dr * 8 + 3] = -imag(partial);
+                                    dI[dr * 8 + 3] = real(partial);
+
+                                    partial = term * dM[dr][cr][2];
+                                    dR[dr * 8 + 4] = real(partial);
+                                    dI[dr * 8 + 4] = imag(partial);
+                                    dR[dr * 8 + 5] = imag(partial);
+                                    dI[dr * 8 + 5] = -real(partial);
+
+                                    partial = term * dM[dr][cr][3];
+                                    dR[dr * 8 + 6] = real(partial);
+                                    dI[dr * 8 + 6] = imag(partial);
+                                    dR[dr * 8 + 7] = imag(partial);
+                                    dI[dr * 8 + 7] = -real(partial);
+
+                                    // Reset source direction.
+                                    mix.backward(1, directions[dr]);
+                                } // Source directions.
+
+                                // Compute the residual.
+                                dcomplex residual = static_cast<dcomplex>(data[tg][cr]) - model;
+
+                                // Update the normal equations.
+                                solver.makeNorm(nPartial, &(dIndex[cr][0]),
+                                    &(dR[0]), static_cast<double>(weight[cr]),
+                                    real(residual));
+                                solver.makeNorm(nPartial, &(dIndex[cr][0]),
+                                    &(dI[0]), static_cast<double>(weight[cr]),
+                                    imag(residual));
+
+                                // Reset target direction.
+                                mix.backward(0, directions[tg]);
+                            } // Target directions.
+                        }
+
+                        // Move to the next correlation.
+                        mix.forward(2);
+                    } // Correlations.
+
+                    // Move to the next channel.
+                    mix.backward(2, 4);
+                    mix.forward(3);
+
+                    for(size_t dr = 0; dr < nDirection; ++dr)
+                    {
+                        model[dr].forward(1);
+                        data[dr].forward(1);
+                    }
+                    flag.forward(1);
+                    weight.forward(1);
+                } // Channels.
+
+                // Reset cursors to the start of the baseline.
+                for(size_t dr = 0; dr < nDirection; ++dr)
+                {
+                    model[dr].backward(1, nChannel);
+                    data[dr].backward(1, nChannel);
+                }
+                flag.backward(1, nChannel);
+                weight.backward(1, nChannel);
+                mix.backward(3, nChannel);
+            }
+
+            // Move cursors to the next baseline.
+            for(size_t dr = 0; dr < nDirection; ++dr)
+            {
+                model[dr].forward(2);
+                data[dr].forward(2);
+            }
+            flag.forward(2);
+            weight.forward(2);
+            mix.forward(4);
+        } // Baselines.
+
+        // Reset all cursors for the next iteration.
+        for(size_t dr = 0; dr < nDirection; ++dr)
+        {
+            model[dr].backward(2, nBaseline);
+            data[dr].backward(2, nBaseline);
+        }
+        flag.backward(2, nBaseline);
+        weight.backward(2, nBaseline);
+        mix.backward(4, nBaseline);
+
+        // Do solve iteration.
+        casa::uInt rank;
+        bool status = solver.solveLoop(rank, &(unknowns_flat[0]), true);
+        ASSERT(status);
+
+        // Update iteration count.
+        ++nIterations;
+
+// DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
+        for(size_t dr = 0; dr < nDirection; ++dr)
+        {
+            ASSERT(model[dr].address() == c_model[dr].address());
+            ASSERT(data[dr].address() == c_data[dr].address());
+        }
+        ASSERT(flag.address() == c_flag.address());
+        ASSERT(weight.address() == c_weight.address());
+        ASSERT(mix.address() == c_mix.address());
+// DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
+    }
+
+    // Unpack unknowns.
+    idx_uf = 0;
+    for(size_t dr = 0; dr < nDirection; ++dr)
+    {
+        unknowns.forward(2, directions[dr]);
+        for(size_t st = 0; st < nStation; ++st)
+        {
+            for(size_t el = 0; el < 8; ++el)
+            {
+                *unknowns = unknowns_flat[idx_uf];
+                ++unknowns;
+                ++idx_uf;
+            }
+            unknowns -= 8;
+            unknowns.forward(1);
+        }
+        unknowns.backward(1, nStation);
+        unknowns.backward(2, directions[dr]);
+    }
+
+    bool converged = (solver.isReady() == casa::LSQFit::SOLINCREMENT
+        || solver.isReady() == casa::LSQFit::DERIVLEVEL);
+    LOG_DEBUG_STR("thread: " << OpenMP::threadNum() //<< " timeslot: " << ts
+        << " #iterations: " << nIterations << " converged: " << boolalpha
+        << converged);
+}
+
 void estimate(size_t nDirection, size_t nStation, size_t nBaseline,
     size_t nChannel, vector<const_cursor<fcomplex> > data,
     vector<const_cursor<dcomplex> > model, const_cursor<Baseline> baselines,

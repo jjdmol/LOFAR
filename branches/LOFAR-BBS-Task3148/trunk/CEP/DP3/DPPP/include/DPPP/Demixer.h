@@ -43,6 +43,14 @@
 //#include <DPPP/EstimateNew.h>
 // TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
 
+#include <measures/Measures/MDirection.h>
+#include <measures/Measures/MCDirection.h>
+#include <measures/Measures/MEpoch.h>
+#include <measures/Measures/MCPosition.h>
+#include <measures/Measures/MeasFrame.h>
+#include <measures/Measures/MeasConvert.h>
+#include <casa/Quanta/Quantum.h>
+
 namespace LOFAR {
 
   namespace DPPP {
@@ -125,7 +133,7 @@ namespace LOFAR {
       string                   itsName;
       string                   itsSkyName;
       string                   itsInstrumentName;
-      double                   itsElevCutoff;   //# min source elevation (rad)
+//      double                   itsElevCutoff;   //# min source elevation (rad)
       vector<PhaseShift*>      itsPhaseShifts;
       vector<DPStep::ShPtr>    itsFirstSteps;   //# phaseshift/average steps
       vector<MultiResultStep*> itsAvgResults;   //# result of phaseshift/average
@@ -135,6 +143,7 @@ namespace LOFAR {
       vector<string>           itsModelSources;
       vector<string>           itsExtraSources;
       vector<string>           itsAllSources;
+      vector<uint>             itsCutOffs;
       double                   itsTimeStart;
       double                   itsTimeInterval;
       vector<double>           itsTimeCenters;
@@ -180,6 +189,9 @@ namespace LOFAR {
       uint                     itsNStation;
       Position                 itsPhaseRef;
       casa::Array<double>      itsUnknowns;
+      casa::Array<double>      itsLastKnowns;
+      vector<casa::MeasFrame>           itsFrames;
+      vector<casa::MDirection::Convert> itsConverters;
     };
 
   } //# end namespace
