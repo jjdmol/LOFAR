@@ -13,8 +13,8 @@ import gsmutils as gsm
 from logger import logger
 
 
-from support.utilities import create_directory                        #@UnresolvedImport
-from lofarpipe.nodes.imager_create_dbs import imager_create_dbs         #@UnresolvedImport
+from lofarpipe.support.utilities import create_directory                        #@UnresolvedImport
+from nodes.imager_create_dbs import imager_create_dbs         #@UnresolvedImport
 
 
 
