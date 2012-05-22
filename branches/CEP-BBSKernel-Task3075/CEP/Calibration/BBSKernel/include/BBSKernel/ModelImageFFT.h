@@ -33,7 +33,8 @@
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>    // DirectionCoordinate needed for patch direction
 #include <coordinates/Coordinates/StokesCoordinate.h>
-#include <images/Images/PagedImage.h>
+#include <measures/Measures/Stokes.h>
+//#include <images/Images/PagedImage.h>
 #include <images/Images/ImageInterface.h>
 
 // From tConvolveBLAS.cc
@@ -63,18 +64,20 @@ typedef struct ModelImageOptions
   casa::String name;                            // name of image
   casa::MDirection imageDirection;              // centre patch direction of image
   casa::MDirection phaseDirection;              // phase direction of MS
-//  casa::String ConvType;                        // convolution type
   vector<double> imageFrequencies;              // channel frequencies of image
-  casa::Vector<casa::Int> imageStokes;          // Stokes present in image
+  casa::Vector<casa::Int> imageStokes;          // Stokes present in image (Stokes::StokesTypes)
   casa::Vector<casa::Double> frequencies;       // vector with channel frequencies
   casa::Vector<casa::Double> lambdas;           // vector with converted lambdas
   casa::Int verbose;                            // verbosity level
   unsigned int oversampling;                    // oversample factor
   casa::Vector<casa::Double> uvScale;           // uvscale in u and v direction
-//  double uvscaleX, uvscaleY;                    // pixel size in wavelengths conversion
   casa::Int nwplanes;                           // number of w-planes to use
   casa::Vector<casa::Double> offset;            // uv offset
-//  casa::Matrix<casa::Bool> degridMuellerMask;   // degridding Mueller mask
+};
+
+typedef struct ImageProperties
+{
+
 };
 
 class ModelImageFft
@@ -89,32 +92,29 @@ public:
   ~ModelImageFft();
 
   // Image property functions
-  void getImageProperties(const ImageInterface<Float> &image);
+  void getImageProperties(const casa::ImageInterface<casa::Float> &image);
   bool validImage(const casa::String &imageName);
-  casa::MDirection getPatchDirection(const ImageInterface<Float> &image);
+  casa::MDirection getPatchDirection(const casa::ImageInterface<casa::Float> &image);
 
-  Vector<Double> getImageFrequencies();
-  Vector<Int> chanMap(const vector<double> frequencies);
-  Vector<Int> getStokes(const PagedImage<DComplex> &image);
-  Vector<Bool> getFourierAxes(const ImageInterface<Float> &image);
+  casa::Vector<casa::Double> getImageFrequencies();
+  casa::Vector<casa::Int> chanMap(const vector<double> frequencies);
+  casa::Vector<casa::Int> getStokes(const casa::ImageInterface<casa::Float> &image);
+  casa::Vector<casa::Bool> getFourierAxes(const casa::ImageInterface<casa::Float> &image);
 
   // Setter functions for individual options
   void setPhaseDirection(const casa::MDirection &phaseDir);
-  //  void setConvType(const casa::String type="SF");
   void setVerbose(casa::uInt verbose=0);
   void setUVScale(const casa::Vector<casa::Double> &uvscale);
   void setUVScale(double uvscaleX, double uvscaleY);
   void setOversampling(unsigned int oversampling);
   void setNwplanes(unsigned int nwplanes);
-//  void setDegridMuellerMask(const casa::Matrix<casa::Bool> &muellerMask);
 
   // Getter functions for individual options
   inline casa::String     name() const { return itsOptions.name; }
   inline casa::MDirection imageDirection() const { return itsOptions.imageDirection; }
   inline casa::MDirection phaseDirection() const { return itsOptions.phaseDirection; }
-//  inline casa::String     convType() const { return itsOptions.ConvType; }
   inline vector<double> imageFrequencies() const { return itsOptions.imageFrequencies; }
-  inline casa::Vector<Int> imageStokes() const { return itsOptions.imageStokes; }
+  inline casa::Vector<casa::Int> imageStokes() const { return itsOptions.imageStokes; }
   inline casa::Vector<casa::Double>  frequencies() const { return itsOptions.frequencies; }
   inline casa::uInt       verbose() const { return itsOptions.verbose; }
   inline casa::Vector<casa::Double> uvScale() const { return itsOptions.uvScale; }
@@ -131,13 +131,13 @@ public:
               casa::DComplex *XY , casa::DComplex *YY);
   void degrid(const boost::multi_array<double, 3> &uvwBaselines, 
               const vector<double> &frequencies,
-              Vector<casa::DComplex> &XX , Vector<casa::DComplex> &XY, 
-              Vector<casa::DComplex> &YX , Vector<casa::DComplex> &YY);              
+              casa::Vector<casa::DComplex> &XX , casa::Vector<casa::DComplex> &XY, 
+              casa::Vector<casa::DComplex> &YX , casa::Vector<casa::DComplex> &YY);              
   // Function to get degridded data into BBS::Matrix
   void degrid(const boost::multi_array<double, 3> &uvwBaselines, 
               const casa::Vector<casa::Double> &frequencies,
-              casa::Array<DComplex> XX , casa::Array<DComplex> XY, 
-              casa::Array<DComplex> XY , casa::Array<DComplex> YY);
+              casa::Array<casa::DComplex> XX , casa::Array<casa::DComplex> XY, 
+              casa::Array<casa::DComplex> XY , casa::Array<casa::DComplex> YY);
 
   /////////////////////////////////////////////////////////////////////////////////
   // The next two functions are the kernel of the gridding/degridding.
@@ -213,9 +213,9 @@ private:
   casa::Vector<casa::Double> convertToLambdas(const casa::Vector<casa::Double> &frequencies);   // convert frequencies to lambda
 
   // Image properties
-  uInt nx, ny;                                  // pixel dimension of image
-  uInt nchan , npol;                            // No. of channels and polarizations in image
-  casa::SpectralCoordinate spectralCoord_p;     // spectral coordinate of image
+  casa::uInt nx, ny;                              // pixel dimension of image
+  casa::uInt nchan , npol;                        // No. of channels and polarizations in image
+  casa::SpectralCoordinate spectralCoord_p;       // spectral coordinate of image
   //casa::StokesCoordinate stokesCoord_p;         // Stokes coordinate
   
   // Old casarest stuff

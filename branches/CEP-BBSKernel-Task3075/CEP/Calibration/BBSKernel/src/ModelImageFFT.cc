@@ -25,6 +25,7 @@
 
 #include <casa/BasicSL/Constants.h>
 #include <casa/Arrays/VectorIter.h>
+#include <tables/Tables/Table.h>                      // access image as a table
 #include <measures/Measures/Stokes.h>                 // casa::Stokes::StokesTypes
 #include <lattices/Lattices/LatticeFFT.h>
 #include <coordinates/Coordinates/CoordinateSystem.h> //for spectral coord
@@ -226,22 +227,25 @@ void ModelImageFft::getImageProperties(const ImageInterface<Float>&image)
 
 // Get Stokes components present in image
 //
-Vector<Int> ModelImageFft::getStokes(const PagedImage<DComplex> &image)
+Vector<Int> ModelImageFft::getStokes(const ImageInterface<Float> &image)
 {
-//  Int StokesCoordInd=coordSys.findCoordinate(Coordinate::STOKES);
-  //uInt npol=shape(StokesCoordInd);
-  for(unsigned int i=0; i<itsOptions.imageStokes.size(); i++)
+//uInt StokesCoordInd=image.coordinates().findCoordinate(Coordinate::STOKES);
+//  uInt npol=shape(StokesCoordInd);
+  StokesCoordinate stokesCoord=image.coordinates().stokesCoordinate(0);
+  itsOptions.imageStokes=stokesCoord.stokes();    //Stokes::StokesTypes
+
+  // DEBUG
+  for(uInt i=0; i<npol; i++)
   {
-   // stokes[i]=name(imageStokes[i]);
-   // name();   // get Name of Stokes compenent
-  }               //Stokes::StokesTypes
+   cout << Stokes::name(Stokes::type(itsOptions.imageStokes[i])) << endl;
+  }
 
   return itsOptions.imageStokes;
 }
 
 // Check that input model image has Jy/pixel flux
 //
-bool ModelImageFft::validImage(const casa::String &imageName)
+bool ModelImageFft::validImage(const String &imageName)
 {
   bool valid=false;
 
