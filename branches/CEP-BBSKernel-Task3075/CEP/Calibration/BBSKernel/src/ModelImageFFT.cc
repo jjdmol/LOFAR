@@ -25,6 +25,7 @@
 
 #include <casa/BasicSL/Constants.h>
 #include <casa/Arrays/VectorIter.h>
+#include <measures/Measures/Stokes.h>                 // casa::Stokes::StokesTypes
 #include <lattices/Lattices/LatticeFFT.h>
 #include <coordinates/Coordinates/CoordinateSystem.h> //for spectral coord
 #include <coordinates/Coordinates/Coordinate.h>
@@ -67,8 +68,9 @@ ModelImageFft::ModelImageFft( const casa::String &name,
   itsOptions.name=name;
   itsOptions.nwplanes=nwplanes;
   itsOptions.oversampling=oversampling;
-  itsOptions.uvScale[0]=uvscaleX;
-  itsOptions.uvScale[1]=uvscaleY;
+  setUVScale(uvscaleX, uvscaleY);
+//  itsOptions.uvScale.append(uvscaleX);
+//  itsOptions.uvScale.append(uvscaleY);
 
   valid=validImage(name);
   if(!valid)
@@ -76,8 +78,10 @@ ModelImageFft::ModelImageFft( const casa::String &name,
     THROW(BBSKernelException, "Invalid image.");
   }
 
+//  PagedImage<DComplex> *image=new PagedImage<DComplex>(name);   // Open image as paged image
   PagedImage<DComplex> *image=new PagedImage<DComplex>(name);   // Open image as paged image
   this->getImageProperties(*image);      // get image properties
+  this->getImageFrequencies();
 
   // TODO
   LatticeFFT::cfft2d(*image);     // FFT image in place 
@@ -200,18 +204,17 @@ void ModelImageFft::getImageProperties(const PagedImage<DComplex> &image)
   Int StokesCoordInd=coordSys.findCoordinate(Coordinate::STOKES);
   if(StokesCoordInd != -1)
   {
-    npol=shape(StokesCoordInd);
+    uInt npol=shape(StokesCoordInd);
     LOG_INFO_STR("Image " << itsOptions.name << " has " << npol << " polarizations.");
 
-    if(npol!=1 || npol!=4)
-    {
-      THROW(BBSKernelException, "Number of polarizations must be 1 or 4.");    
-    }
+ //   stokesCoord_p=image.coordinates().stokesCoordinate(0);   // casarest stuff  
+    itsOptions.imageStokes=image.coordinates().stokesCoordinate(0).stokes(); 
   }
   else
   {
     npol=1;
   }
+//  Vector<Int> stokes=stokesCoord.stokes();    // DEBUG
 
   // DEBUG
   cout << "nCoord = " << nCoord << endl;
@@ -219,6 +222,21 @@ void ModelImageFft::getImageProperties(const PagedImage<DComplex> &image)
   cout << "YCoordInd = " << YCoordInd << endl;
   cout << "SpectralCoordInd = " << SpectralCoordInd << endl;
   cout << "StokesCoordInd = " << StokesCoordInd << endl;  
+}
+
+// Get Stokes components present in image
+//
+Vector<Int> ModelImageFft::getStokes(const PagedImage<DComplex> &image)
+{
+//  Int StokesCoordInd=coordSys.findCoordinate(Coordinate::STOKES);
+  //uInt npol=shape(StokesCoordInd);
+  for(unsigned int i=0; i<itsOptions.imageStokes.size(); i++)
+  {
+   // stokes[i]=name(imageStokes[i]);
+   // name();   // get Name of Stokes compenent
+  }               //Stokes::StokesTypes
+
+  return itsOptions.imageStokes;
 }
 
 // Check that input model image has Jy/pixel flux
@@ -265,7 +283,7 @@ casa::MDirection ModelImageFft::getPatchDirection(const PagedImage<DComplex> &im
 
 // Get channel frequencies from image
 //
-vector<double> ModelImageFft::getImageFrequencies()
+Vector<Double> ModelImageFft::getImageFrequencies()
 {
   vector<double> frequencies(nchan);
   Vector<Double> frequenciesVec(nchan);                // set up vector of number of image channels
@@ -279,6 +297,8 @@ vector<double> ModelImageFft::getImageFrequencies()
   for(unsigned int i=0; i<nchan; i++)   // convert to std::vector, can this be done better?
     frequencies[i]=frequenciesVec(i);
   
+  itsOptions.imageFrequencies=frequencies;
+  
   return frequencies;
 }
 
@@ -289,7 +309,7 @@ Vector<Int>  ModelImageFft::chanMap(const vector<double> frequencies)
 {
   unsigned int nfreqs=frequencies.size();
 
-  vector<double> imageFreqs=getImageFrequencies();
+  vector<double> imageFreqs=imageFrequencies();
   Vector<Int> chanMap(nfreqs);      // channel map to return
 
   for(unsigned int i=0; i<nfreqs; i++)
@@ -525,7 +545,7 @@ void ModelImageFft::degridKernel(const std::vector<std::complex<float> >& grid,
     for (int suppv=0; suppv<sSize; suppv++)
     {
 #ifdef USEBLAS
-      std::complex<float>  dot;
+      std::complex<double>  dot;
       cblas_cdotu_sub(sSize, &grid[gind], 1, &C[cind], 1, &dot);
       data[dind]+=dot;
 #else
@@ -602,11 +622,11 @@ void ModelImageFft::initC(const int nSamples, const std::vector<double>& w,
             long int cind=i+sSize*(j+sSize*(osi+overSample*(osj+overSample*k)));
             if (w!=0.0)
             {
-              C[cind]=static_cast<std::complex<float> >(std::cos(r2/(w*fScale)));
+              C[cind]=static_cast<std::complex<double> >(std::cos(r2/(w*fScale)));
             }
             else
             {
-              C[cind]=static_cast<std::complex<float> >(std::exp(-r2));
+              C[cind]=static_cast<std::complex<double> >(std::exp(-r2));
             }
           }
         }
@@ -615,7 +635,7 @@ void ModelImageFft::initC(const int nSamples, const std::vector<double>& w,
   }
 
   // Now normalise the convolution function
-  float sumC=0.0;
+  double sumC=0.0;
   for (int i=0; i<sSize*sSize*overSample*overSample*wSize; i++)
   {
     sumC+=abs(C[i]);
@@ -623,7 +643,7 @@ void ModelImageFft::initC(const int nSamples, const std::vector<double>& w,
 
   for (int i=0; i<sSize*sSize*overSample*overSample*wSize; i++)
   {
-    C[i]*=std::complex<float> (wSize*overSample*overSample/sumC);
+    C[i]*=std::complex<double> (wSize*overSample*overSample/sumC);
   }
 /*
   for (int i = 0; i < sSize*sSize*overSample*overSample*wSize; i++) {

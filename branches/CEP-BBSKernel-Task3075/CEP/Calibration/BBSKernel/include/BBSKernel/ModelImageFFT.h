@@ -32,6 +32,7 @@
 //#include <coordinates/Coordinates/Coordinate.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>    // DirectionCoordinate needed for patch direction
+#include <coordinates/Coordinates/StokesCoordinate.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/ImageInterface.h>
 
@@ -63,6 +64,8 @@ typedef struct ModelImageOptions
   casa::MDirection imageDirection;              // centre patch direction of image
   casa::MDirection phaseDirection;              // phase direction of MS
 //  casa::String ConvType;                        // convolution type
+  vector<double> imageFrequencies;              // channel frequencies of image
+  casa::Vector<casa::Int> imageStokes;          // Stokes present in image
   casa::Vector<casa::Double> frequencies;       // vector with channel frequencies
   casa::Vector<casa::Double> lambdas;           // vector with converted lambdas
   casa::Int verbose;                            // verbosity level
@@ -90,8 +93,10 @@ public:
   bool validImage(const casa::String &imageName);
   casa::MDirection getPatchDirection(const PagedImage<casa::DComplex> &image);
 
-  vector<double> getImageFrequencies();
+  Vector<Double> getImageFrequencies();
   Vector<Int> chanMap(const vector<double> frequencies);
+  Vector<Int> getStokes(const PagedImage<DComplex> &image);
+
 
   // Setter functions for individual options
   void setPhaseDirection(const casa::MDirection &phaseDir);
@@ -108,6 +113,8 @@ public:
   inline casa::MDirection imageDirection() const { return itsOptions.imageDirection; }
   inline casa::MDirection phaseDirection() const { return itsOptions.phaseDirection; }
 //  inline casa::String     convType() const { return itsOptions.ConvType; }
+  inline vector<double> imageFrequencies() const { return itsOptions.imageFrequencies; }
+  inline casa::Vector<Int> imageStokes() const { return itsOptions.imageStokes; }
   inline casa::Vector<casa::Double>  frequencies() const { return itsOptions.frequencies; }
   inline casa::uInt       verbose() const { return itsOptions.verbose; }
   inline casa::Vector<casa::Double> uvScale() const { return itsOptions.uvScale; }
@@ -208,7 +215,8 @@ private:
   uInt nx, ny;                                  // pixel dimension of image
   uInt nchan , npol;                            // No. of channels and polarizations in image
   casa::SpectralCoordinate spectralCoord_p;     // spectral coordinate of image
-
+  //casa::StokesCoordinate stokesCoord_p;         // Stokes coordinate
+  
   // Old casarest stuff
 //  ModelImageVisibilityResampler itsVisResampler;  // modified casarest VisResampler
 //  casa::CFStore itsConvFunc;          // convolution function for VisResampler
