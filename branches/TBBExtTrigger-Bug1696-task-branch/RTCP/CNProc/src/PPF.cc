@@ -180,10 +180,10 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::computeFlags(unsigned sta
 
 template <typename SAMPLE_TYPE> fcomplex PPF<SAMPLE_TYPE>::phaseShift(unsigned time, unsigned chan, double baseFrequency, double delayAtBegin, double delayAfterEnd) const
 {
-  double timeInterpolatedDelay = delayAtBegin + ((double) time / itsNrSamplesPerIntegration) * (delayAfterEnd - delayAtBegin);
-  double frequency	       = baseFrequency + chan * itsChannelBandwidth;
-  double phaseShift	       = timeInterpolatedDelay * frequency;
-  double phi		       = -2 * M_PI * phaseShift;
+  float timeInterpolatedDelay = delayAtBegin + ((float) time / itsNrSamplesPerIntegration) * (delayAfterEnd - delayAtBegin);
+  float frequency	      = baseFrequency + chan * itsChannelBandwidth;
+  float phaseShift	      = timeInterpolatedDelay * frequency;
+  float phi		      = -2 * M_PI * phaseShift;
 
   return makefcomplex(std::cos(phi), std::sin(phi));
 }
@@ -228,13 +228,12 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, dou
 #endif
 
 #if defined PPF_C_IMPLEMENTATION
-  std::vector<fcomplex, AlignedStdAllocator<fcomplex, 32> > fftOutData(itsNrChannels);
-
   FIRtimer.start();
 
-  for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
-    for (unsigned chan = 0; chan < itsNrChannels; chan ++) {
-      for (unsigned time = 0; time < NR_TAPS - 1 + itsNrSamplesPerIntegration; time ++) {
+#pragma omp parallel for
+  for (int chan = 0; chan < (int) itsNrChannels; chan ++) {
+    for (unsigned time = 0; time < NR_TAPS - 1 + itsNrSamplesPerIntegration; time ++) {
+      for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
 	SAMPLE_TYPE currSample = transposedData->samples[stat][itsNrChannels * time + chan + alignmentShift][pol];
 
 #if defined WORDS_BIGENDIAN
@@ -250,30 +249,36 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, dou
 
   FFTtimer.start();
 
-  for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
-    for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
-      if (filteredData->flags[stat].test(time)) {
-	for (unsigned chan = 0; chan < itsNrChannels; chan ++)
-	  filteredData->samples[chan][stat][time][pol] = makefcomplex(0, 0);
-      } else {
+#pragma omp parallel
+  {
+    std::vector<fcomplex, AlignedStdAllocator<fcomplex, 32> > fftOutData(itsNrChannels);
+
+#pragma omp for
+    for (int time = 0; time < (int) itsNrSamplesPerIntegration; time ++) {
+      for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
+	if (filteredData->flags[stat].test(time)) {
+	  for (unsigned chan = 0; chan < itsNrChannels; chan ++)
+	    filteredData->samples[chan][stat][time][pol] = makefcomplex(0, 0);
+	} else {
 #if defined HAVE_FFTW3
-	fftwf_execute_dft(itsFFTWPlan,
-			  (fftwf_complex *) itsFFTinData[NR_TAPS - 1 + time][pol].origin(),
-			  (fftwf_complex *) (void *) &fftOutData[0]);
+	  fftwf_execute_dft(itsFFTWPlan,
+			    (fftwf_complex *) itsFFTinData[NR_TAPS - 1 + time][pol].origin(),
+			    (fftwf_complex *) (void *) &fftOutData[0]);
 #else
-	fftw_one(itsFFTWPlan,
-		 (fftw_complex *) itsFFTinData[NR_TAPS - 1 + time][pol].origin(),
-		 (fftw_complex *) (void *) &fftOutData[0]);
+	  fftw_one(itsFFTWPlan,
+		   (fftw_complex *) itsFFTinData[NR_TAPS - 1 + time][pol].origin(),
+		   (fftw_complex *) (void *) &fftOutData[0]);
 #endif
 
-	for (unsigned chan = 0; chan < itsNrChannels; chan ++) {
-	  if (itsDelayCompensation)
-	    fftOutData[chan] *= phaseShift(time, chan, baseFrequency, metaData->beams(stat)[0].delayAtBegin, metaData->beams(stat)[0].delayAfterEnd);
+	  for (unsigned chan = 0; chan < itsNrChannels; chan ++) {
+	    if (itsDelayCompensation)
+	      fftOutData[chan] *= phaseShift(time, chan, baseFrequency, metaData->beams(stat)[0].delayAtBegin, metaData->beams(stat)[0].delayAfterEnd);
 
-	  if (itsCorrectBandPass)
-	    fftOutData[chan] *= itsBandPass.correctionFactors()[chan];
+	    if (itsCorrectBandPass)
+	      fftOutData[chan] *= itsBandPass.correctionFactors()[chan];
 
-	  filteredData->samples[chan][stat][time][pol] = fftOutData[chan];
+	    filteredData->samples[chan][stat][time][pol] = fftOutData[chan];
+	  }
 	}
       }
     }
@@ -392,8 +397,8 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::bypass(unsigned stat, dou
     double   phiBegin = -2 * M_PI * metaData->beams(stat)[0].delayAtBegin;
     double   phiEnd   = -2 * M_PI * metaData->beams(stat)[0].delayAfterEnd;
     double   deltaPhi = (phiEnd - phiBegin) / itsNrSamplesPerIntegration;
-    dcomplex v	      = cosisin(phiBegin * frequency);
-    dcomplex vf       = cosisin(deltaPhi * frequency);
+    dcomplex v	 __attribute__((aligned(16))) = cosisin(phiBegin * frequency);
+    dcomplex vf  __attribute__((aligned(16))) = cosisin(deltaPhi * frequency) ;
 
     _apply_single_channel_delays(filteredData->samples[0][stat].origin(), itsNrSamplesPerIntegration, &v, &vf);
   }

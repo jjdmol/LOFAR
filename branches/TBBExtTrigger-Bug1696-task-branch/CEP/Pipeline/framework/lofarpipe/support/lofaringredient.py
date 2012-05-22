@@ -22,6 +22,7 @@ class LOFARinput(WSRTingredient):
 
     * job_name
     * runtime_directory
+    * working_directory
     * config
     * task_files
     * dry_run
@@ -316,17 +317,21 @@ class RecipeIngredients(object):
             '-j', '--job-name',
             help="Job name"
         ),
-        'runtime_directory': FileField(
-            '-r', '--runtime-directory',
-            help="Runtime directory"
-        ),
         'config': FileField(
             '-c', '--config',
             help="Configuration file"
         ),
         'task_files': FileList(
-            '--task-file',
+            '-t', '--task-file',
             help="Task definition file"
+        ),
+        'runtime_directory': FileField(
+            '-r', '--runtime-directory',
+            help="Runtime directory on the head node"
+        ),
+        'working_directory': StringField(
+            '-w', '--working-directory',
+            help="Working directory on the compute nodes"
         ),
         'start_time': StringField(
             '--start-time',

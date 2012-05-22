@@ -172,14 +172,16 @@ private:
     // Insanely complicated boost::multi_array types...
     typedef boost::multi_array<flag_t, 4>::index_range FRange;
     typedef boost::multi_array<flag_t, 4>::const_array_view<4>::type FSlice;
+    typedef boost::multi_array<double, 5>::index_range CRange;
+    typedef boost::multi_array<double, 5>::const_array_view<5>::type CSlice;
     typedef boost::multi_array<dcomplex, 4>::index_range SRange;
     typedef boost::multi_array<dcomplex, 4>::const_array_view<4>::type SSlice;
 
     // Generate normal equations for a single expression from the set.
     template <typename T_ITER>
     void procExpr(ProcContext &context, const VisEquator::FSlice &flagLHS,
-        const VisEquator::SSlice &valueLHS, const pair<size_t, size_t> &idx,
-        T_ITER out);
+        const VisEquator::CSlice &covLHS, const VisEquator::SSlice &valueLHS,
+        const pair<size_t, size_t> &idx, T_ITER out);
 
     // Create a mapping from cells of axis "from" to cell indices on axis "to".
     // Additionally, the interval of cells of axis "from" that intersect axis
@@ -351,6 +353,11 @@ T_ITER VisEquator::process(T_ITER first, T_ITER last)
     FSlice flag(itsLHS->flags[boost::indices[FRange()][timeFRange]
         [freqFRange][FRange()]]);
 
+    CRange freqCRange(itsReqStart.first, itsReqEnd.first + 1);
+    CRange timeCRange(itsReqStart.second, itsReqEnd.second + 1);
+    CSlice covariance(itsLHS->covariance[boost::indices[CRange()][timeCRange]
+        [freqCRange][CRange()][CRange()]]);
+
     SRange freqSRange(itsReqStart.first, itsReqEnd.first + 1);
     SRange timeSRange(itsReqStart.second, itsReqEnd.second + 1);
     SSlice sample(itsLHS->samples[boost::indices[SRange()][timeSRange]
@@ -359,7 +366,7 @@ T_ITER VisEquator::process(T_ITER first, T_ITER last)
     // Construct equations for all baselines.
     for(size_t i = 0; i < itsBlMap.size(); ++i)
     {
-        procExpr(itsProcContext, flag, sample, itsBlMap[i], first);
+        procExpr(itsProcContext, flag, covariance, sample, itsBlMap[i], first);
     }
 
     itsProcTimer.stop();
@@ -369,8 +376,9 @@ T_ITER VisEquator::process(T_ITER first, T_ITER last)
 
 template <typename T_ITER>
 void VisEquator::procExpr(ProcContext &context,
-    const VisEquator::FSlice &flagLHS, const VisEquator::SSlice &valueLHS,
-    const pair<size_t, size_t> &idx, T_ITER out)
+    const VisEquator::FSlice &flagLHS, const VisEquator::CSlice &covLHS,
+    const VisEquator::SSlice &valueLHS, const pair<size_t, size_t> &idx,
+    T_ITER out)
 {
     // Evaluate the right hand side.
     context.timers[ProcContext::EVAL_EXPR].start();
@@ -432,6 +440,12 @@ void VisEquator::procExpr(ProcContext &context,
                     continue;
                 }
 
+                double weight = 1.0 / covLHS[idx.first][t][f][crLHS][crLHS];
+                if(weight == 0.0)
+                {
+                    continue;
+                }
+
                 casa::LSQFit &equation = (out + eqIdx +
                     (itsFreqMap[itsEvalReqStart.first + f]
                     - itsEvalSelStart.first))->equation;
@@ -460,13 +474,13 @@ void VisEquator::procExpr(ProcContext &context,
                 equation.makeNorm(context.nCoeff,
                     &(context.index[0]),
                     &(context.partialRe[0]),
-                    1.0,
+                    weight,
                     real(delta));
 
                 equation.makeNorm(context.nCoeff,
                     &(context.index[0]),
                     &(context.partialIm[0]),
-                    1.0,
+                    weight,
                     imag(delta));
                 context.timers[ProcContext::MAKE_NORM].stop();
             }

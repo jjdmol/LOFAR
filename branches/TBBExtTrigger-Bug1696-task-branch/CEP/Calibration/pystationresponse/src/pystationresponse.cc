@@ -52,26 +52,23 @@ namespace LOFAR { namespace BBS  {
   public:
     PyStationResponse(const string& msName, bool inverse = false,
         bool useElementBeam = true, bool useArrayFactor = true,
-        bool conjugateAF = false);
+        bool useChannelFreq = false, bool conjugateAF = false);
 
     // Get the software version.
     string version(const string& type) const;
 
-    // Set the pointing direction in radians, J2000. The pointing direction is
-    // the direction used by the station and tile beam former).
-    void setPointing(double ra, double dec);
+    // Set the delay reference direction in radians, J2000. The delay reference
+    // direction is the direction used by the station beamformer.
+    void setRefDelay(double ra, double dec);
+
+    // Set the tile reference direction in radians, J2000. The tile reference
+    // direction is the direction used by the analog tile beamformer and is
+    // relevant only for HBA observations.
+    void setRefTile(double ra, double dec);
 
     // Set the direction of interest in radians, J2000. Can and often will be
-    // different than the pointing direction.
+    // different than the delay and/or tile reference direction.
     void setDirection(double ra, double dec);
-
-    // Set the orientation of the +X dipole (azimuth in the antenna field
-    // coordinate system). Antenna field azimuth is defined with respect to the
-    // positive Q axis, and positive azimuth runs from the positive Q axis to
-    // the positive P axis (roughly North over East, depending on the field).
-    // The orientation of the +Y dipole is assumed to be +90 degrees away from
-    // orientation of the +X dipole.
-    void setDipoleOrientation(double orientation);
 
     // Compute the LOFAR beam Jones matrices for the given time, station, and/or
     // channel.
@@ -89,7 +86,7 @@ namespace LOFAR { namespace BBS  {
 
     // Initialize.
     void init(const MeasurementSet& ms, bool inverse, bool useElementBeam,
-        bool useArrayFactor, bool conjugateAF);
+        bool useArrayFactor, bool useChannelFreq, bool conjugateAF);
 
     //# Data members.
     StationResponse::Ptr    itsResponse;
@@ -104,11 +101,13 @@ namespace LOFAR { namespace BBS  {
 
 
   PyStationResponse::PyStationResponse(const string& msName, bool inverse,
-    bool useElementBeam, bool useArrayFactor, bool conjugateAF)
+    bool useElementBeam, bool useArrayFactor, bool useChannelFreq,
+    bool conjugateAF)
     : itsTime    (-1)
   {
     MeasurementSet ms(msName);
-    init(ms, inverse, useElementBeam, useArrayFactor, conjugateAF);
+    init(ms, inverse, useElementBeam, useArrayFactor, useChannelFreq,
+      conjugateAF);
   }
 
   string PyStationResponse::version(const string& type) const
@@ -117,21 +116,22 @@ namespace LOFAR { namespace BBS  {
       type);
   }
 
-  void PyStationResponse::setPointing(double ra, double dec)
+  void PyStationResponse::setRefDelay(double ra, double dec)
   {
     MVDirection radec(Quantity(ra,"rad"), Quantity(dec,"rad"));
-    itsResponse->setPointing(MDirection(radec, MDirection::J2000));
+    itsResponse->setRefDelay(MDirection(radec, MDirection::J2000));
+  }
+
+  void PyStationResponse::setRefTile(double ra, double dec)
+  {
+    MVDirection radec(Quantity(ra,"rad"), Quantity(dec,"rad"));
+    itsResponse->setRefTile(MDirection(radec, MDirection::J2000));
   }
 
   void PyStationResponse::setDirection(double ra, double dec)
   {
     MVDirection radec(Quantity(ra,"rad"), Quantity(dec,"rad"));
     itsResponse->setDirection(MDirection(radec, MDirection::J2000));
-  }
-
-  void PyStationResponse::setDipoleOrientation(double orientation)
-  {
-    itsResponse->setOrientation(orientation);
   }
 
   ValueHolder PyStationResponse::evaluate0(double time)
@@ -202,7 +202,8 @@ namespace LOFAR { namespace BBS  {
   }
 
   void PyStationResponse::init(const MeasurementSet& ms, bool inverse,
-    bool useElementBeam, bool useArrayFactor, bool conjugateAF)
+    bool useElementBeam, bool useArrayFactor, bool useChannelFreq,
+    bool conjugateAF)
   {
     // Get the time interval.
     ROMSColumns msCol(ms);
@@ -220,14 +221,36 @@ namespace LOFAR { namespace BBS  {
         "Frequency channels are not regularly spaced");
     }
 
-    // Form the StationResponse object.
+    // Create the StationResponse object.
     itsResponse = StationResponse::Ptr(new StationResponse(ms, inverse,
-      useElementBeam, useArrayFactor, conjugateAF));
+      useElementBeam, useArrayFactor, useChannelFreq, conjugateAF));
 
-    // Set the pointing direction (for beamforming).
-    // Use first value of MDirection array in first row in FIELD subtable.
+    // Set the direction of interest equal to the phase center direction.
     ROMSFieldColumns fieldCols(ms.field());
-    itsResponse->setPointing(fieldCols.delayDirMeasCol()(0).data()[0]);
+    itsResponse->setDirection(fieldCols.phaseDirMeas(0));
+
+    // Set the delay reference direction.
+    // Use first value of MDirection array in first row in FIELD subtable.
+    itsResponse->setRefDelay(fieldCols.delayDirMeas(0));
+
+    // By default, the tile beam reference direction is assumed to be equal
+    // to the station beam reference direction (for backward compatibility,
+    // and for non-HBA measurements).
+    itsResponse->setRefTile(fieldCols.delayDirMeas(0));
+
+    // The MeasurementSet class does not support LOFAR specific columns, so we
+    // use ROArrayMeasColumn to read the tile beam reference direction.
+    Table tab_field = ms.keywordSet().asTable("FIELD");
+
+    static const String columnName = "LOFAR_TILE_BEAM_DIR";
+    if(tab_field.tableDesc().isColumn(columnName))
+    {
+        ROArrayMeasColumn<MDirection> c_direction(tab_field, columnName);
+        if(c_direction.isDefined(0))
+        {
+            itsResponse->setRefTile(c_direction(0)(IPosition(1, 0)));
+        }
+    }
 
     // Size the result array.
     itsJones.resize (IPosition(3,2,2,itsNChan));
@@ -237,15 +260,15 @@ namespace LOFAR { namespace BBS  {
   void pystationresponse()
   {
     class_<PyStationResponse> ("StationResponse",
-                               init<std::string, bool, bool, bool, bool>())
+        init<std::string, bool, bool, bool, bool, bool>())
       .def ("_version", &PyStationResponse::version,
         (boost::python::arg("type")="other"))
-      .def ("_setPointing", &PyStationResponse::setPointing,
+      .def ("_setRefDelay", &PyStationResponse::setRefDelay,
+        (boost::python::arg("ra"), boost::python::arg("dec")))
+      .def ("_setRefTile", &PyStationResponse::setRefTile,
         (boost::python::arg("ra"), boost::python::arg("dec")))
       .def ("_setDirection", &PyStationResponse::setDirection,
         (boost::python::arg("ra"), boost::python::arg("dec")))
-      .def ("_setDipoleOrientation", &PyStationResponse::setDipoleOrientation,
-        (boost::python::arg("orientation")))
       .def ("_evaluate0", &PyStationResponse::evaluate0,
         (boost::python::arg("time")))
       .def ("_evaluate1", &PyStationResponse::evaluate1,

@@ -53,7 +53,7 @@
 //     "Name,Type,Ra,Dec,I,Q,U,V,SpectralIndex,MajorAxis,MinorAxis,Orientation"
 // thus all fields are separated by commas.
 // If the format string contains only one character, the default format is used
-// with that one character as separator.
+// with the given character as separator.
 // A field name can consists of alphanumeric characters, underscores and colons.
 // However, a colon can not be used as the first character.
 // In this way a colon can be used as separator as long as it is surrounded by
@@ -115,8 +115,10 @@
 
 #include <lofar_config.h>
 #include <ParmDB/SourceDB.h>
+#include <ParmDB/Package__Version.h>
 #include <Common/StringUtil.h>
 #include <Common/StreamUtil.h>
+#include <Common/SystemUtil.h>
 #include <Common/Exception.h>
 #include <string>                //# for getline
 #include <iostream>
@@ -126,8 +128,6 @@
 #include <casa/Quanta/MVAngle.h>
 #include <casa/Inputs/Input.h>
 #include <casa/BasicSL/Constants.h>
-#include <unistd.h>
-#include <libgen.h>
 
 using namespace std;
 using namespace casa;
@@ -141,7 +141,7 @@ Exception::TerminateHandler t(Exception::terminate);
 enum FieldNr {
   // First the standard fields.
   NameNr, TypeNr, RaNr, DecNr, INr, QNr, UNr, VNr, SpInxNr, RefFreqNr,
-  MajorNr, MinorNr, OrientNr, RotMeasNr, PolFracNr, PolAngNr,
+  MajorNr, MinorNr, OrientNr, RotMeasNr, PolFracNr, PolAngNr, RefWavelNr,
   IShapeletNr, QShapeletNr, UShapeletNr, VShapeletNr,
   NrKnownFields,
   // Now other fields
@@ -173,6 +173,7 @@ vector<string> fillKnown()
   names.push_back ("RotationMeasure");
   names.push_back ("PolarizedFraction");
   names.push_back ("PolarizationAngle");
+  names.push_back ("ReferenceWavelength");
   names.push_back ("IShapelet");
   names.push_back ("QShapelet");
   names.push_back ("UShapelet");
@@ -343,6 +344,10 @@ SdbFormat getFormat (const string& format)
       if (lname.empty()  ||  lname == "dummy") {
         fieldType = SKIPFIELD;
       } else {
+        /// Remove ASSERT branch once we're sure SpectralIndexDegree is not used anymore.
+        ASSERTSTR (lname != "spectralindexdegree",
+                   "Use SpectralIndex=[v1,v2,...] instead of SpectralIndexDegree "
+                   "and SpectralIndex:i");
         map<string,int>::const_iterator namepos = nameMap.find(lname);
         // Fill in fieldnr of a known field.
         if (namepos != nameMap.end()) {
@@ -759,6 +764,45 @@ void fillShapelet (SourceInfo& srcInfo,
   srcInfo.setShapeletScale (scaleI, scaleQ, scaleU, scaleV);
 }
 
+// Calculate the polarization angle and polarized fraction given Q and U
+// for a given reference wavelength.
+// A spectral index can be used to calculate Stokes I.
+void calcRMParam (double& polfrac, double& polang,
+                  double fluxi0, double fluxq, double fluxu,
+                  const vector<double>& spinx, double rm,
+                  double refFreq, double rmRefWavel)
+{
+  // polfrac = sqrt(q^2 + u^2) / i
+  // where i = i(0) * spinx
+  // Compute spectral index for the RM reference wavelength as:
+  // (v / v0) ^ (c0 + c1 * log10(v / v0) + c2 * log10(v / v0)^2 + ...)
+  // Where v is the RM frequency and v0 is the spinx reference frequency.
+  double si = 1;
+  if (spinx.size() > 0) {
+    ASSERTSTR (rmRefWavel > 0, "No RM reference wavelength given");
+    double rmFreq = C::c / rmRefWavel;
+    double vv0 = rmFreq / refFreq;
+    double factor = 1;
+    double sum = 0;
+    for (uint i=0; i<spinx.size(); ++i) {
+      sum += factor * spinx[i];
+      factor *= log10(vv0);
+    }
+    si = std::pow(vv0, sum);
+  }
+  double fluxi = fluxi0 * si;
+  polfrac = sqrt(fluxq*fluxq + fluxu*fluxu) / fluxi;
+  // Calculate polang(0) from Q and U given for the reference lambda.
+  // polang = atan2(u,q) / 2
+  // polang(lambda) = polang(0) + lambda^2 * rm
+  // Scale between 0 and pi.
+  double pa = 0.5 * atan2(fluxu, fluxq) - rmRefWavel*rmRefWavel*rm;
+  polang = fmod(pa, C::pi);
+  if (polang < 0) {
+    polang += C::pi;
+  }
+}
+
 void process (const string& line, SourceDB& pdb, const SdbFormat& sdbf,
               bool check, int& nrpatch, int& nrsource,
               int& nrpatchfnd, int& nrsourcefnd, const SearchInfo& searchInfo)
@@ -815,30 +859,65 @@ void process (const string& line, SourceDB& pdb, const SdbFormat& sdbf,
   string rm        = getValue (values, sdbf.fieldNrs[RotMeasNr]);
   string polFrac   = getValue (values, sdbf.fieldNrs[PolFracNr]);
   string polAng    = getValue (values, sdbf.fieldNrs[PolAngNr]);
+  string refWavel  = getValue (values, sdbf.fieldNrs[RefWavelNr]);
   string shapeletI = getValue (values, sdbf.fieldNrs[IShapeletNr]);
   string shapeletQ = getValue (values, sdbf.fieldNrs[QShapeletNr]);
   string shapeletU = getValue (values, sdbf.fieldNrs[UShapeletNr]);
   string shapeletV = getValue (values, sdbf.fieldNrs[VShapeletNr]);
-  ASSERTSTR ((rm.empty() == polFrac.empty()) &&
-             (rm.empty() == polAng.empty()),
-               "If RotationMeasure is specified, PolarizationAngle and"
-               " PolarizedFraction should also be");
+
   vector<double> spinx(vector2real(string2vector(values,
                                                  sdbf.fieldNrs[SpInxNr],
                                                  vector<string>()),
                                    0.));
   double refFreq = string2real (values, sdbf.fieldNrs[RefFreqNr], 0);
-  SourceInfo srcInfo(srcName, srctype, spinx.size(), refFreq, !rm.empty());
+  bool useRM = false;
+  double rmRefWavel = 0;
+  if (rm.empty()) {
+    ASSERTSTR (polFrac.empty() && polAng.empty() && refWavel.empty(),
+               "PolarizationAngle, PolarizedFraction, and ReferenceWavelength"
+               " cannot be specified if RotationMeasure is not specified");
+  } else {
+    if (!fluxQ.empty() || !fluxU.empty()) {
+      ASSERTSTR (!fluxQ.empty() && !fluxU.empty() &&
+                 polFrac.empty() && polAng.empty(),
+                 "PolarizationAngle/PolarizedFraction or Q/U must be "
+                 "specified if RotationMeasure is specified");
+      useRM = true;
+      if (refWavel.empty()) {
+        ASSERTSTR (refFreq > 0,
+                   "For rotation measures the reference frequency or "
+                   "wavelength must be given");
+      }
+      rmRefWavel = string2real (refWavel, C::c / refFreq);
+    } else {
+      ASSERTSTR (!polFrac.empty() && !polAng.empty(),
+                 "PolarizationAngle/PolarizedFraction or Q/U must be "
+                 "specified if RotationMeasure is specified");
+      useRM = true;
+      rmRefWavel = string2real (refWavel, 0);
+    }
+  }               
+  SourceInfo srcInfo(srcName, srctype, spinx.size(), refFreq, useRM);
   if (srctype == SourceInfo::SHAPELET) {
     fillShapelet (srcInfo, shapeletI, shapeletQ, shapeletU, shapeletV);
   }
   add (fieldValues, INr, fluxI);
+  double rmval = 0;
   if (!rm.empty()) {
-    ASSERTSTR (fluxQ.empty() && fluxU.empty(),
-               "If RotationMeasure is specified, Q and U cannot");
-    add (fieldValues, RotMeasNr, string2real(rm, 0.));
-    add (fieldValues, PolFracNr, string2real(polFrac, 0.));
-    add (fieldValues, PolAngNr, string2real(polAng, 0.));
+    rmval = string2real(rm, 0.);
+    add (fieldValues, RotMeasNr, rmval);
+  }
+  double fq = string2real(fluxQ, 0.);
+  double fu = string2real(fluxU, 0.);
+  if (useRM) {
+    double pfrac = string2real(polFrac, 0.);
+    double pang  = string2real(polAng, 0.);
+    if (! fluxQ.empty()) {
+      calcRMParam (pfrac, pang, fluxI, fq, fu,
+                   spinx, rmval, refFreq, rmRefWavel);
+    }
+    add (fieldValues, PolFracNr, pfrac);
+    add (fieldValues, PolAngNr, pang);
   } else {
     add (fieldValues, QNr, string2real(fluxQ, 0.));
     add (fieldValues, UNr, string2real(fluxU, 0.));
@@ -894,10 +973,7 @@ void make (const string& in, const string& out,
   int nrsource    = 0;
   int nrpatchfnd  = 0;
   int nrsourcefnd = 0;
-  if (in.empty()) {
-    process (string(), pdb, sdbf, check, nrpatch, nrsource,
-             nrpatchfnd, nrsourcefnd, searchInfo);
-  } else {
+  if (! in.empty()) {
     ifstream infile(in.c_str());
     ASSERTSTR (infile, "File " << in << " could not be opened");
     casa::Regex regexf("^[ \t]*[fF][oO][rR][mM][aA][tT][ \t]*=.*");
@@ -936,11 +1012,11 @@ void make (const string& in, const string& out,
        << pdb.getParmDBMeta().getTableName() << endl;
   vector<string> dp(pdb.findDuplicatePatches());
   if (dp.size() > 0) {
-    cout << "Duplicate patches: " << dp << endl;
+    cerr << "Duplicate patches: " << dp << endl;
   }
   vector<string> ds(pdb.findDuplicateSources());
   if (ds.size() > 0) {
-    cout << "Duplicate sources: " << ds << endl;
+    cerr << "Duplicate sources: " << ds << endl;
   }
 }
 
@@ -951,6 +1027,9 @@ string readFormat (string file, const string& catFile)
   // Use catalog itself if needed.
   if (file.empty()) {
     file = catFile;
+  }
+  if (file.empty()) {
+    return string();
   }
   // Read file until format line is found or until non-comment is found.
   ifstream infile(file.c_str());
@@ -991,19 +1070,17 @@ string readFormat (string file, const string& catFile)
 
 int main (int argc, char* argv[])
 {
-  // Not all versions of basename accept a const char.
-  const char* progName = basename(argv[0]);
-  INIT_LOGGER(progName);
+  TEST_SHOW_VERSION (argc, argv, ParmDB);
+  INIT_LOGGER(basename(string(argv[0])));
   try {
     // Get the inputs.
     Input inputs(1);
-    inputs.version ("GvD 2010-Dec-15");
+    inputs.version ("GvD 2011-Feb-17");
     inputs.create("in", "",
                   "Input file name", "string");
     inputs.create("out", "",
                   "Output sourcedb name", "string");
-    inputs.create("format", "Name,Type,Ra,Dec,I,Q,U,V,MajorAxis,"
-                            "MinorAxis,Orientation",
+    inputs.create("format", "",
                   "Format of the input lines or name of file containing format",
                   "string");
     inputs.create("append", "true",
@@ -1047,10 +1124,15 @@ int main (int argc, char* argv[])
       // Read format from file.
       format = readFormat (format.substr(st), in);
     }
+    // Use default if empty format.
+    if (format.empty()) {
+      cerr << "No format string found; using default format" << endl;
+      format = "Name,Type,Ra,Dec,I,Q,U,V,MajorAxis,MinorAxis,Orientation";
+    }
     make (in, out, format, append, check,
           getSearchInfo (center, radius, width));
   } catch (Exception& x) {
-    std::cerr << "Caught LOFAR exception: " << x << std::endl;
+    cerr << "Caught LOFAR exception: " << x << endl;
     return 1;
   }
   

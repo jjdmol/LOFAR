@@ -131,8 +131,8 @@ class cimager(BaseRecipe, RemoteCommandRecipeMixIn):
         inputs['nproc'] = self.inputs['nproc']
         inputs['directory'] = os.path.dirname(gvds_file)
         outputs = LOFARoutput(self.inputs)
-        if self.cook_recipe('new_vdsmaker', inputs, outputs):
-            self.logger.warn("new_vdsmaker reports failure")
+        if self.cook_recipe('vdsmaker', inputs, outputs):
+            self.logger.warn("vdsmaker reports failure")
             return 1
         self.logger.debug("cimager GVDS is %s" % (gvds_file,))
 
@@ -188,7 +188,7 @@ class cimager(BaseRecipe, RemoteCommandRecipeMixIn):
                         os.path.basename(vds_data.getString('FileName')).split('.')[0],
                         vds_data.getString("FileName"),
                         str(frequency_range),
-                        vds_data.getString("Extra.FieldDirectionType"),
+                        vds_data.getStringVector("Extra.FieldDirectionType")[0],
                         vds_data.getStringVector("Extra.FieldDirectionRa")[0],
                         vds_data.getStringVector("Extra.FieldDirectionDec")[0],
                         'True', # cimager bug: non-restored image unusable

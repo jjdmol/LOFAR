@@ -33,23 +33,23 @@
 #
 
 # Get name of logfile and program.
-envfile=$1
+envfile="$1"
 shift
-rank=$1
+rank="$1"
 shift
-program=$1
+program="$1"
 shift
-logfile=$envfile.pid-$rank
+logfile="$envfile.pid-$rank"
 
 
 # Start the program and log its pid (in a separate file).
-$program "$@" &
+"$program" "$@" &
 pid=$!
-echo "$program $*" > $logfile
-echo "pid=$pid" >> $logfile
+echo "$program $*" > "$logfile"
+echo "pid=$pid" >> "$logfile"
 
 # Wait for the program to end and log its exit status.
-wait $pid >> $logfile 2>&1
+wait $pid >> "$logfile" 2>&1
 status=$?
-echo "status=$status" >> $logfile
+echo "status=$status" >> "$logfile"
 exit $status

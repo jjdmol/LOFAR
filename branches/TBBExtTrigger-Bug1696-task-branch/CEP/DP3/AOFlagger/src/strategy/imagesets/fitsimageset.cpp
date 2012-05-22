@@ -195,8 +195,8 @@ namespace rfiStrategy {
 		if(valuesR[0].size() == 0)
 			throw BadUsageException("Baseline not found!");
 		Image2DPtr
-			real = Image2D::CreateEmptyImagePtr(valuesR[0].size(), frequencyCount),
-			imaginary = Image2D::CreateEmptyImagePtr(valuesR[0].size(), frequencyCount);
+			real = Image2D::CreateUnsetImagePtr(valuesR[0].size(), frequencyCount),
+			imaginary = Image2D::CreateUnsetImagePtr(valuesR[0].size(), frequencyCount);
 		for(size_t i=0;i<valuesR[0].size();++i)
 		{
 			for(size_t f=0;f<frequencyCount;++f)

@@ -173,9 +173,7 @@ namespace rfiStrategy {
 		metaData->SetAntenna2(_set.GetAntennaInfo(GetAntenna2(msIndex)));
 		metaData->SetBand(_set.GetBandInfo(msIndex._band));
 		metaData->SetField(_set.GetFieldInfo(msIndex._field));
-		std::vector<double> *times = _set.CreateObservationTimesVector();
-		metaData->SetObservationTimes(*times);
-		delete times;
+		metaData->SetObservationTimes(ObservationTimesVector(msIndex));
 		if(_reader != 0)
 		{
 			metaData->SetUVW(uvw);
@@ -219,7 +217,7 @@ namespace rfiStrategy {
 	void MSImageSet::WriteFlags(const ImageSetIndex &index, TimeFrequencyData &data)
 	{
 		ImageSet::AddWriteFlagsTask(index, data);
-		_reader->PerformWriteRequests();
+		_reader->PerformFlagWriteRequests();
 	}
 
 	void MSImageSet::AddReadRequest(const ImageSetIndex &index)
@@ -299,7 +297,7 @@ namespace rfiStrategy {
 	
 	void MSImageSet::PerformWriteFlagsTask()
 	{
-		_reader->PerformWriteRequests();
+		_reader->PerformFlagWriteRequests();
 	}
 
 }

@@ -6,6 +6,10 @@ import scipy.ndimage
 import pyrap.images
 from optparse import OptionParser
 
+# Return the fractional part of the floating point number x.
+def fraction(x):
+  return numpy.modf(x)[0]
+
 # Convert an angle from degrees to radians.
 def deg2rad(angle):
     return (angle * numpy.pi) / 180.0
@@ -16,19 +20,36 @@ def rad2deg(angle):
 
 # Compute hours, min, sec from an angle in radians.
 def rad2ra(angle):
-    deg = rad2deg(angle)
-    return (int(deg / 15.0), int(((deg / 15.0) % 1) * 60.0), ((deg * 4.0) % 1) * 60.0)
+    deg = numpy.fmod(rad2deg(angle), 360.0)
+    if deg < 0.0:
+        deg += 360.0
+    # Ensure positive output (deg could equal -0.0).
+    deg = abs(deg)
+    assert(deg < 360.0)
 
-# Compute degrees, arcmin, arcsec from an angle in radians.
+    return (int(deg / 15.0), int(fraction(deg / 15.0) * 60.0), fraction(deg * 4.0) * 60.0)
+
+# Compute degrees, arcmin, arcsec from an angle in radians, in the range [-90.0, +90.0].
 def rad2dec(angle):
-    deg = rad2deg(angle)
+    deg = numpy.fmod(rad2deg(angle), 360.0)
     if deg > 180.0:
         deg -= 360.0
     elif deg < -180.0:
         deg += 360.0
 
-    assert(deg >= -90.0 and deg <= 90.0)
-    return (int(deg), int((deg % 1) * 60.0), ((deg * 60.0) % 1) * 60.0)
+    sign = (deg < 0.0)
+    deg = abs(deg)
+    assert(deg <= 90.0)
+
+    return (sign, int(deg), int(fraction(deg) * 60.0), fraction(deg * 60.0) * 60.0)
+
+# Return string representation of the input right ascension (as returned by rad2ra).
+def ra2str(ra):
+    return "%02d:%02d:%07.4f" % ra
+
+# Return string representation of the input declination (as returned by rad2dec).
+def dec2str(dec):
+    return "%s%02d.%02d.%07.4f" % ("-" if dec[0] else "+", dec[1], dec[2], dec[3])
 
 # Recursively flatten a list.
 def flatten_list(l):
@@ -43,7 +64,7 @@ def flatten_list(l):
     flatten_rec(l, out)
     return out
 
-# Compute a index that maps each element in requested to the index of the same
+# Compute an index that maps each element in requested to the index of the same
 # element in available. If such an element cannot be found and mandatory is
 # set to True an exception is raised. If mandatory is set to False, None is
 # stored in the index instead.
@@ -230,7 +251,7 @@ def main(options, args):
         if len(patch) > 0:
             patches.append(patch)
 
-        print "info: number of CLEAN components selected: %d (%.2f%%)" % (len(patch), (100.0 * len(patch)) /total_component_count)
+        print "info: number of CLEAN components selected: %d (%.2f%%)" % (len(patch), (100.0 * len(patch)) / total_component_count)
         if len(patch) == 0:
             print "warning: no CLEAN components selected; you may need to raise the clip level (option -c)."
         print "info: flux in selected CLEAN components: %.2f Jy (%.2f%%)" % (sum_flux, (100.0 * sum_flux) / total_flux)
@@ -243,7 +264,11 @@ def main(options, args):
         out = file(args[1], 'w')
 
     # Write the catalog header.
-    print >>out, "# (Name, Type, Patch, Ra, Dec, I, Q, U, V) = format"
+    if options.use_patches:
+        print >>out, "# (Name, Type, Patch, Ra, Dec, I, Q, U, V) = format"
+    else:
+        print >>out, "# (Name, Type, Ra, Dec, I, Q, U, V) = format"
+
     print >>out
     print >>out, "# CLEAN component list converted from:", args[0]
     if not options.mask is None:
@@ -254,22 +279,33 @@ def main(options, args):
 
     # Output all the patches in BBS catalog file format.
     patch_count = 0
+    component_count = 0
     stokes_desc = ["" for i in range(len(stokes_index))]
     pixel_coord = [0 for i in range(len(component_map_im.shape()))]
     for patch in patches:
         # Output patch definition.
-        print >>out, ", , patch-%d, 00:00:00, +90.00.00" % patch_count
+        if options.use_patches:
+            print >>out, ", , patch-%d, 00:00:00, +90.00.00" % patch_count
+
+        # When using patches, reset the component count at the start of each
+        # patch. Thus, components within a patch are counted from zero.
+        # Components are labelled both with a patch count and a component count
+        # to avoid name clashes. If not using patches, just continue counting.
+        if options.use_patches:
+            component_count = 0
 
         # Output all the CLEAN components in the patch.
-        count = 0
         for component in patch:
-            print >>out, "patch-%d-%d, POINT, patch-%d," % (patch_count, count, patch_count),
+            if options.use_patches:
+                print >>out, "patch-%d-%d, POINT, patch-%d," % (patch_count, component_count, patch_count),
+            else:
+                print >>out, "component-%d, POINT," % (component_count),
 
             pixel_coord[axis_index[1]] = component[0]
             pixel_coord[axis_index[2]] = component[1]
             world_coord = component_map_im.toworld(pixel_coord)
-            print >>out, "%02d:%02d:%07.4f," % rad2ra(world_coord[axis_index[2]]),
-            print >>out, "%+03d.%02d.%07.4f," % rad2dec(world_coord[axis_index[1]]),
+            print >>out, "%s," % ra2str(rad2ra(world_coord[axis_index[2]])),
+            print >>out, "%s," % dec2str(rad2dec(world_coord[axis_index[1]])),
 
             for i in range(len(stokes_index)):
                 if stokes_index[i] is None:
@@ -278,14 +314,13 @@ def main(options, args):
                     stokes_desc[i] = "%f" % component_map[(stokes_index[i], component[0], component[1])]
 
             print >>out, ", ".join(stokes_desc)
-            count += 1
+            component_count += 1
 
         print >>out
         patch_count += 1
 
-
-
 parser = OptionParser(usage="%prog [options] <CLEAN component image> [output catalog file]")
+parser.add_option("-n", "--no-patches", action="store_false", dest="use_patches", default=True, help="Do not group components into patches. All CLEAN components will be written as separate components.")
 parser.add_option("-m", "--mask", dest="mask", help="CASA mask image; If provided, the islands in the mask image define separate patches; CLEAN components that do not fall on an island are discarded, as are islands that do not contain any CLEAN components.")
 parser.add_option("-c", "--clip-level", type="float", dest="clip_level", default=100.0, help="Percentage [0.0, 100.0] of the total flux that should be kept (default: %default). If there are CLEAN components with negative flux in the CLEAN component image, you may not recover all CLEAN components even if you specify 100% here. This is due to the way the cumulative flux builds up in the presence of negative components.")
 (options, args) = parser.parse_args()

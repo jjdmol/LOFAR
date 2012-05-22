@@ -10,12 +10,16 @@
 #include <lofar_config.h>
 
 #include <Common/LofarLogger.h>
+#include <Common/CasaLogSink.h>
 #include <Common/StringUtil.h>
 #include <Common/Exceptions.h>
 #include <Common/NewHandler.h>
+#include <ApplCommon/Observation.h>
 #include <Interface/Exceptions.h>
 #include <Interface/Parset.h>
+#include <Interface/Stream.h>
 #include <Common/Thread/Thread.h>
+#include <Stream/PortBroker.h>
 #include <Storage/SubbandWriter.h>
 #include <Storage/IOPriority.h>
 #include <Storage/Package__Version.h>
@@ -27,6 +31,7 @@
 #include <sys/select.h>
 #include <unistd.h>
 #include <cstdio>
+#include <cstdlib>
 
 #include <stdexcept>
 #include <string>
@@ -35,12 +40,13 @@
 #include <boost/format.hpp>
 
 
-// install a new handler to produce backtraces for std::bad_alloc
+// install a new handler to produce backtraces for bad_alloc
 LOFAR::NewHandler h(LOFAR::BadAllocException::newHandler);
 
 
 using namespace LOFAR;
 using namespace LOFAR::RTCP;
+using namespace std;
 
 
 class ExitOnClosedStdin
@@ -103,51 +109,12 @@ void ExitOnClosedStdin::mainLoop()
   }
 }
 
-
-void setIOpriority()
-{
-  if (ioprio_set(IOPRIO_WHO_PROCESS, getpid(), IOPRIO_PRIO_VALUE(IOPRIO_CLASS_RT,7)) != 0) {
-    struct passwd *user = getpwnam("lofarsys");
-    if ((user != NULL) && (getuid() != user->pw_uid)) 
-      LOG_WARN_STR("Failed to set IO priority");
-    else 
-      LOG_ERROR_STR("Failed to set IO priority, capabilities not set?");
-  }
-}
-
-
-void setRTpriority()
-{
-  int priority = sched_get_priority_min(SCHED_RR);
-  struct sched_param sp;
-  sp.sched_priority = priority;
-  
-  if (sched_setscheduler(0, SCHED_RR, &sp) < 0) {
-    struct passwd *user = getpwnam("lofarsys");
-    if ((user != NULL) && (getuid() != user->pw_uid))
-      LOG_WARN_STR("Failed to set RT priority");   
-    else 
-      LOG_ERROR_STR("Failed to set RT priority, capabilities not set?");
-  }
-}
-
-
-void dropPrivileges(Parset ps) 
-{   
-  struct passwd *storageUser = getpwnam(ps.getString("OLAP.Storage.userName").c_str());
-  if ((storageUser != NULL) && (setuid(storageUser->pw_uid) == 0)) {
-    LOG_INFO_STR("Root privileges dropped, now running as user " << storageUser->pw_name);
-    return;
-  }
-
-  throw StorageException(string("Failed to drop privileges "), THROW_ARGS);
-}
-
+char stdoutbuf[1024], stderrbuf[1024];
 
 int main(int argc, char *argv[])
 {
 #if defined HAVE_LOG4CPLUS
-  INIT_LOGGER( "Storage" );
+  INIT_LOGGER(string(getenv("LOFARROOT") ? : ".") + "/etc/Storage_main.log_prop");
 #elif defined HAVE_LOG4CXX
   #error LOG4CXX support is broken (nonsensical?) -- please fix this code if you want to use it
   Context::initialize();
@@ -156,50 +123,80 @@ int main(int argc, char *argv[])
   INIT_LOGGER_WITH_SYSINFO(str(boost::format("Storage@%02d") % (argc > 1 ? atoi(argv[1]) : -1)));
 #endif
 
+  CasaLogSink::attach();
+
   try {
     if (argc != 4)
-      throw StorageException(str(boost::format("usage: %s rank parset is_bigendian") % argv[0]), THROW_ARGS);
+      throw StorageException(str(boost::format("usage: %s obsid rank is_bigendian") % argv[0]), THROW_ARGS);
 
-    char stdoutbuf[1024], stderrbuf[1024];
+    ExitOnClosedStdin			  stdinWatcher;
     setvbuf(stdout, stdoutbuf, _IOLBF, sizeof stdoutbuf);
     setvbuf(stderr, stdoutbuf, _IOLBF, sizeof stderrbuf);
 
     LOG_DEBUG_STR("Started: " << argv[0] << ' ' << argv[1] << ' ' << argv[2] << ' ' << argv[3]);
 
-    ExitOnClosedStdin			  stdinWatcher;
-
-    unsigned				  myRank = boost::lexical_cast<unsigned>(argv[1]);
-    Parset				  parset(argv[2]);
+    int				          observationID = boost::lexical_cast<int>(argv[1]);
+    unsigned				  myRank = boost::lexical_cast<unsigned>(argv[2]);
     bool				  isBigEndian = boost::lexical_cast<bool>(argv[3]);
-    std::vector<SmartPtr<SubbandWriter> > subbandWriters;
-    std::string				  myHostName = parset.getStringVector("OLAP.Storage.hosts", true)[myRank];
 
     setIOpriority();
     setRTpriority();
+    lockInMemory();
 
-    for (OutputType outputType = FIRST_OUTPUT_TYPE; outputType < LAST_OUTPUT_TYPE; outputType ++) {
-      for (unsigned streamNr = 0; streamNr < parset.nrStreams(outputType); streamNr ++) {
-	if (parset.getHostName(outputType, streamNr) == myHostName) {
-	  std::string logPrefix = str(boost::format("[obs %u type %u stream %3u] ") % parset.observationID() % outputType % streamNr);
+    PortBroker::createInstance(storageBrokerPort(observationID));
 
-	  try {
-	    subbandWriters.push_back(new SubbandWriter(parset, outputType, streamNr, isBigEndian, logPrefix));
-	  } catch (Exception &ex) {
-	    LOG_WARN_STR(logPrefix << "Could not create writer: " << ex);
-	  } catch (std::exception &ex) {
-	    LOG_WARN_STR(logPrefix << "Could not create writer: " << ex.what());
-	  }
-	}
-      }
+    // retrieve the parset
+    string resource = getStorageControlDescription(observationID, myRank);
+    PortBroker::ServerStream controlStream(resource);
+
+    Parset parset(&controlStream);
+    Observation obs(&parset, false);
+
+    vector<string> hostnames = parset.getStringVector("OLAP.Storage.hosts", true);
+    ASSERT(myRank < hostnames.size());
+    string myHostName = hostnames[myRank];
+
+    {
+      // make sure "parset" stays in scope for the lifetime of the SubbandWriters
+
+      vector<SmartPtr<SubbandWriter> > subbandWriters;
+
+      for (OutputType outputType = FIRST_OUTPUT_TYPE; outputType < LAST_OUTPUT_TYPE; outputType ++) {
+        for (unsigned streamNr = 0; streamNr < parset.nrStreams(outputType); streamNr ++) {
+          if (parset.getHostName(outputType, streamNr) == myHostName) {
+            unsigned writerNr = 0;
+
+            // lookup PVSS writer number for this file
+            for (unsigned i = 0; i < obs.streamsToStorage.size(); i++) {
+              Observation::StreamToStorage &s = obs.streamsToStorage[i];
+
+              if (s.dataProductNr == static_cast<unsigned>(outputType) && s.streamNr == streamNr) {
+                writerNr = s.writerNr;
+                break;
+              }
+            }
+
+            string logPrefix = str(boost::format("[obs %u type %u stream %3u writer %3u] ") % parset.observationID() % outputType % streamNr % writerNr);
+
+            try {
+              subbandWriters.push_back(new SubbandWriter(parset, outputType, streamNr, isBigEndian, logPrefix));
+            } catch (Exception &ex) {
+              LOG_WARN_STR(logPrefix << "Could not create writer: " << ex);
+            } catch (exception &ex) {
+              LOG_WARN_STR(logPrefix << "Could not create writer: " << ex.what());
+            }
+          }
+        }
+      }   
     }
   } catch (Exception &ex) {
     LOG_FATAL_STR("[obs unknown] Caught Exception: " << ex);
     exit(1);
-  } catch (std::exception &ex) {
-    LOG_FATAL_STR("[obs unknown] Caught std::exception: " << ex.what());
+  } catch (exception &ex) {
+    LOG_FATAL_STR("[obs unknown] Caught exception: " << ex.what());
     exit(1);
   } catch (...) {
-    LOG_FATAL_STR("[obs unknown] Caught non-std::exception");
+    LOG_FATAL_STR("[obs unknown] Caught non-exception");
     exit(1);
   }
 

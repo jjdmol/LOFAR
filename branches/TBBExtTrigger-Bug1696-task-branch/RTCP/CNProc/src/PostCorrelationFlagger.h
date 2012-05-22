@@ -7,21 +7,24 @@ namespace LOFAR {
 namespace RTCP {
 
 class CorrelatedData;
+class Parset;
 
-  class PostCorrelationFlagger : public Flagger
+enum PostCorrelationFlaggerType {
+  POST_FLAGGER_THRESHOLD,
+  POST_FLAGGER_SUM_THRESHOLD,
+  POST_FLAGGER_SMOOTHED_SUM_THRESHOLD,
+  POST_FLAGGER_SMOOTHED_SUM_THRESHOLD_WITH_HISTORY
+};
+
+class PostCorrelationFlagger : public Flagger
 {
   public:
+
   // The firstThreshold of 6.0 is taken from Andre's code.
-  PostCorrelationFlagger(const unsigned nrStations, const unsigned nrChannels, const float cutoffThreshold = 7.0f, float baseSentitivity = 1.0f, float firstThreshold = 6.0f, 
-	  FlaggerType flaggerType = FLAGGER_SUM_THRESHOLD, FlaggerStatisticsType flaggerStatisticsType = FLAGGER_STATISTICS_WINSORIZED);
+  PostCorrelationFlagger(const Parset& parset, const unsigned nrStations, const unsigned nrChannels,
+    const float cutoffThreshold = 7.0f, float baseSentitivity = 1.0f);
 
   void flag(CorrelatedData* correlatedData);
-
-  // Does simple thresholding.
-  void thresholdingFlagger(const float mean, const float stdDev, const float median);
-
-  // Does sum thresholding.
-  void sumThresholdFlagger(const float mean, const float stdDev, const float median);
 
   // Tries to detect broken stations
   void detectBrokenStations();
@@ -29,20 +32,27 @@ class CorrelatedData;
 private:
   // calculates mean, stddev, and median.
   void calculatePowers(unsigned baseline, unsigned pol1, unsigned pol2, CorrelatedData* correlatedData);
-  void sumThreshold(unsigned window, float threshold);
   void calculateSummedbaselinePowers(unsigned baseline);
 
   void wipeFlags();
   void applyFlags(unsigned baseline, CorrelatedData* correlatedData);
   void wipeSums();
 
+  PostCorrelationFlaggerType getFlaggerType(std::string t);
+  std::string getFlaggerTypeString(PostCorrelationFlaggerType t);
+  std::string getFlaggerTypeString();
+
+  const PostCorrelationFlaggerType itsFlaggerType;
   const unsigned itsNrBaselines;
 
   std::vector<float> itsPowers;
+  std::vector<float> itsSmoothedPowers;
+  std::vector<float> itsPowerDiffs;
   std::vector<bool> itsFlags;
   std::vector<float> itsSummedBaselinePowers; // [nrBaselines]
   std::vector<float> itsSummedStationPowers; // [nrStations]
 
+  MultiDimArray<HistoryList, 2> itsHistory; // [NR_POLARIZATIONS][NR_POLARIZATIONS]
 };
 
 

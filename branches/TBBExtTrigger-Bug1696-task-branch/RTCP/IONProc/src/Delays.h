@@ -83,8 +83,10 @@ class Delays
     Delays(const Parset &ps, const string &stationName, const TimeStamp &startTime);
     ~Delays();
 
+    void start();
+
     // get the set of directions (ITRF) and delays for the beams, for the next CN integration time
-    // Both matrices must have dimensions [itsNrBeams][itsNrPencilBeams+1]
+    // Both matrices must have dimensions [itsNrBeams][itsMaxNrPencilBeams+1]
     void getNextDelays(Matrix<casa::MVDirection> &directions, Matrix<double> &delays);
     
   private:
@@ -132,8 +134,9 @@ class Delays
 
     // Beam info.
     const unsigned			itsNrBeams;
-    const unsigned			itsNrPencilBeams;
-    casa::MDirection::Types		itsDirectionType;
+    const unsigned			itsMaxNrPencilBeams;
+    const std::vector<unsigned>		itsNrPencilBeams;
+    Vector<casa::MDirection::Types>	itsDirectionTypes;
     Matrix<casa::MVDirection>		itsBeamDirections; // [itsNrBeams][itsNrPencilBeams+1]
 
     // Sample timings.
@@ -144,7 +147,7 @@ class Delays
     // Station Name.
     const string			itsStationName;
     casa::MeasFrame			itsFrame;
-    SmartPtr<casa::MDirection::Convert>	itsConverter;
+    std::map<casa::MDirection::Types, casa::MDirection::Convert> itsConverters;
     
     // Station phase centre. 
     casa::MPosition			itsPhaseCentre;
@@ -154,7 +157,7 @@ class Delays
     
     NSTimer				itsDelayTimer;
 
-    Thread				itsThread;
+    SmartPtr<Thread>			itsThread;
 };
 
 } // namespace RTCP

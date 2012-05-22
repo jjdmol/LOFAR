@@ -32,13 +32,44 @@ namespace LOFAR
 namespace BBS
 {
 
-ExprVisData::ExprVisData(const VisBuffer::Ptr &chunk, const baseline_t &baseline,
-    Correlation::Type element00, Correlation::Type element01,
-    Correlation::Type element10, Correlation::Type element11)
-    :   itsChunk(chunk)
+ExprVisData::ExprVisData(const VisBuffer::Ptr &buffer,
+    const baseline_t &baseline,
+    bool useFlags)
+    :   itsBuffer(buffer),
+        itsUseFlags(useFlags)
 {
-    itsBaseline = chunk->baselines().index(baseline);
-    ASSERT(itsBaseline < chunk->nBaselines());
+    itsBaseline = buffer->baselines().index(baseline);
+    ASSERT(itsBaseline < buffer->nBaselines());
+
+    ASSERT(buffer->isLinear() != buffer->isCircular());
+    if(buffer->isLinear())
+    {
+        setCorrelation(0, Correlation::XX);
+        setCorrelation(1, Correlation::XY);
+        setCorrelation(2, Correlation::YX);
+        setCorrelation(3, Correlation::YY);
+    }
+    else if(buffer->isCircular())
+    {
+        setCorrelation(0, Correlation::RR);
+        setCorrelation(1, Correlation::RL);
+        setCorrelation(2, Correlation::LR);
+        setCorrelation(3, Correlation::LL);
+    }
+}
+
+ExprVisData::ExprVisData(const VisBuffer::Ptr &buffer,
+    const baseline_t &baseline,
+    Correlation::Type element00,
+    Correlation::Type element01,
+    Correlation::Type element10,
+    Correlation::Type element11,
+    bool useFlags)
+    :   itsBuffer(buffer),
+        itsUseFlags(useFlags)
+{
+    itsBaseline = buffer->baselines().index(baseline);
+    ASSERT(itsBaseline < buffer->nBaselines());
 
     setCorrelation(0, element00);
     setCorrelation(1, element01);
@@ -48,11 +79,11 @@ ExprVisData::ExprVisData(const VisBuffer::Ptr &chunk, const baseline_t &baseline
 
 void ExprVisData::setCorrelation(size_t element, Correlation::Type correlation)
 {
-    const size_t index = itsChunk->correlations().index(correlation);
+    const size_t index = itsBuffer->correlations().index(correlation);
 
     itsCorr[element] = index;
     itsCorrMask[element] = Correlation::isDefined(correlation)
-        && index < itsChunk->nCorrelations();
+        && index < itsBuffer->nCorrelations();
 }
 
 const JonesMatrix ExprVisData::evaluateExpr(const Request &request,
@@ -61,22 +92,25 @@ const JonesMatrix ExprVisData::evaluateExpr(const Request &request,
     EXPR_TIMER_START();
 
     vector<pair<size_t, size_t> > axisMapping[2];
-    makeAxisMapping(request[grid][FREQ], itsChunk->grid()[FREQ],
+    makeAxisMapping(request[grid][FREQ], itsBuffer->grid()[FREQ],
         back_inserter(axisMapping[FREQ]));
-    makeAxisMapping(request[grid][TIME], itsChunk->grid()[TIME],
+    makeAxisMapping(request[grid][TIME], itsBuffer->grid()[TIME],
         back_inserter(axisMapping[TIME]));
 
-    FlagArray flags00(copyFlags(request[grid], 0, axisMapping));
-    FlagArray flags01(copyFlags(request[grid], 1, axisMapping));
-    FlagArray flags10(copyFlags(request[grid], 2, axisMapping));
-    FlagArray flags11(copyFlags(request[grid], 3, axisMapping));
-
     JonesMatrix result;
-    result.setFlags(flags00 | flags01 | flags10 | flags11);
     result.assign(0, 0, copyData(request[grid], 0, axisMapping));
     result.assign(0, 1, copyData(request[grid], 1, axisMapping));
     result.assign(1, 0, copyData(request[grid], 2, axisMapping));
     result.assign(1, 1, copyData(request[grid], 3, axisMapping));
+
+    if(itsBuffer->hasFlags() && itsUseFlags)
+    {
+        FlagArray flags00(copyFlags(request[grid], 0, axisMapping));
+        FlagArray flags01(copyFlags(request[grid], 1, axisMapping));
+        FlagArray flags10(copyFlags(request[grid], 2, axisMapping));
+        FlagArray flags11(copyFlags(request[grid], 3, axisMapping));
+        result.setFlags(flags00 | flags01 | flags10 | flags11);
+    }
 
     EXPR_TIMER_STOP();
 
@@ -109,7 +143,7 @@ FlagArray ExprVisData::copyFlags(const Grid &grid, size_t element,
 
     // Copy flags.
     FSlice flags =
-        itsChunk->flags[boost::indices[itsBaseline][FRange()][FRange()][cr]];
+        itsBuffer->flags[boost::indices[itsBaseline][FRange()][FRange()][cr]];
 
     for(unsigned int t = 0; t < mapping[TIME].size(); ++t)
     {
@@ -155,7 +189,7 @@ Matrix ExprVisData::copyData(const Grid &grid, size_t element,
 
     // Copy visibility data.
     SSlice samples =
-        itsChunk->samples[boost::indices[itsBaseline][SRange()][SRange()][cr]];
+        itsBuffer->samples[boost::indices[itsBaseline][SRange()][SRange()][cr]];
 
     for(unsigned int t = 0; t < mapping[TIME].size(); ++t)
     {

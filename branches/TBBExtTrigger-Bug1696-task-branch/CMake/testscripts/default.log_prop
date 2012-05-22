@@ -3,4 +3,4 @@ log4cplus.logger.TRC=DEBUG
 log4cplus.appender.TESTOUT=log4cplus::FileAppender
 log4cplus.appender.TESTOUT.File=<LOGFILENAME>
 log4cplus.appender.TESTOUT.layout=log4cplus::PatternLayout
-log4cplus.appender.TESTOUT.layout.ConversionPattern=%-5p %c{3} [%F:%L] - %m%n
+log4cplus.appender.TESTOUT.layout.ConversionPattern=%-5p %c{3} [%b:%L] - %m%n

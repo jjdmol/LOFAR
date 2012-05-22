@@ -31,11 +31,11 @@
 #include <BBSKernel/Instrument.h>
 #include <BBSKernel/IonosphereExpr.h>
 #include <BBSKernel/ModelConfig.h>
+#include <BBSKernel/PatchExpr.h>
 #include <BBSKernel/VisBuffer.h>
 #include <BBSKernel/Expr/CachePolicy.h>
 #include <BBSKernel/Expr/Expr.h>
 #include <BBSKernel/Expr/ExprValue.h>
-#include <BBSKernel/Expr/HamakerDipole.h>
 #include <BBSKernel/Expr/Scope.h>
 #include <ParmDB/SourceDB.h>
 #include <measures/Measures/MDirection.h>
@@ -54,13 +54,15 @@ public:
     typedef shared_ptr<StationExprLOFAR>        Ptr;
     typedef shared_ptr<const StationExprLOFAR>  ConstPtr;
 
-    StationExprLOFAR(SourceDB &sourceDB, const ModelConfig &config,
-        const Instrument::ConstPtr &instrument,
-        const casa::MDirection &phaseReference, double referenceFreq,
-        bool inverse = false);
+    StationExprLOFAR(SourceDB &sourceDB, const BufferMap &buffers,
+        const ModelConfig &config, const Instrument::ConstPtr &instrument,
+        double refFreq, const casa::MDirection &refPhase,
+        const casa::MDirection &refDelay, const casa::MDirection &refTile,
+        bool inverse = false, bool useMMSE = false, double sigmaMMSE = 0.0);
 
-    StationExprLOFAR(SourceDB &sourceDB, const ModelConfig &config,
-        const VisBuffer::Ptr &buffer, bool inverse = false);
+    StationExprLOFAR(SourceDB &sourceDB, const BufferMap &buffers,
+        const ModelConfig &config, const VisBuffer::Ptr &buffer,
+        bool inverse = false, bool useMMSE = false, double sigmaMMSE = 0.0);
 
     // \name ExprSet interface implementation
     // These methods form an implementation of the ExprSet interface.
@@ -81,55 +83,22 @@ public:
     // @}
 
 private:
-    void initialize(SourceDB &sourceDB, const ModelConfig &config,
-        bool inverse);
+    void initialize(SourceDB &sourceDB,
+        const BufferMap &buffers,
+        const ModelConfig &config,
+        const Instrument::ConstPtr &instrument,
+        double refFreq,
+        const casa::MDirection &refPhase,
+        const casa::MDirection &refDelay,
+        const casa::MDirection &refTile,
+        bool inverse,
+        bool useMMSE,
+        double sigmaMMSE);
 
-    // Expressions related to positions.
-    Expr<Vector<2> >::Ptr makeSourcePositionExpr(const string &name);
-    Expr<Vector<2> >::Ptr makePatchPositionExpr(SourceDB &sourceDB,
-        const string &patch);
-    Expr<Vector<2> >::Ptr makeRefPositionExpr(const casa::MDirection &position)
-        const;
-    Expr<Vector<2> >::Ptr makeAzElExpr(const Station::ConstPtr &station,
-        const Expr<Vector<2> >::Ptr &direction) const;
-    Expr<Vector<2> >::Ptr makeITRFExpr(const AntennaField::ConstPtr &field,
-        const Expr<Vector<2> >::Ptr &direction) const;
-
-    // Direction independent effects.
-    Expr<JonesMatrix>::Ptr makeBandpassExpr(const Station::ConstPtr &station);
-    Expr<JonesMatrix>::Ptr makeClockExpr(const Station::ConstPtr &station);
-    Expr<JonesMatrix>::Ptr makeGainExpr(const Station::ConstPtr &station,
-        bool phasors);
-
-    // Direction dependent effects.
-    Expr<JonesMatrix>::Ptr
-        makeDirectionalGainExpr(const Station::ConstPtr &station,
-            const string &patch, bool phasors);
-    Expr<JonesMatrix>::Ptr makeBeamExpr(const Station::ConstPtr &station,
-        double referenceFreq, const BeamConfig &config,
-        const Expr<Vector<3> >::Ptr &exprITRF,
-        const Expr<Vector<3> >::Ptr &exprRefITRF) const;
-    Expr<JonesMatrix>::Ptr makeIonosphereExpr(const Station::ConstPtr &station,
-        const casa::MPosition &refPosition,
-        const Expr<Vector<2> >::Ptr &exprAzEl,
-        const IonosphereExpr::Ptr &exprIonosphere) const;
-    Expr<JonesMatrix>::Ptr
-        makeFaradayRotationExpr(const Station::ConstPtr &station,
-            const string &patch);
-
-    // Right multiply accumulator by effect. Return effect if accumulator is
-    // uninitialized.
-    Expr<JonesMatrix>::Ptr compose(const Expr<JonesMatrix>::Ptr &accumulator,
-        const Expr<JonesMatrix>::Ptr &effect) const;
-
-    // Load element beam model coefficients from disk.
-    HamakerBeamCoeff loadBeamModelCoeff(casa::Path path,
-        const AntennaField::ConstPtr &field) const;
-
-    // Attributes.
-    Instrument::ConstPtr            itsInstrument;
-    casa::MDirection                itsPhaseReference;
-    double                          itsReferenceFreq;
+    PatchExprBase::Ptr makePatchExpr(const string &name,
+        const casa::MDirection &refPhase,
+        SourceDB &sourceDB,
+        const BufferMap &buffers);
 
     Request                         itsRequest;
     Cache                           itsCache;

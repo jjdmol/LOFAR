@@ -168,6 +168,10 @@ class EC:
             (stationType[type], wxt520Text[wxt520]))
         return type, wxt520
     #---------------------------------------
+    def getStatusData(self):
+        self.sendCmd(self.EC_STATUS)
+        (cmdId, status, PL2) = self.recvAck()
+        return PL2
     
     def getStatus(self):
         ec_mode = ('OFF','ON','AUTO','MANUAL','STARTUP','AUTO-SEEK','ABSENT')

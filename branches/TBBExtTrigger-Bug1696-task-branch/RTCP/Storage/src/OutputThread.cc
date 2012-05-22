@@ -35,6 +35,7 @@
 #include <boost/format.hpp>
 
 #include <errno.h>
+#include <time.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -105,14 +106,23 @@ OutputThread::OutputThread(const Parset &parset, OutputType outputType, unsigned
   itsReceiveQueue(receiveQueue),
   itsBlocksWritten(0),
   itsBlocksDropped(0),
-  itsNextSequenceNumber(0),
-  itsThread(this, &OutputThread::mainLoop, itsLogPrefix)
+  itsNextSequenceNumber(0)
 {
+}
+
+
+void OutputThread::start()
+{
+  itsThread = new Thread(this, &OutputThread::mainLoop, itsLogPrefix);
 }
 
 
 void OutputThread::createMS()
 {
+  // even the HDF5 writer accesses casacore, to perform conversions
+  ScopedLock sl(casacoreMutex);
+  ScopedDelayCancellation dc; // don't cancel casacore calls
+
   std::string directoryName = itsParset.getDirectoryName(itsOutputType, itsStreamNr);
   std::string fileName	    = itsParset.getFileName(itsOutputType, itsStreamNr);
   std::string path	    = directoryName + "/" + fileName;
@@ -121,9 +131,6 @@ void OutputThread::createMS()
 
   if (itsOutputType == CORRELATED_DATA) {
 #if defined HAVE_AIPSPP
-    ScopedLock sl(casacoreMutex);
-    ScopedDelayCancellation dc; // don't cancel casacore calls
-
     MeasurementSetFormat myFormat(itsParset, 512);
             
     /// Make MeasurementSet filestructures and required tables
@@ -133,7 +140,7 @@ void OutputThread::createMS()
     LOG_INFO_STR(itsLogPrefix << "MeasurementSet created");
 #endif // defined HAVE_AIPSPP
 
-    if (itsParset.getLofarStManVersion() == 2) {
+    if (itsParset.getLofarStManVersion() > 1) {
       string seqfilename = str(boost::format("%s/table.f0seqnr") % path);
       
       try {
@@ -149,25 +156,15 @@ void OutputThread::createMS()
   LOG_INFO_STR(itsLogPrefix << "Writing to " << path);
 
   try {
-#ifdef USE_DAL  
-    if (path.rfind(".h5") == path.length() - strlen(".h5")) {
-      // HDF5 writer requested
-      switch (itsOutputType) {
-        case COHERENT_STOKES:
-          itsWriter = new MSWriterDAL<float,3>(path.c_str(), itsParset, itsOutputType, itsStreamNr, itsIsBigEndian);
-          break;
-        case BEAM_FORMED_DATA:
-          itsWriter = new MSWriterDAL<fcomplex,3>(path.c_str(), itsParset, itsOutputType, itsStreamNr, itsIsBigEndian);
-          break;
-        default:
-          THROW(StorageException, "HDF5 not supported for this data type");
-      }
-    } else {
-      itsWriter = new MSWriterFile(path.c_str());
+    // HDF5 writer requested
+    switch (itsOutputType) {
+      case BEAM_FORMED_DATA:
+        itsWriter = new MSWriterDAL<float,3>(path.c_str(), itsParset, itsStreamNr, itsIsBigEndian);
+        break;
+      default:
+        itsWriter = new MSWriterFile(path, itsOutputType == BEAM_FORMED_DATA);
+        break;
     }
-#else 
-    itsWriter = new MSWriterFile(path.c_str());
-#endif    
   } catch (SystemCallException &ex) {
     LOG_ERROR_STR(itsLogPrefix << "Cannot open " << path << ": " << ex);
     itsWriter = new MSWriterNull;
@@ -189,7 +186,7 @@ void OutputThread::writeSequenceNumber(StreamableData *data)
 {
   if (itsSequenceNumbersFile != 0) {
     // write the sequencenumber in correlator endianness, no byteswapping
-    itsSequenceNumbers.push_back(data->sequenceNumber);
+    itsSequenceNumbers.push_back(data->sequenceNumber(true));
     
     if (itsSequenceNumbers.size() > 64)
       flushSequenceNumbers();
@@ -201,7 +198,7 @@ void OutputThread::checkForDroppedData(StreamableData *data)
 {
   // TODO: check for dropped data at end of observation
   
-  unsigned droppedBlocks = data->byteSwappedSequenceNumber() - itsNextSequenceNumber;
+  unsigned droppedBlocks = data->sequenceNumber() - itsNextSequenceNumber;
 
   if (droppedBlocks > 0) {
     itsBlocksDropped += droppedBlocks;
@@ -209,16 +206,18 @@ void OutputThread::checkForDroppedData(StreamableData *data)
     LOG_WARN_STR(itsLogPrefix << "OutputThread dropped " << droppedBlocks << (droppedBlocks == 1 ? " block" : " blocks"));
   }
 
-  itsNextSequenceNumber = data->byteSwappedSequenceNumber() + 1;
+  itsNextSequenceNumber = data->sequenceNumber() + 1;
   itsBlocksWritten ++;
 }
 
 
-static Semaphore writeSemaphore(3);
+static Semaphore writeSemaphore(300);
 
 
 void OutputThread::doWork()
 {
+  time_t prevlog = 0;
+
   for (SmartPtr<StreamableData> data; (data = itsReceiveQueue.remove()) != 0; itsFreeQueue.append(data.release())) {
     //NSTimer writeTimer("write data", false, false);
 
@@ -238,7 +237,18 @@ void OutputThread::doWork()
 
     writeSemaphore.up();
     //writeTimer.stop();
-    LOG_INFO_STR(itsLogPrefix << "Written block with seqno = " << data->byteSwappedSequenceNumber());
+
+    time_t now = time(0L);
+
+    if (now > prevlog + 5) {
+      // print info every 5 seconds
+      LOG_INFO_STR(itsLogPrefix << "Written block with seqno = " << data->sequenceNumber() << ", " << itsBlocksWritten << " blocks written, " << itsBlocksDropped << " blocks dropped");
+
+      prevlog = now;
+    } else {
+      // print debug info for the other blocks
+      LOG_DEBUG_STR(itsLogPrefix << "Written block with seqno = " << data->sequenceNumber() << ", " << itsBlocksWritten << " blocks written, " << itsBlocksDropped << " blocks dropped");
+    }
   }
 }
 
@@ -248,7 +258,7 @@ void OutputThread::cleanUp()
 
   float dropPercent = itsBlocksWritten + itsBlocksDropped == 0 ? 0.0 : (100.0 * itsBlocksDropped) / (itsBlocksWritten + itsBlocksDropped);
 
-  LOG_INFO_STR(itsLogPrefix << itsBlocksWritten << " blocks written, " << itsBlocksDropped << " blocks dropped: " << std::setprecision(3) << dropPercent << "% lost" );
+  LOG_INFO_STR(itsLogPrefix << "Finished writing: " << itsBlocksWritten << " blocks written, " << itsBlocksDropped << " blocks dropped: " << std::setprecision(3) << dropPercent << "% lost" );
 }
 
 

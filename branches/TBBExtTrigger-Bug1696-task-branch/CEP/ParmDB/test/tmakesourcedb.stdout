@@ -1,3 +1,4 @@
+test 1 ...
 Wrote 0 patches (out of 0) and 2 sources (out of 2) into tmakesourcedb_tmp.sdb
 Dec:cygnus  type=scalar
     values:  0.785398  shape=[1, 1]
@@ -44,8 +45,9 @@ V:cygnus  type=scalar
 V:sun  type=scalar
     values:  0  shape=[1, 1]
     pert=1e-06 pert_rel=y
-15 parms and 15 values found
+15 default parms and 15 values found
 
+test 2 ...
 Wrote 0 patches (out of 0) and 2 sources (out of 2) into tmakesourcedb_tmp.sdb
 Dec:cygnus  type=scalar
     values:  0.785398  shape=[1, 1]
@@ -101,8 +103,9 @@ V:cygnus  type=scalar
 V:sun  type=scalar
     values:  0  shape=[1, 1]
     pert=1e-06 pert_rel=y
-18 parms and 18 values found
+18 default parms and 18 values found
 
+test 3 ...
 Wrote 0 patches (out of 0) and 1 sources (out of 1) into tmakesourcedb_tmp.sdb1
 Dec:cygAA  type=scalar
     values:  0.785398  shape=[1, 1]
@@ -122,8 +125,9 @@ U:cygAA  type=scalar
 V:cygAA  type=scalar
     values:  0  shape=[1, 1]
     pert=1e-06 pert_rel=y
-6 parms and 6 values found
+6 default parms and 6 values found
 
+test 4 ...
 Wrote 1 patches (out of 1) and 3 sources (out of 3) into tmakesourcedb_tmp.sdb
 Dec:cygnus  type=scalar
     values:  0.802851  shape=[1, 1]
@@ -245,7 +249,7 @@ a0:b:lena  type=scalar
 a0:b:sun  type=scalar
     values:  3  shape=[1, 1]
     pert=1e-06 pert_rel=y
-40 parms and 40 values found
+40 default parms and 40 values found
 >>>
 Successful readonly open of default-locked table tmakesourcedb_tmp.sdb/SOURCES/PATCHES: 5 columns, 1 rows
 patch nrow = 1

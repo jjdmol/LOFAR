@@ -80,6 +80,8 @@ namespace rfiStrategy {
 			void writeCombineFlagResults(const class CombineFlagResults &action);
 			void writeCutAreaAction(const class CutAreaAction &action);
 			void writeDirectionalCleanAction(const class DirectionalCleanAction &action);
+			void writeDirectionProfileAction(const class DirectionProfileAction &action);
+			void writeEigenValueVerticalAction(const class EigenValueVerticalAction &action);
 			void writeForEachBaselineAction(const class ForEachBaselineAction &action);
 			void writeForEachComplexComponentAction(const class ForEachComplexComponentAction &action);
 			void writeForEachMSAction(const class ForEachMSAction &action);
@@ -90,8 +92,10 @@ namespace rfiStrategy {
 			void writeFringeStopAction(const class FringeStopAction &action);
 			void writeImagerAction(const class ImagerAction &action);
 			void writeIterationBlock(const class IterationBlock &action);
+			void writeNormalizeVarianceAction(const class NormalizeVarianceAction &action);
 			void writePlotAction(const class PlotAction &action);
 			void writeQuickCalibrateAction(const class QuickCalibrateAction &action);
+			void writeRawAppenderAction(const class RawAppenderAction &action);
 			void writeSetFlaggingAction(const class SetFlaggingAction &action);
 			void writeSetImageAction(const class SetImageAction &action);
 			void writeSlidingWindowFitAction(const class SlidingWindowFitAction &action);

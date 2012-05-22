@@ -20,8 +20,6 @@ set(inst_HEADERS
   SparseSet.h
   Exceptions.h
   StreamableData.h
-  StokesData.h
-  BFRawFormat.h
   TransposedData.h
   TriggerData.h
   InverseFilteredData.h

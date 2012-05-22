@@ -25,6 +25,7 @@
 
 #include <MSLofar/BeamTables.h>
 #include <casa/Inputs.h>
+#include <tables/Tables/ScalarColumn.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 
 using namespace LOFAR;
@@ -42,13 +43,13 @@ int main (int argc, char* argv[])
     inputs.create ("antennaset", "",
 		   "Antenna set used (e.g. LBA_INNER)",
 		   "string");
-    inputs.create ("antennasetfile", "/opt/cep/lofar/share/AntennaSets.conf",
+    inputs.create ("antennasetfile", "/opt/lofar/etc/AntennaSets.conf",
 		   "Name of the AntennaSet file",
 		   "string");
-    inputs.create ("antennafielddir", "/opt/cep/lofar/share/AntennaFields",
+    inputs.create ("antennafielddir", "/opt/lofar/etc/StaticMetaData",
 		   "Directory where the AntennaField.conf files reside",
 		   "string");
-    inputs.create ("ihbadeltadir", "/opt/cep/lofar/share/iHBADeltas",
+    inputs.create ("ihbadeltadir", "/opt/lofar/etc/StaticMetaData",
 		   "Directory where the iHBADelta.conf files reside",
 		   "string");
     inputs.create ("overwrite", "false",
@@ -62,7 +63,19 @@ int main (int argc, char* argv[])
     String hbaDeltaDir = inputs.getString("ihbadeltadir");
     Bool   overwrite   = inputs.getBool  ("overwrite");
     MeasurementSet ms(msName, Table::Update);
-    BeamTables::create (ms, overwrite);
+     // If needed, try to get the AntennaSet name from the Observation table.
+    if (antSet.empty()) {
+      if (ms.observation().tableDesc().isColumn ("LOFAR_ANTENNA_SET")) {
+        ROScalarColumn<String> antSetCol(ms.observation(), "LOFAR_ANTENNA_SET");
+        antSet = antSetCol(0);
+        LOG_DEBUG_STR ("Using AntennaSet " << antSet
+                       << " from OBSERVATION subtable");
+
+      }
+    }
+    ASSERTSTR (!antSet.empty(), "No LOFAR_ANTENNA_SET found in OBSERVATION"
+               " subtable of " << msName);
+   BeamTables::create (ms, overwrite);
     BeamTables::fill   (ms, antSet, antSetFile, antFieldDir, hbaDeltaDir, true);
   } catch (std::exception& x) {
     cout << "Unexpected exception: " << x.what() << endl;

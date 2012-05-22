@@ -241,6 +241,9 @@ static void applyBaseline(boost::multi_array<dcomplex, 4>::reference vis,
 void apply(const StationExprLOFAR::Ptr &expr, const VisBuffer::Ptr &buffer,
     const BaselineMask &mask)
 {
+    ASSERTSTR(buffer->hasCovariance(), "Covariance information required to"
+        " compute corrected visibilities.");
+
     // For now, assume default correlation order.
     ASSERT(buffer->nCorrelations() == 4);
     ASSERT(buffer->correlations()[0] == Correlation::XX);

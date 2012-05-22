@@ -54,8 +54,8 @@ class bbs(LOFARnodeTCP):
                 "BBDB.Host": db_host,
                 "ParmLog": "",
                 "ParmLoglevel": "",
-                "ParmDB.Sky": os.path.join(infile, "sky"),
-                "ParmDB.Instrument": os.path.join(infile, "instrument")
+                "ParmDB.Sky": infile + ".sky",
+                "ParmDB.Instrument": infile + ".instrument"
             }.iteritems():
                 kernel_parset.add(key, value)
             kernel_parset.writeFile(parset_filename)

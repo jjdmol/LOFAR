@@ -30,7 +30,9 @@
 //# Includes
 #include <Common/LofarConstants.h>
 #include <Common/lofar_bitset.h>
+#include <Common/lofar_iostream.h>
 #include <Common/lofar_map.h>
+#include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 #include <ApplCommon/StationInfo.h>
 

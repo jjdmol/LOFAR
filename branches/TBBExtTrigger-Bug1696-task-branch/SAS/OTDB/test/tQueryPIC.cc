@@ -73,7 +73,7 @@ int main (int	argc, char*	argv[]) {
 
 	// try to resolve the database name
 	string 		dbName("otdbtest");
-	string		hostName("dop50.astron.nl");
+	string		hostName("rs005.astron.nl");
 	char		line[64];
 	int32		sleeptime = 1;
 	ifstream	inFile;

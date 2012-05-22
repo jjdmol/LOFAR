@@ -32,7 +32,7 @@
 */
 class ColorScale {
 	public:
-		ColorScale(Glib::RefPtr<Gdk::Drawable> drawable);
+		ColorScale();
 		
 		virtual ~ColorScale()
 		{
@@ -44,18 +44,28 @@ class ColorScale {
 			_topMargin = topMargin;
 			_width = 0.0;
 		}
-		double GetWidth()
+		double GetWidth(Cairo::RefPtr<Cairo::Context> cairo)
 		{
 			if(_width == 0.0)
-				initWidth();
+				initWidth(cairo);
 			return _width;
 		}
 		void Draw(Cairo::RefPtr<Cairo::Context> cairo);
 		void InitializeNumericTicks(double min, double max)
 		{
+			_width = 0.0;
 			_min = min;
 			_max = max;
+			_isLogaritmic = false;
 			_verticalPlotScale.InitializeNumericTicks(min, max);
+		}
+		void InitializeLogarithmicTicks(double min, double max)
+		{
+			_width = 0.0;
+			_min = min;
+			_max = max;
+			_isLogaritmic = true;
+			_verticalPlotScale.InitializeLogarithmicTicks(min, max);
 		}
 		void SetColorValue(double value, double red, double green, double blue)
 		{
@@ -65,6 +75,22 @@ class ColorScale {
 			cValue.blue = blue;
 			_colorValues.insert(std::pair<double, ColorValue>(value, cValue));
 		}
+		void SetDescriptionFontSize(double fontSize)
+		{
+			_verticalPlotScale.SetDescriptionFontSize(fontSize);
+		}
+		void SetTickValuesFontSize(double fontSize)
+		{
+			_verticalPlotScale.SetTickValuesFontSize(fontSize);
+		}
+		void SetDrawWithDescription(bool drawWithDescription)
+		{
+			_verticalPlotScale.SetDrawWithDescription(drawWithDescription);
+		}
+		void SetUnitsCaption(const std::string &caption)
+		{
+			_verticalPlotScale.SetUnitsCaption(caption);
+		}
 	private:
 		static const double BAR_WIDTH;
 		
@@ -73,15 +99,14 @@ class ColorScale {
 			double red, green, blue;
 		};
 		
-		void initWidth();
+		void initWidth(Cairo::RefPtr<Cairo::Context> cairo);
 		
 		double _plotWidth, _plotHeight, _topMargin;
 		double _scaleWidth, _width;
 		double _min, _max;
-		Glib::RefPtr<Gdk::Drawable> _drawable;
-		Cairo::RefPtr<Cairo::Context> _cairo;
 		class VerticalPlotScale _verticalPlotScale;
 		std::map<double, ColorValue> _colorValues;
+		bool _isLogaritmic;
 };
 
 #endif

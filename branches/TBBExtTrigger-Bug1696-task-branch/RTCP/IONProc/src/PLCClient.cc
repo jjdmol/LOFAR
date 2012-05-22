@@ -31,6 +31,7 @@
 
 #include <iostream>
 #include <boost/format.hpp>
+#include <cstdio>
 
 using namespace std;
 using namespace LOFAR;
@@ -268,13 +269,19 @@ PLCClient::PLCClient( Stream &s, PLCRunnable &job, const std::string &procID, un
   itsStartTime( time(0L) ),
   itsDefineCalled( false ),
   itsDone( false ),
-  itsLogPrefix( str(format("[obs %u] [PLC] ") % observationID) ),
-  itsThread(new Thread(this, &PLCClient::mainLoop, "[PLC] ", 65535))
+  itsLogPrefix( str(format("[obs %u] [PLC] ") % observationID) )
 {
+}
+
+void PLCClient::start()
+{
+  itsThread = new Thread(this, &PLCClient::mainLoop, "[PLC] ", 65535);
 }
 
 PLCClient::~PLCClient()
 {
+  ASSERT(itsThread);
+
   // wait until ApplController called define(), so that invalid parsets are reported
   // as such before the connection is terminated
   struct timespec disconnectAt = { itsStartTime + defineWaitTimeout, 0 };
@@ -406,7 +413,14 @@ void PLCClient::mainLoop() {
 
         result = itsJob.define();
 
-        itsDefineCalled = true;
+        {
+          ScopedLock lock(itsMutex);
+
+          itsDefineCalled = true;
+
+          // signal our destructor that define() was called
+          itsCondition.broadcast();
+        }  
         break;
 
       case PCCmdInit:

@@ -71,12 +71,12 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
             )
 
         try:
-            format = self.config.get("logging", "format", raw=True)
+            format = self.config.get("logging", "format", raw = True)
         except:
             format = "%(asctime)s %(levelname)-7s %(name)s: %(message)s"
 
         try:
-            datefmt = self.config.get("logging", "datefmt", raw=True)
+            datefmt = self.config.get("logging", "datefmt", raw = True)
         except:
             datefmt = "%Y-%m-%d %H:%M:%S"
 
@@ -96,7 +96,7 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
         self.logger.addHandler(stream_handler)
         self.logger.addHandler(file_handler)
 
-    def run_task(self, configblock, datafiles=[], **kwargs):
+    def run_task(self, configblock, datafiles = [], **kwargs):
         """
         A task is a combination of a recipe and a set of parameters.
         Tasks can be prefedined in the task file set in the pipeline
@@ -181,9 +181,7 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
 
         if not self.inputs.has_key("start_time"):
             import datetime
-            self.inputs["start_time"] = datetime.datetime.utcnow().replace(microsecond=0).isoformat()
-
-        self.logger.debug("Pipeline start time: %s" % self.inputs['start_time'])
+            self.inputs["start_time"] = datetime.datetime.utcnow().replace(microsecond = 0).isoformat()
 
         # Config is passed in from spawning recipe. But if this is the start
         # of a pipeline, it won't have one.
@@ -213,6 +211,14 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
                              ",".join(self.inputs["task_files"])
         self.task_definitions.read(self.inputs["task_files"])
 
+        # Specify the working directory on the compute nodes
+        if not self.inputs.has_key('working_directory'):
+            self.inputs['working_directory'] = self.config.get(
+                "DEFAULT", "working_directory"
+            )
+        else:
+            self.config.set("DEFAULT", "working_directory", self.inputs['working_directory'])
+            
         try:
             self.recipe_path = [
                 os.path.join(root, 'master') for root in utilities.string_to_list(
@@ -221,6 +227,7 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
             ]
         except NoOptionError:
             self.recipe_path = []
+
 
         # At this point, the recipe inputs must be complete. If not, exit.
         if not self.inputs.complete():
@@ -233,3 +240,6 @@ class BaseRecipe(RecipeIngredients, WSRTrecipe):
         # Otherwise, our parent should have done it for us.
         if isinstance(self.logger.parent, logging.RootLogger):
             self._setup_logging()
+
+        self.logger.debug("Pipeline start time: %s" % self.inputs['start_time'])
+

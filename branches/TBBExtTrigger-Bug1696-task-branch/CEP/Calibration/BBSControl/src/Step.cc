@@ -146,20 +146,25 @@ namespace LOFAR
         toString(itsModelConfig.useClock()));
       ps.add(prefix + "Model.Gain.Enable",
         toString(itsModelConfig.useGain()));
+      ps.add(prefix + "Model.TEC.Enable",
+        toString(itsModelConfig.useTEC()));
       ps.add(prefix + "Model.DirectionalGain.Enable",
         toString(itsModelConfig.useDirectionalGain()));
-      ps.add(prefix + "Model.FaradayRotation.Enable",
-        toString(itsModelConfig.useFaradayRotation()));
 
       ps.add(prefix + "Model.Beam.Enable", toString(itsModelConfig.useBeam()));
       if(itsModelConfig.useBeam()) {
         const BeamConfig &config = itsModelConfig.getBeamConfig();
         ps.add(prefix + "Model.Beam.Mode", BeamConfig::asString(config.mode()));
+        ps.add(prefix + "Model.Beam.UseChannelFreq",
+          toString(config.useChannelFreq()));
         ps.add(prefix + "Model.Beam.ConjugateAF",
           toString(config.conjugateAF()));
-        ps.add(prefix + "Model.Beam.Element.Path",
-          config.getElementPath().originalName());
       }
+
+      ps.add(prefix + "Model.DirectionalTEC.Enable",
+        toString(itsModelConfig.useDirectionalTEC()));
+      ps.add(prefix + "Model.FaradayRotation.Enable",
+        toString(itsModelConfig.useFaradayRotation()));
 
       ps.add(prefix + "Model.Ionosphere.Enable",
         toString(itsModelConfig.useIonosphere()));
@@ -178,13 +183,13 @@ namespace LOFAR
       if(itsModelConfig.useFlagger()) {
         const FlaggerConfig &config = itsModelConfig.getFlaggerConfig();
         ps.add(prefix + "Model.Flagger.Threshold",
-          toString(config.getThreshold()));
+          toString(config.threshold()));
       }
 
       ps.add(prefix + "Model.Cache.Enable",
         toString(itsModelConfig.useCache()));
 
-      ps.add(prefix + "Model.Sources", toString(itsModelConfig.getSources()));
+      ps.add(prefix + "Model.Sources", toString(itsModelConfig.sources()));
 
       LOG_TRACE_VAR_STR("\nContents of ParameterSet ps:\n" << ps);
     }
@@ -211,13 +216,12 @@ namespace LOFAR
       itsModelConfig.setGain(ps.getBool("Model.Gain.Enable",
         itsModelConfig.useGain()));
 
+      itsModelConfig.setTEC(ps.getBool("Model.TEC.Enable",
+        itsModelConfig.useTEC()));
+
       itsModelConfig.setDirectionalGain
         (ps.getBool("Model.DirectionalGain.Enable",
           itsModelConfig.useDirectionalGain()));
-
-      itsModelConfig.setFaradayRotation
-        (ps.getBool("Model.FaradayRotation.Enable",
-          itsModelConfig.useFaradayRotation()));
 
       if(ps.getBool("Model.Beam.Enable", itsModelConfig.useBeam())) {
         BeamConfig parentConfig = itsModelConfig.getBeamConfig();
@@ -236,24 +240,23 @@ namespace LOFAR
           THROW(BBSControlException, "Key Model.Beam.Mode invalid.");
         }
 
+        bool useChannelFreq = ps.getBool("Model.Beam.UseChannelFreq",
+          parentConfig.useChannelFreq());
         bool conjugateAF = ps.getBool("Model.Beam.ConjugateAF",
-            parentConfig.conjugateAF());
+          parentConfig.conjugateAF());
 
-        string defaultPath;
-        if(itsModelConfig.useBeam()) {
-          defaultPath = parentConfig.getElementPath().originalName();
-        } else {
-          defaultPath = "$LOFARROOT/share";
-        }
-
-        string elementPath = ps.getString("Model.Beam.Element.Path",
-          defaultPath);
-
-        itsModelConfig.setBeamConfig(BeamConfig(mode, conjugateAF,
-          casa::Path(elementPath)));
+        itsModelConfig.setBeamConfig(BeamConfig(mode, useChannelFreq,
+          conjugateAF));
       } else {
         itsModelConfig.clearBeamConfig();
       }
+
+      itsModelConfig.setDirectionalTEC(ps.getBool("Model.DirectionalTEC.Enable",
+          itsModelConfig.useDirectionalTEC()));
+
+      itsModelConfig.setFaradayRotation
+        (ps.getBool("Model.FaradayRotation.Enable",
+          itsModelConfig.useFaradayRotation()));
 
       if(ps.getBool("Model.Ionosphere.Enable", itsModelConfig.useIonosphere()))
       {
@@ -291,7 +294,7 @@ namespace LOFAR
         double threshold = 0.0;
         if(itsModelConfig.useFlagger()) {
           threshold = ps.getDouble("Model.Flagger.Threshold",
-            itsModelConfig.getFlaggerConfig().getThreshold());
+            itsModelConfig.getFlaggerConfig().threshold());
         } else {
           threshold = ps.getDouble("Model.Flagger.Threshold");
         }
@@ -305,7 +308,7 @@ namespace LOFAR
         itsModelConfig.useCache()));
 
       itsModelConfig.setSources(ps.getStringVector("Model.Sources",
-        itsModelConfig.getSources()));
+        itsModelConfig.sources()));
     }
 
 

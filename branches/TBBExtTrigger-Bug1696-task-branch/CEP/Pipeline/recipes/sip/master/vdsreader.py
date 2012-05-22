@@ -9,7 +9,7 @@ import lofarpipe.support.utilities as utilities
 import lofarpipe.support.lofaringredient as ingredient
 
 from lofarpipe.support.baserecipe import BaseRecipe
-from lofarpipe.support.utilities import get_parset
+from lofar.parameterset import parameterset
 
 
 class vdsreader(BaseRecipe):
@@ -40,7 +40,7 @@ class vdsreader(BaseRecipe):
         super(vdsreader, self).go()
 
         try:
-            gvds = get_parset(self.inputs['gvds'])
+            gvds = parameterset(self.inputs['gvds'])
         except:
             self.logger.error("Unable to read G(V)DS file")
             raise

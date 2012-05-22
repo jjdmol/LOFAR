@@ -113,12 +113,10 @@ private:
     Cube<bool> fullResFlags(itsNChan,itsNAvgTime,itsNBl);
     fullResFlags = true;   // takes care of missing times at the end
     weights = 0;
-    if (!itsFlag) {
-      for (int j=itsCount*itsNAvgTime; j<itsCount*itsNAvgTime+navgtime; ++j) {
-        for (int i=0; i<int(data.size()); ++i) {
-          data.data()[i] += Complex(i+j*10,i-1000+j*6);
-          weights.data()[i] += float(1);
-        }
+    for (int j=itsCount*itsNAvgTime; j<itsCount*itsNAvgTime+navgtime; ++j) {
+      for (int i=0; i<int(data.size()); ++i) {
+        data.data()[i] += Complex(i+j*10,i-1000+j*6);
+        weights.data()[i] += float(1);
       }
       fullResFlags(Slicer(IPosition(3,0,0,0),
                           IPosition(3,itsNChan,navgtime,itsNBl))) = itsFlag;
@@ -281,6 +279,7 @@ private:
         }
       }
     }
+    ASSERT (allNE(weights, float(0.)));
     for (uint i=0; i<result.size(); ++i) {
       result.data()[i] /= weights.data()[i];
     }

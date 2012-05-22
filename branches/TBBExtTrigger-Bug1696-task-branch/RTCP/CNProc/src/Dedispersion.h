@@ -3,6 +3,7 @@
 
 
 #include <Common/lofar_complex.h>
+#include <Interface/Allocator.h>
 #include <Interface/BeamFormedData.h>
 #include <Interface/FilteredData.h>
 #include <Interface/MultiDimArray.h>
@@ -29,14 +30,14 @@ namespace RTCP {
 class Dedispersion
 {
   protected:
-	 Dedispersion(const Parset &, const std::vector<unsigned> &subbandIndices);
+	 Dedispersion(const Parset &, const std::vector<unsigned> &subbandIndices, std::vector<double> &DMs, Allocator &allocator = heapAllocator);
 
   public:
 	 ~Dedispersion();
 
   protected:
     void initFFT(fcomplex *data);
-    void forwardFFT(fcomplex *data);
+    void forwardFFT(const fcomplex *data);
     void backwardFFT(fcomplex *data);
 
     const unsigned itsNrChannels, itsNrSamplesPerIntegration, itsFFTsize;
@@ -50,19 +51,22 @@ class Dedispersion
     fftw_plan  itsFFTWforwardPlan, itsFFTWbackwardPlan;
 #endif
 
-    void initChirp(const Parset &, const std::vector<unsigned> &subbandIndices);
-    void applyChirp(unsigned subbandIndex, unsigned channel);
+    void initChirp(const Parset &, const std::vector<unsigned> &subbandIndices, std::vector<double> &uniqueDMs);
+    void applyChirp(unsigned subbandIndex, unsigned dmIndex, unsigned channel);
 
-    std::vector<SmartPtr<Matrix<fcomplex> > > itsChirp; // (*[subbandIndex])[channel][time]
+    Matrix<SmartPtr<Matrix<fcomplex> > > itsChirp; // (*[subbandIndex])[dm][channel][time]
+    std::map<double,unsigned> itsDMindices;
+
+    Allocator &itsAllocator;
 };
 
 
 class DedispersionBeforeBeamForming : public Dedispersion
 {
   public:
-    DedispersionBeforeBeamForming(const Parset &, FilteredData *, const std::vector<unsigned> &subbandIndices);
+    DedispersionBeforeBeamForming(const Parset &, FilteredData *, const std::vector<unsigned> &subbandIndices, std::vector<double> &DMs, Allocator &allocator = heapAllocator);
 
-    void dedisperse(FilteredData *, unsigned subbandIndex);
+    void dedisperse(const FilteredData *, FilteredData *, unsigned instat, unsigned outstat, unsigned firstch, unsigned numch, unsigned subbandIndex, double dm);
 
   private:
     const unsigned itsNrStations;
@@ -72,12 +76,9 @@ class DedispersionBeforeBeamForming : public Dedispersion
 class DedispersionAfterBeamForming : public Dedispersion
 {
   public:
-    DedispersionAfterBeamForming(const Parset &, BeamFormedData *, const std::vector<unsigned> &subbandIndex);
+    DedispersionAfterBeamForming(const Parset &, BeamFormedData *, const std::vector<unsigned> &subbandIndex, std::vector<double> &DMs, Allocator &allocator = heapAllocator);
 
-    void dedisperse(BeamFormedData *, unsigned subbandIndex, unsigned beam);
-
-  private:
-    const unsigned itsNrBeams;
+    void dedisperse(BeamFormedData *, unsigned subbandIndex, unsigned beam, double dm);
 };
 
 

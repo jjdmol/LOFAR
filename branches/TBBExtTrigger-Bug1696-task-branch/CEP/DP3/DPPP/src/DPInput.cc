@@ -53,6 +53,21 @@ namespace LOFAR {
       return freqs;
     }
 
+    Vector<double> DPInput::chanWidths (uint nchanAvg) const
+    {
+      uint nchan = itsChanWidths.size() / nchanAvg;
+      Vector<double> widths(nchan);
+      widths = 0.;
+      int inx = 0;
+      for (uint i=0; i<nchan; ++i) {
+        for (uint j=0; j<nchanAvg; ++j) {
+          widths[i] += itsChanWidths[inx];
+          inx++;
+        }
+      }
+      return widths;
+    }
+
     const vector<double>& DPInput::getBaselineLengths() const
     {
       // Calculate the baseline lengths if not done yet.
@@ -96,6 +111,7 @@ namespace LOFAR {
 
     Cube<bool> DPInput::fetchFullResFlags (const DPBuffer& buf,
                                            const RefRows& rowNrs,
+                                           NSTimer& timer,
                                            bool merge)
     {
       // If already defined in the buffer, return those fullRes flags.
@@ -103,7 +119,9 @@ namespace LOFAR {
         return buf.getFullResFlags();
       }
       // No fullRes flags in buffer, so get them from the input.
+      timer.stop();
       Cube<bool> fullResFlags (getFullResFlags(rowNrs));
+      timer.start();
       if (fullResFlags.empty()) {
         // No fullRes flags in input; form them from the flags in the buffer.
         // Only use the XX flags; no averaging done, thus navgtime=1.
@@ -123,7 +141,8 @@ namespace LOFAR {
     }
 
     Cube<float> DPInput::fetchWeights (const DPBuffer& buf,
-                                       const RefRows& rowNrs)
+                                       const RefRows& rowNrs,
+                                       NSTimer& timer)
     {
       // If already defined in the buffer, return those weights.
       if (! buf.getWeights().empty()) {
@@ -131,18 +150,25 @@ namespace LOFAR {
       }
       // No weights in buffer, so get them from the input.
       // It might need the data and flags in the buffer.
-      return getWeights(rowNrs, buf);
+      timer.stop();
+      Cube<float> weights(getWeights(rowNrs, buf));
+      timer.start();
+      return weights;
     }
 
     Matrix<double> DPInput::fetchUVW (const DPBuffer& buf,
-                                      const RefRows& rowNrs)
+                                      const RefRows& rowNrs,
+                                      NSTimer& timer)
     {
       // If already defined in the buffer, return those UVW.
       if (! buf.getUVW().empty()) {
         return buf.getUVW();
       }
       // No UVW in buffer, so get them from the input.
-      return getUVW(rowNrs);
+      timer.stop();
+      Matrix<double> uvws(getUVW(rowNrs));
+      timer.start();
+      return uvws;
     }
 
     Matrix<double> DPInput::getUVW (const RefRows&)
@@ -154,8 +180,8 @@ namespace LOFAR {
     Cube<bool> DPInput::getFullResFlags (const RefRows&)
       { throw Exception ("DPInput::getFullResFlags not implemented"); }
 
-    Cube<Complex> DPInput::getData (const String&, const RefRows&)
-      { throw Exception ("DPInput::getData not implemented"); }
+    ///    Cube<Complex> DPInput::getData (const String&, const RefRows&)
+    ///      { throw Exception ("DPInput::getData not implemented"); }
 
   } //# end namespace
 }

@@ -8,7 +8,7 @@ Observation.Campaign.name = "Development"
 Observation.Campaign.title = "Development"
 
 # ----- Input streams
-Observation.VirtualInstrument.stationList = [CS302]
+Observation.VirtualInstrument.stationList = [S9,S10]
 #Observation.antennaSet=LBA_INNER
 #Observation.antennaSet=LBA_OUTER
 #Observation.antennaSet=LBA_X
@@ -19,12 +19,13 @@ Observation.VirtualInstrument.stationList = [CS302]
 #Observation.antennaSet=HBA_ONE
 #Observation.antennaSet=HBA_DUAL
 #Observation.antennaSet=HBA_JOINED
-Observation.antennaSet=LBA_INNER
+#Observation.antennaSet=LBA_INNER
+Observation.antennaSet=
 
 OLAP.realTime = T # T when reading data from stations, F when reading from disk
 
 Observation.nrPolarisations = 2
-Observation.nrSlotsInFrame = 62 # the number of subbands
+Observation.nrSlotsInFrame = 61 # the number of subbands
 OLAP.nrTimesInFrame = 16
 
 # Eg. [ 300..303, 40 ] --> [ 300,301,302,303,40 ]
@@ -32,14 +33,14 @@ OLAP.nrTimesInFrame = 16
 #     [ 3*(0;1;2;3)  ] --> [ 0,1,2,3,0,1,2,3,0,1,2,3 ]
 #     [ 3*(300..303) ] --> [ 300,301,302,303,300,301,302,303,300,301,302,303 ]
 #     [ 2*(5*0)      ] --> [ 0,0,0,0,0,0,0,0,0,0 ]       
-Observation.subbandList  = [100..343]
+Observation.subbandList  = [100..102]
 Observation.sampleClock  = 200
 OLAP.nrBitsPerSample     = 16
 
 # Observation.{beamList,rspBoardList,rspSlotList} are automatically derived from Observation.subbandList
-#Observation.beamList     = [248*0]
-#Observation.rspBoardList = [62*0,62*1,62*2,62*3]
-#Observation.rspSlotList  = [0..61,0..61,0..61,0..61]
+#Observation.beamList     = [244*0]
+#Observation.rspBoardList = [61*0,61*1,61*2,61*3]
+#Observation.rspSlotList  = [0..60,0..60,0..60,0..60]
 
 
 # Common coordinates are included at the bottom
@@ -48,30 +49,37 @@ Observation.Beam[0].angle1 = 5.2336866848083394 # Cygnus
 Observation.Beam[0].angle2 = 0.71094251447010637
 Observation.Beam[0].directionType = J2000
 
+Observation.Beam[0].nrTiedArrayBeams = 1
+Observation.Beam[0].TiedArrayBeam[0].angle1 = 0
+Observation.Beam[0].TiedArrayBeam[0].angle2 = 0
+Observation.Beam[0].TiedArrayBeam[0].directionType = J2000
+Observation.Beam[0].TiedArrayBeam[0].dispersionMeasure = 0
+Observation.Beam[0].TiedArrayBeam[0].coherent = F
+#Observation.Beam[0].TiedArrayBeam[1].angle1 = 0
+#Observation.Beam[0].TiedArrayBeam[1].angle2 = 0
+#Observation.Beam[0].TiedArrayBeam[1].directionType = J2000
+#Observation.Beam[0].TiedArrayBeam[1].dispersionMeasure = 1.2
+#Observation.Beam[0].TiedArrayBeam[2].angle1 = 0
+#Observation.Beam[0].TiedArrayBeam[2].angle2 = 0
+#Observation.Beam[0].TiedArrayBeam[2].directionType = J2000
+#Observation.Beam[0].TiedArrayBeam[2].dispersionMeasure = 1.3
+
 # ----- Output streams
-OLAP.Storage.hosts = [locus001]
+OLAP.Storage.hosts = [locus080]
 OLAP.Storage.targetDirectory = /data # will be appended with dirmask and filenammask
 
-OLAP.OLAP_Conn.rawDataOutputs = [tcp:10.174.0.1:4000] # output data go to lse001
-OLAP.OLAP_Conn.rawDataOutputOnly = F
-
-Observation.DataProducts.Output_Filtered.enabled = F
-Observation.DataProducts.Output_Beamformed.enabled = F
-Observation.DataProducts.Output_Correlated.enabled = T
-Observation.DataProducts.Output_CoherentStokes.enabled = F
-Observation.DataProducts.Output_IncoherentStokes.enabled = F
+Observation.DataProducts.Output_Beamformed.enabled = T
+Observation.DataProducts.Output_Correlated.enabled = F
 Observation.DataProducts.Output_Trigger.enabled = F
 
-Observation.DataProducts.Output_Filtered.namemask = L${OBSID}_SB${SUBBAND}.filtered
 Observation.DataProducts.Output_Correlated.namemask = L${OBSID}_SB${SUBBAND}_uv.MS
-Observation.DataProducts.Output_IncoherentStokes.namemask = L${OBSID}_SB${SUBBAND}_bf.incoherentstokes
 Observation.DataProducts.Output_Beamformed.namemask = L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.raw
-Observation.DataProducts.Output_CoherentStokes.namemask = L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.raw
 Observation.DataProducts.Output_Trigger.namemask = L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.trigger
 
 Observation.channelsPerSubband = 64
 
 OLAP.delayCompensation = T
+OLAP.coherentDedisperseChannels = T
 
 OLAP.correctBandPass = T
 #Observation.bandFilter = LBA_10_90
@@ -84,9 +92,15 @@ OLAP.Correlator.integrationTime = 1.0
 #OLAP.IONProc.integrationSteps = 1   # (generated)
 #OLAP.CNProc.integrationSteps  = 768 # (generated, multiple of 128 for pencil beams)
 
-OLAP.Stokes.which = I              # I or IQUV
-OLAP.Stokes.integrationSteps = 1   # time integration
-#OLAP.Stokes.nrChannelsPerSubband = 256 # reduce # channels by integration if desired
+OLAP.CNProc_CoherentStokes.subbandsPerFile = 244
+OLAP.CNProc_CoherentStokes.which = I                  # I or IQUV or XXYY
+OLAP.CNProc_CoherentStokes.timeIntegrationFactor = 1  # time integration
+OLAP.CNProc_CoherentStokes.channelsPerSubband = 0     # 0 = same as observation
+
+OLAP.CNProc_IncoherentStokes.subbandsPerFile = 244
+OLAP.CNProc_IncoherentStokes.which = I                # I or IQUV or XXYY
+OLAP.CNProc_IncoherentStokes.timeIntegrationFactor = 1 # time integration
+OLAP.CNProc_IncoherentStokes.channelsPerSubband = 0   # 0 = same as observation
 
 # ----- Beam forming
 OLAP.PencilInfo.flysEye = F           # don't form pencil beams, but turn stations
@@ -94,10 +108,6 @@ OLAP.PencilInfo.flysEye = F           # don't form pencil beams, but turn statio
 
 OLAP.PencilInfo.nrRings = 0 # 0 = just the central beam
 OLAP.PencilInfo.ringSize = 0.01
-OLAP.Storage.subbandsPerPart = 248
-OLAP.nrPencils = 1
-OLAP.Pencil[0].angle1 = 0
-OLAP.Pencil[0].angle2 = 0
 
 # Eg. tiedArray beamforming
 #Observation.Beamformer[0].stationList = "B01_0,B01_1"
@@ -155,10 +165,6 @@ OLAP.maxNetworkDelay = 0.5
 # ----- Storage internals
 OLAP.OLAP_Conn.IONProc_Storage_Transport = TCP
 #OLAP.OLAP_Conn.IONProc_Storage_Ports = [6300..7291] # only define this if you want specific ports to be used
-
-# ----- Global internals
-OLAP.log2SasMac = F
-OLAP.OLAP_Conn.log2SasMacOutputs = [tcp:0.0.0.0:24500]
 
 # ----- Coordinates of common sources
 #Observation.Beam[0].angle1 = 0                  # NCP

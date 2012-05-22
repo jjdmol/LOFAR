@@ -806,44 +806,62 @@ void MSCreate::fillBaseLines()
   }
 }
 
-void MSCreate::addImagerColumns()
+void MSCreate::addImagerColumns (MeasurementSet& ms)
 {
-  // Find data shape and tile shape.
-  IPosition shape(2,itsNrCorr,itsNrFreq);
-  ROTiledStManAccessor tsm(*itsMS, "TiledData");
-  IPosition dataTileShape(tsm.getTileShape(0));
-  {
+  // Find data shape from DATA column.
+  // Make tiles of appr. 1 MB.
+  IPosition shape = ROTableColumn(ms, MS::columnName(MS::DATA)).shapeColumn();
+  IPosition dataTileShape;
+  if (shape.empty()) {
+    dataTileShape = IPosition(3, 4, 64, (1024*1024)/(4*64*8));
+  } else {
+    dataTileShape = IPosition(3, shape[0], shape[1],
+                              (1024*1024)/(shape.product()*8));
+  }
+  String colName = MS::columnName(MS::CORRECTED_DATA);
+  if (! ms.tableDesc().isColumn(colName)) {
     TableDesc td;
-    String colName = MS::columnName(MS::CORRECTED_DATA);
-    td.addColumn (ArrayColumnDesc<Complex>(colName, "corrected data", shape,
-                                           ColumnDesc::FixedShape));
+    if (shape.empty()) {
+      td.addColumn (ArrayColumnDesc<Complex>(colName, "corrected data"));
+    } else {
+      td.addColumn (ArrayColumnDesc<Complex>(colName, "corrected data", shape,
+                                             ColumnDesc::FixedShape));
+    }
     TiledColumnStMan stMan("TiledCorrectedData", dataTileShape);
-    itsMS->addColumn (td, stMan);
+    ms.addColumn (td, stMan);
   }
-  {
+  colName = MS::columnName(MS::MODEL_DATA);
+  if (! ms.tableDesc().isColumn(colName)) {
     TableDesc td;
-    String colName = MS::columnName(MS::MODEL_DATA);
-    td.addColumn (ArrayColumnDesc<Complex>(colName, "model data", shape,
-                                           ColumnDesc::FixedShape));
+    if (shape.empty()) {
+      td.addColumn (ArrayColumnDesc<Complex>(colName, "model data"));
+    } else {
+      td.addColumn (ArrayColumnDesc<Complex>(colName, "model data", shape,
+                                             ColumnDesc::FixedShape));
+    }
     TiledColumnStMan stMan("TiledModelData", dataTileShape);
-    itsMS->addColumn (td, stMan);
+    ms.addColumn (td, stMan);
+    // Set MODEL_DATA keyword for casa::VisSet.
+    // Sort out the channel selection.
+    MSSpWindowColumns msSpW(ms.spectralWindow());
+    Matrix<Int> selection(2, msSpW.nrow());
+    // Fill in default selection (all bands and channels).
+    selection.row(0) = 0;    //start
+    selection.row(1) = msSpW.numChan().getColumn(); 
+    ArrayColumn<Complex> mcd(ms, colName);
+    mcd.rwKeywordSet().define ("CHANNEL_SELECTION",selection);
   }
-  {
+  colName = MS::columnName(MS::IMAGING_WEIGHT);
+  if (! ms.tableDesc().isColumn(colName)) {
     TableDesc td;
-    String colName = MS::columnName(MS::IMAGING_WEIGHT);
-    td.addColumn (ArrayColumnDesc<Float>(colName, "imaging weight",
-                                         IPosition(1, shape[1]),
-                                         ColumnDesc::FixedShape));
+    if (shape.empty()) {
+      td.addColumn (ArrayColumnDesc<Float>(colName, "imaging weight"));
+    } else {
+      td.addColumn (ArrayColumnDesc<Float>(colName, "imaging weight",
+                                           IPosition(1, shape[1]),
+                                           ColumnDesc::FixedShape));
+    }
     TiledColumnStMan stMan("TiledImagingWeight", dataTileShape.getLast(2));
-    itsMS->addColumn (td, stMan);
+    ms.addColumn (td, stMan);
   }
-  // Set keyword for casa::VisSet.
-  // Sort out the channel selection.
-  MSSpWindowColumns msSpW(itsMS->spectralWindow());
-  Matrix<Int> selection(2, msSpW.nrow());
-  // Fill in default selection (all bands and channels).
-  selection.row(0) = 0;    //start
-  selection.row(1) = msSpW.numChan().getColumn(); 
-  ArrayColumn<Complex> mcd(*itsMS,  MS::columnName(MS::MODEL_DATA));
-  mcd.rwKeywordSet().define ("CHANNEL_SELECTION",selection);
 }

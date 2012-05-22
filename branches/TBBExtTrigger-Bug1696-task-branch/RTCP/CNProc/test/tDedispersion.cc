@@ -36,7 +36,6 @@ void init(Parset &parset)
   stationList.append("]");
 
   parset.add("OLAP.storageStationNames", stationList);
-  parset.add("OLAP.PencilInfo.flysEye", "F");
   parset.add("Observation.Beam[0].nrTiedArrayBeams", "64");
   parset.add("Observation.channelsPerSubband", boost::lexical_cast<std::string>(NR_CHANNELS));
   parset.add("OLAP.CNProc.integrationSteps", boost::lexical_cast<std::string>(BLOCK_SIZE));
@@ -46,18 +45,6 @@ void init(Parset &parset)
   parset.add("Observation.sampleClock", "200");
   parset.add("OLAP.dispersionMeasure", boost::lexical_cast<std::string>(DM));
   parset.add("Observation.subbandList", "[50]");
-
-#if 0
-  configuration.nrStations() = NR_STATIONS;
-  configuration.flysEye() = false;
-  configuration.nrPencilBeams() = NR_BEAMS;
-  configuration.nrChannelsPerSubband() = NR_CHANNELS;
-  configuration.nrSamplesPerIntegration() = BLOCK_SIZE;
-  configuration.dedispersionFFTsize() = FFT_SIZE;
-  configuration.sampleRate() = 195312.5;
-  configuration.dispersionMeasure() = DM;
-  configuration.refFreqs().push_back(50 * 195312.5);
-#endif
 }
 
 
@@ -99,7 +86,9 @@ void plot(const BeamFormedData &beamFormedData, float r, float g, float b)
 
 int main()
 {
+#if defined HAVE_BGP
   INIT_LOGGER_WITH_SYSINFO("tDedispersion");
+#endif  
 
   Parset parset;
   init(parset);
@@ -107,7 +96,8 @@ int main()
 #if 1
   BeamFormedData beamFormedData(NR_BEAMS, NR_CHANNELS, BLOCK_SIZE);
   std::vector<unsigned> subbandIndices(1, 0);
-  DedispersionAfterBeamForming dedispersion(parset, &beamFormedData, subbandIndices);
+  std::vector<double> DMs(1, DM);
+  DedispersionAfterBeamForming dedispersion(parset, &beamFormedData, subbandIndices, DMs);
 
   setTestPattern(beamFormedData);
   std::cout << "newgraph xaxis size 7 yaxis size 7" << std::endl;
@@ -117,7 +107,7 @@ int main()
   timer.start();
 
   for (unsigned beam = 0; beam < NR_BEAMS; beam ++)
-    dedispersion.dedisperse(&beamFormedData, 0, beam);
+    dedispersion.dedisperse(&beamFormedData, 0, beam, DMs[0]);
 
   timer.stop();
 
@@ -125,7 +115,8 @@ int main()
 #else
   FilteredData filteredData(NR_STATIONS, NR_CHANNELS, BLOCK_SIZE);
   std::vector<unsigned> subbandIndices(1, 0);
-  DedispersionBeforeBeamForming dedispersion(parset, &filteredData, subbandIndices);
+  std::vector<double> DMs(1, DM);
+  DedispersionBeforeBeamForming dedispersion(parset, &filteredData, subbandIndices, DMs);
 
   setTestPattern(filteredData);
   std::cout << "newgraph xaxis size 7 yaxis size 7" << std::endl;
@@ -133,7 +124,7 @@ int main()
 
   NSTimer timer("dedisperse total", true, true);
   timer.start();
-  dedispersion.dedisperse(&filteredData, 0);
+  dedispersion.dedisperse(&filteredData, DMs[0]);
   timer.stop();
 
   plot(filteredData, 0, 0, 1);

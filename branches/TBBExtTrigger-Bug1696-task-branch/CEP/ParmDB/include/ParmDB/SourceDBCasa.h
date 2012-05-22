@@ -110,7 +110,13 @@ namespace BBS {
     virtual vector<string> getPatches (int category, const string& pattern,
                                        double minBrightness,
                                        double maxBrightness);
-;
+
+    // Get the info of all patches (name, ra, dec).
+    virtual vector<PatchInfo> getPatchInfo (int category,
+                                            const string& pattern,
+                                            double minBrightness,
+                                            double maxBrightness);
+
     // Get the sources belonging to the given patch.
     virtual vector<SourceInfo> getPatchSources (const string& patchName);
 
@@ -146,6 +152,12 @@ namespace BBS {
 
     // Read all sources from the table and return them as a vector.
     std::vector<SourceInfo> readSources (const casa::Table& table);
+
+    // Create the patches subset matching the given arguments.
+    casa::Table selectPatches (int category,
+                               const string& pattern,
+                               double minBrightness,
+                               double maxBrightness) const;
 
     //# Data members
     casa::Table      itsPatchTable;

@@ -26,6 +26,7 @@
 #include <Common/DataConvert.h>
 #include <Common/Exception.h>
 #include <Common/Timer.h>
+#include <Interface/Parset.h>
 #include <PPF.h>
 #include <BeamFormer.h>
 #include <Correlator.h>
@@ -39,9 +40,12 @@
 #include <cstring>
 #include <exception>
 
+#include <boost/format.hpp>
+
 
 using namespace LOFAR;
 using namespace LOFAR::RTCP;
+using boost::format;
 
 
 template <typename T> void toComplex(double phi, T &z);
@@ -173,13 +177,13 @@ void checkCorrelatorTestPattern(const CorrelatedData &correlatedData, unsigned n
 
 template <typename SAMPLE_TYPE> void doWork()
 {
-  unsigned   nrStations			= 64;
-  unsigned   nrChannels			= 1;
+  unsigned   nrStations			= 288;
+  unsigned   nrChannels			= 64;
   unsigned   nrSamplesPerIntegration	= 196608 / nrChannels;
   double     sampleRate			= 195312.5;
   double     centerFrequency		= 384 * sampleRate;
   double     baseFrequency		= centerFrequency - .5 * sampleRate;
-  double     testSignalChannel		= nrChannels > 1 ? 201 : 0.2;
+  double     testSignalChannel		= nrChannels / 5.0;
   double     signalFrequency		= baseFrequency + testSignalChannel * sampleRate / nrChannels;
   unsigned   nrHistorySamples		= nrChannels > 1 ? nrChannels * (NR_TAPS - 1) : 0;
   unsigned   nrSamplesToCNProc		= nrChannels * nrSamplesPerIntegration + nrHistorySamples + 32 / sizeof(SAMPLE_TYPE[NR_POLARIZATIONS]);
@@ -211,7 +215,24 @@ template <typename SAMPLE_TYPE> void doWork()
     exit(1);
   }
 
-  BeamFormer beamFormer(0, nrStations, nrChannels, nrSamplesPerIntegration, 0, station2SuperStation, false);
+  string stationNames = "[";
+  for(unsigned i = 0; i < nrStations; i++) {
+    if(i>0) stationNames += ", ";
+
+    stationNames += str(format("CS%03u") % i);
+  }
+
+  stationNames += "]";
+
+  Parset parset;
+  parset.add("Observation.channelsPerSubband",       str(format("%u") % nrChannels));
+  parset.add("OLAP.CNProc.integrationSteps",         str(format("%u") % nrSamplesPerIntegration));
+  parset.add("Observation.sampleClock",              "200");
+  parset.add("OLAP.storageStationNames",             stationNames);
+  parset.add("Observation.beamList",                 "[0]");
+  parset.add("Observation.Beam[0].nrTiedArrayBeams", "0");
+
+  BeamFormer beamFormer(parset);
 
   const char *env;
   unsigned nrBeamFormedStations = nrStations;

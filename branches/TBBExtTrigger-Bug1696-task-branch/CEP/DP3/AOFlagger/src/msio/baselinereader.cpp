@@ -65,7 +65,8 @@ void BaselineReader::initObservationTimes()
 		for(std::set<double>::const_iterator i=times.begin();i!=times.end();++i)
 		{
 			_observationTimes.insert(std::pair<double,size_t>(*i, index));
-			++index; 
+			_observationTimesVector.push_back(*i);
+			++index;
 		}
 	}
 }
@@ -168,6 +169,7 @@ void BaselineReader::initializePolarizations()
 
 void BaselineReader::clearTableCaches()
 {
+	/*
 	try {
 		casa::ROTiledStManAccessor accessor(*Table(), "LofarStMan");
 		accessor.clearCaches();
@@ -192,5 +194,5 @@ void BaselineReader::clearTableCaches()
 				AOLogger::Debug << "Could not clear LofarStMan caches; don't know how to access it.\n";
 			}
 		}
-	}
+	}*/
 }

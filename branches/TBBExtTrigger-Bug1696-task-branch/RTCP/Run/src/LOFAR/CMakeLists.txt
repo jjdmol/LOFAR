@@ -2,10 +2,7 @@
 
 install(PROGRAMS 
   __init__.py
-  BGcontrol.py
   CommandClient.py
-  Core.py
-  Locations.py
   Logger.py
   LogValidators.py
   ObservationID.py
@@ -13,6 +10,5 @@ install(PROGRAMS
   ParsetTester.py
   Partitions.py
   RingCoordinates.py
-  Sections.py
   Stations.py
   DESTINATION bin/LOFAR)

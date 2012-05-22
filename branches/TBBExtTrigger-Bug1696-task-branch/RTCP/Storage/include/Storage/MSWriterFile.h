@@ -28,7 +28,7 @@
 
 
 #include <Storage/MSWriter.h>
-#include <Stream/FileStream.h>
+#include <Storage/FastFileStream.h>
 
 
 namespace LOFAR {
@@ -38,13 +38,14 @@ namespace RTCP {
 class MSWriterFile : public MSWriter
 {
   public:
-		 MSWriterFile(const char *msName);
-		 ~MSWriterFile();
+    MSWriterFile(const string &msName, bool oldFileFormat);
+    ~MSWriterFile();
 
     virtual void write(StreamableData *data);
 
-  private:
-    FileStream	 itsFile;
+  protected:
+    FastFileStream	 itsFile;
+    const bool           itsOldFileFormat;
 };
 
 

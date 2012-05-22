@@ -58,7 +58,6 @@ void RFIStatistics::addEverything(const TimeFrequencyData &data, TimeFrequencyMe
 {
 	addSingleBaseline(data, metaData, image, mask, segmentedMask, classifiedMask, _writeImmediately);
 	
-	AOLogger::Debug << "Stat: Baselines\n";
 	boost::mutex::scoped_lock taLock(_baselineMapMutex);
 	addBaselines(data, metaData, image, mask, segmentedMask, classifiedMask);
 	if(_writeImmediately)
@@ -69,13 +68,11 @@ void RFIStatistics::addEverything(const TimeFrequencyData &data, TimeFrequencyMe
 
 void RFIStatistics::addSingleBaseline(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr metaData, Image2DCPtr image, Mask2DCPtr mask, SegmentedImagePtr segmentedMask, SegmentedImagePtr classifiedMask, bool save)
 {
-	AOLogger::Debug << "Stat: BaselineTime\n";
 	boost::mutex::scoped_lock taLock(_taMapMutex);
 	addBaselineTimeInfo(metaData, image, mask);
 	if(save) saveBaselineTimeInfo(_filePrefix + "counts-baseltime.txt");
 	taLock.unlock();
 	
-	AOLogger::Debug << "Stat: BaselineFreq\n";
 	boost::mutex::scoped_lock afLock(_afMapMutex);
 	addBaselineFrequencyInfo(metaData, image, mask);
 	saveBaselineFrequencyInfo(_filePrefix + "counts-baselfreq.txt");
@@ -115,7 +112,6 @@ void RFIStatistics::addSingleBaseline(const TimeFrequencyData &data, TimeFrequen
 		if(save) saveTimeFrequencyInfo(_autoTimeFrequencyInfo, _filePrefix + "counts-timefreq-auto.txt");
 		tfLock.unlock();
 	} else {
-		AOLogger::Debug << "Stat: Amplitudes\n";
 		boost::mutex::scoped_lock genLock(_genericMutex);
 		addFeatures(_crossAmplitudes, image, mask, metaData, segmentedMask);
 		segmentedMask.reset();
@@ -128,13 +124,11 @@ void RFIStatistics::addSingleBaseline(const TimeFrequencyData &data, TimeFrequen
 		if(save) saveAmplitudes(_crossAmplitudes, _filePrefix + "counts-amplitudes-cross.txt");
 		genLock.unlock();
 		
-		AOLogger::Debug << "Stat: Frequency\n";
 		boost::mutex::scoped_lock freqLock(_frequencyMapMutex);
 		addChannels(_crossChannels, image, mask, metaData, classifiedMask);
 		if(save) saveChannels(_crossChannels, _filePrefix + "counts-channels-cross.txt");
 		freqLock.unlock();
 		
-		AOLogger::Debug << "Stat: Time\n";
 		boost::mutex::scoped_lock timeLock(_timeMapMutex);
 		addTimesteps(_crossTimesteps, image, mask, metaData, classifiedMask);
 		if(save) {
@@ -143,7 +137,6 @@ void RFIStatistics::addSingleBaseline(const TimeFrequencyData &data, TimeFrequen
 		}
 		timeLock.unlock();
 		
-		AOLogger::Debug << "Stat: TimeFrequency\n";
 		boost::mutex::scoped_lock tfLock(_tfMapMutex);
 		addTimeFrequencyInfo(_crossTimeFrequencyInfo, metaData, image, mask);
 		if(save) saveTimeFrequencyInfo(_crossTimeFrequencyInfo, _filePrefix + "counts-timefreq-cross.txt");
@@ -330,7 +323,7 @@ void RFIStatistics::Add(const TimeFrequencyInfo &entry, bool autocorrelation)
 
 void RFIStatistics::addChannels(std::map<double, class ChannelInfo> &channels, Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr metaData, SegmentedImageCPtr segmentedImage)
 {
-	for(size_t y=1;y<image->Height();++y)
+	for(size_t y=startChannel(image->Height());y<image->Height();++y)
 	{
 		long unsigned count = 0;
 		long double totalAmplitude = 0.0;
@@ -402,7 +395,7 @@ void RFIStatistics::addTimesteps(std::map<double, class TimestepInfo> &timesteps
 		long double broadbandRfiAmplitude = 0.0;
 		long double lineRfiAmplitude = 0.0;
 		
-		for(size_t y=1;y<image->Height();++y)
+		for(size_t y=startChannel(image->Height());y<image->Height();++y)
 		{
 			if(std::isfinite(image->Value(x, y)))
 			{
@@ -453,7 +446,7 @@ void RFIStatistics::addTimesteps(std::map<double, class TimestepInfo> &timesteps
 
 void RFIStatistics::addAmplitudes(std::map<double, class AmplitudeBin> &amplitudes, Image2DCPtr image, Mask2DCPtr mask, TimeFrequencyMetaDataCPtr, SegmentedImageCPtr segmentedImage)
 {
-	for(size_t y=1;y<image->Height();++y)
+	for(size_t y=startChannel(image->Height());y<image->Height();++y)
 	{
 		for(size_t x=0;x<image->Width();++x)
 		{
@@ -506,7 +499,7 @@ void RFIStatistics::addStokes(std::map<double, class AmplitudeBin> &amplitudes, 
 		}
 		Image2DCPtr image = stokes->GetSingleImage();
 		delete stokes;
-		for(size_t y=1;y<image->Height();++y)
+		for(size_t y=startChannel(image->Height());y<image->Height();++y)
 		{
 			for(size_t x=0;x<image->Width();++x)
 			{
@@ -549,7 +542,7 @@ void RFIStatistics::addPolarisations(std::map<double, class AmplitudeBin> &ampli
 		Mask2DCPtr mask = polData->GetSingleMask();
 		delete polData;
 		
-		for(size_t y=1;y<image->Height();++y)
+		for(size_t y=startChannel(image->Height());y<image->Height();++y)
 		{
 			for(size_t x=0;x<image->Width();++x)
 			{
@@ -605,7 +598,7 @@ void RFIStatistics::addBaselines(const TimeFrequencyData &data, TimeFrequencyMet
 	long double broadbandRfiAmplitude = 0.0;
 	long double lineRfiAmplitude = 0.0;
 
-	for(size_t y=1;y<image->Height();++y)
+	for(size_t y=startChannel(image->Height());y<image->Height();++y)
 	{
 		for(size_t x=0;x<image->Width();++x)
 		{
@@ -684,7 +677,7 @@ void RFIStatistics::addFeatures(std::map<double, class AmplitudeBin> &amplitudes
 {
 	FeatureMap features;
 	
-	for(size_t y=0;y<image->Height();++y) {
+	for(size_t y=startChannel(image->Height());y<image->Height();++y) {
 		for(size_t x=0;x<image->Width();++x) {
 			if(mask->Value(x, y) && std::isfinite(image->Value(x, y)))
 			{
@@ -747,7 +740,7 @@ void RFIStatistics::addChannelComparison(std::map<double, ChannelInfo> &channels
 	Image2DCPtr image = data.GetSingleImage();
 	Mask2DCPtr mask = data.GetSingleMask();
 
-	for(size_t y=1;y<image->Height();++y)
+	for(size_t y=startChannel(image->Height());y<image->Height();++y)
 	{
 		long unsigned falsePositiveCount = 0;
 		long unsigned falseNegativeCount = 0;
@@ -791,7 +784,7 @@ void RFIStatistics::addAmplitudeComparison(std::map<double, AmplitudeBin> &ampli
 	Image2DCPtr image = data.GetSingleImage();
 	Mask2DCPtr mask = data.GetSingleMask();
 
-	for(size_t y=1;y<image->Height();++y)
+	for(size_t y=startChannel(image->Height());y<image->Height();++y)
 	{
 		for(size_t x=0;x<image->Width();++x)
 		{
@@ -841,7 +834,7 @@ void RFIStatistics::addBaselineFrequencyInfo(TimeFrequencyMetaDataCPtr metaData,
 		newInfo.antenna2Index = index.antenna2Index;
 		element = _baselineFrequencyInfo.insert(std::pair<IndexTriple, BaselineFrequencyInfo>(index, newInfo)).first;
 	}
-	for(size_t y=1;y<image->Height();++y)
+	for(size_t y=startChannel(image->Height());y<image->Height();++y)
 	{
 		for(size_t x=0;x<image->Width();++x)
 		{
@@ -876,7 +869,7 @@ void RFIStatistics::addBaselineTimeInfo(TimeFrequencyMetaDataCPtr metaData, Imag
 			newInfo.antenna2Index = index.antenna2Index;
 			element = _baselineTimeInfo.insert(std::pair<IndexTriple, BaselineTimeInfo>(index, newInfo)).first;
 		}
-		for(size_t y=1;y<image->Height();++y)
+		for(size_t y=startChannel(image->Height());y<image->Height();++y)
 		{
 			if(std::isfinite(image->Value(x, y)))
 			{
@@ -905,7 +898,7 @@ void RFIStatistics::addTimeFrequencyInfo(TimeFrequencyInfoMap &map, TimeFrequenc
 			newInfo.centralFrequency = index.second;
 			element = map.insert(std::pair<std::pair<double, double>, TimeFrequencyInfo>(index, newInfo)).first;
 		}
-		for(size_t y=1;y<image->Height();++y)
+		for(size_t y=startChannel(image->Height());y<image->Height();++y)
 		{
 			const num_t amplitude = image->Value(x, y);
 			if(std::isfinite(amplitude))
@@ -1020,7 +1013,7 @@ void RFIStatistics::saveSubbands(const std::map<double, class ChannelInfo> &chan
 		bandFNAmps.insert(c.falseNegativeAmplitude);
 		if(index%countPerSubband == 0)
 			file << index/countPerSubband << '\t' << c.frequencyHz << '\t';
-		else if(index%countPerSubband == (countPerSubband-1))
+		if(index%countPerSubband == (countPerSubband-1))
 		{
 			file
 			<< c.frequencyHz << "\t"
@@ -1546,6 +1539,9 @@ void RFIStatistics::createStationData(std::vector<StationInfo> &stations) const
 
 void RFIStatistics::saveMetaData(const std::string &filename) const
 {
+	if(_crossTimesteps.empty() || _crossChannels.empty())
+		return;
+	
 	const struct TimestepInfo
 		&firstStep = _crossTimesteps.begin()->second,
 		&lastStep = _crossTimesteps.rbegin()->second;
@@ -1649,12 +1645,19 @@ void RFIStatistics::saveMetaData(const std::string &filename) const
 
 void RFIStatistics::savePlots(const std::string &basename) const
 {
-	const struct TimestepInfo
-		&firstStep = _crossTimesteps.begin()->second,
-		&lastStep = _crossTimesteps.rbegin()->second;
-	const struct ChannelInfo
-		&startChannel = _crossChannels.begin()->second,
-		&endChannel = _crossChannels.rbegin()->second;
+	
+	struct TimestepInfo firstStep, lastStep;
+	if(!_crossTimesteps.empty())
+	{
+		firstStep = _crossTimesteps.begin()->second;
+		lastStep = _crossTimesteps.rbegin()->second;
+	}
+	struct ChannelInfo startChannel, endChannel;
+	if(!_crossChannels.empty())
+	{
+		startChannel = _crossChannels.begin()->second;
+		endChannel = _crossChannels.rbegin()->second;
+	}
 
 	std::ofstream baselPlot((basename + "Baseline.plt").c_str());
 	baselPlot << std::setprecision(14) <<

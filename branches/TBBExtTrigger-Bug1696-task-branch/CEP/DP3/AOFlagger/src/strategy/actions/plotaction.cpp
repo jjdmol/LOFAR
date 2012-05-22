@@ -19,13 +19,17 @@
  ***************************************************************************/
 #include <boost/thread.hpp>
 
+#include <lofar_config.h>
+
 #include <AOFlagger/strategy/actions/plotaction.h>
 
-#include <AOFlagger/strategy/algorithms/antennaflagcountplot.h>
-#include <AOFlagger/strategy/algorithms/frequencyflagcountplot.h>
-#include <AOFlagger/strategy/algorithms/frequencypowerplot.h>
+#include <AOFlagger/strategy/plots/antennaflagcountplot.h>
+#include <AOFlagger/strategy/plots/frequencyflagcountplot.h>
+#include <AOFlagger/strategy/plots/frequencypowerplot.h>
+#include <AOFlagger/strategy/plots/iterationsplot.h>
+#include <AOFlagger/strategy/plots/timeflagcountplot.h>
+
 #include <AOFlagger/strategy/algorithms/polarizationstatistics.h>
-#include <AOFlagger/strategy/algorithms/timeflagcountplot.h>
 #include <AOFlagger/strategy/algorithms/thresholdtools.h>
 
 #include <AOFlagger/strategy/control/artifactset.h>
@@ -58,8 +62,14 @@ namespace rfiStrategy {
 			case BaselineRMSPlot:
 				plotBaselineRMS(artifacts);
 				break;
+			case IterationsPlot:
+				plotIterations(artifacts);
+				break;
 		}
 	}
+
+
+#ifdef HAVE_GTKMM
 
 	void PlotAction::plotAntennaFlagCounts(ArtifactSet &artifacts)
 	{
@@ -146,4 +156,39 @@ namespace rfiStrategy {
 		AOLogger::Info << "RMS of " << metaData->Antenna1().name << " x " << metaData->Antenna2().name << ": "
 			<< rms << '\n';
 	}
+	
+	void PlotAction::plotIterations(class ArtifactSet &artifacts)
+	{
+		class IterationsPlot *plot = artifacts.IterationsPlot();
+		if(plot != 0)
+		{
+			plot->Add(artifacts.ContaminatedData(), artifacts.MetaData());
+		}
+	}
+
+#else
+	void PlotAction::plotAntennaFlagCounts(ArtifactSet &)
+	{}
+
+	void PlotAction::plotFrequencyFlagCounts(ArtifactSet &)
+	{}
+
+	void PlotAction::plotFrequencyPower(ArtifactSet &)
+	{}
+
+	void PlotAction::plotTimeFlagCounts(ArtifactSet &)
+	{}
+
+	void PlotAction::plotSpectrumPerBaseline(ArtifactSet &)
+	{}
+
+	void PlotAction::plotPolarizationFlagCounts(ArtifactSet &)
+	{}
+
+	void PlotAction::plotBaselineRMS(ArtifactSet &)
+	{}
+	
+	void PlotAction::plotIterations(class ArtifactSet &)
+	{}
+#endif
 }

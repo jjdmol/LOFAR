@@ -42,9 +42,13 @@ LocationInfo::LocationInfo()
 
   itsNrPsets    = boost::lexical_cast<unsigned>(nrPsetsStr);
   itsPsetSize   = boost::lexical_cast<unsigned>(psetSizeStr);
+
   itsPsetNumber = itsRank % itsNrPsets;
   itsRankInPset = itsRank / itsNrPsets;
 #endif
+
+  ASSERT( itsPsetNumber < itsNrPsets );
+  ASSERT( itsRankInPset < itsPsetSize );
 }
 
 

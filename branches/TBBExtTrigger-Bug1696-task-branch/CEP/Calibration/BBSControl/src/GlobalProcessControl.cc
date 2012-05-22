@@ -41,6 +41,7 @@
 
 // sleep()
 #include <unistd.h>
+#include <cstdlib>
 
 namespace LOFAR
 {
@@ -116,8 +117,8 @@ namespace LOFAR
         // Initialize the calibration session.
         string key = ps->getString("BBDB.Key", "default");
         itsCalSession.reset(new CalSession(key,
-            ps->getString("BBDB.Name"),
-            ps->getString("BBDB.User"),
+            ps->getString("BBDB.Name", (getenv("USER") ? : "")),
+            ps->getString("BBDB.User", "postgres"),
             ps->getString("BBDB.Password", ""),
             ps->getString("BBDB.Host", "localhost"),
             ps->getString("BBDB.Port", "")));
@@ -214,7 +215,8 @@ namespace LOFAR
         bool ok = false;
         while(!ok) {
           if(itsCalSession->waitForResult()) {
-            CommandStatus status = itsCalSession->getCommandStatus(initId);
+            CalSession::CommandStatus status =
+              itsCalSession->getCommandStatus(initId);
 
             if(status.failed > 0) {
               LOG_ERROR_STR("" << status.failed << " worker(s) failed at"
@@ -290,7 +292,8 @@ namespace LOFAR
             LOG_TRACE_FLOW("State::NEXT_CHUNK_WAIT");
 
             if(itsCalSession->waitForResult()) {
-              CommandStatus status = itsCalSession->getCommandStatus(itsWaitId);
+              CalSession::CommandStatus status =
+                itsCalSession->getCommandStatus(itsWaitId);
 
               if(status.finished > status.failed) {
                 setState(RUN);
@@ -346,7 +349,8 @@ namespace LOFAR
             LOG_TRACE_FLOW("State::FINALIZE_WAIT");
 
             if(itsCalSession->waitForResult()) {
-              CommandStatus status = itsCalSession->getCommandStatus(itsWaitId);
+              CalSession::CommandStatus status =
+                itsCalSession->getCommandStatus(itsWaitId);
 
               if(status.finished == itsCalSession->getWorkerCount()) {
                 if(status.failed == 0) {

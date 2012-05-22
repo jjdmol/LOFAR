@@ -1,6 +1,7 @@
 # $Id$
 
 include(LofarPackageVersion)
+include(PythonInstall)
 
 set(ms_LIB_SRCS
   Package__Version.cc
@@ -29,4 +30,13 @@ install(PROGRAMS
   mssplit
   makemsdistr
   makemsdistr-part
+  movemss
+  expandcalps
+  expandimageps
+  expandtargetps
   DESTINATION bin)
+
+# Python modules.
+python_install(
+  mstools.py 
+  DESTINATION lofar)

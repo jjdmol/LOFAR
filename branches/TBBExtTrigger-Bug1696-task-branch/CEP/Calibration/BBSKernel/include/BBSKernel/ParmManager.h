@@ -97,8 +97,8 @@ private:
     bool isIncluded(const string &candidate, const vector<casa::Regex> &include,
         const vector<casa::Regex> &exclude) const;
 
-    const ParmDB &getParmDbForCategory(unsigned int category) const;
-    ParmDB &getParmDbForCategory(unsigned int category);
+    const ParmDB &getParmDBForCategory(unsigned int category) const;
+    ParmDB &getParmDBForCategory(unsigned int category);
 
     // TODO: Create domain() method on ParmCache instead of keeping a copy
     // of the domain as a member here.

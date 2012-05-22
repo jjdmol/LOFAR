@@ -38,8 +38,6 @@ namespace rfiStrategy {
 				return "Fringe stop recovery";
 			}
 			
-			virtual void Initialize() { }
-			
 			virtual void Perform(class ArtifactSet &artifacts, class ProgressListener &listener);
 
 			long double FringesToConsider() const { return _fringesToConsider; }

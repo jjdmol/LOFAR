@@ -84,10 +84,12 @@ public:
   // Destructor
   ~MSCreate();
 
-  // Add the extra columns needed for lwimager.
+  // Add the extra columns needed for lwimager for every column not existing.
   // These are CORRECTED_DATA, MODEL_DATA, and IMAGING_WEIGHT.
   // Furthermore it sets the CHANNEL_SELECTION keyword for casa::VisSet.
-  void addImagerColumns();
+  void addImagerColumns()
+    { addImagerColumns (*itsMS); }
+  static void addImagerColumns (casa::MeasurementSet&);
 
   // Add the definition of the next frequency band.
   // 1, 2 or 4 polarizations can be given.

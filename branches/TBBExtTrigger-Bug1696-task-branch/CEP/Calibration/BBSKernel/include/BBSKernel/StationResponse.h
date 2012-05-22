@@ -38,7 +38,6 @@
 
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <measures/Measures/MDirection.h>
-#include <BBSKernel/Expr/HamakerDipole.h>
 
 namespace LOFAR
 {
@@ -100,16 +99,16 @@ public:
 
     StationResponse(const casa::MeasurementSet &ms, bool inverse = false,
         bool useElementBeam = true, bool useArrayFactor = true,
-        bool conjugateAF = false);
+        bool useChannelFreq = false, bool conjugateAF = false);
 
-    // Set the pointing direction (for beamforming).
-    void setPointing(const casa::MDirection &pointing);
+    // Set the delay reference direction (used by the station beamformer).
+    void setRefDelay(const casa::MDirection &reference);
+
+    // Set the tile delay reference direction (used by the tile beamformer).
+    void setRefTile(const casa::MDirection &reference);
 
     // Set the direction of interest.
     void setDirection(const casa::MDirection &direction);
-
-    // Set the reference orientation of the +X dipole.
-    void setOrientation(double orientation);
 
     // Set the grid on which the station responses will be evaluated.
     void setEvalGrid(const Grid &grid);
@@ -122,22 +121,14 @@ public:
     const JonesMatrix::View evaluate(unsigned int i);
 
 private:
-    HamakerBeamCoeff loadBeamModelCoeff(casa::Path path,
-        const AntennaField::ConstPtr &field) const;
+    // Right multiply \p lhs by \p rhs. Return \p rhs if \p lhs is
+    // uninitialized.
+    Expr<JonesMatrix>::Ptr compose(const Expr<JonesMatrix>::Ptr &lhs,
+        const Expr<JonesMatrix>::Ptr &rhs) const;
 
-    Instrument::Ptr initInstrument(const casa::MeasurementSet &ms) const;
-    Station::Ptr initStation(const casa::MeasurementSet &ms, unsigned int id,
-        const string &name, const casa::MPosition &position) const;
-    double getReferenceFreq(const casa::MeasurementSet &ms) const;
-
-    // Helper function that right multiplies accumulator by effect, or returns
-    // effect if accumulator is empty.
-    Expr<JonesMatrix>::Ptr compose(const Expr<JonesMatrix>::Ptr &accumulator,
-        const Expr<JonesMatrix>::Ptr &effect) const;
-
-    Dummy<Vector<2> >::Ptr          itsPointing;
+    Dummy<Vector<2> >::Ptr          itsRefDelay;
+    Dummy<Vector<2> >::Ptr          itsRefTile;
     Dummy<Vector<2> >::Ptr          itsDirection;
-    Dummy<Scalar>::Ptr              itsOrientation;
     vector<Expr<JonesMatrix>::Ptr>  itsExpr;
     Request                         itsRequest;
     Cache                           itsCache;

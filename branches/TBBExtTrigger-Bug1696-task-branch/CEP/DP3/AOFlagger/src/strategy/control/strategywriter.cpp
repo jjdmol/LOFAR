@@ -28,6 +28,8 @@
 #include <AOFlagger/strategy/actions/combineflagresultsaction.h>
 #include <AOFlagger/strategy/actions/cutareaaction.h>
 #include <AOFlagger/strategy/actions/directionalcleanaction.h>
+#include <AOFlagger/strategy/actions/directionprofileaction.h>
+#include <AOFlagger/strategy/actions/eigenvalueverticalaction.h>
 #include <AOFlagger/strategy/actions/foreachbaselineaction.h>
 #include <AOFlagger/strategy/actions/foreachcomplexcomponentaction.h>
 #include <AOFlagger/strategy/actions/foreachmsaction.h>
@@ -38,8 +40,10 @@
 #include <AOFlagger/strategy/actions/fringestopaction.h>
 #include <AOFlagger/strategy/actions/imageraction.h>
 #include <AOFlagger/strategy/actions/iterationaction.h>
+#include <AOFlagger/strategy/actions/normalizevarianceaction.h>
 #include <AOFlagger/strategy/actions/plotaction.h>
 #include <AOFlagger/strategy/actions/quickcalibrateaction.h>
+#include <AOFlagger/strategy/actions/rawappenderaction.h>
 #include <AOFlagger/strategy/actions/setflaggingaction.h>
 #include <AOFlagger/strategy/actions/setimageaction.h>
 #include <AOFlagger/strategy/actions/slidingwindowfitaction.h>
@@ -122,6 +126,12 @@ namespace rfiStrategy {
 			case DirectionalCleanActionType:
 				writeDirectionalCleanAction(static_cast<const DirectionalCleanAction&>(action));
 				break;
+			case DirectionProfileActionType:
+				writeDirectionProfileAction(static_cast<const DirectionProfileAction&>(action));
+				break;
+				case EigenValueVerticalActionType:
+				writeEigenValueVerticalAction(static_cast<const EigenValueVerticalAction&>(action));
+				break;
 			case ForEachBaselineActionType:
 				writeForEachBaselineAction(static_cast<const ForEachBaselineAction&>(action));
 				break;
@@ -152,11 +162,17 @@ namespace rfiStrategy {
 			case IterationBlockType:
 				writeIterationBlock(static_cast<const IterationBlock&>(action));
 				break;
+			case NormalizeVarianceActionType:
+				writeNormalizeVarianceAction(static_cast<const NormalizeVarianceAction&>(action));
+				break;
 			case PlotActionType:
 				writePlotAction(static_cast<const PlotAction&>(action));
 				break;
 			case QuickCalibrateActionType:
 				writeQuickCalibrateAction(static_cast<const QuickCalibrateAction&>(action));
+				break;
+			case RawAppenderActionType:
+				writeRawAppenderAction(static_cast<const RawAppenderAction&>(action));
 				break;
 			case SetFlaggingActionType:
 				writeSetFlaggingAction(static_cast<const SetFlaggingAction&>(action));
@@ -286,6 +302,18 @@ namespace rfiStrategy {
 		Write<bool>("make-plot", action.MakePlot());
 	}
 
+	void StrategyWriter::writeDirectionProfileAction(const DirectionProfileAction &action)
+	{
+		Attribute("type", "DirectionProfileAction");
+		Write<int>("axis", (int) action.Axis());
+		Write<int>("profile-action", (int) action.ProfileAction());
+	}
+
+  void StrategyWriter::writeEigenValueVerticalAction(const EigenValueVerticalAction &)
+  {
+    Attribute("type", "EigenValueVerticalAction");
+  }
+
 	void StrategyWriter::writeForEachBaselineAction(const ForEachBaselineAction &action)
 	{
 		Attribute("type", "ForEachBaselineAction");
@@ -375,7 +403,13 @@ namespace rfiStrategy {
 		writeContainerItems(action);
 	}
 
-	void StrategyWriter::writePlotAction(const class PlotAction &action)
+	void StrategyWriter::writeNormalizeVarianceAction(const NormalizeVarianceAction &action)
+	{
+		Attribute("type", "NormalizeVarianceAction");
+		Write<double>("median-filter-size-in-s", action.MedianFilterSizeInS());
+	}
+
+	void StrategyWriter::writePlotAction(const PlotAction &action)
 	{
 		Attribute("type", "PlotAction");
 		Write<int>("plot-kind", action.PlotKind());
@@ -385,6 +419,11 @@ namespace rfiStrategy {
 	void StrategyWriter::writeQuickCalibrateAction(const QuickCalibrateAction &)
 	{
 		Attribute("type", "QuickCalibrateAction");
+	}
+
+	void StrategyWriter::writeRawAppenderAction(const RawAppenderAction &)
+	{
+		Attribute("type", "RawAppenderAction");
 	}
 
 	void StrategyWriter::writeSetFlaggingAction(const SetFlaggingAction &action)

@@ -5,6 +5,7 @@ include(LofarPackageVersion)
 set(common_LIB_SRCS
   Package__Version.cc
   Allocator.cc
+  CasaLogSink.cc
   DataConvert.cc
   Exception.cc
   FileLocator.cc
@@ -13,9 +14,11 @@ set(common_LIB_SRCS
   lofar_bitset.cc
   NewHandler.cc
   Numeric.cc
+  ParameterRecord.cc
   ParameterSet.cc
   ParameterSetImpl.cc
   ParameterValue.cc
+  InputParSet.cc
   PrettyUnits.cc
   Process.cc
   ReadLine.cc
@@ -30,7 +33,8 @@ set(common_LIB_SRCS
   Version.cc
   Net/FdSet.cc
   Net/Socket.cc
-  Thread/Cancellation.cc)
+  Thread/Cancellation.cc
+  Thread/Thread.cc)
 
 set(common_PROGRAMS
   getparsetvalue

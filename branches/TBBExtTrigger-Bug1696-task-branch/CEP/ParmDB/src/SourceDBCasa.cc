@@ -161,7 +161,7 @@ namespace BBS {
     vector<string> result;
     while (!iter.pastEnd()) {
       if (iter.table().nrow() > 1) {
-        result.push_back (ROScalarColumn<String>(table, columnName)(0));
+        result.push_back (ROScalarColumn<String>(iter.table(), columnName)(0));
       }
       ++iter;
     }
@@ -380,11 +380,11 @@ namespace BBS {
                                                    Point( 1e30, 1e30)));
   }
 
-  vector<string> SourceDBCasa::getPatches (int category, const string& pattern,
-                                           double minBrightness,
-                                           double maxBrightness)
+  Table SourceDBCasa::selectPatches (int category,
+                                     const string& pattern,
+                                     double minBrightness,
+                                     double maxBrightness) const
   {
-    TableLocker locker(itsPatchTable, FileLocker::Read);
     Table table = itsPatchTable;
     if (category >= 0) {
       table = table(table.col("CATEGORY") == category);
@@ -399,6 +399,16 @@ namespace BBS {
     if (maxBrightness >= 0) {
       table = table(table.col("APPARENT_BRIGHTNESS") <= maxBrightness);
     }
+    return table;
+  }
+
+  vector<string> SourceDBCasa::getPatches (int category, const string& pattern,
+                                           double minBrightness,
+                                           double maxBrightness)
+  {
+    TableLocker locker(itsPatchTable, FileLocker::Read);
+    Table table (selectPatches(category, pattern,
+                               minBrightness, maxBrightness));
     Block<String> keys(2);
     Block<Int> orders(2);
     keys[0] = "CATEGORY";
@@ -408,6 +418,27 @@ namespace BBS {
     table = table.sort (keys, orders);
     Vector<String> nm(ROScalarColumn<String>(table, "PATCHNAME").getColumn());
     return vector<string>(nm.cbegin(), nm.cend());
+  }
+
+  vector<PatchInfo> SourceDBCasa::getPatchInfo (int category,
+                                                const string& pattern,
+                                                double minBrightness,
+                                                double maxBrightness)
+  {
+    TableLocker locker(itsPatchTable, FileLocker::Read);
+    Table table (selectPatches(category, pattern,
+                               minBrightness, maxBrightness));
+    Vector<String> nm(ROScalarColumn<String>(table, "PATCHNAME").getColumn());
+    Vector<Double> ra(ROScalarColumn<double>(table, "RA").getColumn());
+    Vector<Double> dc(ROScalarColumn<double>(table, "DEC").getColumn());
+    Vector<uInt>   ca(ROScalarColumn<uInt>  (table, "CATEGORY").getColumn());
+    Vector<Double> ab(ROScalarColumn<double>(table, "APPARENT_BRIGHTNESS").getColumn());
+    vector<PatchInfo> vec;
+    vec.reserve (nm.size());
+    for (uint i=0; i<nm.size(); ++i) {
+      vec.push_back (PatchInfo(nm[i], ra[i], dc[i], ca[i], ab[i]));
+    }
+    return vec;
   }
 
   vector<SourceInfo> SourceDBCasa::getPatchSources (const string& patchName)

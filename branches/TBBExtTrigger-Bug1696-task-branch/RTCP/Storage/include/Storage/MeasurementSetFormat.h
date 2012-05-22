@@ -47,18 +47,19 @@ class MeasurementSetFormat : public Format
   private:
     const Parset &itsPS;
 
-    unsigned itsNrAnt;
-    uint32   itsNrTimes;
+    const vector<string> stationNames;
+    const vector<double> antPos;
+
+    const unsigned itsNrAnt;
+    uint32 itsNrTimes;
 
     double itsStartTime;
     double itsTimeStep;
 
-    vector<string> stationNames;
-    vector<double> antPos;
 
     SmartPtr<MSLofar> itsMS;
 
-    uint32 itsAlignment;
+    const uint32 itsAlignment;
 
     static Mutex sharedMutex;
 

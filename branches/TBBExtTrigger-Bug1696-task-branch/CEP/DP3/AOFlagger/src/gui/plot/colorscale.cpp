@@ -21,26 +21,30 @@
 
 const double ColorScale::BAR_WIDTH = 15.0;
 
-ColorScale::ColorScale(Glib::RefPtr<Gdk::Drawable> drawable)
-: _width(0.0), _drawable(drawable),  _verticalPlotScale(drawable)
+ColorScale::ColorScale()
+: _width(0.0), _verticalPlotScale()
 {
-	_cairo = _drawable->create_cairo_context();
+	_verticalPlotScale.SetUnitsCaption("z");
 }
 
-void ColorScale::initWidth()
+void ColorScale::initWidth(Cairo::RefPtr<Cairo::Context> cairo)
 {
 	if(_width == 0.0)
 	{
-		_scaleWidth = _verticalPlotScale.GetWidth();
+		const double textHeight = _verticalPlotScale.GetTextHeight(cairo);
+		const double scaleHeight = _plotHeight - 2.0*textHeight - _topMargin;
+		_verticalPlotScale.SetPlotDimensions(_plotWidth, scaleHeight, _topMargin + textHeight);
+		_scaleWidth = _verticalPlotScale.GetWidth(cairo);
 		_width = _scaleWidth + BAR_WIDTH;
 	}
 }
 
 void ColorScale::Draw(Cairo::RefPtr<Cairo::Context> cairo)
 {
-	_verticalPlotScale.SetPlotDimensions(_plotWidth, _plotHeight, _topMargin);
-	initWidth();
-	_cairo = cairo;
+	initWidth(cairo);
+	const double textHeight = _verticalPlotScale.GetTextHeight(cairo);
+	const double scaleTop = _topMargin + textHeight;
+	const double scaleHeight = _plotHeight - 2.0*textHeight - _topMargin;
 	ColorValue backValue;
 	if(!_colorValues.empty())
 	{
@@ -50,29 +54,39 @@ void ColorScale::Draw(Cairo::RefPtr<Cairo::Context> cairo)
 		backValue.green = 1.0;
 		backValue.blue = 1.0;
 	}
-	_cairo->rectangle(_plotWidth - _width + _scaleWidth, _topMargin,
-										BAR_WIDTH, _plotHeight);
-	_cairo->set_source_rgb(backValue.red, backValue.green, backValue.blue);
-	_cairo->fill();
+	cairo->rectangle(_plotWidth - _width + _scaleWidth, scaleTop,
+										BAR_WIDTH, scaleHeight);
+	cairo->set_source_rgb(backValue.red, backValue.green, backValue.blue);
+	cairo->fill();
 	
 	for(std::map<double, ColorValue>::const_iterator i=_colorValues.begin();
 		i!=_colorValues.end();++i)
 	{
-		double val = (i->first - _min) / (_max - _min);
-		if(val < 0.0) val = 0.0;
-		if(val > 1.0) val = 1.0;
-		double height = _plotHeight * (1.0 - val);
+		double val;
+		if(_isLogaritmic)
+		{
+			const double minLog10 = log10(_min);
+			if(i->first <= 0.0)
+				val = 0.0;
+			else
+				val = (log10(i->first) - minLog10) / (log10(_max) - minLog10);
+		} else {
+			val = (i->first - _min) / (_max - _min);
+			if(val < 0.0) val = 0.0;
+			if(val > 1.0) val = 1.0;
+		}
+		const double height = scaleHeight * (1.0 - val);
 		const ColorValue &color = i->second;
-		_cairo->set_source_rgb(color.red, color.green, color.blue);
-		_cairo->rectangle(_plotWidth - _width + _scaleWidth, _topMargin,
+		cairo->set_source_rgb(color.red, color.green, color.blue);
+		cairo->rectangle(_plotWidth - _width + _scaleWidth, scaleTop,
 											BAR_WIDTH, height);
-		_cairo->fill();
+		cairo->fill();
 	}
 	
-	_cairo->rectangle(_plotWidth - _width + _scaleWidth, _topMargin,
-										BAR_WIDTH, _plotHeight);
-	_cairo->set_source_rgb(0.0, 0.0, 0.0);
-	_cairo->stroke();
+	cairo->rectangle(_plotWidth - _width + _scaleWidth, scaleTop,
+										BAR_WIDTH, scaleHeight);
+	cairo->set_source_rgb(0.0, 0.0, 0.0);
+	cairo->stroke();
 	
 	_verticalPlotScale.Draw(cairo, _plotWidth - _width, 0.0);
 }

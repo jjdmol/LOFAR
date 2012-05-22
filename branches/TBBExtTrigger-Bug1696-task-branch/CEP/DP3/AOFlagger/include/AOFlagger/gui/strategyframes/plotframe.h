@@ -46,6 +46,7 @@ class StrategyPlotFrame : public Gtk::Frame {
 		_polarizationVsFlagsButton("Polarization vs. flgs"),
 		_baselineSpectrumPlotButton("Spectrum per baseline"),
 		_baselineRMSButton("Baseline RMS"),
+		_iterationsButton("Iterations"),
 		_logYScaleButton("Logarithmic y-axis"),
 		_applyButton(Gtk::Stock::APPLY)
 		{
@@ -82,6 +83,10 @@ class StrategyPlotFrame : public Gtk::Frame {
 			_baselineRMSButton.set_group(group);
 			_baselineRMSButton.show();
 
+			_box.pack_start(_iterationsButton);
+			_iterationsButton.set_group(group);
+			_iterationsButton.show();
+
 			switch(_action.PlotKind())
 			{
 				case rfiStrategy::PlotAction::AntennaFlagCountPlot:
@@ -104,6 +109,9 @@ class StrategyPlotFrame : public Gtk::Frame {
 					break;
 				case rfiStrategy::PlotAction::BaselineRMSPlot:
 					_baselineRMSButton.set_active(true);
+					break;
+				case rfiStrategy::PlotAction::IterationsPlot:
+					_iterationsButton.set_active(true);
 					break;
 			}
 
@@ -130,7 +138,7 @@ class StrategyPlotFrame : public Gtk::Frame {
 		Gtk::Label _plotKindLabel;
 		Gtk::RadioButton
 			_antennaVsFlagsButton, _frequencyVsFlagsButton, _frequencyVsPowerButton, _timeVsFlagsButton,
-			_polarizationVsFlagsButton, _baselineSpectrumPlotButton, _baselineRMSButton;
+			_polarizationVsFlagsButton, _baselineSpectrumPlotButton, _baselineRMSButton, _iterationsButton;
 		Gtk::CheckButton _logYScaleButton;
 		Gtk::Button _applyButton;
 
@@ -150,6 +158,8 @@ class StrategyPlotFrame : public Gtk::Frame {
 				_action.SetPlotKind(rfiStrategy::PlotAction::PolarizationStatisticsPlot);
 			else if(_baselineRMSButton.get_active())
 				_action.SetPlotKind(rfiStrategy::PlotAction::BaselineRMSPlot);
+			else if(_iterationsButton.get_active())
+				_action.SetPlotKind(rfiStrategy::PlotAction::IterationsPlot);
 			_action.SetLogarithmicYAxis(_logYScaleButton.get_active());
 			_editStrategyWindow.UpdateAction(&_action);
 		}

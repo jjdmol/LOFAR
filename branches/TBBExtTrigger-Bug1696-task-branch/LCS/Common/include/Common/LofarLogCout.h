@@ -27,6 +27,7 @@
 // Macro interface to the cout/cerr logging implementation.
 
 
+#include <Common/CasaLogSink.h>
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_sstream.h>
 #include <Common/lofar_iomanip.h>
@@ -53,7 +54,10 @@
 //	- INIT_LOGGER_AND_WATCH
 //
 #define INIT_LOGGER(filename) \
-	::LOFAR::LFDebug::initLevels (::LOFAR::string(filename) + ".debug")
+  do {                                          \
+    ::LOFAR::LFDebug::initLevels (::LOFAR::string(filename) + ".debug"); \
+    ::LOFAR::CasaLogSink::attach();             \
+  } while(0)
 
 //# Note: 'var' logger functionality not available
 #define INIT_VAR_LOGGER(filename,logfile) \
@@ -71,6 +75,8 @@
 #define LOGCOUT_SETLEVEL(level) \
 	::LOFAR::LFDebug::setLevel("Global",level);
 
+// Each new thread might need a partial reinitialisation in the logger
+#define LOGGER_NEWTHREAD()
 
 //# -------------------- Log Levels for the Operator messages -----------------
 //#

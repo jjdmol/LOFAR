@@ -6,9 +6,11 @@
 # ------------------------------------------------------------------------------
 
 from collections import defaultdict
+import os
 import subprocess
 
 from lofar.parameterset import parameterset
+from lofar.mstools import findFiles
 
 import lofarpipe.support.utilities as utilities
 from lofarpipe.support.clusterdesc import get_compute_nodes
@@ -87,13 +89,108 @@ def gvds_iterator(gvds_file, nproc=4):
         else:
             yield yieldable
 
+#def load_data_map(filename):
+    #"""
+    #Load a mapping of filename <-> compute node from a parset on disk.
+    #"""
+    #datamap = Parset(filename)
+    #data = []
+    #for host in datamap:
+        #for filename in datamap.getStringVector(host):
+            #data.append((host, filename))
+    #return data
+
+#def store_data_map(filename, data):
+    #"""
+    #Store a mapping of filename <-> compute node as a parset on disk.
+    #"""
+    #datamap = defaultdict(list)
+    #for (host,file) in data:
+        #datamap[host].append(file)
+    #outfile = open(filename, 'w')
+    #for key in sorted(datamap):
+        #outfile.write('%s = %s\n' % (key, datamap[key]))
+    #outfile.close()
+
+
+def validate_data_maps(*args):
+    """
+    Validate the IO product specifications in the data maps `args`. Each data
+    map must be a list of tuples (hostname, filepath). 
+    
+    Requirements imposed on product specifiations:
+    - Length of all product lists must be equal.
+    - All data-products must reside on the same node.
+    
+    Return True if all requirements are met, otherwise return False.
+    """
+    # Precondition check on `args`. All arguments must be lists; and all
+    # lists must contains tuples of length 2.
+    for arg in args:
+        assert(
+            isinstance(arg, list) and
+            all(isinstance(item, tuple) and len(item) == 2 for item in arg)
+        )
+
+    # Check if all lists have equal length. We do this by creating a set
+    # from a tuple of lenghts of `args`. The set must have length 1.
+    if len(set(len(arg) for arg in args)) != 1: return False
+    
+    # Next, check if the data products in `args`, when matched by index,
+    # reside on the same node. We can use the same trick as before, by
+    # checking the size of a set created from a tuple of hostnames.
+    for i in xrange(len(args[0])):
+        if len(set(arg[i][0] for arg in args)) != 1: return False
+    
+    return True
+    
+
 def load_data_map(filename):
     """
-    Load a mapping of filename <-> compute node from a parset on disk.
+    Load map-file `filename` containing tuples of (host,filepath)
     """
-    datamap = Parset(filename)
-    data = []
-    for host in datamap:
-        for filename in datamap.getStringVector(host):
-            data.append((host, filename))
+    file = open(filename)
+    data = eval(file.read())
+    file.close()
+    if not validate_data_maps(data):
+        raise TypeError("Map-file data validation failed")
     return data
+
+
+def store_data_map(filename, data):
+    """
+    Store tuples of (host,filepath) in a map-file `filename`.
+    """
+    if not validate_data_maps(data):
+        raise TypeError("Map-file data validation failed")
+    file = open(filename, 'w')
+    file.write(repr(data))
+    file.close()
+
+
+def tally_data_map(data, glob, logger=None):
+    """
+    Verify that the files specified in the data map `data` exist on the cluster.
+    The glob pattern `glob` should contain the pattern to be used in the search.
+    This function will return a list of booleans: True for each item in `data`
+    that is present on the cluster; False otherwise.
+    """
+    # Check that `data` is in the correct format
+    validate_data_maps(data)
+    
+    # Determine the directories to search. Get unique directory names from
+    # `data` by creating a set first.
+    dirs = list(set(os.path.dirname(d[1]) for d in data))
+
+    # Compose the filename glob-pattern.
+    glob = ' '.join(os.path.join(d, glob) for d in dirs)
+
+    # Search the files on the cluster using the glob-pattern; turn them into a
+    # list of tuples.
+    if logger:
+        logger.debug("Searching for files: %s" % glob)
+    found = zip(*findFiles(glob, '-1d'))
+    
+    # Return a mask containing True if file exists, False otherwise
+    return [f in found for f in data]
+

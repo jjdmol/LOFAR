@@ -72,7 +72,7 @@ class SVDMitigater : public SurfaceFitMethod {
 		double SingularValue(unsigned index) const throw() { return _singularValues[index]; }
 		void SetRemoveCount(unsigned removeCount) throw() { _removeCount = removeCount; }
 		void SetVerbose(bool verbose) throw() { _verbose = verbose; }
-		static void CreateSingularValueGraph(const TimeFrequencyData &data, class Plot &plot);
+		static void CreateSingularValueGraph(const TimeFrequencyData &data, class Plot2D &plot);
 	private:
 		void Clear();
 		void Decompose();

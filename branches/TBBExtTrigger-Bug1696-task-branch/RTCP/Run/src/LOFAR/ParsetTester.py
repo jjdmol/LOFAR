@@ -75,8 +75,6 @@ class ParsetTester:
     for k,v in override_keys.iteritems():
       self.parset[k] = v
 
-    del self.parset["OLAP.subbandsPerPset"]
-
   def setNrStations( self, nrStations ):
     """ Use fake stations 0 .. nrStations which map to this partition. Uses at most |partition| stations. """
 
@@ -89,13 +87,13 @@ class ParsetTester:
     self.parset.forceStations( stations )
 
 
-  def setNrPencilBeams( self, nrBeams ):
+  def setNrPencilBeams( self, nrBeams, sap = 0 ):
     """ Use nrBeams fake beams. """
 
-    self.parset["OLAP.nrPencils"] = nrBeams
+    self.parset["Observation.Beam[%d].nrTiedArrayBeams" % (sap,)] = nrBeams
     for n in xrange(nrBeams):
-      self.parset["OLAP.Pencil[%d].angle1" % (n,)] = 0
-      self.parset["OLAP.Pencil[%d].angle2" % (n,)] = 0
+      self.parset["Observation.Beam[%d].TiedArrayBeam[%d].angle1" % (sap,n)] = 0
+      self.parset["Observation.Beam[%d].TiedArrayBeam[%d].angle2" % (sap,n)] = n
 
   def runParset( self, starttimeout = 30, runtime = 60, stoptimeout = 120, parsetstartdelay = 30 ):
     # finalise and check parset BEFORE we start doing anything fancy
@@ -204,15 +202,16 @@ class ParsetTester:
          valid = False
        else:
          for linenr,l in enumerate(fd):
-           try:
-             v.parse(l)
-           except ValidationError,e:
-             error( "Validation error in %s:%s: %s" % (fname,linenr,e) )
-             error( "Offending line: %s" % (l,) )
-             valid = False
+           for v in validators:
+             try:
+               v.parse(l)
+             except ValidationError,e:
+               error( "Validation error in %s:%s: %s" % (fname,linenr,e) )
+               error( "Offending line: %s" % (l,) )
+               valid = False
 
-             if not continue_on_error:
-               return
+               if not continue_on_error:
+                 return
 
      for v in validators:
        try:

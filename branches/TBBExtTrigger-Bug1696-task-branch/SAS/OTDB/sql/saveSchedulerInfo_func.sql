@@ -34,8 +34,7 @@
 --
 -- Types:	none
 --
-CREATE OR REPLACE FUNCTION saveSchedulerInfo(INT4, INT4, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, 
-TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT)
+CREATE OR REPLACE FUNCTION saveSchedulerInfo(INT4, INT4, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT)
   RETURNS BOOLEAN AS $$ 
 	DECLARE
 		TThierarchy CONSTANT	INT2 := 30;
@@ -122,6 +121,10 @@ TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT)
 		UPDATE VIChierarchy SET value=$24 WHERE treeID=$2 AND nodeID=vRecord.nodeID;
                 FETCH fieldList INTO vRecord;
                 UPDATE VIChierarchy SET value=$25 WHERE treeID=$2 AND nodeID=vRecord.nodeID;
+--              FETCH fieldList INTO vRecord;
+--              UPDATE VIChierarchy SET value=$26 WHERE treeID=$2 AND nodeID=vRecord.nodeID;
+--              FETCH fieldList INTO vRecord;
+--              UPDATE VIChierarchy SET value=$27 WHERE treeID=$2 AND nodeID=vRecord.nodeID;
 --              FETCH fieldList INTO vRecord;
 --              UPDATE VIChierarchy SET value=$26 WHERE treeID=$2 AND nodeID=vRecord.nodeID;
 --              FETCH fieldList INTO vRecord;

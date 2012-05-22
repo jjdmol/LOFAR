@@ -202,7 +202,7 @@ struct SampleModifierPhase
         {
             dRe = reDerivative[i];
             dIm = imDerivative[i];
-            const double common =(reSim * dRe + imSim * dIm) / normSim3;
+            const double common = (reSim * dRe + imSim * dIm) / normSim3;
 
             reDerivative[i] = dRe / normSim - reSim * common;
             imDerivative[i] = dIm / normSim - imSim * common;

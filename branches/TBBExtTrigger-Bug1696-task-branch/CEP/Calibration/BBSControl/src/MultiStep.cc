@@ -129,6 +129,12 @@ namespace LOFAR
       // This multistep consists of the following steps.
       vector<string> steps(ps.getStringVector("Step." + name() + ".Steps"));
 
+      // An empty multistep is considered an error.
+      if (steps.empty()) {
+        THROW(BBSControlException, "Multistep \"" << name() 
+              << "\" contains no steps");
+      }
+      
       // Create a new step for each name in \a steps.
       for (unsigned int i = 0; i < steps.size(); ++i) {
 	infiniteRecursionCheck(steps[i]);

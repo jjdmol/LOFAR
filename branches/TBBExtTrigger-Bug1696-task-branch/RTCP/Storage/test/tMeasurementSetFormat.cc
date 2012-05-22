@@ -15,24 +15,35 @@
 using namespace LOFAR;
 using namespace LOFAR::RTCP;
 using namespace casa;
+using namespace std;
 
 // Define handler that tries to print a backtrace.
 Exception::TerminateHandler t(Exception::terminate);
 
 int main()
 {
-  try {
-    Parset parset("tMeasurementSetFormat.parset");
-    MeasurementSetFormat msf(parset);
-    msf.addSubband("tMeasurementSetFormat_tmp.ms", 0, false);
-    // Also create the data file, otherwise it is not a true table.
-    ///FILE* file= fopen ("tMeasurementSetFormat_tmp.ms/f0data", "w");
-    ///fclose (file);
-    RegularFileIO file(String("tMeasurementSetFormat_tmp.ms/table.f0data"),
-    		       ByteIO::New);
-  } catch (LOFAR::Exception &err) {
-    std::cerr << "LOFAR Exception detected: " << err << std::endl;
-    return 1;
+  const string suffixes[] = { "-j2000", "-sun" };
+
+  for( unsigned i = 0; i < sizeof suffixes / sizeof suffixes[0]; i++ ) {
+    try {
+      const string parsetName = string("tMeasurementSetFormat.parset") + suffixes[i];
+      const string msName     = string("tMeasurementSetFormat") + suffixes[i] + "_tmp.ms";
+
+      LOG_DEBUG_STR("Testing " << parsetName);
+
+      Parset parset(parsetName.c_str());
+      MeasurementSetFormat msf(parset);
+      msf.addSubband(msName, 0, false);
+      // Also create the data file, otherwise it is not a true table.
+      ///FILE* file= fopen ("tMeasurementSetFormat_tmp.ms/f0data", "w");
+      ///fclose (file);
+      RegularFileIO file(String(msName+"/table.f0data"),
+                         ByteIO::New);
+    } catch (LOFAR::Exception &err) {
+      std::cerr << "LOFAR Exception detected: " << err << std::endl;
+      return 1;
+    }
   }
+
   return 0;
 }

@@ -38,11 +38,14 @@ using namespace casa;
 namespace LOFAR {
   namespace BBS {
 
-    ParmFacade::ParmFacade (const string& tableName)
+    ParmFacade::ParmFacade (const string& tableName, bool create)
     {
-      // If it is a table, open it directly.
+      // If create, only a local ParmDB can be done.
+      // If it is an existing table, open it directly.
       // Otherwise it is a distributed ParmDB.
-      if (Table::isReadable(tableName)) {
+      if (create) {
+        itsRep = ParmFacadeRep::ShPtr(new ParmFacadeLocal(tableName, create));
+      } else if (Table::isReadable(tableName)) {
         itsRep = ParmFacadeRep::ShPtr(new ParmFacadeLocal(tableName));
       } else {
         itsRep = ParmFacadeRep::ShPtr(new ParmFacadeDistr(tableName));
@@ -68,6 +71,10 @@ namespace LOFAR {
         etime = stime  + timev2;
       }
       vector<double> rng = getRange (parmNamePattern);
+      // No values if the range is null.
+      if (rng[0] == 0  &&  rng[1] == 0) {
+        return Record();
+      }
       if (sfreq < rng[0]) sfreq = rng[0];
       if (efreq > rng[1]) efreq = rng[1];
       if (stime < rng[2]) stime = rng[2];

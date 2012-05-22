@@ -48,7 +48,7 @@ if __name__ == "__main__":
 			help = "base directory [%default]" )
   dirgroup.add_option( "--logdir",
   			dest = "logdir",
-			default = "%s/VALIDATION-${TIMESTAMP}" % (os.getcwd(),),
+			default = "%s/test-${TIMESTAMP}" % (os.getcwd(),),
 			help = "log directory (syntax: [host:]path) [%default]" )
   dirgroup.add_option( "--rundir",
   			dest = "rundir",

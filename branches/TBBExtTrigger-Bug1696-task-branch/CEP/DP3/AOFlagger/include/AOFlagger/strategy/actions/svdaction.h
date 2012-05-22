@@ -28,13 +28,12 @@ namespace rfiStrategy {
 	class SVDAction : public Action
 	{
 		public:
-			SVDAction() : _singularValueCount(5) { }
+			SVDAction() : _singularValueCount(1) { }
 			virtual ~SVDAction() { }
 			virtual std::string Description()
 			{
 				return "Singular value decomposition";
 			}
-			virtual void Initialize() { }
 			virtual void Perform(class ArtifactSet &artifacts, class ProgressListener &listener);
 			virtual ActionType Type() const { return SVDActionType; }
 

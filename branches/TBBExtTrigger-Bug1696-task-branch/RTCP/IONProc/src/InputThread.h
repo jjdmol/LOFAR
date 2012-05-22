@@ -31,6 +31,7 @@
 //# Includes
 #include <Common/lofar_vector.h>
 #include <Interface/RSPTimeStamp.h>
+#include <Interface/SmartPtr.h>
 #include <Common/Thread/Thread.h>
 
 #include <BeamletBuffer.h>
@@ -60,13 +61,15 @@ template<typename SAMPLE_TYPE> class InputThread
 			  InputThread(ThreadArgs args);
 			  ~InputThread();
 
-    void		  mainLoop();
+    void                  start();                      
 
     static const unsigned packetBuffersSize = 128;
 
   private:
+    void		  mainLoop();
+
     ThreadArgs		  itsArgs;
-    Thread		  itsThread;
+    SmartPtr<Thread>	  itsThread;
 };
 
 } // namespace RTCP

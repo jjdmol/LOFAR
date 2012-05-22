@@ -179,6 +179,44 @@ TimeFrequencyData *TimeFrequencyData::CreateTFDataFromAutoDipoleComplex(enum Pha
 	return data;
 }
 
+TimeFrequencyData *TimeFrequencyData::CreateTFDataFromCrossDipoleComplex(enum PhaseRepresentation phase) const
+{
+	TimeFrequencyData *data;
+	switch(phase)
+	{
+		case RealPart:
+			data = new TimeFrequencyData(RealPart, CrossDipolePolarisation,
+				GetRealPartFromCrossDipole(XYPolarisation),
+				GetRealPartFromCrossDipole(YXPolarisation));
+			break;
+		case ImaginaryPart:
+			data = new TimeFrequencyData(ImaginaryPart, CrossDipolePolarisation,
+				GetImaginaryPartFromCrossDipole(XYPolarisation),
+				GetImaginaryPartFromCrossDipole(YXPolarisation));
+			break;
+		case AmplitudePart:
+			{
+				Image2DCPtr
+					xy = GetAmplitudePartFromCrossDipole(XYPolarisation),
+					yx = GetAmplitudePartFromCrossDipole(YXPolarisation);
+				data = new TimeFrequencyData(AmplitudePart, CrossDipolePolarisation, xy, yx);
+			}
+			break;
+		case PhasePart:
+			{
+				Image2DCPtr
+					xy = GetPhasePartFromAutoDipole(XYPolarisation),
+					yx = GetPhasePartFromAutoDipole(YXPolarisation);
+				data = new TimeFrequencyData(PhasePart, CrossDipolePolarisation, xy, yx);
+			}
+			break;
+		default:
+			throw BadUsageException("Creating TF data with non implemented phase parameters (not real/imaginary/amplitude)");
+	}
+	CopyFlaggingTo(data);
+	return data;
+}
+
 TimeFrequencyData *TimeFrequencyData::CreateTFDataFromComplexCombination(const TimeFrequencyData &real, const TimeFrequencyData &imaginary)
 {
 	if(real.PhaseRepresentation() == ComplexRepresentation || imaginary.PhaseRepresentation() == ComplexRepresentation)

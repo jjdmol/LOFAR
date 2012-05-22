@@ -334,7 +334,7 @@ void Morphology::floodFill(Mask2DCPtr mask, SegmentedImagePtr output, Mask2DPtr 
 					output->SetValue(p.x, p.y, value);
 			}
 		}
-		Mask2DCPtr matrix = matrices[p.z];
+		Mask2DPtr matrix = matrices[p.z];
 		matrix->SetValue(p.x, p.y, false);
 		if((p.z == 0 || p.z == 2) && matrices[1]->Value(p.x,p.y))
 		{

@@ -44,7 +44,7 @@ void LocalFitMethod::Initialize(const TimeFrequencyData &input)
 {
 	ClearWeights();
 	_original = input.GetSingleImage();
-	_background2D = Image2D::CreateEmptyImagePtr(_original->Width(), _original->Height());
+	_background2D = Image2D::CreateZeroImagePtr(_original->Width(), _original->Height());
 	if(_background!=0)
 		delete _background;
 	_background = new TimeFrequencyData(input.PhaseRepresentation(), input.Polarisation(), _background2D);
@@ -284,7 +284,7 @@ void LocalFitMethod::ElementWiseDivide(Image2DPtr leftHand, Image2DCPtr rightHan
 
 Image2DPtr LocalFitMethod::CreateFlagWeightsMatrix()
 {
-	Image2DPtr image = Image2D::CreateEmptyImagePtr(_mask->Width(), _mask->Height());
+	Image2DPtr image = Image2D::CreateUnsetImagePtr(_mask->Width(), _mask->Height());
 	for(unsigned y=0;y<image->Height();++y) {
 		for(unsigned x=0;x<image->Width();++x) {
 			if(!_mask->Value(x, y) && std::isfinite(_original->Value(x, y)))
@@ -300,7 +300,7 @@ void LocalFitMethod::PerformGaussianConvolution(Image2DPtr input)
 {
 	// Guassian convolution can be separated in two 1D convolution
 	// because of properties of the 2D Gaussian function.
-	Image2DPtr temp = Image2D::CreateEmptyImagePtr(input->Width(), input->Height());
+	Image2DPtr temp = Image2D::CreateZeroImagePtr(input->Width(), input->Height());
 	for(int i=-_hSquareSize;i<=(int) _hSquareSize;++i) {
 		num_t gaus = _weights[_vSquareSize][i+_hSquareSize];
 		for(unsigned y=0;y<input->Height();++y) {

@@ -1,6 +1,6 @@
 /***************************************************************************
- *   Copyright (C) 2008 by A.R. Offringa   *
- *   offringa@astro.rug.nl   *
+ *   Copyright (C) 2012 by A.R. Offringa                                   *
+ *   offringa@astro.rug.nl                                                 *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -65,6 +65,8 @@ class StrategyReader {
 		class Action *parseCombineFlagResults(xmlNode *node);
 		class Action *parseCutAreaAction(xmlNode *node);
 		class Action *parseDirectionalCleanAction(xmlNode *node);
+		class Action *parseDirectionProfileAction(xmlNode *node);
+		class Action *parseEigenValueVerticalAction(xmlNode *node);
 		class Action *parseForEachBaselineAction(xmlNode *node);
 		class Action *parseForEachComplexComponentAction(xmlNode *node);
 		class Action *parseForEachMSAction(xmlNode *node);
@@ -75,8 +77,10 @@ class StrategyReader {
 		class Action *parseFringeStopAction(xmlNode *node);
 		class Action *parseImagerAction(xmlNode *node);
 		class Action *parseIterationBlock(xmlNode *node);
+		class Action *parseNormalizeVarianceAction(xmlNode *node);
 		class Action *parsePlotAction(xmlNode *node);
 		class Action *parseQuickCalibrateAction(xmlNode *node);
+		class Action *parseRawAppenderAction(xmlNode *node);
 		class Action *parseSetFlaggingAction(xmlNode *node);
 		class Action *parseSetImageAction(xmlNode *node);
 		class Action *parseSlidingWindowFitAction(xmlNode *node);

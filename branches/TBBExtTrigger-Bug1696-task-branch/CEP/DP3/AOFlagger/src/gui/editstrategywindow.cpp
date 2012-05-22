@@ -20,6 +20,7 @@
 #include <iostream>
 
 #include <gtkmm/stock.h>
+#include <gtkmm/messagedialog.h>
 
 #include <AOFlagger/strategy/actions/iterationaction.h>
 #include <AOFlagger/strategy/actions/strategyaction.h>
@@ -35,6 +36,7 @@
 #include <AOFlagger/gui/strategyframes/baselineselectionframe.h>
 #include <AOFlagger/gui/strategyframes/changeresolutionframe.h>
 #include <AOFlagger/gui/strategyframes/cutareaframe.h>
+#include <AOFlagger/gui/strategyframes/directionprofileframe.h>
 #include <AOFlagger/gui/strategyframes/foreachbaselineframe.h>
 #include <AOFlagger/gui/strategyframes/foreachmsframe.h>
 #include <AOFlagger/gui/strategyframes/foreachpolarisationframe.h>
@@ -264,6 +266,9 @@ void EditStrategyWindow::onSelectionChanged()
 				break;
 			case CutAreaActionType:
 				showRight(new CutAreaFrame(*static_cast<rfiStrategy::CutAreaAction*>(selectedAction), *this));
+				break;
+			case DirectionProfileActionType:
+				showRight(new DirectionProfileFrame(*static_cast<rfiStrategy::DirectionProfileAction*>(selectedAction), *this));
 				break;
 			case FringeStopActionType:
 				showRight(new FringeStoppingFrame(*static_cast<rfiStrategy::FringeStopAction*>(selectedAction), *this));
@@ -513,11 +518,17 @@ void EditStrategyWindow::onOpenClicked()
 		StrategyReader reader;
 		std::string filename(dialog.get_filename());
 		Strategy *oldStrategy = _strategy;
-		_strategy = reader.CreateStrategyFromFile(filename);
-		_msWindow.SetStrategy(_strategy);
-		delete oldStrategy;
-		_store->clear();
-		fillStore();
+		try {
+			_strategy = reader.CreateStrategyFromFile(filename);
+			_msWindow.SetStrategy(_strategy);
+			delete oldStrategy;
+			_store->clear();
+			fillStore();
+		} catch(std::exception &e)
+		{
+			Gtk::MessageDialog dialog(*this, e.what(), false, Gtk::MESSAGE_ERROR);
+			dialog.run();
+		}
 	}
 }
 

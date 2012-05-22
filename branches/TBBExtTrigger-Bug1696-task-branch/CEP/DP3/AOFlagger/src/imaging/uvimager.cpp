@@ -320,13 +320,14 @@ void UVImager::Image(const TimeFrequencyData &data, TimeFrequencyMetaDataCPtr me
 
 void UVImager::ApplyWeightsToUV()
 {
+	double normFactor = _uvWeights->Sum() / ((num_t) _uvReal->Height() * _uvReal->Width());
 	for(size_t y=0;y<_uvReal->Height();++y) {
 		for(size_t x=0;x<_uvReal->Width();++x) {
 			num_t weight = _uvWeights->Value(x, y);
 			if(weight != 0.0)
 			{
-				_uvReal->SetValue(x, y, _uvReal->Value(x, y) / weight);
-				_uvImaginary->SetValue(x, y, _uvImaginary->Value(x, y) / weight);
+				_uvReal->SetValue(x, y, _uvReal->Value(x, y) * normFactor / weight);
+				_uvImaginary->SetValue(x, y, _uvImaginary->Value(x, y) * normFactor / weight);
 				_uvWeights->SetValue(x, y, 1.0);
 			} 
 		}
@@ -502,17 +503,17 @@ void UVImager::GetUVPosition(num_t &u, num_t &v, const SingleFrequencySingleBase
 	v = -sinn(baselineAngle)*baselineLength;
 }
 
-num_t UVImager::GetFringeStopFrequency(size_t timeIndex, const Baseline &baseline, num_t delayDirectionRA, num_t delayDirectionDec, num_t frequency, TimeFrequencyMetaDataCPtr metaData)
+num_t UVImager::GetFringeStopFrequency(size_t timeIndex, const Baseline &/*baseline*/, num_t /*delayDirectionRA*/, num_t delayDirectionDec, num_t /*frequency*/, TimeFrequencyMetaDataCPtr metaData)
 {
 	// earthspeed = rad / sec
 	const num_t earthSpeed = 2.0L * M_PIn / (24.0L * 60.0L * 60.0L);
-	num_t earthLattitudeAngle =
-		Date::JDToHourOfDay(Date::AipsMJDToJD(metaData->ObservationTimes()[timeIndex]))*M_PIn/12.0L;
-	num_t raSin = sinn(-delayDirectionRA - earthLattitudeAngle);
-	num_t raCos = cosn(-delayDirectionRA - earthLattitudeAngle);
-	num_t dx = baseline.antenna2.x - baseline.antenna1.x;
-	num_t dy = baseline.antenna2.y - baseline.antenna1.y;
-	num_t wavelength = 299792458.0L / frequency;
+	//num_t earthLattitudeAngle =
+	//	Date::JDToHourOfDay(Date::AipsMJDToJD(metaData->ObservationTimes()[timeIndex]))*M_PIn/12.0L;
+	//num_t raSin = sinn(-delayDirectionRA - earthLattitudeAngle);
+	//num_t raCos = cosn(-delayDirectionRA - earthLattitudeAngle);
+	//num_t dx = baseline.antenna2.x - baseline.antenna1.x;
+	//num_t dy = baseline.antenna2.y - baseline.antenna1.y;
+	//num_t wavelength = 299792458.0L / frequency;
 	return -earthSpeed * metaData->UVW()[timeIndex].u * cosn(delayDirectionDec);
 }
 
@@ -526,7 +527,7 @@ num_t UVImager::GetFringeCount(size_t timeIndexStart, size_t timeIndexEnd, unsig
 
 void UVImager::InverseImage(class MeasurementSet &prototype, unsigned /*band*/, const Image2D &/*uvReal*/, const Image2D &/*uvImaginary*/, unsigned antenna1Index, unsigned antenna2Index)
 {
-	_timeFreq = Image2D::CreateEmptyImage(prototype.MaxScanIndex()+1, prototype.FrequencyCount());
+	_timeFreq = Image2D::CreateZeroImage(prototype.MaxScanIndex()+1, prototype.FrequencyCount());
 	AntennaInfo antenna1, antenna2;
 	antenna1 = prototype.GetAntennaInfo(antenna1Index);
 	antenna2 = prototype.GetAntennaInfo(antenna2Index);

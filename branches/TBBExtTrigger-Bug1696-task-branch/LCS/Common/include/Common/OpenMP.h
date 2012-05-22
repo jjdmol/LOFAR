@@ -22,9 +22,14 @@
 //#
 //# @author Ger van Diepen <diepen at astron dot nl>
 
+#ifndef LOFAR_COMMON_OPENMP_H
+#define LOFAR_COMMON_OPENMP_H
+
 #ifdef _OPENMP
-# include <omp.h>
+#include <omp.h>
 #endif
+
+#include <Common/LofarTypes.h>
 
 namespace LOFAR {
   namespace OpenMP {
@@ -33,7 +38,7 @@ namespace LOFAR {
     // OpenMP sets it to the env.var. OMP_NUM_THREADS. If undefined, it is
     // the number of cores.
     // If OpenMP is not used, 1 is returned.
-    uint maxThreads()
+    inline uint maxThreads()
     {
 #ifdef _OPENMP
       return omp_get_max_threads();
@@ -44,7 +49,7 @@ namespace LOFAR {
 
     // Get the number of threads used in a parallel piece of code.
     // If OpenMP is not used, 1 is returned.
-    uint numThreads()
+    inline uint numThreads()
     {
 #ifdef _OPENMP
       return omp_get_num_threads();
@@ -55,7 +60,7 @@ namespace LOFAR {
 
     // Get the thread number (0 till numThreads).
     // If OpenMP is not used, 0 is returned.
-    uint threadNum()
+    inline uint threadNum()
     {
 #ifdef _OPENMP
       return omp_get_thread_num();
@@ -66,3 +71,5 @@ namespace LOFAR {
 
   } // end namespace
 } // end namespace
+
+#endif

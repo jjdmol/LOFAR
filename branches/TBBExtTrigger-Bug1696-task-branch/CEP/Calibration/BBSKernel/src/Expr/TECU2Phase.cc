@@ -62,7 +62,7 @@ const Scalar::View TECU2Phase::evaluateImpl(const Grid &grid,
     //
     // TODO: Find out if and how to sign of the phase shift due to the
     // ionosphere is related to the definition of the plane wave used.
-    Matrix phase = (tec() * 8.44797245e9) / freq;
+    Matrix phase = (tec() * -8.44797245e9) / freq;
 
     return Scalar::View(tocomplex(cos(phase), sin(phase)));
 }

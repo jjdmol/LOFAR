@@ -471,6 +471,9 @@ namespace
             " time, frequency covered by the visibility buffer extends outside"
             " the model domain.");
 
+        ASSERTSTR(buffer->hasFlags() && buffer->hasCovariance(), "Flags and"
+            " covariance information required for parameter estimation.");
+
         // Construct a sequence of pairs of indices of matching baselines (i.e.
         // baselines common to both buffer and model).
         vector<pair<size_t, size_t> > blMap;

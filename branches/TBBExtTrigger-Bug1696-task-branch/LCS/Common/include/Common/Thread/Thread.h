@@ -33,12 +33,14 @@
 #include <Common/LofarLogger.h>
 #include <Common/SystemCallException.h>
 #include <Common/Thread/Semaphore.h>
+#include <Common/Thread/Mutex.h>
 #include <Common/Thread/Cancellation.h>
 
 #include <boost/algorithm/string.hpp>
 
 #include <string>
 #include <vector>
+#include <memory>
 
 namespace LOFAR {
 
@@ -58,6 +60,11 @@ class Thread
     // The thread is joined in the destructor of the Thread object
       
     template <typename T> Thread(T *object, void (T::*method)(), const std::string &logPrefix = "", size_t stackSize = 0);
+
+    // ~Thread() is NOT virtual, because Thread should NOT be inherited. An
+    // DerivedThread class would partially destruct itself before reaching
+    // the pthread_join in ~Thread(), which in turn would result in a running
+    // thread controlled by a partially deconstructed Thread object.
 			  ~Thread(); // join a thread
 
     void		  cancel();
@@ -85,6 +92,36 @@ class Thread
     pthread_t	      thread;
 };
 
+class ThreadMap {
+public:
+  typedef std::map<pthread_t,std::string> mapType;
+
+  void report();
+
+  class ScopedRegistration {
+  public:
+    ScopedRegistration( ThreadMap &tm, const std::string &desc ): tm(tm) {
+      ScopedLock sl(tm.mutex);
+      tm.map[id()] = desc;
+    }
+
+    ~ScopedRegistration() {
+      ScopedLock sl(tm.mutex);
+      tm.map.erase(id());
+    }
+
+  private:
+    ThreadMap &tm;
+
+    pthread_t id() const { return pthread_self(); }
+  };
+
+private:
+  mapType map;
+  Mutex   mutex;
+};
+
+extern ThreadMap globalThreadMap;
 
 template <typename T> inline Thread::Thread(T *object, void (T::*method)(), const std::string &logPrefix, size_t stackSize)
 :
@@ -158,9 +195,9 @@ template <typename T> inline void Thread::stub(Args<T> *args)
   // can be reused once the thread finishes.
   Cancellation::ScopedRegisterThread rt;
 
-#ifdef HAVE_LOG4CPLUS
-  initNDC();
-#endif
+  LOGGER_NEWTHREAD();
+
+  ThreadMap::ScopedRegistration sr(globalThreadMap, logPrefix);
 
   try {
     (args->object->*args->method)();

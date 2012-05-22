@@ -25,6 +25,8 @@
 #ifndef LOFAR_LOFARFT_LOFARIMAGER_H
 #define LOFAR_LOFARFT_LOFARIMAGER_H
 
+#include <LofarFT/LofarFTMachine.h>
+#include <LofarFT/LofarFTMachineOld.h>
 #include <synthesis/MeasurementEquations/Imager.h>
 #include <casa/Containers/Record.h>
 
@@ -45,9 +47,24 @@ namespace LOFAR
     // Create the LofarFTMachine and fill ft_p in the parent.
     virtual casa::Bool createFTMachine();
 
+    virtual void setSkyEquation();
+
+    // Get the average primary beam.
+    const Matrix<Float>& getAveragePB() const
+    { return itsMachine ? itsMachine->getAveragePB() : itsMachineOld->getAveragePB(); }
+
+    // Get the spheroidal cut.
+    const Matrix<Float>& getSpheroidCut() const
+    { return itsMachine ? itsMachine->getSpheroidCut() : itsMachineOld->getSpheroidCut(); }
+
+    // Show the relative timings of the various steps.
+    void showTimings (std::ostream&, double duration) const;
+
   private:
     //# Data members.
-    casa::Record itsParameters;
+    casa::Record       itsParameters;
+    LofarFTMachine*    itsMachine;
+    LofarFTMachineOld* itsMachineOld;
   };
 
 } //# end namespace

@@ -28,18 +28,20 @@
 #include <AOFlagger/msio/date.h>
 #include <AOFlagger/msio/image2d.h>
 
-#include <AOFlagger/strategy/algorithms/rfiplots.h>
+#include <AOFlagger/strategy/plots/rfiplots.h>
+
 #include <AOFlagger/strategy/algorithms/thresholdmitigater.h>
 #include <AOFlagger/strategy/algorithms/fringestoppingfitter.h>
 
-#include <AOFlagger/util/plot.h>
+#include <AOFlagger/gui/plot/plotmanager.h>
 
 #include <AOFlagger/imaging/uvimager.h>
 
 #include <AOFlagger/gui/mswindow.h>
 
-ComplexPlanePlotWindow::ComplexPlanePlotWindow(class MSWindow &_msWindow)
+ComplexPlanePlotWindow::ComplexPlanePlotWindow(MSWindow &_msWindow, PlotManager &plotManager)
 	: _msWindow(_msWindow),
+		_plotManager(plotManager),
 		_detailsFrame("Location details"),
 		_detailsLabel(),
 		_xPositionLabel("time start position:"),
@@ -157,7 +159,7 @@ void ComplexPlanePlotWindow::onPlotPressed()
 	if(_msWindow.HasImage())
 	{
 		try {
-			Plot plot("dist.pdf");
+			Plot2D &plot = _plotManager.NewPlot2D("Complex plane");
 			size_t x = (size_t) _xPositionScale.get_value();
 			size_t y = (size_t) _yPositionScale.get_value();
 			size_t length = (size_t) _lengthScale.get_value();
@@ -167,66 +169,63 @@ void ComplexPlanePlotWindow::onPlotPressed()
 
 			if(_allValuesButton.get_active())
 			{
+				Plot2DPointSet *pointSet;
 				if(realVersusImaginary)
-					plot.StartScatter("Data");
+					pointSet = &plot.StartLine("Data", Plot2DPointSet::DrawPoints);
 				else
-					plot.StartScatter("Data (real)");
+					pointSet = &plot.StartLine("Data (real)", Plot2DPointSet::DrawPoints);
 				Mask2DPtr mask = Mask2D::CreateSetMaskPtr<false>(_msWindow.AltMask()->Width(), _msWindow.AltMask()->Height());
-				RFIPlots::MakeComplexPlanePlot(plot, data, x, length, y, avgSize, mask, realVersusImaginary, false);
+				RFIPlots::MakeComplexPlanePlot(*pointSet, data, x, length, y, avgSize, mask, realVersusImaginary, false);
 	
 				if(!realVersusImaginary)
 				{
-					plot.StartScatter("Data (imaginary)");
-					RFIPlots::MakeComplexPlanePlot(plot, data, x, length, y, avgSize, mask, realVersusImaginary, true);
+					pointSet = &plot.StartLine("Data (imaginary)", Plot2DPointSet::DrawPoints);
+					RFIPlots::MakeComplexPlanePlot(*pointSet, data, x, length, y, avgSize, mask, realVersusImaginary, true);
 				}
 			}
 
 			if(_unmaskedValuesButton.get_active())
 			{
-				plot.StartLine("Without RFI");
-				RFIPlots::MakeComplexPlanePlot(plot, data, x, length, y, avgSize, _msWindow.AltMask(), realVersusImaginary, false);
+				Plot2DPointSet *pointSet = &plot.StartLine("Without RFI");
+				RFIPlots::MakeComplexPlanePlot(*pointSet, data, x, length, y, avgSize, _msWindow.AltMask(), realVersusImaginary, false);
 				if(!realVersusImaginary)
 				{
-					plot.StartLine("Without RFI (I)");
-					RFIPlots::MakeComplexPlanePlot(plot, data, x, length, y, avgSize, _msWindow.AltMask(), realVersusImaginary, true);
+					pointSet = &plot.StartLine("Without RFI (I)");
+					RFIPlots::MakeComplexPlanePlot(*pointSet, data, x, length, y, avgSize, _msWindow.AltMask(), realVersusImaginary, true);
 				}
 			}
 	
 			if(_maskedValuesButton.get_active())
 			{
-				plot.StartLine("Only RFI");
+				Plot2DPointSet *pointSet = &plot.StartLine("Only RFI");
 				Mask2DPtr mask = Mask2D::CreateCopy(_msWindow.AltMask());
 				mask->Invert();
-				RFIPlots::MakeComplexPlanePlot(plot, data, x, length, y, avgSize, mask, realVersusImaginary, false);
+				RFIPlots::MakeComplexPlanePlot(*pointSet, data, x, length, y, avgSize, mask, realVersusImaginary, false);
 				if(!realVersusImaginary)
 				{
-					plot.StartLine("Only RFI (I)");
-					RFIPlots::MakeComplexPlanePlot(plot, data, x, length, y, avgSize, mask, realVersusImaginary, true);
+					pointSet = &plot.StartLine("Only RFI (I)");
+					RFIPlots::MakeComplexPlanePlot(*pointSet, data, x, length, y, avgSize, mask, realVersusImaginary, true);
 				}
 			}
 	
 			if(_fittedValuesButton.get_active())
 			{
+				Plot2DPointSet *pointSet;
 				if(realVersusImaginary)
-					plot.StartLine("Fit");
+					pointSet = &plot.StartLine("Fit");
 				else
-					plot.StartLine("Fit (real)");
+					pointSet = &plot.StartLine("Fit (real)");
 				size_t middleY = (2*y + avgSize) / 2;
-				double deltaTime;
-				if(_observationTimes.size()>1)
-					deltaTime = _observationTimes[1] - _observationTimes[0];
-				else
-					deltaTime = 1.0;
 				Baseline baseline(_msWindow.TimeFrequencyMetaData()->Antenna1(), _msWindow.TimeFrequencyMetaData()->Antenna2());
 				long double fringeCount =
 					UVImager::GetFringeCount(x, x+length, middleY, _msWindow.TimeFrequencyMetaData());
 				long double fringeFrequency = fringeCount / length;
 				Mask2DPtr mask = Mask2D::CreateSetMaskPtr<false>(_msWindow.AltMask()->Width(), _msWindow.AltMask()->Height());
-				RFIPlots::MakeFittedComplexPlot(plot, data, x, length, y, avgSize, mask, fringeFrequency, realVersusImaginary, false);
+				RFIPlots::MakeFittedComplexPlot(*pointSet, data, x, length, y, avgSize, mask, fringeFrequency, realVersusImaginary, false);
 				if(!realVersusImaginary)
 				{
-					plot.StartLine("Fit (imaginary)");
-					RFIPlots::MakeFittedComplexPlot(plot, data, x, length, y, avgSize, mask, fringeFrequency, realVersusImaginary, true);
+					pointSet = &plot.StartLine("Fit (imaginary)");
+					RFIPlots::MakeFittedComplexPlot(*pointSet, data, x, length, y, avgSize, mask, fringeFrequency, realVersusImaginary, true);
 				}
 			}
 
@@ -243,30 +242,31 @@ void ComplexPlanePlotWindow::onPlotPressed()
 				fitter.SetMetaData(_msWindow.TimeFrequencyMetaData());
 				fitter.PerformStaticFrequencyFitOnOneChannel(y);
 
+				Plot2DPointSet *pointSet;
 				if(realVersusImaginary)
-					plot.StartLine("Fit");
+					pointSet = &plot.StartLine("Fit");
 				else
-					plot.StartLine("Fit (real)");
+					pointSet = &plot.StartLine("Fit (real)");
 				Mask2DPtr mask = Mask2D::CreateSetMaskPtr<false>(_msWindow.AltMask()->Width(), _msWindow.AltMask()->Height());
-				RFIPlots::MakeComplexPlanePlot(plot, fitter.Background(), x, length, y, avgSize, mask, realVersusImaginary, false);
+				RFIPlots::MakeComplexPlanePlot(*pointSet, fitter.Background(), x, length, y, avgSize, mask, realVersusImaginary, false);
 	
 				fitter.SetReturnFittedValue(false);
 				fitter.SetReturnMeanValue(true);
 				if(!realVersusImaginary)
 				{
-					plot.StartLine("Fit (imaginary)");
-					RFIPlots::MakeComplexPlanePlot(plot, fitter.Background(), x, length, y, avgSize, mask, realVersusImaginary, true);
+					pointSet = &plot.StartLine("Fit (imaginary)");
+					RFIPlots::MakeComplexPlanePlot(*pointSet, fitter.Background(), x, length, y, avgSize, mask, realVersusImaginary, true);
 				}
 
 				fitter.PerformStaticFrequencyFitOnOneChannel(y);
 
-				plot.StartLine("Center");
-				RFIPlots::MakeComplexPlanePlot(plot, fitter.Background(), x, length, y, avgSize, mask, realVersusImaginary, false);
+				pointSet = &plot.StartLine("Center");
+				RFIPlots::MakeComplexPlanePlot(*pointSet, fitter.Background(), x, length, y, avgSize, mask, realVersusImaginary, false);
 	
 				if(!realVersusImaginary)
 				{
-					plot.StartLine("Center (I)");
-					RFIPlots::MakeComplexPlanePlot(plot, fitter.Background(), x, length, y, avgSize, mask, realVersusImaginary, true);
+					pointSet = &plot.StartLine("Center (I)");
+					RFIPlots::MakeComplexPlanePlot(*pointSet, fitter.Background(), x, length, y, avgSize, mask, realVersusImaginary, true);
 				}
 			}
 	
@@ -306,22 +306,23 @@ void ComplexPlanePlotWindow::onPlotPressed()
 				else
 					fitter.PerformDynamicFrequencyFit(y, y + avgSize);
 
+				Plot2DPointSet *pointSet;
 				if(realVersusImaginary)
-					plot.StartLine("Fit");
+					pointSet = &plot.StartLine("Fit");
 				else
-					plot.StartLine("Fit (real)");
+					pointSet = &plot.StartLine("Fit (real)");
 				Mask2DPtr mask = Mask2D::CreateSetMaskPtr<false>(_msWindow.AltMask()->Width(), _msWindow.AltMask()->Height());
-				RFIPlots::MakeComplexPlanePlot(plot, fitter.Background(), x, length, y, avgSize, mask, realVersusImaginary, false);
+				RFIPlots::MakeComplexPlanePlot(*pointSet, fitter.Background(), x, length, y, avgSize, mask, realVersusImaginary, false);
 	
 				if(!realVersusImaginary)
 				{
-					plot.StartLine("Fit (imaginary)");
-					RFIPlots::MakeComplexPlanePlot(plot, fitter.Background(), x, length, y, avgSize, mask, realVersusImaginary, true);
+					pointSet = &plot.StartLine("Fit (imaginary)");
+					RFIPlots::MakeComplexPlanePlot(*pointSet, fitter.Background(), x, length, y, avgSize, mask, realVersusImaginary, true);
 				}
 			}
 
-			plot.Close();
-			plot.Show();
+			_plotManager.Update();
+			
 		} catch(std::exception &e)
 		{
 			Gtk::MessageDialog dialog(*this, e.what(), false, Gtk::MESSAGE_ERROR);

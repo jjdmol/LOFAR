@@ -70,6 +70,24 @@ class LessThanAsserter {
 				throwGreaterThanComparisonError(actual, limit, description);
 			}
 		}
+
+		template<typename T, typename S>
+		void AssertNotEqual(T first, S second) const
+		{
+			if(!(first != second))
+			{
+				throwNotEqualsError(first, second);
+			}
+		}
+
+		template<typename T, typename S>
+		void AssertNotEqual(T first, S second, const std::string &description) const
+		{
+			if(!(first != second))
+			{
+				throwNotEqualsError(first, second, description);
+			}
+		}
 	private:
 		template <typename T, typename S>
 		void throwLessThanComparisonError(T actual, S limit) const
@@ -86,7 +104,7 @@ class LessThanAsserter {
 		{
 			std::stringstream s;
 			s << "AssertLessThan failed on test '" << description
-			<< "': " << actual << " > " << limit << " was false" << "\n("
+			<< "': " << actual << " < " << limit << " was false" << "\n("
 			<< limit << " was the limit, " << actual << " was the actual value, ";
 			addTypes(s, typeid(actual), typeid(limit));
 			throw std::runtime_error(s.str());
@@ -113,6 +131,25 @@ class LessThanAsserter {
 			throw std::runtime_error(s.str());
 		}
 		
+		template <typename T, typename S>
+		void throwNotEqualsError(T first, S second) const
+		{
+			std::stringstream s;
+			s << "AssertNotEqual failed: " << first << " != " << second << " was false" << "\n(";
+			addTypes(s, typeid(first), typeid(second));
+			throw std::runtime_error(s.str());
+		}
+
+		template <typename T, typename S>
+		void throwNotEqualsError(T first, S second, const std::string &description) const
+		{
+			std::stringstream s;
+			s << "AssertNotEqual failed on test '" << description
+			<< "': " << first << " != " << second << " was false" << "\n(";
+			addTypes(s, typeid(first), typeid(second));
+			throw std::runtime_error(s.str());
+		}
+
 		void addTypes(std::stringstream &s, const std::type_info &leftHandType, const std::type_info &rightHandType) const
 		{
 			if(leftHandType == rightHandType)

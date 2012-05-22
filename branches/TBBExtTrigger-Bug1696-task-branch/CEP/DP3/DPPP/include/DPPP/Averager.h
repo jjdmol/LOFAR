@@ -57,6 +57,10 @@ namespace LOFAR {
       // Parameters are obtained from the parset using the given prefix.
       Averager (DPInput*, const ParSet&, const string& prefix);
 
+      // Construct the object using the given parameters.
+      Averager (DPInput*, const string& stepname,
+                uint nchanAvg, uint ntimeAvg);
+
       virtual ~Averager();
 
       // Process the data.
@@ -92,6 +96,8 @@ namespace LOFAR {
       string          itsName;
       DPBuffer        itsBuf;
       casa::Cube<int> itsNPoints;
+      casa::Cube<casa::Complex> itsAvgAll;
+      casa::Cube<float>         itsWeightAll;
       uint            itsNChanAvg;
       uint            itsNTimeAvg;
       uint            itsMinNPoint;

@@ -1,4 +1,4 @@
-//# MSWriterNull: a null MSWriter
+//# MSWriterFile: a raw file writer
 //#
 //#  Copyright (C) 2001
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,23 +22,20 @@
 
 #include <lofar_config.h>
 
+#include <Common/LofarLogger.h>
 #include <Storage/MSWriterFile.h>
 
 #include <sys/types.h>
 #include <fcntl.h>
 
-
 namespace LOFAR {
 namespace RTCP {
 
 
-MSWriterFile::MSWriterFile (const char *msName)
+MSWriterFile::MSWriterFile (const string &msName, bool oldFileFormat)
 :
- itsFile(msName, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH
-#if 1
-  | O_SYNC | O_DIRECT
-#endif
- )
+ itsFile(msName, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH),
+ itsOldFileFormat(oldFileFormat) // true if the header is just the sequence number padded to 512 bytes
 {
 }
 
@@ -50,7 +47,20 @@ MSWriterFile::~MSWriterFile()
 
 void MSWriterFile::write(StreamableData *data)
 {
-  data->write(&itsFile, true, 512);
+  uint32_t magicValue = 0; // initialise to satisfy compiler
+
+  if (itsOldFileFormat) {
+    ASSERT( FastFileStream::alignment == 512 );
+
+    // a hack to get the sequence number as the first 4 bytes, replacing the magic value.
+    magicValue = data->peerMagicNumber;
+    data->peerMagicNumber = data->sequenceNumber(true);
+  }
+
+  data->write(&itsFile, true, FastFileStream::alignment);
+
+  if (itsOldFileFormat)
+    data->peerMagicNumber = magicValue;
 }
 
 

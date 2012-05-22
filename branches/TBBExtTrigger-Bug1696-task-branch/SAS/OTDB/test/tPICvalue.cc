@@ -123,7 +123,7 @@ int main (int	argc, char*	argv[]) {
 
 	// try to resolve the database name
 	string 		dbName("otdbtest");
-	string		hostName("dop50.astron.nl");
+	string		hostName("rs005.astron.nl");
 	char		line[64];
 	int32		sleeptime = 1;
 	ifstream	inFile;
@@ -182,13 +182,13 @@ int main (int	argc, char*	argv[]) {
 		TreeValue	tv(&conn, treeID);
 
 		LOG_INFO("Adding a kvt to the PIC tree");
-		if (!tv.addKVT("LCU3:PIC.status", "maintenance", 
+		if (!tv.addKVT("LOFAR.PIC.status", "maintenance", 
 							time_from_string("2002-01-20 23:59:55.123"))) {
 			LOG_INFO("Could NOT add the key, key unknown?");
 		}
 
 		LOG_INFO("Adding a OTDBvalue class to the PIC tree");
-		OTDBvalue	aKVT("LCU3:PIC_Rack1.status", "off", 
+		OTDBvalue	aKVT("LOFAR.PIC.Rack1.status", "off", 
 						 ptime(microsec_clock::local_time()));
 		if (!tv.addKVT(aKVT)) {
 			LOG_INFO("Could NOT add the OTDBvalue class");
@@ -199,10 +199,10 @@ int main (int	argc, char*	argv[]) {
 		aKVT.value="on";
 		aKVT.time=ptime(microsec_clock::local_time());
 		myVec.push_back(aKVT);
-		aKVT.name="LCU3:PIC.status";
+		aKVT.name="LOFAR.PIC.status";
 		aKVT.time=ptime(microsec_clock::local_time());
 		myVec.push_back(aKVT);
-		aKVT.name="LCU3:PIC_Rack1_SubRack1.status";
+		aKVT.name="LOFAR.PIC.Rack1.SubRack1.status";
 		aKVT.time=ptime(microsec_clock::local_time());
 		myVec.push_back(aKVT);
 		if (!tv.addKVTlist(myVec)) {
@@ -231,12 +231,12 @@ int main (int	argc, char*	argv[]) {
 		ParameterSet	aPS("tPICvalue.in");
 		cout << aPS;
 
-		LOG_INFO("Adding a Paramset class to the PIC tree");
-		ASSERTSTR(tv.addKVTparamSet(aPS), "Could NOT add the OTDBvalue class");
+		LOG_INFO("Adding a (faulty) Paramset class to the PIC tree");
+		ASSERTSTR(!tv.addKVTparamSet(aPS), "Could add the faulty OTDBvalue class");
 		LOG_INFO("ParameterSet added, going to query it");
 
-		LOG_INFO ("Searching Node: LCU3:PIC.Rack1.status");
-		vector<OTDBnode>	nodeList=tm.getItemList(treeID, "LCU3:PIC.Rack1.status");
+		LOG_INFO ("Searching Node: LOFAR.PIC.Rack1.status");
+		vector<OTDBnode>	nodeList=tm.getItemList(treeID, "LOFAR.PIC.Rack1.status");
 		showNodeList(nodeList);
 
 		nodeIDType		nodeID = nodeList[nodeList.size()-1].nodeID();

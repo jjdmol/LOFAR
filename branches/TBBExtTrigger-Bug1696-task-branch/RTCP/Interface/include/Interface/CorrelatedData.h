@@ -42,11 +42,7 @@ class CorrelatedData : public StreamableData, public IntegratableData
 
 inline CorrelatedData::CorrelatedData(unsigned nrStations, unsigned nrChannels, unsigned maxNrValidSamples, Allocator &allocator)
 :
-#if defined HAVE_BGP
   itsAlignment(512),
-#else 
-  itsAlignment(512),
-#endif
   itsNrBaselines(nrStations * (nrStations + 1) / 2),
   visibilities(boost::extents[itsNrBaselines][nrChannels][NR_POLARIZATIONS][NR_POLARIZATIONS], itsAlignment, allocator, true),
   itsNrBytesPerNrValidSamples(maxNrValidSamples < 256 ? 1 : maxNrValidSamples < 65536 ? 2 : 4)

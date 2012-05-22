@@ -166,16 +166,17 @@ namespace BBS {
     // Read the contents from the blob input stream \a bis into \c *this.
     virtual void read (BlobIStream& bis) = 0;
 
-  private:
-    // Add this and that axis, where this axis must be before that axis.
-    Axis::ShPtr add (const Axis& that) const;
-
     // Make an Axis object from the intervals defined by the low/upp values.
     // If all intervals have the same width, a RegularAxis object is made.
     // Otherwise an OrderedAxis object.
     // The intervals must be consecutive.
+    // <br>It checks if both vectors have equal length.
     static Axis::ShPtr makeAxis (const vector<double>& low,
                                  const vector<double>& high);
+
+  private:
+    // Add this and that axis, where this axis must be before that axis.
+    Axis::ShPtr add (const Axis& that) const;
 
     virtual Axis::ShPtr doSubset (size_t start, size_t end) const = 0;
 
@@ -244,7 +245,7 @@ protected:
     // Default constructor creates one cell from -1e30 till 1e30.
     OrderedAxis();
 
-    // Specify the intervals defined by v1/v2 as width/center or start/end.
+    // Specify the intervals defined by v1/v2 as center/width or start/end.
     // The vectors must have equal sizes. The intervals must be in ascending
     // order and they have to be disjoint. However, they do not need to be
     // consecutive. 

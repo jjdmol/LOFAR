@@ -33,6 +33,7 @@ class StatisticalFlaggerTest : public UnitTest {
 		{
 			AddTest(TestTimeDilation(), "Time dilation");
 			AddTest(TestFrequencyDilation(), "Frequency dilation");
+			AddTest(TestTimeDilationSpeed(), "Time dilation speed");
 		}
 		
 	private:
@@ -41,6 +42,10 @@ class StatisticalFlaggerTest : public UnitTest {
 			void operator()();
 		};
 		struct TestFrequencyDilation : public Asserter
+		{
+			void operator()();
+		};
+		struct TestTimeDilationSpeed : public Asserter
 		{
 			void operator()();
 		};
@@ -104,7 +109,7 @@ inline void StatisticalFlaggerTest::TestTimeDilation::operator()()
 	AssertEquals(maskToString(mask), "xx xx     ");
 
 	StatisticalFlagger::DensityTimeFlagger(mask, 0.5);
-	AssertEquals(mask->Value(2,0), true, "Fill hole");
+	AssertTrue(mask->Value(2,0), "Fill hole");
 	
 	mask = Mask2D::CreateSetMaskPtr<false>(40, 1);
 	//             0    5    0    5    0    5    0    5    
@@ -157,7 +162,7 @@ inline void StatisticalFlaggerTest::TestFrequencyDilation::operator()()
 	AssertEquals(maskToString(mask), "xx xx     ");
 
 	StatisticalFlagger::DensityFrequencyFlagger(mask, 0.5);
-	AssertEquals(mask->Value(0,2), true, "Fill hole");
+	AssertTrue(mask->Value(0,2), "Fill hole");
 	
 	mask = Mask2D::CreateSetMaskPtr<false>(1, 40);
 	//             0    5    0    5    0    5    0    5    
@@ -176,6 +181,21 @@ inline void StatisticalFlaggerTest::TestFrequencyDilation::operator()()
 	setMask(mask, "xxxxxxxxxxxxxxx       xxxxxxxxxxxxxxxxxx");
 	StatisticalFlagger::DensityFrequencyFlagger(mask, 0.3);
 	AssertEquals(maskToString(mask), "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+}
+
+inline void StatisticalFlaggerTest::TestTimeDilationSpeed::operator()()
+{
+	const unsigned flagsSize = 10000;
+	const unsigned channels = 256;
+	Mask2DPtr mask = Mask2D::CreateSetMaskPtr<false>(flagsSize, channels);
+	for(unsigned y=0;y<channels;++y)
+	{
+		for(unsigned i=0;i<flagsSize; ++i)
+		{
+			mask->SetValue(i, 0, (RNG::Uniform() >= 0.2));
+		}
+	}
+	StatisticalFlagger::DensityTimeFlagger(mask, 0.1);
 }
 
 #endif

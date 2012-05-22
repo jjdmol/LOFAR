@@ -29,6 +29,8 @@
 #include <AOFlagger/strategy/actions/combineflagresultsaction.h>
 #include <AOFlagger/strategy/actions/cutareaaction.h>
 #include <AOFlagger/strategy/actions/directionalcleanaction.h>
+#include <AOFlagger/strategy/actions/directionprofileaction.h>
+#include <AOFlagger/strategy/actions/eigenvalueverticalaction.h>
 #include <AOFlagger/strategy/actions/foreachbaselineaction.h>
 #include <AOFlagger/strategy/actions/foreachcomplexcomponentaction.h>
 #include <AOFlagger/strategy/actions/foreachpolarisationaction.h>
@@ -40,8 +42,10 @@
 #include <AOFlagger/strategy/actions/fringestopaction.h>
 #include <AOFlagger/strategy/actions/imageraction.h>
 #include <AOFlagger/strategy/actions/iterationaction.h>
+#include <AOFlagger/strategy/actions/normalizevarianceaction.h>
 #include <AOFlagger/strategy/actions/plotaction.h>
 #include <AOFlagger/strategy/actions/quickcalibrateaction.h>
+#include <AOFlagger/strategy/actions/rawappenderaction.h>
 #include <AOFlagger/strategy/actions/resamplingaction.h>
 #include <AOFlagger/strategy/actions/setflaggingaction.h>
 #include <AOFlagger/strategy/actions/setimageaction.h>
@@ -69,6 +73,8 @@ const std::vector<std::string> ActionFactory::GetActionList()
 	list.push_back("Combine flag results");
 	list.push_back("Cut area");
 	list.push_back("Directional CLEAN");
+	list.push_back("Direction profile");
+	list.push_back("Eigen value decompisition (vertical)");
 	list.push_back("For each baseline");
 	list.push_back("For each complex component");
 	list.push_back("For each polarisation");
@@ -80,9 +86,11 @@ const std::vector<std::string> ActionFactory::GetActionList()
 	list.push_back("Fringe stopping recovery");
 	list.push_back("Image");
 	list.push_back("Iteration");
+	list.push_back("Normalize variance");
 	list.push_back("Phase adapter");
 	list.push_back("Plot");
 	list.push_back("Quickly calibrate");
+	list.push_back("Raw appender");
 	list.push_back("Resample");
 	list.push_back("Set flagging");
 	list.push_back("Set image");
@@ -117,6 +125,10 @@ Action *ActionFactory::CreateAction(const std::string &action)
 		return new CutAreaAction();
 	else if(action == "Directional CLEAN")
 		return new DirectionalCleanAction();
+	else if(action == "Direction profile")
+		return new DirectionProfileAction();
+	else if(action == "Eigen value decompisition (vertical)")
+		return new EigenValueVerticalAction();
 	else if(action == "For each baseline")
 		return new ForEachBaselineAction();
 	else if(action == "For each complex component")
@@ -139,12 +151,16 @@ Action *ActionFactory::CreateAction(const std::string &action)
 		return new ImagerAction();
 	else if(action == "Iteration")
 		return new IterationBlock();
+	else if(action == "Normalize variance")
+		return new NormalizeVarianceAction();
 	else if(action == "Phase adapter")
 		return new Adapter();
 	else if(action == "Plot")
 		return new PlotAction();
 	else if(action == "Quickly calibrate")
 		return new QuickCalibrateAction();
+	else if(action == "Raw appender")
+		return new RawAppenderAction();
 	else if(action == "Resample")
 		return new ResamplingAction();
 	else if(action == "Set flagging")

@@ -12,6 +12,7 @@ Dirs=["node1:abc", 'node1:def']
 TileSizeFreq=8
 TileSize=1
 WriteAutoCorr=T
+WriteImagerColumns=T
 MSName=tmakems_tmp.ms
 VDSPath=tmakems_tmp/vds
 #VDSPath=.

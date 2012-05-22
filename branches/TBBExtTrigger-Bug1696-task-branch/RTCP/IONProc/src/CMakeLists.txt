@@ -15,10 +15,10 @@ lofar_add_library(ionproc
   Package__Version.cc
   BeamletBuffer.cc
   BeamletBufferToComputeNode.cc
-  CN_Personality.cc
   CommandServer.cc
   ControlPhase3Cores.cc
   Delays.cc
+  GlobalVars.cc
   InputSection.cc
   InputThread.cc
   InputThreadAsm.S

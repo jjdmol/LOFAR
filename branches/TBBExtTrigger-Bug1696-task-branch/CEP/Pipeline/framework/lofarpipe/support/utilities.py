@@ -45,10 +45,23 @@ def create_directory(dirname):
     Recursively create a directory, without failing if it already exists.
     """
     try:
-        os.makedirs(dirname)
+        if dirname:
+            os.makedirs(dirname)
     except OSError, failure:
         if failure.errno != errno.EEXIST:
             raise
+
+def disk_usage(*paths):
+    """
+    Return the disk usage in bytes by the file(s) in ``paths``.
+    """
+    cmd = ['du', '-s', '-b']
+    proc = Popen(cmd + list(paths), stdout=PIPE)
+    sout = proc.communicate()[0]
+    if sout:
+        return sum([int(s.split('\t')[0]) for s in sout.strip().split('\n')])
+    else:
+        return 0
 
 #                                                    IPython Dependency Checking
 # ------------------------------------------------------------------------------

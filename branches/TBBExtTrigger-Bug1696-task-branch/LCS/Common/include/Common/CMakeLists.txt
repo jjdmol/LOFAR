@@ -9,6 +9,7 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 install(FILES 
   Allocator.h
   Backtrace.h
+  CasaLogSink.h
   CheckConfig.h
   ComplexBuiltinFP.h
   ComplexBuiltinInt.h
@@ -21,6 +22,7 @@ install(FILES
   Exceptions.h
   FileLocator.h
   hexdump.h
+  InputParSet.h
   i4complex.h
   KVpair.h
   lofar_algorithm.h
@@ -56,9 +58,10 @@ install(FILES
   Numeric.h
   ObjectFactory.h
   OpenMP.h
-  ParameterValue.h
+  ParameterRecord.h
   ParameterSet.h
   ParameterSetImpl.h
+  ParameterValue.h
   PrettyUnits.h
   Process.h
   ReadLine.h

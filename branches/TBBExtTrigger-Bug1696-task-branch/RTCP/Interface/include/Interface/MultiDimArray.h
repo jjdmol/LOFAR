@@ -31,7 +31,22 @@ template <typename T, unsigned DIM> class MultiDimArray : public boost::multi_ar
     :
       SuperType(0, boost::detail::multi_array::extent_gen<DIM>()),
       allocator(&allocator),
+      allocated_num_elements(0),
       alignment(0)
+    {
+    }
+
+    MultiDimArray(const ExtentList &extents, void *ptr)
+    :
+      // Use 'placement new' to force initialisation through constructors if T is a class
+
+      // TODO: Not sure how to handle an exception raised by the constructor of T. The placement
+      // delete[] will be called, but that's an empty stub.
+      SuperType(new(ptr)T[nrElements(extents)], extents),
+      allocator(&allocator),
+      allocated_num_elements(nrElements(extents)),
+      alignment(alignment),
+      padToAlignment(padToAlignment)
     {
     }
 
@@ -43,6 +58,7 @@ template <typename T, unsigned DIM> class MultiDimArray : public boost::multi_ar
       // delete[] will be called, but that's an empty stub.
       SuperType(new(allocator.allocate(padToAlignment ? align(nrElements(extents) * sizeof(T), alignment) : nrElements(extents) * sizeof(T), alignment))T[nrElements(extents)], extents),
       allocator(&allocator),
+      allocated_num_elements(nrElements(extents)),
       alignment(alignment),
       padToAlignment(padToAlignment)
     {
@@ -52,36 +68,25 @@ template <typename T, unsigned DIM> class MultiDimArray : public boost::multi_ar
     :
       SuperType(other.num_elements_ ? new(other.allocator->allocate(padToAlignment ? align(other.num_elements_ * sizeof(T), other.alignment) : other.num_elements_ * sizeof(T), other.alignment))T[other.num_elements_] : 0, other.extent_list_),
       allocator(other.allocator),
+      allocated_num_elements(other.num_elements_),
       alignment(other.alignment)
     {
-      T *me  = this->origin();
-      const T *him = other.origin();
-
-      for (size_t i = 0; i < this->num_elements_; i ++)
-        *(me++) = *(him++); 
+      *this = other;
     }
 
     ~MultiDimArray()
     {
-      // explicitly call the destructors in the 'placement new' array since C++
-      // cannot do this for us. The delete[] operator cannot know the size of the
-      // array, and the placement delete[] operator exists (since new()[] will look
-      // for it) but does nothing.
-      T *elem = this->origin();
+      if (allocator) { // resizeInplace will leave us without an allocator, but also destructs the elements itself
+        destructElements();
 
-      for (size_t i = 0; i < this->num_elements_; i ++) {
-        // amazingly, this also works for T = float etc.
-        (elem++)->~T();
-      }
-
-      allocator->deallocate(this->origin());
+        allocator->deallocate(this->base_);
+      }  
     }
 
     MultiDimArray<T,DIM> &operator= (const MultiDimArray<T,DIM> &other)
     {
-      if (other.num_elements_ != this->num_elements_) {
+      if (other.num_elements_ != this->num_elements_)
         THROW(InterfaceException, "Tried to assign an array with " << other.num_elements_ << " elements to an array with " << this->num_elements_ << "elements.");
-      }
 
       T *me  = this->origin();
       const T *him = other.origin();
@@ -94,6 +99,8 @@ template <typename T, unsigned DIM> class MultiDimArray : public boost::multi_ar
 
     void resize(const ExtentList &extents, size_t alignment, Allocator &allocator, bool padToAlignment = false)
     {
+      destructElements();
+
       MultiDimArray newArray(extents, alignment, allocator, padToAlignment);
       std::swap(this->base_, newArray.base_);
       std::swap(this->storage_, newArray.storage_);
@@ -104,6 +111,7 @@ template <typename T, unsigned DIM> class MultiDimArray : public boost::multi_ar
       std::swap(this->directional_offset_, newArray.directional_offset_);
       std::swap(this->num_elements_, newArray.num_elements_);
       std::swap(this->allocator, newArray.allocator);
+      std::swap(this->allocated_num_elements, newArray.allocated_num_elements);
       std::swap(this->alignment, newArray.alignment);
     }
 
@@ -112,9 +120,48 @@ template <typename T, unsigned DIM> class MultiDimArray : public boost::multi_ar
       resize(extents, alignment, *allocator);
     }
 
-    bool hasShape(const ExtentList &extents)
+    // resizes the array in-place, but the contents are lost if number of elements changes
+    void resizeInplace(const ExtentList &extents)
     {
-      return std::equal( this->extent_list_.begin(), this->extent_list_.end(), extents.begin() );
+      unsigned new_num_elements = nrElements(extents);
+
+      if (new_num_elements > allocated_num_elements)
+        THROW(InterfaceException, "MultiDimArray::resizeInplace: requested to resize to " << new_num_elements << " elements, but only " << allocated_num_elements << " are allocateod");
+
+      // only destruct and construct all elements if the number of elements actually changes
+      if (new_num_elements != this->num_elements_) {
+        destructElements();
+        (void)new(this->base_)T[new_num_elements];
+      }
+
+      // regenerate the metadata, and use it.
+      // Our metadata will be freed due to the swap, but our data won't, because
+      // newArray.allocator == 0.
+      MultiDimArray newArray(*this, extents);
+      //std::swap(this->base_, newArray.base_);
+      std::swap(this->storage_, newArray.storage_);
+      std::swap(this->extent_list_, newArray.extent_list_);
+      std::swap(this->stride_list_, newArray.stride_list_);
+      std::swap(this->index_base_list_, newArray.index_base_list_);
+      std::swap(this->origin_offset_, newArray.origin_offset_);
+      std::swap(this->directional_offset_, newArray.directional_offset_);
+      std::swap(this->num_elements_, newArray.num_elements_);
+      //std::swap(this->allocator, newArray.allocator);
+      //std::swap(this->allocated_num_elements, newArray.allocated_num_elements);
+      //std::swap(this->alignment, newArray.alignment);
+    }
+
+    // Resize only a single dimension in-place.
+    void resizeOneDimensionInplace(unsigned dimNr, size_t newSize)
+    {
+      ExtentList newDims;
+
+      for (size_t i = 0; i < DIM; i++)
+        newDims.ranges_[i] = this->extent_list_[i];
+
+      newDims.ranges_[dimNr] = newSize;  
+
+      resizeInplace(newDims);
     }
 
     static size_t defaultAlignment()
@@ -136,8 +183,39 @@ template <typename T, unsigned DIM> class MultiDimArray : public boost::multi_ar
   private:
     // needs to be a pointer to be swappable in resize()
     Allocator *allocator;
+    size_t    allocated_num_elements;
     unsigned  alignment;
     bool      padToAlignment;
+
+    // a MultiDimArray made to replace another, using a different shape. Assumes
+    // the original MultiDimArray allocated enough memory to hold the new
+    // dimensions.
+    MultiDimArray(const MultiDimArray<T,DIM> &other, const ExtentList &extents)
+    :
+      // Use 'placement new' to force initialisation through constructors if T is a class
+
+      // TODO: Not sure how to handle an exception raised by the constructor of T. The placement
+      // delete[] will be called, but that's an empty stub.
+      SuperType(other.base_, extents),
+      allocator(0), // we did not allocate this
+      allocated_num_elements(0),
+      alignment(other.alignment),
+      padToAlignment(other.padToAlignment)
+    {
+    }
+
+
+    void destructElements()
+    {
+      // explicitly call the destructors in the 'placement new' array since C++
+      // cannot do this for us. The delete[] operator cannot know the size of the
+      // array, and the placement delete[] operator exists (since new()[] will look
+      // for it) but does nothing.
+      T *elem = this->origin();
+
+      for (size_t i = 0; i < this->num_elements_; i ++)
+        (elem++)->~T();
+    }
 };
 
 

@@ -69,9 +69,12 @@ int main(int argc, char *argv[])
 		}
 		else if(flag == "c" || flag == "column")
 		{
-			++parameterIndex;
-			string columnStr(argv[parameterIndex]);
-			dataColumn = columnStr; 
+			cerr <<
+			"ERROR: flag -" << flag << ":\n"
+			"As of June 2011, you can no longer specify the column on which a strategy\n"
+			"is applied with rfistrategy: use the -column parameter of rficonsole (or select\n"
+			"the proper column when opening the ms in rfigui)\n";
+			return 1;
 		}
 		else if(flag == "ff" || flag == "freq-based-flagging")	{ frequencyBasedFlagging = true;	}
 		else if(flag == "fs" || flag == "flag-stokes")	{ flagStokes = true; }

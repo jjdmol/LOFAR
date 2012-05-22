@@ -1,6 +1,6 @@
 //  MSMriterDAL.h: implementation of MSWriter using the DAL to write HDF5
 //
-//  Copyright (C) 2001
+//  Copyright (C) 2011
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
 //  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //
@@ -18,14 +18,13 @@
 //  along with this program; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
-//  $Id: MSWriterImpl.h 11891 2008-10-14 13:43:51Z gels $
+//  $Id: MSWriterDAL.h 11891 2011-10-14 13:43:51Z gels $
 //
 //////////////////////////////////////////////////////////////////////
 
 
 #ifndef LOFAR_STORAGE_MSWRITERDAL_H
 #define LOFAR_STORAGE_MSWRITERDAL_H
-
 
 //# Includes
 #include <Common/LofarTypes.h>
@@ -34,36 +33,29 @@
 #include <Interface/Parset.h>
 #include <Interface/StreamableData.h>
 #include <Storage/MSWriter.h>
+#include <Storage/MSWriterFile.h>
 
-#if 1 && defined HAVE_DAL && defined HAVE_WCSLIB && defined HAVE_HDF5
-#define USE_DAL
-#endif
-
-#ifdef USE_DAL
-#include <data_hl/BF_StokesDataset.h>
-#endif
-
-//# Forward declarations
+#include <vector>
 
 namespace LOFAR
 {
 
   namespace RTCP
   {
-    template<typename T, unsigned DIM> class MSWriterDAL : public MSWriter
+    template<typename T, unsigned DIM> class MSWriterDAL : public MSWriterFile
     {
     public:
-      MSWriterDAL(const char* filename, const Parset &parset, OutputType outputType, unsigned fileno, bool isBigEndian);
+      MSWriterDAL(const string &filename, const Parset &parset, unsigned fileno, bool isBigEndian);
       ~MSWriterDAL();
-      void write(StreamableData *data);
-#ifdef USE_DAL
+      virtual void write(StreamableData *data);
     private:
-      hid_t itsDatatype;
-      unsigned itsNrSamples;
+      const Transpose2 &itsTransposeLogic;
+      const StreamInfo &itsInfo;
       const unsigned itsNrChannels;
+      const unsigned itsNrSamples;
+      unsigned itsNextSeqNr;
 
-      DAL::BF_StokesDataset itsStokesDataset;
-#endif
+      const unsigned itsBlockSize; // the size of StreamableData::samples, in T
     };
   }
 }

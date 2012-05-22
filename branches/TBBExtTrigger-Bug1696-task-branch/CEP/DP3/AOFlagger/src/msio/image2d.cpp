@@ -26,33 +26,50 @@
 
 #include <iostream>
 
-//long Image2D::_imageCount = 0;
-
-Image2D::Image2D(long width, long height) : _width(width), _height(height)
+Image2D::Image2D(size_t width, size_t height) :
+	_width(width),
+	_height(height),
+	_stride((((width-1)/4)+1)*4)
 {
-	//++_imageCount;
-	//_thisImage = _imageCount;
-	//std::cout << "Requesting " << _imageCount << ": " << (sizeof(num_t[width*height]) + sizeof(bool[width*height])) << " bytes of memory for a " << width << " x " << height << " image." << std::endl;
-
-	_data = new num_t[width * height];
+	if(_width == 0) _stride=0;
+	unsigned allocHeight = ((((height-1)/4)+1)*4);
+	if(height == 0) allocHeight = 0;
+#ifdef __APPLE__
+        // OS-X has no posix_memalign, but malloc always uses 16-byte alignment.
+        _dataConsecutive = (num_t*)malloc(_stride * allocHeight * sizeof(num_t));
+#else
+	posix_memalign((void **) &_dataConsecutive, 16, _stride * allocHeight * sizeof(num_t));
+#endif	
+	_dataPtr = new num_t*[allocHeight];
+	for(size_t y=0;y<height;++y)
+	{
+		_dataPtr[y] = &_dataConsecutive[_stride * y];
+		// Even though the values after the requested width are never relevant, we will
+		// initialize them to zero to prevent valgrind to report unset values when they
+		// are used in SSE instructions.
+		for(size_t x=_width;x<_stride;++x)
+		{
+			_dataPtr[y][x] = 0.0;
+		}
+	}
+	for(size_t y=height;y<allocHeight;++y)
+	{
+		_dataPtr[y] = &_dataConsecutive[_stride * y];
+		// (see remark above about initializing to zero)
+		for(size_t x=0;x<_stride;++x)
+		{
+			_dataPtr[y][x] = 0.0;
+		}
+	}
 }
 
 Image2D::~Image2D()
 {
-	delete[] _data;
-
-	//std::cout << "Freed " << _thisImage << ": "  << (sizeof(num_t[_width*_height]) << " bytes of memory for a " << _width << " x " << _height << " image." << std::endl;
-	//--_imageCount;
+	delete[] _dataPtr;
+	free(_dataConsecutive);
 }
 
-Image2D *Image2D::CreateEmptyImage(long width, long height) 
-{
-	Image2D *image = new Image2D(width, height);
-	image->SetAll(0.0);
-	return image;
-}
-
-Image2D *Image2D::CreateZeroImage(long width, long height) 
+Image2D *Image2D::CreateZeroImage(size_t width, size_t height) 
 {
 	Image2D *image = new Image2D(width, height);
 	image->SetAll(0.0);
@@ -63,12 +80,11 @@ Image2D *Image2D::CreateFromSum(const Image2D &imageA, const Image2D &imageB)
 {
 	if(imageA.Width() != imageB.Width() || imageA.Height() != imageB.Height())
 		throw IOException("Images do not match in size");
-	long width = imageA.Width(), height = imageA.Height();
+	const size_t width = imageA.Width(), height = imageA.Height();
 	Image2D *image = new Image2D(width, height);
-	for(long y=0;y<height;y++) {
-		for(long x=0;x<width;x++) {
-			image->_data[y*width+x] = imageA._data[y*width+x] + imageB._data[y*width+x];
-		}
+	const size_t total = imageA._stride * height;
+	for(size_t i=0;i<total;++i) {
+		image->_dataConsecutive[i] = imageA._dataConsecutive[i] + imageB._dataConsecutive[i];
 	}
 	return image;
 }
@@ -77,58 +93,65 @@ Image2D *Image2D::CreateFromDiff(const Image2D &imageA, const Image2D &imageB)
 {
 	if(imageA.Width() != imageB.Width() || imageA.Height() != imageB.Height())
 		throw IOException("Images do not match in size");
-	long width = imageA.Width(), height = imageA.Height();
+	const size_t width = imageA.Width(), height = imageA.Height();
 	Image2D *image = new Image2D(width, height);
-	for(long y=0;y<height;y++) {
-		for(long x=0;x<width;x++) {
-			image->_data[y*width+x] = imageA._data[y*width+x] - imageB._data[y*width+x];
-		}
+	const size_t total = imageA._stride * height;
+	for(size_t i=0;i<total;++i) {
+		image->_dataConsecutive[i] = imageA._dataConsecutive[i] - imageB._dataConsecutive[i];
 	}
 	return image;
 }
 
 Image2D *Image2D::CreateCopy(const Image2D &image)
 {
-	long width = image.Width(), height = image.Height();
+	const size_t width = image.Width(), height = image.Height();
 	Image2D *newImage = new Image2D(width, height);
-	for(long i=0;i<width*height;i++) {
-		newImage->_data[i] = image._data[i];
-	}
+	memcpy(newImage->_dataConsecutive, image._dataConsecutive, image._stride * height * sizeof(num_t));
 	return newImage;
 }
 
 void Image2D::SetValues(const Image2D &source)
 {
-	for(unsigned i=0;i<_width*_height;i++) {
-		_data[i] = source._data[i];
+	const size_t size = _stride*_height;
+	for(size_t i=0;i<size;++i) {
+		_dataConsecutive[i] = source._dataConsecutive[i];
 	}
 }
 
 num_t Image2D::GetAverage() const {
-	long count = 0;
+	size_t count = 0;
 	num_t total = 0.0;
-	for(unsigned long i=0;i<_width * _height;i++) {
-		total += _data[i];
-		count++;
+	for(size_t y=0;y<_height;++y)
+	{
+		for(size_t x=0;x<_width;++x) {
+			total += _dataPtr[y][x];
+			count++;
+		}
 	}
 	return total/(num_t) count;
 }
 
 num_t Image2D::GetMaximum() const {
-	num_t max = -1e100;
-	for(unsigned long i=0;i<_width * _height;++i) {
-		if(_data[i] > max) {
-			max = _data[i];
+	num_t max = _dataPtr[0][0];
+	for(size_t y=0;y<_height;++y)
+	{
+		for(size_t x=0;x<_width;++x) {
+			if(_dataPtr[y][x] > max) {
+				max = _dataPtr[y][x];
+			}
 		}
 	}
 	return max;
 }
 
 num_t Image2D::GetMinimum() const {
-	num_t min = 1e100;
-	for(unsigned long i=0;i<_width * _height;++i) {
-		if(_data[i] < min) {
-			min = _data[i];
+	num_t min = _dataPtr[0][0];
+	for(size_t y=0;y<_height;++y)
+	{
+		for(size_t x=0;x<_width;++x) {
+			if(_dataPtr[y][x] < min) {
+				min = _dataPtr[y][x];
+			}
 		}
 	}
 	return min;
@@ -136,9 +159,12 @@ num_t Image2D::GetMinimum() const {
 
 num_t Image2D::GetMaximumFinite() const {
 	num_t max = -1e100;
-	for(unsigned long i=0;i<_width * _height;++i) {
-		if(isfinite(_data[i]) && _data[i] > max) {
-			max = _data[i];
+	for(size_t y=0;y<_height;++y)
+	{
+		for(size_t x=0;x<_width;++x) {
+			if(isfinite(_dataPtr[y][x]) && _dataPtr[y][x] > max) {
+				max = _dataPtr[y][x];
+			}
 		}
 	}
 	return max;
@@ -146,9 +172,12 @@ num_t Image2D::GetMaximumFinite() const {
 
 num_t Image2D::GetMinimumFinite() const {
 	num_t min = 1e100;
-	for(unsigned long i=0;i<_width * _height;++i) {
-		if(isfinite(_data[i]) && _data[i] < min) {
-			min = _data[i];
+	for(size_t y=0;y<_height;++y)
+	{
+		for(size_t x=0;x<_width;++x) {
+			if(isfinite(_dataPtr[y][x]) && _dataPtr[y][x] < min) {
+				min = _dataPtr[y][x];
+			}
 		}
 	}
 	return min;
@@ -156,10 +185,13 @@ num_t Image2D::GetMinimumFinite() const {
 
 bool Image2D::ContainsOnlyZeros() const 
 {
-	for(unsigned long i=0;i<_width * _height;++i)
+	for(size_t y=0;y<_height;++y)
 	{
-		if(_data[i] != 0.0)
-			return false;
+		for(size_t x=0;x<_width;++x)
+		{
+			if(_dataPtr[y][x] != 0.0)
+				return false;
+		}
 	}
 	return true;
 }
@@ -174,36 +206,59 @@ num_t Image2D::GetMaxMinNormalizationFactor() const
 num_t Image2D::GetStdDev() const
 {
 	num_t mean = GetAverage();
-	unsigned long count = 0;
+	size_t count = 0;
 	num_t total = 0.0;
-	for(unsigned long i=0;i<_width * _height;++i)
+	for(size_t y=0;y<_height;++y)
 	{
-		total += (_data[i]-mean)*(_data[i]-mean);
-		count++;
-	}
-	return sqrt(total / (num_t) count);
-}
-
-num_t Image2D::GetRMS(unsigned xOffset, unsigned yOffset, unsigned width, unsigned height) const
-{
-	unsigned long count = 0;
-	num_t total = 0.0;
-	for(unsigned long y=yOffset;y<height+yOffset;++y) {
-		for(unsigned long x=xOffset;x<width+xOffset;++x)
+		for(size_t x=0;x<_width;++x)
 		{
-			num_t v = Value(x, y);
-			total += v * v;
+			total += (_dataPtr[y][x]-mean)*(_dataPtr[y][x]-mean);
 			count++;
 		}
 	}
 	return sqrt(total / (num_t) count);
 }
 
+num_t Image2D::GetMode() const
+{
+	size_t size = _width * _height;
+
+	num_t mode = 0.0;
+	for(size_t y = 0;y<_height;++y) {
+		for(size_t x = 0;x<_width; ++x) {
+			const num_t value = _dataPtr[y][x];
+			mode += value * value;
+		}
+	}
+	return sqrtn(mode / (2.0L * (num_t) size));
+}
+
+num_t Image2D::GetRMS(size_t xOffset, size_t yOffset, size_t width, size_t height) const
+{
+	size_t long count = 0;
+	num_t total = 0.0;
+	for(size_t y=yOffset;y<height+yOffset;++y)
+	{
+		for(size_t x=xOffset;x<width+xOffset;++x)
+		{
+			num_t v = Value(x, y);
+			total += v * v;
+			count++;
+		}
+	}
+	return sqrtn(total / (num_t) count);
+}
+
 void Image2D::NormalizeVariance()
 {
 	num_t variance = GetStdDev();
-	for(unsigned long i=0;i<_width * _height;++i)
-		_data[i] /= variance;
+	for(size_t y=0;y<_height;++y)
+	{
+		for(size_t x=0;x<_width;++x)
+		{
+			_dataPtr[y][x] /= variance;
+		}
+	}
 }
 
 Image2D *Image2D::CreateFromFits(FitsFile &file, int imageNumber)
@@ -211,8 +266,20 @@ Image2D *Image2D::CreateFromFits(FitsFile &file, int imageNumber)
 	int dimensions = file.GetCurrentImageDimensionCount();
 	if(dimensions >= 2) {
 		Image2D *image = new Image2D(file.GetCurrentImageSize(1), file.GetCurrentImageSize(2));
-		long bufferSize = image->_width * image->_height;
-		file.ReadCurrentImageData(bufferSize*imageNumber, image->_data, bufferSize, 0.0);
+		long bufferSize = (long) image->_width * (long) image->_height;
+		num_t *buffer = new num_t[bufferSize];
+		file.ReadCurrentImageData(bufferSize*imageNumber, buffer, bufferSize, 0.0);
+		num_t *bufferPtr = buffer;
+		for(size_t y=0;y<image->_height;++y)
+		{
+			for(size_t x=0;x<image->_width;++x)
+			{
+				image->_dataPtr[y][x] = *bufferPtr;
+				++bufferPtr;
+			}
+		}
+		delete[] buffer;
+		
 		return image;
 	} else {
 		throw FitsIOException("No 2D images in HUD");
@@ -236,10 +303,16 @@ void Image2D::SaveToFitsFile(const std::string &filename) const
 	FitsFile file(filename);
 	file.Create();
 	file.AppendImageHUD(FitsFile::Double64ImageType, _width, _height);
-	long bufferSize = _width * _height;
+	long bufferSize = (long) _width * (long) _height;
 	double *buffer = new double[bufferSize];
-	for(long i=0;i<bufferSize;i++) {
-		buffer[i] = _data[i];
+	size_t i=0;
+	for(size_t y=0;y<_height;++y)
+	{
+		for(size_t x=0;x<_width;++x)
+		{
+			buffer[i] = _dataPtr[y][x];
+			++i;
+		}
 	}
 	try {
 		file.WriteImage(0, buffer, bufferSize, -1e100);
@@ -254,35 +327,58 @@ void Image2D::SaveToFitsFile(const std::string &filename) const
 size_t Image2D::GetCountAbove(num_t value) const
 {
 	size_t count=0;
-	for(size_t i=0;i<_width * _height;++i)
-		if(_data[i] > value) count++;
+	for(size_t y=0;y<_height;++y)
+	{
+		for(size_t x=0;x<_width;++x)
+		{
+			if(_dataPtr[y][x] > value) count++;
+		}
+	}
 	return count;
 }
 
 num_t Image2D::GetTresholdForCountAbove(size_t count) const
 {
-	num_t *sorted = new num_t[_width * _height];
-	for(size_t i=0;i<_width * _height;++i)
-		sorted[i] = _data[i];
-	std::sort(sorted, sorted + _width * _height);
-	num_t v = sorted[_width * _height - count - 1];
+	const size_t size = _width * _height;
+	num_t *sorted = new num_t[size];
+	size_t i = 0;
+	for(size_t y=0;y<_height;++y)
+	{
+		for(size_t x=0;x<_width;++x)
+		{
+			sorted[i] = _dataPtr[y][x];
+			++i;
+		}
+	}
+	std::sort(sorted, sorted + size);
+	num_t v = sorted[size - count - 1];
 	delete[] sorted;
 	return v;
 }
 
 void Image2D::CopyData(num_t *destination) const
 {
-	for(size_t i=0;i<_width * _height;++i)
-		destination[i] = _data[i];
+	size_t i=0;
+	for(size_t y=0;y<_height;++y)
+	{
+		for(size_t x=0;x<_width;++x)
+		{
+			destination[i] = _dataPtr[y][x];
+			++i;
+		}
+	}
 }
 
 void Image2D::MultiplyValues(num_t factor)
 {
-	for(size_t i=0;i<_width * _height;++i)
-		_data[i] *= factor;
+	const size_t size = _stride * _height;
+	for(size_t i=0;i<size;++i)
+	{
+		_dataConsecutive[i] *= factor;
+	}
 }
 
-Image2DPtr Image2D::ShrinkHorizontally(int factor) const
+Image2DPtr Image2D::ShrinkHorizontally(size_t factor) const
 {
 	size_t newWidth = (_width + factor - 1) / factor;
 
@@ -290,16 +386,16 @@ Image2DPtr Image2D::ShrinkHorizontally(int factor) const
 
 	for(size_t x=0;x<newWidth;++x)
 	{
-		int binSize = factor;
+		size_t binSize = factor;
 		if(binSize + x*factor > _width)
 			binSize = _width - x*factor;
 
 		for(size_t y=0;y<_height;++y)
 		{
 			num_t sum = 0.0;
-			for(int binX=0;binX<binSize;++binX)
+			for(size_t binX=0;binX<binSize;++binX)
 			{
-				int curX = x*factor + binX;
+				size_t curX = x*factor + binX;
 				sum += Value(curX, y);
 			}
 			newImage->SetValue(x, y, sum / (num_t) binSize);
@@ -308,7 +404,7 @@ Image2DPtr Image2D::ShrinkHorizontally(int factor) const
 	return Image2DPtr(newImage);
 }
 
-Image2DPtr Image2D::ShrinkVertically(int factor) const
+Image2DPtr Image2D::ShrinkVertically(size_t factor) const
 {
 	size_t newHeight = (_height + factor - 1) / factor;
 
@@ -316,16 +412,16 @@ Image2DPtr Image2D::ShrinkVertically(int factor) const
 
 	for(size_t y=0;y<newHeight;++y)
 	{
-		int binSize = factor;
+		size_t binSize = factor;
 		if(binSize + y*factor > _height)
 			binSize = _height - y*factor;
 
 		for(size_t x=0;x<_width;++x)
 		{
 			num_t sum = 0.0;
-			for(int binY=0;binY<binSize;++binY)
+			for(size_t binY=0;binY<binSize;++binY)
 			{
-				int curY = y*factor + binY;
+				size_t curY = y*factor + binY;
 				sum += Value(x, curY);
 			}
 			newImage->SetValue(x, y, sum / (num_t) binSize);
@@ -334,7 +430,7 @@ Image2DPtr Image2D::ShrinkVertically(int factor) const
 	return Image2DPtr(newImage);
 }
 
-Image2DPtr Image2D::EnlargeHorizontally(int factor, size_t newWidth) const
+Image2DPtr Image2D::EnlargeHorizontally(size_t factor, size_t newWidth) const
 {
 	Image2D *newImage = new Image2D(newWidth, _height);
 
@@ -350,7 +446,7 @@ Image2DPtr Image2D::EnlargeHorizontally(int factor, size_t newWidth) const
 	return Image2DPtr(newImage);
 }
 
-Image2DPtr Image2D::EnlargeVertically(int factor, size_t newHeight) const
+Image2DPtr Image2D::EnlargeVertically(size_t factor, size_t newHeight) const
 {
 	Image2D *newImage = new Image2D(_width, newHeight);
 
@@ -365,19 +461,19 @@ Image2DPtr Image2D::EnlargeVertically(int factor, size_t newHeight) const
 	return Image2DPtr(newImage);
 }
 
-Image2DPtr Image2D::Trim(unsigned long startX, unsigned long startY, unsigned long endX, unsigned long endY) const
+Image2DPtr Image2D::Trim(size_t startX, size_t startY, size_t endX, size_t endY) const
 {
-	unsigned
+	size_t
 		width = endX - startX,
 		height = endY - startY;
 	Image2D *image = new Image2D(width, height);
-	unsigned long newPtr = 0;
-	for(unsigned y=startY;y<endY;++y)
+	for(size_t y=startY;y<endY;++y)
 	{
-		unsigned long oldPtr = y * _width + startX;
-		for(unsigned x=startX;x<endX;++x)
+		num_t *newPtr = image->_dataPtr[y-startY];
+		num_t *oldPtr = &_dataPtr[y][startX];
+		for(size_t x=startX;x<endX;++x)
 		{
-			image->_data[newPtr] = _data[oldPtr];
+			*newPtr = *oldPtr;
 			++newPtr;
 			++oldPtr;
 		}
@@ -385,39 +481,26 @@ Image2DPtr Image2D::Trim(unsigned long startX, unsigned long startY, unsigned lo
 	return Image2DPtr(image);
 }
 
-void Image2D::SetTrim(unsigned long startX, unsigned long startY, unsigned long endX, unsigned long endY)
+void Image2D::SetTrim(size_t startX, size_t startY, size_t endX, size_t endY)
 {
-	unsigned
-		newWidth = endX - startX,
-		newHeight = endY - startY;
-	num_t *newData = new num_t[newWidth * newHeight];
-	unsigned long newPtr = 0;
-	for(unsigned y=startY;y<endY;++y)
-	{
-		unsigned long oldPtr = y * _width + startX;
-		for(unsigned x=startX;x<endX;++x)
-		{
-			newData[newPtr] = _data[oldPtr];
-			++newPtr;
-			++oldPtr;
-		}
-	}
-	delete[] _data;
-	_data = newData;
-	_width = newWidth;
-	_height = newHeight;
+	Image2DPtr trimmed = Trim(startX, startY, endX, endY);
+	std::swap(trimmed->_dataConsecutive, _dataConsecutive);
+	std::swap(trimmed->_dataPtr, _dataPtr);
+	std::swap(trimmed->_height, _height);
+	std::swap(trimmed->_width, _width);
+	std::swap(trimmed->_stride, _stride);
 }
 
 /**
 	* Returns the maximum value in the specified range.
 	* @return The maximimum value.
 	*/
-num_t Image2D::GetMaximum(unsigned xOffset, unsigned yOffset, unsigned width, unsigned height) const
+num_t Image2D::GetMaximum(size_t xOffset, size_t yOffset, size_t width, size_t height) const
 {
 	size_t count = 0;
 	num_t max =0.0;
-	for(unsigned long y=yOffset;y<height+yOffset;++y) {
-		for(unsigned long x=xOffset;x<width+xOffset;++x)
+	for(size_t y=yOffset;y<height+yOffset;++y) {
+		for(size_t x=xOffset;x<width+xOffset;++x)
 		{
 			if(Value(x,y) > max || count==0)
 			{
@@ -435,12 +518,12 @@ num_t Image2D::GetMaximum(unsigned xOffset, unsigned yOffset, unsigned width, un
 	* Returns the minimum value in the specified range.
 	* @return The minimum value.
 	*/
-num_t Image2D::GetMinimum(unsigned xOffset, unsigned yOffset, unsigned width, unsigned height) const
+num_t Image2D::GetMinimum(size_t xOffset, size_t yOffset, size_t width, size_t height) const
 {
 	size_t count = 0;
 	num_t min = 0.0;
-	for(unsigned long y=yOffset;y<height+yOffset;++y) {
-		for(unsigned long x=xOffset;x<width+xOffset;++x)
+	for(size_t y=yOffset;y<height+yOffset;++y) {
+		for(size_t x=xOffset;x<width+xOffset;++x)
 		{
 			if(Value(x,y) < min || count==0)
 			{

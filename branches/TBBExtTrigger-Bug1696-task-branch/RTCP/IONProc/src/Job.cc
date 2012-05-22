@@ -22,24 +22,27 @@
 #include <BeamletBufferToComputeNode.h>
 #include <ControlPhase3Cores.h>
 #include <Common/LofarLogger.h>
+#include <Stream/PortBroker.h>
+#include <Interface/Stream.h>
 #include <Interface/CN_Command.h>
 #include <Interface/Exceptions.h>
-#include <Interface/OutputTypes.h>
 #include <Interface/PrintVector.h>
 #include <Interface/RSPTimeStamp.h>
 #include <InputSection.h>
 #include <ION_Allocator.h>
-#include <ION_main.h>
+#include <GlobalVars.h>
 #include <Job.h>
 #include <OutputSection.h>
 #include <StreamMultiplexer.h>
 #include <Stream/SocketStream.h>
+#include <Stream/PortBroker.h>
 
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <signal.h>
+#include <time.h>
 
 #include <boost/format.hpp>
 
@@ -71,26 +74,34 @@ Job::Job(const char *parsetName)
   itsLogPrefix = str(boost::format("[obs %d] ") % itsParset.observationID());
 
   if (LOG_CONDITION) {
+    // Handle PVSS (CEPlogProcessor) communication -- report PVSS name in the first log line to allow CEPlogProcessor to resolve obsIDs
+    if (itsParset.PVSS_TempObsName() != "")
+      LOG_INFO_STR(itsLogPrefix << "PVSS name: " << itsParset.PVSS_TempObsName());
+
     LOG_INFO_STR(itsLogPrefix << "----- Creating new job");
     LOG_DEBUG_STR(itsLogPrefix << "usedCoresInPset = " << itsParset.usedCoresInPset());
   }
-
-  // Handle PVSS (CEPlogProcessor) communication
-  if (itsParset.PVSS_TempObsName() != "")
-    LOG_INFO_STR(itsLogPrefix << "PVSS name: " << itsParset.PVSS_TempObsName());
 
   // Handle PLC communication
   if (myPsetNumber == 0) {
     if (itsParset.PLC_controlled()) {
       // let the ApplController decide what we should do
       try {
-        itsPLCStream = new SocketStream(itsParset.PLC_Host().c_str(), itsParset.PLC_Port(), SocketStream::TCP, SocketStream::Server, 60);
+        itsPLCStream = new SocketStream(itsParset.PLC_Host(), itsParset.PLC_Port(), SocketStream::TCP, SocketStream::Client, 60);
 
         itsPLCClient = new PLCClient(*itsPLCStream, *this, itsParset.PLC_ProcID(), itsObservationID);
+        itsPLCClient->start();
       } catch (Exception &ex) {
         LOG_WARN_STR(itsLogPrefix << "Could not connect to ApplController on " << itsParset.PLC_Host() << ":" << itsParset.PLC_Port() << " as " << itsParset.PLC_ProcID() << " -- continuing on autopilot: " << ex);
       }
+    }
+
+    if (!itsPLCClient) {
+      // we are either not PLC controlled, or we're supposed to be but can't connect to
+      // the ApplController
+      LOG_INFO_STR(itsLogPrefix << "Not controlled by ApplController");
     }  
+
   }
 
   // check enough parset settings just to get to the coordinated check in jobThread safely
@@ -111,6 +122,10 @@ Job::Job(const char *parsetName)
 
 Job::~Job()
 {
+  // explicitly free PLCClient first, because it refers to us and needs             
+  // a valid Job object to work on                                                  
+  delete itsPLCClient.release();                                                    
+
   if (LOG_CONDITION)
     LOG_INFO_STR(itsLogPrefix << "----- Job " << (itsIsRunning ? "finished" : "cancelled") << " successfully");
 }
@@ -192,7 +207,7 @@ static void exitwitherror( const char *errorstr )
   _exit(1);
 }
 
-void Job::execSSH(const char *sshKey, const char *userName, const char *hostName, const char *executable, const char *rank, const char *parset, const char *cwd, const char *isBigEndian)
+void Job::StorageProcess::execSSH(const char *sshKey, const char *userName, const char *hostName, const char *executable, const char *rank, const char *cwd, const char *isBigEndian)
 {
   // DO NOT DO ANY CALL THAT GRABS A LOCK, since the lock may be held by a
   // thread that is no longer part of our address space
@@ -241,7 +256,11 @@ void Job::execSSH(const char *sshKey, const char *userName, const char *hostName
 #if defined USE_VALGRIND
     "valgrind", "--leak-check=full",
 #endif
-    executable, rank, parset, isBigEndian,
+    executable,
+
+    boost::lexical_cast<std::string>(itsParset.observationID()).c_str(),
+    rank,
+    isBigEndian,
 
     static_cast<char *>(0)
   ) < 0)
@@ -251,10 +270,11 @@ void Job::execSSH(const char *sshKey, const char *userName, const char *hostName
 }
 
 
-void Job::forkSSH(const char *sshKey, const char *userName, const char *hostName, const char *executable, const char *rank, const char *parset, const char *cwd, const char *isBigEndian, int &storagePID)
+void Job::StorageProcess::forkSSH(const char *sshKey, const char *userName, const char *hostName, const char *executable, const char *rank, const char *cwd, const char *isBigEndian)
 {
-  LOG_INFO_STR("Storage writer on " << hostName << ": starting as rank " << rank);
-  LOG_DEBUG_STR("child will exec "
+  LOG_INFO_STR(itsLogPrefix << " starting");
+
+  LOG_DEBUG_STR(itsLogPrefix << "child will exec "
     "\"/usr/bin/ssh "
     "-q "
     "-i " << sshKey << " "
@@ -268,21 +288,21 @@ void Job::forkSSH(const char *sshKey, const char *userName, const char *hostName
 #if defined USE_VALGRIND
     "valgrind " "--leak-check=full "
 #endif
-    << executable << " " << rank << " " << parset << " " << isBigEndian << " "
+    << executable << " " << rank << " " << isBigEndian << " "
     "\""
   );
 
-  switch (storagePID = fork()) {
+  switch (itsPID = fork()) {
     case -1 : throw SystemCallException("fork", errno, THROW_ARGS);
 
-    case  0 : execSSH(sshKey, userName, hostName, executable, rank, parset, cwd, isBigEndian);
+    case  0 : execSSH(sshKey, userName, hostName, executable, rank, cwd, isBigEndian);
   }
 }
 
 
-void Job::joinSSH(int childPID, const std::string &hostName, unsigned &timeout)
+void Job::StorageProcess::joinSSH(unsigned &timeout)
 {
-  if (childPID != 0) {
+  if (itsPID != 0) {
     int status;
 
     // always try at least one waitpid(). if child has not exited, optionally
@@ -290,16 +310,16 @@ void Job::joinSSH(int childPID, const std::string &hostName, unsigned &timeout)
     for (;;) {
       pid_t ret;
 
-      if ((ret = waitpid(childPID, &status, WNOHANG)) == (pid_t)-1) {
+      if ((ret = waitpid(itsPID, &status, WNOHANG)) == (pid_t)-1) {
         int error = errno;
 
         if (error == EINTR) {
-          LOG_DEBUG_STR(itsLogPrefix << "Storage writer on " << hostName << " : waitpid() was interrupted -- retrying");
+          LOG_DEBUG_STR(itsLogPrefix << " waitpid() was interrupted -- retrying");
           continue;
         }
 
         // error
-        LOG_WARN_STR(itsLogPrefix << "Storage writer on " << hostName << " : waitpid() failed with errno " << error);
+        LOG_WARN_STR(itsLogPrefix << " waitpid() failed with errno " << error);
         return;
       } else if (ret == 0) {
         // child still running
@@ -312,7 +332,7 @@ void Job::joinSSH(int childPID, const std::string &hostName, unsigned &timeout)
       } else {
         // child exited
         if (WIFSIGNALED(status) != 0)
-          LOG_WARN_STR(itsLogPrefix << "SSH to storage writer on " << hostName << " was killed by signal " << WTERMSIG(status));
+          LOG_WARN_STR(itsLogPrefix << "SSH was killed by signal " << WTERMSIG(status));
         else if (WEXITSTATUS(status) != 0) {
           const char *explanation;
 
@@ -363,9 +383,9 @@ void Job::joinSSH(int childPID, const std::string &hostName, unsigned &timeout)
               break;
           }
 
-          LOG_ERROR_STR(itsLogPrefix << "Storage writer on " << hostName << " exited with exit code " << WEXITSTATUS(status) << " (" << explanation << ")" );
+          LOG_ERROR_STR(itsLogPrefix << " exited with exit code " << WEXITSTATUS(status) << " (" << explanation << ")" );
         } else
-          LOG_INFO_STR(itsLogPrefix << "Storage writer on " << hostName << " terminated normally");
+          LOG_INFO_STR(itsLogPrefix << " terminated normally");
 
         return;  
       }
@@ -373,49 +393,94 @@ void Job::joinSSH(int childPID, const std::string &hostName, unsigned &timeout)
 
     // child did not exit within the given timeout
 
-    LOG_WARN_STR(itsLogPrefix << "Storage writer on " << hostName << " : sending SIGTERM");
-    kill(childPID, SIGTERM);
+    LOG_WARN_STR(itsLogPrefix << " sending SIGTERM");
+    kill(itsPID, SIGTERM);
 
-    if (waitpid(childPID, &status, 0) == -1) {
-      LOG_WARN_STR(itsLogPrefix << "Storage writer on " << hostName << " : waitpid() failed");
+    if (waitpid(itsPID, &status, 0) == -1) {
+      LOG_WARN_STR(itsLogPrefix << " waitpid() failed");
     }
 
-    LOG_WARN_STR(itsLogPrefix << "Storage writer on " << hostName << " terminated after sending SIGTERM");
+    LOG_WARN_STR(itsLogPrefix << " terminated after sending SIGTERM");
   }
+}
+
+
+Job::StorageProcess::StorageProcess( const Parset &parset, const string &logPrefix, int rank, const string &hostname )
+:
+  itsParset(parset),
+  itsLogPrefix(str(boost::format("%s [StorageWriter rank %2d host %s] ") % logPrefix % rank % hostname)),
+  itsRank(rank),
+  itsHostname(hostname)
+{
+}
+
+Job::StorageProcess::~StorageProcess()
+{
+  // cancel the control thread in case it is still active
+  itsThread->cancel();
+}
+
+
+void Job::StorageProcess::start()
+{
+  // fork (child process will exec)
+  std::string userName   = itsParset.getString("OLAP.Storage.userName");
+  std::string sshKey     = itsParset.getString("OLAP.Storage.sshIdentityFile");
+  std::string executable = itsParset.getString("OLAP.Storage.msWriter");
+
+  char cwd[1024];
+
+  if (getcwd(cwd, sizeof cwd) == 0)
+    throw SystemCallException("getcwd", errno, THROW_ARGS);
+
+  forkSSH(sshKey.c_str(),
+          userName.c_str(),
+          itsHostname.c_str(),
+          executable.c_str(),
+          boost::lexical_cast<std::string>(itsRank).c_str(),
+          cwd,
+#if defined WORDS_BIGENDIAN
+          "1"
+#else
+          "0"
+#endif
+          );
+
+  // client process won't reach this point
+
+  itsThread = new Thread(this, &Job::StorageProcess::controlThread, itsLogPrefix + "[ControlThread] ", 65535);
+}
+
+
+void Job::StorageProcess::stop(unsigned &timeout)
+{
+  joinSSH(timeout);
+}
+
+
+void Job::StorageProcess::controlThread()
+{
+  LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] connecting...");
+  std::string resource = getStorageControlDescription(itsParset.observationID(), itsRank);
+  PortBroker::ClientStream stream(itsHostname, storageBrokerPort(itsParset.observationID()), resource);
+
+  // for now, we just send the parset and call it a day
+  LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] connected -- sending parset");
+  itsParset.write(&stream);
+  LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] sent parset");
 }
 
 
 void Job::startStorageProcesses()
 {
-  itsStorageHostNames = itsParset.getStringVector("OLAP.Storage.hosts");
+  vector<string> hostnames = itsParset.getStringVector("OLAP.Storage.hosts");
 
-  std::string userName   = itsParset.getString("OLAP.Storage.userName");
-  std::string sshKey     = itsParset.getString("OLAP.Storage.sshIdentityFile");
-  std::string executable = itsParset.getString("OLAP.Storage.msWriter");
-  std::string parset     = itsParset.name();
+  itsStorageProcesses.resize(hostnames.size());
 
-  char cwd[1024];
-
-  if (getcwd(cwd, sizeof cwd) == 0) {
-    throw SystemCallException("getcwd", errno, THROW_ARGS);
-  }
-
-  itsStoragePIDs.resize(itsStorageHostNames.size());
-
-  for (unsigned rank = 0; rank < itsStorageHostNames.size(); rank ++)
-    forkSSH(sshKey.c_str(),
-	    userName.c_str(),
-	    itsStorageHostNames[rank].c_str(),
-	    executable.c_str(),
-	    boost::lexical_cast<std::string>(rank).c_str(),
-	    parset.c_str(),
-	    cwd,
-#if defined WORDS_BIGENDIAN
-	    "1",
-#else
-	    "0",
-#endif
-	    itsStoragePIDs[rank]);
+  for (unsigned rank = 0; rank < itsStorageProcesses.size(); rank ++) {
+    itsStorageProcesses[rank] = new StorageProcess(itsParset, itsLogPrefix, rank, hostnames[rank]);
+    itsStorageProcesses[rank]->start();
+  }  
 }
 
 
@@ -424,8 +489,8 @@ void Job::stopStorageProcesses()
   // warning: there could be zero storage processes
   unsigned timeleft = 10;
 
-  for (unsigned rank = 0; rank < itsStoragePIDs.size(); rank ++)
-    joinSSH(itsStoragePIDs[rank], itsStorageHostNames[rank], timeleft);
+  for (unsigned rank = 0; rank < itsStorageProcesses.size(); rank ++)
+    itsStorageProcesses[rank]->stop(timeleft);
 }
 
 
@@ -499,24 +564,16 @@ void Job::jobThread()
         canStart = false;
       }
 
-      if (!itsPLCClient) {
-        // we are either not PLC controlled, or we're supposed to be but can't connect to
-        // the ApplController
-        LOG_INFO_STR(itsLogPrefix << "Not controlled by ApplController");
-
-        // perform some functions which ApplController would have us do
-
-        // obey the stop time in the parset -- the first anotherRun() will broadcast it
-        if (!pause(itsParset.stopTime())) {
-          LOG_ERROR_STR(itsLogPrefix << "Could not set observation stop time");
-          canStart = false;
-        }
+      // obey the stop time in the parset -- the first anotherRun() will broadcast it
+      if (!pause(itsParset.stopTime())) {
+        LOG_ERROR_STR(itsLogPrefix << "Could not set observation stop time");
+        canStart = false;
       }
 
       if (canStart) {
         // PLC: INIT phase
         if (itsParset.realTime())
-          waitUntilCloseToStartOfObservation(10);
+          waitUntilCloseToStartOfObservation(20);
 
         // PLC: in practice, RUN must start here, because resources
         // can become available just before the observation starts.
@@ -540,6 +597,24 @@ void Job::jobThread()
 
     if (itsIsRunning) {
       // PLC: RUN phase
+
+      if (itsParset.realTime()) {
+        // if we started after itsParset.startTime(), we want to skip ahead to
+        // avoid data loss caused by having to catch up.
+        if (myPsetNumber == 0) {
+          time_t earliest_start = time(0L) + 5;
+
+          if (earliest_start > itsParset.startTime()) {
+            itsBlockNumber = static_cast<unsigned>((earliest_start - itsParset.startTime()) / itsParset.CNintegrationTime());
+
+            LOG_WARN_STR(itsLogPrefix << "Skipping the first " << itsBlockNumber << " blocks to catch up"); 
+          } else {
+            itsBlockNumber = 0;
+          }  
+        }
+
+        broadcast(itsBlockNumber);
+      }
 
       // each node is expected to:
       // 1. agree() on starting, to allow the compute nodes to complain in preprocess()
@@ -587,16 +662,27 @@ void Job::createCNstreams()
 
   itsCNstreams.resize(usedCoresInPset.size());
 
-  for (unsigned core = 0; core < usedCoresInPset.size(); core ++)
-    itsCNstreams[core] = allCNstreams[usedCoresInPset[core]];
+  for (unsigned core = 0; core < usedCoresInPset.size(); core ++) {
+    ASSERT(usedCoresInPset[core] < nrCNcoresInPset);
+    itsCNstreams[core] = allCNstreams[myPsetNumber][usedCoresInPset[core]];
+  }
 
   if (itsHasPhaseOne || itsHasPhaseTwo) {
     std::vector<unsigned> phaseOneTwoCores = itsParset.phaseOneTwoCores();
 
-    itsPhaseOneTwoCNstreams.resize(phaseOneTwoCores.size());
+    itsPhaseOneTwoCNstreams.resize(nrPsets, phaseOneTwoCores.size());
 
-    for (unsigned core = 0; core < phaseOneTwoCores.size(); core ++)
-      itsPhaseOneTwoCNstreams[core] = allCNstreams[phaseOneTwoCores[core]];
+#ifdef CLUSTER_SCHEDULING
+    for (unsigned pset = 0; pset < nrPsets; pset ++)
+#else
+    unsigned pset = myPsetNumber;
+#endif
+    {
+      for (unsigned core = 0; core < phaseOneTwoCores.size(); core ++) {
+        ASSERT(phaseOneTwoCores[core] < nrCNcoresInPset);
+        itsPhaseOneTwoCNstreams[pset][core] = allCNstreams[pset][phaseOneTwoCores[core]];
+      }
+    }
   }
 
   if (itsHasPhaseThree) {
@@ -604,8 +690,10 @@ void Job::createCNstreams()
 
     itsPhaseThreeCNstreams.resize(phaseThreeCores.size());
 
-    for (unsigned core = 0; core < phaseThreeCores.size(); core ++)
-      itsPhaseThreeCNstreams[core] = allCNstreams[phaseThreeCores[core]];
+    for (unsigned core = 0; core < phaseThreeCores.size(); core ++) {
+      ASSERT(phaseThreeCores[core] < nrCNcoresInPset);
+      itsPhaseThreeCNstreams[core] = allCNstreams[myPsetNumber][phaseThreeCores[core]];
+    }
   }
 }
 
@@ -634,7 +722,7 @@ bool Job::configureCNs()
 {
   bool success = true;
 
-  CN_Command command(CN_Command::PREPROCESS);
+  CN_Command command(CN_Command::PREPROCESS, itsBlockNumber);
   
   LOG_DEBUG_STR(itsLogPrefix << "Configuring cores " << itsParset.usedCoresInPset() << " ...");
 
@@ -643,6 +731,7 @@ bool Job::configureCNs()
     itsParset.write(itsCNstreams[core]);
   }
 
+#if 0 // FIXME: leads to deadlock when using TCP
   for (unsigned core = 0; core < itsCNstreams.size(); core ++) {
     char failed;
     itsCNstreams[core]->read(&failed, sizeof failed);
@@ -652,6 +741,7 @@ bool Job::configureCNs()
       success = false;
     }
   }
+#endif
   
   LOG_DEBUG_STR(itsLogPrefix << "Configuring cores " << itsParset.usedCoresInPset() << " done");
 
@@ -688,16 +778,17 @@ bool Job::anotherRun()
     broadcast(itsStopTime);
   }
 
+  // move on to the next block
+  itsBlockNumber ++;
+
   bool done = !itsIsRunning;
 
   if (itsStopTime > 0.0) {
-    // start time of last processed block
-    double currentTime = itsParset.startTime() + itsBlockNumber * itsParset.CNintegrationTime();
+    // the end time of this block must still be within the observation
+    double currentTime = itsParset.startTime() + (itsBlockNumber + 1) * itsParset.CNintegrationTime();
 
     done = done || currentTime >= itsStopTime;
   }
-
-  itsBlockNumber ++;
 
   return !done;
 }
@@ -716,38 +807,39 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
 
     if (LOG_CONDITION)
       LOG_INFO_STR(itsLogPrefix << "----- Observation finished");
+
     return;
   }
 
   if (itsHasPhaseOne)
     attachToInputSection<SAMPLE_TYPE>();
 
-  if (itsParset.outputFilteredData())
-    outputSections.push_back(new FilteredDataOutputSection(itsParset, createCNstream));
+  if (itsHasPhaseTwo) {
+    if (itsParset.outputCorrelatedData())
+      outputSections.push_back(new CorrelatedDataOutputSection(itsParset, itsBlockNumber));
+  }
 
-  if (itsParset.outputCorrelatedData())
-    outputSections.push_back(new CorrelatedDataOutputSection(itsParset, createCNstream));
+  if (itsHasPhaseThree) {
+    if (itsParset.outputBeamFormedData())
+      outputSections.push_back(new BeamFormedDataOutputSection(itsParset, itsBlockNumber));
 
-  if (itsParset.outputIncoherentStokes())
-    outputSections.push_back(new IncoherentStokesOutputSection(itsParset, createCNstream));
+    if (itsParset.outputTrigger())
+      outputSections.push_back(new TriggerDataOutputSection(itsParset, itsBlockNumber));
+  }
 
-  if (itsParset.outputBeamFormedData())
-    outputSections.push_back(new BeamFormedDataOutputSection(itsParset, createCNstream));
-
-  if (itsParset.outputCoherentStokes())
-    outputSections.push_back(new CoherentStokesOutputSection(itsParset, createCNstream));
-
-  if (itsParset.outputTrigger())
-    outputSections.push_back(new TriggerDataOutputSection(itsParset, createCNstream));
+  // start the threads
+  for (unsigned i = 0; i < outputSections.size(); i ++)
+    outputSections[i]->start();
 
   LOG_DEBUG_STR(itsLogPrefix << "doObservation processing input start");
 
   { // separate scope to ensure that the beamletbuffertocomputenode objects
     // only exist if the beamletbuffers exist in the inputsection
     std::vector<SmartPtr<BeamletBuffer<SAMPLE_TYPE> > > noInputs;
-    BeamletBufferToComputeNode<SAMPLE_TYPE>   beamletBufferToComputeNode(itsParset, itsPhaseOneTwoCNstreams, itsHasPhaseOne ? static_cast<InputSection<SAMPLE_TYPE> *>(theInputSection)->itsBeamletBuffers : noInputs, myPsetNumber);
+    BeamletBufferToComputeNode<SAMPLE_TYPE>   beamletBufferToComputeNode(itsParset, itsPhaseOneTwoCNstreams, itsHasPhaseOne ? static_cast<InputSection<SAMPLE_TYPE> *>(theInputSection)->itsBeamletBuffers : noInputs, myPsetNumber, itsBlockNumber);
 
-    ControlPhase3Cores controlPhase3Cores(itsParset, itsPhaseThreeCNstreams);
+    ControlPhase3Cores controlPhase3Cores(itsParset, itsPhaseThreeCNstreams, itsBlockNumber);
+    controlPhase3Cores.start(); // start the thread
 
     while (anotherRun()) {
       for (unsigned i = 0; i < outputSections.size(); i ++)

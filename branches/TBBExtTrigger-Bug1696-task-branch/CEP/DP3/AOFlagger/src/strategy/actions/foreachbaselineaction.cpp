@@ -40,6 +40,9 @@ namespace rfiStrategy {
 		{
 			progress.OnStartTask(*this, 0, 1, "For each baseline (no image set)");
 			progress.OnEndTask(*this);
+			AOLogger::Warn <<
+				"I executed a ForEachBaselineAction without an active imageset: something is\n"
+				"likely wrong. Check your strategy and the input files.\n";
 		} else if(_selection == Current)
 		{
 			ActionBlock::Perform(artifacts, progress);
@@ -50,7 +53,9 @@ namespace rfiStrategy {
 			if(msImageSet != 0)
 			{
 				// Check memory usage
-				size_t timeStepCount = msImageSet->GetObservationTimesSet().size();
+				ImageSetIndex *tempIndex = msImageSet->StartIndex();
+				size_t timeStepCount = msImageSet->ObservationTimesVector(*tempIndex).size();
+				delete tempIndex;
 				size_t channelCount = msImageSet->GetBandInfo(0).channelCount;
 				size_t estMemorySizePerThread = 8/*bp complex*/ * 4 /*polarizations*/ * timeStepCount * channelCount * 3 /* approx copies of the data that will be made in memory*/;
 				AOLogger::Debug << "Estimate of memory each thread will use: " << estMemorySizePerThread/(1024*1024) << " MB.\n";
@@ -86,12 +91,21 @@ namespace rfiStrategy {
 
 			if(artifacts.MetaData() != 0)
 			{
-				_initAntenna1 = artifacts.MetaData()->Antenna1();
-				_initAntenna2 = artifacts.MetaData()->Antenna2();
 				_hasInitAntennae = true;
+				if(artifacts.MetaData()->HasAntenna1())
+					_initAntenna1 = artifacts.MetaData()->Antenna1();
+				else
+					_hasInitAntennae = false;
+				if(artifacts.MetaData()->HasAntenna2())
+					_initAntenna2 = artifacts.MetaData()->Antenna2();
+				else
+					_hasInitAntennae = false;
 			}
 			_artifacts = &artifacts;
-			_initPartIndex = static_cast<MSImageSet*>(imageSet)->GetPart(*artifacts.ImageSetIndex());
+			if(msImageSet != 0)
+				_initPartIndex = msImageSet->GetPart(*artifacts.ImageSetIndex());
+			else
+				_initPartIndex = 0;
 
 			_finishedBaselines = false;
 			_baselineCount = 0;
@@ -107,6 +121,7 @@ namespace rfiStrategy {
 				iteratorIndex->Next();
 			}
 			delete iteratorIndex;
+			AOLogger::Debug << "Will process " << _baselineCount << " baselines.\n";
 			
 			// Initialize thread data and threads
 			_loopIndex = imageSet->StartIndex();
@@ -147,8 +162,16 @@ namespace rfiStrategy {
 	bool ForEachBaselineAction::IsBaselineSelected(ImageSetIndex &index)
 	{
 		ImageSet *imageSet = _artifacts->ImageSet();
-		size_t a1id = static_cast<MSImageSet*>(imageSet)->GetAntenna1(index);
-		size_t a2id = static_cast<MSImageSet*>(imageSet)->GetAntenna2(index);
+		MSImageSet *msImageSet = dynamic_cast<MSImageSet*>(imageSet);
+		size_t a1id, a2id;
+		if(msImageSet != 0)
+		{
+			a1id = msImageSet->GetAntenna1(index);
+			a2id = msImageSet->GetAntenna2(index);
+		} else {
+			a1id = 0;
+			a2id = 0;
+		}
 		if(_antennaeToSkip.count(a1id) != 0 || _antennaeToSkip.count(a2id) != 0)
 			return false;
 		if(!_antennaeToInclude.empty() && (_antennaeToInclude.count(a1id) == 0 && _antennaeToInclude.count(a2id) == 0))
@@ -231,7 +254,10 @@ namespace rfiStrategy {
 				baseline->Index().Reattach(*privateImageSet);
 				
 				std::ostringstream progressStr;
-				progressStr << "Processing baseline " << baseline->MetaData()->Antenna1().name << " x " << baseline->MetaData()->Antenna2().name;
+				if(_action._hasInitAntennae)
+					progressStr << "Processing baseline " << baseline->MetaData()->Antenna1().name << " x " << baseline->MetaData()->Antenna2().name;
+				else
+					progressStr << "Processing next baseline";
 				_action.SetProgress(_progress, _action.BaselineProgress(), _action._baselineCount, progressStr.str(), _threadIndex);
 	
 				newArtifacts.SetOriginalData(baseline->Data());
@@ -284,11 +310,22 @@ namespace rfiStrategy {
 		Stopwatch watch(true);
 		bool finished = false;
 		size_t threadCount = _action.mathThreadCount();
+		size_t minRecommendedBufferSize, maxRecommendedBufferSize;
+		MSImageSet *msImageSet = dynamic_cast<MSImageSet*>(_action._artifacts->ImageSet());
+		if(msImageSet != 0)
+		{
+			minRecommendedBufferSize = msImageSet->Reader()->GetMinRecommendedBufferSize(threadCount);
+			maxRecommendedBufferSize = msImageSet->Reader()->GetMaxRecommendedBufferSize(threadCount) - _action.GetBaselinesInBufferCount();
+		} else {
+			minRecommendedBufferSize = 1;
+			maxRecommendedBufferSize = 2;
+		}
+		
 		do {
 			watch.Pause();
-			_action.WaitForBufferAvailable(static_cast<MSImageSet*>(_action._artifacts->ImageSet())->Reader()->GetMinRecommendedBufferSize(threadCount));
+			_action.WaitForBufferAvailable(minRecommendedBufferSize);
 			
-			size_t wantedCount = static_cast<MSImageSet*>(_action._artifacts->ImageSet())->Reader()->GetMaxRecommendedBufferSize(threadCount) - _action.GetBaselinesInBufferCount();
+			size_t wantedCount = maxRecommendedBufferSize - _action.GetBaselinesInBufferCount();
 			size_t requestedCount = 0;
 			
 			boost::mutex::scoped_lock lock(_action._artifacts->IOMutex());

@@ -44,9 +44,9 @@ public:
     typedef shared_ptr<GaussianCoherence>       Ptr;
     typedef shared_ptr<const GaussianCoherence> ConstPtr;
 
-    GaussianCoherence(const Expr<Vector<4> >::ConstPtr stokes,
-        const Expr<Vector<2> >::ConstPtr dimensions,
-        const Expr<Scalar>::ConstPtr orientation,
+    GaussianCoherence(const Expr<Vector<4> >::ConstPtr &stokes,
+        const Expr<Vector<2> >::ConstPtr &dimensions,
+        const Expr<Scalar>::ConstPtr &orientation,
         const Expr<Vector<3> >::ConstPtr &uvwA,
         const Expr<Vector<3> >::ConstPtr &uvwB);
 

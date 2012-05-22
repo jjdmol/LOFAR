@@ -365,7 +365,7 @@ CREATE OR REPLACE FUNCTION instanciateVHsubTree(INT4, INT4, INT4, TEXT)
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION instanciateVHtree(INT4, INT4)
-  RETURNS INT4 AS '
+  RETURNS INT4 AS $$
 	DECLARE
 		vFunction  CONSTANT		INT2 := 1;
 		TTVHtree   CONSTANT		INT2 := 30;
@@ -381,6 +381,7 @@ CREATE OR REPLACE FUNCTION instanciateVHtree(INT4, INT4)
 	  	vNewNodeID				VICtemplate.nodeID%TYPE;
 		vNewTreeID				OTDBtree.treeID%TYPE;
 		vOriginID				OTDBtree.treeID%TYPE;
+		vGroupID				OTDBtree.groupID%TYPE;
 		vAuthToken				ALIAS FOR $1;
 
 	BEGIN
@@ -389,12 +390,12 @@ CREATE OR REPLACE FUNCTION instanciateVHtree(INT4, INT4)
 	  SELECT isAuthorized(vAuthToken, $2, vFunction, 0)
 	  INTO	 vIsAuth;
 	  IF NOT vIsAuth THEN
-		RAISE EXCEPTION \'Not authorized\';
+		RAISE EXCEPTION 'Not authorized';
 	  END IF;
 
 	  -- get some info about the original tree
-	  SELECT momId, classif, campaign, state, description
-	  INTO	 vMomID, vClassif, vCampaign, vState, vDesc
+	  SELECT momId, classif, campaign, state, description, groupID
+	  INTO	 vMomID, vClassif, vCampaign, vState, vDesc, vGroupID
 	  FROM	 OTDBtree
 	  WHERE	 treeID = $2;
 	  -- note: tree exists, checked in authorisation check
@@ -408,12 +409,15 @@ CREATE OR REPLACE FUNCTION instanciateVHtree(INT4, INT4)
 	  SELECT newTree($1, vOriginID, vMomID, vClassif, TTVHtree, vState, vCampaign)
 	  INTO	 vNewTreeID;
 	  IF vNewTreeID = 0 THEN
-		RAISE EXCEPTION \'Tree can not be created\';
+		RAISE EXCEPTION 'Tree can not be created';
 	  END IF;
 
 	  SELECT setDescription($1, vNewTreeID, vDesc)
 	  INTO	 vResult;
 	  -- ignore result, not important.
+
+	  -- copy groupid.
+	  UPDATE OTDBtree set groupid = vGroupID where treeID = vNewTreeID;
 
 	  -- get topNode
 	  SELECT nodeID
@@ -422,13 +426,17 @@ CREATE OR REPLACE FUNCTION instanciateVHtree(INT4, INT4)
 	  WHERE	 treeID = $2
 	  AND 	 parentID = 0;
 	  IF NOT FOUND THEN
-		RAISE EXCEPTION \'Topnode of tree % unknown; tree empty?\', $2;
+		RAISE EXCEPTION 'Topnode of tree % unknown; tree empty?', $2;
 	  END IF;
 
 	  -- recursively instanciate the tree
-	  vNewNodeID := instanciateVHsubTree(vOrgNodeID, vNewTreeID, 0, \'\'::text);	
+	  vNewNodeID := instanciateVHsubTree(vOrgNodeID, vNewTreeID, 0, ''::text);	
+
+	  SELECT copyProcessType($2, vNewTreeID)
+	  INTO	 vResult;
+	  -- ignore result, not important.
 
 	  RETURN vNewTreeID;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 

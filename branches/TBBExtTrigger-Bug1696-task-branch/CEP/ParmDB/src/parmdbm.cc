@@ -34,6 +34,7 @@
 #include <Blob/KeyParser.h>
 #include <Common/StreamUtil.h>
 #include <Common/StringUtil.h>
+#include <Common/SystemUtil.h>
 #include <Common/ReadLine.h>
 #include <Common/LofarLogger.h>
 
@@ -45,8 +46,6 @@
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_fstream.h>
 #include <pwd.h>
-#include <unistd.h>
-#include <libgen.h>
 
 using namespace casa;
 using namespace LOFAR;
@@ -143,7 +142,7 @@ void showHelp()
 {
   cerr << endl;
   cerr << "Show and update contents of parameter tables containing the" << endl;
-  cerr << "ME parameters and their defaults." << endl;
+  cerr << "BBS parameters and their defaults." << endl;
   cerr << "Frequency is the x-axis and time is the y-axis." << endl;
   cerr << endl;
   cerr << " create db='username' dbtype='casa' table[name]=" << endl;
@@ -151,35 +150,35 @@ void showHelp()
   cerr << " set    stepx=defaultstepsize, stepy=defaultstepsize" << endl;
   cerr << " quit  (or exit or stop)" << endl;
   cerr << endl;
-  cerr << " showdef [parmname_pattern]" << endl;
+  cerr << " showdef  [parmname_pattern]" << endl;
   cerr << " namesdef [parmname_pattern]" << endl;
-  cerr << " adddef parmname valuespec" << endl;
+  cerr << " adddef    parmname         valuespec" << endl;
   cerr << " updatedef parmname_pattern valuespec" << endl;
   cerr << " removedef parmname_pattern" << endl;
-  cerr << " export parmname_pattern dbtype='casa' table[name]= append=0" << endl;
+  cerr << " export    parmname_pattern tablename= append=0 dbtype='casa'" << endl;
   cerr << endl;
   cerr << " range [parmname_pattern]       (show the total domain range)" << endl;
-  cerr << " show [parmname_pattern] [domain=...]" << endl;
+  cerr << " show  [parmname_pattern] [domain=...]" << endl;
   cerr << " names [parmname_pattern]" << endl;
-  cerr << " add parmname domain= valuespec" << endl;
+  cerr << " add    parmname          domain=  valuespec" << endl;
   cerr << " remove parmname_pattern [domain=]" << endl;
   cerr << endl;
-  cerr << "  domain gives an N-dim domain (usually n is 2) as:" << endl;
-  cerr << "      domain=[stx,endx,sty,endy,...]" << endl;
-  cerr << "   or domain=[st=[stx,sty,...],end=[endx,...] or size=[sizex,...]]" << endl;
+  cerr << "  domain gives an N-dim domain (usually N is 2) as:" << endl;
+  cerr << "       domain=[stx,endx,sty,endy,...]" << endl;
+  cerr << "    or domain=[st=[stx,sty,...],end=[endx,...] or size=[sizex,...]]" << endl;
   cerr << "  valuespec gives the values of the parameter attributes as" << endl;
-  cerr << "   key=value pairs separated by commas." << endl;
+  cerr << "    key=value pairs separated by commas." << endl;
   cerr << "  Attributes not given are not changed. Values shown are defaults when adding." << endl;
-  cerr << "   values=1              (coefficients)" << endl;
-  cerr << "    if multiple coefficients, specify as vector and specify shape" << endl;
-  cerr << "    For example:   values=[1,2,3,4], shape=[2,2]" << endl;
-  cerr << "   mask=                 (mask telling which coefficients are solvable" << endl;
-  cerr << "    default is that c[i,j] with i+j>max(shape) are not solvable" << endl;
-  cerr << "    For example:   values=[0,0,3], mask=[F,F,T], nx=3" << endl;
-  cerr << "   errors=               (optional error for each coefficient)" << endl;
-  cerr << "   pert=1e-6             (perturbation for numerical differentation)" << endl;
-  cerr << "   pertrel=T             (perturbation is relative? Use F for angles)" << endl;
-  cerr << "   type='polc'           (funklet type; default is polynomial)" << endl;
+  cerr << "    values=1              (coefficients)" << endl;
+  cerr << "      if multiple coefficients, specify as vector and specify shape" << endl;
+  cerr << "      For example:   values=[1,2,3,4], shape=[2,2]" << endl;
+  cerr << "    mask=                 (mask telling which coefficients are solvable" << endl;
+  cerr << "      default is that c[i,j] with i+j>max(shape) are not solvable" << endl;
+  cerr << "      For example:   values=[0,0,3], mask=[F,F,T], nx=3" << endl;
+  cerr << "    errors=               (optional error for each coefficient)" << endl;
+  cerr << "    pert=1e-6             (perturbation for numerical differentation)" << endl;
+  cerr << "    pertrel=T             (perturbation is relative? Use F for angles)" << endl;
+  cerr << "    type='polc'           (funklet type; default is polc (polynomial))" << endl;
   cerr << endl;
 }
 
@@ -519,7 +518,9 @@ void showParms (ParmMap& parmSet, bool showAll, ostream& ostr)
     }
   }
   if (nr != 1) {
-    ostr << parmSet.size() << " parms and " << nr << " values found" << endl;
+    ostr << parmSet.size();
+    if (!showAll) ostr << " default";
+    ostr << " parms and " << nr << " values found" << endl;
   }
 }
 
@@ -745,7 +746,7 @@ int exportParms (const ParmMap& parmset, ParmDB& newtab, ostream& ostr)
     if (pset.size() > 0) {
       if (pset.size() == 1) {
         const ParmValue& pval = pset.getParmValue(0);
-        if (pval.nx() == 1  &  pval.ny() == 1) {
+        if (pval.nx() == 1  &&  pval.ny() == 1) {
           newtab.putDefValue (name, pset);
           ostr << "Exported default scalar record for parameter "
                << name << endl;
@@ -843,7 +844,10 @@ void doIt (bool noPrompt, ostream& ostr)
           string dbHost = kvmap.getString ("host", "dop50.astron.nl");
           string dbName = kvmap.getString ("db", dbUser);
           string dbType = kvmap.getString ("dbtype", "casa");
-          string tableName = kvmap.getString ("tablename", "MeqParm");
+          string tableName = kvmap.getString ("table", "");
+          if (tableName.empty()) {
+            tableName = kvmap.getString ("tablename", "MeqParm");
+          }
           ParmDBMeta meta (dbType, tableName);
           meta.setSQLMeta (dbName, dbUser, "", dbHost);
           parmtab = new ParmDB (meta, true);
@@ -958,9 +962,8 @@ void doIt (bool noPrompt, ostream& ostr)
 
 int main (int argc, char *argv[])
 {
-  const char* progName = basename(argv[0]);
   TEST_SHOW_VERSION (argc, argv, ParmDB);
-  INIT_LOGGER(progName);
+  INIT_LOGGER(basename(string(argv[0])));
   
   try {
     if (argc > 1) {

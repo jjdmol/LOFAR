@@ -13,8 +13,6 @@
 #include <Storage/MeasurementSetFormat.h>
 #include <Storage/Package__Version.h>
 
-#include <AMCBase/Epoch.h>
-
 #include <string>
 #include <fstream>
 #include <iostream>
@@ -50,15 +48,15 @@
 #include <ms/MeasurementSets.h>
 
 #include <MSLofar/MSLofar.h>
+#include <MSLofar/MSLofarField.h>
 #include <MSLofar/MSLofarAntenna.h>
 #include <MSLofar/MSLofarObservation.h>
 #include <MSLofar/MSLofarAntennaColumns.h>
+#include <MSLofar/MSLofarFieldColumns.h>
 #include <MSLofar/MSLofarObsColumns.h>
 #include <MSLofar/BeamTables.h>
 #include <LofarStMan/LofarStMan.h>
 #include <Interface/Exceptions.h>
-
-#include <boost/thread/mutex.hpp>
 
 
 using namespace casa;
@@ -70,23 +68,23 @@ namespace RTCP {
 Mutex MeasurementSetFormat::sharedMutex;
 
 
+// unix time to mjd time (in seconds instead of days)
+static double toMJDs( double time )
+{
+  // 40587 modify Julian day number = 00:00:00 January 1, 1970, GMT
+  return 40587.0 * 24 * 60 * 60 + time;
+}
+
+
 MeasurementSetFormat::MeasurementSetFormat(const Parset &ps, unsigned alignment)
 :
   itsPS(ps),
+  stationNames(itsPS.mergedStationNames()),
+  antPos(itsPS.positions()),
+  itsNrAnt(stationNames.size()),
   itsMS(0), 
   itsAlignment(alignment)
 {
- 
-  if (itsPS.nrTabStations() > 0) {
-    itsNrAnt = itsPS.nrTabStations();
-    stationNames = itsPS.getStringVector("OLAP.tiedArrayStationNames",true);
-  } else {
-    itsNrAnt = itsPS.nrStations();
-    stationNames = itsPS.getStringVector("OLAP.storageStationNames",true);
-  }
-
-  antPos = itsPS.positions();
-
   if (itsPS.nrTabStations() > 0) { 
     ASSERTSTR(antPos.size() == 3 * itsPS.nrTabStations(),
 	      antPos.size() << " == " << 3 * itsPS.nrTabStations());
@@ -95,12 +93,7 @@ MeasurementSetFormat::MeasurementSetFormat(const Parset &ps, unsigned alignment)
 	      antPos.size() << " == " << 3 * itsPS.nrStations());
   }
 
-  {
-    ScopedLock scopedLock(sharedMutex);
-    AMC::Epoch epoch;
-    epoch.utc(itsPS.startTime());
-    itsStartTime = MVEpoch(epoch.mjd()).getTime().getValue("s");
-  }
+  itsStartTime = toMJDs(itsPS.startTime());
 
   itsTimeStep = itsPS.IONintegrationTime();
   itsNrTimes = 29030400;  /// equates to about one year, sets valid
@@ -179,15 +172,9 @@ void MeasurementSetFormat::createMSTables(const string &MSname, unsigned subband
       // Fill the tables containing the beam info.
       BeamTables::fill(*itsMS,
 		       itsPS.antennaSet(),
-#if 1
-			"/opt/cep/lofar/share/AntennaSets.conf",
-			"/opt/cep/lofar/share/AntennaFields",
-			"/opt/cep/lofar/share/iHBADeltas");
-#else
-		       "/home/romein/projects/LOFAR/RTCP/IONProc/test/AntennaSets.conf",
-		       "/home/romein/projects/LOFAR/RTCP/IONProc/test/AntennaFields",
-		       "/home/romein/projects/LOFAR/RTCP/IONProc/test/iHBADeltas");
-#endif
+                       itsPS.AntennaSetsConf(),
+                       itsPS.AntennaFieldsDir(),
+                       itsPS.HBADeltasDir());
     } catch (LOFAR::AssertError &ex) {
       LOG_WARN_STR("Ignoring exception from BeamTables::fill(): " << ex.what());
     }
@@ -218,7 +205,7 @@ void MeasurementSetFormat::fillAntenna(const Block<MPosition>& antMPos)
     msantCol.stationId().put(i, 0);
     msantCol.station().put(i, "LOFAR");
     msantCol.type().put(i, "GROUND-BASED");
-    msantCol.mount().put(i, "FIXED");
+    msantCol.mount().put(i, "X-Y");
     msantCol.positionMeas().put(i, antMPos[i]);
     msantCol.offset().put(i, antOffset);
     msantCol.dishDiameter().put(i, 0);
@@ -281,26 +268,54 @@ void MeasurementSetFormat::fillFeed()
 
 void MeasurementSetFormat::fillField(unsigned subarray)
 {
+
+  // Beam direction
   MVDirection radec(Quantity(itsPS.getBeamDirection(subarray)[0], "rad"), 
 		    Quantity(itsPS.getBeamDirection(subarray)[1], "rad"));
-  MDirection indir(radec, MDirection::J2000);
+  MDirection::Types beamDirectionType;
+  MDirection::getType(beamDirectionType, itsPS.getBeamDirectionType(subarray));
+  MDirection indir(radec, beamDirectionType);
   casa::Vector<MDirection> outdir(1);
   outdir(0) = indir;
+
+  // AnaBeam direction type
+  MDirection::Types anaBeamDirectionType;
+  if (itsPS.haveAnaBeam())
+    MDirection::getType(anaBeamDirectionType, itsPS.getAnaBeamDirectionType());
+
   // Put the direction into the FIELD subtable.
-  {
-    MSField msfield = itsMS->field();
-    MSFieldColumns msfieldCol(msfield);
-    uInt rownr = msfield.nrow();
-    msfield.addRow();
-    msfieldCol.name().put(rownr, "BEAM_" + String::toString(subarray));
-    msfieldCol.code().put(rownr, "");
-    msfieldCol.time().put(rownr, itsStartTime);
-    msfieldCol.numPoly().put(rownr, 0);
-    msfieldCol.delayDirMeasCol().put(rownr, outdir);
-    msfieldCol.phaseDirMeasCol().put(rownr, outdir);
-    msfieldCol.referenceDirMeasCol().put(rownr, outdir);
-    msfieldCol.sourceId().put(rownr, -1);
-    msfieldCol.flagRow().put(rownr, False);
+  MSLofarField msfield = itsMS->field();
+  MSLofarFieldColumns msfieldCol(msfield);
+
+  uInt rownr = msfield.nrow();
+  ASSERT(rownr == 0); // can only set directionType on first row, so only one field per MeasurementSet for now
+
+  if (itsPS.haveAnaBeam())
+    msfieldCol.setDirectionRef(beamDirectionType, anaBeamDirectionType);
+  else
+    msfieldCol.setDirectionRef(beamDirectionType);
+
+  msfield.addRow();
+  msfieldCol.name().put(rownr, "BEAM_" + String::toString(subarray));
+  msfieldCol.code().put(rownr, "");
+  msfieldCol.time().put(rownr, itsStartTime);
+  msfieldCol.numPoly().put(rownr, 0);
+
+  msfieldCol.delayDirMeasCol().put(rownr, outdir);
+  msfieldCol.phaseDirMeasCol().put(rownr, outdir);
+  msfieldCol.referenceDirMeasCol().put(rownr, outdir);
+
+  msfieldCol.sourceId().put(rownr, -1);
+  msfieldCol.flagRow().put(rownr, False);
+
+  if (itsPS.haveAnaBeam()) {
+    // Analog beam direction
+    MVDirection radec_AnaBeamDirection(Quantity(itsPS.getAnaBeamDirection()[0], "rad"),
+  				       Quantity(itsPS.getAnaBeamDirection()[1], "rad"));
+    MDirection anaBeamDirection(radec_AnaBeamDirection, anaBeamDirectionType);
+    msfieldCol.tileBeamDirMeasCol().put(rownr, anaBeamDirection);
+  } else {
+    msfieldCol.tileBeamDirMeasCol().put(rownr, outdir(0));
   }
 }
 
@@ -405,7 +420,7 @@ void MeasurementSetFormat::fillObs(unsigned subarray)
 
   msobsCol.telescopeName().put(0, "LOFAR");
   msobsCol.timeRange().put(0, timeRange);
-  msobsCol.observer().put(0, itsPS.observerName());
+  msobsCol.observer().put(0, "unknown");
   msobsCol.scheduleType().put(0, "LOFAR");
   msobsCol.schedule().put(0, corrSchedule);
   msobsCol.project().put(0, itsPS.getString("Observation.Campaign.name"));

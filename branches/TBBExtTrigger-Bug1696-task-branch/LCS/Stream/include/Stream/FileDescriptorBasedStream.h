@@ -31,15 +31,13 @@ namespace LOFAR {
 class FileDescriptorBasedStream : public Stream
 {
   public:
+		   FileDescriptorBasedStream(int fd = -1) : fd(fd) {}
     virtual	   ~FileDescriptorBasedStream();
 
     virtual size_t tryRead(void *ptr, size_t size);
     virtual size_t tryWrite(const void *ptr, size_t size);
 
     virtual void   sync();
-
-  protected:
-		   FileDescriptorBasedStream() : fd(-1) {} // do not create directly
 
     int		   fd;
 };

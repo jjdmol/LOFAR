@@ -37,6 +37,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <sys/time.h>
+#include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/syscall.h>   /* For SYS_xxx definitions */
 #include <sys/resource.h>
@@ -85,5 +86,73 @@ inline int ioprio_get(int which, int who)
   return -1;
 #endif
 }
+
+inline void setIOpriority()
+{
+  if (ioprio_set(IOPRIO_WHO_PROCESS, getpid(), IOPRIO_PRIO_VALUE(IOPRIO_CLASS_RT,7)) != 0) {
+    switch (errno) {
+    case EPERM:
+      {
+	struct passwd *user = getpwnam("lofarsys");
+	if ((user != NULL) && (getuid() != user->pw_uid)) 
+	  LOG_WARN_STR("Failed to set IO priority, permission denied");
+	else 
+	  LOG_ERROR_STR("Failed to set IO priority, capability CAP_SYS_ADMIN not set?");
+      } break;
+    case EINVAL:
+    case ESRCH:
+    default:
+      LOG_ERROR_STR("Failed to set IO priority: " << errno);
+    }
+  }
+}
+
+
+inline void setRTpriority()
+{
+  int priority = sched_get_priority_min(SCHED_RR);
+  struct sched_param sp;
+  sp.sched_priority = priority;
+  
+  if (sched_setscheduler(0, SCHED_RR, &sp) < 0) {
+    switch (errno) {
+    case EPERM:
+      {
+	struct passwd *user = getpwnam("lofarsys");
+	if ((user != NULL) && (getuid() != user->pw_uid))
+	  LOG_WARN_STR("Failed to set RT priority, permission denied");   
+	else 
+	  LOG_ERROR_STR("Failed to set RT priority, capability CAP_SYS_NICE not set?");
+      } break;
+
+    case EINVAL:
+    case ESRCH:
+    default:
+      LOG_ERROR_STR("Failed to set RT priority: " << errno);
+    }
+  }
+}
+
+
+inline void lockInMemory()
+{
+  if (mlockall(MCL_CURRENT|MCL_FUTURE) < 0) {
+    switch (errno) {
+    case ENOMEM:
+    case EPERM:
+      {
+	struct passwd *user = getpwnam("lofarsys");
+	if ((user != NULL) && (getuid() != user->pw_uid))
+	  LOG_WARN_STR("Failed to lock application in memory, permission denied");
+	else 
+	  LOG_ERROR_STR("Failed to lock application in memory, capability CAP_IPC_LOCK not set?");
+      } break;
+    case EINVAL:
+    default:
+      LOG_ERROR_STR("Failed to lock application in memory: flags invalid");
+    }
+  }
+}
+
 
 #endif

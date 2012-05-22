@@ -91,6 +91,14 @@ size_t MeasurementSet::FrequencyCount()
 	return _maxFrequencyIndex;
 }
 
+size_t MeasurementSet::BandCount()
+{
+	casa::MeasurementSet ms(_location);
+	casa::Table spwTable = ms.spectralWindow();
+	size_t count = spwTable.nrow();
+	return count;
+}
+
 void MeasurementSet::CalculateScanCounts()
 {
 	if(_maxScanIndex==-1) {
@@ -190,10 +198,10 @@ struct AntennaInfo MeasurementSet::GetAntennaInfo(unsigned antennaId)
 	return info;
 }
 
-struct BandInfo MeasurementSet::GetBandInfo(unsigned bandIndex)
+BandInfo MeasurementSet::GetBandInfo(const std::string &filename, unsigned bandIndex)
 {
 	BandInfo band;
-	casa::MeasurementSet ms(_location);
+	casa::MeasurementSet ms(filename);
 	casa::Table spectralWindowTable = ms.spectralWindow();
 	casa::ROScalarColumn<int> numChanCol(spectralWindowTable, "NUM_CHAN");
 	casa::ROArrayColumn<double> frequencyCol(spectralWindowTable, "CHAN_FREQ");
@@ -278,44 +286,47 @@ MSIterator::~MSIterator()
 
 void MeasurementSet::InitCacheData()
 {
-	AOLogger::Debug << "Initializing ms cache data...\n"; 
-	MSIterator iterator(*this, false);
-	size_t antenna1=0xFFFFFFFF, antenna2 = 0xFFFFFFFF;
-	double time = nan("");
-	for(size_t row=0;row<iterator.TotalRows();++row)
+	if(!_cacheInitialized)
 	{
-		size_t cur_a1 = iterator.Antenna1();
-		size_t cur_a2 = iterator.Antenna2();
-		double cur_time = iterator.Time();
-		if(cur_a1 != antenna1 || cur_a2 != antenna2)
+		AOLogger::Debug << "Initializing ms cache data...\n"; 
+		std::set<double>::iterator obsTimePos = _observationTimes.end();
+		MSIterator iterator(*this, false);
+		size_t antenna1=0xFFFFFFFF, antenna2 = 0xFFFFFFFF;
+		double time = nan("");
+		std::set<std::pair<size_t, size_t> > baselineSet;
+		for(size_t row=0;row<iterator.TotalRows();++row)
 		{
-			bool exists = false;
-			for(vector<pair<size_t,size_t> >::const_iterator i=_baselines.begin();i!=_baselines.end();++i)
+			size_t cur_a1 = iterator.Antenna1();
+			size_t cur_a2 = iterator.Antenna2();
+			double cur_time = iterator.Time();
+			if(cur_a1 != antenna1 || cur_a2 != antenna2)
 			{
-				if(i->first == cur_a1 && i->second == cur_a2)
-				{
-					exists = true;
-					break;
-				}
+				baselineSet.insert(std::pair<size_t,size_t>(cur_a1, cur_a2));
+				antenna1 = cur_a1;
+				antenna2 = cur_a2;
 			}
-			if(!exists)
-				_baselines.push_back(std::pair<size_t,size_t>(cur_a1, cur_a2));
-			antenna1 = cur_a1;
-			antenna2 = cur_a2;
+			if(cur_time != time)
+			{
+				obsTimePos = _observationTimes.insert(obsTimePos, cur_time);
+				time = cur_time;
+			}
+			++iterator;
 		}
-		if(cur_time != time)
-		{
-			_observationTimes.insert(cur_time);
-			time = cur_time;
-		}
-		++iterator;
+		for(std::set<std::pair<size_t, size_t> >::const_iterator i=baselineSet.begin(); i!=baselineSet.end(); ++i)
+			_baselines.push_back(*i);
 	}
+	
 	_cacheInitialized = true;
 }
 
 size_t MeasurementSet::GetPolarizationCount()
 {
-	casa::MeasurementSet ms(Location());
+	return GetPolarizationCount(Location());
+}
+
+size_t MeasurementSet::GetPolarizationCount(const std::string &filename)
+{
+	casa::MeasurementSet ms(filename);
 	casa::Table polTable = ms.polarization();
 	casa::ROArrayColumn<int> corTypeColumn(polTable, "CORR_TYPE"); 
 	casa::Array<int> corType = corTypeColumn(0);
@@ -430,3 +441,27 @@ void MeasurementSet::AddAOFlaggerHistory(const rfiStrategy::Strategy &strategy, 
 	cli.put         (rownr, clivec);
 }
 
+std::string MeasurementSet::GetStationName() const
+{
+	casa::MeasurementSet ms(_location);
+	casa::Table antennaTable(ms.antenna());
+	if(antennaTable.nrow() == 0)
+		throw std::runtime_error("GetStationName() : no rows in Antenna table");
+	casa::ROScalarColumn<casa::String> stationColumn(antennaTable, "STATION");
+	return stationColumn(0);
+}
+
+bool MeasurementSet::ChannelZeroIsRubish()
+{
+	try
+	{
+		const std::string station = GetStationName();
+		if(station != "LOFAR") return false;
+		// This is of course a hack, but its the best estimate we can make :-/ (easily)
+		const BandInfo bandInfo = GetBandInfo(0);
+		return (bandInfo.channelCount == 256 || bandInfo.channelCount==64);
+	} catch(std::exception &e)
+	{
+		return false;
+	}
+}

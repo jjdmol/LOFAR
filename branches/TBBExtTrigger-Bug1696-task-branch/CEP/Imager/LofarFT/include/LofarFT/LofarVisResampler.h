@@ -45,6 +45,10 @@
 #include <images/Images/PagedImage.h>
 #include <casa/Utilities/Assert.h>
 
+#include <coordinates/Coordinates/CoordinateSystem.h>
+#include <coordinates/Coordinates/SpectralCoordinate.h>
+#include <coordinates/Coordinates/StokesCoordinate.h>
+
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MeasConvert.h>
@@ -81,53 +85,71 @@ namespace LOFAR { //# NAMESPACE CASA - BEGIN
 
   class LofarVisResampler: public AWVisResampler
   {
-  public: 
+  public:
     LofarVisResampler(): AWVisResampler()  {}
     LofarVisResampler(const CFStore& cfs): AWVisResampler(cfs)      {}
     virtual ~LofarVisResampler()                                    {}
 
     virtual VisibilityResamplerBase* clone()
     {return new LofarVisResampler(*this);}
-    
-    void copy(const LofarVisResampler& other) 
+
+    void copy(const LofarVisResampler& other)
     {AWVisResampler::copy(other); }
 
     // Re-sample the griddedData on the VisBuffer (a.k.a gridding).
     void lofarDataToGrid (Array<Complex>& griddedData, LofarVBStore& vbs,
                           const Vector<uInt>& rows,
+                          Int rbeg, Int rend,
                           Matrix<Double>& sumwt,
                           const Bool& dopsf, LofarCFStore& cfs)
-      {DataToGridImpl_p(griddedData, vbs, rows, sumwt,dopsf,cfs);}
+    {DataToGridImpl_p(griddedData, vbs, rows, rbeg, rend, sumwt,dopsf,cfs);}
     void lofarDataToGrid (Array<DComplex>& griddedData, LofarVBStore& vbs,
                           const Vector<uInt>& rows,
+                          Int rbeg, Int rend,
                           Matrix<Double>& sumwt,
                           const Bool& dopsf, LofarCFStore& cfs)
-      {DataToGridImpl_p(griddedData, vbs, rows, sumwt,dopsf,cfs);}
+    {DataToGridImpl_p(griddedData, vbs, rows, rbeg, rend, sumwt,dopsf,cfs);}
+
+    void lofarDataToGrid_linear (Array<Complex>& griddedData, LofarVBStore& vbs,
+                          const Vector<uInt>& rows,
+                          Int rbeg, Int rend,
+                          Matrix<Double>& sumwt,
+                          const Bool& dopsf, LofarCFStore& cfs)
+    {DataToGridImpl_linear_p(griddedData, vbs, rows, rbeg, rend, sumwt,dopsf,cfs);}
+    void lofarDataToGrid_linear (Array<DComplex>& griddedData, LofarVBStore& vbs,
+                          const Vector<uInt>& rows,
+                          Int rbeg, Int rend,
+                          Matrix<Double>& sumwt,
+                          const Bool& dopsf, LofarCFStore& cfs)
+    {DataToGridImpl_linear_p(griddedData, vbs, rows, rbeg, rend, sumwt,dopsf,cfs);}
+
 
     void lofarGridToData(LofarVBStore& vbs,
                          const Array<Complex>& grid,
                          const Vector<uInt>& rows,
+                         Int rbeg, Int rend,
                          LofarCFStore& cfs);
-      
+
 
     virtual void setCFMaps(const Vector<Int>& cfMap, const Vector<Int>& conjCFMap)
     {cfMap_p.assign(cfMap); conjCFMap_p.assign(conjCFMap);}
 
     void lofarComputeResiduals(LofarVBStore& vbs);
 
-  void sgrid(Vector<Double>& pos, Vector<Int>& loc, 
-			     Vector<Int>& off, Complex& phasor, 
-			     const Int& irow, const Matrix<Double>& uvw, 
-			     const Double& dphase, const Double& freq, 
-			     const Vector<Double>& scale, 
+  void sgrid(Vector<Double>& pos, Vector<Int>& loc,
+			     Vector<Int>& off, Complex& phasor,
+			     const Int& irow, const Matrix<Double>& uvw,
+			     const Double& dphase, const Double& freq,
+			     const Vector<Double>& scale,
 			     const Vector<Double>& offset,
                                 const Vector<Float>& sampling);
 
+    /*
   template <class T>
     void store2(const Matrix<T> &data, const string &name)
     {
       CoordinateSystem csys;
-      
+
       Matrix<Double> xform(2, 2);
       xform = 0.0;
       xform.diagonal() = 1.0;
@@ -137,15 +159,16 @@ namespace LOFAR { //# NAMESPACE CASA - BEGIN
       csys.addCoordinate(DirectionCoordinate(MDirection::J2000, Projection(Projection::SIN),
 					     refLatLon, refLatLon, incLon, incLat,
 					     xform, data.shape()(0) / 2, data.shape()(1) / 2));
-      
+
       Vector<Int> stokes(1);
       stokes(0) = Stokes::I;
       csys.addCoordinate(StokesCoordinate(stokes));
       csys.addCoordinate(SpectralCoordinate(casa::MFrequency::TOPO, 60e6, 0.0, 0.0, 60e6));
-      
+
       PagedImage<T> im(TiledShape(IPosition(4, data.shape()(0), data.shape()(1), 1, 1)), csys, name);
       im.putSlice(data, IPosition(4, 0, 0, 0, 0));
     };
+    */
 
   private:
     // Re-sample the griddedData on the VisBuffer (a.k.a de-gridding).
@@ -153,6 +176,14 @@ namespace LOFAR { //# NAMESPACE CASA - BEGIN
     template <class T>
     void DataToGridImpl_p(Array<T>& griddedData, LofarVBStore& vb,
                           const Vector<uInt>& rows,
+                          Int rbeg, Int rend,
+			  Matrix<Double>& sumwt,const Bool& dopsf,
+                          LofarCFStore& cfs);
+
+    template <class T>
+    void DataToGridImpl_linear_p(Array<T>& griddedData, LofarVBStore& vb,
+                          const Vector<uInt>& rows,
+                          Int rbeg, Int rend,
 			  Matrix<Double>& sumwt,const Bool& dopsf,
                           LofarCFStore& cfs);
 
@@ -162,4 +193,4 @@ namespace LOFAR { //# NAMESPACE CASA - BEGIN
 
 } //# NAMESPACE CASA - END
 
-#endif // 
+#endif //

@@ -37,7 +37,16 @@ class Stopwatch{
 		void Reset();
 
 		std::string ToString() const;
+		std::string ToShortString() const;
 		long double Seconds() const;
+		
+		std::string ToDaysString() const;
+		std::string ToHoursString() const;
+		std::string ToMinutesString() const;
+		std::string ToSecondsString() const;
+		std::string ToMilliSecondsString() const;
+		std::string ToMicroSecondsString() const;
+		std::string ToNanoSecondsString() const;
 	private:
 		bool _running;
 		boost::posix_time::ptime _startTime;

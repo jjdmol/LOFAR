@@ -252,15 +252,14 @@ void fitGaus(RFIStatistics &statistics)
 		std::cout << "Count=" << max << std::endl;
 		double promileArea = 0.0;
 		double promileLimit = max / 1000.0;
-		double promileStart = 0.0, promileEnd;
 		long unsigned popSize = 0;
 		for(std::map<double, long unsigned>::const_iterator i=distribution.begin();i!=distribution.end();++i)
 		{
 			if(i->second > promileLimit) {
 				promileArea += i->second;
-				promileEnd = i->first;
-				if(promileStart == 0.0)
-					promileStart = i->first;
+				//promileEnd = i->first;
+				//if(promileStart == 0.0)
+				//	promileStart = i->first;
 			}
 			popSize += i->second;
 		}

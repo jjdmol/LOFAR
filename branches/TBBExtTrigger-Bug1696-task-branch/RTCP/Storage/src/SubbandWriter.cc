@@ -33,16 +33,19 @@ namespace RTCP {
 SubbandWriter::SubbandWriter(const Parset &parset, OutputType outputType, unsigned streamNr, bool isBigEndian, const std::string &logPrefix)
 {
   itsInputThread = new InputThread(parset, outputType, streamNr, itsFreeQueue, itsReceiveQueue, logPrefix);
+  itsInputThread->start();
 
   try {
     itsOutputThread = new OutputThread(parset, outputType, streamNr, itsFreeQueue, itsReceiveQueue, logPrefix, isBigEndian);
+    itsOutputThread->start();
   } catch (...) {
     itsInputThread->cancel();
     throw;
   }
 
   for (unsigned i = 0; i < maxReceiveQueueSize; i ++)
-    itsFreeQueue.append(newStreamableData(parset, outputType));
+    itsFreeQueue.append(newStreamableData(parset, outputType, streamNr));
+    
 }
 
 

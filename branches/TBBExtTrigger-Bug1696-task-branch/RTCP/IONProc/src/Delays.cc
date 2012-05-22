@@ -53,22 +53,27 @@ Delays::Delays(const Parset &parset, const string &stationName, const TimeStamp 
   itsParset(parset),
   stop(false),
   // we need an extra entry for the central beam
-  itsBuffer(bufferSize, parset.nrBeams(), parset.nrPencilBeams() + 1),
+  itsBuffer(bufferSize, parset.nrBeams(), parset.maxNrPencilBeams() + 1),
   head(0),
   tail(0),
   bufferFree(bufferSize),
   bufferUsed(0),
   itsNrCalcDelays(parset.nrCalcDelays()),
   itsNrBeams(parset.nrBeams()),
+  itsMaxNrPencilBeams(parset.maxNrPencilBeams()),
   itsNrPencilBeams(parset.nrPencilBeams()),
-  itsDirectionType(MDirection::J2000),
   itsStartTime(startTime),
   itsNrSamplesPerSec(parset.nrSubbandSamples()),
   itsSampleDuration(parset.sampleDuration()),
   itsStationName(stationName),
-  itsDelayTimer("delay producer", true, true),
-  itsThread(this, &Delays::mainLoop, "[DelayCompensation] ")
+  itsDelayTimer("delay producer", true, true)
 {
+}
+
+
+void Delays::start()
+{
+  itsThread = new Thread(this, &Delays::mainLoop, "[DelayCompensation] ");
 }
 
 
@@ -115,8 +120,13 @@ void Delays::init()
   // Set the position for the itsFrame.
   itsFrame.set(itsPhaseCentre);
   
-  // Set-up the conversion engine, using reference direction ITRF.
-  itsConverter = new MDirection::Convert(itsDirectionType, MDirection::Ref(MDirection::ITRF, itsFrame));
+  // Set-up the conversion engines, using reference direction ITRF.
+  for (unsigned beam = 0; beam < itsNrBeams; beam++) {
+    const casa::MDirection::Types &dirtype = itsDirectionTypes[beam];
+
+    if (itsConverters.find(dirtype) == itsConverters.end())
+      itsConverters[dirtype] = MDirection::Convert(dirtype, MDirection::Ref(MDirection::ITRF, itsFrame));
+  }
 }
 
 
@@ -153,13 +163,14 @@ void Delays::mainLoop()
 	  
 	  // For each given direction in the sky ...
 	  for (uint b = 0; b < itsNrBeams; b ++) {
-	    for (uint p = 0; p < itsNrPencilBeams + 1; p ++) {
+            MDirection::Convert &converter = itsConverters[itsDirectionTypes[b]];
 
+	    for (uint p = 0; p < itsNrPencilBeams[b] + 1; p ++) {
 	      // Define the astronomical direction as a J2000 direction.
 	      MVDirection &sky = itsBeamDirections[b][p];
 
 	      // Convert this direction, using the conversion engine.
-	      MDirection dir = (*itsConverter)(sky);
+	      MDirection dir = converter(sky);
 
 	      // Add to the return vector
 	      itsBuffer[tail][b][p] = dir.getValue();
@@ -184,6 +195,10 @@ void Delays::mainLoop()
       bufferUsed.up(itsNrCalcDelays);
     }
   } catch (AipsError &ex) {
+    // trigger getNextDelays and force it to stop
+    stop = true;
+    bufferUsed.up(1);
+
     THROW(IONProcException, "AipsError: " << ex.what());
   }
 
@@ -193,18 +208,23 @@ void Delays::mainLoop()
 
 void Delays::getNextDelays(Matrix<MVDirection> &directions, Matrix<double> &delays)
 {
-  ASSERTSTR(directions.num_elements() == itsNrBeams * (itsNrPencilBeams + 1),
-	    directions.num_elements() << " == " << itsNrBeams << "*" << (itsNrPencilBeams + 1));
+  ASSERTSTR(directions.num_elements() == itsNrBeams * (itsMaxNrPencilBeams + 1),
+	    directions.num_elements() << " == " << itsNrBeams << "*" << (itsMaxNrPencilBeams + 1));
 
-  ASSERTSTR(delays.num_elements() == itsNrBeams * (itsNrPencilBeams + 1),
-	    delays.num_elements() << " == " << itsNrBeams << "*" << (itsNrPencilBeams + 1));
+  ASSERTSTR(delays.num_elements() == itsNrBeams * (itsMaxNrPencilBeams + 1),
+	    delays.num_elements() << " == " << itsNrBeams << "*" << (itsMaxNrPencilBeams + 1));
+
+  ASSERT(itsThread);
 
   bufferUsed.down();
+
+  if (stop)
+    THROW(IONProcException, "Cannot obtain delays -- delay thread stopped running");
 
   // copy the directions at itsBuffer[head] into the provided buffer,
   // and calculate the respective delays
   for (unsigned b = 0; b < itsNrBeams; b ++) {
-    for (unsigned p = 0; p < itsNrPencilBeams + 1; p ++) {
+    for (unsigned p = 0; p < itsNrPencilBeams[b] + 1; p ++) {
       const MVDirection &dir = itsBuffer[head][b][p];
 
       directions[b][p] = dir;
@@ -222,37 +242,31 @@ void Delays::getNextDelays(Matrix<MVDirection> &directions, Matrix<double> &dela
 
 void Delays::setBeamDirections(const Parset &parset)
 {
-  const BeamCoordinates& pencilBeams = parset.pencilBeams();
-
   // TODO: For now, we include pencil beams for all regular beams,
   // and use the pencil beam offsets as offsets in J2000.
   // To do the coordinates properly, the offsets should be applied
   // in today's coordinates (JMEAN/JTRUE?), not J2000.
   
-  itsBeamDirections.resize(itsNrBeams, itsNrPencilBeams + 1);
+  itsBeamDirections.resize(itsNrBeams, itsMaxNrPencilBeams + 1);
+  itsDirectionTypes.resize(itsNrBeams);
 
-  // We only support beams of the same direction type for now
-  const string type0 = toUpper(parset.getBeamDirectionType(0));
+  for (unsigned beam = 0; beam < itsNrBeams; beam ++) {
+    const string type = toUpper(parset.getBeamDirectionType(beam));
 
-  for (unsigned beam = 1; beam < itsNrBeams; beam ++) {
-    const string typeN = toUpper(parset.getBeamDirectionType(beam));
-
-    if (type0 != typeN)
-      THROW(IONProcException, "All beams must use the same coordinate system (beam 0 uses " << type0 << " but beam " << beam << " uses " << typeN << ")");
+    if (!MDirection::getType(itsDirectionTypes[beam], type))
+      THROW(IONProcException, "Beam direction type unknown: " << type);
   }
 
-  if (!MDirection::getType(itsDirectionType, type0))
-    THROW(IONProcException, "Beam direction type unknown: " << type0);
-  
   // Get the source directions from the parameter set. 
   // Split the \a dir vector into separate Direction objects.
   for (unsigned beam = 0; beam < itsNrBeams; beam ++) {
     const vector<double> beamDir = parset.getBeamDirection(beam);
+    const BeamCoordinates& pencilBeams = parset.pencilBeams(beam);
 
     // add central beam coordinates for non-beamforming pipelines
     itsBeamDirections[beam][0] = MVDirection(beamDir[0], beamDir[1]);
 
-    for (unsigned pencil = 0; pencil < itsNrPencilBeams; pencil ++) {
+    for (unsigned pencil = 0; pencil < itsNrPencilBeams[beam]; pencil ++) {
       // obtain pencil coordinate
       const BeamCoord3D &pencilCoord = pencilBeams[pencil];
 

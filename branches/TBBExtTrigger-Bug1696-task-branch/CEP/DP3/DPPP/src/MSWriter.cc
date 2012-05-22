@@ -28,6 +28,7 @@
 #include <DPPP/DPBuffer.h>
 #include <DPPP/DPInfo.h>
 #include <DPPP/ParSet.h>
+#include <DPPP/DPLogger.h>
 #include <MS/VdsMaker.h>
 #include <tables/Tables/TableCopy.h>
 #include <tables/Tables/DataManInfo.h>
@@ -37,6 +38,7 @@
 #include <measures/TableMeasures/ArrayMeasColumn.h>
 #include <measures/Measures/MCDirection.h>
 #include <casa/Arrays/ArrayMath.h>
+#include <casa/Arrays/ArrayLogical.h>
 #include <casa/Containers/Record.h>
 #include <casa/OS/Path.h>
 #include <iostream>
@@ -78,7 +80,7 @@ namespace LOFAR {
       // Write the parset info into the history.
       writeHistory (itsMS, parset.parameterSet());
       itsMS.flush (true, true);
-      cout << "Finished preparing output MS" << endl;
+      DPLOG_INFO ("Finished preparing output MS", false);
     }
 
     MSWriter::~MSWriter()
@@ -346,7 +348,7 @@ namespace LOFAR {
         TiledColumnStMan tsmm("ModelData", tileShape);
         makeArrayColumn(mdesc, dataShape, &tsmm, itsMS);
       }
-      cout << " copying info and subtables ..." << endl;
+      DPLOG_INFO (" copying info and subtables ...", false);
       // Copy the info and subtables.
       TableCopy::copyInfo(itsMS, temptable);
       TableCopy::copySubTables(itsMS, temptable);
@@ -387,32 +389,26 @@ namespace LOFAR {
       makeArrayColumn (tdesc["CHAN_WIDTH"], shape, 0, outSPW);
       makeArrayColumn (tdesc["EFFECTIVE_BW"], shape, 0, outSPW);
       makeArrayColumn (tdesc["RESOLUTION"], shape, 0, outSPW);
+      // Get the original frequency info.
+      Vector<double> oldFreq, oldWidth, oldBW, oldRes;
+      double refFreq;
+      itsReader->getFreqInfo (oldFreq, oldWidth, oldBW, oldRes, refFreq);
       // Create the required column objects.
-      ROArrayColumn<Double> inFREQ(inSPW, "CHAN_FREQ");
-      ROArrayColumn<Double> inWIDTH(inSPW, "CHAN_WIDTH");
-      ROArrayColumn<Double> inBW(inSPW, "EFFECTIVE_BW");
-      ROArrayColumn<Double> inRESOLUTION(inSPW, "RESOLUTION");
       ArrayColumn<Double> outFREQ(outSPW, "CHAN_FREQ");
       ArrayColumn<Double> outWIDTH(outSPW, "CHAN_WIDTH");
       ArrayColumn<Double> outBW(outSPW, "EFFECTIVE_BW");
       ArrayColumn<Double> outRESOLUTION(outSPW, "RESOLUTION");
       ScalarColumn<Double> outTOTALBW(outSPW, "TOTAL_BANDWIDTH");
+      ScalarColumn<Double> outREFFREQ(outSPW, "REF_FREQUENCY");
       Vector<double> newFreq  (itsNrChan);
       Vector<double> newWidth (itsNrChan);
       Vector<double> newBW    (itsNrChan);
       Vector<double> newRes   (itsNrChan);
-      Vector<double> oldFreq = inFREQ(spw);
-      Vector<double> oldWidth = inWIDTH(spw);
-      Vector<double> oldBW = inBW(spw);
-      Vector<double> oldRes = inRESOLUTION(spw);
       double totalBW = 0;
-      uint first = info.startChan();
-      // This loops assumes regularly spaced, adjacent frequency channels.
+      uint first = 0;
+      // This loop assumes regularly spaced, adjacent frequency channels.
       for (uint j=0; j<itsNrChan; ++j) { 
-        uint last  = first + info.nchanAvg();
-        if (last > info.startChan() + info.origNChan()) {
-          last = info.startChan() + info.origNChan();
-        }
+        uint last = std::min (first + info.nchanAvg(), info.origNChan());
         double sf, ef;
         if (oldFreq[first] < oldFreq[last-1]) {
           sf = oldFreq[first]  - 0.5*oldWidth[first];
@@ -439,6 +435,7 @@ namespace LOFAR {
       outBW.put        (0, newBW);
       outRESOLUTION.put(0, newRes);
       outTOTALBW.put   (0, totalBW);
+      outREFFREQ.put   (0, refFreq);
       // Adjust the spwid in the DATA_DESCRIPTION.
       ScalarColumn<Int> spwCol(outDD, "SPECTRAL_WINDOW_ID");
       spwCol.put (0, 0);
@@ -450,8 +447,8 @@ namespace LOFAR {
       // Set nr of channels.
       ArrayColumn<double> timeRange(outObs, "TIME_RANGE");
       Vector<double> times(2);
-      times[0] = itsReader->startTime() - 0.5 * itsReader->timeInterval();
-      times[1] = itsReader->endTime()   + 0.5 * itsReader->timeInterval();
+      times[0] = itsReader->firstTime() - 0.5 * itsReader->timeInterval();
+      times[1] = itsReader->lastTime()  + 0.5 * itsReader->timeInterval();
       // There should be one row, but loop in case of.
       for (uint i=0; i<outObs.nrow(); ++i) {
         timeRange.put (i, times);
@@ -533,19 +530,27 @@ namespace LOFAR {
     {
       ArrayColumn<Complex> dataCol(out, itsDataColName);
       ArrayColumn<bool>    flagCol(out, "FLAG");
+      ScalarColumn<bool>   flagRowCol(out, "FLAG_ROW");
       dataCol.putColumn (buf.getData());
       flagCol.putColumn (buf.getFlags());
+      // A row is flagged if no flags in the row are False.
+      Vector<Bool> rowFlags (partialNFalse(buf.getFlags(), IPosition(2,0,1)) == 0u);
+      flagRowCol.putColumn (rowFlags);
       if (itsWriteFullResFlags) {
         writeFullResFlags (out, buf);
       }
       ArrayColumn<float> weightCol(out, "WEIGHT_SPECTRUM");
-      weightCol.putColumn (itsReader->fetchWeights (buf, buf.getRowNrs()));
+      // Do not account for getting the weights in the timings.
+      Array<float> weights (itsReader->fetchWeights (buf, buf.getRowNrs(),
+                                                     itsTimer));
+      weightCol.putColumn (weights);
     }
 
     void MSWriter::writeFullResFlags (Table& out, const DPBuffer& buf)
     {
       // Get the flags.
-      Cube<bool> flags (itsReader->fetchFullResFlags (buf, buf.getRowNrs()));
+      Cube<bool> flags (itsReader->fetchFullResFlags (buf, buf.getRowNrs(),
+                                                      itsTimer));
       const IPosition& ofShape = flags.shape();
       ASSERT (uint(ofShape[0]) == itsNChanAvg * itsNrChan);
       ASSERT (uint(ofShape[1]) == itsNTimeAvg);
@@ -588,7 +593,6 @@ namespace LOFAR {
       copySca<int> (in, out, "ARRAY_ID");
       copySca<int> (in, out, "OBSERVATION_ID");
       copySca<int> (in, out, "STATE_ID");
-      copySca<bool>(in, out, "FLAG_ROW");
       copyArr<float> (in, out, "SIGMA");
       copyArr<float> (in, out, "WEIGHT");
       if (copyTimeInfo) {

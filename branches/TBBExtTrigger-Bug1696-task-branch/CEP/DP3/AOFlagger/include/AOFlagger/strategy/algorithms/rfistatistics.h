@@ -569,6 +569,13 @@ class RFIStatistics {
 			}
 			return copy;
 		}
+
+		unsigned startChannel(unsigned imageHeight) const {
+			if(imageHeight <= 16)
+				return 0;
+			else
+				return 1;
+		}		
 };
 
 #endif

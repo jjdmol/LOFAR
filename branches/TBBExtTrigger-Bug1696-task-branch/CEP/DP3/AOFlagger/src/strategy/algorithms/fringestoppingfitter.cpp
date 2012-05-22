@@ -101,11 +101,6 @@ void FringeStoppingFitter::PerformFringeStop()
 		real = _originalData->GetRealPart(),
 		imaginary = _originalData->GetImaginaryPart();
 
-	double deltaTime;
-	if(_observationTimes->size()>1)
-		deltaTime = (*_observationTimes)[1] - (*_observationTimes)[0];
-	else
-		deltaTime = 1.0;
 	Baseline baseline(*_antenna1Info, *_antenna2Info);
 
 	for(size_t x=0;x<real->Width();++x)

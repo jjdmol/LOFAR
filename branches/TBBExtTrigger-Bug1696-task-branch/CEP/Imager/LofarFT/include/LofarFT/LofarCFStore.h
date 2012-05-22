@@ -1,4 +1,3 @@
-// -*- C++ -*-
 //# CFStore.h: Definition of the CFStore class
 //# Copyright (C) 1997,1998,1999,2000,2001,2002,2003
 //# Associated Universities, Inc. Washington DC, USA.
@@ -28,6 +27,7 @@
 
 #ifndef LOFARFT_CFSTORE_H
 #define LOFARFT_CFSTORE_H
+
 #include <LofarFT/LofarCFDefs.h>
 #include <synthesis/MeasurementComponents/SynthesisError.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
@@ -38,6 +38,7 @@
 #include <images/Images/ImageInterface.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <casa/Arrays/Matrix.h>
+
 namespace LOFAR {
   using namespace LofarCFDefs;
   class LofarCFStore
@@ -47,23 +48,23 @@ namespace LOFAR {
     LofarCFStore():data(), rdata(),vdata(), coordSys(), sampling(), 
 	      xSupport(), ySupport(), 
 	      maxXSupport(-1), maxYSupport(-1),
-		   pa(), Mask_Pol(), mosPointingPos(0) {};
+		   pa(), mosPointingPos(0) {};
 
-    LofarCFStore(CFType *dataPtr, CoordinateSystem& cs, Vector<Float>& samp,
+    LofarCFStore(const CountedPtr<CFType>& dataPtr, CoordinateSystem& cs, Vector<Float>& samp,
 	    Vector<Int>& xsup, Vector<Int>& ysup, Int maxXSup, Int maxYSup,
 	    Quantity PA, Int mosPointing):
-      data(),rdata(),vdata(), coordSys(cs), sampling(samp),
+      data(dataPtr),rdata(),vdata(), coordSys(cs), sampling(samp),
       xSupport(xsup), ySupport(ysup), maxXSupport(maxXSup),
       maxYSupport(maxYSup), pa(PA), mosPointingPos(mosPointing)
-    {data = new CFType(*dataPtr);};
+    {}
 
-    LofarCFStore(CFTypeVec *dataPtr, CoordinateSystem& cs, Vector<Float>& samp,
+    LofarCFStore(const CountedPtr<CFTypeVec>& dataPtr, CoordinateSystem& cs, Vector<Float>& samp,
 	    Vector<Int>& xsup, Vector<Int>& ysup, Int maxXSup, Int maxYSup,
-		 Quantity PA, Int mosPointing, Matrix<bool> MaskPol):
-      data(),rdata(),vdata(), coordSys(cs), sampling(samp),
+		 Quantity PA, Int mosPointing, const Matrix<bool>&):
+      data(),rdata(),vdata(dataPtr), coordSys(cs), sampling(samp),
       xSupport(xsup), ySupport(ysup), maxXSupport(maxXSup),
-      maxYSupport(maxYSup), pa(PA), mosPointingPos(mosPointing), Mask_Pol(MaskPol)
-    {vdata = new CFTypeVec(*dataPtr);};
+      maxYSupport(maxYSup), pa(PA), mosPointingPos(mosPointing)
+    {}
 
     ~LofarCFStore() {};
 
@@ -75,7 +76,7 @@ namespace LOFAR {
       coordSys = other.coordSys; sampling.assign(other.sampling); 
       xSupport.assign(other.xSupport); ySupport.assign(other.ySupport);
       maxXSupport=other.maxXSupport;  maxYSupport=other.maxYSupport; pa=other.pa;
-      mosPointingPos = other.mosPointingPos; Mask_Pol=other.Mask_Pol;
+      mosPointingPos = other.mosPointingPos;
     }
 
     void set(CFType *dataPtr, CoordinateSystem& cs, Vector<Float>& samp,
@@ -113,7 +114,8 @@ namespace LOFAR {
     Int maxXSupport, maxYSupport;
     Quantity pa;
     Int mosPointingPos;
-    Matrix<bool> Mask_Pol;
   };
+
 } //# NAMESPACE CASA - END
+
 #endif

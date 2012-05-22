@@ -14,6 +14,8 @@ set (inst_HEADERS
   MSElementFailureColumns.h
   MSLofarAntenna.h
   MSLofarAntennaColumns.h
+  MSLofarField.h
+  MSLofarFieldColumns.h
   MSLofarObservation.h
   MSLofarObsColumns.h
   MSStation.h

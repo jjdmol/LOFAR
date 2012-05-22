@@ -59,8 +59,9 @@ void doTest()
   TimeStamp ts = TimeStamp(seconds, samples, parset.clockSpeed());
 
   Delays w(parset, inputs[0].station, ts);
+  w.start();
 
-  unsigned nrPencilBeams = 1;
+  unsigned nrPencilBeams = 0;
   Matrix<double> delays(nrBeams, nrPencilBeams + 1);
   Matrix<casa::MVDirection> prev_directions(nrBeams, nrPencilBeams + 1), directions(nrBeams, nrPencilBeams + 1);
  
