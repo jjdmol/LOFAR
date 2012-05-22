@@ -14,7 +14,7 @@ from logger import logger
 
 
 from lofarpipe.support.utilities import create_directory                        #@UnresolvedImport
-from nodes.imager_create_dbs import imager_create_dbs         #@UnresolvedImport
+from lofarpipe.recipes.nodes.imager_create_dbs import imager_create_dbs         #@UnresolvedImport
 
 
 
