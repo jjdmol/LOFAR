@@ -22,6 +22,9 @@ source /opt/lofar/bin/locations.sh
 # Convert keys where needed
 /opt/lofar/bin/LOFAR/Parset.py -P $PARTITION $PARSET /opt/lofar/etc/OLAP.parset <(echo "$EXTRA_KEYS") > $IONPROC_PARSET &&
 
+# Make the /opt/lofar/log/latest symlink
+(ln -sfT `dirname $STORAGE_PARSET` /opt/lofar/log/latest || true) &&
+
 # Inject the parset into the correlator
 /opt/lofar/bin/commandOLAP.py -P $PARTITION parset $IONPROC_PARSET
 
