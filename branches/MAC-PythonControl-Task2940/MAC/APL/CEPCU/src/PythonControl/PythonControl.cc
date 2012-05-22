@@ -43,17 +43,19 @@
 #include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/CTState.h>
+#include <OTDB/TreeValue.h>
 
 #include "PythonControl.h"
 #include "PVSSDatapointDefs.h"
 
-using namespace LOFAR::GCF::PVSS;
-using namespace LOFAR::GCF::TM;
-using namespace LOFAR::GCF::RTDB;
 using namespace std;
 
 namespace LOFAR {
 	using namespace APLCommon;
+	using namespace GCF::PVSS;
+	using namespace GCF::TM;
+	using namespace GCF::RTDB;
+	using namespace OTDB;
 	namespace CEPCU {
 	
 // static pointer to this object for signal handler
@@ -640,19 +642,27 @@ void PythonControl::_passMetadatToOTDB()
 	if (itsFeedbackFile.empty()) {
 		return;
 	}
-
-	// Try to setup the connection with the KVTlogger
-	string	moduleName(globalParameterSet()->getString("_moduleName", "PythonControl"));
-	int		obsID     (globalParameterSet()->getInt   ("_treeID", 0));
-	KVTLogger	myLogger(obsID, moduleName, itsKVTLoggerHost, true);
-	if (!myLogger.hasConnection()) {
-		LOG_FATAL_STR("No connection with KVTLogger at host '" << itsKVTLoggerHost << "'! Logging not possible!!!");
-		return;
-	}
-
 	// read parameterset
 	ParameterSet	metadata;
 	metadata.adoptFile(itsFeedbackFile);
+
+	// Try to setup the connection with the database
+	string	confFile = globalParameterSet()->getString("OTDBconfFile", "SASGateway.conf");
+	ConfigLocator	CL;
+	string	filename = CL.locate(confFile);
+	LOG_DEBUG_STR("Trying to read database information from file " << filename);
+	ParameterSet	otdbconf;
+	otdbconf.adoptFile(filename);
+	string database = otdbconf.getString("SASGateway.OTDBdatabase");
+	string dbhost   = otdbconf.getString("SASGateway.OTDBhostname");
+	OTDBconnection  conn("paulus", "boskabouter", database, dbhost);
+	if (!conn.connect()) {
+		LOG_FATAL_STR("Cannot connect to database " << database << " on machine " << dbhost);
+		return;
+	}
+	LOG_INFO_STR("Connected to database " << database << " on machine " << dbhost);
+
+	TreeValue   tv(&conn, getObservationNr(getName()));
 
 	// Loop over the parameterset and send the information to the KVTlogger.
 	// During the transition phase from parameter-based to record-based storage in OTDB the
@@ -671,12 +681,12 @@ void PythonControl::_passMetadatToOTDB()
 		//      N          *           store parameter
 		if (!isRecord) {
 			LOG_DEBUG_STR("BASIC: " << iter->first << " = " << iter->second);
-			myLogger.log(iter->first, iter->second);
+			tv.addKVT(iter->first, iter->second, ptime(microsec_clock::local_time()));
 		}
 		else {
 //			if (doubleStorage) {
 //				LOG_DEBUG_STR("RECORD: " << iter->first << " = " << iter->second);
-//				myLogger.log(iter->first, iter->second);
+//				tv.addKVT(iter->first, iter->second, ptime(microsec_clock::local_time()));
 //			}
 			// to store is a node/param values the last _ should be stipped of
 			key = iter->first;		// destroyable copy
@@ -687,7 +697,7 @@ void PythonControl::_passMetadatToOTDB()
 			ParameterRecord::const_iterator	prEnd  = pr.end();
 			while (prIter != prEnd) {
 				LOG_DEBUG_STR("ELEMENT: " << key+"."+prIter->first << " = " << prIter->second);
-				myLogger.log(key+"."+prIter->first, prIter->second);
+				tv.addKVT(key+"."+prIter->first, prIter->second, ptime(microsec_clock::local_time()));
 				prIter++;
 			}
 		}
