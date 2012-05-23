@@ -9,21 +9,17 @@
 #include <Interface/SparseSet.h>
 #include <Interface/StreamableData.h>
 
-#define DETAILED_FLAGS 0
-
 namespace LOFAR {
 namespace RTCP {
 
-class FilteredData : public SampleData<fcomplex, 4>
+class FilteredData : public SampleData<fcomplex, 4, 2>
 {
   public:
-    typedef SampleData<fcomplex, 4> SuperType;
+    typedef SampleData<fcomplex, 4, 2> SuperType;
 
     FilteredData(unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration, Allocator & = heapAllocator);
 
-#if DETAILED_FLAGS
-    std::vector<std::vector<SparseSet<unsigned> > > detailedFlags; // [nrChannels][nrStations][nrSamplesPerIntegration]
-#endif
+    void resetFlags(void);
 };
 
 
@@ -32,14 +28,18 @@ inline FilteredData::FilteredData(unsigned nrStations, unsigned nrChannels, unsi
   // The "| 2" significantly improves transpose speeds for particular
   // numbers of stations due to cache conflict effects.  The extra memory
   // is not used.
-  SuperType::SampleData(boost::extents[nrChannels][nrStations][nrSamplesPerIntegration | 2][NR_POLARIZATIONS], nrStations, allocator)
+  SuperType::SampleData(boost::extents[nrChannels][nrStations][nrSamplesPerIntegration | 2][NR_POLARIZATIONS], boost::extents[nrChannels][nrStations], allocator)
 {
-#if DETAILED_FLAGS
-  detailedFlags.resize(nrChannels);
+}
 
-  for (unsigned i = 0; i < nrChannels; i ++)
-    detailedFlags[i].resize(nrStations);
-#endif
+
+inline void FilteredData::resetFlags(void)
+{
+  for(unsigned c=0; c < flags.shape()[0]; c++) {
+    for(unsigned s=0; s < flags.shape()[1]; s++) {
+      flags[c][s].reset();
+    }
+  }
 }
 
 } // namespace RTCP

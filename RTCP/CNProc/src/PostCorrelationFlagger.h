@@ -21,10 +21,10 @@ class PostCorrelationFlagger : public Flagger
   public:
 
   // The firstThreshold of 6.0 is taken from Andre's code.
-  PostCorrelationFlagger(const Parset& parset, const unsigned nrStations, const unsigned nrChannels,
-    const float cutoffThreshold = 7.0f, float baseSentitivity = 1.0f);
+  PostCorrelationFlagger(const Parset& parset, const unsigned nrStations, const unsigned nrSubbands, const unsigned nrChannels,
+			 const float cutoffThreshold = 7.0f, float baseSentitivity = 1.0f);
 
-  void flag(CorrelatedData* correlatedData);
+  void flag(CorrelatedData* correlatedData, unsigned currentSubband);
 
   // Tries to detect broken stations
   void detectBrokenStations();
@@ -48,11 +48,11 @@ private:
   std::vector<float> itsPowers;
   std::vector<float> itsSmoothedPowers;
   std::vector<float> itsPowerDiffs;
-  std::vector<bool> itsFlags;
+  std::vector<bool>  itsFlags;
   std::vector<float> itsSummedBaselinePowers; // [nrBaselines]
-  std::vector<float> itsSummedStationPowers; // [nrStations]
+  std::vector<float> itsSummedStationPowers;  // [nrStations]
 
-  MultiDimArray<HistoryList, 2> itsHistory; // [NR_POLARIZATIONS][NR_POLARIZATIONS]
+  MultiDimArray<FlaggerHistory, 4> itsHistory;   // [nrBaselines][nrSubbands][NR_POLARIZATIONS][NR_POLARIZATIONS]
 };
 
 
