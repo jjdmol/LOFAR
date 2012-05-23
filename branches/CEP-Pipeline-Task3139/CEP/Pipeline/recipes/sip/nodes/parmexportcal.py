@@ -18,7 +18,7 @@ from lofarpipe.support.utilities import catch_segfaults
 
 
 class ParmExportCal(LOFARnodeTCP):
-    
+
     def run(self, infile, outfile, executable, initscript):
         # Time execution of this job
         with log_time(self.logger):
@@ -37,7 +37,7 @@ class ParmExportCal(LOFARnodeTCP):
 
         # Create output directory (if it doesn't already exist)
         create_directory(os.path.dirname(outfile))
-        
+
         # Initialize environment
         env = read_initscript(self.logger, initscript)
 
@@ -60,7 +60,7 @@ class ParmExportCal(LOFARnodeTCP):
         finally:
             shutil.rmtree(temp_dir)
 
-        return 0
+        return 1 #return 1 to allow rerunning of this script
 
 
 if __name__ == "__main__":

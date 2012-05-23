@@ -4,7 +4,7 @@ import unittest
 import tempfile
 
 from lofarpipe.support.utilities import create_directory                        #@UnresolvedImport
-from lofarpipe.recipes.helpers.writableParmdb import writableParmdb          #@UnresolvedImport
+from lofarpipe.recipes.helpers.WritableParmDb import WritableParmDB          #@UnresolvedImport
 
 #import from fixtures:
 

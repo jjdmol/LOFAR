@@ -78,10 +78,10 @@ class msss_calibrator_pipeline(control):
         if not all(self.io_data_mask):
             self.logger.info("Updating input/output product specifications")
             self.input_data = [
-                f for (f,m) in zip(self.input_data, self.io_data_mask) if m
+                f for (f, m) in zip(self.input_data, self.io_data_mask) if m
             ]
             self.output_data = [
-                f for (f,m) in zip(self.output_data, self.io_data_mask) if m
+                f for (f, m) in zip(self.output_data, self.io_data_mask) if m
             ]
 
 
@@ -99,7 +99,7 @@ class msss_calibrator_pipeline(control):
             self.logger.warn(
                 "The following input data files were not found: %s" %
                 ', '.join(
-                    ':'.join(f) for (f,m) in zip(
+                    ':'.join(f) for (f, m) in zip(
                         self.input_data, self.io_data_mask
                     ) if not m
                 )
@@ -149,7 +149,7 @@ class msss_calibrator_pipeline(control):
         # Create directories for temporary parset- and map files
         create_directory(parset_dir)
         create_directory(mapfile_dir)
-        
+
         # Write input- and output data map-files
         data_mapfile = os.path.join(mapfile_dir, "data.mapfile")
         store_data_map(data_mapfile, self.input_data)
@@ -162,7 +162,7 @@ class msss_calibrator_pipeline(control):
             self.logger.warn("No input data files to process. Bailing out!")
             return 0
 
-        self.logger.debug("Processing: %s" % 
+        self.logger.debug("Processing: %s" %
             ', '.join(':'.join(f) for f in self.input_data)
         )
 
@@ -170,7 +170,7 @@ class msss_calibrator_pipeline(control):
         gvds_file = self.run_task("vdsmaker", data_mapfile)['gvds']
 
         # Read metadata (start, end times, pointing direction) from GVDS.
-        vdsinfo = self.run_task("vdsreader", gvds=gvds_file)
+        vdsinfo = self.run_task("vdsreader", gvds = gvds_file)
 
         # Create a parameter-subset for DPPP and write it to file.
         ndppp_parset = os.path.join(parset_dir, "NDPPP.parset")
@@ -179,16 +179,16 @@ class msss_calibrator_pipeline(control):
         # Run the Default Pre-Processing Pipeline (DPPP);
         dppp_mapfile = self.run_task("ndppp",
             data_mapfile,
-            data_start_time=vdsinfo['start_time'],
-            data_end_time=vdsinfo['end_time'],
-            parset=ndppp_parset
+            data_start_time = vdsinfo['start_time'],
+            data_end_time = vdsinfo['end_time'],
+            parset = ndppp_parset
         )['mapfile']
 
         # Demix the relevant A-team sources
         demix_mapfile = self.run_task("demixing", dppp_mapfile)['mapfile']
 
         # Do a second run of flagging, this time using rficonsole
-        self.run_task("rficonsole", demix_mapfile, indirect_read=True)
+        self.run_task("rficonsole", demix_mapfile, indirect_read = True)
 
         # Create an empty parmdb for DPPP
         parmdb_mapfile = self.run_task("parmdb", data_mapfile)['mapfile']
@@ -196,9 +196,9 @@ class msss_calibrator_pipeline(control):
         # Create a sourcedb based on sourcedb's input argument "skymodel"
         sourcedb_mapfile = self.run_task(
             "sourcedb", data_mapfile,
-            skymodel=os.path.join(
+            skymodel = os.path.join(
                 self.config.get('DEFAULT', 'lofarroot'),
-                'share', 'pipeline', 'skymodels', 
+                'share', 'pipeline', 'skymodels',
                 py_parset.getString('Calibration.CalibratorSource') +
                     '.skymodel'
             )
@@ -209,11 +209,14 @@ class msss_calibrator_pipeline(control):
         py_parset.makeSubset('BBS.').writeFile(bbs_parset)
 
         # Run BBS to calibrate the calibrator source(s).
-        self.run_task("new_bbs", 
+        self.run_task("new_bbs",
             demix_mapfile,
-            parset=bbs_parset,
-            instrument_mapfile=parmdb_mapfile,
-            sky_mapfile=sourcedb_mapfile)
+            parset = bbs_parset,
+            instrument_mapfile = parmdb_mapfile,
+            sky_mapfile = sourcedb_mapfile)
+        self.logger.info("*"*40)
+        self.logger.info(parmdb_mapfile)
+        self.logger.info("*"*40)
 
         # Export the calibration solutions using parmexportcal and store
         # the results in the files specified in the instrument mapfile.
@@ -221,18 +224,18 @@ class msss_calibrator_pipeline(control):
 
         # Create a parset-file containing the metadata for MAC/SAS
         self.run_task("get_metadata", instrument_mapfile,
-            parset_file=self.parset_feedback_file,
-            parset_prefix=(
-                self.parset.getString('prefix') + 
+            parset_file = self.parset_feedback_file,
+            parset_prefix = (
+                self.parset.getString('prefix') +
                 self.parset.fullModuleName('DataProducts')
             ),
-            product_type="InstrumentModel")
+            product_type = "InstrumentModel")
 
         # And now the dirtiest of all hacks. Copy the feedback file back to
         # the CCU001. Actually, MAC should pick up this file, but it doesn't
         # do that at the moment :(
         from subprocess import check_call
-        cmd = "scp %s ccu001:%s" % tuple([self.parset_feedback_file]*2)
+        cmd = "scp %s ccu001:%s" % tuple([self.parset_feedback_file] * 2)
         check_call(cmd.split())
 
 if __name__ == '__main__':
