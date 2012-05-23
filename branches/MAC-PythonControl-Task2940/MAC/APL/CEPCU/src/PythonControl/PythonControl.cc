@@ -335,6 +335,24 @@ GCFEvent::TResult PythonControl::waitForConnection_state(GCFEvent& event, GCFPor
   
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 	switch (event.signal) {
+	case F_ENTRY:
+		itsTimerPort->cancelAllTimers();	// just to be sure.
+		itsTimerPort->setTimer(30.0);		// max waittime for Python framework to respond.
+		break;
+
+	case F_TIMER: {
+		LOG_FATAL("Python environment does not respond! QUITING!");
+		CONTROLConnectedEvent	answer;
+		answer.cntlrName = itsMyName;
+		answer.result    = CONTROL_LOST_CONN_ERR;
+		itsParentPort->send(answer);
+		TRAN(PythonControl::finishing_state);
+	}
+
+	case F_EXIT:
+		itsTimerPort->cancelAllTimers();
+		break;
+		
 	case F_ACCEPT_REQ: {
 		itsPythonPort = new GCFTCPPort();
 		itsPythonPort->init(*this, "client", GCFPortInterface::SPP, CONTROLLER_PROTOCOL);
@@ -672,7 +690,7 @@ void PythonControl::_passMetadatToOTDB()
 	while (iter != end) {
 		string	key(iter->first);	// make destoyable copy
 		rtrim(key, "[]0123456789");
-		bool	doubleStorage(key[key.size()-1] == '_');
+//		bool	doubleStorage(key[key.size()-1] == '_');
 		bool	isRecord(iter->second.isRecord());
 		//   isRecord  doubleStorage
 		// --------------------------------------------------------------
