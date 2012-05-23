@@ -5,6 +5,7 @@ include(PythonInstall)
 python_install(
   helpers/__init__.py
   helpers/metadata.py
+  helpers/WritableParmDB.py
   master/__init__.py
   master/bbs.py
   master/cep2_datamapper.py
