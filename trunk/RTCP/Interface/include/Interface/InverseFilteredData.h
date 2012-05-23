@@ -17,10 +17,10 @@ namespace RTCP {
 // nrSamplesPerIntegration is the original nrSamplesPerIntegration, and now becomes the "major time" index.
 // The stationFilterSize is the minor time index.
 
-class InverseFilteredData: public SampleData<float,1>
+class InverseFilteredData: public SampleData<float,1,1>
 {
   public:
-    typedef SampleData<float,1> SuperType;
+    typedef SampleData<float,1,1> SuperType;
 
     InverseFilteredData(unsigned nrSamplesPerIntegration, unsigned stationFilterSize);
 
@@ -32,7 +32,7 @@ class InverseFilteredData: public SampleData<float,1>
 
 inline InverseFilteredData::InverseFilteredData(unsigned nrSamplesPerIntegration, unsigned stationFilterSize)
 :
-  SuperType::SampleData(boost::extents[nrSamplesPerIntegration*stationFilterSize], 1),
+  SuperType::SampleData(boost::extents[nrSamplesPerIntegration*stationFilterSize], boost::extents[1]),
   itsNrSamplesPerIntegration(nrSamplesPerIntegration),
   itsStationFilterSize(stationFilterSize)
 {

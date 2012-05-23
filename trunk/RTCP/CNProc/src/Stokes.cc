@@ -88,10 +88,13 @@ template <bool ALLSTOKES> void CoherentStokes::calculate(const SampleData<> *sam
 #endif  
 
   // process flags
-  const std::vector<SparseSet<unsigned> > &inflags = sampleData->flags;
-  std::vector<SparseSet<unsigned> > &outflags = stokesData->flags;
-  outflags[0] = inflags[inbeam];
-  outflags[0] /= timeIntegrations;
+  for(unsigned ch = 0; ch < info.nrChannels; ch++) {
+    stokesData->flags[ch].reset();
+  }
+  for(unsigned ch=0; ch < itsNrChannels; ch++) {
+    stokesData->flags[ch/channelIntegrations] |= sampleData->flags[inbeam][ch];
+    stokesData->flags[ch/channelIntegrations] /= timeIntegrations;
+  }
 
   // process data
   const boost::detail::multi_array::const_sub_array<fcomplex,3> &in = sampleData->samples[inbeam];
@@ -242,21 +245,30 @@ template <bool ALLSTOKES> void IncoherentStokes::calculate(const FilteredData *i
   const unsigned channelIntegrations = itsNrChannels / info.nrChannels;
   std::vector<unsigned> stationList;
 
-  ASSERT(channelIntegrations <= itsMaxChannelIntegrations);
+  for(unsigned ch = 0; ch < info.nrChannels; ch++) {
+    out->flags[ch].reset();
+  }
 
-  out->flags[0].reset();
+  ASSERT(channelIntegrations <= itsMaxChannelIntegrations);
 
   for (unsigned stat = 0; stat < nrStations; stat ++) {
     const unsigned upperBound = static_cast<unsigned>(itsNrSamples * Stokes::MAX_FLAGGED_PERCENTAGE);
     const unsigned srcStat = stationMapping[stat];
 
-    if(in->flags[srcStat].count() > upperBound) {
+    unsigned count = 0;
+    for(unsigned ch = 0; ch < itsNrChannels; ch++) {
+      count += in->flags[ch][srcStat].count();
+    }
+
+    if(count > upperBound) {
       // drop station due to too much flagging
     } else {
       stationList.push_back(srcStat);  
 
       // conservative flagging: flag anything that is flagged in one of the stations
-      out->flags[0] |= in->flags[srcStat];
+      for(unsigned ch = 0; ch < itsNrChannels; ch++) {
+        out->flags[ch/channelIntegrations] |= in->flags[ch][srcStat];
+      }
     }
   }
 
@@ -270,13 +282,17 @@ template <bool ALLSTOKES> void IncoherentStokes::calculate(const FilteredData *i
         memset(&out->samples[stokes][ch][0], 0, info.nrSamples * sizeof out->samples[0][0][0]);
 
     // flag everything
-    out->flags[0].include(0, info.nrSamples);
+    for(unsigned ch=0; ch<info.nrChannels; ch++) {
+      out->flags[ch].include(0, info.nrSamples);
+    }
 
     return;
   }
 
   // shorten the flags over the integration length
-  out->flags[0] /= timeIntegrations;
+  for(unsigned ch = 0; ch < info.nrChannels; ch++) {
+    out->flags[ch] /= timeIntegrations;
+  }
 
   const bool dedisperse = dm != 0.0 && itsDedispersion;
   

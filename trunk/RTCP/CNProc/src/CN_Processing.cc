@@ -203,7 +203,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
     itsFilteredData = new FilteredData(parset.nrStations(), parset.nrChannelsPerSubband(), parset.CNintegrationSteps(), itsBigAllocator);
 
     if (parset.onlineFlagging() && parset.onlinePreCorrelationFlagging()) {
-      itsPreCorrelationFlagger = new PreCorrelationFlagger(parset, itsNrStations, itsNrChannels, itsNrSamplesPerIntegration);
+      itsPreCorrelationFlagger = new PreCorrelationFlagger(parset, itsNrStations, itsNrSubbands, itsNrChannels, itsNrSamplesPerIntegration);
       if (LOG_CONDITION)
         LOG_DEBUG_STR("Online PreCorrelation flagger enabled");
     }
@@ -215,7 +215,7 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
     }  
 
     if (parset.onlineFlagging() && parset.onlinePostCorrelationFlagging()) {
-      itsPostCorrelationFlagger = new PostCorrelationFlagger(parset, nrMergedStations, itsNrChannels);
+      itsPostCorrelationFlagger = new PostCorrelationFlagger(parset, nrMergedStations, itsNrSubbands, itsNrChannels);
       if (LOG_CONDITION)
         LOG_DEBUG_STR("Online PostCorrelation flagger enabled");
     }
@@ -720,7 +720,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preCorrelationF
 
   timer.start();
   computeTimer.start();
-  itsPreCorrelationFlagger->flag(itsFilteredData);
+  itsPreCorrelationFlagger->flag(itsFilteredData, *itsCurrentSubband);
   computeTimer.stop();
   timer.stop();
 }
@@ -787,7 +787,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::postCorrelation
 
   timer.start();
   computeTimer.start();
-  itsPostCorrelationFlagger->flag(itsCorrelatedData);
+  itsPostCorrelationFlagger->flag(itsCorrelatedData, *itsCurrentSubband);
 
   if(itsParset.onlinePostCorrelationFlaggingDetectBrokenStations()) {
     itsPostCorrelationFlagger->detectBrokenStations();

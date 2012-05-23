@@ -24,28 +24,28 @@ namespace RTCP {
  *
  */
 
-class BeamFormedData: public SampleData<fcomplex,4> 
+class BeamFormedData: public SampleData<fcomplex,4,2> 
 {
   public:
-    typedef SampleData<fcomplex,4> SuperType;
+    typedef SampleData<fcomplex,4,2> SuperType;
 
     BeamFormedData(unsigned nrBeams, unsigned nrChannels, unsigned nrSamples, Allocator &allocator = heapAllocator);
 };
 
 
-class PreTransposeBeamFormedData: public SampleData<float,3> 
+class PreTransposeBeamFormedData: public SampleData<float,3,1> 
 {
   public:
-    typedef SampleData<float,3> SuperType;
+    typedef SampleData<float,3,1> SuperType;
 
     PreTransposeBeamFormedData(unsigned nrStokes, unsigned nrChannels, unsigned nrSamples, Allocator &allocator = heapAllocator);
 };
 
 
-class TransposedBeamFormedData: public SampleData<float,3>
+class TransposedBeamFormedData: public SampleData<float,3,2>
 {
   public:
-    typedef SampleData<float,3> SuperType;
+	typedef SampleData<float,3,2> SuperType;
 
     TransposedBeamFormedData(unsigned nrSubbands, unsigned nrChannels, unsigned nrSamples, Allocator &allocator = heapAllocator);
 
@@ -53,10 +53,10 @@ class TransposedBeamFormedData: public SampleData<float,3>
 };
 
 
-class FinalBeamFormedData: public SampleData<float,3>
+class FinalBeamFormedData: public SampleData<float,3,2>
 {
   public:
-    typedef SampleData<float,3> SuperType;
+    typedef SampleData<float,3,2> SuperType;
 
     FinalBeamFormedData(unsigned nrSamples, unsigned nrSubbands, unsigned nrChannels, Allocator & = heapAllocator);
 
@@ -69,21 +69,21 @@ inline BeamFormedData::BeamFormedData(unsigned nrBeams, unsigned nrChannels, uns
   // numbers of stations due to cache conflict effects.  The extra memory
   // is not used.
 :
-  SuperType::SampleData(boost::extents[nrBeams][nrChannels][nrSamples | 2][NR_POLARIZATIONS], nrBeams, allocator)
+  SuperType::SampleData(boost::extents[nrBeams][nrChannels][nrSamples | 2][NR_POLARIZATIONS], boost::extents[nrBeams][nrChannels], allocator)
 {
 }
 
 
 inline PreTransposeBeamFormedData::PreTransposeBeamFormedData(unsigned nrStokes, unsigned nrChannels, unsigned nrSamples, Allocator &allocator)
 :
-  SuperType::SampleData(boost::extents[nrStokes][nrChannels][nrSamples  | 2], 1, allocator)
+  SuperType::SampleData(boost::extents[nrStokes][nrChannels][nrSamples  | 2],  boost::extents[nrChannels], allocator)
 {
 }
 
 
 inline TransposedBeamFormedData::TransposedBeamFormedData(unsigned nrSubbands, unsigned nrChannels, unsigned nrSamples, Allocator &allocator)
 :
-  SuperType(boost::extents[nrSubbands][nrChannels][nrSamples | 2], nrSubbands, allocator)
+  SuperType(boost::extents[nrSubbands][nrChannels][nrSamples | 2], boost::extents[nrSubbands][nrChannels], allocator)
 {
 }
 
@@ -96,7 +96,7 @@ inline void TransposedBeamFormedData::setDimensions(unsigned nrSubbands, unsigne
 
 inline FinalBeamFormedData::FinalBeamFormedData(unsigned nrSamples, unsigned nrSubbands, unsigned nrChannels, Allocator &allocator)
 :
-  SuperType(boost::extents[nrSamples  | 2][nrSubbands][nrChannels], nrSubbands, allocator)
+  SuperType(boost::extents[nrSamples | 2][nrSubbands][nrChannels], boost::extents[nrSubbands][nrChannels], allocator)
 {
 }
 
