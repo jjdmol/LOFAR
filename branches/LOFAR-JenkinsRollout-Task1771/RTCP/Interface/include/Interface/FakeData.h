@@ -43,26 +43,26 @@ template<> bool FakeData::equal( const fcomplex a, const fcomplex b ) const {
 void FakeData::fill( FilteredData *data ) const
 {
   for (unsigned s = 0; s < itsParset.nrStations(); s++) {
-    for (unsigned c = 0; c < itsParset.nrChannelsPerSubband(); c++)
+    for (unsigned c = 0; c < itsParset.nrChannelsPerSubband(); c++) {
       for (unsigned t = 0; t < itsParset.CNintegrationSteps(); t++) {
         data->samples[c][s][t][0] = makefcomplex(1 * t, 2 * t);
         data->samples[c][s][t][1] = makefcomplex(3 * t, 5 * t);
-      }  
-
-    data->flags[s].reset();
+      }
+      data->flags[c][s].reset();
+    }
   }
 }
 
 void FakeData::check( const FilteredData *data ) const
 {
   for (unsigned s = 0; s < itsParset.nrStations(); s++) {
-    for (unsigned c = 0; c < itsParset.nrChannelsPerSubband(); c++)
+    for (unsigned c = 0; c < itsParset.nrChannelsPerSubband(); c++) {
       for (unsigned t = 0; t < itsParset.CNintegrationSteps(); t++) {
         ASSERT( equal( data->samples[c][s][t][0], makefcomplex(1 * t, 2 * t) ) );
         ASSERT( equal( data->samples[c][s][t][1], makefcomplex(3 * t, 5 * t) ) );
       }
-
-    ASSERT( data->flags[s].count() == 0 );
+      ASSERT( data->flags[c][s].count() == 0 );
+    }
   }
 }
 

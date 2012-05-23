@@ -125,7 +125,11 @@ int main (int argc, char* argv[])
       // An MS is regular if all times have same nr of baselines.
       uint nrtime =
         tableCommand ("select from $1 orderby unique TIME", ms).table().nrow();
-      uint nrbl =
+      Table blTab =
+        tableCommand ("select from $1 orderby unique ANTENNA1,ANTENNA2", ms).table();
+      uint nrbl = blTab.nrow();
+      uint nrauto =
+        tableCommand ("select from $1 where ANTENNA1=ANTENNA2", blTab).table().nrow(); 
         tableCommand ("select from $1 orderby unique ANTENNA1,ANTENNA2", ms).table().nrow();
       if (nrdd > 1) {
         // Get actual nr of bands.
@@ -138,8 +142,9 @@ int main (int argc, char* argv[])
         cout << "The MS is not regular, thus unsuitable for BBS" << endl;
         cout << "  use msregularize in pyrap.tables to make it regular" << endl;
       }
-      cout << "   nrows=" << ms.nrow() << "  ntimes=" << nrtime
-           << "  nbaselines=" << nrbl << "  nband=" << nrdd << endl;
+      cout << "   nrows=" << ms.nrow() << "   ntimes=" << nrtime
+           << "   nbands=" << nrdd << "   nbaselines=" << nrbl
+           << " (" << nrauto << " autocorr)" << endl;
     }
     cout << endl;
 

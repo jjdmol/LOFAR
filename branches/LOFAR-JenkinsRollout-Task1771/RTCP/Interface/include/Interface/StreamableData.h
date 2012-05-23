@@ -94,15 +94,16 @@ class StreamableData
 
 
 // A typical data set contains a MultiDimArray of tuples and a set of flags.
-template <typename T = fcomplex, unsigned DIM = 4> class SampleData : public StreamableData
+template <typename T = fcomplex, unsigned DIM = 4, unsigned FLAGS_DIM = 2> class SampleData : public StreamableData
 {
   public:
     typedef typename MultiDimArray<T,DIM>::ExtentList ExtentList;
+    typedef typename MultiDimArray<SparseSet<unsigned>,FLAGS_DIM>::ExtentList FlagsExtentList;
 
-    SampleData(const ExtentList &extents, unsigned nrFlags, Allocator & = heapAllocator);
+    SampleData(const ExtentList &extents, const FlagsExtentList &flagsExtents, Allocator & = heapAllocator);
 
     MultiDimArray<T,DIM>	      samples;
-    std::vector<SparseSet<unsigned> > flags; // [itsNrStations]
+    MultiDimArray<SparseSet<unsigned>,FLAGS_DIM>   flags;
 
   protected:
     virtual void readData(Stream *);
@@ -153,22 +154,23 @@ inline void StreamableData::write(Stream *str, bool withSequenceNumber, unsigned
 }
 
 
-template <typename T, unsigned DIM> inline SampleData<T,DIM>::SampleData(const ExtentList &extents, unsigned nrFlags, Allocator &allocator)
+template <typename T, unsigned DIM, unsigned FLAGS_DIM> inline SampleData<T,DIM,FLAGS_DIM>::SampleData(const ExtentList &extents, const FlagsExtentList &flagsExtents, Allocator &allocator)
 :
   samples(extents, alignment, allocator),
-  flags(nrFlags)
+  flags(flagsExtents) // e.g., for FilteredData [nrChannels][nrStations], sparse dimension [nrSamplesPerIntegration]
+
   //itsHaveWarnedLittleEndian(false)
-{
+{ 
 }
 
 
-template <typename T, unsigned DIM> inline void SampleData<T,DIM>::readData(Stream *str)
+template <typename T, unsigned DIM, unsigned FLAGS_DIM> inline void SampleData<T,DIM,FLAGS_DIM>::readData(Stream *str)
 {
   str->read(samples.origin(), samples.num_elements() * sizeof(T));
 }
 
 
-template <typename T, unsigned DIM> inline void SampleData<T,DIM>::writeData(Stream *str)
+template <typename T, unsigned DIM, unsigned FLAGS_DIM> inline void SampleData<T,DIM,FLAGS_DIM>::writeData(Stream *str)
 {
   str->write(samples.origin(), samples.num_elements() * sizeof(T));
 }

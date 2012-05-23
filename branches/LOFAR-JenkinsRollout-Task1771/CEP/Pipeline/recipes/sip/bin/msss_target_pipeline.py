@@ -36,6 +36,7 @@ class msss_target_pipeline(control):
         self.input_data = {}
         self.output_data = {}
         self.io_data_mask = []
+        self.parset_feedback_file = None
 
 
     def usage(self):
@@ -83,13 +84,13 @@ class msss_target_pipeline(control):
         # Update input- and output-data product specifications if needed.
         if not all(self.io_data_mask):
             self.logger.info("Updating input/output product specifications")
-            self.input_data['data'] = [f for (f,m) 
+            self.input_data['data'] = [f for (f, m) 
                 in zip(self.input_data['data'], self.io_data_mask) if m
             ]
-            self.input_data['instrument'] = [f for (f,m) 
+            self.input_data['instrument'] = [f for (f, m) 
                 in zip(self.input_data['instrument'], self.io_data_mask) if m
             ]
-            self.output_data['data'] = [f for (f,m) 
+            self.output_data['data'] = [f for (f, m) 
                 in zip(self.output_data['data'], self.io_data_mask) if m
             ]
 
@@ -129,7 +130,7 @@ class msss_target_pipeline(control):
             )
 
         # Set the IO data mask
-        self.io_data_mask = [x and y for (x,y) in zip(data_mask, inst_mask)]
+        self.io_data_mask = [x and y for (x, y) in zip(data_mask, inst_mask)]
 
 
     def go(self):
@@ -138,10 +139,11 @@ class msss_target_pipeline(control):
         jobname before calling the base-class's `go()` method.
         """
         try:
-            parset_file = self.inputs['args'][0]
+            parset_file = os.path.abspath(self.inputs['args'][0])
         except IndexError:
             return self.usage()
         self.parset.adoptFile(parset_file)
+        self.parset_feedback_file = parset_file + "_feedback"
         # Set job-name to basename of parset-file w/o extension, if it's not
         # set on the command-line with '-j' or '--job-name'
         if not self.inputs.has_key('job_name'):
@@ -250,10 +252,19 @@ class msss_target_pipeline(control):
 
         # Create a parset-file containing the metadata for MAC/SAS
         self.run_task("get_metadata", corrected_mapfile,
-            parset_file=py_parset.getString('metadataFeedbackFile'),
-            parset_prefix=self.parset.fullModuleName('DataProducts'),
+            parset_file=self.parset_feedback_file,
+            parset_prefix=(
+                self.parset.getString('prefix') + 
+                self.parset.fullModuleName('DataProducts')
+            ),
             product_type="Correlated")
 
+        # And now the dirtiest of all hacks. Copy the feedback file back to
+        # the CCU001. Actually, MAC should pick up this file, but it doesn't
+        # do that at the moment :(
+        from subprocess import check_call
+        cmd = "scp %s ccu001:%s" % tuple([self.parset_feedback_file]*2)
+        check_call(cmd.split())
 
 if __name__ == '__main__':
     sys.exit(msss_target_pipeline().main())

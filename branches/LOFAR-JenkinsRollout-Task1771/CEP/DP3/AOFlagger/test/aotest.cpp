@@ -8,6 +8,13 @@
 
 int main(int argc, char *argv[])
 {
+	if(argc == 2 && std::string(argv[1])=="time")
+	{
+		DefaultStrategySpeedTest speedTest("sumthreshold");
+		speedTest.Run();
+		return 0;
+	}
+	
   unsigned successes = 0, failures = 0;
 	if(argc == 1 || std::string(argv[1])!="only")
 	{

@@ -16,13 +16,14 @@ static NSTimer detectBrokenStationsTimer("RFI post DetectBrokenStations", true, 
 // We have the data for one second, all frequencies in a subband.
 // If one of the polarizations exceeds the threshold, flag them all.
 // All baselines are flagged completely independently.
-// Autocorrelations are ignored, and are not flagged!
+// Autocorrelations are ignored.
 
-// TODO: some data could already be flagged, take that into account! --Rob
-// TODO: if detectBrokenStations is not enabled, we do't have to wipe/calc summedbaselinePowers
+// TODO: if detectBrokenStations is not enabled, we don't have to wipe/calc summedbaselinePowers
+// TODO: if some data was already flagged, take that into account (already done for pre-correlation flagger).
 
-PostCorrelationFlagger::PostCorrelationFlagger(const Parset& parset, const unsigned nrStations, const unsigned nrChannels, const float cutoffThreshold, float baseSentitivity) :
-    Flagger(parset, nrStations, nrChannels, cutoffThreshold, baseSentitivity,
+PostCorrelationFlagger::PostCorrelationFlagger(const Parset& parset, const unsigned nrStations, const unsigned nrSubbands, 
+					       const unsigned nrChannels, const float cutoffThreshold, float baseSentitivity) :
+  Flagger(parset, nrStations, nrSubbands, nrChannels, cutoffThreshold, baseSentitivity,
 	    getFlaggerStatisticsType(parset.onlinePostCorrelationFlaggingStatisticsType(getFlaggerStatisticsTypeString(FLAGGER_STATISTICS_WINSORIZED)))), 
     itsFlaggerType(getFlaggerType(parset.onlinePostCorrelationFlaggingType(getFlaggerTypeString(POST_FLAGGER_SMOOTHED_SUM_THRESHOLD_WITH_HISTORY)))),
     itsNrBaselines((nrStations * (nrStations + 1) / 2)) {
@@ -33,13 +34,13 @@ PostCorrelationFlagger::PostCorrelationFlagger(const Parset& parset, const unsig
   itsFlags.resize(itsNrChannels);
   itsSummedBaselinePowers.resize(itsNrBaselines);
   itsSummedStationPowers.resize(itsNrStations);
-  itsHistory.resize(boost::extents[NR_POLARIZATIONS][NR_POLARIZATIONS]);
+  itsHistory.resize(boost::extents[itsNrBaselines][nrSubbands][NR_POLARIZATIONS][NR_POLARIZATIONS]);
 
   LOG_DEBUG_STR("post correlation flagging type = " << getFlaggerTypeString()
 		<< ", statistics type = " << getFlaggerStatisticsTypeString());
 }
 
-void PostCorrelationFlagger::flag(CorrelatedData* correlatedData) {
+void PostCorrelationFlagger::flag(CorrelatedData* correlatedData, unsigned currentSubband) {
   NSTimer flaggerTimer("RFI post flagger", true, true);
   flaggerTimer.start();
 
@@ -64,10 +65,10 @@ void PostCorrelationFlagger::flag(CorrelatedData* correlatedData) {
           sumThresholdFlagger1D(itsPowers, itsFlags, itsBaseSensitivity);
           break;
 	case POST_FLAGGER_SMOOTHED_SUM_THRESHOLD:
-          sumThresholdFlaggerSmoothed1D(itsPowers, itsSmoothedPowers, itsPowerDiffs, itsFlags);
+          sumThresholdFlagger1DSmoothed(itsPowers, itsSmoothedPowers, itsPowerDiffs, itsFlags);
 	  break;
 	case POST_FLAGGER_SMOOTHED_SUM_THRESHOLD_WITH_HISTORY:
-          sumThresholdFlaggerSmoothedWithHistory1D(itsPowers, itsSmoothedPowers, itsPowerDiffs, itsFlags, itsHistory[pol1][pol2]);
+          sumThresholdFlagger1DSmoothedWithHistory(itsPowers, itsSmoothedPowers, itsPowerDiffs, itsFlags, itsHistory[baseline][currentSubband][pol1][pol2]);
 	  break;
         default:
           LOG_INFO_STR("ERROR, illegal FlaggerType. Skipping online post correlation flagger.");
@@ -91,12 +92,11 @@ void PostCorrelationFlagger::calculateSummedbaselinePowers(unsigned baseline) {
   }
 }
 
-
+  // TODO: also integrate flags?
 void PostCorrelationFlagger::detectBrokenStations() {
   detectBrokenStationsTimer.start();
 
   // Sum all baselines that involve a station (both horizontally and vertically).
-  float total = 0.0f;
 
   for (unsigned station = 0; station < itsNrStations; station++) {
     float sum = 0.0f;
@@ -110,14 +110,15 @@ void PostCorrelationFlagger::detectBrokenStations() {
     }
 
     itsSummedStationPowers[station] = sum;
-    total += sum;
   }
 
-  float sum;
   float stdDev;
-  float mean = total / itsNrStations;
-  calculateStdDevAndSum(itsSummedStationPowers.data(), itsSummedStationPowers.size(), mean, stdDev, sum);
-  float median = calculateMedian(itsSummedStationPowers.data(), itsSummedStationPowers.size());
+  float mean;
+  //  calculateStdDevAndSum(itsSummedStationPowers.data(), itsSummedStationPowers.size(), mean, stdDev, sum);
+
+  calculateMeanAndStdDev(itsSummedStationPowers, mean, stdDev);
+
+  float median = calculateMedian(itsSummedStationPowers);
   float threshold = mean + itsCutoffThreshold * stdDev;
 
   LOG_DEBUG_STR("RFI post detectBrokenStations: mean = " << mean << ", median = " << median << " stdDev = " << stdDev << ", threshold = " << threshold);

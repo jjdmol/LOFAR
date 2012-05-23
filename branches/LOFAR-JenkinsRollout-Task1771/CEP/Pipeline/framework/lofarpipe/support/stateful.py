@@ -15,12 +15,15 @@ from lofarpipe.support.lofarexceptions import PipelineException
 
 def stateful(run_task):
     @wraps(run_task)
-    def wrapper(self, configblock, datafiles=[], **kwargs):
+    def wrapper(self, configblock, datafiles = [], **kwargs):
         try:
+
             my_state = self.completed.pop()
         except (AttributeError, IndexError):
-            my_state = ('','')
+            my_state = ('', '')
 
+        print my_state
+        print configblock
         if configblock == my_state[0]:
             # We have already run this task and stored its state, or...
             self.logger.info("Task %s already exists in saved state; skipping"

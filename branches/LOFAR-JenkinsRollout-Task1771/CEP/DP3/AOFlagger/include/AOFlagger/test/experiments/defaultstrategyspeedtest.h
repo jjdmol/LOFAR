@@ -57,6 +57,11 @@ class DefaultStrategySpeedTest : public UnitTest {
 			AddTest(TimeStrategy(), "Timing strategy");
 		}
 		
+		DefaultStrategySpeedTest(const std::string &) : UnitTest("Default strategy speed test")
+		{
+			AddTest(TimeSumThresholdN(), "Timing varying SumThreshold method");
+		}
+		
 	private:
 		struct TimeStrategy : public Asserter
 		{
@@ -302,18 +307,18 @@ inline void DefaultStrategySpeedTest::TimeSumThresholdN::operator()()
 		
 		Mask2DPtr maskA = Mask2D::CreateCopy(artifacts.OriginalData().GetSingleMask());
 		Stopwatch watchA(true);
-		ThresholdMitigater::HorizontalSumThresholdLarge(input, maskA, length, threshold);
+		ThresholdMitigater::HorizontalSumThresholdLargeReference(input, maskA, length, threshold);
 		AOLogger::Info << "Horizontal, length " << length << ": " << watchA.ToString() << '\n';
+		
+		Mask2DPtr maskC = Mask2D::CreateCopy(artifacts.OriginalData().GetSingleMask());
+		Stopwatch watchC(true);
+		ThresholdMitigater::HorizontalSumThresholdLargeSSE(input, maskC, length, threshold);
+		AOLogger::Info << "Horizontal SSE, length " << length << ": " << watchC.ToString() << '\n';
 		
 		Mask2DPtr maskB = Mask2D::CreateCopy(artifacts.OriginalData().GetSingleMask());
 		Stopwatch watchB(true);
 		ThresholdMitigater::VerticalSumThresholdLargeReference(input, maskB, length, threshold);
 		AOLogger::Info << "Vertical, length " << length << ": " << watchB.ToString() << '\n';
-		
-		//Stopwatch watchC(true);
-		//Mask2DPtr newMask = maskB->CreateXYFlipped();
-		//Image2DPtr newImage = input->CreateXYFlipped();
-		//AOLogger::Info << "Flip XY" << length << ": " << watchC.ToString() << '\n';
 		
 		Mask2DPtr maskD = Mask2D::CreateCopy(artifacts.OriginalData().GetSingleMask());
 		Stopwatch watchD(true);

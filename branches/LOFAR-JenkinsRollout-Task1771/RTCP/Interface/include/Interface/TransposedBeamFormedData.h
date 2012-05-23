@@ -12,10 +12,10 @@ namespace RTCP {
 
 // Polarizations are separated, otherwise the buffers do not fit in memory.
 
-class TransposedBeamFormedData: public SampleData<fcomplex,3>
+class TransposedBeamFormedData: public SampleData<fcomplex,3,1>
 {
   public:
-    typedef SampleData<fcomplex,3> SuperType;
+    typedef SampleData<fcomplex,3,1> SuperType;
 
     TransposedBeamFormedData(unsigned nrSubbands, unsigned nrChannels, unsigned nrSamplesPerIntegration);
 };
@@ -23,7 +23,7 @@ class TransposedBeamFormedData: public SampleData<fcomplex,3>
 
 inline TransposedBeamFormedData::TransposedBeamFormedData(unsigned nrSubbands, unsigned nrChannels, unsigned nrSamplesPerIntegration)
 :
-  SuperType(boost::extents[nrSubbands][nrChannels][nrSamplesPerIntegration | 2], 1)
+  SuperType(boost::extents[nrSubbands][nrChannels][nrSamplesPerIntegration | 2], boost::extents[1])
 {
 }
 

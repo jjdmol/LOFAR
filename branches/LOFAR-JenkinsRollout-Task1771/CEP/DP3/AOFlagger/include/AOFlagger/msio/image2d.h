@@ -330,6 +330,34 @@ class Image2D {
 			return Image2DPtr(image);
 		}
 		
+		void SwapXY()
+		{
+			Image2DPtr swapped = CreateXYFlipped();
+			Swap(swapped);
+		}
+		
+		/**
+		 * Swaps the contents of the two masks. This can be used as a move assignment operator, as it
+		 * only swaps pointers; hence it is fast.
+		 */
+		void Swap(Image2D &source)
+		{
+			std::swap(source._width, _width);
+			std::swap(source._stride, _stride);
+			std::swap(source._height, _height);
+			std::swap(source._dataPtr, _dataPtr);
+			std::swap(source._dataConsecutive, _dataConsecutive);
+		}
+		
+		/**
+		 * Swaps the contents of the two masks. This can be used as a move assignment operator, as it
+		 * only swaps pointers; hence it is fast.
+		 */
+		void Swap(Image2DPtr source)
+		{
+			Swap(*source);
+		}
+		
 		/**
 		 * Resample the image horizontally by decreasing the width
 		 * with an integer factor.
