@@ -190,6 +190,21 @@ void Parset::check() const
     if (nrSubbands() > phaseTwoPsets().size() * phaseOneTwoCores().size() )
       THROW(InterfaceException, "For the second transpose to function, there need to be at least nrSubbands cores in phase 2 (requested: " << nrSubbands() << " subbands on " << (phaseTwoPsets().size() * phaseOneTwoCores().size()) << " cores)");
   }
+
+  // check whether the beam forming parameters are valid
+  const Transpose2 &logic = transposeLogic();
+
+  for (unsigned i = 0; i < logic.nrStreams(); i++) {
+    const StreamInfo &info = logic.streamInfo[i];
+
+    if ( info.timeIntFactor == 0 )
+      THROW(InterfaceException, "Temporal integration factor needs to be > 0 (it is set to 0 for " << (info.coherent ? "coherent" : "incoherent") << " beams).");
+
+    if ( info.coherent
+      && info.stokesType == STOKES_XXYY
+      && info.timeIntFactor != 1 )
+      THROW(InterfaceException, "Cannot perform temporal integration if calculating Coherent Stokes XXYY. Integration factor needs to be 1, but is set to " << info.timeIntFactor);
+  }
 }
 
 
