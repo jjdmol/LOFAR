@@ -280,7 +280,7 @@ public class ParSetMetaViewPanel extends javax.swing.JPanel implements IViewPane
                 jOTDBtree aTree = OtdbRmi.getRemoteOTDB().getTreeInfo(itsNode.treeID(),false);
                 itsTreeType=OtdbRmi.getTreeType().get(aTree.type);
             } catch (RemoteException ex) {
-                String aS="ParSetViewPanel: Error getting treeInfo/treetype" + ex;
+                String aS="ParSetMetaViewPanel: Error getting treeInfo/treetype" + ex;
                 logger.error(aS);
                 LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 itsTreeType="";

@@ -52,7 +52,8 @@ public class PICtableModel extends javax.swing.table.AbstractTableModel {
     public PICtableModel(OtdbRmi otdbRmi) {
 
         this.otdbRmi = otdbRmi;
-//       fillTable();
+        // this is the first tab, so we will present a filled tables list. all other tables are filled on demand
+        fillTable();
     }
     
     /** Refreshes 1 row from table out of the database
