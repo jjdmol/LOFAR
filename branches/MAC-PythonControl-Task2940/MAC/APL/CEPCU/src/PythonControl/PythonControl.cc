@@ -657,9 +657,20 @@ GCFEvent::TResult PythonControl::finishing_state(GCFEvent& event, GCFPortInterfa
 //
 void PythonControl::_passMetadatToOTDB()
 {
+	// No name specified?
 	if (itsFeedbackFile.empty()) {
 		return;
 	}
+
+	// Copy file form remote system to localsystem
+	ParameterSet*   thePS  = globalParameterSet();      // shortcut to global PS.
+	string  myPrefix  (thePS->locateModule("PythonControl")+"PythonControl.");
+	string	pythonHost(thePS->getString(myPrefix+"pythonHost","@pythonHost@"));
+	if (copyFromRemote(realHostname(pythonHost), itsFeedbackFile, itsFeedbackFile) != 0) {
+		LOG_ERROR_STR("Failed to copy metadatafile " << itsFeedbackFile << " from host " << realHostname(pythonHost));
+		return;
+	}
+
 	// read parameterset
 	ParameterSet	metadata;
 	metadata.adoptFile(itsFeedbackFile);
