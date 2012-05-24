@@ -1,4 +1,5 @@
 import numpy
+import cmath
 
 # Untested copu pasta of jon swinbanks code
 class ComplexArray(object):
