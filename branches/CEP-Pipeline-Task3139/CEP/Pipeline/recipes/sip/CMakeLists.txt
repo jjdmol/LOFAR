@@ -6,6 +6,7 @@ python_install(
   helpers/__init__.py
   helpers/metadata.py
   helpers/WritableParmDB.py
+  helpers/ComplexArray.py
   master/__init__.py
   master/bbs.py
   master/cep2_datamapper.py
@@ -98,3 +99,5 @@ install(FILES
   skymodels/Ateam_LBA_CC.skymodel
   DESTINATION share/pipeline/skymodels)
 
+
+  
