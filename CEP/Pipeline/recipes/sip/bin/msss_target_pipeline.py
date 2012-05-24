@@ -259,12 +259,6 @@ class msss_target_pipeline(control):
             ),
             product_type="Correlated")
 
-        # And now the dirtiest of all hacks. Copy the feedback file back to
-        # the CCU001. Actually, MAC should pick up this file, but it doesn't
-        # do that at the moment :(
-        from subprocess import check_call
-        cmd = "scp %s ccu001:%s" % tuple([self.parset_feedback_file]*2)
-        check_call(cmd.split())
 
 if __name__ == '__main__':
     sys.exit(msss_target_pipeline().main())
