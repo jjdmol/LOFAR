@@ -63,7 +63,7 @@ VICnodeDef::VICnodeDef(const result::tuple&	row)
 	row["classif"].to(classif);
 	row["constraints"].to(constraints);
 	row["description"].to(description);
-	row["tablename"].to(tablename);
+	//	row["tablename"].to(tablename);
 }
 
 //
