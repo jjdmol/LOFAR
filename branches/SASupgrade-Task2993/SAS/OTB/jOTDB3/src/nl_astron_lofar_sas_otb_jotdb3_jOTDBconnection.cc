@@ -166,10 +166,9 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_disco
             std::map<std::string,void *>::iterator tmpitr = itr;
             itr++;
             // free memory
-            vector<string> spl = StringUtil::split(itr->first,'_');
+            vector<string> spl = StringUtil::split(tmpitr->first,'_');
             int cnt = spl.size();
             string objectclass = spl[cnt-1];
-
             bool flag = false;
             if (objectclass=="Campaign") {
                 delete (Campaign*)(tmpitr->second);
