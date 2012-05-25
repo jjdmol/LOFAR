@@ -22,13 +22,8 @@ from lofarpipe.recipes.helpers.WritableParmDB import WritableParmDB, list_statio
 from lofarpipe.recipes.helpers.ComplexArray import ComplexArray, RealImagArray, AmplPhaseArray
 
 class ParmExportCal(LOFARnodeTCP):
-<<<<<<< .mine
-
     def run(self, infile, outfile, executable, initscript, sigma):
-=======
 
-    def run(self, infile, outfile, executable, initscript):
->>>>>>> .r21050
         # Time execution of this job
         with log_time(self.logger):
             if os.path.exists(infile):
@@ -69,14 +64,9 @@ class ParmExportCal(LOFARnodeTCP):
         finally:
             shutil.rmtree(temp_dir)
 
-<<<<<<< .mine
         #From here new parmdb implementation!!
         self._filter_stations_parmdb(infile, outfile)
-=======
         return 1 #return 1 to allow rerunning of this script
->>>>>>> .r21050
-
-        return 1
 
 
 
