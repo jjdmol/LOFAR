@@ -361,8 +361,8 @@ class parmdb(ParmDB):
                  'pert':pert, 'pertrel':pertrel}
         else:
             d = {'values': values,
-                 'freqs': freqCenters, 'freqwidths':freqWidths,
-                 'times': timeCenters, 'timewidths':timeWidths,
+                 'freqs': sfreq, 'freqwidths':efreq,
+                 'times': stime, 'timewidths':etime,
                  'pert':pert, 'pertrel':pertrel}
         if len(type) > 0:
             d['type'] = type
