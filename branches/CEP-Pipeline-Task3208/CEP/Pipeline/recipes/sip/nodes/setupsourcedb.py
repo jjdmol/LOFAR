@@ -1,4 +1,10 @@
-from __future__ import with_statement
+#                                                         LOFAR IMAGING PIPELINE
+#
+#                                                     setupsourcedb nodes recipe
+#                                                             Marcel Loose, 2012
+#                                                                loose@astron.nl
+# ------------------------------------------------------------------------------
+
 from subprocess import Popen, CalledProcessError, PIPE, STDOUT
 import errno
 import os
@@ -12,7 +18,7 @@ from lofarpipe.support.pipelinelogging import CatchLog4CPlus
 from lofarpipe.support.utilities import catch_segfaults
 
 
-class sourcedb(LOFARnodeTCP):
+class setupsourcedb(LOFARnodeTCP):
     def run(self, executable, catalogue, skydb):
         with log_time(self.logger):
             # Create output directory if it does not yet exist.
@@ -57,4 +63,4 @@ if __name__ == "__main__":
     #                        and pass the rest to the run() method defined above
     # --------------------------------------------------------------------------
     jobid, jobhost, jobport = sys.argv[1:4]
-    sys.exit(sourcedb(jobid, jobhost, jobport).run_with_stored_arguments())
+    sys.exit(setupsourcedb(jobid, jobhost, jobport).run_with_stored_arguments())
