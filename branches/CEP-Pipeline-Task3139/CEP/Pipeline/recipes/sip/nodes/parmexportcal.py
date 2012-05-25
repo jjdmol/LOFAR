@@ -10,11 +10,12 @@ import shutil
 import sys
 import tempfile
 import numpy
+import errno
 
 from lofarpipe.support.lofarnode import LOFARnodeTCP
 from lofarpipe.support.pipelinelogging import CatchLog4CPlus
 from lofarpipe.support.pipelinelogging import log_time
-from lofarpipe.support.utilities import read_initscript, create_directory
+from lofarpipe.support.utilities import read_initscript, create_directory, delete_directory
 from lofarpipe.support.utilities import catch_segfaults
 from lofarpipe.support.lofarexceptions import PipelineRecipeFailed
 
@@ -65,24 +66,34 @@ class ParmExportCal(LOFARnodeTCP):
             shutil.rmtree(temp_dir)
 
         #From here new parmdb implementation!!
-        self._filter_stations_parmdb(infile, outfile)
+        self._filter_stations_parmdb(infile, outfile, sigma)
         return 1 #return 1 to allow rerunning of this script
 
 
 
-    def _filter_stations_parmdb(self, infile, outfile):
+    def _filter_stations_parmdb(self, infile, outfile, sigma):
+        sigma = float(sigma)
         # Create copy of the input file
         # delete target location
-        shutil.rmtree(outfile)
+        if not os.path.exists(infile):
+            message = "The supplied parmdb path is not available on"
+            "the filesystem: {0}".format(infile)
+            self.logger.error(message)
+            raise PipelineRecipeFailed(message)
+
+        delete_directory(outfile)
+
         self.logger.debug("cleared target path for filtered parmdb: \n {0}".format(
                                 outfile))
+
         # copy
         shutil.copytree(infile, outfile)
         self.logger.debug("Copied raw parmdb to target locations: \n {0}".format(
                                 infile))
 
         # Create a local WritableParmDB
-        parmdb = WritetableParmdb(outfile)
+        parmdb = WritableParmDB(outfile)
+
 
         #get all stations in the parmdb
         stations = list_stations(parmdb)
@@ -93,24 +104,29 @@ class ParmExportCal(LOFARnodeTCP):
             # till here implemented
             polarization_data, type_pair = \
                self._read_polarisation_data_and_type_from_db(parmdb, station)
+
             corected_data = self._swap_outliers_with_median(polarization_data,
                                                   type_pair, sigma)
+            #print polarization_data
             self._write_corrected_data(parmdb, station,
                                        polarization_data, corected_data)
+        return parmdb, corected_data
 
     def _read_polarisation_data_and_type_from_db(self, parmdb, station):
         all_matching_names = parmdb.getNames("Gain:*:*:*:{0}".format(station))
 
         # get the polarisation_data eg: 1:1
         # This is based on the 1 trough 3th entry in the parmdb name entry
-        pols = set(":".join(x[1:3]) for x in  (x.split(":") for x in names))
+        pols = set(":".join(x[1:3]) for x in  (x.split(":") for x in all_matching_names))
 
         # Get the im or re name, eg: real. Sort for we need a known order
-        type_pair = sorted([x[3] for x in  (x.split(":") for x in names)])
+        type_pair = sorted(set(x[3] for x in  (x.split(":") for x in all_matching_names)))
+
 
         #Check if the retrieved types are valid
         sorted_valid_type_pairs = [sorted(RealImagArray.keys),
                                     sorted(AmplPhaseArray.keys)]
+
         if not type_pair in sorted_valid_type_pairs:
             self.logger.error("The parsed parmdb contained an invalid array_type:")
             self.logger.error("{0}".format(type_pair))
@@ -119,7 +135,6 @@ class ParmExportCal(LOFARnodeTCP):
             raise PipelineRecipeFailed(
                     "Invalid data type retrieved from parmdb: {0}".format(
                                                 type_pair))
-
         polarisation_data = dict()
         #for all polarisation_data in the parmdb (2 times 2)
         for polarization in pols:
@@ -143,7 +158,6 @@ class ParmExportCal(LOFARnodeTCP):
 
             # get the data as amplitude from the amplitude array, skip last entry
             amplitudes = complex_array.amp[:-1]
-
             # calculate the statistics
             median = numpy.median(amplitudes)
             stddev = numpy.std(amplitudes)
@@ -182,9 +196,9 @@ class ParmExportCal(LOFARnodeTCP):
                 self.logger.error(error_message)
                 raise PipelineRecipeFailed(error_message)
 
-            corrected_data = corected_data[pol]
+            corrected_data_pol = corected_data[pol]
             #get the "complex" converted data from the complex array
-            for component, value in corrected_data.writeable.iteritems():
+            for component, value in corrected_data_pol.writeable.iteritems():
                 #Collect all the data needed to write an array 
                 name = "Gain:{0}:{1}:{2}".format(pol, component, station)
                 freqscale = data[0]['freqs'][0]

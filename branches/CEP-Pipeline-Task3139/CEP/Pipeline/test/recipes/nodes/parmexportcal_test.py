@@ -278,7 +278,7 @@ class ParmExportCalTest(unittest.TestCase):
         parmExportCal = ParmExportCalWrapper()
         self.assertRaises(PipelineRecipeFailed,
                           parmExportCal._filter_stations_parmdb,
-                           unexisting_file, unexisting_file2, "sigma")
+                           unexisting_file, unexisting_file2, "1.0")
 
     def test_filter_stations_parmdb(self):
         file_path_in = os.path.join(self.tempDir, "input")
