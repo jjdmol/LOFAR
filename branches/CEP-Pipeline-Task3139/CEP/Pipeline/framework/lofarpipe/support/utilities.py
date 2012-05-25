@@ -49,14 +49,25 @@ def create_directory(dirname):
             os.makedirs(dirname)
     except OSError, failure:
         if failure.errno != errno.EEXIST:
-            raise
+            raise failure
+
+def delete_directory(dirnam):
+    """
+    Recursively delete a directory tree: Without failing if the dir does not 
+    exist    
+    """
+    try:
+        shutil.rmtree(outfile)
+    except OSError, e:
+        if not e.errno == errno.ENOENT:
+            raise e
 
 def disk_usage(*paths):
     """
     Return the disk usage in bytes by the file(s) in ``paths``.
     """
     cmd = ['du', '-s', '-b']
-    proc = Popen(cmd + list(paths), stdout=PIPE)
+    proc = Popen(cmd + list(paths), stdout = PIPE)
     sout = proc.communicate()[0]
     if sout:
         return sum([int(s.split('\t')[0]) for s in sout.strip().split('\n')])
@@ -122,7 +133,7 @@ except ImportError:
         izip_longest('ABCD', 'xy', fillvalue='-') --> Ax By C- D-
         """
         fillvalue = None
-        def sentinel(counter = ([fillvalue]*(len(args)-1)).pop):
+        def sentinel(counter = ([fillvalue] * (len(args) - 1)).pop):
             yield counter()         # yields the fillvalue, or raises IndexError
         fillers = repeat(fillvalue)
         iters = [chain(it, sentinel(), fillers) for it in args]
@@ -151,7 +162,7 @@ def group_iterable(iterable, size):
 #                                                                  Miscellaneous
 # ------------------------------------------------------------------------------
 
-def read_initscript(logger, filename, shell="/bin/sh"):
+def read_initscript(logger, filename, shell = "/bin/sh"):
     """
     Return a dict of the environment after sourcing the given script in a shell.
     """
@@ -162,11 +173,11 @@ def read_initscript(logger, filename, shell="/bin/sh"):
         logger.debug("Reading environment from %s" % filename)
         p = subprocess.Popen(
             ['. %s ; env' % (filename)],
-            shell=True,
-            executable=shell,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            close_fds=True
+            shell = True,
+            executable = shell,
+            stdout = subprocess.PIPE,
+            stderr = subprocess.PIPE,
+            close_fds = True
         )
         so, se = p.communicate()
         environment = [x.split('=', 1) for x in so.strip().split('\n')]
@@ -179,7 +190,7 @@ def string_to_list(my_string):
     """
     return [x.strip() for x in my_string.strip('[] ').split(',') if x.strip()]
 
-def spawn_process(cmd, logger, cwd=None, env=None, max_tries=2, max_timeout=30):
+def spawn_process(cmd, logger, cwd = None, env = None, max_tries = 2, max_timeout = 30):
     """
     Tries to spawn a process.
 
@@ -195,7 +206,7 @@ def spawn_process(cmd, logger, cwd=None, env=None, max_tries=2, max_timeout=30):
             "Spawning subprocess: cmd=%s, cwd=%s, env=%s" % (cmd, cwd, env))
         try:
             process = Popen(
-                cmd, cwd=cwd, env=env, stdin=PIPE, stdout=PIPE, stderr=PIPE
+                cmd, cwd = cwd, env = env, stdin = PIPE, stdout = PIPE, stderr = PIPE
             )
         except OSError, e:
             logger.warn(
@@ -215,7 +226,7 @@ def spawn_process(cmd, logger, cwd=None, env=None, max_tries=2, max_timeout=30):
             break
     return process
 
-def catch_segfaults(cmd, cwd, env, logger, max=1, cleanup=lambda: None):
+def catch_segfaults(cmd, cwd, env, logger, max = 1, cleanup = lambda: None):
     """
     Run cmd in cwd with env, sending output to logger.
 
