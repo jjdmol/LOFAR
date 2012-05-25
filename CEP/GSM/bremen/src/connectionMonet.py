@@ -1,14 +1,13 @@
 #!/usr/bin/python
-from exceptions import ValueError
+"""
+Database connection with logging.
+Overrides MonetDB connection object.
+"""
 import time
 import monetdb.sql as db
 import logging
 from src.gsmlogger import get_gsm_logger
 from monetdb.monetdb_exceptions import DatabaseError
-"""
-Database connection with logging.
-Overrides MonetDB connection object.
-"""
 
 
 class MonetLoggedConnection(db.connections.Connection):
@@ -20,7 +19,20 @@ class MonetLoggedConnection(db.connections.Connection):
         super(MonetLoggedConnection, self).__init__(**params)
         self.profile = False
         self.log = get_gsm_logger('sql', 'sql.log')
-        self.log.setLevel(logging.DEBUG)
+        self.log.setLevel(logging.INFO)
+
+    @staticmethod
+    def is_monet():
+        """
+        For quick distinction between MonetDB and Postgres.
+        """
+        return True
+
+    def start(self):
+        """
+        Begin transaction.
+        """
+        self.execute('START TRANSACTION;')
 
     def execute(self, query):
         """
@@ -28,17 +40,21 @@ class MonetLoggedConnection(db.connections.Connection):
         """
         if self.profile:
             start = time.time()
-        self.log.debug(query.replace('\n', ' '))
+        if query.strip()[-1:] != ';':
+            query = query + ';'
         try:
             result = super(MonetLoggedConnection, self).execute(query)
         except DatabaseError as oerr:
             self.log.error(oerr)
             raise oerr
         if self.profile:
-            self.log.debug('Time spent: %s' % (time.time() - start))
+            self.log.debug('Time: %.3f SQL: %s' % (time.time() - start,
+                                                 query.replace('\n', ' ')))
+        else:
+            self.log.debug(query.replace('\n', ' '))
         return result
 
-    def execute_set(self, query_set):
+    def execute_set(self, query_set, quiet=True):
         """
         Execute several SQL statements and return the last result.
         """
@@ -49,8 +65,12 @@ class MonetLoggedConnection(db.connections.Connection):
             else:
                 query_set = query_set.split(';')
         cursor = self.cursor()
+        lastcount = 0
         for query in query_set:
-            lastcount = cursor.execute(query)
+            if quiet:
+                cursor.execute(query)
+            else:
+                lastcount = cursor.execute(query)
         if lastcount > 0:
             return cursor.fetchall()
         else:

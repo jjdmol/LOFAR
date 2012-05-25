@@ -3,22 +3,41 @@ import monetdb.sql as db
 from src.errors import SourceException
 from src.gsmconnectionmanager import GSMConnectionManager
 from src.gsmlogger import get_gsm_logger
-from src.queries import get_insert_temprunningcatalog, get_inserts_new_sources
+from src.queries import get_insert_temprunningcatalog
 from src.sqllist import get_sql
 from src.grouper import Grouper
+from src.updater import run_update
+import logging
+import math
 
 
 class GSMPipeline(object):
     """
     General pipeline class.
     """
-    def __init__(self, **params):
-        self.conn_manager = GSMConnectionManager(**params)
-        try:
-            self.conn = self.conn_manager.get_connection()
-        except db.Error as exc:
-            print "Failed to connect: %s" % exc
+    def __init__(self, custom_cm=None, use_monet=None, profile=False,
+                 **params):
+        """
+        @param custom_cm: allows to pass an object to be used as connection
+        manager.
+        """
         self.log = get_gsm_logger('pipeline', 'pipeline.log')
+        self.use_monet = use_monet
+        if not custom_cm:
+            if use_monet != None:
+                self.conn_manager = GSMConnectionManager(use_monet=use_monet)
+            else:
+                self.conn_manager = GSMConnectionManager()
+        else:
+            self.conn_manager = custom_cm
+        try:
+            self.conn = self.conn_manager.get_connection(**params)
+            if profile:
+                self.conn.profile = True
+                self.conn.log.setLevel(logging.DEBUG)
+        except db.Error as exc:
+            self.log.error("Failed to connect: %s" % exc)
+            raise exc
         self.log.info('Pipeline started.')
 
     def read_image(self, source):
@@ -37,29 +56,7 @@ class GSMPipeline(object):
         self.conn.execute("delete from detections;")
         parset.process(self.conn)
         self.process_image(parset.image_id)
-
-    def _update_fluxes(self, runcat_id, band):
-        """
-        Update flux for a given source in a given band.
-        """
-        cursor2 = self.conn.get_cursor(get_sql('select flux for update',
-                                               runcat_id, band))
-        xdata = cursor2.fetchall()
-        if xdata:
-            xdata = xdata[0]
-            self.conn.execute("""
-update runningcatalog_fluxes
-   set datapoints = {2},
-       avg_f_peak = {3}/{2},
-       avg_weight_f_peak = {4}/{2}
- where runcat_id = {0}
-   and band = {1};""".format(runcat_id, band, xdata[0], xdata[1], xdata[2]))
-        else:
-            self.conn.execute("""
-insert into runningcatalog_fluxes (runcat_id, band, datapoints,
-                                   avg_f_peak, avg_weight_f_peak)
-values ({0}, {1}, {2}, {3}, {4});""".format(runcat_id, band,
-                                        xdata[0], xdata[1], xdata[2]))
+        self.log.info('Parset %s done.' % parset.filename)
 
     def run_grouper(self):
         """
@@ -79,35 +76,30 @@ values ({0}, {1}, {2}, {3}, {4});""".format(runcat_id, band,
         """
         Process single image.
         """
+        self.conn.start()
         self.conn.execute("delete from temp_associations;")
         self.conn.execute(get_sql('insert_extractedsources', image_id))
         self.conn.execute(get_insert_temprunningcatalog(image_id, 1.0))
+        self.conn.execute_set(get_sql('Associate extended',
+                                      image_id, math.sin(0.025), 1.0))
         self.conn.call_procedure("fill_temp_assoc_kind();")
         # Process one-to-one associations;
         self.conn.execute(get_sql('add 1 to 1'))
         #process one-to-many associations;
         self.conn.execute(get_sql('add 1 to N'))
         #process one-to-many associations;
-        self.conn.execute(get_sql('add N to 1'))
+        self.conn.execute_set(get_sql('add N to 1'))
         #Process many-to-many;
         self.run_grouper()
 
         band = self.conn.exec_return("select band from images"\
                                      " where imageid = %s;" % image_id)
-        cursor = self.conn.get_cursor(get_sql('update runningcat cursor',
-                                              image_id))
         #updating runningcatalog
-        for xdata in iter(cursor.fetchone, None):
-            self.conn.execute(get_sql('update runningcatalog', xdata[0],
-                                      xdata[1], xdata[2], xdata[3], xdata[4]))
-            #inserting fluxes for new bands
-            cursor2 = self.conn.get_cursor(get_sql('flux cursor',
-                                                   xdata[0], band))
-            for xsource in iter(cursor2.fetchone, None):
-                if not xsource[1]:
-                    self.conn.execute(get_sql('insert flux',
-                                      band, xsource[0], image_id))
-                else:
-                    self.conn.execute(get_sql('update flux', xsource[0], band))
+        run_update(self.conn, 'PG update runningcatalog', image_id)
+        #First update, then insert new (!!!)
+        run_update(self.conn, 'PG update runningcatalog_fluxes',
+                                  image_id, band)
+        self.conn.execute(get_sql('PG insert new bands', image_id, band))
         #inserting new sources
-        self.conn.execute_set(get_inserts_new_sources(image_id))
+        self.conn.execute_set(get_sql('Insert new sources', image_id))
+        self.conn.commit()

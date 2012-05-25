@@ -1,4 +1,4 @@
-drop table temp_associations;
+--drop table temp_associations;
 create table temp_associations(
    xtrsrc_id int not null
   ,runcat_id int not null
@@ -11,5 +11,7 @@ create table temp_associations(
   ,run_count int null
   ,kind int null -- 1: 1-1, 2: 1-n; 3: n-1; 4: n-n
   ,group_head_id int null
+  ,PRIMARY KEY (xtrsrc_id, runcat_id)
+
 );
 

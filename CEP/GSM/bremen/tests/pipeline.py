@@ -6,14 +6,16 @@ from src.pipeline import GSMPipeline
 from src.gsmconnectionmanager import GSMConnectionManager
 from tests.testlib import cleanup_db
 from tests.tempparset import TempParset
+from tests.switchable import SwitchableTest
 
 
-class PipelineTest(unittest.TestCase):
+class PipelineTest(SwitchableTest):
     def setUp(self):
-        cleanup_db(GSMConnectionManager(database='test').get_connection())
+        super(PipelineTest, self).setUp()
+        cleanup_db(self.cm.get_connection(database='test'))
 
-    def xtest_simple(self):
-        pipeline = GSMPipeline(database='test')
+    def test_simple(self):
+        pipeline = GSMPipeline(custom_cm=self.cm, database='test')
         parset = GSMParset('tests/pipeline1.parset')
         pipeline.run_parset(parset)
         self.assertEquals(parset.source_count, 5)
@@ -32,8 +34,8 @@ class PipelineTest(unittest.TestCase):
         res = pipeline.conn.exec_return("select count(*) from runningcatalog where datapoints = 1;")
         self.assertEquals(res, 5)
 
-    def xtest_1_to_N(self):
-        pipeline = GSMPipeline(database='test')
+    def test_1_to_N(self):
+        pipeline = GSMPipeline(custom_cm=self.cm, database='test')
         parset = GSMParset('tests/pipeline1.parset')
         pipeline.run_parset(parset)
         parset = GSMParset('tests/image3.parset')
@@ -46,7 +48,7 @@ class PipelineTest(unittest.TestCase):
 
 
     def test_N_to_1(self):
-        pipeline = GSMPipeline(database='test')
+        pipeline = GSMPipeline(custom_cm=self.cm, database='test')
         parset = GSMParset('tests/pipeline1.parset')
         pipeline.run_parset(parset)
         parset = GSMParset('tests/image4.parset')
@@ -57,10 +59,13 @@ select count(*)
   from assocxtrsources a, extractedsources e
  where e.image_id = %s and a.xtrsrc_id = e.xtrsrcid;""" % parset.image_id)
         self.assertEquals(res, 2)
+        res = pipeline.conn.exec_return(
+            "select count(*)  from runningcatalog;")
+        self.assertEquals(res, 6)
 
 
-    def xtest_N_to_N(self):
-        pipeline = GSMPipeline(database='test')
+    def test_N_to_N(self):
+        pipeline = GSMPipeline(custom_cm=self.cm, database='test')
         parset = TempParset('data/field_multy.dat', '150000000')
         pipeline.run_parset(parset)
         parset1 = TempParset('data/image4.dat', '160000000')
@@ -68,8 +73,8 @@ select count(*)
         parset1 = TempParset('data/image5.dat', '160000000')
         pipeline.run_parset(parset1)
 
-    def xtest_N_to_N_more(self):
-        pipeline = GSMPipeline(database='test')
+    def test_N_to_N_more(self):
+        pipeline = GSMPipeline(custom_cm=self.cm, database='test')
         parset = TempParset('data/field_multy2.dat', '150000000')
         pipeline.run_parset(parset)
         parset1 = TempParset('data/image4.dat', '160000000')

@@ -1,6 +1,7 @@
 #!/usr/bin/python
 from os import path
-from configobj import ConfigObj
+#from configobj import ConfigObj
+from lofar.parameterset import parameterset
 from src.errors import ParsetContentError, SourceException
 from src.bbsfilesource import GSMBBSFileSource
 from src.queries import get_insert_image
@@ -17,7 +18,8 @@ class GSMParset(object):
         """
         self.filename = filename
         self.path = path.dirname(path.realpath(filename))
-        self.data = ConfigObj(filename, raise_errors=True, file_error=True)
+        #self.data = ConfigObj(filename, raise_errors=True, file_error=True)
+        self.data = parameterset(filename).dict()
         self.parset_id = self.data.get('image_id')
         self.image_id = None  # Not yet known.
         self.source_count = None
@@ -33,19 +35,18 @@ class GSMParset(object):
         if not sources:
             raise ParsetContentError('Source list (source_lists) missing')
         elif isinstance(sources, str):
-            sources = [sources]
+            sources = sources.strip(' []').replace(' ', '').split(',')
         if not self.parset_id:
             raise ParsetContentError('"image_id" missing')
         self.image_id = self.save_image_info(conn)
         for source in sources:
-            bbs = source.strip(' []')
             if self.data.get('bbs_format'):
                 bbsfile = GSMBBSFileSource(self.parset_id,
-                                           "%s/%s" % (self.path, bbs),
+                                           "%s/%s" % (self.path, source),
                                            self.data.get('bbs_format'))
             else:
                 bbsfile = GSMBBSFileSource(self.parset_id,
-                                           "%s/%s" % (self.path, bbs))
+                                           "%s/%s" % (self.path, source))
             if not bbsfile.read_and_store_data(conn):
                 raise SourceException
             loaded_sources = loaded_sources + bbsfile.sources
@@ -64,7 +65,7 @@ class GSMParset(object):
                                     % self.data.get('frequency'))
         sql_insert = get_insert_image(self.parset_id,
                                       self.data.get('frequency'))
-        result = conn.execute_set(sql_insert)[0][0]
+        result = conn.execute_set(sql_insert, quiet=False)[0][0]
         if not result or result == -1:
             raise SourceException(
                         'No matching frequency band found for frequency %s' %
