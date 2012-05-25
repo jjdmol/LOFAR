@@ -185,3 +185,172 @@ class ParmExportCalTest(unittest.TestCase):
                     "value not the same within current precision: "
                     "{0} !=  {1}".format(int(left * precision), int(right * precision))))
 
+
+    def test_swap_outliers_with_median_within_3_sigma(self):
+        data = {"pol1":[{"values": [1., 1., 1., 1., 100., 100.]},
+                        {"values": [1., 1., 1., 1., 100., 100.]}]
+                 }
+        type_pair = ["Imag", "Real"]  # Order is alphabetical
+
+        # omit the last entry do swap the 5th entry with the median (1)
+        goal_filtered_array = numpy.array([1., 1., 1., 1., 100., 100.])
+        parmExportCal = ParmExportCalWrapper()
+        corrected_polarisation = \
+            parmExportCal._swap_outliers_with_median(data, type_pair, 3.0) # Sigma three!!
+
+        #incredibly rough and incorrect float comparison of the values in the 
+        for left, right in zip(corrected_polarisation['pol1'].real, goal_filtered_array):
+            message = "Comparison of float values in the array did not" \
+                    "result in about the same value: {0}"
+            if not int(left) == int(right):
+                self.assertTrue(False, message.format(
+                    "int value not the same: "
+                    "{0} !=  {1}".format(int(left), int(right))))
+            precision = 1000
+            if not int(left * precision) == int(right * precision):
+                self.assertTrue(False, message.format(
+                    "value not the same within current precision: "
+                    "{0} !=  {1}".format(int(left * precision), int(right * precision))))
+
+
+    def test_read_polarisation_data_and_type_from_db(self):
+        #create a muck parmdb
+        parmdb = WritableParmDB("parmdb")
+        parmdb.names = ["1:1:Real:name1",
+                      "1:1:Real:name2",
+                      "1:1:Real:name3",
+                      "1:1:Real:name4",
+                      "Gain:1:1:Real:test",
+                      "Gain:1:1:Imag:test",
+                      "Gain:0:0:Real:test",
+                      "Gain:0:0:Imag:test"]
+
+        station = "test"
+
+        #create sut
+        parmExportCal = ParmExportCalWrapper()
+        (retrieved_data, type_pair) = parmExportCal._read_polarisation_data_and_type_from_db(parmdb,
+                                        station)
+
+        #validate output!!
+        value_dict = {"values":[[1., 1., 1., 1., 100., 100.], [1., 1., 1., 1., 100., 100.]],
+                          'freqs':[2],
+                          'freqwidths':[2],
+                          'times':[2],
+                          'timewidths':[2]}
+        goal_retrieved_data = {'1:1': [value_dict, value_dict],
+                                '0:0': [value_dict, value_dict]}
+
+        self.assertTrue(retrieved_data == goal_retrieved_data,
+                         "Incorrect data retrieved from the parmdb: {0}".format(
+                                      retrieved_data))
+        goal_type_pair = ['Imag', 'Real']
+        self.assertTrue(type_pair == goal_type_pair,
+                         "Incorrect data retrieved from the parmdb: {0}".format(
+                                      retrieved_data))
+
+
+    def test_read_polarisation_data_and_type_from_db_invalid_type_pair(self):
+        #create a muck parmdb
+        parmdb = WritableParmDB("parmdb")
+        parmdb.names = ["1:1:Real:name1",
+                      "1:1:Real:name2",
+                      "1:1:Real:name3",
+                      "1:1:Real:name4",
+                      "Gain:1:1:Real:test",
+                      "Gain:1:1:Imag:test",
+                      "Gain:0:0:incorrect_type:test",
+                      "Gain:0:0:Imag:test"]
+
+        station = "test"
+
+        parmExportCal = ParmExportCalWrapper()
+
+        # unknown datatype should throw an exception
+        self.assertRaises(PipelineRecipeFailed, parmExportCal._read_polarisation_data_and_type_from_db,
+                          parmdb, station)
+
+
+    def test_filter_stations_parmdb_unexisting_infile(self):
+        unexisting_file = os.path.join(self.tempDir, "name")
+        unexisting_file2 = os.path.join(self.tempDir, "name2")
+
+        parmExportCal = ParmExportCalWrapper()
+        self.assertRaises(PipelineRecipeFailed,
+                          parmExportCal._filter_stations_parmdb,
+                           unexisting_file, unexisting_file2, "sigma")
+
+    def test_filter_stations_parmdb(self):
+        file_path_in = os.path.join(self.tempDir, "input")
+        create_directory(file_path_in)
+
+        file_path_out = os.path.join(self.tempDir, "fullName")
+
+        parmExportCal = ParmExportCalWrapper()
+
+        # Call the major  function
+        # No errors should be thrown...
+        parmdb = parmExportCal._filter_stations_parmdb(file_path_in,
+                                    file_path_out, 2)
+
+#        expected_calls_to_parmdb = [['getValuesGrid', ['Gain:1:1:Imag:test']], #get the four entries for a station
+#                                    ['getValuesGrid', ['Gain:1:1:Real:test']],
+#                                    ['getValuesGrid', ['Gain:0:0:Imag:test']],
+#                                    ['getValuesGrid', ['Gain:0:0:Real:test']],
+#                                    ['deleteValues', ['Gain:1:1:Real:test']], #delete orig value
+#                                    ['addValues', ['Gain:1:1:Real:test', #insert new value
+#                                        numpy.array([[   1., 1., 1., 1., 1., 1.], # new filtered values
+#                                               [   1., 1., 1., 1., 100., 100.]]), # skip last timestep (also the orig value)
+#                                                    2, 14, 2, 6, False]], #Some stats needed for writing should be this value
+#                                    ['deleteValues', ['Gain:1:1:Imag:test']],
+#                                    ['addValues', ['Gain:1:1:Imag:test',
+#                                        numpy.array([[   1., 1., 1., 1., 1., 1.],
+#                                               [   1., 1., 1., 2000., 100., 100.]]),
+#                                             2, 14, 2, 6, False]],
+#                                    ['deleteValues', ['Gain:0:0:Real:test']],
+#                                    ['addValues', ['Gain:0:0:Real:test',
+#                                        numpy.array([[   1., 1., 1., 1., 1., 1.],
+#                                               [   1., 1., 1., 1., 100., 100.]]),
+#                                                 2, 14, 2, 6, False]],
+#                                    ['deleteValues', ['Gain:0:0:Imag:test']],
+#                                    ['addValues', ['Gain:0:0:Imag:test',
+#                                        numpy.array([[   1., 1., 1., 1., 1., 1.],
+#                                               [   1., 1., 1., 1., 100., 100.]]),
+#                                                 2, 14, 2, 6, False]]]
+#
+#        # there is a bug in this compare mechanism..
+#        # Think about building a generalized comparer... Longterm goal
+#        for left, right in zip(parmdb.called_functions_and_parameters, expected_calls_to_parmdb):
+#            error_message = "\nresult({0}) != \nexpected({1}) \n"\
+#                "-> {2} !=  {3}".format(
+#                        parmdb.called_functions_and_parameters, expected_calls_to_parmdb,
+#                        left, right)
+#            try:
+#                if not left == right:
+#                    error_message = "{0} {1}".format(left, right)
+#                    self.assertTrue(False, error_message)
+#            except ValueError:
+#
+#                for left_entry, right_entry in zip(left, right):
+#                    if isinstance(left_entry, basestring):
+#                        continue
+#                    for left_array, right_array in zip(left_entry, right_entry):
+#                        message = "Comparison of float values in the array did not" \
+#                                    "result in about the same value: {0}"
+#                        if isinstance(left_array, basestring):
+#                            continue
+#                        if isinstance(left_array, int):
+#                            continue
+#                        #self.assertTrue(False, "{0} {1}".format(left_array[0], right_array[0]))
+#                        for left_digit, right_digit in zip(list(left_array[0]), list(right_array[0])):
+#                            if not int(left_digit) == int(right_digit):
+#                                 self.assertTrue(False, message.format(
+#                                        "int value not the same: "
+#                                        "{0} !=  {1}".format(int(left_digit), int(right_digit))))
+#                            precision = 1000
+#                            if not int(left_digit * precision) == int(right_digit * precision):
+#                                    self.assertTrue(False, message.format(
+#                                        "value not the same within current precision: "
+#                                        "{0} !=  {1}".format(int(left_digit * precision), int(right_digit * precision))))
+#
+
