@@ -51,13 +51,13 @@ def create_directory(dirname):
         if failure.errno != errno.EEXIST:
             raise failure
 
-def delete_directory(dirnam):
+def delete_directory(dirname):
     """
     Recursively delete a directory tree: Without failing if the dir does not 
     exist    
     """
     try:
-        shutil.rmtree(outfile)
+        shutil.rmtree(dirname)
     except OSError, e:
         if not e.errno == errno.ENOENT:
             raise e
