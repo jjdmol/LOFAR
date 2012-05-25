@@ -1,12 +1,11 @@
 [DEFAULT]
-lofimroot = /opt/cep
-lofarroot = /opt/lofar
-casaroot = %(lofimroot)s/casacore
-pyraproot = %(lofimroot)s/pyrap
-hdf5root = %(lofimroot)s/hdf5
+lofarroot = @CMAKE_INSTALL_PREFIX@
+casaroot = @CASACORE_ROOT_DIR@
+pyraproot = @PYRAP_ROOT_DIR@
+hdf5root = $ENV{HDF5_ROOT}
 runtime_directory = %(lofarroot)s/share/pipeline
 recipe_directories = [%(lofarroot)s/lib/python2.6/dist-packages/lofarpipe/recipes]
-working_directory = /data/scratch/pipeline
+working_directory = /data/scratch/$ENV{USER}
 task_files = [%(lofarroot)s/share/pipeline/tasks.cfg]
 
 [layout]
