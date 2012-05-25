@@ -2,8 +2,10 @@
 import unittest
 from src.bbsfilesource import GSMBBSFileSource
 from src.gsmconnectionmanager import GSMConnectionManager
+from tests.switchable import SwitchableTest
 
-class BBSFileTest(unittest.TestCase):
+
+class BBSFileTest(SwitchableTest):
     """
     Test for BBS-format file input.
     """

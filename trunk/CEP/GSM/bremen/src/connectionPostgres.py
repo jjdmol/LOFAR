@@ -1,8 +1,8 @@
 #!/usr/bin/python
+import logging
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT, \
                                 ISOLATION_LEVEL_READ_COMMITTED
 import psycopg2
-from exceptions import ValueError
 import time
 from src.gsmlogger import get_gsm_logger
 
@@ -15,13 +15,14 @@ class PgConnection(object):
         par = self.map_params(params)
         self.conn = psycopg2.connect(**par)
         #import ipdb; ipdb.set_trace()
-        self.conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-        self.autocommit = True
-        self.log = get_gsm_logger('sql', 'sql.log')
+        self.conn.set_isolation_level(ISOLATION_LEVEL_READ_COMMITTED)
+        self.autocommit = False
+        self.log = get_gsm_logger('pgsql', 'sql.log')
+        self.log.setLevel(logging.INFO)
         self.profile = False
 
     @staticmethod
-    def is_monet(self):
+    def is_monet():
         """
         For quick distinction between MonetDB and Postgres.
         """
@@ -67,21 +68,30 @@ class PgConnection(object):
         if not self.autocommit:
             self.conn.commit()
 
+    def start(self):
+        """
+        Start transaction.
+        """
+        if not self.autocommit:
+            self.conn.cursor().execute('BEGIN')
+
     def execute(self, query):
         """
         Overriding execute method with logging.
         """
         if self.profile:
             start = time.time()
-        self.log.debug(query.replace('\n', ' '))
         cur = self.conn.cursor()
         result = cur.execute(query)
         cur.close()
         if self.profile:
-            self.log.debug('Time spent: %s' % (time.time() - start))
+            self.log.debug('Time: %.3f SQL: %s' % (time.time() - start,
+                                                 query.replace('\n', ' ')))
+        else:
+            self.log.debug(query.replace('\n', ' '))
         return result
 
-    def execute_set(self, query_set):
+    def execute_set(self, query_set, quiet=True):
         """
         Execute several SQL statements and return the last result.
         """
@@ -95,10 +105,12 @@ class PgConnection(object):
         for query in query_set:
             cursor.execute(query)
         #We have to be sure that there is anything to fetch.
-        if cursor.rowcount > 0 and cursor.statusmessage.split()[0] == 'SELECT':
+        if cursor.rowcount > 0 and \
+           cursor.statusmessage.split()[0] == 'SELECT' and \
+           not quiet:
             return cursor.fetchall()
         else:
-            return None
+            return True
 
     def exec_return(self, query):
         """

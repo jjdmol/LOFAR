@@ -1,18 +1,20 @@
 #!/usr/bin/python
 import sys
+import argparse
 from texttable import Texttable
+from src.gsmconnectionmanager import GSMConnectionManager
 from src.sqllist import get_sql
 from src.queries import get_field as get_field_sql
 
+
 STYLE_PLAIN = 0
-STYLE_TABLE = 1  # Unsupported
+STYLE_TABLE = 1
 
 
 class GSMAPI(object):
     """
     API module for GSM database.
     """
-
     def __init__(self, conn=None):
         """
         """
@@ -68,5 +70,31 @@ class GSMAPI(object):
                 'data': self.connection.get_cursor(
                                get_field_sql(ra, decl, radius, band, min_flux)
                                          ).fetchall()}
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Run GSM API-call')
+    parser.add_argument('-f', '--filename')
+    parser.add_argument('-s', '--style', default=STYLE_PLAIN)
+    parser.add_argument('-S', '--separator', default=' ')
+    parser.add_argument('command', type=str)
+    parser.add_argument('--image_id', type=int)
+    parser.add_argument('--ra', default=0, type=float)
+    parser.add_argument('--decl', default=0, type=float)
+    parser.add_argument('--radius', default=5.0, type=float)
+    parser.add_argument('-B', '--band', default=8, type=int)
+    parser.add_argument('--f_peak', default=None, type=float)
+
+    args = parser.parse_args()
+    connect = GSMConnectionManager(database='test').get_connection()
+    api = GSMAPI(connect)
+    if args.command == 'image':
+        dataset = api.get_image_properties(args.image_id)
+    elif args.command == 'field':
+        dataset = api.get_field(args.ra, args.decl, args.radius,
+                                args.band, args.f_peak)
+    else:
+        raise ValueError
+
+    api.output(dataset, int(args.style), args.filename, args.separator)
 
 

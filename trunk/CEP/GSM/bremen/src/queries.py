@@ -5,7 +5,7 @@ General query generator for GSM.
 import math
 
 
-def _get_distance(runcat_alias, extract_alias):
+def get_distance(runcat_alias, extract_alias):
     """
     Create a query part for association distance.
 
@@ -19,7 +19,7 @@ def _get_distance(runcat_alias, extract_alias):
 """.format(runcat_alias, extract_alias)
 
 
-def _get_assoc_r(runcat_alias, extract_alias):
+def get_assoc_r(runcat_alias, extract_alias):
     """
     Create a query part for association distance.
 
@@ -35,12 +35,44 @@ def _get_assoc_r(runcat_alias, extract_alias):
 """.format(runcat_alias, extract_alias)
 
 
-def _get_column_update(column_alias, new_value, new_weight):
+def get_column_insert(column_alias):
+    return """
+wm_{0}, wm_{0}_err, avg_w{0}, avg_weight_{0}""".format(column_alias)
+
+
+def get_column_insert_values(column_alias):
+    return """
+{0}, {0}_err, {0}/({0}_err*{0}_err), 1/({0}_err*{0}_err)""".format(column_alias)
+
+
+def get_column_insert_list(vlist):
+    return ','.join(get_column_insert(col) for col in vlist)
+
+def get_column_insert_values_list(vlist):
+    return ','.join(get_column_insert_values(col) for col in vlist)
+
+
+def get_column_update(column_alias, new_value, new_weight):
+    """
+    Updater for error-columns for single item ipdate.
+    """
     return """wm_{0} = (avg_w{0} + {2})/(avg_weight_{0} + {1}),
 wm_{0}_err = sqrt(1.0/(avg_weight_{0} + {1})),
 avg_w{0} = avg_w{0} + {2},
-avg_weight_{0} = avg_weight_{0} + {1}
-    """.format(column_alias, new_value, new_weight)
+avg_weight_{0} = avg_weight_{0} + {1}""".format(column_alias,
+                                                new_value, new_weight)
+
+
+def get_column_update_pg(column_alias, new_value, new_weight):
+    """
+    Updater for error columns for Postgres Update-from queries.
+    """
+    return """
+wm_{0} = (avg_w{0} + {1}/({2}*{2}))/(avg_weight_{0} + 1/({2}*{2})),
+wm_{0}_err = sqrt(1.0/(avg_weight_{0} + 1/({2}*{2}))),
+avg_w{0} = avg_w{0} + {1}/({2}*{2}),
+avg_weight_{0} = avg_weight_{0} + 1/({2}*{2})""".format(column_alias,
+                                                        new_value, new_weight)
 
 
 def get_field(ra, decl, radius, band, min_flux=None):
@@ -52,8 +84,8 @@ def get_field(ra, decl, radius, band, min_flux=None):
     x = math.cos(decl) * math.cos(ra)
     y = math.cos(decl) * math.sin(ra)
     z = math.sin(decl)
-    r = math.cos(math.radians(radius))
-    sql = """select r.wm_ra as ra, r.wm_decl as decl, f.avg_f_peak
+    r = math.sin(math.radians(radius))
+    sql = """select r.wm_ra as ra, r.wm_decl as decl, f.wm_f_peak
   from runningcatalog r,
        runningcatalog_fluxes f
  where r.x * {0} + r.y * {1} + r.z * {2} > {3}
@@ -61,10 +93,10 @@ def get_field(ra, decl, radius, band, min_flux=None):
    and r.y between {1} - {3} and {1} + {3}
    and r.z between {2} - {3} and {2} + {3}
    and f.runcat_id = r.runcatid
-   and f.stokes = "I"
+   and f.stokes = 'I'
    and f.band = {4}""".format(x, y, z, r, band)
     if min_flux:
-        sql = "%s\n and f.avg_f_peak > %s" % (sql, min_flux)
+        sql = "%s\n and f.wm_f_peak > %s" % (sql, min_flux)
     return sql
 
 
@@ -92,58 +124,48 @@ def get_insert_temprunningcatalog(image_id, deRuiter_r):
 INSERT INTO temp_associations (xtrsrc_id, runcat_id,
                                distance_arcsec,
                                lr_method, r, group_head_id)
-SELECT x0.xtrsrcid, rc.runcatid,"""\
-+ _get_distance('rc', 'x0') + """ AS assoc_distance_arcsec, 1, """\
-+ _get_assoc_r('rc', 'x0') + """ as assoc_r,
+SELECT e.xtrsrcid, rc.runcatid,"""\
++ get_distance('rc', 'e') + """ AS assoc_distance_arcsec, 1, """\
++ get_assoc_r('rc', 'e') + """ as assoc_r,
        rc.group_head_id
   FROM runningcatalog rc
-      ,extractedsources x0
+      ,extractedsources e
       ,images im0
- WHERE x0.image_id = {0}
-   AND x0.image_id = im0.imageid
-   AND rc.decl_zone BETWEEN CAST(FLOOR(x0.decl - {1}) as INTEGER)
-                        AND CAST(FLOOR(x0.decl + {1}) as INTEGER)
-   AND rc.wm_decl BETWEEN x0.decl - {1}
-                      AND x0.decl + {1}
-   AND rc.wm_ra BETWEEN x0.ra - alpha({1},x0.decl)
-                    AND x0.ra + alpha({1},x0.decl)
- AND """ + _get_assoc_r('rc', 'x0') + """ < {2}"""
-    return sql.format(image_id, 0.025, deRuiter_r)
+ WHERE e.image_id = {0}
+   AND e.image_id = im0.imageid
+   and rc.x between e.x - {1} and e.x + {1}
+   and rc.y between e.y - {1} and e.y + {1}
+   and rc.z between e.z - {1} and e.z + {1}
+   and e.source_kind = 0
+   and rc.source_kind = 0
+ AND """ + get_assoc_r('rc', 'e') + """ < {2}"""
+    return sql.format(image_id, math.sin(0.025), deRuiter_r)
 
+def get_insert_temprunningcatalog_extended(image_id, deRuiter_r):
+    """
+    So far UNUSED!.
+    """
+    sql = """\
+INSERT INTO temp_associations (xtrsrc_id, runcat_id,
+                               distance_arcsec,
+                               lr_method, r, group_head_id)
+SELECT e.xtrsrcid, rc.runcatid,"""\
++ get_distance('rc', 'e') + """ AS assoc_distance_arcsec, 2, """\
++ get_assoc_r('rc', 'e') + """ as assoc_r,
+       rc.group_head_id
+  FROM runningcatalog rc
+      ,extractedsources e
+      ,images im0
+ WHERE e.image_id = {0}
+   AND e.image_id = im0.imageid
+   and rc.x between e.x - {1} and e.x + {1}
+   and rc.y between e.y - {1} and e.y + {1}
+   and rc.z between e.z - {1} and e.z + {1}
+   and e.source_kind = 1
+   and rc.source_kind = 1
+   and rc.band = im0.band
+   and rc.stokes = im0.stokes
+ AND """ + get_assoc_r('rc', 'e') + """ < {2};
 
-def get_inserts_new_sources(image_id):
-    return """
-insert into runningcatalog(first_xtrsrc_id, datapoints, decl_zone,
-                           wm_ra, wm_decl, wm_ra_err, wm_decl_err,
-                           x, y, z,
-                           avg_wra, avg_wdecl, avg_weight_ra, avg_weight_decl)
-select e.xtrsrcid, 1, zone, ra, decl, ra_err, decl_err, x, y, z,
-       ra/(ra_err*ra_err), decl/(decl_err*decl_err), 1/(ra_err*ra_err), 1/(decl_err*decl_err)
-  from extractedsources e
- where image_id = {0}
-   and not exists (select x.xtrsrc_id
-                     from temp_associations x
-                    where x.xtrsrc_id = e.xtrsrcid);
-
-insert into assocxtrsources(xtrsrc_id, runcat_id, distance_arcsec, lr_method,
-                            lr, r)
-select r.first_xtrsrc_id, r.runcatid, 0.0, 0, 0.0, 0.0
-  from runningcatalog r,
-       extractedsources e
- where e.image_id = {0}
-   and e.xtrsrcid = r.first_xtrsrc_id
-   and not exists (select x.xtrsrc_id
-                     from temp_associations x
-                    where x.xtrsrc_id = e.xtrsrcid);
-
-insert into runningcatalog_fluxes(runcat_id, band, datapoints, avg_f_peak, avg_weight_f_peak)
-select r.runcatid, i.band, 1, e.f_peak, 1/(e.f_peak_err*e.f_peak_err)
-  from extractedsources e,
-       images i,
-       runningcatalog r
- where e.image_id = {0}
-   and i.imageid = e.image_id
-   and r.first_xtrsrc_id = e.xtrsrcid
-   and not exists (select x.xtrsrc_id
-                     from temp_associations x
-                    where x.xtrsrc_id = e.xtrsrcid);""".format(image_id)
+"""
+    return sql.format(image_id, math.sin(0.025), deRuiter_r)

@@ -19,6 +19,7 @@ def cleanup_db(conn):
     """
     Cleanup some tables in the database.
     """
+    conn.start()
     cursor = conn.cursor()
     for tbl in ['assocxtrsources',
                 'runningcatalog_fluxes',
@@ -37,9 +38,10 @@ def cleanup_db(conn):
                 'seq_images',
                 'seq_runningcatalog']:
         cursor.execute('alter sequence %s restart with 1;' % seq)
+    conn.commit()
     cursor.close()
 
-def write_parset(filename, source, freq):
+def write_parset(filename, source, freq, ra=0.0, decl=0.0):
     fil = open(filename, 'w')
     fil.write("""##############################
 # Lofar GSM input parset.    #
@@ -48,8 +50,8 @@ source_lists = %s
 image_id = %s
 image_date = ???
 frequency = %s # in Hz
-pointing_ra = 0.0 # in degrees
-pointing_decl = 0.0 # in degrees
-beam_size = 4.00 # in degrees
-stokes = I""" % (source, filename, freq))
+pointing_ra = %s # in degrees
+pointing_decl = %s # in degrees
+beam_size = 1.00 # in degrees
+stokes = I""" % (source, filename, freq, ra, decl))
     fil.close()
