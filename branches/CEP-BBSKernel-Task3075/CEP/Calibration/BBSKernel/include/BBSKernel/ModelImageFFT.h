@@ -78,16 +78,22 @@ typedef struct ImageProperties
   casa::String name;                            // name of image
   // Shape and coordinate indices               // needed for image plane and Stokes access
   casa::IPosition shape;
-  casa::uInt XcoordInd, YcoordInd;              // Direction indices into shape
-  casa::uInt SpectralCoordInd, StokesCoordInd;
-  casa::uInt nx, ny;                              // pixel dimension of image
-  casa::uInt nchan , npol;                        // No. of channels and polarizations in image
+  casa::uInt nCoords;
+//  casa::uInt XcoordInd, YcoordInd;              // Direction indices into shape
+  casa::uInt DirectionCoordInd;                 // Direction coordinate index
+  casa::uInt nPixelAxes;                        // number of pixel axes (must be 2)
+  casa::Vector<casa::Int> DirectionCoordAxes;   // axes indices of Direction coordinate
+  casa::uInt SpectralCoordInd, StokesCoordInd;  // indices into the CoordinateSystem
+  casa::Vector<casa::Int> SpectralCoordAxes;    // pixel axes (needed for shape) for Spectral
+  casa::Vector<casa::Int> StokesCoordAxes;      // and Stokes coordinates
+  casa::uInt nx, ny;                            // pixel dimension of image
+  casa::uInt nchan , npol;                      // No. of channels and polarizations in image
   casa::Vector<casa::Int> stokes;
   
-  casa::SpectralCoordinate spectralCoord_p;       // spectral coordinate of image
-  //casa::StokesCoordinate stokesCoord_p;         // Stokes coordinate
+  casa::SpectralCoordinate spectralCoord_p;     // spectral coordinate of image
+//  casa::StokesCoordinate stokesCoord_p;       // Stokes coordinate
 
-  bool I, Q, U, V;                                // present Stokes parameters
+  bool I, Q, U, V;                              // present Stokes parameters
 };
 
 class ModelImageFft
@@ -102,14 +108,16 @@ public:
   ~ModelImageFft();
 
   // Image property functions
-  void getImageProperties(const casa::ImageInterface<casa::Float> &image);
+  template <class T> void getImageProperties(const casa::ImageInterface<T> &image);
   bool validUnits(const casa::String &imageName);
+  template <class T> bool validUnits(const casa::ImageInterface<T> &image);
   bool validStokes(casa::Vector<casa::Int> stokes);
-  casa::MDirection getPatchDirection(const casa::ImageInterface<casa::Float> &image);
+  template <class T> casa::MDirection getPatchDirection(const casa::ImageInterface<T> &image);
 
   casa::Vector<casa::Double> getImageFrequencies();
-  casa::Vector<casa::Int> getStokes(const casa::ImageInterface<casa::Float> &image);
-  casa::Vector<casa::Bool> getFourierAxes(const casa::ImageInterface<casa::Float> &image);
+  template <class T> casa::Vector<casa::Int> getStokes(const casa::ImageInterface<T> &image);
+  casa::Vector<casa::Int> getStokes(const casa::StokesCoordinate &stokesCoord);
+  template <class T> casa::Vector<casa::Bool>  getFourierAxes(const casa::ImageInterface<T> &image);
   casa::Vector<casa::Int> chanMap(const vector<double> frequencies);
 
   void printImageProperties();

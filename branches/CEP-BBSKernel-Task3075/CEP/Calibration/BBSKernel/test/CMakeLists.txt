@@ -17,7 +17,7 @@ endif ("${COMPILER_SUPPORTS_FSTRICT_ALIASING}")
 
 # Support for BLAS on OS X through -framework veclib
 if (APPLE)
-   SET_TARGET_PROPERTIES (tModelImageFFT PROPERTIES COMPILE_FLAGS "-framework veclib")
-   SET_TARGET_PROPERTIES (tModelImageFFT PROPERTIES COMPILE_FLAGS "-framework veclib")
+   SET_TARGET_PROPERTIES (tModelImageFFT PROPERTIES LIN_FLAGS "-framework veclib")
+   SET_TARGET_PROPERTIES (tModelImageFFT PROPERTIES LIN_FLAGS "-framework veclib")
 endif (APPLE)
 
