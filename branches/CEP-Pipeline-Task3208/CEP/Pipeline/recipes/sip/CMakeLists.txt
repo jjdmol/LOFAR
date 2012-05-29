@@ -72,11 +72,6 @@ install(PROGRAMS
   DESTINATION bin)
 
 install(FILES
-  pipeline.cfg
-  tasks.cfg
-  DESTINATION share/pipeline)
-
-install(FILES
   demixing/bbs_CasA.parset
   demixing/bbs_CasA_smoothcal.parset
   demixing/bbs_CygA.parset
@@ -96,4 +91,17 @@ install(FILES
   skymodels/3C48.skymodel
   skymodels/Ateam_LBA_CC.skymodel
   DESTINATION share/pipeline/skymodels)
+
+install(FILES
+  ${CMAKE_CURRENT_BINARY_DIR}/pipeline.cfg
+  ${CMAKE_CURRENT_BINARY_DIR}/tasks.cfg
+  DESTINATION share/pipeline)
+
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/pipeline.cfg.in
+  ${CMAKE_CURRENT_BINARY_DIR}/pipeline.cfg)
+
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/tasks.cfg.in
+  ${CMAKE_CURRENT_BINARY_DIR}/tasks.cfg)
 
