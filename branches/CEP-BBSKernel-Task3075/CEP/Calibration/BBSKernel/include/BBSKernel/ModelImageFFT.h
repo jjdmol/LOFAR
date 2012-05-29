@@ -34,6 +34,7 @@
 #include <coordinates/Coordinates/StokesCoordinate.h>
 #include <measures/Measures/Stokes.h>
 #include <images/Images/ImageInterface.h>
+//#include <images/Images/PagedImage.h>
 
 // From tConvolveBLAS.cc
 #include <iostream>
@@ -79,7 +80,6 @@ typedef struct ImageProperties
   // Shape and coordinate indices               // needed for image plane and Stokes access
   casa::IPosition shape;
   casa::uInt nCoords;
-//  casa::uInt XcoordInd, YcoordInd;              // Direction indices into shape
   casa::uInt DirectionCoordInd;                 // Direction coordinate index
   casa::uInt nPixelAxes;                        // number of pixel axes (must be 2)
   casa::Vector<casa::Int> DirectionCoordAxes;   // axes indices of Direction coordinate
@@ -88,6 +88,7 @@ typedef struct ImageProperties
   casa::Vector<casa::Int> StokesCoordAxes;      // and Stokes coordinates
   casa::uInt nx, ny;                            // pixel dimension of image
   casa::uInt nchan , npol;                      // No. of channels and polarizations in image
+  vector<double> frequencies;                   // channel frequencies of image
   casa::Vector<casa::Int> stokes;
   
   casa::SpectralCoordinate spectralCoord_p;     // spectral coordinate of image
@@ -118,7 +119,7 @@ public:
   template <class T> casa::Vector<casa::Int> getStokes(const casa::ImageInterface<T> &image);
   casa::Vector<casa::Int> getStokes(const casa::StokesCoordinate &stokesCoord);
   template <class T> casa::Vector<casa::Bool>  getFourierAxes(const casa::ImageInterface<T> &image);
-  casa::Vector<casa::Int> chanMap(const vector<double> frequencies);
+  casa::Vector<casa::Int> chanMap(const vector<double> &frequencies);
 
   void printImageProperties();
 
@@ -134,7 +135,7 @@ public:
   inline casa::String     name() const { return itsOptions.name; }
   inline casa::MDirection imageDirection() const { return itsOptions.imageDirection; }
   inline casa::MDirection phaseDirection() const { return itsOptions.phaseDirection; }
-  inline vector<double> imageFrequencies() const { return itsOptions.imageFrequencies; }
+  inline vector<double> imageFrequencies() const { return itsImageProperties.frequencies; }
 //  inline casa::Vector<casa::Int> imageStokes() const { return itsOptions.imageStokes; }
   inline casa::Vector<casa::Double>  frequencies() const { return itsOptions.frequencies; }
   inline casa::uInt       verbose() const { return itsOptions.verbose; }
@@ -232,8 +233,7 @@ public:
       std::vector<unsigned int>& iv);
 
 private:
-//  casa::Array<casa::DComplex> itsImage;   // keep fft'ed image in memory
-  casa::ImageInterface<casa::Complex> *itsImage;  // keep fft'ed image in memory
+  casa::ImageInterface<casa::Complex> *itsImage;    // keep fft'ed image in memory
   ModelImageOptions itsOptions;           // struct containing all FFT options
   ImageProperties itsImageProperties;     // struct containing image properties
 

@@ -28,7 +28,6 @@
 #include <tables/Tables/Table.h>                      // access image as a table
 #include <measures/Measures/Stokes.h>                 // casa::Stokes::StokesTypes
 #include <lattices/Lattices/LatticeFFT.h>
-//#include <images/Images/PagedImage.h>
 #include <images/Images/ImageOpener.h>
 #include <images/Images/ImageFFT.h>
 #include <coordinates/Coordinates/CoordinateSystem.h> //for spectral coord
@@ -133,16 +132,16 @@ ModelImageFft::ModelImageFft( const casa::String &name,
     THROW(BBSKernelException, "Invalid Model image: " << name << " invalid Units, must be Jy/beam");
   }
 
-  /*
-  if(!validStokes(getStokes(*image)))
+  this->getImageProperties(*image);     // get image properties
+  this->getImageFrequencies();          // get image frequencies and save them in options
+//  this->getStokes(*image);  // TODO: this doesn't work which > nCoordinates for stokesCoordinate()
+  if(!validStokes(itsImageProperties.stokes))
   {
     THROW(BBSKernelException, "Invalid Model image: " << name << " wrong Stokes components.");  
   }
-  */
-
-  this->getImageProperties(*image);     // get image properties
-  this->getImageFrequencies();          // get image frequencies and save them in options
-
+  
+  // allocate memory for itsImage (FFT'ed image)
+  itsImage=dynamic_cast<ImageInterface<Complex> *>(image); // make a copy of the un-ffted image
   // 2D-FFT every image plane along their Direction axes
   ImageFFT imgFFT;
   imgFFT.fft(*image, getFourierAxes(*image));
@@ -152,7 +151,7 @@ ModelImageFft::ModelImageFft( const casa::String &name,
 
 ModelImageFft::~ModelImageFft(void)
 {
-  // don't have to do anything
+  free(itsImage);      // release memory of FFT'ed complex image hyper-cube
 }
 
 //**********************************************
@@ -215,7 +214,6 @@ void ModelImageFft::setNwplanes(unsigned int nwplanes)
 //
 //**********************************************
 
-//void ModelImageFft::getImageProperties(const PagedImage<Float> &image)
 template <class T> void ModelImageFft::getImageProperties(const ImageInterface<T> &image)
 {
   CoordinateSystem coordSys=image.coordinates();   // get coordinate system of image
@@ -288,39 +286,22 @@ template <class T> void ModelImageFft::getImageProperties(const ImageInterface<T
   Int StokesCoordInd=coordSys.findCoordinate(Coordinate::STOKES);
   if(StokesCoordInd != -1)
   {
-    cout << "coordSys.pixelAxes(StokesCoordInd)(0)): " << coordSys.pixelAxes(StokesCoordInd)(0) << endl;
-  
     itsImageProperties.npol=shape(coordSys.pixelAxes(StokesCoordInd)(0));
     LOG_INFO_STR("Image " << itsOptions.name << " has " << itsImageProperties.npol 
     << " polarizations.");
 
     itsImageProperties.StokesCoordAxes=coordSys.pixelAxes(StokesCoordInd);
-
-//    itsImageProperties.stokesCoord_p=image.coordinates().stokesCoordinate(3);   // casarest stuff  
-//    getStokes(image);
-    //itsImageProperties.stokes=image.coordinates().stokesCoordinate(StokesCoordInd).stokes(); 
+    itsImageProperties.stokes=image.coordinates().stokesCoordinate(StokesCoordInd).stokes(); 
   }
   else
   {
     itsImageProperties.npol=1;
   }
-
-  cout << "StokesCoordInd: " << StokesCoordInd << endl;   // DEBUG
-  cout << "SpectralCoordAxes: " << itsImageProperties.SpectralCoordAxes << endl;  // DEBUG
-  cout << "StokesCoordAxes: " << itsImageProperties.StokesCoordAxes << endl;      // DEBUG
+//  cout << "StokesCoordInd: " << StokesCoordInd << endl;   // DEBUG
+//  cout << "SpectralCoordAxes: " << itsImageProperties.SpectralCoordAxes << endl;  // DEBUG
+//  cout << "StokesCoordAxes: " << itsImageProperties.StokesCoordAxes << endl;      // DEBUG
 
   printImageProperties();
-  /*
-  // DEBUG
-  cout << "nCoord = " << nCoord << endl;
-  cout << "XCoordInd = " << itsImageProperties.XcoordInd << endl;
-  cout << "YCoordInd = " << itsImageProperties.YcoordInd << endl;
-  cout << "SpectralCoordInd = " << itsImageProperties.SpectralCoordInd << endl;
-  cout << "StokesCoordInd = " << itsImageProperties.StokesCoordInd << endl;  
-
-  cout << "itsImage->shape(XCoordInd): "<< itsImageProperties.shape(XCoordInd) << endl;
-  cout << "itsImage->shape(YCoordInd): "<< itsImageProperties.shape(YCoordInd) << endl;
-  */
 }
 
 // Check that input model image has Jy/pixel flux
@@ -366,7 +347,8 @@ template <class T> bool ModelImageFft::validUnits(const ImageInterface<T> &image
 bool ModelImageFft::validStokes(casa::Vector<casa::Int> stokes)
 {
   bool valid=false;       // overall judgement on valid Stokes parameters
-  for(uInt i; i<stokes.size(); i++)
+
+  for(uInt i=0; i<stokes.size(); i++)
   {
     if(Stokes::type(stokes[i]) == Stokes::I)
     {
@@ -383,11 +365,11 @@ bool ModelImageFft::validStokes(casa::Vector<casa::Int> stokes)
   }
   
   // A valid model image has either I or both Q and U Stokes
-  if(itsImageProperties.I)
+  if(itsImageProperties.I || (itsImageProperties.Q && itsImageProperties.U && itsImageProperties.V))
   {
     valid=true;
   }
-  else if(itsImageProperties.Q && itsImageProperties.U)
+  else if(itsImageProperties.I && itsImageProperties.Q && itsImageProperties.U && itsImageProperties.V)
   {
     valid=true;
   }
@@ -435,46 +417,35 @@ Vector<Double> ModelImageFft::getImageFrequencies()
   }
   // get frequencies from spectralCoord attribute
   itsImageProperties.spectralCoord_p.toWorld(frequenciesVec, pixels);
-  
-  for(unsigned int i=0; i<nchan; i++)   // convert to std::vector, can this be done better?
-    frequencies[i]=frequenciesVec(i);
-  
-  itsOptions.imageFrequencies=frequencies;
+  frequenciesVec.tovector(frequencies); 
+  //itsOptions.imageFrequencies=frequencies;
+  itsImageProperties.frequencies=frequencies; // this is now kept in the ImageProperties
   
   return frequencies;
 }
+
 
 // Get Stokes components present in image
 //
 template<class T> Vector<Int> ModelImageFft::getStokes(const ImageInterface<T> &image)
 {
-  cout << "itsImageProperties.StokesCoordInd: " << itsImageProperties.StokesCoordInd << endl;  // DEBUG
-  cout << "itsImageProperties.nCoords: " << itsImageProperties.nCoords << endl;  // DEBUG
+  cout << "ModelImageFft::getStokes(const ImageInterface<T> &image) ";  // DEBUG
 
-  StokesCoordinate stokesCoord=image.coordinates().stokesCoordinate(itsImageProperties.StokesCoordAxes(0));
-//  StokesCoordinate stokesCoord=image.coordinates().stokesCoordinate(itsImageProperties.StokesCoordInd+itsImageProperties.nPixelAxes);
-  //StokesCoordinate stokes=image.coordinates();
-  //.StokesCoordinate(0).stokes(itsImageProperties.StokesCoordAxes(0));    //Stokes::StokesTypes
-  
-  // DEBUG
-  itsImageProperties.stokes[0]=0;
-  itsImageProperties.stokes[0]=1;
-  itsImageProperties.stokes[0]=2;
-  itsImageProperties.stokes[0]=3;  
+  itsImageProperties.stokes=image.coordinates().stokesCoordinate(itsImageProperties.StokesCoordInd).stokes();
+  cout << "Stokes: " << itsImageProperties.stokes << endl;    // DEBUG
   // DEBUG
   for(uInt i=0; i<itsImageProperties.npol; i++)
   {
-    cout << "Stokes: "<< Stokes::type(itsImageProperties.stokes[i]) << " name: " << Stokes::name(Stokes::type(itsImageProperties.stokes[i]));
-    cout << "  StokesPixelNumber: " <<  image.coordinates().stokesPixelNumber(Stokes::name(Stokes::type(itsImageProperties.stokes[i]))) << endl;
+    cout << Stokes::name(Stokes::type(itsImageProperties.stokes[i])) << endl;
   }
-
-  cout << "Stokes: " << itsImageProperties.stokes << endl;    // DEBUG
 
   return itsImageProperties.stokes;
 }
 
+
 Vector<Int> ModelImageFft::getStokes(const StokesCoordinate &stokesCoord)
 {
+  cout << "ModelImageFft::getStokes(const StokesCoordinate &stokesCoord)";  // DEBUG
   itsImageProperties.stokes=stokesCoord.stokes();    //Stokes::StokesTypes
 
   // DEBUG
@@ -523,8 +494,7 @@ template<class T> Vector<Bool> ModelImageFft::getFourierAxes(const ImageInterfac
 
 // Find nearest frequency to match requested channel with image frequency channels
 // returns chanMap index vector into image frequencies
-//void ModelImageFft::matchChannels(const vector<double> frequencies, vector<int> &channels)
-Vector<Int>  ModelImageFft::chanMap(const vector<double> frequencies)
+Vector<Int>  ModelImageFft::chanMap(const vector<double> &frequencies)
 {
   unsigned int nfreqs=frequencies.size();
 
@@ -578,7 +548,13 @@ void ModelImageFft::printImageProperties()
   cout << "ny:         " << itsImageProperties.ny << endl;
   cout << "nchan:      " << itsImageProperties.nchan << endl;
   cout << "npol:       " << itsImageProperties.npol << endl;
-  cout << "Stokes:     " << itsImageProperties.stokes << endl;
+//  cout << "Stokes:     " << itsImageProperties.stokes << endl;
+  cout << "Stokes:     ";
+  for(uInt i=0; i<itsImageProperties.stokes.size(); i++)
+  {
+    cout << Stokes::name(Stokes::type(itsImageProperties.stokes[i])) << " ";
+  }
+  cout << endl;
   cout << "I:          " << itsImageProperties.I << endl;
   cout << "Q:          " << itsImageProperties.Q << endl;
   cout << "U:          " << itsImageProperties.U << endl;
@@ -638,7 +614,7 @@ void ModelImageFft::degrid( const double *uvwBaselines[3],
   LOG_INFO_STR("degridding " << nsamples << " samples.");
   vector<complex<double> > data(nsamples);
 
-  // Lover image
+  // Loop over image
   for(uInt x=0; x<itsImageProperties.nx; x++)
     for(uInt y=0; y<itsImageProperties.ny; y++)
       for(uInt chan=0; chan<nchans; chan++)
@@ -664,7 +640,12 @@ void ModelImageFft::degrid( const boost::multi_array<double, 3> &uvwBaselines,
     itsOptions.frequencies[i]=frequencies[i];
   }
   
-  itsOptions.lambdas=convertToLambdas(itsOptions.frequencies);  // convert to lambdas
+  // TODO: at the moment we only support Stokes I
+  // get Stokes::I pixelIndex
+  //uInt IpixelNumber=itsImage->coordinateSystem().stokesPixelNumber("I"); 
+  //cout << "degrid(): IpixelNumber: " << IpixelNumber << endl;  // DEBUG  
+  
+//  itsOptions.lambdas=convertToLambdas(itsOptions.frequencies);  // convert to lambdas
 
   // convert uvwBaseline to ConvolveBlas format
  
