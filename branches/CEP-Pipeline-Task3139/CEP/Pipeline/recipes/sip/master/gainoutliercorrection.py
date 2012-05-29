@@ -17,9 +17,11 @@ from lofarpipe.support.group_data import load_data_map, store_data_map
 from lofarpipe.support.group_data import validate_data_maps
 
 
-class parmexportcal(BaseRecipe, RemoteCommandRecipeMixIn):
+class gainoutliercorrection(BaseRecipe, RemoteCommandRecipeMixIn):
     """
-    Recipe to export calibration solutions, using the program `parmexportcal`.
+    Recipe to correct outliers in the gain solutions of an parmdb,
+    using the program `parmexportcal` or an minimal implementation of the edit_parmdb
+    program.
     The main purpose of this program is to strip off the time axis information
     from a instrument model (a.k.a ParmDB)
 
@@ -30,26 +32,26 @@ class parmexportcal(BaseRecipe, RemoteCommandRecipeMixIn):
     inputs = {
         'executable': ingredient.ExecField(
             '--executable',
-            help="Full path to the `parmexportcal` executable"
+            help = "Full path to the `parmexportcal` executable"
         ),
         'initscript' : ingredient.FileField(
             '--initscript',
-            help="The full path to an (Bourne) shell script which will "
+            help = "The full path to an (Bourne) shell script which will "
                  "intialise the environment (i.e., ``lofarinit.sh``)"
         ),
         'suffix': ingredient.StringField(
             '--suffix',
-            help="Suffix of the table name of the instrument model",
-            default=".instrument"
+            help = "Suffix of the table name of the instrument model",
+            default = ".instrument"
         ),
         'working_directory': ingredient.StringField(
             '-w', '--working-directory',
-            help="Working directory used on output nodes. "
+            help = "Working directory used on output nodes. "
                  "Results will be written here."
         ),
         'mapfile': ingredient.StringField(
             '--mapfile',
-            help="Full path of mapfile to produce; it will contain "
+            help = "Full path of mapfile to produce; it will contain "
                  "a list of the generated instrument-model files"
         )
     }
@@ -60,7 +62,7 @@ class parmexportcal(BaseRecipe, RemoteCommandRecipeMixIn):
 
 
     def go(self):
-        self.logger.info("Starting parmexportcal run")
+        self.logger.info("Starting gainoutliercorrection run")
         super(parmexportcal, self).go()
 
         #                            Load file <-> output node mapping from disk
@@ -78,7 +80,7 @@ class parmexportcal(BaseRecipe, RemoteCommandRecipeMixIn):
                 return 1
         else:
             outdata = [
-                (host, 
+                (host,
                  os.path.join(
                     self.inputs['working_directory'],
                     self.inputs['job_name'],
@@ -89,13 +91,13 @@ class parmexportcal(BaseRecipe, RemoteCommandRecipeMixIn):
 
         command = "python %s" % (self.__file__.replace('master', 'nodes'))
         jobs = []
-        for host, infile, outfile in (x+(y[1],) 
+        for host, infile, outfile in (x + (y[1],)
             for x, y in zip(indata, outdata)):
             jobs.append(
                 ComputeJob(
                     host,
                     command,
-                    arguments=[
+                    arguments = [
                         infile,
                         outfile,
                         self.inputs['executable'],
@@ -106,7 +108,7 @@ class parmexportcal(BaseRecipe, RemoteCommandRecipeMixIn):
         self._schedule_jobs(jobs)
 
         if self.error.isSet():
-            self.logger.warn("Detected failed parmexportcal job")
+            self.logger.warn("Detected failed gainoutliercorrection job")
             return 1
         else:
             self.logger.debug("Writing instrument map file: %s" %
@@ -117,4 +119,4 @@ class parmexportcal(BaseRecipe, RemoteCommandRecipeMixIn):
 
 
 if __name__ == '__main__':
-    sys.exit(parmexportcal().main())
+    sys.exit(gainoutliercorrection().main())

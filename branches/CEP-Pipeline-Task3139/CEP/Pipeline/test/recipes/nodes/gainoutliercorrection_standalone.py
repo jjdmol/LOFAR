@@ -1,4 +1,4 @@
-from lofarpipe.recipes.nodes.parmexportcal import ParmExportCal
+from lofarpipe.recipes.nodes.gainoutliercorrection import GainOutlierCorrection
 import sys
 ## export PYTHONPATH=/home/klijn/build/gnu_debug/lib/python2.6/dist-packages
 class logger():
@@ -29,7 +29,7 @@ class logger():
         return self._log[-1]
 
 
-class ParmExportCalWrapper(ParmExportCal):
+class ParmExportCalWrapper(GainOutlierCorrection):
     """
     Wrapper inserting logger functionality
     """

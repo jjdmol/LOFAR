@@ -27,7 +27,7 @@ python_install(
   master/make_flaggable.py
   master/new_bbs.py
   master/parmdb.py
-  master/parmexportcal.py
+  master/gainoutliercorrection.py
   master/rficonsole.py
   master/skymodel.py
   master/sourcedb.py
@@ -58,7 +58,7 @@ python_install(
   nodes/imager_prepare.py
   nodes/imager_source_finding.py
   nodes/parmdb.py
-  nodes/parmexportcal.py
+  nodes/gainoutliercorrection.py
   nodes/rficonsole.py
   nodes/sourcedb.py
   nodes/vdsmaker.py

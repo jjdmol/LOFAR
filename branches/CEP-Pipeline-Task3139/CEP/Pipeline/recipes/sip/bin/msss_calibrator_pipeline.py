@@ -218,9 +218,9 @@ class msss_calibrator_pipeline(control):
         self.logger.info(parmdb_mapfile)
         self.logger.info("*"*40)
 
-        # Export the calibration solutions using parmexportcal and store
+        # Export the calibration solutions using gainoutliercorrection and store
         # the results in the files specified in the instrument mapfile.
-        self.run_task("parmexportcal", (parmdb_mapfile, instrument_mapfile))
+        self.run_task("gainoutliercorrection", (parmdb_mapfile, instrument_mapfile))
 
         # Create a parset-file containing the metadata for MAC/SAS
         self.run_task("get_metadata", instrument_mapfile,

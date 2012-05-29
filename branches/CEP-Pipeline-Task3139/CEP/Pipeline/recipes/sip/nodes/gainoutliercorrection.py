@@ -1,6 +1,7 @@
 #                                                         LOFAR IMAGING PIPELINE
 #
-#                                    Node recipe to export calibration solutions
+#                                    Node recipe to find outliers in the parmdb
+#                                    and swap these with the median
 #                                                             Marcel Loose, 2011
 #                                                                loose@astron.nl
 # ------------------------------------------------------------------------------
@@ -22,7 +23,7 @@ from lofarpipe.support.lofarexceptions import PipelineRecipeFailed
 from lofarpipe.recipes.helpers.WritableParmDB import WritableParmDB, list_stations
 from lofarpipe.recipes.helpers.ComplexArray import ComplexArray, RealImagArray, AmplPhaseArray
 
-class ParmExportCal(LOFARnodeTCP):
+class GainOutlierCorrection(LOFARnodeTCP):
     def run(self, infile, outfile, executable, initscript, sigma):
 
         # Time execution of this job
@@ -216,4 +217,4 @@ if __name__ == "__main__":
     #                        and pass the rest to the run() method defined above
     # --------------------------------------------------------------------------
     jobid, jobhost, jobport = sys.argv[1:4]
-    sys.exit(ParmExportCal(jobid, jobhost, jobport).run_with_stored_arguments())
+    sys.exit(GainOutlierCorrection(jobid, jobhost, jobport).run_with_stored_arguments())

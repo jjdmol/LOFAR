@@ -10,13 +10,13 @@ from argparse import ArgumentTypeError
 
 from lofarpipe.support.utilities import create_directory                        #@UnresolvedImport
 from lofarpipe.support.lofarexceptions import PipelineRecipeFailed
-from lofarpipe.recipes.nodes.parmexportcal import ParmExportCal
+from lofarpipe.recipes.nodes.gainoutliercorrection import GainOutlierCorrection
 from lofarpipe.recipes.helpers.ComplexArray import ComplexArray, RealImagArray, AmplPhaseArray
 from lofarpipe.recipes.helpers.WritableParmDB import WritableParmDB
 #import from fixtures:
 from logger import logger
 
-class ParmExportCalWrapper(ParmExportCal):
+class GainOutlierCorrectionWrapper(GainOutlierCorrection):
     """
     The test wrapper allows overwriting of function with muck functionality
     """
@@ -25,9 +25,9 @@ class ParmExportCalWrapper(ParmExportCal):
         """
         self.logger = logger()
 
-class ParmExportCalTest(unittest.TestCase):
+class GainOutlierDetectionTest(unittest.TestCase):
     def __init__(self, arg):  #todo deze moet toch in de setUp
-        super(ParmExportCalTest, self).__init__(arg)
+        super(GainOutlierDetectionTest, self).__init__(arg)
 
     def setUp(self):
         self.tempDir = tempfile.mkdtemp()
@@ -39,8 +39,8 @@ class ParmExportCalTest(unittest.TestCase):
     def test_convert_data_to_ComplexArray_real_imag(self):
         data = [{"values": [1]}, {"values": [1]}]
         type_pair = ["Imag", "Real"]  # Order is alphabetical
-        parmExportCal = ParmExportCalWrapper()
-        complex_array = parmExportCal._convert_data_to_ComplexArray(data, type_pair)
+        GainOutlierDetection = GainOutlierDetectionWrapper()
+        complex_array = GainOutlierDetection._convert_data_to_ComplexArray(data, type_pair)
 
         goal_array = RealImagArray([1], [1])
         self.assertTrue(complex_array.real == goal_array.real)
@@ -49,8 +49,8 @@ class ParmExportCalTest(unittest.TestCase):
     def test_convert_data_to_ComplexArray_amp_phase(self):
         data = [{"values": [1]}, {"values": [1]}]
         type_pair = ["Ampl", "Phase"]  # Order is alphabetical
-        parmExportCal = ParmExportCalWrapper()
-        complex_array = parmExportCal._convert_data_to_ComplexArray(data, type_pair)
+        GainOutlierDetection = GainOutlierDetectionWrapper()
+        complex_array = GainOutlierDetection._convert_data_to_ComplexArray(data, type_pair)
 
         goal_array = AmplPhaseArray([1], [1])
         self.assertTrue(complex_array.amp == goal_array.amp)
@@ -59,17 +59,17 @@ class ParmExportCalTest(unittest.TestCase):
     def test_convert_data_to_ComplexArray_incorrect_pair(self):
         data = [{"values": [1]}, {"values": [1]}]
         type_pair = ["spam", "spam"]  # Order is alphabetical
-        parmExportCal = ParmExportCalWrapper()
+        GainOutlierDetection = GainOutlierDetectionWrapper()
 
         self.assertRaises(PipelineRecipeFailed,
-                          parmExportCal._convert_data_to_ComplexArray,
+                          GainOutlierDetection._convert_data_to_ComplexArray,
                           data, type_pair)
 
     def test_write_corrected_data(self):
         # define input data
         name = "test"
         station = "station"
-        parmExportCal = ParmExportCalWrapper()
+        GainOutlierDetection = GainOutlierDetectionWrapper()
         input_polarization_data = {"pol1":[{'freqs':[11],
                                            'freqwidths':[12],
                                            'times':[13],
@@ -81,8 +81,8 @@ class ParmExportCalTest(unittest.TestCase):
         parmdb = WritableParmDB("parmdb")
 
         # call function
-        parmExportCal = ParmExportCalWrapper()
-        parmExportCal._write_corrected_data(parmdb, station,
+        GainOutlierDetection = GainOutlierDetectionWrapper()
+        GainOutlierDetection._write_corrected_data(parmdb, station,
                             input_polarization_data, input_corected_data)
 
         # test output: (the calls to parmdb)
@@ -140,7 +140,7 @@ class ParmExportCalTest(unittest.TestCase):
     def test_write_corrected_data_does_not_contain_pol(self):
         name = "test"
         station = "station"
-        parmExportCal = ParmExportCalWrapper()
+        GainOutlierDetection = GainOutlierDetectionWrapper()
         input_polarization_data = {"unknownPolarisation":[{'freqs':[11],
                                            'freqwidths':[12],
                                            'times':[13],
@@ -152,9 +152,9 @@ class ParmExportCalTest(unittest.TestCase):
         parmdb = WritableParmDB("parmdb")
 
         # call function
-        parmExportCal = ParmExportCalWrapper()
+        GainOutlierDetection = GainOutlierDetectionWrapper()
         self.assertRaises(PipelineRecipeFailed,
-                          parmExportCal._write_corrected_data,
+                          GainOutlierDetection._write_corrected_data,
                           parmdb, station,
                           input_polarization_data, input_corected_data)
 
@@ -167,9 +167,9 @@ class ParmExportCalTest(unittest.TestCase):
 
         # omit the last entry do swap the 5th entry with the median (1)
         goal_filtered_array = numpy.array([1., 1., 1., 1., 1., 100.])
-        parmExportCal = ParmExportCalWrapper()
+        GainOutlierDetection = GainOutlierDetectionWrapper()
         corrected_polarisation = \
-            parmExportCal._swap_outliers_with_median(data, type_pair, 2.0)
+            GainOutlierDetection._swap_outliers_with_median(data, type_pair, 2.0)
 
         #incredibly rough and incorrect float comparison of the values in the 
         for left, right in zip(corrected_polarisation['pol1'].real, goal_filtered_array):
@@ -194,9 +194,9 @@ class ParmExportCalTest(unittest.TestCase):
 
         # omit the last entry do swap the 5th entry with the median (1)
         goal_filtered_array = numpy.array([1., 1., 1., 1., 100., 100.])
-        parmExportCal = ParmExportCalWrapper()
+        GainOutlierDetection = GainOutlierDetectionWrapper()
         corrected_polarisation = \
-            parmExportCal._swap_outliers_with_median(data, type_pair, 3.0) # Sigma three!!
+            GainOutlierDetection._swap_outliers_with_median(data, type_pair, 3.0) # Sigma three!!
 
         #incredibly rough and incorrect float comparison of the values in the 
         for left, right in zip(corrected_polarisation['pol1'].real, goal_filtered_array):
@@ -228,8 +228,8 @@ class ParmExportCalTest(unittest.TestCase):
         station = "test"
 
         #create sut
-        parmExportCal = ParmExportCalWrapper()
-        (retrieved_data, type_pair) = parmExportCal._read_polarisation_data_and_type_from_db(parmdb,
+        GainOutlierDetection = GainOutlierDetectionWrapper()
+        (retrieved_data, type_pair) = GainOutlierDetection._read_polarisation_data_and_type_from_db(parmdb,
                                         station)
 
         #validate output!!
@@ -264,10 +264,10 @@ class ParmExportCalTest(unittest.TestCase):
 
         station = "test"
 
-        parmExportCal = ParmExportCalWrapper()
+        GainOutlierDetection = GainOutlierDetectionWrapper()
 
         # unknown datatype should throw an exception
-        self.assertRaises(PipelineRecipeFailed, parmExportCal._read_polarisation_data_and_type_from_db,
+        self.assertRaises(PipelineRecipeFailed, GainOutlierDetection._read_polarisation_data_and_type_from_db,
                           parmdb, station)
 
 
@@ -275,9 +275,9 @@ class ParmExportCalTest(unittest.TestCase):
         unexisting_file = os.path.join(self.tempDir, "name")
         unexisting_file2 = os.path.join(self.tempDir, "name2")
 
-        parmExportCal = ParmExportCalWrapper()
+        GainOutlierDetection = GainOutlierDetectionWrapper()
         self.assertRaises(PipelineRecipeFailed,
-                          parmExportCal._filter_stations_parmdb,
+                          GainOutlierDetection._filter_stations_parmdb,
                            unexisting_file, unexisting_file2, "1.0")
 
     def test_filter_stations_parmdb(self):
@@ -286,11 +286,11 @@ class ParmExportCalTest(unittest.TestCase):
 
         file_path_out = os.path.join(self.tempDir, "fullName")
 
-        parmExportCal = ParmExportCalWrapper()
+        GainOutlierDetection = GainOutlierDetectionWrapper()
 
         # Call the major  function
         # No errors should be thrown...
-        parmdb = parmExportCal._filter_stations_parmdb(file_path_in,
+        parmdb = GainOutlierDetection._filter_stations_parmdb(file_path_in,
                                     file_path_out, 2)
 
 #        expected_calls_to_parmdb = [['getValuesGrid', ['Gain:1:1:Imag:test']], #get the four entries for a station
