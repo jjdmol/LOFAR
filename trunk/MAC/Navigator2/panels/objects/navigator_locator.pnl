@@ -1,4 +1,4 @@
-V 10
+V 11
 1
 LANG:1 8 (NoName)
 PANEL,-1 -1 235 131 N "_3DFace" 1
@@ -78,12 +78,48 @@ void initTable() {
   
   //Empty de tree
   Locator.clear();
+  
 
+  // since Antenna's(+_Element's) are stores under LOFAR_PIC_HBA** (_Element**)
+  // but in reality belong to the RCU screen, we need to rearrange  the datapaths and add the hardware path that go to the HBA (Element via the normal hardware cabinets and such
+  
+  if (strpos(g_currentDatapoint,\"HBA\") >= 0) {
+    string  s = \"\";
+    
+    if (strpos(g_currentDatapoint,\"Element\") >= 0)  {
+      // strip Elementnn from the datapoint
+      s = strsplit(g_currentDatapoint,\".\");
+    }
+    int hbaNr = substr(g_currentDatapoint,strpos(g_currentDatapoint,\"HBA\")+3);
+    int rcuNr=hbaNr*2;
+    int cabinetNr=navFunct_receiver2Cabinet(rcuNr);
+    int subrackNr=navFunct_receiver2Subrack(rcuNr);
+    int rspNr=navFunct_receiver2RSP(rcuNr);
+    string station = dpSubStr(g_currentDatapoint,DPSUB_SYS);
+    DebugN(\"hba :\"+hbaNr);
+    DebugN(\"rcu :\"+rcuNr);
+    DebugN(\"rsp :\"+rspNr);
+    DebugN(\"sub :\"+subrackNr);
+    DebugN(\"rck :\"+cabinetNr);
+    
+    string ext = \"\";
+    if (hbaNr < 10) {
+      ext=\"0\";
+    }
+    string dp = station+\"LOFAR_PIC_Cabinet\"+cabinetNr+\"_Subrack\"+subrackNr+\"_RSPBoard\"+rspNr+\"_RCU\"+rcuNr;
+    DebugN(dp);
+    typeList = navFunct_dpGetFullPathAsTypes(dp);
+    dynAppend(typeList,\"HBAAntenna\");
+    DebugN(typeList);
+  } else {
   typeList=navFunct_dpGetFullPathAsTypes(g_currentDatapoint);
+  }
   
   if (dynlen(typeList) <=0 ) {
     return;
   }
+ 
+
  
   // fill the Locator with the datatypes derived from the current active datapoint
   for (int i=1; i <= dynlen(typeList); i++) {
@@ -193,23 +229,17 @@ E E E
 LANG:1 0 
 
 0
- 0 0 202 105
+1
+LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
+0  0 0 201 104
 10 TreeWidget
-7
-0 "expanded" "(string id)"
-""
-0 "collapsed" "(string id)"
-""
-0 "selectionChanged" "(string id)"
-""
+3
 0 "clicked" "(string id, int column)"
 "  click();"
 0 "doubleClicked" "(string id, int column)"
 "  dblClick(id,column);"
 0 "rightClicked" "(string id, int column)"
 "  rClick();"
-0 "itemRenamed" "(string id, int column, string text)"
-""
 "main()
 {        
   Locator.addColumn(\"Locator\");
