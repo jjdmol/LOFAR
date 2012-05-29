@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #                                                         LOFAR IMAGING PIPELINE
 #
-#                                                     Calibrator Pipeline recipe
+#                                          Target Pre-Processing Pipeline recipe
 #                                                             Marcel Loose, 2011
 #                                                                loose@astron.nl
 # ------------------------------------------------------------------------------
@@ -200,7 +200,7 @@ class msss_target_pipeline(control):
             
         # Create a sourcedb based on sourcedb's input argument "skymodel"
         # (see, e.g., tasks.cfg file).
-        sourcedb_mapfile = self.run_task("sourcedb", data_mapfile)['mapfile']
+        sourcedb_mapfile = self.run_task("setupsourcedb", data_mapfile)['mapfile']
 
         # Produce a GVDS file describing the data on the compute nodes.
         gvds_file = self.run_task("vdsmaker", data_mapfile)['gvds']

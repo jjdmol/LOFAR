@@ -191,11 +191,11 @@ class msss_calibrator_pipeline(control):
         self.run_task("rficonsole", demix_mapfile, indirect_read=True)
 
         # Create an empty parmdb for DPPP
-        parmdb_mapfile = self.run_task("parmdb", data_mapfile)['mapfile']
+        parmdb_mapfile = self.run_task("setupparmdb", data_mapfile)['mapfile']
 
         # Create a sourcedb based on sourcedb's input argument "skymodel"
         sourcedb_mapfile = self.run_task(
-            "sourcedb", data_mapfile,
+            "setupsourcedb", data_mapfile,
             skymodel=os.path.join(
                 self.config.get('DEFAULT', 'lofarroot'),
                 'share', 'pipeline', 'skymodels', 

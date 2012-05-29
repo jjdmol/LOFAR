@@ -24,11 +24,11 @@ python_install(
   master/get_metadata.py
   master/make_flaggable.py
   master/new_bbs.py
-  master/parmdb.py
   master/parmexportcal.py
   master/rficonsole.py
+  master/setupparmdb.py
+  master/setupsourcedb.py
   master/skymodel.py
-  master/sourcedb.py
   master/storagemapper.py
   master/vdsmaker.py
   master/vdsreader.py
@@ -55,10 +55,10 @@ python_install(
   nodes/imager_finalize.py
   nodes/imager_prepare.py
   nodes/imager_source_finding.py
-  nodes/parmdb.py
   nodes/parmexportcal.py
   nodes/rficonsole.py
-  nodes/sourcedb.py
+  nodes/setupparmdb.py
+  nodes/setupsourcedb.py
   nodes/vdsmaker.py
   DESTINATION lofarpipe/recipes)
 
