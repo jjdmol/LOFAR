@@ -34,7 +34,7 @@
 #include <coordinates/Coordinates/StokesCoordinate.h>
 #include <measures/Measures/Stokes.h>
 #include <images/Images/ImageInterface.h>
-//#include <images/Images/PagedImage.h>
+#include <images/Images/TempImage.h>
 
 // From tConvolveBLAS.cc
 #include <iostream>
@@ -91,9 +91,8 @@ typedef struct ImageProperties
   vector<double> frequencies;                   // channel frequencies of image
   casa::Vector<casa::Int> stokes;
   
-  casa::SpectralCoordinate spectralCoord_p;     // spectral coordinate of image
-//  casa::StokesCoordinate stokesCoord_p;       // Stokes coordinate
-
+  casa::SpectralCoordinate spectralCoord;       // spectral coordinate of image
+  //casa::StokesCoordinate stokesCoord;           // Stokes coordinate
   bool I, Q, U, V;                              // present Stokes parameters
 };
 
@@ -105,7 +104,8 @@ public:
   ModelImageFft(const casa::String &name, 
                 unsigned int nwplanes=1, 
                 unsigned int oversampling=1, 
-                double uvscaleX=1.0, double uvscaleY=1.0);
+                double uvscaleX=1.0, double uvscaleY=1.0,
+                casa::Int cacheSizeMB=-1);
   ~ModelImageFft();
 
   // Image property functions
@@ -233,7 +233,7 @@ public:
       std::vector<unsigned int>& iv);
 
 private:
-  casa::ImageInterface<casa::Complex> *itsImage;    // keep fft'ed image in memory
+  casa::TempImage<casa::Complex> *itsImage;  // keep fft'ed image as temporary (in memory/disk)
   ModelImageOptions itsOptions;           // struct containing all FFT options
   ImageProperties itsImageProperties;     // struct containing image properties
 

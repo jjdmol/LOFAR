@@ -63,7 +63,7 @@ ModelImageFft::ModelImageFft( const casa::String &name,
 ModelImageFft::ModelImageFft( const casa::String &name,
                               unsigned int nwplanes,
                               unsigned int oversampling,
-                              double uvscaleX, double uvscaleY)
+                              double uvscaleX, double uvscaleY, Int cacheSizeMB)
 {
   // initialize Image properties
   itsImageProperties.I=false;
@@ -92,37 +92,7 @@ ModelImageFft::ModelImageFft( const casa::String &name,
     THROW(BBSKernelException, "Unsupported data type: " << dtype);
   }
   
-  ImageInterface<Float> *image=dynamic_cast<ImageInterface<Float>* >(baseLattice);
-
- /*
-  //DataType dtype=baseLattice->dataType();
-  if(dtype==TpInt)
-  {
-    //image=dynamic_cast<ImageInterface<Int>* >(baseLattice);
-    ImageInterface<Int> *image=dynamic_cast<ImageInterface<Int>* >(baseLattice);
-  }
-  else if(dtype==TpFloat)
-  {
-    //ImageInterface<Float> *image=dynamic_cast<ImageInterface<Float>* >(baseLattice);
-    ImageInterface<Float> *image=dynamic_cast<ImageInterface<Float>* >(baseLattice);
-  }
-  else if(dtype==TpDouble)
-  {
-    //ImageInterface<Double> *image=dynamic_cast<ImageInterface<Double>* >(baseLattice);
-    ImageInterface<Double> *image=dynamic_cast<ImageInterface<Double>* >(baseLattice);
-  }
-  else if(dtype==TpComplex)  
-  {
-      THROW(BBSKernelException, "Unsupported image data type: " << dtype);
-//    ImageInterface<Complex> *image=dynamic_cast<ImageInterface<Complex>* >(baseLattice);
-  }
-  else 
-  {
-    THROW(BBSKernelException, "Unsupported image data type: " << dtype);
-//    image=dynamic_cast<ImageInterface<DComplex>* >(baseLattice);
-  }  
-  */
-  
+  ImageInterface<Float> *image=dynamic_cast<ImageInterface<Float>* >(baseLattice); 
   ASSERT(image);
   
   itsImageProperties.name=name;
@@ -134,19 +104,18 @@ ModelImageFft::ModelImageFft( const casa::String &name,
 
   this->getImageProperties(*image);     // get image properties
   this->getImageFrequencies();          // get image frequencies and save them in options
-//  this->getStokes(*image);  // TODO: this doesn't work which > nCoordinates for stokesCoordinate()
   if(!validStokes(itsImageProperties.stokes))
   {
     THROW(BBSKernelException, "Invalid Model image: " << name << " wrong Stokes components.");  
   }
   
-  // allocate memory for itsImage (FFT'ed image)
-  itsImage=dynamic_cast<ImageInterface<Complex> *>(image); // make a copy of the un-ffted image
+  // allocate memory for itsImage (FFT'ed image) by copy-constructor from image
+  itsImage=new TempImage<Complex>(image->shape(), image->coordinates(), cacheSizeMB);
   // 2D-FFT every image plane along their Direction axes
   ImageFFT imgFFT;
   imgFFT.fft(*image, getFourierAxes(*image));
   imgFFT.getComplex(*itsImage);
-  delete image;                   // don't need the intermediate image anymore
+  delete image;                   // don't need the original image anymore
 }
 
 ModelImageFft::~ModelImageFft(void)
@@ -218,28 +187,18 @@ template <class T> void ModelImageFft::getImageProperties(const ImageInterface<T
 {
   CoordinateSystem coordSys=image.coordinates();   // get coordinate system of image
   
-  /*
-  uInt nPixelAxes=coordSys.nPixelAxes();
-  if(nPixelAxes != 1)
-  {
-    THROW(BBSKernelException, "Model image does not have required pixel axes, but "
-          << nPixelAxes << " instead.");
-  }
-  */
   IPosition shape=image.shape();
   itsImageProperties.nCoords=coordSys.nCoordinates();     // DEBUG
   Int DirectionCoordInd=coordSys.findCoordinate(Coordinate::DIRECTION);
-    
-  // Check for nPixelAxes==2
-  //Int YCoordInd;
-  DirectionCoordinate directionCoord=coordSys.directionCoordinate(0);
+
   // DIRECTION coordinates
+  DirectionCoordinate directionCoord=coordSys.directionCoordinate(0);
   if(DirectionCoordInd == -1)
   {
     THROW(BBSKernelException, "No DIRECTION coordinates in image " << itsOptions.name);
   }
   itsImageProperties.nPixelAxes=directionCoord.nPixelAxes();
-  if(itsImageProperties.nPixelAxes==2)
+  if(itsImageProperties.nPixelAxes==2)    // check we have 2 directional axes
   {
     // Keep these values in imageProperties
     itsImageProperties.shape=shape;
@@ -249,7 +208,6 @@ template <class T> void ModelImageFft::getImageProperties(const ImageInterface<T
     // Direction shapes
     itsImageProperties.nx=shape(itsImageProperties.DirectionCoordAxes(0)); 
     itsImageProperties.ny=shape(itsImageProperties.DirectionCoordAxes(1));
-    //itsImageProperties.ny=shape(YCoordInd);
     LOG_INFO_STR("Image " << itsOptions.name << " has dimensions nx = " << 
     itsImageProperties.nx << " ny = " << itsImageProperties.ny << ".");
   }
@@ -258,25 +216,15 @@ template <class T> void ModelImageFft::getImageProperties(const ImageInterface<T
     THROW(BBSKernelException, "Incorrect number of pixel axes: " << coordSys.nPixelAxes());
   }
 
-  // There seems to be a bug or misunderstanding about finding spectral and stokes
-  // coordinates respectively, so we try both before assignment
-  //
   // SPECTRAL coordinate
   Int SpectralCoordInd=coordSys.findCoordinate(Coordinate::SPECTRAL);
-
-  cout << "nCoordinates: " << coordSys.nCoordinates() << endl;  // DEBUG
-  cout << "directionCoord.nPixelAxes(): " << directionCoord.nPixelAxes() << endl;
-  cout << "SpectralCoordInd: " << SpectralCoordInd << endl;     // DEBUG
-
   if(SpectralCoordInd != -1)
   {
-//    itsImageProperties.nchan=shape(SpectralCoordInd + itsImageProperties.nPixelAxes - 1);    
     itsImageProperties.nchan=shape(coordSys.pixelAxes(SpectralCoordInd)(0));
     LOG_INFO_STR("Image has " << itsImageProperties.nchan << " frequency channels.");
+
     SpectralCoordinate specCoord=image.coordinates().spectralCoordinate(SpectralCoordInd);
     itsImageProperties.SpectralCoordAxes=coordSys.pixelAxes(SpectralCoordInd);
-
-//    itsImageProperties.spectralCoord_p=image.coordinates().spectralCoordinate(0);   // casarest stuff
   }
   else
   {
@@ -290,6 +238,7 @@ template <class T> void ModelImageFft::getImageProperties(const ImageInterface<T
     LOG_INFO_STR("Image " << itsOptions.name << " has " << itsImageProperties.npol 
     << " polarizations.");
 
+    StokesCoordinate stokesCoord=image.coordinates().stokesCoordinate(StokesCoordInd);
     itsImageProperties.StokesCoordAxes=coordSys.pixelAxes(StokesCoordInd);
     itsImageProperties.stokes=image.coordinates().stokesCoordinate(StokesCoordInd).stokes(); 
   }
@@ -297,11 +246,6 @@ template <class T> void ModelImageFft::getImageProperties(const ImageInterface<T
   {
     itsImageProperties.npol=1;
   }
-//  cout << "StokesCoordInd: " << StokesCoordInd << endl;   // DEBUG
-//  cout << "SpectralCoordAxes: " << itsImageProperties.SpectralCoordAxes << endl;  // DEBUG
-//  cout << "StokesCoordAxes: " << itsImageProperties.StokesCoordAxes << endl;      // DEBUG
-
-  printImageProperties();
 }
 
 // Check that input model image has Jy/pixel flux
@@ -364,7 +308,7 @@ bool ModelImageFft::validStokes(casa::Vector<casa::Int> stokes)
     }
   }
   
-  // A valid model image has either I or both Q and U Stokes
+  // A valid model image has either I or Q,U and V Stokes
   if(itsImageProperties.I || (itsImageProperties.Q && itsImageProperties.U && itsImageProperties.V))
   {
     valid=true;
@@ -385,16 +329,11 @@ bool ModelImageFft::validStokes(casa::Vector<casa::Int> stokes)
 //casa::MDirection ModelImageFft::getPatchDirection(const ImageInterface<Float> &image)
 template <class T> casa::MDirection ModelImageFft::getPatchDirection(const ImageInterface<T> &image)
 {
-//  casa::IPosition imageShape;                             // shape of image
   casa::Vector<casa::Double> Pixel(2);                    // pixel coords vector of image centre
   casa::MDirection MDirWorld(casa::MDirection::J2000);    // astronomical direction in J2000
     
-//  imageShape=image.shape();                              
-//  Pixel[0]=floor(imageShape[0]/2);
-//  Pixel[1]=floor(imageShape[1]/2);
   Pixel[0]=floor(itsImageProperties.nx/2);                // get centre pixel
   Pixel[1]=floor(itsImageProperties.ny/2);
-
   // Determine DirectionCoordinate
   casa::DirectionCoordinate dir(image.coordinates().directionCoordinate (image.coordinates().findCoordinate(casa::Coordinate::DIRECTION)));
   dir.toWorld(MDirWorld, Pixel);
@@ -416,15 +355,15 @@ Vector<Double> ModelImageFft::getImageFrequencies()
     pixels[i]=i;
   }
   // get frequencies from spectralCoord attribute
-  itsImageProperties.spectralCoord_p.toWorld(frequenciesVec, pixels);
+  itsImageProperties.spectralCoord.toWorld(frequenciesVec, pixels);
   frequenciesVec.tovector(frequencies); 
-  //itsOptions.imageFrequencies=frequencies;
   itsImageProperties.frequencies=frequencies; // this is now kept in the ImageProperties
   
   return frequencies;
 }
 
 
+/*
 // Get Stokes components present in image
 //
 template<class T> Vector<Int> ModelImageFft::getStokes(const ImageInterface<T> &image)
@@ -455,7 +394,7 @@ Vector<Int> ModelImageFft::getStokes(const StokesCoordinate &stokesCoord)
   }
   return itsImageProperties.stokes;
 }
-
+*/
 
 // Determine directional coordinate indices which are the axes which should be
 // FFT-ed and set to True in Vector<Bool>
@@ -539,8 +478,6 @@ void ModelImageFft::printImageProperties()
 {
   cout << "ImageProperties: " << itsImageProperties.name << endl;
   cout << "Shape:     " << itsImageProperties.shape << endl;
-//  cout << "XcoordInd: " << itsImageProperties.XcoordInd << endl;
-//  cout << "YcoordInd: " << itsImageProperties.YcoordInd << endl;
   cout << "DirectionCoordInd: " << itsImageProperties.DirectionCoordInd << endl;
   cout << "SpectralCoordInd: " << itsImageProperties.SpectralCoordInd << endl;
   cout << "StokesCoordInd: " << itsImageProperties.StokesCoordInd << endl;
@@ -548,7 +485,6 @@ void ModelImageFft::printImageProperties()
   cout << "ny:         " << itsImageProperties.ny << endl;
   cout << "nchan:      " << itsImageProperties.nchan << endl;
   cout << "npol:       " << itsImageProperties.npol << endl;
-//  cout << "Stokes:     " << itsImageProperties.stokes << endl;
   cout << "Stokes:     ";
   for(uInt i=0; i<itsImageProperties.stokes.size(); i++)
   {
