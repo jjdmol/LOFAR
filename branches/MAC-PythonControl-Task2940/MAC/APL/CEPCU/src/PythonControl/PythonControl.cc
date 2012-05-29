@@ -538,7 +538,7 @@ GCFEvent::TResult PythonControl::operational_state(GCFEvent& event, GCFPortInter
 		}
 		else {
 			LOG_WARN("Sending FAKE Quit response and quiting application");
-			sendControlResult(*itsParentPort, event.signal, itsMyName, CT_RESULT_NO_ERROR);
+//			sendControlResult(*itsParentPort, event.signal, itsMyName, CT_RESULT_NO_ERROR);
 			TRAN(PythonControl::finishing_state);
 		}
 		break;
@@ -593,9 +593,9 @@ GCFEvent::TResult PythonControl::operational_state(GCFEvent& event, GCFPortInter
 	case CONTROL_QUITED: {
 		CONTROLQuitedEvent		msg(event);
 		LOG_DEBUG_STR("Received QUITED(" << msg.cntlrName << ")");
-		msg.cntlrName = itsMyName;
-		msg.result = CT_RESULT_NO_ERROR;
-		itsParentPort->send(msg);
+//		msg.cntlrName = itsMyName;
+//		msg.result = CT_RESULT_NO_ERROR;
+//		itsParentPort->send(msg);
 		LOG_INFO("Python environment has quited, quiting too.");
 		TRAN(PythonControl::finishing_state);
 		break;
@@ -634,10 +634,15 @@ GCFEvent::TResult PythonControl::finishing_state(GCFEvent& event, GCFPortInterfa
 		break;
 	}
 
-	case F_TIMER:
+	case F_TIMER: {
 		_passMetadatToOTDB();
+		CONTROLQuitedEvent		msg;
+		msg.cntlrName = itsMyName;
+		msg.result = CT_RESULT_NO_ERROR;
+		itsParentPort->send(msg);
 		GCFScheduler::instance()->stop();
 		break;
+	}
 
 	case F_DISCONNECTED:
 		port.close();
