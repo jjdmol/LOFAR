@@ -41,7 +41,7 @@ PANEL,-1 -1 995 561 N "_3DFace" 0
       LOG_ERROR(\"Observation_overview.pnl:main|Couldn't connect to : \"+baseDP);
     } 
     if (!navFunct_dpReachable(baseDP)) {
-      updateObservationControl(\"\",0,\"\",0,\"\",\"\",\"\",\"\",\"\",\"\",0,\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",makeDynString(),\"\",makeDynFloat(),
+      updateObservationControl(\"\",0,\"\",0,\"\",\"\",\"\",\"\",\"\",\"\",0,\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",makeDynString(),\"\",makeDynFloat(),
                     \"\",makeDynFloat(),\"\",makeDynString(),\"\",true);
     }
   } else {
