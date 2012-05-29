@@ -11,9 +11,9 @@ dbHost=getDBhost()
 otdb = pg.connect(user="postgres", host=dbHost, dbname=dbName)
 
 #
-# addIndexedComponent(treeID, keyName)
+# addIndexedComponent(treeID, keyName, orgTreeID)
 #
-def addIndexedComponent(treeID, keyName):
+def addIndexedComponent(treeID, keyName, orgTreeID):
     """
     When parameter belongs to indexed node try to find parent unindexed component in the newtree
     eg. keyName = ObsSW.Observation.Beam[5].angle1
@@ -25,6 +25,10 @@ def addIndexedComponent(treeID, keyName):
         orgNodeID = otdb.query("select * from getVTitem(%s, '%s')" % (treeID, nodeName)).getresult()[0][0]
         newNodeID = otdb.query("select * from dupVTnode(1, %s, %s, '%s')" % (treeID, orgNodeID, dupIndex))
         print "   %s: %-75s added to the tree" % (treeID, parts[0]+'.'+parts[1])
+        # copy nrInstances setting from base component from original tree
+        (instances, limits) = \
+              otdb.query("select instances,limits from getVTitem(%s, '%s')" % (orgTreeID, nodeName)).getresult()[0]
+        otdb.query("select * from updateVTnode(1, %s, %s, '%s', '%s')" % (treeID, orgNodeID, instances, limits))
     return newNodeID
 
 #
@@ -61,7 +65,7 @@ def createNewDefaultTemplate(orgTmplID, newMasterTmplID, orgTmplInfo):
         # if it doesn't exist, add it when it is a parameter from an indexed node
         if nodeid == None:
             try:
-                dummy = addIndexedComponent(newTmplID, key)
+                dummy = addIndexedComponent(newTmplID, key, orgTmplID)
             except:
                 print "   %s: %-75s not in the new tree"  % (newTmplID, key)
                 continue
