@@ -39,7 +39,7 @@ class GainOutlierDetectionTest(unittest.TestCase):
     def test_convert_data_to_ComplexArray_real_imag(self):
         data = [{"values": [1]}, {"values": [1]}]
         type_pair = ["Imag", "Real"]  # Order is alphabetical
-        GainOutlierDetection = GainOutlierDetectionWrapper()
+        GainOutlierDetection = GainOutlierCorrectionWrapper()
         complex_array = GainOutlierDetection._convert_data_to_ComplexArray(data, type_pair)
 
         goal_array = RealImagArray([1], [1])
@@ -49,7 +49,7 @@ class GainOutlierDetectionTest(unittest.TestCase):
     def test_convert_data_to_ComplexArray_amp_phase(self):
         data = [{"values": [1]}, {"values": [1]}]
         type_pair = ["Ampl", "Phase"]  # Order is alphabetical
-        GainOutlierDetection = GainOutlierDetectionWrapper()
+        GainOutlierDetection = GainOutlierCorrectionWrapper()
         complex_array = GainOutlierDetection._convert_data_to_ComplexArray(data, type_pair)
 
         goal_array = AmplPhaseArray([1], [1])
@@ -59,7 +59,7 @@ class GainOutlierDetectionTest(unittest.TestCase):
     def test_convert_data_to_ComplexArray_incorrect_pair(self):
         data = [{"values": [1]}, {"values": [1]}]
         type_pair = ["spam", "spam"]  # Order is alphabetical
-        GainOutlierDetection = GainOutlierDetectionWrapper()
+        GainOutlierDetection = GainOutlierCorrectionWrapper()
 
         self.assertRaises(PipelineRecipeFailed,
                           GainOutlierDetection._convert_data_to_ComplexArray,
@@ -69,7 +69,7 @@ class GainOutlierDetectionTest(unittest.TestCase):
         # define input data
         name = "test"
         station = "station"
-        GainOutlierDetection = GainOutlierDetectionWrapper()
+        GainOutlierDetection = GainOutlierCorrectionWrapper()
         input_polarization_data = {"pol1":[{'freqs':[11],
                                            'freqwidths':[12],
                                            'times':[13],
@@ -81,7 +81,7 @@ class GainOutlierDetectionTest(unittest.TestCase):
         parmdb = WritableParmDB("parmdb")
 
         # call function
-        GainOutlierDetection = GainOutlierDetectionWrapper()
+        GainOutlierDetection = GainOutlierCorrectionWrapper()
         GainOutlierDetection._write_corrected_data(parmdb, station,
                             input_polarization_data, input_corected_data)
 
@@ -140,7 +140,7 @@ class GainOutlierDetectionTest(unittest.TestCase):
     def test_write_corrected_data_does_not_contain_pol(self):
         name = "test"
         station = "station"
-        GainOutlierDetection = GainOutlierDetectionWrapper()
+        GainOutlierDetection = GainOutlierCorrectionWrapper()
         input_polarization_data = {"unknownPolarisation":[{'freqs':[11],
                                            'freqwidths':[12],
                                            'times':[13],
@@ -152,7 +152,7 @@ class GainOutlierDetectionTest(unittest.TestCase):
         parmdb = WritableParmDB("parmdb")
 
         # call function
-        GainOutlierDetection = GainOutlierDetectionWrapper()
+        GainOutlierDetection = GainOutlierCorrectionWrapper()
         self.assertRaises(PipelineRecipeFailed,
                           GainOutlierDetection._write_corrected_data,
                           parmdb, station,
@@ -167,7 +167,7 @@ class GainOutlierDetectionTest(unittest.TestCase):
 
         # omit the last entry do swap the 5th entry with the median (1)
         goal_filtered_array = numpy.array([1., 1., 1., 1., 1., 100.])
-        GainOutlierDetection = GainOutlierDetectionWrapper()
+        GainOutlierDetection = GainOutlierCorrectionWrapper()
         corrected_polarisation = \
             GainOutlierDetection._swap_outliers_with_median(data, type_pair, 2.0)
 
@@ -194,7 +194,7 @@ class GainOutlierDetectionTest(unittest.TestCase):
 
         # omit the last entry do swap the 5th entry with the median (1)
         goal_filtered_array = numpy.array([1., 1., 1., 1., 100., 100.])
-        GainOutlierDetection = GainOutlierDetectionWrapper()
+        GainOutlierDetection = GainOutlierCorrectionWrapper()
         corrected_polarisation = \
             GainOutlierDetection._swap_outliers_with_median(data, type_pair, 3.0) # Sigma three!!
 
@@ -228,7 +228,7 @@ class GainOutlierDetectionTest(unittest.TestCase):
         station = "test"
 
         #create sut
-        GainOutlierDetection = GainOutlierDetectionWrapper()
+        GainOutlierDetection = GainOutlierCorrectionWrapper()
         (retrieved_data, type_pair) = GainOutlierDetection._read_polarisation_data_and_type_from_db(parmdb,
                                         station)
 
@@ -264,7 +264,7 @@ class GainOutlierDetectionTest(unittest.TestCase):
 
         station = "test"
 
-        GainOutlierDetection = GainOutlierDetectionWrapper()
+        GainOutlierDetection = GainOutlierCorrectionWrapper()
 
         # unknown datatype should throw an exception
         self.assertRaises(PipelineRecipeFailed, GainOutlierDetection._read_polarisation_data_and_type_from_db,
@@ -275,7 +275,7 @@ class GainOutlierDetectionTest(unittest.TestCase):
         unexisting_file = os.path.join(self.tempDir, "name")
         unexisting_file2 = os.path.join(self.tempDir, "name2")
 
-        GainOutlierDetection = GainOutlierDetectionWrapper()
+        GainOutlierDetection = GainOutlierCorrectionWrapper()
         self.assertRaises(PipelineRecipeFailed,
                           GainOutlierDetection._filter_stations_parmdb,
                            unexisting_file, unexisting_file2, "1.0")
@@ -286,7 +286,7 @@ class GainOutlierDetectionTest(unittest.TestCase):
 
         file_path_out = os.path.join(self.tempDir, "fullName")
 
-        GainOutlierDetection = GainOutlierDetectionWrapper()
+        GainOutlierDetection = GainOutlierCorrectionWrapper()
 
         # Call the major  function
         # No errors should be thrown...
