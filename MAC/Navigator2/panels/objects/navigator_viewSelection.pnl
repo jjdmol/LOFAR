@@ -75,6 +75,7 @@ void setEvent(dyn_string aSelection,string event) {
   if (navigator_initializing()) {
     return;
   }
+
   string anEvent=$name+\"|\"+event;
   if (dpExists(itsEventDp)) {
      dpSet(itsEventDp,anEvent);

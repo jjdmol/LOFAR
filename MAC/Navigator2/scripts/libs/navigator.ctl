@@ -63,14 +63,14 @@ global dyn_int    g_subrackList;       // holds valid subracks for choices in th
 global dyn_int    g_RSPList;           // holds valid RSP's for choices in the viewBox
 global dyn_int    g_TBBList;           // holds valid TBB's for choices in the viewBox
 global dyn_int    g_RCUList;           // holds valid RCU's for choices in the viewBox
+global dyn_int    g_HBAList;           // holds valid HBAAntenna's for choices in the viewBox
+global dyn_int    g_elementList;       // holds valid HBA Elements's for choices in the viewBox
 // CEP based globals
 global dyn_int    g_BGPRackList;       // holds valid bgpracks for choices in viewBox
 global dyn_int    g_BGPMidplaneList;   // holds valid bgpmidplanes for choices in viewBox
 global dyn_int    g_IONodeList;        // holds valid ionodes for choices in viewBox
 global dyn_int    g_OSRackList;        // holds valid Offline/Storageracks for choices in view
-global dyn_int    g_OSSubclusterList;  // holds valid OSSubclusters for choices in view
-global dyn_int    g_storageNodeList;   // holds valid storagenodes for choices in view
-global dyn_int    g_offlineNodeList;   // holds valid offlinenodes for choices in view
+global dyn_int    g_locusNodeList;     // holds valid storagenodes for choices in view
 
 global dyn_string strPlannedObs;
 global dyn_string strHighlight;        // contains highlight info for mainpanels
@@ -93,17 +93,19 @@ void navigator_handleEventInitialize()
   LOG_TRACE("navigator.ctl:navigator_handleEventInitialize|entered");
   g_initializing = true;
   
-
-  // first we need to check if we are on the MainCU or a stationDB, if we are on a stationDB we are in standalone mode
-  if (getSystemName() != MainDBName) {
     MainDBName         = getSystemName();
     MainDBID           = getSystemId();
+  // first we need to check if we are on the MainCU or a stationDB, if we are on a stationDB we are in standalone mode
+  if (strpos(MainDBName,"MCU") >= 0) {
+    CEPDBName          = MainDBName;
+    strreplace(CEPDBName,"MCU","CCU");
+    } else {
     g_standAlone       = true;    // can be used to check if we are in standalone mode (== station only mode)
+  }
     g_currentDatapoint      = MainDBName+"LOFAR";
     g_lastHardwareDatapoint = MainDBName+"LOFAR";
     g_lastProcessesDatapoint = MainDBName+"LOFAR_PermSW";
     g_lastObservationsDatapoint = MainDBName+"LOFAR_ObsSW";
-  }
     
   // Set the global statecolors/colornames, we need to do this before we 
   //start the rest of the framework, because the other processes need these
@@ -127,9 +129,11 @@ void navigator_handleEventInitialize()
     DebugN("ERROR: Logsystem hasn't been found.");
   }
   
+  
   // Do a dpQueryConnectSingle() so that we get a permanent list of claims
   // we can use this to translate a claimed name into a real datapoint name
   claimManager_queryConnectClaims();
+  
   
 
   // we need to wait until the claim system was able to finish all connections and callbacks
@@ -140,7 +144,6 @@ void navigator_handleEventInitialize()
   // fill global stations lists
   navFunct_fillStationLists();
   
- 
   // Init the connection Watchdog
   GCFCWD_Init();
 
@@ -149,7 +152,6 @@ void navigator_handleEventInitialize()
     LOG_FATAL("navigator.ctl:navigator_handleEventInitialize|Couldn't finish GCFCWD_Init() , leaving");
   }
 
-  
 
   // set user to root for now, has to be taken from PVSS login later
   // since the names are caseinsensitive, convert to lowercase for 
@@ -183,6 +185,7 @@ void navigator_handleEventInitialize()
   g_initializing = false;
 
   LOG_TRACE("navigator.ctl:navigator_handleEventInitialize|end");
+  
 }
 
 ///////////////////////////////////////////////////////////////////////////
