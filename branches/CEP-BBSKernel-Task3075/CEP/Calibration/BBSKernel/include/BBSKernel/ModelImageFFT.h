@@ -130,6 +130,8 @@ public:
   void setUVScale(double uvscaleX, double uvscaleY);
   void setOversampling(unsigned int oversampling);
   void setNwplanes(unsigned int nwplanes);
+  void setFrequencies(const vector<double> &frequencies);
+  void setFrequencies(const double *frequencies, size_t n);
 
   // Getter functions for individual options
   inline casa::String     name() const { return itsOptions.name; }
@@ -155,7 +157,7 @@ public:
               const double *frequencies, 
               casa::DComplex *XX , casa::DComplex *XY, 
               casa::DComplex *XY , casa::DComplex *YY);
-  void degrid(const boost::multi_array<double, 3> &uvwBaselines, 
+  void degrid(const double *baselines[3], 
               const vector<double> &frequencies,
               casa::Vector<casa::DComplex> &XX , casa::Vector<casa::DComplex> &XY, 
               casa::Vector<casa::DComplex> &YX , casa::Vector<casa::DComplex> &YY);              

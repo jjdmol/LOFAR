@@ -40,9 +40,8 @@
 
 #include <BBSKernel/Exceptions.h>
 #include <BBSKernel/ModelImageFFT.h>
-#include <BBSKernel/ModelImageVisibilityResampler.h>
 
-
+#include <iterator>
 
 using namespace std;
 using namespace LOFAR;
@@ -175,6 +174,16 @@ void ModelImageFft::setOversampling(unsigned int oversampling)
 void ModelImageFft::setNwplanes(unsigned int nwplanes)
 {
   itsOptions.nwplanes=nwplanes;
+}
+
+void ModelImageFft::setFrequencies(const vector<double> &frequencies)
+{
+  itsOptions.frequencies=frequencies;
+}
+
+void ModelImageFft::setFrequencies(const double *frequencies, size_t n)
+{
+  itsOptions.frequencies=vector<double>(frequencies, frequencies+n);
 }
 
 //**********************************************
@@ -537,24 +546,22 @@ void ModelImageFft::degrid( const double *uvwBaselines[3],
                             casa::DComplex *XX , casa::DComplex *XY, 
                             casa::DComplex *YX , casa::DComplex *YY)
 {
-  Vector<Double> lamdbdas(nchans);        // vector with wavelengths
-  for(unsigned int i=0; i<nchans; i++)
-  {
-    itsOptions.frequencies[i]=frequencies[i];
-  }
+//  setFrequencies(frequencies[i]); // don't really need to do that...
   
-  itsOptions.lambdas=convertToLambdas(itsOptions.frequencies);  // convert to lambdas
-
   // convert uvwBaseline to Cornwell degrid format, 1-D data vector
-  uInt nsamples=timeslots*nchans;       // number of samples
+  uint nsamples=timeslots*nchans;       // number of samples
   LOG_INFO_STR("degridding " << nsamples << " samples.");
-  vector<complex<double> > data(nsamples);
 
-  // Loop over image
-  for(uInt x=0; x<itsImageProperties.nx; x++)
-    for(uInt y=0; y<itsImageProperties.ny; y++)
+  vector<complex<double> > data(nsamples);    // vector to hold data to grid
+  vector<complex<double> > grid(nsamples);    // output uvw data on grid 
+
+
+  // Take data out of image:
+  // Use STL::fill to write data into vector/array
+
       for(uInt chan=0; chan<nchans; chan++)
       {
+        // IPosition slice();   // get image plane
 //          data[x+y+chan+pol]=itsImage();  // how to index into multi-dim image?
 //Bool 	getSlice (Array< T > &buffer, const Slicer &section, Bool removeDegenerateAxes=False)
 
@@ -564,28 +571,35 @@ void ModelImageFft::degrid( const double *uvwBaselines[3],
  
 }
 
+/*
 void ModelImageFft::degrid( const boost::multi_array<double, 3> &uvwBaselines, 
                             const vector<double> &frequencies,
                             Vector<casa::DComplex> &XX , Vector<casa::DComplex> &XY, 
                             Vector<casa::DComplex> &YX , Vector<casa::DComplex> &YY)
+*/
+void ModelImageFft::degrid( const double *baselines[3], 
+                            const vector<double> &frequencies,
+                            Vector<casa::DComplex> &XX , Vector<casa::DComplex> &XY, 
+                            Vector<casa::DComplex> &YX , Vector<casa::DComplex> &YY)
+
 {
-  unsigned int nchans=frequencies.size();     // get number of channels
-  Vector<Double> lamdbdas(nchans);            // vector for wavelengths conversion
-  for(unsigned int i=0; i<nchans; i++)
-  {
-    itsOptions.frequencies[i]=frequencies[i];
-  }
+  unsigned int nchans=frequencies.size();     // get number of requested channels
+//  Vector<Double> lamdbdas(nchans);            // vector for wavelengths conversion
+
+  setFrequencies(frequencies);
   
   // TODO: at the moment we only support Stokes I
   // get Stokes::I pixelIndex
-  //uInt IpixelNumber=itsImage->coordinateSystem().stokesPixelNumber("I"); 
-  //cout << "degrid(): IpixelNumber: " << IpixelNumber << endl;  // DEBUG  
+  uInt IpixelNumber=itsImage->coordinates().stokesPixelNumber("I"); 
+  cout << "degrid(): IpixelNumber: " << IpixelNumber << endl;     // DEBUG  
   
-//  itsOptions.lambdas=convertToLambdas(itsOptions.frequencies);  // convert to lambdas
-
   // convert uvwBaseline to ConvolveBlas format
+
+  // match requested frequencies to channels
+
+  // Loop over frequencies
  
-  // call degrid
+  // call degridKernel
   
   // Distribute output to correlation vectors
 }

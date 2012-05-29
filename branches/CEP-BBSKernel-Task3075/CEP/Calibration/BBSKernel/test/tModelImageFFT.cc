@@ -26,21 +26,38 @@
 #include <BBSKernel/ModelImageFFT.h>
 
 using namespace std;
+using namespace casa;
 
 //using std::cout;
 //using std::endl;
 //using std::complex;
 //using std::abs;
 
+void getBaselines(const Table &table, double *baselines[3], 
+                  int rowStart=-1, int rowEnd=-1);
+vector<double> getMSFrequencies(const Table &table);
+void writeUVW(const Table &table, const string &name);
+
 int main(int argc, char **argv)
 {
   string imageFilename=argv[1];
+  if(argc==3)
+    string tableName=argv[2];
 
   LOFAR::BBS::ModelImageFft modelImage(imageFilename, 20);  // nwplanes=20
 
   // TODO: Adjust all this to use ModelImageFFT class implementation
   // Change these if necessary to adjust run time
   //
+
+  MeasurementSet ms(tableName, Table::Update);
+  double *baselines[3];
+
+  // Get baselines from MS
+  getBaselines(ms, baselines);
+
+  exit(0);    // DEBUG
+  
   const int nSamples=10000; // Number of data samples
   const int wSize=33; // Number of lookup planes in w projection
   const int nChan=16; // Number of spectral channels
@@ -129,9 +146,26 @@ int main(int argc, char **argv)
 }
 
 
-// Get baselines from MS for timeStart till timeEnd
+// Get baselines from MS from rowStart till rowEnd
 //
-void getBaselines()
+void getBaselines(const Table &table, double *baselines[3], unsigned int rowStart, unsigned int rowEnd)
 {
+  // Check that rowStart and rowEnd are within the limits
 
+// Example: 711.309, -357.693, 432.535
+
+  // ROTableColumn UVW: Double Array of Size [ 1 3 ]
+  // ROArrayColumn?
+}
+
+vector<double> getMSFrequencies(const Table &table)
+{
+  // Table: SPECTRAL_WINDOW, Column: CHAN_FREQ
+
+}
+
+
+void writeUVW(const Table &table, const string &name)
+{
+  // Complex Array of size [ 4 nchannels ]
 }
