@@ -683,6 +683,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         // if no entries in lists we can exit again
         if (itsOperatingModes.isEmpty()) {
             logger.error("ERROR setInputDefaults,  null entry found");
+            return;
         }
         
         // defaultSettings Index
