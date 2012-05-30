@@ -36,6 +36,9 @@ class copierTest(unittest.TestCase):
 
     def tearDown(self):
         shutil.rmtree(self.test_path)
+
+    def test_fail(self):
+        self.assertTrue(False, "lift off")
 #
 ## New version of gsm: Quick fix to allow tests to succeed
 ##    def test_field_of_view_HBA_120_CS(self):
