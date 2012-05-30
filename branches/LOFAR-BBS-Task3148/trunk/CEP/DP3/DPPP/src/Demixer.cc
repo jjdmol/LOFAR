@@ -51,6 +51,7 @@
 
 //#include <BBSKernel/ParmManager.h>
 #include <Common/StreamUtil.h>
+#include <Common/lofar_iomanip.h>
 #include <DPPP/SourceDBUtil.h>
 #include <DPPP/CursorUtilCasa.h>
 #include <DPPP/EstimateMixed.h>
@@ -65,7 +66,7 @@
 #include <ParmDB/Parm.h>
 
 using namespace casa;
-using namespace LOFAR::BBS;
+//using namespace LOFAR::BBS;
 
 namespace LOFAR {
   namespace DPPP {
@@ -106,20 +107,20 @@ namespace LOFAR {
 // TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
     {
       // Get and set solver options.
-      itsSolveOpt.maxIter =
-        parset.getUint  (prefix+"Solve.Options.MaxIter", 300);
-      itsSolveOpt.epsValue =
-        parset.getDouble(prefix+"Solve.Options.EpsValue", 1e-9);
-      itsSolveOpt.epsDerivative =
-        parset.getDouble(prefix+"Solve.Options.EpsDerivative", 1e-9);
-      itsSolveOpt.colFactor =
-        parset.getDouble(prefix+"Solve.Options.ColFactor", 1e-9);
-      itsSolveOpt.lmFactor  =
-        parset.getDouble(prefix+"Solve.Options.LMFactor", 1.0);
-      itsSolveOpt.balancedEq =
-        parset.getBool  (prefix+"Solve.Options.BalancedEqs", false);
-      itsSolveOpt.useSVD  =
-        parset.getBool  (prefix+"Solve.Options.UseSVD", true);
+//      itsSolveOpt.maxIter =
+//        parset.getUint  (prefix+"Solve.Options.MaxIter", 300);
+//      itsSolveOpt.epsValue =
+//        parset.getDouble(prefix+"Solve.Options.EpsValue", 1e-9);
+//      itsSolveOpt.epsDerivative =
+//        parset.getDouble(prefix+"Solve.Options.EpsDerivative", 1e-9);
+//      itsSolveOpt.colFactor =
+//        parset.getDouble(prefix+"Solve.Options.ColFactor", 1e-9);
+//      itsSolveOpt.lmFactor  =
+//        parset.getDouble(prefix+"Solve.Options.LMFactor", 1.0);
+//      itsSolveOpt.balancedEq =
+//        parset.getBool  (prefix+"Solve.Options.BalancedEqs", false);
+//      itsSolveOpt.useSVD  =
+//        parset.getBool  (prefix+"Solve.Options.UseSVD", true);
 //      itsBBSExpr.setOptions (itsSolveOpt);
       /// Maybe optionally a parset parameter directions to give the
       /// directions of unknown sources.
@@ -150,7 +151,7 @@ namespace LOFAR {
 
 // TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
       // Get the patch names and positions from the SourceDB table.
-      SourceDB sdb(ParmDBMeta("casa", itsSkyName));
+      BBS::SourceDB sdb(BBS::ParmDBMeta("casa", itsSkyName));
 
       for(uint i = 0; i < itsNModel; ++i) {
         itsPatchList.push_back(makePatch(sdb, itsAllSources[i]));
@@ -426,13 +427,13 @@ namespace LOFAR {
       os << "  demixfreqstep:  " << itsNChanAvg << std::endl;
       os << "  demixtimestep:  " << itsNTimeAvg << std::endl;
       os << "  ntimechunk:     " << itsNTimeChunk << std::endl;
-      os << "  Solve.Options.MaxIter:       " << itsSolveOpt.maxIter << endl;
-      os << "  Solve.Options.EpsValue:      " << itsSolveOpt.epsValue << endl;
-      os << "  Solve.Options.EpsDerivative: " << itsSolveOpt.epsDerivative << endl;
-      os << "  Solve.Options.ColFactor:     " << itsSolveOpt.colFactor << endl;
-      os << "  Solve.Options.LMFactor:      " << itsSolveOpt.lmFactor << endl;
-      os << "  Solve.Options.BalancedEqs:   " << itsSolveOpt.balancedEq << endl;
-      os << "  Solve.Options.UseSVD:        " << itsSolveOpt.useSVD <<endl;
+//      os << "  Solve.Options.MaxIter:       " << itsSolveOpt.maxIter << endl;
+//      os << "  Solve.Options.EpsValue:      " << itsSolveOpt.epsValue << endl;
+//      os << "  Solve.Options.EpsDerivative: " << itsSolveOpt.epsDerivative << endl;
+//      os << "  Solve.Options.ColFactor:     " << itsSolveOpt.colFactor << endl;
+//      os << "  Solve.Options.LMFactor:      " << itsSolveOpt.lmFactor << endl;
+//      os << "  Solve.Options.BalancedEqs:   " << itsSolveOpt.balancedEq << endl;
+//      os << "  Solve.Options.UseSVD:        " << itsSolveOpt.useSVD <<endl;
     }
 
     void Demixer::showTimings (std::ostream& os, double duration) const
@@ -1251,20 +1252,20 @@ namespace
       // Construct grids for parameter estimation.
       casa::Vector<double> freq = itsInput->chanFreqs(itsInput->nchan());
       casa::Vector<double> width = itsInput->chanWidths(itsInput->nchan());
-      Axis::ShPtr freqAxis(new RegularAxis(freq[0] - width[0] * 0.5, width[0],
-        1));
-      Axis::ShPtr timeAxis(new RegularAxis(itsInput->startTime()
+      BBS::Axis::ShPtr freqAxis(new BBS::RegularAxis(freq[0] - width[0] * 0.5,
+        width[0], 1));
+      BBS::Axis::ShPtr timeAxis(new BBS::RegularAxis(itsInput->startTime()
         - itsInput->timeInterval() * 0.5, itsTimeIntervalAvg, itsNTimeDemix));
 
       // Solve for each time slot over all channels.
-      Grid solGrid(freqAxis, timeAxis);
+      BBS::Grid solGrid(freqAxis, timeAxis);
 
       // Set parameter domain.
 //      ParmManager::instance().setDomain(solGrid.getBoundingBox());
 
-      ParmDB parmDB(ParmDBMeta("casa", itsInstrumentName));
-      ParmSet parmSet;
-      ParmCache parmCache(parmSet, solGrid.getBoundingBox());
+      BBS::ParmDB parmDB(BBS::ParmDBMeta("casa", itsInstrumentName));
+      BBS::ParmSet parmSet;
+      BBS::ParmCache parmCache(parmSet, solGrid.getBoundingBox());
 
       vector<string> names;
       const casa::Vector<casa::String> &tmp = itsInput->antennaNames();
@@ -1276,30 +1277,30 @@ namespace
       ASSERT(names.size() == itsNStation);
 
 //      vector<ParmProxy::Ptr> parms;
-      vector<Parm> parms;
+      vector<BBS::Parm> parms;
 //      BBS::ParmGroup group;
       for(size_t dr = 0; dr < itsNModel; ++dr)
       {
         for(size_t st = 0; st < itsNStation; ++st)
         {
-          parms.push_back(Parm(parmCache, parmSet.addParm(parmDB,
+          parms.push_back(BBS::Parm(parmCache, parmSet.addParm(parmDB,
             "DirectionalGain:0:0:Real:" + names[st] + ":" + itsAllSources[dr])));
-          parms.push_back(Parm(parmCache, parmSet.addParm(parmDB,
+          parms.push_back(BBS::Parm(parmCache, parmSet.addParm(parmDB,
             "DirectionalGain:0:0:Imag:" + names[st] + ":" + itsAllSources[dr])));
 
-          parms.push_back(Parm(parmCache, parmSet.addParm(parmDB,
+          parms.push_back(BBS::Parm(parmCache, parmSet.addParm(parmDB,
             "DirectionalGain:0:1:Real:" + names[st] + ":" + itsAllSources[dr])));
-          parms.push_back(Parm(parmCache, parmSet.addParm(parmDB,
+          parms.push_back(BBS::Parm(parmCache, parmSet.addParm(parmDB,
             "DirectionalGain:0:1:Imag:" + names[st] + ":" + itsAllSources[dr])));
 
-          parms.push_back(Parm(parmCache, parmSet.addParm(parmDB,
+          parms.push_back(BBS::Parm(parmCache, parmSet.addParm(parmDB,
             "DirectionalGain:1:0:Real:" + names[st] + ":" + itsAllSources[dr])));
-          parms.push_back(Parm(parmCache, parmSet.addParm(parmDB,
+          parms.push_back(BBS::Parm(parmCache, parmSet.addParm(parmDB,
             "DirectionalGain:1:0:Imag:" + names[st] + ":" + itsAllSources[dr])));
 
-          parms.push_back(Parm(parmCache, parmSet.addParm(parmDB,
+          parms.push_back(BBS::Parm(parmCache, parmSet.addParm(parmDB,
             "DirectionalGain:1:1:Real:" + names[st] + ":" + itsAllSources[dr])));
-          parms.push_back(Parm(parmCache, parmSet.addParm(parmDB,
+          parms.push_back(BBS::Parm(parmCache, parmSet.addParm(parmDB,
             "DirectionalGain:1:1:Imag:" + names[st] + ":" + itsAllSources[dr])));
 
 //          parms.push_back(ParmManager::instance().get(INSTRUMENT,

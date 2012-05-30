@@ -7,23 +7,23 @@ set(inst_HEADERS
   UVWCalculator.h
   MSReader.h MSWriter.h MSUpdater.h Counter.h
   Averager.h MedFlagger.h PreFlagger.h UVWFlagger.h AORFlagger.h
-  PhaseShift.h Demixer.h EstimateNDPPP.h EstimateNew.h
+  PhaseShift.h Demixer.h
   Cursor.h CursorUtilCasa.h Patch.h PointSource.h Position.h Stokes.h SourceDBUtil.h
   Apply.h EstimateMixed.h Simulate.h SubtractMixed.h Baseline.h
-#  SourceList.h
   FlaggerStatistics.h
-  MsInfo.h
-  MsFile.h
-  ComplexMedianFlagger.h
-  FrequencyFlagger.h
-  ComplexMedianFlagger2.h
-  MADFlagger.h
-  BandpassCorrector.h
-  DataSquasher.h
-  DataBuffer.h
-  TimeBuffer.h
-  RunDetails.h
-  Pipeline.h
+# The following is old IDPPP stuff.
+#  MsInfo.h
+#  MsFile.h
+#  ComplexMedianFlagger.h
+#  FrequencyFlagger.h
+#  ComplexMedianFlagger2.h
+#  MADFlagger.h
+#  BandpassCorrector.h
+#  DataSquasher.h
+#  DataBuffer.h
+#  TimeBuffer.h
+#  RunDetails.h
+#  Pipeline.h
   HWTimer.h)
 
 # Create symbolic link to include directory.
@@ -33,3 +33,4 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 
 # Install header files.
 install(FILES ${inst_HEADERS} DESTINATION include/${PACKAGE_NAME})
+
