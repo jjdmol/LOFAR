@@ -39,7 +39,7 @@
 #include <measures/Measures/MDirection.h>
 
 // TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
-#include <BBSKernel/VisDimensions.h>
+//#include <BBSKernel/VisDimensions.h>
 //#include <DPPP/EstimateNew.h>
 // TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
 
@@ -149,10 +149,10 @@ namespace LOFAR {
       vector<double>           itsTimeCenters;
       vector<double>           itsTimeWidths;
 ///      bool                     itsJointSolve;
-      uint                     itsNrDir;
-      uint                     itsNrModel;
-      uint                     itsNrBl;
-      uint                     itsNrCorr;
+      uint                     itsNDir;
+      uint                     itsNModel;
+      uint                     itsNBl;
+      uint                     itsNCorr;
       uint                     itsNChanIn;
       uint                     itsNTimeIn;
       uint                     itsNChanOutSubtr;
@@ -189,6 +189,7 @@ namespace LOFAR {
       uint                     itsNStation;
       Position                 itsPhaseRef;
       casa::Array<double>      itsUnknowns;
+      casa::Array<double>      itsErrors;
       casa::Array<double>      itsLastKnowns;
       vector<casa::MeasFrame>           itsFrames;
       vector<casa::MDirection::Convert> itsConverters;

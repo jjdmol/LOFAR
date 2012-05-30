@@ -84,11 +84,17 @@ void estimate(size_t nDirection, size_t nStation, size_t nBaseline,
     const_cursor<bool> flag, const_cursor<float> weight,
     const_cursor<dcomplex> mix, cursor<double> unknowns);
 
-void estimate2(size_t nStation, size_t nBaseline, size_t nChannel,
-    const vector<size_t> &directions, const vector<Baseline> &baselines,
+void estimate2(size_t nDirection, size_t nStation, size_t nBaseline, size_t nChannel,
+    const vector<Baseline> &baselines,
     vector<const_cursor<fcomplex> > data, vector<const_cursor<dcomplex> > model,
     const_cursor<bool> flag, const_cursor<float> weight,
-    const_cursor<dcomplex> mix, cursor<double> unknowns);
+    const_cursor<dcomplex> mix, double *unknowns, double *errors);
+
+//void estimate2(size_t nStation, size_t nBaseline, size_t nChannel,
+//    const vector<size_t> &directions, const vector<Baseline> &baselines,
+//    vector<const_cursor<fcomplex> > data, vector<const_cursor<dcomplex> > model,
+//    const_cursor<bool> flag, const_cursor<float> weight,
+//    const_cursor<dcomplex> mix, double *unknowns, double *errors);
 // @}
 
 } //# namespace DPPP

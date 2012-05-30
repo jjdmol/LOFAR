@@ -33,7 +33,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/StreamUtil.h>
 #include <Common/OpenMP.h>
-#include <BBSKernel/MeasurementAIPS.h>
+//#include <BBSKernel/MeasurementAIPS.h>
 
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
@@ -49,7 +49,7 @@
 #include <iostream>
 #include <iomanip>
 
-#include <BBSKernel/ParmManager.h>
+//#include <BBSKernel/ParmManager.h>
 #include <Common/StreamUtil.h>
 #include <DPPP/SourceDBUtil.h>
 #include <DPPP/CursorUtilCasa.h>
@@ -58,6 +58,11 @@
 #include <DPPP/Apply.h>
 #include <DPPP/Simulate.h>
 #include <boost/multi_array.hpp>
+
+#include <ParmDB/ParmDB.h>
+#include <ParmDB/ParmSet.h>
+#include <ParmDB/ParmCache.h>
+#include <ParmDB/Parm.h>
 
 using namespace casa;
 using namespace LOFAR::BBS;
@@ -132,9 +137,9 @@ namespace LOFAR {
                  "time window should fit final averaging integrally");
       itsNTimeChunkSubtr = (itsNTimeChunk * itsNTimeAvg) / itsNTimeAvgSubtr;
       // Collect all source names.
-      itsNrModel = itsSubtrSources.size() + itsModelSources.size();
-      itsNrDir   = itsNrModel + itsExtraSources.size() + 1;
-      itsAllSources.reserve (itsNrDir);
+      itsNModel = itsSubtrSources.size() + itsModelSources.size();
+      itsNDir   = itsNModel + itsExtraSources.size() + 1;
+      itsAllSources.reserve (itsNDir);
       itsAllSources.insert (itsAllSources.end(),
                             itsSubtrSources.begin(), itsSubtrSources.end());
       itsAllSources.insert (itsAllSources.end(),
@@ -147,7 +152,7 @@ namespace LOFAR {
       // Get the patch names and positions from the SourceDB table.
       SourceDB sdb(ParmDBMeta("casa", itsSkyName));
 
-      for(uint i = 0; i < itsNrModel; ++i) {
+      for(uint i = 0; i < itsNModel; ++i) {
         itsPatchList.push_back(makePatch(sdb, itsAllSources[i]));
       }
 // TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
@@ -156,7 +161,7 @@ namespace LOFAR {
       // Because the target source has to be the last direction, it means
       // that (for the time being) no extra sources can be given.
       if (! itsTargetSource.empty()) {
-        itsNrModel++;
+        itsNModel++;
         ASSERTSTR (itsExtraSources.empty(), "Currently no extrasources can "
                    "be given if the targetsource is given");
 // TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
@@ -164,15 +169,15 @@ namespace LOFAR {
 // TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
       }
 // TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
-      ASSERT(itsPatchList.size() == itsNrModel);
+      ASSERT(itsPatchList.size() == itsNModel);
 // TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
 
       // Size buffers.
       itsFactors.resize      (itsNTimeChunk);
       itsFactorsSubtr.resize (itsNTimeChunkSubtr);
-      itsPhaseShifts.reserve (itsNrDir-1);
-      itsFirstSteps.reserve  (itsNrDir+1);   // one extra for itsAvgSubtr
-      itsAvgResults.reserve  (itsNrDir);
+      itsPhaseShifts.reserve (itsNDir-1);
+      itsFirstSteps.reserve  (itsNDir+1);   // one extra for itsAvgSubtr
+      itsAvgResults.reserve  (itsNDir);
 
 //      // Get the patch names and positions from the SourceDB table.
 //      SourceDB sdb(ParmDBMeta("casa", itsSkyName));
@@ -186,7 +191,7 @@ namespace LOFAR {
       //   predict more directions than to solve (for strong sources in field).
       // - use BBS to subtract the solved sources using the demix factors.
       //   The averaging used here can be smaller than used when solving.
-      for (uint i=0; i<itsNrDir-1; ++i) {
+      for (uint i=0; i<itsNDir-1; ++i) {
         // First make the phaseshift and average steps for each demix source.
         // The resultstep gets the result.
         // The phasecenter can be given in a parameter. Its name is the default.
@@ -199,7 +204,7 @@ namespace LOFAR {
 //          sourceVec[0] = toString(patchInfo[0].getRa());
 //          sourceVec.push_back (toString(patchInfo[0].getDec()));
 //        }
-        if(i < itsNrModel) {
+        if(i < itsNModel) {
           sourceVec[0] = toString(itsPatchList[i].position[0]);
           sourceVec.push_back(toString(itsPatchList[i].position[1]));
         }
@@ -249,10 +254,10 @@ namespace LOFAR {
           input->getAnt2()[i]));
       }
 
-      while(itsCutOffs.size() < itsNrModel) {
+      while(itsCutOffs.size() < itsNModel) {
         itsCutOffs.push_back(0);
       }
-      itsCutOffs.resize(itsNrModel);
+      itsCutOffs.resize(itsNModel);
       LOG_DEBUG_STR("Elevation cutoffs: " << itsCutOffs);
 
       itsFrames.reserve(OpenMP::maxThreads());
@@ -275,12 +280,16 @@ namespace LOFAR {
 
     void Demixer::initUnknowns()
     {
-      itsUnknowns.resize(IPosition(4, 8, itsNStation, itsNrModel,
+      itsUnknowns.resize(IPosition(4, 8, itsNStation, itsNModel,
         itsNTimeDemix));
       itsUnknowns = 0.0;
 
-      itsLastKnowns.resize(IPosition(3, 8, itsNStation, itsNrModel));
-      for(uint dr = 0; dr < itsNrModel; ++dr) {
+      itsErrors.resize(IPosition(4, 8, itsNStation, itsNModel,
+        itsNTimeDemix));
+      itsErrors = 0.0;
+
+      itsLastKnowns.resize(IPosition(3, 8, itsNStation, itsNModel));
+      for(uint dr = 0; dr < itsNModel; ++dr) {
         for(uint st = 0; st < itsNStation; ++st) {
           itsLastKnowns(IPosition(3, 0, st, dr)) = 1.0;
           itsLastKnowns(IPosition(3, 1, st, dr)) = 0.0;
@@ -310,13 +319,13 @@ namespace LOFAR {
     void Demixer::updateInfo (DPInfo& info)
     {
       // Get size info.
-      itsNChanIn  = info.nchan();
-      itsNrBl     = info.nbaselines();
-      itsNrCorr   = info.ncorr();
-      itsFactorBuf.resize (IPosition(4, itsNrCorr, itsNChanIn, itsNrBl,
-                                     itsNrDir*(itsNrDir-1)/2));
-      itsFactorBufSubtr.resize (IPosition(4, itsNrCorr, itsNChanIn, itsNrBl,
-                                     itsNrDir*(itsNrDir-1)/2));
+      itsNChanIn = info.nchan();
+      itsNBl     = info.nbaselines();
+      itsNCorr   = info.ncorr();
+      itsFactorBuf.resize (IPosition(4, itsNCorr, itsNChanIn, itsNBl,
+                                     itsNDir*(itsNDir-1)/2));
+      itsFactorBufSubtr.resize (IPosition(4, itsNCorr, itsNChanIn, itsNBl,
+                                     itsNDir*(itsNDir-1)/2));
       itsTimeInterval = info.timeInterval();
 
       // Adapt averaging to available nr of channels and times.
@@ -344,7 +353,7 @@ namespace LOFAR {
           itsTimeIntervalAvg = infocp.timeInterval();
         }
         // Create the BBS model expression for sources with a model.
-        if (i < itsNrModel) {
+        if (i < itsNModel) {
 //          itsBBSExpr.addModel (itsAllSources[i], infocp.phaseCenter());
 
 // TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
@@ -381,14 +390,14 @@ namespace LOFAR {
       itsFreqSubtr = itsInput->chanFreqs (itsNChanAvgSubtr);
 
 // TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
-      LOG_DEBUG_STR("#directions: " << itsNrModel);
+      LOG_DEBUG_STR("#directions: " << itsNModel);
       LOG_DEBUG_STR("#stations: " << itsNStation);
       LOG_DEBUG_STR("#times: " << itsNTimeDemix);
       MDirection dirJ2000(MDirection::Convert(info.phaseCenter(), MDirection::J2000)());
       casa::Quantum<casa::Vector<casa::Double> > angles = dirJ2000.getAngle();
       itsPhaseRef = Position(angles.getBaseValue()(0),
         angles.getBaseValue()(1));
-//      itsState.init(itsNrModel, itsNStation, nTimeDemix, itsBaselinesTMP,
+//      itsState.init(itsNModel, itsNStation, nTimeDemix, itsBaselinesTMP,
 //        itsFreqAxisDemix, itsFreqAxisSubtr,
 //        angles.getBaseValue()(0), angles.getBaseValue()(1),
 //        itsSolveOpt);
@@ -573,7 +582,7 @@ namespace LOFAR {
                               Array<DComplex>& factorBuf)
     {
       // Nothing to do if only target direction.
-      if (itsNrDir <= 1) return;
+      if (itsNDir <= 1) return;
       int ncorr  = newBuf.getData().shape()[0];
       int nchan  = newBuf.getData().shape()[1];
       int nbl    = newBuf.getData().shape()[2];
@@ -582,16 +591,16 @@ namespace LOFAR {
       //# to process.
       DComplex* test = factorBuf.data();
 
-      for (uint i1=0; i1<itsNrDir-1; ++i1) {
-        for (uint i0=i1+1; i0<itsNrDir; ++i0) {
-          if (i0 == itsNrDir-1) {
+      for (uint i1=0; i1<itsNDir-1; ++i1) {
+        for (uint i0=i1+1; i0<itsNDir; ++i0) {
+          if (i0 == itsNDir-1) {
 ///#pragma omp parallel for
             for (int i=0; i<nbl; ++i) {
 //              const double* uvw       = newBuf.getUVW().data() + i*3;
               const bool*   flagPtr   = newBuf.getFlags().data() + i*ncorr*nchan;
               const float*  weightPtr = newBuf.getWeights().data() + i*ncorr*nchan;
               const DComplex* phasor1 = itsPhaseShifts[i1]->getPhasors().data() + i*nchan;
-              DComplex* factorPtr     = factorBuf.data() + i*ncorr*nchan + ((i1 * (2 * itsNrDir - i1 - 1)) / 2 + (i0 - i1 - 1)) * ncorr * nchan * nbl;
+              DComplex* factorPtr     = factorBuf.data() + i*ncorr*nchan + ((i1 * (2 * itsNDir - i1 - 1)) / 2 + (i0 - i1 - 1)) * ncorr * nchan * nbl;
               for (int j=0; j<nchan; ++j) {
                 DComplex factor = conj(*phasor1++);
                 for (int k=0; k<ncorr; ++k) {
@@ -615,7 +624,7 @@ namespace LOFAR {
               const float*  weightPtr = newBuf.getWeights().data() + i*ncorr*nchan;
               const DComplex* phasor0 = itsPhaseShifts[i0]->getPhasors().data() + i*nchan;
               const DComplex* phasor1 = itsPhaseShifts[i1]->getPhasors().data() + i*nchan;
-              DComplex* factorPtr     = factorBuf.data() + ((i1 * (2 * itsNrDir - i1 - 1)) / 2 + (i0 - i1 - 1)) * ncorr * nchan * nbl + i*ncorr*nchan;
+              DComplex* factorPtr     = factorBuf.data() + ((i1 * (2 * itsNDir - i1 - 1)) / 2 + (i0 - i1 - 1)) * ncorr * nchan * nbl + i*ncorr*nchan;
               for (int j=0; j<nchan; ++j) {
                 // Probably multiply with conj
                 DComplex factor = *phasor0++ / *phasor1++;
@@ -644,35 +653,35 @@ namespace LOFAR {
                                uint nChanAvg)
     {
       // Nothing to do if only target direction.
-      if (itsNrDir <= 1) return;
+      if (itsNDir <= 1) return;
       ASSERT (! weightSums.empty());
-      bufOut.resize (IPosition(5, itsNrDir, itsNrDir,
-                               itsNrCorr, nChanOut, itsNrBl));
+      bufOut.resize (IPosition(5, itsNDir, itsNDir,
+                               itsNCorr, nChanOut, itsNBl));
       bufOut = DComplex(1,0);
       const DComplex* phin = bufIn.data();
-      for (uint d0=0; d0<itsNrDir; ++d0) {
-        for (uint d1=d0+1; d1<itsNrDir; ++d1) {
-          DComplex* ph1 = bufOut.data() + d0*itsNrDir + d1;
-          DComplex* ph2 = bufOut.data() + d1*itsNrDir + d0;
+      for (uint d0=0; d0<itsNDir; ++d0) {
+        for (uint d1=d0+1; d1<itsNDir; ++d1) {
+          DComplex* ph1 = bufOut.data() + d0*itsNDir + d1;
+          DComplex* ph2 = bufOut.data() + d1*itsNDir + d0;
           // Average for all channels and divide by the summed weights.
           const float* weightPtr = weightSums.data();
-          for (uint k=0; k<itsNrBl; ++k) {
+          for (uint k=0; k<itsNBl; ++k) {
             for (uint c0=0; c0<nChanOut; ++c0) {
               DComplex sum[4];
               uint nch = std::min(nChanAvg, itsNChanIn-c0*nChanAvg);
               for (uint c1=0; c1<nch; ++c1) {
-                for (uint j=0; j<itsNrCorr; ++j) {
+                for (uint j=0; j<itsNCorr; ++j) {
                   sum[j] += *phin++;
                 }
               }
-              for (uint j=0; j<itsNrCorr; ++j) {
+              for (uint j=0; j<itsNCorr; ++j) {
                 *ph1 = sum[j] / double(*weightPtr++);
                 *ph2 = conj(*ph1);
-                ph1 += itsNrDir*itsNrDir;
-                ph2 += itsNrDir*itsNrDir;
+                ph1 += itsNDir*itsNDir;
+                ph2 += itsNDir*itsNDir;
               }
             }
-            ASSERTSTR(phin == bufIn.data() + ((d0 * (2 * itsNrDir - d0 - 1)) / 2 + (d1 - d0 - 1)) * itsNrBl * itsNrCorr * itsNChanIn + (k + 1) * itsNrCorr * itsNChanIn, "phin: " << reinterpret_cast<size_t>(phin) << " computed: " << reinterpret_cast<size_t>(bufIn.data() + ((d0 * (2 * itsNrDir - d0 - 1)) / 2 + (d1 - d0 - 1)) * itsNrBl * itsNrCorr * itsNChanIn + (k + 1) * itsNrCorr * itsNChanIn));
+            ASSERTSTR(phin == bufIn.data() + ((d0 * (2 * itsNDir - d0 - 1)) / 2 + (d1 - d0 - 1)) * itsNBl * itsNCorr * itsNChanIn + (k + 1) * itsNCorr * itsNChanIn, "phin: " << reinterpret_cast<size_t>(phin) << " computed: " << reinterpret_cast<size_t>(bufIn.data() + ((d0 * (2 * itsNDir - d0 - 1)) / 2 + (d1 - d0 - 1)) * itsNBl * itsNCorr * itsNChanIn + (k + 1) * itsNCorr * itsNChanIn));
           }
         }
       }
@@ -683,14 +692,14 @@ namespace LOFAR {
                              uint resultIndex)
     {
       // Nothing to do if only target direction or if all sources are modeled.
-      if (itsNrDir <= 1  ||  itsNrDir == itsNrModel) return;
+      if (itsNDir <= 1 || itsNDir == itsNModel) return;
       // Get pointers to the data for the various directions.
-      vector<Complex*> resultPtr(itsNrDir);
-      for (uint j=0; j<itsNrDir; ++j) {
+      vector<Complex*> resultPtr(itsNDir);
+      for (uint j=0; j<itsNDir; ++j) {
         resultPtr[j] = avgResults[j]->get()[resultIndex].getData().data();
       }
       // Sources without a model have to be deprojected.
-      uint nrDeproject = itsNrDir - itsNrModel;
+      uint nrDeproject = itsNDir - itsNModel;
       // The projection matrix is given by
       //     P = I - A * inv(A.T.conj * A) * A.T.conj
       // where A is the last column of the demixing matrix M.
@@ -710,25 +719,25 @@ namespace LOFAR {
       // Calculate P for all baselines,channels,correlations.
       IPosition shape = factors.shape();
       int nvis = shape[2] * shape[3] * shape[4];
-      shape[1] = itsNrModel;
+      shape[1] = itsNModel;
       Array<DComplex> newFactors (shape);
-      IPosition inShape (2, itsNrDir, itsNrDir);
-      IPosition outShape(2, itsNrDir, itsNrModel);
+      IPosition inShape (2, itsNDir, itsNDir);
+      IPosition outShape(2, itsNDir, itsNModel);
 ///#pragma omp parallel
       {
-	casa::Matrix<DComplex> a(itsNrDir, nrDeproject);
-	casa::Matrix<DComplex> ma(itsNrDir, itsNrModel);
-	vector<DComplex> vec(itsNrDir);
+	casa::Matrix<DComplex> a(itsNDir, nrDeproject);
+	casa::Matrix<DComplex> ma(itsNDir, itsNModel);
+	vector<DComplex> vec(itsNDir);
 ///#pragma omp for
 	for (int i=0; i<nvis; ++i) {
 	  // Split the matrix into the modeled and deprojected sources.
 	  // Copy the columns to the individual matrices.
-	  const DComplex* inptr  = factors.data() + i*itsNrDir*itsNrDir;
-	  DComplex* outptr = newFactors.data() + i*itsNrDir*itsNrModel;
+	  const DComplex* inptr  = factors.data() + i*itsNDir*itsNDir;
+	  DComplex* outptr = newFactors.data() + i*itsNDir*itsNModel;
 	  casa::Matrix<DComplex> out (outShape, outptr, SHARE);
 	  // Copying a bit of data is probably faster than taking a matrix subset.
-	  objcopy (ma.data(), inptr, itsNrDir*itsNrModel);
-	  objcopy (a.data(), inptr + itsNrDir*itsNrModel, itsNrDir*nrDeproject);
+	  objcopy (ma.data(), inptr, itsNDir*itsNModel);
+	  objcopy (a.data(), inptr + itsNDir*itsNModel, itsNDir*nrDeproject);
 	  // Calculate conjugated transpose of A, multiply with A, and invert.
 	  casa::Matrix<DComplex> at(adjoint(a));
 	  casa::Matrix<DComplex> ata(invert(product(at, a)));
@@ -746,13 +755,13 @@ namespace LOFAR {
 	  ///        cout << "p matrix: " << p;
 	  // Multiply the averaged data point with P.
 	  std::fill (vec.begin(), vec.end(), DComplex());
-	  for (uint j=0; j<itsNrDir; ++j) {
-	    for (uint k=0; k<itsNrDir; ++k) {
+	  for (uint j=0; j<itsNDir; ++j) {
+	    for (uint k=0; k<itsNDir; ++k) {
 	      vec[k] += DComplex(resultPtr[j][i]) * p(k,j);
 	    }
 	  }
 	  // Put result back in averaged data for those sources.
-	  for (uint j=0; j<itsNrDir; ++j) {
+	  for (uint j=0; j<itsNDir; ++j) {
 	    resultPtr[j][i] = vec[j];
 	  }
 	  ///        cout << vec << endl;
@@ -762,18 +771,100 @@ namespace LOFAR {
       factors.reference (newFactors);
     }
 
+namespace
+{
+    void pack_mixing_factors(size_t nBl, size_t nCh, size_t nCr,
+        const vector<size_t> &directions,
+        const_cursor<dcomplex> in, cursor<dcomplex> out)
+    {
+        typedef vector<size_t>::const_iterator it_type;
+
+        for(size_t bl = 0; bl < nBl; ++bl) {
+          for(size_t ch = 0; ch < nCh; ++ch) {
+              for(size_t cr = 0; cr < nCr; ++cr) {
+                for(it_type i = directions.begin(), end_i = directions.end(); i != end_i; ++i) {
+                  in.forward(1, *i);
+                  for(it_type j = directions.begin(), end_j = directions.end(); j != end_j; ++j) {
+                    *out = in[*j];
+                    ++out;
+                  }
+                  out -= directions.size();
+                  out.forward(1);
+                  in.backward(1, *i);
+              }
+
+              in.forward(2);
+              out.backward(1, directions.size());
+              out.forward(2);
+            }
+            in.backward(2, nCr);
+            out.backward(2, nCr);
+            in.forward(3);
+            out.forward(3);
+          }
+          in.backward(3, nCh);
+          out.backward(3, nCh);
+          in.forward(4);
+          out.forward(4);
+        }
+    }
+
+    void pack(size_t nStation, const vector<size_t> &directions,
+        const_cursor<double> in, double *out)
+    {
+        for(size_t dr = 0; dr < directions.size(); ++dr)
+        {
+            in.forward(2, directions[dr]);
+            for(size_t st = 0; st < nStation; ++st)
+            {
+                for(size_t i = 0; i < 8; ++i)
+                {
+                    *out = *in;
+                    ++in;
+                    ++out;
+                }
+                in -= 8;
+                in.forward(1);
+            }
+            in.backward(1, nStation);
+            in.backward(2, directions[dr]);
+        }
+    }
+
+    void unpack(size_t nStation, const vector<size_t> &directions,
+        const double *in, cursor<double> out)
+    {
+        for(size_t dr = 0; dr < directions.size(); ++dr)
+        {
+            out.forward(2, directions[dr]);
+            for(size_t st = 0; st < nStation; ++st)
+            {
+                for(size_t i = 0; i < 8; ++i)
+                {
+                    *out = *in;
+                    ++out;
+                    ++in;
+                }
+                out -= 8;
+                out.forward(1);
+            }
+            out.backward(1, nStation);
+            out.backward(2, directions[dr]);
+        }
+    }
+}
 
     void Demixer::demix()
     {
       // Only solve and subtract if multiple directions.
-      if (itsNrDir > 1) {
+      if (itsNDir > 1) {
         // Collect buffers for each direction.
         vector<vector<DPBuffer> > streams;
         for (size_t i=0; i<itsAvgResults.size(); ++i) {
           // Only the phased shifted and averaged data for directions which have
           // an associated model should be used to estimate the directional
           // response.
-          if(i < itsNrModel) {
+          if(i < itsNModel) {
             streams.push_back (itsAvgResults[i]->get());
           }
           // Clear the buffers.
@@ -784,8 +875,8 @@ namespace LOFAR {
 
         const size_t nTime = streams[0].size();
 
-        LOG_DEBUG_STR("#models: " << itsNrModel);
-        LOG_DEBUG_STR("#directions: " << itsNrDir);
+        LOG_DEBUG_STR("#models: " << itsNModel);
+        LOG_DEBUG_STR("#directions: " << itsNDir);
         LOG_DEBUG_STR("target #time: " << itsAvgResultSubtr->get().size());
         LOG_DEBUG_STR("streams #dir: " << streams.size() << " #time: "
             << streams[0].size());
@@ -795,7 +886,7 @@ namespace LOFAR {
             << itsFactorsSubtr[0].shape());
 
         const size_t nThread = OpenMP::maxThreads();
-        const size_t nDr = itsNrModel;
+        const size_t nDr = itsNModel;
         const size_t nSt = itsNStation;
         const size_t nBl = itsBaselines.size();
         const size_t nCh = itsFreqDemix.size();
@@ -816,8 +907,12 @@ namespace LOFAR {
                 &(unknowns[i][0]));
         }
 
+        boost::multi_array<double, 2> errors(boost::extents[nThread][nDr * nSt * 8]);
+
         boost::multi_array<double, 3> uvw(boost::extents[nThread][nSt][3]);
         boost::multi_array<dcomplex, 5> buffer(boost::extents[nThread][nDr][nBl][nCh][nCr]);
+
+//        boost::multi_array<dcomplex, 2> mix(boost::extents[nThread][nDr * nDr * nCr * nCh * nBl]);
 
         const size_t nChRes = itsFreqSubtr.size();
         boost::multi_array<dcomplex, 4> residual(boost::extents[nThread][nBl][nChRes][nCr]);
@@ -890,14 +985,48 @@ namespace LOFAR {
             const_cursor<bool> cr_flag = casa_const_cursor(streams[0][i].getFlags());
             const_cursor<float> cr_weight =
                 casa_const_cursor(streams[0][i].getWeights());
-            const_cursor<dcomplex> cr_mix = casa_const_cursor(itsFactors[i]);
 
-            size_t strides_unknowns[3] = {1, 8, nSt * 8};
-            cursor<double> cr_unknowns(&(unknowns[thread][0]), 3, strides_unknowns);
-//            estimate(nDr, nSt, nBl, nCh, cr_data, cr_model, cr_baseline,
-//                cr_flag, cr_weight, cr_mix, cr_unknowns);
-            estimate2(nSt, nBl, nCh, drUp, itsBaselines, cr_data,
-                cr_model, cr_flag, cr_weight, cr_mix, cr_unknowns);
+            if(nDrUp != nDr)
+            {
+                LOG_DEBUG_STR("packing unknowns and mixing factors...");
+                vector<double> unknowns_packed(nDrUp * nSt * 8);
+                vector<double> errors_packed(nDrUp * nSt * 8);
+                vector<dcomplex> mix_packed(nDrUp * nDrUp * nCr * nCh * nBl);
+
+                // pack unknowns, mixing factors
+                size_t strides_mix[5] = {1, nDrUp, nDrUp * nDrUp, nCr * nDrUp * nDrUp, nCh * nCr * nDrUp * nDrUp};
+                pack_mixing_factors(nBl, nCh, nCr, drUp, casa_const_cursor(itsFactors[i]), cursor<dcomplex>(&(mix_packed[0]), 5, strides_mix));
+
+                size_t strides_unknowns[3] = {1, 8, nSt * 8};
+                pack(nSt, drUp, const_cursor<double>(&(unknowns[thread][0]), 3, strides_unknowns), &(unknowns_packed[0]));
+
+                const_cursor<dcomplex> cr_mix(&(mix_packed[0]), 5, strides_mix);
+
+                // estimate
+                estimate2(nDrUp, nSt, nBl, nCh, itsBaselines, cr_data,
+                    cr_model, cr_flag, cr_weight, cr_mix, &(unknowns_packed[0]),
+                    &(errors_packed[0]));
+
+                // unpack unknowns, errors
+                unpack(nSt, drUp, &(unknowns_packed[0]), cursor<double>(&(unknowns[thread][0]), 3, strides_unknowns));
+                unpack(nSt, drUp, &(errors_packed[0]), cursor<double>(&(errors[thread][0]), 3, strides_unknowns));
+            }
+            else
+            {
+
+//                size_t strides_unknowns[3] = {1, 8, nSt * 8};
+//                cursor<double> cr_unknowns(&(unknowns[thread][0]), 3, strides_unknowns);
+
+//                cursor<double> cr_errors(&(errors[thread][0]), 3, strides_unknowns);
+    //            estimate(nDr, nSt, nBl, nCh, cr_data, cr_model, cr_baseline,
+    //                cr_flag, cr_weight, cr_mix, cr_unknowns);
+//                estimate2(nSt, nBl, nCh, drUp, itsBaselines, cr_data,
+//                    cr_model, cr_flag, cr_weight, cr_mix, cr_unknowns, cr_errors);
+
+                const_cursor<dcomplex> cr_mix = casa_const_cursor(itsFactors[i]);
+                estimate2(nDr, nSt, nBl, nCh, itsBaselines, cr_data,
+                    cr_model, cr_flag, cr_weight, cr_mix, &(unknowns[thread][0]), &(errors[thread][0]));
+            }
 
             // Tweak solutions.
             const size_t nTimeResidual = min(timeFactor, target.size() - i * timeFactor);
@@ -948,14 +1077,14 @@ namespace LOFAR {
                     cursor<fcomplex> cr_residual = casa_cursor(target[i * timeFactor + j].getData());
 
                     const casa::IPosition tmp_strides_mix_res = itsFactorsSubtr[i * timeFactor + j].steps();
-//                    LOG_DEBUG_STR("nDrRes: " << nDrRes << " itsNrDir: " << itsNrDir << " " << tmp_strides_mix_res[2] << " " << tmp_strides_mix_res[3] << " " << tmp_strides_mix_res[4]);
-                    ASSERT(static_cast<size_t>(tmp_strides_mix_res[2]) == (itsNrDir) * (itsNrDir)
-                        && static_cast<size_t>(tmp_strides_mix_res[3]) == nCr * (itsNrDir) * (itsNrDir)
-                        && static_cast<size_t>(tmp_strides_mix_res[4]) == nChRes * nCr * (itsNrDir) * (itsNrDir));
+//                    LOG_DEBUG_STR("nDrRes: " << nDrRes << " itsNDir: " << itsNDir << " " << tmp_strides_mix_res[2] << " " << tmp_strides_mix_res[3] << " " << tmp_strides_mix_res[4]);
+                    ASSERT(static_cast<size_t>(tmp_strides_mix_res[2]) == (itsNDir) * (itsNDir)
+                        && static_cast<size_t>(tmp_strides_mix_res[3]) == nCr * (itsNDir) * (itsNDir)
+                        && static_cast<size_t>(tmp_strides_mix_res[4]) == nChRes * nCr * (itsNDir) * (itsNDir));
 
-                    // The target direction is always last, and therefore it has index itsNrDir - 1.
+                    // The target direction is always last, and therefore it has index itsNDir - 1.
                     // The directions to subtract are always first, and therefore have indices [0, nDrRes).
-                    const_cursor<dcomplex> cr_mix(&(itsFactorsSubtr[i * timeFactor + j](casa::IPosition(5, itsNrDir - 1, drIdx, 0, 0, 0))), 3, tmp_strides_mix_res.storage() + 2);
+                    const_cursor<dcomplex> cr_mix(&(itsFactorsSubtr[i * timeFactor + j](casa::IPosition(5, itsNDir - 1, drIdx, 0, 0, 0))), 3, tmp_strides_mix_res.storage() + 2);
                     subtract(nBl, nChRes, cr_baseline, cr_residual, cr_model_res, cr_mix);
                 }
             }
@@ -966,6 +1095,8 @@ namespace LOFAR {
                 size_t idx = drUp[dr];
                 copy(&(unknowns[thread][idx * nSt * 8]), &(unknowns[thread][idx * nSt * 8]) + nSt * 8,
                    &(itsUnknowns(IPosition(4, 0, 0, idx, itsTimeCount + i))));
+                copy(&(errors[thread][idx * nSt * 8]), &(errors[thread][idx * nSt * 8]) + nSt * 8,
+                   &(itsErrors(IPosition(4, 0, 0, idx, itsTimeCount + i))));
             }
         }
 
@@ -1004,14 +1135,14 @@ namespace LOFAR {
     void Demixer::demix()
     {
       // Only solve and subtract if multiple directions.
-      if (itsNrDir > 1) {
+      if (itsNDir > 1) {
         // Collect buffers for each direction.
         vector<vector<DPBuffer> > buffers;
         for (size_t i=0; i<itsAvgResults.size(); ++i) {
           // Only the phased shifted and averaged data for directions which have
           // an associated model should be used to estimate the directional
           // response.
-          if(i < itsNrModel) {
+          if(i < itsNModel) {
             buffers.push_back (itsAvgResults[i]->get());
           }
           // Clear the buffers.
@@ -1108,13 +1239,13 @@ namespace LOFAR {
     {
       LOG_DEBUG_STR("writing solutions...");
 
-      try {
-        ParmManager::instance().initCategory(INSTRUMENT,
-          ParmDB(ParmDBMeta("casa", itsInstrumentName)));
-      } catch (Exception &e) {
-        THROW(Exception, "Failed to open instrument model parameter database: "
-          << itsInstrumentName);
-      }
+//      try {
+//        ParmManager::instance().initCategory(INSTRUMENT,
+//          ParmDB(ParmDBMeta("casa", itsInstrumentName)));
+//      } catch (Exception &e) {
+//        THROW(Exception, "Failed to open instrument model parameter database: "
+//          << itsInstrumentName);
+//      }
 
       // Construct grids for parameter estimation.
       casa::Vector<double> freq = itsInput->chanFreqs(itsInput->nchan());
@@ -1128,7 +1259,11 @@ namespace LOFAR {
       Grid solGrid(freqAxis, timeAxis);
 
       // Set parameter domain.
-      ParmManager::instance().setDomain(solGrid.getBoundingBox());
+//      ParmManager::instance().setDomain(solGrid.getBoundingBox());
+
+      ParmDB parmDB(ParmDBMeta("casa", itsInstrumentName));
+      ParmSet parmSet;
+      ParmCache parmCache(parmSet, solGrid.getBoundingBox());
 
       vector<string> names;
       const casa::Vector<casa::String> &tmp = itsInput->antennaNames();
@@ -1139,53 +1274,86 @@ namespace LOFAR {
       LOG_DEBUG_STR("#stations: " << names.size());
       ASSERT(names.size() == itsNStation);
 
-      vector<ParmProxy::Ptr> parms;
-      BBS::ParmGroup group;
-      for(size_t dr = 0; dr < itsNrModel; ++dr)
+//      vector<ParmProxy::Ptr> parms;
+      vector<Parm> parms;
+//      BBS::ParmGroup group;
+      for(size_t dr = 0; dr < itsNModel; ++dr)
       {
         for(size_t st = 0; st < itsNStation; ++st)
         {
-          parms.push_back(ParmManager::instance().get(INSTRUMENT,
-            "DirectionalGain:0:0:Real:" + names[st] + ":" + itsAllSources[dr]));
-          parms.push_back(ParmManager::instance().get(INSTRUMENT,
-            "DirectionalGain:0:0:Imag:" + names[st] + ":" + itsAllSources[dr]));
+          parms.push_back(Parm(parmCache, parmSet.addParm(parmDB,
+            "DirectionalGain:0:0:Real:" + names[st] + ":" + itsAllSources[dr])));
+          parms.push_back(Parm(parmCache, parmSet.addParm(parmDB,
+            "DirectionalGain:0:0:Imag:" + names[st] + ":" + itsAllSources[dr])));
 
-          parms.push_back(ParmManager::instance().get(INSTRUMENT,
-            "DirectionalGain:0:1:Real:" + names[st] + ":" + itsAllSources[dr]));
-          parms.push_back(ParmManager::instance().get(INSTRUMENT,
-            "DirectionalGain:0:1:Imag:" + names[st] + ":" + itsAllSources[dr]));
+          parms.push_back(Parm(parmCache, parmSet.addParm(parmDB,
+            "DirectionalGain:0:1:Real:" + names[st] + ":" + itsAllSources[dr])));
+          parms.push_back(Parm(parmCache, parmSet.addParm(parmDB,
+            "DirectionalGain:0:1:Imag:" + names[st] + ":" + itsAllSources[dr])));
 
-          parms.push_back(ParmManager::instance().get(INSTRUMENT,
-            "DirectionalGain:1:0:Real:" + names[st] + ":" + itsAllSources[dr]));
-          parms.push_back(ParmManager::instance().get(INSTRUMENT,
-            "DirectionalGain:1:0:Imag:" + names[st] + ":" + itsAllSources[dr]));
+          parms.push_back(Parm(parmCache, parmSet.addParm(parmDB,
+            "DirectionalGain:1:0:Real:" + names[st] + ":" + itsAllSources[dr])));
+          parms.push_back(Parm(parmCache, parmSet.addParm(parmDB,
+            "DirectionalGain:1:0:Imag:" + names[st] + ":" + itsAllSources[dr])));
 
-          parms.push_back(ParmManager::instance().get(INSTRUMENT,
-            "DirectionalGain:1:1:Real:" + names[st] + ":" + itsAllSources[dr]));
-          parms.push_back(ParmManager::instance().get(INSTRUMENT,
-            "DirectionalGain:1:1:Imag:" + names[st] + ":" + itsAllSources[dr]));
+          parms.push_back(Parm(parmCache, parmSet.addParm(parmDB,
+            "DirectionalGain:1:1:Real:" + names[st] + ":" + itsAllSources[dr])));
+          parms.push_back(Parm(parmCache, parmSet.addParm(parmDB,
+            "DirectionalGain:1:1:Imag:" + names[st] + ":" + itsAllSources[dr])));
+
+//          parms.push_back(ParmManager::instance().get(INSTRUMENT,
+//            "DirectionalGain:0:0:Real:" + names[st] + ":" + itsAllSources[dr]));
+//          parms.push_back(ParmManager::instance().get(INSTRUMENT,
+//            "DirectionalGain:0:0:Imag:" + names[st] + ":" + itsAllSources[dr]));
+
+//          parms.push_back(ParmManager::instance().get(INSTRUMENT,
+//            "DirectionalGain:0:1:Real:" + names[st] + ":" + itsAllSources[dr]));
+//          parms.push_back(ParmManager::instance().get(INSTRUMENT,
+//            "DirectionalGain:0:1:Imag:" + names[st] + ":" + itsAllSources[dr]));
+
+//          parms.push_back(ParmManager::instance().get(INSTRUMENT,
+//            "DirectionalGain:1:0:Real:" + names[st] + ":" + itsAllSources[dr]));
+//          parms.push_back(ParmManager::instance().get(INSTRUMENT,
+//            "DirectionalGain:1:0:Imag:" + names[st] + ":" + itsAllSources[dr]));
+
+//          parms.push_back(ParmManager::instance().get(INSTRUMENT,
+//            "DirectionalGain:1:1:Real:" + names[st] + ":" + itsAllSources[dr]));
+//          parms.push_back(ParmManager::instance().get(INSTRUMENT,
+//            "DirectionalGain:1:1:Imag:" + names[st] + ":" + itsAllSources[dr]));
         }
       }
 
-      vector<string> incl(1, "DirectionalGain:*"), excl;
-      ParmGroup solvables = ParmManager::instance().makeSubset(incl, excl);
-      LOG_DEBUG_STR("#parms in group: " << solvables.size());
+      LOG_DEBUG_STR("loading values into cache...");
+      parmCache.cacheValues();
+
+//      vector<string> incl(1, "DirectionalGain:*"), excl;
+//      ParmGroup solvables = ParmManager::instance().makeSubset(incl, excl);
+//      LOG_DEBUG_STR("#parms in group: " << solvables.size());
 
       // Assign solution grid to solvables.
-      ParmManager::instance().setGrid(solGrid, solvables);
-
+//      ParmManager::instance().setGrid(solGrid, solvables);
+      LOG_DEBUG_STR("writing...");
       LOG_DEBUG_STR("#parms: " << parms.size());
+      for(size_t i = 0; i < parms.size(); ++i)
+      {
+        parms[i].setSolveGrid(solGrid);
+      }
+
       for(size_t ts = 0; ts < itsNTimeDemix; ++ts)
       {
-        double *offset = &(itsUnknowns(IPosition(4, 0, 0, 0, ts)));
+        double *unknowns = &(itsUnknowns(IPosition(4, 0, 0, 0, ts)));
+        double *errors = &(itsErrors(IPosition(4, 0, 0, 0, ts)));
         for(size_t i = 0; i < parms.size(); ++i)
         {
-          parms[i]->setCoeff(BBS::Location(0, ts), offset + i, 1);
+          parms[i].setCoeff(BBS::Location(0, ts), unknowns + i, 1, errors + i);
         }
       }
 
       // Flush solutions to disk.
-      ParmManager::instance().flush();
+//      ParmManager::instance().flush();
+      LOG_DEBUG_STR("flushing...");
+      parmCache.flush();
+      LOG_DEBUG_STR("done...");
     }
   } //# end namespace
 }

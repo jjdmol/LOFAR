@@ -26,7 +26,7 @@
 // \file
 // A position on the celestial sphere.
 
-#include <Common/lofar_algorithm.h>
+#include <cstring>
 
 namespace LOFAR
 {

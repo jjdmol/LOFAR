@@ -30,7 +30,8 @@ namespace DPPP
 
 Position::Position()
 {
-    fill(itsPosition, itsPosition + 2, 0.0);
+    itsPosition[0] = 0.0;
+    itsPosition[1] = 0.0;
 }
 
 Position::Position(double alpha, double delta)
