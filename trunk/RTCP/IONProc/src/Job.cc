@@ -73,6 +73,9 @@ Job::Job(const char *parsetName)
 {
   itsLogPrefix = str(boost::format("[obs %d] ") % itsParset.observationID());
 
+  // fill the cache to avoid regenerating it many times over
+  itsParset.write(NULL);
+
   if (LOG_CONDITION) {
     // Handle PVSS (CEPlogProcessor) communication -- report PVSS name in the first log line to allow CEPlogProcessor to resolve obsIDs
     if (itsParset.PVSS_TempObsName() != "")
