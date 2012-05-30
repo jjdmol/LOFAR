@@ -91,9 +91,11 @@ void splitUVW(size_t nStation, size_t nBaseline,
                 flag[p] = true;
             }
         }
+
+        // Move to next baseline.
         uvw.forward(1);
         ++baselines;
-    }
+    } // Baselines.
 
     ASSERTSTR(static_cast<size_t>(std::count(flag.begin(), flag.end(), true))
         == flag.size(), "Unable to split baseline UVW coordinates into station"
@@ -209,6 +211,7 @@ void simulate(const Position &reference, const Patch &patch, size_t nStation,
                     vis -= 4;
                     vis.forward(1);
                 } // Channels.
+
                 vis.backward(1, nChannel);
             }
 
@@ -216,6 +219,7 @@ void simulate(const Position &reference, const Patch &patch, size_t nStation,
             vis.forward(2);
             ++baselines;
         } // Baselines.
+
         vis.backward(2, nBaseline);
         baselines -= nBaseline;
     } // Components.

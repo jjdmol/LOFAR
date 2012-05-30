@@ -288,7 +288,7 @@ void demix2(vector<DPPP::DPBuffer> &target,
             splitUVW_csr(nSt, nBl, cr_baseline, cr_uvw, cr_split);
 
             cursor<dcomplex> cr_model(&(buffer[thread][dr][0][0][0]), 3, strides);
-            simulate_csr(patches[dr].position, patches[dr], nSt, nBl, nCh,
+            simulate_csr(patches[dr].position(), patches[dr], nSt, nBl, nCh,
                 cr_baseline, cr_freq, cr_split, cr_model);
         }
 
@@ -298,7 +298,7 @@ void demix2(vector<DPPP::DPBuffer> &target,
 //                state.baselines, nSt);
 
 //            fill(&(buffer[thread][dr][0][0][0]), &(buffer[thread][dr][0][0][0]) + nBl * nCh * nCr, dcomplex());
-//            simulate(patches[dr].position, patches[dr], state.baselines,
+//            simulate(patches[dr].position(), patches[dr], state.baselines,
 //                state.axisDemix, nSt, &(uvw[thread][0][0]), &(buffer[thread][dr][0][0][0]));
 //        }
 
@@ -358,19 +358,19 @@ void demix2(vector<DPPP::DPBuffer> &target,
                     const_cursor<double> cr_uvw = casa_const_cursor(target[i * timeFactor + j].getUVW());
                     splitUVW_csr(nSt, nBl, cr_baseline, cr_uvw, cr_split);
 
-                    rotateUVW_csr(Position(state.ra, state.dec), patches[dr].position, nSt, cr_split);
+                    rotateUVW_csr(Position(state.ra, state.dec), patches[dr].position(), nSt, cr_split);
 
-                    simulate_csr(patches[dr].position, patches[dr], nSt, nBl, nChRes,
+                    simulate_csr(patches[dr].position(), patches[dr], nSt, nBl, nChRes,
                         cr_baseline, cr_freqRes, cr_split, cr_model_res);
 
 //                    splitUVW(&(uvw[thread][0][0]),
 //                        target[i * timeFactor + j].getUVW().data(),
 //                        state.baselines, nSt);
 
-//                    rotateUVW(Position(state.ra, state.dec), patches[dr].position, &(uvw[thread][0][0]), nSt);
+//                    rotateUVW(Position(state.ra, state.dec), patches[dr].position(), &(uvw[thread][0][0]), nSt);
 
 //                    fill(&(residual[thread][0][0][0]), &(residual[thread][0][0][0]) + nBl * nChRes * nCr, dcomplex());
-//                    simulate(patches[dr].position, patches[dr], state.baselines,
+//                    simulate(patches[dr].position(), patches[dr], state.baselines,
 //                        state.axisResidual, nSt, &(uvw[thread][0][0]),
 //                        &(residual[thread][0][0][0]));
                 }
@@ -519,7 +519,8 @@ void estimate_csr(size_t nDr,
 // DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
 
     // Set default iteration axis of mixing coefficients to 1.
-    mix.axis(1);
+//    mix.axis(1);
+    ASSERT(false);
 
     // Iterate until convergence.
     size_t nIterations = 0;
@@ -1864,7 +1865,7 @@ void estimateImpl(DPBuffer &target,
         splitUVW(&(__split[0]), buffers[0].getUVW().data(), state.baselines, nSt);
 
         vector<dcomplex> __buffer(nBl * nCh * 4, dcomplex());
-        simulate(patches[0].position, patches[0], state.baselines, state.axisDemix,
+        simulate(patches[0].position(), patches[0], state.baselines, state.axisDemix,
             nSt, &(__split[0]), &(__buffer[0]));
 
         size_t __bl = 10;
@@ -1874,7 +1875,7 @@ void estimateImpl(DPBuffer &target,
         splitUVW(&(__split[0]), buffers[1].getUVW().data(), state.baselines, nSt);
 
         fill(__buffer.begin(), __buffer.end(), dcomplex());
-        simulate(patches[1].position, patches[1], state.baselines, state.axisDemix,
+        simulate(patches[1].position(), patches[1], state.baselines, state.axisDemix,
             nSt, &(__split[0]), &(__buffer[0]));
 
         LOG_DEBUG_STR("CygA thread: " << threadID << " new: " << setprecision(17) << __buffer[__bl * nCh * 4] << " " << __buffer[__bl * nCh * 4 + 1] << " " << __buffer[__bl * nCh * 4 + 2] << " " << __buffer[__bl * nCh * 4 + 3]);

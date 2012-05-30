@@ -42,21 +42,28 @@ public:
     Position();
     Position(double alpha, double delta);
 
-    const double &operator[](size_t i) const
-    {
-        return itsPosition[i];
-    }
-
-    double &operator[](size_t i)
-    {
-        return itsPosition[i];
-    }
+    const double &operator[](size_t i) const;
+    double &operator[](size_t i);
 
 private:
     double  itsPosition[2];
 };
 
 // @}
+
+// -------------------------------------------------------------------------- //
+// - Implementation: Position                                               - //
+// -------------------------------------------------------------------------- //
+
+inline const double &Position::operator[](size_t i) const
+{
+    return itsPosition[i];
+}
+
+inline double &Position::operator[](size_t i)
+{
+    return itsPosition[i];
+}
 
 } //# namespace DPPP
 } //# namespace LOFAR

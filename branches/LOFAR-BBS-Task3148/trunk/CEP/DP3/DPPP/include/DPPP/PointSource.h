@@ -28,9 +28,7 @@
 
 #include <DPPP/Position.h>
 #include <DPPP/Stokes.h>
-#include <Common/lofar_math.h>
 #include <Common/lofar_vector.h>
-#include <casa/BasicSL/Constants.h>
 
 namespace LOFAR
 {
@@ -43,122 +41,30 @@ namespace DPPP
 class PointSource
 {
 public:
-    PointSource()
-        :   itsRefFreq(0.0),
-            itsPolarizedFraction(0.0),
-            itsPolarizationAngle(0.0),
-            itsRotationMeasure(0.0)
-    {
-    }
+    PointSource();
+    PointSource(const Position &position);
+    PointSource(const Position &position, const Stokes &stokes);
 
-    PointSource(const Position &position)
-        :   itsPosition(position),
-            itsRefFreq(0.0),
-            itsPolarizedFraction(0.0),
-            itsPolarizationAngle(0.0),
-            itsRotationMeasure(0.0)
-    {
-    }
+    void setPosition(const Position &position);
 
-    PointSource(const Position &position, const Stokes &stokes)
-        :   itsPosition(position),
-            itsStokes(stokes),
-            itsRefFreq(0.0),
-            itsPolarizedFraction(0.0),
-            itsPolarizationAngle(0.0),
-            itsRotationMeasure(0.0)
-    {
-    }
-
-    void setPosition(const Position &position)
-    {
-        itsPosition = position;
-    }
-
-    void setStokes(const Stokes &stokes)
-    {
-        itsStokes = stokes;
-    }
+    void setStokes(const Stokes &stokes);
 
     template <typename T>
-    void setSpectralIndex(double refFreq, T first, T last)
-    {
-        itsRefFreq = refFreq;
-        itsSpectralIndex.clear();
-        itsSpectralIndex.insert(itsSpectralIndex.begin(), first, last);
-    }
+    void setSpectralIndex(double refFreq, T first, T last);
 
-    void setPolarizedFraction(double fraction)
-    {
-        itsPolarizedFraction = fraction;
-    }
+    void setPolarizedFraction(double fraction);
 
-    void setPolarizationAngle(double angle)
-    {
-        itsPolarizationAngle = angle;
-    }
+    void setPolarizationAngle(double angle);
 
-    void setRotationMeasure(double rm)
-    {
-        itsRotationMeasure = rm;
-    }
+    void setRotationMeasure(double rm);
 
-    const Position &position() const
-    {
-        return itsPosition;
-    }
+    const Position &position() const;
 
-    Stokes stokes(double freq) const
-    {
-        Stokes stokes(itsStokes);
-
-        if(hasSpectralIndex())
-        {
-            // Compute spectral index as:
-            // (v / v0) ^ (c0 + c1 * log10(v / v0) + c2 * log10(v / v0)^2 + ...)
-            // Where v is the frequency and v0 is the reference frequency.
-
-            // Compute log10(v / v0).
-            double base = log10(freq) - log10(itsRefFreq);
-
-            // Compute c0 + log10(v / v0) * c1 + log10(v / v0)^2 * c2 + ...
-            // using Horner's rule.
-            double exponent = 0.0;
-            typedef vector<double>::const_reverse_iterator iterator_type;
-            for(iterator_type it = itsSpectralIndex.rbegin(),
-                end = itsSpectralIndex.rend(); it != end; ++it)
-            {
-                exponent = exponent * base + *it;
-            }
-
-            // Compute I * (v / v0) ^ exponent, where I is the value of Stokes
-            // I at the reference frequency.
-            stokes.I *= pow10(base * exponent);
-        }
-
-        if(hasRotationMeasure())
-        {
-            double lambda = casa::C::c / freq;
-            double chi = 2.0 * (itsPolarizationAngle + itsRotationMeasure
-                * lambda * lambda);
-            double stokesQU = stokes.I * itsPolarizedFraction;
-            stokes.Q = stokesQU * cos(chi);
-            stokes.U = stokesQU * sin(chi);
-        }
-
-        return stokes;
-    }
+    Stokes stokes(double freq) const;
 
 private:
-    bool hasSpectralIndex() const
-    {
-        return itsSpectralIndex.size() > 0;
-    }
-
-    bool hasRotationMeasure() const
-    {
-        return itsRotationMeasure > 0.0;
-    }
+    bool hasSpectralIndex() const;
+    bool hasRotationMeasure() const;
 
     Position        itsPosition;
     Stokes          itsStokes;
@@ -170,6 +76,23 @@ private:
 };
 
 // @}
+
+// -------------------------------------------------------------------------- //
+// - Implementation: PointSource                                            - //
+// -------------------------------------------------------------------------- //
+
+template <typename T>
+void PointSource::setSpectralIndex(double refFreq, T first, T last)
+{
+    itsRefFreq = refFreq;
+    itsSpectralIndex.clear();
+    itsSpectralIndex.insert(itsSpectralIndex.begin(), first, last);
+}
+
+inline const Position &PointSource::position() const
+{
+    return itsPosition;
+}
 
 } //# namespace DPPP
 } //# namespace LOFAR

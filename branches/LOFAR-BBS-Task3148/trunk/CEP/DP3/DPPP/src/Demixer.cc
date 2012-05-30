@@ -205,8 +205,8 @@ namespace LOFAR {
 //          sourceVec.push_back (toString(patchInfo[0].getDec()));
 //        }
         if(i < itsNModel) {
-          sourceVec[0] = toString(itsPatchList[i].position[0]);
-          sourceVec.push_back(toString(itsPatchList[i].position[1]));
+          sourceVec[0] = toString(itsPatchList[i].position()[0]);
+          sourceVec.push_back(toString(itsPatchList[i].position()[1]));
         }
 // TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
         PhaseShift* step1 = new PhaseShift (input, parset,
@@ -930,7 +930,7 @@ namespace
 
             for(size_t dr = 0; dr < nDr; ++dr)
             {
-                casa::MVDirection drJ2000(itsPatchList[dr].position[0], itsPatchList[dr].position[1]);
+                casa::MVDirection drJ2000(itsPatchList[dr].position()[0], itsPatchList[dr].position()[1]);
                 casa::MVDirection mvAzel(itsConverters[thread](drJ2000).getValue());
                 casa::Vector<casa::Double> azel = mvAzel.getAngle("deg").getValue();
 
@@ -968,7 +968,7 @@ namespace
                 splitUVW(nSt, nBl, cr_baseline, cr_uvw, cr_split);
 
                 cursor<dcomplex> cr_model(&(buffer[thread][dr][0][0][0]), 3, strides);
-                simulate(itsPatchList[drUp[dr]].position, itsPatchList[drUp[dr]], nSt, nBl, nCh,
+                simulate(itsPatchList[drUp[dr]].position(), itsPatchList[drUp[dr]], nSt, nBl, nCh,
                     cr_baseline, cr_freq, cr_split, cr_model);
             }
 
@@ -1003,8 +1003,8 @@ namespace
                 const_cursor<dcomplex> cr_mix(&(mix_packed[0]), 5, strides_mix);
 
                 // estimate
-                estimate2(nDrUp, nSt, nBl, nCh, itsBaselines, cr_data,
-                    cr_model, cr_flag, cr_weight, cr_mix, &(unknowns_packed[0]),
+                estimate(nDrUp, nSt, nBl, nCh, cr_baseline, cr_data, cr_model,
+                    cr_flag, cr_weight, cr_mix, &(unknowns_packed[0]),
                     &(errors_packed[0]));
 
                 // unpack unknowns, errors
@@ -1024,8 +1024,9 @@ namespace
 //                    cr_model, cr_flag, cr_weight, cr_mix, cr_unknowns, cr_errors);
 
                 const_cursor<dcomplex> cr_mix = casa_const_cursor(itsFactors[i]);
-                estimate2(nDr, nSt, nBl, nCh, itsBaselines, cr_data,
-                    cr_model, cr_flag, cr_weight, cr_mix, &(unknowns[thread][0]), &(errors[thread][0]));
+                estimate(nDr, nSt, nBl, nCh, cr_baseline, cr_data, cr_model,
+                    cr_flag, cr_weight, cr_mix, &(unknowns[thread][0]),
+                    &(errors[thread][0]));
             }
 
             // Tweak solutions.
@@ -1058,9 +1059,9 @@ namespace
                         const_cursor<double> cr_uvw = casa_const_cursor(target[i * timeFactor + j].getUVW());
                         splitUVW(nSt, nBl, cr_baseline, cr_uvw, cr_split);
 
-                        rotateUVW(itsPhaseRef, itsPatchList[drIdx].position, nSt, cr_split);
+                        rotateUVW(itsPhaseRef, itsPatchList[drIdx].position(), nSt, cr_split);
 
-                        simulate(itsPatchList[drIdx].position, itsPatchList[drIdx], nSt, nBl, nChRes,
+                        simulate(itsPatchList[drIdx].position(), itsPatchList[drIdx], nSt, nBl, nChRes,
                             cr_baseline, cr_freqRes, cr_split, cr_model_res);
                     }
                     else

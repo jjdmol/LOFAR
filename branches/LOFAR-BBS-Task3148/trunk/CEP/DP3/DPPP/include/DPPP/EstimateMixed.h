@@ -73,28 +73,16 @@ namespace DPPP
 // A cursor for a 3-D buffer of observed visibility weights of shape
 // (\p nBaseline, \p nChannel, 4).
 // \param[in]   mix
-// A cursor for a 5-D buffer of mixing coefficients of shape
+// A cursor for a 5-D buffer of mixing weights of shape
 // (\p nBaseline, \p nChannel, 4, \p nDirection, \p nDirection).
 // \param[in]   unknowns
 // A cursor for a 3-D buffer of unknowns of shape
 // (\p nDirection, \p nStation, 8).
 void estimate(size_t nDirection, size_t nStation, size_t nBaseline,
-    size_t nChannel, vector<const_cursor<fcomplex> > data,
-    vector<const_cursor<dcomplex> > model, const_cursor<Baseline> baselines,
-    const_cursor<bool> flag, const_cursor<float> weight,
-    const_cursor<dcomplex> mix, cursor<double> unknowns);
-
-void estimate2(size_t nDirection, size_t nStation, size_t nBaseline, size_t nChannel,
-    const vector<Baseline> &baselines,
+    size_t nChannel, const_cursor<Baseline> baselines,
     vector<const_cursor<fcomplex> > data, vector<const_cursor<dcomplex> > model,
     const_cursor<bool> flag, const_cursor<float> weight,
     const_cursor<dcomplex> mix, double *unknowns, double *errors);
-
-//void estimate2(size_t nStation, size_t nBaseline, size_t nChannel,
-//    const vector<size_t> &directions, const vector<Baseline> &baselines,
-//    vector<const_cursor<fcomplex> > data, vector<const_cursor<dcomplex> > model,
-//    const_cursor<bool> flag, const_cursor<float> weight,
-//    const_cursor<dcomplex> mix, double *unknowns, double *errors);
 // @}
 
 } //# namespace DPPP

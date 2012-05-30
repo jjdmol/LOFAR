@@ -30,7 +30,6 @@
 
 #include <DPPP/PointSource.h>
 #include <DPPP/Position.h>
-#include <Common/lofar_math.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
 
@@ -46,53 +45,71 @@ struct Patch
 {
     typedef vector<PointSource>::const_iterator const_iterator;
 
-    string          name;
-    Position        position;
-    vector<PointSource>  sources;
+    Patch();
 
-    size_t size() const { return sources.size(); }
-    const PointSource &operator[](size_t i) const
-    {
-        return sources[i];
-    }
+    template <typename T>
+    Patch(const string &name, T first, T last);
 
-    const_iterator begin() const
-    {
-        return sources.begin();
-    }
+    const string &name() const;
+    const Position &position() const;
 
-    const_iterator end() const
-    {
-        return sources.end();
-    }
+    size_t nComponents() const;
+    const PointSource &operator[](size_t i) const;
 
-    void syncPos()
-    {
-        Position position = sources.front().position();
-        double cosDec = cos(position[1]);
-        double x = cos(position[0]) * cosDec;
-        double y = sin(position[0]) * cosDec;
-        double z = sin(position[1]);
+    const_iterator begin() const;
+    const_iterator end() const;
 
-        for(unsigned int i = 1; i < sources.size(); ++i)
-        {
-            position = sources[i].position();
-            cosDec = cos(position[1]);
-            x += cos(position[0]) * cosDec;
-            y += sin(position[0]) * cosDec;
-            z += sin(position[1]);
-        }
+private:
+    void recomputePosition();
 
-        x /= size();
-        y /= size();
-        z /= size();
-
-        this->position[0] = atan2(y, x);
-        this->position[1] = asin(z);
-    }
+    string              itsName;
+    Position            itsPosition;
+    vector<PointSource> itsComponents;
 };
 
 // @}
+
+// -------------------------------------------------------------------------- //
+// - Implementation: Patch                                                  - //
+// -------------------------------------------------------------------------- //
+
+template <typename T>
+Patch::Patch(const string &name, T first, T last)
+    :   itsName(name),
+        itsComponents(first, last)
+{
+    recomputePosition();
+}
+
+inline const string &Patch::name() const
+{
+    return itsName;
+}
+
+inline const Position &Patch::position() const
+{
+    return itsPosition;
+}
+
+inline size_t Patch::nComponents() const
+{
+    return itsComponents.size();
+}
+
+inline const PointSource &Patch::operator[](size_t i) const
+{
+    return itsComponents[i];
+}
+
+inline Patch::const_iterator Patch::begin() const
+{
+    return itsComponents.begin();
+}
+
+inline Patch::const_iterator Patch::end() const
+{
+    return itsComponents.end();
+}
 
 } //# namespace DPPP
 } //# namespace LOFAR

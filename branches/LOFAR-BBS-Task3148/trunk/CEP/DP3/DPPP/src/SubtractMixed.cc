@@ -31,7 +31,7 @@ namespace DPPP
 
 void subtract(size_t nBaseline, size_t nChannel,
     const_cursor<Baseline> baselines, cursor<fcomplex> data,
-    const_cursor<dcomplex> model, const_cursor<dcomplex> mix)
+    const_cursor<dcomplex> model, const_cursor<dcomplex> weight)
 {
     for(size_t bl = 0; bl < nBaseline; ++bl)
     {
@@ -43,37 +43,38 @@ void subtract(size_t nBaseline, size_t nChannel,
             for(size_t ch = 0; ch < nChannel; ++ch)
             {
                 // Update visibilities.
-                *data -= static_cast<fcomplex>(*mix * *model);
-                ++mix;
+                *data -= static_cast<fcomplex>(*weight * *model);
+                ++weight;
                 ++model;
                 ++data;
-                *data -= static_cast<fcomplex>(*mix * *model);
-                ++mix;
+                *data -= static_cast<fcomplex>(*weight * *model);
+                ++weight;
                 ++model;
                 ++data;
-                *data -= static_cast<fcomplex>(*mix * *model);
-                ++mix;
+                *data -= static_cast<fcomplex>(*weight * *model);
+                ++weight;
                 ++model;
                 ++data;
-                *data -= static_cast<fcomplex>(*mix * *model);
-                ++mix;
+                *data -= static_cast<fcomplex>(*weight * *model);
+                ++weight;
                 ++model;
                 ++data;
 
                 // Move to next channel.
-                mix -= 4;
-                mix.forward(1);
+                weight -= 4;
+                weight.forward(1);
                 model -= 4;
                 model.forward(1);
                 data -= 4;
                 data.forward(1);
             } // Channels.
-            mix.backward(1, nChannel);
+
+            weight.backward(1, nChannel);
             model.backward(1, nChannel);
             data.backward(1, nChannel);
         }
 
-        mix.forward(2);
+        weight.forward(2);
         model.forward(2);
         data.forward(2);
         ++baselines;

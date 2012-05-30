@@ -50,16 +50,15 @@ Patch makePatch(SourceDB &sourceDB, const string &name)
     vector<SourceInfo> sources = sourceDB.getPatchSources(name);
     LOG_DEBUG_STR("found: " << sources.size() << " sources for patch: " << name);
 
-    Patch patch;
-    patch.name = name;
-    patch.sources.reserve(sources.size());
+    vector<PointSource> components;
+    components.reserve(sources.size());
     for(vector<SourceInfo>::const_iterator it = sources.begin(),
         end = sources.end(); it != end; ++it)
     {
         ASSERTSTR(it->getType() == SourceInfo::POINT, "Only point sources are"
             " supported at the moment.");
 
-        PointSource source;
+        PointSource component;
 
         try
         {
@@ -67,7 +66,7 @@ Patch makePatch(SourceDB &sourceDB, const string &name)
             Position position;
             position[0] = getDefaultParmValue(parmDB, "Ra:" + it->getName());
             position[1] = getDefaultParmValue(parmDB, "Dec:" + it->getName());
-            source.setPosition(position);
+            component.setPosition(position);
 
             // Fetch stokes vector.
             Stokes stokes;
@@ -78,7 +77,7 @@ Patch makePatch(SourceDB &sourceDB, const string &name)
                 stokes.Q = getDefaultParmValue(parmDB, "Q:" + it->getName());
                 stokes.U = getDefaultParmValue(parmDB, "U:" + it->getName());
             }
-            source.setStokes(stokes);
+            component.setStokes(stokes);
 
             // Fetch spectral index attributes (if applicable).
             size_t nTerms = it->getSpectralIndexNTerms();
@@ -94,18 +93,18 @@ Patch makePatch(SourceDB &sourceDB, const string &name)
                     terms.push_back(getDefaultParmValue(parmDB, oss.str()));
                 }
 
-                source.setSpectralIndex(it->getSpectralIndexRefFreq(),
+                component.setSpectralIndex(it->getSpectralIndexRefFreq(),
                     terms.begin(), terms.end());
             }
 
             // Fetch rotation measure attributes (if applicable).
             if(it->getUseRotationMeasure())
             {
-                source.setPolarizedFraction(getDefaultParmValue(parmDB,
+                component.setPolarizedFraction(getDefaultParmValue(parmDB,
                     "PolarizedFraction:" + it->getName()));
-                source.setPolarizationAngle(getDefaultParmValue(parmDB,
+                component.setPolarizationAngle(getDefaultParmValue(parmDB,
                     "PolarizationAngle:" + it->getName()));
-                source.setRotationMeasure(getDefaultParmValue(parmDB,
+                component.setRotationMeasure(getDefaultParmValue(parmDB,
                     "RotationMeasure:" + it->getName()));
             }
         }
@@ -114,13 +113,10 @@ Patch makePatch(SourceDB &sourceDB, const string &name)
             continue;
         }
 
-        patch.sources.push_back(source);
+        components.push_back(component);
     }
 
-    patch.syncPos();
-    LOG_DEBUG_STR("patch: " << patch.name << " #sources: " << patch.size()
-        << " ra: " << patch.position[0] << " dec: " << patch.position[1]);
-    return patch;
+    return Patch(name, components.begin(), components.end());
 }
 
 namespace

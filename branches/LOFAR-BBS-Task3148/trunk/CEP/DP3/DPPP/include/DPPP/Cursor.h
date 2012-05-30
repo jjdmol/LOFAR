@@ -42,8 +42,7 @@ class cursor
 public:
     cursor()
         :   itsPointer(0),
-            itsRank(0),
-            itsStride(0)
+            itsRank(0)
     {
     }
 
@@ -53,7 +52,6 @@ public:
     {
         fill(itsStrides, itsStrides + MAX_RANK, 0);
         itsStrides[0] = 1;
-        itsStride = itsStrides[0];
     }
 
     template <typename T_STRIDE>
@@ -63,7 +61,6 @@ public:
     {
         copy(strides, strides + itsRank, itsStrides);
         fill(itsStrides + itsRank, itsStrides + MAX_RANK, 0);
-        itsStride = itsStrides[0];
     }
 
     size_t rank() const
@@ -71,33 +68,28 @@ public:
         return itsRank;
     }
 
-    void axis(size_t i)
-    {
-        itsStride = itsStrides[i];
-    }
-
     cursor &operator++()
     {
-        itsPointer += itsStride;
+        itsPointer += itsStrides[0];
         return *this;
     }
 
     cursor operator++(int)
     {
         cursor tmp = *this;
-        itsPointer += itsStride;
+        itsPointer += itsStrides[0];
         return tmp;
     }
 
     cursor &operator+=(size_t n)
     {
-        itsPointer += n * itsStride;
+        itsPointer += n * itsStrides[0];
         return *this;
     }
 
     cursor &operator-=(size_t n)
     {
-        itsPointer -= n * itsStride;
+        itsPointer -= n * itsStrides[0];
         return *this;
     }
 
@@ -123,12 +115,12 @@ public:
 
     T &operator[](size_t n)
     {
-        return *(itsPointer + n * itsStride);
+        return *(itsPointer + n * itsStrides[0]);
     }
 
     const T &operator[](size_t n) const
     {
-        return *(itsPointer + n * itsStride);
+        return *(itsPointer + n * itsStrides[0]);
     }
 
     void forward(size_t i)
@@ -166,17 +158,11 @@ public:
         return itsStrides[i];
     }
 
-    size_t stride() const
-    {
-        return itsStride;
-    }
-
 private:
     static const size_t MAX_RANK = 5;
 
     T*      itsPointer;
     size_t  itsRank;
-    size_t  itsStride;
     size_t  itsStrides[MAX_RANK];
 };
 
@@ -186,8 +172,7 @@ class const_cursor
 public:
     const_cursor()
         :   itsPointer(0),
-            itsRank(0),
-            itsStride(0)
+            itsRank(0)
     {
     }
 
@@ -197,7 +182,6 @@ public:
     {
         fill(itsStrides, itsStrides + MAX_RANK, 0);
         itsStrides[0] = 1;
-        itsStride = itsStrides[0];
     }
 
     template <typename T_STRIDE>
@@ -207,13 +191,11 @@ public:
     {
         copy(strides, strides + itsRank, itsStrides);
         fill(itsStrides + itsRank, itsStrides + MAX_RANK, 0);
-        itsStride = itsStrides[0];
     }
 
     const_cursor(const cursor<T> &other)
         :   itsPointer(other.address()),
-            itsRank(other.rank()),
-            itsStride(other.stride())
+            itsRank(other.rank())
     {
         for(size_t i = 0; i < itsRank; ++i)
         {
@@ -227,33 +209,28 @@ public:
         return itsRank;
     }
 
-    void axis(size_t i)
-    {
-        itsStride = itsStrides[i];
-    }
-
     const_cursor &operator++()
     {
-        itsPointer += itsStride;
+        itsPointer += itsStrides[0];
         return *this;
     }
 
     const_cursor operator++(int)
     {
         const_cursor tmp = *this;
-        itsPointer += itsStride;
+        itsPointer += itsStrides[0];
         return tmp;
     }
 
     const_cursor &operator+=(size_t n)
     {
-        itsPointer += n * itsStride;
+        itsPointer += n * itsStrides[0];
         return *this;
     }
 
     const_cursor &operator-=(size_t n)
     {
-        itsPointer -= n * itsStride;
+        itsPointer -= n * itsStrides[0];
         return *this;
     }
 
@@ -269,7 +246,7 @@ public:
 
     const T &operator[](size_t n) const
     {
-        return *(itsPointer + n * itsStride);
+        return *(itsPointer + n * itsStrides[0]);
     }
 
     void forward(size_t i)
@@ -302,17 +279,11 @@ public:
         return itsStrides[i];
     }
 
-    size_t stride() const
-    {
-        return itsStride;
-    }
-
 private:
     static const size_t MAX_RANK = 5;
 
     const T*    itsPointer;
     size_t      itsRank;
-    size_t      itsStride;
     size_t      itsStrides[MAX_RANK];
 };
 

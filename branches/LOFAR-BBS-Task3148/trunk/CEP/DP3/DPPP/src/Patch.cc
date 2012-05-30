@@ -22,12 +22,39 @@
 
 #include <lofar_config.h>
 #include <DPPP/Patch.h>
+#include <Common/lofar_math.h>
 
 namespace LOFAR
 {
 namespace DPPP
 {
 
+Patch::Patch()
+{
+}
+
+void Patch::recomputePosition()
+{
+    if(nComponents() > 0)
+    {
+        double x = 0.0, y = 0.0, z = 0.0;
+        for(unsigned int i = 0; i < nComponents(); ++i)
+        {
+            const Position &position = itsComponents[i].position();
+            double cosDec = cos(position[1]);
+            x += cos(position[0]) * cosDec;
+            y += sin(position[0]) * cosDec;
+            z += sin(position[1]);
+        }
+
+        x /= nComponents();
+        y /= nComponents();
+        z /= nComponents();
+
+        itsPosition[0] = atan2(y, x);
+        itsPosition[1] = asin(z);
+    }
+}
 
 } //# namespace DPPP
 } //# namespace LOFAR

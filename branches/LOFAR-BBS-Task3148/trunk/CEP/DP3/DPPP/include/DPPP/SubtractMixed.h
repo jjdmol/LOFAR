@@ -52,12 +52,12 @@ namespace DPPP
 // \param[in]   model
 // A cursor for a 3-D buffer of simulated visibilities of shape
 // (\p nBaseline, \p nChannel, 4).
-// \param[in]   mix
-// A cursor for a 3-D buffer of mixing coefficients of shape
+// \param[in]   weight
+// A cursor for a 3-D buffer of mixing weight of shape
 // (\p nBaseline, \p nChannel, 4).
 void subtract(size_t nBaseline, size_t nChannel,
     const_cursor<Baseline> baselines, cursor<fcomplex> data,
-    const_cursor<dcomplex> model, const_cursor<dcomplex> mix);
+    const_cursor<dcomplex> model, const_cursor<dcomplex> weight);
 // @}
 
 } //# namespace DPPP
