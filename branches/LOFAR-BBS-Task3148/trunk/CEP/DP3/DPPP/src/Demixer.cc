@@ -274,7 +274,7 @@ namespace LOFAR {
 
         // TODO: Do we need to use AZEL or AZELGEO here?
         itsConverters.push_back(casa::MDirection::Convert(casa::MDirection::Ref(casa::MDirection::J2000),
-          casa::MDirection::Ref(casa::MDirection::AZELGEO, itsFrames.back())));
+          casa::MDirection::Ref(casa::MDirection::AZEL, itsFrames.back())));
       }
     }
 
