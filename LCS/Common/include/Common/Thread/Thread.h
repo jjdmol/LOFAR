@@ -197,6 +197,8 @@ template <typename T> inline void Thread::stub(Args<T> *args)
 
   LOGGER_NEWTHREAD();
 
+  LOG_DEBUG_STR(logPrefix << "Thread started");
+
   ThreadMap::ScopedRegistration sr(globalThreadMap, logPrefix);
 
   try {
@@ -216,13 +218,15 @@ template <typename T> inline void Thread::stub(Args<T> *args)
   } catch (std::exception &ex) {
     LOG_FATAL_STR(logPrefix << "Caught std::exception: " << ex.what());
   } catch (...) {
-    LOG_DEBUG_STR(logPrefix << "Cancelled");
+    LOG_DEBUG_STR(logPrefix << "Thread cancelled");
 
     finished.up();
     throw;
   }
 
   finished.up();
+
+  LOG_DEBUG_STR(logPrefix << "Thread stopped");
 }
 
 
