@@ -26,13 +26,8 @@
 #include <lofar_config.h>
 #include <DPPP/EstimateMixed.h>
 #include <Common/OpenMP.h>
-
-// DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
 #include <Common/LofarLogger.h>
-#include <Common/StreamUtil.h>
 #include <Common/lofar_iomanip.h>
-// DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
-
 #include <scimath/Fitting/LSQFit.h>
 #include <boost/multi_array.hpp>
 
@@ -48,12 +43,10 @@ void estimate(size_t nDirection, size_t nStation, size_t nBaseline,
     const_cursor<dcomplex> mix, double *unknowns, double *errors)
 {
     ASSERT(data.size() == nDirection && model.size() == nDirection);
-    LOG_DEBUG_STR("#dr: " << nDirection << " #st: " << nStation << " #bl: "
-        << nBaseline << " #ch: " << nChannel << " #cr: " << 4);
-    LOG_DEBUG_STR("#unknowns: " << nDirection * nStation * 4 * 2);
 
+    // Initialize LSQ solver.
     const size_t nUnknowns = nDirection * nStation * 4 * 2;
-    casa::LSQFit solver(nDirection * nStation * 4 * 2);
+    casa::LSQFit solver(nUnknowns);
 
     // Each visibility provides information about two (complex) unknowns per
     // station per direction. A visibility is measured by a specific
@@ -120,14 +113,23 @@ void estimate(size_t nDirection, size_t nStation, size_t nBaseline,
                 {
                     for(size_t dr = 0; dr < nDirection; ++dr)
                     {
-                        dIndex[cr][dr * 8 + 0] = dIndexTemplate[cr][dr * 8 + 0] + offsetP;
-                        dIndex[cr][dr * 8 + 1] = dIndexTemplate[cr][dr * 8 + 1] + offsetP;
-                        dIndex[cr][dr * 8 + 2] = dIndexTemplate[cr][dr * 8 + 2] + offsetP;
-                        dIndex[cr][dr * 8 + 3] = dIndexTemplate[cr][dr * 8 + 3] + offsetP;
-                        dIndex[cr][dr * 8 + 4] = dIndexTemplate[cr][dr * 8 + 4] + offsetQ;
-                        dIndex[cr][dr * 8 + 5] = dIndexTemplate[cr][dr * 8 + 5] + offsetQ;
-                        dIndex[cr][dr * 8 + 6] = dIndexTemplate[cr][dr * 8 + 6] + offsetQ;
-                        dIndex[cr][dr * 8 + 7] = dIndexTemplate[cr][dr * 8 + 7] + offsetQ;
+                        dIndex[cr][dr * 8 + 0] = dIndexTemplate[cr][dr * 8 + 0]
+                            + offsetP;
+                        dIndex[cr][dr * 8 + 1] = dIndexTemplate[cr][dr * 8 + 1]
+                            + offsetP;
+                        dIndex[cr][dr * 8 + 2] = dIndexTemplate[cr][dr * 8 + 2]
+                            + offsetP;
+                        dIndex[cr][dr * 8 + 3] = dIndexTemplate[cr][dr * 8 + 3]
+                            + offsetP;
+
+                        dIndex[cr][dr * 8 + 4] = dIndexTemplate[cr][dr * 8 + 4]
+                            + offsetQ;
+                        dIndex[cr][dr * 8 + 5] = dIndexTemplate[cr][dr * 8 + 5]
+                            + offsetQ;
+                        dIndex[cr][dr * 8 + 6] = dIndexTemplate[cr][dr * 8 + 6]
+                            + offsetQ;
+                        dIndex[cr][dr * 8 + 7] = dIndexTemplate[cr][dr * 8 + 7]
+                            + offsetQ;
                     }
                 }
 
@@ -342,9 +344,8 @@ void estimate(size_t nDirection, size_t nStation, size_t nBaseline,
 
     bool converged = (solver.isReady() == casa::LSQFit::SOLINCREMENT
         || solver.isReady() == casa::LSQFit::DERIVLEVEL);
-    LOG_DEBUG_STR("thread: " << OpenMP::threadNum() //<< " timeslot: " << ts
-        << " #iterations: " << nIterations << " converged: " << boolalpha
-        << converged);
+    LOG_DEBUG_STR("thread: " << OpenMP::threadNum() << " #iterations: "
+        << nIterations << " converged: " << boolalpha << converged);
 }
 
 } //# namespace DPPP

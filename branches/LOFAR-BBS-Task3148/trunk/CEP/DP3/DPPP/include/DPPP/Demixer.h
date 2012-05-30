@@ -27,29 +27,21 @@
 // @file
 // @brief DPPP step class to average in time and/or freq
 
+#include <DPPP/Baseline.h>
 #include <DPPP/DPInput.h>
 #include <DPPP/DPBuffer.h>
 #include <DPPP/Patch.h>
 #include <DPPP/PhaseShift.h>
-//#include <DPPP/BBSExpr.h>
-#include <DPPP/Baseline.h>
-#include <ParmDB/Axis.h>
 
 #include <casa/Arrays/Cube.h>
+#include <casa/Quanta/Quantum.h>
 #include <measures/Measures/MDirection.h>
-
-// TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
-//#include <BBSKernel/VisDimensions.h>
-//#include <DPPP/EstimateNew.h>
-// TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST
-
-#include <measures/Measures/MDirection.h>
-#include <measures/Measures/MCDirection.h>
+#include <measures/Measures/MPosition.h>
 #include <measures/Measures/MEpoch.h>
-#include <measures/Measures/MCPosition.h>
 #include <measures/Measures/MeasFrame.h>
 #include <measures/Measures/MeasConvert.h>
-#include <casa/Quanta/Quantum.h>
+#include <measures/Measures/MCDirection.h>
+#include <measures/Measures/MCPosition.h>
 
 namespace LOFAR {
 
@@ -133,7 +125,6 @@ namespace LOFAR {
       string                   itsName;
       string                   itsSkyName;
       string                   itsInstrumentName;
-//      double                   itsElevCutoff;   //# min source elevation (rad)
       vector<PhaseShift*>      itsPhaseShifts;
       vector<DPStep::ShPtr>    itsFirstSteps;   //# phaseshift/average steps
       vector<MultiResultStep*> itsAvgResults;   //# result of phaseshift/average
