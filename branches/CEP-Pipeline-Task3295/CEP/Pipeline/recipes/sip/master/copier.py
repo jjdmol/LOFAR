@@ -86,7 +86,11 @@ class copier(MasterNodeInterface):
             default = False,
             help = "Allow renaming of basename at target location"
         ),
-
+        'mapfile_dir': ingredient.StringField(
+            '--mapfile-dir',
+            help = "Path of directory, shared by all nodes, which will be used"
+                " to write mapfile for master-node communication"
+        )
     }
 
     outputs = {
@@ -134,9 +138,11 @@ class copier(MasterNodeInterface):
         # Load data from mapfiles
         source_map = load_data_map(self.inputs['mapfile_source'])
         target_map = load_data_map(self.inputs['mapfile_target'])
+        mapfile_dir = self.inputs["mapfile_dir"]
 
         # validate data in mapfiles
-        if not self._validate_source_target_mapfile(source_map, target_map, self.inputs['allow_rename']):
+        if not self._validate_source_target_mapfile(source_map, target_map,
+                                             self.inputs['allow_rename']):
             return 1 #return failure
 
         # 'sort' the input data based on node
@@ -155,7 +161,6 @@ class copier(MasterNodeInterface):
         # start the jobs
         exit_value_jobs = self.run_jobs()
         return exit_value_jobs
-
 
     def _validate_source_target_mapfile(self, source_map, target_map,
                                         allow_rename = False):
@@ -178,7 +183,7 @@ class copier(MasterNodeInterface):
             if not allow_rename:
                 target_name = os.path.basename(target_path)
                 source_name = os.path.basename(source_path)
-                if not (target_name != source_name):
+                if not (target_name == source_name):
                     self.logger.error("One of the suplied source target pairs"
                         "contains a different 'filename': {0} != {1}\n"
                         " aborting".format(target_name, source_name))
@@ -198,7 +203,7 @@ class copier(MasterNodeInterface):
             target_node, target_path = target_pair
             source_node, source_path = source_pair
             # Check if current target is already known
-            if node_source_target_dict.has_key(target_node):
+            if node_source_node_target_dict.has_key(target_node):
                 node_source_node_target_dict[target_node].append(
                     (source_pair, target_pair))
             else:
@@ -218,17 +223,22 @@ class copier(MasterNodeInterface):
         """
         mapfile_dict = {}
         for target_node, source_target_list in source_target_dict.items():
-            # use unzip of the source_target_list to get the mapfiles 
+            # use unzip of the source_target_list to get the mapfiles as sets 
             # (automagically)
-            source_map, target_map = zip(*source_target_list)
+            source_map_set, target_map_set = zip(*source_target_list)
+            # convert to list
+            source_map = list(source_map_set)
+            target_map = list(target_map_set)
 
             # Construct the mapfile paths
             source_name = "copier_source_{0}.map".format(target_node)
             source_mapfile_path = os.path.join(mapfile_dir, source_name)
+
             target_name = "copier_target_{0}.map".format(target_node)
             target_mapfile_path = os.path.join(mapfile_dir, target_name)
 
             # Write the mapfiles
+            self.logger.error(list(target_map))
             store_data_map(target_mapfile_path, target_map)
             self.logger.debug("Wrote mapfile with node specific target"
                               " paths: {0}".format(target_mapfile_path))
