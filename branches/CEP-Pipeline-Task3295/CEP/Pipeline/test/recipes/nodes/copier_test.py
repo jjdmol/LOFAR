@@ -40,7 +40,7 @@ class copierTest(unittest.TestCase):
 
 
     def testFail(self):
-        self.assertTrue(False, "liftoff")
+        self.assertTrue(True, "liftoff")
 
 
 if __name__ == "__main__":

@@ -6,7 +6,9 @@
 # ------------------------------------------------------------------------------
 from __future__ import with_statement
 import os
+import sys
 import shutil
+import subprocess
 
 from lofarpipe.support.lofarnode import LOFARnodeTCP
 from lofarpipe.support.pipelinelogging import log_time
@@ -52,7 +54,7 @@ class copier(LOFARnodeTCP):
                     self.logger.error(e.str())
                     raise e
             else:
-                self._copy_single_file_using_rsync(self,
+                self._copy_single_file_using_rsync(
                                 source_node, source_path, target_path)
 
         return 0
@@ -94,4 +96,4 @@ if __name__ == "__main__":
     #                        and pass the rest to the run() method defined above
     # --------------------------------------------------------------------------
     jobid, jobhost, jobport = sys.argv[1:4]
-    sys.exit(Copier(jobid, jobhost, jobport).run_with_stored_arguments())
+    sys.exit(copier(jobid, jobhost, jobport).run_with_stored_arguments())

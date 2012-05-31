@@ -32,14 +32,15 @@ class MasterNodeInterface(BaseRecipe, RemoteCommandRecipeMixIn):
         # call possible baseclass constructors 
         super(MasterNodeInterface, self).__init__()
         self._command = command
+        self._jobs = []
 
     def append_job(self, host, arguments):
         """
         append_job adds a job to the current job list. It expects the host,
         a command and a list of arguments
         """
-        self._jobs = []
         compute_job = ComputeJob(host, self._command, arguments)
+        self._jobs.append(compute_job)
 
 
     def run_jobs(self):
@@ -48,10 +49,11 @@ class MasterNodeInterface(BaseRecipe, RemoteCommandRecipeMixIn):
         errors occured. On finish it will call the _on_succes function finishing
         the output of the recipe        
         """
+        print 'schedulling jobs'
         self._schedule_jobs(self._jobs)
 
         if self.error.isSet():
-            self.error_function()
+            self.on_error()
             return 1
         else:
             self.on_succes(self._jobs)
@@ -69,10 +71,6 @@ class copier(MasterNodeInterface):
     A mapfile describing the data to be processed.
     """
     inputs = {
-        'executable': ingredient.ExecField(
-            '--executable',
-            help = "Full path to the `parmexportcal` executable"
-        ),
         'mapfile_source': ingredient.StringField(
             '--mapfile-source',
             help = "Full path of mapfile of node:path pairs of source dataset"
@@ -82,7 +80,7 @@ class copier(MasterNodeInterface):
             help = "Full path of mapfile of node:path pairs of target location"
         ),
         'allow_rename': ingredient.BoolField(
-            'allow-rename',
+            '--allow-rename',
             default = False,
             help = "Allow renaming of basename at target location"
         ),
@@ -91,11 +89,6 @@ class copier(MasterNodeInterface):
             help = "Path of directory, shared by all nodes, which will be used"
                 " to write mapfile for master-node communication"
         )
-    }
-
-    outputs = {
-        'mapfile': ingredient.FileField(
-        help = "mapfile containing all copied files on the target location")
     }
 
     def __init__(self):
@@ -121,45 +114,40 @@ class copier(MasterNodeInterface):
         It constructs the output to be generated from this recipe based on 
         results from the node script
         """
-        output_map = []
-        for job in jobs:
-            results = job.results
-            host = job.host
-
-            output_map.append = (host, results["path"])
-
-        store_data_map(self.inputs['mapfile'], output_map)
+        pass
 
 
     def go(self):
         self.logger.info("Starting copier run")
         super(copier, self).go()
-
+        print 'debug 3'
         # Load data from mapfiles
         source_map = load_data_map(self.inputs['mapfile_source'])
         target_map = load_data_map(self.inputs['mapfile_target'])
         mapfile_dir = self.inputs["mapfile_dir"]
 
         # validate data in mapfiles
+        print 'debug 4'
         if not self._validate_source_target_mapfile(source_map, target_map,
                                              self.inputs['allow_rename']):
             return 1 #return failure
-
+        print 'debug 5'
         # 'sort' the input data based on node
         source_target_dict = self._create_target_node_keyed_dict(
                         source_map, target_map)
-
+        print 'debug 5'
         # Create node specific mapfiles
         mapfiles_dict = self._construct_node_specific_mapfiles(
                       source_target_dict, mapfile_dir)
-
+        print 'debug 6'
         # Run the compute nodes with the node specific mapfiles
         for host, (source_mapfile, target_mapfile) in mapfiles_dict.items():
             args = [source_mapfile, target_mapfile]
             self.append_job(host, args)
-
+        print 'debug 1'
         # start the jobs
         exit_value_jobs = self.run_jobs()
+        print 'debug 2'
         return exit_value_jobs
 
     def _validate_source_target_mapfile(self, source_map, target_map,
@@ -238,7 +226,6 @@ class copier(MasterNodeInterface):
             target_mapfile_path = os.path.join(mapfile_dir, target_name)
 
             # Write the mapfiles
-            self.logger.error(list(target_map))
             store_data_map(target_mapfile_path, target_map)
             self.logger.debug("Wrote mapfile with node specific target"
                               " paths: {0}".format(target_mapfile_path))
@@ -254,4 +241,5 @@ class copier(MasterNodeInterface):
         return mapfile_dict
 
 if __name__ == '__main__':
+
     sys.exit(copier().main())
