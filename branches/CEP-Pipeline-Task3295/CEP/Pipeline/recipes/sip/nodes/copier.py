@@ -91,6 +91,7 @@ class copier(LOFARnodeTCP):
         return 0
 
 
+
 if __name__ == "__main__":
     #   If invoked directly, parse command line arguments for logger information
     #                        and pass the rest to the run() method defined above

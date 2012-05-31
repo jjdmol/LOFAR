@@ -39,9 +39,6 @@ class copierTest(unittest.TestCase):
         #shutil.rmtree(self.test_path)
 
 
-    def testFail(self):
-        self.assertTrue(True, "liftoff")
-
 
 if __name__ == "__main__":
     unittest.main()

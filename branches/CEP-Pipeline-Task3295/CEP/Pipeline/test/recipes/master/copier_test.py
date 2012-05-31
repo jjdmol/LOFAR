@@ -117,5 +117,19 @@ class copierTest(unittest.TestCase):
 
 
 
+    def test_copier_create_correct_mapfile(self):
+        sut = copierWrapper()
+
+        instr = [('node1', '/path1/1'), ('node1', '/path1/2')]
+        data = [('node2', '/path2/3'), ('node2', '/path2/4')]
+
+
+        expected_result = [('node2', '/path2/1'), ('node2', '/path2/2')]
+        target_map = sut._create_target_map_for_instruments(instr, data)
+
+        self.assertTrue(expected_result == target_map, target_map)
+
+
+
 if __name__ == "__main__":
     unittest.main()

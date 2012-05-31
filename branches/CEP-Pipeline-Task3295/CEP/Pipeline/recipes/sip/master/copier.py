@@ -240,6 +240,21 @@ class copier(MasterNodeInterface):
 
         return mapfile_dict
 
+    def _create_target_map_for_instruments(self, instrument_map, input_data_map):
+        # Not used by mapfile, allows quick testing of functionality
+        target_map = []
+        for instrument_pair, input_data_pair in zip(instrument_map, input_data_map):
+            instrument_node, instrument_path = instrument_pair
+            input_data_node, input_data_path = input_data_pair
+
+            target_dir = os.path.dirname(input_data_path)
+            target_name = os.path.basename(instrument_path)
+            target_path = os.path.join(target_dir, target_name)
+            target_map.append((input_data_node, target_path))
+
+        return target_map
+
+
 if __name__ == '__main__':
 
     sys.exit(copier().main())
