@@ -12,7 +12,7 @@ from lofarpipe.support.lofarnode import LOFARnodeTCP
 from lofarpipe.support.pipelinelogging import log_time
 from lofarpipe.support.utilities import create_directory
 from lofarpipe.support.group_data import load_data_map, store_data_map
-from lofarpipe.support.subprocessgroup import SubProcessGroup
+
 from lofarpipe.support.lofarexceptions import PipelineException
 
 class copier(LOFARnodeTCP):
