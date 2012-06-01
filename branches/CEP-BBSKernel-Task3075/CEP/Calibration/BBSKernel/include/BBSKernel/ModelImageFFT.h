@@ -35,6 +35,7 @@
 #include <measures/Measures/Stokes.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/TempImage.h>
+#include <casa/Arrays/Slicer.h>
 
 // From tConvolveBLAS.cc
 #include <iostream>
@@ -65,10 +66,11 @@ typedef struct ModelImageOptions
   casa::MDirection phaseDirection;              // phase direction of MS
   vector<double> imageFrequencies;              // channel frequencies of image
 //  casa::Vector<casa::Int> imageStokes;          // Stokes present in image (Stokes::StokesTypes)
-  casa::Vector<casa::Double> frequencies;       // vector with channel frequencies
-  casa::Vector<casa::Double> lambdas;           // vector with converted lambdas
+  std::vector<double> frequencies;              // vector with channel frequencies
+  std::vector<double> lambdas;                  // vector with converted lambdas
+  casa::Vector<casa::Int> chanMap;              // chanMap for frequencies
   casa::Int verbose;                            // verbosity level
-  unsigned int oversampling;                    // oversample factor
+  int oversampling;                             // oversample factor
   casa::Vector<casa::Double> uvScale;           // uvscale in u and v direction
   casa::Int nwplanes;                           // number of w-planes to use
   casa::Vector<casa::Double> offset;            // uv offset
@@ -119,7 +121,8 @@ public:
   template <class T> casa::Vector<casa::Int> getStokes(const casa::ImageInterface<T> &image);
   casa::Vector<casa::Int> getStokes(const casa::StokesCoordinate &stokesCoord);
   template <class T> casa::Vector<casa::Bool>  getFourierAxes(const casa::ImageInterface<T> &image);
-  casa::Vector<casa::Int> chanMap(const vector<double> &frequencies);
+  casa::Vector<casa::Int> chanMap(const vector<double> &frequencies); // create channel Map
+  casa::Vector<casa::Int> chanMap(const double *frequencies, size_t nfreqs);  // overloaded function for array
 
   void printImageProperties();
 
@@ -128,7 +131,7 @@ public:
   void setVerbose(casa::uInt verbose=0);
   void setUVScale(const casa::Vector<casa::Double> &uvscale);
   void setUVScale(double uvscaleX, double uvscaleY);
-  void setOversampling(unsigned int oversampling);
+  void setOversampling(int oversampling);
   void setNwplanes(unsigned int nwplanes);
   void setFrequencies(const vector<double> &frequencies);
   void setFrequencies(const double *frequencies, size_t n);
@@ -139,11 +142,14 @@ public:
   inline casa::MDirection phaseDirection() const { return itsOptions.phaseDirection; }
   inline vector<double> imageFrequencies() const { return itsImageProperties.frequencies; }
 //  inline casa::Vector<casa::Int> imageStokes() const { return itsOptions.imageStokes; }
-  inline casa::Vector<casa::Double>  frequencies() const { return itsOptions.frequencies; }
+  inline std::vector<double>  frequencies() const { return itsOptions.frequencies; }
+  inline std::vector<double>  lambdas() const { return itsOptions.lambdas; }
+  inline casa::Vector<casa::Int> chanMap() const { return itsOptions.chanMap; }
   inline casa::uInt       verbose() const { return itsOptions.verbose; }
   inline casa::Vector<casa::Double> uvScale() const { return itsOptions.uvScale; }
   inline double           uvScaleX() const { return itsOptions.uvScale[0]; }
   inline double           uvScaleY() const { return itsOptions.uvScale[1]; }
+  inline int              oversampling() const { return itsOptions.oversampling; }
   casa::Vector<casa::Double> offset() const { return itsOptions.offset; }
   inline unsigned int     nWplanes() const { return itsOptions.nwplanes; }
 
@@ -151,16 +157,20 @@ public:
   inline casa::Vector<casa::Int> stokes() const { return itsImageProperties.stokes; }
   inline ImageProperties imageOptions() const { return itsImageProperties; }
 
+  casa::Slicer makeSlicer(casa::Int chan, const casa::String &Stokes="I");
+  
   // Function to get degridded data into raw pointers
-  void degrid(const double *uvwBaselines[3], 
-              size_t timeslots, size_t nchans,
-              const double *frequencies, 
+  void degrid(double *u, double *v, double *w, 
+              size_t timeslots, size_t nfreqs,
+              double *frequencies, 
               casa::DComplex *XX , casa::DComplex *XY, 
-              casa::DComplex *XY , casa::DComplex *YY);
-  void degrid(const double *baselines[3], 
+              casa::DComplex *XY , casa::DComplex *YY,
+              double maxBaseline=20000);
+  void degrid(double *baselines[3], 
               const vector<double> &frequencies,
               casa::Vector<casa::DComplex> &XX , casa::Vector<casa::DComplex> &XY, 
-              casa::Vector<casa::DComplex> &YX , casa::Vector<casa::DComplex> &YY);              
+              casa::Vector<casa::DComplex> &YX , casa::Vector<casa::DComplex> &YY,
+              double maxBaseline=20000);              
   // Function to get degridded data into BBS::Matrix
   void degrid(const boost::multi_array<double, 3> &uvwBaselines, 
               const casa::Vector<casa::Double> &frequencies,
@@ -229,7 +239,7 @@ public:
   // wSize - Size of lookup table in w
   void initCOffset(const std::vector<double>& u, const std::vector<double>& v,
       const std::vector<double>& w, const std::vector<double>& freq,
-      const double cellSize, const double wCellSize, const double baseline,
+      const double cellSize, const double wCellSize, const double maxBaseline,
       const int wSize, const int gSize, const int support, const int overSample,
       std::vector<unsigned int>& cOffset, std::vector<unsigned int>& iu,
       std::vector<unsigned int>& iv);

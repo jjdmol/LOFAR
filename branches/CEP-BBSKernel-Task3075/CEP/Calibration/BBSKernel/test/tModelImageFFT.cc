@@ -29,6 +29,10 @@
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/ArrayColumn.h>
+#include <tables/Tables/ArrColDesc.h>
+#include <tables/Tables/TiledColumnStMan.h>
+#include <ms/MeasurementSets/MSSpWindowColumns.h>
+
 #include <casa/Arrays/IPosition.h>
 #include <casa/Arrays/Slicer.h>
 
@@ -42,19 +46,23 @@ using namespace casa;
 
 unsigned int getBaselines(const MeasurementSet &ms, double *baselines[3], 
                   int rowStart=-1, int rowEnd=-1);
+unsigned int getBaselines(const MeasurementSet &ms, double *u, double *v, double *w, 
+                          int rowStart, int rowEnd);                  
 Vector<Double> getMSFrequencies(const MeasurementSet &ms);
 void writeData(const MeasurementSet &ms, const string &name);
 void printBaselines(double **baselines, size_t nrows);
 
 int main(int argc, char **argv)
 {
+  unsigned int nwplanes=1;      // number of w-planes to use (default 1)
   string msName;
   string imageFilename=argv[1];
   if(argc==3)
     msName=argv[2];
+  if(argc==4)
+    nwplanes=atoi(argv[3]);
 
-
-  LOFAR::BBS::ModelImageFft modelImage(imageFilename, 20);  // nwplanes=20
+  LOFAR::BBS::ModelImageFft modelImage(imageFilename, nwplanes);  // nwplanes=20?
 
   // TODO: Adjust all this to use ModelImageFFT class implementation
   // Change these if necessary to adjust run time
@@ -64,99 +72,53 @@ int main(int argc, char **argv)
   double **baselines=static_cast<double**>(malloc(ms.nrow()*sizeof(double)));
   for(unsigned int i=0; i<3; i++)
   {
-    baselines[i]=static_cast<double*>(malloc(3*sizeof(double)));
-  }
+    baselines[i]=static_cast<double*>(malloc(sizeof(double)*3));
+  }  
+  
+  double *u=static_cast<double*>(malloc(ms.nrow()*sizeof(double)));
+  double *v=static_cast<double*>(malloc(ms.nrow()*sizeof(double)));
+  double *w=static_cast<double*>(malloc(ms.nrow()*sizeof(double)));
 
-  Vector<Double> MSfreqs=getMSFrequencies(ms); // get MS frequencies
+  Vector<Double> MSfreqs=getMSFrequencies(ms);  // get MS frequencies
+  double *frequencies=static_cast<double*>(malloc(MSfreqs.size()*sizeof(double)));
+  for(uInt i=0; i<MSfreqs.size(); i++)
+  {
+    frequencies[i]=MSfreqs[i];
+  }
+  //vector<double> frequencies;                   // STL vector for MS frequencies
+  //MSfreqs.tovector(frequencies);
+
+  unsigned int nfreqs=MSfreqs.size();          // number of frequencies in MS (for sim)
   cout << "MSfreqs: " << MSfreqs << endl;       // DEBUG
 
   unsigned int nbaselines=getBaselines(ms, baselines);  // get baselines from MS
-  printBaselines(baselines, nbaselines);      // DEBUG
+  //printBaselines(baselines, nbaselines);      // DEBUG
 
+  // Allocate memory for correlations XX, XY, YX, YY
+  DComplex *XX=(DComplex*)malloc(nbaselines*sizeof(DComplex));
+  DComplex *YY=(DComplex*)malloc(nbaselines*sizeof(DComplex));
+
+  modelImage.degrid(u, v, w, nbaselines, nfreqs, frequencies, XX, NULL, 
+                    NULL, YY);
+
+  /*
+  // Function to get degridded data into raw pointers
+  void degrid(const double *u, const double *v, const double *w, 
+              size_t timeslots, size_t nfreqs,
+              const double *frequencies, 
+              casa::DComplex *XX , casa::DComplex *XY, 
+              casa::DComplex *XY , casa::DComplex *YY,
+              double maxBaseline=200000);
+  */
   exit(0);    // DEBUG
-  
-  const int nSamples=10000; // Number of data samples
-  const int wSize=33; // Number of lookup planes in w projection
-  const int nChan=16; // Number of spectral channels
-
-  // Don't change any of these numbers unless you know what you are doing!
-  const int gSize=512;          // Size of output grid in pixels
-  const double cellSize=40.0;    // Cellsize of output grid in wavelengths
-  const int baseline=2000;      // Maximum baseline in meters
-
-  // Initialize the data to be gridded
-  vector<double> u(nSamples);
-  vector<double> v(nSamples);
-  vector<double> w(nSamples);
-  vector<std::complex<float> > data(nSamples*nChan);
-  vector<std::complex<float> > outdata(nSamples*nChan);
-
-  for (int i=0; i<nSamples; i++)
-  {
-    u[i]=baseline*double(rand())/double(RAND_MAX)-baseline/2;
-    v[i]=baseline*double(rand())/double(RAND_MAX)-baseline/2;
-    w[i]=baseline*double(rand())/double(RAND_MAX)-baseline/2;
-    for (int chan=0; chan<nChan; chan++)
-    {
-      data[i*nChan+chan]=1.0;
-      outdata[i*nChan+chan]=0.0;
-    }
-  }
-  
-  vector<std::complex<float> > grid(gSize*gSize);
-  grid.assign(grid.size(), std::complex<float> (0.0));
-
+/*  
   // Measure frequency in inverse wavelengths
   std::vector<double> freq(nChan);
   for (int i=0; i<nChan; i++)
   {
     freq[i]=(1.4e9-2.0e5*double(i)/double(nChan))/2.998e8;
   }
-
-  // Initialize convolution function and offsets
-//  std::vector<std::complex<float> > C;
-  std::vector<std::complex<float> > C;
-  int support, overSample;
-  std::vector<unsigned int> cOffset;
-  // Vectors of grid centers
-  std::vector<unsigned int> iu;
-  std::vector<unsigned int> iv;
-  double wCellSize;
-  
-  modelImage.initC(nSamples, w, freq, cellSize, baseline, wSize, gSize, support,
-      overSample, wCellSize, C);
-  modelImage.initCOffset(u, v, w, freq, cellSize, wCellSize, baseline, wSize, gSize,
-      support, overSample, cOffset, iu, iv);
-  int sSize=2*support+1;
-
-  // Now we can do the timing
-  cout << "+++++ Forward processing +++++" << endl;
-
-  clock_t start, finish;
-  double time;
-
-  start = clock();
-  modelImage.gridKernel(data, support, C, cOffset, iu, iv, grid, gSize);
-  finish = clock();
-  // Report on timings
-  // Report on timings
-  time = (double(finish)-double(start))/CLOCKS_PER_SEC;
-  cout << "    Time " << time << " (s) " << endl;
-  cout << "    Time per visibility spectral sample " << 1e6*time/double(data.size()) << " (us) " << endl;
-  cout << "    Time per gridding   " << 1e9*time/(double(data.size())* double((sSize)*(sSize))) << " (ns) " << endl;
-
-  cout << "+++++ Reverse processing +++++" << endl;
-  grid.assign(grid.size(), std::complex<float> (1.0));
-  
-  start = clock();
-  modelImage.degridKernel(grid, gSize, support, C, cOffset, iu, iv, outdata);
-  finish = clock();
-  // Report on timings
-  time = (double(finish)-double(start))/CLOCKS_PER_SEC;
-  cout << "    Time " << time << " (s) " << endl;
-  cout << "    Time per visibility spectral sample " << 1e6*time/double(data.size()) << " (us) " << endl;
-  cout << "    Time per degridding " << 1e9*time/(double(data.size())* double((sSize)*(sSize))) << " (ns) " << endl;
-
+*/
   cout << "Done" << endl;
 
   return 0;
@@ -188,6 +150,35 @@ unsigned int getBaselines(const MeasurementSet &ms, double *baselines[3],
   return nrows;                   // return number of baselines
 }
 
+unsigned int getBaselines(const MeasurementSet &ms, double *u, double *v, double *w, 
+                          int rowStart, int rowEnd)   // range not supported yet
+{
+  // Example: 711.309, -357.693, 432.535
+ 
+  // Check that rowStart and rowEnd are within the limits
+  uInt nrows=ms.nrow();
+  IPosition shape = ROTableColumn(ms, MS::columnName(MS::UVW)).shapeColumn();
+ 
+  cout << "getBaselines(): nrows: " << nrows << endl;
+  cout << "getBaselines(): shape: " << shape << endl;
+
+  // ROTableColumn UVW: Double Array of Size [ 1 3 ]
+  ROArrayColumn<Double> uvwColumn(ms, "UVW");
+  
+  Array<Double> uvw=uvwColumn.getColumn();
+  cout << "uvw.shape(): " << uvw.shape() << endl;   // DEBUG
+
+  /*
+  for(unsigned int i=0; i<nrows; i++)
+  {
+    baselines[i]=uvw[i].data();   // assign column to array pointer
+  }
+  */
+  
+  return nrows;                   // return number of baselines
+}
+
+
 Vector<Double> getMSFrequencies(const MeasurementSet &ms)
 {
   // Table: SPECTRAL_WINDOW, Column: CHAN_FREQ
@@ -199,12 +190,54 @@ Vector<Double> getMSFrequencies(const MeasurementSet &ms)
   return MSfrequencies;
 }
 
-
-void writeData(const Table &table, const string &name, double *data[4])
+// Write data into an ArrayColumn
+//
+void writeData(const Table &table, const string &colName, double *data[4])
 {
-  // Add column of name
-
   // Complex Array of size [ 4 nchannels ]
+  ArrayColumn<DComplex> model(table, colName);
+}
+
+// Add a new column to the MeasurementSet
+//
+void addColumn (MeasurementSet& ms, const String &colName, const String& dataManName)
+{
+  // Find data shape from DATA column.
+  // Make tiles of appr. 1 MB.
+//  String colName (MS::columnName(MS::MODEL_DATA));
+  IPosition shape = ROTableColumn(ms, MS::columnName(MS::DATA)).shapeColumn();
+  IPosition dataTileShape;
+  if (shape.empty()) 
+  {
+    dataTileShape = IPosition(3, 4, 64, (1024*1024)/(4*64*8));
+  } 
+  else
+  {
+    dataTileShape = IPosition(3, shape[0], shape[1], (1024*1024)/(shape.product()*8));
+  }
+  if (! ms.tableDesc().isColumn(colName)) 
+  {
+    TableDesc td;
+    if (shape.empty())
+    {
+      td.addColumn (ArrayColumnDesc<Complex>(colName, "model data"));
+    }
+    else
+    {
+      td.addColumn (ArrayColumnDesc<Complex>(colName, "model data", shape, ColumnDesc::FixedShape));
+    }
+    TiledColumnStMan stMan(dataManName, dataTileShape);
+    ms.addColumn (td, stMan);
+    // Set MODEL_DATA keyword for casa::VisSet.
+    // Sort out the channel selection.
+    MSSpWindowColumns msSpW(ms.spectralWindow());
+    Matrix<Int> selection(2, msSpW.nrow());
+    // Fill in default selection (all bands and channels).
+    selection.row(0) = 0;    //start
+    selection.row(1) = msSpW.numChan().getColumn(); 
+    ArrayColumn<Complex> mcd(ms, colName);
+    mcd.rwKeywordSet().define ("CHANNEL_SELECTION",selection);
+  }
 }
 
 // Helper function to print baselines[3]

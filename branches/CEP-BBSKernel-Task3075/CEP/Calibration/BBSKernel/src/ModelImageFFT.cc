@@ -166,7 +166,7 @@ void ModelImageFft::setUVScale(double uvscaleX, double uvscaleY)
   }
 }
 
-void ModelImageFft::setOversampling(unsigned int oversampling)
+void ModelImageFft::setOversampling(int oversampling)
 {
   itsOptions.oversampling=oversampling;
 }
@@ -421,11 +421,11 @@ template<class T> Vector<Bool> ModelImageFft::getFourierAxes(const ImageInterfac
 
   // 2D-FFT the image per channel
   Vector<Bool> FourierAxes(image.shape().size());   // axes to Fourier transform
-  for(Int i; i<FourierAxes.size(); i++)
+  for(uInt i; i < (uInt) FourierAxes.size(); i++)    // this nasty thing is to avoid a uInt/Int warning
   {
     // for the Direction axes set Fourier Transform to true
-    if( i==itsImageProperties.DirectionCoordAxes(0) || 
-        i==itsImageProperties.DirectionCoordAxes(1))
+    if( i==(uInt) itsImageProperties.DirectionCoordAxes(0) || 
+        i==(uInt) itsImageProperties.DirectionCoordAxes(1))
     {
       FourierAxes[i]=True;
     }
@@ -478,6 +478,13 @@ Vector<Int>  ModelImageFft::chanMap(const vector<double> &frequencies)
       }
     }
   }
+  return chanMap;
+}
+
+Vector<Int> ModelImageFft::chanMap(const double *frequencies, size_t nfreqs)
+{
+  vector<double> freqsvec(frequencies, frequencies + nfreqs);
+  Vector<Int> chanMap=this->chanMap(freqsvec);
   return chanMap;
 }
 
@@ -539,54 +546,161 @@ void ModelImageFft::degrid( const double *uvwBaselines,
   // assign return arrays to vector addresses
 }
 */
-
-void ModelImageFft::degrid( const double *uvwBaselines[3], 
-                            size_t timeslots, size_t nchans, 
-                            const double *frequencies,
+void ModelImageFft::degrid( double *uBase, double *vBase, double *wBase, 
+                            size_t timeslots, size_t nfreqs, 
+                            double *frequencies,
                             casa::DComplex *XX , casa::DComplex *XY, 
-                            casa::DComplex *YX , casa::DComplex *YY)
+                            casa::DComplex *YX , casa::DComplex *YY,
+                            double maxBaseline)
 {
-//  setFrequencies(frequencies[i]); // don't really need to do that...
+  setFrequencies(frequencies, nfreqs);       // don't really need to do that...
   
   // convert uvwBaseline to Cornwell degrid format, 1-D data vector
-  uint nsamples=timeslots*nchans;       // number of samples
-  LOG_INFO_STR("degridding " << nsamples << " samples.");
+  int nSamples=timeslots*nfreqs;       // number of samples
+  LOG_INFO_STR("degridding " << nSamples << " samples.");
 
-  vector<complex<double> > data(nsamples);    // vector to hold data to grid
-  vector<complex<double> > grid(nsamples);    // output uvw data on grid 
+  //------------------------------------------------------------------------
+  // Prepare uvw variables etc.
+  //
+  vector<complex<float> > data(itsImageProperties.nx*itsImageProperties.ny);
+  vector<complex<float> > outdata(itsImageProperties.nx*itsImageProperties.ny*nfreqs);
+  vector<double> u(uBase, uBase+timeslots);   // u coord of requested baselines
+  vector<double> v(vBase, vBase+timeslots);   // v coord of requested baselines
+  vector<double> w(wBase, wBase+timeslots);   // w coord of requested baselines
+  // Don't change any of these numbers unless you know what you are doing!
+  int gSize=512;                           // Size of output grid in pixels
+  double cellSize=40.0;    // Cellsize of output grid in wavelengths
+  vector<std::complex<float> > grid(gSize*gSize);
+  grid.assign(grid.size(), std::complex<float> (0.0));
 
-
-  // Take data out of image:
-  // Use STL::fill to write data into vector/array
-
-      for(uInt chan=0; chan<nchans; chan++)
-      {
-        // IPosition slice();   // get image plane
-//          data[x+y+chan+pol]=itsImage();  // how to index into multi-dim image?
-//Bool 	getSlice (Array< T > &buffer, const Slicer &section, Bool removeDegenerateAxes=False)
-
-      }
+  int wSize=itsOptions.nwplanes;        // Number of lookup planes in w projection
   
-  // assign output array parameter to vector to match outside interface
- 
+  // match frequencies to channels in image
+  vector<double> freqsvec(frequencies, frequencies + nfreqs);
+  itsOptions.chanMap=chanMap(freqsvec);
+
+  // Measure frequency in inverse wavelengths
+  std::vector<double> freq(nfreqs);
+  for (unsigned int i=0; i<nfreqs; i++)
+  {
+    freq[i]=(1.4e9-2.0e5*double(i)/double(nfreqs))/2.998e8;
+  }
+  itsOptions.lambdas=freq;
+
+  // Initialize convolution function and offsets
+  std::vector<std::complex<float> > C;
+  //int support, overSample;
+  int support;
+  std::vector<unsigned int> cOffset;
+  // Vectors of grid centers
+  std::vector<unsigned int> iu;
+  std::vector<unsigned int> iv;
+  double wCellSize;
+
+  //----------------------------------------------------------------------
+  // Initialize Convolution function, and COffset
+  //
+  initC(nSamples, w, itsOptions.lambdas, cellSize, maxBaseline, wSize, gSize, support, 
+        itsOptions.oversampling, wCellSize, C);
+  initCOffset(u, v, w, itsOptions.lambdas, cellSize, wCellSize, maxBaseline, wSize, gSize,
+              support, itsOptions.oversampling, cOffset, iu, iv);
+  int sSize=2*support+1;
+  
+  //------------------------------------------------------------------------
+  // Degridding of FFT image planes for different Stokes components
+  //
+  // For now only support Stokes I component in image!
+  //
+  if(itsImageProperties.I)     // Do Stokes I
+  {
+    LOG_INFO_STR("degridding Stokes I: Freq " << itsOptions.frequencies[0]/1e6 << " - " 
+    << itsOptions.frequencies[nfreqs-1]/1e6 << " MHz" );
+    for(uInt freq=0; freq<nfreqs; freq++)
+    {
+      //----------------------------------------------------------------------
+      // Get image slice
+      //
+      IPosition slice(itsImageProperties.nx, itsImageProperties.ny, 1, 1);
+      Array<Complex> imagePlane(slice);
+      Slicer slicer=makeSlicer(freq); // Stokes defaults to I
+  
+      if(itsImage->getSlice(imagePlane, slicer))
+      {
+        cout << "imagePlane.shape(): " << imagePlane.shape() << endl;   // DEBUG
+      
+        //ASSERT(imagePlane.contiguous);      // image slice is contiguous, use        
+        imagePlane.tovector(data);    // copy data into STL vector to conform to Cornwell interface
+
+        // call Cornwell degridKernel
+        degridKernel( grid, gSize, support, C, cOffset, iu, iv, data);
+      }
+      else
+      {
+        LOG_WARN_STR("Did not get image slice for frequency: " << itsOptions.frequencies[freq]);
+      }
+      // copy vector into correlation arrays: TODO: XX=0.5*I, YY=0.5*I
+      if(XX)    // only copy, if we have a valid pointer
+      {
+        copy(data.begin(), data.end(), XX+(freq*timeslots));
+      }
+      else
+      {
+        LOG_WARN_STR("degrid(): XX parameter empty, no XX output.");
+      }
+      if(YY)    // only copy, if we have a valid pointer
+      {  
+        copy(data.begin(), data.end(), YY+(freq*timeslots));
+      }
+      else
+      {
+        LOG_WARN_STR("degrid(): YY parameter empty, no YY output.");      
+      }
+//      XX+(freq*timeslots)=data;
+      //memcpy(XX+(freq*timeslots), data.begin(), data);
+    }
+  }
+  
+
+  
 }
 
-/*
-void ModelImageFft::degrid( const boost::multi_array<double, 3> &uvwBaselines, 
-                            const vector<double> &frequencies,
-                            Vector<casa::DComplex> &XX , Vector<casa::DComplex> &XY, 
-                            Vector<casa::DComplex> &YX , Vector<casa::DComplex> &YY)
-*/
-void ModelImageFft::degrid( const double *baselines[3], 
-                            const vector<double> &frequencies,
-                            Vector<casa::DComplex> &XX , Vector<casa::DComplex> &XY, 
-                            Vector<casa::DComplex> &YX , Vector<casa::DComplex> &YY)
-
+// Create a slicer for the requested image plane / polarization (default=I)
+//
+Slicer ModelImageFft::makeSlicer(Int chan, const String &Stokes)
 {
-  unsigned int nchans=frequencies.size();     // get number of requested channels
+  IPosition plane(itsImageProperties.shape);
+
+  plane[itsImageProperties.DirectionCoordAxes(0)]=itsImageProperties.nx;   // full x dimension
+  plane[itsImageProperties.DirectionCoordAxes(1)]=itsImageProperties.ny;   // full y dimension
+  plane[itsImageProperties.StokesCoordAxes(0)]=1;                          // 1 Stokes
+  plane[itsImageProperties.SpectralCoordAxes(0)]=1;                        // 1 channel
+  
+  IPosition start(itsImageProperties.shape);    // start of slice
+  IPosition end(itsImageProperties.shape);      // end of slice
+  
+  start[itsImageProperties.DirectionCoordAxes(0)]=0;
+  start[itsImageProperties.DirectionCoordAxes(1)]=0;
+  start[itsImageProperties.StokesCoordAxes(0)]=itsImage->coordinates().stokesPixelNumber(Stokes);
+  start[itsImageProperties.SpectralCoordAxes(0)]=itsOptions.chanMap[chan];
+
+  end[itsImageProperties.DirectionCoordAxes(0)]=itsImageProperties.nx;
+  end[itsImageProperties.DirectionCoordAxes(1)]=itsImageProperties.ny;
+  end[itsImageProperties.StokesCoordAxes(0)]=itsImage->coordinates().stokesPixelNumber(Stokes);
+  end[itsImageProperties.SpectralCoordAxes(0)]=itsOptions.chanMap[chan];  
+  
+  Slicer slicer(start, end);
+  return slicer;
+}
+
+void ModelImageFft::degrid( double **baselines, const vector<double> &frequencies,
+                            Vector<casa::DComplex> &XX , Vector<casa::DComplex> &XY, 
+                            Vector<casa::DComplex> &YX , Vector<casa::DComplex> &YY,
+                            double maxBaseline)
+{
+//  unsigned int nfreqs=frequencies.size();     // get number of requested frequencies
 //  Vector<Double> lamdbdas(nchans);            // vector for wavelengths conversion
 
-  setFrequencies(frequencies);
+//  setFrequencies(frequencies);
   
   // TODO: at the moment we only support Stokes I
   // get Stokes::I pixelIndex
