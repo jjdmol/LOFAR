@@ -116,13 +116,13 @@ void fill (const String& imageName)
   rootRec.define ("OBSERVATION_START_MJD",
                   startTime.getValue("d"));
   rootRec.define ("OBSERVATION_START_UTC",
-                  time2String(startTime, 6));
+                  time2String(startTime, 9) + 'Z');     // Z means UTC
   Quantity endTime(obsRec.asDouble("OBSERVATION_END"),
                    *obsRec.asArrayString("OBSERVATION_END_UNIT").data());
   rootRec.define ("OBSERVATION_END_MJD",
                   endTime.getValue("d"));
   rootRec.define ("OBSERVATION_END_UTC",
-                  time2String(endTime, 6));
+                  time2String(endTime, 9) + 'Z');       // Z means UTC
   rootRec.define ("OBSERVATION_NOF_STATIONS",
                   Int(stationNames.size()));
   rootRec.define ("OBSERVATION_STATIONS_LIST",
@@ -147,7 +147,7 @@ void fill (const String& imageName)
   Quantity clockFreq(obsRec.asDouble("CLOCK_FREQUENCY"),
                      *obsRec.asArrayString("CLOCK_FREQUENCY_UNIT").data());
   rootRec.define ("CLOCK_FREQUENCY",
-                  cenFreq.getValue("MHz"));
+                  clockFreq.getValue("MHz"));
   rootRec.define ("CLOCK_FREQUENCY_UNIT",
                   "MHz");
   rootRec.define ("ANTENNA_SET",
