@@ -409,7 +409,6 @@ namespace LOFAR {
 
       // Do the initial steps (phaseshift and average).
       itsTimerPhaseShift.start();
-///#pragma omp parallel for
       for (int i=0; i<int(itsFirstSteps.size()); ++i) {
         itsFirstSteps[i]->process(newBuf);
       }
@@ -463,12 +462,11 @@ namespace LOFAR {
 
         // Finish the initial steps (phaseshift and average).
         itsTimerPhaseShift.start();
-///#pragma omp parallel for
         for (int i=0; i<int(itsFirstSteps.size()); ++i) {
           itsFirstSteps[i]->finish();
         }
         itsTimerPhaseShift.stop();
-        // Only average if there is some data.
+        // Only average if there is some unaveraged data.
         itsTimerDemix.start();
         if (itsNTimeIn % itsNTimeAvg != 0) {
           makeFactors (itsFactorBuf, itsFactors[itsNTimeOut],
@@ -510,58 +508,66 @@ namespace LOFAR {
       int ncorr  = newBuf.getData().shape()[0];
       int nchan  = newBuf.getData().shape()[1];
       int nbl    = newBuf.getData().shape()[2];
+      int ncc    = ncorr*nchan;
       //# If ever in the future a time dependent phase center is used,
       //# the machine must be reset for each new time, thus each new call
       //# to process.
-      DComplex* test = factorBuf.data();
-
+      // Add the weighted factors for each pair of directions.
+      // The input factor is the phaseshift from target direction to
+      // source direction. By combining them you get the shift from one
+      // source direction to another.
+      int dirnr = 0;
       for (uint i1=0; i1<itsNDir-1; ++i1) {
         for (uint i0=i1+1; i0<itsNDir; ++i0) {
           if (i0 == itsNDir-1) {
-///#pragma omp parallel for
+            // The last direction is the target direction, so no need to
+            // combine the factors. Take conj to get shift source to target.
+#pragma omp parallel for
             for (int i=0; i<nbl; ++i) {
-              const bool*   flagPtr   = newBuf.getFlags().data() + i*ncorr*nchan;
-              const float*  weightPtr = newBuf.getWeights().data() + i*ncorr*nchan;
-              const DComplex* phasor1 = itsPhaseShifts[i1]->getPhasors().data() + i*nchan;
-              DComplex* factorPtr     = factorBuf.data() + i*ncorr*nchan + ((i1 * (2 * itsNDir - i1 - 1)) / 2 + (i0 - i1 - 1)) * ncorr * nchan * nbl;
+              const bool*   flagPtr   = newBuf.getFlags().data() + i*ncc;
+              const float*  weightPtr = newBuf.getWeights().data() + i*ncc;
+              DComplex* factorPtr     = factorBuf.data() + (dirnr*nbl + i)*ncc;
+              const DComplex* phasor1 = itsPhaseShifts[i1]->getPhasors().data()
+                                        + i*nchan;
               for (int j=0; j<nchan; ++j) {
                 DComplex factor = conj(*phasor1++);
                 for (int k=0; k<ncorr; ++k) {
-                  ASSERTSTR(test == factorPtr, "test: " << reinterpret_cast<size_t>(test) << " factorPtr: " << reinterpret_cast<size_t>(factorPtr));
                   if (! *flagPtr) {
                     *factorPtr += factor * double(*weightPtr);
                   }
                   flagPtr++;
                   weightPtr++;
                   factorPtr++;
-                  test++;
                 }
               }
-            }
-    	  } else {
-///#pragma omp parallel for
+            } // end omp parallel for
+      	  } else {
+            // Different source directions; take both phase terms into account.
+#pragma omp parallel for
             for (int i=0; i<nbl; ++i) {
-              const bool*   flagPtr   = newBuf.getFlags().data() + i*ncorr*nchan;
-              const float*  weightPtr = newBuf.getWeights().data() + i*ncorr*nchan;
-              const DComplex* phasor0 = itsPhaseShifts[i0]->getPhasors().data() + i*nchan;
-              const DComplex* phasor1 = itsPhaseShifts[i1]->getPhasors().data() + i*nchan;
-              DComplex* factorPtr     = factorBuf.data() + ((i1 * (2 * itsNDir - i1 - 1)) / 2 + (i0 - i1 - 1)) * ncorr * nchan * nbl + i*ncorr*nchan;
+              const bool*   flagPtr   = newBuf.getFlags().data() + i*ncc;
+              const float*  weightPtr = newBuf.getWeights().data() + i*ncc;
+              DComplex* factorPtr     = factorBuf.data() + (dirnr*nbl + i)*ncc;
+              const DComplex* phasor0 = itsPhaseShifts[i0]->getPhasors().data()
+                                        + i*nchan;
+              const DComplex* phasor1 = itsPhaseShifts[i1]->getPhasors().data()
+                                        + i*nchan;
               for (int j=0; j<nchan; ++j) {
-                // Probably multiply with conj
-                DComplex factor = *phasor0++ / *phasor1++;
+                DComplex factor = *phasor0++ * conj(*phasor1++);
                 for (int k=0; k<ncorr; ++k) {
-                  ASSERTSTR(test == factorPtr, "test: " << reinterpret_cast<size_t>(test) << " factorPtr: " << reinterpret_cast<size_t>(factorPtr));
                   if (! *flagPtr) {
                     *factorPtr += factor * double(*weightPtr);
                   }
                   flagPtr++;
                   weightPtr++;
                   factorPtr++;
-                  test++;
                 }
               }
-            }
+            } // end omp parallel for
           }
+
+          // Next direction pair.
+          dirnr++;
         }
       }
     }
@@ -578,16 +584,28 @@ namespace LOFAR {
       bufOut.resize (IPosition(5, itsNDir, itsNDir,
                                itsNCorr, nChanOut, itsNBl));
       bufOut = DComplex(1,0);
-      const DComplex* phin = bufIn.data();
+      int ncc = itsNCorr*nChanOut;
+      int nccdd = ncc*itsNDir*itsNDir;
+      int nccin = itsNCorr*itsNChanIn;
+      // Fill the factors for each combination of different directions.
+      uint dirnr = 0;
       for (uint d0=0; d0<itsNDir; ++d0) {
         for (uint d1=d0+1; d1<itsNDir; ++d1) {
-          DComplex* ph1 = bufOut.data() + d0*itsNDir + d1;
-          DComplex* ph2 = bufOut.data() + d1*itsNDir + d0;
-          // Average for all channels and divide by the summed weights.
-          const float* weightPtr = weightSums.data();
-          for (uint k=0; k<itsNBl; ++k) {
+#pragma omp parallel for
+          // Average factors by summing channels.
+          // Note that summing in time is done in addFactors.
+          // The sum per output channel is divided by the summed weight.
+          // Note there is a summed weight per baseline,outchan,corr.
+          for (int k=0; k<int(itsNBl); ++k) {
+            const DComplex* phin = bufIn.data() + (dirnr*itsNBl + k)*nccin;
+            DComplex* ph1 = bufOut.data() + k*nccdd + (d0*itsNDir + d1);
+            DComplex* ph2 = bufOut.data() + k*nccdd + (d1*itsNDir + d0);
+            const float* weightPtr = weightSums.data() + k*ncc;
             for (uint c0=0; c0<nChanOut; ++c0) {
+              // Sum the factors for the input channels to average.
               DComplex sum[4];
+              // In theory the last output channel could consist of fewer
+              // input channels, so take care of that.
               uint nch = std::min(nChanAvg, itsNChanIn-c0*nChanAvg);
               for (uint c1=0; c1<nch; ++c1) {
                 for (uint j=0; j<itsNCorr; ++j) {
@@ -601,8 +619,9 @@ namespace LOFAR {
                 ph2 += itsNDir*itsNDir;
               }
             }
-            ASSERTSTR(phin == bufIn.data() + ((d0 * (2 * itsNDir - d0 - 1)) / 2 + (d1 - d0 - 1)) * itsNBl * itsNCorr * itsNChanIn + (k + 1) * itsNCorr * itsNChanIn, "phin: " << reinterpret_cast<size_t>(phin) << " computed: " << reinterpret_cast<size_t>(bufIn.data() + ((d0 * (2 * itsNDir - d0 - 1)) / 2 + (d1 - d0 - 1)) * itsNBl * itsNCorr * itsNChanIn + (k + 1) * itsNCorr * itsNChanIn));
-          }
+          } // end omp parallel for
+          // Next input direction pair.
+          dirnr++;
         }
       }
     }
@@ -645,47 +664,46 @@ namespace LOFAR {
       IPosition outShape(2, itsNDir, itsNModel);
 ///#pragma omp parallel
       {
-	Matrix<DComplex> a(itsNDir, nrDeproject);
-	Matrix<DComplex> ma(itsNDir, itsNModel);
-	vector<DComplex> vec(itsNDir);
-///#pragma omp for
-	for (int i=0; i<nvis; ++i) {
-	  // Split the matrix into the modeled and deprojected sources.
-	  // Copy the columns to the individual matrices.
-	  const DComplex* inptr  = factors.data() + i*itsNDir*itsNDir;
-	  DComplex* outptr = newFactors.data() + i*itsNDir*itsNModel;
-	  Matrix<DComplex> out (outShape, outptr, SHARE);
-	  // Copying a bit of data is probably faster than taking a matrix subset.
-	  objcopy (ma.data(), inptr, itsNDir*itsNModel);
-	  objcopy (a.data(), inptr + itsNDir*itsNModel, itsNDir*nrDeproject);
-	  // Calculate conjugated transpose of A, multiply with A, and invert.
-	  Matrix<DComplex> at(adjoint(a));
-	  Matrix<DComplex> ata(invert(product(at, a)));
-	  if (ata.empty()) {
-	    ata.resize (nrDeproject, nrDeproject);
-	  }
-	  DBGASSERT(ata.ncolumn()==nrDeproject && ata.nrow()==nrDeproject);
-	  // Calculate P = I - A * ata * A.T.conj
-	  Matrix<DComplex> aata(product(a,ata));
-	  Matrix<DComplex> p (-product(product(a, ata), at));
-	  Vector<DComplex> diag(p.diagonal());
-	  diag += DComplex(1,0);
-	  // Multiply the demixing factors with P (get stored in newFactors).
-	  out = product(p, ma);
-	  ///        cout << "p matrix: " << p;
-	  // Multiply the averaged data point with P.
-	  std::fill (vec.begin(), vec.end(), DComplex());
-	  for (uint j=0; j<itsNDir; ++j) {
-	    for (uint k=0; k<itsNDir; ++k) {
-	      vec[k] += DComplex(resultPtr[j][i]) * p(k,j);
-	    }
-	  }
-	  // Put result back in averaged data for those sources.
-	  for (uint j=0; j<itsNDir; ++j) {
-	    resultPtr[j][i] = vec[j];
-	  }
-	  ///        cout << vec << endl;
-	}
+        Matrix<DComplex> a(itsNDir, nrDeproject);
+        Matrix<DComplex> ma(itsNDir, itsNModel);
+        vector<DComplex> vec(itsNDir);
+        ///#pragma omp for
+        for (int i=0; i<nvis; ++i) {
+          // Split the matrix into the modeled and deprojected sources.
+          // Copy the columns to the individual matrices.
+          const DComplex* inptr  = factors.data() + i*itsNDir*itsNDir;
+          DComplex* outptr = newFactors.data() + i*itsNDir*itsNModel;
+          Matrix<DComplex> out (outShape, outptr, SHARE);
+          // Copying a bit of data is probably faster than taking a matrix
+          // subset.
+          objcopy (ma.data(), inptr, itsNDir*itsNModel);
+          objcopy (a.data(), inptr + itsNDir*itsNModel, itsNDir*nrDeproject);
+          // Calculate conjugated transpose of A, multiply with A, and invert.
+          Matrix<DComplex> at(adjoint(a));
+          Matrix<DComplex> ata(invert(product(at, a)));
+          if (ata.empty()) {
+            ata.resize (nrDeproject, nrDeproject);
+          }
+          DBGASSERT(ata.ncolumn()==nrDeproject && ata.nrow()==nrDeproject);
+          // Calculate P = I - A * ata * A.T.conj
+          Matrix<DComplex> aata(product(a,ata));
+          Matrix<DComplex> p (-product(product(a, ata), at));
+          Vector<DComplex> diag(p.diagonal());
+          diag += DComplex(1,0);
+          // Multiply the demixing factors with P (get stored in newFactors).
+          out = product(p, ma);
+          // Multiply the averaged data point with P.
+          std::fill (vec.begin(), vec.end(), DComplex());
+          for (uint j=0; j<itsNDir; ++j) {
+            for (uint k=0; k<itsNDir; ++k) {
+              vec[k] += DComplex(resultPtr[j][i]) * p(k,j);
+            }
+          }
+          // Put result back in averaged data for those sources.
+          for (uint j=0; j<itsNDir; ++j) {
+            resultPtr[j][i] = vec[j];
+          }
+        }
       }
       // Set the new demixing factors.
       factors.reference (newFactors);
