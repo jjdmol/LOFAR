@@ -158,15 +158,16 @@ public:
   inline ImageProperties imageOptions() const { return itsImageProperties; }
 
   casa::Slicer makeSlicer(casa::Int chan, const casa::String &Stokes="I");
+  //template <class T>  getPlaneBuffer(casa::Array<T> *arr);
   
   // Function to get degridded data into raw pointers
-  void degrid(double *u, double *v, double *w, 
-              size_t timeslots, size_t nfreqs,
-              double *frequencies, 
+  void degrid(const double *uBL, const double *vBL, const double *wBL, 
+              size_t nuvw, size_t nfreqs,
+              const double *frequencies, 
               casa::DComplex *XX , casa::DComplex *XY, 
               casa::DComplex *XY , casa::DComplex *YY,
               double maxBaseline=20000);
-  void degrid(double *baselines[3], 
+  void degrid(const double *baselines[3], 
               const vector<double> &frequencies,
               casa::Vector<casa::DComplex> &XX , casa::Vector<casa::DComplex> &XY, 
               casa::Vector<casa::DComplex> &YX , casa::Vector<casa::DComplex> &YY,
