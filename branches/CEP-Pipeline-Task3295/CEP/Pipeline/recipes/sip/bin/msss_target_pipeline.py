@@ -212,6 +212,7 @@ class msss_target_pipeline(control):
         # The instrument files are currently located on the wrong nodes
         # Copy to correct nodes and assign the instrument table the now
         # correct data
+        job_dir = self.config.get("layout", "job_directory")
         mapfile_dir = os.path.join(job_dir, "mapfiles")
         create_directory(mapfile_dir)
 
@@ -221,7 +222,7 @@ class msss_target_pipeline(control):
 
         self._validate_io_product_specs()
 
-        job_dir = self.config.get("layout", "job_directory")
+
         parset_dir = os.path.join(job_dir, "parsets")
 
 
