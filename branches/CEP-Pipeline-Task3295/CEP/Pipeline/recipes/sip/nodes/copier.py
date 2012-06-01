@@ -27,7 +27,6 @@ class copier(LOFARnodeTCP):
                 target_map = load_data_map(target_mapfile)
             except Exception, e:
                 self.logger.error("An error occured during loading of mapfiles")
-                self.logger.error("Retrieved exception: {0}".format(e.str()))
                 raise e
 
             return self._copy_all_sources_to_target(source_map,
@@ -51,7 +50,6 @@ class copier(LOFARnodeTCP):
                 except Exception, e:
                     self.logger.error("Failed copy file: {0} on node {1} ".format(
                         source_path, source_node))
-                    self.logger.error(e.str())
                     raise e
             else:
                 self._copy_single_file_using_rsync(
