@@ -123,39 +123,39 @@ inline void HWTimer::start()
 #if defined __x86_64__ && defined __INTEL_COMPILER && defined _OPENMP
     asm volatile
     (
-	"rdtsc\n\t"
-	"shlq $32,%%rdx\n\t"
-	"leaq (%%rax,%%rdx),%%rax\n\t"
-	"lock;subq %%rax,%0"
+        "rdtsc\n\t"
+        "shlq $32,%%rdx\n\t"
+        "leaq (%%rax,%%rdx),%%rax\n\t"
+        "lock;subq %%rax,%0"
     :
-	"+m" (m_total_time)
+        "+m" (m_total_time)
     :
     :
-	"rax", "rdx"
+        "rax", "rdx"
     );
 #elif defined __i386__ && defined __INTEL_COMPILER && defined _OPENMP
     asm volatile
     (
-	"rdtsc\n\t"
-	"lock;subl %%eax,%0\n\t"
-	"lock;sbbl %%edx,%1"
+        "rdtsc\n\t"
+        "lock;subl %%eax,%0\n\t"
+        "lock;sbbl %%edx,%1"
     :
-	"+m" (m_total_time_low), "+m" (m_total_time_high)
+        "+m" (m_total_time_low), "+m" (m_total_time_high)
     :
     :
-	"eax", "edx"
+        "eax", "edx"
     );
 #elif (defined __i386__ || defined __x86_64__) && (defined __GNUC__ || defined __INTEL_COMPILER)
     asm volatile
     (
-	"rdtsc\n\t"
-	"subl %%eax, %0\n\t"
-	"sbbl %%edx, %1"
+        "rdtsc\n\t"
+        "subl %%eax, %0\n\t"
+        "sbbl %%edx, %1"
     :
-	"+m" (m_total_time_low), "+m" (m_total_time_high)
+        "+m" (m_total_time_low), "+m" (m_total_time_high)
     :
     :
-	"eax", "edx"
+        "eax", "edx"
     );
 #elif (defined __i386__ || defined __x86_64__) && defined __PATHSCALE__
     unsigned eax, edx;
@@ -174,21 +174,21 @@ inline void HWTimer::start()
 
     asm
     (
-	"0:\n\t"
-	"mfspr %0,269\n\t"
-	"mfspr %1,268\n\t"
-	"mfspr %2,269\n\t"
-	"cmpw %2,%0\n\t"
-	"bne 0b\n\t"
-	"subfc %3,%1,%3\n\t"
-	"subfe %4,%0,%4"
+        "0:\n\t"
+        "mfspr %0,269\n\t"
+        "mfspr %1,268\n\t"
+        "mfspr %2,269\n\t"
+        "cmpw %2,%0\n\t"
+        "bne 0b\n\t"
+        "subfc %3,%1,%3\n\t"
+        "subfe %4,%0,%4"
     :
-	"=r" (high), "=r" (low), "=r" (retry),
-	"=r" (m_total_time_low), "=r" (m_total_time_high)
+        "=r" (high), "=r" (low), "=r" (retry),
+        "=r" (m_total_time_low), "=r" (m_total_time_high)
     :
-	"3" (m_total_time_low), "4" (m_total_time_high)
+        "3" (m_total_time_low), "4" (m_total_time_high)
     :
-	"cc"
+        "cc"
     );
 #endif
 }
@@ -198,39 +198,39 @@ inline void HWTimer::stop()
 #if defined __x86_64__ && defined __INTEL_COMPILER && defined _OPENMP
     asm volatile
     (
-	"rdtsc\n\t"
-	"shlq $32,%%rdx\n\t"
-	"leaq (%%rax,%%rdx),%%rax\n\t"
-	"lock;addq %%rax,%0"
+        "rdtsc\n\t"
+        "shlq $32,%%rdx\n\t"
+        "leaq (%%rax,%%rdx),%%rax\n\t"
+        "lock;addq %%rax,%0"
     :
-	"+m" (m_total_time)
+        "+m" (m_total_time)
     :
     :
-	"rax", "rdx"
+        "rax", "rdx"
     );
 #elif defined __i386__ && defined __INTEL_COMPILER && defined _OPENMP
     asm volatile
     (
-	"rdtsc\n\t"
-	"lock;addl %%eax, %0\n\t"
-	"lock;adcl %%edx, %1"
+        "rdtsc\n\t"
+        "lock;addl %%eax, %0\n\t"
+        "lock;adcl %%edx, %1"
     :
-	"+m" (m_total_time_low), "+m" (m_total_time_high)
+        "+m" (m_total_time_low), "+m" (m_total_time_high)
     :
     :
-	"eax", "edx"
+        "eax", "edx"
     );
 #elif (defined __i386__ || defined __x86_64__) && (defined __GNUC__ || defined __INTEL_COMPILER)
     asm volatile
     (
-	"rdtsc\n\t"
-	"addl %%eax, %0\n\t"
-	"adcl %%edx, %1"
+        "rdtsc\n\t"
+        "addl %%eax, %0\n\t"
+        "adcl %%edx, %1"
     :
-	"+m" (m_total_time_low), "+m" (m_total_time_high)
+        "+m" (m_total_time_low), "+m" (m_total_time_high)
     :
     :
-	"eax", "edx"
+        "eax", "edx"
     );
 #elif (defined __i386__ || defined __x86_64__) && defined __PATHSCALE__
     unsigned eax, edx;
@@ -248,21 +248,21 @@ inline void HWTimer::stop()
 
     asm
     (
-	"0:\n\t"
-	"mfspr %0,269\n\t"
-	"mfspr %1,268\n\t"
-	"mfspr %2,269\n\t"
-	"cmpw %2,%0\n\t"
-	"bne 0b\n\t"
-	"addc %3,%3,%1\n\t"
-	"adde %4,%4,%0"
+        "0:\n\t"
+        "mfspr %0,269\n\t"
+        "mfspr %1,268\n\t"
+        "mfspr %2,269\n\t"
+        "cmpw %2,%0\n\t"
+        "bne 0b\n\t"
+        "addc %3,%3,%1\n\t"
+        "adde %4,%4,%0"
     :
-	"=r" (high), "=r" (low), "=r" (retry),
-	"=r" (m_total_time_low), "=r" (m_total_time_high)
+        "=r" (high), "=r" (low), "=r" (retry),
+        "=r" (m_total_time_low), "=r" (m_total_time_high)
     :
-	"3" (m_total_time_low), "4" (m_total_time_high)
+        "3" (m_total_time_low), "4" (m_total_time_high)
     :
-	"cc"
+        "cc"
     );
 #endif
 
@@ -271,10 +271,10 @@ inline void HWTimer::stop()
 #elif defined __i386__ && defined __INTEL_COMPILER && defined _OPENMP
     asm volatile
     (
-	"lock;addl $1,%0\n\t"
-	"lock;adcl $0,%1"
+        "lock;addl $1,%0\n\t"
+        "lock;adcl $0,%1"
     :
-	"+m" (m_count_low), "+m" (m_count_high)
+        "+m" (m_count_low), "+m" (m_count_high)
     );
 #else
     ++ m_count;

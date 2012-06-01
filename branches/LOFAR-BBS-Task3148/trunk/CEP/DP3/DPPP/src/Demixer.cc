@@ -47,6 +47,7 @@
 #include <Common/StreamUtil.h>
 #include <Common/lofar_iomanip.h>
 #include <Common/lofar_iostream.h>
+#include <Common/lofar_fstream.h>
 
 #include <casa/Quanta/MVAngle.h>
 #include <casa/Arrays/Vector.h>
@@ -71,6 +72,7 @@ namespace LOFAR {
         const_cursor<double> in, double *out);
       void unpack(const vector<size_t> &directions, size_t nStation,
         const double *in, cursor<double> out);
+      Patch makePatch(const string &name);
     } //# end unnamed namespace
 
     Demixer::Demixer (DPInput* input,
@@ -150,6 +152,11 @@ namespace LOFAR {
         itsPatchList.push_back(makePatch(sourceDB, itsAllSources[i]));
       }
 
+//      // Get the patch names and positions from the SourceDB table.
+//      for(uint i = 0; i < itsNModel; ++i) {
+//        itsPatchList.push_back(makePatch(itsAllSources[i]));
+//      }
+
       // If the target source is given, add it to the model.
       // Because the target source has to be the last direction, it means
       // that (for the time being) no extra sources can be given.
@@ -158,6 +165,7 @@ namespace LOFAR {
         ASSERTSTR (itsExtraSources.empty(), "Currently no extrasources can "
                    "be given if the targetsource is given");
         itsPatchList.push_back(makePatch(sourceDB, itsTargetSource));
+//        itsPatchList.push_back(makePatch(itsTargetSource));
       }
       ASSERT(itsPatchList.size() == itsNModel);
 
@@ -193,8 +201,8 @@ namespace LOFAR {
                                             sourceVec);
         itsFirstSteps.push_back (DPStep::ShPtr(step1));
         itsPhaseShifts.push_back (step1);
-        DPStep::ShPtr step2 (new Averager(input, prefix,
-					  itsNChanAvg, itsNTimeAvg));
+        DPStep::ShPtr step2 (new Averager(input, prefix, itsNChanAvg,
+                                          itsNTimeAvg));
         step1->setNextStep (step2);
         MultiResultStep* step3 = new MultiResultStep(itsNTimeChunk);
         step2->setNextStep (DPStep::ShPtr(step3));
@@ -313,14 +321,12 @@ namespace LOFAR {
       itsNChanAvgSubtr = info.update (itsNChanAvgSubtr, itsNTimeAvgSubtr);
       itsNChanOutSubtr = info.nchan();
       itsTimeIntervalSubtr = info.timeInterval();
-      ASSERTSTR (itsNChanAvg % itsNChanAvgSubtr == 0,
-		 "Demix averaging " << itsNChanAvg
-		 << " must be multiple of output averaging "
-		 << itsNChanAvgSubtr);
-      ASSERTSTR (itsNTimeAvg % itsNTimeAvgSubtr == 0,
-		 "Demix averaging " << itsNTimeAvg
-		 << " must be multiple of output averaging "
-		 << itsNTimeAvgSubtr);
+      ASSERTSTR (itsNChanAvg % itsNChanAvgSubtr == 0, "Demix averaging "
+        << itsNChanAvg << " must be multiple of output averaging "
+        << itsNChanAvgSubtr);
+      ASSERTSTR (itsNTimeAvg % itsNTimeAvgSubtr == 0, "Demix averaging "
+        << itsNTimeAvg << " must be multiple of output averaging "
+        << itsNTimeAvgSubtr);
       // Store channel frequencies for the demix and subtract resolutions.
       itsFreqDemix = itsInput->chanFreqs (itsNChanAvg);
       itsFreqSubtr = itsInput->chanFreqs (itsNChanAvgSubtr);
@@ -541,7 +547,7 @@ namespace LOFAR {
                 }
               }
             } // end omp parallel for
-      	  } else {
+          } else {
             // Different source directions; take both phase terms into account.
 #pragma omp parallel for
             for (int i=0; i<nbl; ++i) {
@@ -1163,6 +1169,63 @@ namespace LOFAR {
           out.backward(1, nStation);
           out.backward(2, *dr);
         }
+      }
+
+      Patch makePatch(const string &name)
+      {
+        string fname = name + ".mdl";
+        LOG_DEBUG_STR("Loading source model from: " << fname);
+        ifstream inf(fname.c_str());
+
+        size_t nComponents = 0;
+        inf >> nComponents;
+        ASSERT(inf);
+        LOG_DEBUG_STR("No. of components: "  << nComponents);
+
+        vector<PointSource> components;
+        components.reserve(nComponents);
+        for(size_t i = 0; i < nComponents; ++i)
+        {
+          Position position;
+          inf >> position[0] >> position[1];
+
+          Stokes stokes;
+          inf >> stokes.I >> stokes.Q >> stokes.U >> stokes.V;
+
+          PointSource component(position, stokes);
+
+          double freq = 0.0;
+          inf >> freq;
+
+          size_t nSI = 0;
+          inf >> nSI;
+
+          vector<double> si(nSI, 0.0);
+          if(nSI > 0)
+          {
+            for(size_t j = 0; j < nSI; ++j)
+            {
+              inf >> si[j];
+            }
+            component.setSpectralIndex(freq, si.begin(), si.end());
+          }
+
+          ASSERT(inf);
+          components.push_back(component);
+
+          if(i == 0 || i == nComponents - 1)
+          {
+            LOG_DEBUG_STR("ra: " << position[0] << " dec: " << position[1]
+              << " I: " << stokes.I
+              << " Q: " << stokes.Q
+              << " U: " << stokes.U
+              << " V: " << stokes.V
+              << " freq: " << freq
+              << " si: " << si);
+          }
+        }
+
+        return Patch(name, components.begin(), components.end());
       }
     } //# end unnamed namespace
 

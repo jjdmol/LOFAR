@@ -48,7 +48,6 @@ Patch makePatch(SourceDB &sourceDB, const string &name)
 {
     ParmDB &parmDB = sourceDB.getParmDB();
     vector<SourceInfo> sources = sourceDB.getPatchSources(name);
-    LOG_DEBUG_STR("found: " << sources.size() << " sources for patch: " << name);
 
     vector<PointSource> components;
     components.reserve(sources.size());
@@ -58,59 +57,50 @@ Patch makePatch(SourceDB &sourceDB, const string &name)
         ASSERTSTR(it->getType() == SourceInfo::POINT, "Only point sources are"
             " supported at the moment.");
 
-        PointSource component;
+        // Fetch position.
+        Position position;
+        position[0] = getDefaultParmValue(parmDB, "Ra:" + it->getName());
+        position[1] = getDefaultParmValue(parmDB, "Dec:" + it->getName());
 
-        try
+        // Fetch stokes vector.
+        Stokes stokes;
+        stokes.I = getDefaultParmValue(parmDB, "I:" + it->getName());
+        stokes.V = getDefaultParmValue(parmDB, "V:" + it->getName());
+        if(!it->getUseRotationMeasure())
         {
-            // Fetch position.
-            Position position;
-            position[0] = getDefaultParmValue(parmDB, "Ra:" + it->getName());
-            position[1] = getDefaultParmValue(parmDB, "Dec:" + it->getName());
-            component.setPosition(position);
-
-            // Fetch stokes vector.
-            Stokes stokes;
-            stokes.I = getDefaultParmValue(parmDB, "I:" + it->getName());
-            stokes.V = getDefaultParmValue(parmDB, "V:" + it->getName());
-            if(!it->getUseRotationMeasure())
-            {
-                stokes.Q = getDefaultParmValue(parmDB, "Q:" + it->getName());
-                stokes.U = getDefaultParmValue(parmDB, "U:" + it->getName());
-            }
-            component.setStokes(stokes);
-
-            // Fetch spectral index attributes (if applicable).
-            size_t nTerms = it->getSpectralIndexNTerms();
-            if(nTerms > 0)
-            {
-                vector<double> terms;
-                terms.reserve(nTerms);
-
-                ostringstream oss;
-                for(size_t i = 0; i < nTerms; ++i)
-                {
-                    oss << "SpectralIndex:" << i << ":" << it->getName();
-                    terms.push_back(getDefaultParmValue(parmDB, oss.str()));
-                }
-
-                component.setSpectralIndex(it->getSpectralIndexRefFreq(),
-                    terms.begin(), terms.end());
-            }
-
-            // Fetch rotation measure attributes (if applicable).
-            if(it->getUseRotationMeasure())
-            {
-                component.setPolarizedFraction(getDefaultParmValue(parmDB,
-                    "PolarizedFraction:" + it->getName()));
-                component.setPolarizationAngle(getDefaultParmValue(parmDB,
-                    "PolarizationAngle:" + it->getName()));
-                component.setRotationMeasure(getDefaultParmValue(parmDB,
-                    "RotationMeasure:" + it->getName()));
-            }
+            stokes.Q = getDefaultParmValue(parmDB, "Q:" + it->getName());
+            stokes.U = getDefaultParmValue(parmDB, "U:" + it->getName());
         }
-        catch(Exception &e)
+
+        PointSource component(position, stokes);
+
+        // Fetch spectral index attributes (if applicable).
+        size_t nTerms = it->getSpectralIndexNTerms();
+        if(nTerms > 0)
         {
-            continue;
+            vector<double> terms;
+            terms.reserve(nTerms);
+
+            ostringstream oss;
+            for(size_t i = 0; i < nTerms; ++i)
+            {
+                oss << "SpectralIndex:" << i << ":" << it->getName();
+                terms.push_back(getDefaultParmValue(parmDB, oss.str()));
+            }
+
+            component.setSpectralIndex(it->getSpectralIndexRefFreq(),
+                terms.begin(), terms.end());
+        }
+
+        // Fetch rotation measure attributes (if applicable).
+        if(it->getUseRotationMeasure())
+        {
+            component.setPolarizedFraction(getDefaultParmValue(parmDB,
+                "PolarizedFraction:" + it->getName()));
+            component.setPolarizationAngle(getDefaultParmValue(parmDB,
+                "PolarizationAngle:" + it->getName()));
+            component.setRotationMeasure(getDefaultParmValue(parmDB,
+                "RotationMeasure:" + it->getName()));
         }
 
         components.push_back(component);
