@@ -139,22 +139,22 @@ class msss_target_pipeline(control):
     def _copy_instrument_files(self, instrument_map, input_data_map, mapfile_dir):
         # For the copy recipe a target mapfile is needed
         # create target map based on the node and the dir in the input_data_map
-        # with the filename based on the 
+        # with the filename based on the
         copier_map_path = os.path.join(mapfile_dir, "copier")
         create_directory(copier_map_path)
         target_map = self._create_target_map_for_instruments(
                                     instrument_map, input_data_map)
         #Write the two needed maps to file
         source_path = os.path.join(copier_map_path, "source_instruments.map")
-        store_data_map(source_path)
+        store_data_map(source_path, instrument_map)
 
         target_path = os.path.join(copier_map_path, "target_instruments.map")
-        store_data_map(target_map)
+        store_data_map(target_path, target_map)
 
         self.run_task("copier",
                       mapfile_source = source_path,
                       mapfile_target = target_path,
-                      mapdile_dir = copier_map_path)
+                      mapfile_dir = copier_map_path)
 
         return target_map
 
@@ -217,7 +217,7 @@ class msss_target_pipeline(control):
         create_directory(mapfile_dir)
 
         self.input_data['instrument'] = self._copy_instrument_files(
-                                    self.nput_data['instrument'],
+                                    self.input_data['instrument'],
                                     self.input_data['data'], mapfile_dir)
 
         self._validate_io_product_specs()
