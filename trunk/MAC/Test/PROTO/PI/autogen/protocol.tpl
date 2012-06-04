@@ -17,7 +17,11 @@
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
 //  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //
+[+ IF (== autogen-version "5.12") +]
+//  [+ (lgpl "This program" "ASTRON" "//  ") +]
+[+ ELSE "5.10 is fine, 5.12 forgets the 1st // (build err) and 5.12 and 5.16 append 2 chars (don't care)." +]
 [+ (lgpl "This program" "ASTRON" "//  ") +]
+[+ ENDIF +]
 //
 //  $Id$
 //
