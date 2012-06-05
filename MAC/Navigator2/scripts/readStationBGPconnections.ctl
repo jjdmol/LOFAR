@@ -38,8 +38,8 @@ main()
   string strDataDir             = ""; 
   if (isdir("/opt/lofar/etc/") ) {
     strDataDir = "/opt/lofar/etc/StaticMetaData/";
-  } else if ( isdir ("d:/data/CS20_CCU001/data/configs/") ) {
-    strDataDir = "d:/data/CS20_CCU001/data/configs/";
+  } else if ( isdir ("d:/data/TRUNK-CCU001/data/configs/") ) {
+    strDataDir = "d:/data/TRUNK-CCU001/data/configs/";
   } else {
     DebugN("Could not find datadir to work with, leaving and no antenne data read.");
     return;
@@ -83,7 +83,7 @@ main()
         if (showDebug) DebugN( "node: "+ionode+ "  rspfull: " + linesplitted[2]+ "  rsp[2]" + rsp[2]+ "nr: "+nr);
         if (dpExists(ioname)) {
           dpSet(ioname+".station"+stationPlace,linesplitted[1]);
-          dpSet(ioname+".RSPBoard"+rackPlace,nr);
+//          dpSet(ioname+".RSPBoard"+rackPlace,nr);
         } else {
             DebugN(ionode+" gives wrong dp: " , ioname);
         }
@@ -145,7 +145,7 @@ main()
           ioname = "LOFAR_PIC_"+navFunct_CEPName2DPName(ionode);
           if (dpExists(ioname)) {
             dpSet(ioname+".station"+stationPlace,station);
-            dpSet(ioname+".RSPBoard"+rackPlace,nr);
+//            dpSet(ioname+".RSPBoard"+rackPlace,nr);
           } else {
             DebugN(ionode+" gives wrong dp: " , ioname);
             continue;
