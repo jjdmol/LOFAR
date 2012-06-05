@@ -46,7 +46,10 @@ class copier(LOFARnodeTCP):
             if source_node == target_node:
                 # quick copy
                 try:
-                    shutil.copyfile(source_path, target_path)
+                    if os.path.exists(target_path):
+                        shutils.rmtree(target_path)
+
+                    shutil.copytree(source_path, target_path)
                 except Exception, e:
                     self.logger.error("Failed copy file: {0} on node {1} ".format(
                         source_path, source_node))

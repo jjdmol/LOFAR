@@ -142,11 +142,11 @@ class msss_target_pipeline(control):
         # with the filename based on the
         copier_map_path = os.path.join(mapfile_dir, "copier")
         create_directory(copier_map_path)
-        target_map = self._create_target_map_for_instruments(
+        source_map, target_map, new_instrument_map = self._create_target_map_for_instruments(
                                     instrument_map, input_data_map)
         #Write the two needed maps to file
         source_path = os.path.join(copier_map_path, "source_instruments.map")
-        store_data_map(source_path, instrument_map)
+        store_data_map(source_path, source_map)
 
         target_path = os.path.join(copier_map_path, "target_instruments.map")
         store_data_map(target_path, target_map)
@@ -156,13 +156,13 @@ class msss_target_pipeline(control):
                       mapfile_target = target_path,
                       mapfile_dir = copier_map_path)
 
-        return target_map
-
-
+        return new_instrument_map
 
 
     def _create_target_map_for_instruments(self, instrument_map, input_data_map):
         target_map = []
+        source_map = []
+        new_instrument_map = []
         for instrument_pair, input_data_pair in zip(instrument_map, input_data_map):
             instrument_node, instrument_path = instrument_pair
             input_data_node, input_data_path = input_data_pair
@@ -170,9 +170,15 @@ class msss_target_pipeline(control):
             target_dir = os.path.dirname(input_data_path)
             target_name = os.path.basename(instrument_path)
             target_path = os.path.join(target_dir, target_name)
+            new_instrument_map.append((input_data_node, target_path))
+            #If the data is already on the correct node, skip this file
+            if instrument_node == input_data_node and instrument_path == input_data_path:
+                continue
+
+            source_map.append(instrument_pair)
             target_map.append((input_data_node, target_path))
 
-        return target_map
+        return source_map, target_map, new_instrument_map
 
 
 
@@ -215,6 +221,7 @@ class msss_target_pipeline(control):
         job_dir = self.config.get("layout", "job_directory")
         mapfile_dir = os.path.join(job_dir, "mapfiles")
         create_directory(mapfile_dir)
+
 
         self.input_data['instrument'] = self._copy_instrument_files(
                                     self.input_data['instrument'],
