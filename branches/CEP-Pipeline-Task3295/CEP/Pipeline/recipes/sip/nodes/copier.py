@@ -47,7 +47,7 @@ class copier(LOFARnodeTCP):
                 # quick copy
                 try:
                     if os.path.exists(target_path):
-                        shutils.rmtree(target_path)
+                        shutil.rmtree(target_path)
 
                     shutil.copytree(source_path, target_path)
                 except Exception, e:
