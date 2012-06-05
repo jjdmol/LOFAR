@@ -120,34 +120,33 @@ class copier(MasterNodeInterface):
     def go(self):
         self.logger.info("Starting copier run")
         super(copier, self).go()
-        print 'debug 3'
+
         # Load data from mapfiles
         source_map = load_data_map(self.inputs['mapfile_source'])
         target_map = load_data_map(self.inputs['mapfile_target'])
         mapfile_dir = self.inputs["mapfile_dir"]
 
         # validate data in mapfiles
-        print 'debug 4'
         if not self._validate_source_target_mapfile(source_map, target_map,
                                              self.inputs['allow_rename']):
             return 1 #return failure
-        print 'debug 5'
+
         # 'sort' the input data based on node
         source_target_dict = self._create_target_node_keyed_dict(
                         source_map, target_map)
-        print 'debug 5'
+
         # Create node specific mapfiles
         mapfiles_dict = self._construct_node_specific_mapfiles(
                       source_target_dict, mapfile_dir)
-        print 'debug 6'
+
         # Run the compute nodes with the node specific mapfiles
         for host, (source_mapfile, target_mapfile) in mapfiles_dict.items():
             args = [source_mapfile, target_mapfile]
             self.append_job(host, args)
-        print 'debug 1'
+
         # start the jobs
         exit_value_jobs = self.run_jobs()
-        print 'debug 2'
+
         return exit_value_jobs
 
     def _validate_source_target_mapfile(self, source_map, target_map,
@@ -190,13 +189,18 @@ class copier(MasterNodeInterface):
         for source_pair, target_pair in zip(source_map, target_map):
             target_node, target_path = target_pair
             source_node, source_path = source_pair
+
+            # remove the Observation specific details in the path 
+            # In previous function the basename are already tested to be the same
+            new_target_pair = (target_node, os.path.dirname(target_path))
+
             # Check if current target is already known
             if node_source_node_target_dict.has_key(target_node):
                 node_source_node_target_dict[target_node].append(
-                    (source_pair, target_pair))
+                    (source_pair, new_target_pair))
             else:
                 node_source_node_target_dict[target_node] = [(source_pair,
-                                                             target_pair)]
+                                                             new_target_pair)]
 
         return node_source_node_target_dict
 
