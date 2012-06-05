@@ -726,10 +726,19 @@ void ModelImageFft::degrid( const double **baselines, const vector<double> &freq
 //**********************************************
 
 // Using std::vector datacontainers
+void ModelImageFft::computeICorr( const vector<complex<float> > &data, 
+                                  vector<complex<float> > &XX, 
+                                  vector<complex<float> > &YY)
+{
+  for(unsigned int i=0; i<data.size(); i++)
+  {
+    XX[i]=0.5*data[i];
+    YY[i]=0.5*data[i];
+  }
+}
 
 void ModelImageFft::computeICorr( const vector<complex<float> > &data, 
-                                  DComplex *XX,
-                                  DComplex *YY)
+                                  DComplex *XX, DComplex *YY)
 {
   for(unsigned int i=0; i<data.size(); i++)
   {
@@ -738,35 +747,51 @@ void ModelImageFft::computeICorr( const vector<complex<float> > &data,
   memcpy(YY, XX, data.size()*sizeof(complex<float>));
 }
 
-
-void ModelImageFft::computePolCorr( const vector<complex<float> > &Q, 
-                                    const vector<complex<float> > &U,
-                                    const vector<complex<float> > &V,
-                                    vector<complex<float> > &XY,
-                                    vector<complex<float> > &YX)
-{
-//  for_each (myvector.begin(), myvector.end(), myfunction);
-}
-
 // Using data stored in pointers
-void ModelImageFft::computeICorr(const std::complex<float> *data, size_t nuvw,
+void ModelImageFft::computeICorr(const complex<float> *data, size_t nuvw,
                                  DComplex *XX, DComplex *YY)
 {
   for(unsigned int i=0; i<nuvw; i++)
   {
     XX[i]=0.5*data[i];
   }
-  memcpy(YY, XX, nuvw);
+  memcpy(YY, XX, nuvw*sizeof(complex<float>));
 }
 
 /*
-void ModelImageFft::computePolCorr( const std::complex<float> *Q, 
-                                    const std::complex<float> *U,
-                                    const std::complex<float> *V,  
-                                    size_t nuvw,
-                                    const DComplex *XX, const DComplex *YY)
+void ModelImageFft::computePolCorr( const vector<complex<float> > &I
+                                    const vector<complex<float> > &Q, 
+                                    const vector<complex<float> > &U,
+                                    const vector<complex<float> > &V,
+                                    vector<complex<float> > &XX,
+                                    vector<complex<float> > &XY,
+                                    vector<complex<float> > &XY,
+                                    vector<complex<float> > &YY)
 {
+//  for_each (myvector.begin(), myvector.end(), myfunction);
+  for(unsigned int i=0; i<data.size(); i++)
+  {
+    XX[i] = I[i] + Q[i];                      // XX= I+Q
+    XY[i] = U[i] + complex<float>(0,1)*V[i];  // XY = U+iV
+    YX[i] = U[i] - complex<float>(0,1)*V[i];  // YX = U-iV
+    YY[i] = I[i] - Q[i];                      // YY = I-Q
+  }  
+}
 
+void ModelImageFft::computePolCorr( const complex<float> *Q, 
+                                    const complex<float> *U,
+                                    const complex<float> *V,  
+                                    size_t nuvw,
+                                    DComplex *XX, DComplex *XY,
+                                    DComplex *YX, DComplex *YY)
+{
+  for(unsigned int i=0; i<data.size(); i++)
+  {
+    XX[i] = I[i] + Q[i];
+    XY[i] = U[i] + complex<float>(0,1)*V[i];
+    YX[i] = U[i] - complex<float>(0,1)*V[i];
+    YY[i] = I[i] - Q[i];
+  }
 }
 */
 

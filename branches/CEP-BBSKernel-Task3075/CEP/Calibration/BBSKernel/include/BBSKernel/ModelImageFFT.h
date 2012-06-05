@@ -194,6 +194,12 @@ public:
                       std::vector<std::complex<float> > &YX);
   void computeICorr(const std::complex<float> *data, size_t nuvw,
                     casa::DComplex *XX, casa::DComplex *YY);
+  void computePolCorr(const std::complex<float> *Q, 
+                      const std::complex<float> *U,
+                      const std::complex<float> *V,  
+                      size_t nuvw,
+                      casa::DComplex *XX, casa::DComplex *XY,
+                      casa::DComplex *YX, casa::DComplex *YY);
 
   /////////////////////////////////////////////////////////////////////////////////
   // The next two functions are the kernel of the gridding/degridding.
