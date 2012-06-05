@@ -42,20 +42,20 @@ class copier(LOFARnodeTCP):
             #assure that target dir exists
             create_directory(os.path.dirname(target_path))
 
-            # if on same node
-            if source_node == target_node:
-                # quick copy
-                try:
-                    if os.path.exists(target_path):
-                        shutil.rmtree(target_path)
-
-                    shutil.copytree(source_path, target_path)
-                except Exception, e:
-                    self.logger.error("Failed copy file: {0} on node {1} ".format(
-                        source_path, source_node))
-                    raise e
-            else:
-                self._copy_single_file_using_rsync(
+#            # if on same node
+#            if source_node == target_node:
+#                # quick copy
+#                try:
+#                    if os.path.exists(target_path):
+#                        shutil.rmtree(target_path)
+#
+#                    shutil.copytree(source_path, target_path)
+#                except Exception, e:
+#                    self.logger.error("Failed copy file: {0} on node {1} ".format(
+#                        source_path, source_node))
+#                    raise e
+#            else:
+            self._copy_single_file_using_rsync(
                                 source_node, source_path, target_path)
 
         return 0
