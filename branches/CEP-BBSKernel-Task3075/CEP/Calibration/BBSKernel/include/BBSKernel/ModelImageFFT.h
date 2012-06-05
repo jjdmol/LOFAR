@@ -158,7 +158,6 @@ public:
   inline ImageProperties imageOptions() const { return itsImageProperties; }
 
   casa::Slicer makeSlicer(casa::Int chan, const casa::String &Stokes="I");
-  //template <class T>  getPlaneBuffer(casa::Array<T> *arr);
   
   // Function to get degridded data into raw pointers
   void degrid(const double *uBL, const double *vBL, const double *wBL, 
@@ -177,6 +176,24 @@ public:
               const casa::Vector<casa::Double> &frequencies,
               casa::Array<casa::DComplex> XX , casa::Array<casa::DComplex> XY, 
               casa::Array<casa::DComplex> XY , casa::Array<casa::DComplex> YY);
+
+  /////////////////////////////////////////////////////////////////////////////////
+  //
+  // Functions to compute correlations from degridded data
+  //
+  void computeICorr(const std::vector<std::complex<float> > &data, 
+                    std::vector<std::complex<float> > &XX,
+                    std::vector<std::complex<float> > &YY);
+  void computeICorr(const std::vector<std::complex<float> > &data, 
+                    casa::DComplex *XX,
+                    casa::DComplex *YY);                            
+  void computePolCorr(const std::vector<std::complex<float> > &Q, 
+                      const std::vector<std::complex<float> > &U,
+                      const std::vector<std::complex<float> > &V,
+                      std::vector<std::complex<float> > &XY,
+                      std::vector<std::complex<float> > &YX);
+  void computeICorr(const std::complex<float> *data, size_t nuvw,
+                    casa::DComplex *XX, casa::DComplex *YY);
 
   /////////////////////////////////////////////////////////////////////////////////
   // The next two functions are the kernel of the gridding/degridding.

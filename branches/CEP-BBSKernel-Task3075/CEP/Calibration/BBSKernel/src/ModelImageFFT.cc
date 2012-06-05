@@ -434,9 +434,6 @@ template<class T> Vector<Bool> ModelImageFft::getFourierAxes(const ImageInterfac
       FourierAxes[i]=False; // otherwise don't transform spectral and polarization axes
     }
   }
-  
-  cout << "FourierAxes: " << FourierAxes << endl;  // DEBUG
-  
   return FourierAxes;
 }
 
@@ -667,28 +664,6 @@ void ModelImageFft::degrid( const double *uBl, const double *vBl, const double *
   }
 }
 
-// Create an array for an image plane
-//
-/*
-template <class T> ModelImageFft::getPlaneBuffer(Array<T> *arr)
-{
-  IPosition plane(itsImageProperties.shape);
-  plane[itsImageProperties.DirectionCoordAxes(0)]=itsImageProperties.nx; // full x dimension
-  plane[itsImageProperties.DirectionCoordAxes(1)]=itsImageProperties.ny; // full y dimension
-  plane[itsImageProperties.StokesCoordAxes(0)]=1;                        // 1 Stokes
-  plane[itsImageProperties.SpectralCoordAxes(0)]=1;                      // 1 channel
-
-  if(itsImage->dataType()==TpComplex)
-  {
-    arr=(Array<Complex> arr(plane));
-  }
-  else
-  {
-    return (Array<DComplex> arr(plane));
-  }
-}
-*/
-
 // Create a slicer for the requested image plane / polarization (default=I)
 //
 Slicer ModelImageFft::makeSlicer(Int chan, const String &Stokes)
@@ -742,6 +717,58 @@ void ModelImageFft::degrid( const double **baselines, const vector<double> &freq
   
   // Distribute output to correlation vectors
 }
+
+
+//**********************************************
+//
+// Correlation computation functions
+//
+//**********************************************
+
+// Using std::vector datacontainers
+
+void ModelImageFft::computeICorr( const vector<complex<float> > &data, 
+                                  DComplex *XX,
+                                  DComplex *YY)
+{
+  for(unsigned int i=0; i<data.size(); i++)
+  {
+    XX[i]=0.5*data[i];
+  }
+  memcpy(YY, XX, data.size()*sizeof(complex<float>));
+}
+
+
+void ModelImageFft::computePolCorr( const vector<complex<float> > &Q, 
+                                    const vector<complex<float> > &U,
+                                    const vector<complex<float> > &V,
+                                    vector<complex<float> > &XY,
+                                    vector<complex<float> > &YX)
+{
+//  for_each (myvector.begin(), myvector.end(), myfunction);
+}
+
+// Using data stored in pointers
+void ModelImageFft::computeICorr(const std::complex<float> *data, size_t nuvw,
+                                 DComplex *XX, DComplex *YY)
+{
+  for(unsigned int i=0; i<nuvw; i++)
+  {
+    XX[i]=0.5*data[i];
+  }
+  memcpy(YY, XX, nuvw);
+}
+
+/*
+void ModelImageFft::computePolCorr( const std::complex<float> *Q, 
+                                    const std::complex<float> *U,
+                                    const std::complex<float> *V,  
+                                    size_t nuvw,
+                                    const DComplex *XX, const DComplex *YY)
+{
+
+}
+*/
 
 //**********************************************
 //
