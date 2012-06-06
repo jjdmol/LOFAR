@@ -92,12 +92,13 @@ void rotateUVW(const Position &from, const Position &to, size_t nUVW,
 // \param[in]   uvw
 // A cursor for a 2-D buffer of station UVW coordinates of shape
 // (\p nStation, 3).
-// \param[in]   vis
-// A cursor for a 3-D buffer of visibilities of shape
-// (\p nBaseline, \p nChannel, 4).
-void simulate(const Position &reference, const Patch &patch, size_t nStation,
-    size_t nBaseline, size_t nChannel, const_cursor<Baseline> baselines,
-    const_cursor<double> freq, const_cursor<double> uvw, cursor<dcomplex> vis);
+// \param[in]   buffer
+// A cursor for a 3-D buffer of shape (\p nBaseline, \p nChannel, 4) into which
+// the simulated visibilities will be written.
+void simulate(const Position &reference, const Patch::ConstPtr &patch,
+    size_t nStation, size_t nBaseline, size_t nChannel,
+    const_cursor<Baseline> baselines, const_cursor<double> freq,
+    const_cursor<double> uvw, cursor<dcomplex> buffer);
 // @}
 
 } //# namespace DPPP

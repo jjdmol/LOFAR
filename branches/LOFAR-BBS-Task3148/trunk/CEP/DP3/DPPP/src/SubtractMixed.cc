@@ -43,19 +43,19 @@ void subtract(size_t nBaseline, size_t nChannel,
             for(size_t ch = 0; ch < nChannel; ++ch)
             {
                 // Update visibilities.
-                *data -= static_cast<fcomplex>(*weight * *model);
+                *data -= static_cast<fcomplex>((*weight) * (*model));
                 ++weight;
                 ++model;
                 ++data;
-                *data -= static_cast<fcomplex>(*weight * *model);
+                *data -= static_cast<fcomplex>((*weight) * (*model));
                 ++weight;
                 ++model;
                 ++data;
-                *data -= static_cast<fcomplex>(*weight * *model);
+                *data -= static_cast<fcomplex>((*weight) * (*model));
                 ++weight;
                 ++model;
                 ++data;
-                *data -= static_cast<fcomplex>(*weight * *model);
+                *data -= static_cast<fcomplex>((*weight) * (*model));
                 ++weight;
                 ++model;
                 ++data;

@@ -50,7 +50,7 @@ namespace LOFAR {
 
     // @ingroup NDPPP
 
-    typedef vector<Patch>   PatchList;
+    typedef vector<Patch::ConstPtr> PatchList;
 
     // This class is a DPStep class to subtract the strong A-team sources.
     // It is based on the demixing.py script made by Bas vd Tol and operates
@@ -84,6 +84,9 @@ namespace LOFAR {
 
       // Show the step parameters.
       virtual void show (std::ostream&) const;
+
+      // Show the counts.
+      virtual void showCounts (std::ostream&) const;
 
       // Show the timings.
       virtual void showTimings (std::ostream&, double duration) const;
@@ -169,8 +172,8 @@ namespace LOFAR {
       NSTimer                  itsTimerPhaseShift;
       NSTimer                  itsTimerDemix;
       NSTimer                  itsTimerSolve;
-      NSTimer                  itsTimerSubtract;
 
+      uint                     itsNConverged;
       uint                     itsTimeCount;
       PatchList                itsPatchList;
       vector<Baseline>         itsBaselines;

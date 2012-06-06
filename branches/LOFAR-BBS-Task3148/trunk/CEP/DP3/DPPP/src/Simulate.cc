@@ -29,6 +29,10 @@
 #include <DPPP/PhaseShift.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/MatrixMath.h>
+#include <DPPP/PointSource.h>
+#include <DPPP/GaussianSource.h>
+#include <DPPP/ModelComponentVisitor.h>
+#include <DPPP/Patch.h>
 
 namespace LOFAR
 {
@@ -46,8 +50,15 @@ namespace
 // \param[in]   lmn
 // Pointer to a buffer of (at least) length three into which the computed LMN
 // coordinates will be written.
-inline void radec2lmn(const Position &reference, const Position &position,
-    double *lmn);
+void radec2lmn(const Position &reference, const Position &position,
+    cursor<double> lmn);
+
+void phases(size_t nStation, size_t nChannel, const_cursor<double> lmn,
+    const_cursor<double> uvw, const_cursor<double> freq,
+    cursor<dcomplex> shift);
+
+void spectrum(const PointSource &source, size_t nChannel,
+    const_cursor<double> freq, cursor<dcomplex> spectrum);
 } // Unnamed namespace.
 
 void splitUVW(size_t nStation, size_t nBaseline,
@@ -129,64 +140,58 @@ void rotateUVW(const Position &from, const Position &to, size_t nUVW,
     } // Stations.
 }
 
-void simulate(const Position &reference, const Patch &patch, size_t nStation,
-    size_t nBaseline, size_t nChannel, const_cursor<Baseline> baselines,
-    const_cursor<double> freq, const_cursor<double> uvw, cursor<dcomplex> vis)
+class SimulateVisitor: public ModelComponentVisitor
 {
-    vector<dcomplex> buf_shift(nStation * nChannel);
-    vector<dcomplex> buf_spectrum(nChannel * 4);
+public:
+    SimulateVisitor(const Position &reference, size_t nStation,
+        size_t nBaseline, size_t nChannel, const_cursor<Baseline> baselines,
+        const_cursor<double> freq, const_cursor<double> uvw,
+        cursor<dcomplex> buffer)
+        :   itsReference(reference),
+            itsStationCount(nStation),
+            itsBaselineCount(nBaseline),
+            itsChannelCount(nChannel),
+            itsBaselines(baselines),
+            itsFreq(freq),
+            itsUVW(uvw),
+            itsBuffer(buffer),
+            itsShiftBuffer(nStation * nChannel),
+            itsSpectrumBuffer(nChannel * 4)
+    {
+    }
 
-    for(Patch::const_iterator it = patch.begin(), end = patch.end(); it != end;
-        ++it)
+    void simulate(const ModelComponent::ConstPtr &component)
+    {
+        component->accept(*this);
+    }
+
+private:
+    virtual void visit(const PointSource &source)
     {
         // Compute LMN coordinates.
         double lmn[3];
-        radec2lmn(reference, it->position(), lmn);
+        radec2lmn(itsReference, source.position(), cursor<double>(lmn));
 
         // Compute station phase shifts.
-        dcomplex *shift = &(buf_shift[0]);
-        for(size_t st = 0; st < nStation; ++st)
-        {
-            const double phase = casa::C::_2pi * (uvw[0] * lmn[0]
-                + uvw[1] * lmn[1] + uvw[2] * (lmn[2] - 1.0));
-            uvw.forward(1);
-
-            for(size_t ch = 0; ch < nChannel; ++ch)
-            {
-                const double chPhase = phase * (*freq) / casa::C::c;
-                *shift = dcomplex(cos(chPhase), sin(chPhase));
-                ++freq;
-                ++shift;
-            } // Channels.
-            freq -= nChannel;
-        } // Stations.
-        uvw.backward(1, nStation);
+        phases(itsStationCount, itsChannelCount, const_cursor<double>(lmn),
+            itsUVW, itsFreq, cursor<dcomplex>(&itsShiftBuffer[0]));
 
         // Compute source spectrum.
-        dcomplex *spectrum = &(buf_spectrum[0]);
-        for(size_t ch = 0; ch < nChannel; ++ch)
-        {
-            Stokes stokes = it->stokes(*freq);
-            ++freq;
+        spectrum(source, itsChannelCount, itsFreq,
+            cursor<dcomplex>(&itsSpectrumBuffer[0]));
 
-            *spectrum++ = dcomplex(stokes.I + stokes.Q, 0.0);
-            *spectrum++ = dcomplex(stokes.U, stokes.V);
-            *spectrum++ = dcomplex(stokes.U, -stokes.V);
-            *spectrum++ = dcomplex(stokes.I - stokes.Q, 0.0);
-        } // Channels.
-        freq -= nChannel;
-
-        for(size_t bl = 0; bl < nBaseline; ++bl)
+        // Compute visibilities.
+        for(size_t bl = 0; bl < itsBaselineCount; ++bl)
         {
-            const size_t p = baselines->first;
-            const size_t q = baselines->second;
+            const size_t p = itsBaselines->first;
+            const size_t q = itsBaselines->second;
 
             if(p != q)
             {
-                const dcomplex *shiftP = &(buf_shift[p * nChannel]);
-                const dcomplex *shiftQ = &(buf_shift[q * nChannel]);
-                const dcomplex *spectrum = &(buf_spectrum[0]);
-                for(size_t ch = 0; ch < nChannel; ++ch)
+                const dcomplex *shiftP = &(itsShiftBuffer[p * itsChannelCount]);
+                const dcomplex *shiftQ = &(itsShiftBuffer[q * itsChannelCount]);
+                const dcomplex *spectrum = &(itsSpectrumBuffer[0]);
+                for(size_t ch = 0; ch < itsChannelCount; ++ch)
                 {
                     // Compute baseline phase shift.
                     const dcomplex blShift = (*shiftQ) * conj(*shiftP);
@@ -194,41 +199,171 @@ void simulate(const Position &reference, const Patch &patch, size_t nStation,
                     ++shiftQ;
 
                     // Compute visibilities.
-                    *vis += blShift * (*spectrum);
-                    ++vis;
+                    *itsBuffer += blShift * (*spectrum);
+                    ++itsBuffer;
                     ++spectrum;
-                    *vis += blShift * (*spectrum);
-                    ++vis;
+                    *itsBuffer += blShift * (*spectrum);
+                    ++itsBuffer;
                     ++spectrum;
-                    *vis += blShift * (*spectrum);
-                    ++vis;
+                    *itsBuffer += blShift * (*spectrum);
+                    ++itsBuffer;
                     ++spectrum;
-                    *vis += blShift * (*spectrum);
-                    ++vis;
+                    *itsBuffer += blShift * (*spectrum);
+                    ++itsBuffer;
                     ++spectrum;
 
                     // Move to next channel.
-                    vis -= 4;
-                    vis.forward(1);
+                    itsBuffer -= 4;
+                    itsBuffer.forward(1);
                 } // Channels.
 
-                vis.backward(1, nChannel);
+                itsBuffer.backward(1, itsChannelCount);
             }
 
             // Move to next baseline.
-            vis.forward(2);
-            ++baselines;
+            itsBuffer.forward(2);
+            ++itsBaselines;
         } // Baselines.
 
-        vis.backward(2, nBaseline);
-        baselines -= nBaseline;
-    } // Components.
+        itsBuffer.backward(2, itsBaselineCount);
+        itsBaselines -= itsBaselineCount;
+    }
+
+    virtual void visit(const GaussianSource &source)
+    {
+        // Compute LMN coordinates.
+        double lmn[3];
+        radec2lmn(itsReference, source.position(), cursor<double>(lmn));
+
+        // Compute station phase shifts.
+        phases(itsStationCount, itsChannelCount, const_cursor<double>(lmn),
+            itsUVW, itsFreq, cursor<dcomplex>(&itsShiftBuffer[0]));
+
+        // Compute source spectrum.
+        spectrum(source, itsChannelCount, itsFreq,
+            cursor<dcomplex>(&itsSpectrumBuffer[0]));
+
+        // Convert position angle from North over East to the angle used to
+        // rotate the right-handed UV-plane.
+        // TODO: Can probably optimize by changing the rotation matrix instead.
+        const double phi = casa::C::pi_2 - source.positionAngle();
+        const double cosPhi = cos(phi);
+        const double sinPhi = sin(phi);
+
+        // Take care of the conversion of axis lengths from FWHM in radians to
+        // sigma.
+        // TODO: Shouldn't the projection from the celestial sphere to the
+        // UV-plane be taken into account here?
+        const double fwhm2sigma = 1.0 / (2.0 * std::sqrt(2.0 * std::log(2.0)));
+        const double uScale = source.majorAxis() * fwhm2sigma;
+        const double vScale = source.minorAxis() * fwhm2sigma;
+
+        for(size_t bl = 0; bl < itsBaselineCount; ++bl)
+        {
+            const size_t p = itsBaselines->first;
+            const size_t q = itsBaselines->second;
+
+            if(p != q)
+            {
+                itsUVW.forward(1, q);
+                double u = itsUVW[0];
+                double v = itsUVW[1];
+                itsUVW.backward(1, q);
+
+                itsUVW.forward(1, p);
+                u -= itsUVW[0];
+                v -= itsUVW[1];
+                itsUVW.backward(1, p);
+
+                // Rotate (u, v) by the position angle and scale with the major
+                // and minor axis lengths (FWHM in rad).
+                const double uPrime = uScale * (u * cosPhi - v * sinPhi);
+                const double vPrime = vScale * (u * sinPhi + v * cosPhi);
+
+                // Compute uPrime^2 + vPrime^2 and pre-multiply with -2.0 * PI^2
+                // / C^2.
+                const double uvPrime = (-2.0 * casa::C::pi * casa::C::pi)
+                    * (uPrime * uPrime + vPrime * vPrime);
+
+                const dcomplex *shiftP = &(itsShiftBuffer[p * itsChannelCount]);
+                const dcomplex *shiftQ = &(itsShiftBuffer[q * itsChannelCount]);
+                const dcomplex *spectrum = &(itsSpectrumBuffer[0]);
+
+                for(size_t ch = 0; ch < itsChannelCount; ++ch)
+                {
+                    // Compute baseline phase shift.
+                    dcomplex blShift = (*shiftQ) * conj(*shiftP);
+                    ++shiftP;
+                    ++shiftQ;
+
+                    const double ampl = exp(((*itsFreq) * (*itsFreq))
+                        / (casa::C::c * casa::C::c) * uvPrime);
+                    ++itsFreq;
+
+                    blShift *= ampl;
+
+                    // Compute visibilities.
+                    *itsBuffer += blShift * (*spectrum);
+                    ++itsBuffer;
+                    ++spectrum;
+                    *itsBuffer += blShift * (*spectrum);
+                    ++itsBuffer;
+                    ++spectrum;
+                    *itsBuffer += blShift * (*spectrum);
+                    ++itsBuffer;
+                    ++spectrum;
+                    *itsBuffer += blShift * (*spectrum);
+                    ++itsBuffer;
+                    ++spectrum;
+
+                    // Move to next channel.
+                    itsBuffer -= 4;
+                    itsBuffer.forward(1);
+                } // Channels.
+                itsFreq -= itsChannelCount;
+                itsBuffer.backward(1, itsChannelCount);
+            }
+
+            // Move to next baseline.
+            itsBuffer.forward(2);
+            ++itsBaselines;
+        } // Baselines.
+
+        itsBuffer.backward(2, itsBaselineCount);
+        itsBaselines -= itsBaselineCount;
+    }
+
+    virtual void visit(const Patch&)
+    {
+    }
+
+private:
+    Position                itsReference;
+    size_t                  itsStationCount;
+    size_t                  itsBaselineCount;
+    size_t                  itsChannelCount;
+    const_cursor<Baseline>  itsBaselines;
+    const_cursor<double>    itsFreq;
+    const_cursor<double>    itsUVW;
+    cursor<dcomplex>        itsBuffer;
+    vector<dcomplex>        itsShiftBuffer;
+    vector<dcomplex>        itsSpectrumBuffer;
+};
+
+void simulate(const Position &reference, const Patch::ConstPtr &patch,
+    size_t nStation, size_t nBaseline, size_t nChannel,
+    const_cursor<Baseline> baselines, const_cursor<double> freq,
+    const_cursor<double> uvw, cursor<dcomplex> vis)
+{
+    SimulateVisitor visitor(reference, nStation, nBaseline, nChannel, baselines,
+        freq, uvw, vis);
+    visitor.simulate(patch);
 }
 
 namespace
 {
 inline void radec2lmn(const Position &reference, const Position &position,
-    double *lmn)
+    cursor<double> lmn)
 {
     const double dRA = position[0] - reference[0];
     const double pDEC = position[1];
@@ -241,6 +376,44 @@ inline void radec2lmn(const Position &reference, const Position &position,
     lmn[0] = l;
     lmn[1] = m;
     lmn[2] = sqrt(1.0 - l * l - m * m);
+}
+
+inline void phases(size_t nStation, size_t nChannel, const_cursor<double> lmn,
+    const_cursor<double> uvw, const_cursor<double> freq, cursor<dcomplex> shift)
+{
+    // Compute station phase shifts.
+    for(size_t st = 0; st < nStation; ++st)
+    {
+        const double phase = casa::C::_2pi * (uvw[0] * lmn[0]
+            + uvw[1] * lmn[1] + uvw[2] * (lmn[2] - 1.0));
+        uvw.forward(1);
+
+        for(size_t ch = 0; ch < nChannel; ++ch)
+        {
+            const double chPhase = phase * (*freq) / casa::C::c;
+            *shift = dcomplex(cos(chPhase), sin(chPhase));
+            ++freq;
+            ++shift;
+        } // Channels.
+        freq -= nChannel;
+    } // Stations.
+}
+
+inline void spectrum(const PointSource &source, size_t nChannel,
+    const_cursor<double> freq, cursor<dcomplex> spectrum)
+{
+    // Compute source spectrum.
+    for(size_t ch = 0; ch < nChannel; ++ch)
+    {
+        Stokes stokes = source.stokes(*freq);
+        ++freq;
+
+        spectrum[0] = dcomplex(stokes.I + stokes.Q, 0.0);
+        spectrum[1] = dcomplex(stokes.U, stokes.V);
+        spectrum[2] = dcomplex(stokes.U, -stokes.V);
+        spectrum[3] = dcomplex(stokes.I - stokes.Q, 0.0);
+        spectrum += 4;
+    }
 }
 } // Unnamed namespace.
 

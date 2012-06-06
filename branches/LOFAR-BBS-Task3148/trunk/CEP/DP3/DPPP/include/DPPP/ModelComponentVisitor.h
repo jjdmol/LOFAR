@@ -1,5 +1,5 @@
-//# SourceDBUtil.h: Helper functions to extract patch and source information
-//# from a SourceDB.
+//# ModelComponentVisitor.h: Base class for visitors that visit model component
+//# hierarchies.
 //#
 //# Copyright (C) 2012
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -21,28 +21,34 @@
 //#
 //# $Id$
 
-#ifndef DPPP_SOURCEDBUTIL_H
-#define DPPP_SOURCEDBUTIL_H
+#ifndef DPPP_MODELCOMPONENTVISITOR_H
+#define DPPP_MODELCOMPONENTVISITOR_H
 
 // \file
-// Helper functions to extract patch and source information from a SourceDB.
-
-#include <DPPP/Patch.h>
-#include <Common/lofar_string.h>
+// Base class for visitors that visit model component hierarchies.
 
 namespace LOFAR
 {
-namespace BBS
-{
-class SourceDB;
-}
-
 namespace DPPP
 {
 
-// \addtogroup NDPPP
+class PointSource;
+class GaussianSource;
+class Patch;
+
+// \addtogroup DPPP
 // @{
-Patch::Ptr makePatch(BBS::SourceDB &sourceDB, const string &name);
+
+class ModelComponentVisitor
+{
+public:
+    virtual ~ModelComponentVisitor();
+
+    virtual void visit(const PointSource&) = 0;
+    virtual void visit(const GaussianSource&) = 0;
+    virtual void visit(const Patch&) = 0;
+};
+
 // @}
 
 } //# namespace DPPP

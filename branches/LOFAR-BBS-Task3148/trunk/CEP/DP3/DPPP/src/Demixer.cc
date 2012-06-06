@@ -35,6 +35,8 @@
 #include <DPPP/SourceDBUtil.h>
 #include <DPPP/SubtractMixed.h>
 
+#include <DPPP/PointSource.h>
+
 #include <ParmDB/Axis.h>
 #include <ParmDB/SourceDB.h>
 #include <ParmDB/ParmDB.h>
@@ -72,7 +74,7 @@ namespace LOFAR {
         const_cursor<double> in, double *out);
       void unpack(const vector<size_t> &directions, size_t nStation,
         const double *in, cursor<double> out);
-      Patch makePatch(const string &name);
+      Patch::Ptr makePatch(const string &name);
     } //# end unnamed namespace
 
     Demixer::Demixer (DPInput* input,
@@ -101,6 +103,7 @@ namespace LOFAR {
                                            itsNTimeAvgSubtr)),
         itsNTimeChunk    (parset.getUint  (prefix+"ntimechunk", 0)),
         itsNTimeOut      (0),
+        itsNConverged    (0),
         itsTimeCount     (0),
         itsNStation      (input->antennaNames().size())
     {
@@ -128,7 +131,6 @@ namespace LOFAR {
       // Default nr of time chunks is maximum number of threads.
       if (itsNTimeChunk == 0) {
         itsNTimeChunk = OpenMP::maxThreads();
-        LOG_DEBUG_STR("#threads: " << itsNTimeChunk);
       }
       // Check that time windows fit nicely.
       ASSERTSTR ((itsNTimeChunk * itsNTimeAvg) % itsNTimeAvgSubtr == 0,
@@ -193,8 +195,8 @@ namespace LOFAR {
         // If found, turn it into a vector of strings.
         vector<string> sourceVec (1, itsAllSources[i]);
         if(i < itsNModel) {
-          sourceVec[0] = toString(itsPatchList[i].position()[0]);
-          sourceVec.push_back(toString(itsPatchList[i].position()[1]));
+          sourceVec[0] = toString(itsPatchList[i]->position()[0]);
+          sourceVec.push_back(toString(itsPatchList[i]->position()[1]));
         }
         PhaseShift* step1 = new PhaseShift (input, parset,
                                             prefix + itsAllSources[i] + '.',
@@ -235,20 +237,19 @@ namespace LOFAR {
         itsCutOffs.push_back(0);
       }
       itsCutOffs.resize(itsNModel);
-      LOG_DEBUG_STR("Elevation cutoffs: " << itsCutOffs);
 
-      itsFrames.reserve(OpenMP::maxThreads());
-      itsConverters.reserve(OpenMP::maxThreads());
-      for(size_t i = 0; i < OpenMP::maxThreads(); ++i) {
-        MeasFrame frame;
-        frame.set(input->arrayPos());
-        frame.set(MEpoch());
-        itsFrames.push_back(frame);
+//      itsFrames.reserve(OpenMP::maxThreads());
+//      itsConverters.reserve(OpenMP::maxThreads());
+//      for(size_t i = 0; i < OpenMP::maxThreads(); ++i) {
+//        MeasFrame frame;
+//        frame.set(input->arrayPos());
+//        frame.set(MEpoch());
+//        itsFrames.push_back(frame);
 
-        // Using AZEL because AZELGEO produces weird results.
-        itsConverters.push_back(MDirection::Convert(MDirection::Ref(MDirection::J2000),
-          MDirection::Ref(MDirection::AZEL, itsFrames.back())));
-      }
+//        // Using AZEL because AZELGEO produces weird results.
+//        itsConverters.push_back(MDirection::Convert(MDirection::Ref(MDirection::J2000),
+//          MDirection::Ref(MDirection::AZEL, itsFrames.back())));
+//      }
     }
 
     void Demixer::initUnknowns()
@@ -278,6 +279,12 @@ namespace LOFAR {
 
     Demixer::~Demixer()
     {
+//        for(PatchList::iterator it = itsPatchList.begin(),
+//            it_end = itsPatchList.end(); it != it_end; ++it)
+//        {
+//            delete *it;
+//            *it = 0;
+//        }
     }
 
     void Demixer::updateInfo (DPInfo& info)
@@ -331,10 +338,6 @@ namespace LOFAR {
       itsFreqDemix = itsInput->chanFreqs (itsNChanAvg);
       itsFreqSubtr = itsInput->chanFreqs (itsNChanAvgSubtr);
 
-      LOG_DEBUG_STR("#directions: " << itsNModel);
-      LOG_DEBUG_STR("#stations: " << itsNStation);
-      LOG_DEBUG_STR("#times: " << itsNTimeDemix);
-
       // Store phase center position in J2000.
       MDirection dirJ2000(MDirection::Convert(info.phaseCenter(), MDirection::J2000)());
       Quantum<Vector<Double> > angles = dirJ2000.getAngle();
@@ -368,6 +371,14 @@ namespace LOFAR {
 //      os << "  Solve.Options.UseSVD:        " << itsSolveOpt.useSVD <<endl;
     }
 
+    void Demixer::showCounts (std::ostream& os) const
+    {
+      os << endl << "Statistics for Demixer " << itsName;
+      os << endl << "======================" << endl;
+      os << endl << "Converged: " << itsNConverged << "/" << itsNTimeDemix
+        << " time stamps." << endl;
+    }
+
     void Demixer::showTimings (std::ostream& os, double duration) const
     {
       const double self = itsTimer.getElapsed();
@@ -384,10 +395,7 @@ namespace LOFAR {
       os << " of it spent in calculating decorrelation factors" << endl;
       os << "          ";
       FlagCounter::showPerc1 (os, itsTimerSolve.getElapsed(), self);
-      os << " of it spent in solving source gains" << endl;
-      os << "          ";
-      FlagCounter::showPerc1 (os, itsTimerSubtract.getElapsed(), self);
-      os << " of it spent in subtracting modeled sources" << endl;
+      os << " of it spent in estimating gains and computing residuals" << endl;
     }
 
     bool Demixer::process (const DPBuffer& buf)
@@ -736,16 +744,6 @@ namespace LOFAR {
 
         const size_t nTime = streams[0].size();
 
-        LOG_DEBUG_STR("#models: " << itsNModel);
-        LOG_DEBUG_STR("#directions: " << itsNDir);
-        LOG_DEBUG_STR("target #time: " << itsAvgResultSubtr->get().size());
-        LOG_DEBUG_STR("streams #dir: " << streams.size() << " #time: "
-            << streams[0].size());
-        LOG_DEBUG_STR("coeff #time: " << itsFactors.size() << " shape: "
-            << itsFactors[0].shape());
-        LOG_DEBUG_STR("coeffRes #time: " << itsFactorsSubtr.size() << " shape: "
-            << itsFactorsSubtr[0].shape());
-
         const size_t nThread = OpenMP::maxThreads();
         const size_t nDr = itsNModel;
         const size_t nSt = itsNStation;
@@ -768,6 +766,7 @@ namespace LOFAR {
                 &(unknowns[i][0]));
         }
 
+        vector<size_t> converged(nThread, 0);
         boost::multi_array<double, 2> errors(boost::extents[nThread][nDr * nSt * 8]);
 
         boost::multi_array<double, 3> uvw(boost::extents[nThread][nSt][3]);
@@ -783,29 +782,33 @@ namespace LOFAR {
 
             // Compute elevation and determine which sources are visible.
             vector<size_t> drUp;
-            Quantum<Double> qEpoch(streams[0][i].getTime(), "s");
-            MEpoch mEpoch(qEpoch, MEpoch::UTC);
-            itsFrames[thread].set(mEpoch);
+//            Quantum<Double> qEpoch(streams[0][i].getTime(), "s");
+//            MEpoch mEpoch(qEpoch, MEpoch::UTC);
+//            itsFrames[thread].set(mEpoch);
+
+//            for(size_t dr = 0; dr < nDr; ++dr)
+//            {
+//                MVDirection drJ2000(itsPatchList[dr]->position()[0], itsPatchList[dr]->position()[1]);
+//                MVDirection mvAzel(itsConverters[thread](drJ2000).getValue());
+//                Vector<Double> azel = mvAzel.getAngle("deg").getValue();
+
+//                if(azel(1) >= itsCutOffs[dr])
+//                {
+//                    drUp.push_back(dr);
+//                    last[dr][thread] = i;
+//                }
+//            }
 
             for(size_t dr = 0; dr < nDr; ++dr)
             {
-                MVDirection drJ2000(itsPatchList[dr].position()[0], itsPatchList[dr].position()[1]);
-                MVDirection mvAzel(itsConverters[thread](drJ2000).getValue());
-                Vector<Double> azel = mvAzel.getAngle("deg").getValue();
-
-                if(azel(1) >= itsCutOffs[dr])
-                {
-                    drUp.push_back(dr);
-                    last[dr][thread] = i;
-                }
+                drUp.push_back(dr);
+                last[dr][thread] = i;
             }
 
             const size_t nDrUp = drUp.size();
-            LOG_DEBUG_STR("thread: " << thread << " directions: " << drUp);
 
             if(nDrUp == 0)
             {
-               LOG_DEBUG_STR("thread: " << thread << " SKIPPING");
                continue;
             }
 
@@ -821,14 +824,16 @@ namespace LOFAR {
             for(size_t dr = 0; dr < nDrUp; ++dr)
             {
                 fill(&(buffer[thread][dr][0][0][0]),
-                    &(buffer[thread][dr][0][0][0]) + nBl * nCh * nCr, dcomplex());
+                    &(buffer[thread][dr][0][0][0]) + nBl * nCh * nCr,
+                    dcomplex(0.0, 0.0));
 
                 const_cursor<double> cr_uvw = casa_const_cursor(streams[drUp[dr]][i].getUVW());
                 splitUVW(nSt, nBl, cr_baseline, cr_uvw, cr_split);
 
                 cursor<dcomplex> cr_model(&(buffer[thread][dr][0][0][0]), 3, strides);
-                simulate(itsPatchList[drUp[dr]].position(), itsPatchList[drUp[dr]], nSt, nBl, nCh,
-                    cr_baseline, cr_freq, cr_split, cr_model);
+                simulate(itsPatchList[drUp[dr]]->position(),
+                    itsPatchList[drUp[dr]], nSt, nBl, nCh, cr_baseline, cr_freq,
+                    cr_split, cr_model);
             }
 
             // Estimate.
@@ -845,9 +850,9 @@ namespace LOFAR {
             const_cursor<float> cr_weight =
                 casa_const_cursor(streams[0][i].getWeights());
 
+            bool status = false;
             if(nDrUp != nDr)
             {
-                LOG_DEBUG_STR("packing unknowns and mixing factors...");
                 vector<double> unknowns_packed(nDrUp * nSt * 8);
                 vector<double> errors_packed(nDrUp * nSt * 8);
                 vector<dcomplex> mix_packed(nDrUp * nDrUp * nCr * nCh * nBl);
@@ -865,8 +870,8 @@ namespace LOFAR {
                 const_cursor<dcomplex> cr_mix(&(mix_packed[0]), 5, strides_mix);
 
                 // estimate
-                estimate(nDrUp, nSt, nBl, nCh, cr_baseline, cr_data, cr_model,
-                    cr_flag, cr_weight, cr_mix, &(unknowns_packed[0]),
+                status = estimate(nDrUp, nSt, nBl, nCh, cr_baseline, cr_data,
+                    cr_model, cr_flag, cr_weight, cr_mix, &(unknowns_packed[0]),
                     &(errors_packed[0]));
 
                 // unpack unknowns, errors
@@ -878,17 +883,19 @@ namespace LOFAR {
             else
             {
                 const_cursor<dcomplex> cr_mix = casa_const_cursor(itsFactors[i]);
-                estimate(nDr, nSt, nBl, nCh, cr_baseline, cr_data, cr_model,
-                    cr_flag, cr_weight, cr_mix, &(unknowns[thread][0]),
-                    &(errors[thread][0]));
+                status = estimate(nDr, nSt, nBl, nCh, cr_baseline, cr_data,
+                    cr_model, cr_flag, cr_weight, cr_mix,
+                    &(unknowns[thread][0]), &(errors[thread][0]));
             }
 
-            // Tweak solutions.
+            if(status)
+            {
+                ++converged[thread];
+            }
+
             const size_t nTimeResidual = min(timeFactor, target.size() - i * timeFactor);
-            LOG_DEBUG_STR("timeFactor: " << timeFactor << "  nTime: " << nTime << " nTimeResidual: " << nTimeResidual);
 
             const size_t nDrRes = itsSubtrSources.size();
-            LOG_DEBUG_STR("#sources to subtract: " << nDrRes);
 
             size_t strides_model[3] = {1, nCr, nChRes * nCr};
             cursor<dcomplex> cr_model_res(&(residual[thread][0][0][0]), 3, strides_model);
@@ -913,9 +920,9 @@ namespace LOFAR {
                         const_cursor<double> cr_uvw = casa_const_cursor(target[i * timeFactor + j].getUVW());
                         splitUVW(nSt, nBl, cr_baseline, cr_uvw, cr_split);
 
-                        rotateUVW(itsPhaseRef, itsPatchList[drIdx].position(), nSt, cr_split);
+                        rotateUVW(itsPhaseRef, itsPatchList[drIdx]->position(), nSt, cr_split);
 
-                        simulate(itsPatchList[drIdx].position(), itsPatchList[drIdx], nSt, nBl, nChRes,
+                        simulate(itsPatchList[drIdx]->position(), itsPatchList[drIdx], nSt, nBl, nChRes,
                             cr_baseline, cr_freqRes, cr_split, cr_model_res);
                     }
                     else
@@ -971,6 +978,12 @@ namespace LOFAR {
             }
         }
 
+        // Update convergance count.
+        for(size_t i = 0; i < nThread; ++i)
+        {
+            itsNConverged += converged[i];
+        }
+
         itsTimerSolve.stop();
       }
 
@@ -1012,9 +1025,9 @@ namespace LOFAR {
     {
       // Construct solution grid.
       Vector<double> freq = itsInput->chanFreqs(itsInput->nchan());
-      Vector<double> width = itsInput->chanWidths(itsInput->nchan());
-      BBS::Axis::ShPtr freqAxis(new BBS::RegularAxis(freq[0] - width[0] * 0.5,
-        width[0], 1));
+      Vector<double> freqWidth = itsInput->chanWidths(itsInput->nchan());
+      BBS::Axis::ShPtr freqAxis(new BBS::RegularAxis(freq[0] - freqWidth[0]
+        * 0.5, freqWidth[0], 1));
       BBS::Axis::ShPtr timeAxis(new BBS::RegularAxis(itsInput->startTime()
         - itsInput->timeInterval() * 0.5, itsTimeIntervalAvg, itsNTimeDemix));
       BBS::Grid solGrid(freqAxis, timeAxis);
@@ -1023,6 +1036,12 @@ namespace LOFAR {
       BBS::ParmDB parmDB(BBS::ParmDBMeta("casa", itsInstrumentName));
       BBS::ParmSet parmSet;
       BBS::ParmCache parmCache(parmSet, solGrid.getBoundingBox());
+
+      // Store the (freq, time) resolution of the solutions.
+      vector<double> resolution(2);
+      resolution[0] = freqWidth[0];
+      resolution[1] = itsTimeIntervalAvg;
+      parmDB.setDefaultSteps(resolution);
 
       // Convert station names from casa::String to std::string.
       ASSERT(itsInput->antennaNames().size() == itsNStation);
@@ -1171,18 +1190,18 @@ namespace LOFAR {
         }
       }
 
-      Patch makePatch(const string &name)
+      Patch::Ptr makePatch(const string &name)
       {
         string fname = name + ".mdl";
-        LOG_DEBUG_STR("Loading source model from: " << fname);
+//        LOG_DEBUG_STR("Loading source model from: " << fname);
         ifstream inf(fname.c_str());
 
         size_t nComponents = 0;
         inf >> nComponents;
         ASSERT(inf);
-        LOG_DEBUG_STR("No. of components: "  << nComponents);
+//        LOG_DEBUG_STR("No. of components: "  << nComponents);
 
-        vector<PointSource> components;
+        vector<ModelComponent::Ptr> components;
         components.reserve(nComponents);
         for(size_t i = 0; i < nComponents; ++i)
         {
@@ -1192,7 +1211,7 @@ namespace LOFAR {
           Stokes stokes;
           inf >> stokes.I >> stokes.Q >> stokes.U >> stokes.V;
 
-          PointSource component(position, stokes);
+          PointSource::Ptr component(new PointSource(position, stokes));
 
           double freq = 0.0;
           inf >> freq;
@@ -1207,25 +1226,15 @@ namespace LOFAR {
             {
               inf >> si[j];
             }
-            component.setSpectralIndex(freq, si.begin(), si.end());
+            component->setSpectralIndex(freq, si.begin(), si.end());
           }
 
           ASSERT(inf);
           components.push_back(component);
-
-          if(i == 0 || i == nComponents - 1)
-          {
-            LOG_DEBUG_STR("ra: " << position[0] << " dec: " << position[1]
-              << " I: " << stokes.I
-              << " Q: " << stokes.Q
-              << " U: " << stokes.U
-              << " V: " << stokes.V
-              << " freq: " << freq
-              << " si: " << si);
-          }
         }
 
-        return Patch(name, components.begin(), components.end());
+        return Patch::Ptr(new Patch(name, components.begin(),
+            components.end()));
       }
     } //# end unnamed namespace
 

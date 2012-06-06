@@ -28,7 +28,7 @@
 // A set of sources for which direction dependent effects are assumed to be
 // equal.
 
-#include <DPPP/PointSource.h>
+#include <DPPP/ModelComponent.h>
 #include <DPPP/Position.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
@@ -41,31 +41,32 @@ namespace DPPP
 // \addtogroup NDPPP
 // @{
 
-struct Patch
+class Patch: public ModelComponent
 {
-    typedef vector<PointSource>::const_iterator const_iterator;
-
-    Patch();
+public:
+    typedef shared_ptr<Patch>       Ptr;
+    typedef shared_ptr<const Patch> ConstPtr;
 
     template <typename T>
     Patch(const string &name, T first, T last);
 
     const string &name() const;
-    const Position &position() const;
+    virtual const Position &position() const;
+    virtual void accept(ModelComponentVisitor &visitor) const;
 
-    size_t nComponents() const;
-    const PointSource &operator[](size_t i) const;
+private:
+    typedef vector<ModelComponent::ConstPtr>::const_iterator const_iterator;
 
     const_iterator begin() const;
     const_iterator end() const;
 
-private:
-    void recomputePosition();
+    void computePosition();
 
-    string              itsName;
-    Position            itsPosition;
-    vector<PointSource> itsComponents;
+    string                              itsName;
+    Position                            itsPosition;
+    vector<ModelComponent::ConstPtr>    itsComponents;
 };
+
 
 // @}
 
@@ -78,7 +79,7 @@ Patch::Patch(const string &name, T first, T last)
     :   itsName(name),
         itsComponents(first, last)
 {
-    recomputePosition();
+    computePosition();
 }
 
 inline const string &Patch::name() const
@@ -89,26 +90,6 @@ inline const string &Patch::name() const
 inline const Position &Patch::position() const
 {
     return itsPosition;
-}
-
-inline size_t Patch::nComponents() const
-{
-    return itsComponents.size();
-}
-
-inline const PointSource &Patch::operator[](size_t i) const
-{
-    return itsComponents[i];
-}
-
-inline Patch::const_iterator Patch::begin() const
-{
-    return itsComponents.begin();
-}
-
-inline Patch::const_iterator Patch::end() const
-{
-    return itsComponents.end();
 }
 
 } //# namespace DPPP

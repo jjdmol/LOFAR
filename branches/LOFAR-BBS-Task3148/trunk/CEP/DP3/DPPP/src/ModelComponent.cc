@@ -1,5 +1,4 @@
-//# SourceDBUtil.h: Helper functions to extract patch and source information
-//# from a SourceDB.
+//# ModelComponent.cc: Base class for model components.
 //#
 //# Copyright (C) 2012
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -21,31 +20,17 @@
 //#
 //# $Id$
 
-#ifndef DPPP_SOURCEDBUTIL_H
-#define DPPP_SOURCEDBUTIL_H
-
-// \file
-// Helper functions to extract patch and source information from a SourceDB.
-
-#include <DPPP/Patch.h>
-#include <Common/lofar_string.h>
+#include <lofar_config.h>
+#include <DPPP/ModelComponent.h>
 
 namespace LOFAR
 {
-namespace BBS
-{
-class SourceDB;
-}
-
 namespace DPPP
 {
 
-// \addtogroup NDPPP
-// @{
-Patch::Ptr makePatch(BBS::SourceDB &sourceDB, const string &name);
-// @}
+ModelComponent::~ModelComponent()
+{
+}
 
 } //# namespace DPPP
 } //# namespace LOFAR
-
-#endif

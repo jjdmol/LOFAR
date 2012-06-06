@@ -36,7 +36,7 @@ namespace LOFAR
 namespace DPPP
 {
 
-void estimate(size_t nDirection, size_t nStation, size_t nBaseline,
+bool estimate(size_t nDirection, size_t nStation, size_t nBaseline,
     size_t nChannel, const_cursor<Baseline> baselines,
     vector<const_cursor<fcomplex> > data, vector<const_cursor<dcomplex> > model,
     const_cursor<bool> flag, const_cursor<float> weight,
@@ -332,6 +332,7 @@ void estimate(size_t nDirection, size_t nStation, size_t nBaseline,
 
     // Get the estimated error for each unknown from the solver.
 //    boost::multi_array<double, 1> errors_packed(boost::extents[nUnknowns * nUnknowns]);
+//    TODO: Somehow this only returns zero??
 //    bool status = solver.getErrors(&(errors_packed[0]));
 
     vector<double> cov(nUnknowns * nUnknowns);
@@ -344,8 +345,9 @@ void estimate(size_t nDirection, size_t nStation, size_t nBaseline,
 
     bool converged = (solver.isReady() == casa::LSQFit::SOLINCREMENT
         || solver.isReady() == casa::LSQFit::DERIVLEVEL);
-    LOG_DEBUG_STR("thread: " << OpenMP::threadNum() << " #iterations: "
-        << nIterations << " converged: " << boolalpha << converged);
+//    LOG_DEBUG_STR("thread: " << OpenMP::threadNum() << " #iterations: "
+//        << nIterations << " converged: " << boolalpha << converged);
+    return converged;
 }
 
 } //# namespace DPPP

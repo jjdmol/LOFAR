@@ -1,4 +1,5 @@
-//# PointSource.h: Point source with optional spectral index and (intrinsic) rotation measure.
+//# PointSource.h: Point source model component with optional spectral index and
+//# rotation measure.
 //#
 //# Copyright (C) 2012
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -24,27 +25,39 @@
 #define DPPP_POINTSOURCE_H
 
 // \file
-// Point source with optional spectral index and (intrinsic) rotation measure.
+// Point source model component with optional spectral index and rotation
+// measure.
 
+#include <DPPP/ModelComponent.h>
 #include <DPPP/Position.h>
 #include <DPPP/Stokes.h>
 #include <Common/lofar_vector.h>
+
+#include <Common/lofar_string.h>
+#include <Common/lofar_math.h>
+#include <Common/LofarLogger.h>
+#include <Common/lofar_smartptr.h>
 
 namespace LOFAR
 {
 namespace DPPP
 {
 
+class ModelComponentVisitor;
+
 // \addtogroup NDPPP
 // @{
 
-class PointSource
+class PointSource: public ModelComponent
 {
 public:
-    PointSource();
+    typedef shared_ptr<PointSource>         Ptr;
+    typedef shared_ptr<const PointSource>   ConstPtr;
+
     PointSource(const Position &position);
     PointSource(const Position &position, const Stokes &stokes);
 
+    virtual const Position &position() const;
     void setPosition(const Position &position);
 
     void setStokes(const Stokes &stokes);
@@ -58,9 +71,9 @@ public:
 
     void setRotationMeasure(double rm);
 
-    const Position &position() const;
-
     Stokes stokes(double freq) const;
+
+    virtual void accept(ModelComponentVisitor &visitor) const;
 
 private:
     bool hasSpectralIndex() const;

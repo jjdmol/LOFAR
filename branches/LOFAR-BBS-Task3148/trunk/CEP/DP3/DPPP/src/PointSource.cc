@@ -1,4 +1,5 @@
-//# PointSource.cc: Point source with optional spectral index and (intrinsic) rotation measure.
+//# PointSource.cc: Point source model component with optional spectral index
+//# and rotation measure.
 //#
 //# Copyright (C) 2012
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -22,6 +23,7 @@
 
 #include <lofar_config.h>
 #include <DPPP/PointSource.h>
+#include <DPPP/ModelComponentVisitor.h>
 #include <Common/lofar_math.h>
 #include <casa/BasicSL/Constants.h>
 
@@ -29,14 +31,6 @@ namespace LOFAR
 {
 namespace DPPP
 {
-
-PointSource::PointSource()
-    :   itsRefFreq(0.0),
-        itsPolarizedFraction(0.0),
-        itsPolarizationAngle(0.0),
-        itsRotationMeasure(0.0)
-{
-}
 
 PointSource::PointSource(const Position &position)
     :   itsPosition(position),
@@ -121,6 +115,11 @@ Stokes PointSource::stokes(double freq) const
     }
 
     return stokes;
+}
+
+void PointSource::accept(ModelComponentVisitor &visitor) const
+{
+    visitor.visit(*this);
 }
 
 bool PointSource::hasSpectralIndex() const

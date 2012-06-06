@@ -8,8 +8,10 @@ set(inst_HEADERS
   MSReader.h MSWriter.h MSUpdater.h Counter.h
   Averager.h MedFlagger.h PreFlagger.h UVWFlagger.h AORFlagger.h
   PhaseShift.h Demixer.h
-  Cursor.h CursorUtilCasa.h Patch.h PointSource.h Position.h Stokes.h SourceDBUtil.h
+  Cursor.h CursorUtilCasa.h Position.h Stokes.h SourceDBUtil.h
   Apply.h EstimateMixed.h Simulate.h SubtractMixed.h Baseline.h
+  ModelComponent.h PointSource.h GaussianSource.h Patch.h
+  ModelComponentVisitor.h
   FlaggerStatistics.h
 # The following is old IDPPP stuff.
 #  MsInfo.h

@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <DPPP/Patch.h>
+#include <DPPP/ModelComponentVisitor.h>
 #include <Common/lofar_math.h>
 
 namespace LOFAR
@@ -29,31 +30,50 @@ namespace LOFAR
 namespace DPPP
 {
 
-Patch::Patch()
+void Patch::accept(ModelComponentVisitor &visitor) const
 {
+    for(const_iterator it = begin(), it_end = end(); it != it_end; ++it)
+    {
+        (*it)->accept(visitor);
+    }
+    visitor.visit(*this);
 }
 
-void Patch::recomputePosition()
+Patch::const_iterator Patch::begin() const
 {
-    if(nComponents() > 0)
+    return itsComponents.begin();
+}
+
+Patch::const_iterator Patch::end() const
+{
+    return itsComponents.end();
+}
+
+void Patch::computePosition()
+{
+    itsPosition = Position();
+
+    if(itsComponents.empty())
     {
-        double x = 0.0, y = 0.0, z = 0.0;
-        for(unsigned int i = 0; i < nComponents(); ++i)
-        {
-            const Position &position = itsComponents[i].position();
-            double cosDec = cos(position[1]);
-            x += cos(position[0]) * cosDec;
-            y += sin(position[0]) * cosDec;
-            z += sin(position[1]);
-        }
-
-        x /= nComponents();
-        y /= nComponents();
-        z /= nComponents();
-
-        itsPosition[0] = atan2(y, x);
-        itsPosition[1] = asin(z);
+        return;
     }
+
+    double x = 0.0, y = 0.0, z = 0.0;
+    for(const_iterator it = begin(), it_end = end(); it != it_end; ++it)
+    {
+        const Position &position = (*it)->position();
+        double cosDec = cos(position[1]);
+        x += cos(position[0]) * cosDec;
+        y += sin(position[0]) * cosDec;
+        z += sin(position[1]);
+    }
+
+    x /= itsComponents.size();
+    y /= itsComponents.size();
+    z /= itsComponents.size();
+
+    itsPosition[0] = atan2(y, x);
+    itsPosition[1] = asin(z);
 }
 
 } //# namespace DPPP

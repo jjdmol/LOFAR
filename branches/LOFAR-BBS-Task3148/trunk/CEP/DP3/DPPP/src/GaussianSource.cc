@@ -1,5 +1,4 @@
-//# SourceDBUtil.h: Helper functions to extract patch and source information
-//# from a SourceDB.
+//# GaussianSource.cc: Gaussian source model component.
 //#
 //# Copyright (C) 2012
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -21,31 +20,50 @@
 //#
 //# $Id$
 
-#ifndef DPPP_SOURCEDBUTIL_H
-#define DPPP_SOURCEDBUTIL_H
-
-// \file
-// Helper functions to extract patch and source information from a SourceDB.
-
-#include <DPPP/Patch.h>
-#include <Common/lofar_string.h>
+#include <lofar_config.h>
+#include <DPPP/GaussianSource.h>
+#include <DPPP/ModelComponentVisitor.h>
 
 namespace LOFAR
 {
-namespace BBS
-{
-class SourceDB;
-}
-
 namespace DPPP
 {
 
-// \addtogroup NDPPP
-// @{
-Patch::Ptr makePatch(BBS::SourceDB &sourceDB, const string &name);
-// @}
+GaussianSource::GaussianSource(const Position &position)
+    :   PointSource(position),
+        itsPositionAngle(0.0),
+        itsMajorAxis(0.0),
+        itsMinorAxis(0.0)
+{
+}
+
+GaussianSource::GaussianSource(const Position &position, const Stokes &stokes)
+    :   PointSource(position, stokes),
+        itsPositionAngle(0.0),
+        itsMajorAxis(0.0),
+        itsMinorAxis(0.0)
+{
+}
+
+void GaussianSource::setPositionAngle(double angle)
+{
+    itsPositionAngle = angle;
+}
+
+void GaussianSource::setMajorAxis(double fwhm)
+{
+    itsMajorAxis = fwhm;
+}
+
+void GaussianSource::setMinorAxis(double fwhm)
+{
+    itsMinorAxis = fwhm;
+}
+
+void GaussianSource::accept(ModelComponentVisitor &visitor) const
+{
+    visitor.visit(*this);
+}
 
 } //# namespace DPPP
 } //# namespace LOFAR
-
-#endif

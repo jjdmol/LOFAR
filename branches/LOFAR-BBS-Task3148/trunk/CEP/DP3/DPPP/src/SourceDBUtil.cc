@@ -23,6 +23,8 @@
 
 #include <lofar_config.h>
 #include <DPPP/SourceDBUtil.h>
+#include <DPPP/PointSource.h>
+#include <DPPP/GaussianSource.h>
 #include <ParmDB/SourceDB.h>
 #include <Common/LofarLogger.h>
 
@@ -44,19 +46,16 @@ double getDefaultParmValue(const ParmDB &parmDB, const string &name,
     const double value = 0.0);
 } // Unnamed namespace.
 
-Patch makePatch(SourceDB &sourceDB, const string &name)
+Patch::Ptr makePatch(SourceDB &sourceDB, const string &name)
 {
     ParmDB &parmDB = sourceDB.getParmDB();
-    vector<SourceInfo> sources = sourceDB.getPatchSources(name);
+    vector<SourceInfo> sourceList = sourceDB.getPatchSources(name);
 
-    vector<PointSource> components;
-    components.reserve(sources.size());
-    for(vector<SourceInfo>::const_iterator it = sources.begin(),
-        end = sources.end(); it != end; ++it)
+    vector<ModelComponent::Ptr> components;
+    components.reserve(sourceList.size());
+    for(vector<SourceInfo>::const_iterator it = sourceList.begin(),
+        end = sourceList.end(); it != end; ++it)
     {
-        ASSERTSTR(it->getType() == SourceInfo::POINT, "Only point sources are"
-            " supported at the moment.");
-
         // Fetch position.
         Position position;
         position[0] = getDefaultParmValue(parmDB, "Ra:" + it->getName());
@@ -72,7 +71,38 @@ Patch makePatch(SourceDB &sourceDB, const string &name)
             stokes.U = getDefaultParmValue(parmDB, "U:" + it->getName());
         }
 
-        PointSource component(position, stokes);
+        PointSource::Ptr source;
+        switch(it->getType())
+        {
+        case SourceInfo::POINT:
+            {
+                source = PointSource::Ptr(new PointSource(position, stokes));
+            }
+            break;
+
+        case SourceInfo::GAUSSIAN:
+            {
+                GaussianSource::Ptr gauss(new GaussianSource(position, stokes));
+
+                const double deg2rad = (casa::C::pi / 180.0);
+                gauss->setPositionAngle(getDefaultParmValue(parmDB,
+                    "Orientation:" + it->getName()) * deg2rad);
+
+                const double arcsec2rad = (casa::C::pi / 3600.0) / 180.0;
+                gauss->setMajorAxis(getDefaultParmValue(parmDB, "MajorAxis:"
+                     + it->getName()) * arcsec2rad);
+                gauss->setMinorAxis(getDefaultParmValue(parmDB, "MinorAxis:"
+                    + it->getName()) * arcsec2rad);
+                source = gauss;
+            }
+            break;
+
+        default:
+            {
+                ASSERTSTR(false, "Only point sources and Gaussian sources are"
+                    " supported at this time.");
+            }
+        }
 
         // Fetch spectral index attributes (if applicable).
         size_t nTerms = it->getSpectralIndexNTerms();
@@ -88,25 +118,25 @@ Patch makePatch(SourceDB &sourceDB, const string &name)
                 terms.push_back(getDefaultParmValue(parmDB, oss.str()));
             }
 
-            component.setSpectralIndex(it->getSpectralIndexRefFreq(),
+            source->setSpectralIndex(it->getSpectralIndexRefFreq(),
                 terms.begin(), terms.end());
         }
 
         // Fetch rotation measure attributes (if applicable).
         if(it->getUseRotationMeasure())
         {
-            component.setPolarizedFraction(getDefaultParmValue(parmDB,
+            source->setPolarizedFraction(getDefaultParmValue(parmDB,
                 "PolarizedFraction:" + it->getName()));
-            component.setPolarizationAngle(getDefaultParmValue(parmDB,
+            source->setPolarizationAngle(getDefaultParmValue(parmDB,
                 "PolarizationAngle:" + it->getName()));
-            component.setRotationMeasure(getDefaultParmValue(parmDB,
+            source->setRotationMeasure(getDefaultParmValue(parmDB,
                 "RotationMeasure:" + it->getName()));
         }
 
-        components.push_back(component);
+        components.push_back(source);
     }
 
-    return Patch(name, components.begin(), components.end());
+    return Patch::Ptr(new Patch(name, components.begin(), components.end()));
 }
 
 namespace
