@@ -35,26 +35,15 @@ class copier(LOFARnodeTCP):
 
     def _copy_all_sources_to_target(self, source_map, target_map):
 
-        #combine the two lists to get the copy pairs
+        # combine the two lists to get the copy pairs
         for source_pair, target_pair in zip(source_map, target_map):
             source_node, source_path = source_pair
             target_node, target_path = target_pair
-            #assure that target dir exists
+
+            # assure that target dir exists (rsync creates it but..
+            # an error in the python code will throw a nicer error
             create_directory(os.path.dirname(target_path))
 
-#            # if on same node
-#            if source_node == target_node:
-#                # quick copy
-#                try:
-#                    if os.path.exists(target_path):
-#                        shutil.rmtree(target_path)
-#
-#                    shutil.copytree(source_path, target_path)
-#                except Exception, e:
-#                    self.logger.error("Failed copy file: {0} on node {1} ".format(
-#                        source_path, source_node))
-#                    raise e
-#            else:
             self._copy_single_file_using_rsync(
                                 source_node, source_path, target_path)
 

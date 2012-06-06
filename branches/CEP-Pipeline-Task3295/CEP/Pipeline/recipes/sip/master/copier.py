@@ -19,15 +19,35 @@ from lofarpipe.support.group_data import validate_data_maps
 
 class MasterNodeInterface(BaseRecipe, RemoteCommandRecipeMixIn):
     """
-    Wrapper class for master script collecting functionality regarding
+    Abstract class for master script collecting functionality regarding
     master node communication in a single interface
+    
+    The abstract part of this class definition indicates that this class is 
+    intended only to be a base class of other classes: It contains basic 
+    functionality with a number of stubs to be implemented in the inheriting 
+    class:  
+    on_error(this) : Called when a node recipe returned with an invalid return
+                     code
+    on_succes(this): Called when all node recipes returned with a correct 
+                     return code
+    TODO: Suggested improvements
+    on_partial_succes(this):   To prepare for rerun of partial runs
+    on_warn(this):          To distinguish between    
     """
     def __init__(self, command = None):
         """
         constructor, expects a string command used for calling the node script
+        This class cannot be created with the base constructor. Inheriting 
+        should call this constructor with an command string 
         """
         if not isinstance(command, basestring):
-            self.logger.error("MasterNodeInterface not constructed with an string")
+            # Pipeline logger NOT called: This is an 'language' type error and
+            # has nothing to do with the pipelines
+            raise NotImplementedError("MasterNodeInterface not constructed"
+                "with a command string. This is an abstract class, inheriting"
+                "class should implement an constructor calling this function with"
+                "an comand string")
+
 
         # call possible baseclass constructors 
         super(MasterNodeInterface, self).__init__()
@@ -37,7 +57,7 @@ class MasterNodeInterface(BaseRecipe, RemoteCommandRecipeMixIn):
     def append_job(self, host, arguments):
         """
         append_job adds a job to the current job list. It expects the host,
-        a command and a list of arguments
+        a list of arguments.
         """
         compute_job = ComputeJob(host, self._command, arguments)
         self._jobs.append(compute_job)
@@ -47,17 +67,46 @@ class MasterNodeInterface(BaseRecipe, RemoteCommandRecipeMixIn):
         """
         Starts the set of tasks in the job lists. Call the on_error function if
         errors occured. On finish it will call the _on_succes function finishing
-        the output of the recipe        
+        the output of the recipe.
+        An log message is displayed on the stdout or in a logger if the object 
+        contains one  
         """
-        print 'schedulling jobs'
+        log_message = "Start scheduling jobs with command {0}".format(
+                                                                self._command)
+        if hasattr(self, 'logger'):
+            self.logger.info(log_message)
+        else:
+            print log_message
+
         self._schedule_jobs(self._jobs)
 
         if self.error.isSet():
             self.on_error()
             return 1
         else:
-            self.on_succes(self._jobs)
+            self.on_succes()
             return 0
+
+    def on_error(self):
+        """
+        on_error should be implemented by the inheriting class. This function
+        is called when the node script returned with a invalid return value
+        """
+        raise NotImplementedError("on_error called on abstract class"
+           " MasterNodeInterface.\n Inheriting classes should implement an "
+           "on_error function")
+
+    def on_succes(self):
+        """
+        on_succes should be implemented by the inheriting class. This function
+        is called when the node script return with a valid return value == 0
+        Typical usage would be the construction of the return dictionary 
+        containing processed data. 
+        """
+        raise NotImplementedError("on_succes called on abstract class"
+           " MasterNodeInterface.\n Inheriting classes should implement an "
+           "on_succes function")
+
 
 
 class copier(MasterNodeInterface):

@@ -10,7 +10,7 @@ import tempfile
 from logger import logger
 
 from lofarpipe.support.utilities import create_directory                        #@UnresolvedImport
-from lofarpipe.recipes.master.copier import copier       #@UnresolvedImport
+from lofarpipe.recipes.master.copier import copier                              #@UnresolvedImport
 
 
 
@@ -46,19 +46,22 @@ class copierTest(unittest.TestCase):
         self.assertTrue(sut._validate_source_target_mapfile(source_map, target_map))
 
     def test_create_target_node_keyed_dict(self):
-        source_map = [("node1", "path1"), ("node2", "path2"), ("node2", "path3")]
-        target_map = [("node3", "path1"), ("node4", "path2"), ("node4", "path3")]
+        source_map = [("node1", "/path1/path1"), ("node2", "/path2/path2"), ("node2", "/path3/path3/")]
+        target_map = [("node3", "/path1/path1"), ("node4", "/path2/path2"), ("node4", "/path3/path3")]
 
 
         sut = copierWrapper()
         output = sut._create_target_node_keyed_dict(source_map, target_map)
-        expected_output = {'node3': [(('node1', 'path1'), ('node3', 'path1'))],
+        expected_output = {'node3': [(('node1', "/path1/path1"), ('node3', '/path1'))],
                            'node4': [
-                                     (('node2', 'path2'), ('node4', 'path2')),
-                                     (('node2', 'path3'), ('node4', 'path3'))
+                                     (('node2', "/path2/path2"), ('node4', '/path2')),
+                                     (('node2', "/path3/path3/"), ('node4', '/path3'))
                                     ]
                            }
-        self.assertTrue(output == expected_output, "incorrect output")
+        self.assertTrue(output == expected_output, "incorrect output"
+                        " expected, received:\n {0}, \n {1}".format(
+                                            expected_output, output))
+
 
     def test_construct_node_specific_mapfiles(self):
         temp_path = self.test_path
@@ -129,6 +132,143 @@ class copierTest(unittest.TestCase):
 
         self.assertTrue(expected_result == target_map, target_map)
 
+
+from logger import logger
+from lofarpipe.recipes.master.copier import MasterNodeInterface                              #@UnresolvedImport
+from lofarpipe.support.remotecommand import ComputeJob
+
+class MasterNodeInterfaceWrapper(MasterNodeInterface):
+    """
+    Wrapper for the imager_create_dbs an actual implementation of abstract class
+    """
+    def __init__(self, command):
+        """
+        """
+        super(MasterNodeInterfaceWrapper, self).__init__(command)
+
+        self.logger = logger()
+
+        self._function_calls = []
+
+        class Error():
+            self._return_value = True
+            def isSet(self):
+                return self._return_value
+
+        self.error = Error()
+
+    def _schedule_jobs(self, *args):
+        self._function_calls.append(('_schedule_jobs', args))
+        if self._command == "fail":
+            self.error._return_value = True
+        elif self._command == "succes":
+            self.error._return_value = False
+
+    def on_error(self, *args):
+        self._function_calls.append(('on_error', args))
+
+    def on_succes(self, *args):
+        self._function_calls.append(('on_succes', args))
+
+class MasterNodeInterfaceTest(unittest.TestCase):
+
+    def __init__(self, arg):  #todo deze moet toch in de setUp
+        super(MasterNodeInterfaceTest, self).__init__(arg)
+
+    def setUp(self):
+        self.test_path = temp_path = tempfile.mkdtemp()
+
+    def tearDown(self):
+        #shutil.rmtree(self.test_path)
+        pass
+
+    def test__init__raise_exception(self):
+        """
+        Test if MasterNodeInterface constructor raises a notimplemented error
+        if called without an string (ideally containing the command to run
+        on the node
+        """
+        self.assertRaises(NotImplementedError, MasterNodeInterface)
+
+
+    def test__init__raise_called_with_command(self):
+        command = "a string"
+        sut = MasterNodeInterface(command)
+
+        self.assertTrue(sut._command == command,
+            "The constructor did not assign the command to the local variabale")
+
+        self.assertTrue(hasattr(sut, '_jobs') and isinstance(sut._jobs, list),
+            "The constructor did create a list data member called _list")
+
+
+    def test_on_error_raise_exception(self):
+        command = "a string"
+        sut = MasterNodeInterface(command)
+        # on error on the superclass cannot be called: throws an error for it 
+        # needs an implementation in the inheriting class
+        self.assertRaises(NotImplementedError, sut.on_error)
+
+
+    def test_on_succes_raise_exception(self):
+        command = "a string"
+        sut = MasterNodeInterface(command)
+        # on error on the superclass cannot be called: throws an error for it 
+        # needs an implementation in the inheriting class
+        self.assertRaises(NotImplementedError, sut.on_succes)
+
+
+    def test_append_job(self):
+        command = "a string"
+        sut = MasterNodeInterface(command)
+
+        sut.append_job("test", ["arg1", "arg2"])
+
+        self.assertTrue(len(sut._jobs) == 1 , "append_job did not add a job"
+                        " To the job list")
+
+        self.assertTrue(isinstance(sut._jobs[0], ComputeJob) ,
+                 "append_job did not add an object with the type ComputeJob to"
+                 " the job list")
+
+    def test_run_jobs_error(self):
+        command = "fail"
+        sut = MasterNodeInterfaceWrapper(command)
+        # command fail will result in any calls to the run_jobs to 'fail'
+        # error.isSet will return true (used internaly) resulting in a call to
+        # on_error
+        sut.run_jobs()
+
+        self.assertTrue(len(sut._function_calls) == 2,
+             "run_jobs in a fail state should return in two function calls")
+
+        self.assertTrue(sut._function_calls[0][0] == '_schedule_jobs' ,
+             "the name of the first called function in a fail state should be _schedule_jobs")
+
+        self.assertTrue(sut._function_calls[1][0] == 'on_error' ,
+             "the name of the second called function in a fail state should be on_error")
+
+
+    def test_run_jobs_succes(self):
+        command = "succes"
+        sut = MasterNodeInterfaceWrapper(command)
+        # command fail will result in any calls to the run_jobs to 'fail'
+        # error.isSet will return true (used internaly) resulting in a call to
+        # on_error
+        sut.run_jobs()
+
+        self.assertTrue(len(sut._function_calls) == 2,
+             "run_jobs in a fail state should return in two function calls")
+
+        self.assertTrue(sut._function_calls[0][0] == '_schedule_jobs' ,
+             "the name of the first called function in a succes state should be _schedule_jobs")
+
+        self.assertTrue(sut._function_calls[1][0] == 'on_succes' ,
+             "the name of the second called function in a succes state should be on_succes")
+
+        #Test the adding of an log string (info level)
+        self.assertTrue(sut.logger.last()[0] == "info")
+        self.assertTrue(sut.logger.last()[1].startswith("Start scheduling jobs with"))
 
 
 if __name__ == "__main__":
