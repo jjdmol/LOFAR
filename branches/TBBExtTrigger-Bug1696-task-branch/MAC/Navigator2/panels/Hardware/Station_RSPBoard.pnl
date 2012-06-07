@@ -1,4 +1,4 @@
-V 10
+V 11
 1
 LANG:1 7 Subrack
 PANEL,-1 -1 986 776 N "_3DFace" 0
@@ -154,12 +154,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 146 129 154 146
+E E 0 1 1 0 1 E U  0 E 146 129 154 145
 0 2 0 "0s" 0 0 0 192 0 0  146 129 1
 1
-LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,13,5,69,0,0,0,0,0
+0 1
 LANG:1 1 x
 2 273
 "Text13"
@@ -174,12 +173,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 247 128 254 145
+E E 0 1 1 0 1 E U  0 E 247 128 254 144
 0 2 0 "0s" 0 0 0 192 0 0  247 128 1
 1
-LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,13,5,69,0,0,0,0,0
+0 1
 LANG:1 1 y
 2 274
 "Text14"
@@ -194,12 +192,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 346 129 354 146
+E E 0 1 1 0 1 E U  0 E 346 129 354 145
 0 2 0 "0s" 0 0 0 192 0 0  346 129 1
 1
-LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,13,5,69,0,0,0,0,0
+0 1
 LANG:1 1 x
 2 275
 "Text15"
@@ -214,12 +211,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 447 129 454 146
+E E 0 1 1 0 1 E U  0 E 447 129 454 145
 0 2 0 "0s" 0 0 0 192 0 0  447 129 1
 1
-LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,13,5,69,0,0,0,0,0
+0 1
 LANG:1 1 y
 2 276
 "Text16"
@@ -234,12 +230,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 547 129 555 146
+E E 0 1 1 0 1 E U  0 E 547 129 555 145
 0 2 0 "0s" 0 0 0 192 0 0  547 129 1
 1
-LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,13,5,69,0,0,0,0,0
+0 1
 LANG:1 1 x
 2 277
 "Text17"
@@ -254,12 +249,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 647 129 654 146
+E E 0 1 1 0 1 E U  0 E 647 129 654 145
 0 2 0 "0s" 0 0 0 192 0 0  647 129 1
 1
-LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,13,5,69,0,0,0,0,0
+0 1
 LANG:1 1 y
 2 278
 "Text18"
@@ -274,12 +268,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 747 129 755 146
+E E 0 1 1 0 1 E U  0 E 747 129 755 145
 0 2 0 "0s" 0 0 0 192 0 0  747 129 1
 1
-LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,13,5,69,0,0,0,0,0
+0 1
 LANG:1 1 x
 2 279
 "Text19"
@@ -294,12 +287,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 847 129 854 146
+E E 0 1 1 0 1 E U  0 E 847 129 854 145
 0 2 0 "0s" 0 0 0 192 0 0  847 129 1
 1
-LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,13,5,69,0,0,0,0,0
+0 1
 LANG:1 1 y
 1 697 11 "" 0
 0
@@ -500,12 +492,11 @@ LANG:1 0
 {
   setValue(\"\", \"text\", \"View: \" + g_currentDatapoint );
 }" 0
- E 0 1 1 0 1 E U  0 E 92 52 124 68
+ E 0 1 1 0 1 E U  0 E 92 52 124 67
 0 2 0 "0s" 0 0 0 192 0 0  92 52 1
 1
-LANG:1 84 -*-Arial-*-r-normal-*-12-*-100-100-*-*-iso8859-1|-12,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,12,5,40,0,0,0,0,0
+0 1
 LANG:1 6 View: 
 4 643
 "Line53"
@@ -856,17 +847,15 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 642 638 699 672
+E E 0 1 1 0 1 E U  0 E 642 638 699 670
 0 2 0 "0s" 0 0 0 192 0 0  642 638 2
 1
-LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
+0 1
 LANG:1 7 Control
 1
-LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
+0 1
 LANG:1 10 (Ethernet)
 2 684
 "Text2"
@@ -881,17 +870,15 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 800 638 867 672
+E E 0 1 1 0 1 E U  0 E 800 638 867 670
 0 2 0 "0s" 0 0 0 192 0 0  800 638 2
 1
-LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
+0 1
 LANG:1 11 Data output
 1
-LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
+0 1
 LANG:1 10 (Ethernet)
 4 685
 "Line60"
@@ -1220,61 +1207,61 @@ LAYER, 7
 1
 LANG:1 6 Layer8
 0
-3 11 ""
+3 11 "" -1
 "objects\\Hardware\\RSPBoard_AP.pnl" 85 156 T 157 1 0 1 45 152
 1
 "$APNr""0"
-3 12 ""
+3 12 "" -1
 "objects\\Hardware\\RSPBoard_AP.pnl" 236 357 T 158 1 0 1 94 -49
 1
 "$APNr""1"
-3 13 ""
+3 13 "" -1
 "objects\\Hardware\\RSPBoard_AP.pnl" 197 359 T 159 1 0 1 333 -51
 1
 "$APNr""2"
-3 14 ""
+3 14 "" -1
 "objects\\Hardware\\RSPBoard_AP.pnl" 307 331 T 160 1 0 1 423 -23
 1
 "$APNr""3"
-3 15 "RCU0"
-"objects\\Hardware\\RSPBoard_RCU.pnl" 62 153 T 161 1 0 1 76 137
+3 15 "RCU0" -1
+"objects\\Hardware\\RSPBoard_RCU.pnl" 62 153 T 161 1 0 1 73 137
 1
 "$RCUNr""0"
-3 16 "RCU1"
+3 16 "RCU1" -1
 "objects\\Hardware\\RSPBoard_RCU.pnl" 79 262 T 161 1 0 1 152 28
 1
 "$RCUNr""1"
-3 17 "RCU2"
+3 17 "RCU2" -1
 "objects\\Hardware\\RSPBoard_RCU.pnl" 270 210 T 162 1 0 1 67 80
 1
 "$RCUNr""2"
-3 18 "RCU3"
+3 18 "RCU3" -1
 "objects\\Hardware\\RSPBoard_RCU.pnl" 370 210 T 163 1 0 1 60 80
 1
 "$RCUNr""3"
-3 19 "RCU4"
+3 19 "RCU4" -1
 "objects\\Hardware\\RSPBoard_RCU.pnl" 470 210 T 164 1 0 1 67 80
 1
 "$RCUNr""4"
-3 21 "RCU5"
+3 21 "RCU5" -1
 "objects\\Hardware\\RSPBoard_RCU.pnl" 570 210 T 166 1 0 1 60 80
 1
 "$RCUNr""5"
-3 22 "RCU6"
+3 22 "RCU6" -1
 "objects\\Hardware\\RSPBoard_RCU.pnl" 670 210 T 167 1 0 1 69 80
 1
 "$RCUNr""6"
-3 23 "RCU7"
+3 23 "RCU7" -1
 "objects\\Hardware\\RSPBoard_RCU.pnl" 770 210 T 168 1 0 1 59 80
 1
 "$RCUNr""7"
-3 27 "BP"
+3 27 "BP" -1
 "objects\\Hardware\\RSPBoard_BP.pnl" 200 294 T 178 1 0 1 370 336
 0
-3 39 ""
+3 39 "" -1
 "objects\\Hardware\\Station_Clock.pnl" 80 665 T 350 1 0 1 40 -550
 0
-3 42 ""
+3 42 "" -1
 "objects\\Hardware\\RSPBoard.pnl" 205 529 T 356 1 0 1 -70 86
 0
 0

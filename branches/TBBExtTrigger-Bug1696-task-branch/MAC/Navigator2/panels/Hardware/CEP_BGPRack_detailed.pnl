@@ -8,13 +8,9 @@ PANEL,-1 -1 1011 662 N "_3DFace" 0
   navPanel_initPanel(\"fw_viewBox\");
 
   baseDP         = g_currentDatapoint;
-  
-  dyn_string dpAr= strsplit(dpSubStr(g_currentDatapoint,DPSUB_DP),\"_\");
-  if (strpos(dpAr[dynlen(dpAr)],\"BGP\") > -1) {
-    rNr = substr(dpAr[dynlen(dpAr)],3,strlen(dpAr[dynlen(dpAr)]));
-  } else {
-    LOG_ERROR(\"CEP_BGPRack_detailed.pnl:Initialize|No BGPRack found in currentDatapoint.\");
-  }
+
+  rNr=0;
+  if (navFunct_isBGPSwitch()) rNr=1;  
   
   string aS = navFunct_DPName2CEPName(baseDP);
   setValue(\"BGPRack\", \"text\", aS);
@@ -147,7 +143,7 @@ E E 0 2 1 0 1 E 1 0 1 400 132 1 E 15 15 152 410
 2 674
 "BGPRack"
 ""
-1 442.5 150 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 438 150 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 84 0 0 0 0 0
 E E E
@@ -157,8 +153,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 444.5 150 484 167
-0 2 0 "0s" 0 0 0 192 0 0  444.5 150 1
+E E 0 1 1 0 1 E U  0 E 440 150 479.5 167
+0 2 0 "0s" 0 0 0 192 0 0  440 150 1
 1
 LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
 0 ""
@@ -218,12 +214,10 @@ LANG:1 6 Layer8
 0
 3 71 "PANEL_REF72"
 "objects\\Hardware\\CEP_Midplane_small.pnl" 408 350 T 87 1 0 1 5 0
-2
+1
 "$BGPMidplaneNr""1"
-"$BGPRackNr""0"
 3 72 "PANEL_REF73"
 "objects\\Hardware\\CEP_Midplane_small.pnl" 408 540 T 88 1 0 1 5 -6
-2
+1
 "$BGPMidplaneNr""0"
-"$BGPRackNr""0"
 0

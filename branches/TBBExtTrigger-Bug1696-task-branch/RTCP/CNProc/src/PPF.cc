@@ -161,7 +161,10 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::computeFlags(unsigned sta
 {
   computeFlagsTimer.start();
 
-  filteredData->flags[stat].reset();
+  for (unsigned ch = 0; ch < itsNrChannels; ch++) {
+    filteredData->flags[ch][stat].reset();
+  }
+
   SparseSet<unsigned> flags = metaData->getFlags(stat);
   const SparseSet<unsigned>::Ranges &ranges = flags.getRanges();
 
@@ -169,7 +172,9 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::computeFlags(unsigned sta
     unsigned begin = itsNrChannels == 1 ? it->begin : std::max(0, (signed) (it->begin >> itsLogNrChannels) - NR_TAPS + 1);
     unsigned end   = std::min(itsNrSamplesPerIntegration, ((it->end - 1) >> itsLogNrChannels) + 1);
 
-    filteredData->flags[stat].include(begin, end);
+    for (unsigned ch = 0; ch < itsNrChannels; ch++) {
+      filteredData->flags[ch][stat].include(begin, end);
+    }
   }
 
   computeFlagsTimer.stop();
@@ -253,10 +258,13 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, dou
   {
     std::vector<fcomplex, AlignedStdAllocator<fcomplex, 32> > fftOutData(itsNrChannels);
 
+    // The flags of all channels are still the same here, so we just use channel 1.
+    // Flags are kept per channel, since we will do online flagging on FilteredData later.
+
 #pragma omp for
     for (int time = 0; time < (int) itsNrSamplesPerIntegration; time ++) {
       for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
-	if (filteredData->flags[stat].test(time)) {
+	if (filteredData->flags[1][stat].test(time)) {
 	  for (unsigned chan = 0; chan < itsNrChannels; chan ++)
 	    filteredData->samples[chan][stat][time][pol] = makefcomplex(0, 0);
 	} else {
@@ -319,7 +327,10 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, dou
 
   computePhaseShifts(phaseShifts, metaData->beams(stat)[0].delayAtBegin, metaData->beams(stat)[0].delayAfterEnd, baseFrequency);
 
-  const SparseSet<unsigned>::Ranges &ranges = filteredData->flags[stat].getRanges();
+  // The flags of all channels are still the same here, so we just use channel 1.
+  // Flags are kept per channel, since we will do online flagging on FilteredData later.
+
+  const SparseSet<unsigned>::Ranges &ranges = filteredData->flags[1][stat].getRanges();
   SparseSet<unsigned>::const_iterator it = ranges.begin();
 
   for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
@@ -368,10 +379,13 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::bypass(unsigned stat, dou
 
   unsigned alignmentShift = metaData->alignmentShift(stat);
 
+  // The flags of all channels are still the same here, so we just use channel 1.
+  // Flags are kept per channel, since we will do online flagging on FilteredData later.
+
 #if defined PPF_C_IMPLEMENTATION
   for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
     for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
-      if (filteredData->flags[stat].test(time)) {
+      if (filteredData->flags[1][stat].test(time)) {
 	filteredData->samples[0][stat][time][pol] = makefcomplex(0, 0);
       } else {
 	SAMPLE_TYPE currSample = transposedData->samples[stat][time + alignmentShift][pol];
@@ -404,7 +418,7 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::bypass(unsigned stat, dou
   }
 
   // clear flagged data
-  const SparseSet<unsigned>::Ranges &ranges = filteredData->flags[stat].getRanges();
+  const SparseSet<unsigned>::Ranges &ranges = filteredData->flags[1][stat].getRanges();
 
   for (SparseSet<unsigned>::const_iterator it = ranges.begin(); it != ranges.end(); it ++)
     memset(filteredData->samples[0][stat][it->begin].origin(), 0, (it->end - it->begin) * NR_POLARIZATIONS * sizeof(fcomplex));

@@ -19,6 +19,11 @@ OBSID=$5
 source /opt/lofar/bin/locations.sh
 
 (
+echo "---------------"
+date
+echo starting obs $OBSID
+echo "---------------"
+
 # Convert keys where needed
 /opt/lofar/bin/LOFAR/Parset.py -P $PARTITION $PARSET /opt/lofar/etc/OLAP.parset <(echo "$EXTRA_KEYS") > $IONPROC_PARSET &&
 

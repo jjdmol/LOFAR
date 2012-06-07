@@ -5,11 +5,9 @@ import monetdb
 import monetdb.sql as db
 import psycopg2
 from src.gsmconnectionmanager import GSMConnectionManager
+from tests.switchable import SwitchableTest
 
-class ConnectionTest(unittest.TestCase):
-
-    def setUp(self):
-        self.cm = GSMConnectionManager()
+class ConnectionTest(SwitchableTest):
 
     def test_default_connection(self):
         conn = self.cm.get_connection()

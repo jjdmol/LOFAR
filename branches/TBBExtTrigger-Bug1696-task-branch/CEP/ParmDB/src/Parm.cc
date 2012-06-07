@@ -190,6 +190,10 @@ namespace BBS {
                                         where, itsSolveGrid,
                                         pv.getGrid());
       values.data()[cellId] = newValues[0];
+      if (newErrors) {
+        errors.data()[cellId] = newErrors[0];
+      }
+
       cell0changed = (cellId==0);
     }
     // Coefficients have changed, so recalculate the perturbations.

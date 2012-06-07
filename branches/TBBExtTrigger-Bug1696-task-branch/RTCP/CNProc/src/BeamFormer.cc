@@ -96,7 +96,7 @@ void BeamFormer::initStationMergeMap(const std::vector<unsigned> &station2BeamFo
 
 void BeamFormer::mergeStationFlags(const SampleData<> *in, SampleData<> *out)
 {
-  const unsigned upperBound = static_cast<unsigned>(itsNrSamples * BeamFormer::MAX_FLAGGED_PERCENTAGE);
+  const unsigned upperBound = static_cast<unsigned>(itsNrSamples * itsNrChannels * BeamFormer::MAX_FLAGGED_PERCENTAGE);
 
   for (unsigned d = 0; d < itsMergeDestStations.size(); d ++) {
     unsigned			destStation	     = itsMergeDestStations[d];
@@ -111,25 +111,39 @@ void BeamFormer::mergeStationFlags(const SampleData<> *in, SampleData<> *out)
       validSourceStations.push_back(sourceStations[0]);
     } else {
       // copy valid stations from sourceStations -> validSourceStations
-      for (unsigned s = 0; s < sourceStations.size(); s ++)
-        if (in->flags[sourceStations[s]].count() <= upperBound)
+      for (unsigned s = 0; s < sourceStations.size(); s ++) {
+        unsigned count = 0;
+        for (unsigned ch = 0; ch < itsNrChannels; ch++) {
+          count += in->flags[ch][sourceStations[s]].count();
+        }
+
+        if (count <= upperBound) {
           validSourceStations.push_back(sourceStations[s]);
+        }
+      }
     }   
 
     // conservative flagging: flag output if any input was flagged 
     if (validSourceStations.empty()) {
       // no valid stations: flag everything
-      out->flags[destStation].include(0, itsNrSamples);
+      for (unsigned ch = 0; ch < itsNrChannels; ch++) {
+        out->flags[ch][destStation].include(0, itsNrSamples);
+      }
     } else {
       // some valid stations: merge flags
 
       if (validSourceStations[0] != destStation || in != out) {
         // dest station, which should be first in the list, was not valid
-        out->flags[destStation] = in->flags[validSourceStations[0]];
+        for (unsigned ch = 0; ch < itsNrChannels; ch++) {
+          out->flags[ch][destStation] = in->flags[ch][validSourceStations[0]];
+        }
       }
 
-      for (unsigned stat = 1; stat < validSourceStations.size(); stat ++)
-        out->flags[destStation] |= in->flags[validSourceStations[stat]];
+      for (unsigned stat = 1; stat < validSourceStations.size(); stat ++) {
+        for (unsigned ch = 0; ch < itsNrChannels; ch++) {
+          out->flags[ch][destStation] |= in->flags[ch][validSourceStations[stat]];
+        }
+      }
     }
   }
 }
@@ -137,12 +151,14 @@ void BeamFormer::mergeStationFlags(const SampleData<> *in, SampleData<> *out)
 
 void BeamFormer::computeFlags(const SampleData<> *in, SampleData<> *out, unsigned sap, unsigned firstBeam, unsigned nrBeams)
 {
-  const unsigned upperBound = static_cast<unsigned>(itsNrSamples * BeamFormer::MAX_FLAGGED_PERCENTAGE);
+  const unsigned upperBound = static_cast<unsigned>(itsNrSamples * itsNrChannels * BeamFormer::MAX_FLAGGED_PERCENTAGE);
 
   // conservative flagging: flag output if any input was flagged 
   for (unsigned pencil = 0; pencil < nrBeams; pencil ++) {
     itsValidStations[pencil].clear();
-    out->flags[pencil].reset();
+    for (unsigned ch = 0; ch < itsNrChannels; ch++) {
+      out->flags[pencil][ch].reset();
+    }
 
     const std::vector<unsigned> &stations = itsStationIndices[sap][firstBeam + pencil];
 
@@ -150,9 +166,15 @@ void BeamFormer::computeFlags(const SampleData<> *in, SampleData<> *out, unsigne
       unsigned stat = stations[s];
 
       // determine which stations have too much flagged data
-      if (in->flags[stat].count() <= upperBound) {
+      unsigned count = 0;
+      for (unsigned ch = 0; ch < itsNrChannels; ch++) {
+        count += in->flags[ch][stat].count();
+      }
+      if (count <= upperBound) {
         itsValidStations[pencil].push_back(stat);
-        out->flags[pencil] |= in->flags[stat];
+        for (unsigned ch = 0; ch < itsNrChannels; ch++) {
+          out->flags[pencil][ch] |= in->flags[ch][stat];
+        }
       }
     }  
   }
@@ -175,7 +197,7 @@ void BeamFormer::mergeStations(const SampleData<> *in, SampleData<> *out)
 
     for (unsigned ch = 0; ch < itsNrChannels; ch ++) {
       for (unsigned time = 0; time < itsNrSamples; time ++) {
-        if (!out->flags[destStation].test(time)) {
+        if (!out->flags[ch][destStation].test(time)) {
           for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
             fcomplex &dest = out->samples[ch][destStation][time][pol];
 
@@ -219,14 +241,14 @@ void BeamFormer::computeComplexVoltages(const SampleData<> *in, SampleData<> *ou
         weights[stat][b] = phaseShift(frequency, itsDelays[stat][b]) * factor;
       }
     }  
-  }     
+  }
 
   for (unsigned beam = 0; beam < nrBeams; beam ++) {
       for (unsigned time = 0; time < itsNrSamples; time ++) {
         // PPF.cc sets flagged samples to 0, so we can always add them. Since flagged
         // samples are typically rare, it's faster to not test the flags of every
         // sample. This can be sped up by traversing the flags in groups.
-        if (1 || !out->flags[beam].test(time)) {
+        if (1 || !out->flags[beam][ch].test(time)) {
           for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
             fcomplex &dest  = out->samples[beam][ch][time][pol];
 	    double averagingSteps = 1.0 / itsValidStations[beam].size();
@@ -560,7 +582,9 @@ void BeamFormer::computeDelays(const SubbandMetaData *metaData, unsigned sap, un
 }
 
 void BeamFormer::flagBeam(SampleData<> *out, unsigned beam) {
-  out->flags[beam].include(0, itsNrSamples);
+  for (unsigned ch = 0; ch < itsNrChannels; ch++) {
+    out->flags[beam][ch].include(0, itsNrSamples);
+  }
   memset(out->samples[beam].origin(), 0, out->samples[beam].num_elements() * sizeof out->samples[0][0][0][0]);
 }
 
@@ -638,7 +662,9 @@ void BeamFormer::preTransposeBeam(const BeamFormedData *in, PreTransposeBeamForm
 
   ASSERT(NR_POLARIZATIONS == 2);
 
-  out->flags[0] = in->flags[inbeam];
+  for (unsigned c = 0; c < itsNrChannels; c ++) {
+    out->flags[c] = in->flags[inbeam][c];
+  }
 
 #if 0
   /* reference implementation */

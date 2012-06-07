@@ -1,4 +1,6 @@
-inputBufferList		stringArr
+ioNodeList				intArr
+locusNodeList			stringArr
 adderList		stringArr
-stationList		stringArr
-
+writerList				stringArr
+dataProductList			stringArr
+dataProductTypeList		stringArr

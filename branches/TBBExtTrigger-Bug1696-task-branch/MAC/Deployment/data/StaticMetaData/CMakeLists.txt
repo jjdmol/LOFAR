@@ -10,6 +10,8 @@ install(PROGRAMS
 file(GLOB sysconf_data *.conf)
 install(FILES
   ${sysconf_data}
+  StationInfo.dat
+  ControlInfo.dat
   DESTINATION etc)
 
 # These files end up in ${prefix}/etc/StaticMetaData
@@ -28,3 +30,5 @@ file(GLOB staticmeta_data
 install(FILES
   ${staticmeta_data}
   DESTINATION etc/StaticMetaData)
+
+
