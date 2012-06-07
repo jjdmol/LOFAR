@@ -38,7 +38,7 @@ prelude = << PRELUDE_END
 // STOP_DUMPS_ACK  	(triggerID, result);
 //
 
-#define PSN_CR_TRIGGERPORT		"LOFAR_TBBControl"
+#define PSN_CR_TRIGGERPORT		"MCU001:LOFAR_TBBControl"
 
 PRELUDE_END;
 
