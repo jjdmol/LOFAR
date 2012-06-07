@@ -413,7 +413,7 @@ LANG:1 8 hardware
     panelSelection=\"LOFAR_Remote.pnl\";
   } else if (txt == \"Europe\") {
     panelSelection=\"LOFAR_Europe.pnl\";
-  } else if (txt == \"CCU001\") {
+  } else if (txt == navFunct_bareDBName(CEPDBName)) {
     panelSelection=\"LOFAR_Remote.pnl\";
   } else {
     panelSelection=\"\";

@@ -110,7 +110,7 @@ void CEPCallback(string dp1, bool aTrig) {
   LOG_DEBUG(\"CEP_small.pnl:CEPCallback| objectTrigger Callback on: \"+dp1+\" trigger: \"+aTrig);
   LOG_DEBUG(\"CEP_small.pnl:CEPCallback|Found highlight : \" + highlight+ \" Looking for: CEP\");
   bool bHighlight=false;
-  if (dynContains(highlight,\"CCU001\")) {
+  if (dynContains(highlight,navFunct_bareDBName(CEPDBName))) {
     bHighlight=true;
   }
   LOG_DEBUG(\"CEP_small.pnl:CEPCallback|Highlight request: \"+bHighlight);
