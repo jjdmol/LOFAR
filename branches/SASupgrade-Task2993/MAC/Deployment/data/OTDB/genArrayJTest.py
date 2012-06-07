@@ -24,15 +24,19 @@ def genData(file, className, fieldList):
       args = field.split()
       if args[3] in tText:
         print >>file, '    field = "";'
-        print >>file, "    for(int i=0; i<15;i++) { field += charset.charAt(rand.nextInt(nrChars)); }; result += field; // %s" % args[1]
-      if args[3] in tInt + tLong:
-        print >>file, "    result += toString(rand.nextInt()%%2 ? rand.nextInt() : -rand.nextInt()); // %s" % args[1]
-      if args[3] in tUint + tULng:
-        print >>file, "    result += toString(rand.nextInt()); // %s" % args[1]
+        print >>file, "    for(int i=0; i<15;i++) { field += charset.charAt(rand.nextInt(nrChars)); } result += field; // %s" % args[1]
+      if args[3] in tInt:
+        print >>file, "    result += Integer.toString(rand.nextInt()%%2 == 1 ? rand.nextInt() : -rand.nextInt()); // %s" % args[1]
+      if args[3] in tLong:
+        print >>file, "    result += Long.toString(rand.nextInt()%%2 == 1 ? rand.nextInt() : -rand.nextInt()); // %s" % args[1]
+      if args[3] in tUint:
+        print >>file, "    result += Integer.toString(rand.nextInt()); // %s" % args[1]
+      if args[3] in tULng:
+        print >>file, "    result += Long.toString(rand.nextInt()); // %s" % args[1]
       if args[3] in tBool:
-        print >>file, '    result += (rand.nextInt()%%2 ? "true" : "false"); // %s' % args[1]
+        print >>file, '    result += (rand.nextInt()%%2 == 1 ? "true" : "false"); // %s' % args[1]
       if args[3] in tFlt:
-        print >>file, "    result += Float.toString(rand.nextFloat() %% 100000 * 3.1415926); // %s" % args[1]
+        print >>file, "    result += Float.toString((rand.nextFloat() %% 100000) * (float)3.1415926); // %s" % args[1]
       if args[3] in tDbl:
         print >>file, "    result += Double.toString(rand.nextDouble() %% 100000 * 3.1415926); // %s" % args[1]
       idx += 1
@@ -104,7 +108,7 @@ def genConstructor(file, className, fieldList):
     print >>file
     print >>file, '      assert object2.treeID()   == 25 : "treeID not 25";'
     print >>file, '      assert object2.recordID() == 625 : "recordID not 625";'
-    print >>file, '      assert object2.nodeName() == "theNameOfTheNode" : "nodename not \'theNameOfTheNode\'";'
+    print >>file, '      assert object2.nodeName().equals("theNameOfTheNode") : "nodename not \'theNameOfTheNode\'";'
     print >>file
     print >>file, '      String[]   fields = contents.split(",");'
     idx = 0
@@ -113,15 +117,15 @@ def genConstructor(file, className, fieldList):
       if args[3] in tText:
         print >>file, "      assert object2.%s.equals(fields[%d]);" % (args[1], idx)
       if args[3] in tInt:
-        print >>file, "      assert object2.%s == int.valueOf(fields[%d]);" % (args[1], idx)
+        print >>file, "      assert object2.%s == Integer.valueOf(fields[%d]);" % (args[1], idx)
       if args[3] in tUint:
-        print >>file, "      assert object2.%s == int.valueOf(fields[%d]);" % (args[1], idx)
+        print >>file, "      assert object2.%s == Integer.valueOf(fields[%d]);" % (args[1], idx)
       if args[3] in tLong:
-        print >>file, "      assert object2.%s == long.valueOf(fields[%d]);" % (args[1], idx)
+        print >>file, "      assert object2.%s == Long.valueOf(fields[%d]);" % (args[1], idx)
       if args[3] in tULng:
-        print >>file, "      assert object2.%s == long.valueOf(fields[%d]);" % (args[1], idx)
+        print >>file, "      assert object2.%s == Long.valueOf(fields[%d]);" % (args[1], idx)
       if args[3] in tBool:
-        print >>file, "      assert object2.%s == Bool.valueOf(fields[%d]);" % (args[1], idx)
+        print >>file, "      assert object2.%s == Boolean.valueOf(fields[%d]);" % (args[1], idx)
       if args[3] in tFlt:
         print >>file, "      assert object2.%s == Float.valueOf(fields[%d]);" % (args[1], idx)
       if args[3] in tDbl:
@@ -140,13 +144,13 @@ def genSaveRecords(file,className):
     print >>file, "      String  mask;"
     print >>file, "      Vector<j%s>   origRecs = new Vector();" % className
     print >>file, "      for (int i = 0; i < 32; i++) {" 
-    print >>file, '        if ((i % 16)/ 8) mask="secondHalf_"; '
+    print >>file, '        if (((i % 16)/ 8) == 1) mask="secondHalf_"; '
     print >>file, '        else mask="firstHalf_";'
     print >>file, "        j%s aRec = new j%s(firstTree+(i/16)*36, i+1, mask+i, genDataString());" %(className, className)
     print >>file, "        boolean add = origRecs.add(aRec);"
     print >>file, "      }"
     print >>file, "      for (j%s aRec: origRecs) {" % className
-    print >>file, "        itsRecordAccess.save%s(aRec)" % className
+    print >>file, "        itsRecordAccess.save%s(aRec);" % className
     print >>file, "      }"
     print >>file
 
@@ -185,8 +189,8 @@ def genGetRecords(file,className,fieldList):
     print >>file, "      container = itsRecordAccess.get%ssOnTreeList(treeIDs);" % className
     print >>file, '      assert container.size() == 32 : "Expected 32 records in the result";'
     print >>file, "      // All the saved records are in the container now, compare them with the original ones."
-    print >>file, "      for (uint i = 0; i < 32; i++) {"
-    print >>file, '        assert containerelementAt(i).equals(origRecs.elementAt(i)) : "Element at "+i+" differs from original";'
+    print >>file, "      for (int i = 0; i < 32; i++) {"
+    print >>file, '        assert container.elementAt(i).equals(origRecs.elementAt(i)) : "Element at "+i+" differs from original";'
     print >>file, "        ((j%s)container.elementAt(i)).print();" % className
     print >>file, "      }"
     print >>file
@@ -197,7 +201,7 @@ def genGetRecords(file,className,fieldList):
     print >>file, "      recordIDs.add(container.elementAt(14).recordID());"
     print >>file, "      recordIDs.add(container.elementAt(24).recordID());"
     print >>file, "      recordIDs.add(container.elementAt(17).recordID());"
-    print >>file, "      Vector<j%s> smallContainer = itsRecordAcess.get%ssOnRecordList(recordIDs);" % (className, className)
+    print >>file, "      Vector<j%s> smallContainer = itsRecordAccess.get%ssOnRecordList(recordIDs);" % (className, className)
     print >>file, '      assert smallContainer.size() == 4 : "expected 4 records in the small container";'
     print >>file
     print >>file, "      // getFieldOnRecordList(connection, fieldname, vector<RecordID>)"
@@ -240,16 +244,16 @@ def genSaveField(file,className,fieldList):
       print >>file, "      for(int i=0; i<15; i++) { newValue += charset.charAt(rand.nextInt(nrChars)); }"
       print >>file, "      container.elementAt(13).%s = newValue;" % args[1]
     if args[3] in tInt + tLong:
-      print >>file, "      container.elementAt(13).%s = (rand.nextInt()%%2 ? rand.nextInt() : -rand.nextInt());" % args[1]
+      print >>file, "      container.elementAt(13).%s = (rand.nextInt()%%2 == 1 ? rand.nextInt() : -rand.nextInt());" % args[1]
     if args[3] in tUint + tULng:
       print >>file, "      container.elementAt(13).%s = rand.nextInt();" % args[1]
     if args[3] in tBool:
-      print >>file, '      container.elementAt(13).%s = (rand.nextInt()%%2 ? "true" : "false");' % args[1]
+      print >>file, '      container.elementAt(13).%s = (rand.nextInt()%%2 == 1 ? "true" : "false");' % args[1]
     if args[3] in tFlt:
       print >>file, "      container.elementAt(13).%s = (rand.nextFloat() % 100000 * 3.1415926);" % args[1]
     if args[3] in tDbl:
       print >>file, "      container.elementAt(13).%s = (rand.nextDouble() % 100000 * 3.1415926);" % args[1]
-    print >>file, '      assert itsRecordAccess.save%sField(containter.elementAt(13), 1) : "Saving %s failed";' % (className, className)
+    print >>file, '      assert itsRecordAccess.save%sField(container.elementAt(13), 1) : "Saving %s failed";' % (className, className)
     print >>file, "      j%s record13 = itsRecordAccess.get%s(container.elementAt(13).recordID());" % (className, className)
     print >>file, "      assert container.elementAt(13).equals(record13);"
     print >>file
@@ -263,19 +267,19 @@ def genSaveFields(file,className,fieldList):
       print >>file, '        aRec.%s="";' % args[1]
       print >>file, "        for(int c=0; c<15; c++) { aRec.%s += charset.charAt(rand.nextInt(nrChars)); }" % args[1]
     if args[3] in tInt + tLong:
-      print >>file, "        aRec.%s = (rand.nextInt()%%2 ? rand.nextInt() : -rand.nextInt());" % args[1]
+      print >>file, "        aRec.%s = (rand.nextInt()%%2 == 1 ? rand.nextInt() : -rand.nextInt());" % args[1]
     if args[3] in tUint + tULng:
       print >>file, "        aRec.%s = rand.nextInt();" % args[1]
     if args[3] in tBool:
-      print >>file, '        aRec.%s = (rand.nextInt()%%2 ? "true" : "false");' % args[1]
+      print >>file, '        aRec.%s = Boolean.valueOf(rand.nextInt()%%2 == 1 ? "true" : "false");' % args[1]
     if args[3] in tFlt:
       print >>file, "        aRec.%s = (rand.nextFloat() % 100000 * 3.1415926);" % args[1]
     if args[3] in tDbl:
       print >>file, "        aRec.%s = (rand.nextDouble() % 100000 * 3.1415926);" % args[1]
     print >>file, '      }'
     print >>file, '      assert itsRecordAccess.save%sFields(0, smallContainer) : "Saving %s fieldsvector failed";' % (className, className)
-    print >>file, "      Vector<j%s> smallContainer2 = itsRecordAccess.get%sOnRecordList(recordIDs);" % (className, className)
-    print >>file, '      assert smallContainer2.size() == smallContainer.size() : "smallContainers differ is size;"'
+    print >>file, "      Vector<j%s> smallContainer2 = itsRecordAccess.get%ssOnRecordList(recordIDs);" % (className, className)
+    print >>file, '      assert smallContainer2.size() == smallContainer.size() : "smallContainers differ in size";'
     print >>file, "      for (int i = 0; i < smallContainer.size(); i++) {"
     print >>file, '        assert smallContainer.elementAt(i).equals(smallContainer2.elementAt(i)) : "smallContainer " + i + " not equal to smallContainer2 "+ i;'
     print >>file, "      }"
