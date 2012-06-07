@@ -13,8 +13,8 @@ PANEL,-1 -1 114 101 N "_3DFace" 1
   // The PVSSdB element numbers is from 0..15 but the hardware elementnumbers are 1..16
   theElementNr=$elementNr;
   ElementNr_HardWare=theElementNr+1;
-  LOG_ERROR(\"HBA_TileElement.pnl:initialize|elementNr: \"+theElementNr);
-  LOG_ERROR(\"HBA_TileElement.pnl:initialize|elementNr_Hardware: \"+ElementNr_HardWare);
+  LOG_DEBUG(\"HBA_TileElement.pnl:initialize|elementNr: \"+theElementNr);
+  LOG_DEBUG(\"HBA_TileElement.pnl:initialize|elementNr_Hardware: \"+ElementNr_HardWare);
 
   string aS=\"\";
   if (theElementNr < 10) aS+=\"0\";
@@ -32,7 +32,7 @@ PANEL,-1 -1 114 101 N "_3DFace" 1
      if (dpExists(baseDP + \".X.status.state:_online.._value\")) {
        if (dpConnect(\"ShowStates\", baseDP + \".X.status.state:_online.._value\", 
                                    baseDP + \".Y.status.state:_online.._value\",
-                                   baseDP + \".comm.status.state:_online.._value\",
+                                   baseDP + \".comm:_online.._value\",
                      	            baseDP + \".X.status.state:_online.._invalid\") == -1) {
          LOG_ERROR(\"HBA_TileElement.pnl:Initialize|couldn't connect to \"+baseDP + \".X or .Y .status.state \" + getLastError());
        }      
@@ -42,7 +42,7 @@ PANEL,-1 -1 114 101 N "_3DFace" 1
 
 void ShowStates( string dp1, int X_Status, 
                  string dp2, int Y_Status, 
-                 string dp3, int Comm_Status, 
+                 string dp3, bool Comm_Status, 
                  string dp4, bool invalid) {
   if(!invalid) {
        LOG_DEBUG(\"HBA_TileElement.pnl:initialize| OK  X_Status = \" + X_Status + \" Y_Status = \" + Y_Status+ \" Comm_Status = \" + Comm_Status);
