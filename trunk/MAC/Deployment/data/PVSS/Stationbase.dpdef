@@ -147,7 +147,8 @@ HBAElement.HBAElement	1#
 		status	41#:ObjectStatus
 	Y	1#
 		status	41#:ObjectStatus
-	comm	23#
+	comm	1#
+		status	41#:ObjectStatus
 
 
 # Create missing CtrlDbg internals and DP for remoteStation
