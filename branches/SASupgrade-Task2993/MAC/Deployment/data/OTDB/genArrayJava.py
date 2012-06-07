@@ -28,12 +28,10 @@ def genConstructor(file, className, fieldList):
       args = field.split()
       if args[3] in tText:
         print >>file, '    %s = "";' % args[1]
-      if args[3] in tInt + tUint:
+      if args[3] in tInt + tUint + tLong + tULng + tFlt + tDbl:
         print >>file, "    %s = 0;" % args[1]
       if args[3] in tBool:
         print >>file, "    %s = false;" % args[1]
-      if args[3] in tFlt:
-        print >>file, "    %s = 0;" % args[1]
     print >>file, "  }"
     print >>file
     print >>file, "  public j%s (int aTreeID, int aRecordID, String aParent, String arrayList)" % className
@@ -49,12 +47,14 @@ def genConstructor(file, className, fieldList):
       args = field.split()
       if args[3] in tText:
         print >>file, "    %s = fields[%d];" % (args[1], idx)
-      if args[3] in tInt + tUint:
+      if args[3] in tInt + tUint + tLong + tULng:
         print >>file, "    %s = Integer.valueOf(fields[%d]);" % (args[1], idx)
       if args[3] in tBool:
         print >>file, "    %s = Boolean.parseBoolean(fields[%d]);" % (args[1], idx)
       if args[3] in tFlt:
         print >>file, "    %s = Float.valueOf(fields[%d]);" % (args[1], idx)
+      if args[3] in tDbl:
+        print >>file, "    %s = Double.valueOf(fields[%d]);" % (args[1], idx)
       idx += 1
     print >>file, "  }"
     print >>file
@@ -83,7 +83,7 @@ def genCompareFunction(file,className,fieldList):
       args = field.split()
       if args[3] in tText:
          print >>file, "that.%s.equals(this.%s)" % (args[1], args[1]),
-      if args[3] in tInt + tUint + tFlt + tBool:
+      if args[3] in tInt + tUint + tLong + tULng + tFlt + tDbl + tBool:
          print >>file, "that.%s == this.%s" % (args[1], args[1]),
       count += 1
     print >>file, ";"
@@ -127,10 +127,14 @@ def genDatamembers(file, className, fieldList):
         print >>file, "  public String    %s;" % args[1]
       if args[3] in tInt + tUint:
         print >>file, "  public int       %s;" % args[1]
+      if args[3] in tLong + tULng:
+        print >>file, "  public long      %s;" % args[1]
       if args[3] in tBool:
         print >>file, "  public boolean   %s;" % args[1]
       if args[3] in tFlt:
         print >>file, "  public float     %s;" % args[1]
+      if args[3] in tDbl:
+        print >>file, "  public double    %s;" % args[1]
     print >>file, "}"
     print >>file
 
@@ -582,6 +586,7 @@ def genCRtoJavaFunction(file, tablename,fieldList):
       if (args[3] not in tText):
          print >>file, '  ss << aRec.%s;' % args[1]
          print >>file, '  string c%s = ss.str();' % args[1]
+         print >>file, '  ss.seekp(0);'
     print >>file
     print >>file, '  string arrayList = string("{") +',
     count = 0
@@ -613,23 +618,42 @@ def J2Sstring(tablename, fieldname):
 
 def J2Sinteger(tablename, fieldname):
     print >>file, "  // %s" % fieldname
-    print >>file, "  integer %sInt  = (integer)env->GetIntegerField(jRec, fid_j%s_%s);" % (fieldname, tablename, fieldname)
+    print >>file, "  int %sInt  = env->GetIntField(jRec, fid_j%s_%s);" % (fieldname, tablename, fieldname)
     print >>file, "  ss << %sInt;" % fieldname
     print >>file, "  string %s = ss.str();" % fieldname
+    print >>file, "  ss.seekp(0);"
+    print >>file
+
+def J2Slong(tablename, fieldname):
+    print >>file, "  // %s" % fieldname
+    print >>file, "  long %sLong  = env->GetLongField(jRec, fid_j%s_%s);" % (fieldname, tablename, fieldname)
+    print >>file, "  ss << %sLong;" % fieldname
+    print >>file, "  string %s = ss.str();" % fieldname
+    print >>file, "  ss.seekp(0);"
     print >>file
 
 def J2Sboolean(tablename, fieldname):
     print >>file, "  // %s" % fieldname
-    print >>file, "  boolean %sBool  = (boolean)env->GetBooleanField(jRec, fid_j%s_%s);" % (fieldname, tablename, fieldname)
+    print >>file, "  bool %sBool  = env->GetBooleanField(jRec, fid_j%s_%s);" % (fieldname, tablename, fieldname)
     print >>file, "  ss << %sBool;" % fieldname
     print >>file, "  string %s = ss.str();" % fieldname
+    print >>file, "  ss.seekp(0);"
     print >>file
 
 def J2Sfloat(tablename, fieldname):
     print >>file, "  // %s" % fieldname
-    print >>file, "  float %sFlt  = (float)env->GetBooleanField(jRec, fid_j%s_%s);" % (fieldname, tablename, fieldname)
+    print >>file, "  float %sFlt  = env->GetFloatField(jRec, fid_j%s_%s);" % (fieldname, tablename, fieldname)
     print >>file, "  ss << %sFlt;" % fieldname
     print >>file, "  string %s = ss.str();" % fieldname
+    print >>file, "  ss.seekp(0);"
+    print >>file
+
+def J2Sdouble(tablename, fieldname):
+    print >>file, "  // %s" % fieldname
+    print >>file, "  double %sDbl  = env->GetDoubleField(jRec, fid_j%s_%s);" % (fieldname, tablename, fieldname)
+    print >>file, "  ss << %sDbl;" % fieldname
+    print >>file, "  string %s = ss.str();" % fieldname
+    print >>file, "  ss.seekp(0);"
     print >>file
 
 def genCRtoCppFunction(file, tablename,fieldList):
@@ -646,10 +670,14 @@ def genCRtoCppFunction(file, tablename,fieldList):
         print >>file, '  jfieldID fid_j%s_%s = env->GetFieldID(class_j%s, "%s", "Ljava/lang/String;");' % (tablename, args[1], tablename, args[1])
       if args[3] in tInt + tUint:
         print >>file, '  jfieldID fid_j%s_%s = env->GetFieldID(class_j%s, "%s", "I");' % (tablename, args[1], tablename, args[1])
+      if args[3] in tLong + tULng:
+        print >>file, '  jfieldID fid_j%s_%s = env->GetFieldID(class_j%s, "%s", "J");' % (tablename, args[1], tablename, args[1])
       if args[3] in tBool:
-        print >>file, '  jfieldID fid_j%s_%s = env->GetFieldID(class_j%s, "%s", "B");' % (tablename, args[1], tablename, args[1])
+        print >>file, '  jfieldID fid_j%s_%s = env->GetFieldID(class_j%s, "%s", "Z");' % (tablename, args[1], tablename, args[1])
       if args[3] in tFlt:
         print >>file, '  jfieldID fid_j%s_%s = env->GetFieldID(class_j%s, "%s", "F");' % (tablename, args[1], tablename, args[1])
+      if args[3] in tDbl:
+        print >>file, '  jfieldID fid_j%s_%s = env->GetFieldID(class_j%s, "%s", "D");' % (tablename, args[1], tablename, args[1])
     print >>file
     print >>file, "  // nodeName"
     print >>file, "  jstring nodeNamestr  = (jstring)env->CallObjectMethod(jRec, mid_j%s_nodeName);" % tablename
@@ -665,10 +693,14 @@ def genCRtoCppFunction(file, tablename,fieldList):
         J2Sstring(tablename, args[1])
       if args[3] in tInt + tUint:
         J2Sinteger(tablename, args[1])
+      if args[3] in tLong + tULng:
+        J2Slong(tablename, args[1])
       if args[3] in tBool:
         J2Sboolean(tablename, args[1])
       if args[3] in tFlt:
         J2Sfloat(tablename, args[1])
+      if args[3] in tDbl:
+        J2Sdouble(tablename, args[1])
     print >>file
     print >>file, '  string arrayList = string("{") +',
     count = 0
@@ -710,7 +742,7 @@ def genFieldValuesFunction(file,className,fieldList):
          print >>file, "    oss",
       if count != 0:
          print >>file, '<< ","',
-      if args[3] in tText + tInt + tUint + tFlt:
+      if args[3] in tText + tInt + tUint + tLong + tULng + tFlt + tDbl:
          print >>file, '<< %s' % args[1],
       if args[3] in tBool:
          print >>file, '<< (%s ? "true" : "false")' % args[1],
@@ -731,7 +763,7 @@ def genFieldValuesFunction(file,className,fieldList):
       args = field.split()
       if args[3] in tText:
          print >>file, '  case %d: return(%s); break;' % (count, args[1])
-      if args[3] in tInt + tUint + tFlt:
+      if args[3] in tInt + tUint + tLong + tULng + tFlt + tDbl:
          print >>file, '  case %d: return(toString(%s)); break;' % (count, args[1])
       if args[3] in tBool:
          print >>file, '  case %d: return(%s ? "true" : "false"); break;' % (count, args[1])
@@ -771,9 +803,13 @@ def fieldNameList(fieldlist):
 # MAIN
 tText = ["text", "vtext", "ptext" ]
 tBool = ["bool", "vbool", "pbool" ]
-tInt  = ["int",  "vint",  "pint",  "long", "vlong", "plong" ]
-tUint = ["uint", "vuint", "puint", "ulng", "vulng", "pulng" ]
-tFlt  = ["flt",  "vflt",  "pflt",  "dbl",  "vdbl",  "pdbl" ]
+tInt  = ["int",  "vint",  "pint"]
+tUint = ["uint", "vuint", "puint"]
+tLong = ["long", "vlong", "plong" ]
+tULng = ["ulng", "vulng", "pulng" ]
+tDate = ["time", "date", "vtime", "vdate", "ptime", "pdate"]
+tFlt  = ["flt",  "vflt",  "pflt"]
+tDbl  = ["dbl",  "vdbl",  "pdbl" ]
 
 compfiles = [cf for cf in os.listdir('.') if cf.endswith(".comp")]
 DBfiles = grep("^table.",compfiles)

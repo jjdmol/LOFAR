@@ -17,7 +17,7 @@ def genHeader(file,className,fieldList):
     print >>file, "#include <Common/StringUtil.h>"
     print >>file, "#include <Common/StreamUtil.h>"
     print >>file, "#include <OTDB/OTDBconnection.h>"
-    print >>file, '#include "%s.h"' % className
+    print >>file, '#include <%s.h>' % className
     print >>file
     print >>file, "using namespace pqxx;"
     print >>file, "using namespace LOFAR;"
@@ -48,13 +48,13 @@ def genData(file, className, fieldList):
       args = field.split()
       if args[3] in tText:
         print >>file, "  for(int i=0; i<15;i++) { field[i]=charset[rand()%%nrChars]; }; result += field; // %s" % args[1]
-      if args[3] in tInt:
+      if args[3] in tInt + tLong:
         print >>file, "  result += toString(rand()%%2 ? rand() : -rand()); // %s" % args[1]
-      if args[3] in tUint:
+      if args[3] in tUint + tULng:
         print >>file, "  result += toString(rand()); // %s" % args[1]
       if args[3] in tBool:
         print >>file, '  result += (rand()%%2 ? "true" : "false"); // %s' % args[1]
-      if args[3] in tFlt:
+      if args[3] in tFlt + tDbl:
         print >>file, "  result += toString(rand() %% 100000 * 3.1415926); // %s" % args[1]
       idx += 1
       if idx < len(fieldList):
@@ -86,10 +86,16 @@ def genConstructor(file, className, fieldList):
         print >>file, "  ASSERT(object2.%s == StringToInt32(fields[%d]));" % (args[1], idx)
       if args[3] in tUint:
         print >>file, "  ASSERT(object2.%s == StringToUint32(fields[%d]));" % (args[1], idx)
+      if args[3] in tLong:
+        print >>file, "  ASSERT(object2.%s == StringToInt64(fields[%d]));" % (args[1], idx)
+      if args[3] in tULng:
+        print >>file, "  ASSERT(object2.%s == StringToUint64(fields[%d]));" % (args[1], idx)
       if args[3] in tBool:
         print >>file, "  ASSERT(object2.%s == StringToBool(fields[%d]));" % (args[1], idx)
       if args[3] in tFlt:
         print >>file, "  ASSERT(object2.%s == StringToFloat(fields[%d]));" % (args[1], idx)
+      if args[3] in tDbl:
+        print >>file, "  ASSERT(object2.%s == StringToDouble(fields[%d]));" % (args[1], idx)
       idx += 1
     print >>file
 
@@ -143,15 +149,20 @@ def genGetRecords(file,className,fieldList):
     print >>file, "  ASSERT(smallContainer.size() == 4);"
     print >>file
     print >>file, "  // getFieldOnRecordList(connection, fieldname, vector<RecordID>)"
-    fieldname = fieldList[5].split()[1]
+    fieldname = fieldList[len(fieldList)-2].split()[1]
+    fieldtype = fieldList[len(fieldList)-2].split()[3]
+    if fieldtype in tText:
+        converter = ""
+    else:
+        converter = "toString"
     print >>file, '  cout << "Testing getFieldOnRecordList(connection, \'%s\', vector<recordID>)" << endl;' % fieldname
     print >>file, "  fields.clear();"
     print >>file, '  fields = %s::getFieldOnRecordList(otdbConn, "%s", recordIDs);' % (className, fieldname)
     print >>file, "  ASSERT(fields.size() == 4);"
-    print >>file, '  ASSERTSTR(fields[0] == toString(container[4].%s), fields[0] << " ? " << toString(container[4].%s));' % (fieldname, fieldname)
-    print >>file, '  ASSERTSTR(fields[1] == toString(container[14].%s), fields[1] << " ? " << toString(container[14].%s));' % (fieldname, fieldname)
-    print >>file, '  ASSERTSTR(fields[2] == toString(container[24].%s), fields[2] << " ? " << toString(container[24].%s));' % (fieldname, fieldname)
-    print >>file, '  ASSERTSTR(fields[3] == toString(container[17].%s), fields[3] << " ? " << toString(container[17].%s));' % (fieldname, fieldname)
+    print >>file, '  ASSERTSTR(fields[0] == %s(container[4].%s), fields[0] << " ? " << %s(container[4].%s));' % (converter, fieldname, converter, fieldname)
+    print >>file, '  ASSERTSTR(fields[1] == %s(container[14].%s), fields[1] << " ? " << %s(container[14].%s));' % (converter, fieldname, converter, fieldname)
+    print >>file, '  ASSERTSTR(fields[2] == %s(container[24].%s), fields[2] << " ? " << %s(container[24].%s));' % (converter, fieldname, converter, fieldname)
+    print >>file, '  ASSERTSTR(fields[3] == %s(container[17].%s), fields[3] << " ? " << %s(container[17].%s));' % (converter, fieldname, converter, fieldname)
     print >>file
 
 
@@ -184,22 +195,22 @@ def genSaveRecords(file,className):
 def genSaveField(file,className,fieldList):
     print >>file, "  // saveField(connection, fieldIndex)"
     print >>file, '  cout << "Testing saveField(connection, fieldIndex)" << endl;'
-    print >>file, '  string    newValue;'
     args = fieldList[1].split()
     if args[3] in tText:
+      print >>file, '  string    newValue;'
       print >>file, "  newValue.resize(15);"
       print >>file, '  string charset("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789");'
       print >>file, "  int    nrChars(charset.length());"
       print >>file, "  for(int i=0; i<15; i++) { newValue[i]=charset[rand()%nrChars]; };"
-    if args[3] in tInt:
-      print >>file, "  newValue = toString(rand()%2 ? rand() : -rand());"
-    if args[3] in tUint:
-      print >>file, "  newValue = toString(rand());"
+      print >>file, "  container[13].%s = newValue;" % args[1]
+    if args[3] in tInt + tLong:
+      print >>file, "  container[13].%s = (rand()%%2 ? rand() : -rand());" % args[1]
+    if args[3] in tUint + tULng:
+      print >>file, "  container[13].%s = rand();" % args[1]
     if args[3] in tBool:
-      print >>file, '  newValue = (rand()%2 ? "true" : "false");'
-    if args[3] in tFlt:
-      print >>file, "  newValue = toString(rand() % 100000 * 3.1415926);"
-    print >>file, "  container[13].%s = newValue;" % args[1]
+      print >>file, '  container[13].%s = (rand()%%2 ? "true" : "false");' % args[1]
+    if args[3] in tFlt + tDbl:
+      print >>file, "  container[13].%s = (rand() % 100000 * 3.1415926);" % args[1]
     print >>file, "  ASSERT(container[13].saveField(otdbConn, 1));"
     print >>file, "  %s record13(%s::getRecord(otdbConn, container[13].recordID()));" % (className, className)
     print >>file, "  ASSERT(container[13] == record13);"
@@ -217,13 +228,13 @@ def genSaveFields(file,className,fieldList):
       print >>file, '  string charset("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789");'
       print >>file, "  int    nrChars(charset.length());"
       print >>file, "  for(int c=0; c<15; c++) { iter->%s[c]=charset[rand()%%nrChars]; };" % args[1]
-    if args[3] in tInt:
+    if args[3] in tInt + tLong:
       print >>file, "  iter->%s = toString(rand()%2 ? rand() : -rand());" % args[1]
-    if args[3] in tUint:
+    if args[3] in tUint + tULng:
       print >>file, "  iter->%s = toString(rand());" % args[1]
     if args[3] in tBool:
-      print >>file, '  iter->%s = (rand()%2 ? "true" : "false");' % args[1]
-    if args[3] in tFlt:
+      print >>file, '  iter->%s = (rand()%%2 ? "true" : "false");' % args[1]
+    if args[3] in tFlt + tDbl:
       print >>file, "  iter->%s = toString(rand() % 100000 * 3.1415926);" % args[1]
     print >>file, '    iter++;'
     print >>file, '  }'
@@ -280,9 +291,13 @@ def fieldNameList(fieldlist):
 # MAIN
 tText = ["text", "vtext", "ptext" ]
 tBool = ["bool", "vbool", "pbool" ]
-tInt  = ["int",  "vint",  "pint",  "long", "vlong", "plong" ]
-tUint = ["uint", "vuint", "puint", "ulng", "vulng", "pulng" ]
-tFlt  = ["flt",  "vflt",  "pflt",  "dbl",  "vdbl",  "pdbl" ]
+tInt  = ["int",  "vint",  "pint"]
+tUint = ["uint", "vuint", "puint"]
+tLong = ["long", "vlong", "plong" ]
+tULng = ["ulng", "vulng", "pulng" ]
+tDate = ["time", "date", "vtime", "vdate", "ptime", "pdate"]
+tFlt  = ["flt",  "vflt",  "pflt"]
+tDbl  = ["dbl",  "vdbl",  "pdbl" ]
 
 compfiles = [cf for cf in os.listdir('.') if cf.endswith(".comp")]
 DBfiles = grep("^table.",compfiles)

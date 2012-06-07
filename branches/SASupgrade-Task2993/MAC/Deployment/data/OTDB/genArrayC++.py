@@ -45,10 +45,16 @@ def genConstructor(file, className, fieldList):
         print >>file, "  %s = StringToInt32(fields[%d]);" % (args[1], idx)
       if args[3] in tUint:
         print >>file, "  %s = StringToUint32(fields[%d]);" % (args[1], idx)
+      if args[3] in tLong:
+        print >>file, "  %s = StringToInt64(fields[%d]);" % (args[1], idx)
+      if args[3] in tULng:
+        print >>file, "  %s = StringToUint64(fields[%d]);" % (args[1], idx)
       if args[3] in tBool:
         print >>file, "  %s = StringToBool(fields[%d]);" % (args[1], idx)
       if args[3] in tFlt:
         print >>file, "  %s = StringToFloat(fields[%d]);" % (args[1], idx)
+      if args[3] in tDbl:
+        print >>file, "  %s = StringToDouble(fields[%d]);" % (args[1], idx)
       idx += 1
     print >>file, "}"
     print >>file
@@ -57,11 +63,11 @@ def genConstructor(file, className, fieldList):
     idx = 0
     for field in fieldList:
       args = field.split()
-      if args[3] in tInt + tUint:
+      if args[3] in tInt + tUint + tLong + tULng:
         print >>file, "  %s = 0;" % args[1]
       if args[3] in tBool:
         print >>file, "  %s = false;" % args[1]
-      if args[3] in tFlt:
+      if args[3] in tFlt + tDbl:
         print >>file, "  %s = 0.0;" % args[1]
       idx += 1
     print >>file, "}"
@@ -303,7 +309,7 @@ def genFieldValuesFunction(file,className,fieldList):
          print >>file, "    oss",
       if count != 0:
          print >>file, '<< ","',
-      if args[3] in tText + tInt + tUint + tFlt:
+      if args[3] in tText + tInt + tUint + tLong + tULng + tFlt + tDbl:
          print >>file, '<< %s' % args[1],
       if args[3] in tBool:
          print >>file, '<< (%s ? "true" : "false")' % args[1],
@@ -324,7 +330,7 @@ def genFieldValuesFunction(file,className,fieldList):
       args = field.split()
       if args[3] in tText:
          print >>file, '  case %d: return(%s); break;' % (count, args[1])
-      if args[3] in tInt + tUint + tFlt:
+      if args[3] in tInt + tUint + tLong + tULng + tFlt + tDbl:
          print >>file, '  case %d: return(toString(%s)); break;' % (count, args[1])
       if args[3] in tBool:
          print >>file, '  case %d: return(%s ? "true" : "false"); break;' % (count, args[1])
@@ -346,7 +352,7 @@ def genFieldDictFunction(file,className,fieldList):
          print >>file, "    oss",
       if count != 0:
          print >>file, '<< ","',
-      if args[3] in tText + tInt + tUint + tFlt:
+      if args[3] in tText + tInt + tUint + tLong + tULng + tFlt + tDbl:
          print >>file, '<< "%s:" << %s' % (args[1], args[1]),
       if args[3] in tBool:
          print >>file, '<< "%s:" << (%s ? "true" : "false")' % (args[1], args[1]),
@@ -474,10 +480,16 @@ def genHeaderFile(file,className,fieldList):
         print >>file, "  int32     %s;" % args[1]
       if args[3] in tUint:
         print >>file, "  uint32    %s;" % args[1]
+      if args[3] in tLong:
+        print >>file, "  int64     %s;" % args[1]
+      if args[3] in tULng:
+        print >>file, "  uint64    %s;" % args[1]
       if args[3] in tBool:
         print >>file, "  bool      %s;" % args[1]
       if args[3] in tFlt:
         print >>file, "  float     %s;" % args[1]
+      if args[3] in tDbl:
+        print >>file, "  double    %s;" % args[1]
     print >>file, "};"
     print >>file
     print >>file, "// operator<<"
@@ -500,9 +512,13 @@ def fieldNameList(fieldlist):
 # MAIN
 tText = ["text", "vtext", "ptext" ]
 tBool = ["bool", "vbool", "pbool" ]
-tInt  = ["int",  "vint",  "pint",  "long", "vlong", "plong" ]
-tUint = ["uint", "vuint", "puint", "ulng", "vulng", "pulng" ]
-tFlt  = ["flt",  "vflt",  "pflt",  "dbl",  "vdbl",  "pdbl" ]
+tInt  = ["int",  "vint",  "pint"]
+tUint = ["uint", "vuint", "puint"]
+tLong = ["long", "vlong", "plong" ]
+tULng = ["ulng", "vulng", "pulng" ]
+tDate = ["time", "date", "vtime", "vdate", "ptime", "pdate"]
+tFlt  = ["flt",  "vflt",  "pflt"]
+tDbl  = ["dbl",  "vdbl",  "pdbl" ]
 
 compfiles = [cf for cf in os.listdir('.') if cf.endswith(".comp")]
 DBfiles = grep("^table.",compfiles)

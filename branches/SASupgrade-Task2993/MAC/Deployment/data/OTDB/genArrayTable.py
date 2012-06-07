@@ -288,10 +288,16 @@ def fieldAndType(args):
       return args[1].ljust(30)+"INT4        "
     if args[3] in tUint:
       return args[1].ljust(30)+"INT4        "
+    if args[3] in tLong:
+      return args[1].ljust(30)+"BIGINT      "
+    if args[3] in tULng:
+      return args[1].ljust(30)+"BIGINT      "
     if args[3] in tFlt:
       return args[1].ljust(30)+"FLOAT       "
     if args[3] in tBool:
       return args[1].ljust(30)+"BOOLEAN     "
+    if args[3] in tDate:
+      return args[1].ljust(30)+"TIMESTAMP   "
     if args[3] in tText:
       return args[1].ljust(30)+"VARCHAR     "
     return args[1].ljust(30)+"???         "
@@ -335,8 +341,11 @@ def checkTreeExistance(file, treeIDIdx):
 # MAIN
 tText = ["text", "vtext", "ptext" ]
 tBool = ["bool", "vbool", "pbool" ]
-tInt  = ["int",  "vint",  "pint",  "long", "vlong", "plong" ]
-tUint = ["uint", "vuint", "puint", "ulng", "vulng", "pulng" ]
+tInt  = ["int",  "vint",  "pint"]
+tUint = ["uint", "vuint", "puint"]
+tLong = ["long", "vlong", "plong" ]
+tULng = ["ulng", "vulng", "pulng" ]
+tDate = ["time", "date", "vtime", "vdate", "ptime", "pdate"]
 tFlt  = ["flt",  "vflt",  "pflt",  "dbl",  "vdbl",  "pdbl" ]
 
 compfiles = [cf for cf in os.listdir('.') if cf.endswith(".comp")]
