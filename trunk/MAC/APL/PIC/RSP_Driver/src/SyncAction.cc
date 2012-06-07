@@ -151,7 +151,7 @@ GCFEvent::TResult SyncAction::waitack_state(GCFEvent& event, GCFPortInterface& p
 
     case F_EXIT:
       break;
-
+/*
     case EPA_READACK_ERROR:
     case EPA_WRITEACK_ERROR:
       LOG_ERROR("Read/write error during SyncAction. Aborting sync action.");
@@ -160,7 +160,7 @@ GCFEvent::TResult SyncAction::waitack_state(GCFEvent& event, GCFPortInterface& p
       setCompleted(true); // done with this statemachine
       TRAN(SyncAction::idle_state);
       break;
-      
+*/      
     default:
       status = handleack(event, port);
       

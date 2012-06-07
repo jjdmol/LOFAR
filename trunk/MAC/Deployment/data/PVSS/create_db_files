@@ -876,6 +876,7 @@ create_dpt_file()
 			oldnode=""
 			cleanlist ${dpt}.dpdef | awk -v elemNr=$count ' 
 				BEGIN {  
+					PVSStype["blob"]	 = "46"
 					PVSStype["string"]	 = "25"
 					PVSStype["bool"]	 = "23"
 					PVSStype["uint"]	 = "20"

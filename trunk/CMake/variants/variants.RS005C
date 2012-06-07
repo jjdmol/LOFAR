@@ -11,7 +11,7 @@ set(CPPLAPACK_ROOT_DIR /usr)
 set(LOG4CPLUS_ROOT_DIR /usr/local/log4cplus)
 
 # Path to PVSS
-#set(PVSS_ROOT_DIR /opt/pvss/pvss2_v3.7)  set via /opt/pvss/pvssproj/VersInfo.mk
+set(PVSS_PROJ_DIR /opt/pvss/pvssproj)
 set(PVSS_DEFINITIONS "-Wno-deprecated")
 
 # Path to Matlab

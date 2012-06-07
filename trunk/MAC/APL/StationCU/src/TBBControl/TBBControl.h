@@ -39,6 +39,10 @@
 #include <GCF/TM/GCF_Task.h>
 #include <MACIO/GCF_Event.h>
 #include <GCF/RTDB/RTDB_PropertySet.h>
+#include <GCF/RTDB/GCF_RTDBPort.h>
+
+#include <APL/CR_Protocol/CRstopRequest.h>
+#include <APL/CR_Protocol/CRreadRequest.h>
 
 //# local includes
 #include <APL/APLCommon/ParentControl.h>
@@ -52,7 +56,8 @@
 
 
 namespace LOFAR {
-	namespace StationCU {
+    using namespace CR_Protocol;
+    namespace StationCU {
 
 using   MACIO::GCFEvent;
 using   GCF::TM::GCFTimerPort;
@@ -61,6 +66,7 @@ using   GCF::TM::GCFPort;
 using   GCF::TM::GCFPortInterface;
 using   GCF::TM::GCFTask;
 using   GCF::RTDB::RTDBPropertySet;
+using   GCF::RTDB::GCFRTDBPort;
 using   APLCommon::ParentControl;
 using   VHECR::TBBReadCmd;
 using   VHECR::TBBTrigger;
@@ -68,104 +74,203 @@ using   VHECR::VHECRTask;
 
 typedef bitset<MAX_RCUS> RCUset_t;
 
+// RCU information
+class RcuInfo
+{
+public:
+    RcuInfo();
+    ~RcuInfo(){};
+    int              rcuNr;
+    int              boardNr;
+    char             rcuState;    // state 'I', 'A', 'R', 'S' or 'E'
+    uint16           triggerMode;
+    uint16           operatingMode;
+    double           bufferTime;  // recording time of buffer
+private:
+};
+
+// Board information
+class BoardInfo
+{
+public:
+    BoardInfo();
+    ~BoardInfo(){};
+    int  boardNr;
+    bool cepActive; // true if cep is sending data
+    int  cepDelay;  // last set cep delay
+private:
+};
+
+class StopRequest
+{
+public:
+    StopRequest();
+    ~StopRequest(){};
+    RCUset_t rcuSet;
+    RTC::NsTimestamp stopTime;
+private:
+};
+
+class ReadRequest
+{
+public:
+    ReadRequest();
+    ~ReadRequest(){};
+    int    rcuNr;
+    RTC::NsTimestamp readTime;
+    RTC::NsTimestamp timeBefore;
+    RTC::NsTimestamp timeAfter;
+    int    cepDelay;
+    int    cepDatapaths;
+    bool   readActive;
+private:
+};
+
+
 class TBBControl : public GCFTask
 {
 public:
-	explicit TBBControl(const string& cntlrName);
-	~TBBControl();
+    explicit TBBControl(const string& cntlrName);
+    ~TBBControl();
 
-	// used by externel program
-	void readTBBdata(vector<TBBReadCmd> readCmd);
+    // used by externel program
+    void readTBBdata(vector<TBBReadCmd> readCmd);
 
-	// Interrupthandler for switching to finishingstate when exiting the program.
-	static void sigintHandler (int signum);
-	void finish();
+    // Interrupthandler for switching to finishingstate when exiting the program.
+    static void sigintHandler (int signum);
+    void finish();
 
 private:
-	// During the initial state all connections with the other programs are made.
-	GCFEvent::TResult initial_state (GCFEvent& e, GCFPortInterface& p);
-	// connected to PVSS, waiting for CLAIM event
-	GCFEvent::TResult started_state (GCFEvent& e, GCFPortInterface& p);
-	// connected to TBBDriver, waiting for PREPARE event
-	GCFEvent::TResult claimed_state (GCFEvent& e, GCFPortInterface& p);
-
-	// set boards in right mode, if done got to mode state
-	GCFEvent::TResult doRSPtbbMode(GCFEvent& event, GCFPortInterface& port);
-	// set storage for boards, if done got to alloc state
-	GCFEvent::TResult doTBBstorage (GCFEvent& e, GCFPortInterface& p);
-	// allocate memory for selected rcus, if done got to trigsetup state
-	GCFEvent::TResult doTBBalloc (GCFEvent& e, GCFPortInterface& p);
-	// setup trigger system for selected rcus, if done got to trigcoef state
-	GCFEvent::TResult doTBBtrigsetup (GCFEvent& e, GCFPortInterface& p);
-	// setup filter coeffcients for selected rcus, if done got to record state
-	GCFEvent::TResult doTBBtrigcoef (GCFEvent& e, GCFPortInterface& p);
-	// start recording on selected rcus, if done got to subscribe state
-	GCFEvent::TResult doTBBrecord (GCFEvent& e, GCFPortInterface& p);
-	// subscribe on tbb messages, if done got to release state
-	GCFEvent::TResult doTBBsubscribe (GCFEvent& e, GCFPortInterface& p);
-	// release trigger system, if done got to prepared state
-	GCFEvent::TResult doTBBrelease (GCFEvent& e, GCFPortInterface& p);
-
-	// TBB boards are setup, waiting for RESUME event
-	GCFEvent::TResult prepared_state  (GCFEvent& e, GCFPortInterface& p);
-	// Normal control mode, handling of trigger messages is active
-	GCFEvent::TResult active_state  (GCFEvent& e, GCFPortInterface& p);
-	// send data to CEP for selected rcus
-	GCFEvent::TResult doTBBread  (GCFEvent& e, GCFPortInterface& p);
-
-	// unsubscribe on tbb mesages, if done go to free state
-	GCFEvent::TResult doTBBunsubscribe (GCFEvent& e, GCFPortInterface& p);
-	// free memory for selected rcus, if done got to quiting state
-	GCFEvent::TResult doTBBfree (GCFEvent& e, GCFPortInterface& p);
-
-	// released state, unsubscribed and freed tbb memory 
-	GCFEvent::TResult released_state(GCFEvent& event, GCFPortInterface& port); 
-	// Quiting, shutdown connections, send FINISH and quit 
-	GCFEvent::TResult quiting_state (GCFEvent& e, GCFPortInterface& p);
+    // During the initial state all connections with the other programs are made.
+    GCFEvent::TResult initial_state (GCFEvent& e, GCFPortInterface& p);
+    // connected to PVSS, waiting for CLAIM event
+    GCFEvent::TResult started_state (GCFEvent& e, GCFPortInterface& p);
+    // connected to TBBDriver, waiting for PREPARE event
+    GCFEvent::TResult claimed_state (GCFEvent& e, GCFPortInterface& p);
+    // released state, unsubscribed and freed tbb memory 
+    GCFEvent::TResult released_state(GCFEvent& event, GCFPortInterface& port); 
+    // TBB boards are setup, waiting for RESUME event
+    GCFEvent::TResult prepared_state  (GCFEvent& e, GCFPortInterface& p);
+    // Normal control mode, handling of trigger messages is active
+    GCFEvent::TResult active_state  (GCFEvent& e, GCFPortInterface& p);
+    // Quiting, shutdown connections, send FINISH and quit 
+    GCFEvent::TResult quiting_state (GCFEvent& e, GCFPortInterface& p);
 
 
+    // set boards in right  observation mode (transient or subbands
+    void sendRspModeCmd();
+    int handleRspModeAck(GCFEvent& event);
+    
+    // set storage node for boards
+    void sendStorageCmd();
+    int handleStorageAck(GCFEvent& event);
+    
+    // allocate memory for selected rcus
+    void sendAllocCmd();
+    int handleAllocAck(GCFEvent& event);
+    
+    // allocate memory for selected rcus
+    void sendRcuInfoCmd();
+    int handleRcuInfoAck(GCFEvent& event);
+    
+    // setup trigger system for selected rcus
+    void sendTrigSetupCmd();
+    int handleTrigSetupAck(GCFEvent& event);
+    
+    // setup filter coeffcients for selected rcus
+    void sendTrigCoefCmd();
+    int handleTrigCoefAck(GCFEvent& event);
+    
+    // start recording on selected rcus
+    void sendRecordCmd(RCUset_t RCUset);
+    int handleRecordAck(GCFEvent& event);
+    
+    // stop recording on selected rcus
+    void sendStopCmd();
+    int handleStopAck(GCFEvent& event);
+    
+    // get Cep status
+    void sendCepStatusCmd();
+    int handleCepStatusAck(GCFEvent& event);
+    
+    // send delay setting for CEP port
+    void sendCepDelayCmd();
+    int handleCepDelayAck(GCFEvent& event);
+    
+    // stop sending on CEP port
+    void sendStopCepCmd();
+    int handleStopCepAck(GCFEvent& event);
+    
+    // subscribe on tbb messages
+    void sendSubscribeCmd();
+    int handleSubscribeAck(GCFEvent& event);
+    
+    // release trigger system for selected rcus
+    void sendReleaseCmd(RCUset_t RCUset);
+    int handleReleaseAck(GCFEvent& event);
+    
+    // send data to CEP for selected rcu
+    void sendReadCmd(ReadRequest read);
+    int handleReadAck(GCFEvent& event);
+    
+    // unsubscribe tbb mesages
+    void sendUnsubscribeCmd();
+    int handleUnsubscribeAck(GCFEvent& event);
+    
+    // free memory for selected rcus
+    void sendFreeCmd();
+    int handleFreeAck(GCFEvent& event);
 
-	// avoid defaultconstruction and copying
-	TBBControl();
-	TBBControl(const TBBControl&);
-	TBBControl& operator=(const TBBControl&);
+   void readCmdToRequests(vector<TBBReadCmd> read);
 
-	void    setState    (CTState::CTstateNr     newState);
+    // avoid defaultconstruction and copying
+    TBBControl();
+    TBBControl(const TBBControl&);
+    TBBControl& operator=(const TBBControl&);
 
-	GCFEvent::TResult   _triggerEventHandler(GCFEvent& event);
-	GCFEvent::TResult   _triggerReleaseAckEventHandler(GCFEvent& event);
-	GCFEvent::TResult   _defaultEventHandler(GCFEvent&  event, GCFPortInterface&    port);
+    void    setState    (CTState::CTstateNr     newState);
+    
+    RCUset_t strToBitset(string str);
+    
+    GCFEvent::TResult   handleTriggerEvent(GCFEvent& event);
+    //GCFEvent::TResult   triggerReleaseAckEventHandler(GCFEvent& event);
+    GCFEvent::TResult   _defaultEventHandler(GCFEvent& event, GCFPortInterface& port);
 
     bool isBoardUsed(int board);
     
-	ParameterSet*       itsParameterSet;
-	RTDBPropertySet*    itsPropertySet;
-	bool                itsPropertySetInitialized;
+    ParameterSet*       itsParameterSet;
+    RTDBPropertySet*    itsPropertySet;
+    bool                itsPropertySetInitialized;
     int                 itsNrTBBs;
     int                 itsNrRCUs;
+    int                 itsMaxCepDatapaths;
+    int                 itsActiveCepDatapaths;
+    int                 itsCepDelay;  // 5 uSec/cnt
+    bool                itsAutoRecord;
+   
+    // pointer to parent control task
+    ParentControl*      itsParentControl;
+    GCFITCPort*         itsParentPort;
 
-	// pointer to parent control task
-	ParentControl*      itsParentControl;
-	GCFITCPort*         itsParentPort;
+    GCFTimerPort*       itsTimerPort;
+    GCFTimerPort*       itsVHECRtimer;
+    GCFTimerPort*       itsStopTimer;
+    GCFTimerPort*       itsCepTimer;
+    GCFRTDBPort*        itsTriggerPort;
+    GCFTCPPort*         itsTBBDriver;
+    GCFTCPPort*         itsRSPDriver;
 
-	GCFTimerPort*       itsTimerPort;
-	GCFTimerPort*       itsVHECRtimer;
-
-	GCFTCPPort*         itsTBBDriver;
-	GCFTCPPort*         itsRSPDriver;
-
-	CTState::CTstateNr  itsState;
-	VHECRTask*          itsVHECRTask;
-	// ParameterSet variables
-	string              itsTreePrefix;
-	//uint32                itsInstanceNr;
-	TBBObservation*     itsObs;
-	vector<TBBReadCmd>  itsStopCommandVector;
-	vector<TBBReadCmd>  itsReadCommandVector;
-	uint16              itsTriggerMode[192];
-	RCUset_t            itsRCUs;
+    CTState::CTstateNr  itsState;
+    VHECRTask*          itsVHECRTask;
+    // ParameterSet variables
+    string              itsTreePrefix;
+    TBBObservation*     itsObs;
+    vector<RcuInfo>     itsRcuInfo;
+    vector<BoardInfo>   itsBoardInfo;
+    vector<StopRequest> itsStopRequests;
+    vector<ReadRequest> itsReadRequests;
 };
 
-	};//StationCU
+    };//StationCU
 };//LOFAR
 #endif

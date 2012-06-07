@@ -37,7 +37,7 @@ namespace LOFAR {
 
 static const uint16 BASEUDPPORT = 0x7BB0; // (=31664) start numbering src and dst UDP ports at this number
 static const uint16 TRANSIENT_FRAME_SIZE = 2140; // bytes, header(88) + payload(2048) + CRC(4)
-static const uint16 SUBBANDS_FRAME_SIZE = 2012;  // bytes, header(88) + payload(1920) + CRC(4)
+static const uint16 SUBBANDS_FRAME_SIZE = 2040;  // bytes, header(88) + payload(1948) + CRC(4)
 
 //TbbSettings *TS = TbbSettings::instance();
 
@@ -61,12 +61,12 @@ inline void string2mac(const char* macstring, uint32 mac[2])
 
 	sscanf(macstring, "%x:%x:%x:%x:%x:%x", &hx[5], &hx[4], &hx[3], &hx[2], &hx[1], &hx[0]);
 
-	mac[0]	= ((hx[0] & 0xFF))
+	mac[0]   = ((hx[0] & 0xFF))
 			+ ((hx[1] & 0xFF) << 8)
 			+ ((hx[2] & 0xFF) << 16)
 			+ ((hx[3] & 0xFF) << 24);
 
-	mac[1] 	= ((hx[4] & 0xFF))
+	mac[1]   = ((hx[4] & 0xFF))
 			+ ((hx[5] & 0xFF) << 8);
 
 	for ( int i = 0; i < 2; i++) {
@@ -81,7 +81,7 @@ inline uint32 string2ip(const char* ipstring)
 
 	sscanf(ipstring, "%d.%d.%d.%d", &hx[3], &hx[2], &hx[1], &hx[0]);
 	
-	result	= ((hx[0] & 0xFF))
+	result   = ((hx[0] & 0xFF))
 			+ ((hx[1] & 0xFF) << 8)
 			+ ((hx[2] & 0xFF) << 16)
 			+ ((hx[3] & 0xFF) << 24);
@@ -128,22 +128,22 @@ inline void setup_udpip_header(uint32 boardnr, uint32 mode, const char *srcip, c
 	if (mode == TBB_MODE_SUBBANDS) data_size = SUBBANDS_FRAME_SIZE;
 
 	// IP header values
-	uint32 version 			= 4; // IPv4
-	uint32 ihl 				= 5; // 5 x uint32, no options field
-	uint32 tos				= 0;
-	uint32 total_length		= ip_hdr_size + udp_hdr_size + data_size;
-	uint32 identification	= 0;
-	uint32 flags_offset		= 0x2 << 13;
-	uint32 ttl				= 128;
-	uint32 protocol			= 0x11;
-	uint32 header_checksum	= 0; // set to zero for checksum calculation
-	uint32 src_ip_address	= string2ip(srcip);
-	uint32 dst_ip_address	= string2ip(dstip);
+	uint32 version          = 4; // IPv4
+	uint32 ihl              = 5; // 5 x uint32, no options field
+	uint32 tos              = 0;
+	uint32 total_length     = ip_hdr_size + udp_hdr_size + data_size;
+	uint32 identification   = 0;
+	uint32 flags_offset     = 0x2 << 13;
+	uint32 ttl              = 128;
+	uint32 protocol         = 0x11;
+	uint32 header_checksum  = 0; // set to zero for checksum calculation
+	uint32 src_ip_address   = string2ip(srcip);
+	uint32 dst_ip_address   = string2ip(dstip);
 	// UDP header values
-	uint32 src_udp_port		= BASEUDPPORT + boardnr;
-	uint32 dst_udp_port		= BASEUDPPORT + boardnr;
-	uint32 length			= udp_hdr_size + data_size;
-	uint32 checksum			= 0; // disable checksum
+	uint32 src_udp_port     = BASEUDPPORT + boardnr;
+	uint32 dst_udp_port     = BASEUDPPORT + boardnr;
+	uint32 length           = udp_hdr_size + data_size;
+	uint32 checksum         = 0; // disable checksum
 
 	// put all ip settings on the correct place
 	iphdr[0] = ((version & 0xF) << 28)
