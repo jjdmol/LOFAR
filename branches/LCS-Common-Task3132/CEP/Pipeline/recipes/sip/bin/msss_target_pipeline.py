@@ -15,7 +15,6 @@ from lofarpipe.support.group_data import store_data_map, validate_data_maps
 from lofarpipe.support.group_data import tally_data_map
 from lofarpipe.support.utilities import create_directory
 from lofar.parameterset import parameterset
-from lofar.mstools import findFiles
 
 class msss_target_pipeline(control):
     """
@@ -37,6 +36,7 @@ class msss_target_pipeline(control):
         self.input_data = {}
         self.output_data = {}
         self.io_data_mask = []
+        self.parset_feedback_file = None
 
 
     def usage(self):
@@ -84,13 +84,13 @@ class msss_target_pipeline(control):
         # Update input- and output-data product specifications if needed.
         if not all(self.io_data_mask):
             self.logger.info("Updating input/output product specifications")
-            self.input_data['data'] = [f for (f,m) 
+            self.input_data['data'] = [f for (f, m) 
                 in zip(self.input_data['data'], self.io_data_mask) if m
             ]
-            self.input_data['instrument'] = [f for (f,m) 
+            self.input_data['instrument'] = [f for (f, m) 
                 in zip(self.input_data['instrument'], self.io_data_mask) if m
             ]
-            self.output_data['data'] = [f for (f,m) 
+            self.output_data['data'] = [f for (f, m) 
                 in zip(self.output_data['data'], self.io_data_mask) if m
             ]
 
@@ -127,11 +127,10 @@ class msss_target_pipeline(control):
                         self.input_data['instrument'], inst_mask
                     ) if not m
                 )
-            
             )
 
         # Set the IO data mask
-        self.io_data_mask = [x and y for (x,y) in zip(data_mask, inst_mask)]
+        self.io_data_mask = [x and y for (x, y) in zip(data_mask, inst_mask)]
 
 
     def go(self):
@@ -140,10 +139,11 @@ class msss_target_pipeline(control):
         jobname before calling the base-class's `go()` method.
         """
         try:
-            parset_file = self.inputs['args'][0]
+            parset_file = os.path.abspath(self.inputs['args'][0])
         except IndexError:
             return self.usage()
         self.parset.adoptFile(parset_file)
+        self.parset_feedback_file = parset_file + "_feedback"
         # Set job-name to basename of parset-file w/o extension, if it's not
         # set on the command-line with '-j' or '--job-name'
         if not self.inputs.has_key('job_name'):
@@ -191,7 +191,7 @@ class msss_target_pipeline(control):
         )
         
         if len(self.input_data['data']) == 0:
-            self.logger.warn("No input data files to process. Bailing out")
+            self.logger.warn("No input data files to process. Bailing out!")
             return 0
 
         self.logger.debug("Processing: %s" % 
@@ -249,6 +249,15 @@ class msss_target_pipeline(control):
             suffix='',
             parset=ndppp_parset
         )
+
+        # Create a parset-file containing the metadata for MAC/SAS
+        self.run_task("get_metadata", corrected_mapfile,
+            parset_file=self.parset_feedback_file,
+            parset_prefix=(
+                self.parset.getString('prefix') + 
+                self.parset.fullModuleName('DataProducts')
+            ),
+            product_type="Correlated")
 
 
 if __name__ == '__main__':

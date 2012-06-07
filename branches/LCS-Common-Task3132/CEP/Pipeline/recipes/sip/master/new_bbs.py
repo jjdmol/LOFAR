@@ -36,9 +36,6 @@ class new_bbs(BaseRecipe):
     runs both GlobalControl and KernelControl; as yet, SolverControl has not
     been integrated.
 
-    The recipe will also run the sourcedb and parmdb recipes on each of the
-    input MeasuementSets.
-
     **Arguments**
 
     A mapfile describing the data to be processed.
@@ -98,6 +95,10 @@ class new_bbs(BaseRecipe):
             '--data-mapfile',
             help="Full path to the mapfile containing the names of the "
                  "data files that were processed by BBS (clobbered if exists)"
+        ),
+        'gvds': ingredient.StringField(
+            '-g', '--gvds',
+            help = "Path for output GVDS file"
         )
     }
     outputs = {
@@ -211,7 +212,8 @@ class new_bbs(BaseRecipe):
         # Produce a GVDS file, describing the data that must be processed.
         gvds_file = self.run_task(
             "vdsmaker",
-            self.inputs['data_mapfile']
+            self.inputs['data_mapfile'],
+            gvds = self.inputs['gvds']
         )['gvds']
 
         #      Construct a parset for BBS GlobalControl by patching the GVDS

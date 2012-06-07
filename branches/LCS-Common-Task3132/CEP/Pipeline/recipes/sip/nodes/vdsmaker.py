@@ -26,7 +26,6 @@ class vdsmaker(LOFARnodeTCP):
             else:
                 self.logger.error("Dataset %s does not exist" % (infile))
                 return 1
-
             try:
                 if not os.access(executable, os.X_OK):
                     raise ExecutableMissing(executable)
@@ -42,9 +41,11 @@ class vdsmaker(LOFARnodeTCP):
                 self.logger.error(str(e))
                 return 1
 
+
 if __name__ == "__main__":
     #   If invoked directly, parse command line arguments for logger information
     #                        and pass the rest to the run() method defined above
+
     # --------------------------------------------------------------------------
     jobid, jobhost, jobport = sys.argv[1:4]
     sys.exit(vdsmaker(jobid, jobhost, jobport).run_with_stored_arguments())
