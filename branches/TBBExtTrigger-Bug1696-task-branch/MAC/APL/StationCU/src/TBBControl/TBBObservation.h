@@ -77,6 +77,7 @@ public:
     //# Datamembers
     vector<cSettings> TbbSettings;
     RCUset_t allRCUset;
+    bool vhecrTaskEnabled;
     int clockFreq;
     double sampleTime;
     double NSEC2SAMPLE;

@@ -247,7 +247,6 @@ private:
     int                 itsActiveCepDatapaths;
     int                 itsCepDelay;  // 5 uSec/cnt
     bool                itsAutoRecord;
-    bool                itsVhecrTaskActive;
    
     // pointer to parent control task
     ParentControl*      itsParentControl;

@@ -42,8 +42,6 @@
 #include <Common/lofar_set.h>
 #include <time.h>
 
-//#include <APL/RTCCommon/gnuplot_i.h>
-
 #include <netinet/in.h>
 #include <net/ethernet.h>
 #include <cstdio>
@@ -52,7 +50,6 @@
 #include "tbbctl.h"
 
 using namespace std;
-//using namespace blitz;
 using namespace LOFAR;
 using namespace GCF::TM;
 using namespace TBB_Protocol;
@@ -1935,9 +1932,15 @@ GCFEvent::TResult TestDdrCmd::ack(GCFEvent& e)
             TBBSizeAckEvent ack(e);
             cout << formatString("Testing DDR memory address lines of board %d",getBoard()) << endl;
             if (ack.status_mask[getBoard()] == TBB_SUCCESS) {
+                // one page is 2048 bytes, memsize on board in bytes = number of pages * 2048
+                // 4 MPs on one board, memsize one MP in bytes = memsize board / 4
+                // word adressing (32 bit), memsize one MP in words = memsize MP / 4
+                // from number of pages to memsize one MP in words, 
+                // memsize one MP in words = (pages * 2048) / 4 / 4 = pages on board * 128   
+                // total adrress lines = log(pages on board * 128) / log(2) 
+                
                 double mpMemorySize = ((double)ack.npages[getBoard()] * 2048.) / (1024. * 1024. * 1024.) / 4.;
-                cout << "Memory size 1 MP = " << mpMemorySize << " GByte" << endl;
-                // total bytes = (npages * 2048), 1 mp = total / 4, in words = 1mp / 4 ==> (npages * (2048 / (4 * 4))
+                cout << "Memory size 1 MP = " << mpMemorySize << " Gb" << endl;
                 itsAddrLines = static_cast<uint32>(log10(ack.npages[getBoard()] * 128.) / log10(2.));
                 cout << "Number of addr lines to check = " << itsAddrLines << endl;
             }

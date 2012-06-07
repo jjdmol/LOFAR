@@ -139,7 +139,6 @@ TBBControl::TBBControl(const string&    cntlrName) :
     itsActiveCepDatapaths = 0;
     itsCepDelay = 0;
     itsAutoRecord = true;
-    itsVhecrTaskActive = true;
     //itsBoardCepActive.resize(itsNrTBBs, false);
     
     RcuInfo rcuinfo;
@@ -675,7 +674,7 @@ GCFEvent::TResult TBBControl::active_state(GCFEvent& event, GCFPortInterface& po
             if (&port == itsVHECRtimer) {
                 clock_t nexttime = clock()  + (long)(VHECR_INTERVAL * CLOCKS_PER_SEC); 
                 vector<TBBReadCmd>  readCommandVector;
-                if (itsVhecrTaskActive) {
+                if (itsObs->vhecrTaskEnabled) {
                     itsVHECRTask->getReadCmd(readCommandVector);
                 }
                 
@@ -729,7 +728,7 @@ GCFEvent::TResult TBBControl::active_state(GCFEvent& event, GCFPortInterface& po
         // -------------------- EVENTS RECEIVED FROM TBBDRIVER --------------------
     // TODO TBB
         case TBB_TRIGGER:{
-            if (itsVhecrTaskActive) {
+            if (itsObs->vhecrTaskEnabled) {
                 status = handleTriggerEvent(event);
             }
         } break;
@@ -1010,10 +1009,10 @@ GCFEvent::TResult TBBControl::active_state(GCFEvent& event, GCFPortInterface& po
             if ((station_list.length() == 2) || (station_list.find(PVSSDatabaseName(""), 0) != string::npos)) {
                 LOG_INFO_STR(formatString("CR_Trig. VHECR state=%u", e.state));
                 if (e.state == 1) {
-                    itsVhecrTaskActive = true;
+                    itsObs->vhecrTaskEnabled = true;
                 }
                 else {
-                    itsVhecrTaskActive = false;
+                    itsObs->vhecrTaskEnabled = false;
                 }
             }
             

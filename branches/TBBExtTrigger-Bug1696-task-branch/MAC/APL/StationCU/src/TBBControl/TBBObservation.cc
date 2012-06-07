@@ -43,9 +43,17 @@ TBBObservation::TBBObservation(ParameterSet* aParSet)
     itsSettingsLoaded = false;
     clockFreq = 200;
     sampleTime = 5.0;
+    string prefix;
     // analyse ParameterSet.
-    string prefix = aParSet->locateModule("Observation") + "Observation.TBB.TBBsetting";
+    
+    
+    prefix = aParSet->locateModule("Observation") + "Observation.TBB";
     LOG_DEBUG_STR("'TBB' located at: " << prefix);
+    
+    vhecrTaskEnabled = aParSet->getBool(prefix+"vhecrTaskEnabled", true);
+        
+    prefix = aParSet->locateModule("Observation") + "Observation.TBB.TBBsetting";
+    LOG_DEBUG_STR("'TBB.TBBsetting' located at: " << prefix);
 
     int setNr = 0;
     string setnr(formatString("[%d].", setNr));
@@ -100,6 +108,7 @@ TBBObservation::TBBObservation(ParameterSet* aParSet)
     if (setNr == 0) {
         LOG_DEBUG_STR("No TBB parameterSets defined");
     }
+    
     // get used clock frequency
     prefix = aParSet->locateModule("Observation") + "Observation.";
     LOG_DEBUG_STR("'Observation' located at: " << prefix);
@@ -160,6 +169,12 @@ ostream& TBBObservation::print(ostream&    os) const
         }
         os << endl;
         setNr++;
+    }
+    if (vhecrTaskEnabled) {
+        os << "vhecrTaskEnabled : yes" << endl;
+    }
+    else {
+        os << "vhecrTaskEnabled : no" << endl;
     }
     return (os);
 }
