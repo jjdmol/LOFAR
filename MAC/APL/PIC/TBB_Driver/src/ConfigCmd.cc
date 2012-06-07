@@ -97,8 +97,9 @@ void ConfigCmd::saveTpAckEvent(GCFEvent& event)
 		}
 	}
 	nextBoardNr();
+	setSleepTime(0.5);
 	if (isDone()) { 
-		setSleepTime(15.0);
+		setSleepTime(8.0);
 	}
 }
 

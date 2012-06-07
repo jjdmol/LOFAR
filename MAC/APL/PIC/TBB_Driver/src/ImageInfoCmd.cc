@@ -30,7 +30,7 @@ using namespace LOFAR;
 using namespace GCF::TM;
 using namespace TBB_Protocol;
 using namespace TP_Protocol;
-using	namespace TBB;
+using namespace TBB;
 
 //--Constructors for a ImageInfoCmd object.----------------------------------------
 ImageInfoCmd::ImageInfoCmd():
@@ -40,8 +40,8 @@ ImageInfoCmd::ImageInfoCmd():
 	for (int i = 0; i < TS->flashMaxImages(); i++) {
 		itsImageVersion[i] = 0;	  
 		itsWriteDate[i] = 0;	
-		memset(itsTpFileName[i],'\0',16);
-		memset(itsMpFileName[i],'\0',16);
+		memset(itsTpFileName[i],0x00,16);
+		memset(itsMpFileName[i],0x00,16);
 	}
 	setWaitAck(true);
 }
@@ -99,9 +99,9 @@ void ImageInfoCmd::saveTpAckEvent(GCFEvent& event)
 			setStatus(0, (tp_ack.status << 24));
 			setDone(true);
 		} else {
-			char info[256];
-			memset(info,0,256);
-			memcpy(info,&tp_ack.data[2],256);
+			char info[64];
+			memset(info,0,64);
+			memcpy(info,&tp_ack.data[2],64);
 			
 			LOG_DEBUG_STR("ImageInfoCmd: " << info); 
 			
@@ -115,12 +115,13 @@ void ImageInfoCmd::saveTpAckEvent(GCFEvent& event)
 			stopptr = strstr(startptr," ");
 			if (stopptr != 0) {
 				namesize = stopptr - startptr;
+				if (namesize > 15) { namesize = 15; }
 				memcpy(itsTpFileName[itsImage], startptr, namesize);
-				
 				startptr = stopptr + 1;
 				stopptr = strstr(startptr + 1," ");
 				if (stopptr != 0) {	
 					namesize = stopptr - startptr;
+					if (namesize > 15) { namesize = 15; }
 					memcpy(itsMpFileName[itsImage], startptr, namesize);
 				}
 			}			
@@ -140,7 +141,7 @@ void ImageInfoCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
 	TBBImageInfoAckEvent tbb_ack;
 	tbb_ack.board = itsBoard;
-	tbb_ack.active_image = TS->getImageNr(getBoardNr());
+	tbb_ack.active_image = TS->getImageNr(itsBoard);
 	
 	for (int image = 0; image < MAX_N_IMAGES; image++) {
 		tbb_ack.image_version[image] = itsImageVersion[image];	  

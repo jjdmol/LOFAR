@@ -60,7 +60,6 @@ public:
 private:
 	TbbSettings *TS;
 	int32 itsRcu;
-	uint32 itsSequenceNr;
 	uint32 itsTime;
 	uint32 itsSampleNr;
 	uint32 itsTriggerSum;

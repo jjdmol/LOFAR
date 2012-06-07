@@ -81,9 +81,9 @@ void RawBlockRead::sendrequest()
 	memcpy((void*)&(rawData.hdr.m_fields.addr), (void*)&(rdb.address), sizeof(rdb.address));
 	m_hdr = rawData.hdr; // remember header to match with ack
 
-//	string	hDump;	// DEBUG
-//	hexdump(hDump, (void*)&m_hdr.m_fields, MEPHeader::SIZE); // DEBUG
-//	LOG_INFO_STR ("RAWBLOCKREAD: "  << hDump);
+	string	hDump;	// DEBUG
+	hexdump(hDump, (void*)&m_hdr.m_fields, MEPHeader::SIZE); // DEBUG
+	LOG_INFO_STR ("RAWBLOCKREAD: "  << hDump);
 
 	// finally send the message
 	getBoardPort().send(rawData);
@@ -109,9 +109,9 @@ GCFEvent::TResult RawBlockRead::handleack(GCFEvent& event, GCFPortInterface& /*p
 	//		 We can't even check it because the user made up the address and there for the response-type.
 	EPAReadackEvent ack(event);
 
-//	string	hDump;		/// DEBUG
-//	hexdump(hDump, (void*)&(ack.hdr.m_fields), MEPHeader::SIZE);
-//	LOG_INFO_STR ("RAWBLOCKREAD REPLY: " << hDump);
+	string	hDump;		/// DEBUG
+	hexdump(hDump, (void*)&(ack.hdr.m_fields), MEPHeader::SIZE);
+	LOG_INFO_STR ("RAWBLOCKREAD REPLY: " << hDump);
 
 	// check result
 	if (!ack.hdr.isValidAck(m_hdr)) {
@@ -128,9 +128,9 @@ GCFEvent::TResult RawBlockRead::handleack(GCFEvent& event, GCFPortInterface& /*p
 	rdb.dataLen = ack.hdr.m_fields.payload_length;
 	memcpy(rdb.data, ack.data, rdb.dataLen);
 
-//	hDump.clear();		/// DEBUG
-//	hexdump(hDump, (void*)&(rdb.data), rdb.dataLen);
-//	LOG_INFO (hDump);
+	hDump.clear();		/// DEBUG
+	hexdump(hDump, (void*)&(rdb.data), rdb.dataLen);
+	LOG_INFO (hDump);
 
 	return GCFEvent::HANDLED;
 }

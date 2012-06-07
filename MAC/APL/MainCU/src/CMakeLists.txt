@@ -12,3 +12,4 @@ lofar_add_bin_program(versionmaincu versionmaincu.cc)
 
 add_subdirectory(MACScheduler)
 add_subdirectory(ObservationControl)
+add_subdirectory(CRTriggerControl)
