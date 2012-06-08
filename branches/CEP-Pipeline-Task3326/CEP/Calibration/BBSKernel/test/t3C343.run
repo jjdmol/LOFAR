@@ -1,0 +1,265 @@
+#!/bin/sh
+
+if [ "$#" != "2" ]; then
+ echo "run as:   t3C343.run <max #iterations> <compute UVW (T/F)>"
+ exit 1
+fi
+
+nriter=$1
+calcuvw=$2
+pert="1e-6"
+
+# remove parm history
+rm -rf history.parmdb
+
+# construct sky_model ParmDB
+rm -rf t3C343.sky_model
+parmdb << EOF
+create tablename='t3C343.sky_model'
+adddef RA:3C343_1  values=4.356645791155902, perturbation=${pert}, pert_rel=F
+adddef DEC:3C343_1 values=1.092208429052697, perturbation=${pert}, pert_rel=F
+adddef StokesI:3C343_1 nx=2, values=[1.0, 0.0], perturbation=${pert}, freqscale=1.
+adddef StokesQ:3C343_1 nx=2, values=[0.0, 0.0], perturbation=${pert}
+adddef StokesU:3C343_1 values=0, perturbation=${pert}
+adddef StokesV:3C343_1 values=0, perturbation=${pert}
+adddef RA:3C343  values=4.3396003966265599, perturbation=${pert}, pert_rel=F
+adddef DEC:3C343 values=1.0953677174056471, perturbation=${pert}, pert_rel=F
+adddef StokesI:3C343 nx=4, values=[1.0, 0.0, 0.0, 0.0], perturbation=${pert}, freqscale=1.
+adddef StokesQ:3C343 nx=4, values=[0.0, 0.0, 0.0, 0.0], perturbation=${pert}, freqscale=1.
+adddef StokesU:3C343 values=0, perturbation=${pert}
+adddef StokesV:3C343 values=0, perturbation=${pert}
+close
+quit
+EOF
+
+# check status
+if [ $? != 0 ]; then
+    echo "t3C343: FAIL (creation of skymodel ParmDB failed)"
+    exit 1
+fi
+
+# construct instrument_model ParmDB
+rm -rf t3C343.instrument_model
+parmdb << EOF
+create tablename='t3C343.instrument_model'
+adddef gain:11:ampl ny=2, values=[1.0, 0.0], perturbation=${pert}
+adddef gain:12:ampl values=0, perturbation=${pert}
+adddef gain:21:ampl values=0, perturbation=${pert}
+adddef gain:22:ampl ny=2, values=[1.0, 0.0], perturbation=${pert}
+adddef gain:11:phase values=0, perturbation=${pert}
+adddef gain:12:phase values=0, perturbation=${pert}
+adddef gain:21:phase values=0, perturbation=${pert}
+adddef gain:22:phase values=0, perturbation=${pert}
+close
+quit
+EOF
+
+# check status
+if [ $? != 0 ]; then
+    echo "t3C343: FAIL (creation of instrument model ParmDB failed)"
+    exit 1
+fi
+
+# construct parset
+cat > t3C343.flux.pass1.parset << EOF
+user="$USER"
+instrument_parmdb="t3C343.instrument_model"
+sky_parmdb="t3C343.sky_model"
+measurement_set="/dop58_0/data_zwieten/3C343.MS"
+instrument_model=""
+calculate_UVW=${calcuvw}
+operation="solve"
+data_column_in="DATA"
+data_column_out="CORRECTED_DATA"
+time_domain_size=1e12
+start_channel=29
+end_channel=36
+solvable_parms=["StokesI:*", "StokesQ:*"]
+solvable_parms_excluded=[]
+nr_solve_interval=[1,1]
+nriter=${nriter}
+save_solution=T
+antennas=[]
+corrs=[T,F,F,T]
+EOF
+
+# check status
+if [ $? != 0 ]; then
+    echo "$1: FAIL (creation of parset [flux, pass 1] failed)"
+    exit 1
+fi
+
+# construct parset
+cat > t3C343.flux.parset << EOF
+user="$USER"
+instrument_parmdb="t3C343.instrument_model"
+sky_parmdb="t3C343.sky_model"
+measurement_set="/dop58_0/data_zwieten/3C343.MS"
+instrument_model="PATCHGAIN"
+calculate_UVW=${calcuvw}
+operation="solve"
+data_column_in="DATA"
+data_column_out="CORRECTED_DATA"
+time_domain_size=1e12
+start_channel=29
+end_channel=36
+solvable_parms=["StokesI:*", "StokesQ:*"]
+solvable_parms_excluded=[]
+nr_solve_interval=[1,1]
+nriter=${nriter}
+save_solution=T
+antennas=[]
+corrs=[T,F,F,T]
+EOF
+
+# check status
+if [ $? != 0 ]; then
+    echo "$1: FAIL (creation of parset [flux] failed)"
+    exit 1
+fi
+
+# construct parset
+cat > t3C343.phase.parset << EOF
+user="$USER"
+instrument_parmdb="t3C343.instrument_model"
+sky_parmdb="t3C343.sky_model"
+measurement_set="/dop58_0/data_zwieten/3C343.MS"
+instrument_model="PATCHGAIN"
+calculate_UVW=${calcuvw}
+operation="solve"
+data_column_in="DATA"
+data_column_out="CORRECTED_DATA"
+time_domain_size=30
+start_channel=29
+end_channel=36
+solvable_parms=["gain:11:phase:*", "gain:22:phase:*"]
+solvable_parms_excluded=["gain:*:phase:RT0"]
+nr_solve_interval=[1,1]
+nriter=${nriter}
+save_solution=T
+antennas=[]
+corrs=[T,F,F,T]
+EOF
+
+# check status
+if [ $? != 0 ]; then
+    echo "$1: FAIL (creation of parset [phase] failed)"
+    exit 1
+fi
+
+# construct parset
+cat > t3C343.gain.parset << EOF
+user="$USER"
+instrument_parmdb="t3C343.instrument_model"
+sky_parmdb="t3C343.sky_model"
+measurement_set="/dop58_0/data_zwieten/3C343.MS"
+instrument_model="PATCHGAIN"
+calculate_UVW=${calcuvw}
+operation="solve"
+data_column_in="DATA"
+data_column_out="CORRECTED_DATA"
+time_domain_size=900
+start_channel=29
+end_channel=36
+solvable_parms=["gain:11:ampl:*", "gain:22:ampl:*"]
+solvable_parms_excluded=[]
+nr_solve_interval=[1,1]
+nriter=${nriter}
+save_solution=T
+antennas=[]
+corrs=[T,F,F,T]
+EOF
+
+# check status
+if [ $? != 0 ]; then
+    echo "$1: FAIL (creation of parset [gain] failed)"
+    exit 1
+fi
+
+echo "Solving for source flux, pass 1..."
+time ./BBSrun t3C343.flux.pass1.parset
+# check status
+if [ $? != 0 ]; then
+    echo "t3C343: FAIL (BBSrun failed)"
+    exit 1
+fi
+
+echo "Solving for phase (30 s), pass 1..."
+time ./BBSrun t3C343.phase.parset
+# check status
+if [ $? != 0 ]; then
+    echo "t3C343: FAIL (BBSrun failed)"
+    exit 1
+fi
+
+echo "Solving for source flux, pass 2..."
+time ./BBSrun t3C343.flux.parset
+# check status
+if [ $? != 0 ]; then
+    echo "t3C343: FAIL (BBSrun failed)"
+    exit 1
+fi
+
+echo "Solving for phase (30 s), pass 2..."
+time ./BBSrun t3C343.phase.parset
+# check status
+if [ $? != 0 ]; then
+    echo "t3C343: FAIL (BBSrun failed)"
+    exit 1
+fi
+
+echo "Solving for independent gain (15 min), pass 2..."
+time ./BBSrun t3C343.gain.parset
+# check status
+if [ $? != 0 ]; then
+    echo "t3C343: FAIL (BBSrun failed)"
+    exit 1
+fi
+
+rm -rf t3C343.instrument_model
+rm -rf t3C343.sky_model
+rm t3C343.flux.pass1.parset
+rm t3C343.flux.parset
+rm t3C343.phase.parset
+
+#
+# OBSOLETE BBS3 CODE USING THE t3C343 TEST PROGRAM
+#
+# The code above should do roughly the same thing, except for the following:
+# - BBS currently does not support more than one source in a group, so
+#   when solving for fluxes the first time two source groups are used
+#   instead of one.
+# - Convergence is not checked at runtime, i.e. the solver always performs
+#   $nriter iterations.
+# - For type=2/3/4 t3C343 select a specific part of the time domain. This
+#   is supported by BBS but not by BBSrun, so currently the whole time
+#   domain is alway used.
+# - Subtract and correct steps have not yet been added in the test above
+#   (mainly because I want to check the results of the other steps first).
+
+# t3C343 user msname meqparmtable skyparmtable model [nrgrp=1] [type=1] [nriter=1] [calcuvw=1] [dbtype=aips]
+# Solve for StokesI as function of freq.
+#echo "Solving fluxes 1st time ..."
+#time ./t3C343 $usernm 10008336.MS_p1 10008336 10008336_gsm "" 1 1 $maxniter $calcuvw $dbtype
+# Solve for phase
+#echo "Solving phases 1st time ..."
+#time ./t3C343 $usernm 10008336.MS_p1 10008336 10008336_gsm "PATCHEJ" 2 4 $maxniter $calcuvw $dbtype
+# Solve again for StokesI as function of freq.
+#echo "Solving fluxes 2nd time ..."
+#time ./t3C343 $usernm 10008336.MS_p1 10008336 10008336_gsm "PATCHEJ" 2 1 $maxniter $calcuvw $dbtype
+# Solve again for phase
+#echo "Solving phases 2nd time ..."
+#time ./t3C343 $usernm 10008336.MS_p1 10008336 10008336_gsm "PATCHEJ" 2 4 $maxniter $calcuvw $dbtype
+# Solve again for StokesI as function of freq.
+#echo "Solving fluxes 3rd time ..."
+#time ./t3C343 $usernm 10008336.MS_p1 10008336 10008336_gsm "PATCHEJ" 2 1 $maxniter $calcuvw $dbtype
+# Solve for amplitude in 2 patches.
+#echo "Solving amplitudes ..."
+#time ./t3C343 $usernm 10008336.MS_p1 10008336 10008336_gsm "PATCHEJ" 2 3 $maxniter $calcuvw $dbtype
+# Subtract the sources.
+#echo "Subtracting sources"
+#time ./t3C343 $usernm 10008336.MS_p1 10008336 10008336_gsm "PATCHEJ" 2 10 1 $calcuvw $dbtype
+# Correct the residual data for the complex gain at the center.
+#time ./t3C343 $usernm 10008336.MS_p1 10008336 10008336_gsm "PATCHEJ" 2 5 1 $calcuvw $dbtype
+# Make the map.
+#glish image343.g
