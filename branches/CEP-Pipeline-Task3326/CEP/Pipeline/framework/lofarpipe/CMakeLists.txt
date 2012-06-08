@@ -33,4 +33,5 @@ python_install(
   support/remotecommand.py
   support/stateful.py
   support/utilities.py
+  support/xml.py
   DESTINATION lofarpipe)
