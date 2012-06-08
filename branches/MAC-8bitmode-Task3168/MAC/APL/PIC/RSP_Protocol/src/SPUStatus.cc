@@ -38,14 +38,14 @@ using namespace EPA_Protocol;
 
 unsigned int SPUStatus::getSize()
 {
-  return MSH_ARRAY_SIZE(itsSPUStatus, EPA_Protocol::SPUBoardStatus);
+  return MSH_ARRAY_SIZE(itsSPUStatus);
 }
 
 unsigned int SPUStatus::pack  (void* buffer)
 {
   unsigned int offset = 0;
   
-  MSH_PACK_ARRAY(buffer, offset, itsSPUStatus, EPA_Protocol::SPUBoardStatus);
+  MSH_PACK_ARRAY(buffer, offset, itsSPUStatus);
 
   return offset;
 }
@@ -54,7 +54,7 @@ unsigned int SPUStatus::unpack(void *buffer)
 {
   unsigned int offset = 0;
   
-  MSH_UNPACK_ARRAY(buffer, offset, itsSPUStatus, EPA_Protocol::SPUBoardStatus, 1);
+  MSH_UNPACK_ARRAY(buffer, offset, itsSPUStatus);
 
   return offset;
 }

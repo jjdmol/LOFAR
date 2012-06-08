@@ -130,18 +130,18 @@ public:
 
 	/* marshalling methods */
 	unsigned int getSize() {
-		return MSH_ARRAY_SIZE(m_state, State);
+		return MSH_ARRAY_SIZE(m_state);
 	}
 
 	unsigned int pack(void* buffer) {
 		unsigned int offset = 0;
-		MSH_PACK_ARRAY(buffer, offset, m_state, State);
+		MSH_PACK_ARRAY(buffer, offset, m_state);
 		return offset;
 	}
 
 	unsigned int unpack(void* buffer) {
 		unsigned int offset = 0;
-		MSH_UNPACK_ARRAY(buffer, offset, m_state, State, 1);
+		MSH_UNPACK_ARRAY(buffer, offset, m_state);
 		return offset;
 	}
 

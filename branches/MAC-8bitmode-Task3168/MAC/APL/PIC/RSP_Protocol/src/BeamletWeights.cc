@@ -33,14 +33,14 @@ using namespace RSP_Protocol;
 
 unsigned int BeamletWeights::getSize()
 {
-  return MSH_ARRAY_SIZE(m_weights, complex<int16>);
+  return MSH_ARRAY_SIZE(m_weights);
 }
 
 unsigned int BeamletWeights::pack  (void* buffer)
 {
   unsigned int offset = 0;
 
-  MSH_PACK_ARRAY(buffer, offset, m_weights, complex<int16>);
+  MSH_PACK_ARRAY(buffer, offset, m_weights);
 
   return offset;
 }
@@ -49,7 +49,7 @@ unsigned int BeamletWeights::unpack(void *buffer)
 {
   unsigned int offset = 0;
 
-  MSH_UNPACK_ARRAY(buffer, offset, m_weights, complex<int16>, NDIM);
+  MSH_UNPACK_ARRAY(buffer, offset, m_weights);
 
   return offset;
 }

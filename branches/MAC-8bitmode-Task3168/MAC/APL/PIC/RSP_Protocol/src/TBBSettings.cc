@@ -33,14 +33,14 @@ using namespace RSP_Protocol;
 
 unsigned int TBBSettings::getSize()
 {
-  return MSH_ARRAY_SIZE(m_bandsel, bitset<MEPHeader::N_SUBBANDS>);
+  return MSH_ARRAY_SIZE(m_bandsel);
 }
 
 unsigned int TBBSettings::pack  (void* buffer)
 {
   unsigned int offset = 0;
   
-  MSH_PACK_ARRAY(buffer, offset, m_bandsel, bitset<MEPHeader::N_SUBBANDS>);
+  MSH_PACK_ARRAY(buffer, offset, m_bandsel);
 
   return offset;
 }
@@ -49,7 +49,7 @@ unsigned int TBBSettings::unpack(void *buffer)
 {
   unsigned int offset = 0;
 
-  MSH_UNPACK_ARRAY(buffer, offset, m_bandsel, bitset<MEPHeader::N_SUBBANDS>, 1);
+  MSH_UNPACK_ARRAY(buffer, offset, m_bandsel);
 
   return offset;
 }

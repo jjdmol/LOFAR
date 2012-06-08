@@ -38,14 +38,14 @@ using namespace EPA_Protocol;
 
 unsigned int TDStatus::getSize()
 {
-  return MSH_ARRAY_SIZE(m_board_status, EPA_Protocol::TDBoardStatus);
+  return MSH_ARRAY_SIZE(m_board_status);
 }
 
 unsigned int TDStatus::pack  (void* buffer)
 {
   unsigned int offset = 0;
   
-  MSH_PACK_ARRAY(buffer, offset, m_board_status, EPA_Protocol::TDBoardStatus);
+  MSH_PACK_ARRAY(buffer, offset, m_board_status);
 
   return offset;
 }
@@ -54,7 +54,7 @@ unsigned int TDStatus::unpack(void *buffer)
 {
   unsigned int offset = 0;
   
-  MSH_UNPACK_ARRAY(buffer, offset, m_board_status, EPA_Protocol::TDBoardStatus, 1);
+  MSH_UNPACK_ARRAY(buffer, offset, m_board_status);
 
   return offset;
 }

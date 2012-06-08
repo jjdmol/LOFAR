@@ -99,14 +99,14 @@ void WGSettings::initWaveformPresets()
 
 unsigned int WGSettings::getSize()
 {
-  return MSH_ARRAY_SIZE(m_registers, WGRegisterType);
+  return MSH_ARRAY_SIZE(m_registers);
 }
 
 unsigned int WGSettings::pack  (void* buffer)
 {
   unsigned int offset = 0;
   
-  MSH_PACK_ARRAY(buffer, offset, m_registers, WGRegisterType);
+  MSH_PACK_ARRAY(buffer, offset, m_registers);
 
   return offset;
 }
@@ -115,7 +115,7 @@ unsigned int WGSettings::unpack(void *buffer)
 {
   unsigned int offset = 0;
 
-  MSH_UNPACK_ARRAY(buffer, offset, m_registers, WGRegisterType, 1);
+  MSH_UNPACK_ARRAY(buffer, offset, m_registers);
 
   return offset;
 }

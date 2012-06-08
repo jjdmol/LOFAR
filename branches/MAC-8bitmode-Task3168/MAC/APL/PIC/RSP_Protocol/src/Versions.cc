@@ -34,16 +34,16 @@ using namespace RSP_Protocol;
 unsigned int Versions::getSize()
 {
   return
-      MSH_ARRAY_SIZE(m_bp_versions,  EPA_Protocol::RSRVersion)
-    + MSH_ARRAY_SIZE(m_ap_versions,  EPA_Protocol::RSRVersion);
+      MSH_ARRAY_SIZE(m_bp_versions)
+    + MSH_ARRAY_SIZE(m_ap_versions);
 }
 
 unsigned int Versions::pack  (void* buffer)
 {
   unsigned int offset = 0;
 
-  MSH_PACK_ARRAY(buffer, offset, m_bp_versions,  EPA_Protocol::RSRVersion);
-  MSH_PACK_ARRAY(buffer, offset, m_ap_versions,  EPA_Protocol::RSRVersion);
+  MSH_PACK_ARRAY(buffer, offset, m_bp_versions);
+  MSH_PACK_ARRAY(buffer, offset, m_ap_versions);
 
   return offset;
 }
@@ -52,8 +52,8 @@ unsigned int Versions::unpack(void *buffer)
 {
   unsigned int offset = 0;
 
-  MSH_UNPACK_ARRAY(buffer, offset, m_bp_versions,  EPA_Protocol::RSRVersion, 1);
-  MSH_UNPACK_ARRAY(buffer, offset, m_ap_versions,  EPA_Protocol::RSRVersion, 1);
+  MSH_UNPACK_ARRAY(buffer, offset, m_bp_versions);
+  MSH_UNPACK_ARRAY(buffer, offset, m_ap_versions);
 
   return offset;
 }

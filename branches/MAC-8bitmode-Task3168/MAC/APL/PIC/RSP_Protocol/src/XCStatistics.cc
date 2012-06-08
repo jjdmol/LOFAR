@@ -33,14 +33,14 @@ using namespace RSP_Protocol;
 
 unsigned int XCStatistics::getSize()
 {
-  return MSH_ARRAY_SIZE(m_xstatistics, complex<double>);
+  return MSH_ARRAY_SIZE(m_xstatistics);
 }
 
 unsigned int XCStatistics::pack  (void* buffer)
 {
   unsigned int offset = 0;
 
-  MSH_PACK_ARRAY(buffer, offset, m_xstatistics, complex<double>);
+  MSH_PACK_ARRAY(buffer, offset, m_xstatistics);
 
   return offset;
 }
@@ -49,7 +49,7 @@ unsigned int XCStatistics::unpack(void *buffer)
 {
   unsigned int offset = 0;
 
-  MSH_UNPACK_ARRAY(buffer, offset, m_xstatistics, complex<double>, 4);
+  MSH_UNPACK_ARRAY(buffer, offset, m_xstatistics);
 
   return offset;
 }

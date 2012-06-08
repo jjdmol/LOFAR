@@ -34,14 +34,14 @@ namespace LOFAR {
 
 unsigned int BypassSettings::getSize()
 {
-  return MSH_ARRAY_SIZE(m_registers, BypassSettings::Control);
+  return MSH_ARRAY_SIZE(m_registers);
 }
 
 unsigned int BypassSettings::pack  (void* buffer)
 {
   unsigned int offset = 0;
   
-  MSH_PACK_ARRAY(buffer, offset, m_registers, BypassSettings::Control);
+  MSH_PACK_ARRAY(buffer, offset, m_registers);
 
   return offset;
 }
@@ -50,7 +50,7 @@ unsigned int BypassSettings::unpack(void *buffer)
 {
   unsigned int offset = 0;
 
-  MSH_UNPACK_ARRAY(buffer, offset, m_registers, BypassSettings::Control, 1);
+  MSH_UNPACK_ARRAY(buffer, offset, m_registers);
 
   return offset;
 }

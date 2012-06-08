@@ -35,14 +35,14 @@ using namespace RSP_Protocol;
 
 unsigned int SubbandSelection::getSize()
 {
-  return MSH_ARRAY_SIZE(m_subbands, uint16) + sizeof(uint16);
+  return MSH_ARRAY_SIZE(m_subbands) + sizeof(uint16);
 }
 
 unsigned int SubbandSelection::pack(void* buffer)
 {
   unsigned int offset = 0;
 
-  MSH_PACK_ARRAY(buffer, offset, m_subbands,   uint16);
+  MSH_PACK_ARRAY(buffer, offset, m_subbands);
   memcpy((char*)buffer + offset, &m_type, sizeof(uint16));
   offset += sizeof(uint16);
   
@@ -53,7 +53,7 @@ unsigned int SubbandSelection::unpack(void *buffer)
 {
   unsigned int offset = 0;
 
-  MSH_UNPACK_ARRAY(buffer, offset, m_subbands,   uint16, 2);
+  MSH_UNPACK_ARRAY(buffer, offset, m_subbands);
   memcpy(&m_type, (char*)buffer + offset, sizeof(uint16));
   offset += sizeof(uint16);
 

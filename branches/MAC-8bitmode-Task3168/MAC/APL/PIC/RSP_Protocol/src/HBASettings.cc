@@ -33,14 +33,14 @@ using namespace RSP_Protocol;
 
 unsigned int HBASettings::getSize()
 {
-  return MSH_ARRAY_SIZE(m_delay, uint8);
+  return MSH_ARRAY_SIZE(m_delay);
 }
 
 unsigned int HBASettings::pack  (void* buffer)
 {
   unsigned int offset = 0;
   
-  MSH_PACK_ARRAY(buffer, offset, m_delay, uint8);
+  MSH_PACK_ARRAY(buffer, offset, m_delay);
 
   return offset;
 }
@@ -49,7 +49,7 @@ unsigned int HBASettings::unpack(void *buffer)
 {
   unsigned int offset = 0;
 
-  MSH_UNPACK_ARRAY(buffer, offset, m_delay, uint8, 2);
+  MSH_UNPACK_ARRAY(buffer, offset, m_delay);
 
   return offset;
 }

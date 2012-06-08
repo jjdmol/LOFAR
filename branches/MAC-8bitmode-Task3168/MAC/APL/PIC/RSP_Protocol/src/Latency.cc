@@ -38,14 +38,14 @@ using namespace EPA_Protocol;
 
 unsigned int Latency::getSize()
 {
-  return MSH_ARRAY_SIZE(itsLatency, EPA_Protocol::RADLatency);
+  return MSH_ARRAY_SIZE(itsLatency);
 }
 
 unsigned int Latency::pack  (void* buffer)
 {
   unsigned int offset = 0;
   
-  MSH_PACK_ARRAY(buffer, offset, itsLatency, EPA_Protocol::RADLatency);
+  MSH_PACK_ARRAY(buffer, offset, itsLatency);
 
   return offset;
 }
@@ -54,7 +54,7 @@ unsigned int Latency::unpack(void *buffer)
 {
   unsigned int offset = 0;
   
-  MSH_UNPACK_ARRAY(buffer, offset, itsLatency, EPA_Protocol::RADLatency, 1);
+  MSH_UNPACK_ARRAY(buffer, offset, itsLatency);
 
   return offset;
 }
