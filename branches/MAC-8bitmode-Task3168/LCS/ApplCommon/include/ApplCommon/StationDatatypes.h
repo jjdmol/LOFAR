@@ -40,12 +40,10 @@ namespace LOFAR {
 typedef bitset<MAX_RCUS>		RCUmask_t;
 typedef bitset<MAX_ANTENNAS>	AntennaMask_t;
 typedef bitset<MAX_SUBBANDS>	SubbandMask_t;
-typedef bitset<MAX_BEAMLETS>	BeamletMask_t;
 
 using LOFAR::RCUmask_t;
 using LOFAR::AntennaMask_t;
 using LOFAR::SubbandMask_t;
-using LOFAR::BeamletMask_t;
 
 RCUmask_t		Antenna2RCUmask(const AntennaMask_t&	am);
 AntennaMask_t	RCU2AntennaMask(const RCUmask_t&		rm);

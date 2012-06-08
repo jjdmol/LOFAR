@@ -179,6 +179,7 @@ public:
 	vector<string>	stations;
 	int				nrSlotsInFrame;
 	int				sampleClock;		// 160 | 200
+    int             bitsPerSample;      // 4 | 8 | 16
 	string			filter;				// LBA_30_80, LBA_10_90, HBA_110_190, etc.
 	string			MSNameMask;
 	string			realPVSSdatapoint;
