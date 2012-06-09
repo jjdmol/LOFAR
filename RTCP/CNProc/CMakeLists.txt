@@ -28,8 +28,8 @@ endif(USE_VALGRIND)
 ## CN and ION are no longer variants; we then need two compiler definitions:
 ## BGPCN and BGPION, which is a cleaner solution anyway.
 ## ---------------------------------------------------------------------------
+enable_language(ASM-BGP)
 if(LOFAR_COMPILER_SUITE STREQUAL "BGPCN")
-  enable_language(ASM-BGP)
   set(CMAKE_C_LINK_EXECUTABLE ${CMAKE_ASM-BGP_LINK_EXECUTABLE})
   set(CMAKE_CXX_LINK_EXECUTABLE ${CMAKE_ASM-BGP_LINK_EXECUTABLE})
 endif(LOFAR_COMPILER_SUITE STREQUAL "BGPCN")
