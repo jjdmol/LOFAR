@@ -1,6 +1,6 @@
-//# lofar_datetime.h: namespace wrapper for Boost.Date_Time Posix classes
+//# PosixTime.h: conversion routines from/to Unix to/from Posix time.
 //#
-//# Copyright (C) 2002
+//# Copyright (C) 2002-2012
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -20,13 +20,13 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_COMMON_DATETIME_H
-#define LOFAR_COMMON_DATETIME_H
+#ifndef APPLCOMMON_POSIXTIME_H
+#define APPLCOMMON_POSIXTIME_H
 
 // \file
-// namespace wrapper for Boost.Date_Time Posix classes
+// Conversion routines from/to Unix to/from Posix time.
 
-#if !defined(HAVE_BOOST)
+#if !defined(HAVE_BOOST_DATE_TIME)
 #error Boost.Date_Time is required.
 #endif
 

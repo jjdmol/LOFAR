@@ -26,7 +26,7 @@
 //# Common Includes
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
-#include <ApplCommon/lofar_datetime.h>
+#include <ApplCommon/PosixTime.h>
 #include <Common/LofarLogger.h>
 
 //# ACC Includes

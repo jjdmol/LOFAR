@@ -26,7 +26,7 @@
 //# Common Includes
 #include <Common/LofarLogger.h>
 #include <Common/lofar_string.h>
-#include <ApplCommon/lofar_datetime.h>
+#include <ApplCommon/PosixTime.h>
 
 //# GCF Includes
 #include <MACIO/GCF_Event.h>

@@ -29,7 +29,7 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
 #include <OTDB/OTDBtypes.h>
-#include <ApplCommon/lofar_datetime.h>
+#include <ApplCommon/PosixTime.h>
 #include <pqxx/pqxx>
 
 using namespace boost::posix_time;

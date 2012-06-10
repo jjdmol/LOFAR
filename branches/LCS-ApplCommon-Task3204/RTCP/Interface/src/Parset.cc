@@ -25,7 +25,7 @@
 
 #include <Common/LofarLogger.h>
 #include <Common/DataConvert.h>
-#include <ApplCommon/lofar_datetime.h>
+#include <ApplCommon/PosixTime.h>
 #include <Interface/Parset.h>
 #include <Interface/SmartPtr.h>
 #include <Interface/Exceptions.h>
