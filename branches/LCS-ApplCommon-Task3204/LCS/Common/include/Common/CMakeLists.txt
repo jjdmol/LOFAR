@@ -29,7 +29,6 @@ install(FILES
   lofar_bitset.h
   LofarConstants.h
   lofar_complex.h
-  lofar_datetime.h
   lofar_deque.h
   lofar_fstream.h
   lofar_iomanip.h
