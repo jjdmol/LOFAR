@@ -169,16 +169,16 @@ void dblClick(string id,int column) {
 
   string dp=\"\";
   if (itsDummyDP != \"\") {
-    dp = itsDummyDP;
-  } else {
-    dp=navFunct_getDPFromTypePath(typeList,id);
+    g_currentDatapoint = itsDummyDP;
   }
+  dp=navFunct_getDPFromTypePath(typeList,id);
+  
   LOG_DEBUG(\"navigator_locator.pnl:doubleClicked|dp:\"+dp);
 
   // check if we have an existing datapoint and if it's not the same as b4
   // if it is different, fire the chain to go back and change panels.
   if (dpExists(dp) ) {
-    if (g_currentDatapoint != dp) {
+    if (g_currentDatapoint != dp || itsDummyDP != \"\") {
       g_currentDatapoint = dp;  
       setEvent(\"Locator:\"+Locator.getText(id,column),\"ChangePanel\");
     }

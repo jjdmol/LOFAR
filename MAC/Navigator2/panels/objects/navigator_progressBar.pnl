@@ -41,7 +41,7 @@ void initialize() {
 // connect progressbar to value to act on
 setProgressBarDPE() {
   if (dpExists(itsProgressBarDp)) {
-    if (connected) {
+    if (connected && dpExists(dpe) && dpe != \"\") {
       dpDisconnect(display,dpe);
       connected=false;
     }
