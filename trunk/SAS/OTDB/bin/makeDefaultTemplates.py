@@ -32,6 +32,33 @@ def addIndexedComponent(treeID, keyName, orgTreeID):
     return newNodeID
 
 #
+# removeElement(orgTree, newTree, key)
+#
+def removeElement(orgTmplID, newTmplID, key, always):
+    """
+    Removes the given key from the new tree. If the remaining node is empty afterwards it is deleted also.
+    """
+    parentname = key.rsplit('.',1)[0]
+    oldparentid = otdb.query("select nodeid from getVTitem(%s, '%s')" % (orgTmplID, parentname)).getresult()[0][0]
+    if oldparentid == None:
+        # parent of parameter was removed from old template, safe to delete it in the new template too
+        nodeid = otdb.query("select nodeid from getVTitem(%s, '%s')" % (newTmplID, parentname)).getresult()[0][0]
+        if nodeid != None:
+            otdb.query ("select * from removeVTNode(1, %s, %s)" % (newTmplID, nodeid))
+            print "   %s: %-75s removed node deleted" % (newTmplID, parentname)
+            # new parent may also be a 'dangling' node, try that.
+            removeElement(orgTmplID, newTmplID, parentname, False)
+    else:
+        if not always: # coming from a recursive call?
+            return
+        # parent of parameter still exists in old template, remove parameter itself only
+        nodeid = otdb.query("select nodeid from getVTitem(%s, '%s')" % (newTmplID, key)).getresult()[0][0]
+        if nodeid != None:
+            # found item: delete it
+            otdb.query ("select * from removeVTleafNode(%s)" % nodeid)
+            print "   %s: %-75s parameter deleted" % (newTmplID, key)
+        
+#
 # createNewDefaultTemplate(orgTemplateID, newMasterTemplateID, orgTemplateInfo)
 #
 def createNewDefaultTemplate(orgTmplID, newMasterTmplID, orgTmplInfo):
@@ -90,22 +117,7 @@ def createNewDefaultTemplate(orgTmplID, newMasterTmplID, orgTmplInfo):
     # loop over the list: when the NODE(=parent) of this parameter was removed in the ORIGINAL default template
     # remove the NODE in the new template otherwise remove the parameter only
     for key in os.popen(command).read().splitlines():
-        parentname = key.rsplit('.',1)[0]
-        oldparentid = otdb.query("select nodeid from getVTitem(%s, '%s')" % (orgTmplID, parentname)).getresult()[0][0]
-        if oldparentid == None:
-            # parent of parameter was removed from old template, safe to delete it in the new template too
-            nodeid = otdb.query("select nodeid from getVTitem(%s, '%s')" % (newTmplID, parentname)).getresult()[0][0]
-            if nodeid != None:
-                otdb.query ("select * from removeVTNode(1, %s, %s)" % (newTmplID, nodeid))
-                print "   %s: %-75s removed node deleted" % (newTmplID, parentname)
-        else:
-            # parent of parameter still exists in old template, remove parameter itself only
-            nodeid = otdb.query("select nodeid from getVTitem(%s, '%s')" % (newTmplID, key)).getresult()[0][0]
-            if nodeid != None:
-                # found item: delete it
-                otdb.query ("select * from removeVTleafNode(%s)" % nodeid)
-                print "   %s: %-75s parameter deleted" % (newTmplID, key)
-        
+        removeElement(orgTmplID, newTmplID, key, True)
        
 #
 # createParsetFile(treeID, nodeID, fileName)
