@@ -413,7 +413,7 @@ class imager_awimager(LOFARnodeTCP):
         # Do debugging size conversion ( to decrease image size for fater testing)
         if npix <= 256: #Do not make small images smaller
             size_converter = 1
-        elif npix == 512 #only increase one size step for 512 npix
+        elif npix == 512: #only increase one size step for 512 npix
             size_converter = min(2, size_converter)
         cell_size_formatted = str(int(round(cell_size * size_converter))) + 'arcsec'
         npix = int(float(npix) / size_converter)
