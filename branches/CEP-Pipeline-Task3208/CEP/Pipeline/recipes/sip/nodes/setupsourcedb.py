@@ -40,7 +40,8 @@ class setupsourcedb(LOFARnodeTCP):
                 cmd = [executable,
                        "format=<",
                        "in=%s" % (catalogue),
-                       "out=%s" % (skydb)
+                       "out=%s" % (skydb),
+                       "append=false"
                       ]
                 with CatchLog4CPlus(
                     scratch_dir,
