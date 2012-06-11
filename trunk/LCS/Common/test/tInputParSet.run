@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# Run it with the LOFAR parset style.
+tInputParset tInputParset.in
+
+# Run it with the casacore Input style.
+tInputParset `grep -v '#' tInputParset.in`
