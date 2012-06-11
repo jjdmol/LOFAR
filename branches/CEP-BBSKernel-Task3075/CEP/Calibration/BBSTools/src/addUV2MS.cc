@@ -476,7 +476,7 @@ casa::MDirection getPatchDirection(const string &patchName)
 {
   casa::IPosition imageShape;                             // shape of image
   casa::Vector<casa::Double> Pixel(2);                    // pixel coords vector of image centre
-  casa::MDirection MDirWorld(casa::MDirection::J2000);   // astronomical direction in J2000
+  casa::MDirection MDirWorld(casa::MDirection::J2000);    // astronomical direction in J2000
   casa::PagedImage<casa::Float> image(patchName);         // open image
     
   imageShape=image.shape();                               // get centre pixel

@@ -446,6 +446,21 @@ Vector<Int>  ModelImageFft::chanMap(const vector<double> &frequencies)
   vector<double> imageFreqs=imageFrequencies();
   Vector<Int> chanMap(nfreqs);      // channel map to return
 
+  /*
+  for(unsigned int i=0; i<nfreqs; i++)
+  {
+    double pixel=0;
+    if(itsImageProperties.spectralCoord.toWorld(pixel, frequencies[i]))
+    {
+      cout << "pixel: " << pixel << endl;
+      chanMap[i]=pixel;
+    }
+    else
+    {
+      LOG_WARN_STR("Mapping of frequency " << frequencies[i] << "to image failed.");
+    }    
+  }
+  */
   for(unsigned int i=0; i<nfreqs; i++)
   {
     double lower=-1, upper=-1;
@@ -456,15 +471,22 @@ Vector<Int>  ModelImageFft::chanMap(const vector<double> &frequencies)
     if (it == imageFreqs.begin())
     {
       upper = *it;              // no smaller value than val in vector
+      chanMap[i]=upper;
+//      cout << "i: " << i << "   lower: " << lower << "   upper: " << upper << endl; // DEBUG
     }
     else if (it == imageFreqs.end())
     {
       lower = *(it-1);          // no bigger value than val in vector
+      chanMap[i]=lower;
+//      cout << "i: " << i << "   lower: " << lower << "   upper: " << upper << endl; // DEBUG
     }
     else 
     {
       lower = *(it-1);    // lower neighbour in image channels
       upper = *it;        // upper neighbour in image channels
+
+//      cout << "i: " << i << "   lower: " << lower << "   upper: " << upper << endl; // DEBUG
+
       if(abs(lower-val) < abs(val-upper))   // find nearest neighbour
       {
         chanMap[i]=lower;
@@ -626,11 +648,9 @@ void ModelImageFft::degrid( const double *uBl, const double *vBl, const double *
 
       Array<Complex> imagePlane(planeShape); 
       Slicer slicer=makeSlicer(freq);   // Stokes defaults to I
-  
+
       if(itsImage->getSlice(imagePlane, slicer))
       {
-        cout << "imagePlane.shape(): " << imagePlane.shape() << endl;   // DEBUG
-      
         //ASSERT(imagePlane.contiguous);      // image slice is contiguous, use        
         imagePlane.tovector(data);    // copy data into STL vector to conform to Cornwell interface
 
@@ -669,6 +689,8 @@ void ModelImageFft::degrid( const double *uBl, const double *vBl, const double *
 Slicer ModelImageFft::makeSlicer(Int chan, const String &Stokes)
 {
   IPosition plane(itsImageProperties.shape);
+
+//  cout << "itsOptions.chanMap[" << chan << "]: " << itsOptions.chanMap[chan] << endl;  // DEBUG
 
   plane[itsImageProperties.DirectionCoordAxes(0)]=itsImageProperties.nx;  // full x dimension
   plane[itsImageProperties.DirectionCoordAxes(1)]=itsImageProperties.ny;  // full y dimension
