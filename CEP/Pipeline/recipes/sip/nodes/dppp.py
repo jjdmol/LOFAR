@@ -37,7 +37,7 @@ class dppp(LOFARnodeTCP):
 
             if clobber:
                 self.logger.info("Removing previous output %s" % outfile)
-                shutil.rmtree(outfile, ignore_errors=True)
+                shutil.rmtree(outfile, ignore_errors = True)
 
             self.logger.debug("Time interval: %s %s" % (start_time, end_time))
 
@@ -92,11 +92,11 @@ class dppp(LOFARnodeTCP):
                     #     Catch NDPPP segfaults (a regular occurance), and retry
                     # ----------------------------------------------------------
                     if outfile != infile:
-                        cleanup_fn = lambda : shutil.rmtree(outfile, ignore_errors=True)
+                        cleanup_fn = lambda : shutil.rmtree(outfile, ignore_errors = True)
                     else:
                         cleanup_fn = lambda : None
                     catch_segfaults(
-                        cmd, working_dir, env, logger, cleanup=cleanup_fn
+                        cmd, working_dir, env, logger, cleanup = cleanup_fn
                     )
             except ExecutableMissing, e:
                 self.logger.error("%s not found" % (e.args[0]))
@@ -113,6 +113,8 @@ class dppp(LOFARnodeTCP):
                 os.unlink(temp_parset_filename)
                 shutil.rmtree(working_dir)
 
+            # We need some signal to the master script that the script ran ok.
+            self.outputs['ok'] = True
             return 0
 
 if __name__ == "__main__":
