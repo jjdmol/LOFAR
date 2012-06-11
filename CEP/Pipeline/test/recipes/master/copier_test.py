@@ -38,12 +38,12 @@ class copierTest(unittest.TestCase):
         #shutil.rmtree(self.test_path)
         pass
 
-#    def test_validate_source_target_mapfile(self):
-#        source_map = [("node1", "path1"), ("node2", "path2"), ("node2", "path3")]
-#        target_map = [("node3", "path1"), ("node4", "path2"), ("node4", "path3")]
-#
-#        sut = copierWrapper()
-#        self.assertTrue(sut._validate_source_target_mapfile(source_map, target_map))
+    def test_validate_source_target_mapfile(self):
+        source_map = [("node1", "path1"), ("node2", "path2"), ("node2", "path3")]
+        target_map = [("node3", "path1"), ("node4", "path2"), ("node4", "path3")]
+
+        sut = copierWrapper()
+        self.assertTrue(sut._validate_source_target_mapfile(source_map, target_map))
 #
 #    def test_create_target_node_keyed_dict(self):
 #        source_map = [("node1", "/path1/path1"), ("node2", "/path2/path2"), ("node2", "/path3/path3/")]
