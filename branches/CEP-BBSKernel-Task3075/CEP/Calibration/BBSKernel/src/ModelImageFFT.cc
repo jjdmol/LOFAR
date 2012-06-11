@@ -662,24 +662,17 @@ void ModelImageFft::degrid( const double *uBl, const double *vBl, const double *
         LOG_WARN_STR("Did not get image slice for frequency: " << itsOptions.frequencies[freq]);
       }
       // copy vector into correlation arrays: TODO: XX=0.5*I, YY=0.5*I
-      if(XX)    // only copy, if we have a valid pointer
+      if(XX && YY)    // only copy, if we have a valid pointer
       {
-        copy(data.begin(), data.end(), XX+(freq*nuvw));
+        //copy(data.begin(), data.end(), XX+(freq*nuvw));
+        computeICorr(data, XX, YY);
       }
       else
       {
-        LOG_WARN_STR("degrid(): XX parameter empty, no XX output.");
+        LOG_WARN_STR("degrid(): XX or YY parameter empty, no correlations output.");
       }
-      if(YY)    // only copy, if we have a valid pointer
-      {  
-        copy(data.begin(), data.end(), YY+(freq*nuvw));
-      }
-      else
-      {
-        LOG_WARN_STR("degrid(): YY parameter empty, no YY output.");      
-      }
-//      XX+(freq*nuvw)=data;
-      //memcpy(XX+(freq*nuvw), data.begin(), data);
+
+
     }
   }
 }
