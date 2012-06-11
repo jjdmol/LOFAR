@@ -70,10 +70,9 @@ class copier(LOFARnodeTCP):
 
         #if copy failed log the missing file
         if  exit_status != 0:
-            missing_files.append(path)
             message = "Failed to (rsync) copy file: {0} on node {1}".format(
                                                     source_path, source_node)
-            self.logger.warning()
+            self.logger.warning(message)
             self.logger.warning(stderrdata)
             raise PipelineException(message)
 

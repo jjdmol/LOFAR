@@ -156,7 +156,7 @@ class copier(MasterNodeInterface):
                           "Exiting copier master recipe")
 
     ## Function expected by MasterNodeInterface
-    def on_succes(self, jobs):
+    def on_succes(self):
         """
         on_succes is called after all jobs have finished and
         no errors have been encountered. 
