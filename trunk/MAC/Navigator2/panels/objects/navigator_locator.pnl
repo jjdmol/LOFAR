@@ -78,6 +78,7 @@ void initTable() {
   
   //Empty de tree
   Locator.clear();
+  itsDummyDP=\"\";
   
 
   // since Antenna's(+_Element's) are stores under LOFAR_PIC_HBA** (_Element**)
@@ -96,21 +97,13 @@ void initTable() {
     int subrackNr=navFunct_receiver2Subrack(rcuNr);
     int rspNr=navFunct_receiver2RSP(rcuNr);
     string station = dpSubStr(g_currentDatapoint,DPSUB_SYS);
-    DebugN(\"hba :\"+hbaNr);
-    DebugN(\"rcu :\"+rcuNr);
-    DebugN(\"rsp :\"+rspNr);
-    DebugN(\"sub :\"+subrackNr);
-    DebugN(\"rck :\"+cabinetNr);
-    
     string ext = \"\";
     if (hbaNr < 10) {
       ext=\"0\";
     }
-    string dp = station+\"LOFAR_PIC_Cabinet\"+cabinetNr+\"_Subrack\"+subrackNr+\"_RSPBoard\"+rspNr+\"_RCU\"+rcuNr;
-    DebugN(dp);
-    typeList = navFunct_dpGetFullPathAsTypes(dp);
+    itsDummyDP = station+\"LOFAR_PIC_Cabinet\"+cabinetNr+\"_Subrack\"+subrackNr+\"_RSPBoard\"+rspNr+\"_RCU\"+rcuNr;
+    typeList = navFunct_dpGetFullPathAsTypes(itsDummyDP);
     dynAppend(typeList,\"HBAAntenna\");
-    DebugN(typeList);
   } else {
   typeList=navFunct_dpGetFullPathAsTypes(g_currentDatapoint);
   }
@@ -151,8 +144,9 @@ void changeSelection(string aSelection) {
 E "dyn_string typeList;
 
 //Global mainpoint holders
-string 	   itsActionDp	   = \"\";
+string 	   itsActionDp	    = \"\";
 string 	   itsEventDp      = \"\";
+string     itsDummyDP      = \"\";
 dyn_string itsSelectionDp  = \"\";
 bool       bDoubleClicked  = false;
 
@@ -166,12 +160,19 @@ void click() {
 
 void dblClick(string id,int column) {
   // indicate this is a doubleClick
+
   bDoubleClicked = true; 
    
   // double click indicates that we want to go to the selected level.
   // to do this we need to determine a new g_currentDatapoint derived from the current one and the level that
   // we clicked (backwards) in the typeList.
-  string dp=navFunct_getDPFromTypePath(typeList,id);
+
+  string dp=\"\";
+  if (itsDummyDP != \"\") {
+    dp = itsDummyDP;
+  } else {
+    dp=navFunct_getDPFromTypePath(typeList,id);
+  }
   LOG_DEBUG(\"navigator_locator.pnl:doubleClicked|dp:\"+dp);
 
   // check if we have an existing datapoint and if it's not the same as b4
