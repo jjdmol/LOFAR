@@ -172,6 +172,20 @@ class msss_calibrator_pipeline(control):
         # Read metadata (start, end times, pointing direction) from GVDS.
         vdsinfo = self.run_task("vdsreader", gvds=gvds_file)
 
+        # Create an empty parmdb for DPPP
+        parmdb_mapfile = self.run_task("setupparmdb", data_mapfile)['mapfile']
+
+        # Create a sourcedb based on sourcedb's input argument "skymodel"
+        sourcedb_mapfile = self.run_task(
+            "setupsourcedb", data_mapfile,
+            skymodel=os.path.join(
+                self.config.get('DEFAULT', 'lofarroot'),
+                'share', 'pipeline', 'skymodels', 
+                py_parset.getString('Calibration.CalibratorSource') +
+                    '.skymodel'
+            )
+        )['mapfile']
+
         # Create a parameter-subset for DPPP and write it to file.
         ndppp_parset = os.path.join(parset_dir, "NDPPP.parset")
         py_parset.makeSubset('DPPP.').writeFile(ndppp_parset)
@@ -181,9 +195,13 @@ class msss_calibrator_pipeline(control):
             data_mapfile,
             data_start_time=vdsinfo['start_time'],
             data_end_time=vdsinfo['end_time'],
-            parset=ndppp_parset
+            parset=ndppp_parset,
+            parmdb_mapfile=parmdb_mapfile,
+            sourcedb_mapfile=sourcedb_mapfile
         )['mapfile']
 
+        return 1
+        
         # Demix the relevant A-team sources
         demix_mapfile = self.run_task("demixing", dppp_mapfile)['mapfile']
 
