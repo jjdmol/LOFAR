@@ -47,10 +47,15 @@ using namespace casa;
 unsigned int getBaselines(const MeasurementSet &ms, double *baselines[3], 
                   int rowStart=-1, int rowEnd=-1);
 unsigned int getBaselines(const MeasurementSet &ms, double *u, double *v, double *w, 
-                          int rowStart, int rowEnd);                  
+                          int rowStart=-1, int rowEnd=-1);                  
 Vector<Double> getMSFrequencies(const MeasurementSet &ms);
-void writeData(const MeasurementSet &ms, const string &name);
+void writeData(const Table &table, const string &colName, double *data[4]); // unused
+void writeData( const MeasurementSet &ms, const string &name, 
+                const DComplex *XX, const DComplex *XY,
+                const DComplex *YX, const DComplex *YY, 
+                unsigned int nbaselines, unsigned int nfreqs=1);
 void printBaselines(double **baselines, size_t nrows);
+void printBaselines(double *u, double *v, double *w, size_t nrows);
 
 int main(int argc, char **argv)
 {
@@ -68,12 +73,15 @@ int main(int argc, char **argv)
   // Change these if necessary to adjust run time
   //
   MeasurementSet ms(msName, Table::Update);    // open MS
+
+  /*
   // allocate memory for array to hold baselines
   double **baselines=static_cast<double**>(malloc(ms.nrow()*sizeof(double)));
   for(unsigned int i=0; i<3; i++)
   {
     baselines[i]=static_cast<double*>(malloc(sizeof(double)*3));
   }  
+  */
   
   double *u=static_cast<double*>(malloc(ms.nrow()*sizeof(double)));
   double *v=static_cast<double*>(malloc(ms.nrow()*sizeof(double)));
@@ -89,17 +97,22 @@ int main(int argc, char **argv)
   //MSfreqs.tovector(frequencies);
 
   unsigned int nfreqs=MSfreqs.size();          // number of frequencies in MS (for sim)
-  cout << "MSfreqs: " << MSfreqs << endl;       // DEBUG
+  //cout << "MSfreqs: " << MSfreqs << endl;       // DEBUG
 
-  unsigned int nbaselines=getBaselines(ms, baselines);  // get baselines from MS
-  //printBaselines(baselines, nbaselines);      // DEBUG
+//  unsigned int nbaselines=getBaselines(ms, baselines);  // get baselines from MS
+//  printBaselines(baselines, nbaselines);      // DEBUG
+  unsigned int nbaselines=getBaselines(ms, u, v, w);
+  //printBaselines(u, v, w, nbaselines);          // DEBUG
 
   // Allocate memory for correlations XX, XY, YX, YY
-  DComplex *XX=(DComplex*)malloc(nbaselines*sizeof(DComplex));
-  DComplex *YY=(DComplex*)malloc(nbaselines*sizeof(DComplex));
+  DComplex *XX=(DComplex*)malloc(nbaselines*nfreqs*sizeof(DComplex));
+  DComplex *YY=(DComplex*)malloc(nbaselines*nfreqs*sizeof(DComplex));
 
   modelImage.degrid(u, v, w, nbaselines, nfreqs, frequencies, XX, NULL, 
                     NULL, YY);
+
+  // Write correlations to MS column
+
 
   /*
   // Function to get degridded data into raw pointers
@@ -110,15 +123,6 @@ int main(int argc, char **argv)
               casa::DComplex *XY , casa::DComplex *YY,
               double maxBaseline=200000);
   */
-  exit(0);    // DEBUG
-/*  
-  // Measure frequency in inverse wavelengths
-  std::vector<double> freq(nChan);
-  for (int i=0; i<nChan; i++)
-  {
-    freq[i]=(1.4e9-2.0e5*double(i)/double(nChan))/2.998e8;
-  }
-*/
   cout << "Done" << endl;
 
   return 0;
@@ -137,7 +141,7 @@ unsigned int getBaselines(const MeasurementSet &ms, double *baselines[3],
   IPosition shape = ROTableColumn(ms, MS::columnName(MS::UVW)).shapeColumn();
  
   cout << "getBaselines(): nrows: " << nrows << endl;
-  cout << "getBaselines(): shape: " << shape << endl;
+  //cout << "getBaselines(): shape: " << shape << endl;
 
   // ROTableColumn UVW: Double Array of Size [ 1 3 ]
   ROArrayColumn<Double> uvwColumn(ms, "UVW");
@@ -160,7 +164,7 @@ unsigned int getBaselines(const MeasurementSet &ms, double *u, double *v, double
   IPosition shape = ROTableColumn(ms, MS::columnName(MS::UVW)).shapeColumn();
  
   cout << "getBaselines(): nrows: " << nrows << endl;
-  cout << "getBaselines(): shape: " << shape << endl;
+  //cout << "getBaselines(): shape: " << shape << endl;
 
   // ROTableColumn UVW: Double Array of Size [ 1 3 ]
   ROArrayColumn<Double> uvwColumn(ms, "UVW");
@@ -168,12 +172,12 @@ unsigned int getBaselines(const MeasurementSet &ms, double *u, double *v, double
   Array<Double> uvw=uvwColumn.getColumn();
   cout << "uvw.shape(): " << uvw.shape() << endl;   // DEBUG
 
-  /*
   for(unsigned int i=0; i<nrows; i++)
   {
-    baselines[i]=uvw[i].data();   // assign column to array pointer
+    u[i]=uvw[i].data()[0];   // assign column to array pointer
+    v[i]=uvw[i].data()[1];   // assign column to array pointer
+    w[i]=uvw[i].data()[2];   // assign column to array pointer
   }
-  */
   
   return nrows;                   // return number of baselines
 }
@@ -196,6 +200,26 @@ void writeData(const Table &table, const string &colName, double *data[4])
 {
   // Complex Array of size [ 4 nchannels ]
   ArrayColumn<DComplex> model(table, colName);
+}
+
+void writeData( const Table &table, const string &colName, const DComplex *XX, 
+                const DComplex *XY, const DComplex *YX, const DComplex *YY,
+                unsigned int nbaselines, unsigned int nfreqs)
+{
+  // Complex Array of size [ 4 nchannels ]
+  ArrayColumn<DComplex> model(table, colName);
+  IPosition shape(2, 4, nfreqs);
+
+  for(unsigned int i=0; i<nbaselines; i++)
+  {
+    model.setShape(i, shape);    // set shape to 4 Corr, N frequencies
+    Array<DComplex> array(shape);
+  // gather correlations into temporary array
+//  Array<DComplex> correlations(model.shape());
+
+//void 	put (uInt rownr, const Array< T > &array)
+// 	Put the array in a particular cell (i.e. 
+  }
 }
 
 // Add a new column to the MeasurementSet
@@ -241,11 +265,21 @@ void addColumn (MeasurementSet& ms, const String &colName, const String& dataMan
 }
 
 // Helper function to print baselines[3]
+//
 void printBaselines(double **baselines, size_t nrows)
 {
   cout << "Baselines: u, v, w" << endl;
   for(unsigned int i=0; i<nrows; i++)
   {
     cout << baselines[i][0] << ", " << baselines[i][1] << ", " << baselines[i][2] << endl;
+  }
+}
+
+void printBaselines(double *u, double *v, double *w, size_t nrows)
+{
+  cout << "Baselines: u, v, w" << endl;
+  for(unsigned int i=0; i<nrows; i++)
+  {
+    cout << u[i] << ", " << v[i] << ", " << w[i] << endl;
   }
 }

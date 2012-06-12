@@ -581,8 +581,9 @@ void ModelImageFft::degrid( const double *uBl, const double *vBl, const double *
   //------------------------------------------------------------------------
   // Prepare uvw variables etc.
   //
-  vector<complex<float> > data(itsImageProperties.nx*itsImageProperties.ny);
-  vector<complex<float> > outdata(itsImageProperties.nx*itsImageProperties.ny*nfreqs);
+//  vector<complex<float> > data(itsImageProperties.nx*itsImageProperties.ny);
+  vector<complex<float> > data(itsImageProperties.nx*itsImageProperties.ny*nfreqs);
+  vector<complex<float> > outdata(nuvw*nfreqs);
   vector<double> u(uBl, uBl+nuvw);      // u coord of requested baselines
   vector<double> v(vBl, vBl+nuvw);      // v coord of requested baselines
   vector<double> w(wBl, wBl+nuvw);      // w coord of requested baselines
@@ -653,9 +654,7 @@ void ModelImageFft::degrid( const double *uBl, const double *vBl, const double *
       {
         //ASSERT(imagePlane.contiguous);      // image slice is contiguous, use        
         imagePlane.tovector(data);    // copy data into STL vector to conform to Cornwell interface
-
-        // call Cornwell degridKernel
-        degridKernel( grid, gSize, support, C, cOffset, iu, iv, data);
+        degridKernel(grid, gSize, support, C, cOffset, iu, iv, data);  // call Cornwell degridKernel
       }
       else
       {
@@ -671,8 +670,6 @@ void ModelImageFft::degrid( const double *uBl, const double *vBl, const double *
       {
         LOG_WARN_STR("degrid(): XX or YY parameter empty, no correlations output.");
       }
-
-
     }
   }
 }
