@@ -67,12 +67,13 @@ void navConfig_setNavigatorID(int newID)
   // We need an unique ID for this instance of the user interface
   // We can use the myManId() which will give:
   // <manager type> + <manager ID>
-  if (newID < 0) {
+
+  if (newID <= 0) {
     g_navigatorID = myManId();
   } else {
     g_navigatorID = newID;
   }   
-    
+  
   // if there is no DP yet available, create one.
   if (! dpExists(DPNAME_NAVIGATOR + g_navigatorID)) {
     LOG_DEBUG("navConfig.ctl:navConfig_setNavigatorID|Creating new navigator configuration");
