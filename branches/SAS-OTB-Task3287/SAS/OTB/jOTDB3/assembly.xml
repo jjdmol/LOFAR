@@ -38,6 +38,7 @@
 		<fileSet>
 			<directory>${basedir}/dist-src</directory>
 			<outputDirectory>.</outputDirectory>
+			>fileMode>0555</fileMode>
 			<includes>
 				<include>**/*</include>
 			</includes>
