@@ -1,245 +1,202 @@
-#from __future__ import with_statement
-#import os
-#import errno
-#import unittest
-#import shutil
-#import numpy
-#import tempfile
-#
-##imports from fixture:
-#import lofarpipe.support.xml
-#
-#class XmlTest(unittest.TestCase):
-#    def __init__(self, arg):
-#        super(XmlTest, self).__init__(arg)
-#
-#    def setUp(self):
-#        pass
-#
-#    def tearDown(self):
-#        pass
-#
-#    def test_fail(self):
-#        self.assertTrue(False)
-#
-#if __name__ == "__main__":
-#    import xmlrunner
-#    unittest.main(testRunner = xmlrunner.XMLTestRunner(output = 'result.xml'))
-
-#                                                       LOFAR PIPELINE FRAMEWORK
-#
-#                                                             Tests: ingredients
-#                                                            John Swinbank, 2010
-#                                                      swinbank@transientskp.org
-# ------------------------------------------------------------------------------
-import unittest
+from __future__ import with_statement
 import os
+import errno
+import unittest
+import shutil
+import numpy
+import tempfile
 
-class StringFieldTest(unittest.TestCase):
-    """
-    Tests for :class:`lofarpipe.support.lofaringredient.StringField`
-    """
+#imports from fixture:
+import lofarpipe.support.pipelinexml as pipexml
+import xml.dom.minidom as xml
+
+
+class pipelinexmlTest(unittest.TestCase):
+    def __init__(self, arg):
+        super(pipelinexmlTest, self).__init__(arg)
+
     def setUp(self):
-        from lofarpipe.support.lofaringredient import StringField
-        self.stringfield = StringField(default = "a string")
+        pass
 
-    def test_validator(self):
-        """
-        Check that strings are correctly regarded as valid, and integers
-        aren't.
-        """
-        self.assertFalse(self.stringfield.is_valid(1))
-        self.assertTrue(self.stringfield.is_valid("1"))
+    def tearDown(self):
+        pass
 
-    def test_default(self):
-        """
-        Check that default is correctly set.
-        """
-        self.assertEqual(self.stringfield.default, "a string")
+    # reading and writing of parset is extremely limited: The parameterset
+    # is part of the mucked fixture.
+    # it does describe the todict function. This means that all test start, leave
+    # from this interface.
 
-class IntFieldTest(unittest.TestCase):
-    """
-    Tests for :class:`lofarpipe.support.lofaringredient.IntField`
-    """
-    def setUp(self):
-        from lofarpipe.support.lofaringredient import IntField
-        self.intfield = IntField(default = 1)
+    def test_read_parset_to_dict(self):
+        # write a tempparset with test data
+        testdata = \
+"""
+#Comment 
+key1=value #end of line comment 
+key2= value \  #end of line comment 
+additional data 
+key3=value #\end of line comment 
+key4=value=value
+   #randomdata this is not parsed
+    key5 = value                
+"""
+        expected_dict = {}
+        expected_dict["key1"] = "value"
+        expected_dict["key2"] = "value additional data"
+        expected_dict["key3"] = "value"
+        expected_dict["key4"] = "value=value"
+        expected_dict["key5"] = "value"
 
-    def test_validator(self):
-        """
-        Check that integers are correctly regarded as valid, and strings
-        aren't.
-        """
-        self.assertFalse(self.intfield.is_valid("1"))
-        self.assertTrue(self.intfield.is_valid(1))
+        temp_dir = tempfile.mkdtemp()
+        temp_parset_path = os.path.join(temp_dir, "parset.par")
+        fp = open(temp_parset_path, 'w')
+        fp.write(testdata)
+        fp.close
 
-    def test_default(self):
-        """
-        Check that default is correctly set.
-        """
-        self.assertEqual(self.intfield.default, 1)
+        fp = open(temp_parset_path, 'r')
 
-    def test_coerce(self):
-        """
-        Check that a string is correctly coerced to an integer.
-        """
-        self.assertEqual(self.intfield.coerce("1"), 1)
+        dicted_parset = pipexml._read_parset_to_dict(temp_parset_path)
+        for key in expected_dict.iterkeys():
+            message = "dict did not contain expected key {0} \n {1}".format(
+                    key, dicted_parset)
+            self.assertTrue(dicted_parset.has_key(key), message)
 
-class FloatFieldTest(unittest.TestCase):
-    """
-    Tests for :class:`lofarpipe.support.lofaringredient.FloatField`
-    """
-    def setUp(self):
-        from lofarpipe.support.lofaringredient import FloatField
-        self.floatfield = FloatField(default = 1.0)
+            message = "retrieved value based on key {0} is not the correct: \n"\
+               " >{1}< != >{2}< ".format(key, dicted_parset[key], expected_dict[key])
 
-    def test_validator(self):
-        """
-        Check that floats are correctly regarded as valid, and strings
-        aren't.
-        """
-        self.assertFalse(self.floatfield.is_valid("1"))
-        self.assertTrue(self.floatfield.is_valid(1.0))
+            self.assertTrue(dicted_parset[key] == expected_dict[key], message)
 
-    def test_default(self):
-        """
-        Check that default is correctly set.
-        """
-        self.assertEqual(self.floatfield.default, 1.0)
 
-    def test_coerce(self):
-        """
-        Check that a string is correctly coerced to an float.
-        """
-        self.assertEqual(self.floatfield.coerce("1"), 1.0)
+    def test_convert_dict_to_xml_node_multi_toplevel(self):
+        input_dict = {}
+        input_dict["node1.node21.leaf1"] = "leaf1"
+        input_dict["node1.node21.leaf2"] = "leaf2"
+        input_dict["node1.node22.leaf3"] = "leaf3"
+        input_dict["node1.node3.leaf4"] = "leaf4"
+        input_dict["node1.node21"] = "leaf_node"
+        input_dict["parset_leaf"] = "leaf5"
+        toplevel_name = "parset"
 
-class FileFieldTest(unittest.TestCase):
-    """
-    Tests for :class:`lofarpipe.support.lofaringredient.FileField`
-    """
-    def setUp(self):
-        from lofarpipe.support.lofaringredient import FileField
-        self.filefield = FileField(default = '/')
+        expected_output = """<parset parset_leaf="leaf5"><node1 node21="leaf_node"><node3 leaf4="leaf4"/><node22 leaf3="leaf3"/><node21 leaf1="leaf1" leaf2="leaf2"/></node1></parset>"""
+        xml = pipexml._convert_dict_to_xml_node(input_dict, toplevel_name)
 
-    def test_validator(self):
-        """
-        Integers are not valid as filenames, and certainly don't exist on
-        disk.
+        message = "_convert_key_to_xml_tree returned an unexpected value: expected, received\n"\
+            "{0} \n{1}".format(expected_output, xml.toxml())
+        self.assertTrue(expected_output == xml.toxml(), message)
 
-        ``/`` should, though.
-        """
-        self.assertFalse(self.filefield.is_valid(1))
-        self.assertTrue(self.filefield.is_valid("/"))
+    def test_convert_dict_to_xml_node_single_toplevel(self):
+        input_dict = {}
+        input_dict["node1.node21.leaf1"] = "leaf1"
+        input_dict["node1.node21.leaf2"] = "leaf2"
+        input_dict["node1.node22.leaf3"] = "leaf3"
+        input_dict["node1.node3.leaf4"] = "leaf4"
+        input_dict["node1.node21"] = "leaf_node"
 
-    def test_default(self):
-        """
-        Check that default is correctly set.
-        """
-        self.assertEqual(self.filefield.default, "/")
+        expected_output = """<node1 node21="leaf_node"><node21 leaf1="leaf1" leaf2="leaf2"/><node22 leaf3="leaf3"/><node3 leaf4="leaf4"/></node1>"""
+        xml = pipexml._convert_dict_to_xml_node(input_dict)
 
-class ExecFieldTest(unittest.TestCase):
-    """
-    Tests for :class:`lofarpipe.support.lofaringredient.ExecField`
-    """
-    def setUp(self):
-        from lofarpipe.support.lofaringredient import ExecField
-        self.execfield = ExecField(default = '/bin/ls')
+        message = "_convert_key_to_xml_tree returned an unexpected value: expected, received\n"\
+            "{0} \n{1}".format(expected_output, xml.toxml())
+        self.assertTrue(expected_output == xml.toxml(), message)
 
-    def test_validator(self):
-        """
-        ``/etc/passwd`` should always exist as a file on disk, but not be
-        executable.
 
-        ``/bin/ls`` should always exist, and must be executable.
-        """
-        self.assertFalse(self.execfield.is_valid("/etc/passwd"))
-        self.assertTrue(self.execfield.is_valid("/bin/ls"))
+    def test_convert_xml_node_to_dict(self):
+        # TODO: brittle test: cause it uses _convert_dict_to_xml_node
+        input_dict = {}
+        input_dict["node1.node21.leaf1"] = "leaf1"
+        input_dict["node1.node21.leaf2"] = "leaf2"
+        input_dict["node1.node22.leaf3"] = "leaf3"
+        input_dict["node1.node3.leaf4"] = "leaf4"
+        input_dict["node1.node21"] = "leaf_node"
+        input_dict["parset_leaf"] = "leaf5"
 
-    def test_default(self):
-        """
-        Check that default is correctly set.
-        """
-        self.assertEqual(self.execfield.default, "/bin/ls")
+        xml = pipexml._convert_dict_to_xml_node(input_dict)
 
-class DirectoryFieldTest(unittest.TestCase):
-    """
-    Tests for :class:`lofarpipe.support.lofaringredient.DirectoryField`
-    """
-    def setUp(self):
-        from lofarpipe.support.lofaringredient import DirectoryField
-        self.directoryfield = DirectoryField(default = '/tmp')
+        output_dict = {}
+        pipexml._convert_xml_node_to_dict(xml.firstChild, [], output_dict)
 
-    def test_validator(self):
-        """
-        An integer is not a valid directory.
+        for key in input_dict.keys():
+            if key == "parset_leaf":
+                self.assertFalse(output_dict.has_key(key), "The output dict"
+                        "contained a parset leaf: this should not be returned"
+                        "in this test case")
+                continue
 
-        ``/tmp`` should always be valid.
-        """
-        self.assertFalse(self.directoryfield.is_valid(1))
-        self.assertTrue(self.directoryfield.is_valid("/tmp"))
+            self.assertTrue(output_dict.has_key(key),
+                "The generated dict did not contain the expected key:\n {0}\n{1}".format(
+                        input_dict, output_dict))
+            self.assertTrue(output_dict[key] == input_dict[key],
+                "the received value for key {0} was not equal: {1}, {2}".format(
+                    key, input_dict[key], output_dict[key]))
 
-    def test_default(self):
-        """
-        Check that default is correctly set.
-        """
-        self.assertEqual(self.directoryfield.default, "/tmp")
 
-    def test_coerce(self):
-        """
-        Coercing a create-able directory name should cause it to exist. We
-        should always be able to write in ``/tmp``.
-        """
-        self.directoryfield.coerce("/tmp/foo")
-        self.assertTrue(os.path.exists("/tmp/foo"))
+    def test_convert_xml_to_dict_node(self):
+        input_dict = {}
+        input_dict["node1.node21.leaf1"] = "leaf1"
+        input_dict["node1.node21.leaf2"] = "leaf2"
+        input_dict["node1.node22.leaf3"] = "leaf3"
+        input_dict["node1.node3.leaf4"] = "leaf4"
+        input_dict["node1.node21"] = "leaf_node"
 
-class LOFARIngredientTest(unittest.TestCase):
-    """
-    Tests for :class:`lofarpipe.support.lofaringredient.LOFARingredient`
-    """
-    def setUp(self):
-        """
-        An instance of
-        :class:`~lofarpipe.support.lofaringredient.LOFARingredient` is defined
-        which contains three instances of
-        :class:`~lofarpipe.support.lofaringredient.StringField`.
-        """
-        from lofarpipe.support.lofaringredient import StringField
-        from lofarpipe.support.lofaringredient import LOFARingredient
-        f = StringField(default = "foo")
-        g = StringField()
-        h = StringField(default = 1)
-        self.lofaringredient = LOFARingredient({"f": f, "g": g, "h": h})
+        toplevel_name = "a_name"
 
-    def test_keys(self):
-        """
-        ``self.lofaringredient`` should contain keys for the two fields
-        which have default parameters, but not for the one which is unset.
-        """
-        self.assertEqual(len(self.lofaringredient.keys()), 2)
-        self.assertRaises(KeyError, lambda: self.lofaringredient['g'])
+        xml_node = pipexml._convert_dict_to_xml_node(input_dict,)
 
-    def test_values(self):
-        """
-        Prior to setting, the value of the fields should be equal to
-        the default value.
-        """
-        self.assertEqual(self.lofaringredient['f'], "foo")
 
-    def test_set(self):
-        """
-        When set, the value of the fields should be equal to the new value.
-        """
-        self.lofaringredient['g'] = "bar"
-        self.assertEqual(self.lofaringredient['g'], "bar")
+        output_dict = {}
+        output_dict = pipexml._convert_xml_to_dict(xml_node)
 
-    def test_bad_values(self):
-        """
-        Unacceptable values should raise an exception.
-        """
-        self.assertRaises(TypeError, lambda: self.lofaringredient['h'])
-        self.lofaringredient['h'] = "bar"
-        self.assertEqual(self.lofaringredient['h'], "bar")
+        for key in input_dict.keys():
+            if key == "parset_leaf":
+                self.assertFalse(output_dict.has_key(key), "The output dict"
+                        "contained a parset leaf: this should not be returned"
+                        "in this test case")
+                continue
+            self.assertTrue(output_dict.has_key(key),
+                "The generated dict did not contain the expected key:\n {0}\n{1}".format(
+                        input_dict, output_dict))
+            self.assertTrue(output_dict[key] == input_dict[key],
+                "the received value for key {0} was not equal: {1}, {2}".format(
+                    key, input_dict[key], output_dict[key]))
+
+
+    def test_convert_xml_to_dict_document(self):
+        input_dict = {}
+        input_dict["node1.node21.leaf1"] = "leaf1"
+        input_dict["node1.node21.leaf2"] = "leaf2"
+        input_dict["node1.node22.leaf3"] = "leaf3"
+        input_dict["node1.node3.leaf4"] = "leaf4"
+        input_dict["node1.node21"] = "leaf_node"
+
+        toplevel_name = "a_name"
+        xml_node = pipexml._convert_dict_to_xml_node(input_dict)
+
+
+        xml_document = xml.Document()
+        xml_root = xml_document.createElement("root")
+        xml_root.appendChild(xml_node)
+        xml_document.appendChild(xml_root)
+        output_dict = {}
+        output_dict = pipexml._convert_xml_to_dict(xml_document)
+
+        for key in input_dict.keys():
+            if key == "parset_leaf":
+                self.assertFalse(output_dict.has_key(key), "The output dict"
+                        "contained a parset leaf: this should not be returned"
+                        "in this test case")
+                continue
+            self.assertTrue(output_dict.has_key(key),
+                "The generated dict did not contain the expected key:\n {0}\n{1}".format(
+                        input_dict, output_dict))
+            self.assertTrue(output_dict[key] == input_dict[key],
+                "the received value for key {0} was not equal: {1}, {2}".format(
+                    key, input_dict[key], output_dict[key]))
+
+
 
 if __name__ == "__main__":
     import xmlrunner
     unittest.main(testRunner = xmlrunner.XMLTestRunner(output = 'result.xml'))
+
+
+
+
