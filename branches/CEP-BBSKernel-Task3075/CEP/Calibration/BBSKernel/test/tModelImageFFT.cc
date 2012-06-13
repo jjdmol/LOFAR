@@ -49,7 +49,7 @@ unsigned int getBaselines(const MeasurementSet &ms, double *baselines[3],
 unsigned int getBaselines(const MeasurementSet &ms, double *u, double *v, double *w, 
                           int rowStart=-1, int rowEnd=-1);                  
 Vector<Double> getMSFrequencies(const MeasurementSet &ms);
-void addColumn(MeasurementSet& ms, const String& dataManName);
+void addModelColumn(MeasurementSet& ms, const String& dataManName, unsigned int nchan=1);
 void writeData( MeasurementSet &ms, const string &name, 
                 const DComplex *XX, const DComplex *XY,
                 const DComplex *YX, const DComplex *YY, 
@@ -67,11 +67,7 @@ int main(int argc, char **argv)
   if(argc==4)
     nwplanes=atoi(argv[3]);
 
-  LOFAR::BBS::ModelImageFft modelImage(imageFilename, nwplanes);  // nwplanes=20?
-
-  // TODO: Adjust all this to use ModelImageFFT class implementation
-  // Change these if necessary to adjust run time
-  //
+  LOFAR::BBS::ModelImageFft modelImage(imageFilename, nwplanes);  // nwplanes=1
   MeasurementSet ms(msName, Table::Update);    // open MS
 
   /*
@@ -109,8 +105,9 @@ int main(int argc, char **argv)
   DComplex *YY=(DComplex*)malloc(nbaselines*nfreqs*sizeof(DComplex));
 
   //modelImage.degrid(u, v, w, nbaselines, nfreqs, frequencies, XX, NULL, NULL, YY);
-  addColumn(ms, "imageFilename");
-//  writeData(ms, "imageFilename", XX, NULL, NULL, YY, nbaselines, nfreqs); // Write correlations to MS column
+  addModelColumn(ms, imageFilename);
+  ms.flush(); // needed to make added column flush to file
+  writeData(ms, "imageFilename", XX, NULL, NULL, YY, nbaselines, nfreqs); // Write correlations to MS column
 
   /*
   // Function to get degridded data into raw pointers
@@ -121,8 +118,11 @@ int main(int argc, char **argv)
               casa::DComplex *XY , casa::DComplex *YY,
               double maxBaseline=200000);
   */
-  cout << "Done" << endl;
 
+  ms.flush();
+  ms.closeSubTables();
+
+  cout << "Done" << endl;
   return 0;
 }
 
@@ -133,17 +133,14 @@ unsigned int getBaselines(const MeasurementSet &ms, double *baselines[3],
                           int rowStart, int rowEnd)   // range not supported yet
 {
   // Example: 711.309, -357.693, 432.535
- 
   // Check that rowStart and rowEnd are within the limits
   uInt nrows=ms.nrow();
   IPosition shape = ROTableColumn(ms, MS::columnName(MS::UVW)).shapeColumn();
  
   cout << "getBaselines(): nrows: " << nrows << endl;
-  //cout << "getBaselines(): shape: " << shape << endl;
 
   // ROTableColumn UVW: Double Array of Size [ 1 3 ]
   ROArrayColumn<Double> uvwColumn(ms, "UVW");
-  
   Array<Double> uvw=uvwColumn.getColumn();
   for(unsigned int i=0; i<nrows; i++)
   {
@@ -156,20 +153,14 @@ unsigned int getBaselines(const MeasurementSet &ms, double *u, double *v, double
                           int rowStart, int rowEnd)   // range not supported yet
 {
   // Example: 711.309, -357.693, 432.535
- 
-  // Check that rowStart and rowEnd are within the limits
   uInt nrows=ms.nrow();
   IPosition shape = ROTableColumn(ms, MS::columnName(MS::UVW)).shapeColumn();
  
-  cout << "getBaselines(): nrows: " << nrows << endl;
-  //cout << "getBaselines(): shape: " << shape << endl;
-
+  //cout << "getBaselines(): nrows: " << nrows << endl;
   // ROTableColumn UVW: Double Array of Size [ 1 3 ]
   ROArrayColumn<Double> uvwColumn(ms, "UVW");
   
   Array<Double> uvw=uvwColumn.getColumn();
-  cout << "uvw.shape(): " << uvw.shape() << endl;   // DEBUG
-
   for(unsigned int i=0; i<nrows; i++)
   {
     u[i]=uvw[i].data()[0];   // assign column to array pointer
@@ -199,13 +190,13 @@ void writeData( MeasurementSet &ms, const string &colName, const DComplex *XX,
                 unsigned int nbaselines, unsigned int nfreqs)
 {
   // Complex Array of size [ 4 nchannels ]
-  ArrayColumn<DComplex> model(ms, colName);
+  ArrayColumn<Complex> modelCol(ms, colName);
   IPosition shape(2, 4, nfreqs);
 
   for(unsigned int i=0; i<nbaselines; i++)
   {
-    model.setShape(i, shape);    // set shape to 4 Corr, N frequencies
-    Array<DComplex> correlations(shape);
+    modelCol.setShape(i, shape);    // set shape to 4 Corr, N frequencies
+    Array<Complex> correlations(shape);
 
     cout << "writeData(): shape: " << shape << endl;    // DEBUG
 //    correlations(0,i)=XX[i];
@@ -217,13 +208,13 @@ void writeData( MeasurementSet &ms, const string &colName, const DComplex *XX,
   }
 }
 
-// Add a new column to the MeasurementSet
-//
-void addColumn(MeasurementSet& ms, const String& dataManName)
+
+void addModelColumn (MeasurementSet& ms, const String& dataManName, unsigned int nchan)
 {
   // Find data shape from DATA column.
   // Make tiles of appr. 1 MB.
-  String colName (MS::columnName(MS::MODEL_DATA));
+//  String colName (MS::columnName(MS::MODEL_DATA));
+  String colName=dataManName;
   IPosition shape = ROTableColumn(ms, MS::columnName(MS::DATA)).shapeColumn();
   IPosition dataTileShape;
   if (shape.empty()) 
@@ -234,8 +225,11 @@ void addColumn(MeasurementSet& ms, const String& dataManName)
   {
     dataTileShape = IPosition(3, shape[0], shape[1], (1024*1024)/(shape.product()*8));
   }
+  
   if (! ms.tableDesc().isColumn(colName)) 
   {
+    cout << "Shape: " << shape << endl;
+  
     TableDesc td;
     if (shape.empty())
     {
