@@ -49,8 +49,8 @@ unsigned int getBaselines(const MeasurementSet &ms, double *baselines[3],
 unsigned int getBaselines(const MeasurementSet &ms, double *u, double *v, double *w, 
                           int rowStart=-1, int rowEnd=-1);                  
 Vector<Double> getMSFrequencies(const MeasurementSet &ms);
-void writeData(const Table &table, const string &colName, double *data[4]); // unused
-void writeData( const MeasurementSet &ms, const string &name, 
+void addColumn(MeasurementSet& ms, const String& dataManName);
+void writeData( MeasurementSet &ms, const string &name, 
                 const DComplex *XX, const DComplex *XY,
                 const DComplex *YX, const DComplex *YY, 
                 unsigned int nbaselines, unsigned int nfreqs=1);
@@ -108,11 +108,9 @@ int main(int argc, char **argv)
   DComplex *XX=(DComplex*)malloc(nbaselines*nfreqs*sizeof(DComplex));
   DComplex *YY=(DComplex*)malloc(nbaselines*nfreqs*sizeof(DComplex));
 
-  modelImage.degrid(u, v, w, nbaselines, nfreqs, frequencies, XX, NULL, 
-                    NULL, YY);
-
-  // Write correlations to MS column
-
+  //modelImage.degrid(u, v, w, nbaselines, nfreqs, frequencies, XX, NULL, NULL, YY);
+  addColumn(ms, "imageFilename");
+//  writeData(ms, "imageFilename", XX, NULL, NULL, YY, nbaselines, nfreqs); // Write correlations to MS column
 
   /*
   // Function to get degridded data into raw pointers
@@ -196,24 +194,21 @@ Vector<Double> getMSFrequencies(const MeasurementSet &ms)
 
 // Write data into an ArrayColumn
 //
-void writeData(const Table &table, const string &colName, double *data[4])
-{
-  // Complex Array of size [ 4 nchannels ]
-  ArrayColumn<DComplex> model(table, colName);
-}
-
-void writeData( const Table &table, const string &colName, const DComplex *XX, 
+void writeData( MeasurementSet &ms, const string &colName, const DComplex *XX, 
                 const DComplex *XY, const DComplex *YX, const DComplex *YY,
                 unsigned int nbaselines, unsigned int nfreqs)
 {
   // Complex Array of size [ 4 nchannels ]
-  ArrayColumn<DComplex> model(table, colName);
+  ArrayColumn<DComplex> model(ms, colName);
   IPosition shape(2, 4, nfreqs);
 
   for(unsigned int i=0; i<nbaselines; i++)
   {
     model.setShape(i, shape);    // set shape to 4 Corr, N frequencies
-    Array<DComplex> array(shape);
+    Array<DComplex> correlations(shape);
+
+    cout << "writeData(): shape: " << shape << endl;    // DEBUG
+//    correlations(0,i)=XX[i];
   // gather correlations into temporary array
 //  Array<DComplex> correlations(model.shape());
 
@@ -224,11 +219,11 @@ void writeData( const Table &table, const string &colName, const DComplex *XX,
 
 // Add a new column to the MeasurementSet
 //
-void addColumn (MeasurementSet& ms, const String &colName, const String& dataManName)
+void addColumn(MeasurementSet& ms, const String& dataManName)
 {
   // Find data shape from DATA column.
   // Make tiles of appr. 1 MB.
-//  String colName (MS::columnName(MS::MODEL_DATA));
+  String colName (MS::columnName(MS::MODEL_DATA));
   IPosition shape = ROTableColumn(ms, MS::columnName(MS::DATA)).shapeColumn();
   IPosition dataTileShape;
   if (shape.empty()) 

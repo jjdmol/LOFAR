@@ -582,14 +582,13 @@ void ModelImageFft::degrid( const double *uBl, const double *vBl, const double *
   // Prepare uvw variables etc.
   //
   vector<complex<float> > data(itsImageProperties.nx*itsImageProperties.ny);
-//  vector<complex<float> > data(itsImageProperties.nx*itsImageProperties.ny*nfreqs);
   vector<complex<float> > outdata(nuvw*nfreqs);
   vector<double> u(uBl, uBl+nuvw);      // u coord of requested baselines
   vector<double> v(vBl, vBl+nuvw);      // v coord of requested baselines
   vector<double> w(wBl, wBl+nuvw);      // w coord of requested baselines
   // Don't change any of these numbers unless you know what you are doing!
   int gSize=512;                        // Size of output grid in pixels
-  double cellSize=40.0;    // Cellsize of output grid in wavelengths
+  double cellSize=40.0;                 // Cellsize of output grid in wavelengths
   vector<std::complex<float> > grid(gSize*gSize);
   grid.assign(grid.size(), std::complex<float> (0.0));
 
