@@ -118,7 +118,7 @@ par  LMFactor                I    dbl    -      10    0    1.0                 -
 par  BalancedEqs             I    bool   -      10    0    F                    -        'Add LM-factor to diagonal elements'
 par  UseSVD                  I    bool   -      10    0    T                    -        'Use Singular Value Decomposition to compute solution'
 
-node Solve            4.0.0  development 'node constraint' 'Template Solve Operation'
+node demixer:Solve            4.0.0  development 'node constraint' 'Template Solve Operation'
 uses Options         4.0.0  development 1                 'Solver configuration'
 
 node	demixer		4.0.0	development	'node constraint'	"Demix"
@@ -135,7 +135,7 @@ par	targetsource     I	text -	10		0	""                              -	"Name of o
 par	subtractsources I	vtext -	10		0	""                              -	"Names of the sources to subtract."
 par	modelsources I	vtext -	10		0	'[]'                              -	"Names of the sources to take into account when solving."
 par	othersources    I	 vtext -	10		0	'[]'                              -	"Names of the sources to project away when solving."
-uses Solve         4.0.0  development 1                 'Solver attributes'
+uses demixer:Solve         4.0.0  development 1                 'Solver attributes'
 
 node	uvwflagger	4.0.0	development	'node constraint'	"UVW flagger"
 par	type		I		text	-	10		0	"uvwflagger"	-	"Type of the flagger, do not change"
