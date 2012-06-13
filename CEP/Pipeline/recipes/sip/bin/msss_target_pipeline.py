@@ -51,23 +51,32 @@ class msss_target_pipeline(control):
         """
         odp = self.parset.makeSubset('ObsSW.Observation.DataProducts.')
         self.input_data['data'] = [
-            tuple(''.join(x).split(':')) for x in zip(
-                odp.getStringVector('Input_Correlated.locations', []),
-                odp.getStringVector('Input_Correlated.filenames', []))
+            tuple(os.path.join(location, filename).split(':'))
+                for location, filename, skip in zip(
+                    odp.getStringVector('Input_Correlated.locations'),
+                    odp.getStringVector('Input_Correlated.filenames'),
+                    odp.getBoolVector('Input_Correlated.skip'))
+                if not skip
         ]
         self.logger.debug("%d Input_Correlated data products specified" %
                           len(self.input_data['data']))
         self.input_data['instrument'] = [
-            tuple(''.join(x).split(':')) for x in zip(
-                odp.getStringVector('Input_InstrumentModel.locations', []),
-                odp.getStringVector('Input_InstrumentModel.filenames', []))
+            tuple(os.path.join(location, filename).split(':'))
+                for location, filename, skip in zip(
+                    odp.getStringVector('Input_InstrumentModel.locations'),
+                    odp.getStringVector('Input_InstrumentModel.filenames'),
+                    odp.getBoolVector('Input_InstrumentModel.skip'))
+                if not skip
         ]
         self.logger.debug("%d Input_InstrumentModel data products specified" %
                           len(self.input_data['instrument']))
         self.output_data['data'] = [
-            tuple(''.join(x).split(':')) for x in zip(
-                odp.getStringVector('Output_Correlated.locations', []),
-                odp.getStringVector('Output_Correlated.filenames', []))
+            tuple(os.path.join(location, filename).split(':'))
+                for location, filename, skip in zip(
+                    odp.getStringVector('Output_Correlated.locations'),
+                    odp.getStringVector('Output_Correlated.filenames'),
+                    odp.getBoolVector('Output_Correlated.skip'))
+                if not skip
         ]
         self.logger.debug("%d Output_Correlated data products specified" %
                           len(self.output_data['data']))
