@@ -280,7 +280,8 @@ class msss_target_pipeline(control):
             data_mapfile,
             data_start_time = vdsinfo['start_time'],
             data_end_time = vdsinfo['end_time'],
-            parset = ndppp_parset
+            parset = ndppp_parset,
+            mapfile = os.path.join(mapfile_dir, 'dppp[0].mapfile')
         )['mapfile']
 
         # Demix the relevant A-team sources
@@ -310,7 +311,8 @@ class msss_target_pipeline(control):
             (bbs_mapfile, corrected_mapfile),
             clobber = False,
             suffix = '',
-            parset = ndppp_parset
+            parset = ndppp_parset,
+            mapfile = os.path.join(mapfile_dir, 'dppp[1].mapfile')
         )
 
         # Create a parset-file containing the metadata for MAC/SAS
