@@ -5,7 +5,7 @@ import shutil
 
 from lofar.parameterset import parameterset
 from lofarpipe.support.lofarnode import LOFARnodeTCP
-import bdsm #@UnresolvedImport
+import lofar.bdsm as bdsm#@UnresolvedImport
 
 from lofarpipe.support.utilities import read_initscript
 from lofarpipe.support.pipelinelogging import CatchLog4CPlus
