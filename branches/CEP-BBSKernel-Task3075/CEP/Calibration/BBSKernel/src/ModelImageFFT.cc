@@ -581,8 +581,8 @@ void ModelImageFft::degrid( const double *uBl, const double *vBl, const double *
   //------------------------------------------------------------------------
   // Prepare uvw variables etc.
   //
-//  vector<complex<float> > data(itsImageProperties.nx*itsImageProperties.ny);
-  vector<complex<float> > data(itsImageProperties.nx*itsImageProperties.ny*nfreqs);
+  vector<complex<float> > data(itsImageProperties.nx*itsImageProperties.ny);
+//  vector<complex<float> > data(itsImageProperties.nx*itsImageProperties.ny*nfreqs);
   vector<complex<float> > outdata(nuvw*nfreqs);
   vector<double> u(uBl, uBl+nuvw);      // u coord of requested baselines
   vector<double> v(vBl, vBl+nuvw);      // v coord of requested baselines
@@ -664,7 +664,7 @@ void ModelImageFft::degrid( const double *uBl, const double *vBl, const double *
       if(XX && YY)    // only copy, if we have a valid pointer
       {
         //copy(data.begin(), data.end(), XX+(freq*nuvw));
-        computeICorr(data, XX, YY);
+        computeICorr(outdata, XX, YY);
       }
       else
       {
