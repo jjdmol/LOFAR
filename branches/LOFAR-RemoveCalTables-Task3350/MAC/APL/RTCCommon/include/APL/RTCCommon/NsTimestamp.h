@@ -25,6 +25,7 @@
 #ifndef NSTIMESTAMP_H_
 #define NSTIMESTAMP_H_
 
+#include <Common/LofarTypes.h>
 #include <time.h>
 #include <sys/time.h>
 #include <string.h>
