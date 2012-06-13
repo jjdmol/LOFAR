@@ -1,0 +1,8 @@
+# BeamCntrl
+connected		bool
+subArray		string
+subbandList		stringArr
+angle1			doubleArr
+angle2			doubleArr
+directionType	stringArr
+beamName		stringArr
