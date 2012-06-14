@@ -121,10 +121,10 @@ PIC.Core.CS302HBA0.clockCorrectionTime = 0
 PIC.Core.CS302HBA.clockCorrectionTime = 0
 PIC.Core.CS302HBA1.clockCorrectionTime = 0
 
-PIC.Core.CS401LBA.clockCorrectionTime = 8.06397-06
-PIC.Core.CS401HBA0.clockCorrectionTime = 8.06397-06
-PIC.Core.CS401HBA1.clockCorrectionTime = 8.06397-06
-PIC.Core.CS401HBA.clockCorrectionTime = 8.06397-06
+PIC.Core.CS401LBA.clockCorrectionTime = 8.06397e-06
+PIC.Core.CS401HBA0.clockCorrectionTime = 8.06397e-06
+PIC.Core.CS401HBA1.clockCorrectionTime = 8.06397e-06
+PIC.Core.CS401HBA.clockCorrectionTime = 8.06397e-06
 
 PIC.Core.CS501LBA.clockCorrectionTime  = 0
 PIC.Core.CS501HBA0.clockCorrectionTime = 0
