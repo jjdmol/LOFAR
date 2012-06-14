@@ -29,6 +29,7 @@
 #include <measures/Measures/Stokes.h>                 // casa::Stokes::StokesTypes
 #include <lattices/Lattices/LatticeFFT.h>
 #include <images/Images/ImageOpener.h>
+#include <images/Images/PagedImage.h>
 #include <images/Images/ImageFFT.h>
 #include <coordinates/Coordinates/CoordinateSystem.h> //for spectral coord
 #include <coordinates/Coordinates/Coordinate.h>
@@ -651,6 +652,8 @@ void ModelImageFft::degrid( const double *uBl, const double *vBl, const double *
 
       if(itsImage->getSlice(imagePlane, slicer))
       {
+        writeImage(imagePlane, "plane.img");    // DEBUG
+
         //ASSERT(imagePlane.contiguous);      // image slice is contiguous, use        
         imagePlane.tovector(data);    // copy data into STL vector to conform to Cornwell interface
         degridKernel(grid, gSize, support, C, cOffset, iu, iv, data);  // call Cornwell degridKernel
@@ -821,6 +824,15 @@ Vector<Double> ModelImageFft::convertToLambdas(const Vector<Double> &frequencies
     lambdas[i]=(casa::C::c)/frequencies[i];
   }
   return lambdas;
+}
+
+// Write an image out to file
+void ModelImageFft::writeImage(const Array<Complex> &imagePlane, const String &filename)
+{
+  IPosition shape=imagePlane.shape();
+  PagedImage<Complex> image(shape, itsImage->coordinates(), filename);
+
+  image.put(imagePlane);
 }
 
 //***************************************************************************

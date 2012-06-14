@@ -39,11 +39,6 @@
 using namespace std;
 using namespace casa;
 
-//using std::cout;
-//using std::endl;
-//using std::complex;
-//using std::abs;
-
 unsigned int getBaselines(const MeasurementSet &ms, double *baselines[3], 
                   int rowStart=-1, int rowEnd=-1);
 unsigned int getBaselines(const MeasurementSet &ms, double *u, double *v, double *w, 
@@ -104,10 +99,10 @@ int main(int argc, char **argv)
   DComplex *XX=(DComplex*)malloc(nbaselines*nfreqs*sizeof(DComplex));
   DComplex *YY=(DComplex*)malloc(nbaselines*nfreqs*sizeof(DComplex));
 
-  //modelImage.degrid(u, v, w, nbaselines, nfreqs, frequencies, XX, NULL, NULL, YY);
+  modelImage.degrid(u, v, w, nbaselines, nfreqs, frequencies, XX, NULL, NULL, YY);
   addModelColumn(ms, imageFilename);
   ms.flush(); // needed to make added column flush to file
-  writeData(ms, "imageFilename", XX, NULL, NULL, YY, nbaselines, nfreqs); // Write correlations to MS column
+  writeData(ms, imageFilename, XX, NULL, NULL, YY, nbaselines, nfreqs); // Write correlations to MS column
 
   /*
   // Function to get degridded data into raw pointers
@@ -126,14 +121,13 @@ int main(int argc, char **argv)
   return 0;
 }
 
-
 // Get baselines from MS from rowStart till rowEnd
 //
 unsigned int getBaselines(const MeasurementSet &ms, double *baselines[3], 
                           int rowStart, int rowEnd)   // range not supported yet
 {
   // Example: 711.309, -357.693, 432.535
-  // Check that rowStart and rowEnd are within the limits
+  // TODO: Check that rowStart and rowEnd are within the limits
   uInt nrows=ms.nrow();
   IPosition shape = ROTableColumn(ms, MS::columnName(MS::UVW)).shapeColumn();
  
@@ -155,19 +149,15 @@ unsigned int getBaselines(const MeasurementSet &ms, double *u, double *v, double
   // Example: 711.309, -357.693, 432.535
   uInt nrows=ms.nrow();
   IPosition shape = ROTableColumn(ms, MS::columnName(MS::UVW)).shapeColumn();
- 
-  //cout << "getBaselines(): nrows: " << nrows << endl;
-  // ROTableColumn UVW: Double Array of Size [ 1 3 ]
-  ROArrayColumn<Double> uvwColumn(ms, "UVW");
-  
+  ROArrayColumn<Double> uvwColumn(ms, "UVW");  // Double Array of Size [ 1 3 ]
+
   Array<Double> uvw=uvwColumn.getColumn();
   for(unsigned int i=0; i<nrows; i++)
   {
     u[i]=uvw[i].data()[0];   // assign column to array pointer
     v[i]=uvw[i].data()[1];   // assign column to array pointer
     w[i]=uvw[i].data()[2];   // assign column to array pointer
-  }
-  
+  } 
   return nrows;                   // return number of baselines
 }
 
@@ -193,21 +183,42 @@ void writeData( MeasurementSet &ms, const string &colName, const DComplex *XX,
   ArrayColumn<Complex> modelCol(ms, colName);
   IPosition shape(2, 4, nfreqs);
 
-  for(unsigned int i=0; i<nbaselines; i++)
+  for(unsigned int row=0; row<nbaselines*nfreqs; row++)
   {
-    modelCol.setShape(i, shape);    // set shape to 4 Corr, N frequencies
+    modelCol.setShape(row, shape);    // set shape to 4 Corr, N frequencies
     Array<Complex> correlations(shape);
+    correlations.set(0);              // initialize with 0
 
-    cout << "writeData(): shape: " << shape << endl;    // DEBUG
-//    correlations(0,i)=XX[i];
-  // gather correlations into temporary array
-//  Array<DComplex> correlations(model.shape());
+    // gather correlations into temporary array
+    if(XX)
+    {
+      IPosition pos(2, 0, row%nfreqs);
+      correlations(pos)=XX[row];
 
-//void 	put (uInt rownr, const Array< T > &array)
-// 	Put the array in a particular cell (i.e. 
+      cout << "XX[row]: " << XX[row] << endl;   // DEBUG
+    }
+    if(XY)
+    {
+      IPosition pos(2, 1, row%nfreqs);  
+      correlations(pos)=XY[row];
+    }
+    if(YX)
+    {
+      IPosition pos(2, 2, row%nfreqs);  
+      correlations(pos)=YX[row];
+    }
+    if(YY)
+    {
+      IPosition pos(2, 3, row%nfreqs);      
+      correlations(pos)=YY[row];
+
+      cout << "YY[row]: " << YY[row] << endl;   // DEBUG
+    }
+    
+    cout << "writeData(): correlations: " << correlations << endl;   // DEBUG
+    //modelCol.put(row, correlations);  // 	Put the array in row's cell
   }
 }
-
 
 void addModelColumn (MeasurementSet& ms, const String& dataManName, unsigned int nchan)
 {
@@ -219,7 +230,7 @@ void addModelColumn (MeasurementSet& ms, const String& dataManName, unsigned int
   IPosition dataTileShape;
   if (shape.empty()) 
   {
-    dataTileShape = IPosition(3, 4, 64, (1024*1024)/(4*64*8));
+    dataTileShape = IPosition(3, 4, nchan, (1024*1024)/(4*64*8));
   } 
   else
   {
@@ -228,8 +239,6 @@ void addModelColumn (MeasurementSet& ms, const String& dataManName, unsigned int
   
   if (! ms.tableDesc().isColumn(colName)) 
   {
-    cout << "Shape: " << shape << endl;
-  
     TableDesc td;
     if (shape.empty())
     {

@@ -273,7 +273,9 @@ private:
   ModelImageOptions itsOptions;           // struct containing all FFT options
   ImageProperties itsImageProperties;     // struct containing image properties
 
-  casa::Vector<casa::Double> convertToLambdas(const casa::Vector<casa::Double> &frequencies);   // convert frequencies to lambda
+  casa::Vector<casa::Double> convertToLambdas(const casa::Vector<casa::Double> &frequencies);
+  void writeImage(const casa::Array<casa::Complex> &imagePlane, 
+                  const casa::String &filename);
 };
 
 } // end namespace BBS
