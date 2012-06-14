@@ -86,7 +86,9 @@ private:
     thread_state(): refcount(0), oldstate(false) {}
   };
 
-  static std::map<pthread_t, struct thread_state> thread_states; 
+  typedef std::map<pthread_t, struct thread_state> thread_states_t;
+
+  static thread_states_t& getThreadStates(); 
 
   // register threads explicitly to avoid the state maps growing unbounded
   // note that the main thread won't be registered since there is no way
@@ -175,7 +177,7 @@ inline void Cancellation::push_disable() {
 
   // map::operator[] will call the default constructor
   // if myid is not in the map
-  struct thread_state &state = thread_states[myid];
+  struct thread_state &state = getThreadStates()[myid];
 
   if (state.refcount++ == 0)
     state.oldstate = disable();
@@ -189,7 +191,7 @@ inline void Cancellation::pop_disable() {
 
   ScopedLock sl;
 
-  struct thread_state &state = thread_states[myid];
+  struct thread_state &state = getThreadStates()[myid];
 
   if (--state.refcount == 0)
     set( state.oldstate );
@@ -201,7 +203,7 @@ inline void Cancellation::pop_disable() {
 inline void Cancellation::register_thread( pthread_t id ) {
   ScopedLock sl;
 
-  thread_states[id] = thread_state();
+  getThreadStates()[id] = thread_state();
 }
 #endif  
 
@@ -210,7 +212,7 @@ inline void Cancellation::register_thread( pthread_t id ) {
 inline void Cancellation::unregister_thread( pthread_t id ) {
   ScopedLock sl;
 
-  thread_states.erase(id);
+  getThreadStates().erase(id);
 }
 #endif  
 
