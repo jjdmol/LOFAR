@@ -79,10 +79,12 @@ namespace LOFAR {
     // Write the possible AntennaField elements.
     // The elements in the configuration are given in the bitset
     // starting at the given bit (there is a bit for X and one for Y).
+    // The number of skipped elements has to be added for HBA1.
     static void writeElements (MSAntennaFieldColumns& columns,
                                int rownr,
                                const AntField::AFArray& elemOffsets,
                                const vector<int16>& elemPresent,
+                               bool addSkip,
                                const AntField::AFArray& stationCenter,
                                const AntField::AFArray& fieldCenter);
 
