@@ -81,8 +81,22 @@ Parset::Parset(Stream *stream)
 
 void Parset::write(Stream *stream) const
 {
-  std::string buffer;
-  writeBuffer(buffer);
+  // stream == NULL fills the cache,
+  // causing subsequent write()s to use it
+  bool readCache = !itsWriteCache.empty();
+  bool writeCache = !stream;
+  
+  std::string newbuffer;
+  std::string &buffer = readCache || writeCache ? itsWriteCache : newbuffer;
+
+  if (buffer.empty())
+    writeBuffer(buffer);
+
+  if (!stream) {
+    // we only filled the cache
+    return;
+  }
+  
   uint64 size = buffer.size();
 
 #if !defined WORDS_BIGENDIAN
