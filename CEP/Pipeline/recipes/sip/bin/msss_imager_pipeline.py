@@ -214,26 +214,16 @@ class msss_imager_pipeline(control):
         Get input- and output-data product specifications from the
         parset-file, and do some sanity checks.
         """
-        odp = self.parset.makeSubset(
-            self.parset.fullModuleName('DataProducts') + '.'
-        )
-        self.input_data = [
-            tuple(os.path.join(location, filename).split(':'))
-                for location, filename, skip in zip(
-                    odp.getStringVector('Input_Correlated.locations'),
-                    odp.getStringVector('Input_Correlated.filenames'),
-                    odp.getBoolVector('Input_Correlated.skip'))
-                if not skip
+        odp = self.parset.makeSubset('ObsSW.Observation.DataProducts.')
+        self.input_data = [tuple(os.path.join(*x).split(':')) for x in zip(
+            odp.getStringVector('Input_Correlated.locations', []),
+            odp.getStringVector('Input_Correlated.filenames', []))
         ]
         self.logger.debug("%d Input_Correlated data products specified" %
                           len(self.input_data))
-        self.output_data = [
-            tuple(os.path.join(location, filename).split(':'))
-                for location, filename, skip in zip(
-                    odp.getStringVector('Output_SkyImage.locations'),
-                    odp.getStringVector('Output_SkyImage.filenames'),
-                    odp.getBoolVector('Output_SkyImage.skip'))
-                if not skip
+        self.output_data = [tuple(os.path.join(*x).split(':')) for x in zip(
+            odp.getStringVector('Output_SkyImage.locations', []),
+            odp.getStringVector('Output_SkyImage.filenames', []))
         ]
         self.logger.debug("%d Output_SkyImage data products specified" %
                           len(self.output_data))
