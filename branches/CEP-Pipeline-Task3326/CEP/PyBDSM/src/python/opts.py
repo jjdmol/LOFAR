@@ -1025,9 +1025,9 @@ class Opts(object):
     clobber         =   Bool(False,
                              doc="Overwrite existing file?",
                              group='hidden')
-    format          =   Enum('bbs', 'ds9', 'fits', 'ascii', 'star', 'kvis',
+    format          =   Enum('bbs', 'ds9', 'fits', 'ascii', 'star', 'kvis', 'sagecal',
                              doc="Format of output catalog: 'bbs', "\
-                                 "'ds9', 'fits', 'star', 'kvis', or 'ascii'\n"\
+                                 "'ds9', 'fits', 'star', 'kvis', 'sagecal', or 'ascii'\n"\
                                  "The following formats are supported:\n"\
                                  "'bbs' - BlackBoard Selfcal sky model format "\
                                  "(Gaussian list only)\n"\
@@ -1038,6 +1038,7 @@ class Opts(object):
                                  "'star' - AIPS STAR format (Gaussian list only)\n"\
                                  "'kvis' - kvis format (Gaussian list only)\n"\
                                  "'ascii' - simple text file\n"\
+                                 "'sagecal - Sagecal formal\n"\
                                  "Catalogues with the 'fits' and 'ascii' formats "\
                                  "include all available information (see headers "\
                                  "of the output file for column definitions). The "\
@@ -1153,6 +1154,24 @@ class Opts(object):
         if values is not None:
             self.set_opts(values)
 
+			
+    def _parse_string_as_bool(self, bool_string):
+        """
+        'private' function performing parse of a string containing
+        a bool representation as defined in the parameter set/otdb
+        implementation
+        """
+        true_chars = ['t', 'T', 'y', 'Y', '1']
+        false_chars = ['f', 'F', 'n', 'N', '0']
+        if bool_string[0] in true_chars:
+            return True
+        if bool_string[0] in false_chars:
+            return False
+
+        raise tcError(
+            "Supplied string cannot be parsed as a bool: {0}".format(bool_string))
+
+
     def set_opts(self, opts):
         """Set multiple variables at once.
 
@@ -1161,10 +1180,29 @@ class Opts(object):
         opts = dict(opts)
         for k, v in opts.iteritems():
             try:
-                self.__setattr__(k,v)
-            except tcError:
+                # Fix for lofar parameter set integration:
+                # If the attribute is a bool, test if it is a string.
+                # and then try to parse it
+
+                if isinstance(self.__getattribute__(k), bool):
+                    if isinstance(v, bool):
+                        # just enter the bool into the parameter
+                        pass
+                    elif isinstance(v, basestring):
+                        # Try parse it as a parameter set bool string
+                        v = self._parse_string_as_bool(v)
+                    else:
+                        # riase error
+                        raise tcError("unknow type for bool variable")
+                if v == "none":
+                    v = None
+                self.__setattr__(k, v)
+            except tcError, e:
                 # Catch and re-raise as a RuntimeError
-                raise RuntimeError('Parameter "%s" is not defined properly.' % (k,))
+                raise RuntimeError(
+                        'Parameter "{0}" is not defined properly. \n {1}'.format(k
+                                    , str(e)))
+									
 
     def set_default(self, opt_names=None):
         """Set one or more opts to default value.
