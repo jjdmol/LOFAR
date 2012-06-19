@@ -72,23 +72,26 @@ void generateDelays( const string &parsetFilename, const string &station )
 
   for( unsigned block = 0; block < nrBlocks; block++ ) {
     w.getNextDelays(directions, delays);
+    struct timespec spec = ts;
 
     if (ascii_ts) {
-      time_t seconds = ts.getSeqId();
+      time_t seconds =  spec.tv_sec;
+
       char buf[26];
       ctime_r(&seconds, buf);
       buf[strlen(buf) - 1] = 0; // remove trailing \n
 
       cout << buf << " sample " << ts.getBlockId() << " delay ";
     } else {
-      cout << ts << " delay ";
+      double seconds = 1.0 * spec.tv_sec + spec.tv_nsec / 1.0e9;
+      cout << fixed << setprecision(9) << seconds << " delay ";
     }   
 
     for( unsigned beam = 0; beam < nrBeams; beam++ ) {
       unsigned nr_delays = print_tabs ? nrPencilBeams[beam] + 1 : 1;
 
       for( unsigned pencil = 0; pencil < nr_delays; pencil++ )
-        cout << fixed << setprecision(15) << delays[beam][pencil] << " ";
+        cout << fixed << setprecision(12) << delays[beam][pencil] << " ";
     }    
 
     cout << endl;
