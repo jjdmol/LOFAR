@@ -545,11 +545,15 @@ class msss_imager_pipeline(control):
         mapfile_path = os.path.join(mapfile_dir,
                          "{0}.map".format(mapfile_name))
 
-        # if none then write empty (and thus valid) array
-        if datamap == None:
-            datamap = []
-
-        store_data_map(mapfile_path, datamap)
+        # This solution is not perfect but, the skip does not
+        # return the complete output and this the data's will be empty
+        # TODO
+        if datamap != None:
+            store_data_map(mapfile_path, datamap)
+        else:
+            if not os.path.exists(mapfile_path):
+                store_data_map(mapfile_path, [])
+                #open(mapfile_path, 'w').close()
 
         return mapfile_path
 
