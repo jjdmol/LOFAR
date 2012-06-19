@@ -22,7 +22,7 @@
 //# $Id: TBB_StaticMapping.h 2278 2012-03-12 20:01:54Z amesfoort $
 
 #ifndef TBB_STATIC_MAPPING_H
-#define TBB_STATIC_MAPPING_H	1
+#define TBB_STATIC_MAPPING_H 1
 
 #include <string>
 #include <vector>

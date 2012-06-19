@@ -1,27 +1,30 @@
-//# TBB_Writer.h
-//#
-//# Copyright (C) 2012
-//# ASTRON (Netherlands Institute for Radio Astronomy)
-//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
-//#
-//# This file is part of the LOFAR software suite.
-//# The LOFAR software suite is free software: you can redistribute it and/or
-//# modify it under the terms of the GNU General Public License as published
-//# by the Free Software Foundation, either version 3 of the License, or
-//# (at your option) any later version.
-//#
-//# The LOFAR software suite is distributed in the hope that it will be useful,
-//# but WITHOUT ANY WARRANTY; without even the implied warranty of
-//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//# GNU General Public License for more details.
-//#
-//# You should have received a copy of the GNU General Public License along
-//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
-//#
-//# $Id: TBB_Writer.h 8495 2012-03-14 15:41:22Z amesfoort $
+/* TBB_Writer.h
+ *
+ * Copyright (C) 2012
+ * ASTRON (Netherlands Institute for Radio Astronomy)
+ * P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
+ *
+ * This file is part of the LOFAR software suite.
+ * The LOFAR software suite is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * The LOFAR software suite is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * $Id: TBB_Writer.h 8495 2012-03-14 15:41:22Z amesfoort $
+ */
 
 #ifndef LOFAR_STORAGE_TBB_WRITER_H
-#define LOFAR_STORAGE_TBB_WRITER_H
+#define LOFAR_STORAGE_TBB_WRITER_H 1
+
+#include <sys/time.h>
 
 #include <string>
 #include <vector>
@@ -29,14 +32,17 @@
 #include <fstream>
 
 #include <boost/array.hpp>
-#include <boost/crc.hpp>
 
+#include <Common/LofarTypes.h>
 #include <Common/LofarConstants.h>
+#include <Common/LofarLogger.h>
+#include <Common/SystemCallException.h>
 #ifndef USE_THREADS
 #error The TBB writer needs USE_THREADS to operate.
 #endif
 #include <Common/Thread/Thread.h>
 #include <Common/Thread/Queue.h>
+#include <Common/Thread/Condition.h>
 
 #include <Interface/SmartPtr.h>
 #include <Interface/Parset.h>		// Writers use a specialized Parset class.
@@ -47,11 +53,11 @@ namespace LOFAR {
 namespace RTCP {
 
 struct TBB_StationOut {
-	// HDF5 file with one Station Group. Multiple output threads may create DipoleDataset Groups, so protect with a mutex.
+	// HDF5 file with one Station Group. Multiple output threads may create HDF5 groups and attributes, so protect with a mutex.
 	DAL::TBB_File		h5Out;
 	LOFAR::Mutex		h5OutMutex;
 
-	const std::string	itsRawOutFilenameFmt;	// "L10000_CS001_D20120101T03:16:41.123Z_R%03u_R%03u_tbb.raw" (rsp, rcu)
+	const std::string	rawOutFilenameFmt;	// "L10000_CS001_D20120101T03:16:41.123Z_R%03u_R%03u_tbb.raw" (rsp, rcu)
 
 	// The remaining members are set by the output thread when the first datagram from a (rsp, rcu) is seen.
 	// Time and sample numbers of first sample in the first datagram.
@@ -59,13 +65,13 @@ struct TBB_StationOut {
 	uint32_t			sampleNr0;	// transient only
 
 	// Only one thread deals with an (rsp, rcu) stream, so no mutex is needed for the common case of storing data.
-	boost::array<std::ofstream, MAX_RSPBOARDS/*=per station*/ * NR_RCUS_PER_RSPBOARD> rawOuts;
-
+	boost::array<std::ofstream, MAX_RSPBOARDS/*=per station*/ * NR_RCUS_PER_RSPBOARD> rawOuts; // 192 needed for int'l stations
 
 
 	TBB_StationOut(const std::string& h5Filename, const std::string& rawOutFilenameFmt)
 	: h5Out(DAL::TBB_File(h5Filename, DAL::TBB_File::CREATE)),
-	  itsRawOutFilenameFmt(rawOutFilenameFmt) {
+		rawOutFilenameFmt(rawOutFilenameFmt)
+	{
 	}
 
 	inline std::ofstream& fileStream(unsigned rsp, unsigned rcu) {
@@ -128,11 +134,11 @@ class TBB_Writer {
 #define MAX_TBB_SPECTRAL_NSAMPLES	(MAX_TBB_DATA_SIZE / (2 * sizeof(int16_t)))	// 487
 
 		// Unpacked, sign-extended (for transient) samples without padding, i.e. as received.
-		// Frames might not be full; the crc32 is always sent right after (no padding as stored by TBB),
+		// Frames might not be full; the crc32 is always sent right after (no padding unlike as stored by TBB),
 		// so we include it in 'data', but note that the crc32 is an uint32_t (hence '+ 2'). The crc32 is computed for transient data only.
-		int16_t data[MAX_TBB_TRANSIENT_NSAMPLES + 2];		// 1300*2 bytes; Because only transient data is unpacked, use its max.
+		int16_t data[MAX_TBB_TRANSIENT_NSAMPLES + 2];			// 1300*2 bytes; Because only transient data is unpacked, use its max.
 
-#define DEFAULT_TRANSIENT_NSAMPLES	1024				// From the spec and from real data.
+#define DEFAULT_TRANSIENT_NSAMPLES	1024						// From the spec and from real data.
 #define DEFAULT_SPECTRAL_NSAMPLES	MAX_TBB_SPECTRAL_NSAMPLES	// The spec only states a max, so guess. Spectral mode has never been used or tested.
 	};
 
@@ -149,42 +155,43 @@ class TBB_Writer {
  */
 public:
 	TBB_Writer(std::map<unsigned, LOFAR::RTCP::SmartPtr<LOFAR::RTCP::TBB_StationOut> >& stationOuts, const std::string& inputDescr,
-		const LOFAR::RTCP::Parset& parset, const std::string& logPrefix);
+		const LOFAR::RTCP::Parset& parset, struct timeval& timeoutStamp, const std::string& logPrefix);
 	~TBB_Writer();
 
+	void cancel();
+
 private:
+	static const size_t nrFrameBuffers = 50000; // 50000 is about 100 MB (from old DAL TBB Writer); bf writer uses 5 (don't know size)...
+
 	// map from stationId to SmartPtr-ed TBB_StationOut
 	std::map<unsigned, LOFAR::RTCP::SmartPtr<LOFAR::RTCP::TBB_StationOut> > itsStationOutputs;
-	const std::string&			itsInputDescriptor;
+	const std::string			itsInputDescriptor;
 	const LOFAR::RTCP::Parset&	itsParset;
+	struct timeval&				itsTimeoutStamp;
 
-
-	LOFAR::Queue<TBB_Frame*>	itsFrameQueue;
-
+	LOFAR::Queue<LOFAR::RTCP::SmartPtr<TBB_Frame> > itsFreeQueue;
+	LOFAR::Queue<LOFAR::RTCP::SmartPtr<TBB_Frame> > itsReceiveQueue;
 	SmartPtr<LOFAR::Thread>		itsOutputThread;
 	SmartPtr<LOFAR::Thread>		itsInputThread; // last, so destruction blocks first on joining with the input thread
 
-
-#ifdef _DEBUG
-	std::string stationIdToName(unsigned sid);
-	void printHeader(TBB_Header& h);
-#endif
 
 	// Input thread
 	uint16_t byteSwap(uint16_t v);
 	uint32_t byteSwap(uint32_t v);
 	uint16_t littleNativeBSwap(uint16_t val);
 	uint32_t littleNativeBSwap(uint32_t val);
+	std::string stationIdToName(unsigned sid);
+	std::string stationIdToName_alt(unsigned sid);
 	void frameHeaderLittleNativeBSwap(TBB_Header& fh);
 	void correctTransientSampleNr(TBB_Header& header);
-	uint16_t crc16(const unsigned char* data, size_t size);
+	uint16_t crc16tbb(const uint16_t* buf, size_t len);
 	void processHeader(TBB_Header& header, size_t recvPayloadSize);
 	void mainInputLoop();
 
 	// Output thread
 	void setDipoleDataset(DAL::TBB_DipoleDataset& ds, const LOFAR::RTCP::Parset& parset,
 						unsigned stationId, unsigned rspId, unsigned rcuId);
-	uint32_t crc32(const unsigned char* data, size_t size);
+	uint32_t crc32tbb(const uint16_t* buf, size_t len);
 	void processPayload(const TBB_Frame& frame);
 	void mainOutputLoop();
 };
