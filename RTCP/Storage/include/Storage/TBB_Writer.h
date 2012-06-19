@@ -164,7 +164,7 @@ private:
 	static const size_t nrFrameBuffers = 50000; // 50000 is about 100 MB (from old DAL TBB Writer); bf writer uses 5 (don't know size)...
 
 	// map from stationId to SmartPtr-ed TBB_StationOut
-	std::map<unsigned, LOFAR::RTCP::SmartPtr<LOFAR::RTCP::TBB_StationOut> > itsStationOutputs;
+	std::map<unsigned, LOFAR::RTCP::SmartPtr<LOFAR::RTCP::TBB_StationOut> >& itsStationOutputs;
 	const std::string			itsInputDescriptor;
 	const LOFAR::RTCP::Parset&	itsParset;
 	struct timeval&				itsTimeoutStamp;

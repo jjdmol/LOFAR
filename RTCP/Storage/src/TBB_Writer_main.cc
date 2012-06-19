@@ -80,7 +80,7 @@ using namespace std;
 
 struct progArgs {
 	string inFilename;
-	string outFilename;
+	string outDir;
 	string parsetFilename;
 	string conMapFilename;
 	string proto;
@@ -479,7 +479,7 @@ static void doThreadedWrites(map<unsigned, LOFAR::RTCP::SmartPtr<LOFAR::RTCP::TB
 		writers.push_back(new LOFAR::RTCP::TBB_Writer(h5Outputs, inputStreamName, parset, timeoutStamps[i], logPrefix));
 	}
 
-	// Restore signal mask. Skipped if the above throws, but then we are terminating already.
+	// Restore signal mask. Skipped if the above throws, but then we are terminating already. (TODO: not if keepRunning)
 	if (err == 0) {
 		err = pthread_sigmask(SIG_SETMASK, &sigset_old, NULL);
 		if (err != 0) {
@@ -537,7 +537,7 @@ static int parseArgs(int argc, char *argv[], struct progArgs* args) {
 
 	// Default values
 	args->inFilename = "";	// default is to read from a socket
-	args->outFilename = "";	// default is generated according to ICD005; TODO: if user-specified, we don't have the %03u conv specifiers...
+	args->outDir = "";
 	args->parsetFilename = "";	// default means most meta data fields cannot be set
 	args->conMapFilename = "";	// default is to find the filename at $LOFARROOT/etc/StaticMetaData/TBBConnections.dat
 	args->proto = "udp";
@@ -545,14 +545,14 @@ static int parseArgs(int argc, char *argv[], struct progArgs* args) {
 	args->timeoutVal.tv_sec = 10; // default secs of inactivity after which to terminate all input workers and close output files
 	args->timeoutVal.tv_usec = 0;
 	args->keepRunning = false;
-
+	
 	static struct option long_opts[] = {
 		// {const char *name, int has_arg, int *flag, int val}
 		{"help",        no_argument,       NULL, 'h'},
 		{"version",     no_argument,       NULL, 'v'},
 
 		{"inputfile",   required_argument, NULL, 'i'},
-		{"outputfile",  required_argument, NULL, 'o'},
+		{"outputdir",   required_argument, NULL, 'd'},
 		{"parsetfile",  required_argument, NULL, 'c'}, // 'c'onfig
 		{"conmapfile",  required_argument, NULL, 'm'}, // 'm'ap
 		{"protocol",    required_argument, NULL, 'p'},
@@ -566,7 +566,7 @@ static int parseArgs(int argc, char *argv[], struct progArgs* args) {
 
 	opterr = 0; // prevent error printing to stderr by getopt*()
 	int opt;
-	while ((opt = getopt_long(argc, argv, "hvi:o:c:m:p:b:t:k::", long_opts, NULL)) != -1) {
+	while ((opt = getopt_long(argc, argv, "hvi:d:c:m:p:b:t:k::", long_opts, NULL)) != -1) {
 		switch (opt) {
 		case 'h':
 		case 'v':
@@ -577,7 +577,7 @@ static int parseArgs(int argc, char *argv[], struct progArgs* args) {
 		case 'i':
 			args->inFilename = optarg;
 			break;
-		case 'o':
+/*		case 'o':
 		{
 			args->outFilename = optarg;
 			string ext(".h5");
@@ -586,7 +586,13 @@ static int parseArgs(int argc, char *argv[], struct progArgs* args) {
 				args->outFilename.append(ext); // don't error, just correct
 			}
 			break;
-		}
+		}*/
+		case 'd':
+			args->outDir = optarg;
+			if (args->outDir[args->outDir.size() - 1] != '/') {
+				args->outDir.push_back('/');
+			}
+			break;
 		case 'c':
 			args->parsetFilename = optarg;
 			break;
@@ -635,13 +641,14 @@ static int parseArgs(int argc, char *argv[], struct progArgs* args) {
 		}
 	}
 
+/*	args->outFilename = outDir + args->outFilename;
 	if (!args->outFilename.empty() && (
 			args->outFilename == args->inFilename ||
 			args->outFilename == args->parsetFilename ||
 			args->outFilename == args->conMapFilename)) {
 		cerr << "Output filename (ending in .h5) cannot be equal to another filename argument." << endl;
 		rv = 1;
-	}
+	}*/
 
 	if (optind < argc) {
 		cerr << "Failed to recognize arguments:";
@@ -725,28 +732,34 @@ int main(int argc, char* argv[]) {
 		string triggerDateTime(formatFilenameTimestamp(tv, output_format, output_format_secs, sizeof(output_format_example)));
 
 		string runNrStr(LOFAR::formatString("%03u", run_nr));
-		string h5FilenameFmt(genOutputFilename(obsIdStr, "%s", "", triggerDateTime, runNrStr, "tbb", "h5" ));
+		string h5FilenameFmt(args.outDir + genOutputFilename(obsIdStr, "%s", "", triggerDateTime, runNrStr, "tbb", "h5" ));
 
 		/*
-		 * The converters receive a stationId in the incoming datagrams, so create an HDF5 output per station
-		 * and map from stationId to the TBB_StationOut struct.
+		 * The workers receive a stationId in the incoming datagrams, so create an HDF5 output per station and
+		 * map from stationId to the TBB_StationOut struct.
 		 */
 		map<unsigned, LOFAR::RTCP::SmartPtr<LOFAR::RTCP::TBB_StationOut> > h5Outputs;
+		vector<LOFAR::RTCP::SmartPtr<LOFAR::RTCP::TBB_StationOut> > stOuts;
 		for (unsigned i = 0; i < stationNames.size(); i++) {
 			string h5Filename(LOFAR::formatString(h5FilenameFmt.c_str(), stationNames[i].c_str()));
 
 			// Fully regenerate raw fmt every time, because we cannot have snprintf()/formatString() _only_ treat the station name conv.
 			// The rsp/rcu are for the workers to fill in.
-			string rawFilenameStationFmt(genOutputFilename(obsIdStr, stationNames[i], "%03hhu%03hhu", triggerDateTime, runNrStr, "tbb", "raw"));
-			LOFAR::RTCP::SmartPtr<LOFAR::RTCP::TBB_StationOut> stOut = new LOFAR::RTCP::TBB_StationOut(h5Filename, rawFilenameStationFmt);
+			string rawFilenameStationFmt(args.outDir + genOutputFilename(obsIdStr, stationNames[i], "%03hhu%03hhu", triggerDateTime, runNrStr, "tbb", "raw"));
 
+			// Initialize the HDF5 root group attributes.
 			// Don't need to grab the mutex, because we are the main thread initializing before we create output threads.
+//	LOFAR::RTCP::SmartPtr<LOFAR::RTCP::TBB_StationOut> stOut(new LOFAR::RTCP::TBB_StationOut(h5Filename, rawFilenameStationFmt));
+			stOuts.push_back(new LOFAR::RTCP::TBB_StationOut(h5Filename, rawFilenameStationFmt));
+			LOFAR::RTCP::SmartPtr<LOFAR::RTCP::TBB_StationOut> stOut(stOuts[i]);
 			setCommonLofarAttributes(stOut->h5Out, parset, h5Filename);
 			setTBB_RootAttributes(stOut->h5Out, parset, stationNames[i]);
 			stOut->h5Out.flush();
 
+			// Store these two outside the for { }, so they are not deleted ending up with a dangling ref. (rawFilenameStationFmt was passed by value so not needed there.)
 			unsigned stationId = stationNameToId(stationNames[i]);
 			h5Outputs.insert(make_pair(stationId, stOut));
+//			stOuts.push_back(stOut);
 		}
 
 		LOG_INFO_STR("Expecting from " << stationNames.size() << " station(s); about to receive from "
