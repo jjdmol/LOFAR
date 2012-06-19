@@ -180,7 +180,7 @@ class msss_imager_pipeline(control):
             # *****************************************************************
             # (5) Source finding 
             sourcelist_map, found_sourcedb_path = self._source_finding(aw_image_mapfile,
-                                    idx_loop, skip = False)
+                                    idx_loop, skip = True) # TODO: skip for integration test
             #should the output be a sourcedb? instead of a sourcelist
 
 
