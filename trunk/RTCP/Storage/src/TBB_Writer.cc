@@ -55,6 +55,10 @@ TBB_Writer::TBB_Writer(map<unsigned, SmartPtr<TBB_StationOut> >& stationOuts, co
   itsParset(parset),
   itsTimeoutStamp(timeoutStamp) {
 
+	for (size_t i = 0; i < nrFrameBuffers; i++) {
+		itsFreeQueue.append(new TBB_Frame);
+	}
+
 	itsOutputThread = new Thread(this, &TBB_Writer::mainOutputLoop, logPrefix + " OutputThread: ");
 	try {
 		itsInputThread = new Thread(this, &TBB_Writer::mainInputLoop, logPrefix + " InputThread: ");
@@ -65,7 +69,7 @@ TBB_Writer::TBB_Writer(map<unsigned, SmartPtr<TBB_StationOut> >& stationOuts, co
 }
 
 TBB_Writer::~TBB_Writer() {
-	//cancel();
+	cancel();
 }
 
 void TBB_Writer::cancel() {
@@ -281,69 +285,10 @@ void TBB_Writer::correctTransientSampleNr(TBB_Header& header) {
 	}
 }
 
-static uint16_t crc16_boost(const void* data, size_t dataSize) {
-	//typedef crc_optimal<16, 0x8005, 0, 0, true, true> crc_16_type;
-	boost::crc_16_type crc16; // TODO: do this once and call crc16.reset() before usage (share table?); then remove this func
-
-	//crc16.reset();
-	crc16.process_bytes(data, dataSize);
-	return crc16.checksum();
-}
-
-static uint32_t crc32_boost(const void* data, size_t dataSize) {
-	boost::crc_32_type crc32;
-
-	//crc32.reset();
-	crc32.process_bytes(data, dataSize);
-	return crc32.checksum();
-}
-
-static uint16_t const crc16_table[256] = {
-        0x0000, 0xC0C1, 0xC181, 0x0140, 0xC301, 0x03C0, 0x0280, 0xC241,
-        0xC601, 0x06C0, 0x0780, 0xC741, 0x0500, 0xC5C1, 0xC481, 0x0440,
-        0xCC01, 0x0CC0, 0x0D80, 0xCD41, 0x0F00, 0xCFC1, 0xCE81, 0x0E40,
-        0x0A00, 0xCAC1, 0xCB81, 0x0B40, 0xC901, 0x09C0, 0x0880, 0xC841,
-        0xD801, 0x18C0, 0x1980, 0xD941, 0x1B00, 0xDBC1, 0xDA81, 0x1A40,
-        0x1E00, 0xDEC1, 0xDF81, 0x1F40, 0xDD01, 0x1DC0, 0x1C80, 0xDC41,
-        0x1400, 0xD4C1, 0xD581, 0x1540, 0xD701, 0x17C0, 0x1680, 0xD641,
-        0xD201, 0x12C0, 0x1380, 0xD341, 0x1100, 0xD1C1, 0xD081, 0x1040,
-        0xF001, 0x30C0, 0x3180, 0xF141, 0x3300, 0xF3C1, 0xF281, 0x3240,
-        0x3600, 0xF6C1, 0xF781, 0x3740, 0xF501, 0x35C0, 0x3480, 0xF441,
-        0x3C00, 0xFCC1, 0xFD81, 0x3D40, 0xFF01, 0x3FC0, 0x3E80, 0xFE41,
-        0xFA01, 0x3AC0, 0x3B80, 0xFB41, 0x3900, 0xF9C1, 0xF881, 0x3840,
-        0x2800, 0xE8C1, 0xE981, 0x2940, 0xEB01, 0x2BC0, 0x2A80, 0xEA41,
-        0xEE01, 0x2EC0, 0x2F80, 0xEF41, 0x2D00, 0xEDC1, 0xEC81, 0x2C40,
-        0xE401, 0x24C0, 0x2580, 0xE541, 0x2700, 0xE7C1, 0xE681, 0x2640,
-        0x2200, 0xE2C1, 0xE381, 0x2340, 0xE101, 0x21C0, 0x2080, 0xE041,
-        0xA001, 0x60C0, 0x6180, 0xA141, 0x6300, 0xA3C1, 0xA281, 0x6240,
-        0x6600, 0xA6C1, 0xA781, 0x6740, 0xA501, 0x65C0, 0x6480, 0xA441,
-        0x6C00, 0xACC1, 0xAD81, 0x6D40, 0xAF01, 0x6FC0, 0x6E80, 0xAE41,
-        0xAA01, 0x6AC0, 0x6B80, 0xAB41, 0x6900, 0xA9C1, 0xA881, 0x6840,
-        0x7800, 0xB8C1, 0xB981, 0x7940, 0xBB01, 0x7BC0, 0x7A80, 0xBA41,
-        0xBE01, 0x7EC0, 0x7F80, 0xBF41, 0x7D00, 0xBDC1, 0xBC81, 0x7C40,
-        0xB401, 0x74C0, 0x7580, 0xB541, 0x7700, 0xB7C1, 0xB681, 0x7640,
-        0x7200, 0xB2C1, 0xB381, 0x7340, 0xB101, 0x71C0, 0x7080, 0xB041,
-        0x5000, 0x90C1, 0x9181, 0x5140, 0x9301, 0x53C0, 0x5280, 0x9241,
-        0x9601, 0x56C0, 0x5780, 0x9741, 0x5500, 0x95C1, 0x9481, 0x5440,
-        0x9C01, 0x5CC0, 0x5D80, 0x9D41, 0x5F00, 0x9FC1, 0x9E81, 0x5E40,
-        0x5A00, 0x9AC1, 0x9B81, 0x5B40, 0x9901, 0x59C0, 0x5880, 0x9841,
-        0x8801, 0x48C0, 0x4980, 0x8941, 0x4B00, 0x8BC1, 0x8A81, 0x4A40,
-        0x4E00, 0x8EC1, 0x8F81, 0x4F40, 0x8D01, 0x4DC0, 0x4C80, 0x8C41,
-        0x4400, 0x84C1, 0x8581, 0x4540, 0x8701, 0x47C0, 0x4680, 0x8641,
-        0x8201, 0x42C0, 0x4380, 0x8341, 0x4100, 0x81C1, 0x8081, 0x4040
-};
-static inline uint16_t crc16_byte(uint16_t crc, const uint16_t data) {
-  return (crc >> 8) ^ crc16_table[(crc ^ data) & 0xff];
-}
-static uint16_t crc16_lnx(uint16_t crc, uint8_t const *buffer, size_t len) {
-  while (len--)
-    crc = crc16_byte(crc, *buffer++);
-  return crc;
-}
-
 /*
- * TBB CRC16. Uses a standard CRC16 polynome, but is not exactly like crc16. Also fails for len==0.
- * Derived from Python code written by Gijs Schoonderbeek.
+ * This code is based on the Python ref/test code from Gijs Schoonderbeek. It does not do a std crc16 (AFAICS).
+ * It assumes that the seqNr field (buf[1]) has been zeroed.
+ * Do not call this function with len < 1; reject the frame earlier.
  */
 uint16_t TBB_Writer::crc16tbb(const uint16_t* buf, size_t len) {
 	uint16_t CRC            = 0;
@@ -368,25 +313,27 @@ uint16_t TBB_Writer::crc16tbb(const uint16_t* buf, size_t len) {
 }
 
 /*
- * TBB CRC32. Uses a standard CRC32 polynome, but is not exactly like CRC32. Also fails for len<2.
- * Derived from Python code written by Gijs Schoonderbeek.
+ * This code is based on the Python ref/test code from Gijs Schoonderbeek. It does not do a std crc32 (AFAICS).
+ * It computes a 32 bit result, but the buf arg is of uint16_t*.
+ * Do not call this function with len < 2; reject the frame earlier.
  */
-uint32_t TBB_Writer::crc32tbb(const uint32_t* buf, size_t len) {
+uint32_t TBB_Writer::crc32tbb(const uint16_t* buf, size_t len) {
 	uint32_t CRC            = 0;
 	const uint64_t CRC_poly = 0x104C11DB7ULL;
 	const uint16_t bits     = 16;
 	uint64_t data           = 0;
 	const uint64_t CRCDIV   = (CRC_poly & 0x7fffffffffffULL) << 15;
 
-// * Added ' & 0x0fff' to mask sign-extended unpacking of the samples.
-	data = buf[0];// & 0x0fff;
+	// Added '& 0x0fff' to mask sign-extended unpacking of the samples. (vs Gijs' Python code)
+	data = buf[0] & 0x0fff;
 	data = data & 0x7fffffffffffULL;
 	data = data << 16;
-	data = data + (buf[1]);// & 0x0fff);
+	data = data + (buf[1] & 0x0fff);
 	data = data & 0x7fffffffffffULL;
 	data = data << 16;
-	for (uint32_t i = 2; i < len; i++) {
-		data = data + (buf[i]);// & 0x0fff);
+	uint32_t i = 2;
+	for ( ; i < len-2; i++) {
+		data = data + (buf[i] & 0x0fff);
 		for (uint32_t j = 0; j < bits; j++) {
 			if (data & 0x800000000000ULL) {
 				data = data ^ CRCDIV;
@@ -395,6 +342,21 @@ uint32_t TBB_Writer::crc32tbb(const uint32_t* buf, size_t len) {
 			data = data << 1;
 		}
 	}
+
+	// Do the 32 bit checksum separately, without the '& 0xfff' masking.
+	// Process the two 16 bit halves in reverse order (no endian swap!), but keep the i < len cond.
+	// TODO: verify that this swapping is needed/different on big endian
+	for (buf += 1; i < len; i++, buf -= 2) {
+		data = data + buf[i];
+		for (uint32_t j = 0; j < bits; j++) {
+			if (data & 0x800000000000ULL) {
+				data = data ^ CRCDIV;
+			}
+			data = data & 0x7fffffffffffULL;
+			data = data << 1;
+		}
+	}
+
 	CRC = (uint32_t)(data >> 16);
 	return CRC;
 }
@@ -409,11 +371,6 @@ void TBB_Writer::processHeader(TBB_Header& header, size_t recvPayloadSize/*, uin
 	//uint32_t seqNrTmp = header.seqNr; // seqNr must be 0 for the header crc; don't need seqNr later.
 	header.seqNr = 0;
 	uint16_t csum = crc16tbb(reinterpret_cast<uint16_t*>(&header), sizeof(header) / sizeof(uint16_t));
-/*	csum = crc16_boost(&header, sizeof(header));
-	cout << hex << "hdrsum=" << sum << " " << header.crc16 << dec << " len=" << sizeof(header) << endl;
-	sum = crc16_lnx(0, reinterpret_cast<uint8_t*>(&header), sizeof(header));
-	cout << hex << "hdrsum=" << sum << " " << header.crc16 << dec << " len=" << sizeof(header) << endl;
-*/
 	if (csum != 0) {
 		/*
 		 * Spec says each frame has the same fixed length. Even though each frame may hold any numer of samples that fits,
@@ -421,28 +378,27 @@ void TBB_Writer::processHeader(TBB_Header& header, size_t recvPayloadSize/*, uin
 		 */
 		//header.nOfSamplesPerFrame = lastNSamples; // TODO
 
-		cerr << hex << "Header checksum failed: " << csum << " header.crc16: " << header.crc16 << endl;
+		cerr << "Header checksum failed of frame with time=" << header.time << " sampleNr=" << header.sampleNr <<
+				" crc16=" << header.crc16 << endl;
 	}
 	//header.seqNr = seqNrTmp; // restore
 
-	/*
-	 * Act on crazy nOfsamplesPerFrame. We have checksummed, but never read out of bounds.
-	 * Also correct sample numbers for transient data.
-	 */
 	if (header.nOfFreqBands == 0) { // transient data
+		// Use received size instead of received nOfSamplesPerFrame header field to access data.
 		if (recvPayloadSize < sizeof(int16_t) + sizeof(uint32_t)) {
-			throw Exception(""); // drop datagrams with payloads under 1 sample + crc32 TODO: subclass and handle it
+			// Drop bad frame; also, the data crc routine cannot handle this.
+			throw Exception("dropping bad tbb transient frame"); // TODO: sub-class exc.
 		}
 		uint16_t recvSamples = (recvPayloadSize - sizeof(uint32_t)) / sizeof(int16_t);
-		header.nOfSamplesPerFrame = recvSamples; // likely already that amount; don't check, always assign.
+		header.nOfSamplesPerFrame = recvSamples; // most likely already 1024
 
 		correctTransientSampleNr(header);
-	} else { // spectral data (TODO: similar to transient, so merge once spectral is tested)
+	} else { // spectral data
 		if (recvPayloadSize < sizeof(int16_t)) {
-			throw Exception(""); // idem as above, but no crc32 for spectral
+			throw Exception("dropping bad tbb spectral frame");
 		}
 		uint16_t recvSamples = recvPayloadSize / (2 * sizeof(int16_t));
-		header.nOfSamplesPerFrame = recvSamples; // idem as above
+		header.nOfSamplesPerFrame = recvSamples;
 	}
 }
 
@@ -451,35 +407,28 @@ void TBB_Writer::mainInputLoop() {
 	LOG_INFO_STR(string("Reading incoming data from ") << itsInputDescriptor);
 	Stream* inStream(createStream(itsInputDescriptor, true)); // true: server listening socket
 
-	//const unsigned maxTargetQueueSize = 100; // throttle if above this; TODO: throttle or something
-	//unsigned qSize;
-
-	TBB_Frame* frame = 0;
-	//uint16_t lastNSamples = 0; // as a backup if header crc fails
-//int q = 0;
 	while (1) { // we use thread cancellation
 		try {
-			frame = new TBB_Frame;
+			SmartPtr<TBB_Frame> frame(itsFreeQueue.remove());
 			size_t datagramSize = inStream->tryRead(frame, sizeof(*frame));
 //			LOG_INFO_STR("Received datagram");
 			if (datagramSize < sizeof(TBB_Header)) {
-				throw Exception("xxx"); // TODO: subclass and handle it: Dropped frame smaller than header size
+				throw Exception("dropping too small tbb frame"); // TODO: subclass and handle it: Dropped frame smaller than header size
 			}
 
 			gettimeofday(&itsTimeoutStamp, NULL); // notifies master that we are still busy.
 
-			TBB_Header* header = reinterpret_cast<TBB_Header*>(frame);
-			processHeader(*header, datagramSize - sizeof(TBB_Header)/*, lastNSamples*/);
+			TBB_Header* header = &frame->header;
+			processHeader(*header, datagramSize - sizeof(TBB_Header));
 
 			// Throttle if the output thread cannot keep up. No, better recycle buffers, that'll throttle and get rid of the cross-thread mem mgmnt.
-			/*qSize = itsFrameQueue.size(); // size() is a locked op, so slows down output thread (and us)
+			/*qSize = itsReceiveQueue.size(); // size() is a locked op, so slows down output thread (and us)
 			if (qSize > maxTargetQueueSize) {
 				wait((qSize - maxTargetQueueSize) * waitFactor);
 			}*/
 
 			// By appending, we transfer the ownership of frame to the output thread that will delete it.
-			itsFrameQueue.append(frame);
-//if (++q == 8) break; // tmp
+			itsReceiveQueue.append(frame.release());
 		} catch (Stream::EndOfStreamException& eos) {
 			LOG_INFO_STR("EndOfStreamException");
 			break;
@@ -498,13 +447,13 @@ void TBB_Writer::mainInputLoop() {
 		} catch (...) {
 			// Thread.h already logs on a Cancellation exc.
 			delete inStream;
-			itsFrameQueue.append(0); // TODO: check this doesn't throw
+			itsReceiveQueue.append(0); // no more data; hope this doesn't throw...
 			throw; // Cancellation exceptions MUST be rethrown. Any other we cannot handle, so rethrow too.
 		}
 	}
 
 	delete inStream;
-	itsFrameQueue.append(0); // signal output thread to terminate
+	itsReceiveQueue.append(0); // no more data
 }
 
 void TBB_Writer::setDipoleDataset(DAL::TBB_DipoleDataset& ds, const Parset& parset, unsigned stationId, unsigned rspId, unsigned rcuId) {
@@ -564,35 +513,23 @@ void TBB_Writer::setDipoleDataset(DAL::TBB_DipoleDataset& ds, const Parset& pars
 */
 }
 
-// TODO: check log once in critical paths
-void TBB_Writer::processPayload(/*const */TBB_Frame& frame) {
+void TBB_Writer::processPayload(const TBB_Frame& frame) {
 	if (frame.header.nOfFreqBands == 0) { // transient data
-		// Data crc32 over the unpacked, sign-extended samples. Pass as uint32_t; assume nOfSamplesPerFrame is even; +1: add the checksum to check over.
-		// Keep track of which frames appeared broken and the supposedly correct crc, but still store the data.
-
-/*		// test for crc32, but corrupts data.
-		for (unsigned i = 0; i < frame.header.nOfSamplesPerFrame; i++) {
-			frame.payload.data[i] &= 0x0fff;
-		}*/
-
-		uint32_t csum = crc32tbb(reinterpret_cast<const uint32_t*>(frame.payload.data), frame.header.nOfSamplesPerFrame * sizeof(frame.payload.data[0]) / sizeof(uint32_t) + 1);
-//		uint32_t csum = crc32_boost(frame.payload.data, frame.header.nOfSamplesPerFrame * sizeof(frame.payload.data[0]) + sizeof(uint32_t));
-		//uint32_t stored_csum = *reinterpret_cast<const uint32_t*>(&frame.payload.data[frame.header.nOfSamplesPerFrame]);
-		//cerr << hex << "crc32: " << csum << dec << " len=" << (frame.header.nOfSamplesPerFrame * sizeof(frame.payload.data[0]) / sizeof(uint32_t) + 1) * sizeof(uint32_t) << endl;
-
-		if (csum != 0) { // TODO: check checksum incl if nSamples == 0; and on big endian
-			// Note this crc data error, so we can add all data crc errors to the metadata later. (can this slow us down too much?)
+		uint32_t csum = crc32tbb(reinterpret_cast<const uint16_t*>(frame.payload.data), frame.header.nOfSamplesPerFrame + 2); // +2: the crc32 in terms of 16 bit data vals
+		if (csum != 0) {
+			// TODO: Keep track of "broken" data (flag it), but still store it.
 			//badDataCRCs.push_back(DataCRC(idx, frame.payload.crc32));
-			// store ranges only. Keeps it compact and compat with future flagging. (Also, log to syslog).
+			static unsigned nseen = 0;
 
-			//cerr << hex << "Data checksum failed: " << csum << endl;
-			getpid(); // tmp; avoid opt-out the check so we can test perf
+			if (nseen++ < 4) // racy, but tmp
+			cerr << "Data checksum failed of frame with time=" << frame.header.time << " sampleNr=" << frame.header.sampleNr <<
+					" crc32=" << *reinterpret_cast<const uint32_t*>(&frame.payload.data[frame.header.nOfSamplesPerFrame]) << endl;
 		}
-
-	}/* else { // spectral data
-		uint32_t bandNr  = frame.header.bandsliceNr & BAND_NR_MASK;
-		uint32_t sliceNr = frame.header.bandsliceNr >> SLICE_NR_SHIFT;
-	}*/
+	} else { // spectral data
+		//uint32_t bandNr  = frame.header.bandsliceNr & BAND_NR_MASK;
+		//uint32_t sliceNr = frame.header.bandsliceNr >> SLICE_NR_SHIFT;
+		// TODO: prepare to store, but spectral output format unclear.
+	}
 
 	map<unsigned, SmartPtr<TBB_StationOut> >::iterator stOutIt(itsStationOutputs.find(frame.header.stationId));
 	if (stOutIt == itsStationOutputs.end()) {
@@ -607,7 +544,7 @@ void TBB_Writer::processPayload(/*const */TBB_Frame& frame) {
 	ofstream& rawOut(stOut->fileStream(frame.header.rspId, frame.header.rcuId));
 	if (!rawOut.is_open()) { // TODO: can cause too many files to be opened?
 		// Create raw data file and a new DipoleDataset referencing the file.
-		string outFilenameRaw(formatString(stOut->rawOutFilenameFmt.c_str()/*, frame.header.rspId, frame.header.rcuId*/)); // TODO: restore
+		string outFilenameRaw(formatString(stOut->rawOutFilenameFmt.c_str(), frame.header.rspId, frame.header.rcuId));
 		rawOut.open(outFilenameRaw.c_str(), ios_base::out | ios_base::binary | ios_base::trunc);
 		if (!rawOut) {
 			// TODO: ehhh
@@ -682,24 +619,13 @@ void TBB_Writer::processPayload(/*const */TBB_Frame& frame) {
 }
 
 void TBB_Writer::mainOutputLoop() {
-	TBB_Frame* frame = 0;
-	while (1) {
-		frame = itsFrameQueue.remove();
-//		LOG_INFO_STR("Received frame from queue");
-		if (frame == 0) {
-			break;
-		}
-
+	for (SmartPtr<TBB_Frame> frame; (frame = itsReceiveQueue.remove()) != 0; itsFreeQueue.append(frame.release())) {
 		try {
 			processPayload(*frame);
 		} catch (Exception& ex) { // TODO: specialize
 			LOG_INFO_STR(ex.text());
-			frame = 0; // safe delete
-			break;
 		}
 	}
-	
-	delete frame;
 }
 
 } // namespace RTCP
