@@ -25,8 +25,8 @@ WAN				-		M	N	LOFAR_PIC_WAN
 WANarea				-		M	N	LOFAR_PIC_WAN_@wan@
 Switch				-		M	Y	LOFAR_PIC_WAN_@wan@_@switch@
 PermSW				-		M	N	LOFAR_PermSW
+RTDBPort			-		M	N	CRTriggerPort
 # Note: the next 4 lines are neccesary for PVSS2SAS to create the PIC tree.
-RTDBPort			-		M	Y	CRTriggerPort
 Ring				-		M	N	LOFAR_PermSW_@ring@
 Station				STS		M	Y	LOFAR_PermSW_@ring@_@station@
 Cluster				-		M	N	LOFAR_PermSW_@cluster@
