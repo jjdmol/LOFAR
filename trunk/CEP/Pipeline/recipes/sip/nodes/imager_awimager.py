@@ -41,7 +41,7 @@ class imager_awimager(LOFARnodeTCP):
         self.logger.info("Start imager_awimager  run: client")
         log4CPlusName = "imager_awimager"
         with log_time(self.logger):
-            size_converter = 4.0 #TODO debugging tool scale the image and cellsize to allow quicker running of the awimager
+            size_converter = 1.0 #TODO debugging tool scale the image and cellsize to allow quicker running of the awimager
             # Calculate awimager parameters that depend on measurement set                 
             cell_size, npix, w_max, w_proj_planes = \
                 self._calc_par_from_measurement(concatenated_measurement_set, parset, size_converter)
