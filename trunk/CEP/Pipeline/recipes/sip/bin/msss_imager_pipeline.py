@@ -180,7 +180,7 @@ class msss_imager_pipeline(control):
             # *****************************************************************
             # (5) Source finding 
             sourcelist_map, found_sourcedb_path = self._source_finding(aw_image_mapfile,
-                                    idx_loop, skip = True) # TODO: skip for integration test
+                                    idx_loop, skip = False)
             #should the output be a sourcedb? instead of a sourcelist
 
 
@@ -198,10 +198,14 @@ class msss_imager_pipeline(control):
         # *********************************************************************
         # (7) Get metadata
         # Create a parset-file containing the metadata for MAC/SAS
+        # TODO: quickfix om toegang te hebben tot de volle parset omdat prefix nodig is
+        full_parset = parameterset()
+        full_parset.adoptFile(os.path.abspath(self.inputs['args'][0]))
+
         self.run_task("get_metadata", aw_image_mapfile,
             parset_file = self.parset_feedback_file,
             parset_prefix = (
-                self.parset.getString('prefix') +
+                full_parset.getString('prefix') +
                 self.parset.fullModuleName('DataProducts')
             ),
             product_type = "SkyImage")
