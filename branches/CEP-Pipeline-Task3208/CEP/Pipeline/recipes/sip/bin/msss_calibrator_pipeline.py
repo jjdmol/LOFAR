@@ -2,7 +2,7 @@
 #                                                         LOFAR IMAGING PIPELINE
 #
 #                                                     Calibrator Pipeline recipe
-#                                                             Marcel Loose, 2011
+#                                                        Marcel Loose, 2011-2012
 #                                                                loose@astron.nl
 # ------------------------------------------------------------------------------
 
@@ -175,14 +175,13 @@ class msss_calibrator_pipeline(control):
         # Create an empty parmdb for DPPP
         parmdb_mapfile = self.run_task("setupparmdb", data_mapfile)['mapfile']
 
-        # Create a sourcedb based on sourcedb's input argument "skymodel"
+        # Create a sourcedb to be used by the demixing phase of DPPP
+        # The path to the A-team sky model is read from the tasks.cfg file
         sourcedb_mapfile = self.run_task(
             "setupsourcedb", data_mapfile,
             skymodel=os.path.join(
                 self.config.get('DEFAULT', 'lofarroot'),
-                'share', 'pipeline', 'skymodels', 
-                py_parset.getString('Calibration.CalibratorSource') +
-                    '.skymodel'
+                'share', 'pipeline', 'skymodels', 'Ateam_LBA_CC.skymodel'
             )
         )['mapfile']
 
@@ -200,13 +199,13 @@ class msss_calibrator_pipeline(control):
             sourcedb_mapfile=sourcedb_mapfile
         )['mapfile']
 
-        return 1
+        demix_mapfile = dppp_mapfile
         
-        # Demix the relevant A-team sources
-        demix_mapfile = self.run_task("demixing", dppp_mapfile)['mapfile']
+#        # Demix the relevant A-team sources
+#        demix_mapfile = self.run_task("demixing", dppp_mapfile)['mapfile']
 
-        # Do a second run of flagging, this time using rficonsole
-        self.run_task("rficonsole", demix_mapfile, indirect_read=True)
+#        # Do a second run of flagging, this time using rficonsole
+#        self.run_task("rficonsole", demix_mapfile, indirect_read=True)
 
         # Create an empty parmdb for DPPP
         parmdb_mapfile = self.run_task("setupparmdb", data_mapfile)['mapfile']

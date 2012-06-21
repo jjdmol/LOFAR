@@ -12,8 +12,12 @@ executable = %(lofarroot)s/bin/NDPPP
 initscript = %(lofarroot)s/lofarinit.sh
 dry_run = False
 mapfile = %(runtime_directory)s/jobs/%(job_name)s/mapfiles/dppp.mapfile
+parmdb_mapfile = %(runtime_directory)s/jobs/%(job_name)s/mapfiles/dppp_parmdb.mapfile
+sourcedb_mapfile = %(runtime_directory)s/jobs/%(job_name)s/mapfiles/dppp_sourcedb.mapfile
 parset = %(runtime_directory)s/jobs/%(job_name)s/parsets/NDPPP.parset
+demix_sources = CasA
 nproc = 1
+nthreads = 8
 clobber = True
 
 [bbs]
