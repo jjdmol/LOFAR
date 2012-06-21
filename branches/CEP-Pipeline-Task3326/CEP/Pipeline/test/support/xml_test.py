@@ -100,7 +100,7 @@ key4=value=value
 
 
     def test_convert_xml_node_to_dict(self):
-        # TODO: brittle test: cause it uses _convert_dict_to_xml_node
+        # TODO: brittle test:  it uses _convert_dict_to_xml_node
         input_dict = {}
         input_dict["node1.node21.leaf1"] = "leaf1"
         input_dict["node1.node21.leaf2"] = "leaf2"

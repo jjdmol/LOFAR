@@ -12,41 +12,41 @@ class imager_source_finding(BaseRecipe, RemoteCommandRecipeMixIn):
     inputs = {
         'initscript': ingredient.FileField(
             '--initscript',
-            help = "Initscript to source (ie, lofarinit.sh)"
+            help="Initscript to source (ie, lofarinit.sh)"
         ),
         'bdsm_parset_file_run1': ingredient.FileField(
             '--bdsm-parset-file-run1',
-            help = "Path to bdsm parameter set for the first sourcefinding run"
+            help="Path to bdsm parameter set for the first sourcefinding run"
         ),
         'bdsm_parset_file_run2x': ingredient.FileField(
             '--bdsm-parset-file-run2x',
-            help = "Path to bdsm parameter set for the second and later" \
+            help="Path to bdsm parameter set for the second and later" \
                    " sourcefinding runs"
         ),
         'catalog_output_path': ingredient.StringField(
             '--catalog-output-path',
-            help = "Path to write the catalog created by bdsm)"
+            help="Path to write the catalog created by bdsm)"
         ),
         'mapfile': ingredient.StringField(
             '--mapfile',
-            help = "Full path of mapfile; containing the succesfull generated"
+            help="Full path of mapfile; containing the succesfull generated"
             "source list"
         ),
         'working_directory': ingredient.StringField(
             '--working-directory',
-            help = "Working directory used by the nodes: local data"
+            help="Working directory used by the nodes: local data"
         ),
         'sourcedb_target_path': ingredient.StringField(
             '--sourcedb-target-path',
-            help = "Target path for the sourcedb created based on the found sources"
+            help="Target path for the sourcedb created based on the found sources"
         ),
         'makesourcedb_path': ingredient.ExecField(
              '--makesourcedb-path',
-             help = "Path to makesourcedb executable."
+             help="Path to makesourcedb executable."
         ),
         'sourcedb_map_path': ingredient.StringField(
             '--sourcedb-map-path',
-            help = "Full path of mapfile; containing the succesfull generated"
+            help="Full path of mapfile; containing the succesfull generated"
             "sourcedbs"
         ),
 
@@ -54,10 +54,13 @@ class imager_source_finding(BaseRecipe, RemoteCommandRecipeMixIn):
 
     outputs = {
         'mapfile': ingredient.StringField(
-        help = "Full path of mapfile; containing the succesfull generated"
+        help="Full path of mapfile; containing the succesfull generated"
             ),
         'sourcedb_map_path': ingredient.StringField(
-        help = "Full path of mapfile; containing the succesfull generated sourcedbs"
+        help="Full path of mapfile; containing the succesfull generated sourcedbs"
+            ),
+        'return_xml': ingredient.StringField(
+        help="xml string containing information with regards to timing"
             )
     }
 
@@ -115,6 +118,8 @@ class imager_source_finding(BaseRecipe, RemoteCommandRecipeMixIn):
 
         self.outputs["mapfile"] = self.inputs['mapfile']
         self.outputs["sourcedb_map_path"] = self.inputs['sourcedb_map_path']
+
+        self.outputs["return_xml"] = '<myxml>Some data<empty/> some more data</myxml>'
 
 if __name__ == '__main__':
     sys.exit(imager_source_finding().main())

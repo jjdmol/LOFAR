@@ -3,9 +3,9 @@ import sys
 import os
 import shutil
 
-from lofar.parameterset import parameterset
+from lofar.parameterset import parameterset #@UnresolvedImport
 from lofarpipe.support.lofarnode import LOFARnodeTCP
-import bdsm #@UnresolvedImport
+import lofar.bdsm as bdsm #@UnresolvedImport
 
 from lofarpipe.support.utilities import read_initscript
 from lofarpipe.support.pipelinelogging import CatchLog4CPlus
@@ -14,7 +14,7 @@ from lofarpipe.support.utilities import catch_segfaults
 
 class imager_source_finding(LOFARnodeTCP):
     """
-    The imager_source_finding    
+    The imager_source_finding
     """
     def run(self, input_image, bdsm_parameter_run1_path,
             bdsm_parameter_run2x_path, catalog_output_path, image_output_path,
@@ -54,7 +54,7 @@ class imager_source_finding(LOFARnodeTCP):
                                                         input_image_local))
             self.logger.debug(repr(bdsm_parameters))
             img = bdsm.process_image(bdsm_parameters,
-                        filename = input_image_local, frequency = frequency)
+                        filename=input_image_local, frequency=frequency)
 
 
             # If no more matching of sources with gausians is possible (nsrc==0)
@@ -70,14 +70,14 @@ class imager_source_finding(LOFARnodeTCP):
 
 
             #export the catalog and the image with gausians substracted
-            img.write_catalog(outfile = catalog_output_path + "_{0}".format(str(idx)),
-                              catalog_type = 'gaul', clobber = True, format = "bbs")
+            img.write_catalog(outfile=catalog_output_path + "_{0}".format(str(idx)),
+                              catalog_type='gaul', clobber=True, format="bbs")
 
             self.logger.debug("Wrote list of sources to file at: {0})".format(
                                                         catalog_output_path))
-            img.export_image(outfile = image_output_path_local,
-                             img_type = 'gaus_resid', clobber = True,
-                             img_format = "fits")
+            img.export_image(outfile=image_output_path_local,
+                             img_type='gaus_resid', clobber=True,
+                             img_format="fits")
             self.logger.debug("Wrote fits image with substracted sources"
                               " at: {0})".format(catalog_output_path))
             #img does not have close()
@@ -161,7 +161,7 @@ class imager_source_finding(LOFARnodeTCP):
 
 
     def _create_source_db(self, source_list, sourcedb_target_path, init_script,
-                          working_directory, executable, append = False):
+                          working_directory, executable, append=False):
         """
         _create_source_db consumes a skymap text file and produces a source db
         (pyraptable) 
@@ -186,7 +186,7 @@ class imager_source_finding(LOFARnodeTCP):
                  os.path.basename(executable)
             ) as logger:
                     catch_segfaults(cmd, working_directory, environment,
-                                            logger, cleanup = None)
+                                            logger, cleanup=None)
 
         except Exception, e:
             self.logger.error("Execution of external failed:")

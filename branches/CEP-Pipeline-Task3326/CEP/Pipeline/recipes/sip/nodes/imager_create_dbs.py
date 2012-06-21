@@ -17,7 +17,7 @@ from lofarpipe.support.pipelinelogging import log_process_output
 from lofarpipe.support.pipelinelogging import CatchLog4CPlus
 from lofarpipe.support.utilities import read_initscript
 from lofarpipe.support.utilities import catch_segfaults
-import monetdb.sql as db
+import monetdb.sql as db #@UnresolvedImport
 import lofar.gsm.gsmutils as gsm                                                #@UnresolvedImport
 
 #TODO: A better place for this template
@@ -307,10 +307,11 @@ class imager_create_dbs(LOFARnodeTCP):
         The skymap is created at the sourcelist
         """
         # Create monetdb connection
+        self.logger.debug("Connecting to monet db at: {0}:{1}  {2}".format(
+                monet_db_host, monet_db_port, monet_db_name))
+
         conn = self._create_monet_db_connection(monet_db_host, monet_db_name,
                  monet_db_user, monet_db_password, monet_db_port)
-        self.logger.debug("Connected to monet db at: {0}:{1}  {2}".format(
-                monet_db_host, monet_db_port, monet_db_name))
 
         # get position of the target in the sky
         (ra_c, decl_c) = self._get_ra_and_decl_from_ms(measurement_set)
