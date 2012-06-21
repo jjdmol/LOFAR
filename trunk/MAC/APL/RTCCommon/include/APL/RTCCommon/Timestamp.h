@@ -30,6 +30,7 @@
 #include <string.h>
 #include <iostream>
 #include <limits.h>
+#include <cmath>
 
 namespace LOFAR {
 namespace RTC
