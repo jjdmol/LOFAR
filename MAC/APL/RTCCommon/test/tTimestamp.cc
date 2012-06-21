@@ -24,6 +24,7 @@
 #include <lofar_config.h>
 
 //# Includes
+#include <Common/StringUtil.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_bitset.h>
 #include <Common/lofar_map.h>
