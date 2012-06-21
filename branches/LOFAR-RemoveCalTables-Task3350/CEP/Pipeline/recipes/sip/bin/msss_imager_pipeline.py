@@ -198,10 +198,14 @@ class msss_imager_pipeline(control):
         # *********************************************************************
         # (7) Get metadata
         # Create a parset-file containing the metadata for MAC/SAS
+        # TODO: quickfix om toegang te hebben tot de volle parset omdat prefix nodig is
+        full_parset = parameterset()
+        full_parset.adoptFile(os.path.abspath(self.inputs['args'][0]))
+
         self.run_task("get_metadata", aw_image_mapfile,
             parset_file = self.parset_feedback_file,
             parset_prefix = (
-                self.parset.getString('prefix') +
+                full_parset.getString('prefix') +
                 self.parset.fullModuleName('DataProducts')
             ),
             product_type = "SkyImage")
@@ -214,26 +218,16 @@ class msss_imager_pipeline(control):
         Get input- and output-data product specifications from the
         parset-file, and do some sanity checks.
         """
-        odp = self.parset.makeSubset(
-            self.parset.fullModuleName('DataProducts') + '.'
-        )
-        self.input_data = [
-            tuple(os.path.join(location, filename).split(':'))
-                for location, filename, skip in zip(
-                    odp.getStringVector('Input_Correlated.locations'),
-                    odp.getStringVector('Input_Correlated.filenames'),
-                    odp.getBoolVector('Input_Correlated.skip'))
-                if not skip
+        odp = self.parset.makeSubset('ObsSW.Observation.DataProducts.')
+        self.input_data = [tuple(os.path.join(*x).split(':')) for x in zip(
+            odp.getStringVector('Input_Correlated.locations', []),
+            odp.getStringVector('Input_Correlated.filenames', []))
         ]
         self.logger.debug("%d Input_Correlated data products specified" %
                           len(self.input_data))
-        self.output_data = [
-            tuple(os.path.join(location, filename).split(':'))
-                for location, filename, skip in zip(
-                    odp.getStringVector('Output_SkyImage.locations'),
-                    odp.getStringVector('Output_SkyImage.filenames'),
-                    odp.getBoolVector('Output_SkyImage.skip'))
-                if not skip
+        self.output_data = [tuple(os.path.join(*x).split(':')) for x in zip(
+            odp.getStringVector('Output_SkyImage.locations', []),
+            odp.getStringVector('Output_SkyImage.filenames', []))
         ]
         self.logger.debug("%d Output_SkyImage data products specified" %
                           len(self.output_data))
@@ -555,11 +549,15 @@ class msss_imager_pipeline(control):
         mapfile_path = os.path.join(mapfile_dir,
                          "{0}.map".format(mapfile_name))
 
+        # This solution is not perfect but, the skip does not
+        # return the complete output and this the data's will be empty
+        # TODO
         if datamap != None:
             store_data_map(mapfile_path, datamap)
         else:
             if not os.path.exists(mapfile_path):
-                open(mapfile_path, 'w').close()
+                store_data_map(mapfile_path, [])
+                #open(mapfile_path, 'w').close()
 
         return mapfile_path
 

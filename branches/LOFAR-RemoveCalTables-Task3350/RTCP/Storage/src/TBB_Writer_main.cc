@@ -30,21 +30,25 @@
  * Currently, users I talked to don't care about spectral data, although the hardware should be able to supply it. (Mar 2012)
  */
 
-#include <lofar_config.h>			// before any other include
+// Enable sigaction(2), gethostname(2), timer_create(2), and thread-safe _r functions, like gmtime_r().
+#define _POSIX_C_SOURCE				200112L
+#define _GNU_SOURCE				1	// getopt_long(3)
 
-#define _XOPEN_SOURCE	500			// enable sigaction(2), gethostname(2), and thread-safe _r functions, like gmtime_r()
+#include <lofar_config.h>			// before any other include
 
 #include <cstddef>
 #include <cstdlib>
 #include <ctime>
 #include <cstring>
 #include <cmath>
+#include <sys/types.h>
 #include <csignal>
 #include <ctime>					// strftime()
-#include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <sys/time.h>
+#include <climits>
+#include <cerrno>
+#include <getopt.h>
 
 #include <iostream>
 #include <sstream>
@@ -54,8 +58,6 @@
 
 #include <boost/lexical_cast.hpp>
 
-#include <Common/LofarTypes.h>
-#include <Common/LofarLogger.h>
 #include <Common/SystemUtil.h>
 #include <Common/StringUtil.h>
 #include <Common/StreamUtil.h>
@@ -63,8 +65,8 @@
 #include <Common/Exceptions.h>
 #include <Common/NewHandler.h>
 
-#include <Storage/TBB_StaticMapping.h>
 #include <Storage/TBB_Writer.h>
+#include <Storage/TBB_StaticMapping.h>
 #include <Storage/IOPriority.h>
 
 #if defined HAVE_PKVERSION
@@ -72,26 +74,47 @@
 #endif
 
 #define TBB_DEFAULT_BASE_PORT		0x7bb0	// i.e. tbb0
-#define TBB_DEFAULT_LAST_PORT		0x7bbb	// 0x7b5 for NL stations
+#define TBB_DEFAULT_LAST_PORT		0x7bbb	// 0x7bbf for NL, 0x7bbb for int'l stations
 
 using namespace std;
 
 struct progArgs {
 	string inFilename;
-	string outFilename;
+	string outDir;
 	string parsetFilename;
-	string connMapFilename;
-	int proto;
+	string conMapFilename;
+	string proto;
 	uint16_t port;
+	struct timeval timeoutVal;
+	bool keepRunning;
 };
 
 // Install a new handler to produce backtraces for std::bad_alloc.
 LOFAR::NewHandler badAllocExcHandler(LOFAR::BadAllocException::newHandler);
 
-static volatile bool sigint_seen; // read only for anyone, written only by the signal handler below
+static void termSigsHandler(int sig_nr) {
+	if (sig_nr == SIGALRM) {
+		// do nothing
+	}
+}
 
-static void sigint_handler(int signal_number) {
-	sigint_seen = true;
+/*
+ * Register signal handlers for SIGINT and SIGTERM to gracefully terminate early,
+ * so we can break out of blocking system calls and exit without corruption of already written output.
+ * Leave SIGQUIT (Ctrl-\) untouched, so users can still easily quit immediately.
+ */
+static void setTermSigsHandler() {
+	struct sigaction sa;
+
+	sa.sa_handler = termSigsHandler;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = 0;
+	int err = sigaction(SIGINT,  &sa, NULL); // keyb INT (typically Ctrl-C)
+	err    |= sigaction(SIGTERM, &sa, NULL);
+	err    |= sigaction(SIGALRM, &sa, NULL); // for setitimer(); don't use sleep(3) and friends
+	if (err != 0) {
+		LOG_WARN("Failed to register SIGINT/SIGTERM handler to allow manual, early, graceful program termination.");
+	}
 }
 
 static unsigned stationNameToId(const string& stName) {
@@ -106,39 +129,44 @@ static unsigned stationNameToId(const string& stName) {
 	return id;
 }
 
-// Returns last mod date/time of filename or current time of day if stat()ing
-// filename fails, in YYYY-MM-DDThh:mm:ss.s UTC format.
-static string getFileModDate(const string& filename) {
-	struct stat st;
-	int err;
-
-	err = stat(filename.c_str(), &st);
-	if (err != 0) {
-		struct timeval tv;
-		err = gettimeofday(&tv, NULL); // If stat() fails, this is close enough to file mod date.
-		if (err == 0) {
-			st.st_mtime = tv.tv_sec;
-			st.st_mtim.tv_nsec = tv.tv_usec * 1000;
-		} else { // very unlikely, gettimeofday() should not return non-null when passed a proper buffer
-			st.st_mtime = 0;
-			st.st_mtim.tv_nsec = 0;
-		}
-	}
-
+// For in filenames and indirectly, the FILEDATE attribute. The output_format is without seconds; the output_size is incl the '\0'.
+static string formatFilenameTimestamp(const struct timeval& tv, const char* output_format, const char* output_format_secs, size_t output_size) {
 	struct tm tm = {0}; // init in case gmtime_r() returns NULL (if year does not fit into an int, unlikely)
-	gmtime_r(&st.st_mtime, &tm);
-	double secs = tm.tm_sec + st.st_mtim.tv_nsec / 1000000000.0;
+	gmtime_r(&tv.tv_sec, &tm);
+	double secs = tm.tm_sec + tv.tv_usec / 1000000.0;
 
-	const char output_fmt[] = "YYYY-MM-DDThh:mm:ss.s";
-	char* date_str = new char[sizeof(output_fmt)];
-	size_t nwritten = strftime(date_str, sizeof(output_fmt), "%Y-%m-%dT%H:%M:", &tm); // Add the "ss.s" secs separately.
-	/*int nprinted = */snprintf(date_str + nwritten, sizeof(output_fmt) - nwritten, "%04.1f", secs); // _total_ width of 4 of "ss.s"
+	char* date_str = new char[output_size];
+	size_t nwritten = strftime(date_str, output_size, output_format, &tm);
+	/*int nprinted = */snprintf(date_str + nwritten, sizeof(output_format) - nwritten, output_format_secs, secs); // e.g. %06.3f: _total_ width of 6 of "ss.sss"
 
 	string date(date_str);
 	delete[] date_str;
 	return date;
 }
 
+// Returns last mod date/time of filename or current time of day if stat()ing
+// filename fails, in "YYYY-MM-DDThh:mm:ss.s" UTC format.
+// For FILEDATE attribute.
+static string getFileModDate(const string& filename) {
+	struct timeval tv;
+	struct stat st;
+	int err;
+
+	err = stat(filename.c_str(), &st);
+	if (err != 0) {
+		gettimeofday(&tv, NULL); // If stat() fails, this is close enough to file mod date.
+	} else {
+		tv.tv_sec = st.st_mtime;
+		tv.tv_usec = st.st_mtim.tv_nsec / 1000;
+	}
+
+	const char output_format[] = "%Y-%m-%dT%H:%M:";
+	const char output_format_secs[] = "%04.1f"; // _total_ width of 4 of "ss.s"
+	const char output_format_example[] = "YYYY-MM-DDThh:mm:ss.s";
+	return formatFilenameTimestamp(tv, output_format, output_format_secs, sizeof(output_format_example));
+}
+
+// For UTC timestamp attributes.
 static string timeStr(double time) {
 	time_t timeSec = static_cast<time_t>(floor(time));
 	unsigned long timeNSec = static_cast<unsigned long>(round( (time-floor(time))*1e9 ));
@@ -148,7 +176,7 @@ static string timeStr(double time) {
 		return "";
 	}
 
-	return LOFAR::formatString("%s.%09lu", utcstr, timeNSec);
+	return LOFAR::formatString("%s.%09luZ", utcstr, timeNSec);
 }
 
 static double toMJD(double time) {
@@ -158,53 +186,51 @@ static double toMJD(double time) {
 
 // Populates the Station group. Note: Does _not_ set the dipole datasets.
 static void setStationGroup(DAL::TBB_Station& st, const LOFAR::RTCP::Parset& parset, const string& stName, const vector<double>& stPosition) {
-	st.groupType().set("StationGroup");
-	st.stationName().set(stName);
+	st.groupType().value = "StationGroup";
+	st.stationName().value = stName;
 
-	st.stationPositionValue().set(stPosition);
-	//st.stationPositionUnit().set(); // TODO: ??? array of strings? (also at beamDirection, but not at antennaPosition)
-	st.stationPositionFrame().set(parset.positionType()); // returns "ITRF"
+	st.stationPositionValue().value = stPosition;
+	//st.stationPositionUnit().value = ???; // TODO: ??? array of strings? (also at beamDirection, but not at antennaPosition)
+	st.stationPositionFrame().value = parset.positionType(); // returns "ITRF"
 
 	// TODO: Also see bf writer MS makeBeamTable() kind of function. In the future, also indicates broken tiles/dipoles w/ timestamp.
 	// TODO: ITRF -> ITRF2008...?
 	if (parset.haveAnaBeam()) { // HBA // TODO: AnaBeam vs Beam?
-		st.beamDirectionValue().set(parset.getAnaBeamDirection()); // always for beam 0
-		st.beamDirectionFrame().set(parset.getAnaBeamDirectionType()); // idem
+		st.beamDirectionValue().value = parset.getAnaBeamDirection(); // always for beam 0
+		st.beamDirectionFrame().value = parset.getAnaBeamDirectionType(); // idem
 	} else {
 		unsigned nBeams = parset.nrBeams(); // TODO: What if >1 station beams? Now, only write beam0. Probably irrel for now, because of AnaBeam (HBA).
-		if (parset.nrBeams() > 0) {
-			st.beamDirectionValue().set(parset.getBeamDirection(0));
-			st.beamDirectionFrame().set(parset.getBeamDirectionType(0)); // TODO: fix getBeamDirectionType() sprintf -> snprintf (check all parset funcs)
+		if (nBeams > 0) {
+			st.beamDirectionValue().value = parset.getBeamDirection(0);
+			st.beamDirectionFrame().value = parset.getBeamDirectionType(0); // TODO: fix getBeamDirectionType() sprintf -> snprintf (check all parset funcs)
 		} else { // No beam (known or at all), so set null vector
 			vector<double> noBeamDirVal(2, 0.0);
-			st.beamDirectionValue().set(noBeamDirVal);
-			st.beamDirectionFrame().set("ITRF");
+			st.beamDirectionValue().value = noBeamDirVal;
+			st.beamDirectionFrame().value = "ITRF";
 		}
 	}
-	//st.beamDirectionUnit().set(); // TODO: ??? beam dir = 2 angles. array of string??? "radians"
+	//st.beamDirectionUnit().value = ???; // TODO: ??? beam dir = 2 angles. array of string??? "radians"
 
-	st.clockOffsetValue().set(parset.clockCorrectionTime(stName)); // TODO: check if stName is as expected; returns 0.0 if not avail
-	st.clockOffsetUnit().set("s");
+	st.clockOffsetValue().value = parset.clockCorrectionTime(stName); // TODO: check if stName is as expected; returns 0.0 if not avail
+	st.clockOffsetUnit().value = "s";
 
-	//st.triggerOffset().set(); // TODO: remove from DAL
+	//st.triggerOffset().value = ???; // TODO: remove from DAL
 
-	// Also need the following, but we create/set that while the data is incoming to match better.
-	//st.nofDipoles().set(); // TODO: make it unsigned (instead of int in the ICD); later: remove it alltogether and make it and #stations retrievable
-	//DAL::TBB_DipoleDataset tdds(tbbf.dipole(stationId, rspId, rcuId)); // we could get all station/rsp pairs from getStationNamesAndRSPboardNumbers(), but not rcus
+	// Create dipole datasets when the first datagram for that dipole has been received.
 }
 
 static void setTriggerGroup(DAL::TBB_Trigger& tg, const LOFAR::RTCP::Parset& parset) {
-	tg.groupType().set("TriggerGroup");
-//	tg.triggerType().set("Unknown"); // We don't get this or any other trigger data yet, so do the minimum.
-//	tg.triggerVersion().set(0); // There is no trigger alg impl yet.
+	tg.groupType().value = "TriggerGroup";
+//	tg.triggerType().value = "Unknown"; // We don't get this or any other trigger data yet, so do the minimum.
+//	tg.triggerVersion().value = 0; // There is no trigger alg impl yet.
 
 	// TODO: put these into DAL, because we can set them
 	// Trigger parameters (how to decide if there is a trigger) (per obs)
-//	tg.paramCoincidenceChannels().set(parset.tbbNumberOfCoincidenceChannels());	// int(->unsigned); from Observation.ObservationControl.StationControl.TBBControl.NoCoincChann
-//	tg.paramCoincidenceTime()    .set(parset.tbbCoincidenceTime());				// double; from Observation.ObservationControl.StationControl.TBBControl.CoincidenceTime
-//	tg.paramDirectionFit()       .set(parset.tbbDoDirectionFit());				// string; from Observation.ObservationControl.StationControl.TBBControl.DoDirectionFit
-//	tg.paramElevationMin()       .set(parset.tbbMinElevation());				// double; from Observation.ObservationControl.StationControl.TBBControl.MinElevation
-//	tg.paramFitVarianceMax()     .set(parset.tbbMaxFitVariance());				// double; Observation.ObservationControl.StationControl.TBBControl.MaxFitVariance
+//	tg.paramCoincidenceChannels().value = parset.tbbNumberOfCoincidenceChannels();	// int(->unsigned); from Observation.ObservationControl.StationControl.TBBControl.NoCoincChann
+//	tg.paramCoincidenceTime()    .value = parset.tbbCoincidenceTime();				// double; from Observation.ObservationControl.StationControl.TBBControl.CoincidenceTime
+//	tg.paramDirectionFit()       .value = parset.tbbDoDirectionFit();				// string; from Observation.ObservationControl.StationControl.TBBControl.DoDirectionFit
+//	tg.paramElevationMin()       .value = parset.tbbMinElevation();					// double; from Observation.ObservationControl.StationControl.TBBControl.MinElevation
+//	tg.paramFitVarianceMax()     .value = parset.tbbMaxFitVariance();				// double; Observation.ObservationControl.StationControl.TBBControl.MaxFitVariance
 	// unused: Observation.ObservationControl.StationControl.TBBControl.ParamExtension = []
 
 	// Trigger data (per trigger)
@@ -221,12 +247,10 @@ static void setTriggerGroup(DAL::TBB_Trigger& tg, const LOFAR::RTCP::Parset& par
 }
 
 static void setTBB_RootAttributes(DAL::TBB_File& file, const LOFAR::RTCP::Parset& parset, const string& stName) {
-	//file.mode().set("transient"); // TODO: add string mode field: "transient" or "spectral". Maybe it's Observation.TBB.TBBsetting.operatingMode = 1
-	// TODO: also setting for?: Each TBB can store [...] either before or after the conversion to subbands (the polyphase filter and FFT).
-	// from: http://www.astron.nl/radio-observatory/astronomers/users/technical-information/transient-buffer-boards/transient-buffer-b
+	//file.operatingMode().value = "transient"; // TODO: add string mode field: "transient" or "spectral". Maybe it's Observation.TBB.TBBsetting.operatingMode = 1
 
 	// The writer creates one HDF5 file per station, so create only one Station Group here.
-	DAL::TBB_Station station(file.station(0/*stName*/)); // TODO: 0 -> stName
+	DAL::TBB_Station station(file.station(stName));
 
 	// Find the station name we're looking for ("CS001" == "CS001HBA0") and retrieve it's pos using the found idx.
 	vector<double> stPos;
@@ -243,8 +267,8 @@ static void setTBB_RootAttributes(DAL::TBB_File& file, const LOFAR::RTCP::Parset
 			break;
 		}
 	}
-	if (nameIt != obsStationNames.end() && // found?
-				posIt < stationPositions.end()) { // only fails if Parset provided broken vectors
+	if (nameIt != obsStationNames.end() // found?
+				&& posIt < stationPositions.end()) { // only fails if Parset provided broken vectors
 		stPos.assign(posIt, posIt + 3);
 	} else { // not found or something wrong; create anyway or we lose data
 		stPos.assign(3, 0.0);
@@ -261,49 +285,48 @@ static void setTBB_RootAttributes(DAL::TBB_File& file, const LOFAR::RTCP::Parset
 }
 
 static void setCommonLofarAttributes(DAL::TBB_File& file, const LOFAR::RTCP::Parset& parset, const string& filename) {
-	file.groupType().set("Root");
+	file.groupType().value = "Root";
 	const string baseFilename(LOFAR::basename(filename));
-	file.fileName() .set(baseFilename);
-	file.fileDate() .set(getFileModDate(baseFilename));
-	file.fileType() .set("tbb"); // TODO: this is obviously tbb specific; the rest of this function is not.
-	file.telescope().set("LOFAR");
-	//file.observer() .set(parset.observer()); // TODO: name(s) of the observer(s); bf writes "unknown"; our default val is "UNKNOWN"
+	file.fileName().value = baseFilename;
+	file.fileDate().value = getFileModDate(baseFilename);
+	file.fileType().value = "tbb"; // TODO: this is obviously tbb specific; the rest of this function is not. -> DAL; also the next one
 
-	file.projectID()     .set(parset.getString("Observation.Campaign.name"));
-	file.projectTitle()  .set(parset.getString("Observation.Campaign.title"));
-	file.projectPI()     .set(parset.getString("Observation.Campaign.PI"));
-	// Don't use ", " as a separator, because it already occurs in names formatted backwards (e.g. Smith, J.).
+	file.telescope().value = "LOFAR";
+	file.observer() .value = "unknown"; // TODO: name(s) of the observer(s); bf writes "unknown"
+
+	file.projectID()     .value = parset.getString("Observation.Campaign.name");
+	file.projectTitle()  .value = parset.getString("Observation.Campaign.title");
+	file.projectPI()     .value = parset.getString("Observation.Campaign.PI");
 	ostringstream oss;
+	// Use ';' instead of ',' to pretty print, because ',' already occurs in names (e.g. Smith, J.).
 	LOFAR::writeVector(oss, parset.getStringVector("Observation.Campaign.CO_I"), "; ", "", "");
-	file.projectCOI()    .set(oss.str());
-	file.projectContact().set(parset.getString("Observation.Campaign.contact"));
+	file.projectCOI()    .value = oss.str();
+	file.projectContact().value = parset.getString("Observation.Campaign.contact");
 
 /*	// TODO: add getString() and getStringVector() routines to RTCP Parset (sub)class
-	file.projectID()     .set(parset.observationName()); // TODO: check if Name -> ID
-	file.projectTitle()  .set(parset.observationTitle());
-	file.projectPI()     .set(parset.observationPI());
-	file.projectCOI()    .set(parset.observationCOI()); // TODO: see above
-	file.projectContact().set(parset.observationContact());
+	file.projectID()     .value = parset.observationName(); // TODO: check if Name -> ID
+	file.projectTitle()  .value = parset.observationTitle();
+	file.projectPI()     .value = parset.observationPI();
+	file.projectCOI()    .value = parset.observationCOI(); // TODO: see above
+	file.projectContact().value = parset.observationContact();
 */
-	//file.observationID() .set(str(format("%s") % parset.observationID()));
-	file.observationID() .set(LOFAR::formatString("%u", parset.observationID()));
+	//file.observationID() .value = str(format("%s") % parset.observationID());
+	file.observationID() .value = LOFAR::formatString("%u", parset.observationID());
 
-	file.observationStartUTC().set(timeStr(parset.startTime())); // TODO: parset gives this as a double?!?! also below
-	file.observationStartMJD().set(toMJD(parset.startTime())); // TODO: needed? also below
-	//file.observationStartTAI().set(toTAI(parset.startTime()));
+	file.observationStartUTC().value = timeStr(parset.startTime()); // TODO: parset gives this as a double?!?! also below
+	file.observationStartMJD().value = toMJD(parset.startTime()); // TODO: needed? also below
 
 	// The stop time can be a bit further than the one actually specified, because we process in blocks.
 	const size_t nBlocks = ceil((parset.stopTime() - parset.startTime()) / parset.CNintegrationTime());
 	const double stopTime = parset.startTime() + nBlocks * parset.CNintegrationTime();
-	file.observationEndUTC().set(timeStr(stopTime));
-	file.observationEndMJD().set(toMJD(stopTime));
-	//file.observationEndTAI().set(toTAI(stopTime));
+	file.observationEndUTC().value = timeStr(stopTime);
+	file.observationEndMJD().value = toMJD(stopTime);
 
-	file.observationNofStations().set(parset.nrStations()); // TODO: SS beamformer?
+	file.observationNofStations().value = parset.nrStations(); // TODO: SS beamformer?
 
 	// For the observation attribs, dump all stations participating in the observation (i.e. allStationNames(), not mergedStatioNames()).
 	// This may not correspond to which station HDF5 groups will be written, but that is true anyway, regardless of any merging (e.g. w/ piggy-backed TBB).
-	file.observationStationsList().set(parset.allStationNames()); // TODO: SS beamformer?
+	file.observationStationsList().value = parset.allStationNames(); // TODO: SS beamformer?
 
 	// TODO: DAL: this is for the original obs; DAL TBB users need to know which stations and dipoles are actually there. Use some way to enumerate to get it from HDF5. And some way to iterate over all or over a user-specified selection (see DAL1).
 
@@ -312,27 +335,26 @@ static void setCommonLofarAttributes(DAL::TBB_File& file, const LOFAR::RTCP::Par
 	double max_centerfrequency = *max_element(subbandCenterFrequencies.begin(), subbandCenterFrequencies.end());
 	double sum_centerfrequencies = accumulate(subbandCenterFrequencies.begin(), subbandCenterFrequencies.end(), 0.0);
 	double subbandBandwidth = parset.sampleRate();
-	double channelBandwidth = parset.channelWidth();
 
-	file.observationFrequencyMin()   .set((min_centerfrequency - subbandBandwidth / 2) / 1e6);
-	file.observationFrequencyCenter().set(sum_centerfrequencies / subbandCenterFrequencies.size());
-	file.observationFrequencyMax()   .set((max_centerfrequency + subbandBandwidth / 2) / 1e6);
-	file.observationFrequencyUnit()  .set("MHz");
+	file.observationFrequencyMin()   .value = (min_centerfrequency - subbandBandwidth / 2) / 1e6;
+	file.observationFrequencyCenter().value = sum_centerfrequencies / subbandCenterFrequencies.size();
+	file.observationFrequencyMax()   .value = (max_centerfrequency + subbandBandwidth / 2) / 1e6;
+	file.observationFrequencyUnit()  .value = "MHz";
 
-	file.observationNofBitsPerSample().set(parset.nrBitsPerSample());
+	file.observationNofBitsPerSample().value = parset.nrBitsPerSample();
 
-	file.clockFrequency()    .set(parset.clockSpeed() / 1e6);
-	file.clockFrequencyUnit().set("MHz");
+	file.clockFrequency()    .value = parset.clockSpeed() / 1e6;
+	file.clockFrequencyUnit().value = "MHz";
 
-	file.antennaSet().set(parset.antennaSet()); // TODO: does this provide the strings from the ICD const tables?!?
+	file.antennaSet().value = parset.antennaSet(); // TODO: does this provide the strings from the ICD const tables?!?
 
-	file.filterSelection().set(parset.getString("Observation.bandFilter"));
+	file.filterSelection().value = parset.getString("Observation.bandFilter");
 
-	//file.target().set(); // TODO: not in bf h5 writer; as array of strings?
+	//file.target().value = ???; // TODO: not in bf h5 writer; as array of strings?
 	// Code from bf MS Writer:
 	//vector<string> targets(parset.getStringVector("Observation.Beam[" + toString(subarray) + "].target"));
 
-	/*
+	/*unexp
 	 * Set release string, e.g. "LOFAR-Release-1.0".
 	 * Only works if writer is rebuilt and reinstalled on every release, so force cmake deps. (Means on build failure, everyone will know soon!)
 	 */
@@ -345,27 +367,27 @@ static void setCommonLofarAttributes(DAL::TBB_File& file, const LOFAR::RTCP::Par
 	LOFAR::Version::show<TBB_WriterVersion>(vss, "TBB_Writer",  type);
 	const string releaseStr(vss.str());
 #endif
-	file.systemVersion().set(versionStr);
+	file.systemVersion().value = versionStr;
 */
-	//file.pipelineName().set(); // TODO: remove from DAL; for offline/LTA only
-	//file.pipelineVersion().set(); // idem
+	//file.pipelineName().value = ???; // TODO: remove from DAL; for offline/LTA only
+	//file.pipelineVersion().value = ???; // idem
 
-	//file.ICDNumber().set("1"); //TODO: this is wrong if we provide a spec doc, and redundant if we already have 'tbb'; LOFAR-USG-ICD-001: TBB Time-Series Data"); // make it 1 or 001, or drop this, it's in file type (data product type)
-	//file.ICDVersion().set("2.02.15"); // patch number is useless; and this is wrong if we provide a spec doc
-	//file.notes().set(""); // TODO: needed?
+	//file.ICDNumber().value = "1"; //TODO: this is wrong if we provide a spec doc, and redundant if we already have 'tbb'; LOFAR-USG-ICD-001: TBB Time-Series Data"); // make it 1 or 001, or drop this, it's in file type (data product type)
+	//file.ICDVersion().value = "2.02.15"; // patch number is useless; and this is wrong if we provide a spec doc
+	//file.notes().value = ""; // TODO: needed?
 	// TODO: No TBB_SysLog group anymore, add it back to CommonLofarAttributes instead of Notes?
 	/*if (parset.fakeInputData()) { // ignore checkFakeInputData(), always annotate the data product if data is fake
-		syslog.append("input data is fake!"); // -> "TBB Writer: input data is fake!"
+		syslog.append("input data is fake!");
 	}*/
 }
 
 /*
  * The generated format is: <Prefix><Observation ID>_<Optional Descriptors>_<Filetype>.<Extension>
  * From LOFAR-USG-ICD005 spec named "LOFAR Data Format ICD File Naming Conventions", by A. Alexov et al.
- * Example for TBB: "L10000_CS001_D20120101T03:16:41.123Z_tbb.h5" or "L10000_CS001_D20120101T03:16:41.123Z_R%03u_R%03u_tbb.raw"
+ * Example for TBB: "L10000_D20120101T031641.123Z_tbb.h5" or "L10000_CS001_%03hhu%03hhu_D20120101T031641.123Z_R%03u_tbb.raw"
  */
 static string genOutputFilename(const string& observationId,
-		const string& stationName, const string& dateTime, const vector<string>& readOuts, // <-- all optional
+		const string& stationName, const string& rsprcu, const string& dateTime, const string& readOut, // <-- may all be empty
 		const string& fileType, const string& filenameExtension) {
 	ostringstream oss;
 
@@ -373,11 +395,14 @@ static string genOutputFilename(const string& observationId,
 	if (!stationName.empty()) {
 		oss << "_" << stationName;
 	}
+	if (!rsprcu.empty()) {
+		oss << "_" << rsprcu;
+	}
 	if (!dateTime.empty()) {
 		oss << "_" << dateTime;
 	}
-	for (size_t i = 0; i < readOuts.size(); i++) {
-		oss << "_R" << readOuts[i];
+	if (!readOut.empty()) {
+		oss << "_R" << readOut;
 	}
 	oss << "_" << fileType << "." << filenameExtension;
 
@@ -423,8 +448,9 @@ static vector<string> getTBB_InputStreamNames(struct progArgs& args) {
 	 */
 	vector<string> allInputStreamNames;
 
-	for (uint16_t port = TBB_DEFAULT_BASE_PORT; port <= TBB_DEFAULT_LAST_PORT; port++) {
-		string streamName(LOFAR::formatString("udp:0.0.0.0:%hu", port));
+	uint16_t portsEnd = args.port + TBB_DEFAULT_LAST_PORT - TBB_DEFAULT_BASE_PORT;
+	for (uint16_t port = args.port; port <= portsEnd; port++) {
+		string streamName(args.proto + ":0.0.0.0:" + LOFAR::formatString("%hu", port));
 		allInputStreamNames.push_back(streamName);
 	}
 
@@ -432,103 +458,208 @@ static vector<string> getTBB_InputStreamNames(struct progArgs& args) {
 }
 
 static void doThreadedWrites(map<unsigned, LOFAR::RTCP::SmartPtr<LOFAR::RTCP::TBB_StationOut> >& h5Outputs,
-							vector<string>& inputStreamNames, LOFAR::RTCP::Parset& parset) {
-	// Create a TBB_Writer for each (possible) input stream.
-	string obsIdStr(LOFAR::formatString("%u", parset.observationID()));
-	vector<LOFAR::RTCP::SmartPtr<LOFAR::RTCP::TBB_Writer> > writers;
-	for (vector<string>::const_iterator it(inputStreamNames.begin()); it != inputStreamNames.end(); ++it) {
-		string inputStreamName(*it);
-		const string logPrefix(LOFAR::formatString("[TBB obs %s stream %s]", obsIdStr.c_str(), it->c_str()));
-		writers.push_back(new LOFAR::RTCP::TBB_Writer(h5Outputs, inputStreamName, parset, logPrefix));
+				vector<string>& inputStreamNames, LOFAR::RTCP::Parset& parset, struct timeval& timeoutVal) {
+	// Mask all signals to inherit for workers. This forces signals to be delivered to the main thread.
+	sigset_t sigset_old;
+	sigset_t sigset_all_masked;
+	sigfillset(&sigset_all_masked);
+	int err = pthread_sigmask(SIG_SETMASK, &sigset_all_masked, &sigset_old);
+	if (err != 0) {
+		throw LOFAR::SystemCallException("pthread_sigmask() to mask sigs failed");
 	}
-	// Join with writer threads here when destructing writers objects.
+
+	// Create a TBB_Writer workers for each (possible) input stream.
+	string obsIdStr(LOFAR::formatString("%u", parset.observationID()));
+	struct timeval tvmax = {0, 0};
+	vector<struct timeval> timeoutStamps(inputStreamNames.size(), tvmax);
+	vector<LOFAR::RTCP::SmartPtr<LOFAR::RTCP::TBB_Writer> > writers;
+	for (size_t i = 0; i < inputStreamNames.size(); i++) {
+		string inputStreamName(inputStreamNames[i]);
+		const string logPrefix(LOFAR::formatString("[TBB obs %s stream %s]", obsIdStr.c_str(), inputStreamNames[i].c_str()));
+		writers.push_back(new LOFAR::RTCP::TBB_Writer(h5Outputs, inputStreamName, parset, timeoutStamps[i], logPrefix));
+	}
+
+	// Restore signal mask. Skipped if the above throws, but then we are terminating already. (TODO: not if keepRunning)
+	if (err == 0) {
+		err = pthread_sigmask(SIG_SETMASK, &sigset_old, NULL);
+		if (err != 0) {
+			throw LOFAR::SystemCallException("pthread_sigmask() to restore sigs failed");
+		}
+	}
+
+	/*
+	 * We don't know how much data comes in, so cancel workers when all are idle for a timeout_sec seconds.
+	 * In some situations, threads can become active again after idling a bit.
+	 * So periodically monitor thread timeout stamps.
+	 * Poor man's sync, but per-thread timers to break read() to notify us of idleness does not work.
+	 * This can be improved once the LOFAR system keeps track of TBB dumping and can inform us when to shutdown.
+	 */
+	struct itimerval timer = {timeoutVal, timeoutVal};
+	if (setitimer(ITIMER_REAL, &timer, NULL) != 0) {
+		throw LOFAR::SystemCallException("setitimer failed");
+	}
+
+	bool anyFrameReceived = false; // don't quit if there is no data immediately after starting
+	size_t workersDone;
+	do {
+		pause();
+
+		workersDone = 0;
+		for (size_t i = 0; i < inputStreamNames.size(); i++) {
+			struct timeval now;
+			gettimeofday(&now, NULL);
+			time_t lastActive_sec = timeoutStamps[i].tv_sec; // racy read (and no access once guarantee)
+			if (lastActive_sec != 0) {
+				anyFrameReceived = true;
+			}
+			if (anyFrameReceived && lastActive_sec <= now.tv_sec - timeoutVal.tv_sec) {
+				workersDone += 1;
+			}
+		}
+	} while (workersDone < inputStreamNames.size());
+
+	// Cancel writer threads and join with them when destructing writers objects.
+	for (size_t i = 0; i < writers.size(); i++) {
+		writers[i]->cancel();
+	}
 }
 
-// TODO: what was planned (OTDB/MoM) vs what actually happened: try to store what actually happened
+static void printUsage(const char* progname) {
+	cout << "Usage: " << progname << " [--inputfile=input_file.raw] [--outputfile=output_file.h5] [--parsetfile=file.parset]"
+		" [--conmapfile=TBBConnections.dat] [--protocol=tcp] [--portbase=1234] [--timeout=30] [--keeprunning=1]" << endl;
+}
+
 // TODO: remove _VALUE except wcscoords REFERENCE_VALUE (e.g. in ICD003 Table 14, 15).
 // TODO: cross-check formats with casacore (see Ger's e-mail)
-
 // TODO: most cerr/cout through logger, some into h5out Syslog
 static int parseArgs(int argc, char *argv[], struct progArgs* args) {
 	int rv = 0;
 
 	// Default values
 	args->inFilename = "";	// default is to read from a socket
-	args->outFilename = "";	// default is generated according to ICD005
+	args->outDir = "";
 	args->parsetFilename = "";	// default means most meta data fields cannot be set
-//	args->proto = LOFAR::SocketStream::UDP;
-	args->port = 0;
+	args->conMapFilename = "";	// default is to find the filename at $LOFARROOT/etc/StaticMetaData/TBBConnections.dat
+	args->proto = "udp";
+	args->port = TBB_DEFAULT_BASE_PORT;
+	args->timeoutVal.tv_sec = 10; // default secs of inactivity after which to terminate all input workers and close output files
+	args->timeoutVal.tv_usec = 0;
+	args->keepRunning = false;
+	
+	static struct option long_opts[] = {
+		// {const char *name, int has_arg, int *flag, int val}
+		{"help",        no_argument,       NULL, 'h'},
+		{"version",     no_argument,       NULL, 'v'},
 
-	// Specified arguments and per-argument checks
-	int i;
-	for (i = 0; i < argc; i++) {
-		if (strncmp(argv[i], "--infile=", strlen("--infile=")) == 0) {
-			args->inFilename = argv[i + strlen("--infile=")];
-		} else if (strncmp(argv[i], "--outfile=", strlen("--outfile=")) == 0) {
-			args->outFilename = argv[i + strlen("--outfile=")];
-			// force '.h5' file name extension  TODO: here?!?
-			const string h5ext(".h5");
-			if (args->outFilename.size() < h5ext.size() ||
-					args->outFilename.substr(args->outFilename.size() - h5ext.size()) != h5ext) {
-				args->outFilename.append(h5ext);
+		{"inputfile",   required_argument, NULL, 'i'},
+		{"outputdir",   required_argument, NULL, 'd'},
+		{"parsetfile",  required_argument, NULL, 'c'}, // 'c'onfig
+		{"conmapfile",  required_argument, NULL, 'm'}, // 'm'ap
+		{"protocol",    required_argument, NULL, 'p'},
+		{"portbase",    required_argument, NULL, 'b'}, // 'b'ase
+		{"timeout",     required_argument, NULL, 't'},
+
+		{"keeprunning", optional_argument, NULL, 'k'},
+
+		{NULL, 0, NULL, 0}
+	};
+
+	opterr = 0; // prevent error printing to stderr by getopt*()
+	int opt;
+	while ((opt = getopt_long(argc, argv, "hvi:d:c:m:p:b:t:k::", long_opts, NULL)) != -1) {
+		switch (opt) {
+		case 'h':
+		case 'v':
+			if (rv == 0) {
+				rv = 2;
 			}
-		} else if (strncmp(argv[i], "--parsetfile=", strlen("--parsetfile=")) == 0) {
-			args->parsetFilename = argv[i + strlen("--parsetfile=")];
-		} else if (strncmp(argv[i], "--proto=", strlen("--proto=")) == 0) {
-			if (strcmp(argv[i + strlen("--proto=")], "tcp") == 0) {
-//				args->proto = LOFAR::SocketStream::TCP;
-			} else if (strcmp(argv[i + strlen("--proto=")], "udp") == 0) {
-//				args->proto = LOFAR::SocketStream::UDP;
-			} else {
-				cerr << "Invalid proto argument: " << argv[i] << endl;
-				rv = 1;
-			}
-		} else if (strncmp(argv[i], "--port=", strlen("--port=")) == 0) {
-			try {
-				args->port = boost::lexical_cast<uint16_t>(argv[i + strlen("--port=")]);
-			} catch (boost::bad_lexical_cast& /*exc*/) {
-				cerr << "Invalid port argument: " << argv[i] << endl;
-				rv = 1;
-			}
-		} else if (strcmp(argv[i], "--version") == 0 || strcmp(argv[i], "--help") == 0) {
-			rv = 2; // Not an error, just print some info, then exit.
-		} else if (strcmp(argv[i], "--") == 0) { // "end of options" option. Not so useful if we have only opts and no args.
 			break;
-		} else {
-			cerr << "Invalid program argument: " << argv[i] << endl;
+		case 'i':
+			args->inFilename = optarg;
+			break;
+/*		case 'o':
+		{
+			args->outFilename = optarg;
+			string ext(".h5");
+			size_t len = args->outFilename.size();
+			if (len < 3 || strcasecmp(&optarg[len - ext.size()], ext.c_str()) != 0) {
+				args->outFilename.append(ext); // don't error, just correct
+			}
+			break;
+		}*/
+		case 'd':
+			args->outDir = optarg;
+			if (args->outDir[args->outDir.size() - 1] != '/') {
+				args->outDir.push_back('/');
+			}
+			break;
+		case 'c':
+			args->parsetFilename = optarg;
+			break;
+		case 'm':
+			args->conMapFilename = optarg;
+			break;
+		case 'p':
+			if (strcmp(optarg, "tcp") == 0 || strcmp(optarg, "udp") == 0) {
+				args->proto = optarg;
+			} else {
+				cerr << "Invalid protocol argument: " << optarg << endl;
+				rv = 1;
+			}
+			break;
+		case 'b':
+			try {
+				args->port = boost::lexical_cast<uint16_t>(optarg);
+			} catch (boost::bad_lexical_cast& /*exc*/) {
+				cerr << "Invalid port argument: " << optarg << endl;
+				rv = 1;
+			}
+			break;
+		case 't':
+			try {
+				args->timeoutVal.tv_sec = boost::lexical_cast<unsigned long>(optarg);
+			} catch (boost::bad_lexical_cast& /*exc*/) {
+				cerr << "Invalid timeout argument: " << optarg << endl;
+				rv = 1;
+			}
+			break;
+		case 'k':
+			if (optarg == NULL || optarg[0] == '\0') {
+				args->keepRunning = true;
+				break;
+			}
+			try {
+				args->keepRunning = boost::lexical_cast<bool>(optarg);
+			} catch (boost::bad_lexical_cast& /*exc*/) {
+				cerr << "Invalid keeprunning argument: " << optarg << endl;
+				rv = 1;
+			}
+			break;
+		default: // '?'
+			cerr << "Invalid program argument." << endl; // TODO: print which one; not optarg
 			rv = 1;
 		}
 	}
 
-	// Checks across arguments
-	if ( (args->inFilename != "" && (args->inFilename == args->outFilename || args->inFilename == args->parsetFilename))
-			|| ((args->outFilename != "" && args->outFilename == args->parsetFilename)) ) {
-		cerr << "Pair(s) of in-, out-, and/or parsetfile options cannot specify the same filename (outfile always ends in .h5)." << endl;
+/*	args->outFilename = outDir + args->outFilename;
+	if (!args->outFilename.empty() && (
+			args->outFilename == args->inFilename ||
+			args->outFilename == args->parsetFilename ||
+			args->outFilename == args->conMapFilename)) {
+		cerr << "Output filename (ending in .h5) cannot be equal to another filename argument." << endl;
+		rv = 1;
+	}*/
+
+	if (optind < argc) {
+		cerr << "Failed to recognize arguments:";
+		while (optind < argc) {
+			cerr << " " << argv[optind++];
+		}
+		cerr << endl;
 		rv = 1;
 	}
 
 	return rv;
-}
-
-// Register signal handlers to terminate early, so we can also break out of blocking system calls. TODO: deal with EINTR
-static void setSigIntHandler() {
-	struct sigaction sa;
-	int err;
-
-	sa.sa_handler = sigint_handler;
-	sigemptyset(&sa.sa_mask);
-	sa.sa_flags = 0;
-	err  = sigaction(SIGINT,  &sa, NULL);
-	err |= sigaction(SIGHUP,  &sa, NULL);
-	err |= sigaction(SIGTERM, &sa, NULL);
-	if (err != 0) {
-		LOG_WARN_STR("Failed to register int/hup/term signal handler; graceful abort may be difficult.");
-	}
-}
-
-static void printUsage(const char* progname) {
-	cout << "Usage: " << progname << " [--infile=input_file.raw] [--outfile=output_file.h5] [--parsetfile=file.parset]"
-		" [--proto=tcp|udp] [--port=1234]" << endl;
 }
 
 int main(int argc, char* argv[]) {
@@ -549,99 +680,108 @@ int main(int argc, char* argv[]) {
 	Context::initialize();
 	setLevel("Global", 8);
 #else
-	INIT_LOGGER_WITH_SYSINFO(str(boost::format("Storage@%02d") % (argc > 1 ? atoi(argv[1]) : -1)));
+	INIT_LOGGER_WITH_SYSINFO(str(boost::format("Storage@%02d") % (argc > 1 ? atoi(argv[1]) : -1))); // TODO: no boost fmt or everywhere; not like this
 #endif
 
-	// TODO: rework prog args
 	err = parseArgs(argc, argv, &args);
 	if (err != 0) {
-		if (err == 2) err = 0;
+		if (err == 2) err = 0; // just asking for help is not an error
 		printUsage(argv[0]);
 		return err;
 	}
-	if (argc > 1) {
-		printUsage(argv[0]);
-		return 1;
-	}
 
-	setSigIntHandler();
+	setTermSigsHandler();
 
 	// We don't run alone, so increase the QoS we get from the OS to decrease the chance of data loss.
 	setIOpriority();
 	setRTpriority();
 	lockInMemory();
 
-	try {
-		LOFAR::RTCP::Parset parset(args.parsetFilename);
+	unsigned run_nr = 0;
+	do {
+		err = 0;
+		run_nr += 1; // mangle into filenames to avoid accidental overwriting with keeprunning
 
+	try {
 		/*
 		 * Retrieve the station name that will send data to this host (input thread will check this at least once).
-		 * Getting this from static meta data is inflexible. Should come from the parset.
+		 * Getting this from static meta data is inflexible.
 		 */
-		vector<string> stationNames;
-		try {
-			string tbbMappingFilename(args.connMapFilename);
-			if (tbbMappingFilename.empty()) {
-				const string defaultTbbMappingFilename("TBBConnections.dat");
-				char* lrpath = getenv("LOFARROOT");
-				if (lrpath != NULL) {
-					tbbMappingFilename = string(lrpath) + "/etc/StaticMetaData/";
-				}
-				tbbMappingFilename.append(defaultTbbMappingFilename);
+		string tbbMappingFilename(args.conMapFilename);
+		if (tbbMappingFilename.empty()) {
+			const string defaultTbbMappingFilename("TBBConnections.dat");
+			char* lrpath = getenv("LOFARROOT");
+			if (lrpath != NULL) {
+				tbbMappingFilename = string(lrpath) + "/etc/StaticMetaData/";
 			}
-
-			stationNames = getTBB_StationNames(tbbMappingFilename);
-		} catch (LOFAR::IOException& exc) {
-			LOG_FATAL_STR(exc.what());
+			tbbMappingFilename.append(defaultTbbMappingFilename);
 		}
+		vector<string> stationNames(getTBB_StationNames(tbbMappingFilename));
+
+		vector<string> inputStreamNames(getTBB_InputStreamNames(args));
+		LOFAR::RTCP::Parset parset(args.parsetFilename);
 
 		// Generate the output filename ourselve (if not from command-line), because for TBB it's not in the parset.
 		string obsIdStr(LOFAR::formatString("%u", parset.observationID()));
-		const string triggerDateTime(getFileModDate("")); // Don't have the trigger timestamp. Use NOW as getFileModDate() cannot stat("").
-		vector<string> filenameReadOuts;
-		string h5FilenameFmt(genOutputFilename(obsIdStr, "%s", triggerDateTime, filenameReadOuts, "tbb", "h5"));
-		filenameReadOuts.assign(2, "%03u"); // We set stationName, but leave these rsp and rcu ids to be filled in by the output threads.
-		string rawFilenameFmt(genOutputFilename(obsIdStr, "%s", triggerDateTime, filenameReadOuts, "tbb", "raw"));
+
+		struct timeval tv;
+		gettimeofday(&tv, NULL); // TODO: must be time of 1st frame arrival
+		const char output_format[] = "D%Y%m%dT%H%M"; // without secs
+		const char output_format_secs[] = "%06.3fZ";
+		const char output_format_example[] = "DYYYYMMDDTHHMMSS.SSSZ";
+		string triggerDateTime(formatFilenameTimestamp(tv, output_format, output_format_secs, sizeof(output_format_example)));
+
+		string runNrStr(LOFAR::formatString("%03u", run_nr));
+		string h5FilenameFmt(args.outDir + genOutputFilename(obsIdStr, "%s", "", triggerDateTime, runNrStr, "tbb", "h5" ));
 
 		/*
-		* The converters receive a stationId in the incoming datagrams, so create an HDF5 output per station
-		* and map from stationId to the TBB_StationOut struct.
-		*/
+		 * The workers receive a stationId in the incoming datagrams, so create an HDF5 output per station and
+		 * map from stationId to the TBB_StationOut struct.
+		 */
 		map<unsigned, LOFAR::RTCP::SmartPtr<LOFAR::RTCP::TBB_StationOut> > h5Outputs;
+		vector<LOFAR::RTCP::SmartPtr<LOFAR::RTCP::TBB_StationOut> > stOuts;
 		for (unsigned i = 0; i < stationNames.size(); i++) {
 			string h5Filename(LOFAR::formatString(h5FilenameFmt.c_str(), stationNames[i].c_str()));
-			string rawFilenameStationFmt(LOFAR::formatString(rawFilenameFmt.c_str(), stationNames[i].c_str()));
-			LOFAR::RTCP::SmartPtr<LOFAR::RTCP::TBB_StationOut> stOut = new LOFAR::RTCP::TBB_StationOut(h5Filename, rawFilenameStationFmt);
 
-			// Don't need to grab the mutex, because we are the main thead initializing before we create output threads.
+			// Fully regenerate raw fmt every time, because we cannot have snprintf()/formatString() _only_ treat the station name conv.
+			// The rsp/rcu are for the workers to fill in.
+			string rawFilenameStationFmt(args.outDir + genOutputFilename(obsIdStr, stationNames[i], "%03hhu%03hhu", triggerDateTime, runNrStr, "tbb", "raw"));
+
+			// Initialize the HDF5 root group attributes.
+			// Don't need to grab the mutex, because we are the main thread initializing before we create output threads.
+//	LOFAR::RTCP::SmartPtr<LOFAR::RTCP::TBB_StationOut> stOut(new LOFAR::RTCP::TBB_StationOut(h5Filename, rawFilenameStationFmt));
+			stOuts.push_back(new LOFAR::RTCP::TBB_StationOut(h5Filename, rawFilenameStationFmt));
+			LOFAR::RTCP::SmartPtr<LOFAR::RTCP::TBB_StationOut> stOut(stOuts[i]);
 			setCommonLofarAttributes(stOut->h5Out, parset, h5Filename);
 			setTBB_RootAttributes(stOut->h5Out, parset, stationNames[i]);
 			stOut->h5Out.flush();
 
+			// Store these two outside the for { }, so they are not deleted ending up with a dangling ref. (rawFilenameStationFmt was passed by value so not needed there.)
 			unsigned stationId = stationNameToId(stationNames[i]);
 			h5Outputs.insert(make_pair(stationId, stOut));
+//			stOuts.push_back(stOut);
 		}
 
-		vector<string> inputStreamNames(getTBB_InputStreamNames(args));
-		if (inputStreamNames.empty()) {
-			LOG_FATAL_STR("Failed to find any input stream name(s)"); // TODO all LOG_FATAL_STR into exc to catch below
-		}
+		LOG_INFO_STR("Expecting from " << stationNames.size() << " station(s); about to receive from "
+					<< inputStreamNames.size() << " input stream(s)");
 
-		LOG_INFO_STR(LOFAR::formatString("Expecting from %zu through %zu input stream name(s)", stationNames.size(), inputStreamNames.size()).c_str());
+		doThreadedWrites(h5Outputs, inputStreamNames, parset, args.timeoutVal);
 
-		doThreadedWrites(h5Outputs, inputStreamNames, parset);
-
-		err = 0;
-	} catch (LOFAR::Exception& lexc) {
-		LOG_FATAL_STR(lexc.text());
+	} catch (LOFAR::Exception& exc) {
+		LOG_FATAL_STR(exc.text());
 		err = 1;
-	} catch (exception& ex) {
-		LOG_FATAL_STR("[obs unknown] Caught std::exception: " << ex.what());
+	} catch (DAL::DALException& exc) {
+		LOG_FATAL_STR("[obs unknown] Caught DAL::DALException: " << exc.what()); // TODO: fix obs unknown
+		err = 1;
+	} catch (exception& exc) {
+		LOG_FATAL_STR("[obs unknown] Caught std::exception: " << exc.what());
 		err = 1;
 	} catch (...) {
-		LOG_FATAL_STR("[obs unknown] Caught non-std::exception");
+		LOG_FATAL("[obs unknown] Caught non-std::exception");
 		err = 1;
 	}
+
+	} while (args.keepRunning);
 
 	fclose(stderr);
 	fclose(stdout);
