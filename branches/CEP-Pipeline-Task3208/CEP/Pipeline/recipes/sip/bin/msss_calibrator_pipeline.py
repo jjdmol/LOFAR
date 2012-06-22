@@ -184,7 +184,7 @@ class msss_calibrator_pipeline(control):
         parmdb_mapfile = self.run_task("setupparmdb", data_mapfile)['mapfile']
 
         # Create a sourcedb to be used by the demixing phase of DPPP
-        # The path to the A-team sky model is read from the tasks.cfg file
+        # The path to the A-team sky model is currently hard-coded.
         sourcedb_mapfile = self.run_task(
             "setupsourcedb", data_mapfile,
             skymodel=os.path.join(
@@ -215,7 +215,7 @@ class msss_calibrator_pipeline(control):
 #        # Do a second run of flagging, this time using rficonsole
 #        self.run_task("rficonsole", demix_mapfile, indirect_read=True)
 
-        # Create an empty parmdb for DPPP
+        # Create an empty parmdb for BBS
         parmdb_mapfile = self.run_task("setupparmdb", data_mapfile)['mapfile']
 
         # Create a sourcedb based on sourcedb's input argument "skymodel"
