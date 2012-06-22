@@ -129,7 +129,9 @@ class dppp(LOFARnodeTCP):
                 finally:
                     shutil.rmtree(working_dir)
 
-            return 0
+        # We need some signal to the master script that the script ran ok.
+        self.outputs['ok'] = True
+        return 0
 
 
     def _prepare_steps(self, **kwargs):

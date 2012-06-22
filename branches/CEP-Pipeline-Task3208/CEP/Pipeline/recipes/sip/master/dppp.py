@@ -229,14 +229,41 @@ class dppp(BaseRecipe, RemoteCommandRecipeMixIn):
         self.outputs['fullyflagged'] = baselinecounter.keys()
 
         if self.error.isSet():
-            self.logger.warn("Failed DPPP process detected")
-            return 1
-        else:
-            self.logger.debug("Writing data map file: %s" %
-                              self.inputs['mapfile'])
-            store_data_map(self.inputs['mapfile'], outdata)
-            self.outputs['mapfile'] = self.inputs['mapfile']
-            return 0
+            # dppp needs to continue on partial succes.
+            # Get the status of the jobs
+            node_status = {}
+            ok_counter = 0
+            for job in jobs:
+                if job.results.has_key("ok"):
+                    node_status[job.host] = True
+                    ok_counter += 1
+                else:
+                    node_status[job.host] = False
+
+            # if all nodes failed abort
+            if ok_counter == 0:
+                self.logger.error("None of the dppp runs finished with an ok status")
+                self.logger.error("Exiting recipe with fail status")
+                return 1
+
+            # Create new mapfile with only the successful runs
+            new_outdata = []
+            for host, path in outdata:
+                if node_status[host]:
+                    new_outdata.append((host, path))
+                # else do not put in the outdata list
+            #swap the outputfiles
+            outdata = new_outdata
+
+            self.logger.warn("Failed DPPP process detected,"
+                             "continue with succeeded runs")
+
+        # Write output data return ok status
+        self.logger.debug("Writing data map file: %s" %
+                          self.inputs['mapfile'])
+        store_data_map(self.inputs['mapfile'], outdata)
+        self.outputs['mapfile'] = self.inputs['mapfile']
+        return 0
 
 if __name__ == '__main__':
     sys.exit(dppp().main())
