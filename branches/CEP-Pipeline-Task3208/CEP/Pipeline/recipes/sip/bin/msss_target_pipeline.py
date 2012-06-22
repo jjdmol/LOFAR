@@ -231,10 +231,10 @@ class msss_target_pipeline(control):
         mapfile_dir = os.path.join(job_dir, "mapfiles")
         create_directory(mapfile_dir)
 
-
-        self.input_data['instrument'] = self._copy_instrument_files(
-                                    self.input_data['instrument'],
-                                    self.input_data['data'], mapfile_dir)
+# Temporarily disabled, until Wouter has fixed _copy_instrument_files().
+#        self.input_data['instrument'] = self._copy_instrument_files(
+#                                    self.input_data['instrument'],
+#                                    self.input_data['data'], mapfile_dir)
 
         self._validate_io_product_specs()
 
@@ -270,15 +270,24 @@ class msss_target_pipeline(control):
             ', '.join(':'.join(f) for f in self.input_data['data'])
         )
 
-        # Create a sourcedb based on sourcedb's input argument "skymodel"
-        # (see, e.g., tasks.cfg file).
-        sourcedb_mapfile = self.run_task("setupsourcedb", data_mapfile)['mapfile']
-
         # Produce a GVDS file describing the data on the compute nodes.
         gvds_file = self.run_task("vdsmaker", data_mapfile)['gvds']
 
         # Read metadata (e.g., start- and end-time) from the GVDS file.
         vdsinfo = self.run_task("vdsreader", gvds = gvds_file)
+
+        # Create an empty parmdb for DPPP
+        parmdb_mapfile = self.run_task("setupparmdb", data_mapfile)['mapfile']
+
+        # Create a sourcedb to be used by the demixing phase of DPPP
+        # The path to the A-team sky model is currently hard-coded.
+        sourcedb_mapfile = self.run_task(
+            "setupsourcedb", data_mapfile,
+            skymodel=os.path.join(
+                self.config.get('DEFAULT', 'lofarroot'),
+                'share', 'pipeline', 'skymodels', 'Ateam_LBA_CC.skymodel'
+            )
+        )['mapfile']
 
         # Create a parameter-subset for DPPP and write it to file.
         ndppp_parset = os.path.join(parset_dir, "NDPPP[0].parset")
@@ -290,11 +299,23 @@ class msss_target_pipeline(control):
             data_start_time = vdsinfo['start_time'],
             data_end_time = vdsinfo['end_time'],
             parset = ndppp_parset,
+            parmdb_mapfile=parmdb_mapfile,
+            sourcedb_mapfile=sourcedb_mapfile,
             mapfile = os.path.join(mapfile_dir, 'dppp[0].mapfile')
         )['mapfile']
 
-        # Demix the relevant A-team sources
-        demix_mapfile = self.run_task("demixing", dppp_mapfile)['mapfile']
+        demix_mapfile = dppp_mapfile
+        
+#        # Demix the relevant A-team sources
+#        demix_mapfile = self.run_task("demixing", dppp_mapfile)['mapfile']
+
+        # Create an empty parmdb for BBS
+        parmdb_mapfile = self.run_task("setupparmdb", data_mapfile)['mapfile']
+
+        # Create an empty sourcedb for BBS
+        sourcedb_mapfile = self.run_task(
+            "setupsourcedb", data_mapfile
+        )['mapfile']
 
         # Create a parameter-subset for BBS and write it to file.
         bbs_parset = os.path.join(parset_dir, "BBS.parset")

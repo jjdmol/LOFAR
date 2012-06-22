@@ -58,13 +58,13 @@ class dppp(BaseRecipe, RemoteCommandRecipeMixIn):
             help="Name of the output mapfile containing the names of the "
                  "MS-files produced by the DPPP recipe"
         ),
-        'parmdb_mapfile': ingredient.FileField(
+        'parmdb_mapfile': ingredient.StringField(
             '--parmdb-mapfile',
             optional=True,
             help="Path to mapfile containing the parmdb files "
                  "(used by demixing step only)"
         ),
-        'sourcedb_mapfile': ingredient.FileField(
+        'sourcedb_mapfile': ingredient.StringField(
             '--sourcedb-mapfile',
             optional=True,
             help="Path to mapfile containing the sourcedb files "

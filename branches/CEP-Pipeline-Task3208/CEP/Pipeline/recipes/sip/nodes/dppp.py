@@ -149,7 +149,7 @@ class dppp(LOFARnodeTCP):
         # We have to read the parsetfile to check this.
         parset = parameterset(kwargs['parsetfile'])
         for step in parset.getStringVector('steps'):
-            if parset.getString(step + '.type').startswith('demix'):
+            if parset.getString(step + '.type', '').startswith('demix'):
                 patch_dictionary.update(
                     self._prepare_demix_step(step, **kwargs)
                 )

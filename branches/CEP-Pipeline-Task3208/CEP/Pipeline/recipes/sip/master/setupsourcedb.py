@@ -34,7 +34,8 @@ class setupsourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
         ),
         'skymodel': ingredient.StringField(
             '-s', '--skymodel',
-            help="Input sky catalogue"
+            help="Input sky catalogue",
+            default=''
         ),
         'mapfile': ingredient.StringField(
             '--mapfile',
