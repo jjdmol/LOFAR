@@ -43,7 +43,7 @@ class TBBReadCmd
 {
 public:
 	// Most likely way to construct the trigger.
-	TBBReadCmd (uint32	rcuNr,		uint32	time, 	uint32	sampleTime,
+	TBBReadCmd (uint32	rcuNr,		uint32	time, 	uint32	sampleNr,
 				uint32	prePages,	uint32	postPages);
 
 	// default construction
@@ -58,10 +58,10 @@ public:
 	// Note that the members are public, we use it as a struct.
 	uint32	itsRcuNr;
 	uint32	itsTime;
-	uint32	itsSampleTime;
+	uint32	itsSampleNr;
 	uint32	itsPrePages;
 	uint32	itsPostPages;
-
+	
 	//# print function for operator<<
 	ostream&	print(ostream&	os) const;
 };

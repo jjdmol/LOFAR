@@ -1,8 +1,8 @@
 # Adder
 dropping			bool
-nrBlocksDropped		int
+dropped			int
 dataProductType		string
 fileName		string
-storageNode		string
+locusNode		string
 directory		string
 observationName		string

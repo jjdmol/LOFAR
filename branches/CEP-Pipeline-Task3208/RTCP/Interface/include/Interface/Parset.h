@@ -248,6 +248,8 @@ class Parset: public ParameterSet
 private:
     const std::string		itsName;
 
+    mutable std::string		itsWriteCache;
+
     mutable SmartPtr<const Transpose2>     itsTransposeLogic;
     mutable SmartPtr<const CN_Transpose2>  itsCN_TransposeLogic;
 

@@ -189,9 +189,8 @@ int main(int argc, char* argv[])
             cout << "Waiting for more input..." << endl;
           }else{
 	  LOG_DEBUG_STR("input: " << triggerLine);
-	  if (sscanf(triggerLine, "%d %u %u %u %u %u %u",
+	  if (sscanf(triggerLine, "%d %u %u %u %u %u",
 		     &theTrigger.itsRcuNr,
-		     &theTrigger.itsSeqNr,
 		     &theTrigger.itsTime,
 		     &theTrigger.itsSampleNr,
 		     &theTrigger.itsSum,

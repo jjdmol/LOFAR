@@ -55,15 +55,23 @@ class msss_calibrator_pipeline(control):
         odp = self.parset.makeSubset(
             self.parset.fullModuleName('DataProducts') + '.'
         )
-        self.input_data = [tuple(''.join(x).split(':')) for x in zip(
-            odp.getStringVector('Input_Correlated.locations', []),
-            odp.getStringVector('Input_Correlated.filenames', []))
+        self.input_data = [
+            tuple(os.path.join(location, filename).split(':'))
+                for location, filename, skip in zip(
+                    odp.getStringVector('Input_Correlated.locations'),
+                    odp.getStringVector('Input_Correlated.filenames'),
+                    odp.getBoolVector('Input_Correlated.skip'))
+                if not skip
         ]
         self.logger.debug("%d Input_Correlated data products specified" %
                           len(self.input_data))
-        self.output_data = [tuple(''.join(x).split(':')) for x in zip(
-            odp.getStringVector('Output_InstrumentModel.locations', []),
-            odp.getStringVector('Output_InstrumentModel.filenames', []))
+        self.output_data = [
+            tuple(os.path.join(location, filename).split(':'))
+                for location, filename, skip in zip(
+                    odp.getStringVector('Output_InstrumentModel.locations'),
+                    odp.getStringVector('Output_InstrumentModel.filenames'),
+                    odp.getBoolVector('Output_InstrumentModel.skip'))
+                if not skip
         ]
         self.logger.debug("%d Output_InstrumentModel data products specified" %
                           len(self.output_data))

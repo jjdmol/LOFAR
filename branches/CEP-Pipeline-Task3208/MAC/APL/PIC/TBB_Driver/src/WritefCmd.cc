@@ -133,9 +133,16 @@ void WritefCmd::saveTbbEvent(GCFEvent& event)
 	
 	itsPassword = tbb_event.password;
 	
-	if ((itsImage == 0) && (itsPassword != 0xfac)) {
-		itsStage = unprotect;
-	} else {
+	if (itsImage == 0) {
+	    if (itsPassword == 0xfac) {
+		    itsStage = unprotect;
+		}
+		else {
+		    setStatus(0, TBB_FLASH_BAD_PASSWORD);
+			setDone(true);
+		}
+	} 
+	else {
 		itsStage = erase_flash;
 	}
 	
@@ -151,13 +158,13 @@ void WritefCmd::sendTpEvent()
 			TPUnprotectEvent tp_event;
 			tp_event.opcode = oc_UNPROTECT;
 			tp_event.status = 0;
-			tp_event.password = itsPassword;
+			tp_event.password = 0xad001234;
 			TS->boardPort(getBoardNr()).send(tp_event);
 			TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 		} break;
 		
 		case erase_flash: {
-			if ((itsImage == 0) && (itsPassword != 0xfac)) {
+			if ((itsImage == 0) && (itsPassword == 0xfac)) {
 				TPErasefSpecEvent tp_event;
 				tp_event.opcode = oc_ERASEF_SPEC;
 				tp_event.status = 0;
@@ -178,7 +185,7 @@ void WritefCmd::sendTpEvent()
 		// stage 2, write flash
 		case write_flash: {
 			// fill event with data and send
-			if ((itsImage == 0) && (itsPassword != 0xfac)) {
+			if ((itsImage == 0) && (itsPassword == 0xfac)) {
 				TPWritefSpecEvent tp_event;
 				tp_event.opcode = oc_WRITEF_SPEC;
 				tp_event.status = 0;

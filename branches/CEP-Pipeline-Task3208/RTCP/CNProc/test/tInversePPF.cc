@@ -52,8 +52,8 @@ const static unsigned nrTaps = 16;
 static unsigned nrSubbands = 248;
 //static unsigned nrSubbands = 4;
 static unsigned nrChannels = 1; // for the NuMoon pipeline, there are no separate channels.
-//static unsigned nrSamplesPerIntegration = 768 * 256 / 4; // one quarter of a second
-static unsigned nrSamplesPerIntegration = 64; // one quarter of a second
+static unsigned nrSamplesPerIntegration = 768 * 256 / 4; // one quarter of a second
+//static unsigned nrSamplesPerIntegration = 64;
 static double sampleRate = 195312.5;
 static double centerFrequency = (nrSamplesPerIntegration / 2) * sampleRate;
 static double signalFrequency = centerFrequency - (0.5 * sampleRate);
@@ -244,6 +244,8 @@ static void filterTest(InverseFilteredData& originalData) {
 
 int main() {
 
+  NSTimer iPPFTimer("Full inverse PPF", true);
+
   // copy the integer filter constants into a float array.
   for (unsigned filter = 0; filter < onStationFilterSize; filter++) {
     for (unsigned tap = 0; tap < nrTaps; tap++) {
@@ -283,7 +285,7 @@ int main() {
 
   generateInputSignal(originalData);
 
-  printData(originalData);
+//  printData(originalData);
 
 //  filterTest(originalData);
 //  exit(0);
@@ -303,9 +305,15 @@ int main() {
   }
 #endif
 
-  cerr << "performing inversePPF" << endl;
+  const unsigned nIter = 1;
 
-  inversePPF.performInversePPF(transposedBeamFormedData, invertedFilteredData);
+  cerr << "performing inversePPF " << nIter << " time(s)" << endl;
+
+  for(unsigned i=0; i<nIter; i++) {
+    iPPFTimer.start();
+    inversePPF.performInversePPF(transposedBeamFormedData, invertedFilteredData);
+    iPPFTimer.stop();
+  }
 
   cerr << "inversePPF done" << endl;
 

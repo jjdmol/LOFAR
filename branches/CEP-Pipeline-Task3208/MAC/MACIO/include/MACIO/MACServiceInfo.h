@@ -51,7 +51,6 @@ namespace LOFAR {
 #define	MAC_SVCMASK_CALSERVER			"CalServer%s:acceptor_v2"
 #define MAC_SVCMASK_BEAMSERVER			"BeamServer%s:acceptor_v2.1"
 #define MAC_SVCMASK_TBBDRIVER			"TBBDriver%s:acceptor"
-//#define MAC_SVCMASK_RSPCTLFE			"RSPCtlFE%s:acceptor"
 
 // Define names for the daemons
 #define MAC_SVCMASK_SERVICEBROKER		"ServiceBroker%s:v1.0"
@@ -64,14 +63,12 @@ namespace LOFAR {
 // Define names for all controllers
 #define	MAC_SVCMASK_SCHEDULERCTRL		"MACScheduler%s:v1.0"
 #define	MAC_SVCMASK_OBSERVATIONCTRL		"Observation%s:v1.0"
-#define	MAC_SVCMASK_BEAMDIRECTIONCTRL	"BeamDirection%s:v1.0"
-#define	MAC_SVCMASK_GROUPCTRL			"RingControl%s:v1.0"
 #define	MAC_SVCMASK_STATIONCTRL			"StationControl%s:v1.0"
 #define	MAC_SVCMASK_CLOCKCTRL			"ClockCtrl%s:v1.0"
 #define	MAC_SVCMASK_BEAMCTRL			"BeamCtrl%s:v1.0"
 #define	MAC_SVCMASK_CALIBRATIONCTRL		"CalibrationCtrl%s:v1.0"
 #define	MAC_SVCMASK_TBBCTRL				"TBBCtrl%s:v1.0"
-#define	MAC_SVCMASK_STATIONINFRACTRL	"StationInfraCtrl%s:v1.0"
+#define	MAC_SVCMASK_TRIGGERCTRL			"TriggerCtrl%s:v1.0"
 #define	MAC_SVCMASK_MACINFOSERVER		"MACInfoServer%s:v1.0"
 #define	MAC_SVCMASK_SHMSESSION			"MISSession%s:v1.0"
 

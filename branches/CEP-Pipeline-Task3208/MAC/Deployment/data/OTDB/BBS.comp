@@ -131,11 +131,10 @@ uses DirectionalGain 4.0.0  development 1                 'Model for complex-val
 uses BBS:Beam        4.0.0  development 1                 'Beam model configuration'
 uses Ionosphere      4.0.0  development 1                 'Ionospheric model configuration'
 uses Flagger         4.0.0  development 1                 'Condition number flagging configuration'
+
 #    name                   dir. type   unit   prun. vm   value                constr.  descr.
 #--------------------------------------------------------------------------------------------------------
 par  Sources                I    vtext   -      10   0    '[]'                 -        'List of sources'
-par  ExtraSources           I    vtext   -      10   0    '[]'                 -        'List of extra sources'
-par  InstrumentModel        I    vtext   -      10   0    '[]'                 -        'Instrument Model'
 
 # -- Step Output attributes
 #
@@ -156,7 +155,7 @@ node CellSize         4.0.0  development 1                 'Solve cell size attr
 #    name                    dir. type   unit   prun. vm   value                constr.  descr.
 #--------------------------------------------------------------------------------------------------------
 par  Freq                    I    int    -      10    0    0                    -        'Number of channels that are grouped'
-par  Time                    I    int    -      10    0    0                    -        'Number of timeslots that are grouped'
+par  Time                    I    int    -      10    0    1                    -        'Number of timeslots that are grouped'
 
 # -- Solve Step Log attributes
 #
@@ -218,7 +217,7 @@ par  UseSVD                  I    bool   -      10    0    F                    
 #
 #    name             vers   qual        constr.           descr.
 #--------------------------------------------------------------------------------------------------------
-node Solve            4.0.0  development 'node constraint' 'Template BBS Step Solve Operation'
+node BBS:Solve        4.0.0  development 'node constraint' 'Template BBS Step Solve Operation'
 uses CellSize         4.0.0  development 1                 'Solve cell size attributes' 
 uses Log              4.0.0  development 1                 'Solver statistics logging configuration'
 uses OutlierRejection 4.0.0  development 1                 'Outlier rejections configuration'
@@ -244,7 +243,7 @@ par  UVRange                 I    vdbl   -      10    0    []                   
 node DefaultBBSStep  4.0.0  development 'node constraint' 'Template BBS Step'
 uses Model           4.0.0  development 1                 'BBS Step Model attributes'
 uses Output          4.0.0  development 1                 'BBS Step Output attributes'
-uses Solve           4.0.0  development 1                 'BBS Solve Step attributes'
+uses BBS:Solve       4.0.0  development 1                 'BBS Solve Step attributes'
 #    name                   dir. type   unit   prun. vm   value                constr.  descr.
 #--------------------------------------------------------------------------------------------------------
 #par  Steps                  I    vtext   -      10   0    '[]'                 -        'OPTIONAL: The steps contained in this BBS Step'

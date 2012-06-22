@@ -200,12 +200,12 @@ class msss_imager_pipeline(control):
         # Create a parset-file containing the metadata for MAC/SAS
         self.run_task("get_metadata", aw_image_mapfile,
             parset_file = self.parset_feedback_file,
-            parset_prefix=(
-                self.parset.getString('prefix') + 
-                self.parset.fullModuleName('DataProducts')
+            parset_prefix = (
+                full_parset.getString('prefix') +
+                full_parset.fullModuleName('DataProducts')
             ),
             product_type = "SkyImage")
-            
+
         return 0
 
 
@@ -406,7 +406,7 @@ class msss_imager_pipeline(control):
                           working_directory = self.scratch_directory)
 
 
-        return output_mapfile, parset.getInt("Imaging.maxbaseline")
+        return output_mapfile, self.parset.getInt("Imaging.maxbaseline")
 
 
     def _prepare_phase(self, input_ms_map_path, target_mapfile, processed_ms_dir,
@@ -545,11 +545,15 @@ class msss_imager_pipeline(control):
         mapfile_path = os.path.join(mapfile_dir,
                          "{0}.map".format(mapfile_name))
 
+        # This solution is not perfect but, the skip does not
+        # return the complete output and this the data's will be empty
+        # TODO
         if datamap != None:
             store_data_map(mapfile_path, datamap)
         else:
             if not os.path.exists(mapfile_path):
-                open(mapfile_path, 'w').close()
+                store_data_map(mapfile_path, [])
+                #open(mapfile_path, 'w').close()
 
         return mapfile_path
 

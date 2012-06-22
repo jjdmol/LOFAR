@@ -72,7 +72,8 @@ class PValue : public MACIO::GCFTransportable
     {
       assert(!_pValue);
       _unpacked = true;
-      _pValue = LOFAR::GCF::PVSS::GCFPValue::unpackValue(buffer);
+	  unsigned int	_offset(0);
+      _pValue = LOFAR::GCF::PVSS::GCFPValue::unpackValue(buffer, &_offset);
       return _pValue->getSize();
     }
     unsigned int getSize()

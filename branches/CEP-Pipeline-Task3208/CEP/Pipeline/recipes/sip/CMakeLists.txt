@@ -10,6 +10,7 @@ python_install(
   master/cep2_datamapper.py
   master/cimager.py
   master/compression_pipeline.py
+  master/copier.py
   master/count_timesteps.py
   master/datamapper.py
   master/demixing.py
@@ -35,6 +36,7 @@ python_install(
   nodes/__init__.py
   nodes/bbs.py
   nodes/cimager.py
+  nodes/copier.py
   nodes/count_timesteps.py
   nodes/demix/demixing.py
   nodes/demix/find_a_team.py

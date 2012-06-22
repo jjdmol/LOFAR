@@ -21,6 +21,7 @@
 //#  $Id$
 
 #include <lofar_config.h>
+#include <Common/LofarLogger.h>
 
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <Common/StringUtil.h>
@@ -35,7 +36,6 @@ namespace LOFAR {
 GCFPValue* GCFPValue::createMACTypeObject(TMACValueType type)
 {
 	GCFPValue* pResult(0);
-
 	switch (type) {
 		case LPT_BOOL: 		pResult = new GCFPVBool(); 		break;
 		case LPT_CHAR: 		pResult = new GCFPVChar(); 		break;
@@ -50,12 +50,13 @@ GCFPValue* GCFPValue::createMACTypeObject(TMACValueType type)
 		case LPT_BIT32:		pResult = new GCFPVBit32(); 	break;    
 		*/
 		default:
-			if (type > LPT_DYNARR && type < END_DYNLPT) {
-				pResult = new GCFPVDynArr(type);
+			bool	isDynArr (type & LPT_DYNARR);
+			int		basicType(type & ~LPT_DYNARR);
+			if (isDynArr && basicType < END_LPT && basicType != 0) {
+				pResult = new GCFPVDynArr((TMACValueType)basicType);
 			}
 			else {
-				LOG_ERROR(LOFAR::formatString (
-				"Type of MAC value is unknown or not supported yet: '%d'", type));
+				LOG_ERROR(LOFAR::formatString ("MACValueType '%d' is unknown or not supported yet.", type));
 			}
 		break;
 	}  
@@ -64,16 +65,22 @@ GCFPValue* GCFPValue::createMACTypeObject(TMACValueType type)
 }
 
 //
-// unpackValue(buffer)
+// unpackValue(buffer, &offset)
 //
-GCFPValue* GCFPValue::unpackValue(const char* valBuf)
+GCFPValue* GCFPValue::unpackValue(const char* valBuf, unsigned int*	offset)
 {
-	GCFPValue* pValue = createMACTypeObject((TMACValueType) (uchar) *valBuf);
+	ASSERTSTR(valBuf, "unpackValue called with nullpointer");
+
+	GCFPValue* pValue = createMACTypeObject((TMACValueType) (uchar)(*(valBuf + *offset)));
 	if (pValue) {
-		unsigned int readLength = pValue->unpack(valBuf);
+		unsigned int readLength = pValue->unpack(valBuf + *offset);
 		if (readLength != pValue->getSize()) {
+			LOG_FATAL_STR("Unpacking object of type " << pValue->getTypeName() << " used " << readLength << " bytes iso " << pValue->getSize());
 			delete pValue;
 			pValue = 0;
+		}
+		else {
+			(*offset) += readLength;
 		}
 	}
 
@@ -85,7 +92,7 @@ GCFPValue* GCFPValue::unpackValue(const char* valBuf)
 //
 unsigned int GCFPValue::unpack(const char* valBuf)
 {
-	ASSERT(_type == (TMACValueType) (uchar) *valBuf);
+	ASSERTSTR(_type == (TMACValueType) (uchar) *valBuf, "Buffer contains type " << (TMACValueType) (uchar) *valBuf << " iso " << _type);
 	_dataFormat = (LOFAR::DataFormat) valBuf[1];
 	// the type was already set, because it was set on construction of this class
 	// later maybe also a timestamp can be assigned to a value.
@@ -117,13 +124,13 @@ string GCFPValue::getTypeName() const
 		"char", 
 		"unsigned", 
 		"integer",
-		"NO_TYPE", 
+		"bit32", 
 		"blob",
-		"NO_TYPE", 
+		"ref", 
 		"float", 
-		"NO_TYPE", 
+		"datetime", 
 		"string", 
-		"NO_TYPE",    
+		"array",    
 	};
 
 	if (_type >= LPT_DYNARR) {
