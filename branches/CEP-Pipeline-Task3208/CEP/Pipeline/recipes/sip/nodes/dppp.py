@@ -24,19 +24,6 @@ from lofar.parameterset import parameterset
 
 class dppp(LOFARnodeTCP):
 
-#    def __init__(self):
-#        super(dppp, self).__init__()
-#        self.infile = None
-#        self.outfile = None
-#        self.parmdb = None
-#        self.sourcedb = None
-#        self.parsetfile = None
-#        self.executable = None
-#        self.demix_sources = None
-#        self.start_time = None
-#        self.end_time = None
-
-
     def run(
         self, infile, outfile, parmdb, sourcedb,
         parsetfile, executable, initscript, demix_sources,
@@ -95,14 +82,13 @@ class dppp(LOFARnodeTCP):
 
             # Prepare for the actual DPPP run.
             with patched_parset(
-                parsetfile, self._prepare_steps(**kwargs), unlink=False
+                parsetfile, self._prepare_steps(**kwargs) #, unlink=False
             ) as temp_parset_filename:
 
                 self.logger.debug("Created temporary parset file: %s" % 
                     temp_parset_filename
                 )
                 try:
-#                raise Exception("Intentionally aborted")
                     working_dir = tempfile.mkdtemp()
                     cmd = [executable, temp_parset_filename, '1']
 
