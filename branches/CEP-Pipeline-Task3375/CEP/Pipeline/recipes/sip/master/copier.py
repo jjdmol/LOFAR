@@ -17,6 +17,7 @@ from lofarpipe.support.remotecommand import ComputeJob
 from lofarpipe.support.group_data import load_data_map, store_data_map
 from lofarpipe.support.group_data import validate_data_maps
 
+
 class MasterNodeInterface(BaseRecipe, RemoteCommandRecipeMixIn):
     """
     Abstract class for master script collecting functionality regarding
@@ -34,7 +35,7 @@ class MasterNodeInterface(BaseRecipe, RemoteCommandRecipeMixIn):
     on_partial_succes(this):   To prepare for rerun of partial runs
     on_warn(this):          To distinguish between    
     """
-    def __init__(self, command = None):
+    def __init__(self, command=None):
         """
         constructor, expects a string command used for calling the node script
         This class cannot be created with the base constructor. Inheriting 
@@ -108,7 +109,6 @@ class MasterNodeInterface(BaseRecipe, RemoteCommandRecipeMixIn):
            "on_succes function")
 
 
-
 class copier(MasterNodeInterface):
     """
     Recipe to export calibration solutions, using the program `parmexportcal`.
@@ -122,21 +122,30 @@ class copier(MasterNodeInterface):
     inputs = {
         'mapfile_source': ingredient.StringField(
             '--mapfile-source',
-            help = "Full path of mapfile of node:path pairs of source dataset"
+            help="Full path of mapfile of node:path pairs of source dataset"
         ),
         'mapfile_target': ingredient.StringField(
             '--mapfile-target',
-            help = "Full path of mapfile of node:path pairs of target location"
+            help="Full path of mapfile of node:path pairs of target location"
         ),
         'allow_rename': ingredient.BoolField(
             '--allow-rename',
-            default = False,
-            help = "Allow renaming of basename at target location"
+            default=False,
+            help="Allow renaming of basename at target location"
         ),
         'mapfile_dir': ingredient.StringField(
             '--mapfile-dir',
-            help = "Path of directory, shared by all nodes, which will be used"
+            help="Path of directory, shared by all nodes, which will be used"
                 " to write mapfile for master-node communication"
+        ),
+        'target_dir': ingredient.StringField(
+            '--target-dir',
+            default="",
+            help="Optional parameter: If this option is set ignore the"
+            "path in the target mapfile. "
+            "Absolute path (starting with slash): files will be copied her "
+            "A relative path/name will be prepended with the working directory "
+            "The filename will be used in the actual copy action"
         )
     }
 
@@ -165,7 +174,6 @@ class copier(MasterNodeInterface):
         """
         pass
 
-
     def go(self):
         self.logger.info("Starting copier run")
         super(copier, self).go()
@@ -190,7 +198,8 @@ class copier(MasterNodeInterface):
 
         # Run the compute nodes with the node specific mapfiles
         for host, (source_mapfile, target_mapfile) in mapfiles_dict.items():
-            args = [source_mapfile, target_mapfile]
+            args = [self.inputs['working_directory'], source_mapfile,
+                    target_mapfile, self.inputs["target_dir"]]
             self.append_job(host, args)
 
         # start the jobs
@@ -199,7 +208,7 @@ class copier(MasterNodeInterface):
         return exit_value_jobs
 
     def _validate_source_target_mapfile(self, source_map, target_map,
-                                        allow_rename = False):
+                                        allow_rename=False):
         """
         Validation the input source and target files, are they the same name
         And if rename is not allowed, test if the 'file names' are the same 
