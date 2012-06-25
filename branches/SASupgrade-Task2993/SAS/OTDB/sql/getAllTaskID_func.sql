@@ -30,7 +30,7 @@ CREATE OR REPLACE FUNCTION getAllTaskID()
 	  FOR vRecord IN 
 	    SELECT CAST(value AS INTEGER) 
 	    FROM VICHIERARCHY 
-	    WHERE NAME LIKE '%taskID' 
+	    WHERE NAME = 'LOFAR.ObsSW.Observation.Scheduler.taskID' 
 	    ORDER BY VALUE 
 	    LOOP
 	  	  RETURN NEXT vRecord.value;

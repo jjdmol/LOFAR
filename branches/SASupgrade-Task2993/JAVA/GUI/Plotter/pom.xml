@@ -20,9 +20,7 @@
 	</properties>
 
 	<build>
-
 		<sourceDirectory>src</sourceDirectory>
-
 		<resources>
 			<resource>
 				<directory>src</directory>
@@ -52,5 +50,13 @@
 		</plugins>
 
 	</build>
+	
+	<distributionManagement>
+		<snapshotRepository>
+			<id>snapshots</id>
+			<name>Astron Nexus Repository</name>
+			<url>https://support.astron.nl/nexus/content/repositories/snapshots/</url>
+		</snapshotRepository>
+	</distributionManagement>
 
 </project>
