@@ -12,11 +12,10 @@ from logger import logger
 
 from lofarpipe.support.lofarexceptions import PipelineException
 from lofarpipe.support.utilities import create_directory                        #@UnresolvedImport
-from lofarpipe.recipes.nodes.copier import copier       #@UnresolvedImport
+from lofarpipe.recipes.nodes.copier import copier as copier_node       #@UnresolvedImport
 
 
-
-class copierWrapper(copier):
+class copierWrapper_node(copier_node):
     """
     Wrapper for the imager_create_dbs allows overwriting of
     """
@@ -33,7 +32,8 @@ class copierTest(unittest.TestCase):
         super(copierTest, self).__init__(arg)
 
     def setUp(self):
-        self.imager_create_dbs = copierWrapper()
+        pass
+        #self.imager_create_dbs = copierWrapper()
         #create_directory(self.test_path)
 
     def tearDown(self):
@@ -64,7 +64,7 @@ class copierTest(unittest.TestCase):
                               ))
         target_map_file.close()
 
-        sut = copierWrapper()
+        sut = copierWrapper_node()
         # error msg =  Failed to (rsync) copy file: /tmp/tmpdWhBbM/test.txt on node nodename
         self.assertRaises(IOError, sut.run, "working_dir",
         os.path.join(temp_dir, "source.map"), os.path.join(temp_dir, "target.map"), "")
@@ -94,7 +94,7 @@ class copierTest(unittest.TestCase):
                               ))
         target_map_file.close()
 
-        sut = copierWrapper()
+        sut = copierWrapper_node()
         # error msg =  Failed to (rsync) copy file: /tmp/tmpdWhBbM/test.txt on node nodename
         sut.run("working_dir",
         os.path.join(temp_dir, "source.map"),
@@ -131,7 +131,7 @@ class copierTest(unittest.TestCase):
                               ))
         target_map_file.close()
 
-        sut = copierWrapper()
+        sut = copierWrapper_node()
         # error msg =  Failed to (rsync) copy file: /tmp/tmpdWhBbM/test.txt on node nodename
         sut.run(temp_dir2,
         os.path.join(temp_dir, "source.map"),
