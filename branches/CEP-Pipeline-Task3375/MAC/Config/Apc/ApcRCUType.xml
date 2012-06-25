@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+
+<RCUType>
+  <status>
+    <MACType>MACUnsigned</MACType>
+  </status>
+  <overflow>
+    <MACType>MACBool</MACType>
+  </overflow>
+  <rcuPwr>
+    <MACType>MACBool</MACType>
+  </rcuPwr>
+  <hbaPwr>
+    <MACType>MACBool</MACType>
+  </hbaPwr>
+  <lbaPwr>
+    <MACType>MACBool</MACType>
+  </lbaPwr>
+  <filter>
+    <MACType>MACUnsigned</MACType>
+  </filter>
+</RCUType>
