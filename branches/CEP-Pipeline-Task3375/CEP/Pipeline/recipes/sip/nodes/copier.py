@@ -65,17 +65,15 @@ class copier(LOFARnodeTCP):
 
     def _copy_single_file_using_rsync(self, source_node, source_path,
                                       target_path):
-        # assure that target dir exists (rsync creates it but..
-        # an error in the python code will throw a nicer error
-        create_directory(os.path.dirname(target_path))
-
         #check if the targat_path is writable for the current proc
         if not os.access(os.path.dirname(target_path), os.W_OK):
             message = "No write acces to target path: {0}".format(target_path)
             self.logger.error(message)
             raise IOError(message)
 
-
+        # assure that target dir exists (rsync creates it but..
+        # an error in the python code will throw a nicer error
+        create_directory(os.path.dirname(target_path))
 
         # construct copy command
         command = ["rsync", "-r", "{0}:{1}".format(source_node, source_path) ,
