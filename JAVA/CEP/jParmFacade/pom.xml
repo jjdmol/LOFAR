@@ -9,7 +9,7 @@
 	<groupId>nl.astron.lofar.cep</groupId>
 	<artifactId>jParmFacade</artifactId>
 	<name>jParmFacade</name>
-	<version>1.0.1-SNAPSHOT</version>
+	<version>1.0.2</version>
 
 	<organization>
 		<name>Astron</name>
@@ -67,7 +67,7 @@
 		<dependency>
 			<groupId>nl.astron.lofar.sas</groupId>
 			<artifactId>jOTDB3</artifactId>
-			<version>1.0.1-SNAPSHOT</version>
+			<version>1.0.2</version>
 		</dependency>
 
 		<dependency>
