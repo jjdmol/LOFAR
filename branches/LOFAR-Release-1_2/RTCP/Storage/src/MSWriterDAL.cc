@@ -318,13 +318,8 @@ namespace LOFAR
       beam.nofStations() .value = beamStationList.size();
       beam.stationsList().value = beamStationList;
 
-      // we don't support non-tracking at this point
-      beam.tracking().value     = true;
+      beam.tracking().value     = parset.getBeamDirectionType(sapNr);
 
-      //const char *trackingTypes[] = { "J2000", "LMN", "TBD" };
-      //writeAttribute(         beam, "TRACKING",      "J2000" ); // TODO: support non-tracking
-      // TODO: non-J2000 pointings
-      //ASSERT( parset.getBeamDirectionType() == "J2000" );
       BeamCoordinates pbeamDirs = parset.pencilBeams(sapNr);
       BeamCoord3D pbeamDir = pbeamDirs[beamNr];
       beam.pointRA()           .value = (beamDir[0] + pbeamDir[0]) * 180.0 / M_PI;
