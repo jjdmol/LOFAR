@@ -31,6 +31,7 @@
 #include <Common/lofar_vector.h>
 #include <Common/StreamUtil.h>
 #include <Common/SystemUtil.h>
+#include <Common/LofarBitModeInfo.h>
 #include <ApplCommon/Observation.h>
 
 #include <Common/lofar_map.h>
@@ -137,12 +138,12 @@ Observation::Observation(const ParameterSet*		aParSet,
 	storageNodeList = compactedArrayString(aParSet->getString(prefix+"VirtualInstrument.storageNodeList","[]"));
 
 	// construct array with usable (-1) slots and unusable(999) slots. Unusable slots arise
-	// when nrSlotsInFrame differs from MAX_BEAMLETS_PER_RSP.
-	itsSlotTemplate.resize (MAX_BEAMLETS(bitsPerSample), -1);	// assume all are usable.
-	nrSlotsInFrame = aParSet->getInt(prefix+"nrSlotsInFrame", MAX_BEAMLETS_PER_RSP(bitsPerSample));
+	// when nrSlotsInFrame differs from maxBeamletsPerRSP.
+	itsSlotTemplate.resize (maxBeamlets(bitsPerSample), -1);	// assume all are usable.
+	nrSlotsInFrame = aParSet->getInt(prefix+"nrSlotsInFrame", maxBeamletsPerRSP(bitsPerSample));
     for (int rsp = 0; rsp < 4; rsp++) {
-        for (int bl = nrSlotsInFrame; bl < MAX_BEAMLETS_PER_RSP(bitsPerSample); bl++) {
-            itsSlotTemplate[rsp*MAX_BEAMLETS_PER_RSP(bitsPerSample) + bl] = 999;
+        for (int bl = nrSlotsInFrame; bl < maxBeamletsPerRSP(bitsPerSample); bl++) {
+            itsSlotTemplate[rsp * maxBeamletsPerRSP(bitsPerSample) + bl] = 999;
         }
     }
 
@@ -531,7 +532,7 @@ vector<int> Observation::getBeamAllocation(const string& stationName) const
 
 	// fill with required information
 	for (int i = RSPboardList.size()-1; i >= 0; --i) {
-		int	idx = RSPboardList[i] * MAX_BEAMLETS_PER_RSP(bitsPerSample) + DataslotList[i];
+		int	idx = RSPboardList[i] * maxBeamletsPerRSP(bitsPerSample) + DataslotList[i];
 		if (b2b[idx] != -1) {
 			THROW (Exception, "beamlet " << i << " of beam " << itsBeamSlotList[i] << " clashes with beamlet of other beam(" << b2b[idx] << ")"); 
 		}
@@ -583,7 +584,7 @@ vector<int>	Observation::getBeamlets (uint beamIdx, const string&	stationName) c
 	uint	nrEntries = itsBeamSlotList.size();
 	for (uint i = 0; i < nrEntries; ++i) {
 		if (itsBeamSlotList[i] == parsetIdx) {
-			result.push_back(RSPboardList[i] * MAX_BEAMLETS_PER_RSP(bitsPerSample) + DataslotList[i]);
+			result.push_back(RSPboardList[i] * maxBeamletsPerRSP(bitsPerSample) + DataslotList[i]);
 		}
 	}
 	return (result);

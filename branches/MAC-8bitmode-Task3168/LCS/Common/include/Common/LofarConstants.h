@@ -49,7 +49,8 @@ namespace LOFAR {
 
 	static const int NR_RCU_MODES			  = 7;
 	static const int NR_SPECTRAL_WINDOWS	  = 5;
-
+    
+    /*
     // Max number of beamlets comming from one RSPboard
     static int MAX_BEAMLETS_PER_RSP( unsigned bitsPerSample ) {
       return 61 * (16 / bitsPerSample);
@@ -59,6 +60,7 @@ namespace LOFAR {
     static int MAX_BEAMLETS( unsigned bitsPerSample ) {
       return 4 * MAX_BEAMLETS_PER_RSP(bitsPerSample);
     }
+    */
 }
 
 #endif

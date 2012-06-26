@@ -27,6 +27,7 @@ install(FILES
   KVpair.h
   lofar_algorithm.h
   lofar_bitset.h
+  LofarBitModeInfo.h
   LofarConstants.h
   lofar_complex.h
   lofar_datetime.h

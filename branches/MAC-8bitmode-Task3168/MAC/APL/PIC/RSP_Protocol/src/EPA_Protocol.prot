@@ -188,6 +188,13 @@ prelude = << PRELUDE_END
     uint8 fpga_maj :4; // FPGA firmware version (major)
   };
 
+  struct RSRNofbeam
+  {
+    uint8 select   :4; // select mode, 0=16bit 1=8bit 2=4bit
+    uint8 bitmode  :3; // firmware version, 1=16bit 2=16/8bit 4=16/8/4bit
+    uint8 rounding :1; // rounding(not used yet)
+  };
+
   struct RSUReconfig
   {
     uint8 page      :3;       // page selection
@@ -500,6 +507,22 @@ event = {
     type = "uint32";
   };
 };
+
+event = {
+  noheader;
+  signal = RSR_NOFBEAM;
+  dir = INOUT; // read-write register
+  param = {
+    name = "hdr";
+    type = "MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "nofbeam";
+    type = "struct RSRNofbeam";
+  };
+};
+
 
 event = {
   noheader;
