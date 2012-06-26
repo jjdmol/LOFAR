@@ -276,6 +276,13 @@ private:
   casa::Vector<casa::Double> convertToLambdas(const casa::Vector<casa::Double> &frequencies);
   void writeImage(const casa::Array<casa::Complex> &imagePlane, 
                   const casa::String &filename);
+  // Convert baselines between metres and wavelengths
+  vector<double> convertMetresToWavelengths(const vector<double> &metres, double freq);
+  void convertMetresToWavelengths( const double *metres, double *lambdas,
+                                   unsigned int nuvw, double freq);
+  vector<double> convertWavelengthsToMetres(const vector<double> &lambdas, double freq);
+  void convertWavelengthsToMetres(const double *lambdas, double *metres, 
+                                  unsigned int nuvw, double freq);
 };
 
 } // end namespace BBS

@@ -577,21 +577,24 @@ void ModelImageFft::degrid( const double *uBl, const double *vBl, const double *
   
   // convert uvwBaseline to Cornwell degrid format, 1-D data vector
   int nSamples=nuvw*nfreqs;       // number of samples
+  //int nSamples=itsImageProperties.nx*itsImageProperties.ny*nfreqs;
   LOG_INFO_STR("degridding " << nSamples << " samples.");
 
   //------------------------------------------------------------------------
   // Prepare uvw variables etc.
   //
-  vector<complex<float> > data(itsImageProperties.nx*itsImageProperties.ny);
-  vector<complex<float> > outdata(nuvw*nfreqs);
+//  vector<complex<float> > data(itsImageProperties.nx*itsImageProperties.ny);
+  vector<complex<float> > data(nuvw*nfreqs);
   vector<double> u(uBl, uBl+nuvw);      // u coord of requested baselines
   vector<double> v(vBl, vBl+nuvw);      // v coord of requested baselines
   vector<double> w(wBl, wBl+nuvw);      // w coord of requested baselines
   // Don't change any of these numbers unless you know what you are doing!
-  int gSize=512;                        // Size of output grid in pixels
+  int gSize=itsImageProperties.nx;      // Size of output grid in pixels (only support square pixels)
   double cellSize=40.0;                 // Cellsize of output grid in wavelengths
   vector<std::complex<float> > grid(gSize*gSize);
-  grid.assign(grid.size(), std::complex<float> (0.0));
+  grid.assign(grid.size(), std::complex<float> (1.0));
+
+  cout << "grid.size(): " << grid.size() << endl;  // DEBUG
 
   int wSize=itsOptions.nwplanes;        // Number of lookup planes in w projection
   
@@ -603,9 +606,10 @@ void ModelImageFft::degrid( const double *uBl, const double *vBl, const double *
   std::vector<double> freq(nfreqs);
   for (unsigned int i=0; i<nfreqs; i++)
   {
-    freq[i]=(1.4e9-2.0e5*double(i)/double(nfreqs))/2.998e8;
+//    freq[i]=(1.4e9-2.0e5*double(i)/double(nfreqs))/2.998e8;
+    itsOptions.lambdas[i]=(casa::C::c)/frequencies[i];
   }
-  itsOptions.lambdas=freq;
+//  itsOptions.lambdas=freq;
 
   // Initialize convolution function and offsets
   std::vector<std::complex<float> > C;
@@ -624,8 +628,6 @@ void ModelImageFft::degrid( const double *uBl, const double *vBl, const double *
         itsOptions.oversampling, wCellSize, C);
   initCOffset(u, v, w, itsOptions.lambdas, cellSize, wCellSize, maxBaseline, wSize, gSize,
               support, itsOptions.oversampling, cOffset, iu, iv);
-  int sSize=2*support+1;
-  
   //------------------------------------------------------------------------
   // Degridding of FFT image planes for different Stokes components
   //
@@ -648,15 +650,29 @@ void ModelImageFft::degrid( const double *uBl, const double *vBl, const double *
       planeShape[itsImageProperties.SpectralCoordAxes(0)]=1;     // 1 channel
 
       Array<Complex> imagePlane(planeShape); 
-      Slicer slicer=makeSlicer(freq);   // Stokes defaults to I
+      Slicer slicer=makeSlicer(freq);           // Stokes defaults to I
 
       if(itsImage->getSlice(imagePlane, slicer))
       {
         writeImage(imagePlane, "plane.img");    // DEBUG
 
         //ASSERT(imagePlane.contiguous);      // image slice is contiguous, use        
-        imagePlane.tovector(data);    // copy data into STL vector to conform to Cornwell interface
+        imagePlane.tovector(grid);    // copy data into STL vector to conform to Cornwell interface
+
+        cout << "degrid()" << endl;
+        cout << "itsImageProperties.nx = " << itsImageProperties.nx << endl;    // DEBUG
+        cout << "grid.size() = " << grid.size() << endl; // DEBUG
+        cout << "data.size() = " << data.size() << endl; // DEBUG
+        cout << "iu.size() = " <<  iu.size() << endl;     // DEBUG
+        cout << "iv.size() = " <<  iv.size() << endl;     // DEBUG
+
         degridKernel(grid, gSize, support, C, cOffset, iu, iv, data);  // call Cornwell degridKernel
+
+//        cout << "data: " << endl;   // DEBUG
+//        for(unsigned int i=0; i<data.size(); i++)
+//          cout << data[i] << "  ";
+//        cout << endl; 
+//        exit(0);
       }
       else
       {
@@ -666,7 +682,7 @@ void ModelImageFft::degrid( const double *uBl, const double *vBl, const double *
       if(XX && YY)    // only copy, if we have a valid pointer
       {
         //copy(data.begin(), data.end(), XX+(freq*nuvw));
-        computeICorr(outdata, XX, YY);
+        computeICorr(data, XX, YY);
       }
       else
       {
@@ -719,7 +735,7 @@ void ModelImageFft::degrid( const double **baselines, const vector<double> &freq
   // TODO: at the moment we only support Stokes I
   // get Stokes::I pixelIndex
   uInt IpixelNumber=itsImage->coordinates().stokesPixelNumber("I"); 
-  cout << "degrid(): IpixelNumber: " << IpixelNumber << endl;     // DEBUG  
+  LOG_INFO_STR("degrid(): IpixelNumber: " << IpixelNumber);     // DEBUG  
   
   // convert uvwBaseline to ConvolveBlas format
 
@@ -731,7 +747,6 @@ void ModelImageFft::degrid( const double **baselines, const vector<double> &freq
   
   // Distribute output to correlation vectors
 }
-
 
 //**********************************************
 //
@@ -757,6 +772,7 @@ void ModelImageFft::computeICorr( const vector<complex<float> > &data,
   for(unsigned int i=0; i<data.size(); i++)
   {
     XX[i]=0.5*data[i];
+    //YY[i]=0.5*data[i];
   }
   memcpy(YY, XX, data.size()*sizeof(complex<float>));
 }
@@ -768,6 +784,7 @@ void ModelImageFft::computeICorr(const complex<float> *data, size_t nuvw,
   for(unsigned int i=0; i<nuvw; i++)
   {
     XX[i]=0.5*data[i];
+    //YY[i]=0.5*data[i];
   }
   memcpy(YY, XX, nuvw*sizeof(complex<float>));
 }
@@ -815,7 +832,64 @@ void ModelImageFft::computePolCorr( const complex<float> *Q,
 //
 //**********************************************
 
+// Convert baselines from metres (m) to wavelengths (lambdas)
+//
+vector<double> ModelImageFft::convertMetresToWavelengths( const vector<double> &metres, 
+                                                          double freq)
+{
+  double lambda=(casa::C::c)/freq;
+
+  vector<double> lambdas(metres.size());
+  for(unsigned int i=0; i<metres.size(); i++)
+  {
+    lambdas[i]=metres[i]/lambda;
+  }
+
+  return lambdas;
+}
+
+void ModelImageFft::convertMetresToWavelengths( const double *metres, double *lambdas,
+                                                unsigned int nuvw, double freq)
+{
+  double lambda=(casa::C::c)/freq;
+  for(unsigned int i=0; i<nuvw; i++)
+  {
+    lambdas[i]=metres[i]/lambda;
+  }
+}
+
+// Convert baselines from wavelengths (lambdas) to metres (m)
+//
+vector<double> ModelImageFft::convertWavelengthsToMetres( const vector<double> &lambdas, 
+                                                          double freq)
+{
+  vector<double> metres(lambdas.size());      // in metres
+
+  double lambda=(casa::C::c)/freq;
+
+  vector<double>::iterator itMetres;
+  vector<double>::const_iterator itLambdas;
+  for(itLambdas=lambdas.begin(), itMetres=metres.begin(); itLambdas!=lambdas.end(); 
+      itLambdas++, itMetres++)
+  {
+    *itMetres=*itLambdas*lambda;
+  }
+  
+  return metres;
+}
+
+void ModelImageFft::convertWavelengthsToMetres( const double *lambdas, double *metres, 
+                                                unsigned int nuvw, double freq)
+{
+  double lambda=(casa::C::c)/freq;
+  for(unsigned int i=0; i<nuvw; i++)
+  {
+    metres[i]=lambdas[i]*lambda;
+  }
+}
+
 // Convert a Vector of frequencies to lambdas
+//
 Vector<Double> ModelImageFft::convertToLambdas(const Vector<Double> &frequencies)
 {
   Vector<Double> lambdas(frequencies.size());
@@ -867,7 +941,7 @@ void ModelImageFft::gridKernel(const std::vector<std::complex<float> >& data,
 {
   int sSize=2*support+1;
 
-  cout << "sSize = " << sSize << ", support = " << support << " dataSize = " << data.size() << endl;
+  LOG_INFO_STR("sSize = " << sSize << ", support = " << support << " dataSize = " << data.size());
 
   for (unsigned int dind=0; dind<data.size(); dind++)
   {
@@ -878,7 +952,7 @@ void ModelImageFft::gridKernel(const std::vector<std::complex<float> >& data,
     // The Convoluton function point from which we offset
     int cind=cOffset[dind];
 
-//    cout << "gind: " << gind << ", cind: " << cind << endl;
+//    cout << "gind: " << gind << ", cind: " << cind << endl;   // DEBUG
 
     for (int suppv=0; suppv<sSize; suppv++)
     {
@@ -906,28 +980,29 @@ void ModelImageFft::gridKernel(const std::vector<std::complex<float> >& data,
 */
 }
 
-// Perform degridding
-void ModelImageFft::degridKernel(const std::vector<std::complex<float> >& grid, 
-                                const int gSize, const int support,
-                                const std::vector<std::complex<float> >& C,
-                                const std::vector<unsigned int>& cOffset,
-                                const std::vector<unsigned int>& iu, 
-                                const std::vector<unsigned int>& iv,
-                                std::vector<std::complex<float> >& data)
+// Perform degridding with Tim Cornwell's degridding
+//
+void ModelImageFft::degridKernel( const std::vector<std::complex<float> >& grid, 
+                                  const int gSize, const int support,
+                                  const std::vector<std::complex<float> >& C,
+                                  const std::vector<unsigned int>& cOffset,
+                                  const std::vector<unsigned int>& iu, 
+                                  const std::vector<unsigned int>& iv,
+                                  std::vector<std::complex<float> >& data)
 {
   int sSize=2*support+1;
 
   for (unsigned int dind=0; dind<data.size(); dind++)
   {
-   data[dind]=0.0;
+    data[dind]=0.0;
 
     // Nearly all the L2 cache misses originate here in the next
     // two statements
-    // The actual grid point from which we offset
+    // The actual grid point from which we offset   
     int gind=iu[dind]+gSize*iv[dind]-support;
     // The Convoluton function point from which we offset
     int cind=cOffset[dind];
-    
+
     for (int suppv=0; suppv<sSize; suppv++)
     {
 #ifdef USEBLAS
@@ -935,8 +1010,18 @@ void ModelImageFft::degridKernel(const std::vector<std::complex<float> >& grid,
       cblas_cdotu_sub(sSize, &grid[gind], 1, &C[cind], 1, &dot);
       data[dind]+=dot;
 #else
+      // DEBUG
+      if(gind >= static_cast<int>(grid.size()))
+      {
+        cout << "sSize: " << sSize << "\tgind: " << gind  << "\tgrid.size(): " << grid.size() << "\tcind: " << cind << "\tC.size(): " << C.size() << endl;  // DEBUG
+        cout << gind << "\t" << grid.size() << endl;  // DEBUG
+        exit(0);
+      }
+      // DEBUG
+
       for (int suppu=0; suppu<sSize; suppu++)
       {
+//        data[dind]+=grid[gind+suppu]*C[cind+suppu];
         data[dind]+=grid[gind+suppu]*C[cind+suppu];
       }
 #endif
@@ -964,13 +1049,13 @@ void ModelImageFft::initC(const int nSamples, const std::vector<double>& w,
     const int wSize, const int gSize, int& support, int& overSample,
     double& wCellSize, std::vector<std::complex<float> >& C)
 {
-  cout << "Initializing W projection convolution function" << endl;
+  LOG_INFO_STR("Initializing W projection convolution function");
   support=static_cast<int>(1.5*sqrt(abs(baseline) *static_cast<double>(cellSize)
       *freq[0])/cellSize);
   overSample=8;
-  cout << "Support = " << support << " pixels" << endl;
+  LOG_DEBUG_STR("Support = " << support << " pixels");
   wCellSize=2*baseline*freq[0]/wSize;
-  cout << "W cellsize = " << wCellSize << " wavelengths" << endl;
+  LOG_DEBUG_STR("W cellsize = " << wCellSize << " wavelengths");
 
   // Convolution function. This should be the convolution of the
   // w projection kernel (the Fresnel term) with the convolution
@@ -982,10 +1067,10 @@ void ModelImageFft::initC(const int nSamples, const std::vector<double>& w,
   int cCenter=(sSize-1)/2;
 
   C.resize(sSize*sSize*overSample*overSample*wSize);
-  cout << "Size of convolution function = " << sSize*sSize*overSample
-      *overSample*wSize*8/(1024*1024) << " MB" << std::endl;
-  cout << "Shape of convolution function = [" << sSize << ", " << sSize << ", "
-      << overSample << ", " << overSample << ", " << wSize << "]" << std::endl;
+  LOG_DEBUG_STR("Size of convolution function = " << sSize*sSize*overSample
+      *overSample*wSize*8/(1024*1024) << " MB");
+  LOG_DEBUG_STR("Shape of convolution function = [" << sSize << ", " << sSize << ", "
+      << overSample << ", " << overSample << ", " << wSize << "]");
 
   for (int k=0; k<wSize; k++)
   {
@@ -1063,6 +1148,7 @@ void ModelImageFft::initCOffset(const std::vector<double>& u, const std::vector<
   cOffset.resize(nSamples*nChan);
   iu.resize(nSamples*nChan);
   iv.resize(nSamples*nChan);
+  
   for (int i=0; i<nSamples; i++)
   {
     for (int chan=0; chan<nChan; chan++)

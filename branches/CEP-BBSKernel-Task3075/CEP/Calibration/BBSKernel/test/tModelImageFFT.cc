@@ -195,7 +195,7 @@ void writeData( MeasurementSet &ms, const string &colName, const DComplex *XX,
       IPosition pos(2, 0, row%nfreqs);
       correlations(pos)=XX[row];
 
-      cout << "XX[row]: " << XX[row] << endl;   // DEBUG
+//      cout << "XX[row]: " << XX[row] << endl;   // DEBUG
     }
     if(XY)
     {
@@ -212,11 +212,11 @@ void writeData( MeasurementSet &ms, const string &colName, const DComplex *XX,
       IPosition pos(2, 3, row%nfreqs);      
       correlations(pos)=YY[row];
 
-      cout << "YY[row]: " << YY[row] << endl;   // DEBUG
+      //cout << "YY[row]: " << YY[row] << endl;   // DEBUG
     }
     
-    cout << "writeData(): correlations: " << correlations << endl;   // DEBUG
-    //modelCol.put(row, correlations);  // 	Put the array in row's cell
+    //cout << "writeData(): correlations: " << correlations << endl;   // DEBUG
+    modelCol.put(row, correlations);  // 	Put the array in row's cell
   }
 }
 
