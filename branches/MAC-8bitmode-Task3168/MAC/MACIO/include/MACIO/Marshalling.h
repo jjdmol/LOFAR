@@ -22,13 +22,19 @@
 //#
 //#  $Id$
 
+#if 0
+
 #ifndef MACIO_MARSHALLING_H_
 #define MACIO_MARSHALLING_H_
 
 #include <Common/LofarTypes.h>
 #include <Common/lofar_string.h>
-#include <Common/lofar_bitset.h>
 #include <Common/lofar_map.h>
+#include <boost/dynamic_bitset.hpp>
+#include <bitset>
+#include <sstream>
+
+using namespace LOFAR;
 
 // SIZE string
 #define MSH_STRING_SIZE(stdstring) \
@@ -242,3 +248,5 @@ do {	\
 } while (0)
 
 #endif /* MARSHALLING_H_ */
+
+#endif

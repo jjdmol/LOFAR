@@ -30,8 +30,8 @@
 //# Includes
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
+#include <MACIO/Marshalling.tcc>
 #include <Common/StreamUtil.h>
-#include <MACIO/Marshalling.h>
 
 // Avoid 'using namespace' in headerfiles
 
@@ -49,9 +49,9 @@ public:
 	StringVector() {};
 	~StringVector() {};
 
-	unsigned int getSize();
-	unsigned int pack  (void	*buffer);
-	unsigned int unpack(void	*buffer);
+	size_t getSize() const;
+	size_t pack  (char	*buffer) const;
+	size_t unpack(char	*buffer);
 	ostream& print (ostream& os) const;
 
 	vector<string>&	operator()()
@@ -66,26 +66,24 @@ private:
 // @}
 
 // getSize()
-inline unsigned int StringVector::getSize()
+inline size_t StringVector::getSize() const
 {
-	unsigned int	offset = 0;
-	MSH_SIZE_VECTOR_STRING(offset, theVector);
-	return (offset);
+	return (MSH_size(theVector));
 }
 
 // pack()
-inline unsigned int StringVector::pack(void	*buffer)
+inline size_t StringVector::pack(char	*buffer) const
 {
-	unsigned int offset = 0;
-	MSH_PACK_VECTOR_STRING(buffer, offset, theVector);
+	size_t offset = 0;
+	MSH_pack(buffer, offset, theVector);
 	return (offset);
 }
 
 // unpack()
-inline unsigned int StringVector::unpack(void	*buffer)
+inline size_t StringVector::unpack(char	*buffer)
 {
-	unsigned int offset = 0;
-	MSH_UNPACK_VECTOR_STRING(buffer, offset, theVector);
+	size_t offset = 0;
+	MSH_unpack(buffer, offset, theVector);
 	return (offset);
 }
 

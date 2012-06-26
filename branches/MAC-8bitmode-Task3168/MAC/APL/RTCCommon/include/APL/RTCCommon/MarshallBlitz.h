@@ -30,24 +30,24 @@
 #include <cstring>
 
 // SIZE blitz::array<...>
-template<typename T, int N> size_t MSH_ARRAY_SIZE( const blitz::Array<T,N> &array )
+template<typename T, int N> size_t MSH_size( const blitz::Array<T,N> &array )
 {
     return array.dimensions() * sizeof(LOFAR::int32) + array.size() * sizeof(T);
 }
 
 // PACK blitz::array<...>
 // first copy the dimensions of the array, then the array itself.
-template<typename T, int N> void MSH_PACK_ARRAY( void *bufptr, size_t &offset, const blitz::Array<T,N> &array )
+template<typename T, int N> void MSH_pack( char *bufptr, size_t &offset, const blitz::Array<T,N> &array )
 {
     for (int dim = blitz::firstDim; dim < blitz::firstDim + N; dim++) {
         LOFAR::int32 extent = array.extent(dim);
-        memcpy((char*)bufptr + offset, &extent, sizeof(LOFAR::int32));
+        memcpy(bufptr + offset, &extent, sizeof(LOFAR::int32));
         offset += sizeof(LOFAR::int32);
     }
   
     if ((array).numElements() > 0) {
         if ((array).isStorageContiguous()) {
-            memcpy((char*)bufptr + offset, array.data(), array.size() * sizeof(T));
+            memcpy(bufptr + offset, array.data(), array.size() * sizeof(T));
             offset += array.size() * sizeof(T);
         }
         else {
@@ -58,13 +58,13 @@ template<typename T, int N> void MSH_PACK_ARRAY( void *bufptr, size_t &offset, c
 }
 
 // UNPACK blitz::array<...>
-template<typename T, int N> void MSH_UNPACK_ARRAY( void *bufptr, size_t &offset, blitz::Array<T,N> &array )
+template<typename T, int N> void MSH_unpack( const char *bufptr, size_t &offset, blitz::Array<T,N> &array )
 {
 	blitz::TinyVector<int, N> extent;
 
 	for (int dim = blitz::firstDim; dim < blitz::firstDim + N; dim++) {
 		LOFAR::int32 extenttmp = array.extent(dim);
-		memcpy(&extenttmp, (char*)bufptr + offset, sizeof(LOFAR::int32));
+		memcpy(&extenttmp, bufptr + offset, sizeof(LOFAR::int32));
 		offset += sizeof(LOFAR::int32);
 		extent(dim - blitz::firstDim) = extenttmp;
 	}
@@ -72,8 +72,8 @@ template<typename T, int N> void MSH_UNPACK_ARRAY( void *bufptr, size_t &offset,
 	/* resize the array to the correct size */
 	array.resize(extent);
 
-	memcpy(array.data(), (char*)bufptr + offset, array.size() * sizeof(T));
+	memcpy(array.data(), bufptr + offset, array.size() * sizeof(T));
 	offset += array.size() * sizeof(T);
 }
 
-#endif /* MARSHALLING_H_ */
+#endif /* MARSHALLBLITZ_H_ */

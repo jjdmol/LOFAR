@@ -45,34 +45,34 @@ int main (int	/*argc*/, char**	/*argv[]*/)
 			40, 41;
 	cout << "Testing blitz::Array<double, 2>" << ba1 << endl;
 	
-	cout << "size = " << MSH_ARRAY_SIZE(ba1) << endl;
+	cout << "size = " << MSH_size(ba1) << endl;
 
 	bzero(buf, 4096);
 	offset = 0;
-	MSH_PACK_ARRAY((void*)buf, offset, ba1);
+	MSH_pack(buf, offset, ba1);
 	cout << "packed:" << endl;
 	hexdump(buf, offset);
 
 	blitz::Array<double, 2>		ba2(2,4);
 	offset = 0;
-	MSH_UNPACK_ARRAY((void*)buf, offset, ba2);
+	MSH_unpack(buf, offset, ba2);
 	cout << "unpacked: " << ba2 << endl;
 
 	// blitz array <int>
 	blitz::Array<int, 2>		emptyArr;
 	cout << "Testing EMPTY blitz::Array<int, 2>" << emptyArr << endl;
 	
-	cout << "size = " << MSH_ARRAY_SIZE(emptyArr) << endl;
+	cout << "size = " << MSH_size(emptyArr) << endl;
 
 	bzero(buf, 4096);
 	offset = 0;
-	MSH_PACK_ARRAY((void*)buf, offset, emptyArr);
+	MSH_pack(buf, offset, emptyArr);
 	cout << "packed:" << endl;
 	hexdump(buf, offset);
 
 	blitz::Array<int, 2>		empty2;
 	offset = 0;
-	MSH_UNPACK_ARRAY((void*)buf, offset, empty2);
+	MSH_unpack(buf, offset, empty2);
 	cout << "unpacked: " << empty2 << endl;
 
 	return (0);

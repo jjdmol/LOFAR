@@ -33,28 +33,28 @@ using namespace blitz;
 using namespace LOFAR;
 using namespace RSP_Protocol;
 
-unsigned int SubbandSelection::getSize()
+size_t SubbandSelection::getSize() const
 {
-  return MSH_ARRAY_SIZE(m_subbands) + sizeof(uint16);
+  return MSH_size(m_subbands) + sizeof(uint16);
 }
 
-unsigned int SubbandSelection::pack(void* buffer)
+size_t SubbandSelection::pack(char* buffer) const
 {
-  unsigned int offset = 0;
+  size_t offset = 0;
 
-  MSH_PACK_ARRAY(buffer, offset, m_subbands);
-  memcpy((char*)buffer + offset, &m_type, sizeof(uint16));
+  MSH_pack(buffer, offset, m_subbands);
+  memcpy(buffer + offset, &m_type, sizeof(uint16));
   offset += sizeof(uint16);
   
   return offset;
 }
 
-unsigned int SubbandSelection::unpack(void *buffer)
+size_t SubbandSelection::unpack(const char *buffer)
 {
-  unsigned int offset = 0;
+  size_t offset = 0;
 
-  MSH_UNPACK_ARRAY(buffer, offset, m_subbands);
-  memcpy(&m_type, (char*)buffer + offset, sizeof(uint16));
+  MSH_unpack(buffer, offset, m_subbands);
+  memcpy(&m_type, buffer + offset, sizeof(uint16));
   offset += sizeof(uint16);
 
   return offset;

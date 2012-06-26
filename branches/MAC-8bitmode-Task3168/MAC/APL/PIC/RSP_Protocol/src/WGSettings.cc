@@ -97,25 +97,25 @@ void WGSettings::initWaveformPresets()
   LOG_DEBUG_STR("ramp=" << WGSettings::m_presets(PRESET_RAMP, Range::all()));
 }
 
-unsigned int WGSettings::getSize()
+size_t WGSettings::getSize() const
 {
-  return MSH_ARRAY_SIZE(m_registers);
+  return MSH_size(m_registers);
 }
 
-unsigned int WGSettings::pack  (void* buffer)
+size_t WGSettings::pack  (char* buffer) const
 {
-  unsigned int offset = 0;
+  size_t offset = 0;
   
-  MSH_PACK_ARRAY(buffer, offset, m_registers);
+  MSH_pack(buffer, offset, m_registers);
 
   return offset;
 }
 
-unsigned int WGSettings::unpack(void *buffer)
+size_t WGSettings::unpack(const char *buffer)
 {
-  unsigned int offset = 0;
+  size_t offset = 0;
 
-  MSH_UNPACK_ARRAY(buffer, offset, m_registers);
+  MSH_unpack(buffer, offset, m_registers);
 
   return offset;
 }

@@ -26,6 +26,7 @@ set(CTEST_CUSTOM_WARNING_EXCEPTION
   "/boost/date_time/time.hpp:[0-9]+: warning: unused parameter"
   "/boost/tuple/detail/tuple_basic.hpp:[0-9]+: warning: unused parameter"
   "/boost/python/object/value_holder.hpp:[0-9]+: warning: unused parameter"
+  "/boost/dynamic_bitset/dynamic_bitset.hpp:"
   "/matlab-2008a/extern/include/mclcppclass.h"
   "/pvss2_v3.7/api/include/(Basics|Datapoint|Manager|Messages)/"
   "/opt/WinCC_OA/3.10/api/include/(Basics|Datapoint|Manager|Messages)/"

@@ -50,9 +50,9 @@ namespace LOFAR {
       /**
        * marshalling methods
        */
-      unsigned int getSize();
-      unsigned int pack  (void* buffer);
-      unsigned int unpack(void *buffer);
+	size_t getSize() const;
+	size_t pack  (char* buffer) const;
+	size_t unpack(const char *buffer);
       /*@}*/
 
     private:

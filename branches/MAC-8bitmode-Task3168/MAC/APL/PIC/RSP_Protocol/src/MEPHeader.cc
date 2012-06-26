@@ -118,18 +118,18 @@ const MEPHeader::FieldsType MEPHeader::RAD_LATENCY_HDR       = { READ , 0, 0, { 
 const MEPHeader::FieldsType MEPHeader::RSP_RAWDATA_WRITE     = { WRITE, 0, 0, { 0xABBA, 0xBB, 0xAA }, 0xEFFE, 0xEBBE, 0x3412, 0 };
 const MEPHeader::FieldsType MEPHeader::RSP_RAWDATA_READ      = { READ , 0, 0, { 0xABBA, 0xBB, 0xAA }, 0xEFFE, 0xEBBE, 0x3412, 0 };
 
-unsigned int MEPHeader::getSize()
+size_t MEPHeader::getSize() const
 {
   return MEPHeader::SIZE;
 }
 
-unsigned int MEPHeader::pack  (void* buffer)
+size_t MEPHeader::pack  (char* buffer) const
 {
   memcpy(buffer, &(this->m_fields), MEPHeader::SIZE);
   return MEPHeader::SIZE;
 }
 
-unsigned int MEPHeader::unpack(void *buffer)
+size_t MEPHeader::unpack(const char *buffer)
 {
   memcpy(&(this->m_fields), buffer, MEPHeader::SIZE);
   return MEPHeader::SIZE;
