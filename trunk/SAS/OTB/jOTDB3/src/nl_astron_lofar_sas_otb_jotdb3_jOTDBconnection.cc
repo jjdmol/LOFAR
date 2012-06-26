@@ -28,7 +28,14 @@
 #include <jni.h>
 #include <jOTDB3/nl_astron_lofar_sas_otb_jotdb3_jCommon.h>
 #include <jOTDB3/nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection.h>
+#include <OTDB/Campaign.h>
+#include <OTDB/ClassifConv.h>
 #include <OTDB/OTDBconnection.h>
+#include <OTDB/ParamTypeConv.h>
+#include <OTDB/TreeMaintenance.h>
+#include <OTDB/TreeStateConv.h>
+#include <OTDB/TreeTypeConv.h>
+#include <OTDB/UnitConv.h>
 #include <boost/date_time/posix_time/ptime.hpp>
 #include <boost/date_time/posix_time/time_formatters.hpp>
 #include <string>
@@ -36,6 +43,7 @@
 
 
 using namespace boost::posix_time;
+using namespace LOFAR;
 using namespace LOFAR::OTDB;
 using namespace std;
 
@@ -158,7 +166,38 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_disco
             std::map<std::string,void *>::iterator tmpitr = itr;
             itr++;
             // free memory
-            delete tmpitr->second;
+            vector<string> spl = StringUtil::split(tmpitr->first,'_');
+            int cnt = spl.size();
+            string objectclass = spl[cnt-1];
+            bool flag = false;
+            if (objectclass=="Campaign") {
+                delete (Campaign*)(tmpitr->second);
+                flag = true;
+            } else if (objectclass=="ClassifConv") {
+                delete (ClassifConv*)(tmpitr->second);
+                flag = true;
+            } else if (objectclass=="OTDBconnection") {
+                delete (OTDBconnection*)(tmpitr->second);
+                flag = true;
+            } else if (objectclass=="ParamTypeConv") {
+                delete (ParamTypeConv*)(tmpitr->second);
+                flag = true;
+            } else if (objectclass=="TreeMaintenance") {
+                delete (TreeMaintenance*)(tmpitr->second);
+                flag = true;
+            } else if (objectclass=="TreeStateConv") {
+                delete (TreeStateConv*)(tmpitr->second);
+                flag = true;
+            } else if (objectclass=="TreeTypeConv") {
+                delete (TreeTypeConv*)(tmpitr->second);
+                flag = true;
+            } else if (objectclass=="UnitConv") {
+                delete (UnitConv*)(tmpitr->second);
+                flag = true;
+            }
+            if (!flag) {
+                LOG_ERROR_STR(itr->first << " Failed to free memory");
+            }
             theirC_ObjectMap.erase(tmpitr);
         } else {
             itr++;

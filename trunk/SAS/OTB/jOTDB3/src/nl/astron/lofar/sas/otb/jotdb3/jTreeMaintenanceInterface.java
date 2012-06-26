@@ -142,12 +142,11 @@ public interface jTreeMaintenanceInterface extends Remote
     // Prune an instanciated tree to get loss of depricated values.
     public boolean pruneTree (int aTreeID, short pruningLevel) throws RemoteException;
 
-    // Export a VIC (sub)tree to a file. The user may choose in which format
-    // the tree is exported: HTML, KeyValue List.
-    public boolean exportTree (int aTreeID,int topItem,String filename,int outputFormat,boolean folded) throws RemoteException;
-    public boolean exportTree (int aTreeID,int topItem,String filename,int outputFormat) throws RemoteException;
+    // Export a VIC (sub)tree to a file. 
     public boolean exportTree (int aTreeID,int topItem,String filename) throws RemoteException;
-
+    
+    // Export a VIC (sub)tree with reported metadata to a file.
+    public boolean exportResultTree (int aTreeID,int topItem,String filename) throws RemoteException;
     //# --- Finally some general tree maintenance ---
     // Delete a tree (of any kind) from the database.
     public boolean deleteTree (int aTreeID) throws RemoteException;
