@@ -594,8 +594,6 @@ void ModelImageFft::degrid( const double *uBl, const double *vBl, const double *
   vector<std::complex<float> > grid(gSize*gSize);
   grid.assign(grid.size(), std::complex<float> (1.0));
 
-  cout << "grid.size(): " << grid.size() << endl;  // DEBUG
-
   int wSize=itsOptions.nwplanes;        // Number of lookup planes in w projection
   
   // match frequencies to channels in image
@@ -604,12 +602,12 @@ void ModelImageFft::degrid( const double *uBl, const double *vBl, const double *
 
   // Measure frequency in inverse wavelengths
   std::vector<double> freq(nfreqs);
+  itsOptions.lambdas.resize(nfreqs);
   for (unsigned int i=0; i<nfreqs; i++)
   {
 //    freq[i]=(1.4e9-2.0e5*double(i)/double(nfreqs))/2.998e8;
     itsOptions.lambdas[i]=(casa::C::c)/frequencies[i];
   }
-//  itsOptions.lambdas=freq;
 
   // Initialize convolution function and offsets
   std::vector<std::complex<float> > C;
@@ -622,12 +620,11 @@ void ModelImageFft::degrid( const double *uBl, const double *vBl, const double *
   double wCellSize;
 
   //----------------------------------------------------------------------
-  // Initialize Convolution function, and COffset
+  // Initialize Convolution function
   //
   initC(nSamples, w, itsOptions.lambdas, cellSize, maxBaseline, wSize, gSize, support, 
         itsOptions.oversampling, wCellSize, C);
-  initCOffset(u, v, w, itsOptions.lambdas, cellSize, wCellSize, maxBaseline, wSize, gSize,
-              support, itsOptions.oversampling, cOffset, iu, iv);
+
   //------------------------------------------------------------------------
   // Degridding of FFT image planes for different Stokes components
   //
@@ -658,21 +655,25 @@ void ModelImageFft::degrid( const double *uBl, const double *vBl, const double *
 
         //ASSERT(imagePlane.contiguous);      // image slice is contiguous, use        
         imagePlane.tovector(grid);    // copy data into STL vector to conform to Cornwell interface
+        // Convert baselines to lambda units
+        u=convertMetresToWavelengths(u, itsOptions.frequencies[freq]);
+        v=convertMetresToWavelengths(v, itsOptions.frequencies[freq]);
+        w=convertMetresToWavelengths(w, itsOptions.frequencies[freq]);
+
+        //----------------------------------------------------------------------
+        // Initialize COffset
+        //
+        initCOffset(u, v, w, itsOptions.lambdas, cellSize, wCellSize, maxBaseline, wSize, gSize,
+                    support, itsOptions.oversampling, cOffset, iu, iv);
 
         cout << "degrid()" << endl;
-        cout << "itsImageProperties.nx = " << itsImageProperties.nx << endl;    // DEBUG
-        cout << "grid.size() = " << grid.size() << endl; // DEBUG
-        cout << "data.size() = " << data.size() << endl; // DEBUG
+        cout << "itsImageProperties.nx = " << itsImageProperties.nx << endl;  // DEBUG
+        cout << "grid.size() = " << grid.size() << endl;  // DEBUG
+        cout << "data.size() = " << data.size() << endl;  // DEBUG
         cout << "iu.size() = " <<  iu.size() << endl;     // DEBUG
         cout << "iv.size() = " <<  iv.size() << endl;     // DEBUG
 
         degridKernel(grid, gSize, support, C, cOffset, iu, iv, data);  // call Cornwell degridKernel
-
-//        cout << "data: " << endl;   // DEBUG
-//        for(unsigned int i=0; i<data.size(); i++)
-//          cout << data[i] << "  ";
-//        cout << endl; 
-//        exit(0);
       }
       else
       {
@@ -1011,17 +1012,15 @@ void ModelImageFft::degridKernel( const std::vector<std::complex<float> >& grid,
       data[dind]+=dot;
 #else
       // DEBUG
-      if(gind >= static_cast<int>(grid.size()))
-      {
-        cout << "sSize: " << sSize << "\tgind: " << gind  << "\tgrid.size(): " << grid.size() << "\tcind: " << cind << "\tC.size(): " << C.size() << endl;  // DEBUG
-        cout << gind << "\t" << grid.size() << endl;  // DEBUG
-        exit(0);
-      }
+//      if(gind >= static_cast<int>(grid.size()))
+//      {
+//        cout << "sSize: " << sSize << "\tgind: " << gind  << "\tgrid.size(): " << grid.size() << "\tcind: " << cind << "\tC.size(): " << C.size() << endl;  // DEBUG
+//        cout << gind << "\t" << grid.size() << endl;  // DEBUG
+//      }
       // DEBUG
 
       for (int suppu=0; suppu<sSize; suppu++)
       {
-//        data[dind]+=grid[gind+suppu]*C[cind+suppu];
         data[dind]+=grid[gind+suppu]*C[cind+suppu];
       }
 #endif

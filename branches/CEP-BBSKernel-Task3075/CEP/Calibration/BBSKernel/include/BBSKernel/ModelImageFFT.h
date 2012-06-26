@@ -65,7 +65,6 @@ typedef struct ModelImageOptions
   casa::MDirection imageDirection;              // centre patch direction of image
   casa::MDirection phaseDirection;              // phase direction of MS
   vector<double> imageFrequencies;              // channel frequencies of image
-//  casa::Vector<casa::Int> imageStokes;          // Stokes present in image (Stokes::StokesTypes)
   std::vector<double> frequencies;              // vector with channel frequencies
   std::vector<double> lambdas;                  // vector with converted lambdas
   casa::Vector<casa::Int> chanMap;              // chanMap for frequencies
@@ -94,15 +93,12 @@ typedef struct ImageProperties
   casa::Vector<casa::Int> stokes;
   
   casa::SpectralCoordinate spectralCoord;       // spectral coordinate of image
-  //casa::StokesCoordinate stokesCoord;           // Stokes coordinate
   bool I, Q, U, V;                              // present Stokes parameters
 };
 
 class ModelImageFft
 {
 public:
-//  ModelImageFft(const casa::String &name, const casa::Vector<casa::Double> &frequencies,
-//                unsigned int oversampling=1, double uvscaleX=1.0, double uvscaleY=1.0);
   ModelImageFft(const casa::String &name, 
                 unsigned int nwplanes=1, 
                 unsigned int oversampling=1, 
@@ -141,7 +137,6 @@ public:
   inline casa::MDirection imageDirection() const { return itsOptions.imageDirection; }
   inline casa::MDirection phaseDirection() const { return itsOptions.phaseDirection; }
   inline vector<double> imageFrequencies() const { return itsImageProperties.frequencies; }
-//  inline casa::Vector<casa::Int> imageStokes() const { return itsOptions.imageStokes; }
   inline std::vector<double>  frequencies() const { return itsOptions.frequencies; }
   inline std::vector<double>  lambdas() const { return itsOptions.lambdas; }
   inline casa::Vector<casa::Int> chanMap() const { return itsOptions.chanMap; }
