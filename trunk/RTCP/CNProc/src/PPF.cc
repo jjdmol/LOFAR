@@ -385,7 +385,7 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::bypass(unsigned stat, dou
 #if defined PPF_C_IMPLEMENTATION
   for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
     for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
-      if (filteredData->flags[1][stat].test(time)) {
+      if ((itsNrChannels > 1 && filteredData->flags[1][stat].test(time)) || (itsNrChannels == 1 && filteredData->flags[0][stat].test(time))) {
 	filteredData->samples[0][stat][time][pol] = makefcomplex(0, 0);
       } else {
 	SAMPLE_TYPE currSample = transposedData->samples[stat][time + alignmentShift][pol];

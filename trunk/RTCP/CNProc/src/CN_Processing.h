@@ -47,6 +47,7 @@
 #include <LocationInfo.h>
 #include <PPF.h>
 #include <PreCorrelationFlagger.h>
+#include <PreCorrelationNoChannelsFlagger.h>
 #include <PostCorrelationFlagger.h>
 #include <Ring.h>
 #include <Stokes.h>
@@ -86,6 +87,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
     int			transposeBeams(unsigned block);
     void		filter();
     void		dedisperseAfterBeamForming(unsigned beam, double dm);
+    void		preCorrelationNoChannelsFlagging();
     void		preCorrelationFlagging();
     void		mergeStations();
     void		formBeams(unsigned sap, unsigned firstBeam, unsigned nrBeams);
@@ -168,6 +170,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
     SmartPtr<DedispersionAfterBeamForming>	itsDedispersionAfterBeamForming;
     SmartPtr<DedispersionBeforeBeamForming>	itsDedispersionBeforeBeamForming;
     SmartPtr<PreCorrelationFlagger>		itsPreCorrelationFlagger;
+    SmartPtr<PreCorrelationNoChannelsFlagger>	itsPreCorrelationNoChannelsFlagger;
     SmartPtr<PostCorrelationFlagger>		itsPostCorrelationFlagger;
     SmartPtr<Trigger>				itsTrigger;
 };

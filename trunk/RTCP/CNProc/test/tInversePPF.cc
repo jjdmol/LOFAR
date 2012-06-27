@@ -52,7 +52,8 @@ const static unsigned nrTaps = 16;
 static unsigned nrSubbands = 248;
 //static unsigned nrSubbands = 4;
 static unsigned nrChannels = 1; // for the NuMoon pipeline, there are no separate channels.
-static unsigned nrSamplesPerIntegration = 768 * 256 / 4; // one quarter of a second
+//static unsigned nrSamplesPerIntegration = 768 * 256 / 4; // one quarter of a second
+static unsigned nrSamplesPerIntegration = 19648; // roughly 0.1 seconds
 //static unsigned nrSamplesPerIntegration = 64;
 static double sampleRate = 195312.5;
 static double centerFrequency = (nrSamplesPerIntegration / 2) * sampleRate;
@@ -110,7 +111,7 @@ static void performStationFFT(TransposedBeamFormedData& transposedBeamFormedData
   // Put data in the right order, go from half complex to normal format
   for (unsigned subbandIndex = 0; subbandIndex < subbandList.size(); subbandIndex++) {
     unsigned subband = subbandList[subbandIndex];
-    fcomplex sample = makefcomplex(fftOutData[subband], fftOutData[onStationFilterSize - subband]);
+    fcomplex sample = makefcomplex(fftOutData[subband], fftOutData[onStationFilterSize - subband - 1]);
     transposedBeamFormedData.samples[subband][0 /* channel, but there is only one now */][time] = sample;
   }
 }
@@ -180,7 +181,7 @@ static void fftTest() {
 #if 0
   // Put data in the right order, go from half complex to normal format
   for (unsigned subband = 0; subband < nrSubbands; subband++) {
-    fcomplex sample = makefcomplex(fftOutData[subband], fftOutData[onStationFilterSize - subband]);
+    fcomplex sample = makefcomplex(fftOutData[subband], fftOutData[onStationFilterSize - subband - 1]);
     transposedBeamFormedData.samples[subband][0 /* channel */][time] = sample;
   }
 #endif
@@ -190,12 +191,10 @@ static void fftTest() {
   float maxError = 0.0f;
 
   for (unsigned time = 0; time < onStationFilterSize; time++) {
-
     float error = fabsf(inputData[time] - (fftInData[time]/((float)onStationFilterSize))); // the error
     if(error > maxError) {
       maxError = error;
     }
-
 //    fprintf(stdout, "%20.10lf\n", error);
 //    fprintf(stdout, "%20.10lf\n", fftInData[time]);
   }
