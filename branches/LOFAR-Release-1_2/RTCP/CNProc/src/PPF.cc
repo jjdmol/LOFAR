@@ -418,7 +418,7 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::bypass(unsigned stat, dou
   }
 
   // clear flagged data
-  const SparseSet<unsigned>::Ranges &ranges = filteredData->flags[1][stat].getRanges();
+  const SparseSet<unsigned>::Ranges &ranges = filteredData->flags[0][stat].getRanges();
 
   for (SparseSet<unsigned>::const_iterator it = ranges.begin(); it != ranges.end(); it ++)
     memset(filteredData->samples[0][stat][it->begin].origin(), 0, (it->end - it->begin) * NR_POLARIZATIONS * sizeof(fcomplex));
