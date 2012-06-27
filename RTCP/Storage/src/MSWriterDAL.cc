@@ -186,11 +186,11 @@ namespace LOFAR
       file.telescope().value = "LOFAR";
       file.observer() .value = "unknown";
 
-      file.projectID()     .value = parset.getString("Observation.Campaign.name");
-      file.projectTitle()  .value = parset.getString("Observation.Scheduler.taskName");
-      file.projectPI()     .value = parset.getString("Observation.Campaign.PI");
-      file.projectCOI()    .value = parset.getString("Observation.Campaign.CO_I");
-      file.projectContact().value = parset.getString("Observation.Campaign.contact");
+      file.projectID()     .value = parset.getString("Observation.Campaign.name", "");
+      file.projectTitle()  .value = parset.getString("Observation.Scheduler.taskName", "");
+      file.projectPI()     .value = parset.getString("Observation.Campaign.PI", "");
+      file.projectCOI()    .value = parset.getString("Observation.Campaign.CO_I", "");
+      file.projectContact().value = parset.getString("Observation.Campaign.contact", "");
 
       file.observationID() .value = str(format("%u") % parset.observationID());
 
