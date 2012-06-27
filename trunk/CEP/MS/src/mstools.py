@@ -397,6 +397,7 @@ def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0, nodes=[]):
             newkey = 'ObsSW.Observation.DataProducts.' + keyout
             ps.replace (newkey + '.locations', str(locs));
             ps.replace (newkey + '.filenames', str(names));
+            ps.replace (newkey + '.skip', str([0 for x in locs]));
 
     # Check if all keymap keywords have been processed.
     if nrproc != len(keymap):
