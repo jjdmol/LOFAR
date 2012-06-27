@@ -39,7 +39,7 @@ function stop() {
     mpikill "$PID" ||
 
     # ask DNA to kill the job
-    (bgjobs -u $USER -s | awk "/$PARTITION/ { print \$1; }" | xargs -L 1 bgkilljob) ||
+    (cd /;bgjobs -u $USER -s | awk "/$PARTITION/ { print \$1; }" | xargs -L 1 bgkilljob) ||
 
     # kill -9 is the last resort
     kill -9 "$PID"
@@ -50,8 +50,8 @@ function stop() {
 
   while true
   do
-    JOBSTATUS=`bgjobs -u $USER -s | awk "/$PARTITION/ { print \\$6; }"`
-    JOBID=`bgjobs -u $USER -s | awk "/$PARTITION/ { print \\$1; }"`
+    JOBSTATUS=`cd /;bgjobs -u $USER -s | awk "/$PARTITION/ { print \\$6; }"`
+    JOBID=`cd /;bgjobs -u $USER -s | awk "/$PARTITION/ { print \\$1; }"`
 
     if [ -z "$JOBID" ]
     then
