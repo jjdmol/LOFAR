@@ -76,18 +76,13 @@ void InversePPF::destroyFFT() {
 #endif
 }
 
-// Reads itsFftOutData, writes to invertedFilteredData.
-void InversePPF::performFilter(InverseFilteredData& invertedFilteredData, unsigned time, unsigned minorTime) {
-  float sample = itsFftOutData[minorTime];
-  float result = itsFIRs[minorTime].processNextSample(sample);
-  invertedFilteredData.samples[time * itsOnStationFilterSize + minorTime] = result;
-}
-
 // Goes from tansposedBeamFormedData to itsFftInData.
 void InversePPF::createFFTInput(const TransposedBeamFormedData& transposedBeamFormedData, unsigned time) {
   fftInTimer.start();
 
   // First set the unselected subbands to zero.
+  // We have to do this every time, since the input is destroyed by the FFT.
+  // However, the time this takes is very small compared to the time to fill in the real data below.
   memset(itsFftInData, 0, itsOnStationFilterSize * sizeof(float));
 
   // Fill input buffer, using "half complex" format.
@@ -98,7 +93,7 @@ void InversePPF::createFFTInput(const TransposedBeamFormedData& transposedBeamFo
     fcomplex sample = transposedBeamFormedData.samples[sb][0 /* channel, but there only is 1 now */][time];
 
     itsFftInData[sb] = real(sample);
-    itsFftInData[itsOnStationFilterSize - sb] = imag(sample);
+    itsFftInData[itsOnStationFilterSize - sb - 1] = imag(sample);
   }
 
   fftInTimer.stop();
@@ -119,11 +114,15 @@ void InversePPF::performInverseFFT() {
   fftTimer.stop();
 }
 
+// Reads itsFftOutData, writes to invertedFilteredData.
 void InversePPF::performFiltering(InverseFilteredData& invertedFilteredData, unsigned time) {
   firTimer.start();
 
+  unsigned index = time * itsOnStationFilterSize;
   for (unsigned minorTime = 0; minorTime < itsOnStationFilterSize; minorTime++) {
-    performFilter(invertedFilteredData, time, minorTime);
+    const float sample = itsFftOutData[minorTime];
+    const float result = itsFIRs[minorTime].processNextSample(sample);
+    invertedFilteredData.samples[index++] = result;
   }
 
   firTimer.stop();

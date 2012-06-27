@@ -208,6 +208,12 @@ template <typename SAMPLE_TYPE> CN_Processing<SAMPLE_TYPE>::CN_Processing(const 
         LOG_DEBUG_STR("Online PreCorrelation flagger enabled");
     }
 
+    if (parset.onlineFlagging() && parset.onlinePreCorrelationNoChannelsFlagging()) {
+      itsPreCorrelationNoChannelsFlagger = new PreCorrelationNoChannelsFlagger(parset, itsNrStations, itsNrSubbands, itsNrChannels, itsNrSamplesPerIntegration);
+      if (LOG_CONDITION)
+        LOG_DEBUG_STR("Online PreCorrelation no channels flagger enabled");
+    }
+
     if (parset.outputCorrelatedData()) {
       itsCorrelator	      = new Correlator(itsBeamFormer->getStationMapping(), itsNrChannels, itsNrSamplesPerIntegration);
       itsCorrelatedData       = (CorrelatedData*)newStreamableData(parset, CORRELATED_DATA, -1, itsBigAllocator);
@@ -726,6 +732,23 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preCorrelationF
 }
 
 
+template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::preCorrelationNoChannelsFlagging()
+{
+#if defined HAVE_MPI
+  if (LOG_CONDITION)
+    LOG_DEBUG_STR(itsLogPrefix << "Start pre correlation no channels flagger at t = " << blockAge());
+#endif // HAVE_MPI
+
+  static NSTimer timer("pre correlation no channels flagger", true, true);
+
+  timer.start();
+  computeTimer.start();
+  itsPreCorrelationNoChannelsFlagger->flag(itsFilteredData, *itsCurrentSubband);
+  computeTimer.stop();
+  timer.stop();
+}
+
+
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::mergeStations()
 {
 #if defined HAVE_MPI
@@ -929,6 +952,9 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::process(unsigne
 
     if (itsPPF != 0)
       filter();
+
+    if (itsPreCorrelationNoChannelsFlagger != 0)
+      preCorrelationNoChannelsFlagging();
 
     if (itsPreCorrelationFlagger != 0)
       preCorrelationFlagging();
