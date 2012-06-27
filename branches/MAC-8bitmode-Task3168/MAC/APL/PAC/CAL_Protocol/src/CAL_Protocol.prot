@@ -76,7 +76,7 @@ event = {
       };
       param = { // subset of the receivers (2 receivers per antenna)
 	    name = "subset";
-	    type = "LOFAR::bitset<LOFAR::MAX_RCUS>";
+	    type = "bitset<LOFAR::MAX_RCUS>";
       };
       param = {
 	    // RCU control byte controls the setting of all
@@ -88,7 +88,7 @@ event = {
 	  // TODO: add this parameter for faster calibration in the future
 //      param = { // set of subbands
 //	    name = "subbandset";
-//	    type = "LOFAR::bitset<LOFAR::MAX_SUBBANDS>";
+//	    type = "bitset<LOFAR::MAX_SUBBANDS>";
 //      };
       // nyquist_zone is deducted from RCUSettings
       // sampling_frequency and nyquist_zone determine the spectral window
@@ -138,7 +138,7 @@ event = {
       };
       param = { // set of subbands
 	    name = "subbandset";
-	    type = "LOFAR::bitset<LOFAR::MAX_SUBBANDS>";
+	    type = "bitset<LOFAR::MAX_SUBBANDS>";
       };
 };
 

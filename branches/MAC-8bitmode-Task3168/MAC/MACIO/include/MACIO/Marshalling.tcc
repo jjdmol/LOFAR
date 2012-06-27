@@ -26,11 +26,11 @@
 #define MACIO_MARSHALLING_TCC_
 
 #include <Common/LofarTypes.h>
+#include <Common/lofar_bitset.h>
 #include <Common/lofar_map.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 #include <boost/dynamic_bitset.hpp>
-#include <bitset>
 #include <sstream>
 
 using namespace LOFAR;
@@ -80,40 +80,6 @@ template<> inline void MSH_unpack<string>(const char *bufPtr, size_t &offset, st
 	tVar= string(bufPtr+offset);
 	offset += nrChars + 1;
 }
-
-#if 0
-// Specialistion for bitset
-template<size_t N> size_t MSH_size(const std::bitset<N> &tVar)
-{
-cout << "BITSETSIZE" << endl;
-	return (sizeof(int32) + tVar.size() + sizeof(char));
-}
-
-template <size_t N> void MSH_pack(char *bufPtr, size_t &offset, const std::bitset<N> &tVar)
-{
-cout << "BITSETPACK" << endl;
-	int32	nrBits = N;
-	memcpy(bufPtr + offset, &nrBits, sizeof(nrBits));
-	offset += sizeof(nrBits);
-	stringstream  tmpbuf(stringstream::in | stringstream::out);
-	tmpbuf << tVar;
-	memcpy(bufPtr + offset, tmpbuf.str().data(), nrBits);
-	offset += nrBits;
-    memset(bufPtr + offset, 0, 1);
-	offset++;
-}
-
-template<size_t N> void MSH_unpack(const char *bufPtr, size_t &offset, std::bitset<N> &tVar)
-{
-cout << "BITSETUNPACK" << endl;
-	int32	nrBits;
-	memcpy(&nrBits, bufPtr + offset, sizeof(nrBits));
-	offset += sizeof(nrBits);
-//	tVar << string(bufPtr+offset);
-	tVar = std::bitset<N> (string(bufPtr+offset));
-	offset += nrBits + 1;
-}
-#endif
 
 // Specialistion for boost::dynamic_bitset
 template<> inline size_t MSH_size<boost::dynamic_bitset<> >(const boost::dynamic_bitset<> &tVar)

@@ -24,6 +24,7 @@
 #define ANALOGUE_BEAM_H_
 
 #include <lofar_config.h>
+#include <Common/lofar_bitset.h>
 #include "Beam.h"
 #include <blitz/array.h>
 

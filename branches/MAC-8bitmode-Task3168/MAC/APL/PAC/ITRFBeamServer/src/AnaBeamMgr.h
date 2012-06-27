@@ -24,9 +24,10 @@
 #define ANABEAMMGR_H_
 
 #include <lofar_config.h>
-#include <Common/lofar_string.h>
+#include <Common/lofar_bitset.h>
 #include <Common/lofar_list.h>
 #include <Common/lofar_map.h>
+#include <Common/lofar_string.h>
 #include <ApplCommon/StationConfig.h>
 #include <GCF/TM/GCF_PortInterface.h>
 #include <APL/RTCCommon/Timestamp.h>
@@ -125,7 +126,7 @@ private:
 	RTC::Timestamp				itsTargetTime;
 
 	// RCUs participating in the active beams
-	bitset<MAX_RCUS>			itsActiveRCUs;
+	bitset<MAX_RCUS>		itsActiveRCUs;
 
 	// queue of future pointings as delivered by the user.
 	map<string, AnalogueBeam>	itsBeams;

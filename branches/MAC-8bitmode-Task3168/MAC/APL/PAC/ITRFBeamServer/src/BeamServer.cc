@@ -24,6 +24,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
+#include <Common/LofarBitModeInfo.h>
 #include <Common/lofar_complex.h>
 #include <Common/Version.h>
 #include <Common/ParameterSet.h>
@@ -47,11 +48,13 @@
 #include <sstream>
 #include <time.h>
 #include <fstream>
+#include <bitset>
 
 #include <netinet/in.h>
 #include <blitz/array.h>
 
 using namespace blitz;
+using namespace std;
 namespace LOFAR {
   using namespace RTC;
   using namespace IBS_Protocol;
@@ -66,6 +69,8 @@ int	gBeamformerGain = 0;
 //
 BeamServer::BeamServer(const string& name, long	timestamp) : 
 	GCFTask((State)&BeamServer::con2rspdriver, name),
+	itsCurrentBitsPerSample (MAX_BITS_PER_SAMPLE),
+	itsCurrentMaxBeamlets   (maxBeamlets(itsCurrentBitsPerSample)),
 	itsNrLBAbeams			(0),
 	itsNrHBAbeams			(0),
 	itsListener				(0),
@@ -230,7 +235,7 @@ GCFEvent::TResult BeamServer::con2rspdriver(GCFEvent& event, GCFPortInterface& p
 //
 // askConfiguration(event, port)
 //
-// Ask the RSPdriver what ahrdware is available
+// Ask the RSPdriver what hardware is available
 //
 GCFEvent::TResult BeamServer::askConfiguration(GCFEvent& event, GCFPortInterface& port)
 {
@@ -253,9 +258,10 @@ GCFEvent::TResult BeamServer::askConfiguration(GCFEvent& event, GCFPortInterface
 		itsMaxRCUs = ack.n_rcus;
 		LOG_INFO_STR("Station has " << itsMaxRCUs << " RCU's");
 
+//		@@@ TODO: FIRST TAKE SUBSCRIPTION ON BITMODE THEN RESIZE THE ARRAYS !!!
 		// initialize matrices
-		itsWeights.resize   (itsMaxRCUs, MAX_BEAMLETS);
-		itsWeights16.resize (itsMaxRCUs, MAX_BEAMLETS);
+		itsWeights.resize   (itsMaxRCUs, itsCurrentMaxBeamlets);
+		itsWeights16.resize (itsMaxRCUs, itsCurrentMaxBeamlets);
 		itsWeights   = complex<double>(0,0);
 		itsWeights16 = complex<int16_t>(0,0);
 
@@ -1051,7 +1057,7 @@ void BeamServer::_createBeamPool()
 	itsBeamPool.clear();
 
 	// make a new one based on the current value of the splitter.
-	int		nrBeamlets = (itsSplitterOn ? 2 : 1 ) * MAX_BEAMLETS;
+	int		nrBeamlets = (itsSplitterOn ? 2 : 1 ) * itsCurrentMaxBeamlets;
 	LOG_INFO_STR("Initializing space for " << nrBeamlets << " beamlets");
 	itsBeamletAllocation.clear();
 	itsBeamletAllocation.resize(nrBeamlets, BeamletAlloc_t(0,0.0));
@@ -1100,7 +1106,7 @@ DigitalBeam* BeamServer::checkBeam(GCFPortInterface* 				port,
 						  std::string 						name, 
 						  std::string 						antennaSetName, 
 						  IBS_Protocol::Beamlet2SubbandMap	allocation,
-						  LOFAR::bitset<LOFAR::MAX_RCUS>	rcumask,
+						  bitset<LOFAR::MAX_RCUS>		    rcumask,
 						  uint								ringNr,
 						  uint								rcuMode,
 						  int*								beamError)
@@ -1218,7 +1224,7 @@ bool BeamServer::_checkBeamlets(IBS_Protocol::Beamlet2SubbandMap&	allocation,
 	// first check if the allocation is valid
 	for ( ; iter != end; iter++) {
 		//											v--- beamletnumber
-		int	index(ringNr * LOFAR::MAX_BEAMLETS + iter->first);
+		int	index(ringNr * itsCurrentMaxBeamlets + iter->first);
 		if (itsBeamletAllocation[index].subbandNr) {
 			LOG_ERROR_STR("Beamlet " << iter->first << "(" << index << 
 							") is already assigned to subband " << iter->second);
@@ -1240,11 +1246,11 @@ void BeamServer::_allocBeamlets(IBS_Protocol::Beamlet2SubbandMap&	allocation,
 	map<uint16,uint16>::const_iterator iter = allocation().begin();
 	map<uint16,uint16>::const_iterator end  = allocation().end();
 	for ( ; iter != end; iter++) {
-		itsBeamletAllocation[ringNr * LOFAR::MAX_BEAMLETS + iter->first].subbandNr = iter->second;
+		itsBeamletAllocation[ringNr * itsCurrentMaxBeamlets + iter->first].subbandNr = iter->second;
 		// NOTE: we like to set the scaling for each beamlets here also but we need
 		// the spectral window of the antenneSet for that. We will receive that info
 		// from the CalServer in a later state and calc the scalings than.
-		itsBeamletAllocation[ringNr * LOFAR::MAX_BEAMLETS + iter->first].scaling = complex<double>(0.0, 0.0);
+		itsBeamletAllocation[ringNr * itsCurrentMaxBeamlets + iter->first].scaling = complex<double>(0.0, 0.0);
 	} 
 
 	LOG_INFO_STR("Assignment of subbands to beamlets succesfull.");
@@ -1267,7 +1273,7 @@ void BeamServer::_scaleBeamlets(IBS_Protocol::Beamlet2SubbandMap&	allocation,
 	for ( ; iter != end; iter++) {
 		// first: beamletIndex, second: subbandnr
 		double	freq  = spw.getSubbandFreq(iter->second);
-		int		index = ringNr * LOFAR::MAX_BEAMLETS + iter->first;
+		int		index = ringNr * itsCurrentMaxBeamlets + iter->first;
 		itsBeamletAllocation[index].scaling = -2.0 * M_PI * freq * complex<double>(0.0,1.0) / speedOfLight;
 		LOG_TRACE_OBJ_STR("scaling subband[" << itsBeamletAllocation[index].subbandNr << 
 						  "]@beamlet[" << index << "] = " << itsBeamletAllocation[index].scaling <<
@@ -1287,8 +1293,8 @@ void BeamServer::_releaseBeamlets(IBS_Protocol::Beamlet2SubbandMap&	allocation,
 	map<uint16,uint16>::iterator iter = allocation().begin();
 	map<uint16,uint16>::iterator end  = allocation().end();
 	for ( ; iter != end; iter++) {
-		itsBeamletAllocation[ringNr * LOFAR::MAX_BEAMLETS + iter->first].subbandNr = 0;
-		itsBeamletAllocation[ringNr * LOFAR::MAX_BEAMLETS + iter->first].scaling   = complex<double>(0.0, 0.0);
+		itsBeamletAllocation[ringNr * itsCurrentMaxBeamlets + iter->first].subbandNr = 0;
+		itsBeamletAllocation[ringNr * itsCurrentMaxBeamlets + iter->first].scaling   = complex<double>(0.0, 0.0);
 	} 
 
 	LOG_INFO_STR("Assigned beamlets released succesfully.");
@@ -1552,7 +1558,7 @@ void BeamServer::compute_weights(Timestamp weightTime)
 							sourceJ2000xyz(0,0), sourceJ2000xyz(0,1), sourceJ2000xyz(0,2)));
 
 			// Note: Beamlet numbers depend on the ring.
-			int	firstBeamlet(gAntField->ringNr(fieldName) * LOFAR::MAX_BEAMLETS);
+			int	firstBeamlet(gAntField->ringNr(fieldName) * itsCurrentMaxBeamlets);
 			LOG_DEBUG_STR("first beamlet of field " << fieldName << "=" << firstBeamlet);
 			// Note: RCUallocation is stationbased, rest info is fieldbased, 
 			bitset<MAX_RCUS>	RCUallocation(beamIter->second->rcuMask());
@@ -1566,7 +1572,9 @@ void BeamServer::compute_weights(Timestamp weightTime)
 				// Note: weight is in-procduct for RCUpos and source Pos and depends on 
 				// the frequency of the subband.
 				//
-				bitset<MAX_BEAMLETS>	beamletAllocation = beamIter->second->allocation().getBeamletBitset();
+				boost::dynamic_bitset<>	beamletAllocation;
+				beamletAllocation.resize(itsCurrentMaxBeamlets);
+				beamletAllocation = beamIter->second->allocation().getBeamletBitset();
 				int		nrBeamlets = beamletAllocation.size();
 				for (int	beamlet = 0; beamlet < nrBeamlets; beamlet++) {
 					if (!beamletAllocation.test(beamlet)) {
@@ -1616,7 +1624,7 @@ void BeamServer::send_weights(Timestamp time)
 		sw.rcumask.set(i);
 	}
   
-	sw.weights().resize(1, itsMaxRCUs, MAX_BEAMLETS);
+	sw.weights().resize(1, itsMaxRCUs, itsCurrentMaxBeamlets);
 	sw.weights()(0, Range::all(), Range::all()) = itsWeights16;
   
 	LOG_INFO_STR("sending weights for interval " << time << " : " << time + (long)(itsComputeInterval-1));
@@ -1660,7 +1668,7 @@ void BeamServer::send_sbselection()
 		// of 64 beamlets before the beamlets of beam 1.
 		//
 		ss.subbands.setType(SubbandSelection::BEAMLET);
-		ss.subbands().resize(1, MAX_BEAMLETS);
+		ss.subbands().resize(1, itsCurrentMaxBeamlets);
 		ss.subbands() = 0;
 
 		// reconstruct the selection
@@ -1682,13 +1690,13 @@ void BeamServer::send_sbselection()
 		for ( ; iter != end; ++iter) {
 			LOG_DEBUG(formatString("(%d,%d)", iter->first, iter->second));
 
-			if (iter->first >= MAX_BEAMLETS) {
-				LOG_ERROR(formatString("SBSELECTION: invalid src index %d", iter->first));
+			if (iter->first >= itsCurrentMaxBeamlets) {
+				LOG_ERROR(formatString("SBSELECTION: invalid src index %d (max=%d)", iter->first, itsCurrentMaxBeamlets));
 				continue;
 			}
 
 			if (iter->second >= MAX_SUBBANDS) {
-				LOG_ERROR(formatString("SBSELECTION: invalid tgt index %d", iter->second));
+				LOG_ERROR(formatString("SBSELECTION: invalid tgt index %d (max=%d)", iter->second, MAX_SUBBANDS));
 				continue;
 			}
 

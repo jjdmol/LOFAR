@@ -25,6 +25,7 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
+#include <Common/lofar_bitset.h>
 #include <Common/lofar_map.h>
 #include <Common/lofar_vector.h>
 #include <Common/hexdump.h>
@@ -121,7 +122,7 @@ int main (int	/*argc*/, char*	/*argv[]*/)
 
 
 	// bitset test1
-	bitset<35>	bs1;
+	LOFAR::bitset<35>	bs1;
 	bs1.reset();
 	bs1.set(0);
 	bs1.set(5);
@@ -135,7 +136,7 @@ int main (int	/*argc*/, char*	/*argv[]*/)
 	cout << "packed:" << endl;
 	hexdump(buf, offset1);
 
-	bitset<35>	bs2;
+	LOFAR::bitset<35>	bs2;
 	offset2 = 0;
 	MSH_unpack(buf, offset2, bs2);
 	cout << "size = " << offset2 << endl;

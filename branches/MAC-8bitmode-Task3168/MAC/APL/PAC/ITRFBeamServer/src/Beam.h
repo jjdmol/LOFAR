@@ -24,10 +24,10 @@
 #define BEAM_H_
 
 #include <lofar_config.h>
-#include <Common/lofar_vector.h>
-#include <Common/lofar_string.h>
 #include <Common/lofar_bitset.h>
 #include <Common/lofar_list.h>
+#include <Common/lofar_string.h>
+#include <Common/lofar_vector.h>
 #include <Common/LofarConstants.h>
 #include <APL/RTCCommon/Timestamp.h>
 #include <APL/IBS_Protocol/Pointing.h>

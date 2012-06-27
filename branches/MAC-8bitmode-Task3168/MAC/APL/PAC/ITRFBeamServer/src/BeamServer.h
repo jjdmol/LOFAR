@@ -23,10 +23,11 @@
 #ifndef BEAMSERVER_H_
 #define BEAMSERVER_H_
 
-#include <Common/lofar_string.h>
-#include <Common/lofar_set.h>
-#include <Common/lofar_map.h>
+#include <Common/lofar_bitset.h>
 #include <Common/lofar_list.h>
+#include <Common/lofar_map.h>
+#include <Common/lofar_set.h>
+#include <Common/lofar_string.h>
 #include <GCF/TM/GCF_Control.h>
 #include <APL/IBS_Protocol/IBS_Protocol.ph>
 #include <CASATools/CasaConverter.h>
@@ -90,7 +91,7 @@ private:
 					string 								name, 
 					string 								subarrayname, 
 					IBS_Protocol::Beamlet2SubbandMap	allocation,
-					LOFAR::bitset<LOFAR::MAX_RCUS>		rcumask,
+					bitset<LOFAR::MAX_RCUS>				rcumask,
 					uint								ringNr,
 					uint								rcuMode,
 					int*								beamError);
@@ -178,6 +179,13 @@ private:
 	void 					_loadCalTable(uint rcuMode, uint nrRSPBoards);
 
 	// ### data members ###
+
+	// 'constant' containing the current number of bits each datasample has.
+	// This value determines how many beamlets a RSPBoard produces (and how large some of
+	// our arrays become). The function maxBeamletsPerRSP in Common/LofarBitModeInfo.h calculates
+	// the maxBeamlets 'constant' we are used to work with before bitsperSample was a variable value.
+	int		itsCurrentBitsPerSample;
+	int		itsCurrentMaxBeamlets;
 
 	// BeamletAllocation
 	typedef struct BeamletAllocation {

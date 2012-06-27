@@ -28,7 +28,9 @@
 #include <MACIO/Marshalling.tcc>
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
 
+#include <Common/LofarConstants.h>
 #include <Common/LofarTypes.h>
+#include <Common/lofar_bitset.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_map.h>
 #include <boost/dynamic_bitset.hpp>
@@ -58,8 +60,8 @@ public:
 	/*@}*/
 
 	// other methods
-	boost::dynamic_bitset<> getSubbandBitset() const;
-	boost::dynamic_bitset<> getBeamletBitset() const;
+	bitset<MAX_SUBBANDS> getSubbandBitset() const;
+	boost::dynamic_bitset<>   getBeamletBitset() const;
 
 	ostream& print (ostream& os) const;
 

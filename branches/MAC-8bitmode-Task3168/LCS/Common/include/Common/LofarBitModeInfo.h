@@ -1,6 +1,6 @@
 //# LofarBitModeInfo.h
 //#
-//# Copyright (C) 2008
+//# Copyright (C) 2012
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -23,29 +23,22 @@
 #ifndef LOFAR_COMMON_BITMODEINFO_H
 #define LOFAR_COMMON_BITMODEINFO_H
 
+#include <Common/LofarConstants.h>
 
 namespace LOFAR {
     
-    int maxBeamletsPerRSP(unsigned bitsPerSample) {
-        int max_beamlets_per_rsp;
-        switch (bitsPerSample)
-        {
-            case 4:
-            case 8: {
-                max_beamlets_per_rsp = 59;
-            } break;
-            
-            case 16: {
-                max_beamlets_per_rsp = 61;
-            } break;
-            default: {
-                max_beamlets_per_rsp = 61;
-            }
-        }
-        return(max_beamlets_per_rsp);
+    int maxBeamletsPerRSP(int bitsPerSample) {
+		assert(bitsPerSample >= MIN_BITS_PER_SAMPLE && bitsPerSample <= MAX_BITS_PER_SAMPLE && bitsPerSample%2==0);
+        switch (bitsPerSample) {
+          case 4:
+          case 8: 
+              return(59);
+          default: 
+              return(61);
+		}
     }
     
-    int maxBeamlets(unsigned bitsPerSample) {
+    int maxBeamlets(int bitsPerSample) {
         // 4 output lanes on one station
         return(4 * maxBeamletsPerRSP(bitsPerSample));
     }
