@@ -8,6 +8,7 @@ from __future__ import with_statement
 import os
 import sys
 import subprocess
+import errno
 
 from lofarpipe.support.lofarnode import LOFARnodeTCP
 from lofarpipe.support.pipelinelogging import log_time
@@ -54,14 +55,23 @@ class copier(LOFARnodeTCP):
                                       target_path):
         # assure that target dir exists (rsync creates it but..
         # an error in the python code will throw a nicer error
-        create_directory(os.path.dirname(target_path))
-
-        #check if the targat_path is writable for the current proc
-        if not os.access(os.path.dirname(target_path), os.W_OK):
-            message = "No write acces to target path: {0}".format(
+        message = "No write acces to target path: {0}".format(
                                     os.path.dirname(target_path))
+        # If not existing try to create dir catch no permission
+        try:
+            create_directory(os.path.dirname(target_path))
+        except OSError, e:
+            if e.errno == 13:  # No permision
+                self.logger.error(message)
+                raise IOError(message)
+            else:
+                raise e
+
+        #check if the target_path is writable for the current proc
+        if not os.access(os.path.dirname(target_path), os.W_OK):
             self.logger.error(message)
             raise IOError(message)
+
 
         # construct copy command
         command = ["rsync", "-r", "{0}:{1}".format(source_node, source_path),
