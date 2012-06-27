@@ -75,8 +75,9 @@
 #define LOGCOUT_SETLEVEL(level) \
 	::LOFAR::LFDebug::setLevel("Global",level);
 
-// Each new thread might need a partial reinitialisation in the logger
-#define LOGGER_NEWTHREAD()
+// Each new thread might need a partial reinitialisation and destruction in the logger
+#define LOGGER_ENTER_THREAD()
+#define LOGGER_EXIT_THREAD()
 
 //# -------------------- Log Levels for the Operator messages -----------------
 //#
