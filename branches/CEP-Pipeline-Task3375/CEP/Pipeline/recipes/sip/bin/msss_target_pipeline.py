@@ -170,36 +170,6 @@ class msss_target_pipeline(control):
 
         return new_instrument_map
 
-
-#    def _create_target_map_for_instruments(self, instrument_map,
-#                                            input_data_map):
-#        """
-#        Obselete function to create a mapfile with target paths
-#        placing them next to the measurement sets.
-#        TODO: Remove at next refactor round: saved as backup
-#        """
-#        target_map = []
-#        source_map = []
-#        new_instrument_map = []
-#        for instrument_pair, input_data_pair in zip(instrument_map, input_data_map):
-#            instrument_node, instrument_path = instrument_pair
-#            input_data_node, input_data_path = input_data_pair
-#
-#            target_dir = os.path.dirname(input_data_path)
-#            target_name = os.path.basename(instrument_path)
-#            target_path = os.path.join(target_dir, target_name)
-#            new_instrument_map.append((input_data_node, target_path))
-##            #If the data is already on the correct node, skip this file
-##            if instrument_node == input_data_node and instrument_path == input_data_path:
-##                continue
-#
-#            source_map.append(instrument_pair)
-#            target_map.append((input_data_node, target_path))
-#
-#        return source_map, target_map, new_instrument_map
-
-
-
     def go(self):
         """
         Read the parset-file that was given as input argument, and set the

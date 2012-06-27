@@ -14,7 +14,7 @@ from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
 from lofarpipe.support.group_data import load_data_map, store_data_map
-
+from lofarpipe.support.lofarexceptions import PipelineException
 
 class MasterNodeInterface(BaseRecipe, RemoteCommandRecipeMixIn):
     """
@@ -140,7 +140,7 @@ class copier(MasterNodeInterface):
         ),
         'allow_rename': ingredient.BoolField(
             '--allow-rename',
-            default=False,
+            default=True,
             help="Allow renaming of basename at target location"
         ),
         'mapfiles_dir': ingredient.StringField(
@@ -162,7 +162,7 @@ class copier(MasterNodeInterface):
             help="Working directory used on output nodes. Results location"
         ),
         'mapfile': ingredient.StringField(
-            '-w', '--mapfile',
+            '--mapfile',
             help="full path to mapfile containing copied paths"
         ),
     }
@@ -209,7 +209,7 @@ class copier(MasterNodeInterface):
         # Load data from mapfiles
         source_map = load_data_map(self.inputs['mapfile_source'])
         target_map = load_data_map(self.inputs['mapfile_target'])
-        mapfile_dir = self.inputs["mapfile_dir"]
+        mapfile_dir = self.inputs["mapfiles_dir"]
 
         # validate data in mapfiles
         if not self._validate_source_target_mapfile(source_map, target_map,
@@ -248,6 +248,12 @@ class copier(MasterNodeInterface):
         if os.path.isabs(input_path):
             return input_path
         else:
+            if '/' in input_path:
+                self.logger.warn("Using nested relative paths "
+                    "is not supported!")
+                raise PipelineException(
+                    "Nested relative target path, not supported: {0}".format(
+                            input_path))
             return os.path.join(working_dir, input_path)
 
     def _validate_source_target_mapfile(self, source_map, target_map,
