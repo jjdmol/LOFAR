@@ -85,10 +85,15 @@ namespace LOFAR {
 # define INIT_LOGGER_AND_WATCH(filename,watchinterval) INIT_LOGGER(filename)
 #endif
 
-// Each new thread might need a partial reinitialisation in the logger
-#define LOGGER_NEWTHREAD()                      \
+// Each new thread might need a partial reinitialisation and destruction in the logger
+#define LOGGER_ENTER_THREAD()                   \
   do {                                          \
     ::LOFAR::initNDC();                         \
+  } while(0)  
+
+#define LOGGER_EXIT_THREAD()                    \
+  do {                                          \
+    ::LOFAR::destroyNDC();                      \
   } while(0)  
 
 //@}
@@ -458,6 +463,9 @@ inline LoggerReference&	getLogger() { return theirTraceLoggerRef; }
 
   // initialise a new NDC (required when creating a new thread)
   void initNDC();
+
+  // destroy an NDC (required when exiting a thread)
+  void destroyNDC();
 
   // Initialize Log4cplus. 
   // \param propFile Name of the properties file. A missing \c ".log_prop"
