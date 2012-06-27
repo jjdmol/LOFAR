@@ -67,7 +67,7 @@ void PreCorrelationNoChannelsFlagger::initFFT()
   itsFFTWforwardPlan =  fftwf_plan_dft_1d(itsFFTSize, (fftwf_complex *) &itsSamples[0], (fftwf_complex *) &itsFFTBuffer[0], FFTW_FORWARD, FFTW_MEASURE);
   itsFFTWbackwardPlan = fftwf_plan_dft_1d(itsFFTSize, (fftwf_complex *) &itsFFTBuffer[0], (fftwf_complex *) &itsSamples[0], FFTW_FORWARD, FFTW_MEASURE);
 #elif defined HAVE_FFTW2
-#error TODO // @@@ TODO
+// @@@ TODO
 //  itsFFTWforwardPlan  = fftw_create_plan_specific(itsFFTsize, FFTW_FORWARD,  FFTW_ESTIMATE | FFTW_USE_WISDOM, (fftw_complex *) &itsSamples[0], 2, (fftw_complex *) &itsFFTBuffer[0], 1);
 //  itsFFTWbackwardPlan = fftw_create_plan_specific(itsFFTsize, FFTW_BACKWARD, FFTW_ESTIMATE | FFTW_USE_WISDOM, (fftw_complex *) &itsFFTBuffer[0], 1, (fftw_complex *) &itsSamples[0], 2);
 #endif
@@ -79,7 +79,7 @@ void PreCorrelationNoChannelsFlagger::forwardFFT()
 #if defined HAVE_FFTW3
   fftwf_execute(itsFFTWforwardPlan);
 #elif defined HAVE_FFTW2
-  fftw(itsFFTWforwardPlan, 2, (fftw_complex *) data, 2, 1, (fftw_complex *) &itsFFTedBuffer[0][0], 1, itsFFTsize);
+//  fftw(itsFFTWforwardPlan, 2, (fftw_complex *) data, 2, 1, (fftw_complex *) &itsFFTedBuffer[0][0], 1, itsFFTsize);
 #endif
 }
 
@@ -89,7 +89,7 @@ void PreCorrelationNoChannelsFlagger::backwardFFT()
 #if defined HAVE_FFTW3
   fftwf_execute(itsFFTWbackwardPlan);
 #elif defined HAVE_FFTW2
-  fftw(itsFFTWbackwardPlan, 2, (fftw_complex *) &itsFFTedBuffer[0][0], 1, itsFFTsize, (fftw_complex *) data, 2, 1);
+//  fftw(itsFFTWbackwardPlan, 2, (fftw_complex *) &itsFFTedBuffer[0][0], 1, itsFFTsize, (fftw_complex *) data, 2, 1);
 #endif
 }
 
