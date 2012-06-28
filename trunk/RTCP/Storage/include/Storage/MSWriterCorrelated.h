@@ -1,4 +1,4 @@
-//  MSMriterNull.h: null implementation of MSWriter
+//  MSMriterCorrelated.h: a writer for correlated visibilities
 //
 //  Copyright (C) 2001
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,28 +23,26 @@
 //////////////////////////////////////////////////////////////////////
 
 
-#ifndef LOFAR_STORAGE_MSWRITERFILE_H
-#define LOFAR_STORAGE_MSWRITERFILE_H
+#ifndef LOFAR_STORAGE_MSWRITERCORRELATED_H
+#define LOFAR_STORAGE_MSWRITERCORRELATED_H
 
-
-#include <Storage/MSWriter.h>
-#include <Storage/FastFileStream.h>
-
+#include <Storage/MSWriterFile.h>
+#include <Interface/Parset.h>
 
 namespace LOFAR {
 namespace RTCP {
 
 
-class MSWriterFile : public MSWriter
+class MSWriterCorrelated : public MSWriterFile
 {
   public:
-    MSWriterFile(const string &msName);
-    ~MSWriterFile();
+    MSWriterCorrelated(const string &msName, const Parset &parset);
+    ~MSWriterCorrelated();
 
     virtual void write(StreamableData *data);
 
   protected:
-    FastFileStream	 itsFile;
+    const Parset &itsParset;
 };
 
 
