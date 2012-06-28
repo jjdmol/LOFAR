@@ -1,4 +1,4 @@
-OLAP.CNProc.integrationSteps		 = 12208
+OLAP.CNProc.integrationSteps		 = 12288
 OLAP.CNProc.phaseOnePsets		 = [0..4]
 OLAP.CNProc.phaseTwoPsets		 = [0..4]
 OLAP.CNProc.phaseThreePsets		 = [0..4]
@@ -9,11 +9,13 @@ OLAP.CNProc.tabList			 = []
 
 OLAP.CNProc.onlineFlagging               = F # enable or disable all online flagging
 
-OLAP.CNProc.onlinePreCorrelationFlagging = T
+OLAP.CNProc.onlinePreCorrelationNoChannelsFlagging = F
+
+OLAP.CNProc.onlinePreCorrelationFlagging = F
 #OLAP.CNProc.onlinePreCorrelationFlaggingType = INTEGRATED_THRESHOLD
 OLAP.CNProc.onlinePreCorrelationFlaggingType = INTEGRATED_SUM_THRESHOLD_2D_WITH_HISTORY # THRESHOLD, INTEGRATED_THRESHOLD, INTEGRATED_THRESHOLD_2D, SUM_THRESHOLD, INTEGRATED_SUM_THRESHOLD, INTEGRATED_SUM_THRESHOLD_WITH_HISTORY, INTEGRATED_SMOOTHED_SUM_THRESHOLD, INTEGRATED_SMOOTHED_SUM_THRESHOLD_WITH_HISTORY, INTEGRATED_SUM_THRESHOLD_2D, INTEGRATED_SUM_THRESHOLD_2D_WITH_HISTORY
 OLAP.CNProc.onlinePreCorrelationFlaggingStatisticsType = WINSORIZED  # NORMAL, WINSORIZED
-OLAP.CNProc.onlinePostCorrelationFlaggingIntegration = 763
+OLAP.CNProc.onlinePostCorrelationFlaggingIntegration = 768
 
 OLAP.CNProc.onlinePostCorrelationFlagging= F
 OLAP.CNProc.onlinePostCorrelationFlaggingType = SMOOTHED_SUM_THRESHOLD_WITH_HISTORY  # THRESHOLD, SUM_THRESHOLD, SMOOTHED_SUM_THRESHOLD, SMOOTHED_SUM_THRESHOLD_WITH_HISTORY
@@ -46,8 +48,8 @@ Observation.Beam[0].TiedArrayBeam[0].dispersionMeasure = 0
 OLAP.IONProc.integrationSteps		 = 1
 OLAP.CNProc_CoherentStokes.timeIntegrationFactor = 1
 OLAP.CNProc_IncoherentStokes.timeIntegrationFactor = 1
-OLAP.CNProc_CoherentStokes.channelsPerSubband = 16
-OLAP.CNProc_IncoherentStokes.channelsPerSubband = 16
+OLAP.CNProc_CoherentStokes.channelsPerSubband = 32
+OLAP.CNProc_IncoherentStokes.channelsPerSubband = 32
 #OLAP.CNProc_CoherentStokes.which	 = IQUV
 #OLAP.CNProc_IncoherentStokes.which	 = IQUV
 OLAP.CNProc_CoherentStokes.which	 = I
@@ -74,7 +76,7 @@ Observation.subbandList			 = [200..231]
 Observation.beamList			 = [32*0]
 Observation.rspBoardList		 = [32*0]
 Observation.rspSlotList		 	 = [0..31]
-Observation.channelsPerSubband		 = 16
+Observation.channelsPerSubband		 = 32
 Observation.sampleClock			 = 200
 Observation.nrSlotsInFrame		 = 32
 Observation.ObsID			 = 1000000

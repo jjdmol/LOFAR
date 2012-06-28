@@ -11,7 +11,7 @@ function stop() {
 }
 
 function getpid() {
-  STATUS=`bgpartstatus $PARTITION </dev/null`
+  STATUS=`cd /;bgpartstatus $PARTITION </dev/null`
 
   case $STATUS in
     busy) PID="UP [$PARTITION]"

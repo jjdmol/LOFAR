@@ -186,11 +186,11 @@ namespace LOFAR
       file.telescope().value = "LOFAR";
       file.observer() .value = "unknown";
 
-      file.projectID()     .value = parset.getString("Observation.Campaign.name");
-      file.projectTitle()  .value = parset.getString("Observation.Scheduler.taskName");
-      file.projectPI()     .value = parset.getString("Observation.Campaign.PI");
-      file.projectCOI()    .value = parset.getString("Observation.Campaign.CO_I");
-      file.projectContact().value = parset.getString("Observation.Campaign.contact");
+      file.projectID()     .value = parset.getString("Observation.Campaign.name", "");
+      file.projectTitle()  .value = parset.getString("Observation.Scheduler.taskName", "");
+      file.projectPI()     .value = parset.getString("Observation.Campaign.PI", "");
+      file.projectCOI()    .value = parset.getString("Observation.Campaign.CO_I", "");
+      file.projectContact().value = parset.getString("Observation.Campaign.contact", "");
 
       file.observationID() .value = str(format("%u") % parset.observationID());
 
@@ -318,13 +318,8 @@ namespace LOFAR
       beam.nofStations() .value = beamStationList.size();
       beam.stationsList().value = beamStationList;
 
-      // we don't support non-tracking at this point
-      beam.tracking().value     = true;
+      beam.tracking().value     = parset.getBeamDirectionType(sapNr);
 
-      //const char *trackingTypes[] = { "J2000", "LMN", "TBD" };
-      //writeAttribute(         beam, "TRACKING",      "J2000" ); // TODO: support non-tracking
-      // TODO: non-J2000 pointings
-      //ASSERT( parset.getBeamDirectionType() == "J2000" );
       BeamCoordinates pbeamDirs = parset.pencilBeams(sapNr);
       BeamCoord3D pbeamDir = pbeamDirs[beamNr];
       beam.pointRA()           .value = (beamDir[0] + pbeamDir[0]) * 180.0 / M_PI;

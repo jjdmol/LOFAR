@@ -167,6 +167,7 @@ class Parset: public ParameterSet
 
     bool                        onlineFlagging() const;
     bool                        onlinePreCorrelationFlagging() const;
+    bool                        onlinePreCorrelationNoChannelsFlagging() const;
     bool                        onlinePostCorrelationFlagging() const;
     bool                        onlinePostCorrelationFlaggingDetectBrokenStations() const;
     unsigned                    onlinePreCorrelationFlaggingIntegration() const;
@@ -778,6 +779,11 @@ inline bool Parset::onlineFlagging() const
 inline bool Parset::onlinePreCorrelationFlagging() const
 {
   return getBool("OLAP.CNProc.onlinePreCorrelationFlagging", false);
+}
+
+inline bool Parset::onlinePreCorrelationNoChannelsFlagging() const
+{
+  return getBool("OLAP.CNProc.onlinePreCorrelationNoChannelsFlagging", false);
 }
 
 inline bool Parset::onlinePostCorrelationFlagging() const
