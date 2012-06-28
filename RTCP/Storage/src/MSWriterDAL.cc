@@ -110,7 +110,7 @@ namespace LOFAR
 
     template <typename T,unsigned DIM> MSWriterDAL<T,DIM>::MSWriterDAL (const string &filename, const Parset &parset, unsigned fileno, bool isBigEndian)
     :
-      MSWriterFile(forceextension(string(filename),".raw"),false),
+      MSWriterFile(forceextension(string(filename),".raw")),
       itsTransposeLogic(parset.transposeLogic()),
       itsInfo(itsTransposeLogic.streamInfo[fileno]),
       itsNrChannels(itsInfo.nrChannels * itsInfo.subbands.size()),
