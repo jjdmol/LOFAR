@@ -96,7 +96,7 @@ class GainOutlierDetectionTest(unittest.TestCase):
         # then the new values should be added, with the correct values
         expected = ['addValues', ['Gain:pol1:Real:station',
                                   numpy.array([[1.], [1.]],),
-                        11, 11 + 12, 13, 13 + 2 * 14, False]] #stat + steps*size 
+                        11, 11 + 12, 13, 13 + 2 * 14, True]] #stat + steps*size 
 
         # Now scan the argument array: for numpy use special compare function
         for left, right in zip(parmdb.called_functions_and_parameters[1][1],
