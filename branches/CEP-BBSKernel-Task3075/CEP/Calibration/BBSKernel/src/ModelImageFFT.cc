@@ -959,7 +959,7 @@ void ModelImageFft::gridKernel(const std::vector<std::complex<float> >& data,
 
     for (int suppv=0; suppv<sSize; suppv++)
     {
-#ifdef USEBLAS
+#ifdef USE_CBLAS
       cblas_caxpy(sSize, &data[dind], &C[cind], 1, &grid[gind], 1);
 #else
       for (int suppu=0; suppu<sSize; suppu++)
@@ -1008,19 +1008,11 @@ void ModelImageFft::degridKernel( const std::vector<std::complex<float> >& grid,
 
     for (int suppv=0; suppv<sSize; suppv++)
     {
-#ifdef USEBLAS
+#ifdef USE_CBLAS
       std::complex<double>  dot;
       cblas_cdotu_sub(sSize, &grid[gind], 1, &C[cind], 1, &dot);
       data[dind]+=dot;
 #else
-      // DEBUG
-//      if(gind >= static_cast<int>(grid.size()))
-//      {
-//        cout << "sSize: " << sSize << "\tgind: " << gind  << "\tgrid.size(): " << grid.size() << "\tcind: " << cind << "\tC.size(): " << C.size() << endl;  // DEBUG
-//        cout << gind << "\t" << grid.size() << endl;  // DEBUG
-//      }
-      // DEBUG
-
       for (int suppu=0; suppu<sSize; suppu++)
       {
         data[dind]+=grid[gind+suppu]*C[cind+suppu];
