@@ -71,12 +71,9 @@ reqwidths=[2], times=[2], freqs=[1], timestep=[1]
     A sigma of 3 will leave it intact/unchanged
     
     """
-
     if len(sys.argv) < 4:
         print usage
         sys.exit()
-
-
 
     infile, outfile, sigma = sys.argv[1:4]
 

@@ -170,7 +170,7 @@ class msss_calibrator_pipeline(control):
         gvds_file = self.run_task("vdsmaker", data_mapfile)['gvds']
 
         # Read metadata (start, end times, pointing direction) from GVDS.
-        vdsinfo = self.run_task("vdsreader", gvds = gvds_file)
+        vdsinfo = self.run_task("vdsreader", gvds=gvds_file)
 
         # Create a parameter-subset for DPPP and write it to file.
         ndppp_parset = os.path.join(parset_dir, "NDPPP.parset")
@@ -179,16 +179,16 @@ class msss_calibrator_pipeline(control):
         # Run the Default Pre-Processing Pipeline (DPPP);
         dppp_mapfile = self.run_task("ndppp",
             data_mapfile,
-            data_start_time = vdsinfo['start_time'],
-            data_end_time = vdsinfo['end_time'],
-            parset = ndppp_parset
+            data_start_time=vdsinfo['start_time'],
+            data_end_time=vdsinfo['end_time'],
+            parset=ndppp_parset
         )['mapfile']
 
         # Demix the relevant A-team sources
         demix_mapfile = self.run_task("demixing", dppp_mapfile)['mapfile']
 
         # Do a second run of flagging, this time using rficonsole
-        self.run_task("rficonsole", demix_mapfile, indirect_read = True)
+        self.run_task("rficonsole", demix_mapfile, indirect_read=True)
 
         # Create an empty parmdb for DPPP
         parmdb_mapfile = self.run_task("parmdb", data_mapfile)['mapfile']
@@ -196,7 +196,7 @@ class msss_calibrator_pipeline(control):
         # Create a sourcedb based on sourcedb's input argument "skymodel"
         sourcedb_mapfile = self.run_task(
             "sourcedb", data_mapfile,
-            skymodel = os.path.join(
+            skymodel=os.path.join(
                 self.config.get('DEFAULT', 'lofarroot'),
                 'share', 'pipeline', 'skymodels',
                 py_parset.getString('Calibration.CalibratorSource') +
@@ -211,25 +211,24 @@ class msss_calibrator_pipeline(control):
         # Run BBS to calibrate the calibrator source(s).
         self.run_task("new_bbs",
             demix_mapfile,
-            parset = bbs_parset,
-            instrument_mapfile = parmdb_mapfile,
-            sky_mapfile = sourcedb_mapfile)
-        self.logger.info("*"*40)
-        self.logger.info(parmdb_mapfile)
-        self.logger.info("*"*40)
+            parset=bbs_parset,
+            instrument_mapfile=parmdb_mapfile,
+            sky_mapfile=sourcedb_mapfile)
 
         # Export the calibration solutions using gainoutliercorrection and store
         # the results in the files specified in the instrument mapfile.
-        self.run_task("gainoutliercorrection", (parmdb_mapfile, instrument_mapfile))
+        self.run_task("gainoutliercorrection",
+                      (parmdb_mapfile, instrument_mapfile),
+                      sigma=1.0)
 
         # Create a parset-file containing the metadata for MAC/SAS
         self.run_task("get_metadata", instrument_mapfile,
-            parset_file = self.parset_feedback_file,
-            parset_prefix = (
+            parset_file=self.parset_feedback_file,
+            parset_prefix=(
                 self.parset.getString('prefix') +
                 self.parset.fullModuleName('DataProducts')
             ),
-            product_type = "InstrumentModel")
+            product_type="InstrumentModel")
 
         # And now the dirtiest of all hacks. Copy the feedback file back to
         # the CCU001. Actually, MAC should pick up this file, but it doesn't

@@ -44,6 +44,12 @@ class GainOutlierCorrection(LOFARnodeTCP):
         # Create output directory (if it doesn't already exist)
         create_directory(os.path.dirname(outfile))
 
+        if sigma != None:
+            # Throws exception on failures
+            self._filter_stations_parmdb(infile, outfile, sigma)
+            return 0 #return 1 to allow rerunning of this script
+
+
         # Initialize environment
         env = read_initscript(self.logger, initscript)
 
@@ -66,13 +72,17 @@ class GainOutlierCorrection(LOFARnodeTCP):
         finally:
             shutil.rmtree(temp_dir)
 
-        #From here new parmdb implementation!!
-        self._filter_stations_parmdb(infile, outfile, sigma)
-        return 1 #return 1 to allow rerunning of this script
-
-
+        return 0
 
     def _filter_stations_parmdb(self, infile, outfile, sigma):
+        """
+        Performs a gain outlier correction of the infile parmdb with
+        the corrected parmdb written to outfile.
+        Outliers in the gain with a distance of median of sigma times std
+        are replaced with the mean. The last value of the complex array
+        is skipped (John Swinbank: "I found it was bad when I hacked"
+        " together some code to do this")
+        """
         sigma = float(sigma)
         # Create copy of the input file
         # delete target location
@@ -115,14 +125,15 @@ class GainOutlierCorrection(LOFARnodeTCP):
 
     def _read_polarisation_data_and_type_from_db(self, parmdb, station):
         all_matching_names = parmdb.getNames("Gain:*:*:*:{0}".format(station))
-
+        """
+        Read the polarisation data and type from the db.
+        """
         # get the polarisation_data eg: 1:1
         # This is based on the 1 trough 3th entry in the parmdb name entry
         pols = set(":".join(x[1:3]) for x in  (x.split(":") for x in all_matching_names))
 
         # Get the im or re name, eg: real. Sort for we need a known order
         type_pair = sorted(set(x[3] for x in  (x.split(":") for x in all_matching_names)))
-
 
         #Check if the retrieved types are valid
         sorted_valid_type_pairs = [sorted(RealImagArray.keys),
@@ -152,6 +163,11 @@ class GainOutlierCorrection(LOFARnodeTCP):
 
 
     def _swap_outliers_with_median(self, polarization_data, type_pair, sigma):
+        """
+        Perform the actual find and replace of the outliers
+        Calculation are perform with complex arithmatic therefore the
+        2d arrays are converted to complex value array of 1 d
+        """
         corrected_polarization_data = dict()
         for pol, data in polarization_data.iteritems():
             # Convert the raw data to the correct complex array type
@@ -176,6 +192,10 @@ class GainOutlierCorrection(LOFARnodeTCP):
         return corrected_polarization_data
 
     def _convert_data_to_ComplexArray(self, data, type_pair):
+        """
+        Performs a conversion of a 2d array to a 1d complex valued array.
+        with real/imag values or with amplitude phase values
+        """
         if sorted(type_pair) == sorted(RealImagArray.keys):
             # The type_pair is in alphabetical order: Imag on index 0
             complex_array = RealImagArray(data[1]["values"], data[0]["values"])
@@ -190,6 +210,9 @@ class GainOutlierCorrection(LOFARnodeTCP):
 
     def _write_corrected_data(self, parmdb, station, polarization_data,
                                corected_data):
+        """
+        Use pyparmdb to write (now corrected) data to the parmdb
+        """
         for pol, data in polarization_data.iteritems():
             if not pol in corected_data:
                 error_message = "Requested polarisation type is unknown:" \
@@ -209,7 +232,6 @@ class GainOutlierCorrection(LOFARnodeTCP):
                 #call the write function on the parmdb
                 parmdb.setValues(name, value, freqscale, freqstep, timescale,
                                  timestep)
-
 
 
 if __name__ == "__main__":

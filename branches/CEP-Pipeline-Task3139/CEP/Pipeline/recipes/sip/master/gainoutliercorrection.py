@@ -30,29 +30,34 @@ class gainoutliercorrection(BaseRecipe, RemoteCommandRecipeMixIn):
     A mapfile describing the data to be processed.
     """
     inputs = {
-        'executable': ingredient.ExecField(
+        'executable': ingredient.StringField(
             '--executable',
-            help = "Full path to the `parmexportcal` executable"
+            help="Full path to the `parmexportcal` executable"
         ),
         'initscript' : ingredient.FileField(
             '--initscript',
-            help = "The full path to an (Bourne) shell script which will "
+            help="The full path to an (Bourne) shell script which will "
                  "intialise the environment (i.e., ``lofarinit.sh``)"
         ),
         'suffix': ingredient.StringField(
             '--suffix',
-            help = "Suffix of the table name of the instrument model",
-            default = ".instrument"
+            help="Suffix of the table name of the instrument model",
+            default=".instrument"
         ),
         'working_directory': ingredient.StringField(
             '-w', '--working-directory',
-            help = "Working directory used on output nodes. "
+            help="Working directory used on output nodes. "
                  "Results will be written here."
         ),
         'mapfile': ingredient.StringField(
             '--mapfile',
-            help = "Full path of mapfile to produce; it will contain "
+            help="Full path of mapfile to produce; it will contain "
                  "a list of the generated instrument-model files"
+        ),
+        'sigma': ingredient.FloatField(
+            '--sigma',
+            default=None,
+            help="Clip at sigma * median: activates 'edit_parmdb' functionality"
         )
     }
 
@@ -63,6 +68,13 @@ class gainoutliercorrection(BaseRecipe, RemoteCommandRecipeMixIn):
 
     def go(self):
         self.logger.info("Starting gainoutliercorrection run")
+        #if sigma is none use default behaviour and use executable: test if
+        # It excists
+        if (sigma == None) and not os.access(executable, os.X_OK):
+            self.logger.error(
+                "the suplied parmexportcal excecutable is not found on the suplied"
+                "path: {0}".format(self.inputs['executable']))
+
         super(parmexportcal, self).go()
 
         #                            Load file <-> output node mapping from disk
@@ -97,11 +109,12 @@ class gainoutliercorrection(BaseRecipe, RemoteCommandRecipeMixIn):
                 ComputeJob(
                     host,
                     command,
-                    arguments = [
+                    arguments=[
                         infile,
                         outfile,
                         self.inputs['executable'],
-                        self.inputs['initscript']
+                        self.inputs['initscript'],
+                        self.inputs['sigma']
                      ]
                 )
             )
