@@ -947,7 +947,17 @@ void CEPlogProcessor::_processIONProcLine(const struct logline &logline)
 
 void CEPlogProcessor::_processCNProcLine(const struct logline &logline)
 { 
-  (void)logline;
+  char *result;
+
+  // CNProc@0000 13-02-12 12:13:44.823 WARN  [obs 1003431 phases 111] Station S17 subband 0 consists of only zeros.
+  if ((result = strstr(logline.msg, "consists of only zeros"))) {
+    int subband = 0;
+    vector<char> stationName(strlen(logline.msg));
+    if (sscanf(logline.msg, "Station %[^ ]s subband %d consists of only zeros", &stationName[0], &subband) == 2) {
+      LOG_DEBUG(formatString("[%s] Subband %d is zeros", &stationName[0], subband));
+    }
+    return;
+  }
 }
 
 void CEPlogProcessor::_processStorageLine(const struct logline &logline)

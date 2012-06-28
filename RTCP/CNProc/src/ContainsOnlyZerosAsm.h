@@ -1,7 +1,5 @@
-//# MSWriterFile: a raw file writer
+//#  ContainsOnlyZerosAsm.h: header files for CN assembly
 //#
-//#  Copyright (C) 2001
-//#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
@@ -18,38 +16,25 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  $Id: $
+//#  $Id: FFT_Asm.h 13808 2009-08-19 11:42:05Z romein $
 
-#include <lofar_config.h>
+#ifndef LOFAR_CNPROC_CONTAINSONLYZEROS_ASM_H
+#define LOFAR_CNPROC_CONTAINSONLYZEROS_ASM_H
 
-#include <Common/LofarLogger.h>
-#include <Storage/MSWriterFile.h>
-
-#include <sys/types.h>
-#include <fcntl.h>
+#if defined HAVE_BGP
+#include <Common/lofar_complex.h>
 
 namespace LOFAR {
 namespace RTCP {
 
+// ContainsOnlyZerosAsm.S implements containsOnlyZeros<T> with
+//   T = std::complex<short>
+//   T = std::complex<signed char>
+//   T = LOFAR::i4complex
+template <typename T> bool containsOnlyZeros(const T *samples, unsigned nrSamples);
 
-MSWriterFile::MSWriterFile (const string &msName)
-:
- itsFile(msName, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)
-{
+}
 }
 
-
-MSWriterFile::~MSWriterFile()
-{
-}
-
-
-void MSWriterFile::write(StreamableData *data)
-{
-  data->write(&itsFile, true, FastFileStream::alignment);
-}
-
-
-} // namespace RTCP
-} // namespace LOFAR
-
+#endif
+#endif
