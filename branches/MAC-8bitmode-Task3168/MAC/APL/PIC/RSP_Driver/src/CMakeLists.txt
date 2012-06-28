@@ -70,6 +70,9 @@ lofar_add_bin_program(RSPDriver
   GetDatastreamCmd.cc
   SetSwapxyCmd.cc
   GetSwapxyCmd.cc
+  SetBitModeCmd.cc
+  GetBitModeCmd.cc
+  UpdBitModeCmd.cc
   SyncAction.cc
   WriteReg.cc
   ReadReg.cc

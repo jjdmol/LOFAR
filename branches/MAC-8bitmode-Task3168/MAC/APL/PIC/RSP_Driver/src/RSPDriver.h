@@ -170,6 +170,11 @@ public:
 	
 	void rsp_setswapxy(GCFEvent& event, GCFPortInterface& port);
 	void rsp_getswapxy(GCFEvent& event, GCFPortInterface& port);
+	
+	void rsp_setBitMode(GCFEvent& event, GCFPortInterface &port);
+	void rsp_getBitMode(GCFEvent& event, GCFPortInterface &port);
+	void rsp_subBitMode(GCFEvent& event, GCFPortInterface &port);
+	void rsp_unsubBitMode(GCFEvent& event, GCFPortInterface &port);
 	/*@}*/
 
 private:

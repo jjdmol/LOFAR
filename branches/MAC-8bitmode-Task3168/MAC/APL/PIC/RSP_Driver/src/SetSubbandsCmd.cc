@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/LofarBitModeInfo.h>
 
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <APL/RTCCommon/PSAccess.h>
@@ -74,16 +75,16 @@ void SetSubbandsCmd::apply(CacheBuffer& cache, bool /*setModFlag*/)
 			if (m_event->rcumask[cache_rcu]) {
 				// NOTE: MEPHeader::N_BEAMLETS = 4x62 but userside MAX_BEAMLETS may be different
 				//       In other words: getSubbandSelection can contain more data than m_event->subbands
-				if (MEPHeader::N_BEAMLETS == MAX_BEAMLETS) {
+				if (MEPHeader::N_BEAMLETS == maxBeamlets(cache.getBitMode())) {
 					cache.getSubbandSelection()()(cache_rcu, dst_range) = 0;
 					cache.getSubbandSelection()()(cache_rcu, dst_range) = m_event->subbands()(0, Range::all()) * (int)N_POL + (cache_rcu % N_POL);
 				}
 				else {
 					int nr_subbands = m_event->subbands().extent(secondDim);
 					for (int rsp = 0; rsp < 4; rsp++) {
-						int	swstart(rsp*MAX_BEAMLETS_PER_RSP);
+						int	swstart(rsp*maxBeamletsPerRSP(cache.getBitMode()));
 						int hwstart(MEPHeader::N_LOCAL_XLETS + rsp * (MEPHeader::N_BEAMLETS/4));
-						int nrSubbands2move(MIN(nr_subbands-swstart, MAX_BEAMLETS_PER_RSP));
+						int nrSubbands2move(MIN(nr_subbands-swstart, maxBeamletsPerRSP(cache.getBitMode())));
 						if (nrSubbands2move > 0) {
 							dst_range = Range(hwstart, hwstart+nrSubbands2move-1);
 							src_range = Range(swstart, swstart+nrSubbands2move-1);

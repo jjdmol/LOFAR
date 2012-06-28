@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/LofarBitModeInfo.h>
 
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <APL/RTCCommon/PSAccess.h>
@@ -53,21 +54,21 @@ void GetWeightsCmd::ack(CacheBuffer& cache)
 
 	ack.timestamp = getTimestamp();
 	ack.status    = RSP_SUCCESS;
-	ack.weights().resize(BeamletWeights::SINGLE_TIMESTEP, m_event->rcumask.count(), MAX_BEAMLETS);	// 4 x 61
+	ack.weights().resize(BeamletWeights::SINGLE_TIMESTEP, m_event->rcumask.count(), maxBeamlets(cache.getBitMode()));	// 4 x 61
 
 	int result_rcu = 0;
 	for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++) {
 		if (m_event->rcumask[cache_rcu]) {
 			// NOTE: MEPHeader::N_BEAMLETS = 4x62 but userside MAX_BEAMLETS may be different
 			//       In other words: getBeamletWeights can contain more data than ack.weights
-			if (MEPHeader::N_BEAMLETS == MAX_BEAMLETS) {
+			if (MEPHeader::N_BEAMLETS == maxBeamlets(cache.getBitMode())) {
 				ack.weights()(0, result_rcu, Range::all()) = cache.getBeamletWeights()()(0, cache_rcu, Range::all());
 			}
 			else {
 				for (int rsp = 0; rsp < 4; rsp++) {
-					int	swstart(rsp*MAX_BEAMLETS_PER_RSP);
+					int	swstart(rsp*maxBeamletsPerRSP(cache.getBitMode()));
 					int hwstart(rsp*MEPHeader::N_BEAMLETS/4);
-					ack.weights()(0, result_rcu, Range(swstart,swstart+MAX_BEAMLETS_PER_RSP-1)) = cache.getBeamletWeights()()(0, cache_rcu, Range(hwstart, hwstart+MAX_BEAMLETS_PER_RSP-1));
+					ack.weights()(0, result_rcu, Range(swstart,swstart+maxBeamletsPerRSP(cache.getBitMode())-1)) = cache.getBeamletWeights()()(0, cache_rcu, Range(hwstart, hwstart+maxBeamletsPerRSP(cache.getBitMode())-1));
 				}
 			}
 			result_rcu++;

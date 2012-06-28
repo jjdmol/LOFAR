@@ -24,6 +24,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarConstants.h>
 #include <Common/lofar_bitset.h>
+#include <Common/LofarBitModeInfo.h>
 
 #include "StationSettings.h"
 #include "Cache.h"
@@ -156,7 +157,7 @@ void CacheBuffer::reset(void)
 		for (int rcu = 0; rcu < m_subbandselection().extent(firstDim); rcu++) {
 			for (int rsp = 0; rsp < 4; rsp++) {
 				int	start(rsp*(MEPHeader::N_BEAMLETS/4));
-				int stop (start+MAX_BEAMLETS_PER_RSP);
+				int stop (start + maxBeamletsPerRSP(itsBitMode));
 				if (rcu==0) LOG_DEBUG_STR("start=" << start << ", stop=" << stop);
 				for (int sb = start; sb < stop; sb++) {
 					m_subbandselection()(rcu, sb + MEPHeader::N_LOCAL_XLETS) = (rcu%N_POL) + (sb*N_POL) + (firstSubband*2);
@@ -274,6 +275,9 @@ void CacheBuffer::reset(void)
 	memset(&radlatencyinit, 0, sizeof(RADLatency));
 	itsLatencys() = radlatencyinit;
 	itsSwappedXY.reset();
+	
+	// BitMode
+	itsBitMode = 16;
 }
 
 

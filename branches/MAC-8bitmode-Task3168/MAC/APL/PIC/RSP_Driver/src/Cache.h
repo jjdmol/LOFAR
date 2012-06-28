@@ -89,6 +89,7 @@ public:
 	SerdesBuffer&			getSdsWriteBuffer() 	{ return (itsSdsWriteBuffer); }
 	SerdesBuffer&			getSdsReadBuffer(int rspBoardNr);
 	Latency&				getLatencys()			{ return (itsLatencys); }
+	
 		
 	bool isSplitterActive() { return(itsSplitterActive); }
 	void setSplitterActive(bool active) { itsSplitterActive = active; }
@@ -99,6 +100,9 @@ public:
     bool isSwappedXY(int antenna){ return (itsSwappedXY.test(antenna)); }
     void setSwappedXY(bitset<MAX_ANTENNAS> antennamask) { itsSwappedXY = antennamask; }
     bitset<MAX_ANTENNAS> getSwappedXY() { return(itsSwappedXY); }
+
+    uint16 getBitMode() { return (itsBitMode); }
+    void setBitMode(uint16 bitmode) { itsBitMode = bitmode; }
 
 	I2Cuser getI2Cuser() { return (itsI2Cuser); }
 	void setI2Cuser(I2Cuser user) { itsI2Cuser = user; }
@@ -152,7 +156,8 @@ private:
 	bool							itsCepEnabled1;
 	RSP_Protocol::Latency			itsLatencys;
 	bitset<MAX_ANTENNAS>            itsSwappedXY;
-	
+	uint16                          itsBitMode;
+	    
 	Cache* m_cache;		// pointer to container
 };
 

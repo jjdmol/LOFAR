@@ -26,6 +26,7 @@
 #include <Common/LofarLocators.h>
 #include <Common/ParameterSet.h>
 #include <Common/Version.h>
+#include <Common/LofarBitModeInfo.h>
 
 #include <ApplCommon/StationConfig.h>
 
@@ -95,6 +96,9 @@
 #include "GetDatastreamCmd.h"
 #include "SetSwapxyCmd.h"
 #include "GetSwapxyCmd.h"
+#include "SetBitModeCmd.h"
+#include "GetBitModeCmd.h"
+#include "UpdBitModeCmd.h"
 
 #include "RSUWrite.h"
 #include "BSWrite.h"
@@ -155,6 +159,8 @@
 
 #define ETHERTYPE_EPA 0x10FA
 #define PPS_FETCH_TIMEOUT { 3, 0 }
+#define bitsPerSample 16
+
 
 namespace LOFAR {
 	using namespace GCF::TM;
@@ -1038,6 +1044,10 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 		case RSP_GETDATASTREAM:         rsp_getDatastream(event,port);      break;
 		case RSP_SETSWAPXY:             rsp_setswapxy(event,port);          break;
 		case RSP_GETSWAPXY:             rsp_getswapxy(event,port);          break;
+		case RSP_SETBITMODE:			rsp_setBitMode(event,port);         break;
+		case RSP_GETBITMODE:			rsp_getBitMode(event,port);         break;
+		case RSP_SUBBITMODE:			rsp_subBitMode(event,port);         break;
+		case RSP_UNSUBBITMODE:			rsp_unsubBitMode(event,port);       break;
 
 		case F_TIMER: {
 		if (&port == &m_boardPorts[0]) {
@@ -1219,7 +1229,7 @@ void RSPDriver::rsp_setweights(GCFEvent& event, GCFPortInterface& port)
 	if ((sw_event->weights().dimensions() != BeamletWeights::NDIM)
 		|| (sw_event->weights().extent(firstDim) < 1)
 		|| (sw_event->weights().extent(secondDim) > StationSettings::instance()->nrRcus())
-		|| (sw_event->weights().extent(thirdDim) != MAX_BEAMLETS(16))) {
+		|| (sw_event->weights().extent(thirdDim) != maxBeamlets(bitsPerSample))) {
 		LOG_ERROR(formatString("SETWEIGHTS: invalid parameter,weighs-size=(%d,%d,%d)", 
 			sw_event->weights().extent(firstDim), 
 			sw_event->weights().extent(secondDim), 
@@ -2483,6 +2493,98 @@ void RSPDriver::rsp_getDatastream(GCFEvent& event, GCFPortInterface& port)
 	// command is ok, schedule it.
 	m_scheduler.enter(Ptr<Command>(&(*command)));
 }
+
+//
+// rsp_setBitMode(event, port)
+//
+void RSPDriver::rsp_setBitMode(GCFEvent& event, GCFPortInterface& port)
+{
+	Ptr<SetBitModeCmd> command = new SetBitModeCmd(event, port, Command::WRITE);
+
+	if (!command->validate()) {
+		LOG_ERROR("SetBitMode: invalid parameter");
+
+		RSPSetbitmodeackEvent ack;
+		ack.timestamp = Timestamp(0,0);
+		ack.status = RSP_FAILURE;
+		port.send(ack);
+		return;
+	}
+	// command is ok, schedule it.
+	m_scheduler.enter(Ptr<Command>(&(*command)));
+}
+
+//
+// rsp_getDatastream(event, port)
+//
+void RSPDriver::rsp_getBitMode(GCFEvent& event, GCFPortInterface& port)
+{
+	Ptr<GetBitModeCmd> command = new GetBitModeCmd(event, port, Command::READ);
+
+	if (!command->validate()) {
+		LOG_ERROR("GetBitMode: invalid parameter");
+
+		RSPGetbitmodeackEvent ack;
+		ack.timestamp = Timestamp(0,0);
+		ack.status = RSP_FAILURE;
+		port.send(ack);
+		return;
+	}
+	// command is ok, schedule it.
+	m_scheduler.enter(Ptr<Command>(&(*command)));
+}
+
+//
+// rsp_subSplitter(event, port)
+//
+void RSPDriver::rsp_subBitMode(GCFEvent& event, GCFPortInterface& port)
+{
+	// subscription is done by entering a UpdSplitterCmd in the periodic queue
+	Ptr<UpdBitModeCmd> command = new UpdBitModeCmd(event, port, Command::READ);
+	RSPSubBitmodeackEvent ack;
+
+	if (!command->validate()) {
+		LOG_ERROR("SUBBITMODE: invalid parameter");
+
+		ack.timestamp = m_scheduler.getCurrentTime();
+		ack.status = RSP_FAILURE;
+		ack.handle = 0;
+
+		port.send(ack);
+		return;
+	}
+	else {
+		ack.timestamp = m_scheduler.getCurrentTime();
+		ack.status = RSP_SUCCESS;
+		ack.handle = (memptr_t)&(*command);
+		port.send(ack);
+	}
+
+	m_scheduler.enter(Ptr<Command>(&(*command)), Scheduler::PERIODIC);
+}
+
+//
+// rsp_unsubBitMode(event, port)
+//
+void RSPDriver::rsp_unsubBitMode(GCFEvent& event, GCFPortInterface& port)
+{
+	RSPUnsubbitmodeEvent unsub(event);
+
+	RSPUnsubbitmodeackEvent ack;
+	ack.timestamp = m_scheduler.getCurrentTime();
+	ack.status = RSP_FAILURE;
+	ack.handle = unsub.handle;
+
+	if (m_scheduler.remove_subscription(port, unsub.handle) > 0) {
+		ack.status = RSP_SUCCESS;
+	}
+	else {
+		LOG_ERROR("UNSUBBITMODE: failed to remove subscription");
+	}
+
+	port.send(ack);
+}
+
 
 	} // namespace RSP
 } // namespace LOFAR
