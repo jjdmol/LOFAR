@@ -768,39 +768,28 @@ void ModelImageFft::computeICorr( const vector<complex<float> > &data,
 void ModelImageFft::computeICorr( const vector<complex<float> > &data, 
                                   DComplex *XX, DComplex *YY)
 {
-  /*
-  for(unsigned int i=0; i<data.size(); i++)
-  {
-    XX[i]=0.5*data[i];
-    //YY[i]=0.5*data[i];
-  }
-  memcpy(YY, XX, data.size()*sizeof(complex<float>));
-  */
-  /*
   for(unsigned int i=0; i<data.size(); i++)
   {
     XX[i]=data[i];
     YY[i]=data[i];
   }
-  */
-  memcpy(XX, &data, data.size()*sizeof(complex<float>));
-  memcpy(YY, &data, data.size()*sizeof(complex<float>));  
+  
+//  memcpy(XX, data, data.size()*sizeof(complex<float>));
+//  memcpy(YY, data, data.size()*sizeof(complex<float>));  
 }
 
 // Using data stored in pointers
 void ModelImageFft::computeICorr(const complex<float> *data, size_t nuvw,
                                  DComplex *XX, DComplex *YY)
 {
-  /*
+ 
   for(unsigned int i=0; i<nuvw; i++)
   {
-    XX[i]=0.5*data[i];
-    //YY[i]=0.5*data[i];
+    XX[i]=data[i];
+    YY[i]=data[i];
   }
-  memcpy(YY, XX, nuvw*sizeof(complex<float>));
-  */
-  memcpy(XX, &data, nuvw*sizeof(complex<float>));
-  memcpy(YY, &data, nuvw*sizeof(complex<float>));  
+//  memcpy(XX, &data, nuvw*sizeof(complex<float>));
+//  memcpy(YY, &data, nuvw*sizeof(complex<float>));  
 }
 
 /*
