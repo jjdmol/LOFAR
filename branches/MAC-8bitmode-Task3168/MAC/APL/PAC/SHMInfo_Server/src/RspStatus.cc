@@ -39,25 +39,25 @@ using namespace EPA_Protocol;
 
 namespace LOFAR {
   namespace SHM_Protocol {
-    unsigned int RspStatus::getSize()
+    size_t RspStatus::getSize() const
     {
-      return MSH_ARRAY_SIZE(m_board_status, EPA_Protocol::BoardStatus);
+      return MSH_size(m_board_status);
     }
     
-    unsigned int RspStatus::pack  (void* buffer)
+    size_t RspStatus::pack  (char* buffer) const
     {
-      unsigned int offset = 0;
+      size_t offset = 0;
       
-      MSH_PACK_ARRAY(buffer, offset, m_board_status, EPA_Protocol::BoardStatus);
+      MSH_pack(buffer, offset, m_board_status);
       
       return offset;
     }
     
-    unsigned int RspStatus::unpack(void *buffer)
+    size_t RspStatus::unpack(const char *buffer)
     {
-      unsigned int offset = 0;
+      size_t offset = 0;
       
-      MSH_UNPACK_ARRAY(buffer, offset, m_board_status, EPA_Protocol::BoardStatus, 1);
+      MSH_unpack(buffer, offset, m_board_status);
       
       return offset;
     }

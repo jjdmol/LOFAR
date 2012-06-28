@@ -27,7 +27,7 @@
 
 #include <APL/ICAL_Protocol/SpectralWindow.h>
 
-#include <MACIO/Marshalling.h>
+#include <MACIO/Marshalling.tcc>
 #include <APL/RTCCommon/MarshallBlitz.h>
 
 namespace LOFAR {
@@ -104,39 +104,39 @@ ostream& SpectralWindow::print(ostream& os) const
 //
 // ---------- pack and unpack functions ----------
 //
-unsigned int SpectralWindow::getSize() const
+size_t SpectralWindow::getSize() const
 {
-  return MSH_STRING_SIZE(itsName) +
+  return MSH_size(itsName) +
     sizeof(itsSamplingFreq) +
     sizeof(itsNyquistZone) +
     sizeof(itsLBAfilterOn);
 }
 
-unsigned int SpectralWindow::pack(void* buffer) const
+size_t SpectralWindow::pack(char* buffer) const
 {
-  unsigned int offset = 0;
+  size_t offset = 0;
 
-  MSH_PACK_STRING(buffer, offset, itsName);
-  memcpy(((char*)buffer) + offset, &itsSamplingFreq, sizeof(itsSamplingFreq));
+  MSH_pack(buffer, offset, itsName);
+  memcpy(buffer + offset, &itsSamplingFreq, sizeof(itsSamplingFreq));
   offset += sizeof(itsSamplingFreq);
-  memcpy(((char*)buffer) + offset, &itsNyquistZone, sizeof(itsNyquistZone));
+  memcpy(buffer + offset, &itsNyquistZone, sizeof(itsNyquistZone));
   offset += sizeof(itsNyquistZone);
-  memcpy(((char*)buffer) + offset, &itsLBAfilterOn, sizeof(itsLBAfilterOn));
+  memcpy(buffer + offset, &itsLBAfilterOn, sizeof(itsLBAfilterOn));
   offset += sizeof(itsLBAfilterOn);
 
   return offset;
 }
 
-unsigned int SpectralWindow::unpack(void* buffer)
+size_t SpectralWindow::unpack(const char* buffer)
 {
-  unsigned int offset = 0;
+  size_t offset = 0;
 
-  MSH_UNPACK_STRING(buffer, offset, itsName);
-  memcpy(&itsSamplingFreq, ((char*)buffer) + offset, sizeof(itsSamplingFreq));
+  MSH_unpack(buffer, offset, itsName);
+  memcpy(&itsSamplingFreq, buffer + offset, sizeof(itsSamplingFreq));
   offset += sizeof(itsSamplingFreq);
-  memcpy(&itsNyquistZone, ((char*)buffer) + offset, sizeof(itsNyquistZone));
+  memcpy(&itsNyquistZone, buffer + offset, sizeof(itsNyquistZone));
   offset += sizeof(itsNyquistZone);
-  memcpy(&itsLBAfilterOn, ((char*)buffer) + offset, sizeof(itsLBAfilterOn));
+  memcpy(&itsLBAfilterOn, buffer + offset, sizeof(itsLBAfilterOn));
   offset += sizeof(itsLBAfilterOn);
 
   return offset;

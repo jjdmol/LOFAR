@@ -32,25 +32,25 @@ using namespace blitz;
 namespace LOFAR {
   namespace SHM_Protocol {
 
-    unsigned int XCStatistics::getSize()
+    size_t XCStatistics::getSize() const
     {
-      return MSH_ARRAY_SIZE(m_xstatistics, complex<double>);
+      return MSH_size(m_xstatistics);
     }
     
-    unsigned int XCStatistics::pack  (void* buffer)
+    size_t XCStatistics::pack  (char* buffer) const
     {
-      unsigned int offset = 0;
+      size_t offset = 0;
       
-      MSH_PACK_ARRAY(buffer, offset, m_xstatistics, complex<double>);
+      MSH_pack(buffer, offset, m_xstatistics);
 
       return offset;
     }
     
-    unsigned int XCStatistics::unpack(void *buffer)
+    size_t XCStatistics::unpack(const char *buffer) 
     {
-      unsigned int offset = 0;
+      size_t offset = 0;
       
-      MSH_UNPACK_ARRAY(buffer, offset, m_xstatistics, complex<double>, 4);
+      MSH_unpack(buffer, offset, m_xstatistics);
       
       return offset;
     }

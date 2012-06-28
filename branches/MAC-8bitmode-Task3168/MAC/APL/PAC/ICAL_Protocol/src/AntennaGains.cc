@@ -68,29 +68,29 @@ AntennaGains* AntennaGains::clone() const
 	return (theClone);
 }
 
-unsigned int AntennaGains::getSize()
+size_t AntennaGains::getSize() const
 {
   return 
-      MSH_ARRAY_SIZE(m_gains, complex<double>)
-    + MSH_ARRAY_SIZE(m_quality, double);
+      MSH_size(m_gains)
+    + MSH_size(m_quality);
 }
 
-unsigned int AntennaGains::pack(void* buffer)
+size_t AntennaGains::pack(char* buffer) const
 {
-  unsigned int offset = 0;
+  size_t offset = 0;
 
-  MSH_PACK_ARRAY(buffer, offset, m_gains, complex<double>);
-  MSH_PACK_ARRAY(buffer, offset, m_quality, double);
+  MSH_pack(buffer, offset, m_gains);
+  MSH_pack(buffer, offset, m_quality);
 
   return offset;
 }
 
-unsigned int AntennaGains::unpack(void* buffer)
+size_t AntennaGains::unpack(const char* buffer)
 {
-  unsigned int offset = 0;
+  size_t offset = 0;
 
-  MSH_UNPACK_ARRAY(buffer, offset, m_gains, complex<double>, 2);
-  MSH_UNPACK_ARRAY(buffer, offset, m_quality, double, 2);
+  MSH_unpack(buffer, offset, m_gains);
+  MSH_unpack(buffer, offset, m_quality);
 
   return offset;
 }
