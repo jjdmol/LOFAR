@@ -35,20 +35,19 @@ class GainOutlierCorrection(LOFARnodeTCP):
                     "Instrument model file %s does not exist" % infile
                 )
                 return 1
-
-        # Check if executable exists and is executable.
-        if not os.access(executable, os.X_OK):
-            self.logger.error("Executable %s not found" % executable)
-            return 1
-
         # Create output directory (if it doesn't already exist)
         create_directory(os.path.dirname(outfile))
 
-        if sigma != None:
-            # Throws exception on failures
+        if not os.access(executable, os.X_OK) and sigma != None:
+            # If the executable is not accesable and we have a sigma:
+            # use the 'local' functionality (edit parmdb)
             self._filter_stations_parmdb(infile, outfile, sigma)
-            return 0 #return 1 to allow rerunning of this script
-
+            return 0
+        # else we need an executable
+        # Check if exists and is executable.
+        if not os.access(executable, os.X_OK):
+            self.logger.error("Executable %s not found" % executable)
+            return 1
 
         # Initialize environment
         env = read_initscript(self.logger, initscript)

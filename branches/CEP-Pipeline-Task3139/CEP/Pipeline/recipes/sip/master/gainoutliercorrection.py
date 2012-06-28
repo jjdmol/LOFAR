@@ -32,7 +32,9 @@ class gainoutliercorrection(BaseRecipe, RemoteCommandRecipeMixIn):
     inputs = {
         'executable': ingredient.StringField(
             '--executable',
-            help="Full path to the `parmexportcal` executable"
+            default="",
+            help="Full path to the `parmexportcal` executable, not settings this"
+            " results in edit_parmdb behaviour"
         ),
         'initscript' : ingredient.FileField(
             '--initscript',
@@ -56,7 +58,7 @@ class gainoutliercorrection(BaseRecipe, RemoteCommandRecipeMixIn):
         ),
         'sigma': ingredient.FloatField(
             '--sigma',
-            default=None,
+            default=2.0,
             help="Clip at sigma * median: activates 'edit_parmdb' functionality"
         )
     }
@@ -70,12 +72,16 @@ class gainoutliercorrection(BaseRecipe, RemoteCommandRecipeMixIn):
         self.logger.info("Starting gainoutliercorrection run")
         #if sigma is none use default behaviour and use executable: test if
         # It excists
-        if (sigma == None) and not os.access(executable, os.X_OK):
-            self.logger.error(
-                "the suplied parmexportcal excecutable is not found on the suplied"
+        executable = self.inputs['executable']
+        if executable == "":
+            pass
+        elif not os.access(executable, os.X_OK):
+            self.logger.warn(
+                "No parmexportcal excecutable is not found on the suplied"
                 "path: {0}".format(self.inputs['executable']))
+            self.logger.warn("Defaulting to edit_parmdb behaviour")
 
-        super(parmexportcal, self).go()
+        super(gainoutliercorrection, self).go()
 
         #                            Load file <-> output node mapping from disk
         # ----------------------------------------------------------------------
