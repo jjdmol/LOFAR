@@ -162,6 +162,7 @@ private:
 	uint32					itsHeartBeatTimer;
 
 	// ParameterSet variables
+	string					itsProcessType;
 	string					itsTreePrefix;
 	uint32					itsTreeID;
 	uint32					itsHeartBeatItv;
