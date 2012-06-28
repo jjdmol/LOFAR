@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project>
+<project 
+	xmlns="http://maven.apache.org/POM/4.0.0" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>nl.astron.lofar</groupId>
 	<artifactId>lofarutils</artifactId>
 	<name>Lofar Utils</name>
-	<version>1.0.0</version>
+	<version>1.0.2</version>
 
 	<organization>
 		<name>Astron</name>
@@ -13,14 +17,12 @@
 	</organization>
 
 	<properties>
-            <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-            <project.test.sourceEncoding>UTF-8</project.test.sourceEncoding>
-        </properties>
-        
-    	<build>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.test.sourceEncoding>UTF-8</project.test.sourceEncoding>
+	</properties>
 
+	<build>
 		<sourceDirectory>src</sourceDirectory>
-
 		<resources>
 			<resource>
 				<directory>src</directory>
@@ -41,17 +43,23 @@
 				</configuration>
 			</plugin>
 		</plugins>
-
 	</build>
 
 	<dependencies>
-
 		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
 			<version>1.2.16</version>
 		</dependency>
-
 	</dependencies>
+	
+	<distributionManagement>
+		<snapshotRepository>
+			<id>snapshots</id>
+			<name>Astron Nexus Repository</name>
+			<url>https://support.astron.nl/nexus/content/repositories/snapshots/</url>
+		</snapshotRepository>
+	</distributionManagement>
+        
 
 </project>

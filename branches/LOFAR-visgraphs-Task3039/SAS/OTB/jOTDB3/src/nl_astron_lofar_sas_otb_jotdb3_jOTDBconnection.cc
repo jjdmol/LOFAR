@@ -28,7 +28,14 @@
 #include <jni.h>
 #include <jOTDB3/nl_astron_lofar_sas_otb_jotdb3_jCommon.h>
 #include <jOTDB3/nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection.h>
+#include <OTDB/Campaign.h>
+#include <OTDB/ClassifConv.h>
 #include <OTDB/OTDBconnection.h>
+#include <OTDB/ParamTypeConv.h>
+#include <OTDB/TreeMaintenance.h>
+#include <OTDB/TreeStateConv.h>
+#include <OTDB/TreeTypeConv.h>
+#include <OTDB/UnitConv.h>
 #include <boost/date_time/posix_time/ptime.hpp>
 #include <boost/date_time/posix_time/time_formatters.hpp>
 #include <string>
@@ -36,6 +43,7 @@
 
 
 using namespace boost::posix_time;
+using namespace LOFAR;
 using namespace LOFAR::OTDB;
 using namespace std;
 
@@ -54,6 +62,8 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_initO
   const string p (pass);
   const string d (db);
   const string h (hn);
+  const char* n;
+  jstring str;
 
   try {
     OTDBconnection* aPtr = new OTDBconnection(u, p, d, h);
@@ -66,13 +76,14 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_initO
     jfieldID fid_jOTDBconn_name = env->GetFieldID (class_jOTDBconn, "itsName", "Ljava/lang/String;");
     
     // itsName
-    jstring str = (jstring)env->GetObjectField (jOTDBconnection, fid_jOTDBconn_name);
+    str = (jstring)env->GetObjectField (jOTDBconnection, fid_jOTDBconn_name);
     jboolean isCopy;
-    const char* n = env->GetStringUTFChars (str, &isCopy);
+    n = env->GetStringUTFChars (str, &isCopy);
     const string name (n);
 
     std::map<std::string,void *>::iterator iter;    
 
+    theirC_ObjectMap.erase(name+"_OTDBconnection");
     theirC_ObjectMap[name+"_OTDBconnection"]=(void *)aPtr;
 
     LOG_DEBUG("after connect: theirC_ObjectMap contains: ");
@@ -93,6 +104,7 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_initO
     env->ReleaseStringUTFChars(passwd, pass);
     env->ReleaseStringUTFChars(database, db);
     env->ReleaseStringUTFChars(hostname, hn);
+    env->ReleaseStringUTFChars(str, n);
     env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
   }
 }
@@ -124,7 +136,8 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_c
 }
 
 JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_disconnect(JNIEnv *env, jobject jOTDBconnection) {
-
+    jstring str;
+    const char* n;
   try {
     std::map<std::string,void *>::iterator iter;
 
@@ -134,10 +147,11 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_disco
     jfieldID fid_jOTDBconn_name = env->GetFieldID (class_jOTDBconn, "itsName", "Ljava/lang/String;");
     
     // itsName
-    jstring str = (jstring)env->GetObjectField (jOTDBconnection, fid_jOTDBconn_name);
+    str = (jstring)env->GetObjectField (jOTDBconnection, fid_jOTDBconn_name);
     jboolean isCopy;
-    const char* n = env->GetStringUTFChars (str, &isCopy);
+    n = env->GetStringUTFChars (str, &isCopy);
     const string name (n);
+    env->ReleaseStringUTFChars(str, n);
 
     bool found = false;
     std::map<std::string,void *>::iterator itr;
@@ -151,6 +165,39 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_disco
             if (!found) found=true;
             std::map<std::string,void *>::iterator tmpitr = itr;
             itr++;
+            // free memory
+            vector<string> spl = StringUtil::split(tmpitr->first,'_');
+            int cnt = spl.size();
+            string objectclass = spl[cnt-1];
+            bool flag = false;
+            if (objectclass=="Campaign") {
+                delete (Campaign*)(tmpitr->second);
+                flag = true;
+            } else if (objectclass=="ClassifConv") {
+                delete (ClassifConv*)(tmpitr->second);
+                flag = true;
+            } else if (objectclass=="OTDBconnection") {
+                delete (OTDBconnection*)(tmpitr->second);
+                flag = true;
+            } else if (objectclass=="ParamTypeConv") {
+                delete (ParamTypeConv*)(tmpitr->second);
+                flag = true;
+            } else if (objectclass=="TreeMaintenance") {
+                delete (TreeMaintenance*)(tmpitr->second);
+                flag = true;
+            } else if (objectclass=="TreeStateConv") {
+                delete (TreeStateConv*)(tmpitr->second);
+                flag = true;
+            } else if (objectclass=="TreeTypeConv") {
+                delete (TreeTypeConv*)(tmpitr->second);
+                flag = true;
+            } else if (objectclass=="UnitConv") {
+                delete (UnitConv*)(tmpitr->second);
+                flag = true;
+            }
+            if (!flag) {
+                LOG_ERROR_STR(itr->first << " Failed to free memory");
+            }
             theirC_ObjectMap.erase(tmpitr);
         } else {
             itr++;
@@ -167,7 +214,7 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jOTDBconnection_disco
 
   } catch (exception &ex) {
     cout << "Exception during OTDBconnection::disconnect "<< ex.what() << endl;
-    
+    env->ReleaseStringUTFChars(str, n);
     env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
   }
 

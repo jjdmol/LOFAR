@@ -47,6 +47,8 @@ string getOwnerExt(JNIEnv *env, jobject anObject) {
   jboolean isCopy;
   const char* n = env->GetStringUTFChars (str, &isCopy);
   const string name (n);
+  // free
+  env->ReleaseStringUTFChars (str, n);
   return name;
 }
 

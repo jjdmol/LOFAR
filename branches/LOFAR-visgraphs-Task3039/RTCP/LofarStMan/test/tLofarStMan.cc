@@ -365,12 +365,12 @@ void checkUVW (uInt row, uInt nant, Vector<Double> uvw)
   uInt nrbl = nant*nant;
   uInt seqnr = row / nrbl;
   uInt bl = row % nrbl;
-  uInt ant1 = bl / nant;
-  uInt ant2 = bl % nant;
+  uInt ant1 = bl % nant;
+  uInt ant2 = bl / nant;
   // Only check first two time stamps and first four antennae.
   if (seqnr < 2  &&  ant1 < 4  &&  ant2 < 4) {
     AlwaysAssertExit (near(uvw[0],
-                           uvwVals[3*(seqnr*16 + 4*ant2 + ant1)],
+                           uvwVals[3*(seqnr*16 + 4*ant1 + ant2)],
                            1e-5))
   }
 }

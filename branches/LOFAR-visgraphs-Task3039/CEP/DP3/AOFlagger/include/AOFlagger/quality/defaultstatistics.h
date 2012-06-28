@@ -101,6 +101,25 @@ class DefaultStatistics : public Serializable
 			return *this;
 		}
 		
+		DefaultStatistics ToSinglePolarization() const
+		{
+			if(_polarizationCount == 1)
+				return *this;
+			
+			DefaultStatistics singlePol(1);
+			for(unsigned p=0;p<_polarizationCount;++p)
+			{
+				singlePol.rfiCount[0] += rfiCount[p];
+				singlePol.count[0] += count[p];
+				singlePol.sum[0] += sum[p];
+				singlePol.sumP2[0] += sumP2[p];
+				singlePol.dCount[0] += dCount[p];
+				singlePol.dSum[0] += dSum[p];
+				singlePol.dSumP2[0] += dSumP2[p];
+			}
+			return singlePol;
+		}
+		
 		virtual void Serialize(std::ostream &stream) const
 		{
 			SerializeToUInt32(stream, _polarizationCount);

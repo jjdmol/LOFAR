@@ -158,17 +158,17 @@ void RFIPlots::MakePowerTimePlot(Plot2DPointSet &pointSet, Image2DCPtr image, Ma
 	}
 }
 
-void RFIPlots::MakeComplexPlanePlot(class Plot &plot, const TimeFrequencyData &data, size_t xStart, size_t length, size_t y, size_t yAvgSize, Mask2DCPtr mask, bool realVersusImaginary, bool drawImaginary)
+void RFIPlots::MakeComplexPlanePlot(Plot2DPointSet &pointSet, const TimeFrequencyData &data, size_t xStart, size_t length, size_t y, size_t yAvgSize, Mask2DCPtr mask, bool realVersusImaginary, bool drawImaginary)
 {
 
 	if(realVersusImaginary)
 	{
-		plot.SetXAxisText("real");
-		plot.SetYAxisText("imaginary");
+		pointSet.SetXDesc("real");
+		pointSet.SetYDesc("imaginary");
 	} else {
-		plot.SetXRange(xStart, xStart+length-1);
-		plot.SetXAxisText("time");
-		plot.SetYAxisText("real/imaginary visibility");
+		//pointSet.SetXRange(xStart, xStart+length-1);
+		pointSet.SetXDesc("time");
+		pointSet.SetYDesc("real/imaginary visibility");
 	}
 
 	Image2DCPtr real = data.GetRealPart();
@@ -186,24 +186,24 @@ void RFIPlots::MakeComplexPlanePlot(class Plot &plot, const TimeFrequencyData &d
 			}
 		}
 		if(realVersusImaginary)
-			plot.PushDataPoint(r, i);
+			pointSet.PushDataPoint(r, i);
 		else if(drawImaginary)
-			plot.PushDataPoint(x, i);
+			pointSet.PushDataPoint(x, i);
 		else
-			plot.PushDataPoint(x, r);
+			pointSet.PushDataPoint(x, r);
 	}
 }
 
-void RFIPlots::MakeFittedComplexPlot(class Plot &plot, const TimeFrequencyData &data, size_t xStart, size_t length, size_t y, size_t yAvgSize, Mask2DCPtr mask, num_t frequency, bool realVersusImaginary, bool drawImaginary)
+void RFIPlots::MakeFittedComplexPlot(Plot2DPointSet &pointSet, const TimeFrequencyData &data, size_t xStart, size_t length, size_t y, size_t yAvgSize, Mask2DCPtr mask, num_t frequency, bool realVersusImaginary, bool drawImaginary)
 {
 	if(realVersusImaginary)
 	{
-		plot.SetXAxisText("real");
-		plot.SetYAxisText("imaginary");
+		pointSet.SetXDesc("real");
+		pointSet.SetYDesc("imaginary");
 	} else {
-		plot.SetXRange(xStart, xStart+length-1);
-		plot.SetXAxisText("time");
-		plot.SetYAxisText("real/imaginary visibility");
+		//plot.SetXRange(xStart, xStart+length-1);
+		pointSet.SetXDesc("time");
+		pointSet.SetYDesc("real/imaginary visibility");
 	}
 	Image2DCPtr real = data.GetRealPart();
 	Image2DCPtr imaginary = data.GetImaginaryPart();
@@ -257,14 +257,14 @@ void RFIPlots::MakeFittedComplexPlot(class Plot &plot, const TimeFrequencyData &
 	for(size_t x=xStart;x<xStart + length;++x)
 	{
 		if(realVersusImaginary)
-			plot.PushDataPoint(
+			pointSet.PushDataPoint(
 				cosn(frequency*twopi*(long double) x + realPhase) * realAmplitude + realMean,
 				cosn(frequency*twopi*(long double) x + imagPhase) * imagAmplitude + imagMean);
 		else if(drawImaginary)
-			plot.PushDataPoint(x,
+			pointSet.PushDataPoint(x,
 				cosn(frequency*twopi*(long double) x + imagPhase) * imagAmplitude + imagMean);
 		else
-			plot.PushDataPoint(x,
+			pointSet.PushDataPoint(x,
 				cosn(frequency*twopi*(long double) x + realPhase) * realAmplitude + realMean);
 	}
 

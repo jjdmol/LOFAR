@@ -18,19 +18,21 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#include <AOFlagger/gui/quality/aoqplotwindow.h>
+
 #include <limits>
 
+#include <gtkmm/main.h>
 #include <gtkmm/messagedialog.h>
-
-#include <AOFlagger/gui/quality/aoqplotwindow.h>
 
 #include <AOFlagger/msio/measurementset.h>
 
+#include <AOFlagger/quality/histogramtablesformatter.h>
+#include <AOFlagger/quality/histogramcollection.h>
 #include <AOFlagger/quality/statisticscollection.h>
 
 #include <AOFlagger/remote/clusteredobservation.h>
 #include <AOFlagger/remote/processcommander.h>
-#include <gtkmm/main.h>
 
 AOQPlotWindow::AOQPlotWindow() :
 	_isOpen(false)
@@ -59,6 +61,8 @@ AOQPlotWindow::AOQPlotWindow() :
 	_notebook.append_page(_summaryPage, "Summary");
 	_summaryPage.show();
 	
+	_notebook.append_page(_histogramPage, "Histograms");
+	
 	_vBox.pack_start(_notebook);
 	_notebook.signal_switch_page().connect(sigc::mem_fun(*this, &AOQPlotWindow::onSwitchPage));
 	_notebook.show();
@@ -79,10 +83,10 @@ void AOQPlotWindow::Open(const std::string &filename)
 	_openOptionsWindow.ShowForFile(filename);
 }
 
-void AOQPlotWindow::onOpenOptionsSelected(std::string filename, bool downsampleTime, bool downsampleFreq, size_t timeCount, size_t freqCount)
+void AOQPlotWindow::onOpenOptionsSelected(std::string filename, bool downsampleTime, bool downsampleFreq, size_t timeCount, size_t freqCount, bool correctHistograms)
 {
 	_filename = filename;
-	readStatistics(downsampleTime, downsampleFreq, timeCount, freqCount);
+	readStatistics(downsampleTime, downsampleFreq, timeCount, freqCount, correctHistograms);
 	_baselinePlotPage.SetStatistics(_statCollection, _antennas);
 	_antennaePlotPage.SetStatistics(_statCollection, _antennas);
 	_bLengthPlotPage.SetStatistics(_statCollection, _antennas);
@@ -90,6 +94,8 @@ void AOQPlotWindow::onOpenOptionsSelected(std::string filename, bool downsampleT
 	_frequencyPlotPage.SetStatistics(_statCollection, _antennas);
 	_timeFrequencyPlotPage.SetStatistics(_fullStats);
 	_summaryPage.SetStatistics(_statCollection);
+	if(_histogramPage.is_visible())
+		_histogramPage.SetStatistics(*_histCollection);
 	show();
 }
 
@@ -104,14 +110,15 @@ void AOQPlotWindow::close()
 		_frequencyPlotPage.CloseStatistics();
 		_timeFrequencyPlotPage.CloseStatistics();
 		_summaryPage.CloseStatistics();
+		_histogramPage.CloseStatistics();
 		delete _statCollection;
+		delete _histCollection;
 		delete _fullStats;
 		_isOpen = false;
-		
 	}
 }
 
-void AOQPlotWindow::readStatistics(bool downsampleTime, bool downsampleFreq, size_t timeSize, size_t freqSize)
+void AOQPlotWindow::readStatistics(bool downsampleTime, bool downsampleFreq, size_t timeSize, size_t freqSize, bool correctHistograms)
 {
 	close();
 	
@@ -119,9 +126,11 @@ void AOQPlotWindow::readStatistics(bool downsampleTime, bool downsampleFreq, siz
 	{
 		aoRemote::ClusteredObservation *observation = aoRemote::ClusteredObservation::Load(_filename);
 		_statCollection = new StatisticsCollection();
+		_histCollection = new HistogramCollection();
 		aoRemote::ProcessCommander commander(*observation);
+		commander.SetCorrectHistograms(correctHistograms);
 		commander.PushReadAntennaTablesTask();
-		commander.PushReadQualityTablesTask(_statCollection);
+		commander.PushReadQualityTablesTask(_statCollection, _histCollection);
 		commander.Run();
 		if(!commander.Errors().empty())
 		{
@@ -155,10 +164,18 @@ void AOQPlotWindow::readStatistics(bool downsampleTime, bool downsampleFreq, siz
 			_antennas.push_back(ms->GetAntennaInfo(a));
 		delete ms;
 
-		QualityTablesFormatter formatter(_filename);
+		QualityTablesFormatter qualityTables(_filename);
 		_statCollection = new StatisticsCollection(polarizationCount);
-		_statCollection->Load(formatter);
+		_statCollection->Load(qualityTables);
+		
+		HistogramTablesFormatter histogramTables(_filename);
+		_histCollection = new HistogramCollection(polarizationCount);
+		if(histogramTables.HistogramsExist())
+		{
+			_histCollection->Load(histogramTables);
+		}
 	}
+	setShowHistograms(!_histCollection->Empty());
 	if(downsampleTime)
 	{
 		std::cout << "Lowering time resolution..." << std::endl;

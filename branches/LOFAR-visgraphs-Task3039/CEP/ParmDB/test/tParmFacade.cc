@@ -96,32 +96,82 @@ void showValues (ParmFacade& acc, const string& pattern, int nf, int nt)
   cout << ">end<" << endl;
 }
 
+void createPDB (const string& name)
+{
+    Matrix<Double> vald(2,1);
+    Record recd, recds, recs;
+  {
+    // Create a new local ParmDB.
+    ParmFacade acc(name, true);
+    vald(0,0) = 3.;
+    vald(1,0) = 1.;
+    recds.define ("value", vald);
+    recd.defineRecord ("parmdef", recds);
+    acc.addDefValues (recd);
+    Record rec1;
+    recs.define ("freqs",      Vector<Double>(1,1.));
+    recs.define ("freqwidths", Vector<Double>(1,3.));
+    recs.define ("times",      Vector<Double>(1,5.));
+    recs.define ("timewidths", Vector<Double>(1,5.));
+    recs.define ("values",     Matrix<Double>(1,1,2.));
+    rec1.defineRecord ("parm1", recs);
+    acc.addValues (rec1);
+  }
+  {
+    // Open the new local ParmDB.
+    ParmFacade acc(name);
+    recs.removeField ("values");
+    vald(0,0) = 2;
+    vald(1,0) = 0.1;
+    recs.define ("values", vald);
+    recs.define ("type", "polc");
+    Record rec2;
+    rec2.defineRecord ("parm2", recs);
+    acc.addValues (rec2);
+  }
+}
+
+void showhelp()
+{
+  cerr << "Run as: tParmFacade [-c] parmtable [pattern nf nt]" << endl;
+  cerr << "    -c  create a new local ParmDB" << endl;
+}
+
 int main (int argc, const char* argv[])
 {
   try {
-    if (argc < 2) {
-      cerr << "Run as: tParmFacade parmtable [pattern nf nt]"
-	   << endl;
+    int  starg  = 1;
+    bool create = false;
+    if (argc > 1  &&  String(argv[1]) == "-c") {
+      starg  = 2;
+      create = true;
+    }
+    if (argc < starg+1) {
+      showhelp();
       return 1;
     }
     string pattern ="*";
     int nf = 4;
     int nt = 2;
-    if (argc > 2) {
-      pattern = argv[2];
+    if (argc > starg+1) {
+      pattern = argv[starg+1];
     }
-    if (argc > 3) {
-      istringstream istr(argv[3]);
+    if (argc > starg+2) {
+      istringstream istr(argv[starg+2]);
       istr >> nf;
       if (nf <= 0) nf = 1;
     }
-    if (argc > 4) {
-      istringstream istr(argv[4]);
+    if (argc > starg+3) {
+      istringstream istr(argv[starg+3]);
       istr >> nt;
       if (nt <= 0) nt = 1;
     }
+    // If needed, create the ParmTable using ParmFacade.
+    if (create) {
+      createPDB (argv[starg]);
+    }
     // Open the facade.
-    ParmFacade acc(argv[1]);
+    ParmFacade acc(argv[starg]);
     // Get values.
     showValues (acc, pattern, nf, nt);
     // Get default values.

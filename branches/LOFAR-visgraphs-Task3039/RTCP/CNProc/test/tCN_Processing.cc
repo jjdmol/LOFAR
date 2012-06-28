@@ -231,6 +231,7 @@ template <typename SAMPLE_TYPE> void doWork()
   parset.add("OLAP.storageStationNames",             stationNames);
   parset.add("Observation.beamList",                 "[0]");
   parset.add("Observation.Beam[0].nrTiedArrayBeams", "0");
+  parset.add("OLAP.CNProc.tabList",                  "[]");
 
   BeamFormer beamFormer(parset);
 
@@ -260,8 +261,10 @@ template <typename SAMPLE_TYPE> void doWork()
     ppf.doWork(stat, centerFrequency, &metaData, &transposedData, &filteredData);
     ppfTimer.stop();
 
-    if (filteredData.flags[stat].count() != 0)
-      std::cout << "flags of station " << stat << ": " << filteredData.flags[stat] << std::endl;
+    for(unsigned ch = 0; ch < nrChannels; ch++) {
+      if (filteredData.flags[stat][ch].count() != 0)
+	std::cout << "flags of station " << stat << " channel " << ch << ": " << filteredData.flags[stat][ch] << std::endl;
+    }
   }
 
   beamFormer.mergeStations(&filteredData);

@@ -3,14 +3,13 @@
 from Partitions import PartitionPsets
 import os
 import sys
-from Locations import Locations
 
 # allow ../util to be found, a bit of a hack
 sys.path += [(os.path.dirname(__file__) or ".")+"/.."]
 
 from util.Commands import backquote
 
-__all__ = ["packetAnalysis","stationInPartition","Stations","overrideRack"]
+__all__ = ["packetAnalysis","Stations","overrideRack"]
 
 def overrideRack( stations, rack ):
   """ Set the rack that will be used (0,1,2) for all stations provided. """
@@ -20,26 +19,13 @@ def overrideRack( stations, rack ):
   for s in stations:
     for t in stations[s]:
       octets = t.ionode.split(".")
-      t.ionode = "%s.%s.%s.%s" % (octets[0],octets[1],rack,octets[3])
+      if octets[0] == "10" and octets[1] == "170": # only process stations connected to BG/P
+        t.ionode = "%s.%s.%s.%s" % (octets[0],octets[1],rack,octets[3])
 
 def packetAnalysis( name, ip, port ):
-  # locate packetanalysis binary, since its location differs per usage, mainly because
-  # nobody runs these scripts from an installed environment
-  locations = map( os.path.abspath, [
-    "%s/../packetanalysis"    % os.path.dirname(__file__), # when running straight from a source tree
-    "%s/../../packetanalysis" % os.path.dirname(__file__), # when running in an installed environment
-    "%s/../../build/gnu/src/packetanalysis" % os.path.dirname(__file__), # when running straight from a source tree
+  location = os.popen("which packetanalysis").read().strip()
 
-    "/globalhome/mol/projects/LOFAR/RTCP/Run/src/packetanalysis", # fallback: Jan David's version
-  ] )
-  
-  location = None
-  for l in locations:
-    if os.path.exists( l ):
-      location = l
-      break
-
-  if location is None:
+  if not location or "no packetanalysis in" in location:
     return "ERROR: Could not find `packetanalysis' binary"
 
   mainAnalysis = backquote( "ssh -tq %s %s %s" % (ip,location,port), 5)
@@ -116,22 +102,6 @@ def allInputs( station ):
       if ip in ["0.0.0.0","0"]:
         ip = ionode
       yield (name,ip,port)
-
-def stationInPartition( station, partition ):
-  """ Returns a list of stations that are not received within the given partition.
-  
-      Returns (True,[]) if the station is received correctly.
-      Returns (False,missingInputs) if some inputs are missing, where missingInputs is a list of (name,ip:port) pairs.
-  """
-
-  notfound = []
-
-  for name,ip,port in allInputs( station ):  
-    if ip not in PartitionPsets[partition]:
-      notfound.append( (name,"%s:%s" % (ip,port)) )
-    
-  return (not notfound, notfound)	
-
 
 class UnknownStationError(StandardError):
     pass
@@ -210,9 +180,8 @@ def defineStations( s ):
     "RSP_1": ["HBA1"],
   }
 
-  # TODO: reolsve only after Locations.files have been finalised
-  # adter processing command-line parameters
-  configdir = Locations.resolvePath( Locations.files["configdir"] )
+  lofarroot = os.environ["LOFARROOT"] or "/opt/lofar"
+  configdir = "%s/etc" % (lofarroot,)
 
   # parse hostname <-> ip translation, since not all hostnames
   # are ionodes (foreign stations send to a router)
@@ -292,9 +261,6 @@ def defineStations( s ):
 
   # Special stations, one-time stations, etc.
   s.update( {
-   "Pulsar": [Station('Pulsar', '10.170.0.30', ['0.0.0.0:4346'])],
-   "twoears":  [Station('CS302HBA0', '10.170.0.133', ['0.0.0.0:4346']),
-                Station('CS302HBA1', '10.170.0.134', ['0.0.0.0:4347'])],
   } )
 
   # Standard configurations
@@ -328,6 +294,11 @@ if __name__ == "__main__":
 			action = "store_true",
 			default = False,
   			help = "check whether the station provide correct data" )
+  parser.add_option( "-a", "--analyze",
+  			dest = "analyze",
+			action = "store_true",
+			default = False,
+  			help = "run datarate analyzer (assumes 200 MHz clock, 61 subbands, 16 beamlets)" )
   parser.add_option( "-l", "--list",
   			dest = "list",
 			action = "store_true",
@@ -346,7 +317,8 @@ if __name__ == "__main__":
     parser.print_help()
     sys.exit(0)
 
-  overrideRack( Stations, int(options.partition[2]) )
+  if options.partition != "R00R01":
+    overrideRack( Stations, int(options.partition[2]) )
 
   for stationName in args:
     # print the inputs of a single station
@@ -367,5 +339,10 @@ if __name__ == "__main__":
       for name,ip,port in allInputs( Stations[stationName] ):
         print "---- Packet analysis for %s %s:%s" % (name,ip,port)
         print packetAnalysis( name, ip, port )
+
+    if options.analyze:
+      # ssh 10.170.0.182 "echo 0.0.0.0:4346 0.0.0.0:4347 0.0.0.0:4348 0.0.0.0:4349 | xargs -n 1 -P 4 `which analyzer`" 2>&1 | awk '{ print "DE602LBA ",$0; }'
+      s = Stations[stationName][0]
+      os.system('ssh %s "echo %s | xargs -n 1 -P 4 `which analyzer`" 2>&1 | awk \'{ print "%s",$0; }\'' % (s.ionode, " ".join(s.inputs), s.name))
 
   sys.exit(int(errorOccurred))

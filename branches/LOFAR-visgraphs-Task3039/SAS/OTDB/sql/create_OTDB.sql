@@ -76,6 +76,7 @@
 \i classify_func.sql
 \i setMomInfo_func.sql
 \i setDescription_func.sql
+\i getMomID2treeID_func.sql
 
 -- campaign
 \i campaignAPI.sql

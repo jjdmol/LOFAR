@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project>
+<project 
+	xmlns="http://maven.apache.org/POM/4.0.0" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>nl.astron.lofar.cep</groupId>
 	<artifactId>jParmFacade</artifactId>
 	<name>jParmFacade</name>
-	<version>1.0.0</version>
+	<version>1.0.2</version>
 
 	<organization>
 		<name>Astron</name>
@@ -13,14 +17,14 @@
 	</organization>
 
 	<properties>
-            <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-            <project.test.sourceEncoding>UTF-8</project.test.sourceEncoding>
-        </properties>
-        
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.test.sourceEncoding>UTF-8</project.test.sourceEncoding>
+	</properties>
+
 	<build>
 
 		<sourceDirectory>src</sourceDirectory>
-		<testSourceDirectory>src/test</testSourceDirectory>
+		<testSourceDirectory>test</testSourceDirectory>
 
 		<resources>
 			<resource>
@@ -29,21 +33,21 @@
 					<exclude>**/*.java</exclude>
 				</excludes>
 			</resource>
-			
+
 			<resource>
 				<directory>conf</directory>
 				<excludes>
 					<exclude>**/*.java</exclude>
 				</excludes>
 			</resource>
-			
+
 			<resource>
 				<directory>include</directory>
 				<excludes>
 					<exclude>**/*.java</exclude>
 				</excludes>
 			</resource>
-			
+
 		</resources>
 
 		<plugins>
@@ -57,28 +61,30 @@
 				</configuration>
 			</plugin>
 		</plugins>
-
 	</build>
-	
+
 	<dependencies>
-	
 		<dependency>
 			<groupId>nl.astron.lofar.sas</groupId>
-			<artifactId>jOTB3</artifactId>
-			<version>1.0.0</version>
+			<artifactId>jOTDB3</artifactId>
+			<version>1.0.2</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
 			<version>1.2.16</version>
 		</dependency>
-
-		
 	</dependencies>
-	
-	
 
+	<distributionManagement>
+		<snapshotRepository>
+			<id>snapshots</id>
+			<name>Astron Nexus Repository</name>
+			<url>https://support.astron.nl/nexus/content/repositories/snapshots/</url>
+		</snapshotRepository>
+	</distributionManagement>
+	
 </project>
 
 

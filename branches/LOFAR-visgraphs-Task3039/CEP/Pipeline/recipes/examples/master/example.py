@@ -3,6 +3,9 @@
 #                                                                 Example recipe
 #                                                            John Swinbank, 2010
 #                                                      swinbank@transientskp.org
+#
+# Example command line argument:
+# python example.py --config ../../pipeline.cfg --job-name test -d
 # ------------------------------------------------------------------------------
 
 import sys
@@ -16,8 +19,8 @@ class example(BaseRecipe):
     inputs = {
         'executable': ExecField(
             '--executable',
-            help="Command to run",
-            default="/bin/ls"
+            help = "Command to run",
+            default = "/bin/ls"
         )
     }
 
@@ -35,8 +38,8 @@ class example(BaseRecipe):
             [
                 self.inputs['executable']
             ],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
+            stdout = subprocess.PIPE,
+            stderr = subprocess.PIPE
         )
         sout, serr = my_process.communicate()
         self.outputs['stdout'] = sout

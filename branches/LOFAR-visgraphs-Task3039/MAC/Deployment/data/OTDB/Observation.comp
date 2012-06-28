@@ -12,16 +12,16 @@ node  Observation        4.0.2  development 'node constraint'  "Observation"
 #    name                    dir. type   unit   prun. vm   value                     constr.  descr.
 #--------------------------------------------------------------------------------------------------------
 # timing information
-par  startTime               I    text   -      10    100    ''                                         - 'Start time of the observation in GMT (yyyy-mm-dd hh:mm:ss)'
-par  stopTime                I    text   -      10    100    ''                                         - 'Stop time of the observation in GMT (yyyy-mm-dd hh:mm:ss)'
-par  claimPeriod             I    int    -      10    100    120                                       - 'Periodlength in seconds the CLAIM phases will take'
-par  preparePeriod           I    int    -      10    100    120                                       - 'Periodlength in seconds the PREPARE phases will take'
+par  startTime               I    text   -      10    100    ''                                        - 'Start time of the observation in GMT (yyyy-mm-dd hh:mm:ss)'
+par  stopTime                I    text   -      10    100    ''                                        - 'Stop time of the observation in GMT (yyyy-mm-dd hh:mm:ss)'
+par  claimPeriod             I    int    -      10    100    50                                        - 'Periodlength in seconds the CLAIM phases will take'
+par  preparePeriod           I    int    -      10    100    30                                        - 'Periodlength in seconds the PREPARE phases will take'
 
 # measurement information
 par  bandFilter  	     I	  ptext	 -   	10    0	     'LBA_10_70|LBA_10_90|LBA_30_70|LBA_30_90|HBA_110_190|HBA_170_230|HBA_210_250;LBA_30_90' - 'one of the seven filters to use'
 par  antennaArray	     I	  ptext	 -   	10    0	     'LBA|HBA;LBA'			                   - 'Name of the antenneArray (AntennaArrays.conf)'
 par  receiverList	     I	  vint	 -   	10    0	     '[]'                                       - 'List of the receivers to use, eg.[0..7,10,11]. Range 0..191.'
-par  channelsPerSubband      I    int    -      10    100    256                                       - 'Number of channels per subband, preferred values:16,32,64,128,192,256'
+par  channelsPerSubband      I    int    -      10    100    64                                       - 'Number of channels per subband, preferred values:16,32,64,128,192,256'
 par  nrBeams                 I    int    -      10    100    0                                         - 'Number of simultaneous beams in this observation'
 par  nrAnaBeams              I    int    -      10    100    0                                         - 'Number of analog beams in this observation'
 par  nrTBBSettings           I    int    -      10    100    0                                         - 'Number of TBBsettings'
@@ -33,15 +33,12 @@ par  existingStations        I    vtext   -      10    100    '["CS001","CS002",
 par  existingAntennaFields   I    vtext   -      10    100    '["LBA","HBA","HBA0","HBA1"]'  - 'Constant value: names of all antennafields'
 
 # new way of selection the receivers and the antennaArray at once
-par  antennaSet		     I    ptext  -      10    0      'LBA_INNER|LBA_OUTER|LBA_SPARSE_EVEN|LBA_SPARSE_ODD|LBA_X|LBA_Y|HBA_ZERO|HBA_ONE|HBA_DUAL|HBA_JOINED;LBA_INNER'    - 'Which part of the antennas should be used'
+par  antennaSet		     I    ptext  -      10    0      'LBA_INNER|LBA_OUTER|LBA_SPARSE_EVEN|LBA_SPARSE_ODD|LBA_X|LBA_Y|HBA_ZERO|HBA_ONE|HBA_DUAL|HBA_JOINED|HBA_ZERO_INNER|HBA_ONE_INNER|HBA_DUAL_INNER|HBA_JOINED_INNER;LBA_INNER'    - 'Which part of the antennas should be used'
 par  longBaselines           I    pbool  -      10    0      'true|false;false'                               - 'Number of polarisations to use in this observation'
 
 # copy of the characterisation of the (template)
 par  topologyID              I    text   -      10    100    ''                       - 'topology ID for identifying and structuring data products'
 par  KSPType                 O    ptext  -      10    0      'eor|cosmicrays|surveys|transients|magnetism|solar;surveys'          -   'Key science project'
-
-# piggyback
-par  tbbPiggybackAllowed     I    bool   -      10    100    false   -   'TBB piggybacking allowed for this observation'
 
 # clock related info
 par  clockMode               I    pnode  -      10    0      '<<Clock160|<<Clock200;<<Clock200'        - 'Mode in which clock is running'

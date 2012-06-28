@@ -35,6 +35,7 @@ class OpenOptionsWindow : public Gtk::Window {
 		OpenOptionsWindow() :
 			_downsampleTimeButton("Lower time resolution (faster plots)"),
 			_downsampleFreqButton("Lower frequency resolution (faster plots)"),
+			_correctHistograms("Correct histograms for frequence response"),
 			_cancelButton(Gtk::Stock::CANCEL),
 			_openButton(Gtk::Stock::OPEN)
 		{
@@ -53,6 +54,8 @@ class OpenOptionsWindow : public Gtk::Window {
 			_freqDownsampleEntry.set_text("1000");
 			
 			_box.pack_start(_freqBox);
+			
+			_box.pack_start(_correctHistograms);
 			
 			_buttonBox.pack_start(_cancelButton);
 			
@@ -75,14 +78,16 @@ class OpenOptionsWindow : public Gtk::Window {
 			show();
 		}
 		
-		sigc::signal<void, std::string, bool, bool, size_t, size_t> &SignalOpen() { return _signalOpen; }
+		sigc::signal<void, std::string, bool, bool, size_t, size_t, bool> &SignalOpen() { return _signalOpen; }
 	private:
 		void onOpen()
 		{
 			hide();
 			size_t timeRes = atol(_timeDownsampleEntry.get_text().c_str());
 			size_t freqRes = atol(_freqDownsampleEntry.get_text().c_str());
-			_signalOpen.emit(_file, _downsampleTimeButton.get_active(), _downsampleFreqButton.get_active(), timeRes, freqRes);
+			_signalOpen.emit(_file, _downsampleTimeButton.get_active(), _downsampleFreqButton.get_active(), timeRes, freqRes,
+			_correctHistograms.get_active()
+			);
 			_file.clear();
 		}
 		
@@ -93,9 +98,10 @@ class OpenOptionsWindow : public Gtk::Window {
 		Gtk::HBox _freqBox;
 		Gtk::CheckButton _downsampleFreqButton;
 		Gtk::Entry _freqDownsampleEntry;
+		Gtk::CheckButton _correctHistograms;
 		Gtk::HButtonBox _buttonBox;
 		Gtk::Button _cancelButton, _openButton;
-		sigc::signal<void, std::string, bool, bool, size_t, size_t> _signalOpen;
+		sigc::signal<void, std::string, bool, bool, size_t, size_t, bool> _signalOpen;
 		
 		std::string _file;
 };

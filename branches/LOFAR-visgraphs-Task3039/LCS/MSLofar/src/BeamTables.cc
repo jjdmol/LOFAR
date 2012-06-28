@@ -177,10 +177,12 @@ void BeamTables::fill (Table& ms,
           // Write all elements.
           writeElements (antfCols, rownr, antField.AntPos("HBA"),
                          antennaSet.positionIndex ("HBA_ZERO", stationType),
+                         false,
                          antField.Centre("HBA"),
                          antField.Centre("HBA0"));
           writeElements (antfCols, rownr+1, antField.AntPos("HBA"),
                          antennaSet.positionIndex ("HBA_ONE", stationType),
+                         true,
                          antField.Centre("HBA"),
                          antField.Centre("HBA1"));
           rownr += 2;
@@ -203,6 +205,7 @@ void BeamTables::fill (Table& ms,
                      antField, antFieldName, hbaOffsets, firstHbaOffset);
       writeElements (antfCols, rownr, antField.AntPos(antFieldType),
                      antennaSet.positionIndex (setName, stationType),
+                     setName == "HBA_ONE",
                      antField.Centre(antFieldType),
                      antField.Centre(antFieldName));
       rownr++;
@@ -252,6 +255,7 @@ void BeamTables::writeElements (MSAntennaFieldColumns& columns,
                                 int rownr,
                                 const AntField::AFArray& elemOffsets,
                                 const vector<int16>& elemPresent,
+                                bool addSkip,
                                 const AntField::AFArray& stationCenter,
                                 const AntField::AFArray& fieldCenter)
 {
@@ -272,16 +276,26 @@ void BeamTables::writeElements (MSAntennaFieldColumns& columns,
     offset(1,i) = elemOff(1,0,i) + off1;
     offset(2,i) = elemOff(2,0,i) + off2;
   }
-  // Clear flag for the present dipoles.
+  // Clear the flag for the dipoles that are present.
+  // Normally the value in the elemPresent vector gives the element index,
+  // but not for HBA1 in the core stations. For those the skipped number
+  // of values has to be added.
+  // Note that elemPresent defines which elements are used for a mode.
+  // -1 means not used.
+  // If >=0, the value is normally equal to the vector's index.
+  // However, for HBA_ONE this is not the case. It has 48 -1 values, and
+  // thereafter value 0..47. SAS/MAC/BeamServer needs it this way.
+  // Therefore the code adds the nr of -1 values if value != index to get
+  // the proper flag index (which is the RCU number).
   Bool* flagPtr = flag.data();
   int nskip = 0;
-  for (vector<int16>::const_iterator iter=elemPresent.begin();
-       iter!=elemPresent.end(); ++iter) {
-    if (*iter < 0) {
+  for (uint i=0; i<elemPresent.size(); ++i) {
+    if (elemPresent[i] < 0) {
       nskip++;
     } else {
-      int index = *iter + nskip;
-      ASSERT (index < int16(flag.size()));
+      int index = elemPresent[i];
+      if (addSkip) index += nskip;
+      ASSERT (index < int(flag.size()));
       flagPtr[index] = False;
     }
   }

@@ -7,7 +7,7 @@
 <h2>RFI software</h2>
 <p>This page describes the software to detect and mitigate radio frequency interference (RFI) in a radio measurement set. The main algorithms is described in the article "Post-correlation radio frequency interference classification methods" by Offringa et al, published in <a href="http://adsabs.harvard.edu/doi/10.1111/j.1365-2966.2010.16471.x">MNRAS, Volume 405, Issue 1, pp. 155-167</a>. Please acknowledge this paper in publications in which the software is used. </p>
 <p>I've made a "<a href="faq.html">Frequently Asked Questions</a>" page for the software, a short <a href="gui-tutorial.html">RFI GUI tutorial</a> and an <a href="strategy-example-a.html">example of how one can optimize the strategy</a>.</p>
-<p>Last release: version 1.5.0, 20 October 2011.</p>
+<p>Last release: version 2.0.0, 9 March 2012.</p>
 <p>Contents:</p>
 <ul>
 <li><a href="#introduction">Introduction</a></li>
@@ -25,6 +25,7 @@
 <p>The software is published under the GNU General Public License version 3.</p>
 <a id="download"><h4>Download</h4></a>
 <p>The latest version of the software can be downloaded here:</p>
+<ul><li>Download: <a href="AOFlagger-2.0.0.tar.bz2">AOFlagger-2.0.0.tar.bz2</a> (9 March 2012, <a href="CHANGELOG">changelog</a>)</li></ul>
 <ul><li>Download: <a href="AOFlagger-1.5.0.tar.bz2">AOFlagger-1.5.0.tar.bz2</a> (20 October 2011, <a href="CHANGELOG">changelog</a>)</li></ul>
 <ul><li>Download: <a href="AOFlagger-1.4.0.tar.bz2">AOFlagger-1.4.0.tar.bz2</a> (22 Juli 2011, <a href="CHANGELOG">changelog</a>)</li></ul>
 <ul><li>Download: <a href="AOFlagger-1.3.0.tar.bz2">AOFlagger-1.3.0.tar.bz2</a> (26 April 2011)</li></ul>
@@ -43,7 +44,7 @@
 <li><a href="http://www.netlib.org/clapack/">CLAPACK</a>, for linear algebra, such as singular value decomposition.</li>
 <li><a href="http://heasarc.nasa.gov/fitsio/">CFITSIO</a>, for reading and writing FITS files.</li>
 <li>(the <a href="http://www.gnu.org/software/gsl/">GNU Science Library</a> is no longer required since version 1.2)</li>
-<li>gtkmm (only for <tt>rfigui</tt>)</li>
+<li>gtkmm (only for <tt>rfigui</tt> and other graphical programs)</li>
 </ul>
 <p>All the libraries are available as free and open software. The gtkmm libraries and headers are only required to compile the gui. If they are not present, cmake will warn about it, but will compile the console programs nevertheless.</p>
 <p>I would not encourage you to compile gtkmm yourself; it has many dependencies. Rather use your package manager (or ask your system administrator). Debian ships this library as "gtkmm-dev".</p>
@@ -63,7 +64,7 @@
 <li>Enter the directory <tt>./LOFAR</tt> and create and enter a sub-directory called "build/gnu_opt": <tt>mkdir -p build/gnu_opt</tt>; <tt>cd build/gnu_opt</tt>
 <li>Configure the package with cmake. If you installed all the libraries in their default location, you can issue the following command: <tt>cmake ../..</tt><br/>
 CMake will tell you when some of the files can not be found. If you need to specify the location of libraries, e.g. for casacore and log4cpp, you can issue something like:
-<tt>cmake ../.. -DCASACORE_ROOT_DIR=/home/offringa/casacore-install -DLOG4CPLUS_LIBRARY=/home/offringa/lib/liblog4cplus.a -DLOG4CPLUS_INCLUDE_DIR=/home/offringa/include/</tt><br/>In releases >= 1.5.0, CMake reported an error in its first run about not being able to determine the repository. This is solved by running it again.</li>
+<tt>cmake ../.. -DCASACORE_ROOT_DIR=/home/offringa/casacore-install -DLOG4CPLUS_LIBRARY=/home/offringa/lib/liblog4cplus.a -DLOG4CPLUS_INCLUDE_DIR=/home/offringa/include/</tt></li>
 <li>If CMake succeeds, you can start the compilation: <tt>make</tt> (or <tt>make -j 8</tt> for 8 threaded compilation).</li>
 </ol></ol>
 <p>After the last step, the executables will be in the ./LOFAR/build/gnu_opt/CEP/DP3/AOFlagger/src directory, ready for action!</p>
@@ -128,16 +129,13 @@ frequency interference classification methods", submitted to MNRAS.</pre>
 <ul>
 <li>If you have problems running the executables, and you get an error about loading libraries, a solution might be to explicitly define where the libraries are, i.e., type in:
 <pre>export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:&lt;path&#8209;to&#8209;source&#8209;root&gt;/libs/lib/</pre></li>
-<li>The gui uses gnuplot, ps2pdf and kpdf to create and visualize some of the graphs it creates. If plotting graphs does not work, make sure you have a symlink in the starting directory of rfigui named "kpdf" that links to whatever you like to use to visualize the generated pdf-files. GNU plot version 4.2 or higher is required.</li>
 <li>If you have any further problems, don't hesitate to contact me! I will be glad to help out. See the section "contact information".</li>
 </ul>
 <a id="contact"><h4>Contact information</h4></a>
 <p>In case of questions, suggestions or feedback, please mail me. My e-mail address is <tt>&lt;mylastname&gt;@astro.rug.nl</tt>, and my last name is offringa.</p>
 <a id="acknowledgments"><h4>Acknowledgments</h4></a>
 <p>Thanks to all who provided data to me for testing, in special Ger de Bruyn
-and Gianni Bernardi. Also thanks to Andy Biggs who was the first unfortunate
-one to try it on a Mac and face all incompatibities for the first time.
-Thanks to Ger van Diepen for several fixes and hints.
+and Gianni Bernardi. Also thanks to Andy Biggs and Ger van Diepen for several fixes and hints.
 The RFI tools heavily use Casacore, thus their authors have been instrumental
 in creating the flagger.</p>
 </body>

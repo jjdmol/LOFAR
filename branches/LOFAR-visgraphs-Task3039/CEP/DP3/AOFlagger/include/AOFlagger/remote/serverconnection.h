@@ -34,6 +34,7 @@
 #include <AOFlagger/msio/antennainfo.h>
 
 class StatisticsCollection;
+class HistogramCollection;
 
 namespace aoRemote {
 
@@ -50,14 +51,14 @@ class ServerConnection : public boost::enable_shared_from_this<ServerConnection>
 		~ServerConnection();
 		
 		void StopClient();
-		void ReadQualityTables(const std::string &msFilename, class StatisticsCollection &collection);
+		void ReadQualityTables(const std::string &msFilename, class StatisticsCollection &collection, HistogramCollection &histogramCollection);
 		void ReadAntennaTables(const std::string &msFilename, std::vector<AntennaInfo> &antennas);
 		void Start();
 		
 		boost::asio::ip::tcp::socket &Socket() { return _socket; }
 		
 		sigc::signal<void, ServerConnectionPtr> &SignalAwaitingCommand() { return _onAwaitingCommand; }
-		sigc::signal<void, ServerConnectionPtr, StatisticsCollection&> &SignalFinishReadQualityTables() { return _onFinishReadQualityTables; }
+		sigc::signal<void, ServerConnectionPtr, StatisticsCollection&, HistogramCollection&> &SignalFinishReadQualityTables() { return _onFinishReadQualityTables; }
 		sigc::signal<void, ServerConnectionPtr, std::vector<AntennaInfo>&> &SignalFinishReadAntennaTables() { return _onFinishReadAntennaTables; }
 		sigc::signal<void, ServerConnectionPtr, const std::string&> &SignalError() { return _onError; }
 		
@@ -68,7 +69,7 @@ class ServerConnection : public boost::enable_shared_from_this<ServerConnection>
 		std::string _hostname;
 		
 		sigc::signal<void, ServerConnectionPtr> _onAwaitingCommand;
-		sigc::signal<void, ServerConnectionPtr, StatisticsCollection&> _onFinishReadQualityTables;
+		sigc::signal<void, ServerConnectionPtr, StatisticsCollection&, HistogramCollection&> _onFinishReadQualityTables;
 		sigc::signal<void, ServerConnectionPtr, std::vector<AntennaInfo>&> _onFinishReadAntennaTables;
 		sigc::signal<void, ServerConnectionPtr, const std::string&> _onError;
 		
@@ -91,6 +92,7 @@ class ServerConnection : public boost::enable_shared_from_this<ServerConnection>
 		void handleError(const GenericReadResponseHeader &header);
 		
 		StatisticsCollection *_collection;
+		HistogramCollection *_histogramCollection;
 		std::vector<AntennaInfo> *_antennas;
 };
 	

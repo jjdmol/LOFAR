@@ -41,17 +41,18 @@ namespace LOFAR
     // Top-level exception class for the BBSControl package.
     EXCEPTION_CLASS(BBSControlException, LOFAR::Exception);
 
-    // Exception class for the global controller.
-    EXCEPTION_CLASS(GlobalControlException, BBSControlException);
+    // Exception class for the command line argument parser.
+    EXCEPTION_CLASS(OptionParserException, BBSControlException);
 
-    // Exception class for the kernel controller.
-    EXCEPTION_CLASS(KernelControlException, BBSControlException);
-
-    // Exception class for the (global) solver controller.
-    EXCEPTION_CLASS(SolverControlException, BBSControlException);
+    // Exception class for protocol errors.
+    EXCEPTION_CLASS(ProtocolException, BBSControlException);
 
     // Exception class for the solve task.
     EXCEPTION_CLASS(SolveTaskException, BBSControlException);
+
+#ifdef HAVE_PQXX
+    // Exception class for the shared state.
+    EXCEPTION_CLASS(CalSessionException, BBSControlException);
 
     // Exception class for the database access layer.
     EXCEPTION_CLASS(DatabaseException, BBSControlException);
@@ -59,14 +60,12 @@ namespace LOFAR
     // Exception class to signal failed data translation to / from the database
     // access layer.
     EXCEPTION_CLASS(TranslationException, DatabaseException);
-
-    // Exception class for the shared state.
-    EXCEPTION_CLASS(CalSessionException, BBSControlException);
+#endif
 
     //  @}
 
   } // namespace BBS
-  
+
 } // namespace LOFAR
 
 #endif

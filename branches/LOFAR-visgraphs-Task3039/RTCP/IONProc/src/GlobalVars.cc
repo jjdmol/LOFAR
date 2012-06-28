@@ -35,23 +35,26 @@ namespace LOFAR {
 namespace RTCP {
 
 unsigned				  myPsetNumber, nrPsets, nrCNcoresInPset;
-std::vector<SmartPtr<Stream> >		  allCNstreams, allIONstreams;
+std::vector<SmartPtr<Stream> >		  allIONstreams;
+Matrix<SmartPtr<Stream> >		  allCNstreams;
 
 std::vector<SmartPtr<StreamMultiplexer> > allIONstreamMultiplexers;
 
 const char                       *cnStreamType;
 
-Stream *createCNstream(unsigned core, unsigned channel)
+Stream *createCNstream(unsigned pset, unsigned core, unsigned channel)
 {
   // translate logical to physical core number
   core = CN_Mapping::mapCoreOnPset(core, myPsetNumber);
 
 #if defined HAVE_FCNP && defined __PPC__ && !defined USE_VALGRIND
+  ASSERT( pset == myPsetNumber );
+
   if (strcmp(cnStreamType, "FCNP") == 0)
     return new FCNP_ServerStream(core, channel);
 #endif
 
-  string descriptor = getStreamDescriptorBetweenIONandCN(cnStreamType, myPsetNumber, core, nrPsets, nrCNcoresInPset, channel);
+  string descriptor = getStreamDescriptorBetweenIONandCN(cnStreamType, myPsetNumber, pset, core, nrPsets, nrCNcoresInPset, channel);
 
   return createStream(descriptor, true);
 }

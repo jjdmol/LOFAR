@@ -5,6 +5,5 @@ subbandList		stringArr
 beamletList		stringArr
 angle1			doubleArr
 angle2			doubleArr
-directionType	stringArr
-#angleTimes		uintArr
+directionType		stringArr
 beamName		stringArr

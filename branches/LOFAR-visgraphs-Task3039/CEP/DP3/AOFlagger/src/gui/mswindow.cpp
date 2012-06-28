@@ -24,6 +24,7 @@
 #include <gtkmm/filechooserdialog.h>
 #include <gtkmm/messagedialog.h>
 #include <gtkmm/inputdialog.h>
+#include <gtkmm/toolbar.h>
 
 #include <AOFlagger/msio/baselinematrixloader.h>
 #include <AOFlagger/msio/measurementset.h>
@@ -33,7 +34,6 @@
 #include <AOFlagger/msio/segmentedimage.h>
 #include <AOFlagger/msio/spatialmatrixmetadata.h>
 
-#include <AOFlagger/strategy/actions/baselineselectionaction.h>
 #include <AOFlagger/strategy/actions/strategyaction.h>
 
 #include <AOFlagger/strategy/control/artifactset.h>
@@ -44,6 +44,7 @@
 #include <AOFlagger/strategy/imagesets/spatialmsimageset.h>
 #include <AOFlagger/strategy/imagesets/spatialtimeimageset.h>
 
+#include <AOFlagger/strategy/algorithms/baselineselector.h>
 #include <AOFlagger/strategy/algorithms/mitigationtester.h>
 #include <AOFlagger/strategy/algorithms/morphology.h>
 #include <AOFlagger/strategy/algorithms/fringetestcreater.h>
@@ -72,6 +73,7 @@
 #include <AOFlagger/gui/editstrategywindow.h>
 #include <AOFlagger/gui/gotowindow.h>
 #include <AOFlagger/gui/highlightwindow.h>
+#include <AOFlagger/gui/histogramwindow.h>
 #include <AOFlagger/gui/imageplanewindow.h>
 #include <AOFlagger/gui/imagepropertieswindow.h>
 #include <AOFlagger/gui/msoptionwindow.h>
@@ -84,14 +86,17 @@
 #include <AOFlagger/imaging/model.h>
 #include <AOFlagger/imaging/observatorium.h>
 
+#include <AOFlagger/quality/histogramcollection.h>
+
 #include <iostream>
 
-MSWindow::MSWindow() : _imagePlaneWindow(0), _optionWindow(0), _editStrategyWindow(0), _gotoWindow(0), _progressWindow(0), _highlightWindow(0), _plotComplexPlaneWindow(0), _imagePropertiesWindow(0), _antennaMapWindow(0), _statistics(new RFIStatistics()),  _imageSet(0), _imageSetIndex(0), _gaussianTestSets(true), _spatialMetaData(0), _plotWindow(_plotManager)
+MSWindow::MSWindow() : _imagePlaneWindow(0), _histogramWindow(0), _optionWindow(0), _editStrategyWindow(0), _gotoWindow(0), _progressWindow(0), _highlightWindow(0), _plotComplexPlaneWindow(0), _imagePropertiesWindow(0), _antennaMapWindow(0), _statistics(new RFIStatistics()),  _imageSet(0), _imageSetIndex(0), _gaussianTestSets(true), _spatialMetaData(0), _plotWindow(_plotManager)
 {
 	createToolbar();
 
 	_mainVBox.pack_start(_timeFrequencyWidget);
 	_timeFrequencyWidget.OnMouseMovedEvent().connect(sigc::mem_fun(*this, &MSWindow::onTFWidgetMouseMoved));
+	_timeFrequencyWidget.OnMouseLeaveEvent().connect(sigc::mem_fun(*this, &MSWindow::setSetNameInStatusBar));
 	_timeFrequencyWidget.OnButtonReleasedEvent().connect(sigc::mem_fun(*this, &MSWindow::onTFWidgetButtonReleased));
 	_timeFrequencyWidget.SetShowXAxisDescription(false);
 	_timeFrequencyWidget.SetShowYAxisDescription(false);
@@ -113,7 +118,12 @@ MSWindow::MSWindow() : _imagePlaneWindow(0), _optionWindow(0), _editStrategyWind
 
 MSWindow::~MSWindow()
 {
+	while(!_actionGroup->get_actions().empty())
+		_actionGroup->remove(*_actionGroup->get_actions().begin());
+	
 	delete _imagePlaneWindow;
+	if(_histogramWindow != 0)
+		delete _histogramWindow;
 	if(_optionWindow != 0)
 		delete _optionWindow;
 	if(_editStrategyWindow != 0)
@@ -154,7 +164,7 @@ void MSWindow::onActionDirectoryOpen()
 
   if(result == Gtk::RESPONSE_OK)
 	{
-		openPath(dialog.get_filename());
+		OpenPath(dialog.get_filename());
 	}
 }
 
@@ -238,11 +248,11 @@ void MSWindow::onActionFileOpen()
 
   if(result == Gtk::RESPONSE_OK)
 	{
-		openPath(dialog.get_filename());
+		OpenPath(dialog.get_filename());
 	}
 }
 
-void MSWindow::openPath(const std::string &path)
+void MSWindow::OpenPath(const std::string &path)
 {
 	if(_optionWindow != 0)
 		delete _optionWindow;
@@ -300,8 +310,7 @@ void MSWindow::loadCurrentTFData()
 				_spatialMetaData = new SpatialMatrixMetaData(static_cast<rfiStrategy::SpatialMSImageSet*>(_imageSet)->SpatialMetaData(*_imageSetIndex));
 			}
 			_timeFrequencyWidget.Update();
-			_statusbar.pop();
-			_statusbar.push(std::string() + _imageSet->Name() + ": " + _imageSetIndex->Description());
+			setSetNameInStatusBar();
 		} catch(std::exception &e)
 		{
 			AOLogger::Error << e.what() << '\n';
@@ -310,6 +319,14 @@ void MSWindow::loadCurrentTFData()
 	}
 }
 
+void MSWindow::setSetNameInStatusBar()
+{
+  if(HasImageSet()) {
+	_statusbar.pop();
+	_statusbar.push(std::string() + _imageSet->Name() + ": " + _imageSetIndex->Description());
+  }
+}
+		
 void MSWindow::onLoadPrevious()
 {
 	if(_imageSet != 0) {
@@ -368,7 +385,7 @@ void MSWindow::onExecuteStrategyPressed()
 	artifacts.SetIterationsPlot(new IterationsPlot());
 	
 	artifacts.SetPolarizationStatistics(new PolarizationStatistics());
-	artifacts.SetBaselineSelectionInfo(new rfiStrategy::BaselineSelectionInfo());
+	artifacts.SetBaselineSelectionInfo(new rfiStrategy::BaselineSelector());
 	artifacts.SetImager(_imagePlaneWindow->GetImager());
 
 	if(HasImage())
@@ -466,7 +483,12 @@ void MSWindow::SetImageSet(rfiStrategy::ImageSet *newImageSet)
 	_imageSet = newImageSet;
 	_imageSetIndex = _imageSet->StartIndex();
 	
-	loadCurrentTFData();
+	if(dynamic_cast<rfiStrategy::MSImageSet*>(newImageSet) != 0)
+	{
+		onGoToPressed();
+	} else {
+		loadCurrentTFData();
+	}
 }
 
 void MSWindow::SetImageSetIndex(rfiStrategy::ImageSetIndex *newImageSetIndex)
@@ -571,6 +593,12 @@ void MSWindow::createToolbar()
 	sigc::mem_fun(*this, &MSWindow::onOpenTestSetSlewedGaussianBroadband));
 	_actionGroup->add( Gtk::Action::create("OpenTestSetBurstBroadband", "Burst"),
 	sigc::mem_fun(*this, &MSWindow::onOpenTestSetBurstBroadband));
+	_actionGroup->add( Gtk::Action::create("OpenTestSetRFIDistributionLow", "Slope -2 dist low"),
+	sigc::mem_fun(*this, &MSWindow::onOpenTestSetRFIDistributionLow));
+	_actionGroup->add( Gtk::Action::create("OpenTestSetRFIDistributionMid", "Slope -2 dist mid"),
+	sigc::mem_fun(*this, &MSWindow::onOpenTestSetRFIDistributionMid));
+	_actionGroup->add( Gtk::Action::create("OpenTestSetRFIDistributionHigh", "Slope -2 dist high"),
+	sigc::mem_fun(*this, &MSWindow::onOpenTestSetRFIDistributionHigh));
 	_actionGroup->add( Gtk::Action::create("AddTestModification", "Test modify") );
 	_actionGroup->add( Gtk::Action::create("AddStaticFringe", "Static fringe"),
 	sigc::mem_fun(*this, &MSWindow::onAddStaticFringe) );
@@ -598,11 +626,13 @@ void MSWindow::createToolbar()
 	
 	_actionGroup->add( Gtk::Action::create("PlotDist", "Plot _distribution"),
   sigc::mem_fun(*this, &MSWindow::onPlotDistPressed) );
+	_actionGroup->add( Gtk::Action::create("PlotLogLogDist", "Plot _log-log dist"),
+  sigc::mem_fun(*this, &MSWindow::onPlotLogLogDistPressed) );
 	_actionGroup->add( Gtk::Action::create("PlotComplexPlane", "Plot _complex plane"),
   sigc::mem_fun(*this, &MSWindow::onPlotComplexPlanePressed) );
 	_actionGroup->add( Gtk::Action::create("PlotPowerSpectrum", "Plot _power spectrum"),
   sigc::mem_fun(*this, &MSWindow::onPlotPowerSpectrumPressed) );
-	_actionGroup->add( Gtk::Action::create("PlotPowerSpectrumComparison", "_Power spectrum"),
+	_actionGroup->add( Gtk::Action::create("PlotPowerSpectrumComparison", "Power _spectrum"),
   sigc::mem_fun(*this, &MSWindow::onPlotPowerSpectrumComparisonPressed) );
 	_actionGroup->add( Gtk::Action::create("PlotRMSSpectrum", "Plot _rms spectrum"),
   sigc::mem_fun(*this, &MSWindow::onPlotPowerRMSPressed) );
@@ -610,9 +640,9 @@ void MSWindow::createToolbar()
   sigc::mem_fun(*this, &MSWindow::onPlotPowerSNRPressed) );
 	_actionGroup->add( Gtk::Action::create("PlotPowerTime", "Plot power vs _time"),
   sigc::mem_fun(*this, &MSWindow::onPlotPowerTimePressed) );
-	_actionGroup->add( Gtk::Action::create("PlotPowerTimeComparison", "Power vs _time"),
+	_actionGroup->add( Gtk::Action::create("PlotPowerTimeComparison", "Po_wer vs time"),
   sigc::mem_fun(*this, &MSWindow::onPlotPowerTimeComparisonPressed) );
-	_actionGroup->add( Gtk::Action::create("PlotTimeScatter", "Plot time scatter"),
+	_actionGroup->add( Gtk::Action::create("PlotTimeScatter", "Plot time s_catter"),
   sigc::mem_fun(*this, &MSWindow::onPlotTimeScatterPressed) );
 	_actionGroup->add( Gtk::Action::create("PlotTimeScatterComparison", "Time _scatter"),
   sigc::mem_fun(*this, &MSWindow::onPlotTimeScatterComparisonPressed) );
@@ -809,6 +839,9 @@ void MSWindow::createToolbar()
 		"        <menuitem action='OpenTestSetSinusoidalBroadband'/>"
 		"        <menuitem action='OpenTestSetSlewedGaussianBroadband'/>"
 		"        <menuitem action='OpenTestSetBurstBroadband'/>"
+		"        <menuitem action='OpenTestSetRFIDistributionLow'/>"
+		"        <menuitem action='OpenTestSetRFIDistributionMid'/>"
+		"        <menuitem action='OpenTestSetRFIDistributionHigh'/>"
 		"      </menu>"
 		"      <menu action='AddTestModification'>"
 		"        <menuitem action='AddStaticFringe'/>"
@@ -838,6 +871,7 @@ void MSWindow::createToolbar()
 		"      </menu>"
     "      <separator/>"
     "      <menuitem action='PlotDist'/>"
+    "      <menuitem action='PlotLogLogDist'/>"
     "      <menuitem action='PlotComplexPlane'/>"
     "      <menuitem action='PlotPowerSpectrum'/>"
     "      <menuitem action='PlotRMSSpectrum'/>"
@@ -941,6 +975,7 @@ void MSWindow::createToolbar()
 	Gtk::Widget* pMenubar = uiManager->get_widget("/MenuBar");
 	_mainVBox.pack_start(*pMenubar, Gtk::PACK_SHRINK);
 	Gtk::Widget* pToolbar = uiManager->get_widget("/ToolBar");
+	static_cast<Gtk::Toolbar *>(pToolbar)->set_toolbar_style(Gtk::TOOLBAR_BOTH);
 	_mainVBox.pack_start(*pToolbar, Gtk::PACK_SHRINK);
 	pMenubar->show();
 }
@@ -1156,12 +1191,33 @@ void MSWindow::onPlotDistPressed()
 	}
 }
 
+void MSWindow::onPlotLogLogDistPressed()
+{
+	if(_timeFrequencyWidget.HasImage())
+	{
+		TimeFrequencyData activeData = GetActiveData();
+		HistogramCollection histograms(activeData.PolarisationCount());
+		for(unsigned p=0;p!=activeData.PolarisationCount();++p)
+		{
+			TimeFrequencyData *polData = activeData.CreateTFDataFromPolarisationIndex(p);
+			Image2DCPtr image = polData->GetSingleImage();
+			Mask2DCPtr mask = Mask2D::CreateCopy(polData->GetSingleMask());
+			histograms.Add(0, 1, p, image, mask);
+		}
+		if(_histogramWindow == 0)
+			_histogramWindow = new HistogramWindow(histograms);
+		else
+			_histogramWindow->SetStatistics(histograms);
+		_histogramWindow->show();
+	}
+}
+
 void MSWindow::onPlotComplexPlanePressed()
 {
 	if(HasImage()) {
 		if(_plotComplexPlaneWindow != 0)
 			delete _plotComplexPlaneWindow;
-		_plotComplexPlaneWindow = new ComplexPlanePlotWindow(*this);
+		_plotComplexPlaneWindow = new ComplexPlanePlotWindow(*this, _plotManager);
 		_plotComplexPlaneWindow->show();
 	}
 }
@@ -1529,7 +1585,18 @@ void MSWindow::showPhasePart(enum TimeFrequencyData::PhaseRepresentation phaseRe
 			_timeFrequencyWidget.Update();
 		} catch(std::exception &e)
 		{
-			showError(e.what());
+			std::stringstream errstr;
+			errstr
+				<< "The data that was currently in memory could not be converted to the requested "
+				   "type. The error given by the converter was:\n"
+				<< e.what()
+				<< "\n\n"
+				<< "Note that if the original data should be convertable to this type, but "
+				   "you have already used one of the 'Keep ..' buttons, you first need to reload "
+					 "the full data with Goto -> Load.\n\n"
+					 "(alternatively, if loading takes a lot of time, you can use the Store and Recall"
+					 " options in the Data menu)";
+			showError(errstr.str());
 		}
 	}
 }
@@ -1546,7 +1613,18 @@ void MSWindow::showPolarisation(enum PolarisationType polarisation)
 			_timeFrequencyWidget.Update();
 		} catch(std::exception &e)
 		{
-			showError(e.what());
+			std::stringstream errstr;
+			errstr
+				<< "The data that was currently in memory could not be converted to the requested "
+				   "polarization. The error given by the converter was:\n"
+				<< e.what()
+				<< "\n\n"
+				<< "Note that if the original data should be convertable to this polarization, but "
+				   "you have already used one of the 'Keep ..' buttons, you first need to reload "
+					 "the full data with Goto -> Load.\n\n"
+					 "(alternatively, if loading takes a lot of time, you can use the Store and Recall"
+					 " options in the Data menu)";
+			showError(errstr.str());
 		}
 	}
 }

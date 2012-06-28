@@ -1,18 +1,18 @@
-V 10
+V 11
 1
 LANG:1 0 
 PANEL,-1 -1 369 118 N "_3DFace" 0
 "main()
 {
   
-  baseDP       = \"CCU001:LOFAR_PIC\";
+  baseDP       = navFunct_bareDBName(CEPDBName)+ \":LOFAR_PIC\";
   CEPDP        = baseDP;
   
 
-  setValue(\"\",\"toolTipText\",\"CCU001\");
-  setValue(\"selfState.light\",\"toolTipText\",CEPDP);
-  setValue(\"childStateBorder\",\"toolTipText\",\"CCU001\");
-  setValue(\"station_highLight\",\"toolTipText\",\"CCU001\");
+  setValue(\"\",\"toolTipText\",CEPDBName);
+  setValue(\"selfState.light\",\"toolTipText\",navFunct_bareDBName(CEPDBName));
+  setValue(\"childStateBorder\",\"toolTipText\",navFunct_bareDBName(CEPDBName));
+  setValue(\"station_highLight\",\"toolTipText\",navFunct_bareDBName(CEPDBName));
   setValue(\"selfState.light\",\"foreCol\",\"_Transparent\");
   
 
@@ -46,7 +46,7 @@ void click() {
     // set delay in case double click was meant
   delay(0, 100); 
   if (!bDoubleClicked) {
-    navPanel_setEvent(\"CCU001\",\"EventClick\");
+    navPanel_setEvent(CEPDBName,\"EventClick\");
   }
 }
 
@@ -59,7 +59,7 @@ void dblClick() {
   if (dpExists(baseDP) ) {
     LOG_DEBUG(\"CEP_small.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
     g_currentDatapoint=baseDP;
-    navPanel_setEvent(\"CCU001\",\"ChangePanel\");
+    navPanel_setEvent(CEPDBName,\"ChangePanel\");
   }
   
   // set delay to avoid click event will be triggered
@@ -110,7 +110,7 @@ void CEPCallback(string dp1, bool aTrig) {
   LOG_DEBUG(\"CEP_small.pnl:CEPCallback| objectTrigger Callback on: \"+dp1+\" trigger: \"+aTrig);
   LOG_DEBUG(\"CEP_small.pnl:CEPCallback|Found highlight : \" + highlight+ \" Looking for: CEP\");
   bool bHighlight=false;
-  if (dynContains(highlight,\"CCU001\")) {
+  if (dynContains(highlight,navFunct_bareDBName(CEPDBName))) {
     bHighlight=true;
   }
   LOG_DEBUG(\"CEP_small.pnl:CEPCallback|Highlight request: \"+bHighlight);
@@ -181,7 +181,7 @@ LAYER, 7
 1
 LANG:1 0 
 0
-3 1 "selfState"
+3 1 "selfState" -1
 "objects\\lofar_self_state.pnl" 118 28 T 4 1.133333333333333 0 1.133333333333333 -128.7333333333333 -26.73333333333333
 0
 0

@@ -50,6 +50,7 @@ JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_init
   try {
     OTDBconnection* aConn=getConnection(name);
     TreeMaintenance* aTM = new TreeMaintenance(aConn);
+    theirC_ObjectMap.erase(name+"_TreeMaintenance");
     theirC_ObjectMap[name+"_TreeMaintenance"]=(void*)aTM;
 
   } catch (exception &ex) {
@@ -900,53 +901,9 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance
  * Method:    exportTree
- * Signature: (IILjava/lang/String;IZ)Z
- */
-JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_exportTree__IILjava_lang_String_2IZ (JNIEnv *env, jobject jTreeMaintenance, jint treeID, jint topItem, jstring aName, jint outputFormat, jboolean folded) {
-
-  jboolean isCopy;
-  jboolean succes;
-  const char* name = env->GetStringUTFChars (aName, &isCopy);
-  try {
-    succes = ((TreeMaintenance*)getCObjectPtr(env,jTreeMaintenance,"_TreeMaintenance"))->exportTree (treeID, topItem, name, (TreeMaintenance::formatType)outputFormat , folded);
-    env->ReleaseStringUTFChars (aName, name);
-  } catch (exception &ex) {
-    cout << "Exception during TreeMaintenance::exportTree(" << treeID << "," << topItem << "," << name << "," << (TreeMaintenance::formatType)outputFormat << "," << folded << ") "<< ex.what() << endl; 
-    env->ReleaseStringUTFChars (aName, name);
-    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
-  }
-  
-  return succes;
-}
-
-/*
- * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance
- * Method:    exportTree
- * Signature: (IILjava/lang/String;I)Z
- */
-JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_exportTree__IILjava_lang_String_2I (JNIEnv *env, jobject jTreeMaintenance, jint treeID, jint topItem, jstring aName, jint outputFormat) {
-
-  jboolean isCopy;
-  jboolean succes;
-  const char* name = env->GetStringUTFChars (aName, &isCopy);
-  try {
-    succes = ((TreeMaintenance*)getCObjectPtr(env,jTreeMaintenance,"_TreeMaintenance"))->exportTree (treeID, topItem, name, (TreeMaintenance::formatType)outputFormat);
-    env->ReleaseStringUTFChars (aName, name);
-  } catch (exception &ex) {
-    cout << "Exception during TreeMaintenance::exportTree(" << treeID << "," << topItem << "," << name << "," << (TreeMaintenance::formatType)outputFormat <<  ") "<< ex.what() << endl;
-    env->ReleaseStringUTFChars (aName, name);
-    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
-  }
-
-  return succes;
-}
-
-/*
- * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance
- * Method:    exportTree
  * Signature: (IILjava/lang/String;)Z
  */
-JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_exportTree__IILjava_lang_String_2 (JNIEnv *env, jobject jTreeMaintenance, jint treeID, jint topItem, jstring aName) {
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_exportTree(JNIEnv *env, jobject jTreeMaintenance, jint treeID, jint topItem, jstring aName) {
 
   jboolean isCopy;
   jboolean succes;
@@ -956,6 +913,28 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_
     env->ReleaseStringUTFChars (aName, name);
   } catch (exception &ex) {
     cout << "Exception during TreeMaintenance::exportTree(" << treeID << "," << topItem << "," << name <<   ") "<< ex.what() << endl;
+    env->ReleaseStringUTFChars (aName, name);
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
+
+  return succes;
+}
+
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance
+ * Method:    exportResultTree
+ * Signature: (IILjava/lang/String;)Z
+ */
+JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_exportResultTree (JNIEnv *env, jobject jTreeMaintenance, jint treeID, jint topItem, jstring aName) {
+
+  jboolean isCopy;
+  jboolean succes;
+  const char* name = env->GetStringUTFChars (aName, &isCopy);
+  try {
+    succes = ((TreeMaintenance*)getCObjectPtr(env,jTreeMaintenance,"_TreeMaintenance"))->exportResultTree (treeID, topItem, name);
+    env->ReleaseStringUTFChars (aName, name);
+  } catch (exception &ex) {
+    cout << "Exception during TreeMaintenance::exportResultTree(" << treeID << "," << topItem << "," << name <<   ") "<< ex.what() << endl;
     env->ReleaseStringUTFChars (aName, name);
     env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
   }

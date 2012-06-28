@@ -8,7 +8,7 @@ Observation.Campaign.name = "Development"
 Observation.Campaign.title = "Development"
 
 # ----- Input streams
-Observation.VirtualInstrument.stationList = [CS302]
+Observation.VirtualInstrument.stationList = [S9,S10]
 #Observation.antennaSet=LBA_INNER
 #Observation.antennaSet=LBA_OUTER
 #Observation.antennaSet=LBA_X
@@ -19,7 +19,8 @@ Observation.VirtualInstrument.stationList = [CS302]
 #Observation.antennaSet=HBA_ONE
 #Observation.antennaSet=HBA_DUAL
 #Observation.antennaSet=HBA_JOINED
-Observation.antennaSet=LBA_INNER
+#Observation.antennaSet=LBA_INNER
+Observation.antennaSet=
 
 OLAP.realTime = T # T when reading data from stations, F when reading from disk
 
@@ -32,7 +33,7 @@ OLAP.nrTimesInFrame = 16
 #     [ 3*(0;1;2;3)  ] --> [ 0,1,2,3,0,1,2,3,0,1,2,3 ]
 #     [ 3*(300..303) ] --> [ 300,301,302,303,300,301,302,303,300,301,302,303 ]
 #     [ 2*(5*0)      ] --> [ 0,0,0,0,0,0,0,0,0,0 ]       
-Observation.subbandList  = [100..343]
+Observation.subbandList  = [100..102]
 Observation.sampleClock  = 200
 OLAP.nrBitsPerSample     = 16
 
@@ -164,14 +165,6 @@ OLAP.maxNetworkDelay = 0.5
 # ----- Storage internals
 OLAP.OLAP_Conn.IONProc_Storage_Transport = TCP
 #OLAP.OLAP_Conn.IONProc_Storage_Ports = [6300..7291] # only define this if you want specific ports to be used
-
-OLAP.Storage.AntennaSetsConf  = ${STORAGE_CONFIGDIR}/AntennaSets.conf
-OLAP.Storage.AntennaFieldsDir = ${STORAGE_CONFIGDIR}/StaticMetaData
-OLAP.Storage.HBADeltasDir     = ${STORAGE_CONFIGDIR}/StaticMetaData
-
-# ----- Global internals
-OLAP.log2SasMac = F
-OLAP.OLAP_Conn.log2SasMacOutputs = [tcp:0.0.0.0:24500]
 
 # ----- Coordinates of common sources
 #Observation.Beam[0].angle1 = 0                  # NCP

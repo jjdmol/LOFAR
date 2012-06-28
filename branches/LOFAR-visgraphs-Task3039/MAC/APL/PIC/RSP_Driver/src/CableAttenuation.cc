@@ -83,7 +83,7 @@ CableAttenuation::CableAttenuation(const string&	filename)
 				// not the first line, do some sanity checks before storing the atts.
 				int rcuMode = strToInt(column[0]);
 				ASSERTSTR(rcuMode == prevRcuMode + 1, "Expected line with rcumode " << prevRcuMode + 1);
-				ASSERTSTR(column.size() == nrOfColumns, "Expected " << nrOfColumns << " fields on line: " << line);
+				ASSERTSTR((int)column.size() == nrOfColumns, "Expected " << nrOfColumns << " fields on line: " << line);
 				ASSERTSTR(rcuMode <= MAX_RCU_MODE, 
 							"RCUmode " << rcuMode << " not in range [0.." << MAX_RCU_MODE << "]");
 

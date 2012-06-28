@@ -34,7 +34,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collection;
-import java.util.Enumeration;
 import java.util.Vector;
 import javax.swing.DefaultListModel;
 import javax.swing.JFileChooser;
@@ -255,6 +254,15 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         aMenuItem.setActionCommand("Create ParSet File");
         aPopupMenu.add(aMenuItem);
             
+        aMenuItem=new JMenuItem("Create ParSetMeta File");        
+        aMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                popupMenuHandler(evt);
+            }
+        });
+        aMenuItem.setActionCommand("Create ParSetMeta File");
+        aPopupMenu.add(aMenuItem);
         
         aPopupMenu.setOpaque(true);
         aPopupMenu.show(aComponent, x, y );       
@@ -270,7 +278,9 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
      */
     @Override
     public void popupMenuHandler(java.awt.event.ActionEvent evt) {
-         if (evt.getActionCommand().equals("Create ParSet File")) {
+        switch (evt.getActionCommand()) {
+            case "Create ParSet File":
+                {
             logger.trace("Create ParSet File");
             int aTreeID=itsMainFrame.getSharedVars().getTreeID();
             if (fc == null) {
@@ -286,7 +296,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                     String aRemoteFileName="/tmp/"+aTreeID+"-"+itsNode.name+"_"+itsMainFrame.getUserAccount().getUserName()+".ParSet";
                     
                     // write the parset
-                    OtdbRmi.getRemoteMaintenance().exportTree(aTreeID,itsNode.nodeID(),aRemoteFileName,2,false); 
+                            OtdbRmi.getRemoteMaintenance().exportTree(aTreeID,itsNode.nodeID(),aRemoteFileName); 
                     
                     //obtain the remote file
                     byte[] dldata = OtdbRmi.getRemoteFileTrans().downloadFile(aRemoteFileName);
@@ -309,7 +319,52 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                     LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 }
             }
-        }       
+                    break;
+    }
+            case "Create ParSetMeta File":
+                {
+                    logger.trace("Create ParSet File");
+                    int aTreeID=itsMainFrame.getSharedVars().getTreeID();
+                    if (fc == null) {
+                        fc = new JFileChooser();
+                        fc.setApproveButtonText("Save");
+                    }
+                    // try to get a new filename to write the parsetfile to
+                    if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+                        try {
+                            File aFile = fc.getSelectedFile();
+    
+                            // create filename that can be used at the remote site    
+                            String aRemoteFileName="/tmp/"+aTreeID+"-"+itsNode.name+"_"+itsMainFrame.getUserAccount().getUserName()+".ParSetMeta";
+                            
+                            // write the parset
+                            OtdbRmi.getRemoteMaintenance().exportResultTree(aTreeID,itsNode.nodeID(),aRemoteFileName); 
+                            
+                            //obtain the remote file
+                            byte[] dldata = OtdbRmi.getRemoteFileTrans().downloadFile(aRemoteFileName);
+                            try (BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(aFile))) {
+                                output.write(dldata,0,dldata.length);
+                                output.flush();
+                            }
+                            logger.trace("File written to: " + aFile.getPath());
+                        } catch (RemoteException ex) {
+                            String aS="exportResultTree failed : " + ex;
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                        } catch (FileNotFoundException ex) {
+                            String aS="Error during newPICTree creation: "+ ex;
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                        } catch (IOException ex) {
+                            String aS="Error during newPICTree creation: "+ ex;
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                        }
+                    }
+                    break;
+                }
+        }
+       
     }
     
      /** 
@@ -873,17 +928,16 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
      * @param   enabled     true/false enabled/disabled
      */
     public void enableButtons(boolean enabled) {
-        loadBeamsButton.setEnabled(enabled);
-        loadAnaBeamsButton.setEnabled(enabled);
         addBeamButton.setEnabled(enabled);
         editBeamButton.setEnabled(enabled);
-        copyBeamButton.setEnabled(enabled);
-        loadAnaBeamsButton.setEnabled(enabled);
-        loadBeamsButton.setEnabled(enabled);
         deleteBeamButton.setEnabled(enabled);
+        loadBeamsButton.setEnabled(enabled);
+        copyBeamButton.setEnabled(enabled);
+        
         addAnaBeamButton.setEnabled(enabled);
         editAnaBeamButton.setEnabled(enabled);
         deleteAnaBeamButton.setEnabled(enabled);
+        loadAnaBeamsButton.setEnabled(enabled);
     }
     
     /** Sets the buttons visible/invisible
@@ -892,17 +946,16 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
      */
     @Override
     public void setButtonsVisible(boolean visible) {
-        loadBeamsButton.setVisible(visible);
-        loadAnaBeamsButton.setVisible(visible);
         addBeamButton.setVisible(visible);
         editBeamButton.setVisible(visible);
-        copyBeamButton.setVisible(visible);
-        loadAnaBeamsButton.setVisible(visible);
-        loadBeamsButton.setVisible(visible);
         deleteBeamButton.setVisible(visible);
+        loadBeamsButton.setVisible(visible);
+        copyBeamButton.setVisible(visible);
+
         addAnaBeamButton.setVisible(visible);
         editAnaBeamButton.setVisible(visible);
         deleteAnaBeamButton.setVisible(visible);
+        loadAnaBeamsButton.setVisible(visible);
     }        
     
     /** Enables/disables the complete form
@@ -1464,6 +1517,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 this.editBeamButton.setEnabled(false);
                 this.deleteBeamButton.setEnabled(false);
                 this.copyBeamButton.setEnabled(false);
+                this.showBeamButton.setEnabled(false);
 
 
             }
@@ -1510,11 +1564,15 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             BitSet oldBeamlets = selection.getBeamletBitSet();
             aBS.xor(oldBeamlets);
         }
-        beamDialog = new BeamDialog(itsMainFrame,itsTreeType,true,aBS,selection.clone(),editBeam);
+        beamDialog = new BeamDialog(itsMainFrame,itsTreeType,true,aBS,selection.clone(),editBeam,showBeam);
         
         beamDialog.setLocationRelativeTo(this);
         if (editBeam) {
-            beamDialog.setBorderTitle("edit Beam");
+            if (showBeam) {
+                beamDialog.setBorderTitle("show Beam");                
+            } else {
+                beamDialog.setBorderTitle("edit Beam");
+            }
         } else {
             beamDialog.setBorderTitle("add new Beam");            
         }
@@ -1538,6 +1596,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         this.editBeamButton.setEnabled(false);
         this.deleteBeamButton.setEnabled(false);
         this.copyBeamButton.setEnabled(false);
+        this.showBeamButton.setEnabled(false);
         if (beamConfigurationPanel.getTableModel().getRowCount() == 244 ) {
             this.addBeamButton.setEnabled(false);
         } else {
@@ -2042,7 +2101,9 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
 
     private void setAnaBeamConfiguration(boolean flag) {
         this.anaBeamConfiguration.setVisible(flag);
-        this.copyBeamButton.setVisible(flag);
+        if (addBeamButton.isVisible()) {
+            this.copyBeamButton.setVisible(flag);
+        }
    }
 
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -2067,9 +2128,10 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         beamConfigurationPanel = new nl.astron.lofar.sas.otbcomponents.TablePanel();
         addBeamButton = new javax.swing.JButton();
         editBeamButton = new javax.swing.JButton();
-        deleteBeamButton = new javax.swing.JButton();
+        showBeamButton = new javax.swing.JButton();
         loadBeamsButton = new javax.swing.JButton();
         copyBeamButton = new javax.swing.JButton();
+        deleteBeamButton = new javax.swing.JButton();
         jPanel5 = new javax.swing.JPanel();
         stationsPanel = new javax.swing.JPanel();
         stationsScrollPane = new javax.swing.JScrollPane();
@@ -2209,12 +2271,12 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             }
         });
 
-        deleteBeamButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_delete.png"))); // NOI18N
-        deleteBeamButton.setText("delete beam");
-        deleteBeamButton.setEnabled(false);
-        deleteBeamButton.addActionListener(new java.awt.event.ActionListener() {
+        showBeamButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_info.gif"))); // NOI18N
+        showBeamButton.setText("show beam");
+        showBeamButton.setEnabled(false);
+        showBeamButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                deleteBeamButtonActionPerformed(evt);
+                showBeamButtonActionPerformed(evt);
             }
         });
 
@@ -2237,22 +2299,33 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             }
         });
 
+        deleteBeamButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_delete.png"))); // NOI18N
+        deleteBeamButton.setText("delete beam");
+        deleteBeamButton.setEnabled(false);
+        deleteBeamButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                deleteBeamButtonActionPerformed(evt);
+            }
+        });
+
         org.jdesktop.layout.GroupLayout jPanel3Layout = new org.jdesktop.layout.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(jPanel3Layout.createSequentialGroup()
                 .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(beamConfigurationPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1255, Short.MAX_VALUE)
+                    .add(beamConfigurationPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1324, Short.MAX_VALUE)
                     .add(jPanel3Layout.createSequentialGroup()
                         .add(addBeamButton)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(editBeamButton)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(8, 8, 8)
                         .add(deleteBeamButton)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(showBeamButton)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(loadBeamsButton)
-                        .add(18, 18, 18)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(copyBeamButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 155, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
@@ -2265,6 +2338,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                     .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                         .add(editBeamButton)
                         .add(deleteBeamButton)
+                        .add(showBeamButton)
                         .add(loadBeamsButton)
                         .add(copyBeamButton))
                     .add(addBeamButton))
@@ -2452,7 +2526,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         anaBeamConfigurationLayout.setHorizontalGroup(
             anaBeamConfigurationLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(anaBeamConfigurationLayout.createSequentialGroup()
-                .add(anaBeamConfigurationPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1163, Short.MAX_VALUE)
+                .add(anaBeamConfigurationPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1232, Short.MAX_VALUE)
                 .add(102, 102, 102))
             .add(anaBeamConfigurationLayout.createSequentialGroup()
                 .add(addAnaBeamButton)
@@ -2462,7 +2536,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 .add(deleteAnaBeamButton)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
                 .add(loadAnaBeamsButton)
-                .add(839, 839, 839))
+                .add(908, 908, 908))
         );
         anaBeamConfigurationLayout.setVerticalGroup(
             anaBeamConfigurationLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -2490,7 +2564,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                         .add(30, 30, 30)
                         .add(jPanel10, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                     .add(descriptionScrollPane)
-                    .add(jPanel3, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1277, Short.MAX_VALUE)
+                    .add(jPanel3, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1346, Short.MAX_VALUE)
                     .add(anaBeamConfiguration, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .add(treeDescriptionScrollPane))
                 .addContainerGap(30, Short.MAX_VALUE))
@@ -2532,24 +2606,30 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         add(buttonPanel1, java.awt.BorderLayout.SOUTH);
     }// </editor-fold>//GEN-END:initComponents
 
-    private void deleteBeamButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteBeamButtonActionPerformed
-        deleteBeam();
-    }//GEN-LAST:event_deleteBeamButtonActionPerformed
+    private void showBeamButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_showBeamButtonActionPerformed
+        editBeam = true;
+        showBeam = true;
+        addBeam();
+    }//GEN-LAST:event_showBeamButtonActionPerformed
 
     private void editBeamButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_editBeamButtonActionPerformed
         editBeam=true;
+        showBeam = false;
         addBeam();
     }//GEN-LAST:event_editBeamButtonActionPerformed
 
     private void addBeamButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addBeamButtonActionPerformed
         editBeam=false;
+        showBeam = false;
         addBeam();
     }//GEN-LAST:event_addBeamButtonActionPerformed
 
     private void beamConfigurationPanelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_beamConfigurationPanelMouseClicked
         editBeamButton.setEnabled(true);
-        deleteBeamButton.setEnabled(true);
+        showBeamButton.setEnabled(true);
         copyBeamButton.setEnabled(true);
+        deleteBeamButton.setEnabled(true);
+        showBeamButton.setEnabled(true);
     }//GEN-LAST:event_beamConfigurationPanelMouseClicked
 
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
@@ -2674,6 +2754,10 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
            buttonPanel1.setButtonEnabled("Apply", false);
        }
     }//GEN-LAST:event_antennaConfigPanelActionPerformed
+
+    private void deleteBeamButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteBeamButtonActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_deleteBeamButtonActionPerformed
     
     private jOTDBnode                         itsNode = null;
     private MainFrame                         itsMainFrame;
@@ -2726,11 +2810,10 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     private BitSet   itsUsedBeamlets = new BitSet(216);
     private boolean  editBeam = false;
     private boolean  editAnaBeam = false;
+    private boolean  showBeam = false;
     private int      itsSelectedRow = -1;
 
 
-    // Temp
-    private Vector<String>    itsUsedStorageNodes      = new Vector<>();
 
 
 
@@ -2775,6 +2858,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JLabel labelNrSlotsInFrame;
     private javax.swing.JButton loadAnaBeamsButton;
     private javax.swing.JButton loadBeamsButton;
+    private javax.swing.JButton showBeamButton;
     private javax.swing.JList stationList;
     private javax.swing.JPanel stationsButtonPanel;
     private javax.swing.JPanel stationsModPanel;

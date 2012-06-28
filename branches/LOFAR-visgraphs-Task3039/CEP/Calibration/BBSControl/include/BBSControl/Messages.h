@@ -23,14 +23,14 @@
 #ifndef LOFAR_BBSCONTROL_MESSAGES_H
 #define LOFAR_BBSCONTROL_MESSAGES_H
 
+#include <BBSControl/ProcessId.h>
+#include <BBSControl/Types.h>
+#include <BBSKernel/SolverInterfaceTypes.h>
 #include <Blob/BlobStreamable.h>
 #include <Common/LofarTypes.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_smartptr.h>
-#include <BBSKernel/SolverInterfaceTypes.h>
-#include <BBSControl/CalSession.h>
-#include <BBSControl/Types.h>
 
 namespace LOFAR
 {

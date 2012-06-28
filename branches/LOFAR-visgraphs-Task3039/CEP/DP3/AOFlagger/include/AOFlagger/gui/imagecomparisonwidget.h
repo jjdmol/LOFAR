@@ -58,7 +58,7 @@ class ImageComparisonWidget : public ImageWidget {
 					data.SetMask(_contaminated);
 			}
 			if(StartHorizontal() != 0.0 || EndHorizontal() != 1.0 || StartVertical() != 0.0 || EndVertical() != 1.0)
-			   data.Trim(round(StartHorizontal() * data.ImageWidth()), round(StartVertical() * data.ImageWidth()),
+			   data.Trim(round(StartHorizontal() * data.ImageWidth()), round(StartVertical() * data.ImageHeight()),
 									 round(EndHorizontal() * data.ImageWidth()), round(EndVertical() * data.ImageHeight())); 
 			return data;
 		}

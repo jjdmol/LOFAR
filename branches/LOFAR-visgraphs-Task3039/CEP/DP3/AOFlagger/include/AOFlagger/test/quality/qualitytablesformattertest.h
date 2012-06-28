@@ -124,7 +124,7 @@ void QualityTablesFormatterTest::TestTableInitialization::operator()()
 	};
 	for(unsigned i=0;i<5;++i)
 	{
-		qd.InitializeEmptyTable(tables[i]);
+		qd.InitializeEmptyTable(tables[i], 8);
 		AssertTrue(qd.TableExists(tables[i]), "Table exists after initialization");
 	}
 	
@@ -143,7 +143,7 @@ void QualityTablesFormatterTest::TestKindOperations::operator()()
 	QualityTablesFormatter qd("QualityTest.MS");
 	
 	qd.RemoveAllQualityTables();
-	qd.InitializeEmptyTable(QualityTablesFormatter::KindNameTable);
+	qd.InitializeEmptyTable(QualityTablesFormatter::KindNameTable, 4);
 	AssertTrue(qd.TableExists(QualityTablesFormatter::KindNameTable));
 	
 	unsigned kindIndex;
@@ -159,7 +159,7 @@ void QualityTablesFormatterTest::TestKindOperations::operator()()
 	AssertEquals(qd.QueryKindIndex(QualityTablesFormatter::MeanStatistic), originalKindIndex);
 	AssertEquals(qd.QueryKindIndex(QualityTablesFormatter::VarianceStatistic), secondKindIndex);
 	
-	qd.InitializeEmptyTable(QualityTablesFormatter::KindNameTable);
+	qd.InitializeEmptyTable(QualityTablesFormatter::KindNameTable, 4);
 	AssertFalse(qd.QueryKindIndex(QualityTablesFormatter::MeanStatistic, kindIndex), "Empty table contains no index after re-init");
 }
 
@@ -170,10 +170,10 @@ void QualityTablesFormatterTest::TestStoreStatistics::operator()()
 	qd.RemoveAllQualityTables();
 	AssertFalse(qd.IsStatisticAvailable(QualityTablesFormatter::TimeDimension, QualityTablesFormatter::MeanStatistic), "Statistic not available when table not exists");
 	
-	qd.InitializeEmptyTable(QualityTablesFormatter::KindNameTable);
+	qd.InitializeEmptyTable(QualityTablesFormatter::KindNameTable, 4);
 	AssertFalse(qd.IsStatisticAvailable(QualityTablesFormatter::TimeDimension, QualityTablesFormatter::MeanStatistic), "Statistic not available when only kind-name table exists");
 	
-	qd.InitializeEmptyTable(QualityTablesFormatter::TimeStatisticTable);
+	qd.InitializeEmptyTable(QualityTablesFormatter::TimeStatisticTable, 4);
 	AssertFalse(qd.IsStatisticAvailable(QualityTablesFormatter::TimeDimension, QualityTablesFormatter::MeanStatistic), "Statistic not available when empty tables exist");
 	
 	unsigned meanStatIndex = qd.StoreKindName(QualityTablesFormatter::MeanStatistic);

@@ -8,5 +8,8 @@ python_install(
     testbbs.py 
     DESTINATION lofar/bbs) 
 
-install(PROGRAMS bbstests.sh DESTINATION bin)
+install(PROGRAMS 
+	bbstests.sh 
+	sbprogress.sh
+	DESTINATION bin)
 #install(PROGRAMS BBStiming.py DESTINATION bin)

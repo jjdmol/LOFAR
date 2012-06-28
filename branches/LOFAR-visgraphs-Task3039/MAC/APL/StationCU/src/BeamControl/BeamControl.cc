@@ -465,7 +465,7 @@ GCFEvent::TResult BeamControl::allocBeams_state(GCFEvent& event, GCFPortInterfac
 		// digital part
 		if (!itsObs->beams.empty()) {			// fill digital part if any
 			StationConfig		sc;
-			beamAllocEvent.ringNr = ((sc.hasSplitters && (beamAllocEvent.antennaSet == "HBA_ONE")) ? 1 : 0);
+			beamAllocEvent.ringNr = ((sc.hasSplitters && (beamAllocEvent.antennaSet.substr(0,7) == "HBA_ONE")) ? 1 : 0);
 
 			vector<int> beamBeamlets = itsObs->getBeamlets(beamIdx);
 			if (itsObs->beams[beamIdx].subbands.size() != beamBeamlets.size()) {

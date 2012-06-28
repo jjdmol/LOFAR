@@ -26,7 +26,7 @@
 #include <Common/StringUtil.h>
 #include <Storage/MSWriterFile.h>
 #include <Storage/MSWriterCorrelated.h>
-#include <Storage/MSWriterLDA.h>
+#include <Storage/MSWriterDAL.h>
 #include <Storage/MSWriterNull.h>
 #include <Storage/MeasurementSetFormat.h>
 #include <Storage/OutputThread.h>
@@ -107,14 +107,23 @@ OutputThread::OutputThread(const Parset &parset, OutputType outputType, unsigned
   itsReceiveQueue(receiveQueue),
   itsBlocksWritten(0),
   itsBlocksDropped(0),
-  itsNextSequenceNumber(0),
-  itsThread(this, &OutputThread::mainLoop, itsLogPrefix)
+  itsNextSequenceNumber(0)
 {
+}
+
+
+void OutputThread::start()
+{
+  itsThread = new Thread(this, &OutputThread::mainLoop, itsLogPrefix);
 }
 
 
 void OutputThread::createMS()
 {
+  // even the HDF5 writer accesses casacore, to perform conversions
+  ScopedLock sl(casacoreMutex);
+  ScopedDelayCancellation dc; // don't cancel casacore calls
+
   std::string directoryName = itsParset.getDirectoryName(itsOutputType, itsStreamNr);
   std::string fileName	    = itsParset.getFileName(itsOutputType, itsStreamNr);
   std::string path	    = directoryName + "/" + fileName;
@@ -123,9 +132,6 @@ void OutputThread::createMS()
 
   if (itsOutputType == CORRELATED_DATA) {
 #if defined HAVE_AIPSPP
-    ScopedLock sl(casacoreMutex);
-    ScopedDelayCancellation dc; // don't cancel casacore calls
-
     MeasurementSetFormat myFormat(itsParset, 512);
             
     /// Make MeasurementSet filestructures and required tables
@@ -158,7 +164,7 @@ void OutputThread::createMS()
         break;
 
       case BEAM_FORMED_DATA:
-        itsWriter = new MSWriterLDA<float,3>(path.c_str(), itsParset, itsStreamNr, itsIsBigEndian);
+        itsWriter = new MSWriterDAL<float,3>(path.c_str(), itsParset, itsStreamNr, itsIsBigEndian);
         break;
 
       default:
@@ -258,7 +264,7 @@ void OutputThread::cleanUp()
 
   float dropPercent = itsBlocksWritten + itsBlocksDropped == 0 ? 0.0 : (100.0 * itsBlocksDropped) / (itsBlocksWritten + itsBlocksDropped);
 
-  LOG_INFO_STR(itsLogPrefix << itsBlocksWritten << " blocks written, " << itsBlocksDropped << " blocks dropped: " << std::setprecision(3) << dropPercent << "% lost" );
+  LOG_INFO_STR(itsLogPrefix << "Finished writing: " << itsBlocksWritten << " blocks written, " << itsBlocksDropped << " blocks dropped: " << std::setprecision(3) << dropPercent << "% lost" );
 }
 
 

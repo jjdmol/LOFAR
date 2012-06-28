@@ -83,7 +83,7 @@ ssize_t GTMETHSocket::send(void* buf, size_t count)
 
   ssize_t written = -1;
   do {
-    written = sendto(_fd, 
+    written = ::sendto(_fd, 
 		     _sendPacket,
 		     newcount + sizeof(struct ethhdr), 0,
 		     (struct sockaddr*)&_sockaddr,
@@ -162,13 +162,13 @@ int GTMETHSocket::open(const char* ifname,
 
     // make large send/recv buffers
     int val = 262144;
-    if (setsockopt(socketFD, SOL_SOCKET, SO_RCVBUF, &val, sizeof(val)) < 0) 
+    if (::setsockopt(socketFD, SOL_SOCKET, SO_RCVBUF, &val, sizeof(val)) < 0) 
     {
       LOG_WARN(LOFAR::formatString (
           "setsockopt(SO_RCVBUF): %s", 
           strerror(errno)));	
     }
-    if (setsockopt(socketFD, SOL_SOCKET, SO_SNDBUF, &val, sizeof(val)) < 0) 
+    if (::setsockopt(socketFD, SOL_SOCKET, SO_SNDBUF, &val, sizeof(val)) < 0) 
     {
       LOG_WARN(LOFAR::formatString (
           "setsockopt(SO_SNDBUF): %s", 
@@ -178,12 +178,12 @@ int GTMETHSocket::open(const char* ifname,
    // find MAC address for specified interface
     struct ifreq ifr;
     strncpy(ifr.ifr_name, ifname, IFNAMSIZ-1);
-    if (ioctl(socketFD, SIOCGIFHWADDR, &ifr) < 0)
+    if (::ioctl(socketFD, SIOCGIFHWADDR, &ifr) < 0)
     {
       LOG_FATAL(LOFAR::formatString ( 
           "ioctl(SIOCGIFHWADDR): %s", 
           strerror(errno)));
-      close();
+      ::close(socketFD);
       return -1;
     }
   
@@ -194,7 +194,7 @@ int GTMETHSocket::open(const char* ifname,
     for (int i = 0; i < ETH_ALEN; i++)
     {
       hx = ifr.ifr_hwaddr.sa_data[i] & 0xff;
-      sprintf(macPart, "%02x", hx);
+      snprintf(macPart, sizeof macPart, "%02x", hx);
       macAddress += macPart;
       if (i < ETH_ALEN - 1) macAddress += ':';
     }
@@ -212,12 +212,12 @@ int GTMETHSocket::open(const char* ifname,
     memcpy((char*)(&mac_filter_insn[3].k) + 2, destMac, sizeof(__u16));
     mac_filter_insn[3].k = htonl(mac_filter_insn[3].k);
     filter.filter = mac_filter_insn;
-    if (setsockopt(socketFD,
+    if (::setsockopt(socketFD,
 		   SOL_SOCKET, SO_ATTACH_FILTER,
 		   &filter, sizeof(struct sock_fprog)) < 0)
     {
       LOG_ERROR("setsockopt(SO_ATTACH_FILTER) failed");
-      close();
+      ::close(socketFD);
       return -1;
     }
   
@@ -226,7 +226,7 @@ int GTMETHSocket::open(const char* ifname,
     for (int i = 0; i < ETH_ALEN; i++)
     {
       hx = destMac[i] & 0xff;
-      sprintf(macPart, "%02x", hx);
+      snprintf(macPart, sizeof macPart, "%02x", hx);
       macAddress += macPart;
       if (i < ETH_ALEN - 1) macAddress += ':';
     }
@@ -246,7 +246,7 @@ int GTMETHSocket::open(const char* ifname,
     {
       LOG_FATAL(LOFAR::formatString ( 
           "ioctl(SIOCGIFINDEX)"));
-      close();
+      ::close(socketFD);
       return -1;
     }
     int ifindex = ifr.ifr_ifindex;
@@ -259,13 +259,13 @@ int GTMETHSocket::open(const char* ifname,
     _sockaddr.sll_protocol = htons(ETH_P_ALL);
     _sockaddr.sll_ifindex = ifindex;
     _sockaddr.sll_hatype = ARPHRD_ETHER;
-    if (bind(socketFD, (struct sockaddr*)&_sockaddr,
+    if (::bind(socketFD, (struct sockaddr*)&_sockaddr,
 	     sizeof(struct sockaddr_ll)) < 0)
     {
         LOG_FATAL(LOFAR::formatString ( 
             "GCFETHRawPort::open; bind : %s",
             strerror(errno)));
-        close();
+        ::close(socketFD);
         return -1;
     }
   
@@ -275,7 +275,7 @@ int GTMETHSocket::open(const char* ifname,
     so.mr_type = PACKET_MR_PROMISC;
     so.mr_alen = 0;
     memset(&so.mr_address, 0, sizeof(so.mr_address));
-    if (setsockopt(socketFD, SOL_PACKET, PACKET_ADD_MEMBERSHIP,
+    if (::setsockopt(socketFD, SOL_PACKET, PACKET_ADD_MEMBERSHIP,
        (void*)&so, sizeof(struct packet_mreq)) < 0)
     {
     }

@@ -29,6 +29,7 @@ set(cnproc_LIB_SRCS
   PPF.cc
   Flagger.cc
   PreCorrelationFlagger.cc
+  PreCorrelationNoChannelsFlagger.cc
   PostCorrelationFlagger.cc
   Stokes.cc)
 

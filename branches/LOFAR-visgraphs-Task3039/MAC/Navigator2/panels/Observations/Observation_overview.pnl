@@ -1,4 +1,4 @@
-V 10
+V 11
 1
 LANG:1 0 
 PANEL,-1 -1 995 561 N "_3DFace" 0
@@ -36,14 +36,13 @@ PANEL,-1 -1 995 561 N "_3DFace" 0
                                    baseDP + \".Beams.angle1\",
                                    baseDP + \".Beams.angle2\",
                                    baseDP + \".Beams.subbandList\",
-                                   baseDP + \".Beams.beamletList\",
                                    baseDP + \".runState\",
                                    baseDP + \".stationList:_online.._invalid\") == -1) {
       LOG_ERROR(\"Observation_overview.pnl:main|Couldn't connect to : \"+baseDP);
     } 
     if (!navFunct_dpReachable(baseDP)) {
-      updateObservationControl(\"\",0,\"\",0,\"\",\"\",\"\",\"\",\"\",\"\",0,\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",makeDynString(),\"\",makeDynFloat(),
-                    \"\",makeDynFloat(),\"\",makeDynString(),\"\",makeDynString(),\"\",true);
+      updateObservationControl(\"\",0,\"\",0,\"\",\"\",\"\",\"\",\"\",\"\",0,\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",makeDynString(),\"\",makeDynFloat(),
+                    \"\",makeDynFloat(),\"\",makeDynString(),\"\",true);
     }
   } else {
     LOG_ERROR(\"ObservationControl.pnl:main|Couldn't find DP to connect to: \"+baseDP);
@@ -85,13 +84,21 @@ updateObservationControl(string dp1, int claimPeriod,
               string dp16,dyn_float angle1,
               string dp17,dyn_float angle2,
               string dp18,dyn_string subbandList,
-              string dp19,dyn_string beamletList, 
-              string dp20,string runState,
+              string dp19,string runState,
               string dp20, bool invalid)
 {
   LOG_TRACE(\"Observation_overview.pnl:updateObservationControl|entered\");
   beamTable.deleteAllLines();
   string SymbolCol=\"_Window\";
+
+  if (strtolower(runState) == \"running\") {
+    Abort_Observation.visible(true);
+    Abort_Observation.enabled(true);
+  } else {
+    Abort_Observation.visible(false);
+    Abort_Observation.enabled(false);
+  }
+
   if (!invalid) {
     beamTable.enabled(true);
     setValue(\"claimPeriodText\", \"text\", claimPeriod);
@@ -112,7 +119,7 @@ updateObservationControl(string dp1, int claimPeriod,
    
     for (int i=1; i<= dynlen(directionType); i++) {
       beamTable.appendLine(\"Direction\",directionType[i],\"Angle1\",angle1[i],\"Angle2\",angle2[i],
-                           \"subbands\",subbandList[i],\"beamlets\",beamletList[i]);
+                           \"subbands\",subbandList[i]);
     }
     
   } else {
@@ -123,13 +130,6 @@ updateObservationControl(string dp1, int claimPeriod,
     beamTable.enabled(false);
   }
   
-  if (strtolower(runState) == \"running\") {
-    Abort_Observation.visible(true);
-    Abort_Observation.enabled(true);
-  } else {
-    Abort_Observation.visible(false);
-    Abort_Observation.enabled(false);
-  }
   
   setValue(\"claimPeriodText\", \"backCol\", SymbolCol);
   setValue(\"preparePeriodText\", \"backCol\", SymbolCol);
@@ -216,12 +216,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 39 64 101 78
+E E 0 1 1 2 1 E U  1 E 39 64 101 77
 0 2 2 "0s" 0 0 0 192 0 0  39 64 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 11 Start Time:
 2 1
 "PRIMITIVE_TEXT9"
@@ -236,12 +235,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 19 132 103 146
+E E 0 1 1 2 1 E U  1 E 19 132 103 145
 0 2 2 "0s" 0 0 0 192 0 0  19 132 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 14 Antenna Array:
 14 2
 "antennaArrayText"
@@ -256,14 +254,13 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 117 128 984 149
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  117 128 984 149
 2 "0s" 0 0 0 0 0 -1  E E E
 25 3
 "beamTable"
 ""
-1 6 277 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 10 280 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 7 0 0 0 0 0
 E E E
@@ -273,40 +270,33 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 4 275 984 464
-EE 1 0 1 5 8 "Direction" 5 1 0 "s" 1
+LANG:1 33 MS Shell Dlg,-1,13,5,50,0,0,0,0,0
+0  8 278 988 467
+EE 1 0 1 4 8 "Direction" 8 1 0 "s" 1
 LANG:1 9 Direction
 E
 1
 LANG:1 0 
 
-65 "Angle1" 4 1 0 "s" 1
+100 "Angle1" 8 1 0 "s" 1
 LANG:1 6 Angle1
 E
 1
 LANG:1 0 
 
-60 "Angle2" 4 1 0 "s" 1
+100 "Angle2" 8 1 0 "s" 1
 LANG:1 6 Angle2
 E
 1
 LANG:1 0 
 
-60 "subbands" 35 1 0 "s" 1
+100 "subbands" 60 1 0 "s" 1
 LANG:1 8 subbands
 E
 1
 LANG:1 0 
 
-395 "beamlets" 35 1 0 "s" 1
-LANG:1 8 beamlets
-E
-1
-LANG:1 0 
-
-395 
+672 
 18 18 "" 1 1
 LANG:1 2 #8
 "" 1 1
@@ -325,9 +315,8 @@ LANG:1 2 #2
 LANG:1 2 #1
 10 8
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-0 0 2 1 7
+LANG:1 33 MS Shell Dlg,-1,13,5,50,0,0,0,0,0
+0 0 0 2 1 7
 1 0
 2 4
 "PRIMITIVE_TEXT10"
@@ -342,12 +331,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 4 262 45 276
+E E 0 1 1 2 1 E U  1 E 4 262 45 275
 0 2 2 "0s" 0 0 0 192 0 0  4 262 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 6 Beams:
 14 5
 "startTimeText"
@@ -362,9 +350,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 117 62 351 83
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  117 62 351 83
 2 "0s" 0 0 0 0 0 -1  E E E
 2 6
 "PRIMITIVE_TEXT11"
@@ -379,12 +366,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 395 66 456 80
+E E 0 1 1 2 1 E U  1 E 395 66 456 79
 0 2 2 "0s" 0 0 0 192 0 0  395 66 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 10 Stop Time:
 14 7
 "stopTimeText"
@@ -399,9 +385,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 467 62 701 83
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  467 62 701 83
 2 "0s" 0 0 0 0 0 -1  E E E
 2 8
 "PRIMITIVE_TEXT12"
@@ -416,12 +401,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 28 88 102 102
+E E 0 1 1 2 1 E U  1 E 28 88 102 101
 0 2 2 "0s" 0 0 0 192 0 0  28 88 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 13 Claim Period:
 14 9
 "claimPeriodText"
@@ -436,9 +420,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 117 84 351 105
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  117 84 351 105
 2 "0s" 0 0 0 0 0 -1  E E E
 2 10
 "PRIMITIVE_TEXT13"
@@ -453,12 +436,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 369 88 457 102
+E E 0 1 1 2 1 E U  1 E 369 88 457 101
 0 2 2 "0s" 0 0 0 192 0 0  369 88 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 15 Prepare Period:
 14 11
 "preparePeriodText"
@@ -473,9 +455,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 467 84 701 105
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  467 84 701 105
 2 "0s" 0 0 0 0 0 -1  E E E
 2 12
 "PRIMITIVE_TEXT14"
@@ -490,12 +471,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 41 110 102 124
+E E 0 1 1 2 1 E U  1 E 41 110 102 123
 0 2 2 "0s" 0 0 0 192 0 0  41 110 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 11 BandFilter:
 14 13
 "bandFilterText"
@@ -510,9 +490,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 117 106 351 127
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  117 106 351 127
 2 "0s" 0 0 0 0 0 -1  E E E
 2 14
 "PRIMITIVE_TEXT15"
@@ -527,12 +506,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 751 110 826 124
+E E 0 1 1 2 1 E U  1 E 751 110 826 123
 0 2 2 "0s" 0 0 0 192 0 0  751 110 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 12 NyquistZone:
 14 15
 "nyquistzoneText"
@@ -547,14 +525,13 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 835 106 869 127
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  835 106 869 127
 2 "0s" 0 0 0 0 0 -1  E E E
 2 16
 "PRIMITIVE_TEXT16"
 ""
-1 -131.7036011080334 -192 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 -3791.477835200918 -1240 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 33 0 0 0 0 0
 E E E
@@ -564,12 +541,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1.263157894736842 0 1 -588.3684210526316 -262 1 E 752 372 829 386
+E E 0 1 1 2 1 E 1.263157894736842 0 1 -588.3684210526316 -262 1 E 752 372 829 385
 0 2 2 "0s" 0 0 0 192 0 0  752 372 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 12 SampleClock:
 14 17
 "sampleClockText"
@@ -584,9 +560,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 467 106 701 127
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  467 106 701 127
 2 "0s" 0 0 0 0 0 -1  E E E
 2 18
 "PRIMITIVE_TEXT17"
@@ -601,12 +576,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 35 154 103 168
+E E 0 1 1 2 1 E U  1 E 35 154 103 167
 0 2 2 "0s" 0 0 0 192 0 0  35 154 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 13 Station List:
 14 19
 "stationListText"
@@ -621,9 +595,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 117 150 984 171
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  117 150 984 171
 2 "0s" 0 0 0 0 0 -1  E E E
 2 20
 "PRIMITIVE_TEXT18"
@@ -638,12 +611,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 24 176 103 190
+E E 0 1 1 2 1 E U  1 E 24 176 103 189
 0 2 2 "0s" 0 0 0 192 0 0  24 176 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 14 Receiver List:
 14 21
 "receiverListText"
@@ -658,9 +630,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 117 172 984 193
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  117 172 984 193
 2 "0s" 0 0 0 0 0 -1  E E E
 2 22
 "PRIMITIVE_TEXT19"
@@ -675,12 +646,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 21 198 106 212
+E E 0 1 1 2 1 E U  1 E 21 198 106 211
 0 2 2 "0s" 0 0 0 192 0 0  21 198 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 15 Inputnode List:
 14 23
 "inputNodeListText"
@@ -695,9 +665,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 117 194 984 215
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  117 194 984 215
 2 "0s" 0 0 0 0 0 -1  E E E
 2 24
 "PRIMITIVE_TEXT20"
@@ -712,12 +681,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 23 220 105 234
+E E 0 1 1 2 1 E U  1 E 23 220 105 233
 0 2 2 "0s" 0 0 0 192 0 0  23 220 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 13 BGLNode List:
 14 25
 "BGLNodeListText"
@@ -732,9 +700,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 117 216 984 237
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  117 216 984 237
 2 "0s" 0 0 0 0 0 -1  E E E
 2 26
 "PRIMITIVE_TEXT21"
@@ -749,12 +716,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 4 242 106 256
+E E 0 1 1 2 1 E U  1 E 4 242 106 255
 0 2 2 "0s" 0 0 0 192 0 0  4 242 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 17 StorageNode List:
 14 27
 "storageNodeListText"
@@ -769,9 +735,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 117 238 984 259
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  117 238 984 259
 2 "0s" 0 0 0 0 0 -1  E E E
 2 28
 "PRIMITIVE_TEXT22"
@@ -786,12 +751,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 2 42 100 56
+E E 0 1 1 2 1 E U  1 E 2 42 100 55
 0 2 2 "0s" 0 0 0 192 0 0  2 42 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 15 MeasurementSet:
 14 29
 "measurementSetText"
@@ -806,9 +770,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 117 40 351 61
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  117 40 351 61
 2 "0s" 0 0 0 0 0 -1  E E E
 2 30
 "observationName"
@@ -823,12 +786,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 300 10 401 31
+E E 0 1 1 2 1 E U  1 E 300 10 401 30
 0 2 2 "0s" 0 0 0 192 0 0  300 10 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-16-*-100-100-*-*-iso8859-1|-16,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,16,5,75,0,0,0,0,0
+0 1
 LANG:1 12 Observation:
 13 31
 "Abort_Observation"
@@ -843,9 +805,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 4 488 128 514
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  4 488 128 514
 
 T 
 1
@@ -887,12 +848,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 710 66 762 80
+E E 0 1 1 2 1 E U  1 E 710 66 762 79
 0 2 2 "0s" 0 0 0 192 0 0  710 66 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 9 runState:
 14 33
 "runStateText"
@@ -907,9 +867,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 784 62 982 83
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  784 62 982 83
 2 "0s" 0 0 0 0 0 -1  E E E
 0
 LAYER, 1 

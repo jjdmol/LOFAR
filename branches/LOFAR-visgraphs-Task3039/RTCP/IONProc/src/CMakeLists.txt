@@ -15,7 +15,6 @@ lofar_add_library(ionproc
   Package__Version.cc
   BeamletBuffer.cc
   BeamletBufferToComputeNode.cc
-  CN_Personality.cc
   CommandServer.cc
   ControlPhase3Cores.cc
   Delays.cc
@@ -37,3 +36,4 @@ lofar_add_library(ionproc
 
 lofar_add_bin_program(versionionproc versionionproc.cc)
 lofar_add_bin_program(ION_Processing ION_main.cc)
+lofar_add_bin_program(generateDelays generateDelays.cc)

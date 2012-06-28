@@ -4,7 +4,6 @@ TODO
 Things that still have to be done (in arbitrary order).
 
 * Code clean-up.
-* Remove unnecessary copy-ing of arrays in LofarConvolutionFunction.
 * Proper support for MS with multiple channels / bands (MF in FTMachine).
     - How to determine reference frequencies?
     - LofarATerm needs to correct the A-term for the response at the phase center for each channel.
@@ -15,11 +14,11 @@ Things that still have to be done (in arbitrary order).
 * Allow a facet to be put at the location of a corrupting source.
 * MFS from Sanjay (?)
 * Parallelisation
-* Gridder optimisation
 * Make sure convolution functions are not too large
 * Use WEIGHT_SPECTRUM
 * Support for multiple image channels
-* Store average PB, etc. in properly named files
 * Distributed weighting and gridding (multiple subbands on different nodes)
 * Grid PSF and data simultaneously (to reduce data access and conv.func. calculation)
+* Get rid of multiple times writing avgpb and spheriod_cut_im for csclean
+* Implement (de)gridding on GPU
 

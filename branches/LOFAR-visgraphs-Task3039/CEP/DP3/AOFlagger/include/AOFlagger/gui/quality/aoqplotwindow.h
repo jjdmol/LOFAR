@@ -34,6 +34,7 @@
 #include "baselineplotpage.h"
 #include "blengthplotpage.h"
 #include "frequencyplotpage.h"
+#include "histogrampage.h"
 #include "openoptionswindow.h"
 #include "summarypage.h"
 #include "timefrequencyplotpage.h"
@@ -58,9 +59,9 @@ class AOQPlotWindow : public Gtk::Window {
 			onStatusChange(newStatus);
 		}
 	private:
-		void onOpenOptionsSelected(std::string filename, bool downsampleTime, bool downsampleFreq, size_t timeSize, size_t freqSize);
+		void onOpenOptionsSelected(std::string filename, bool downsampleTime, bool downsampleFreq, size_t timeSize, size_t freqSize, bool correctHistograms);
 		void close();
-		void readStatistics(bool downsampleTime, bool downsampleFreq, size_t timeSize, size_t freqSize);
+		void readStatistics(bool downsampleTime, bool downsampleFreq, size_t timeSize, size_t freqSize, bool correctHistograms);
 		void onHide()
 		{
 			Gtk::Main::quit();
@@ -79,6 +80,10 @@ class AOQPlotWindow : public Gtk::Window {
 				case 6: SetStatus("Summary"); break;
 			}
 		}
+		void setShowHistograms(bool show)
+		{
+			_histogramPage.set_visible(show);
+		}
 		
 		Gtk::VBox _vBox;
 		Gtk::Notebook _notebook;
@@ -91,12 +96,14 @@ class AOQPlotWindow : public Gtk::Window {
 		TimePlotPage _timePlotPage;
 		FrequencyPlotPage _frequencyPlotPage;
 		SummaryPage _summaryPage;
+		HistogramPage _histogramPage;
 		
 		OpenOptionsWindow _openOptionsWindow;
 
 		bool _isOpen;
 		std::string _filename;
 		class StatisticsCollection *_statCollection;
+		class HistogramCollection *_histCollection;
 		class StatisticsCollection *_fullStats;
 		std::vector<class AntennaInfo> _antennas;
 };

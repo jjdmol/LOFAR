@@ -25,7 +25,6 @@
 #include <BBSKernel/StationExprLOFAR.h>
 #include <BBSKernel/Exceptions.h>
 #include <BBSKernel/MeasurementExprLOFARUtil.h>
-#include <BBSKernel/Expr/AntennaFieldAzEl.h>
 #include <BBSKernel/Expr/AzEl.h>
 #include <BBSKernel/Expr/CachePolicy.h>
 #include <BBSKernel/Expr/Delay.h>
@@ -35,6 +34,7 @@
 #include <BBSKernel/Expr/ITRFDirection.h>
 #include <BBSKernel/Expr/Literal.h>
 #include <BBSKernel/Expr/MatrixInverse.h>
+#include <BBSKernel/Expr/MatrixInverseMMSE.h>
 #include <BBSKernel/Expr/MatrixMul2.h>
 #include <BBSKernel/Expr/ScalarMatrixMul.h>
 #include <BBSKernel/Expr/StationBeamFormer.h>
@@ -49,25 +49,27 @@ StationExprLOFAR::StationExprLOFAR(SourceDB &sourceDB, const BufferMap &buffers,
     const ModelConfig &config, const Instrument::ConstPtr &instrument,
     double refFreq, const casa::MDirection &refPhase,
     const casa::MDirection &refDelay, const casa::MDirection &refTile,
-    bool inverse)
+    bool inverse, bool useMMSE, double sigmaMMSE)
 {
     initialize(sourceDB, buffers, config, instrument, refFreq, refPhase,
-        refDelay, refTile, inverse);
+        refDelay, refTile, inverse, useMMSE, sigmaMMSE);
 }
 
 StationExprLOFAR::StationExprLOFAR(SourceDB &sourceDB, const BufferMap &buffers,
-    const ModelConfig &config, const VisBuffer::Ptr &buffer, bool inverse)
+    const ModelConfig &config, const VisBuffer::Ptr &buffer, bool inverse,
+    bool useMMSE, double sigmaMMSE)
 {
     initialize(sourceDB, buffers, config, buffer->instrument(),
         buffer->getReferenceFreq(), buffer->getPhaseReference(),
-        buffer->getDelayReference(), buffer->getTileReference(), inverse);
+        buffer->getDelayReference(), buffer->getTileReference(), inverse,
+        useMMSE, sigmaMMSE);
 }
 
 void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
-    const ModelConfig &config, const Instrument::Ptr &instrument,
+    const ModelConfig &config, const Instrument::ConstPtr &instrument,
     double refFreq, const casa::MDirection &refPhase,
     const casa::MDirection &refDelay, const casa::MDirection &refTile,
-    bool inverse)
+    bool inverse, bool useMMSE, double sigmaMMSE)
 {
     // Allocate space for the station response expressions.
     itsExpr.resize(instrument->nStations());
@@ -128,21 +130,6 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
         Expr<Vector<3> >::Ptr exprRefTileITRF =
             makeITRFExpr(instrument->position(), exprRefTile);
 
-        HamakerBeamCoeff coeffLBA, coeffHBA;
-        if(config.useBeam())
-        {
-            // Read LBA beam model coefficients.
-            casa::Path path;
-            path = config.getBeamConfig().getElementPath();
-            path.append("element_beam_HAMAKER_LBA.coeff");
-            coeffLBA.init(path);
-
-            // Read HBA beam model coefficients.
-            path = config.getBeamConfig().getElementPath();
-            path.append("element_beam_HAMAKER_HBA.coeff");
-            coeffHBA.init(path);
-        }
-
         // Functor for the creation of the ionosphere sub-expression.
         IonosphereExpr::Ptr exprIonosphere;
         if(config.useIonosphere())
@@ -177,8 +164,7 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
                     itsExpr[i] = compose(itsExpr[i],
                         makeBeamExpr(itsScope, instrument->station(i),
                         refFreq, exprRefPhaseITRF, exprRefDelayITRF,
-                        exprRefTileITRF, config.getBeamConfig(), coeffLBA,
-                        coeffHBA));
+                        exprRefTileITRF, config.getBeamConfig()));
                 }
 
                 // Ionosphere.
@@ -225,8 +211,7 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
                     itsExpr[i] = compose(itsExpr[i],
                         makeBeamExpr(itsScope, instrument->station(i), refFreq,
                         exprPatchPositionITRF, exprRefDelayITRF,
-                        exprRefTileITRF, config.getBeamConfig(), coeffLBA,
-                        coeffHBA));
+                        exprRefTileITRF, config.getBeamConfig()));
                 }
 
                 // Directional TEC.
@@ -273,7 +258,17 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
 
         if(inverse)
         {
-            itsExpr[i] = Expr<JonesMatrix>::Ptr(new MatrixInverse(itsExpr[i]));
+            if(useMMSE && sigmaMMSE > 0.0)
+            {
+                itsExpr[i] =
+                    Expr<JonesMatrix>::Ptr(new MatrixInverseMMSE(itsExpr[i],
+                    sigmaMMSE));
+            }
+            else
+            {
+                itsExpr[i] =
+                    Expr<JonesMatrix>::Ptr(new MatrixInverse(itsExpr[i]));
+            }
         }
     }
 

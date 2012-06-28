@@ -27,8 +27,16 @@ namespace LOFAR {
 
 #ifdef USE_THREADS
 
-std::map<pthread_t, struct Cancellation::thread_state> Cancellation::thread_states; 
 pthread_mutex_t Cancellation::mutex = PTHREAD_MUTEX_INITIALIZER;
+
+Cancellation::thread_states_t& Cancellation::getThreadStates() {
+  // Cancellation needs to be available _always_. This means that we
+  // a) need to construct it on demand, to avoid race conditions during global static initialisation
+  // b) need to leak it, to avoid race conditions during global static destruction
+  static thread_states_t *thread_states = new thread_states_t;
+
+  return *thread_states;
+}
 
 #endif
 

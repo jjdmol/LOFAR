@@ -484,6 +484,19 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& event, GCFPortInterface& port)
 	break;
 
 	// ---------- requests from the clients ----------
+	case IBS_GETCALINFO: {
+		IBSGetcalinfoackEvent	answer;
+		ostringstream	oss;
+		if (itsCalTableMode1)	oss << *itsCalTableMode1 << endl;
+		if (itsCalTableMode3)	oss << *itsCalTableMode3 << endl;
+		if (itsCalTableMode5)	oss << *itsCalTableMode5 << endl;
+		if (itsCalTableMode6)	oss << *itsCalTableMode6 << endl;
+		if (itsCalTableMode7)	oss << *itsCalTableMode7 << endl;
+		answer.info = oss.str();
+		port.send(answer);
+	}
+	break;
+
 	case IBS_BEAMALLOC: {
 		IBSBeamallocEvent 	allocEvent(event);
 		LOG_DEBUG_STR("ALLOC event=" << allocEvent);
@@ -791,13 +804,12 @@ GCFEvent::TResult BeamServer::beamfree_state(GCFEvent& event, GCFPortInterface& 
 		// it was stopped (CAL_STOP by SRG) then
 		// issue a warning but continue
 		if (ack.status != CAL_Protocol::CAL_SUCCESS) {
-			LOG_WARN("CAL_UNSUBSCRIBE failed");
+			LOG_WARN_STR("CAL_UNSUBSCRIBE failed, status = " << ack.status);
 		}
 
 		// send succesful ack
 		beamfreeack.status   = IBS_Protocol::IBS_NO_ERR;
 		beamfreeack.beamName = itsBeamTransaction.getBeam()->name();
-
 		itsBeamTransaction.getPort()->send(beamfreeack);
 
 		// destroy beam, updates itsBeamTransaction
@@ -985,7 +997,7 @@ int BeamServer::beampointto_action(IBSPointtoEvent&		ptEvent,
 // _idealStartTime(now,t1,d1,t2,d2,p2)
 //
 // t1: start time of beam
-// d1: period at takes to get the beam active
+// d1: period it takes to get the beam active
 // t2: nexttime heartbeat will happen
 // d2: period it takes to complete the heartbeat
 // p2: interval of the heartbeat.
@@ -1413,7 +1425,10 @@ void BeamServer::_loadCalTable(uint rcuMode, uint nrRSPBoards)
 			case 6:
 			case 7: LOG_WARN_STR ("NO CALIBRATION TABLE FOUND FOR MODE " << rcuMode); break;
 		}
+		return;
 	}
+
+	LOG_INFO_STR(**tableHandle);
 }
 
 

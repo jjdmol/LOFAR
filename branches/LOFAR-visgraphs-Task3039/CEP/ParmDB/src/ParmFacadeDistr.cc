@@ -83,8 +83,8 @@ namespace LOFAR {
           getRecord (bbi.blobStream(), defValues);
           checkNames (itsParmNames, names, i);
           if (defValues.size() != itsDefValues.size()) {
-            LOG_WARN_STR ("record sizes of parts " << itsPartNames[0] << " and "
-                      << itsPartNames[i] << " differ");
+            LOG_WARN_STR ("DEFAULTVALUES sizes of parts " << itsPartNames[0]
+                          << " and " << itsPartNames[i] << " differ");
           }
         }
         bbi.finish();
@@ -198,6 +198,26 @@ namespace LOFAR {
         }
       }
       return result;
+    }
+
+    void ParmFacadeDistr::addDefValues (const Record& values,
+                                        bool check)
+    {
+      BlobString buf;
+      MWBlobOut bbo(buf, AddDefValues, 0);
+      putRecord (bbo.blobStream(), values);
+      bbo.blobStream() << check;
+      bbo.finish();
+      itsConn.writeAll (buf);
+    }
+
+    void ParmFacadeDistr::deleteDefValues (const string& parmNamePattern)
+    {
+      BlobString buf;
+      MWBlobOut bbo(buf, DeleteDefValues, 0);
+      bbo.blobStream() << parmNamePattern;
+      bbo.finish();
+      itsConn.writeAll (buf);
     }
 
     void ParmFacadeDistr::checkNames (const vector<string>& firstNames,
@@ -328,6 +348,69 @@ namespace LOFAR {
       }
       return combineRemote (recs);
     }
+
+    vector<double> ParmFacadeDistr::getDefaultSteps() const
+      { throw Exception ("ParmFacadeDistr::getDefaultSteps not implemented"); }
+
+    void ParmFacadeDistr::flush (bool fsync)
+    {
+      BlobString buf;
+      MWBlobOut bbo(buf, Flush, 0);
+      bbo.blobStream() << fsync;
+      bbo.finish();
+      itsConn.writeAll (buf);
+    }
+
+    void ParmFacadeDistr::lock (bool lockForWrite)
+    {
+      BlobString buf;
+      MWBlobOut bbo(buf, Lock, 0);
+      bbo.blobStream() << lockForWrite;
+      bbo.finish();
+      itsConn.writeAll (buf);
+    }
+
+    void ParmFacadeDistr::unlock()
+    {
+      BlobString buf;
+      MWBlobOut bbo(buf, Unlock, 0);
+      bbo.finish();
+      itsConn.writeAll (buf);
+    }
+
+    void ParmFacadeDistr::clearTables()
+    {
+      BlobString buf;
+      MWBlobOut bbo(buf, ClearTables, 0);
+      bbo.finish();
+      itsConn.writeAll (buf);
+    }
+
+    void ParmFacadeDistr::setDefaultSteps (const vector<double>& steps)
+    {
+      BlobString buf;
+      MWBlobOut bbo(buf, Unlock, 0);
+      bbo.blobStream() << steps;
+      bbo.finish();
+      itsConn.writeAll (buf);
+    }
+
+    void ParmFacadeDistr::addValues (const Record&)
+      { throw Exception ("ParmFacadeDistr::putValues not implemented"); }
+
+    void ParmFacadeDistr::deleteValues (const string& parmNamePattern,
+                                        double freqv1, double freqv2,
+                                        double timev1, double timev2,
+                                        bool asStartEnd)
+    {
+      BlobString buf;
+      MWBlobOut bbo(buf, Unlock, 0);
+      bbo.blobStream() << parmNamePattern
+                       << freqv1 << freqv2 << timev1 << timev2 << asStartEnd;
+      bbo.finish();
+      itsConn.writeAll (buf);
+    }
+
 
     Record ParmFacadeDistr::combineRemote (const vector<Record>& recs) const
     {
@@ -503,6 +586,13 @@ namespace LOFAR {
       BlobAipsIO baio(bis);
       casa::AipsIO aio(&baio);
       aio >> rec;
+    }
+
+    void ParmFacadeDistr::putRecord (BlobOStream& bos, const Record& rec)
+    {
+      BlobAipsIO baio(bos);
+      casa::AipsIO aio(&baio);
+      aio << rec;
     }
 
   } // namespace ParmDB

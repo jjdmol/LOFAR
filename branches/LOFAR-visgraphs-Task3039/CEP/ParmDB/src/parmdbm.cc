@@ -844,7 +844,10 @@ void doIt (bool noPrompt, ostream& ostr)
           string dbHost = kvmap.getString ("host", "dop50.astron.nl");
           string dbName = kvmap.getString ("db", dbUser);
           string dbType = kvmap.getString ("dbtype", "casa");
-          string tableName = kvmap.getString ("tablename", "MeqParm");
+          string tableName = kvmap.getString ("table", "");
+          if (tableName.empty()) {
+            tableName = kvmap.getString ("tablename", "MeqParm");
+          }
           ParmDBMeta meta (dbType, tableName);
           meta.setSQLMeta (dbName, dbUser, "", dbHost);
           parmtab = new ParmDB (meta, true);

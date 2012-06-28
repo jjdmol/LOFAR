@@ -342,14 +342,14 @@ void LogClient::_activateBuffer()
 		LOGSendMsgPoolEvent		poolEvent;
 		poolEvent.seqnr    = itsOutSeqnr;
 		poolEvent.msgCount = itsChunkSize;
-		poolEvent.DPnames.theVector.resize (itsChunkSize);
-		poolEvent.messages.theVector.resize(itsChunkSize);
+		poolEvent.DPnames().resize (itsChunkSize);
+		poolEvent.messages().resize(itsChunkSize);
 LOG_DEBUG_STR("outSeq=" << itsOutSeqnr);
 		MsgMap::iterator	iter = itsMsgBuffer.begin();
 		for (uint32 i = 0; i < itsChunkSize; i++) {
 LOG_DEBUG_STR("PoolMsg " << i << ": " << iter->second.message);
-			poolEvent.DPnames.theVector[i] = iter->second.DPname;
-			poolEvent.messages.theVector[i] = iter->second.message;
+			poolEvent.DPnames()[i] = iter->second.DPname;
+			poolEvent.messages()[i] = iter->second.message;
 			iter++;
 		}
 		itsCLmaster->send(poolEvent);
@@ -545,7 +545,7 @@ void LogClient::_saveAdmin(const string&	filename)
 	LOG_DEBUG ("Saving administration");
 
 	char	line [MAX_ADMINLINE_LEN];
-	sprintf(line, "%s|%d|%s|%d", itsSurvivalFile.c_str(), itsSurvivalLinenr, 
+	snprintf(line, sizeof line, "%s|%d|%s|%d", itsSurvivalFile.c_str(), itsSurvivalLinenr, 
 								 itsDrainFile.c_str(), itsDrainLinenr);
 
 	admFile.write(line, strlen(line));

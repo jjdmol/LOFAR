@@ -19,6 +19,8 @@
  ***************************************************************************/
 #include <AOFlagger/strategy/control/strategyreader.h>
 
+#include <AOFlagger/util/numberparser.h>
+
 #include <AOFlagger/strategy/actions/absthresholdaction.h>
 #include <AOFlagger/strategy/actions/action.h>
 #include <AOFlagger/strategy/actions/adapter.h>
@@ -41,6 +43,7 @@
 #include <AOFlagger/strategy/actions/fringestopaction.h>
 #include <AOFlagger/strategy/actions/imageraction.h>
 #include <AOFlagger/strategy/actions/iterationaction.h>
+#include <AOFlagger/strategy/actions/normalizevarianceaction.h>
 #include <AOFlagger/strategy/actions/plotaction.h>
 #include <AOFlagger/strategy/actions/quickcalibrateaction.h>
 #include <AOFlagger/strategy/actions/rawappenderaction.h>
@@ -100,19 +103,23 @@ Strategy *StrategyReader::CreateStrategyFromFile(const std::string &filename)
 			xmlChar *formatVersionCh = xmlGetProp(curNode, BAD_CAST "format-version");
 			if(formatVersionCh == 0)
 				throw StrategyReaderError("Missing attribute 'format-version'");
-			double formatVersion = atof((const char*) formatVersionCh);
+			double formatVersion = NumberParser::ToDouble((const char*) formatVersionCh);
 			xmlFree(formatVersionCh);
 
 			xmlChar *readerVersionRequiredCh = xmlGetProp(curNode, BAD_CAST "reader-version-required");
 			if(readerVersionRequiredCh == 0)
 				throw StrategyReaderError("Missing attribute 'reader-version-required'");
-			double readerVersionRequired = atof((const char*) readerVersionRequiredCh);
+			double readerVersionRequired = NumberParser::ToDouble((const char*) readerVersionRequiredCh);
 			xmlFree(readerVersionRequiredCh);
 			
 			if(readerVersionRequired > STRATEGY_FILE_FORMAT_VERSION)
 				throw StrategyReaderError("This file requires a newer software version");
 			if(formatVersion < STRATEGY_FILE_FORMAT_VERSION_REQUIRED)
-				throw StrategyReaderError("This file is too old for the software, please recreate the strategy");
+			{
+				std::stringstream s;
+				s << "This file is too old for the software, please recreate the strategy. File format version: " << formatVersion << ", oldest version that this software understands: " << STRATEGY_FILE_FORMAT_VERSION_REQUIRED << " (these versions are numbered differently from the software).";
+				throw StrategyReaderError(s.str());
+			}
 			
 			strategy = parseRootChildren(curNode);
 		}
@@ -213,7 +220,7 @@ int StrategyReader::getInt(xmlNode *node, const char *name) const
 double StrategyReader::getDouble(xmlNode *node, const char *name) const 
 {
 	xmlNode *valNode = getTextNode(node, name);
-	return atof((const char *) valNode->content);
+	return NumberParser::ToDouble((const char *) valNode->content);
 }
 
 std::string StrategyReader::getString(xmlNode *node, const char *name) const 
@@ -274,6 +281,8 @@ Action *StrategyReader::parseAction(xmlNode *node)
 		newAction = parseImagerAction(node);
 	else if(typeStr == "IterationBlock")
 		newAction = parseIterationBlock(node);
+	else if(typeStr == "NormalizeVarianceAction")
+		newAction = parseNormalizeVarianceAction(node);
 	else if(typeStr == "PlotAction")
 		newAction = parsePlotAction(node);
 	else if(typeStr == "QuickCalibrateAction")
@@ -527,7 +536,7 @@ Action *StrategyReader::parseFourierTransformAction(xmlNode *)
 	return newAction;
 }
 
-class Action *StrategyReader::parseFrequencyConvolutionAction(xmlNode *node)
+Action *StrategyReader::parseFrequencyConvolutionAction(xmlNode *node)
 {
 	FrequencyConvolutionAction *newAction = new FrequencyConvolutionAction();
 	newAction->SetConvolutionSize(getInt(node, "convolution-size"));
@@ -535,14 +544,14 @@ class Action *StrategyReader::parseFrequencyConvolutionAction(xmlNode *node)
 	return newAction;
 }
 
-class Action *StrategyReader::parseFrequencySelectionAction(xmlNode *node)
+Action *StrategyReader::parseFrequencySelectionAction(xmlNode *node)
 {
 	FrequencySelectionAction *newAction = new FrequencySelectionAction();
 	newAction->SetThreshold(getDouble(node, "threshold"));
 	return newAction;
 }
 
-class Action *StrategyReader::parseFringeStopAction(xmlNode *node)
+Action *StrategyReader::parseFringeStopAction(xmlNode *node)
 {
 	FringeStopAction *newAction = new FringeStopAction();
 	newAction->SetFitChannelsIndividually(getBool(node, "fit-channels-individually"));
@@ -553,18 +562,25 @@ class Action *StrategyReader::parseFringeStopAction(xmlNode *node)
 	return newAction;
 }
 
-class Action *StrategyReader::parseImagerAction(xmlNode *)
+Action *StrategyReader::parseImagerAction(xmlNode *)
 {
 	ImagerAction *newAction = new ImagerAction();
 	return newAction;
 }
 
-class Action *StrategyReader::parseIterationBlock(xmlNode *node)
+Action *StrategyReader::parseIterationBlock(xmlNode *node)
 {
 	IterationBlock *newAction = new IterationBlock();
 	newAction->SetIterationCount(getInt(node, "iteration-count"));
 	newAction->SetSensitivityStart(getDouble(node, "sensitivity-start"));
 	parseChildren(node, newAction);
+	return newAction;
+}
+
+Action *StrategyReader::parseNormalizeVarianceAction(xmlNode *node)
+{
+	NormalizeVarianceAction *newAction = new NormalizeVarianceAction();
+	newAction->SetMedianFilterSizeInS(getDouble(node, "median-filter-size-in-s"));
 	return newAction;
 }
 

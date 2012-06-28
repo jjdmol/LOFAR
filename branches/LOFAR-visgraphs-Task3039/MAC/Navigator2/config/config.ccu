@@ -1,7 +1,7 @@
 [general]
-pvss_path = "/opt/pvss/pvss2_v3.7"
+pvss_path = "/opt/WinCC_OA/3.10"
 proj_path = "/opt/pvss/pvssproj/CCU001"
-proj_version = "3.7"
+proj_version = "3.10"
 userName = "root"
 password = ""
 langs = "en_US.iso88591"

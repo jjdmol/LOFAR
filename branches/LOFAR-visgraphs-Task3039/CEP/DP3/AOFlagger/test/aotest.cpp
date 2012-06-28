@@ -4,9 +4,17 @@
 #include <AOFlagger/test/experiments/experimentstestgroup.h>
 #include <AOFlagger/test/msio/msiotestgroup.h>
 #include <AOFlagger/test/quality/qualitytestgroup.h>
+#include <AOFlagger/test/util/utiltestgroup.h>
 
 int main(int argc, char *argv[])
 {
+	if(argc == 2 && std::string(argv[1])=="time")
+	{
+		DefaultStrategySpeedTest speedTest("sumthreshold");
+		speedTest.Run();
+		return 0;
+	}
+	
   unsigned successes = 0, failures = 0;
 	if(argc == 1 || std::string(argv[1])!="only")
 	{
@@ -24,6 +32,11 @@ int main(int argc, char *argv[])
 		qualityGroup.Run();
 		successes += qualityGroup.Successes();
 		failures += qualityGroup.Failures();
+		
+		UtilTestGroup utilGroup;
+		utilGroup.Run();
+		successes += utilGroup.Successes();
+		failures += utilGroup.Failures();
 	}
 	
 	if(argc > 1 && (std::string(argv[1])=="all" || std::string(argv[1])=="only"))

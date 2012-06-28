@@ -53,8 +53,9 @@ public class BeamDialog extends javax.swing.JDialog {
      * @param   selection               Vector of all Beam parameters
      * @param   directionTypeChoices    String with all possible choices + default for combobox
      * @param   edit                    indicates edit or add mode
+     * @param   show                    indicates show only mode
      */
-    public BeamDialog(java.awt.Frame parent, String treeType, boolean modal,BitSet usedBeamlets, Beam aBeam, boolean edit ) {
+    public BeamDialog(java.awt.Frame parent, String treeType, boolean modal,BitSet usedBeamlets, Beam aBeam, boolean edit, boolean show ) {
 
         super(parent, modal);
         initComponents();
@@ -63,6 +64,7 @@ public class BeamDialog extends javax.swing.JDialog {
         itsSavedBeamlets=(BitSet)usedBeamlets.clone();
         itsUsedBeamlets=(BitSet)usedBeamlets.clone();
         editting=edit;
+        showing=show;
         itsTreeType = treeType;
         // need to skip first entry because it is the default (dummy) TBBsetting in other then VHTree's
         if (itsTreeType.equals("VHtree")) {
@@ -157,7 +159,31 @@ public class BeamDialog extends javax.swing.JDialog {
         itsTiedArrayBeams=itsBeam.getTiedArrayBeams();
         itsTiedArrayBeams.trimToSize();
         // fill table with all entries
-        itsTABConfigurationTableModel.fillTable(itsTreeType,itsBeam.getTiedArrayBeams(), true);
+        boolean fillTable = itsTABConfigurationTableModel.fillTable(itsTreeType,itsBeam.getTiedArrayBeams(), true);
+        // if showmode, only view, so disable all buttons
+        if (showing) {
+            enableAll(false);
+            saveButton.setVisible(false);
+            addTiedArrayBeamButton.setVisible(false);
+            editTiedArrayBeamButton.setVisible(false);
+            deleteTiedArrayBeamButton.setVisible(false);
+        }
+    }
+    
+    private void enableAll(boolean flag) {
+        TABConfigurationPanel.setEnabled(flag);
+        inputDirectionTypes.setEnabled(flag);
+        inputAngle1.setEnabled(flag);
+        inputAngle2.setEnabled(flag);
+        coordTypeChange.setEnabled(flag);
+        inputMaxDur.setEnabled(flag);
+        inputSubbandList.setEnabled(flag);
+        inputBeamletList.setEnabled(flag);
+        inputDuration.setEnabled(flag);
+        inputTarget.setEnabled(flag);
+        inputStartTime.setEnabled(flag);
+        inputNrTabRings.setEnabled(flag);
+        inputTabRingSize.setEnabled(flag);
     }
     
     public boolean hasChanged() {
@@ -735,6 +761,7 @@ public class BeamDialog extends javax.swing.JDialog {
     
     private boolean   editTiedArrayBeam = false;
     private boolean   editting          = false;
+    private boolean   showing           = false;
     private BitSet    itsUsedBeamlets   = null;
     private BitSet    itsSavedBeamlets  = null;
     private String    itsTreeType       = null;

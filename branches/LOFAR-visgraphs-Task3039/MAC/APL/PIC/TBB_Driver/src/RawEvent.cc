@@ -52,7 +52,7 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
 	
 	GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
 	TbbSettings *TS = TbbSettings::instance();
-	int32 boardnr;    
+	int32 boardnr;
 	// Receive a raw packet
 	//ssize_t size = port.recv(buf.payload, ETH_DATA_LEN);
 	ssize_t size = port.recv(&buf.opcode, ETH_DATA_LEN);
@@ -86,9 +86,9 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
 			break;
 		case oc_TRIGGER:
 		    boardnr = TS->port2Board(&port);
+		    // check if more triggers can be handled this second
 		    if (TS->isTriggersLeft(boardnr)) {
-			    memcpy(buf.payload,&boardnr,4);
-			    TS->setTriggerInfo(buf.payload);
+			    TS->setTriggerInfo(boardnr, buf.payload);
 			    return(status);
 			    //buf.event.signal = TP_TRIGGER;
 			    //buf.event.length = 44;

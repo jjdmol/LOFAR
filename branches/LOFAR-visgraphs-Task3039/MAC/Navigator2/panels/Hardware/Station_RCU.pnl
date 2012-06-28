@@ -1,4 +1,4 @@
-V 10
+V 11
 1
 LANG:1 11 station_RCU
 PANEL,-1 -1 1047 803 N "_3DFace" 0
@@ -19,14 +19,16 @@ PANEL,-1 -1 1047 803 N "_3DFace" 0
   
   setValue(\"rcuLabel\",\"text\",\"RCU\"+rcuNr);
   
+  // HBAButton setting and initializing
+  setHBANr();
+  ShowHBAButtom.toolTipText  = \"Show the connected HBAAntenna \"+HBANr;
  
-  
   // pass baseDP to selfstate Object to work with
   setValue(\"selfState.light\",\"toolTipText\",baseDP);
 
   // connect for selfUpdates
   showSelfState(baseDP);
-
+  showChildState(baseDP);
  
   if (dpExists(baseDP + \".InputEnable:_online.._value\")) {
     if (dpConnect(\"ShowInputLines\", baseDP + \".InputEnable:_online.._value\",
@@ -169,18 +171,53 @@ void reload() {
 
 }
 " 0
- E E E E 1 -1 -1 0  130 290
+ E "main(int x, int y)
+{
+
+}" 0
+ E E 1 -1 -1 0  130 290
 ""0  1
 E "#uses \"navPanel.ctl\"
 string baseDP=\"\";
+bool bDoubleClicked  = false;
 int rcuNr;
+int HBANr=20; // should be dynamic 
+string aS=\"\";
 
+void setHBANr() {
+  HBANr=rcuNr/2;
+}
 
+// routine for single mouse click
+void click() {
+  // set delay in case double click was meant
+  delay(0, 100); 
+  if (!bDoubleClicked) {
+    navPanel_setEvent(\"RCU\"+rcuNr,\"EventClick\");
+  }
+}
+
+// routine for double mouse click
+void dblClick() {
+  // indicate this is a doubleClick
+  bDoubleClicked = true;   
+}
+
+void gotoHBAPanel() {
+  if (HBANr < 10) aS+=\"0\";
+  baseDP=sysName+\"LOFAR_PIC_HBA\"+aS+HBANr;
+  if (dpExists(baseDP) ) {
+    LOG_DEBUG(\"Station_RCU:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
+    g_currentDatapoint = baseDP;
+    navPanel_setEvent(\"HBA\"+aS+HBANr,\"ChangePanel\"); 
+  } else {
+    LOG_ERROR(\"Station_RCU:DoubleClick|HBAAntenna.pnl:Initialize|No HBA found in currentDatapoint.\"+baseDP);
+  }
+}
 
 void defineStateAntenna(string anAnt) {
   string anAntDp = g_currentDatapoint + \".\" + anAnt;
   
-	
   if (dpExists(anAntDp )) {
     if (dpConnect(\"setStateAntenna\", anAntDp + \":_online.._value\",
                   	                             anAntDp + \":_online.._invalid\") == -1) {
@@ -285,7 +322,7 @@ LAYER, 0
 1
 LANG:1 6 Layer1
 6 129
-"border1"
+"childStateBorder"
 ""
 1 70 687 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
  E E
@@ -298,17 +335,17 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 2 1 0 1 E 1.242857142857143 0 1 -16.99999999999999 0 1 E 70 110 770 690
-1 863 14 "" 0
+1 936 14 "" 0
 0
-1 864 14 "" 2
+1 937 14 "" 2
 0
-1 865 14 "" 3
+1 938 14 "" 3
 0
-1 881 44 "" 0
+1 954 44 "" 0
 0
-1 882 44 "" 2
+1 955 44 "" 2
 0
-1 883 44 "" 3
+1 956 44 "" 3
 0
 4 658
 "line1_lba"
@@ -324,11 +361,11 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 2 1 0 1 E  251 379 251 180
-1 866 15 "" 0
+1 939 15 "" 0
 0
-1 867 15 "" 2
+1 940 15 "" 2
 0
-1 868 15 "" 3
+1 941 15 "" 3
 0
 4 593
 "line3_path"
@@ -385,20 +422,19 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 528 108 536 125
+E E 0 1 1 0 1 E U  0 E 528 108 536 124
 0 2 0 "0s" 0 0 0 192 0 0  528 108 1
 1
-LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,13,5,69,0,0,0,0,0
+0 1
 LANG:1 1 x
-1 859 13 "" 0
+1 932 13 "" 0
 0
-1 860 13 "" 4
+1 933 13 "" 4
 0
-1 861 13 "" 6
+1 934 13 "" 6
 0
-1 862 13 "" 7
+1 935 13 "" 7
 0
 2 230
 "Text1"
@@ -420,9 +456,8 @@ LANG:1 0
  E 0 1 1 0 1 E U  0 E 12 2 678 18
 0 2 0 "0s" 0 0 0 64 0 0  12 2 1
 1
-LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
+0 1
 LANG:1 1 .
 2 240
 "Text12"
@@ -437,12 +472,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 531 702 591 719
+E E 0 1 1 0 1 E U  0 E 530 702 592 718
 0 2 0 "0s" 0 0 0 193 0 0  561 702 1
 1
-LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
+0 1
 LANG:1 9 Backplane
 2 278
 "txt_polarization_LBL"
@@ -457,20 +491,19 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 168 109 176 126
+E E 0 1 1 0 1 E U  0 E 168 109 176 125
 0 2 0 "0s" 0 0 0 192 0 0  168 109 1
 1
-LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,13,5,69,0,0,0,0,0
+0 1
 LANG:1 1 x
-1 869 21 "" 0
+1 942 21 "" 0
 0
-1 870 21 "" 4
+1 943 21 "" 4
 0
-1 871 21 "" 6
+1 944 21 "" 6
 0
-1 872 21 "" 7
+1 945 21 "" 7
 0
 4 289
 "line2_lblpath"
@@ -541,12 +574,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 350 108 358 125
+E E 0 1 1 0 1 E U  0 E 350 108 358 124
 0 2 0 "0s" 0 0 0 192 0 0  350 108 1
 1
-LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,13,5,69,0,0,0,0,0
+0 1
 LANG:1 1 x
 2 308
 "Text3"
@@ -561,12 +593,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 150 68 172 85
+E E 0 1 1 0 1 E U  0 E 149 68 173 84
 0 2 0 "0s" 0 0 0 193 0 0  161 68 1
 1
-LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
+0 1
 LANG:1 3 LBL
 2 310
 "Text9"
@@ -581,48 +612,27 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 331 68 355 85
+E E 0 1 1 0 1 E U  0 E 330 68 356 84
 0 2 0 "0s" 0 0 0 193 0 0  343 68 1
 1
-LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
+0 1
 LANG:1 3 LBH
-2 311
-"Text11"
-""
-1 506 66 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-165 0 0 0 0 0
-E E E
+1 946 22 "" 0
 0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 508 68 534 85
-0 2 0 "0s" 0 0 0 193 0 0  521 68 1
-1
-LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
-LANG:1 3 HBA
-1 873 22 "" 0
+1 947 22 "" 1
 0
-1 874 22 "" 1
+1 948 22 "" 9
 0
-1 875 22 "" 9
+1 949 41 "" 224
 0
-1 876 41 "" 224
+1 950 41 "" 225
 0
-1 877 41 "" 225
+1 951 41 "" 72
 0
-1 878 41 "" 72
+1 952 41 "" 229
 0
-1 879 41 "" 229
-0
-1 880 43 "" 1
+1 953 43 "" 1
 0
 7 648
 "stateLBL"
@@ -677,7 +687,7 @@ LANG:1 0
 {
   defineStateAntenna(\"HBAEnable\");
 }" 0
- E 0 1 1 0 1 E U  1 E 493 76 7 7
+ E 0 1 1 0 1 E 1 0 1 0 1 1 E 493 76 7 7
 6 651
 "rect_delay"
 ""
@@ -705,12 +715,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 349 636 382 653
+E E 0 1 1 0 1 E U  0 E 349 636 382 652
 0 2 0 "0s" 0 0 0 192 0 0  349 636 1
 1
-LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
+0 1
 LANG:1 5 Delay
 4 656
 "line_inputOff"
@@ -782,11 +791,11 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 2 1 0 1 E  460 380 521 380
-1 856 10 "" 0
+1 929 10 "" 0
 0
-1 857 10 "" 1
+1 930 10 "" 1
 0
-1 858 10 "" 8
+1 931 10 "" 8
 0
 4 664
 "line1_path"
@@ -843,12 +852,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 444 516 496 533
+E E 0 1 1 0 1 E U  0 E 444 516 496 532
 0 2 0 "0s" 0 0 0 193 0 0  470 516 1
 1
-LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
+0 1
 LANG:1 9 overflows
 2 688
 "Text4"
@@ -863,100 +871,99 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 458 501 482 518
+E E 0 1 1 0 1 E U  0 E 457 501 483 517
 0 2 0 "0s" 0 0 0 193 0 0  470 501 1
 1
-LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
+0 1
 LANG:1 5 nr of
-1 884 45 "" 1
+1 957 45 "" 1
 0
-1 885 45 "" 2
+1 958 45 "" 2
 0
-1 886 45 "" 3
+1 959 45 "" 3
 0
-1 887 45 "" 4
+1 960 45 "" 4
 0
-1 888 45 "" 6
+1 961 45 "" 6
 0
-1 889 45 "" 30
+1 962 45 "" 30
 0
-1 890 45 "" 31
+1 963 45 "" 31
 0
-1 891 45 "" 32
+1 964 45 "" 32
 0
-1 892 45 "" 33
+1 965 45 "" 33
 0
-1 893 45 "" 34
+1 966 45 "" 34
 0
-1 894 46 "" 1
+1 967 46 "" 1
 0
-1 895 46 "" 2
+1 968 46 "" 2
 0
-1 896 46 "" 3
+1 969 46 "" 3
 0
-1 897 46 "" 4
+1 970 46 "" 4
 0
-1 898 46 "" 6
+1 971 46 "" 6
 0
-1 899 46 "" 30
+1 972 46 "" 30
 0
-1 900 46 "" 31
+1 973 46 "" 31
 0
-1 901 46 "" 32
+1 974 46 "" 32
 0
-1 902 46 "" 33
+1 975 46 "" 33
 0
-1 903 46 "" 34
+1 976 46 "" 34
 0
-1 904 46 "" 43
+1 977 46 "" 43
 0
-1 905 46 "" 47
+1 978 46 "" 47
 0
-1 906 46 "" 48
+1 979 46 "" 48
 0
-1 907 46 "" 49
+1 980 46 "" 49
 0
-1 908 46 "" 50
+1 981 46 "" 50
 0
-1 909 46 "" 51
+1 982 46 "" 51
 0
-1 910 46 "" 52
+1 983 46 "" 52
 0
-1 911 46 "" 53
+1 984 46 "" 53
 0
-1 912 46 "" 54
+1 985 46 "" 54
 0
-1 913 46 "" 55
+1 986 46 "" 55
 0
-1 914 46 "" 56
+1 987 46 "" 56
 0
-1 915 46 "" 57
+1 988 46 "" 57
 0
-1 916 46 "" 58
+1 989 46 "" 58
 0
-1 917 46 "" 59
+1 990 46 "" 59
 0
-1 918 46 "" 60
+1 991 46 "" 60
 0
-1 919 46 "" 61
+1 992 46 "" 61
 0
-1 920 46 "" 62
+1 993 46 "" 62
 0
-1 921 46 "" 63
+1 994 46 "" 63
 0
-1 922 46 "" 64
+1 995 46 "" 64
 0
-1 923 46 "" 65
+1 996 46 "" 65
 0
-1 924 46 "" 66
+1 997 46 "" 66
 0
-1 925 46 "" 67
+1 998 46 "" 67
 0
-1 926 46 "" 68
+1 999 46 "" 68
 0
-1 927 46 "" 69
+1 1000 46 "" 69
 0
 14 734
 "txt_overflow"
@@ -971,9 +978,8 @@ LANG:1 0
 
 0
 1
-LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-0 ""
- 365 506 439 529
+LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
+0  365 506 439 529
 2 "9d" 9 0 0 2 0 -1  E E E
 14 735
 "txt_delay"
@@ -988,9 +994,8 @@ LANG:1 0
 
 0
 1
-LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-0 ""
- 388 634 502 657
+LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
+0  388 634 502 657
 2 "3.2f" 6 0 0 2 0 -1  E E E
 2 795
 "rcuLabel"
@@ -1005,12 +1010,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 300 20 332 37
+E E 0 1 1 2 1 E U  1 E 300 20 332 36
 0 2 2 "0s" 0 0 0 192 0 0  300 20 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,13,5,75,0,0,0,0,0
+0 1
 LANG:1 3 RCU
 2 855
 "PRIMITIVE_TEXT1"
@@ -1025,13 +1029,36 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 510 640 524 657
+E E 0 1 1 2 1 E U  1 E 510 640 524 656
 0 2 2 "0s" 0 0 0 192 0 0  510 640 1
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,13,5,50,0,0,0,0,0
+0 1
 LANG:1 2 ns
+13 928
+"ShowHBAButtom"
+""
+1 505 62 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+225 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0  503 60 627 92
+
+T 
+1
+LANG:1 16 Show HBA Antenna
+"main()
+{
+  gotoHBAPanel();
+}" 0
+ E E E
 0
 LAYER, 1 
 1
@@ -1061,43 +1088,43 @@ LAYER, 7
 1
 LANG:1 6 Layer8
 0
-3 10 "HighBandFilter"
+3 10 "HighBandFilter" -1
 "objects\\Hardware\\RCU_HB_Filter.pnl" 314 200 T 96 1 0 1 145 97
 0
-3 13 ""
+3 13 "" -1
 "objects\\Hardware\\RCU_bandSelection.pnl" 475 403 T 102 1 0 1 -45 7
 1
 "$Component""bandSelLbaHba"
-3 14 ""
+3 14 "" -1
 "objects\\Hardware\\RCU_Component.pnl" 81 654 T 103 1 0 1 93 -433
 2
 "$Caption""LBAReceiver"
 "$Component""VlEnable"
-3 15 "Group11"
+3 15 "Group11" -1
 "objects\\Hardware\\RCU_Component.pnl" 60 350 T 104 1 0 1 383 -129
 2
 "$Caption""HBAReceiver"
 "$Component""VhEnable"
-3 21 "Group13"
+3 21 "Group13" -1
 "objects\\Hardware\\RCU_bandSelection.pnl" 400 485 T 153 1 0 1 -149 -306
 1
 "$Component""bandSelLblLbh"
-3 22 "LowBandFilter"
+3 22 "LowBandFilter" -1
 "objects\\Hardware\\RCU_LB_Filter.pnl" 190 350 T 161 1 0 1 0 -53
 0
-3 41 ""
+3 41 "" -1
 "objects\\Hardware\\RCU_Attenuating.pnl" 224 553 T 188 1 0 1 231 -97
 0
-3 43 "selfState"
+3 43 "selfState" -1
 "objects\\lofar_self_state.pnl" 25 171 T 196 1 0 1 54.5 489.5
 0
-3 44 ""
+3 44 "" -1
 "objects\\Hardware\\RCU_ADC_Component.pnl" 273 516 T 200 1 0 1 27 -16
 0
-3 45 ""
+3 45 "" -1
 "objects\\Hardware\\RCU_TBBInfo.pnl" 164 436 T 220 1 0 1 -61 64
 0
-3 46 ""
+3 46 "" -1
 "objects\\Hardware\\RCU_TriggerInfo.pnl" 599 454 T 221 1 0 1 47 -196
 0
 0

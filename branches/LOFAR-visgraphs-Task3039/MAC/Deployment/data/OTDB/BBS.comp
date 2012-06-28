@@ -10,7 +10,6 @@
 node BBDB            4.0.0  development 'node constraint' 'BBS Blackboard Database'
 #    name                   dir. type   unit   prun. vm   value                constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par  Key                    I    text   -      10    0    'default'            -        'Key used by the Blackboard database to identify an observation'
 par  Host                   I    text   -      10    0    'localhost'          -        'Host on which the Blackboard database resides'
 par  Port                   I    int    -      10    0    5432                 -        'Port on which the Blackboard database is listening'
 par  Name                   I    text   -      10    0    'blackboard'         -        'Database name with the Black Board tables'
@@ -129,14 +128,13 @@ uses Phasors         4.0.0  development 1                 'Model parameters expr
 uses Bandpass        4.0.0  development 1                 'Model for real-valued bandpass correction' 
 uses Gain            4.0.0  development 1                 'Model for complex-valued gain correction'
 uses DirectionalGain 4.0.0  development 1                 'Model for complex-valued direction-dependent gain'
-uses BBS:Beam            4.0.0  development 1                 'Beam model configuration'
+uses BBS:Beam        4.0.0  development 1                 'Beam model configuration'
 uses Ionosphere      4.0.0  development 1                 'Ionospheric model configuration'
 uses Flagger         4.0.0  development 1                 'Condition number flagging configuration'
+
 #    name                   dir. type   unit   prun. vm   value                constr.  descr.
 #--------------------------------------------------------------------------------------------------------
 par  Sources                I    vtext   -      10   0    '[]'                 -        'List of sources'
-par  ExtraSources           I    vtext   -      10   0    '[]'                 -        'List of extra sources'
-par  InstrumentModel        I    vtext   -      10   0    '[]'                 -        'Instrument Model'
 
 # -- Step Output attributes
 #
@@ -157,7 +155,7 @@ node CellSize         4.0.0  development 1                 'Solve cell size attr
 #    name                    dir. type   unit   prun. vm   value                constr.  descr.
 #--------------------------------------------------------------------------------------------------------
 par  Freq                    I    int    -      10    0    0                    -        'Number of channels that are grouped'
-par  Time                    I    int    -      10    0    0                    -        'Number of timeslots that are grouped'
+par  Time                    I    int    -      10    0    1                    -        'Number of timeslots that are grouped'
 
 # -- Solve Step Log attributes
 #
@@ -177,7 +175,7 @@ node OutlierRejection 4.0.0  development 1                 'Outlier rejections c
 #    name                    dir. type   unit   prun. vm   value                constr.  descr.
 #--------------------------------------------------------------------------------------------------------
 par  Enable                  I    bool   F      10    0    F                    -        'Toggles outlier rejection'
-par  Threshold               I    vdbl   -      10    0    [7.0, 5.0, 4.0, 3.5, 3.0, 2.8, 2.6, 2.4, 2.2, 2.5] - 'RMS thresholds for outlier rejection'
+par  Threshold               I    vdbl   -      10    0    [7.0,5.0,4.0,3.5,3.0,2.8,2.6,2.4,2.2,2.5] - 'RMS thresholds for outlier rejection'
 
 # -- Solve Step PhaseShift attributes
 #
@@ -219,7 +217,7 @@ par  UseSVD                  I    bool   -      10    0    F                    
 #
 #    name             vers   qual        constr.           descr.
 #--------------------------------------------------------------------------------------------------------
-node Solve            4.0.0  development 'node constraint' 'Template BBS Step Solve Operation'
+node BBS:Solve        4.0.0  development 'node constraint' 'Template BBS Step Solve Operation'
 uses CellSize         4.0.0  development 1                 'Solve cell size attributes' 
 uses Log              4.0.0  development 1                 'Solver statistics logging configuration'
 uses OutlierRejection 4.0.0  development 1                 'Outlier rejections configuration'
@@ -229,7 +227,7 @@ uses Options          4.0.0  development 1                 'Solver configuration
 #    name                    dir. type   unit   prun. vm   value                constr.  descr.
 #--------------------------------------------------------------------------------------------------------
 par  Algorithm               I    text   -      10    0    'L2'                 -        'Solving algorithm to use'
-par  EpsilonL1               I    vdbl   -      10    0    [1e-4, 1e-5, 1e-6]   -        'Epsilon values for L1 weighted least squares'
+par  EpsilonL1               I    vdbl   -      10    0    [1e-4,1e-5,1e-6]     -        'Epsilon values for L1 weighted least squares'
 par  Mode                    I    text   -      10    0    'COMPLEX'            -        'How to compare data and model values'
 par  Parms                   I    vtext  -      10    0    '[]'                 -        'Parameters to fit; shell-style wildcards may be used'
 par  ExclParms               I    vtext  -      10    0    '[]'                 -        'Subset of Parms that should NOT be fitted'
@@ -245,10 +243,10 @@ par  UVRange                 I    vdbl   -      10    0    []                   
 node DefaultBBSStep  4.0.0  development 'node constraint' 'Template BBS Step'
 uses Model           4.0.0  development 1                 'BBS Step Model attributes'
 uses Output          4.0.0  development 1                 'BBS Step Output attributes'
-uses Solve           4.0.0  development 1                 'BBS Solve Step attributes'
+uses BBS:Solve       4.0.0  development 1                 'BBS Solve Step attributes'
 #    name                   dir. type   unit   prun. vm   value                constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par  Steps                  I    vtext   -      10   0    '[]'                 -        'The steps contained in this BBS Step'
+#par  Steps                  I    vtext   -      10   0    '[]'                 -        'OPTIONAL: The steps contained in this BBS Step'
 par  Baselines              I    text    -      10   0    '*&'                 -        'Baselines to process; use CASA baseline selection syntax'
 par  Correlations           I    vtext   -      10   0    '[]'                 -        'Correlations to process'
 par  Operation              I    text    -      10   0    ''                   -        'Operation to be performed in this BBS Step'
@@ -259,41 +257,19 @@ par  Operation              I    text    -      10   0    ''                   -
 #--------------------------------------------------------------------------------------------------------
 node Step             4.0.0  development 'node constraint' 'BBS Step Container'
 uses DefaultBBSStep   4.0.0  development 1                 'BBS Template Step'
+#    name                   dir. type   unit   prun. vm   value                constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  nrOfDefaultBBSStep     I    uint    -      10    0    0                    -        'Number of DefaultBBSSteps'
 
-# -- BBSKernel
+# -- BBS
 #
 #    name             vers   qual        constr.           descr.
 #--------------------------------------------------------------------------------------------------------
-node BBSKernel        4.0.0  development 'node constraint' 'BBSKernel'
-#    name                    dir. type   unit   prun. vm   value                         constr.  descr.
-#--------------------------------------------------------------------------------------------------------
-par  _executable             I    text    -      10    0    '-'                             -        'The name of the executable to start'
-par  _startstopType          I    ptext   -      10    0    'cmdline|mpirun|bgl;bgl'        -        'Method of starting the proces'
-par  _node                   I    vtext   -      10    0    '[]'                            -        'Nodes used by the process'
-
-# -- BBSControl
-#
-#    name             vers   qual        constr.           descr.
-#--------------------------------------------------------------------------------------------------------
-node BBSControl       4.0.0  development 'node constraint' 'BBSControl'
+node BBS              4.0.0  development 'node constraint' 'Blackboard system'
 uses BBDB             4.0.0  development 1                 'Blackboard database for BBS'
 uses Strategy         4.0.0  development 1                 'Strategy to be used by BBS'
 uses Step             4.0.0  development 1                 'Strategy Step Container'
 #    name                    dir. type   unit   prun. vm   value                         constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par  _executable             I    text   -      10    0    '-'                           -        'The name of the executable to start'
-par  _startstopType          I    ptext  -      10    0    'cmdline|mpiru|bgl;bgl'       -        'Method of starting the proces'
-par  _node                   I    vtext  -      10    0    '[]'                          -        'Nodes used by the process'
 
-# --BBS Global--
-#
-#    name             vers   qual        constr.           descr.
-#--------------------------------------------------------------------------------------------------------
-node BBS              4.0.0  development 'node constraint' 'BBS'
-uses BBSKernel        4.0.0  development 1                 'BBSKernel'
-uses BBSControl       4.0.0  development 1                 'BBSControl'
-#    name                    dir. type   unit   prun. vm   value                         constr.  descr.
-#--------------------------------------------------------------------------------------------------------
-par  _procs                  I    vtext   -      10    0   '["BBSKernel","BBSControl"]'  -        'The processes the application consists of'
-par  _depends                I    vtext   -      10    0   '["Flagger"]'                 -        'The application that must be finished before this appl. can start'
 

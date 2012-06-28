@@ -50,7 +50,7 @@ AsyncTransposeBeams::AsyncTransposeBeams(
 {
 }
 
-template <typename T,unsigned DIM> void AsyncTransposeBeams::postReceive(SampleData<T,DIM> *transposedData, unsigned localSubband, unsigned globalSubband, unsigned beam, unsigned psetIndex, unsigned coreIndex)
+  template <typename T,unsigned DIM, unsigned FLAGS_DIM> void AsyncTransposeBeams::postReceive(SampleData<T,DIM,FLAGS_DIM> *transposedData, unsigned localSubband, unsigned globalSubband, unsigned beam, unsigned psetIndex, unsigned coreIndex)
 {
   unsigned pset = itsInputPsets[psetIndex];
   unsigned core = itsInputCores[coreIndex];
@@ -123,7 +123,7 @@ unsigned AsyncTransposeBeams::waitForAnyReceive()
 }
 
 
-template <typename T, unsigned DIM> void AsyncTransposeBeams::asyncSend(unsigned outputPsetIndex, unsigned coreIndex, unsigned subband, unsigned stokes, unsigned globalBeam, const SampleData<T,DIM> *inputData)
+  template <typename T, unsigned DIM, unsigned FLAGS_DIM> void AsyncTransposeBeams::asyncSend(unsigned outputPsetIndex, unsigned coreIndex, unsigned subband, unsigned stokes, unsigned globalBeam, const SampleData<T,DIM,FLAGS_DIM> *inputData)
 {
   unsigned pset = itsOutputPsets[outputPsetIndex];
   unsigned core = itsOutputCores[coreIndex];
@@ -153,8 +153,9 @@ template <typename T, unsigned DIM> void AsyncTransposeBeams::asyncSend(unsigned
   }
 }
 
-template void AsyncTransposeBeams::postReceive(SampleData<float,3> *, unsigned, unsigned, unsigned, unsigned, unsigned);
-template void AsyncTransposeBeams::asyncSend(unsigned, unsigned, unsigned, unsigned, unsigned, const SampleData<float,3> *);
+template void AsyncTransposeBeams::postReceive(SampleData<float,3,1> *, unsigned, unsigned, unsigned, unsigned, unsigned);
+template void AsyncTransposeBeams::postReceive(SampleData<float,3,2> *, unsigned, unsigned, unsigned, unsigned, unsigned);
+template void AsyncTransposeBeams::asyncSend(unsigned, unsigned, unsigned, unsigned, unsigned, const SampleData<float,3,1> *);
 
 void AsyncTransposeBeams::waitForAllSends()
 {

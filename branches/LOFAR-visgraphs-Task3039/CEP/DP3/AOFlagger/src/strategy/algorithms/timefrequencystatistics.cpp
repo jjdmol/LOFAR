@@ -47,6 +47,13 @@ num_t TimeFrequencyStatistics::GetFlaggedRatio()
 std::string TimeFrequencyStatistics::FormatRatio(num_t ratio)
 {
 	std::stringstream s;
-	s << (round(ratio*1000.0)/10.0) << "%";
+	if(ratio > 0.01)
+		s << (round(ratio*10000.0)/100.0) << "%";
+	else if(ratio > 0.001)
+		s << (round(ratio*100000.0)/1000.0) << "%";
+	else if(ratio > 0.0001)
+		s << (round(ratio*1000000.0)/10000.0) << "%";
+	else
+		s << (ratio*100.0) << "%";
 	return s.str();
 }

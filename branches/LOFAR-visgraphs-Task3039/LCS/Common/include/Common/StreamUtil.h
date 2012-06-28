@@ -73,7 +73,7 @@ namespace LOFAR
   template <typename T, typename U>
   inline ostream& operator<< (ostream& os, const std::pair<T,U>& p)
   {
-    os << p.first << ':' << p.second;
+    os << '<' << p.first << ',' << p.second << '>';
     return os;
   }
 

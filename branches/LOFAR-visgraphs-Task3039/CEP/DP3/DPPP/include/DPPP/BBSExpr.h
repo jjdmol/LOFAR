@@ -34,7 +34,9 @@
 #include <BBSKernel/CorrelationMask.h>
 #include <BBSKernel/ParmManager.h>
 #include <BBSKernel/VisBuffer.h>
+#include <BBSKernel/Estimate.h>
 #include <ParmDB/SourceDB.h>
+#include <ParmDB/Grid.h>
 
 #include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
@@ -48,43 +50,57 @@ namespace LOFAR {
     class BBSExpr
     {
     public:
-      // Define the shared pointer for this type.
-      typedef shared_ptr<BBSExpr> ShPtr;
-
-      // Construct the expression for the given source.
-      BBSExpr(const DPInput&, const DPInfo&, const string& sourceName);
+      // Construct the expression for the given sky and instrument
+      // parameter databases.
+      BBSExpr (const DPInput& input, const string& skyName,
+               const string& instrumentName, double elevationCutoff);
 
       ~BBSExpr();
 
-      // Get the resulting expression.
-      BBS::MeasurementExprLOFAR::Ptr getModel()
-        { return itsModel; }
+      // Set the options.
+      void setOptions (const BBS::SolverOptions&);
 
-      // Get the frequency axis.
-      const BBS::Axis::ShPtr& getFreqAxis() const
-        { return itsFreqAxis; }
+      // Add a model expression for the given source and phase reference.
+      void addModel (const string &source, const casa::MDirection &phaseRef);
 
-      // Get the baseline mask.
-      const BBS::BaselineMask& getBaselineMask() const
-        { return itsBaselineMask; }
+      // Estimate the model parameters.
+      void estimate (vector<vector<DPBuffer> >& buffers,
+                     const BBS::Grid& visGrid, const BBS::Grid& solveGrid,
+                     const vector<casa::Array<casa::DComplex> >& factors);
+
+      // Subtract the sources.
+      void subtract (vector<DPBuffer>& buffer, const BBS::Grid& visGrid,
+                     const vector<casa::Array<casa::DComplex> >& factors,
+                     uint target, uint nSources);
 
     private:
       // For now, forbid copy construction and assignment.
       BBSExpr(const BBSExpr& other);
       BBSExpr& operator= (const BBSExpr& other);
 
+      // Clear the solvables in the model expressions.
+      void clearSolvables();
+
+      // Set the solvables in the model expressions to the gains.
+      void setSolvables();
+
+      // Gather information about the instrument from the input meta-data.
+      void initInstrument(const DPInput &input);
+
       //# Data members
-      boost::shared_ptr<BBS::SourceDB> itsSourceDB;
-      BBS::MeasurementExprLOFAR::Ptr   itsModel;
-      BBS::ParmGroup                   itsParms;
-      BBS::BaselineMask                itsBaselineMask;
-      casa::MDirection                 itsPhaseReference;
-      double                           itsRefFreq;
-      double                           itsTimeInterval;
-      BBS::Instrument::Ptr             itsInstrument;
-      BBS::BaselineSeq                 itsBaselines;
-      BBS::CorrelationSeq              itsCorrelations;
-      BBS::Axis::ShPtr                 itsFreqAxis;
+      boost::shared_ptr<BBS::SourceDB>  itsSourceDB;
+      vector<BBS::MeasurementExpr::Ptr> itsModels;
+      BBS::Instrument::Ptr              itsInstrument;
+      casa::MDirection                  itsDelayRef;
+      casa::MDirection                  itsTileRef;
+      BBS::BaselineSeq                  itsBaselines;
+      BBS::CorrelationSeq               itsCorrelations;
+      BBS::BaselineMask                 itsBaselineMask;
+      BBS::CorrelationMask              itsCorrelationMask;
+      double                            itsElevationCutoff;
+      BBS::EstimateOptions              itsOptions;
+      BBS::ParmGroup                    itsParms;
+      vector<BBS::ParmGroup>            itsModelParms;
     };
 
 // @}

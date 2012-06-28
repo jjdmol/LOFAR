@@ -2,7 +2,18 @@ V 10
 1
 LANG:1 0 
 PANEL,-1 -1 500 400 N "_3DFace" 0
-E E E E E 1 -1 -1 0  30 60
+"main()
+{
+  string query = \"SELECT '_original.._value' FROM 'test*.stations' WHERE '_original.._value' == \\\"*CS001*\\\"\";
+//  string query = \"SELECT '_original.._value' FROM 'test*.stations'\";
+  
+  dyn_dyn_anytype tab;
+  
+  int i= dpQuery(query,tab);
+  DebugN(\"return: \",i);
+  DebugN(tab);
+}" 0
+ E E E E 1 -1 -1 0  30 60
 ""0  1
 E E 2
 "CBRef" "1"
@@ -12,31 +23,6 @@ DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
 1
 LANG:1 0 
-14 0
-"TEXT_FIELD1"
-""
-1 30 60 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-0 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-0
-1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 28 58 342 122
-3 "0s" 0 0 0 0 0 -1  E "main()
-{
-  const dyn_string aDS=makeDynString(\"1\",\"2\",\"3\");
-  dyn_string aNewDS;
-  dynAppend(aDS,aNewDS);
-  DebugN(\"1st:\"+aDS);
-  DebugN(\"2nd:\"+aNewDS);
-}" 0
- E
 0
 LAYER, 1 
 1

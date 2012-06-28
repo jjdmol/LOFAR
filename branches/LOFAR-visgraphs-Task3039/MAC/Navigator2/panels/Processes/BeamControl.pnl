@@ -1,4 +1,4 @@
-V 10
+V 11
 1
 LANG:1 0 
 PANEL,-1 -1 1013 750 N "_3DFace" 0
@@ -43,7 +43,7 @@ updateBeamControl(string dp1, bool connected,
                string dp5, dyn_float angle1,
                string dp6, dyn_float angle2,
                string dp7, dyn_string subbandList,
-               string dp8, dyn_string beamletList, 
+               string dp8, dyn_string beamletList,
                string dp9, bool invalid)
 {
   LOG_TRACE(\"BeamControl.pnl:updateBeamControl|entered\");
@@ -200,12 +200,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 30 320 95 334
+E E 0 1 1 2 1 E U  1 E 30 320 95 333
 0 2 2 "0s" 0 0 0 192 0 0  30 320 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 10 Connected:
 6 51
 "connectedText"
@@ -234,12 +233,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 30 344 83 358
+E E 0 1 1 2 1 E U  1 E 30 344 83 357
 0 2 2 "0s" 0 0 0 192 0 0  30 344 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 9 subArray:
 14 66
 "subArrayText"
@@ -254,9 +252,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 108 338 992 359
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  108 338 992 359
 2 "0s" 0 0 0 0 0 -1  E E E
 25 82
 "beamTable"
@@ -271,46 +268,45 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 28 388 992 577
-EE 1 0 1 6 8 "Name" 6 1 0 "s" 1
+LANG:1 33 MS Shell Dlg,-1,13,5,50,0,0,0,0,0
+0  28 388 992 577
+EE 1 0 1 6 8 "Name" 8 1 0 "s" 1
 LANG:1 4 Name
 E
 1
 LANG:1 0 
 
-80 "Direction" 5 1 0 "s" 1
+100 "Direction" 7 1 0 "s" 1
 LANG:1 9 Direction
 E
 1
 LANG:1 0 
 
-65 "Angle1" 4 1 0 "s" 1
+85 "Angle1" 8 1 0 "s" 1
 LANG:1 6 Angle1
 E
 1
 LANG:1 0 
 
-60 "Angle2" 4 1 0 "s" 1
+100 "Angle2" 8 1 0 "s" 1
 LANG:1 6 Angle2
 E
 1
 LANG:1 0 
 
-60 "subbands" 30 1 0 "s" 1
+100 "subbands" 51 1 0 "s" 1
 LANG:1 8 subbands
 E
 1
 LANG:1 0 
 
-347 "beamlets" 30 1 0 "s" 1
+285 "beamlets" 6 1 0 "s" 1
 LANG:1 8 beamlets
 E
 1
 LANG:1 0 
 
-347 
+285 
 18 18 "" 1 1
 LANG:1 2 #8
 "" 1 1
@@ -329,9 +325,8 @@ LANG:1 2 #2
 LANG:1 2 #1
 10 8
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-0 0 2 1 7
+LANG:1 33 MS Shell Dlg,-1,13,5,50,0,0,0,0,0
+0 0 0 2 1 7
 1 0
 2 83
 "PRIMITIVE_TEXT10"
@@ -346,12 +341,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 30 370 71 384
+E E 0 1 1 2 1 E U  1 E 30 370 71 383
 0 2 2 "0s" 0 0 0 192 0 0  30 370 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 6 Beams:
 0
 LAYER, 1 
@@ -382,7 +376,7 @@ LAYER, 7
 1
 LANG:1 0 
 0
-3 0 "PANEL_REF1"
+3 0 "PANEL_REF1" -1
 "objects\\Processes\\controller_top.pnl" 49 92 T 0 1 0 1 1.4432899320127e-014 -40
 1
 "$ctrlName""BeamControl"

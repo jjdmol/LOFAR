@@ -102,6 +102,7 @@ int doIt(KeyCompare::Mode mode)
     ASSERT(myPS.getTime("Time", 15) == 15);
     ASSERT(myPS.getTime("Time", 18000) == 18000);
     ASSERT(myPS["emptyvec"].getVector().size() == 0);
+    ASSERT(myPS.getVector("emptyvec").size() == 0);
     ASSERT(myPS.getUint32Vector("emptyvec").size() == 0);
 
     {

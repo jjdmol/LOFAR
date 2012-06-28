@@ -1,4 +1,4 @@
-# $Id:$
+# $Id$
 #
 #      name             vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
@@ -6,6 +6,7 @@ node  @outputdataproduct@     4.0.2  development 'node constraint'  "Storage set
 
 #    name              dir.    type   unit     prun.   vm      value   constr. descr.
 #--------------------------------------------------------------------------------------------------------
+par archived           I       bool    -       10     100	false   -	"true if the data has been archived"
 par deleted            I       bool    -       10     100       false   -       "true if the cleanup of the file is done"
 par dirmask            I       text    -       10     100       ''      -       "directory mask for interpreting the directory name (set by scheduler)"
 par enabled            I       bool    -       10     100       false   -       "Create the @outputdataproduct@ data product type"
@@ -16,4 +17,5 @@ par mountpoints        I       vtext   -       10     100       '[]'    -       
 par namemask           I       text    -       10     100       ''      -       "name mask for interpreting the filenames (set by scheduler)"
 par percentageWritten  I       vint    -       10     100       '[]'    -       "the percentage written for all files 0=not written, 100=complete"
 par retentiontime      I       uint    -       10     100       14      -       "number of days the data stays on storage nodes before cleanup"
+par skip               I       vint    -       10     100	'[]'    -	"array of integers. 0 = don't skip, 1 = skip processing the corresponding file"
 

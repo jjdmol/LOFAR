@@ -160,7 +160,7 @@ void comboClick(string sel) {
   if (!dynContains(selectionCombobox.items(),sel)) {
     sel=\"\";
   }
-  dpSet(MainDBName+ACTIVE_USER+\"Saves.Queries.lastQuery\",sel);
+  dpSet(MainDBName+ACTIVE_USER+\"Saves.Queries.LastQuery\",sel);
   if (sel == \"\") return;
 
   // set selectedline active
@@ -309,7 +309,7 @@ void updatePD() {
     }
   }
   string oldQuery=\"\";
-  dpGet(MainDBName+ACTIVE_USER+\"Saves.Queries.lastQuery\",oldQuery);
+  dpGet(MainDBName+ACTIVE_USER+\"Saves.Queries.LastQuery\",oldQuery);
   if (oldQuery != \"\") {
     comboClick(oldQuery);
     } else {
@@ -595,7 +595,7 @@ LANG:1 23 remove query from list
       // save in DB
       if (dpSet(MainDBName+ACTIVE_USER+\"Saves.Queries.Query\",defaultSaves[\"QUERY\"],  
                 MainDBName+ACTIVE_USER+\"Saves.Queries.Short\",defaultSaves[\"SHORT\"],
-                MainDBName+ACTIVE_USER+\"Saves.Queries.lastQuery\",\"\") ==  -1) {
+                MainDBName+ACTIVE_USER+\"Saves.Queries.LastQuery\",\"\") ==  -1) {
         LOG_ERROR( \"LOFAR_Query.pnl:removeQueryButton click|ERROR: \".getLastError());
       }
     } else {
@@ -609,7 +609,7 @@ LANG:1 23 remove query from list
       // save in DB
       if (dpSet(MainDBName+ACTIVE_USER+\"Saves.Queries.Query\",userSaves[\"QUERY\"],  
                 MainDBName+ACTIVE_USER+\"Saves.Queries.Short\",userSaves[\"SHORT\"],
-                MainDBName+ACTIVE_USER+\"Saves.Queries.lastQuery\",\"\") ==  -1) {
+                MainDBName+ACTIVE_USER+\"Saves.Queries.LastQuery\",\"\") ==  -1) {
         LOG_ERROR( \"LOFAR_Query.pnl:removeQueryButton click|ERROR: \".getLastError());
       }
     }
@@ -654,7 +654,7 @@ LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,
 
       if (dpSet(MainDBName+ACTIVE_USER+\"Saves.Queries.Query\",userSaves[\"QUERY\"],  
                 MainDBName+ACTIVE_USER+\"Saves.Queries.Short\",userSaves[\"SHORT\"],
-                MainDBName+ACTIVE_USER+\"Saves.Queries.lastQuery\",saveShortNameInput.text()) ==  -1) {
+                MainDBName+ACTIVE_USER+\"Saves.Queries.LastQuery\",saveShortNameInput.text()) ==  -1) {
         LOG_ERROR( \"LOFAR_Query.pnl:saveShortNameInput|ERROR: \".getLastError());
       }
       saveShortNameInput.text(\"\");
@@ -673,7 +673,7 @@ LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,
 
       if (dpSet(MainDBName+ACTIVE_USER+\"Saves.Queries.Query\",defaultSaves[\"QUERY\"],  
                 MainDBName+ACTIVE_USER+\"Saves.Queries.Short\",defaultSaves[\"SHORT\"],
-                MainDBName+ACTIVE_USER+\"Saves.Queries.lastQuery\",saveShortNameInput.text()) ==  -1) {
+                MainDBName+ACTIVE_USER+\"Saves.Queries.LastQuery\",saveShortNameInput.text()) ==  -1) {
         LOG_ERROR( \"LOFAR_Query.pnl:saveShortNameInput|ERROR: \".getLastError());
       }
       saveShortNameInput.text(\"\");
@@ -812,7 +812,7 @@ LANG:1 0
 E E 0 1 1 2 1 E U  1 E 190 650 266 664
 0 2 2 "0s" 0 0 0 192 0 0  190 650 1
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
 1
 LANG:1 16 Last Query time:
@@ -832,7 +832,7 @@ LANG:1 0
 E E 0 1 1 2 1 E U  1 E 280 650 313 664
 0 2 2 "0s" 0 0 0 192 0 0  280 650 1
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
 1
 LANG:1 7 xxx:xxx

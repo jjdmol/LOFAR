@@ -20,12 +20,10 @@ storageNodeList		string
 
 Beams.angle1		doubleArr
 Beams.angle2		doubleArr
-#Beams.angleTimes	uintArr
 Beams.directionType	stringArr
-Beams.beamletList	stringArr
 Beams.subbandList	stringArr
 
-TiedArrayBeams.beamIndex		doubleArr
+TiedArrayBeams.beamIndex		intArr
 TiedArrayBeams.angle1			doubleArr
 TiedArrayBeams.angle2			doubleArr
 TiedArrayBeams.directionType 	stringArr

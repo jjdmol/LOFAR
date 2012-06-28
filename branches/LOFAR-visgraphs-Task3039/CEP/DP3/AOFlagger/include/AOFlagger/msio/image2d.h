@@ -47,13 +47,19 @@ class Image2D {
 		 * Creates an image containing unset values.
 		 * @param width Width of the new image.
 		 * @param height Height of the new image.
-		 * @return The new created image. Should be deleted by the caller.
+		 * @return The new image. Should be deleted by the caller.
 		 */
 		static Image2D *CreateUnsetImage(size_t width, size_t height)
 		{
 			return new Image2D(width, height);
 		}
 		
+		/**
+		 * As CreateUnsetImage(), but returns a smart pointer instead.
+		 * @param width Width of the new image.
+		 * @param height Height of the new image.
+		 * @return A (unique) smart pointer to the new image.
+		 */
 		static Image2DPtr CreateUnsetImagePtr(size_t width, size_t height)
 		{
 			return Image2DPtr(CreateUnsetImage(width, height));
@@ -66,6 +72,13 @@ class Image2D {
 		 * @return The new created image. Should be deleted by the caller.
 		 */
 		static Image2D *CreateZeroImage(size_t width, size_t height);
+		
+		/**
+		 * As CreateZeroImage(), but returns a smart pointer instead.
+		 * @param width Width of the new image.
+		 * @param height Height of the new image.
+		 * @return The (unique) smart pointer to the new image.
+		 */
 		static Image2DPtr CreateZeroImagePtr(size_t width, size_t height)
 		{
 			return Image2DPtr(CreateZeroImage(width, height));
@@ -142,22 +155,16 @@ class Image2D {
 		num_t GetMinimum(size_t xOffset, size_t yOffset, size_t width, size_t height) const;
 
 		/**
-		 * Returns the maximum value in the image.
+		 * Returns the maximum finite value in the image.
 		 * @return The maximimum value.
 		 */
 		num_t GetMaximumFinite() const;
 		
 		/**
-		 * Returns the minimum value in the image.
+		 * Returns the minimum finite value in the image.
 		 * @return The minimum value.
 		 */
 		num_t GetMinimumFinite() const;
-		
-		/**
-		 * Retrieves the number of unset values in the image.
-		 * @return The number of unset values.
-		 */
-		size_t GetUnsetValueCount() const;
 		
 		/**
 		 * Retrieves the value at a specific position.
@@ -323,6 +330,34 @@ class Image2D {
 			return Image2DPtr(image);
 		}
 		
+		void SwapXY()
+		{
+			Image2DPtr swapped = CreateXYFlipped();
+			Swap(swapped);
+		}
+		
+		/**
+		 * Swaps the contents of the two masks. This can be used as a move assignment operator, as it
+		 * only swaps pointers; hence it is fast.
+		 */
+		void Swap(Image2D &source)
+		{
+			std::swap(source._width, _width);
+			std::swap(source._stride, _stride);
+			std::swap(source._height, _height);
+			std::swap(source._dataPtr, _dataPtr);
+			std::swap(source._dataConsecutive, _dataConsecutive);
+		}
+		
+		/**
+		 * Swaps the contents of the two masks. This can be used as a move assignment operator, as it
+		 * only swaps pointers; hence it is fast.
+		 */
+		void Swap(Image2DPtr source)
+		{
+			Swap(*source);
+		}
+		
 		/**
 		 * Resample the image horizontally by decreasing the width
 		 * with an integer factor.
@@ -365,14 +400,51 @@ class Image2D {
 			}
 		}
 		
+		/**
+		 * Returns a pointer to one row of data. This can be used to step
+		 * quickly over the data in x direction. Note that the next row
+		 * is not exactly at "one times width", because the number of
+		 * samples in a row is made divisable by four. This makes it
+		 * possible to execute SSE instruction easily.
+		 * 
+		 * If you want to skip over a whole row, use the Stride() method
+		 * to determine the intrinsicly used width of one row.
+		 * 
+		 * @see Stride()
+		 */
 		inline num_t *ValuePtr(unsigned x, unsigned y)
 		{
 			return &_dataPtr[y][x];
 		}
 		
+		/**
+		 * Returns a constant pointer to one row of data. This can be used to
+		 * step quickly over the data in x direction. Note that the next row
+		 * is not exactly at "one times width", because the number of
+		 * samples in a row is made divisable by four. This makes it
+		 * possible to execute SSE instruction easily.
+		 * 
+		 * If you want to skip over a whole row, use the Stride() method
+		 * to determine the intrinsicly used width of one row.
+		 * 
+		 * @see Stride()
+		 */
 		inline const num_t *ValuePtr(unsigned x, unsigned y) const
 		{
 			return &_dataPtr[y][x];
+		}
+		
+		/**
+		 * This value specifies the intrinsic width of one row. It is
+		 * normally the first number that is >= Width() and divisable by
+		 * four. When using the ValuePtr(unsigned, unsigned) method,
+		 * this value can be used to step over one row.
+		 * 
+		 * @see ValuePtr(unsigned, unsigned)
+		 */
+		inline size_t Stride() const
+		{
+			return _stride;
 		}
 		
 	private:
@@ -380,9 +452,6 @@ class Image2D {
 		size_t _width, _height;
 		size_t _stride;
 		num_t **_dataPtr, *_dataConsecutive;
-
-		//static long _imageCount;
-		//long _thisImage;
 };
 
 #endif

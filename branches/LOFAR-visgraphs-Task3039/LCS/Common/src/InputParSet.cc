@@ -76,7 +76,7 @@ namespace LOFAR {
     itsInput->readArguments (argc, argv);
 #else
     THROW (APSException, "Program parameters are given on the command line, "
-           "but casacore's Input is available to handle them");
+           "but casacore's Input is not available to handle them");
 #endif
   }
 

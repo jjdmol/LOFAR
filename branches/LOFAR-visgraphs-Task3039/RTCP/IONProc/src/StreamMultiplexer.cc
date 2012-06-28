@@ -24,6 +24,7 @@
 
 #include <StreamMultiplexer.h>
 #include <Common/Thread/Cancellation.h>
+#include <Common/LofarLogger.h>
 
 #include <cstring>
 
@@ -59,9 +60,14 @@ template <typename K, typename V> V StreamMultiplexer::Map<K, V>::remove(K key)
 
 StreamMultiplexer::StreamMultiplexer(Stream &stream)
 :
-  itsStream(stream),
-  itsReceiveThread(this, &StreamMultiplexer::receiveThread, "[StreamMultiplexer] ", 16384)
+  itsStream(stream)
 {
+}
+
+
+void StreamMultiplexer::start()
+{
+  itsReceiveThread = new Thread(this, &StreamMultiplexer::receiveThread, "[StreamMultiplexer] ", 65536);
 }
 
 
@@ -109,7 +115,13 @@ void StreamMultiplexer::receiveThread()
 {
   while (1) {
     RequestMsg msg;
-    itsStream.read(&msg, sizeof msg);
+
+    try {
+      itsStream.read(&msg, sizeof msg);
+    } catch(Stream::EndOfStreamException &) {
+      LOG_FATAL("[StreamMultiplexer] Connection reset by peer");
+      return;
+    }
 
     switch (msg.type) {
       case RequestMsg::RECV_REQ : msg.reqPtr->msg = msg;

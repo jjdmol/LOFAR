@@ -23,8 +23,8 @@
 # $Id$
 
 # Find the path used to start the script.
-pgmpath=`dirname $0`
-pgmpath=`cd $pgmpath > /dev/null 2>&1  &&  pwd`
+pgmpath=`dirname "$0"`
+pgmpath=`cd "$pgmpath" > /dev/null 2>&1  &&  pwd`
 
 if test $# != 17; then
   echo "run as:  setupsourcedb-part dummy dummy dummy dummy rank"
@@ -38,22 +38,22 @@ shift
 shift
 shift
 shift
-seqnr=$1
-msn=$2
-envfile=$5
-wd=$6
-srccat=$7
-makeopt=$8
-pdb=$9
-overwrite=${10}
-dry=${11}
-stepfreq=${12}
-steptime=${13}
+seqnr="$1"
+msn="$2"
+envfile="$5"
+wd="$6"
+srccat="$7"
+makeopt="$8"
+pdb="$9"
+overwrite="${10}"
+dry="${11}"
+stepfreq="${12}"
+steptime="${13}"
 
 
 # Initialize environment.
 if test "$envfile" != ""; then
-  . $envfile
+  . "$envfile"
 fi
 
 # Check if a sourcedb name is given.
@@ -62,18 +62,11 @@ if test "$pdb" = ""; then
   exit 1
 fi
 
-# For 'make check' we need to qualify where makesourcedb is.
-#case "$wd" in
-#*/test)
-#  pgmpath=../src/
-#  ;;
-#esac
-
 # Set the working directory; derive it if needed.
 if test "$wd" = ""  -o  "$wd" = "..."; then
   wd=`dirname "$msn"`
 fi
-cd $wd  ||  exit 1
+cd "$wd"  ||  exit 1
 
 # Enclose all options in quotes.
 sdbopt=
@@ -83,13 +76,14 @@ do
 done
 
 # Append to the SourceDB. Delete it first if overwrite is given.
-echo "makesourcedb $sdbopt in=$srccat out=$msn/$pdb"
+echo "makesourcedb $sdbopt 'in=$srccat' 'out=$msn/$pdb'"
 if test "$dry" != dry; then
-  if test $overwrite = 1; then
-    rm -rf $msn/$pdb
+  if test "$overwrite" = 1; then
+    rm -rf "$msn/$pdb"
   fi
   # Use eval to avoid problems with quotes in sdbopt.
-  eval makesourcedb $sdbopt in=$srccat out=$msn/$pdb || exit 1
+  # Use quotes in case filenames contain blanks.
+  eval makesourcedb $sdbopt "'in=$srccat'" "'out=$msn/$pdb'" || exit 1
 
   if test "$stepfreq" != "."  -a  "$steptime" != "."; then
     # Put default steps into the sourcedb.

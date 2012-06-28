@@ -437,7 +437,7 @@ void PQGetWorkerRegister::on_commit()
         // Check if slot is empty.
         if(rowIt["hostname"].is_null() || rowIt["pid"].is_null())
         {
-            LOG_DEBUG_STR("Empty slot.");
+//            LOG_DEBUG_STR("Empty slot.");
             ++rowIt;
             continue;
         }
@@ -485,7 +485,7 @@ void PQGetWorkerRegister::on_commit()
         }
 
         itsWorkers->push_back(worker);
-        LOG_DEBUG_STR("Found worker... Type: " << type);
+//        LOG_DEBUG_STR("Found worker... Type: " << type);
 
         ++rowIt;
     }
@@ -775,7 +775,7 @@ void PQGetCommand::on_commit()
 
 
 PQGetCommandStatus::PQGetCommandStatus(const CommandId &id, int32 &status,
-    CalSession::WorkerType &addressee, CommandStatus &commandStatus)
+    CalSession::WorkerType &addressee, CalSession::CommandStatus &commandStatus)
     :   pqxx::transactor<>("PQGetCommandStatus"),
         itsCommandId(id),
         itsStatus(&status),

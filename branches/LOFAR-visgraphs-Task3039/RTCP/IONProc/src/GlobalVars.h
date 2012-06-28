@@ -26,18 +26,21 @@
 
 #include <StreamMultiplexer.h>
 #include <Interface/SmartPtr.h>
+#include <Interface/MultiDimArray.h>
 
 #include <vector>
 
 namespace LOFAR {
 namespace RTCP {
 
-extern std::vector<SmartPtr<Stream> >   allCNstreams, allIONstreams;
+
+extern std::vector<SmartPtr<Stream> >   allIONstreams;
+extern Matrix<SmartPtr<Stream> >        allCNstreams;
 extern std::vector<SmartPtr<StreamMultiplexer> > allIONstreamMultiplexers;
 extern unsigned                         myPsetNumber, nrPsets, nrCNcoresInPset;
 
 extern const char                       *cnStreamType;
-extern Stream				*createCNstream(unsigned core, unsigned channel);
+extern Stream				*createCNstream(unsigned pset, unsigned core, unsigned channel);
 
 } // namespace RTCP
 } // namespace LOFAR

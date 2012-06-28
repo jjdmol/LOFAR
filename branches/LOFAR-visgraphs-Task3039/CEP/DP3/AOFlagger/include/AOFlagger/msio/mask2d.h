@@ -146,14 +146,51 @@ class Mask2D {
 			return true;
 		}
 
+		/**
+		 * Returns a pointer to one row of data. This can be used to step
+		 * quickly over the data in x direction. Note that the next row
+		 * is not exactly at "one times width", because the number of
+		 * samples in a row is made divisable by four. This makes it
+		 * possible to execute SSE instruction easily.
+		 * 
+		 * If you want to skip over a whole row, use the Stride() method
+		 * to determine the intrinsicly used width of one row.
+		 * 
+		 * @see Stride()
+		 */
 		inline bool *ValuePtr(size_t x, size_t y)
 		{
 			return &_values[y][x];
 		}
 		
+		/**
+		 * Returns a constant pointer to one row of data. This can be used to
+		 * step quickly over the data in x direction. Note that the next row
+		 * is not exactly at "one times width", because the number of
+		 * samples in a row is made divisable by four. This makes it
+		 * possible to execute SSE instruction easily.
+		 * 
+		 * If you want to skip over a whole row, use the Stride() method
+		 * to determine the intrinsicly used width of one row.
+		 * 
+		 * @see Stride()
+		 */
 		inline const bool *ValuePtr(size_t x, size_t y) const
 		{
 			return &_values[y][x];
+		}
+		
+		/**
+		 * This value specifies the intrinsic width of one row. It is
+		 * normally the first number that is >= Width() and divisable by
+		 * four. When using the ValuePtr(unsigned, unsigned) method,
+		 * this value can be used to step over one row.
+		 * 
+		 * @see ValuePtr(unsigned, unsigned)
+		 */
+		inline size_t Stride() const
+		{
+			return _stride;
 		}
 		
 		template<bool NewValue>
@@ -288,6 +325,20 @@ class Mask2D {
 				for(size_t x=destX;x<x2;++x)
 					SetValue(x, y, source->Value(x-destX, y-destY));
 			}
+		}
+		
+		void SwapXY()
+		{
+			Mask2D *tempMask = new Mask2D(_height, _width);
+			for(size_t y=0;y<_height;++y)
+			{
+				for(size_t x=0;x<_width;++x)
+				{
+					tempMask->SetValue(y, x, Value(x, y));
+				}
+			}
+			Swap(*tempMask);
+			delete tempMask;
 		}
 	private:
 		Mask2D(size_t width, size_t height);

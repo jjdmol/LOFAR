@@ -51,12 +51,10 @@ TGCFResult GCFPVInteger::setValue(const string& valueData)
 {
   TGCFResult result(GCF_VALUESTRING_NOT_VALID);
   
-  if (valueData.length() > 0)
-  {
+  if (valueData.length() > 0) {
     char* validPos(0);
     long int value = strtol(valueData.c_str(), &validPos, 10);
-    if (*validPos == '\0')
-    {
+    if (*validPos == '\0') {
       _value = value;
       result = GCF_NO_ERROR;
     }
@@ -67,16 +65,10 @@ TGCFResult GCFPVInteger::setValue(const string& valueData)
 
 string GCFPVInteger::getValueAsString(const string& format) const
 {
-  string retVal;
-  if (format.length() == 0)
-  {
-    retVal = formatString("%d", _value);
+  if (format.length() == 0) {
+    return(formatString("%d", _value));
   }
-  else
-  {
-    retVal = formatString(format.c_str(), _value);
-  }
-  return retVal;
+  return(formatString(format.c_str(), _value));
 }
 
 GCFPValue* GCFPVInteger::clone() const

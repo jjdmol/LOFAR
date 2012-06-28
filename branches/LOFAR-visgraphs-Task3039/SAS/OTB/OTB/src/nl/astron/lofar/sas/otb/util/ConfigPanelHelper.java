@@ -122,6 +122,10 @@ public class ConfigPanelHelper {
         itsVector.add("nl.astron.lofar.sas.otbcomponents.ParSetViewPanel");
     }
 
+    private void addParSetMetaPanel() {
+        //generic parset view panel
+        itsVector.add("nl.astron.lofar.sas.otbcomponents.ParSetMetaViewPanel");
+    }
     /**
      * Returns the possible panels for this Key
      *
