@@ -36,6 +36,10 @@
 #include <Common/Thread/Thread.h>
 #include <PLCClient.h>
 
+#ifdef HAVE_LIBSSH2
+#include <SSH.h>
+#endif
+
 #include <sys/time.h>
 
 #include <vector>
@@ -100,9 +104,11 @@ class Job : public PLCRunnable
     private:
       void                               controlThread();
 
-      void			         execSSH(const char *sshKey, const char *userName, const char *hostName, const char *executable, const char *rank, const char *cwd, const char *isBigEndian);
-      void			         forkSSH(const char *sshKey, const char *userName, const char *hostName, const char *executable, const char *rank, const char *cwd, const char *isBigEndian);
-      void				 joinSSH(unsigned &timeout);
+#ifdef HAVE_LIBSSH2
+      SmartPtr<SSHconnection>            itsSSHconnection;
+#else      
+      int itsPID;
+#endif
 
       const Parset &itsParset;
       const std::string itsLogPrefix;
@@ -110,7 +116,6 @@ class Job : public PLCRunnable
       const int itsRank;
       const std::string itsHostname;
 
-      int itsPID;
       SmartPtr<Thread> itsThread;
     };
 
