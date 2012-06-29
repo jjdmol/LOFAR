@@ -97,6 +97,7 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 											 getString("Observation.stopTime"));
 	itsClaimPeriod   = globalParameterSet()->getTime  ("Observation.claimPeriod");
 	itsPreparePeriod = globalParameterSet()->getTime  ("Observation.preparePeriod");
+	itsProcessType   = globalParameterSet()->getString("Observation.processType", "Observation");
 
 	// Values from my conf file
 	itsLateLimit     = globalParameterSet()->getTime   ("ObservationControl.lateLimit", 15);
@@ -741,7 +742,7 @@ void  ObservationControl::doHeartBeatTask()
 		// if no more children left while we are not in the quit-phase
 		time_t	now   = to_time_t(second_clock::universal_time());
 		time_t	stop  = to_time_t(itsStopTime);
-		if (now < stop && itsChildControl->countChilds(0, CNTLRTYPE_STATIONCTRL)==0) {
+		if (now < stop && itsProcessType == "Observation" && itsChildControl->countChilds(0, CNTLRTYPE_STATIONCTRL)==0) {
 			LOG_FATAL("Too less stations left, FORCING QUIT OF OBSERVATION");
 			if (itsState < CTState::RESUME) {
 				itsQuitReason = CT_RESULT_LOST_CONNECTION;
