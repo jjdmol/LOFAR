@@ -22,6 +22,7 @@ using namespace RTCP;
 
 
 void test_SSHconnection() {
+#ifdef HAVE_LIBSSH2
   SSHconnection ssh("", "localhost", "echo SSHconnection success", USER, privkey);
 
   ssh.start();
@@ -31,7 +32,7 @@ void test_SSHconnection() {
   ts.tv_nsec = 0;
 
   ssh.stop(ts);
-
+#endif
 }
 
 

@@ -244,8 +244,8 @@ void Job::StorageProcess::start()
   itsSSHconnection->start();
 #else
 
-#warn Using fork/exec for SSH processes to Storage
-  const char *commandLine[] = {
+#warning Using fork/exec for SSH processes to Storage
+  const char * const commandLine[] = {
     "cd ", cwd, " && ",
 #if defined USE_VALGRIND
     "valgrind " "--leak-check=full "
@@ -259,7 +259,7 @@ void Job::StorageProcess::start()
 #endif
     0
   };
-  itsPID = forkSSH(itsLogPrefix, itsHostname.c_str(), commandLine, userName.c_str(), sshKey.c_str());
+  itsPID = forkSSH(itsLogPrefix, itsHostname.c_str(), const_cast<char * const *>(commandLine), userName.c_str(), sshKey.c_str());
 
   // client process won't reach this point
 #endif
