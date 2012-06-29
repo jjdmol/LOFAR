@@ -706,8 +706,10 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::filter()
 
 template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::checkInputForZeros(unsigned station)
 {
+#ifdef HAVE_MPI
   if (LOG_CONDITION)
     LOG_DEBUG_STR(itsLogPrefix << "Start checking for zeroes at " << MPI_Wtime());
+#endif
 
   static NSTimer timer("input zero-check timer", true, true);
 
