@@ -111,11 +111,16 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
                 created_awimages.append((job.host, job.results["image"]))
             #TODO else: aw imager failed. Currently partial runs cannot be
             # restarted: for the next lofar version the framework needs to 
-            # be expanded with a partial rerun capability 
+            # be expanded with a partial rerun capability
+
+        if len(created_awimages) == 0:
+            self.logger.error("None of the starter awimager run finished correct")
+            self.logger.error("No work left to be done: exiting with error status")
+            return 1
 
         if self.error.isSet():
-            self.logger.warn("Failed awimager node run detected")
-            return 1
+            self.logger.error("Failed awimager node run detected. continue with"
+                              "successful tasks.")
 
         store_data_map(self.inputs['mapfile'], created_awimages)
         self.logger.debug("Wrote mapfile containing produces awimages: {0}".format(

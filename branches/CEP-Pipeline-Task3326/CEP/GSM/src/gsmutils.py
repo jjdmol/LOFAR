@@ -9,6 +9,7 @@ import sys, string
 import numpy as np
 import monetdb.sql as db
 import logging
+from gsm_exceptions import GSMException
 
 def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius, assoc_theta, bbsfile, 
                                  storespectraplots=False, deruiter_radius=0.,
@@ -70,6 +71,7 @@ def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius, assoc_the
     skymodel = open(bbsfile, 'w')
     header = "# (Name, Type, Ra, Dec, I, Q, U, V, ReferenceFrequency='60e6',  SpectralIndex='[0.0]', MajorAxis, MinorAxis, Orientation) = format\n\n"
     skymodel.write(header)
+    status = True
 
     # This is dimensionless search radius that takes into account 
     # the ra and decl difference between two sources weighted by 
@@ -675,6 +677,7 @@ def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius, assoc_the
         else:    
             raise BaseException("ra = %s > 360 degrees, not implemented yet" % str(ra_central + alpha(fov_radius, decl_central))) 
         results = zip(*cursor.fetchall())
+        cursor.close()
         if len(results) != 0:
             vlss_catsrcid = results[0]
             vlss_name = results[1]
@@ -700,92 +703,96 @@ def expected_fluxes_in_fov(conn, ra_central, decl_central, fov_radius, assoc_the
             minor = results[21]
             ra = results[22]
             decl = results[23]
+        else:
+            status = False
         spectrumfiles = []
-        for i in range(len(vlss_catsrcid)):
-            ##print "\ni = ", i
-            bbsrow = ""
-            # Here we check the cases for the degree of the polynomial spectral index fit
-            #print i, vlss_name[i],vlss_catsrcid[i], wenssm_catsrcid[i], wenssp_catsrcid[i], nvss_catsrcid[i]
-            #print "VLSS",vlss_name[i]
-            bbsrow += vlss_name[i] + ", "
-            # According to Jess, only sources that have values for all
-            # three are considered as GAUSSIAN
-            if pa[i] is not None and major[i] is not None and minor[i] is not None:
-                #print "Gaussian:", pa[i], major[i], minor[i]
-                bbsrow += "GAUSSIAN, "
-            else:
-                #print "POINT"
-                bbsrow += "POINT, "
-            #print "ra = ", ra[i], "; decl = ", decl[i]
-            #print "BBS ra = ", ra2bbshms(ra[i]), "; BBS decl = ", decl2bbsdms(decl[i])
-            bbsrow += ra2bbshms(ra[i]) + ", " + decl2bbsdms(decl[i]) + ", "
-            # Stokes I id default, so filed is empty
-            #bbsrow += ", "
-            lognu = []
-            logflux = []
-            lognu.append(np.log10(74.0/60.0))
-            logflux.append(np.log10(v_flux[i]))
-            if wenssm_catsrcid[i] is not None:
-                lognu.append(np.log10(325.0/60.0))
-                logflux.append(np.log10(wm_flux[i]))
-            if wenssp_catsrcid[i] is not None:
-                lognu.append(np.log10(352.0/60.0))
-                logflux.append(np.log10(wp_flux[i]))
-            if nvss_catsrcid[i] is not None:
-                lognu.append(np.log10(1400.0/60.0))
-                logflux.append(np.log10(n_flux[i]))
-            f = ""
-            for j in range(len(logflux)):
-                f += str(10**logflux[j]) + "; "
-            ##print f
-            #print "len(lognu) = ",len(lognu), "nvss_catsrcid[",i,"] =", nvss_catsrcid[i]
-            # Here we write the expected flux values at 60 MHz, and the fitted spectral index and
-            # and curvature term
-            if len(lognu) == 1:
-                #print "Exp. flux:", 10**(np.log10(v_flux[i]) + 0.7 * np.log10(74.0/60.0))
-                #print "Default -0.7"
-                bbsrow += str(round(10**(np.log10(v_flux[i]) + 0.7 * np.log10(74.0/60.0)), 2)) + ", , , , , "
-                bbsrow += "[-0.7]"
-            elif len(lognu) == 2 or (len(lognu) == 3 and nvss_catsrcid[i] is None):
-                #print "Do a 1-degree polynomial fit"
-                # p has form : p(x) = p[0] + p[1]*x
-                p = np.poly1d(np.polyfit(np.array(lognu), np.array(logflux), 1))
-                #print p
-                if storespectraplots:
-                    spectrumfile = plotSpectrum(np.array(lognu), np.array(logflux), p, "spectrum_%s.eps" % vlss_name[i])
-                    spectrumfiles.append(spectrumfile)
-                # Default reference frequency is reported, so we leave it empty here;
-                # Catalogues just report on Stokes I, so others are empty.
-                bbsrow += str(round(10**p[0], 4)) + ", , , , , "
-                bbsrow += "[" + str(round(p[1], 4)) + "]"
-            elif (len(lognu) == 3 and nvss_catsrcid[i] is not None) or len(lognu) == 4:
-                #print "Do a 2-degree polynomial fit"
-                # p has form : p(x) = p[0] + p[1]*x + p[2]*x**2
-                p = np.poly1d(np.polyfit(np.array(lognu), np.array(logflux), 2))
-                #print p
-                if storespectraplots:
-                    spectrumfile = plotSpectrum(np.array(lognu), np.array(logflux), p, "spectrum_%s.eps" % vlss_name[i])
-                    spectrumfiles.append(spectrumfile)
-                # Default reference frequency is reported, so we leave it empty here
-                bbsrow += str(round(10**p[0], 4)) + ", , , , , "
-                bbsrow += "[" + str(round(p[1],4)) + ", " + str(round(p[2],4)) + "]"
-            if pa[i] is not None and major[i] is not None and minor[i] is not None:
-                # Gaussian source:
-                bbsrow += ", " + str(round(major[i], 2)) + ", " + str(round(minor[i], 2)) + ", " + str(round(pa[i], 2))
-            #print bbsrow
-            skymodel.write(bbsrow + '\n')
+        if len(results) != 0:
+            for i in range(len(vlss_catsrcid)):
+                ##print "\ni = ", i
+                bbsrow = ""
+                # Here we check the cases for the degree of the polynomial spectral index fit
+                #print i, vlss_name[i],vlss_catsrcid[i], wenssm_catsrcid[i], wenssp_catsrcid[i], nvss_catsrcid[i]
+                #print "VLSS",vlss_name[i]
+                bbsrow += vlss_name[i] + ", "
+                # According to Jess, only sources that have values for all
+                # three are considered as GAUSSIAN
+                if pa[i] is not None and major[i] is not None and minor[i] is not None:
+                    #print "Gaussian:", pa[i], major[i], minor[i]
+                    bbsrow += "GAUSSIAN, "
+                else:
+                    #print "POINT"
+                    bbsrow += "POINT, "
+                #print "ra = ", ra[i], "; decl = ", decl[i]
+                #print "BBS ra = ", ra2bbshms(ra[i]), "; BBS decl = ", decl2bbsdms(decl[i])
+                bbsrow += ra2bbshms(ra[i]) + ", " + decl2bbsdms(decl[i]) + ", "
+                # Stokes I id default, so filed is empty
+                #bbsrow += ", "
+                lognu = []
+                logflux = []
+                lognu.append(np.log10(74.0/60.0))
+                logflux.append(np.log10(v_flux[i]))
+                if wenssm_catsrcid[i] is not None:
+                    lognu.append(np.log10(325.0/60.0))
+                    logflux.append(np.log10(wm_flux[i]))
+                if wenssp_catsrcid[i] is not None:
+                    lognu.append(np.log10(352.0/60.0))
+                    logflux.append(np.log10(wp_flux[i]))
+                if nvss_catsrcid[i] is not None:
+                    lognu.append(np.log10(1400.0/60.0))
+                    logflux.append(np.log10(n_flux[i]))
+                f = ""
+                for j in range(len(logflux)):
+                    f += str(10**logflux[j]) + "; "
+                ##print f
+                #print "len(lognu) = ",len(lognu), "nvss_catsrcid[",i,"] =", nvss_catsrcid[i]
+                # Here we write the expected flux values at 60 MHz, and the fitted spectral index and
+                # and curvature term
+                if len(lognu) == 1:
+                    #print "Exp. flux:", 10**(np.log10(v_flux[i]) + 0.7 * np.log10(74.0/60.0))
+                    #print "Default -0.7"
+                    bbsrow += str(round(10**(np.log10(v_flux[i]) + 0.7 * np.log10(74.0/60.0)), 2)) + ", , , , , "
+                    bbsrow += "[-0.7]"
+                elif len(lognu) == 2 or (len(lognu) == 3 and nvss_catsrcid[i] is None):
+                    #print "Do a 1-degree polynomial fit"
+                    # p has form : p(x) = p[0] + p[1]*x
+                    p = np.poly1d(np.polyfit(np.array(lognu), np.array(logflux), 1))
+                    #print p
+                    if storespectraplots:
+                        spectrumfile = plotSpectrum(np.array(lognu), np.array(logflux), p, "spectrum_%s.eps" % vlss_name[i])
+                        spectrumfiles.append(spectrumfile)
+                    # Default reference frequency is reported, so we leave it empty here;
+                    # Catalogues just report on Stokes I, so others are empty.
+                    bbsrow += str(round(10**p[0], 4)) + ", , , , , "
+                    bbsrow += "[" + str(round(p[1], 4)) + "]"
+                elif (len(lognu) == 3 and nvss_catsrcid[i] is not None) or len(lognu) == 4:
+                    #print "Do a 2-degree polynomial fit"
+                    # p has form : p(x) = p[0] + p[1]*x + p[2]*x**2
+                    p = np.poly1d(np.polyfit(np.array(lognu), np.array(logflux), 2))
+                    #print p
+                    if storespectraplots:
+                        spectrumfile = plotSpectrum(np.array(lognu), np.array(logflux), p, "spectrum_%s.eps" % vlss_name[i])
+                        spectrumfiles.append(spectrumfile)
+                    # Default reference frequency is reported, so we leave it empty here
+                    bbsrow += str(round(10**p[0], 4)) + ", , , , , "
+                    bbsrow += "[" + str(round(p[1],4)) + ", " + str(round(p[2],4)) + "]"
+                if pa[i] is not None and major[i] is not None and minor[i] is not None:
+                    # Gaussian source:
+                    bbsrow += ", " + str(round(major[i], 2)) + ", " + str(round(minor[i], 2)) + ", " + str(round(pa[i], 2))
+                #print bbsrow
+                skymodel.write(bbsrow + '\n')
+            
+            if storespectraplots:
+                print "Spectra available in:", spectrumfiles
         
-        if storespectraplots:
-            print "Spectra available in:", spectrumfiles
-
         skymodel.close()
         print "Sky model stored in source table:", bbsfile
-    
+        
+        if not status:
+            raise GSMException("Sky Model File %s is empty" % (bbsfile,))
+
     except db.Error, e:
         logging.warn("Failed on query nr %s; for reason %s" % (query, e))
         raise
-    finally:
-        cursor.close()
 
 def plotSpectrum(x, y, p, f):
     import pylab

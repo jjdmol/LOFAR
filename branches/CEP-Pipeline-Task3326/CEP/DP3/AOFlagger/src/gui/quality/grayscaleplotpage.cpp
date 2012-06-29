@@ -245,26 +245,32 @@ void GrayScalePlotPage::UpdateImage()
 
 void GrayScalePlotPage::setToSelectedPolarization(TimeFrequencyData &data)
 {
-	TimeFrequencyData *newData = 0;
-	if(_polXXButton.get_active())
-		newData = data.CreateTFData(XXPolarisation);
-	else if(_polXYButton.get_active())
-		newData = data.CreateTFData(XYPolarisation);
-	else if(_polYXButton.get_active())
-		newData = data.CreateTFData(YXPolarisation);
-	else if(_polYYButton.get_active())
-		newData = data.CreateTFData(YYPolarisation);
-	else if(_polXXandYYButton.get_active())
+	try {
+		TimeFrequencyData *newData = 0;
+		if(_polXXButton.get_active())
+			newData = data.CreateTFData(XXPolarisation);
+		else if(_polXYButton.get_active())
+			newData = data.CreateTFData(XYPolarisation);
+		else if(_polYXButton.get_active())
+			newData = data.CreateTFData(YXPolarisation);
+		else if(_polYYButton.get_active())
+			newData = data.CreateTFData(YYPolarisation);
+		else if(_polXXandYYButton.get_active())
+		{
+			newData = data.CreateTFData(AutoDipolePolarisation);
+			newData->MultiplyImages(0.5);
+		}
+		else if(_polXYandYXButton.get_active())
+			newData = data.CreateTFData(CrossDipolePolarisation);
+		if(newData != 0)
+		{
+			data = *newData;
+			delete newData;
+		}
+	} catch(std::exception &e)
 	{
-		newData = data.CreateTFData(AutoDipolePolarisation);
-		newData->MultiplyImages(0.5);
-	}
-	else if(_polXYandYXButton.get_active())
-		newData = data.CreateTFData(CrossDipolePolarisation);
-	if(newData != 0)
-	{
-		data = *newData;
-		delete newData;
+		// probably a conversion error -- polarisation was not available.
+		// Best solution is probably to ignore.
 	}
 }
 
