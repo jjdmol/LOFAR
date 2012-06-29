@@ -39,7 +39,7 @@ void test_SSHconnection() {
 void test_forkExec() {
   pid_t pid;
 
-  char * const params[] = {
+  const char * const params[] = {
     "echo",
     "forkExec success",
     0

@@ -366,7 +366,7 @@ static void execSSH(const char * const sshParams[])
 }
 
 
-pid_t forkSSH(const std::string &logPrefix, const char *hostName, char * const extraParams[], const char *userName, const char *sshKey)
+pid_t forkSSH(const std::string &logPrefix, const char *hostName, const char * const extraParams[], const char *userName, const char *sshKey)
 {
   pid_t pid;
 
