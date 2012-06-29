@@ -58,6 +58,15 @@ int main() {
   HOME = getenv("HOME");
   snprintf(privkey, sizeof privkey, "%s/.ssh/id_rsa", HOME);
 
+  // can we even ssh to localhost?
+  char sshcmd[1024];
+  snprintf(sshcmd, sizeof sshcmd, "ssh %s@localhost -i %s echo system success", USER, privkey);
+  int ret = system(sshcmd);
+  if (ret < 0 || WEXITSTATUS(ret) != 0) {
+    // no -- mark this test as unrunnable and don't attempt to try with libssh then
+    return 3;
+  }  
+
   test_SSHconnection();
   test_forkExec();
 
