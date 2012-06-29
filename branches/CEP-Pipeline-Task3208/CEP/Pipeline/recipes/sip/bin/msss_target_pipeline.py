@@ -309,9 +309,6 @@ class msss_target_pipeline(control):
 #        # Demix the relevant A-team sources
 #        demix_mapfile = self.run_task("demixing", dppp_mapfile)['mapfile']
 
-        # Create an empty parmdb for BBS
-        parmdb_mapfile = self.run_task("setupparmdb", data_mapfile)['mapfile']
-
         # Create an empty sourcedb for BBS
         sourcedb_mapfile = self.run_task(
             "setupsourcedb", data_mapfile
