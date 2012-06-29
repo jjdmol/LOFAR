@@ -71,7 +71,7 @@ private:
 
 #endif
 
-pid_t forkSSH(const std::string &logPrefix, const char *hostName, char * const extraParams[], const char *userName, const char *sshKey);
+pid_t forkSSH(const std::string &logPrefix, const char *hostName, const char * const extraParams[], const char *userName, const char *sshKey);
 void joinSSH(const std::string &logPrefix, pid_t pid, unsigned &timeout);
 
 } // namespace RTCP
