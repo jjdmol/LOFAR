@@ -72,6 +72,11 @@ public:
   static void free( T *ptr ) { ::free(ptr); }
 };
 
+template <typename T, void (*F)(T*) > class SmartPtrFreeFunc {
+public:
+  static void free( T *ptr ) { F(ptr); }
+};
+
 template <typename T, class D> inline SmartPtr<T,D>::SmartPtr(T *orig)
 :
   ptr(orig)
