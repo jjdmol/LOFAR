@@ -1,8 +1,5 @@
-import copy
 import os
-
 import xml.dom.minidom as _xml
-
 
 from lofarpipe.support.lofarexceptions import PipelineException
 from lofarpipe.support.utilities import create_directory
@@ -11,21 +8,22 @@ from lofarpipe.support.utilities import create_directory
 # Therefore a single Document is created which owns all 'unbound' xml nodes
 _node_factory_document = None
 
+
 def open_parset_as_xml_node(parset):
     """
-    Open the parset supplied at path and convert it to a fill xml_document
+    Open the parset supplied at path and convert it to a full xml_document
     """
-    parset_as_dict = "test"
-
+    parset_as_dict = None
     if isinstance(parset, basestring):
         try:
-            # Small wrapper of parset parsing: If parameter set cannot be found 
-            # use an limmited stand alone parser
+            # Small wrapper of parset parsing: If parameter set cannot
+            # be found use an limited stand alone parser
             from lofar.parameterset import parameterset  #@UnresolvedImport
             parset = parameterset(parset)
             parset_as_dict = parset.dict()
         except:
             # use standalone parser if import failed
+            print "lofar.parameterset not found. Using standalone parser."
             parset_as_dict = _read_parset_to_dict(parset)
     else:
         message = "open_parset_as_xml_node received an unknown argument. Only"\
@@ -38,12 +36,13 @@ def open_parset_as_xml_node(parset):
 def write_xml_as_parset(xml, parset_path):
     """
     Writes the supplied xml_document or xml_node to the supplied path
-    
+    as a lofar parameterset
     """
+    # assure existence of target path
     create_directory(os.path.dirname(parset_path))
-    fp = open(parset_path, "w")
 
     dicted_xml = _convert_xml_to_dict(xml)
+    fp = open(parset_path, "w")
     # parset is key = value  on each line
     for (key, value) in dicted_xml:
         line = "{}={}\n".format(key, value)
@@ -55,7 +54,7 @@ def write_xml_as_parset(xml, parset_path):
 def add_child(node, name):
     """
     Create a node with name. And append it to the supplied node.
-    This function might create duplicate node names.
+    (This function allows duplicate node names as specified by xml)
     """
     local_document = _xml.Document()
     created_node = local_document.createElement(name)
@@ -65,8 +64,8 @@ def add_child(node, name):
 
 def _read_parset_to_dict(parset_path):
     """
-    Open the parset at parset_path. Parse the entries and return the a dict with
-    all key value pairs.
+    Open the parset at parset_path. Parse the entries and return the a dict
+    with all key value pairs.
     """
     fp = open(parset_path, 'r')
     parset_as_dict = {}
@@ -107,10 +106,13 @@ def _convert_dict_to_xml_node(par_dict, top_level_name="default name"):
     """
     _convert_dict_to_xml_node receives an dicted parset, parses the (implicit)
     node names, dot seperated names. Inserts new nodes into an xml node.
-    leaves are added as attributes. No duplicate nodes are created on the same level
-    Iff the par_dict contains multiple toplevel  names (nodes or leaves), a root
-    xml node with the name supplied in top_level_name (default='default name') is created. 
-    TODO: deze functie wil te veel doen. Mischien moet de validatie ergens anders. 
+    leaves are added as attributes. No duplicate nodes are created on the same
+    level
+    Iff the par_dict contains multiple toplevel  names (nodes or leaves), a
+    root xml node with the name supplied in top_level_name (default='default
+    name') is created.
+    TODO: deze functie wil te veel doen. Mischien moet de validatie ergens
+    anders.
     """
     xml_document = _xml.Document()
     # start by creating a top_level_node
@@ -138,7 +140,7 @@ def _convert_dict_to_xml_node(par_dict, top_level_name="default name"):
                 current_parent = child
 
         # we have now parsed all the node names in the key except the leaf
-        # insert the leafs as an Attribute 
+        # insert the leafs as an Attribute
         current_parent.setAttribute(node_names[-1], value)
 
     # test if there is a single node toplevel child
@@ -190,7 +192,8 @@ def _convert_xml_node_to_dict(node, prefix_list, target_dict):
         node_prefix_string = ".".join(prefix_list)
         for (attr_name, value) in node.attributes.items():
             # add the allement to the dict use string manipulate
-            target_dict['{0}.{1}'.format(node_prefix_string, attr_name)] = value
+            target_dict['{0}.{1}'.format(node_prefix_string, attr_name)] = \
+                value
 
     # remove the current node name
     prefix_list.pop()
@@ -198,15 +201,23 @@ def _convert_xml_node_to_dict(node, prefix_list, target_dict):
 
 def _enter_active_stack_node(calling_object, active_stack_node_name,
                              child_name):
+    """
+    """
     stack_name = "active_stack"
     active_stack_node = None
     stack_node = None
-    if not hasattr(calling_object, active_stack_node_name): # specifiek
+    # Check if the calling object has a active stack node with
+    # name ==  active_stack_node_name
+    if not hasattr(calling_object, active_stack_node_name):
         # Create the xml node if it not exists
         _throw_away_document = _xml.Document()
         stack_node = \
             _throw_away_document.createElement(active_stack_node_name)
+
+        # The xml name of the object is the calling object
         stack_node.setAttribute("Name", calling_object.__class__.__name__)
+        stack_node.setAttribute("type", "active_stack_node")
+        # assign the node to the calling class as an attribute
         calling_object.__setattr__(active_stack_node_name, stack_node)
 
         # add the 'call stack'
@@ -224,57 +235,58 @@ def _enter_active_stack_node(calling_object, active_stack_node_name,
     named_stacked_child = add_child(active_stack_node, child_name)
     return named_stacked_child
 
+
 def _exit_active_stack_node(calling_object, active_stack_node_name):
-        # get the named active stack node
-        active_stack_node = calling_object.__getattribute__(active_stack_node_name)
-        stack_name = "active_stack"
+    # get the named active stack node
+    active_stack_node = calling_object.__getattribute__(
+                                             active_stack_node_name)
+    stack_name = "active_stack"
 
-        # get the active stack
-        active_stack = None
-        for child_node in active_stack_node.childNodes:
-            if child_node.nodeName == stack_name:
-                active_stack = child_node
-                break
+    # get the active stack
+    active_stack = None
+    for child_node in active_stack_node.childNodes:
+        if child_node.nodeName == stack_name:
+            active_stack = child_node
+            break
 
-        # Get the current last item in the stack
-        last_child = active_stack.lastChild
-        # remove it
-        active_stack.removeChild(last_child)
+    # Get the current last item in the stack
+    last_child = active_stack.lastChild
+    # remove it
+    active_stack.removeChild(last_child)
 
-        # Now 'log' the now 'finished' step
-        if active_stack.lastChild == None:
-            # add to the main time_logger node
-            active_stack_node.appendChild(last_child)
-        else:
-            # add to the calling node info
-            active_stack.lastChild.appendChild(last_child)
-
+    # Now 'log' the now 'finished' step
+    if active_stack.lastChild == None:
+        # add to the main time_logger node
+        active_stack_node.appendChild(last_child)
+    else:
+        # add to the calling node info
+        active_stack.lastChild.appendChild(last_child)
 
 
 def timing_logger(target):
     """
     function decorator to be used on member functions of the pipeline
-    classes: It adds info  to the (xml node) class attribute timing_info. Creating the 
-    attribute if it not exists, allowing for fire and forget usage.
+    classes: It adds info  to the (xml node) class attribute timing_info.
+    Creating thos attribute if it not exist, allowing fire and forget
+    usage.
     Subsequent usage of this logger decorator in nested function will result
     in a nested xml structure.
-    The created data well need to be processed separately: it is not displayed 
-    standalone
+    The created data well need to be processed separately:
+    displaying is not part of this logger
     """
-
     def wrapper(*args, **argsw):
-        import time # alows stand alone usage
+        import time  #allows stand alone usage
         calling_object = args[0]
 
         time_info_current_node = _enter_active_stack_node(
                     calling_object, 'timing_info', target.__name__)
 
         t1 = time.time()
-        # call the actual function        
+        # call the actual function
         return_value = target(*args, **argsw)
         # end time
         t2 = time.time()
-        # add the duration        
+        # add the duration
         time_info_current_node.setAttribute("duration", str(t2 - t1))
 
         _exit_active_stack_node(calling_object, 'timing_info')
