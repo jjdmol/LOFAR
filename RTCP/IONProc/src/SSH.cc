@@ -25,6 +25,7 @@
 #include <SSH.h>
 
 #include <Common/Thread/Cancellation.h>
+#include <Common/SystemCallException.h>
 #include <Common/LofarLogger.h>
 #include <sys/wait.h>
 #include <sys/types.h>
