@@ -303,9 +303,7 @@ void SSHconnection::commThread()
   if (exitsignal) {
     LOG_ERROR_STR(itsLogPrefix << "SSH was killed by signal " << exitsignal);
   } else if(exitcode > 0) {
-    const char *explanation = "";
-
-    LOG_ERROR_STR(itsLogPrefix << "Exited with exit code " << exitcode << " (" << explanation << ")" );
+    LOG_ERROR_STR(itsLogPrefix << "Exited with exit code " << exitcode << " (" << explainExitStatus(exitcode) << ")" );
   } else {
     LOG_INFO_STR(itsLogPrefix << "Terminated normally");
   }
@@ -438,56 +436,8 @@ void joinSSH(const std::string &logPrefix, pid_t pid, unsigned &timeout)
         if (WIFSIGNALED(status) != 0)
           LOG_WARN_STR(logPrefix << "SSH was killed by signal " << WTERMSIG(status));
         else if (WEXITSTATUS(status) != 0) {
-          const char *explanation;
 
-          switch (WEXITSTATUS(status)) {
-            default:
-              explanation = "??";
-              break;
-
-            case 255:
-              explanation = "Network or authentication error";
-              break;
-            case 127:
-              explanation = "BASH: command/library not found";
-              break;
-            case 126:
-              explanation = "BASH: command found but could not be executed (wrong architecture?)";
-              break;
-
-            case 128 + SIGHUP:
-              explanation = "killed by SIGHUP";
-              break;
-            case 128 + SIGINT:
-              explanation = "killed by SIGINT (Ctrl-C)";
-              break;
-            case 128 + SIGQUIT:
-              explanation = "killed by SIGQUIT";
-              break;
-            case 128 + SIGILL:
-              explanation = "illegal instruction";
-              break;
-            case 128 + SIGABRT:
-              explanation = "killed by SIGABRT";
-              break;
-            case 128 + SIGKILL:
-              explanation = "killed by SIGKILL";
-              break;
-            case 128 + SIGSEGV:
-              explanation = "segmentation fault";
-              break;
-            case 128 + SIGPIPE:
-              explanation = "broken pipe";
-              break;
-            case 128 + SIGALRM:
-              explanation = "killed by SIGALRM";
-              break;
-            case 128 + SIGTERM:
-              explanation = "killed by SIGTERM";
-              break;
-          }
-
-          LOG_ERROR_STR(logPrefix << " exited with exit code " << WEXITSTATUS(status) << " (" << explanation << ")" );
+          LOG_ERROR_STR(logPrefix << " exited with exit code " << WEXITSTATUS(status) << " (" << explainExitStatus(WEXITSTATUS(status)) << ")" );
         } else
           LOG_INFO_STR(logPrefix << " terminated normally");
 
@@ -506,6 +456,61 @@ void joinSSH(const std::string &logPrefix, pid_t pid, unsigned &timeout)
 
     LOG_WARN_STR(logPrefix << " terminated after sending SIGTERM");
   }
+}
+
+
+const char *explainExitStatus( int exitstatus )
+{
+  const char *explanation;
+
+  switch (exitstatus) {
+    default:
+      explanation = "??";
+      break;
+
+    case 255:
+      explanation = "Network or authentication error";
+      break;
+    case 127:
+      explanation = "BASH: command/library not found";
+      break;
+    case 126:
+      explanation = "BASH: command found but could not be executed (wrong architecture?)";
+      break;
+
+    case 128 + SIGHUP:
+      explanation = "killed by SIGHUP";
+      break;
+    case 128 + SIGINT:
+      explanation = "killed by SIGINT (Ctrl-C)";
+      break;
+    case 128 + SIGQUIT:
+      explanation = "killed by SIGQUIT";
+      break;
+    case 128 + SIGILL:
+      explanation = "illegal instruction";
+      break;
+    case 128 + SIGABRT:
+      explanation = "killed by SIGABRT";
+      break;
+    case 128 + SIGKILL:
+      explanation = "killed by SIGKILL";
+      break;
+    case 128 + SIGSEGV:
+      explanation = "segmentation fault";
+      break;
+    case 128 + SIGPIPE:
+      explanation = "broken pipe";
+      break;
+    case 128 + SIGALRM:
+      explanation = "killed by SIGALRM";
+      break;
+    case 128 + SIGTERM:
+      explanation = "killed by SIGTERM";
+      break;
+  }
+
+  return explanation;
 }
 
 } // namespace RTCP
