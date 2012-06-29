@@ -3,7 +3,7 @@ import sys
 import os
 import shutil
 
-from lofar.parameterset import parameterset #@UnresolvedImport
+from lofar.parameterset import parameterset
 from lofarpipe.support.lofarnode import LOFARnodeTCP
 import lofar.bdsm as bdsm #@UnresolvedImport
 

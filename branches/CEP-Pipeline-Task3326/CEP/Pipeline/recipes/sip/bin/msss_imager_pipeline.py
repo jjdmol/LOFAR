@@ -86,7 +86,7 @@ class msss_imager_pipeline(control):
         self.parset_feedback_file = parset_file + "_feedback"
         # Set job-name to basename of parset-file w/o extension, if it's not
         # set on the command-line with '-j' or '--job-name'
-        if not 'job_name' in self.inputs:  # self.inputs.has_key('job_name'):
+        if not 'job_name' in self.inputs: 
             self.inputs['job_name'] = (
                 os.path.splitext(os.path.basename(parset_file))[0]
             )
@@ -312,12 +312,10 @@ class msss_imager_pipeline(control):
              "source_finding_outputs")
 
         msg = "Touched mapfile for sourcefinding output: {0}"
-        self.logger.debug(msg.format(source_list_map))
 
         sourcedb_map_path = self._write_datamap_to_file(None,
              "source_dbs_outputs")
         msg = "Touched mapfile for sourcedb based in found sources: {0}"
-        self.logger.debug(msg.format(sourcedb_map_path))
 
         catalog_path = os.path.join(
             self.scratch_directory,
