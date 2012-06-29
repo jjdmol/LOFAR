@@ -267,9 +267,60 @@ void test_beamformer() {
   */
 }
 
+void test_pretranspose()
+{
+  BeamFormedData in( 1, NRCHANNELS, NRSAMPLES );
+  PreTransposeBeamFormedData out( 4, NRCHANNELS, NRSAMPLES );
+  Parset p = createParset();
+  BeamFormer f = BeamFormer(p);
+
+  // fill input data
+  for( unsigned c = 0; c < NRCHANNELS; c++ ) {
+    for( unsigned i = 0; i < NRSAMPLES; i++ ) {
+      real(in.samples[0][c][i][0]) = 1.0f * (c + i * NRCHANNELS + 1);
+      imag(in.samples[0][c][i][0]) = 3.0f * (c + i * NRCHANNELS + 1);
+      real(in.samples[0][c][i][1]) = 5.0f * (c + i * NRCHANNELS + 1);
+      imag(in.samples[0][c][i][1]) = 7.0f * (c + i * NRCHANNELS + 1);
+    }
+  }
+
+  f.preTransposeBeam( &in, &out, 0 );
+
+  for( unsigned st = 0; st < 4; st++ ) {
+    for( unsigned c = 0; c < NRCHANNELS; c++ ) {
+      for( unsigned i = 0; i < NRSAMPLES; i++ ) {
+        float &x = out.samples[st][c][i];
+        float y;
+
+        switch(st) {
+          case 0:
+            y = real(in.samples[0][c][i][0]);
+            break;
+
+          case 1:
+            y = imag(in.samples[0][c][i][0]);
+            break;
+
+          case 2:
+            y = real(in.samples[0][c][i][1]);
+            break;
+
+          case 3:
+            y = imag(in.samples[0][c][i][1]);
+            break;
+        }
+
+        if( !same(x, y) ) {
+          std::cerr << "preTransposeBeams: Sample doesn't match for stokes #" << st << " channel " << c << " sample " << i << std::endl;
+          exit(1);
+        }
+      }
+    }
+  }
+}
+
 void test_posttranspose()
 {
-  std::vector<unsigned> stationMapping(0);
   TransposedBeamFormedData in( NRSUBBANDS, NRCHANNELS, NRSAMPLES );
   FinalBeamFormedData out( NRSAMPLES, NRSUBBANDS, NRCHANNELS );
   Parset p = createParset();
@@ -291,7 +342,7 @@ void test_posttranspose()
       for( unsigned i = 0; i < NRSAMPLES; i++ ) {
         float &x = out.samples[i][sb][c];
 
-        if( !same(x, in.samples[sb][i][c]) ) {
+        if( !same(x, in.samples[sb][c][i]) ) {
           std::cerr << "postTransposeBeams: Sample doesn't match for subband " << sb << " channel " << c << " sample " << i << std::endl;
           exit(1);
         }
@@ -305,7 +356,8 @@ int main() {
   //test_flyseye();
   //test_stationmerger();
   test_beamformer();
-  //test_posttranspose();
+  test_pretranspose();
+  test_posttranspose();
 
   return 0;
 }
