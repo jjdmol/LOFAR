@@ -1,0 +1,30 @@
+Run1 ...
+Server connectionset on port 3851
+>>>
+server received 65 bytes
+name=cl1
+server received 69 bytes
+name=client2
+<<<
+server sends 66 bytes
+Client connection on host localhost, port 3851, name=cl1
+client cl1 sends 65 bytes
+client cl1 received 66 bytes
+Client connection on host localhost, port 3851, name=client2
+client client2 sends 69 bytes
+client client2 received 66 bytes
+Run2 ...
+Server connectionset on port 3851
+>>>
+server received 68 bytes
+name=clien2
+server received 69 bytes
+name=client1
+<<<
+server sends 66 bytes
+Client connection on host localhost, port 3851, name=client1
+client client1 sends 69 bytes
+client client1 received 66 bytes
+Client connection on host localhost, port 3851, name=clien2
+client clien2 sends 68 bytes
+client clien2 received 66 bytes
