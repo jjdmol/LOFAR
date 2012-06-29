@@ -735,7 +735,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::checkInputForZe
 #else
     for (unsigned t = it->begin; allzeros && t < it->end; t++) {
       for (unsigned p = 0; p < NR_POLARIZATIONS; p++) {
-        const SAMPLE_TYPE &sample = itsTransposedInputData[s][t][p];
+        const SAMPLE_TYPE &sample = itsTransposedInputData->samples[station][t][p];
 
         if (real(sample) != 0.0 || imag(sample) != 0.0) {
           allzeros = false;
