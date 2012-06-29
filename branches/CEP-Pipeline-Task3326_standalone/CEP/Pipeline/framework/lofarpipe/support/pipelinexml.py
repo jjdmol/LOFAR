@@ -33,10 +33,13 @@ def open_parset_as_xml_node(parset):
     return _convert_dict_to_xml_node(parset_as_dict)
 
 
-def write_xml_as_parset(xml, parset_path):
+def write_xml_as_parset(xml, parset_path, prefix_remove=""):
     """
     Writes the supplied xml_document or xml_node to the supplied path
     as a lofar parameterset
+    prefix_remove allows the removal of a possible document name
+    before writing to file. It removes <prefix_remove.> from each
+    key name
     """
     # assure existence of target path
     create_directory(os.path.dirname(parset_path))
@@ -44,8 +47,10 @@ def write_xml_as_parset(xml, parset_path):
     dicted_xml = _convert_xml_to_dict(xml)
     fp = open(parset_path, "w")
     # parset is key = value  on each line
-    for (key, value) in dicted_xml:
-        line = "{}={}\n".format(key, value)
+    for (key, value) in dicted_xml.items():
+        if not prefix_remove == "":
+            key = key[len(prefix_remove) + 1:]
+        line = "{0}={1}\n".format(key, value)
         fp.write(line)
 
     fp.close()
@@ -102,7 +107,7 @@ def _read_parset_to_dict(parset_path):
     return parset_as_dict
 
 
-def _convert_dict_to_xml_node(par_dict, top_level_name="default name"):
+def _convert_dict_to_xml_node(par_dict, top_level_name="parset"):
     """
     _convert_dict_to_xml_node receives an dicted parset, parses the (implicit)
     node names, dot seperated names. Inserts new nodes into an xml node.
