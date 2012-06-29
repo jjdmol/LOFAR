@@ -23,8 +23,8 @@ class pipelinexmlTest(unittest.TestCase):
 
     # reading and writing of parset is extremely limited: The parameterset
     # is part of the mucked fixture.
-    # it does describe the todict function. This means that all test start, leave
-    # from this interface.
+    # The lofar.parameterset has a the todict function. 
+    # This means that all test start and leave from this interface.
 
     def test_read_parset_to_dict(self):
         # write a tempparset with test data
@@ -65,7 +65,6 @@ key4=value=value
 
             self.assertTrue(dicted_parset[key] == expected_dict[key], message)
 
-
     def test_convert_dict_to_xml_node_multi_toplevel(self):
         input_dict = {}
         input_dict["node1.node21.leaf1"] = "leaf1"
@@ -98,7 +97,6 @@ key4=value=value
             "{0} \n{1}".format(expected_output, xml.toxml())
         self.assertTrue(expected_output == xml.toxml(), message)
 
-
     def test_convert_xml_node_to_dict(self):
         # TODO: brittle test:  it uses _convert_dict_to_xml_node
         input_dict = {}
@@ -128,7 +126,6 @@ key4=value=value
                 "the received value for key {0} was not equal: {1}, {2}".format(
                     key, input_dict[key], output_dict[key]))
 
-
     def test_convert_xml_to_dict_node(self):
         input_dict = {}
         input_dict["node1.node21.leaf1"] = "leaf1"
@@ -157,7 +154,6 @@ key4=value=value
             self.assertTrue(output_dict[key] == input_dict[key],
                 "the received value for key {0} was not equal: {1}, {2}".format(
                     key, input_dict[key], output_dict[key]))
-
 
     def test_convert_xml_to_dict_document(self):
         input_dict = {}
@@ -192,11 +188,6 @@ key4=value=value
                     key, input_dict[key], output_dict[key]))
 
 
-
 if __name__ == "__main__":
     import xmlrunner
-    unittest.main(testRunner = xmlrunner.XMLTestRunner(output = 'result.xml'))
-
-
-
-
+    unittest.main(testRunner=xmlrunner.XMLTestRunner(output='result.xml'))
