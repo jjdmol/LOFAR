@@ -1,4 +1,4 @@
-//# tDAL: Test HDF5 routines through DAL
+//# tMSWriterDAL: Test HDF5 routines through DAL
 //#
 //#  Copyright (C) 2011
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,19 +24,32 @@
 
 #ifdef HAVE_DAL
 
-#include <dal/dal_version.h>
-#include <iostream>
-#include <string>
+#include <Storage/MSWriterDAL.h>
+#include <Interface/DataFactory.h>
 
 using namespace std;
-using namespace DAL;
+using namespace LOFAR;
+using namespace RTCP;
+
+#if defined WORDS_BIGENDIAN
+const int bigEndian = 1;
+#else
+const int bigEndian = 0;
+#endif
 
 int main() {
-  if (!check_hdf5_versions()) {
-    cerr << "HDF5 version mismatch. DAL was compiled with " << get_dal_hdf5_version() << ", our headers are " << get_current_hdf5_header_version() << ", our library is " << get_current_hdf5_lib_version() << endl;
-    return 1;
-  }
-  
+  Parset parset("tMSWriterDAL.parset");
+
+  {
+    MSWriterDAL<float,3> writer("tMSWriterDAL_tmp.h5", parset, 0, bigEndian);
+
+    StreamableData *data = newStreamableData(parset, BEAM_FORMED_DATA, 0);
+
+    writer.write(data);
+
+    delete data;
+  }  
+
   return 0;
 }
 

@@ -252,13 +252,13 @@ std::vector<UVW> DirectBaselineReader::ReadUVW(unsigned antenna1, unsigned anten
 			timeIndex = allObservationTimes.find(time)->second;
 
 		casa::Array<double> arr = uvwColumn(rowIndex);
-		casa::Array<double>::const_iterator i = arr.begin();
+		casa::Array<double>::const_iterator j = arr.begin();
 		UVW &uvw = uvws[timeIndex];
-		uvw.u = *i;
-		++i;
-		uvw.v = *i;
-		++i;
-		uvw.w = *i;
+		uvw.u = *j;
+		++j;
+		uvw.v = *j;
+		++j;
+		uvw.w = *j;
 	}
 	
 	AOLogger::Debug << "Read of UVW took: " << stopwatch.ToString() << '\n';
