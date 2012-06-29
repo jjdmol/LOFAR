@@ -12,18 +12,18 @@ import cPickle
 
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.lofarexceptions import PipelineException
+from lofarpipe.support.pipelinexml import _enter_active_stack_node, _exit_active_stack_node
+from xml.dom.minidom import parseString
 
 def stateful(run_task):
     @wraps(run_task)
-    def wrapper(self, configblock, datafiles = [], **kwargs):
+    def wrapper(self, configblock, datafiles=[], **kwargs):
         try:
 
             my_state = self.completed.pop()
         except (AttributeError, IndexError):
             my_state = ('', '')
 
-        print my_state
-        print configblock
         if configblock == my_state[0]:
             # We have already run this task and stored its state, or...
             self.logger.info("Task %s already exists in saved state; skipping"
@@ -31,13 +31,29 @@ def stateful(run_task):
             return my_state[1]
         elif my_state[0] != '':
             # There is a stored task, but it doesn't match this one, or...
-            self.logger.error("Stored state does not match pipeline definition; bailing out")
-            raise PipelineException("Stored state does not match pipeline definition")
+            self.logger.error("Stored state does not match pipeline"
+                              " definition. bailing out")
+            raise PipelineException("Stored state does not match pipeline"
+                                    "definition")
         else:
             # We need to run this task now.
             outputs = run_task(self, configblock, datafiles, **kwargs)
             self.state.append((configblock, outputs))
             self._save_state()
+
+            # Allow transfer of timing info from recipes to toplevel
+            # location of new toplevel to master interface
+            if "return_xml" in outputs:
+                recipe_node = _enter_active_stack_node(
+                    self, 'timing_info', "recipe")
+                recipe_node.setAttribute("task", configblock)
+
+                dom3 = parseString(outputs['return_xml'])
+                recipe_node.appendChild(dom3.documentElement)
+
+                _exit_active_stack_node(self, 'timing_info')
+
+
             return outputs
     return wrapper
 
