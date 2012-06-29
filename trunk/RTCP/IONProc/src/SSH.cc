@@ -31,6 +31,8 @@
 #include <unistd.h>
 #include <signal.h>
 #include <fcntl.h>
+#include <string.h>
+#include <errno.h>
 #include <vector>
 
 #ifdef HAVE_LIBSSH2
