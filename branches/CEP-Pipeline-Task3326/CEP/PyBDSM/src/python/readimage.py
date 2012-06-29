@@ -40,7 +40,7 @@ class Op_readimage(Op):
     """
     def __call__(self, img):
         import time, os
-        mylog = mylogger.logging.getLogger("PyBDSM." + img.log + "Readimage")
+        mylog = mylogger.logging.getLogger("PyBDSM."+img.log+"Readimage")
 
         # Check for trailing "/" in filename (happens a lot, since MS images are directories)
         # Although the general rule is to not alter the values in opts (only the
@@ -59,7 +59,7 @@ class Op_readimage(Op):
             img.indir = indir
         else:
             img.indir = img.opts.indir
-
+            
         image_file = os.path.basename(img.opts.filename)
         result = read_image_from_file(image_file, img, img.indir)
         if result == None:
@@ -71,7 +71,7 @@ class Op_readimage(Op):
         img.nchan = data.shape[1]
         img.nstokes = data.shape[0]
         mylogger.userinfo(mylog, 'Image size',
-                          str(data.shape[-2:]) + ' pixels')
+                          str(data.shape[-2:])+' pixels')
         mylogger.userinfo(mylog, 'Number of channels',
                           '%i' % data.shape[1])
         mylogger.userinfo(mylog, 'Number of Stokes parameters',
@@ -82,9 +82,9 @@ class Op_readimage(Op):
         if img.opts.polarisation_do or data.shape[0] == 1:
             img.image = data
         else:
-            img.image = data[0, :].reshape(1, data.shape[1], data.shape[2], data.shape[3])
+            img.image = data[0,:].reshape(1, data.shape[1], data.shape[2], data.shape[3])
         img.header = hdr
-        img.j = 0
+        img.j = 0                    
 
         ### initialize wcs conversion routines
         self.init_wcs(img)
@@ -105,29 +105,29 @@ class Op_readimage(Op):
             fname = img.opts.filename
         img.filename = img.opts.filename
         img.parentname = fname
-        img.imagename = fname + '.pybdsm'
+        img.imagename = fname+'.pybdsm'
         img.waveletimage = False
         if img.opts.output_all:
             # Set up directory to write output to
-            basedir = './' + fname + '_pybdsm'
+            basedir = './'+fname+'_pybdsm'
             opdir = img.opts.opdir_overwrite
-            if opdir not in ['overwrite', 'append']:
+            if opdir not in ['overwrite', 'append']: 
                 img.opts.opdir_overwrite = 'append'
-                mylog.info('Appending output files in directory ' + basedir)
+                mylog.info('Appending output files in directory '+basedir)
             img.basedir = basedir + '/'
             if img.opts.solnname != None: img.basedir += img.opts.solnname + '_'
             img.basedir += time.strftime("%d%b%Y_%H.%M.%S")
 
-            if os.path.isfile(basedir): os.system("rm -fr " + basedir)
+            if os.path.isfile(basedir): os.system("rm -fr "+basedir)
             if not os.path.isdir(basedir): os.mkdir(basedir)
-            if opdir == 'overwrite': os.system("rm -fr " + basedir + "/*")
+            if opdir == 'overwrite': os.system("rm -fr "+basedir+"/*")
             os.mkdir(img.basedir)
 
         # Check for zeros and blank if img.opts.blank_zeros is True
         if img.opts.blank_zeros:
             zero_pixels = N.where(img.image[0] == 0.0)
             img.image[0][zero_pixels] = N.nan
-
+        
         img.completed_Ops.append('readimage')
         return img
 
@@ -145,7 +145,7 @@ class Op_readimage(Op):
         try:
             import wcslib
             img.use_wcs = 'wcslib'
-        except ImportError:
+        except ImportError, ewcslib:
             try:
                 import pywcs
                 img.use_wcs = 'pywcs'
@@ -153,45 +153,45 @@ class Op_readimage(Op):
                 # Expose original exception details to outside world
                 raise RuntimeError(
                     "Either WCSLIB or PyWCS is required."
-                    " Original error: \n {0}".format(str(e)))
+                    " Original error: \n {0}\n {1}".format(str(e_wcslib), str(e)))
         from math import pi
 
         hdr = img.header
         if img.use_wcs == 'wcslib':
             t = wcslib.wcs()
         elif img.use_wcs == 'pywcs':
-            t = pywcs.WCS(naxis=2)
-
+            t = pywcs.WCS(naxis=2)   
+             
         if img.use_io == 'fits':
           crval = [hdr['crval1'], hdr['crval2']]
           crpix = [hdr['crpix1'], hdr['crpix2']]
           cdelt = [hdr['cdelt1'], hdr['cdelt2']]
           acdelt = [abs(hdr['cdelt1']), abs(hdr['cdelt2'])]
           ctype = [hdr['ctype1'], hdr['ctype2']]
-          if 'crota1' in hdr:
+          if 'crota1' in hdr: 
             crota = [hdr['crota1'], hdr['crota2']]
           else:
-            crota = []
-          if 'cunit1' in hdr:
+            crota = [0.0, 0.0]
+          if 'cunit1' in hdr: 
             cunit = [hdr['cunit1'], hdr['cunit2']]
           else:
             cunit = []
 
         if img.use_io == 'rap':
           wcs_dict = hdr['coordinates']['direction0']
-          coord_dict = {'degree' : 1.0, 'arcsec' : 1.0 / 3600, 'rad' : 180.0 / pi}
+          coord_dict = {'degree' : 1.0, 'arcsec' : 1.0/3600, 'rad' : 180.0/pi}
           iterlist = range(2)
           co_conv = [coord_dict[wcs_dict['units'][i]] for i in iterlist]
-          crval = [wcs_dict.get('crval')[i] * co_conv[i] for i in iterlist]
+          crval = [wcs_dict.get('crval')[i]*co_conv[i] for i in iterlist]
           crpix = [wcs_dict.get('crpix')[i] for i in iterlist]
-          cdelt = [wcs_dict.get('cdelt')[i] * co_conv[i] for i in iterlist]
-          acdelt = [abs(wcs_dict.get('cdelt')[i]) * co_conv[i] for i in iterlist]
+          cdelt = [wcs_dict.get('cdelt')[i]*co_conv[i] for i in iterlist]
+          acdelt = [abs(wcs_dict.get('cdelt')[i])*co_conv[i] for i in iterlist]
           ctype = ['RA---' + wcs_dict.get('projection'), 'DEC--' + wcs_dict.get('projection')]
           if wcs_dict.has_key('crota1'):
             crota = [wcs_dict.get('crota')[i] for i in iterlist]
           else:
-            crota = []
-          if wcs_dict.has_key('cunit1'):
+            crota = [0.0, 0.0]
+          if wcs_dict.has_key('cunit1'): 
             cunit = [wcs_dict.get('cunit')[i] for i in iterlist]
           else:
             cunit = []
@@ -208,8 +208,7 @@ class Op_readimage(Op):
             t.cdelt = tuple(cdelt)
             t.acdelt = tuple(acdelt)
             t.ctype = tuple(ctype)
-            if crota != []:
-                t.crota = tuple(crota)
+            t.crota = tuple(crota)
             if cunit != []:
                 t.cunit = tuple(cunit)
             t.wcsset()
@@ -233,13 +232,12 @@ class Op_readimage(Op):
             t.p2s = instancemethod(p2s, t, pywcs.WCS)
             instancemethod = type(t.wcs_sky2pix)
             t.s2p = instancemethod(s2p, t, pywcs.WCS)
-
+          
             t.wcs.crval = crval
             t.wcs.crpix = crpix
             t.wcs.cdelt = cdelt
             t.wcs.ctype = ctype
-            if crota != []:
-                t.wcs.crota = crota
+            t.wcs.crota = crota
             if cunit != []:
                 t.wcs.cunit = cunit
 
@@ -249,11 +247,10 @@ class Op_readimage(Op):
             img.wcs_obj.crpix = crpix
             img.wcs_obj.cdelt = cdelt
             img.wcs_obj.ctype = ctype
-            if crota != []:
-                img.wcs_obj.crota = crota
+            img.wcs_obj.crota = crota
             if cunit != []:
                 img.wcs_obj.cunit = cunit
-
+            
             img.pix2sky = t.p2s
             img.sky2pix = t.s2p
 
@@ -263,30 +260,39 @@ class Op_readimage(Op):
         from const import fwsig
         mylog = mylogger.logging.getLogger("PyBDSM.InitBeam")
 
-        ### FIXME: beam shape conversion should include rotation angle
         hdr = img.header
         cdelt1, cdelt2 = img.wcs_obj.acdelt[0:2]
-
+        brot = self.get_rot(img.wcs_obj) # beam rotation delta CCW (in degrees) between N and +y axis of image
+        
         ### define beam conversion routines:
         def beam2pix(x):
-            """ Converts beam in deg to pixels """
+            """ Converts beam in deg to pixels.
+            
+            Input beam angle should be degrees CCW from North.
+            The output beam angle is degrees CCW from the +y axis of the image.
+            """
             bmaj, bmin, bpa = x
-            s1 = abs(bmaj / cdelt1)
-            s2 = abs(bmin / cdelt2)
-            th = bpa ### FIXME: check conventions (th + 90)
+            s1 = abs(bmaj/cdelt1) 
+            s2 = abs(bmin/cdelt2) 
+            th = bpa + brot 
             return (s1, s2, th)
 
         def pix2coord(pix):
             x, y = pix
-            s1 = abs(x * cdelt1)
-            s2 = abs(y * cdelt2)
+            s1 = abs(x*cdelt1) 
+            s2 = abs(y*cdelt2) 
             return (s1, s2)
 
         def pix2beam(x):
+            """ Converts beam in pixels to deg.
+            
+            Input beam angle should be degrees CCW from the +y axis of the image.
+            The output beam angle is degrees CCW from North.
+            """
             s1, s2, th = x
-            bmaj = abs(s1 * cdelt1)
-            bmin = abs(s2 * cdelt2)
-            bpa = th ### FIXME: check conventions (th - 90)
+            bmaj = abs(s1*cdelt1) 
+            bmin = abs(s2*cdelt2) 
+            bpa  = th - brot
             if bmaj < bmin:
                 bmaj, bmin = bmin, bmaj
                 bpa += 90
@@ -327,7 +333,7 @@ class Op_readimage(Op):
                       # Check if h is a string or a FITS Card object (long headers are
                       # split into Cards as of PyFITS 3.0.4)
                       if not isinstance(h, str):
-                        hstr = h.value
+                        hstr = h.value                        
                       else:
                         hstr = h
                       if N.all(['BMAJ' in hstr, 'BMIN' in hstr, 'BPA' in hstr, 'CLEAN' in hstr]):
@@ -337,26 +343,26 @@ class Op_readimage(Op):
                             try:
                                 dum, dum, bmaj, dum, bmin, dum, bpa, dum, dum = hstr.split()
                             except ValueError:
-                                break
+                                break    
                         beam = (float(bmaj), float(bmin), float(bpa))
                         found = True
             if not found: raise RuntimeError("No beam information found in image header.")
 
-        ### convert beam into pixels and make sure it's asymmetric
+        ### convert beam into pixels
         pbeam = beam2pix(beam)
-        pbeam = (pbeam[0] / fwsig, pbeam[1] / fwsig, pbeam[2])  # IN SIGMA UNITS
-
+        pbeam = (pbeam[0]/fwsig, pbeam[1]/fwsig, pbeam[2])  # IN SIGMA UNITS
+        
         ### and store it
         img.pix2beam = pix2beam
         img.beam2pix = beam2pix
         img.pix2coord = pix2coord
         img.beam = beam   # FWHM size
         img.pixel_beam = pbeam   # IN SIGMA UNITS
-        img.pixel_beamarea = 1.1331 * img.pixel_beam[0] * img.pixel_beam[1] * fwsig * fwsig # area of restoring beam in pixels
+        img.pixel_beamarea = 1.1331*img.pixel_beam[0]*img.pixel_beam[1]*fwsig*fwsig # area of restoring beam in pixels
         mylogger.userinfo(mylog, 'Beam shape (major, minor, pos angle)',
-                          '(%s, %s, %s) degrees' % (round(beam[0], 5),
-                                                    round(beam[1], 5),
-                                                    round(beam[2], 1)))
+                          '(%s, %s, %s) degrees' % (round(beam[0],5),
+                                                    round(beam[1],5),
+                                                    round(beam[2],1)))
 
     def init_freq(self, img):
         """Initialize frequency parameters and store them"""
@@ -370,9 +376,9 @@ class Op_readimage(Op):
         elif img.opts.frequency != None and img.image.shape[1] == 1:
             img.cfreq = img.opts.frequency
             img.freq_pars = (0.0, 0.0, 0.0)
-            mylog.info('Using user-specified frequency.')
+            mylog.info('Using user-specified frequency.')           
         else:
-            found = False
+            found  = False
             hdr = img.header
             if img.use_io == 'rap':
                 if hdr['coordinates'].has_key('spectral2'):
@@ -380,19 +386,19 @@ class Op_readimage(Op):
                     spec_dict = hdr['coordinates']['spectral2']['wcs']
                     crval, cdelt, crpix = spec_dict.get('crval'), \
                         spec_dict.get('cdelt'), spec_dict.get('crpix')
-                    ff = crval + cdelt * (1. - crpix)
+                    ff = crval+cdelt*(1.-crpix)
 
             if img.use_io == 'fits':
                 nax = hdr['naxis']
                 if nax > 2:
                     for i in range(nax):
-                        s = str(i + 1)
-                        if hdr['ctype' + s][0:4] == 'FREQ':
+                        s = str(i+1)
+                        if hdr['ctype'+s][0:4] == 'FREQ':
                             found = True
-                            crval, cdelt, crpix = hdr['CRVAL' + s], \
-                                hdr['CDELT' + s], hdr['CRPIX' + s]
-                            ff = crval + cdelt * (1. - crpix)
-            if found:
+                            crval, cdelt, crpix = hdr['CRVAL'+s], \
+                                hdr['CDELT'+s], hdr['CRPIX'+s]
+                            ff = crval+cdelt*(1.-crpix)
+            if found: 
                 if img.opts.frequency != None:
                     img.cfreq = img.opts.frequency
                 else:
@@ -426,7 +432,7 @@ class Op_readimage(Op):
                     if (tst == 'J') or (tst == 'B'):
                         year = float(year[1:])
                         if tst == 'J': code = 3
-                        if tst == 'B': code = 2
+                        if tst == 'B': code = 2 
                 else:
                     code = 0
         if img.use_io == 'fits':
@@ -438,7 +444,7 @@ class Op_readimage(Op):
                     if (tst == 'J') or (tst == 'B'):
                         year = float(year[1:])
                         if tst == 'J': code = 3
-                        if tst == 'B': code = 2
+                        if tst == 'B': code = 2 
                 else:
                     code = 0
             else:
@@ -448,8 +454,15 @@ class Op_readimage(Op):
                 else:
                     if 'RADECSYS' in hdr:
                         sys = hdr['RADECSYS']
-                        code = 4
+                        code = 4 
                         if sys[:3] == 'ICR': year = 2000.0
                         if sys[:3] == 'FK5': year = 2000.0
                         if sys[:3] == 'FK4': year = 1950.0
         return year, code
+
+    def get_rot(self, wcs_obj):
+        """Returns CCW rotation angle (in degrees) between N and +y axis of image"""
+        if wcs_obj.crota == []:
+            return 0.0
+        else:
+            return N.mean(wcs_obj.crota) * 180.0 / N.pi

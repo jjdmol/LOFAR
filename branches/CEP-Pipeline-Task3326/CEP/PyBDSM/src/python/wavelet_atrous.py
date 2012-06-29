@@ -31,13 +31,13 @@ from make_residimage import Op_make_residimage
 from output import Op_outlist
 from interface import raw_input_no_history
 
-jmax = Int(doc="Maximum order of a-trous wavelet decomposition")
-lpf = String(doc="Low pass filter used for a-trous wavelet decomposition")
-atrous_islands = List(Any(), doc="")
-atrous_gaussians = List(Any(), doc="")
-atrous_sources = List(Any(), doc="")
-n_pyrsrc = Int(0, doc="Number of pyramidal sources")
-Image.resid_wavelets = NArray(doc="Residual image calculated from " \
+jmax = Int(doc = "Maximum order of a-trous wavelet decomposition")
+lpf = String(doc = "Low pass filter used for a-trous wavelet decomposition")
+atrous_islands = List(Any(), doc = "")
+atrous_gaussians = List(Any(), doc = "")
+atrous_sources = List(Any(), doc = "")
+n_pyrsrc = Int(0, doc = "Number of pyramidal sources")
+Image.resid_wavelets = NArray(doc = "Residual image calculated from " \
                                 "gaussians fitted to wavelet sources")
 
 class Op_wavelet_atrous(Op):
@@ -50,8 +50,8 @@ class Op_wavelet_atrous(Op):
           bdir = img.basedir + '/wavelet/'
           if img.opts.output_all:
               os.mkdir(bdir)
-              os.mkdir(bdir + '/residuals/')
-              os.mkdir(bdir + '/models/')
+              os.mkdir(bdir + '/residual/')
+              os.mkdir(bdir + '/model/')
           dobdsm = img.opts.atrous_bdsm_do
           filter = {'tr':{'size':3, 'vec':[1. / 4, 1. / 2, 1. / 4], 'name':'Triangle'},
                     'b3':{'size':5, 'vec':[1. / 16, 1. / 4, 3. / 8, 1. / 4, 1. / 16], 'name':'B3 spline'}}
@@ -158,7 +158,7 @@ class Op_wavelet_atrous(Op):
                     good_isl = []
                     # Make original rank image boolean; rank counts from 0, with -1 being
                     # outside any island
-                    orig_rankim_bool = N.array(img.pyrank + 1, dtype=bool)
+                    orig_rankim_bool = N.array(img.pyrank + 1, dtype = bool)
                     # Multiply rank images
                     valid_islands = orig_rankim_bool * (wimg.pyrank + 1)
                     for wvisl in wimg.islands:
@@ -252,14 +252,11 @@ class Op_wavelet_atrous(Op):
                                        im_new.transpose(), img, bdir)
               mylog.info('%s %s' % ('Wrote ', img.imagename + '.atrous.cJ.fits'))
               func.write_image_to_file(img.use_io, img.imagename + '.resid_wavelets.fits',
-                                       N.transpose(img.resid_wavelets), img, bdir)
+                                       N.transpose(img.ch0 - img.resid_gaus + img.resid_wavelets), img, bdir + '/residual/')
               mylog.info('%s %s' % ('Wrote ', img.imagename + '.resid_wavelets.fits'))
               func.write_image_to_file(img.use_io, img.imagename + '.model_wavelets.fits',
-                                       N.transpose(img.resid_gaus - img.resid_wavelets), img, bdir)
+                                       N.transpose(img.resid_gaus - img.resid_wavelets), img, bdir + '/model/')
               mylog.info('%s %s' % ('Wrote ', img.imagename + '.model_wavelets.fits'))
-              func.write_image_to_file(img.use_io, img.imagename + '.model_all.fits',
-                                       N.transpose(img.ch0 - img.resid_wavelets), img, bdir)
-              mylog.info('%s %s' % ('Wrote ', img.imagename + '.model_all.fits'))
           img.completed_Ops.append('wavelet_atrous')
 
 
@@ -272,7 +269,7 @@ class Op_wavelet_atrous(Op):
           ff[ii:ii] = [0] * (2 ** (j - 1) - 1)
         kern = N.outer(ff, ff)
         unmasked = N.nan_to_num(image)
-        im_new = S.fftconvolve(unmasked, kern, mode='same')
+        im_new = S.fftconvolve(unmasked, kern, mode = 'same')
         if im_new.shape != image.shape:
             im_new = im_new[0:image.shape[0], 0:image.shape[1]]
 
@@ -292,8 +289,7 @@ class Op_wavelet_atrous(Op):
         opts['mean_map'] = img.opts.mean_map
         opts['thresh_isl'] = 3.0
         opts['minpix_isl'] = 6
-        # TODO: some attrubutes assigned here do not exist: refactor
-#        opts['takemeanclip'] = False 
+#        opts['takemeanclip'] = False
         opts['savefits_rmsim'] = False
         opts['savefits_meanim'] = False
         opts['savefits_rankim'] = False
@@ -413,7 +409,7 @@ class Op_wavelet_atrous(Op):
                 col = colours[pyr.pyr_id % 7]
                 pl.subplot(a, b, jj)
                 ind = N.where(~isl.mask_active)
-                pl.plot(ind[0] + isl.origin[0], ind[1] + isl.origin[1], '.', color=col)
+                pl.plot(ind[0] + isl.origin[0], ind[1] + isl.origin[1], '.', color = col)
                 pl.axis([0.0, sh[0], 0.0, sh[1]])
                 pl.title('J = ' + str(jj))
             pl.savefig(bdir + img.imagename + '.pybdsm.atrous.pyramidsrc.png')
@@ -450,7 +446,7 @@ class Pyramid_source(object):
             self.jlevels.append(level + 1)
 
 
-Image.pyrsrcs = List(tInstance(Pyramid_source), doc="List of Pyramidal sources")
+Image.pyrsrcs = List(tInstance(Pyramid_source), doc = "List of Pyramidal sources")
 
 
 
