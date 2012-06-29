@@ -181,7 +181,10 @@ class msss_calibrator_pipeline(control):
         vdsinfo = self.run_task("vdsreader", gvds=gvds_file)
 
         # Create an empty parmdb for DPPP
-        parmdb_mapfile = self.run_task("setupparmdb", data_mapfile)['mapfile']
+        parmdb_mapfile = self.run_task(
+            "setupparmdb", data_mapfile,
+            suffix='.demix.parmdb'
+        )['mapfile']
 
         # Create a sourcedb to be used by the demixing phase of DPPP
         # The path to the A-team sky model is currently hard-coded.
