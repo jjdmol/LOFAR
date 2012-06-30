@@ -33,6 +33,7 @@
 
 #include <AOFlagger/util/aologger.h>
 #include <AOFlagger/util/ffttools.h>
+#include <boost/concept_check.hpp>
 
 namespace rfiStrategy {
 
@@ -176,6 +177,16 @@ private:
 				numl_t
 					**fSinTable,
 					**fCosTable;
+					
+				IterationData() :
+					artifacts(0), width(0), fourierWidth(0), rangeStart(0), rangeEnd(0),
+					vZeroPos(0), startXf(0), endXf(0),
+					maxDist(0.0),
+					rowRValues(0), rowIValues(0), rowUPositions(0), rowVPositions(0),
+					fourierValuesReal(0), fourierValuesImag(0), channelMaxDist(0),
+					fSinTable(0), fCosTable(0)
+				{
+				}
 			};
 
 			Image2DPtr PerformSingleSincOperation(ArtifactSet &artifacts) const
