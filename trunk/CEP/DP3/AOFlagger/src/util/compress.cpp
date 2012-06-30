@@ -140,6 +140,7 @@ Image2DPtr Compress::Read(std::ifstream &stream, Image2DPtr image, Mask2DCPtr ma
 			}
 		}
 	}
+	return Image2DPtr();
 }
 
 unsigned long Compress::RawSize()

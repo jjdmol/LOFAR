@@ -60,7 +60,7 @@ int fit_df(const gsl_vector *xvec, void *data, gsl_matrix *J)
 		const double x = i.value();
 		if(x >= minVal && x < maxVal && std::isfinite(x))
 		{
-			const double val = i.normalizedCount();
+			//const double val = i.normalizedCount();
 			//const double weight = log(val);
 
 			double dfdsigma, dfdn;
