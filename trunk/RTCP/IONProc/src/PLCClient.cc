@@ -303,7 +303,9 @@ PLCClient::~PLCClient()
     itsDone = true;
   }
 
-  // thread might have been deleted in waitForDone()
+  // Release the thread first! Use waitForDone() as the
+  // thread might have been deleted in an earlier waitForDone()
+  waitForDone();
 }
 
 void PLCClient::waitForDone()
