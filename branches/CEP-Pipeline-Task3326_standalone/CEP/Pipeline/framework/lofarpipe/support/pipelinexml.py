@@ -53,12 +53,7 @@ def write_xml_as_parset(xml, parset_path, prefix_remove=""):
             key = key[len(prefix_remove) + 1:]
 
         # Needed for correct conversion of dict to parset:
-        # todict in pyparameterset eats containing quotes
-        parset_special_char = """#"' ="""
-        if 1 in [c in value for c in parset_special_char]:
-            line = "{0}='{1}'\n".format(key, value)
-        else:
-            line = "{0}={1}\n".format(key, value)
+        line = "{0}={1}\n".format(key, value)
 
         fp.write(line)
 
