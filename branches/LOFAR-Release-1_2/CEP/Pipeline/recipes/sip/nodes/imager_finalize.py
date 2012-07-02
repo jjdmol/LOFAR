@@ -71,7 +71,7 @@ class imager_finalize(LOFARnodeTCP):
                 # Create the output directory
                 create_directory(os.path.split(output_image)[0])
                 # save the image
-                im.saveas(output_image, hdf5 = True)
+                im.saveas(output_image, hdf5=True)
                 # TODO: HDF5 version of PIM is different to the system version
                 # dunno the solution: the script breaks.
             except Exception, error:
@@ -86,9 +86,9 @@ class imager_finalize(LOFARnodeTCP):
             #Spawn a subprocess and connect the pipes
             proc = subprocess.Popen(
                         command,
-                        stdin = subprocess.PIPE,
-                        stdout = subprocess.PIPE,
-                        stderr = subprocess.PIPE)
+                        stdin=subprocess.PIPE,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE)
 
             (stdoutdata, stderrdata) = proc.communicate()
 
@@ -102,6 +102,9 @@ class imager_finalize(LOFARnodeTCP):
                     "see above lines. Exit status: {0}".format(exit_status))
 
                 return 1
+
+            self.outputs["hdf5"] = "succes"
+            self.outputs["image"] = output_image
 
         return 0
 
