@@ -97,7 +97,7 @@ class Job : public PLCRunnable
       ~StorageProcess();
 
       void start();
-      void stop( unsigned &timeout );
+      void stop( struct timespec deadline );
     private:
       void                               controlThread();
 
