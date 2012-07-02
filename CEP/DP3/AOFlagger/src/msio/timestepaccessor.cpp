@@ -314,7 +314,8 @@ void TimestepAccessor::lock(unsigned setIndex)
 		std::ostringstream s;
 		s << "ssh node079 -C \"~/LOFAR-build/bin/aosynchronisation lock-unique \"" << setIndex << " 2> /dev/null\n";
 		std::string str = s.str();
-		system(str.c_str());
+		if(system(str.c_str()) != 0)
+			throw std::runtime_error("system() returned nonzero");
 	}
 }
 
@@ -325,7 +326,8 @@ void TimestepAccessor::unlock(unsigned setIndex)
 		std::ostringstream s;
 		s << "ssh node079 -C \"~/LOFAR-build/bin/aosynchronisation release-unique \"" << setIndex << " 2> /dev/null\n";
 		std::string str = s.str();
-		system(str.c_str());
+		if(system(str.c_str()) != 0)
+			throw std::runtime_error("system() returned nonzero");
 	}
 }
 
