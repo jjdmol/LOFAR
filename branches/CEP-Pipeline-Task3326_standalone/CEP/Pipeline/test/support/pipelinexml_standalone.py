@@ -22,4 +22,4 @@ if __name__ == "__main__":
     fp.close()
 
     # convert back to parset and save
-    pipexml.write_xml_as_parset(xml_node, arg1[0] + ".out", "parset")
+    pipexml.write_xml_as_parset(xml_node, arg1[0] + ".out", "dict")

@@ -21,6 +21,7 @@ def open_parset_as_xml_node(parset):
             from lofar.parameterset import parameterset  #@UnresolvedImport
             parset = parameterset(parset)
             parset_as_dict = parset.dict()
+
         except:
             # use standalone parser if import failed
             print "lofar.parameterset not found. Using standalone parser."
@@ -48,9 +49,17 @@ def write_xml_as_parset(xml, parset_path, prefix_remove=""):
     fp = open(parset_path, "w")
     # parset is key = value  on each line
     for (key, value) in dicted_xml.items():
-        if not prefix_remove == "":
+        if not (prefix_remove == ""):
             key = key[len(prefix_remove) + 1:]
-        line = "{0}={1}\n".format(key, value)
+
+        # Needed for correct conversion of dict to parset:
+        # todict in pyparameterset eats containing quotes
+        parset_special_char = """#"' """
+        if 1 in [c in value for c in parset_special_char]:
+            line = "{0}='{1}'\n".format(key, value)
+        else:
+            line = "{0}={1}\n".format(key, value)
+
         fp.write(line)
 
     fp.close()
@@ -107,7 +116,7 @@ def _read_parset_to_dict(parset_path):
     return parset_as_dict
 
 
-def _convert_dict_to_xml_node(par_dict, top_level_name="parset"):
+def _convert_dict_to_xml_node(par_dict, top_level_name="dict"):
     """
     _convert_dict_to_xml_node receives an dicted parset, parses the (implicit)
     node names, dot seperated names. Inserts new nodes into an xml node.
@@ -130,10 +139,11 @@ def _convert_dict_to_xml_node(par_dict, top_level_name="parset"):
         current_parent = root
         # for all the node names exept the last one (the leaf)
         for name in node_names[:-1]:
-            # get all nodes matching with the current node name
+            # get all nodes matching with the current node name, INCLUDING grandchil.
             matching_nodes = current_parent.getElementsByTagName(name)
-            # If we already have this node name
-            if len(matching_nodes) == 1:
+            # If we already have this node name as a CHILD
+            if len(matching_nodes) == 1 and \
+               (matching_nodes[0] in current_parent.childNodes):
                 # update the current_parent and continue parsing the node name
                 current_parent = matching_nodes[0]
             else:
@@ -150,9 +160,11 @@ def _convert_dict_to_xml_node(par_dict, top_level_name="parset"):
 
     # test if there is a single node toplevel child
     if len(root.childNodes) == 1 and (not root.hasAttributes()):
-        # return this child as the xml node
+        # return this child as the xml node: this results in expected behaviour
+        # that the xml contains only dict information
+        # In other instances we need a node to assign the leaf information to
         return root.childNodes[0]
-    # else return the root xml node
+    # else return the root xml node: T
     return root
 
 

@@ -31,7 +31,7 @@ class pipelinexmlTest(unittest.TestCase):
         testdata = \
 """
 #Comment 
-key1=value #end of line comment 
+key1='value' #end of line comment 
 key2= value \  #end of line comment 
 additional data 
 key3=value #\end of line comment 
@@ -40,7 +40,7 @@ key4=value=value
     key5 = value                
 """
         expected_dict = {}
-        expected_dict["key1"] = "value"
+        expected_dict["key1"] = "'value'"
         expected_dict["key2"] = "value additional data"
         expected_dict["key3"] = "value"
         expected_dict["key4"] = "value=value"
@@ -186,6 +186,54 @@ key4=value=value
             self.assertTrue(output_dict[key] == input_dict[key],
                 "the received value for key {0} was not equal: {1}, {2}".format(
                     key, input_dict[key], output_dict[key]))
+
+
+    def test_dict_to_xml_elementsbyname_bug(self):
+        """
+        In the dict to xml conversion the matching of leaf/node names with the parent is done using
+        getElementsByTagName which also produces matches with grandchildren.
+        Adding an test of match is indeed parent lets this test succeed
+        """
+        # write a tempparset with test data
+        input_dict = {}
+        input_dict["ObsSW.Observation.ObservationControl.PythonControl.BBS.Step.DefaultBBSStep[0].Solve.CellSize.Freq"] = "4"
+        input_dict["ObsSW.Observation.ObservationControl.PythonControl.BBS.Step.DefaultBBSStep[0].Solve.Resample.CellSize.Freq"] = "0"
+        input_dict["ObsSW.Observation.ObservationControl.PythonControl.BBS.Step.DefaultBBSStep[0].Solve.Resample.CellSize.Time"] = "1"
+        input_dict["ObsSW.Observation.ObservationControl.PythonControl.BBS.Step.DefaultBBSStep[0].Solve.CellSize.Time"] = "5"
+
+
+        xml_node = pipexml._convert_dict_to_xml_node(input_dict)
+        output_dict = pipexml._convert_xml_to_dict(xml_node)
+
+        for key in input_dict.iterkeys():
+            message = "dict did not contain expected key {0} \n {1}".format(
+                    key, output_dict)
+            self.assertTrue(output_dict.has_key(key), message)
+
+            message = "retrieved value based on key {0} is not the correct: \n"\
+               " >{1}< != >{2}< \n output: \n {3} \n expected: \n {4} ".format(key, output_dict[key], input_dict[key], output_dict, input_dict)
+
+            self.assertTrue(output_dict[key] == input_dict[key], message)
+
+    def test_convert_value_with_quotes(self):
+        # write a tempparset with test data
+        input_dict = {}
+        input_dict["test.key1"] = """"'value"'"""
+
+        xml_node = pipexml._convert_dict_to_xml_node(input_dict)
+
+        #self.assertTrue(False, input_dict)
+        output_dict = pipexml._convert_xml_to_dict(xml_node)
+
+        for key in input_dict.iterkeys():
+            message = "dict did not contain expected key {0} \n {1}".format(
+                    key, output_dict)
+            self.assertTrue(output_dict.has_key(key), message)
+
+            message = "retrieved value based on key {0} is not the correct: \n"\
+               " >{1}< != >{2}< ".format(key, output_dict[key], input_dict[key])
+
+            self.assertTrue(output_dict[key] == input_dict[key], message)
 
 
 if __name__ == "__main__":
