@@ -268,17 +268,16 @@ void Job::StorageProcess::start()
 }
 
 
-void Job::StorageProcess::stop(unsigned &timeout)
+void Job::StorageProcess::stop(struct timespec deadline)
 {
 #ifdef HAVE_LIBSSH2
-  // TODO: update timeout
-  struct timespec deadline;
-
-  deadline.tv_sec  = time(0) + timeout;
-  deadline.tv_nsec = 0;
-
   itsSSHconnection->stop(deadline);
 #else
+  // TODO: update timeout
+  time_t now = time(0);
+
+  unsigned timeout = 1 + (now < deadline.tv_sec ? deadline.tv_sec - now : 0);
+
   joinSSH(itsLogPrefix, itsPID, timeout);
 #endif  
 }
@@ -312,11 +311,13 @@ void Job::startStorageProcesses()
 
 void Job::stopStorageProcesses()
 {
-  // warning: there could be zero storage processes
-  unsigned timeleft = 10;
+  struct timespec deadline;
+
+  deadline.tv_sec  = time(0) + 10;
+  deadline.tv_nsec = 0;
 
   for (unsigned rank = 0; rank < itsStorageProcesses.size(); rank ++)
-    itsStorageProcesses[rank]->stop(timeleft);
+    itsStorageProcesses[rank]->stop(deadline);
 }
 
 
