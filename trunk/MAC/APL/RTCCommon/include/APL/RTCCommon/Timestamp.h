@@ -123,7 +123,7 @@ namespace RTC
 	   */
 	  long sec()  const;
 	  long usec() const;
-	  static Timestamp maxTime() { return (Timestamp(LONG_MAX, 999999)); };
+	  static Timestamp maxTime() { return (Timestamp(INT_MAX, 999999)); };
 	  /*@}*/
 
 public:
