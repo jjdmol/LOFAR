@@ -265,7 +265,8 @@ class copier(MasterNodeInterface):
         # Same length? Of no then fail
         if len(source_map) != len(target_map):
             self.logger.error("Number of entries in the source and target map"
-                              "Is not the same ")
+                "Is not the same: \n target \n {0}\n source \n {1}".format(
+                            target_map, source_map))
             return False
 
         # Construct mapfiles for each node containing the source and target

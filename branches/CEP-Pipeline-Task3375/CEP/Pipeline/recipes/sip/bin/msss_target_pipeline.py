@@ -162,10 +162,14 @@ class msss_target_pipeline(control):
         target_path = os.path.join(copier_map_path, "target_instruments.map")
         store_data_map(target_path, input_data_map)
 
+        copied_files_path = os.path.join(copier_map_path, "copied_instruments.map")
+        store_data_map(target_path, input_data_map)
+
         new_instrument_map = self.run_task("copier",
                       mapfile_source=source_path,
                       mapfile_target=target_path,
-                      mapfile_dir=copier_map_path,
+                      mapfiles_dir=copier_map_path,
+                      mapfile=copied_files_path,
                       target_dir="instument_models")['mapfile']
 
         return new_instrument_map
@@ -215,8 +219,8 @@ class msss_target_pipeline(control):
                                     self.input_data['instrument'],
                                     self.input_data['data'], mapfile_dir)
 
-        self._validate_io_product_specs()
-
+        # File locations are not on the same node: skip check for same node
+        #self._validate_io_product_specs()
 
         parset_dir = os.path.join(job_dir, "parsets")
 
@@ -230,11 +234,8 @@ class msss_target_pipeline(control):
         self.logger.debug(
             "Wrote input data mapfile: %s" % data_mapfile
         )
-        instrument_mapfile = os.path.join(mapfile_dir, "instrument.mapfile")
-        store_data_map(instrument_mapfile, self.input_data['instrument'])
-        self.logger.debug(
-            "Wrote input instrument mapfile: %s" % instrument_mapfile
-        )
+        instrument_mapfile = self.input_data['instrument']
+
         corrected_mapfile = os.path.join(mapfile_dir, "corrected_data.mapfile")
         store_data_map(corrected_mapfile, self.output_data['data'])
         self.logger.debug(
