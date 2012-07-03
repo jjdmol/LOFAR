@@ -91,7 +91,7 @@ public:
 	// Return parts.
 	long sec()  const;
 	long nsec() const;
-	static NsTimestamp maxTime() { return (NsTimestamp(LONG_MAX, 999999999)); };
+	static NsTimestamp maxTime() { return (NsTimestamp(INT_MAX, 999999999)); };
 	/*@}*/
 
 	/*@{*/

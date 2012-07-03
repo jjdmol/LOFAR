@@ -27,8 +27,10 @@
 
 #include <Storage/MSWriter.h>
 #include <Storage/MSWriterDAL.h>
+#include <Storage/Package__Version.h>
 
-#include <lofar/BF_File.h>
+#include <dal/lofar/BF_File.h>
+#include <dal/dal_version.h>
 
 using namespace DAL;
 using namespace std;
@@ -57,6 +59,11 @@ static string timeStr( double time )
     return "";
 
   return str(format("%s.%09lu") % utcstr % timeNSec);
+}
+
+static string toUTC( double time )
+{
+  return timeStr(time) + "Z";
 }
 
 static double toMJD( double time )
@@ -103,7 +110,7 @@ namespace LOFAR
 
     template <typename T,unsigned DIM> MSWriterDAL<T,DIM>::MSWriterDAL (const string &filename, const Parset &parset, unsigned fileno, bool isBigEndian)
     :
-      MSWriterFile(forceextension(string(filename),".raw"),false),
+      MSWriterFile(forceextension(string(filename),".raw")),
       itsTransposeLogic(parset.transposeLogic()),
       itsInfo(itsTransposeLogic.streamInfo[fileno]),
       itsNrChannels(itsInfo.nrChannels * itsInfo.subbands.size()),
@@ -167,40 +174,40 @@ namespace LOFAR
       BF_File file(h5filename, BF_File::CREATE);
 
       // Common Attributes
-      file.groupType().set("Root");
-      file.fileName() .set(LOFAR::basename(h5filename));
+      file.groupType().value = "Root";
+      file.fileName() .value = LOFAR::basename(h5filename);
 
       char now_str[50];
       time_t now = time(NULL);
       if (strftime( now_str, sizeof now_str, "%Y-%m-%dT%H:%M:%S.0", gmtime(&now) ) > 0 )
-        file.fileDate().set(now_str);
+        file.fileDate().value = now_str;
 
-      file.fileType() .set("bf");
-      file.telescope().set("LOFAR");
-      file.observer() .set("unknown");
+      file.fileType() .value = "bf";
+      file.telescope().value = "LOFAR";
+      file.observer() .value = "unknown";
 
-      file.projectID()     .set(parset.getString("Observation.Campaign.name"));
-      file.projectTitle()  .set(parset.getString("Observation.Campaign.title"));
-      file.projectPI()     .set(parset.getString("Observation.Campaign.PI"));
-      file.projectCOI()    .set(parset.getString("Observation.Campaign.CO_I")); // TODO: actually a vector, so pretty print
-      file.projectContact().set(parset.getString("Observation.Campaign.contact"));
+      file.projectID()     .value = parset.getString("Observation.Campaign.name", "");
+      file.projectTitle()  .value = parset.getString("Observation.Scheduler.taskName", "");
+      file.projectPI()     .value = parset.getString("Observation.Campaign.PI", "");
+      file.projectCOI()    .value = parset.getString("Observation.Campaign.CO_I", "");
+      file.projectContact().value = parset.getString("Observation.Campaign.contact", "");
 
-      file.observationID() .set(str(format("%s") % parset.observationID()));
+      file.observationID() .value = str(format("%u") % parset.observationID());
 
-      file.observationStartUTC().set(timeStr(parset.startTime()));
-      file.observationStartMJD().set(toMJD(parset.startTime()));
-      file.observationStartTAI().set(toTAI(parset.startTime()));
+      file.observationStartUTC().value = toUTC(parset.startTime());
+      file.observationStartMJD().value = toMJD(parset.startTime());
+      file.observationStartTAI().value = toTAI(parset.startTime());
 
       // because we process in blocks, the stop time can be a bit further than the one
       // actually specified.
       double stopTime = parset.startTime() + nrBlocks * parset.CNintegrationTime();
 
-      file.observationEndUTC().set(timeStr(stopTime));
-      file.observationEndMJD().set(toMJD(stopTime));
-      file.observationEndTAI().set(toTAI(stopTime));
+      file.observationEndUTC().value = toUTC(stopTime);
+      file.observationEndMJD().value = toMJD(stopTime);
+      file.observationEndTAI().value = toTAI(stopTime);
 
-      file.observationNofStations().set(parset.nrStations()); // TODO: SS beamformer?
-      file.observationStationsList().set(parset.allStationNames()); // TODO: SS beamformer?
+      file.observationNofStations().value = parset.nrStations(); // TODO: SS beamformer?
+      file.observationStationsList().value = parset.allStationNames(); // TODO: SS beamformer?
 
       const vector<double> subbandCenterFrequencies = parset.subbandToFrequencyMapping();
       double min_centerfrequency = *min_element( subbandCenterFrequencies.begin(), subbandCenterFrequencies.end() );
@@ -210,37 +217,54 @@ namespace LOFAR
       double subbandBandwidth = parset.sampleRate();
       double channelBandwidth = parset.channelWidth();
 
-      file.observationFrequencyMin()   .set((min_centerfrequency - subbandBandwidth / 2) / 1e6);
-      file.observationFrequencyCenter().set(sum_centerfrequencies / subbandCenterFrequencies.size());
-      file.observationFrequencyMax()   .set((max_centerfrequency + subbandBandwidth / 2) / 1e6);
-      file.observationFrequencyUnit()  .set("MHz");
+      file.observationFrequencyMax()   .value = (max_centerfrequency + subbandBandwidth / 2) / 1e6;
+      file.observationFrequencyMin()   .value = (min_centerfrequency - subbandBandwidth / 2) / 1e6;
+      file.observationFrequencyCenter().value = sum_centerfrequencies / subbandCenterFrequencies.size() / 1e6;
+      file.observationFrequencyUnit()  .value = "MHz";
 
-      file.observationNofBitsPerSample().set(parset.nrBitsPerSample());
-      file.clockFrequency()             .set(parset.clockSpeed() / 1e6);
-      file.clockFrequencyUnit()         .set("MHz");
+      file.observationNofBitsPerSample().value = parset.nrBitsPerSample();
+      file.clockFrequency()             .value = parset.clockSpeed() / 1e6;
+      file.clockFrequencyUnit()         .value = "MHz";
 
-      file.antennaSet()     .set(parset.antennaSet());
-      file.filterSelection().set(parset.getString("Observation.bandFilter"));
+      file.antennaSet()     .value = parset.antennaSet();
+      file.filterSelection().value = parset.getString("Observation.bandFilter");
 
-      file.ICDNumber() .set("3");
-      file.ICDVersion().set("2.04.10");
+      unsigned nrSAPs = parset.nrBeams();
+      vector<string> targets(nrSAPs);
+
+      for (unsigned sap = 0; sap < nrSAPs; sap++)
+        targets[sap] = parset.beamTarget(sap);
+
+      file.targets().value = targets;
+
+      file.systemVersion().value   = StorageVersion::getVersion(); // LOFAR version
+      file.pipelineName().value    = "";
+      file.pipelineVersion().value = "";
+
+      file.docName() .value   = "ICD 3: Beam-Formed Data";
+      file.docVersion().value = "2.04.27";
+
+      file.notes().value      = "";
 
       // BF_File specific root group parameters
 
-      file.createOfflineOnline().set("Online");
+      file.createOfflineOnline().value = "Online";
+      file.BFFormat().value            = "TAB";
+      file.BFVersion().value           = str(format("RTCP/Storage %s r%s using DAL %s and HDF5 %s") % StorageVersion::getVersion() % StorageVersion::getRevision() % DAL::get_lib_version() % DAL::get_dal_hdf5_version());
 
-      file.expTimeStartUTC().set(timeStr(parset.startTime()));
-      file.expTimeStartMJD().set(toMJD(parset.startTime()));
-      file.expTimeStartTAI().set(toTAI(parset.startTime()));
+      file.totalIntegrationTime()    .value = nrBlocks * parset.CNintegrationTime();
+      file.totalIntegrationTimeUnit().value = "s";
+      file.observationDataType()     .value = "";
 
-      file.expTimeEndUTC().set(timeStr(stopTime));
-      file.expTimeEndMJD().set(toMJD(stopTime));
-      file.expTimeEndTAI().set(toTAI(stopTime));
+      //file.subArrayPointingDiameter().value = 0.0;
+      //file.subArrayPointingDiameterUnit().value = "arcmin";
+      file.bandwidth()               .value = parset.nrSubbands() * subbandBandwidth / 1e6;
+      file.bandwidthUnit()           .value = "MHz";
+      //file.beamDiameter()            .value = 0.0;
+      //file.beamDiameterUnit()          .value = "arcmin";
 
-      file.totalIntegrationTime().set(nrBlocks * parset.CNintegrationTime());
-      file.bandwidth()           .set(parset.nrSubbands() * subbandBandwidth / 1e6);
-
-      file.nofSubArrayPointings().set(parset.nrBeams());
+      file.observationNofSubArrayPointings().value = parset.nrBeams();
+      file.nofSubArrayPointings().value            = 1;
 
       // SysLog group -- empty for now
       file.sysLog().create();
@@ -248,56 +272,79 @@ namespace LOFAR
       // information about the station beam (SAP)
       BF_SubArrayPointing sap = file.subArrayPointing(sapNr);
       sap.create();
-      sap.groupType()   .set("SubArrayPointing");
+      sap.groupType()   .value = "SubArrayPointing";
+      sap.target()      .value = targets[sapNr];
 
-      sap.nofStations() .set(parset.nrStations()); // TODO: SS beamformer?
-      sap.stationsList().set(parset.allStationNames());
+      sap.expTimeStartUTC().value = toUTC(parset.startTime());
+      sap.expTimeStartMJD().value = toMJD(parset.startTime());
+      sap.expTimeStartTAI().value = toTAI(parset.startTime());
+
+      sap.expTimeEndUTC().value = toUTC(stopTime);
+      sap.expTimeEndMJD().value = toMJD(stopTime);
+      sap.expTimeEndTAI().value = toTAI(stopTime);
 
       // TODO: non-J2000 pointings
       if( parset.getBeamDirectionType(sapNr) != "J2000" )
         LOG_WARN("HDF5 writer does not record positions of non-J2000 observations yet.");
 
       vector<double> beamDir = parset.getBeamDirection(sapNr);
-      sap.pointRA() .set(beamDir[0] * 180.0 / M_PI);
-      sap.pointDEC().set(beamDir[1] * 180.0 / M_PI);
+      sap.pointRA() .value = beamDir[0] * 180.0 / M_PI;
+      sap.pointDEC().value = beamDir[1] * 180.0 / M_PI;
 
-      sap.clockRate()         .set(parset.clockSpeed());
-      sap.clockRateUnit()     .set("Hz");
+      sap.subbandWidth()      .value = subbandBandwidth;
+      sap.subbandWidthUnit()  .value = "Hz";
 
-      sap.nofSamples()        .set(itsNrSamples * nrBlocks);
-      sap.samplingRate()      .set(parset.sampleRate());
-      sap.samplingRateUnit()  .set("Hz");
-      sap.samplingTime()      .set(1.0 / parset.sampleRate());
-      sap.samplingTimeUnit()  .set("s");
+      sap.observationNofBeams().value = parset.nrPencilBeams(sapNr);
+      sap.nofBeams()           .value = 1;
 
-      sap.channelsPerSubband().set(parset.nrChannelsPerSubband());
-      sap.subbandWidth()      .set(subbandBandwidth);
-      sap.subbandWidthUnit()  .set("Hz");
-      sap.channelWidth()      .set(channelBandwidth);
-      sap.channelWidthUnit()  .set("Hz");
+      BF_ProcessingHistory sapHistory = sap.processHistory();
+      sapHistory.create();
 
-      sap.nofBeams()          .set(parset.nrPencilBeams(sapNr));
+      string parsetAsString;
+      parset.writeBuffer(parsetAsString);
+
+      sapHistory.observationParset().value = parsetAsString;
+      sapHistory.observationLog()   .value = "";
+      sapHistory.prestoParset()     .value = "";
+      sapHistory.prestoLog()        .value = "";
 
       // information about the pencil beam
 
       BF_BeamGroup beam = sap.beam(beamNr);
       beam.create();
-      beam.groupType()   .set("Beam");
+      beam.groupType()         .value = "Beam";
 
       vector<string> beamStationList = parset.pencilBeamStationList(sapNr, beamNr);
-      beam.nofStations() .set(beamStationList.size());
-      beam.stationsList().set(beamStationList);
+      beam.nofStations() .value = beamStationList.size();
+      beam.stationsList().value = beamStationList;
 
-      //const char *trackingTypes[] = { "J2000", "LMN", "TBD" };
-      //writeAttribute(         beam, "TRACKING",      "J2000" ); // TODO: support non-tracking
-      // TODO: non-J2000 pointings
-      //ASSERT( parset.getBeamDirectionType() == "J2000" );
+      beam.tracking().value     = parset.getBeamDirectionType(sapNr);
+
       BeamCoordinates pbeamDirs = parset.pencilBeams(sapNr);
       BeamCoord3D pbeamDir = pbeamDirs[beamNr];
-      beam.pointRA()       .set((beamDir[0] + pbeamDir[0]) * 180.0 / M_PI);
-      beam.pointDEC()      .set((beamDir[1] + pbeamDir[1]) * 180.0 / M_PI);
-      beam.pointOffsetRA() .set(pbeamDir[0] * 180.0 / M_PI);
-      beam.pointOffsetDEC().set(pbeamDir[1] * 180.0 / M_PI);
+      beam.pointRA()           .value = (beamDir[0] + pbeamDir[0]) * 180.0 / M_PI;
+      beam.pointRAUnit()       .value = "deg";
+      beam.pointDEC()          .value = (beamDir[1] + pbeamDir[1]) * 180.0 / M_PI;
+      beam.pointDECUnit()      .value = "deg";
+      beam.pointOffsetRA()     .value = pbeamDir[0] * 180.0 / M_PI;
+      beam.pointOffsetRAUnit() .value = "deg";
+      beam.pointOffsetDEC()    .value = pbeamDir[1] * 180.0 / M_PI;
+      beam.pointOffsetDECUnit().value = "deg";
+
+      beam.beamDiameterRA()     .value = 0;
+      beam.beamDiameterRAUnit() .value = "arcmin";
+      beam.beamDiameterDEC()    .value = 0;
+      beam.beamDiameterDECUnit().value = "arcmin";
+
+      beam.nofSamples()        .value = itsNrSamples * nrBlocks;
+      beam.samplingRate()      .value = parset.sampleRate() / parset.nrChannelsPerSubband() / itsInfo.timeIntFactor;
+      beam.samplingRateUnit()  .value = "Hz";
+      beam.samplingTime()      .value = parset.sampleDuration() * parset.nrChannelsPerSubband() * itsInfo.timeIntFactor;
+      beam.samplingTimeUnit()  .value = "s";
+
+      beam.channelsPerSubband().value = itsInfo.nrChannels;
+      beam.channelWidth()      .value = channelBandwidth * (parset.nrChannelsPerSubband() / itsInfo.nrChannels);
+      beam.channelWidthUnit()  .value = "Hz";
 
       vector<double> beamCenterFrequencies(nrSubbands, 0.0);
 
@@ -306,51 +353,67 @@ namespace LOFAR
 
       double beamCenterFrequencySum = accumulate(beamCenterFrequencies.begin(), beamCenterFrequencies.end(), 0.0);
 
-      beam.beamFrequencyCenter().set(beamCenterFrequencySum / nrSubbands);
+      beam.beamFrequencyCenter()    .value = beamCenterFrequencySum / nrSubbands / 1e6;
+      beam.beamFrequencyCenterUnit().value = "MHz";
 
       double DM = parset.dispersionMeasure(sapNr, beamNr);
 
-      beam.foldedData()             .set(false);
-      beam.dedispersion()           .set(DM == 0.0 ? "NONE" : "COHERENT");
-      beam.dedispersionMeasure()    .set(DM);
-      beam.dedispersionMeasureUnit().set("pc/cm^3");
+      beam.foldedData()             .value = false;
+      beam.foldPeriod()             .value = 0.0;
+      beam.foldPeriodUnit()         .value = "s";
 
-      //beam.baryCenter()             .set(false);
+      beam.dedispersion()           .value = DM == 0.0 ? "NONE" : "COHERENT";
+      beam.dedispersionMeasure()    .value = DM;
+      beam.dedispersionMeasureUnit().value = "pc/cm^3";
 
-      beam.nofStokes()              .set(itsInfo.nrStokes);
-      beam.stokesComponents()       .set(stokesVars);
-      beam.complexVoltages()        .set(itsInfo.stokesType == STOKES_XXYY);
-      beam.signalSum()              .set(itsInfo.coherent ? "COHERENT" : "INCOHERENT");
+      beam.barycentered()           .value = false;
+
+      beam.observationNofStokes()   .value = itsInfo.nrStokes;
+      beam.nofStokes()              .value = 1;
+
+      vector<string> stokesComponents(1, stokesVars[stokesNr]);
+
+      beam.stokesComponents()       .value = stokesComponents;
+      beam.complexVoltages()        .value = itsInfo.stokesType == STOKES_XXYY;
+      beam.signalSum()              .value = itsInfo.coherent ? "COHERENT" : "INCOHERENT";
+
+      BF_ProcessingHistory beamHistory = beam.processHistory();
+      beamHistory.create();
+
+      beamHistory.observationParset().value = parsetAsString;
+      beamHistory.observationLog()   .value = "";
+      beamHistory.prestoParset()     .value = "";
+      beamHistory.prestoLog()        .value = "";
 
       CoordinatesGroup coordinates = beam.coordinates();
       coordinates.create();
-      coordinates.groupType().set("Coordinates");
+      coordinates.groupType().value = "Coordinates";
 
-      coordinates.refLocationValue().set(parset.getRefPhaseCentre());
-      coordinates.refLocationUnit().set(vector<string>(3,"m"));
-      coordinates.refLocationFrame().set("ITRF");
+      coordinates.refLocationValue().value = parset.getRefPhaseCentre();
+      coordinates.refLocationUnit().value = vector<string>(3,"m");
+      coordinates.refLocationFrame().value = "ITRF";
 
-      coordinates.refTimeValue().set(toMJD(parset.startTime()));
-      coordinates.refTimeUnit().set("d");
-      coordinates.refTimeFrame().set("MJD");
+      coordinates.refTimeValue().value = toMJD(parset.startTime());
+      coordinates.refTimeUnit().value = "d";
+      coordinates.refTimeFrame().value = "MJD";
 
-      coordinates.nofCoordinates().set(2);
-      coordinates.nofAxes()       .set(2);
+      coordinates.nofCoordinates().value = 2;
+      coordinates.nofAxes()       .value = 2;
 
       vector<string> coordinateTypes(2);
       coordinateTypes[0] = "Time"; // or TimeCoord ?
       coordinateTypes[1] = "Spectral"; // or SpectralCoord ?
-      coordinates.coordinateTypes().set(coordinateTypes);
+      coordinates.coordinateTypes().value = coordinateTypes;
 
       SmartPtr<TimeCoordinate> timeCoordinate = dynamic_cast<TimeCoordinate*>(coordinates.coordinate(0));
       timeCoordinate.get()->create();
-      timeCoordinate.get()->groupType()     .set("TimeCoord");
+      timeCoordinate.get()->groupType()     .value = "TimeCoord";
 
-      timeCoordinate.get()->coordinateType().set("Time");
-      timeCoordinate.get()->storageType()   .set(vector<string>(1,"Linear"));
-      timeCoordinate.get()->nofAxes()       .set(1);
-      timeCoordinate.get()->axisNames()     .set(vector<string>(1,"Time"));
-      timeCoordinate.get()->axisUnits()     .set(vector<string>(1,"us"));
+      timeCoordinate.get()->coordinateType().value = "Time";
+      timeCoordinate.get()->storageType()   .value = vector<string>(1,"Linear");
+      timeCoordinate.get()->nofAxes()       .value = 1;
+      timeCoordinate.get()->axisNames()     .value = vector<string>(1,"Time");
+      timeCoordinate.get()->axisUnits()     .value = vector<string>(1,"us");
 
       // linear coordinates:
       //   referenceValue = offset from starting time, in axisUnits
@@ -358,19 +421,26 @@ namespace LOFAR
       //   increment      = time increment for each sample
       //   pc             = scaling factor (?)
 
-      timeCoordinate.get()->referenceValue().set(0);
-      timeCoordinate.get()->referencePixel().set(0);
-      timeCoordinate.get()->increment()     .set(parset.sampleDuration() * itsInfo.timeIntFactor);
+      timeCoordinate.get()->referenceValue().value = 0;
+      timeCoordinate.get()->referencePixel().value = 0;
+      timeCoordinate.get()->increment()     .value = parset.sampleDuration() * itsInfo.timeIntFactor;
+
+      timeCoordinate.get()->axisValuesPixel().value = vector<unsigned>(1, 0); // not used
+      timeCoordinate.get()->axisValuesWorld().value = vector<double>(1, 0.0); // not used
 
       SmartPtr<SpectralCoordinate> spectralCoordinate = dynamic_cast<SpectralCoordinate*>(coordinates.coordinate(1));
       spectralCoordinate.get()->create();
-      spectralCoordinate.get()->groupType()     .set("SpectralCoord");
+      spectralCoordinate.get()->groupType()     .value = "SpectralCoord";
 
-      spectralCoordinate.get()->coordinateType().set("Spectral");
-      spectralCoordinate.get()->storageType()   .set(vector<string>(1,"Tabular"));
-      spectralCoordinate.get()->nofAxes()       .set(1);
-      spectralCoordinate.get()->axisNames()     .set(vector<string>(1,"Frequency"));
-      spectralCoordinate.get()->axisUnits()     .set(vector<string>(1,"MHz"));
+      spectralCoordinate.get()->coordinateType().value = "Spectral";
+      spectralCoordinate.get()->storageType()   .value = vector<string>(1,"Tabular");
+      spectralCoordinate.get()->nofAxes()       .value = 1;
+      spectralCoordinate.get()->axisNames()     .value = vector<string>(1,"Frequency");
+      spectralCoordinate.get()->axisUnits()     .value = vector<string>(1,"MHz");
+
+      spectralCoordinate.get()->referenceValue().value = 0; // not used
+      spectralCoordinate.get()->referencePixel().value = 0; // not used
+      spectralCoordinate.get()->increment()     .value = 0; // not used
 
       // tabular coordinates:
       //   axisValuePixel = data indices
@@ -388,8 +458,8 @@ namespace LOFAR
         }
       }
 
-      spectralCoordinate.get()->axisValuesPixel().set(spectralPixels);
-      spectralCoordinate.get()->axisValuesWorld().set(spectralWorld);
+      spectralCoordinate.get()->axisValuesPixel().value = spectralPixels;
+      spectralCoordinate.get()->axisValuesWorld().value = spectralWorld;
 
       BF_StokesDataset stokesDS = beam.stokes(stokesNr);
 
@@ -402,10 +472,13 @@ namespace LOFAR
       maxdims[1] = itsNrChannels;
 
       stokesDS.create(dims, maxdims, LOFAR::basename(rawfilename), isBigEndian ? BF_StokesDataset::BIG : BF_StokesDataset::LITTLE);
+      stokesDS.groupType().value = "bfData";
+      stokesDS.dataType() .value = "float";
 
-      stokesDS.stokesComponent().set(stokesVars[stokesNr]);
-      stokesDS.nofChannels()    .set(vector<unsigned>(nrSubbands, itsInfo.nrChannels));
-      stokesDS.nofSamples()     .set(dims[0]);
+      stokesDS.stokesComponent().value = stokesVars[stokesNr];
+      stokesDS.nofChannels()    .value = vector<unsigned>(nrSubbands, itsInfo.nrChannels);
+      stokesDS.nofSubbands()    .value = nrSubbands;
+      stokesDS.nofSamples()     .value = dims[0];
     }
 
     template <typename T,unsigned DIM> MSWriterDAL<T,DIM>::~MSWriterDAL()

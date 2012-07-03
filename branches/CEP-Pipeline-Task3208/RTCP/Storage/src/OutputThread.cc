@@ -25,6 +25,7 @@
 
 #include <Common/StringUtil.h>
 #include <Storage/MSWriterFile.h>
+#include <Storage/MSWriterCorrelated.h>
 #include <Storage/MSWriterDAL.h>
 #include <Storage/MSWriterNull.h>
 #include <Storage/MeasurementSetFormat.h>
@@ -158,11 +159,16 @@ void OutputThread::createMS()
   try {
     // HDF5 writer requested
     switch (itsOutputType) {
+      case CORRELATED_DATA:
+        itsWriter = new MSWriterCorrelated(path, itsParset);
+        break;
+
       case BEAM_FORMED_DATA:
         itsWriter = new MSWriterDAL<float,3>(path.c_str(), itsParset, itsStreamNr, itsIsBigEndian);
         break;
+
       default:
-        itsWriter = new MSWriterFile(path, itsOutputType == BEAM_FORMED_DATA);
+        itsWriter = new MSWriterFile(path);
         break;
     }
   } catch (SystemCallException &ex) {

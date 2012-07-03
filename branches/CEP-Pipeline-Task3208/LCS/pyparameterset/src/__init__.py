@@ -134,7 +134,7 @@ class parameterset(PyParameterSet):
         """Turn the parset into a dict"""
         d = {}
         for key in self.keys():
-            d[key] = self.getString(key)
+            d[key] = self.get(key).get()
         return d
 
     def get(self, key):

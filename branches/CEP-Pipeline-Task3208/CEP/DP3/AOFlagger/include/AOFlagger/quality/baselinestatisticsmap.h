@@ -172,7 +172,7 @@ class BaselineStatisticsMap : public Serializable
 		void unserializeOuterMap(std::istream &stream, OuterMap &map) const
 		{
 			size_t size = UnserializeUInt32(stream);
-			for(size_t i=0;i<size;++i)
+			for(size_t j=0;j<size;++j)
 			{
 				unsigned antenna1 = UnserializeUInt32(stream);
 				
@@ -199,7 +199,7 @@ class BaselineStatisticsMap : public Serializable
 		void unserializeInnerMap(std::istream &stream, InnerMap &map) const
 		{
 			size_t size = UnserializeUInt32(stream);
-			for(size_t i=0;i<size;++i)
+			for(size_t j=0;j<size;++j)
 			{
 				unsigned antenna2 = UnserializeUInt32(stream);
 				

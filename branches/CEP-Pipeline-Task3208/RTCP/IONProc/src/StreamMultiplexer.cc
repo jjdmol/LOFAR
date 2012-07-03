@@ -67,7 +67,7 @@ StreamMultiplexer::StreamMultiplexer(Stream &stream)
 
 void StreamMultiplexer::start()
 {
-  itsReceiveThread = new Thread(this, &StreamMultiplexer::receiveThread, "[StreamMultiplexer] ", 16384);
+  itsReceiveThread = new Thread(this, &StreamMultiplexer::receiveThread, "[StreamMultiplexer] ", 65536);
 }
 
 

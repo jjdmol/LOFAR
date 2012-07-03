@@ -14,6 +14,26 @@ class PipelineTest(SwitchableTest):
         super(PipelineTest, self).setUp()
         cleanup_db(self.cm.get_connection(database='test'))
 
+    def tearDown(self):
+        self.check_datapoints()
+
+    def check_datapoints(self):
+        pipeline = GSMPipeline(custom_cm=self.cm, database='test')
+        pipeline.conn.start()
+        cur = pipeline.conn.get_cursor("""
+select parent_id,
+       max(datapoints),
+       count(distinct xtrsrc_id),
+       sum(per_band_datapoints),
+       sum(flux_datapoints)
+  from v_catalog_info
+group by parent_id""")
+        for items in cur.fetchall():
+            self.assertEquals(items[1], items[2], "Datapoints - objects")
+            self.assertEquals(items[3], items[4], "Per-band datapoints - flux datapoints")
+        cur.close()
+        pipeline.conn.commit()
+
     def test_simple(self):
         pipeline = GSMPipeline(custom_cm=self.cm, database='test')
         parset = GSMParset('tests/pipeline1.parset')

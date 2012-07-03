@@ -41,6 +41,8 @@ def _load_from_sql_list(filename):
                 hashvalue = ''
             hashkey = line[3:].strip()
         elif (not line.startswith('--')) and line:
+            if line.find('--') > 0:  # Drop comments
+                line = line[:line.index('--')]
             hashvalue = '%s %s' % (hashvalue, line.strip())
     if hashkey:
         SQL_LIST[hashkey] = _expand_value(hashvalue)
@@ -61,6 +63,9 @@ def get_sql(name, *params):
 
 for sqlfile in ['sqllist.sql',
                 'sqllist_api.sql',
-                'sqllist_pg.sql',
+                'sqllist_associate.sql',
+                'sqllist_join.sql',
+                'sqllist_new.sql',
+                'sqllist_update.sql',
                 'sqllist_group.sql']:
     _load_from_sql_list(path.dirname(path.abspath(__file__)) + '/%s' % sqlfile)

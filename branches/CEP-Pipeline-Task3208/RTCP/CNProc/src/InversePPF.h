@@ -30,7 +30,7 @@
  * Input must be in "half complex" format.
 
  This consists of the non-redundant half of the complex output for a 1d real-input DFT of size n,
- stored as a sequence of n  real numbers (double) in the format:
+ stored as a sequence of n real numbers (double) in the format:
 
  r0, r1, r2, ..., rn/2, i(n+1)/2-1, ..., i2, i1
 
@@ -105,7 +105,6 @@ private:
 
   void initFFT();
   void destroyFFT();
-  void performFilter(InverseFilteredData& invertedFilteredData, unsigned time, unsigned minorTime);
   void createFFTInput(const TransposedBeamFormedData& transposedBeamFormedData, unsigned time);
   void performInverseFFT();
   void performFiltering(InverseFilteredData& invertedFilteredData, unsigned time);
@@ -127,10 +126,9 @@ private:
   unsigned itsNrSubbands;
   unsigned itsNrTaps; // 16
   unsigned itsNrSamplesPerIntegration;
-  unsigned itsOnStationFilterSize; // 1204
+  unsigned itsOnStationFilterSize; // 1024
 
   bool itsVerbose;
-
 };
 
 } // namespace RTCP

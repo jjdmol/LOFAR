@@ -4,6 +4,7 @@ import copy
 import re
 import sys
 import monetdb.sql as db
+import monetdb.monetdb_exceptions as me
 import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
@@ -13,6 +14,7 @@ from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 class Recreator(object):
 
     PROCEDURES = ['fill_temp_assoc_kind']
+    VIEWS = ['v_catalog_info']
     TABLES = ['datasets', 'images', 'extractedsources',
               'assocxtrsources', 'detections',
               'runningcatalog', 'runningcatalog_fluxes',
@@ -80,6 +82,14 @@ class Recreator(object):
         self.conn.execute(sql_lines)
         print "Table %s recreated" % tab_name
 
+    def create_view(self, view_name):
+        sql_file = open("../create.view.%s.sql" % view_name, 'r')
+        sql_lines = ''.join(sql_file.readlines())
+        sql_lines = self.refactor_lines(sql_lines)
+        self.conn.execute(sql_lines)
+        print "View %s recreated" % view_name
+
+
     def create_procedure(self, tab_name):
         if self.monet:
             sql_file = open("../create.procedure.%s.sql" % tab_name, 'r')
@@ -95,8 +105,17 @@ class Recreator(object):
         try:
             for procedure in self.PROCEDURES:
                 if self.monet:
-                    self.conn.execute("drop procedure %s;" % procedure)
-                    print "drop procedure %s;" % procedure
+                    try:
+                        self.conn.execute("drop procedure %s;" % procedure)
+                        print "drop procedure %s;" % procedure
+                    except (psycopg2.ProgrammingError, me.OperationalError):
+                        pass
+            for view in self.VIEWS:
+                try:
+                    self.conn.execute("drop view %s;" % view)
+                except (psycopg2.ProgrammingError, me.OperationalError):
+                    pass
+                print "drop view %s;" % view
 
             drop_tables = copy.copy(self.TABLES)
             drop_tables.reverse()
@@ -109,6 +128,8 @@ class Recreator(object):
             print '=' * 20
             for procedure in self.PROCEDURES:
                 self.create_procedure(procedure)
+            for view in self.VIEWS:
+                self.create_view(view)
         except db.Error, e:
             raise e
         self.conn.close()

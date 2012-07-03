@@ -68,6 +68,8 @@ template <typename T> class SparseSet {
     // Scale the ranges. Assumes T to be some integer type.
     SparseSet<T> &operator /= (size_t shrinkFactor);
 
+    SparseSet<T> invert(T first, T last) const;
+
     SparseSet<T> subset(T first, T last) const;
 
     const Ranges &getRanges() const;
@@ -119,6 +121,21 @@ template <typename T> inline SparseSet<T> &SparseSet<T>::operator |= (const Spar
 {
   ranges = (*this | other).ranges;
   return *this;
+}
+
+
+template <typename T> inline SparseSet<T> SparseSet<T>::invert(T first, T last) const
+{
+  SparseSet<T> inverted;
+
+  for (const_iterator it = ranges.begin(); it != ranges.end(); it ++) {
+    inverted.include(first, it->begin);
+    first = it->end;
+  }
+
+  inverted.include(first, last);
+
+  return inverted;
 }
 
 

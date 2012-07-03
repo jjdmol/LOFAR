@@ -167,6 +167,7 @@ class Parset: public ParameterSet
 
     bool                        onlineFlagging() const;
     bool                        onlinePreCorrelationFlagging() const;
+    bool                        onlinePreCorrelationNoChannelsFlagging() const;
     bool                        onlinePostCorrelationFlagging() const;
     bool                        onlinePostCorrelationFlaggingDetectBrokenStations() const;
     unsigned                    onlinePreCorrelationFlaggingIntegration() const;
@@ -190,6 +191,9 @@ class Parset: public ParameterSet
     std::string			bandFilter() const;
     std::string			antennaSet() const;
 
+    unsigned			nrBeams() const;
+    std::string                 beamTarget(unsigned beam) const;
+
     unsigned			nrPencilBeams(unsigned beam) const;
     std::vector<unsigned>	nrPencilBeams() const;
     unsigned			totalNrPencilBeams() const;
@@ -202,7 +206,6 @@ class Parset: public ParameterSet
     std::vector<unsigned>	subbandList() const;
     unsigned			nrSubbands() const;
     unsigned			nrSubbandsPerSAP(unsigned sap) const;
-    unsigned			nrBeams() const;
     unsigned			nyquistZone() const;
 
     std::vector<unsigned>	subbandToSAPmapping() const;
@@ -776,6 +779,11 @@ inline bool Parset::onlineFlagging() const
 inline bool Parset::onlinePreCorrelationFlagging() const
 {
   return getBool("OLAP.CNProc.onlinePreCorrelationFlagging", false);
+}
+
+inline bool Parset::onlinePreCorrelationNoChannelsFlagging() const
+{
+  return getBool("OLAP.CNProc.onlinePreCorrelationNoChannelsFlagging", false);
 }
 
 inline bool Parset::onlinePostCorrelationFlagging() const

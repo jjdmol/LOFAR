@@ -38,14 +38,13 @@ namespace RTCP {
 class MSWriterFile : public MSWriter
 {
   public:
-    MSWriterFile(const string &msName, bool oldFileFormat);
+    MSWriterFile(const string &msName);
     ~MSWriterFile();
 
     virtual void write(StreamableData *data);
 
   protected:
     FastFileStream	 itsFile;
-    const bool           itsOldFileFormat;
 };
 
 

@@ -41,13 +41,13 @@ def gsmMain (name, argv):
     if len(argv) > 5:
         theta = float(argv[5])
 
-    #db_host = "ldb002"
-    db_host = "napels"
+    db_host = "ldb002"
+    #db_host = "napels"
     db_dbase = "gsm"
     db_user = "gsm"
-    #db_passwd = "msss"
-    db_passwd = "gsm"
-    db_port = 60000
+    db_passwd = "msss"
+    #db_passwd = "gsm"
+    db_port = 51000
     db_autocommit = True
 
     try:

@@ -49,6 +49,10 @@
 #include <sys/types.h>
 #include <sys/mman.h>
 
+#ifdef HAVE_LIBSSH2
+#include <libssh2.h>
+#endif
+
 #include <boost/format.hpp>
 
 #if defined HAVE_MPI
@@ -418,6 +422,14 @@ int main(int argc, char **argv)
       exit(1);
     }
 #endif
+
+#ifdef HAVE_LIBSSH2
+  int rc = libssh2_init(0);
+  if (rc) {
+    std::cerr << "libssh2 init failed: " << rc << std::endl;
+    exit(1);
+  }
+#endif  
   
 #if defined HAVE_BGP
   INIT_LOGGER_WITH_SYSINFO(str(boost::format("IONProc@%02d") % myPsetNumber));
@@ -435,6 +447,10 @@ int main(int argc, char **argv)
   //CasaLogSink::attach();
 
   master_thread();
+
+#ifdef HAVE_LIBSSH2
+  libssh2_exit();
+#endif
 
 #if defined HAVE_MPI
   MPI_Finalize();

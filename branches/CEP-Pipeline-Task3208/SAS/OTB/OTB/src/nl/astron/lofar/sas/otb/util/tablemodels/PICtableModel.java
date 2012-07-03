@@ -52,6 +52,7 @@ public class PICtableModel extends javax.swing.table.AbstractTableModel {
     public PICtableModel(OtdbRmi otdbRmi) {
 
         this.otdbRmi = otdbRmi;
+        // this is the first tab, so we will present a filled tables list. all other tables are filled on demand
         fillTable();
     }
     
@@ -170,7 +171,7 @@ public class PICtableModel extends javax.swing.table.AbstractTableModel {
      */
     public Object getValueAt(int r, int c) {
         try {
-            if (data.length > 0) {
+            if (data != null && data.length > 0) {
                 return data[r][c];
             } else {
                 return null;

@@ -327,9 +327,11 @@ def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0, nodes=[]):
             inputOK = False
             print "Error: " + str(nf) + " of files found for " + str(patterns) + " differs from first pattern for which " + str(nfiles) + " files were found"
         # Add prefix to output parameter name
+        # Add skip=0 for each product.
         newkey = 'ObsSW.Observation.DataProducts.' + keyout
         ps.replace (newkey + '.locations', str(locs));
         ps.replace (newkey + '.filenames', str(names));
+        ps.replace (newkey + '.skip', str([0 for x in locs]));
 
     # Write nsubbands if needed.
     if havesubbands:
@@ -395,6 +397,7 @@ def expandps (parsetin, parsetout, keymap, nsubbands=0, nodeindex=0, nodes=[]):
             newkey = 'ObsSW.Observation.DataProducts.' + keyout
             ps.replace (newkey + '.locations', str(locs));
             ps.replace (newkey + '.filenames', str(names));
+            ps.replace (newkey + '.skip', str([0 for x in locs]));
 
     # Check if all keymap keywords have been processed.
     if nrproc != len(keymap):

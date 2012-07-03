@@ -38,7 +38,8 @@ Image2D::Image2D(size_t width, size_t height) :
         // OS-X has no posix_memalign, but malloc always uses 16-byte alignment.
         _dataConsecutive = (num_t*)malloc(_stride * allocHeight * sizeof(num_t));
 #else
-	posix_memalign((void **) &_dataConsecutive, 16, _stride * allocHeight * sizeof(num_t));
+	if(posix_memalign((void **) &_dataConsecutive, 16, _stride * allocHeight * sizeof(num_t)) != 0)
+		throw std::bad_alloc();
 #endif	
 	_dataPtr = new num_t*[allocHeight];
 	for(size_t y=0;y<height;++y)

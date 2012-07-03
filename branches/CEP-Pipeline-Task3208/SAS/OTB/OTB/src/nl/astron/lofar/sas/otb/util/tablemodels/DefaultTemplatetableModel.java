@@ -54,7 +54,7 @@ public class DefaultTemplatetableModel extends javax.swing.table.AbstractTableMo
     /** Creates a new instance of PICtableModel */
     public DefaultTemplatetableModel(OtdbRmi otdbRmi) {
         this.otdbRmi = otdbRmi;
-        fillTable();
+ //       fillTable();
     }
 
     /** Refreshes 1 row from table out of the database
@@ -193,13 +193,14 @@ public class DefaultTemplatetableModel extends javax.swing.table.AbstractTableMo
      */
     public Object getValueAt(int r, int c) {
         try {
-            if (data.length > 0) {
+            if (data != null && data.length > 0) {
                 return data[r][c];
             } else {
                 return null;
             }
         }
         catch(ArrayIndexOutOfBoundsException e) {
+            logger.error("ArrayIndex out of bound exception for getValueAt("+r+","+c+"): "+e);
             return null;
         }
     }

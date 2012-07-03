@@ -99,6 +99,13 @@ namespace LOFAR
     log4cplus::getNDC().push(loggerId);
   }
 
+  // Destroy the NDC (nested diagnostic context) when we're done
+  // with this thread.
+  void destroyNDC(void)
+  {
+    log4cplus::getNDC().remove();
+  }
+
   // Create the tracelogger
   LOFAR::LoggerReference theirTraceLoggerRef("TRC");
 

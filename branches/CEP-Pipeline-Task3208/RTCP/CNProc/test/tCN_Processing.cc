@@ -231,6 +231,7 @@ template <typename SAMPLE_TYPE> void doWork()
   parset.add("OLAP.storageStationNames",             stationNames);
   parset.add("Observation.beamList",                 "[0]");
   parset.add("Observation.Beam[0].nrTiedArrayBeams", "0");
+  parset.add("OLAP.CNProc.tabList",                  "[]");
 
   BeamFormer beamFormer(parset);
 

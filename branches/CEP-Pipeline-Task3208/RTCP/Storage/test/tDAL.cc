@@ -24,7 +24,7 @@
 
 #ifdef HAVE_DAL
 
-#include <dal_version.h>
+#include <dal/dal_version.h>
 #include <iostream>
 #include <string>
 

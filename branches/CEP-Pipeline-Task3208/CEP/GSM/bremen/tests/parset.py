@@ -1,6 +1,6 @@
 #!/usr/bin/python
 import unittest
-from src.errors import ParsetContentError, SourceException
+from src.errors import ParsetContentError, SourceException, GSMException
 #from src.bbsfilesource import GSMBBSFileSource
 from src.gsmparset import GSMParset
 from src.gsmconnectionmanager import GSMConnectionManager
@@ -10,10 +10,10 @@ class ParsetTest(SwitchableTest):
     def test_sample_parset(self):
         parset = GSMParset('tests/sample.parset')
         loaded = parset.process(self.cm.get_connection(database='test'))
-        self.assertEquals(loaded, 13)
+        self.assertEquals(loaded, 22)
 
     def test_missing_parset(self):
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(GSMException):
             _ = GSMParset('tests/nonexists.parset')
 
     def test_wrong_parset(self):
