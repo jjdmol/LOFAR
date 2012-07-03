@@ -18,7 +18,7 @@ class PgConnection(object):
         self.conn.set_isolation_level(ISOLATION_LEVEL_READ_COMMITTED)
         self.autocommit = False
         self.log = get_gsm_logger('pgsql', 'sql.log')
-        self.log.setLevel(logging.INFO)
+        self.log.setLevel(logging.DEBUG)
         self.profile = False
 
     @staticmethod
@@ -66,7 +66,11 @@ class PgConnection(object):
         Commit only if it is needed.
         """
         if not self.autocommit:
+            if self.profile:
+                st = time.time()
             self.conn.commit()
+            if self.profile:
+                self.log.debug('Time: %.3f SQL: COMMIT' % (time.time() - st))
 
     def start(self):
         """
@@ -79,11 +83,24 @@ class PgConnection(object):
         """
         Overriding execute method with logging.
         """
+        cur = self.conn.cursor()
+        result = self._execute_with_cursor(query, cur)
+        cur.close()
+        return result
+
+    def _execute_with_cursor(self, query, cursor):
+        """
+        Run the SQL statement and return it's result.
+        Log (with profiling information, if required).
+        """
         if self.profile:
             start = time.time()
-        cur = self.conn.cursor()
-        result = cur.execute(query)
-        cur.close()
+        try:
+            result = cursor.execute(query)
+        except Exception as oerr:
+            self.log.error(query.replace('\n', ' '))
+            self.log.error(oerr)
+            raise oerr
         if self.profile:
             self.log.debug('Time: %.3f SQL: %s' % (time.time() - start,
                                                  query.replace('\n', ' ')))
@@ -103,7 +120,7 @@ class PgConnection(object):
                 query_set = query_set.strip('; ').split(';')
         cursor = self.conn.cursor()
         for query in query_set:
-            cursor.execute(query)
+            self._execute_with_cursor(query, cursor)
         #We have to be sure that there is anything to fetch.
         if cursor.rowcount > 0 and \
            cursor.statusmessage.split()[0] == 'SELECT' and \

@@ -1,6 +1,10 @@
---drop procedure fill_temp_assoc_kind;
-create procedure fill_temp_assoc_kind()
-begin
+-- Function: fill_temp_assoc_kind()
+
+-- DROP FUNCTION fill_temp_assoc_kind();
+
+CREATE OR REPLACE FUNCTION fill_temp_assoc_kind()
+  RETURNS void AS
+$BODY$begin
 update temp_associations
    set xtr_count = (select count(xtrsrc_id2)
                       from temp_associations as ta
@@ -67,3 +71,8 @@ update temp_associations
                       and r.band = r2.band
                 );
 end;
+$BODY$
+LANGUAGE plpgsql VOLATILE
+COST 100;
+ALTER FUNCTION fill_temp_assoc_kind()
+OWNER TO postgres;

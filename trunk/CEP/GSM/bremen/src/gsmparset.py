@@ -1,8 +1,13 @@
 #!/usr/bin/python
 from os import path
-#from configobj import ConfigObj
-from lofar.parameterset import parameterset
-from src.errors import ParsetContentError, SourceException
+try:
+    from lofar.parameterset import parameterset
+    LOFAR_PARAMETERSET = True
+except ImportError:
+    from configobj import ConfigObj
+    LOFAR_PARAMETERSET = False
+
+from src.errors import ParsetContentError, SourceException, GSMException
 from src.bbsfilesource import GSMBBSFileSource
 from src.queries import get_insert_image
 from src.gsmlogger import get_gsm_logger
@@ -17,13 +22,18 @@ class GSMParset(object):
         Read parset from a given file.
         """
         self.filename = filename
+        self.log = get_gsm_logger('parsets', 'import.log')
+        if not path.isfile(filename):
+            self.log.error('Parset file does not exist: %s' % filename)
+            raise GSMException
         self.path = path.dirname(path.realpath(filename))
-        #self.data = ConfigObj(filename, raise_errors=True, file_error=True)
-        self.data = parameterset(filename).dict()
+        if LOFAR_PARAMETERSET:
+            self.data = parameterset(filename).dict()
+        else:
+            self.data = ConfigObj(filename, raise_errors=True, file_error=True)
         self.parset_id = self.data.get('image_id')
         self.image_id = None  # Not yet known.
         self.source_count = None
-        self.log = get_gsm_logger('parsets', 'import.log')
         self.log.info('Parset opened: %s' % filename)
 
     def process(self, conn):
@@ -36,8 +46,11 @@ class GSMParset(object):
             raise ParsetContentError('Source list (source_lists) missing')
         elif isinstance(sources, str):
             sources = sources.strip(' []').replace(' ', '').split(',')
+        elif isinstance(sources, list):
+            sources = ','.join(sources).strip(' []').replace(' ', '').split(',')
         if not self.parset_id:
             raise ParsetContentError('"image_id" missing')
+        conn.start()
         self.image_id = self.save_image_info(conn)
         for source in sources:
             if self.data.get('bbs_format'):
@@ -50,6 +63,7 @@ class GSMParset(object):
             if not bbsfile.read_and_store_data(conn):
                 raise SourceException
             loaded_sources = loaded_sources + bbsfile.sources
+        conn.commit()
         self.log.info('%s sources loaded from parset %s' % (loaded_sources,
                                                             self.filename))
 

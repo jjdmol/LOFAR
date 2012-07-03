@@ -3,10 +3,11 @@
 Tools for logging in GSM package.
 """
 import logging
+import os
 
 LOGGERS = {}
 
-BASE_LOG_DIR = '/home/amints/prog/GSM/'
+BASE_LOG_DIR = os.path.join(os.getenv('HOME'), 'prog', 'GSM')
 
 USE_CONSOLE = False
 
@@ -21,7 +22,7 @@ def get_gsm_logger(log_name, file_name, use_console=USE_CONSOLE):
     logger.setLevel(logging.INFO)
     formatter = logging.Formatter(
                     '%(asctime)-6s: %(name)s - %(levelname)s - %(message)s')
-    file_handler = logging.FileHandler(filename='%s%s' % (BASE_LOG_DIR,
+    file_handler = logging.FileHandler(filename=os.path.join(BASE_LOG_DIR,
                                                           file_name))
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)
@@ -35,6 +36,9 @@ def get_gsm_logger(log_name, file_name, use_console=USE_CONSOLE):
 
 
 def switch_console(use_console=False):
+    """
+    Switch console output on/off for all loggers.
+    """
     USE_CONSOLE = use_console
     for logger in LOGGERS.itervalues():
         if use_console and len(logger.handlers) == 1:
@@ -45,3 +49,10 @@ def switch_console(use_console=False):
         elif not use_console and len(logger.handlers) == 2:
             logger.removeHandler(logger.handlers[1])
 
+
+def set_all_levels(level):
+    """
+    Set output level for all loggers.
+    """
+    for logger in LOGGERS.itervalues():
+        logger.setLevel(level)
