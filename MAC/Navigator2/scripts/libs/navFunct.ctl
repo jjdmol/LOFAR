@@ -1863,7 +1863,11 @@ string navFunct_DPName2CEPName(string DPName) {
   // strip all b4 BGP if part of the name
   if (strpos(DPName,"BGP") >= 0) {
     string dp = substr(DPName,strpos(DPName,"BGP"));
-    DPName = dp;
+    int BGPnr = 0;
+    bool bgp = false;
+    dpget (DPName+".BGPSwitch:_online.._value",bgp);
+    if (bgp) BGPnr = 1;
+    DPName = dp+BGPnr;
   }
     
   dyn_string names = strsplit(DPName,"_");
