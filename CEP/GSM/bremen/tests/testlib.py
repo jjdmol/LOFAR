@@ -5,6 +5,34 @@ Various tools for testing.
 from os import path
 from src.connectionMonet import MonetLoggedConnection
 
+FREQUENCY = {
+    1: 30000000,
+    2: 34000000,
+    3: 38000000,
+    4: 42000000,
+    5: 120000000,
+    6: 130000000,
+    7: 140000000,
+    8: 150000000,
+    9: 160000000,
+    10: 170000000,
+    11: 325000000,
+    12: 352000000,
+    13: 640000000,
+    14: 850000000,
+    15: 1400000000,
+    16: 2300000000,
+    17: 4800000000,
+    18: 8500000000
+}
+
+def get_frequency(band):
+    """
+    Convert GSM band to frequency.
+    """
+    return str(FREQUENCY[band])
+
+
 def load_from_csv_file(conn, filename, table):
     """
     Load data from CSV file into a table with the given name.
@@ -34,10 +62,10 @@ def cleanup_db(conn):
             cursor.execute("truncate table %s;" % tbl)
 
     for seq in ['seq_datasets',
-                'seq_extractedsources',
                 'seq_images',
                 'seq_runningcatalog']:
         cursor.execute('alter sequence %s restart with 1;' % seq)
+    cursor.execute('alter sequence seq_extractedsources restart with 1001;')
     conn.commit()
     cursor.close()
 

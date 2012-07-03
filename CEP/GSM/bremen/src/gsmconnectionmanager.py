@@ -1,6 +1,6 @@
 #!/usr/bin/python
 import cPickle as pickle
-from src.gsmlogger import get_gsm_logger
+from src.gsmlogger import get_gsm_logger, USE_CONSOLE
 from src.connectionMonet import MonetLoggedConnection
 from src.connectionPostgres import PgConnection
 
@@ -19,7 +19,7 @@ class GSMConnectionManager(object):
       'autocommit': True
     }
 
-    def __init__(self, use_monet=True, use_console=True, **params):
+    def __init__(self, use_monet=True, use_console=USE_CONSOLE, **params):
         """
         """
         self.params = self.DEFAULTS.copy()

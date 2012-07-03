@@ -43,6 +43,7 @@ CREATE SEQUENCE "seq_extractedsources" AS INTEGER;
 
 CREATE TABLE extractedsources
   (xtrsrcid INT DEFAULT NEXT VALUE FOR "seq_extractedsources"
+  ,xtrsrcid2 int null --reference to the original source for a copied sources.
   ,image_id INT NOT NULL
   ,zone INT NOT NULL
   ,ra double NOT NULL

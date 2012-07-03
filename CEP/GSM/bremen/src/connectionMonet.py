@@ -6,8 +6,10 @@ Overrides MonetDB connection object.
 import time
 import monetdb.sql as db
 import logging
+import sys
 from src.gsmlogger import get_gsm_logger
 from monetdb.monetdb_exceptions import DatabaseError
+from monetdb.monetdb_exceptions import OperationalError
 
 
 class MonetLoggedConnection(db.connections.Connection):
@@ -19,7 +21,8 @@ class MonetLoggedConnection(db.connections.Connection):
         super(MonetLoggedConnection, self).__init__(**params)
         self.profile = False
         self.log = get_gsm_logger('sql', 'sql.log')
-        self.log.setLevel(logging.INFO)
+        self.log.setLevel(logging.DEBUG)
+        self.in_transaction = False
 
     @staticmethod
     def is_monet():
@@ -32,7 +35,21 @@ class MonetLoggedConnection(db.connections.Connection):
         """
         Begin transaction.
         """
-        self.execute('START TRANSACTION;')
+        if not self.in_transaction:
+            self.execute('START TRANSACTION;')
+        self.in_transaction = True
+
+    def commit(self):
+        """
+        Overriding default commit.
+        """
+        if self.in_transaction:
+            try:
+                super(MonetLoggedConnection, self).commit()
+            except OperationalError as oerr:
+                self.log.error(oerr)
+                raise oerr
+        self.in_transaction = False
 
     def execute(self, query):
         """
@@ -45,8 +62,13 @@ class MonetLoggedConnection(db.connections.Connection):
         try:
             result = super(MonetLoggedConnection, self).execute(query)
         except DatabaseError as oerr:
+            self.log.error(query.replace('\n', ' '))
             self.log.error(oerr)
             raise oerr
+        except:
+            self.log.error(query.replace('\n', ' '))
+            self.log.error(sys.exc_info()[0])
+            raise
         if self.profile:
             self.log.debug('Time: %.3f SQL: %s' % (time.time() - start,
                                                  query.replace('\n', ' ')))
