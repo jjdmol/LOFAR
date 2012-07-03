@@ -130,6 +130,8 @@ private:
 
 	GCFTimerPort*			itsTimerPort;
 
+	GCFTCPPort*				itsLogControlPort;
+
 	CAMmap					itsCEPapplications;
     ParameterSet  itsResultParams;
 

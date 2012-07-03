@@ -83,12 +83,7 @@ namespace LOFAR
       prop.setProperty("log4cplus.appender.STDERR.layout",
                        "log4cplus::PatternLayout");
       prop.setProperty("log4cplus.appender.STDERR.layout.ConversionPattern",
-#ifdef USE_VANILLA_LOG4CPLUS
-                       "%D{%y%m%d %H%M%S,%q} [%i] %-6p %c{3} [%b:%L] - %m%n"
-#else
-                       "%D{%y%m%d %H%M%S,%q} [%P] %-6p %c{3} [%F:%L] - %m%n"
-#endif
-                       );
+                       "%D{%y%m%d %H%M%S,%q} [%i] %-6p %c{3} [%b:%L] - %m%n");
       PropertyConfigurator(prop).configure();
       Logger::getInstance("TRC").forcedLog(0, "TRACE module activated");
 #endif
@@ -102,6 +97,13 @@ namespace LOFAR
   {
     string loggerId(basename(gExecutablePath) + "@" + myHostname(false));
     log4cplus::getNDC().push(loggerId);
+  }
+
+  // Destroy the NDC (nested diagnostic context) when we're done
+  // with this thread.
+  void destroyNDC(void)
+  {
+    log4cplus::getNDC().remove();
   }
 
   // Create the tracelogger

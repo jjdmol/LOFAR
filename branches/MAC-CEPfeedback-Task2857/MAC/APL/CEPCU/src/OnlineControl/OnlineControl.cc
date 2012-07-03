@@ -36,8 +36,8 @@
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/APLUtilities.h>
+#include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
-#include <APL/APLCommon/APLUtilities.h>
 #include <APL/APLCommon/CTState.h>
 #include <GCF/RTDB/DP_Protocol.ph>
 #include <PLC/PCCmd.h>
@@ -68,6 +68,7 @@ OnlineControl::OnlineControl(const string&	cntlrName) :
 	itsParentControl	(0),
 	itsParentPort		(0),
 	itsTimerPort		(0),
+	itsLogControlPort	(0),
     itsCEPapplications  (),
 	itsResultParams     (),
 	itsState			(CTState::NOSTATE),
@@ -102,6 +103,9 @@ OnlineControl::OnlineControl(const string&	cntlrName) :
 	// need port for timers.
 	itsTimerPort = new GCFTimerPort(*this, "TimerPort");
 
+	// Controlport to logprocessor
+	itsLogControlPort = new GCFTCPPort(*this, MAC_SVCMASK_CEPLOGCONTROL, GCFPortInterface::SAP, CONTROLLER_PROTOCOL);
+
 	// for debugging purposes
 	registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
 	registerProtocol (DP_PROTOCOL, 		DP_PROTOCOL_STRINGS);
@@ -116,6 +120,14 @@ OnlineControl::OnlineControl(const string&	cntlrName) :
 OnlineControl::~OnlineControl()
 {
 	LOG_TRACE_OBJ_STR (getName() << " destruction");
+	if (itsLogControlPort) {
+		itsLogControlPort->close();
+		delete itsLogControlPort;
+	}
+
+	if (itsTimerPort) {
+		delete itsTimerPort;
+	}
 }
 
 //
@@ -422,6 +434,11 @@ GCFEvent::TResult OnlineControl::active_state(GCFEvent& event, GCFPortInterface&
 	case CONTROL_CONNECT: {
 		CONTROLConnectEvent		msg(event);
 		LOG_DEBUG_STR("Received CONNECT(" << msg.cntlrName << ")");
+		// first inform CEPlogProcessor
+		CONTROLAnnounceEvent		announce;
+		announce.observationID = toString(getObservationNr(msg.cntlrName));
+		itsLogControlPort->send(announce);
+		// execute this state
 		_setState(CTState::CONNECT);
 		_setupBGPmappingTables();
 		_doBoot();			// start ACC's and boot them

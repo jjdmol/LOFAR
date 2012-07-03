@@ -86,6 +86,10 @@ namespace LOFAR {
 # define INIT_LOGGER_AND_WATCH(filename,watchinterval) INIT_LOGGER(filename)
 #endif
 
+// Each new thread might need a partial reinitialisation and destruction in the logger
+#define LOGGER_ENTER_THREAD()
+#define LOGGER_EXIT_THREAD()
+
   //@}
 
   //# -------------------- Log Levels for the Operator messages ------------------

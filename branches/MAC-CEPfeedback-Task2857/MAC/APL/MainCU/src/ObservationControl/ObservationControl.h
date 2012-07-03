@@ -127,17 +127,23 @@ private:
 	// State administration. Note: administration is done by ChildControl, to simplify reports
 	// about the states we keep a copy of it.
 	typedef struct ChildProc {
-		ChildProc() : type(APLCommon::CNTLRTYPE_NO_TYPE), state(CTState::NOSTATE) {};
-		ChildProc(int aType, CTState::CTstateNr aState) : type(aType), state(aState) {};
+		ChildProc() : type(APLCommon::CNTLRTYPE_NO_TYPE), requestTime(0), requestedState(CTState::NOSTATE), 
+					  currentState(CTState::NOSTATE), reportedState(CTState::NOSTATE) {};
+		ChildProc(int aType, CTState::CTstateNr curState, CTState::CTstateNr reqState, time_t reqTime) : 
+					type(aType), requestTime(reqTime), requestedState(reqState), 
+					currentState(curState), reportedState(CTState::NOSTATE) {};
 		uint16				type;
-		CTState::CTstateNr	state;
-		CTState::CTstateNr	reportedState;
+		time_t				requestTime;		// time last statechange was requested
+		CTState::CTstateNr	requestedState;	
+		CTState::CTstateNr	currentState;
+		CTState::CTstateNr	reportedState;		// state eported in logfiles.
 	} ChildProc;
 	map<string, ChildProc>	itsChildInfo;
 	bool					itsFullReport;		// report every child every heartbeat
 	bool					itsChangeReport;	// report only changed states
 
 	CTState::CTstateNr		itsState;
+	CTState::CTstateNr		itsLastReportedState;	// to SAS
 	uint32					itsNrStations;
 	uint32					itsNrOnlineCtrls;
 	uint32					itsNrOfflineCtrls;
@@ -156,12 +162,15 @@ private:
 	uint32					itsHeartBeatTimer;
 
 	// ParameterSet variables
+	string					itsProcessType;
 	string					itsTreePrefix;
 	uint32					itsTreeID;
 	uint32					itsHeartBeatItv;
 	uint32					itsForcedQuitDelay;
 	uint32					itsClaimPeriod;
 	uint32					itsPreparePeriod;
+	int32					itsLateLimit;		// after how many seconds a requested state should have been reached.
+	int32					itsFailedLimit;		// after how many seconds a late state change is treated as failure.
 	ptime					itsStartTime;
 	ptime					itsStopTime;
 };

@@ -26,7 +26,9 @@
 #include <Common/CasaLogSink.h>
 #include <Common/lofar_iostream.h>
 
+#ifdef HAVE_AIPSPP
 #include <casa/Logging/LogIO.h>
+#endif
 
 using namespace LOFAR;
 

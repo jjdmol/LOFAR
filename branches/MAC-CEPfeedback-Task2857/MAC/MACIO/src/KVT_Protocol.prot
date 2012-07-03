@@ -28,15 +28,16 @@ id 			= "(LOFAR::MACIO::F_GCF_PROTOCOL + 1)";
 
 // specify extra include files
 include = '<MACIO/StringVector.h>';
+include = '<MACIO/DoubleVector.h>';
 
 prelude = << PRELUDE_END
 
 //	REGISTER 	  	 (uint obsID, string	name);
 //	REGISTER_ACK	 (uint obsID, string	name);
-//	SEND_MSG		 (uint seqnr, string key, string value);
-//	SEND_MSG_ACK	 (uint seqnr, uint result);
-//	SEND_MSG_POOL	 (uint seqnr, uint nrMsgs, strVector key, strVector value);
-//	SEND_MSG_POOL_ACK(uint seqnr, uint result);
+//	SEND_MSG		 (int seqnr, string key, string value, double	secsEpoch1970);
+//	SEND_MSG_ACK	 (int seqnr, uint result);
+//	SEND_MSG_POOL	 (int seqnr, uint nrMsgs, strVector key, strVector value, dblVector time);
+//	SEND_MSG_POOL_ACK(int seqnr, uint result);
 
 PRELUDE_END;
 
@@ -77,7 +78,7 @@ event = {
 	dir = IN;
 	param = {
 		name = "seqnr";
-		type = "uint32";
+		type = "int32";
 	};
 	param = {
 		name = "key";
@@ -87,6 +88,10 @@ event = {
 		name = "value";
 		type = "string";
 	};
+	param = {
+		name = "timestamp";
+		type = "double";
+	};
 };
 
 event = {
@@ -94,7 +99,7 @@ event = {
 	dir = OUT;
 	param = {
 		name = "seqnr";
-		type = "uint32";
+		type = "int32";
 	};
 	param = {
 		name = "result";
@@ -107,21 +112,29 @@ event = {
 	dir = IN;
 	param = {
 		name = "seqnr";
-		type = "uint32";
+		type = "int32";
 	};
 	param = {
-		name = "msgCount";
+		name = "nrElements";
 		type = "uint32";
 	};
 	param = {
 		name = "keys";
 		type = "MACIO::StringVector";
 		userdefined;
+		printable;
 	};
 	param = {
 		name = "values";
 		type = "MACIO::StringVector";
 		userdefined;
+		printable;
+	};
+	param = {
+		name = "times";
+		type = "MACIO::DoubleVector";
+		userdefined;
+		printable;
 	};
 };
 
@@ -130,7 +143,7 @@ event = {
 	dir = OUT;
 	param = {
 		name = "seqnr";
-		type = "uint32";
+		type = "int32";
 	};
 	param = {
 		name = "result";

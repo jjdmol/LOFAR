@@ -22,6 +22,7 @@
 
 #include<lofar_config.h>
 #include <Common/ParameterValue.h>
+#include <Common/ParameterRecord.h>
 #include <Common/Exceptions.h>
 #include <Common/LofarLogger.h>
 #include <cstdio>
@@ -45,24 +46,20 @@ namespace LOFAR {
     return ParameterValue (expandArrayString (itsValue));
   }
 
-  vector<ParameterValue> ParameterValue::getVector() const
+  vector<ParameterValue> ParameterValue::splitValue (uint st, uint last) const
   {
-    // A single value if there is no opening and closing bracket.
-    uint st = 1;
-    uint last = itsValue.size() - 1;
-    if (!(itsValue[0] == '['  &&  itsValue[last] == ']')) {
-      return vector<ParameterValue> (1, *this);
-    }
     // Allocate result.
-    // Empty result if only whitespace between brackets.
+    // Empty result if only whitespace left.
     vector<ParameterValue> result;
     st = lskipws (st, last);
     if (st == last) {
       return result;
     }
-    // Split on commas, but take quotes, parentheses, and brackets into account.
+    // Split on commas, but take quotes, braces, parentheses, and brackets
+    // into account.
     int nrpar=0;
     int nrbracket=0;
+    int nrbrace=0;
     uint i = st;
     while (i < last) {
       if (itsValue[i] == '\''  ||  itsValue[i] == '"') {
@@ -73,34 +70,105 @@ namespace LOFAR {
         } else if (itsValue[i] == ')') {
           nrpar--;
         } else if (itsValue[i] == '[') {
-          ASSERT (nrpar == 0);
+          ASSERTSTR (nrpar == 0, "Unbalanced () om '" << itsValue << '\'');
           nrbracket++;
         } else if (itsValue[i] == ']') {
           nrbracket--;
+        } else if (itsValue[i] == '{') {
+          ASSERTSTR (nrpar == 0, "Unbalanced () om '" << itsValue << '\'');
+          nrbrace++;
+        } else if (itsValue[i] == '}') {
+          nrbrace--;
         } else if (itsValue[i] == ',') {
-          if (nrpar+nrbracket == 0) {
+          if (nrpar+nrbracket+nrbrace == 0) {
             result.push_back (ParameterValue(substr(st, i)));
             st = i+1;
           }
         }
-        ASSERT (nrpar >= 0  &&  nrbracket >= 0);
+        ASSERTSTR (nrpar >= 0  &&  nrbracket >= 0  &&  nrbrace >= 0,
+                   "Unbalanced () [] or {} in '" << itsValue << '\'');
         i++;
       }
     }
     result.push_back (ParameterValue(substr(st, last)));
-    ASSERT (nrpar == 0  &&  nrbracket == 0);
+    ASSERTSTR (nrpar == 0  &&  nrbracket == 0  &&  nrbrace == 0,
+               "Unbalanced () [] or {} in '" << itsValue << '\'');
+    return result;
+  }
+
+  vector<ParameterValue> ParameterValue::getVector() const
+  {
+    uint st   = 1;
+    uint last = itsValue.size() - 1;
+    // A single value if there is no opening and closing bracket.
+    if (itsValue.empty() || !(itsValue[0] == '['  &&  itsValue[last] == ']')) {
+      return vector<ParameterValue> (1, *this);
+    }
+    ASSERTSTR (itsValue.size() >= 2  &&  itsValue[0] == '['  &&
+               itsValue[last] == ']',
+               "Invalid vector specification in value '"
+               << itsValue << '\'');
+    return splitValue (st, last);
+  }
+
+  ParameterRecord ParameterValue::getRecord() const
+  {
+    uint st   = 1;
+    uint last = itsValue.size() - 1;
+    ASSERTSTR (itsValue.size() >= 2  &&  itsValue[0] == '{'  &&
+               itsValue[last] == '}',
+               "Invalid record specification in value '"
+               << itsValue << '\'');
+    vector<ParameterValue> values (splitValue (st, last));
+    // Loop over all values and split in names and values.
+    ParameterRecord result;
+    for (vector<ParameterValue>::const_iterator iter = values.begin();
+         iter!=values.end(); ++iter) {
+      const string& str = iter->get();
+      uint st = 0;
+      if (str[0] == '"'  ||  str[0] == '\'') {
+        st = skipQuoted (str, 0);
+      }
+      string::size_type pos = str.find(':', st);
+      ASSERTSTR (pos != string::npos, "Invalid record specification in value '"
+                 << str << '\'');
+      // Get name and value.
+      // ParameterValue is used to remove possible whitespace.
+      // getString also removes quotes in case the name was quoted.
+      string name (ParameterValue(str.substr(0, pos)).getString());
+      string value (ParameterValue(str.substr(pos+1)).get());
+      result.add (name, value);
+    }
     return result;
   }
 
   string ParameterValue::getString() const
   {
-    // Remove possible quotes around the value.
-    uint sz = itsValue.size();
-    if (sz < 2  ||  (itsValue[0] != '"'  &&  itsValue[0] != '\'')) {
-      return itsValue;
+    // Remove possible quotes used to escape special chars in the value.
+    string result;
+    uint end = itsValue.size();
+    uint pos = 0;
+    uint stv = 0;
+    while (pos < end) {
+      if (itsValue[pos] == '"'  ||  itsValue[pos] == '\'') {
+        if (stv < pos) {
+          // Add unquoted part.
+          result += itsValue.substr(stv, pos-stv);
+        }
+        // Add quoted part without the quotes.
+        stv = pos+1;
+        pos = skipQuoted (itsValue, pos);
+        result += itsValue.substr(stv, pos-stv-1);
+        stv = pos;
+      } else {
+        pos++;
+      }
     }
-    ASSERT (itsValue[0] == itsValue[sz-1]);
-    return itsValue.substr(1, sz-2);
+    if (stv < end) {
+      // Add remaining part.
+      result += itsValue.substr (stv, end-stv);
+    }
+    return result;
   }
 
   vector<bool> ParameterValue::getBoolVector() const
