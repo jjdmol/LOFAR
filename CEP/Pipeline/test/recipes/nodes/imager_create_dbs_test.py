@@ -39,17 +39,17 @@ class ImagerCreateDBsTest(unittest.TestCase):
     """
     Tests for ImagerCreateDBs class 
     """
-    test_path = "/data/scratch/python_unittest"
+    #self.test_path = "/data/scratch/python_unittest"
 
     def __init__(self, arg):  #todo deze moet toch in de setUp
         super(ImagerCreateDBsTest, self).__init__(arg)
 
     def setUp(self):
         self.imager_create_dbs = ImagerCreateDBsTestWrapper()
-        create_directory(self.test_path)
+        self.test_path = tempfile.mkdtemp()
 
     def tearDown(self):
-        shutil.rmtree(self.test_path)
+        pass
 
 # New version of gsm: Quick fix to allow tests to succeed
 #    def test_field_of_view_HBA_120_CS(self):
