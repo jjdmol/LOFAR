@@ -305,9 +305,16 @@ Image2DCPtr GrayScalePlotPage::normalizeYAxis(Image2DCPtr input)
 	for(size_t y=0;y<input->Height();++y)
 	{
 		num_t norm = 0.0;
+		size_t count = 0;
 		for(size_t x=0;x<input->Width();++x)
-			norm += input->Value(x, y);
-		norm = input->Width() / norm;
+		{
+			if(std::isfinite(input->Value(x, y)))
+				norm += input->Value(x, y);
+		}
+		if(count == 0)
+			norm = 1.0;
+		else
+			norm = (num_t) count / norm;
 		for(size_t x=0;x<input->Width();++x)
 			output->SetValue(x, y, input->Value(x, y) * norm);
 	}
