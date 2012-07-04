@@ -34,6 +34,9 @@ using namespace LOFAR;
 using namespace casa;
 using namespace std;
 
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
+
 MPosition readPos()
 {
   cout << endl << "Enter WGS84 coordinates: " << endl;

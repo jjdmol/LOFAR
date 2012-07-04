@@ -25,6 +25,7 @@
 #include <Blob/BlobOBufStream.h>
 #include <Blob/BlobArray.h>
 #include <Common/LofarLogger.h>
+#include <Common/Exception.h>
 
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSAntenna.h>
@@ -53,6 +54,9 @@
 using namespace LOFAR;
 using namespace casa;
 using namespace std;
+
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 void getFreq (MS& ms, int ddid, int& nrchan,
 	      double& startFreq, double& endFreq, double& stepFreq)

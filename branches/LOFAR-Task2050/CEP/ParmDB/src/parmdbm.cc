@@ -37,6 +37,7 @@
 #include <Common/SystemUtil.h>
 #include <Common/ReadLine.h>
 #include <Common/LofarLogger.h>
+#include <Common/Exception.h>
 
 #include <casa/Quanta/MVTime.h>
 #include <casa/Utilities/MUString.h>
@@ -50,6 +51,9 @@
 using namespace casa;
 using namespace LOFAR;
 using namespace BBS;
+
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 ParmDB* parmtab;
 
