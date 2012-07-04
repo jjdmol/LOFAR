@@ -20,6 +20,8 @@
 
 #include <limits>
 
+#include <AOFlagger/msio/samplerow.h>
+
 #include <AOFlagger/gui/quality/grayscaleplotpage.h>
 
 #include <AOFlagger/gui/imagepropertieswindow.h>
@@ -56,6 +58,9 @@ GrayScalePlotPage::GrayScalePlotPage() :
 	_rangeSpecified("Specified"),
 	_logarithmicScaleButton("Logarithmic"),
 	_normalizeYAxisButton("Normalize Y"),
+	_meanNormButton("Mean"),
+	_winsorNormButton("Winsor"),
+	_medianNormButton("Median"),
 	_plotPropertiesButton("Properties..."),
 	_selectStatisticKind(QualityTablesFormatter::VarianceStatistic),
 	_ready(false),
@@ -215,6 +220,19 @@ void GrayScalePlotPage::initPlotOptions()
 	_normalizeYAxisButton.signal_clicked().connect(sigc::mem_fun(*this, &GrayScalePlotPage::onNormalizeYAxisButtonClicked));
 	_plotBox.pack_start(_normalizeYAxisButton, Gtk::PACK_SHRINK);
 	
+	Gtk::RadioButtonGroup normMethodGroup;
+	_meanNormButton.set_group(normMethodGroup);
+	_meanNormButton.signal_clicked().connect(sigc::mem_fun(*this, &GrayScalePlotPage::onChangeNormMethod));
+	_plotBox.pack_start(_meanNormButton, Gtk::PACK_SHRINK);
+	
+	_winsorNormButton.set_group(normMethodGroup);
+	_winsorNormButton.signal_clicked().connect(sigc::mem_fun(*this, &GrayScalePlotPage::onChangeNormMethod));
+	_plotBox.pack_start(_winsorNormButton, Gtk::PACK_SHRINK);
+	
+	_medianNormButton.set_group(normMethodGroup);
+	_medianNormButton.signal_clicked().connect(sigc::mem_fun(*this, &GrayScalePlotPage::onChangeNormMethod));
+	_plotBox.pack_start(_medianNormButton, Gtk::PACK_SHRINK);
+	
 	_plotPropertiesButton.signal_clicked().connect(sigc::mem_fun(*this, &GrayScalePlotPage::onPropertiesClicked));
 	_plotBox.pack_start(_plotPropertiesButton, Gtk::PACK_SHRINK);
 	
@@ -304,20 +322,14 @@ Image2DCPtr GrayScalePlotPage::normalizeYAxis(Image2DCPtr input)
 	Image2DPtr output = Image2D::CreateUnsetImagePtr(input->Width(), input->Height());
 	for(size_t y=0;y<input->Height();++y)
 	{
-		num_t norm = 0.0;
-		size_t count = 0;
-		for(size_t x=0;x<input->Width();++x)
-		{
-			if(std::isfinite(input->Value(x, y)))
-			{
-				norm += input->Value(x, y);
-				++count;
-			}
-		}
-		if(count == 0)
-			norm = 1.0;
-		else
-			norm = (num_t) count / norm;
+		SampleRowPtr row = SampleRow::CreateFromRow(input, y);
+		num_t norm;
+		if(_meanNormButton.get_active())
+			norm = 1.0 / row->MeanWithMissings();
+		else if(_winsorNormButton.get_active())
+			norm = 1.0 / row->WinsorizedMeanWithMissings();
+		else // _medianNormButton
+			norm = 1.0 / row->MedianWithMissings();
 		for(size_t x=0;x<input->Width();++x)
 			output->SetValue(x, y, input->Value(x, y) * norm);
 	}
