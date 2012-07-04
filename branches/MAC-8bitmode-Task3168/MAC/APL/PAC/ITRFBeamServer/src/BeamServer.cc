@@ -307,10 +307,24 @@ GCFEvent::TResult BeamServer::subscribeSplitter(GCFEvent& event, GCFPortInterfac
 		RSPSubsplitterEvent		subSplitter;
 		subSplitter.period = 1;
 		itsRSPDriver->send(subSplitter);
+		itsConnectTimer->setTimer(5.0);
+		// wait for ack message
+	}
+	break;
+
+	case RSP_SUBSPLITTERACK: {
+		itsConnectTimer->cancelAllTimers();
+		RSPSubsplitterackEvent	ack(event);
+		if (ack.status != RSP_SUCCESS) {
+			LOG_INFO("Could not get a subscription on the splitter, retry in 5 seconds");
+		}
+		itsConnectTimer->setTimer(5.0);
+		// wait for update message.
 	}
 	break;
 
 	case RSP_UPDSPLITTER: {
+		itsConnectTimer->cancelAllTimers();
 		RSPUpdsplitterEvent		answer(event);
 		if (answer.status != RSP_SUCCESS) {
 			LOG_INFO("Could not get a subscription on the splitter, retry in 5 seconds");
@@ -322,7 +336,7 @@ GCFEvent::TResult BeamServer::subscribeSplitter(GCFEvent& event, GCFPortInterfac
 		LOG_INFO_STR("The ringsplitter is " << (itsSplitterOn ? "ON" : "OFF"));
 		_createBeamPool();		// (re)allocate memory for the beamlet mapping
 
-		itsConnectTimer->cancelAllTimers();
+//		TRAN(BeamServer::subscribeBitmode);
 		TRAN(BeamServer::con2calserver);
 	}
 	break;
@@ -353,6 +367,87 @@ GCFEvent::TResult BeamServer::subscribeSplitter(GCFEvent& event, GCFPortInterfac
 
 	return (status);
 }
+
+#if 0
+//
+// subscribeBitmode(event, port)
+//
+// Take subscription on changes in the bitmode
+//
+GCFEvent::TResult BeamServer::subscribeBitmode(GCFEvent& event, GCFPortInterface& port)
+{
+	LOG_DEBUG_STR("subscribeBitmode:" << eventName(event) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
+	switch(event.signal) {
+	case F_ENTRY: {
+		// send request for splitter info
+		LOG_INFO("Requesting a subscription on the splitter state");
+		RSPSubbitmodeEvent		subBitmode;
+		subBitmode.period = 1;
+		itsRSPDriver->send(subBitmode);
+		itsConnectTimer->setTimer(5.0);
+		// wait for update event.
+	}
+	break;
+
+	case RSP_SUBBITMODEACK: {
+		itsConnectTimer->cancelAllTimers();
+		RSPsubbitmodeackEvent		ack(event);
+		if (ack.status != RSP_SUCCESS) {
+			LOG_INFO("Could not get a subscription on the bitmode, retry in 5 seconds");
+			break;
+		}
+		itsConnectTimer->setTimer(5.0);
+		// wait for update event.
+	}
+	break;
+
+	case RSP_UPDBITMODE: {
+		itsConnectTimer->cancelAllTimers();
+		RSPUpdbitmodeEvent		answer(event);
+		if (answer.status != RSP_SUCCESS) {
+			LOG_INFO("Could not get a subscription on the bitmode, retry in 5 seconds");
+			itsConnectTimer->setTimer(5.0);
+			break;
+		}
+
+		itsBitmode = answer.bit-mode; // @@@
+		LOG_INFO_STR("The bitmode is " << itsBitmode << " bits");
+		_createBeamPool();		// (re)allocate memory for the beamlet mapping
+
+		TRAN(BeamServer::con2calserver);
+	}
+	break;
+
+	case F_TIMER: {
+		LOG_INFO("Requesting a subscription on the bitmode again.");
+		RSPSubbitmodeEvent		subBitmode;
+		subBitmode.period = 1;
+		itsRSPDriver->send(subBitmode);
+    }
+    break;
+
+	case F_DISCONNECTED: {
+		port.close();
+		if (&port == itsRSPDriver) {
+			LOG_WARN("Lost connection with the RSPDriver, going back to the reconnect state");
+			itsConnectTimer->cancelAllTimers();
+			TRAN(BeamServer::con2rspdriver);
+		}
+	}
+	break;
+
+	default:
+		LOG_DEBUG("subscribeBitmode:default");
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}
+
+	return (status);
+}
+#endif
 
 //
 // con2calserver(event, port)

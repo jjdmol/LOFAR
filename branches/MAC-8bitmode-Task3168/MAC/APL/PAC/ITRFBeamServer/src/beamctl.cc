@@ -816,7 +816,9 @@ int main(int argc, char** argv)
 {
 	GCFScheduler::instance()->init(argc, argv, "beamctl");
 
-	ASSERTSTR(BEAMLET_RING_OFFSET < maxBeamlets(MIN_BITS_PER_SAMPLE), "beamctl is not suitable for handling " << MIN_BITS_PER_SAMPLE << " bits mode. Revise program.");
+	ASSERTSTR(BEAMLET_RING_OFFSET > maxBeamlets(MIN_BITS_PER_SAMPLE), 
+				formatString("(%d>%d) beamctl is not suitable for handling %d bit mode. Revise program.", 
+				BEAMLET_RING_OFFSET, maxBeamlets(MIN_BITS_PER_SAMPLE), MIN_BITS_PER_SAMPLE));
 
 	try {
 		beamctl beamctlTask("beamctl");
