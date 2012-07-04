@@ -41,6 +41,8 @@ echo "Find all programs that catch exceptions other than LOFAR::Exception..."
 cat progs.txt | xargs grep '\bcatch[[:space:]]*(' | grep -v Exception \
     | cut -d: -f1 | uniq > progs_catch_nonlofar_excp.txt
 
+exit 
+
 # -----------------------------------------------------------------------------
 
 echo 

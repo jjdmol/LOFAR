@@ -26,6 +26,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
+#include <Common/Exception.h>
 
 #include <MACIO/MACServiceInfo.h>
 
@@ -54,6 +55,9 @@ using namespace LOFAR;
 using namespace GCF::TM;
 using namespace TBB_Protocol;
 using namespace TbbCtl;
+
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 static const double DELAY = 60.0;
 
