@@ -309,7 +309,10 @@ Image2DCPtr GrayScalePlotPage::normalizeYAxis(Image2DCPtr input)
 		for(size_t x=0;x<input->Width();++x)
 		{
 			if(std::isfinite(input->Value(x, y)))
+			{
 				norm += input->Value(x, y);
+				++count;
+			}
 		}
 		if(count == 0)
 			norm = 1.0;
