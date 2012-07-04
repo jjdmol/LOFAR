@@ -368,6 +368,7 @@ std::string TwoDimensionalPlotPage::getYDesc() const
 		if(_countButton.get_active()) kind = QualityTablesFormatter::CountStatistic;
 		if(_meanButton.get_active()) kind = QualityTablesFormatter::MeanStatistic;
 		if(_stdDevButton.get_active()) kind = QualityTablesFormatter::StandardDeviationStatistic;
+		if(_varianceButton.get_active()) kind = QualityTablesFormatter::VarianceStatistic;
 		if(_dCountButton.get_active()) kind = QualityTablesFormatter::DCountStatistic;
 		if(_dMeanButton.get_active()) kind = QualityTablesFormatter::DMeanStatistic;
 		if(_dStdDevButton.get_active()) kind = QualityTablesFormatter::DStandardDeviationStatistic;
