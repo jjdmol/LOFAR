@@ -79,6 +79,11 @@ class GrayScalePlotPage : public Gtk::HBox {
 				_imageWidget.SetScaleOption(ImageWidget::NormalScale);
 			 _imageWidget.Update();
 		}
+		void onNormalizeYAxisButtonClicked()
+		{
+			UpdateImage();
+		}
+		Image2DCPtr normalizeYAxis(Image2DCPtr input);
 		
 		void setToSelectedPolarization(TimeFrequencyData &data);
 		void setToSelectedPhase(TimeFrequencyData &data);
@@ -105,7 +110,7 @@ class GrayScalePlotPage : public Gtk::HBox {
 		Gtk::VBox _plotBox;
 		
 		Gtk::RadioButton _rangeMinMaxButton, _rangeWinsorizedButton, _rangeSpecified;
-		Gtk::CheckButton _logarithmicScaleButton;
+		Gtk::CheckButton _logarithmicScaleButton, _normalizeYAxisButton;
 		Gtk::Button _plotPropertiesButton;
 		
 		QualityTablesFormatter::StatisticKind _selectStatisticKind;

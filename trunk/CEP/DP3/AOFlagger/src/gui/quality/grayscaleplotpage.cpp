@@ -55,6 +55,7 @@ GrayScalePlotPage::GrayScalePlotPage() :
 	_rangeWinsorizedButton("Winsorized"),
 	_rangeSpecified("Specified"),
 	_logarithmicScaleButton("Logarithmic"),
+	_normalizeYAxisButton("Normalize Y"),
 	_plotPropertiesButton("Properties..."),
 	_selectStatisticKind(QualityTablesFormatter::VarianceStatistic),
 	_ready(false),
@@ -211,6 +212,8 @@ void GrayScalePlotPage::initPlotOptions()
 	_plotBox.pack_start(_logarithmicScaleButton, Gtk::PACK_SHRINK);
 	_logarithmicScaleButton.set_active(true);
 	
+	_normalizeYAxisButton.signal_clicked().connect(sigc::mem_fun(*this, &GrayScalePlotPage::onNormalizeYAxisButtonClicked));
+	_plotBox.pack_start(_normalizeYAxisButton, Gtk::PACK_SHRINK);
 	
 	_plotPropertiesButton.signal_clicked().connect(sigc::mem_fun(*this, &GrayScalePlotPage::onPropertiesClicked));
 	_plotBox.pack_start(_plotPropertiesButton, Gtk::PACK_SHRINK);
@@ -233,8 +236,12 @@ void GrayScalePlotPage::UpdateImage()
 			
 			setToSelectedPhase(data);
 			
+			Image2DCPtr image = data.GetSingleImage();
+			if(_normalizeYAxisButton.get_active())
+				image = normalizeYAxis(image);
+			
 			_imageWidget.SetZAxisDescription(StatisticsDerivator::GetDescWithUnits(GetSelectedStatisticKind()));
-			_imageWidget.SetImage(data.GetSingleImage());
+			_imageWidget.SetImage(image);
 			_imageWidget.SetOriginalMask(data.GetSingleMask());
 			if(pair.second != 0)
 				_imageWidget.SetMetaData(pair.second);
@@ -290,6 +297,21 @@ void GrayScalePlotPage::setToSelectedPhase(TimeFrequencyData &data)
 		data = *newData;
 		delete newData;
 	}
+}
+
+Image2DCPtr GrayScalePlotPage::normalizeYAxis(Image2DCPtr input)
+{
+	Image2DPtr output = Image2D::CreateUnsetImagePtr(input->Width(), input->Height());
+	for(size_t y=0;y<input->Height();++y)
+	{
+		num_t norm = 0.0;
+		for(size_t x=0;x<input->Width();++x)
+			norm += input->Value(x, y);
+		norm = input->Width() / norm;
+		for(size_t x=0;x<input->Width();++x)
+			output->SetValue(x, y, input->Value(x, y) * norm);
+	}
+	return output;
 }
 
 void GrayScalePlotPage::onPropertiesClicked()
