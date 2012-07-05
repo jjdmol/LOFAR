@@ -33,6 +33,7 @@ include = '<APL/RSP_Protocol/Versions.h>';
 include = '<APL/RSP_Protocol/WGSettings.h>';
 include = '<APL/RSP_Protocol/XCStatistics.h>';
 include = '<APL/RSP_Protocol/Latency.h>';
+include = '<APL/RSP_Protocol/Bitmode.h>';
 
 prelude = << PRELUDE_END
 
@@ -2326,7 +2327,7 @@ event = {
 // 16 = 16bit
 // 8 = 8bit
 // 4 = 4bit
-// SETBITMODE (timestamp, bitmode);
+// SETBITMODE (timestamp, bits_per_sample);
 event = {
 	signal = SETBITMODE;
 	dir = IN;
@@ -2336,7 +2337,7 @@ event = {
 		userdefined;
 	};
 	param = {
-		name = "bit_mode";
+		name = "bits_per_sample";
 		type = "uint16";
 	};
 };
@@ -2371,7 +2372,7 @@ event = {
 	};
 };
 
-// GETBITMODEACK(timestamp, status, bitmode)
+// GETBITMODEACK(timestamp, status, bitmode_version, bits_per_sample)
 event = {
 	signal = GETBITMODEACK;
 	dir = OUT;
@@ -2385,7 +2386,11 @@ event = {
 		type = "int16";
 	};
 	param = {
-		name = "bit_mode";
+		name = "bitmode_version";
+		type = "uint16";
+	};
+	param = {
+		name = "bit_per_sample";
 		type = "uint16";
 	};
 };
@@ -2424,7 +2429,7 @@ event = {
 	};
 };
 
-// UPDBITMODE(timestamp, status, handle, bitmode)
+// UPDBITMODE(timestamp, status, handle, bitmode_version, bits_per_sample)
 event = {
 	signal = UPDBITMODE;
 	dir = OUT;
@@ -2442,7 +2447,11 @@ event = {
 		type = "memptr_t";
 	};
 	param = {
-		name = "bit_mode";
+		name = "bitmode_version";
+		type = "uint16";
+	};
+	param = {
+		name = "bits_per_sample";
 		type = "uint16";
 	};
 };
