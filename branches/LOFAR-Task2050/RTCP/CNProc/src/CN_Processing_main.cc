@@ -73,33 +73,11 @@
 // install a new handler to produce backtraces for std::bad_alloc
 LOFAR::NewHandler h(LOFAR::BadAllocException::newHandler);
 
-
-// if exceptions are not caught, an attempt is made to create a backtrace
-// from the place where the exception is thrown.
-#define CATCH_EXCEPTIONS
-
-
 using namespace LOFAR;
 using namespace LOFAR::RTCP;
 
-#if !defined CATCH_EXCEPTIONS
-
-void terminate_with_backtrace()
-{
-  LOG_FATAL("terminate_with_backtrace()");
-
-  void *buffer[100];
-  int  nptrs	 = backtrace(buffer, 100);
-  char **strings = backtrace_symbols(buffer, nptrs);
-
-  for (int i = 0; i < nptrs; i ++)
-    LOG_FATAL_STR(i << ": " << strings[i]);
-
-  free(strings);
-  abort();
-}
-
-#endif
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 static const char *ionStreamType;
 
@@ -154,18 +132,12 @@ int main(int argc, char **argv)
 {
   std::clog.rdbuf(std::cout.rdbuf());
   
-#if !defined CATCH_EXCEPTIONS
-  std::set_terminate(terminate_with_backtrace);
-#endif
-
 #if defined REROUTE_FFTW2_MALLOC
   fftw_malloc_hook = my_fftw_malloc;
   fftw_free_hook   = my_fftw_free;
 #endif
 
-#if defined CATCH_EXCEPTIONS
   try {
-#endif
 
 #if defined HAVE_MPI
     MPI_Init(&argc, &argv);
@@ -302,13 +274,8 @@ int main(int argc, char **argv)
 #endif
     
     return 0;
-#if defined CATCH_EXCEPTIONS
   } catch (Exception &ex) {
     LOG_FATAL_STR("Uncaught Exception: " << ex);
     return 1;
-  } catch (std::exception &ex) {
-    LOG_FATAL_STR("Uncaught Exception: " << ex.what());
-    return 1;
   }
-#endif
 }

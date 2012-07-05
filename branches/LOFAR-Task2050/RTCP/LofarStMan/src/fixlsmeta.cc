@@ -22,6 +22,7 @@
 #include <lofar_config.h>
 #include <LofarStMan/LofarStMan.h>
 #include <Common/LofarLogger.h>
+#include <Common/Exception.h>
 #include <casa/IO/AipsIO.h>
 #include <casa/Containers/BlockIO.h>
 #include <casa/Quanta/MVTime.h>
@@ -72,8 +73,8 @@ int main (int argc, char* argv[])
     uint32 nPol;
     uint32 nBytesPerNrValidSamples=2;
     double maxNrSample;
-    int version
-;    {
+    int version;
+    {
       // Open and read the meta file.
       AipsIO aio(msin + "/table.f0meta");
       version = aio.getstart ("LofarStMan");
@@ -113,9 +114,12 @@ int main (int argc, char* argv[])
       }
       aio.putend();
     }
-
-  } catch (AipsError x) {
-    cout << "Caught an exception: " << x.getMesg() << endl;
+ 
+  } catch (Exception& ex) {
+    cerr << "Caught a LOFAR exception: " << ex << endl;
+    return 1;
+  } catch (AipsError& x) {
+    cerr << "Caught an AIPS error: " << x.getMesg() << endl;
     return 1;
   } 
   return 0;                           // exit with success status
