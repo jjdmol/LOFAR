@@ -53,7 +53,7 @@ public:
 	Observation();
 	~Observation();
 //	explicit	Observation (const ParameterSet*		aParSet, bool	hasDualHBA = false);
-	explicit	Observation (const ParameterSet*		aParSet, bool	hasDualHBA);
+	explicit	Observation (const ParameterSet*		aParSet, bool	hasDualHBA, unsigned nrBGPIOnodes = 64);
 
 	// global function for converting filtername to nyquist zone
 	static uint nyquistzoneFromFilter(const string&	filterName);
