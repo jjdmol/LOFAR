@@ -73,6 +73,7 @@ private:
    	GCFEvent::TResult connect2RSP_state		  (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult startListener_state	  (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult subscribeClock_state 	  (GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult subscribeBitmode_state 	  (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult subscribeSplitter_state (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult active_state    		  (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult defaultMessageHandling  (GCFEvent& e, GCFPortInterface& p);
@@ -92,6 +93,10 @@ private:
 	void cancelClockSubscription();
 	void requestClockSetting();
 	void sendClockSetting();
+	void requestBitmodeSubscription();
+	void cancelBitmodeSubscription();
+	void requestBitmodeSetting();
+	void sendBitmodeSetting();
 	void requestSplitterSubscription();
 	void cancelSplitterSubscription();
 	void requestSplitterSetting();
@@ -119,6 +124,9 @@ private:
 
 	void*					itsClockSubscription;
 	int32					itsClock;
+
+	void*					itsBitmodeSubscription;
+	int32					itsBitmode;
 
 	bool					itsSplitterRequest;
 	bitset<MAX_RSPBOARDS>	itsSplitters;

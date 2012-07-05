@@ -137,6 +137,7 @@ private:
 	uint32					itsInstanceNr;
 	time_t					itsStartTime;		// timestamp the controller was started
 	int32					itsClock;
+	int32					itsBitmode;
 
 	map<string, ActiveObs*>	itsObsMap;			// current running observations
 	ObsIter					itsStartingObs;		// the Obs that is being started is this moment.
@@ -152,6 +153,8 @@ private:
 	uint32									itsNrRSPboards;
 	bool									itsHasSplitters;
 	bitset<MAX_RSPBOARDS>					itsSplitters;	// On or Off.
+
+    unsigned                                itsSetupSequence;
 };
 
   };//StationCU

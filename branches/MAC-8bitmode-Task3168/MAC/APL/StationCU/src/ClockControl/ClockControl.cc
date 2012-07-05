@@ -64,6 +64,7 @@ ClockControl::ClockControl(const string&	cntlrName) :
 	itsRSPDriver		(0),
 	itsCommandPort		(0),
 	itsClock			(0)
+	itsBitmode			(0)
 {
 	LOG_TRACE_OBJ_STR (cntlrName << " construction");
 	LOG_INFO(Version::getInfo<StationCUVersion>("ClockControl"));
@@ -103,6 +104,7 @@ ClockControl::~ClockControl()
 	LOG_TRACE_OBJ_STR (getName() << " destruction");
 
 	cancelClockSubscription();	// tell RSPdriver to stop sending updates.
+	cancelBitmodeSubscription();	// tell RSPdriver to stop sending updates.
 	cancelSplitterSubscription();	// tell RSPdriver to stop sending updates.
 
 	if (itsCommandPort) {
@@ -167,6 +169,18 @@ void ClockControl::_databaseEventHandler(GCFEvent& event)
 				LOG_DEBUG_STR("Received clock change from PVSS, clock is now " << itsClock);
 				TRAN(ClockControl::setClock_state);
 				// sendClockSetting();
+			}
+			break;
+		}
+
+		if (strstr(dpEvent.DPname.c_str(), PN_CLC_REQUESTED_BITMODE) != 0) {
+			GCFPVInteger*	bitmodeObj = (GCFPVInteger*)dpEvent.value._pValue;
+			int32			newBitmode = bitmodeObj->getValue();
+			if (newBitmode != itsBitmode) {
+				itsBitmode = newBitmode;
+				LOG_DEBUG_STR("Received bitmode change from PVSS, bitmode is now " << itsBitmode);
+				TRAN(ClockControl::setBitmode_state);
+				// sendBitmodeSetting();
 			}
 			break;
 		}
@@ -240,16 +254,24 @@ GCFEvent::TResult ClockControl::initial_state(GCFEvent& event,
 	case DP_SUBSCRIBED: {
 		DPSubscribedEvent	dpEvent(event);
 		string	propSetName(createPropertySetName(PSN_CLOCK_CONTROL, getName()));
-		propSetName += "." PN_CLC_REQUESTED_CLOCK;
-		if (dpEvent.DPname.find(propSetName) != string::npos) {
+
+		if (dpEvent.DPname.find(propSetName + "." PN_CLC_REQUESTED_CLOCK) != string::npos) {
 			GCFPVInteger	clockVal;
 			itsOwnPropertySet->getValue(PN_CLC_REQUESTED_CLOCK, clockVal);
 			itsClock = clockVal.getValue();
 			LOG_INFO_STR("Requested clock is " << itsClock);
-
-			LOG_DEBUG ("Going to connect2RSP state");
-			TRAN(ClockControl::connect2RSP_state);			// go to next state.
 		}
+
+		if (dpEvent.DPname.find(propSetName + "." PN_CLC_REQUESTED_BITMODE) != string::npos) {
+			GCFPVInteger	bitmodeVal;
+			itsOwnPropertySet->getValue(PN_CLC_REQUESTED_BITMODE, bitmodeVal);
+			itsBitmode = bitmodeVal.getValue();
+			LOG_INFO_STR("Requested bitmode is " << itsBitmode);
+		}
+
+		LOG_DEBUG ("Going to connect2RSP state");
+		TRAN(ClockControl::connect2RSP_state);			// go to next state.
+        break;
 	}
 	break;
 
@@ -324,6 +346,23 @@ GCFEvent::TResult ClockControl::connect2RSP_state(GCFEvent& event,
 			// Note: only here I am allowed to change the value of the requested clock. Normally
 			//       the stationController is the owner of this value.
 			itsOwnPropertySet->setValue(PN_CLC_REQUESTED_CLOCK,GCFPVInteger(itsClock));
+		}
+		TRAN(ClockControl::startListener_state);		// go to next state.
+	}
+	break;
+
+	case RSP_GETBITMODEACK: {
+		RSPGetbitmodeackEvent		ack(event);
+		if (ack.status != RSP_SUCCESS) {
+			LOG_ERROR ("Bitmode could not be get. Ignoring that for now.");
+		}
+		else {
+			itsBitmode = ack.bitmode;
+			LOG_INFO_STR("RSP says bitmode is " << itsBitmode << "MHz. Adopting that value.");
+			itsOwnPropertySet->setValue(PN_CLC_ACTUAL_BITMODE,GCFPVInteger(itsBitmode));
+			// Note: only here I am allowed to change the value of the requested bitmode. Normally
+			//       the stationController is the owner of this value.
+			itsOwnPropertySet->setValue(PN_CLC_REQUESTED_BITMODE,GCFPVInteger(itsBitmode));
 		}
 		TRAN(ClockControl::startListener_state);		// go to next state.
 	}
@@ -476,6 +515,8 @@ GCFEvent::TResult ClockControl::subscribeSplitter_state(GCFEvent& event,
 	
 	case CLKCTRL_GET_CLOCK:
 	case CLKCTRL_SET_CLOCK:
+	case CLKCTRL_GET_BITMODE:
+	case CLKCTRL_SET_BITMODE:
 	case CLKCTRL_GET_SPLITTERS:
 	case CLKCTRL_SET_SPLITTERS:
 		LOG_INFO_STR("Postponing event " << eventName(event) << " till next state");
@@ -541,6 +582,8 @@ GCFEvent::TResult ClockControl::subscribeClock_state(GCFEvent& event,
 	
 	case CLKCTRL_GET_CLOCK:
 	case CLKCTRL_SET_CLOCK:
+	case CLKCTRL_GET_BITMODE:
+	case CLKCTRL_SET_BITMODE:
 	case CLKCTRL_GET_SPLITTERS:
 	case CLKCTRL_SET_SPLITTERS:
 	case RSP_UPDSPLITTER:
@@ -606,6 +649,8 @@ GCFEvent::TResult ClockControl::setClock_state(GCFEvent& event,
 	
 	case CLKCTRL_GET_CLOCK:
 	case CLKCTRL_SET_CLOCK:
+	case CLKCTRL_GET_BITMODE:
+	case CLKCTRL_SET_BITMODE:
 	case CLKCTRL_GET_SPLITTERS:
 	case CLKCTRL_SET_SPLITTERS:
 	case RSP_UPDCLOCK:
@@ -621,6 +666,142 @@ GCFEvent::TResult ClockControl::setClock_state(GCFEvent& event,
 
 	return (status);
 }
+//
+// subscribeBitmode_state(event, port)
+//
+// Take subscription on bitmode modifications
+//
+GCFEvent::TResult ClockControl::subscribeBitmode_state(GCFEvent& event, 
+													GCFPortInterface& port)
+{
+	LOG_DEBUG_STR ("subscribeBitmode:" << eventName(event) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+  
+	switch (event.signal) {
+    case F_EXIT:
+   		break;
+
+	case F_ENTRY:
+	case F_TIMER:
+		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("Subscribe to bitmode"));
+		requestBitmodeSubscription();		// will result in RSP_SUBBITMODEACK;
+		break;
+
+	case F_DISCONNECTED:
+		_disconnectedHandler(port);		// might result in transition to connect_state
+		break;
+
+	case F_ACCEPT_REQ:
+		_acceptRequestHandler(port);
+	break;
+
+	case RSP_SUBBITMODEACK: {
+		RSPSubbitmodeackEvent	ack(event);
+		if (ack.status != RSP_SUCCESS) {
+			LOG_WARN ("Could not get subscription on bitmode, retry in 2 seconds.");
+			itsOwnPropertySet->setValue(PN_FSM_ERROR, GCFPVString("subscribe failed"));
+			itsTimerPort->setTimer(2.0);
+			break;
+		}
+		itsBitmodeSubscription = ack.handle;
+		LOG_INFO("Subscription on the bitmode successful. going to operational mode");
+		itsOwnPropertySet->setValue(PN_CLC_ACTUAL_BITMODE,GCFPVInteger(itsBitmode));
+		TRAN(ClockControl::active_state);				// go to next state.
+	}
+	break;
+	
+	case DP_CHANGED:
+		_databaseEventHandler(event);
+		break;
+	
+	case CLKCTRL_GET_CLOCK:
+	case CLKCTRL_SET_CLOCK:
+	case CLKCTRL_GET_BITMODE:
+	case CLKCTRL_SET_BITMODE:
+	case CLKCTRL_GET_SPLITTERS:
+	case CLKCTRL_SET_SPLITTERS:
+	case RSP_UPDSPLITTER:
+	case RSP_UPDBITMODE:
+		LOG_INFO_STR("Postponing event " << eventName(event) << " till next state");
+		return (GCFEvent::NEXT_STATE);
+
+	default:
+		LOG_DEBUG_STR ("subscribeBitmode, default");
+		status = defaultMessageHandling(event, port);
+		break;
+	}    
+
+	return (status);
+}
+
+
+//
+// setBitmode_state(event, port)
+//
+// Set samplebitmode from RSP driver
+//
+GCFEvent::TResult ClockControl::setBitmode_state(GCFEvent& event, 
+													GCFPortInterface& port)
+{
+	LOG_DEBUG_STR ("setBitmode:" << eventName(event) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+  
+	switch (event.signal) {
+	case F_ENTRY:
+	case F_TIMER:
+		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("Set bitmode"));
+		sendBitmodeSetting();				// will result in RSP_SETBITMODEACK;
+		break;
+
+	case F_DISCONNECTED:
+		_disconnectedHandler(port);		// might result in transition to connect_state
+		break;
+
+	case F_ACCEPT_REQ:
+		_acceptRequestHandler(port);
+	break;
+
+	case RSP_SETBITMODEACK: {
+		RSPSetbitmodeackEvent		ack(event);
+		if (ack.status != RSP_SUCCESS) {
+			LOG_ERROR_STR ("Bitmode could not be set to " << itsBitmode << ", retry in 5 seconds.");
+			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("bitmodeset error"));
+			itsTimerPort->setTimer(5.0);
+			break;
+		}
+		LOG_INFO_STR ("StationBitmode is set to " << itsBitmode << ", going to operational state");
+		itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString(""));
+		itsOwnPropertySet->setValue(PN_CLC_ACTUAL_BITMODE,GCFPVInteger(itsBitmode));
+		TRAN(ClockControl::active_state);				// go to next state.
+		break;
+	}
+
+	case DP_CHANGED:
+		_databaseEventHandler(event);
+		break;
+	
+	case CLKCTRL_GET_BITMODE:
+	case CLKCTRL_SET_BITMODE:
+	case CLKCTRL_GET_BITMODE:
+	case CLKCTRL_SET_BITMODE:
+	case CLKCTRL_GET_SPLITTERS:
+	case CLKCTRL_SET_SPLITTERS:
+	case RSP_UPDBITMODE:
+	case RSP_UPDSPLITTER:
+		LOG_INFO_STR("Postponing event " << eventName(event) << " till next state");
+		return (GCFEvent::NEXT_STATE);
+
+	default:
+		LOG_DEBUG_STR ("setBitmode, default");
+		status = defaultMessageHandling(event, port);
+		break;
+	}    
+
+	return (status);
+}
+
 
 
 //
@@ -682,6 +863,8 @@ GCFEvent::TResult ClockControl::setSplitters_state(GCFEvent& event,
 	
 	case CLKCTRL_GET_CLOCK:
 	case CLKCTRL_SET_CLOCK:
+	case CLKCTRL_GET_BITMODE:
+	case CLKCTRL_SET_BITMODE:
 	case CLKCTRL_GET_SPLITTERS:
 	case CLKCTRL_SET_SPLITTERS:
 	case RSP_UPDCLOCK:
@@ -763,6 +946,40 @@ GCFEvent::TResult ClockControl::active_state(GCFEvent& event, GCFPortInterface& 
 	}
 	break;
 
+	case RSP_UPDBITMODE: {
+		RSPUpdbitmodeEvent	updateEvent(event);
+		if (updateEvent.status != RSP_SUCCESS) {
+			LOG_WARN ("Received and INVALID bitmode update, WHAT IS THE BITMODE?");
+			itsOwnPropertySet->setValue(PN_FSM_ERROR, GCFPVString("getbitmode failed"));
+			break;
+		}
+
+		if (updateEvent.bitmode == 0) {
+			LOG_ERROR_STR ("StationBitmode has stopped! Going to setBitmode state to try to solve the problem");
+			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("Bitmode stopped"));
+			TRAN(ClockControl::setBitmode_state);
+			break;
+		}
+
+		if (itsBitmode == 0) { // my bitmode still uninitialized?
+			LOG_INFO_STR("My bitmode is still not initialized. StationBitmode is " << updateEvent.bitmode << " adopting this value");
+			itsBitmode=updateEvent.bitmode;
+			break;
+		}
+
+		if ((int32) updateEvent.bitmode != itsBitmode) {
+			LOG_ERROR_STR ("BITMODE WAS CHANGED TO " << updateEvent.bitmode << 
+						   " BY SOMEONE WHILE BITMODE SHOULD BE " << itsBitmode << ". CHANGING BITMODE BACK.");
+			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("Bitmode unallowed changed"));
+			TRAN (ClockControl::setBitmode_state);
+			break;
+		}
+
+		// when update.bitmode==itsBitmode ignore it, we probable caused it ourselves.
+		LOG_DEBUG_STR("Event.bitmode = " << updateEvent.bitmode << ", myBitmode = " << itsBitmode);
+	}
+	break;
+
 	case RSP_UPDSPLITTER: {
 		RSPUpdsplitterEvent		update(event);
 		itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString(""));
@@ -804,6 +1021,31 @@ GCFEvent::TResult ClockControl::active_state(GCFEvent& event, GCFPortInterface& 
 		itsOwnPropertySet->setValue(PN_CLC_REQUESTED_CLOCK,GCFPVInteger(request.clock));
 		itsClock = request.clock;
 		TRAN(ClockControl::setClock_state);
+		port.send(response);
+	}
+	break;
+
+	case CLKCTRL_GET_BITMODE: {
+		CLKCTRLGetBitmodeAckEvent		answer;
+		answer.clock = itsBitmode;
+		port.send(answer);
+	}
+	break;
+
+	case CLKCTRL_SET_BITMODE:	{
+		CLKCTRLSetBitmodeEvent		request(event);
+		CLKCTRLSetBitmodeAckEvent	response;
+		if (request.bitmode != 16 && request.bitmode != 8 && request.bitmode != 4) {
+			LOG_DEBUG_STR("Received request to change the bitmode to invalid value " << request.bitmode);
+			response.status = CLKCTRL_INVALIDBITMODE_ERR;
+			port.send(response);
+			break;
+		}
+		response.status = CLKCTRL_NO_ERR;
+		LOG_INFO_STR("Received request to change the bitmode to " << request.bitmode << " bit.");
+		itsOwnPropertySet->setValue(PN_CLC_REQUESTED_BITMODE,GCFPVInteger(request.clock));
+		itsBitmode = request.bitmode;
+		TRAN(ClockControl::setBitmode_state);
 		port.send(response);
 	}
 	break;
@@ -918,6 +1160,60 @@ void ClockControl::sendClockSetting()
 	RSPSetclockEvent		msg;
 	msg.timestamp = RTC::Timestamp(0,0);
 	msg.clock = itsClock;
+	itsRSPDriver->send(msg);
+}
+
+
+//
+// requestBitmodeSubscription()
+//
+void ClockControl::requestBitmodeSubscription()
+{
+	LOG_INFO ("Taking subscription on bitmode settings");
+
+	RSPSubbitmodeEvent		msg;
+//	msg.timestamp = 0;
+	msg.period = 1;				// let RSPdriver check every second
+	itsRSPDriver->send(msg);
+}
+
+//
+// cancelBitmodeSubscription()
+//
+void ClockControl::cancelBitmodeSubscription()
+{
+	LOG_INFO ("Canceling subscription on bitmode settings");
+
+	RSPUnsubbitmodeEvent		msg;
+	msg.handle = itsBitmodeSubscription;
+	itsBitmodeSubscription = 0;
+	itsRSPDriver->send(msg);
+}
+
+//
+// requestBitmodeSetting()
+//
+void ClockControl::requestBitmodeSetting()
+{
+	LOG_INFO ("Asking RSPdriver current bitmode setting");
+
+	RSPGetbitmodeEvent		msg;
+	msg.timestamp = RTC::Timestamp(0,0);
+	msg.cache = 1;
+	itsRSPDriver->send(msg);
+}
+
+
+//
+// sendBitmodeSetting()
+//
+void ClockControl::sendBitmodeSetting()
+{
+	LOG_INFO_STR ("Setting stationBitmode to " << itsBitmode << " bit");
+
+	RSPSetbitmodeEvent		msg;
+	msg.timestamp = RTC::Timestamp(0,0);
+	msg.bitmode = itsBitmode;
 	itsRSPDriver->send(msg);
 }
 

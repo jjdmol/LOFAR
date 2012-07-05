@@ -703,7 +703,6 @@ LOG_TRACE_FLOW_STR("There are " << cntlrStates.size() << " busy controllers");
 	return (status);
 }
 
-
 //
 // startObservation_state(event,port)
 //
@@ -713,36 +712,20 @@ GCFEvent::TResult	StationControl::startObservation_state(GCFEvent&	event, GCFPor
 {
 	LOG_DEBUG_STR("startObservation: " << eventName(event) << "@" << port.getName());
 
+    /*
+     * Several parts of the station (clock, splitters, bitmode..) need to be configured in sequence, and can take
+     * a while to stabilise. This is implemented by sequencing the station configuration in using F_TIMER. Every time
+     * the timer is triggered, the next configuration step is performed, after which an ACK event defers back to the
+     * timer to perform the next step.
+     */
+
 	switch (event.signal) {
-	case CONTROL_CLAIM: {
-		// Clock changes are done in the claim state and require an extra action
-		if (itsClock != itsStartingObs->second->obsPar()->sampleClock) {
-			// Check if all others obs are down otherwise we may not switch the clock
-			CONTROLCommonEvent	ObsEvent(event);		// we just need the name
-			uint16			 instanceNr = getInstanceNr(ObsEvent.cntlrName);
-			OTDBtreeIDType	 treeID	    = getObservationNr(ObsEvent.cntlrName);
-			string			 cntlrName  = controllerName(CNTLRTYPE_STATIONCTRL, instanceNr, treeID);
-			if (itsObsMap.size() != 1) {
-				LOG_FATAL_STR("Need to switch the clock to " <<  itsStartingObs->second->obsPar()->sampleClock << 
-						" for observation " << treeID << " but there are still " << itsObsMap.size()-1 << 
-						" other observations running at clockspeed" << itsClock << ".");
-				_abortObservation(itsStartingObs);
-				itsStartingObs = itsObsMap.end();
-				TRAN(StationControl::operational_state);
-				break;
-			}
-			// its OK to switch te clock
-			itsClock = itsStartingObs->second->obsPar()->sampleClock;
-			LOG_DEBUG_STR ("Changing clock to " << itsClock);
-			CLKCTRLSetClockEvent	setClock;
-			setClock.clock = itsClock;
-			itsClkCtrlPort->send(setClock);		// results in CLKCTRL_SET_CLOCK_ACK
-			itsClockPropSet->setValue(PN_CLC_REQUESTED_CLOCK,GCFPVInteger(itsClock));
-		}
-		else {
-			LOG_INFO_STR("new observation also uses clock " << itsClock);
-			itsTimerPort->setTimer(0.0);	// goto set splitter section
-		}
+	case CONTROL_CLAIM:
+        // defer the setup to the timer event
+        itsSetupSequence = 0;
+
+		itsTimerPort->setTimer(0.0);
+        break;
 	}
 	break;
 
@@ -757,31 +740,24 @@ GCFEvent::TResult	StationControl::startObservation_state(GCFEvent&	event, GCFPor
 		}
 		// clock was set succesfully, give clock 5 seconds to stabilize
 		LOG_INFO("Stationclock is changed, waiting 5 seconds to let the clock stabilize");
+
 		itsTimerPort->setTimer(5.0);
 	}
 	break;
 
-	case F_TIMER: {
-		StationConfig	sc;
-		if (!sc.hasSplitters) {
-			LOG_INFO_STR("Ignoring splitter settings because we don't have splitters");
-			// finally send a CLAIM event to the observation
-			LOG_TRACE_FLOW("Dispatch CLAIM event to observation FSM's.");
-			CONTROLClaimEvent		claimEvent;
-			itsStartingObs->second->doEvent(claimEvent, port);
-
-			LOG_INFO("Going back to operational state.");
+	case CLKCTRL_SET_BITMODE_ACK: {
+		CLKCTRLSetBitmodeAckEvent		ack(event);
+		if (ack.status != CLKCTRL_NO_ERR) {
+			LOG_FATAL_STR("Unable to set the bitmode to " << itsBitmode << ".");
+			_abortObservation(itsStartingObs);
 			itsStartingObs = itsObsMap.end();
 			TRAN(StationControl::operational_state);
 			break;
 		}
+		// bitmode was set succesfully
+		LOG_INFO("Stationbitmode is changed");
 
-		// set the splitters in the right state.
-		bool	splitterState = itsStartingObs->second->obsPar()->splitterOn;
-		LOG_DEBUG_STR ("Setting the splitters to " << (splitterState ? "ON" : "OFF"));
-		CLKCTRLSetSplittersEvent	setEvent;
-		setEvent.splittersOn = splitterState;
-		itsClkCtrlPort->send(setEvent);		// will result in CLKCTRL_SET_SPLITTERS_ACK
+		itsTimerPort->setTimer(0.0);
 	}
 	break;
 
@@ -790,23 +766,107 @@ GCFEvent::TResult	StationControl::startObservation_state(GCFEvent&	event, GCFPor
 		bool	splitterState = itsStartingObs->second->obsPar()->splitterOn;
 		if (ack.status != CLKCTRL_NO_ERR) {
 			LOG_FATAL_STR("Unable to set the splittters to " << (splitterState ? "ON" : "OFF"));
-			_abortObservation(itsStartingObs);
-			itsStartingObs = itsObsMap.end();
-			TRAN(StationControl::operational_state);
-			break;
-		}
-		
-		itsSplitters = splitterState;
-		sleep (2);			// give splitters time to stabilize.
+		} else {
+	    	itsSplitters = splitterState;
+        }
 
-		// finally send a CLAIM event to the observation
-		LOG_TRACE_FLOW("Dispatch CLAIM event to observation FSM's");
-		CONTROLClaimEvent		claimEvent;
-		itsStartingObs->second->doEvent(claimEvent, port);
+		// give splitters time to stabilize.
+		itsTimerPort->setTimer(2.0);
+	}
+	break;
 
-		LOG_INFO("Going back to operational state");
-		itsStartingObs = itsObsMap.end();
-		TRAN(StationControl::operational_state);
+	case F_TIMER: {
+        switch (itsSetupSequence++) {
+            case 0: {
+                // Set the clock
+                if (itsClock != itsStartingObs->second->obsPar()->sampleClock) {
+                    // Check if all others obs are down otherwise we may not switch the clock
+                    if (itsObsMap.size() != 1) {
+                        CONTROLCommonEvent	ObsEvent(event);		// we just need the name
+                        OTDBtreeIDType	 treeID	= getObservationNr(ObsEvent.cntlrName);
+
+                        LOG_FATAL_STR("Need to switch the clock to " <<  itsStartingObs->second->obsPar()->sampleClock << 
+                                " for observation " << treeID << " but there are still " << itsObsMap.size()-1 << 
+                                " other observations running at clockspeed" << itsClock << ".");
+                        _abortObservation(itsStartingObs);
+                        itsStartingObs = itsObsMap.end();
+                        TRAN(StationControl::operational_state);
+                        break;
+                    }
+                    // its OK to switch te clock
+                    itsClock = itsStartingObs->second->obsPar()->sampleClock;
+                    LOG_DEBUG_STR ("Changing clock to " << itsClock);
+                    CLKCTRLSetClockEvent	setClock;
+                    setClock.clock = itsClock;
+                    itsClkCtrlPort->send(setClock);		// results in CLKCTRL_SET_CLOCK_ACK
+                    itsClockPropSet->setValue(PN_CLC_REQUESTED_CLOCK,GCFPVInteger(itsClock));
+                }
+                else {
+                    LOG_INFO_STR("new observation also uses clock " << itsClock);
+		            itsTimerPort->setTimer(0.0);
+                }
+            }
+
+            case 1: {
+                // Set the splitters
+                StationConfig	sc;
+                if (!sc.hasSplitters) {
+                    LOG_INFO_STR("Ignoring splitter settings because we don't have splitters");
+
+		            itsTimerPort->setTimer(0.0);
+                    break;
+                }
+
+                // set the splitters in the right state.
+                bool	splitterState = itsStartingObs->second->obsPar()->splitterOn;
+                LOG_DEBUG_STR ("Setting the splitters to " << (splitterState ? "ON" : "OFF"));
+                CLKCTRLSetSplittersEvent	setEvent;
+                setEvent.splittersOn = splitterState;
+                itsClkCtrlPort->send(setEvent);		// will result in CLKCTRL_SET_SPLITTERS_ACK
+            } 
+
+            case 2: {
+                // Set the bit mode
+                if (itsBitmode != itsStartingObs->second->obsPar()->bitsPerSample) {
+                    // Check if all others obs are down otherwise we may not switch the bitmode
+                    if (itsObsMap.size() != 1) {
+                        CONTROLCommonEvent	ObsEvent(event);		// we just need the name
+                        OTDBtreeIDType	 treeID	= getObservationNr(ObsEvent.cntlrName);
+
+                        LOG_FATAL_STR("Need to switch the bitmode to " <<  itsStartingObs->second->obsPar()->bitsPerSample << 
+                                " for observation " << treeID << " but there are still " << itsObsMap.size()-1 << 
+                                " other observations running at bitmodespeed" << itsBitmode << ".");
+                        _abortObservation(itsStartingObs);
+                        itsStartingObs = itsObsMap.end();
+                        TRAN(StationControl::operational_state);
+                        break;
+                    }
+
+                    // its OK to switch the bitmode
+                    itsBitmode = itsStartingObs->second->obsPar()->bitsPerSample;
+                    LOG_DEBUG_STR ("Changing bitmode to " << itsBitmode);
+                    CLKCTRLSetBitmodeEvent	setBitmode;
+                    setBitmode.bitmode = itsBitmode;
+                    itsClkCtrlPort->send(setBitmode);		// results in CLKCTRL_SET_BITMODE_ACK
+                    itsBitmodePropSet->setValue(PN_CLC_REQUESTED_BITMODE,GCFPVInteger(itsBitmode));
+                }
+                else {
+                    LOG_INFO_STR("new observation also uses bitmode " << itsBitmode);
+		            itsTimerPort->setTimer(0.0);
+                }
+            }
+
+            default: {
+                // finally send a CLAIM event to the observation
+                LOG_TRACE_FLOW("Dispatch CLAIM event to observation FSM's");
+                CONTROLClaimEvent		claimEvent;
+                itsStartingObs->second->doEvent(claimEvent, port);
+
+                LOG_INFO("Going back to operational state");
+                itsStartingObs = itsObsMap.end();
+                TRAN(StationControl::operational_state);
+            }
+        }  
 	}
 	break;
 
@@ -896,11 +956,25 @@ void StationControl::_databaseEventHandler(GCFEvent& event)
 			break;
 		}
 
-		// during startup we adopt the value set by the Clockcontroller.
+		// during startup we adopt the value set by the ClockController.
 		if (strstr(dpEvent.DPname.c_str(), PN_CLC_ACTUAL_CLOCK) != 0) {
-			itsClock = ((GCFPVInteger*)(dpEvent.value._pValue))->getValue();
-			LOG_DEBUG_STR("Received (actual)clock change from PVSS, clock is now " << itsClock);
-			_abortObsWithWrongClock();
+			itsbitmode = ((GCFPVInteger*)(dpEvent.value._pValue))->getValue();
+			LOG_DEBUG_STR("Received (actual)bitmode change from PVSS, bitmode is now " << itsClock);
+			_abortObsWithWrongbitmode();
+			break;
+		}
+
+		if (strstr(dpEvent.DPname.c_str(), PN_CLC_REQUESTED_BITMODE) != 0) {
+			itsBitmode = ((GCFPVInteger*)(dpEvent.value._pValue))->getValue();
+			LOG_DEBUG_STR("Received (requested)bitmode change from PVSS, bitmode is now " << itsBitmode);
+			break;
+		}
+
+		// during startup we adopt the value set by the ClockController.
+		if (strstr(dpEvent.DPname.c_str(), PN_CLC_ACTUAL_BITMODE) != 0) {
+			itsBitmode = ((GCFPVInteger*)(dpEvent.value._pValue))->getValue();
+			LOG_DEBUG_STR("Received (actual)bitmode change from PVSS, bitmode is now " << itsBitmode);
+			_abortObsWithWrongBitmode();
 			break;
 		}
 
@@ -1160,6 +1234,25 @@ void StationControl::_abortObsWithWrongClock()
 		if (iter->second->obsPar()->sampleClock != itsClock) {
 			LOG_FATAL_STR("Aborting observation " << getObservationNr(iter->second->getName()) <<
 							" because the clock was (manually?) changed!");
+			_abortObservation(iter);
+		}
+		++iter;
+	}
+}
+
+//
+// _abortObsWithWrongBitmode()
+//
+void StationControl::_abortObsWithWrongBitmode()
+{
+	LOG_DEBUG_STR("Checking if all observations use bitmode " << itsBitmode);
+
+	ObsIter		iter = itsObsMap.begin();
+	ObsIter		end  = itsObsMap.end();
+	while (iter != end) {
+		if (iter->second->obsPar()->bitsPerSample != itsBitmode) {
+			LOG_FATAL_STR("Aborting observation " << getObservationNr(iter->second->getName()) <<
+							" because the bitmode was (manually?) changed!");
 			_abortObservation(iter);
 		}
 		++iter;
