@@ -357,7 +357,7 @@ GCFEvent::TResult ClockControl::connect2RSP_state(GCFEvent& event,
 			LOG_ERROR ("Bitmode could not be get. Ignoring that for now.");
 		}
 		else {
-			itsBitmode = ack.bitmode;
+			itsBitmode = ack.bit_mode;
 			LOG_INFO_STR("RSP says bitmode is " << itsBitmode << "MHz. Adopting that value.");
 			itsOwnPropertySet->setValue(PN_CLC_ACTUAL_BITMODE,GCFPVInteger(itsBitmode));
 			// Note: only here I am allowed to change the value of the requested bitmode. Normally
@@ -954,7 +954,7 @@ GCFEvent::TResult ClockControl::active_state(GCFEvent& event, GCFPortInterface& 
 			break;
 		}
 
-		if (updateEvent.bitmode == 0) {
+		if (updateEvent.bit_mode == 0) {
 			LOG_ERROR_STR ("StationBitmode has stopped! Going to setBitmode state to try to solve the problem");
 			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("Bitmode stopped"));
 			TRAN(ClockControl::setBitmode_state);
@@ -962,21 +962,21 @@ GCFEvent::TResult ClockControl::active_state(GCFEvent& event, GCFPortInterface& 
 		}
 
 		if (itsBitmode == 0) { // my bitmode still uninitialized?
-			LOG_INFO_STR("My bitmode is still not initialized. StationBitmode is " << updateEvent.bitmode << " adopting this value");
-			itsBitmode=updateEvent.bitmode;
+			LOG_INFO_STR("My bitmode is still not initialized. StationBitmode is " << updateEvent.bit_mode << " adopting this value");
+			itsBitmode=updateEvent.bit_mode;
 			break;
 		}
 
-		if ((int32) updateEvent.bitmode != itsBitmode) {
-			LOG_ERROR_STR ("BITMODE WAS CHANGED TO " << updateEvent.bitmode << 
+		if ((int32) updateEvent.bit_mode != itsBitmode) {
+			LOG_ERROR_STR ("BITMODE WAS CHANGED TO " << updateEvent.bit_mode << 
 						   " BY SOMEONE WHILE BITMODE SHOULD BE " << itsBitmode << ". CHANGING BITMODE BACK.");
 			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("Bitmode unallowed changed"));
 			TRAN (ClockControl::setBitmode_state);
 			break;
 		}
 
-		// when update.bitmode==itsBitmode ignore it, we probable caused it ourselves.
-		LOG_DEBUG_STR("Event.bitmode = " << updateEvent.bitmode << ", myBitmode = " << itsBitmode);
+		// when update.bit_mode==itsBitmode ignore it, we probable caused it ourselves.
+		LOG_DEBUG_STR("Event.bit_mode = " << updateEvent.bit_mode << ", myBitmode = " << itsBitmode);
 	}
 	break;
 
@@ -1027,7 +1027,7 @@ GCFEvent::TResult ClockControl::active_state(GCFEvent& event, GCFPortInterface& 
 
 	case CLKCTRL_GET_BITMODE: {
 		CLKCTRLGetBitmodeAckEvent		answer;
-		answer.clock = itsBitmode;
+		answer.bit_mode = itsBitmode;
 		port.send(answer);
 	}
 	break;
@@ -1035,16 +1035,16 @@ GCFEvent::TResult ClockControl::active_state(GCFEvent& event, GCFPortInterface& 
 	case CLKCTRL_SET_BITMODE:	{
 		CLKCTRLSetBitmodeEvent		request(event);
 		CLKCTRLSetBitmodeAckEvent	response;
-		if (request.bitmode != 16 && request.bitmode != 8 && request.bitmode != 4) {
-			LOG_DEBUG_STR("Received request to change the bitmode to invalid value " << request.bitmode);
+		if (request.bit_mode != 16 && request.bit_mode != 8 && request.bit_mode != 4) {
+			LOG_DEBUG_STR("Received request to change the bitmode to invalid value " << request.bit_mode);
 			response.status = CLKCTRL_INVALIDBITMODE_ERR;
 			port.send(response);
 			break;
 		}
 		response.status = CLKCTRL_NO_ERR;
-		LOG_INFO_STR("Received request to change the bitmode to " << request.bitmode << " bit.");
-		itsOwnPropertySet->setValue(PN_CLC_REQUESTED_BITMODE,GCFPVInteger(request.bitmode));
-		itsBitmode = request.bitmode;
+		LOG_INFO_STR("Received request to change the bitmode to " << request.bit_mode << " bit.");
+		itsOwnPropertySet->setValue(PN_CLC_REQUESTED_BITMODE,GCFPVInteger(request.bit_mode));
+		itsBitmode = request.bit_mode;
 		TRAN(ClockControl::setBitmode_state);
 		port.send(response);
 	}
@@ -1213,7 +1213,7 @@ void ClockControl::sendBitmodeSetting()
 
 	RSPSetbitmodeEvent		msg;
 	msg.timestamp = RTC::Timestamp(0,0);
-	msg.bitmode = itsBitmode;
+	msg.bit_mode = itsBitmode;
 	itsRSPDriver->send(msg);
 }
 

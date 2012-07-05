@@ -85,7 +85,7 @@ GCFEvent::TResult ClkCtl::doCommand(GCFEvent&	event, GCFPortInterface&	port)
 	
 	case CLKCTRL_GET_BITMODE_ACK: {
 		CLKCTRLGetBitmodeAckEvent	ack(event);
-		cout << "Bitmode is set to " << ack.bitmode << "bit" << endl;
+		cout << "Bitmode is set to " << ack.bit_mode << "bit" << endl;
 		GCFScheduler::instance()->stop();
 	}
 	break;
@@ -155,7 +155,7 @@ GCFEvent* ClkCtl::parseOptions(int argc, char** argv)
 
 	case 'B': {
 		CLKCTRLSetBitmodeEvent* event = new CLKCTRLSetBitmodeEvent();
-		event->bitmode = atoi(optarg);
+		event->bit_mode = atoi(optarg);
 		return(event);
 	}
 	break;

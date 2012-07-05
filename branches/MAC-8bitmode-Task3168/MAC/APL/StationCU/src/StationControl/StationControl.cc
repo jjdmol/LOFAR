@@ -846,7 +846,7 @@ GCFEvent::TResult	StationControl::startObservation_state(GCFEvent&	event, GCFPor
                     itsBitmode = itsStartingObs->second->obsPar()->bitsPerSample;
                     LOG_DEBUG_STR ("Changing bitmode to " << itsBitmode);
                     CLKCTRLSetBitmodeEvent	setBitmode;
-                    setBitmode.bitmode = itsBitmode;
+                    setBitmode.bit_mode = itsBitmode;
                     itsClkCtrlPort->send(setBitmode);		// results in CLKCTRL_SET_BITMODE_ACK
                     itsClockPropSet->setValue(PN_CLC_REQUESTED_BITMODE,GCFPVInteger(itsBitmode));
                 }
