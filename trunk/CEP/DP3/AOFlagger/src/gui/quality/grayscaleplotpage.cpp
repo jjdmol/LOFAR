@@ -218,7 +218,10 @@ void GrayScalePlotPage::initPlotOptions()
 	_plotBox.pack_start(_logarithmicScaleButton, Gtk::PACK_SHRINK);
 	_logarithmicScaleButton.set_active(true);
 	
-	_normalizeYAxisButton.signal_clicked().connect(sigc::mem_fun(*this, &GrayScalePlotPage::onNormalizeYAxisButtonClicked));
+	_normalizeXAxisButton.signal_clicked().connect(sigc::mem_fun(*this, &GrayScalePlotPage::onNormalizeAxesButtonClicked));
+	_plotBox.pack_start(_normalizeXAxisButton, Gtk::PACK_SHRINK);
+	
+	_normalizeYAxisButton.signal_clicked().connect(sigc::mem_fun(*this, &GrayScalePlotPage::onNormalizeAxesButtonClicked));
 	_plotBox.pack_start(_normalizeYAxisButton, Gtk::PACK_SHRINK);
 	
 	Gtk::RadioButtonGroup normMethodGroup;

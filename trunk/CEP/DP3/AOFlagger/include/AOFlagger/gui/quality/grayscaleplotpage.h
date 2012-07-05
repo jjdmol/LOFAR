@@ -79,7 +79,7 @@ class GrayScalePlotPage : public Gtk::HBox {
 				_imageWidget.SetScaleOption(ImageWidget::NormalScale);
 			 _imageWidget.Update();
 		}
-		void onNormalizeYAxisButtonClicked()
+		void onNormalizeAxesButtonClicked()
 		{
 			UpdateImage();
 		}
