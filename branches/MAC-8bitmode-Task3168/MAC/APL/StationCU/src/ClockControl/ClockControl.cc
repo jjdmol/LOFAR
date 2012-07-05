@@ -63,7 +63,7 @@ ClockControl::ClockControl(const string&	cntlrName) :
 	itsTimerPort		(0),
 	itsRSPDriver		(0),
 	itsCommandPort		(0),
-	itsClock			(0)
+	itsClock			(0),
 	itsBitmode			(0)
 {
 	LOG_TRACE_OBJ_STR (cntlrName << " construction");
@@ -782,8 +782,8 @@ GCFEvent::TResult ClockControl::setBitmode_state(GCFEvent& event,
 		_databaseEventHandler(event);
 		break;
 	
-	case CLKCTRL_GET_BITMODE:
-	case CLKCTRL_SET_BITMODE:
+	case CLKCTRL_GET_CLOCK:
+	case CLKCTRL_SET_CLOCK:
 	case CLKCTRL_GET_BITMODE:
 	case CLKCTRL_SET_BITMODE:
 	case CLKCTRL_GET_SPLITTERS:
@@ -1043,7 +1043,7 @@ GCFEvent::TResult ClockControl::active_state(GCFEvent& event, GCFPortInterface& 
 		}
 		response.status = CLKCTRL_NO_ERR;
 		LOG_INFO_STR("Received request to change the bitmode to " << request.bitmode << " bit.");
-		itsOwnPropertySet->setValue(PN_CLC_REQUESTED_BITMODE,GCFPVInteger(request.clock));
+		itsOwnPropertySet->setValue(PN_CLC_REQUESTED_BITMODE,GCFPVInteger(request.bitmode));
 		itsBitmode = request.bitmode;
 		TRAN(ClockControl::setBitmode_state);
 		port.send(response);

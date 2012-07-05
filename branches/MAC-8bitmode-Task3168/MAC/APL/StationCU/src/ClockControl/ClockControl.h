@@ -78,6 +78,7 @@ private:
    	GCFEvent::TResult active_state    		  (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult defaultMessageHandling  (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult setClock_state  		  (GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult setBitmode_state  		  (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult setSplitters_state 	  (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult finishing_state  		  (GCFEvent& e, GCFPortInterface& p);
 

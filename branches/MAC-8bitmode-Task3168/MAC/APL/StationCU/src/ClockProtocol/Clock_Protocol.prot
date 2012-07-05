@@ -65,6 +65,10 @@ error = {
 	msg = "Invalid clock frequency specified, only 160 and 200 MHz are allowed";
 };
 error = {
+	id  = INVALIDBITMODE;
+	msg = "Invalid bit mode specified, only 4, 8 and 16 are allowed";
+};
+error = {
 	id  = SPLITTERS;
 	msg = "Trouble setting the splitters";
 };

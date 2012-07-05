@@ -720,7 +720,7 @@ GCFEvent::TResult	StationControl::startObservation_state(GCFEvent&	event, GCFPor
      */
 
 	switch (event.signal) {
-	case CONTROL_CLAIM:
+	case CONTROL_CLAIM: {
         // defer the setup to the timer event
         itsSetupSequence = 0;
 
@@ -848,7 +848,7 @@ GCFEvent::TResult	StationControl::startObservation_state(GCFEvent&	event, GCFPor
                     CLKCTRLSetBitmodeEvent	setBitmode;
                     setBitmode.bitmode = itsBitmode;
                     itsClkCtrlPort->send(setBitmode);		// results in CLKCTRL_SET_BITMODE_ACK
-                    itsBitmodePropSet->setValue(PN_CLC_REQUESTED_BITMODE,GCFPVInteger(itsBitmode));
+                    itsClockPropSet->setValue(PN_CLC_REQUESTED_BITMODE,GCFPVInteger(itsBitmode));
                 }
                 else {
                     LOG_INFO_STR("new observation also uses bitmode " << itsBitmode);
@@ -958,9 +958,9 @@ void StationControl::_databaseEventHandler(GCFEvent& event)
 
 		// during startup we adopt the value set by the ClockController.
 		if (strstr(dpEvent.DPname.c_str(), PN_CLC_ACTUAL_CLOCK) != 0) {
-			itsbitmode = ((GCFPVInteger*)(dpEvent.value._pValue))->getValue();
-			LOG_DEBUG_STR("Received (actual)bitmode change from PVSS, bitmode is now " << itsClock);
-			_abortObsWithWrongbitmode();
+			itsClock = ((GCFPVInteger*)(dpEvent.value._pValue))->getValue();
+			LOG_DEBUG_STR("Received (actual)clock change from PVSS, bitmode is now " << itsClock);
+			_abortObsWithWrongClock();
 			break;
 		}
 
