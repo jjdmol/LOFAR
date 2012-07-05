@@ -160,7 +160,7 @@ typedef struct RSRVersion // total size 2 bytes
 //
 // RSR(0x01) 0x03: get nofbeam
 //
-typedef struct RSRNofbeam // total size 2 bytes
+typedef struct RSRNofbeam // total size 1 byte
 {
 	uint8 select   :4; // select mode, 0=16bit 1=8bit 2=4bit              
 	uint8 bitmode  :3; // firmware version, 1=16bit 2=16/8bit 4=16/8/4bit 
