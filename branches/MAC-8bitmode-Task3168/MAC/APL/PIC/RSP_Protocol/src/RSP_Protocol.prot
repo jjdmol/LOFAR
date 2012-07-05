@@ -2390,7 +2390,7 @@ event = {
 		type = "uint16";
 	};
 	param = {
-		name = "bit_per_sample";
+		name = "bits_per_sample";
 		type = "uint16";
 	};
 };
