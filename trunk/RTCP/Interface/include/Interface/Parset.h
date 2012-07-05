@@ -146,6 +146,7 @@ class Parset: public ParameterSet
     std::vector<unsigned>	phaseTwoPsets() const;
     std::vector<unsigned>	phaseThreePsets() const;
     std::vector<unsigned>	usedPsets() const; // union of phasePsets
+    unsigned	                totalNrPsets() const; // nr psets in the partition
     bool			phaseThreeDisjunct() const; // if phase 3 does not overlap with phase 1 or 2 in psets or cores
     std::vector<unsigned>	tabList() const;
     bool			conflictingResources(const Parset &otherParset, std::stringstream &error) const;
@@ -990,6 +991,18 @@ inline vector<unsigned> Parset::phaseTwoPsets() const
 inline vector<unsigned> Parset::phaseThreePsets() const
 {
   return getUint32Vector("OLAP.CNProc.phaseThreePsets",true);
+}
+
+inline unsigned Parset::totalNrPsets() const
+{
+  const std::string key = "OLAP.IONProc.psetList";
+
+  if (isDefined(key)) {
+    return getUint32Vector(key,true).size();
+  } else {
+    LOG_WARN_STR( "Missing key " << key << ", using the used psets as a fallback");
+    return usedPsets().size();
+  }  
 }
 
 inline vector<unsigned> Parset::tabList() const
