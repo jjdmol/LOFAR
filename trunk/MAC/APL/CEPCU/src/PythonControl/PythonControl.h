@@ -86,6 +86,7 @@ private:
 						  const string&	pythonHost,
 						  const string&	parentService);
 	void	_databaseEventHandler(GCFEvent&				event);
+	void	_passMetadatToOTDB();
 
 	// ----- datamembers -----
    	RTDBPropertySet*           	itsPropertySet;
@@ -108,8 +109,10 @@ private:
 
 	CTState::CTstateNr		itsState;
 
-	// ParameterSet variables
-	string					itsTreePrefix;
+	// conf-file variables
+	string					itsFeedbackFile;
+	double					itsFeedbackWaittime;
+	string					itsKVTLoggerHost;
 };
 
   }  //CEPCU
