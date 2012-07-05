@@ -57,6 +57,7 @@ GrayScalePlotPage::GrayScalePlotPage() :
 	_rangeWinsorizedButton("Winsorized"),
 	_rangeSpecified("Specified"),
 	_logarithmicScaleButton("Logarithmic"),
+	_normalizeXAxisButton("Normalize X"),
 	_normalizeYAxisButton("Normalize Y"),
 	_meanNormButton("Mean"),
 	_winsorNormButton("Winsor"),
@@ -255,6 +256,8 @@ void GrayScalePlotPage::UpdateImage()
 			setToSelectedPhase(data);
 			
 			Image2DCPtr image = data.GetSingleImage();
+			if(_normalizeXAxisButton.get_active())
+				image = normalizeXAxis(image);
 			if(_normalizeYAxisButton.get_active())
 				image = normalizeYAxis(image);
 			
@@ -315,6 +318,25 @@ void GrayScalePlotPage::setToSelectedPhase(TimeFrequencyData &data)
 		data = *newData;
 		delete newData;
 	}
+}
+
+Image2DCPtr GrayScalePlotPage::normalizeXAxis(Image2DCPtr input)
+{
+	Image2DPtr output = Image2D::CreateUnsetImagePtr(input->Width(), input->Height());
+	for(size_t x=0;x<input->Width();++x)
+	{
+		SampleRowPtr row = SampleRow::CreateFromColumn(input, x);
+		num_t norm;
+		if(_meanNormButton.get_active())
+			norm = 1.0 / row->MeanWithMissings();
+		else if(_winsorNormButton.get_active())
+			norm = 1.0 / row->WinsorizedMeanWithMissings();
+		else // _medianNormButton
+			norm = 1.0 / row->MedianWithMissings();
+		for(size_t y=0;y<input->Height();++y)
+			output->SetValue(x, y, input->Value(x, y) * norm);
+	}
+	return output;
 }
 
 Image2DCPtr GrayScalePlotPage::normalizeYAxis(Image2DCPtr input)
