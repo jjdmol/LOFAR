@@ -23,6 +23,7 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/Exception.h>
 #include <Common/lofar_fstream.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/RTDB/DPservice.h>
@@ -193,6 +194,9 @@ bool mainTask::updateState(const string&	who,
 using namespace LOFAR;
 using namespace LOFAR::GCF;
 using namespace LOFAR::APL::RTDBCommon;
+
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 int main(int argc, char* argv[])
 {

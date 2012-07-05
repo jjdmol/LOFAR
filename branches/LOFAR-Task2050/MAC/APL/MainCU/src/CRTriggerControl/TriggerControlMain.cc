@@ -22,11 +22,15 @@
 //#
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/Exception.h>
 
 #include "TriggerControl.h"
 
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::MainCU;
+
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 int main(int argc, char* argv[])
 {

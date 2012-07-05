@@ -27,6 +27,7 @@
 
 //# Includes
 #include <lofar_config.h>
+#include <LofarFT/Exceptions.h>
 #include <LofarFT/LofarImager.h>
 #include <LofarFT/Package__Version.h>
 #include <Common/InputParSet.h>
@@ -63,7 +64,7 @@ IPosition handlePos (const IPosition& pos, const IPosition& def)
     return def;
   }
   if (pos.nelements() != 2) {
-    throw AipsError("Give 0 or 2 values in maskblc and masktrc");
+    THROW(AWImagerException, "Give 0 or 2 values in maskblc and masktrc");
   }
   IPosition npos(def);
   int n = npos.nelements();
@@ -90,7 +91,7 @@ Quantity readQuantity (const String& in)
 {
   Quantity res;
   if (!Quantity::read(res, in)) {
-    throw AipsError (in + " is an illegal quantity");
+    THROW(AWImagerException, in << " is an illegal quantity");
   }
   return res;
 }
@@ -99,12 +100,12 @@ MDirection readDirection (const String& in)
 {
   Vector<String> vals = stringToVector(in);
   if (vals.size() > 3) {
-    throw AipsError ("MDirection value " + in + " is invalid;"
+    THROW(AWImagerException, "MDirection value " << in << " is invalid;"
 		     " up to 3 values can be given");
   }
   MDirection::Types tp;
   if (! MDirection::getType (tp, vals[0])) {
-    throw AipsError(vals[0] + " is an invalid MDirection type");
+    THROW(AWImagerException, vals[0] << " is an invalid MDirection type");
   }
   Quantity v0(0, "deg");
   Quantity v1(90, "deg");     // same default as in measures.g
@@ -125,7 +126,7 @@ void readFilter (const String& filter,
   }
   Vector<String> strs = stringToVector(filter);
   if (strs.size() != 3) {
-    throw AipsError("Specify gaussian tapering filter as bmajor,bminor,bpa");
+    THROW(AWImagerException, "Specify gaussian tapering filter as bmajor,bminor,bpa");
   }
   if (! strs[0].empty()) {
     bmajor = readQuantity (strs[0]);
@@ -154,7 +155,7 @@ Matrix<Bool> readMueller (const String& str, String stokes, Bool grid)
     if (s == "BAND1") {
       mat(0,3) = mat(1,4) = mat(3,0) = mat(4,1) = False;
     } else if (s != "BAND2") {
-      throw AipsError (str + " is an invalid Mueller specification");
+      THROW(AWImagerException, str << " is an invalid Mueller specification");
     }
   }
   if((stokes=="I")&&(grid)){
@@ -575,7 +576,7 @@ int main(int argc, char *argv[])
     // Check and interpret input values.
     Quantity qcellsize = readQuantity (cellsize);
     if (msName.empty()) {
-      throw AipsError("An MS name must be given like ms=test.ms");
+      THROW(AWImagerException, "An MS name must be given like ms=test.ms");
     }
     imageType.downcase();
     if (imageType == "data") {
@@ -836,7 +837,7 @@ int main(int argc, char *argv[])
                                                  fitsName,
                                                  64,         // memoryInMB
                                                  preferVelocity)) {
-            throw AipsError(error);
+            THROW(AWImagerException, error);
           }
         }
 
@@ -994,7 +995,7 @@ int main(int argc, char *argv[])
                                                  fitsName,
                                                  64,         // memoryInMB
                                                  preferVelocity)) {
-            throw AipsError(error);
+            THROW(AWImagerException, error);
           }
         }
       }

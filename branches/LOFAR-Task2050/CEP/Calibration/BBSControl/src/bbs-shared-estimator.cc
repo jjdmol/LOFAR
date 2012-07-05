@@ -115,11 +115,6 @@ int main(int argc, char *argv[])
     LOG_FATAL_STR(progName << " terminated due to an exception: " << ex);
     return 1;
   }
-  catch(...)
-  {
-    LOG_FATAL_STR(progName << " terminated due to an unknown exception.");
-    return 1;
-  }
 
   LOG_INFO_STR(progName << " terminated successfully.");
   return 0;

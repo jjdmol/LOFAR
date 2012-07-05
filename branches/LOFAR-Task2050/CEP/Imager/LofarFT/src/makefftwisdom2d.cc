@@ -23,12 +23,16 @@
 #include <lofar_config.h>
 #include <LofarFT/FFTCMatrix.h>
 #include <Common/lofar_iostream.h>
+#include <Common/Exception.h>
 #include <casa/OS/Path.h>
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>     //# for strerror
 
 using namespace LOFAR;
+
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 void showhelp()
 {

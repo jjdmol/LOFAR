@@ -286,8 +286,8 @@ int main (int argc, char *argv[])
     }
     // Do the export.
     doIt (nameIn, nameOut, append, skipLast, amplPerc, parmType);
-  } catch (std::exception& x) {
-    cerr << "Caught exception: " << x.what() << endl;
+  } catch (Exception& ex) {
+    cerr << ex << endl;
     return 1;
   }
   

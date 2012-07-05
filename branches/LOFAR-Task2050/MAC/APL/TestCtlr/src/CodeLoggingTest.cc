@@ -23,11 +23,17 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/SystemUtil.h>
+#include <Common/Exception.h>
 
 #include <time.h>
 #include <unistd.h>
 #include <cstdio>
 #include <cstring>
+
+using namespace LOFAR;
+
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 int main(int argc, char* argv[])
 {

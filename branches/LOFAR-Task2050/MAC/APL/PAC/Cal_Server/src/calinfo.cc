@@ -26,6 +26,7 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
+#include <Common/Exception.h>
 #include <APL/CAL_Protocol/CAL_Protocol.ph>
 #include <MACIO/MACServiceInfo.h>
 #include "calinfo.h" 
@@ -135,6 +136,9 @@ using namespace LOFAR;
 using namespace LOFAR::GCF;
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::CAL;
+
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 int main(int	argc,	char*	argv[])
 {

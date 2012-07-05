@@ -33,6 +33,9 @@
 using namespace casa;
 using namespace LOFAR;
 
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
+
 int main (int argc, char* argv[])
 {
   try {

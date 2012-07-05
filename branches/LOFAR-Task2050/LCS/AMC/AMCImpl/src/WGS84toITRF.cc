@@ -78,8 +78,8 @@ int main()
       pos = conv(pos);
       showPos(pos);
     }
-  } catch (exception& e) {
-    cerr << "Exception: " << e.what() << endl;
+  } catch (Exception& e) {
+    cerr << e << endl;
     return 1;
   }
   return 0;
