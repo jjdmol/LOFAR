@@ -391,6 +391,8 @@ void CEPlogProcessor::processParset( const std::string &observationID )
     time_t now = time(0L);
     unsigned obsID;
 
+    LOG_DEBUG_STR("Initialising PVSS arrays from parset for obs " << observationID);
+
     if (sscanf(observationID.c_str(), "%u", &obsID) != 1) {
       LOG_ERROR_STR("Observation ID not numerical: " << observationID);
       return;
@@ -400,9 +402,11 @@ void CEPlogProcessor::processParset( const std::string &observationID )
     string filename(formatString("/opt/lofar/share/Observation%s", observationID.c_str()));
 
     ParameterSet parset(filename);
-    Observation obs(&parset);
+    Observation obs(&parset, false);
 
     unsigned nrStreams = obs.streamsToStorage.size();
+
+    LOG_DEBUG_STR("#streams = " << nrStreams);
 
     // process all the writers
     for( unsigned i = 0; i < nrStreams; i++ ) {
@@ -416,6 +420,8 @@ void CEPlogProcessor::processParset( const std::string &observationID )
       }
 
       hostNr--; // we use 0-based indexing in our arrays
+
+      LOG_DEBUG_STR("Storage node " << hostNr << " writer " << s.writerNr << " writes " << s.filename);
 
       unsigned writerIndex = hostNr * itsNrWriters + s.writerNr;
       RTDBPropertySet *writer = itsWriters[writerIndex];
@@ -433,6 +439,8 @@ void CEPlogProcessor::processParset( const std::string &observationID )
     // process all the adders
     for( unsigned i = 0; i < nrStreams; i++ ) {
       Observation::StreamToStorage &s = obs.streamsToStorage[i];
+
+      LOG_DEBUG_STR("IO node " << s.sourcePset << " adder " << s.adderNr << " generates " << s.filename);
 
       unsigned adderIndex = s.sourcePset * itsNrAdders + s.adderNr;
       RTDBPropertySet *adder = itsAdders[adderIndex];
