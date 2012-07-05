@@ -88,6 +88,7 @@ class GrayScalePlotPage : public Gtk::HBox {
 			if(_normalizeYAxisButton.get_active())
 				UpdateImage();
 		}
+		Image2DCPtr normalizeXAxis(Image2DCPtr input);
 		Image2DCPtr normalizeYAxis(Image2DCPtr input);
 		
 		void setToSelectedPolarization(TimeFrequencyData &data);
@@ -115,7 +116,7 @@ class GrayScalePlotPage : public Gtk::HBox {
 		Gtk::VBox _plotBox;
 		
 		Gtk::RadioButton _rangeMinMaxButton, _rangeWinsorizedButton, _rangeSpecified;
-		Gtk::CheckButton _logarithmicScaleButton, _normalizeYAxisButton;
+		Gtk::CheckButton _logarithmicScaleButton, _normalizeXAxisButton, _normalizeYAxisButton;
 		Gtk::RadioButton _meanNormButton, _winsorNormButton, _medianNormButton;
 		Gtk::Button _plotPropertiesButton;
 		
