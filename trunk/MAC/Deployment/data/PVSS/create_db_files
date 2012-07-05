@@ -236,7 +236,7 @@ substitute_midplane()
 	{
 		hasMid=index($1,"@midplane@");
 		if (hasMid > 0) {
-			for (midplane=0; midplane<4; midplane++) {
+			for (midplane=0; midplane<2; midplane++) {
 				dpname=$1;
 				sub("@midplane@", "Midplane"midplane, dpname);
 				print dpname"	"$2;
@@ -258,7 +258,7 @@ substitute_midplane_ionode()
 	{
 		hasMidIONode=index($1,"@midplane@_@ionode@");
 		if (hasMidIONode > 0) {
-			for (ionode=0; ionode<128; ionode++) {
+			for (ionode=0; ionode<64; ionode++) {
 				dpname=$1;
 				midplane=int(ionode/32)
                                 newname = sprintf("Midplane%d_IONode%02d",midplane,ionode);
