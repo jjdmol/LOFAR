@@ -2387,11 +2387,11 @@ event = {
 	};
 	param = {
 		name = "bitmode_version";
-		type = "uint16";
+		type = "uint16[MAX_N_RSPBOARDS]";
 	};
 	param = {
 		name = "bits_per_sample";
-		type = "uint16";
+		type = "uint16[MAX_N_RSPBOARDS]";
 	};
 };
 
@@ -2448,11 +2448,11 @@ event = {
 	};
 	param = {
 		name = "bitmode_version";
-		type = "uint16";
+		type = "uint16[MAX_N_RSPBOARDS]";
 	};
 	param = {
 		name = "bits_per_sample";
-		type = "uint16";
+		type = "uint16[MAX_N_RSPBOARDS]";
 	};
 };
 
