@@ -357,7 +357,7 @@ GCFEvent::TResult ClockControl::connect2RSP_state(GCFEvent& event,
 			LOG_ERROR ("Bitmode could not be get. Ignoring that for now.");
 		}
 		else {
-			itsBitmode = ack.bit_mode;
+			itsBitmode = ack.bits_per_sample;
 			LOG_INFO_STR("RSP says bitmode is " << itsBitmode << "MHz. Adopting that value.");
 			itsOwnPropertySet->setValue(PN_CLC_ACTUAL_BITMODE,GCFPVInteger(itsBitmode));
 			// Note: only here I am allowed to change the value of the requested bitmode. Normally
@@ -954,7 +954,7 @@ GCFEvent::TResult ClockControl::active_state(GCFEvent& event, GCFPortInterface& 
 			break;
 		}
 
-		if (updateEvent.bit_mode == 0) {
+		if (updateEvent.bits_per_sample == 0) {
 			LOG_ERROR_STR ("StationBitmode has stopped! Going to setBitmode state to try to solve the problem");
 			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("Bitmode stopped"));
 			TRAN(ClockControl::setBitmode_state);
@@ -962,21 +962,21 @@ GCFEvent::TResult ClockControl::active_state(GCFEvent& event, GCFPortInterface& 
 		}
 
 		if (itsBitmode == 0) { // my bitmode still uninitialized?
-			LOG_INFO_STR("My bitmode is still not initialized. StationBitmode is " << updateEvent.bit_mode << " adopting this value");
-			itsBitmode=updateEvent.bit_mode;
+			LOG_INFO_STR("My bitmode is still not initialized. StationBitmode is " << updateEvent.bits_per_sample << " adopting this value");
+			itsBitmode=updateEvent.bits_per_sample;
 			break;
 		}
 
-		if ((int32) updateEvent.bit_mode != itsBitmode) {
-			LOG_ERROR_STR ("BITMODE WAS CHANGED TO " << updateEvent.bit_mode << 
+		if ((int32) updateEvent.bits_per_sample != itsBitmode) {
+			LOG_ERROR_STR ("BITMODE WAS CHANGED TO " << updateEvent.bits_per_sample << 
 						   " BY SOMEONE WHILE BITMODE SHOULD BE " << itsBitmode << ". CHANGING BITMODE BACK.");
 			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("Bitmode unallowed changed"));
 			TRAN (ClockControl::setBitmode_state);
 			break;
 		}
 
-		// when update.bit_mode==itsBitmode ignore it, we probable caused it ourselves.
-		LOG_DEBUG_STR("Event.bit_mode = " << updateEvent.bit_mode << ", myBitmode = " << itsBitmode);
+		// when update.bits_per_sample==itsBitmode ignore it, we probable caused it ourselves.
+		LOG_DEBUG_STR("Event.bits_per_sample = " << updateEvent.bits_per_sample << ", myBitmode = " << itsBitmode);
 	}
 	break;
 
@@ -1027,7 +1027,7 @@ GCFEvent::TResult ClockControl::active_state(GCFEvent& event, GCFPortInterface& 
 
 	case CLKCTRL_GET_BITMODE: {
 		CLKCTRLGetBitmodeAckEvent		answer;
-		answer.bit_mode = itsBitmode;
+		answer.bits_per_sample = itsBitmode;
 		port.send(answer);
 	}
 	break;
@@ -1035,16 +1035,16 @@ GCFEvent::TResult ClockControl::active_state(GCFEvent& event, GCFPortInterface& 
 	case CLKCTRL_SET_BITMODE:	{
 		CLKCTRLSetBitmodeEvent		request(event);
 		CLKCTRLSetBitmodeAckEvent	response;
-		if (request.bit_mode != 16 && request.bit_mode != 8 && request.bit_mode != 4) {
-			LOG_DEBUG_STR("Received request to change the bitmode to invalid value " << request.bit_mode);
+		if (request.bits_per_sample != 16 && request.bits_per_sample != 8 && request.bits_per_sample != 4) {
+			LOG_DEBUG_STR("Received request to change the bitmode to invalid value " << request.bits_per_sample);
 			response.status = CLKCTRL_INVALIDBITMODE_ERR;
 			port.send(response);
 			break;
 		}
 		response.status = CLKCTRL_NO_ERR;
-		LOG_INFO_STR("Received request to change the bitmode to " << request.bit_mode << " bit.");
-		itsOwnPropertySet->setValue(PN_CLC_REQUESTED_BITMODE,GCFPVInteger(request.bit_mode));
-		itsBitmode = request.bit_mode;
+		LOG_INFO_STR("Received request to change the bitmode to " << request.bits_per_sample << " bit.");
+		itsOwnPropertySet->setValue(PN_CLC_REQUESTED_BITMODE,GCFPVInteger(request.bits_per_sample));
+		itsBitmode = request.bits_per_sample;
 		TRAN(ClockControl::setBitmode_state);
 		port.send(response);
 	}
@@ -1213,7 +1213,7 @@ void ClockControl::sendBitmodeSetting()
 
 	RSPSetbitmodeEvent		msg;
 	msg.timestamp = RTC::Timestamp(0,0);
-	msg.bit_mode = itsBitmode;
+	msg.bits_per_sample = itsBitmode;
 	itsRSPDriver->send(msg);
 }
 

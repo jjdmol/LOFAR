@@ -139,7 +139,7 @@ event = {
 	signal = GET_BITMODE_ACK;
 	dir = OUT;
 	param  = {
-		name = "bit_mode";
+		name = "bits_per_sample";
 		type = "uint32";
 	};
 };
@@ -151,7 +151,7 @@ event = {
 	signal = SET_BITMODE;
 	dir = IN; 
 	param  = {
-		name = "bit_mode";
+		name = "bits_per_sample";
 		type = "uint32";
 	};
 };
