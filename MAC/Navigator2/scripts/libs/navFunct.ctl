@@ -1896,7 +1896,7 @@ string navFunct_DPName2CEPName(string DPName) {
   
   if (foundMidplane) {
     if (foundRack) name+="-";
-    midnr = midplane - (2*rack);
+    midnr = midplane;
     name += "M" + midnr;
   }
   
