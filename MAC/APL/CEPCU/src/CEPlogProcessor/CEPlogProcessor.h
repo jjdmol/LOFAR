@@ -152,6 +152,8 @@ private:
     unsigned        itsNrWriters;
     unsigned        itsBufferSize;
 
+    unsigned        itsNrPsets;
+
     template<typename T, typename U> class BiMap {
     public:
       void set( const T &t, const U &u ) {

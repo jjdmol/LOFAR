@@ -28,6 +28,7 @@
 #include <ApplCommon/Observation.h>
 
 #include <GCF/PVSS/GCF_PVTypes.h>
+#include <GCF/PVSS/PVSSinfo.h>
 #include <MACIO/MACServiceInfo.h>
 #include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
@@ -72,6 +73,21 @@ CEPlogProcessor::CEPlogProcessor(const string&  cntlrName) :
     itsBufferSize       (0)
 {
     LOG_TRACE_OBJ_STR (cntlrName << " construction");
+
+    // HACK: test environment uses 4-pset partitions, production environment 64 pset partition
+    // anything else will break this code.
+
+    string dbname = PVSSinfo::getMainDBName();
+
+    LOG_DEBUG_STR("Connected to database " << dbname);
+
+    if (dbname == "MCU099") {
+      LOG_WARN("Detected test environment -- assuming 4 psets");
+      itsNrPsets = 4;
+    } else {
+      LOG_WARN("Detected production environment -- assuming 64 psets");
+      itsNrPsets = 64;
+    }
 
     // need port for timers.
     itsTimerPort = new GCFTimerPort(*this, "TimerPort");
@@ -400,7 +416,8 @@ void CEPlogProcessor::processParset( const std::string &observationID )
     string filename(formatString("/opt/lofar/share/Observation%s", observationID.c_str()));
 
     ParameterSet parset(filename);
-    Observation obs(&parset,false);
+
+    Observation obs(&parset, false, itsNrPsets);
 
     unsigned nrStreams = obs.streamsToStorage.size();
 
