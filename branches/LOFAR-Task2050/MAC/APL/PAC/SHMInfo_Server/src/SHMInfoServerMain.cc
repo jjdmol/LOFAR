@@ -45,8 +45,8 @@ int main(int argc, char *argv[])
 	try {
 	  GCFScheduler::instance()->run();
 	}
-	catch (std::exception& x) {
-	  LOG_FATAL_STR("Unexpected exception: " << x.what());
+	catch (Exception& x) {
+	  LOG_FATAL_STR(x);
 	  return 1;
 	}
 	return (0);

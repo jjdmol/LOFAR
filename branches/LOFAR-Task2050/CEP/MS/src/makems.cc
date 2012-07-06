@@ -267,8 +267,8 @@ int main (int argc, char** argv)
       // Print vdsName, so script can capture it.
       cout << "vds=" << vdsName << endl;
     }
-  } catch (std::exception& x) {
-    cout << "Unexpected exception in " << argv[0] << ": " << x.what() << endl;
+  } catch (Exception& ex) {
+    cerr << "Unexpected exception in " << argv[0] << ": " << ex << endl;
     return 1;
   }
   return 0;

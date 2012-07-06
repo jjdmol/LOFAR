@@ -178,7 +178,7 @@ Matrix<Bool> readMueller (const String& str, String stokes, Bool grid)
 void makeEmpty (Imager& imager, const String& imgName, Int fieldid)
 {
   CoordinateSystem coords;
-  AlwaysAssert (imager.imagecoordinates(coords), AipsError);
+  ASSERT (imager.imagecoordinates(coords));
   String name(imgName);
   imager.makeEmptyImage(coords, name, fieldid);
   imager.unlock();
@@ -1000,8 +1000,8 @@ int main(int argc, char *argv[])
         }
       }
     }
-    } }catch (AipsError& x) {
-    cout << x.getMesg() << endl;
+    } }catch (Exception& ex) {
+    cerr << ex << endl;
     return 1;
   }
   cout << "awimager normally ended" << endl;
