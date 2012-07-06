@@ -308,8 +308,6 @@ private:
 };
 
 
-
-
 //
 // class RSUCommand
 //
@@ -613,6 +611,27 @@ private:
 	bool itsStream0On;
 	bool itsStream1On;
 };
+
+//
+// class BitmodeCommand
+//
+class BitmodeCommand : public Command
+{
+public:
+	BitmodeCommand(GCFPortInterface& port);
+	virtual ~BitmodeCommand() {}
+	virtual void send();
+	virtual GCFEvent::TResult ack(GCFEvent& e);
+	void bitmode(const int	bitmode) { itsBitmode = bitmode; }
+	uint bitmode() const 			 { return itsBitmode; }
+	vector<uint> getBitmode() const    { return(itsBitmodeArray); }
+	vector<uint> getBitVersion() const { return(itsBitVersionArray); }
+private:
+	uint    		itsBitmode;
+	vector<uint>    itsBitmodeArray;
+	vector<uint>    itsBitVersionArray;
+};
+
 
 //
 // class RegisterStateCommand

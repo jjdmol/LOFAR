@@ -29,8 +29,7 @@ namespace LOFAR {
     //int maxBeamletsPerRSP(int bitsPerSample);
     //int maxBeamlets(int bitsPerSample);
     
-    
-    inline int maxBeamletsPerRSP(int bitsPerSample) {
+    inline static int maxBeamletsPerRSP(int bitsPerSample) {
 		assert(bitsPerSample >= MIN_BITS_PER_SAMPLE && bitsPerSample <= MAX_BITS_PER_SAMPLE && bitsPerSample%2==0);
         switch (bitsPerSample) {
           case 4:
@@ -42,7 +41,7 @@ namespace LOFAR {
 		}
     }
     
-    inline int maxBeamlets(int bitsPerSample) {
+    inline static int maxBeamlets(int bitsPerSample) {
         // 4 output lanes on one station
         return(4 * maxBeamletsPerRSP(bitsPerSample));
     }

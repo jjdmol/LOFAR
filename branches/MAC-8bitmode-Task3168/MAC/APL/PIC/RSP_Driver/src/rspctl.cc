@@ -501,7 +501,6 @@ GCFEvent::TResult RCUCommand::ack(GCFEvent& e)
 
 
 // Swap X Y on RCU
-
 SWAPXYCommand::SWAPXYCommand(GCFPortInterface& port) : Command(port)
 {
 }
@@ -572,6 +571,81 @@ GCFEvent::TResult SWAPXYCommand::ack(GCFEvent& e)
 
 			if (RSP_SUCCESS != ack.status) {
 				logMessage(cerr, "Error: RSP_SETSWAPXY command failed.");
+			}
+		}
+		break;
+
+		default:
+			status = GCFEvent::NOT_HANDLED;
+		break;
+	}
+
+	GCFScheduler::instance()->stop();
+
+	return status;
+}
+
+// Swap X Y on RCU
+BitmodeCommand::BitmodeCommand(GCFPortInterface& port) : Command(port)
+{
+}
+
+void BitmodeCommand::send()
+{
+	if (getMode()) {
+		// GET
+		RSPGetbitmodeEvent   getbitmode;
+		getbitmode.timestamp = Timestamp(0,0);
+		getbitmode.cache     = true;
+
+		m_rspport.send(getbitmode);
+	}
+	else {
+		// SET
+		RSPSetbitmodeEvent   setbitmode;
+		setbitmode.timestamp       = Timestamp(0,0);
+		setbitmode.rspmask         = getRSPMask();
+		setbitmode.bits_per_sample = bitmode();
+		m_rspport.send(setbitmode);
+	}
+}
+
+GCFEvent::TResult BitmodeCommand::ack(GCFEvent& e)
+{
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
+	switch (e.signal) {
+		case RSP_GETBITMODEACK: {
+			RSPGetbitmodeackEvent ack(e);
+
+			std::ostringstream msg;
+			msg << "setbitmodeack.timestamp=" << ack.timestamp;
+			logMessage(cout, msg.str());
+			msg.seekp(0);
+
+			if (ack.status != RSP_SUCCESS) {
+				logMessage(cerr, "Error: RSP_GETBitMode command failed.");
+				break;
+			}
+
+			// print bitmode settings
+			for (int rsp = 0; rsp < get_ndevices(); rsp++) {
+				if (getRSPMask().test(rsp)) {
+					cout << formatString("RSP[%02u]: %2d : %2d\n", rsp, ack.bitmode_version[rsp], ack.bits_per_sample[rsp]);
+				}
+			}
+		}
+		break;
+
+		case RSP_SETBITMODEACK: {
+			RSPSetbitmodeackEvent ack(e);
+
+			std::ostringstream msg;
+			msg << "setbitmodeack.timestamp=" << ack.timestamp;
+			logMessage(cout, msg.str());
+
+			if (RSP_SUCCESS != ack.status) {
+				logMessage(cerr, "Error: RSP_SETBitMode command failed.");
 			}
 		}
 		break;
@@ -3012,6 +3086,7 @@ static void usage(bool exportMode)
 	cout << "rspctl --splitter[=0|1]                        # set or get the status of the Serdes splitter" << endl;
 	cout << "rspctl --datastream[=0|1|2|3]                  # set or get the status of data stream to cep" << endl;
 	cout << "rspctl --swapxy[=0|1] [--select=<set>]         # set or get the status of xy swap, 0=normal, 1=swapped" << endl;
+	cout << "rspctl --bitmode[=4|8|16]                      # set or get the number of bits per sample" << endl;
 	if (exportMode) {
 	cout << endl;
 	cout << "--- Raw register control -------------------------------------------------------------------------------------" << endl;
@@ -3084,6 +3159,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		{ "wgmode",         required_argument, 0, 'G' },
 		{ "hbadelays",      optional_argument, 0, 'H' },
 		{ "specinv",        optional_argument, 0, 'I' },
+		{ "bitmode",        optional_argument, 0, 'K' },
 		{ "latency",        no_argument,       0, 'L' },
 		{ "phase",          required_argument, 0, 'P' },
 		{ "tdstatus",       no_argument,       0, 'Q' },
@@ -3104,7 +3180,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	realDelays = false;
 	while (1) {
 		int option_index = 0;
-		int c = getopt_long(argc, argv, "a::b:c::d:e::f:g::hi:l:m:n:p::qr::s::t::vw::xy:z::A:BC::D:E::G:H::I::LP:QR::ST::VX1:2:", long_options, &option_index);
+		int c = getopt_long(argc, argv, "a::b:c::d:e::g::hi:l:m:n:p::qr::s::t::vw::xy:z::A:BC::D:E::G:H::I::K::LP:QR::ST::VXY::Z::1:2:", long_options, &option_index);
 
 		if (c == -1) // end of argument list reached?
 			break;
@@ -3468,6 +3544,29 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
 		}
 		break;
+
+		case 'K': // bitmode
+		{
+			if (command)
+				delete command;
+			BitmodeCommand* bitmodecommand = new BitmodeCommand(*itsRSPDriver);
+			command = bitmodecommand;
+
+			command->set_ndevices(m_nrspboards);
+			select.clear();
+			for (int i = 0; i < m_nrspboards; ++i) {
+				select.push_back(i);
+			}
+
+			if (optarg) {
+				bitmodecommand->setMode(false);
+				int	bitmode = atoi(optarg);
+				if (bitmode != 4 && bitmode != 8 && bitmode & 16) {
+					logMessage(cerr, "Error: bitmode value can only be 4, 8 or 16");
+				}
+				bitmodecommand->bitmode(bitmode);
+			}
+		} break;
 
 		case 't': // --statistics
 		{
