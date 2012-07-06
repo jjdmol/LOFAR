@@ -20,14 +20,17 @@
 //#
 //# $Id: LofarBitModeInfo.h 21167 2012-06-08 13:36:34Z mol $
 
-#ifndef LOFAR_COMMON_BITMODEINFO_H
-#define LOFAR_COMMON_BITMODEINFO_H
+#ifndef LOFAR_COMMON_BITMODEINFO_H_
+#define LOFAR_COMMON_BITMODEINFO_H_
 
 #include <Common/LofarConstants.h>
 
 namespace LOFAR {
+    //int maxBeamletsPerRSP(int bitsPerSample);
+    //int maxBeamlets(int bitsPerSample);
     
-    int maxBeamletsPerRSP(int bitsPerSample) {
+    
+    inline int maxBeamletsPerRSP(int bitsPerSample) {
 		assert(bitsPerSample >= MIN_BITS_PER_SAMPLE && bitsPerSample <= MAX_BITS_PER_SAMPLE && bitsPerSample%2==0);
         switch (bitsPerSample) {
           case 4:
@@ -39,7 +42,7 @@ namespace LOFAR {
 		}
     }
     
-    int maxBeamlets(int bitsPerSample) {
+    inline int maxBeamlets(int bitsPerSample) {
         // 4 output lanes on one station
         return(4 * maxBeamletsPerRSP(bitsPerSample));
     }

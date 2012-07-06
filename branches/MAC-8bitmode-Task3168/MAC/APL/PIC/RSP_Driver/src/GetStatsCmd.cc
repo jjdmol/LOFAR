@@ -62,7 +62,7 @@ void GetStatsCmd::ack(CacheBuffer& cache)
 		ack.stats().resize(m_event->rcumask.count(), cache.getSubbandStats()().extent(secondDim));
 	}
 	else {
-		ack.stats().resize(m_event->rcumask.count(), maxBeamlets(cache.getBitMode()));
+		ack.stats().resize(m_event->rcumask.count(), maxBeamlets(cache.getBitsPerSample()));
 	}
 
 	unsigned int result_device = 0;
@@ -76,18 +76,18 @@ void GetStatsCmd::ack(CacheBuffer& cache)
 			case Statistics::BEAMLET_POWER:
 				// NOTE: MEPHeader::N_BEAMLETS = 4x62 but userside MAX_BEAMLETS may be different
 				//       In other words: getBeamletWeights can contain more data than ack.weights
-				if (MEPHeader::N_BEAMLETS == maxBeamlets(cache.getBitMode())) {
+				if (MEPHeader::N_BEAMLETS == maxBeamlets(cache.getBitsPerSample())) {
 					ack.stats()(result_device, Range::all()) = cache.getBeamletStats()()(cache_device, Range::all());
 				}
 				else {
 					for (int rsp = 0; rsp < 4; rsp++) {
-						int	swstart(rsp*maxBeamletsPerRSP(cache.getBitMode()));
+						int	swstart(rsp*maxBeamletsPerRSP(cache.getBitsPerSample()));
 						int hwstart(rsp*MEPHeader::N_BEAMLETS/4);
-						ack.stats()(result_device, Range(swstart,swstart+maxBeamletsPerRSP(cache.getBitMode())-1)) = 
-							cache.getBeamletStats()()(cache_device, Range(hwstart, hwstart+maxBeamletsPerRSP(cache.getBitMode())-1));
+						ack.stats()(result_device, Range(swstart,swstart+maxBeamletsPerRSP(cache.getBitsPerSample())-1)) = 
+							cache.getBeamletStats()()(cache_device, Range(hwstart, hwstart+maxBeamletsPerRSP(cache.getBitsPerSample())-1));
 						if (cache_device == 0) {
-							LOG_DEBUG_STR("Getstats:move(" << hwstart << ".." << hwstart+maxBeamletsPerRSP(cache.getBitMode()) << ") to (" 
-														   << swstart << ".." << swstart+maxBeamletsPerRSP(cache.getBitMode()) << ")");
+							LOG_DEBUG_STR("Getstats:move(" << hwstart << ".." << hwstart+maxBeamletsPerRSP(cache.getBitsPerSample()) << ") to (" 
+														   << swstart << ".." << swstart+maxBeamletsPerRSP(cache.getBitsPerSample()) << ")");
 						}
 					}
 				}

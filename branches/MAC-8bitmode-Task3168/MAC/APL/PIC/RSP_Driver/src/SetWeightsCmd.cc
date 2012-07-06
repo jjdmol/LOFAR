@@ -78,15 +78,15 @@ void SetWeightsCmd::apply(CacheBuffer& cache, bool setModFlag)
 		if (m_event->rcumask[cache_rcu]) {
 			// NOTE: MEPHeader::N_BEAMLETS = 4x62 but userside MAX_BEAMLETS may be different
 			//       In other words: getBeamletWeights can contain more data than ack.weights
-			if (MEPHeader::N_BEAMLETS == maxBeamlets(cache.getBitMode())) {
+			if (MEPHeader::N_BEAMLETS == maxBeamlets(cache.getBitsPerSample())) {
 				cache.getBeamletWeights()()(0, cache_rcu, Range::all()) = m_event->weights()(0, input_rcu, Range::all());
 			}
 			else {
 				for (int rsp = 0; rsp < 4; rsp++) {
-					int	swstart(rsp * maxBeamletsPerRSP(cache.getBitMode()));
+					int	swstart(rsp * maxBeamletsPerRSP(cache.getBitsPerSample()));
 					int hwstart(rsp*MEPHeader::N_BEAMLETS/4);
-					cache.getBeamletWeights()()(0, cache_rcu, Range(hwstart, hwstart+maxBeamletsPerRSP(cache.getBitMode())-1)) = 
-									m_event->weights()(0, input_rcu, Range(swstart,swstart+maxBeamletsPerRSP(cache.getBitMode())-1));
+					cache.getBeamletWeights()()(0, cache_rcu, Range(hwstart, hwstart+maxBeamletsPerRSP(cache.getBitsPerSample())-1)) = 
+									m_event->weights()(0, input_rcu, Range(swstart,swstart+maxBeamletsPerRSP(cache.getBitsPerSample())-1));
 				}
 			}
 

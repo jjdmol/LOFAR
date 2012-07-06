@@ -40,51 +40,63 @@ using namespace RTC;
 GetBitModeCmd::GetBitModeCmd(GCFEvent& event, GCFPortInterface& port, Operation oper) :
 	Command("GetBitMode", port, oper)
 {
-  itsEvent = new RSPGetbitmodeEvent(event);
+    itsEvent = new RSPGetbitmodeEvent(event);
 }
 
 GetBitModeCmd::~GetBitModeCmd()
 {
-  delete itsEvent;
+    delete itsEvent;
 }
 
 void GetBitModeCmd::ack(CacheBuffer& cache)
 {
-  RSPGetbitmodeackEvent ack;
+    RSPGetbitmodeackEvent ack;
 
-  ack.timestamp = getTimestamp();
-  ack.status = RSP_SUCCESS;
-  ack.bit_mode = cache.getBitMode();
-
-  getPort()->send(ack);
+    ack.timestamp = getTimestamp();
+    ack.status = RSP_SUCCESS;
+    for (int i = 0; i < StationSettings::instance()->nrRspBoards(); ++i) {
+        ack.bitmode_version[i] = cache.getBitModeInfo()()(i).bitmode;
+        
+        uint8 select = cache.getBitModeInfo()()(i).select;
+        if (select == 0) { 
+            ack.bits_per_sample[i] = 16;
+        }
+        else if (select == 1) {
+            ack.bits_per_sample[i] = 8;
+        }
+        else if (select == 2) {
+            ack.bits_per_sample[i] = 4;
+        }
+    }
+    getPort()->send(ack);
 }
 
 void GetBitModeCmd::apply(CacheBuffer& /*cache*/, bool /*setModFlag*/)
 {
-  /* intentionally left empty */
+    /* intentionally left empty */
 }
 
 void GetBitModeCmd::complete(CacheBuffer& cache)
 {
-  ack(cache);
+    ack(cache);
 }
 
 const RTC::Timestamp& GetBitModeCmd::getTimestamp() const
 {
-  return itsEvent->timestamp;
+    return itsEvent->timestamp;
 }
 
 void GetBitModeCmd::setTimestamp(const RTC::Timestamp& timestamp)
 {
-  itsEvent->timestamp = timestamp;
+    itsEvent->timestamp = timestamp;
 }
 
 bool GetBitModeCmd::validate() const
 {
-  return (true);
+    return (true);
 }
 
 bool GetBitModeCmd::readFromCache() const
 {
-  return itsEvent->cache;
+    return itsEvent->cache;
 }

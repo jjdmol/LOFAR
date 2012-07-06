@@ -28,6 +28,7 @@
 #include <Common/lofar_bitset.h>
 #include <Common/lofar_list.h>
 #include <Common/LofarConstants.h>
+#include <Common/LofarBitModeInfo.h>
 
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
@@ -39,6 +40,9 @@
 
 #include <complex>
 #include <blitz/array.h>
+#include <boost/dynamic_bitset.hpp>
+
+#define bitsPerSample 16
 
 namespace LOFAR {
 	using GCF::TM::GCFTask;
@@ -106,13 +110,12 @@ public:
 	}
 
 	// Get the mask (N_BEAMLETS bits).
-	bitset<MAX_BEAMLETS> getBEAMLETSMask() const {
-		bitset<MAX_BEAMLETS> mask;
-
+	boost::dynamic_bitset<> getBEAMLETSMask() const {
+        boost::dynamic_bitset<> mask(maxBeamlets(bitsPerSample));
 		mask.reset();
 		std::list<int>::const_iterator it;
 		for (it = m_beamlets.begin(); it != m_beamlets.end(); ++it) {
-			if (*it < MAX_BEAMLETS)
+			if (*it < maxBeamlets(bitsPerSample))
 				mask.set(*it);
 		}
 		return mask;

@@ -92,8 +92,8 @@ void UpdSubbandsCmd::complete(CacheBuffer& cache)
 	Range src_range;
 	switch (m_event->type) {
 	case SubbandSelection::BEAMLET:
-		ack.subbands().resize(m_event->rcumask.count(), maxBeamlets(cache.getBitMode()));
-		src_range = Range(MEPHeader::N_LOCAL_XLETS, MEPHeader::N_LOCAL_XLETS + maxBeamlets(cache.getBitMode()) - 1);
+		ack.subbands().resize(m_event->rcumask.count(), LOFAR::maxBeamlets(cache.getBitsPerSample()));
+		src_range = Range(MEPHeader::N_LOCAL_XLETS, MEPHeader::N_LOCAL_XLETS + LOFAR::maxBeamlets(cache.getBitsPerSample()) - 1);
 		break;
 
 	case SubbandSelection::XLET:
@@ -114,18 +114,18 @@ void UpdSubbandsCmd::complete(CacheBuffer& cache)
 		if (m_event->rcumask[cache_rcu]) {
 			// NOTE: MEPHeader::N_BEAMLETS = 4x62 but userside MAX_BEAMLETS may be different
 			//       In other words: getSubbandSelection can contain more data than ack.weights
-			if (MEPHeader::N_BEAMLETS == maxBeamlets(cache.getBitMode()) || m_event->type == SubbandSelection::XLET) {
+			if (MEPHeader::N_BEAMLETS == LOFAR::maxBeamlets(cache.getBitsPerSample()) || m_event->type == SubbandSelection::XLET) {
 				ack.subbands()(result_rcu, Range::all()) = cache.getSubbandSelection()()(cache_rcu, src_range);
 			}
 			else {
 				for (int rsp = 0; rsp < 4; rsp++) {
-					int	swstart(rsp*maxBeamletsPerRSP(cache.getBitMode()));
+					int	swstart(rsp*LOFAR::maxBeamletsPerRSP(cache.getBitsPerSample()));
 					int hwstart(MEPHeader::N_LOCAL_XLETS + rsp * (MEPHeader::N_BEAMLETS/4));
-					ack.subbands()(result_rcu, Range(swstart,swstart+maxBeamletsPerRSP(cache.getBitMode())-1)) = 
-							cache.getSubbandSelection()()(cache_rcu, Range(hwstart, hwstart+maxBeamletsPerRSP(cache.getBitMode())-1));
+					ack.subbands()(result_rcu, Range(swstart,swstart+LOFAR::maxBeamletsPerRSP(cache.getBitsPerSample())-1)) = 
+							cache.getSubbandSelection()()(cache_rcu, Range(hwstart, hwstart+LOFAR::maxBeamletsPerRSP(cache.getBitsPerSample())-1));
 					if (cache_rcu == 0) {
-						LOG_DEBUG_STR("UpdSubbands:move(" << hwstart << ".." << hwstart+maxBeamletsPerRSP(cache.getBitMode()) << ") to (" 
-														  << swstart << ".." << swstart+maxBeamletsPerRSP(cache.getBitMode()) << ")");
+						LOG_DEBUG_STR("UpdSubbands:move(" << hwstart << ".." << hwstart+LOFAR::maxBeamletsPerRSP(cache.getBitsPerSample()) << ") to (" 
+														  << swstart << ".." << swstart+LOFAR::maxBeamletsPerRSP(cache.getBitsPerSample()) << ")");
 					}
 				}
 			}

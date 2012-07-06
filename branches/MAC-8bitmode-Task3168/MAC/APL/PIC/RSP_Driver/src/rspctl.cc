@@ -192,9 +192,10 @@ void WeightsCommand::send()
 		setweights.rcumask   = getRCUMask();
 
 		logMessage(cerr,formatString("rcumask.count()=%d",setweights.rcumask.count()));
-		setweights.weights().resize(1, setweights.rcumask.count(), MAX_BEAMLETS);
+		setweights.weights().resize(1, setweights.rcumask.count(), maxBeamlets(bitsPerSample));
 
-		bitset<MAX_BEAMLETS> beamlet_mask = getBEAMLETSMask();
+		//bitset<maxBeamlets(bitsPerSample)> beamlet_mask = getBEAMLETSMask();
+		boost::dynamic_bitset<> beamlet_mask = getBEAMLETSMask();
 
 		// -1 < m_value <= 1
 		complex<double> value = m_value;
@@ -203,7 +204,7 @@ void WeightsCommand::send()
 		int rcunr = 0;
 		for (int rcu = 0; rcu < MAX_RCUS; rcu++) {
 			if (setweights.rcumask.test(rcu)) {
-				for (int beamlet = 0; beamlet < MAX_BEAMLETS; beamlet++) {
+				for (int beamlet = 0; beamlet < maxBeamlets(bitsPerSample); beamlet++) {
 					if (beamlet_mask.test(beamlet)) {
 						setweights.weights()(0,rcunr,beamlet) = complex<int16>((int16)value.real(), (int16)value.imag()); // complex<int16>((int16)value,0);
 					}
@@ -228,7 +229,7 @@ GCFEvent::TResult WeightsCommand::ack(GCFEvent& e)
 		case RSP_GETWEIGHTSACK: {
 			RSPGetweightsackEvent ack(e);
 			bitset<MAX_RCUS> mask = getRCUMask();
-			itsWeights.resize(1, mask.count(), MAX_BEAMLETS);
+			itsWeights.resize(1, mask.count(), maxBeamlets(bitsPerSample));
 			itsWeights = complex<int16>(0,0);
 			itsWeights = ack.weights();
 
@@ -327,7 +328,7 @@ void SubbandsCommand::send()
 		case SubbandSelection::BEAMLET:
 			{
 	if (1 == m_subbandlist.size()) {
-		setsubbands.subbands().resize(1, MAX_BEAMLETS);
+		setsubbands.subbands().resize(1, maxBeamlets(bitsPerSample));
 		std::list<int>::iterator it = m_subbandlist.begin();
 		setsubbands.subbands() = (*it);
 	} else {
@@ -337,11 +338,11 @@ void SubbandsCommand::send()
 		std::list<int>::iterator it;
 		for (it = m_subbandlist.begin(); it != m_subbandlist.end(); it++, i++)
 			{
-				if (i >= MAX_BEAMLETS) break;
+				if (i >= maxBeamlets(bitsPerSample)) break;
 				setsubbands.subbands()(0, i) = (*it);
 			}
 #if 0
-		for (; i < MAX_BEAMLETS; i++) {
+		for (; i < maxBeamlets(bitsPerSample); i++) {
 			setsubbands.subbands()(0, i) = 0;
 		}
 #endif
@@ -2047,7 +2048,7 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 				break;
 			case Statistics::BEAMLET_POWER:
 				gnuplot_cmd(handle, "set xlabel \"Beamlet index\"\n");
-				gnuplot_cmd(handle, "set xrange [0:%d]\n", MAX_BEAMLETS);
+				gnuplot_cmd(handle, "set xrange [0:%d]\n", maxBeamlets(bitsPerSample));
 				break;
 		}
 	}
@@ -2134,7 +2135,7 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 					break;
 				case Statistics::BEAMLET_POWER:
 					gnuplot_cmd(handle2, "set xlabel \"Beamlet index\"\n");
-					gnuplot_cmd(handle2, "set xrange [0:%d]\n", MAX_BEAMLETS);
+					gnuplot_cmd(handle2, "set xrange [0:%d]\n", maxBeamlets(bitsPerSample));
 					break;
 			}
 		}
@@ -3046,7 +3047,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		select.push_back(i);
 
 	beamlets.clear();
-	for (int i = 0; i < MAX_BEAMLETS; ++i)
+	for (int i = 0; i < maxBeamlets(bitsPerSample); ++i)
 		beamlets.push_back(i);
 
 	optind = 0; // reset option parsing
@@ -3132,7 +3133,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 					logMessage(cerr,"Error: 'command' argument should come before --beamlets argument");
 					exit(EXIT_FAILURE);
 				}
-				beamlets = strtolist(optarg, MAX_BEAMLETS);
+				beamlets = strtolist(optarg, maxBeamlets(bitsPerSample));
 				if (beamlets.empty()) {
 					logMessage(cerr,"Error: invalid or missing '--beamlets' option");
 					exit(EXIT_FAILURE);

@@ -60,14 +60,33 @@ void SetBitModeCmd::ack(CacheBuffer& /*cache*/)
 
 void SetBitModeCmd::apply(CacheBuffer& cache, bool setModFlag)
 {
-  cache.setBitMode(itsEvent->bit_mode);
-  LOG_INFO_STR(formatString("Setting bitmode to %d bits @ ", itsEvent->bit_mode) << getTimestamp());
-
-  if (setModFlag) {
-    for (int b = 0; b < StationSettings::instance()->nrRspBoards(); b++) {
-		cache.getCache().getState().sys().write(2*b); //TODO
-	}
-  }
+    int select;
+    switch (itsEvent->bits_per_sample) {
+        case 16:
+            select = 0;
+            break;
+        case 8:
+            select = 1;
+            break;
+        case 4:
+            select = 2;
+            break;
+        default: 
+            return;
+            break;
+    }
+    cache.setBitsPerSample(select); 
+    for (int i = 0; i < StationSettings::instance()->nrRspBoards(); ++i) {
+        cache.getBitModeInfo()()(i).select = (uint8)select;
+    }
+  
+    LOG_INFO_STR(formatString("Setting bitmode to %d bits @ ", itsEvent->bits_per_sample) << getTimestamp());
+    
+    if (setModFlag) {
+        for (int b = 0; b < StationSettings::instance()->nrRspBoards(); b++) {
+        	cache.getCache().getState().sys().write(2*b); //TODO
+        }
+    }
 }
 
 void SetBitModeCmd::complete(CacheBuffer& /*cache*/)
@@ -86,7 +105,7 @@ void SetBitModeCmd::setTimestamp(const Timestamp& timestamp)
 
 bool SetBitModeCmd::validate() const
 {
-  return (16 == itsEvent->bit_mode ||
-          8  == itsEvent->bit_mode ||
-          4  == itsEvent->bit_mode);
+  return (16 == itsEvent->bits_per_sample ||
+          8  == itsEvent->bits_per_sample ||
+          4  == itsEvent->bits_per_sample);
 }

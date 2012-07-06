@@ -140,6 +140,8 @@
 #include "RawBlockWrite.h"
 #include "LatencyRead.h"
 #include "TimestampWrite.h"
+#include "BMWrite.h"
+#include "BMRead.h"
 
 #include "RawEvent.h"
 #include "Sequencer.h"
@@ -377,6 +379,7 @@ bool RSPDriver::isBoardPort(GCFPortInterface& port)
  * Order is:
  * - STATUS  (RSP Status): read RSP status info   // StatusRead
  * - VERSION (RSP Status): read RSP version info  // VersionRead
+ * - BITMODE (RSP Status): read RSP nofbeam info  // BMRead
  * - TDS:     write TDS control settings          // TDSResultWrite/TDSProtocolWrite
  * - TDSSTATUS: read TDS status                   // TDSStatusWrite/TDSStatusRead
  * - RSU:     write RSU settings                  // RSUWrite
@@ -415,6 +418,11 @@ void RSPDriver::addAllSyncActions()
 			VersionsRead* versionread = new VersionsRead(m_boardPorts[boardid], boardid);
 			ASSERT(versionread);
 			m_scheduler.addSyncAction(versionread);
+		}
+		if (GET_CONFIG("RSPDriver.READ_BITMODE", i)) {
+			BMRead* bitmoderead = new BMRead(m_boardPorts[boardid], boardid);
+			ASSERT(bitmoderead);
+			m_scheduler.addSyncAction(bitmoderead);
 		}
 
 		// Schedule register writes for soft PPS if configured.
@@ -2541,7 +2549,7 @@ void RSPDriver::rsp_subBitMode(GCFEvent& event, GCFPortInterface& port)
 {
 	// subscription is done by entering a UpdSplitterCmd in the periodic queue
 	Ptr<UpdBitModeCmd> command = new UpdBitModeCmd(event, port, Command::READ);
-	RSPSubBitmodeackEvent ack;
+	RSPSubbitmodeackEvent ack;
 
 	if (!command->validate()) {
 		LOG_ERROR("SUBBITMODE: invalid parameter");

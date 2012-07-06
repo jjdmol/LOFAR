@@ -80,7 +80,7 @@ namespace LOFAR {
       UpdBitModeCmd();
 
       RSPSubbitmodeEvent* itsEvent;
-      uint16              itsCurrentBitMode;
+      uint16              itsCurrentBitsPerSample;
     };
   };
 };

@@ -22,8 +22,8 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-#include <Common/LofarConstants.h>
-#include <Common/lofar_bitset.h>
+//#include <Common/LofarConstants.h>
+//#include <Common/lofar_bitset.h>
 #include <Common/LofarBitModeInfo.h>
 
 #include "StationSettings.h"
@@ -128,6 +128,7 @@ CacheBuffer::~CacheBuffer()
   m_tbbsettings().free();
   m_bypasssettings().free();
   itsLatencys().free();
+  itsBitModeInfo().free();
 }
 
 void CacheBuffer::reset(void)
@@ -157,7 +158,7 @@ void CacheBuffer::reset(void)
 		for (int rcu = 0; rcu < m_subbandselection().extent(firstDim); rcu++) {
 			for (int rsp = 0; rsp < 4; rsp++) {
 				int	start(rsp*(MEPHeader::N_BEAMLETS/4));
-				int stop (start + maxBeamletsPerRSP(itsBitMode));
+				int stop (start + maxBeamletsPerRSP(itsBitsPerSample));
 				if (rcu==0) LOG_DEBUG_STR("start=" << start << ", stop=" << stop);
 				for (int sb = start; sb < stop; sb++) {
 					m_subbandselection()(rcu, sb + MEPHeader::N_LOCAL_XLETS) = (rcu%N_POL) + (sb*N_POL) + (firstSubband*2);
@@ -277,7 +278,13 @@ void CacheBuffer::reset(void)
 	itsSwappedXY.reset();
 	
 	// BitMode
-	itsBitMode = 16;
+	itsBitModeInfo().resize(StationSettings::instance()->nrRspBoards());
+	RSRNofbeam bitmodeinfo;
+	bitmodeinfo.select = 16;
+	bitmodeinfo.bitmode = 1;
+	bitmodeinfo.rounding = 0;
+	itsBitModeInfo() = bitmodeinfo;
+	itsBitsPerSample = 16;
 }
 
 
