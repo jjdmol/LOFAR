@@ -198,7 +198,7 @@ static const int RSP_RAW_BLOCK_SIZE = 1480;
 // UNSUBBITMODE 		(handle)
 // UNSUBBITMODEACK		(timestamp,	status,	handle)
 
-// 120 commands
+// 129 commands
 
 PRELUDE_END;
 
@@ -2335,6 +2335,10 @@ event = {
 		name = "timestamp";
 		type = "RTC::Timestamp";
 		userdefined;
+	};
+	param = {
+    	name = "rspmask";
+    	type = "bitset<MAX_N_RSPBOARDS>";
 	};
 	param = {
 		name = "bits_per_sample";
