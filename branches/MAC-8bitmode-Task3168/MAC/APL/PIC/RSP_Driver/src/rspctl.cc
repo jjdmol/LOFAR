@@ -192,7 +192,7 @@ void WeightsCommand::send()
 		setweights.rcumask   = getRCUMask();
 
 		logMessage(cerr,formatString("rcumask.count()=%d",setweights.rcumask.count()));
-		setweights.weights().resize(1, setweights.rcumask.count(), maxBeamlets(bitsPerSample));
+		setweights.weights().resize(1, setweights.rcumask.count(), maxBeamlets(itsBitsPerSample));
 
 		//bitset<maxBeamlets(bitsPerSample)> beamlet_mask = getBEAMLETSMask();
 		boost::dynamic_bitset<> beamlet_mask = getBEAMLETSMask();
@@ -202,9 +202,10 @@ void WeightsCommand::send()
 		value *= (1<<14); // -.99999 should become -16383 and 1 should become 16384
 		setweights.weights() = itsWeights;
 		int rcunr = 0;
+		int max_beamlets = maxBeamlets(itsBitsPerSample);
 		for (int rcu = 0; rcu < MAX_RCUS; rcu++) {
 			if (setweights.rcumask.test(rcu)) {
-				for (int beamlet = 0; beamlet < maxBeamlets(bitsPerSample); beamlet++) {
+				for (int beamlet = 0; beamlet < max_beamlets; beamlet++) {
 					if (beamlet_mask.test(beamlet)) {
 						setweights.weights()(0,rcunr,beamlet) = complex<int16>((int16)value.real(), (int16)value.imag()); // complex<int16>((int16)value,0);
 					}
@@ -229,7 +230,7 @@ GCFEvent::TResult WeightsCommand::ack(GCFEvent& e)
 		case RSP_GETWEIGHTSACK: {
 			RSPGetweightsackEvent ack(e);
 			bitset<MAX_RCUS> mask = getRCUMask();
-			itsWeights.resize(1, mask.count(), maxBeamlets(bitsPerSample));
+			itsWeights.resize(1, mask.count(), maxBeamlets(itsBitsPerSample));
 			itsWeights = complex<int16>(0,0);
 			itsWeights = ack.weights();
 
@@ -328,19 +329,21 @@ void SubbandsCommand::send()
 		case SubbandSelection::BEAMLET:
 			{
 	if (1 == m_subbandlist.size()) {
-		setsubbands.subbands().resize(1, maxBeamlets(bitsPerSample));
+		setsubbands.subbands().resize(1, maxBeamlets(itsBitsPerSample));
 		std::list<int>::iterator it = m_subbandlist.begin();
 		setsubbands.subbands() = (*it);
 	} else {
 		setsubbands.subbands().resize(1, m_subbandlist.size());
 
 		int i = 0;
+		int max_beamlets = maxBeamlets(itsBitsPerSample);
 		std::list<int>::iterator it;
-		for (it = m_subbandlist.begin(); it != m_subbandlist.end(); it++, i++)
-			{
-				if (i >= maxBeamlets(bitsPerSample)) break;
-				setsubbands.subbands()(0, i) = (*it);
+		for (it = m_subbandlist.begin(); it != m_subbandlist.end(); it++, i++) {
+			if (i >= max_beamlets) {
+				break;
 			}
+			setsubbands.subbands()(0, i) = (*it);
+		}
 #if 0
 		for (; i < maxBeamlets(bitsPerSample); i++) {
 			setsubbands.subbands()(0, i) = 0;
@@ -629,6 +632,7 @@ GCFEvent::TResult BitmodeCommand::ack(GCFEvent& e)
 			}
 
 			// print bitmode settings
+			cout << "board  :vers:mode\n";
 			for (int rsp = 0; rsp < get_ndevices(); rsp++) {
 				if (getRSPMask().test(rsp)) {
 					cout << formatString("RSP[%02u]: %2d : %2d\n", rsp, ack.bitmode_version[rsp], ack.bits_per_sample[rsp]);
@@ -2122,7 +2126,7 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 				break;
 			case Statistics::BEAMLET_POWER:
 				gnuplot_cmd(handle, "set xlabel \"Beamlet index\"\n");
-				gnuplot_cmd(handle, "set xrange [0:%d]\n", maxBeamlets(bitsPerSample));
+				gnuplot_cmd(handle, "set xrange [0:%d]\n", maxBeamlets(itsBitsPerSample));
 				break;
 		}
 	}
@@ -2209,7 +2213,7 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 					break;
 				case Statistics::BEAMLET_POWER:
 					gnuplot_cmd(handle2, "set xlabel \"Beamlet index\"\n");
-					gnuplot_cmd(handle2, "set xrange [0:%d]\n", maxBeamlets(bitsPerSample));
+					gnuplot_cmd(handle2, "set xrange [0:%d]\n", maxBeamlets(itsBitsPerSample));
 					break;
 			}
 		}
@@ -2656,13 +2660,17 @@ RSPCtl::~RSPCtl()
 GCFEvent::TResult RSPCtl::initial(GCFEvent& e, GCFPortInterface& port)
 {
 	LOG_DEBUG_STR ("initial:" << eventName(e) << "@" << port.getName());
-	GCFEvent::TResult status = GCFEvent::HANDLED;
 
 	switch(e.signal) {
 	case F_INIT:
 	break;
 
 	case F_ENTRY: {
+		if (m_argc == 1) {
+			usage(false);
+			exit(EXIT_FAILURE);
+		}
+
 		// setup a connection with the RSPDriver
 		if (!itsRSPDriver->isConnected()) {
 			itsRSPDriver->autoOpen(3,0,1); // try 3 times at 1 second interval
@@ -2716,11 +2724,10 @@ GCFEvent::TResult RSPCtl::initial(GCFEvent& e, GCFPortInterface& port)
 	break;
 
 	default:
-		status = GCFEvent::NOT_HANDLED;
-	break;
+		return(GCFEvent::NOT_HANDLED);
 	}
 
-	return status;
+	return (GCFEvent::HANDLED);
 }
 
 //
@@ -2945,6 +2952,8 @@ GCFEvent::TResult RSPCtl::doCommand(GCFEvent& e, GCFPortInterface& port)
 	case RSP_GETDATASTREAMACK:
 	case RSP_SETSWAPXYACK:
 	case RSP_GETSWAPXYACK:
+	case RSP_SETBITMODEACK:
+	case RSP_GETBITMODEACK:
 
 		status = itsCommand->ack(e); // handle the acknowledgement
 		gClockChanged = false;
@@ -3122,7 +3131,8 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 		select.push_back(i);
 
 	beamlets.clear();
-	for (int i = 0; i < maxBeamlets(bitsPerSample); ++i)
+	int max_beamlets = maxBeamlets(MAX_BITS_PER_SAMPLE);
+	for (int i = 0; i < max_beamlets; ++i)
 		beamlets.push_back(i);
 
 	optind = 0; // reset option parsing
@@ -3209,7 +3219,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 					logMessage(cerr,"Error: 'command' argument should come before --beamlets argument");
 					exit(EXIT_FAILURE);
 				}
-				beamlets = strtolist(optarg, maxBeamlets(bitsPerSample));
+				beamlets = strtolist(optarg, maxBeamlets(command->itsBitsPerSample));
 				if (beamlets.empty()) {
 					logMessage(cerr,"Error: invalid or missing '--beamlets' option");
 					exit(EXIT_FAILURE);

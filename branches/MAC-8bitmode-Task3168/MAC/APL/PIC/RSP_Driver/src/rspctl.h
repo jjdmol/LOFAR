@@ -42,8 +42,6 @@
 #include <blitz/array.h>
 #include <boost/dynamic_bitset.hpp>
 
-#define bitsPerSample 16
-
 namespace LOFAR {
 	using GCF::TM::GCFTask;
 	using GCF::TM::GCFPort;
@@ -111,12 +109,14 @@ public:
 
 	// Get the mask (N_BEAMLETS bits).
 	boost::dynamic_bitset<> getBEAMLETSMask() const {
-        boost::dynamic_bitset<> mask(maxBeamlets(bitsPerSample));
+		int	max_beamlets = maxBeamlets(itsBitsPerSample);
+        boost::dynamic_bitset<> mask(max_beamlets);
 		mask.reset();
 		std::list<int>::const_iterator it;
 		for (it = m_beamlets.begin(); it != m_beamlets.end(); ++it) {
-			if (*it < maxBeamlets(bitsPerSample))
+			if (*it < max_beamlets) {
 				mask.set(*it);
+			}
 		}
 		return mask;
 	}
@@ -182,8 +182,12 @@ public:
 		stream << message << endl;
 	}
 
+	// No need to keep this private.
+	int					itsBitsPerSample;
+
 protected:
 	explicit Command(GCFPortInterface& port) :
+		itsBitsPerSample(MAX_BITS_PER_SAMPLE),
 		m_rspport(port),
 		m_select(),
 		m_get(true),
