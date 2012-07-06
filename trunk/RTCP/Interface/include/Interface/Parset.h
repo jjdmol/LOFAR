@@ -998,7 +998,7 @@ inline unsigned Parset::totalNrPsets() const
   const std::string key = "OLAP.IONProc.psetList";
 
   if (isDefined(key)) {
-    return getUint32Vector(key,true).size();
+    return getStringVector(key,true).size();
   } else {
     LOG_WARN_STR( "Missing key " << key << ", using the used psets as a fallback");
     return usedPsets().size();
