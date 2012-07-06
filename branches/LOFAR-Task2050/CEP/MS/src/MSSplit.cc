@@ -203,7 +203,7 @@ int main(int argc, char** argv)
     }
     doIt (argv[1], argv[2], column);
   } catch (Exception& ex) {
-    cerr << "Unexpected expection: " << ex << endl;
+    cerr << "Unexpected exception: " << ex << endl;
     return 1;
   }
   return 0;

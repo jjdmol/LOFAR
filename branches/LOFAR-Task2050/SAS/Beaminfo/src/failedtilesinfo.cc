@@ -177,7 +177,7 @@ int main (int argc, char* argv[])
   }
   catch (Exception& x)
   {
-    LOG_FATAL_STR(x);
+    LOG_FATAL_STR("Unexpected exception: " << x);
     return 1;
   }
   

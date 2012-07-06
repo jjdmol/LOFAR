@@ -82,7 +82,7 @@ int main (int	argc, char*	argv[]) {
 		cout << "TreeID of new PICtree = " << treeID << endl;
 	}
 	catch (Exception&	ex) {
-		cerr << ex << endl;
+		cerr << "Unexpected exception: " << ex << endl;
 		return (1);		// return !0 on failure
 	}
 

@@ -81,7 +81,7 @@ int main (int argc, char* argv[])
    BeamTables::create (ms, overwrite);
     BeamTables::fill   (ms, antSet, antSetFile, antFieldDir, hbaDeltaDir, true);
   } catch (Exception& x) {
-    cerr << x << endl;
+    cerr << "Unexpected exception: " << x << endl;
     return 1;
   }
   return 0;

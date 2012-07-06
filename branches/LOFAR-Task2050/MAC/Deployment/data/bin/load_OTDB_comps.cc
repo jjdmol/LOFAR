@@ -124,7 +124,7 @@ int main (int	argc, char*	argv[]) {
 		}
 	}
 	catch (Exception&	ex) {
-		cerr << ex << endl;
+		cerr << "Unexpected exception: " << ex << endl;
 		return (1);		// return !0 on failure
 	}
 

@@ -55,7 +55,7 @@ int main (int argc, char* argv[])
     // Read the failed tile info and write into MS.
     FailedTileInfo::failedTiles2MS (msName, beforeName, duringName);
   } catch (Exception& ex) {
-    cerr << ex << endl;
+    cerr << "Unexpected exception: " << ex << endl;
     return 1;
   }
   return 0;

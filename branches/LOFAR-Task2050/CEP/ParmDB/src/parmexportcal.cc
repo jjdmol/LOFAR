@@ -287,7 +287,7 @@ int main (int argc, char *argv[])
     // Do the export.
     doIt (nameIn, nameOut, append, skipLast, amplPerc, parmType);
   } catch (Exception& ex) {
-    cerr << ex << endl;
+    cerr << "Caught exception: " << ex << endl;
     return 1;
   }
   

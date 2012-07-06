@@ -79,7 +79,7 @@ int main()
       showPos(pos);
     }
   } catch (Exception& e) {
-    cerr << e << endl;
+    cerr << "Exception: " << e << endl;
     return 1;
   }
   return 0;

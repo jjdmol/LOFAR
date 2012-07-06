@@ -957,7 +957,7 @@ void doIt (bool noPrompt, ostream& ostr)
         }
       }
     } catch (Exception& ex) {
-      cerr << ex << endl;
+      cerr << "Exception: " << ex << endl;
     }
   }
   delete parmtab;
@@ -979,7 +979,7 @@ int main (int argc, char *argv[])
     // Print an extra line to be sure the shell prompt is at a new line.
     cout << endl;
   } catch (Exception& ex) {
-    cerr << ex << endl;
+    cerr << "Caught exception: " << ex << endl;
     return 1;
   }
   

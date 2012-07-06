@@ -219,7 +219,7 @@ int main (int argc, const char* argv[])
       makeFromFile (argv[st], workers, cluster, type);
     }
   } catch (Exception& ex) {
-    cerr << ex << endl;
+    cerr << "Unexpected exception: " << ex << endl;
     return 1;
   }
   return 0;
