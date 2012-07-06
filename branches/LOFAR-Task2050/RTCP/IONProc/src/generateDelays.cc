@@ -157,7 +157,7 @@ int main(int argc, char *argv[])
     free(station);
     free(parset);
   } catch (Exception &ex) {
-    cerr << "Caught Exception: " << ex.what() << endl;
+    cerr << "Caught Exception: " << ex << endl;
     return 1;
   }
 

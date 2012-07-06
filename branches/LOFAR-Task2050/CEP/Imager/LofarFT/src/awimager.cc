@@ -91,7 +91,7 @@ Quantity readQuantity (const String& in)
 {
   Quantity res;
   if (!Quantity::read(res, in)) {
-    THROW(AWImagerException, in << " is an illegal quantity");
+    THROW(AWImagerException, in + " is an illegal quantity");
   }
   return res;
 }
@@ -100,12 +100,12 @@ MDirection readDirection (const String& in)
 {
   Vector<String> vals = stringToVector(in);
   if (vals.size() > 3) {
-    THROW(AWImagerException, "MDirection value " << in << " is invalid;"
+    THROW(AWImagerException, "MDirection value " + in + " is invalid;"
 		     " up to 3 values can be given");
   }
   MDirection::Types tp;
   if (! MDirection::getType (tp, vals[0])) {
-    THROW(AWImagerException, vals[0] << " is an invalid MDirection type");
+    THROW(AWImagerException, vals[0] + " is an invalid MDirection type");
   }
   Quantity v0(0, "deg");
   Quantity v1(90, "deg");     // same default as in measures.g
@@ -155,7 +155,7 @@ Matrix<Bool> readMueller (const String& str, String stokes, Bool grid)
     if (s == "BAND1") {
       mat(0,3) = mat(1,4) = mat(3,0) = mat(4,1) = False;
     } else if (s != "BAND2") {
-      THROW(AWImagerException, str << " is an invalid Mueller specification");
+      THROW(AWImagerException, str + " is an invalid Mueller specification");
     }
   }
   if((stokes=="I")&&(grid)){

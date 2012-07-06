@@ -29,14 +29,9 @@
 namespace LOFAR
 {
   //
-  // Exception for the LofarFT package.
-  //
-  EXCEPTION_CLASS(LofarFTException, Exception);
-
-  //
   // Exception for the AWImager.
   //
-  EXCEPTION_CLASS(AWImagerException, LofarFTException);
+  EXCEPTION_CLASS(AWImagerException, Exception);
 
 } // namespace LOFAR
 
