@@ -124,12 +124,14 @@ static void performStationFilter(InverseFilteredData& originalData, std::vector<
   }
 }
 
+#if 0
 static void printData(InverseFilteredData& data) {
   for (unsigned time = 0; time < nrSamplesPerIntegration * onStationFilterSize; time++) {
     float sample = data.samples[time];
     fprintf(stdout, "%20.10lf\n", sample);
   }
 }
+#endif
 
 #if 0
 static void cepFilterTest() {
@@ -275,7 +277,7 @@ int main() {
   for (unsigned sb = 0; sb < nrSubbands; sb ++)
     subbandList[sb] = sb;
 
-  InversePPF inversePPF(subbandList, nrSamplesPerIntegration, nrTaps, onStationFilterSize, true);
+  InversePPF inversePPF(subbandList, nrSamplesPerIntegration, true);
   initFFT();
 
 //  fftTest();

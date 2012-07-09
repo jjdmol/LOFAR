@@ -91,12 +91,19 @@
 #define fftw_imag(x)     (c_im(x))
 #endif
 
+#define ON_STATION_FILTER_SIZE 1024
+#define ON_STATION_FILTER_TAPS 16
+
+
+#define USE_FFT_HALF_COMPLEX 1
+
+
 namespace LOFAR {
 namespace RTCP {
 
 class InversePPF: boost::noncopyable {
 public:
-  InversePPF(std::vector<unsigned>& subbandList, unsigned nrSamplesPerIntegration, unsigned nrTaps, unsigned onStationFilterSize, bool verbose);
+  InversePPF(std::vector<unsigned>& subbandList, unsigned nrSamplesPerIntegration, bool verbose);
   ~InversePPF();
 
   void performInversePPF(const TransposedBeamFormedData& transposedBeamFormedData, InverseFilteredData& inverseFilteredData);
@@ -124,11 +131,10 @@ private:
 
   std::vector<unsigned>& itsSubbandList;
   unsigned itsNrSubbands;
-  unsigned itsNrTaps; // 16
   unsigned itsNrSamplesPerIntegration;
-  unsigned itsOnStationFilterSize; // 1024
 
   bool itsVerbose;
+  bool itsSubbandsAreContiguous;
 };
 
 } // namespace RTCP
