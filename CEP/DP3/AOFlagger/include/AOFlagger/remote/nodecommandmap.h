@@ -42,12 +42,20 @@ class NodeCommandMap
 			}
 		}
 		
+		const ClusteredObservationItem &Top(const std::string &hostname) const
+		{
+			NodeMap::const_iterator iter = _nodeMap.find(hostname);
+			const std::deque<ClusteredObservationItem> &items = iter->second;
+			return items.front();
+		}
+		
 		/**
 		 * Removes the top clustered observation item ('command') from the node map and
-		 * returns it.
+		 * returns it. The item can be re-requested by calling Current(), until the GetNext()
+		 * is called again or the host is removed.
 		 * @returns @c true when the node had another item ('command')
 		 */
-		bool GetNext(const std::string &hostname, ClusteredObservationItem &item)
+		bool Pop(const std::string &hostname, ClusteredObservationItem &item)
 		{
 			NodeMap::iterator iter = _nodeMap.find(hostname);
 			if(iter == _nodeMap.end())
@@ -65,6 +73,7 @@ class NodeCommandMap
 				{
 					item = items.front();
 					items.pop_front();
+					_lastItem[hostname] = item;
 					return true;
 				}
 			}
@@ -72,20 +81,13 @@ class NodeCommandMap
 		
 		/**
 		 * Removes all commands that had to be executed for the given node.
+		 * Also removes the 'current' item for this host.
 		 * @returns @c true when the hostname was found and removed.
 		 */
 		bool RemoveNode(const std::string &hostname)
 		{
-			NodeMap::iterator iter = _nodeMap.find(hostname);
-			if(iter == _nodeMap.end())
-			{
-				// There were no more commands for this client
-				return false;
-			}
-			else {
-				_nodeMap.erase(iter);
-				return true;
-			}
+			_lastItem.erase(hostname);
+			return _nodeMap.erase(hostname) != 0;
 		}
 		
 		bool Empty() const
@@ -104,14 +106,22 @@ class NodeCommandMap
 			}
 		}
 		
-		std::string CurrentFilename(const std::string &hostname) const
+		bool Current(const std::string &hostname, ClusteredObservationItem &item) const
 		{
-			NodeMap::const_iterator iter = _nodeMap.find(hostname);
-			return iter->second.front().LocalPath();
+			std::map<std::string, ClusteredObservationItem>::const_iterator iter = _lastItem.find(hostname);
+			if(iter == _lastItem.end())
+				return false;
+			else
+			{
+				item = iter->second;
+				return true;
+			}
 		}
 	private:
 		typedef std::map<std::string, std::deque<ClusteredObservationItem> > NodeMap;
 		NodeMap _nodeMap;
+		
+		std::map<std::string, ClusteredObservationItem> _lastItem;
 };
 
 }

@@ -84,7 +84,7 @@ void ProcessCommander::continueReadQualityTablesTask(ServerConnectionPtr serverC
 	
 	boost::mutex::scoped_lock lock(_mutex);
 	ClusteredObservationItem item;
-	if(_nodeCommands.GetNext(hostname, item))
+	if(_nodeCommands.Pop(hostname, item))
 	{
 		const std::string msFilename = item.LocalPath();
 		StatisticsCollection *statisticsCollection = new StatisticsCollection();
@@ -109,7 +109,7 @@ void ProcessCommander::continueReadAntennaTablesTask(ServerConnectionPtr serverC
 	
 	const std::string &hostname = serverConnection->Hostname();
 	std::vector<AntennaInfo> *antennas = new std::vector<AntennaInfo>();
-	serverConnection->ReadAntennaTables(_nodeCommands.CurrentFilename(hostname), *antennas);
+	serverConnection->ReadAntennaTables(_nodeCommands.Top(hostname).LocalPath(), *antennas);
 }
 
 void ProcessCommander::continueReadDataRowsTask(ServerConnectionPtr serverConnection)
@@ -208,9 +208,14 @@ void ProcessCommander::onConnectionFinishReadDataRows(ServerConnectionPtr server
 void ProcessCommander::onError(ServerConnectionPtr connection, const std::string &error)
 {
 	std::stringstream s;
-	s
-		<< "On connection with " << connection->Hostname()
-		<< ", reported error was: " << error;
+	
+	const std::string &hostname = connection->Hostname();
+	ClusteredObservationItem item;
+	bool knowFile = _nodeCommands.Current(hostname, item);
+	s << "On connection with " << hostname;
+	if(knowFile)
+		s << " to process local file '" << item.LocalPath() << "'";
+	s << ", reported error was: " << error;
 	boost::mutex::scoped_lock lock(_mutex);
 	_errors.push_back(s.str());
 }
