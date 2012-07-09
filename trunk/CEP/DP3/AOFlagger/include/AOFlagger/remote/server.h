@@ -34,12 +34,29 @@ class StatisticsCollection;
 
 namespace aoRemote {
 
+/**
+	* A server can listen for incoming connections on a TCP port. When incoming connections are created,
+	* the class will spawn ServerConnection instances. All operations are asynchroneous.
+	* @see ServerConnection
+	*/
 class Server
 {
 	public:
+		/** After the Server has been constructed, incoming connections will no longer be refused. Only after
+		 * Run() has been called, the connections will actually be accepted.
+		 */
 		Server();
 		
+		/**
+		 * Open the server so that it will accept connections on the specific TCP port. Will not return
+		 * untill the server has been stopped by calling Stop().
+		 */
 		void Run();
+		
+		/**
+		 * Stop listening for connections. This will cause Run() to return. Note that this will not terminate
+		 * any currently running connections; it will merely stop accepting new connections.
+		 */
 		void Stop();
 		
 		static unsigned PORT() { return 1892; }
