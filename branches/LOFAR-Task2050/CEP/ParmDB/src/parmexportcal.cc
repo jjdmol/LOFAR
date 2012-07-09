@@ -286,8 +286,11 @@ int main (int argc, char *argv[])
     }
     // Do the export.
     doIt (nameIn, nameOut, append, skipLast, amplPerc, parmType);
-  } catch (Exception& ex) {
-    cerr << "Caught exception: " << ex << endl;
+  } catch (LOFAR::Exception& ex) {
+    cerr << "Caught LOFAR exception: " << ex << endl;
+    return 1;
+  } catch (casa::AipsError& ex) {
+    cerr << "Caught AIPS error: " << ex.what() << endl;
     return 1;
   }
   

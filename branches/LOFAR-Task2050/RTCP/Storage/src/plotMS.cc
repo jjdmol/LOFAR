@@ -173,8 +173,11 @@ int main(int argc, char *argv[])
 
     }
 
-  } catch (Exception &ex) {
-    LOG_FATAL_STR("[obs unknown] Caught Exception: " << ex);
+  } catch (LOFAR::Exception &ex) {
+    LOG_FATAL_STR("[obs unknown] Caught LOFAR Exception: " << ex);
+    return 1;
+  } catch (casa::AipsError& ex) {
+    LOG_FATAL_STR("[obs unknown] Caught Aips Error: " << ex.what());
     return 1;
   }
 

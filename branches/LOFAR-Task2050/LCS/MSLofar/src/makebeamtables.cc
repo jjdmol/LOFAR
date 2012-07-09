@@ -22,7 +22,6 @@
 //# @author Ger van Diepen
 
 #include <lofar_config.h>
-#include <Common/Exception.h>
 #include <MSLofar/BeamTables.h>
 #include <casa/Inputs.h>
 #include <tables/Tables/ScalarColumn.h>
@@ -30,9 +29,6 @@
 
 using namespace LOFAR;
 using namespace casa;
-
-// Use a terminate handler that can produce a backtrace.
-Exception::TerminateHandler t(Exception::terminate);
 
 int main (int argc, char* argv[])
 {
@@ -81,7 +77,10 @@ int main (int argc, char* argv[])
    BeamTables::create (ms, overwrite);
     BeamTables::fill   (ms, antSet, antSetFile, antFieldDir, hbaDeltaDir, true);
   } catch (Exception& x) {
-    cerr << "Unexpected exception: " << x << endl;
+    cerr << "Unexpected LOFAR exception: " << x << endl;
+    return 1;
+  } catch (std::exception& x) {
+    cerr << "Unexpected exception: " << x.what() << endl;
     return 1;
   }
   return 0;
