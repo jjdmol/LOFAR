@@ -128,9 +128,8 @@ void AOQPlotWindow::readStatistics(bool downsampleTime, bool downsampleFreq, siz
 		_statCollection = new StatisticsCollection();
 		_histCollection = new HistogramCollection();
 		aoRemote::ProcessCommander commander(*observation);
-		commander.SetCorrectHistograms(correctHistograms);
 		commander.PushReadAntennaTablesTask();
-		commander.PushReadQualityTablesTask(_statCollection, _histCollection);
+		commander.PushReadQualityTablesTask(_statCollection, _histCollection, correctHistograms);
 		commander.Run();
 		if(!commander.Errors().empty())
 		{
