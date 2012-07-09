@@ -106,7 +106,7 @@ public:
 	void setI2Cuser(I2Cuser user) { itsI2Cuser = user; }
 	
 	int getBitsPerSample() { return itsBitsPerSample; }
-	void  setBitsPerSample(int bits) { itsBitsPerSample = bits; }
+	void setBitsPerSample(int bits) { itsBitsPerSample = bits; }
 	/*@}*/
     
     

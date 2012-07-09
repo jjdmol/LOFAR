@@ -22,8 +22,8 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-//#include <Common/LofarConstants.h>
-//#include <Common/lofar_bitset.h>
+#include <Common/LofarConstants.h>
+#include <Common/lofar_bitset.h>
 #include <Common/LofarBitModeInfo.h>
 
 #include "StationSettings.h"
@@ -140,6 +140,8 @@ void CacheBuffer::reset(void)
 	tv.tv_sec = 0; tv.tv_usec = 0;
 	m_timestamp.set(tv);
 
+    itsBitsPerSample = 16;
+	
 	m_beamletweights().resize(BeamletWeights::SINGLE_TIMESTEP, StationSettings::instance()->nrRcus(), MEPHeader::N_BEAMLETS);
 	m_beamletweights() = complex<int16>(0,0);
 
@@ -280,11 +282,11 @@ void CacheBuffer::reset(void)
 	// BitMode
 	itsBitModeInfo().resize(StationSettings::instance()->nrRspBoards());
 	RSRNofbeam bitmodeinfo;
-	bitmodeinfo.select = 16;
+	bitmodeinfo.select = 0;
 	bitmodeinfo.bitmode = 1;
 	bitmodeinfo.rounding = 0;
 	itsBitModeInfo() = bitmodeinfo;
-	itsBitsPerSample = 16;
+	
 }
 
 

@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/LofarBitModeInfo.h>
 
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
@@ -192,7 +193,9 @@ void CDOWrite::sendrequest()
 		cdo.ffi              = 0xDDCC;
 
 		cdo.nof_blocks       = GET_CONFIG("RSPDriver.CDO_N_BLOCKS", i);
-		cdo.nof_beamlets     = GET_CONFIG("RSPDriver.CDO_N_BEAMLETS", i);
+		
+		//GET_CONFIG("RSPDriver.CDO_N_BEAMLETS", i);
+		cdo.nof_beamlets     = maxDataslotsPerRSP(Cache::getInstance().getBack().getBitsPerSample());
 
 		if (output_lane >= 0) {
 

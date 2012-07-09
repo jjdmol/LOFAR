@@ -145,6 +145,7 @@
 
 #include "RawEvent.h"
 #include "Sequencer.h"
+#include "Cache.h"
 #include <RSP_Driver/Package__Version.h>
 
 #ifdef HAVE_UNISTD_H
@@ -161,8 +162,6 @@
 
 #define ETHERTYPE_EPA 0x10FA
 #define PPS_FETCH_TIMEOUT { 3, 0 }
-#define bitsPerSample 16
-
 
 namespace LOFAR {
 	using namespace GCF::TM;
@@ -420,6 +419,10 @@ void RSPDriver::addAllSyncActions()
 			m_scheduler.addSyncAction(versionread);
 		}
 		if (GET_CONFIG("RSPDriver.READ_BITMODE", i)) {
+			BMWrite* bitmodewrite = new BMWrite(m_boardPorts[boardid], boardid);
+			ASSERT(bitmodewrite);
+			m_scheduler.addSyncAction(bitmodewrite);
+			
 			BMRead* bitmoderead = new BMRead(m_boardPorts[boardid], boardid);
 			ASSERT(bitmoderead);
 			m_scheduler.addSyncAction(bitmoderead);
@@ -1237,7 +1240,7 @@ void RSPDriver::rsp_setweights(GCFEvent& event, GCFPortInterface& port)
 	if ((sw_event->weights().dimensions() != BeamletWeights::NDIM)
 		|| (sw_event->weights().extent(firstDim) < 1)
 		|| (sw_event->weights().extent(secondDim) > StationSettings::instance()->nrRcus())
-		|| (sw_event->weights().extent(thirdDim) != maxBeamlets(bitsPerSample))) {
+		|| (sw_event->weights().extent(thirdDim) != maxBeamlets(Cache::getInstance().getBack().getBitsPerSample()))) {
 		LOG_ERROR(formatString("SETWEIGHTS: invalid parameter,weighs-size=(%d,%d,%d)", 
 			sw_event->weights().extent(firstDim), 
 			sw_event->weights().extent(secondDim), 

@@ -635,11 +635,24 @@ GCFEvent::TResult BitmodeCommand::ack(GCFEvent& e)
 			}
 
 			// print bitmode settings
-			cout << "board  :vers:mode\n";
+			cout << "board  :version :mode\n";
 			for (int rsp = 0; rsp < get_ndevices(); rsp++) {
 				if (getRSPMask().test(rsp)) {
 					// note: version: 1=16 bit, 2=16/8 bit and 4=16/8/4/ bit
-					cout << formatString("RSP[%02u]: %2d : %2d\n", rsp, 16/ack.bitmode_version[rsp], ack.bits_per_sample[rsp]);
+					switch (ack.bitmode_version[rsp]) {
+					    case 1:
+					        cout << formatString("RSP[%02u]: 16     : %2d\n", rsp, ack.bits_per_sample[rsp]);
+					        break;
+					    case 2:
+					        cout << formatString("RSP[%02u]: 16/8   : %2d\n", rsp, ack.bits_per_sample[rsp]);
+					        break;
+					    case 4:
+					        cout << formatString("RSP[%02u]: 16/8/4 : %2d\n", rsp, ack.bits_per_sample[rsp]);
+					        break;
+					    default: break;    
+					}
+					
+					//cout << formatString("RSP[%02u]: %2d : %2d\n", rsp, 16/ack.bitmode_version[rsp], ack.bits_per_sample[rsp]);
 				}
 			}
 		}

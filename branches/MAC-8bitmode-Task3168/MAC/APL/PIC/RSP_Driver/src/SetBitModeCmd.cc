@@ -75,16 +75,20 @@ void SetBitModeCmd::apply(CacheBuffer& cache, bool setModFlag)
             return;
             break;
     }
-    cache.setBitsPerSample(select); 
+    cache.setBitsPerSample(itsEvent->bits_per_sample); 
     for (int i = 0; i < StationSettings::instance()->nrRspBoards(); ++i) {
-        cache.getBitModeInfo()()(i).select = (uint8)select;
+        if (itsEvent->rspmask.test(i)) {
+            cache.getBitModeInfo()()(i).select = (uint8)select;
+        }
     }
   
     LOG_INFO_STR(formatString("Setting bitmode to %d bits @ ", itsEvent->bits_per_sample) << getTimestamp());
     
     if (setModFlag) {
         for (int b = 0; b < StationSettings::instance()->nrRspBoards(); b++) {
-        	cache.getCache().getState().sys().write(2*b); //TODO
+        	cache.getCache().getState().bmState().write(b);
+        	cache.getCache().getState().cdo().write(2*b);
+			cache.getCache().getState().cdo().write(2*b+1);
         }
     }
 }

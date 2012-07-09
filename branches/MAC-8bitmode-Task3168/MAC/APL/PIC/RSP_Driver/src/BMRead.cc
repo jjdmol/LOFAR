@@ -56,6 +56,7 @@ void BMRead::sendrequest()
 
   itsHdr = bmread.hdr;
   getBoardPort().send(bmread);
+  LOG_DEBUG_STR("BMRead::sendrequest() done");
 }
 
 void BMRead::sendrequest_status()
@@ -74,6 +75,9 @@ GCFEvent::TResult BMRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
   // unpack bm message
   EPARsrNofbeamEvent bm(event);
 
+  LOG_DEBUG_STR(formatString("BM select  = %d", bm.nofbeam.select));
+  LOG_DEBUG_STR(formatString("BM bitmode = %d", bm.nofbeam.bitmode));
+
   if (!bm.hdr.isValidAck(itsHdr))
   {
     LOG_ERROR("BMRead::handleack: invalid ack");
@@ -87,6 +91,7 @@ GCFEvent::TResult BMRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
   
   Cache::getInstance().getBack().getBitModeInfo()()(getBoardId()).select = bm.nofbeam.select;
   Cache::getInstance().getBack().getBitModeInfo()()(getBoardId()).bitmode = bm.nofbeam.bitmode;
-
+  
+  LOG_DEBUG_STR("BMRead::handleack() done");
   return GCFEvent::HANDLED;
 }

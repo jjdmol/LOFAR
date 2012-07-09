@@ -40,7 +40,7 @@ using namespace RSP;
 using namespace RTC;
 
 BMWrite::BMWrite(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, NR_BLPS_PER_RSPBOARD + 1)
+  : SyncAction(board_port, board_id, 1)
 {
   memset(&itsHdr, 0, sizeof(MEPHeader));
 }
@@ -52,18 +52,22 @@ BMWrite::~BMWrite()
 
 void BMWrite::sendrequest()
 {
-  uint8 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) + getCurrentIndex();
-  LOG_DEBUG(formatString(">>>> BMWrite(%s) global_blp=%d",
+  LOG_DEBUG(formatString(">>>> BMWrite(%s) boardId=%d",
 			 getBoardPort().getName().c_str(),
-			 global_blp));
+			 getBoardId()));
 
-  // mark modified
-  //Cache::getInstance().getState().ss().write_now(global_blp);
+  // skip update if the neither of the RCU's settings have been modified
+  if (RTC::RegisterState::WRITE != Cache::getInstance().getState().bmState().get(getBoardId())) {
+    Cache::getInstance().getState().bmState().unmodified(getBoardId());
+    setContinue(true);
+
+    return;
+  }
     
   // send subband select message
   EPARsrNofbeamEvent bm;
   bm.hdr.set(MEPHeader::RSR_NOFBEAM_HDR,
-             0 == getCurrentIndex() ? MEPHeader::DST_RSP : 1 << (getCurrentIndex() - 1));
+             MEPHeader::DST_ALL);
     
   bm.nofbeam.select = Cache::getInstance().getBack().getBitModeInfo()()(getBoardId()).select;
   
@@ -78,25 +82,22 @@ void BMWrite::sendrequest_status()
 
 GCFEvent::TResult BMWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  if (EPA_RSR_NOFBEAM != event.signal)
+  if (EPA_WRITEACK != event.signal)
   {
     LOG_WARN("BMWrite::handleack: unexpected ack");
     return GCFEvent::NOT_HANDLED;
   }
 
-  EPARsrNofbeamEvent bm(event);
-
-  //uint8 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) + getCurrentIndex();
+  EPAWriteackEvent bm(event);
 
   if (!bm.hdr.isValidAck(itsHdr))
   {
-    //Cache::getInstance().getState().ss().write_error(global_blp);
-
+    Cache::getInstance().getState().bmState().write_error(getBoardId());
     LOG_ERROR("BMWrite::handleack: invalid ack");
     return GCFEvent::NOT_HANDLED;
   }
 
-  //Cache::getInstance().getState().ss().write_ack(global_blp);
+  Cache::getInstance().getState().bmState().write_ack(getBoardId());
   
   return GCFEvent::HANDLED;
 }

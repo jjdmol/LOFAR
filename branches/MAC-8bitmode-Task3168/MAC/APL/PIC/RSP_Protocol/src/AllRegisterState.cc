@@ -62,7 +62,8 @@ size_t AllRegisterState::getSize() const
 	+ rawdatawrite_state.getSize()
 	+ rawdataread_state.getSize()
 	+ itsSerdesWriteState.getSize()
-	+ itsSerdesReadState.getSize();
+	+ itsSerdesReadState.getSize()
+	+ itsBitModeWriteState.getSize();
 }
 
 size_t AllRegisterState::pack  (char* buffer) const
@@ -98,6 +99,7 @@ size_t AllRegisterState::pack  (char* buffer) const
 	offset += rawdataread_state.pack(buffer + offset);
 	offset += itsSerdesWriteState.pack(buffer + offset);
 	offset += itsSerdesReadState.pack(buffer + offset);
+	offset += itsBitModeWriteState.pack(buffer + offset);
 
 	return (offset);
 }
@@ -135,6 +137,7 @@ size_t AllRegisterState::unpack(const char *buffer)
 	offset += rawdataread_state.unpack(buffer + offset);
 	offset += itsSerdesWriteState.unpack(buffer + offset);
 	offset += itsSerdesReadState.unpack(buffer + offset);
+	offset += itsBitModeWriteState.unpack(buffer + offset);
 
 	return (offset);
 }
