@@ -108,8 +108,8 @@ public:
 	}
 
 	// Get the mask (N_BEAMLETS bits).
-	boost::dynamic_bitset<> getBEAMLETSMask() const {
-		int	max_beamlets = maxBeamlets(itsBitsPerSample);
+	boost::dynamic_bitset<> getBEAMLETSMask(int bitsPerSample) const {
+		int	max_beamlets = maxBeamlets(bitsPerSample);
         boost::dynamic_bitset<> mask(max_beamlets);
 		mask.reset();
 		std::list<int>::const_iterator it;
@@ -182,12 +182,8 @@ public:
 		stream << message << endl;
 	}
 
-	// No need to keep this private.
-	int					itsBitsPerSample;
-
 protected:
 	explicit Command(GCFPortInterface& port) :
-		itsBitsPerSample(MAX_BITS_PER_SAMPLE),
 		m_rspport(port),
 		m_select(),
 		m_get(true),
@@ -214,7 +210,7 @@ public:
 		COMPLEX = 1,
 		ANGLE,
 	};
-	WeightsCommand(GCFPortInterface& port);
+	WeightsCommand(GCFPortInterface& port, int bitsPerSample);
 	virtual ~WeightsCommand() {}
 	virtual void send();
 	virtual GCFEvent::TResult ack(GCFEvent& e);
@@ -227,6 +223,7 @@ private:
 	int                                     m_type;
 	int                                     itsStage;
 	blitz::Array<std::complex<int16>, 3>    itsWeights;
+	int										itsBitsPerSample;
 };
 
 //
@@ -235,7 +232,7 @@ private:
 class SubbandsCommand : public Command
 {
 public:
-	SubbandsCommand(GCFPortInterface& port);
+	SubbandsCommand(GCFPortInterface& port, int bitsPerSample);
 	virtual ~SubbandsCommand() {}
 	virtual void send();
 	virtual GCFEvent::TResult ack(GCFEvent& e);
@@ -248,6 +245,7 @@ public:
 private:
 	std::list<int>      m_subbandlist;
 	int                 m_type;
+	int					itsBitsPerSample;
 };
 
 //
@@ -446,7 +444,7 @@ protected:
 class StatisticsCommand : public StatisticsBaseCommand
 {
 public:
-	StatisticsCommand(GCFPortInterface& port);
+	StatisticsCommand(GCFPortInterface& port, const int bitsPerSample);
 	virtual ~StatisticsCommand() {}
 	virtual void send();
 	virtual void stop();
@@ -461,6 +459,7 @@ public:
 private:
 	uint8                   m_type;
 	blitz::Array<double, 2> m_stats;
+	int						itsBitsPerSample;
 };
 
 //
@@ -783,6 +782,7 @@ private:
 	int             m_nrspboards;
 	int             m_maxrspboards;
 	int             itsNantennas;
+	int             itsNbitsPerSample;
 
 	// commandline parameters
 	int             m_argc;
