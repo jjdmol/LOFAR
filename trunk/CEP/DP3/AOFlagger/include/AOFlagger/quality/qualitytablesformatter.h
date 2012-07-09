@@ -295,8 +295,24 @@ class QualityTablesFormatter {
 		void removeKindNameEntry(enum StatisticKind kind);
 		void removeEntries(enum QualityTable table);
 		
+		/**
+			* Add the time column to the table descriptor. Used by create..Table() methods.
+			* It holds "Measure"s of time, which is what casacore defines as a value including
+			* a unit and a reference frame.
+			*/
 		void addTimeColumn(casa::TableDesc &tableDesc);
+		
+		/**
+		 * Add the frequency column to the table descriptor. Used by create..Table() methods.
+		 * It holds "Quantum"s of frequency, which is what casacore defines as a value including
+		 * a unit (Hertz).
+		 */
 		void addFrequencyColumn(casa::TableDesc &tableDesc);
+		
+		/**
+		 * Add value column to the table descriptor. Used by create..Table() methods.
+		 * It consist of an array of statistics, each element holds a polarization.
+		 */
 		void addValueColumn(casa::TableDesc &tableDesc, unsigned polarizationCount);
 		
 		void createTable(enum QualityTable table, unsigned polarizationCount)
@@ -312,9 +328,36 @@ class QualityTablesFormatter {
 			}
 		}
 		
+		/**
+		 * Will add an empty table to the measurement set named "QUALITY_KIND_NAME" and
+		 * initialize its default column.
+		 * This table can hold a list of quality statistic types that are referred to in
+		 * the statistic value tables.
+		 */
 		void createKindNameTable();
+		/**
+		 * Will add an empty table to the measurement set named "QUALITY_TIME_STATISTIC" and
+		 * initialize its default column.
+		 * This table can hold several statistic kinds per time step. 
+		 * @param polarizationCount specifies the nr polarizations. This is required for the
+		 * shape of the value column.
+		 */
 		void createTimeStatisticTable(unsigned polarizationCount);
+		/**
+		 * Will add an empty table to the measurement set named "QUALITY_FREQUENCY_STATISTIC" and
+		 * initialize its default column.
+		 * This table can hold several statistic kinds per time step. 
+		 * @param polarizationCount specifies the nr polarizations. This is required for the
+		 * shape of the value column.
+		 */
 		void createFrequencyStatisticTable(unsigned polarizationCount);
+		/**
+		 * Will add an empty table to the measurement set named "QUALITY_BASELINE_STATISTIC" and
+		 * initialize its default column.
+		 * This table can hold several statistic kinds per time step. 
+		 * @param polarizationCount specifies the nr polarizations. This is required for the
+		 * shape of the value column.
+		 */
 		void createBaselineStatisticTable(unsigned polarizationCount);
 		void createBaselineTimeStatisticTable(unsigned polarizationCount);
 		unsigned findFreeKindIndex(casa::Table &kindTable);
