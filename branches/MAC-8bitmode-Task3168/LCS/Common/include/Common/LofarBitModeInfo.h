@@ -29,15 +29,27 @@ namespace LOFAR {
     //int maxBeamletsPerRSP(int bitsPerSample);
     //int maxBeamlets(int bitsPerSample);
     
+    inline static int maxDataslotsPerRSP(int bitsPerSample) {
+		assert(bitsPerSample >= MIN_BITS_PER_SAMPLE && bitsPerSample <= MAX_BITS_PER_SAMPLE && bitsPerSample%2==0);
+        switch (bitsPerSample) {
+          case 4:
+              return(59);
+          case 8: 
+              return(59);
+          default: 
+              return(61);
+		}
+	}
+
     inline static int maxBeamletsPerRSP(int bitsPerSample) {
 		assert(bitsPerSample >= MIN_BITS_PER_SAMPLE && bitsPerSample <= MAX_BITS_PER_SAMPLE && bitsPerSample%2==0);
         switch (bitsPerSample) {
           case 4:
-              return(4*59);
+              return(4*maxDataslotsPerRSP(bitsPerSample));
           case 8: 
-              return(2*59);
+              return(2*maxDataslotsPerRSP(bitsPerSample));
           default: 
-              return(61);
+              return(maxDataslotsPerRSP(bitsPerSample));
 		}
     }
     
