@@ -1,10 +1,10 @@
 #!/usr/bin/python
 import unittest
-from src.queries import _get_svn_version, makelistable
+from src.queries import get_svn_version, makelistable
 
 class UtilsTest(unittest.TestCase):
     def test_svn(self):
-        self.assertIsInstance(_get_svn_version(), int)
+        self.assertIsInstance(get_svn_version(), int)
 
     def test_makelistable(self):
         @makelistable

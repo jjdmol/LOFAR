@@ -1,3 +1,18 @@
+--#get frequency
+select freqbandid
+  from frequencybands
+ where freq_low < {0} and freq_high > {0};
+
+--#get last image_id
+select max(imageid) from images;
+
+--#insert image
+insert into images (ds_id, tau, band, imagename, status,
+                    centr_ra, centr_decl, svn_version)
+select 0, 1, {1}, '{0}' as imagename, 0,
+       0.0, 0.0, {2}
+
+
 --#insert_extractedsources
 insert into extractedsources (image_id, zone, ra, decl, ra_err, decl_err,
                               x, y, z, det_sigma,
@@ -34,7 +49,8 @@ select image_id, zone, ra - 360.0, decl, ra_err, decl_err,
        g_pa, g_pa_err, xtrsrcid
   from extractedsources
  where image_id = {0}
-   and ra > 360 - 1/cos(decl)
+   and ra > 360 - 1/cos(radians(decl))
+   and ra > 180
 union
 select image_id, zone, ra + 360.0, decl, ra_err, decl_err,
        x, y, z, det_sigma,
@@ -44,7 +60,8 @@ select image_id, zone, ra + 360.0, decl, ra_err, decl_err,
        g_pa, g_pa_err, xtrsrcid
   from extractedsources
  where image_id = {0}
-   and ra < 1/cos(decl);
+   and ra < 1/cos(radians(decl))
+   and ra < 180;
 
 --#update flux_fraction
 --for point sources only
