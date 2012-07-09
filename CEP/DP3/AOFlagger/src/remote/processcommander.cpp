@@ -224,7 +224,7 @@ void ProcessCommander::onProcessFinished(RemoteProcess &process, bool error, int
 {
 	boost::mutex::scoped_lock lock(_mutex);
 	
-	if(!_nodeCommands.RemoveNode(process.ClientHostname()))
+	if(_nodeCommands.RemoveNode(process.ClientHostname()) && _nodeCommands.Empty())
 		onCurrentTaskFinished();
 	
 	if(error)

@@ -37,7 +37,7 @@ class StatisticsCollection;
 
 namespace aoRemote {
 	
-class ObservationTimestep;
+class ObservationTimerange;
 
 class ProcessCommander
 {
@@ -51,7 +51,7 @@ class ProcessCommander
 		const StatisticsCollection &Statistics() const { return *_statisticsCollection; }
 		const HistogramCollection &Histograms() const { return *_histogramCollection; }
 		const std::vector<AntennaInfo> &Antennas() const { return _antennas; }
-		const ObservationTimestep &ObsTimestep() const { return *_observationTimestep; }
+		const ObservationTimerange &ObsTimerange() const { return *_observationTimerange; }
 		const std::vector<std::string> &Errors() const { return _errors; }
 		
 		void PushReadQualityTablesTask(StatisticsCollection *dest, HistogramCollection *destHistogram, bool correctHistograms = false)
@@ -61,10 +61,10 @@ class ProcessCommander
 			_statisticsCollection = dest;
 			_histogramCollection = destHistogram;
 		}
-		void PushReadDataRowsTask(class ObservationTimestep *observationTimestep)
+		void PushReadDataRowsTask(class ObservationTimerange &timerange)
 		{
 			_tasks.push_back(ReadDataRowsTask);
-			_observationTimestep = observationTimestep;
+			_observationTimerange = &timerange;
 		}
 		void PushReadAntennaTablesTask() { _tasks.push_back(ReadAntennaTablesTask); }
 	private:
@@ -91,7 +91,7 @@ class ProcessCommander
 		HistogramCollection *_histogramCollection;
 		bool _correctHistograms;
 		std::vector<AntennaInfo> _antennas;
-		class ObservationTimestep *_observationTimestep;
+		class ObservationTimerange *_observationTimerange;
 		
 		const ClusteredObservation _observation;
 		NodeCommandMap _nodeCommands;
@@ -100,7 +100,8 @@ class ProcessCommander
 		std::vector<std::string> _errors;
 		std::deque<enum Task> _tasks;
 		
-		/** Because the processes have separate threads that can send signals from
+		/** 
+		 * Because the processes have separate threads that can send signals from
 		 * their thread, locking is required for accessing data that might be
 		 * accessed by the processes.
 		 */
