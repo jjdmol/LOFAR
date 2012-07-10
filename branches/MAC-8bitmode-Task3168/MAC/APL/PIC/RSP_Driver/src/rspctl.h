@@ -759,6 +759,9 @@ public:
 	// Get a subscription on the splitter state.
 	GCFEvent::TResult sub2Splitter(GCFEvent& e, GCFPortInterface &p);
 
+	// Get a subscription on the bitmode state.
+	GCFEvent::TResult sub2Bitmode(GCFEvent& e, GCFPortInterface &p);
+
 	// In this state the command is sent and the acknowledge handled. Any relevant output is printed.
 	GCFEvent::TResult doCommand(GCFEvent& e, GCFPortInterface &p);
 
@@ -794,6 +797,7 @@ private:
 	bool            itsNeedClockOnce;       // getClock
 	bool            itsNeedClock;           // subClock
 	bool            itsNeedSplitter;        // subSplitter
+	bool            itsNeedBitmode;         // subBitmode
 
 	SubClockCommand m_subclock; // always subscribe to clock updates
 };
