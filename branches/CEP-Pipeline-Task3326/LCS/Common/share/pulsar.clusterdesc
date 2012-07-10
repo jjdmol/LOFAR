@@ -1,4 +1,0 @@
-ClusterName = Pulsar
-
-# Directory is the same as the parent.
-SubClusters = [sub5.clusterdesc]
