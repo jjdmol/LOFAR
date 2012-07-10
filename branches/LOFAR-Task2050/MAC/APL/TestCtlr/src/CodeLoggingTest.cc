@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
 		return (1);
 	}
 
-	INIT_LOGGER(basename(argv[0]));
+	INIT_LOGGER(LOFAR::basename(argv[0]));
 
 	LOG_INFO_STR("MACProcessScope: " << argv[1]);
 
