@@ -66,7 +66,7 @@ updateBGPAppl(string dp1,dyn_int ionodeList,
   for (int i = 1; i <= dynlen(ionodeList); i++) {
     // get station connected to the ionode
     string station;
-    string cepNodeName = navFunct_inputBuf2CEPName(ionodeList(0));
+    string cepNodeName = navFunct_inputBuf2CEPName(ionodeList[i]);
     string iodp = navFunct_CEPName2DPName(cepNodeName); 
     dpGet(iodp+\".usedStation\",station);
     dynAppend(stationList,station);
