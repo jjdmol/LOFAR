@@ -66,6 +66,14 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
       EPA_RSR_TIMESTAMP, /* READACK  */
       EPA_WRITEACK,      /* WRITEACK */
     },
+    
+    /* reg = 0x03 (RSR_NOFBEAM new in 8/4bit mode) */
+    { 0,
+      EPA_READ,          /* READ     */
+      EPA_WRITE,         /* WRITE    */
+      EPA_READACK,       /* READACK  */
+      EPA_WRITEACK,      /* WRITEACK */
+  },
   },
 
   /* pid = 0x02 (RSU) */
@@ -168,7 +176,28 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
 
   /* pid = 0x04 (SS) */
   {
-    /* reg = 0x00 (Subband Select parameters) */
+    /* reg = 0x00 (Subband 0 Select parameters) */
+    { 0,
+      EPA_READ,      /* READ    */
+      EPA_SS_SELECT, /* WRITE   */
+      EPA_SS_SELECT, /* READACK */
+      EPA_WRITEACK,  /* WRITEACK */
+    },
+    /* reg = 0x01 (Subband 1 Select parameters, new in 8/4bit mode) */
+    { 0,
+      EPA_READ,      /* READ    */
+      EPA_SS_SELECT, /* WRITE   */
+      EPA_SS_SELECT, /* READACK */
+      EPA_WRITEACK,  /* WRITEACK */
+  },
+    /* reg = 0x02 (Subband 2 Select parameters, new in 8/4bit mode) */
+    { 0,
+      EPA_READ,      /* READ    */
+      EPA_SS_SELECT, /* WRITE   */
+      EPA_SS_SELECT, /* READACK */
+      EPA_WRITEACK,  /* WRITEACK */
+    },
+    /* reg = 0x03 (Subband 3 Select parameters, new in 8/4bit mode) */
     { 0,
       EPA_READ,      /* READ    */
       EPA_SS_SELECT, /* WRITE   */
@@ -179,28 +208,112 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
 
   /* pid = 0x05 (BF) */
   {
-    /* reg = 0x00 (BF_XROUT) */
+    /* reg = 0x00 (BF_XROUT subband 0) */
     { 0,
       EPA_READ,           /* READ    */
       EPA_BF_COEFS_WRITE, /* WRITE   */
       EPA_BF_COEFS_READ,  /* READACK */
       EPA_WRITEACK,       /* WRITEACK */
     },
-    /* reg = 0x01 (BF_XIOUT) */
+    /* reg = 0x01 (BF_XIOUT subband 0) */
     { 0,
       EPA_READ,           /* READ    */
       EPA_BF_COEFS_WRITE, /* WRITE   */
       EPA_BF_COEFS_READ,  /* READACK */
       EPA_WRITEACK,       /* WRITEACK */
     },
-    /* reg = 0x02 (BF_YROUT) */
+    /* reg = 0x02 (BF_YROUT subband 0) */
     { 0,
       EPA_READ,           /* READ    */
       EPA_BF_COEFS_WRITE, /* WRITE   */
       EPA_BF_COEFS_READ,  /* READACK */
       EPA_WRITEACK,       /* WRITEACK */
     },
-    /* reg = 0x03 (BF_YIOUT) */
+    /* reg = 0x03 (BF_YIOUT subband 0) */
+    { 0,
+      EPA_READ,           /* READ    */
+      EPA_BF_COEFS_WRITE, /* WRITE   */
+      EPA_BF_COEFS_READ,  /* READACK */
+      EPA_WRITEACK,       /* WRITEACK */
+    },
+    /* reg = 0x04 (BF_XROUT subband 1 new in 8/4bit mode) */
+    { 0,
+      EPA_READ,           /* READ    */
+      EPA_BF_COEFS_WRITE, /* WRITE   */
+      EPA_BF_COEFS_READ,  /* READACK */
+      EPA_WRITEACK,       /* WRITEACK */
+  },
+    /* reg = 0x05 (BF_XIOUT subband 1 new in 8/4bit mode) */
+    { 0,
+      EPA_READ,           /* READ    */
+      EPA_BF_COEFS_WRITE, /* WRITE   */
+      EPA_BF_COEFS_READ,  /* READACK */
+      EPA_WRITEACK,       /* WRITEACK */
+    },
+    /* reg = 0x06 (BF_YROUT subband 1 new in 8/4bit mode) */
+    { 0,
+      EPA_READ,           /* READ    */
+      EPA_BF_COEFS_WRITE, /* WRITE   */
+      EPA_BF_COEFS_READ,  /* READACK */
+      EPA_WRITEACK,       /* WRITEACK */
+    },
+    /* reg = 0x07 (BF_YIOUT subband 1 new in 8/4bit mode) */
+    { 0,
+      EPA_READ,           /* READ    */
+      EPA_BF_COEFS_WRITE, /* WRITE   */
+      EPA_BF_COEFS_READ,  /* READACK */
+      EPA_WRITEACK,       /* WRITEACK */
+    },
+    /* reg = 0x08 (BF_XROUT subband 2 new in 8/4bit mode) */
+    { 0,
+      EPA_READ,           /* READ    */
+      EPA_BF_COEFS_WRITE, /* WRITE   */
+      EPA_BF_COEFS_READ,  /* READACK */
+      EPA_WRITEACK,       /* WRITEACK */
+    },
+    /* reg = 0x09 (BF_XIOUT subband 2 new in 8/4bit mode) */
+    { 0,
+      EPA_READ,           /* READ    */
+      EPA_BF_COEFS_WRITE, /* WRITE   */
+      EPA_BF_COEFS_READ,  /* READACK */
+      EPA_WRITEACK,       /* WRITEACK */
+    },
+    /* reg = 0x0A (BF_YROUT subband 2 new in 8/4bit mode) */
+    { 0,
+      EPA_READ,           /* READ    */
+      EPA_BF_COEFS_WRITE, /* WRITE   */
+      EPA_BF_COEFS_READ,  /* READACK */
+      EPA_WRITEACK,       /* WRITEACK */
+    },
+    /* reg = 0x0B (BF_YIOUT subband 2 new in 8/4bit mode) */
+    { 0,
+      EPA_READ,           /* READ    */
+      EPA_BF_COEFS_WRITE, /* WRITE   */
+      EPA_BF_COEFS_READ,  /* READACK */
+      EPA_WRITEACK,       /* WRITEACK */
+    },
+    /* reg = 0x0C (BF_XROUT subband 3 new in 8/4bit mode) */
+    { 0,
+      EPA_READ,           /* READ    */
+      EPA_BF_COEFS_WRITE, /* WRITE   */
+      EPA_BF_COEFS_READ,  /* READACK */
+      EPA_WRITEACK,       /* WRITEACK */
+    },
+    /* reg = 0x0D (BF_XIOUT subband 3 new in 8/4bit mode) */
+    { 0,
+      EPA_READ,           /* READ    */
+      EPA_BF_COEFS_WRITE, /* WRITE   */
+      EPA_BF_COEFS_READ,  /* READACK */
+      EPA_WRITEACK,       /* WRITEACK */
+    },
+    /* reg = 0x0E (BF_YROUT subband 3 new in 8/4bit mode) */
+    { 0,
+      EPA_READ,           /* READ    */
+      EPA_BF_COEFS_WRITE, /* WRITE   */
+      EPA_BF_COEFS_READ,  /* READACK */
+      EPA_WRITEACK,       /* WRITEACK */
+    },
+    /* reg = 0x0F (BF_YIOUT subband 3 new in 8/4bit mode) */
     { 0,
       EPA_READ,           /* READ    */
       EPA_BF_COEFS_WRITE, /* WRITE   */

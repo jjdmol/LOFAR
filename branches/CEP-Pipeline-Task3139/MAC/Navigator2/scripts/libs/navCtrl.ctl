@@ -979,7 +979,7 @@ void navCtrl_highlightAddHardwareFromObservation(string selection) {
   string station="";  
   if (dynlen(g_stationList) > 1 || (dynlen(g_stationList) == 1 && ACTIVE_TAB != "Hardware")) {
     for (int k=1; k<= dynlen(g_stationList); k++) {
-      if (g_stationList[k] == "CCU001" || navFunct_hardware2Obs(g_stationList[k], longObs,"Station",g_stationList[k],0)) {
+      if (g_stationList[k] == navFunct_bareDBName(CEPDBName) || navFunct_hardware2Obs(g_stationList[k], longObs,"Station",g_stationList[k],0)) {
         if (!dynContains(highlight,g_stationList[k])) {
           dynAppend(highlight,g_stationList[k]);
         }

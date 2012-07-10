@@ -1,22 +1,20 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,-1 -1 453 525 N "_3DFace" 2
+PANEL,-1 -1 453 525 N "_3DFace" 1
 "$BGPMidplaneNr"
-"$BGPRackNr"
 "main()
 {
   baseDP = g_currentDatapoint;
  
   if (!isRack()) {
-    rNr = $BGPRackNr;
     mNr = $BGPMidplaneNr;
   }
    
   if (strpos(g_currentDatapoint,\"_BGP\") > -1){
     baseDP += \"_Midplane\" + mNr;         
   } else {
-    baseDP += \"_BGP\" + rNr + \"_Midplane\" + mNr;         
+    baseDP += \"_BGP_Midplane\" + mNr;         
   }
     
   string aS = navFunct_DPName2CEPName(baseDP);
@@ -47,17 +45,17 @@ PANEL,-1 -1 453 525 N "_3DFace" 2
 E "#uses \"navPanel.ctl\"
 
 string     baseDP          = \"\";
-int        rNr             = \"\";
-int        mNr             = \"\";
+int        rNr             = -1;
+int        mNr             = -1;
 bool       bDoubleClicked  = false;
 
 bool isRack() {
   dyn_string dpAr= strsplit(dpSubStr(baseDP,DPSUB_DP),\"_\");
   for (int i = 1; i <= dynlen(dpAr);i++ ) {
     if (strpos(dpAr[i],\"BGP\") > -1) {
-      rNr = substr(dpAr[i],3,strlen(dpAr[i]));
-      int m=$BGPMidplaneNr;
-      mNr = (2 * rNr) + m;
+      rNr=0;
+      if (navFunct_isBGPSwitch()) rNr=1;  
+      mNr = $BGPMidplaneNr;
       return true;
     }
   }

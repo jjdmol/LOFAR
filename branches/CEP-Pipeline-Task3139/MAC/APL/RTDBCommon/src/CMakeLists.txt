@@ -20,3 +20,4 @@ lofar_add_library(rtdbcommon
 add_dependencies(rtdbcommon RTDBCommon-CM_Protocol)
 
 lofar_add_bin_program(versionrtdbcommon versionrtdbcommon.cc)
+lofar_add_sbin_program(setObjectState setObjectState.cc)

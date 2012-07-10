@@ -29,6 +29,7 @@
 #include <Common/hexdump.h>
 
 #include <GCF/PVSS/GCF_PVTypes.h>
+#include <GCF/PVSS/PVSSinfo.h>
 #include <MACIO/MACServiceInfo.h>
 #include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/APLUtilities.h>
@@ -254,7 +255,8 @@ GCFEvent::TResult ECMonitor::createPropertySets(GCFEvent& event, GCFPortInterfac
 		// resize vectors.
 		itsCabs.resize (itsNrCabs, 0);
 		
-		string  stationNameMask("MCU001:"+createPropertySetName(PSN_STATION, getName()));
+		string	mainDB(PVSSinfo::getMainDBName()+":");
+		string  stationNameMask(mainDB+createPropertySetName(PSN_STATION, getName()));
 //		LOG_DEBUG_STR("stationNameMask=" << stationNameMask);
 		string  PSname(formatString(stationNameMask.c_str(), 0));
 //		LOG_DEBUG_STR("PSname=" << PSname);

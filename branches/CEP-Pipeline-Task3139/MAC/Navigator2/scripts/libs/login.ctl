@@ -1,7 +1,7 @@
 // this function is called after the user correctly logged in 
 // this should start whatever this project wants 
  
-afterLogin(string user, string password, string newLocale, int closeModules = 1) 
+afterLogin(string user, string password, string newLocale, int closeModules = 1, int iConfNum = 1) 
 {
   // WARNING string variable 'panel' below must be set 
   // - if the user would like to have a special beginning panel
@@ -16,12 +16,15 @@ afterLogin(string user, string password, string newLocale, int closeModules = 1)
      myModule = myModuleName();
   
   bool           usePT=true;
+  bool           useNewPT=false; //cstoeg: new PT with preview and Multiscreening
+   
   unsigned       xResolution, yResolution, templateNumber,
                  x=1000, y=600, i;
   dyn_string     panels;
   dyn_uint       xs=makeDynInt(1600,1280,1024),
                  ys=makeDynInt(1200,1024, 768);
     switchToSplitWithActiveDrivers();
+ 
   //**** mhalper: only if demo application ******************************************************
   if (dpExists("ApplicationProperties"))
   { 
@@ -36,9 +39,17 @@ afterLogin(string user, string password, string newLocale, int closeModules = 1)
       panel  = "basePanel_user.pnl";   // default panel to be used 
   }
   //*********************************************************************************************
-
+  
+  if (dpExists("_"+user+"_UiConfiguration"))
+  { 
+    useNewPT = true;
+  }
+ 
   if ( /*isMotif() ||*/ !dpExists("_PanelTopology"))
     usePT = FALSE;
+   else
+     if(!useNewPT && dpExists("_Default_UiConfiguration")) //IM 88664 -> PVSS woman should be shown if PT but now Template is configured for user
+       usePT = false;
 
   if (usePT)
   {
@@ -51,8 +62,17 @@ afterLogin(string user, string password, string newLocale, int closeModules = 1)
       usePT = FALSE;
   }
   
+  if (useNewPT)
+  {
+    if(!g_iNumberOfScreens || dynlen(g_diXRes)<=0 || dynlen(g_dsTemplates)<=0 )
+    {
+      useNewPT = false; //Error: Nothing parameterized on DP
+    }
+  }
+    
+  
   // panel topology not found
-  if (usePT)
+  if (usePT && !useNewPT)
   {
     if (templateNumber == 4 )
     {
@@ -82,7 +102,7 @@ afterLogin(string user, string password, string newLocale, int closeModules = 1)
   }
 
   //opening new module
-  if ( newLocale != locale) 
+  if ( newLocale != locale && newLocale != "") 
   {
     startThread("changeLang", newLocale);
       //int    err = switchLang(getLangIdx(newLocale));
@@ -99,7 +119,9 @@ afterLogin(string user, string password, string newLocale, int closeModules = 1)
          delay(0,100);
 //       delay(0,500);
   }
-
+  
+  if(!useNewPT)  //cstoeg: if new Panel Topology is used than do not open a module
+  {
   if (closeModules==0 || !isModuleOpen(module))
   {
      ModuleOn(module,0,0,x,y,-1,-1,"Scale");
@@ -107,10 +129,39 @@ afterLogin(string user, string password, string newLocale, int closeModules = 1)
      while (!isModuleOpen(module))
         delay(0, 100);
   }
+  }
 
   playDemoStartUpSound();
+  
+  if (useNewPT) // Initialise the different libarys and open basePanels
+  {
+    ptms_InitializeScreens(iConfNum);
+    ptms_InitializeSystems();
+    
+    // HOOK >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> HOOK
+    // When a function 'HOOK_ScreenConfiguration()' is defined
+    // then call this one to modify Screen Configuration. 
+    // The Configration can be modified by changing the values of the global Variables:
+    // g_dbUsedScreens = dyn String of Used Screens
+    // g_dsTemplates = dyn String of loaded templates
+    // g_dsPanels = dyn String of loaded panels
+    // g_dsCharacters = dyn String of Screen Characters
 
-  if (usePT)
+    if( isFunctionDefined( "HOOK_ScreenConfiguration" ) )
+  {
+      string strEval = "bool main(){ return HOOK_ScreenConfiguration(); }";
+      bool bResult; //Result of the function
+     
+      evalScript( bResult, strEval, makeDynString() );
+                    
+    
+    } 
+    // HOOK <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< HOOK
+
+    ptnavi_InitializeAfterLogin();
+    ptms_LoadBasePanels();
+  }
+  else if (usePT)
   {
      
     if (isModuleOpen("naviModule"))  //redraw navi panel
@@ -125,7 +176,7 @@ afterLogin(string user, string password, string newLocale, int closeModules = 1)
       RootPanelOnModule(panel,"",module,"");
       playDemoStartUpSound();
     }
-
+    
     if ((closeModules == 1 || closeModules == 3) &&
          myModule != "mainModule" &&
          myModule != "naviModule" &&
@@ -138,15 +189,39 @@ afterLogin(string user, string password, string newLocale, int closeModules = 1)
    }
   else
   {
-    string ID="$ID:"+myManId();
-    RootPanelOnModule(panel,"",module,makeDynString(ID)); 
+    RootPanelOnModule(panel,"",module,""); 
     
     if ( module != myModule && closeModules != 0) 
       ModuleOff(myModule);
 
     playDemoStartUpSound();
   }
+  //on logOut the lastScreenView will be saved
+  msc_deleteFav(user, "lastScreenView");
+
+  delay(0,50); //IM 98250: otherwise the panel can not be cloesed because module can not be found
+  //removeGlobals which are created in login.pnl
+  if(globalExists("g_iNumberOfScreens"))
+  {
+    removeGlobal("g_iNumberOfScreens");
+    removeGlobal("g_sConfigName");
+    removeGlobal("g_dbUsedScreens"); // Used Screens 
+    removeGlobal("g_diXRes"); // Resolution of Screen
+    removeGlobal("g_diYRes");
+    removeGlobal("g_dsTemplates");  // Templates of the specific Screens
+    removeGlobal("g_dsPanels");     // Panels to Load
+    removeGlobal("g_dsCharacters"); // Characters of Screen
+    removeGlobal("g_dsLCharacters");
+    removeGlobal("g_dsRCharacters");
+    removeGlobal("g_iActNumberOfScreens");
+    removeGlobal("g_iDefaultResX");
+    removeGlobal("g_iDefaultResY");
+    removeGlobal("g_sDefaultTemplate");
+  }
+  
   // last action ... close login-Module 
+  PanelOff();
+  
 } 
 
 //**************************

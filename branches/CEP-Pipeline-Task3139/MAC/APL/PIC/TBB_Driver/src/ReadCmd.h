@@ -27,6 +27,7 @@
 
 #include <Common/LofarTypes.h>
 #include <GCF/TM/GCF_Control.h>
+#include <APL/RTCCommon/NsTimestamp.h>
 
 #include <APL/TBB_Protocol/TBB_Protocol.ph>
 #include "TP_Protocol.ph"
@@ -59,11 +60,21 @@ public:
 
 private:
 	TbbSettings *TS;
+	
 	uint32 itsSecondstime;
-	uint32 itsSampletime;
+	uint32 itsSampleNr;
 	uint32 itsPrepages;
 	uint32 itsPostpages;
+	
 	int32  itsStage;
+	uint32 itsLastSavedSecond;
+	uint32 itsLastSavedSampleNr;
+	uint32 itsLastSavedNrOfSamples;
+	uint32 itsLastSavedSampleFreq;
+	
+	RTC::NsTimestamp itsTimestamp;
+	RTC::NsTimestamp itsTimeBefore;
+	RTC::NsTimestamp itsTimeAfter;
 };
 
 	} // end TBB namespace

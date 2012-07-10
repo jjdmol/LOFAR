@@ -82,7 +82,8 @@ TbbSettings::TbbSettings() :
 	itsActiveBoardsMask(0),            // mask with active boards
 	itsBoardInfo(0),
 	itsChannelInfo(0),                  // Struct with channel info
-	itsBoardSetup(false),
+	itsClockFreq(0),
+	itsSampleTime(5.0),
 	itsIfName(""),
 	itsSetupNeeded(false),
 	itsTriggerInfo(0)
@@ -205,6 +206,7 @@ void TbbSettings::setMaxBoards (int32 maxboards)
 		itsChannelInfo[ch].BoardNr = boardnr;
 		itsChannelInfo[ch].InputNr = inputnr;
 		itsChannelInfo[ch].MpNr = mpnr;
+		itsChannelInfo[ch].MemWriter = 2 + (inputnr % 4); // writer number 2..5
 		itsChannelInfo[ch].StartAddr = 0;
 		itsChannelInfo[ch].PageSize = 0;
 		inputnr++;
@@ -212,7 +214,7 @@ void TbbSettings::setMaxBoards (int32 maxboards)
 			inputnr = 0;
 			boardnr++;
 		}
-		mpnr = (int32)(inputnr / 4);
+		mpnr = inputnr / 4;
 		
 		// initialize filter settings
 		itsChannelInfo[ch].TriggerReleased = false;
@@ -223,7 +225,7 @@ void TbbSettings::setMaxBoards (int32 maxboards)
 		itsChannelInfo[ch].FilterSelect = 0;
 		itsChannelInfo[ch].DetectWindow = 0;
 		itsChannelInfo[ch].TriggerMode = 0;
-		itsChannelInfo[ch].OperatingMode = 0;
+		itsChannelInfo[ch].OperatingMode = TBB_MODE_TRANSIENT;
         for (int f = 0; f < 2; f++) {
             for (int c = 0; c < 4; c++) {
 		        itsChannelInfo[ch].Filter[f][c] = 0;
@@ -233,8 +235,6 @@ void TbbSettings::setMaxBoards (int32 maxboards)
 		itsChannelInfo[ch].dstMacCep.clear();
 	}
 	
-	itsBoardSetup  = false;
-		
 	if (itsBoardInfo) delete itsBoardInfo;
 	itsBoardInfo = new BoardInfo[itsMaxBoards];
 	
@@ -246,6 +246,7 @@ void TbbSettings::setMaxBoards (int32 maxboards)
 		itsBoardInfo[nr].setupCmdDone = true;
 		itsBoardInfo[nr].memorySize = 0;
 		itsBoardInfo[nr].imageNr = 0;
+		itsBoardInfo[nr].configState = 0;
 		itsBoardInfo[nr].freeToReset = true;
 		itsBoardInfo[nr].dstMac = "";
 		itsBoardInfo[nr].srcIpCep = "";
@@ -260,7 +261,6 @@ void TbbSettings::setBoardState(int32 boardnr, BoardStateT boardstate)
 {
 	itsBoardInfo[boardnr].boardState = boardstate; 
 	if ((boardstate > noBoard) && (boardstate < boardReady)) {
-		itsBoardSetup = true;
 		itsBoardInfo[boardnr].used = false;
 	}
 }
@@ -392,7 +392,7 @@ void TbbSettings::setDestination(int32 channelnr, char *storage)
     fin.close();
     
 	if (strlen(ip) == 1 || strlen(mac) == 1 ) {
-		LOG_DEBUG_STR(formatString("storage=%s NOT found", key));
+		LOG_DEBUG_STR(formatString("storage=%s NOT found", storage));
 	}
 	else {
 	    itsChannelInfo[channelnr].dstIpCep = static_cast<string>(ip);
@@ -416,7 +416,7 @@ void TbbSettings::clearRcuSettings(int32 boardnr)
 		itsChannelInfo[(boardnr * 16) + cn].FilterSelect = 0;
 		itsChannelInfo[(boardnr * 16) + cn].DetectWindow = 0;
 		itsChannelInfo[(boardnr * 16) + cn].TriggerMode = 0;
-		itsChannelInfo[(boardnr * 16) + cn].OperatingMode = 0;
+		itsChannelInfo[(boardnr * 16) + cn].OperatingMode = TBB_MODE_TRANSIENT;
                 for (int f = 0; f < 2; f++) {
                     for (int c = 0; c < 4; c++) {
                         itsChannelInfo[cn].Filter[f][c] = 0;

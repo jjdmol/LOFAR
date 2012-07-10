@@ -42,7 +42,7 @@ uint 	PVSSinfo::_lastManNum 	= 0;
 uint 	PVSSinfo::_lastManType 	= 0;
 
 TMACValueType macValueTypes[] = 
-{
+{// PVSS/GCF_Defines.h		// api/include/Basics/DpBasics/DpElementType.hxx
   NO_LPT,           // DPELEMENT_NOELEMENT,
   NO_LPT,           // DPELEMENT_RECORD,
   NO_LPT,           // DPELEMENT_ARRAY,
@@ -119,7 +119,7 @@ bool PVSSinfo::typeExists (const string& dpTypeName)
 {
 	CharString 	pvssTypeName(dpTypeName.c_str());
 	DpTypeId 	dpTypeId; 
-	if (Manager::getTypeId(pvssTypeName, dpTypeId) == PVSS_TRUE) {
+	if (Manager::getTypeId(pvssTypeName, dpTypeId) != PVSS_TRUE) {
 		LOG_TRACE_VAR_STR("typeExists(" << dpTypeName << "): FALSE");
 		return (true);
 	}
@@ -180,6 +180,23 @@ const string PVSSinfo::getSystemName(uint sysnr)
 	CharString sysName;
 	if (Manager::getSystemName(sysnr, sysName) == PVSS_TRUE) {      
 		return ((const char*) sysName);
+	}
+	return ("");
+}
+
+//
+// getMainDBName()
+//
+string PVSSinfo::getMainDBName()
+{
+	SystemNumType		sysNr;
+	CharString	sysName("MCU001");
+	if (Manager::getSystemId(sysName, sysNr) == PVSS_TRUE) {      
+		return ("MCU001");
+	}
+	sysName = "MCU099";
+	if (Manager::getSystemId(sysName, sysNr) == PVSS_TRUE) {      
+		return ("MCU099");
 	}
 	return ("");
 }

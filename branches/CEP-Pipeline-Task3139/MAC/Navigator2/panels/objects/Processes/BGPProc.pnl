@@ -39,7 +39,7 @@ PANEL,-1 -1 1003 784 N "_3DFace" 4
   
   //  In the database we can find the IONode involved per stationName, so lets
   // get that nodeName
-  string nodeName = stationNameToIONode($station);
+  string nodeName = navFunct_stationNameToIONode($station);
 
   DebugN(\"Station:  \",$station);
   DebugN(\"nodeName: \",nodeName);
@@ -140,17 +140,7 @@ dyn_string adder=\"\";
 
 string baseDP = \"\";
 int ioNr;
-
-string stationNameToIONode(string name) {
- 
-  dyn_dyn_anytype tab;
-  dpQuery(\"SELECT '_original.._value' FROM 'R0*-*.station' REMOTE 'CCU001:' WHERE _DPT =  \\\"BGPConnectionInfo\\\"\",tab);
-  
-  for(int z=2;z<=dynlen(tab);z++) {
-    if (tab[z][2] == name) return dpSubStr(tab[z][1],DPSUB_DP);
-  }
-  return \"not found\";
-}" 0
+" 0
  2
 "CBRef" "1"
 "EClose" E

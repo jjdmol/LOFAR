@@ -51,7 +51,6 @@ void Command::setBoard(int32 board)
 	if (board < TS->maxBoards()) {
 		if (TS->isBoardReady(board)) {
 		    itsBoards.set(board);
-		    return;
 		}
 		else if (TS->isBoardActive(board) == false) {
 			itsStatus[board] = TBB_NOT_ACTIVE;
@@ -163,6 +162,7 @@ void Command::setChannelNr(int32 channelnr)
 {
 	itsChannel = channelnr;
 	itsBoard = TS->getChBoardNr(itsChannel);
+	
 }
 
 // ----------------------------------------------------------------------------

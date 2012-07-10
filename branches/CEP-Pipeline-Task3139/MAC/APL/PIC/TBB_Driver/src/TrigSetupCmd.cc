@@ -93,7 +93,7 @@ void TrigSetupCmd::sendTpEvent()
 	tp_event.mp = TS->getChMpNr(getChannelNr());
 	for (int i = 0; i < 4; i++) {
 		tp_event.channel[i].level         = TS->getChTriggerLevel(getChannelNr() + i);
-		tp_event.channel[i].td_mode       = (TS->getChTriggerStartMode(getChannelNr() + i) +
+        tp_event.channel[i].td_mode       =(TS->getChTriggerStartMode(getChannelNr() + i) +
 											(TS->getChTriggerStopMode(getChannelNr() + i) << 4));
 		tp_event.channel[i].filter_select = TS->getChFilterSelect(getChannelNr() + i);
 		tp_event.channel[i].window        = TS->getChDetectWindow(getChannelNr() + i);

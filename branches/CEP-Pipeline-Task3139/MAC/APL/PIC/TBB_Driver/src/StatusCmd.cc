@@ -111,8 +111,9 @@ void StatusCmd::saveTpAckEvent(GCFEvent& event)
 			itsTmp2[getBoardNr()] = tp_ack.Tmp2;
 			itsTmp3[getBoardNr()] = tp_ack.Tmp3;
 			itsCurrentImage[getBoardNr()] = TS->getImageNr(getBoardNr());
-			itsFlashState[getBoardNr()] = ((tp_ack.info[5] >> 8) & 0xff);
-			itsWatchDogMode[getBoardNr()] = ((tp_ack.info[5] >> 16) & 0xf);
+			itsFlashState[getBoardNr()] = ((tp_ack.info[5] >> 8) & 0x7f);
+			TS->setFlashState(getBoardNr(), (tp_ack.info[5] >> 11) & 0x07);
+			itsWatchDogMode[getBoardNr()] = ((tp_ack.info[5] >> 16) & 0x1);
 			itsPgood[getBoardNr()] = tp_ack.info[0];
 				
 			LOG_DEBUG_STR(formatString("Status info = 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x",

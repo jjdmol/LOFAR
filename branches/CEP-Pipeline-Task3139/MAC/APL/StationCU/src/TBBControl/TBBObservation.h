@@ -1,5 +1,5 @@
 //#  TBBObservation.h: class/struct that holds the Observation information
-//#
+//# 
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
@@ -50,42 +50,45 @@ namespace LOFAR {
 class TBBObservation
 {
 public:
-	TBBObservation();
-	~TBBObservation() { };
-	
-	explicit	TBBObservation (ParameterSet*		aParSet);
-	
-	typedef bitset<MAX_RCUS> RCUset_t;
+    TBBObservation();
+    ~TBBObservation() { };
+    
+    explicit    TBBObservation (ParameterSet*        aParSet);
+    
+    typedef bitset<MAX_RCUS> RCUset_t;
 
-	class cSettings {
-	public:
-	    cSettings() {};
-	    ~cSettings() {};
-		uint16 filter0[4];
-		uint16 filter1[4];
-		uint16 triggerLevel;
-		uint16 filter;
-		uint16 startLevel;
-		uint16 stopLevel;
-		uint16 detectWindow;
-		uint16 triggerMode;
-		uint16 operatingMode;         // transient or subbands
-		
-		RCUset_t      RCUset;
-		vector<int32> SubbandList;
-   };
-	//# Datamembers
-	vector<cSettings> TbbSettings;
-	//RCUset_t          RCUset;
-	//vector<int32>     SubbandList;
-	
-	bool isLoaded();
-	//# print function for operator<<
-	ostream&	print(ostream&	os) const;
+    class cSettings {
+    public:
+        cSettings() {};
+        ~cSettings() {};
+        uint16 filter0[4];
+        uint16 filter1[4];
+        uint16 triggerLevel;
+        uint16 filter;
+        uint16 startLevel;
+        uint16 stopLevel;
+        uint16 detectWindow;
+        uint16 triggerMode;
+        uint16 operatingMode;         // transient or subbands
+        
+        RCUset_t      RCUset;
+        vector<int32> SubbandList;
+    };
+    //# Datamembers
+    vector<cSettings> TbbSettings;
+    RCUset_t allRCUset;
+    bool vhecrTaskEnabled;
+    int clockFreq;
+    double sampleTime;
+    double NSEC2SAMPLE;
+    
+    bool isLoaded();
+    //# print function for operator<<
+    ostream&    print(ostream&    os) const;
 
 private:
-	bool itsSettingsLoaded;
-	uint16 _windowNr(const string&		wdwName);
+    bool itsSettingsLoaded;
+    uint16 _windowNr(const string&        wdwName);
 
 };
 
@@ -94,8 +97,8 @@ inline bool TBBObservation::isLoaded() { return(itsSettingsLoaded); }
 //# operator<<
 //#
 inline ostream& operator<< (ostream& os, const TBBObservation& aTBBObservation)
-{	
-	return (aTBBObservation.print(os));
+{    
+    return (aTBBObservation.print(os));
 }
 
   } // namespace StationCU

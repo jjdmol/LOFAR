@@ -1,4 +1,4 @@
-#!/usr/bin/ksh
+#!/usr/bin/ksh 
 #
 # create_OTDB_comps : Expand all base-file to gcomp files.
 #
@@ -35,9 +35,10 @@ SyntaxError()
 
 	[ -z "${Msg}" ] || echo "ERROR: ${Msg}"
 	echo ""
-	echo "Syntax: $(basename $0) [-d destdir] target(s)"
+	echo "Syntax: $(basename $0) [-d destdir] [-l] target(s)"
 	echo "        destdir    Relative directory where the resultfiles are placed"
 	echo "        targets	 PVSS | C++ | OTDB"
+        echo "        -l: local use, assumes that this is run from a SVN checkout"
 	echo ""
 	exit 1
 }
@@ -145,7 +146,7 @@ expand_storagemarker      ()
 substitute_station()
 {
 	# expand the nodes
-	cleanlist ../StaticMetaData/StationInfo.dat | while read nodename ID stnType rest
+	cleanlist ${wdir}/StationInfo.dat | while read nodename ID stnType rest
 	do
 		if [ "${stnType}" != $1 ]; then
 			continue
@@ -165,7 +166,7 @@ substitute_station()
 	done
 
 	> /tmp/foo.list
-	cleanlist ../StaticMetaData/StationInfo.dat | while read nodename ID stnType rest
+	cleanlist ${wdir}/StationInfo.dat | while read nodename ID stnType rest
 	do
 		if [ "${stnType}" != $1 ]; then
 			continue
@@ -210,7 +211,9 @@ expand_connection()
 # where target is pvss / c++ / otdb
 #
 DESTDIR="."
-eval set argv=`getopt "d:h" $*`		# reformat arguments
+INDIR="."
+localUse=0
+eval set argv=`getopt "d:hl" $*`		# reformat arguments
 shift
 while [ "$1" != "--" ]
 do
@@ -220,17 +223,44 @@ do
 				SyntaxError "Destination directory >${DESTDIR}< does not exist"
 			shift 2
 			;;
+                -l)     localUse=1
+                        shift
+                        ;;
 		-h) SyntaxError
 			;;
+                 *)     SyntaxError
+			;;    
 	esac
 done
 shift								# remove --
+
+if [ ${localUse} == 0 ]; then 
+  DESTDIR="/opt/lofar/etc/otdb"
+  INDIR="/opt/lofar/etc"
+fi 
 
 rm -f ${DESTDIR}/*.gcomp
 
 # generate stationlist file
 echo "# Generated file !!!" >Stations.list
-cat -s ../StaticMetaData/StationInfo.dat | grep -v -e '.*0\.0.*' -e '#' -e'^$' | cut -c1-5 >>Stations.list
+if [ "${INDIR}" = "." ]; then 
+  wdir="../StaticMetaData"
+  otdbdir="."
+  pvssdir="../PVSS"
+else
+  wdir="/opt/lofar/etc"
+  otdbdir="/opt/lofar/etc/otdb"
+  pvssdir="/opt/lofar/pvss/dpdef"
+fi 
+
+cd $wdir
+cat -s StationInfo.dat | grep -v -e '.*0\.0.*' -e '#' -e'^$' | cut -c1-5 >>${DESTDIR}/Stations.list
+
+if [ "$wdir" = "/opt/lofar/etc" ]; then 
+  cd $wdir/otdb # location of all component files, etc.
+else
+  cd $wdir/../OTDB
+fi
 
 for file in `ls -1 *.base | grep -v Node`
 do
@@ -270,7 +300,7 @@ do
 	grep @ring@ $file >/dev/null 2>&1
 	if [ $? -eq 0 ]; then
 		cat $file | \
-		substitute_marker "../PVSS/Rings" "@ring@" >${outputname}
+		substitute_marker "${pvssdir}/Rings" "@ring@" >${outputname}
 	fi
 
         grep @inputdataproduct@ $file >/dev/null 2>&1
@@ -299,4 +329,3 @@ do
 	fi
 
 done
-

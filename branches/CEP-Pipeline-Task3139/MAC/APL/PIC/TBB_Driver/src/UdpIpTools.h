@@ -37,7 +37,7 @@ namespace LOFAR {
 
 static const uint16 BASEUDPPORT = 0x7BB0; // (=31664) start numbering src and dst UDP ports at this number
 static const uint16 TRANSIENT_FRAME_SIZE = 2140; // bytes, header(88) + payload(2048) + CRC(4)
-static const uint16 SUBBANDS_FRAME_SIZE = 2012;  // bytes, header(88) + payload(1920) + CRC(4)
+static const uint16 SUBBANDS_FRAME_SIZE = 2040;  // bytes, header(88) + payload(1948) + CRC(4)
 
 //TbbSettings *TS = TbbSettings::instance();
 

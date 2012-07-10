@@ -34,11 +34,11 @@ namespace LOFAR {
 //
 // TBBReadCmd(...)
 //
-TBBReadCmd::TBBReadCmd (uint32	rcuNr, 	uint32	time, 	uint32	sampleTime,
+TBBReadCmd::TBBReadCmd (uint32	rcuNr, 	uint32	time, 	uint32	sampleNr,
 						uint32	prePages, 	uint32	postPages) :
 	itsRcuNr	 (rcuNr),
 	itsTime 	 (time),
-	itsSampleTime(sampleTime),
+	itsSampleNr  (sampleNr),
 	itsPrePages	 (prePages),
 	itsPostPages (postPages)
 {}
@@ -49,7 +49,7 @@ TBBReadCmd::TBBReadCmd (uint32	rcuNr, 	uint32	time, 	uint32	sampleTime,
 TBBReadCmd::TBBReadCmd() :
 	itsRcuNr	 (0),
 	itsTime 	 (0),
-	itsSampleTime(0),
+	itsSampleNr  (0),
 	itsPrePages	 (0),
 	itsPostPages (0)
 {}
@@ -62,9 +62,9 @@ TBBReadCmd& TBBReadCmd::operator=(const TBBReadCmd& that)
 	if (this != &that) { 
 		this->itsRcuNr 	   = that.itsRcuNr; 
 		this->itsTime 	   = that.itsTime; 
-		this->itsSampleTime= that.itsSampleTime; 
+		this->itsSampleNr   = that.itsSampleNr; 
 		this->itsPrePages  = that.itsPrePages; 
-		this->itsPostPages = that.itsPostPages; 
+		this->itsPostPages  = that.itsPostPages;
 	} 
 
 	return (*this); 
@@ -77,10 +77,9 @@ ostream& TBBReadCmd::print(ostream&	os) const
 {
 	os << "RCUnr     : " << itsRcuNr << endl;
 	os << "Time      : " << to_simple_string(from_time_t(itsTime)) << endl;
-	os << "SampleTime: " << itsSampleTime << endl;
+	os << "SampleNr   : " << itsSampleNr << endl;
 	os << "Pre pages : " << itsPrePages << endl;
-	os << "Post pages: " << itsPostPages << endl;
-
+	os << "Post pages : " << itsPostPages << endl;
 	return (os);
 }
 
