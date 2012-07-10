@@ -146,6 +146,7 @@ class Parset: public ParameterSet
     std::vector<unsigned>	phaseTwoPsets() const;
     std::vector<unsigned>	phaseThreePsets() const;
     std::vector<unsigned>	usedPsets() const; // union of phasePsets
+    unsigned	                totalNrPsets() const; // nr psets in the partition
     bool			phaseThreeDisjunct() const; // if phase 3 does not overlap with phase 1 or 2 in psets or cores
     std::vector<unsigned>	tabList() const;
     bool			conflictingResources(const Parset &otherParset, std::stringstream &error) const;
@@ -167,8 +168,10 @@ class Parset: public ParameterSet
 
     bool                        onlineFlagging() const;
     bool                        onlinePreCorrelationFlagging() const;
+    bool                        onlinePreCorrelationNoChannelsFlagging() const;
     bool                        onlinePostCorrelationFlagging() const;
     bool                        onlinePostCorrelationFlaggingDetectBrokenStations() const;
+    unsigned                    onlinePreCorrelationFlaggingIntegration() const;
     std::string                 onlinePreCorrelationFlaggingType(std::string defaultVal) const;
     std::string                 onlinePreCorrelationFlaggingStatisticsType(std::string defaultVal) const;
     std::string                 onlinePostCorrelationFlaggingType(std::string defaultVal) const;
@@ -189,6 +192,9 @@ class Parset: public ParameterSet
     std::string			bandFilter() const;
     std::string			antennaSet() const;
 
+    unsigned			nrBeams() const;
+    std::string                 beamTarget(unsigned beam) const;
+
     unsigned			nrPencilBeams(unsigned beam) const;
     std::vector<unsigned>	nrPencilBeams() const;
     unsigned			totalNrPencilBeams() const;
@@ -201,7 +207,6 @@ class Parset: public ParameterSet
     std::vector<unsigned>	subbandList() const;
     unsigned			nrSubbands() const;
     unsigned			nrSubbandsPerSAP(unsigned sap) const;
-    unsigned			nrBeams() const;
     unsigned			nyquistZone() const;
 
     std::vector<unsigned>	subbandToSAPmapping() const;
@@ -246,6 +251,8 @@ class Parset: public ParameterSet
 
 private:
     const std::string		itsName;
+
+    mutable std::string		itsWriteCache;
 
     mutable SmartPtr<const Transpose2>     itsTransposeLogic;
     mutable SmartPtr<const CN_Transpose2>  itsCN_TransposeLogic;
@@ -775,10 +782,21 @@ inline bool Parset::onlinePreCorrelationFlagging() const
   return getBool("OLAP.CNProc.onlinePreCorrelationFlagging", false);
 }
 
+inline bool Parset::onlinePreCorrelationNoChannelsFlagging() const
+{
+  return getBool("OLAP.CNProc.onlinePreCorrelationNoChannelsFlagging", false);
+}
+
 inline bool Parset::onlinePostCorrelationFlagging() const
 {
   return getBool("OLAP.CNProc.onlinePostCorrelationFlagging", false);
 }
+
+ inline unsigned Parset::onlinePreCorrelationFlaggingIntegration() const
+{
+  return getUint32("OLAP.CNProc.onlinePostCorrelationFlaggingIntegration", 0);
+}
+
 
 inline string Parset::onlinePreCorrelationFlaggingType(std::string defaultVal) const
 {
@@ -973,6 +991,18 @@ inline vector<unsigned> Parset::phaseTwoPsets() const
 inline vector<unsigned> Parset::phaseThreePsets() const
 {
   return getUint32Vector("OLAP.CNProc.phaseThreePsets",true);
+}
+
+inline unsigned Parset::totalNrPsets() const
+{
+  const std::string key = "OLAP.IONProc.psetList";
+
+  if (isDefined(key)) {
+    return getStringVector(key,true).size();
+  } else {
+    LOG_WARN_STR( "Missing key " << key << ", using the used psets as a fallback");
+    return usedPsets().size();
+  }  
 }
 
 inline vector<unsigned> Parset::tabList() const

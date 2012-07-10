@@ -107,14 +107,17 @@ public class ResultPanelHelper {
     private void addBasePanels() {
         //generic node panel
         itsVector.add("nl.astron.lofar.sas.otbcomponents.NodeViewPanel");
-        //generic parameter panel
+        //generic parameter & meta data panel
         itsVector.add("nl.astron.lofar.sas.otbcomponents.ParameterViewPanel");
         addParSetAndLogPanels();
+        //generic parameter including Metadata panel
     }
     
     private void addParSetAndLogPanels() {
         //generic parset view panel
         itsVector.add("nl.astron.lofar.sas.otbcomponents.ParSetViewPanel");
+        //parset+ metadata view panel
+        itsVector.add("nl.astron.lofar.sas.otbcomponents.ParSetMetaViewPanel");
         //generic logging panel
         itsVector.add("nl.astron.lofar.sas.otbcomponents.LogParamPanel");
     }

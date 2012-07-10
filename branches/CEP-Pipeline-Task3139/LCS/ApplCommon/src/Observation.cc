@@ -58,7 +58,8 @@ Observation::Observation() :
 // Observation(ParameterSet*, [hasDualHBA]))
 //
 Observation::Observation(const ParameterSet*		aParSet,
-						 bool				hasDualHBA) :
+						 bool				hasDualHBA,
+						 unsigned			nrBGPIOnodes) :
 	name(),
 	obsID(0),
 	startTime(0),
@@ -308,13 +309,15 @@ Observation::Observation(const ParameterSet*		aParSet,
                 unsigned dataProductNrs[]      = { 2,            1 };
 		size_t nrDataProducts = sizeof dataProductNames / sizeof dataProductNames[0];
 
+        const unsigned nrPsets = nrBGPIOnodes;
+
 		// by default, use all psets
 		vector<unsigned> phaseTwoPsets;
 		if (aParSet->isDefined(olapprefix+"CNProc.phaseTwoPsets")) {
 			phaseTwoPsets = aParSet->getUint32Vector(olapprefix+"CNProc.phaseTwoPsets", true);
 		}
 		if (phaseTwoPsets.empty())  {
-			for (unsigned p = 0; p < 64; p++) {
+			for (unsigned p = 0; p < nrPsets; p++) {
 				phaseTwoPsets.push_back(p);
 			}
 		}
@@ -325,7 +328,7 @@ Observation::Observation(const ParameterSet*		aParSet,
 			phaseThreePsets = aParSet->getUint32Vector(olapprefix+"CNProc.phaseThreePsets", true);
 		}
 		if (phaseThreePsets.empty())  {
-			for (unsigned p = 0; p < 64; p++) {
+			for (unsigned p = 0; p < nrPsets; p++) {
 				phaseThreePsets.push_back(p);
 			}
 		}

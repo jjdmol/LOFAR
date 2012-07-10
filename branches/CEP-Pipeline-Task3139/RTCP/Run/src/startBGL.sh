@@ -19,8 +19,19 @@ OBSID=$5
 source /opt/lofar/bin/locations.sh
 
 (
+
+echo "---------------"
+date
+echo starting obs $OBSID
+echo "---------------"
+
+STORAGE_PARSET=/opt/lofar/log/L$OBSID.parset
+
 # Convert keys where needed
 /opt/lofar/bin/LOFAR/Parset.py -P $PARTITION $PARSET /opt/lofar/etc/OLAP.parset <(echo "$EXTRA_KEYS") > $IONPROC_PARSET &&
+
+# Copy the parset to NFS for post processing
+(cp $IONPROC_PARSET $STORAGE_PARSET || true) &&
 
 # Make the /opt/lofar/log/latest symlink
 (ln -sfT `dirname $STORAGE_PARSET` /opt/lofar/log/latest || true) &&

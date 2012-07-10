@@ -195,7 +195,9 @@ template <typename T> inline void Thread::stub(Args<T> *args)
   // can be reused once the thread finishes.
   Cancellation::ScopedRegisterThread rt;
 
-  LOGGER_NEWTHREAD();
+  LOGGER_ENTER_THREAD();
+
+  LOG_DEBUG_STR(logPrefix << "Thread started");
 
   ThreadMap::ScopedRegistration sr(globalThreadMap, logPrefix);
 
@@ -216,15 +218,21 @@ template <typename T> inline void Thread::stub(Args<T> *args)
   } catch (std::exception &ex) {
     LOG_FATAL_STR(logPrefix << "Caught std::exception: " << ex.what());
   } catch (...) {
-    LOG_DEBUG_STR(logPrefix << "Cancelled");
+    LOG_DEBUG_STR(logPrefix << "Thread cancelled");
 
     finished.up();
+
+    LOGGER_EXIT_THREAD();
+
     throw;
   }
 
   finished.up();
-}
 
+  LOG_DEBUG_STR(logPrefix << "Thread stopped");
+
+  LOGGER_EXIT_THREAD();
+}
 
 template <typename T> inline void *Thread::stub(void *arg)
 {

@@ -46,17 +46,19 @@ template <typename T> void Correlator::setNrValidSamples(const SampleData<> *sam
   for (unsigned stat2 = 0; stat2 < itsNrStations; stat2 ++) {
     for (unsigned stat1 = 0; stat1 <= stat2; stat1 ++) {
       unsigned bl             = baseline(stat1, stat2);
-      unsigned nrValidSamples = itsNrSamplesPerIntegration - (sampleData->flags[itsStationMapping[stat1]] | sampleData->flags[itsStationMapping[stat2]]).count();
 
       if (itsNrChannels == 1) {
+	unsigned nrValidSamples = itsNrSamplesPerIntegration - (sampleData->flags[0][itsStationMapping[stat1]] | sampleData->flags[0][itsStationMapping[stat2]]).count();
 	theNrValidSamples[bl][0] = nrValidSamples;
       } else {
 	theNrValidSamples[bl][0] = 0; // channel 0 does not contain valid data
 
-	for (unsigned ch = 1; ch < itsNrChannels; ch ++)
+	for (unsigned ch = 1; ch < itsNrChannels; ch ++) {
+	  unsigned nrValidSamples = itsNrSamplesPerIntegration - (sampleData->flags[ch][itsStationMapping[stat1]] | sampleData->flags[ch][itsStationMapping[stat2]]).count();
 	  theNrValidSamples[bl][ch] = nrValidSamples;
       }
     }
+  }
   }
 }
 
@@ -78,7 +80,6 @@ void Correlator::computeFlags(const SampleData<> *sampleData, CorrelatedData *co
 
   computeFlagsTimer.stop();
 }
-
 
 
 void Correlator::correlate(const SampleData<> *sampleData, CorrelatedData *correlatedData)
@@ -104,7 +105,7 @@ void Correlator::correlate(const SampleData<> *sampleData, CorrelatedData *corre
 	unsigned bl	 = baseline(stat1, stat2);
 	unsigned nrValid = 0;
 
-	if ((ch > 0 || itsNrChannels == 1) /* && !itsRFIflags[stat1][ch] && !itsRFIflags[stat2][ch] */) {
+	if ((ch > 0 || itsNrChannels == 1)) {
 	  nrValid = correlatedData->nrValidSamples(bl, ch);
 
 #if 0

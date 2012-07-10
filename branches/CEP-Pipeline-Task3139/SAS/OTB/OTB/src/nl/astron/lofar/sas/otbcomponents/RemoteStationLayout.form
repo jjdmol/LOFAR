@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.1" encoding="UTF-8" ?>
 
 <Form version="1.3" maxVersion="1.5" type="org.netbeans.modules.form.forminfo.JPanelFormInfo">
   <Properties>
@@ -13,6 +13,7 @@
   <AuxValues>
     <AuxValue name="FormSettings_autoResourcing" type="java.lang.Integer" value="0"/>
     <AuxValue name="FormSettings_autoSetComponentName" type="java.lang.Boolean" value="false"/>
+    <AuxValue name="FormSettings_generateFQN" type="java.lang.Boolean" value="true"/>
     <AuxValue name="FormSettings_generateMnemonicsCode" type="java.lang.Boolean" value="false"/>
     <AuxValue name="FormSettings_i18nAutoMode" type="java.lang.Boolean" value="false"/>
     <AuxValue name="FormSettings_layoutCodeTarget" type="java.lang.Integer" value="1"/>
@@ -36,6 +37,23 @@
       <Constraints>
         <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
           <AbsoluteConstraints x="20" y="100" width="-1" height="20"/>
+        </Constraint>
+      </Constraints>
+    </Component>
+    <Component class="nl.astron.lofar.sas.otbcomponents.SquareButton" name="HBALeftInnerSquare">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="24"/>
+        <Property name="enabled" type="boolean" value="false"/>
+        <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+          <Font name="Dialog" size="12" style="1"/>
+        </Property>
+      </Properties>
+      <AuxValues>
+        <AuxValue name="JavaCodeGenerator_CreateCodePost" type="java.lang.String" value="HBALeftInnerSquare.addActionListener(new java.awt.event.ActionListener() {&#xa;  public void actionPerformed(java.awt.event.ActionEvent evt) {&#xa;    ActionEvent event = new ActionEvent(this,-1,&quot;HBALeftInnerSquare&quot;);&#xa;    fireActionListenerActionPerformed(event);&#xa;  }&#xa;});"/>
+      </AuxValues>
+      <Constraints>
+        <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
+          <AbsoluteConstraints x="180" y="80" width="50" height="50"/>
         </Constraint>
       </Constraints>
     </Component>
@@ -66,20 +84,34 @@
         </Constraint>
       </Constraints>
     </Component>
-    <Component class="nl.astron.lofar.sas.otbcomponents.SquareButton" name="HBALeftSquare">
+    <Component class="javax.swing.JLabel" name="HBALeftOuterSquareText">
       <Properties>
-        <Property name="text" type="java.lang.String" value="48"/>
+        <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+          <Font name="Tahoma" size="11" style="1"/>
+        </Property>
+        <Property name="text" type="java.lang.String" value="24"/>
+        <Property name="enabled" type="boolean" value="false"/>
+      </Properties>
+      <Constraints>
+        <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
+          <AbsoluteConstraints x="160" y="100" width="-1" height="-1"/>
+        </Constraint>
+      </Constraints>
+    </Component>
+    <Component class="nl.astron.lofar.sas.otbcomponents.SquareButton" name="HBALeftOuterSquare">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="24"/>
         <Property name="enabled" type="boolean" value="false"/>
         <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
           <Font name="Dialog" size="12" style="1"/>
         </Property>
       </Properties>
       <AuxValues>
-        <AuxValue name="JavaCodeGenerator_CreateCodePost" type="java.lang.String" value="HBALeftSquare.addActionListener(new java.awt.event.ActionListener() {&#xa;  public void actionPerformed(java.awt.event.ActionEvent evt) {&#xa;    ActionEvent event = new ActionEvent(this,-1,&quot;HBALeftSquare&quot;);&#xa;    fireActionListenerActionPerformed(event);&#xa;  }&#xa;});"/>
+        <AuxValue name="JavaCodeGenerator_CreateCodePost" type="java.lang.String" value="HBALeftOuterSquare.addActionListener(new java.awt.event.ActionListener() {&#xa;  public void actionPerformed(java.awt.event.ActionEvent evt) {&#xa;    ActionEvent event = new ActionEvent(this,-1,&quot;HBALeftOuterSquare&quot;);&#xa;    fireActionListenerActionPerformed(event);&#xa;  }&#xa;});"/>
       </AuxValues>
       <Constraints>
         <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
-          <AbsoluteConstraints x="160" y="70" width="70" height="70"/>
+          <AbsoluteConstraints x="155" y="55" width="100" height="100"/>
         </Constraint>
       </Constraints>
     </Component>

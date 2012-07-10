@@ -47,6 +47,7 @@
 #include <LocationInfo.h>
 #include <PPF.h>
 #include <PreCorrelationFlagger.h>
+#include <PreCorrelationNoChannelsFlagger.h>
 #include <PostCorrelationFlagger.h>
 #include <Ring.h>
 #include <Stokes.h>
@@ -85,7 +86,9 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
 #endif
     int			transposeBeams(unsigned block);
     void		filter();
+    void                checkInputForZeros(unsigned station);
     void		dedisperseAfterBeamForming(unsigned beam, double dm);
+    void		preCorrelationNoChannelsFlagging();
     void		preCorrelationFlagging();
     void		mergeStations();
     void		formBeams(unsigned sap, unsigned firstBeam, unsigned nrBeams);
@@ -102,7 +105,10 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
 
     double		itsStartTime, itsIntegrationTime;
     unsigned		itsBlock;
+
+    std::vector<std::string> itsStationNames;
     unsigned		itsNrStations;
+    unsigned		itsNrSlotsInFrame;
     unsigned		itsNrSubbands;
     std::vector<unsigned> itsSubbandToSAPmapping;
     std::vector<unsigned> itsNrPencilBeams;
@@ -111,6 +117,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
     unsigned		itsNrSubbandsPerPart;
     unsigned		itsNrChannels;
     unsigned		itsNrSamplesPerIntegration;
+    double		itsCNintegrationTime;
     unsigned		itsPhaseTwoPsetSize, itsPhaseThreePsetSize;
     unsigned		itsPhaseTwoPsetIndex, itsPhaseThreePsetIndex;
     bool		itsPhaseThreeExists, itsPhaseThreeDisjunct;
@@ -168,6 +175,7 @@ template <typename SAMPLE_TYPE> class CN_Processing : public CN_Processing_Base
     SmartPtr<DedispersionAfterBeamForming>	itsDedispersionAfterBeamForming;
     SmartPtr<DedispersionBeforeBeamForming>	itsDedispersionBeforeBeamForming;
     SmartPtr<PreCorrelationFlagger>		itsPreCorrelationFlagger;
+    SmartPtr<PreCorrelationNoChannelsFlagger>	itsPreCorrelationNoChannelsFlagger;
     SmartPtr<PostCorrelationFlagger>		itsPostCorrelationFlagger;
     SmartPtr<Trigger>				itsTrigger;
 };

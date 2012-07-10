@@ -6,10 +6,7 @@
 #
 
 # cron jobs don't set $PATH, so construct our own.
-if [ -z "$PATH" ]
-then
-  export PATH=/bin:/usr/bin:/opt/lofar/bin
-fi
+export PATH=$PATH:/bin:/usr/bin:/opt/lofar/bin
 
 source locations.sh
 

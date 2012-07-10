@@ -81,8 +81,22 @@ Parset::Parset(Stream *stream)
 
 void Parset::write(Stream *stream) const
 {
-  std::string buffer;
+  // stream == NULL fills the cache,
+  // causing subsequent write()s to use it
+  bool readCache = !itsWriteCache.empty();
+  bool writeCache = !stream;
+  
+  std::string newbuffer;
+  std::string &buffer = readCache || writeCache ? itsWriteCache : newbuffer;
+
+  if (buffer.empty())
   writeBuffer(buffer);
+
+  if (!stream) {
+    // we only filled the cache
+    return;
+  }
+  
   uint64 size = buffer.size();
 
 #if !defined WORDS_BIGENDIAN
@@ -189,6 +203,21 @@ void Parset::check() const
 
     if (nrSubbands() > phaseTwoPsets().size() * phaseOneTwoCores().size() )
       THROW(InterfaceException, "For the second transpose to function, there need to be at least nrSubbands cores in phase 2 (requested: " << nrSubbands() << " subbands on " << (phaseTwoPsets().size() * phaseOneTwoCores().size()) << " cores)");
+  }
+
+  // check whether the beam forming parameters are valid
+  const Transpose2 &logic = transposeLogic();
+
+  for (unsigned i = 0; i < logic.nrStreams(); i++) {
+    const StreamInfo &info = logic.streamInfo[i];
+
+    if ( info.timeIntFactor == 0 )
+      THROW(InterfaceException, "Temporal integration factor needs to be > 0 (it is set to 0 for " << (info.coherent ? "coherent" : "incoherent") << " beams).");
+
+    if ( info.coherent
+      && info.stokesType == STOKES_XXYY
+      && info.timeIntFactor != 1 )
+      THROW(InterfaceException, "Cannot perform temporal integration if calculating Coherent Stokes XXYY. Integration factor needs to be 1, but is set to " << info.timeIntFactor);
   }
 }
 
@@ -405,6 +434,13 @@ std::vector<double> Parset::getPhaseCorrection(const string &name, char pol) con
   return getDoubleVector(str(boost::format("PIC.Core.%s.%s.phaseCorrection.%c") % name % antennaSet() % pol));
 }
 */
+
+string Parset::beamTarget(unsigned beam) const
+{
+  string key = str(boost::format("Observation.Beam[%u].target") % beam);
+
+  return getString(key, "");
+}
 
 
 std::vector<double> Parset::getPencilBeam(unsigned beam, unsigned pencil) const

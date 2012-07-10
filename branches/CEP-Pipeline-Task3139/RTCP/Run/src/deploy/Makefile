@@ -176,7 +176,7 @@ configure:		checkout
 	mkdir -p ${BUILD_DIR}/lhn/gnu_opt
         # remove /data/sys: on lhn, /opt is a symlink for /data/sys/opt, which cmake resolves for us. However, on locus,
         # we really need it as /opt. 
-	ssh ${LHN_HOST} 'cd ${BUILD_DIR}/lhn/gnu_opt && cmake ${SOURCE_DIR}/LOFAR -DBUILD_PACKAGES="Storage;StaticMetaData" ${COMMON_FLAGS} ${STORAGE_FLAGS} -DCMAKE_INSTALL_PREFIX=${LOCUS_INSTALL_DIR} && sed -i s#/data/sys##g CMakeCache.txt'
+	ssh ${LHN_HOST} 'cd ${BUILD_DIR}/lhn/gnu_opt && cmake ${SOURCE_DIR}/LOFAR -DBUILD_PACKAGES="Storage;StaticMetaData" ${COMMON_FLAGS} ${STORAGE_FLAGS} -DCMAKE_INSTALL_PREFIX=${LOCUS_INSTALL_DIR}'
 
 # Build and install ION_Processing
 ${INSTALL_ION}:		configure

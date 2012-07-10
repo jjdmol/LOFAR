@@ -29,6 +29,7 @@ set(cnproc_LIB_SRCS
   PPF.cc
   Flagger.cc
   PreCorrelationFlagger.cc
+  PreCorrelationNoChannelsFlagger.cc
   PostCorrelationFlagger.cc
   Stokes.cc)
 
@@ -38,6 +39,7 @@ set(cnproc_LIB_SRCS
 if(CMAKE_ASM-BGP_COMPILER_WORKS)
   list(APPEND cnproc_LIB_SRCS
     BeamFormerAsm.S
+    ContainsOnlyZerosAsm.S
     CorrelatorAsm.S
     DedispersionAsm.S
     FIR_Asm.S

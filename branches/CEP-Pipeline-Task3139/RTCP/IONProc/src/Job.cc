@@ -37,11 +37,7 @@
 #include <Stream/SocketStream.h>
 #include <Stream/PortBroker.h>
 
-#include <sys/types.h>
-#include <sys/wait.h>
 #include <unistd.h>
-#include <fcntl.h>
-#include <signal.h>
 #include <time.h>
 
 #include <boost/format.hpp>
@@ -72,6 +68,9 @@ Job::Job(const char *parsetName)
   itsStopTime(0.0)
 {
   itsLogPrefix = str(boost::format("[obs %d] ") % itsParset.observationID());
+
+  // fill the cache to avoid regenerating it many times over
+  itsParset.write(NULL);
 
   if (LOG_CONDITION) {
     // Handle PVSS (CEPlogProcessor) communication -- report PVSS name in the first log line to allow CEPlogProcessor to resolve obsIDs
@@ -195,216 +194,6 @@ template <typename T> void Job::broadcast(T &value)
 }
 
 
-static void exitwitherror( const char *errorstr )
-{
-  // can't cast to (void) since gcc won't allow that as a method to drop the result
-  int ignoreResult;
-
-  ignoreResult = write(STDERR_FILENO, errorstr, strlen(errorstr)+1);
-
-  // use _exit instead of exit to avoid calling atexit handlers in both
-  // the master and the child process.
-  _exit(1);
-}
-
-void Job::StorageProcess::execSSH(const char *sshKey, const char *userName, const char *hostName, const char *executable, const char *rank, const char *cwd, const char *isBigEndian)
-{
-  // DO NOT DO ANY CALL THAT GRABS A LOCK, since the lock may be held by a
-  // thread that is no longer part of our address space
-
-  // use write() for output since the Logger uses a mutex, and printf also holds locks
-
-  // Prevent cancellation due to race conditions. A cancellation can still be pending for this JobThread, in which case one of the system calls
-  // below triggers it. If this thread/process can be cancelled, there will be multiple processes running, leading to all kinds of Bad Things.
-  Cancellation::disable();
-
-  // close all file descriptors other than stdin/out/err, which might have been openend by
-  // other threads at the time of fork(). We brute force over all possible fds, most of which will be invalid.
-  for (int f = sysconf(_SC_OPEN_MAX); f > 2; --f)
-    (void)close(f);
-
-  // create a valid stdin from which can be read (a blocking fd created by pipe() won't suffice anymore for since at least OpenSSH 5.8)
-  // rationale: this forked process inherits stdin from the parent process, which is unusable because IONProc is started in the background
-  // and routed through mpirun as well. Also, it is shared by all forked processes. Nevertheless, we want Storage to be able to determine
-  // when to shut down based on whether stdin is open. So we create a new stdin.
-  int devzero = open("/dev/zero", O_RDONLY);
-
-  if (devzero < 0)
-    exitwitherror("cannot open /dev/zero\n");
-
-  if (close(0) < 0)
-    exitwitherror("cannot close stdin\n");
-
-  if (dup(devzero) < 0)
-    exitwitherror("cannot dup /dev/zero into stdin\n");
-
-  if (close(devzero) < 0)
-    exitwitherror("cannot close /dev/zero\n");
-
-  if (execl("/usr/bin/ssh",
-    "ssh",
-    "-q",
-    "-i", sshKey,
-    "-c", "blowfish",
-    "-o", "StrictHostKeyChecking=no",
-    "-o", "UserKnownHostsFile=/dev/null",
-    "-o", "ServerAliveInterval=30",
-    "-l", userName,
-    hostName,
-
-    "cd", cwd, "&&",
-#if defined USE_VALGRIND
-    "valgrind", "--leak-check=full",
-#endif
-    executable,
-
-    boost::lexical_cast<std::string>(itsParset.observationID()).c_str(),
-    rank,
-    isBigEndian,
-
-    static_cast<char *>(0)
-  ) < 0)
-    exitwitherror("execl failed\n");
-
-  exitwitherror("execl succeeded but did return\n");
-}
-
-
-void Job::StorageProcess::forkSSH(const char *sshKey, const char *userName, const char *hostName, const char *executable, const char *rank, const char *cwd, const char *isBigEndian)
-{
-  LOG_INFO_STR(itsLogPrefix << " starting");
-
-  LOG_DEBUG_STR(itsLogPrefix << "child will exec "
-    "\"/usr/bin/ssh "
-    "-q "
-    "-i " << sshKey << " "
-    "-c blowfish "
-    "-o StrictHostKeyChecking=no "
-    "-o UserKnownHostsFile=/dev/null "
-    "-o ServerAliveInterval=30 "
-    "-l " << userName << " "
-    << hostName << " "
-    "cd " << cwd << " && "
-#if defined USE_VALGRIND
-    "valgrind " "--leak-check=full "
-#endif
-    << executable << " " << rank << " " << isBigEndian << " "
-    "\""
-  );
-
-  switch (itsPID = fork()) {
-    case -1 : throw SystemCallException("fork", errno, THROW_ARGS);
-
-    case  0 : execSSH(sshKey, userName, hostName, executable, rank, cwd, isBigEndian);
-  }
-}
-
-
-void Job::StorageProcess::joinSSH(unsigned &timeout)
-{
-  if (itsPID != 0) {
-    int status;
-
-    // always try at least one waitpid(). if child has not exited, optionally
-    // sleep and try again.
-    for (;;) {
-      pid_t ret;
-
-      if ((ret = waitpid(itsPID, &status, WNOHANG)) == (pid_t)-1) {
-        int error = errno;
-
-        if (error == EINTR) {
-          LOG_DEBUG_STR(itsLogPrefix << " waitpid() was interrupted -- retrying");
-          continue;
-        }
-
-        // error
-        LOG_WARN_STR(itsLogPrefix << " waitpid() failed with errno " << error);
-        return;
-      } else if (ret == 0) {
-        // child still running
-        if (timeout == 0) {
-          break;
-        }
-
-        timeout--;
-        sleep(1);
-      } else {
-        // child exited
-        if (WIFSIGNALED(status) != 0)
-          LOG_WARN_STR(itsLogPrefix << "SSH was killed by signal " << WTERMSIG(status));
-        else if (WEXITSTATUS(status) != 0) {
-          const char *explanation;
-
-          switch (WEXITSTATUS(status)) {
-            default:
-              explanation = "??";
-              break;
-
-            case 255:
-              explanation = "Network or authentication error";
-              break;
-            case 127:
-              explanation = "BASH: command/library not found";
-              break;
-            case 126:
-              explanation = "BASH: command found but could not be executed (wrong architecture?)";
-              break;
-
-            case 128 + SIGHUP:
-              explanation = "killed by SIGHUP";
-              break;
-            case 128 + SIGINT:
-              explanation = "killed by SIGINT (Ctrl-C)";
-              break;
-            case 128 + SIGQUIT:
-              explanation = "killed by SIGQUIT";
-              break;
-            case 128 + SIGILL:
-              explanation = "illegal instruction";
-              break;
-            case 128 + SIGABRT:
-              explanation = "killed by SIGABRT";
-              break;
-            case 128 + SIGKILL:
-              explanation = "killed by SIGKILL";
-              break;
-            case 128 + SIGSEGV:
-              explanation = "segmentation fault";
-              break;
-            case 128 + SIGPIPE:
-              explanation = "broken pipe";
-              break;
-            case 128 + SIGALRM:
-              explanation = "killed by SIGALRM";
-              break;
-            case 128 + SIGTERM:
-              explanation = "killed by SIGTERM";
-              break;
-          }
-
-          LOG_ERROR_STR(itsLogPrefix << " exited with exit code " << WEXITSTATUS(status) << " (" << explanation << ")" );
-        } else
-          LOG_INFO_STR(itsLogPrefix << " terminated normally");
-
-        return;  
-      }
-    }
-
-    // child did not exit within the given timeout
-
-    LOG_WARN_STR(itsLogPrefix << " sending SIGTERM");
-    kill(itsPID, SIGTERM);
-
-    if (waitpid(itsPID, &status, 0) == -1) {
-      LOG_WARN_STR(itsLogPrefix << " waitpid() failed");
-    }
-
-    LOG_WARN_STR(itsLogPrefix << " terminated after sending SIGTERM");
-  }
-}
-
-
 Job::StorageProcess::StorageProcess( const Parset &parset, const string &logPrefix, int rank, const string &hostname )
 :
   itsParset(parset),
@@ -433,28 +222,64 @@ void Job::StorageProcess::start()
   if (getcwd(cwd, sizeof cwd) == 0)
     throw SystemCallException("getcwd", errno, THROW_ARGS);
 
-  forkSSH(sshKey.c_str(),
-          userName.c_str(),
-          itsHostname.c_str(),
-          executable.c_str(),
-          boost::lexical_cast<std::string>(itsRank).c_str(),
-          cwd,
-#if defined WORDS_BIGENDIAN
-          "1"
+#ifdef HAVE_LIBSSH2
+  std::string commandLine = str(boost::format("cd %s && %s%s %u %d %u")
+    % cwd
+#if defined USE_VALGRIND
+    % "valgrind --leak-check=full "
 #else
-          "0"
+    % ""
 #endif
-          );
+    % executable
+    % itsParset.observationID()
+    % itsRank
+#if defined WORDS_BIGENDIAN
+    % 1
+#else
+    % 0
+#endif
+  );
+
+  itsSSHconnection = new SSHconnection(itsLogPrefix, itsHostname, commandLine, userName, sshKey);
+  itsSSHconnection->start();
+#else
+
+#warning Using fork/exec for SSH processes to Storage
+  const char * const commandLine[] = {
+    "cd ", cwd, " && ",
+#if defined USE_VALGRIND
+    "valgrind " "--leak-check=full "
+#endif
+    executable.c_str(),
+    boost::lexical_cast<std::string>(itsRank).c_str(),
+#if defined WORDS_BIGENDIAN
+    "1",
+#else
+    "0",
+#endif
+    0
+  };
+  itsPID = forkSSH(itsLogPrefix, itsHostname.c_str(), commandLine, userName.c_str(), sshKey.c_str());
 
   // client process won't reach this point
+#endif
 
   itsThread = new Thread(this, &Job::StorageProcess::controlThread, itsLogPrefix + "[ControlThread] ", 65535);
 }
 
 
-void Job::StorageProcess::stop(unsigned &timeout)
+void Job::StorageProcess::stop(struct timespec deadline)
 {
-  joinSSH(timeout);
+#ifdef HAVE_LIBSSH2
+  itsSSHconnection->stop(deadline);
+#else
+  // TODO: update timeout
+  time_t now = time(0);
+
+  unsigned timeout = 1 + (now < deadline.tv_sec ? deadline.tv_sec - now : 0);
+
+  joinSSH(itsLogPrefix, itsPID, timeout);
+#endif  
 }
 
 
@@ -486,11 +311,13 @@ void Job::startStorageProcesses()
 
 void Job::stopStorageProcesses()
 {
-  // warning: there could be zero storage processes
-  unsigned timeleft = 10;
+  struct timespec deadline;
+
+  deadline.tv_sec  = time(0) + 10;
+  deadline.tv_nsec = 0;
 
   for (unsigned rank = 0; rank < itsStorageProcesses.size(); rank ++)
-    itsStorageProcesses[rank]->stop(timeleft);
+    itsStorageProcesses[rank]->stop(deadline);
 }
 
 

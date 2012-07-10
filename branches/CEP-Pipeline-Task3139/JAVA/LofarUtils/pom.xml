@@ -9,7 +9,7 @@
 	<groupId>nl.astron.lofar</groupId>
 	<artifactId>lofarutils</artifactId>
 	<name>Lofar Utils</name>
-	<version>1.0.1-SNAPSHOT</version>
+	<version>1.0.2</version>
 
 	<organization>
 		<name>Astron</name>
@@ -60,5 +60,6 @@
 			<url>https://support.astron.nl/nexus/content/repositories/snapshots/</url>
 		</snapshotRepository>
 	</distributionManagement>
+        
 
 </project>

@@ -88,9 +88,9 @@ function set_psetinfo() {
   # bghierarchy needs a valid stdin for some reason and will read from it, so provide a fake one
   if [ "$PARTITION" == "R00R01" ]
   then
-    SUBPARTITIONS="`(bghierarchy -s R00 R01;bghierarchy -s \`bghierarchy -s R00 R01\`) </dev/null`"
+    SUBPARTITIONS="`(cd /;bghierarchy -s R00 R01;bghierarchy -s \`bghierarchy -s R00 R01\`) </dev/null`"
   else
-    SUBPARTITIONS="`(bghierarchy -s $PARTITION;bghierarchy -s \`bghierarchy -s $PARTITION\`) </dev/null`"
+    SUBPARTITIONS="`(cd /;bghierarchy -s $PARTITION;bghierarchy -s \`bghierarchy -s $PARTITION\`) </dev/null`"
   fi  
 
   # a comma-separated list of all psets in $PARTITION

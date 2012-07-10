@@ -29,8 +29,10 @@ endif(USE_VALGRIND)
 ## BGPCN and BGPION, which is a cleaner solution anyway.
 ## ---------------------------------------------------------------------------
 enable_language(ASM-BGP)
-set(CMAKE_C_LINK_EXECUTABLE ${CMAKE_ASM-BGP_LINK_EXECUTABLE})
-set(CMAKE_CXX_LINK_EXECUTABLE ${CMAKE_ASM-BGP_LINK_EXECUTABLE})
+if(LOFAR_COMPILER_SUITE STREQUAL "BGPCN")
+  set(CMAKE_C_LINK_EXECUTABLE ${CMAKE_ASM-BGP_LINK_EXECUTABLE})
+  set(CMAKE_CXX_LINK_EXECUTABLE ${CMAKE_ASM-BGP_LINK_EXECUTABLE})
+endif(LOFAR_COMPILER_SUITE STREQUAL "BGPCN")
 
 add_subdirectory(src)
 add_subdirectory(test)

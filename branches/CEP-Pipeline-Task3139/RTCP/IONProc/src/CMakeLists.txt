@@ -32,7 +32,9 @@ lofar_add_library(ionproc
   ReaderWriterSynchronization.cc
   Scheduling.cc
   StreamMultiplexer.cc
+  SSH.cc
   FCNP_ServerStream.cc)
 
 lofar_add_bin_program(versionionproc versionionproc.cc)
 lofar_add_bin_program(ION_Processing ION_main.cc)
+lofar_add_bin_program(generateDelays generateDelays.cc)
