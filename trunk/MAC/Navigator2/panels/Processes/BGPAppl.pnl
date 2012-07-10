@@ -78,7 +78,7 @@ updateBGPAppl(string dp1,dyn_int ionodeList,
                             \"writers\",writerList[i],
                             \"locusNodes\",locusNodeList[i],
                             \"dataProducts\",dataProductList[i],
-                            \"types\",dataProductTypeList[i]);
+                            \"type\",dataProductTypeList[i]);
   }
   
   // set the observation selectable items
