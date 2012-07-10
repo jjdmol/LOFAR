@@ -112,6 +112,10 @@ void ProcessCommander::continueReadAntennaTablesTask(ServerConnectionPtr serverC
 	serverConnection->ReadAntennaTables(_nodeCommands.Top(hostname).LocalPath(), *antennas);
 }
 
+void ProcessCommander::continueReadBandTablesTask(ServerConnectionPtr serverConnection)
+{
+}
+
 void ProcessCommander::continueReadDataRowsTask(ServerConnectionPtr serverConnection)
 {
 }
