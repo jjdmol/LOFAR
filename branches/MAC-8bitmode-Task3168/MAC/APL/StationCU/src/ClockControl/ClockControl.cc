@@ -357,8 +357,16 @@ GCFEvent::TResult ClockControl::connect2RSP_state(GCFEvent& event,
 			LOG_ERROR ("Bitmode could not be get. Ignoring that for now.");
 		}
 		else {
-			itsBitmode = ack.bits_per_sample;
-			LOG_INFO_STR("RSP says bitmode is " << itsBitmode << "MHz. Adopting that value.");
+			itsBitmode = ack.bits_per_sample[0];
+
+                        for (int i = 0; i < MAX_N_RSPBOARDS; i++) {
+                          if (ack.bits_per_sample[i] != ack.bits_per_sample[0]) {
+                            LOG_ERROR_STR("Mixed bit modes not supported: RSP board " << i << " is in " << ack.bits_per_sample[i] << " bit mode, but board 0 is in " << ack.bits_per_sample[0] << " bit mode");
+                          } 
+                        }
+                          
+
+			LOG_INFO_STR("RSP says bitmode is " << itsBitmode << " bits. Adopting that value.");
 			itsOwnPropertySet->setValue(PN_CLC_ACTUAL_BITMODE,GCFPVInteger(itsBitmode));
 			// Note: only here I am allowed to change the value of the requested bitmode. Normally
 			//       the stationController is the owner of this value.
@@ -963,7 +971,13 @@ GCFEvent::TResult ClockControl::active_state(GCFEvent& event, GCFPortInterface& 
 
 		if (itsBitmode == 0) { // my bitmode still uninitialized?
 			LOG_INFO_STR("My bitmode is still not initialized. StationBitmode is " << updateEvent.bits_per_sample << " adopting this value");
-			itsBitmode=updateEvent.bits_per_sample;
+			itsBitmode = updateEvent.bits_per_sample[0];
+
+                        for (int i = 0; i < MAX_N_RSPBOARDS; i++) {
+                          if (updateEvent.bits_per_sample[i] != updateEvent.bits_per_sample[0]) {
+                            LOG_ERROR_STR("Mixed bit modes not supported: RSP board " << i << " is in " << updateEvent.bits_per_sample[i] << " bit mode, but board 0 is in " << updateEvent.bits_per_sample[0] << " bit mode");
+                          } 
+                        }
 			break;
 		}
 

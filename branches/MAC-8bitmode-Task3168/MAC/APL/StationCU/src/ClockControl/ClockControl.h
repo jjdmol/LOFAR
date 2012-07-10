@@ -127,7 +127,7 @@ private:
 	int32					itsClock;
 
 	void*					itsBitmodeSubscription;
-	int32					itsBitmode;
+	uint16					itsBitmode;
 
 	bool					itsSplitterRequest;
 	bitset<MAX_RSPBOARDS>	itsSplitters;
