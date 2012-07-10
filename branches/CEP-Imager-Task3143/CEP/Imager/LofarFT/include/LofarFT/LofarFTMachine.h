@@ -218,7 +218,7 @@ public:
   void put(const VisBuffer& vb, Int row=-1, Bool dopsf=False,
            FTMachine::Type type=FTMachine::OBSERVED);
 
-  mutable Array<Float> itsAvgPB;
+  Matrix<Float> itsAvgPB;
   Bool its_Use_Linear_Interp_Gridder;
 
   // Make the entire image
@@ -232,7 +232,7 @@ public:
   ImageInterface<Complex>& getImage(Matrix<Float>&, Bool normalize=True);
 
   // Get the average primary beam.
-  virtual const Matrix<Float>& getAveragePB() const;
+  Matrix<Float>& getAveragePB();
 
   // Get the spheroidal cut.
   const Matrix<Float>& getSpheroidCut() const

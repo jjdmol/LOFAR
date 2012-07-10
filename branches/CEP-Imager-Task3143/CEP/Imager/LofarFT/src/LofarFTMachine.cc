@@ -132,7 +132,7 @@ LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize,
     offsetLoc(IPosition(4,0)), usezero_p(usezero), noPadding_p(False),
     usePut2_p(False), machineName_p("LofarFTMachine"), itsMS(ms),
     itsNWPlanes(nwPlanes), itsWMax(wmax), itsConvFunc(0),
-    itsVerbose(verbose),
+    itsVerbose(verbose), itsAvgPB(),
     itsMaxSupport(maxsupport), itsOversample(oversample), itsImgName(imgName),
     itsGridMuellerMask(gridMuellerMask),
     itsDegridMuellerMask(degridMuellerMask),
@@ -449,17 +449,22 @@ LofarFTMachine::~LofarFTMachine()
 //  delete itsConvFunc;
 }
 
-const Matrix<Float>& LofarFTMachine::getAveragePB() const
+Matrix<Float>& LofarFTMachine::getAveragePB()
 {
   //cout<<"return beam"<<endl;
   // Read average beam from disk if not present.
   if (itsAvgPB.empty()) {
-    //cout<<"...read beam "<<itsImgName+String::toString(thisterm_p) + ".avgpb"<<endl;
+    cout<<"...read beam "<<itsImgName+String::toString(thisterm_p) + ".avgpb"<<endl;
     PagedImage<Float> pim(itsImgName+String::toString(thisterm_p) + ".avgpb");
     Array<Float> arr = pim.get();
     itsAvgPB.reference (arr.nonDegenerate(2));
+    cout << "...itsAvgPB.shape: " << itsAvgPB.shape() << endl;
   }
-  return itsAvgPB;
+  else {
+    cout << "itsAvgPB is not empty." << endl;
+  }
+
+  return this->itsAvgPB;
 }
 
 // Initialize for a transform from the Sky domain. This means that
@@ -564,6 +569,7 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
 
     // const Matrix<Float>& datai = getSpheroidCut();
     const Matrix<Float>& data = getAveragePB();
+    cout << "data: " << &data << endl;
     //    cout<<"tmp.shape() "<<data.shape()<<"  "<<lattice->shape()<<endl;
     IPosition pos(4,lattice->shape()[0],lattice->shape()[1],1,1);
     IPosition pos2(2,lattice->shape()[0],lattice->shape()[1]);
@@ -571,6 +577,7 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
     pos[3]=0.;
     pos2[2]=0.;
     pos2[3]=0.;
+    cout << "data.shape: " << data.shape() << endl;
     Int offset_pad(floor(data.shape()[0]-lattice->shape()[0])/2.);
 
     //    cout<<"LofarFTMachine::initializeToVis lattice->shape() == "<<lattice->shape()<<endl;
@@ -596,6 +603,12 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
 
     double maxPB(0.);
     double minPB(1e10);
+    cout << "lattice->shape: " << lattice->shape() << endl;
+    cout << "itsAvgPB.shape: " << itsAvgPB.shape() << endl;
+    cout << "itsAvgPB: " << &itsAvgPB << endl;
+    cout << "data:" << &data << endl;
+    cout << "data.shape: " << data.shape() << endl;
+    cout << "offset_loc:" << offset_pad << endl;
     for(uInt i=0;i<lattice->shape()[0];++i){
       for(uInt j=0;j<lattice->shape()[0];++j){
 	double pixel(data(i+offset_pad,j+offset_pad));
@@ -603,6 +616,7 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
 	if(abs(pixel)<minPB){minPB=abs(pixel);};
       }
     }
+    cout << "minPB: " << minPB << ", maxPB: " << maxPB << endl;
 
     for(Int k=0;k<lattice->shape()[2];++k){
       ff=0.;
@@ -633,14 +647,13 @@ void LofarFTMachine::initializeToVis(ImageInterface<Complex>& iimage,
 	  // }
 
 	  if(!itsPredictFT){
-	    fact*=sqrt(maxPB)/sqrt(data(pos2));
-	  } else {
-	    fact/=datai(pos2); //*datai(pos2); 
-	    if(its_Apply_Element){fact/=spheroidCutElement(pos2);}
+	    fact*=data(pos2);
 	  }
-	  pixel*=Complex(fact);
+          fact/=datai(pos2); //*datai(pos2); // 
+          if(its_Apply_Element){fact/=spheroidCutElement(pos2);}
+          pixel*=Complex(fact);
 
-	  if((data(pos2)>=(minPB))&&(abs(pixel)>0.)){   // SvdT: Had to make comparison great _or equal_ because of fake PB consisting of all ones
+	  if((data(pos2)>=(minPB))&&(abs(pixel)>0.)){   // SvdT: Had to make comparison greater _or equal_ because of fake PB consisting of all ones
 	    lattice->putAt(pixel,pos);
 	  };
 	}
@@ -1525,7 +1538,7 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
 
   cout << "1" << endl;
   cout << itsAvgPB.shape() << endl;
-  itsAvgPB.reference (itsConvFunc->Compute_avg_pb(lattice->shape()));
+  itsAvgPB = Matrix<Float>(itsConvFunc->Compute_avg_pb(lattice->shape())[0][0]);
   cout << lattice->shape() << endl;
   cout << "2" << endl;
   cout << itsAvgPB.shape() << endl;
@@ -1669,42 +1682,35 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
     IPosition pos(4,lattice->shape()[0],lattice->shape()[1],1,1);
     uInt shapeout(floor(lattice->shape()[0]/padding_p));
     uInt istart(floor((lattice->shape()[0]-shapeout)/2.));
-    Cube<Complex> tempimage(IPosition(3,shapeout,shapeout,lattice->shape()[2]));
-
 
     pos[3]=0.;
     double minPB(1e10);
     double maxPB(0.);
     for(uInt i=0;i<shapeout;++i){
       for(uInt j=0;j<shapeout;++j){
-//         for(uInt k=0;k<itsAvgPB.shape()(2);++k){
-//           for(uInt l=0;l<itsAvgPB.shape()(3);++l){
-        for(uInt k=0;k<1;++k){
-          for(uInt l=0;l<1;++l){
-	    double pixel(itsAvgPB(IPosition(4,i+istart,j+istart,k,l)));
-	    if(abs(pixel)>maxPB) maxPB=abs(pixel);
-	    if(abs(pixel)<minPB) minPB=abs(pixel);
-          }
-        }
+        double pixel(itsAvgPB(i,j));
+        if(abs(pixel)>maxPB) maxPB=abs(pixel);
+        if(abs(pixel)<minPB) minPB=abs(pixel);
       }
     }
     
-    double PBcut = maxPB * 1e-6;
+    double PBcut = maxPB * 1e-2;
     cout << PBcut << endl;
 
     const Matrix<Float>& sphe = getSpheroidCut();
     //maxPB=1.;
+    
     for(uInt i=0;i<shapeout;++i){
       for(uInt j=0;j<shapeout;++j){
-        for(uInt k=0;k<itsAvgPB.shape()(2);++k){
-          for(uInt l=0;l<itsAvgPB.shape()(3);++l){
+        for(uInt k=0;k<lattice->shape()(2);++k){
+          for(uInt l=0;l<lattice->shape()(3);++l){
             pos[0]=i+istart;
             pos[1]=j+istart;
             pos[2]=k;
             pos[3]=l;
           
             Complex pixel(lattice->getAt(pos));
-            Float scale(sphe(i,j) * itsAvgPB(pos));
+            Float scale(sphe(i,j) * itsAvgPB(i,j));
             if(scale<PBcut) {
 //               cout << "pixel set to zero because " << itsAvgPB(pos) << "<" << PBcut << endl;
               pixel=0.;
@@ -1715,6 +1721,7 @@ ImageInterface<Complex>& LofarFTMachine::getImage(Matrix<Float>& weights, Bool n
 //               cout << "pixel now is: " << pixel << endl;
             }
             lattice->putAt(pixel,pos);
+            
           }
         }
       }

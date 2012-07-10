@@ -935,10 +935,13 @@ void LofarCubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
                 // use visCube if there is no correctedData
 		//		Timers tGetRes=Timers::getTime();
 
-		if(!iftm_p[0]->canComputeResiduals()){
-		  cout<<"CANNOT!!!!"<<endl;
-		  if(!useCorrected) vb->modelVisCube()-=vb->visCube();
-		  else              vb->modelVisCube()-=vb->correctedVisCube();}
+                if(!iftm_p[0]->canComputeResiduals()){
+                  cout<<"CANNOT!!!!"<<endl;
+                  if(!useCorrected) 
+                    vb->modelVisCube()-=vb->visCube();
+                  else
+                    vb->modelVisCube()-=vb->correctedVisCube();
+                }
 		else
 		  iftm_p[0]->ComputeResiduals(*vb,useCorrected);
 

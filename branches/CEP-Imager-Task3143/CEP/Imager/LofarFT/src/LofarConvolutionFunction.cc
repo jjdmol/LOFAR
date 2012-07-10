@@ -215,8 +215,8 @@ namespace LOFAR
     td.addColumn (ScalarColumnDesc<Int> ("ANTENNA2"));
     td.addColumn (ArrayColumnDesc<Complex> ("DATA",0));
     
-    SetupNewTable newtab("loggingtable.data", td, Table::New);
-    itsLoggingTable = Table(newtab);
+//     SetupNewTable newtab("loggingtable.data", td, Table::New);
+//     itsLoggingTable = Table(newtab);
 
   }
 
@@ -868,6 +868,9 @@ namespace LOFAR
 
     Matrix<bool> Mask_Mueller(IPosition(2,4,4),false);
     Mask_Mueller(0,0)=true;
+//     Mask_Mueller(1,1)=true;
+//     Mask_Mueller(2,2)=true;
+//     Mask_Mueller(3,3)=true;
 
     // Stack_PB_CF should be called Sum_PB_CF (it is a sum, no stack).
     CountedPtr<CFTypeVec> res (new vector< vector< vector < Matrix<Complex> > > >());
@@ -1206,13 +1209,16 @@ namespace LOFAR
       }   
     }
     result = result/itsSumWeight;
-    itsLoggingTable.addRow();
-    ArrayColumn<Complex> data(itsLoggingTable, "DATA");
-    Array<Complex> result0;
-    result0.resize(result.shape());
-    convertArray( result0, result );
-    data.put(itsLoggingTable.nrow()-1, result0);
-    
+//     itsLoggingTable.addRow();
+//     ArrayColumn<Complex> data(itsLoggingTable, "DATA");
+//     Array<Complex> result0;
+//     result0.resize(result.shape());
+//     convertArray( result0, result );
+//     data.put(itsLoggingTable.nrow()-1, result0);
+
+    Matrix<Float> a;
+    a.reference(result[0][0]);
+    store(m_coordinates,a, itsImgName + ".avgpb");
     return result;
   }
 
