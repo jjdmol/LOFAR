@@ -86,19 +86,15 @@ void ProcessCommander::continueReadQualityTablesTask(ServerConnectionPtr serverC
 	ClusteredObservationItem item;
 	if(_nodeCommands.Pop(hostname, item))
 	{
-		const std::string msFilename = item.LocalPath();
+		const std::string &msFilename = item.LocalPath();
 		StatisticsCollection *statisticsCollection = new StatisticsCollection();
 		HistogramCollection *histogramCollection = new HistogramCollection();
 		serverConnection->ReadQualityTables(msFilename, *statisticsCollection, *histogramCollection);
 	} else {
-		serverConnection->StopClient();
+		handleIdleConnection(serverConnection);
 		
 		if(_nodeCommands.Empty())
-		{
 			onCurrentTaskFinished();
-			lock.unlock();
-			onConnectionAwaitingCommand(serverConnection);
-		}
 	}
 }
 
@@ -114,6 +110,20 @@ void ProcessCommander::continueReadAntennaTablesTask(ServerConnectionPtr serverC
 
 void ProcessCommander::continueReadBandTablesTask(ServerConnectionPtr serverConnection)
 {
+	const std::string &hostname = serverConnection->Hostname();
+	
+	boost::mutex::scoped_lock lock(_mutex);
+	ClusteredObservationItem item;
+	if(_nodeCommands.Pop(hostname, item))
+	{
+		const std::string &msFilename = item.LocalPath();
+		serverConnection->ReadBandTable(msFilename, _bands[item.Index()]);
+	} else {
+		handleIdleConnection(serverConnection);
+		
+		if(_nodeCommands.Empty())
+			onCurrentTaskFinished();
+	}
 }
 
 void ProcessCommander::continueReadDataRowsTask(ServerConnectionPtr serverConnection)
@@ -155,10 +165,7 @@ void ProcessCommander::onConnectionAwaitingCommand(ServerConnectionPtr serverCon
 			continueReadDataRowsTask(serverConnection);
 			break;
 		case NoTask:
-			if(_finishConnections)
-				serverConnection->StopClient();
-			else
-				_idleConnections.push_back(serverConnection);
+			handleIdleConnection(serverConnection);
 			break;
 	}
 }
