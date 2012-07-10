@@ -1925,7 +1925,7 @@ string navFunct_DPName2CEPName(string DPName) {
 // ****************************************
 string navFunct_inputBuf2CEPName(int buf) {
   int racknr = 0;
-  if (navFunct_isBGPSwitch()) rack=1;
+  if (navFunct_isBGPSwitch()) racknr=1;
   int midnr = floor(buf/32);
   buf=buf-midnr*32;
   int nodenr = floor(buf/2);
