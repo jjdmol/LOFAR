@@ -1,8 +1,10 @@
 #                                                         LOFAR IMAGING PIPELINE
 #
-#                                                                sourcedb recipe
+#                                                    setupsourcedb master recipe
 #                                                            John Swinbank, 2010
 #                                                      swinbank@transientskp.org
+#                                                             Marcel Loose, 2012
+#                                                                loose@astron.nl
 # ------------------------------------------------------------------------------
 
 from __future__ import with_statement
@@ -16,13 +18,11 @@ from lofarpipe.support.group_data import load_data_map, store_data_map
 from lofarpipe.support.group_data import validate_data_maps
 from lofarpipe.support.remotecommand import ComputeJob
 
-class sourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
+class setupsourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
     """
-    Add a source database to input MeasurementSets.
-
-    This recipe is called by the :class:`bbs.bbs` recipe; it may also be used
-    standalone.
-
+    Create a distributed Sky Model database (SourceDB) for a distributed
+    Measurement Set (MS).
+    
     **Arguments**
 
     A mapfile describing the data to be processed.
@@ -34,7 +34,8 @@ class sourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
         ),
         'skymodel': ingredient.StringField(
             '-s', '--skymodel',
-            help="Input sky catalogue"
+            help="Input sky catalogue",
+            default=''
         ),
         'mapfile': ingredient.StringField(
             '--mapfile',
@@ -64,8 +65,8 @@ class sourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
 
 
     def go(self):
-        self.logger.info("Starting sourcedb run")
-        super(sourcedb, self).go()
+        self.logger.info("Starting setupsourcedb run")
+        super(setupsourcedb, self).go()
 
         #                           Load file <-> compute node mapping from disk
         # ----------------------------------------------------------------------
@@ -125,4 +126,4 @@ class sourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
 
 
 if __name__ == '__main__':
-    sys.exit(sourcedb().main())
+    sys.exit(setupsourcedb().main())

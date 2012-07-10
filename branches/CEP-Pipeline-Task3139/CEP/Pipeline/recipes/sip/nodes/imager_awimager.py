@@ -41,12 +41,12 @@ class imager_awimager(LOFARnodeTCP):
         self.logger.info("Start imager_awimager  run: client")
         log4CPlusName = "imager_awimager"
         with log_time(self.logger):
-            size_converter = 4.0 #TODO debugging tool scale the image and cellsize to allow quicker running of the awimager
+            size_converter = 1.0 #TODO debugging tool scale the image and cellsize to allow quicker running of the awimager
             # Calculate awimager parameters that depend on measurement set                 
             cell_size, npix, w_max, w_proj_planes = \
                 self._calc_par_from_measurement(concatenated_measurement_set, parset, size_converter)
 
-            npix = int(float(npix) / size_converter)
+
 
             # Get the target image location from the mapfile for the parset.
             # Create target dir
@@ -60,6 +60,8 @@ class imager_awimager(LOFARnodeTCP):
                          concatenated_measurement_set, init_script, executable,
                          working_directory, log4CPlusName, sourcedb_path,
                           mask_patch_size, image_path_head)
+            # The max support should always be a minimum of 1024 (Ger van Diepen)
+            maxsupport = max(1024, npix)
 
             # Update the parset with calculated parameters, and output image
             patch_dictionary = {'uselogger': 'True', # enables log4cpluscd log
@@ -408,8 +410,14 @@ class imager_awimager(LOFARnodeTCP):
         if w_proj_planes > 511:
             raise Exception("The number of projections planes for the current" +
                             "measurement set is to large.")  #FIXME: Ask george 
+        # Do debugging size conversion ( to decrease image size for fater testing)
+        if npix <= 256: #Do not make small images smaller
+            size_converter = 1
+        elif npix == 512: #only increase one size step for 512 npix
+            size_converter = min(2, size_converter)
         cell_size_formatted = str(int(round(cell_size * size_converter))) + 'arcsec'
-        return cell_size_formatted, str(npix), str(w_max), str(w_proj_planes)
+        npix = int(float(npix) / size_converter)
+        return cell_size_formatted, npix, str(w_max), str(w_proj_planes)
 
 
 if __name__ == "__main__":

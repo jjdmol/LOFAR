@@ -155,9 +155,16 @@ class Correlated(DataProduct):
             exposure = main.getcell('EXPOSURE', 0)
             startTime = main.getcell('TIME', 0) - 0.5 * exposure
             endTime = main.getcell('TIME', main.nrows() - 1) + 0.5 * exposure
+            # This is an ugly way to get the start time in the format that
+            # OTDB/MoM expects, yyyy-mm-ddTHH:MM:SS, because it depends on the
+            # output string format of 'ctod'.
+            startTimeString = (
+                pyrap.tables.taql('calc ctod($startTime s)')[0]
+                    .replace('/', '-', 2).replace('/', 'T')
+            )
             self._data.update({
                 'percentageWritten' : 100,
-                'startTime' : startTime,
+                'startTime' : startTimeString,
                 'duration' : endTime - startTime,
                 'integrationInterval' : exposure,
                 'centralFrequency' : spw.getcell('REF_FREQUENCY', 0),

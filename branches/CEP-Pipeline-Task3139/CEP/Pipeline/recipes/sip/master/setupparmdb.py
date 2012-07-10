@@ -1,8 +1,10 @@
 #                                                         LOFAR IMAGING PIPELINE
 #
-#                                                                  parmdb recipe
+#                                                      setupparmdb master recipe
 #                                                            John Swinbank, 2010
 #                                                      swinbank@transientskp.org
+#                                                             Marcel Loose, 2012
+#                                                                loose@astron.nl
 # ------------------------------------------------------------------------------
 
 import os
@@ -29,16 +31,13 @@ adddef DirectionalGain:0:0:Ampl  values=1.0
 adddef DirectionalGain:1:1:Ampl  values=1.0
 adddef DirectionalGain:0:0:Real  values=1.0
 adddef DirectionalGain:1:1:Real  values=1.0
-adddef AntennaOrientation values=5.497787144
 quit
 """
 
-class parmdb(BaseRecipe, RemoteCommandRecipeMixIn):
+class setupparmdb(BaseRecipe, RemoteCommandRecipeMixIn):
     """
-    Add a parameter database to input MeasurementSets.
-
-    This recipe is called by the :class:`bbs.bbs` recipe; it may also be used
-    standalone.
+    Create a distributed parameter database (ParmDB) for a distributed 
+    Measurement set (MS).
 
     **Arguments**
 
@@ -76,8 +75,8 @@ class parmdb(BaseRecipe, RemoteCommandRecipeMixIn):
     }
 
     def go(self):
-        self.logger.info("Starting parmdb run")
-        super(parmdb, self).go()
+        self.logger.info("Starting setupparmdb run")
+        super(setupparmdb, self).go()
 
         self.logger.info("Generating template parmdb")
         pdbdir = tempfile.mkdtemp(
@@ -155,4 +154,4 @@ class parmdb(BaseRecipe, RemoteCommandRecipeMixIn):
 
 
 if __name__ == '__main__':
-    sys.exit(parmdb().main())
+    sys.exit(setupparmdb().main())
