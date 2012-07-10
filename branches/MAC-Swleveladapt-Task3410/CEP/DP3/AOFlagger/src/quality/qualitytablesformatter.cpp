@@ -118,6 +118,12 @@ bool QualityTablesFormatter::hasOneEntry(enum QualityTable table, unsigned kindI
 	return false;
 }
 
+/**
+ * Will add an empty table to the measurement set named "QUALITY_KIND_NAME" and
+ * initialize its default column.
+ * This table can hold a list of quality statistic types that are referred to in
+ * the statistic value tables.
+ */
 void QualityTablesFormatter::createKindNameTable()
 {
 	casa::TableDesc tableDesc("QUALITY_KIND_NAME_TYPE", QUALITY_TABLES_VERSION_STR, casa::TableDesc::Scratch);
@@ -131,6 +137,11 @@ void QualityTablesFormatter::createKindNameTable()
 	_measurementSet->rwKeywordSet().defineTable(TableToName(KindNameTable), newTable);
 }
 
+/**
+ * Add the time column to the table descriptor. Used by create..Table() methods.
+ * It holds "Measure"s of time, which is what casacore defines as a value including
+ * a unit and a reference frame.
+ */
 void QualityTablesFormatter::addTimeColumn(casa::TableDesc &tableDesc)
 {
 	casa::ScalarColumnDesc<double> timeDesc(ColumnNameTime, "Central time of statistic");
@@ -142,6 +153,11 @@ void QualityTablesFormatter::addTimeColumn(casa::TableDesc &tableDesc)
 	mepochCol.write(tableDesc);
 }
 
+/**
+ * Add the frequency column to the table descriptor. Used by create..Table() methods.
+ * It holds "Quantum"s of frequency, which is what casacore defines as a value including
+ * a unit (Hertz).
+ */
 void QualityTablesFormatter::addFrequencyColumn(casa::TableDesc &tableDesc)
 {
 	casa::ScalarColumnDesc<double> freqDesc(ColumnNameFrequency, "Central frequency of statistic bin");
@@ -153,6 +169,10 @@ void QualityTablesFormatter::addFrequencyColumn(casa::TableDesc &tableDesc)
 	quantDesc.write(tableDesc);
 }
 
+/**
+ * Add value column to the table descriptor. Used by create..Table() methods.
+ * It consist of an array of statistics, each element holds a polarization.
+ */
 void QualityTablesFormatter::addValueColumn(casa::TableDesc &tableDesc, unsigned polarizationCount)
 {
 	casa::IPosition shape(1);
@@ -161,6 +181,13 @@ void QualityTablesFormatter::addValueColumn(casa::TableDesc &tableDesc, unsigned
 	tableDesc.addColumn(valDesc);
 }
 
+/**
+ * Will add an empty table to the measurement set named "QUALITY_TIME_STATISTIC" and
+ * initialize its default column.
+ * This table can hold several statistic kinds per time step. 
+ * @param polarizationCount specifies the nr polarizations. This is required for the
+ * shape of the value column.
+ */
 void QualityTablesFormatter::createTimeStatisticTable(unsigned polarizationCount)
 {
 	casa::TableDesc tableDesc("QUALITY_TIME_STATISTIC_TYPE", QUALITY_TABLES_VERSION_STR, casa::TableDesc::Scratch);
@@ -177,6 +204,13 @@ void QualityTablesFormatter::createTimeStatisticTable(unsigned polarizationCount
 	_measurementSet->rwKeywordSet().defineTable(TableToName(TimeStatisticTable), newTable);
 }
 
+/**
+ * Will add an empty table to the measurement set named "QUALITY_FREQUENCY_STATISTIC" and
+ * initialize its default column.
+ * This table can hold several statistic kinds per time step. 
+ * @param polarizationCount specifies the nr polarizations. This is required for the
+ * shape of the value column.
+ */
 void QualityTablesFormatter::createFrequencyStatisticTable(unsigned polarizationCount)
 {
 	casa::TableDesc tableDesc("QUALITY_FREQUENCY_STATISTIC_TYPE", QUALITY_TABLES_VERSION_STR, casa::TableDesc::Scratch);
@@ -192,6 +226,13 @@ void QualityTablesFormatter::createFrequencyStatisticTable(unsigned polarization
 	_measurementSet->rwKeywordSet().defineTable(TableToName(FrequencyStatisticTable), newTable);
 }
 
+/**
+ * Will add an empty table to the measurement set named "QUALITY_BASELINE_STATISTIC" and
+ * initialize its default column.
+ * This table can hold several statistic kinds per time step. 
+ * @param polarizationCount specifies the nr polarizations. This is required for the
+ * shape of the value column.
+ */
 void QualityTablesFormatter::createBaselineStatisticTable(unsigned polarizationCount)
 {
 	casa::TableDesc tableDesc("QUALITY_BASELINE_STATISTIC_TYPE", QUALITY_TABLES_VERSION_STR, casa::TableDesc::Scratch);

@@ -17,13 +17,13 @@ static NSTimer firTimer("FIR", true);
 static NSTimer fftTimer("FFT", true);
 static NSTimer fftInTimer("create FFT input", true);
 
-InversePPF::InversePPF(std::vector<unsigned>& subbandList, unsigned nrSamplesPerIntegration, unsigned nrTaps, unsigned onStationFilterSize, bool verbose) :
-  itsFilterBank(false, nrTaps, onStationFilterSize, (float*) invertedStationPPFWeights), itsSubbandList(subbandList), itsNrSubbands(itsSubbandList.size()),
-      itsNrTaps(nrTaps), itsNrSamplesPerIntegration(nrSamplesPerIntegration), itsOnStationFilterSize(onStationFilterSize), itsVerbose(verbose) {
+InversePPF::InversePPF(std::vector<unsigned>& subbandList, unsigned nrSamplesPerIntegration, bool verbose) :
+  itsFilterBank(false, ON_STATION_FILTER_TAPS, ON_STATION_FILTER_SIZE, (float*) invertedStationPPFWeights), itsSubbandList(subbandList), itsNrSubbands(itsSubbandList.size()),
+      itsNrSamplesPerIntegration(nrSamplesPerIntegration), itsVerbose(verbose) {
 
   double origInputSize = (itsNrSubbands * itsNrSamplesPerIntegration * sizeof(fcomplex)) / (1024.0 * 1024.0);
-  double fftBufSize = (itsOnStationFilterSize * sizeof(float)) / (1024.0);
-  double outputSize = (itsOnStationFilterSize * itsNrSamplesPerIntegration * sizeof(float)) / (1024.0 * 1024.0);
+  double fftBufSize = (ON_STATION_FILTER_SIZE * sizeof(float)) / (1024.0);
+  double outputSize = (ON_STATION_FILTER_SIZE * itsNrSamplesPerIntegration * sizeof(float)) / (1024.0 * 1024.0);
 
   if (itsVerbose) {
     cerr << "size of original input data: " << origInputSize << " MB" << endl;
@@ -33,29 +33,47 @@ InversePPF::InversePPF(std::vector<unsigned>& subbandList, unsigned nrSamplesPer
   }
 
   // Init the FIR filters themselves with the weights of the filterbank.
-  itsFIRs.resize(onStationFilterSize);
-  for (unsigned chan = 0; chan < itsOnStationFilterSize; chan++) {
+  itsFIRs.resize(ON_STATION_FILTER_SIZE);
+  for (unsigned chan = 0; chan < ON_STATION_FILTER_SIZE; chan++) {
     itsFIRs[chan].initFilter(&itsFilterBank, chan);
+  }
+
+  // See if the selected subbands are a contiguous list. If so, we can index the data more efficiently.
+  itsSubbandsAreContiguous = true;
+  unsigned prev = itsSubbandList[0];
+  for(unsigned i=1; i<itsNrSubbands; i++) {
+    unsigned sb = itsSubbandList[i];
+    if(sb != prev+1) {
+      cout << "EEE" << endl;
+      itsSubbandsAreContiguous = false;
+      break;
+    }
+    prev = sb;
   }
 
   initFFT();
 }
 
+
 InversePPF::~InversePPF() {
   destroyFFT();
 }
 
+
 void InversePPF::initFFT() {
 #if defined HAVE_FFTW3
-  itsFftInData = (float*) fftwf_malloc(itsOnStationFilterSize * sizeof(float));
-  itsFftOutData = (float*) fftwf_malloc(itsOnStationFilterSize * sizeof(float));
+  itsFftInData = (float*) fftwf_malloc(ON_STATION_FILTER_SIZE * sizeof(float));
+  itsFftOutData = (float*) fftwf_malloc(ON_STATION_FILTER_SIZE * sizeof(float));
 
-  itsPlan = fftwf_plan_r2r_1d(itsOnStationFilterSize, itsFftInData, itsFftOutData, FFTW_HC2R, FFTW_ESTIMATE);
+  itsPlan = fftwf_plan_r2r_1d(ON_STATION_FILTER_SIZE, itsFftInData, itsFftOutData, FFTW_HC2R, FFTW_ESTIMATE);
+
+//  itsPlan = fftwf_plan_dft_c2r_1d(ON_STATION_FILTER_SIZE, itsFftInData, itsFftOutData, FFTW_ESTIMATE);
+
 #elif defined HAVE_FFTW2
-  itsFftInData = (float*) malloc(itsOnStationFilterSize * sizeof(float));
-  itsFftOutData = (float*) malloc(itsOnStationFilterSize * sizeof(float));
+  itsFftInData = (float*) malloc(ON_STATION_FILTER_SIZE * sizeof(float));
+  itsFftOutData = (float*) malloc(ON_STATION_FILTER_SIZE * sizeof(float));
 
-  itsPlan = rfftw_create_plan(itsOnStationFilterSize, FFTW_COMPLEX_TO_REAL, FFTW_ESTIMATE);
+  itsPlan = rfftw_create_plan(ON_STATION_FILTER_SIZE, FFTW_COMPLEX_TO_REAL, FFTW_ESTIMATE);
 #endif
 
   if (itsFftInData == NULL || itsFftOutData == NULL) {
@@ -76,28 +94,65 @@ void InversePPF::destroyFFT() {
 #endif
 }
 
+
+// in hc format, we store n/2+1 reals and n/2-1 imags
 // Goes from tansposedBeamFormedData to itsFftInData.
+// Fill input buffer, using "half complex" format.
 void InversePPF::createFFTInput(const TransposedBeamFormedData& transposedBeamFormedData, unsigned time) {
   fftInTimer.start();
 
-  // First set the unselected subbands to zero.
-  // We have to do this every time, since the input is destroyed by the FFT.
-  // However, the time this takes is very small compared to the time to fill in the real data below.
-  memset(itsFftInData, 0, itsOnStationFilterSize * sizeof(float));
+  if(itsSubbandsAreContiguous) {
+    const unsigned start = itsSubbandList[0]; // inclusive
+    const unsigned end = start + itsNrSubbands-1; // inclusive
 
-  // Fill input buffer, using "half complex" format.
-  // There can be gaps in the subband list.
-  // Copy the samples from the different subbands to their correct places.
-  for (unsigned i = 0; i < itsNrSubbands; i++) {
-    unsigned sb = itsSubbandList[i];
-    fcomplex sample = transposedBeamFormedData.samples[sb][0 /* channel, but there only is 1 now */][time];
+    if(start > 0) {
+      memset(itsFftInData, 0, start * sizeof(float)); // subbands before start, real
+      memset(itsFftInData + ON_STATION_FILTER_SIZE-start, 0, (start-1) * sizeof(float));  // subbands before start, imag
+    }
 
-    itsFftInData[sb] = real(sample);
-    itsFftInData[itsOnStationFilterSize - sb - 1] = imag(sample);
+    if(end < ON_STATION_FILTER_SIZE/2) {
+      memset(itsFftInData + end, 0, (ON_STATION_FILTER_SIZE/2 - end) * sizeof(float)); // subbands after end, real
+      memset(itsFftInData + ((ON_STATION_FILTER_SIZE/2) + 1), 0, ((ON_STATION_FILTER_SIZE/2 - end)-1) * sizeof(float));
+    }
+
+    if(start == 0) { // special case, the half complex format doesn store the imag part of the 0th element (it is always 0)
+      fcomplex sample = transposedBeamFormedData.samples[0][0 /* channel, but there only is 1 now */][time];
+      itsFftInData[0] = real(sample);
+      for (unsigned sb = 1; sb < itsNrSubbands; sb++) {
+	fcomplex sample = transposedBeamFormedData.samples[sb][0 /* channel, but there only is 1 now */][time];
+	itsFftInData[sb] = real(sample);
+	itsFftInData[ON_STATION_FILTER_SIZE - sb] = imag(sample);
+      }
+    } else {
+      for (unsigned i = 0; i < itsNrSubbands; i++) {
+	unsigned sb = start + i;
+	fcomplex sample = transposedBeamFormedData.samples[sb][0 /* channel, but there only is 1 now */][time];
+	itsFftInData[i] = real(sample);
+	itsFftInData[ON_STATION_FILTER_SIZE - sb] = imag(sample);
+      }
+    }
+  } else {
+    // First set the unselected subbands to zero.
+    // We have to do this every time, since the input is destroyed by the FFT.
+    // However, the time this takes is very small compared to the time to fill in the real data below.
+    memset(itsFftInData, 0, ON_STATION_FILTER_SIZE * sizeof(float));
+
+    // There can be gaps in the subband list.
+    // Copy the samples from the different subbands to their correct places.
+    for (unsigned i = 0; i < itsNrSubbands; i++) {
+      unsigned sb = itsSubbandList[i];
+      fcomplex sample = transposedBeamFormedData.samples[sb][0 /* channel, but there only is 1 now */][time];
+      
+      itsFftInData[sb] = real(sample);
+      if(sb != 0) {
+	itsFftInData[ON_STATION_FILTER_SIZE - sb] = imag(sample);
+      }
+    }
   }
 
   fftInTimer.stop();
 }
+
 
 // This method writes the result to itsFFtOutData
 void InversePPF::performInverseFFT() {
@@ -114,12 +169,13 @@ void InversePPF::performInverseFFT() {
   fftTimer.stop();
 }
 
+
 // Reads itsFftOutData, writes to invertedFilteredData.
 void InversePPF::performFiltering(InverseFilteredData& invertedFilteredData, unsigned time) {
   firTimer.start();
 
-  unsigned index = time * itsOnStationFilterSize;
-  for (unsigned minorTime = 0; minorTime < itsOnStationFilterSize; minorTime++) {
+  unsigned index = time * ON_STATION_FILTER_SIZE;
+  for (unsigned minorTime = 0; minorTime < ON_STATION_FILTER_SIZE; minorTime++) {
     const float sample = itsFftOutData[minorTime];
     const float result = itsFIRs[minorTime].processNextSample(sample);
     invertedFilteredData.samples[index++] = result;
@@ -128,11 +184,13 @@ void InversePPF::performFiltering(InverseFilteredData& invertedFilteredData, uns
   firTimer.stop();
 }
 
+
 void InversePPF::performInversePPFTimeStep(const TransposedBeamFormedData& transposedBeamFormedData, InverseFilteredData& invertedFilteredData, unsigned time) {
   createFFTInput(transposedBeamFormedData, time);
   performInverseFFT();
   performFiltering(invertedFilteredData, time);
 }
+
 
 void InversePPF::performInversePPF(const TransposedBeamFormedData& transposedBeamFormedData, InverseFilteredData& invertedFilteredData) {
   for (unsigned time = 0; time < itsNrSamplesPerIntegration; time++) {

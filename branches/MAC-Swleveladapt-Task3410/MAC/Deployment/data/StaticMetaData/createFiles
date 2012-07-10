@@ -720,6 +720,9 @@ if (sys.argv[1] == "localhost" or sys.argv[1] == "test" ):
                 # CCU needs RSPConnections.dat for CEP in PVSS
                 print "Using BG/P partition " + partitionName + " for creating destination MAC addresses"
                 createRSPConnectionsFile(resultDir, dataDir, partitionName)
+                print stationName.upper()
+                if (stationName.upper() == "CCU09"):
+                    print "Adapt /opt/lofar/etc/RSPConnections.dat for test stations and used test BG/P nodes!!"
             else:
                 if (sys.argv[1] == "test"):
                     print "Setting up station "+stationName+" for TEST use"

@@ -185,6 +185,23 @@ const string PVSSinfo::getSystemName(uint sysnr)
 }
 
 //
+// getMainDBName()
+//
+string PVSSinfo::getMainDBName()
+{
+	SystemNumType		sysNr;
+	CharString	sysName("MCU001");
+	if (Manager::getSystemId(sysName, sysNr) == PVSS_TRUE) {      
+		return ("MCU001");
+	}
+	sysName = "MCU099";
+	if (Manager::getSystemId(sysName, sysNr) == PVSS_TRUE) {      
+		return ("MCU099");
+	}
+	return ("");
+}
+
+//
 // getProjectName()
 //
 const string& PVSSinfo::getProjectName()

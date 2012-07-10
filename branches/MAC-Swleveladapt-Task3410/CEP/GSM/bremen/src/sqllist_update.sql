@@ -11,11 +11,18 @@ select a.runcat_id, {1}, 1,
        e.f_int/(e.f_int_err*e.f_int_err), 1/(e.f_int_err*e.f_int_err)
   from extractedsources e,
        assocxtrsources a,
-       temp_associations ta
+       temp_associations ta,
+       images i
  where a.xtrsrc_id = e.xtrsrcid
    and ta.xtrsrc_id = a.xtrsrc_id
    and ta.runcat_id = a.runcat_id
    and ta.kind not in (3, 4)
+   and i.imageid = e.image_id
+   and not exists (select f.band
+                     from runningcatalog_fluxes f
+                    where f.runcat_id = a.runcat_id
+                      and f.band = i.band
+                      and f.stokes = i.stokes)
    and ta.lr_method = 1
    and e.image_id = {0};
 

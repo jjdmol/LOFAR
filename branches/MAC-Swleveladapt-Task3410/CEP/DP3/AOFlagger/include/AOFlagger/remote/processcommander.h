@@ -27,6 +27,7 @@
 #include <vector>
 
 #include "clusteredobservation.h"
+#include "nodecommandmap.h"
 #include "remoteprocess.h"
 #include "server.h"
 
@@ -35,6 +36,8 @@
 class StatisticsCollection;
 
 namespace aoRemote {
+	
+class ObservationTimerange;
 
 class ProcessCommander
 {
@@ -42,58 +45,76 @@ class ProcessCommander
 		ProcessCommander(const ClusteredObservation &observation);
 		~ProcessCommander();
 		
-		void Run();
+		void Run(bool finishConnections = true);
 		
 		static std::string GetHostName();
 		const StatisticsCollection &Statistics() const { return *_statisticsCollection; }
 		const HistogramCollection &Histograms() const { return *_histogramCollection; }
 		const std::vector<AntennaInfo> &Antennas() const { return _antennas; }
+		const ObservationTimerange &ObsTimerange() const { return *_observationTimerange; }
 		const std::vector<std::string> &Errors() const { return _errors; }
 		
-		void PushReadQualityTablesTask(StatisticsCollection *dest, HistogramCollection *destHistogram)
+		void PushReadQualityTablesTask(StatisticsCollection *dest, HistogramCollection *destHistogram, bool correctHistograms = false)
 		{
+			_correctHistograms = correctHistograms;
 			_tasks.push_back(ReadQualityTablesTask);
 			_statisticsCollection = dest;
 			_histogramCollection = destHistogram;
 		}
+		void PushReadDataRowsTask(class ObservationTimerange &timerange)
+		{
+			_tasks.push_back(ReadDataRowsTask);
+			_observationTimerange = &timerange;
+		}
 		void PushReadAntennaTablesTask() { _tasks.push_back(ReadAntennaTablesTask); }
-		void SetCorrectHistograms(bool correctHistograms) { _correctHistograms = correctHistograms; }
 	private:
-		enum Task { NoTask, ReadQualityTablesTask, ReadAntennaTablesTask };
-		
-		void initializeNextTask();
+		enum Task { NoTask, ReadQualityTablesTask, ReadAntennaTablesTask, ReadDataRowsTask };
 		
 		void continueReadQualityTablesTask(ServerConnectionPtr serverConnection);
 		void continueReadAntennaTablesTask(ServerConnectionPtr serverConnection);
+		void continueReadDataRowsTask(ServerConnectionPtr serverConnection);
 		
-		void makeNodeMap(const ClusteredObservation &observation);
 		void onConnectionCreated(ServerConnectionPtr serverConnection, bool &acceptConnection);
 		void onConnectionAwaitingCommand(ServerConnectionPtr serverConnection);
 		void onConnectionFinishReadQualityTables(ServerConnectionPtr serverConnection, StatisticsCollection &statisticsCollection, HistogramCollection &histogramCollection);
 		void onConnectionFinishReadAntennaTables(ServerConnectionPtr serverConnection, std::vector<AntennaInfo> &antennas);
+		void onConnectionFinishReadDataRows(ServerConnectionPtr serverConnection, MSRowDataExt *rowData);
 		void onError(ServerConnectionPtr connection, const std::string &error);
 		void onProcessFinished(RemoteProcess &process, bool error, int status);
 		
 		Server _server;
-		typedef std::map<std::string, std::deque<ClusteredObservationItem> > NodeMap;
-		NodeMap _nodeMap;
+		typedef std::vector<ServerConnectionPtr> ConnectionVector;
+		ConnectionVector _idleConnections;
 		std::vector<RemoteProcess *> _processes;
+		
 		StatisticsCollection *_statisticsCollection;
 		HistogramCollection *_histogramCollection;
-		std::vector<AntennaInfo> _antennas;
-		const ClusteredObservation _observation;
 		bool _correctHistograms;
+		std::vector<AntennaInfo> _antennas;
+		class ObservationTimerange *_observationTimerange;
+		
+		const ClusteredObservation _observation;
+		NodeCommandMap _nodeCommands;
+		bool _finishConnections;
 		
 		std::vector<std::string> _errors;
 		std::deque<enum Task> _tasks;
+		
+		/** 
+		 * Because the processes have separate threads that can send signals from
+		 * their thread, locking is required for accessing data that might be
+		 * accessed by the processes.
+		 */
 		boost::mutex _mutex;
 		
 		Task currentTask() const {
 			if(!_tasks.empty()) return _tasks.front();
 			else return NoTask;
 		}
-		void removeCurrentTask() {
+		void onCurrentTaskFinished() {
 			_tasks.pop_front();
+			if(currentTask() == NoTask)
+				_server.Stop();
 		}
 };
 

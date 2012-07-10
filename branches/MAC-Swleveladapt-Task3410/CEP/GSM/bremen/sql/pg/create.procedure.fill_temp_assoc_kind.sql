@@ -69,6 +69,9 @@ update temp_associations
                       and ta.runcat_id <> temp_associations.runcat_id
                       and r2.parent_runcat_id = ta.runcat_id
                       and r.band = r2.band
+                      and r.stokes = r2.stokes
+                      and ta.kind = 2
+                      and ta.lr_method = 3
                 );
 end;
 $BODY$

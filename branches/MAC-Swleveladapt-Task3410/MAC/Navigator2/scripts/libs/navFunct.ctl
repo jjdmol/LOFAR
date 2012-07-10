@@ -1896,7 +1896,7 @@ string navFunct_DPName2CEPName(string DPName) {
   
   if (foundMidplane) {
     if (foundRack) name+="-";
-    midnr = midplane - (2*rack);
+    midnr = midplane;
     name += "M" + midnr;
   }
   
@@ -1924,8 +1924,8 @@ string navFunct_DPName2CEPName(string DPName) {
 // returns the CEPName 
 // ****************************************
 string navFunct_inputBuf2CEPName(int buf) {
-  int racknr = floor(buf/64);
-  buf=buf-(racknr*64);
+  int racknr = 0;
+  if (navFunct_isBGPSwitch()) rack=1;
   int midnr = floor(buf/32);
   buf=buf-midnr*32;
   int nodenr = floor(buf/2);

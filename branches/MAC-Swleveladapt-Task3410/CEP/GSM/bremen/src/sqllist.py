@@ -67,5 +67,6 @@ for sqlfile in ['sqllist.sql',
                 'sqllist_join.sql',
                 'sqllist_new.sql',
                 'sqllist_update.sql',
+                'sqllist_deduct.sql',
                 'sqllist_group.sql']:
     _load_from_sql_list(path.dirname(path.abspath(__file__)) + '/%s' % sqlfile)

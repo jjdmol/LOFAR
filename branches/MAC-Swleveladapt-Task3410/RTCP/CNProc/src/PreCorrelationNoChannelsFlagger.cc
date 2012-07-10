@@ -58,6 +58,8 @@ PreCorrelationNoChannelsFlagger::PreCorrelationNoChannelsFlagger(const Parset& p
   itsFlagsTime.resize(itsFFTSize);
   itsFlagsFrequency.resize(itsFFTSize);
   itsFFTBuffer.resize(itsFFTSize);
+
+  initFFT();
 }
 
 
@@ -96,9 +98,10 @@ void PreCorrelationNoChannelsFlagger::backwardFFT()
 
 void PreCorrelationNoChannelsFlagger::flag(FilteredData* filteredData, unsigned currentSubband)
 {
+  (void) currentSubband; // removes compiler warning
   NSTimer flaggerTimer("RFI noChannels flagger total", true, true);
   NSTimer flaggerTimeTimer("RFI noChannels time flagger", true, true);
-  NSTimer flaggerFrequencyTimer("RFI noChannels time flagger", true, true);
+  NSTimer flaggerFrequencyTimer("RFI noChannels frequency flagger", true, true);
 
   flaggerTimer.start();
 
@@ -131,8 +134,13 @@ void PreCorrelationNoChannelsFlagger::flag(FilteredData* filteredData, unsigned 
       flaggerFrequencyTimer.stop();
     }
 
+    flaggerTimeTimer.start();
     applyFlagsTime(station, filteredData); // copy flags from my original format into FilteredData again.
+    flaggerTimeTimer.stop();
+
+    flaggerFrequencyTimer.start();
     applyFlagsFrequency(station, filteredData); // do forward FFT; fix samples; backward FFT on the original samples in full resolution
+    flaggerFrequencyTimer.stop();
   }
 
   flaggerTimer.stop();
