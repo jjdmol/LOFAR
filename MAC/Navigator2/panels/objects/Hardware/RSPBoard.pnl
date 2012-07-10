@@ -418,7 +418,7 @@ LANG:1 1 V
 2 26
 "label_voltage33"
 ""
-1 40 186.2231404958679 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 50 199.8091660405712 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 25 0 0 0 0 0
 E E E
@@ -573,7 +573,7 @@ LANG:1 1 0
 2 62
 "lblBitmodeCapability"
 ""
-1 188 198 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 188 191 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 47 0 0 0 0 0
 E E E
@@ -583,8 +583,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 190 200 300 214
-0 2 0 "0s" 0 0 0 64 0 0  190 200 1
+E E 0 1 1 0 1 E U  0 E 190 193 300 207
+0 2 0 "0s" 0 0 0 64 0 0  190 193 1
 1
 LANG:1 26 Arial,-1,12,5,40,0,0,0,0,0
 0 1
