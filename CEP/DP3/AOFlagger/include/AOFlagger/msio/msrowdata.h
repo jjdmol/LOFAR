@@ -105,7 +105,14 @@ class MSRowData : public Serializable
 			for(size_t i=0 ; i<size * 2; ++i)
 				_realData[i] = UnserializeFloat(stream);
 		}
-		
+		unsigned PolarizationCount() const { return _polarizationCount; }
+		unsigned ChannelCount() const { return _channelCount; }
+		const num_t *RealPtr() const { return _realData; }
+		const num_t *ImagPtr() const { return _imagData; }
+		num_t *RealPtr() { return _realData; }
+		num_t *ImagPtr() { return _imagData; }
+		num_t *RealPtr(size_t channel) { return &_realData[_polarizationCount * channel]; }
+		num_t *ImagPtr(size_t channel) { return &_imagData[_polarizationCount * channel]; }
 	private:
 		unsigned _polarizationCount, _channelCount;
 		num_t *_realData, *_imagData;

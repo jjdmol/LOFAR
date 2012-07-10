@@ -33,7 +33,7 @@
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
 */
-struct EarthPosition : public Serializable {
+struct EarthPosition {
 	double x, y, z;
 	std::string ToString() {
 		std::stringstream s;
@@ -76,18 +76,18 @@ struct EarthPosition : public Serializable {
 		return sqrtl((long double) x*x+y*y+z*z);
 	}
 
-	virtual void Serialize(std::ostream &stream) const
+	void Serialize(std::ostream &stream) const
 	{
-		SerializeToDouble(stream, x);
-		SerializeToDouble(stream, y);
-		SerializeToDouble(stream, z);
+		Serializable::SerializeToDouble(stream, x);
+		Serializable::SerializeToDouble(stream, y);
+		Serializable::SerializeToDouble(stream, z);
 	}
 	
-	virtual void Unserialize(std::istream &stream)
+	void Unserialize(std::istream &stream)
 	{
-		x = UnserializeDouble(stream);
-		y = UnserializeDouble(stream);
-		z = UnserializeDouble(stream);
+		x = Serializable::UnserializeDouble(stream);
+		y = Serializable::UnserializeDouble(stream);
+		z = Serializable::UnserializeDouble(stream);
 	}
 };
 
@@ -97,7 +97,7 @@ struct UVW {
 	num_t u, v, w;
 };
 
-struct AntennaInfo : public Serializable {
+struct AntennaInfo {
 	AntennaInfo() { }
 	AntennaInfo(const AntennaInfo &source)
 		: id(source.id), position(source.position), name(source.name), diameter(source.diameter), mount(source.mount), station(source.station)
@@ -119,24 +119,24 @@ struct AntennaInfo : public Serializable {
 	std::string mount;
 	std::string station;
 	
-	virtual void Serialize(std::ostream &stream) const
+	void Serialize(std::ostream &stream) const
 	{
-		SerializeToUInt32(stream, id);
+		Serializable::SerializeToUInt32(stream, id);
 		position.Serialize(stream);
-		SerializeToString(stream, name);
-		SerializeToDouble(stream, diameter);
-		SerializeToString(stream, mount);
-		SerializeToString(stream, station);
+		Serializable::SerializeToString(stream, name);
+		Serializable::SerializeToDouble(stream, diameter);
+		Serializable::SerializeToString(stream, mount);
+		Serializable::SerializeToString(stream, station);
 	}
 	
-	virtual void Unserialize(std::istream &stream)
+	void Unserialize(std::istream &stream)
 	{
-		id = UnserializeUInt32(stream);
+		id = Serializable::UnserializeUInt32(stream);
 		position.Unserialize(stream);
-		UnserializeString(stream, name);
-		diameter = UnserializeDouble(stream);
-		UnserializeString(stream, mount);
-		UnserializeString(stream, station);
+		Serializable::UnserializeString(stream, name);
+		diameter = Serializable::UnserializeDouble(stream);
+		Serializable::UnserializeString(stream, mount);
+		Serializable::UnserializeString(stream, station);
 	}
 };
 
@@ -150,6 +150,23 @@ struct ChannelInfo {
 	double MetersToLambda(double meters) const
 	{
 		return meters * frequencyHz / 299792458.0L;
+	}
+	void Serialize(std::ostream &stream) const
+	{
+		Serializable::SerializeToUInt32(stream, frequencyIndex);
+		Serializable::SerializeToDouble(stream, frequencyHz);
+		Serializable::SerializeToDouble(stream, channelWidthHz);
+		Serializable::SerializeToDouble(stream, effectiveBandWidthHz);
+		Serializable::SerializeToDouble(stream, resolutionHz);
+	}
+	
+	void Unserialize(std::istream &stream)
+	{
+		frequencyIndex = Serializable::UnserializeUInt32(stream);
+		frequencyHz = Serializable::UnserializeDouble(stream);
+		channelWidthHz = Serializable::UnserializeDouble(stream);
+		effectiveBandWidthHz = Serializable::UnserializeDouble(stream);
+		resolutionHz = Serializable::UnserializeDouble(stream);
 	}
 };
 
@@ -177,6 +194,22 @@ struct BandInfo {
 		for(std::vector<ChannelInfo>::const_iterator i=channels.begin();i!=channels.end();++i)
 			total += i->frequencyHz;
 		return total / channels.size();
+	}
+	void Serialize(std::ostream &stream) const
+	{
+		Serializable::SerializeToUInt32(stream, windowIndex);
+		Serializable::SerializeToUInt32(stream, channels.size());
+		for(std::vector<ChannelInfo>::const_iterator i=channels.begin();i!=channels.end();++i)
+			i->Serialize(stream);
+	}
+	
+	void Unserialize(std::istream &stream)
+	{
+		windowIndex = Serializable::UnserializeUInt32(stream);
+		channelCount = Serializable::UnserializeUInt32(stream);
+		channels.resize(channelCount);
+		for(size_t i=0;i<channelCount;++i)
+			channels[i].Unserialize(stream);
 	}
 };
 

@@ -51,6 +51,7 @@ class ProcessCommander
 		const StatisticsCollection &Statistics() const { return *_statisticsCollection; }
 		const HistogramCollection &Histograms() const { return *_histogramCollection; }
 		const std::vector<AntennaInfo> &Antennas() const { return _antennas; }
+		const std::vector<BandInfo> &Bands() const { return _bands; }
 		const ObservationTimerange &ObsTimerange() const { return *_observationTimerange; }
 		const std::vector<std::string> &Errors() const { return _errors; }
 		
@@ -67,11 +68,19 @@ class ProcessCommander
 			_observationTimerange = &timerange;
 		}
 		void PushReadAntennaTablesTask() { _tasks.push_back(ReadAntennaTablesTask); }
+		void PushReadBandTablesTask() { _tasks.push_back(ReadBandTablesTask); }
 	private:
-		enum Task { NoTask, ReadQualityTablesTask, ReadAntennaTablesTask, ReadDataRowsTask };
+		enum Task {
+			NoTask,
+			ReadQualityTablesTask,
+			ReadAntennaTablesTask,
+			ReadBandTablesTask,
+			ReadDataRowsTask
+		};
 		
 		void continueReadQualityTablesTask(ServerConnectionPtr serverConnection);
 		void continueReadAntennaTablesTask(ServerConnectionPtr serverConnection);
+		void continueReadBandTablesTask(ServerConnectionPtr serverConnection);
 		void continueReadDataRowsTask(ServerConnectionPtr serverConnection);
 		
 		void onConnectionCreated(ServerConnectionPtr serverConnection, bool &acceptConnection);
@@ -91,6 +100,7 @@ class ProcessCommander
 		HistogramCollection *_histogramCollection;
 		bool _correctHistograms;
 		std::vector<AntennaInfo> _antennas;
+		std::vector<BandInfo> _bands;
 		class ObservationTimerange *_observationTimerange;
 		
 		const ClusteredObservation _observation;
