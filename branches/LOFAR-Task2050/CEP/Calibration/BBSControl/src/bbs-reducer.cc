@@ -37,6 +37,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/StreamUtil.h>
 #include <Common/SystemUtil.h>
+#include <Common/Exception.h>
 
 #ifdef HAVE_PQXX
 #include <BBSControl/CalSession.h>

@@ -23,6 +23,7 @@
 
 #include <lofar_config.h>
 #include <Common/SystemUtil.h>
+#include <Common/Exception.h>
 #include <BBSControl/Package__Version.h>
 #include <BBSControl/CalSession.h>
 #include <BBSControl/CommandHandlerEstimator.h>

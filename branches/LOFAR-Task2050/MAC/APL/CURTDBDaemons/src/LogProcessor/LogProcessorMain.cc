@@ -26,6 +26,7 @@
 #include <Common/Exception.h>
 #include "LogProcessor.h"
 
+using namespace LOFAR;
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::RTDBDaemons;
 

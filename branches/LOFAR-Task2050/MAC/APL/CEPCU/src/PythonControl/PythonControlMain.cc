@@ -28,6 +28,7 @@
 
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::CEPCU;
+using namespace LOFAR;
 
 // Use a terminate handler that can produce a backtrace.
 Exception::TerminateHandler t(Exception::terminate);

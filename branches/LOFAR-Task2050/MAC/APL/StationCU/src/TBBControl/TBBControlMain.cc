@@ -25,6 +25,7 @@
 #include <Common/Exception.h>
 #include "TBBControl.h"
 
+using namespace LOFAR;
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::StationCU;
 

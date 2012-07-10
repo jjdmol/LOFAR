@@ -34,6 +34,7 @@
 #include <Common/InputParSet.h>
 #include <Common/LofarLogger.h>
 #include <Common/SystemUtil.h>
+#include <Common/Exception.h>
 
 #include <casa/Quanta/MVTime.h>
 #include <casa/Utilities/MUString.h>

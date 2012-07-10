@@ -75,9 +75,6 @@ int main()
       pos = conv(pos);
       showPos(pos);
     }
-  } catch (Exception& e) {
-    cerr << "LOFAR Exception: " << e << endl;
-    return 1;
   } catch (exception& e) {
     cerr << "Exception: " << e.what() << endl;
     return 1;
