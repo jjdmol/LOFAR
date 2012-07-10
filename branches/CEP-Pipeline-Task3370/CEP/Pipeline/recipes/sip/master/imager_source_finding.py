@@ -1,12 +1,15 @@
 from __future__ import with_statement
 import os
 import sys
+import xml.dom.minidom as xml
 
 from lofarpipe.support.baserecipe import BaseRecipe
 import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.remotecommand import ComputeJob
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.group_data import load_data_map, store_data_map
+from lofarpipe.support.pipelinexml import add_child, get_child
+from lofarpipe.support.xmllogging import master_xml_decorator
 
 class imager_source_finding(BaseRecipe, RemoteCommandRecipeMixIn):
     inputs = {
@@ -58,12 +61,10 @@ class imager_source_finding(BaseRecipe, RemoteCommandRecipeMixIn):
             ),
         'sourcedb_map_path': ingredient.StringField(
         help="Full path of mapfile; containing the succesfull generated sourcedbs"
-            ),
-        'return_xml': ingredient.StringField(
-        help="xml string containing information with regards to timing"
             )
     }
 
+    @master_xml_decorator
     def go(self):
         self.logger.info("Starting imager_source_finding run")
         super(imager_source_finding, self).go()
@@ -82,6 +83,7 @@ class imager_source_finding(BaseRecipe, RemoteCommandRecipeMixIn):
         )
         node_command = " python %s" % (self.__file__.replace("master", "nodes"))
         jobs = []
+        self.jobs = jobs
         created_sourcelists = []
         created_sourcedbs = []
         for host, data in input_map:
@@ -119,7 +121,8 @@ class imager_source_finding(BaseRecipe, RemoteCommandRecipeMixIn):
         self.outputs["mapfile"] = self.inputs['mapfile']
         self.outputs["sourcedb_map_path"] = self.inputs['sourcedb_map_path']
 
-        self.outputs["return_xml"] = '<myxml>Some data<empty/> some more data</myxml>'
+        return 0
+
 
 if __name__ == '__main__':
     sys.exit(imager_source_finding().main())

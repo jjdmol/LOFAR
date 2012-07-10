@@ -5,11 +5,11 @@ import unittest
 import shutil
 import numpy
 import tempfile
-
-#imports from fixture:
-import lofarpipe.support.pipelinexml as pipexml
 import xml.dom.minidom as xml
 
+import lofarpipe.support.pipelinexml as pipexml
+
+#imports from fixture:
 
 class pipelinexmlTest(unittest.TestCase):
     def __init__(self, arg):

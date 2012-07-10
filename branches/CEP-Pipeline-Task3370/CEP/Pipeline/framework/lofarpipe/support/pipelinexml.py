@@ -66,6 +66,18 @@ def add_child(node, name):
     node.appendChild(created_node)
     return created_node
 
+def get_child(node, name):
+    """
+    Returns the first named child of node contains it as a child.
+    Return None of not found 
+    """
+    for child in node.childNodes:
+        if child.nodeName == name:
+            return child
+
+    return None
+
+
 
 def _read_parset_to_dict(parset_path):
     """

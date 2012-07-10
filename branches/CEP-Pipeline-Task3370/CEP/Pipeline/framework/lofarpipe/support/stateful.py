@@ -12,7 +12,7 @@ import cPickle
 
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.lofarexceptions import PipelineException
-from lofarpipe.support.pipelinexml import _enter_active_stack_node, _exit_active_stack_node
+from lofarpipe.support.xmllogging import _enter_active_stack_node, _exit_active_stack_node
 from xml.dom.minidom import parseString
 
 def stateful(run_task):
@@ -48,8 +48,10 @@ def stateful(run_task):
                     self, 'timing_info', "recipe")
                 recipe_node.setAttribute("task", configblock)
 
-                dom3 = parseString(outputs['return_xml'])
-                recipe_node.appendChild(dom3.documentElement)
+                #dom3 = parseString(outputs['return_xml'])
+                #recipe_node.appendChild(dom3.documentElement)
+                recipe_node.appendChild(parseString(outputs['return_xml']).documentElement)
+
 
                 _exit_active_stack_node(self, 'timing_info')
 

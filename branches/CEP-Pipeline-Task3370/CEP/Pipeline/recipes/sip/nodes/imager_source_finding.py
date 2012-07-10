@@ -2,6 +2,7 @@ from __future__ import with_statement
 import sys
 import os
 import shutil
+import xml.dom.minidom as _xml
 
 from lofar.parameterset import parameterset
 from lofarpipe.support.lofarnode import LOFARnodeTCP
@@ -10,12 +11,15 @@ import lofar.bdsm as bdsm #@UnresolvedImport
 from lofarpipe.support.utilities import read_initscript
 from lofarpipe.support.pipelinelogging import CatchLog4CPlus
 from lofarpipe.support.utilities import catch_segfaults
+from lofarpipe.support.xmllogging import timing_logger, node_xml_decorator, \
+    scan_file_for_timing_info, add_node_to_current_active_stack_node
 
 
 class imager_source_finding(LOFARnodeTCP):
     """
     The imager_source_finding
     """
+    @node_xml_decorator
     def run(self, input_image, bdsm_parameter_run1_path,
             bdsm_parameter_run2x_path, catalog_output_path, image_output_path,
             sourcedb_target_path, init_script, working_directory, executable):
@@ -108,7 +112,7 @@ class imager_source_finding(LOFARnodeTCP):
 
         return 0
 
-
+    @timing_logger
     def _combine_source_lists(self, number_of_sourcefind_itterations,
                               catalog_output_path):
         """
@@ -159,13 +163,18 @@ class imager_source_finding(LOFARnodeTCP):
         self.logger.debug("Wrote concatenated sourcelist to: {0}".format(
                                                 catalog_output_path))
 
-
+    @timing_logger
     def _create_source_db(self, source_list, sourcedb_target_path, init_script,
                           working_directory, executable, append=False):
         """
         _create_source_db consumes a skymap text file and produces a source db
         (pyraptable) 
         """
+
+        fp = open("/data/scratch/klijn/pipeline/test/logfile_test.log")
+        xml_node = scan_file_for_timing_info(fp)
+
+        add_node_to_current_active_stack_node(self, "timing_info", xml_node)
         #remove existing sourcedb if not appending
         if (append == False) and os.path.isdir(sourcedb_target_path):
             shutil.rmtree(sourcedb_target_path)

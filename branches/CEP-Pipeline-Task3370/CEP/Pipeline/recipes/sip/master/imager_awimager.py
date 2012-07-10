@@ -26,42 +26,43 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
     inputs = {
         'executable': ingredient.ExecField(
             '--executable',
-            help = "The full path to the  awimager executable"
+            help="The full path to the  awimager executable"
         ),
         'initscript': ingredient.FileField(
             '--initscript',
-            help = '''The full path to an (Bourne) shell script which will\
+            help='''The full path to an (Bourne) shell script which will\
              intialise the environment (ie, ``lofarinit.sh``)'''
         ),
         'parset': ingredient.FileField(
             '-p', '--parset',
-            help = "The full path to a awimager configuration parset."
+            help="The full path to a awimager configuration parset."
         ),
         'working_directory': ingredient.StringField(
             '-w', '--working-directory',
-            help = "Working directory used on output nodes. Results location"
+            help="Working directory used on output nodes. Results location"
         ),
         'output_image': ingredient.StringField(
             '--output-image',
-            help = "Path of the image to be create by the awimager"
+            help="Path of the image to be create by the awimager"
         ),
         'mapfile': ingredient.StringField(
             '--mapfile',
-            help = "Full path of mapfile; contains a list of the"
+            help="Full path of mapfile; contains a list of the"
                  "successfully generated images"
         ),
         'sourcedb_path': ingredient.StringField(
             '--sourcedb-path',
-            help = "Full path of sourcedb used to create a mask for known sources"
+            help="Full path of sourcedb used to create a mask for known sources"
         ),
         'mask_patch_size': ingredient.FloatField(
             '--mask-patch-size',
-            help = "Scale factor for patches in the awimager mask"
+            help="Scale factor for patches in the awimager mask"
         ),
     }
 
     outputs = {
-        'mapfile': ingredient.StringField()
+        'mapfile': ingredient.StringField(),
+        'return_xml': ingredient.StringField()
     }
 
     def go(self):
@@ -126,6 +127,7 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
         self.logger.debug("Wrote mapfile containing produces awimages: {0}".format(
                            self.inputs['mapfile']))
         self.outputs["mapfile"] = self.inputs['mapfile']
+        self.outputs["return_xml"] = "is received correctly"
         return 0
 
 

@@ -18,6 +18,8 @@ import sys
 import shutil
 import os.path
 import math
+import logging
+
 
 from lofarpipe.support.lofarnode import LOFARnodeTCP
 from lofarpipe.support.pipelinelogging import CatchLog4CPlus
@@ -40,8 +42,14 @@ class imager_awimager(LOFARnodeTCP):
             output_image, concatenated_measurement_set, sourcedb_path, mask_patch_size):
         self.logger.info("Start imager_awimager  run: client")
         log4CPlusName = "imager_awimager"
+
+        # Extend the current logger with additional file logger
+        temp_logfile_for_parsing = os.path.join(working_directory, "temp_imager_awimager.log")
+        temp_logger = logging.FileHandler(temp_logfile_for_parsing)
+        self.logger.addHandler(temp_logger)
+
         with log_time(self.logger):
-            size_converter = 1.0 #TODO debugging tool scale the image and cellsize to allow quicker running of the awimager
+            size_converter = 4.0 #TODO debugging tool scale the image and cellsize to allow quicker running of the awimager
             # Calculate awimager parameters that depend on measurement set                 
             cell_size, npix, w_max, w_proj_planes = \
                 self._calc_par_from_measurement(concatenated_measurement_set, parset, size_converter)
@@ -105,7 +113,12 @@ class imager_awimager(LOFARnodeTCP):
 
         # TODO Append static .restored: This might change but prob. not
         self.outputs["image"] = output_image + ".restored"
+
+        #remove the temp handler writing to know file location
+        self.logger.removeHandler(temp_logger)
         return 0
+
+
 
     def _create_mask(self, npix, cell_size, output_image,
                      concatenated_measurement_set, init_script, executable,
@@ -163,7 +176,7 @@ class imager_awimager(LOFARnodeTCP):
         self.logger.debug("Fished mask creation")
         return mask_file_path
 
-    def _msss_mask(self, mask_file_path, sourcedb_path, mask_patch_size = 1.0):
+    def _msss_mask(self, mask_file_path, sourcedb_path, mask_patch_size=1.0):
         """
         Fill a mask based on skymodel
         Usage: ./msss_mask.py mask-file skymodel
@@ -198,7 +211,7 @@ class imager_awimager(LOFARnodeTCP):
         pad = 500. # increment in maj/minor axes [arcsec]
 
         # open mask
-        mask = pim.image(mask_file_path, overwrite = True)
+        mask = pim.image(mask_file_path, overwrite=True)
         mask_data = mask.getdata()
         xlen, ylen = mask.shape()[2:]
         freq, stokes, null, null = mask.toworld([0, 0, 0, 0]) #@UnusedVariable

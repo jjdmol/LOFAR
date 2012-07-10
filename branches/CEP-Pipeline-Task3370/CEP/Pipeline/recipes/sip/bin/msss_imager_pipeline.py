@@ -17,7 +17,7 @@ from lofarpipe.support.lofarexceptions import PipelineException
 from lofarpipe.support.group_data import load_data_map, store_data_map
 from lofarpipe.support.group_data import validate_data_maps
 from lofarpipe.support.utilities import patch_parset
-from lofarpipe.support.pipelinexml import timing_logger
+from lofarpipe.support.xmllogging import timing_logger
 from lofarpipe.support.pipelinexml import open_parset_as_xml_node, \
     add_child
 import xml.dom.minidom as xml
@@ -86,7 +86,7 @@ class msss_imager_pipeline(control):
         self.parset_feedback_file = parset_file + "_feedback"
         # Set job-name to basename of parset-file w/o extension, if it's not
         # set on the command-line with '-j' or '--job-name'
-        if not 'job_name' in self.inputs: 
+        if not 'job_name' in self.inputs:
             self.inputs['job_name'] = (
                 os.path.splitext(os.path.basename(parset_file))[0]
             )
