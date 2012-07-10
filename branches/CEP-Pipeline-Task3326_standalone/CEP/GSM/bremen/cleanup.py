@@ -18,7 +18,7 @@ formatter_class=argparse.RawDescriptionHelpFormatter)
 parser.add_argument('-D', '--database', type=str, default='test',
                     help='database name to load data into')
 parser.add_argument('-M', '--monetdb', action="store_true", default=False,
-                    help='database name to load data into')
+                    help='Use MonetDB instead of PostgreSQL')
 args = parser.parse_args()
 
 cm = GSMConnectionManager(use_monet=args.monetdb, database=args.database)

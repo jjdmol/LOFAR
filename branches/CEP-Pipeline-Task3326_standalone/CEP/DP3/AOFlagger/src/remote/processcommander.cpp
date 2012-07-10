@@ -44,26 +44,36 @@ ProcessCommander::~ProcessCommander()
 	}
 }
 
-void ProcessCommander::Run()
+void ProcessCommander::Run(bool finishConnections)
 {
 	_errors.clear();
+	_finishConnections = finishConnections;
 	
 	if(!_observation.GetItems().empty() && !_tasks.empty())
 	{
 		const std::string thisHostName = GetHostName();
 		
-		//construct a process for each unique node name
-		makeNodeMap(_observation);
-		for(std::map<std::string, std::deque<ClusteredObservationItem> >::const_iterator i=_nodeMap.begin();i!=_nodeMap.end();++i)
+		// make a list of the involved nodes
+		_nodeCommands.Initialize(_observation);
+		
+		if(_processes.empty())
 		{
-			RemoteProcess *process = new RemoteProcess(i->first, thisHostName);
-			process->SignalFinished().connect(sigc::mem_fun(*this, &ProcessCommander::onProcessFinished));
-			process->Start();
-			_processes.push_back(process);
+			//construct a process for each unique node name
+			std::vector<std::string> list;
+			_nodeCommands.NodeList(list);
+			for(std::vector<std::string>::const_iterator i=list.begin();i!=list.end();++i)
+			{
+				RemoteProcess *process = new RemoteProcess(*i, thisHostName);
+				process->SignalFinished().connect(sigc::mem_fun(*this, &ProcessCommander::onProcessFinished));
+				process->Start();
+				_processes.push_back(process);
+			}
 		}
 		
-		initializeNextTask();
-		
+		// We will now start accepting connections. The Run() method will not return until the server
+		// stops listening and there are no more io operations pending. With asynchroneous
+		// handles, the server and its connections will call onEvent...(). These handles
+		// will push new tasks until all tasks in the ProcessCommander are finished.
 		_server.Run();
 	}
 }
@@ -73,32 +83,21 @@ void ProcessCommander::continueReadQualityTablesTask(ServerConnectionPtr serverC
 	const std::string &hostname = serverConnection->Hostname();
 	
 	boost::mutex::scoped_lock lock(_mutex);
-	NodeMap::iterator iter = _nodeMap.find(hostname);
-	if(iter == _nodeMap.end())
+	ClusteredObservationItem item;
+	if(_nodeCommands.Pop(hostname, item))
 	{
+		const std::string msFilename = item.LocalPath();
+		StatisticsCollection *statisticsCollection = new StatisticsCollection();
+		HistogramCollection *histogramCollection = new HistogramCollection();
+		serverConnection->ReadQualityTables(msFilename, *statisticsCollection, *histogramCollection);
+	} else {
 		serverConnection->StopClient();
-	}
-	else {
-		std::deque<ClusteredObservationItem> &items = iter->second;
-		if(items.empty())
+		
+		if(_nodeCommands.Empty())
 		{
-			serverConnection->StopClient();
-			_nodeMap.erase(iter);
-			if(_nodeMap.empty())
-			{
-				removeCurrentTask();
-				initializeNextTask();
-				lock.unlock();
-				onConnectionAwaitingCommand(serverConnection);
-			}
-		}
-		else
-		{
-			const std::string msFilename = items.front().LocalPath();
-			items.pop_front();
-			StatisticsCollection *statisticsCollection = new StatisticsCollection();
-			HistogramCollection *histogramCollection = new HistogramCollection();
-			serverConnection->ReadQualityTables(msFilename, *statisticsCollection, *histogramCollection);
+			onCurrentTaskFinished();
+			lock.unlock();
+			onConnectionAwaitingCommand(serverConnection);
 		}
 	}
 }
@@ -106,39 +105,15 @@ void ProcessCommander::continueReadQualityTablesTask(ServerConnectionPtr serverC
 void ProcessCommander::continueReadAntennaTablesTask(ServerConnectionPtr serverConnection)
 {
 	boost::mutex::scoped_lock lock(_mutex);
-	removeCurrentTask();
-	initializeNextTask();
+	onCurrentTaskFinished();
 	
 	const std::string &hostname = serverConnection->Hostname();
-	NodeMap::iterator iter = _nodeMap.find(hostname);
-	const std::string msFilename = iter->second.front().LocalPath();
 	std::vector<AntennaInfo> *antennas = new std::vector<AntennaInfo>();
-	serverConnection->ReadAntennaTables(msFilename, *antennas);
+	serverConnection->ReadAntennaTables(_nodeCommands.Top(hostname).LocalPath(), *antennas);
 }
 
-void ProcessCommander::initializeNextTask()
+void ProcessCommander::continueReadDataRowsTask(ServerConnectionPtr serverConnection)
 {
-	std::cout << "Initializing next task.\n";
-	switch(currentTask())
-	{
-		case ReadQualityTablesTask:
-			//makeNodeMap(_observation);
-			break;
-		case ReadAntennaTablesTask:
-			break;
-		case NoTask:
-			_server.Stop();
-			break;
-	}
-}
-
-void ProcessCommander::makeNodeMap(const ClusteredObservation &observation)
-{
-	const std::vector<ClusteredObservationItem> &items = observation.GetItems();
-	for(std::vector<ClusteredObservationItem>::const_iterator i=items.begin();i!=items.end();++i)
-	{
-		_nodeMap[i->HostName()].push_back(*i);
-	}
 }
 
 std::string ProcessCommander::GetHostName()
@@ -157,15 +132,13 @@ void ProcessCommander::onConnectionCreated(ServerConnectionPtr serverConnection,
 	serverConnection->SignalAwaitingCommand().connect(sigc::mem_fun(*this, &ProcessCommander::onConnectionAwaitingCommand));
 	serverConnection->SignalFinishReadQualityTables().connect(sigc::mem_fun(*this, &ProcessCommander::onConnectionFinishReadQualityTables));
 	serverConnection->SignalFinishReadAntennaTables().connect(sigc::mem_fun(*this, &ProcessCommander::onConnectionFinishReadAntennaTables));
+	serverConnection->SignalFinishReadDataRows().connect(sigc::mem_fun(*this, &ProcessCommander::onConnectionFinishReadDataRows));
 	serverConnection->SignalError().connect(sigc::mem_fun(*this, &ProcessCommander::onError));
 	acceptConnection = true;
 }
 
 void ProcessCommander::onConnectionAwaitingCommand(ServerConnectionPtr serverConnection)
 {
-	const std::string &hostname = serverConnection->Hostname();
-	std::cout << "Connection " << hostname << " awaiting commands..." << std::endl;
-	
 	switch(currentTask())
 	{
 		case ReadQualityTablesTask:
@@ -174,8 +147,14 @@ void ProcessCommander::onConnectionAwaitingCommand(ServerConnectionPtr serverCon
 		case ReadAntennaTablesTask:
 			continueReadAntennaTablesTask(serverConnection);
 			break;
+		case ReadDataRowsTask:
+			continueReadDataRowsTask(serverConnection);
+			break;
 		case NoTask:
-			serverConnection->StopClient();
+			if(_finishConnections)
+				serverConnection->StopClient();
+			else
+				_idleConnections.push_back(serverConnection);
 			break;
 	}
 }
@@ -222,10 +201,21 @@ void ProcessCommander::onConnectionFinishReadAntennaTables(ServerConnectionPtr s
 	delete &antennas;
 }
 
+void ProcessCommander::onConnectionFinishReadDataRows(ServerConnectionPtr serverConnection, MSRowDataExt *rowData)
+{
+}
+
 void ProcessCommander::onError(ServerConnectionPtr connection, const std::string &error)
 {
 	std::stringstream s;
-	s << "On connection with " << connection->Hostname() << ", reported error was: " << error;
+	
+	const std::string &hostname = connection->Hostname();
+	ClusteredObservationItem item;
+	bool knowFile = _nodeCommands.Current(hostname, item);
+	s << "On connection with " << hostname;
+	if(knowFile)
+		s << " to process local file '" << item.LocalPath() << "'";
+	s << ", reported error was: " << error;
 	boost::mutex::scoped_lock lock(_mutex);
 	_errors.push_back(s.str());
 }
@@ -233,19 +223,9 @@ void ProcessCommander::onError(ServerConnectionPtr connection, const std::string
 void ProcessCommander::onProcessFinished(RemoteProcess &process, bool error, int status)
 {
 	boost::mutex::scoped_lock lock(_mutex);
-	NodeMap::iterator iter = _nodeMap.find(process.ClientHostname());
-	if(iter == _nodeMap.end())
-	{
-		// There were no comments for this client, thus probably finished okay.
-	}
-	else {
-		_nodeMap.erase(iter);
-		if(_nodeMap.empty())
-		{
-			removeCurrentTask();
-			initializeNextTask();
-		}
-	}
+	
+	if(_nodeCommands.RemoveNode(process.ClientHostname()) && _nodeCommands.Empty())
+		onCurrentTaskFinished();
 	
 	if(error)
 	{
