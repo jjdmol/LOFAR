@@ -146,6 +146,7 @@ void ProcessCommander::onConnectionCreated(ServerConnectionPtr serverConnection,
 	serverConnection->SignalAwaitingCommand().connect(sigc::mem_fun(*this, &ProcessCommander::onConnectionAwaitingCommand));
 	serverConnection->SignalFinishReadQualityTables().connect(sigc::mem_fun(*this, &ProcessCommander::onConnectionFinishReadQualityTables));
 	serverConnection->SignalFinishReadAntennaTables().connect(sigc::mem_fun(*this, &ProcessCommander::onConnectionFinishReadAntennaTables));
+	serverConnection->SignalFinishReadBandTable().connect(sigc::mem_fun(*this, &ProcessCommander::onConnectionFinishReadBandTable));
 	serverConnection->SignalFinishReadDataRows().connect(sigc::mem_fun(*this, &ProcessCommander::onConnectionFinishReadDataRows));
 	serverConnection->SignalError().connect(sigc::mem_fun(*this, &ProcessCommander::onError));
 	acceptConnection = true;
@@ -160,6 +161,9 @@ void ProcessCommander::onConnectionAwaitingCommand(ServerConnectionPtr serverCon
 			break;
 		case ReadAntennaTablesTask:
 			continueReadAntennaTablesTask(serverConnection);
+			break;
+		case ReadBandTablesTask:
+			continueReadBandTablesTask(serverConnection);
 			break;
 		case ReadDataRowsTask:
 			continueReadDataRowsTask(serverConnection);
@@ -210,6 +214,10 @@ void ProcessCommander::onConnectionFinishReadAntennaTables(ServerConnectionPtr s
 	boost::mutex::scoped_lock lock(_mutex);
 	_antennas = antennas;
 	delete &antennas;
+}
+
+void ProcessCommander::onConnectionFinishReadBandTable(ServerConnectionPtr serverConnection, BandInfo &band)
+{
 }
 
 void ProcessCommander::onConnectionFinishReadDataRows(ServerConnectionPtr serverConnection, MSRowDataExt *rowData)

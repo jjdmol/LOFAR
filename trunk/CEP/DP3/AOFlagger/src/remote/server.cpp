@@ -51,12 +51,11 @@ void Server::startAccept()
 
 void Server::handleAccept(ServerConnectionPtr connection, const boost::system::error_code &error)
 {
-	std::cout << "Connection accepted." << std::endl;
-	
 	if (_acceptor.is_open())
 	{
 		if (!error)
 		{
+			std::cout << "Connection accepted." << std::endl;
 			bool acceptConnection = true;
 			_onConnectionCreated(connection, acceptConnection);
 			if(acceptConnection)

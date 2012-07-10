@@ -91,6 +91,12 @@ void Client::Run(const std::string &serverHost)
 			case ReadAntennaTablesRequest:
 				handleReadAntennaTables(requestBlock.dataSize);
 				break;
+			case ReadBandTableRequest:
+				handleReadBandTable(requestBlock.dataSize);
+				break;
+			default:
+				writeGenericReadException("Command not understood by client: server and client versions don't match?");
+				break;
 		}
 	}
 }
@@ -99,15 +105,19 @@ void Client::writeGenericReadException(const std::exception &e)
 {
 	std::stringstream s;
 	s << "Exception type " << typeid(e).name() << ": " << e.what();
-	
+	writeGenericReadException(s.str());
+}
+
+void Client::writeGenericReadException(const std::string &s)
+{
 	GenericReadResponseHeader header;
 	header.blockIdentifier = GenericReadResponseHeaderId;
 	header.blockSize = sizeof(header);
 	header.errorCode = UnexpectedExceptionOccured;
-	header.dataSize = s.str().size();
+	header.dataSize = s.size();
 	
 	boost::asio::write(_socket, boost::asio::buffer(&header, sizeof(header)));
-	boost::asio::write(_socket, boost::asio::buffer(s.str()));
+	boost::asio::write(_socket, boost::asio::buffer(s));
 }
 
 void Client::writeGenericReadError(enum ErrorCode error)
@@ -118,6 +128,23 @@ void Client::writeGenericReadError(enum ErrorCode error)
 	header.errorCode = CouldNotOpenTableError;
 	header.dataSize = 0;
 	boost::asio::write(_socket, boost::asio::buffer(&header, sizeof(header)));
+}
+
+void Client::writeDataResponse(std::ostringstream &buffer)
+{
+	try {
+		GenericReadResponseHeader header;
+		header.blockIdentifier = GenericReadResponseHeaderId;
+		header.blockSize = sizeof(header);
+		header.errorCode = NoError;
+		const std::string str = buffer.str();
+		header.dataSize = str.size();
+		
+		boost::asio::write(_socket, boost::asio::buffer(&header, sizeof(header)));
+		boost::asio::write(_socket, boost::asio::buffer(str));
+	} catch(std::exception &e) {
+		writeGenericReadException(e);
+	}
 }
 
 std::string Client::readStr(unsigned size)
@@ -155,19 +182,11 @@ void Client::handleReadQualityTables(unsigned dataSize)
 				histogramCollection.Load(histogramFormatter);
 			}
 			
-			GenericReadResponseHeader header;
-			header.blockIdentifier = GenericReadResponseHeaderId;
-			header.blockSize = sizeof(header);
-			header.errorCode = NoError;
 			std::ostringstream s;
 			collection.Serialize(s);
 			if(histogramsExist)
 				histogramCollection.Serialize(s);
-			const std::string str = s.str();
-			header.dataSize = str.size();
-			
-			boost::asio::write(_socket, boost::asio::buffer(&header, sizeof(header)));
-			boost::asio::write(_socket, boost::asio::buffer(str));
+			writeDataResponse(s);
 		}
 	} catch(std::exception &e) {
 		writeGenericReadException(e);
@@ -195,20 +214,36 @@ void Client::handleReadAntennaTables(unsigned dataSize)
 			antennaInfo.Serialize(buffer);
 		}
 		
-		GenericReadResponseHeader header;
-		header.blockIdentifier = GenericReadResponseHeaderId;
-		header.blockSize = sizeof(header);
-		header.errorCode = NoError;
-		const std::string str = buffer.str();
-		header.dataSize = str.size();
-		
-		boost::asio::write(_socket, boost::asio::buffer(&header, sizeof(header)));
-		boost::asio::write(_socket, boost::asio::buffer(str));
+		writeDataResponse(buffer);
 	} catch(std::exception &e) {
 		writeGenericReadException(e);
 	}
 }
 
+void Client::handleReadBandTable(unsigned dataSize)
+{
+	std::cout << "I was asked for my band!\n";
+	try {
+		ReadBandTableRequestOptions options;
+		boost::asio::read(_socket, boost::asio::buffer(&options.flags, sizeof(options.flags)));
+		
+		unsigned nameLength = dataSize - sizeof(options.flags);
+		options.msFilename = readStr(nameLength);
+		
+		std::ostringstream buffer;
+		
+		// Serialize the band info
+		MeasurementSet ms(options.msFilename);
+		if(ms.BandCount() != 1)
+			throw std::runtime_error("The number of bands in the measurement set was not 1");
+		BandInfo band = ms.GetBandInfo(0);
+		band.Serialize(buffer);
+		
+		writeDataResponse(buffer);
+	} catch(std::exception &e) {
+		writeGenericReadException(e);
+	}
+}
 
 } // namespace
 

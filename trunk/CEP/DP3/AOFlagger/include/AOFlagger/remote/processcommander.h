@@ -68,7 +68,11 @@ class ProcessCommander
 			_observationTimerange = &timerange;
 		}
 		void PushReadAntennaTablesTask() { _tasks.push_back(ReadAntennaTablesTask); }
-		void PushReadBandTablesTask() { _tasks.push_back(ReadBandTablesTask); }
+		void PushReadBandTablesTask()
+		{ 
+			_tasks.push_back(ReadBandTablesTask);
+			_bands.resize(_observation.Size());
+		}
 	private:
 		enum Task {
 			NoTask,
@@ -87,6 +91,7 @@ class ProcessCommander
 		void onConnectionAwaitingCommand(ServerConnectionPtr serverConnection);
 		void onConnectionFinishReadQualityTables(ServerConnectionPtr serverConnection, StatisticsCollection &statisticsCollection, HistogramCollection &histogramCollection);
 		void onConnectionFinishReadAntennaTables(ServerConnectionPtr serverConnection, std::vector<AntennaInfo> &antennas);
+		void onConnectionFinishReadBandTable(ServerConnectionPtr serverConnection, BandInfo &band);
 		void onConnectionFinishReadDataRows(ServerConnectionPtr serverConnection, MSRowDataExt *rowData);
 		void onError(ServerConnectionPtr connection, const std::string &error);
 		void onProcessFinished(RemoteProcess &process, bool error, int status);
@@ -125,6 +130,12 @@ class ProcessCommander
 			_tasks.pop_front();
 			if(currentTask() == NoTask)
 				_server.Stop();
+		}
+		void handleIdleConnection(ServerConnectionPtr serverConnection) {
+			if(_finishConnections)
+				serverConnection->StopClient();
+			else
+				_idleConnections.push_back(serverConnection);
 		}
 };
 

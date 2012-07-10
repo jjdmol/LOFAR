@@ -153,6 +153,7 @@ void ServerConnection::ReadBandTable(const std::string &msFilename, BandInfo &ba
 {
 	_band = &band;
 	
+	std::cout << "Requesting band table from " << Hostname() << "...\n";
 	std::stringstream reqBuffer;
 	
 	RequestBlock requestBlock;
