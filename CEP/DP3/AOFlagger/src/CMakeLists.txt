@@ -47,8 +47,6 @@ lofar_add_bin_program(aofrequencyfilter aofrequencyfilter.cpp util/rng.cpp msio/
 
 lofar_add_bin_program(aorefscript aorefscript.cpp)
 
-lofar_add_bin_program(aosynchronisation aosynchronisation.cpp)
-
 set(GUI_PLOT_FILES
   gui/plot/colorscale.cpp
   gui/plot/horizontalplotscale.cpp
