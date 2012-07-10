@@ -231,10 +231,9 @@ class msss_target_pipeline(control):
         mapfile_dir = os.path.join(job_dir, "mapfiles")
         create_directory(mapfile_dir)
 
-# Temporarily disabled, until Wouter has fixed _copy_instrument_files().
-#        self.input_data['instrument'] = self._copy_instrument_files(
-#                                    self.input_data['instrument'],
-#                                    self.input_data['data'], mapfile_dir)
+        self.input_data['instrument'] = self._copy_instrument_files(
+                                    self.input_data['instrument'],
+                                    self.input_data['data'], mapfile_dir)
 
         self._validate_io_product_specs()
 
