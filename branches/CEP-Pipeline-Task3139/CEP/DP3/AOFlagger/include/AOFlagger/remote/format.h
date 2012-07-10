@@ -70,7 +70,8 @@ struct ErrorStr
 	}
 };
 
-enum RequestType { StopClientRequest = 0, ReadQualityTablesRequest = 1, ReadAntennaTablesRequest = 2 };
+enum RequestType { StopClientRequest = 0, ReadQualityTablesRequest = 1, ReadAntennaTablesRequest = 2,
+	ReadDataRowsRequest = 3 };
 
 struct InitialBlock
 {
@@ -116,6 +117,14 @@ struct ReadAntennaTablesRequestOptions
 {
 	int32_t flags;
 	std::string msFilename;
+};
+
+struct ReadDataRowsRequestOptions
+{
+	int32_t flags;
+	std::string msFilename;
+	uint64_t startRow;
+	uint64_t rowCount;
 };
 
 }

@@ -7,7 +7,6 @@
 
 import sys
 import string
-import src.ab
 import numpy as np
 import monetdb.sql as db
 import logging

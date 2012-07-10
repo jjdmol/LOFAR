@@ -39,32 +39,32 @@
  *
  */
 
-CREATE SEQUENCE "seq_extractedsources" AS INTEGER
-  START WITH 1
-  INCREMENT BY 1
-;
+CREATE SEQUENCE "seq_extractedsources" AS INTEGER;
 
 CREATE TABLE extractedsources
   (xtrsrcid INT DEFAULT NEXT VALUE FOR "seq_extractedsources"
+  ,xtrsrcid2 int null --reference to the original source for a copied sources.
   ,image_id INT NOT NULL
   ,zone INT NOT NULL
-  ,ra DOUBLE NOT NULL
-  ,decl DOUBLE NOT NULL
-  ,ra_err DOUBLE NOT NULL
-  ,decl_err DOUBLE NOT NULL
-  ,x DOUBLE NOT NULL
-  ,y DOUBLE NOT NULL
-  ,z DOUBLE NOT NULL
-  ,margin BOOLEAN NOT NULL DEFAULT 0
-  ,det_sigma DOUBLE NOT NULL
+  ,ra double NOT NULL
+  ,decl double NOT NULL
+  ,ra_err double NOT NULL
+  ,decl_err double NOT NULL
+  ,x double NOT NULL
+  ,y double NOT NULL
+  ,z double NOT NULL
+  ,det_sigma double NOT NULL
   ,source_kind smallint not null default 0 -- 0-Point; 1-Gaussian;
-  ,g_major DOUBLE NULL
-  ,g_minor DOUBLE NULL
-  ,g_pa DOUBLE NULL
-  ,f_peak DOUBLE NULL
-  ,f_peak_err DOUBLE NULL
-  ,f_int DOUBLE NULL
-  ,f_int_err DOUBLE NULL
+  ,g_major double NULL
+  ,g_major_err double NULL
+  ,g_minor double NULL
+  ,g_minor_err double NULL
+  ,g_pa double NULL
+  ,g_pa_err double NULL
+  ,f_peak double NULL
+  ,f_peak_err double NULL
+  ,f_int double NULL
+  ,f_int_err double NULL
   ,PRIMARY KEY (xtrsrcid)
   --,FOREIGN KEY (image_id) REFERENCES images (imageid)
   )

@@ -24,6 +24,7 @@
 #include <gtkmm/filechooserdialog.h>
 #include <gtkmm/messagedialog.h>
 #include <gtkmm/inputdialog.h>
+#include <gtkmm/toolbar.h>
 
 #include <AOFlagger/msio/baselinematrixloader.h>
 #include <AOFlagger/msio/measurementset.h>
@@ -974,6 +975,7 @@ void MSWindow::createToolbar()
 	Gtk::Widget* pMenubar = uiManager->get_widget("/MenuBar");
 	_mainVBox.pack_start(*pMenubar, Gtk::PACK_SHRINK);
 	Gtk::Widget* pToolbar = uiManager->get_widget("/ToolBar");
+	static_cast<Gtk::Toolbar *>(pToolbar)->set_toolbar_style(Gtk::TOOLBAR_BOTH);
 	_mainVBox.pack_start(*pToolbar, Gtk::PACK_SHRINK);
 	pMenubar->show();
 }

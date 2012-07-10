@@ -9,7 +9,7 @@ Parameters for substitution are passed to get_sql.
 """
 from os import path
 import re
-from src.queries import _get_assoc_r, _get_distance, _get_column_update
+from src.queries import *
 
 SQL_LIST = {}
 
@@ -19,6 +19,9 @@ def _expand_value(value):
     Replace all occurences of $$function()$$ by result of the function call.
     """
     def _expand_formula(matchvalues):
+        """
+        Expand $$..$$ by calculating value in $s.
+        """
         return str(eval(matchvalues.group(0)[2:-2]))
     return re.sub(r'\$\$(.*?)\$\$', _expand_formula, value, count=0)
 
@@ -28,21 +31,22 @@ def _load_from_sql_list(filename):
     Load sql-commands from file.
     Command name is prefixed by --#
     """
-    sqlfile = open(filename, 'r')
+    sqls = open(filename, 'r')
     hashkey = None
     hashvalue = ''
-    for line in iter(sqlfile.readline, ''):
+    for line in iter(sqls.readline, ''):
         if (line.startswith('--#')):
             if hashkey:
                 SQL_LIST[hashkey] = _expand_value(hashvalue)
                 hashvalue = ''
             hashkey = line[3:].strip()
         elif (not line.startswith('--')) and line:
+            if line.find('--') > 0:  # Drop comments
+                line = line[:line.index('--')]
             hashvalue = '%s %s' % (hashvalue, line.strip())
     if hashkey:
         SQL_LIST[hashkey] = _expand_value(hashvalue)
-    print 'Loaded SQL list'
-    sqlfile.close()
+    sqls.close()
 
 
 def get_sql(name, *params):
@@ -57,5 +61,12 @@ def get_sql(name, *params):
         return SQL_LIST[name].format(*params)
 
 
-_load_from_sql_list(path.dirname(path.abspath(__file__)) + '/sqllist.sql')
-_load_from_sql_list(path.dirname(path.abspath(__file__)) + '/sqllist_api.sql')
+for sqlfile in ['sqllist.sql',
+                'sqllist_api.sql',
+                'sqllist_associate.sql',
+                'sqllist_join.sql',
+                'sqllist_new.sql',
+                'sqllist_update.sql',
+                'sqllist_deduct.sql',
+                'sqllist_group.sql']:
+    _load_from_sql_list(path.dirname(path.abspath(__file__)) + '/%s' % sqlfile)

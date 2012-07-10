@@ -2,13 +2,14 @@
 
 This module initializes the interactive PyBDSM shell, which is a customized
 IPython enviroment. It should be called from the terminal prompt using the
-"pybdsm" shell script in apps/PyBDSM/ or as "python pybdsm.py".
+"pybdsm" shell script or as "python pybdsm.py".
 """
 import lofar.bdsm
 from lofar.bdsm.image import Image
 import pydoc
 import sys
 import inspect
+
 
 ###############################################################################
 # Functions needed only in the custom IPython shell are defined here. Other
@@ -21,7 +22,8 @@ import inspect
 # start-up banner. However, the parameter list will fill the entire available
 # terminal width to consume as few vertical lines as possible.
 global _img
-_img = Image({'filename':'', 'output_all':False})
+_img = Image({'filename':''})
+_img._is_interactive_shell = True
 T = True
 F = False
 true = True
@@ -231,7 +233,7 @@ def _set_pars_from_prompt():
         orig_opt_val = opts[k]
         f_dict[k] = orig_opt_val
         print '\033[31;1mERROR\033[0m: ' + str(err) + \
-              ' Resetting to previous value.'
+              '\nResetting to previous value.'
         return False
 
     
@@ -657,8 +659,42 @@ def _opts_completer(self, event):
         opts.append('export_image')
         return opts
 
-# Define the welcome banner to print on startup
+# Define the welcome banner to print on startup. Also check if there is a newer 
+# version on the STRW ftp server. If there is, print a message to the user 
+# asking them to update.
 from lofar.bdsm._version import __version__, __revision__, changelog
+
+# Query the STRW FTP server. Tar files must be named "PyBDSM-version#.tar.gz":
+#   e.g., "PyBDSM-1.3.tar.gz".
+# Check whether called from the LOFAR CEPI/II. If so, skip check.
+import os
+aps_local_val = os.environ.get('APS_LOCAL')
+if aps_local_val == None:
+    try:
+        import ftplib
+        f = ftplib.FTP()
+        f.connect("ftp.strw.leidenuniv.nl")
+        f.login()
+        file_list = []
+        file_list = f.nlst('pub/rafferty/PyBDSM')
+        f.close()
+        ftp_version = []
+        for file in file_list:
+            if 'tar.gz' in file:
+                ver_start_indx = file.find('-') + 1
+                ftp_version.append(float(file[ver_start_indx:ver_start_indx+3]))
+        if ftp_version == []:
+            # No matching files found, continue without message
+            pass
+        elif float(__version__) < max(ftp_version):
+            print '\n' + '*' * 72
+            print "There appears to be a newer version of PyBDSM available at:"
+            print "    ftp://ftp.strw.leidenuniv.nl/pub/rafferty/PyBDSM/"
+            print "Please consider updating your installation"
+            print '*' * 72
+    except:
+        pass
+    
 divider1 = '=' * 72 + '\n'
 divider2 = '_' * 72 + '\n'
 banner = '\nPyBDSM version ' + __version__ + ' (LOFAR revision ' + \

@@ -8,6 +8,7 @@ def gsmMain (name, argv):
     import monetdb
     import monetdb.sql as db
     import lofar.gsm.gsmutils as gsm 
+    #import gsmutils as gsm 
 
     if len(argv) < 4:
         print ''
@@ -41,9 +42,11 @@ def gsmMain (name, argv):
         theta = float(argv[5])
 
     db_host = "ldb002"
+    #db_host = "napels"
     db_dbase = "gsm"
     db_user = "gsm"
     db_passwd = "msss"
+    #db_passwd = "gsm"
     db_port = 51000
     db_autocommit = True
 
@@ -61,6 +64,9 @@ def gsmMain (name, argv):
 # This is the main entry.
 if __name__ == "__main__":
     import sys
-    if gsmMain (sys.argv[0], sys.argv[1:]):
-        sys.exit(0)
-    sys.exit(1)
+    try:
+        gsmMain (sys.argv[0], sys.argv[1:])
+    except Exception as e:
+        print "Failed for reason: %s" % (e,)
+    #    raise
+    #sys.exit(1)

@@ -28,24 +28,54 @@ CREATE TABLE runningcatalog
   ,stokes CHAR(1) NULL  -- not null for group members ONLY
   ,datapoints INT NOT NULL
   ,decl_zone INT NULL
-  ,wm_ra DOUBLE NOT NULL
-  ,wm_decl DOUBLE NOT NULL
-  ,wm_ra_err DOUBLE NOT NULL
-  ,wm_decl_err DOUBLE NOT NULL
-  ,avg_wra DOUBLE NULL
-  ,avg_wdecl DOUBLE NULL
-  ,avg_weight_ra DOUBLE NULL
-  ,avg_weight_decl DOUBLE NULL
-  ,source_kind smallint not null default 0 -- 0-Point; 1-Gaussian, 2-Group head, 3-Dummy;
+
+  ,wm_ra double NOT NULL
+  ,wm_ra_err double NOT NULL
+  ,avg_wra double NULL
+  ,avg_weight_ra double NULL
+
+  ,wm_decl double NOT NULL
+  ,wm_decl_err double NOT NULL
+  ,avg_wdecl double NULL
+  ,avg_weight_decl double NULL
+
+  ,source_kind smallint not null default 0 -- 0-Point; 1-Gaussian, 2-Group head, 3-Dummy, 4-ToBe Updated;
+  ,parent_runcat_id int null --reference to the non-banded extended source
+
+  ,wm_g_minor double NULL
+  ,wm_g_minor_err double NULL
+  ,avg_wg_minor double NULL
+  ,avg_weight_g_minor double NULL
+
+  ,wm_g_major double NULL
+  ,wm_g_major_err double NULL
+  ,avg_wg_major double NULL
+  ,avg_weight_g_major double NULL
+
+  ,wm_g_pa double NULL
+  ,wm_g_pa_err double NULL
+  ,avg_wg_pa double NULL
+  ,avg_weight_g_pa double NULL
+
   ,is_group BOOLEAN NOT NULL DEFAULT FALSE -- to be used for groups
   ,group_head_id INT NULL --reference to the group head
   ,deleted BOOLEAN NOT NULL DEFAULT FALSE -- deletion flag
-  ,x DOUBLE NOT NULL
-  ,y DOUBLE NOT NULL
-  ,z DOUBLE NOT NULL
-  --,beam_semimaj DOUBLE NULL
-  --,beam_semimin DOUBLE NULL
-  --,beam_pa DOUBLE NULL
+  ,last_update_date timestamp not null default current_timestamp()
+
+  ,x double NOT NULL
+  ,y double NOT NULL
+  ,z double NOT NULL
+  ,last_spectra_update_date timestamp null --last update of spectral indices
+  ,spectral_power integer null
+  ,spectral_index_0 double  null
+  ,spectral_index_1 double  null
+  ,spectral_index_2 double  null
+  ,spectral_index_3 double  null
+  ,spectral_index_4 double  null
+
+  --,beam_semimaj double NULL
+  --,beam_semimin double NULL
+  --,beam_pa double NULL
   --,stokes CHAR(1) NOT NULL DEFAULT 'I'
   )
 ;

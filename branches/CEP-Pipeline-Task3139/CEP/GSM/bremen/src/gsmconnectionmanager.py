@@ -1,12 +1,8 @@
 #!/usr/bin/python
 import cPickle as pickle
-from src.gsmlogger import get_gsm_logger
-from src.connectionMonet import MonetLoggedConnection
+from src.gsmlogger import get_gsm_logger, USE_CONSOLE
+from src.connectionMonet import MonetConnection
 from src.connectionPostgres import PgConnection
-
-
-#LoggedConnection = MonetLoggedConnection
-LoggedConnection = PgConnection
 
 
 class GSMConnectionManager(object):
@@ -15,20 +11,21 @@ class GSMConnectionManager(object):
     Have options to save/load connection parameters.
     """
     DEFAULTS = {
-      'hostname': 'localhost',
-      'port': 50000,
-      'database': 'gsm',
-      'username': 'monetdb',
-      'password': 'monetdb',
-      'autocommit': True
+        'hostname': 'localhost',
+        'port': 50000,
+        'database': 'gsm',
+        'username': 'monetdb',
+        'password': 'monetdb',
+        'autocommit': True
     }
 
-    def __init__(self, **params):
+    def __init__(self, use_monet=True, use_console=USE_CONSOLE, **params):
         """
         """
         self.params = self.DEFAULTS.copy()
         self.params.update(params)
-        self.log = get_gsm_logger('sql', 'sql.log')
+        self.log = get_gsm_logger('sql', 'sql.log', use_console)
+        self.use_monet = use_monet
 
     def get_connection(self, **ext_params):
         """
@@ -39,7 +36,10 @@ class GSMConnectionManager(object):
         connect_params = self.params
         connect_params.update(ext_params)
         self.log.info(connect_params)
-        return LoggedConnection(**connect_params)
+        if self.use_monet:
+            return MonetConnection(**connect_params)
+        else:
+            return PgConnection(**connect_params)
 
     def save_params(self, filename):
         """

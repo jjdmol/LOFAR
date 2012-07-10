@@ -121,7 +121,7 @@ TimeFrequencyData BaselineMatrixLoader::LoadSummed(size_t timeIndex)
 		yxMask = Mask2D::CreateUnsetMaskPtr(nrAntenna, nrAntenna),
 		yyMask = Mask2D::CreateUnsetMaskPtr(nrAntenna, nrAntenna);
 
-	for(size_t i=0;i<table.nrow();++i)
+	for(size_t j=0;j<table.nrow();++j)
 	{
 		int
 			a1 = *antenna1Iter,
