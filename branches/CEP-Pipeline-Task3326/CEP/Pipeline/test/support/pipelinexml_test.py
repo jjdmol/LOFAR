@@ -188,6 +188,42 @@ key4=value=value
                     key, input_dict[key], output_dict[key]))
 
 
+
+    def test_read_parset_to_dict(self):
+        # write a tempparset with test data
+        testdata = \
+"""
+ObsSW.Observation.ObservationControl.PythonControl.BBS.Step.DefaultBBSStep[0].Solve.CellSize.Freq=0
+ObsSW.Observation.ObservationControl.PythonControl.BBS.Step.DefaultBBSStep[0].Solve.CellSize.Time=1             
+"""
+        expected_dict = {}
+        expected_dict["ObsSW.Observation.ObservationControl.PythonControl.BBS.Step.DefaultBBSStep[0].Solve.CellSize.Freq"] = "0"
+        expected_dict["ObsSW.Observation.ObservationControl.PythonControl.BBS.Step.DefaultBBSStep[0].Solve.CellSize.Time"] = "1"
+
+        temp_dir = tempfile.mkdtemp()
+        temp_parset_path = os.path.join(temp_dir, "parset.par")
+        fp = open(temp_parset_path, 'w')
+        fp.write(testdata)
+        fp.close
+
+        fp = open(temp_parset_path, 'r')
+
+        dicted_parset = pipexml._read_parset_to_dict(temp_parset_path)
+
+        self.assertTrue(False, dicted_parset)
+#        
+#        for key in expected_dict.iterkeys():
+#            message = "dict did not contain expected key {0} \n {1}".format(
+#                    key, dicted_parset)
+#            self.assertTrue(dicted_parset.has_key(key), message)
+#
+#            message = "retrieved value based on key {0} is not the correct: \n"\
+#               " >{1}< != >{2}< ".format(key, dicted_parset[key], expected_dict[key])
+#
+#            self.assertTrue(dicted_parset[key] == expected_dict[key], message)
+
+
+
 if __name__ == "__main__":
     import xmlrunner
     unittest.main(testRunner=xmlrunner.XMLTestRunner(output='result.xml'))
