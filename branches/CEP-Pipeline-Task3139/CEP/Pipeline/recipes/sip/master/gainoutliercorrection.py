@@ -58,7 +58,7 @@ class gainoutliercorrection(BaseRecipe, RemoteCommandRecipeMixIn):
         ),
         'sigma': ingredient.FloatField(
             '--sigma',
-            default=2.0,
+            default=1.0,
             help="Clip at sigma * median: activates 'edit_parmdb' functionality"
         )
     }
