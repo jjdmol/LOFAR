@@ -23,6 +23,8 @@
 
 #include <string.h>
 
+#include <ms/MeasurementSets/MSColumns.h>
+
 #include "types.h"
 
 #include <AOFlagger/util/serializable.h>

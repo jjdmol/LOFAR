@@ -53,7 +53,10 @@ class ProcessCommander
 		const std::vector<AntennaInfo> &Antennas() const { return _antennas; }
 		const std::vector<BandInfo> &Bands() const { return _bands; }
 		const ObservationTimerange &ObsTimerange() const { return *_observationTimerange; }
+		
 		const std::vector<std::string> &Errors() const { return _errors; }
+		std::string ErrorString() const;
+		void CheckErrors() const;
 		
 		void PushReadQualityTablesTask(StatisticsCollection *dest, HistogramCollection *destHistogram, bool correctHistograms = false)
 		{
@@ -68,10 +71,15 @@ class ProcessCommander
 			_tasks.push_back(ReadBandTablesTask);
 			_bands.resize(_observation.Size());
 		}
-		void PushReadDataRowsTask(class ObservationTimerange &timerange, size_t rowStart, size_t rowCount)
+		
+		/**
+		 * @param rowBuffer should have #NODES elements, each which is an array of #ROWCOUNT rows.
+		 */
+		void PushReadDataRowsTask(class ObservationTimerange &timerange, size_t rowStart, size_t rowCount, MSRowDataExt **rowBuffer)
 		{
 			_tasks.push_back(ReadDataRowsTask);
 			_observationTimerange = &timerange;
+			_rowBuffer = rowBuffer;
 		}
 	private:
 		enum Task {
@@ -91,7 +99,7 @@ class ProcessCommander
 		void onConnectionCreated(ServerConnectionPtr serverConnection, bool &acceptConnection);
 		void onConnectionAwaitingCommand(ServerConnectionPtr serverConnection);
 		void onConnectionFinishReadQualityTables(ServerConnectionPtr serverConnection, StatisticsCollection &statisticsCollection, HistogramCollection &histogramCollection);
-		void onConnectionFinishReadAntennaTables(ServerConnectionPtr serverConnection, std::vector<AntennaInfo> &antennas);
+		void onConnectionFinishReadAntennaTables(ServerConnectionPtr serverConnection, boost::shared_ptr<std::vector<AntennaInfo> > antennas);
 		void onConnectionFinishReadBandTable(ServerConnectionPtr serverConnection, BandInfo &band);
 		void onConnectionFinishReadDataRows(ServerConnectionPtr serverConnection, MSRowDataExt *rowData);
 		void onError(ServerConnectionPtr connection, const std::string &error);
@@ -108,6 +116,7 @@ class ProcessCommander
 		std::vector<AntennaInfo> _antennas;
 		std::vector<BandInfo> _bands;
 		class ObservationTimerange *_observationTimerange;
+		MSRowDataExt **_rowBuffer;
 		size_t _rowStart, _rowCount;
 		
 		const ClusteredObservation _observation;

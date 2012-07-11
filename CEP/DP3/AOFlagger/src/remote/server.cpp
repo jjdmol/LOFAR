@@ -68,7 +68,8 @@ void Server::handleAccept(ServerConnectionPtr connection, const boost::system::e
 
 void Server::Stop()
 {
-	std::cout << "Stopping server." << std::endl;
+	if(_acceptor.is_open())
+		std::cout << "Stopping server." << std::endl;
 	_acceptor.close();
 }
 

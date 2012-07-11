@@ -25,6 +25,8 @@
 #include <boost/asio/read.hpp>
 #include <boost/asio/write.hpp>
 
+#include <ms/MeasurementSets/MSColumns.h>
+
 #include <AOFlagger/quality/histogramcollection.h>
 #include <AOFlagger/quality/histogramtablesformatter.h>
 #include <AOFlagger/quality/qualitytablesformatter.h>
@@ -93,6 +95,9 @@ void Client::Run(const std::string &serverHost)
 				break;
 			case ReadBandTableRequest:
 				handleReadBandTable(requestBlock.dataSize);
+				break;
+			case ReadDataRowsRequest:
+				handleReadDataRows(requestBlock.dataSize);
 				break;
 			default:
 				writeGenericReadException("Command not understood by client: server and client versions don't match?");
@@ -228,6 +233,36 @@ void Client::handleReadBandTable(unsigned dataSize)
 		
 		unsigned nameLength = dataSize - sizeof(options.flags);
 		options.msFilename = readStr(nameLength);
+		
+		std::ostringstream buffer;
+		
+		// Serialize the band info
+		MeasurementSet ms(options.msFilename);
+		if(ms.BandCount() != 1)
+			throw std::runtime_error("The number of bands in the measurement set was not 1");
+		BandInfo band = ms.GetBandInfo(0);
+		band.Serialize(buffer);
+		
+		writeDataResponse(buffer);
+	} catch(std::exception &e) {
+		writeGenericReadException(e);
+	}
+}
+
+void Client::handleReadDataRows(unsigned dataSize)
+{
+	try {
+		ReadDataRowsRequestOptions options;
+		boost::asio::read(_socket, boost::asio::buffer(&options.flags, sizeof(options.flags)));
+		
+		unsigned nameLength = dataSize - sizeof(options.flags);
+		options.msFilename = readStr(nameLength);
+		
+		boost::asio::read(_socket, boost::asio::buffer(&options.startRow, sizeof(options.startRow)));
+		boost::asio::read(_socket, boost::asio::buffer(&options.rowCount, sizeof(options.rowCount)));
+		
+		casa::Table table(options.msFilename);
+		casa::ROTableColumn dataCol(table, "DATA");
 		
 		std::ostringstream buffer;
 		

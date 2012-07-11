@@ -120,9 +120,9 @@ void ServerConnection::ReadQualityTables(const std::string &msFilename, Statisti
 		boost::bind(&ServerConnection::onReceiveQualityTablesResponseHeader, shared_from_this()));
 }
 
-void ServerConnection::ReadAntennaTables(const std::string &msFilename, std::vector<AntennaInfo> &antennas)
+void ServerConnection::ReadAntennaTables(const std::string &msFilename, boost::shared_ptr<std::vector<AntennaInfo> > antennas)
 {
-	_antennas = &antennas;
+	_antennas = antennas;
 	
 	std::stringstream reqBuffer;
 	
@@ -177,9 +177,9 @@ void ServerConnection::ReadBandTable(const std::string &msFilename, BandInfo &ba
 		boost::bind(&ServerConnection::onReceiveBandTableResponseHeader, shared_from_this()));
 }
 
-void ServerConnection::ReadDataRows(const std::string &msFilename, size_t rowStart, size_t rowCount, MSRowDataExt *destination)
+void ServerConnection::ReadDataRows(const std::string &msFilename, size_t rowStart, size_t rowCount, MSRowDataExt *destinationArray)
 {
-	_rowData = destination;
+	_rowData = destinationArray;
 	
 	std::stringstream reqBuffer;
 	
@@ -308,7 +308,7 @@ void ServerConnection::onReceiveAntennaTablesResponseData(size_t dataSize)
 	if(stream.rdbuf()->pubsetbuf(_buffer, dataSize) == 0)
 		throw std::runtime_error("Could not set string buffer");
 	
-	std::cout << "Received antenna table of size " << dataSize << "." << std::endl;
+	std::cout << "Received antenna tablestd::vector<AntennaInfo> of size " << dataSize << "." << std::endl;
 	size_t count = Serializable::UnserializeUInt32(stream);
 	for(size_t i=0;i<count;++i)
 	{
@@ -316,7 +316,7 @@ void ServerConnection::onReceiveAntennaTablesResponseData(size_t dataSize)
 		_antennas->rbegin()->Unserialize(stream);
 	}
 
-	_onFinishReadAntennaTables(shared_from_this(), *_antennas);
+	_onFinishReadAntennaTables(shared_from_this(), _antennas);
 	_onAwaitingCommand(shared_from_this());
 }
 
@@ -360,6 +360,7 @@ void ServerConnection::onReceiveDataRowsResponseData(size_t dataSize)
 		throw std::runtime_error("Could not set string buffer");
 	
 	size_t count = Serializable::UnserializeUInt32(stream);
+	std::cout << "Receiving " << count << " rows of total size " << dataSize << "." << std::endl;
 	for(size_t i=0;i<count;++i)
 		_rowData[i].Unserialize(stream);
 
