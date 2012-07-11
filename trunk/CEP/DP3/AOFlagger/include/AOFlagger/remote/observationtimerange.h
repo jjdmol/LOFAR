@@ -28,7 +28,7 @@
 
 #include <AOFlagger/msio/antennainfo.h>
 #include <AOFlagger/msio/types.h>
-#include <AOFlagger/msio/msrowdata.h>
+#include <AOFlagger/msio/msrowdataext.h>
 
 #include "clusteredobservation.h"
 
@@ -44,7 +44,8 @@ class ObservationTimerange
 			_polarizationCount(0),
 			_timestepCount(0),
 			_gridFrequencySize(0),
-			_realData(0), _imagData(0)
+			_realData(0), _imagData(0),
+			_u(0), _v(0), _w(0)
 		{
 		}
 		
@@ -149,20 +150,23 @@ class ObservationTimerange
 				_realData[p] = new num_t[_gridFrequencySize * _timestepCount * 2];
 				_imagData[p] = &_realData[p][_gridFrequencySize * _timestepCount];
 			}
+			_u = new double[_timestepCount];
+			_v = new double[_timestepCount];
+			_w = new double[_timestepCount];
 		}
 		
-		void SetTimestepData(size_t nodeIndex, const MSRowData *rows, size_t rowCount)
+		void SetTimestepData(size_t nodeIndex, const MSRowDataExt *rows, size_t rowCount)
 		{
 			size_t bandStart = _bandStartLookup[nodeIndex];
 			std::vector<size_t>::const_iterator gridPtr = _gridIndexLookup.begin()+bandStart;
-			const MSRowData &firstRow = rows[0];
-			for(size_t c=0;c<firstRow.ChannelCount();++c)
+			const MSRowData &firstRowData = rows[0].Data();
+			for(size_t c=0;c<firstRowData.ChannelCount();++c)
 			{
 				const size_t gridIndex = gridPtr[c];
 				
 				for(size_t r=0;r<rowCount;++r)
 				{
-					const MSRowData &row = rows[r];
+					const MSRowData &row = rows[r].Data();
 					const num_t *realPtr = row.RealPtr(c);
 					const num_t *imagPtr = row.ImagPtr(c);
 					const size_t gridStart = r * _gridFrequencySize;
@@ -189,6 +193,7 @@ class ObservationTimerange
 		// First index is polarization, second is frequency x timestep
 		num_t **_realData;
 		num_t **_imagData;
+		double *_u, *_v, *_w;
 		
 		void deallocate()
 		{
@@ -196,8 +201,11 @@ class ObservationTimerange
 			{
 				delete[] _realData[p];
 			}
-			delete _realData;
-			delete _imagData;
+			delete[] _realData;
+			delete[] _imagData;
+			delete[] _u;
+			delete[] _v;
+			delete[] _w;
 		}
 };
 	

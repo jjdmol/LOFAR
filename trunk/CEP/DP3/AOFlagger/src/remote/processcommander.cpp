@@ -22,6 +22,7 @@
 
 #include <unistd.h> //gethostname
 
+#include <AOFlagger/remote/observationtimerange.h>
 #include <AOFlagger/remote/serverconnection.h>
 
 #include <AOFlagger/quality/statisticscollection.h>
@@ -116,7 +117,8 @@ void ProcessCommander::continueReadAntennaTablesTask(ServerConnectionPtr serverC
 	
 	const std::string &hostname = serverConnection->Hostname();
 	std::vector<AntennaInfo> *antennas = new std::vector<AntennaInfo>();
-	serverConnection->ReadAntennaTables(_nodeCommands.Top(hostname).LocalPath(), *antennas);
+	serverConnection->ReadAntennaTables(_nodeCommands.Top(hostname).LocalPath(),
+																			boost::shared_ptr<std::vector<AntennaInfo> >(antennas));
 }
 
 void ProcessCommander::continueReadBandTablesTask(ServerConnectionPtr serverConnection)
@@ -146,7 +148,7 @@ void ProcessCommander::continueReadDataRowsTask(ServerConnectionPtr serverConnec
 	if(_nodeCommands.Pop(hostname, item))
 	{
 		const std::string &msFilename = item.LocalPath();
-		serverConnection->ReadDataRows(msFilename, _rowStart, _rowCount, new MSRowDataExt());
+		serverConnection->ReadDataRows(msFilename, _rowStart, _rowCount, _rowBuffer[item.Index()]);
 	} else {
 		handleIdleConnection(serverConnection);
 		
@@ -234,20 +236,23 @@ void ProcessCommander::onConnectionFinishReadQualityTables(ServerConnectionPtr s
 	delete &histogramCollection;
 }
 
-void ProcessCommander::onConnectionFinishReadAntennaTables(ServerConnectionPtr serverConnection, std::vector<AntennaInfo> &antennas)
+void ProcessCommander::onConnectionFinishReadAntennaTables(ServerConnectionPtr serverConnection, boost::shared_ptr<std::vector<AntennaInfo> > antennas)
 {
 	boost::mutex::scoped_lock lock(_mutex);
-	_antennas = antennas;
-	delete &antennas;
+	_antennas = *antennas;
 }
 
 void ProcessCommander::onConnectionFinishReadBandTable(ServerConnectionPtr serverConnection, BandInfo &band)
 {
+	// Nothing needs to be done.
 }
 
 void ProcessCommander::onConnectionFinishReadDataRows(ServerConnectionPtr serverConnection, MSRowDataExt *rowData)
 {
-	delete rowData;
+	const std::string &hostname = serverConnection->Hostname();
+	ClusteredObservationItem item;
+	_nodeCommands.Current(hostname, item);
+	_observationTimerange->SetTimestepData(item.Index(), rowData, _rowCount);
 }
 
 void ProcessCommander::onError(ServerConnectionPtr connection, const std::string &error)
@@ -281,5 +286,34 @@ void ProcessCommander::onProcessFinished(RemoteProcess &process, bool error, int
 	}
 }
 
+std::string ProcessCommander::ErrorString() const
+{
+	if(!_errors.empty())
+	{
+		std::stringstream s;
+		s << _errors.size() << " error(s) occured while querying the nodes or measurement sets in the given observation. This might be caused by a failing node, an unreadable measurement set, or maybe the quality tables are not available. The errors reported are:\n\n";
+		size_t count = 0;
+		for(std::vector<std::string>::const_iterator i=_errors.begin();i!=_errors.end() && count < 30;++i)
+		{
+			s << "- " << *i << '\n';
+			++count;
+		}
+		if(_errors.size() > 30)
+		{
+			s << "... and " << (_errors.size()-30) << " more.\n";
+		}
+		return s.str();
+	} else {
+		return std::string();
+	}
+}
+
+void ProcessCommander::CheckErrors() const
+{
+	if(!_errors.empty())
+	{
+		throw std::runtime_error(ErrorString());
+	}
+}
 
 }
