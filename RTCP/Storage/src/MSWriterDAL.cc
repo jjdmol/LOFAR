@@ -273,7 +273,6 @@ namespace LOFAR
       BF_SubArrayPointing sap = file.subArrayPointing(sapNr);
       sap.create();
       sap.groupType()   .value = "SubArrayPointing";
-      sap.target()      .value = targets[sapNr];
 
       sap.expTimeStartUTC().value = toUTC(parset.startTime());
       sap.expTimeStartMJD().value = toMJD(parset.startTime());
@@ -283,22 +282,25 @@ namespace LOFAR
       sap.expTimeEndMJD().value = toMJD(stopTime);
       sap.expTimeEndTAI().value = toTAI(stopTime);
 
+      sap.totalIntegrationTime().value = parset.beamDuration(sapNr);
+      sap.totalIntegrationTimeUnit().value = "s";
+
       // TODO: non-J2000 pointings
       if( parset.getBeamDirectionType(sapNr) != "J2000" )
         LOG_WARN("HDF5 writer does not record positions of non-J2000 observations yet.");
 
       vector<double> beamDir = parset.getBeamDirection(sapNr);
-      sap.pointRA() .value = beamDir[0] * 180.0 / M_PI;
-      sap.pointDEC().value = beamDir[1] * 180.0 / M_PI;
-
-      sap.subbandWidth()      .value = subbandBandwidth;
-      sap.subbandWidthUnit()  .value = "Hz";
+      sap.pointRA() .value     = beamDir[0] * 180.0 / M_PI;
+      sap.pointRAUnit().value  = "deg";
+      sap.pointDEC().value     = beamDir[1] * 180.0 / M_PI;
+      sap.pointDECUnit().value = "deg";
 
       sap.observationNofBeams().value = parset.nrPencilBeams(sapNr);
       sap.nofBeams()           .value = 1;
 
       BF_ProcessingHistory sapHistory = sap.processHistory();
       sapHistory.create();
+      sapHistory.groupType()   .value = "ProcessingHistory";
 
       string parsetAsString;
       parset.writeBuffer(parsetAsString);
@@ -318,6 +320,9 @@ namespace LOFAR
       beam.nofStations() .value = beamStationList.size();
       beam.stationsList().value = beamStationList;
 
+      const vector<string> beamtargets(1, targets[sapNr]);
+
+      beam.targets()     .value = beamtargets;
       beam.tracking().value     = parset.getBeamDirectionType(sapNr);
 
       BeamCoordinates pbeamDirs = parset.pencilBeams(sapNr);
@@ -330,6 +335,11 @@ namespace LOFAR
       beam.pointOffsetRAUnit() .value = "deg";
       beam.pointOffsetDEC()    .value = pbeamDir[1] * 180.0 / M_PI;
       beam.pointOffsetDECUnit().value = "deg";
+
+ 
+      beam.subbandWidth()      .value = subbandBandwidth;
+      beam.subbandWidthUnit()  .value = "Hz";
+
 
       beam.beamDiameterRA()     .value = 0;
       beam.beamDiameterRAUnit() .value = "arcmin";
@@ -374,7 +384,11 @@ namespace LOFAR
       vector<string> stokesComponents(1, stokesVars[stokesNr]);
 
       beam.stokesComponents()       .value = stokesComponents;
-      beam.complexVoltages()        .value = itsInfo.stokesType == STOKES_XXYY;
+      beam.complexVoltage()         .value = itsInfo.stokesType == STOKES_XXYY;
+      beam.signalSum()              .value = itsInfo.coherent ? "COHERENT" : "INCOHERENT";
+
+      beam.stokesComponents()       .value = stokesComponents;
+      beam.complexVoltage()         .value = itsInfo.stokesType == STOKES_XXYY;
       beam.signalSum()              .value = itsInfo.coherent ? "COHERENT" : "INCOHERENT";
 
       BF_ProcessingHistory beamHistory = beam.processHistory();
@@ -405,6 +419,8 @@ namespace LOFAR
       coordinateTypes[1] = "Spectral"; // or SpectralCoord ?
       coordinates.coordinateTypes().value = coordinateTypes;
 
+      vector<double> unitvector(1,1);
+
       SmartPtr<TimeCoordinate> timeCoordinate = dynamic_cast<TimeCoordinate*>(coordinates.coordinate(0));
       timeCoordinate.get()->create();
       timeCoordinate.get()->groupType()     .value = "TimeCoord";
@@ -424,6 +440,7 @@ namespace LOFAR
       timeCoordinate.get()->referenceValue().value = 0;
       timeCoordinate.get()->referencePixel().value = 0;
       timeCoordinate.get()->increment()     .value = parset.sampleDuration() * itsInfo.timeIntFactor;
+      timeCoordinate.get()->pc()            .value = unitvector;
 
       timeCoordinate.get()->axisValuesPixel().value = vector<unsigned>(1, 0); // not used
       timeCoordinate.get()->axisValuesWorld().value = vector<double>(1, 0.0); // not used
@@ -441,6 +458,7 @@ namespace LOFAR
       spectralCoordinate.get()->referenceValue().value = 0; // not used
       spectralCoordinate.get()->referencePixel().value = 0; // not used
       spectralCoordinate.get()->increment()     .value = 0; // not used
+      spectralCoordinate.get()->pc()            .value = unitvector; // not used
 
       // tabular coordinates:
       //   axisValuePixel = data indices
