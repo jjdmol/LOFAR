@@ -49,14 +49,21 @@ BMRead::~BMRead()
 
 void BMRead::sendrequest()
 {
-  EPAReadEvent bmread;
-  bmread.hdr.set(MEPHeader::RSR_NOFBEAM_HDR,
-                 MEPHeader::DST_RSP,
-                 MEPHeader::READ );
-
-  itsHdr = bmread.hdr;
-  getBoardPort().send(bmread);
-  LOG_DEBUG_STR("BMRead::sendrequest() done");
+  if ((( Cache::getInstance().getBack().getVersions().bp()(getBoardId()).fpga_maj * 10) +
+         Cache::getInstance().getBack().getVersions().bp()(getBoardId()).fpga_min) < 74) {
+    LOG_DEBUG_STR(formatString("BMRead:: Firmware on board[%d], has NO bitmode support", getBoardId()));
+    setContinue(true); // continue with next action
+  }
+  else {
+      EPAReadEvent bmread;
+      bmread.hdr.set(MEPHeader::RSR_NOFBEAM_HDR,
+                     MEPHeader::DST_RSP,
+                     MEPHeader::READ );
+    
+      itsHdr = bmread.hdr;
+      getBoardPort().send(bmread);
+      LOG_DEBUG_STR("BMRead::sendrequest() done");
+  }
 }
 
 void BMRead::sendrequest_status()

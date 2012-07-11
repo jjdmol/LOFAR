@@ -61,6 +61,9 @@ void SetBitModeCmd::ack(CacheBuffer& /*cache*/)
 void SetBitModeCmd::apply(CacheBuffer& cache, bool setModFlag)
 {
     int select;
+    
+    LOG_INFO_STR(formatString("Setting bitmode to %d bits @ ", itsEvent->bits_per_sample) << getTimestamp());
+    
     switch (itsEvent->bits_per_sample) {
         case 16:
             select = 0;
@@ -75,21 +78,32 @@ void SetBitModeCmd::apply(CacheBuffer& cache, bool setModFlag)
             return;
             break;
     }
-    cache.setBitsPerSample(itsEvent->bits_per_sample); 
+    
+    bool ok = true;
+    // check if BP version of all boards >= 7.4
     for (int i = 0; i < StationSettings::instance()->nrRspBoards(); ++i) {
-        if (itsEvent->rspmask.test(i)) {
-            cache.getBitModeInfo()()(i).select = (uint8)select;
+        if (((cache.getVersions().bp()(i).fpga_maj * 10) + cache.getVersions().bp()(i).fpga_min) < 74) {
+            LOG_WARN_STR(formatString("Wrong firmware version on board[%d], NO bitmode support", i));
+            ok = false;
         }
     }
-  
-    LOG_INFO_STR(formatString("Setting bitmode to %d bits @ ", itsEvent->bits_per_sample) << getTimestamp());
     
-    if (setModFlag) {
-        for (int b = 0; b < StationSettings::instance()->nrRspBoards(); b++) {
-        	cache.getCache().getState().bmState().write(b);
-        	cache.getCache().getState().cdo().write(2*b);
-			cache.getCache().getState().cdo().write(2*b+1);
+    if (ok) {         
+        cache.setBitsPerSample(itsEvent->bits_per_sample);
+        
+        for (int i = 0; i < StationSettings::instance()->nrRspBoards(); ++i) {
+            if (itsEvent->rspmask.test(i)) {
+                cache.getBitModeInfo()()(i).select = (uint8)select;
+                if (setModFlag) {
+                	cache.getCache().getState().bmState().write(i);
+                	cache.getCache().getState().cdo().write(2*i);
+        			cache.getCache().getState().cdo().write(2*i+1);
+                }
+            }
         }
+    }
+    else {
+        LOG_WARN_STR("Bitmode NOT set");
     }
 }
 

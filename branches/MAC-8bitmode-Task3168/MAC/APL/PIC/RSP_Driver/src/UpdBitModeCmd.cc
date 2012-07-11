@@ -37,13 +37,13 @@ using namespace RSP_Protocol;
 using namespace RTC;
 
 UpdBitModeCmd::UpdBitModeCmd(GCFEvent& event, GCFPortInterface& port, Operation oper) :
-	Command("SubClock", port, oper),
+	Command("SubBitMode", port, oper),
 	itsEvent(0), 
 	itsCurrentBitsPerSample(0)
 {
   itsEvent = new RSPSubbitmodeEvent(event);
 
-  setPeriod(1);
+  setPeriod(itsEvent->period);
 }
 
 UpdBitModeCmd::~UpdBitModeCmd()

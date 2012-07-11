@@ -140,7 +140,7 @@ void CacheBuffer::reset(void)
 	tv.tv_sec = 0; tv.tv_usec = 0;
 	m_timestamp.set(tv);
 
-    itsBitsPerSample = 16;
+    itsBitsPerSample = MAX_BITS_PER_SAMPLE;
 	
 	m_beamletweights().resize(BeamletWeights::SINGLE_TIMESTEP, StationSettings::instance()->nrRcus(), MEPHeader::N_BEAMLETS);
 	m_beamletweights() = complex<int16>(0,0);

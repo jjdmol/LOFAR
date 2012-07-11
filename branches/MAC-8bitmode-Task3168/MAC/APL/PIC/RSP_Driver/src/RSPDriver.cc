@@ -2546,7 +2546,7 @@ void RSPDriver::rsp_getBitMode(GCFEvent& event, GCFPortInterface& port)
 }
 
 //
-// rsp_subSplitter(event, port)
+// rsp_subBitMode(event, port)
 //
 void RSPDriver::rsp_subBitMode(GCFEvent& event, GCFPortInterface& port)
 {

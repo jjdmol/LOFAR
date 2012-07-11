@@ -52,27 +52,35 @@ BMWrite::~BMWrite()
 
 void BMWrite::sendrequest()
 {
-  LOG_DEBUG(formatString(">>>> BMWrite(%s) boardId=%d",
-			 getBoardPort().getName().c_str(),
-			 getBoardId()));
-
-  // skip update if the neither of the RCU's settings have been modified
-  if (RTC::RegisterState::WRITE != Cache::getInstance().getState().bmState().get(getBoardId())) {
-    Cache::getInstance().getState().bmState().unmodified(getBoardId());
-    setContinue(true);
-
-    return;
+  if ((( Cache::getInstance().getBack().getVersions().bp()(getBoardId()).fpga_maj * 10) +
+         Cache::getInstance().getBack().getVersions().bp()(getBoardId()).fpga_min) < 74) {
+    LOG_DEBUG_STR(formatString("BMWrite:: Firmware on board[%d], has NO bitmode support", getBoardId()));
+    setContinue(true); // continue with next action
   }
+  else {
+      
+      LOG_DEBUG(formatString(">>>> BMWrite(%s) boardId=%d",
+    			 getBoardPort().getName().c_str(),
+    			 getBoardId()));
+      
+      // skip update if the neither of the RCU's settings have been modified
+      if (RTC::RegisterState::WRITE != Cache::getInstance().getState().bmState().get(getBoardId())) {
+        Cache::getInstance().getState().bmState().unmodified(getBoardId());
+        setContinue(true);
     
-  // send subband select message
-  EPARsrNofbeamEvent bm;
-  bm.hdr.set(MEPHeader::RSR_NOFBEAM_HDR,
-             MEPHeader::DST_ALL);
-    
-  bm.nofbeam.select = Cache::getInstance().getBack().getBitModeInfo()()(getBoardId()).select;
-  
-  itsHdr = bm.hdr;
-  getBoardPort().send(bm);
+        return;
+      }
+        
+      // send subband select message
+      EPARsrNofbeamEvent bm;
+      bm.hdr.set(MEPHeader::RSR_NOFBEAM_HDR,
+                 MEPHeader::DST_ALL);
+        
+      bm.nofbeam.select = Cache::getInstance().getBack().getBitModeInfo()()(getBoardId()).select;
+      
+      itsHdr = bm.hdr;
+      getBoardPort().send(bm);
+  }
 }
 
 void BMWrite::sendrequest_status()
