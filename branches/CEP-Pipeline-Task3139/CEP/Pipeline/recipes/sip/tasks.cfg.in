@@ -152,5 +152,5 @@ fillrootimagegroup_exec = %(lofarroot)s/bin/fillRootImageGroup
 
 [copier]
 recipe = copier
-mapfile_dir = %(runtime_directory)s/jobs/%(job_name)s/mapfiles
+mapfiles_dir = %(runtime_directory)s/jobs/%(job_name)s/mapfiles
 

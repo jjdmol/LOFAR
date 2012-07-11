@@ -51,7 +51,7 @@ class copierTest(unittest.TestCase):
 
 
         sut = copierWrapper()
-        output = sut._create_target_node_keyed_dict(source_map, target_map)
+        output, copied_files = sut._create_target_node_keyed_dict(source_map, target_map, "")
         expected_output = {'node3': [(('node1', "/path1/path1"), ('node3', '/path1'))],
                            'node4': [
                                      (('node2', "/path2/path2"), ('node4', '/path2')),
@@ -61,6 +61,24 @@ class copierTest(unittest.TestCase):
         self.assertTrue(output == expected_output, "incorrect output"
                         " expected, received:\n {0}, \n {1}".format(
                                             expected_output, output))
+
+    def test_create_target_node_keyed_dict_new_path(self):
+        source_map = [("node1", "/path1/path1"), ("node2", "/path2/path2"), ("node2", "/path3/path3/")]
+        target_map = [("node3", "/path1/path1"), ("node4", "/path2/path2"), ("node4", "/path3/path3")]
+        target_path = "/new"
+
+        sut = copierWrapper()
+        output, copied_files = sut._create_target_node_keyed_dict(source_map, target_map, target_path)
+        expected_output = {'node3': [(('node1', "/path1/path1"), ('node3', target_path))],
+                           'node4': [
+                                     (('node2', "/path2/path2"), ('node4', target_path)),
+                                     (('node2', "/path3/path3/"), ('node4', target_path))
+                                    ]
+                           }
+        self.assertTrue(output == expected_output, "incorrect output"
+                        " expected, received:\n {0}, \n {1}".format(
+                                            expected_output, output))
+
 
 
     def test_construct_node_specific_mapfiles(self):
@@ -119,17 +137,17 @@ class copierTest(unittest.TestCase):
 
 
 
-    def test_copier_create_correct_mapfile(self):
-        sut = copierWrapper()
-
-        instr = [('node1', '/path1/1'), ('node1', '/path1/2')]
-        data = [('node2', '/path2/3'), ('node2', '/path2/4')]
-
-
-        expected_result = [('node2', '/path2/1'), ('node2', '/path2/2')]
-        target_map = sut._create_target_map_for_instruments(instr, data)
-
-        self.assertTrue(expected_result == target_map, target_map)
+#    def test_copier_create_correct_mapfile(self):
+#        sut = copierWrapper()
+#
+#        instr = [('node1', '/path1/1'), ('node1', '/path1/2')]
+#        data = [('node2', '/path2/3'), ('node2', '/path2/4')]
+#
+#
+#        expected_result = [('node2', '/path2/1'), ('node2', '/path2/2')]
+#        target_map = sut._create_target_map_for_instruments(instr, data)
+#
+#        self.assertTrue(expected_result == target_map, target_map)
 
 
 from logger import logger
