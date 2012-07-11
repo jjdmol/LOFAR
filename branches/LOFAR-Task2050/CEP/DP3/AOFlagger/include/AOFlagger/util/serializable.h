@@ -48,6 +48,11 @@ class Serializable
 			stream.write(reinterpret_cast<char *>(&val32t), sizeof(val32t));
 		}
 		
+		static void SerializeToFloat(std::ostream &stream, float value)
+		{
+			stream.write(reinterpret_cast<char *>(&value), sizeof(value));
+		}
+		
 		static void SerializeToDouble(std::ostream &stream, double value)
 		{
 			stream.write(reinterpret_cast<char *>(&value), sizeof(value));
@@ -79,6 +84,11 @@ class Serializable
 			return Unserialize<uint32_t>(stream);
 		}
 		
+		static double UnserializeFloat(std::istream &stream)
+		{
+			return Unserialize<float>(stream);
+		}
+
 		static double UnserializeDouble(std::istream &stream)
 		{
 			return Unserialize<double>(stream);

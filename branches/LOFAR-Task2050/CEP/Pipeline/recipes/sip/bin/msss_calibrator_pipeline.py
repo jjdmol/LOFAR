@@ -2,7 +2,7 @@
 #                                                         LOFAR IMAGING PIPELINE
 #
 #                                                     Calibrator Pipeline recipe
-#                                                             Marcel Loose, 2011
+#                                                        Marcel Loose, 2011-2012
 #                                                                loose@astron.nl
 # ------------------------------------------------------------------------------
 
@@ -180,6 +180,22 @@ class msss_calibrator_pipeline(control):
         # Read metadata (start, end times, pointing direction) from GVDS.
         vdsinfo = self.run_task("vdsreader", gvds=gvds_file)
 
+        # Create an empty parmdb for DPPP
+        parmdb_mapfile = self.run_task(
+            "setupparmdb", data_mapfile,
+            suffix='.demix.parmdb'
+        )['mapfile']
+
+        # Create a sourcedb to be used by the demixing phase of DPPP
+        # The path to the A-team sky model is currently hard-coded.
+        sourcedb_mapfile = self.run_task(
+            "setupsourcedb", data_mapfile,
+            skymodel=os.path.join(
+                self.config.get('DEFAULT', 'lofarroot'),
+                'share', 'pipeline', 'skymodels', 'Ateam_LBA_CC.skymodel'
+            )
+        )['mapfile']
+
         # Create a parameter-subset for DPPP and write it to file.
         ndppp_parset = os.path.join(parset_dir, "NDPPP.parset")
         py_parset.makeSubset('DPPP.').writeFile(ndppp_parset)
@@ -189,21 +205,25 @@ class msss_calibrator_pipeline(control):
             data_mapfile,
             data_start_time=vdsinfo['start_time'],
             data_end_time=vdsinfo['end_time'],
-            parset=ndppp_parset
+            parset=ndppp_parset,
+            parmdb_mapfile=parmdb_mapfile,
+            sourcedb_mapfile=sourcedb_mapfile
         )['mapfile']
 
-        # Demix the relevant A-team sources
-        demix_mapfile = self.run_task("demixing", dppp_mapfile)['mapfile']
+        demix_mapfile = dppp_mapfile
+        
+#        # Demix the relevant A-team sources
+#        demix_mapfile = self.run_task("demixing", dppp_mapfile)['mapfile']
 
-        # Do a second run of flagging, this time using rficonsole
-        self.run_task("rficonsole", demix_mapfile, indirect_read=True)
+#        # Do a second run of flagging, this time using rficonsole
+#        self.run_task("rficonsole", demix_mapfile, indirect_read=True)
 
-        # Create an empty parmdb for DPPP
-        parmdb_mapfile = self.run_task("parmdb", data_mapfile)['mapfile']
+        # Create an empty parmdb for BBS
+        parmdb_mapfile = self.run_task("setupparmdb", data_mapfile)['mapfile']
 
         # Create a sourcedb based on sourcedb's input argument "skymodel"
         sourcedb_mapfile = self.run_task(
-            "sourcedb", data_mapfile,
+            "setupsourcedb", data_mapfile,
             skymodel=os.path.join(
                 self.config.get('DEFAULT', 'lofarroot'),
                 'share', 'pipeline', 'skymodels', 

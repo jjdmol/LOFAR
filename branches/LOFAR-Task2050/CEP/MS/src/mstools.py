@@ -5,18 +5,29 @@ import lofar.parameterset
 
 """ Find files on nodes in a cluster matching the given pattern """
 def findFiles (msPattern, lsOption='', cluster=''):
+    # First find out where ls_nostderr is located.
+    pipe = os.popen ('sh -c "which ls_nostderr"')
+    lsloc = ''
+    # Note: sh returns nothing if which does not find the program.
+    for line in pipe:
+        lsloc = line[:-1]     # discard \n
+    pipe.close()
+    if lsloc == '':
+        lsloc = 'ls'
+    # Make regex for lines containing info and errors.
     hostline    = re.compile ('^-+ +[^ ]+ +-+$')
     hostline1   = re.compile ('^-+ +')
     hostline2   = re.compile (' +-+$')
-    nomatch     = ['ls: No match.',
-                   'ls: cannot access .*: No such file or directory',
+    nomatch     = [lsloc + ': No match.',
+                   lsloc + ': cannot access .*: No such file or directory',
                    'ssh: connect to host .*: ' +
                        '(No route to host|Connection refused)',
                    'Permission denied \(publickey,keyboard-interactive\).',
                    'Warning: No xauth data; .*',
                    '/usr/bin/xauth:  error in locking authority file.*'] 
     nomatchline = re.compile ('^(%s)$' % '|'.join(nomatch))
-    pipe = os.popen ('cexec ' + cluster + ' "ls ' + lsOption + ' ' + msPattern + '"')
+    # Find matching files on all nodes.
+    pipe = os.popen ('cexec ' + cluster + ' "' + lsloc + ' ' + lsOption + ' ' + msPattern + '"')
     files = []
     hosts = []
     host = ''

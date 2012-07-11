@@ -152,7 +152,7 @@ int main(int argc, char *argv[])
     PortBroker::ServerStream controlStream(resource);
 
     Parset parset(&controlStream);
-    Observation obs(&parset, false);
+    Observation obs(&parset, false, parset.totalNrPsets());
 
     vector<string> hostnames = parset.getStringVector("OLAP.Storage.hosts", true);
     ASSERT(myRank < hostnames.size());

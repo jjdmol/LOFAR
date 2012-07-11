@@ -1,10 +1,16 @@
-from __future__ import with_statement
+#                                                         LOFAR IMAGING PIPELINE
+#
+#                                                       setupparmdb nodes recipe
+#                                                             Marcel Loose, 2012
+#                                                                loose@astron.nl
+# ------------------------------------------------------------------------------
+
 from lofarpipe.support.lofarnode import LOFARnodeTCP
 from lofarpipe.support.utilities import log_time
-import shutil, os.path
+import shutil
 import sys
 
-class parmdb(LOFARnodeTCP):
+class setupparmdb(LOFARnodeTCP):
     def run(self, pdb_in, pdb_out):
         with log_time(self.logger):
             self.logger.debug("Copying parmdb: %s --> %s" % (pdb_in, pdb_out))
@@ -22,4 +28,4 @@ if __name__ == "__main__":
     #                        and pass the rest to the run() method defined above
     # --------------------------------------------------------------------------
     jobid, jobhost, jobport = sys.argv[1:4]
-    sys.exit(parmdb(jobid, jobhost, jobport).run_with_stored_arguments())
+    sys.exit(setupparmdb(jobid, jobhost, jobport).run_with_stored_arguments())

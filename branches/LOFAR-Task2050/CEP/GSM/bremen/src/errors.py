@@ -22,3 +22,9 @@ class ParsetContentError(GSMException):
     Missing part of the parset file or parset file is wrong.
     """
     pass
+
+class ImageStateError(GSMException):
+    """
+    Image cannot be processed: wrong state.
+    """
+    pass

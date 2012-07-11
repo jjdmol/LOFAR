@@ -9,6 +9,7 @@ Written by Oscar Martinez
 version 0.1 28/03/2012: Initial version
 version 0.2 30/03/2012: No error if output exists
                         Added option to overwrite files
+version v0.3 02/07/2012: Rename polarization to correlation
 """
 
 ################################################################################
@@ -45,14 +46,14 @@ def getData(table,column):
     print 'Column to plot: ' + column + ' is not correct!'
     return None
 
-def getPolData(data, polindex):
+def getCorrData(data,corrindex):
     if len(data.shape) == 3:
-        return data[:, :, polindex]
+        return data[:, :, corrindex]
     else:
         #some average has been done in time or freq
-        return data[:, polindex]
+        return data[:, corrindex]
 
-# This gets the full 3D with all polarizations and maybe a cut in channels
+# This gets the full 3D with all correlations and maybe a cut in channels
 # convert to stokes and set the flags if required 
 def get3DCutData(table, column, showFlags, flagCol, channels, stokes):
     # Get the data 
@@ -90,15 +91,15 @@ def getIntegratedData(cutdata, prefaxis=0):
         # No average over axis, only cut in channels 
         return cutdata # 3D     
 
-# Get the complex component of an operation over the polarizations (2D or 1D of float numbers)
+# Get the complex component of an operation over the correlations (2D or 1D of float numbers)
 def getIntegratedDataOperation(cutdata, operation, prefaxis=0):
     intdata = getIntegratedData(cutdata,prefaxis)
     if operation == 1:
         # Special operation : XX - YY
-        return getPolData(intdata, 0) - getPolData(intdata, 3)
+        return getCorrData(intdata, 0) - getCorrData(intdata, 3)
     elif operation == 2:
         # Special operation : XY . YX*
-        return getPolData(intdata, 1) * getPolData(intdata, 2).conjugate()
+        return getCorrData(intdata, 1) * getCorrData(intdata, 2).conjugate()
     else:
         print 'Error: Requested operation not implemented'
         return None   
@@ -366,7 +367,7 @@ def processdistribute(childrenIds, whats, functionToApply, maximumProcessorsToUs
     return result
 
 
-def processMS(absPath, output,overwrite,stats,column,timeslots,channels,antennas, polar, wrap, flag, colflag, stokes, autocorr,operation, acc):
+def processMS(absPath, output,overwrite,stats,column,timeslots,channels,antennas, correlations, wrap, flag, colflag, stokes, autocorr,operation, acc):
     overWrite = booleanStringToBoolean(overwrite)
     showFlags = booleanStringToBoolean(flag)
     acc = int(acc)
@@ -389,9 +390,9 @@ def processMS(absPath, output,overwrite,stats,column,timeslots,channels,antennas
         else:
             print 'Error: Could not understand antenna list.'
             return
-    polarizations = polar.split(',')
-    for i in range(len(polarizations)):
-        polarizations[i] = int(polarizations[i])
+    corrs = correlations.split(',')
+    for i in range(len(corrs)):
+        corrs[i] = int(corrs[i])
     
     convertStokes = booleanStringToBoolean(stokes)  
     if operation != '':
@@ -453,7 +454,7 @@ def processMS(absPath, output,overwrite,stats,column,timeslots,channels,antennas
             return
     compCoordDict = getIndexesDictionary(complexcoordinates)
     
-    header = ['#sbfreq','ant1', 'ant2', 'ant1Name', 'ant2Name', 'pol', 'num', 'numflag']
+    header = ['#sbfreq','ant1', 'ant2', 'ant1Name', 'ant2Name', 'corr', 'num', 'numflag']
     colwidths = [9,5,5,15,15,4,10,10]
     header.extend(statslist)
     for i in range(len(statslist)):
@@ -475,9 +476,9 @@ def processMS(absPath, output,overwrite,stats,column,timeslots,channels,antennas
     tsel = t.query('TIME >= %f AND TIME <= %f AND ANTENNA1 IN %s AND ANTENNA2 IN %s' % (times.getcell('TIME',timeslots[0]),times.getcell('TIME',timeslots[1]),str(antToPlot),str(antToPlot)))
 
     if convertStokes:
-        polLabels = ['I','Q','U','V']
+        corrLabels = ['I','Q','U','V']
     else:
-        polLabels = ['XX','XY','YX','YY']
+        corrLabels = ['XX','XY','YX','YY']
     
     # prefaxis is to make samples integrated over the f axis after the cut
     prefaxis = 0
@@ -493,28 +494,28 @@ def processMS(absPath, output,overwrite,stats,column,timeslots,channels,antennas
             if not showAutocorr:
                 continue
         
-        # Get the 3D cut data [time][freq][pol]
+        # Get the 3D cut data [time][freq][corr]
         cutData = get3DCutData(tpart, column, showFlags, flagCol, channels, convertStokes)
         
         if cutData is None: # This baseline must be empty, go to next one
             print 'No good data on baseline %s - %s' % (ant1Name,ant2Name)
             continue
         
-        if operation != 0: # A special operation of the polarizations is required
+        if operation != 0: # A special operation of the correlations is required
             
             # we get the integrated data 
             intData = getIntegratedDataOperation(cutData, operation, prefaxis)
             statsresults = getStats(intData, compCoordDict, statparams, doUnwrap)
                 
             # To know the num and nummasked we do not need the operation itself,
-            # only to know how the combination of the polarizations affected the
+            # only to know how the combination of the correlations affected the
             # masks (but we need to do this using the non integrated data)
             if operation == 1:
                 label = 'XX-YY'
-                cData = getPolData(cutData, 0) + getPolData(cutData, 3)
+                cData = getCorrData(cutData, 0) + getCorrData(cutData, 3)
             elif operation == 2:
                 label = 'XY.YX*'
-                cData = getPolData(cutData, 1) + getPolData(cutData, 2)
+                cData = getCorrData(cutData, 1) + getCorrData(cutData, 2)
             num = cData.count()
             nummasked = numpy.ma.count_masked(cData)
 
@@ -522,16 +523,16 @@ def processMS(absPath, output,overwrite,stats,column,timeslots,channels,antennas
         else:
             
             intData = getIntegratedData(cutData, prefaxis)
-            for j in polarizations:
-                # For each polarization
-                # From the integrated array we get mean and std of the desired complex component of each polarization
-                statsresults = getStats(getPolData(intData, j), compCoordDict, statparams, doUnwrap)               
+            for j in corrs:
+                # For each correlations
+                # From the integrated array we get mean and std of the desired complex component of each correlations
+                statsresults = getStats(getCorrData(intData, j), compCoordDict, statparams, doUnwrap)               
                 # To know the num and nummasked we have to use the cut data (before the complex component selection and axis integration)
-                polCutData = getPolData(cutData, j)
-                num = polCutData.count()
-                nummasked = numpy.ma.count_masked(polCutData)
+                corrCutData = getCorrData(cutData, j)
+                num = corrCutData.count()
+                nummasked = numpy.ma.count_masked(corrCutData)
                 
-                addInfo(lines, ant1,ant2,ant1Name,ant2Name, statsresults, num, nummasked, polLabels[j], freq, acc, colwidths)
+                addInfo(lines, ant1,ant2,ant1Name,ant2Name, statsresults, num, nummasked, corrLabels[j], freq, acc, colwidths)
     tow = ''
     for line in lines:
         tow += line + '\n'
@@ -551,11 +552,11 @@ def addInfo(lines, ant1,ant2,ant1Name,ant2Name, stats, num, nummasked, label, fr
         
 # Function used for the tasksdistributor
 def function(node, what):
-    (absPath, output, overwrite, stats,column,timeslots,channels,antennas,polar, wrap, flag, colflag, stokes, autocorr,operation,acc,build) = what
+    (absPath, output, overwrite, stats,column,timeslots,channels,antennas,correlations, wrap, flag, colflag, stokes, autocorr,operation,acc,build) = what
     scriptpath  = os.path.abspath(__file__)
     parentpath = os.path.abspath(os.path.join(scriptpath, '..'))
     scriptname = scriptpath.split('/')[-1].split('.')[0]
-    command = 'python -c "import ' + scriptname + '; ' + scriptname + '.' + processMS.__name__ + '(\\\"' + absPath +'\\\",\\\"' + str(output) +'\\\",\\\"' + str(overwrite) +'\\\",\\\"' + str(stats) +'\\\",\\\"' + str(column) +'\\\",\\\"' + str(timeslots)  +'\\\",\\\"' + str(channels)  +'\\\",\\\"' + str(antennas)  +'\\\",\\\"' + str(polar)  +'\\\",\\\"' + str(wrap)  +'\\\",\\\"' + str(flag)   +'\\\",\\\"' + str(colflag)   +'\\\",\\\"' + str(stokes)   +'\\\",\\\"' + str(autocorr)   +'\\\",\\\"' + str(operation) +'\\\",\\\"' + str(acc) +'\\\")"'
+    command = 'python -c "import ' + scriptname + '; ' + scriptname + '.' + processMS.__name__ + '(\\\"' + absPath +'\\\",\\\"' + str(output) +'\\\",\\\"' + str(overwrite) +'\\\",\\\"' + str(stats) +'\\\",\\\"' + str(column) +'\\\",\\\"' + str(timeslots)  +'\\\",\\\"' + str(channels)  +'\\\",\\\"' + str(antennas)  +'\\\",\\\"' + str(correlations)  +'\\\",\\\"' + str(wrap)  +'\\\",\\\"' + str(flag)   +'\\\",\\\"' + str(colflag)   +'\\\",\\\"' + str(stokes)   +'\\\",\\\"' + str(autocorr)   +'\\\",\\\"' + str(operation) +'\\\",\\\"' + str(acc) +'\\\")"'
     
     if node == getHostName():
         return (os.popen("cd " + parentpath + " ; " + command)).read()
@@ -594,7 +595,7 @@ def main(opts):
     
     whats = []
     for absPath in absPaths:
-        whats.append((absPath, output, opts.overwrite, opts.stats,opts.column,opts.timeslots,opts.channels,opts.antennas,opts.polar, opts.wrap, opts.flag, opts.colflag, opts.stokes, opts.autocorr,opts.operation,opts.acc,opts.build))
+        whats.append((absPath, output, opts.overwrite, opts.stats,opts.column,opts.timeslots,opts.channels,opts.antennas,opts.correlations, opts.wrap, opts.flag, opts.colflag, opts.stokes, opts.autocorr,opts.operation,opts.acc,opts.build))
     
     if len(absPaths) > 1:
         print 'Collecting in the nodes...'
@@ -619,7 +620,7 @@ def main(opts):
 
 if __name__ == "__main__":
     
-    version_string = 'v0.2, 30 March 2012\nWritten by Oscar Martinez'
+    version_string = 'v0.3, 02 July 2012\nWritten by Oscar Martinez'
     print 'asciistats.py',version_string
     print ''
     
@@ -632,13 +633,13 @@ if __name__ == "__main__":
     opt.add_option('-t','--timeslots',help='Timeslots to use (comma separated and zero-based: start,end[inclusive]). Negative values work like python slicing, but please note that the second index here is inclusive [default is 0,-1].',default='0,-1')
     opt.add_option('-s','--channels',help='Channels to use (comma separated and zero-based: start,end[inclusive]). Negative values work like python slicing, but please note that the second index here is inclusive [default is 0,-1].',default='0,-1')
     opt.add_option('-e','--antennas',help= 'Antennas to use (comma separated list, zero-based) To specify an inclusive range of antennas use .. format, e.g. -e 0..9 requests the first 10 antennas. To see which antennas are available use uvplot -q with some of the ms',default='-1')
-    opt.add_option('-p','--polar',help='Polarizations to use (it does not convert, so use integers as in the MS) [default is 0,1,2,3].',default='0,1,2,3')
+    opt.add_option('-p','--correlations',help='Correlations to use (it does not convert, so use integers as in the MS) [default is 0,1,2,3].',default='0,1,2,3')
     opt.add_option('-w','--wrap',default=False,help='Unwrap phase? [default False]',action='store_true')
     opt.add_option('-f','--flag',default=False,help='Show flagged data? [default False]',action='store_true')
     opt.add_option('-g','--colflag',help='Column that contains flags [default is FLAG]',default='FLAG')
     opt.add_option('-k','--stokes',default=False,help='Convert to Stokes IQUV?',action='store_true')
-    opt.add_option('-u','--autocorr',default=False,help='Show autocorrelations?',action='store_true')
-    opt.add_option('-o','--operation',help='Use an special operation over the polarizations. (choose from 0|1|2). 0 is for none operation (normal polarizations are used), 1 is XX-YY and 2 is XY.YX*. If some operation is specified the options polar and stokes are ignored. [default is 0, i.e. none operation]',default='0')
+    opt.add_option('-u','--autocorr',default=False,help='Show autocorrelations?, this refers to baseline autocorrelations',action='store_true')
+    opt.add_option('-o','--operation',help='Use an special operation over the correlations. (choose from 0|1|2). 0 is for none operation (normal correlations are used), 1 is XX-YY and 2 is XY.YX*. If some operation is specified the options correlations and stokes are ignored. [default is 0, i.e. none operation]',default='0')
     opt.add_option('-a','--acc',help='Accuracy in the given statistics [default is 4]',default='4')
     opt.add_option('-j','--numprocessors',help='Simultaneous processes, only applying if GDS file is given [default is 1]',default='1')
     opt.add_option('-n','--numnodes',help='Simultaneous nodes, only applying if GDS file is given [default is 64]',default='64')

@@ -16,6 +16,6 @@ update runningcatalog
 
 --#GroupFill
 insert into assocxtrsources(xtrsrc_id, runcat_id, distance_arcsec, lr_method, r)
-select xtrsrc_id, runcat_id, distance_arcsec, 4, r
+select xtrsrc_id, runcat_id, distance_arcsec, 5, r
   from temp_associations
  where kind = 4;

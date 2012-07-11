@@ -149,6 +149,64 @@ void ServerConnection::ReadAntennaTables(const std::string &msFilename, std::vec
 		boost::bind(&ServerConnection::onReceiveAntennaTablesResponseHeader, shared_from_this()));
 }
 
+void ServerConnection::ReadBandTable(const std::string &msFilename, BandInfo &band)
+{
+	_band = &band;
+	
+	std::cout << "Requesting band table from " << Hostname() << "...\n";
+	std::stringstream reqBuffer;
+	
+	RequestBlock requestBlock;
+	ReadBandTableRequestOptions options;
+	
+	requestBlock.blockIdentifier = RequestId;
+	requestBlock.blockSize = sizeof(requestBlock);
+	requestBlock.dataSize = sizeof(options.flags) + msFilename.size();
+	requestBlock.request = ReadBandTableRequest;
+	reqBuffer.write(reinterpret_cast<char *>(&requestBlock), sizeof(requestBlock));
+	
+	options.flags = 0;
+	options.msFilename = msFilename;
+	reqBuffer.write(reinterpret_cast<char *>(&options.flags), sizeof(options.flags));
+	reqBuffer.write(reinterpret_cast<const char *>(options.msFilename.c_str()), options.msFilename.size());
+	
+	boost::asio::write(_socket, boost::asio::buffer(reqBuffer.str()));
+	
+	prepareBuffer(sizeof(GenericReadResponseHeader));
+	boost::asio::async_read(_socket, boost::asio::buffer(_buffer, sizeof(GenericReadResponseHeader)),
+		boost::bind(&ServerConnection::onReceiveBandTableResponseHeader, shared_from_this()));
+}
+
+void ServerConnection::ReadDataRows(const std::string &msFilename, size_t rowStart, size_t rowCount, MSRowDataExt *destination)
+{
+	_rowData = destination;
+	
+	std::stringstream reqBuffer;
+	
+	RequestBlock requestBlock;
+	ReadDataRowsRequestOptions options;
+	
+	requestBlock.blockIdentifier = RequestId;
+	requestBlock.blockSize = sizeof(requestBlock);
+	requestBlock.dataSize = sizeof(options.flags) + msFilename.size() + sizeof(options.startRow) + sizeof(options.rowCount);
+	requestBlock.request = ReadDataRowsRequest;
+	reqBuffer.write(reinterpret_cast<char *>(&requestBlock), sizeof(requestBlock));
+	
+	options.flags = 0;
+	options.msFilename = msFilename;
+	
+	reqBuffer.write(reinterpret_cast<char *>(&options.flags), sizeof(options.flags));
+	reqBuffer.write(reinterpret_cast<const char *>(options.msFilename.c_str()), options.msFilename.size());
+	reqBuffer.write(reinterpret_cast<const char *>(options.startRow), sizeof(options.startRow));
+	reqBuffer.write(reinterpret_cast<const char *>(options.rowCount), sizeof(options.rowCount));
+	
+	boost::asio::write(_socket, boost::asio::buffer(reqBuffer.str()));
+	
+	prepareBuffer(sizeof(GenericReadResponseHeader));
+	boost::asio::async_read(_socket, boost::asio::buffer(_buffer, sizeof(GenericReadResponseHeader)),
+		boost::bind(&ServerConnection::onReceiveDataRowsResponseHeader, shared_from_this()));
+}
+
 void ServerConnection::handleError(const GenericReadResponseHeader &header)
 {
 	std::stringstream s;
@@ -223,6 +281,27 @@ void ServerConnection::onReceiveAntennaTablesResponseHeader()
 	}
 }
 
+void ServerConnection::onReceiveBandTableResponseHeader()
+{
+	std::cout << "Receiving band table...\n";
+	GenericReadResponseHeader responseHeader = *reinterpret_cast<GenericReadResponseHeader*>(_buffer);
+	if(responseHeader.blockIdentifier != GenericReadResponseHeaderId || responseHeader.blockSize != sizeof(responseHeader))
+	{
+		_onError(shared_from_this(), "Bad response from client upon read band table request");
+		StopClient();
+	}
+	else if(responseHeader.errorCode != NoError)
+	{
+		handleError(responseHeader);
+		_onAwaitingCommand(shared_from_this());
+	}
+	else {
+		prepareBuffer(responseHeader.dataSize);
+		boost::asio::async_read(_socket, boost::asio::buffer(_buffer, responseHeader.dataSize),
+			boost::bind(&ServerConnection::onReceiveBandTableResponseData, shared_from_this(), responseHeader.dataSize));
+	}
+}
+
 void ServerConnection::onReceiveAntennaTablesResponseData(size_t dataSize)
 {
 	std::istringstream stream;
@@ -240,6 +319,54 @@ void ServerConnection::onReceiveAntennaTablesResponseData(size_t dataSize)
 	_onFinishReadAntennaTables(shared_from_this(), *_antennas);
 	_onAwaitingCommand(shared_from_this());
 }
+
+void ServerConnection::onReceiveBandTableResponseData(size_t dataSize)
+{
+	std::istringstream stream;
+	if(stream.rdbuf()->pubsetbuf(_buffer, dataSize) == 0)
+		throw std::runtime_error("Could not set string buffer");
+	
+	std::cout << "Received band table of size " << dataSize << "." << std::endl;
+	_band->Unserialize(stream);
+
+	_onFinishReadBandTable(shared_from_this(), *_band);
+	_onAwaitingCommand(shared_from_this());
+}
+
+void ServerConnection::onReceiveDataRowsResponseHeader()
+{
+	GenericReadResponseHeader responseHeader = *reinterpret_cast<GenericReadResponseHeader*>(_buffer);
+	if(responseHeader.blockIdentifier != GenericReadResponseHeaderId || responseHeader.blockSize != sizeof(responseHeader))
+	{
+		_onError(shared_from_this(), "Bad response from client upon read data rows request");
+		StopClient();
+	}
+	else if(responseHeader.errorCode != NoError)
+	{
+		handleError(responseHeader);
+		_onAwaitingCommand(shared_from_this());
+	}
+	else {
+		prepareBuffer(responseHeader.dataSize);
+		boost::asio::async_read(_socket, boost::asio::buffer(_buffer, responseHeader.dataSize),
+			boost::bind(&ServerConnection::onReceiveDataRowsResponseData, shared_from_this(), responseHeader.dataSize));
+	}
+}
+
+void ServerConnection::onReceiveDataRowsResponseData(size_t dataSize)
+{
+	std::istringstream stream;
+	if(stream.rdbuf()->pubsetbuf(_buffer, dataSize) == 0)
+		throw std::runtime_error("Could not set string buffer");
+	
+	size_t count = Serializable::UnserializeUInt32(stream);
+	for(size_t i=0;i<count;++i)
+		_rowData[i].Unserialize(stream);
+
+	_onFinishReadDataRows(shared_from_this(), _rowData);
+	_onAwaitingCommand(shared_from_this());
+}
+
 
 }
 
