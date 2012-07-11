@@ -222,7 +222,6 @@ void Client::handleReadAntennaTables(unsigned dataSize)
 
 void Client::handleReadBandTable(unsigned dataSize)
 {
-	std::cout << "I was asked for my band!\n";
 	try {
 		ReadBandTableRequestOptions options;
 		boost::asio::read(_socket, boost::asio::buffer(&options.flags, sizeof(options.flags)));

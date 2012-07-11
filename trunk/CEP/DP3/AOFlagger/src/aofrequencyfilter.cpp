@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include <AOFlagger/remote/clusteredobservation.h>
+#include <AOFlagger/remote/observationtimerange.h>
 #include <AOFlagger/remote/processcommander.h>
 
 using namespace std;
