@@ -62,16 +62,16 @@ class ProcessCommander
 			_statisticsCollection = dest;
 			_histogramCollection = destHistogram;
 		}
-		void PushReadDataRowsTask(class ObservationTimerange &timerange)
-		{
-			_tasks.push_back(ReadDataRowsTask);
-			_observationTimerange = &timerange;
-		}
 		void PushReadAntennaTablesTask() { _tasks.push_back(ReadAntennaTablesTask); }
 		void PushReadBandTablesTask()
 		{ 
 			_tasks.push_back(ReadBandTablesTask);
 			_bands.resize(_observation.Size());
+		}
+		void PushReadDataRowsTask(class ObservationTimerange &timerange, size_t rowStart, size_t rowCount)
+		{
+			_tasks.push_back(ReadDataRowsTask);
+			_observationTimerange = &timerange;
 		}
 	private:
 		enum Task {
@@ -82,6 +82,7 @@ class ProcessCommander
 			ReadDataRowsTask
 		};
 		
+		void endIdleConnections();
 		void continueReadQualityTablesTask(ServerConnectionPtr serverConnection);
 		void continueReadAntennaTablesTask(ServerConnectionPtr serverConnection);
 		void continueReadBandTablesTask(ServerConnectionPtr serverConnection);
@@ -107,6 +108,7 @@ class ProcessCommander
 		std::vector<AntennaInfo> _antennas;
 		std::vector<BandInfo> _bands;
 		class ObservationTimerange *_observationTimerange;
+		size_t _rowStart, _rowCount;
 		
 		const ClusteredObservation _observation;
 		NodeCommandMap _nodeCommands;

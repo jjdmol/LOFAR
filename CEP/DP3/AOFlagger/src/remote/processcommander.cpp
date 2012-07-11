@@ -38,9 +38,20 @@ ProcessCommander::ProcessCommander(const ClusteredObservation &observation)
 
 ProcessCommander::~ProcessCommander()
 {
+	endIdleConnections();
 	for(std::vector<RemoteProcess*>::iterator i=_processes.begin();i!=_processes.end();++i)
 	{
 		delete *i;
+	}
+}
+
+void ProcessCommander::endIdleConnections()
+{
+	ConnectionVector idleConnections = _idleConnections;
+	_idleConnections.clear();
+	for(ConnectionVector::const_iterator i=idleConnections.begin();i!=idleConnections.end();++i)
+	{
+		(*i)->StopClient();
 	}
 }
 
@@ -128,6 +139,20 @@ void ProcessCommander::continueReadBandTablesTask(ServerConnectionPtr serverConn
 
 void ProcessCommander::continueReadDataRowsTask(ServerConnectionPtr serverConnection)
 {
+	const std::string &hostname = serverConnection->Hostname();
+	
+	boost::mutex::scoped_lock lock(_mutex);
+	ClusteredObservationItem item;
+	if(_nodeCommands.Pop(hostname, item))
+	{
+		const std::string &msFilename = item.LocalPath();
+		serverConnection->ReadDataRows(msFilename, _rowStart, _rowCount, new MSRowDataExt());
+	} else {
+		handleIdleConnection(serverConnection);
+		
+		if(_nodeCommands.Empty())
+			onCurrentTaskFinished();
+	}
 }
 
 std::string ProcessCommander::GetHostName()
@@ -222,6 +247,7 @@ void ProcessCommander::onConnectionFinishReadBandTable(ServerConnectionPtr serve
 
 void ProcessCommander::onConnectionFinishReadDataRows(ServerConnectionPtr serverConnection, MSRowDataExt *rowData)
 {
+	delete rowData;
 }
 
 void ProcessCommander::onError(ServerConnectionPtr connection, const std::string &error)

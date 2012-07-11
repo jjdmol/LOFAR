@@ -111,6 +111,8 @@ class MSRowData : public Serializable
 		const num_t *ImagPtr() const { return _imagData; }
 		num_t *RealPtr() { return _realData; }
 		num_t *ImagPtr() { return _imagData; }
+		const num_t *RealPtr(size_t channel) const { return &_realData[_polarizationCount * channel]; }
+		const num_t *ImagPtr(size_t channel) const { return &_imagData[_polarizationCount * channel]; }
 		num_t *RealPtr(size_t channel) { return &_realData[_polarizationCount * channel]; }
 		num_t *ImagPtr(size_t channel) { return &_imagData[_polarizationCount * channel]; }
 	private:

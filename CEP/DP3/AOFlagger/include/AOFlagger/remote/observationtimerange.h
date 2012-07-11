@@ -41,8 +41,16 @@ class ObservationTimerange
 			_observation(observation),
 			_bands(observation.Size()),
 			_bandStartLookup(observation.Size()),
+			_polarizationCount(0),
+			_timestepCount(0),
+			_gridFrequencySize(0),
 			_realData(0), _imagData(0)
 		{
+		}
+		
+		~ObservationTimerange()
+		{
+			deallocate();
 		}
 		
 		void SetBandInfo(size_t nodeIndex, const BandInfo &bandInfo)
@@ -50,9 +58,11 @@ class ObservationTimerange
 			_bands[nodeIndex] = bandInfo;
 		}
 		
-		void InitializeChannels()
+		void InitializeChannels(size_t polarizationCount)
 		{
-			struct { double endFrequency; size_t nodeIndex; } BandRange;
+			deallocate();
+			
+			_polarizationCount = polarizationCount;
 			std::map<double, BandRangeInfo > ranges;
 			
 			if(_bands.empty())
@@ -62,9 +72,9 @@ class ObservationTimerange
 			for(std::vector<BandInfo>::const_iterator i = _bands.begin();i != _bands.end();++i)
 			{
 				const BandInfo &band = *i;
-				double startFreq = band.channels->begin()->frequencyHz;
-				BandRange range;
-				range.endFrequency = band.channels->rbegin()->frequencyHz;
+				double startFreq = band.channels.begin()->frequencyHz;
+				BandRangeInfo range;
+				range.endFrequency = band.channels.rbegin()->frequencyHz;
 				range.nodeIndex = indx;
 				ranges.insert(std::pair<double, BandRangeInfo>(startFreq, range));
 				++indx;
@@ -72,13 +82,16 @@ class ObservationTimerange
 			// Check for overlap
 			if(!ranges.empty())
 			{
-				for(std::map<double, BandRangeInfo>::const_iterator i=ranges.begin();i+1!=ranges.end();++i)
+				std::map<double, BandRangeInfo>::const_iterator nextPtr = ranges.begin();
+					++nextPtr;
+				for(std::map<double, BandRangeInfo>::const_iterator i=ranges.begin();nextPtr!=ranges.end();++i)
 				{
 					const double
 						endFirst = i->second.endFrequency,
-						beginSecond = (i+1)->first;
+						beginSecond = nextPtr->first;
 					if(endFirst <= beginSecond)
 						throw std::runtime_error("Observation has measurement sets whose bands overlap in frequency");
+					++nextPtr;
 				}
 			}
 			// Enumerate channels
@@ -86,7 +99,7 @@ class ObservationTimerange
 			for(std::map<double, BandRangeInfo>::const_iterator i=ranges.begin();i!=ranges.end();++i)
 			{
 				const BandInfo &band = _bands[i->second.nodeIndex];
-				for(std::vector<double>::const_iterator c=band.channels.begin();c!=band.channels.end();++c)
+				for(std::vector<ChannelInfo>::const_iterator c=band.channels.begin();c!=band.channels.end();++c)
 					channels.push_back(c->frequencyHz);
 			}
 			// Find the median distance between channels
@@ -101,7 +114,7 @@ class ObservationTimerange
 				else
 					throw std::runtime_error("Channels were not ordered correctly in one of the sets");
 			}
-			double gridDistance = std::min_element(distances.begin(), distances.end());
+			double gridDistance = *std::min_element(distances.begin(), distances.end());
 			
 			// Create band start index lookup table
 			size_t channelCount = 0;
@@ -119,12 +132,22 @@ class ObservationTimerange
 			double gridPos = channels[0];
 			while(lookupIndex < channels.size())
 			{
-				// we will round each channel to its nearest point on the grid with size "gridDistance"
+				// we will round each channel to its nearest point on the grid with resolution "gridDistance"
 				size_t gridDist = (size_t) round((channels[lookupIndex] - gridPos) / gridDistance);
 				gridPos = channels[lookupIndex];
 				gridIndex += gridDist;
 				_gridIndexLookup[lookupIndex] = gridIndex;
 				++lookupIndex;
+			}
+			_gridFrequencySize = gridIndex;
+			
+			// Allocate memory
+			_realData = new num_t*[_polarizationCount];
+			_imagData = new num_t*[_polarizationCount];
+			for(size_t p=0;p<_polarizationCount;++p)
+			{
+				_realData[p] = new num_t[_gridFrequencySize * _timestepCount * 2];
+				_imagData[p] = &_realData[p][_gridFrequencySize * _timestepCount];
 			}
 		}
 		
@@ -140,9 +163,9 @@ class ObservationTimerange
 				for(size_t r=0;r<rowCount;++r)
 				{
 					const MSRowData &row = rows[r];
-					num_t *realPtr = row.RealPtr(c);
-					num_t *imagPtr = row.ImagPtr(c);
-					const size_t gridStart = r * _gridSize;
+					const num_t *realPtr = row.RealPtr(c);
+					const num_t *imagPtr = row.ImagPtr(c);
+					const size_t gridStart = r * _gridFrequencySize;
 					
 					for(size_t p=0;p<_polarizationCount;++p)
 					{
@@ -154,16 +177,28 @@ class ObservationTimerange
 		}
 		
 	private:
+		struct BandRangeInfo { double endFrequency; size_t nodeIndex; };
 		ClusteredObservation &_observation;
 		std::vector<BandInfo> _bands;
 		std::vector<size_t> _bandStartLookup;
 		std::vector<size_t> _gridIndexLookup;
 		size_t _polarizationCount;
 		size_t _timestepCount;
+		size_t _gridFrequencySize;
 		
 		// First index is polarization, second is frequency x timestep
 		num_t **_realData;
 		num_t **_imagData;
+		
+		void deallocate()
+		{
+			for(size_t p=0;p<_polarizationCount;++p)
+			{
+				delete[] _realData[p];
+			}
+			delete _realData;
+			delete _imagData;
+		}
 };
 	
 }
