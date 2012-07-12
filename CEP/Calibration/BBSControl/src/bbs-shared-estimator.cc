@@ -23,6 +23,7 @@
 
 #include <lofar_config.h>
 #include <Common/SystemUtil.h>
+#include <Common/Exception.h>
 #include <BBSControl/Package__Version.h>
 #include <BBSControl/CalSession.h>
 #include <BBSControl/CommandHandlerEstimator.h>
@@ -113,11 +114,6 @@ int main(int argc, char *argv[])
   catch(Exception &ex)
   {
     LOG_FATAL_STR(progName << " terminated due to an exception: " << ex);
-    return 1;
-  }
-  catch(...)
-  {
-    LOG_FATAL_STR(progName << " terminated due to an unknown exception.");
     return 1;
   }
 

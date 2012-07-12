@@ -1,4 +1,6 @@
-//# Copyright (C) 2007
+//# Exceptions.h: Declaration and definition of LOFAR MS specific exceptions.
+//#
+//# Copyright (C) 2002-2012
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -17,30 +19,20 @@
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
 //# $Id$
-//#
-//# @author Adriaan Renting
 
-#include <lofar_config.h>
-#include <Common/lofar_iostream.h>
-#include <Common/SystemUtil.h>
-#include <Common/Exceptions.h>
-#include <PLC/ACCmain.h>
-#include <SPWCombine/CombinerProcessControl.h>
+#ifndef LOFAR_MS_EXCEPTIONS_H
+#define LOFAR_MS_EXCEPTIONS_H
 
-using namespace LOFAR;
+//# Includes
+#include <Common/Exception.h>
 
-// Use a terminate handler that can produce a backtrace.
-Exception::TerminateHandler t(Exception::terminate);
-
-int main(int argc, char *argv[])
+namespace LOFAR
 {
-  try {
-    INIT_LOGGER(LOFAR::basename(argv[0]));
-    LOFAR::CS1::CombinerProcessControl myProcess;
-    return LOFAR::ACC::PLC::ACCmain(argc, argv, &myProcess);
-  } catch(Exception& ex) {
-    cerr << ex << endl;
-    return 1;
-  }
-  return 0;
-}
+  //
+  // Exception for the LofarFT package.
+  //
+  EXCEPTION_CLASS(MSException, Exception);
+
+} // namespace LOFAR
+
+#endif

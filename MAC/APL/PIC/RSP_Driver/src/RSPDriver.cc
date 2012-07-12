@@ -25,6 +25,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
 #include <Common/ParameterSet.h>
+#include <Common/Exception.h>
 #include <Common/Version.h>
 
 #include <ApplCommon/StationConfig.h>
@@ -2493,6 +2494,9 @@ void RSPDriver::rsp_getDatastream(GCFEvent& event, GCFPortInterface& port)
 //
 using namespace LOFAR;
 using namespace LOFAR::RSP;
+
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 int main(int argc, char** argv)
 {

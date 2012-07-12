@@ -51,6 +51,9 @@ using namespace LOFAR;
 using namespace LOFAR::OTDB;
 using namespace casa;
 
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
+
 // Time converter helper functions
 string fromCasaTime (const MEpoch& epoch, double addDays);
 MVEpoch toCasaTime(const string &time);
@@ -172,9 +175,9 @@ int main (int argc, char* argv[])
     getFailedTilesInfo(conn, brokenfilename, startTime);
     getFailedTilesInfo(conn, failedfilename, startTime, endTime);
   }
-  catch (std::exception& x)
+  catch (Exception& x)
   {
-    LOG_DEBUG_STR("Unexpected exception: " << x.what());
+    LOG_FATAL_STR("Unexpected exception: " << x);
     return 1;
   }
   

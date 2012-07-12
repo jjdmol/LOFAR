@@ -26,12 +26,16 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
+#include <Common/Exception.h>
 #include <AMCImpl/ConverterServer.h>
 #include <cstdlib>
 #include <libgen.h>  //# for basename on Darwin
 
 using namespace LOFAR;
 using namespace LOFAR::AMC;
+
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 int main(int argc, char* argv[])
 {

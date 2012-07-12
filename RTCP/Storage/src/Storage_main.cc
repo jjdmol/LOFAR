@@ -43,10 +43,12 @@
 // install a new handler to produce backtraces for bad_alloc
 LOFAR::NewHandler h(LOFAR::BadAllocException::newHandler);
 
-
 using namespace LOFAR;
 using namespace LOFAR::RTCP;
 using namespace std;
+
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 
 class ExitOnClosedStdin
@@ -191,13 +193,7 @@ int main(int argc, char *argv[])
     }
   } catch (Exception &ex) {
     LOG_FATAL_STR("[obs unknown] Caught Exception: " << ex);
-    exit(1);
-  } catch (exception &ex) {
-    LOG_FATAL_STR("[obs unknown] Caught exception: " << ex.what());
-    exit(1);
-  } catch (...) {
-    LOG_FATAL_STR("[obs unknown] Caught non-exception");
-    exit(1);
+    return 1;
   }
 
   LOG_INFO_STR("[obs unknown] Program end");

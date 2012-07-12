@@ -22,12 +22,17 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/Exception.h>
 
 #include <GCF/TM/GCF_Control.h>
 #include "SHMInfoServer.h"
 
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::AMI;
+using namespace LOFAR;
+
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 int main(int argc, char *argv[])
 {
@@ -41,8 +46,8 @@ int main(int argc, char *argv[])
 	try {
 	  GCFScheduler::instance()->run();
 	}
-	catch (std::exception& x) {
-	  LOG_INFO_STR("Unexpected exception: " << x.what());
+	catch (Exception& x) {
+	  LOG_FATAL_STR("Unexpected exception: " << x);
 	  return 1;
 	}
 	return (0);

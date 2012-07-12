@@ -16,6 +16,7 @@
 #include <Interface/DataFactory.h>
 #include <Interface/CorrelatedData.h>
 #include <Common/DataConvert.h>
+#include <Common/Exception.h>
 #include <string>
 #include <cstdio>
 #include <cstdlib>
@@ -28,6 +29,9 @@
 using namespace LOFAR;
 using namespace LOFAR::RTCP;
 using namespace std;
+
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 bool shouldSwap = false;
 
@@ -169,15 +173,12 @@ int main(int argc, char *argv[])
 
     }
 
-  } catch (Exception &ex) {
-    LOG_FATAL_STR("[obs unknown] Caught Exception: " << ex);
-    exit(1);
-  } catch (std::exception &ex) {
-    LOG_FATAL_STR("[obs unknown] Caught std::exception: " << ex.what());
-    exit(1);
-  } catch (...) {
-    LOG_FATAL_STR("[obs unknown] Caught non-std::exception");
-    exit(1);
+  } catch (LOFAR::Exception &ex) {
+    LOG_FATAL_STR("[obs unknown] Caught LOFAR Exception: " << ex);
+    return 1;
+  } catch (casa::AipsError& ex) {
+    LOG_FATAL_STR("[obs unknown] Caught Aips Error: " << ex.what());
+    return 1;
   }
 
   return 0;
