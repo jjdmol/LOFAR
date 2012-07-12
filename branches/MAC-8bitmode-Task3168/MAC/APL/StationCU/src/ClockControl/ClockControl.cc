@@ -260,7 +260,7 @@ GCFEvent::TResult ClockControl::initial_state(GCFEvent& event,
 			itsOwnPropertySet->getValue(PN_CLC_REQUESTED_CLOCK, clockVal);
 			itsClock = clockVal.getValue();
 			LOG_INFO_STR("Requested clock is " << itsClock);
-		}
+        }
 
 		if (dpEvent.DPname.find(propSetName + "." PN_CLC_REQUESTED_BITMODE) != string::npos) {
 			GCFPVInteger	bitmodeVal;
@@ -580,7 +580,7 @@ GCFEvent::TResult ClockControl::subscribeClock_state(GCFEvent& event,
 		itsClockSubscription = ack.handle;
 		LOG_INFO("Subscription on the clock successful. going to operational mode");
 		itsOwnPropertySet->setValue(PN_CLC_ACTUAL_CLOCK,GCFPVInteger(itsClock));
-		TRAN(ClockControl::active_state);				// go to next state.
+		TRAN(ClockControl::subscribeBitmode_state);				// go to next state.
 	}
 	break;
 	
