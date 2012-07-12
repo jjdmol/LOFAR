@@ -88,7 +88,7 @@ TbbSettings::TbbSettings() :
 	itsSetupNeeded(false),
 	itsTriggerInfo(0)
 {
-    itsTriggerInfo = new TriggerInfo;
+	 itsTriggerInfo = new TriggerInfo;
 }
 
 TbbSettings::~TbbSettings()
@@ -226,10 +226,10 @@ void TbbSettings::setMaxBoards (int32 maxboards)
 		itsChannelInfo[ch].DetectWindow = 0;
 		itsChannelInfo[ch].TriggerMode = 0;
 		itsChannelInfo[ch].OperatingMode = TBB_MODE_TRANSIENT;
-        for (int f = 0; f < 2; f++) {
-            for (int c = 0; c < 4; c++) {
-		        itsChannelInfo[ch].Filter[f][c] = 0;
-            }
+		for (int f = 0; f < 2; f++) {
+			for (int c = 0; c < 4; c++) {
+				itsChannelInfo[ch].Filter[f][c] = 0;
+			}
 		}
 		itsChannelInfo[ch].dstIpCep.clear();
 		itsChannelInfo[ch].dstMacCep.clear();
@@ -239,7 +239,7 @@ void TbbSettings::setMaxBoards (int32 maxboards)
 	itsBoardInfo = new BoardInfo[itsMaxBoards];
 	
 	for (int nr = 0;nr < itsMaxBoards; nr++) {
-	    itsBoardInfo[nr].used = false;
+		 itsBoardInfo[nr].used = false;
 		itsBoardInfo[nr].boardState = noBoard;
 		itsBoardInfo[nr].setupWaitTime = 0;
 		itsBoardInfo[nr].setupRetries = 0;
@@ -327,22 +327,22 @@ void TbbSettings::convertCh2Rcu(int32 channelnr, int32 *rcunr)
 
 int32 TbbSettings::convertRcuToChan(int32 rcunr)
 {
-    int32 board;	// board 0 .. 11
+	 int32 board;	// board 0 .. 11
 	int32 channel;	// channel 0 .. 15
 	
 	board = (rcunr / itsChannelsOnBoard);
 	channel = RCU_TO_CH_TABLE[rcunr % itsChannelsOnBoard];
-    return((board * itsChannelsOnBoard) + channel);
+	 return((board * itsChannelsOnBoard) + channel);
 }
 
 int32 TbbSettings::convertRcuToBoard(int32 rcunr)
 {
-    return(rcunr / itsChannelsOnBoard);
+	 return(rcunr / itsChannelsOnBoard);
 }
 
 int32 TbbSettings::convertChanToRcu(int32 channelnr)
 {
-    int32 boardnr;
+	 int32 boardnr;
 	int32 rcu;
 	
 	boardnr = (int32)(channelnr / itsChannelsOnBoard);
@@ -363,40 +363,40 @@ int32 TbbSettings::getFirstChannelNr(int32 board, int32 mp)
 
 void TbbSettings::setDestination(int32 channelnr, char *storage)
 {
-    char mac[20];
-    char ip[20];
-    char line[100];
+	char mac[20];
+	char ip[20];
+	char line[100];
 	char *key;
 	char *val;
-    
-    strcpy(mac,"0");
-    strcpy(ip,"0");
-    
-    ifstream fin("/opt/lofar/etc/StaticMetaData/Storage+MAC.dat", ifstream::in );
+	
+	strcpy(mac,"0");
+	strcpy(ip,"0");
+	
+	ifstream fin("/opt/lofar/etc/StaticMetaData/Storage+MAC.dat", ifstream::in );
 	
 	while (!fin.eof()) {
-        fin.getline(line,sizeof line);
+		fin.getline(line,sizeof line);
 		if (strlen(line) < 6 || line[0] == '#') { continue; }
-        key = strtok (line," ");
-        if (strcmp(storage, key) == 0) {
-            val = strtok(NULL, " ");
+		   key = strtok (line," ");
+		   if (strcmp(storage, key) == 0) {
+				val = strtok(NULL, " ");
 			strncpy(mac,val,sizeof mac);
-            mac[sizeof mac - 1] = 0;
+				mac[sizeof mac - 1] = 0;
 			val = strtok(NULL, " ");
 			strncpy(ip,val,sizeof ip);
-            ip[sizeof ip - 1] = 0;
-            LOG_DEBUG_STR(formatString("storage=%s  mac=%s  ip=%s", key, mac, ip));
+				ip[sizeof ip - 1] = 0;
+				LOG_DEBUG_STR(formatString("storage=%s  mac=%s  ip=%s", key, mac, ip));
 			break;
-        }
-    }
-    fin.close();
-    
+		  }
+	 }
+	 fin.close();
+	 
 	if (strlen(ip) == 1 || strlen(mac) == 1 ) {
 		LOG_DEBUG_STR(formatString("storage=%s NOT found", storage));
 	}
 	else {
-	    itsChannelInfo[channelnr].dstIpCep = static_cast<string>(ip);
-	    itsChannelInfo[channelnr].dstMacCep = static_cast<string>(mac);
+		 itsChannelInfo[channelnr].dstIpCep = static_cast<string>(ip);
+		 itsChannelInfo[channelnr].dstMacCep = static_cast<string>(mac);
 	}
 }
 
@@ -417,11 +417,11 @@ void TbbSettings::clearRcuSettings(int32 boardnr)
 		itsChannelInfo[(boardnr * 16) + cn].DetectWindow = 0;
 		itsChannelInfo[(boardnr * 16) + cn].TriggerMode = 0;
 		itsChannelInfo[(boardnr * 16) + cn].OperatingMode = TBB_MODE_TRANSIENT;
-                for (int f = 0; f < 2; f++) {
-                    for (int c = 0; c < 4; c++) {
-                        itsChannelInfo[cn].Filter[f][c] = 0;
-                    }
-                }
+					 for (int f = 0; f < 2; f++) {
+						  for (int c = 0; c < 4; c++) {
+								itsChannelInfo[cn].Filter[f][c] = 0;
+						  }
+					 }
 	}
 }
 

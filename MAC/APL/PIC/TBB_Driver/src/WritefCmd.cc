@@ -135,7 +135,7 @@ void WritefCmd::saveTbbEvent(GCFEvent& event)
 	
 	if (itsImage == 0) {
 	    if (itsPassword == 0xfac) {
-		itsStage = unprotect;
+		    itsStage = unprotect;
 		}
 		else {
 		    setStatus(0, TBB_FLASH_BAD_PASSWORD);

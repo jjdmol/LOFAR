@@ -81,7 +81,7 @@ GCFPValue* GCFPValue::unpackValue(const char* valBuf, unsigned int*	offset)
 		}
 		else {
 			(*offset) += readLength;
-	}
+		}
 	}
 
 	return (pValue);
