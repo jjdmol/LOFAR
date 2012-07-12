@@ -33,6 +33,8 @@
 #include <Interface/SmartPtr.h>
 #endif
 
+#include <string>
+
 namespace LOFAR {
 namespace RTCP {
 
