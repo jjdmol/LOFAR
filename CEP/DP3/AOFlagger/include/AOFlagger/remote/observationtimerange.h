@@ -148,13 +148,9 @@ class ObservationTimerange
 			std::cout << "Grid points: " << _gridFrequencySize << "\n";
 			
 			// Allocate memory
-			_realData = new num_t*[_polarizationCount];
-			_imagData = new num_t*[_polarizationCount];
-			for(size_t p=0;p<_polarizationCount;++p)
-			{
-				_realData[p] = new num_t[_gridFrequencySize * _timestepCount * 2];
-				_imagData[p] = &_realData[p][_gridFrequencySize * _timestepCount];
-			}
+			const size_t allocSize = _gridFrequencySize * _timestepCount * _polarizationCount;
+			_realData = new num_t[allocSize * 2];
+			_imagData = &_realData[allocSize];
 			_u = new double[_timestepCount];
 			_v = new double[_timestepCount];
 			_w = new double[_timestepCount];
@@ -163,23 +159,27 @@ class ObservationTimerange
 		void SetTimestepData(size_t nodeIndex, const MSRowDataExt *rows, size_t rowCount)
 		{
 			size_t bandStart = _bandStartLookup[nodeIndex];
-			std::vector<size_t>::const_iterator gridPtr = _gridIndexLookup.begin()+bandStart;
-			const MSRowData &firstRowData = rows[0].Data();
-			for(size_t c=0;c<firstRowData.ChannelCount();++c)
+			//const MSRowData &firstRowData = rows[0].Data();
+			const unsigned pCount = _polarizationCount;
+			for(size_t r=0;r<rowCount;++r)
 			{
-				const size_t gridIndex = gridPtr[c];
-				
-				for(size_t r=0;r<rowCount;++r)
+				const MSRowData &row = rows[r].Data();
+				const num_t *realPtr = row.RealPtr();
+				const num_t *imagPtr = row.ImagPtr();
+				std::vector<size_t>::const_iterator gridPtr = _gridIndexLookup.begin()+bandStart;
+				for(size_t c=0;c<row.ChannelCount();++c)
 				{
-					const MSRowData &row = rows[r].Data();
-					const num_t *realPtr = row.RealPtr(c);
-					const num_t *imagPtr = row.ImagPtr(c);
-					const size_t gridStart = r * _gridFrequencySize;
-					for(size_t p=0;p<_polarizationCount;++p)
+					const size_t gridIndex = *gridPtr;
+					size_t fullIndex = (r * _gridFrequencySize + gridIndex) * pCount;
+					for(unsigned p=0;p<pCount;++p)
 					{
-						_realData[p][gridIndex + gridStart] = realPtr[p];
-						_imagData[p][gridIndex + gridStart] = imagPtr[p];
+						_realData[fullIndex] = *realPtr;
+						_imagData[fullIndex] = *imagPtr;
+						++fullIndex;
+						++realPtr;
+						++imagPtr;
 					}
+					++gridPtr;
 				}
 			}
 		}
@@ -194,19 +194,14 @@ class ObservationTimerange
 		size_t _timestepCount;
 		size_t _gridFrequencySize;
 		
-		// First index is polarization, second is frequency x timestep
-		num_t **_realData;
-		num_t **_imagData;
+		// First index is polarization, second is frequency, third is timestep
+		num_t *_realData;
+		num_t *_imagData;
 		double *_u, *_v, *_w;
 		
 		void deallocate()
 		{
-			for(size_t p=0;p<_polarizationCount;++p)
-			{
-				delete[] _realData[p];
-			}
 			delete[] _realData;
-			delete[] _imagData;
 			delete[] _u;
 			delete[] _v;
 			delete[] _w;

@@ -26,8 +26,9 @@ int main(int argc, char *argv[])
 		for(size_t i=0; i!=bands.size(); ++i)
 			timerange.SetBandInfo(i, bands[i]);
 		
-		unsigned polarizationCount = 4;
-		size_t rowCountPerRequest = 128;
+		unsigned polarizationCount = commander.PolarizationCount();
+		cout << "Polarization count: " << polarizationCount << '\n';
+		size_t rowCountPerRequest = 128*16;
 		
 		timerange.Initialize(polarizationCount, rowCountPerRequest);
 		MSRowDataExt *rowBuffer[obs->Size()];
