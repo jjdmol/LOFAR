@@ -15,7 +15,7 @@ class FakeData {
   public:
     FakeData( const Parset &parset ): itsParset(parset) {}
 
-    void fill( FilteredData *data ) const;
+    void fill( FilteredData *data, unsigned subband ) const;
     void check( const FilteredData *data ) const;
     void check( const FinalBeamFormedData *data, unsigned pol ) const;
 
@@ -40,13 +40,14 @@ template<> bool FakeData::equal( const fcomplex a, const fcomplex b ) const {
   return equal(real(a), real(b)) && equal(imag(a), imag(b));
 }
 
-void FakeData::fill( FilteredData *data ) const
+void FakeData::fill( FilteredData *data, unsigned subband ) const
 {
   for (unsigned s = 0; s < itsParset.nrStations(); s++) {
     for (unsigned c = 0; c < itsParset.nrChannelsPerSubband(); c++) {
       for (unsigned t = 0; t < itsParset.CNintegrationSteps(); t++) {
-        data->samples[c][s][t][0] = makefcomplex(1 * t, 2 * t);
-        data->samples[c][s][t][1] = makefcomplex(3 * t, 5 * t);
+        const float base = 1000 * subband;
+        data->samples[c][s][t][0] = makefcomplex(base + 1 * t, base + 2 * t);
+        data->samples[c][s][t][1] = makefcomplex(base + 3 * t, base + 5 * t);
       }
       data->flags[c][s].reset();
     }

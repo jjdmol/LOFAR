@@ -700,7 +700,7 @@ template <typename SAMPLE_TYPE> void CN_Processing<SAMPLE_TYPE>::filter()
 #endif
 
   if (itsFakeInputData)
-    FakeData(itsParset).fill(itsFilteredData);
+    FakeData(itsParset).fill(itsFilteredData, *itsCurrentSubband);
 }
 
 

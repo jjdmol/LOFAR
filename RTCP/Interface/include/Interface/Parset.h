@@ -194,6 +194,7 @@ class Parset: public ParameterSet
 
     unsigned			nrBeams() const;
     std::string                 beamTarget(unsigned beam) const;
+    double                      beamDuration(unsigned beam) const;
 
     unsigned			nrPencilBeams(unsigned beam) const;
     std::vector<unsigned>	nrPencilBeams() const;
