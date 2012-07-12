@@ -258,12 +258,16 @@ void ProcessCommander::onConnectionFinishReadBandTable(ServerConnectionPtr serve
 	// Nothing needs to be done.
 }
 
-void ProcessCommander::onConnectionFinishReadDataRows(ServerConnectionPtr serverConnection, MSRowDataExt *rowData)
+void ProcessCommander::onConnectionFinishReadDataRows(ServerConnectionPtr serverConnection, MSRowDataExt *rowData, size_t totalRows)
 {
 	const std::string &hostname = serverConnection->Hostname();
 	ClusteredObservationItem item;
 	_nodeCommands.Current(hostname, item);
 	_observationTimerange->SetTimestepData(item.Index(), rowData, _rowCount);
+	if(_rowsTotal == 0)
+		_rowsTotal = totalRows;
+	else if(_rowsTotal != totalRows)
+		throw std::runtime_error("The measurement sets did not have the same number of rows in their main table");
 }
 
 void ProcessCommander::onError(ServerConnectionPtr connection, const std::string &error)
