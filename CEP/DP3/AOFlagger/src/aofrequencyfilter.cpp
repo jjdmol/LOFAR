@@ -113,8 +113,8 @@ void initializeFFTW(size_t channelCount)
 	
 	fftIn = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * channelCount);
 	fftOut = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * channelCount);
-	fftPlanForward = fftw_plan_dft_1d(channelCount, fftIn, fftOut, FFTW_FORWARD, FFTW_PATIENT);
-	fftPlanBackward = fftw_plan_dft_1d(channelCount, fftIn, fftOut, FFTW_BACKWARD, FFTW_PATIENT);
+	fftPlanForward = fftw_plan_dft_1d(channelCount, fftIn, fftOut, FFTW_FORWARD, FFTW_MEASURE);
+	fftPlanBackward = fftw_plan_dft_1d(channelCount, fftIn, fftOut, FFTW_BACKWARD, FFTW_MEASURE);
 
 	fftw_free(fftIn);
 	fftw_free(fftOut);
