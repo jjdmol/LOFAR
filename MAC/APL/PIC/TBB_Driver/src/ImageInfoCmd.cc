@@ -30,7 +30,7 @@ using namespace LOFAR;
 using namespace GCF::TM;
 using namespace TBB_Protocol;
 using namespace TP_Protocol;
-using namespace TBB;
+using	namespace TBB;
 
 //--Constructors for a ImageInfoCmd object.----------------------------------------
 ImageInfoCmd::ImageInfoCmd():

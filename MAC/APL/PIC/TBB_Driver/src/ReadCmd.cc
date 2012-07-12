@@ -33,7 +33,7 @@ using namespace LOFAR;
 using namespace GCF::TM;
 using namespace TBB_Protocol;
 using namespace TP_Protocol;
-using namespace TBB;
+using	namespace TBB;
 
 
 //--Constructors for a ReadCmd object.----------------------------------------
@@ -57,7 +57,7 @@ ReadCmd::~ReadCmd()
 bool ReadCmd::isValid(GCFEvent& event)
 {
 	if ((event.signal == TBB_READ)
-		||(event.signal == TP_UDP_ACK)
+	    ||(event.signal == TP_UDP_ACK)
 		||(event.signal == TP_READ_ACK)
 		||(event.signal == TP_READR_ACK)
 		||(event.signal == TP_ARP_ACK)) {
@@ -134,27 +134,27 @@ void ReadCmd::sendTpEvent()
 		
 		// send UDP header settings for CEP port
 		case 2: {
-			TPUdpEvent tp_event;
-			tp_event.opcode = oc_UDP;
-			tp_event.status = 0;
-			uint32 mode = TS->getChOperatingMode(getChannelNr());
-			LOG_DEBUG_STR(formatString("selected mode = %u", mode));
-			// fill in destination mac address
-			string2mac(TS->getSrcMacCep(getBoardNr()).c_str(), tp_event.srcmac);
-			string2mac(TS->getDstMacCep(getChannelNr()).c_str(), tp_event.dstmac);
-			// fill in udp-ip header
-			setup_udpip_header(  getBoardNr(),
-								      mode,
-								      TS->getSrcIpCep(getBoardNr()).c_str(),
-								      TS->getDstIpCep(getChannelNr()).c_str(),
-								      tp_event.ip,
-								      tp_event.udp );
+        	TPUdpEvent tp_event;
+        	tp_event.opcode = oc_UDP;
+        	tp_event.status = 0;
+        	uint32 mode = TS->getChOperatingMode(getChannelNr());
+        	LOG_DEBUG_STR(formatString("selected mode = %u", mode));
+        	// fill in destination mac address
+        	string2mac(TS->getSrcMacCep(getBoardNr()).c_str(), tp_event.srcmac);
+        	string2mac(TS->getDstMacCep(getChannelNr()).c_str(), tp_event.dstmac);
+        	// fill in udp-ip header
+        	setup_udpip_header(	getBoardNr(),
+        						mode,
+        						TS->getSrcIpCep(getBoardNr()).c_str(),
+        						TS->getDstIpCep(getChannelNr()).c_str(),
+        						tp_event.ip,
+        						tp_event.udp );
 
 			TS->boardPort(getBoardNr()).send(tp_event);
 			TS->setBoardUsed(getBoardNr());
 			TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 		} break;
-		
+        
 		// send 1 arp message
 		case 3: {
 			TPArpEvent tp_event;
@@ -162,31 +162,31 @@ void ReadCmd::sendTpEvent()
 			tp_event.opcode = oc_ARP;
 			tp_event.status = 0;
 			
-			TS->boardPort(getBoardNr()).send(tp_event);
-			TS->setBoardUsed(getBoardNr());
-			TS->boardPort(getBoardNr()).setTimer(TS->timeout());
-		} break;
-		
+        	TS->boardPort(getBoardNr()).send(tp_event);
+        	TS->setBoardUsed(getBoardNr());
+        	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
+	    } break;
+	    
 		// send requested data to CEP
 		case 4: {
-			TPReadEvent tp_event;
+	        TPReadEvent tp_event;
 
-			tp_event.opcode      = oc_READ;
-			tp_event.status      = 0;
-			tp_event.channel     = TS->getChInputNr(getChannelNr());
-			tp_event.secondstime = itsSecondstime;
+        	tp_event.opcode      = oc_READ;
+        	tp_event.status      = 0;
+        	tp_event.channel     = TS->getChInputNr(getChannelNr());
+        	tp_event.secondstime = itsSecondstime;
 			tp_event.sampletime  = itsSampleNr;
-			tp_event.prepages    = itsPrepages;
-			tp_event.postpages   = itsPostpages;
-			TS->boardPort(getBoardNr()).send(tp_event);
-			TS->setBoardUsed(getBoardNr());
-			TS->boardPort(getBoardNr()).setTimer(TS->timeout());
+        	tp_event.prepages    = itsPrepages;
+        	tp_event.postpages   = itsPostpages;
+        	TS->boardPort(getBoardNr()).send(tp_event);
+        	TS->setBoardUsed(getBoardNr());
+        	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 			LOG_INFO_STR(formatString("DATA->>CEP rcu %d : time=%lf  timebefore=%lf  timeafter=%lf",
 				                       TS->convertChanToRcu(getChannelNr()),
 				                       (double)itsTimestamp,
 				                       (double)itsTimeBefore,
 				                       (double)itsTimeAfter));
-		} break;
+	    } break;
 	}
 }
 
@@ -317,11 +317,11 @@ void ReadCmd::saveTpAckEvent(GCFEvent& event)
 			usleep(1000); // wait for some time and try again
 		}
 		else { 
-		    if (tp_ack.status != 0) {
+		if (tp_ack.status != 0) {
 			    setStatus(0, (tp_ack.status << 24));
-			}
-			setDone(true);
 		}
+		setDone(true);
+	}
 	}
 }
 

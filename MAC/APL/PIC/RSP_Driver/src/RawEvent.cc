@@ -73,7 +73,7 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
       EPA_WRITE,         /* WRITE    */
       EPA_READACK,       /* READACK  */
       EPA_WRITEACK,      /* WRITEACK */
-    },
+  },
   },
 
   /* pid = 0x02 (RSU) */
@@ -189,7 +189,7 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
       EPA_SS_SELECT, /* WRITE   */
       EPA_SS_SELECT, /* READACK */
       EPA_WRITEACK,  /* WRITEACK */
-    },
+  },
     /* reg = 0x02 (Subband 2 Select parameters, new in 8/4bit mode) */
     { 0,
       EPA_READ,      /* READ    */
@@ -242,7 +242,7 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
       EPA_BF_COEFS_WRITE, /* WRITE   */
       EPA_BF_COEFS_READ,  /* READACK */
       EPA_WRITEACK,       /* WRITEACK */
-    },
+  },
     /* reg = 0x05 (BF_XIOUT subband 1 new in 8/4bit mode) */
     { 0,
       EPA_READ,           /* READ    */

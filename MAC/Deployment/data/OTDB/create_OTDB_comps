@@ -226,7 +226,7 @@ do
                 -l)     localUse=1
                         shift
                         ;;
-		-h)     SyntaxError
+		-h) SyntaxError
 			;;
                  *)     SyntaxError
 			;;    

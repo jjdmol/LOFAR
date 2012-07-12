@@ -5,6 +5,8 @@ include(PythonInstall)
 python_install(
   helpers/__init__.py
   helpers/metadata.py
+  helpers/WritableParmDB.py
+  helpers/ComplexArray.py
   master/__init__.py
   master/bbs.py
   master/cep2_datamapper.py
@@ -25,7 +27,7 @@ python_install(
   master/get_metadata.py
   master/make_flaggable.py
   master/new_bbs.py
-  master/parmexportcal.py
+  master/gainoutliercorrection.py
   master/rficonsole.py
   master/setupparmdb.py
   master/setupsourcedb.py
@@ -57,7 +59,7 @@ python_install(
   nodes/imager_finalize.py
   nodes/imager_prepare.py
   nodes/imager_source_finding.py
-  nodes/parmexportcal.py
+  nodes/gainoutliercorrection.py
   nodes/rficonsole.py
   nodes/setupparmdb.py
   nodes/setupsourcedb.py

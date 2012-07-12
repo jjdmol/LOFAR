@@ -46,7 +46,7 @@ class TBBTrigger
 public:
 	// Most likely way to construct the trigger.
 	TBBTrigger (uint32 rcuNr, uint32 time, uint32 sampleNr, RTC::NsTimestamp nsTimestamp,
-					uint32 sum, uint32 nrSamples, uint32 peakValue, uint32 missed);
+				uint32	sum,	uint32	nrSamples,	uint32	peakValue,	uint32	missed);
 
 	// default construction
 	TBBTrigger();
@@ -58,15 +58,15 @@ public:
 
 	// --- Datamembers ---
 	// Note that the members are public, we use it as a struct.
-	uint32           itsNo;
-	uint32           itsRcuNr;
-	uint32           itsTime;
-	uint32           itsSampleNr;
+	uint32  itsNo;
+	uint32	itsRcuNr;
+	uint32	itsTime;
+	uint32	itsSampleNr;
 	RTC::NsTimestamp itsNsTimestamp;
-	uint32           itsSum;
-	uint32           itsNrSamples;
-	uint32           itsPeakValue;
-	uint32           itsMissed;
+	uint32	itsSum;
+	uint32	itsNrSamples;
+	uint32	itsPeakValue;
+	uint32	itsMissed;
 
 	//# print function for operator<<
 	ostream&	print(ostream&	os) const;

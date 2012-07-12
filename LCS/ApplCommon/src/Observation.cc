@@ -306,7 +306,7 @@ Observation::Observation(const ParameterSet*		aParSet,
 	if (!olapprefix.empty()) {		// offline Pipelines don't have OLAP in the parset.
 		const char *dataProductNames[] = { "Beamformed", "Correlated" };
 		unsigned dataProductPhases[]   = { 3,            2 };
-        unsigned dataProductNrs[]      = { 2,            1 };
+                unsigned dataProductNrs[]      = { 2,            1 };
 		size_t nrDataProducts = sizeof dataProductNames / sizeof dataProductNames[0];
 
         const unsigned nrPsets = nrBGPIOnodes;

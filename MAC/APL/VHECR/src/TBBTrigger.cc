@@ -86,17 +86,17 @@ TBBTrigger& TBBTrigger::operator=(const TBBTrigger& that)
 //#
 ostream& TBBTrigger::print(ostream&	os) const
 {
-	os << "RCUnr      : " << itsRcuNr << endl;
-		char	*timeStr = ctime((const time_t*)&itsTime);
+	os << "RCUnr     : " << itsRcuNr << endl;
+	char	*timeStr = ctime((const time_t*)&itsTime);
 	timeStr[strlen(timeStr)-1] = '\0';
-	os << "Time       : " << timeStr << endl;
-	os << "SampleNr   : " << itsSampleNr << endl;
+	os << "Time      : " << timeStr << endl;
+	os << "SampleNr  : " << itsSampleNr << endl;
 	os << "Time sec   : " << itsNsTimestamp.sec() << endl;
 	os << "Time nsec  : " << itsNsTimestamp.nsec() << endl;
-	os << "Sum        : " << itsSum << endl;
+	os << "Sum       : " << itsSum << endl;
 	os << "Nr samples : " << itsNrSamples << endl;
-	os << "Peakvalue  : " << itsPeakValue << endl;
-	os << "Missed     : " << itsMissed << endl;
+	os << "Peakvalue : " << itsPeakValue << endl;
+	os << "Missed    : " << itsMissed << endl;
 
 	return (os);
 }
