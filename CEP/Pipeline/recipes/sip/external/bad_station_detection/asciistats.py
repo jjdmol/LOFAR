@@ -147,10 +147,10 @@ def getStats(intData, compCoordDict, statparams, doUnwrap):
 
 # Get from a GDS file a list of absPaths and nodes with the MSs
 def gdsToPathNode(gdsFile):
-    if not os.path.isfile(input):
-        raise Exception('Error: ' + input + ' does not exists')
+    if not os.path.isfile(gdsFile):
+        raise Exception('Error: ' + gdsFile + ' does not exists')
     
-    gdsfile = open(input, 'r')
+    gdsfile = open(gdsFile, 'r')
     gdslines = gdsfile.read().split('\n')
     gdsfile.close()
     absPaths = []
@@ -367,7 +367,7 @@ def processdistribute(childrenIds, whats, functionToApply, maximumProcessorsToUs
     return result
 
 
-def processMS(absPath, output,overwrite,stats,column,timeslots,channels,antennas, correlations, wrap, flag, colflag, stokes, autocorr,operation, acc):
+def processMS(absPath, output,overwrite,stats,column,timeslots,channels,antennas,baselines,correlations, wrap, flag, colflag, stokes, autocorr,operation, acc):
     overWrite = booleanStringToBoolean(overwrite)
     showFlags = booleanStringToBoolean(flag)
     acc = int(acc)
@@ -378,18 +378,31 @@ def processMS(absPath, output,overwrite,stats,column,timeslots,channels,antennas
         print 'Error: Timeslots format is start,end'
         return
     for i in range(len(timeslots)): timeslots[i] = int(timeslots[i])
-    antToPlotSpl = antennas.split(',')
     antToPlot = []
-    for i in range(len(antToPlotSpl)):
-        tmpspl = antToPlotSpl[i].split('..')
-        if len(tmpspl) == 1:
-            antToPlot.append(int(antToPlotSpl[i]))
-        elif len(tmpspl) == 2:
-            for j in range(int(tmpspl[0]),int(tmpspl[1])+1):
-                antToPlot.append(j)
-        else:
-            print 'Error: Could not understand antenna list.'
-            return
+    basesToPlot = []
+    if baselines == '':
+        antToPlotSpl = antennas.split(',')
+        for i in range(len(antToPlotSpl)):
+            tmpspl = antToPlotSpl[i].split('..')
+            if len(tmpspl) == 1:
+                antToPlot.append(int(antToPlotSpl[i]))
+            elif len(tmpspl) == 2:
+                for j in range(int(tmpspl[0]),int(tmpspl[1])+1):
+                    antToPlot.append(j)
+            else:
+                print 'Error: Could not understand antenna list.'
+                return
+    else:
+        basesToPlotSpl = baselines.split(',')
+        for i in range(len(basesToPlotSpl)):
+            tmpspl = basesToPlotSpl[i].split('-')
+            if len(tmpspl) == 2:
+                basesToPlot.append((int(tmpspl[0]), int(tmpspl[1])))
+                antToPlot.append(int(tmpspl[0]))
+                antToPlot.append(int(tmpspl[1]))
+            else:
+                print 'Error: Could not understand baseline list.'
+                return
     corrs = correlations.split(',')
     for i in range(len(corrs)):
         corrs[i] = int(corrs[i])
@@ -489,9 +502,19 @@ def processMS(absPath, output,overwrite,stats,column,timeslots,channels,antennas
         ant1Name = antList[ant1]
         ant2 = tpart.getcell("ANTENNA2", 0)
         ant2Name = antList[ant2]
-        if ant1 not in antToPlot or ant2 not in antToPlot: continue
-        if ant1 == ant2:
-            if not showAutocorr:
+        # If there is a baseline list, we check if ant1 and ant2 
+        if len(basesToPlot):
+            plotBaseline = False
+            for baseline in basesToPlot:
+                if ((ant1,ant2) == baseline) or ((ant2,ant1) == baseline):
+                    plotBaseline = True
+                    break
+            if not plotBaseline:
+                continue
+        else:
+            if ant1 not in antToPlot or ant2 not in antToPlot: 
+                continue
+            if ant1 == ant2 and not showAutocorr:
                 continue
         
         # Get the 3D cut data [time][freq][corr]
@@ -552,11 +575,11 @@ def addInfo(lines, ant1,ant2,ant1Name,ant2Name, stats, num, nummasked, label, fr
         
 # Function used for the tasksdistributor
 def function(node, what):
-    (absPath, output, overwrite, stats,column,timeslots,channels,antennas,correlations, wrap, flag, colflag, stokes, autocorr,operation,acc,build) = what
+    (absPath, output, overwrite, stats,column,timeslots,channels,antennas,baselines,correlations, wrap, flag, colflag, stokes, autocorr,operation,acc,build) = what
     scriptpath  = os.path.abspath(__file__)
     parentpath = os.path.abspath(os.path.join(scriptpath, '..'))
     scriptname = scriptpath.split('/')[-1].split('.')[0]
-    command = 'python -c "import ' + scriptname + '; ' + scriptname + '.' + processMS.__name__ + '(\\\"' + absPath +'\\\",\\\"' + str(output) +'\\\",\\\"' + str(overwrite) +'\\\",\\\"' + str(stats) +'\\\",\\\"' + str(column) +'\\\",\\\"' + str(timeslots)  +'\\\",\\\"' + str(channels)  +'\\\",\\\"' + str(antennas)  +'\\\",\\\"' + str(correlations)  +'\\\",\\\"' + str(wrap)  +'\\\",\\\"' + str(flag)   +'\\\",\\\"' + str(colflag)   +'\\\",\\\"' + str(stokes)   +'\\\",\\\"' + str(autocorr)   +'\\\",\\\"' + str(operation) +'\\\",\\\"' + str(acc) +'\\\")"'
+    command = 'python -c "import ' + scriptname + '; ' + scriptname + '.' + processMS.__name__ + '(\\\"' + absPath +'\\\",\\\"' + str(output) +'\\\",\\\"' + str(overwrite) +'\\\",\\\"' + str(stats) +'\\\",\\\"' + str(column) +'\\\",\\\"' + str(timeslots)  +'\\\",\\\"' + str(channels)  +'\\\",\\\"' + str(antennas)  +'\\\",\\\"' + str(baselines)  +'\\\",\\\"' + str(correlations)  +'\\\",\\\"' + str(wrap)  +'\\\",\\\"' + str(flag)   +'\\\",\\\"' + str(colflag)   +'\\\",\\\"' + str(stokes)   +'\\\",\\\"' + str(autocorr)   +'\\\",\\\"' + str(operation) +'\\\",\\\"' + str(acc) +'\\\")"'
     
     if node == getHostName():
         return (os.popen("cd " + parentpath + " ; " + command)).read()
@@ -583,7 +606,6 @@ def main(opts):
         exit()
     output = os.path.abspath(output)
     if input.endswith('gds') or input.endswith('GDS'):
-        print 'GDS as input is untested.'
         (absPaths,nodes) = gdsToPathNode(input)
     else:
         # We assume single MS
@@ -595,7 +617,7 @@ def main(opts):
     
     whats = []
     for absPath in absPaths:
-        whats.append((absPath, output, opts.overwrite, opts.stats,opts.column,opts.timeslots,opts.channels,opts.antennas,opts.correlations, opts.wrap, opts.flag, opts.colflag, opts.stokes, opts.autocorr,opts.operation,opts.acc,opts.build))
+        whats.append((absPath, output, opts.overwrite, opts.stats,opts.column,opts.timeslots,opts.channels,opts.antennas,opts.baselines,opts.correlations, opts.wrap, opts.flag, opts.colflag, opts.stokes, opts.autocorr,opts.operation,opts.acc,opts.build))
     
     if len(absPaths) > 1:
         print 'Collecting in the nodes...'
@@ -633,6 +655,7 @@ if __name__ == "__main__":
     opt.add_option('-t','--timeslots',help='Timeslots to use (comma separated and zero-based: start,end[inclusive]). Negative values work like python slicing, but please note that the second index here is inclusive [default is 0,-1].',default='0,-1')
     opt.add_option('-s','--channels',help='Channels to use (comma separated and zero-based: start,end[inclusive]). Negative values work like python slicing, but please note that the second index here is inclusive [default is 0,-1].',default='0,-1')
     opt.add_option('-e','--antennas',help= 'Antennas to use (comma separated list, zero-based) To specify an inclusive range of antennas use .. format, e.g. -e 0..9 requests the first 10 antennas. To see which antennas are available use uvplot -q with some of the ms',default='-1')
+    opt.add_option('-b','--baselines',help= 'Baselines to use  [optional] (comma separated list, zero-based), specify baselines as [st1]-[st2], if this option is used the antennas and autocorr options will be ignored',default='')
     opt.add_option('-p','--correlations',help='Correlations to use (it does not convert, so use integers as in the MS) [default is 0,1,2,3].',default='0,1,2,3')
     opt.add_option('-w','--wrap',default=False,help='Unwrap phase? [default False]',action='store_true')
     opt.add_option('-f','--flag',default=False,help='Show flagged data? [default False]',action='store_true')
@@ -643,6 +666,6 @@ if __name__ == "__main__":
     opt.add_option('-a','--acc',help='Accuracy in the given statistics [default is 4]',default='4')
     opt.add_option('-j','--numprocessors',help='Simultaneous processes, only applying if GDS file is given [default is 1]',default='1')
     opt.add_option('-n','--numnodes',help='Simultaneous nodes, only applying if GDS file is given [default is 64]',default='64')
-    opt.add_option('-b','--build',help='Use different build day, only applying if GDS file is given. Only provide this if you had to do use LofIm XXX (the options are Mon,Tue,Wed,Thu,Fri,Sat and Sun) [default is to use current day]',default='')
+    opt.add_option('-l','--build',help='Use different build day, only applying if GDS file is given. Only provide this if you had to do use LofIm XXX (the options are Mon,Tue,Wed,Thu,Fri,Sat and Sun) [default is to use current day]',default='')
     options, arguments = opt.parse_args()
     main(options)
