@@ -34,12 +34,17 @@
 
 #include <Common/SystemUtil.h>
 #include <Common/LofarLogger.h>
+#include <Common/Exception.h>
 
 #include <ostream>
 #include <sstream>
 
 using namespace casa;
+using namespace LOFAR;
 using namespace std;
+
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 // Convert time to FITS format string.
 String time2String (const Quantity& time, int ndecimals)
@@ -181,7 +186,8 @@ int main (int argc, char* argv[])
     }
     fill (argv[1]);
     cout << "Filled Root group in HDF5 image " << argv[1] << endl;
-  } catch (std::exception& x) {
+  } catch (Exception& ex) {
+    cerr << ex << endl;
     return 1;
   }
   return 0;

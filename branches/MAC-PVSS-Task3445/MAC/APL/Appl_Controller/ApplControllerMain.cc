@@ -29,10 +29,14 @@
 #include <Common/lofar_string.h>
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
+#include <Common/Exception.h>
 #include "ApplController.h"
 
 using namespace LOFAR;
 using namespace LOFAR::ACC;
+
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 //
 // MAIN (ParameterFile)

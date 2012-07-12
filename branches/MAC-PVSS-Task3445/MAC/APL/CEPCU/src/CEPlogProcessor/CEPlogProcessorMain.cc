@@ -26,12 +26,16 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
+#include <Common/Exception.h>
 #include <GCF/TM/GCF_Scheduler.h>
 #include "CEPlogProcessor.h"
 
 using namespace LOFAR;
 using namespace GCF::TM;
 using namespace LOFAR::APL;
+
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 //
 // MAIN (parameterfile)

@@ -95,33 +95,8 @@ void *I_WRAP_SONAME_FNNAME_ZZ(Za,memset)( void *dest, int val, size_t len) {
 // install a new handler to produce backtraces for std::bad_alloc
 LOFAR::NewHandler h(LOFAR::BadAllocException::newHandler);
 
-
-// if exceptions are not caught, an attempt is made to create a backtrace
-// from the place where the exception is thrown.
-//
-// JD: if exceptions are caught, a backtrace is produced now as well,
-//     plus the actual exception is printed. So that's preferable as a default.
-#define CATCH_EXCEPTIONS
-
-
-#if !defined CATCH_EXCEPTIONS
-
-void terminate_with_backtrace()
-{
-  LOG_FATAL("terminate_with_backtrace()");
-
-  void *buffer[100];
-  int  nptrs     = backtrace(buffer, 100);
-  char **strings = backtrace_symbols(buffer, nptrs);
-
-  for (int i = 0; i < nptrs; i ++)
-    LOG_FATAL_STR(i << ": " << strings[i]);
-
-  free(strings);
-  abort();
-}
-
-#endif
+// Use a terminate handler that can produce a backtrace.
+LOFAR::Exception::TerminateHandler t(LOFAR::Exception::terminate);
 
 
 namespace LOFAR {
@@ -297,9 +272,7 @@ static void master_thread()
   enableCoreDumps();
   installSigHandlers();
 
-#if defined CATCH_EXCEPTIONS
   try {
-#endif
 
 #if defined FLAT_MEMORY
     mmapFlatMemory();
@@ -337,7 +310,6 @@ static void master_thread()
     unmapFlatMemory();
 #endif
 
-#if defined CATCH_EXCEPTIONS
   } catch (Exception &ex) {
     LOG_FATAL_STR("Master thread caught Exception: " << ex);
   } catch (std::exception &ex) {
@@ -345,7 +317,6 @@ static void master_thread()
   } catch (...) {
     LOG_FATAL("Master thread caught non-std::exception: ");
   }
-#endif
 
   LOG_DEBUG("Master thread stopped");
 }
@@ -359,10 +330,6 @@ int main(int argc, char **argv)
 {
   using namespace LOFAR;
   using namespace LOFAR::RTCP;
-
-#if !defined CATCH_EXCEPTIONS
-  std::set_terminate(terminate_with_backtrace);
-#endif
 
 #if defined HAVE_MPI
 #if 1

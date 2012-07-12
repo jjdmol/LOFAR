@@ -26,6 +26,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/lofar_bitset.h>
 #include <Common/hexdump.h>
+#include <Common/Exception.h>
 
 #include <MACIO/MACServiceInfo.h>
 #include <GCF/TM/GCF_Scheduler.h>
@@ -67,6 +68,9 @@ namespace LOFAR {
 	using namespace RSP_Protocol;
 //	using namespace RSP;
 	using namespace RTC;
+
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 // declare class constants
 double WGCommand::AMPLITUDE_SCALE = (1.0 * ((uint32)(1 << 11)-1) / (uint32)(1 << 11)) * (uint32)(1 << 31);

@@ -28,6 +28,7 @@
 #include <Common/ParameterSet.h>
 #include <MACIO/MACServiceInfo.h>
 #include <Common/hexdump.h>
+#include <Common/Exception.h>
 
 #include <getopt.h>
 #include <string>
@@ -83,6 +84,9 @@ using namespace GCF::TM;
 using namespace MACIO;
 using namespace TBB;
 using namespace std;
+
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 static bool   itsDaemonize  = false;
 static int32  itsInstancenr = -1;

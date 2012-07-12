@@ -281,8 +281,8 @@ int main (int argc, char** argv)
       msvec[k]->flush (true);
     }
     timer.show("fsync ");
-  } catch (AipsError x) {
-    cout << "Caught an exception: " << x.getMesg() << endl;
+  } catch (AipsError& x) {
+    cerr << "Caught an exception: " << x.getMesg() << endl;
     return 1;
   } 
   Timer timer;

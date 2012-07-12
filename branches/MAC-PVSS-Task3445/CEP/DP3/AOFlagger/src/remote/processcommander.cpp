@@ -68,6 +68,14 @@ void ProcessCommander::Run(bool finishConnections)
 		// make a list of the involved nodes
 		_nodeCommands.Initialize(_observation);
 		
+		// recycle idle connections
+		ConnectionVector list = _idleConnections;
+		_idleConnections.clear();
+		for(ConnectionVector::iterator i=list.begin();i!=list.end();++i)
+		{
+			onConnectionAwaitingCommand(*i);
+		}
+		
 		if(_processes.empty())
 		{
 			//construct a process for each unique node name
@@ -198,6 +206,8 @@ void ProcessCommander::onConnectionAwaitingCommand(ServerConnectionPtr serverCon
 		case NoTask:
 			handleIdleConnection(serverConnection);
 			break;
+		default:
+			throw std::runtime_error("Unknown task");
 	}
 }
 
@@ -236,9 +246,10 @@ void ProcessCommander::onConnectionFinishReadQualityTables(ServerConnectionPtr s
 	delete &histogramCollection;
 }
 
-void ProcessCommander::onConnectionFinishReadAntennaTables(ServerConnectionPtr serverConnection, boost::shared_ptr<std::vector<AntennaInfo> > antennas)
+void ProcessCommander::onConnectionFinishReadAntennaTables(ServerConnectionPtr serverConnection, boost::shared_ptr<std::vector<AntennaInfo> > antennas, size_t polarizationCount)
 {
 	boost::mutex::scoped_lock lock(_mutex);
+	_polarizationCount = polarizationCount;
 	_antennas = *antennas;
 }
 
