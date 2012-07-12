@@ -35,6 +35,7 @@ lofar_add_test(tTimeAxis tTimeAxis.cc)
 lofar_add_test(tparmdb DEPENDS parmdbm)
 lofar_add_test(tparmexportcal DEPENDS parmexportcal)
 lofar_add_test(tmakesourcedb DEPENDS makesourcedb parmdbm)
+lofar_add_test(tSourceDBBlob tSourceDBBlob.cc)
 lofar_add_test(tsetupparmdb)
 lofar_add_test(tsetupsourcedb)
 

@@ -95,7 +95,7 @@
 // A patch is defined by having an empty source name, otherwise it is a source.
 // Thus an empty source name and empty patch name is invalid.
 //
-// Currently only 2 source types are supported (Point and Gaussian).
+// Currently 3 source types are supported (Point, Gaussian, and Shapelet).
 //
 // Ra can be specified in various forms.
 // If it is a single value, it must be in the Casacore MVAngle format which is:
@@ -107,9 +107,13 @@
 // Therefore some extra format fields exist which are Rah, Ram, and Ras.
 // They define the hh, mm, and ss parts. Instead of Rah one can use Rad which
 // defines it as degrees instead of hours.
-// The same is true for Dec (which extra fields Dech, Decd, Decm, and Decs).
+// <br>The same is true for Dec (which extra fields Dech, Decd, Decm, and Decs).
 // Please note that in a value like '-10 23 45.6' the mm and ss parts are
 // also treated negative, thus it is handled as -10:23:45.6
+//
+// It is possible to specify a reference type string for the source position.
+// If such a column is not given, it defaults to J2000. The reference type
+// given must be a valid casacore measures type (which is case-insensitive).
 
 // See the various test/tmakesourcdb files for an example.
 
@@ -140,7 +144,8 @@ Exception::TerminateHandler t(Exception::terminate);
 // Define the sequence nrs of the various fields.
 enum FieldNr {
   // First the standard fields.
-  NameNr, TypeNr, RaNr, DecNr, INr, QNr, UNr, VNr, SpInxNr, RefFreqNr,
+  NameNr, TypeNr, RefTypeNr, RaNr, DecNr,
+  INr, QNr, UNr, VNr, SpInxNr, RefFreqNr,
   MajorNr, MinorNr, OrientNr, RotMeasNr, PolFracNr, PolAngNr, RefWavelNr,
   IShapeletNr, QShapeletNr, UShapeletNr, VShapeletNr,
   NrKnownFields,
@@ -159,6 +164,7 @@ vector<string> fillKnown()
   names.reserve (NrFields);
   names.push_back ("Name");
   names.push_back ("Type");
+  names.push_back ("RefType");
   names.push_back ("Ra");
   names.push_back ("Dec");
   names.push_back ("I");
@@ -416,6 +422,7 @@ SdbFormat getFormat (const string& format)
         fieldType = KNOWNFIELD;
       }
     }
+    sdbf.sep.push_back (' ');
     sdbf.names.push_back (name);
     sdbf.types.push_back (fieldType);
     sdbf.values.push_back ("");
@@ -437,16 +444,6 @@ SourceInfo::Type string2type (const string& str)
     return SourceInfo::DISK;
   } else if (s == "shapelet") {
     return SourceInfo::SHAPELET;
-  } else if (s == "sun") {
-    return SourceInfo::SUN;
-  } else if (s == "moon") {
-    return SourceInfo::MOON;
-  } else if (s == "jupiter") {
-    return SourceInfo::JUPITER;
-  } else if (s == "mars") {
-    return SourceInfo::MARS;
-  } else if (s == "venus") {
-    return SourceInfo::VENUS;
   }
   ASSERTSTR (false, str << " is an invalid source type");
 }
@@ -600,6 +597,17 @@ double string2pos (const vector<string>& values, int pnr, int hnr, int dnr,
     return q.getValue ("rad");
   }
   return 1e-9;
+}
+
+void checkRefType (const string& refType)
+{
+  string type = toUpper(refType);
+  if (type != "J2000"   &&  type != "B1950"    &&
+      type != "SUN"     &&  type != "MOON"     &&  type != "VENUS"   &&
+      type != "MARS"    &&  type != "JUPITER"  &&  type != "SATURN"  &&
+      type != "URANUS"  &&  type != "NEPTUNE"  &&  type != "MERCURY") {
+    THROW (Exception, "Reference type " + refType + " is incorrect");
+  }
 }
 
 struct SearchInfo
@@ -835,6 +843,11 @@ void process (const string& line, SourceDB& pdb, const SdbFormat& sdbf,
   }
   // Now handle the standard fields.
   string srcName = getValue(values, sdbf.fieldNrs[NameNr]);
+  string refType = getValue(values, sdbf.fieldNrs[RefTypeNr], "J2000");
+  if (refType.empty()) {
+    refType = "J2000";
+  }
+  checkRefType (refType);
   SourceInfo::Type srctype = string2type (getValue(values,
                                                    sdbf.fieldNrs[TypeNr]));
   double ra = string2pos (values, sdbf.fieldNrs[RaNr],
@@ -895,9 +908,11 @@ void process (const string& line, SourceDB& pdb, const SdbFormat& sdbf,
                  "specified if RotationMeasure is specified");
       useRM = true;
       rmRefWavel = string2real (refWavel, 0);
+      ASSERTSTR (rmRefWavel == 0, "PolarizationAngle/PolarizedFraction can "
+                 "only be given for ReferenceWavelength=0");
     }
   }               
-  SourceInfo srcInfo(srcName, srctype, spinx.size(), refFreq, useRM);
+  SourceInfo srcInfo(srcName, srctype, refType, spinx.size(), refFreq, useRM);
   if (srctype == SourceInfo::SHAPELET) {
     fillShapelet (srcInfo, shapeletI, shapeletQ, shapeletU, shapeletV);
   }
@@ -959,14 +974,14 @@ void process (const string& line, SourceDB& pdb, const SdbFormat& sdbf,
   }
 }
 
-void make (const string& in, const string& out,
+void make (const string& in, const string& out, const string& outType,
            const string& format, bool append, bool check,
            const SearchInfo& searchInfo)
 {
   // Analyze the format string.
   SdbFormat sdbf = getFormat (format);
   // Create/open the sourcedb and lock it for write.
-  ParmDBMeta ptm("casa", out);
+  ParmDBMeta ptm(outType, out);
   SourceDB pdb(ptm, !append);
   pdb.lock (true);
   int nrpatch     = 0;
@@ -1075,11 +1090,13 @@ int main (int argc, char* argv[])
   try {
     // Get the inputs.
     Input inputs(1);
-    inputs.version ("GvD 2011-Feb-17");
+    inputs.version ("GvD 2012-Jul-10");
     inputs.create("in", "",
                   "Input file name", "string");
     inputs.create("out", "",
                   "Output sourcedb name", "string");
+    inputs.create ("outtype", "casa",
+                   "Output type (casa or blob)", "string");
     inputs.create("format", "",
                   "Format of the input lines or name of file containing format",
                   "string");
@@ -1105,6 +1122,7 @@ int main (int argc, char* argv[])
     string in = inputs.getString("in");
     string out = inputs.getString("out");
     ASSERTSTR (!out.empty(), "no output sourcedb name given");
+    string outType = inputs.getString("outtype");
     string format = inputs.getString("format");
     bool append = inputs.getBool("append");
     bool check  = inputs.getBool("check");
@@ -1129,7 +1147,7 @@ int main (int argc, char* argv[])
       cerr << "No format string found; using default format" << endl;
       format = "Name,Type,Ra,Dec,I,Q,U,V,MajorAxis,MinorAxis,Orientation";
     }
-    make (in, out, format, append, check,
+    make (in, out, outType, format, append, check,
           getSearchInfo (center, radius, width));
   } catch (Exception& x) {
     cerr << "Caught LOFAR exception: " << x << endl;

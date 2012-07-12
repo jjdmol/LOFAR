@@ -33,7 +33,7 @@ cat tmakesourcedb_tmp.stdout
 
 echo ""
 echo "test 2 ..."
-../src/makesourcedb in=tmakesourcedb.in out=tmakesourcedb_tmp.sdb append=0 format="category=fixed'1',Name,Type,Ra,Dec,I,Q,U,V,SpectralIndex='0.5',ReferenceFrequency='1e9',MajorAxis,MinorAxis,Orientation" | grep -v ' Version '
+../src/makesourcedb in=tmakesourcedb.in out=tmakesourcedb_tmp.sdb append=0 format="category=fixed'1',Name,Type,RefType,Ra,Dec,I,Q,U,V,SpectralIndex='0.5',ReferenceFrequency='1e9',MajorAxis,MinorAxis,Orientation" | grep -v ' Version '
 ../src/parmdbm tmakesourcedb_tmp.stdout > /dev/null <<EOF
 open tablename='tmakesourcedb_tmp.sdb'
 showdef
@@ -70,7 +70,7 @@ for name in ["tmakesourcedb_tmp.sdb/SOURCES","tmakesourcedb_tmp.sdb1/SOURCES"]:
 
   t=table(name)
   print "source nrow =",t.nrows()
-  for col in ["SOURCENAME", "PATCHID", "SOURCETYPE",
+  for col in ["SOURCENAME", "PATCHID", "SOURCETYPE", "REFTYPE",
               "SPINX_NTERMS", "SPINX_REFFREQ",
               "ROTMEAS_TYPE", "ROTMEAS_REFWAVEL",
               "SHAPELET_ISCALE","SHAPELET_QSCALE",
