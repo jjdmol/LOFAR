@@ -35,7 +35,10 @@
 #include <Common/Thread/Queue.h>
 #include <Common/Thread/Thread.h>
 #include <PLCClient.h>
+
+#ifdef HAVE_LIBSSH2
 #include <SSH.h>
+#endif
 
 #include <sys/time.h>
 
