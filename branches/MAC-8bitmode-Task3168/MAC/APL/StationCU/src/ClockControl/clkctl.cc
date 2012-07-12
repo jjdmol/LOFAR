@@ -71,7 +71,7 @@ GCFEvent::TResult ClkCtl::doCommand(GCFEvent&	event, GCFPortInterface&	port)
 	
 	case CLKCTRL_GET_CLOCK_ACK: {
 		CLKCTRLGetClockAckEvent	ack(event);
-		cout << "Clock is set to " << ack.clock << "MHz" << endl;
+		cout << "Clock is set to " << ack.clock << " MHz" << endl;
 		GCFScheduler::instance()->stop();
 	}
 	break;
@@ -85,7 +85,7 @@ GCFEvent::TResult ClkCtl::doCommand(GCFEvent&	event, GCFPortInterface&	port)
 	
 	case CLKCTRL_GET_BITMODE_ACK: {
 		CLKCTRLGetBitmodeAckEvent	ack(event);
-		cout << "Bitmode is set to " << ack.bits_per_sample << "bit" << endl;
+		cout << "Bitmode is set to " << ack.bits_per_sample << " bit" << endl;
 		GCFScheduler::instance()->stop();
 	}
 	break;
