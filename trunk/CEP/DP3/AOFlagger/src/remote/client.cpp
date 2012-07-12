@@ -211,7 +211,9 @@ void Client::handleReadAntennaTables(unsigned dataSize)
 		
 		// Serialize the antennae info
 		MeasurementSet ms(options.msFilename);
+		size_t polarizationCount = ms.GetPolarizationCount();
 		size_t antennas = ms.AntennaCount();
+		Serializable::SerializeToUInt32(buffer, polarizationCount);
 		Serializable::SerializeToUInt32(buffer, antennas);
 		for(unsigned aIndex = 0; aIndex<antennas; ++aIndex)
 		{
@@ -255,26 +257,52 @@ void Client::handleReadDataRows(unsigned dataSize)
 		ReadDataRowsRequestOptions options;
 		boost::asio::read(_socket, boost::asio::buffer(&options.flags, sizeof(options.flags)));
 		
-		unsigned nameLength = dataSize - sizeof(options.flags);
+		unsigned nameLength = dataSize - sizeof(options.flags) - sizeof(options.startRow) - sizeof(options.rowCount);
 		options.msFilename = readStr(nameLength);
 		
 		boost::asio::read(_socket, boost::asio::buffer(&options.startRow, sizeof(options.startRow)));
 		boost::asio::read(_socket, boost::asio::buffer(&options.rowCount, sizeof(options.rowCount)));
 		
-		casa::Table table(options.msFilename);
-		casa::ROTableColumn dataCol(table, "DATA");
-		
 		std::ostringstream buffer;
+		Serializable::SerializeToUInt64(buffer, options.rowCount);
 		
-		// Serialize the band info
-		MeasurementSet ms(options.msFilename);
-		if(ms.BandCount() != 1)
-			throw std::runtime_error("The number of bands in the measurement set was not 1");
-		BandInfo band = ms.GetBandInfo(0);
-		band.Serialize(buffer);
+		// Read meta data from the MS
+		casa::Table table(options.msFilename);
+		casa::ROArrayColumn<casa::Complex> dataCol(table, "DATA");
+		const casa::IPosition &shape = dataCol.shape(0);
+		size_t channelCount, polarizationCount;
+		if(shape.nelements() > 1)
+		{
+			channelCount = shape[1];
+			polarizationCount = shape[0];
+		}
+		else
+			throw std::runtime_error("Unknown shape of DATA column");
+		const size_t samplesPerRow = polarizationCount * channelCount;
+		
+		// Read and serialize the rows
+		for(size_t rowIndex=0; rowIndex != options.rowCount; ++rowIndex)
+		{
+			const casa::Array<casa::Complex> cellData = dataCol(rowIndex);
+			casa::Array<casa::Complex>::const_iterator cellIter = cellData.begin();
+			
+			MSRowDataExt dataExt(polarizationCount, channelCount);
+			MSRowData &data = dataExt.Data();
+			num_t *realPtr = data.RealPtr();
+			num_t *imagPtr = data.ImagPtr();
+			for(size_t i=0;i<samplesPerRow;++i) {
+				*realPtr = cellIter->real();
+				*imagPtr = cellIter->imag();
+				++realPtr;
+				++imagPtr;
+				++cellIter;
+			}
+			dataExt.Serialize(buffer);
+		}
 		
 		writeDataResponse(buffer);
 	} catch(std::exception &e) {
+		throw;
 		writeGenericReadException(e);
 	}
 }

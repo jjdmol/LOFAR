@@ -50,6 +50,7 @@ class ProcessCommander
 		static std::string GetHostName();
 		const StatisticsCollection &Statistics() const { return *_statisticsCollection; }
 		const HistogramCollection &Histograms() const { return *_histogramCollection; }
+		size_t PolarizationCount() const { return _polarizationCount; }
 		const std::vector<AntennaInfo> &Antennas() const { return _antennas; }
 		const std::vector<BandInfo> &Bands() const { return _bands; }
 		const ObservationTimerange &ObsTimerange() const { return *_observationTimerange; }
@@ -80,6 +81,8 @@ class ProcessCommander
 			_tasks.push_back(ReadDataRowsTask);
 			_observationTimerange = &timerange;
 			_rowBuffer = rowBuffer;
+			_rowStart = rowStart;
+			_rowCount = rowCount;
 		}
 	private:
 		enum Task {
@@ -99,7 +102,7 @@ class ProcessCommander
 		void onConnectionCreated(ServerConnectionPtr serverConnection, bool &acceptConnection);
 		void onConnectionAwaitingCommand(ServerConnectionPtr serverConnection);
 		void onConnectionFinishReadQualityTables(ServerConnectionPtr serverConnection, StatisticsCollection &statisticsCollection, HistogramCollection &histogramCollection);
-		void onConnectionFinishReadAntennaTables(ServerConnectionPtr serverConnection, boost::shared_ptr<std::vector<AntennaInfo> > antennas);
+		void onConnectionFinishReadAntennaTables(ServerConnectionPtr serverConnection, boost::shared_ptr<std::vector<AntennaInfo> > antennas, size_t polarizationCount);
 		void onConnectionFinishReadBandTable(ServerConnectionPtr serverConnection, BandInfo &band);
 		void onConnectionFinishReadDataRows(ServerConnectionPtr serverConnection, MSRowDataExt *rowData);
 		void onError(ServerConnectionPtr connection, const std::string &error);
@@ -113,6 +116,7 @@ class ProcessCommander
 		StatisticsCollection *_statisticsCollection;
 		HistogramCollection *_histogramCollection;
 		bool _correctHistograms;
+		size_t _polarizationCount;
 		std::vector<AntennaInfo> _antennas;
 		std::vector<BandInfo> _bands;
 		class ObservationTimerange *_observationTimerange;
