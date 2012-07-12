@@ -92,7 +92,7 @@ class ObservationTimerange
 					const double
 						endFirst = i->second.endFrequency,
 						beginSecond = nextPtr->first;
-					if(endFirst <= beginSecond)
+					if(endFirst >= beginSecond)
 						throw std::runtime_error("Observation has measurement sets whose bands overlap in frequency");
 					++nextPtr;
 				}

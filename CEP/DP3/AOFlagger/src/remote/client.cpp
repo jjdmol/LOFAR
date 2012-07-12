@@ -268,41 +268,44 @@ void Client::handleReadDataRows(unsigned dataSize)
 		
 		// Read meta data from the MS
 		casa::Table table(options.msFilename);
-		casa::ROArrayColumn<casa::Complex> dataCol(table, "DATA");
-		const casa::IPosition &shape = dataCol.shape(0);
-		size_t channelCount, polarizationCount;
-		if(shape.nelements() > 1)
-		{
-			channelCount = shape[1];
-			polarizationCount = shape[0];
-		}
-		else
-			throw std::runtime_error("Unknown shape of DATA column");
-		const size_t samplesPerRow = polarizationCount * channelCount;
-		
-		// Read and serialize the rows
-		for(size_t rowIndex=0; rowIndex != options.rowCount; ++rowIndex)
-		{
-			const casa::Array<casa::Complex> cellData = dataCol(rowIndex);
-			casa::Array<casa::Complex>::const_iterator cellIter = cellData.begin();
-			
-			MSRowDataExt dataExt(polarizationCount, channelCount);
-			MSRowData &data = dataExt.Data();
-			num_t *realPtr = data.RealPtr();
-			num_t *imagPtr = data.ImagPtr();
-			for(size_t i=0;i<samplesPerRow;++i) {
-				*realPtr = cellIter->real();
-				*imagPtr = cellIter->imag();
-				++realPtr;
-				++imagPtr;
-				++cellIter;
+		if(options.rowCount == 0)
+			Serializable::SerializeToUInt64(buffer, table.nrow());
+		else {
+			casa::ROArrayColumn<casa::Complex> dataCol(table, "DATA");
+			const casa::IPosition &shape = dataCol.shape(0);
+			size_t channelCount, polarizationCount;
+			if(shape.nelements() > 1)
+			{
+				channelCount = shape[1];
+				polarizationCount = shape[0];
 			}
-			dataExt.Serialize(buffer);
+			else
+				throw std::runtime_error("Unknown shape of DATA column");
+			const size_t samplesPerRow = polarizationCount * channelCount;
+			
+			// Read and serialize the rows
+			for(size_t rowIndex=0; rowIndex != options.rowCount; ++rowIndex)
+			{
+				const casa::Array<casa::Complex> cellData = dataCol(rowIndex);
+				casa::Array<casa::Complex>::const_iterator cellIter = cellData.begin();
+				
+				MSRowDataExt dataExt(polarizationCount, channelCount);
+				MSRowData &data = dataExt.Data();
+				num_t *realPtr = data.RealPtr();
+				num_t *imagPtr = data.ImagPtr();
+				for(size_t i=0;i<samplesPerRow;++i) {
+					*realPtr = cellIter->real();
+					*imagPtr = cellIter->imag();
+					++realPtr;
+					++imagPtr;
+					++cellIter;
+				}
+				dataExt.Serialize(buffer);
+			}
 		}
 		
 		writeDataResponse(buffer);
 	} catch(std::exception &e) {
-		throw;
 		writeGenericReadException(e);
 	}
 }

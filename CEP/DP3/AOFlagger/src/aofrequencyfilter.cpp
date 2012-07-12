@@ -33,9 +33,12 @@ int main(int argc, char *argv[])
 		MSRowDataExt *rowBuffer[obs->Size()];
 		for(size_t i=0;i<obs->Size();++i)
 			rowBuffer[i] = new MSRowDataExt[timestepCount];
-		commander.PushReadDataRowsTask(timerange, 0, timestepCount, rowBuffer);
+		// We ask for "0" rows, which means we will ask for the total number of rows
+		commander.PushReadDataRowsTask(timerange, 0, 0, rowBuffer);
 		commander.Run(false);
 		commander.CheckErrors();
+		const size_t totalRows = commander.RowsTotal();
+		cout << "Total rows to filter: " << totalRows << '\n';
 		
 		for(size_t i=0;i<obs->Size();++i)
 			delete[] rowBuffer[i];

@@ -359,11 +359,14 @@ void ServerConnection::onReceiveDataRowsResponseData(size_t dataSize)
 	if(stream.rdbuf()->pubsetbuf(_buffer, dataSize) == 0)
 		throw std::runtime_error("Could not set string buffer");
 	
-	size_t count = Serializable::UnserializeUInt64(stream);
-	for(size_t i=0;i<count;++i)
+	size_t rowsSent = Serializable::UnserializeUInt64(stream);
+	size_t rowsTotal = 0;
+	if(rowsSent == 0)
+		rowsTotal = Serializable::UnserializeUInt64(stream);
+	for(size_t i=0;i<rowsSent;++i)
 		_rowData[i].Unserialize(stream);
 
-	_onFinishReadDataRows(shared_from_this(), _rowData);
+	_onFinishReadDataRows(shared_from_this(), _rowData, rowsTotal);
 	_onAwaitingCommand(shared_from_this());
 }
 
