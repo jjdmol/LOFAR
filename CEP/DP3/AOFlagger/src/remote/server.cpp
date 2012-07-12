@@ -40,6 +40,7 @@ void Server::Run()
 {
 	startAccept();
 	_ioService.run();
+	_ioService.reset();
 }
 
 void Server::startAccept()
@@ -69,7 +70,7 @@ void Server::handleAccept(ServerConnectionPtr connection, const boost::system::e
 void Server::Stop()
 {
 	if(_acceptor.is_open())
-		std::cout << "Stopping server." << std::endl;
+		std::cout << "No longer accepting connections." << std::endl;
 	_acceptor.close();
 }
 

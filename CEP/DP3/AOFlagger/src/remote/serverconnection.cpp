@@ -194,11 +194,13 @@ void ServerConnection::ReadDataRows(const std::string &msFilename, size_t rowSta
 	
 	options.flags = 0;
 	options.msFilename = msFilename;
+	options.startRow = rowStart;
+	options.rowCount = rowCount;
 	
 	reqBuffer.write(reinterpret_cast<char *>(&options.flags), sizeof(options.flags));
 	reqBuffer.write(reinterpret_cast<const char *>(options.msFilename.c_str()), options.msFilename.size());
-	reqBuffer.write(reinterpret_cast<const char *>(options.startRow), sizeof(options.startRow));
-	reqBuffer.write(reinterpret_cast<const char *>(options.rowCount), sizeof(options.rowCount));
+	reqBuffer.write(reinterpret_cast<const char *>(&options.startRow), sizeof(options.startRow));
+	reqBuffer.write(reinterpret_cast<const char *>(&options.rowCount), sizeof(options.rowCount));
 	
 	boost::asio::write(_socket, boost::asio::buffer(reqBuffer.str()));
 	
@@ -262,7 +264,6 @@ void ServerConnection::onReceiveQualityTablesResponseData(size_t dataSize)
 
 void ServerConnection::onReceiveAntennaTablesResponseHeader()
 {
-	std::cout << "Receiving antenna tables...\n";
 	GenericReadResponseHeader responseHeader = *reinterpret_cast<GenericReadResponseHeader*>(_buffer);
 	if(responseHeader.blockIdentifier != GenericReadResponseHeaderId || responseHeader.blockSize != sizeof(responseHeader))
 	{
@@ -283,7 +284,6 @@ void ServerConnection::onReceiveAntennaTablesResponseHeader()
 
 void ServerConnection::onReceiveBandTableResponseHeader()
 {
-	std::cout << "Receiving band table...\n";
 	GenericReadResponseHeader responseHeader = *reinterpret_cast<GenericReadResponseHeader*>(_buffer);
 	if(responseHeader.blockIdentifier != GenericReadResponseHeaderId || responseHeader.blockSize != sizeof(responseHeader))
 	{
@@ -308,7 +308,8 @@ void ServerConnection::onReceiveAntennaTablesResponseData(size_t dataSize)
 	if(stream.rdbuf()->pubsetbuf(_buffer, dataSize) == 0)
 		throw std::runtime_error("Could not set string buffer");
 	
-	std::cout << "Received antenna tablestd::vector<AntennaInfo> of size " << dataSize << "." << std::endl;
+	std::cout << "Received antenna table of size " << dataSize << "." << std::endl;
+	size_t polarizationCount = Serializable::UnserializeUInt32(stream);
 	size_t count = Serializable::UnserializeUInt32(stream);
 	for(size_t i=0;i<count;++i)
 	{
@@ -316,7 +317,7 @@ void ServerConnection::onReceiveAntennaTablesResponseData(size_t dataSize)
 		_antennas->rbegin()->Unserialize(stream);
 	}
 
-	_onFinishReadAntennaTables(shared_from_this(), _antennas);
+	_onFinishReadAntennaTables(shared_from_this(), _antennas, polarizationCount);
 	_onAwaitingCommand(shared_from_this());
 }
 
@@ -326,7 +327,6 @@ void ServerConnection::onReceiveBandTableResponseData(size_t dataSize)
 	if(stream.rdbuf()->pubsetbuf(_buffer, dataSize) == 0)
 		throw std::runtime_error("Could not set string buffer");
 	
-	std::cout << "Received band table of size " << dataSize << "." << std::endl;
 	_band->Unserialize(stream);
 
 	_onFinishReadBandTable(shared_from_this(), *_band);
@@ -359,8 +359,7 @@ void ServerConnection::onReceiveDataRowsResponseData(size_t dataSize)
 	if(stream.rdbuf()->pubsetbuf(_buffer, dataSize) == 0)
 		throw std::runtime_error("Could not set string buffer");
 	
-	size_t count = Serializable::UnserializeUInt32(stream);
-	std::cout << "Receiving " << count << " rows of total size " << dataSize << "." << std::endl;
+	size_t count = Serializable::UnserializeUInt64(stream);
 	for(size_t i=0;i<count;++i)
 		_rowData[i].Unserialize(stream);
 

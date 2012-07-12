@@ -16,6 +16,7 @@ int main(int argc, char *argv[])
 	else {
 		ClusteredObservation *obs = ClusteredObservation::Load(argv[1]);
 		ProcessCommander commander(*obs);
+		commander.PushReadAntennaTablesTask();
 		commander.PushReadBandTablesTask();
 		commander.Run(false);
 		commander.CheckErrors();
@@ -26,9 +27,9 @@ int main(int argc, char *argv[])
 			timerange.SetBandInfo(i, bands[i]);
 		
 		unsigned polarizationCount = 4;
-		timerange.InitializeChannels(polarizationCount);
-		
 		size_t timestepCount = 128;
+		
+		timerange.Initialize(polarizationCount, timestepCount);
 		MSRowDataExt *rowBuffer[obs->Size()];
 		for(size_t i=0;i<obs->Size();++i)
 			rowBuffer[i] = new MSRowDataExt[timestepCount];
@@ -36,6 +37,8 @@ int main(int argc, char *argv[])
 		commander.Run(false);
 		commander.CheckErrors();
 		
+		for(size_t i=0;i<obs->Size();++i)
+			delete[] rowBuffer[i];
 		delete obs;
 	}
 }

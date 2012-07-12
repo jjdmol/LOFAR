@@ -59,11 +59,13 @@ class ObservationTimerange
 			_bands[nodeIndex] = bandInfo;
 		}
 		
-		void InitializeChannels(size_t polarizationCount)
+		void Initialize(size_t polarizationCount, size_t timestepCount)
 		{
 			deallocate();
 			
 			_polarizationCount = polarizationCount;
+			_timestepCount = timestepCount;
+			
 			std::map<double, BandRangeInfo > ranges;
 			
 			if(_bands.empty())
@@ -116,6 +118,7 @@ class ObservationTimerange
 					throw std::runtime_error("Channels were not ordered correctly in one of the sets");
 			}
 			double gridDistance = *std::min_element(distances.begin(), distances.end());
+			std::cout << "Frequency resolution: " << gridDistance << "\n";
 			
 			// Create band start index lookup table
 			size_t channelCount = 0;
@@ -125,6 +128,7 @@ class ObservationTimerange
 				_bandStartLookup[nodeIndex] = channelCount;
 				channelCount += _bands[nodeIndex].channels.size();
 			}
+			std::cout << "Channel count: " << channelCount << "\n";
 			
 			// Create grid
 			_gridIndexLookup.resize(channelCount);
@@ -140,7 +144,8 @@ class ObservationTimerange
 				_gridIndexLookup[lookupIndex] = gridIndex;
 				++lookupIndex;
 			}
-			_gridFrequencySize = gridIndex;
+			_gridFrequencySize = gridIndex+1;
+			std::cout << "Grid points: " << _gridFrequencySize << "\n";
 			
 			// Allocate memory
 			_realData = new num_t*[_polarizationCount];
@@ -170,11 +175,10 @@ class ObservationTimerange
 					const num_t *realPtr = row.RealPtr(c);
 					const num_t *imagPtr = row.ImagPtr(c);
 					const size_t gridStart = r * _gridFrequencySize;
-					
 					for(size_t p=0;p<_polarizationCount;++p)
 					{
-						_realData[gridIndex + gridStart][p] = realPtr[p];
-						_imagData[gridIndex + gridStart][p] = imagPtr[p];
+						_realData[p][gridIndex + gridStart] = realPtr[p];
+						_imagData[p][gridIndex + gridStart] = imagPtr[p];
 					}
 				}
 			}
