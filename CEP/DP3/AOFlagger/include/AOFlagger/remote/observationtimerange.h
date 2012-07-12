@@ -47,7 +47,8 @@ class ObservationTimerange
 			_startFrequency(0.0),
 			_frequencyWidth(0.0),
 			_realData(0), _imagData(0),
-			_u(0), _v(0), _w(0)
+			_u(0), _v(0), _w(0),
+			_antenna1(0), _antenna2(0)
 		{
 		}
 		
@@ -67,6 +68,8 @@ class ObservationTimerange
 			memcpy(_u, source._u, sizeof(double) * _timestepCount);
 			memcpy(_v, source._v, sizeof(double) * _timestepCount);
 			memcpy(_w, source._w, sizeof(double) * _timestepCount);
+			memcpy(_antenna1, source._antenna1, sizeof(unsigned) * _timestepCount);
+			memcpy(_antenna2, source._antenna2, sizeof(unsigned) * _timestepCount);
 		}
 		
 		~ObservationTimerange()
@@ -187,7 +190,8 @@ class ObservationTimerange
 			const unsigned pCount = _polarizationCount;
 			for(size_t r=0;r<rowCount;++r)
 			{
-				const MSRowData &row = rows[r].Data();
+				const MSRowDataExt &rowExt = rows[r];
+				const MSRowData &row = rowExt.Data();
 				const num_t *realPtr = row.RealPtr();
 				const num_t *imagPtr = row.ImagPtr();
 				std::vector<size_t>::const_iterator gridPtr = _gridIndexLookup.begin()+bandStart;
@@ -205,6 +209,12 @@ class ObservationTimerange
 					}
 					++gridPtr;
 				}
+				
+				_u[r] = rowExt.U();
+				_v[r] = rowExt.V();
+				_w[r] = rowExt.W();
+				_antenna1[r] = rowExt.Antenna1();
+				_antenna2[r] = rowExt.Antenna2();
 			}
 		}
 		
@@ -218,6 +228,8 @@ class ObservationTimerange
 		double U(size_t timestep) const { return _u[timestep]; }
 		double V(size_t timestep) const { return _u[timestep]; }
 		double W(size_t timestep) const { return _u[timestep]; }
+		unsigned Antenna1(size_t timestep) const { return _antenna1[timestep]; }
+		unsigned Antenna2(size_t timestep) const { return _antenna2[timestep]; }
 	private:
 		struct BandRangeInfo { double endFrequency; size_t nodeIndex; };
 		ClusteredObservation &_observation;
@@ -233,6 +245,7 @@ class ObservationTimerange
 		num_t *_realData;
 		num_t *_imagData;
 		double *_u, *_v, *_w;
+		unsigned *_antenna1, *_antenna2;
 		
 		void allocate()
 		{
@@ -242,6 +255,8 @@ class ObservationTimerange
 			_u = new double[_timestepCount];
 			_v = new double[_timestepCount];
 			_w = new double[_timestepCount];
+			_antenna1 = new unsigned[_timestepCount];
+			_antenna2 = new unsigned[_timestepCount];
 		}
 		
 		void deallocate()
@@ -250,6 +265,8 @@ class ObservationTimerange
 			delete[] _u;
 			delete[] _v;
 			delete[] _w;
+			delete[] _antenna1;
+			delete[] _antenna2;
 		}
 };
 	

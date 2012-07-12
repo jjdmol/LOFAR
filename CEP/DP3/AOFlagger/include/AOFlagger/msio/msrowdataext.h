@@ -45,7 +45,14 @@ class MSRowDataExt : public Serializable
 		double U() const { return _u; }
 		double V() const { return _v; }
 		double W() const { return _w; }
-		double Timestep() const { return _timestep; }
+		double Time() const { return _time; }
+		
+		void SetU(double u) { _u = u; }
+		void SetV(double v) { _v = v; }
+		void SetW(double w) { _w = w; }
+		void SetAntenna1(double antenna1) { _antenna1 = antenna1; }
+		void SetAntenna2(double antenna2) { _antenna1 = antenna2; }
+		void SetTime(double time) { _time = time; }
 		
 		virtual void Serialize(std::ostream &stream) const
 		{
@@ -55,7 +62,7 @@ class MSRowDataExt : public Serializable
 			SerializeToDouble(stream, _u);
 			SerializeToDouble(stream, _v);
 			SerializeToDouble(stream, _w);
-			SerializeToDouble(stream, _timestep);
+			SerializeToDouble(stream, _time);
 		}
 		
 		virtual void Unserialize(std::istream &stream)
@@ -66,13 +73,13 @@ class MSRowDataExt : public Serializable
 			_u = UnserializeDouble(stream);
 			_v = UnserializeDouble(stream);
 			_w = UnserializeDouble(stream);
-			_timestep = UnserializeDouble(stream);
+			_time = UnserializeDouble(stream);
 		}
 	private:
 		MSRowData _data;
 		unsigned _antenna1, _antenna2;
 		double _u, _v, _w;
-		double _timestep;
+		double _time;
 };
 
 #endif
