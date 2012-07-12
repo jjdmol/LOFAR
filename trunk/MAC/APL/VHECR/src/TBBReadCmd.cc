@@ -60,10 +60,10 @@ TBBReadCmd::TBBReadCmd() :
 TBBReadCmd& TBBReadCmd::operator=(const TBBReadCmd& that)
 {
 	if (this != &that) { 
-		this->itsRcuNr 	   = that.itsRcuNr; 
-		this->itsTime 	   = that.itsTime; 
+		this->itsRcuNr 	    = that.itsRcuNr; 
+		this->itsTime 	    = that.itsTime; 
 		this->itsSampleNr   = that.itsSampleNr; 
-		this->itsPrePages  = that.itsPrePages; 
+		this->itsPrePages   = that.itsPrePages; 
 		this->itsPostPages  = that.itsPostPages;
 	} 
 
@@ -75,10 +75,10 @@ TBBReadCmd& TBBReadCmd::operator=(const TBBReadCmd& that)
 //#
 ostream& TBBReadCmd::print(ostream&	os) const
 {
-	os << "RCUnr     : " << itsRcuNr << endl;
-	os << "Time      : " << to_simple_string(from_time_t(itsTime)) << endl;
+	os << "RCUnr      : " << itsRcuNr << endl;
+	os << "Time       : " << to_simple_string(from_time_t(itsTime)) << endl;
 	os << "SampleNr   : " << itsSampleNr << endl;
-	os << "Pre pages : " << itsPrePages << endl;
+	os << "Pre pages  : " << itsPrePages << endl;
 	os << "Post pages : " << itsPostPages << endl;
 	return (os);
 }

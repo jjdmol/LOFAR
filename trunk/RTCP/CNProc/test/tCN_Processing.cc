@@ -264,7 +264,7 @@ template <typename SAMPLE_TYPE> void doWork()
     for(unsigned ch = 0; ch < nrChannels; ch++) {
       if (filteredData.flags[stat][ch].count() != 0)
 	std::cout << "flags of station " << stat << " channel " << ch << ": " << filteredData.flags[stat][ch] << std::endl;
-  }
+    }
   }
 
   beamFormer.mergeStations(&filteredData);

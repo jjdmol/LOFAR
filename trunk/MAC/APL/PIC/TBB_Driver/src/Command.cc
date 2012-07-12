@@ -212,7 +212,7 @@ void Command::nextChannelNr()
 	    itsChannel++;
 		if (itsChannel == TS->maxChannels()) { break; }
 		itsBoard = TS->getChBoardNr(itsChannel);
-		if (itsChannels.test(itsChannel)  && (itsStatus[itsBoard] == TBB_SUCCESS)) {
+		if (itsChannels.test(itsChannel) && (itsStatus[itsBoard] == TBB_SUCCESS)) {
 			LOG_DEBUG_STR(formatString("nextChannelNr() = %d",itsChannel));
 			return;
 		}

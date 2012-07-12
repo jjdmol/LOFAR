@@ -83,7 +83,7 @@ unsigned int GCFPVBlob::packConcrete(char* valBuf) const
 		memcpy(valBuf + sizeof(_length), (void *) itsBuffer.data(), _length); // packs the blob data
 	}
 	else {
-	memcpy(valBuf + sizeof(_length), (void *) _value, _length); // packs the blob data
+		memcpy(valBuf + sizeof(_length), (void *) _value, _length); // packs the blob data
 	}
 	packedBytes += sizeof(_length) + _length;
 

@@ -111,7 +111,7 @@ private:
 	bool SetTbbCommand(unsigned short signal);
 	void requestClockSubscription();
 	void cancelClockSubscription();
-	
+	    
 	TbbSettings *TS;
 	
 	// define some variables

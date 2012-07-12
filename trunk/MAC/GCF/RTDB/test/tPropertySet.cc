@@ -428,8 +428,8 @@ GCFEvent::TResult tPropertySet::WriteDelayTest(GCFEvent& e, GCFPortInterface& /*
 			gTestPassed = false;
 			LOG_DEBUG_STR("Calling flush");
 			itsPropSet->flush();
-		itsTimerPort->setTimer(2.0);
-	}
+			itsTimerPort->setTimer(2.0);
+		}
 		else {
 			TRAN(tPropertySet::final);
 		}

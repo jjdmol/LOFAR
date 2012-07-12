@@ -118,7 +118,7 @@ def createNewDefaultTemplate(orgTmplID, newMasterTmplID, orgTmplInfo):
     # remove the NODE in the new template otherwise remove the parameter only
     for key in os.popen(command).read().splitlines():
         removeElement(orgTmplID, newTmplID, key, True)
-        
+       
 #
 # createParsetFile(treeID, nodeID, fileName)
 #
