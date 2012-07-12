@@ -45,11 +45,11 @@
 #include <vector>
 #include <algorithm>
 
-#ifdef USEBLAS
-#ifdef __APPLE_CC__
-#include <vecLib/cblas.h>
-#endif
-
+#ifdef USE_CBLAS
+# ifdef __APPLE_CC__
+#  include <vecLib/cblas.h>
+# else
+# endif
 #endif
 
 //#include <BBSKernel/ModelImageVisibilityResampler.h>
@@ -100,7 +100,7 @@ class ModelImageFft
 {
 public:
   ModelImageFft(const casa::String &name, 
-                unsigned int nwplanes=1, 
+                unsigned int nwplanes=128, 
                 unsigned int oversampling=1, 
                 double uvscaleX=1.0, double uvscaleY=1.0,
                 casa::Int cacheSizeMB=-1);
@@ -160,7 +160,7 @@ public:
               const double *frequencies, 
               casa::DComplex *XX , casa::DComplex *XY, 
               casa::DComplex *XY , casa::DComplex *YY,
-              double maxBaseline=20000);
+              double maxBaseline=2000);
   void degrid(const double *baselines[3], 
               const vector<double> &frequencies,
               casa::Vector<casa::DComplex> &XX , casa::Vector<casa::DComplex> &XY, 

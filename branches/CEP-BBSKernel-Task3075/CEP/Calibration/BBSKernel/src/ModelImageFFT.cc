@@ -998,7 +998,6 @@ void ModelImageFft::degridKernel( const std::vector<std::complex<float> >& grid,
   for (unsigned int dind=0; dind<data.size(); dind++)
   {
     data[dind]=0.0;
-
     // Nearly all the L2 cache misses originate here in the next
     // two statements
     // The actual grid point from which we offset   
@@ -1042,6 +1041,8 @@ void ModelImageFft::initC(const int nSamples, const std::vector<double>& w,
     const int wSize, const int gSize, int& support, int& overSample,
     double& wCellSize, std::vector<std::complex<float> >& C)
 {
+  cout << "initC()" << endl;  // DEBUG
+
   LOG_INFO_STR("Initializing W projection convolution function");
   support=static_cast<int>(1.5*sqrt(abs(baseline) *static_cast<double>(cellSize)
       *freq[0])/cellSize);
@@ -1133,6 +1134,8 @@ void ModelImageFft::initCOffset(const std::vector<double>& u, const std::vector<
     std::vector<unsigned int>& cOffset, std::vector<unsigned int>& iu,
     std::vector<unsigned int>& iv)
 {
+  cout << "initCOffset()" << endl;
+
   const int nSamples = u.size();
   const int nChan = freq.size();
   int sSize=2*support+1;

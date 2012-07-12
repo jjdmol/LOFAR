@@ -45,10 +45,11 @@ unsigned int getBaselines(const MeasurementSet &ms, double *u, double *v, double
                           int rowStart=-1, int rowEnd=-1);                  
 Vector<Double> getMSFrequencies(const MeasurementSet &ms);
 void addModelColumn(MeasurementSet& ms, const String& dataManName, unsigned int nchan=1);
+string createColumnName(const string &ModelFilename);
 void writeData( MeasurementSet &ms, const string &name, 
                 const DComplex *XX, const DComplex *XY,
                 const DComplex *YX, const DComplex *YY, 
-                unsigned int nbaselines, unsigned int nfreqs=1);
+                unsigned int nbaselines, unsigned int nfreqs=1, bool useFlags=False);
 void printBaselines(double **baselines, size_t nrows);
 void printBaselines(double *u, double *v, double *w, size_t nrows);
 
@@ -66,14 +67,13 @@ int main(int argc, char **argv)
   MeasurementSet ms(msName, Table::Update);    // open MS
 
   /*
-  // allocate memory for array to hold baselines
   double **baselines=static_cast<double**>(malloc(ms.nrow()*sizeof(double)));
   for(unsigned int i=0; i<3; i++)
   {
     baselines[i]=static_cast<double*>(malloc(sizeof(double)*3));
   }  
   */
-  
+  // allocate memory for array to hold baselines 
   double *u=static_cast<double*>(malloc(ms.nrow()*sizeof(double)));
   double *v=static_cast<double*>(malloc(ms.nrow()*sizeof(double)));
   double *w=static_cast<double*>(malloc(ms.nrow()*sizeof(double)));
@@ -100,9 +100,10 @@ int main(int argc, char **argv)
   DComplex *YY=(DComplex*)malloc(nbaselines*nfreqs*sizeof(DComplex));
 
   modelImage.degrid(u, v, w, nbaselines, nfreqs, frequencies, XX, NULL, NULL, YY);
-  addModelColumn(ms, imageFilename);
+  string columnname=createColumnName(imageFilename);
+  addModelColumn(ms, columnname);
   ms.flush(); // needed to make added column flush to file
-  writeData(ms, imageFilename, XX, NULL, NULL, YY, nbaselines, nfreqs); // Write correlations to MS column
+  writeData(ms, columnname, XX, NULL, NULL, YY, nbaselines, nfreqs); // Write correlations to MS column
 
   /*
   // Function to get degridded data into raw pointers
@@ -177,46 +178,47 @@ Vector<Double> getMSFrequencies(const MeasurementSet &ms)
 //
 void writeData( MeasurementSet &ms, const string &colName, const DComplex *XX, 
                 const DComplex *XY, const DComplex *YX, const DComplex *YY,
-                unsigned int nbaselines, unsigned int nfreqs)
+                unsigned int nbaselines, unsigned int nfreqs, bool useFlags)
 {
   // Complex Array of size [ 4 nchannels ]
   ArrayColumn<Complex> modelCol(ms, colName);
   IPosition shape(2, 4, nfreqs);
 
+  ScalarColumn<Bool> flagRow(ms, "FLAG_ROW");
+
   for(unsigned int row=0; row<nbaselines*nfreqs; row++)
   {
-    modelCol.setShape(row, shape);    // set shape to 4 Corr, N frequencies
-    Array<Complex> correlations(shape);
-    correlations.set(0);              // initialize with 0
-
-    // gather correlations into temporary array
-    if(XX)
-    {
-      IPosition pos(2, 0, row%nfreqs);
-      correlations(pos)=XX[row];
-
-//      cout << "XX[row]: " << XX[row] << endl;   // DEBUG
+    Bool flag=flagRow(row);    
+    if(!flag)
+    {  
+      modelCol.setShape(row, shape);    // set shape to 4 Corr, N frequencies
+      Array<Complex> correlations(shape);
+      correlations.set(0);              // initialize with 0
+  
+      // gather correlations into temporary array
+      if(XX)
+      {
+        IPosition pos(2, 0, row%nfreqs);
+        correlations(pos)=XX[row];
+      }
+      if(XY)
+      {
+        IPosition pos(2, 1, row%nfreqs);  
+        correlations(pos)=XY[row];
+      }
+      if(YX)
+      {
+        IPosition pos(2, 2, row%nfreqs);  
+        correlations(pos)=YX[row];
+      }
+      if(YY)
+      {
+        IPosition pos(2, 3, row%nfreqs);      
+        correlations(pos)=YY[row];
+      }    
+      //cout << "writeData(): correlations: " << correlations << endl;   // DEBUG
+      modelCol.put(row, correlations);  // 	Put the array in row's cell
     }
-    if(XY)
-    {
-      IPosition pos(2, 1, row%nfreqs);  
-      correlations(pos)=XY[row];
-    }
-    if(YX)
-    {
-      IPosition pos(2, 2, row%nfreqs);  
-      correlations(pos)=YX[row];
-    }
-    if(YY)
-    {
-      IPosition pos(2, 3, row%nfreqs);      
-      correlations(pos)=YY[row];
-
-      //cout << "YY[row]: " << YY[row] << endl;   // DEBUG
-    }
-    
-    //cout << "writeData(): correlations: " << correlations << endl;   // DEBUG
-    modelCol.put(row, correlations);  // 	Put the array in row's cell
   }
 }
 
@@ -261,6 +263,29 @@ void addModelColumn (MeasurementSet& ms, const String& dataManName, unsigned int
     mcd.rwKeywordSet().define ("CHANNEL_SELECTION",selection);
   }
 }
+
+string createColumnName(const string &ModelFilename)
+{
+  string columnName;
+  string patchName;
+  casa::String Filename;
+  casa::Path Path(ModelFilename);             // casa Path object to allow basename stripping
+    
+  Filename=Path.baseName();                   // remove path from ModelFilename
+  unsigned long pos=string::npos;             // remove .image or .img extension from Patchname  
+  if((pos=Filename.find(".model")) != string::npos) // only accept .model extension anymore
+  {
+  }
+  
+  if(pos!=string::npos)                       // if we have a file suffix
+  {
+    patchName=Filename.substr(0, pos);        // remove it
+  }
+  columnName+=patchName;                      // create complete column name according to scheme
+
+  return columnName;
+}
+
 
 // Helper function to print baselines[3]
 //
