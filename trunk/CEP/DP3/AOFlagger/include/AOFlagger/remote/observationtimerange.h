@@ -44,9 +44,29 @@ class ObservationTimerange
 			_polarizationCount(0),
 			_timestepCount(0),
 			_gridFrequencySize(0),
+			_startFrequency(0.0),
+			_frequencyWidth(0.0),
 			_realData(0), _imagData(0),
 			_u(0), _v(0), _w(0)
 		{
+		}
+		
+		ObservationTimerange(const ObservationTimerange &source) :
+			_observation(source._observation),
+			_bands(source._bands),
+			_bandStartLookup(source._bandStartLookup),
+			_polarizationCount(source._polarizationCount),
+			_timestepCount(source._timestepCount),
+			_gridFrequencySize(source._gridFrequencySize),
+			_startFrequency(source._startFrequency),
+			_frequencyWidth(source._frequencyWidth)
+		{
+			allocate();
+			const size_t size = _gridFrequencySize * _timestepCount * _polarizationCount * 2;
+			memcpy(_realData, source._realData, sizeof(num_t) * size);
+			memcpy(_u, source._u, sizeof(double) * _timestepCount);
+			memcpy(_v, source._v, sizeof(double) * _timestepCount);
+			memcpy(_w, source._w, sizeof(double) * _timestepCount);
 		}
 		
 		~ObservationTimerange()
@@ -105,6 +125,8 @@ class ObservationTimerange
 				for(std::vector<ChannelInfo>::const_iterator c=band.channels.begin();c!=band.channels.end();++c)
 					channels.push_back(c->frequencyHz);
 			}
+			_startFrequency = channels[0];
+			
 			// Find the median distance between channels
 			std::vector<double> distances;
 			for(std::vector<double>::const_iterator i=channels.begin();i+1!=channels.end();++i)
@@ -146,14 +168,16 @@ class ObservationTimerange
 			}
 			_gridFrequencySize = gridIndex+1;
 			std::cout << "Grid points: " << _gridFrequencySize << "\n";
+			_frequencyWidth = _gridFrequencySize * gridDistance;
 			
-			// Allocate memory
-			const size_t allocSize = _gridFrequencySize * _timestepCount * _polarizationCount;
-			_realData = new num_t[allocSize * 2];
-			_imagData = &_realData[allocSize];
-			_u = new double[_timestepCount];
-			_v = new double[_timestepCount];
-			_w = new double[_timestepCount];
+			allocate();
+		}
+		
+		void SetZero()
+		{
+			const size_t size = _gridFrequencySize * _timestepCount * _polarizationCount * 2;
+			for(size_t i=0;i<size;++i)
+				_realData[i] = 0.0f;
 		}
 		
 		void SetTimestepData(size_t nodeIndex, const MSRowDataExt *rows, size_t rowCount)
@@ -184,6 +208,16 @@ class ObservationTimerange
 			}
 		}
 		
+		size_t PolarizationCount() const { return _polarizationCount; }
+		size_t TimestepCount() const { return _timestepCount; }
+		size_t ChannelCount() const { return _gridFrequencySize; }
+		num_t *RealData(size_t timestep) { return &_realData[timestep * _polarizationCount * _gridFrequencySize]; }
+		num_t *ImagData(size_t timestep) { return &_imagData[timestep * _polarizationCount * _gridFrequencySize]; }
+		double StartFrequency() const { return _startFrequency; }
+		double FrequencyWidth() const { return _frequencyWidth; }
+		double U(size_t timestep) const { return _u[timestep]; }
+		double V(size_t timestep) const { return _u[timestep]; }
+		double W(size_t timestep) const { return _u[timestep]; }
 	private:
 		struct BandRangeInfo { double endFrequency; size_t nodeIndex; };
 		ClusteredObservation &_observation;
@@ -193,11 +227,22 @@ class ObservationTimerange
 		size_t _polarizationCount;
 		size_t _timestepCount;
 		size_t _gridFrequencySize;
+		double _startFrequency, _frequencyWidth;
 		
 		// First index is polarization, second is frequency, third is timestep
 		num_t *_realData;
 		num_t *_imagData;
 		double *_u, *_v, *_w;
+		
+		void allocate()
+		{
+			const size_t allocSize = _gridFrequencySize * _timestepCount * _polarizationCount;
+			_realData = new num_t[allocSize * 2];
+			_imagData = &_realData[allocSize];
+			_u = new double[_timestepCount];
+			_v = new double[_timestepCount];
+			_w = new double[_timestepCount];
+		}
 		
 		void deallocate()
 		{
