@@ -30,6 +30,7 @@
 #include <Blob/BlobAipsIO.h>
 #include <Common/LofarLogger.h>
 #include <Common/StreamUtil.h>
+#include <Common/Exception.h>
 #include <casa/IO/AipsIO.h>
 #include <casa/Containers/Record.h>
 #include <iostream>
@@ -40,6 +41,9 @@ using namespace LOFAR::BBS;
 using namespace LOFAR::CEP;
 using namespace LOFAR;
 using namespace std;
+
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 void putRecord (BlobOStream& bos, const casa::Record& rec)
 {

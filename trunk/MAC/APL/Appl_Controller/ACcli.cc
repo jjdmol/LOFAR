@@ -22,12 +22,15 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/Exception.h>
 #include <ALC/ACSyncClient.h>
 
 using namespace LOFAR;
 using namespace LOFAR::ACC;
 using namespace LOFAR::ACC::ALC;
 
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 void printUsage() {
   cout << "This program is a commandline client to ACC. It can be used from shell scripts." << endl;

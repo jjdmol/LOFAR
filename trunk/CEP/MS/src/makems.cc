@@ -28,6 +28,7 @@
 #include <MS/Package__Version.h>
 #include <Common/ParameterSet.h>
 #include <Common/LofarLogger.h>
+#include <Common/Exception.h>
 
 #include <casa/Quanta/MVTime.h>
 #include <casa/Quanta/MVAngle.h>
@@ -47,6 +48,9 @@
 using namespace LOFAR;
 using namespace casa;
 using namespace std;
+
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 // Define the variables shared between the functions.
 vector<double> itsRa;
@@ -263,8 +267,8 @@ int main (int argc, char** argv)
       // Print vdsName, so script can capture it.
       cout << "vds=" << vdsName << endl;
     }
-  } catch (std::exception& x) {
-    cout << "Unexpected exception in " << argv[0] << ": " << x.what() << endl;
+  } catch (Exception& ex) {
+    cerr << "Unexpected exception in " << argv[0] << ": " << ex << endl;
     return 1;
   }
   return 0;

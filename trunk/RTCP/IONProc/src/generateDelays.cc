@@ -24,6 +24,7 @@
 #include <Common/Exception.h>
 #include <Interface/RSPTimeStamp.h>
 #include <Common/lofar_math.h>
+#include <Common/Exception.h>
 
 #include <string>
 #include <vector>
@@ -40,6 +41,9 @@
 using namespace LOFAR;
 using namespace LOFAR::RTCP;
 using namespace std;
+
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 bool print_tabs = false;
 bool ascii_ts = false;
@@ -153,13 +157,7 @@ int main(int argc, char *argv[])
     free(station);
     free(parset);
   } catch (Exception &ex) {
-    cerr << "Caught Exception: " << ex.what() << endl;
-    return 1;
-  } catch (exception &ex) {
-    cerr << "Caught exception: " << ex.what() << endl;
-    return 1;
-  } catch (...) {
-    cerr << "Caught unknown exception" << endl;
+    cerr << "Caught Exception: " << ex << endl;
     return 1;
   }
 

@@ -9,6 +9,7 @@
 #include <lofar_config.h>
 #include <Storage/MeasurementSetFormat.h>
 #include <Common/LofarLogger.h>
+#include <Common/Exception.h>
 
 #include <casa/IO/RegularFileIO.h>
 

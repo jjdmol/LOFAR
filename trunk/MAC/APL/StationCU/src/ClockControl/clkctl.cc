@@ -22,6 +22,7 @@
 //#
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/Exception.h>
 #include <MACIO/MACServiceInfo.h>
 #include "Clock_Protocol.ph"
 
@@ -169,6 +170,9 @@ void ClkCtl::doHelp()
 
 using namespace LOFAR;
 using namespace LOFAR::GCF::TM;
+
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 int main(int argc, char* argv[])
 {

@@ -23,10 +23,15 @@
 #include <lofar_config.h>
 
 #include <GCF/TM/GCF_Control.h>
+#include <Common/Exception.h>
 #include "SASGateway.h"
 
+using namespace LOFAR;
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::RTDBDaemons;
+
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 int main(int argc, char *argv[])
 {
