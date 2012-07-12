@@ -123,8 +123,10 @@ private:
 	uint32					itsInstanceNr;
 	time_t					itsStartTime;		// timestamp the controller was started
 
+    unsigned                itsNrRSPs;
+
 	void*					itsClockSubscription;
-	int32					itsClock;
+	uint32					itsClock;
 
 	void*					itsBitmodeSubscription;
 	uint16					itsBitmode;

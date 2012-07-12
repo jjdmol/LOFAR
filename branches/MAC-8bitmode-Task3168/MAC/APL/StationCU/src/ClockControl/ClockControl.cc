@@ -63,8 +63,11 @@ ClockControl::ClockControl(const string&	cntlrName) :
 	itsTimerPort		(0),
 	itsRSPDriver		(0),
 	itsCommandPort		(0),
-	itsClock			(0),
-	itsBitmode			(0)
+    itsNrRSPs           (0),
+
+    // we need default values to push in case the boards are set to 0
+	itsClock			(200),
+	itsBitmode			(16)
 {
 	LOG_TRACE_OBJ_STR (cntlrName << " construction");
 	LOG_INFO(Version::getInfo<StationCUVersion>("ClockControl"));
@@ -93,6 +96,10 @@ ClockControl::ClockControl(const string&	cntlrName) :
 	registerProtocol (DP_PROTOCOL,			DP_PROTOCOL_STRINGS);
 	registerProtocol (RSP_PROTOCOL,			RSP_PROTOCOL_STRINGS);
 	registerProtocol (CLOCK_PROTOCOL,		CLOCK_PROTOCOL_STRINGS);
+
+    StationConfig sc;
+
+    itsNrRSPs = sc.nrRSPs;
 }
 
 
@@ -163,7 +170,7 @@ void ClockControl::_databaseEventHandler(GCFEvent& event)
 
 		if (strstr(dpEvent.DPname.c_str(), PN_CLC_REQUESTED_CLOCK) != 0) {
 			GCFPVInteger*	clockObj = (GCFPVInteger*)dpEvent.value._pValue;
-			int32			newClock = clockObj->getValue();
+			uint32			newClock = clockObj->getValue();
 			if (newClock != itsClock) {
 				itsClock = newClock;
 				LOG_DEBUG_STR("Received clock change from PVSS, clock is now " << itsClock);
@@ -347,7 +354,8 @@ GCFEvent::TResult ClockControl::connect2RSP_state(GCFEvent& event,
 			//       the stationController is the owner of this value.
 			itsOwnPropertySet->setValue(PN_CLC_REQUESTED_CLOCK,GCFPVInteger(itsClock));
 		}
-		TRAN(ClockControl::startListener_state);		// go to next state.
+
+		requestBitmodeSetting();		// ask value of bitmode: will result in RSP_GETBITMODEACK
 	}
 	break;
 
@@ -357,21 +365,27 @@ GCFEvent::TResult ClockControl::connect2RSP_state(GCFEvent& event,
 			LOG_ERROR ("Bitmode could not be get. Ignoring that for now.");
 		}
 		else {
-			itsBitmode = ack.bits_per_sample[0];
+            bool success = true;
 
-                        for (int i = 0; i < MAX_N_RSPBOARDS; i++) {
-                          if (ack.bits_per_sample[i] != ack.bits_per_sample[0]) {
-                            LOG_ERROR_STR("Mixed bit modes not supported: RSP board " << i << " is in " << ack.bits_per_sample[i] << " bit mode, but board 0 is in " << ack.bits_per_sample[0] << " bit mode");
-                          } 
-                        }
-                          
+            for (unsigned i = 0; i < itsNrRSPs; i++) {
+              if (ack.bits_per_sample[i] != ack.bits_per_sample[0]) {
+                LOG_ERROR_STR("Mixed bit modes not supported: RSP board " << i << " is in " << ack.bits_per_sample[i] << " bit mode, but board 0 is in " << ack.bits_per_sample[0] << " bit mode");
+                success = false;
+                break;
+              } 
+            }
 
-			LOG_INFO_STR("RSP says bitmode is " << itsBitmode << " bits. Adopting that value.");
-			itsOwnPropertySet->setValue(PN_CLC_ACTUAL_BITMODE,GCFPVInteger(itsBitmode));
-			// Note: only here I am allowed to change the value of the requested bitmode. Normally
-			//       the stationController is the owner of this value.
-			itsOwnPropertySet->setValue(PN_CLC_REQUESTED_BITMODE,GCFPVInteger(itsBitmode));
+            if (success) {
+			    itsBitmode = ack.bits_per_sample[0];
+
+			    LOG_INFO_STR("RSP says bitmode is " << itsBitmode << " bits. Adopting that value.");
+			    itsOwnPropertySet->setValue(PN_CLC_ACTUAL_BITMODE,GCFPVInteger(itsBitmode));
+			    // Note: only here I am allowed to change the value of the requested bitmode. Normally
+			    //       the stationController is the owner of this value.
+			    itsOwnPropertySet->setValue(PN_CLC_REQUESTED_BITMODE,GCFPVInteger(itsBitmode));
+            }
 		}
+
 		TRAN(ClockControl::startListener_state);		// go to next state.
 	}
 	break;
@@ -856,8 +870,7 @@ GCFEvent::TResult ClockControl::setSplitters_state(GCFEvent& event,
 		// update our admin
 		itsSplitters.reset();
 		if (itsSplitterRequest) {
-			StationConfig			sc;
-			for (int i = 0; i < sc.nrRSPs; i++) {
+			for (unsigned i = 0; i < itsNrRSPs; i++) {
 				itsSplitters.set(i);
 			}
 		}
@@ -941,7 +954,7 @@ GCFEvent::TResult ClockControl::active_state(GCFEvent& event, GCFPortInterface& 
 			break;
 		}
 
-		if ((int32) updateEvent.clock != itsClock) {
+		if (updateEvent.clock != itsClock) {
 			LOG_ERROR_STR ("CLOCK WAS CHANGED TO " << updateEvent.clock << 
 						   " BY SOMEONE WHILE CLOCK SHOULD BE " << itsClock << ". CHANGING CLOCK BACK.");
 			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("Clock unallowed changed"));
@@ -956,41 +969,58 @@ GCFEvent::TResult ClockControl::active_state(GCFEvent& event, GCFPortInterface& 
 
 	case RSP_UPDBITMODE: {
 		RSPUpdbitmodeEvent	updateEvent(event);
+
+        // was the update even succesful?
 		if (updateEvent.status != RSP_SUCCESS) {
-			LOG_WARN ("Received and INVALID bitmode update, WHAT IS THE BITMODE?");
+			LOG_WARN ("Received an INVALID bitmode update, WHAT IS THE BITMODE?");
 			itsOwnPropertySet->setValue(PN_FSM_ERROR, GCFPVString("getbitmode failed"));
 			break;
 		}
+  
+        bool retry = false;
+        for (unsigned i = 0; i < itsNrRSPs; i++) {
+            // 0 bits indicates the bit mode could not be set
+            if (updateEvent.bits_per_sample[i] == 0) {
+			    LOG_ERROR_STR ("StationBitmode has stopped on board " << i << " (and possibly others)! Going to setBitmode state to try to solve the problem");
+			    itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("Bitmode stopped"));
 
-		if (updateEvent.bits_per_sample == 0) {
-			LOG_ERROR_STR ("StationBitmode has stopped! Going to setBitmode state to try to solve the problem");
-			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("Bitmode stopped"));
+                retry = true;
+                break;
+            }
+
+            // we don't allow a mix of bit modes from the boards
+            if (updateEvent.bits_per_sample[i] != updateEvent.bits_per_sample[0]) {
+                LOG_ERROR_STR("Mixed bit modes not supported: RSP board " << i << " is in " << updateEvent.bits_per_sample[i] << " bit mode, but board 0 is in " << updateEvent.bits_per_sample[0] << " bit mode, going to setBitmode state to try to solve the problem");
+			    itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("boards report mixed bit modes"));
+
+                retry = true;
+                break;
+            } 
+        }
+
+        if (retry) {
 			TRAN(ClockControl::setBitmode_state);
-			break;
-		}
+            break;
+        }
+
+        // because we don't allow mixed bit modes, we can simply use the first one
+        uint16 bitmode = updateEvent.bits_per_sample[0];
 
 		if (itsBitmode == 0) { // my bitmode still uninitialized?
-			LOG_INFO_STR("My bitmode is still not initialized. StationBitmode is " << updateEvent.bits_per_sample << " adopting this value");
-			itsBitmode = updateEvent.bits_per_sample[0];
-
-                        for (int i = 0; i < MAX_N_RSPBOARDS; i++) {
-                          if (updateEvent.bits_per_sample[i] != updateEvent.bits_per_sample[0]) {
-                            LOG_ERROR_STR("Mixed bit modes not supported: RSP board " << i << " is in " << updateEvent.bits_per_sample[i] << " bit mode, but board 0 is in " << updateEvent.bits_per_sample[0] << " bit mode");
-                          } 
-                        }
+			LOG_INFO_STR("My bitmode is still not initialized. StationBitmode is " << bitmode << " adopting this value");
+			itsBitmode = bitmode;
 			break;
-		}
-
-		if ((int32) updateEvent.bits_per_sample != itsBitmode) {
-			LOG_ERROR_STR ("BITMODE WAS CHANGED TO " << updateEvent.bits_per_sample << 
+		} else if (bitmode != itsBitmode) {
+			LOG_ERROR_STR ("BITMODE WAS CHANGED TO " << bitmode <<
 						   " BY SOMEONE WHILE BITMODE SHOULD BE " << itsBitmode << ". CHANGING BITMODE BACK.");
 			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("Bitmode unallowed changed"));
+
 			TRAN (ClockControl::setBitmode_state);
 			break;
-		}
-
-		// when update.bits_per_sample==itsBitmode ignore it, we probable caused it ourselves.
-		LOG_DEBUG_STR("Event.bits_per_sample = " << updateEvent.bits_per_sample << ", myBitmode = " << itsBitmode);
+		} else {
+		    // when update.bits_per_sample==itsBitmode ignore it, we probable caused it ourselves.
+		    LOG_DEBUG_STR("Event.bits_per_sample[0..n] = " << bitmode << ", myBitmode = " << itsBitmode);
+        }    
 	}
 	break;
 
@@ -1024,17 +1054,19 @@ GCFEvent::TResult ClockControl::active_state(GCFEvent& event, GCFPortInterface& 
 	case CLKCTRL_SET_CLOCK:	{
 		CLKCTRLSetClockEvent		request(event);
 		CLKCTRLSetClockAckEvent		response;
+
 		if (request.clock != 160 && request.clock != 200) {
-			LOG_DEBUG_STR("Received request to change the clock to invalid value " << request.clock);
+			LOG_ERROR_STR("Received request to change the clock to invalid value " << request.clock);
 			response.status = CLKCTRL_CLOCKFREQ_ERR;
-			port.send(response);
-			break;
-		}
-		response.status = CLKCTRL_NO_ERR;
-		LOG_INFO_STR("Received request to change the clock to " << request.clock << " MHz.");
-		itsOwnPropertySet->setValue(PN_CLC_REQUESTED_CLOCK,GCFPVInteger(request.clock));
-		itsClock = request.clock;
-		TRAN(ClockControl::setClock_state);
+		} else {
+		    LOG_INFO_STR("Received request to change the clock to " << request.clock << " MHz.");
+		    response.status = CLKCTRL_NO_ERR;
+
+		    itsOwnPropertySet->setValue(PN_CLC_REQUESTED_CLOCK,GCFPVInteger(request.clock));
+		    itsClock = request.clock;
+		    TRAN(ClockControl::setClock_state);
+        }
+
 		port.send(response);
 	}
 	break;
@@ -1049,17 +1081,19 @@ GCFEvent::TResult ClockControl::active_state(GCFEvent& event, GCFPortInterface& 
 	case CLKCTRL_SET_BITMODE:	{
 		CLKCTRLSetBitmodeEvent		request(event);
 		CLKCTRLSetBitmodeAckEvent	response;
+
 		if (request.bits_per_sample != 16 && request.bits_per_sample != 8 && request.bits_per_sample != 4) {
-			LOG_DEBUG_STR("Received request to change the bitmode to invalid value " << request.bits_per_sample);
+			LOG_ERROR_STR("Received request to change the bitmode to invalid value " << request.bits_per_sample);
 			response.status = CLKCTRL_INVALIDBITMODE_ERR;
-			port.send(response);
-			break;
-		}
-		response.status = CLKCTRL_NO_ERR;
-		LOG_INFO_STR("Received request to change the bitmode to " << request.bits_per_sample << " bit.");
-		itsOwnPropertySet->setValue(PN_CLC_REQUESTED_BITMODE,GCFPVInteger(request.bits_per_sample));
-		itsBitmode = request.bits_per_sample;
-		TRAN(ClockControl::setBitmode_state);
+		} else {
+		    LOG_INFO_STR("Received request to change the bitmode to " << request.bits_per_sample << " bit.");
+		    response.status = CLKCTRL_NO_ERR;
+
+		    itsOwnPropertySet->setValue(PN_CLC_REQUESTED_BITMODE,GCFPVInteger(request.bits_per_sample));
+		    itsBitmode = request.bits_per_sample;
+		    TRAN(ClockControl::setBitmode_state);
+        }
+
 		port.send(response);
 	}
 	break;
@@ -1076,6 +1110,7 @@ GCFEvent::TResult ClockControl::active_state(GCFEvent& event, GCFPortInterface& 
 		LOG_INFO_STR("Received request to switch the splitters " << (request.splittersOn ? "ON" : "OFF"));
 		itsSplitterRequest = request.splittersOn;
 		TRAN (ClockControl::setSplitters_state);
+
 		CLKCTRLSetSplittersAckEvent		response;
 		response.status = CLKCTRL_NO_ERR;
 		port.send(response);
@@ -1226,7 +1261,14 @@ void ClockControl::sendBitmodeSetting()
 	LOG_INFO_STR ("Setting stationBitmode to " << itsBitmode << " bit");
 
 	RSPSetbitmodeEvent		msg;
+    bitset<MAX_N_RSPBOARDS> mask;
+
+    // select all RSP boards
+    for (unsigned i = 0; i < itsNrRSPs; i++)
+      mask.set(i);
+
 	msg.timestamp = RTC::Timestamp(0,0);
+    msg.rspmask   = mask;
 	msg.bits_per_sample = itsBitmode;
 	itsRSPDriver->send(msg);
 }
