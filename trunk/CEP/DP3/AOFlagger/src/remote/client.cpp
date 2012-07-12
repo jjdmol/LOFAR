@@ -272,6 +272,10 @@ void Client::handleReadDataRows(unsigned dataSize)
 			Serializable::SerializeToUInt64(buffer, table.nrow());
 		else {
 			casa::ROArrayColumn<casa::Complex> dataCol(table, "DATA");
+			casa::ROArrayColumn<double> uvwColumn(table, "UVW");
+			casa::ROScalarColumn<int> a1Column(table, "ANTENNA1");
+			casa::ROScalarColumn<int> a2Column(table, "ANTENNA2");
+			casa::ROScalarColumn<double> timeColumn(table, "TIME");
 			const casa::IPosition &shape = dataCol.shape(0);
 			size_t channelCount, polarizationCount;
 			if(shape.nelements() > 1)
@@ -286,6 +290,7 @@ void Client::handleReadDataRows(unsigned dataSize)
 			// Read and serialize the rows
 			for(size_t rowIndex=0; rowIndex != options.rowCount; ++rowIndex)
 			{
+				// DATA
 				const casa::Array<casa::Complex> cellData = dataCol(rowIndex);
 				casa::Array<casa::Complex>::const_iterator cellIter = cellData.begin();
 				
@@ -301,6 +306,20 @@ void Client::handleReadDataRows(unsigned dataSize)
 					++cellIter;
 				}
 				dataExt.Serialize(buffer);
+				
+				// UVW
+				casa::Array<double> uvwArr = uvwColumn(rowIndex);
+				casa::Array<double>::const_iterator uvwIter = uvwArr.begin();
+				dataExt.SetU(*uvwIter);
+				++uvwIter;
+				dataExt.SetV(*uvwIter);
+				++uvwIter;
+				dataExt.SetW(*uvwIter);
+				
+				// OTHER
+				dataExt.SetAntenna1(a1Column(rowIndex));
+				dataExt.SetAntenna2(a2Column(rowIndex));
+				dataExt.SetTime(timeColumn(rowIndex));
 			}
 		}
 		

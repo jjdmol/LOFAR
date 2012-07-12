@@ -1,5 +1,7 @@
 #include <iostream>
 
+#include <fftw3.h>
+
 #include <AOFlagger/remote/clusteredobservation.h>
 #include <AOFlagger/remote/observationtimerange.h>
 #include <AOFlagger/remote/processcommander.h>
@@ -16,6 +18,8 @@ using namespace std;
 using namespace aoRemote;
 
 lane<ObservationTimerange*> *readLane;
+
+fftw_plan fftPlanForward, fftPlanBackward;
 
 // fringe size is given in units of wavelength / fringe. Fringes smaller than that will be filtered.
 double filterFringeSize;
@@ -35,57 +39,91 @@ void workThread()
 	// These are for diagnostic info
 	double maxFilterSizeInChannels = 0.0, minFilterSizeInChannels = 1e100;
 	
-	while(readLane->read(timerange))
+	if(readLane->read(timerange))
 	{
-		unsigned polarizationCount = timerange->PolarizationCount();
-		size_t channelCount = timerange->ChannelCount();
-		num_t realBuffer[channelCount];
-		num_t imagBuffer[channelCount];
-		
-		for(size_t t=0;t<timerange->TimestepCount();++t)
+		const size_t channelCount = timerange->ChannelCount();
+		const unsigned polarizationCount = timerange->PolarizationCount();
+		fftw_complex
+			*fftIn = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * channelCount),
+			*fftOut = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * channelCount);
+		do
 		{
-			// Calculate the convolution size
-			double u = timerange->U(t), v = timerange->V(t);
-			double convolutionSize = filterFringeSize * (double) channelCount / uvDist(u, v, timerange->FrequencyWidth());
-			if(convolutionSize > maxFilterSizeInChannels) maxFilterSizeInChannels = convolutionSize;
-			if(convolutionSize < minFilterSizeInChannels) minFilterSizeInChannels = convolutionSize;
-			
-			if(convolutionSize > 1.0)
+			for(size_t t=0;t<timerange->TimestepCount();++t)
 			{
-				for(unsigned p=0;p<polarizationCount;++p)
+				if(timerange->Antenna1(t) != timerange->Antenna2(t))
 				{
-					// Copy data in buffer
-					num_t *realPtr = timerange->RealData(t) + p;
-					num_t *imagPtr = timerange->ImagData(t) + p;
+					// Calculate the frequencies to filter
+					double u = timerange->U(t), v = timerange->V(t);
+					double limitFrequency = uvDist(u, v, timerange->FrequencyWidth()) / filterFringeSize;
 					
-					for(size_t c=0;c<channelCount;++c)
+					if(limitFrequency < channelCount) // otherwise no frequencies had to be removed
 					{
-						realBuffer[c] = *realPtr;
-						imagBuffer[c] = *imagPtr;
-						realPtr += polarizationCount;
-						imagPtr += polarizationCount;
-					}
-					
-					// Convolve the data
-						Convolutions::OneDimensionalSincConvolution(realBuffer, channelCount, 1.0/convolutionSize);
-						Convolutions::OneDimensionalSincConvolution(imagBuffer, channelCount, 1.0/convolutionSize);
+						if(limitFrequency > maxFilterSizeInChannels) maxFilterSizeInChannels = limitFrequency;
+						if(limitFrequency < minFilterSizeInChannels) minFilterSizeInChannels = limitFrequency;
+						for(unsigned p=0;p<polarizationCount;++p)
+						{
+							// Copy data in buffer
+							num_t *realPtr = timerange->RealData(t) + p;
+							num_t *imagPtr = timerange->ImagData(t) + p;
+							
+							for(size_t c=0;c<channelCount;++c)
+							{
+								fftIn[c][0] = *realPtr;
+								fftIn[c][1] = *imagPtr;
+								realPtr += polarizationCount;
+								imagPtr += polarizationCount;
+							}
+							
+							fftw_execute_dft(fftPlanForward, fftIn, fftOut);
+							// Remove the high frequencies [n/2-filterIndexSize : n/2+filterIndexSize]
+							size_t filterIndexSize = (limitFrequency > 1.0) ? (size_t) ceil(limitFrequency) : 1;
+							for(size_t f=filterIndexSize;f<channelCount - filterIndexSize;++f)
+							{
+								fftOut[f][0] = 0.0;
+								fftOut[f][1] = 0.0;
+							}
+							fftw_execute_dft(fftPlanBackward, fftOut, fftIn);
 
-					// Copy data back
-					realPtr = timerange->RealData(t) + p;
-					imagPtr = timerange->ImagData(t) + p;
-					for(size_t c=0;c<channelCount;++c)
-					{
-						*realPtr = realBuffer[c];
-						*imagPtr = imagBuffer[c];
-						realPtr += polarizationCount;
-						imagPtr += polarizationCount;
+							// Copy data back; fftw multiplies data with n, so divide by n.
+							double factor = 1.0 / (double) channelCount;
+							realPtr = timerange->RealData(t) + p;
+							imagPtr = timerange->ImagData(t) + p;
+							for(size_t c=0;c<channelCount;++c)
+							{
+								*realPtr = fftIn[c][0] * factor;
+								*imagPtr = fftIn[c][1] * factor;
+								realPtr += polarizationCount;
+								imagPtr += polarizationCount;
+							}
+						}
 					}
 				}
 			}
-		}
-		delete timerange;
+			delete timerange;
+		} while(readLane->read(timerange));
+		fftw_free(fftIn);
+		fftw_free(fftOut);
 	}
 	std::cout << "Worker finished. Filtersize range in channel: " << minFilterSizeInChannels << "-" << maxFilterSizeInChannels << '\n';
+}
+
+void initializeFFTW(size_t channelCount)
+{
+	fftw_complex *fftIn, *fftOut;
+	
+	fftIn = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * channelCount);
+	fftOut = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * channelCount);
+	fftPlanForward = fftw_plan_dft_1d(channelCount, fftIn, fftOut, FFTW_FORWARD, FFTW_PATIENT);
+	fftPlanBackward = fftw_plan_dft_1d(channelCount, fftIn, fftOut, FFTW_BACKWARD, FFTW_PATIENT);
+
+	fftw_free(fftIn);
+	fftw_free(fftOut);
+}
+
+void deinitializeFFTW()
+{
+	fftw_destroy_plan(fftPlanForward);
+	fftw_destroy_plan(fftPlanBackward);
 }
 
 int main(int argc, char *argv[])
@@ -112,9 +150,14 @@ int main(int argc, char *argv[])
 		cout << "CPUs: " << processorCount << '\n';
 		unsigned polarizationCount = commander.PolarizationCount();
 		cout << "Polarization count: " << polarizationCount << '\n';
-		size_t rowCountPerRequest = 128;
+		const size_t rowCountPerRequest = 128;
 		
 		timerange.Initialize(polarizationCount, rowCountPerRequest);
+		
+		cout << "Initializing FFTW..." << std::flush;
+		initializeFFTW(timerange.ChannelCount());
+		cout << " Done.\n";
+		
 		MSRowDataExt *rowBuffer[obs->Size()];
 		for(size_t i=0;i<obs->Size();++i)
 			rowBuffer[i] = new MSRowDataExt[rowCountPerRequest];
