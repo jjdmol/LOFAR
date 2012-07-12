@@ -174,7 +174,7 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::computeFlags(unsigned sta
 
     for (unsigned ch = 0; ch < itsNrChannels; ch++) {
       filteredData->flags[ch][stat].include(begin, end);
-    }
+  }
   }
 
   computeFlagsTimer.stop();

@@ -90,7 +90,7 @@ void Parset::write(Stream *stream) const
   std::string &buffer = readCache || writeCache ? itsWriteCache : newbuffer;
 
   if (buffer.empty())
-    writeBuffer(buffer);
+  writeBuffer(buffer);
 
   if (!stream) {
     // we only filled the cache

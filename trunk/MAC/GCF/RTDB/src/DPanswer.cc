@@ -142,8 +142,8 @@ void DPanswer::dpQueryChanged(uint32 queryId,		PVSSresult result,
 void DPanswer::_dispatchEvent(GCFEvent&	event)
 {
 	if (itsTask) {		// allow empty taskPointers
-		event.pack();
-		itsTask->doEvent(event, gDummyPort);
+	event.pack();
+	itsTask->doEvent(event, gDummyPort);
 	}
 }
 

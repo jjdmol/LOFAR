@@ -423,7 +423,7 @@ inline  void TbbSettings::setTriggerInfo(int32 boardnr, uint8 *info) {
 				RTC::NsTimestamp ns_timestamp(sec, nsec);
 				itsTriggerInfo->ns_timestamp = ns_timestamp;
             
-				itsNewTriggerInfo = true;
+            itsNewTriggerInfo = true;
 
 #if 0
 				LOG_INFO_STR("channel     = " << itsTriggerInfo->channel);
@@ -504,7 +504,7 @@ inline  bool TbbSettings::isClockFreqChanged() {
             return(false);
         }
 inline  double TbbSettings::getSampleTime() { return(itsSampleTime); }
-    
+	 
 	} // namespace TBB
 } // namespace LOFAR
 

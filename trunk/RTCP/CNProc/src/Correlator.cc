@@ -56,9 +56,9 @@ template <typename T> void Correlator::setNrValidSamples(const SampleData<> *sam
 	for (unsigned ch = 1; ch < itsNrChannels; ch ++) {
 	  unsigned nrValidSamples = itsNrSamplesPerIntegration - (sampleData->flags[ch][itsStationMapping[stat1]] | sampleData->flags[ch][itsStationMapping[stat2]]).count();
 	  theNrValidSamples[bl][ch] = nrValidSamples;
-	}
       }
     }
+  }
   }
 }
 

@@ -81,7 +81,7 @@ void MsgHandler::sendSavedTrigger()
 	//LOG_DEBUG_STR(formatString("send saved trigger from board %d to client", boardnr));
 	TBBTriggerEvent tbb_event;
 	TriggerInfo *triggerInfo = TS->getTriggerInfo();
-		
+	
 	tbb_event.rcu             = triggerInfo->rcu;
 	tbb_event.nstimestamp     = triggerInfo->ns_timestamp;
 	tbb_event.trigger_sum     = triggerInfo->trigger_sum;

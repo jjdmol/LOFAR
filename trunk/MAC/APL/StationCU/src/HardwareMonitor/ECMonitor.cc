@@ -254,7 +254,7 @@ GCFEvent::TResult ECMonitor::createPropertySets(GCFEvent& event, GCFPortInterfac
 		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("EC:create PropertySets"));
 		// resize vectors.
 		itsCabs.resize (itsNrCabs, 0);
-	
+		
 		string	mainDB(PVSSinfo::getMainDBName()+":");
 		string  stationNameMask(mainDB+createPropertySetName(PSN_STATION, getName()));
 //		LOG_DEBUG_STR("stationNameMask=" << stationNameMask);

@@ -17,9 +17,11 @@ from lofarpipe.support.group_data import load_data_map, store_data_map
 from lofarpipe.support.group_data import validate_data_maps
 
 
-class parmexportcal(BaseRecipe, RemoteCommandRecipeMixIn):
+class gainoutliercorrection(BaseRecipe, RemoteCommandRecipeMixIn):
     """
-    Recipe to export calibration solutions, using the program `parmexportcal`.
+    Recipe to correct outliers in the gain solutions of an parmdb,
+    using the program `parmexportcal` or an minimal implementation of the edit_parmdb
+    program.
     The main purpose of this program is to strip off the time axis information
     from a instrument model (a.k.a ParmDB)
 
@@ -28,9 +30,11 @@ class parmexportcal(BaseRecipe, RemoteCommandRecipeMixIn):
     A mapfile describing the data to be processed.
     """
     inputs = {
-        'executable': ingredient.ExecField(
+        'executable': ingredient.StringField(
             '--executable',
-            help="Full path to the `parmexportcal` executable"
+            default="",
+            help="Full path to the `parmexportcal` executable, not settings this"
+            " results in edit_parmdb behaviour"
         ),
         'initscript' : ingredient.FileField(
             '--initscript',
@@ -51,6 +55,11 @@ class parmexportcal(BaseRecipe, RemoteCommandRecipeMixIn):
             '--mapfile',
             help="Full path of mapfile to produce; it will contain "
                  "a list of the generated instrument-model files"
+        ),
+        'sigma': ingredient.FloatField(
+            '--sigma',
+            default=1.0,
+            help="Clip at sigma * median: activates 'edit_parmdb' functionality"
         )
     }
 
@@ -60,8 +69,19 @@ class parmexportcal(BaseRecipe, RemoteCommandRecipeMixIn):
 
 
     def go(self):
-        self.logger.info("Starting parmexportcal run")
-        super(parmexportcal, self).go()
+        self.logger.info("Starting gainoutliercorrection run")
+        #if sigma is none use default behaviour and use executable: test if
+        # It excists
+        executable = self.inputs['executable']
+        if executable == "":
+            pass
+        elif not os.access(executable, os.X_OK):
+            self.logger.warn(
+                "No parmexportcal excecutable is not found on the suplied"
+                "path: {0}".format(self.inputs['executable']))
+            self.logger.warn("Defaulting to edit_parmdb behaviour")
+
+        super(gainoutliercorrection, self).go()
 
         #                            Load file <-> output node mapping from disk
         # ----------------------------------------------------------------------
@@ -78,7 +98,7 @@ class parmexportcal(BaseRecipe, RemoteCommandRecipeMixIn):
                 return 1
         else:
             outdata = [
-                (host, 
+                (host,
                  os.path.join(
                     self.inputs['working_directory'],
                     self.inputs['job_name'],
@@ -89,7 +109,7 @@ class parmexportcal(BaseRecipe, RemoteCommandRecipeMixIn):
 
         command = "python %s" % (self.__file__.replace('master', 'nodes'))
         jobs = []
-        for host, infile, outfile in (x+(y[1],) 
+        for host, infile, outfile in (x + (y[1],)
             for x, y in zip(indata, outdata)):
             jobs.append(
                 ComputeJob(
@@ -99,14 +119,15 @@ class parmexportcal(BaseRecipe, RemoteCommandRecipeMixIn):
                         infile,
                         outfile,
                         self.inputs['executable'],
-                        self.inputs['initscript']
+                        self.inputs['initscript'],
+                        self.inputs['sigma']
                      ]
                 )
             )
         self._schedule_jobs(jobs)
 
         if self.error.isSet():
-            self.logger.warn("Detected failed parmexportcal job")
+            self.logger.warn("Detected failed gainoutliercorrection job")
             return 1
         else:
             self.logger.debug("Writing instrument map file: %s" %
@@ -117,4 +138,4 @@ class parmexportcal(BaseRecipe, RemoteCommandRecipeMixIn):
 
 
 if __name__ == '__main__':
-    sys.exit(parmexportcal().main())
+    sys.exit(gainoutliercorrection().main())
