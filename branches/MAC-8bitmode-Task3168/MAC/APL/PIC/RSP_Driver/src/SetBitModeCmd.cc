@@ -30,6 +30,7 @@
 #include "StationSettings.h"
 #include "SetBitModeCmd.h"
 #include "Sequencer.h"
+#include "Cache.h"
 
 using namespace blitz;
 using namespace LOFAR;
@@ -79,31 +80,17 @@ void SetBitModeCmd::apply(CacheBuffer& cache, bool setModFlag)
             break;
     }
     
-    bool ok = true;
-    // check if BP version of all boards >= 7.4
-    for (int i = 0; i < StationSettings::instance()->nrRspBoards(); ++i) {
-        if (((cache.getVersions().bp()(i).fpga_maj * 10) + cache.getVersions().bp()(i).fpga_min) < 74) {
-            LOG_WARN_STR(formatString("Wrong firmware version on board[%d], NO bitmode support", i));
-            ok = false;
-        }
-    }
-    
-    if (ok) {         
-        cache.setBitsPerSample(itsEvent->bits_per_sample);
+    cache.setBitsPerSample(itsEvent->bits_per_sample);
         
-        for (int i = 0; i < StationSettings::instance()->nrRspBoards(); ++i) {
-            if (itsEvent->rspmask.test(i)) {
-                cache.getBitModeInfo()()(i).select = (uint8)select;
-                if (setModFlag) {
-                	cache.getCache().getState().bmState().write(i);
-                	cache.getCache().getState().cdo().write(2*i);
-        			cache.getCache().getState().cdo().write(2*i+1);
-                }
+    for (int i = 0; i < StationSettings::instance()->nrRspBoards(); ++i) {
+        if (itsEvent->rspmask.test(i)) {
+            cache.getBitModeInfo()()(i).select = (uint8)select;
+            if (setModFlag) {
+            	cache.getCache().getState().bmState().write(i);
+            	cache.getCache().getState().cdo().write(2*i);
+    			cache.getCache().getState().cdo().write(2*i+1);
             }
         }
-    }
-    else {
-        LOG_WARN_STR("Bitmode NOT set");
     }
 }
 
@@ -123,7 +110,15 @@ void SetBitModeCmd::setTimestamp(const Timestamp& timestamp)
 
 bool SetBitModeCmd::validate() const
 {
-  return (16 == itsEvent->bits_per_sample ||
-          8  == itsEvent->bits_per_sample ||
-          4  == itsEvent->bits_per_sample);
+    // check if BP version of all boards >= 7.4
+    for (int i = 0; i < StationSettings::instance()->nrRspBoards(); ++i) {
+        if (((Cache::getInstance().getBack().getVersions().bp()(i).fpga_maj * 10) + 
+              Cache::getInstance().getBack().getVersions().bp()(i).fpga_min) < 74) {
+            LOG_WARN_STR(formatString("Wrong firmware version on board[%d], NO bitmode support", i));
+            return(false);
+        }
+    }
+    return (16 == itsEvent->bits_per_sample ||
+            8  == itsEvent->bits_per_sample ||
+            4  == itsEvent->bits_per_sample);
 }
