@@ -27,6 +27,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
 #include <Common/lofar_bitset.h>
+#include <Common/Exception.h>
 #include <Common/Version.h>
 #include <ApplCommon/StationConfig.h>
 #include <ApplCommon/StationDatatypes.h>
@@ -74,6 +75,9 @@ using namespace GCF::TM;
 #define NPOL 2
 
 #define SCHEDULING_DELAY 3
+
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 //
 // CalServer constructor

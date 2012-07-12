@@ -18,14 +18,14 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
 
 
   // check if the requiered datapoint for this view are enabled and accessible
-  if (dpExists(baseDP + \".inputBufferList\")) {
-    if (dpConnect(\"updateBGPAppl\", baseDP + \".ionodeList\",
+  if (dpExists(baseDP + \".ioNodeList\")) {
+    if (dpConnect(\"updateBGPAppl\", baseDP + \".ioNodeList\",
                                    baseDP + \".locusNodeList\",
                                    baseDP + \".adderList\",
                                    baseDP + \".writerList\",
                                    baseDP + \".dataProductList\",
                                    baseDP + \".dataProductTypeList\",
-                                   baseDP + \".ionodeList:_online.._invalid\") == -1) {
+                                   baseDP + \".ioNodeList:_online.._invalid\") == -1) {
       LOG_ERROR(\"BGPAppl.pnl:main|Couldn'tconnect to: \"+baseDP);
     }
     if (!navFunct_dpReachable(baseDP)) {
@@ -64,21 +64,14 @@ updateBGPAppl(string dp1,dyn_int ionodeList,
   
   // loop over nr of stations to fill table
   for (int i = 1; i <= dynlen(ionodeList); i++) {
-    // get station connected to the ionode
-    string station;
-    string cepNodeName = navFunct_inputBuf2CEPName(ionodeList(0));
-    string iodp = navFunct_CEPName2DPName(cepNodeName); 
-    dpGet(iodp+\".usedStation\",station);
-    dynAppend(stationList,station);
   
     // update stations based inputbuffers and adders
-    stationTable.appendLine(\"station\",station,
-                            \"ioNode\",ionodeList[i],
+    stationTable.appendLine(\"ioNode\",ionodeList[i],
                             \"adders\",adderList[i],
                             \"writers\",writerList[i],
                             \"locusNodes\",locusNodeList[i],
                             \"dataProducts\",dataProductList[i],
-                            \"types\",dataProductTypeList[i]);
+                            \"type\",dataProductTypeList[i]);
   }
   
   // set the observation selectable items
@@ -219,43 +212,37 @@ LANG:1 0
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
 0  18 318 1002 622
-EE 1 0 1 7 0 "station" 8 1 0 "s" 1
-LANG:1 7 station
-E
-1
-LANG:1 0 
-
-75 "ioNode" 6 1 0 "s" 1
+EE 1 0 1 6 0 "ioNode" 4 1 0 "s" 1
 LANG:1 6 ioNode
 E
 1
 LANG:1 0 
 
-45 "adders" 26 1 0 "s" 1
+45 "adders" 10 1 0 "s" 1
 LANG:1 6 adders
 E
 1
 LANG:1 0 
 
-100 "writers" 6 1 0 "s" 1
+100 "writers" 10 1 0 "s" 1
 LANG:1 7 writers
 E
 1
 LANG:1 0 
 
-100 "locusNodes" 6 1 0 "s" 1
+100 "locusNodes" 27 1 0 "s" 1
 LANG:1 10 locusNodes
 E
 1
 LANG:1 0 
 
-255 "dataProducts" 6 1 0 "s" 1
+255 "dataProducts" 33 1 0 "s" 1
 LANG:1 12 dataProducts
 E
 1
 LANG:1 0 
 
-305 "type" 6 1 0 "s" 1
+305 "type" 10 1 0 "s" 1
 LANG:1 4 type
 E
 1

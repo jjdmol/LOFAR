@@ -22,7 +22,6 @@
 //# @author Ger van Diepen
 
 #include <lofar_config.h>
-
 #include <MSLofar/BeamTables.h>
 #include <casa/Inputs.h>
 #include <tables/Tables/ScalarColumn.h>
@@ -77,8 +76,11 @@ int main (int argc, char* argv[])
                " subtable of " << msName);
    BeamTables::create (ms, overwrite);
     BeamTables::fill   (ms, antSet, antSetFile, antFieldDir, hbaDeltaDir, true);
+  } catch (Exception& x) {
+    cerr << "Unexpected LOFAR exception: " << x << endl;
+    return 1;
   } catch (std::exception& x) {
-    cout << "Unexpected exception: " << x.what() << endl;
+    cerr << "Unexpected exception: " << x.what() << endl;
     return 1;
   }
   return 0;

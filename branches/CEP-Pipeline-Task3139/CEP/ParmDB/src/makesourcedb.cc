@@ -1134,6 +1134,9 @@ int main (int argc, char* argv[])
   } catch (Exception& x) {
     cerr << "Caught LOFAR exception: " << x << endl;
     return 1;
+  } catch (AipsError& x) {
+    cerr << "Caught AIPS error: " << x.what() << endl;
+    return 1;
   }
   
   return 0;

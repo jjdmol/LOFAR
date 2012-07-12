@@ -29,6 +29,7 @@
 #include <Common/LofarConstants.h>
 #include <Common/lofar_bitset.h>
 #include <Common/ParameterSet.h>
+#include <Common/Exception.h>
 #include <Common/Version.h>
 
 #include <APL/LBA_Calibration/lba_calibration.h>		// the matlab stuff
@@ -38,14 +39,15 @@
 #include "ACCcache.h"
 #include "ACMProxy.h"
 #include "LBACalibration.h"
-//#include "Package__Version.h"
-
 
 
 using namespace LOFAR;
 using namespace GCF::TM;
 using namespace RTC;
 using namespace ICAL;
+
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 //
 // MAIN

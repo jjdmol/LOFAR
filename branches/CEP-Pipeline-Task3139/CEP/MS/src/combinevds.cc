@@ -26,6 +26,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
 #include <Common/SystemUtil.h>
+#include <Common/Exception.h>
 #include <stdexcept>
 #include <iostream>
 

@@ -50,9 +50,14 @@ class ProcessCommander
 		static std::string GetHostName();
 		const StatisticsCollection &Statistics() const { return *_statisticsCollection; }
 		const HistogramCollection &Histograms() const { return *_histogramCollection; }
+		size_t PolarizationCount() const { return _polarizationCount; }
 		const std::vector<AntennaInfo> &Antennas() const { return _antennas; }
+		const std::vector<BandInfo> &Bands() const { return _bands; }
 		const ObservationTimerange &ObsTimerange() const { return *_observationTimerange; }
+		
 		const std::vector<std::string> &Errors() const { return _errors; }
+		std::string ErrorString() const;
+		void CheckErrors() const;
 		
 		void PushReadQualityTablesTask(StatisticsCollection *dest, HistogramCollection *destHistogram, bool correctHistograms = false)
 		{
@@ -61,23 +66,44 @@ class ProcessCommander
 			_statisticsCollection = dest;
 			_histogramCollection = destHistogram;
 		}
-		void PushReadDataRowsTask(class ObservationTimerange &timerange)
+		void PushReadAntennaTablesTask() { _tasks.push_back(ReadAntennaTablesTask); }
+		void PushReadBandTablesTask()
+		{ 
+			_tasks.push_back(ReadBandTablesTask);
+			_bands.resize(_observation.Size());
+		}
+		
+		/**
+		 * @param rowBuffer should have #NODES elements, each which is an array of #ROWCOUNT rows.
+		 */
+		void PushReadDataRowsTask(class ObservationTimerange &timerange, size_t rowStart, size_t rowCount, MSRowDataExt **rowBuffer)
 		{
 			_tasks.push_back(ReadDataRowsTask);
 			_observationTimerange = &timerange;
+			_rowBuffer = rowBuffer;
+			_rowStart = rowStart;
+			_rowCount = rowCount;
 		}
-		void PushReadAntennaTablesTask() { _tasks.push_back(ReadAntennaTablesTask); }
 	private:
-		enum Task { NoTask, ReadQualityTablesTask, ReadAntennaTablesTask, ReadDataRowsTask };
+		enum Task {
+			NoTask,
+			ReadQualityTablesTask,
+			ReadAntennaTablesTask,
+			ReadBandTablesTask,
+			ReadDataRowsTask
+		};
 		
+		void endIdleConnections();
 		void continueReadQualityTablesTask(ServerConnectionPtr serverConnection);
 		void continueReadAntennaTablesTask(ServerConnectionPtr serverConnection);
+		void continueReadBandTablesTask(ServerConnectionPtr serverConnection);
 		void continueReadDataRowsTask(ServerConnectionPtr serverConnection);
 		
 		void onConnectionCreated(ServerConnectionPtr serverConnection, bool &acceptConnection);
 		void onConnectionAwaitingCommand(ServerConnectionPtr serverConnection);
 		void onConnectionFinishReadQualityTables(ServerConnectionPtr serverConnection, StatisticsCollection &statisticsCollection, HistogramCollection &histogramCollection);
-		void onConnectionFinishReadAntennaTables(ServerConnectionPtr serverConnection, std::vector<AntennaInfo> &antennas);
+		void onConnectionFinishReadAntennaTables(ServerConnectionPtr serverConnection, boost::shared_ptr<std::vector<AntennaInfo> > antennas, size_t polarizationCount);
+		void onConnectionFinishReadBandTable(ServerConnectionPtr serverConnection, BandInfo &band);
 		void onConnectionFinishReadDataRows(ServerConnectionPtr serverConnection, MSRowDataExt *rowData);
 		void onError(ServerConnectionPtr connection, const std::string &error);
 		void onProcessFinished(RemoteProcess &process, bool error, int status);
@@ -90,8 +116,12 @@ class ProcessCommander
 		StatisticsCollection *_statisticsCollection;
 		HistogramCollection *_histogramCollection;
 		bool _correctHistograms;
+		size_t _polarizationCount;
 		std::vector<AntennaInfo> _antennas;
+		std::vector<BandInfo> _bands;
 		class ObservationTimerange *_observationTimerange;
+		MSRowDataExt **_rowBuffer;
+		size_t _rowStart, _rowCount;
 		
 		const ClusteredObservation _observation;
 		NodeCommandMap _nodeCommands;
@@ -115,6 +145,12 @@ class ProcessCommander
 			_tasks.pop_front();
 			if(currentTask() == NoTask)
 				_server.Stop();
+		}
+		void handleIdleConnection(ServerConnectionPtr serverConnection) {
+			if(_finishConnections)
+				serverConnection->StopClient();
+			else
+				_idleConnections.push_back(serverConnection);
 		}
 };
 

@@ -593,7 +593,10 @@ void BeamFormer::computeFlysEye(const SampleData<> *in, SampleData<> *out, unsig
   unsigned src = itsValidStations[beam][0];
 
   // copy station src to dest
-  out->flags[beam] = in->flags[src];        
+  for (unsigned ch = 0; ch < itsNrChannels; ch++) {
+    out->flags[beam][ch] = in->flags[ch][src];
+  }
+
   for (unsigned ch = 0; ch < itsNrChannels; ch ++)
     memcpy(out->samples[beam][ch].origin(),
             in->samples[ch][src].origin(), 

@@ -42,12 +42,16 @@ class Client
 		boost::asio::ip::tcp::socket _socket;
 		
 		void writeGenericReadException(const std::exception &e);
+		void writeGenericReadException(const std::string &s);
 		void writeGenericReadError(enum ErrorCode code);
+		void writeDataResponse(std::ostringstream &buffer);
 		
 		std::string readStr(unsigned size);
 		
 		void handleReadQualityTables(unsigned dataSize);
 		void handleReadAntennaTables(unsigned dataSize);
+		void handleReadBandTable(unsigned dataSize);
+		void handleReadDataRows(unsigned dataSize);
 };
 	
 }
