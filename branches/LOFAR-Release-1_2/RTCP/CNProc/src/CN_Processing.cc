@@ -523,7 +523,8 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
     unsigned sap = itsSubbandToSAPmapping[subband];
 
     unsigned nrBeams = itsNrPencilBeams[sap];
-    unsigned part = itsTranspose2Logic.myPart(subband);
+    unsigned coherentPart   = itsTranspose2Logic.myPart(subband, true);
+    unsigned incoherentPart = itsTranspose2Logic.myPart(subband, false);
 
     //LOG_DEBUG_STR("I process subband " << subband << " which belongs to sap " << sap << " part " << part);
 
@@ -533,8 +534,10 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
     for (unsigned beam = 0; beam < nrBeams;) { // beam is incremented in inner for-loop
       unsigned groupSize;
 
-      stream = itsTranspose2Logic.stream(sap, beam, 0, part, stream);
+      // go to part 0 first, to determine coherency (which determines the part #)
+      stream = itsTranspose2Logic.stream(sap, beam, 0, 0, stream);
       const StreamInfo &info = itsTranspose2Logic.streamInfo[stream];
+      const unsigned part = info.coherent ? coherentPart : incoherentPart;
 
       if (info.coherent) {
         // a coherent beam -- look BEST_NRBEAMS ahead to see if we can process them at the same time
@@ -544,7 +547,7 @@ template <typename SAMPLE_TYPE> int CN_Processing<SAMPLE_TYPE>::transposeBeams(u
 
         // determine how many beams (up to groupSize) are coherent
         for (unsigned i = 1; i < groupSize; i++ ) {
-          stream2 = itsTranspose2Logic.stream(sap, beam+i, 0, part, stream2);
+          stream2 = itsTranspose2Logic.stream(sap, beam+i, 0, 0, stream2);
           const StreamInfo &info2 = itsTranspose2Logic.streamInfo[stream2];
 
           if (!info2.coherent) {
