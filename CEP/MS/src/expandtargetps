@@ -4,10 +4,11 @@ import lofar.mstools as lmt
 import sys
 
 if __name__ == "__main__":
-    if len(sys.argv) < 3:
+    if len(sys.argv) < 4:
         print ''
         print 'Insufficient arguments; run as:'
-        print '  expandtargetps parsetin parsetout [mspattern [instrpattern [outname]]]'
+        print '  expandtargetps parsetin parsetout nsubband'
+        print '                 [mspattern [instrpattern [outname]]]'
         print ''
         print ' If an mspattern is given, it must be the name of a directory'
         print ' containing the MeasurementSets or a glob-pattern matching the'
@@ -28,7 +29,7 @@ if __name__ == "__main__":
         print ' input parset defines the output names'
         print ''
         print 'For example:'
-        print '  expandcalps  in.parset  out.parset  /data/L45318'
+        print '  expandcalps  in.parset  out.parset  80  /data/L45318'
         print '    /data/scratch/pipeline/L45318'
         print '    /data/scratch/pipeline/L45318/<BN.>_dppp.MS'
         print ''
@@ -38,19 +39,20 @@ if __name__ == "__main__":
         sys.exit(1)
     # See if the MS pattern is given.
     msname = 'msin'
-    if len(sys.argv) > 3  and  len(sys.argv[3]) > 0:
+    if len(sys.argv) > 4  and  len(sys.argv[4]) > 0:
         # Add *.MS if no glob pattern given. Turn it into a list.
-        msname = [lmt.addfileglob (sys.argv[3], '*.MS')]
+        msname = [lmt.addfileglob (sys.argv[4], '*.MS')]
     # See if the instrument ParmDB pattern is given.
     instrname = 'instrin'
-    if len(sys.argv) > 4  and  len(sys.argv[4]) > 0:
-        instrname = [lmt.addfileglob (sys.argv[4], '*.INST')]
+    if len(sys.argv) > 5  and  len(sys.argv[5]) > 0:
+        instrname = [lmt.addfileglob (sys.argv[5], '*.INST')]
     # See if the MS output name is given.
     outname = 'msout'
-    if len(sys.argv) > 5  and  len(sys.argv[5]) > 0:
-        outname = [sys.argv[5]]
+    if len(sys.argv) > 6  and  len(sys.argv[6]) > 0:
+        outname = [sys.argv[6]]
     # Expand the parset.
     lmt.expandps (sys.argv[1], sys.argv[2],
                   {'in': [[msname, 'Input_Correlated'],
                           [instrname, 'Input_InstrumentModel']],
-                   'out': [[outname, 'Output_Correlated']]})
+                   'out': [[outname, 'Output_Correlated']]},
+                  int(sys.argv[3]))
