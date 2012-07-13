@@ -588,7 +588,7 @@ GCFEvent::TResult TBBControl::claimed_state(GCFEvent& event, GCFPortInterface& p
     }
     if (cmdStatus == FAILURE) {
         setState(CTState::CLAIMED);
-        //TRAN(TBBControl::claimed_state);  // go to claimed_state state.
+        TRAN(TBBControl::claimed_state);  // go to claimed_state state.
     }
     return (status);
 }

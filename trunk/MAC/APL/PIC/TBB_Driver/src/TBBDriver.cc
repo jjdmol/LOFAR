@@ -357,9 +357,14 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
                     config.imagenr = 1;
                     //config.imagenr = 0;
                     itsBoard[board].send(config);
-                    itsBoard[board].setTimer(TS->timeout());
+                    
+                    TS->setBoardState(board, image1Set);
+                    //TS->setImageNr(board, 1);
+                    TS->setSetupWaitTime(board, 12);
+                    
+                    //itsBoard[board].setTimer(TS->timeout());
                     LOG_INFO_STR("CONFIG = 1  is send to port '" << itsBoard[board].getName() << "'");
-                    TS->setSetupCmdDone(board, false);
+                    TS->setSetupCmdDone(board, true);
                     continue;
                 }
 
@@ -478,7 +483,7 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
             LOG_INFO_STR(formatString("Received ConfigAck from boardnr[%d], status=%d", board, ack.status));
             if (ack.status == TBB_SUCCESS) {
                 TS->setBoardState(board, image1Set);
-                TS->setImageNr(board, 1);
+                //TS->setImageNr(board, 1);
                 TS->setSetupWaitTime(board, 12);
             }
             TS->setSetupCmdDone(board, true);
@@ -510,6 +515,7 @@ GCFEvent::TResult TBBDriver::setup_state(GCFEvent& event, GCFPortInterface& port
                     TS->setBoardState(board, setImage1);
                 }
                 else {
+                    TS->setImageNr(board, 1);
                     TS->setBoardState(board, statusChecked);
                 }
 
@@ -980,7 +986,6 @@ bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
     static uint32 activeboards;
     static uint32 sendmask;
     static bool boardreset;
-    static uint32 retries;
 
     TPAliveEvent tp_event;
     tp_event.opcode = oc_ALIVE;
@@ -989,12 +994,10 @@ bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
      // If No Alivecheck running, startup one
     if (!itsAliveCheck) {
         itsAliveCheck = true;
-
         boardnr      = 0;
         sendmask     = 0;
         activeboards = 0;
         boardreset   = false;
-        retries      = 0;
 
         // mask all boards to check
         for(int nr = 0; nr < TS->maxBoards(); nr++) {
@@ -1010,7 +1013,7 @@ bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
             // check only boards with the listed states
             else if ((TS->getBoardState(nr) == noBoard) ||
                      (TS->getBoardState(nr) == boardReady) ||
-                     //(TS->getBoardState(nr) == boardError) ||
+                     (TS->getBoardState(nr) == boardError) ||
                      (TS->getBoardState(nr) == boardCleared)) {
                  LOG_DEBUG_STR(formatString("board %d alive check needed", nr));
                 itsBoard[nr].send(tp_event);
@@ -1035,6 +1038,7 @@ bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
         // one time-out timer for al events
         itsAliveTimer->setTimer(5.0);
     }
+    // Alive check is running
     else {
         if (event.signal == TP_ALIVE_ACK) {
             boardnr = TS->port2Board(&port);
@@ -1050,6 +1054,7 @@ bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
                     if (TS->getFreeToReset(boardnr)) {
                         TS->setImageNr(boardnr, 0);
                         TS->setBoardState(boardnr,setImage1);
+                        TS->resetSetupRetries(boardnr);
                     } else {
                         // new image loaded, auto reconfigure is now possible again
                         TS->setFreeToReset(boardnr, true);
@@ -1059,47 +1064,49 @@ bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
                     }
                     boardreset = true;
                 }
-
-                if (ack.resetflag == 0) {   // board reset
-                    itsResetCount[boardnr]++;
-                    LOG_INFO_STR("TB board " << boardnr << " has been reset " << itsResetCount[boardnr] << " times");
-                }
+                
                 if ((TS->activeBoardsMask() & (1 << boardnr)) == 0) {   // new board
                     LOG_INFO_STR("TB board " << boardnr << " is new");
                 }
-                //TS->setImageNr(boardnr, ack.imagenr);
-            }
-        }
-
-        if (((event.signal == F_TIMER) && (&port == itsAliveTimer)) || (activeboards == sendmask )) {
-            if (activeboards == sendmask) {
-                itsAliveTimer->cancelAllTimers();
-                retries = 0;
-            }
-            else {
-                ++retries;
-            }
-
-                // look if boards need a resent
-            for (int board = 0; board < TS->maxBoards(); board++) {
-                if ((activeboards & (1 << board)) == 0) { // look for not active boards
-                    //TS->setBoardState(board, noBoard);
-                    if (retries < 3) {
-                        itsBoard[board].send(tp_event);
-                        LOG_INFO_STR("retry(" << retries << ") AliveCmd for board " << board);
+                else {
+                    if (ack.resetflag == 0) {   // board reset
+                        itsResetCount[boardnr]++;
+                        LOG_INFO_STR("TB board " << boardnr << " has been reset " << itsResetCount[boardnr] << " times");
                     }
-                    else {
-                        TS->setBoardState(board, noBoard);
-                    }
-
                 }
             }
-
-            if (retries == 3) { retries = 0; }
-
-            if (retries > 0) {
-                itsAliveTimer->setTimer(5.0);
-                return(!itsAliveCheck);
+        }
+        
+        // if timeout or all boards done
+        if (((event.signal == F_TIMER) && (&port == itsAliveTimer)) || (activeboards == sendmask )) {
+            
+            if (activeboards == sendmask) {
+                itsAliveTimer->cancelAllTimers();
+            }
+            else {
+                // look if boards need a resent
+                int nResends = 0;  // number of boards with resen
+                for (int board = 0; board < TS->maxBoards(); board++) {
+                    if ((activeboards & (1 << board)) == 0) { // look for not active boards
+                        if (TS->getSetupRetries(board) < TS->maxRetries()) {
+                            nResends++;
+                            TS->incSetupRetries(board);
+                            itsBoard[board].send(tp_event);
+                            LOG_INFO_STR("retry(" << TS->getSetupRetries(board) << ") AliveCmd for board " << board);
+                        }
+                        else {
+                            if (TS->getBoardState(board) != boardError) {
+                                TS->setBoardState(board, noBoard);
+                            }
+                        }
+                    }
+                }
+    
+                // is there a resend active
+                if (nResends > 0) {
+                    itsAliveTimer->setTimer(5.0);
+                    return(!itsAliveCheck);
+                }
             }
 
             if (activeboards != TS->activeBoardsMask()) {
@@ -1122,6 +1129,7 @@ bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
                 itsMsgHandler->sendBoardChange(TS->activeBoardsMask());
                 LOG_INFO_STR("Available TB boards changed:" << boardstr);
             }
+            
             if (boardreset) {
                 itsSetupTimer->cancelAllTimers();
                 itsSetupTimer->setTimer(1.0, 1.0);
