@@ -159,7 +159,7 @@ public:
               size_t nuvw, size_t nfreqs,
               const double *frequencies, 
               casa::DComplex *XX , casa::DComplex *XY, 
-              casa::DComplex *XY , casa::DComplex *YY,
+              casa::DComplex *YX , casa::DComplex *YY,
               double maxBaseline=2000);
   void degrid(const double *baselines[3], 
               const vector<double> &frequencies,
@@ -170,7 +170,7 @@ public:
   void degrid(const boost::multi_array<double, 3> &uvwBaselines, 
               const casa::Vector<casa::Double> &frequencies,
               casa::Array<casa::DComplex> XX , casa::Array<casa::DComplex> XY, 
-              casa::Array<casa::DComplex> XY , casa::Array<casa::DComplex> YY);
+              casa::Array<casa::DComplex> YX , casa::Array<casa::DComplex> YY);
 
   /////////////////////////////////////////////////////////////////////////////////
   //
