@@ -118,6 +118,7 @@ namespace BBS {
     itsBlobOut->putStart ("patch", 1);
     *itsBlobOut << patchName << cType << apparentBrightness << ra << dec;
     itsBlobOut->putEnd();
+    itsEndPos = itsFile.tellp();
     return 0;
   }
 
@@ -129,7 +130,6 @@ namespace BBS {
     itsBlobIn->getStart ("patch");
     *itsBlobIn >> patchName >> cType >> apparentBrightness >> ra >> dec;
     itsBlobIn->getEnd();
-    itsEndPos = itsFile.tellp();
   }
 
   void SourceDBBlob::addSource (const SourceInfo& sourceInfo,
@@ -223,7 +223,8 @@ namespace BBS {
 
   SourceData::SourceData (const SourceInfo& info,
                           const string& patchName,
-                          double ra, double dec)
+                          
+double ra, double dec)
     : itsInfo      (info),
       itsPatchName (patchName),
       itsRa        (ra),
