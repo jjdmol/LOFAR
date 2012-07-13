@@ -142,10 +142,10 @@ void CacheBuffer::reset(void)
 
     itsBitsPerSample = MAX_BITS_PER_SAMPLE;
 	
-	m_beamletweights().resize(BeamletWeights::SINGLE_TIMESTEP, StationSettings::instance()->nrRcus(), MEPHeader::N_BEAMLETS);
+	m_beamletweights().resize(BeamletWeights::SINGLE_TIMESTEP, StationSettings::instance()->nrRcus(), MEPHeader::N_BEAMLETS * (MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE));
 	m_beamletweights() = complex<int16>(0,0);
 
-	m_subbandselection().resize(StationSettings::instance()->nrRcus(), MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS);
+	m_subbandselection().resize(StationSettings::instance()->nrRcus(), (MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS) * (MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE) );
 	m_subbandselection() = 0;
 
 	if (GET_CONFIG("RSPDriver.IDENTITY_WEIGHTS", i)) {
