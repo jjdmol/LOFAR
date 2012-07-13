@@ -1,0 +1,14 @@
+# comment line
+A.B=7
+# the next two lines overlap with the KVs in test.ps
+a.b.lange_naam="dit is nu een andere naam geworden met extra spaties aan het einde  "
+a.B.c=5
+A.b.DOUBLE= 3.1415926	# we may put comment here
+
+e.g=een voorbeeld
+Egg=een ei
+emptyvec=[]
+
+1.2.33.4.5= dubbel 3
+1.2.3.44.5= dubbel 4
+abc.def.par = something
