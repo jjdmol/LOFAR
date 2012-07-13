@@ -377,8 +377,8 @@ def expandps (parsetin, parsetout, keymap, nsubbands, ngroups=0, nodeindex=0, no
             locs  = []
             names = []
             # Get all nodes and file names matching the pattern
-            ##(fnodes,files) = findDirs(patt)
-            (fnodes,files) = (['locus1','locus2'], ['/data/L1/_SB9.MS','/data/L1/_SB12.MS'])
+            (fnodes,files) = findDirs(patt)
+            ##(fnodes,files) = (['locus1','locus2'], ['/data/L1/_SB9.MS','/data/L1/_SB12.MS'])
             # Turn into a list of pairs (instead of pair of lists) and sort
             filesnodes = [(os.path.basename(files[i]),
                            os.path.dirname(files[i]),
