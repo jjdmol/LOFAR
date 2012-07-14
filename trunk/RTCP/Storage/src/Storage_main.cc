@@ -133,7 +133,7 @@ int main(int argc, char *argv[])
 
     ExitOnClosedStdin			  stdinWatcher;
     setvbuf(stdout, stdoutbuf, _IOLBF, sizeof stdoutbuf);
-    setvbuf(stderr, stdoutbuf, _IOLBF, sizeof stderrbuf);
+    setvbuf(stderr, stderrbuf, _IOLBF, sizeof stderrbuf);
 
     LOG_DEBUG_STR("Started: " << argv[0] << ' ' << argv[1] << ' ' << argv[2] << ' ' << argv[3]);
 
