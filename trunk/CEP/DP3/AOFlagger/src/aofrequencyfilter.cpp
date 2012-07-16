@@ -18,6 +18,7 @@ using namespace std;
 using namespace aoRemote;
 
 lane<ObservationTimerange*> *readLane;
+lane<ObservationTimerange*> *writeLane;
 
 fftw_plan fftPlanForward, fftPlanBackward;
 
@@ -107,6 +108,10 @@ void workThread()
 	std::cout << "Worker finished. Filtersize range in channel: " << minFilterSizeInChannels << "-" << maxFilterSizeInChannels << '\n';
 }
 
+void writeThread()
+{
+}
+
 void initializeFFTW(size_t channelCount)
 {
 	fftw_complex *fftIn, *fftOut;
@@ -170,6 +175,7 @@ int main(int argc, char *argv[])
 		cout << "Total rows to filter: " << totalRows << '\n';
 		
 		readLane = new lane<ObservationTimerange*>(processorCount);
+		writeLane = new lane<ObservationTimerange*>(processorCount);
 		
 		// Start worker threads
 		boost::thread *threads[processorCount];
@@ -201,7 +207,10 @@ int main(int argc, char *argv[])
 			threads[i]->join();
 		}
 		
+		writeLane->write_end();
+		
 		delete readLane;
+		delete writeLane;
 		
 		for(size_t i=0;i<obs->Size();++i)
 			delete[] rowBuffer[i];
