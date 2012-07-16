@@ -89,7 +89,7 @@ class msss_imager_pipeline(control):
             self.inputs['job_name'] = (
                 os.path.splitext(os.path.basename(parset_file))[0]
             )
-        super(msss_imager_pipeline, self).go()
+        return super(msss_imager_pipeline, self).go()
 
 
     def pipeline_logic(self):

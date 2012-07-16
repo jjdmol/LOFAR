@@ -133,7 +133,7 @@ class msss_calibrator_pipeline(control):
                 os.path.splitext(os.path.basename(parset_file))[0]
             )
         # Call the base-class's `go()` method.
-        super(msss_calibrator_pipeline, self).go()
+        return super(msss_calibrator_pipeline, self).go()
 
 
     def pipeline_logic(self):
