@@ -132,6 +132,16 @@ namespace BBS {
     // Clear database or table
     virtual void clearTables();
 
+    // Get the next source from the table.
+    // An exception is thrown if there are no more sources.
+    virtual void getNextSource (SourceData& src);
+
+    // Tell if we are the end of the file.
+    virtual bool atEnd();
+
+    // Reset to the beginning of the file.
+    virtual void rewind();
+
   private:
     // Create the source and patch table.
     void createTables (const string& tableName);
@@ -159,12 +169,16 @@ namespace BBS {
                                double minBrightness,
                                double maxBrightness) const;
 
+    // Read a default parameter.
+    double getDefaultParmValue(const string& name);
+
     //# Data members
     casa::Table      itsPatchTable;
     casa::Table      itsSourceTable;
     set<std::string> itsPatchSet;
     set<std::string> itsSourceSet;
     bool             itsSetsFilled;
+    casa::Vector<casa::uInt> itsRowNr;
   };
 
   // @}

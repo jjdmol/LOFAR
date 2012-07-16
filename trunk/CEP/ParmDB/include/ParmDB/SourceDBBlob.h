@@ -29,7 +29,6 @@
 
 //# Includes
 #include <ParmDB/SourceDB.h>
-#include <ParmDB/SourceInfo.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_set.h>
 #include <fstream>
@@ -44,75 +43,6 @@ namespace BBS {
 
   // @ingroup ParmDB
   // @{
-
-  // @brief Class holding a  data of a source.
-  class SourceData
-  {
-  public:
-    SourceData();
-
-    SourceData (const SourceInfo&, const string& patchName,
-                double ra, double dec);
-
-    const SourceInfo& getInfo() const
-      { return itsInfo; }
-    const string& getPatchName() const
-      { return itsPatchName; }
-    double getRa() const
-      { return itsRa; }
-    double getDec() const
-      { return itsDec; }
-    double getI() const
-      { return itsI; }
-    double getQ() const
-      { return itsQ; }
-    double getU() const
-      { return itsU; }
-    double getV() const
-      { return itsV; }
-    double getMajorAxis() const
-      { return itsMajorAxis; }
-    double getMinorAxis() const
-      { return itsMinorAxis; }
-    double getOrientation() const
-      { return itsOrientation; }
-    double getPolarizationAngle() const
-      { return itsPolAngle; }
-    double getPolarizedFraction() const
-      { return itsPolFrac; }
-    double getRotationMeasure() const
-      { return itsRM; }
-    const vector<double>& getSpectralIndex() const
-      { return itsSpInx; }
-
-    void setParms (const ParmMap& defaultParameters);
-
-    void writeSource (BlobOStream&);
-    void readSource (BlobIStream&);
-
-  private:
-    // Set a parameter.
-    // If defined, its value is taken from the map.
-    // Otherwise the default value is used.
-    void setParm (const ParmMap& parms, const string& name,
-                  double defValue, double& value);
-
-    SourceInfo     itsInfo;
-    string         itsPatchName;
-    double         itsRa;
-    double         itsDec;
-    double         itsI;
-    double         itsQ;
-    double         itsU;
-    double         itsV;
-    double         itsMajorAxis;
-    double         itsMinorAxis;
-    double         itsOrientation;
-    double         itsPolAngle;
-    double         itsPolFrac;
-    double         itsRM;
-    vector<double> itsSpInx;
-  };
 
   // @brief Class for a Blob file holding source parameters.
   class SourceDBBlob : public SourceDBRep
@@ -207,13 +137,13 @@ namespace BBS {
 
     // Get the next source from the table.
     // An exception is thrown if there are no more sources.
-    void getNextSource (SourceData& src);
+    virtual void getNextSource (SourceData& src);
 
     // Tell if we are the end of the file.
-    bool atEnd();
+    virtual bool atEnd();
 
     // Reset to the beginning of the file.
-    void rewind();
+    virtual void rewind();
 
   private:
     // Skip the patch info in the file.

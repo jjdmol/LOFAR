@@ -21,7 +21,7 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <ParmDB/SourceDBBlob.h>
+#include <ParmDB/SourceDB.h>
 #include <Common/StreamUtil.h>
 #include <Common/Exception.h>
 #include <iostream>
@@ -32,7 +32,8 @@ using namespace std;
 
 int main()
 {
-  SourceDBBlob sdb(ParmDBMeta("blob", "tSourceDBBlob_tmp.src"), false);
+  // It should recognize that the data is in blob format.
+  SourceDB sdb(ParmDBMeta("casa", "tSourceDBBlob_tmp.src"), false);
   SourceData sdata;
   while (! sdb.atEnd()) {
     sdb.getNextSource (sdata);

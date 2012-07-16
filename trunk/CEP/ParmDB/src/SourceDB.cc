@@ -27,6 +27,8 @@
 #include <ParmDB/ParmDB.h>
 #include <Common/LofarLogger.h>
 
+#include <casa/OS/File.h>
+
 using namespace std;
 using namespace casa;
 
@@ -50,13 +52,22 @@ namespace BBS {
 
   SourceDB::SourceDB (const ParmDBMeta& ptm, bool forceNew)
   {
+    ParmDBMeta pm(ptm);
     // Open the correct SourceDB.
-    if (ptm.getType() == "casa") {
-      itsRep = new SourceDBCasa (ptm, forceNew);
-    } else if (ptm.getType() == "blob") {
-      itsRep = new SourceDBBlob (ptm, forceNew);
+    if (!forceNew  &&  pm.getType() == "casa") {
+      // Check if an existing DB is stored as a file (thus as SourceDBBlob).
+      // This is for compatibility reasons.
+      File file(ptm.getTableName());
+      if (file.exists()  &&  file.isRegular()) {
+        pm = ParmDBMeta("blob", pm.getTableName());
+      }
+    }
+    if (pm.getType() == "casa") {
+      itsRep = new SourceDBCasa (pm, forceNew);
+    } else if (pm.getType() == "blob") {
+      itsRep = new SourceDBBlob (pm, forceNew);
     } else {
-      ASSERTSTR(false, "unknown sourceTableType: " << ptm.getType());
+      ASSERTSTR(false, "unknown sourceTableType: " << pm.getType());
     }
     itsRep->link();
   }

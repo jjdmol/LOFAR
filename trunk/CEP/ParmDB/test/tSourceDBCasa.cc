@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <ParmDB/SourceDBCasa.h>
+#include <Common/StreamUtil.h>
 #include <Common/LofarLogger.h>
 #include <tables/Tables/TableRecord.h>
 #include <iostream>
@@ -245,6 +246,42 @@ void checkParms()
   ASSERT (v["PolFrac:src2a"].getFirstParmValue().getValues().data()[0] == 0.5);
 }
 
+void showData()
+{
+  SourceDB sdb(ParmDBMeta("casa", "tSourceDBCasa_tmp.tab"), false);
+  sdb.lock();
+  sdb.rewind();
+  SourceData sdata;
+  while (! sdb.atEnd()) {
+    sdb.getNextSource (sdata);
+    cout << endl;
+    cout << "Source name:    " << sdata.getInfo().getName() << endl;
+    cout << "Patch name:     " << sdata.getPatchName() << endl;
+    cout << "Source type:    " << sdata.getInfo().getType() << endl;
+    cout << "Reftype:        " << sdata.getInfo().getRefType() << endl;
+    cout << "RA:             " << sdata.getRa() << endl;
+    cout << "DEC:            " << sdata.getDec() << endl;
+    cout << "I:              " << sdata.getI() << endl;
+    cout << "Q:              " << sdata.getQ() << endl;
+    cout << "U:              " << sdata.getU() << endl;
+    cout << "V:              " << sdata.getV() << endl;
+    cout << "Major axis:     " << sdata.getMajorAxis() << endl;
+    cout << "Minor axis:     " << sdata.getMinorAxis() << endl;
+    cout << "Orientation:    " << sdata.getOrientation() << endl;
+    cout << "Spectral index: " << sdata.getInfo().getSpectralIndexNTerms()
+         << "  " << sdata.getSpectralIndex() << endl;
+    cout << "SpInx RefFreq:  " << sdata.getInfo().getSpectralIndexRefFreq() << endl;
+    cout << "Use RM:         " << sdata.getInfo().getUseRotationMeasure() << endl;
+    cout << "PolAngle:       " << sdata.getPolarizationAngle() << endl;
+    cout << "PolFrac:        " << sdata.getPolarizedFraction() << endl;
+    cout << "RM:             " << sdata.getRotationMeasure() << endl;
+    cout << "Shapelet I:     " << sdata.getInfo().getShapeletCoeffI() << endl;
+    cout << "Shapelet Q:     " << sdata.getInfo().getShapeletCoeffQ() << endl;
+    cout << "Shapelet U:     " << sdata.getInfo().getShapeletCoeffU() << endl;
+    cout << "Shapelet V:     " << sdata.getInfo().getShapeletCoeffV() << endl;
+  }
+}
+
 int main()
 {
   try {
@@ -253,6 +290,7 @@ int main()
     testPatches();
     testSources();
     checkParms();
+    showData();
   } catch (exception& x) {
     cout << "Unexpected exception: " << x.what() << endl;
     return 1;
