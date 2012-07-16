@@ -975,7 +975,7 @@ inline unsigned Parset::nrPsetsPerStorage() const
 
 inline unsigned Parset::getLofarStManVersion() const
 {
-  return getUint32("OLAP.LofarStManVersion", 3); 
+  return getUint32("OLAP.LofarStManVersion", 2); 
 }
 
 inline vector<unsigned> Parset::phaseOnePsets() const
