@@ -305,7 +305,6 @@ void Client::handleReadDataRows(unsigned dataSize)
 					++imagPtr;
 					++cellIter;
 				}
-				dataExt.Serialize(buffer);
 				
 				// UVW
 				casa::Array<double> uvwArr = uvwColumn(rowIndex);
@@ -320,6 +319,8 @@ void Client::handleReadDataRows(unsigned dataSize)
 				dataExt.SetAntenna1(a1Column(rowIndex));
 				dataExt.SetAntenna2(a2Column(rowIndex));
 				dataExt.SetTime(timeColumn(rowIndex));
+				
+				dataExt.Serialize(buffer);
 			}
 		}
 		
