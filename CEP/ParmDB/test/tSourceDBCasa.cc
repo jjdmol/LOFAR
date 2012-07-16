@@ -248,7 +248,7 @@ void checkParms()
 
 void showData()
 {
-  SourceDB sdb(ParmDBMeta("casa", "tSourceDBCasa_tmp.tab"), false);
+  SourceDB sdb(ParmDBMeta("", "tSourceDBCasa_tmp.tab"), false);
   sdb.lock();
   sdb.rewind();
   SourceData sdata;

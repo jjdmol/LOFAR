@@ -33,7 +33,7 @@ using namespace std;
 int main()
 {
   // It should recognize that the data is in blob format.
-  SourceDB sdb(ParmDBMeta("casa", "tSourceDBBlob_tmp.src"), false);
+  SourceDB sdb(ParmDBMeta("", "tSourceDBBlob_tmp.src"), false);
   SourceData sdata;
   while (! sdb.atEnd()) {
     sdb.getNextSource (sdata);

@@ -45,6 +45,10 @@ namespace BBS {
   public:
     ParmDBMeta();
 
+    // Construct from a given type and file/table name.
+    // The type can be empty, casa or blob.
+    // If empty, the code doing the open will detect the exact type. At the
+    // moment that can only be used for SourceDB.
     ParmDBMeta (const std::string& type, const std::string& tableName);
 
     void setSQLMeta (const std::string& dbName, const std::string& userName,
