@@ -1,25 +1,18 @@
 #!/usr/bin/python
-import logging
-from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT, \
-                                ISOLATION_LEVEL_READ_COMMITTED
+from psycopg2.extensions import ISOLATION_LEVEL_READ_COMMITTED
 import psycopg2
-import time
-from src.gsmlogger import get_gsm_logger
+from src.unifiedConnection import UnifiedConnection
 
 
-class PgConnection(object):
+class PgConnection(UnifiedConnection):
     """
     Connection object for PostgreSQL.
     """
     def __init__(self, **params):
+        super(PgConnection, self).__init__()
         par = self.map_params(params)
         self.conn = psycopg2.connect(**par)
-        #import ipdb; ipdb.set_trace()
         self.conn.set_isolation_level(ISOLATION_LEVEL_READ_COMMITTED)
-        self.autocommit = False
-        self.log = get_gsm_logger('pgsql', 'sql.log')
-        self.log.setLevel(logging.DEBUG)
-        self.profile = False
 
     @staticmethod
     def is_monet():
@@ -45,128 +38,38 @@ class PgConnection(object):
         result = {}
         for key, value in somedict.iteritems():
             if key in mapper:
-                if mapper[key] != None:
+                if mapper[key] is not None:
                     result[mapper[key]] = value
             else:
                 result[key] = value
         return result
 
-    def set_autocommit(self, value):
-        """
-        Change commit level for connection.
-        """
-        if value:
-            self.conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-        else:
-            self.conn.set_isolation_level(ISOLATION_LEVEL_READ_COMMITTED)
-        self.autocommit = value
-
-    def commit(self):
-        """
-        Commit only if it is needed.
-        """
-        if not self.autocommit:
-            if self.profile:
-                st = time.time()
-            self.conn.commit()
-            if self.profile:
-                self.log.debug('Time: %.3f SQL: COMMIT' % (time.time() - st))
-
-    def start(self):
+    def _start_transaction(self):
         """
         Start transaction.
         """
-        if not self.autocommit:
+        try:
+            self.log.debug('BEGIN')
+            self.conn.cursor().execute('BEGIN')
+        except psycopg2.InternalError:
+            self.log.debug('ROLLBACK')
+            self.conn.rollback()
+            self.log.debug('BEGIN')
             self.conn.cursor().execute('BEGIN')
 
-    def execute(self, query):
+    def _get_lastcount(self, cursor):
+        if cursor.statusmessage.split()[0] == 'SELECT':
+            return cursor.rowcount
+        else:
+            return 0
+
+    def call_procedure(self, procname):
         """
-        Overriding execute method with logging.
+        Proper procedure call (for Monet/Postgres compatibility.)
         """
         cur = self.conn.cursor()
-        result = self._execute_with_cursor(query, cur)
+        self._execute_with_cursor('select %s' % procname, cur)
         cur.close()
-        return result
-
-    def _execute_with_cursor(self, query, cursor):
-        """
-        Run the SQL statement and return it's result.
-        Log (with profiling information, if required).
-        """
-        if self.profile:
-            start = time.time()
-        try:
-            result = cursor.execute(query)
-        except Exception as oerr:
-            self.log.error(query.replace('\n', ' '))
-            self.log.error(oerr)
-            raise oerr
-        if self.profile:
-            self.log.debug('Time: %.3f SQL: %s' % (time.time() - start,
-                                                 query.replace('\n', ' ')))
-        else:
-            self.log.debug(query.replace('\n', ' '))
-        return result
-
-    def execute_set(self, query_set, quiet=True):
-        """
-        Execute several SQL statements and return the last result.
-        """
-        if not isinstance(query_set, list):
-            if not isinstance(query_set, str):
-                raise ValueError("Got %s instead of list of SQLs" %
-                                 str(query_set))
-            else:
-                query_set = query_set.strip('; ').split(';')
-        cursor = self.conn.cursor()
-        for query in query_set:
-            self._execute_with_cursor(query, cursor)
-        #We have to be sure that there is anything to fetch.
-        if cursor.rowcount > 0 and \
-           cursor.statusmessage.split()[0] == 'SELECT' and \
-           not quiet:
-            return cursor.fetchall()
-        else:
-            return True
-
-    def exec_return(self, query):
-        """
-        Run a single query and return the first value from resultset.
-        """
-        result = []
-        try:
-            cursor = self.conn.cursor()
-            cursor.execute(query)
-            result = cursor.fetchone()[0]
-            if isinstance(result, long):
-                result = int(result)
-        except psycopg2.Error, exc:
-            self.log.error("Failed on query: %s. Error: %s" % (query, exc))
-            raise exc
-        finally:
-            cursor.close()
-        return result
-
-    def get_cursor(self, query):
-        """
-        Create and return a cursor for a given query.
-        """
-        cur = self.conn.cursor()
-        cur.execute(query)
-        return cur
-
-    def cursor(self):
-        """
-        Create and return a cursor for a given query.
-        """
-        cur = self.conn.cursor()
-        return cur
-
-    def close(self):
-        """
-        Close the connection.
-        """
-        self.conn.close()
 
     def established(self):
         """
@@ -177,10 +80,3 @@ class PgConnection(object):
         else:
             return False
 
-    def call_procedure(self, procname):
-        """
-        Proper procedure call (for Monet/Postgres compatibility.)
-        """
-        cur = self.conn.cursor()
-        cur.execute('select %s' % procname)
-        cur.close()

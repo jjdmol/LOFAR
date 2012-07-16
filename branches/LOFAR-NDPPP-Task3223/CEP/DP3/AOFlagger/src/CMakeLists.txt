@@ -43,11 +43,7 @@ endif(GSL_FOUND)
 
 lofar_add_bin_program(rfihistory rfihistory.cpp)
 
-lofar_add_bin_program(aofrequencyfilter aofrequencyfilter.cpp util/rng.cpp msio/timestepaccessor.cpp util/aologger.cpp)
-
 lofar_add_bin_program(aorefscript aorefscript.cpp)
-
-lofar_add_bin_program(aosynchronisation aosynchronisation.cpp)
 
 set(GUI_PLOT_FILES
   gui/plot/colorscale.cpp
@@ -237,9 +233,11 @@ if(GTKMM_FOUND)
 		gui/imagewidget.cpp
 		gui/imagepropertieswindow.cpp
 		)
-		lofar_add_bin_program(badstations badstations.cpp ${REMOTE_FILES})
 		target_link_libraries(aoqplot ${GTKMM_LIBRARIES})
+		lofar_add_bin_program(badstations badstations.cpp ${REMOTE_FILES})
 		target_link_libraries(badstations ${GTKMM_LIBRARIES})
+		lofar_add_bin_program(aofrequencyfilter aofrequencyfilter.cpp ${REMOTE_FILES})
+		target_link_libraries(aofrequencyfilter ${GTKMM_LIBRARIES})
 	endif(BOOST_ASIO_H_FOUND AND SIGCXX_FOUND)
 else()
   message(WARNING " The graphical user interface library GTKMM was not found; rfigui and aoqplot will not be compiled.")

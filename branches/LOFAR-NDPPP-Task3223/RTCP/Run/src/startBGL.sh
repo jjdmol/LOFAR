@@ -36,6 +36,9 @@ STORAGE_PARSET=/opt/lofar/log/L$OBSID.parset
 # Make the /opt/lofar/log/latest symlink
 (ln -sfT `dirname $STORAGE_PARSET` /opt/lofar/log/latest || true) &&
 
+# Make the /opt/lofar/log/latest.parset symlink
+(ln -sfT $STORAGE_PARSET /opt/lofar/log/latest.parset || true) &&
+
 # Inject the parset into the correlator
 /opt/lofar/bin/commandOLAP.py -P $PARTITION parset $IONPROC_PARSET
 

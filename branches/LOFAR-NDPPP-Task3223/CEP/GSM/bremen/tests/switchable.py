@@ -5,6 +5,7 @@ from src.gsmconnectionmanager import GSMConnectionManager
 
 class SwitchableTest(unittest.TestCase):
     """
+    Test with MonetDB/PostgreSQL switch using 'testconfig'.
     """
     def setUp(self):
         """

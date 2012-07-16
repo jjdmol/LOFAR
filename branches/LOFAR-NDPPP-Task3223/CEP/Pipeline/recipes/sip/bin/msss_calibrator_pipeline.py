@@ -86,10 +86,10 @@ class msss_calibrator_pipeline(control):
         if not all(self.io_data_mask):
             self.logger.info("Updating input/output product specifications")
             self.input_data = [
-                f for (f,m) in zip(self.input_data, self.io_data_mask) if m
+                f for (f, m) in zip(self.input_data, self.io_data_mask) if m
             ]
             self.output_data = [
-                f for (f,m) in zip(self.output_data, self.io_data_mask) if m
+                f for (f, m) in zip(self.output_data, self.io_data_mask) if m
             ]
 
 
@@ -107,7 +107,7 @@ class msss_calibrator_pipeline(control):
             self.logger.warn(
                 "The following input data files were not found: %s" %
                 ', '.join(
-                    ':'.join(f) for (f,m) in zip(
+                    ':'.join(f) for (f, m) in zip(
                         self.input_data, self.io_data_mask
                     ) if not m
                 )
@@ -157,7 +157,7 @@ class msss_calibrator_pipeline(control):
         # Create directories for temporary parset- and map files
         create_directory(parset_dir)
         create_directory(mapfile_dir)
-        
+
         # Write input- and output data map-files
         data_mapfile = os.path.join(mapfile_dir, "data.mapfile")
         store_data_map(data_mapfile, self.input_data)
@@ -170,7 +170,7 @@ class msss_calibrator_pipeline(control):
             self.logger.warn("No input data files to process. Bailing out!")
             return 0
 
-        self.logger.debug("Processing: %s" % 
+        self.logger.debug("Processing: %s" %
             ', '.join(':'.join(f) for f in self.input_data)
         )
 
@@ -226,7 +226,7 @@ class msss_calibrator_pipeline(control):
             "setupsourcedb", data_mapfile,
             skymodel=os.path.join(
                 self.config.get('DEFAULT', 'lofarroot'),
-                'share', 'pipeline', 'skymodels', 
+                'share', 'pipeline', 'skymodels',
                 py_parset.getString('Calibration.CalibratorSource') +
                     '.skymodel'
             )
@@ -237,21 +237,23 @@ class msss_calibrator_pipeline(control):
         py_parset.makeSubset('BBS.').writeFile(bbs_parset)
 
         # Run BBS to calibrate the calibrator source(s).
-        self.run_task("new_bbs", 
+        self.run_task("new_bbs",
             demix_mapfile,
             parset=bbs_parset,
             instrument_mapfile=parmdb_mapfile,
             sky_mapfile=sourcedb_mapfile)
 
-        # Export the calibration solutions using parmexportcal and store
+        # Export the calibration solutions using gainoutliercorrection and store
         # the results in the files specified in the instrument mapfile.
-        self.run_task("parmexportcal", (parmdb_mapfile, instrument_mapfile))
+        self.run_task("gainoutliercorrection",
+                      (parmdb_mapfile, instrument_mapfile),
+                      sigma=1.0)
 
         # Create a parset-file containing the metadata for MAC/SAS
         self.run_task("get_metadata", instrument_mapfile,
             parset_file=self.parset_feedback_file,
             parset_prefix=(
-                self.parset.getString('prefix') + 
+                self.parset.getString('prefix') +
                 self.parset.fullModuleName('DataProducts')
             ),
             product_type="InstrumentModel")

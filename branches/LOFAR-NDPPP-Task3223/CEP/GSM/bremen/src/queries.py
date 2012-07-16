@@ -13,7 +13,7 @@ except ImportError:
     SVN_LOCATION = None
 
 
-def _get_svn_version():
+def get_svn_version():
     """
     Returns SVN version of the GSM.
     """
@@ -149,6 +149,25 @@ avg_w{0} = avg_w{0} + {1}/({2}*{2}),
 avg_weight_{0} = avg_weight_{0} + 1/({2}*{2})""".format(column_alias,
                                                         new_value, new_weight)
 
+def get_column_deduct(column_alias, new_value, new_weight):
+    """
+    Updater for error-columns for single item ipdate.
+    """
+    return """
+avg_w{0} = avg_w{0} - {1}/({2}*{2}),
+avg_weight_{0} = avg_weight_{0} - 1/({2}*{2})""".format(column_alias,
+                                                        new_value, new_weight)
+
+def get_column_deduct_nonzero(column_alias, new_value, new_weight):
+    """
+    Updater for error-columns for single item ipdate.
+    """
+    return """
+wm_{0} = avg_w{0}/avg_weight_{0},
+wm_{0}_err = sqrt(1.0/avg_weight_{0})""".format(column_alias,
+                                                        new_value, new_weight)
+
+
 @makelistable
 def get_column_update2(column_alias):
     """
@@ -160,6 +179,25 @@ wm_{0} = (avg_w{0} + y.{0}_value)/(avg_weight_{0} + y.{0}_weight),
 wm_{0}_err = sqrt(1.0/(avg_weight_{0} + y.{0}_weight)),
 avg_w{0} = avg_w{0} + y.{0}_value,
 avg_weight_{0} = avg_weight_{0} + y.{0}_weight""".format(column_alias)
+
+
+@makelistable
+def get_column_deduct2(column_alias):
+    """
+    Updater for error-columns for single item ipdate.
+    Used for updating by multiple new records (good for extendedsources).
+    """
+    return """
+avg_w{0} = avg_w{0} - y.{0}_value,
+avg_weight_{0} = avg_weight_{0} - y.{0}_weight""".format(column_alias)
+
+
+@makelistable
+def get_column_deduct2_nonzero(column_alias):
+    return """
+wm_{0} = avg_w{0}/avg_weight_{0},
+wm_{0}_err = sqrt(1.0/avg_weight_{0})""".format(column_alias)
+
 
 @makelistable
 def get_column_from(column_alias):
@@ -213,18 +251,4 @@ select r.wm_ra as ra, r.wm_decl as decl, f.wm_f_peak
 """.format(get_field_conditions(), stokes, band)
     return sql
 
-
-def get_insert_image(parset_id, frequency):
-    """
-    Insert image and return image_id.
-    """
-    return ["""
-insert into images (ds_id, tau, band, imagename,
-                    centr_ra, centr_decl, svn_version)
-select 0, 1, freqbandid, \'{0}\' as imagename,
-       0.0, 0.0, {2}
-  from frequencybands
- where freq_low < {1} and freq_high > {1};""".format(parset_id, frequency,
-                                                     _get_svn_version()),
-"""select max(imageid) from images;"""]
 

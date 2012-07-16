@@ -9,7 +9,7 @@ except ImportError:
 
 from src.errors import ParsetContentError, SourceException, GSMException
 from src.bbsfilesource import GSMBBSFileSource
-from src.queries import get_insert_image
+from src.sqllist import get_sql, get_svn_version
 from src.gsmlogger import get_gsm_logger
 
 
@@ -77,14 +77,16 @@ class GSMParset(object):
         if not self.data.get('frequency').isdigit():
             raise SourceException('Frequency should be digital, %s found'
                                     % self.data.get('frequency'))
-        sql_insert = get_insert_image(self.parset_id,
-                                      self.data.get('frequency'))
-        result = conn.execute_set(sql_insert, quiet=False)[0][0]
-        if not result or result == -1:
+        band = conn.exec_return(get_sql('get frequency',
+                                        self.data.get('frequency')))
+        if not band or band == -1:
             raise SourceException(
                         'No matching frequency band found for frequency %s' %
                             self.data.get('frequency'))
-        self.log.info(result)
-        return result
+        conn.execute(get_sql('insert image', self.parset_id, band,
+                             get_svn_version()))
+        image_id = conn.exec_return(get_sql('get last image_id'))
+        self.log.info('Image %s created' % image_id)
+        return image_id
 
 

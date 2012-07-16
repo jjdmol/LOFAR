@@ -194,6 +194,7 @@ class Parset: public ParameterSet
 
     unsigned			nrBeams() const;
     std::string                 beamTarget(unsigned beam) const;
+    double                      beamDuration(unsigned beam) const;
 
     unsigned			nrPencilBeams(unsigned beam) const;
     std::vector<unsigned>	nrPencilBeams() const;
@@ -526,18 +527,17 @@ public:
   }
 
   // the part number of a subband with an absolute index
-  unsigned myPart( unsigned subband ) const {
+  unsigned myPart( unsigned subband, bool coherent ) const {
     for (unsigned i = 0; i < streamInfo.size(); i++) {
       const struct StreamInfo &info = streamInfo[i];
 
-      if ( info.subbands[0] <= subband
+      if ( info.coherent == coherent
+        && info.subbands[0] <= subband
         && info.subbands[info.subbands.size()-1] >= subband )
         return info.part;
     }
 
-    // shouldn't reach this point
-    ASSERTSTR(false, "Requested part for unused subband " << subband);
-
+    // we reach this point if there are no beams of this coherency
     return 0;
   }
 

@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/Exception.h>
 
 #include <ServiceBroker.h>
 #include <GCF/TM/GCF_Control.h>
@@ -29,6 +30,9 @@
 using namespace LOFAR;
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::CUDaemons;
+
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 int main(int argc, char *argv[])
 {

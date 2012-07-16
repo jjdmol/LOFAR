@@ -464,6 +464,10 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 			itsBusyControllers = itsChildControl->countChilds(0, CNTLRTYPE_NO_TYPE);
 		}
 		else if (timerEvent.id == itsStopTimer) {
+			if (itsState == CTState::QUIT) {
+				LOG_INFO("Re-entry of quit-phase, ignored.");
+				break;
+			}
 			setState(CTState::QUIT);
 			itsChildResult   = itsQuitReason;
 			itsChildsInError = 0;

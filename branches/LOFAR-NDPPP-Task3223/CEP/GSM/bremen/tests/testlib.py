@@ -3,7 +3,7 @@
 Various tools for testing.
 """
 from os import path
-from src.connectionMonet import MonetLoggedConnection
+from src.connectionMonet import MonetConnection
 
 FREQUENCY = {
     1: 30000000,
@@ -56,7 +56,7 @@ def cleanup_db(conn):
                 'images',
                 'extractedsources',
                 'detections']:
-        if isinstance(conn, MonetLoggedConnection):
+        if isinstance(conn, MonetConnection):
             cursor.execute("delete from %s;" % tbl)
         else:
             cursor.execute("truncate table %s;" % tbl)
