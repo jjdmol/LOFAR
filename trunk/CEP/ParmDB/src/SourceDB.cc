@@ -23,6 +23,7 @@
 #include <lofar_config.h>
 #include <ParmDB/SourceDB.h>
 #include <ParmDB/SourceDBCasa.h>
+#include <ParmDB/SourceDBBlob.h>
 #include <ParmDB/ParmDB.h>
 #include <Common/LofarLogger.h>
 
@@ -52,6 +53,8 @@ namespace BBS {
     // Open the correct SourceDB.
     if (ptm.getType() == "casa") {
       itsRep = new SourceDBCasa (ptm, forceNew);
+    } else if (ptm.getType() == "blob") {
+      itsRep = new SourceDBBlob (ptm, forceNew);
     } else {
       ASSERTSTR(false, "unknown sourceTableType: " << ptm.getType());
     }

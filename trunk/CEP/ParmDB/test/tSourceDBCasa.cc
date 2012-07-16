@@ -111,9 +111,9 @@ void testSources()
   defValues.define ("PolAng",  ParmValueSet(ParmValue(0.3)));
   defValues.define ("PolFrac", ParmValueSet(ParmValue(0.5)));
   // Add to an existing patch.
-  pdb.addSource (SourceInfo("sun", SourceInfo::SUN),
+  pdb.addSource (SourceInfo("sun", SourceInfo::POINT, "SUN"),
                  "patch1", defValues);
-  pdb.addSource (SourceInfo("src1", SourceInfo::POINT, 1, 1e9, true),
+  pdb.addSource (SourceInfo("src1", SourceInfo::POINT, "J2000", 1, 1e9, true),
                  "patch2", defValues,
                  1., -1.);
   ASSERT (t1.nrow() == 2);
@@ -121,7 +121,7 @@ void testSources()
   // Try adding to an unknown patch.
   bool ok = false;
   try {
-    pdb.addSource (SourceInfo("src100", SourceInfo::POINT), "patch20",
+    pdb.addSource (SourceInfo("src100", SourceInfo::POINT, "J2000"), "patch20",
                    defValues);
   } catch (std::exception& x) {
     cout << "Expected exception: " << x.what() << endl;
@@ -182,13 +182,15 @@ void testSources()
   // Get some sources.
   SourceInfo info1 = pdb.getSource("sun");
   ASSERT (info1.getName() == "sun");
-  ASSERT (info1.getType() == SourceInfo::SUN);
+  ASSERT (info1.getType() == SourceInfo::POINT);
+  ASSERT (info1.getRefType() == "SUN");
   ASSERT (info1.getSpectralIndexNTerms() == 0);
   ASSERT (info1.getSpectralIndexRefFreq() == 0.);
   ASSERT (info1.getUseRotationMeasure() == false);
   vector<SourceInfo> vinfo1 = pdb.getSources("s*");
   ASSERT(vinfo1.size() == 3);
-  ASSERT(vinfo1[0].getName()=="sun" && vinfo1[0].getType()==SourceInfo::SUN);
+  ASSERT(vinfo1[0].getName()=="sun" && vinfo1[0].getType()==SourceInfo::POINT &&
+         vinfo1[0].getRefType()=="SUN");
   ASSERT(vinfo1[1].getName()=="src2" && vinfo1[1].getType()==SourceInfo::POINT);
   ASSERT(vinfo1[2].getName()=="src2a" && vinfo1[2].getType()==SourceInfo::DISK);
   vector<SourceInfo> vinfo2 = pdb.getPatchSources("src2");

@@ -83,6 +83,7 @@ namespace BBS {
     td.addColumn (ScalarColumnDesc<String>("SOURCENAME"));
     td.addColumn (ScalarColumnDesc<uint>  ("PATCHID"));
     td.addColumn (ScalarColumnDesc<int>   ("SOURCETYPE"));
+    td.addColumn (ScalarColumnDesc<String>("REFTYPE"));
     td.addColumn (ScalarColumnDesc<uint>  ("SPINX_NTERMS"));
     td.addColumn (ScalarColumnDesc<double>("SPINX_REFFREQ"));
     td.addColumn (ScalarColumnDesc<bool>  ("USE_ROTMEAS"));
@@ -98,7 +99,7 @@ namespace BBS {
     TableDesc tdpat("Local Sky Model patches", TableDesc::Scratch);
     tdpat.comment() = String("Table containing the patches in the Local Sky Model");
     tdpat.addColumn (ScalarColumnDesc<String>("PATCHNAME"));
-    tdpat.addColumn (ScalarColumnDesc<uint>  ("CATEGORY"));
+    tdpat.addColumn (ScalarColumnDesc<uInt>  ("CATEGORY"));
     tdpat.addColumn (ScalarColumnDesc<double>("APPARENT_BRIGHTNESS"));
     tdpat.addColumn (ScalarColumnDesc<double>("RA"));
     tdpat.addColumn (ScalarColumnDesc<double>("DEC"));
@@ -301,6 +302,7 @@ namespace BBS {
     ScalarColumn<String> nameCol (itsSourceTable, "SOURCENAME");
     ScalarColumn<uint>   idCol   (itsSourceTable, "PATCHID");
     ScalarColumn<int>    typeCol (itsSourceTable, "SOURCETYPE");
+    ScalarColumn<String> reftCol (itsSourceTable, "REFTYPE");
     ScalarColumn<uint>   spinxCol(itsSourceTable, "SPINX_NTERMS");
     ScalarColumn<double> sirefCol(itsSourceTable, "SPINX_REFFREQ");
     ScalarColumn<bool>   usermCol(itsSourceTable, "USE_ROTMEAS");
@@ -317,6 +319,7 @@ namespace BBS {
     nameCol.put  (rownr, sourceInfo.getName());
     idCol.put    (rownr, patchId);
     typeCol.put  (rownr, sourceInfo.getType());
+    reftCol.put  (rownr, sourceInfo.getRefType());
     spinxCol.put (rownr, sourceInfo.getSpectralIndexNTerms());
     sirefCol.put (rownr, sourceInfo.getSpectralIndexRefFreq());
     usermCol.put (rownr, sourceInfo.getUseRotationMeasure());
@@ -482,6 +485,11 @@ namespace BBS {
   {
     Vector<String> nm(ROScalarColumn<String>(table, "SOURCENAME").getColumn());
     Vector<int>    tp(ROScalarColumn<int>   (table, "SOURCETYPE").getColumn());
+    // Default RefType is J2000 (for backward compatibility).
+    Vector<String> rt(tp.size(), "J2000");
+    if (table.tableDesc().isColumn("REFTYPE")) {
+      ROScalarColumn<String>(table, "REFTYPE").getColumn(rt);
+    }
     vector<SourceInfo> res;
     res.reserve (nm.size());
     if (table.tableDesc().isColumn("SPINX_NTERMS")) {
@@ -498,7 +506,7 @@ namespace BBS {
       ROArrayColumn<double>  vcoefCol(table, "SHAPELET_VCOEFF");
       for (uint i=0; i<nm.size(); ++i) {
         SourceInfo::Type type = SourceInfo::Type((tp[i]));
-        res.push_back (SourceInfo(nm[i], type, sd[i], sr[i], rm[i]));
+        res.push_back (SourceInfo(nm[i], type, rt[i], sd[i], sr[i], rm[i]));
         if (type == SourceInfo::SHAPELET) {
           ASSERTSTR (icoefCol.isDefined(i), "No coefficients defined for "
                      " shapelet source " << nm[i]);
@@ -527,7 +535,7 @@ namespace BBS {
                         getValues().data());
           }
         }
-        res.push_back (SourceInfo(nm[i], SourceInfo::Type(tp[i]),
+        res.push_back (SourceInfo(nm[i], SourceInfo::Type(tp[i]), rt[i],
                                   degree+1, refFreq));
       }
     }

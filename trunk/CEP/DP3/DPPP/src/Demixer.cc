@@ -38,7 +38,7 @@
 #include <DPPP/PointSource.h>
 
 #include <ParmDB/Axis.h>
-#include <ParmDB/SourceDB.h>
+#include <ParmDB/SourceDBBlob.h>
 #include <ParmDB/ParmDB.h>
 #include <ParmDB/ParmSet.h>
 #include <ParmDB/ParmCache.h>
@@ -104,8 +104,7 @@ namespace LOFAR {
         itsNTimeChunk    (parset.getUint  (prefix+"ntimechunk", 0)),
         itsNTimeOut      (0),
         itsNConverged    (0),
-        itsTimeCount     (0),
-        itsNStation      (input->antennaNames().size())
+        itsTimeCount     (0)
     {
       // Get and set solver options.
 //      itsSolveOpt.maxIter =
@@ -128,6 +127,8 @@ namespace LOFAR {
       // Or make sources a vector of vectors like [name, ra, dec] where
       // ra and dec are optional.
 
+      ASSERTSTR (!(itsSkyName.empty() || itsInstrumentName.empty()),
+                 "An empty name is given for the sky and/or instrument model");
       // Default nr of time chunks is maximum number of threads.
       if (itsNTimeChunk == 0) {
         itsNTimeChunk = OpenMP::maxThreads();
@@ -148,27 +149,21 @@ namespace LOFAR {
                             itsExtraSources.begin(), itsExtraSources.end());
       itsAllSources.push_back (itsTargetSource);
 
-      // Get the patch names and positions from the SourceDB table.
-      BBS::SourceDB sourceDB(BBS::ParmDBMeta("casa", itsSkyName));
-      for(uint i = 0; i < itsNModel; ++i) {
-        itsPatchList.push_back(makePatch(sourceDB, itsAllSources[i]));
-      }
-
-//      // Get the patch names and positions from the SourceDB table.
-//      for(uint i = 0; i < itsNModel; ++i) {
-//        itsPatchList.push_back(makePatch(itsAllSources[i]));
-//      }
-
+      // Get the source info of all patches from the SourceDB table.
+      BBS::SourceDBBlob sourceDB(BBS::ParmDBMeta("blob", itsSkyName), false);
+      vector<string> patchNames(itsAllSources);
       // If the target source is given, add it to the model.
       // Because the target source has to be the last direction, it means
       // that (for the time being) no extra sources can be given.
       if (! itsTargetSource.empty()) {
-        itsNModel++;
+        patchNames[itsNModel++] = itsTargetSource;
+        // The target has to be the last demix direction.
+        // If it has a source model, there cannot be any extra source
+        // because the sources to be predicted have to be a consecutive vector.
         ASSERTSTR (itsExtraSources.empty(), "Currently no extrasources can "
                    "be given if the targetsource is given");
-        itsPatchList.push_back(makePatch(sourceDB, itsTargetSource));
-//        itsPatchList.push_back(makePatch(itsTargetSource));
       }
+      itsPatchList = makePatches (sourceDB, patchNames, itsNModel);
       ASSERT(itsPatchList.size() == itsNModel);
 
       // Size buffers.
@@ -228,11 +223,6 @@ namespace LOFAR {
       targetAvgSubtr->setNextStep (DPStep::ShPtr(itsAvgResultSubtr));
       itsFirstSteps.push_back (targetAvgSubtr);
 
-      for(size_t i = 0; i < input->getAnt1().size(); ++i) {
-        itsBaselines.push_back(Baseline(input->getAnt1()[i],
-          input->getAnt2()[i]));
-      }
-
 //      while(itsCutOffs.size() < itsNModel) {
 //        itsCutOffs.push_back(0);
 //      }
@@ -281,12 +271,15 @@ namespace LOFAR {
     {
     }
 
-    void Demixer::updateInfo (DPInfo& info)
+    void Demixer::updateInfo (const DPInfo& infoIn)
     {
+      info() = infoIn;
       // Get size info.
-      itsNChanIn = info.nchan();
-      itsNBl     = info.nbaselines();
-      itsNCorr   = info.ncorr();
+      itsNStation = infoIn.antennaNames().size();
+      itsNChanIn  = infoIn.nchan();
+      itsNBl      = infoIn.nbaselines();
+      itsNCorr    = infoIn.ncorr();
+      ASSERTSTR (itsNCorr==4, "Demixing requires data with 4 polarizations");
       itsFactorBuf.resize (IPosition(4, itsNCorr, itsNChanIn, itsNBl,
                                      itsNDir*(itsNDir-1)/2));
       itsFactorBufSubtr.resize (IPosition(4, itsNCorr, itsNChanIn, itsNBl,
@@ -294,48 +287,45 @@ namespace LOFAR {
 
       // Adapt averaging to available nr of channels and times.
       // Use a copy of the DPInfo, otherwise it is updated multiple times.
-      DPInfo infocp(info);
-      itsNTimeAvg = std::min (itsNTimeAvg, infocp.ntime());
-      itsNChanAvg = infocp.update (itsNChanAvg, itsNTimeAvg);
-      itsNTimeDemix = infocp.ntime();
+      DPInfo infoDemix(infoIn);
+      itsNTimeAvg = std::min (itsNTimeAvg, infoIn.ntime());
+      itsNChanAvg = infoDemix.update (itsNChanAvg, itsNTimeAvg);
+      itsNChanOut = infoDemix.nchan();
+      itsTimeIntervalAvg = infoDemix.timeInterval();
+      itsNTimeDemix      = infoDemix.ntime();
+      for (size_t i=0; i<infoIn.getAnt1().size(); ++i) {
+        itsBaselines.push_back (Baseline(infoIn.getAnt1()[i],
+                                         infoIn.getAnt2()[i]));
+      }
 
       // Let the internal steps update their data.
       for (uint i=0; i<itsFirstSteps.size(); ++i) {
-        infocp = info;
-        DPStep::ShPtr step = itsFirstSteps[i];
-        while (step) {
-          step->updateInfo (infocp);
-          step = step->getNextStep();
-        }
-        if (i == 0) {
-          // Keep the averaged time interval.
-          itsNChanOut = infocp.nchan();
-          itsTimeIntervalAvg = infocp.timeInterval();
-        }
+        itsFirstSteps[i]->setInfo (infoIn);
       }
-
       // Update the info of this object.
-      info.setNeedVisData();
-      info.setNeedWrite();
-      itsNTimeAvgSubtr = std::min (itsNTimeAvgSubtr, info.ntime());
-      itsNChanAvgSubtr = info.update (itsNChanAvgSubtr, itsNTimeAvgSubtr);
-      itsNChanOutSubtr = info.nchan();
-      ASSERTSTR (itsNChanAvg % itsNChanAvgSubtr == 0, "Demix averaging "
-        << itsNChanAvg << " must be multiple of output averaging "
-        << itsNChanAvgSubtr);
-      ASSERTSTR (itsNTimeAvg % itsNTimeAvgSubtr == 0, "Demix averaging "
-        << itsNTimeAvg << " must be multiple of output averaging "
-        << itsNTimeAvgSubtr);
-
+      info().setNeedVisData();
+      info().setNeedWrite();
+      itsNTimeAvgSubtr = std::min (itsNTimeAvgSubtr, infoIn.ntime());
+      itsNChanAvgSubtr = info().update (itsNChanAvgSubtr, itsNTimeAvgSubtr);
+      itsNChanOutSubtr = info().nchan();
+      ASSERTSTR (itsNChanAvg % itsNChanAvgSubtr == 0,
+		 "Demix averaging " << itsNChanAvg
+		 << " must be multiple of output averaging "
+		 << itsNChanAvgSubtr);
+      ASSERTSTR (itsNTimeAvg % itsNTimeAvgSubtr == 0,
+		 "Demix averaging " << itsNTimeAvg
+		 << " must be multiple of output averaging "
+		 << itsNTimeAvgSubtr);
       // Store channel frequencies for the demix and subtract resolutions.
-      itsFreqDemix = itsInput->chanFreqs (itsNChanAvg);
-      itsFreqSubtr = itsInput->chanFreqs (itsNChanAvgSubtr);
+      itsFreqDemix = infoDemix.chanFreqs();
+      itsFreqSubtr = getInfo().chanFreqs();
 
       // Store phase center position in J2000.
-      MDirection dirJ2000(MDirection::Convert(info.phaseCenter(), MDirection::J2000)());
+      MDirection dirJ2000(MDirection::Convert(infoIn.phaseCenter(),
+                                              MDirection::J2000)());
       Quantum<Vector<Double> > angles = dirJ2000.getAngle();
-      itsPhaseRef = Position(angles.getBaseValue()(0),
-        angles.getBaseValue()(1));
+      itsPhaseRef = Position(angles.getBaseValue()[0],
+                             angles.getBaseValue()[1]);
 
       initUnknowns();
     }
@@ -394,7 +384,6 @@ namespace LOFAR {
     bool Demixer::process (const DPBuffer& buf)
     {
       itsTimer.start();
-
       // Update the count.
       itsNTimeIn++;
       // Make sure all required data arrays are filled in.
@@ -1024,9 +1013,8 @@ namespace LOFAR {
         }
 
         // Update convergence count.
-        for(size_t i = 0; i < nThread; ++i)
-        {
-            itsNConverged += converged[i];
+        for (size_t i=0; i<nThread; ++i) {
+          itsNConverged += converged[i];
         }
 
         itsTimerSolve.stop();
@@ -1069,16 +1057,16 @@ namespace LOFAR {
     void Demixer::dumpSolutions()
     {
       // Construct solution grid.
-      Vector<double> freq = itsInput->chanFreqs(itsInput->nchan());
-      Vector<double> freqWidth = itsInput->chanWidths(itsInput->nchan());
+      const Vector<double>& freq      = getInfo().chanFreqs();
+      const Vector<double>& freqWidth = getInfo().chanWidths();
       BBS::Axis::ShPtr freqAxis(new BBS::RegularAxis(freq[0] - freqWidth[0]
         * 0.5, freqWidth[0], 1));
-      BBS::Axis::ShPtr timeAxis(new BBS::RegularAxis(itsInput->startTime()
-        - itsInput->timeInterval() * 0.5, itsTimeIntervalAvg, itsNTimeDemix));
+      BBS::Axis::ShPtr timeAxis(new BBS::RegularAxis(getInfo().startTime()
+        - getInfo().timeInterval() * 0.5, itsTimeIntervalAvg, itsNTimeDemix));
       BBS::Grid solGrid(freqAxis, timeAxis);
 
-      // Initialize ParmDB.
-      BBS::ParmDB parmDB(BBS::ParmDBMeta("casa", itsInstrumentName));
+      // Create and initialize ParmDB.
+      BBS::ParmDB parmDB(BBS::ParmDBMeta("casa", itsInstrumentName), true);
       BBS::ParmSet parmSet;
       BBS::ParmCache parmCache(parmSet, solGrid.getBoundingBox());
 
@@ -1089,9 +1077,9 @@ namespace LOFAR {
       parmDB.setDefaultSteps(resolution);
 
       // Convert station names from casa::String to std::string.
-      ASSERT(itsInput->antennaNames().size() == itsNStation);
+      ASSERT(getInfo().antennaNames().size() == itsNStation);
       vector<string> stations(itsNStation);
-      copy(itsInput->antennaNames().begin(), itsInput->antennaNames().end(),
+      copy(getInfo().antennaNames().begin(), getInfo().antennaNames().end(),
           stations.begin());
 
       vector<BBS::Parm> parms;
@@ -1149,138 +1137,6 @@ namespace LOFAR {
       parmCache.flush();
     }
 
-//    namespace {
-//      void pack(const vector<size_t> &directions, size_t nBl, size_t nCh,
-//        size_t nCr, const_cursor<dcomplex> in, cursor<dcomplex> out)
-//      {
-//          const size_t nDr = directions.size();
-//          for(size_t bl = 0; bl < nBl; ++bl)
-//          {
-//            for(size_t ch = 0; ch < nCh; ++ch)
-//            {
-//              for(size_t cr = 0; cr < nCr; ++cr)
-//              {
-//                for(vector<size_t>::const_iterator dr0 = directions.begin(),
-//                  end_dr0 = directions.end(); dr0 != end_dr0; ++dr0)
-//                {
-//                  in.forward(1, *dr0);
-//                  for(vector<size_t>::const_iterator dr1 = directions.begin(),
-//                    end_dr1 = directions.end(); dr1 != end_dr1; ++dr1)
-//                  {
-//                    *out = in[*dr1];
-//                    ++out;
-//                  }
-//                  in.backward(1, *dr0);
-
-//                  out -= nDr;
-//                  out.forward(1);
-//                }
-
-//                in.forward(2);
-//                out.backward(1, nDr);
-//                out.forward(2);
-//              }
-//              in.backward(2, nCr);
-//              in.forward(3);
-//              out.backward(2, nCr);
-//              out.forward(3);
-//            }
-//            in.backward(3, nCh);
-//            in.forward(4);
-//            out.backward(3, nCh);
-//            out.forward(4);
-//          }
-//      }
-
-//      void pack(const vector<size_t> &directions, size_t nStation,
-//        const_cursor<double> in, double *out)
-//      {
-//        for(vector<size_t>::const_iterator dr = directions.begin(),
-//          end_dr = directions.end(); dr != end_dr; ++dr)
-//        {
-//          in.forward(2, *dr);
-//          for(size_t st = 0; st < nStation; ++st)
-//          {
-//            for(size_t i = 0; i < 8; ++i)
-//            {
-//              *out++ = *in;
-//              ++in;
-//            }
-//            in -= 8;
-//            in.forward(1);
-//          }
-//          in.backward(1, nStation);
-//          in.backward(2, *dr);
-//        }
-//      }
-
-//      void unpack(const vector<size_t> &directions, size_t nStation,
-//        const double *in, cursor<double> out)
-//      {
-//        for(vector<size_t>::const_iterator dr = directions.begin(),
-//          end_dr = directions.end(); dr != end_dr; ++dr)
-//        {
-//          out.forward(2, *dr);
-//          for(size_t st = 0; st < nStation; ++st)
-//          {
-//            for(size_t i = 0; i < 8; ++i)
-//            {
-//              *out = *in++;
-//              ++out;
-//            }
-//            out -= 8;
-//            out.forward(1);
-//          }
-//          out.backward(1, nStation);
-//          out.backward(2, *dr);
-//        }
-//      }
-
-//      Patch::Ptr makePatch(const string &name)
-//      {
-//        string fname = name + ".mdl";
-//        ifstream inf(fname.c_str());
-
-//        size_t nComponents = 0;
-//        inf >> nComponents;
-//        ASSERT(inf);
-
-//        vector<ModelComponent::Ptr> components;
-//        components.reserve(nComponents);
-//        for(size_t i = 0; i < nComponents; ++i)
-//        {
-//          Position position;
-//          inf >> position[0] >> position[1];
-
-//          Stokes stokes;
-//          inf >> stokes.I >> stokes.Q >> stokes.U >> stokes.V;
-
-//          PointSource::Ptr component(new PointSource(position, stokes));
-
-//          double freq = 0.0;
-//          inf >> freq;
-
-//          size_t nSI = 0;
-//          inf >> nSI;
-
-//          vector<double> si(nSI, 0.0);
-//          if(nSI > 0)
-//          {
-//            for(size_t j = 0; j < nSI; ++j)
-//            {
-//              inf >> si[j];
-//            }
-//            component->setSpectralIndex(freq, si.begin(), si.end());
-//          }
-
-//          ASSERT(inf);
-//          components.push_back(component);
-//        }
-
-//        return Patch::Ptr(new Patch(name, components.begin(),
-//            components.end()));
-//      }
-//    } //# end unnamed namespace
 
   } //# end namespace DPPP
 } //# end namespace LOFAR
