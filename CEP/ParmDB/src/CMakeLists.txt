@@ -14,6 +14,7 @@ set(parmdb_LIB_SRCS
   ParmCache.cc
   ParmDBMeta.cc
   ParmDB.cc
+  ParmDBBlob.cc
   ParmDBCasa.cc
   ParmDBLocker.cc
   ParmDBLog.cc
@@ -23,6 +24,7 @@ set(parmdb_LIB_SRCS
   ParmFacadeDistr.cc
   ParmFacade.cc
   SourceDB.cc
+  SourceDBBlob.cc
   SourceDBCasa.cc
   SourceInfo.cc
 )
