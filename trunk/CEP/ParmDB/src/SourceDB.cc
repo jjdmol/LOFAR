@@ -53,13 +53,17 @@ namespace BBS {
   SourceDB::SourceDB (const ParmDBMeta& ptm, bool forceNew)
   {
     ParmDBMeta pm(ptm);
-    // Open the correct SourceDB.
-    if (!forceNew  &&  pm.getType() == "casa") {
-      // Check if an existing DB is stored as a file (thus as SourceDBBlob).
-      // This is for compatibility reasons.
-      File file(ptm.getTableName());
-      if (file.exists()  &&  file.isRegular()) {
-        pm = ParmDBMeta("blob", pm.getTableName());
+    // Determine type if not given.
+    // Default is casa, but an existing regular file is blob.
+    if (pm.getType().empty()) {
+      pm = ParmDBMeta("casa", pm.getTableName());
+      if (!forceNew) {
+        // Check if an existing DB is stored as a file (thus as SourceDBBlob).
+        // This is for compatibility reasons.
+        File file(ptm.getTableName());
+        if (file.exists()  &&  file.isRegular()) {
+          pm = ParmDBMeta("blob", pm.getTableName());
+        }
       }
     }
     if (pm.getType() == "casa") {
