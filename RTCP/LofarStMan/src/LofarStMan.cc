@@ -365,6 +365,7 @@ void LofarStMan::init()
   itsSpec.define ("alignment", alignment);
   itsSpec.define ("bigEndian", asBigEndian);
   itsSpec.define ("maxNrSample", itsMaxNrSample);
+  itsSpec.define ("nrBytesPerNrValidSamples", itsNrBytesPerNrValidSamples);
 }
 
 Double LofarStMan::time (uInt blocknr)
@@ -453,7 +454,7 @@ const uChar* LofarStMan::getNSample1 (uInt rownr, Bool)
 {
   uInt blocknr = rownr / itsAnt1.size();
   uInt baseline = rownr - blocknr*itsAnt1.size();
-  uInt offset  = itsSampStart + baseline * itsNChan*2;
+  uInt offset  = itsSampStart + baseline * itsNChan*itsNrBytesPerNrValidSamples;
   const void* ptr = getReadPointer (blocknr, offset, itsNChan*itsNrBytesPerNrValidSamples);
 
   const uChar* from = (const uChar*)ptr;
@@ -464,7 +465,7 @@ const uShort* LofarStMan::getNSample2 (uInt rownr, Bool swapIfNeeded)
 {
   uInt blocknr = rownr / itsAnt1.size();
   uInt baseline = rownr - blocknr*itsAnt1.size();
-  uInt offset  = itsSampStart + baseline * itsNChan*2;
+  uInt offset  = itsSampStart + baseline * itsNChan*itsNrBytesPerNrValidSamples;
   const void* ptr = getReadPointer (blocknr, offset, itsNChan*itsNrBytesPerNrValidSamples);
 
   const uShort* from = (const uShort*)ptr;
@@ -484,7 +485,7 @@ const uInt* LofarStMan::getNSample4 (uInt rownr, Bool swapIfNeeded)
 {
   uInt blocknr = rownr / itsAnt1.size();
   uInt baseline = rownr - blocknr*itsAnt1.size();
-  uInt offset  = itsSampStart + baseline * itsNChan*2;
+  uInt offset  = itsSampStart + baseline * itsNChan*itsNrBytesPerNrValidSamples;
   const void* ptr = getReadPointer (blocknr, offset, itsNChan*itsNrBytesPerNrValidSamples);
 
   const uInt* from = (const uInt*)ptr;
