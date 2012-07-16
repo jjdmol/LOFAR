@@ -44,7 +44,8 @@ namespace BBS {
 
   SourceDBCasa::SourceDBCasa (const ParmDBMeta& pdm, bool forceNew)
     : SourceDBRep   (pdm, forceNew),
-      itsSetsFilled (false)
+      itsSetsFilled (false),
+      itsRowNr      (1, 0)
   {
     string tableName = pdm.getTableName() + "/SOURCES";
     // Create the table if needed or if it does not exist yet.
@@ -540,6 +541,85 @@ namespace BBS {
       }
     }
     return res;
+  }
+
+  bool SourceDBCasa::atEnd()
+  {
+    return itsRowNr[0] >= itsSourceTable.nrow();
+  }
+
+  void SourceDBCasa::rewind()
+  {
+    itsRowNr[0] = 0;
+  }
+
+  void SourceDBCasa::getNextSource (SourceData& src)
+  {
+    // Read the main info for the current row.
+    src.setInfo (readSources(itsSourceTable(itsRowNr))[0]);
+    ROScalarColumn<String> patchNameCol(itsPatchTable, "PATCHNAME");
+    ROScalarColumn<uint> patchIdCol(itsSourceTable, "PATCHID");
+    src.setPatchName (patchNameCol(patchIdCol(itsRowNr[0])));
+    // Read the other SourceData info from the default Parm values.
+    const string& srcName = src.getInfo().getName();
+    // Fetch position.
+    src.setRa  (getDefaultParmValue("Ra:" + srcName));
+    src.setDec (getDefaultParmValue("Dec:" + srcName));
+    src.setI   (getDefaultParmValue("I:" + srcName));
+    src.setV   (getDefaultParmValue("V:" + srcName));
+    if (!src.getInfo().getUseRotationMeasure()) {
+      src.setQ   (getDefaultParmValue("Q:" + srcName));
+      src.setU   (getDefaultParmValue("U:" + srcName));
+    }
+    if (src.getInfo().getType() == SourceInfo::GAUSSIAN) {
+      const double deg2rad = (casa::C::pi / 180.0);
+      src.setOrientation (getDefaultParmValue
+                          ("Orientation:" + srcName) * deg2rad);
+      const double arcsec2rad = (casa::C::pi / 3600.0) / 180.0;
+      src.setMajorAxis (getDefaultParmValue
+                        ("MajorAxis:" + srcName) * arcsec2rad);
+      src.setMinorAxis (getDefaultParmValue
+                        ("MinorAxis:" + srcName) * arcsec2rad);
+    } else {
+      src.setOrientation (0);
+      src.setMajorAxis (0);
+      src.setMinorAxis (0);
+    }
+    // Fetch spectral index attributes (if applicable).
+    size_t nTerms = src.getInfo().getSpectralIndexNTerms();
+    vector<double> terms;
+    if (nTerms > 0) {
+      terms.reserve(nTerms);
+      for (size_t i=0; i<nTerms; ++i) {
+        ostringstream oss;
+        oss << "SpectralIndex:" << i << ":" << srcName;
+        terms.push_back (getDefaultParmValue(oss.str()));
+      }
+    }
+    src.setSpectralIndex(terms);
+    // Fetch rotation measure attributes (if applicable).
+    if (src.getInfo().getUseRotationMeasure()) {
+      src.setPolarizedFraction (getDefaultParmValue
+                                ("PolarizedFraction:" + srcName));
+      src.setPolarizationAngle (getDefaultParmValue
+                                ("PolarizationAngle:" + srcName));
+      src.setRotationMeasure (getDefaultParmValue
+                              ("RotationMeasure:" + srcName));
+    } else {
+      src.setPolarizedFraction (0);
+      src.setPolarizationAngle (0);
+      src.setRotationMeasure (0);
+    }
+    itsRowNr[0]++;
+  }
+
+  double SourceDBCasa::getDefaultParmValue(const string& name)
+  {
+    ParmValueSet valueSet = getParmDB().getDefValue(name, ParmValue());
+    ASSERT(valueSet.empty() && valueSet.getType() == ParmValue::Scalar);
+    const casa::Array<double> &values = valueSet.getDefParmValue().getValues();
+    ASSERT(values.size() == 1);
+    return values.data()[0];
   }
 
 } // namespace BBS

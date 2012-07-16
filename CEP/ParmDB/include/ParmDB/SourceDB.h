@@ -28,7 +28,7 @@
 #define LOFAR_PARMDB_SOURCEDB_H
 
 //# Includes
-#include <ParmDB/SourceInfo.h>
+#include <ParmDB/SourceData.h>
 #include <ParmDB/PatchInfo.h>
 #include <ParmDB/ParmDBMeta.h>
 #include <ParmDB/ParmDB.h>
@@ -153,6 +153,16 @@ namespace BBS {
 
     const ParmDBMeta& getParmDBMeta() const
       { return itsParmDB.getParmDBMeta(); }
+
+    // Get the next source from the table.
+    // An exception is thrown if there are no more sources.
+    virtual void getNextSource (SourceData& src) = 0;
+
+    // Tell if we are the end of the file.
+    virtual bool atEnd() = 0;
+
+    // Reset to the beginning of the file.
+    virtual void rewind() = 0;
 
   private:
     int    itsCount;
@@ -289,6 +299,19 @@ namespace BBS {
     // Get the name and type of the SourceDB.
     const ParmDBMeta& getParmDBMeta() const
       { return itsRep->getParmDBMeta(); }
+
+    // Get the next source from the table.
+    // An exception is thrown if there are no more sources.
+    void getNextSource (SourceData& src)
+      { itsRep->getNextSource (src); }
+
+    // Tell if we are the end of the file.
+    bool atEnd()
+      { return itsRep->atEnd(); }
+
+    // Reset to the beginning of the file.
+    void rewind()
+      { itsRep->rewind(); }
 
   private:
     // Create a SourceDB object for an existing SourceDBRep.
