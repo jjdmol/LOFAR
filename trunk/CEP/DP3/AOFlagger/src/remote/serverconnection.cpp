@@ -179,7 +179,7 @@ void ServerConnection::ReadBandTable(const std::string &msFilename, BandInfo &ba
 
 void ServerConnection::ReadDataRows(const std::string &msFilename, size_t rowStart, size_t rowCount, MSRowDataExt *destinationArray)
 {
-	_rowData = destinationArray;
+	_readRowData = destinationArray;
 	
 	std::stringstream reqBuffer;
 	
@@ -206,7 +206,48 @@ void ServerConnection::ReadDataRows(const std::string &msFilename, size_t rowSta
 	
 	prepareBuffer(sizeof(GenericReadResponseHeader));
 	boost::asio::async_read(_socket, boost::asio::buffer(_buffer, sizeof(GenericReadResponseHeader)),
-		boost::bind(&ServerConnection::onReceiveDataRowsResponseHeader, shared_from_this()));
+		boost::bind(&ServerConnection::onReceiveReadDataRowsResponseHeader, shared_from_this()));
+}
+
+void ServerConnection::WriteDataRows(const std::string &msFilename, size_t rowStart, size_t rowCount, const MSRowDataExt *rowArray)
+{
+	_writeRowData = rowArray;
+	
+	std::stringstream reqBuffer;
+	
+	RequestBlock requestBlock;
+	WriteDataRowsRequestOptions options;
+	
+	requestBlock.blockIdentifier = RequestId;
+	requestBlock.blockSize = sizeof(requestBlock);
+	requestBlock.dataSize = sizeof(options.flags) + msFilename.size() + sizeof(options.startRow) + sizeof(options.rowCount);
+	requestBlock.request = WriteDataRowsRequest;
+	reqBuffer.write(reinterpret_cast<char *>(&requestBlock), sizeof(requestBlock));
+	
+	std::ostringstream dataBuffer;
+	// Serialize the rows
+	for(size_t rowIndex=0; rowIndex != rowCount; ++rowIndex)
+		rowArray[rowIndex].Serialize(dataBuffer);
+	std::string dataBufferStr = dataBuffer.str();
+
+	options.flags = 0;
+	options.msFilename = msFilename;
+	options.startRow = rowStart;
+	options.rowCount = rowCount;
+	options.dataSize = dataBufferStr.size();
+	
+	reqBuffer.write(reinterpret_cast<char *>(&options.flags), sizeof(options.flags));
+	reqBuffer.write(reinterpret_cast<const char *>(options.msFilename.c_str()), options.msFilename.size());
+	reqBuffer.write(reinterpret_cast<const char *>(&options.startRow), sizeof(options.startRow));
+	reqBuffer.write(reinterpret_cast<const char *>(&options.rowCount), sizeof(options.rowCount));
+	reqBuffer.write(reinterpret_cast<const char *>(&options.dataSize), sizeof(options.dataSize));
+	
+	boost::asio::write(_socket, boost::asio::buffer(reqBuffer.str()));
+	boost::asio::write(_socket, boost::asio::buffer(dataBufferStr));
+	
+	prepareBuffer(sizeof(GenericReadResponseHeader));
+	boost::asio::async_read(_socket, boost::asio::buffer(_buffer, sizeof(GenericReadResponseHeader)),
+		boost::bind(&ServerConnection::onReceiveWriteDataRowsResponseHeader, shared_from_this()));
 }
 
 void ServerConnection::handleError(const GenericReadResponseHeader &header)
@@ -333,7 +374,7 @@ void ServerConnection::onReceiveBandTableResponseData(size_t dataSize)
 	_onAwaitingCommand(shared_from_this());
 }
 
-void ServerConnection::onReceiveDataRowsResponseHeader()
+void ServerConnection::onReceiveReadDataRowsResponseHeader()
 {
 	GenericReadResponseHeader responseHeader = *reinterpret_cast<GenericReadResponseHeader*>(_buffer);
 	if(responseHeader.blockIdentifier != GenericReadResponseHeaderId || responseHeader.blockSize != sizeof(responseHeader))
@@ -349,11 +390,11 @@ void ServerConnection::onReceiveDataRowsResponseHeader()
 	else {
 		prepareBuffer(responseHeader.dataSize);
 		boost::asio::async_read(_socket, boost::asio::buffer(_buffer, responseHeader.dataSize),
-			boost::bind(&ServerConnection::onReceiveDataRowsResponseData, shared_from_this(), responseHeader.dataSize));
+			boost::bind(&ServerConnection::onReceiveReadDataRowsResponseData, shared_from_this(), responseHeader.dataSize));
 	}
 }
 
-void ServerConnection::onReceiveDataRowsResponseData(size_t dataSize)
+void ServerConnection::onReceiveReadDataRowsResponseData(size_t dataSize)
 {
 	std::istringstream stream;
 	if(stream.rdbuf()->pubsetbuf(_buffer, dataSize) == 0)
@@ -364,12 +405,32 @@ void ServerConnection::onReceiveDataRowsResponseData(size_t dataSize)
 	if(rowsSent == 0)
 		rowsTotal = Serializable::UnserializeUInt64(stream);
 	for(size_t i=0;i<rowsSent;++i)
-		_rowData[i].Unserialize(stream);
+		_readRowData[i].Unserialize(stream);
 
-	_onFinishReadDataRows(shared_from_this(), _rowData, rowsTotal);
+	_onFinishReadDataRows(shared_from_this(), _readRowData, rowsTotal);
 	_onAwaitingCommand(shared_from_this());
 }
 
+void ServerConnection::onReceiveWriteDataRowsResponseHeader()
+{
+	GenericReadResponseHeader responseHeader = *reinterpret_cast<GenericReadResponseHeader*>(_buffer);
+	if(responseHeader.blockIdentifier != GenericReadResponseHeaderId || responseHeader.blockSize != sizeof(responseHeader))
+	{
+		_onError(shared_from_this(), "Bad response from client upon read data rows request");
+		StopClient();
+	}
+	else if(responseHeader.errorCode != NoError)
+	{
+		handleError(responseHeader);
+		_onAwaitingCommand(shared_from_this());
+	}
+	else if(responseHeader.dataSize != 0) {
+		_onError(shared_from_this(), "Client sent unexpected data during write rows action");
+		_onAwaitingCommand(shared_from_this());
+	} else {
+		_onAwaitingCommand(shared_from_this());
+	}
+}
 
 }
 

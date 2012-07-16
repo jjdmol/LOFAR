@@ -56,6 +56,7 @@ class ServerConnection : public boost::enable_shared_from_this<ServerConnection>
 		void ReadAntennaTables(const std::string &msFilename, boost::shared_ptr<std::vector<AntennaInfo> > antennas);
 		void ReadBandTable(const std::string &msFilename, BandInfo &band);
 		void ReadDataRows(const std::string &msFilename, size_t rowStart, size_t rowCount, MSRowDataExt *destinationArray);
+		void WriteDataRows(const std::string &msFilename, size_t rowStart, size_t rowCount, const MSRowDataExt *rowArray);
 		void Start();
 		
 		boost::asio::ip::tcp::socket &Socket() { return _socket; }
@@ -93,8 +94,10 @@ class ServerConnection : public boost::enable_shared_from_this<ServerConnection>
 		void onReceiveBandTableResponseHeader();
 		void onReceiveBandTableResponseData(size_t dataSize);
 		
-		void onReceiveDataRowsResponseHeader();
-		void onReceiveDataRowsResponseData(size_t dataSize);
+		void onReceiveReadDataRowsResponseHeader();
+		void onReceiveReadDataRowsResponseData(size_t dataSize);
+		
+		void onReceiveWriteDataRowsResponseHeader();
 		
 		void prepareBuffer(size_t size)
 		{
@@ -108,7 +111,8 @@ class ServerConnection : public boost::enable_shared_from_this<ServerConnection>
 		HistogramCollection *_histogramCollection;
 		boost::shared_ptr<std::vector<AntennaInfo> > _antennas;
 		BandInfo *_band;
-		MSRowDataExt *_rowData;
+		MSRowDataExt *_readRowData;
+		const MSRowDataExt *_writeRowData;
 };
 	
 }
