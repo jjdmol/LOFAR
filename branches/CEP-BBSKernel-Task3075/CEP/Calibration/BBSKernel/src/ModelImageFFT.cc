@@ -198,7 +198,7 @@ template <class T> void ModelImageFft::getImageProperties(const ImageInterface<T
   CoordinateSystem coordSys=image.coordinates();   // get coordinate system of image
   
   IPosition shape=image.shape();
-  itsImageProperties.nCoords=coordSys.nCoordinates();     // DEBUG
+  itsImageProperties.nCoords=coordSys.nCoordinates();
   Int DirectionCoordInd=coordSys.findCoordinate(Coordinate::DIRECTION);
 
   // DIRECTION coordinates
@@ -372,40 +372,6 @@ Vector<Double> ModelImageFft::getImageFrequencies()
   return frequencies;
 }
 
-
-/*
-// Get Stokes components present in image
-//
-template<class T> Vector<Int> ModelImageFft::getStokes(const ImageInterface<T> &image)
-{
-  cout << "ModelImageFft::getStokes(const ImageInterface<T> &image) ";  // DEBUG
-
-  itsImageProperties.stokes=image.coordinates().stokesCoordinate(itsImageProperties.StokesCoordInd).stokes();
-  cout << "Stokes: " << itsImageProperties.stokes << endl;    // DEBUG
-  // DEBUG
-  for(uInt i=0; i<itsImageProperties.npol; i++)
-  {
-    cout << Stokes::name(Stokes::type(itsImageProperties.stokes[i])) << endl;
-  }
-
-  return itsImageProperties.stokes;
-}
-
-
-Vector<Int> ModelImageFft::getStokes(const StokesCoordinate &stokesCoord)
-{
-  cout << "ModelImageFft::getStokes(const StokesCoordinate &stokesCoord)";  // DEBUG
-  itsImageProperties.stokes=stokesCoord.stokes();    //Stokes::StokesTypes
-
-  // DEBUG
-  for(uInt i=0; i<itsImageProperties.npol; i++)
-  {
-    cout << Stokes::name(Stokes::type(itsImageProperties.stokes[i])) << endl;
-  }
-  return itsImageProperties.stokes;
-}
-*/
-
 // Determine directional coordinate indices which are the axes which should be
 // FFT-ed and set to True in Vector<Bool>
 //
@@ -413,7 +379,6 @@ template<class T> Vector<Bool> ModelImageFft::getFourierAxes(const ImageInterfac
 {
   CoordinateSystem coordSys=image.coordinates();   // get coordinate system of image
   IPosition shape=image.shape();
-  //uInt DirectionCoordInd=coordSys.findCoordinate(Coordinate::DIRECTION);
 
   if(itsImageProperties.DirectionCoordAxes.size()!=2)
   {
@@ -421,7 +386,7 @@ template<class T> Vector<Bool> ModelImageFft::getFourierAxes(const ImageInterfac
   }
 
   // 2D-FFT the image per channel
-  Vector<Bool> FourierAxes(image.shape().size());   // axes to Fourier transform
+  Vector<Bool> FourierAxes(image.shape().size());    // axes to Fourier transform
   for(uInt i; i < (uInt) FourierAxes.size(); i++)    // this nasty thing is to avoid a uInt/Int warning
   {
     // for the Direction axes set Fourier Transform to true
@@ -473,21 +438,16 @@ Vector<Int>  ModelImageFft::chanMap(const vector<double> &frequencies)
     {
       upper = *it;              // no smaller value than val in vector
       chanMap[i]=upper;
-//      cout << "i: " << i << "   lower: " << lower << "   upper: " << upper << endl; // DEBUG
     }
     else if (it == imageFreqs.end())
     {
       lower = *(it-1);          // no bigger value than val in vector
       chanMap[i]=lower;
-//      cout << "i: " << i << "   lower: " << lower << "   upper: " << upper << endl; // DEBUG
     }
     else 
     {
       lower = *(it-1);    // lower neighbour in image channels
       upper = *it;        // upper neighbour in image channels
-
-//      cout << "i: " << i << "   lower: " << lower << "   upper: " << upper << endl; // DEBUG
-
       if(abs(lower-val) < abs(val-upper))   // find nearest neighbour
       {
         chanMap[i]=lower;
@@ -577,13 +537,11 @@ void ModelImageFft::degrid( const double *uBl, const double *vBl, const double *
   
   // convert uvwBaseline to Cornwell degrid format, 1-D data vector
   int nSamples=nuvw*nfreqs;       // number of samples
-  //int nSamples=itsImageProperties.nx*itsImageProperties.ny*nfreqs;
   LOG_INFO_STR("degridding " << nSamples << " samples.");
 
   //------------------------------------------------------------------------
   // Prepare uvw variables etc.
   //
-//  vector<complex<float> > data(itsImageProperties.nx*itsImageProperties.ny);
   vector<complex<float> > data(nuvw*nfreqs);
   vector<double> u(uBl, uBl+nuvw);      // u coord of requested baselines
   vector<double> v(vBl, vBl+nuvw);      // v coord of requested baselines
@@ -605,7 +563,6 @@ void ModelImageFft::degrid( const double *uBl, const double *vBl, const double *
   itsOptions.lambdas.resize(nfreqs);
   for (unsigned int i=0; i<nfreqs; i++)
   {
-//    freq[i]=(1.4e9-2.0e5*double(i)/double(nfreqs))/2.998e8;
     itsOptions.lambdas[i]=(casa::C::c)/frequencies[i];
   }
 
@@ -663,14 +620,6 @@ void ModelImageFft::degrid( const double *uBl, const double *vBl, const double *
         //
         initCOffset(u, v, w, itsOptions.lambdas, cellSize, wCellSize, maxBaseline, wSize, gSize,
                     support, itsOptions.oversampling, cOffset, iu, iv);
-
-        cout << "degrid()" << endl;
-        cout << "itsImageProperties.nx = " << itsImageProperties.nx << endl;  // DEBUG
-        cout << "grid.size() = " << grid.size() << endl;  // DEBUG
-        cout << "data.size() = " << data.size() << endl;  // DEBUG
-        cout << "iu.size() = " <<  iu.size() << endl;     // DEBUG
-        cout << "iv.size() = " <<  iv.size() << endl;     // DEBUG
-
         degridKernel(grid, gSize, support, C, cOffset, iu, iv, data);  // call Cornwell degridKernel
       }
       else
@@ -680,7 +629,6 @@ void ModelImageFft::degrid( const double *uBl, const double *vBl, const double *
       // copy vector into correlation arrays: TODO: XX=0.5*I, YY=0.5*I
       if(XX && YY)    // only copy, if we have a valid pointer
       {
-        //copy(data.begin(), data.end(), XX+(freq*nuvw));
         computeICorr(data, XX, YY);
       }
       else
@@ -721,32 +669,6 @@ Slicer ModelImageFft::makeSlicer(Int chan, const String &Stokes)
   return slicer;
 }
 
-void ModelImageFft::degrid( const double **baselines, const vector<double> &frequencies,
-                            Vector<casa::DComplex> &XX , Vector<casa::DComplex> &XY, 
-                            Vector<casa::DComplex> &YX , Vector<casa::DComplex> &YY,
-                            double maxBaseline)
-{
-//  unsigned int nfreqs=frequencies.size();     // get number of requested frequencies
-//  Vector<Double> lamdbdas(nchans);            // vector for wavelengths conversion
-
-//  setFrequencies(frequencies);
-  
-  // TODO: at the moment we only support Stokes I
-  // get Stokes::I pixelIndex
-  uInt IpixelNumber=itsImage->coordinates().stokesPixelNumber("I"); 
-  LOG_INFO_STR("degrid(): IpixelNumber: " << IpixelNumber);     // DEBUG  
-  
-  // convert uvwBaseline to ConvolveBlas format
-
-  // match requested frequencies to channels
-
-  // Loop over frequencies
- 
-  // call degridKernel
-  
-  // Distribute output to correlation vectors
-}
-
 //**********************************************
 //
 // Correlation computation functions
@@ -755,7 +677,7 @@ void ModelImageFft::degrid( const double **baselines, const vector<double> &freq
 
 // Using std::vector datacontainers
 void ModelImageFft::computeICorr( const vector<complex<float> > &data, 
-                                  vector<complex<float> > &XX, 
+                                  vector<complex<float> > &XX,
                                   vector<complex<float> > &YY)
 {
   for(unsigned int i=0; i<data.size(); i++)
@@ -773,23 +695,17 @@ void ModelImageFft::computeICorr( const vector<complex<float> > &data,
     XX[i]=data[i];
     YY[i]=data[i];
   }
-  
-//  memcpy(XX, data, data.size()*sizeof(complex<float>));
-//  memcpy(YY, data, data.size()*sizeof(complex<float>));  
 }
 
 // Using data stored in pointers
 void ModelImageFft::computeICorr(const complex<float> *data, size_t nuvw,
                                  DComplex *XX, DComplex *YY)
 {
- 
   for(unsigned int i=0; i<nuvw; i++)
   {
     XX[i]=data[i];
     YY[i]=data[i];
   }
-//  memcpy(XX, &data, nuvw*sizeof(complex<float>));
-//  memcpy(YY, &data, nuvw*sizeof(complex<float>));  
 }
 
 /*
