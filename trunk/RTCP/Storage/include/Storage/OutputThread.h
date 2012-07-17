@@ -44,12 +44,13 @@ namespace RTCP {
 class OutputThread
 {
   public:
-				     OutputThread(const Parset &, OutputType, unsigned streamNr, Queue<SmartPtr<StreamableData> > &freeQueue, Queue<SmartPtr<StreamableData> > &receiveQueue, const std::string &logPrefix, bool isBigEndian);
+				     OutputThread(const Parset &, OutputType, unsigned streamNr, Queue<SmartPtr<StreamableData> > &freeQueue, Queue<SmartPtr<StreamableData> > &receiveQueue, const std::string &logPrefix, bool isBigEndian, const std::string &targetDirectory = "");
 
     void			     start();
 
-  private:
     void			     createMS();
+
+  private:
     void			     flushSequenceNumbers();
     void			     writeSequenceNumber(StreamableData *);
     void			     checkForDroppedData(StreamableData *);
@@ -63,6 +64,7 @@ class OutputThread
     const bool			     itsIsBigEndian;
     const std::string		     itsLogPrefix;
     const bool                       itsCheckFakeData;
+    const std::string                itsTargetDirectory;
 
     Queue<SmartPtr<StreamableData> > &itsFreeQueue, &itsReceiveQueue;
 

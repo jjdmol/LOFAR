@@ -95,7 +95,7 @@ static void recursiveMakeDir(const string &dirname, const string &logPrefix)
 }
 
 
-OutputThread::OutputThread(const Parset &parset, OutputType outputType, unsigned streamNr, Queue<SmartPtr<StreamableData> > &freeQueue, Queue<SmartPtr<StreamableData> > &receiveQueue, const std::string &logPrefix, bool isBigEndian)
+OutputThread::OutputThread(const Parset &parset, OutputType outputType, unsigned streamNr, Queue<SmartPtr<StreamableData> > &freeQueue, Queue<SmartPtr<StreamableData> > &receiveQueue, const std::string &logPrefix, bool isBigEndian, const std::string &targetDirectory)
 :
   itsParset(parset),
   itsOutputType(outputType),
@@ -103,6 +103,7 @@ OutputThread::OutputThread(const Parset &parset, OutputType outputType, unsigned
   itsIsBigEndian(isBigEndian),
   itsLogPrefix(logPrefix + "[OutputThread] "),
   itsCheckFakeData(parset.checkFakeInputData()),
+  itsTargetDirectory(targetDirectory),
   itsFreeQueue(freeQueue),
   itsReceiveQueue(receiveQueue),
   itsBlocksWritten(0),
@@ -124,7 +125,7 @@ void OutputThread::createMS()
   ScopedLock sl(casacoreMutex);
   ScopedDelayCancellation dc; // don't cancel casacore calls
 
-  std::string directoryName = itsParset.getDirectoryName(itsOutputType, itsStreamNr);
+  std::string directoryName = itsTargetDirectory == "" ? itsParset.getDirectoryName(itsOutputType, itsStreamNr) : itsTargetDirectory;
   std::string fileName	    = itsParset.getFileName(itsOutputType, itsStreamNr);
   std::string path	    = directoryName + "/" + fileName;
 

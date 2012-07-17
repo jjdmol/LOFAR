@@ -8,7 +8,7 @@ Observation.Campaign.name = "Development"
 Observation.Campaign.title = "Development"
 
 # ----- Input streams
-Observation.VirtualInstrument.stationList = [S9,S10]
+Observation.VirtualInstrument.stationList = [CS302]
 #Observation.antennaSet=LBA_INNER
 #Observation.antennaSet=LBA_OUTER
 #Observation.antennaSet=LBA_X
@@ -33,7 +33,7 @@ OLAP.nrTimesInFrame = 16
 #     [ 3*(0;1;2;3)  ] --> [ 0,1,2,3,0,1,2,3,0,1,2,3 ]
 #     [ 3*(300..303) ] --> [ 300,301,302,303,300,301,302,303,300,301,302,303 ]
 #     [ 2*(5*0)      ] --> [ 0,0,0,0,0,0,0,0,0,0 ]       
-Observation.subbandList  = [100..102]
+Observation.subbandList  = [100..159]
 Observation.sampleClock  = 200
 OLAP.nrBitsPerSample     = 16
 
@@ -49,12 +49,12 @@ Observation.Beam[0].angle1 = 5.2336866848083394 # Cygnus
 Observation.Beam[0].angle2 = 0.71094251447010637
 Observation.Beam[0].directionType = J2000
 
-Observation.Beam[0].nrTiedArrayBeams = 1
+Observation.Beam[0].nrTiedArrayBeams = 0
 Observation.Beam[0].TiedArrayBeam[0].angle1 = 0
 Observation.Beam[0].TiedArrayBeam[0].angle2 = 0
 Observation.Beam[0].TiedArrayBeam[0].directionType = J2000
 Observation.Beam[0].TiedArrayBeam[0].dispersionMeasure = 0
-Observation.Beam[0].TiedArrayBeam[0].coherent = F
+Observation.Beam[0].TiedArrayBeam[0].coherent = T
 #Observation.Beam[0].TiedArrayBeam[1].angle1 = 0
 #Observation.Beam[0].TiedArrayBeam[1].angle2 = 0
 #Observation.Beam[0].TiedArrayBeam[1].directionType = J2000
@@ -76,12 +76,12 @@ Observation.DataProducts.Output_Correlated.namemask = L${OBSID}_SB${SUBBAND}_uv.
 Observation.DataProducts.Output_Beamformed.namemask = L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.raw
 Observation.DataProducts.Output_Trigger.namemask = L${OBSID}_B${BEAM}_S${STOKES}_P${PART}_bf.trigger
 
-Observation.channelsPerSubband = 64
+Observation.channelsPerSubband = 1
 
-OLAP.delayCompensation = T
-OLAP.coherentDedisperseChannels = T
+OLAP.delayCompensation = F
+OLAP.coherentDedisperseChannels = F
 
-OLAP.correctBandPass = T
+OLAP.correctBandPass = F
 #Observation.bandFilter = LBA_10_90
 Observation.bandFilter = LBA_30_90
 #Observation.bandFilter = HBA_110_190
@@ -92,8 +92,8 @@ OLAP.Correlator.integrationTime = 1.0
 #OLAP.IONProc.integrationSteps = 1   # (generated)
 #OLAP.CNProc.integrationSteps  = 768 # (generated, multiple of 128 for pencil beams)
 
-OLAP.CNProc_CoherentStokes.subbandsPerFile = 244
-OLAP.CNProc_CoherentStokes.which = I                  # I or IQUV or XXYY
+OLAP.CNProc_CoherentStokes.subbandsPerFile = 15
+OLAP.CNProc_CoherentStokes.which = XXYY               # I or IQUV or XXYY
 OLAP.CNProc_CoherentStokes.timeIntegrationFactor = 1  # time integration
 OLAP.CNProc_CoherentStokes.channelsPerSubband = 0     # 0 = same as observation
 
@@ -103,7 +103,7 @@ OLAP.CNProc_IncoherentStokes.timeIntegrationFactor = 1 # time integration
 OLAP.CNProc_IncoherentStokes.channelsPerSubband = 0   # 0 = same as observation
 
 # ----- Beam forming
-OLAP.PencilInfo.flysEye = F           # don't form pencil beams, but turn stations
+OLAP.PencilInfo.flysEye = T           # don't form pencil beams, but turn stations
                                    # into pencil beams
 
 OLAP.PencilInfo.nrRings = 0 # 0 = just the central beam
@@ -119,7 +119,7 @@ OLAP.PencilInfo.ringSize = 0.01
 OLAP.OLAP_Conn.IONProc_CNProc_Transport = FCNP
 
 # generate fake station input, overriding any real data
-OLAP.CNProc.fakeInputData = F
+OLAP.CNProc.fakeInputData = T
 OLAP.CNProc.checkFakeInputData = F
 
 OLAP.CNProc.nrPPFTaps = 16
