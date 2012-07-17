@@ -572,6 +572,14 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 		LOG_TRACE_FLOW("Dispatch to observation FSM's");
 		theObs->second->doEvent(event, port);
 		LOG_TRACE_FLOW("Back from dispatch");
+
+		// check if observation is still running after this timer.
+		if (theObs->second->curState() == CTState::QUITED && theObs->second->isReady()) {
+			sendControlResult(*itsParentPort, CONTROL_QUIT, theObs->second->getName(), CT_RESULT_LOST_CONNECTION);
+			LOG_DEBUG_STR("Removing " << theObs->second->getName() << " from the administration due to premature quit");
+			delete theObs->second;
+			itsObsMap.erase(theObs);
+		}
 	}
 	break;
 

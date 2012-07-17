@@ -255,15 +255,9 @@ GCFEvent::TResult BeamServer::askConfiguration(GCFEvent& event, GCFPortInterface
 		RSPGetconfigackEvent ack(event);
 
 		// resize our array to the amount of current RCUs
-		itsMaxRCUs = ack.n_rcus;
-		LOG_INFO_STR("Station has " << itsMaxRCUs << " RCU's");
-
-//		@@@ TODO: FIRST TAKE SUBSCRIPTION ON BITMODE THEN RESIZE THE ARRAYS !!!
-		// initialize matrices
-		itsWeights.resize   (itsMaxRCUs, itsCurrentMaxBeamlets);
-		itsWeights16.resize (itsMaxRCUs, itsCurrentMaxBeamlets);
-		itsWeights   = complex<double>(0,0);
-		itsWeights16 = complex<int16_t>(0,0);
+		itsMaxRCUs      = ack.n_rcus;
+		itsMaxRSPboards = ack.max_rspboards;
+		LOG_INFO_STR("Station has " << itsMaxRCUs << " RCU's and " << itsMaxRSPboards << " RSPBoards");
 
 		itsConnectTimer->cancelAllTimers();
 		TRAN(BeamServer::subscribeSplitter);
@@ -336,8 +330,8 @@ GCFEvent::TResult BeamServer::subscribeSplitter(GCFEvent& event, GCFPortInterfac
 		LOG_INFO_STR("The ringsplitter is " << (itsSplitterOn ? "ON" : "OFF"));
 		_createBeamPool();		// (re)allocate memory for the beamlet mapping
 
-//		TRAN(BeamServer::subscribeBitmode);
-		TRAN(BeamServer::con2calserver);
+		TRAN(BeamServer::subscribeBitmode);
+//		TRAN(BeamServer::con2calserver);
 	}
 	break;
 
@@ -368,7 +362,7 @@ GCFEvent::TResult BeamServer::subscribeSplitter(GCFEvent& event, GCFPortInterfac
 	return (status);
 }
 
-#if 0
+#if 1
 //
 // subscribeBitmode(event, port)
 //
@@ -383,7 +377,7 @@ GCFEvent::TResult BeamServer::subscribeBitmode(GCFEvent& event, GCFPortInterface
 	switch(event.signal) {
 	case F_ENTRY: {
 		// send request for splitter info
-		LOG_INFO("Requesting a subscription on the splitter state");
+		LOG_INFO("Requesting a subscription on the bitmode");
 		RSPSubbitmodeEvent		subBitmode;
 		subBitmode.period = 1;
 		itsRSPDriver->send(subBitmode);
@@ -394,7 +388,7 @@ GCFEvent::TResult BeamServer::subscribeBitmode(GCFEvent& event, GCFPortInterface
 
 	case RSP_SUBBITMODEACK: {
 		itsConnectTimer->cancelAllTimers();
-		RSPsubbitmodeackEvent		ack(event);
+		RSPSubbitmodeackEvent		ack(event);
 		if (ack.status != RSP_SUCCESS) {
 			LOG_INFO("Could not get a subscription on the bitmode, retry in 5 seconds");
 			break;
@@ -413,8 +407,13 @@ GCFEvent::TResult BeamServer::subscribeBitmode(GCFEvent& event, GCFPortInterface
 			break;
 		}
 
-		itsBitmode = answer.bit-mode; // @@@
-		LOG_INFO_STR("The bitmode is " << itsBitmode << " bits");
+		itsCurrentBitsPerSample = MIN_BITS_PER_SAMPLE;
+		for (uint i = 0; i < itsMaxRSPboards; i++) {
+			itsCurrentBitsPerSample = (answer.bits_per_sample[i] > itsCurrentBitsPerSample) ? answer.bits_per_sample[i] : itsCurrentBitsPerSample;
+		}
+		itsCurrentMaxBeamlets = maxBeamlets(itsCurrentBitsPerSample);
+		LOG_INFO_STR("The bitmode is " << itsCurrentBitsPerSample << " bits");
+
 		_createBeamPool();		// (re)allocate memory for the beamlet mapping
 
 		TRAN(BeamServer::con2calserver);
@@ -668,6 +667,19 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& event, GCFPortInterface& port)
 		// TODO: don't ignore status field!
 		itsSplitterOn = answer.splitter[0];
 		LOG_INFO_STR("The ringsplitter is switched " << (itsSplitterOn ? "ON" : "OFF"));
+		_createBeamPool();
+	}
+	break;
+
+	case RSP_UPDBITMODE: {
+		RSPUpdbitmodeEvent		answer(event);
+		// TODO: don't ignore status field!
+		itsCurrentBitsPerSample = MIN_BITS_PER_SAMPLE;
+		for (uint i = 0; i < itsMaxRSPboards; i++) {
+			itsCurrentBitsPerSample = (answer.bits_per_sample[i] > itsCurrentBitsPerSample) ? answer.bits_per_sample[i] : itsCurrentBitsPerSample;
+		}
+		itsCurrentMaxBeamlets = maxBeamlets(itsCurrentBitsPerSample);
+		LOG_INFO_STR("The bitmode changed to " << itsCurrentBitsPerSample << " bits");
 		_createBeamPool();
 	}
 	break;
@@ -1160,6 +1172,12 @@ void BeamServer::_createBeamPool()
 	delete itsAnaBeamMgr;
 	itsAnaBeamMgr = new AnaBeamMgr(itsMaxRCUs, (itsSplitterOn ? 2 : 1 ));
 	ASSERTSTR(itsAnaBeamMgr, "Failed to create an Manager for the analogue beams.");
+
+	// initialize matrices
+	itsWeights.resize   (itsMaxRCUs, itsCurrentMaxBeamlets);
+	itsWeights16.resize (itsMaxRCUs, itsCurrentMaxBeamlets);
+	itsWeights   = complex<double>(0,0);
+	itsWeights16 = complex<int16_t>(0,0);
 }
 
 //
@@ -1669,7 +1687,7 @@ void BeamServer::compute_weights(Timestamp weightTime)
 				//
 				boost::dynamic_bitset<>	beamletAllocation;
 				beamletAllocation.resize(itsCurrentMaxBeamlets);
-				beamletAllocation = beamIter->second->allocation().getBeamletBitset();
+				beamletAllocation = beamIter->second->allocation().getBeamletBitset(itsCurrentMaxBeamlets);
 				int		nrBeamlets = beamletAllocation.size();
 				for (int	beamlet = 0; beamlet < nrBeamlets; beamlet++) {
 					if (!beamletAllocation.test(beamlet)) {

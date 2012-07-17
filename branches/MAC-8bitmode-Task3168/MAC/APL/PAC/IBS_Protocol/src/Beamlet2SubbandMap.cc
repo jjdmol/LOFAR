@@ -102,10 +102,10 @@ bitset<MAX_SUBBANDS> Beamlet2SubbandMap::getSubbandBitset() const
 //
 // returns a bitset in which the bits represent the used beamlets
 //
-boost::dynamic_bitset<> Beamlet2SubbandMap::getBeamletBitset() const
+boost::dynamic_bitset<> Beamlet2SubbandMap::getBeamletBitset(const int	maxBeamlets) const
 {
 	boost::dynamic_bitset<> result;
-	result.resize(m_beamlet2subband.size());
+	result.resize(maxBeamlets);
 
 	map<uint16, uint16>::const_iterator iter = m_beamlet2subband.begin();
 	map<uint16, uint16>::const_iterator end  = m_beamlet2subband.end();

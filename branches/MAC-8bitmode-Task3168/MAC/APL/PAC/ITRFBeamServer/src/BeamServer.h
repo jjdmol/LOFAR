@@ -109,6 +109,9 @@ private:
 	// Take a subscription on the splitter state.
 	GCFEvent::TResult subscribeSplitter(GCFEvent& e, GCFPortInterface& p);
 
+	// Take a subscription on the bitmode
+	GCFEvent::TResult subscribeBitmode(GCFEvent& event, GCFPortInterface& port);
+
 	// Try to connect to the CalServer
 	GCFEvent::TResult con2calserver(GCFEvent& e, GCFPortInterface& p);
 
@@ -237,6 +240,7 @@ private:
 	
 	// constants
 	uint   	itsMaxRCUs;				//
+	uint   	itsMaxRSPboards;		//
 	bool	itsSetHBAEnabled;		//
 	bool	itsSetWeightsEnabled;	//
 	bool	itsSetSubbandsEnabled;	//

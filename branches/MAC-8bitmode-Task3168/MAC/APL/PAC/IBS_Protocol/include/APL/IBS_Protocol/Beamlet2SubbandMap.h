@@ -61,7 +61,7 @@ public:
 
 	// other methods
 	bitset<MAX_SUBBANDS> getSubbandBitset() const;
-	boost::dynamic_bitset<>   getBeamletBitset() const;
+	boost::dynamic_bitset<>   getBeamletBitset(const int maxBeamlets) const;
 
 	ostream& print (ostream& os) const;
 
