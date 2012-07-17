@@ -682,8 +682,8 @@ void ModelImageFft::computeICorr( const vector<complex<float> > &data,
 {
   for(unsigned int i=0; i<data.size(); i++)
   {
-    XX[i]=0.5*data[i];
-    YY[i]=0.5*data[i];
+    XX[i]=data[i];
+    YY[i]=data[i];
   }
 }
 
