@@ -1781,8 +1781,8 @@ void BeamServer::send_sbselection()
 		// of 64 beamlets before the beamlets of beam 1.
 		//
 		ss.subbands.setType(SubbandSelection::BEAMLET);
-		ss.subbands().resize(1, itsCurrentMaxBeamlets);
-		ss.subbands() = 0;
+		ss.subbands.beamlets().resize(1, itsCurrentMaxBeamlets);
+		ss.subbands.beamlets() = 0;
 
 		// reconstruct the selection
 		Beamlet2SubbandMap selection;
@@ -1814,12 +1814,12 @@ void BeamServer::send_sbselection()
 			}
 
 			// same selection for x and y polarization
-			ss.subbands()(0, (int)iter->first) = iter->second;
+			ss.subbands.beamlets()(0, (int)iter->first) = iter->second;
 		}
 
 		if (selection().size()) {
 			LOG_DEBUG_STR("Sending subbandselection for ring segment " << ringNr);
-			LOG_DEBUG_STR(ss.subbands());
+			LOG_DEBUG_STR(ss.subbands.beamlets());
 			itsRSPDriver->send(ss);
 		} 
 		else {
