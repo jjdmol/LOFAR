@@ -66,9 +66,11 @@ namespace LOFAR {
       virtual ~SubbandSelection() {}
 
       /**
-       * Return the subbands array.
+       * Return the crosslet or beamlet array.
        */
-      blitz::Array<uint16, 2>& operator()();
+      blitz::Array<uint16, 2>& crosslets();
+      blitz::Array<uint16, 2>& beamlets();
+       
 
       /**
        * Return type of selection.
@@ -99,10 +101,14 @@ namespace LOFAR {
        * dim 2 = n_beamlets (if type == BEAMLET)
        * dim 2 = 1          (if type == XLET)
        */
-      blitz::Array<uint16, 2> m_subbands;
+      blitz::Array<uint16, 2> itsCrosslets;
+      blitz::Array<uint16, 2> itsBeamlets;
 
       uint16 m_type; // type of subband selection (BEAMLET or XLET)
     };
+    
+    inline blitz::Array<uint16, 2>& SubbandSelection::crosslets() { return itsCrosslets; }
+    inline blitz::Array<uint16, 2>& SubbandSelection::beamlets() { return itsBeamlets; }
   };
 }; // namespace LOFAR
 

@@ -35,14 +35,17 @@ using namespace RSP_Protocol;
 
 size_t SubbandSelection::getSize() const
 {
-  return MSH_size(m_subbands) + sizeof(uint16);
+  return MSH_size(itsCrosslets)
+       + MSH_size(itsBeamlets)
+       + sizeof(uint16);
 }
 
 size_t SubbandSelection::pack(char* buffer) const
 {
   size_t offset = 0;
 
-  MSH_pack(buffer, offset, m_subbands);
+  MSH_pack(buffer, offset, itsCrosslets);
+  MSH_pack(buffer, offset, itsBeamlets);
   memcpy(buffer + offset, &m_type, sizeof(uint16));
   offset += sizeof(uint16);
   
@@ -53,16 +56,13 @@ size_t SubbandSelection::unpack(const char *buffer)
 {
   size_t offset = 0;
 
-  MSH_unpack(buffer, offset, m_subbands);
+  MSH_unpack(buffer, offset, itsCrosslets);
+  MSH_unpack(buffer, offset, itsBeamlets);
   memcpy(&m_type, buffer + offset, sizeof(uint16));
   offset += sizeof(uint16);
 
   return offset;
 }
 
-Array<uint16,2>& SubbandSelection::operator()()
-{
-  return m_subbands;
-}
 
 
