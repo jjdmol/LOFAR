@@ -217,11 +217,11 @@ class ObservationTimerange
 			}
 		}
 		
-		void GetTimestepData(size_t nodeIndex, MSRowDataExt *rows, size_t rowCount)
+		void GetTimestepData(size_t nodeIndex, MSRowDataExt *rows)
 		{
 			size_t bandStart = _bandStartLookup[nodeIndex];
 			const unsigned pCount = _polarizationCount;
-			for(size_t r=0;r<rowCount;++r)
+			for(size_t r=0;r<_timestepCount;++r)
 			{
 				MSRowDataExt &rowExt = rows[r];
 				MSRowData &row = rowExt.Data();
@@ -253,6 +253,7 @@ class ObservationTimerange
 		
 		size_t PolarizationCount() const { return _polarizationCount; }
 		size_t TimestepCount() const { return _timestepCount; }
+		size_t TimeOffsetIndex() const { return _timeOffsetIndex; }
 		size_t ChannelCount() const { return _gridFrequencySize; }
 		num_t *RealData(size_t timestep) { return &_realData[timestep * _polarizationCount * _gridFrequencySize]; }
 		num_t *ImagData(size_t timestep) { return &_imagData[timestep * _polarizationCount * _gridFrequencySize]; }
@@ -263,6 +264,8 @@ class ObservationTimerange
 		double W(size_t timestep) const { return _u[timestep]; }
 		unsigned Antenna1(size_t timestep) const { return _antenna1[timestep]; }
 		unsigned Antenna2(size_t timestep) const { return _antenna2[timestep]; }
+		
+		void SetTimeOffsetIndex(size_t timeOffsetIndex) { _timeOffsetIndex = timeOffsetIndex; }
 	private:
 		struct BandRangeInfo { double endFrequency; size_t nodeIndex; };
 		ClusteredObservation &_observation;
@@ -271,6 +274,7 @@ class ObservationTimerange
 		std::vector<size_t> _gridIndexLookup;
 		size_t _polarizationCount;
 		size_t _timestepCount;
+		size_t _timeOffsetIndex;
 		size_t _gridFrequencySize;
 		double _startFrequency, _frequencyWidth;
 		

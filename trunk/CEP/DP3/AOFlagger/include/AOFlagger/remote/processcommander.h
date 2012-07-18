@@ -76,6 +76,8 @@ class ProcessCommander
 		
 		/**
 		 * @param rowBuffer should have #NODES elements, each which is an array of #ROWCOUNT rows.
+		 * It is not expected to hold the data yet; it is a parameter so that repeated calls do not have
+		 * to allocate that memory over and over.
 		 */
 		void PushReadDataRowsTask(class ObservationTimerange &timerange, size_t rowStart, size_t rowCount, MSRowDataExt **rowBuffer)
 		{
@@ -88,17 +90,19 @@ class ProcessCommander
 		}
 		
 		/**
-		 * @param rowBuffer should have #NODES elements, each which is an array of #ROWCOUNT rows.
+		 * @param rowBuffer should have #NODES elements, each which is an array of timerange.#ROW rows.
+		 * It is not expected to hold the data yet; it is a parameter so that repeated calls do not have
+		 * to allocate that memory over and over.
 		 */
-		void PushWriteDataRowsTask(class ObservationTimerange &timerange, size_t rowStart, size_t rowCount, MSRowDataExt **rowBuffer)
+		void PushWriteDataRowsTask(class ObservationTimerange &timerange, MSRowDataExt **rowBuffer)
 		{
 			_tasks.push_back(WriteDataRowsTask);
 			_observationTimerange = &timerange;
 			_writeRowBuffer = rowBuffer;
-			_rowStart = rowStart;
-			_rowCount = rowCount;
 			_rowsTotal = 0;
 		}
+		
+		const ClusteredObservation &Observation() const { return _observation; }
 	private:
 		enum Task {
 			NoTask,
@@ -142,7 +146,7 @@ class ProcessCommander
 		MSRowDataExt **_writeRowBuffer;
 		size_t _rowStart, _rowCount, _rowsTotal;
 		
-		const ClusteredObservation _observation;
+		const ClusteredObservation &_observation;
 		NodeCommandMap _nodeCommands;
 		bool _finishConnections;
 		

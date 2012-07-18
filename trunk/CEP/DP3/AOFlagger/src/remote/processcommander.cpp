@@ -174,9 +174,9 @@ void ProcessCommander::continueWriteDataRowsTask(ServerConnectionPtr serverConne
 	if(_nodeCommands.Pop(hostname, item))
 	{
 		const std::string &msFilename = item.LocalPath();
-		_observationTimerange->GetTimestepData(item.Index(), _writeRowBuffer[item.Index()], _rowCount);
+		_observationTimerange->GetTimestepData(item.Index(), _writeRowBuffer[item.Index()]);
 
-		serverConnection->WriteDataRows(msFilename, _rowStart, _rowCount, _writeRowBuffer[item.Index()]);
+		serverConnection->WriteDataRows(msFilename, _observationTimerange->TimeOffsetIndex(), _observationTimerange->TimestepCount(), _writeRowBuffer[item.Index()]);
 	} else {
 		handleIdleConnection(serverConnection);
 		
@@ -287,6 +287,7 @@ void ProcessCommander::onConnectionFinishReadDataRows(ServerConnectionPtr server
 	ClusteredObservationItem item;
 	_nodeCommands.Current(hostname, item);
 	_observationTimerange->SetTimestepData(item.Index(), rowData, _rowCount);
+	_observationTimerange->SetTimeOffsetIndex(_rowStart);
 	if(_rowsTotal < totalRows)
 		_rowsTotal = totalRows;
 }
