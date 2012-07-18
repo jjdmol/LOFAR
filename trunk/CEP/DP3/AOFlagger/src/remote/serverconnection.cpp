@@ -220,7 +220,7 @@ void ServerConnection::WriteDataRows(const std::string &msFilename, size_t rowSt
 	
 	requestBlock.blockIdentifier = RequestId;
 	requestBlock.blockSize = sizeof(requestBlock);
-	requestBlock.dataSize = sizeof(options.flags) + msFilename.size() + sizeof(options.startRow) + sizeof(options.rowCount);
+	requestBlock.dataSize = sizeof(options.flags) + msFilename.size() + sizeof(options.startRow) + sizeof(options.rowCount) + sizeof(options.dataSize);
 	requestBlock.request = WriteDataRowsRequest;
 	reqBuffer.write(reinterpret_cast<char *>(&requestBlock), sizeof(requestBlock));
 	
@@ -426,7 +426,7 @@ void ServerConnection::onReceiveWriteDataRowsResponseHeader()
 	}
 	else if(responseHeader.dataSize != 0) {
 		_onError(shared_from_this(), "Client sent unexpected data during write rows action");
-		_onAwaitingCommand(shared_from_this());
+		StopClient();
 	} else {
 		_onAwaitingCommand(shared_from_this());
 	}
