@@ -61,7 +61,7 @@ fi
 # Start the Python program in the background. 
 # This script should return ASAP so that MAC can set the task to ACTIVE.
 # STDERR will be redirected to the log-file.
-${pythonProgram} ${programOptions} ${parsetFile} 2>> ${logFile} &
+${pythonProgram} ${programOptions} ${parsetFile} 1> /dev/null 2>> ${logFile} &
 
 # Check if the Python program died early. If so, this indicates an error.
 sleep 1
