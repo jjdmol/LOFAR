@@ -59,6 +59,7 @@ class MSRowDataExt : public Serializable
 			_data.Serialize(stream);
 			SerializeToUInt32(stream, _antenna1);
 			SerializeToUInt32(stream, _antenna2);
+			SerializeToUInt64(stream, _timeOffsetIndex);
 			SerializeToDouble(stream, _u);
 			SerializeToDouble(stream, _v);
 			SerializeToDouble(stream, _w);
@@ -70,6 +71,7 @@ class MSRowDataExt : public Serializable
 			_data.Unserialize(stream);
 			_antenna1 = UnserializeUInt32(stream);
 			_antenna2 = UnserializeUInt32(stream);
+			_timeOffsetIndex = UnserializeUInt64(stream);
 			_u = UnserializeDouble(stream);
 			_v = UnserializeDouble(stream);
 			_w = UnserializeDouble(stream);
@@ -78,6 +80,7 @@ class MSRowDataExt : public Serializable
 	private:
 		MSRowData _data;
 		unsigned _antenna1, _antenna2;
+		size_t _timeOffsetIndex;
 		double _u, _v, _w;
 		double _time;
 };
