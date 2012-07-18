@@ -186,7 +186,6 @@ class ObservationTimerange
 		void SetTimestepData(size_t nodeIndex, const MSRowDataExt *rows, size_t rowCount)
 		{
 			size_t bandStart = _bandStartLookup[nodeIndex];
-			//const MSRowData &firstRowData = rows[0].Data();
 			const unsigned pCount = _polarizationCount;
 			for(size_t r=0;r<rowCount;++r)
 			{
@@ -215,6 +214,40 @@ class ObservationTimerange
 				_w[r] = rowExt.W();
 				_antenna1[r] = rowExt.Antenna1();
 				_antenna2[r] = rowExt.Antenna2();
+			}
+		}
+		
+		void GetTimestepData(size_t nodeIndex, MSRowDataExt *rows, size_t rowCount)
+		{
+			size_t bandStart = _bandStartLookup[nodeIndex];
+			const unsigned pCount = _polarizationCount;
+			for(size_t r=0;r<rowCount;++r)
+			{
+				MSRowDataExt &rowExt = rows[r];
+				MSRowData &row = rowExt.Data();
+				num_t *realPtr = row.RealPtr();
+				num_t *imagPtr = row.ImagPtr();
+				std::vector<size_t>::const_iterator gridPtr = _gridIndexLookup.begin()+bandStart;
+				for(size_t c=0;c<row.ChannelCount();++c)
+				{
+					const size_t gridIndex = *gridPtr;
+					size_t fullIndex = (r * _gridFrequencySize + gridIndex) * pCount;
+					for(unsigned p=0;p<pCount;++p)
+					{
+						*realPtr = _realData[fullIndex];
+						*imagPtr = _imagData[fullIndex];
+						++fullIndex;
+						++realPtr;
+						++imagPtr;
+					}
+					++gridPtr;
+				}
+				
+				rowExt.SetU(_u[r]);
+				rowExt.SetV(_v[r]);
+				rowExt.SetW(_w[r]);
+				rowExt.SetAntenna1(_antenna1[r]);
+				rowExt.SetAntenna2(_antenna2[r]);
 			}
 		}
 		

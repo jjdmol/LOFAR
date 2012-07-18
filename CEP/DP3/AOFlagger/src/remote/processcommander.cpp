@@ -156,7 +156,27 @@ void ProcessCommander::continueReadDataRowsTask(ServerConnectionPtr serverConnec
 	if(_nodeCommands.Pop(hostname, item))
 	{
 		const std::string &msFilename = item.LocalPath();
-		serverConnection->ReadDataRows(msFilename, _rowStart, _rowCount, _rowBuffer[item.Index()]);
+		serverConnection->ReadDataRows(msFilename, _rowStart, _rowCount, _readRowBuffer[item.Index()]);
+	} else {
+		handleIdleConnection(serverConnection);
+		
+		if(_nodeCommands.Empty())
+			onCurrentTaskFinished();
+	}
+}
+
+void ProcessCommander::continueWriteDataRowsTask(ServerConnectionPtr serverConnection)
+{
+	const std::string &hostname = serverConnection->Hostname();
+	
+	boost::mutex::scoped_lock lock(_mutex);
+	ClusteredObservationItem item;
+	if(_nodeCommands.Pop(hostname, item))
+	{
+		const std::string &msFilename = item.LocalPath();
+		_observationTimerange->GetTimestepData(item.Index(), _writeRowBuffer[item.Index()], _rowCount);
+
+		serverConnection->WriteDataRows(msFilename, _rowStart, _rowCount, _writeRowBuffer[item.Index()]);
 	} else {
 		handleIdleConnection(serverConnection);
 		
@@ -201,6 +221,9 @@ void ProcessCommander::onConnectionAwaitingCommand(ServerConnectionPtr serverCon
 			continueReadBandTablesTask(serverConnection);
 			break;
 		case ReadDataRowsTask:
+			continueReadDataRowsTask(serverConnection);
+			break;
+		case WriteDataRowsTask:
 			continueReadDataRowsTask(serverConnection);
 			break;
 		case NoTask:
