@@ -245,14 +245,17 @@ void Job::StorageProcess::start()
 #else
 
 #warning Using fork/exec for SSH processes to Storage
+  const std::string obsID = boost::lexical_cast<std::string>(itsParset.observationID());
+  const std::string rank = boost::lexical_cast<std::string>(itsRank);
+
   const char * const commandLine[] = {
     "cd ", cwd, " && ",
 #if defined USE_VALGRIND
     "valgrind " "--leak-check=full "
 #endif
     executable.c_str(),
-    boost::lexical_cast<std::string>(itsParset.observationID()).c_str(),
-    boost::lexical_cast<std::string>(itsRank).c_str(),
+    obsID.c_str(),
+    rank.c_str(),
 #if defined WORDS_BIGENDIAN
     "1",
 #else
