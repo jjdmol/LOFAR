@@ -89,9 +89,11 @@ public:
 private:
 	// Private types.
 	typedef std::priority_queue<Ptr<Command>, std::vector<Ptr<Command> >, RSP::Command_greater> pqueue;
+	typedef std::priority_queue<Ptr<Command>, std::vector<Ptr<Command> >, RSP::Command_order>   oqueue;
 
 	// Private helper methods.
 	int pqueue_remove_commands(pqueue& p, GCFPortInterface& port, memptr_t handle = 0);
+	int oqueue_remove_commands(oqueue& p, GCFPortInterface& port, memptr_t handle = 0);
 
 	// Constants from the config file converted to the correct type.
 	static int SYNC_INTERVAL_INT;
@@ -110,7 +112,7 @@ private:
 	pqueue	m_later_queue;				// commands to be exec later
 	pqueue	m_periodic_queue;			// commands to be executed peiodically
 	pqueue	m_now_queue;				// filled every second from later and periodic queue
-	pqueue	m_done_queue;				// commands that wait for cache switching
+	oqueue	m_done_queue;				// commands that wait for cache switching
 	pqueue	itsDelayedResponseQueue;	// commands that wait for two cache switchings
 
 	std::map< GCFPortInterface*, std::vector<SyncAction*> > m_syncactions;

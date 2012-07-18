@@ -422,7 +422,6 @@ void RSPDriver::addAllSyncActions()
 			BMWrite* bitmodewrite = new BMWrite(m_boardPorts[boardid], boardid);
 			ASSERT(bitmodewrite);
 			m_scheduler.addSyncAction(bitmodewrite);
-			
 			BMRead* bitmoderead = new BMRead(m_boardPorts[boardid], boardid);
 			ASSERT(bitmoderead);
 			m_scheduler.addSyncAction(bitmoderead);
@@ -1479,8 +1478,7 @@ void RSPDriver::rsp_subrcu(GCFEvent& event, GCFPortInterface& port)
 	ack.handle = (memptr_t)&(*command);
 	port.send(ack);
 
-	m_scheduler.enter(Ptr<Command>(&(*command)),
-													Scheduler::PERIODIC);
+	m_scheduler.enter(Ptr<Command>(&(*command)), Scheduler::PERIODIC);
 }
 
 //
