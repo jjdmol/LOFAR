@@ -267,6 +267,7 @@ select e.xtrsrcid, r.runcatid,
    and r.runcatid = ta.runcat_id
    and ta.lr_method = 3;
 
+--update all old associations with flux_fraction
 UPDATE assocxtrsources
 SET    weight = weight * (SELECT ta.flux_fraction
                           FROM   temp_associations ta,assocxtrsources a,runningcatalog r
@@ -288,3 +289,43 @@ WHERE EXISTS (SELECT ta.flux_fraction
                       AND r.runcatid = ta.runcat_id
                       AND ta.lr_method < 3
                       AND ta.kind = 3);
+
+--update old fluxes with new weights
+update runningcatalog_fluxes
+   set $$get_column_update_total(['f_peak', 'f_int'], True)$$
+ where exists (select 1
+                 from extractedsources e,
+                      temp_associations ta
+                where e.xtrsrcid = ta.xtrsrc_id
+                  and ta.runcat_id = runningcatalog_fluxes.runcat_id
+                  and ta.kind = 3)
+   and band <> {0};
+
+update runningcatalog_fluxes
+   set $$get_column_update_second(['f_peak', 'f_int'])$$
+ where exists (select 1
+                 from extractedsources e,
+                      temp_associations ta
+                where e.xtrsrcid = ta.xtrsrc_id
+                  and ta.runcat_id = runningcatalog_fluxes.runcat_id
+                  and ta.kind = 3)
+   and band <> {0};
+
+--insert old fluxes for new sources
+insert into runningcatalog_fluxes(runcat_id, band, datapoints,
+                                  wm_f_peak, wm_f_peak_err,
+                                  avg_wf_peak, avg_weight_f_peak,
+                                  wm_f_int, wm_f_int_err,
+                                  avg_wf_int, avg_weight_f_int)
+select r.runcatid, f.band, f.datapoints,
+       ta.flux_fraction*wm_f_peak, wm_f_peak_err,
+       ta.flux_fraction*avg_wf_peak, avg_weight_f_peak,
+       ta.flux_fraction*wm_f_int, wm_f_int_err,
+       ta.flux_fraction*avg_wf_int, avg_weight_f_int
+  from runningcatalog_fluxes f,
+       runningcatalog r,
+       temp_associations ta
+ where ta.runcat_id = f.runcat_id
+   and ta.xtrsrc_id = r.first_xtrsrc_id
+   and f.band <> {0}
+   and ta.kind = 3 ;

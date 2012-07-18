@@ -39,6 +39,18 @@ class GSMPipeline(object):
             raise exc
         self.log.info('Pipeline started.')
 
+    def reopen_connection(self):
+        """
+        Reopen connection in case it was closed.
+        """
+        if not self.conn or not self.conn.established():
+            try:
+                self.conn = self.conn_manager.get_connection(**params)
+                self.log.info('Pipeline connection reopened.')
+            except db.Error as exc:
+                self.log.error("Failed to connect: %s" % exc)
+                raise exc
+
     def read_image(self, source):
         """
         Read image and detections from a given source.

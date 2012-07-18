@@ -109,20 +109,12 @@ update runningcatalog
    set datapoints = (select count(*)
                        from assocxtrsources a
                       where a.runcat_id = runningcatalog.runcatid),
-       $$get_column_update_total('ra', 'e.ra','e.ra_err')$$,
-       $$get_column_update_total('decl', 'e.decl','e.decl_err')$$,
-       $$get_column_update_total('g_minor', 'e.g_minor','e.g_minor_err')$$,
-       $$get_column_update_total('g_major', 'e.g_major','e.g_major_err')$$,
-       $$get_column_update_total('g_pa', 'e.g_pa','e.g_pa_err')$$
+       $$get_column_update_total(['ra', 'decl', 'g_minor', 'g_major', 'g_pa'])$$
  where not deleted
    and source_kind = 4;
 
 update runningcatalog
-   set $$get_column_update_second('ra')$$,
-       $$get_column_update_second('decl')$$,
-       $$get_column_update_second('g_minor')$$,
-       $$get_column_update_second('g_major')$$,
-       $$get_column_update_second('g_pa')$$,
+   set $$get_column_update_second(['ra', 'decl', 'g_minor', 'g_major', 'g_pa'])$$,
        last_update_date = current_timestamp,
        source_kind = 1
  where not deleted

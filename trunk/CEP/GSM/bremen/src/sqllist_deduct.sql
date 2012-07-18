@@ -95,4 +95,10 @@ update runningcatalog_fluxes
 delete from assocxtrsources
  where exists (select 1 from extractedsources e
                 where e.image_id = {0}
-                  and e.xtrsrcid = a.xtrsrc_id);
+                  and e.xtrsrcid = assocxtrsources.xtrsrc_id);
+
+--#deduct remove extractedsources
+delete from extractedsources
+ where image_id = {0}
+   and not exists (select 1 from assocxtrsources a
+                    where a.xtrsrc_id = extractedsources.xtrsrcid);

@@ -57,15 +57,15 @@ def cleanup_db(conn):
                 'extractedsources',
                 'detections']:
         if isinstance(conn, MonetConnection):
-            cursor.execute("delete from %s;" % tbl)
+            conn._execute_with_cursor("delete from %s;" % tbl, cursor)
         else:
-            cursor.execute("truncate table %s;" % tbl)
+            conn._execute_with_cursor("truncate table %s;" % tbl, cursor)
 
     for seq in ['seq_datasets',
                 'seq_images',
                 'seq_runningcatalog']:
-        cursor.execute('alter sequence %s restart with 1;' % seq)
-    cursor.execute('alter sequence seq_extractedsources restart with 1001;')
+        conn._execute_with_cursor('alter sequence %s restart with 1;' % seq, cursor)
+    conn._execute_with_cursor('alter sequence seq_extractedsources restart with 1001;', cursor)
     conn.commit()
     cursor.close()
 

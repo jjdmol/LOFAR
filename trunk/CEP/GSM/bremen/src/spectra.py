@@ -1,12 +1,10 @@
 #!/usr/bin/python
 import numpy
-import math
 from copy import copy
 from numpy.polynomial.polynomial import polyval
-from scipy.stats import chi2
+#Unused:
+#from scipy.stats import chi2
 
-from src.connectionMonet import MonetConnection
-from src.connectionPostgres import PgConnection
 
 class Spectra(object):
     """
@@ -14,6 +12,8 @@ class Spectra(object):
     """
     def __init__(self, conn):
         """
+        No data is loaded on init.
+        @param conn: connection to the database. Has to be opened.
         """
         self.conn = conn
         self.args = []
@@ -24,7 +24,7 @@ class Spectra(object):
 
     def get_sql_data(self, runcatid):
         """
-        Get spectral information for a given source.
+        Get spectral information for a given source (selected by ID).
         """
         cur = self.conn.get_cursor("""
 select case when last_update_date > last_spectra_update_date
@@ -36,32 +36,67 @@ select case when last_update_date > last_spectra_update_date
  where runcatid = {0};""".format(runcatid))
         result = cur.fetchone()
         cur.close()
-        print result
         self.need_update = result[0] == 1
         if not self.need_update:
-            for f in xrange(int(result[1])):
-                self.args.append(result[f+2])
+            for order in xrange(int(result[1])):
+                self.args.append(result[order + 2])
         else:
             self.fit_spectra(runcatid)
         return self.args
 
-    def get_approx(self, x):
-        return polyval(x, self.args)
-
-    def get_chi(self):
+    def _get_chi(self, args):
+        """
+        Gets chi-squared statistics for an approximation with given params.
+        :param args: array of polynomia coefficients.
+        """
         tmp = 0
         for ind, y in enumerate(self.flux):
-            tmp_v = self.get_approx(self.freq[ind])
-            tmp = tmp + numpy.power((y - tmp_v), 2) #/fabs(tmp_v)
+            tmp_v = polyval(self.freq[ind], args)
+            tmp = tmp + numpy.power((y - tmp_v) / self.flux_err[ind], 2)
         return tmp
 
-    def one_fit(self, power):
-        self.args = numpy.polyfit(self.freq, self.flux, power)[::-1]
-        return self.get_chi()
+    def _one_fit(self, power):
+        """
+        Fit the spectra with a polinom.
+        :param power: polinom order.
+        :returns: chi-squared value, chi-squared pdf value,
+        polynom coefficients.
+        """
+        args = numpy.polyfit(self.freq, self.flux, power)[::-1]
+        chi = self._get_chi(args)
+        #so far this is not used
+        #chi_pdf = chi2.logpdf(chi, len(self.freq) - power - 1)
+        return chi, args
+
+    def best_fit(self):
+        """
+        Find best fit to the data.
+        Starts with polynom of order 0 (constant).
+        On each iteration chi-square value and it's ratio to the
+        previous value are calculated.
+        Increases order of polynom until ratio is larger than 3,
+        or until order = 5 or until order is higher than number of known
+        points in the spectrum.
+        :returns: coefficient list and order of polynom.
+        """
+        sp_power = 0
+        ratio = None
+        saved_args = []
+        chi = None
+        while sp_power < max(6, len(self.freq) - 1) and \
+              (not ratio or ratio > 3):
+            old_chi = chi
+            old_args = copy(saved_args)
+            chi, saved_args = self._one_fit(sp_power)
+            if old_chi:
+                ratio = numpy.abs(old_chi / chi)
+            sp_power = sp_power + 1
+        sp_power = sp_power - 1
+        return old_args, sp_power
 
     def fit_spectra(self, runcat_id):
         """
-        Fit spectra for a given object.
+        Fit spectra for a given object and save fit to the database.
         """
         self.freq = []
         self.flux = []
@@ -77,32 +112,10 @@ select log(f.freq_central), log(rf.wm_f_int), rf.avg_weight_f_int
             self.freq.append(xdata[0])
             self.flux.append(xdata[1])
             self.flux_err.append(xdata[2])
-        print self.freq
-        print self.flux
-
-        #for ind, y in enumerate(self.flux):
-        #    print self.freq[ind], y
         cursor.close()
-        sp_power = 0
-        old_ratio = -2
-        chi = None
-        ratio = -1
-        while sp_power < 5 and sp_power < len(self.freq) and old_ratio <= ratio:
-            old_ratio = ratio
-            old_chi = chi
-            chi = self.one_fit(sp_power)
-            if not old_chi:
-                print sp_power, self.args, chi
-                sp_power = sp_power + 1
-                continue
-            saved_args = copy(self.args)
-            print sp_power, self.args, chi, old_chi, old_chi/chi
-            ratio = numpy.abs(old_chi/chi)
-            sp_power = sp_power + 1
-        self.args = saved_args
-        print self.args
-        sp_power = sp_power - 1
-        sp_update = ','.join(map(lambda x: 'spectral_index_%s = %s' % (x, self.args[x]), range(sp_power)))
+        self.args, sp_power = self.best_fit()
+        sp_update = ','.join(map(lambda x: 'spectral_index_%s = %s' %
+                                       (x, self.args[x]), range(sp_power)))
         self.conn.execute("""
 update runningcatalog
    set spectral_power = %s,
