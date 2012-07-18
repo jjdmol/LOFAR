@@ -251,6 +251,7 @@ void Job::StorageProcess::start()
     "valgrind " "--leak-check=full "
 #endif
     executable.c_str(),
+    boost::lexical_cast<std::string>(itsParset.observationID()).c_str(),
     boost::lexical_cast<std::string>(itsRank).c_str(),
 #if defined WORDS_BIGENDIAN
     "1",
