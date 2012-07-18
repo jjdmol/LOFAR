@@ -28,3 +28,9 @@ class ImageStateError(GSMException):
     Image cannot be processed: wrong state.
     """
     pass
+
+class SQLError(GSMException):
+    """
+    Some error in SQL
+    """
+    pass

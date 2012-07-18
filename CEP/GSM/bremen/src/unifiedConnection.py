@@ -5,6 +5,7 @@ import psycopg2
 import logging
 from src.gsmlogger import get_gsm_logger
 from monetdb.monetdb_exceptions import OperationalError
+from monetdb.mapi import STATE_READY
 
 
 class UnifiedConnection(object):
@@ -76,6 +77,7 @@ class UnifiedConnection(object):
             query = query + ';'
         try:
             result = cursor.execute(query)
+            self.in_transaction = True
         except Exception as oerr:
             self.log.error(query.replace('\n', ' '))
             self.log.error(oerr)
@@ -139,6 +141,9 @@ class UnifiedConnection(object):
         except (psycopg2.Error, monetdb.Error), exc:
             self.log.error("Failed on query: %s. Error: %s" % (query, exc))
             raise exc
+        except NoneType, exc:
+            self.log.error("Failed on query: %s. No data returned" % query)
+            raise exc
         finally:
             cursor.close()
         return result
@@ -147,7 +152,7 @@ class UnifiedConnection(object):
         """
         :returns: True if the connection is active.
         """
-        if self.conn.mapi:
+        if self.conn.mapi and self.conn.mapi.state == STATE_READY:
             return True
         else:
             return False

@@ -238,6 +238,7 @@ class Server:
                 if len(ready_to_read) > 0:
                     recv = ready_to_read[0].recv(bytes, flags)
                     if recv == '':
+                        self.disconnect()
                         raise socket.error(_, 'Connection closed unexpectedly')
                 logger.debug("II: package size: %i payload: %s" % (len(recv), recv))
                 count -= len(recv)

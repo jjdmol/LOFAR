@@ -1,6 +1,7 @@
 #!/usr/bin/python
 from os import path
 try:
+    # Try loading LOFAR parset support, fallback to ConfigObj.
     from lofar.parameterset import parameterset
     LOFAR_PARAMETERSET = True
 except ImportError:
@@ -25,7 +26,7 @@ class GSMParset(object):
         self.log = get_gsm_logger('parsets', 'import.log')
         if not path.isfile(filename):
             self.log.error('Parset file does not exist: %s' % filename)
-            raise GSMException
+            raise GSMException('Parset file does not exist: %s' % filename)
         self.path = path.dirname(path.realpath(filename))
         if LOFAR_PARAMETERSET:
             self.data = parameterset(filename).dict()
@@ -60,8 +61,7 @@ class GSMParset(object):
             else:
                 bbsfile = GSMBBSFileSource(self.parset_id,
                                            "%s/%s" % (self.path, source))
-            if not bbsfile.read_and_store_data(conn):
-                raise SourceException
+            bbsfile.read_and_store_data(conn)
             loaded_sources = loaded_sources + bbsfile.sources
         conn.commit()
         self.log.info('%s sources loaded from parset %s' % (loaded_sources,

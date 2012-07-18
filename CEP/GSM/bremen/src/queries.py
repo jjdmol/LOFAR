@@ -105,27 +105,30 @@ def get_column_insert_values(column_alias):
     return """
 {0},{0}_err, {0}/({0}_err*{0}_err), 1/({0}_err*{0}_err)""".format(column_alias)
 
-
-def get_column_update_total(column_alias, new_value, new_weight):
+@makelistable
+def get_column_update_total(column_alias, fluxes=False):
     """
     Update values of runningcatalog/runningcatalog_fluxes
     for a full recalculation of value with associations.
     Part I: update weights and weighted sums.
     Used in: Extended source merging.
     """
-    return """avg_w{0} = (select sum({1}/({2}*{2}))
+    suffix = 'runningcatalog.runcatid'
+    if fluxes:
+        suffix = 'runningcatalog_fluxes.runcat_id'
+    return """avg_w{0} = (select sum(a.weight*e.{0}/(e.{0}_err*e.{0}_err))
                             from extractedsources e,
                                  assocxtrsources a
                            where e.xtrsrcid = a.xtrsrc_id
-                             and a.runcat_id = runningcatalog.runcatid),
-avg_weight_{0} = (select sum(1/({2}*{2}))
+                             and a.runcat_id = {1}),
+        avg_weight_{0} = (select sum(1/(e.{0}_err*e.{0}_err))
                             from extractedsources e,
                                  assocxtrsources a
                            where e.xtrsrcid = a.xtrsrc_id
-                             and a.runcat_id = runningcatalog.runcatid)
-""".format(column_alias, new_value, new_weight)
+                             and a.runcat_id = {1})
+""".format(column_alias, suffix)
 
-
+@makelistable
 def get_column_update_second(column_alias):
     """
     Update values of runningcatalog/runningcatalog_fluxes
@@ -235,7 +238,7 @@ def get_field(ra, decl, radius, band, stokes='I', min_flux=None):
  where {0}
    and r.source_kind = 0
    and f.runcat_id = r.runcatid
-   and f.stokes = {1}
+   and f.stokes = '{1}'
    and f.band = {2}
 UNION
 select r.wm_ra as ra, r.wm_decl as decl, f.wm_f_peak
@@ -246,9 +249,9 @@ select r.wm_ra as ra, r.wm_decl as decl, f.wm_f_peak
    and r.stokes = f.stokes
    and r.band = f.band
    and f.runcat_id = r.runcatid
-   and f.stokes = {1}
+   and f.stokes = '{1}'
    and f.band = {2}
-""".format(get_field_conditions(), stokes, band)
+""".format(get_field_conditions(x, y, z, r, min_flux), stokes, band)
     return sql
 
 

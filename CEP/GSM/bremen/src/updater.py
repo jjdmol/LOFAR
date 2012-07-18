@@ -14,9 +14,9 @@ def _refactor_update(sql):
         return ' '.join(map(lambda x: 'and {0}.{1} = x.{1}'.format(tabname, x),
                             _UPDATER_EXTRAS[tabname]))
     sqlupdate, sqlfrom = sql.strip().split('from', 1)
-    sqlupd_list = sqlupdate.split('set')[1].split(',')
-    table = sqlupdate.split('set')[0].split()[1]
-
+    table, sqlupd_list = sqlupdate.split('set')
+    sqlupd_list = sqlupd_list.split(',')
+    table = table.split()[1]
     if sqlfrom.endswith(';'):
         sqlfrom = sqlfrom[:-1]
     sqlfrom_split = sqlfrom.split('where', 1)

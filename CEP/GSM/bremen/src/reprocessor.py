@@ -28,6 +28,7 @@ class Reprocessor(GSMPipeline):
                     'deduct runningcatalog_fluxes',
                     'deduct runningcatalog_fluxes non-zero']:
             run_update(self.conn, sql, image_id)
+        self.conn.execute(get_sql('deduct cleanup', image_id))
         self.conn.execute(get_sql('update runningcatalog XYZ', image_id))
         self.conn.execute("""
 update images

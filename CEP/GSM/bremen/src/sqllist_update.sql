@@ -16,7 +16,7 @@ select a.runcat_id, {1}, 1,
  where a.xtrsrc_id = e.xtrsrcid
    and ta.xtrsrc_id = a.xtrsrc_id
    and ta.runcat_id = a.runcat_id
-   and ta.kind not in (3, 4)
+   and ta.kind <> 4
    and i.imageid = e.image_id
    and not exists (select f.band
                      from runningcatalog_fluxes f
