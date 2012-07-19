@@ -41,8 +41,10 @@ class ObservationTimerange
 			_observation(observation),
 			_bands(observation.Size()),
 			_bandStartLookup(observation.Size()),
+			_gridIndexLookup(),
 			_polarizationCount(0),
 			_timestepCount(0),
+			_timeOffsetIndex(0),
 			_gridFrequencySize(0),
 			_startFrequency(0.0),
 			_frequencyWidth(0.0),
@@ -56,8 +58,10 @@ class ObservationTimerange
 			_observation(source._observation),
 			_bands(source._bands),
 			_bandStartLookup(source._bandStartLookup),
+			_gridIndexLookup(source._gridIndexLookup),
 			_polarizationCount(source._polarizationCount),
 			_timestepCount(source._timestepCount),
+			_timeOffsetIndex(source._timeOffsetIndex),
 			_gridFrequencySize(source._gridFrequencySize),
 			_startFrequency(source._startFrequency),
 			_frequencyWidth(source._frequencyWidth)
@@ -215,6 +219,7 @@ class ObservationTimerange
 				_antenna1[r] = rowExt.Antenna1();
 				_antenna2[r] = rowExt.Antenna2();
 			}
+			_timestepCount = rowCount;
 		}
 		
 		void GetTimestepData(size_t nodeIndex, MSRowDataExt *rows)
@@ -235,6 +240,7 @@ class ObservationTimerange
 				{
 					const size_t gridIndex = *gridPtr;
 					size_t fullIndex = (r * _gridFrequencySize + gridIndex) * pCount;
+					
 					for(unsigned p=0;p<pCount;++p)
 					{
 						*realPtr = _realData[fullIndex];
@@ -287,6 +293,8 @@ class ObservationTimerange
 		num_t *_imagData;
 		double *_u, *_v, *_w;
 		unsigned *_antenna1, *_antenna2;
+		
+		void operator=(const ObservationTimerange &source) { }
 		
 		void allocate()
 		{

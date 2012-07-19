@@ -227,7 +227,6 @@ void ServerConnection::WriteDataRows(const std::string &msFilename, size_t rowSt
 	std::ostringstream dataBuffer;
 	// Serialize the rows
 	for(size_t rowIndex=0; rowIndex != rowCount; ++rowIndex) {
-		std::cout << "Write rowArray of size " << rowArray[rowIndex].Data().ChannelCount() <<'\n';
 		rowArray[rowIndex].Serialize(dataBuffer);
 	}
 	std::string dataBufferStr = dataBuffer.str();
