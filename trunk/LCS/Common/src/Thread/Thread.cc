@@ -31,7 +31,14 @@ namespace LOFAR {
 
 #ifdef USE_THREADS
 
-ThreadMap globalThreadMap;
+ThreadMap &ThreadMap::instance() {
+  // this leaks, but we have no way of properly enforcing that all
+  // threads are destructed before the global map is.
+
+  static ThreadMap *globalThreadMap = new ThreadMap();
+
+  return *globalThreadMap;
+}
 
 void ThreadMap::report() {
   ScopedLock sl(mutex);
