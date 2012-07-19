@@ -60,7 +60,7 @@ void CommandServer::handleCommand(const std::string &command)
   } else if (command == "quit") {
     itsQuit = true;
   } else if (command == "threads") {
-    globalThreadMap.report();
+    ThreadMap::instance().report();
 #if defined HAVE_BGP    
   } else if (command == "debug") {
     LOGCOUT_SETLEVEL(8);
