@@ -216,6 +216,9 @@ BandInfo MeasurementSet::GetBandInfo(const std::string &filename, unsigned bandI
 		ChannelInfo channelInfo;
 		channelInfo.frequencyIndex = channel;
 		channelInfo.frequencyHz = frequencies(casa::IPosition(1, channel));
+		channelInfo.channelWidthHz = 0.0;
+		channelInfo.effectiveBandWidthHz = 0.0;
+		channelInfo.resolutionHz = 0.0;
 		band.channels.push_back(channelInfo);
 
 		++frequencyIterator;

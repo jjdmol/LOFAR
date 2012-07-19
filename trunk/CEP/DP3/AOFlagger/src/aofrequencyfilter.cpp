@@ -112,6 +112,36 @@ void workThread()
 	std::cout << "Worker finished. Filtersize range in channel: " << minFilterSizeInChannels << "-" << maxFilterSizeInChannels << '\n';
 }
 
+void readThreadFunction(ObservationTimerange &timerange, const size_t &totalRows)
+{
+	MSRowDataExt *rowBuffer[commander->Observation().Size()];
+	for(size_t i=0;i<commander->Observation().Size();++i)
+		rowBuffer[i] = new MSRowDataExt[rowCountPerRequest];
+
+	size_t currentRow = 0;
+	while(currentRow < totalRows)
+	{
+		size_t currentRowCount = rowCountPerRequest;
+		if(currentRow + currentRowCount > totalRows)
+			currentRowCount = totalRows - currentRow;
+		timerange.SetZero();
+		
+		boost::mutex::scoped_lock lock(commanderMutex);
+		std::cout << "Reading... " << std::flush;
+		commander->PushReadDataRowsTask(timerange, currentRow, currentRowCount, rowBuffer);
+		commander->Run(false);
+		commander->CheckErrors();
+		std::cout << "Done.\n" << std::flush;
+		lock.unlock();
+		
+		currentRow += currentRowCount;
+		cout << "Read " << currentRow << '/' << totalRows << '\n';
+		readLane->write(new ObservationTimerange(timerange));
+	}
+	for(size_t i=0;i<commander->Observation().Size();++i)
+		delete[] rowBuffer[i];
+}
+
 void writeThreadFunction()
 {
 	const ClusteredObservation &obs = commander->Observation();
@@ -120,15 +150,24 @@ void writeThreadFunction()
 		rowBuffer[i] = new MSRowDataExt[rowCountPerRequest];
 		
 	ObservationTimerange *timerange;
-	while(writeLane->read(timerange))
+	if(writeLane->read(timerange))
 	{
-		boost::mutex::scoped_lock lock(commanderMutex);
-		commander->PushWriteDataRowsTask(*timerange, rowBuffer);
-		commander->Run(false);
-		commander->CheckErrors();
-		lock.unlock();
-		
-		delete timerange;
+		for(size_t i=0;i<obs.Size();++i)
+		{
+			for(size_t row=0;row<rowCountPerRequest;++row)
+				rowBuffer[i][row] = MSRowDataExt(timerange->PolarizationCount(), timerange->Band(i).channels.size());
+		}
+		do {
+			boost::mutex::scoped_lock lock(commanderMutex);
+			std::cout << "Writing... " << std::flush;
+			commander->PushWriteDataRowsTask(*timerange, rowBuffer);
+			commander->Run(false);
+			commander->CheckErrors();
+			std::cout << "Done.\n" << std::flush;
+			lock.unlock();
+			
+			delete timerange;
+		} while(writeLane->read(timerange));
 	}
 	std::cout << "Writer thread finished.\n";
 }
@@ -183,12 +222,8 @@ int main(int argc, char *argv[])
 		initializeFFTW(timerange.ChannelCount());
 		cout << " Done.\n";
 		
-		MSRowDataExt *rowBuffer[obs->Size()];
-		for(size_t i=0;i<obs->Size();++i)
-			rowBuffer[i] = new MSRowDataExt[rowCountPerRequest];
-		
 		// We ask for "0" rows, which means we will ask for the total number of rows
-		commander->PushReadDataRowsTask(timerange, 0, 0, rowBuffer);
+		commander->PushReadDataRowsTask(timerange, 0, 0, 0);
 		commander->Run(false);
 		commander->CheckErrors();
 		const size_t totalRows = commander->RowsTotal();
@@ -205,24 +240,7 @@ int main(int argc, char *argv[])
 		}
 		boost::thread writeThread(&writeThreadFunction);
 		
-		size_t currentRow = 0;
-		while(currentRow < totalRows)
-		{
-			size_t currentRowCount = rowCountPerRequest;
-			if(currentRow + currentRowCount > totalRows)
-				currentRowCount = totalRows - currentRow;
-			timerange.SetZero();
-			
-			boost::mutex::scoped_lock lock(commanderMutex);
-			commander->PushReadDataRowsTask(timerange, currentRow, currentRowCount, rowBuffer);
-			commander->Run(false);
-			commander->CheckErrors();
-			lock.unlock();
-			
-			currentRow += currentRowCount;
-			cout << "Read " << currentRow << '/' << totalRows << '\n';
-			readLane->write(new ObservationTimerange(timerange));
-		}
+		readThreadFunction(timerange, totalRows);
 		
 		// Shut down read workers
 		readLane->write_end();
@@ -238,8 +256,7 @@ int main(int argc, char *argv[])
 		delete writeLane;
 		
 		// Clean
-		for(size_t i=0;i<obs->Size();++i)
-			delete[] rowBuffer[i];
+		delete commander;
 		delete obs;
 	}
 }

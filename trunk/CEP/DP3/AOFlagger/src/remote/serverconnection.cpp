@@ -226,8 +226,10 @@ void ServerConnection::WriteDataRows(const std::string &msFilename, size_t rowSt
 	
 	std::ostringstream dataBuffer;
 	// Serialize the rows
-	for(size_t rowIndex=0; rowIndex != rowCount; ++rowIndex)
+	for(size_t rowIndex=0; rowIndex != rowCount; ++rowIndex) {
+		std::cout << "Write rowArray of size " << rowArray[rowIndex].Data().ChannelCount() <<'\n';
 		rowArray[rowIndex].Serialize(dataBuffer);
+	}
 	std::string dataBufferStr = dataBuffer.str();
 
 	options.flags = 0;
@@ -416,7 +418,7 @@ void ServerConnection::onReceiveWriteDataRowsResponseHeader()
 	GenericReadResponseHeader responseHeader = *reinterpret_cast<GenericReadResponseHeader*>(_buffer);
 	if(responseHeader.blockIdentifier != GenericReadResponseHeaderId || responseHeader.blockSize != sizeof(responseHeader))
 	{
-		_onError(shared_from_this(), "Bad response from client upon read data rows request");
+		_onError(shared_from_this(), "Bad response from client upon write data rows request");
 		StopClient();
 	}
 	else if(responseHeader.errorCode != NoError)

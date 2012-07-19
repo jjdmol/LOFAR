@@ -83,6 +83,7 @@ void Client::Run(const std::string &serverHost)
 		boost::asio::read(_socket, boost::asio::buffer(&requestBlock, sizeof(requestBlock)));
 		
 		enum RequestType request = (enum RequestType) requestBlock.request;
+		std::cout << "CLIENT: got request" << std::endl;
 		switch(request)
 		{
 			case StopClientRequest:
@@ -99,7 +100,11 @@ void Client::Run(const std::string &serverHost)
 			case ReadDataRowsRequest:
 				handleReadDataRows(requestBlock.dataSize);
 				break;
+			case WriteDataRowsRequest:
+				handleWriteDataRows(requestBlock.dataSize);
+				break;
 			default:
+				std::cout << "CLIENT: unknown command sent" << std::endl;
 				writeGenericReadException("Command not understood by client: server and client versions don't match?");
 				break;
 		}
@@ -146,7 +151,8 @@ void Client::writeDataResponse(std::ostringstream &buffer)
 		header.dataSize = str.size();
 		
 		boost::asio::write(_socket, boost::asio::buffer(&header, sizeof(header)));
-		boost::asio::write(_socket, boost::asio::buffer(str));
+		if(str.size() != 0)
+			boost::asio::write(_socket, boost::asio::buffer(str));
 	} catch(std::exception &e) {
 		writeGenericReadException(e);
 	}
@@ -288,7 +294,8 @@ void Client::handleReadDataRows(unsigned dataSize)
 			const size_t samplesPerRow = polarizationCount * channelCount;
 			
 			// Read and serialize the rows
-			for(size_t rowIndex=0; rowIndex != options.rowCount; ++rowIndex)
+			const size_t endRow = options.startRow + options.rowCount;
+			for(size_t rowIndex=options.startRow; rowIndex != endRow; ++rowIndex)
 			{
 				// DATA
 				const casa::Array<casa::Complex> cellData = dataCol(rowIndex);
@@ -319,6 +326,7 @@ void Client::handleReadDataRows(unsigned dataSize)
 				dataExt.SetAntenna1(a1Column(rowIndex));
 				dataExt.SetAntenna2(a2Column(rowIndex));
 				dataExt.SetTime(timeColumn(rowIndex));
+				dataExt.SetTimeOffsetIndex(rowIndex);
 				
 				dataExt.Serialize(buffer);
 			}
@@ -333,12 +341,12 @@ void Client::handleReadDataRows(unsigned dataSize)
 void Client::handleWriteDataRows(unsigned dataSize)
 {
 	try {
+		std::cout << "CLIENT: handling write data rows\n";
 		WriteDataRowsRequestOptions options;
-		boost::asio::read(_socket, boost::asio::buffer(&options.flags, sizeof(options.flags)));
 		
+		boost::asio::read(_socket, boost::asio::buffer(&options.flags, sizeof(options.flags)));
 		unsigned nameLength = dataSize - sizeof(options.flags) - sizeof(options.startRow) - sizeof(options.rowCount) - sizeof(options.dataSize);
 		options.msFilename = readStr(nameLength);
-		
 		boost::asio::read(_socket, boost::asio::buffer(&options.startRow, sizeof(options.startRow)));
 		boost::asio::read(_socket, boost::asio::buffer(&options.rowCount, sizeof(options.rowCount)));
 		boost::asio::read(_socket, boost::asio::buffer(&options.dataSize, sizeof(options.dataSize)));
@@ -353,11 +361,9 @@ void Client::handleWriteDataRows(unsigned dataSize)
 		// Write the received data to the MS
 		casa::Table table(options.msFilename, casa::Table::Update);
 		casa::ArrayColumn<casa::Complex> dataCol(table, "DATA");
-		//casa::ROArrayColumn<double> uvwColumn(table, "UVW");
 		//casa::ROScalarColumn<int> a1Column(table, "ANTENNA1");
 		//casa::ROScalarColumn<int> a2Column(table, "ANTENNA2");
-		//casa::ROScalarColumn<double> timeColumn(table, "TIME");
-		const casa::IPosition &shape = dataCol.shape(0);
+		const casa::IPosition shape = dataCol.shape(0);
 		size_t channelCount, polarizationCount;
 		if(shape.nelements() > 1)
 		{
@@ -375,6 +381,7 @@ void Client::handleWriteDataRows(unsigned dataSize)
 			MSRowDataExt dataExt;
 			dataExt.Unserialize(stream);
 			MSRowData &data = dataExt.Data();
+			std::cout << "Channels in dataExt: " << dataExt.Data().ChannelCount() << '\n';
 			
 			casa::Array<casa::Complex>::iterator cellIter = cellData.begin();
 			
@@ -390,8 +397,10 @@ void Client::handleWriteDataRows(unsigned dataSize)
 		}
 		
 		std::ostringstream buffer;
+		std::cout << "CLIENT: responding to write\n";
 		writeDataResponse(buffer);
 	} catch(std::exception &e) {
+		std::cout << "CLIENT: catched exception\n";
 		writeGenericReadException(e);
 	}
 }
