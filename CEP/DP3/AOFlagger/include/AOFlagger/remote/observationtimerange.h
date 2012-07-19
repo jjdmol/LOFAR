@@ -37,7 +37,7 @@ namespace aoRemote {
 class ObservationTimerange
 {
 	public:
-		ObservationTimerange(ClusteredObservation &observation) :
+		ObservationTimerange(const ClusteredObservation &observation) :
 			_observation(observation),
 			_bands(observation.Size()),
 			_bandStartLookup(observation.Size()),
@@ -225,6 +225,9 @@ class ObservationTimerange
 			{
 				MSRowDataExt &rowExt = rows[r];
 				MSRowData &row = rowExt.Data();
+				size_t thisChannelCount = _bands[nodeIndex].channels.size();
+				if(row.ChannelCount() != thisChannelCount)
+					throw std::runtime_error("Given rows do not match in channel count with the bands");
 				num_t *realPtr = row.RealPtr();
 				num_t *imagPtr = row.ImagPtr();
 				std::vector<size_t>::const_iterator gridPtr = _gridIndexLookup.begin()+bandStart;
@@ -266,9 +269,10 @@ class ObservationTimerange
 		unsigned Antenna2(size_t timestep) const { return _antenna2[timestep]; }
 		
 		void SetTimeOffsetIndex(size_t timeOffsetIndex) { _timeOffsetIndex = timeOffsetIndex; }
+		const BandInfo &Band(size_t nodeIndex) { return _bands[nodeIndex]; }
 	private:
 		struct BandRangeInfo { double endFrequency; size_t nodeIndex; };
-		ClusteredObservation &_observation;
+		const ClusteredObservation &_observation;
 		std::vector<BandInfo> _bands;
 		std::vector<size_t> _bandStartLookup;
 		std::vector<size_t> _gridIndexLookup;

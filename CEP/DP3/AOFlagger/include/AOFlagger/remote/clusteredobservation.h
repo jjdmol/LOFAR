@@ -95,6 +95,15 @@ class ClusteredObservation
 		size_t Size() const { return _items.size(); }
 		
 	private:
+		// disable copying
+		ClusteredObservation(const ClusteredObservation &source)
+		{
+		}
+		// disable assignment
+		void operator=(const ClusteredObservation &source)
+		{
+		}
+		
 		static void throwIfNotEnabled();
 		
 		std::vector<ClusteredObservationItem> _items;

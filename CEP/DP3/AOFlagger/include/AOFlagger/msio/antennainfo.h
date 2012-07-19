@@ -175,7 +175,7 @@ struct BandInfo {
 	unsigned channelCount;
 	std::vector<ChannelInfo> channels;
 
-	BandInfo() { }
+	BandInfo() : windowIndex(0), channelCount(0) { }
 	BandInfo(const BandInfo &source) :
 		windowIndex(source.windowIndex),
 		channelCount(source.channelCount),
