@@ -89,7 +89,7 @@ class RemoteProcess
 			{
 				std::ostringstream commandLine;
 				commandLine
-					<< "ssh " << _remoteProcess._clientHostName << " -x \"bash --login -c \\\"valgrind aoremoteclient connect "
+					<< "ssh " << _remoteProcess._clientHostName << " -x \"bash --login -c \\\"aoremoteclient connect "
 					<< _remoteProcess._serverHostName << "\\\" \"";
 				std::cout << commandLine.str() << std::endl;
 				int pid = vfork();

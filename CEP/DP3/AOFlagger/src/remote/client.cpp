@@ -83,7 +83,6 @@ void Client::Run(const std::string &serverHost)
 		boost::asio::read(_socket, boost::asio::buffer(&requestBlock, sizeof(requestBlock)));
 		
 		enum RequestType request = (enum RequestType) requestBlock.request;
-		std::cout << "CLIENT: got request" << std::endl;
 		switch(request)
 		{
 			case StopClientRequest:
@@ -341,7 +340,6 @@ void Client::handleReadDataRows(unsigned dataSize)
 void Client::handleWriteDataRows(unsigned dataSize)
 {
 	try {
-		std::cout << "CLIENT: handling write data rows\n";
 		WriteDataRowsRequestOptions options;
 		
 		boost::asio::read(_socket, boost::asio::buffer(&options.flags, sizeof(options.flags)));
@@ -355,7 +353,7 @@ void Client::handleWriteDataRows(unsigned dataSize)
 		std::vector<char> dataBuffer(options.dataSize);
 		boost::asio::read(_socket, boost::asio::buffer(&dataBuffer[0], options.dataSize));
 		std::istringstream stream;
-		if(stream.rdbuf()->pubsetbuf(&dataBuffer[0], dataSize) == 0)
+		if(stream.rdbuf()->pubsetbuf(&dataBuffer[0], options.dataSize) == 0)
 			throw std::runtime_error("Could not set string buffer");
 		
 		// Write the received data to the MS
@@ -376,12 +374,12 @@ void Client::handleWriteDataRows(unsigned dataSize)
 		
 		// Unserialize and write the rows
 		casa::Array<casa::Complex> cellData(shape);
-		for(size_t rowIndex=0; rowIndex != options.rowCount; ++rowIndex)
+		const size_t endRow = options.startRow + options.rowCount;
+		for(size_t rowIndex=options.startRow; rowIndex != endRow; ++rowIndex)
 		{
 			MSRowDataExt dataExt;
 			dataExt.Unserialize(stream);
 			MSRowData &data = dataExt.Data();
-			std::cout << "Channels in dataExt: " << dataExt.Data().ChannelCount() << '\n';
 			
 			casa::Array<casa::Complex>::iterator cellIter = cellData.begin();
 			
@@ -397,10 +395,8 @@ void Client::handleWriteDataRows(unsigned dataSize)
 		}
 		
 		std::ostringstream buffer;
-		std::cout << "CLIENT: responding to write\n";
 		writeDataResponse(buffer);
 	} catch(std::exception &e) {
-		std::cout << "CLIENT: catched exception\n";
 		writeGenericReadException(e);
 	}
 }
