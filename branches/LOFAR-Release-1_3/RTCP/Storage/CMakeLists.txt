@@ -2,6 +2,8 @@
 
 lofar_package(Storage 1.0 DEPENDS Common ApplCommon Interface MSLofar LofarStMan)
 
+set(GNU_EXE_LINKER_FLAGS "-Wl,-rpath,'$ORIGIN/../lib'")
+
 include(LofarFindPackage)
 lofar_find_package(Casacore COMPONENTS casa measures ms tables REQUIRED)
 lofar_find_package(DAL REQUIRED)
