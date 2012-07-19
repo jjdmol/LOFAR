@@ -335,11 +335,11 @@ void SubbandsCommand::send()
 		switch (m_type) {
 			case SubbandSelection::BEAMLET: {
 				if (1 == m_subbandlist.size()) {
-					setsubbands.subbands().resize(1, maxBeamlets(itsBitsPerSample));
+					setsubbands.subbands.beamlets().resize(1, maxBeamlets(itsBitsPerSample));
 					std::list<int>::iterator it = m_subbandlist.begin();
-					setsubbands.subbands() = (*it);
+					setsubbands.subbands.beamlets() = (*it);
 				} else {
-					setsubbands.subbands().resize(1, m_subbandlist.size());
+					setsubbands.subbands.beamlets().resize(1, m_subbandlist.size());
 
 					int i = 0;
 					int max_beamlets = maxBeamlets(itsBitsPerSample);
@@ -348,21 +348,21 @@ void SubbandsCommand::send()
 						if (i >= max_beamlets) {
 							break;
 						}
-						setsubbands.subbands()(0, i) = (*it);
+						setsubbands.subbands.beamlets()(0, i) = (*it);
 					}
 #if 0
 		for (; i < maxBeamlets(bitsPerSample); i++) {
-			setsubbands.subbands()(0, i) = 0;
+			setsubbands.subbands.beamlets()(0, i) = 0;
 		}
 #endif
 				}
 			}
 			break;
 
-		case SubbandSelection::XLET: {
-			setsubbands.subbands().resize(1,1);
-			std::list<int>::iterator it = m_subbandlist.begin();
-			setsubbands.subbands() = (*it);
+    		case SubbandSelection::XLET: {
+    			setsubbands.subbands.crosslets().resize(1,1);
+    			std::list<int>::iterator it = m_subbandlist.begin();
+    			setsubbands.subbands.crosslets() = (*it);
 			}
 			break;
 
@@ -394,10 +394,11 @@ GCFEvent::TResult SubbandsCommand::ack(GCFEvent& e)
 				for (int rcuout = 0; rcuout < get_ndevices(); rcuout++) {
 					if (mask[rcuout]) {
 						std::ostringstream logStream;
-						logStream << ack.subbands()(rcuin++, Range::all());
 						if (SubbandSelection::BEAMLET == m_type) {
+							logStream << ack.subbands.beamlets()(rcuin++, Range::all());
 							logMessage(cout,formatString("RCU[%2d].subbands=%s", rcuout,logStream.str().c_str()));
 						} else {
+						    logStream << ack.subbands.crosslets()(rcuin++, Range::all());
 							logMessage(cout,formatString("RCU[%2d].xcsubbands=%s", rcuout,logStream.str().c_str()));
 						}
 					}
@@ -3422,9 +3423,9 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 			if (command)
 				delete command;
 			SubbandsCommand* subbandscommand = new SubbandsCommand(*itsRSPDriver, itsNbitsPerSample);
-			subbandscommand->setType(SubbandSelection::BEAMLET);
-
 			command = subbandscommand;
+			
+			subbandscommand->setType(SubbandSelection::BEAMLET);
 			command->set_ndevices(m_nrcus);
 
 			if (optarg) {

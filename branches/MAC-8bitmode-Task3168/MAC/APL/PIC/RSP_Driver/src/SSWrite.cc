@@ -83,8 +83,8 @@ void SSWrite::sendrequest()
 
   // copy crosslet selection
   Range xlet_range(0, MEPHeader::N_LOCAL_XLETS-1);
-  subbands(xlet_range, 0) = Cache::getInstance().getBack().getSubbandSelection()()(global_blp * 2,     xlet_range); // x
-  subbands(xlet_range, 1) = Cache::getInstance().getBack().getSubbandSelection()()(global_blp * 2 + 1, xlet_range); // y
+  subbands(xlet_range, 0) = Cache::getInstance().getBack().getSubbandSelection().crosslets()(global_blp * 2,     xlet_range); // x
+  subbands(xlet_range, 1) = Cache::getInstance().getBack().getSubbandSelection().crosslets()(global_blp * 2 + 1, xlet_range); // y
 
   //
   // copy the actual values from the cache
@@ -92,7 +92,7 @@ void SSWrite::sendrequest()
   for (int lane = 0; lane < MEPHeader::N_SERDES_LANES; lane++) {
 
     int hw_offset = lane + MEPHeader::N_LOCAL_XLETS;
-    int cache_offset = (lane * (MEPHeader::N_BEAMLETS / MEPHeader::N_SERDES_LANES)) + MEPHeader::N_LOCAL_XLETS;
+    int cache_offset = (lane * (MEPHeader::N_BEAMLETS / MEPHeader::N_SERDES_LANES));
     
     // strided source range, stride = NR_BLPS_PER_RSPBOARD
     Range hw_range(hw_offset, hw_offset + MEPHeader::N_BEAMLETS - MEPHeader::N_BLPS, MEPHeader::N_BLPS);
@@ -102,8 +102,8 @@ void SSWrite::sendrequest()
     LOG_DEBUG_STR("hw_range=" << hw_range);
     LOG_DEBUG_STR("cache_range=" << cache_range);
 
-    subbands(hw_range, 0) = Cache::getInstance().getBack().getSubbandSelection()()(global_blp * 2,     cache_range); // x
-    subbands(hw_range, 1) = Cache::getInstance().getBack().getSubbandSelection()()(global_blp * 2 + 1, cache_range); // y
+    subbands(hw_range, 0) = Cache::getInstance().getBack().getSubbandSelection().beamlets()(global_blp * 2,     cache_range); // x
+    subbands(hw_range, 1) = Cache::getInstance().getBack().getSubbandSelection().beamlets()(global_blp * 2 + 1, cache_range); // y
 
 #if 0
     mapped_index(hw_range, 0) = index(cache_range, 0);

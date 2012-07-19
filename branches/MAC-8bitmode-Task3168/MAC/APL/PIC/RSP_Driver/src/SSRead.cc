@@ -91,10 +91,19 @@ GCFEvent::TResult SSRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 			    shape(MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS, N_POL),
 			    neverDeleteData);
 
+  Range hw_range;
+  
   if (0 == GET_CONFIG("RSPDriver.LOOPBACK_MODE", i))
   {
-    subbands(Range::all(), 0) -= Cache::getInstance().getBack().getSubbandSelection()()(global_blp * 2,     Range::all());
-    subbands(Range::all(), 1) -= Cache::getInstance().getBack().getSubbandSelection()()(global_blp * 2 + 1, Range::all());
+    
+    hw_range = Range(0, MEPHeader::N_LOCAL_XLETS - 1);
+    subbands(hw_range, 0) -= Cache::getInstance().getBack().getSubbandSelection().crosslets()(global_blp * 2,     Range::all());
+    subbands(hw_range, 1) -= Cache::getInstance().getBack().getSubbandSelection().crosslets()(global_blp * 2 + 1, Range::all());
+    
+    hw_range = Range(MEPHeader::N_LOCAL_XLETS, MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS);
+    subbands(hw_range, 0) -= Cache::getInstance().getBack().getSubbandSelection().beamlets()(global_blp * 2,     Range::all());
+    subbands(hw_range, 1) -= Cache::getInstance().getBack().getSubbandSelection().beamlets()(global_blp * 2 + 1, Range::all());
+    
     uint16 ssum = sum(subbands);
 
     if (0 != ssum)
@@ -106,10 +115,17 @@ GCFEvent::TResult SSRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
   else
   {
     // copy into the cache
-    Cache::getInstance().getBack().getSubbandSelection()()(global_blp * 2, Range::all())
-      = subbands(Range::all(), 0); // x
-    Cache::getInstance().getBack().getSubbandSelection()()(global_blp * 2 + 1, Range::all())
-      = subbands(Range::all(), 1); // y
+    hw_range = Range(0, MEPHeader::N_LOCAL_XLETS - 1);
+    Cache::getInstance().getBack().getSubbandSelection().crosslets()(global_blp * 2, Range::all())
+      = subbands(hw_range, 0); // x
+    Cache::getInstance().getBack().getSubbandSelection().crosslets()(global_blp * 2 + 1, Range::all())
+      = subbands(hw_range, 1); // y
+    
+    hw_range = Range(MEPHeader::N_LOCAL_XLETS, MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS);
+    Cache::getInstance().getBack().getSubbandSelection().beamlets()(global_blp * 2, Range::all())
+      = subbands(hw_range, 0); // x
+    Cache::getInstance().getBack().getSubbandSelection().beamlets()(global_blp * 2 + 1, Range::all())
+      = subbands(hw_range, 1); // y  
   }
 
   Cache::getInstance().getState().ss().read_ack(global_blp);

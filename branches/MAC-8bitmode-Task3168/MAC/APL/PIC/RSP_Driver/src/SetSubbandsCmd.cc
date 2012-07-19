@@ -70,26 +70,26 @@ void SetSubbandsCmd::apply(CacheBuffer& cache, bool /*setModFlag*/)
 
 	case SubbandSelection::BEAMLET: {
 		//dst_range = Range(MEPHeader::N_LOCAL_XLETS, MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS - 1);
-		dst_range = Range(MEPHeader::N_LOCAL_XLETS, MEPHeader::N_LOCAL_XLETS + m_event->subbands().extent(secondDim) - 1);
+		dst_range = Range(0, m_event->subbands.beamlets().extent(secondDim) - 1);
 		for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++) {
 			if (m_event->rcumask[cache_rcu]) {
 				// NOTE: MEPHeader::N_BEAMLETS = 4x62 but userside MAX_BEAMLETS may be different
 				//       In other words: getSubbandSelection can contain more data than m_event->subbands
 				if (MEPHeader::N_BEAMLETS == maxBeamlets(cache.getBitsPerSample())) {
-					cache.getSubbandSelection()()(cache_rcu, dst_range) = 0;
-					cache.getSubbandSelection()()(cache_rcu, dst_range) = m_event->subbands()(0, Range::all()) * (int)N_POL + (cache_rcu % N_POL);
+					cache.getSubbandSelection().beamlets()(cache_rcu, dst_range) = 0;
+					cache.getSubbandSelection().beamlets()(cache_rcu, dst_range) = m_event->subbands.beamlets()(0, Range::all()) * (int)N_POL + (cache_rcu % N_POL);
 				}
 				else {
-					int nr_subbands = m_event->subbands().extent(secondDim);
+					int nr_subbands = m_event->subbands.beamlets().extent(secondDim);
 					for (int rsp = 0; rsp < 4; rsp++) {
-						int	swstart(rsp*maxBeamletsPerRSP(cache.getBitsPerSample()));
-						int hwstart(MEPHeader::N_LOCAL_XLETS + rsp * (MEPHeader::N_BEAMLETS/4));
+						int	swstart(rsp * maxBeamletsPerRSP(cache.getBitsPerSample()));
+						int hwstart(rsp * (MEPHeader::N_BEAMLETS/4));
 						int nrSubbands2move(MIN(nr_subbands-swstart, maxBeamletsPerRSP(cache.getBitsPerSample())));
 						if (nrSubbands2move > 0) {
 							dst_range = Range(hwstart, hwstart+nrSubbands2move-1);
 							src_range = Range(swstart, swstart+nrSubbands2move-1);
-							cache.getSubbandSelection()()(cache_rcu, dst_range) = 0;
-							cache.getSubbandSelection()()(cache_rcu, dst_range) = m_event->subbands()(0, src_range) * (int)N_POL + (cache_rcu % N_POL);
+							cache.getSubbandSelection().beamlets()(cache_rcu, dst_range) = 0;
+							cache.getSubbandSelection().beamlets()(cache_rcu, dst_range) = m_event->subbands.beamlets()(0, src_range) * (int)N_POL + (cache_rcu % N_POL);
 							if (cache_rcu == 0) {
 								LOG_DEBUG_STR("Setsubbands:move(" << swstart << ".." << swstart+nrSubbands2move << ") to (" 
 																  << hwstart << ".." << hwstart+nrSubbands2move << ")");
@@ -99,8 +99,8 @@ void SetSubbandsCmd::apply(CacheBuffer& cache, bool /*setModFlag*/)
 				} // difference in max'en
 
 				if (cache_rcu == 0) {
-					LOG_DEBUG_STR("m_event->subbands() = " << m_event->subbands());
-					LOG_DEBUG_STR("cache->subbands(0) = " << cache.getSubbandSelection()()(0,Range::all()));
+					LOG_DEBUG_STR("m_event->subbands.beamlets() = " << m_event->subbands.beamlets());
+					LOG_DEBUG_STR("cache->subbands.beamlets(0) = " << cache.getSubbandSelection().beamlets()(0,Range::all()));
 				}
 			} // if rcu selected
 		} // for each rcu
@@ -111,10 +111,10 @@ void SetSubbandsCmd::apply(CacheBuffer& cache, bool /*setModFlag*/)
 		dst_range = Range(0, MEPHeader::N_LOCAL_XLETS - 1);
 		for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++) {
 			if (m_event->rcumask[cache_rcu]) {
-				cache.getSubbandSelection()()(cache_rcu, dst_range) = 0;
-				cache.getSubbandSelection()()(cache_rcu, dst_range) = m_event->subbands()(0,0) * N_POL + (cache_rcu % N_POL);
+				cache.getSubbandSelection().crosslets()(cache_rcu, dst_range) = 0;
+				cache.getSubbandSelection().crosslets()(cache_rcu, dst_range) = m_event->subbands.crosslets()(0,0) * N_POL + (cache_rcu % N_POL);
 
-				LOG_DEBUG_STR("m_event->subbands() = " << m_event->subbands());
+				LOG_DEBUG_STR("m_event->subbands.crosslets() = " << m_event->subbands.crosslets());
 			}
 		}
 	}
@@ -149,30 +149,39 @@ bool SetSubbandsCmd::validate() const
 	switch (m_event->subbands.getType()) {
 
 	case SubbandSelection::BEAMLET:
-		if (m_event->subbands().extent(secondDim) <= MEPHeader::N_BEAMLETS) valid = true;
+		if (   (m_event->subbands.beamlets().extent(secondDim) <= MEPHeader::N_BEAMLETS)
+			&& (2 == m_event->subbands.beamlets().dimensions())
+		    && (1 == m_event->subbands.beamlets().extent(firstDim))) {
+		    valid = true;
+		}
 		break;
 
 	case SubbandSelection::XLET:
-		if (1 == m_event->subbands().extent(secondDim)) valid = true;
+		if (   (1 == m_event->subbands.crosslets().extent(secondDim))
+	        && (2 == m_event->subbands.crosslets().dimensions())
+		    && (1 == m_event->subbands.crosslets().extent(firstDim))) {
+		    valid = true;
+		}
 		break;
 
 	default:
-		LOG_WARN("invalid SubbandSelection type");
+		LOG_WARN("invalid SubbandSelection type or dimensions");
 		break;
 	}
 
 	// return true when everything is right
-	if ((m_event->rcumask.count() <= (unsigned int)StationSettings::instance()->nrRcus())
-		&& (2 == m_event->subbands().dimensions())
-		&& (1 == m_event->subbands().extent(firstDim)) && valid) {
+	if (   (m_event->rcumask.count() <= (unsigned int)StationSettings::instance()->nrRcus())
+		&& valid) {
 		return (true);
 	}
 
 	// show our validation values.
-    LOG_DEBUG(formatString("cmd rcumask.count = %d",m_event->rcumask.count()));
-    LOG_DEBUG(formatString("nr Rcus           = %d",StationSettings::instance()->nrRcus()));
-    LOG_DEBUG(formatString("first dim         = %d",m_event->subbands().extent(firstDim)));
-    LOG_DEBUG(formatString("second dim        = %d",m_event->subbands().extent(secondDim)));
+    LOG_DEBUG(formatString("cmd rcumask.count    = %d",m_event->rcumask.count()));
+    LOG_DEBUG(formatString("nr Rcus              = %d",StationSettings::instance()->nrRcus()));
+    LOG_DEBUG(formatString("first dim crosslets  = %d",m_event->subbands.crosslets().extent(firstDim)));
+    LOG_DEBUG(formatString("second dim crosslets = %d",m_event->subbands.crosslets().extent(secondDim)));
+    LOG_DEBUG(formatString("first dim beamlets   = %d",m_event->subbands.beamlets().extent(firstDim)));
+    LOG_DEBUG(formatString("second dim beamlets  = %d",m_event->subbands.beamlets().extent(secondDim)));
     return (false);
 
 }
