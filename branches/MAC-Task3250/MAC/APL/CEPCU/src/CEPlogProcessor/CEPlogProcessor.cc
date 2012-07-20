@@ -26,6 +26,7 @@
 #include <Common/StringUtil.h>
 #include <Common/ParameterSet.h>
 #include <ApplCommon/Observation.h>
+#include <ApplCommon/StationInfo.h>
 
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/PVSS/PVSSinfo.h>
@@ -412,8 +413,9 @@ void CEPlogProcessor::processParset( const std::string &observationID )
       return;
     }
 
-    // parsets are in /opt/lofar/var/run
-    string filename(formatString("/opt/lofar/var/run/Observation%s", observationID.c_str()));
+    // parsets are in LOFAR_SHARE_LOCATION
+    string filename(formatString("%s/Observation%s", 
+                                 LOFAR_SHARE_LOCATION, observationID.c_str()));
 
     ParameterSet parset(filename);
 

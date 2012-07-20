@@ -26,6 +26,7 @@
 #include <Common/SystemUtil.h>
 
 #include <Common/ParameterSet.h>
+#include <ApplCommon/StationInfo.h>
 #include <MACIO/MACServiceInfo.h>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/ControllerDefines.h>
@@ -547,8 +548,9 @@ void ControllerMenu::_doStartMenu()
 {
 	cout << endl;
 	cout << "You need an exportFile from OTDB containing an Observation." << endl;
-	cout << "Its name has the format /opt/lofar/var/run/Observation<nr>." << endl;
-	string	command("ls -1 /opt/lofar/var/run/Observation[0-9]*");
+	cout << "Its name has the format " << LOFAR_SHARE_LOCATION 
+	     << "/Observation<nr>." << endl;
+	string	command("ls -1 " LOFAR_SHARE_LOCATION "/Observation[0-9]*");
 	system(command.c_str());
 
 	int32	obsnr(-1);
@@ -562,7 +564,8 @@ void ControllerMenu::_doStartMenu()
 			return;
 		}
 		ifstream	iFile;
-		string obsFileName(formatString("/opt/lofar/var/run/Observation%d", obsnr));
+		string obsFileName(formatString("%s/Observation%d", 
+		                                LOFAR_SHARE_LOCATION, obsnr));
 		iFile.open(obsFileName.c_str(), ifstream::in);
 		if (!iFile) {
 			cout << endl << "Cannot open file " << obsFileName << endl;

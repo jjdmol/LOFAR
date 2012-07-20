@@ -28,6 +28,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/SystemUtil.h>    // needed for basename
 #include <Common/Exception.h>     // THROW macro for exceptions
+#include <ApplCommon/StationInfo.h>
 
 // SAS
 #include <OTDB/OTDBconstants.h>
@@ -145,8 +146,8 @@ int main (int argc, char* argv[])
     string password    = parset.getString("password", "boskabouter");
     string port        = parset.getString("port", "5432");
     // Locations to save SAS hardware strings of broken and failed tiles to
-    string brokenfilename = parset.getString("brokenTilesFile", "/opt/lofar/var/run/brokenTiles.txt");
-    string failedfilename = parset.getString("failedTilesFile", "/opt/lofar/var/run/failedTiles.txt");
+    string failedfilename = parset.getString("failedTilesFile", LOFAR_SHARE_LOCATION "/failedTiles.txt");
+    string brokenfilename = parset.getString("brokenTilesFile", LOFAR_SHARE_LOCATION "/brokenTiles.txt");
 
     //---------------------------------------------------------------------
     // Handle observation starttime and endtime
