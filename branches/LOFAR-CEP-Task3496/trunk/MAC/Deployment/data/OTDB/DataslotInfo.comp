@@ -1,0 +1,13 @@
+# -- DataslotInfo --
+#
+# $Id$
+#
+#      name            vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node   DataslotInfo     4.0.0  development 'node constraint'  "allocation information"
+
+#    name                    dir. type   unit   prun. vm   value                   constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  RSPBoardList		I    vuint   -      10    0    "[]"       -     "RSPboardnumbers of the dataslots"
+par  DataslotList		I    vuint   -      10    0    "[]"       -     "Corresponding dataslotnumbers"
+
