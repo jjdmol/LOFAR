@@ -154,9 +154,9 @@ GCFEvent::TResult CalServer::initial(GCFEvent& event, GCFPortInterface& port)
 			LOG_INFO_STR("Calibration subbandrange: " << itsLowestSubband << ".." << itsHighestSubband);
 
 			// Setup datapath
-			itsDataDir = globalParameterSet()->getString("CalServer.DataDirectory", "/opt/lofar/log");
+			itsDataDir = globalParameterSet()->getString("CalServer.DataDirectory", "/opt/lofar/var/log");
 			if (itsDataDir.empty()) {
-				itsDataDir="/opt/lofar/log";
+				itsDataDir="/opt/lofar/var/log";
 			}
 			else if ((*itsDataDir.rbegin()) == '/') {       // strip off last /
 				itsDataDir.erase(itsDataDir.length()-1);

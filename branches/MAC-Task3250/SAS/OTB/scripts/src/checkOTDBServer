@@ -2,13 +2,13 @@ export serverDir=/opt/sas/server
 export clientDir=/opt/sas/client
 export JAVAHOME=/usr/java/jdk1.6.0_07
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$serverDir
-check_logfile=/opt/lofar/log/checkOTDBServer.log
+check_logfile=/opt/lofar/var/log/checkOTDBServer.log
 check_curdate=`date +%Y-%m-%d\ %H:%M:%S`
 
 start_server()
 {
       curdate=`date +%Y%m%dT%H%M%S`
-      logfile="/opt/lofar/log/OTDBServer."$curdate
+      logfile="/opt/lofar/var/log/OTDBServer."$curdate
       echo "Starting server: $JAVAHOME/bin/java -jar $serverDir/jOTDB2.jar paulus boskabouter LOFAR20 sas001 sas001 $port1 $port2 &" | tee -a $logfile
       $JAVAHOME/bin/java -jar $serverDir/jOTDB2.jar paulus boskabouter LOFAR20 sas001 sas001 $port1 $port2 2>&1 1>$logfile&
       serverpid=$!

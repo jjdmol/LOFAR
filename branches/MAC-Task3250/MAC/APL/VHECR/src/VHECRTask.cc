@@ -90,7 +90,7 @@ namespace LOFAR {
     itsSettings = new VHECRsettings(itsParameterSet);  // does all nasty conversions
 
     itsConfigurationFile = "/opt/lofar/etc/VHECRtask.conf"; // /opt/lofar/etc/
-    itsOutputFilename = "/opt/lofar/log/VHECRtaskLogTest.dat";
+    itsOutputFilename = "/opt/lofar/var/log/VHECRtaskLogTest.dat";
     itsAntennaPositionsFile = "/opt/lofar/etc/AntennaArrays.conf"; // hardcoded but can be overridden by VHECRtask.conf config file
     // which is read in only now:
     readConfigFile(itsConfigurationFile.c_str());
