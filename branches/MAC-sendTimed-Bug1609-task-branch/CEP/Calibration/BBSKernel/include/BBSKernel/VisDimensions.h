@@ -68,6 +68,9 @@ public:
     size_t nCorrelations() const;
     // @}
 
+    // Total number of samples.
+    size_t nSamples() const;
+
     // Check for empty dimensions.
     bool empty() const;
 
@@ -135,10 +138,14 @@ inline size_t VisDimensions::nCorrelations() const
     return itsCorrelationAxis.size();
 }
 
+inline size_t VisDimensions::nSamples() const
+{
+    return nBaselines() * nTime() * nFreq() * nCorrelations();
+}
+
 inline bool VisDimensions::empty() const
 {
-    return nFreq() == 0 || nTime() == 0 || nBaselines() == 0
-        || nCorrelations() == 0;
+    return nSamples() == 0;
 }
 
 inline Box VisDimensions::domain() const

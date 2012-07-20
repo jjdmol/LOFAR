@@ -45,6 +45,8 @@ public:
 	// Process Control object.
 	ProcCtrlRemote(ProcessControl* aProcCtrl, const string&	aUniqProcName);
 
+        virtual ~ProcCtrlRemote();
+
 	// Start the process controller. Let it run under control of a
 	// ProcControlServer.
 	virtual int operator()(const ParameterSet& arg);

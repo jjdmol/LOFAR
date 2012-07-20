@@ -25,11 +25,13 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include "image2d.h"
-#include "mask2d.h"
+#include <AOFlagger/msio/image2d.h>
+#include <AOFlagger/msio/mask2d.h>
 
 typedef boost::shared_ptr<class SampleRow> SampleRowPtr;
 typedef boost::shared_ptr<const class SampleRow> SampleRowCPtr;
+
+#include <AOFlagger/strategy/algorithms/convolutions.h>
 
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
@@ -73,6 +75,15 @@ class SampleRow {
 					row->_values[x] = std::numeric_limits<num_t>::quiet_NaN();
 				else
 					row->_values[x] = image->Value(x, y);
+			}
+			return SampleRowPtr(row);
+		}
+		static SampleRowPtr CreateAmplitudeFromRow(Image2DCPtr real, Image2DCPtr imaginary, size_t y)
+		{
+			SampleRow *row = new SampleRow(real->Width());
+			for(size_t x=0;x<real->Width();++x)
+			{
+				row->_values[x] = sqrtn(real->Value(x,y)*real->Value(x,y) + imaginary->Value(x,y)*imaginary->Value(x,y));
 			}
 			return SampleRowPtr(row);
 		}
@@ -127,6 +138,10 @@ class SampleRow {
 		{
 			return SampleRowPtr(new SampleRow(*source));
 		}
+		SampleRowPtr Copy() const
+		{
+			return SampleRowPtr(new SampleRow(*this));
+		}
 		
 		void SetHorizontalImageValues(Image2DPtr image, unsigned y) const
 		{
@@ -161,14 +176,29 @@ class SampleRow {
 		void SetValue(size_t i, num_t newValue) { _values[i] = newValue; }
 
 		size_t Size() const { return _size; }
-
-		num_t RMS() const
+		
+		size_t IndexOfMax() const
 		{
-			if(_size == 0) return std::numeric_limits<num_t>::quiet_NaN();
-			num_t sum = 0.0;
+			size_t maxIndex = 0;
+			num_t maxValue = _values[0];
+			for(size_t i = 1; i<_size;++i)
+			{
+				if(_values[i] > maxValue)
+				{
+					maxIndex = i;
+					maxValue = _values[i];
+				}
+			}
+			return maxIndex;
+		}
+
+		numl_t RMS() const
+		{
+			if(_size == 0) return std::numeric_limits<numl_t>::quiet_NaN();
+			numl_t sum = 0.0;
 			for(size_t i=0;i<_size;++i)
 				sum += _values[i] * _values[i];
-			return sqrtl(sum / _size);
+			return sqrtnl(sum / _size);
 		}
 		num_t Median() const
 		{
@@ -196,12 +226,33 @@ class SampleRow {
 				return mid;
 			}
 		}
-		num_t StdDev(double mean) const
+		numl_t Mean() const
 		{
-			num_t stddev = 0.0;
+			numl_t mean = 0.0;
+			for(size_t i = 0; i<_size;++i)
+				mean += _values[i];
+			return mean / _size;
+		}
+		numl_t MeanWithMissings() const
+		{
+			numl_t mean = 0.0;
+			size_t count = 0;
+			for(size_t i = 0; i<_size;++i)
+			{
+				if(std::isfinite(_values[i]))
+				{
+					mean += _values[i];
+					++count;
+				}
+			}
+			return mean / count;
+		}
+		numl_t StdDev(double mean) const
+		{
+			numl_t stddev = 0.0;
 			for(size_t i = 0; i<_size;++i)
 				stddev += (_values[i] - mean) * (_values[i] - mean);
-			return sqrtn(stddev / _size);
+			return sqrtnl(stddev / _size);
 		}
 		num_t RMSWithMissings() const
 		{
@@ -227,6 +278,48 @@ class SampleRow {
 		{
 			SetValue(i, std::numeric_limits<num_t>::quiet_NaN());
 		}
+		void ConvolveWithGaussian(num_t sigma)
+		{
+			Convolutions::OneDimensionalGausConvolution(_values, _size, sigma);
+		}
+		void ConvolveWithSinc(num_t frequency)
+		{
+			Convolutions::OneDimensionalSincConvolution(_values, _size, frequency);
+		}
+		void Subtract(SampleRowCPtr source)
+		{
+			for(unsigned i=0;i<_size;++i)
+				_values[i] -= source->_values[i];
+		}
+		num_t WinsorizedMean() const
+		{
+			num_t *data = new num_t[_size];
+			memcpy(data, _values, sizeof(num_t) * _size);
+			std::sort(data, data + _size, numLessThanOperator);
+			size_t lowIndex = (size_t) floor(0.1 * _size);
+			size_t highIndex = (size_t) ceil(0.9 * _size)-1;
+			num_t lowValue = data[lowIndex];
+			num_t highValue = data[highIndex];
+			delete[] data;
+
+			// Calculate mean
+			num_t mean = 0.0;
+			for(size_t x = 0;x < _size; ++x) {
+				const num_t value = data[x];
+				if(value < lowValue)
+					mean += lowValue;
+				else if(value > highValue)
+					mean += highValue;
+				else
+					mean += value;
+			}
+			return mean / (num_t) _size;
+		}
+		num_t WinsorizedMeanWithMissings() const
+		{
+			SampleRowPtr row = CreateWithoutMissings();
+			return row->WinsorizedMean();
+		}
 	private:
 		explicit SampleRow(size_t size) :
 			_size(size), _values(new num_t[_size])
@@ -244,6 +337,19 @@ class SampleRow {
 		}
 		size_t _size;
 		num_t *_values;
+		
+		// We need this less than operator, because the normal operator
+		// does not enforce a strictly ordered set, because a<b != !(b<a) in the case
+		// of nans/infs.
+		static bool numLessThanOperator(const num_t &a, const num_t &b) {
+			if(std::isfinite(a)) {
+				if(std::isfinite(b))
+					return a < b;
+				else
+					return true;
+			}
+			return false;
+		}
 };
 
 #endif

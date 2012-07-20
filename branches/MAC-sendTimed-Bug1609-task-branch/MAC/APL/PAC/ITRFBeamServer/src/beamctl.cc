@@ -23,15 +23,16 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/Exception.h>
 #include <Common/ParameterSet.h>
 #include <Common/lofar_bitset.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_list.h>
+#include <ApplCommon/AntennaSets.h>
 
 #include <APL/CAL_Protocol/CAL_Protocol.ph>
 #include <APL/IBS_Protocol/IBS_Protocol.ph>
 #include <APL/RSP_Protocol/RCUSettings.h>
-#include <APL/APLCommon/AntennaSets.h>
 #include <MACIO/MACServiceInfo.h>
 #include <GCF/TM/GCF_Control.h>
 
@@ -54,7 +55,6 @@ namespace LOFAR {
   using namespace CAL_Protocol;
   using namespace IBS_Protocol;
   using namespace GCF::TM;
-  using namespace APLCommon;
   namespace BS {
 
 //
@@ -64,7 +64,8 @@ beamctl::beamctl(const string&	name) :
 	GCFTask((State)&beamctl::checkUserInput, name), 
 	itsCalServer	(0),
 	itsBeamServer	(0),
-	itsRCUmode		(-1)
+	itsRCUmode		(-1),
+	itsCalInfo		(false)
 {
 	registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_STRINGS);
 	registerProtocol(IBS_PROTOCOL, IBS_PROTOCOL_STRINGS);
@@ -127,7 +128,12 @@ GCFEvent::TResult beamctl::con2beamserver(GCFEvent& event, GCFPortInterface& por
 
 	case F_CONNECTED: {
 //		TRAN(beamctl::validate_pointings);
-		TRAN(beamctl::con2calserver);
+		if (itsCalInfo) {
+			TRAN(beamctl::askCalInfo);
+		}
+		else {
+			TRAN(beamctl::con2calserver);
+		}
 	}
 	break;
 
@@ -213,10 +219,9 @@ GCFEvent::TResult beamctl::create_subarray(GCFEvent& event, GCFPortInterface& po
 	switch (event.signal) {
 	case F_ENTRY: {
 		CALStartEvent start;
-		AntennaSets*	AS(globalAntennaSets());
 		start.name   = BEAMCTL_BEAM + formatString("_%d", getpid());
-		start.parent = AS->antennaField(itsAntSet);
-		start.subset = getRCUMask();
+		start.parent = globalAntennaSets()->antennaField(itsAntSet);
+		start.subset = getRCUMask() & globalAntennaSets()->RCUallocation(itsAntSet);
 		start.rcumode().resize(1);
 		start.rcumode()(0).setMode((RSP_Protocol::RCUSettings::Control::RCUMode)itsRCUmode);
 
@@ -270,7 +275,7 @@ GCFEvent::TResult beamctl::create_beam(GCFEvent& event, GCFPortInterface& port)
 		IBSBeamallocEvent 	alloc;
 		alloc.beamName	   = BEAMCTL_BEAM + formatString("_%d", getpid());
 		alloc.antennaSet   = itsAntSet;
-		alloc.rcumask	   = getRCUMask();
+		alloc.rcumask	   = getRCUMask() & globalAntennaSets()->RCUallocation(itsAntSet);
 		// assume beamletnumbers are right so the ring can be extracted from those numbers.
 		// when the user did this wrong the BeamServer will complain.
 		alloc.ringNr	   = itsBeamlets.front() >= BEAMLET_RING_OFFSET;
@@ -393,6 +398,43 @@ GCFEvent::TResult beamctl::sendPointings(GCFEvent& event, GCFPortInterface& port
 }
 
 
+//
+// askCalInfo(event, port)
+//
+GCFEvent::TResult beamctl::askCalInfo(GCFEvent& event, GCFPortInterface& port)
+{
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
+	switch (event.signal) {
+	case F_ENTRY: {
+		IBSGetcalinfoEvent 	request;
+		itsBeamServer->send(request);
+	}
+	break;
+
+	case IBS_GETCALINFOACK: {
+		IBSGetcalinfoackEvent ack(event);
+		cout << "--- Calibration info ---" << endl;
+		cout << ack.info << endl;
+		TRAN(beamctl::final);
+	}
+	break;
+
+	case F_DISCONNECTED: {
+		port.close();
+		cerr << "Error: unexpected disconnect" << endl;
+		TRAN(beamctl::final);
+	}
+	break;
+
+	default:
+		status = GCFEvent::NOT_HANDLED;
+	break;
+	}
+
+	return status;
+}
+
 
 
 GCFEvent::TResult beamctl::final(GCFEvent& event, GCFPortInterface& /*port*/)
@@ -477,6 +519,7 @@ void beamctl::usage() const
 	cout <<
 		"Usage: beamctl <rcuspec> <dataspec> <digpointing> [<digpointing> ...] FOR LBA ANTENNAS\n"
 		"       beamctl <rcuspec> <anapointing> [<anapointing> ...] [<dataspec> <digpointing> [<digpointing> ...]] FOR HBA ANTENNAS\n"
+		"       beamctl --calinfo\n"
 		"where:\n"
 		"  <rcuspec>      = --antennaset [--rcus] --rcumode \n"
 		"  <dataspec>     = --subbands --beamlets \n"
@@ -595,6 +638,10 @@ void beamctl::printList(list<int>&		theList) const
 
 bool beamctl::checkOptions()
 {
+	if (itsCalInfo) {
+		return (true);
+	}
+
 	// antennaSet OR rcus must be specified.
 	if (itsAntSet.empty() && itsRCUs.empty()) {
 		cerr << "Error: antennaSet or rcu selection is required." << endl;
@@ -646,6 +693,8 @@ bool beamctl::parseOptions(int	myArgc, char** myArgv)
 		{ "anadir", 	 required_argument, 0, 'A' },
 		{ "subbands",  	 required_argument, 0, 's' },
 		{ "beamlets",  	 required_argument, 0, 'b' },
+		{ "remotehost",  required_argument, 0, 'J' },
+		{ "calinfo",  	 no_argument,       0, 'c' },
 		{ "help",      	 no_argument,       0, 'h' },
 		{ 0, 0, 0, 0 },
 	};
@@ -657,11 +706,11 @@ bool beamctl::parseOptions(int	myArgc, char** myArgv)
 	optind = 0; // reset option parsing
 	while (true) {
 		int option_index = 0;
-		int c = getopt_long(myArgc, myArgv, "a:r:m:A:D:s:b:h", long_options, &option_index);
+		int c = getopt_long(myArgc, myArgv, "a:r:m:A:D:s:b:ch", long_options, &option_index);
 		if (c == -1) {
 			break;
 		}
-		if (c != 'h') {		// only 'h' does not need an argument
+		if ((c != 'h') && (c != 'c')) {		// only 'h' and 'c' does not need an argument
 			// note: --xxx  results in !optarg when it is the last option
 			if (!optarg)
 				continue;
@@ -729,6 +778,16 @@ bool beamctl::parseOptions(int	myArgc, char** myArgv)
 		}
 		break;
 
+		case 'J': 
+			cout << "remotehost : " << optarg << endl;
+			itsCalServer->setHostName (optarg);
+			itsBeamServer->setHostName(optarg);
+		break;
+
+		case 'c':
+			itsCalInfo = true;
+			break;
+
 		case 'h':
 		default:
 			usage();
@@ -748,6 +807,9 @@ bool beamctl::parseOptions(int	myArgc, char** myArgv)
 using namespace LOFAR;
 using namespace BS;
 using namespace GCF::TM;
+
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 //
 // main

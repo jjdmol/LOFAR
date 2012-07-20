@@ -151,15 +151,19 @@ dyn_string navTabCtrl_getViewPanels()
     }
   
     if (dpExists(panelConfigDP)) {
+      LOG_DEBUG("navTabCtrl.ctl:navTabCtrl_getViewPanels|looking for: "+ panelConfigDP);
       if (dpGet(panelConfigDP,dpViews)==-1) {
 	LOG_ERROR("navTabCtrl.ctl:navTabCtrl_getViewPanels|Error obtaining panelViews: " + getLastError());
       } else {
+        if (dynlen(dpViews) > 0) {
+          LOG_DEBUG("navTabCtrl.ctl:navTabCtrl_getViewPanels|found views: "+ dpViews);
         found=true;
         return dpViews;
       }
-    } else {
-   	LOG_DEBUG("navTabCtrl.ctl:navTabCtrl_getViewPanels|panelConfigDP doesn't exist: "+ panelConfigDP);
+      }
     }
+   	LOG_DEBUG("navTabCtrl.ctl:navTabCtrl_getViewPanels|panelConfigDP doesn't exist: "+ panelConfigDP);
+    
     // Strip last element and retry
     // check if g_currentDatapoint < DB:LOFAR,
     // if so, reset and leave
@@ -275,10 +279,22 @@ bool navTabCtrl_showView(int panelNr=1)
     
     // check if the panel also has a DPName if available set g_currentDatapoint to that dpName
     dyn_string splitName = strsplit(viewPanels[panelNr],":");
+    string syst=dpSubStr(g_currentDatapoint,DPSUB_SYS);
     if (dynlen(splitName) > 1) {
-      string syst=dpSubStr(g_currentDatapoint,DPSUB_SYS);
       LOG_DEBUG("navTabCtrl.ctl:navTabCtrl_showView|found new datapoint: "+splitName[2]+" for sys:" + syst);      
       g_currentDatapoint=syst+splitName[2];
+    }
+    
+    // Check if System is online
+   
+    if (!g_initializing) {
+    
+      int iPos=dynContains(g_connections["NAME"],syst);
+      if (iPos > 0) {
+        if (!g_connections["UP"][iPos]) {
+          splitName[1]="objects/connectionBroken.pnl";
+        }
+      }
     }
     LOG_DEBUG("navTabCtrl.ctl:navTabCtrl_showView|Trying to load panel: "+splitName[1]);
     setValue(tabCtrl,"namedRegisterPanel", ACTIVE_TAB, splitName[1], makeDynString(""));
@@ -356,6 +372,9 @@ void navTabCtrl_fillPanelChoice(dyn_string panels,int panelNr) {
 ///////////////////////////////////////////////////////////////////////////
 void navTabCtrl_saveAndRestoreCurrentDP(string newtab) {
 
+  LOG_DEBUG("navTabCtrl.ctl:navTabCtrl_saveAndRestoreCurrentDP| curDP: "+g_currentDatapoint);
+  LOG_DEBUG("navTabCtrl.ctl:navTabCtrl_saveAndRestoreCurrentDP| ACTIVE_TAB: "+ACTIVE_TAB);
+  LOG_DEBUG("navTabCtrl.ctl:navTabCtrl_saveAndRestoreCurrentDP| newtab: "+newtab);
   if (ACTIVE_TAB == "Hardware" ) {
     g_lastHardwareDatapoint = g_currentDatapoint;
   } else  if (ACTIVE_TAB == "Processes" ) {
@@ -382,6 +401,7 @@ void navTabCtrl_saveAndRestoreCurrentDP(string newtab) {
   } else {
     g_currentDatapoint = MainDBName+"LOFAR";
   }     
+  LOG_DEBUG("navTabCtrl.ctl:navTabCtrl_saveAndRestoreCurrentDP|curDP after change: ",g_currentDatapoint);
 }
 
 

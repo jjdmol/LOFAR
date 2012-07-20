@@ -239,6 +239,7 @@ INSERT INTO treestate VALUES (100, 'described');
 INSERT INTO treestate VALUES (200, 'prepared');
 INSERT INTO treestate VALUES (300, 'approved');
 INSERT INTO treestate VALUES (320, 'on_hold');
+INSERT INTO treestate VALUES (335, 'conflict');
 INSERT INTO treestate VALUES (350, 'prescheduled');
 INSERT INTO treestate VALUES (400, 'scheduled');
 INSERT INTO treestate VALUES (500, 'queued');
@@ -284,3 +285,38 @@ CREATE TABLE operator (
 ) WITHOUT OIDS;
 INSERT INTO operator VALUES (1, 'eucalypta', '0612345678');
 INSERT INTO operator VALUES (2, 'gargamel', '0123456789');
+
+--
+-- ProcessType table
+--
+-- All allowed combinations of processType, processSubtype and strategy
+--
+--DROP TABLE processTypes;
+--CREATE TABLE processTypes  (
+--	processType		VARCHAR(20)	  NOT NULL DEFAULT '',
+--	processSubtype	VARCHAR(50)   NOT NULL DEFAULT '',
+--	strategy		VARCHAR(30)	  NOT NULL DEFAULT '',
+--	CONSTRAINT combi_uniq UNIQUE (processType,processSubtype,strategy)
+--) WITHOUT OIDS;
+-- NOTE: unfortunately indexes do not work on NULL values
+
+--INSERT INTO processTypes VALUES ('');
+--INSERT INTO processTypes VALUES ('Observation', '[Interferometer]');
+--INSERT INTO processTypes VALUES ('Observation', '[TransientBufferBoard]');
+--INSERT INTO processTypes VALUES ('Observation', '[CoherentStokes]');
+--INSERT INTO processTypes VALUES ('Observation', '[IncoherentStokes]');
+--INSERT INTO processTypes VALUES ('Observation', '[Interferometer, TransientBufferBoard]');
+--INSERT INTO processTypes VALUES ('Pipeline', '[CompressionPipeline]');
+--INSERT INTO processTypes VALUES ('Pipeline', '[CalibrationPipeline]');
+--INSERT INTO processTypes VALUES ('Pipeline', '[SimpleImagePipeline]');
+--INSERT INTO processTypes VALUES ('Pipeline', '[TransientPipeline]');
+--INSERT INTO processTypes VALUES ('Pipeline', '[RMSynthesisPipeline]');
+--INSERT INTO processTypes VALUES ('Pipeline', '[TBBCosmicRayPipeline]');
+--INSERT INTO processTypes VALUES ('Pipeline', '[TBBTransientPipeline]');
+--INSERT INTO processTypes VALUES ('Pipeline', '[KnownPulsarPipeline]');
+--INSERT INTO processTypes VALUES ('Pipeline', '[PulsarSearchPipeline]');
+--INSERT INTO processTypes VALUES ('Pipeline', '[BFCosmicRayPipeline]');
+--INSERT INTO processTypes VALUES ('System', '[Ingest]');
+--INSERT INTO processTypes VALUES ('System', '[CleanUp]');
+--INSERT INTO processTypes VALUES ('Maintenance');
+--INSERT INTO processTypes VALUES ('Reservation');

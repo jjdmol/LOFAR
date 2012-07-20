@@ -557,10 +557,10 @@ void GCFRTMyPropertySet::readTypeFile()
 
   char buffer[200];
   system("chmod 777 genTypeInfo");
-  sprintf(buffer, "./genTypeInfo %d %s", getpid(), _type.c_str());
+  snprintf(buffer, sizeof buffer, "./genTypeInfo %d %s", getpid(), _type.c_str());
   system(buffer);
   //# Try to pen the file
-  sprintf(buffer, "typeInfo_%d.dpl.tmp", getpid());
+  snprintf(buffer, sizeof buffer, "typeInfo_%d.dpl.tmp", getpid());
   pvssAsciiFile.open(buffer, ifstream::in);
   
   char asciiLine[1024];
@@ -568,7 +568,7 @@ void GCFRTMyPropertySet::readTypeFile()
   bool typeFound(false);
 
   //# Read the file line by line and convert it to Key Value pairs.
-  while (pvssAsciiFile.getline (asciiLine, 1024))
+  while (pvssAsciiFile.getline (asciiLine, sizeof asciiLine))
   {
     if (typesSectionFound)
     {
@@ -592,7 +592,7 @@ void GCFRTMyPropertySet::readTypeFile()
     }
   }
   pvssAsciiFile.close();
-  sprintf(buffer, "rm -f typeInfo_%d.dpl.tmp", getpid());
+  snprintf(buffer, sizeof buffer, "rm -f typeInfo_%d.dpl.tmp", getpid());
   system(buffer);
 }
 
@@ -635,7 +635,7 @@ void buildTypeStructTree(const string path,
     delete [] elName;
   if (elType == 1 || elType == 41) // structure or type ref
   {
-    while (pvssAsciiFile.getline (asciiLine, 1024) && !readWithBuild)
+    while (pvssAsciiFile.getline (asciiLine, sizeof asciiLine) && !readWithBuild)
     {
       buildTypeStructTree(propName, pvssAsciiFile, asciiLine, propInfos);
     }

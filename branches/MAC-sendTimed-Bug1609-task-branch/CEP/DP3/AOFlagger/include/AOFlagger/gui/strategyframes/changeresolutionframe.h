@@ -27,9 +27,9 @@
 #include <gtkmm/label.h>
 #include <gtkmm/scale.h>
 
-#include "../../rfi/strategy/changeresolutionaction.h"
+#include <AOFlagger/strategy/actions/changeresolutionaction.h>
 
-#include "../editstrategywindow.h"
+#include <AOFlagger/gui/editstrategywindow.h>
 
 class ChangeResolutionFrame : public Gtk::Frame {
 	public:
@@ -43,43 +43,38 @@ class ChangeResolutionFrame : public Gtk::Frame {
 		_setRevisedToChangedImage("Set revised images to changed image"),
 		_setContaminatedToChangedImage("Set contaminated images to changed image"),
 		_setMasksToChangedMasks("Set masks to changed masks"),
+		_useMaskForAveraging("Use mask for averaging"),
 		_applyButton(Gtk::Stock::APPLY)
 		{
 			_box.pack_start(_timeDecreaseFactorLabel);
-			_timeDecreaseFactorLabel.show();
 
 			_box.pack_start(_timeDecreaseFactorScale);
 			_timeDecreaseFactorScale.set_value(_action.TimeDecreaseFactor());
-			_timeDecreaseFactorScale.show();
 
 			_box.pack_start(_frequencyDecreaseFactorLabel);
-			_frequencyDecreaseFactorLabel.show();
 
 			_box.pack_start(_frequencyDecreaseFactorScale);
 			_frequencyDecreaseFactorScale.set_value(_action.FrequencyDecreaseFactor());
-			_frequencyDecreaseFactorScale.show();
 
 			_box.pack_start(_setRevisedToChangedImage);
 			_setRevisedToChangedImage.set_active(_action.RestoreRevised());
-			_setRevisedToChangedImage.show();
 
 			_box.pack_start(_setContaminatedToChangedImage);
 			_setContaminatedToChangedImage.set_active(_action.RestoreContaminated());
-			_setContaminatedToChangedImage.show();
 
 			_box.pack_start(_setMasksToChangedMasks);
 			_setMasksToChangedMasks.set_active(_action.RestoreMasks());
-			_setMasksToChangedMasks.show();
 
+			_box.pack_start(_useMaskForAveraging);
+			_useMaskForAveraging.set_active(_action.UseMaskInAveraging());
+			
 			_buttonBox.pack_start(_applyButton);
 			_applyButton.signal_clicked().connect(sigc::mem_fun(*this, &ChangeResolutionFrame::onApplyClicked));
-			_applyButton.show();
 
 			_box.pack_start(_buttonBox);
-			_buttonBox.show();
 
 			add(_box);
-			_box.show();
+			_box.show_all();
 		}
 	private:
 		EditStrategyWindow &_editStrategyWindow;
@@ -94,6 +89,7 @@ class ChangeResolutionFrame : public Gtk::Frame {
 		Gtk::CheckButton _setRevisedToChangedImage;
 		Gtk::CheckButton _setContaminatedToChangedImage;
 		Gtk::CheckButton _setMasksToChangedMasks;
+		Gtk::CheckButton _useMaskForAveraging;
 		Gtk::Button _applyButton;
 
 		void onApplyClicked()
@@ -103,6 +99,7 @@ class ChangeResolutionFrame : public Gtk::Frame {
 			_action.SetRestoreRevised(_setRevisedToChangedImage.get_active());
 			_action.SetRestoreContaminated(_setContaminatedToChangedImage.get_active());
 			_action.SetRestoreMasks(_setMasksToChangedMasks.get_active());
+			_action.SetUseMaskInAveraging(_useMaskForAveraging.get_active());
 			_editStrategyWindow.UpdateAction(&_action);
 		}
 };

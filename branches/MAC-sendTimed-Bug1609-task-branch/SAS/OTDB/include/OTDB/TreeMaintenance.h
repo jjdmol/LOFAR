@@ -114,6 +114,13 @@ public:
 	bool	assignTemplateName (treeIDType		treeID,
 							    const string&	name);
 
+	// Assign processType and others to a (default) template.
+	// Doubles are not allowed by the database.
+	bool	assignProcessType (treeIDType		treeID,
+						       const string&	processType,
+							   const string&	processSubtype,
+							   const string&	strategy);
+
 	// Get a single node from any tree
 	OTDBnode getNode (treeIDType	aTreeID,
 					  nodeIDType	aNodeID);
@@ -176,10 +183,12 @@ public:
 	// the tree is exported: HTML, KeyValue List.
 	bool	exportTree (treeIDType			aTreeID,
 						nodeIDType			topItem,
-						const string&		filename,
-						const formatType	outputFormat = FtKVList,
-						bool				folded = false);
+						const string&		filename);
 
+	// Export a VIC (sub)tree with reported metadata to a file.
+	bool	exportResultTree (treeIDType		aTreeID,
+							  nodeIDType		topItem,
+							  const string&		filename);
 
 	//# --- Finally some general tree maintenance ---
 	// Delete a tree (of any kind) from the database.
@@ -191,6 +200,7 @@ public:
 	// save modified OTDBtree information
 	bool	setMomInfo (treeIDType		aTreeID,
 						treeIDType		aMomID,
+						uint32			aGroupID,
 						string			aCampaign);
 
 	// Set the classification of any tree.

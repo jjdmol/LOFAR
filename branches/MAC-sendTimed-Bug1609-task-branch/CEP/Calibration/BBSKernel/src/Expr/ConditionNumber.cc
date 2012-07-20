@@ -34,7 +34,7 @@ ConditionNumber::ConditionNumber(const Expr<JonesMatrix>::ConstPtr &arg0)
 {
 }
 
-const Scalar::View ConditionNumber::evaluateImpl(const Grid &grid,
+const Scalar::View ConditionNumber::evaluateImpl(const Grid&,
     const JonesMatrix::View &arg0) const
 {
     Matrix norm00 = abs(arg0(0, 0));

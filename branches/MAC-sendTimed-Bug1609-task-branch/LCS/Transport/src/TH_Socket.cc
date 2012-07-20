@@ -66,7 +66,9 @@ TH_Socket::TH_Socket (const string& service,
         LOG_TRACE_FLOW("TH_Socket<server>");
   
 	if (openSocketNow) {
-	  ASSERTSTR(openSocket(), "Could not open server socket");
+      bool result = openSocket();
+
+	  ASSERTSTR(result, "Could not open server socket");
 	}
 }
 
@@ -99,7 +101,9 @@ TH_Socket::TH_Socket (const string&	hostName,
 	LOG_TRACE_FLOW("TH_Socket<client>");
 
 	if (openSocketNow) {
-	  ASSERTSTR(openSocket(), "Could not start client socket");
+      bool result = openSocket();
+
+	  ASSERTSTR(result, "Could not start client socket");
 	}
 }
 
@@ -359,8 +363,7 @@ bool TH_Socket::initBuffers(int recvBufferSize, int sendBufferSize) {
   // set the size of the kernel level socket buffer
   // use -1 in the constructor (default) to leave it untouched.
   
-  // BG/L doesn't implement setsockopt; also ignore if no sockets are used.
-#if !defined(HAVE_BGL) && !defined(USE_NOSOCKETS)
+#if !defined(USE_NOSOCKETS)
   int socketFD; 
   if (itsIsServer && itsServerSocket != NULL) socketFD = itsServerSocket->getSid();
   else socketFD = itsDataSocket->getSid();
@@ -406,7 +409,7 @@ bool TH_Socket::initBuffers(int recvBufferSize, int sendBufferSize) {
     }
 
   }    
-#endif /* HAVE_BGL */
+#endif
   return true;
 }
 

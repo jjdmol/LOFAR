@@ -28,9 +28,6 @@
 #include <Common/lofar_smartptr.h>
 #include <Common/lofar_map.h>
 #include <Common/LofarLogger.h>
-#include <ParmDB/ParmDBLog.h>
-#include <ParmDB/Box.h>
-#include <ParmDB/Grid.h>
 
 #include <scimath/Fitting/LSQFit.h>
 
@@ -69,8 +66,6 @@ ostream& operator<<(ostream&, const SolverOptions&);
 
 class Solver
 {
-//  friend class LocalSolveController;
-  
 public:
     typedef shared_ptr<Solver>          Ptr;
     typedef shared_ptr<const Solver>    ConstPtr;
@@ -95,9 +90,6 @@ public:
     template <typename T_ITER>
     void setEquations(size_t kernelId, T_ITER first, T_ITER last);
 
-    // Get the maximum number of iterations that are set
-    size_t getMaxIter(void);
-    
     // Perform an iteration for all available cells.
     template <typename T_OUTPUT_ITER>
     bool iterate(T_OUTPUT_ITER out);
@@ -131,7 +123,7 @@ private:
 };
 
 // @}
-	
+
 
 template <typename T_ITER>
 void Solver::setCoeff(size_t kernelId, T_ITER first, T_ITER last)
@@ -229,8 +221,6 @@ bool Solver::iterate(T_OUTPUT_ITER out)
         solution.ready = (cell.solver.isReady() != Solver::NONREADY);
         solution.resultText = cell.solver.readyText();
         solution.rank = rank;
-        solution.rankDeficiency = cell.solver.getDeficiency();
-        solution.niter = cell.solver.nIterations();        
         solution.chiSqr = chiSqr;
         solution.lmFactor = lmFactor;
 

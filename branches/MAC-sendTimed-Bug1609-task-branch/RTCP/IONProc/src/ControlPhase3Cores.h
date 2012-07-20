@@ -26,10 +26,11 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
+#include <Interface/SmartPtr.h>
 #include <Interface/Parset.h>
 #include <Stream/Stream.h>
-#include <Thread/Semaphore.h>
-#include <Thread/Thread.h>
+#include <Common/Thread/Semaphore.h>
+#include <Common/Thread/Thread.h>
 
 #include <string>
 #include <vector>
@@ -39,21 +40,25 @@ namespace RTCP {
 
 class ControlPhase3Cores {
   public:
-    ControlPhase3Cores(const Parset *ps, const std::vector<Stream *> &phaseThreeStreams );
-    ~ControlPhase3Cores();
+				ControlPhase3Cores(const Parset &, const std::vector<Stream *> &phaseThreeStreams, unsigned firstBlock);
+				~ControlPhase3Cores();
 
-    void addIterations(unsigned count);
+    void                        start();                            
+
+    void			addIterations(unsigned count);
   
   private:
-    void                         mainLoop();
+    void			mainLoop();
 
-    const std::string            itsLogPrefix;
+    const std::string		itsLogPrefix;
 
-    const std::vector<Stream *>  &itsPhaseThreeStreams;
-    const unsigned               itsNrBeamsPerPset;
+    const std::vector<Stream *>	&itsPhaseThreeStreams;
+    const unsigned		itsMaxNrStreamsPerPset;
+    const unsigned              itsFirstBlock;
+    const bool                  itsAmNeeded;
 
-    Semaphore                    itsNrIterationsToDo;
-    Thread                       *itsThread;
+    Semaphore			itsNrIterationsToDo;
+    SmartPtr<Thread>		itsThread;
 };
 
 } // namespace RTCP

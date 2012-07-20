@@ -69,16 +69,27 @@ class FFTTools{
 		static Image2D *CreateFullImageFromFFT(const Image2D &fft);
 		static Image2D *CreateShiftedImageFromFFT(const Image2D &fft);
 		static Image2D *CreateAbsoluteImage(const Image2D &real, const Image2D &imaginary);
+		static Image2DPtr CreateAbsoluteImage(Image2DCPtr real, Image2DCPtr imaginary)
+		{
+			return Image2DPtr(CreateAbsoluteImage(*real, *imaginary));
+		}
 		static Image2DPtr CreatePhaseImage(Image2DCPtr real, Image2DCPtr imaginary);
 		static void FFTConvolve(const Image2D &realIn, const Image2D &imaginaryIn, const Image2D &realKernel, const Image2D &imaginaryKernel, Image2D &outReal, Image2D &outImaginary);
 		static void FFTConvolveFFTKernel(const Image2D &realIn, const Image2D &imaginaryIn, const Image2D &realFFTKernel, const Image2D &imaginaryFFTKernel, Image2D &outReal, Image2D &outImaginary);
 		static void Multiply(Image2D &left, const Image2D &right); 
 		static void Divide(Image2D &left, const Image2D &right); 
 		static void Multiply(Image2D &leftReal, Image2D &leftImaginary, const Image2D &rightReal, const Image2D &rightImaginary);
+
 		static void Sqrt(Image2D &image);
-		static void CreateHorizontalFFTImage(Image2D &real, Image2D &imaginary, bool negate=false);
+		static void Sqrt(Image2DPtr image) { Sqrt(*image); }
+		static void SignedSqrt(Image2D &image);
+		static void SignedSqrt(Image2DPtr image) { SignedSqrt(*image); }
+		
+		static void CreateHorizontalFFTImage(Image2D &real, Image2D &imaginary, bool inverse=false);
+		static void CreateDynamicHorizontalFFTImage(Image2DPtr real, Image2DPtr imaginary, unsigned sections, bool inverse=false);
 		static Image2DPtr AngularTransform(Image2DCPtr input);
 		static void FFT(SampleRowPtr realRow, SampleRowPtr imaginaryRow);
+		//static void FFTConvolve(num_t *realValues, num_t *imagValues, num_t *realKernel, num_t *imagKernel, size_t count);
 	private:
 		FFTTools() { }
 		~FFTTools() { };

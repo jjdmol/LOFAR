@@ -32,6 +32,9 @@ using namespace std;
 using namespace LOFAR;
 
 int	main (int	argc, char*	argv[]) {
+    (void)argc;
+    (void)argv;
+
 	string	input;
 	while(getline(cin, input)) {
 		cout << PVSS2SASname(input) << endl;

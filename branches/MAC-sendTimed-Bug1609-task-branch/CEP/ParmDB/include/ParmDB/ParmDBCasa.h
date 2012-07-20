@@ -54,6 +54,9 @@ namespace BBS {
 
     virtual ~ParmDBCasa();
 
+    // Flush possible changes to disk.
+    virtual void flush (bool fsync);
+
     // Writelock and unlock the table.
     // It is not necessary to do this, but it can be useful if many
     // small accesses have to be done.
@@ -96,7 +99,8 @@ namespace BBS {
                                const std::string& parmNamePattern);
 
     // Put the default value.
-    virtual void putDefValue (const string& name, const ParmValueSet& value);
+    virtual void putDefValue (const string& name, const ParmValueSet& value,
+                              bool check=true);
 
     // Delete the default value records for the given parameters.
     virtual void deleteDefValues (const std::string& parmNamePattern);
@@ -117,6 +121,13 @@ namespace BBS {
 
     // Create a parmtable with the given name.
     void createTables (const std::string& tableName);
+
+    // If not empty, put the domain into the table.
+    // The DOMAIN column is added to the table if it does not exist.
+    void putDefDomain (const Box& domain, casa::Table& tab, uint rownr);
+
+    // If defined in the table, set the scale domain in the ParmValue.
+    Box getDefDomain (const casa::Table& tab, uint row);
 
     // Get a selection from the NAME table.
     // <group>

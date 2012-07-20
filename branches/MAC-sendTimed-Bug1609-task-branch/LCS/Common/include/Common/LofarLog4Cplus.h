@@ -27,9 +27,11 @@
 // Interface to the log4cplus logging package.
 
 //# Includes
+#include <Common/CasaLogSink.h>
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_sstream.h>
 #include <Common/lofar_string.h>
+#include <Common/Thread/Cancellation.h>
 
 #ifdef ENABLE_TRACER
 #include <Common/StringUtil.h>
@@ -62,11 +64,13 @@ namespace LOFAR {
 #define INIT_LOGGER(filename)                   \
   do {                                          \
     ::LOFAR::initLog4Cplus(filename);           \
+    ::LOFAR::CasaLogSink::attach();             \
   } while(0)
 
 #define INIT_VAR_LOGGER(filename,logfile)                 \
   do {                                                    \
     ::LOFAR::initLog4Cplus(filename, logfile);            \
+    ::LOFAR::CasaLogSink::attach();                       \
   } while(0)
   
 // After initialisation a thread is started to monitor any changes in the
@@ -75,11 +79,23 @@ namespace LOFAR {
 # define INIT_LOGGER_AND_WATCH(filename,watchinterval)        \
   do {                                                        \
     ::LOFAR::initLog4CplusAndWatch(filename, watchinterval);  \
+    ::LOFAR::CasaLogSink::attach();                           \
   } while(0)
 #else
 # define INIT_LOGGER_AND_WATCH(filename,watchinterval) INIT_LOGGER(filename)
 #endif
-  
+
+// Each new thread might need a partial reinitialisation and destruction in the logger
+#define LOGGER_ENTER_THREAD()                   \
+  do {                                          \
+    ::LOFAR::initNDC();                         \
+  } while(0)  
+
+#define LOGGER_EXIT_THREAD()                    \
+  do {                                          \
+    ::LOFAR::destroyNDC();                      \
+  } while(0)  
+
 //@}
 
 //# -------------------- Log Levels for the Operator messages ------------------
@@ -273,17 +289,21 @@ namespace LOFAR {
 // \internal
 // Internal macro used by the LOG_TRACE_<level> macros.
 #define LofarLogTrace(level,message) do { \
-	if (getLogger().logger().isEnabledFor(level)) \
+	  if (getLogger().logger().isEnabledFor(level)) { \
+                ::LOFAR::ScopedDelayCancellation dc; \
 		getLogger().logger().forcedLog(level, message, __FILE__, __LINE__); \
+          } \
 	} while(0)
 
 // \internal
 // Internal macro used by the LOG_TRACE_<level>_STR macros.
 #define LofarLogTraceStr(level,stream) do { \
-	if (getLogger().logger().isEnabledFor(level)) { \
+	  if (getLogger().logger().isEnabledFor(level)) { \
+                ::LOFAR::ScopedDelayCancellation dc; \
 		std::ostringstream	lfr_log_oss;	\
 		lfr_log_oss << stream;					\
-		getLogger().logger().forcedLog(level, lfr_log_oss.str(), __FILE__, __LINE__); } \
+		getLogger().logger().forcedLog(level, lfr_log_oss.str(), __FILE__, __LINE__); \
+          } \
 	} while(0)
 
 // @}
@@ -343,6 +363,7 @@ namespace LOFAR {
 // before executing the real throw.
 #undef THROW
 #define THROW(exc,stream) do { \
+        ::LOFAR::ScopedDelayCancellation dc; \
 	std::ostringstream	lfr_log_oss;	\
 	lfr_log_oss << stream;				\
 	log4cplus::Logger::getInstance(LOFARLOGGER_FULLPACKAGE ".EXCEPTION").log( \
@@ -360,6 +381,7 @@ namespace LOFAR {
 // @{
 #define LofarLog(level,message)                                         \
   do {                                                                  \
+    ::LOFAR::ScopedDelayCancellation dc;                                \
     log4cplus::Logger _logger =                                         \
       log4cplus::Logger::getInstance(LOFARLOGGER_FULLPACKAGE);          \
     LOG4CPLUS_##level##_STR(_logger, message);                          \
@@ -368,6 +390,7 @@ namespace LOFAR {
 // \internal
 #define LofarLogStr(level,stream)                                       \
   do {                                                                  \
+    ::LOFAR::ScopedDelayCancellation dc;                                \
     log4cplus::Logger _logger =                                         \
       log4cplus::Logger::getInstance(LOFARLOGGER_FULLPACKAGE);          \
     LOG4CPLUS_##level(_logger, stream);                                 \
@@ -415,6 +438,8 @@ public:
 
 	~LifetimeLogger()
 	{
+                ::LOFAR::ScopedDelayCancellation dc;
+
 		if (itsLogger.isEnabledFor(itsLevel)) {
 			itsLogger.forcedLog(itsLevel, LOG4CPLUS_TEXT("EXIT: ") + itsMsg, 
 																itsFile, itsLine);
@@ -435,6 +460,12 @@ extern LoggerReference	theirTraceLoggerRef;
 inline LoggerReference&	getLogger() { return theirTraceLoggerRef; }
 
 // @}
+
+  // initialise a new NDC (required when creating a new thread)
+  void initNDC();
+
+  // destroy an NDC (required when exiting a thread)
+  void destroyNDC();
 
   // Initialize Log4cplus. 
   // \param propFile Name of the properties file. A missing \c ".log_prop"

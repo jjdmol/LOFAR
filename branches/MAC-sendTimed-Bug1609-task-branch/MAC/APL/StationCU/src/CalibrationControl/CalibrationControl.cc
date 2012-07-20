@@ -25,12 +25,12 @@
 #include <Common/Version.h>
 #include <ApplCommon/StationConfig.h>
 #include <ApplCommon/StationInfo.h>
+#include <ApplCommon/AntennaSets.h>
 
 #include <MACIO/MACServiceInfo.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/RTDB/DP_Protocol.ph>
 #include <APL/APLCommon/Controller_Protocol.ph>
-#include <APL/APLCommon/AntennaSets.h>
 #include <APL/CAL_Protocol/CAL_Protocol.ph>
 #include <APL/RTDBCommon/RTDButilities.h>
 #include <signal.h>
@@ -81,10 +81,6 @@ CalibrationControl::CalibrationControl(const string&	cntlrName) :
 
 	// attach to parent control task
 	itsParentControl = ParentControl::instance();
-	itsParentPort = new GCFITCPort (*this, *itsParentControl, "ParentITCport", 
-									GCFPortInterface::SAP, CONTROLLER_PROTOCOL);
-	ASSERTSTR(itsParentPort, "Cannot allocate ITCport for Parentcontrol");
-	itsParentPort->open();		// will result in F_CONNECTED
 
 	// need port for timers.
 	itsTimerPort = new GCFTimerPort(*this, "TimerPort");
@@ -151,14 +147,23 @@ void    CalibrationControl::setState(CTState::CTstateNr     newState)
 //
 int32 CalibrationControl::convertFilterSelection(const string&	filterselection, const string&	antennaSet) 
 {
+	// international stations don't have the LBL's connected, force them to use the LBH inputs.
+	string	tmpAntennaSet(antennaSet);	// modifyable copy
+	if ((stationTypeValue() == 2) && (tmpAntennaSet == "LBA_OUTER")) {
+		tmpAntennaSet = "LBA_INNER";
+		LOG_INFO("LBA_OUTER on an international station: forcing it to LBA_INNER");
+	}
+	LOG_DEBUG_STR("stationTypeValue() = " << stationTypeValue());
+	LOG_DEBUG_STR("antennaSet         = " << tmpAntennaSet);
+	LOG_DEBUG_STR("filterselection    = " << filterselection);
 	// support new filternames
-	if (antennaSet == "LBA_OUTER") {
+	if (tmpAntennaSet == "LBA_OUTER") {
 		if (filterselection == "LBA_10_70")	{ return(1); }	// 160 Mhz
 		if (filterselection == "LBA_10_90")	{ return(1); }	// 200 Mhz
 		if (filterselection == "LBA_30_70")	{ return(2); }	// 160 Mhz
 		if (filterselection == "LBA_30_90")	{ return(2); }	// 200 Mhz
 	}
-	if (antennaSet == "LBA_INNER") {
+	if (tmpAntennaSet == "LBA_INNER") {
 		if (filterselection == "LBA_10_70")	{ return(3); }	// 160 Mhz
 		if (filterselection == "LBA_10_90")	{ return(3); }	// 200 Mhz
 		if (filterselection == "LBA_30_70")	{ return(4); }	// 160 Mhz

@@ -28,6 +28,7 @@
 #include <complex>
 #include <blitz/array.h>
 #include <Common/LofarTypes.h>
+#include <Common/LofarConstants.h>
 
 #undef MIN
 #define MIN(a,b) ((a)<(b)?(a):(b))
@@ -157,9 +158,10 @@ public:
 	static const uint8 RCU_PROTOCOLY    = 0x03;
 	static const uint8 RCU_RESULTY      = 0x04;
 
-	static const uint8 CR_SOFTCLEAR     = 0x00;
+	static const uint8 CR_SOFTRESET     = 0x00;
 	static const uint8 CR_SOFTSYNC      = 0x01;
 	static const uint8 CR_SYNCDISABLE   = 0x02;
+	static const uint8 CR_SYNCDELAY     = 0x03;
 
 	// Cross correlation registers.
 	static const uint8 XST_STATS    = 0x00;
@@ -212,22 +214,18 @@ public:
 	// subbands produced by the EPA digital filter.
 	// The N_BEAMLETS are a selection from this
 	// number of beamlets.
-	static const uint16 N_POL            = 2;                    // number of polarizations
-	static const uint16 N_PHASE          = 2;                    // number of phases in a complex number
-	static const uint16 N_PHASEPOL       = N_PHASE * N_POL;      // number of phase polarizations
-//	static const uint16 MAX_N_RCUS       = 128 * MEPHeader::N_POL; // in hardware
-	static const uint16 MAX_N_RCUS       = 96 * MEPHeader::N_POL;	// in real
-	static const uint16 N_BLPS           = 4;                    // number of BLP's per RSP board
-	static const uint16 N_SUBBANDS       = 512;
-	static const uint16 N_DATA_SLOTS	 = 62; 
+	static const uint16 N_PHASE          = 2;                    	// number of phases in a complex number
+	static const uint16 N_PHASEPOL       = N_PHASE * N_POL;      	// number of phase polarizations
+	static const uint16 MAX_N_RCUS       = MAX_RCUS;				// in real
+	static const uint16 N_BLPS           = NR_BLPS_PER_RSPBOARD;	// number of BLP's per RSP board
+	static const uint16 N_SUBBANDS       = MAX_SUBBANDS;			// 512
+	static const uint16 N_DATA_SLOTS	 = 62; 						// 'frozen in firmware'
 	static const uint16 N_SERDES_LANES   = 4;
 	static const uint16 N_TOTAL_XLETS    = N_SERDES_LANES * N_DATA_SLOTS;
 	static const uint16 N_LOCAL_XLETS    = 4;
 	static const uint16 N_BEAMLETS       = N_SERDES_LANES * N_DATA_SLOTS;
 	static const uint16 XLET_SIZE        = N_POL * sizeof(std::complex<uint32>);
 	static const uint16 WEIGHT_SIZE      = N_POL * sizeof(std::complex<uint16>);
-
-	static const uint16 N_HBA_DELAYS     = 16; // number of High Band antenna delay elements
 
 	// TBB related constants
 	static const uint16 TBB_MAXPAYLOADSIZE     = 1948; // available TBB payload bytes
@@ -396,7 +394,10 @@ public:
 	static const FieldsType RCU_PROTOCOLY_HDR;
 	static const FieldsType RCU_RESULTY_HDR;
 
-	static const FieldsType CR_CONTROL_HDR;
+	static const FieldsType CR_SOFTRESET_HDR;
+	static const FieldsType CR_SOFTSYNC_HDR;
+	static const FieldsType CR_SYNCDISABLE_HDR;
+	static const FieldsType CR_SYNCDELAY_HDR;
 
 	static const FieldsType XST_STATS_HDR;
 

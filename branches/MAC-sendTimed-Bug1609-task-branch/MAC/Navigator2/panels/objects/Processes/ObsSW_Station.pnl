@@ -25,12 +25,12 @@ void click(string originator) {
   // set delay in case double click was meant
   delay(0, 100); 
   if (!bDoubleClicked) {
-    // empty global listings
-    navFunct_clearGlobalLists();
    
     if (originator == \"stationTree\") {
       navPanel_setEvent(stationTree.selectedItem(),\"EventClick\");
     } else if (originator == \"activeObs\") {
+      // empty global listings
+      navFunct_clearGlobalLists();
       station_obsBaseDP=activeObs.selectedItem();
       station_selectedObservation=activeObs.getText(activeObs.selectedItem(),0);
       stationObservationName.text(station_selectedObservation);
@@ -123,14 +123,14 @@ E E E
 LANG:1 19 Active Observations
 
 8
-"resizeMode" "enum 0"
-"hScrollBarMode" "enum 0"
-"vScrollBarMode" "enum 0"
-"frameShape" "enum 6"
-"defaultRenameAction" "enum 0"
-"backgroundOrigin" "enum 0"
-"selectionMode" "enum 0"
 "frameShadow" "enum 48"
+"selectionMode" "enum 0"
+"backgroundOrigin" "enum 0"
+"defaultRenameAction" "enum 0"
+"frameShape" "enum 6"
+"vScrollBarMode" "enum 0"
+"hScrollBarMode" "enum 0"
+"resizeMode" "enum 0"
  820 20 990 188
 10 TreeWidget
 7
@@ -152,10 +152,29 @@ LANG:1 19 Active Observations
 {
   stationTree.addColumn(\"Involved Stations\");
   stationTree.setColumnWidth(0,201);
+  dpConnect( \"stationCallback\",true,DPNAME_NAVIGATOR + g_navigatorID +\".objectTrigger\" );
+}
 
-}    
+
+void stationCallback(string dp1, bool aTrig) {
+  
+  LOG_DEBUG(\"ObsSW_Station.pnl:stationCallback| ObjectTrigger Callback on: \"+dp1+\" trigger: \"+aTrig);
+  LOG_DEBUG(\"ObsSW_Station.pnl:stationCallback|Found highlight : \" + highlight + \" Looking for stations\");
+  dyn_string ids = stationTree.children(\"\");
+  
+  for (int i = 1; i<= dynlen(ids); i++) {
+
+    // check if item is available in highlight list
+    int iPos = dynContains(highlight,stationTree.getText(ids[i],0));
     
-" 0
+    if (iPos > 0) {
+      stationTree.ensureItemVisible(ids[i]);
+      stationTree.setIcon(ids[i],0,\"16_hand_right.gif\");
+    } else {
+      stationTree.setIcon(ids[i],0,\"16_empty.gif\");
+    }  
+  }
+} " 0
 29 5
 "activeObs"
 ""
@@ -192,8 +211,29 @@ LANG:1 19 Active Observations
   
   //take over the old selection from main (if any)
   station_selectedObservation=selectedObservation;
+  dpConnect( \"observationCallback\",true,DPNAME_NAVIGATOR + g_navigatorID +\".objectTrigger\" );
 }
-" 0
+
+
+void observationCallback(string dp1, bool aTrig) {
+  
+  LOG_DEBUG(\"ObsSW_Station.pnl:observationCallback| ObjectTrigger Callback on: \"+dp1+\" trigger: \"+aTrig);
+  LOG_DEBUG(\"ObsSW_Station.pnl:observationCallback|Found highlight : \" + highlight + \" Looking for Observations\");
+  dyn_string ids = activeObs.children(\"\");
+  
+  for (int i = 1; i<= dynlen(ids); i++) {
+
+    // check if item is available in highlight list
+    int iPos = dynContains(highlight,activeObs.getText(ids[i],0));
+    
+    if (iPos > 0) {
+      activeObs.ensureItemVisible(ids[i]);
+      activeObs.setIcon(ids[i],0,\"16_hand_right.gif\");
+    } else {
+      activeObs.setIcon(ids[i],0,\"16_empty.gif\");
+    }  
+  }
+}" 0
 2 46
 "PRIMITIVE_TEXT4"
 ""

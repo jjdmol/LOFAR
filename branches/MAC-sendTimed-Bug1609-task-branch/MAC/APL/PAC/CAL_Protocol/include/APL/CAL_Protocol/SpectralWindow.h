@@ -75,6 +75,9 @@ namespace LOFAR {
 
 	  // Returns try if spectralWindow is ment for the HBA antennas.
 	  bool isForHBA() const;
+	
+	  // Returns the rcumode of this SPW
+	  int rcumode() const;
 
 	  // Output function
 	  ostream& print (ostream& os) const;

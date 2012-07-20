@@ -23,6 +23,8 @@
 #include <set>
 #include <stdexcept>
 
+#include <ms/MeasurementSets/MeasurementSet.h>
+
 #include <tables/Tables/ExprNode.h>
 #include <tables/Tables/TableIter.h>
 
@@ -110,7 +112,7 @@ void TimeFrequencyImager::image(size_t antenna1Select, size_t antenna2Select, si
 
 	if(_sortedTable == 0)
 	{
-		casa::Table *rawTable = _measurementSet->OpenTable(MeasurementSet::MainTable);
+		casa::Table *rawTable = _measurementSet->OpenTable();
 		casa::Block<casa::String> names(4);
 		names[0] = "DATA_DESC_ID";
 		names[1] = "ANTENNA1";
@@ -164,28 +166,28 @@ void TimeFrequencyImager::image(size_t antenna1Select, size_t antenna2Select, si
 	if(_readData) {
 		if(_realXX==0 && _readXX)
 		{
-			_realXX = Image2D::CreateEmptyImagePtr(width, frequencyCount);
-			_imaginaryXX = Image2D::CreateEmptyImagePtr(width, frequencyCount);
+			_realXX = Image2D::CreateZeroImagePtr(width, frequencyCount);
+			_imaginaryXX = Image2D::CreateZeroImagePtr(width, frequencyCount);
 		}
 		if(_realXY == 0 && _readXY)
 		{
-			_realXY = Image2D::CreateEmptyImagePtr(width, frequencyCount);
-			_imaginaryXY = Image2D::CreateEmptyImagePtr(width, frequencyCount);
+			_realXY = Image2D::CreateZeroImagePtr(width, frequencyCount);
+			_imaginaryXY = Image2D::CreateZeroImagePtr(width, frequencyCount);
 		}
 		if(_realYX == 0 && _readYX)
 		{
-			_realYX = Image2D::CreateEmptyImagePtr(width, frequencyCount);
-			_imaginaryYX = Image2D::CreateEmptyImagePtr(width, frequencyCount);
+			_realYX = Image2D::CreateZeroImagePtr(width, frequencyCount);
+			_imaginaryYX = Image2D::CreateZeroImagePtr(width, frequencyCount);
 		}
 		if(_realYY == 0 && _readYY)
 		{
-			_realYY = Image2D::CreateEmptyImagePtr(width, frequencyCount);
-			_imaginaryYY = Image2D::CreateEmptyImagePtr(width, frequencyCount);
+			_realYY = Image2D::CreateZeroImagePtr(width, frequencyCount);
+			_imaginaryYY = Image2D::CreateZeroImagePtr(width, frequencyCount);
 		}
 		if(_realStokesI == 0 && _readStokesI)
 		{
-			_realStokesI = Image2D::CreateEmptyImagePtr(width, frequencyCount);
-			_imaginaryStokesI = Image2D::CreateEmptyImagePtr(width, frequencyCount);
+			_realStokesI = Image2D::CreateZeroImagePtr(width, frequencyCount);
+			_imaginaryStokesI = Image2D::CreateZeroImagePtr(width, frequencyCount);
 		}
 	}
 	if(_readFlags) {
@@ -321,7 +323,7 @@ void TimeFrequencyImager::WriteNewFlagsPart(Mask2DCPtr newXX, Mask2DCPtr newXY, 
 	std::map<double,size_t> observationTimes;
 	setObservationTimes(*_measurementSet, observationTimes);
 
-	casa::Table *table = _measurementSet->OpenTable(MeasurementSet::MainTable, true);
+	casa::Table *table = _measurementSet->OpenTable(true);
 	casa::ROScalarColumn<int> antenna1Column(*table, "ANTENNA1"); 
 	casa::ROScalarColumn<int> antenna2Column(*table, "ANTENNA2");
 	casa::ROScalarColumn<int> windowColumn(*table, "DATA_DESC_ID");
@@ -633,8 +635,9 @@ void TimeFrequencyImager::PartInfo(const std::string &msFile, size_t maxTimeScan
 
 void TimeFrequencyImager::initializePolarizations()
 {
-	casa::Table *table = _measurementSet->OpenTable(MeasurementSet::PolarizationTable, false);
-	casa::ROArrayColumn<int> corTypeColumn(*table, "CORR_TYPE"); 
+	casa::MeasurementSet ms(_measurementSet->Location());
+	casa::Table polTable = ms.polarization();
+	casa::ROArrayColumn<int> corTypeColumn(polTable, "CORR_TYPE"); 
 	casa::Array<int> corType = corTypeColumn(0);
 	casa::Array<int>::iterator iterend(corType.end());
 	_xxIndex = -1, _xyIndex = -1, _yxIndex = -1, _yyIndex = -1; _stokesIIndex = -1;
@@ -660,7 +663,6 @@ void TimeFrequencyImager::initializePolarizations()
 		}
 		++polarizationCount;
   }
-	delete table;
 }
 
 void TimeFrequencyImager::checkPolarizations()

@@ -11,6 +11,8 @@ namespace LOFAR
 {
   namespace
   {
+    const string gExecutablePath = getExecutablePath();
+
     // Define the eight trace log levels
     const LogLevel TRACE1_LOG_LEVEL = 1;
     const LogLevel TRACE2_LOG_LEVEL = 2;
@@ -58,14 +60,6 @@ namespace LOFAR
       return NOT_SET_LOG_LEVEL;   // not found
     }
 
-    // Create an NDC (nested diagnostic context) with the text
-    // "application@node" and push it onto the NDC stack.
-    void initNDC(void)
-    {
-      string loggerId(basename(getExecutablePath()) + "@" + myHostname(false));
-      log4cplus::getNDC().push(loggerId);
-    }
-
     // Function that is used when the TRACE levels are NOT compiled out. It
     // registers the TRACEn management routines at the Log4Cplus
     // LogLevelManager and sets up the global trace-logger named "TRC", with
@@ -89,18 +83,28 @@ namespace LOFAR
       prop.setProperty("log4cplus.appender.STDERR.layout",
                        "log4cplus::PatternLayout");
       prop.setProperty("log4cplus.appender.STDERR.layout.ConversionPattern",
-#ifdef USE_VANILLA_LOG4CPLUS
-                       "%D{%y%m%d %H%M%S,%q} [%i] %-6p %c{3} [%F:%L] - %m%n"
-#else
-                       "%D{%y%m%d %H%M%S,%q} [%P] %-6p %c{3} [%F:%L] - %m%n"
-#endif
-                       );
+                       "%D{%y%m%d %H%M%S,%q} [%i] %-6p %c{3} [%b:%L] - %m%n");
       PropertyConfigurator(prop).configure();
       Logger::getInstance("TRC").forcedLog(0, "TRACE module activated");
 #endif
     }
   } // namespace
 
+
+  // Create an NDC (nested diagnostic context) with the text
+  // "application@node" and push it onto the NDC stack.
+  void initNDC(void)
+  {
+    string loggerId(basename(gExecutablePath) + "@" + myHostname(false));
+    log4cplus::getNDC().push(loggerId);
+  }
+
+  // Destroy the NDC (nested diagnostic context) when we're done
+  // with this thread.
+  void destroyNDC(void)
+  {
+    log4cplus::getNDC().remove();
+  }
 
   // Create the tracelogger
   LOFAR::LoggerReference theirTraceLoggerRef("TRC");

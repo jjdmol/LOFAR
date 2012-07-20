@@ -27,6 +27,7 @@
 #include <Scheduling.h>
 #include <Interface/PrintVector.h>
 #include <Common/LofarLogger.h>
+#include <Common/Thread/Cancellation.h>
 
 #include <algorithm>
 #include <cstdio>
@@ -44,16 +45,23 @@ namespace RTCP {
 LogThread::LogThread(unsigned nrRspBoards, std::string stationName)
 :
   itsCounters(nrRspBoards),
-  itsStationName(stationName),
-  itsShouldStop(false),
-  itsThread(this, &LogThread::mainLoop, "[LogThread] ", 65536)
+  itsStationName(stationName)
 {
+}
+
+
+void LogThread::start()
+{
+  itsThread = new Thread(this, &LogThread::mainLoop, "[LogThread] ", 65536);
 }
 
 
 LogThread::~LogThread()
 {
-  itsShouldStop = true;
+  if (itsThread)
+    itsThread->cancel();
+
+  LOG_DEBUG_STR("[LogThread] finished");
 }
 
 
@@ -67,6 +75,16 @@ bool LogThread::readCPUstats(struct CPUload &load)
   if (file == 0)
     return false;
 
+  // make sure the file is always closed -- even on cancellation (fscanf CAN be a cancellation point)
+  struct D {
+    ~D() {
+      fclose(file);
+    }
+
+    FILE *file;
+  } onDestruct = { file };
+  (void)onDestruct;
+
   do
     retval = fscanf(file, "cpu %llu %*u %llu %llu %*u %*u %llu %*u\n", &load.user, &load.system, &load.idle, &load.interrupt);
   while (retval != 4 && retval != EOF);
@@ -75,13 +93,6 @@ bool LogThread::readCPUstats(struct CPUload &load)
     retval = fscanf(file, "cpu0 %*u %*u %*u %llu %*u %*u %*u %*u\n", &load.idle0);
   while (retval != 1 && retval != EOF);
 
-#if 0
-  for (unsigned cpu = 0; cpu < 4 && retval != EOF;)
-    if ((retval = fscanf(file, "cpu%*d %*u %*u %*u %llu %*u %*u %*u %*u\n", &load.idlePerCore[cpu])) == 1)
-      ++ cpu;
-#endif
-
-  fclose(file);
   return retval != EOF;
 }
 
@@ -89,15 +100,21 @@ bool LogThread::readCPUstats(struct CPUload &load)
 void LogThread::writeCPUstats(std::stringstream &str)
 {
   struct CPUload load;
+  struct timeval tv;
 
   if (readCPUstats(load)) {
+    gettimeofday( &tv, 0 );
+
+    float timediff = (tv.tv_sec - previousTimeval.tv_sec) + (tv.tv_usec - previousTimeval.tv_usec)/1.0e6;
+
     //str << ", us/sy/in/id: ["
     str << ", us/sy/in/id(0): ["
-	<< (unsigned(load.user	    - previousLoad.user)      + 2) / 4 << '/'
-	<< (unsigned(load.system    - previousLoad.system)    + 2) / 4 << '/'
-	<< (unsigned(load.interrupt - previousLoad.interrupt) + 2) / 4 << '/'
-	<< (unsigned(load.idle	    - previousLoad.idle)      + 2) / 4 << '('
-	<< (unsigned(load.idle0	    - previousLoad.idle0)) << ")]";
+	<< fixed << setprecision(0) 
+        << (unsigned(load.user	    - previousLoad.user)      + 2) / 4 / timediff << '/'
+	<< (unsigned(load.system    - previousLoad.system)    + 2) / 4 / timediff << '/'
+	<< (unsigned(load.interrupt - previousLoad.interrupt) + 2) / 4 / timediff << '/'
+	<< (unsigned(load.idle	    - previousLoad.idle)      + 2) / 4 / timediff << '('
+	<< (unsigned(load.idle0	    - previousLoad.idle0) / timediff) << ")]";
 #if 0
 	<< "], id: ["
 	<< (unsigned(load.idlePerCore[0] - previousLoad.idlePerCore[0]) << '/'
@@ -108,6 +125,7 @@ void LogThread::writeCPUstats(std::stringstream &str)
 #endif
 
     previousLoad = load;
+    previousTimeval = tv;
   } else {
     str << ", no CPU load info";
   }
@@ -121,13 +139,14 @@ void LogThread::mainLoop()
 #if defined HAVE_BGP_ION
   runOnCore0();
   readCPUstats(previousLoad);
+  gettimeofday(&previousTimeval,0);
 #endif
 
-  LOG_DEBUG("LogThread running");
+  //LOG_DEBUG("LogThread running");
 
   // non-atomic updates from other threads cause race conditions, but who cares
 
-  while (!itsShouldStop) {
+  while (true) {
     std::stringstream	  logStr;
     std::vector<unsigned> counts(itsCounters.size());
 
@@ -160,11 +179,11 @@ void LogThread::mainLoop()
     writeCPUstats(logStr);
 #endif
 
-    LOG_INFO(logStr.str());
-    sleep(1);
+    LOG_INFO_STR(logStr.str());
+    sleep(15);
   }
 
-  LOG_DEBUG("LogThread stopped");
+  //LOG_DEBUG("LogThread stopped");
 }
 
 } // namespace RTCP

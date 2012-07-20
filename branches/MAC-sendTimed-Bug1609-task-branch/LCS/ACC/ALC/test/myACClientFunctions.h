@@ -36,7 +36,7 @@ namespace LOFAR {
 class myACClientFunctions : public ACClientFunctions
 {
 	string	supplyInfoFunc(const string&	keyList)
-		{ return ("myACClientFunctions::supplyInfo from ACClient was called"); }
+		{ (void)keyList; return ("myACClientFunctions::supplyInfo from ACClient was called"); }
 
 	void	handleAnswerMsg(const string&	answer)
 		{ cout << "myACClientFunctions::handleAnswerMessage from ACClient was called"; 

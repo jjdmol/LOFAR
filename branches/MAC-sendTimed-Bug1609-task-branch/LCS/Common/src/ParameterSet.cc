@@ -25,6 +25,7 @@
 
 
 #include <Common/ParameterSet.h>
+#include <Common/ParameterRecord.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_fstream.h>
 
@@ -32,14 +33,12 @@
 namespace LOFAR {
 
 //-------------------------- creation and destroy ---------------------------
-static ParameterSet* globalParameterSetInstance = 0;
 
 ParameterSet* globalParameterSet()
 {
-  if (globalParameterSetInstance == 0) {
-    globalParameterSetInstance = new ParameterSet();
-  }
-  return (globalParameterSetInstance);
+  static ParameterSet ps;
+
+  return &ps;
 }
 
 //-------------------------- creation and destroy ---------------------------
@@ -89,11 +88,11 @@ ParameterSet::ParameterSet(const ParameterSet& that)
 ParameterSet& 
 ParameterSet::operator=(const ParameterSet& that)
 {
-	if (this != &that) {
-	  unlink();
-	  itsSet = that.itsSet->incrCount();
-	}
-	return (*this);
+  if (this != &that) {
+    unlink();
+    itsSet = that.itsSet->incrCount();
+  }
+  return (*this);
 }
 
 //
@@ -111,13 +110,19 @@ void ParameterSet::unlink()
   }
 }
 
+
+ParameterRecord ParameterSet::getRecord (const string& aKey) const
+{
+  return get(aKey).getRecord();
+}
+
 //
 // operator<<
 //
 std::ostream&	operator<< (std::ostream& os, const ParameterSet &thePS)
 {
-	os << *thePS.itsSet;
-	return os;
+  os << *thePS.itsSet;
+  return os;
 }
 
 } // namespace LOFAR

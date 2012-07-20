@@ -57,7 +57,7 @@ namespace LOFAR {
       /*@}*/
 
     private:
-      // two dimensional (nRcus x MEPHeader::N_HBA_DELAYS)
+      // two dimensional (nRcus x N_HBA_ELEM_PER_TILE)
       blitz::Array<uint8, 2> m_delay;
     };
   

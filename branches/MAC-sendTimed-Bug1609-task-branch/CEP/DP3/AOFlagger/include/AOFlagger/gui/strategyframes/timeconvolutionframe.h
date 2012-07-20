@@ -27,7 +27,7 @@
 #include <gtkmm/label.h>
 #include <gtkmm/scale.h>
 
-#include <AOFlagger/rfi/strategy/timeconvolutionaction.h>
+#include <AOFlagger/strategy/actions/timeconvolutionaction.h>
 
 #include <AOFlagger/gui/editstrategywindow.h>
 
@@ -50,8 +50,12 @@ class TimeConvolutionFrame : public Gtk::Frame {
 		_etaScale(0, 1, 0.01),
 		_iterationsLabel("Iterations"),
 		_iterationsScale(0, 100, 1),
+		_channelAveragingSizeLabel("Channel averaging size"),
+		_channelAveragingSizeScale(0, 512, 1),
 		_sincScaleInSamplesButton("Sinc scale is in time steps"),
 		_autoAngleButton("Auto angle"),
+		_alwaysRemoveButton("Always remove"),
+		_hammingButton("Use hamming window"),
 		_applyButton(Gtk::Stock::APPLY)
 		{
 			Gtk::RadioButton::Group group;
@@ -103,50 +107,49 @@ class TimeConvolutionFrame : public Gtk::Frame {
 			}
 
 			_box.pack_start(_sincSizeLabel);
-			_sincSizeLabel.show();
 
 			_box.pack_start(_sincSizeScale);
 			_sincSizeScale.set_value(action.SincScale());
-			_sincSizeScale.show();
 			
 			_box.pack_start(_angleLabel);
-			_angleLabel.show();
 
 			_box.pack_start(_angleScale);
 			_angleScale.set_value(action.DirectionRad()*180.0/M_PI);
-			_angleScale.show();
 			
 			_box.pack_start(_etaLabel);
-			_etaLabel.show();
 
 			_box.pack_start(_etaScale);
 			_etaScale.set_value(action.EtaParameter());
-			_etaScale.show();
 			
 			_box.pack_start(_iterationsLabel);
-			_iterationsLabel.show();
 
 			_box.pack_start(_iterationsScale);
 			_iterationsScale.set_value(action.Iterations());
-			_iterationsScale.show();
+			
+			_box.pack_start(_channelAveragingSizeLabel);
+
+			_box.pack_start(_channelAveragingSizeScale);
+			_channelAveragingSizeScale.set_value(action.ChannelAveragingSize());
 			
 			_box.pack_start(_sincScaleInSamplesButton);
 			_sincScaleInSamplesButton.set_active(action.IsSincScaleInSamples());
-			_sincScaleInSamplesButton.show();
 
 			_box.pack_start(_autoAngleButton);
 			_autoAngleButton.set_active(action.AutoAngle());
-			_autoAngleButton.show();
+
+			_box.pack_start(_alwaysRemoveButton);
+			_alwaysRemoveButton.set_active(action.AlwaysRemove());
+			
+			_box.pack_start(_hammingButton);
+			_hammingButton.set_active(action.UseHammingWindow());
 
 			_buttonBox.pack_start(_applyButton);
 			_applyButton.signal_clicked().connect(sigc::mem_fun(*this, &TimeConvolutionFrame::onApplyClicked));
-			_applyButton.show();
 
 			_box.pack_start(_buttonBox);
-			_buttonBox.show();
 
 			add(_box);
-			_box.show();
+			_box.show_all();
 		}
 	private:
 		EditStrategyWindow &_editStrategyWindow;
@@ -163,7 +166,9 @@ class TimeConvolutionFrame : public Gtk::Frame {
 		Gtk::HScale _etaScale;
 		Gtk::Label _iterationsLabel;
 		Gtk::HScale _iterationsScale;
-		Gtk::CheckButton _sincScaleInSamplesButton, _autoAngleButton;
+		Gtk::Label _channelAveragingSizeLabel;
+		Gtk::HScale _channelAveragingSizeScale;
+		Gtk::CheckButton _sincScaleInSamplesButton, _autoAngleButton, _alwaysRemoveButton, _hammingButton;
 		Gtk::Button _applyButton;
 
 		void onApplyClicked()
@@ -174,6 +179,9 @@ class TimeConvolutionFrame : public Gtk::Frame {
 			_action.SetIterations((unsigned) _iterationsScale.get_value());
 			_action.SetIsSincScaleInSamples(_sincScaleInSamplesButton.get_active());
 			_action.SetAutoAngle(_autoAngleButton.get_active());
+			_action.SetAlwaysRemove(_alwaysRemoveButton.get_active());
+			_action.SetChannelAveragingSize((unsigned) _channelAveragingSizeScale.get_value());
+			_action.SetUseHammingWindow(_hammingButton.get_active());
 			if(_singleSincOperationButton.get_active())
 				_action.SetOperation(rfiStrategy::TimeConvolutionAction::SingleSincOperation);
 			else if(_sincOperationButton.get_active())

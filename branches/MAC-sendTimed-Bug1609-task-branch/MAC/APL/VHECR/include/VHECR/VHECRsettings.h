@@ -36,7 +36,6 @@
 #include <APL/APLCommon/AntennaField.h>
 
 namespace LOFAR {
-  using APLCommon::AntennaField;
   namespace VHECR {
 //# Forward Declarations
 //class forward;

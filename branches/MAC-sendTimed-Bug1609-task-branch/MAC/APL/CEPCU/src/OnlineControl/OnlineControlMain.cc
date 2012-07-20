@@ -22,11 +22,16 @@
 //#
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/Exception.h>
 
 #include "OnlineControl.h"
 
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::CEPCU;
+using namespace LOFAR;
+
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 int main(int argc, char* argv[])
 {
@@ -37,7 +42,7 @@ int main(int argc, char* argv[])
 		return(-1);
 	}
 
-	GCFScheduler::instance()->init(argc, argv, "OnlineControl");
+	GCFScheduler::instance()->init(argc, argv, argv[1]);
 
 	ParentControl*	pc = ParentControl::instance();
 	pc->start();	// make initial transition

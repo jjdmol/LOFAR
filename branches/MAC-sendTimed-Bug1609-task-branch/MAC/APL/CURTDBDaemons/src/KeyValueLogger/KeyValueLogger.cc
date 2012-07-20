@@ -1,6 +1,6 @@
 //#  KeyValueLogger.cc: Filters and stores logmessages in PVSS
 //#
-//#  Copyright (C) 2007
+//#  Copyright (C) 2007-2011
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -21,6 +21,7 @@
 //#  $Id$
 
 #include <lofar_config.h>
+#include <Common/lofar_datetime.h>
 #include <Common/LofarLogger.h>
 #include <Common/Version.h>
 #include <Common/ParameterSet.h>
@@ -30,11 +31,15 @@
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/PVSS/PVSSresult.h>
 #include <GCF/RTDB/DP_Protocol.ph>
+#include <OTDB/ClassifConv.h>
+#include <OTDB/TreeTypeConv.h>
+#include <OTDB/TreeValue.h>
 #include "KeyValueLogger.h"
 #include <CURTDBDaemons/Package__Version.h>
 
 namespace LOFAR {
   using namespace MACIO;
+  using namespace OTDB;
   namespace GCF {
     using namespace TM;
     using namespace PVSS;
@@ -46,9 +51,10 @@ namespace LOFAR {
 //
 KeyValueLogger::KeyValueLogger(const string&	myName) :
 	GCFTask((State)&KeyValueLogger::initial, myName),
-	itsListener (0),
-	itsDPservice(0),
-	itsTimerPort(0)
+	itsListener  (0),
+	itsDPservice (0),
+	itsSASservice(0),
+	itsTimerPort (0)
 {
 	LOG_DEBUG_STR("KeyValueLogger(" << myName << ")");
 	LOG_INFO(Version::getInfo<CURTDBDaemonsVersion>("KeyValueLogger"));
@@ -61,8 +67,13 @@ KeyValueLogger::KeyValueLogger(const string&	myName) :
 	itsListener = new GCFTCPPort(*this, MAC_SVCMASK_KVTLOGGER, GCFPortInterface::MSPP, KVT_PROTOCOL);
 	ASSERTSTR(itsListener, "Can't allocate a listener port");
 
-	itsDPservice = new DPservice(this);
-	ASSERTSTR(itsDPservice, "Can't allocate DataPoint service");
+//	itsDPservice = new DPservice(this);
+//	ASSERTSTR(itsDPservice, "Can't allocate DataPoint service");
+
+	itsSASdbname  = globalParameterSet()->getString("KeyValueLogger.OTDBdatabase");
+	itsSAShostname= globalParameterSet()->getString("KeyValueLogger.OTDBhostname");
+	itsSASservice = new OTDBconnection("paulus", "boskabouter", itsSASdbname, itsSAShostname);
+	ASSERTSTR(itsSASservice, "Can't allocate connection to SAS");
 
 	itsTimerPort = new GCFTimerPort(*this, "timerPort");
 	ASSERTSTR(itsTimerPort, "Can't allocate timer");
@@ -81,6 +92,9 @@ KeyValueLogger::~KeyValueLogger()
 	if (itsDPservice) {
 		delete itsDPservice;
 	}
+	if (itsSASservice) {
+		delete itsSASservice;
+	}
 	if (itsListener) {
 		delete itsListener;
 	}
@@ -93,7 +107,6 @@ KeyValueLogger::~KeyValueLogger()
 //
 GCFEvent::TResult KeyValueLogger::initial(GCFEvent& event, GCFPortInterface& port)
 {
-	GCFEvent::TResult status = GCFEvent::HANDLED;
 	switch (event.signal) {
 	case F_INIT:
 		break;
@@ -107,7 +120,7 @@ GCFEvent::TResult KeyValueLogger::initial(GCFEvent& event, GCFPortInterface& por
 
 	case F_CONNECTED:
 		// Listener is opened, go to operational state.
-		TRAN(KeyValueLogger::operational);
+		TRAN(KeyValueLogger::connect2SAS);
 	break;
 
 	case F_DISCONNECTED:
@@ -115,18 +128,62 @@ GCFEvent::TResult KeyValueLogger::initial(GCFEvent& event, GCFPortInterface& por
 	break;
 
 	default:
-		status = GCFEvent::NOT_HANDLED;
-	break;
+		break;
 	}
 
-	return (status);
+	return (GCFEvent::HANDLED);
 }
+
+//
+// connect2SAS(event, port)
+//
+// Try to open our listener socket
+//
+GCFEvent::TResult KeyValueLogger::connect2SAS(GCFEvent& event, GCFPortInterface& port)
+{
+	LOG_DEBUG_STR("connect2SAS:" << eventName(event) << "@" << port.getName());
+
+	switch (event.signal) {
+	case F_ENTRY: {
+		// Connect to the SAS database
+		LOG_INFO(formatString("Trying to connect to SAS database %s@%s", itsSASdbname.c_str(), itsSAShostname.c_str()));
+		itsSASservice->connect();
+		if (!itsSASservice->isConnected()) {
+			LOG_WARN("Connection to SAS failed. Retry in 10 seconds");
+			itsTimerPort->setTimer(10.0);
+			return (GCFEvent::HANDLED);
+		}
+
+		// Get ID of the current PIC tree
+		LOG_INFO("Connection to SAS database succesfull, getting info about instrument");
+		ClassifConv     CTconv(itsSASservice);
+		TreeTypeConv    TTconv(itsSASservice);
+		vector<OTDBtree>    treeList = itsSASservice->getTreeList(TTconv.get("hardware"), CTconv.get("operational"));
+		ASSERTSTR(treeList.size() == 1, "Expected 1 hardware tree in SAS, database error=" << itsSASservice->errorMsg());
+
+		itsPICtreeID = treeList[0].treeID();
+		LOG_INFO(formatString("Using PICtree %d (%s)", itsPICtreeID, to_simple_string(treeList[0].starttime).c_str()));
+
+		// SAS part seems OK, continue with main loop
+		itsKVTgate = new TreeValue(itsSASservice, itsPICtreeID);
+		ASSERTSTR(itsKVTgate, "Unable to create a TreeValue object for tree: " << itsPICtreeID);
+
+		TRAN(KeyValueLogger::operational);
+	}
+	break;
+
+	default:
+		break;
+	}
+
+    return (GCFEvent::HANDLED);
+}
+
 
 //
 // operational(event, port)
 //
-GCFEvent::TResult KeyValueLogger::operational(GCFEvent&			event, 
-												GCFPortInterface&	port)
+GCFEvent::TResult KeyValueLogger::operational(GCFEvent&		event, GCFPortInterface&	port)
 {
 	LOG_DEBUG_STR("operational:" << eventName(event) << "@" << port.getName());
 
@@ -163,11 +220,11 @@ GCFEvent::TResult KeyValueLogger::operational(GCFEvent&			event,
 		}
 		else {
 			if (iter->second.valid) {
-				LOG_INFO_STR("Closing log-stream to " << iter->second.name << ", passed " 
+				LOG_INFO_STR("Closing log-stream with " << iter->second.name << ", passed " 
 							<< iter->second.msgCnt << " messages to the database");
 			}
 			else if (!iter->second.name.empty()) {
-				LOG_INFO_STR("Closing log-stream to " << iter->second.name);
+				LOG_INFO_STR("Closing log-stream with " << iter->second.name);
 			}
 			else {
 				LOG_INFO("Closing unknown log-stream");
@@ -204,87 +261,48 @@ GCFEvent::TResult KeyValueLogger::operational(GCFEvent&			event,
 
 	case KVT_SEND_MSG: {
 		KVTSendMsgEvent		logEvent(event);
-		KVTSendMsgAckEvent	answer;
-		answer.seqnr  = logEvent.seqnr;
-		answer.result = PVSS::SA_NO_ERROR;
-
-		int32	timeStamp = indexValue(logEvent.key, "{}");
-		rtrim  (logEvent.key, "{}01234565789");	 // cut off timestamp
-		// replace all but last . with underscore.
-		string::reverse_iterator	riter	= logEvent.key.rbegin();
-		string::reverse_iterator	rend	= logEvent.key.rend();
-		bool	lastDot(true);
-		while (riter != rend) {
-			if (*riter == '.') {
-				if (lastDot) {
-					lastDot = false;
-				}
-				else {
-					*riter = '_';
-				}
-			}
-			riter++;
-		}
-		PVSSresult	result = itsDPservice->setValue(logEvent.key, 
-													GCFPVString(logEvent.value),
-													1.0 * timeStamp);
+		LOG_DEBUG_STR("Received: " << logEvent);
+		bool	sendOk(itsKVTgate->addKVT(logEvent.key, logEvent.value, from_ustime_t(logEvent.timestamp)));
 		itsClients[&port].msgCnt++;
 
-		switch (result) {
-		case PVSS::SA_NO_ERROR:
-			break;
-		case PVSS::SA_SCADA_NOT_AVAILABLE:
-			answer.result = result;
-			break;
-		default:
-			// _registerFailure(port);
-			answer.result = result;
+		if (logEvent.seqnr > 0) {
+			KVTSendMsgAckEvent	answer;
+			answer.seqnr  = logEvent.seqnr;
+			answer.result = !sendOk;
+			port.send(answer);
 		}
-		port.send(answer);
 	}
 	break;
 
+
 	case KVT_SEND_MSG_POOL: {
 		KVTSendMsgPoolEvent		logEvent(event);
-		KVTSendMsgPoolAckEvent	answer;
-		answer.seqnr  = logEvent.seqnr;
-		answer.result = PVSS::SA_NO_ERROR;
-		for (uint32 i = 0; i < logEvent.msgCount; i++) {
-			int32	timeStamp = indexValue(logEvent.keys.theVector[i], "{}");
-			rtrim  (logEvent.keys.theVector[i], "{}01234565789");	 // cut off timestamp
-			// replace all but last . with underscore.
-			string::reverse_iterator	riter	= logEvent.keys.theVector[i].rbegin();
-			string::reverse_iterator	rend	= logEvent.keys.theVector[i].rend();
-			bool	lastDot(true);
-			while (riter != rend) {
-				if (*riter == '.') {
-					if (lastDot) {
-						lastDot = false;
-					}
-					else {
-						*riter = '_';
-					}
-				}
-				riter++;
+		if (logEvent.keys().size() != logEvent.nrElements || 
+			logEvent.values().size() != logEvent.nrElements ||
+			logEvent.times().size() != logEvent.nrElements) {
+			LOG_ERROR(formatString("Received kvt pool from %s (seqnr=%d) with unequal vectorsizes (n=%d, k=%d, v=%d, t=%d)", 
+					itsClients[&port].name.c_str(), logEvent.seqnr, logEvent.nrElements, 
+					logEvent.keys().size(), logEvent.values().size(), logEvent.times().size()));
+			if (logEvent.seqnr > 0) {
+				KVTSendMsgPoolAckEvent	answer;
+				answer.seqnr = logEvent.seqnr;
+				answer.result = -1;
+				port.send(answer);
+				break;
 			}
-			PVSSresult	result = itsDPservice->setValue(logEvent.keys.theVector[i], 
-														GCFPVString(logEvent.values.theVector[i]),
-														1.0 * timeStamp);
-			itsClients[&port].msgCnt++;
+		}
 
-			switch (result) {
-			case PVSS::SA_NO_ERROR:
-				break;
-			case PVSS::SA_SCADA_NOT_AVAILABLE:
-				answer.result = result;
-				i = logEvent.msgCount;		// don't try the others.
-				break;
-			default:
-				// _registerFailure(port);
-				answer.result |= result;
-			} // switch
-		} // for all msgs in the pool
-		port.send(answer);
+		bool	sendOk(true);
+		for (uint32 i = 0; i < logEvent.nrElements; i++) {
+			sendOk &= itsKVTgate->addKVT(logEvent.keys()[i], logEvent.values()[i], from_ustime_t(logEvent.times()[i]));
+		}
+		itsClients[&port].msgCnt += logEvent.nrElements;
+		if (logEvent.seqnr > 0) {
+			KVTSendMsgPoolAckEvent	answer;
+			answer.seqnr  = logEvent.seqnr;
+			answer.result = !sendOk;	// bool -> int: 0=Ok
+			port.send(answer);
+		}
 	}
 	break;
 

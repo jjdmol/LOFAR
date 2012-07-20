@@ -27,7 +27,7 @@
 
 #include <iostream>
 
-Model::Model() : _noiseSigma(1), _sourceSigma(0), _integrationTime(15.0)
+Model::Model() : _noiseSigma(1.0), _sourceSigma(0.0), _integrationTime(15.0)
 {
 }
 
@@ -36,9 +36,10 @@ Model::~Model()
 }
 
 template<typename T>
-void Model::SimulateObservation(struct OutputReceiver<T> &receiver, Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA, num_t frequency)
+void Model::SimulateObservation(struct OutputReceiver<T> &receiver, Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA)
 {
-	size_t channelCount = observatorium.BandInfo().channelCount;
+	const size_t channelCount = observatorium.BandInfo().channelCount;
+	const double frequency = observatorium.BandInfo().channels[0].frequencyHz;
 
 	for(size_t f=0;f<channelCount;++f)
 	{
@@ -56,18 +57,19 @@ void Model::SimulateObservation(struct OutputReceiver<T> &receiver, Observatoriu
 					dy = antenna1.position.y - antenna2.position.y,
 					dz = antenna1.position.z - antenna2.position.z;
 
-				SimulateCorrelation(receiver, delayDirectionDEC, delayDirectionRA, dx, dy, dz, channelFrequency, 12*60*60, _integrationTime);
+				SimulateCorrelation(receiver, delayDirectionDEC, delayDirectionRA, dx, dy, dz, channelFrequency, observatorium.ChannelWidthHz(), 12*60*60, _integrationTime);
 			}
 		}
 	}
 }
 
-template void Model::SimulateObservation(struct OutputReceiver<UVImager> &receiver, Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA, num_t frequency);
-template void Model::SimulateObservation(struct OutputReceiver<TimeFrequencyData> &receiver, Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA, num_t frequency);
+template void Model::SimulateObservation(struct OutputReceiver<UVImager> &receiver, Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA);
+template void Model::SimulateObservation(struct OutputReceiver<TimeFrequencyData> &receiver, Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA);
 
-std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> Model::SimulateObservation(class Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA, num_t frequency, size_t a1, size_t a2)
+std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> Model::SimulateObservation(class Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA, size_t a1, size_t a2)
 {
-	size_t channelCount = observatorium.BandInfo().channelCount;
+	const size_t channelCount = observatorium.BandInfo().channelCount;
+	const double frequency = observatorium.BandInfo().channels[0].frequencyHz;
 	
 	OutputReceiver<TimeFrequencyData> tfOutputter;
 	tfOutputter._real = Image2D::CreateZeroImagePtr((size_t) (12*60*60/_integrationTime), channelCount);
@@ -86,7 +88,7 @@ std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> Model::SimulateObservatio
 	{
 		double channelFrequency = frequency + observatorium.ChannelWidthHz() * f;
 		tfOutputter.SetY(f);
-		SimulateCorrelation(tfOutputter, delayDirectionDEC, delayDirectionRA, dx, dy, dz, channelFrequency, 12*60*60, _integrationTime);
+		SimulateCorrelation(tfOutputter, delayDirectionDEC, delayDirectionRA, dx, dy, dz, channelFrequency, observatorium.ChannelWidthHz(), 12*60*60, _integrationTime);
 	}
 
 	std::vector<double> times;
@@ -117,8 +119,9 @@ std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> Model::SimulateObservatio
 }
 
 template<typename T>
-void Model::SimulateCorrelation(struct OutputReceiver<T> &receiver, num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t dz, num_t frequency, double totalTime, double integrationTime)
+void Model::SimulateCorrelation(struct OutputReceiver<T> &receiver, num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t dz, num_t frequency, num_t channelWidth, double totalTime, double integrationTime)
 {
+	double sampleGain = integrationTime/(12.0*60.0*60.0) * channelWidth;
 	num_t wavelength = 1.0L / frequency;
 	size_t index = 0;
 	for(num_t t=0.0;t<totalTime;t+=integrationTime)
@@ -132,12 +135,12 @@ void Model::SimulateCorrelation(struct OutputReceiver<T> &receiver, num_t delayD
 		num_t
 			r = r1 * r2 - (i1 * -i2),
 			i = r1 * -i2 + r2 * i1;
-		receiver.SetUVValue(index, u, v, r, i, 1.0);
+		receiver.SetUVValue(index, u, v, r * sampleGain, i * sampleGain, 1.0);
 		++index;
 	}
 }
 
-template void Model::SimulateCorrelation(struct OutputReceiver<UVImager> &receiver, num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t dz, num_t frequency, double totalTime, double integrationTime);
+template void Model::SimulateCorrelation(struct OutputReceiver<UVImager> &receiver, num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t dz, num_t frequency, num_t channelWidth, double totalTime, double integrationTime);
 
 void Model::SimulateAntenna(double time, num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t frequency, num_t earthLattitude, num_t &r, num_t &i)
 {
@@ -176,35 +179,10 @@ void Model::SimulateUncoherentAntenna(double time, num_t delayDirectionDEC, num_
 	//}
 }
 
-void Model::SimulateBaseline(long double delayDirectionDEC, long double delayDirectionRA, long double dx, long double dy, long double dz, long double frequencyStart, long double frequencyEnd, long double seconds, class Image2D &destR, class Image2D &destI)
-{
-	for(unsigned fIndex=0;fIndex<destR.Height();++fIndex)
-	{
-		long double frequency = (frequencyEnd - frequencyStart) * (long double) fIndex/destR.Height() + frequencyStart;
-
-		for(unsigned tIndex=0;tIndex<destR.Width();++tIndex)
-		{
-			long double timeRotation =
-				(long double) tIndex * 2.0 * M_PIn * seconds /
-				(12.0L*60.0L*60.0L/*=totalTime*/ * destR.Width());
-
-			num_t u,v;
-			GetUVPosition(u, v, timeRotation, delayDirectionDEC, delayDirectionRA, dx, dy, dz, 1.0L/frequency);
-			num_t r, i;
-			AddFTOfSources(u, v, r, i);
-			destR.AddValue(tIndex, fIndex, r);
-			destI.AddValue(tIndex, fIndex, i);
-		}
-	}
-}
-
 void Model::GetUVPosition(num_t &u, num_t &v, num_t earthLattitudeAngle, num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t dz, num_t wavelength)
 {
-	long double pointingLattitude = delayDirectionRA;
-
 	// Rotate baseline plane towards phase center, first rotate around z axis, then around x axis
-	//long double raRotation = earthLattitudeAngle - pointingLattitude + M_PIn*0.5L;
-	long double raRotation = -earthLattitudeAngle + pointingLattitude + M_PIn*0.5L;
+	long double raRotation = -earthLattitudeAngle + delayDirectionRA + M_PIn*0.5L;
 	long double tmpCos = cosn(raRotation);
 	long double tmpSin = sinn(raRotation);
 
@@ -216,7 +194,6 @@ void Model::GetUVPosition(num_t &u, num_t &v, num_t earthLattitudeAngle, num_t d
 	long double dyProjected = tmpCos*tmpdy - tmpSin*dz;
 
 	// Now, the newly projected positive z axis of the baseline points to the phase center
-
 	long double baselineLength = sqrtn(dxProjected*dxProjected + dyProjected*dyProjected);
 	
 	long double baselineAngle;
@@ -232,73 +209,46 @@ void Model::GetUVPosition(num_t &u, num_t &v, num_t earthLattitudeAngle, num_t d
 		
 	u = cosn(baselineAngle)*baselineLength;
 	v = -sinn(baselineAngle)*baselineLength;
-	//u = -sinn(baselineAngle)*baselineLength;
-	//v = cosn(baselineAngle)*baselineLength;
 }
 
-num_t Model::GetWPosition(num_t delayDirectionDec, num_t delayDirectionRA, num_t frequency, num_t earthLattitudeAngle, num_t dx, num_t dy)
-{
-	num_t wavelength = 299792458.0L / frequency;
-	num_t raSinEnd = sinn(-delayDirectionRA - earthLattitudeAngle);
-	num_t raCosEnd = cosn(-delayDirectionRA - earthLattitudeAngle);
-	num_t decSin = sinn(delayDirectionDec);
-	// term "+ dz * decCos" is eliminated because of subtraction
-	//num_t wPosition =
-	//	(dx*raCosEnd - dy*raSinEnd) * (-decCos) / wavelength;
-	num_t wPosition =
-		(dx*raCosEnd - dy*raSinEnd) * (-decSin) / wavelength;
-	return wPosition;
-}
-
-void Model::AddFTOfSources(num_t u, num_t v, num_t &rVal, num_t &iVal)
-{
-	rVal = 0.0;
-	iVal = 0.0;
-
-	for(std::vector<Source *>::const_iterator i=_sources.begin();i!=_sources.end();++i)
-	{
-		AddFTOfSource(u, v, rVal, iVal, (*i));
-	}
-}
-
-void Model::AddFTOfSource(num_t u, num_t v, num_t &r, num_t &i, const Source *source)
-{
-	// Calculate F(X) = f(x) e ^ {i 2 pi (x1 u + x2 v) } 
-	long double fftRotation = (u * source->Dec(0.0)/180.0L + v * source->Ra(0.0)/180.0L) * -2.0L * M_PIn;
-	r += cosn(fftRotation) * source->FluxIntensity(0.0);
-	i += sinn(fftRotation) * source->FluxIntensity(0.0);
-}
-
-void Model::loadUrsaMajor()
+void Model::loadUrsaMajor(double ra, double dec, double factor)
 {
 	double
-		s = 0.00005, //scale
-		rs = 8.0; // stretch in dec
-	double cd = M_PI + 0.12800;
-	double cr = -0.03000;
+		s = 0.00005 * factor, //scale
+		rs = 6.0 + 2.0 * factor; // stretch in dec
 	double fluxoffset = 0.0;
 
-	AddSource(cd + s*rs*40, cr + s*72, 8.0/8.0 + fluxoffset); // Dubhe
-	AddSource(cd + s*rs*-16, cr + s*81, 4.0/8.0 + fluxoffset); // Beta
-	AddSource(cd + s*rs*-45, cr + s*2, 3.0/8.0 + fluxoffset); // Gamma
-	AddSource(cd + s*rs*-6, cr + s*-27, 2.0/8.0 + fluxoffset); // Delta
-	AddSource(cd + s*rs*-4, cr + s*-85, 6.0/8.0 + fluxoffset); // Alioth
-	AddSource(cd + s*rs*2, cr + s*-131, 5.0/8.0 + fluxoffset); // Zeta
-	AddSource(cd + s*rs*-36, cr + s*-192, 7.0/8.0 + fluxoffset); // Alkaid
+	AddSource(dec + s*rs*40, ra + s*72, 8.0/8.0 + fluxoffset); // Dubhe
+	AddSource(dec + s*rs*-16, ra + s*81, 4.0/8.0 + fluxoffset); // Beta
+	AddSource(dec + s*rs*-45, ra + s*2, 3.0/8.0 + fluxoffset); // Gamma
+	AddSource(dec + s*rs*-6, ra + s*-27, 2.0/8.0 + fluxoffset); // Delta
+	AddSource(dec + s*rs*-4, ra + s*-85, 6.0/8.0 + fluxoffset); // Alioth
+	AddSource(dec + s*rs*2, ra + s*-131, 5.0/8.0 + fluxoffset); // Zeta
+	AddSource(dec + s*rs*-36, ra + s*-192, 7.0/8.0 + fluxoffset); // Alkaid
+
+	//AddSource(cd, cr - M_PI, 4.0);
 }
 
-void Model::loadUrsaMajorDistortingSource()
+void Model::loadUrsaMajorDistortingSource(double ra, double dec, double factor, bool slightlyMiss)
 {
-	double fluxoffset = 0.0;
-
-	AddSource(M_PI, 0, 4.0 + fluxoffset); // NCP
+	if(slightlyMiss)
+	{
+		dec += 0.005;
+		ra += 0.002;
+	}
+	AddSource(dec - 0.12800 * factor, ra + 0.015 + 0.015 * factor, 4.0);
 }
 
-void Model::loadUrsaMajorDistortingVariableSource(bool weak, bool slightlyMiss)
+void Model::loadOnAxisSource(double ra, double dec, double factor)
+{
+	AddSource(dec - 0.01280 * factor, ra + 0.0015 + 0.0015 * factor, 4.0);
+}
+
+void Model::loadUrsaMajorDistortingVariableSource(double ra, double dec, double factor, bool weak, bool slightlyMiss)
 {
 	double flux = 4.0;
-	double dec = M_PI;
-	double ra = 0.0;
+	dec = dec - 0.12800 * factor;
+	ra = ra + 0.015 + 0.015 * factor;
 	if(slightlyMiss)
 	{
 		dec += 0.005;
@@ -308,6 +258,6 @@ void Model::loadUrsaMajorDistortingVariableSource(bool weak, bool slightlyMiss)
 	{
 		flux /= 100.0;
 	}
-	AddVariableSource(dec, ra, flux); // NCP
+	AddVariableSource(dec, ra, flux);
 }
 

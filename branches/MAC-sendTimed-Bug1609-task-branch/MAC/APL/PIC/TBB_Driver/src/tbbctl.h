@@ -26,7 +26,7 @@
 #define TBBCTL_H_
 
 #include <APL/TBB_Protocol/TBB_Protocol.ph>
-
+#include <APL/RTCCommon/NsTimestamp.h>
 #include <GCF/TM/GCF_Control.h>
 #include <GCF/TM/GCF_ETHRawPort.h>
 #include <GCF/TM/GCF_TimerPort.h>
@@ -45,7 +45,7 @@ namespace LOFAR {
 
 GCFTimerPort* itsCmdTimer;
 
-static const int TBBCTL_VERSION = 231;
+static const int TBBCTL_VERSION = 251;
 
 // MAX_N_TBBOARDS and MAX_N_RCUS come from TBB_protocol.ph
 
@@ -183,7 +183,7 @@ public:
 		
 		if (str.empty() && status) {
 			char statusstr[64];
-			sprintf(statusstr,"unknown ERROR, 0x%08X",status);
+			snprintf(statusstr,sizeof statusstr,"unknown ERROR, 0x%08X",status);
 			str.append(statusstr);
 		}
 		return(str);
@@ -515,16 +515,26 @@ public:
 	virtual ~ReadCmd() { }
 	virtual void send();
 	virtual GCFEvent::TResult ack(GCFEvent& e);
+	void setTime(double time) { itsTime.set(time); }
+	void setTimeBefore(double time) { itsTimeAfter.set(time); }
+	void setTimeAfter(double time) { itsTimeBefore.set(time); }
+	/*
 	void setSecondsTime(uint32 secondstime) { itsSecondsTime = secondstime; }
-	void setSampleTime(uint32 sampletime) { itsSampleTime = sampletime; }
+	void setSampleNr(uint32 samplenr) { itsSampleNr = samplenr; }
 	void setPrePages(uint32 prepages) { itsPrePages = prepages; }
 	void setPostPages(uint32 postpages) { itsPostPages = postpages; }
+	*/
 private:
 	uint32 itsStage;
+	RTC::NsTimestamp itsTime;
+    RTC::NsTimestamp itsTimeBefore;
+	RTC::NsTimestamp itsTimeAfter;
+	/*
 	uint32 itsSecondsTime;
-	uint32 itsSampleTime;
+	uint32 itsSampleNr;
 	uint32 itsPrePages;
 	uint32 itsPostPages;
+	*/
 };
 
 //-----------------------------------------------------------------------------
@@ -536,12 +546,21 @@ public:
 	virtual void send();
 	virtual GCFEvent::TResult ack(GCFEvent& e);
 	void setPages(uint32 pages) { itsPages = pages; }
+	void setTime(double time) { itsTime.set(time); }
+	void setTimeBefore(double time) { itsTimeAfter.set(time); }
+	void setTimeAfter(double time) { itsTimeBefore.set(time); }
+
 private:
 	int itsStage;
 	int itsRcu;
-	uint32 itsSecondsTime;
-	uint32 itsSampleTime;
 	uint32 itsPages;
+	RTC::NsTimestamp itsTime;
+    RTC::NsTimestamp itsTimeBefore;
+	RTC::NsTimestamp itsTimeAfter;
+	/*
+	uint32 itsSecondsTime;
+	uint32 itsSampleNr;
+	*/
 };
 
 //-----------------------------------------------------------------------------
@@ -657,7 +676,10 @@ class CepStorageCmd : public Command
         virtual ~CepStorageCmd() { }
         virtual void send();
         virtual GCFEvent::TResult ack(GCFEvent& e);
-        void setStorageNode(char *storagenode) { strcpy(itsStorageNode,storagenode); }
+        void setStorageNode(char *storagenode) {
+          strncpy(itsStorageNode, storagenode, sizeof itsStorageNode);
+          itsStorageNode[sizeof itsStorageNode - 1] = 0;
+        }
     private:
         char itsStorageNode[10];
 };
@@ -948,8 +970,11 @@ private:
 	// private methods
 	Command* parse_options(int argc, char** argv);
 	std::list<int> strtolist(const char* str, int max);
+	
+	static void sigintHandler (int signum);
+    void finish();
+	
 	void logMessage(ostream& stream, const string& message);
-
 	void commandHelp(int level);
 private:
 	GCFPortInterface*   itsServerPort;

@@ -19,8 +19,7 @@
 --  along with this program; if not, write to the Free Software
 --  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 --
---  $Id: getSchedulerInfo.sql 8438 2006-05-18 19:16:37Z overeem $
---
+--  $Id:$
 
 CREATE OR REPLACE FUNCTION getAllTaskID()
   RETURNS SETOF INTEGER AS $$
@@ -31,7 +30,7 @@ CREATE OR REPLACE FUNCTION getAllTaskID()
 	  FOR vRecord IN 
 	    SELECT CAST(value AS INTEGER) 
 	    FROM VICHIERARCHY 
-	    WHERE NAME LIKE '%taskID' 
+	    WHERE NAME = 'LOFAR.ObsSW.Observation.Scheduler.taskID' 
 	    ORDER BY VALUE 
 	    LOOP
 	  	  RETURN NEXT vRecord.value;

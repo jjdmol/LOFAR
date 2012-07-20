@@ -43,7 +43,7 @@ import nl.astron.lofar.sas.otbcomponents.*;
  * @version $Id$
  * @updated 
  */
-public class MainFrame extends javax.swing.JFrame {
+public final class MainFrame extends javax.swing.JFrame {
 
     // Create a Log4J logger instance
     static Logger logger = Logger.getLogger(MainFrame.class);
@@ -58,8 +58,11 @@ public class MainFrame extends javax.swing.JFrame {
     private String itsServer               = "";
     private String itsPort                 = "";
     private String itsDBName               = "No Database";
+    private String itsUserName             = "";
 
     private String itsServiceName          = "";
+    
+    private boolean isEnded                = false;
 
 
     
@@ -102,10 +105,13 @@ public class MainFrame extends javax.swing.JFrame {
     }
     
     /** Creates new form MainFrame */
-    public MainFrame(String server, String port) throws NoServerConnectionException,NotLoggedInException {
+    public MainFrame(String server, String port, String database, String user ) throws NoServerConnectionException,NotLoggedInException {
         itsServer=server;
         itsPort=port;
-        itsPlugins = new HashMap<String,PluginPanelInfo>();
+        itsDBName=database;
+        itsUserName=user;
+
+        itsPlugins = new HashMap<>();
 
         itsSharedVars = new SharedVars(this);
         itsStorageLocation = new StorageLocation(SharedVars.getOTDBrmi());
@@ -131,19 +137,16 @@ public class MainFrame extends javax.swing.JFrame {
         
 
         
-        
-        
             showPanel(MainPanel.getFriendlyNameStatic());
         } catch(NoServerConnectionException ex ) {
             String aS="No Server Connection "+ex;
             logger.error(aS);
-            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+            LofarUtils.showErrorPanel(this.getOwner(),aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             exit();
             throw ex;
         } catch (NotLoggedInException ex ) {
             String aS="Not logged in "+ex;
             logger.error(aS);
-            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             exit();
             throw ex;
         }
@@ -240,7 +243,7 @@ public class MainFrame extends javax.swing.JFrame {
 
             return p;
         }
-        catch(Exception e) {
+        catch(ClassNotFoundException | InstantiationException | IllegalAccessException e) {
             String aS= e.getMessage();
             logger.fatal(aS);
             LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_death.gif")));
@@ -396,7 +399,6 @@ public class MainFrame extends javax.swing.JFrame {
         jToolBarPlugins = new javax.swing.JToolBar();
         jMenuBarMainFrame = new javax.swing.JMenuBar();
         jMenuFile = new javax.swing.JMenu();
-        jMenuItemLogout = new javax.swing.JMenuItem();
         jSeparator1 = new javax.swing.JSeparator();
         jMenuItemExit = new javax.swing.JMenuItem();
         jMenuPlugins = new javax.swing.JMenu();
@@ -405,20 +407,16 @@ public class MainFrame extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Lofar Observation Tree Browser"); // NOI18N
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                formWindowClosing(evt);
+            }
+        });
         getContentPane().add(statusPanelMainFrame, java.awt.BorderLayout.SOUTH);
         getContentPane().add(jToolBarPlugins, java.awt.BorderLayout.NORTH);
 
         jMenuFile.setMnemonic('f');
         jMenuFile.setText("File"); // NOI18N
-
-        jMenuItemLogout.setMnemonic('l');
-        jMenuItemLogout.setText("Logout"); // NOI18N
-        jMenuItemLogout.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItemLogoutActionPerformed(evt);
-            }
-        });
-        jMenuFile.add(jMenuItemLogout);
         jMenuFile.add(jSeparator1);
 
         jMenuItemExit.setMnemonic('x');
@@ -455,25 +453,6 @@ public class MainFrame extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jMenuItemLogoutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemLogoutActionPerformed
-        logger.info("Logout requested");
-        logout();
-        setVisible(false);
-        try {
-            login();
-            setVisible(true);
-            showPanel(MainPanel.getFriendlyNameStatic());
-        } catch (NoServerConnectionException e) {
-            String aS= "No Server connection"+e.getMessage();
-            logger.fatal(aS);
-            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_death.gif")));
-        } catch (NotLoggedInException e) {
-            String aS= "Not logged in "+e.getMessage();
-            logger.fatal(aS);
-            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_death.gif")));
-        }
-    }//GEN-LAST:event_jMenuItemLogoutActionPerformed
-
     private void jMenuItemExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemExitActionPerformed
         exit();
     }//GEN-LAST:event_jMenuItemExitActionPerformed
@@ -485,21 +464,28 @@ public class MainFrame extends javax.swing.JFrame {
         itsCoordConversionDialog.setVisible(true);
     }//GEN-LAST:event_jMenuItemCoordChangeActionPerformed
 
+    private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
+       exit();
+    }//GEN-LAST:event_formWindowClosing
+
     public void exit() {
-        logger.info("Exit requested");
-        logout();
-        setVisible(false);
-        // remove used rmi connections from server
-        try {
-            if ( OtdbRmi.getRemoteOTDBaccess() != null) {
-                OtdbRmi.getRemoteOTDBaccess().logout(OtdbRmi.getRMIRegistryName());
+        if (!isEnded) {
+            logger.info("Exit requested");
+            logout();
+            setVisible(false);  
+           // remove used rmi connections from server
+            try {
+                if ( OtdbRmi.getRemoteOTDBaccess() != null) {
+                    OtdbRmi.getRemoteOTDBaccess().logout(OtdbRmi.getRMIRegistryName());
+                }
+            } catch (RemoteException ex) {
+                String aS= "Remote Exception "+ex.getMessage();
+                logger.error(aS);
+                LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             }
-        } catch (RemoteException ex) {
-            String aS= "Remote Exception "+ex.getMessage();
-            logger.error(aS);
-            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+            this.dispose();
+            isEnded=true;
         }
-        this.dispose();
     }
     
     /** Event handler called when a button in the button panel is called
@@ -520,23 +506,23 @@ public class MainFrame extends javax.swing.JFrame {
         boolean accessAllowed = false;
         while(!accessAllowed) {
             // show login dialog
-            LoginDialog loginDialog = new LoginDialog(this,true);
+            LoginDialog loginDialog = new LoginDialog(this,true,itsUserName,itsDBName);
             loginDialog.setLocationRelativeTo(this);
             loginDialog.setVisible(true);
             if(loginDialog.isOk()) {
-                String userName = loginDialog.getUserName();
-                String password = loginDialog.getPassword();
-                itsDBName       = loginDialog.getDBName();
+                itsUserName   = loginDialog.getUserName();
+                String pwd    = loginDialog.getPassword();
+                itsDBName     = loginDialog.getDBName();
 
-                logger.info("User: " + userName);
+                logger.info("User: " + itsUserName);
 
                 // create a useraccount object Interaction object
                 try {
-                    itsUserAccount = new UserAccount(userName, password);
+                    itsUserAccount = new UserAccount(itsUserName, pwd);
 //                    itsMACInteraction.setCurrentUser(userName,password);
 
 
-                    statusPanelMainFrame.setText(StatusPanel.MIDDLE,"User: "+userName);
+                    statusPanelMainFrame.setText(StatusPanel.MIDDLE,"User: "+itsUserName);
 
                     String aC = "NO Main DB connection";
                   // Start the actual RMI connection
@@ -560,7 +546,7 @@ public class MainFrame extends javax.swing.JFrame {
                         // we now have the OTDBaccess object and we can login, and obtain the OTDBconnection servicename.
                         logger.trace("remoteAccess object available, trying to login");
                         try {
-                            itsServiceName = OtdbRmi.getRemoteOTDBaccess().login(userName,password,itsDBName);
+                            itsServiceName = OtdbRmi.getRemoteOTDBaccess().login(itsUserName,pwd,itsDBName);
                             if (!itsServiceName.equals("")) {
                                 OtdbRmi.setRMIRegistryName(itsServiceName);
 
@@ -646,8 +632,8 @@ public class MainFrame extends javax.swing.JFrame {
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
                 try {
-                    new MainFrame("","").setVisible(true);
-                } catch (Exception e) {
+                    new MainFrame("","","","").setVisible(true);
+                } catch (NoServerConnectionException | NotLoggedInException e) {
                     System.out.println(e);
                 } finally {
                     System.out.println("We really need to go");
@@ -666,7 +652,6 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JMenu jMenuFile;
     private javax.swing.JMenuItem jMenuItemCoordChange;
     private javax.swing.JMenuItem jMenuItemExit;
-    private javax.swing.JMenuItem jMenuItemLogout;
     private javax.swing.JMenu jMenuPlugins;
     private javax.swing.JMenu jMenuTools;
     private javax.swing.JSeparator jSeparator1;

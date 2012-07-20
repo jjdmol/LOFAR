@@ -31,7 +31,7 @@
 
 namespace LOFAR {
   using GCF::TM::GCFTask;
-  using GCF::TM::GCFPort;
+  using GCF::TM::GCFTCPPort;
   using GCF::TM::GCFPortInterface;
   namespace CAL {
 
@@ -75,7 +75,7 @@ namespace LOFAR {
 
 	private:
 	  // ports
-	  GCFPort m_server;
+	  GCFTCPPort*  m_server;
 
 	  memptr_t	m_handle; // subscription handle
 	  int 		m_counter1; // general purpose test counter, semantics assigned per test

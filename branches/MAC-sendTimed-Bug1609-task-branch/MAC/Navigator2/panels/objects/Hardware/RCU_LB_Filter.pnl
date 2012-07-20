@@ -82,7 +82,7 @@ LANG:1 14 Lowband filter
 14 9
 "txt_filter"
 ""
-1 20 40 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
+1 20 40 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 7 0 0 0 0 0
 E E E

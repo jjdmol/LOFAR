@@ -25,8 +25,8 @@
 
 #include <Common/LofarLogger.h>
 #include <Interface/SparseSet.h>
-#include <Thread/Condition.h>
-#include <Thread/Mutex.h>
+#include <Common/Thread/Condition.h>
+#include <Common/Thread/Mutex.h>
 
 
 namespace LOFAR {

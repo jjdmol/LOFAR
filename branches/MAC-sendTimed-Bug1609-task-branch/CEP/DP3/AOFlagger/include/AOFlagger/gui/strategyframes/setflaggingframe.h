@@ -27,9 +27,9 @@
 #include <gtkmm/label.h>
 #include <gtkmm/radiobutton.h>
 
-#include "../../rfi/strategy/setflaggingaction.h"
+#include <AOFlagger/strategy/actions/setflaggingaction.h>
 
-#include "../editstrategywindow.h"
+#include <AOFlagger/gui/editstrategywindow.h>
 
 class SetFlaggingFrame : public Gtk::Frame {
 	public:

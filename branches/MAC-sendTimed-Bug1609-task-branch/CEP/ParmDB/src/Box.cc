@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <ParmDB/Box.h>
+#include <Common/lofar_iostream.h>
 
 namespace LOFAR {
 namespace BBS {
@@ -89,6 +90,12 @@ namespace BBS {
     ASSERT (sty <= eny);
     itsStart = Point(stx, sty);
     itsEnd   = Point(enx, eny);
+  }
+
+  void Box::print() const
+  {
+    cout << itsStart.first << "\t" << itsStart.second << "\t" 
+         << itsEnd.first << "\t" << itsEnd.second << endl;
   }
 
 } //# namespace BBS

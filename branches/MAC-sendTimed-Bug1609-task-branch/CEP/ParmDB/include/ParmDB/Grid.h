@@ -140,7 +140,6 @@ namespace BBS {
     // They have to be in order of startY,startX. They are sorted if needed.
     // The domains in the vector must span a rectangular grid, otherwise an
     // exception is thrown.
-    // Its axes can be regular (RegularAxis) or irregular (OrderedAxis).
     // The vector can be empty. In that case a default Grid is created.
     Grid(const vector<Box>& domains, bool sort=false)
       : itsRep (new GridRep(domains, sort))

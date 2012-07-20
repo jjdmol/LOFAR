@@ -143,47 +143,6 @@ private:
     std::vector<BeamCoord3D>  itsCoordinates;
 };
 
-// BeamRings are rings of regular hexagons around a center beam:
-//    _
-//  _/ \_   //
-// / \_/ \  //
-// \_/ \_/  //
-// / \_/ \  //
-// \_/ \_/  //
-//   \_/    //
-//
-// the width of each ring is defined as the distance between pencil centers
-//
-// assumes l horizontal (incr left), m vertical (incr up)
-class BeamRings: public BeamCoordinates
-{
-  public:
-    BeamRings(unsigned nrRings, double ringWidth);
-
-    unsigned nrPencils() const;
-
-    // length of a pencil edge
-    double pencilEdge() const;
-
-    // width of a pencil beam
-    double pencilWidth() const;
-
-    // height of a pencil beam
-    double pencilHeight() const;
-
-    // horizontal difference for neighbouring beams, in case of partial overlap
-    double pencilWidthDelta() const;
-
-    // vertical difference for neighbouring beams, in case of partial overlap
-    double pencilHeightDelta() const;
-
-  private:
-    void computeBeamCoordinates();
-
-    const unsigned	    itsNrRings;
-    const double	    itsRingWidth;
-};
-
 inline double operator* (const BeamCoord3D &lhs, const BeamCoord3D &rhs)
 {
   double sum = 0;

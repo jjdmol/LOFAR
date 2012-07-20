@@ -32,6 +32,7 @@
 #include <Stream/FileStream.h>
 #include <Stream/NullStream.h>
 #include <Stream/SocketStream.h>
+#include <Stream/PortBroker.h>
 #include <Stream/NamedPipeStream.h>
 
 #include <boost/format.hpp>
@@ -40,13 +41,14 @@
 #include <vector>
 
 using boost::format;
+using namespace std;
 
 namespace LOFAR {
 namespace RTCP {
 
-Stream *createStream(const std::string &descriptor, bool asServer)
+Stream *createStream(const string &descriptor, bool asServer)
 {
-  std::vector<std::string> split = StringUtil::split(descriptor, ':');
+  vector<string> split = StringUtil::split(descriptor, ':');
 
   if (descriptor == "null:")
     return new NullStream;
@@ -56,12 +58,20 @@ Stream *createStream(const std::string &descriptor, bool asServer)
     return new SocketStream(split[1].c_str(), boost::lexical_cast<short>(split[2]), SocketStream::TCP, asServer ? SocketStream::Server : SocketStream::Client, 30);
   else if (split.size() == 3 && split[0] == "udpkey")
     return new SocketStream(split[1].c_str(), 0, SocketStream::UDP, asServer ? SocketStream::Server : SocketStream::Client, 30, split[2].c_str());
+#ifdef USE_THREADS    
+  else if (split.size() == 4 && split[0] == "tcpbroker") 
+    return asServer ? static_cast<Stream*>(new PortBroker::ServerStream(split[3])) : static_cast<Stream*>(new PortBroker::ClientStream(split[1], boost::lexical_cast<short>(split[2]), split[3]));
+#endif    
   else if (split.size() == 3 && split[0] == "tcpkey")
+#if defined CLUSTER_SCHEDULING
+    return new SocketStream(split[1].c_str(), 0, SocketStream::TCP, asServer ? SocketStream::Server : SocketStream::Client, 30000, split[2].c_str());
+#else
     return new SocketStream(split[1].c_str(), 0, SocketStream::TCP, asServer ? SocketStream::Server : SocketStream::Client, 30, split[2].c_str());
+#endif
   else if (split.size() == 2 && split[0] == "file")
     return asServer ? new FileStream(split[1].c_str()) : new FileStream(split[1].c_str(), 0666);
   else if (split.size() == 2 && split[0] == "pipe")
-    return new NamedPipeStream(split[1].c_str());
+    return new NamedPipeStream(split[1].c_str(), asServer);
   else if (split.size() == 2)
     return new SocketStream(split[0].c_str(), boost::lexical_cast<short>(split[1]), SocketStream::UDP, asServer ? SocketStream::Server : SocketStream::Client, 30);
   else if (split.size() == 1)
@@ -70,9 +80,10 @@ Stream *createStream(const std::string &descriptor, bool asServer)
     THROW(InterfaceException, string("unrecognized connector format: \"" + descriptor + '"'));
 }
 
-std::string getStreamDescriptorBetweenIONandCN(const char *streamType, unsigned pset, unsigned core, unsigned numpsets, unsigned numcores, unsigned channel)
+
+string getStreamDescriptorBetweenIONandCN(const char *streamType, unsigned ionode, unsigned pset, unsigned core, unsigned numpsets, unsigned numcores, unsigned channel)
 {
-  std::string descriptor;
+  string descriptor;
 
   if (strcmp(streamType, "NULL") == 0) {
     descriptor = "null:";
@@ -85,35 +96,52 @@ std::string getStreamDescriptorBetweenIONandCN(const char *streamType, unsigned 
   } else if (strcmp(streamType, "TCPKEY") == 0) {
     usleep(10000 * core); // do not connect all at the same time
 
-    descriptor = str(format("tcpkey:127.0.0.1:ion-cn-%u-%u-%u") % pset % core % channel );
+    // FIXME: do not use fixed IP address
+    descriptor = str(format("tcpkey:10.149.5.23:ion-cn-%u-%u-%u-%u") % ionode % pset % core % channel);
   } else if (strcmp(streamType, "PIPE") == 0) {
-    descriptor = str(format("pipe:/tmp/ion-cn-%u-%u-%u") % pset % core % channel);
+    descriptor = str(format("pipe:/tmp/ion-cn-%u-%u-%u-%u") % ionode % pset % core % channel);
   } else {
     THROW(InterfaceException, "unknown Stream type between ION and CN");
   }
 
-  LOG_DEBUG_STR("Creating stream " << descriptor << " for pset " << pset << " core " << core << " channel " << channel);
+  LOG_DEBUG_STR("Creating stream " << descriptor << " from ionode " << ionode << " to pset " << pset << " core " << core << " channel " << channel);
 
   return descriptor;
 }
 
-
-#ifndef HAVE_BGP_CN
-std::string getStreamDescriptorBetweenIONandStorage(const Parset &parset, const string &host, const std::string &filename)
+uint16 storageBrokerPort(int observationID)
 {
-  std::string connectionType = parset.getString("OLAP.OLAP_Conn.IONProc_Storage_Transport");
+  return 8000 + observationID % 1000;
+}
+
+
+string getStorageControlDescription(int observationID, int rank)
+{
+  return str(format("[obs %d rank %d] control") % observationID % rank);
+}
+
+
+string getStreamDescriptorBetweenIONandStorage(const Parset &parset, OutputType outputType, unsigned streamNr)
+{
+  string connectionType = parset.getString("OLAP.OLAP_Conn.IONProc_Storage_Transport");
 
   if (connectionType == "NULL") {
     return "null:";
   } else if (connectionType == "TCP") {
-    return str(format("tcpkey:%s:ion-storage-obs-%s-file-%s") % host % parset.observationID() % filename);
+#if defined USE_THREADS
+    string host = parset.getHostName(outputType, streamNr);
+    uint16 port = storageBrokerPort(parset.observationID());
+    return str(format("tcpbroker:%s:%u:ion-storage-obs-%u-type-%u-stream-%u") % host % port % parset.observationID() % outputType % streamNr);
+#else    
+    string host = parset.getHostName(outputType, streamNr);
+    return str(format("tcpkey:%s:ion-storage-obs-%u-type-%u-stream-%u") % host % parset.observationID() % outputType % streamNr);
+#endif    
   } else if (connectionType == "FILE") {
-    return str(format("file:%s") % filename );
+    return str(format("file:out-obs-%u-type-%u-stream-%u") % parset.observationID() % outputType % streamNr);
   } else {
     THROW(InterfaceException, "unsupported ION->Storage stream type: " << connectionType);
   }
 }
-#endif
 
 } // namespace RTCP
 } // namespace LOFAR

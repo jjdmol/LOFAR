@@ -19,10 +19,12 @@
  ***************************************************************************/
 
 #include <iostream>
+#include <libgen.h>
 
-#include <AOFlagger/rfi/strategy/strategy.h>
-#include <AOFlagger/rfi/strategy/strategyreader.h>
-#include <AOFlagger/rfi/strategy/strategywriter.h>
+#include <AOFlagger/strategy/actions/strategyaction.h>
+
+#include <AOFlagger/strategy/control/strategyreader.h>
+#include <AOFlagger/strategy/control/strategywriter.h>
 
 #include <AOFlagger/util/aologger.h>
 #include <AOFlagger/util/parameter.h>
@@ -42,7 +44,7 @@ int main(int argc, char *argv[])
 			<< endl;
 
 	Parameter<enum BaselineSelection> baselineSelection;
-	Parameter<enum DataKind> dataKind;
+	Parameter<std::string> dataColumn;
 	Parameter<bool> frequencyBasedFlagging;
 	Parameter<bool> flagStokes;
 	Parameter<size_t> threadCount;
@@ -67,12 +69,12 @@ int main(int argc, char *argv[])
 		}
 		else if(flag == "c" || flag == "column")
 		{
-			++parameterIndex;
-			string columnStr(argv[parameterIndex]); 
-			if(columnStr == "DATA") dataKind = ObservedData;
-			else if(columnStr == "CORRECTED_DATA") dataKind = CorrectedData;
-			else if(columnStr == "residuals") dataKind = ResidualData;
-			else throw runtime_error("Column parameter -c can only be followed by DATA, CORRECTED_DATA or residuals");
+			cerr <<
+			"ERROR: flag -" << flag << ":\n"
+			"As of June 2011, you can no longer specify the column on which a strategy\n"
+			"is applied with rfistrategy: use the -column parameter of rficonsole (or select\n"
+			"the proper column when opening the ms in rfigui)\n";
+			return 1;
 		}
 		else if(flag == "ff" || flag == "freq-based-flagging")	{ frequencyBasedFlagging = true;	}
 		else if(flag == "fs" || flag == "flag-stokes")	{ flagStokes = true; }
@@ -135,9 +137,8 @@ int main(int argc, char *argv[])
 //			"-a -antennae"
 			"-b or -baseline <all/auto/cross>\n"
 			"  Specify which baselines to process (default: all)\n"
-			"-c or -column <DATA/CORRECTED_DATA/residual>\n"
+			"-c or -column <DATA/CORRECTED_DATA/...>\n"
 			"  Specify which column to use when reading the data (default: DATA)\n"
-			"  (residual = MODEL_DATA - CORRECTED_DATA)\n"
 //			"-cf or -clear-flags\n"
 //			"-f  or -freq <channel start>-<channel end>\n"
 			"-ff or -freq-based-flagging\n"
@@ -198,8 +199,8 @@ int main(int argc, char *argv[])
 
 	if(baselineSelection.IsSet())
 		Strategy::SetBaselines(*strategy, baselineSelection);
-	if(dataKind.IsSet())
-		Strategy::SetDataKind(*strategy, dataKind);
+	if(dataColumn.IsSet())
+		Strategy::SetDataColumnName(*strategy, dataColumn);
 	if(flagStokes.IsSet())
 		Strategy::SetFlagStokes(*strategy, flagStokes.Value());
 	if(frequencyBasedFlagging.IsSet() && frequencyBasedFlagging.Value())

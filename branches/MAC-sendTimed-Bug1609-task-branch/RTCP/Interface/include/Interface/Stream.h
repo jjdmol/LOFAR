@@ -23,12 +23,9 @@
 #ifndef LOFAR_INTERFACE_STREAM_H
 #define LOFAR_INTERFACE_STREAM_H
 
-#include <Stream/Stream.h>
-#include <string>
-
-#ifndef HAVE_BGP_CN
+#include <Interface/OutputTypes.h>
 #include <Interface/Parset.h>
-#endif
+#include <Stream/Stream.h>
 
 #include <string>
 
@@ -39,11 +36,12 @@ namespace RTCP {
 Stream *createStream(const std::string &descriptor, bool asReader);
 
 // Return a string descriptor, for all supported streamTypes except FCNP
-std::string getStreamDescriptorBetweenIONandCN(const char *streamType, unsigned pset, unsigned core, unsigned numpsets, unsigned numcores, unsigned channel);
+std::string getStreamDescriptorBetweenIONandCN(const char *streamType, unsigned ionode, unsigned pset, unsigned core, unsigned numpsets, unsigned numcores, unsigned channel);
 
-#ifndef HAVE_BGP_CN
-std::string getStreamDescriptorBetweenIONandStorage(const Parset &parset, const std::string &host, const std::string &filename);
-#endif
+uint16 storageBrokerPort(int observationID);
+std::string getStorageControlDescription(int observationID, int rank);
+
+std::string getStreamDescriptorBetweenIONandStorage(const Parset &parset, OutputType outputType, unsigned streamNr);
 
 } // namespace RTCP
 } // namespace LOFAR

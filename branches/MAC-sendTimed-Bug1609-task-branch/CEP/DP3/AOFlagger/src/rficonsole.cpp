@@ -22,15 +22,18 @@
 
 #include <libgen.h>
 
-#include <AOFlagger/rfi/strategy/artifactset.h>
-#include <AOFlagger/rfi/strategy/baselineselectionaction.h>
-#include <AOFlagger/rfi/strategy/foreachmsaction.h>
-#include <AOFlagger/rfi/strategy/strategy.h>
-#include <AOFlagger/rfi/strategy/strategyreader.h>
+#include <AOFlagger/strategy/actions/foreachmsaction.h>
+#include <AOFlagger/strategy/actions/strategyaction.h>
 
-#include <AOFlagger/rfi/antennaflagcountplot.h>
-#include <AOFlagger/rfi/frequencyflagcountplot.h>
-#include <AOFlagger/rfi/timeflagcountplot.h>
+#include <AOFlagger/strategy/algorithms/baselineselector.h>
+#include <AOFlagger/strategy/algorithms/polarizationstatistics.h>
+
+#include <AOFlagger/strategy/plots/antennaflagcountplot.h>
+#include <AOFlagger/strategy/plots/frequencyflagcountplot.h>
+#include <AOFlagger/strategy/plots/timeflagcountplot.h>
+
+#include <AOFlagger/strategy/control/artifactset.h>
+#include <AOFlagger/strategy/control/strategyreader.h>
 
 #include <AOFlagger/util/aologger.h>
 #include <AOFlagger/util/parameter.h>
@@ -42,6 +45,8 @@
 #ifdef HAS_LOFARSTMAN
 #include <LofarStMan/Register.h>
 #endif // HAS_LOFARSTMAN
+
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 class ConsoleProgressHandler : public ProgressListener {
 	private:
@@ -82,62 +87,109 @@ class ConsoleProgressHandler : public ProgressListener {
 		}
 };
 
+#define RETURN_SUCCESS                0
+#define RETURN_CMDLINE_ERROR         10
+#define RETURN_STRATEGY_PARSE_ERROR  20
+#define RETURN_UNHANDLED_EXCEPTION   30
+
+void checkRelease()
+{
+#ifndef NDEBUG
+		AOLogger::Warn
+			<< "This version of RFI console has been compiled as DEBUG version! (NDEBUG was not defined)\n"
+			<< "For better performance, recompile it as a RELEASE.\n\n";
+#endif
+}
+
 int main(int argc, char **argv)
 {
 	if(argc == 1)
 	{
 		AOLogger::Init(basename(argv[0]), true);
-		AOLogger::Error << "Usage: " << argv[0] << " [-v] [-j <threadcount>] [-strategy <file.rfis>] [-indirect-read] [-nolog] <ms1> [<ms2> [..]]\n";
+		AOLogger::Error << "Usage: " << argv[0] << " [-v] [-j <threadcount>] [-strategy <file.rfis>] [-indirect-read] [-nolog] [-skip-flagged] <ms1> [<ms2> [..]]\n"
+		"  -v will produce verbose output\n"
+		"  -j overrides the number of threads specified in the strategy\n"
+		"  -strategy specifies a possible customized strategy\n"
+		"  -indirect-read will reorder the measurement set before starting, which is normally faster\n"
+		"  -nolog will not use the LOFAR logger to output logging messages\n"
+		"  -skip-flagged will skip an ms if it has already been processed by RFI console according\n"
+		"   to its HISTORY table.\n"
+		"  -uvw reads uvw values (some strategies require them)\n"
+		"  -column <NAME> specify column to flag\n"
+		"Execute 'rfistrategy' without parameters for help on creating RFIS strategies.\n";
+		
+		checkRelease();
+		
+		return RETURN_CMDLINE_ERROR;
 	}
-	else
-	{
+	
 #ifdef HAS_LOFARSTMAN
-		register_lofarstman();
+	register_lofarstman();
 #endif // HAS_LOFARSTMAN
 
-		Parameter<size_t> threadCount;
-		Parameter<bool> indirectRead;
-		Parameter<std::string> strategyFile;
-		Parameter<bool> useLogger;
-		Parameter<bool> logVerbose;
+	Parameter<size_t> threadCount;
+	Parameter<bool> indirectRead;
+	Parameter<bool> readUVW;
+	Parameter<std::string> strategyFile;
+	Parameter<bool> useLogger;
+	Parameter<bool> logVerbose;
+	Parameter<bool> skipFlagged;
+	Parameter<std::string> dataColumn;
 
-		size_t parameterIndex = 1;
-		while(parameterIndex < (size_t) argc && argv[parameterIndex][0]=='-')
+	size_t parameterIndex = 1;
+	while(parameterIndex < (size_t) argc && argv[parameterIndex][0]=='-')
+	{
+		std::string flag(argv[parameterIndex]+1);
+		if(flag=="j" && parameterIndex < (size_t) (argc-1))
 		{
-			std::string flag(argv[parameterIndex]+1);
-			if(flag=="j" && parameterIndex < (size_t) (argc-1))
-			{
-				threadCount = atoi(argv[parameterIndex+1]);
-				parameterIndex+=2;
-			}
-			else if(flag=="v")
-			{
- 				logVerbose = true;
-				++parameterIndex;
-			}
-			else if(flag=="indirect-read")
-			{
-				indirectRead = true;
-				++parameterIndex;
-			}
-			else if(flag=="strategy")
-			{
-				strategyFile = argv[parameterIndex+1];
-				parameterIndex+=2;
-			}
-			else if(flag=="nolog")
-			{
-				useLogger = false;
-				++parameterIndex;
-			}
-			else
-			{
-				AOLogger::Init(basename(argv[0]), useLogger.Value(true));
-				AOLogger::Error << "Incorrect usage; parameter \"" << argv[parameterIndex] << "\" not understood.\n";
-				return 1;
-			}
+			threadCount = atoi(argv[parameterIndex+1]);
+			parameterIndex+=2;
 		}
+		else if(flag=="v")
+		{
+			logVerbose = true;
+			++parameterIndex;
+		}
+		else if(flag=="indirect-read")
+		{
+			indirectRead = true;
+			++parameterIndex;
+		}
+		else if(flag=="strategy")
+		{
+			strategyFile = argv[parameterIndex+1];
+			parameterIndex+=2;
+		}
+		else if(flag=="nolog")
+		{
+			useLogger = false;
+			++parameterIndex;
+		}
+		else if(flag=="skip-flagged")
+		{
+			skipFlagged = true;
+			++parameterIndex;
+		}
+		else if(flag=="uvw")
+		{
+			readUVW = true;
+			++parameterIndex;
+		}
+		else if(flag == "column")
+		{
+			string columnStr(argv[parameterIndex+1]);
+			parameterIndex+=2;
+			dataColumn = columnStr; 
+		}
+		else
+		{
+			AOLogger::Init(basename(argv[0]), useLogger.Value(true));
+			AOLogger::Error << "Incorrect usage; parameter \"" << argv[parameterIndex] << "\" not understood.\n";
+			return 1;
+		}
+	}
 
+	try {
 		AOLogger::Init(basename(argv[0]), useLogger.Value(true), logVerbose.Value(false));
 		AOLogger::Info << 
 			"RFI strategy console runner\n"
@@ -145,6 +197,8 @@ int main(int argc, char **argv)
 			"or a console program called rfistrategy, and executes it on one or several .MS\n"
 			"directories.\n\n"
 			"Author: André Offringa (offringa@astro.rug.nl)\n\n";
+			
+		checkRelease();
 
 		if(threadCount.IsSet())
 			AOLogger::Debug << "Number of threads: " << threadCount.Value() << "\n";
@@ -172,7 +226,7 @@ int main(int argc, char **argv)
 					"created the strategy file, as it is still rapidly changing.\n"
 					"Try recreating the file with rfistrategy.\n"
 					"\nThe thrown exception was:\n" << e.what() << "\n";
-				exit(1);
+				return RETURN_STRATEGY_PARSE_ERROR;
 			}
 		}
 		if(threadCount.IsSet())
@@ -181,6 +235,10 @@ int main(int argc, char **argv)
 		rfiStrategy::ForEachMSAction *fomAction = new rfiStrategy::ForEachMSAction();
 		if(indirectRead.IsSet())
 			fomAction->SetIndirectReader(indirectRead);
+		if(readUVW.IsSet())
+			fomAction->SetReadUVW(readUVW);
+		if(dataColumn.IsSet())
+			fomAction->SetDataColumnName(dataColumn);
 		std::stringstream commandLineStr;
 		commandLineStr << argv[0];
 		for(int i=1;i<argc;++i)
@@ -188,7 +246,8 @@ int main(int argc, char **argv)
 			commandLineStr << " \"" << argv[i] << '\"';
 		}
 		fomAction->SetCommandLineForHistory(commandLineStr.str());
-
+		if(skipFlagged.IsSet())
+			fomAction->SetSkipIfAlreadyProcessed(skipFlagged);
 		for(int i=parameterIndex;i<argc;++i)
 		{
 			AOLogger::Debug << "Adding '" << argv[i] << "'\n";
@@ -198,14 +257,17 @@ int main(int argc, char **argv)
 		
 		rfiStrategy::Strategy overallStrategy;
 		overallStrategy.Add(fomAction);
-	
+
 		rfiStrategy::ArtifactSet artifacts(&ioMutex);
 		artifacts.SetAntennaFlagCountPlot(new AntennaFlagCountPlot());
 		artifacts.SetFrequencyFlagCountPlot(new FrequencyFlagCountPlot());
 		artifacts.SetTimeFlagCountPlot(new TimeFlagCountPlot());
-		artifacts.SetBaselineSelectionInfo(new rfiStrategy::BaselineSelectionInfo());
+		artifacts.SetPolarizationStatistics(new PolarizationStatistics());
+		artifacts.SetBaselineSelectionInfo(new rfiStrategy::BaselineSelector());
 		
 		ConsoleProgressHandler progress;
+
+		AOLogger::Info << "Starting strategy on " << to_simple_string(boost::posix_time::microsec_clock::local_time()) << '\n';
 		
 		overallStrategy.InitializeAll();
 		overallStrategy.StartPerformThread(artifacts, progress);
@@ -214,14 +276,24 @@ int main(int argc, char **argv)
 
 		set->AntennaFlagCountPlot()->Report();
 		set->FrequencyFlagCountPlot()->Report();
+		set->PolarizationStatistics()->Report();
 
 		delete set->AntennaFlagCountPlot();
 		delete set->FrequencyFlagCountPlot();
 		delete set->TimeFlagCountPlot();
+		delete set->PolarizationStatistics();
 		delete set->BaselineSelectionInfo();
 
 		delete set;
 
 		AOLogger::Debug << "Time: " << watch.ToString() << "\n";
+		
+		return RETURN_SUCCESS;
+	} catch(std::exception &exception)
+	{
+		std::cerr
+			<< "An unhandled exception occured: " << exception.what() << '\n'
+			<< "If you think this is a bug, please contact offringa@astro.rug.nl\n";
+		return RETURN_UNHANDLED_EXCEPTION;
 	}
 }

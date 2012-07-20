@@ -74,6 +74,7 @@ void WatchDogCmd::sendTpEvent()
 	tp_event.mode = itsMode;
 	
 	TS->boardPort(getBoardNr()).send(tp_event);
+	TS->setBoardUsed(getBoardNr());
 	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 }
 

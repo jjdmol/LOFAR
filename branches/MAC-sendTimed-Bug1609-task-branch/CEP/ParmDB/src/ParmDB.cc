@@ -24,6 +24,7 @@
 
 #include <ParmDB/ParmDB.h>
 #include <ParmDB/ParmDBCasa.h>
+#include <ParmDB/ParmDBBlob.h>
 #if 0
 #include <ParmDB/ParmDBPostgres.h>
 #endif
@@ -57,6 +58,9 @@ namespace BBS {
     }
 
   ParmDBRep::~ParmDBRep()
+  {}
+
+  void ParmDBRep::flush (bool)
   {}
 
   void ParmDBRep::lock (bool)
@@ -137,6 +141,8 @@ namespace BBS {
     // Open the correct ParmDB.
     if (ptm.getType() == "casa") {
       itsRep = new ParmDBCasa (ptm.getTableName(), forceNew);
+    } else if (ptm.getType() == "blob") {
+      itsRep = new ParmDBBlob (ptm.getTableName(), forceNew);
       ///  } else if (ptm.getType() == "bdb") {
       ///itsRep = new ParmDBBDB (ptm, forceNew);
     } else if (ptm.getType() == "postgres") {

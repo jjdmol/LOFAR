@@ -25,24 +25,22 @@
 #ifndef LOFAR_STORAGE_MSWRITER_H
 #define LOFAR_STORAGE_MSWRITER_H
 
-#include <Common/LofarTypes.h>
-#include <Common/lofar_vector.h>
-
 #include <Interface/StreamableData.h>
 
-namespace LOFAR
-{
-  namespace RTCP
-  {
-    class MSWriter
-    {
-    public:
-      MSWriter();
-      virtual ~MSWriter();
+namespace LOFAR {
+namespace RTCP {
 
-      virtual void write(StreamableData*) = 0;
-    };
-  } // namespace RTCP
+
+class MSWriter
+{
+  public:
+    virtual	 ~MSWriter();
+
+    virtual void write(StreamableData *) = 0;
+};
+
+
+} // namespace RTCP
 } // namespace LOFAR
 
 #endif

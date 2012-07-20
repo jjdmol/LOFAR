@@ -64,6 +64,7 @@ DPservice::~DPservice()
 
 	delete itsService;
 	delete itsOwnResponse;
+	delete itsExtResponse;
 }
 
 //

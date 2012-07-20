@@ -92,12 +92,6 @@ template<typename SAMPLE_TYPE> BeamletBuffer<SAMPLE_TYPE>::BeamletBuffer(const P
 }
 
 
-template<typename SAMPLE_TYPE> BeamletBuffer<SAMPLE_TYPE>::~BeamletBuffer()
-{      
-  delete itsSynchronizedReaderWriter;
-}
-
-
 #if defined HAVE_BGP && !defined USE_VALGRIND
 
 template<> inline void BeamletBuffer<i4complex>::writePacket(i4complex *dst, const i4complex *src)
@@ -131,7 +125,8 @@ template<typename SAMPLE_TYPE> inline void BeamletBuffer<SAMPLE_TYPE>::writePack
 
 template<typename SAMPLE_TYPE> inline void BeamletBuffer<SAMPLE_TYPE>::updateValidData(const TimeStamp &begin, const TimeStamp &end)
 {
-  itsValidDataMutex.lock();
+  ScopedLock sl(itsValidDataMutex);
+
   itsValidData.exclude(0, end - itsSize);  // forget old ValidData
 
   // add new ValidData (except if range list will grow too long, to avoid long
@@ -141,8 +136,6 @@ template<typename SAMPLE_TYPE> inline void BeamletBuffer<SAMPLE_TYPE>::updateVal
 
   if (ranges.size() < 64 || ranges.back().end == begin) 
     itsValidData.include(begin, end);
-
-  itsValidDataMutex.unlock();
 }
 
 
@@ -196,18 +189,17 @@ template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::resetCurrentTime
   if (!aligned(itsCurrentI, itsNrTimesPerPacket)) {
     // RSP board reset?  Recompute itsOffset and clear the entire buffer.
 
-    itsReadMutex.lock(); // avoid reset while other thread reads
+    ScopedLock sl(itsReadMutex); // avoid reset while other thread reads
 
     int oldOffset = itsOffset;
     itsOffset   = - (newTimeStamp % itsNrTimesPerPacket);
     itsCurrentI = mapTime2Index(newTimeStamp);
     assert(aligned(itsCurrentI, itsNrTimesPerPacket));
 
-    itsValidDataMutex.lock();
-    itsValidData.reset();
-    itsValidDataMutex.unlock();
-
-    itsReadMutex.unlock();
+    {
+      ScopedLock sl(itsValidDataMutex);
+      itsValidData.reset();
+    }
 
     if (!firstPacket) {
       LOG_WARN_STR(itsLogPrefix << "Reset BeamletBuffer at " << newTimeStamp << "; itsOffset was " << oldOffset << " and becomes " << itsOffset);
@@ -256,9 +248,10 @@ template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::writePacketData(
       itsOffset = - (startI % itsNrTimesPerPacket);
       startI    = mapTime2Index(begin);
 
-      itsValidDataMutex.lock();
-      itsValidData.reset();
-      itsValidDataMutex.unlock();
+      {
+        ScopedLock sl(itsValidDataMutex);
+        itsValidData.reset();
+      }
     }
 
     //LOG_DEBUG_STR(""timestamp = " << (uint64_t) begin << ", itsOffset = " << itsOffset");
@@ -282,17 +275,17 @@ template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::writePacketData(
   writePacket(itsSBBuffers[0][startI].origin(), data);
   
   // forget old ValidData
-  itsValidDataMutex.lock();
-  itsValidData.exclude(0, end - itsSize);
+  {
+    ScopedLock sl(itsValidDataMutex);
+    itsValidData.exclude(0, end - itsSize);
 
-  unsigned rangesSize = itsValidData.getRanges().size();
+    unsigned rangesSize = itsValidData.getRanges().size();
 
-  // add new ValidData (except if range list will grow too long, to avoid long
-  // computations)
-  if (rangesSize < 64 || itsValidData.getRanges()[rangesSize - 1].end == begin) 
-    itsValidData.include(begin, end);
-
-  itsValidDataMutex.unlock();
+    // add new ValidData (except if range list will grow too long, to avoid long
+    // computations)
+    if (rangesSize < 64 || itsValidData.getRanges()[rangesSize - 1].end == begin) 
+      itsValidData.include(begin, end);
+  }  
 
   itsLockedRanges.unlock(startI, endI);
 
@@ -370,6 +363,7 @@ template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::sendUnalignedSub
   }
 }
 
+
 template<typename SAMPLE_TYPE> SparseSet<unsigned> BeamletBuffer<SAMPLE_TYPE>::readFlags(unsigned beam)
 {
   itsValidDataMutex.lock();
@@ -385,6 +379,7 @@ template<typename SAMPLE_TYPE> SparseSet<unsigned> BeamletBuffer<SAMPLE_TYPE>::r
 
   return flags;
 }
+
 
 template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::stopReadTransaction()
 {
@@ -404,6 +399,13 @@ template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::noMoreReading()
 {
   if (!itsIsRealTime)
     itsSynchronizedReaderWriter->noMoreReading();
+}
+
+
+template<typename SAMPLE_TYPE> void BeamletBuffer<SAMPLE_TYPE>::noMoreWriting()
+{
+  if (!itsIsRealTime)
+    itsSynchronizedReaderWriter->noMoreWriting();
 }
 
 

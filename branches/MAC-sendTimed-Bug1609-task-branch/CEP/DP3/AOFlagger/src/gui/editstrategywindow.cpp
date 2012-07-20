@@ -20,33 +20,39 @@
 #include <iostream>
 
 #include <gtkmm/stock.h>
+#include <gtkmm/messagedialog.h>
 
-#include <AOFlagger/rfi/strategy/iterationblock.h>
-#include <AOFlagger/rfi/strategy/strategy.h>
-#include <AOFlagger/rfi/strategy/strategyreader.h>
-#include <AOFlagger/rfi/strategy/strategywriter.h>
+#include <AOFlagger/strategy/actions/iterationaction.h>
+#include <AOFlagger/strategy/actions/strategyaction.h>
+
+#include <AOFlagger/strategy/control/strategyreader.h>
+#include <AOFlagger/strategy/control/strategywriter.h>
 
 #include <AOFlagger/gui/editstrategywindow.h>
 #include <AOFlagger/gui/mswindow.h>
-#include <AOFlagger/gui/newstrategyactionframe.h>
+#include <AOFlagger/gui/addstrategyactionmenu.h>
 
+#include <AOFlagger/gui/strategyframes/absthresholdframe.h>
 #include <AOFlagger/gui/strategyframes/baselineselectionframe.h>
 #include <AOFlagger/gui/strategyframes/changeresolutionframe.h>
 #include <AOFlagger/gui/strategyframes/cutareaframe.h>
+#include <AOFlagger/gui/strategyframes/directionprofileframe.h>
 #include <AOFlagger/gui/strategyframes/foreachbaselineframe.h>
 #include <AOFlagger/gui/strategyframes/foreachmsframe.h>
 #include <AOFlagger/gui/strategyframes/foreachpolarisationframe.h>
 #include <AOFlagger/gui/strategyframes/foreachcomplexcomponentframe.h>
+#include <AOFlagger/gui/strategyframes/frequencyconvolutionframe.h>
 #include <AOFlagger/gui/strategyframes/fringestoppingframe.h>
 #include <AOFlagger/gui/strategyframes/iterationframe.h>
 #include <AOFlagger/gui/strategyframes/plotframe.h>
+#include <AOFlagger/gui/strategyframes/resamplingframe.h>
 #include <AOFlagger/gui/strategyframes/setflaggingframe.h>
 #include <AOFlagger/gui/strategyframes/setimageframe.h>
 #include <AOFlagger/gui/strategyframes/slidingwindowfitframe.h>
 #include <AOFlagger/gui/strategyframes/spatialcompositionframe.h>
 #include <AOFlagger/gui/strategyframes/statisticalflaggingframe.h>
 #include <AOFlagger/gui/strategyframes/svdframe.h>
-#include <AOFlagger/gui/strategyframes/thresholdframe.h>
+#include <AOFlagger/gui/strategyframes/sumthresholdframe.h>
 #include <AOFlagger/gui/strategyframes/timeconvolutionframe.h>
 #include <AOFlagger/gui/strategyframes/timeselectionframe.h>
 #include <AOFlagger/gui/strategyframes/uvprojectframe.h>
@@ -59,7 +65,6 @@ EditStrategyWindow::EditStrategyWindow(class MSWindow &msWindow)
 	_moveUpButton(Gtk::Stock::GO_UP), _moveDownButton(Gtk::Stock::GO_DOWN),
 	_addFOBButton("FOB"), _addFOMSButton("FOMS"),
 	_loadEmptyButton(Gtk::Stock::NEW), _loadDefaultButton("Default"),
-	_loadOldButton("Old"),
 	_load1Button("1"),
 	_load2Button("2"),
 	_load3Button("3"),
@@ -72,67 +77,64 @@ EditStrategyWindow::EditStrategyWindow(class MSWindow &msWindow)
 	_viewScrollWindow.add(_view);
 	_view.get_selection()->signal_changed().connect(
 		sigc::mem_fun(*this, &EditStrategyWindow::onSelectionChanged));
-	_view.show();
 	
 	_viewScrollWindow.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
 	_viewScrollWindow.set_size_request(100, 400);
 	_strategyBox.pack_start(_viewScrollWindow);
-	_viewScrollWindow.show();
 
 	initEditButtons();
 
 	initLoadDefaultsButtons();
 	
 	_paned.add1(_strategyBox);
-	_strategyBox.show();
 
 	add(_paned);
-	_paned.show();
-
+	
+	show_all();
+	
 	_strategy = &_msWindow.Strategy();
 	fillStore();
 }
 
 EditStrategyWindow::~EditStrategyWindow()
 {
+	delete _addMenu;
 }
 
 void EditStrategyWindow::initEditButtons()
 {
 	_strategyEditButtonBox.pack_start(_addActionButton);
-	_addActionButton.signal_clicked().connect(sigc::mem_fun(*this, &EditStrategyWindow::onAddActionClicked));
-	_addActionButton.show();
+	_addActionButton.set_sensitive(false);
+	_addMenu = new AddStrategyActionMenu(*this);
+	_addActionButton.set_menu(*_addMenu);
 
 	_strategyEditButtonBox.pack_start(_moveUpButton);
+	_moveUpButton.set_sensitive(false);
 	_moveUpButton.signal_clicked().connect(sigc::mem_fun(*this, &EditStrategyWindow::onMoveUpClicked));
-	_moveUpButton.show();
 
 	_strategyEditButtonBox.pack_start(_moveDownButton);
+	_moveDownButton.set_sensitive(false);
 	_moveDownButton.signal_clicked().connect(sigc::mem_fun(*this, &EditStrategyWindow::onMoveDownClicked));
-	_moveDownButton.show();
 
 	_strategyEditButtonBox.pack_start(_removeActionButton);
+	_removeActionButton.set_sensitive(false);
 	_removeActionButton.signal_clicked().connect(sigc::mem_fun(*this, &EditStrategyWindow::onRemoveActionClicked));
-	_removeActionButton.show();
-
-	_strategyEditButtonBox.pack_start(_addFOBButton);
-	_addFOBButton.signal_clicked().connect(sigc::mem_fun(*this, &EditStrategyWindow::onAddFOBaseline));
-	_addFOBButton.show();
-
-	_strategyEditButtonBox.pack_start(_addFOMSButton);
-	_addFOMSButton.signal_clicked().connect(sigc::mem_fun(*this, &EditStrategyWindow::onAddFOMS));
-	_addFOMSButton.show();
-
-	_strategyEditButtonBox.pack_start(_saveButton);
-	_saveButton.signal_clicked().connect(sigc::mem_fun(*this, &EditStrategyWindow::onSaveClicked));
-	_saveButton.show();
-
-	_strategyEditButtonBox.pack_start(_openButton);
-	_openButton.signal_clicked().connect(sigc::mem_fun(*this, &EditStrategyWindow::onOpenClicked));
-	_openButton.show();
 
 	_strategyBox.pack_start(_strategyEditButtonBox, Gtk::PACK_SHRINK, 0);
-	_strategyEditButtonBox.show();
+
+	_strategyFileButtonBox.pack_start(_addFOBButton);
+	_addFOBButton.signal_clicked().connect(sigc::mem_fun(*this, &EditStrategyWindow::onAddFOBaseline));
+
+	_strategyFileButtonBox.pack_start(_addFOMSButton);
+	_addFOMSButton.signal_clicked().connect(sigc::mem_fun(*this, &EditStrategyWindow::onAddFOMS));
+
+	_strategyFileButtonBox.pack_start(_saveButton);
+	_saveButton.signal_clicked().connect(sigc::mem_fun(*this, &EditStrategyWindow::onSaveClicked));
+
+	_strategyFileButtonBox.pack_start(_openButton);
+	_openButton.signal_clicked().connect(sigc::mem_fun(*this, &EditStrategyWindow::onOpenClicked));
+
+	_strategyBox.pack_start(_strategyFileButtonBox, Gtk::PACK_SHRINK, 0);
 }
 
 void EditStrategyWindow::initLoadDefaultsButtons()
@@ -144,10 +146,6 @@ void EditStrategyWindow::initLoadDefaultsButtons()
 	_strategyLoadDefaultsButtonBox.pack_start(_loadDefaultButton);
 	_loadDefaultButton.signal_clicked().connect(sigc::mem_fun(*this, &EditStrategyWindow::onLoadDefaultClicked));
 	_loadDefaultButton.show();
-
-	_strategyLoadDefaultsButtonBox.pack_start(_loadOldButton);
-	_loadOldButton.signal_clicked().connect(sigc::mem_fun(*this, &EditStrategyWindow::onLoadOldClicked));
-	_loadOldButton.show();
 
 	_strategyLoadDefaultsButtonBox.pack_start(_load1Button);
 	_load1Button.signal_clicked().connect(sigc::mem_fun(*this, &EditStrategyWindow::onLoad1ButtonClicked));
@@ -194,12 +192,6 @@ void EditStrategyWindow::fillStore(Gtk::TreeModel::Row &row, Action &action, siz
 			fillStore(newRow, container->GetChild(i), i);
 		}
 	}
-}
-
-void EditStrategyWindow::onAddActionClicked()
-{
-	clearRightFrame();
-	showRight(new NewStrategyActionFrame(*this));
 }
 
 void EditStrategyWindow::onRemoveActionClicked()
@@ -249,9 +241,23 @@ void EditStrategyWindow::onSelectionChanged()
 	if(selectedAction != 0)
 	{
 		clearRightFrame();
+		
+		_moveDownButton.set_sensitive(true);
+		_moveUpButton.set_sensitive(true);
+		_removeActionButton.set_sensitive(true);
+		ActionContainer *container = dynamic_cast<rfiStrategy::ActionContainer*>(selectedAction);
+		if(container != 0)
+		{
+			_addActionButton.set_sensitive(true);
+		} else {
+			_addActionButton.set_sensitive(false);
+		}
 
 		switch(selectedAction->Type())
 		{
+			case AbsThresholdActionType:
+				showRight(new AbsThresholdFrame(*static_cast<rfiStrategy::AbsThresholdAction*>(selectedAction), *this));
+				break;
 			case BaselineSelectionActionType:
 				showRight(new BaselineSelectionFrame(*static_cast<rfiStrategy::BaselineSelectionAction*>(selectedAction), *this));
 				break;
@@ -260,6 +266,9 @@ void EditStrategyWindow::onSelectionChanged()
 				break;
 			case CutAreaActionType:
 				showRight(new CutAreaFrame(*static_cast<rfiStrategy::CutAreaAction*>(selectedAction), *this));
+				break;
+			case DirectionProfileActionType:
+				showRight(new DirectionProfileFrame(*static_cast<rfiStrategy::DirectionProfileAction*>(selectedAction), *this));
 				break;
 			case FringeStopActionType:
 				showRight(new FringeStoppingFrame(*static_cast<rfiStrategy::FringeStopAction*>(selectedAction), *this));
@@ -285,8 +294,14 @@ void EditStrategyWindow::onSelectionChanged()
 			case ForEachPolarisationBlockType:
 				showRight(new ForEachPolarisationFrame(*static_cast<rfiStrategy::ForEachPolarisationBlock*>(selectedAction), *this));
 				break;
+			case FrequencyConvolutionActionType:
+				showRight(new FrequencyConvolutionFrame(*static_cast<rfiStrategy::FrequencyConvolutionAction*>(selectedAction), *this));
+				break;
 			case PlotActionType:
 				showRight(new StrategyPlotFrame(*static_cast<rfiStrategy::PlotAction*>(selectedAction), *this));
+				break;
+			case ResamplingActionType:
+				showRight(new ResamplingFrame(*static_cast<rfiStrategy::ResamplingAction*>(selectedAction), *this));
 				break;
 			case SetImageActionType:
 				showRight(new SetImageFrame(*static_cast<rfiStrategy::SetImageAction*>(selectedAction), *this));
@@ -300,8 +315,8 @@ void EditStrategyWindow::onSelectionChanged()
 			case StatisticalFlagActionType:
 				showRight(new StatisticalFlaggingFrame(*static_cast<rfiStrategy::StatisticalFlagAction*>(selectedAction), *this));
 				break;
-			case ThresholdActionType:
-				showRight(new ThresholdFrame(*static_cast<rfiStrategy::ThresholdAction*>(selectedAction), *this));
+			case SumThresholdActionType:
+				showRight(new SumThresholdFrame(*static_cast<rfiStrategy::SumThresholdAction*>(selectedAction), *this));
 				break;
 			case TimeConvolutionActionType:
 				showRight(new TimeConvolutionFrame(*static_cast<rfiStrategy::TimeConvolutionAction*>(selectedAction), *this));
@@ -315,6 +330,11 @@ void EditStrategyWindow::onSelectionChanged()
 			default:
 				break;
 		}
+	} else {
+		_addActionButton.set_sensitive(false);
+		_moveDownButton.set_sensitive(false);
+		_moveUpButton.set_sensitive(false);
+		_removeActionButton.set_sensitive(false);
 	}
 }
 
@@ -498,11 +518,17 @@ void EditStrategyWindow::onOpenClicked()
 		StrategyReader reader;
 		std::string filename(dialog.get_filename());
 		Strategy *oldStrategy = _strategy;
-		_strategy = reader.CreateStrategyFromFile(filename);
-		_msWindow.SetStrategy(_strategy);
-		delete oldStrategy;
-		_store->clear();
-		fillStore();
+		try {
+			_strategy = reader.CreateStrategyFromFile(filename);
+			_msWindow.SetStrategy(_strategy);
+			delete oldStrategy;
+			_store->clear();
+			fillStore();
+		} catch(std::exception &e)
+		{
+			Gtk::MessageDialog dialog(*this, e.what(), false, Gtk::MESSAGE_ERROR);
+			dialog.run();
+		}
 	}
 }
 

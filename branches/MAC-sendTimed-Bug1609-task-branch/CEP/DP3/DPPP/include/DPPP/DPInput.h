@@ -69,64 +69,16 @@ namespace LOFAR {
 
       // Read the weights at the given row numbers.
       // The default implementation throws an exception.
-      virtual casa::Cube<float> getWeights (const casa::RefRows& rowNrs);
+      virtual casa::Cube<float> getWeights (const casa::RefRows& rowNrs,
+                                            const DPBuffer&);
 
       // Read the fullRes flags (LOFAR_FULL_RES_FLAG) at the given row numbers.
       // The default implementation throws an exception.
       virtual casa::Cube<bool> getFullResFlags (const casa::RefRows& rowNrs);
 
-      // Read the given data column at the given row numbers.
-      // The default implementation throws an exception.
-      virtual casa::Cube<casa::Complex> getData
-      (const casa::String& columnName, const casa::RefRows& rowNrs);
-
       // Get the MS name.
       // The default implementation returns an empty string.
       virtual casa::String msName() const;
-
-      // Get info.
-      double startTime() const
-        { return itsStartTime; }
-      uint ncorr() const
-        { return itsNrCorr; }
-      uint nchan() const
-        { return itsNrChan; }
-      uint nbaselines() const
-        { return itsNrBl; }
-      const casa::Vector<int>& getAnt1() const
-        { return itsAnt1; }
-      const casa::Vector<int>& getAnt2() const
-        { return itsAnt2; }
-
-      // Get the baseline table index of the autocorrelations.
-      // A negative value means there are no autocorrelations for that antenna.
-      const vector<int>& getAutoCorrIndex() const;
-
-      // Get the lengths of the baselines (in meters).
-      const vector<double>& getBaselineLengths() const;
-
-      // Get the antenna names.
-      const casa::Vector<casa::String>& antennaNames() const
-        { return itsAntNames; }
-
-      // Get the antenna positions.
-      const vector<casa::MPosition>& antennaPos() const
-        { return itsAntPos; }
-
-      // Get the array position.
-      const casa::MPosition& arrayPos() const
-        { return itsArrayPos; }
-      
-      // Get the phase reference direction.
-      const casa::MDirection& phaseCenter() const
-        { return itsPhaseCenter; }
-
-      // Get the channel frequencies.
-      const casa::Vector<double>& chanFreqs() const
-        { return itsChanFreqs; }
-
-      // Get averaged channel frequencies.
-      casa::Vector<double> chanFreqs (uint nchanAvg) const;
 
       // Fetch the FullRes flags.
       // If defined in the buffer, they are taken from there.
@@ -136,37 +88,27 @@ namespace LOFAR {
       // If defined, they can be merged with the buffer's flags which means
       // that if an averaged channel is flagged, the corresponding FullRes
       // flags are set.
+      // <br>It does a stop/start of the timer when actually reading the data.
       casa::Cube<bool> fetchFullResFlags (const DPBuffer& buf,
                                           const casa::RefRows& rowNrs,
+                                          NSTimer& timer,
                                           bool merge=false);
 
       // Fetch the weights.
       // If defined in the buffer, they are taken from there.
       // Otherwise there are read from the input.
+      // <br>It does a stop/start of the timer when actually reading the data.
       casa::Cube<float> fetchWeights (const DPBuffer& buf,
-                                      const casa::RefRows& rowNrs);
+                                      const casa::RefRows& rowNrs,
+                                      NSTimer& timer);
 
       // Fetch the UVW.
       // If defined in the buffer, they are taken from there.
       // Otherwise there are read from the input.
+      // <br>It does a stop/start of the timer when actually reading the data.
       casa::Matrix<double> fetchUVW (const DPBuffer& buf,
-                                     const casa::RefRows& rowNrs);
-
-    protected:
-      double itsStartTime;
-      uint   itsNrChan;
-      uint   itsNrCorr;
-      uint   itsNrBl;
-      casa::Vector<casa::Int>    itsAnt1;          //# ant1 of all baselines
-      casa::Vector<casa::Int>    itsAnt2;          //# ant2 of all baselines
-      mutable vector<double>     itsBLength;       //# baseline lengths
-      mutable vector<int>        itsAutoCorrIndex; //# autocorr index per ant
-      casa::Vector<casa::String> itsAntNames;
-      vector<casa::MPosition>    itsAntPos;
-      casa::MPosition            itsArrayPos;
-      casa::MDirection           itsPhaseCenter;
-      casa::Vector<double>       itsChanFreqs;
-      casa::Vector<double>       itsChanWidths;
+                                     const casa::RefRows& rowNrs,
+                                     NSTimer& timer);
     };
 
   } //# end namespace

@@ -17,6 +17,7 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 lofar_add_library(tbb_protocol
   Package__Version.cc
   TBB_Protocol.cc)
+add_dependencies(tbb_protocol TBB_Protocol-TBB_Protocol)
 
 lofar_add_bin_program(versiontbb_protocol versiontbb_protocol.cc)
 

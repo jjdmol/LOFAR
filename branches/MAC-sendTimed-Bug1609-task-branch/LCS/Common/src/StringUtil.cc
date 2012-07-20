@@ -34,6 +34,7 @@
 #include <cstdarg>
 #include <cstdio>
 #include <ctime>
+#include <cctype>
 #include <errno.h>
 
 namespace LOFAR
@@ -69,7 +70,22 @@ vector<string> StringUtil::split(const string& s, char c)
 		i = j + 1;
     }
     return (v);
-  }
+}
+
+vector<string> StringUtil::tokenize(const string& str, const string& delims) {
+    vector<string>    tokens;
+    string::size_type pos = 0;
+    string::size_type pos0;
+
+    while ( (pos0 = str.find_first_not_of(delims, pos)) != string::npos ) {
+        pos = str.find_first_of(delims, pos0 + 1);
+        if (pos - pos0 > 0) { // If pos == string::npos then substr() clamps.
+            tokens.push_back(str.substr(pos0, pos - pos0));
+        }
+    }
+
+    return tokens;
+}
 
 //
 // formatString(format, ...) --> string up to 10Kb
@@ -125,21 +141,17 @@ const string timeString(time_t		aTime,
 
 uint lskipws (const string& value, uint st, uint end)
 {
-  for (; st<end; ++st) {
-    if (value[st] != ' '  &&  value[st] != '\t') {
-      break;
-    }
-  }
+  for (; st<end && isspace(value[st]); ++st)
+    ;
+
   return st;
 }
   
 uint rskipws (const string& value, uint st, uint end)
 {
-  for (; end>st; --end) {
-    if (value[end-1] != ' '  &&  value[end-1] != '\t') {
-      break;
-    }
-  }
+  for (; end>st && isspace(value[end-1]); --end)
+    ;
+
   return end;
 }
   
@@ -408,7 +420,7 @@ float strToFloat (const string& aString) throw(Exception)
   // Clear errno since strtof does not do it.
   errno = 0;
   double val = strtof (str+st, &endPtr);
-  ASSERTSTR (endPtr == str+end, aString << " is not an integer value");
+  ASSERTSTR (endPtr == str+end, aString << " is not a floating point value");
   ASSERTSTR (errno != ERANGE  &&  errno != EINVAL,
              aString << " is invalid or outside float range");
   return val;
@@ -423,7 +435,7 @@ double strToDouble (const string& aString) throw(Exception)
   // Clear errno since strtod does not do it.
   errno = 0;
   double val = strtod (str+st, &endPtr);
-  ASSERTSTR (endPtr == str+end, aString << " is not an integer value");
+  ASSERTSTR (endPtr == str+end, aString << " is not a floating point value");
   ASSERTSTR (errno != ERANGE  &&  errno != EINVAL,
              aString << " is invalid or outside double range");
   return val;

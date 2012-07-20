@@ -5,9 +5,16 @@ __all__ = ["ropen","rmkdir","rexists","runlink","rsymlink"]
 import os
 import sys
 import subprocess
-import socket
 
 HOSTNAME = os.environ.get("HOSTNAME")
+
+def correct_hostname( host ):
+  """ Translates the hostname such that bgfen can resolve it. """
+
+  if host.startswith("locus") and "." not in host:
+    return "%s.cep2.lofar" % (host,)
+
+  return host  
 
 def split( filename ):
   """ Internally used: split a filename into host,file. Host == '' if pointing to localhost. """
@@ -40,13 +47,6 @@ def ropen( filename, mode = "r", buffering = -1 ):
 
     return open(file, mode, buffering)
 
-  if host == "tcp":
-    # create a TCP socket
-    s = socket.socket()
-    ip,port = file.split(":")
-    s.connect( (ip,int(port)) )
-    return s.makefile(mode, buffering)
-
   modelist = {
     "r": "cat %s" % (file,),
     "w": "cat - > %s" % (file,),
@@ -63,10 +63,10 @@ def ropen( filename, mode = "r", buffering = -1 ):
 
   if mode in "wa":
     # writing
-    return subprocess.Popen( ["ssh",host,modelist[mode]], bufsize=buffering, stdin=subprocess.PIPE ).stdin
+    return subprocess.Popen( ["ssh",correct_hostname(host),modelist[mode]], bufsize=buffering, stdin=subprocess.PIPE ).stdin
   else:
     # reading
-    return subprocess.Popen( ["ssh",host,modelist[mode]], bufsize=buffering, stdout=subprocess.PIPE ).stdout
+    return subprocess.Popen( ["ssh",correct_hostname(host),modelist[mode]], bufsize=buffering, stdout=subprocess.PIPE ).stdout
 
 def rmkdir( dirname ):
   """ Make a local or a remote directory. A remote directory name
@@ -91,9 +91,9 @@ def rexists( filename ):
     # a local file
     return os.path.exists( file )
 
-  return int(subprocess.Popen( ["ssh",host,"[ ! -e %s ]; echo $?" % (file,)], stdout=subprocess.PIPE ).stdout.read()) == 1
+  return int(subprocess.Popen( ["ssh",correct_hostname(host),"[ ! -e %s ]; echo $?" % (file,)], stdout=subprocess.PIPE ).stdout.read()) == 1
 
-def runlink( filename ):
+def runlink( filename, recursive = False ):
   """ Deletes a local or a remote file. A remote
       file has the syntax host:filename. """
 
@@ -103,7 +103,12 @@ def runlink( filename ):
     # a local file
     return os.unlink( file )
 
-  return int(subprocess.Popen( ["ssh",host,"rm -f '%s'" % (file,)], stdout=subprocess.PIPE ).stdout.read()) == 1
+  flags = "-f"
+
+  if recursive:
+    flags += " -r"
+
+  return int(subprocess.Popen( ["ssh",correct_hostname(host),"rm %s -- '%s'" % (flags,file,)], stdout=subprocess.PIPE ).stdout.read()) == 1
 
 def rsymlink( src, dest ):
   """ Create a symlink at src, pointing to dest.
@@ -118,5 +123,5 @@ def rsymlink( src, dest ):
     # a local file
     return os.symlink( dest, src )
 
-  return int(subprocess.Popen( ["ssh",srchost,"ln -s '%s' '%s'" % (destfile,srcfile,)], stdout=subprocess.PIPE ).stdout.read()) == 1
+  return int(subprocess.Popen( ["ssh",correct_hostname(srchost),"ln -s '%s' '%s'" % (destfile,srcfile,)], stdout=subprocess.PIPE ).stdout.read()) == 1
 

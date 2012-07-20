@@ -33,7 +33,7 @@
 #include <Common/lofar_smartptr.h>
 #include <PLC/ProcessControl.h>
 #include <ParmDB/Axis.h>
-#include <MWCommon/VdsDesc.h>
+#include <LMWCommon/VdsDesc.h>
 
 namespace LOFAR
 {

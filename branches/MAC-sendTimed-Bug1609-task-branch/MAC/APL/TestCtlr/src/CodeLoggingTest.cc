@@ -22,20 +22,28 @@
 //#
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/SystemUtil.h>
+#include <Common/Exception.h>
 
 #include <time.h>
 #include <unistd.h>
 #include <cstdio>
+#include <cstring>
+
+using namespace LOFAR;
+
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 int main(int argc, char* argv[])
 {
 	if (argc != 2) {
-		printf("Syntax: %s PVSS_data_point\n", basename(argv[0]));
+		printf("Syntax: %s PVSS_data_point\n", LOFAR::basename(argv[0]).c_str());
 		printf("Every 10 seconds a line is logged to this datapoint until program is killed");
 		return (1);
 	}
 
-	INIT_LOGGER(basename(argv[0]));
+	INIT_LOGGER(LOFAR::basename(argv[0]));
 
 	LOG_INFO_STR("MACProcessScope: " << argv[1]);
 

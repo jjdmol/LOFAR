@@ -43,7 +43,6 @@
 #uses "navFunct.ctl"
 #uses "navTabCtrl.ctl"
 
-global bool       g_initializing          = true;     // to show if initialise is ready
 global bool       g_objectReady           = true;     // Can be used for timing by objects
 
 global string     g_currentDatapoint      = MainDBName+"LOFAR_PIC_Europe";
@@ -64,14 +63,14 @@ global dyn_int    g_subrackList;       // holds valid subracks for choices in th
 global dyn_int    g_RSPList;           // holds valid RSP's for choices in the viewBox
 global dyn_int    g_TBBList;           // holds valid TBB's for choices in the viewBox
 global dyn_int    g_RCUList;           // holds valid RCU's for choices in the viewBox
+global dyn_int    g_HBAList;           // holds valid HBAAntenna's for choices in the viewBox
+global dyn_int    g_elementList;       // holds valid HBA Elements's for choices in the viewBox
 // CEP based globals
 global dyn_int    g_BGPRackList;       // holds valid bgpracks for choices in viewBox
 global dyn_int    g_BGPMidplaneList;   // holds valid bgpmidplanes for choices in viewBox
 global dyn_int    g_IONodeList;        // holds valid ionodes for choices in viewBox
 global dyn_int    g_OSRackList;        // holds valid Offline/Storageracks for choices in view
-global dyn_int    g_OSSubclusterList;  // holds valid OSSubclusters for choices in view
-global dyn_int    g_storageNodeList;   // holds valid storagenodes for choices in view
-global dyn_int    g_offlineNodeList;   // holds valid offlinenodes for choices in view
+global dyn_int    g_locusNodeList;     // holds valid storagenodes for choices in view
 
 global dyn_string strPlannedObs;
 global dyn_string strHighlight;        // contains highlight info for mainpanels
@@ -93,11 +92,27 @@ void navigator_handleEventInitialize()
 {
   LOG_TRACE("navigator.ctl:navigator_handleEventInitialize|entered");
   g_initializing = true;
-
-  // Set the global statecolors/colornames.
+  
+    MainDBName         = getSystemName();
+    MainDBID           = getSystemId();
+  // first we need to check if we are on the MainCU or a stationDB, if we are on a stationDB we are in standalone mode
+  if (strpos(MainDBName,"MCU") >= 0) {
+    CEPDBName          = MainDBName;
+    strreplace(CEPDBName,"MCU","CCU");
+    } else {
+    g_standAlone       = true;    // can be used to check if we are in standalone mode (== station only mode)
+  }
+    g_currentDatapoint      = MainDBName+"LOFAR";
+    g_lastHardwareDatapoint = MainDBName+"LOFAR";
+    g_lastProcessesDatapoint = MainDBName+"LOFAR_PermSW";
+    g_lastObservationsDatapoint = MainDBName+"LOFAR_ObsSW";
+    
+  // Set the global statecolors/colornames, we need to do this before we 
+  //start the rest of the framework, because the other processes need these
   initLofarColors();
   
-  // first thing to do: get a new navigator ID
+  // first thing to do: get a new navigator ID,
+  // this also clears all navigator_instance points from previous runs
   // check the commandline parameter:
   int navID = 0;
   if (isDollarDefined("$ID")) {
@@ -114,22 +129,36 @@ void navigator_handleEventInitialize()
     DebugN("ERROR: Logsystem hasn't been found.");
   }
   
-    // fill global stations lists
-  navFunct_fillStationLists();
- 
-  // Init the connection Watchdog
-  GCFCWD_Init();
-
-
+  
   // Do a dpQueryConnectSingle() so that we get a permanent list of claims
   // we can use this to translate a claimed name into a real datapoint name
   claimManager_queryConnectClaims();
   
+  
+
+  // we need to wait until the claim system was able to finish all connections and callbacks
+  if (!waitInitProcess("connectClaimsFinished")) {
+    LOG_FATAL("navigator.ctl:navigator_handleEventInitialize|Couldn't finish claimManager_queryConnectClaims() , leaving");
+  }
+  
+  // fill global stations lists
+  navFunct_fillStationLists();
+  
+  // Init the connection Watchdog
+  GCFCWD_Init();
+
+  // we need to wait until the connection watchdog has been initialised
+  if (!waitInitProcess("GCFCWDFinished")) {
+    LOG_FATAL("navigator.ctl:navigator_handleEventInitialize|Couldn't finish GCFCWD_Init() , leaving");
+  }
+
 
   // set user to root for now, has to be taken from PVSS login later
+  // since the names are caseinsensitive, convert to lowercase for 
+  // database point conveniance later
   if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + ".user")) {
     dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".user",getUserName());
-    ACTIVE_USER=getUserName();
+    ACTIVE_USER=strtolower(getUserName());
   }
 
   // Clear the workDatapoints
@@ -137,15 +166,26 @@ void navigator_handleEventInitialize()
         
   // Initilaize the alarm system
   initNavigatorAlarms();
+
+  // we need to wait until the alarmSystem has been initialised
+  if (!waitInitProcess("initNavigatorAlarmsFinished")) {
+    LOG_FATAL("navigator.ctl:navigator_handleEventInitialize|Couldn't finish initNavigatorAlarmsFinished() , leaving");
+  }
  
   // Do a dpQueryConnectSingle() so that we get a list of observations
   // so that we can easily populate our tables with 'Planned', 'Running' and 'Finished' observations
   navFunct_queryConnectObservations();
   
-  // set initialized ready
+  // we need to wait until all known observations have been initialized
+  if (!waitInitProcess("queryConnectObservationsFinished")) {
+    LOG_FATAL("navigator.ctl:navigator_handleEventInitialize|Couldn't finish queryConnectObservationsFinished() , leaving");
+  }
+
+    // set initialized ready
   g_initializing = false;
 
   LOG_TRACE("navigator.ctl:navigator_handleEventInitialize|end");
+  
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -239,3 +279,4 @@ void navigator_clearWorkDPs() {
   }
 
 }
+

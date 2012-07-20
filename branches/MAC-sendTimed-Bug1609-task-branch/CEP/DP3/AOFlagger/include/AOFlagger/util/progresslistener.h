@@ -23,7 +23,7 @@
 #include <string>
 #include <vector>
 
-#include <AOFlagger/rfi/strategy/types.h>
+#include <AOFlagger/strategy/control/types.h>
 
 class ProgressListener
 {
@@ -66,7 +66,18 @@ class ProgressListener
 		virtual void OnException(const rfiStrategy::Action &action, std::exception &thrownException) = 0;
 };
 
-#include <AOFlagger/rfi/strategy/action.h>
+class DummyProgressListener : public ProgressListener {
+  virtual void OnStartTask(const rfiStrategy::Action &, size_t, size_t, const std::string &, size_t = 1)
+    {}
+  virtual void OnEndTask(const rfiStrategy::Action &)
+    {}
+  virtual void OnProgress(const rfiStrategy::Action &, size_t, size_t)
+    {}
+  virtual void OnException(const rfiStrategy::Action &, std::exception &)
+    {}
+};
+
+#include <AOFlagger/strategy/actions/action.h>
 
 void ProgressListener::OnStartTask(const rfiStrategy::Action &, size_t taskNo, size_t taskCount, const std::string &/*description*/, size_t weight)
 {

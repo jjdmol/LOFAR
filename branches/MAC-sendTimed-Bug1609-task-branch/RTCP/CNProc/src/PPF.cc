@@ -67,13 +67,10 @@ template <typename SAMPLE_TYPE> PPF<SAMPLE_TYPE>::PPF(unsigned nrStations, unsig
 #endif
 
   // Init the FIR filters themselves with the weights of the filterbank.
-  for(unsigned stat=0; stat<nrStations; stat++) {
-    for(unsigned pol=0; pol<NR_POLARIZATIONS; pol++) {
-      for(unsigned chan=0; chan<nrChannels; chan++) {
+  for (unsigned stat = 0; stat < nrStations; stat ++)
+    for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++)
+      for (unsigned chan = 0; chan < nrChannels; chan ++)
         itsFIRs[stat][pol][chan].initFilter(&itsFilterBank, chan);
-      }
-    }
-  }
 
   // In CEP, the first subband is from -98 KHz to 98 KHz, rather than from 0 to 195 KHz.
   // To avoid that the FFT outputs the channels in the wrong order (from 128 to
@@ -164,15 +161,20 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::computeFlags(unsigned sta
 {
   computeFlagsTimer.start();
 
-  filteredData->flags[stat].reset();
-  SparseSet<unsigned> flags = metaData->getFlags( stat );
+  for (unsigned ch = 0; ch < itsNrChannels; ch++) {
+    filteredData->flags[ch][stat].reset();
+  }
+
+  SparseSet<unsigned> flags = metaData->getFlags(stat);
   const SparseSet<unsigned>::Ranges &ranges = flags.getRanges();
 
   for (SparseSet<unsigned>::const_iterator it = ranges.begin(); it != ranges.end(); it ++) {
-    unsigned begin = std::max(0, (signed) (it->begin >> itsLogNrChannels) - NR_TAPS + 1);
+    unsigned begin = itsNrChannels == 1 ? it->begin : std::max(0, (signed) (it->begin >> itsLogNrChannels) - NR_TAPS + 1);
     unsigned end   = std::min(itsNrSamplesPerIntegration, ((it->end - 1) >> itsLogNrChannels) + 1);
 
-    filteredData->flags[stat].include(begin, end);
+    for (unsigned ch = 0; ch < itsNrChannels; ch++) {
+      filteredData->flags[ch][stat].include(begin, end);
+    }
   }
 
   computeFlagsTimer.stop();
@@ -183,10 +185,10 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::computeFlags(unsigned sta
 
 template <typename SAMPLE_TYPE> fcomplex PPF<SAMPLE_TYPE>::phaseShift(unsigned time, unsigned chan, double baseFrequency, double delayAtBegin, double delayAfterEnd) const
 {
-  double timeInterpolatedDelay = delayAtBegin + ((double) time / itsNrSamplesPerIntegration) * (delayAfterEnd - delayAtBegin);
-  double frequency	       = baseFrequency + chan * itsChannelBandwidth;
-  double phaseShift	       = timeInterpolatedDelay * frequency;
-  double phi		       = -2 * M_PI * phaseShift;
+  float timeInterpolatedDelay = delayAtBegin + ((float) time / itsNrSamplesPerIntegration) * (delayAfterEnd - delayAtBegin);
+  float frequency	      = baseFrequency + chan * itsChannelBandwidth;
+  float phaseShift	      = timeInterpolatedDelay * frequency;
+  float phi		      = -2 * M_PI * phaseShift;
 
   return makefcomplex(std::cos(phi), std::sin(phi));
 }
@@ -223,22 +225,20 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, dou
 {
   PPFtimer.start();
 
-  double baseFrequency = centerFrequency - (itsNrChannels * 0.5) * itsChannelBandwidth;
-
-  const unsigned alignmentShift = metaData->alignmentShift( stat );
+  double   baseFrequency  = centerFrequency - (itsNrChannels * 0.5) * itsChannelBandwidth;
+  unsigned alignmentShift = metaData->alignmentShift(stat);
 
 #if 0
   LOG_DEBUG_STR(setprecision(15) << "stat " << stat << ", basefreq " << baseFrequency << ": delay from " << delays[stat].delayAtBegin << " to " << delays[stat].delayAfterEnd << " sec");
 #endif
 
 #if defined PPF_C_IMPLEMENTATION
-  std::vector<fcomplex, AlignedStdAllocator<fcomplex, 32> > fftOutData(itsNrChannels);
-
   FIRtimer.start();
 
-  for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
-    for (unsigned chan = 0; chan < itsNrChannels; chan ++) {
-      for (unsigned time = 0; time < NR_TAPS - 1 + itsNrSamplesPerIntegration; time ++) {
+#pragma omp parallel for
+  for (int chan = 0; chan < (int) itsNrChannels; chan ++) {
+    for (unsigned time = 0; time < NR_TAPS - 1 + itsNrSamplesPerIntegration; time ++) {
+      for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
 	SAMPLE_TYPE currSample = transposedData->samples[stat][itsNrChannels * time + chan + alignmentShift][pol];
 
 #if defined WORDS_BIGENDIAN
@@ -254,30 +254,39 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, dou
 
   FFTtimer.start();
 
-  for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
-    for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
-      if (filteredData->flags[stat].test(time)) {
-	for (unsigned chan = 0; chan < itsNrChannels; chan ++)
-	  filteredData->samples[chan][stat][time][pol] = makefcomplex(0, 0);
-      } else {
+#pragma omp parallel
+  {
+    std::vector<fcomplex, AlignedStdAllocator<fcomplex, 32> > fftOutData(itsNrChannels);
+
+    // The flags of all channels are still the same here, so we just use channel 1.
+    // Flags are kept per channel, since we will do online flagging on FilteredData later.
+
+#pragma omp for
+    for (int time = 0; time < (int) itsNrSamplesPerIntegration; time ++) {
+      for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
+	if (filteredData->flags[1][stat].test(time)) {
+	  for (unsigned chan = 0; chan < itsNrChannels; chan ++)
+	    filteredData->samples[chan][stat][time][pol] = makefcomplex(0, 0);
+	} else {
 #if defined HAVE_FFTW3
-	fftwf_execute_dft(itsFFTWPlan,
-			  (fftwf_complex *) itsFFTinData[NR_TAPS - 1 + time][pol].origin(),
-			  (fftwf_complex *) (void *) &fftOutData[0]);
+	  fftwf_execute_dft(itsFFTWPlan,
+			    (fftwf_complex *) itsFFTinData[NR_TAPS - 1 + time][pol].origin(),
+			    (fftwf_complex *) (void *) &fftOutData[0]);
 #else
-	fftw_one(itsFFTWPlan,
-		 (fftw_complex *) itsFFTinData[NR_TAPS - 1 + time][pol].origin(),
-		 (fftw_complex *) (void *) &fftOutData[0]);
+	  fftw_one(itsFFTWPlan,
+		   (fftw_complex *) itsFFTinData[NR_TAPS - 1 + time][pol].origin(),
+		   (fftw_complex *) (void *) &fftOutData[0]);
 #endif
 
-	for (unsigned chan = 0; chan < itsNrChannels; chan ++) {
-	  if (itsDelayCompensation)
-	    fftOutData[chan] *= phaseShift(time, chan, baseFrequency, metaData->beams(stat)[0].delayAtBegin, metaData->beams(stat)[0].delayAfterEnd);
+	  for (unsigned chan = 0; chan < itsNrChannels; chan ++) {
+	    if (itsDelayCompensation)
+	      fftOutData[chan] *= phaseShift(time, chan, baseFrequency, metaData->beams(stat)[0].delayAtBegin, metaData->beams(stat)[0].delayAfterEnd);
 
-	  if (itsCorrectBandPass)
-	    fftOutData[chan] *= itsBandPass.correctionFactors()[chan];
+	    if (itsCorrectBandPass)
+	      fftOutData[chan] *= itsBandPass.correctionFactors()[chan];
 
-	  filteredData->samples[chan][stat][time][pol] = fftOutData[chan];
+	    filteredData->samples[chan][stat][time][pol] = fftOutData[chan];
+	  }
 	}
       }
     }
@@ -291,10 +300,11 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, dou
   for (unsigned chan = 0; chan < itsNrChannels; chan += 4) {
     for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
 #if defined __GNUC__	// work around bug ???
-      for (register unsigned ch asm ("r28") = 0; ch < 4; ch ++) {
+      for (register unsigned ch asm ("r28") = 0; ch < 4; ch ++)
 #else
-      for (unsigned ch = 0; ch < 4; ch ++) {
+      for (unsigned ch = 0; ch < 4; ch ++)
 #endif
+      {
 	FIRtimer.start();
 	_filter(itsNrChannels,
 		itsFIRs[stat][pol][chan + ch].getWeights(),
@@ -317,7 +327,10 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, dou
 
   computePhaseShifts(phaseShifts, metaData->beams(stat)[0].delayAtBegin, metaData->beams(stat)[0].delayAfterEnd, baseFrequency);
 
-  const SparseSet<unsigned>::Ranges &ranges = filteredData->flags[stat].getRanges();
+  // The flags of all channels are still the same here, so we just use channel 1.
+  // Flags are kept per channel, since we will do online flagging on FilteredData later.
+
+  const SparseSet<unsigned>::Ranges &ranges = filteredData->flags[1][stat].getRanges();
   SparseSet<unsigned>::const_iterator it = ranges.begin();
 
   for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
@@ -358,6 +371,73 @@ template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::filter(unsigned stat, dou
 
   PPFtimer.stop();
 }
+
+
+template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::bypass(unsigned stat, double frequency, const SubbandMetaData *metaData, const TransposedData<SAMPLE_TYPE> *transposedData, FilteredData *filteredData)
+{
+  PPFtimer.start();
+
+  unsigned alignmentShift = metaData->alignmentShift(stat);
+
+  // The flags of all channels are still the same here, so we just use channel 1.
+  // Flags are kept per channel, since we will do online flagging on FilteredData later.
+
+#if defined PPF_C_IMPLEMENTATION
+  for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
+    for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
+      if ((itsNrChannels > 1 && filteredData->flags[1][stat].test(time)) || (itsNrChannels == 1 && filteredData->flags[0][stat].test(time))) {
+	filteredData->samples[0][stat][time][pol] = makefcomplex(0, 0);
+      } else {
+	SAMPLE_TYPE currSample = transposedData->samples[stat][time + alignmentShift][pol];
+
+#if defined WORDS_BIGENDIAN
+	dataConvert(LittleEndian, &currSample, 1);
+#endif
+
+	fcomplex sample = makefcomplex(real(currSample), imag(currSample));
+
+	if (itsDelayCompensation)
+	  sample *= phaseShift(time, 0, frequency, metaData->beams(stat)[0].delayAtBegin, metaData->beams(stat)[0].delayAfterEnd);
+
+	filteredData->samples[0][stat][time][pol] = sample;
+      }
+    }
+  }
+#else // assembly implementation
+  // convert little-endian integers to floating point
+  _convert(filteredData->samples[0][stat].origin(), transposedData->samples[stat][alignmentShift].origin(), itsNrSamplesPerIntegration * NR_POLARIZATIONS);
+
+  if (itsDelayCompensation) {
+    double   phiBegin = -2 * M_PI * metaData->beams(stat)[0].delayAtBegin;
+    double   phiEnd   = -2 * M_PI * metaData->beams(stat)[0].delayAfterEnd;
+    double   deltaPhi = (phiEnd - phiBegin) / itsNrSamplesPerIntegration;
+    dcomplex v	 __attribute__((aligned(16))) = cosisin(phiBegin * frequency);
+    dcomplex vf  __attribute__((aligned(16))) = cosisin(deltaPhi * frequency) ;
+
+    _apply_single_channel_delays(filteredData->samples[0][stat].origin(), itsNrSamplesPerIntegration, &v, &vf);
+  }
+
+  // clear flagged data
+  const SparseSet<unsigned>::Ranges &ranges = filteredData->flags[0][stat].getRanges();
+
+  for (SparseSet<unsigned>::const_iterator it = ranges.begin(); it != ranges.end(); it ++)
+    memset(filteredData->samples[0][stat][it->begin].origin(), 0, (it->end - it->begin) * NR_POLARIZATIONS * sizeof(fcomplex));
+#endif
+
+  PPFtimer.stop();
+}
+
+
+template <typename SAMPLE_TYPE> void PPF<SAMPLE_TYPE>::doWork(unsigned stat, double frequency, const SubbandMetaData *metaData, const TransposedData<SAMPLE_TYPE> *transposedData, FilteredData *filteredData)
+{
+  computeFlags(stat, metaData, filteredData);
+
+  if (itsNrChannels > 1)
+    filter(stat, frequency, metaData, transposedData, filteredData);
+  else
+    bypass(stat, frequency, metaData, transposedData, filteredData);
+}
+
 
 template class PPF<i4complex>;
 template class PPF<i8complex>;

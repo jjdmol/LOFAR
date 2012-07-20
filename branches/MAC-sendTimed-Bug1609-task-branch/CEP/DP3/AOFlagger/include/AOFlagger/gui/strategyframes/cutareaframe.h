@@ -27,7 +27,7 @@
 #include <gtkmm/label.h>
 #include <gtkmm/radiobutton.h>
 
-#include <AOFlagger/rfi/strategy/cutareaaction.h>
+#include <AOFlagger/strategy/actions/cutareaaction.h>
 
 #include <AOFlagger/gui/editstrategywindow.h>
 

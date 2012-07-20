@@ -7,9 +7,9 @@
 #include <AOFlagger/msio/timefrequencydata.h>
 #include <AOFlagger/msio/timefrequencyimager.h>
 
-#include <AOFlagger/rfi/thresholdconfig.h>
-#include <AOFlagger/rfi/thresholdtools.h>
-#include <AOFlagger/rfi/sinusfitter.h>
+#include <AOFlagger/strategy/algorithms/thresholdconfig.h>
+#include <AOFlagger/strategy/algorithms/thresholdtools.h>
+#include <AOFlagger/strategy/algorithms/sinusfitter.h>
 
 #include <AOFlagger/util/rng.h>
 

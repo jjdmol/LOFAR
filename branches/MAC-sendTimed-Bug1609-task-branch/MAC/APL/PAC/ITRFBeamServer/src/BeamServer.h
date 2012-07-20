@@ -150,6 +150,9 @@ private:
 	// Send subbands selection to the board.
 	void send_sbselection();
 
+	// Calculate best starttime for analoge beam
+	int	_idealStartTime (int now, int t1, int d1, int t2, int d2, int p2) const;
+
 	// (re)create the beampool. Normally done after the splitter state changed.
 	void _createBeamPool();
 
@@ -196,6 +199,7 @@ private:
 	vector<uint>				itsHBArcus;			// counter: in how many beams the RCU participates
 	uint						itsNrLBAbeams;
 	uint						itsNrHBAbeams;
+	long						itsLastHBACalculationTime;
 
 	// ports
 	GCFTCPPort*					itsListener;	// list for clients on this port

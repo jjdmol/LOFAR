@@ -77,6 +77,13 @@ namespace BBS {
   ParmDBCasa::~ParmDBCasa()
   {}
 
+  void ParmDBCasa::flush (bool fsync)
+  {
+    itsTables[0].flush (fsync, false);
+    itsTables[1].flush (fsync, false);
+    itsTables[2].flush (fsync, false);
+  }
+
   void ParmDBCasa::lock (bool lockForWrite)
   {
     itsTables[0].lock (lockForWrite);
@@ -122,6 +129,7 @@ namespace BBS {
     tddef.addColumn (ScalarColumnDesc<double>("PERTURBATION"));
     tddef.addColumn (ScalarColumnDesc<bool>  ("PERT_REL"));
     tddef.addColumn (ArrayColumnDesc<bool>   ("SOLVABLE"));
+    tddef.addColumn (ArrayColumnDesc<double> ("DOMAIN"));
     tddef.addColumn (ArrayColumnDesc<double> ("VALUES"));
 
     SetupNewTable newtab(tableName, td, Table::New);
@@ -274,13 +282,15 @@ namespace BBS {
     ParmValue pval;
     Array<double> val = valCol(row);
     ParmValue::FunkletType type = ParmValue::FunkletType(typeCol(row));
+    Box scaleDomain;
     if (type == ParmValue::Scalar) {
       ASSERTSTR(val.size() == 1, "A scalar parameter should have 1 value");
       pval.setScalars (Grid(), val);
     } else {
+      scaleDomain = getDefDomain (tab, row);
       pval.setCoeff (val);
     }
-    ParmValueSet valset(pval, type, pertCol(row), prelCol(row));
+    ParmValueSet valset(pval, type, pertCol(row), prelCol(row), scaleDomain);
     if (maskCol.isDefined(row)) {
       valset.setSolvableMask (maskCol(row));
     }
@@ -564,32 +574,38 @@ namespace BBS {
     return id;
   }
 
-  void ParmDBCasa::putDefValue (const string& name, const ParmValueSet& pset)
+  void ParmDBCasa::putDefValue (const string& name, const ParmValueSet& pset,
+                                bool check)
   {
     itsTables[2].reopenRW();
     TableLocker locker(itsTables[2], FileLocker::Write);
     const ParmValue& pval = pset.getFirstParmValue();
     // First see if the parameter name exists at all.
     Table& table = itsTables[2];
-    Table sel = table(table.col("NAME") == String(name));
-    if (sel.nrow() == 1) {
-      uint rownr=0;
-      ScalarColumn<int>    typeCol (sel, "FUNKLETTYPE");
-      ArrayColumn<bool>    maskCol (sel, "SOLVABLE");
-      ArrayColumn<double>  valCol  (sel, "VALUES");
-      ScalarColumn<double> pertCol (sel, "PERTURBATION");
-      ScalarColumn<bool>   prelCol (sel, "PERT_REL");
-      typeCol.put (rownr, pset.getType());
-      valCol.put (rownr, pval.getValues());
-      if (pset.getSolvableMask().size() > 0  ||  maskCol.isDefined(rownr)) {
-        maskCol.put (rownr, pset.getSolvableMask());
-      }
-      pertCol.put (rownr, pset.getPerturbation());
-      prelCol.put (rownr, pset.getPertRel());
-    } else if (sel.nrow() == 0) {
+    if (!check) {
       putNewDefValue (name, pset);
     } else {
-      ASSERTSTR (false, "Too many default parms with the same name/domain");
+      Table sel = table(table.col("NAME") == String(name));
+      if (sel.nrow() == 1) {
+        uint rownr=0;
+        ScalarColumn<int>    typeCol (sel, "FUNKLETTYPE");
+        ArrayColumn<bool>    maskCol (sel, "SOLVABLE");
+        ArrayColumn<double>  valCol  (sel, "VALUES");
+        ScalarColumn<double> pertCol (sel, "PERTURBATION");
+        ScalarColumn<bool>   prelCol (sel, "PERT_REL");
+        typeCol.put (rownr, pset.getType());
+        valCol.put (rownr, pval.getValues());
+        putDefDomain (pset.getScaleDomain(), sel, rownr);
+        if (pset.getSolvableMask().size() > 0  ||  maskCol.isDefined(rownr)) {
+          maskCol.put (rownr, pset.getSolvableMask());
+        }
+        pertCol.put (rownr, pset.getPerturbation());
+        prelCol.put (rownr, pset.getPertRel());
+      } else if (sel.nrow() == 0) {
+        putNewDefValue (name, pset);
+      } else {
+        ASSERTSTR (false, "Too many default parms with the same name/domain");
+      }
     }
     clearDefFilled();
   }
@@ -609,12 +625,45 @@ namespace BBS {
     nameCol.put (rownr, name);
     typeCol.put (rownr, pset.getType());
     valCol.put (rownr, pval.getValues());
+    if (pset.getType() != ParmValue::Scalar) {
+      putDefDomain (pset.getScaleDomain(), table, rownr);
+    }
     if (pset.getSolvableMask().size() > 0) {
       maskCol.put (rownr, pset.getSolvableMask());
     }
     pertCol.put (rownr, pset.getPerturbation());
     prelCol.put (rownr, pset.getPertRel());
     clearDefFilled();
+  }
+
+  void ParmDBCasa::putDefDomain (const Box& domain, Table& tab, uint rownr)
+  {
+    if (! domain.empty()) {
+      if (! tab.tableDesc().isColumn("SCALE_DOMAIN")) {
+        tab.addColumn (ArrayColumnDesc<double>("SCALE_DOMAIN"));
+      }
+      ArrayColumn<double> scaldCol (tab, "SCALE_DOMAIN");
+      Vector<double> vec(4);
+      vec[0] = domain.lowerX();
+      vec[1] = domain.lowerY();
+      vec[2] = domain.upperX();
+      vec[3] = domain.upperY();
+      scaldCol.put (rownr, vec);
+    }
+  }
+
+  Box ParmDBCasa::getDefDomain (const Table& tab, uint rownr)
+  {
+    Box domain;
+    if (tab.tableDesc().isColumn("SCALE_DOMAIN")) {
+      ROArrayColumn<double> domCol (tab, "SCALE_DOMAIN");
+      if (domCol.isDefined (rownr)) {
+        Vector<double> vec = domCol(rownr);
+        ASSERT (vec.size() == 4);
+        domain = Box(Point(vec[0], vec[1]), Point(vec[2], vec[3]));
+      }
+    }
+    return domain;
   }
 
   void ParmDBCasa::deleteValues (const string& parmNamePattern,

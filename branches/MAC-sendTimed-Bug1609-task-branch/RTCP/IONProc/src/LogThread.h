@@ -27,10 +27,12 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 
-#include <Thread/Thread.h>
+#include <Common/Thread/Thread.h>
+#include <Interface/SmartPtr.h>
 
 #include <vector>
 #include <string>
+#include <sys/time.h>
 
 namespace LOFAR {
 namespace RTCP {
@@ -41,6 +43,8 @@ class LogThread
     LogThread(unsigned nrRspBoards, std::string stationName);
     ~LogThread();
 
+    void start();
+
     struct Counters {
       unsigned received, badTimeStamp, badSize;
       unsigned pad[5]; // pad to cache line size to avoid false sharing 
@@ -49,18 +53,19 @@ class LogThread
     std::vector<Counters> itsCounters;
 
   private:
-    void	  mainLoop();
+    void	mainLoop();
 
-    std::string   itsStationName;
+    std::string itsStationName;
   
-    volatile bool itsShouldStop;
-    Thread	  itsThread;
+    SmartPtr<Thread>	itsThread;
 
 #if defined HAVE_BGP_ION
     struct CPUload {
       //unsigned long long user, system, interrupt, idle, idlePerCore[4];
       unsigned long long user, system, interrupt, idle, idle0;
     } previousLoad;
+
+    struct timeval previousTimeval;
 
     bool readCPUstats(struct CPUload &load);
     void writeCPUstats(std::stringstream &str);

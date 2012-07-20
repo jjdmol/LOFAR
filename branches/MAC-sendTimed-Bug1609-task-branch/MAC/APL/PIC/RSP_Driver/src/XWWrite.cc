@@ -56,7 +56,7 @@ XWWrite::~XWWrite()
 
 void XWWrite::sendrequest()
 {
-  uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + m_blp;
+  uint8 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) + m_blp;
 
   if (m_regid < MEPHeader::BF_XROUT || m_regid > MEPHeader::BF_YIOUT)
   {
@@ -94,7 +94,7 @@ void XWWrite::sendrequest()
   }
 
   // create blitz view om the weights in the bfcoefs message to be sent to the RSP hardware
-  Array<complex<int16>, 2> weights(MEPHeader::N_LOCAL_XLETS, MEPHeader::N_POL);
+  Array<complex<int16>, 2> weights(MEPHeader::N_LOCAL_XLETS, N_POL);
   bfcoefs.coef.setBuffer(weights.data(), weights.size() * sizeof(complex<uint16>));
 
   weights = complex<int16>(0, 0);
@@ -158,7 +158,7 @@ GCFEvent::TResult XWWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/
   EPAWriteackEvent ack(event);
 
 #if 0
-  uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + m_blp;
+  uint8 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) + m_blp;
 #endif
 
   if (!ack.hdr.isValidAck(m_hdr))

@@ -23,8 +23,8 @@
 package nl.astron.lofar.sas.otbcomponents;
 
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.Vector;
 import javax.swing.DefaultListModel;
 import javax.swing.border.TitledBorder;
 import nl.astron.lofar.lofarutils.LofarUtils;
@@ -60,7 +60,7 @@ public class StationSelectionPanel extends javax.swing.JPanel {
     }
     
 
-    public void setTitle(String aName) {
+    public final void setTitle(String aName) {
         itsName=aName;
         String aTitle = aName+" Station Selection";
         ((TitledBorder)this.getBorder()).setTitle(aTitle);       
@@ -90,19 +90,19 @@ public class StationSelectionPanel extends javax.swing.JPanel {
     private DefaultListModel itsUsedModel             = new DefaultListModel();
     private DefaultListModel itsAvailableModel        = new DefaultListModel();
     private jOTDBtree itsTree                         = null;
-    private Vector<String> itsStationList             = new Vector<String>();
-    private Vector<String> itsUsedStationList         = new Vector<String>();
-    private Vector<String> itsAvailableStationList    = new Vector<String>();
+    private ArrayList<String> itsStationList          = new ArrayList<>();
+    private ArrayList<String> itsUsedStationList       = new ArrayList<>();
+    private ArrayList<String> itsAvailableStationList = new ArrayList<>();
 
     
     public void init() {
         AvailableStationList.setModel(itsAvailableModel);
         UsedStationList.setModel(itsUsedModel);
         try {
-            Vector aTreeList = OtdbRmi.getRemoteOTDB().getTreeList(OtdbRmi.getRemoteTypes().getTreeType("hardware"),
-                    OtdbRmi.getRemoteTypes().getClassif("operational"));
+            ArrayList<jOTDBtree> aTreeList = new ArrayList(OtdbRmi.getRemoteOTDB().getTreeList(OtdbRmi.getRemoteTypes().getTreeType("hardware"),
+                    OtdbRmi.getRemoteTypes().getClassif("operational")));
            for (int k = 0; k < aTreeList.size(); k++) {
-                jOTDBtree tInfo = (jOTDBtree) aTreeList.elementAt(k);
+                jOTDBtree tInfo = aTreeList.get(k);
                 if (OtdbRmi.getTreeState().get(tInfo.state).equals("active")) {
                     itsTree = tInfo;
                     break;
@@ -117,17 +117,13 @@ public class StationSelectionPanel extends javax.swing.JPanel {
 
             // Now we have the operational PIC tree, we need to search for the Ring Node to find
             // all available  stations for that ring
-            Vector stations = OtdbRmi.getRemoteMaintenance().getItemList(itsTree.treeID(), "LOFAR_PIC_"+itsName);
-            Enumeration e = stations.elements();
-            while (e.hasMoreElements()) {
+            ArrayList<jOTDBnode> stations = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(itsTree.treeID(), "LOFAR_PIC_"+itsName));
                 
-                jOTDBnode aRingNode = (jOTDBnode) e.nextElement();
-                Vector childs = OtdbRmi.getRemoteMaintenance().getItemList(itsTree.treeID() ,aRingNode.nodeID(), 1);
-
-                Enumeration ec = childs.elements();
-                while (ec.hasMoreElements()) {
-                   jOTDBnode aNode = (jOTDBnode) ec.nextElement();
+            for (jOTDBnode aRingNode: stations) {
+                ArrayList<jOTDBnode> childs = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(itsTree.treeID() ,aRingNode.nodeID(), 1));
                  
+                for (jOTDBnode aNode: childs) {
+                
                    if (!aNode.leaf) {
                        // split the name
                        String aName=LofarUtils.keyName(aNode.name);
@@ -156,11 +152,24 @@ public class StationSelectionPanel extends javax.swing.JPanel {
      */
     private void validateModels() {
 
+        // loop over UsedStationList and check if the mentioned Stations are (still) in the PIC generated stationList
+        // if a station is in the selection list while it is not in the available station List,
+        // pop up a warning and remove that station from the list
+        ArrayList<String> removeStationList = new ArrayList<>();
         for (int i=0; i< getUsedStationList().size();i++) {
             if (!itsStationList.contains(itsUsedStationList.get(i))) {
                 itsUsedModel.removeElement(getUsedStationList().get(i));
+                removeStationList.add(getUsedStationList().get(i));
+                LofarUtils.showErrorPanel(this,"Removing not available station: "+getUsedStationList().get(i)+" from list.\n Don't forget to press Apply later!!!",new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
             }
         }
+
+        for (int i=0; i< removeStationList.size();i++) {
+            itsStationList.remove(i);
+        }
+        removeStationList.clear();
+
+
         for (int i=0; i< itsStationList.size();i++) {
             if (!itsUsedModel.contains(itsStationList.get(i)) &&
                     !itsAvailableModel.contains(itsStationList.get(i))) {
@@ -300,13 +309,14 @@ public class StationSelectionPanel extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private void RemoveAllButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_RemoveAllButtonActionPerformed
-       for (int i = 0; i < itsUsedModel.size();i++) {
+        for (int i = 0; i < itsUsedModel.size();i++) {
             if (!itsAvailableModel.contains(itsUsedModel.elementAt(i))) {
                 itsAvailableModel.addElement(itsUsedModel.get(i));
             }
-            itsUsedModel.clear();
         }
+        itsUsedModel.clear();
         validateModels();
+        this.fireActionListenerActionPerformed(evt);
 }//GEN-LAST:event_RemoveAllButtonActionPerformed
 
     private void AddButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_AddButtonActionPerformed
@@ -322,6 +332,7 @@ public class StationSelectionPanel extends javax.swing.JPanel {
             }
         }
         validateModels();
+        this.fireActionListenerActionPerformed(evt);
 }//GEN-LAST:event_AddButtonActionPerformed
 
     private void AddAllButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_AddAllButtonActionPerformed
@@ -332,6 +343,7 @@ public class StationSelectionPanel extends javax.swing.JPanel {
         }
         itsAvailableModel.clear();
         validateModels();
+        this.fireActionListenerActionPerformed(evt);
 }//GEN-LAST:event_AddAllButtonActionPerformed
 
     private void RemoveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_RemoveButtonActionPerformed
@@ -347,7 +359,7 @@ public class StationSelectionPanel extends javax.swing.JPanel {
             }
         }
         validateModels();
-
+        this.fireActionListenerActionPerformed(evt);
 }//GEN-LAST:event_RemoveButtonActionPerformed
 
     private void enableAllButtons(boolean b) {
@@ -410,20 +422,20 @@ public class StationSelectionPanel extends javax.swing.JPanel {
     /**
      * @return the itsUsedStationList
      */
-    public Vector<String> getUsedStationList() {
+    public ArrayList<String> getUsedStationList() {
         return itsUsedStationList;
     }
 
     /**
      * @param itsUsedStationList the itsUsedStationList to set
      */
-    public void setUsedStationList(Vector<String> itsUsedStationList) {
-        this.itsUsedStationList = itsUsedStationList;
+    public void setUsedStationList(ArrayList<String> stationList) {
+        this.itsUsedStationList = stationList;
         this.itsUsedModel.clear();
-        for (int i=0; i<itsUsedStationList.size();i++) {
-            itsUsedModel.addElement(itsUsedStationList.get(i));
-            if (itsAvailableModel.contains(itsUsedStationList.get(i))) {
-                itsAvailableModel.removeElement(itsUsedStationList.get(i));
+        for (int i=0; i<stationList.size();i++) {
+            itsUsedModel.addElement(stationList.get(i));
+            if (itsAvailableModel.contains(stationList.get(i))) {
+                itsAvailableModel.removeElement(stationList.get(i));
             }
         }
         this.validateModels();

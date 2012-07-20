@@ -87,7 +87,7 @@ namespace LOFAR {
 #define N_WRITES 2 // 2 writes, one for protocol register, one to clear results register
 
 RCUProtocolWrite::RCUProtocolWrite(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, StationSettings::instance()->nrRcusPerBoard() * N_WRITES) // *N_POL for X and Y
+  : SyncAction(board_port, board_id, NR_RCUS_PER_RSPBOARD * N_WRITES) // *N_POL for X and Y
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -104,7 +104,7 @@ RCUProtocolWrite::~RCUProtocolWrite()
 //
 void RCUProtocolWrite::sendrequest()
 {
-	uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrRcusPerBoard()) + (getCurrentIndex() / N_WRITES);
+	uint8 global_rcu = (getBoardId() * NR_RCUS_PER_RSPBOARD) + (getCurrentIndex() / N_WRITES);
 	bool	writeCmdRequested(true);		// assume setting the rcumode
 
 	// should we write the RCU?
@@ -128,7 +128,7 @@ void RCUProtocolWrite::sendrequest()
 	case 0: {
 			// set appropriate header
 			MEPHeader::FieldsType hdr;
-			if (0 == global_rcu % MEPHeader::N_POL) {
+			if (0 == global_rcu % N_POL) {
 				hdr = MEPHeader::RCU_PROTOCOLX_HDR;
 			} else {
 				hdr = MEPHeader::RCU_PROTOCOLY_HDR;
@@ -141,7 +141,7 @@ void RCUProtocolWrite::sendrequest()
 				memcpy(i2c_protocol_write+3, &control, 3);
 
 				EPARcuProtocolEvent rcuprotocol;
-				rcuprotocol.hdr.set(hdr, 1 << (getCurrentIndex() / (MEPHeader::N_POL * N_WRITES)), MEPHeader::WRITE, sizeof(i2c_protocol_write));
+				rcuprotocol.hdr.set(hdr, 1 << (getCurrentIndex() / (N_POL * N_WRITES)), MEPHeader::WRITE, sizeof(i2c_protocol_write));
 				rcuprotocol.protocol.setBuffer(i2c_protocol_write, sizeof(i2c_protocol_write));
 
 				m_hdr = rcuprotocol.hdr; // remember header to match with ack
@@ -150,7 +150,7 @@ void RCUProtocolWrite::sendrequest()
 			}
 			// user wants to read the RCUs
 			EPARcuProtocolEvent rcuprotocol;
-			rcuprotocol.hdr.set(hdr, 1 << (getCurrentIndex() / (MEPHeader::N_POL * N_WRITES)), MEPHeader::WRITE, sizeof(i2c_protocol_read));
+			rcuprotocol.hdr.set(hdr, 1 << (getCurrentIndex() / (N_POL * N_WRITES)), MEPHeader::WRITE, sizeof(i2c_protocol_read));
 			rcuprotocol.protocol.setBuffer(i2c_protocol_read, sizeof(i2c_protocol_read));
 
 			m_hdr = rcuprotocol.hdr; // remember header to match with ack
@@ -162,14 +162,14 @@ void RCUProtocolWrite::sendrequest()
 			EPAWriteEvent rcuresultwrite;
 			// set appropriate header
 			uint8 regid = 0;
-			if (0 == (global_rcu % MEPHeader::N_POL)) {
+			if (0 == (global_rcu % N_POL)) {
 				regid = MEPHeader::RCU_RESULTX;
 			} else {
 				regid = MEPHeader::RCU_RESULTY;
 			}
 
 			int		resultSize = writeCmdRequested ? RESULT_WRITE_SIZE : RESULT_READ_SIZE;
-			rcuresultwrite.hdr.set(MEPHeader::WRITE, 1 << (getCurrentIndex() / (MEPHeader::N_POL * N_WRITES)),
+			rcuresultwrite.hdr.set(MEPHeader::WRITE, 1 << (getCurrentIndex() / (N_POL * N_WRITES)),
 									MEPHeader::RCU, regid, resultSize, 0);
 			uint8 clear[RESULT_WRITE_SIZE];
 			memset(clear, 0xAA, RESULT_WRITE_SIZE); // clear result
@@ -194,7 +194,7 @@ GCFEvent::TResult RCUProtocolWrite::handleack(GCFEvent& event, GCFPortInterface&
 		return GCFEvent::NOT_HANDLED;
 	}
 
-	uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrRcusPerBoard()) + (getCurrentIndex() / N_WRITES);
+	uint8 global_rcu = (getBoardId() * NR_RCUS_PER_RSPBOARD) + (getCurrentIndex() / N_WRITES);
 
 	EPAWriteackEvent ack(event);
 	if (!ack.hdr.isValidAck(m_hdr)) {

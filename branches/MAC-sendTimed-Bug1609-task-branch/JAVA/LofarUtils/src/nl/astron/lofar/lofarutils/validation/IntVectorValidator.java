@@ -4,6 +4,7 @@ import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JTextField;
+import nl.astron.lofar.lofarutils.LofarUtils;
 
 /**
  * A class for performing pre-validation on Integers
@@ -27,7 +28,9 @@ public class IntVectorValidator extends AbstractValidator {
     protected boolean validationCriteria(JComponent c) {
         String input = ((JTextField)c).getText();
 
-        String msg = Validators.validateIntVector(input,isSigned);
+        //int vectors can contain x..y notation, so expand the string first
+        String in = LofarUtils.expandedArrayString(input);
+        String msg = Validators.validateIntVector(in,isSigned);
         if (msg.isEmpty() ) {
             return true;
         } else {

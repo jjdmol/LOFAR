@@ -114,8 +114,14 @@
 /* Define if FFTW3 is installed */
 #cmakedefine HAVE_FFTW3
 
+/* Define if HDF5 is installed */
+#cmakedefine HAVE_HDF5
+
 /* Define if LAM is installed */
 #cmakedefine HAVE_LAM 1
+
+/* Define if libssh2 is installed */
+#cmakedefine HAVE_LIBSSH2 1
 
 /* Define if LOG4CPLUS is installed */
 #cmakedefine HAVE_LOG4CPLUS 1
@@ -150,6 +156,9 @@
 /* Defined if shared memory is used */
 #cmakedefine HAVE_SHMEM 1
 
+/* Define if WCSLIB is installed */
+#cmakedefine HAVE_WCSLIB 1
+
 
 /*-------------------------------------------------------------------------*\
 |  Defines for the presence or absence of (system) functions                |
@@ -160,12 +169,6 @@
 
 /* Define to 1 if you have the `backtrace' function. */
 #cmakedefine HAVE_BACKTRACE 1
-
-/* Define to 1 if you have the `cplus_demangle' function. */
-#cmakedefine HAVE_CPLUS_DEMANGLE 1
-
-/* Define to 1 if you have a declaration for the `basename' function. */
-#cmakedefine HAVE_DECL_BASENAME 1
 
 /* Define to 1 if you have a declaration for the `getprotobyname_r' function. */
 #cmakedefine HAVE_GETPROTOBYNAME_R 1

@@ -45,6 +45,8 @@ public:
     typedef map<unsigned int, ExprParm::Ptr>::iterator          iterator;
     typedef map<unsigned int, ExprParm::Ptr>::const_iterator    const_iterator;
 
+    size_t size() const;
+
     void clear();
 
     ExprParm::Ptr operator()(unsigned int category, const string &name);

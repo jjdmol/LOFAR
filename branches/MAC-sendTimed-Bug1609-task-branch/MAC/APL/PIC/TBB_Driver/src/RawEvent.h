@@ -27,6 +27,8 @@
 
 #include <GCF/TM/GCF_Control.h>
 
+#include "DriverSettings.h"
+
 namespace LOFAR {
 	using GCF::TM::GCFTask;
 	using GCF::TM::GCFPortInterface;
@@ -34,8 +36,11 @@ namespace LOFAR {
 
 class RawEvent
 {
+
 public:
 	static GCFEvent::TResult dispatch(GCFTask& task, GCFPortInterface& port);
+private:
+    
 };
 
 	} // end TBB namespace

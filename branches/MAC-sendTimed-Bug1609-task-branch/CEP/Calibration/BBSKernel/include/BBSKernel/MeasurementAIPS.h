@@ -31,6 +31,8 @@
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <tables/Tables/ExprNodeSet.h>
 
+#include <Common/ParameterSet.h>
+
 namespace LOFAR
 {
 namespace BBS
@@ -53,33 +55,55 @@ public:
     // that class for function documentation.
     //
     // @{
-    virtual VisDimensions dimensions(const VisSelection &selection) const;
+    virtual VisDimensions dims(const VisSelection &selection) const;
 
     virtual VisBuffer::Ptr read(const VisSelection &selection = VisSelection(),
-        const string &column = "DATA") const;
+        const string &column = "DATA",
+        bool readCovariance = true,
+        bool readFlags = true) const;
 
     virtual void write(VisBuffer::Ptr buffer,
         const VisSelection &selection = VisSelection(),
-        const string &column = "CORRECTED_DATA", bool writeFlags = true,
+        const string &column = "CORRECTED_DATA",
+        bool writeCovariance = true,
+        bool writeFlags = false,
         flag_t flagMask = ~flag_t(0));
+
+    virtual void writeHistory(const ParameterSet &parset) const;
 
     virtual BaselineMask asMask(const string &filter) const;
     // @}
 
 private:
-    void initInstrument();
-    void initPhaseReference();
+    void initReferenceDirections();
     void initDimensions();
 
-    bool hasColumn(const string &column) const;
-    void addDataColumn(const string &column);
+    void createVisibilityColumn(const string &name);
+    void createCovarianceColumn(const string &name);
+
+    casa::MDirection getColumnPhaseReference(const string &column) const;
 
     casa::Table getVisSelection(casa::Table table,
         const VisSelection &selection) const;
     casa::Table getBaselineSelection(const casa::Table &table,
         const string &pattern) const;
     BaselineMask getBaselineMask(const VisSelection &selection) const;
+
+    Interval<size_t> getChannelRange(const VisSelection &selection) const;
     casa::Slicer getCellSlicer(const VisSelection &selection) const;
+    casa::Slicer getCovarianceSlicer(const VisSelection &selection,
+        const string &column) const;
+
+    string getLinkedCovarianceColumn(const string &column,
+        const string &defaultColumn) const;
+    void setLinkedCovarianceColumn(const string &column,
+        const string &linkedColumn);
+
+    casa::Array<casa::Float>
+    reformatCovarianceArray(const casa::Array<casa::Float> &in,
+        unsigned int nCorrelations, unsigned int nFreq, unsigned int nRows)
+        const;
+
     VisDimensions getDimensionsImpl(const casa::Table &tab_selection,
         const casa::Slicer &slicer) const;
 
@@ -93,6 +117,16 @@ private:
     unsigned int            itsIdDataDescription;
 };
 
+Instrument::Ptr readInstrument(const casa::MeasurementSet &ms,
+    unsigned int idObservation = 0);
+casa::MDirection readPhaseReference(const casa::MeasurementSet &ms,
+    unsigned int idField = 0);
+casa::MDirection readDelayReference(const casa::MeasurementSet &ms,
+    unsigned int idField = 0);
+casa::MDirection readTileReference(const casa::MeasurementSet &ms,
+    unsigned int idField = 0);
+double readFreqReference(const casa::MeasurementSet &ms,
+    unsigned int idDataDescription = 0);
 // @}
 
 } //# namespace BBS

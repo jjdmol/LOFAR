@@ -57,6 +57,10 @@ namespace LOFAR {
       // Parameters are obtained from the parset using the given prefix.
       Averager (DPInput*, const ParSet&, const string& prefix);
 
+      // Construct the object using the given parameters.
+      Averager (DPInput*, const string& stepname,
+                uint nchanAvg, uint ntimeAvg);
+
       virtual ~Averager();
 
       // Process the data.
@@ -68,7 +72,7 @@ namespace LOFAR {
       virtual void finish();
 
       // Update the general info.
-      virtual void updateInfo (DPInfo&);
+      virtual void updateInfo (const DPInfo&);
 
       // Show the step parameters.
       virtual void show (std::ostream&) const;
@@ -92,12 +96,15 @@ namespace LOFAR {
       string          itsName;
       DPBuffer        itsBuf;
       casa::Cube<int> itsNPoints;
+      casa::Cube<casa::Complex> itsAvgAll;
+      casa::Cube<float>         itsWeightAll;
       uint            itsNChanAvg;
       uint            itsNTimeAvg;
       uint            itsMinNPoint;
       float           itsMinPerc;
       uint            itsNTimes;
       double          itsTimeInterval;
+      bool            itsNoAvg;           //# No averaging (i.e. both 1)?
       NSTimer         itsTimer;
     };
 

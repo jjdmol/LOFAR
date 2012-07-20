@@ -40,7 +40,7 @@ using namespace RSP;
 using namespace EPA_Protocol;
 
 RCUResultRead::RCUResultRead(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, StationSettings::instance()->nrRcusPerBoard())
+  : SyncAction(board_port, board_id, NR_RCUS_PER_RSPBOARD)
 {
 	memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -64,7 +64,7 @@ RCUResultRead::~RCUResultRead()
 //
 void RCUResultRead::sendrequest()
 {
-	uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrRcusPerBoard()) + getCurrentIndex();
+	uint8 global_rcu = (getBoardId() * NR_RCUS_PER_RSPBOARD) + getCurrentIndex();
 	bool	handlingWriteResult(Cache::getInstance().getState().rcuprotocol().get(global_rcu) == RTC::RegisterState::READ);
 
 	// skip update if the RCU settings have not been applied yet
@@ -76,7 +76,7 @@ void RCUResultRead::sendrequest()
 
 	// set appropriate header
 	MEPHeader::FieldsType hdr;
-	if (0 == global_rcu % MEPHeader::N_POL) {
+	if (0 == global_rcu % N_POL) {
 		hdr = MEPHeader::RCU_RESULTX_HDR;
 	} 
 	else {
@@ -84,7 +84,7 @@ void RCUResultRead::sendrequest()
 	}
 
 	EPAReadEvent rcuresult;
-	rcuresult.hdr.set(hdr, 1 << (getCurrentIndex() / MEPHeader::N_POL), MEPHeader::READ, 
+	rcuresult.hdr.set(hdr, 1 << (getCurrentIndex() / N_POL), MEPHeader::READ, 
 						handlingWriteResult ? RCUProtocolWrite::RESULT_WRITE_SIZE : RCUProtocolWrite::RESULT_READ_SIZE);
 
 	m_hdr = rcuresult.hdr; // remember header to match with ack
@@ -109,7 +109,7 @@ GCFEvent::TResult RCUResultRead::handleack(GCFEvent& event, GCFPortInterface& /*
 		return GCFEvent::NOT_HANDLED;
 	}
 
-	uint8	global_rcu 			= (getBoardId() * StationSettings::instance()->nrRcusPerBoard()) + getCurrentIndex();
+	uint8	global_rcu 			= (getBoardId() * NR_RCUS_PER_RSPBOARD) + getCurrentIndex();
 	bool	handlingWriteResult = (Cache::getInstance().getState().rcuprotocol().get(global_rcu) == RTC::RegisterState::READ);
 	int		resultOffset		= handlingWriteResult ? 1 : 0;
 

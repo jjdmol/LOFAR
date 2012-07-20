@@ -1,4 +1,4 @@
-# $Id: CMakeLists.txt 14273 2009-10-16 10:08:29Z loose $
+# $Id$
 
 include(LofarCTest)
 
@@ -13,3 +13,4 @@ lofar_add_executable(tLBATracking tLBATracking.cc)
 lofar_add_executable(tHBATracking tHBATracking.cc)
 lofar_add_executable(tAnaBeamMgr tAnaBeamMgr.cc ../src/AnaBeamMgr.cc ../src/Beam.cc ../src/AnalogueBeam.cc)
 lofar_add_executable(tStatCal tStatCal.cc ../src/StatCal.cc) 
+lofar_add_executable(tIdealStartTime tIdealStartTime.cc)

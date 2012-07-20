@@ -75,6 +75,7 @@ void ConfigCmd::sendTpEvent()
 	tp_event.imagenr = itsImage;
 	
 	TS->boardPort(getBoardNr()).send(tp_event);
+	TS->setBoardUsed(getBoardNr());
 	TS->boardPort(getBoardNr()).setTimer(5.0);
 }
 
@@ -96,8 +97,9 @@ void ConfigCmd::saveTpAckEvent(GCFEvent& event)
 		}
 	}
 	nextBoardNr();
+	setSleepTime(0.5);
 	if (isDone()) { 
-		setSleepTime(15.0);
+		setSleepTime(8.0);
 	}
 }
 
@@ -110,4 +112,6 @@ void ConfigCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 		tbb_ack.status_mask[i] = getStatus(i);
 	}
 	if (clientport->isConnected()) { clientport->send(tbb_ack); }
+	TS->resetBoardUsed();
+	TS->setSetupNeeded(true);
 }

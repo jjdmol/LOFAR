@@ -22,15 +22,20 @@
 //#
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/Exception.h>
 
 #include "ClockControl.h"
 
+using namespace LOFAR;
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::StationCU;
 
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
+
 int main(int argc, char* argv[])
 {
-	if (argc < 2) {
+	if (argc < 3) {
 		return (1);
 	}
 

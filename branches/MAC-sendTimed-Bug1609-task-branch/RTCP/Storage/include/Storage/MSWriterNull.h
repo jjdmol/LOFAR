@@ -27,28 +27,24 @@
 #define LOFAR_STORAGE_MSWRITERNULL_H
 
 
-//# Includes
-#include <Common/LofarTypes.h>
-#include <Common/lofar_vector.h>
-
 #include <Storage/MSWriter.h>
 
-//# Forward declarations
 
-namespace LOFAR
+namespace LOFAR {
+namespace RTCP {
+
+
+class MSWriterNull : public MSWriter
 {
+  public:
+		 MSWriterNull();
+		 ~MSWriterNull();
 
-  namespace RTCP
-  {
-    class MSWriterNull : public MSWriter
-    {
-    public:
-      MSWriterNull();
-      ~MSWriterNull();
+    virtual void write(StreamableData *);
+};
 
-      void write(StreamableData*);
-    };
-  }
+
+}
 }
 
 #endif

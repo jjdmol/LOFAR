@@ -34,22 +34,41 @@ using LOFAR::operator<<;
 
 
 // -------------------------------------------------------------------------- //
+// - ElevationCutConfig implementation                                      - //
+// -------------------------------------------------------------------------- //
+
+ElevationCutConfig::ElevationCutConfig()
+    :   itsThreshold(0.0)
+{
+}
+
+ElevationCutConfig::ElevationCutConfig(double threshold)
+    :   itsThreshold(threshold)
+{
+}
+
+double ElevationCutConfig::threshold() const
+{
+    return itsThreshold;
+}
+
+// -------------------------------------------------------------------------- //
 // - BeamConfig implementation                                              - //
 // -------------------------------------------------------------------------- //
 
-bool BeamConfig::isDefined(ElementType in)
+bool BeamConfig::isDefined(Mode in)
 {
-    return in != N_ElementType;
+    return in != N_Mode;
 }
 
-BeamConfig::ElementType BeamConfig::asElementType(const string &in)
+BeamConfig::Mode BeamConfig::asMode(const string &in)
 {
-    ElementType out = N_ElementType;
-    for(unsigned int i = 0; i < N_ElementType; ++i)
+    Mode out = N_Mode;
+    for(unsigned int i = 0; i < N_Mode; ++i)
     {
-        if(in == asString(static_cast<ElementType>(i)))
+        if(in == asString(static_cast<Mode>(i)))
         {
-            out = static_cast<ElementType>(i);
+            out = static_cast<Mode>(i);
             break;
         }
     }
@@ -57,15 +76,14 @@ BeamConfig::ElementType BeamConfig::asElementType(const string &in)
     return out;
 }
 
-const string &BeamConfig::asString(ElementType in)
+const string &BeamConfig::asString(Mode in)
 {
     //# Caution: Always keep this array of strings in sync with the enum
-    //# ElementType that is defined in the header.
-    static const string name[N_ElementType + 1] =
-        {"HAMAKER_LBA",
-        "HAMAKER_HBA",
-        "YATAWATTA_LBA",
-        "YATAWATTA_HBA",
+    //# Mode that is defined in the header.
+    static const string name[N_Mode + 1] =
+        {"DEFAULT",
+        "ELEMENT",
+        "ARRAY_FACTOR",
         //# "<UNDEFINED>" should always be last.
         "<UNDEFINED>"};
 
@@ -73,37 +91,32 @@ const string &BeamConfig::asString(ElementType in)
 }
 
 BeamConfig::BeamConfig()
-    :   itsElementType(N_ElementType)
+    :   itsMode(DEFAULT),
+        itsUseChannelFreq(false),
+        itsConjugateAF(false)
 {
 }
 
-BeamConfig::BeamConfig(const string &configName, const casa::Path &configPath,
-    ElementType elementType, const casa::Path &elementPath)
-    :   itsConfigName(configName),
-        itsConfigPath(configPath),
-        itsElementType(elementType),
-        itsElementPath(elementPath)
+BeamConfig::BeamConfig(Mode mode, bool useChannelFreq, bool conjugateAF)
+    :   itsMode(mode),
+        itsUseChannelFreq(useChannelFreq),
+        itsConjugateAF(conjugateAF)
 {
 }
 
-const string &BeamConfig::getConfigName() const
+BeamConfig::Mode BeamConfig::mode() const
 {
-    return itsConfigName;
+    return itsMode;
 }
 
-const casa::Path &BeamConfig::getConfigPath() const
+bool BeamConfig::useChannelFreq() const
 {
-    return itsConfigPath;
+    return itsUseChannelFreq;
 }
 
-BeamConfig::ElementType BeamConfig::getElementType() const
+bool BeamConfig::conjugateAF() const
 {
-    return itsElementType;
-}
-
-const casa::Path &BeamConfig::getElementPath() const
-{
-    return itsElementPath;
+    return itsConjugateAF;
 }
 
 // -------------------------------------------------------------------------- //
@@ -179,7 +192,7 @@ FlaggerConfig::FlaggerConfig(double threshold)
 {
 }
 
-double FlaggerConfig::getThreshold() const
+double FlaggerConfig::threshold() const
 {
     return itsThreshold;
 }
@@ -213,14 +226,24 @@ bool ModelConfig::useGain() const
     return itsModelOptions[GAIN];
 }
 
+bool ModelConfig::useTEC() const
+{
+    return itsModelOptions[TEC];
+}
+
 bool ModelConfig::useDirectionalGain() const
 {
     return itsModelOptions[DIRECTIONAL_GAIN];
 }
 
-bool ModelConfig::useFaradayRotation() const
+bool ModelConfig::useElevationCut() const
 {
-    return itsModelOptions[FARADAY_ROTATION];
+    return itsModelOptions[ELEVATION_CUT];
+}
+
+const ElevationCutConfig &ModelConfig::getElevationCutConfig() const
+{
+    return itsConfigElevationCut;
 }
 
 bool ModelConfig::useBeam() const
@@ -231,6 +254,16 @@ bool ModelConfig::useBeam() const
 const BeamConfig &ModelConfig::getBeamConfig() const
 {
     return itsConfigBeam;
+}
+
+bool ModelConfig::useDirectionalTEC() const
+{
+    return itsModelOptions[DIRECTIONAL_TEC];
+}
+
+bool ModelConfig::useFaradayRotation() const
+{
+    return itsModelOptions[FARADAY_ROTATION];
 }
 
 bool ModelConfig::useIonosphere() const
@@ -278,14 +311,26 @@ void ModelConfig::setGain(bool value)
     itsModelOptions[GAIN] = value;
 }
 
+void ModelConfig::setTEC(bool value)
+{
+    itsModelOptions[TEC] = value;
+}
+
 void ModelConfig::setDirectionalGain(bool value)
 {
     itsModelOptions[DIRECTIONAL_GAIN] = value;
 }
 
-void ModelConfig::setFaradayRotation(bool value)
+void ModelConfig::setElevationCutConfig(const ElevationCutConfig &config)
 {
-    itsModelOptions[FARADAY_ROTATION] = value;
+    itsModelOptions[ELEVATION_CUT] = true;
+    itsConfigElevationCut = config;
+}
+
+void ModelConfig::clearElevationCutConfig()
+{
+    itsConfigElevationCut = ElevationCutConfig();
+    itsModelOptions[ELEVATION_CUT] = false;
 }
 
 void ModelConfig::setBeamConfig(const BeamConfig &config)
@@ -298,6 +343,16 @@ void ModelConfig::clearBeamConfig()
 {
     itsConfigBeam = BeamConfig();
     itsModelOptions[BEAM] = false;
+}
+
+void ModelConfig::setDirectionalTEC(bool value)
+{
+    itsModelOptions[DIRECTIONAL_TEC] = value;
+}
+
+void ModelConfig::setFaradayRotation(bool value)
+{
+    itsModelOptions[FARADAY_ROTATION] = value;
 }
 
 void ModelConfig::setIonosphereConfig(const IonosphereConfig &config)
@@ -334,7 +389,7 @@ void ModelConfig::setSources(const vector<string> &sources)
     itsSources = sources;
 }
 
-const vector<string> &ModelConfig::getSources() const
+const vector<string> &ModelConfig::sources() const
 {
     return itsSources;
 }
@@ -345,7 +400,7 @@ const vector<string> &ModelConfig::getSources() const
 
 ostream &operator<<(ostream &out, const FlaggerConfig &obj)
 {
-    out << indent << "Threshold: " << obj.getThreshold();
+    out << indent << "Threshold: " << obj.threshold();
     return out;
 }
 
@@ -364,13 +419,17 @@ ostream &operator<<(ostream &out, const IonosphereConfig &obj)
 
 ostream &operator<<(ostream &out, const BeamConfig &obj)
 {
-    out << indent << "Antenna configuration name: " << obj.getConfigName()
-        << endl << indent << "Antenna configuration path: "
-        << obj.getConfigPath().originalName()
-        << endl << indent << "Element model type: "
-        << BeamConfig::asString(obj.getElementType())
-        << endl << indent << "Element model path: "
-        << obj.getElementPath().originalName();
+    out << indent << "Mode: " << BeamConfig::asString(obj.mode())
+        << endl << indent << "Use channel frequency: " << boolalpha
+        << obj.useChannelFreq() << noboolalpha
+        << endl << indent << "Conjugate array factor: " << boolalpha
+        << obj.conjugateAF() << noboolalpha;
+    return out;
+}
+
+ostream &operator<<(ostream &out, const ElevationCutConfig &obj)
+{
+    out << indent << "Threshold: " << obj.threshold() << " (deg)";
     return out;
 }
 
@@ -387,10 +446,18 @@ ostream& operator<<(ostream &out, const ModelConfig &obj)
         << obj.useClock() << noboolalpha;
     out << endl << indent << "Gain enabled: " << boolalpha
         << obj.useGain() << noboolalpha;
+    out << endl << indent << "TEC enabled: " << boolalpha
+        << obj.useTEC() << noboolalpha;
     out << endl << indent << "Direction dependent gain enabled: " << boolalpha
         << obj.useDirectionalGain() << noboolalpha;
-    out << endl << indent << "Faraday rotation enabled: " << boolalpha
-        << obj.useFaradayRotation() << noboolalpha;
+
+    out << endl << indent << "Elevation cut enabled: " << boolalpha
+        << obj.useElevationCut() << noboolalpha;
+    if(obj.useElevationCut())
+    {
+        Indent id;
+        out << endl << obj.getElevationCutConfig();
+    }
 
     out << endl << indent << "Beam enabled: " << boolalpha << obj.useBeam()
         << noboolalpha;
@@ -399,6 +466,11 @@ ostream& operator<<(ostream &out, const ModelConfig &obj)
         Indent id;
         out << endl << obj.getBeamConfig();
     }
+
+    out << endl << indent << "Direction dependent TEC enabled: " << boolalpha
+        << obj.useDirectionalTEC() << noboolalpha;
+    out << endl << indent << "Faraday rotation enabled: " << boolalpha
+        << obj.useFaradayRotation() << noboolalpha;
 
     out << endl << indent << "Ionosphere enabled: " << boolalpha
         << obj.useIonosphere() << noboolalpha;
@@ -419,7 +491,7 @@ ostream& operator<<(ostream &out, const ModelConfig &obj)
     out << endl << indent << "Cache enabled: " << boolalpha << obj.useCache()
         << noboolalpha;
 
-    out << endl << indent << "Sources: " << obj.getSources();
+    out << endl << indent << "Sources: " << obj.sources();
     return out;
 }
 

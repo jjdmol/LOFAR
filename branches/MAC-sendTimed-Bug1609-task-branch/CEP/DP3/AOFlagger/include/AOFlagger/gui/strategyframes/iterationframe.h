@@ -27,9 +27,9 @@
 #include <gtkmm/label.h>
 #include <gtkmm/scale.h>
 
-#include <AOFlagger/rfi/strategy/iterationblock.h>
+#include <AOFlagger/strategy/actions/iterationaction.h>
 
-#include "../editstrategywindow.h"
+#include <AOFlagger/gui/editstrategywindow.h>
 
 class IterationFrame : public Gtk::Frame {
 	public:
@@ -38,33 +38,27 @@ class IterationFrame : public Gtk::Frame {
 		_editStrategyWindow(editStrategyWindow), _iterationBlock(iterationBlock),
 		_iterationCountLabel("Iteration count:"),
 		_sensitivityStartLabel("Sensitivity start value (moves to 1):"),
-		_iterationCountScale(0, 100, 1),
+		_iterationCountScale(0, 1000, 1),
 		_sensitivityStartScale(0, 25.0, 0.25),
 		_applyButton(Gtk::Stock::APPLY)
 		{
 			_box.pack_start(_iterationCountLabel);
-			_iterationCountLabel.show();
 
 			_box.pack_start(_iterationCountScale);
 			_iterationCountScale.set_value(_iterationBlock.IterationCount());
-			_iterationCountScale.show();
 
 			_box.pack_start(_sensitivityStartLabel);
-			_sensitivityStartLabel.show();
 
 			_box.pack_start(_sensitivityStartScale);
 			_sensitivityStartScale.set_value(_iterationBlock.SensitivityStart());
-			_sensitivityStartScale.show();
 
 			_buttonBox.pack_start(_applyButton);
 			_applyButton.signal_clicked().connect(sigc::mem_fun(*this, &IterationFrame::onApplyClicked));
-			_applyButton.show();
 
 			_box.pack_start(_buttonBox);
-			_buttonBox.show();
 
 			add(_box);
-			_box.show();
+			_box.show_all();
 		}
 	private:
 		EditStrategyWindow &_editStrategyWindow;

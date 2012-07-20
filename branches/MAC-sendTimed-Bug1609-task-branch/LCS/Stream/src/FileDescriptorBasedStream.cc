@@ -25,6 +25,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/SystemCallException.h>
 #include <Stream/FileDescriptorBasedStream.h>
+#include <Common/Thread/Cancellation.h>
 
 #include <unistd.h>
 
@@ -35,6 +36,8 @@ namespace LOFAR {
 
 FileDescriptorBasedStream::~FileDescriptorBasedStream()
 {
+  ScopedDelayCancellation dc; // close() can throw as it is a cancellation point
+
   if (fd >= 0 && close(fd) < 0) {
     // try/throw/catch to match patterns elsewhere. 
     //
@@ -43,8 +46,8 @@ FileDescriptorBasedStream::~FileDescriptorBasedStream()
     // of exceptions in general.
     try {
       throw SystemCallException("close", errno, THROW_ARGS);
-    } catch( Exception &ex ) {
-      LOG_ERROR_STR( "Exception in destructor: " << ex );
+    } catch (Exception &ex) {
+      LOG_ERROR_STR("Exception in destructor: " << ex);
     }
   }
 }

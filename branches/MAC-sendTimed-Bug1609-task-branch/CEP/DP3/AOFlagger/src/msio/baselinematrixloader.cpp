@@ -11,7 +11,7 @@
 BaselineMatrixLoader::BaselineMatrixLoader(MeasurementSet &measurementSet)
 	: _sortedTable(0), _tableIter(0), _currentIterIndex(0), _measurementSet(measurementSet), _timeIndexCount(0), _metaData(0)
 {
-	casa::Table *rawTable = _measurementSet.OpenTable(MeasurementSet::MainTable);
+	casa::Table *rawTable = _measurementSet.OpenTable();
 	casa::Block<casa::String> names(4);
 	names[0] = "DATA_DESC_ID";
 	names[1] = "TIME";
@@ -107,21 +107,21 @@ TimeFrequencyData BaselineMatrixLoader::LoadSummed(size_t timeIndex)
 		ROArrayColumnIterator<double>::First(uvwColumn);
 
 	Image2DPtr
-		xxRImage = Image2D::CreateEmptyImagePtr(nrAntenna, nrAntenna),
-		xxIImage = Image2D::CreateEmptyImagePtr(nrAntenna, nrAntenna),
-		xyRImage = Image2D::CreateEmptyImagePtr(nrAntenna, nrAntenna),
-		xyIImage = Image2D::CreateEmptyImagePtr(nrAntenna, nrAntenna),
-		yxRImage = Image2D::CreateEmptyImagePtr(nrAntenna, nrAntenna),
-		yxIImage = Image2D::CreateEmptyImagePtr(nrAntenna, nrAntenna),
-		yyRImage = Image2D::CreateEmptyImagePtr(nrAntenna, nrAntenna),
-		yyIImage = Image2D::CreateEmptyImagePtr(nrAntenna, nrAntenna);
+		xxRImage = Image2D::CreateZeroImagePtr(nrAntenna, nrAntenna),
+		xxIImage = Image2D::CreateZeroImagePtr(nrAntenna, nrAntenna),
+		xyRImage = Image2D::CreateZeroImagePtr(nrAntenna, nrAntenna),
+		xyIImage = Image2D::CreateZeroImagePtr(nrAntenna, nrAntenna),
+		yxRImage = Image2D::CreateZeroImagePtr(nrAntenna, nrAntenna),
+		yxIImage = Image2D::CreateZeroImagePtr(nrAntenna, nrAntenna),
+		yyRImage = Image2D::CreateZeroImagePtr(nrAntenna, nrAntenna),
+		yyIImage = Image2D::CreateZeroImagePtr(nrAntenna, nrAntenna);
 	Mask2DPtr
 		xxMask = Mask2D::CreateUnsetMaskPtr(nrAntenna, nrAntenna),
 		xyMask = Mask2D::CreateUnsetMaskPtr(nrAntenna, nrAntenna),
 		yxMask = Mask2D::CreateUnsetMaskPtr(nrAntenna, nrAntenna),
 		yyMask = Mask2D::CreateUnsetMaskPtr(nrAntenna, nrAntenna);
 
-	for(size_t i=0;i<table.nrow();++i)
+	for(size_t j=0;j<table.nrow();++j)
 	{
 		int
 			a1 = *antenna1Iter,
@@ -295,14 +295,14 @@ void BaselineMatrixLoader::LoadPerChannel(size_t timeIndex, std::vector<TimeFreq
 		xxMask[_frequencyCount], xyMask[_frequencyCount], yxMask[_frequencyCount], yyMask[_frequencyCount];
 	for(size_t f=0;f<(size_t) _frequencyCount;++f)
 	{
-		xxRImage[f] = Image2D::CreateEmptyImagePtr(nrAntenna, nrAntenna),
-		xxIImage[f] = Image2D::CreateEmptyImagePtr(nrAntenna, nrAntenna),
-		xyRImage[f] = Image2D::CreateEmptyImagePtr(nrAntenna, nrAntenna),
-		xyIImage[f] = Image2D::CreateEmptyImagePtr(nrAntenna, nrAntenna),
-		yxRImage[f] = Image2D::CreateEmptyImagePtr(nrAntenna, nrAntenna),
-		yxIImage[f] = Image2D::CreateEmptyImagePtr(nrAntenna, nrAntenna),
-		yyRImage[f] = Image2D::CreateEmptyImagePtr(nrAntenna, nrAntenna),
-		yyIImage[f] = Image2D::CreateEmptyImagePtr(nrAntenna, nrAntenna);
+		xxRImage[f] = Image2D::CreateZeroImagePtr(nrAntenna, nrAntenna),
+		xxIImage[f] = Image2D::CreateZeroImagePtr(nrAntenna, nrAntenna),
+		xyRImage[f] = Image2D::CreateZeroImagePtr(nrAntenna, nrAntenna),
+		xyIImage[f] = Image2D::CreateZeroImagePtr(nrAntenna, nrAntenna),
+		yxRImage[f] = Image2D::CreateZeroImagePtr(nrAntenna, nrAntenna),
+		yxIImage[f] = Image2D::CreateZeroImagePtr(nrAntenna, nrAntenna),
+		yyRImage[f] = Image2D::CreateZeroImagePtr(nrAntenna, nrAntenna),
+		yyIImage[f] = Image2D::CreateZeroImagePtr(nrAntenna, nrAntenna);
 		xxMask[f] = Mask2D::CreateSetMaskPtr<true>(nrAntenna, nrAntenna),
 		xyMask[f] = Mask2D::CreateSetMaskPtr<true>(nrAntenna, nrAntenna),
 		yxMask[f] = Mask2D::CreateSetMaskPtr<true>(nrAntenna, nrAntenna),

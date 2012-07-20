@@ -78,6 +78,9 @@ void initNavigatorAlarms(){
     }
   } else {
     LOG_ERROR("GCFAlarm.ctl:initCtrlAlarmSystem|Couldn't connect to alarm point, alarms will not be updated");  
+    if (g_initializing) {
+      writeInitProcess("initNavigatorAlarmsFinished");
+    }
   } 
 }
 
@@ -103,6 +106,10 @@ void alarmSystemTriggered(string dp1, dyn_time times) {
   }  
   LOG_DEBUG("GCFAlarm.ctl:alarmSystemTriggered|Nr alarms in global after update: ", dynlen(g_alarms["TIME"]));      
   showMapping(g_alarms,"g_alarms");
+  
+  if (g_initializing) {
+    writeInitProcess("initNavigatorAlarmsFinished");
+  }
 
   
 }

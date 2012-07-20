@@ -41,6 +41,7 @@
 
 // sleep()
 #include <unistd.h>
+#include <cstdlib>
 
 namespace LOFAR
 {
@@ -116,8 +117,8 @@ namespace LOFAR
         // Initialize the calibration session.
         string key = ps->getString("BBDB.Key", "default");
         itsCalSession.reset(new CalSession(key,
-            ps->getString("BBDB.Name"),
-            ps->getString("BBDB.User"),
+            ps->getString("BBDB.Name", (getenv("USER") ? : "")),
+            ps->getString("BBDB.User", "postgres"),
             ps->getString("BBDB.Password", ""),
             ps->getString("BBDB.Host", "localhost"),
             ps->getString("BBDB.Port", "")));
@@ -128,6 +129,10 @@ namespace LOFAR
             " state in the database for key: " << key);
           return false;
         }
+
+        // Write the global ParameterSet to the blackboard so that it can then
+        // be retrieved by the KernelProcesses and be written to the MS/History
+        itsCalSession->setParset(*ps);
 
         // Initialize the register and switch the session state to allow workers
         // to register.
@@ -140,7 +145,7 @@ namespace LOFAR
         }
 
         // All workers have registered. Assign indices sorted on frequency.
-        itsCalSession->setState(CalSession::COMPUTING_WORKER_INDEX);
+        itsCalSession->setState(CalSession::INITIALIZING);
         createWorkerIndex();
 
         // Determine the frequency range of the observation.
@@ -149,14 +154,15 @@ namespace LOFAR
         const ProcessId lastKernel =
           itsCalSession->getWorkerByIndex(CalSession::KERNEL,
             itsCalSession->getWorkerCount(CalSession::KERNEL) - 1);
-        itsFreqStart = itsCalSession->getGrid(firstKernel)[0]->range().first;
-        itsFreqEnd = itsCalSession->getGrid(lastKernel)[0]->range().second;
+        itsFreqStart = itsCalSession->getFreqRange(firstKernel).start;
+        itsFreqEnd = itsCalSession->getFreqRange(lastKernel).end;
 
         LOG_INFO_STR("Observation frequency range: [" << itsFreqStart << ","
           << itsFreqEnd << "]");
 
         // Determine global time axis and verify consistency across all parts.
         itsGlobalTimeAxis = getGlobalTimeAxis();
+        itsCalSession->setTimeAxis(itsGlobalTimeAxis);
 
         // Apply TimeRange selection.
         itsTimeStart = 0;
@@ -209,7 +215,8 @@ namespace LOFAR
         bool ok = false;
         while(!ok) {
           if(itsCalSession->waitForResult()) {
-            CommandStatus status = itsCalSession->getCommandStatus(initId);
+            CalSession::CommandStatus status =
+              itsCalSession->getCommandStatus(initId);
 
             if(status.failed > 0) {
               LOG_ERROR_STR("" << status.failed << " worker(s) failed at"
@@ -285,7 +292,8 @@ namespace LOFAR
             LOG_TRACE_FLOW("State::NEXT_CHUNK_WAIT");
 
             if(itsCalSession->waitForResult()) {
-              CommandStatus status = itsCalSession->getCommandStatus(itsWaitId);
+              CalSession::CommandStatus status =
+                itsCalSession->getCommandStatus(itsWaitId);
 
               if(status.finished > status.failed) {
                 setState(RUN);
@@ -341,7 +349,8 @@ namespace LOFAR
             LOG_TRACE_FLOW("State::FINALIZE_WAIT");
 
             if(itsCalSession->waitForResult()) {
-              CommandStatus status = itsCalSession->getCommandStatus(itsWaitId);
+              CalSession::CommandStatus status =
+                itsCalSession->getCommandStatus(itsWaitId);
 
               if(status.finished == itsCalSession->getWorkerCount()) {
                 if(status.failed == 0) {
@@ -469,7 +478,7 @@ namespace LOFAR
       Axis::ShPtr globalAxis;
       for(size_t i = 0; i < kernels.size(); ++i)
       {
-        Axis::ShPtr localAxis = itsCalSession->getGrid(kernels[i])[1];
+        Axis::ShPtr localAxis = itsCalSession->getTimeAxis(kernels[i]);
         if(!localAxis) {
           THROW(BBSControlException, "Time axis not known for kernel process: "
             << kernels[i]);
@@ -498,7 +507,7 @@ namespace LOFAR
       for(size_t i = 0; i < kernels.size(); ++i)
       {
         index[i] = make_pair(kernels[i],
-          itsCalSession->getGrid(kernels[i])[0]->lower(0));
+          itsCalSession->getFreqRange(kernels[i]).start);
       }
 
       stable_sort(index.begin(), index.end(), LessKernel());

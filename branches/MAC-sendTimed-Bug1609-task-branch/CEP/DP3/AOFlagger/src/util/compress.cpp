@@ -17,7 +17,9 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#include <AOFlagger/rfi/thresholdtools.h>
+#include <stdint.h> 
+
+#include <AOFlagger/strategy/algorithms/thresholdtools.h>
 
 #include <AOFlagger/msio/samplerow.h>
 
@@ -46,13 +48,12 @@ void Compress::Deinitialize()
 
 void Compress::Write(std::ofstream &stream, Image2DCPtr image, Mask2DCPtr mask)
 {
-	
 	const num_t
 		max = ThresholdTools::MaxValue(image, mask),
 		min = ThresholdTools::MinValue(image, mask),
 		mid = (min + max) / 2.0;
 	const num_t normalizeFactor = (num_t) ((2<<22) + ((2<<22)-1)) / (max - min);
-	const size_t
+	const uint32_t
 		width = image->Width(),
 		height = image->Height();
 	const char mode = 0;
@@ -83,7 +84,7 @@ void Compress::WriteSubtractFrequencies(std::ofstream &stream, Image2DCPtr image
 		min = ThresholdTools::MinValue(image, mask);
 	const num_t normalizeFactor = (num_t) ((2<<22) + ((2<<22)-1)) / (max - min);
 	//const num_t normalizeFactor = 256.0;
-	const size_t
+	const uint32_t
 		width = image->Width(),
 		height = image->Height();
 	const char mode = 1;
@@ -139,46 +140,54 @@ Image2DPtr Compress::Read(std::ifstream &stream, Image2DPtr image, Mask2DCPtr ma
 			}
 		}
 	}
+	return Image2DPtr();
 }
 
 unsigned long Compress::RawSize()
 {
 	Initialize();
-	system("cp compress.bin compress.raw");
+	ExecuteCmd("cp compress.bin compress.raw");
 	return Size("compress.raw");
 }
 
 unsigned long Compress::FlacSize()
 {
 	Initialize();
-	system("flac -f -8 --bps=24 --endian=little --channels=1 --sample-rate=128000 --sign=signed --lax -o compress.flac compress.bin");
+	ExecuteCmd("flac -f -8 --bps=24 --endian=little --channels=1 --sample-rate=128000 --sign=signed --lax -o compress.flac compress.bin");
 	return Size("compress.flac");
 }
 
 unsigned long Compress::ZipSize()
 {
 	Initialize();
-	system("zip -9 compress.zip compress.bin");
+	ExecuteCmd("zip -9 compress.zip compress.bin");
 	return Size("compress.zip");
 }
 
 unsigned long Compress::Size(const std::string &file)
 {
-	system((std::string("ls -lh ") + file).c_str());
-	system((std::string("rm ") + file).c_str());
+	ExecuteCmd((std::string("ls -lh ") + file).c_str());
+	ExecuteCmd((std::string("rm ") + file).c_str());
 	return 0;
 }
 
 unsigned long Compress::GzSize()
 {
 	Initialize();
-	system("gzip -9 -c compress.bin > compress.gz");
+	ExecuteCmd("gzip -9 -c compress.bin > compress.gz");
 	return Size("compress.gz");
 }
 
 unsigned long Compress::Bz2Size()
 {
 	Initialize();
-	system("bzip2 -9 -c compress.bin > compress.bz2");
+	ExecuteCmd("bzip2 -9 -c compress.bin > compress.bz2");
 	return Size("compress.bz2");
 }
+
+void Compress::ExecuteCmd(const std::string &str)
+{
+	if(system(str.c_str()) != 0)
+		throw std::runtime_error("system() returned non-zero");
+}
+

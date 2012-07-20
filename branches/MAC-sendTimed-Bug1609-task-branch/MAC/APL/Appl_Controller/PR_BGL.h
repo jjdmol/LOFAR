@@ -42,7 +42,6 @@ namespace LOFAR {
     class PR_BGL : public ProcRule {
     public:
       PR_BGL(const string& aJobName, 
-	     const string& aPartition,
 	     const string& aExecutable,
 	     const string& aWorkingDir,
              const string& aObservationID,

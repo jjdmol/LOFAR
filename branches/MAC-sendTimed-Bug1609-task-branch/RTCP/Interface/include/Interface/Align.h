@@ -35,6 +35,17 @@ template <typename T> inline static bool powerOfTwo(T n)
 }
 
 
+template <typename T> inline static T nextPowerOfTwo(T n)
+{
+  T p;
+
+  for (p = 1; p < n; p <<= 1)
+    ;
+
+  return p;
+}
+
+
 template <typename T> inline static T align(T value, size_t alignment)
 {
 #if defined __GNUC__

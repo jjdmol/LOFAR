@@ -35,6 +35,7 @@
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/ArrColDesc.h>
 #include <tables/Tables/TableRecord.h>
+#include <tables/Tables/TableCopy.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Cube.h>
 #include <casa/Arrays/Matrix.h>
@@ -65,7 +66,8 @@ using namespace casa;
 
 MSCreate::MSCreate (const std::string& msName,
 		    double startTime, double timeStep, int nfreq, int ncorr,
-		    int nantennas, const Matrix<double>& antPos,
+                    const Matrix<double>& antPos,
+		    const std::string& antennaTableName,
 		    bool writeAutoCorr,
 		    int tileSizeFreq, int tileSize,
                     const std::string& flagColumn, int nflagBits,
@@ -73,7 +75,7 @@ MSCreate::MSCreate (const std::string& msName,
 : itsWriteAutoCorr (writeAutoCorr),
   itsNrBand        (0),
   itsNrField       (0),
-  itsNrAnt         (nantennas),
+  itsNrAnt         (antPos.ncolumn()),
   itsNrFreq        (nfreq),
   itsNrCorr        (ncorr),
   itsNrTimes       (0),
@@ -88,20 +90,21 @@ MSCreate::MSCreate (const std::string& msName,
   itsMS            (0),
   itsMSCol         (0)
 {
-  AlwaysAssert (nantennas > 0, AipsError);
+  AlwaysAssert (itsNrAnt > 0, AipsError);
   AlwaysAssert (nfreq > 0, AipsError);
   // Keep the antenna positions in ITRF coordinates.
-  Block<MPosition> antMPos(nantennas);
-  for (int i=0; i<nantennas; i++) {
+  Block<MPosition> antMPos(itsNrAnt);
+  for (Int i=0; i<itsNrAnt; i++) {
     antMPos[i] = MPosition (MVPosition(antPos(0,i), antPos(1,i), antPos(2,i)),
 			    MPosition::ITRF);
   }
-  // Use the middle antenna as the array position.
+  // Use the first antenna as the array position.
   // Setup the frame for the UVW calculations.
-  itsArrayPos = new MPosition(antMPos[nantennas/2]);
+  itsArrayPos = new MPosition(antMPos[0]);
   itsFrame = new MeasFrame(*itsArrayPos);
   // Create the MS.
-  createMS (msName, antMPos, tileSizeFreq, tileSize, flagColumn, nflagBits,
+  createMS (msName, antennaTableName, antMPos,
+            tileSizeFreq, tileSize, flagColumn, nflagBits,
             mapFlagBits);
   itsNrPol  = new Block<Int>;
   itsNrChan = new Block<Int>;
@@ -133,6 +136,7 @@ int MSCreate::nrPolarizations() const
 
 
 void MSCreate::createMS (const String& msName,
+                         const String& antennaTableName,
 			 const Block<MPosition>& antPos,
 			 int tileSizeFreq, int tileSize,
                          const String& flagColumn, int nflagBits,
@@ -162,6 +166,13 @@ void MSCreate::createMS (const String& msName,
       td.addColumn(ArrayColumnDesc<Int>(flagColumn, 2));
     }
     td.rwColumnDesc(flagColumn).setShape (dataShape);
+  }
+  // Set the reference frame of UVW to J2000.
+  {
+    ColumnDesc& col(td.rwColumnDesc("UVW"));
+    TableRecord rec = col.keywordSet().asRecord ("MEASINFO");
+    rec.define ("Ref", "J2000");
+    col.rwKeywordSet().defineRecord ("MEASINFO", rec);
   }
   // Setup the new table.
   // Most columns use the IncrStMan; some use others.
@@ -223,7 +234,7 @@ void MSCreate::createMS (const String& msName,
   // so the MS will know about those optional sutables.
   itsMS->createDefaultSubtables (Table::New);
   // Fill various subtables.
-  fillAntenna (antPos);
+  fillAntenna (antPos, antennaTableName);
   fillFeed();
   fillProcessor();
   fillObservation();
@@ -416,24 +427,62 @@ int MSCreate::addField (double ra, double dec)
   return itsNrField-1;
 }
 
-void MSCreate::fillAntenna (const Block<MPosition>& antPos)
+void MSCreate::fillAntenna (const Block<MPosition>& antPos,
+                            const String& antennaTableName)
 {
-  // Determine constants for the ANTENNA subtable.
+  // If a column is contained in the input ANTENNA table, copy it from there.
+  // Otherwise fill in a default value.
+  // Only the array positions are written directly.
+  // Fill the ANTENNA subtable.
+  Table antTab(antennaTableName, TableLock(TableLock::AutoNoReadLocking));
+  //# Defensive programming.
+  ASSERT (Int(antTab.nrow()) == itsNrAnt  &&  Int(antPos.size()) == itsNrAnt);
+  MSAntenna msant = itsMS->antenna();
+  msant.addRow (itsNrAnt);
   Vector<Double> antOffset(3);
   antOffset = 0;
-  // Fill the ANTENNA subtable.
-  MSAntenna msant = itsMS->antenna();
   MSAntennaColumns msantCol(msant);
-  msant.addRow (itsNrAnt);
+  // First copy the possible input columns.
+  TableCopy::copyRows (msant, antTab);
+  // Write default values if there was no such input column.
+  if (! antTab.tableDesc().isColumn("NAME")) {
+    for (Int i=0; i<itsNrAnt; i++) {
+      msantCol.name().put (i, "ST_" + String::toString(i));
+    }
+  }
+  if (! antTab.tableDesc().isColumn("STATION")) {
+    for (Int i=0; i<itsNrAnt; i++) {
+      msantCol.station().put (i, "LOFAR");
+    }
+  }
+  if (! antTab.tableDesc().isColumn("TYPE")) {
+    for (Int i=0; i<itsNrAnt; i++) {
+      msantCol.type().put (i, "GROUND-BASED");
+    }
+  }
+  if (! antTab.tableDesc().isColumn("MOUNT")) {
+    for (Int i=0; i<itsNrAnt; i++) {
+      msantCol.mount().put (i, "ALT-AZ");
+    }
+  }
+  if (! antTab.tableDesc().isColumn("OFFSET")) {
+    for (Int i=0; i<itsNrAnt; i++) {
+      msantCol.offset().put (i, antOffset);
+    }
+  }
+  if (! antTab.tableDesc().isColumn("DISH_DIAMETER")) {
+    for (Int i=0; i<itsNrAnt; i++) {
+      msantCol.dishDiameter().put (i, 150);
+    }
+  }
+  if (! antTab.tableDesc().isColumn("FLAG_ROW")) {
+    for (Int i=0; i<itsNrAnt; i++) {
+      msantCol.flagRow().put (i, False);
+    }
+  }
+  // Always write the position.
   for (Int i=0; i<itsNrAnt; i++) {
-    msantCol.name().put (i, "ST_" + String::toString(i));
-    msantCol.station().put (i, "LOFAR");
-    msantCol.type().put (i, "GROUND-BASED");
-    msantCol.mount().put (i, "ALT-AZ");
     msantCol.positionMeas().put (i, antPos[i]);
-    msantCol.offset().put (i, antOffset);
-    msantCol.dishDiameter().put (i, 150);
-    msantCol.flagRow().put (i, False);
   }
   msant.flush();
 }
@@ -757,44 +806,62 @@ void MSCreate::fillBaseLines()
   }
 }
 
-void MSCreate::addImagerColumns()
+void MSCreate::addImagerColumns (MeasurementSet& ms)
 {
-  // Find data shape and tile shape.
-  IPosition shape(2,itsNrCorr,itsNrFreq);
-  ROTiledStManAccessor tsm(*itsMS, "TiledData");
-  IPosition dataTileShape(tsm.getTileShape(0));
-  {
+  // Find data shape from DATA column.
+  // Make tiles of appr. 1 MB.
+  IPosition shape = ROTableColumn(ms, MS::columnName(MS::DATA)).shapeColumn();
+  IPosition dataTileShape;
+  if (shape.empty()) {
+    dataTileShape = IPosition(3, 4, 64, (1024*1024)/(4*64*8));
+  } else {
+    dataTileShape = IPosition(3, shape[0], shape[1],
+                              (1024*1024)/(shape.product()*8));
+  }
+  String colName = MS::columnName(MS::CORRECTED_DATA);
+  if (! ms.tableDesc().isColumn(colName)) {
     TableDesc td;
-    String colName = MS::columnName(MS::CORRECTED_DATA);
-    td.addColumn (ArrayColumnDesc<Complex>(colName, "corrected data", shape,
-                                           ColumnDesc::FixedShape));
+    if (shape.empty()) {
+      td.addColumn (ArrayColumnDesc<Complex>(colName, "corrected data"));
+    } else {
+      td.addColumn (ArrayColumnDesc<Complex>(colName, "corrected data", shape,
+                                             ColumnDesc::FixedShape));
+    }
     TiledColumnStMan stMan("TiledCorrectedData", dataTileShape);
-    itsMS->addColumn (td, stMan);
+    ms.addColumn (td, stMan);
   }
-  {
+  colName = MS::columnName(MS::MODEL_DATA);
+  if (! ms.tableDesc().isColumn(colName)) {
     TableDesc td;
-    String colName = MS::columnName(MS::MODEL_DATA);
-    td.addColumn (ArrayColumnDesc<Complex>(colName, "model data", shape,
-                                           ColumnDesc::FixedShape));
+    if (shape.empty()) {
+      td.addColumn (ArrayColumnDesc<Complex>(colName, "model data"));
+    } else {
+      td.addColumn (ArrayColumnDesc<Complex>(colName, "model data", shape,
+                                             ColumnDesc::FixedShape));
+    }
     TiledColumnStMan stMan("TiledModelData", dataTileShape);
-    itsMS->addColumn (td, stMan);
+    ms.addColumn (td, stMan);
+    // Set MODEL_DATA keyword for casa::VisSet.
+    // Sort out the channel selection.
+    MSSpWindowColumns msSpW(ms.spectralWindow());
+    Matrix<Int> selection(2, msSpW.nrow());
+    // Fill in default selection (all bands and channels).
+    selection.row(0) = 0;    //start
+    selection.row(1) = msSpW.numChan().getColumn(); 
+    ArrayColumn<Complex> mcd(ms, colName);
+    mcd.rwKeywordSet().define ("CHANNEL_SELECTION",selection);
   }
-  {
+  colName = MS::columnName(MS::IMAGING_WEIGHT);
+  if (! ms.tableDesc().isColumn(colName)) {
     TableDesc td;
-    String colName = MS::columnName(MS::IMAGING_WEIGHT);
-    td.addColumn (ArrayColumnDesc<Float>(colName, "imaging weight",
-                                         IPosition(1, shape[1]),
-                                         ColumnDesc::FixedShape));
+    if (shape.empty()) {
+      td.addColumn (ArrayColumnDesc<Float>(colName, "imaging weight"));
+    } else {
+      td.addColumn (ArrayColumnDesc<Float>(colName, "imaging weight",
+                                           IPosition(1, shape[1]),
+                                           ColumnDesc::FixedShape));
+    }
     TiledColumnStMan stMan("TiledImagingWeight", dataTileShape.getLast(2));
-    itsMS->addColumn (td, stMan);
+    ms.addColumn (td, stMan);
   }
-  // Set keyword for casa::VisSet.
-  // Sort out the channel selection.
-  MSSpWindowColumns msSpW(itsMS->spectralWindow());
-  Matrix<Int> selection(2, msSpW.nrow());
-  // Fill in default selection (all bands and channels).
-  selection.row(0) = 0;    //start
-  selection.row(1) = msSpW.numChan().getColumn(); 
-  ArrayColumn<Complex> mcd(*itsMS,  MS::columnName(MS::MODEL_DATA));
-  mcd.rwKeywordSet().define ("CHANNEL_SELECTION",selection);
 }

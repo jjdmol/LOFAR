@@ -48,8 +48,11 @@ class BaselineReader {
 		bool ReadData() const { return _readData; }
 		void SetReadData(bool readData) { _readData = readData; }
 
-		enum DataKind DataKind() const { return _dataKind; }
-		void SetDataKind(enum DataKind kind) { _dataKind = kind; }
+		const std::string &DataColumnName() const { return _dataColumnName; }
+		void SetDataColumnName(const std::string &name) { _dataColumnName = name; }
+
+		bool SubtractModel() const { return _subtractModel; }
+		void SetSubtractModel(bool subtractModel) { _subtractModel = subtractModel; }
 
 		size_t PolarizationCount()
 		{
@@ -66,7 +69,13 @@ class BaselineReader {
 
 		MeasurementSet &Set() { return _measurementSet; }
 
-		const std::map<double,size_t> &ObservationTimes() const { return _observationTimes; }
+		const std::map<double,size_t> &AllObservationTimes() const { return _observationTimes; }
+		
+		std::vector<double> ObservationTimes(size_t startIndex, size_t endIndex) const {
+			std::vector<double> times;
+			times.insert(times.begin(), _observationTimesVector.begin()+startIndex, _observationTimesVector.begin()+endIndex);
+			return times;
+		}
 
 		void AddReadRequest(size_t antenna1, size_t antenna2, size_t spectralWindow);
 		void AddReadRequest(size_t antenna1, size_t antenna2, size_t spectralWindow, size_t startIndex, size_t endIndex)
@@ -100,7 +109,7 @@ class BaselineReader {
 			task.rightBorder = rightBorder;
 			_writeRequests.push_back(task);
 		}
-		virtual void PerformWriteRequests() = 0;
+		virtual void PerformFlagWriteRequests() = 0;
 		virtual void PerformDataWriteTask(std::vector<Image2DCPtr> _realImages, std::vector<Image2DCPtr> _imaginaryImages, int antenna1, int antenna2, int spectralWindow) = 0;
 		
 		virtual class TimeFrequencyData GetNextResult(std::vector<class UVW> &uvw);
@@ -173,8 +182,8 @@ class BaselineReader {
 			initObservationTimes();
 			initializePolarizations();
 		}
-		casa::ROArrayColumn<casa::Complex> *CreateDataColumn(enum DataKind kind, class casa::Table &table);
-		casa::ArrayColumn<casa::Complex> *CreateDataColumnRW(enum DataKind kind, class casa::Table &table);
+		casa::ROArrayColumn<casa::Complex> *CreateDataColumn(const std::string &columnName, class casa::Table &table);
+		casa::ArrayColumn<casa::Complex> *CreateDataColumnRW(const std::string &columnName, class casa::Table &table);
 		void clearTableCaches();
 
 		std::vector<ReadRequest> _readRequests;
@@ -202,10 +211,12 @@ class BaselineReader {
 		MeasurementSet _measurementSet;
 		class casa::Table *_table;
 		
-		enum DataKind _dataKind;
+		std::string _dataColumnName;
+		bool _subtractModel;
 		bool _readData, _readFlags;
 		
 		std::map<double,size_t> _observationTimes;
+		std::vector<double> _observationTimesVector;
 		size_t _polarizationCount;
 		size_t _frequencyCount;
 };

@@ -29,12 +29,19 @@
 // 
 
 global bool isConnected=false;
-global bool bDebug = false;
+global bool bDebug = true;
 global dyn_string dpList;
 global dyn_int    dpStates;
 global dyn_string msgs;
 
 main () {
+  
+  // check if we run on a standAlone system
+  if (!isDistributed() ) {
+    MainDBName         = getSystemName();
+    MainDBID           = getSystemId();
+    DebugN("Running in standAlone modus");
+  }
   
   // Set the global statecolors/colornames.
   initLofarColors();

@@ -9,8 +9,8 @@
 
 #include <Common/lofar_complex.h>
 
-#include <Interface/Config.h>
 #include <Interface/AlignedStdAllocator.h>
+#include <Interface/Config.h>
 
 #include <boost/multi_array.hpp>
 
@@ -22,18 +22,19 @@ enum WindowType { HAMMING, BLACKMAN, GAUSSIAN, KAISER, PREDEFINED_FILTER };
 // Note that the filter tap constants for a channel are in reverse order.
 // This makes the implementation more efficient.
 
-class FilterBank {
+class FilterBank
+{
   public:
 
   // This constructor designs a new filter with the specified parameters, and initializes the weights array.
-  FilterBank(const bool verbose, const unsigned taps, const unsigned channels, const WindowType windowType);
+  FilterBank(bool verbose, unsigned taps, unsigned channels, WindowType windowType);
 
   // This constructor creates a filterbank from an already existing set of weights.
-  FilterBank(const bool verbose, const unsigned taps, const unsigned channels, float* weights);
+  FilterBank(bool verbose, unsigned taps, unsigned channels, float *weights);
 
   unsigned getNrTaps();
 
-  float* getWeights(unsigned channel);
+  float *getWeights(unsigned channel);
 
   // In CEP, the first subband is from -98 KHz to 98 KHz, rather than from 0 to 195 KHz.
   // To avoid that the FFT outputs the channels in the wrong order (from 128 to
@@ -52,22 +53,21 @@ class FilterBank {
 
 private:
   // Hamming window function
-  void hamming(const unsigned n, double* d);
+  void hamming(unsigned n, double d[]);
 
   // Blackman window function
-  void blackman(const unsigned n, double* d);
+  void blackman(unsigned n, double d[]);
 
   // Gaussian window function
-  void gaussian(const int n, const double a, double* d);
+  void gaussian(int n, double a, double d[]);
 
   // Kaiser window function
-  void kaiser(const int n, const double beta, double* d);
+  void kaiser(int n, double beta, double d[]);
 
   // helper functions
-  double besselI0(const double x);
-  unsigned next_power_of_2(const unsigned n);
-  void interpolate(const double* x, const double* y, const unsigned xlen, const unsigned n, double* result);
-  void generate_fir_filter(const unsigned n, const double w, const double* window, double* result);
+  double besselI0(double x);
+  void interpolate(const double x[], const double y[], unsigned xlen, unsigned n, double result[]);
+  void generate_fir_filter(unsigned n, double w, const double window[], double result[]);
   void generate_filter();
 
 
@@ -92,17 +92,19 @@ private:
 
 inline unsigned FilterBank::getNrTaps()
 {
-	return itsNrTaps;
+  return itsNrTaps;
 }
 
 
-inline float* FilterBank::getWeights(unsigned channel)
+inline float *FilterBank::getWeights(unsigned channel)
 {
-	return weights[channel].origin();
+  return weights[channel].origin();
 }
 
-inline bool FilterBank::isNegated() {
-	return itsNegated;
+
+inline bool FilterBank::isNegated()
+{
+  return itsNegated;
 }
 
 } // namespace RTCP

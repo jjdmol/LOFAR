@@ -18,6 +18,7 @@ lofar_add_library(rsp_protocol
   BeamletWeights.cc
   BypassSettings.cc
   HBASettings.cc
+  Latency.cc
   MEPHeader.cc
   MEPData.cc
   RCUSettings.cc
@@ -30,7 +31,10 @@ lofar_add_library(rsp_protocol
   TDStatus.cc
   Versions.cc
   WGSettings.cc
-  XCStatistics.cc
-  Latency.cc)
+  XCStatistics.cc)
+
+add_dependencies(rsp_protocol 
+  RSP_Protocol-EPA_Protocol
+  RSP_Protocol-RSP_Protocol)
 
 lofar_add_bin_program(versionrsp_protocol versionrsp_protocol.cc)

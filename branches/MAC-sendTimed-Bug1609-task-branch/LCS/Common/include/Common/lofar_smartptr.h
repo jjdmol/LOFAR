@@ -30,12 +30,6 @@
 #error Boost Smart Pointer classes are required.
 #endif
 
-#if defined(USE_THREADS)
-# define BOOST_AC_USE_PTHREADS
-#else
-# define BOOST_DISABLE_THREADS
-#endif
-
 #include <boost/smart_ptr.hpp>
 
 namespace LOFAR

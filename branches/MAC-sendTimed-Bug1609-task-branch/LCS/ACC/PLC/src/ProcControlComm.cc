@@ -23,7 +23,6 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <Transport/TH_Socket.h>
 #include <PLC/ProcControlComm.h>
 
 namespace LOFAR {
@@ -39,17 +38,17 @@ ProcControlComm::ProcControlComm(const string&		hostname,
 	itsReadConn(0),
 	itsWriteConn(0),
 	itsDataHolder(new DH_ProcControl),
-	itsSyncComm(syncComm)
+	itsSyncComm(syncComm),
+    itsTHSocket(new TH_Socket(hostname, port, syncComm))
 {
 	ASSERTSTR(itsDataHolder, "Unable to allocate a dataholder");
 	itsDataHolder->init();
 
-	TH_Socket*	theTH = new TH_Socket(hostname, port, syncComm);
-	ASSERTSTR(theTH, "Unable to allocate a transportHolder");
-	theTH->init();
+	ASSERTSTR(itsTHSocket, "Unable to allocate a transportHolder");
+	itsTHSocket->init();
 
-	itsReadConn  = new CSConnection("read",  0, itsDataHolder, theTH, syncComm);
-	itsWriteConn = new CSConnection("write", itsDataHolder, 0, theTH, syncComm);
+	itsReadConn  = new CSConnection("read",  0, itsDataHolder, itsTHSocket, syncComm);
+	itsWriteConn = new CSConnection("write", itsDataHolder, 0, itsTHSocket, syncComm);
 	ASSERTSTR(itsReadConn,  "Unable to allocate connection for reading");
 	ASSERTSTR(itsWriteConn, "Unable to allocate connection for wrtiting");
 }
@@ -62,26 +61,28 @@ ProcControlComm::ProcControlComm(const string&		port,
 	itsReadConn(0),
 	itsWriteConn(0),
 	itsDataHolder(new DH_ProcControl),
-	itsSyncComm(syncComm)
+	itsSyncComm(syncComm),
+    itsTHSocket(new TH_Socket(port, syncComm))
 {
 	ASSERTSTR(itsDataHolder, "Unable to allocate a dataholder");
 	itsDataHolder->init();
 
-	TH_Socket*	theTH = new TH_Socket(port, syncComm);
-	ASSERTSTR(theTH, "Unable to allocate a transportHolder");
-	theTH->init();
+	ASSERTSTR(itsTHSocket, "Unable to allocate a transportHolder");
+	itsTHSocket->init();
 
-	itsReadConn  = new CSConnection("read",  0, itsDataHolder, theTH, syncComm);
-	itsWriteConn = new CSConnection("write", itsDataHolder, 0, theTH, syncComm);
+	itsReadConn  = new CSConnection("read",  0, itsDataHolder, itsTHSocket, syncComm);
+	itsWriteConn = new CSConnection("write", itsDataHolder, 0, itsTHSocket, syncComm);
 	ASSERTSTR(itsReadConn,  "Unable to allocate connection for reading");
 	ASSERTSTR(itsWriteConn, "Unable to allocate connection for wrtiting");
 }
+
 // Destructor
 ProcControlComm::~ProcControlComm() 
 {
-	if (itsDataHolder) {
-		delete itsDataHolder;
-	}
+    delete itsWriteConn;
+    delete itsReadConn;
+    delete itsTHSocket;
+	delete itsDataHolder;
 }
 
 //# Returns the result code from the last completed command.

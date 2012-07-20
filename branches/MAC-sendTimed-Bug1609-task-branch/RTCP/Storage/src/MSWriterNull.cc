@@ -22,36 +22,28 @@
 
 #include <lofar_config.h>
 
-#include <AMCBase/Epoch.h>
-#include <Common/LofarLogger.h>
-#include <Storage/MSWriter.h>
 #include <Storage/MSWriterNull.h>
 
-#if defined HAVE_MPI
-#include <mpi.h>
-#endif
+
+namespace LOFAR {
+namespace RTCP {
 
 
-namespace LOFAR 
+MSWriterNull::MSWriterNull ()
 {
-
-  namespace RTCP
-  {
-
-    MSWriterNull::MSWriterNull ()
-    {
-    }
-
-    MSWriterNull::~MSWriterNull()
-    {
-    }
-
-    void MSWriterNull::write(StreamableData*)
-    {
-      //nothing
-    }
+}
 
 
-  } // namespace RTCP
+MSWriterNull::~MSWriterNull()
+{
+}
+
+
+void MSWriterNull::write(StreamableData *)
+{
+}
+
+
+} // namespace RTCP
 } // namespace LOFAR
 

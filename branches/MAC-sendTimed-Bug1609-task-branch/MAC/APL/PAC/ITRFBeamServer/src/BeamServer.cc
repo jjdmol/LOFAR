@@ -29,11 +29,11 @@
 #include <Common/ParameterSet.h>
 #include <Common/StreamUtil.h>
 #include <ApplCommon/StationConfig.h>
+#include <ApplCommon/AntennaSets.h>
 
 #include <MACIO/MACServiceInfo.h>
-#include <APL/APLCommon/AntennaField.h>
-#include <APL/APLCommon/AntennaSets.h>
 
+#include <APL/APLCommon/AntennaField.h>
 #include <APL/IBS_Protocol/IBS_Protocol.ph>
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <APL/CAL_Protocol/CAL_Protocol.ph>
@@ -53,7 +53,6 @@
 
 using namespace blitz;
 namespace LOFAR {
-  using namespace APLCommon;
   using namespace RTC;
   using namespace IBS_Protocol;
   using namespace RSP_Protocol;
@@ -84,7 +83,7 @@ BeamServer::BeamServer(const string& name, long	timestamp) :
 	itsHBAUpdateInterval	(0),
 	itsTestSingleShotTimestamp(timestamp)
 {
-//	LOG_INFO(Version::getInfo<ITRFBeamServerVersion>("ITRFBeamServer"));
+	LOG_INFO(Version::getInfo<ITRFBeamServerVersion>("ITRFBeamServer"));
 
 	// register protocols for debugging
 	registerProtocol(IBS_PROTOCOL, IBS_PROTOCOL_STRINGS);
@@ -362,16 +361,16 @@ GCFEvent::TResult BeamServer::con2calserver(GCFEvent& event, GCFPortInterface& p
 
 	switch(event.signal) {
 	case F_ENTRY: {
-		itsCalServer->autoOpen(5, 0, 2);	// try max 5 times every 2 seconds than report DISCO
+		itsCalServer->open();
 	}
 	break;
 
 	case F_CONNECTED: {
 		// start update timer and start accepting clients
-		LOG_DEBUG_STR("Starting digital pointing timer with interval: " << itsUpdateInterval << " secs");
+		LOG_INFO_STR("Starting digital pointing timer with interval: " << itsUpdateInterval << " secs");
 		itsDigHeartbeat->setTimer(0, 0, itsUpdateInterval, 0);
 		if (itsSetHBAEnabled) {
-			LOG_DEBUG_STR("Starting analogue pointing timer with interval: " << itsHBAUpdateInterval << " secs");
+			LOG_INFO_STR("Starting analogue pointing timer with interval: " << itsHBAUpdateInterval << " secs");
 			itsAnaHeartbeat->setTimer(2, 0, itsHBAUpdateInterval, 0);	// start 2 seconds later
 		}
 		else {
@@ -388,15 +387,15 @@ GCFEvent::TResult BeamServer::con2calserver(GCFEvent& event, GCFPortInterface& p
 
 	case F_DISCONNECTED: {
 		port.close();
-		port.setTimer(10.0);
-		LOG_INFO(formatString("port '%s' disconnected, retry in 10 seconds...", port.getName().c_str()));
+		port.setTimer(2.0);
+		LOG_INFO(formatString("port '%s' disconnected, retry in 2 seconds...", port.getName().c_str()));
 	}
 	break;
 
 	case F_TIMER: {
 		LOG_INFO_STR("port.getState()=" << port.getState());
 		LOG_INFO(formatString("port '%s' retry to open...", port.getName().c_str()));
-		itsCalServer->autoOpen(5, 0, 2);	// try max 5 times every 2 seconds than report DISCO
+		itsCalServer->open();
 	}
 	break;
 
@@ -454,7 +453,7 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& event, GCFPortInterface& port)
 			if (weightsPeriod >= itsComputeInterval) {
 				weightsPeriod = 0;
 				// compute new weights and send the weights
-				LOG_INFO_STR("computing weights " << Timestamp(timer->sec, timer->usec));
+				LOG_INFO_STR("Computing weights " << Timestamp(timer->sec, timer->usec));
 				compute_weights(Timestamp(timer->sec + LEADIN_TIME, 0L));
 				send_weights   (Timestamp(timer->sec + LEADIN_TIME, 0L));
 			}
@@ -468,9 +467,15 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& event, GCFPortInterface& port)
 
 		if (&port == itsAnaHeartbeat) {
 			GCFTimerEvent* timer = static_cast<GCFTimerEvent*>(&event);
-			LOG_INFO_STR("computing HBA delays " << Timestamp(timer->sec, timer->usec));
-			itsAnaBeamMgr->calculateHBAdelays(Timestamp((long)timer->sec + LEADIN_TIME, 0L), *itsJ2000Converter);
-			itsAnaBeamMgr->sendHBAdelays     (*itsRSPDriver);
+			if (timer->sec - itsLastHBACalculationTime < HBA_MIN_INTERVAL) {
+				LOG_INFO_STR("Skipping HBA delay calculations: too soon after previous run");
+			}
+			else {
+				LOG_INFO_STR("Computing HBA delays " << Timestamp(timer->sec, timer->usec));
+				itsAnaBeamMgr->calculateHBAdelays(Timestamp((long)timer->sec + LEADIN_TIME, 0L), *itsJ2000Converter);
+				itsAnaBeamMgr->sendHBAdelays     (*itsRSPDriver);
+				itsLastHBACalculationTime = timer->sec;
+			}
 			return (GCFEvent::HANDLED);
 		}
 		
@@ -479,6 +484,19 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& event, GCFPortInterface& port)
 	break;
 
 	// ---------- requests from the clients ----------
+	case IBS_GETCALINFO: {
+		IBSGetcalinfoackEvent	answer;
+		ostringstream	oss;
+		if (itsCalTableMode1)	oss << *itsCalTableMode1 << endl;
+		if (itsCalTableMode3)	oss << *itsCalTableMode3 << endl;
+		if (itsCalTableMode5)	oss << *itsCalTableMode5 << endl;
+		if (itsCalTableMode6)	oss << *itsCalTableMode6 << endl;
+		if (itsCalTableMode7)	oss << *itsCalTableMode7 << endl;
+		answer.info = oss.str();
+		port.send(answer);
+	}
+	break;
+
 	case IBS_BEAMALLOC: {
 		IBSBeamallocEvent 	allocEvent(event);
 		LOG_DEBUG_STR("ALLOC event=" << allocEvent);
@@ -614,11 +632,14 @@ GCFEvent::TResult BeamServer::cleanup(GCFEvent& event, GCFPortInterface& port)
 	}
 	break;
 
-	case F_TIMER: {
+	case F_TIMER:
 		LOG_DEBUG("closed all TCP ports, going to 'con2rspdriver' state for restart");
 		TRAN(BeamServer::con2rspdriver);
-	}
 	break;
+
+	case F_EXIT:
+		itsConnectTimer->cancelAllTimers();
+		break;
 
 	default:
 		LOG_DEBUG("cleanup:default");
@@ -706,6 +727,12 @@ GCFEvent::TResult BeamServer::beamalloc_state(GCFEvent& event, GCFPortInterface&
 	break;
 
 	case F_TIMER: {
+		if (&port != itsConnectTimer) {
+			// Timer event may be from one of the pointing timers, ignore them
+			LOG_INFO_STR(">>> TimerEvent on port " << port.getName() << " while in alloc state, ignoring it");
+			return (GCFEvent::HANDLED);
+//			return ((&port==itsAnaHeartbeat) ? GCFEvent::NEXT_STATE : GCFEvent::HANDLED); TODO: FIX THIS
+		}
 		IBSBeamallocackEvent beamallocack;
 		LOG_ERROR_STR("Timeout on starting the calibration of beam " << itsBeamTransaction.getBeam()->name());
 		beamallocack.status       = IBS_BEAMALLOC_ERR;
@@ -725,7 +752,9 @@ GCFEvent::TResult BeamServer::beamalloc_state(GCFEvent& event, GCFPortInterface&
 			LOG_WARN("Lost connection, going back to 'enabled' state");
 			TRAN(BeamServer::enabled);
 		}
-		return (GCFEvent::NEXT_STATE);
+		queueTaskEvent(event, port);
+		return (GCFEvent::HANDLED);
+//		return (GCFEvent::NEXT_STATE);
 	}
 	break;
 
@@ -775,13 +804,12 @@ GCFEvent::TResult BeamServer::beamfree_state(GCFEvent& event, GCFPortInterface& 
 		// it was stopped (CAL_STOP by SRG) then
 		// issue a warning but continue
 		if (ack.status != CAL_Protocol::CAL_SUCCESS) {
-			LOG_WARN("CAL_UNSUBSCRIBE failed");
+			LOG_WARN_STR("CAL_UNSUBSCRIBE failed, status = " << ack.status);
 		}
 
 		// send succesful ack
 		beamfreeack.status   = IBS_Protocol::IBS_NO_ERR;
 		beamfreeack.beamName = itsBeamTransaction.getBeam()->name();
-
 		itsBeamTransaction.getPort()->send(beamfreeack);
 
 		// destroy beam, updates itsBeamTransaction
@@ -793,6 +821,12 @@ GCFEvent::TResult BeamServer::beamfree_state(GCFEvent& event, GCFPortInterface& 
 	break;
 
 	case F_TIMER: {
+		if (&port != itsConnectTimer) {
+			// Timer event may be from one of the pointing timers, ignore them
+			LOG_INFO_STR(">>> TimerEvent on port " << port.getName() << " while in free state, ignoring it");
+			return (GCFEvent::HANDLED);
+//			return ((&port==itsAnaHeartbeat) ? GCFEvent::NEXT_STATE : GCFEvent::HANDLED); TODO: FIX THIS
+		}
 		LOG_DEBUG_STR("Timeout on ending subscription of beam " << itsBeamTransaction.getBeam()->name());
 		TRAN(BeamServer::enabled);
 	}
@@ -804,7 +838,9 @@ GCFEvent::TResult BeamServer::beamfree_state(GCFEvent& event, GCFPortInterface& 
 			LOG_WARN("Lost connection, going back to 'enabled' state");
 			TRAN(BeamServer::enabled);
 		}
-		return (GCFEvent::NEXT_STATE);
+		queueTaskEvent(event, port);
+		return (GCFEvent::HANDLED);
+//		return (GCFEvent::NEXT_STATE);
 	}
 	break;
 
@@ -919,16 +955,64 @@ int BeamServer::beampointto_action(IBSPointtoEvent&		ptEvent,
 	}
 	// END OF TEMP CODE
 
-	if (ptEvent.analogue) {
-		// note we don't know if we added the beam before, just do it again and ignore returnvalue.
-		itsAnaBeamMgr->addBeam(AnalogueBeam(ptEvent.beamName, beamIter->second->antennaSetName(), 
-										beamIter->second->rcuMask(), ptEvent.rank));
-		return (itsAnaBeamMgr->addPointing(ptEvent.beamName, ptEvent.pointing) ? 
-					IBS_NO_ERR : IBS_UNKNOWN_BEAM_ERR);
-	}
-	else {
+	LOG_DEBUG_STR("Starttime of pointing is " << ptEvent.pointing.time());
+	if (!ptEvent.analogue) {
 		return (beamIter->second->addPointing(ptEvent.pointing));
 	}
+
+	// The analogue must be started several seconds before the observationstart time because the I2C bus
+	// needs several seconds to pass the information
+	int		activationTime = _idealStartTime(Timestamp::now().sec(), 
+				ptEvent.pointing.time(), HBA_MIN_INTERVAL, 
+				itsLastHBACalculationTime+itsHBAUpdateInterval, HBA_MIN_INTERVAL, itsHBAUpdateInterval);
+	int		timeShift(ptEvent.pointing.time().sec() - activationTime);
+	// update pointing
+	ptEvent.pointing.setTime(Timestamp(activationTime,0));
+	if (ptEvent.pointing.duration() && timeShift) {
+		ptEvent.pointing.setDuration(ptEvent.pointing.duration()+timeShift);
+		LOG_INFO_STR("Extended duration of " << beamIter->second->name() << " with " << timeShift << " seconds because starttime was shifted");
+	}
+
+	// note we don't know if we added the beam before, just do it again and ignore returnvalue.
+	itsAnaBeamMgr->addBeam(AnalogueBeam(ptEvent.beamName, beamIter->second->antennaSetName(), 
+									beamIter->second->rcuMask(), ptEvent.rank));
+	if (!itsAnaBeamMgr->addPointing(ptEvent.beamName, ptEvent.pointing)) {
+		return (IBS_UNKNOWN_BEAM_ERR);
+	}
+
+	itsAnaHeartbeat->setTimer(activationTime - Timestamp::now().sec());
+
+	LOG_INFO_STR("Analogue beam for beam " << beamIter->second->name() << " will be active at " << Timestamp(activationTime+HBA_MIN_INTERVAL, 0));
+	LOG_INFO_STR("Analogue pointing for beam " << beamIter->second->name() << " will be send at " << Timestamp(activationTime, 0));
+	LOG_DEBUG_STR("ptEvent.pointing.time()  =" << ptEvent.pointing.time());
+	LOG_DEBUG_STR("itsLastHBACalculationTime=" << itsLastHBACalculationTime);
+	LOG_DEBUG_STR("itsHBAUpdateInterval     =" << itsHBAUpdateInterval);
+	LOG_DEBUG_STR("Timestamp::now().sec()   =" << Timestamp::now().sec());
+	LOG_DEBUG_STR("activationTime           =" << activationTime);
+
+	return (IBS_NO_ERR);
+}
+
+//
+// _idealStartTime(now,t1,d1,t2,d2,p2)
+//
+// t1: start time of beam
+// d1: period it takes to get the beam active
+// t2: nexttime heartbeat will happen
+// d2: period it takes to complete the heartbeat
+// p2: interval of the heartbeat.
+// Returns the time the activation of t1 should be started.
+//
+int	BeamServer::_idealStartTime (int now, int t1, int d1, int t2, int d2, int p2) const
+{
+	int	t1start = t1-d1;				// ideal starttime
+	if (t1start < now) 					// not before now ofcourse
+		t1start = now;
+	int nearestt2 = (t1start<=t2 ? t2 : t2+((t1-t2)/p2)*p2);
+	if (t1start > nearestt2 && t1start < nearestt2+d2)	// not during heartbeat period
+		t1start = nearestt2;
+
+	return (t1start);
 }
 
 //
@@ -967,7 +1051,7 @@ void BeamServer::_createBeamPool()
 	itsBeamPool.clear();
 
 	// make a new one based on the current value of the splitter.
-	int		nrBeamlets = (itsSplitterOn ? 2 : 1 ) * MEPHeader::N_BEAMLETS;
+	int		nrBeamlets = (itsSplitterOn ? 2 : 1 ) * MAX_BEAMLETS;
 	LOG_INFO_STR("Initializing space for " << nrBeamlets << " beamlets");
 	itsBeamletAllocation.clear();
 	itsBeamletAllocation.resize(nrBeamlets, BeamletAlloc_t(0,0.0));
@@ -1310,7 +1394,7 @@ complex<double>	BeamServer::_getCalFactor(uint rcuMode, uint rcu, uint subbandNr
 		break;
 	}
 
-	LOG_DEBUG_STR("calFactor(" << rcuMode << "," << rcu << "," << subbandNr << ")=" << result);
+//	LOG_DEBUG_STR("calFactor(" << rcuMode << "," << rcu << "," << subbandNr << ")=" << result);
 	return (result);
 }
 
@@ -1341,7 +1425,10 @@ void BeamServer::_loadCalTable(uint rcuMode, uint nrRSPBoards)
 			case 6:
 			case 7: LOG_WARN_STR ("NO CALIBRATION TABLE FOUND FOR MODE " << rcuMode); break;
 		}
+		return;
 	}
+
+	LOG_INFO_STR(**tableHandle);
 }
 
 
@@ -1418,11 +1505,11 @@ void BeamServer::compute_weights(Timestamp weightTime)
 			LOG_DEBUG_STR("No antennas defined in this field");
 			continue;
 		}
-		LOG_DEBUG_STR("ITRFRCUPos = " << rcuPosITRF);
+//		LOG_DEBUG_STR("ITRFRCUPos = " << rcuPosITRF);
 
 		// Get geographical location of subarray in ITRF
 		blitz::Array<double, 1> fieldCentreITRF = gAntField->Centre(fieldName);
-		LOG_DEBUG_STR("ITRF position antennaField: " << fieldCentreITRF);
+//		LOG_DEBUG_STR("ITRF position antennaField: " << fieldCentreITRF);
 
 		// convert ITRF position of all antennas to J2000 for timestamp t
 		blitz::Array<double,2>	rcuJ2000Pos; // [rcu, xyz]
@@ -1433,11 +1520,11 @@ void BeamServer::compute_weights(Timestamp weightTime)
 
 		// Lengths of the vector of the antennaPosition i.r.t. the fieldCentre,
 		blitz::Array<double,1>	rcuPosLengths = gAntField->RCULengths(fieldName);
-		LOG_DEBUG_STR("rcuPosLengths = " << rcuPosLengths);
+//		LOG_DEBUG_STR("rcuPosLengths = " << rcuPosLengths);
 
 		// denormalize length of vector
 		rcuJ2000Pos = rcuJ2000Pos(tensor::i, tensor::j) * rcuPosLengths(tensor::i);
-		LOG_DEBUG_STR("J2000RCUPos@fullLength=" << rcuJ2000Pos);
+//		LOG_DEBUG_STR("J2000RCUPos@fullLength=" << rcuJ2000Pos);
 
 		// for all beams using this field
 		map<string, DigitalBeam*>::iterator	beamIter = itsBeamPool.begin();
@@ -1456,12 +1543,13 @@ void BeamServer::compute_weights(Timestamp weightTime)
 			blitz::Array<double,2>	curPoint(1,2);		// [1, angles]
 			curPoint(0,0) = currentPointing.angle0();
 			curPoint(0,1) = currentPointing.angle1();
-			LOG_DEBUG_STR("current pointing for beam " << beamIter->second->name() << ":" << currentPointing);
+			LOG_INFO_STR("current pointing for beam " << beamIter->second->name() << ":" << currentPointing);
 			if (!itsJ2000Converter->doConversion(currentPointing.getType(), curPoint, fieldCentreITRF, weightTime, sourceJ2000xyz)) {
 				LOG_FATAL_STR("Conversion of source to J2000 failed");
 				continue;
 			}
-			LOG_DEBUG_STR("sourceJ2000xyz:" << sourceJ2000xyz);
+			LOG_INFO(formatString("sourceJ2000xyz: [ %9.6f, %9.6f, %9.6f ]", 
+							sourceJ2000xyz(0,0), sourceJ2000xyz(0,1), sourceJ2000xyz(0,2)));
 
 			// Note: Beamlet numbers depend on the ring.
 			int	firstBeamlet(gAntField->ringNr(fieldName) * LOFAR::MAX_BEAMLETS);
@@ -1528,7 +1616,7 @@ void BeamServer::send_weights(Timestamp time)
 		sw.rcumask.set(i);
 	}
   
-	sw.weights().resize(1, itsMaxRCUs, MEPHeader::N_BEAMLETS);
+	sw.weights().resize(1, itsMaxRCUs, MAX_BEAMLETS);
 	sw.weights()(0, Range::all(), Range::all()) = itsWeights16;
   
 	LOG_INFO_STR("sending weights for interval " << time << " : " << time + (long)(itsComputeInterval-1));
@@ -1572,7 +1660,7 @@ void BeamServer::send_sbselection()
 		// of 64 beamlets before the beamlets of beam 1.
 		//
 		ss.subbands.setType(SubbandSelection::BEAMLET);
-		ss.subbands().resize(1, MEPHeader::N_BEAMLETS);
+		ss.subbands().resize(1, MAX_BEAMLETS);
 		ss.subbands() = 0;
 
 		// reconstruct the selection
@@ -1594,12 +1682,12 @@ void BeamServer::send_sbselection()
 		for ( ; iter != end; ++iter) {
 			LOG_DEBUG(formatString("(%d,%d)", iter->first, iter->second));
 
-			if (iter->first >= MEPHeader::N_BEAMLETS) {
+			if (iter->first >= MAX_BEAMLETS) {
 				LOG_ERROR(formatString("SBSELECTION: invalid src index %d", iter->first));
 				continue;
 			}
 
-			if (iter->second >= MEPHeader::N_SUBBANDS) {
+			if (iter->second >= MAX_SUBBANDS) {
 				LOG_ERROR(formatString("SBSELECTION: invalid tgt index %d", iter->second));
 				continue;
 			}

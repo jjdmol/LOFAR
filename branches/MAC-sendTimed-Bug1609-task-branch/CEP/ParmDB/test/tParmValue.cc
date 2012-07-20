@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <ParmDB/ParmValue.h>
+#include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayLogical.h>
 #include <Common/LofarLogger.h>
@@ -236,6 +237,37 @@ void testSolveCoeffSet()
   checkSolveCoeffSet (pset, 10, 12);
 }
 
+double calc2 (const Matrix<double>& coeff, double x, double y)
+{
+  int nx = coeff.shape()(0);
+  int ny = coeff.shape()(1);
+  double res=0;
+  double py = 1;
+  for (int iy=0; iy<ny; ++iy) {
+    double px = py;
+    for (int ix=0; ix<nx; ++ix) {
+      res += px * coeff(ix,iy);
+      px *= x;
+    }
+    py *= y;
+  }
+  return res;
+}
+
+void testScaleDomain (int ox, int oy)
+{
+  cout << "  order=(" << ox << ',' << oy << ')' << endl;
+  Matrix<double> coeff(ox+1, oy+1);
+  indgen(coeff, 2.);
+  double f23 = calc2(coeff,2,3);
+  double f32 = calc2(coeff,3,2);
+  // Scale the coefficients to another domain.
+  Matrix<double> scoeff1 = ParmValue::scale2(coeff, 3, 4, 5, 6);
+  // Check if results are the same.
+  ASSERT (near (calc2(scoeff1,(2-3)/5.,(3-4)/6.), f23));
+  ASSERT (near (calc2(scoeff1,(3-3)/5.,(2-4)/6.), f32));
+}
+
 int main()
 {
   try {
@@ -252,7 +284,13 @@ int main()
     testSolveScalarSet();
     cout << "testing setSolveCoeffSet ..." << endl;
     testSolveCoeffSet();
-  } catch (exception& x) {
+    cout << "testing polynomial rescaling ..." << endl;
+    testScaleDomain(0,0);
+    testScaleDomain(0,2);
+    testScaleDomain(2,0);
+    testScaleDomain(2,2);
+    testScaleDomain(3,5);
+   } catch (exception& x) {
     cout << "Unexpected exception: " << x.what() << endl;
     return 1;
   }

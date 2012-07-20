@@ -20,9 +20,11 @@
 #include <AOFlagger/util/rng.h>
 
 #include <stdlib.h>
-#include <math.h>
+#include <cmath>
 
-#include <AOFlagger/msio/image2d.h>
+#ifndef M_PIl
+#define M_PIl M_PI
+#endif
 
 RNG::RNG()
 {
@@ -52,13 +54,13 @@ double RNG::GaussianPartialProduct()
 	long double a, b;
 	DoubleGaussian(a, b);
 	if(a >= 0.0)
-		a = pow(a, sqrt(2.0)/2.0);
+		a = pow(a, M_SQRT2/2.0);
 	else
-		a = -pow(-a, sqrt(2.0)/2.0);
+		a = -pow(-a, M_SQRT2/2.0);
 	if(b >= 0.0)
-		b = pow(b, sqrt(2.0)/2.0);
+		b = pow(b, M_SQRT2/2.0);
 	else
-		b = -pow(-b, sqrt(2.0)/2.0);
+		b = -pow(-b, M_SQRT2/2.0);
 	return a*b;
 }
 
@@ -74,7 +76,7 @@ void RNG::DoubleGaussian(long double &a, long double &b)
 		w = x1 * x1 + x2 * x2;
 	} while ( w >= 1.0 );
 
-	w = sqrtl( (-2.0 * logl( w ) ) / w );
+	w = std::sqrt( (-2.0 * std::log( w ) ) / w );
 	a = x1 * w;
 	b = x2 * w;
 }
@@ -95,32 +97,32 @@ double RNG::IntegrateGaussian(long double upperLimit)
 	long double integral = 0.0L, term = 0.0L, stepSize = 1e-4L;
 	upperLimit -= stepSize/2.0L;
 	do {
-		term = expl(-upperLimit * upperLimit / 2.0L);
+		term = std::exp(-upperLimit * upperLimit / 2.0L);
 		upperLimit -= stepSize;
 		integral += term * stepSize;
 	} while(term >= 1e-6 || upperLimit >= 0);
-	return integral / sqrtl(2.0L * M_PI);
+	return integral / std::sqrt(2.0L * M_PIl);
 }
 
 double RNG::EvaluateGaussian(double x, double sigma)
 {
-	return 1.0 / (sigma * sqrtl(2.0L*M_PI)) * expl(-0.5*x*x/sigma);
+	return 1.0 / (sigma * std::sqrt(2.0L*M_PI)) * std::exp(-0.5*x*x/sigma);
 }
 
 long double RNG::EvaluateGaussian(long double x, long double sigma)
 {
-	return 1.0L / (sigma * sqrtl(2.0L*M_PI)) * expl(-0.5L*x*x/sigma);
+	return 1.0L / (sigma * std::sqrt(2.0L*M_PI)) * std::exp(-0.5L*x*x/sigma);
 }
 
 double RNG::EvaluateGaussian2D(long double x1, long double x2, long double sigmaX1, long double sigmaX2)
 {
-	return 1.0L / (2.0L*M_PI*sigmaX1*sigmaX2) * expl(-0.5L*(x1*(1.0L/sigmaX1)*x1 + x2*(1.0L/sigmaX2)*x2));
+	return 1.0L / (2.0L*M_PI*sigmaX1*sigmaX2) * std::exp(-0.5L*(x1*(1.0L/sigmaX1)*x1 + x2*(1.0L/sigmaX2)*x2));
 }
 
 void RNG::ComplexGaussianAmplitude(num_t &r, num_t &i)
 {
 	num_t amplitude = Gaussian();
 	num_t phase = Uniform() * 2.0 * M_PIn;
-	r = amplitude * cosn(phase);
-	i = amplitude * sinn(phase);
+	r = amplitude * std::cos(phase);
+	i = amplitude * std::sin(phase);
 }

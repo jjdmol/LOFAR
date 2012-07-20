@@ -36,16 +36,23 @@ class IndirectBaselineReader : public BaselineReader {
 		~IndirectBaselineReader();
 
 		virtual void PerformReadRequests();
-		virtual void PerformWriteRequests();
+		virtual void PerformFlagWriteRequests();
 		virtual void PerformDataWriteTask(std::vector<Image2DCPtr> _realImages, std::vector<Image2DCPtr> _imaginaryImages, int antenna1, int antenna2, int spectralWindow);
 		
 		void ShowStatistics();
 		virtual size_t GetMinRecommendedBufferSize(size_t /*threadCount*/) { return 1; }
 		virtual size_t GetMaxRecommendedBufferSize(size_t /*threadCount*/) { return 2; }
+		void SetReadUVW(bool readUVW) { _readUVW = readUVW; }
 	private:
 		void initializeReorderedMS();
 		void reorderMS();
+		void updateOriginalMSData();
+		void updateOriginalMSFlags();
+		void performFlagWriteTask(std::vector<Mask2DCPtr> flags, int antenna1, int antenna2);
+		
+		template<bool UpdateData, bool UpdateFlags>
 		void updateOriginalMS();
+		
 		void removeTemporaryFiles();
 		std::string DataFilename(int antenna1, int antenna2) const
 		{
@@ -55,15 +62,16 @@ class IndirectBaselineReader : public BaselineReader {
 		}
 		std::string FlagFilename(int antenna1, int antenna2) const
 		{
-			std::stringstream dataFilename;
-			dataFilename << "flag-" << antenna1 << "x" << antenna2 << ".tmp";
-			return dataFilename.str();
+			std::stringstream flagFilename;
+			flagFilename << "flag-" << antenna1 << "x" << antenna2 << ".tmp";
+			return flagFilename.str();
 		}
 
 		DirectBaselineReader _directReader;
 		bool _msIsReordered;
 		bool _removeReorderedFiles;
-		bool _reorderedFilesHaveChanged;
+		bool _reorderedDataFilesHaveChanged;
+		bool _reorderedFlagFilesHaveChanged;
 		size_t _maxMemoryUse;
 		bool _readUVW;
 };

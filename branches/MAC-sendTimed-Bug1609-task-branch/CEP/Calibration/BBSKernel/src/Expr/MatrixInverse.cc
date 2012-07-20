@@ -27,17 +27,8 @@
 // Inverse of a 2x2 matrix:
 //
 //        (a b)                      ( d -b)
-// If A = (   ) then inverse(A)   =  (     ) / (ad-bc)
+// If A = (   ) then inverse(A)   =  (     ) / (ad - bc)
 //        (c d)                      (-c  a)
-//
-// Note that:
-//            (conj(a) conj(c))
-//  conj(A) = (               )
-//            (conj(b) conj(d))
-//
-// so  inverse(conj(A)) = conj(inverse(A))
-//
-// Also note that conj(AB) = conj(B)conj(A)
 
 namespace LOFAR
 {
@@ -49,7 +40,7 @@ MatrixInverse::MatrixInverse(const Expr<JonesMatrix>::ConstPtr &expr)
 {
 }
 
-const JonesMatrix::View MatrixInverse::evaluateImpl(const Grid &grid,
+const JonesMatrix::View MatrixInverse::evaluateImpl(const Grid&,
     const JonesMatrix::View &arg0) const
 {
     JonesMatrix::View result;

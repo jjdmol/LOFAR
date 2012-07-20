@@ -9,12 +9,13 @@
 #ifndef LOFAR_STORAGEFORMAT_H
 #define LOFAR_STORAGEFORMAT_H
 
-#define ENDIANNESS      0      // data is bigendian
-
-#include <Thread/Mutex.h>
+#include <Common/Thread/Mutex.h>
 #include <Interface/Parset.h>
+#include <Interface/SmartPtr.h>
+
 #include <casa/aips.h>
-#include <tables/Tables/Table.h>
+#include <casa/Utilities/DataType.h>
+#include <casa/Arrays/IPosition.h>
 
 #include <Storage/Format.h>
 
@@ -23,54 +24,58 @@
 //# Forward Declarations
 namespace casa
 {
+  class TableDesc;
   class MPosition;
-  class MeasurementSet;
   template<class T> class Block;
 }
 
 
 namespace LOFAR {
+  //# Forward Declarations
+  class MSLofar;
+
 namespace RTCP {
 
 class MeasurementSetFormat : public Format
 {
- public:
-	  MeasurementSetFormat(const Parset *, uint32 alignment = 1);
-  virtual ~MeasurementSetFormat();
+  public:
+	    MeasurementSetFormat(const Parset &, uint32 alignment = 1);
+    virtual ~MeasurementSetFormat();
 
-  virtual void addSubband(const string MSname, unsigned subband, bool isBigEndian);
+    virtual void addSubband(const string MSname, unsigned subband, bool isBigEndian);
 
- private:
-  const Parset *itsPS;
+  private:
+    const Parset &itsPS;
 
-  unsigned itsNrAnt;
-  uint32   itsNrTimes;
+    const vector<string> stationNames;
+    const vector<double> antPos;
 
-  double itsStartTime;
-  double itsTimeStep;
-  
-  vector<string> stationNames;
-  vector<double> antPos;
+    const unsigned itsNrAnt;
+    uint32 itsNrTimes;
 
-  casa::MeasurementSet* itsMS;
-/*   casa::Table* itsMS; */
-  uint32 itsAlignment;
+    double itsStartTime;
+    double itsTimeStep;
 
-  static Mutex sharedMutex;
 
-  void createMSTables(const string &MSname, unsigned subband);
-  void createMSMetaFile(const string &MSname, unsigned subband, bool isBigEndian);
+    SmartPtr<MSLofar> itsMS;
 
-  void fillFeed();
-  void fillAntenna(const casa::Block<casa::MPosition>& antMPos);
-  void fillField(unsigned subband);
-  void fillPola();
-  void fillDataDesc();
-  void fillSpecWindow(unsigned subband);
-  void fillObs();
-  void fillHistory();
+    const uint32 itsAlignment;
+
+    static Mutex sharedMutex;
+
+    void createMSTables(const string &MSname, unsigned subband);
+    void createMSMetaFile(const string &MSname, unsigned subband, bool isBigEndian);
+
+    void fillFeed();
+    void fillAntenna(const casa::Block<casa::MPosition>& antMPos);
+    void fillField(unsigned subarray);
+    void fillPola();
+    void fillDataDesc();
+    void fillSpecWindow(unsigned subband);
+    void fillObs(unsigned subarray);
+    void fillHistory();
 };
-  
+
 } //RTCP
 } //LOFAR
 #endif // LOFAR_STORAGEFORMAT_H

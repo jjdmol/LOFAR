@@ -24,6 +24,7 @@
 #include <lofar_config.h>
 #include <BBSKernel/VisBuffer.h>
 #include <BBSKernel/Exceptions.h>
+#include <BBSKernel/EstimateUtil.h>
 
 #include <Common/lofar_algorithm.h>
 #include <Common/LofarLogger.h>
@@ -36,43 +37,84 @@
 #include <measures/Measures/MCPosition.h>
 #include <measures/Measures/MCBaseline.h>
 #include <casa/Quanta/MVuvw.h>
+//#include <casa/complex.h>
+#include <casa/BasicSL/Complex.h>
+//#include <casa/BasicMath/Math.h>
+//#include <casa/BasicSL/Constants.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
 
-VisBuffer::VisBuffer(const VisDimensions &dims)
-    :   flags(boost::extents[dims.nBaselines()][dims.nTime()][dims.nFreq()]
-            [dims.nCorrelations()]),
-        samples(boost::extents[dims.nBaselines()][dims.nTime()][dims.nFreq()]
-            [dims.nCorrelations()]),
-        itsDims(dims)
+VisBuffer::VisBuffer(const VisDimensions &dims, bool hasCovariance,
+    bool hasFlags)
+    :   itsDims(dims)
 {
-    LOG_DEBUG_STR("Size: "
-        << nBaselines() * nTime() * nFreq() * nCorrelations() * sizeof(flag_t)
-        + nBaselines() * nTime() * nFreq() * nCorrelations() * sizeof(dcomplex)
-        / (1024.0 * 1024.0)
-        << " Mb.");
-}
+    size_t sample = sizeof(dcomplex);
+    samples.resize(boost::extents[nBaselines()][nTime()][nFreq()]
+        [nCorrelations()]);
 
-VisBuffer::VisBuffer(const VisDimensions &dims, const Instrument &instrument,
-    const casa::MDirection &phaseRef, double refFreq)
-    :   flags(boost::extents[dims.nBaselines()][dims.nTime()][dims.nFreq()]
-            [dims.nCorrelations()]),
-        samples(boost::extents[dims.nBaselines()][dims.nTime()][dims.nFreq()]
-            [dims.nCorrelations()]),
-        itsDims(dims)
-{
-    setInstrument(instrument);
-    setPhaseReference(phaseRef);
-    setReferenceFreq(refFreq);
+    if(hasCovariance)
+    {
+        sample += nCorrelations() * sizeof(double);
+        covariance.resize(boost::extents[nBaselines()][nTime()][nFreq()]
+            [nCorrelations()][nCorrelations()]);
+    }
+
+    if(hasFlags)
+    {
+        sample += sizeof(flag_t);
+        flags.resize(boost::extents[nBaselines()][nTime()][nFreq()]
+            [nCorrelations()]);
+    }
+
+    LOG_DEBUG_STR("Buffer size: " << (nSamples() * sample) / (1024.0 * 1024.0)
+        << " MB.");
 }
 
 void VisBuffer::setPhaseReference(const casa::MDirection &reference)
 {
     itsPhaseReference = casa::MDirection::Convert(reference,
         casa::MDirection::J2000)();
+}
+
+void VisBuffer::setDelayReference(const casa::MDirection &reference)
+{
+    itsDelayReference = casa::MDirection::Convert(reference,
+        casa::MDirection::J2000)();
+}
+
+void VisBuffer::setTileReference(const casa::MDirection &reference)
+{
+    itsTileReference = casa::MDirection::Convert(reference,
+        casa::MDirection::J2000)();
+}
+
+bool VisBuffer::isLinear() const
+{
+    for(size_t i = 0; i < nCorrelations(); ++i)
+    {
+        if(!Correlation::isLinear(correlations()[i]))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool VisBuffer::isCircular() const
+{
+    for(size_t i = 0; i < nCorrelations(); ++i)
+    {
+        if(!Correlation::isCircular(correlations()[i]))
+        {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 void VisBuffer::computeUVW()
@@ -86,23 +128,24 @@ void VisBuffer::computeUVW()
     // Ensure the UVW buffer is large enough.
     uvw.resize(boost::extents[nStations()][nTime()][3]);
 
-    // Initialize frame.
+    // Initialize reference frame.
     casa::Quantum<casa::Double> qEpoch(0.0, "s");
     casa::MEpoch mEpoch(qEpoch, casa::MEpoch::UTC);
-
-    casa::MeasFrame frame(itsInstrument.position());
-    frame.set(itsPhaseReference);
-    frame.set(mEpoch);
+    casa::MeasFrame mFrame(mEpoch, itsInstrument->position(),
+        itsPhaseReference);
 
     // Compute UVW.
+    casa::MVPosition mvArrayPosition = itsInstrument->position().getValue();
     for(size_t i = 0; i < nStations(); ++i)
     {
         // Use station positions relative to the array reference position (to
         // keep values small).
-        casa::MVBaseline mvBaseline(itsInstrument[i].position().getValue(),
-            itsInstrument.position().getValue());
-        casa::MBaseline mBaseline(mvBaseline, casa::MBaseline::ITRF);
-        mBaseline.getRefPtr()->set(frame);
+        casa::MVPosition mvPosition =
+            itsInstrument->station(i)->position().getValue();
+        casa::MVBaseline mvBaseline(mvPosition, mvArrayPosition);
+
+        casa::MBaseline mBaseline(mvBaseline,
+            casa::MBaseline::Ref(casa::MBaseline::ITRF, mFrame));
 
         // Setup coordinate transformation engine.
         casa::MBaseline::Convert convertor(mBaseline, casa::MBaseline::J2000);
@@ -112,18 +155,18 @@ void VisBuffer::computeUVW()
         {
             qEpoch.setValue(grid()[TIME]->center(j));
             mEpoch.set(qEpoch);
-            frame.set(mEpoch);
+            mFrame.set(mEpoch);
 
             // Create MVuvw from a baseline (MVBaseline) and a reference
             // direction (MVDirection). Baseline and reference direction are
             // _assumed_ to be in the same frame (see casacore documentation).
-            casa::MVuvw mvUVW(convertor().getValue(),
+            casa::MBaseline mBaselineJ2000(convertor());
+            casa::MVuvw mvUVW(mBaselineJ2000.getValue(),
                 itsPhaseReference.getValue());
 
-            const casa::Vector<casa::Double> &xyz = mvUVW.getValue();
-            uvw[i][j][0] = xyz(0);
-            uvw[i][j][1] = xyz(1);
-            uvw[i][j][2] = xyz(2);
+            uvw[i][j][0] = mvUVW(0);
+            uvw[i][j][1] = mvUVW(1);
+            uvw[i][j][2] = mvUVW(2);
         }
     }
 }
@@ -166,6 +209,37 @@ void VisBuffer::flagsNot()
     {
         *it = ~(*it);
     }
+}
+
+void VisBuffer::flagsNaN()
+{
+  if(!hasFlags())
+  {
+    return;
+  }
+  
+  // Loop over all samples: nSamples()
+  typedef boost::multi_array<dcomplex, 4>::element* samplesIterator;
+  typedef boost::multi_array<flag_t, 4>::element* flagsIterator;
+  flagsIterator flagsIt=flags.data();
+  
+  for(samplesIterator samplesIt = samples.data(), end = samples.data() + samples.num_elements(); samplesIt != end;)
+  {   
+    // If any of the correlations is a NaN, flag all correlations
+    for(unsigned int i=0; i<nCorrelations(); i++)
+    {
+      if(casa::isNaN(*(samplesIt+i)))
+      {
+        for(unsigned int j=0; j<nCorrelations(); j++)
+        {
+          *(flagsIt+j) = *(flagsIt+j) | 1;
+        }
+        break;
+      }
+    }      
+    flagsIt=flagsIt+nCorrelations();
+    samplesIt=samplesIt+nCorrelations();
+  }
 }
 
 } //# namespace BBS

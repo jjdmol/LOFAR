@@ -23,13 +23,14 @@
 #include <lofar_config.h>
 #include <ParmDB/ParmFacadeLocal.h>
 #include <ParmDB/ParmFacadeDistr.h>
-#include <MWCommon/SocketConnection.h>
-#include <MWCommon/MWBlobIO.h>
-#include <MWCommon/VdsPartDesc.h>
+#include <LMWCommon/SocketConnection.h>
+#include <LMWCommon/MWBlobIO.h>
+#include <LMWCommon/VdsPartDesc.h>
 #include <Blob/BlobArray.h>
 #include <Blob/BlobAipsIO.h>
 #include <Common/LofarLogger.h>
 #include <Common/StreamUtil.h>
+#include <Common/Exception.h>
 #include <casa/IO/AipsIO.h>
 #include <casa/Containers/Record.h>
 #include <iostream>
@@ -41,11 +42,21 @@ using namespace LOFAR::CEP;
 using namespace LOFAR;
 using namespace std;
 
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
+
 void putRecord (BlobOStream& bos, const casa::Record& rec)
 {
   BlobAipsIO baio(bos);
   casa::AipsIO aio(&baio);
   aio << rec;
+}
+
+void getRecord (BlobIStream& bis, casa::Record& rec)
+{
+  BlobAipsIO baio(bis);
+  casa::AipsIO aio(&baio);
+  aio >> rec;
 }
 
 void getRange (ParmFacadeLocal& pdb, BlobIStream& bis, BlobOStream& bos)
@@ -134,6 +145,63 @@ void getCoeff (ParmFacadeLocal& pdb, BlobIStream& bis, BlobOStream& bos)
   bos << msg;
 }
 
+void flush (ParmFacadeLocal& pdb, BlobIStream& bis)
+{
+  bool fsync;
+  bis >> fsync;
+  pdb.flush (fsync);
+}
+
+void lock (ParmFacadeLocal& pdb, BlobIStream& bis)
+{
+  bool lockForWrite;
+  bis >> lockForWrite;
+  pdb.lock (lockForWrite);
+}
+
+void unlock (ParmFacadeLocal& pdb)
+{
+  pdb.unlock();
+}
+
+void clearTables (ParmFacadeLocal& pdb)
+{
+  pdb.clearTables();
+}
+
+void setDefaultSteps (ParmFacadeLocal& pdb, BlobIStream& bis)
+{
+  vector<double> steps;
+  bis >> steps;
+  pdb.setDefaultSteps (steps);
+}
+
+void deleteDefValues (ParmFacadeLocal& pdb, BlobIStream& bis)
+{
+  string namePattern;
+  bis >> namePattern;
+  pdb.deleteDefValues (namePattern);
+}
+
+void addDefValues (ParmFacadeLocal& pdb, BlobIStream& bis)
+{
+  casa::Record values;
+  bool check;
+  getRecord (bis, values);
+  bis >> check;
+  pdb.addDefValues (values, check);
+}
+
+void deleteValues (ParmFacadeLocal& pdb, BlobIStream& bis)
+{
+  string namePattern;
+  double freqv1, freqv2, timev1, timev2;
+  bool asStartEnd;
+  bis >> namePattern >> freqv1 >> freqv2 >> timev1 >> timev2 >> asStartEnd;
+  pdb.deleteValues (namePattern, freqv1, freqv2, timev1, timev2, asStartEnd);
+}
+
+
 void doIt (SocketConnection& conn, ParmFacadeLocal& pdb)
 {
   vector<double> range = pdb.getRange("*");
@@ -164,6 +232,30 @@ void doIt (SocketConnection& conn, ParmFacadeLocal& pdb)
       break;
     case ParmFacadeDistr::GetCoeff:
       getCoeff (pdb, bbi.blobStream(), bbo.blobStream());
+      break;
+    case ParmFacadeDistr::ClearTables:
+      clearTables (pdb);
+      break;
+    case ParmFacadeDistr::Flush:
+      flush (pdb, bbi.blobStream());
+      break;
+    case ParmFacadeDistr::Lock:
+      lock (pdb, bbi.blobStream());
+      break;
+    case ParmFacadeDistr::Unlock:
+      unlock (pdb);
+      break;
+    case ParmFacadeDistr::SetDefaultSteps:
+      setDefaultSteps (pdb, bbi.blobStream());
+      break;
+    case ParmFacadeDistr::AddDefValues:
+      addDefValues (pdb, bbi.blobStream());
+      break;
+    case ParmFacadeDistr::DeleteDefValues:
+      deleteDefValues (pdb, bbi.blobStream());
+      break;
+    case ParmFacadeDistr::DeleteValues:
+      deleteValues (pdb, bbi.blobStream());
       break;
     default:
       ASSERTSTR(false, "parmdbremote: unknown command-id "

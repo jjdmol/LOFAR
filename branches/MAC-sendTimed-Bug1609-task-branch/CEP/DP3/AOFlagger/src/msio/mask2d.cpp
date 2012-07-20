@@ -25,20 +25,40 @@
 Mask2D::Mask2D(size_t width, size_t height) :
 	_width(width),
 	_height(height),
-	_values(new bool*[height])
+	_stride((((width-1)/4)+1)*4)
 {
-	//std::cout << "Requesting " << (sizeof(bool*[height]) + sizeof(bool[width])*height) << " bytes of memory for a " << width << " x " << height << " mask." << std::endl;
-
-	for(size_t i=0;i<height;++i)
-		_values[i] = new bool[width];
+	if(_width == 0) _stride=0;
+	unsigned allocHeight = ((((height-1)/4)+1)*4);
+	if(height == 0) allocHeight = 0;
+	_valuesConsecutive = new bool[_stride * allocHeight * sizeof(bool)];
+	
+	_values = new bool*[allocHeight];
+	for(size_t y=0;y<height;++y)
+	{
+		_values[y] = &_valuesConsecutive[_stride * y];
+		// Even though the values after the requested width are never relevant, we will
+		// initialize them to true to prevent valgrind to report unset values when they
+		// are used in SSE instructions.
+		for(size_t x=_width;x<_stride;++x)
+		{
+			_values[y][x] = true;
+		}
+	}
+	for(size_t y=height;y<allocHeight;++y)
+	{
+		_values[y] = &_valuesConsecutive[_stride * y];
+		// (see remark above about initializing to true)
+		for(size_t x=0;x<_stride;++x)
+		{
+			_values[y][x] = true;
+		}
+	}
 }
 
 Mask2D::~Mask2D()
 {
-	//std::cout << "Freed "  << (sizeof(bool*[_height]) + sizeof(bool[_width])*_height) << " bytes of memory for a " << _width << " x " << _height << " mask." << std::endl;
-	for(size_t i=0;i<_height;++i)
-		delete[] _values[i];
 	delete[] _values;
+	delete[] _valuesConsecutive;
 }
 
 Mask2D *Mask2D::CreateUnsetMask(const Image2D &templateImage)
@@ -54,11 +74,7 @@ Mask2D *Mask2D::CreateSetMask(const class Image2D &templateImage)
 		height = templateImage.Height();
 
 	Mask2D *newMask = new Mask2D(width, height);
-	for(size_t y=0;y<height;++y)
-	{
-		for(size_t x=0;x<width;++x)
-			newMask->_values[y][x] = InitValue;
-	}
+	memset(newMask->_valuesConsecutive, InitValue, newMask->_stride * height * sizeof(bool));
 	return newMask;
 }
 
@@ -72,11 +88,7 @@ Mask2D *Mask2D::CreateCopy(const Mask2D &source)
 		height = source.Height();
 
 	Mask2D *newMask = new Mask2D(width, height);
-	for(size_t y=0;y<height;++y)
-	{
-		for(size_t x=0;x<width;++x)
-			newMask->_values[y][x] = source._values[y][x];
-	}
+	memcpy(newMask->_valuesConsecutive, source._valuesConsecutive, source._stride * height * sizeof(bool));
 	return newMask;
 }
 
@@ -99,6 +111,32 @@ Mask2DPtr Mask2D::ShrinkHorizontally(int factor) const
 			{
 				size_t curX = x*factor + binX;
 				value = value | Value(curX, y);
+			}
+			newMask->SetValue(x, y, value);
+		}
+	}
+	return Mask2DPtr(newMask);
+}
+
+Mask2DPtr Mask2D::ShrinkHorizontallyForAveraging(int factor) const
+{
+	size_t newWidth = (_width + factor - 1) / factor;
+
+	Mask2D *newMask= new Mask2D(newWidth, _height);
+
+	for(size_t x=0;x<newWidth;++x)
+	{
+		size_t binSize = factor;
+		if(binSize + x*factor > _width)
+			binSize = _width - x*factor;
+
+		for(size_t y=0;y<_height;++y)
+		{
+			bool value = true;
+			for(size_t binX=0;binX<binSize;++binX)
+			{
+				size_t curX = x*factor + binX;
+				value = value & Value(curX, y);
 			}
 			newMask->SetValue(x, y, value);
 		}

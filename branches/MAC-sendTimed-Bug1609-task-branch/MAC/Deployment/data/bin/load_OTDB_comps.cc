@@ -29,10 +29,14 @@
 #include <Common/lofar_fstream.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
+#include <Common/Exception.h>
 #include <OTDB/TreeMaintenance.h>
 
 using namespace LOFAR;
 using namespace LOFAR::OTDB;
+
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 int main (int	argc, char*	argv[]) {
 
@@ -60,6 +64,15 @@ int main (int	argc, char*	argv[]) {
 			break;
 		case 'v':
 			versionNr = optarg;
+			if (versionNr.find(".") == string::npos) {
+			  // Add "." in version string
+			  // 16785 -> 1.67.85
+			  size_t vsize=versionNr.length();
+			  versionNr.insert(vsize-4,".");
+			  vsize=versionNr.length();
+			  versionNr.insert(vsize-2,".");
+			  LOG_INFO_STR("VersionNr: " << versionNr);
+			}
 			break;
 		case 'q':
 			qualifier = optarg;
@@ -110,8 +123,8 @@ int main (int	argc, char*	argv[]) {
 			}
 		}
 	}
-	catch (std::exception&	ex) {
-		cout << "Unexpected exception: " << ex.what() << endl;
+	catch (Exception&	ex) {
+		cerr << "Unexpected exception: " << ex << endl;
 		return (1);		// return !0 on failure
 	}
 

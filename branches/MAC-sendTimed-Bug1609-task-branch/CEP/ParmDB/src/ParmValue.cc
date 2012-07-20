@@ -23,6 +23,7 @@
 #include <lofar_config.h>
 #include <ParmDB/ParmValue.h>
 #include <Common/LofarTypes.h>
+#include <casa/Arrays/Matrix.h>
 
 using namespace casa;
 using namespace std;
@@ -46,8 +47,6 @@ namespace BBS {
   ParmValue& ParmValue::operator= (const ParmValue& that)
   {
     if (this != &that) {
-      delete itsErrors;
-      itsErrors = 0;
       copyOther (that);
     }
     return *this;
@@ -60,9 +59,11 @@ namespace BBS {
 
   void ParmValue::copyOther (const ParmValue& that)
   {
-    itsGrid     = that.itsGrid;
-    itsRowId    = that.itsRowId;
+    itsGrid   = that.itsGrid;
+    itsRowId  = that.itsRowId;
     itsValues.assign (that.itsValues);     // ensure a copy is made
+    delete itsErrors;
+    itsErrors = 0;
     if (that.itsErrors) {
       itsErrors = new Array<double>;
       *itsErrors = *that.itsErrors;
@@ -100,16 +101,108 @@ namespace BBS {
     itsErrors->assign (errors);
   }
 
+  bool ParmValue::rescale (double sx, double ex, double sy, double ey,
+                           const Box& oldDomain)
+  {
+    // No need to rescale if polynomial did not have a domain
+    // or if the axes have length 1 and others match.
+    casa::Matrix<double> coeff(getValues());
+    if (oldDomain.empty()  ||  coeff.size() == 1  ||
+        (coeff.nrow() == 1  &&  sy == oldDomain.lowerY()  &&
+         ey == oldDomain.upperY())  ||
+        (coeff.ncolumn() == 1 && sx == oldDomain.lowerX()  &&
+         ex == oldDomain.upperX())) {
+      return false;
+    }
+    // Rescale from coeff like:  s2a=s2/s1 and o2a=(o2-o1)/s1
+    // x1=(x-o1)/s1 and x2=(x-o2)/s2; hence x2=(x1-(o2-o1)/s1)/(s2/s1)
+    // where o is start of box and s is width of box (1 is old, 2 is new).
+    // Note this must be the same as in AxisMapping that also uses
+    // lower and width when scaling a polynomial.
+    double s1x = oldDomain.widthX();
+    double s1y = oldDomain.widthY();
+    itsValues = scale2 (coeff,
+                        (sx - oldDomain.lowerX()) / s1x,
+                        (sy - oldDomain.lowerY()) / s1y,
+                        (ex-sx) / s1x,
+                        (ey-sy) / s1y);
+    return true;
+  }
+
+  // Scale a 2D polynomial using a given offset and scale factor.
+  // Polynomial is:
+  //  f(x,y) = sigma (a[i,j] * x**i * y**j)
+  // When scaling x to (x-ox)/sx  and  y to (y-oy)/sy each term gets
+  //  a[i,j] * (x*sx+ox)**i * (y*sy+oy)**j
+  //  a[i,j] * sigma((i p) * x**p * sx**p * ox**(i-p)) *
+  //           sigma((j q) * x**q * sy**q * oy**(j-q))
+  // So for each i,j,p,q each new coeff(p,q) gets terms
+  //  a[i,j] * (i p) * sx**p * ox**(i-p)) * (j q) * sy**q * oy**(j-q))
+  // The factors sx**p and sy**q are independent of i,j and are applied later.
+  casa::Matrix<double> ParmValue::scale2 (const casa::Matrix<double>& coeff,
+                                          double offx, double offy,
+                                          double scalex, double scaley)
+  {
+    // Fill the Pascal triangle (till order 10) if not done yet.
+    static casa::Matrix<double> pascal;
+    if (pascal.empty()) {
+      fillPascal (pascal, 10);
+    }
+    // Rescale by looping over all possible terms (see above).
+    int nx = coeff.shape()[0];
+    int ny = coeff.shape()[1];
+    ASSERT (nx<int(pascal.nrow()) && ny<int(pascal.nrow()));
+    casa::Matrix<double> scoeff(coeff.shape(), 0.);
+    for (int iy=0; iy<ny; ++iy) {
+      for (int ix=0; ix<nx; ++ix) {
+        double offpy= coeff(ix,iy);
+        for (int jy=iy; jy>=0; --jy) {
+          double offpx = pascal(jy,iy)*offpy;
+          for (int jx=ix; jx>=0; --jx) {
+            scoeff(jx,jy) += pascal(jx,ix)*offpx;
+            offpx *= offx;
+          }
+          offpy *= offy;
+        }
+      }
+    }
+    double scy = 1;
+    for (int iy=0; iy<ny; ++iy) {
+      double scx = scy;
+      for (int ix=0; ix<nx; ++ix) {
+        scoeff(ix,iy) *= scx;
+        scx *= scalex;
+      }
+      scy *= scaley;
+    }
+    return scoeff;
+  }
+
+  void ParmValue::fillPascal (casa::Matrix<double>& pascal, int order)
+  {
+    // pascal(j,i) gives (i over j).
+    pascal.resize (order, order);
+    pascal = 0.;
+    for (int i=0; i<order; ++i) {
+      pascal(0,i) = 1.;
+      for (int j=1; j<=i; ++j) {
+        pascal(j,i) = pascal(j-1,i-1) + pascal(j,i-1);
+      }
+    }
+  }
+
 
 
   ParmValueSet::ParmValueSet (const ParmValue& defaultValue,
                               ParmValue::FunkletType type,
                               double perturbation,
-                              bool pertRel)
+                              bool pertRel,
+                              const Box& scaleDomain)
     : itsType         (type),
       itsPerturbation (perturbation),
       itsPertRel      (pertRel),
       itsDefaultValue (defaultValue),
+      itsScaleDomain  (scaleDomain),
       itsDirty        (false)
   {
     if (type == ParmValue::Scalar) {
@@ -142,6 +235,27 @@ namespace BBS {
     }
   }
 
+  ParmValueSet::ParmValueSet (const ParmValueSet& that)
+  {
+    operator= (that);
+  }
+
+  ParmValueSet& ParmValueSet::operator= (const ParmValueSet& that)
+  {
+    if (this != &that) {
+      itsType         = that.itsType;
+      itsPerturbation = that.itsPerturbation;
+      itsPertRel      = that.itsPertRel;
+      itsSolvableMask.assign (that.itsSolvableMask);
+      itsDomainGrid   = that.itsDomainGrid;
+      itsValues       = that.itsValues;
+      itsDefaultValue = that.itsDefaultValue;
+      itsScaleDomain  = that.itsScaleDomain;
+      itsDirty        = that.itsDirty;
+    }
+    return *this;
+  }
+
   const ParmValue& ParmValueSet::getFirstParmValue() const
   {
     return itsValues.empty()  ?  itsDefaultValue : *itsValues[0];
@@ -170,10 +284,21 @@ namespace BBS {
     // If the ParmValue represents coefficients, copy it as often as needed.
     if (itsType != ParmValue::Scalar) {
       itsDomainGrid = solveGrid;
-      uint nrv = itsDomainGrid.size();
-      itsValues.reserve (nrv);
-      for (uint i=0; i<nrv; ++i) {
-        itsValues.push_back (ParmValue::ShPtr(new ParmValue(itsDefaultValue)));
+      const Axis& xaxis = *itsDomainGrid[0];
+      const Axis& yaxis = *itsDomainGrid[1];
+      uint nrx = itsDomainGrid.ny();
+      uint nry = itsDomainGrid.nx();
+      itsValues.reserve (nrx*nry);
+      for (uint iy=0; iy<nry; ++iy) {
+        for (uint ix=0; ix<nrx; ++ix) {
+          ParmValue::ShPtr pval(new ParmValue(itsDefaultValue));
+          itsValues.push_back (pval);
+          if (! itsScaleDomain.empty()) {
+            // Rescale from itsScaleDomain to new domain.
+            pval->rescale (xaxis.lower(ix), xaxis.upper(ix),
+                           yaxis.lower(iy), yaxis.upper(iy), itsScaleDomain);
+          }
+        }
       }
     } else {
       // Otherwise it is an array of scalar values, so form the array.

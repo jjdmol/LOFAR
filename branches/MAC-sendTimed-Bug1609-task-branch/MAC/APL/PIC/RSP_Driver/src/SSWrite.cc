@@ -40,7 +40,7 @@ using namespace RSP;
 using namespace RTC;
 
 SSWrite::SSWrite(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, StationSettings::instance()->nrBlpsPerBoard())
+  : SyncAction(board_port, board_id, NR_BLPS_PER_RSPBOARD)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -52,7 +52,7 @@ SSWrite::~SSWrite()
 
 void SSWrite::sendrequest()
 {
-  uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + getCurrentIndex();
+  uint8 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) + getCurrentIndex();
   LOG_DEBUG(formatString(">>>> SSWrite(%s) global_blp=%d",
 			 getBoardPort().getName().c_str(),
 			 global_blp));
@@ -66,16 +66,16 @@ void SSWrite::sendrequest()
     
   // create array to contain the subband selection
   Array<uint16, 2> subbands((uint16*)&ss.subbands,
-			    shape(MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS, MEPHeader::N_POL),
+			    shape(MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS, N_POL),
 			    neverDeleteData);
 
 #if 0
-  Array<int, 2> index(MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS, MEPHeader::N_POL);
-  Array<int, 2> mapped_index(MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS, MEPHeader::N_POL);
+  Array<int, 2> index(MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS, N_POL);
+  Array<int, 2> mapped_index(MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS, N_POL);
 
   for (int beamlet = MEPHeader::N_LOCAL_XLETS; beamlet < MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS; beamlet++) {
-    for (int pol = 0; pol < MEPHeader::N_POL; pol++) {
-      index(beamlet, pol) = beamlet * MEPHeader::N_POL + pol;
+    for (int pol = 0; pol < N_POL; pol++) {
+      index(beamlet, pol) = beamlet * N_POL + pol;
     }
   }
   mapped_index = 0;
@@ -94,7 +94,7 @@ void SSWrite::sendrequest()
     int hw_offset = lane + MEPHeader::N_LOCAL_XLETS;
     int cache_offset = (lane * (MEPHeader::N_BEAMLETS / MEPHeader::N_SERDES_LANES)) + MEPHeader::N_LOCAL_XLETS;
     
-    // strided source range, stride = nrBlpsPerBoard
+    // strided source range, stride = NR_BLPS_PER_RSPBOARD
     Range hw_range(hw_offset, hw_offset + MEPHeader::N_BEAMLETS - MEPHeader::N_BLPS, MEPHeader::N_BLPS);
     Range cache_range(cache_offset, cache_offset + (MEPHeader::N_BEAMLETS / MEPHeader::N_SERDES_LANES) - 1, 1);
 
@@ -134,7 +134,7 @@ GCFEvent::TResult SSWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/
 
   EPAWriteackEvent ack(event);
 
-  uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + getCurrentIndex();
+  uint8 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) + getCurrentIndex();
 
   if (!ack.hdr.isValidAck(m_hdr))
   {

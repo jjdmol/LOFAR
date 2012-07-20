@@ -19,18 +19,20 @@
 //#  $Id$
 
 #include <lofar_config.h>
+#include <GlobalVars.h>
 
 #include <CommandServer.h>
 #include <Common/LofarLogger.h>
+#include <Common/CasaLogSink.h>
+#include <Common/NewHandler.h>
 #include <Common/SystemCallException.h>
 #include <Interface/CN_Command.h>
-#include <Interface/Stream.h>
 #include <Interface/CN_Mapping.h>
 #include <Interface/Exceptions.h>
+#include <Interface/SmartPtr.h>
+#include <Interface/Stream.h>
 #include <Interface/Parset.h>
 #include <ION_Allocator.h>
-#include <Job.h>
-#include <JobQueue.h>
 #include <Stream/SocketStream.h>
 #include <StreamMultiplexer.h>
 #include <IONProc/Package__Version.h>
@@ -47,8 +49,11 @@
 #include <sys/types.h>
 #include <sys/mman.h>
 
+#ifdef HAVE_LIBSSH2
+#include <libssh2.h>
+#endif
+
 #include <boost/format.hpp>
-using boost::format;
 
 #if defined HAVE_MPI
 #include <mpi.h>
@@ -87,66 +92,29 @@ void *I_WRAP_SONAME_FNNAME_ZZ(Za,memset)( void *dest, int val, size_t len) {
 }
 #endif
 
-// if exceptions are not caught, an attempt is made to create a backtrace
-// from the place where the exception is thrown.
-//
-// JD: if exceptions are caught, a backtrace is produced now as well,
-//     plus the actual exception is printed. So that's preferable as a default.
-#define CATCH_EXCEPTIONS
+// install a new handler to produce backtraces for std::bad_alloc
+LOFAR::NewHandler h(LOFAR::BadAllocException::newHandler);
 
-
-#if !defined CATCH_EXCEPTIONS
-
-void terminate_with_backtrace()
-{
-  LOG_FATAL("terminate_with_backtrace()");
-
-  void *buffer[100];
-  int  nptrs     = backtrace(buffer, 100);
-  char **strings = backtrace_symbols(buffer, nptrs);
-
-  for (int i = 0; i < nptrs; i ++)
-    LOG_FATAL_STR(i << ": " << strings[i]);
-
-  free(strings);
-  abort();
-}
-
-#endif
+// Use a terminate handler that can produce a backtrace.
+LOFAR::Exception::TerminateHandler t(LOFAR::Exception::terminate);
 
 
 namespace LOFAR {
 namespace RTCP {
 
-unsigned			   myPsetNumber, nrPsets, nrCNcoresInPset;
-static boost::multi_array<char, 2> ipAddresses;
-std::vector<Stream *>		   allCNstreams, allIONstreams;
-std::vector<StreamMultiplexer *>   allIONstreamMultiplexers;
-
-static const char		   *cnStreamType;
+static boost::multi_array<char, 2>	  ipAddresses;
 
 #if defined HAVE_FCNP && defined __PPC__ && !defined USE_VALGRIND
-static bool			   fcnp_inited;
+static struct InitFCNP {
+  InitFCNP() { FCNP_ION::init(true); }
+  ~InitFCNP() { FCNP_ION::end(); }
+} initFCNP;
 #endif
-
-Stream *createCNstream(unsigned core, unsigned channel)
-{
-  // translate logical to physical core number
-  core = CN_Mapping::mapCoreOnPset(core, myPsetNumber);
-
-#if defined HAVE_FCNP && defined __PPC__ && !defined USE_VALGRIND
-  if (strcmp(cnStreamType, "FCNP") == 0)
-    return new FCNP_ServerStream(core, channel);
-#endif
-
-  string descriptor = getStreamDescriptorBetweenIONandCN( cnStreamType, myPsetNumber, core, nrPsets, nrCNcoresInPset, channel );
-
-  return createStream(descriptor, false);
-}
-
 
 static void createAllCNstreams()
 {
+  LOG_DEBUG_STR("Create streams to CN nodes ...");
+
   const char *streamType = getenv("CN_STREAM_TYPE");
 
   if (streamType != 0)
@@ -160,31 +128,18 @@ static void createAllCNstreams()
     cnStreamType = "TCPKEY";
 #endif
 
-#if defined HAVE_FCNP && defined __PPC__ && !defined USE_VALGRIND
-  if (cnStreamType == "FCNP" && !fcnp_inited) {
-    FCNP_ION::init(true);
-    fcnp_inited = true;
-  }
+  allCNstreams.resize(nrPsets,nrCNcoresInPset);
+
+#ifdef CLUSTER_SCHEDULING
+  for (unsigned pset = 0; pset < nrPsets; pset ++)
+    for (unsigned core = 0; core < nrCNcoresInPset; core ++)
+      allCNstreams[pset][core] = createCNstream(pset, core, 0);
+#else
+  for (unsigned core = 0; core < nrCNcoresInPset; core ++)
+    allCNstreams[myPsetNumber][core] = createCNstream(myPsetNumber, core, 0);
 #endif
 
-  allCNstreams.resize(nrCNcoresInPset);
-
-  for (unsigned core = 0; core < nrCNcoresInPset; core ++)
-    allCNstreams[core] = createCNstream(core, 0);
-}
-
-
-static void deleteAllCNstreams()
-{
-  for (unsigned core = 0; core < nrCNcoresInPset; core ++)
-    delete allCNstreams[core];
-
-#if defined HAVE_FCNP && defined __PPC__ && !defined USE_VALGRIND
-  if (fcnp_inited) {
-    FCNP_ION::end();
-    fcnp_inited = false;
-  }
-#endif
+  LOG_DEBUG_STR("Create streams to CN nodes done");
 }
 
 
@@ -195,7 +150,7 @@ static void stopCNs()
   CN_Command command(CN_Command::STOP);
 
   for (unsigned core = 0; core < nrCNcoresInPset; core ++)
-    command.write(allCNstreams[core]);
+    command.write(allCNstreams[myPsetNumber][core]);
 
   LOG_DEBUG_STR("Stopping " << nrCNcoresInPset << " cores: done");
 }
@@ -212,30 +167,15 @@ static void createAllIONstreams()
     for (unsigned ion = 1; ion < nrPsets; ion ++) {
       allIONstreams[ion] = new SocketStream(ipAddresses[ion].origin(), 4000 + ion, SocketStream::TCP, SocketStream::Client);
       allIONstreamMultiplexers[ion] = new StreamMultiplexer(*allIONstreams[ion]);
+      allIONstreamMultiplexers[ion]->start();
     }
   } else {
     allIONstreams.push_back(new SocketStream(ipAddresses[myPsetNumber].origin(), 4000 + myPsetNumber, SocketStream::TCP, SocketStream::Server));
     allIONstreamMultiplexers.push_back(new StreamMultiplexer(*allIONstreams[0]));
+    allIONstreamMultiplexers[0]->start();
   }
 
   LOG_DEBUG_STR("Create streams between I/O nodes: done");
-}
-
-
-static void deleteAllIONstreams()
-{
-  if (myPsetNumber == 0) {
-    for (unsigned ion = 1; ion < nrPsets; ion ++) {
-      delete allIONstreamMultiplexers[ion];
-      delete allIONstreams[ion];
-    }
-  } else {
-    delete allIONstreamMultiplexers[0];
-    delete allIONstreams[0];
-  }
-
-  allIONstreamMultiplexers.clear();
-  allIONstreams.clear();
 }
 
 
@@ -258,10 +198,29 @@ static void enableCoreDumps()
 }
 
 
-static void ignoreSigPipe()
+static void abortHandler(int sig)
 {
+  (void)sig;
+
+  abort();
+}
+
+
+static void installSigHandlers()
+{
+  // ignore SIGPIPE
   if (signal(SIGPIPE, SIG_IGN) < 0)
     perror("warning: ignoring SIGPIPE failed");
+
+  // force abort() on a few signals, as OpenMPI appears to be broken in this regard
+  if (signal(SIGBUS, abortHandler) < 0)
+    perror("warning: rerouting SIGBUS failed");
+  if (signal(SIGSEGV, abortHandler) < 0)
+    perror("warning: rerouting SIGSEGV failed");
+  if (signal(SIGILL, abortHandler) < 0)
+    perror("warning: rerouting SIGILL failed");
+  if (signal(SIGFPE, abortHandler) < 0)
+    perror("warning: rerouting SIGFPE failed");
 }
 
 
@@ -271,14 +230,10 @@ static void   *flatMemoryAddress = reinterpret_cast<void *>(0x50000000);
 static size_t flatMemorySize     = 1536 * 1024 * 1024;
 
 static void mmapFlatMemory()
-  /* 
-
-  mmap a fixed area of flat memory space to increase performance. 
-  currently only 1.5 GiB can be allocated, we mmap() the maximum
-  available amount
-
-  */
 {
+  // mmap a fixed area of flat memory space to increase performance. 
+  // currently only 1.5 GiB can be allocated, we mmap() the maximum
+  // available amount
   int fd = open("/dev/flatmem", O_RDONLY);
 
   if (fd < 0) { 
@@ -315,11 +270,9 @@ static void master_thread()
   LOG_DEBUG("Master thread running");
 
   enableCoreDumps();
-  ignoreSigPipe();
+  installSigHandlers();
 
-#if defined CATCH_EXCEPTIONS
   try {
-#endif
 
 #if defined FLAT_MEMORY
     mmapFlatMemory();
@@ -329,32 +282,34 @@ static void master_thread()
       setenv("AIPSPATH", "/globalhome/lofarsystem/packages/root/bgp_ion/", 0);
 
 #if defined HAVE_BGP
-    nrCNcoresInPset = 64; // TODO: how to figure this out?
-#else
-    const char *str = getenv("PSET_SIZE");
+    // TODO: how to figure these out?
+    nrCNcoresInPset = 64;
 
-    if (str == 0)
+    // nrPsets is communicated by MPI
+#else
+    const char *nr_psets  = getenv("NR_PSETS");
+    const char *pset_size = getenv("PSET_SIZE");
+
+    if (nr_psets == 0)
+      throw IONProcException("environment variable NR_PSETS must be defined", THROW_ARGS);
+
+    if (pset_size == 0)
       throw IONProcException("environment variable PSET_SIZE must be defined", THROW_ARGS);
 
-    nrCNcoresInPset = boost::lexical_cast<unsigned>(str);
+    nrPsets = boost::lexical_cast<unsigned>(nr_psets);
+    nrCNcoresInPset = boost::lexical_cast<unsigned>(pset_size);
 #endif
 
     createAllCNstreams();
     createAllIONstreams();
+    { CommandServer s; s.start(); }
 
-    commandServer();
-
-    jobQueue.waitUntilAllJobsAreFinished();
     stopCNs();
 
 #if defined FLAT_MEMORY
     unmapFlatMemory();
 #endif
 
-    deleteAllIONstreams();
-    deleteAllCNstreams();
-
-#if defined CATCH_EXCEPTIONS
   } catch (Exception &ex) {
     LOG_FATAL_STR("Master thread caught Exception: " << ex);
   } catch (std::exception &ex) {
@@ -362,7 +317,6 @@ static void master_thread()
   } catch (...) {
     LOG_FATAL("Master thread caught non-std::exception: ");
   }
-#endif
 
   LOG_DEBUG("Master thread stopped");
 }
@@ -377,10 +331,6 @@ int main(int argc, char **argv)
   using namespace LOFAR;
   using namespace LOFAR::RTCP;
 
-#if !defined CATCH_EXCEPTIONS
-  std::set_terminate(terminate_with_backtrace);
-#endif
-  
 #if defined HAVE_MPI
 #if 1
   if (MPI_Init(&argc, &argv) != MPI_SUCCESS) {
@@ -400,6 +350,9 @@ int main(int argc, char **argv)
 
   MPI_Comm_rank(MPI_COMM_WORLD, reinterpret_cast<int *>(&myPsetNumber));
   MPI_Comm_size(MPI_COMM_WORLD, reinterpret_cast<int *>(&nrPsets));
+#else
+  (void) argc;
+  (void) argv;
 #endif
 
 #if defined HAVE_MPI
@@ -436,19 +389,35 @@ int main(int argc, char **argv)
       exit(1);
     }
 #endif
+
+#ifdef HAVE_LIBSSH2
+  int rc = libssh2_init(0);
+  if (rc) {
+    std::cerr << "libssh2 init failed: " << rc << std::endl;
+    exit(1);
+  }
+#endif  
   
 #if defined HAVE_BGP
-  INIT_LOGGER_WITH_SYSINFO(str(format("IONProc@%02d") % myPsetNumber));
+  INIT_LOGGER_WITH_SYSINFO(str(boost::format("IONProc@%02d") % myPsetNumber));
+  bool isProduction = argc > 1 && argv[1][0] == '1';
+  LOGCOUT_SETLEVEL(isProduction ? 4 : 8); // do (not) show debug info
 #elif defined HAVE_LOG4CPLUS
   // do nothing
 #elif defined HAVE_LOG4CXX
   Context::initialize();
   setLevel("Global", 8);
 #else
-  INIT_LOGGER_WITH_SYSINFO(str(format("IONProc@%02d") % myPsetNumber));
+  INIT_LOGGER_WITH_SYSINFO(str(boost::format("IONProc@%02d") % myPsetNumber));
 #endif
 
+  //CasaLogSink::attach();
+
   master_thread();
+
+#ifdef HAVE_LIBSSH2
+  libssh2_exit();
+#endif
 
 #if defined HAVE_MPI
   MPI_Finalize();

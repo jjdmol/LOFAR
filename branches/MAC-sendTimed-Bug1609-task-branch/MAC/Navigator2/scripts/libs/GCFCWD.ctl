@@ -57,17 +57,38 @@ GCFCWD_Init() {
   g_connections[ "DOWNTIME" ] = makeDynTime();
   g_connections[ "UPTIME"   ] = makeDynTime();
   
-  // retrieve old settings
   
-  if (dpExists(CWD_DP+".systemID")) {
-    dpConnect("GCFCWD_connectWD", TRUE, CWD_DP+".systemID",
-                                        CWD_DP+".name",
-                                        CWD_DP+".online",
-                                        CWD_DP+".lastUpTime",
-                                        CWD_DP+".lastDownTime");
-    LOG_DEBUG("GCFCWD.ctl:GCFCWD_Init|Watch-dog started");
+  
+  // different behavior for standAlone mode.
+  // in dist system mode (lofar) we need to keep up with all connections.
+  // in standAlone mode we only need to fill in the active station values.
+  
+  if (g_standAlone) {
+    mappingClear(g_connections);
+    g_connections[ "SYSTEM"   ] = makeDynInt(MainDBID);
+    g_connections[ "NAME"     ] = makeDynString(MainDBName);
+    g_connections[ "UP"       ] = makeDynBool(TRUE);
+    g_connections[ "DOWNTIME" ] = makeDynTime(getCurrentTime());
+    g_connections[ "UPTIME"   ] = makeDynTime(getCurrentTime());
+    if (g_initializing) {
+      writeInitProcess("GCFCWDFinished");
+    }
   } else {
-    LOG_DEBUG("GCFCWD.ctl:GCFCWD_Init|Couldn't connect to "+CWD_DP+".systemID.  Watch-dog NOT started");
+    // retrieve old settings
+  
+    if (dpExists(CWD_DP+".systemID")) {
+      dpConnect("GCFCWD_connectWD", TRUE, CWD_DP+".systemID",
+                                          CWD_DP+".name",
+                                          CWD_DP+".online",
+                                          CWD_DP+".lastUpTime",
+                                          CWD_DP+".lastDownTime");
+      LOG_DEBUG("GCFCWD.ctl:GCFCWD_Init|Watch-dog started");
+    } else {
+      LOG_DEBUG("GCFCWD.ctl:GCFCWD_Init|Couldn't connect to "+CWD_DP+".systemID.  Watch-dog NOT started");
+      if (g_initializing) {
+        writeInitProcess("GCFCWDFinished");
+      }
+    }
   } 
 } 
 
@@ -110,29 +131,45 @@ void GCFCWD_connectWD(string dp1, dyn_int systemID,
         g_connections[ "UP" ][iPos]       = up[i];
         changed=true;
     }
+    if (dynlen(upTime) >= i) {
     g_connections[ "UPTIME" ][iPos]   = upTime[i];
+    } else {
+      time t;
+      g_connections[ "UPTIME" ][iPos]   = t;
+    }
+    if (dynlen(downTime) >= i) {
     g_connections[ "DOWNTIME" ][iPos] = downTime[i];
-    
+    } else {
+      time t;
+      g_connections[ "DOWNTIME" ][iPos] = t;        
+    }    
     // we need to reflect the status of the stations up/down also in the "MainDBName+LOFAR_PIC_[Ring].status.childState
     if (changed) {
       // changed to up, childstate is highest childstate of all stations.state and .childStates
       // else 
       // changed to down, childstate will be set to dpOffline
-      if (up[i] && name[i] != "CCU001:") {
+      if (up[i] && name[i] != CEPDBName) {
         if (dpExists(MainDBName+"__navObjectState.DPName")) {
             dpSet(MainDBName+"__navObjectState.DPName",MainDBName+"LOFAR_PIC_"+navFunct_getRingFromStation(name[i])+"_"+navFunct_bareDBName(name[i])+".status.state",
                   MainDBName+"__navObjectState.stateNr",OPERATIONAL,
                   MainDBName+"__navObjectState.message","System came online",
                   MainDBName+"__navObjectState.force",true);
         }        
-      } else if (name[i] != "CCU001:") {
+      } else if (name[i] != CEPDBName) {
         if (dpExists(MainDBName+"__navObjectState.DPName")) {
             dpSet(MainDBName+"__navObjectState.DPName",MainDBName+"LOFAR_PIC_"+navFunct_getRingFromStation(name[i])+"_"+navFunct_bareDBName(name[i])+".status.state",
                   MainDBName+"__navObjectState.stateNr",DPOFFLINE,
                   MainDBName+"__navObjectState.message","System went offline",
                   MainDBName+"__navObjectState.force",false);
         }
-      }    
+      }
+      // if not first call during init process, inform framewotk that something has changed 
+      if (!isAnswer()) {
+        navCtrl_handleNavigatorEvent("","DistChanged","GCFCWD.ctl");
+      }
     }
+  }
+  if (g_initializing) {
+    writeInitProcess("GCFCWDFinished");
   }
 }

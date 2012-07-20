@@ -29,6 +29,7 @@
 --             1: get all trees that are scheduled to start in the period: now till now+period
 --             2: get all trees with starttime <=now and stoptime > now ; period param is ignored
 --             3: get all trees with stoptime in the period: now-period till now
+--             4: get all trees with stoptime < now and have state >= FINISHED
 --
 -- With this function we can get the planned, active or finished trees from the database.
 --
@@ -41,7 +42,7 @@
 -- Types:	treeInfo
 --
 CREATE OR REPLACE FUNCTION getTreeGroup(INT, INT)
-  RETURNS SETOF treeInfo AS '
+  RETURNS SETOF treeInfo AS $$
 	DECLARE
 		vRecord			RECORD;
 		TSscheduled		CONSTANT	INT2 := 400;
@@ -50,36 +51,46 @@ CREATE OR REPLACE FUNCTION getTreeGroup(INT, INT)
 		TThierarchy		CONSTANT	INT2 := 30;
 		TCoperational	CONSTANT	INT2 := 3;
 		vQuery			TEXT;
+		vSortOrder		TEXT;
 
 	BEGIN
-	  vQuery := \'\';
+	  vQuery := '';
+	  vSortOrder := 't.starttime, t.treeID';
 	  IF $1 = 0 THEN
-		vQuery := \' AND (t.stoptime > now() OR t.stoptime IS NULL) \';
+		vQuery := ' AND (t.stoptime > now() OR t.stoptime IS NULL) ';
 	  ELSE
 	    IF $1 = 1 THEN
-		  vQuery := \' AND (t.state = \' || TSscheduled || \' OR t.state = \' || TSqueued || \') \';
---		  vQuery := vQuery || \' AND t.starttime < now()+interval \' || chr(39) || $2 || \' minutes\' || chr(39);
-		  vQuery := vQuery || \' AND t.starttime >= now() AND t.starttime < now()+interval \' || chr(39) || $2 || \' minutes\' || chr(39);
+		  vQuery := ' AND (t.state = ' || TSscheduled || ' OR t.state = ' || TSqueued || ') ';
+--		  vQuery := vQuery || ' AND t.starttime < now()+interval ' || chr(39) || $2 || ' minutes' || chr(39);
+		  vQuery := vQuery || ' AND t.starttime >= now() AND t.starttime < now()+interval ' || chr(39) || $2 || ' minutes' || chr(39);
 	    ELSE 
 	  	  IF $1 = 2 THEN
-		    vQuery := \' AND t.starttime <= now() AND t.stoptime > now() \';
-		    vQuery := vQuery || \' AND t.state > \' || TSscheduled;
-		    vQuery := vQuery || \' AND t.state < \' || TSfinished;
+		    vQuery := ' AND t.starttime <= now() AND t.stoptime > now() ';
+		    vQuery := vQuery || ' AND t.state > ' || TSscheduled;
+		    vQuery := vQuery || ' AND t.state < ' || TSfinished;
 	      ELSE 
-		    IF $1 = 3 THEN
-			  vQuery := \' AND t.state >= \' || TSfinished;
-			  vQuery := vQuery || \' AND t.stoptime > now()-interval \' || chr(39) || $2 || \' minutes\' || chr(39);
-		    ELSE
-			  RAISE EXCEPTION \'groupType must be 0,1,2 or 3 not %\', $1;
+                    IF $1 = 3 THEN
+                          vQuery := ' AND t.state >= ' || TSfinished;
+                          vQuery := vQuery || ' AND t.stoptime > now()-interval ' || chr(39) || $2 || ' minutes' || chr(39);
+                          vSortOrder := 't.stoptime, t.treeID';
+                ELSE
+		      IF $1 = 4 THEN
+		  	    vQuery := ' AND t.state >= ' || TSfinished;
+			    vQuery := vQuery || ' AND t.stoptime < now() ';
+			    vSortOrder := 't.treeID';
+		      ELSE
+			    RAISE EXCEPTION 'groupType must be 0,1,2,3 or 4 not %', $1;
+                      END IF;
 		    END IF;
 		  END IF;
 	    END IF;
 	  END IF;
 
 	  -- do selection
-	  FOR vRecord IN EXECUTE \'
+	  FOR vRecord IN EXECUTE '
 		SELECT t.treeID, 
 			   t.momID,
+			   t.groupID,
 			   t.classif, 
 			   u.username, 
 			   t.d_creation, 
@@ -89,20 +100,21 @@ CREATE OR REPLACE FUNCTION getTreeGroup(INT, INT)
 			   c.name, 
 			   t.starttime, 
 			   t.stoptime,
+			   t.processType,
+			   t.processSubtype,
+			   t.strategy,
 			   t.description
 		FROM   OTDBtree t 
 			   INNER JOIN OTDBuser u ON t.creator = u.userid
 			   INNER JOIN campaign c ON c.ID = t.campaign
 		WHERE  t.treetype = 30
 		AND	   t.classif  = 3 
-		\' || vQuery || \'
-		ORDER BY t.starttime, t.treeID \'
+		' || vQuery || '
+		ORDER BY ' || vSortOrder 
 	  LOOP
 		RETURN NEXT vRecord;
 	  END LOOP;
 	  RETURN;
 	END
-' LANGUAGE plpgsql;
-
-
+$$ LANGUAGE plpgsql;
 

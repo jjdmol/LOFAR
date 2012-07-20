@@ -75,6 +75,7 @@ void ErasefCmd::sendTpEvent()
 	
 	tp_event.addr = static_cast<uint32>(itsSector * TS->flashSectorSize());
 	TS->boardPort(getBoardNr()).send(tp_event);
+	TS->setBoardUsed(getBoardNr());
 	TS->boardPort(getBoardNr()).setTimer(TS->timeout()); // erase time of sector = 500 mSec
 }
 

@@ -25,24 +25,14 @@
 #include <BBSControl/CalSession.h>
 #include <BBSControl/CalSessionTransactors.h>
 #include <BBSControl/Exceptions.h>
-
-#include <MWCommon/VdsDesc.h>
-
+#include <BBSControl/Step.h>
+#include <LMWCommon/VdsDesc.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_numeric.h>
 #include <Common/lofar_string.h>
-
 #include <Common/ParameterSet.h>
-#include <BBSControl/Step.h>
-
-// gethostname() and getpid()
-#include <unistd.h>
-
-// numeric_limits<int32>
-// TODO: Create lofar_limits.h in Common.
-#include <limits>
-
 #include <pqxx/except>
+#include <limits>
 
 // Now here's an ugly kludge: libpqxx defines four different top-level
 // exception classes. In order to avoid a lot of code duplication we clumped
@@ -104,14 +94,9 @@ ostream& operator<<(ostream& os, const ProcessId &obj)
 
 CalSession::CalSession(const string &key, const string &db, const string &user,
     const string &password, const string &host, const string &port)
-    :   itsSessionId(-1)
+    :   itsSessionId(-1),
+        itsProcessId(ProcessId::id())
 {
-    // Determine the ProcessId of this worker.
-    char hostname[512];
-    int status = gethostname(hostname, 512);
-    ASSERT(status == 0);
-    itsProcessId = ProcessId(string(hostname), getpid());
-
     // Build connection string.
     string opts("dbname='" + db + "' user='" + user + "' host='" + host + "'");
     if(!port.empty()) {
@@ -160,14 +145,14 @@ bool CalSession::registerAsControl()
 }
 
 bool CalSession::registerAsKernel(const string &filesys, const string &path,
-    const Grid &grid)
+    const Axis::ShPtr &freqAxis, const Axis::ShPtr &timeAxis)
 {
     int32 status = -1;
 
     try
     {
         itsConnection->perform(PQRegisterAsKernel(itsSessionId, itsProcessId,
-            filesys, path, grid, status));
+            filesys, path, freqAxis, timeAxis, status));
     }
     CATCH_PQXX_AND_RETHROW;
 
@@ -201,7 +186,7 @@ void CalSession::setState(State state)
 
     if(status != 0)
     {
-        THROW(CalSessionException, "Unable to set session state");
+        THROW(CalSessionException, "Unable to set the session state");
     }
 }
 
@@ -218,10 +203,82 @@ CalSession::State CalSession::getState() const
 
     if(status != 0)
     {
-        THROW(CalSessionException, "Unable to get session state");
+        THROW(CalSessionException, "Unable to get the session state");
     }
 
     return result;
+}
+
+void CalSession::setTimeAxis(const Axis::ShPtr &axis)
+{
+    int32 status = -1;
+
+    try
+    {
+        itsConnection->perform(PQSetAxisTime(itsSessionId, itsProcessId, axis,
+            status));
+    }
+    CATCH_PQXX_AND_RETHROW;
+
+    if(status != 0)
+    {
+        THROW(CalSessionException, "Unable to set the session time axis.");
+    }
+}
+
+Axis::ShPtr CalSession::getTimeAxis()
+{
+    int32 status = -1;
+    Axis::ShPtr axis;
+
+    try
+    {
+        itsConnection->perform(PQGetAxisTime(itsSessionId, status, axis));
+    }
+    CATCH_PQXX_AND_RETHROW;
+
+    if(status != 0)
+    {
+        THROW(CalSessionException, "Unable to get the session time axis.");
+    }
+
+    return axis;
+}
+
+void CalSession::setParset(const ParameterSet &parset) const
+{
+    int32 status = -1;
+
+    try
+    {
+        itsConnection->perform(PQSetParset(itsSessionId, itsProcessId, parset,
+            status));
+    }
+    CATCH_PQXX_AND_RETHROW;
+
+    if(status != 0)
+    {
+        THROW(CalSessionException, "Unable to set the session parset.");
+    }
+}
+
+ParameterSet CalSession::getParset() const
+{
+    int32 status = -1;
+    ParameterSet parset;
+
+    try
+    {
+        itsConnection->perform(PQGetParset(itsSessionId, status, parset));
+    }
+    CATCH_PQXX_AND_RETHROW;
+
+    if(status != 0)
+    {
+        THROW(CalSessionException, "Unable to get the session parset.");
+    }
+
+    return parset;
 }
 
 void CalSession::initWorkerRegister(const CEP::VdsDesc &vds, bool useSolver)
@@ -314,7 +371,8 @@ void CalSession::postResult(const CommandId &id, const CommandResult &result)
     }
 }
 
-CommandStatus CalSession::getCommandStatus(const CommandId &id) const
+CalSession::CommandStatus CalSession::getCommandStatus(const CommandId &id)
+  const
 {
     int32 status = -1;
     WorkerType addressee;
@@ -460,7 +518,7 @@ string CalSession::getPath(const ProcessId &id) const
     return worker.path;
 }
 
-Grid CalSession::getGrid(const ProcessId &id) const
+Interval<double> CalSession::getFreqRange(const ProcessId &id) const
 {
     // Note: syncWorkerRegister() already called in getWorkerById().
     const Worker &worker = getWorkerById(id);
@@ -468,7 +526,76 @@ Grid CalSession::getGrid(const ProcessId &id) const
     {
         THROW(CalSessionException, "Worker " << id << " is not of type KERNEL");
     }
-    return worker.grid;
+
+    return worker.freqRange;
+}
+
+Interval<double> CalSession::getTimeRange(const ProcessId &id) const
+{
+    // Note: syncWorkerRegister() already called in getWorkerById().
+    const Worker &worker = getWorkerById(id);
+    if(worker.type != KERNEL)
+    {
+        THROW(CalSessionException, "Worker " << id << " is not of type KERNEL");
+    }
+
+    return worker.timeRange;
+}
+
+Axis::ShPtr CalSession::getFreqAxis(const ProcessId &id) const
+{
+    // Note: syncWorkerRegister() already called in getWorkerById().
+    const Worker &worker = getWorkerById(id);
+    if(worker.type != KERNEL)
+    {
+        THROW(CalSessionException, "Worker " << id << " is not of type KERNEL");
+    }
+
+    int32 status = -1;
+    Axis::ShPtr axis;
+
+    try
+    {
+        itsConnection->perform(PQGetWorkerAxisFreq(itsSessionId, id, status,
+            axis));
+    }
+    CATCH_PQXX_AND_RETHROW;
+
+    if(status != 0)
+    {
+        THROW(CalSessionException, "Unable to get the frequency axis of worker "
+            << id);
+    }
+
+    return axis;
+}
+
+Axis::ShPtr CalSession::getTimeAxis(const ProcessId &id) const
+{
+    // Note: syncWorkerRegister() already called in getWorkerById().
+    const Worker &worker = getWorkerById(id);
+    if(worker.type != KERNEL)
+    {
+        THROW(CalSessionException, "Worker " << id << " is not of type KERNEL");
+    }
+
+    int32 status = -1;
+    Axis::ShPtr axis;
+
+    try
+    {
+        itsConnection->perform(PQGetWorkerAxisTime(itsSessionId, id, status,
+            axis));
+    }
+    CATCH_PQXX_AND_RETHROW;
+
+    if(status != 0)
+    {
+        THROW(CalSessionException, "Unable to get the time axis of worker "
+            << id);
+    }
+
+    return axis;
 }
 
 vector<ProcessId> CalSession::getWorkersByType(WorkerType type) const
@@ -517,7 +644,7 @@ void CalSession::syncWorkerRegister(bool force) const
         return;
     }
 
-    vector<size_t> tmpSlotCount(N_WorkerType, 0);
+    vector<size_t> tmpSlotCount;
     vector<Worker> tmpRegister;
 
     try

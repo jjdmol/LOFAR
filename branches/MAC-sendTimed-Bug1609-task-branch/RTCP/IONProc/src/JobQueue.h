@@ -24,8 +24,8 @@
 #if !defined LOFAR_RTCP_JOB_QUEUE_H
 #define LOFAR_RTCP_JOB_QUEUE_H
 
-#include <Thread/Condition.h>
-#include <Thread/Mutex.h>
+#include <Common/Thread/Condition.h>
+#include <Common/Thread/Mutex.h>
 
 #include <vector>
 

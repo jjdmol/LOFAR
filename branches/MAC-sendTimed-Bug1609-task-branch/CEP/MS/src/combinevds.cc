@@ -22,7 +22,11 @@
 
 #include <lofar_config.h>
 #include <MS/VdsMaker.h>
+#include <MS/Package__Version.h>
 #include <Common/LofarLogger.h>
+#include <Common/StringUtil.h>
+#include <Common/SystemUtil.h>
+#include <Common/Exception.h>
 #include <stdexcept>
 #include <iostream>
 
@@ -30,9 +34,14 @@ using namespace std;
 using namespace LOFAR;
 using namespace LOFAR::CEP;
 
+// Define handler that tries to print a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
+
 int main (int argc, const char* argv[])
 {
   try {
+    TEST_SHOW_VERSION (argc, argv, MS);
+    INIT_LOGGER(basename(string(argv[0])));
     if (argc < 3) {
       cout << "Run as:  combinevds outName in1 in2 ..." << endl;
       return 0;
@@ -41,13 +50,15 @@ int main (int argc, const char* argv[])
     vector<string> vdsNames;
     vdsNames.reserve (argc-2);
     for (int i=2; i<argc; ++i) {
-      vdsNames.push_back (argv[i]);
+      // Multiple names can be given separated by commas.
+      vector<string> names = StringUtil::split (string(argv[i]), ',');
+      vdsNames.insert (vdsNames.end(), names.begin(), names.end());
     }
     // Combine them.
     VdsMaker::combine (argv[1], vdsNames);
 
-  } catch (exception& x) {
-    cout << "Unexpected expection: " << x.what() << endl;
+  } catch (LOFAR::Exception& err) {
+    std::cerr << "LOFAR Exception detected: " << err << std::endl;
     return 1;
   }
   return 0;

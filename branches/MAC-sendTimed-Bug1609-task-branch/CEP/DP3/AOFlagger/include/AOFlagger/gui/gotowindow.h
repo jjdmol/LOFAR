@@ -23,6 +23,7 @@
 #include <string>
 
 #include <gtkmm/box.h>
+#include <gtkmm/button.h>
 #include <gtkmm/buttonbox.h>
 #include <gtkmm/frame.h>
 #include <gtkmm/liststore.h>
@@ -30,7 +31,7 @@
 #include <gtkmm/treeview.h>
 #include <gtkmm/window.h>
 
-#include "../rfi/strategy/types.h"
+#include <AOFlagger/strategy/control/types.h>
 
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>

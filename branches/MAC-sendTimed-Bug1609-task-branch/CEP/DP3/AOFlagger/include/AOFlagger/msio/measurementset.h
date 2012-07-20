@@ -28,7 +28,7 @@
 #include <ms/MeasurementSets/MSColumns.h>
 #include <tables/Tables/DataManager.h>
 
-#include <AOFlagger/rfi/strategy/types.h>
+#include <AOFlagger/strategy/control/types.h>
 
 #include <AOFlagger/msio/antennainfo.h>
 
@@ -96,7 +96,6 @@ class MSIterator {
 
 class MeasurementSet {
 	public:
-		enum TableType { MainTable, PolarizationTable };
 		MeasurementSet(const std::string &location) throw()
 			: _location(location), _maxSpectralBandIndex(-1),
 			_maxFrequencyIndex(-1), _maxScanIndex(-1), _cacheInitialized(false)
@@ -104,9 +103,15 @@ class MeasurementSet {
 		}
 		MeasurementSet(const std::string &newLocation, const MeasurementSet &formatExample);
 		~MeasurementSet();
-		casa::Table *OpenTable(TableType type, bool update = false) const;
+		casa::Table *OpenTable(bool update = false) const;
 		size_t MaxSpectralBandIndex();
 		size_t FrequencyCount();
+		size_t TimestepCount()
+		{
+			if(_maxScanIndex==-1)
+				CalculateScanCounts();
+			return _maxScanIndex;
+		}
 		size_t MaxScanIndex()
 		{
 			if(_maxScanIndex==-1)
@@ -119,10 +124,14 @@ class MeasurementSet {
 				CalculateScanCounts();
 			return _minScanIndex;
 		}
+		size_t GetPolarizationCount();
+		static size_t GetPolarizationCount(const std::string &filename);
+		static struct BandInfo GetBandInfo(const std::string &filename, unsigned bandIndex);
 		size_t AntennaCount();
 		size_t FieldCount();
+		size_t BandCount();
 		struct AntennaInfo GetAntennaInfo(unsigned antennaId);
-		struct BandInfo GetBandInfo(unsigned bandIndex);
+		struct BandInfo GetBandInfo(unsigned bandIndex) {return GetBandInfo(_location, bandIndex);}
 		struct FieldInfo GetFieldInfo(unsigned fieldIndex);
 		void DataMerge(const MeasurementSet &source);
 		std::string Location() const throw() { return _location; }
@@ -147,7 +156,11 @@ class MeasurementSet {
 				times->push_back(*i);
 			return times;
 		}
+		bool HasRFIConsoleHistory();
+		void GetAOFlaggerHistory(std::ostream &stream);
 		void AddAOFlaggerHistory(const class rfiStrategy::Strategy &strategy, const std::string &commandline);
+		std::string GetStationName() const;
+		bool ChannelZeroIsRubish();
 	private:
 		void InitCacheData();
 		void CalculateScanCounts();

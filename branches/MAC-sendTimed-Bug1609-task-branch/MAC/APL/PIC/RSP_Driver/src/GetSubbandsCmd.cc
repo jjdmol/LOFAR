@@ -49,43 +49,55 @@ GetSubbandsCmd::~GetSubbandsCmd()
 
 void GetSubbandsCmd::ack(CacheBuffer& cache)
 {
-  RSPGetsubbandsackEvent ack;
+	RSPGetsubbandsackEvent ack;
 
-  ack.timestamp = getTimestamp();
-  ack.status = RSP_SUCCESS;
+	ack.timestamp = getTimestamp();
+	ack.status    = RSP_SUCCESS;
 
-  Range src_range;
-  switch (m_event->type) {
+	Range src_range;
+	switch (m_event->type) {
+	case SubbandSelection::BEAMLET:
+		ack.subbands().resize(m_event->rcumask.count(), MAX_BEAMLETS);
+		src_range = Range(MEPHeader::N_LOCAL_XLETS, MEPHeader::N_LOCAL_XLETS + MAX_BEAMLETS - 1);
+		break;
 
-  case SubbandSelection::BEAMLET:
-    ack.subbands().resize(m_event->rcumask.count(), MEPHeader::N_BEAMLETS);
-    src_range = Range(MEPHeader::N_LOCAL_XLETS, MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS - 1);
-    break;
+	case SubbandSelection::XLET:
+		ack.subbands().resize(m_event->rcumask.count(), MEPHeader::N_LOCAL_XLETS);
+		src_range = Range(0, MEPHeader::N_LOCAL_XLETS - 1);
+		break;
 
-  case SubbandSelection::XLET:
-    ack.subbands().resize(m_event->rcumask.count(), MEPHeader::N_LOCAL_XLETS);
-    src_range = Range(0, MEPHeader::N_LOCAL_XLETS - 1);
-    break;
+	default:
+		LOG_FATAL("invalid subbandselection type");
+		exit(EXIT_FAILURE);
+		break;
+	}
 
-  default:
-    LOG_FATAL("invalid subbandselection type");
-    exit(EXIT_FAILURE);
-    break;
-  }
-  
-  int result_rcu = 0;
-  for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++)
-  {
-    if (m_event->rcumask[cache_rcu])
-    {
-      ack.subbands()(result_rcu, Range::all())
-	= cache.getSubbandSelection()()(cache_rcu, src_range);
-      
-      result_rcu++;
-    }
-  }
-  
-  getPort()->send(ack);
+	int result_rcu = 0;
+	for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++) {
+		if (m_event->rcumask[cache_rcu]) {
+			// NOTE: MEPHeader::N_BEAMLETS = 4x62 but userside MAX_BEAMLETS may be different
+			//       In other words: getSubbandSelection can contain more data than ack.weights
+			if (MEPHeader::N_BEAMLETS == MAX_BEAMLETS || m_event->type == SubbandSelection::XLET) {
+				ack.subbands()(result_rcu, Range::all()) = cache.getSubbandSelection()()(cache_rcu, src_range);
+			}
+			else {
+				for (int rsp = 0; rsp < 4; rsp++) {
+					int	swstart(rsp*MAX_BEAMLETS_PER_RSP);
+					int hwstart(MEPHeader::N_LOCAL_XLETS + rsp * (MEPHeader::N_BEAMLETS/4));
+					ack.subbands()(result_rcu, Range(swstart,swstart+MAX_BEAMLETS_PER_RSP-1)) = 
+							cache.getSubbandSelection()()(cache_rcu, Range(hwstart, hwstart+MAX_BEAMLETS_PER_RSP-1));
+					if (cache_rcu == 0) {
+						LOG_DEBUG_STR("GetSubbands:move(" << hwstart << ".." << hwstart+MAX_BEAMLETS_PER_RSP << ") to (" 
+														  << swstart << ".." << swstart+MAX_BEAMLETS_PER_RSP << ")");
+					}
+				}
+			}
+			LOG_DEBUG_STR("GetSubbands(cache[0]): " << cache.getSubbandSelection()()(0,Range::all()));
+			result_rcu++;
+		} // if rcu selected
+	} // for each rcu
+
+	getPort()->send(ack);
 }
 
 void GetSubbandsCmd::apply(CacheBuffer& /*cache*/, bool /*setModFlag*/)

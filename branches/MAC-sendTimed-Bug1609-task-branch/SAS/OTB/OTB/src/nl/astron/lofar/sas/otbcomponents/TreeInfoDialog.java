@@ -24,15 +24,17 @@ import com.toedter.components.JSpinField;
 import java.rmi.RemoteException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.TimeZone;
 import java.util.TreeMap;
-import java.util.Vector;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.Icon;
 import javax.swing.JOptionPane;
+import javax.swing.JTextField;
 import nl.astron.lofar.lofarutils.DateTimeChooser;
 import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.sas.otb.MainFrame;
@@ -117,10 +119,8 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                     // Get all Beams (if any) from this observation and try to determine the longest duration
                     // try to set the dates
                     itsMaxBeamDuration=0;
-                    Vector<jOTDBnode> beams = OtdbRmi.getRemoteMaintenance().getItemList(itsTree.treeID(), "%.Beam[%.duration");
-                    Iterator<jOTDBnode> itr = beams.iterator();
-                    while (itr.hasNext()){
-                        jOTDBnode aNode=itr.next();
+                    ArrayList<jOTDBnode> beams = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(itsTree.treeID(), "%.Beam[%.duration"));
+                    for (jOTDBnode aNode: beams) {
                         try {
                             if (Integer.parseInt(aNode.limits) > itsMaxBeamDuration) {
                                 itsMaxBeamDuration=Integer.parseInt(aNode.limits);
@@ -166,7 +166,10 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                     itsStopDate=null;
                 }
             }
-            itsDescription = itsTree.description;     
+            if (itsTree.description != null) itsDescription = itsTree.description;
+            if (itsTree.processType != null) itsProcessType=itsTree.processType;
+            if (itsTree.processSubtype != null) itsProcessSubType=itsTree.processSubtype;
+            if (itsTree.strategy != null) itsStrategy=itsTree.strategy;
             initComboLists();
             initFocus();
             initView();
@@ -201,36 +204,36 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     public void composeTimeString(String time) {
         // Set the dateformat OTDB takes
         SimpleDateFormat id = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss",itsLocale);
-        if (time.equals("start")) {
-            if (itsStartDate != null) {
-              startTimeInput.setText(id.format(itsStartDate));
-              if (stopTimeInput.getText().equals("") ||
-                      stopTimeInput.getText().equals("not-a-date-time") ||
-                      itsStartDate.after(itsStopDate)) {
-                stopTimeInput.setText(id.format(itsStartDate));
-                itsStopDate=itsStartDate;
-              }
-              itsStarttime=startTimeInput.getText();
-            } else {
-                startTimeInput.setText("not-a-date-time");
-            }
-            
-              
-        } else if (time.equals("stop")) {
-            if (itsStopDate != null) {
-                stopTimeInput.setText(id.format(itsStopDate));
-                itsStoptime=stopTimeInput.getText();
-                saveButton.setEnabled(true);
-            } else {
-                stopTimeInput.setText("not-a-date-time");
-                saveButton.setEnabled(false);
-            }
+        switch (time) {
+            case "start":
+                if (itsStartDate != null) {
+                  startTimeInput.setText(id.format(itsStartDate));
+                  if (stopTimeInput.getText().equals("") ||
+                          stopTimeInput.getText().equals("not-a-date-time") ||
+                          itsStartDate.after(itsStopDate)) {
+                    stopTimeInput.setText(id.format(itsStartDate));
+                    itsStopDate=itsStartDate;
+                  }
+                  itsStarttime=startTimeInput.getText();
+                } else {
+                    startTimeInput.setText("not-a-date-time");
+                }
+                break;
+            case "stop":
+                if (itsStopDate != null) {
+                    stopTimeInput.setText(id.format(itsStopDate));
+                    itsStoptime=stopTimeInput.getText();
+                    saveButton.setEnabled(true);
+                } else {
+                    stopTimeInput.setText("not-a-date-time");
+                    saveButton.setEnabled(false);
+                }
+                if (itsStartDate != null && itsStartDate.after(itsStopDate)) {
+                    startTimeInput.setText(id.format(itsStopDate));
+                    itsStartDate=itsStopDate;
 
-            if (itsStartDate != null && itsStartDate.after(itsStopDate)) {
-                startTimeInput.setText(id.format(itsStopDate));
-                itsStartDate=itsStopDate;
-
-            }
+                }
+                break;
         }
     }
 
@@ -311,6 +314,10 @@ public class TreeInfoDialog extends javax.swing.JDialog {
    }
 
     private boolean checkTimes() {
+
+        // for now return true because Arno needs to do some testing.
+        return true;
+/*
         // start the checking. Both dates need to be set.
         // the startdate needs to be at least 4 minutes away from NOW
         // the enddate needs to be further in the future then the starttime/.
@@ -325,134 +332,148 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                anErrorMsg = "Stop time BEFORE start time";
             }
             
-            // check if date is further away then now(in GMT) + 4 minutes
+            // check if date is further away then now(in GMT) + 1 minutes
             Date now = getGMTTime(new Date());
             Calendar cal = Calendar.getInstance();
             cal.setTime(now);
             cal.set(Calendar.MINUTE,cal.get(Calendar.MINUTE)+1);
             Date minTime = getGMTTime(cal.getTime());
-            if (itsStartDate.before(minTime)) {
-                anErrorMsg = "Start time needs to be minimal 1 minutes away from now (GMT)";
-                // create an Info popup.
-                JOptionPane.showMessageDialog(this,anErrorMsg,"Warning",JOptionPane.WARNING_MESSAGE);
-                return true;            }
+            if (itsStartDate.after(now)) {
+                anErrorMsg = "That date allready passed I'm afraid.";
+            } else if (itsStartDate.before(minTime)) {
+                    anErrorMsg = "Start time needs to be minimal 1 minutes away from now (GMT)";
+                    // create an Info popup.
+                    JOptionPane.showMessageDialog(this,anErrorMsg,"Warning",JOptionPane.WARNING_MESSAGE);
+                    return true;            }
             if (itsStopDate.before(itsStartDate)) {
                 if (anErrorMsg.length() > 0) {
                     anErrorMsg+=", and ";
                 }
                 anErrorMsg = "Stop time BEFORE start time";
-                // create an Info popup.
-                JOptionPane.showMessageDialog(this,anErrorMsg,"Error",JOptionPane.WARNING_MESSAGE);
-                return false;            }
+            }
         }
-        return true;
+        if (!anErrorMsg.equals("") ) {
+            // create an Error popup.
+            JOptionPane.showMessageDialog(this,anErrorMsg,"Error",JOptionPane.ERROR_MESSAGE);
+            return false;
+        } else {
+            return true;
+        }
+ * 
+ */
     }
     
     private void initFocus() {
-        
-            
         // PIC
-        if (itsTreeType.equals("hardware")) {
-            momIDLabel.setVisible(false);
-            momIDInput.setVisible(false);
-            nameLabel.setVisible(false);
-            nameInput.setVisible(false);
-            setNameButton.setVisible(false);
-            originalTreeIDLabel.setVisible(false);
-            originalTreeIDInput.setVisible(false);
-            campaignLabel.setVisible(false);
-            campaignInput.setVisible(false);
-            showCampaignButton.setVisible(false);
-            startTimeLabel.setVisible(false);
-            startTimeInput.setVisible(false);
-            durationLabel.setVisible(false);
-            durationDayLabel.setVisible(false);
-            durationHourLabel.setVisible(false);
-            durationMinuteLabel.setVisible(false);
-            durationSecondLabel.setVisible(false);
-            inputDurationDays.setVisible(false);
-            inputDurationHours.setVisible(false);
-            inputDurationMinutes.setVisible(false);
-            inputDurationSeconds.setVisible(false);
-            setDurationButton.setVisible(false);
-            stopTimeLabel.setVisible(false);
-            stopTimeInput.setVisible(false);
-            setStartDateButton.setVisible(false);
-            setStopDateButton.setVisible(false);
-            descriptionInput.setEnabled(true);                
-            // VICtemplate    
-        } else if (itsTreeType.equals("VItemplate")) {
-            campaignLabel.setVisible(false);
-            campaignInput.setVisible(false);        
-            showCampaignButton.setVisible(false);
-            startTimeLabel.setVisible(false);
-            startTimeInput.setVisible(false);
-            durationLabel.setVisible(false);
-            durationDayLabel.setVisible(false);
-            durationHourLabel.setVisible(false);
-            durationMinuteLabel.setVisible(false);
-            durationSecondLabel.setVisible(false);
-            inputDurationDays.setVisible(false);
-            inputDurationHours.setVisible(false);
-            inputDurationMinutes.setVisible(false);
-            inputDurationSeconds.setVisible(false);
-            setDurationButton.setVisible(false);
-            stopTimeLabel.setVisible(false);
-            stopTimeInput.setVisible(false);
-            setStartDateButton.setVisible(false);
-            setStopDateButton.setVisible(false);
-            descriptionInput.setEnabled(true);                
-            
-        // VIC
-        } else if (itsTreeType.equals("VHtree")) {
-            nameLabel.setVisible(false);
-            nameInput.setVisible(false);
-            setNameButton.setVisible(false);
-            campaignLabel.setVisible(true);
-            campaignInput.setVisible(true);
-            showCampaignButton.setVisible(true);
-            startTimeLabel.setVisible(true);
-            startTimeInput.setVisible(true);
-            durationLabel.setVisible(true);
-            durationDayLabel.setVisible(true);
-            durationHourLabel.setVisible(true);
-            durationMinuteLabel.setVisible(true);
-            durationSecondLabel.setVisible(true);
-            inputDurationDays.setVisible(true);
-            inputDurationHours.setVisible(true);
-            inputDurationMinutes.setVisible(true);
-            inputDurationSeconds.setVisible(true);
-            setDurationButton.setVisible(true);
-            stopTimeLabel.setVisible(true);
-            stopTimeInput.setVisible(true);
-            setStartDateButton.setVisible(true);
-            setStopDateButton.setVisible(true);
-            if (itsMultiple) {
-                descriptionInput.setEnabled(false);
-                inputDurationDays.setEnabled(false);
-                inputDurationHours.setEnabled(false);
-                inputDurationMinutes.setEnabled(false);
-                inputDurationSeconds.setEnabled(false);
-                setDurationButton.setEnabled(false);
-                setStartDateButton.setEnabled(false);
-                setStopDateButton.setEnabled(false);
-                showCampaignButton.setEnabled(false);
+        switch (itsTreeType) {
+            case "hardware":
+                momIDLabel.setVisible(false);
+                momIDInput.setVisible(false);
+                nameLabel.setVisible(false);
+                nameInput.setVisible(false);
+                setNameButton.setVisible(false);
+                originalTreeIDLabel.setVisible(false);
+                originalTreeIDInput.setVisible(false);
+                campaignLabel.setVisible(false);
+                campaignInput.setVisible(false);
+                showCampaignButton.setVisible(false);
+                startTimeLabel.setVisible(false);
+                startTimeInput.setVisible(false);
+                durationLabel.setVisible(false);
+                durationDayLabel.setVisible(false);
+                durationHourLabel.setVisible(false);
+                durationMinuteLabel.setVisible(false);
+                durationSecondLabel.setVisible(false);
+                inputDurationDays.setVisible(false);
+                inputDurationHours.setVisible(false);
+                inputDurationMinutes.setVisible(false);
+                inputDurationSeconds.setVisible(false);
+                setDurationButton.setVisible(false);
+                stopTimeLabel.setVisible(false);
+                stopTimeInput.setVisible(false);
+                setStartDateButton.setVisible(false);
+                setStopDateButton.setVisible(false);
+                descriptionInput.setEnabled(true);
+                // VICtemplate
+                break;
+            case "VItemplate":
+                campaignLabel.setVisible(false);
+                campaignInput.setVisible(false);
+                showCampaignButton.setVisible(false);
+                startTimeLabel.setVisible(false);
+                startTimeInput.setVisible(false);
+                durationLabel.setVisible(false);
+                durationDayLabel.setVisible(false);
+                durationHourLabel.setVisible(false);
+                durationMinuteLabel.setVisible(false);
+                durationSecondLabel.setVisible(false);
+                inputDurationDays.setVisible(false);
+                inputDurationHours.setVisible(false);
+                inputDurationMinutes.setVisible(false);
+                inputDurationSeconds.setVisible(false);
+                setDurationButton.setVisible(false);
+                stopTimeLabel.setVisible(false);
+                stopTimeInput.setVisible(false);
+                setStartDateButton.setVisible(false);
+                setStopDateButton.setVisible(false);
+                descriptionInput.setEnabled(true);
+                
+            // VIC
+                break;
+            case "VHtree":
+                nameLabel.setVisible(false);
+                nameInput.setVisible(false);
+                setNameButton.setVisible(false);
+                campaignLabel.setVisible(true);
+                campaignInput.setVisible(true);
+                showCampaignButton.setVisible(true);
+                startTimeLabel.setVisible(true);
+                startTimeInput.setVisible(true);
+                durationLabel.setVisible(true);
+                durationDayLabel.setVisible(true);
+                durationHourLabel.setVisible(true);
+                durationMinuteLabel.setVisible(true);
+                durationSecondLabel.setVisible(true);
+                inputDurationDays.setVisible(true);
+                inputDurationHours.setVisible(true);
+                inputDurationMinutes.setVisible(true);
+                inputDurationSeconds.setVisible(true);
+                setDurationButton.setVisible(true);
+                stopTimeLabel.setVisible(true);
+                stopTimeInput.setVisible(true);
+                setStartDateButton.setVisible(true);
+                setStopDateButton.setVisible(true);
+                if (itsMultiple) {
+                    descriptionInput.setEnabled(false);
+                    inputDurationDays.setEnabled(false);
+                    inputDurationHours.setEnabled(false);
+                    inputDurationMinutes.setEnabled(false);
+                    inputDurationSeconds.setEnabled(false);
+                    setDurationButton.setEnabled(false);
+                    setStartDateButton.setEnabled(false);
+                    setStopDateButton.setEnabled(false);
+                    showCampaignButton.setEnabled(false);
 
-            } else {
-                descriptionInput.setEnabled(true);                
-                inputDurationDays.setEnabled(true);
-                inputDurationHours.setEnabled(true);
-                inputDurationMinutes.setEnabled(true);
-                inputDurationSeconds.setEnabled(true);
-                setDurationButton.setEnabled(true);
-                setStartDateButton.setEnabled(true);
-                setStopDateButton.setEnabled(true);
-                showCampaignButton.setEnabled(true);
-            }
+                } else {
+                    descriptionInput.setEnabled(true);
+                    inputDurationDays.setEnabled(true);
+                    inputDurationHours.setEnabled(true);
+                    inputDurationMinutes.setEnabled(true);
+                    inputDurationSeconds.setEnabled(true);
+                    setDurationButton.setEnabled(true);
+                    setStartDateButton.setEnabled(true);
+                    setStopDateButton.setEnabled(true);
+                    showCampaignButton.setEnabled(true);
+                }
+                break;
         }
         if (isAdministrator) {
             classificationInput.setEnabled(true);
         }
+        this.groupIDInput.setEditable(false);
+        this.processTypeInput.setEditable(false);
+        this.processSubTypeInput.setEditable(false);
+        this.strategyInput.setEditable(false);
     }
     
     private void initComboLists() {
@@ -475,10 +496,16 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     
     /* Fill the view */
     private void initView() {
+        processTypeInput.setEnabled(false);
+        processSubTypeInput.setEnabled(false);
+        strategyInput.setEnabled(false);
+        processTypeInput.setEditable(false);
+        processSubTypeInput.setEditable(false);
+        strategyInput.setEditable(false);
         // check if the found tree is a defaulttree
         if (itsTreeType.equals("VItemplate")) {
             try {
-                itsDefaultTemplateList = OtdbRmi.getRemoteOTDB().getDefaultTemplates();
+                itsDefaultTemplateList = new ArrayList(OtdbRmi.getRemoteOTDB().getDefaultTemplates());
                 Iterator<jDefaultTemplate> anI = itsDefaultTemplateList.iterator();
                 while (anI.hasNext()) {
                     // found DefaultTemplate
@@ -489,6 +516,12 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                         nameLabel.setVisible(true);
                         nameInput.setVisible(true);
                         setNameButton.setVisible(true);
+                        processTypeInput.setEnabled(true);
+                        processSubTypeInput.setEnabled(true);
+                        strategyInput.setEnabled(true);
+                        processTypeInput.setEditable(true);
+                        processSubTypeInput.setEditable(true);
+                        strategyInput.setEditable(true);
                     }
                 }
             }  catch (RemoteException ex) {
@@ -512,7 +545,11 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         campaignInput.setText(itsTree.campaign);
         startTimeInput.setText(itsTree.starttime.replace("T", " "));
         stopTimeInput.setText(itsTree.stoptime.replace("T", " "));
-        descriptionInput.setText(itsDescription);
+        descriptionInput.setText(itsTree.description);
+        groupIDInput.setText(String.valueOf(itsTree.groupID));
+        processTypeInput.setText(itsTree.processType);
+        processSubTypeInput.setText(itsTree.processSubtype);
+        strategyInput.setText(itsTree.strategy);
     }
     
     private boolean saveNewTree() {
@@ -534,7 +571,6 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                     jOTDBtree aTree=OtdbRmi.getRemoteOTDB().getTreeInfo(itsTreeIDs[i], false); 
                     String aTreeState=OtdbRmi.getTreeState().get(aTree.state);
                     String aClassification = OtdbRmi.getClassif().get(aTree.classification);
-                    
                     // Check treeState and alter in DB when changed
                     if (!aTreeState.equals(stateInput.getSelectedItem().toString())) {
                         aTree.state=OtdbRmi.getRemoteTypes().getTreeState(stateInput.getSelectedItem().toString());
@@ -587,6 +623,20 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                     itsTree.description = descriptionInput.getText();
                     if (!OtdbRmi.getRemoteMaintenance().setDescription(itsTree.treeID(), itsTree.description)) {
                         String aS="Error during setDescription("+itsTree.treeID()+","+itsTree.description+"): "+OtdbRmi.getRemoteMaintenance().errorMsg();
+                        logger.error(aS);
+                        LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                        succes=false;
+                    }
+                }
+                if (!itsProcessType.equals(processTypeInput.getText()) ||
+                    !itsProcessSubType.equals(processSubTypeInput.getText()) ||
+                    !itsStrategy.equals(strategyInput.getText())) {
+                    hasChanged=true;
+                    itsTree.processType = processTypeInput.getText();
+                    itsTree.processSubtype = processSubTypeInput.getText();
+                    itsTree.strategy = strategyInput.getText();
+                    if (!OtdbRmi.getRemoteMaintenance().assignProcessType(itsTree.treeID(), itsTree.processType,itsTree.processSubtype,itsTree.strategy)) {
+                        String aS="Error during assignProcessType("+itsTree.treeID()+","+itsTree.processType+","+itsTree.processSubtype+","+itsTree.strategy                                +"): "+OtdbRmi.getRemoteMaintenance().errorMsg();
                         logger.error(aS);
                         LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                         succes=false;
@@ -655,10 +705,10 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        jTextField1 = new javax.swing.JTextField();
         jLabel2 = new javax.swing.JLabel();
         stateInput = new javax.swing.JComboBox();
         jLabel3 = new javax.swing.JLabel();
-        descriptionInput = new javax.swing.JTextArea();
         cancelButton = new javax.swing.JButton();
         saveButton = new javax.swing.JButton();
         jLabel1 = new javax.swing.JLabel();
@@ -705,28 +755,33 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         nameLabel = new javax.swing.JLabel();
         treeIDInput = new javax.swing.JTextField();
         setNameButton = new javax.swing.JButton();
+        groupIDLabel = new javax.swing.JLabel();
+        groupIDInput = new javax.swing.JTextField();
+        processTypeLabel = new javax.swing.JLabel();
+        processTypeInput = new javax.swing.JTextField();
+        processSubTypeLabel = new javax.swing.JLabel();
+        strategyLabel = new javax.swing.JLabel();
+        strategyInput = new javax.swing.JTextField();
+        descriptionInput = new javax.swing.JTextArea();
+        processSubTypeInput = new javax.swing.JTextField();
+
+        jTextField1.setText("jTextField1");
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("LOFAR View TreeInfo");
-        setAlwaysOnTop(true);
         setModal(true);
         setName("loadFileDialog"); // NOI18N
         setResizable(false);
         getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         jLabel2.setText("State:");
-        getContentPane().add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 230, -1, 20));
+        getContentPane().add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 350, -1, 20));
 
         stateInput.setToolTipText("State Selection");
-        getContentPane().add(stateInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 230, 170, -1));
+        getContentPane().add(stateInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 350, 170, -1));
 
         jLabel3.setText("Description :");
-        getContentPane().add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 440, 130, 20));
-
-        descriptionInput.setLineWrap(true);
-        descriptionInput.setRows(3);
-        descriptionInput.setToolTipText("Set Description for this tree");
-        getContentPane().add(descriptionInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 460, 530, 60));
+        getContentPane().add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 560, 130, 20));
 
         cancelButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_cancel.png"))); // NOI18N
         cancelButton.setText("Cancel");
@@ -737,7 +792,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                 cancelButtonActionPerformed(evt);
             }
         });
-        getContentPane().add(cancelButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 530, 100, -1));
+        getContentPane().add(cancelButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 650, 100, -1));
 
         saveButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_apply.png"))); // NOI18N
         saveButton.setText("Apply");
@@ -748,77 +803,77 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                 saveButtonActionPerformed(evt);
             }
         });
-        getContentPane().add(saveButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 530, 90, -1));
+        getContentPane().add(saveButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 650, 90, -1));
 
         jLabel1.setText("ID:");
         getContentPane().add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 50, -1, 20));
 
         nameInput.setToolTipText("Give Name for DefaultTree.\n!!!!!! Keep in mind that only Default templates who's names are known to MoM can be used by MoM !!!!!!!\n");
         nameInput.setEnabled(false);
-        getContentPane().add(nameInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(240, 50, 210, 20));
+        getContentPane().add(nameInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(250, 50, 200, 20));
 
         jLabel4.setText("Classification:");
-        getContentPane().add(jLabel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 110, -1, 20));
+        getContentPane().add(jLabel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 230, -1, 20));
 
         classificationInput.setToolTipText("Select Classification");
         classificationInput.setEnabled(false);
-        getContentPane().add(classificationInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 110, 170, -1));
+        getContentPane().add(classificationInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 230, 170, -1));
 
         jLabel6.setText("Creator:");
-        getContentPane().add(jLabel6, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 140, -1, 20));
+        getContentPane().add(jLabel6, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 260, -1, 20));
 
         creatorInput.setToolTipText("Owner for this TreeNode");
         creatorInput.setEnabled(false);
-        getContentPane().add(creatorInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 140, 430, -1));
+        getContentPane().add(creatorInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 260, 440, -1));
 
         startTimeLabel.setText("StartTime:");
-        getContentPane().add(startTimeLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 320, -1, 20));
+        getContentPane().add(startTimeLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 440, -1, 20));
 
         stopTimeLabel.setText("StopTime:");
-        getContentPane().add(stopTimeLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 410, -1, 20));
+        getContentPane().add(stopTimeLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 530, -1, 20));
 
         startTimeInput.setEditable(false);
         startTimeInput.setToolTipText("Start Time in GMT (YYYY-MMM-DD hh:mm:ss)");
         startTimeInput.setDragEnabled(true);
-        getContentPane().add(startTimeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 320, 340, -1));
+        getContentPane().add(startTimeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 440, 340, -1));
 
         stopTimeInput.setEditable(false);
         stopTimeInput.setToolTipText("Stop Time in GMT (YYYY-MMM-DD hh:mm:ss)");
-        getContentPane().add(stopTimeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 410, 340, -1));
+        getContentPane().add(stopTimeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 530, 340, -1));
 
         momIDLabel.setText("MoMID:");
         getContentPane().add(momIDLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 80, -1, 20));
 
         momIDInput.setToolTipText("MoMID");
         momIDInput.setEnabled(false);
-        getContentPane().add(momIDInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 80, 90, -1));
+        getContentPane().add(momIDInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 80, 90, -1));
 
         jLabel10.setText("CreationDate:");
-        getContentPane().add(jLabel10, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 170, -1, 20));
+        getContentPane().add(jLabel10, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 290, -1, 20));
 
         creationDateInput.setToolTipText("Date this entry was created");
         creationDateInput.setEnabled(false);
-        getContentPane().add(creationDateInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 170, 430, -1));
+        getContentPane().add(creationDateInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 290, 440, -1));
 
         jLabel11.setText("Type:");
-        getContentPane().add(jLabel11, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 200, -1, 20));
+        getContentPane().add(jLabel11, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 320, -1, 20));
 
         typeInput.setEnabled(false);
-        getContentPane().add(typeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 200, 430, -1));
+        getContentPane().add(typeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 320, 440, -1));
 
         originalTreeIDLabel.setText("OriginalTree:");
-        getContentPane().add(originalTreeIDLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 260, -1, 20));
+        getContentPane().add(originalTreeIDLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 380, -1, 20));
 
         originalTreeIDInput.setToolTipText("Original Tree ID");
         originalTreeIDInput.setEnabled(false);
-        getContentPane().add(originalTreeIDInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 260, 90, -1));
+        getContentPane().add(originalTreeIDInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 380, 90, -1));
 
         campaignLabel.setText("Campaign:");
-        getContentPane().add(campaignLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 290, -1, 20));
+        getContentPane().add(campaignLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 410, -1, 20));
 
         campaignInput.setEditable(false);
         campaignInput.setToolTipText("Campaign name");
-        getContentPane().add(campaignInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 290, 340, -1));
+        getContentPane().add(campaignInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 410, 340, -1));
 
         jScrollPane1.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         jScrollPane1.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
@@ -831,7 +886,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         topLabel.setOpaque(false);
         jScrollPane1.setViewportView(topLabel);
 
-        getContentPane().add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 530, 40));
+        getContentPane().add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 570, 40));
 
         setStartDateButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_edit.gif"))); // NOI18N
         setStartDateButton.setText("set");
@@ -842,7 +897,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                 setStartDateButtonActionPerformed(evt);
             }
         });
-        getContentPane().add(setStartDateButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(450, 320, 90, -1));
+        getContentPane().add(setStartDateButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(460, 440, 90, -1));
 
         setStopDateButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_edit.gif"))); // NOI18N
         setStopDateButton.setText("set");
@@ -852,10 +907,10 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                 setStopDateButtonActionPerformed(evt);
             }
         });
-        getContentPane().add(setStopDateButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(450, 410, 90, -1));
+        getContentPane().add(setStopDateButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(470, 530, 90, -1));
 
         durationLabel.setText("Duration:");
-        getContentPane().add(durationLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 360, -1, 20));
+        getContentPane().add(durationLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 480, -1, 20));
 
         setDurationButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_apply.png"))); // NOI18N
         setDurationButton.setText("set");
@@ -865,10 +920,10 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                 setDurationButtonActionPerformed(evt);
             }
         });
-        getContentPane().add(setDurationButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(450, 350, 90, -1));
+        getContentPane().add(setDurationButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(460, 470, 90, -1));
 
         inputDurationDays.setName("Days"); // NOI18N
-        getContentPane().add(inputDurationDays, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 360, 50, -1));
+        getContentPane().add(inputDurationDays, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 480, 50, -1));
 
         inputDurationHours.setName("Hours"); // NOI18N
         inputDurationHours.addPropertyChangeListener(new java.beans.PropertyChangeListener() {
@@ -876,7 +931,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                 inputDurationHoursPropertyChange(evt);
             }
         });
-        getContentPane().add(inputDurationHours, new org.netbeans.lib.awtextra.AbsoluteConstraints(170, 360, 40, -1));
+        getContentPane().add(inputDurationHours, new org.netbeans.lib.awtextra.AbsoluteConstraints(180, 480, 40, -1));
 
         inputDurationSeconds.setName("Seconds\n"); // NOI18N
         inputDurationSeconds.addPropertyChangeListener(new java.beans.PropertyChangeListener() {
@@ -884,7 +939,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                 inputDurationSecondsPropertyChange(evt);
             }
         });
-        getContentPane().add(inputDurationSeconds, new org.netbeans.lib.awtextra.AbsoluteConstraints(290, 360, 40, -1));
+        getContentPane().add(inputDurationSeconds, new org.netbeans.lib.awtextra.AbsoluteConstraints(300, 480, 40, -1));
 
         inputDurationMinutes.setName("Minutes"); // NOI18N
         inputDurationMinutes.addPropertyChangeListener(new java.beans.PropertyChangeListener() {
@@ -892,23 +947,23 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                 inputDurationMinutesPropertyChange(evt);
             }
         });
-        getContentPane().add(inputDurationMinutes, new org.netbeans.lib.awtextra.AbsoluteConstraints(230, 360, 40, -1));
+        getContentPane().add(inputDurationMinutes, new org.netbeans.lib.awtextra.AbsoluteConstraints(240, 480, 40, -1));
 
         durationSecondLabel.setText("seconds:");
-        getContentPane().add(durationSecondLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(290, 340, -1, -1));
+        getContentPane().add(durationSecondLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(300, 460, -1, -1));
 
         durationDayLabel.setText("days:");
-        getContentPane().add(durationDayLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 340, -1, -1));
+        getContentPane().add(durationDayLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 460, -1, -1));
 
         durationHourLabel.setText("hours:");
-        getContentPane().add(durationHourLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(170, 340, -1, -1));
+        getContentPane().add(durationHourLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(180, 460, -1, -1));
 
         durationMinuteLabel.setText("minutes:");
-        getContentPane().add(durationMinuteLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(230, 340, -1, -1));
+        getContentPane().add(durationMinuteLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(240, 460, -1, -1));
 
         timeWarningLabel.setForeground(new java.awt.Color(255, 0, 0));
         timeWarningLabel.setText("WARNING: Observation exceeds maximum length !!!!!!!!!");
-        getContentPane().add(timeWarningLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 390, 440, -1));
+        getContentPane().add(timeWarningLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 510, 440, -1));
 
         showCampaignButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_folder.png"))); // NOI18N
         showCampaignButton.setText("show");
@@ -918,14 +973,14 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                 showCampaignButtonMouseClicked(evt);
             }
         });
-        getContentPane().add(showCampaignButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(450, 290, 90, -1));
+        getContentPane().add(showCampaignButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(460, 410, 90, -1));
 
         nameLabel.setText("Name:");
         getContentPane().add(nameLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(200, 50, -1, 20));
 
         treeIDInput.setToolTipText("Tree ID in database");
         treeIDInput.setEnabled(false);
-        getContentPane().add(treeIDInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 50, 90, 20));
+        getContentPane().add(treeIDInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 50, 90, 20));
 
         setNameButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_apply.png"))); // NOI18N
         setNameButton.setText("set");
@@ -935,7 +990,35 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                 setNameButtonActionPerformed(evt);
             }
         });
-        getContentPane().add(setNameButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(460, 50, 70, -1));
+        getContentPane().add(setNameButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(470, 50, 100, -1));
+
+        groupIDLabel.setText("GroupID:");
+        getContentPane().add(groupIDLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 110, -1, 20));
+
+        groupIDInput.setToolTipText("GroupID");
+        groupIDInput.setEnabled(false);
+        getContentPane().add(groupIDInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 110, 90, 20));
+
+        processTypeLabel.setText("ProcessType:");
+        getContentPane().add(processTypeLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 140, -1, 20));
+
+        processTypeInput.setToolTipText("processType");
+        getContentPane().add(processTypeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 140, 130, -1));
+
+        processSubTypeLabel.setText("ProcessSubType:");
+        getContentPane().add(processSubTypeLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 170, -1, 20));
+
+        strategyLabel.setText("Strategy:");
+        getContentPane().add(strategyLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 200, -1, 20));
+
+        strategyInput.setToolTipText("strategy");
+        getContentPane().add(strategyInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 200, 210, -1));
+
+        descriptionInput.setLineWrap(true);
+        descriptionInput.setRows(3);
+        descriptionInput.setToolTipText("Set Description for this tree");
+        getContentPane().add(descriptionInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 580, 550, 60));
+        getContentPane().add(processSubTypeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 170, 450, -1));
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
@@ -950,7 +1033,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         try {
             return aD.parse(aS);
         } catch (ParseException ex) {
-            ex.printStackTrace();
+            logger.error("Parse Exception in time: ", ex);
         }        
         return aGMTDate;
         
@@ -964,7 +1047,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                 SimpleDateFormat aD = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", itsLocale);
                 initialDate = aD.parse(aS);
             } catch (ParseException ex) {
-                ex.printStackTrace();
+                logger.error("Parse Exception in time: ", ex);
             }
         }
         DateTimeChooser chooser = new DateTimeChooser(initialDate);
@@ -985,7 +1068,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                 SimpleDateFormat aD = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss",itsLocale);
                 initialDate = aD.parse(aS);
             } catch (ParseException ex) {
-                ex.printStackTrace();
+                logger.error("Parse Exception in time: ", ex);
             }
         } else {
         }
@@ -1111,19 +1194,30 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     }//GEN-LAST:event_showCampaignButtonMouseClicked
 
     private void setNameButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_setNameButtonActionPerformed
-        String aName=JOptionPane.showInputDialog(this, "Give Name for DefaultTree.\n\n !!!!!! Keep in mind that only Default templates who's names are known to MoM can be used by MoM !!!!!!! \n\n","DefaultTree Name", JOptionPane.QUESTION_MESSAGE);
-        if (aName == null || aName.equals("") ){
-            nameInput.setText("");
+        String aName = (String)JOptionPane.showInputDialog(this, 
+                "Give Name for DefaultTree.\n\n !!!!!! Keep in mind that only Default templates who's names are known to MoM can be used by MoM !!!!!!! \n\n",
+                "DefaultTree Name", 
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                null,
+                nameInput.getText());
+        
+        // cancelled
+        if (aName == null) {
+            return;
+        }
+        
+        if (aName.equals("")) {
+            nameInput.setText("") ;
             return;
         }
 
         if (!aName.equals(nameInput.getText())) {
             boolean found=false;
             try {
-                Vector<jDefaultTemplate> aDFList = OtdbRmi.getRemoteOTDB().getDefaultTemplates();
-                Iterator<jDefaultTemplate> it=aDFList.iterator();
-                while (it.hasNext()) {
-                    if (it.next().name.equals(aName)) {
+                ArrayList<jDefaultTemplate> aDFList = new ArrayList(OtdbRmi.getRemoteOTDB().getDefaultTemplates());
+                for (jDefaultTemplate it: aDFList) {
+                    if (it.name.equals(aName)) {
                         found=true;
                     }
                 }
@@ -1160,13 +1254,16 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     private String    itsStarttime = "";
     private String    itsStoptime = "";
     private String    itsDescription = "";
+    private String    itsProcessType = "";
+    private String    itsProcessSubType = "";
+    private String    itsStrategy = "";
     private Date      itsStartDate = null;
     private Date      itsStopDate = null;
     private Locale    itsLocale = new Locale("en");
     private boolean   isInitialized=false;
     private CampaignInfoDialog campaignInfoDialog=null;
     private int       itsMaxBeamDuration=0;
-    private Vector<jDefaultTemplate> itsDefaultTemplateList=null;
+    private ArrayList<jDefaultTemplate> itsDefaultTemplateList=null;
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField campaignInput;
@@ -1181,6 +1278,8 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     private javax.swing.JLabel durationLabel;
     private javax.swing.JLabel durationMinuteLabel;
     private javax.swing.JLabel durationSecondLabel;
+    private javax.swing.JTextField groupIDInput;
+    private javax.swing.JLabel groupIDLabel;
     private com.toedter.components.JSpinField inputDurationDays;
     private com.toedter.components.JSpinField inputDurationHours;
     private com.toedter.components.JSpinField inputDurationMinutes;
@@ -1193,12 +1292,17 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JTextField jTextField1;
     private javax.swing.JTextField momIDInput;
     private javax.swing.JLabel momIDLabel;
     private javax.swing.JTextField nameInput;
     private javax.swing.JLabel nameLabel;
     private javax.swing.JTextField originalTreeIDInput;
     private javax.swing.JLabel originalTreeIDLabel;
+    private javax.swing.JTextField processSubTypeInput;
+    private javax.swing.JLabel processSubTypeLabel;
+    private javax.swing.JTextField processTypeInput;
+    private javax.swing.JLabel processTypeLabel;
     private javax.swing.JButton saveButton;
     private javax.swing.JButton setDurationButton;
     private javax.swing.JButton setNameButton;
@@ -1210,6 +1314,8 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     private javax.swing.JComboBox stateInput;
     private javax.swing.JTextField stopTimeInput;
     private javax.swing.JLabel stopTimeLabel;
+    private javax.swing.JTextField strategyInput;
+    private javax.swing.JLabel strategyLabel;
     private javax.swing.JLabel timeWarningLabel;
     private javax.swing.JTextArea topLabel;
     private javax.swing.JTextField treeIDInput;

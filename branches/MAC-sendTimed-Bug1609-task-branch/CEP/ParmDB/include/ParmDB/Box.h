@@ -137,7 +137,7 @@ namespace BBS {
                   || casa::near(other.itsEnd.second, itsEnd.second)));
     }
 
-    //Check if the box is empty.
+    // Check if the box is empty.
     bool empty() const
     {
       return (casa::near(itsStart.first, itsEnd.first)
@@ -171,12 +171,8 @@ namespace BBS {
                itsStart.first > that.itsStart.first); }
     // </group>
 
-	 // Output the start and end point coordinates of the Box
-	 void print()
-	 {
-		cout << itsStart.first << "\t" << itsStart.second << "\t" 
-		<< itsEnd.first << "\t" << itsEnd.second << endl;
-	 }
+    // Output the start and end point coordinates of the Box
+    void print() const;
 
   private:
     Point itsStart;

@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 #
-# $Id: $
+# $Id$
 #
-# Syntax: createFiles ( -a | stationname [stationame ...])
+# Syntax: createPICFile ( -a | stationname [stationame ...])
 #
 # Makea a file with PVSS(!) datapoints that must be monitored in SAS.
 import re, sys
+from optparse import OptionParser
 
 def expandRCUMarker(dataPoint, nrRSP):
     """
@@ -65,13 +66,32 @@ def expandCabinetMarker(dataPoint, nrRSP):
 
 
 # MAIN
-# all the files we are uisng
-PVSSbasefile= "../PVSS/PVSSDataPoints.base"
-StationFile = "../StaticMetaData/StationInfo.dat"
-ControlFile = "../StaticMetaData/ControlInfo.dat"
-RingFile    = "../PVSS/Rings.list"
-ClusterFile = "../PVSS/Clusters.list"
+# all the files we are using
+
+# We can start this from a SVN tree, or from the install location (/opt/lofar)
+# This is indicated by the "-l" command line option.
+
+parser = OptionParser()
+parser.add_option("-l", "--local", action="store_true", dest="isLocal", default=False,
+                  help="Run createPICFile in situ (in a svn checkout tree, not an in install tree [default!]")
+
+(options, args) = parser.parse_args()
+
+if (options.isLocal):
+    PVSSbasefile= "../PVSS/PVSSDataPoints.base"
+    StationFile = "../StaticMetaData/StationInfo.dat"
+    ControlFile = "../StaticMetaData/ControlInfo.dat"
+    RingFile    = "../PVSS/Rings.list"
+    ClusterFile = "../PVSS/Clusters.list"
+else:
+    PVSSbasefile= "/opt/lofar/pvss/dpdef/PVSSDataPoints.base"
+    StationFile = "/opt/lofar/etc/StationInfo.dat"
+    ControlFile = "/opt/lofar/etc/ControlInfo.dat"
+    RingFile    = "/opt/lofar/pvss/dpdef/Rings.list"
+    ClusterFile = "/opt/lofar/pvss/dpdef/Clusters.list" 
+
 filledLine  = re.compile("^[^#].*", re.MULTILINE)
+
 
 # construct a dictionary from the rings file: key is first character, value is ringname
 ringDict = {}

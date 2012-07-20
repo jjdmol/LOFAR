@@ -28,6 +28,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
+#include <cerrno>
 #include <climits>
 
 #if defined(__APPLE__)
@@ -36,13 +37,7 @@
 
 #if !defined(USE_NOSOCKETS)
 // netdb is not available on Cray XT machines with Catamount.
-#if defined HAVE_BGL && !defined HAVE_ZOID
-// netdb is not available on BGL; all code using netdb will be 
-// conditionally included using the HAVE_BGL definition;
-#define OPTIMAL_CIOD_CHUNK_SIZE (64 * 1024)
-#else
 #include <netdb.h>
-#endif
 #endif
 
 namespace LOFAR {
@@ -50,21 +45,32 @@ namespace LOFAR {
 //
 // remoteCopy(localFile, remoteHost, remoteFile)
 //
-int remoteCopy (const string& localFile, 
-			    const string& remoteHost, 
-			    const string& remoteFile)
+int remoteCopy (const	string& localFile, 
+			    const	string& remoteHost, 
+			    const	string& remoteFile,
+				int		timeoutSec)
 {
 	string		tmpResultFile(getTempFileName());
+	string		command;
   
-	// -B: batch mode; -q: no progress bar
-	string command(formatString("scp -Bq %s %s:%s 1>&2 2>%s", localFile.c_str(),
+	if (!timeoutSec) {
+		// -B: batch mode; -q: no progress bar
+		command = formatString("scp -Bq %s %s:%s 1>&2 2>%s", localFile.c_str(),
 									remoteHost.c_str(), remoteFile.c_str(),
-									tmpResultFile.c_str()));
+									tmpResultFile.c_str());
+	}
+	else {
+		command = formatString("scp -Bq -o ConnectTimeout=%d %s %s:%s 1>&2 2>%s &", timeoutSec,
+									localFile.c_str(),
+									remoteHost.c_str(), remoteFile.c_str(),
+									tmpResultFile.c_str());
+	}
+
 	// execute the command.
 	int error = system(command.c_str());
 	LOG_DEBUG(formatString("copy command: %s",command.c_str()));
 
-	if(error == 0) {			
+	if (error == 0) {			
 		LOG_INFO(formatString("Successfully copied %s to %s:%s",
 						localFile.c_str(),remoteHost.c_str(),remoteFile.c_str()));
 	}
@@ -81,7 +87,8 @@ int remoteCopy (const string& localFile,
 		else {
 			// construct the error message
 			while(!feof(f)) {
-				fgets(outputLine,200,f);
+				if(!fgets(outputLine,sizeof outputLine,f))
+                  break;
 				if(!feof(f)) {
 					outputString+=string(outputLine);
 				}
@@ -133,7 +140,8 @@ int copyFromRemote(const string& remoteHost,
 		else {
 			// construct the error message
 			while(!feof(f)) {
-				fgets(outputLine,200,f);
+				if(!fgets(outputLine,sizeof outputLine,f))
+                  break;
 				if(!feof(f)) {
 					outputString+=string(outputLine);
 				}
@@ -159,13 +167,24 @@ string getTempFileName(const string&	format)
 	char tempFileName [256];
 
 	if (format.find("XXXXXX", 0) != string::npos) {	// did user specify mask?
-		strcpy (tempFileName, format.c_str());		// use user-mask
+		strncpy (tempFileName, format.c_str(), sizeof tempFileName);		// use user-mask
 	}
 	else {
-		strcpy (tempFileName, "/tmp/LOFAR_XXXXXX");// use default mask
+		strncpy (tempFileName, "/tmp/LOFAR_XXXXXX", sizeof tempFileName); // use default mask
 	}
 
-	mkstemp(tempFileName);							// let OS invent the name
+    // note that if we actually cut off the mask, it will likely be invalid because
+    // it has to end in XXXXXX
+    tempFileName[sizeof tempFileName - 1] = 0;
+
+	if (!mkstemp(tempFileName)) {					// let OS invent the name
+      if(errno == EINVAL)
+        LOG_ERROR(formatString("Invalid temporary file-name mask %s (specified %s)",tempFileName,format.c_str()));
+      else
+        LOG_ERROR(formatString("Could not create temporary file with mask %s (specified %s)",tempFileName,format.c_str()));
+
+      return "";
+    }  
 
 	return string(tempFileName);
 }
@@ -198,10 +217,7 @@ string myHostname(bool	giveFullName)
 //
 uint32 myIPV4Address()
 {
-#if defined HAVE_BGL && !defined HAVE_ZOID
-	LOG_ERROR ("Function myIPV4Address not available for Blue Gene.");
-	return (0);
-#elif defined USE_NOSOCKETS
+#if defined USE_NOSOCKETS
 	LOG_ERROR ("Function myIPV4Address not available.");
 	return (0);
 #else

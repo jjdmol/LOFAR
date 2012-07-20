@@ -1,4 +1,4 @@
-V 10
+V 11
 3
 LANG:1 12 antennaField
 LANG:6 8 (NoName)
@@ -11,8 +11,21 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
   
   baseDP=g_currentDatapoint;
   
+  if (navFunct_getRingFromStation(sysName) == \"Core\") {
+    isCore=true;
+    isRemote=false;
+    isEurope=false;
+  } else if(navFunct_getRingFromStation(sysName) == \"Remote\") {
+    isCore=false;
+    isRemote=true;
+    isEurope=false;
+  } else {
+    isCore=false;
+    isRemote=false;
+    isEurope=true;
+  }
   strPanelName    = \"antennaField\";
-  strModuleName   = myModuleName();  
+  strModuleName   = myModuleName();   
   
   // get PanelSize to determine scaling and offsets
   if ( panelSize( \"\" , mainpanel_horSize , mainpanel_vertSize) != 0 ) {
@@ -31,17 +44,17 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
 
     bool fill=true;
     for (int i=0; i<=1;i++) {
-      if (dpConnect(\"updatePositions\",fill,sysName+\"remoteStation.\"+arrayList.text(i)+\".centerOL\",
-                                       sysName+\"remoteStation.\"+arrayList.text(i)+\".centerNB\",
-                                       sysName+\"remoteStation.\"+arrayList.text(i)+\".centerH\",
-                                       sysName+\"remoteStation.N_RSPBoards\",        
-                                       sysName+\"remoteStation.N_TBBoards\",
-                                       sysName+\"remoteStation.N_LBAS\",
-                                       sysName+\"remoteStation.N_HBAS\",
-                                       sysName+\"remoteStation.HBA_Split\",         
-                                       sysName+\"remoteStation.wide_LBAS\",
-                                       sysName+\"remoteStation.\"+arrayList.text(i)+\".centerOL:_online.._invalid\") == -1) {
-        LOG_DEBUG(\"LOFAR_Netherlands.pnl:main| couldn't connect to \"+sysName+\"remoteStation.\"+arrayList.text(i)+\".centerOL \"+ getLastError());
+      if (dpConnect(\"updatePositions\",fill,sysName+\"LOFAR_PIC_StationInfo.\"+arrayList.text(i)+\".centerX\",
+                                       sysName+\"LOFAR_PIC_StationInfo.\"+arrayList.text(i)+\".centerY\",
+                                       sysName+\"LOFAR_PIC_StationInfo.\"+arrayList.text(i)+\".centerZ\",
+                                       sysName+\"LOFAR_PIC_StationInfo.N_RSPBoards\",        
+                                       sysName+\"LOFAR_PIC_StationInfo.N_TBBoards\",
+                                       sysName+\"LOFAR_PIC_StationInfo.N_LBAS\",
+                                       sysName+\"LOFAR_PIC_StationInfo.N_HBAS\",
+                                       sysName+\"LOFAR_PIC_StationInfo.HBA_Split\",         
+                                       sysName+\"LOFAR_PIC_StationInfo.wide_LBAS\",
+                                       sysName+\"LOFAR_PIC_StationInfo.\"+arrayList.text(i)+\".centerX:_online.._invalid\") == -1) {
+        LOG_DEBUG(\"station.pnl:main| couldn't connect to \"+sysName+\"LOFAR_PIC_StationInfo.\"+arrayList.text(i)+\".centerX \"+ getLastError());
       }  
 
       if (fill) {
@@ -56,24 +69,39 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
 // If there is an action required this point will tell so
 //
 void doAction(string aDP, string anAction) {
-  LOG_DEBUG(\"LOFAR_Netherlands.pnl:doAction| Action required. found: \" + anAction);
+  LOG_DEBUG(\"Station.pnl:doAction| Action required. found: \" + anAction);
   // split action into essentials
   dyn_string actionString;
   if (!navFunct_splitAction(anAction,actionString)) {
     return;
   }
   
-  LOG_DEBUG(\"LOFAR_Netherlands.pnl:doAction|found actionString: \" + actionString);
+  LOG_DEBUG(\"Station.pnl:doAction|found actionString: \" + actionString);
   
   // Reload
   if (actionString[1] == \"Reload\") {
     redraw(arrayList.text(arrayList.number()));
+    return;
+  } else if (actionString[1] == \"DistChanged\") {
+    // for dist system bound hardware only, if the distsystem went offline we need to replace 
+    // the screen with a broken connection screen.
+    if (!g_initializing) {
+    
+      // check if this syst is in the connectionlist and down
+      int iPos=dynContains(g_connections[\"NAME\"],sysName);
+      if (iPos > 0) {
+        if (!g_connections[\"UP\"][iPos]) {
+          navPanel_setEvent(\"invalid DP\",\"ChangePanel\");
+        }
+      }
+    }
+    return;
   }
 }
 
-void updatePositions(string dp1, float cOL,
-                     string dp2, float cNB,
-                     string dp3, float cH,
+void updatePositions(string dp1, float cX,
+                     string dp2, float cY,
+                     string dp3, float cZ,
                      string dp4, int nrsp,
                      string dp5, int ntbb,
                      string dp6, int nlbas,
@@ -81,6 +109,8 @@ void updatePositions(string dp1, float cOL,
                      string dp8, bool hbasplit,
                      string dp9, bool widelbas,
                      string dp10, bool invalid) {
+  
+  
   
   // Check if the update concerns the current view
   string txt=arrayList.text(arrayList.number());
@@ -96,36 +126,45 @@ void updatePositions(string dp1, float cOL,
   HBASplit=hbasplit;         
   WideLBAs=widelbas;
   
-  dyn_string unsortOL=dpNames(sysName+txt+\"*.deltaX;\",\"Antenna\");
-  dyn_string unsortNB=dpNames(sysName+txt+\"*.deltaY;\",\"Antenna\");
-  dyn_string unsortH= dpNames(sysName+txt+\"*.deltaH;\",\"Antenna\");
-  dyn_string OL=unsortOL;
-  dyn_string NB=unsortNB;
-  dyn_string H=unsortH;
+  dpGet(sysName+\"LOFAR_PIC_StationInfo.HBA.HBA0.rotation\",HBA0Angle);
+  if (isCore) {
+    dpGet(sysName+\"LOFAR_PIC_StationInfo.HBA.HBA1.rotation\",HBA1Angle);
+  } else {
+    HBA1Angle=0;
+  }
+  
+  string dpt = txt+\"Antenna\";
+  dyn_string X=dpNames(sysName+\"LOFAR_PIC_\"+txt+\"*.common.deltaX;\",dpt);
+  dyn_string Y=dpNames(sysName+\"LOFAR_PIC_\"+txt+\"*.common.deltaY;\",dpt);
+  dyn_string Z=dpNames(sysName+\"LOFAR_PIC_\"+txt+\"*.common.deltaZ;\",dpt);
+ 
+ /*  dyn_string X=unsortX;
+  dyn_string Y=unsortY;
+  dyn_string Z=unsortZ;
   
   // since we have Antenna's with 1 digit and 2 digits we need to resort the dynstrings here, otherwise we get them as:
   // HBA0 HBA1 HBA10 HBA11-HBA19 HBA 2 HBA 20 etc
   //
   
-  for (int i=1; i<= dynlen(unsortOL);i++) {
-    string ant = strsplit(unsortOL[i],\":.\" )[2];
+  for (int i=1; i<= dynlen(unsortX);i++) {
+    string ant = strsplit(unsortX[i],\":.\" )[2];
     int idx = substr(ant,3);
-    OL[idx+1]=unsortOL[i];
-    NB[idx+1]=unsortNB[i];
-    H[idx+1]=unsortH[i];         
+    X[idx+1]=unsortX[i];
+    Y[idx+1]=unsortY[i];
+    Z[idx+1]=unsortZ[i];         
   }
 
+  */
   
   
-        
   // found match, save found strings and redraw screen
   
-  centerOL = cOL;
-  centerNB = cNB;
-  centerH  = cH;
-  dpGet(OL,antennaOffsetsOL);
-  dpGet(NB,antennaOffsetsNB);
-  dpGet(H,antennaOffsetsH);
+  centerX = cX;
+  centerY = cY;
+  centerZ  = cZ;
+  dpGet(X,antennaOffsetsX);
+  dpGet(Y,antennaOffsetsY);
+  dpGet(Z,antennaOffsetsZ);
   
 
   
@@ -137,6 +176,9 @@ void updatePositions(string dp1, float cOL,
 E "#uses \"navPanel.ctl\"
 
 string baseDP=\"\";
+bool isCore=false;
+bool isRemote=false;
+bool isEurope=false;
 int mainpanel_midX;
 int mainpanel_midY;
 dyn_string refNames;
@@ -157,12 +199,14 @@ bool HBASplit=false;
 bool WideLBAs=false;
 
 
-float centerOL;
-float centerNB;
-float centerH;
-dyn_float antennaOffsetsOL;
-dyn_float antennaOffsetsNB;
-dyn_float antennaOffsetsH;
+float centerX;
+float centerY;
+float centerZ;
+dyn_float antennaOffsetsX;
+dyn_float antennaOffsetsY;
+dyn_float antennaOffsetsZ;
+float HBA0Angle=0;
+float HBA1Angle=0;
 
 string strPanelName;
 string strModuleName;
@@ -189,6 +233,8 @@ void redraw(string mode) {
   int   xPos_AddSymbol;
   int   yPos_AddSymbol;
   string addPanelName;
+  float angle=0;
+
   
   navFunct_clearGlobalLists();
   
@@ -197,8 +243,10 @@ void redraw(string mode) {
   LOG_DEBUG(\"Station.pnl:redraw|Mode: \"+mode);
   if (strpos(mode,\"LBA\") > -1) {
     addPanelName    = \"objects/Hardware/Station_LBA.pnl\";
+    angle=0;
   } else if (strpos(mode,\"HBA\") > -1) {
     addPanelName    = \"objects/Hardware/Station_HBA.pnl\";
+    angle=HBA0Angle;
   }
   
         
@@ -207,11 +255,12 @@ void redraw(string mode) {
   }
    
   // determine max values and calculate scaling factors
-  for (int i=1; i<= dynlen(antennaOffsetsOL); i++) { 
-    if ( maxXOffsetValue < fabs(antennaOffsetsOL[i]) ) maxXOffsetValue = fabs(antennaOffsetsOL[i]);
-    if ( maxYOffsetValue < fabs(antennaOffsetsNB[i]) ) maxYOffsetValue = fabs(antennaOffsetsNB[i]);
+  for (int i=1; i<= dynlen(antennaOffsetsX); i++) { 
+    if ( maxXOffsetValue < fabs(antennaOffsetsX[i]) ) maxXOffsetValue = fabs(antennaOffsetsX[i]);
+    if ( maxYOffsetValue < fabs(antennaOffsetsY[i]) ) maxYOffsetValue = fabs(antennaOffsetsY[i]);
   }
-
+  
+  
   LOG_DEBUG(\"Station.pnl:redraw|mainpanel_midX: \"+mainpanel_midX);
   LOG_DEBUG(\"Station.pnl:redraw|mainpanel_midY: \"+mainpanel_midY);
   LOG_DEBUG(\"Station.pnl:redraw|maxXOffsetValue: \"+maxXOffsetValue);
@@ -246,7 +295,7 @@ void redraw(string mode) {
   
   //  now start adding symbols to panel
   int ref =   1;
-  for (int i = 1; i <= dynlen(antennaOffsetsOL); i++ ) {
+  for (int i = 1; i <= dynlen(antennaOffsetsX); i++ ) {
     int XRCU;
     int YRCU;
     if (i-1 < NRSP*8/2) {
@@ -257,29 +306,34 @@ void redraw(string mode) {
       YRCU = 2*i-1 - NRSP*8;
     }
       
-    string xDP=baseDP+\"_PIC_Cabinet\"+navFunct_receiver2Cabinet(XRCU)+\"_Subrack\"+
+    if (isCore && strpos(mode,\"HBA\") > -1) {
+      if (i > 24) angle=HBA1Angle;
+    }
+
+      string xDP=baseDP+\"_PIC_Cabinet\"+navFunct_receiver2Cabinet(XRCU)+\"_Subrack\"+
                navFunct_receiver2Subrack(XRCU)+\"_RSPBoard\"+navFunct_receiver2RSP(XRCU)+\"_RCU\"+XRCU;
     string yDP=baseDP+\"_PIC_Cabinet\"+navFunct_receiver2Cabinet(YRCU)+\"_Subrack\"+
                navFunct_receiver2Subrack(YRCU)+\"_RSPBoard\"+navFunct_receiver2RSP(YRCU)+\"_RCU\"+YRCU;
     if (i-1 < NRSP*8/2) {
-      dynAppend(g_RCUList,XRCU);
-      dynAppend(g_RCUList,YRCU);
+//      dynAppend(g_RCUList,XRCU);
+//      dynAppend(g_RCUList,YRCU);
+      dynAppend(g_HBAList,navFunct_receiver2HBA(XRCU));
     }
     refNames[ref]=\"ant\"+(ref);
-    xPos_AddSymbol = (mainpanel_midX+shiftFactorX) + (antennaOffsetsOL[i] * expandFactorX);
-    yPos_AddSymbol = (mainpanel_midY+shiftFactorY) - (antennaOffsetsNB[i] * expandFactorY);
+    xPos_AddSymbol = (mainpanel_midX+shiftFactorX) + (antennaOffsetsX[i] * expandFactorX);
+    yPos_AddSymbol = (mainpanel_midY+shiftFactorY) - (antennaOffsetsY[i] * expandFactorY);
       
     if (  addSymbol(  strModuleName,                   // Stay in this modul
                                   \"\",                  // Name of this panel
 		      addPanelName,                    // Panel to add
 		      refNames[ref],                     // Ref of the addedPanel
 		      makeDynString( \"$aNr:\" + (i-1) ,     // Define all $values
-		                     \"$aOL:\" + antennaOffsetsOL[i]  ,    
-		                     \"$aNB:\" + antennaOffsetsNB[i]  ,
-		                     \"$aH:\"  + antennaOffsetsH[i]),                  // of particular addedpanel
+		                     \"$aX:\" + antennaOffsetsX[i]  ,    
+		                     \"$aY:\" + antennaOffsetsY[i]  ,
+		                     \"$aZ:\"  + antennaOffsetsZ[i]),                  // of particular addedpanel
 		      xPos_AddSymbol,                  // Xpos of the AddedSymbol
 		      yPos_AddSymbol,                  // Ypos of the AddedSymbol
-		      0,                               // angle
+		      angle,                           // angle
 		      1    ,1                          // zoomX , zoomY
         ) < 0 ) {
 	  LOG_ERROR(\"Station.pnl:redraw|Error Appending antenna : \" + i + \" in this panel.\");
@@ -302,48 +356,49 @@ void updateField() {
   // Check if the update concerns the current view
   string txt= arrayList.text(arrayList.number());
 
-  dyn_string unsortOL=dpNames(sysName+txt+\"*.deltaX;\",\"Antenna\");
-  dyn_string unsortNB=dpNames(sysName+txt+\"*.deltaY;\",\"Antenna\");
-  dyn_string unsortH= dpNames(sysName+txt+\"*.deltaH;\",\"Antenna\");
-  dyn_string OL=unsortOL;
-  dyn_string NB=unsortNB;
-  dyn_string H=unsortH;
+  string dpt=txt+\"Antenna\";
+  dyn_string unsortX=dpNames(sysName+\"LOFAR_PIC_\"+txt+\"*.common.deltaX;\",dpt);
+  dyn_string unsortY=dpNames(sysName+\"LOFAR_PIC_\"+txt+\"*.common.deltaY;\",dpt);
+  dyn_string unsortZ= dpNames(sysName+\"LOFAR_PIC_\"+txt+\"*.common.deltaZ;\",dpt);
+  dyn_string X=unsortX;
+  dyn_string Y=unsortY;
+  dyn_string Z=unsortZ;
                
-  
+  /*
   // since we have Antenna's with 1 digit and 2 digits we need to resort the dynstrings here, otherwise we get them as:
   // HBA0 HBA1 HBA10 HBA11-HBA19 HBA 2 HBA 20 etc
   //
   
-  for (int i=1; i<= dynlen(unsortOL);i++) {
-    string ant = strsplit(unsortOL[i],\":.\" )[2];
+  for (int i=1; i<= dynlen(unsortX);i++) {
+    string ant = strsplit(unsortX[i],\":.\" )[2];
     int idx = substr(ant,3);
-    OL[idx+1]=unsortOL[i];
-    NB[idx+1]=unsortNB[i];
-    H[idx+1]=unsortH[i];         
+    X[idx+1]=unsortX[i];
+    Y[idx+1]=unsortY[i];
+    Z[idx+1]=unsortZ[i];         
   }
+  */
   
-    
 
   
-  string field=sysName+\"remoteStation.\"+txt;
-  if (dpExists(field+\".centerOL:_online.._value\")) {
+  string field=sysName+\"LOFAR_PIC_StationInfo.\"+txt;
+  if (dpExists(field+\".centerX:_online.._value\")) {
     // found match, save found strings and redraw screen
-    dpGet(field+\".centerOL:_online.._value\",centerOL,
-          field+\".centerNB:_online.._value\",centerNB,
-          field+\".centerH:_online.._value\",centerH);
-    dpGet(OL,antennaOffsetsOL);          
-    dpGet(NB,antennaOffsetsNB);          
-    dpGet(H,antennaOffsetsH);
-    dpGet(sysName+\"remoteStation.N_RSPBoards\",NRSP);         
-    dpGet(sysName+\"remoteStation.N_TBBoards\",NTBB);         
-    dpGet(sysName+\"remoteStation.N_LBAS\",NLBA);         
-    dpGet(sysName+\"remoteStation.N_HBAS\",NHBA);         
-    dpGet(sysName+\"remoteStation.HBA_Split\",HBASplit);         
-    dpGet(sysName+\"remoteStation.wide_LBAS\",WideLBAs);
+    dpGet(field+\".centerX:_online.._value\",centerX,
+          field+\".centerY:_online.._value\",centerY,
+          field+\".centerZ:_online.._value\",centerZ);
+    dpGet(X,antennaOffsetsX);          
+    dpGet(Y,antennaOffsetsY);          
+    dpGet(Z,antennaOffsetsZ);
+    dpGet(sysName+\"LOFAR_PIC_StationInfo.N_RSPBoards\",NRSP);         
+    dpGet(sysName+\"LOFAR_PIC_StationInfo.N_TBBoards\",NTBB);         
+    dpGet(sysName+\"LOFAR_PIC_StationInfo.N_LBAS\",NLBA);         
+    dpGet(sysName+\"LOFAR_PIC_StationInfo.N_HBAS\",NHBA);         
+    dpGet(sysName+\"LOFAR_PIC_StationInfo.HBA_Split\",HBASplit);         
+    dpGet(sysName+\"LOFAR_PIC_StationInfo.wide_LBAS\",WideLBAs);
  
     redraw(txt);
   } else {
-    LOG_ERROR(\"Station.pnl:updateField|Error, couldn't find:\"+field+\".centerOL:_online.._value\");
+    LOG_ERROR(\"Station.pnl:updateField|Error, couldn't find:\"+field+\".centerOX:_online.._value\");
   }
 }
 
@@ -402,12 +457,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 796 5 869 19
+E E 0 1 1 2 1 E U  1 E 796 5 869 18
 0 2 2 "0s" 0 0 0 192 0 0  796 5 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 13 Select Array:
 1 167 5 "" 2190
 0
@@ -430,9 +484,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 887 -1 951 43
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  887 -1 951 43
 2
 T 
 1
@@ -476,9 +529,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 870 38 890 58
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  870 38 890 58
 
 T 
 1
@@ -503,9 +555,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 902 38 922 58
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  902 38 922 58
 
 T 
 1
@@ -530,12 +581,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 931 40 962 54
+E E 0 1 1 2 1 E U  1 E 931 40 962 53
 0 2 2 "0s" 0 0 0 192 0 0  931 40 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 4 Zoom
 13 136
 "shift_down"
@@ -550,9 +600,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 886 87 906 107
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  886 87 906 107
 
 P 
 4294967295
@@ -579,9 +628,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 886 55 906 75
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  886 55 906 75
 
 P 
 4294967295
@@ -608,9 +656,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 870 71 890 91
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  870 71 890 91
 
 P 
 4294967295
@@ -637,9 +684,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 902 71 922 91
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  902 71 922 91
 
 P 
 4294967295
@@ -666,9 +712,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 886 71 906 91
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  886 71 906 91
 
 P 
 4294967295
@@ -707,9 +752,8 @@ LANG:1 31 Give the shift value to be used
   }
 }"
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 938 69 991 90
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  938 69 991 90
 3 "0d" 0 0 0 1 0 -1  E "main()
 {
   setValue(\"\",\"text\",shiftValue);
@@ -728,9 +772,8 @@ LANG:1 26 set zoomsize to 100% again
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 886 38 906 58
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  886 38 906 58
 
 P 
 4294967295
@@ -757,12 +800,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 931 58 993 72
+E E 0 1 1 2 1 E U  1 E 931 58 993 71
 0 2 2 "0s" 0 0 0 192 0 0  931 58 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 11 ShiftFactor
 0
 LAYER, 1 
@@ -837,10 +879,10 @@ LAYER, 7
 1
 LANG:1 6 Layer8
 0
-3 2 "PANEL_REF3"
+3 2 "PANEL_REF3" -1
 "objects\\compass.pnl" 212 350 T 12 0.742857142857143 0 0.752688172043011 -29.7142857142857 -52.6881720430108
 0
-3 5 "PANEL_REF6"
+3 5 "PANEL_REF6" -1
 "objects\\Hardware\\Station_Cabinet_top.pnl" 298 258 T 13 1 0 1 40 -100
 0
 0

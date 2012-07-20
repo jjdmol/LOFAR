@@ -6,9 +6,8 @@ lofar_add_library(interface
   Package__Version.cc
   Allocator.cc
   BeamCoordinates.cc
-  CN_Configuration.cc
   CN_Mapping.cc
-  CN_ProcessingPlan.cc
+  DataFactory.cc
   Stream.cc
   Parset.cc
   RSPTimeStamp.cc)

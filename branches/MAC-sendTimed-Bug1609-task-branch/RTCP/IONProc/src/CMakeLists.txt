@@ -15,9 +15,10 @@ lofar_add_library(ionproc
   Package__Version.cc
   BeamletBuffer.cc
   BeamletBufferToComputeNode.cc
-  CN_Personality.cc
   CommandServer.cc
   ControlPhase3Cores.cc
+  Delays.cc
+  GlobalVars.cc
   InputSection.cc
   InputThread.cc
   InputThreadAsm.S
@@ -27,11 +28,13 @@ lofar_add_library(ionproc
   LogThread.cc
   OutputThread.cc
   OutputSection.cc
+  PLCClient.cc
   ReaderWriterSynchronization.cc
   Scheduling.cc
   StreamMultiplexer.cc
-  WH_DelayCompensation.cc
+  SSH.cc
   FCNP_ServerStream.cc)
 
 lofar_add_bin_program(versionionproc versionionproc.cc)
 lofar_add_bin_program(ION_Processing ION_main.cc)
+lofar_add_bin_program(generateDelays generateDelays.cc)

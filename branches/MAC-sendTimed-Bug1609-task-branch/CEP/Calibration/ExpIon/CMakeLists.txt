@@ -4,7 +4,6 @@
 lofar_package(ExpIon 1.0 DEPENDS pyparameterset pyparmdb)
 
 include(LofarFindPackage)
-lofar_find_package(Python REQUIRED)
 lofar_find_package(Pyrap REQUIRED)
 
 add_subdirectory(src)

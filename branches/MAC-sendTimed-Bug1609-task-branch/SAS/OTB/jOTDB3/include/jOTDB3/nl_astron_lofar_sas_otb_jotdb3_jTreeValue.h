@@ -7,7 +7,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeValue
  * Method:    addKVT
@@ -34,19 +33,67 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_addKVT
 
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeValue
+ * Method:    getBrokenHardware
+ * Signature: (Ljava/lang/String;)Ljava/util/Vector;
+ */
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_getBrokenHardware__Ljava_lang_String_2
+  (JNIEnv *, jobject, jstring);
+
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeValue
+ * Method:    getBrokenHardware
+ * Signature: ()Ljava/util/Vector;
+ */
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_getBrokenHardware__
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeValue
  * Method:    searchInPeriod
  * Signature: (IILjava/lang/String;Ljava/lang/String;Z)Ljava/util/Vector;
  */
-JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_searchInPeriod
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_searchInPeriod__IILjava_lang_String_2Ljava_lang_String_2Z
   (JNIEnv *, jobject, jint, jint, jstring, jstring, jboolean);
+
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeValue
+ * Method:    searchInPeriod
+ * Signature: (IILjava/lang/String;Ljava/lang/String;)Ljava/util/Vector;
+ */
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_searchInPeriod__IILjava_lang_String_2Ljava_lang_String_2
+  (JNIEnv *, jobject, jint, jint, jstring, jstring);
+
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeValue
+ * Method:    searchInPeriod
+ * Signature: (IILjava/lang/String;)Ljava/util/Vector;
+ */
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_searchInPeriod__IILjava_lang_String_2
+  (JNIEnv *, jobject, jint, jint, jstring);
+
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeValue
+ * Method:    searchInPeriod
+ * Signature: (II)Ljava/util/Vector;
+ */
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_searchInPeriod__II
+  (JNIEnv *, jobject, jint, jint);
 
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeValue
  * Method:    getSchedulableItems
  * Signature: (I)Ljava/util/Vector;
  */
-JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_getSchedulableItems
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_getSchedulableItems__I
   (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb3_jTreeValue
+ * Method:    getSchedulableItems
+ * Signature: ()Ljava/util/Vector;
+ */
+JNIEXPORT jobject JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeValue_getSchedulableItems__
+  (JNIEnv *, jobject);
 
 #ifdef __cplusplus
 }

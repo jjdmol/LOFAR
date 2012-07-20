@@ -42,6 +42,7 @@ typedef float num_t;
 #define acosn(X) acosf(X)
 #define tann(X) tanf(X)
 #define atann(X) atanf(X)
+#define atan2n(X, Y) atan2(X, Y)
 #define fabsn(X) fabsf(X)
 #define floorn(X) floorf(X)
 #define ceiln(X) ceilf(X)
@@ -63,6 +64,7 @@ typedef double num_t;
 #define acosn(X) acos(X)
 #define tann(X) tan(X)
 #define atann(X) atan(X)
+#define atan2n(X, Y) atan2(X, Y)
 #define fabsn(X) fabs(X)
 #define floorn(X) floor(X)
 #define ceiln(X) ceil(X)
@@ -83,17 +85,24 @@ typedef long double numl_t;
 #define asinnl(X) asinl(X)
 #define cosnl(X) cosl(X)
 #define tannl(X) tanl(X)
+#define atannl(X) atanl(X)
+#define atan2nl(X, Y) atan2l(X, Y)
 #define fabsnl(X) fabsl(X)
 #define floornl(X) floorl(X)
 #define ceilnl(X) ceill(X)
 #define roundnl(X) roundl(X)
 #define pownl(X, Y) powl(X, Y)
 #define fmodnl(X, Y) fmodl(X, Y)
+// M_PIl is not defined on some OS-X systems
+#ifndef M_PIl
+# define M_PIl          3.1415926535897932384626433832795029L  /* pi */
+#endif
 #define M_PInl M_PIl
 
 enum DataKind { ObservedData, CorrectedData, ResidualData, ModelData, WeightData };
 
 enum PolarisationType { SinglePolarisation, DipolePolarisation, AutoDipolePolarisation, CrossDipolePolarisation, StokesIPolarisation, StokesQPolarisation, StokesUPolarisation, StokesVPolarisation, XXPolarisation, XYPolarisation, YXPolarisation, YYPolarisation };
 
+class ParmTable;
 
 #endif // MSIO_TYPES

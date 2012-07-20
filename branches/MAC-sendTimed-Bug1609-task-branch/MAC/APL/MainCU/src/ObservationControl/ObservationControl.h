@@ -27,11 +27,13 @@
 #include <MACIO/GCF_Event.h>
 #include <GCF/TM/GCF_Control.h>
 #include <GCF/RTDB/RTDB_PropertySet.h>
+#include <GCF/RTDB/DPservice.h>
 #include <APL/RTDBCommon/ClaimMgrTask.h>
 
 //# local includes
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/APL_Defines.h>
+#include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/ChildControl.h>
 #include <APL/APLCommon/ParentControl.h>
 #include <APL/APLCommon/CTState.h>
@@ -55,6 +57,7 @@ namespace LOFAR {
 	using	GCF::TM::GCFPortInterface;
 	using	GCF::TM::GCFTask;
 	using	GCF::RTDB::RTDBPropertySet;
+	using	GCF::RTDB::DPservice;
 	using	APL::RTDBCommon::ClaimMgrTask;
 	using	APLCommon::ChildControl;
 	using	APLCommon::ParentControl;
@@ -91,9 +94,13 @@ private:
    	ObservationControl& operator=(const ObservationControl&);
 
 	void 	setState(CTState::CTstateNr	newState);
-	void	setObservationTimers();
+	void	setObservationTimers(double minimalDelay=0.0);
 
 	void	doHeartBeatTask();
+	void 	registerResultMessage(const string& cntlrName, int	result, CTState::CTstateNr	state);
+
+	void 	_updateChildInfo(const string& name="", CTState::CTstateNr	state=CTState::NOSTATE);
+	void	_showChildInfo();
 
    	void 	_connectedHandler(GCFPortInterface& port);
    	void	_disconnectedHandler(GCFPortInterface& port);
@@ -101,10 +108,10 @@ private:
 
 	string					itsObsDPname;			// DPname of ObservationDP
    	RTDBPropertySet*		itsPropertySet;			// my own propset.
+	RTDBPropertySet*		itsObsPS;
+	DPservice*				itsDPservice;
 	ClaimMgrTask*			itsClaimMgrTask;		// for resolving the DPnames
 	GCFITCPort*				itsClaimMgrPort;
-//	RTDBPropertySet*		itsBootPS;
-//	map <string, RTDBPropertySet*>	itsStationDPs;
 
 	// pointer to child control task
 	ChildControl*			itsChildControl;
@@ -114,9 +121,32 @@ private:
 	ParentControl*			itsParentControl;
 	GCFITCPort*				itsParentPort;
 
+	// Generic timerport
 	GCFTimerPort*			itsTimerPort;
 
+	// State administration. Note: administration is done by ChildControl, to simplify reports
+	// about the states we keep a copy of it.
+	typedef struct ChildProc {
+		ChildProc() : type(APLCommon::CNTLRTYPE_NO_TYPE), requestTime(0), requestedState(CTState::NOSTATE), 
+					  currentState(CTState::NOSTATE), reportedState(CTState::NOSTATE) {};
+		ChildProc(int aType, CTState::CTstateNr curState, CTState::CTstateNr reqState, time_t reqTime) : 
+					type(aType), requestTime(reqTime), requestedState(reqState), 
+					currentState(curState), reportedState(CTState::NOSTATE) {};
+		uint16				type;
+		time_t				requestTime;		// time last statechange was requested
+		CTState::CTstateNr	requestedState;	
+		CTState::CTstateNr	currentState;
+		CTState::CTstateNr	reportedState;		// state eported in logfiles.
+	} ChildProc;
+	map<string, ChildProc>	itsChildInfo;
+	bool					itsFullReport;		// report every child every heartbeat
+	bool					itsChangeReport;	// report only changed states
+
 	CTState::CTstateNr		itsState;
+	CTState::CTstateNr		itsLastReportedState;	// to SAS
+	uint32					itsNrStations;
+	uint32					itsNrOnlineCtrls;
+	uint32					itsNrOfflineCtrls;
 	uint32					itsNrControllers;
 	uint32					itsBusyControllers;
 	uint16					itsChildResult;
@@ -132,12 +162,15 @@ private:
 	uint32					itsHeartBeatTimer;
 
 	// ParameterSet variables
+	string					itsProcessType;
 	string					itsTreePrefix;
 	uint32					itsTreeID;
 	uint32					itsHeartBeatItv;
 	uint32					itsForcedQuitDelay;
 	uint32					itsClaimPeriod;
 	uint32					itsPreparePeriod;
+	int32					itsLateLimit;		// after how many seconds a requested state should have been reached.
+	int32					itsFailedLimit;		// after how many seconds a late state change is treated as failure.
 	ptime					itsStartTime;
 	ptime					itsStopTime;
 };

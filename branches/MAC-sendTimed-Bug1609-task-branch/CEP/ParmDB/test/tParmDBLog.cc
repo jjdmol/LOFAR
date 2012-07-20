@@ -21,6 +21,7 @@
 //# $Id$
 
 #include <lofar_config.h>
+#include <ParmDB/ParmDBLogLevel.h>
 #include <ParmDB/ParmDBLog.h>
 #include <Common/LofarLogger.h>
 #include <iostream>
@@ -33,15 +34,15 @@ using namespace std;
 void fill (bool create)
 {
   // Create a parm data base.
-  ParmDBLog db1("tParmDBLog_tmp.tab", ParmDBLog::PERSOLUTION, create, create);
+  ParmDBLog db1("tParmDBLog_tmp.tab", ParmDBLoglevel::PERSOLUTION, create, create);
   vector<double> sol(3);
   sol[0] = 1.;
   sol[1] = 2.;
   sol[2] = 3.;
   Array<double> corrMat(IPosition(2, 11, 11));
   corrMat = 1.;
-  db1.add (1e5, 2e5, 0., 10., 1, 5, false, 25, 3, 1.03, 0.5, sol, "msg1");
-  db1.add (1e5, 2e5, 0., 10., 1, 5, false, 25, 3, 1.03, 0.5, sol, "msg2", corrMat);
+  db1.add (1e5, 2e5, 0., 10., 1, false, 25, 3, 1.03, 0.5, sol, "msg1");
+  db1.add (1e5, 2e5, 0., 10., 1, false, 25, 3, 1.03, 0.5, sol, "msg2", corrMat);
 }
 
 void check (uint nrow)

@@ -57,6 +57,12 @@ namespace BBS {
     int unlink()
       { return --itsCount; }
 
+    // Flush possible changes to disk.
+    // <br>If <src>fsync=True</src> the file contents are fsync-ed to disk,
+    // to ensure that the system buffers are actually written to disk.
+    // The default implementation does nothing.
+    virtual void flush (bool fsync);
+
     // Writelock and unlock the database tables.
     // The user does not need to lock/unlock, but it can increase performance
     // if many small accesses have to be done.
@@ -124,7 +130,8 @@ namespace BBS {
 
     // Put the default value.
     virtual void putDefValue (const string& parmName,
-                              const ParmValueSet& value) = 0;
+                              const ParmValueSet& value,
+                              bool check=true) = 0;
 
     // Delete the default value records for the given parameters.
     virtual void deleteDefValues (const std::string& parmNamePattern) = 0;
@@ -196,6 +203,12 @@ namespace BBS {
     // Assignment has reference semantics.
     ParmDB& operator= (const ParmDB&);
 
+    // Flush possible changes to disk.
+    // <br>If <src>fsync=True</src> the file contents are fsync-ed to disk,
+    // to ensure that the system buffers are actually written to disk.
+    void flush (bool fsync=false)
+      { itsRep->flush(fsync); }
+
     // Lock and unlock the database tables.
     // The user does not need to lock/unlock, but it can increase performance
     // if many small accesses have to be done.
@@ -262,8 +275,9 @@ namespace BBS {
       { itsRep->getDefValues (result, parmNamePattern); }
 
     // Put the default value for the given parameter.
-    void putDefValue (const string& parmName, const ParmValueSet& value)
-      { itsRep->putDefValue (parmName, value); }
+    void putDefValue (const string& parmName, const ParmValueSet& value,
+                      bool check=true)
+      { itsRep->putDefValue (parmName, value, check); }
 
     // Delete the default value records for the given parameters.
     void deleteDefValues (const std::string& parmNamePattern)

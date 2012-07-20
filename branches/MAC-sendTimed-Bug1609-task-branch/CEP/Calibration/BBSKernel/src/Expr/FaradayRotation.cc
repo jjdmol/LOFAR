@@ -51,13 +51,14 @@ const JonesMatrix::View FaradayRotation::evaluateImpl(const Grid &grid,
     // arrays.
     for(unsigned int f = 0; f < nFreq; ++f)
     {
-        double *sample = origin + f;
-
         // Precompute lambda squared for the current frequency point.
-        const double value = std::pow(C::c / grid[FREQ]->center(f), 2);
+        const double lambda = C::c / grid[FREQ]->center(f);
+        const double lambda2 = lambda * lambda;
+
+        double *sample = origin + f;
         for(unsigned int t = 0; t < nTime; ++t)
         {
-            *sample = value;
+            *sample = lambda2;
             sample += nFreq;
         }
     }

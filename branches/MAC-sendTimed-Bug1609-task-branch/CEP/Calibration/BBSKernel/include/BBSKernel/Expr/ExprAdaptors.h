@@ -212,6 +212,8 @@ const Vector<LENGTH> AsExpr<Vector<LENGTH> >::evaluateExpr
         result.setElement(i, args[i].element());
     }
 
+    EXPR_TIMER_START();
+
     // Evaluate flags.
     FlagArray flags[LENGTH];
     for(unsigned int i = 0; i < LENGTH; ++i)
@@ -219,6 +221,8 @@ const Vector<LENGTH> AsExpr<Vector<LENGTH> >::evaluateExpr
         flags[i] = args[i].flags();
     }
     result.setFlags(mergeFlags(flags, flags + LENGTH));
+
+    EXPR_TIMER_STOP();
 
     return result;
 }

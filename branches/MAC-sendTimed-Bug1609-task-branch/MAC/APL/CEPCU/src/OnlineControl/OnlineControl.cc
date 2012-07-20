@@ -35,8 +35,8 @@
 #include <GCF/TM/GCF_Protocols.h>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/APLUtilities.h>
+#include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
-#include <APL/APLCommon/APLUtilities.h>
 #include <APL/APLCommon/CTState.h>
 #include <GCF/RTDB/DP_Protocol.ph>
 #include <PLC/PCCmd.h>
@@ -67,6 +67,7 @@ OnlineControl::OnlineControl(const string&	cntlrName) :
 	itsParentControl	(0),
 	itsParentPort		(0),
 	itsTimerPort		(0),
+	itsLogControlPort	(0),
     itsCEPapplications  (),
 	itsResultParams     (),
 	itsState			(CTState::NOSTATE),
@@ -81,7 +82,8 @@ OnlineControl::OnlineControl(const string&	cntlrName) :
 	itsStartTime        (),
 	itsStopTime         (),
 	itsStopTimerID      (0),
-	itsFinishTimerID 	(0)
+	itsFinishTimerID 	(0),
+	itsInFinishState	(false)
 {
 	LOG_TRACE_OBJ_STR (cntlrName << " construction");
 
@@ -97,13 +99,12 @@ OnlineControl::OnlineControl(const string&	cntlrName) :
 
 	// attach to parent control task
 	itsParentControl = ParentControl::instance();
-	itsParentPort = new GCFITCPort (*this, *itsParentControl, "ParentITCport", 
-									GCFPortInterface::SAP, CONTROLLER_PROTOCOL);
-	ASSERTSTR(itsParentPort, "Cannot allocate ITCport for Parentcontrol");
-	itsParentPort->open();		// will result in F_CONNECTED
 
 	// need port for timers.
 	itsTimerPort = new GCFTimerPort(*this, "TimerPort");
+
+	// Controlport to logprocessor
+	itsLogControlPort = new GCFTCPPort(*this, MAC_SVCMASK_CEPLOGCONTROL, GCFPortInterface::SAP, CONTROLLER_PROTOCOL);
 
 	// for debugging purposes
 	registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
@@ -119,6 +120,14 @@ OnlineControl::OnlineControl(const string&	cntlrName) :
 OnlineControl::~OnlineControl()
 {
 	LOG_TRACE_OBJ_STR (getName() << " destruction");
+	if (itsLogControlPort) {
+		itsLogControlPort->close();
+		delete itsLogControlPort;
+	}
+
+	if (itsTimerPort) {
+		delete itsTimerPort;
+	}
 }
 
 //
@@ -425,6 +434,11 @@ GCFEvent::TResult OnlineControl::active_state(GCFEvent& event, GCFPortInterface&
 	case CONTROL_CONNECT: {
 		CONTROLConnectEvent		msg(event);
 		LOG_DEBUG_STR("Received CONNECT(" << msg.cntlrName << ")");
+		// first inform CEPlogProcessor
+		CONTROLAnnounceEvent		announce;
+		announce.observationID = toString(getObservationNr(msg.cntlrName));
+		itsLogControlPort->send(announce);
+		// execute this state
 		_setState(CTState::CONNECT);
 		_doBoot();			// start ACC's and boot them
 		break;
@@ -513,11 +527,34 @@ GCFEvent::TResult OnlineControl::finishing_state(GCFEvent& event, GCFPortInterfa
 
 	switch (event.signal) {
 	case F_ENTRY: {
+		if (itsInFinishState) {
+			return (status);
+		}
+		itsInFinishState = true;
+
 		// update PVSS
 		itsPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("finished"));
 		itsPropertySet->setValue(PN_FSM_ERROR, GCFPVString(""));
 
-		itsTimerPort->setTimer(1.0);
+		// construct system command for starting an inspection program to qualify the measured data
+		ParameterSet*   thePS  = globalParameterSet();      // shortcut to global PS.
+		string  myPrefix    (thePS->locateModule("OnlineControl")+"OnlineControl.");
+		string	inspectProg (thePS->getString(myPrefix+"inspectionProgram",  "@inspectionProgram@"));
+		string	inspectHost (thePS->getString(myPrefix+"inspectionHost",     "@inspectionHost@"));
+		uint32	obsID	    (thePS->getUint32("Observation.ObsID", 0));
+		bool	onRemoteMachine(inspectHost != myHostname(false)  && inspectHost != myHostname(true));
+		string	startCmd;
+		if (onRemoteMachine) {
+			startCmd = formatString("ssh %s %s %d &", inspectHost.c_str(), inspectProg.c_str(), obsID);
+		}
+		else {
+			startCmd = formatString("%s %d &", inspectProg.c_str(), obsID);
+		}
+		LOG_INFO_STR("About to start: " << startCmd);
+		int32	result = system (startCmd.c_str());
+		LOG_INFO_STR ("Result of command = " << result);
+
+		itsTimerPort->setTimer(2.0);
 		break;
 	}
 
@@ -585,16 +622,18 @@ void OnlineControl::_doBoot()
 				}
 			}
 
-			// always add Observation
+			// always add Observation and _DPname
 			string	obsPrefix(thePS->locateModule("Observation"));
 			params.adoptCollection(thePS->makeSubset(obsPrefix+"Observation", "Observation"));
+			params.replace("_DPname", thePS->getString("_DPname"));
+
 			// write parset to file.
 			paramFileName = formatString("%s/ACC_%s_%s.param", LOFAR_SHARE_LOCATION,
 											  getName().c_str(), applName.c_str());
 			params.writeFile(paramFileName); 	// local copy
 			string	accHost(thePS->getString(applPrefix+"_hostname"));
 			LOG_DEBUG_STR("Controller for " << applName << " wil be running on " << accHost);
-			APLCommon::APLUtilities::remoteCopy(paramFileName,accHost,LOFAR_SHARE_LOCATION);
+			remoteCopy(paramFileName,accHost,LOFAR_SHARE_LOCATION);
 
 			// Finally start ApplController on the right host
 			LOG_INFO_STR("Starting controller for " << applName << " in 3 seconds ");

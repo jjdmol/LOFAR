@@ -23,6 +23,7 @@
 package nl.astron.lofar.sas.otb.util.tablemodels;
 
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Vector;
 import nl.astron.lofar.sas.otb.jotdb3.jDefaultTemplate;
@@ -43,7 +44,7 @@ import org.apache.log4j.Logger;
  */
 public class DefaultTemplatetableModel extends javax.swing.table.AbstractTableModel {
     
-    private String headers[] = {"ID","Name","OriginalTree","Status","Classification","Campaign","MoMID","Description"};
+    private String headers[] = {"ID","Name","Status","PType","PStype","Strat","Classif","Campaign","Description"};
     private OtdbRmi otdbRmi;
     private Object data[][];
 
@@ -53,7 +54,7 @@ public class DefaultTemplatetableModel extends javax.swing.table.AbstractTableMo
     /** Creates a new instance of PICtableModel */
     public DefaultTemplatetableModel(OtdbRmi otdbRmi) {
         this.otdbRmi = otdbRmi;
-        fillTable();
+ //       fillTable();
     }
 
     /** Refreshes 1 row from table out of the database
@@ -71,16 +72,21 @@ public class DefaultTemplatetableModel extends javax.swing.table.AbstractTableMo
 
             // get TreeID that needs 2b refreshed
             // first get all defaulttemplates from the database
-            Vector<jDefaultTemplate> templateList= OtdbRmi.getRemoteOTDB().getDefaultTemplates();
-            Iterator<jDefaultTemplate> it = templateList.iterator();
+            ArrayList<jDefaultTemplate> templateList= new ArrayList(OtdbRmi.getRemoteOTDB().getDefaultTemplates());
             int aTreeID=((Integer)data[row][0]).intValue();
-            jDefaultTemplate aDF=null;
-            while(it.hasNext()) {
-                aDF = it.next();
-                if (aDF.treeID() == aTreeID) break;
+            if (templateList.isEmpty()) {
+                logger.warn("no DefaultTemplates in database");
+                return false;
             }
 
             // if no match, return
+            jDefaultTemplate aDF=null;
+            for (jDefaultTemplate aT : templateList) {
+                if (aT.treeID() == aTreeID) {
+                    aDF=aT;
+                    break;
+                }
+            }
             if (aDF == null) {
                 logger.warn("Couldn't find Matching DefaultTemplate in database");
                 return false;
@@ -92,13 +98,14 @@ public class DefaultTemplatetableModel extends javax.swing.table.AbstractTableMo
                 return false;
             }
             data[row][0]=new Integer(tInfo.treeID());
-            data[row][1]=new String(aDF.name);
-            data[row][2]=new Integer(tInfo.originalTree);
-            data[row][3]=new String(OtdbRmi.getTreeState().get(tInfo.state));
-            data[row][4]=new String(OtdbRmi.getClassif().get(tInfo.classification));
-            data[row][5]=new String(tInfo.campaign);
-            data[row][6]=new Integer(tInfo.momID());
-            data[row][7]=new String(tInfo.description);
+            data[row][1]=aDF.name;
+            data[row][2]=OtdbRmi.getTreeState().get(tInfo.state);
+            data[row][3]=tInfo.processType;
+            data[row][4]=tInfo.processSubtype;
+            data[row][5]=tInfo.strategy;
+            data[row][6]=OtdbRmi.getClassif().get(tInfo.classification);
+            data[row][7]=tInfo.campaign;
+            data[row][8]=tInfo.description;
             fireTableDataChanged();
         } catch (RemoteException e) {
             logger.debug("Remote OTDB via RMI and JNI failed: " + e);
@@ -118,26 +125,25 @@ public class DefaultTemplatetableModel extends javax.swing.table.AbstractTableMo
                 return false;
             }
             // Get a Treelist of all available VItemplate's
-            Vector<jDefaultTemplate> aTreeList=OtdbRmi.getRemoteOTDB().getDefaultTemplates();
-            Iterator<jDefaultTemplate> it = aTreeList.iterator();
+            ArrayList<jDefaultTemplate> aTreeList=new ArrayList(OtdbRmi.getRemoteOTDB().getDefaultTemplates());
             data = new Object[aTreeList.size()][headers.length];
             logger.debug("DefaultTreelist downloaded. Size: "+aTreeList.size());
             int k=0;
-            while (it.hasNext()) {
-                jDefaultTemplate aDF = it.next();
+            for (jDefaultTemplate aDF : aTreeList) {
                 jOTDBtree tInfo =OtdbRmi.getRemoteOTDB().getTreeInfo(aDF.treeID(), false);
                 if (tInfo.treeID()==0) {
                     logger.warn("Illegal TreeID found!");
                 } else {
                     logger.debug("Gathered info for ID: "+tInfo.treeID());
                     data[k][0]=new Integer(tInfo.treeID());
-                    data[k][1]=new String(aDF.name);
-                    data[k][2]=new Integer(tInfo.originalTree);
-	            data[k][3]=new String(OtdbRmi.getTreeState().get(tInfo.state));
-                    data[k][4]=new String(OtdbRmi.getClassif().get(tInfo.classification));
-	            data[k][5]=new String(tInfo.campaign);
-	            data[k][6]=new Integer(tInfo.momID());
-	            data[k][7]=new String(tInfo.description);
+                    data[k][1]=aDF.name;
+	            data[k][2]=OtdbRmi.getTreeState().get(tInfo.state);
+                    data[k][3]=tInfo.processType;
+                    data[k][4]=tInfo.processSubtype;
+                    data[k][5]=tInfo.strategy;
+                    data[k][6]=OtdbRmi.getClassif().get(tInfo.classification);
+	            data[k][7]=tInfo.campaign;
+	            data[k][8]=tInfo.description;
                     k++;
                 }
             }
@@ -187,13 +193,14 @@ public class DefaultTemplatetableModel extends javax.swing.table.AbstractTableMo
      */
     public Object getValueAt(int r, int c) {
         try {
-            if (data.length > 0) {
+            if (data != null && data.length > 0) {
                 return data[r][c];
             } else {
                 return null;
             }
         }
         catch(ArrayIndexOutOfBoundsException e) {
+            logger.error("ArrayIndex out of bound exception for getValueAt("+r+","+c+"): "+e);
             return null;
         }
     }

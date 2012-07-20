@@ -59,7 +59,11 @@ void SetSubbandsCmd::ack(CacheBuffer& /*cache*/)
 
 void SetSubbandsCmd::apply(CacheBuffer& cache, bool /*setModFlag*/)
 {
-	Range dst_range;
+	#undef MIN
+	#define	MIN(A,B) ((A)<(B)?(A):(B))
+
+	Range	dst_range;
+	Range	src_range;
 
 	switch (m_event->subbands.getType()) {
 
@@ -68,14 +72,38 @@ void SetSubbandsCmd::apply(CacheBuffer& cache, bool /*setModFlag*/)
 		dst_range = Range(MEPHeader::N_LOCAL_XLETS, MEPHeader::N_LOCAL_XLETS + m_event->subbands().extent(secondDim) - 1);
 		for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++) {
 			if (m_event->rcumask[cache_rcu]) {
-				cache.getSubbandSelection()()(cache_rcu, dst_range) = 0;
-				cache.getSubbandSelection()()(cache_rcu, dst_range)
-					= m_event->subbands()(0, Range::all()) * (int)MEPHeader::N_POL + (cache_rcu % MEPHeader::N_POL);
+				// NOTE: MEPHeader::N_BEAMLETS = 4x62 but userside MAX_BEAMLETS may be different
+				//       In other words: getSubbandSelection can contain more data than m_event->subbands
+				if (MEPHeader::N_BEAMLETS == MAX_BEAMLETS) {
+					cache.getSubbandSelection()()(cache_rcu, dst_range) = 0;
+					cache.getSubbandSelection()()(cache_rcu, dst_range) = m_event->subbands()(0, Range::all()) * (int)N_POL + (cache_rcu % N_POL);
+				}
+				else {
+					int nr_subbands = m_event->subbands().extent(secondDim);
+					for (int rsp = 0; rsp < 4; rsp++) {
+						int	swstart(rsp*MAX_BEAMLETS_PER_RSP);
+						int hwstart(MEPHeader::N_LOCAL_XLETS + rsp * (MEPHeader::N_BEAMLETS/4));
+						int nrSubbands2move(MIN(nr_subbands-swstart, MAX_BEAMLETS_PER_RSP));
+						if (nrSubbands2move > 0) {
+							dst_range = Range(hwstart, hwstart+nrSubbands2move-1);
+							src_range = Range(swstart, swstart+nrSubbands2move-1);
+							cache.getSubbandSelection()()(cache_rcu, dst_range) = 0;
+							cache.getSubbandSelection()()(cache_rcu, dst_range) = m_event->subbands()(0, src_range) * (int)N_POL + (cache_rcu % N_POL);
+							if (cache_rcu == 0) {
+								LOG_DEBUG_STR("Setsubbands:move(" << swstart << ".." << swstart+nrSubbands2move << ") to (" 
+																  << hwstart << ".." << hwstart+nrSubbands2move << ")");
+							}
+						} // subbands left
+					} // for each rsp-slice
+				} // difference in max'en
 
-				LOG_DEBUG_STR("m_event->subbands() = " << m_event->subbands());
-			}
-		}
-	}
+				if (cache_rcu == 0) {
+					LOG_DEBUG_STR("m_event->subbands() = " << m_event->subbands());
+					LOG_DEBUG_STR("cache->subbands(0) = " << cache.getSubbandSelection()()(0,Range::all()));
+				}
+			} // if rcu selected
+		} // for each rcu
+	} // case
 	break;
 
 	case SubbandSelection::XLET: {
@@ -83,8 +111,7 @@ void SetSubbandsCmd::apply(CacheBuffer& cache, bool /*setModFlag*/)
 		for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++) {
 			if (m_event->rcumask[cache_rcu]) {
 				cache.getSubbandSelection()()(cache_rcu, dst_range) = 0;
-				cache.getSubbandSelection()()(cache_rcu, dst_range)
-					= m_event->subbands()(0, 0) * MEPHeader::N_POL + (cache_rcu % MEPHeader::N_POL);
+				cache.getSubbandSelection()()(cache_rcu, dst_range) = m_event->subbands()(0,0) * N_POL + (cache_rcu % N_POL);
 
 				LOG_DEBUG_STR("m_event->subbands() = " << m_event->subbands());
 			}

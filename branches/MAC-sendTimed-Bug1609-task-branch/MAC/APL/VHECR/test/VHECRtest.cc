@@ -172,7 +172,7 @@ int main(int argc, char* argv[])
  		       NoCoincidenceChannels, CoincidenceTime, DoDirectionFit,
  		       MinElevation, MaxFitVariance);
 
-	theTrigger.itsFlags = 0;
+	theTrigger.itsMissed = 0;
 	// process file
         uint32 n = 0;
         uint32 badtimes = 0;
@@ -189,9 +189,8 @@ int main(int argc, char* argv[])
             cout << "Waiting for more input..." << endl;
           }else{
 	  LOG_DEBUG_STR("input: " << triggerLine);
-	  if (sscanf(triggerLine, "%d %u %u %u %u %u %u",
+	  if (sscanf(triggerLine, "%d %u %u %u %u %u",
 		     &theTrigger.itsRcuNr,
-		     &theTrigger.itsSeqNr,
 		     &theTrigger.itsTime,
 		     &theTrigger.itsSampleNr,
 		     &theTrigger.itsSum,

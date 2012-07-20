@@ -1,14 +1,12 @@
 #!/usr/bin/env python
 
-__all__ = [ "PartitionPsets","owner","runningJob","killJobs","freePartition","allocatePartition"]
+__all__ = [ "PartitionPsets" ]
 
 import os
 import sys
 
 # allow ../util to be found, a bit of a hack
 sys.path += [os.path.abspath(os.path.dirname(__file__)+"/..")]
-
-from util.Commands import SyncCommand
 
 # PartitionPsets:	A dict which maps partitions to I/O node IP addresses.
 # the pset hierarchy is is analogue to:
@@ -52,90 +50,7 @@ for R in xrange(3):
   # a rack
   PartitionPsets[rack] = PartitionPsets["%s-M0" % rack] + PartitionPsets["%s-M1" % rack]
 
-# Locations of the bg* scripts
-BGBUSY = "/usr/local/bin/bgbusy"
-BGJOBS = "/usr/local/bin/bgjobs"
-
-def owner( partition ):
-  """ Returns the name of the owner of the partition, or None if the partition is not allocated. """
-
-  cmd = "%s" % (BGBUSY,)
-
-  for l in os.popen( cmd, "r" ).readlines():
-    try:
-      part,nodes,cores,state,owner,net = l.split()
-    except ValueError:
-      continue
-
-    if part == partition:  
-      # partition found     
-      return owner
-  
-  # partition is not allocated
-  return None
-
-def runningJob( partition ):
-  """ Returns a (jobId,name) tuple of the job running on the partition, or None if no job is running. """
-
-  cmd = "%s" % (BGJOBS,)
-
-  for l in os.popen( cmd, "r" ).readlines():
-    try:
-      job,part,mode,executable,user,state,queue,limit,wall = l.split()
-    except ValueError:
-      continue
-
-    if part == partition: 
-      # job found 
-      return (job,executable)
-  
-  # partition is not allocated or has no job running
-  return None
-
-def killJobs( partition ):
-  """ Kill anything running on the partition. """
-  return SyncCommand( "%s | /usr/bin/grep %s | /usr/bin/awk '{ print $1; }' | /usr/bin/xargs -r bgkilljob" % (BGJOBS,partition,) ).isSuccess()
-
-def freePartition( partition ):
-  """ Free the given partition. """
-  return SyncCommand( "mpirun -partition %s -free wait" % (partition,) ).isSuccess()
-
-def resetPartition( partition ):
-  """ Reset /dev/flatmem on all I/O nodes and kill all processes that we started. """
-  success = True
-
-  for node in PartitionPsets[partition]:
-    success = success and SyncCommand( "ssh -tq %s pkill IONProc ; pkill orted ; echo 1 > /proc/flatmem_reset" % (node,) ).isSuccess()
-
-  return success  
-
-def allocatePartition( partition ):
-  """ Allocate the given partition by running Hello World. """
-  return SyncCommand( "mpirun -partition %s -nofree -exe /bgsys/tools/hello" % (partition,), ["/dev/null"] ).isSuccess()
-
-def stealPartition( partition ):
-  """ Take over a partition from another user. UNDER CONSTRUCTION. """
-  old_owner = owner( partition )
-  new_owner = os.environ["USER"]
-
-  if old_owner is None:
-    # we already own it
-    return allocatePartition( partition )
-
-  jobinfo = runningJob( partition )
-
-  if jobinfo is not None:
-    # someone is still running a job
-    return False
-
-  # reallocate partition
-  commands = [
-    "set_username %s" % (old_owner,),
-    "free %s" % (partition,),
-    "set_username %s" % (new_owner,),
-    "allocate %s" % (partition),
-  ]
-  return SyncCommand("ssh bgsn echo '%s' | mmcs_db_console" % "\\n".join(commands) ).isSuccess()
+PartitionPsets["R00R01"] = PartitionPsets["R00"] + PartitionPsets["R01"]  
 
 if __name__ == "__main__":
   from optparse import OptionParser,OptionGroup
@@ -148,36 +63,6 @@ if __name__ == "__main__":
 			action = "store_true",
 			default = False,
   			help = "list the psets in the partition" )
-  parser.add_option( "-c", "--check",
-  			dest = "check",
-			action = "store_true",
-			default = False,
-  			help = "check the partition status" )
-  parser.add_option( "-k", "--kill",
-  			dest = "kill",
-			action = "store_true",
-			default = False,
-  			help = "kill all jobs running on the partition" )
-  parser.add_option( "-a", "--allocate",
-  			dest = "allocate",
-			action = "store_true",
-			default = False,
-  			help = "allocate the partition" )
-  parser.add_option( "-f", "--free",
-  			dest = "free",
-			action = "store_true",
-			default = False,
-  			help = "free the partition" )
-  parser.add_option( "-r", "--reset",
-  			dest = "reset",
-			action = "store_true",
-			default = False,
-  			help = "reset the partition without freeing it" )
-  parser.add_option( "-s", "--steal",
-  			dest = "steal",
-			action = "store_true",
-			default = False,
-  			help = "take over a partition from another user (needs access to bgsn)" )
 
   # parse arguments
   (options, args) = parser.parse_args()
@@ -194,38 +79,6 @@ if __name__ == "__main__":
       # print the psets of a single partition
       for ip in PartitionPsets[partition]:
         print ip
-
-    if options.kill and not errorOccurred:
-      print "Killing jobs on %s..." % ( partition, )
-      errorOccured = killJobs( partition )
-
-    if options.free and not errorOccurred:
-      print "Freeing %s..." % ( partition, )
-      errorOccured = freePartition( partition )
-
-    if options.allocate and not errorOccurred:
-      print "Allocating %s..." % ( partition, )
-      errorOccured = allocatePartition( partition )
-
-    if options.reset and not errorOccurred:
-      print "Resetting %s..." % ( partition, )
-      errorOccured = resetPartition( partition )
-
-    if options.steal and not errorOccurred:
-      print "Taking over partition %s..." % ( partition, )
-      errorOccured = stealPartition( partition )
-
-    # check partition if requested so
-    if options.check:
-      expected_owner = os.environ["USER"]
-      real_owner = owner( partition )
-
-      print "Partition Owner : %-40s" % (real_owner,)
-
-      expected_job = None
-      real_job = runningJob( partition )
-
-      print "Running Job     : %-40s" % (real_job,)
 
     sys.exit(int(errorOccurred))
 

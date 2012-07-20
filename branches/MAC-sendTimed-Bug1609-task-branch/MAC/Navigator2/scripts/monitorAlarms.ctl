@@ -60,6 +60,9 @@ void initCtrlAlarmSystem()  {
   g_alarms[ "STATE"    ] = makeDynInt();
   g_alarms[ "STATUS"   ] = makeDynInt();
   
+  // read all stored alarms.
+  readAlarms();
+  
   // Routine to connect to _DistConnections.ManNums.
   // This point keeps a dyn_int array with all active distributed connections
   // and will generate a callback everytime a station goes off-, or on- line
@@ -107,14 +110,15 @@ void distSystemTriggered(string dp1, dyn_int systemList) {
 
   // Connect to the dp elements that we use to receive
   // a new claim in the MainDB
-  dpQueryConnectAll( "objectStateCallback",true,"objectState",query,20); 
+  // dpQueryConnectAll( "objectStateCallback",true,"objectState",query,20);   test DISCARDING
+  dpQueryConnectAll( "objectStateCallback",true,"objectState",query); 
   
   // also connect to the dpResetList dp to receive lists if dp's that need to be cleared from the global list and thus from the
   // datapoint in the database
   if (dpExists(DPNAME_NAVIGATOR +  ".alarms.dpResetList")) {
-    dpConnect("resetTriggered",DPNAME_NAVIGATOR +  ".alarms.dpResetList",
-                               DPNAME_NAVIGATOR +  ".alarms.dpResetStates",
-                               DPNAME_NAVIGATOR +  ".alarms.dpResetMsgs");
+    dpConnect("resetTriggered",false,DPNAME_NAVIGATOR +  ".alarms.dpResetList",
+                                     DPNAME_NAVIGATOR +  ".alarms.dpResetStates",
+                                     DPNAME_NAVIGATOR +  ".alarms.dpResetMsgs");
   } else {
     DebugTN("monitorAlarms.ctl:distSystemTriggered|Couldn't connect to"+DPNAME_NAVIGATOR +  ".alarms.dpResetList");
   }
@@ -185,12 +189,14 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
     iPos = dynContains( g_alarms[ "DPNAME"         ], aDP );
 
   
- 
     // check if existing dp.
     // if it exists, check if new state 1st digit > oldState 1st digit && force, otherwise return
-    if (iPos > 0 && ((floor(g_alarms["STATE"][iPos]/10) >= floor(state/10))&& !force)) {
-    if (bDebug) DebugN("monitorAlarms.ctl:objectStateCallback|return on condition mismatch");
-      continue;
+//    if (iPos > 0 && ((floor(g_alarms["STATE"][iPos]/10) >= floor(state/10))&& !force)) {
+    if (iPos > 0 && g_alarms["STATE"][iPos] >= state && !force) {
+    	if (bDebug) DebugN("monitorAlarms.ctl:objectStateCallback|return on condition mismatch");
+    	if (bDebug) DebugN("Found existing dp: ",aDP);
+    	if (bDebug) DebugN("state ",g_alarms["STATE"][iPos]);
+      	continue;
     }
     
     
@@ -235,25 +241,26 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
       // it was an existing DP, so we have to compare the status.
      
       int oldState=g_alarms["STATE"][iPos];
+      time oldTime = g_alarms["TIME"][iPos];
 
       // check broken ranges first
       if (state >= BROKEN ) {
         if (oldState == BROKEN) {
           if (state == BROKEN) {
             aStatus = ACK;
+            aTime = oldTime;
           } else if (state == BROKEN_CAME) {
             aStatus = CAME;
           } else {
-            DebugTN("monitorAlarms.ctl:objectStateCallback|Someone wants to set : "+ aDP+ " state from BROKEN to BROKEN_WENT again, that should not be possible");
             aStatus = WENT;
           }
         } else if (oldState  == BROKEN_WENT) {
           if (state == BROKEN) {
             aStatus = ACK;
           } else if (state == BROKEN_WENT) {
+            aTime = oldTime;
             aStatus = WENT;
           } else {
-            DebugTN("monitorAlarms.ctl:objectStateCallback|Someone wants to set : "+ aDP+ " state from BROKEN_WENT to BROKEN_CAME again, leaving last WENT not ACK'ed");
             aStatus = CAME;
           }        
         } else if (oldState == BROKEN_CAME) {
@@ -262,26 +269,27 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
           } else if (state == BROKEN_WENT) {
             aStatus = WENT;
           } else {
+            aTime = oldTime;
             aStatus = CAME;
           }
         }
       } else if (state >= SUSPICIOUS) {
         if (oldState == SUSPICIOUS) {
           if (state == SUSPICIOUS) {
+            aTime = oldTime;
             aStatus = ACK;
           } else if (state == SUSPICIOUS_CAME) {
             aStatus = CAME;
           } else {
-            DebugTN("monitorAlarms.ctl:objectStateCallback|Someone wants to set : "+ aDP+ " state from SUSPICIOUS to SUSPICIOUS_WENT again, that should not be possible");
             aStatus = WENT;
           }
         } else if (oldState  == SUSPICIOUS_WENT) {
           if (state == SUSPICIOUS) {
             aStatus = ACK;
           } else if (state == SUSPICIOUS_WENT) {
+            aTime = oldTime;
             aStatus = WENT;
           } else {
-            DebugTN("monitorAlarms.ctl:objectStateCallback|Someone wants to set : "+ aDP+ " state from SUSPICIOUS_WENT to SUSPICIOUS_CAME again, leaving last WENT not ACK'ed");
             aStatus = CAME;
           }        
         } else if (oldState == SUSPICIOUS_CAME) {
@@ -291,6 +299,7 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
             aStatus = WENT;
           } else {
             aStatus = CAME;
+            aTime = oldTime;
           }        
         }
       }
@@ -308,6 +317,13 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
     g_alarms[ "MESSAGE" ][iPos] = message;
     g_alarms[ "STATUS"  ][iPos] = aStatus;
     changed=true;
+    // check if the alarm was a suspicious_came or an alarm_came
+    // if this is true then we need to send an email to the observers
+    if (state == SUSPICIOUS_CAME ) {
+      sendMail("SUSPICIOUS_CAME",aDP,aTime,message);
+    } else if (state == BROKEN_CAME) {
+      sendMail("BROKEN_CAME",aDP,aTime,message);        
+    }
   }
   // store all alarms if changed
   if (changed) {
@@ -345,11 +361,22 @@ void resetTriggered(string dp1, dyn_string aDPList,
       if (aStateList[i] >= SUSPICIOUS  ) {
         if (iPos > 0) {
           if (g_alarms["STATE"][iPos] != aStateList[i]) {
-            g_alarms["TIME"][iPos] = aTime;
-            g_alarms["STATE"][iPos]=aStateList[i];
-            g_alarms["MESSAGE"][iPos]=aMsgList[i];
-            g_alarms["STATUS"][iPos]=stateToStatus(aStateList[i]);
-            changed=true;
+            if (g_alarms["STATE"][iPos]!=aStateList[i] || 
+                g_alarms["STATUS"][iPos]!=stateToStatus(aStateList[i]) ||
+                g_alarms["MESSAGE"][iPos]!=aMsgList[i] ) {
+              g_alarms["TIME"][iPos] = aTime;
+              g_alarms["STATE"][iPos]=aStateList[i];
+              g_alarms["MESSAGE"][iPos]=aMsgList[i];
+              g_alarms["STATUS"][iPos]=stateToStatus(aStateList[i]);
+              // check if the alarm was a suspicious_came or an alarm_came
+              // if this is true then we need to send an email to the observers
+              if (aStateList[i] == SUSPICIOUS_CAME ) {
+                sendMail("SUSPICIOUS_CAME",aDPList[i],aTime,aMsgList[i]);
+              } else if (aStateList[i] == BROKEN_CAME) {
+                sendMail("BROKEN_CAME",aDPList[i],aTime,aMsgList[i]);        
+              }
+              changed=true;
+            }   
           }
         } else {
           iPos=dynAppend(g_alarms["DPNAME" ],aDPList[i]);
@@ -357,6 +384,13 @@ void resetTriggered(string dp1, dyn_string aDPList,
           g_alarms["STATE"][iPos]=aStateList[i];
           g_alarms["MESSAGE"][iPos]=aMsgList[i];
           g_alarms["STATUS"][iPos]=stateToStatus(aStateList[i]);
+          // check if the alarm was a suspicious_came or an alarm_came
+          // if this is true then we need to send an email to the observers
+          if (aStateList[i] == SUSPICIOUS_CAME ) {
+            sendMail("SUSPICIOUS_CAME",aDPList[i],aTime,aMsgList[i]);
+          } else if (aStateList[i] == BROKEN_CAME) {
+            sendMail("BROKEN_CAME",aDPList[i],aTime,aMsgList[i]);        
+          }
           changed=true;
         }
       } else {
@@ -412,4 +446,27 @@ void readAlarms() {
   } else {
     DebugTN("monitorAlarms.ctl:initCtrlAlarmSystem|Couldn't get alarms from navigator");
   }
+}
+
+private void sendMail(string state, string aDP,time aTime,string message) {
+
+  int ret;
+  dyn_string email_cont;
+  string aS="";
+  
+  string t = formatTime("%c",aTime);
+
+  email_cont[1] = "observer@astron.nl";
+  email_cont[2] = "lofarsys@control.lofar";
+  aS="LOFAR_ALARM "+dpSubStr(aDP,DPSUB_SYS)+" "+message+" "+state;
+  email_cont[3] = aS;
+  aS="This is a generated message, replying is useless.\n\n New alarm from LOFAR: \n\n time     : "+t+"\n status   : "+state+"\n datapoint: "+aDP+"\n message  : "+message; 
+  email_cont[4] = aS;
+  
+
+  // sending the message
+  if (bDebug) DebugTN("sending msg to observer: ");
+  emSendMail ("smtp.lofar.eu","mcu001.control.lofar", email_cont, ret);
+  if (bDebug) DebugTN("SendMail return value: "+ret);
+  
 }

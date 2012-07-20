@@ -43,6 +43,10 @@ public class jTreeValue implements jTreeValueInterface
         itsTreeID=aTreeID;
     }
 
+    public int TreeID() {
+        return itsTreeID;
+    }
+
     // PVSS will continuously add value-changes to the offline PIC.
     // There two ways PVSS can do this.
     // The function returns false if the PIC node can not be found.
@@ -53,6 +57,10 @@ public class jTreeValue implements jTreeValueInterface
     // a list of modified node.
     public native boolean addKVTlist(Vector<jOTDBvalue> aValueList) throws RemoteException;
     //    public native boolean addKVTparamSet(jParamterSet aPS) throws Exception;
+
+    // Query for getting list of broken hardware on a certain time.
+    public native Vector<jOTDBvalue> getBrokenHardware (String atTime) throws RemoteException;
+    public native Vector<jOTDBvalue> getBrokenHardware () throws RemoteException;
 
     //# SHM queries
     // With searchInPeriod a list of all valuechanges in the OTDB tree can
@@ -67,6 +75,10 @@ public class jTreeValue implements jTreeValueInterface
 						     String beginDate, 
 						     String endDate, 
 						     boolean mostRecentlyOnly) throws RemoteException;
+    public native Vector<jOTDBvalue> searchInPeriod (int topNode, int depth, String beginDate,
+				  String endDate) throws RemoteException;
+    public native Vector<jOTDBvalue> searchInPeriod (int topNode, int depth, String beginDate) throws RemoteException;
+    public native Vector<jOTDBvalue> searchInPeriod (int topNode, int depth) throws RemoteException;
 
     //# SAS queries
     // For scheduling the VIC tree on the OTDB tree SAS must know what
@@ -74,6 +86,7 @@ public class jTreeValue implements jTreeValueInterface
     // this function.
     // TBW: Is this realy what SAS needs???
     public native Vector<jOTDBvalue> getSchedulableItems (int topNode) throws RemoteException;
+    public native Vector<jOTDBvalue> getSchedulableItems () throws RemoteException;
 
     // Whenever an error occurs in one the OTDB functions the message can
     // be retrieved with this function.

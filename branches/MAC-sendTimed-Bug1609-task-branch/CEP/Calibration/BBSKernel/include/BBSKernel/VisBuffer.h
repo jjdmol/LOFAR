@@ -29,6 +29,7 @@
 // coordinates).
 
 #include <Common/lofar_smartptr.h>
+#include <Common/lofar_map.h>
 #include <BBSKernel/Instrument.h>
 #include <BBSKernel/Types.h>
 #include <BBSKernel/VisDimensions.h>
@@ -49,22 +50,25 @@ public:
     typedef shared_ptr<VisBuffer>       Ptr;
     typedef shared_ptr<const VisBuffer> ConstPtr;
 
-    VisBuffer(const VisDimensions &dims);
-    VisBuffer(const VisDimensions &dims, const Instrument &instrument,
-        const casa::MDirection &phaseRef, double refFreq);
+    VisBuffer(const VisDimensions &dims, bool hasCovariance = true,
+        bool hasFlags = true);
 
-    // Access to the dimensions of this buffer.
-    const VisDimensions &dimensions() const;
+    const VisDimensions &dims() const;
 
-    void setInstrument(const Instrument &instrument);
-    const Instrument &instrument() const;
-    size_t nStations() const;
+    void setInstrument(const Instrument::ConstPtr &instrument);
+    Instrument::ConstPtr instrument() const;
+
+    void setReferenceFreq(double freq);
+    double getReferenceFreq() const;
 
     void setPhaseReference(const casa::MDirection &reference);
     const casa::MDirection &getPhaseReference() const;
 
-    void setReferenceFreq(double freq);
-    double getReferenceFreq() const;
+    void setDelayReference(const casa::MDirection &reference);
+    const casa::MDirection &getDelayReference() const;
+
+    void setTileReference(const casa::MDirection &reference);
+    const casa::MDirection &getTileReference() const;
 
     // Convenience functions that delegate to VisDimensions (refer to the
     // documentation of VisDimensions for their documentation).
@@ -73,6 +77,7 @@ public:
     size_t nTime() const;
     size_t nBaselines() const;
     size_t nCorrelations() const;
+    size_t nSamples() const;
 
     Box domain() const;
     const Grid &grid() const;
@@ -80,9 +85,15 @@ public:
     const CorrelationSeq &correlations() const;
     // @}
 
-    size_t nSamples() const;
+    size_t nStations() const;
+
+    bool isLinear() const;
+    bool isCircular() const;
 
     bool hasUVW() const;
+    bool hasFlags() const;
+    bool hasSamples() const;
+    bool hasCovariance() const;
 
     // Computes station UVW coordinates in meters for the center of each time
     // interval in the buffer. Requires a valid instrument and phase reference
@@ -95,6 +106,7 @@ public:
     void flagsOrWithMask(flag_t mask);
     void flagsSet(flag_t value);
     void flagsNot();
+    void flagsNaN();
     // @}
 
     // Station UVW coordinates in meters.
@@ -103,19 +115,27 @@ public:
     boost::multi_array<flag_t, 4>   flags;
     // Visibilities.
     boost::multi_array<dcomplex, 4> samples;
+    // Covariance.
+    boost::multi_array<double, 5>   covariance;
 
 private:
     // Information about the instrument (e.g. station positions).
-    Instrument          itsInstrument;
+    Instrument::ConstPtr    itsInstrument;
     // Phase reference direction (J2000).
-    casa::MDirection    itsPhaseReference;
+    casa::MDirection        itsPhaseReference;
+    // Delay reference direction (J2000).
+    casa::MDirection        itsDelayReference;
+    // Tile beam reference direction (J2000).
+    casa::MDirection        itsTileReference;
     // Reference frequency (Hz).
-    double              itsReferenceFreq;
+    double                  itsReferenceFreq;
 
     // Shape of the buffer along all four dimensions (frequency, time, baseline,
     // correlation).
-    VisDimensions       itsDims;
+    VisDimensions           itsDims;
 };
+
+typedef map<string, VisBuffer::Ptr> BufferMap;
 
 // @}
 
@@ -123,29 +143,39 @@ private:
 // - Implementation: VisBuffer                                              - //
 // -------------------------------------------------------------------------- //
 
-inline const VisDimensions &VisBuffer::dimensions() const
+inline const VisDimensions &VisBuffer::dims() const
 {
     return itsDims;
 }
 
-inline void VisBuffer::setInstrument(const Instrument &instrument)
+inline void VisBuffer::setInstrument(const Instrument::ConstPtr &instrument)
 {
     itsInstrument = instrument;
 }
 
-inline const Instrument &VisBuffer::instrument() const
+inline Instrument::ConstPtr VisBuffer::instrument() const
 {
     return itsInstrument;
 }
 
 inline size_t VisBuffer::nStations() const
 {
-    return itsInstrument.size();
+    return itsInstrument->nStations();
 }
 
 inline const casa::MDirection &VisBuffer::getPhaseReference() const
 {
     return itsPhaseReference;
+}
+
+inline const casa::MDirection &VisBuffer::getDelayReference() const
+{
+    return itsDelayReference;
+}
+
+inline const casa::MDirection &VisBuffer::getTileReference() const
+{
+    return itsTileReference;
 }
 
 inline void VisBuffer::setReferenceFreq(double freq)
@@ -178,6 +208,11 @@ inline size_t VisBuffer::nCorrelations() const
     return itsDims.nCorrelations();
 }
 
+inline size_t VisBuffer::nSamples() const
+{
+    return itsDims.nSamples();
+}
+
 inline Box VisBuffer::domain() const
 {
     return itsDims.grid().getBoundingBox();
@@ -203,9 +238,19 @@ inline bool VisBuffer::hasUVW() const
     return uvw.size() > 0;
 }
 
-inline size_t VisBuffer::nSamples() const
+inline bool VisBuffer::hasFlags() const
 {
-    return nBaselines() * nTime() * nFreq() * nCorrelations();
+    return flags.size() > 0;
+}
+
+inline bool VisBuffer::hasSamples() const
+{
+    return samples.size() > 0;
+}
+
+inline bool VisBuffer::hasCovariance() const
+{
+    return covariance.size() > 0;
 }
 
 } //# namespace BBS

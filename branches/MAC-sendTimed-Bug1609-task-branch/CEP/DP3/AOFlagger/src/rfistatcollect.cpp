@@ -26,9 +26,12 @@
 #include <iomanip>
 
 #include <AOFlagger/msio/date.h>
-#include <AOFlagger/rfi/rfistatistics.h>
+
+#include <AOFlagger/strategy/algorithms/rfistatistics.h>
+#include <AOFlagger/strategy/algorithms/noisestatistics.h>
+#include <AOFlagger/strategy/algorithms/noisestatisticscollector.h>
+
 #include <AOFlagger/util/rng.h>
-#include <sys/stat.h>
 
 using namespace std;
 
@@ -163,6 +166,67 @@ void readBaselines(RFIStatistics &statistics, string &filename)
 	}
 }
 
+void readBaselineTime(RFIStatistics &statistics, string &filename)
+{
+	ifstream f(filename.c_str());
+	string headers;
+	getline(f, headers);
+	while(!f.eof())
+	{
+		RFIStatistics::BaselineTimeInfo info;
+		f
+		>> info.antenna1Index;
+		if(f.eof()) break;
+		f
+		>> info.antenna2Index
+		>> info.time
+		>> info.totalCount
+		>> info.rfiCount;
+		statistics.Add(info);
+	}
+}
+
+void readBaselineFrequency(RFIStatistics &statistics, string &filename)
+{
+	ifstream f(filename.c_str());
+	string headers;
+	getline(f, headers);
+	while(!f.eof())
+	{
+		RFIStatistics::BaselineFrequencyInfo info;
+		f
+		>> info.antenna1Index;
+		if(f.eof()) break;
+		f
+		>> info.antenna2Index
+		>> info.centralFrequency
+		>> info.totalCount
+		>> info.rfiCount;
+		statistics.Add(info);
+	}
+}
+
+void readTimeFrequency(RFIStatistics &statistics, string &filename, bool autocorrelation)
+{
+	ifstream f(filename.c_str());
+	string headers;
+	getline(f, headers);
+	while(!f.eof())
+	{
+		RFIStatistics::TimeFrequencyInfo info;
+		f
+		>> info.time;
+		if(f.eof()) break;
+		f
+		>> info.centralFrequency
+		>> info.totalCount
+		>> info.rfiCount
+		>> info.totalAmplitude
+		>> info.rfiAmplitude;
+		statistics.Add(info, autocorrelation);
+	}
+}
+
 void fitGaus(RFIStatistics &statistics)
 {
 	const std::map<double, class RFIStatistics::AmplitudeBin> &amplitudes = statistics.GetCrossAmplitudes();
@@ -172,81 +236,93 @@ void fitGaus(RFIStatistics &statistics)
 	{
 		distribution.insert(std::pair<double, long unsigned>(i->first, i->second.featureAvgCount));
 	}
-	
-	// Find largest value
-	long unsigned max = distribution.begin()->second;
-	double ampOfMax = distribution.begin()->first;
-	for(std::map<double, long unsigned>::const_iterator i=distribution.begin();i!=distribution.end();++i)
+	if(!distribution.empty())
 	{
-		if(i->second > max) {
-			max = i->second;
-			ampOfMax = i->first;
-		}
-	}
-	std::cout << "Maximum occurring amplitude=" << ampOfMax << std::endl;
-	std::cout << "Count=" << max << std::endl;
-	double promileArea = 0.0;
-	double promileLimit = max / 1000.0;
-	double promileStart = 0.0, promileEnd;
-	long unsigned popSize = 0;
-	for(std::map<double, long unsigned>::const_iterator i=distribution.begin();i!=distribution.end();++i)
-	{
-		if(i->second > promileLimit) {
-			promileArea += i->second;
-			promileEnd = i->first;
-			if(promileStart == 0.0)
- 				promileStart = i->first;
-		}
-		popSize += i->second;
-	}
-	double halfPromileArea = promileArea / 2.0;
-	double mean = 0.0;
-	promileArea = 0.0;
-	for(std::map<double, long unsigned>::const_iterator i=distribution.begin();i!=distribution.end();++i)
-	{
-		if(i->second > promileLimit) {
-			promileArea += i->second;
-		}
-		if(promileArea > halfPromileArea)
+		// Find largest value
+		long unsigned max = distribution.begin()->second;
+		double ampOfMax = distribution.begin()->first;
+		for(std::map<double, long unsigned>::const_iterator i=distribution.begin();i!=distribution.end();++i)
 		{
-			mean = i->first;
-			break;
+			if(i->second > max) {
+				max = i->second;
+				ampOfMax = i->first;
+			}
 		}
-	}
-	std::cout << "Mean=" << mean << std::endl;
-	double halfStddevArea = 0.682689492137 * halfPromileArea;
-	double stddev = 0.0;
-	for(std::map<double, long unsigned>::const_reverse_iterator i=distribution.rbegin();i!=distribution.rend();++i)
-	{
-		if(i->first <= mean) {
-			halfStddevArea -= i->second;
-		}
-		if(halfStddevArea <= 0.0)
+		std::cout << "Maximum occurring amplitude=" << ampOfMax << std::endl;
+		std::cout << "Count=" << max << std::endl;
+		double promileArea = 0.0;
+		double promileLimit = max / 1000.0;
+		long unsigned popSize = 0;
+		for(std::map<double, long unsigned>::const_iterator i=distribution.begin();i!=distribution.end();++i)
 		{
-			stddev = i->first;
-			break;
+			if(i->second > promileLimit) {
+				promileArea += i->second;
+				//promileEnd = i->first;
+				//if(promileStart == 0.0)
+				//	promileStart = i->first;
+			}
+			popSize += i->second;
 		}
-	}
-	std::cout << "Stddev=" << stddev << std::endl;
+		double halfPromileArea = promileArea / 2.0;
+		double mean = 0.0;
+		promileArea = 0.0;
+		for(std::map<double, long unsigned>::const_iterator i=distribution.begin();i!=distribution.end();++i)
+		{
+			if(i->second > promileLimit) {
+				promileArea += i->second;
+			}
+			if(promileArea > halfPromileArea)
+			{
+				mean = i->first;
+				break;
+			}
+		}
+		std::cout << "Mean=" << mean << std::endl;
+		double halfStddevArea = 0.682689492137 * halfPromileArea;
+		double stddev = 0.0;
+					// Note: need a cast to const for older compilers
+		for(std::map<double, long unsigned>::const_reverse_iterator i=distribution.rbegin();i!=static_cast<const std::map<double, long unsigned> >(distribution).rend();++i)
+		{
+			if(i->first <= mean) {
+				halfStddevArea -= i->second;
+			}
+			if(halfStddevArea <= 0.0)
+			{
+				stddev = i->first;
+				break;
+			}
+		}
+		std::cout << "Stddev=" << stddev << std::endl;
 
-	ofstream f("fit.txt");
-	f
-	<< setprecision(15)
-	<< "Amplitude\tLogAmplitude\tCount\tCount\tGaussian\tGaussian\tRayleigh\tRayleigh\n";
-	for(std::map<double, long unsigned>::const_iterator i=distribution.begin();i!=distribution.end();++i)
-	{
-		if(i != distribution.begin())
+		ofstream f("fit.txt");
+		f
+		<< setprecision(15)
+		<< "Amplitude\tLogAmplitude\tCount\tCount\tGaussian\tGaussian\tRayleigh\tRayleigh\n";
+		for(std::map<double, long unsigned>::const_iterator i=distribution.begin();i!=distribution.end();++i)
 		{
-			double g = RNG::EvaluateGaussian(i->first - mean, stddev)*popSize;
-			double r = RNG::EvaluateRayleigh(i->first, mean)*popSize;
-			double binsize = i->first / 100.0;
-			g *= binsize;
-			r *= binsize;
-			f
-			<< i->first << '\t' << log10(i->first) << '\t'
-			<< i->second << '\t' << log10(i->second) << '\t'
-			<< g << '\t' << log10(g) << '\t' << r << '\t' << log10(r) << '\n';
+			if(i != distribution.begin())
+			{
+				double g = RNG::EvaluateGaussian(i->first - mean, stddev)*popSize;
+				double r = RNG::EvaluateRayleigh(i->first, mean)*popSize;
+				double binsize = i->first / 100.0;
+				g *= binsize;
+				r *= binsize;
+				f
+				<< i->first << '\t' << log10(i->first) << '\t'
+				<< i->second << '\t' << log10(i->second) << '\t'
+				<< g << '\t' << log10(g) << '\t' << r << '\t' << log10(r) << '\n';
+			}
 		}
+	}
+}
+
+void Save(NoiseStatisticsCollector &stats, const std::string baseName)
+{
+	if(!stats.Empty())
+	{
+		stats.SaveTA(baseName + "-ta.txt");
+		stats.SaveTF(baseName + "-tf.txt");
+		stats.SaveTimeAntennaPlot(baseName + "-plotdata.txt", baseName + "-timestation.plt");
 	}
 }
 
@@ -261,17 +337,47 @@ int main(int argc, char **argv)
 
 	if(argc == 1)
 	{
-		std::cerr << "Usage: " << argv[0] << " [files]" << std::endl;
+		std::cerr << "Usage: " << argv[0] << " [-c <N>] [-i] [files]" << std::endl;
 	}
 	else
 	{
+		int argStart = 1;
+		int channelCount = 256;
+		bool ignoreFirst = true;
+		std::string argString(argv[argStart]);
+		while(argString.size()>0 && argString[0]=='-')
+		{
+			if(argString == "-c")
+			{
+				argStart++;
+				channelCount = atoi(argv[argStart]);
+			}
+			else if(argString == "-i")
+				ignoreFirst = false;
+			else {
+				std::cerr << "Wrong option: " << argString << "\n";
+				exit(-1);
+			}
+			++argStart;
+			if(argStart < argc)
+				argString = argv[argStart];
+			else {
+				std::cerr << "No files specified\n";
+				exit(-1);
+			}
+		}
+
 		ofstream amplitudeSlopeFile("amplitudeSlopes.txt");
 		amplitudeSlopeFile << "0.01-0.1\t10-100\tcount\n";
 		std::map<double, double> frequencyFlags;
 		std::map<double, long unsigned> timeTotalCount, timeFlagsCount;
 		RFIStatistics statistics;
+		statistics.SetIgnoreFirstChannel(ignoreFirst);
+		statistics.SetChannelCountPerSubband(channelCount);
+		
+		NoiseStatisticsCollector noise0, noise1, noise2, noise4, noise8;
 
-		for(int i=1;i<argc;++i)
+		for(int i=argStart;i<argc;++i)
 		{
 			string filename = argv[i];
 			cout << "Reading " << filename << "..." << endl;
@@ -297,6 +403,14 @@ int main(int argc, char **argv)
 			}
 			else if(filename.find("counts-baselines.txt")!=string::npos)
 				readBaselines(statistics, filename);
+			else if(filename.find("counts-baseltime.txt")!=string::npos)
+				readBaselineTime(statistics, filename);
+			else if(filename.find("counts-baselfreq.txt")!=string::npos)
+				readBaselineFrequency(statistics, filename);
+			else if(filename.find("counts-timefreq-auto.txt")!=string::npos)
+				readTimeFrequency(statistics, filename, true);
+			else if(filename.find("counts-timefreq-cross.txt")!=string::npos)
+				readTimeFrequency(statistics, filename, false);
 			else if(filename.find("counts-subbands-auto.txt")!=string::npos)
 				; // skip
 			else if(filename.find("counts-subbands-cross.txt")!=string::npos)
@@ -305,7 +419,36 @@ int main(int argc, char **argv)
 				; // skip
 			else if(filename.find("counts-timeint-cross.txt")!=string::npos)
 				; // skip
-			else	
+			else if(filename.find("counts-obaselines.txt")!=string::npos)
+				; // skip
+			else if(filename.find("counts-stationstime.txt")!=string::npos)
+				; // skip
+			else if(filename.find("noise-statistics1-ta.txt")!=string::npos)
+				noise1.ReadTA(filename);
+			else if(filename.find("noise-statistics1-tf.txt")!=string::npos)
+				noise1.ReadTF(filename);
+			else if(filename.find("noise-statistics2-ta.txt")!=string::npos)
+				noise2.ReadTA(filename);
+			else if(filename.find("noise-statistics2-tf.txt")!=string::npos)
+				noise2.ReadTF(filename);
+			else if(filename.find("noise-statistics4-ta.txt")!=string::npos)
+				noise4.ReadTA(filename);
+			else if(filename.find("noise-statistics4-tf.txt")!=string::npos)
+				noise4.ReadTF(filename);
+			else if(filename.find("noise-statistics8-ta.txt")!=string::npos)
+				noise8.ReadTA(filename);
+			else if(filename.find("noise-statistics8-tf.txt")!=string::npos)
+				noise8.ReadTF(filename);
+			else if(filename.find("noise-statistics")!=string::npos)
+			{
+				if(filename.find("-ta.txt")!=string::npos)
+					noise0.ReadTA(filename);
+				else if(filename.find("-tf.txt")!=string::npos)
+					noise0.ReadTF(filename);
+				else
+					throw runtime_error("Could not determine type of noise file.");
+			}
+			else
 				throw runtime_error("Could not determine type of file.");
 		}
 		fitGaus(statistics);
@@ -321,5 +464,10 @@ int main(int argc, char **argv)
 		<< statistics.AmplitudeCrossSlope(0.01, 0.1) << "\n"
 		<< "Cross correlation slope fit between 10 and 100 amplitude: "
 		<< statistics.AmplitudeCrossSlope(10.0, 100.0) << "\n";
+		Save(noise0, "noise-statistics");
+		Save(noise1, "noise-statistics1");
+		Save(noise2, "noise-statistics2");
+		Save(noise4, "noise-statistics4");
+		Save(noise8, "noise-statistics8");
 	}
 }

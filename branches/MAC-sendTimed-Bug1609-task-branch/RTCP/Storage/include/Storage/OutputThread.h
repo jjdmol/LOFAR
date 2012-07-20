@@ -25,60 +25,57 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-#include <Common/Timer.h>
-#include <Interface/CN_ProcessingPlan.h>
-#include <Interface/MultiDimArray.h>
+#include <Interface/OutputTypes.h>
+#include <Interface/SmartPtr.h>
 #include <Interface/StreamableData.h>
-#include <Stream/FileStream.h>
-#include <Stream/Stream.h>
 #include <Storage/MSWriter.h>
-#include <Thread/Mutex.h>
-#include <Thread/Queue.h>
-#include <Thread/Semaphore.h>
-#include <Thread/Thread.h>
+#include <Stream/FileStream.h>
+#include <Common/Thread/Queue.h>
+#include <Common/Thread/Thread.h>
 
-#include <queue>
-#include <vector>
 #include <string>
+#include <vector>
+
 
 namespace LOFAR {
 namespace RTCP {
 
+
 class OutputThread
 {
   public:
-			    OutputThread(const Parset &, const ProcessingPlan::planlet &outputConfig, unsigned index, const std::string &dir, const std::string &filename, Queue<StreamableData *> &freeQueue, Queue<StreamableData *> &receiveQueue, bool isBigEndian);
-			    ~OutputThread();
+				     OutputThread(const Parset &, OutputType, unsigned streamNr, Queue<SmartPtr<StreamableData> > &freeQueue, Queue<SmartPtr<StreamableData> > &receiveQueue, const std::string &logPrefix, bool isBigEndian, const std::string &targetDirectory = "");
 
-    // report any writes that take longer than this (seconds)
-    static const float      reportWriteDelay = 0.05;
+    void			     start();
+
+    void			     createMS();
 
   private:
-    void                    writeLogMessage(unsigned sequenceNumber);
-    void                    flushSequenceNumbers();
-    void                    checkForDroppedData(StreamableData *data);
-    void		    mainLoop();
+    void			     flushSequenceNumbers();
+    void			     writeSequenceNumber(StreamableData *);
+    void			     checkForDroppedData(StreamableData *);
+    void			     doWork();
+    void			     cleanUp();
+    void			     mainLoop();
 
-    const std::string       itsLogPrefix;
+    const Parset		     &itsParset;
+    const OutputType		     itsOutputType;
+    const unsigned		     itsStreamNr;
+    const bool			     itsIsBigEndian;
+    const std::string		     itsLogPrefix;
+    const bool                       itsCheckFakeData;
+    const std::string                itsTargetDirectory;
 
-    const Parset            &itsParset;
-    const ProcessingPlan::planlet &itsOutputConfig;
+    Queue<SmartPtr<StreamableData> > &itsFreeQueue, &itsReceiveQueue;
 
-    Thread		    *itsThread;
-
-    const unsigned          itsOutputNumber;
-
-    const unsigned          itsObservationID;
-
-    MSWriter*               itsWriter;
-    unsigned                itsNextSequenceNumber;
-
-    Queue<StreamableData *> &itsFreeQueue, &itsReceiveQueue;
-
-    std::vector<unsigned>   itsSequenceNumbers;
-    FileStream              *itsSequenceNumbersFile;
-    bool                    itsHaveCaughtException;
+    unsigned		 	     itsBlocksWritten, itsBlocksDropped;
+    unsigned			     itsNextSequenceNumber;
+    std::vector<unsigned>	     itsSequenceNumbers;
+    SmartPtr<FileStream>	     itsSequenceNumbersFile;
+    SmartPtr<MSWriter>		     itsWriter;
+    SmartPtr<Thread>		     itsThread;
 };
+
 
 } // namespace RTCP
 } // namespace LOFAR

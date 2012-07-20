@@ -50,15 +50,19 @@ public:
     virtual ~ExprSet();
 
     // Return the number of expressions in the set.
-    virtual unsigned int size() const = 0;
+    virtual size_t size() const = 0;
 
     // Return the domain on which the expressions in the set are defined.
     virtual Box domain() const = 0;
 
-    // Get the set of parameters this set of expressions depends on.
+    // Return the set of parameters this set of expressions depends on.
     virtual ParmGroup parms() const = 0;
 
-    // Get the set of parameters for which partial derivatives will be computed.
+    // Return the total number of parameters.
+    virtual size_t nParms() const = 0;
+
+    // Return the set of parameters for which partial derivatives will be
+    // computed.
     virtual ParmGroup solvables() const = 0;
 
     // Set the parameters for which partial derivatives will be computed.

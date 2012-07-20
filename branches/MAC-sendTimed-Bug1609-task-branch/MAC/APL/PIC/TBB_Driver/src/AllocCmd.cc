@@ -88,6 +88,7 @@ void AllocCmd::sendTpEvent()
 			tp_event.status = 0;
 			if (getStatus(getBoardNr()) == TBB_SUCCESS) {
 				TS->boardPort(getBoardNr()).send(tp_event);
+				TS->setBoardUsed(getBoardNr());
 			}
 		} break;
 		
@@ -106,6 +107,7 @@ void AllocCmd::sendTpEvent()
 			// send cmd if no errors
 			if (getStatus(getBoardNr()) == TBB_SUCCESS) {
 				TS->boardPort(getBoardNr()).send(tp_event);
+				TS->setBoardUsed(getBoardNr());
 				LOG_DEBUG_STR(formatString("Sending Alloc to boardnr[%d], channel[%d]",getBoardNr(),getChannelNr()));
 			}
 		} break;

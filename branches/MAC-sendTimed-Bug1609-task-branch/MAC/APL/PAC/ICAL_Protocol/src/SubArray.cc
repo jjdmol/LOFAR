@@ -23,18 +23,17 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-
-#include <APL/ICAL_Protocol/SubArray.h>
 #include <Common/StringUtil.h>
 #include <Common/hexdump.h>
+#include <ApplCommon/AntennaSets.h>
+
 #include <MACIO/Marshalling.h>
 #include <APL/RTCCommon/MarshallBlitz.h>
-#include <APL/APLCommon/AntennaSets.h>
+#include <APL/ICAL_Protocol/SubArray.h>
 
 namespace LOFAR {
   namespace ICAL {
 	using namespace blitz;
-	using namespace APLCommon;
 
 // forward declaration
 class CalibrationInterface;

@@ -66,6 +66,7 @@ public:
 					
 	void setTpCmd(Command *cmd);
 	bool tpCmdDone();
+	GCFPortInterface* getClientPort() { return(itsClientPort); }
 private:
 	TbbSettings* TS;
 	bool itsFlashMode;
@@ -74,6 +75,7 @@ private:
 	GCFPortInterface* itsClientPort; // return port of the actual commmand
 	Command* itsCmd; // command to use
 	GCFTimerPort* itsSleepTimer;
+	bool itsCmdDone;
 };
 
 	} // end TBB namespace

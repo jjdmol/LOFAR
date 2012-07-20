@@ -11,8 +11,6 @@ PANEL,-1 -1 1000 735 N "_3DFace" 0
   syst   = dpSubStr(baseDP,DPSUB_SYS);
    
   reload(); 
-  // set the process selectable items
-  MainCU_Processes_initList();  
 }
 
 //
@@ -43,11 +41,6 @@ void reload() {
   // set the observation selectable items
   MainCU_Processes_initList();
 
-  // set panel to ready
-  g_objectReady=true;
-  
-  // trigger that the panel values are calculated and ready
-  navPanel_setEvent(\"MainCU_Processes.pnl\",\"Update\");
 }
 
 " 0
@@ -391,7 +384,7 @@ LAYER, 7
 LANG:1 0 
 0
 3 12 "PANEL_REF13"
-"objects\\Processes\\ObsSW_Main.pnl" 75 402 T 15 1 0 1 -65 -70
+"objects\\Processes\\ObsSW_Main.pnl" 75 402 T 15 1 0 1 -69 -110
 0
 3 13 "PANEL_REF14"
 "objects\\Processes\\daemon_small.pnl" 0 40 T 16 1 0 1 0 -8

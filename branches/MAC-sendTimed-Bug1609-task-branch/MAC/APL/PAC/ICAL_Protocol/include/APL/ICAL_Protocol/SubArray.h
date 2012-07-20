@@ -29,7 +29,7 @@
 #include <Common/lofar_map.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_bitset.h>
-#include <Common/LofarConstants.h>
+#include <ApplCommon/StationDatatypes.h>
 
 #include <APL/ICAL_Protocol/SpectralWindow.h>
 #include <APL/ICAL_Protocol/AntennaGains.h>

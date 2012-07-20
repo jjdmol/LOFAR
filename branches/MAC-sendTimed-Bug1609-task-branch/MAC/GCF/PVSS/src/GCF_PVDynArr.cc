@@ -205,6 +205,33 @@ void GCFPVDynArr::cleanup()
 	}
 	_values.clear();	// clear pointer vector.
 }
+
+//
+// operator==()
+//
+bool GCFPVDynArr::operator==(const GCFPValue& that) const
+{
+	if (that.getType() != getType()) {
+		return (false);
+	}
+
+	int	thisSize(_values.size());
+	int thatSize(((GCFPVDynArr&)(that)).getValue().size());
+	if (thisSize != thatSize) {
+		return (false);
+	}
+
+    GCFPValueArray 	thatValues = ((GCFPVDynArr&)(that)).getValue();
+
+	for (int element = 0; element < thisSize; element++) {
+		if (_values[element]->getValueAsString() != thatValues[element]->getValueAsString()) {
+			return (false);
+		}
+	}
+
+	return (true);
+}
+
   } // namespace Common
  } // namespace GCF
 } // namespace LOFAR

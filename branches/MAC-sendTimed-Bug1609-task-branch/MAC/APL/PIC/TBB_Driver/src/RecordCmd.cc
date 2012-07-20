@@ -94,6 +94,7 @@ void RecordCmd::sendTpEvent()
 			
 	if (getStatus(getBoardNr()) == TBB_SUCCESS) {
 		TS->boardPort(getBoardNr()).send(tp_event);
+		TS->setBoardUsed(getBoardNr());
 		TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 		LOG_DEBUG_STR(formatString("Sending RecordCmd to boardnr[%d], channel[%08X]", getBoardNr(), tp_event.channel));
 	} else {

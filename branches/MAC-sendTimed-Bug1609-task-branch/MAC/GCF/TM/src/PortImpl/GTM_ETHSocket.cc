@@ -83,7 +83,7 @@ ssize_t GTMETHSocket::send(void* buf, size_t count)
 
   ssize_t written = -1;
   do {
-    written = sendto(_fd, 
+    written = ::sendto(_fd, 
 		     _sendPacket,
 		     newcount + sizeof(struct ethhdr), 0,
 		     (struct sockaddr*)&_sockaddr,
@@ -171,7 +171,7 @@ int GTMETHSocket::open(const char* ifname,
     strncpy(ifr.ifr_name, ifname, IFNAMSIZ-1);
     if (ioctl(socketFD, SIOCGIFHWADDR, &ifr) < 0) {
       LOG_FATAL(LOFAR::formatString ( "ioctl(SIOCGIFHWADDR): %s", strerror(errno)));
-      close();
+      ::close(socketFD);
       return -1;
     }
   
@@ -181,7 +181,7 @@ int GTMETHSocket::open(const char* ifname,
     // print MAC addres for source
     for (int i = 0; i < ETH_ALEN; i++) {
       hx = ifr.ifr_hwaddr.sa_data[i] & 0xff;
-      sprintf(macPart, "%02x", hx);
+      snprintf(macPart, sizeof macPart, "%02x", hx);
       macAddress += macPart;
       if (i < ETH_ALEN - 1) 
 		macAddress += ':';
@@ -199,7 +199,7 @@ int GTMETHSocket::open(const char* ifname,
     filter.filter = mac_filter_insn;
     if (setsockopt(socketFD, SOL_SOCKET, SO_ATTACH_FILTER, &filter, sizeof(struct sock_fprog)) < 0) {
       LOG_ERROR("setsockopt(SO_ATTACH_FILTER) failed");
-      close();
+      ::close(socketFD);
       return -1;
     }
   
@@ -207,7 +207,7 @@ int GTMETHSocket::open(const char* ifname,
     macAddress = "";
     for (int i = 0; i < ETH_ALEN; i++) {
       hx = destMac[i] & 0xff;
-      sprintf(macPart, "%02x", hx);
+      snprintf(macPart, sizeof macPart, "%02x", hx);
       macAddress += macPart;
       if (i < ETH_ALEN - 1) 
 	    macAddress += ':';
@@ -224,7 +224,7 @@ int GTMETHSocket::open(const char* ifname,
     strncpy(ifr.ifr_name, ifname, IFNAMSIZ-1);
     if (ioctl(socketFD, SIOCGIFINDEX, &ifr) < 0) {
       LOG_FATAL(LOFAR::formatString ( "ioctl(SIOCGIFINDEX)"));
-      close();
+      ::close(socketFD);
       return -1;
     }
     int ifindex = ifr.ifr_ifindex;
@@ -239,7 +239,7 @@ int GTMETHSocket::open(const char* ifname,
     _sockaddr.sll_hatype = ARPHRD_ETHER;
     if (bind(socketFD, (struct sockaddr*)&_sockaddr, sizeof(struct sockaddr_ll)) < 0) {
         LOG_FATAL(LOFAR::formatString ( "GCFETHRawPort::open; bind : %s", strerror(errno)));
-        close();
+        ::close(socketFD);
         return -1;
     }
   

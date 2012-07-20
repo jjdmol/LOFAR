@@ -60,16 +60,40 @@ class UVImager {
 
 		/**
 		 * This function calculates the uv position, but it's not optimized for speed, so it's not to be used in an imager.
-		 * @param u the u position (in the uv-plane domain)
-		 * @param v the v position (in the uv-plane domain)
-		 * @param baseline information about the baseline
-		 * @param time the time to calculate the u,v position for
+		 * @param [out] u the u position (in the uv-plane domain)
+		 * @param [out] v the v position (in the uv-plane domain)
+		 * @param [in] timeIndex the time index to calculate the u,v position for
+		 * @param [in] frequencyIndex the frequency index to calculate the u,v position for
+		 * @param [in] metaData information about the baseline
 		 */
 		static void GetUVPosition(num_t &u, num_t &v, size_t timeIndex, size_t frequencyIndex, TimeFrequencyMetaDataCPtr metaData);
 
 		static num_t GetFringeStopFrequency(size_t time, const Baseline &baseline, num_t delayDirectionRA, num_t delayDirectionDec, num_t frequency, TimeFrequencyMetaDataCPtr metaData);
 		//static double GetFringeCount(long double timeStart, long double timeEnd, const Baseline &baseline, long double delayDirectionRA, long double delayDirectionDec, long double frequency);
 		static num_t GetFringeCount(size_t timeIndexStart, size_t timeIndexEnd, unsigned channelIndex, TimeFrequencyMetaDataCPtr metaData);
+		
+		static numl_t GetWPosition(numl_t delayDirectionDec, numl_t delayDirectionRA, numl_t frequency, numl_t earthLattitudeAngle, numl_t dx, numl_t dy)
+		{
+			numl_t wavelength = 299792458.0L / frequency;
+			numl_t raSinEnd = sinn(-delayDirectionRA - earthLattitudeAngle);
+			numl_t raCosEnd = cosn(-delayDirectionRA - earthLattitudeAngle);
+			numl_t decCos = cosn(delayDirectionDec);
+			// term "+ dz * decCos" is eliminated because of subtraction
+			num_t wPosition =
+				(dx*raCosEnd - dy*raSinEnd) * (-decCos) / wavelength;
+			return wPosition;
+		}
+		
+		static numl_t TimeToEarthLattitude(unsigned x, TimeFrequencyMetaDataCPtr metaData)
+		{
+			return TimeToEarthLattitude(metaData->ObservationTimes()[x]);
+		}
+		
+		static numl_t TimeToEarthLattitude(double time)
+		{
+			return time*M_PInl/(12.0*60.0*60.0);
+		}
+		
 		void Empty();
 		void PerformFFT();
 		bool HasUV() const { return _uvReal != 0; }
@@ -94,6 +118,43 @@ class UVImager {
 		static long double SpeedOfLight()
 		{
 			return 299792458.0L;
+		}
+		numl_t ImageDistanceToDecRaDistance(numl_t imageDistance) const
+		{
+			return imageDistance * _uvScaling;
+		}
+		static numl_t AverageUVDistance(TimeFrequencyMetaDataCPtr metaData, const double frequencyHz)
+		{
+			const std::vector<UVW> &uvw = metaData->UVW();
+			numl_t avgDist = 0.0;
+			for(std::vector<UVW>::const_iterator i=uvw.begin();i!=uvw.end();++i)
+			{
+				numl_t dist = i->u*i->u + i->v*i->v;
+				avgDist += sqrtnl(dist);
+			}
+			return avgDist * frequencyHz / (SpeedOfLight() * (numl_t) uvw.size());
+		}
+		static numl_t UVTrackLength(TimeFrequencyMetaDataCPtr metaData, const double frequencyHz)
+		{
+			const std::vector<UVW> &uvw = metaData->UVW();
+			numl_t length = 0.0;
+			std::vector<UVW>::const_iterator i=uvw.begin();
+			if(i == uvw.end()) return 0.0;
+			while((i+1)!=uvw.end())
+			{
+				std::vector<UVW>::const_iterator n=i;
+				++n;
+				const numl_t
+					du = n->u - i->u,
+					dv = n->v - i->v;
+				length += sqrtnl(du*du + dv*dv);
+				i=n;
+			}
+			return length * frequencyHz / SpeedOfLight();
+		}
+		numl_t ImageDistanceToFringeSpeedInSamples(numl_t imageDistance, double frequencyHz, TimeFrequencyMetaDataCPtr metaData) const
+		{
+			return ImageDistanceToDecRaDistance(imageDistance) * AverageUVDistance(metaData, frequencyHz) / (0.5 * (numl_t) metaData->UVW().size());
 		}
 	private:
 		void Clear();

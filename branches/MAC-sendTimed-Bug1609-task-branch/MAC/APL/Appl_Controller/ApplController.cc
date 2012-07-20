@@ -63,7 +63,8 @@ ApplController::ApplController(const string&	configID) :
 	itsIsRunning     (false),
 	itsStateEngine   (new StateEngine),
 	itsCurState      (StateNone),
-	itsCurACMsg		 (0)
+	itsCurACMsg		 (0),
+	itsNrOfProcs	 (0)
 {
 	LOG_TRACE_OBJ ("ApplController constructor");
 
@@ -297,8 +298,6 @@ void ApplController::createParSubsets()
 		// The startstopType determines what information is put in the parsetfiles
 		// for the processes.
 		string startstopType = itsObsParamSet->getString(procPrefix+"._startstopType");
-		string fileName 	 = string(LOFAR_SHARE_LOCATION) + "/" + procName + ".parset";
-
 		LOG_DEBUG_STR("Creating parameterfile for process " << procName);
 
 		// [A] Get the default parameters ( procName[0].* ) when procname changes
@@ -316,6 +315,8 @@ void ApplController::createParSubsets()
 			basePS.replace("_parsetPrefix", procPrefix+".");
 			prevProcName = procName;
 		}
+
+		string fileName 	 = formatString("%s/%s-%s.parset", LOFAR_SHARE_LOCATION, procName.c_str(), basePS.getString("Observation.ObsID").c_str());
 
 		// --- cmdline ---
 		if (startstopType == "cmdline") {
@@ -354,7 +355,7 @@ void ApplController::createParSubsets()
 					// copy the default PS and give it a new prefix
 //					myPS.adoptCollection(itsObsParamSet->makeSubset(procPrefix+".",
 //																	procPrefix+"."));
-					fileName  = string(LOFAR_SHARE_LOCATION) + "/" + pName + ".parset";
+					fileName  = formatString("%s/%s-%s.parset", LOFAR_SHARE_LOCATION, pName.c_str(), basePS.getString("Observation.ObsID").c_str());
 					writeParSubset(myPS, pName, fileName);
 
 					// note: nodes[] may be smaller than nrProcs. by taking the remainder
@@ -392,15 +393,14 @@ void ApplController::createParSubsets()
 			// This processSet is a BG/L job
 			LOG_TRACE_COND_STR("bgl process " << procName);
 			itsProcRuler.add(PR_BGL(procName,				    
-									basePS.getString("OLAP.CNProc.partition"),
 									basePS.getString(procPrefix + "._executable"),
 									basePS.getString(procPrefix + ".workingdir"),
                                                                         basePS.getString("Observation.ObsID"),
 									fileName, 
 									nrProcs));
 			writeParSubset(basePS, procName, fileName);
-			// CN processes do not connect to the ApplController.
-			itsNrOfProcs -= nrProcs ? nrProcs : 1;
+			// CN processes do now connect to the ApplController.
+			//itsNrOfProcs -= nrProcs ? nrProcs : 1;
 		}
 	} // for processes
 }
@@ -453,16 +453,16 @@ void ApplController::sendToKVLogger(ParameterSet&	aResultPS)
 	ParameterSet::iterator	end  = aResultPS.end();
 	KVTSendMsgPoolEvent		poolEvent;
 	poolEvent.seqnr = 1;
-	poolEvent.msgCount = 0;
+	poolEvent.nrElements = 0;
 	while (iter != end) {
-		poolEvent.keys.theVector.push_back(iter->first);
-		poolEvent.values.theVector.push_back(iter->second);
-		poolEvent.msgCount++;
+		poolEvent.keys().push_back(iter->first);
+		poolEvent.values().push_back(iter->second);
+		poolEvent.nrElements++;
 		iter++;
 	}
 
 	// empty PS?
-	if (!poolEvent.msgCount) {
+	if (!poolEvent.nrElements) {
 		return;
 	}
 

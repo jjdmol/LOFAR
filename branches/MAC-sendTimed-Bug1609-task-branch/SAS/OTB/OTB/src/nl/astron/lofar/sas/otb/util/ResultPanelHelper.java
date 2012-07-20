@@ -71,12 +71,12 @@ public class ResultPanelHelper {
         itsPanelMap.put("*",itsVector);
 
         //ParmDB
-//        itsVector = new Vector<String>();
-//        itsVector.add("nl.astron.lofar.sas.otbcomponents.ParmDBConfigPanel");
-//        itsPanelMap.put("ParmDB",itsVector);
-//        itsVector = new Vector<String>();
-//        itsVector.add("nl.astron.lofar.sas.otbcomponents.ParmDBPlotPanel");
-//        itsPanelMap.put("ParmDBValues",itsVector);
+        itsVector = new Vector<String>();
+        itsVector.add("nl.astron.lofar.sas.otbcomponents.ParmDBConfigPanel");
+        itsPanelMap.put("ParmDB",itsVector);
+        itsVector = new Vector<String>();
+        itsVector.add("nl.astron.lofar.sas.otbcomponents.ParmDBPlotPanel");
+        itsPanelMap.put("ParmDBValues",itsVector);
         
         // Observation
         itsVector = new Vector<String>();
@@ -97,24 +97,27 @@ public class ResultPanelHelper {
         addParSetAndLogPanels();
 
         //Imager
-//        itsVector = new Vector<String>();
-//        itsVector.add("nl.astron.lofar.sas.otbcomponents.userpanels.ImagerPanel");
-//        itsPanelMap.put("Imager",itsVector);
-//        addParSetAndLogPanels();
+        itsVector = new Vector<String>();
+        itsVector.add("nl.astron.lofar.sas.otbcomponents.userpanels.ImagerPanel");
+        itsPanelMap.put("Imager",itsVector);
+        addParSetAndLogPanels();
     }
     
     
     private void addBasePanels() {
         //generic node panel
         itsVector.add("nl.astron.lofar.sas.otbcomponents.NodeViewPanel");
-        //generic parameter panel
+        //generic parameter & meta data panel
         itsVector.add("nl.astron.lofar.sas.otbcomponents.ParameterViewPanel");
         addParSetAndLogPanels();
+        //generic parameter including Metadata panel
     }
     
     private void addParSetAndLogPanels() {
         //generic parset view panel
         itsVector.add("nl.astron.lofar.sas.otbcomponents.ParSetViewPanel");
+        //parset+ metadata view panel
+        itsVector.add("nl.astron.lofar.sas.otbcomponents.ParSetMetaViewPanel");
         //generic logging panel
         itsVector.add("nl.astron.lofar.sas.otbcomponents.LogParamPanel");
     }

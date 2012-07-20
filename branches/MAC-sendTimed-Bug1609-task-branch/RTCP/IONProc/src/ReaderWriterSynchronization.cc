@@ -82,6 +82,10 @@ void SynchronizedReaderAndWriter::noMoreReading()
 }
 
 
+void SynchronizedReaderAndWriter::noMoreWriting()
+{
+  itsWritePointer.advanceTo(TimeStamp(0x7FFFFFFFFFFFFFFFLL));
+}
 
 
 TimeSynchronizedReader::TimeSynchronizedReader(unsigned maximumNetworkLatency)

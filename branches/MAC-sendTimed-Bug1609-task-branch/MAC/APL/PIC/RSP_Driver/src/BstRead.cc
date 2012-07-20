@@ -119,9 +119,7 @@ GCFEvent::TResult BstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
   }
 
   Array<uint32, 2> stats((uint32*)&ack.stat,
-			 shape((MEPHeader::BST_POWER_SIZE / sizeof(uint32)) / MEPHeader::N_POL,
-			       MEPHeader::N_POL),
-			 neverDeleteData);
+			 shape((MEPHeader::BST_POWER_SIZE / sizeof(uint32)) / N_POL, N_POL), neverDeleteData);
 
   Array<double, 2>& cache(Cache::getInstance().getBack().getBeamletStats()());
 

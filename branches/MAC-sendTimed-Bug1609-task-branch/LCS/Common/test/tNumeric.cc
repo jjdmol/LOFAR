@@ -38,7 +38,7 @@ using namespace std;
   LOG_INFO("initNumbers("#T")");                                     \
   typedef Numeric::T##Mask_t mask_t;                                 \
   typedef Numeric::T##Union_t union_t;                               \
-  mask_t negmask = mask_t(1) << 8*sizeof(T)-1;                       \
+  mask_t negmask = mask_t(1) << (8*sizeof(T)-1);                     \
   ASSERT(sizeof(T) == sizeof(mask_t));				     \
   T zero(0), one(1), two(2);                                         \
   /* Create a negative zero                              */          \
@@ -78,32 +78,30 @@ using namespace std;
   smallestDenormal_u.mask += 1;                                      \
   T smallestDenormal(smallestDenormal_u.value);
 
-#define printNumber(os, x)                                           \
+#define printNumber(x)                                               \
 { int p(2*sizeof(x)+1);                                              \
   union_t u = { x };                                                 \
-  /* test output verification requires NaNs to be signed, */         \
-  /* even though the sign of NaN is platform dependent. */           \
-  if (Numeric::isNan(x)) u.mask |= negmask;                          \
-  os << setprecision(p) << left << setw(17) << #x << " = "           \
-     << setw(p+6) << x << " (" << hex << showbase << setw(p+1)       \
-     << u.mask << dec << ")" << endl;                                \
+  LOG_DEBUG_STR(setprecision(p) << left << setw(17) << #x << " = "   \
+                << setw(p+6) << x << " (" << hex << showbase         \
+                << setw(p+1) << u.mask << dec << ")");               \
 }
+
 #define showNumbers(T)                                               \
 { LOG_INFO("showNumbers("#T")");                                     \
-  printNumber(cout, zero);                                           \
-  printNumber(cout, one);                                            \
-  printNumber(cout, two);                                            \
-  printNumber(cout, negativeZero);                                   \
-  printNumber(cout, nan);                                            \
-  printNumber(cout, nan1);                                           \
-  printNumber(cout, nan2);                                           \
-  printNumber(cout, nan3);                                           \
-  printNumber(cout, nan4);                                           \
-  printNumber(cout, nan5);                                           \
-  printNumber(cout, nearestTwo);                                     \
-  printNumber(cout, nearTwo);                                        \
-  printNumber(cout, notNearTwo);                                     \
-  printNumber(cout, smallestDenormal);                               \
+  printNumber(zero);                                                 \
+  printNumber(one);                                                  \
+  printNumber(two);                                                  \
+  printNumber(negativeZero);                                         \
+  printNumber(nan);                                                  \
+  printNumber(nan1);                                                 \
+  printNumber(nan2);                                                 \
+  printNumber(nan3);                                                 \
+  printNumber(nan4);                                                 \
+  printNumber(nan5);                                                 \
+  printNumber(nearestTwo);                                           \
+  printNumber(nearTwo);                                              \
+  printNumber(notNearTwo);                                           \
+  printNumber(smallestDenormal);                                     \
 }
 
 #define testNegative(T)                                              \
@@ -209,7 +207,7 @@ using namespace std;
   /* Test wrapping from inf to -inf; maxUlps is larger than mantissa.   */ \
   /* I.e. maxUlps = 1 << 23 for floats, and 1 << 52 for doubles;        */ \
   /* or as formula: maxUlps = 1 << 8*(sizeof(T)-1)-(2*sizeof(T)/3)+1    */ \
-  mask_t maxUlps = (mask_t)1 << 8*(sizeof(T)-1)-(2*sizeof(T)/3)+1;         \
+  mask_t maxUlps = (mask_t)1 << (8*(sizeof(T)-1)-(2*sizeof(T)/3)+1);       \
   LOG_DEBUG_STR("maxUlps = " << hex << showbase << maxUlps);               \
   ASSERT(!Numeric::compare(inf, -inf, maxUlps));                           \
                                                                            \

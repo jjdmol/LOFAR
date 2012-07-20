@@ -6,12 +6,12 @@ set(inst_HEADERS
   BeamCoordinates.h
   BeamFormedData.h
   CN_Command.h
-  CN_Configuration.h
   CN_Mapping.h
   Stream.h
   CorrelatedData.h
   Config.h
   FilteredData.h
+  FakeData.h
   MultiDimArray.h
   Parset.h
   SubbandMetaData.h
@@ -20,10 +20,6 @@ set(inst_HEADERS
   SparseSet.h
   Exceptions.h
   StreamableData.h
-  StokesData.h
-  ProcessingPlan.h
-  CN_ProcessingPlan.h
-  BFRawFormat.h
   TransposedData.h
   TriggerData.h
   InverseFilteredData.h

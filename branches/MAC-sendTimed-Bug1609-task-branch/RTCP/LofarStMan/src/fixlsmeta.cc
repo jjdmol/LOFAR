@@ -22,20 +22,26 @@
 #include <lofar_config.h>
 #include <LofarStMan/LofarStMan.h>
 #include <Common/LofarLogger.h>
+#include <Common/Exception.h>
 #include <casa/IO/AipsIO.h>
 #include <casa/Containers/BlockIO.h>
+#include <casa/Quanta/MVTime.h>
+#include <casa/Quanta/Quantum.h>
 #include <casa/Inputs/Input.h>
 #include <casa/iostream.h>
 
 using namespace casa;
 using namespace LOFAR;
 
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
+
 int main (int argc, char* argv[])
 {
   try {
     Input inputs(1);
     // Define the input keywords
-    inputs.version("20100401GvD");
+    inputs.version("201020515GvD");
     inputs.create ("ms", "",
 		   "Name of input MS",
 		   "string");
@@ -45,6 +51,9 @@ int main (int argc, char* argv[])
     inputs.create ("timemultiplier", "1",
 		   "Factor to multiply the time interval with",
 		   "float");
+    inputs.create ("starttime", "",
+                   "New start time like 2-Mar-2012/07:34:12.52"
+                   "string");
     // Fill the input value from the command line.
     inputs.readArguments (argc, argv);
 
@@ -53,9 +62,9 @@ int main (int argc, char* argv[])
     if (msin == "") {
       throw AipsError(" an input MS must be given");
     }
-    // Get the time divisor.
     double timeDivisor (inputs.getDouble("timedivisor"));
     double timeMultiplier (inputs.getDouble("timemultiplier"));
+    string startStr (inputs.getString("starttime"));
 
     Bool asBigEndian;
     uInt alignment;
@@ -65,9 +74,10 @@ int main (int argc, char* argv[])
     double timeIntv;
     uint32 nChan;
     uint32 nPol;
+    uint32 nBytesPerNrValidSamples=2;
     double maxNrSample;
-    int version
-;    {
+    int version;
+    {
       // Open and read the meta file.
       AipsIO aio(msin + "/table.f0meta");
       version = aio.getstart ("LofarStMan");
@@ -75,24 +85,44 @@ int main (int argc, char* argv[])
                  "fixlsmeta can only handle up to version 3");
       aio >> ant1 >> ant2 >> startTime >> timeIntv >> nChan
           >> nPol >> maxNrSample >> alignment >> asBigEndian;
+      if (version > 1) {
+        aio >> nBytesPerNrValidSamples;
+      }
       aio.getend();
     }
     // Fix the interval.
-    cout << "time interval changed from " << timeIntv << " to ";
-    timeIntv /= timeDivisor;
-    timeIntv *= timeMultiplier;
-    cout <<timeIntv << endl;
+    if (timeDivisor != 1  &&  timeMultiplier != 1) {
+      cout << "time interval changed from " << timeIntv << " to ";
+      timeIntv /= timeDivisor;
+      timeIntv *= timeMultiplier;
+      cout <<timeIntv << endl;
+    }
+    // Fix the start time.
+    if (!startStr.empty()) {
+      Quantity q;
+      ASSERTSTR (MVTime::read(q, startStr, True),
+                 startStr << " is an invalid date/time");
+      cout << "start time changed from " << startTime << " to ";
+      startTime = q.getValue("s");
+      cout <<startTime << endl;
+    }
     {
       // Create and write the meta file.
       AipsIO aio(msin + "/table.f0meta", ByteIO::New);
-      version = aio.putstart ("LofarStMan", version);
+      aio.putstart ("LofarStMan", version);
       aio << ant1 << ant2 << startTime << timeIntv << nChan
           << nPol << maxNrSample << alignment << asBigEndian;
+      if (version > 1) {
+        aio << nBytesPerNrValidSamples;
+      }
       aio.putend();
     }
-
-  } catch (AipsError x) {
-    cout << "Caught an exception: " << x.getMesg() << endl;
+ 
+  } catch (Exception& ex) {
+    cerr << "Caught a LOFAR exception: " << ex << endl;
+    return 1;
+  } catch (AipsError& x) {
+    cerr << "Caught an AIPS error: " << x.getMesg() << endl;
     return 1;
   } 
   return 0;                           // exit with success status

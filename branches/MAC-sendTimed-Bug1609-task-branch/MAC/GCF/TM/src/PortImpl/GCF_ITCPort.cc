@@ -134,19 +134,26 @@ GCFEvent::TResult GCFITCPort::dispatch(GCFEvent& event)
 	LOG_TRACE_CALC_STR("GCFITCPort::dispatch");
 	GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
 
+	// when event is a timer event it might be one of my own events
 	if (event.signal == F_TIMER) {
 		GCFTimerEvent& timerEvent=static_cast<GCFTimerEvent&>(event);
 
+		// its a timer event, try to find it
 		set<long>::iterator clientIt = itsToSlaveTimerId.find(timerEvent.id);
 		set<long>::iterator serverIt = itsToContainerTimerId.find(timerEvent.id);
 
+		// timer event of my own?
 		if (clientIt != itsToSlaveTimerId.end() || serverIt != itsToContainerTimerId.end()) {
 			GCFEvent* pActualEvent = (GCFEvent*)timerEvent.userPtr;
 			if (pActualEvent!=0) {
 				// client timer expired? dispatch to slave
 				if (clientIt != itsToSlaveTimerId.end()) {
-					LOG_TRACE_CALC(formatString("GCFITCPort::dispatch calling clientTask.doEvent, event@%08X", pActualEvent));
+					LOG_TRACE_CALC(formatString("GCFITCPort::dispatch:Calling clientTask.doEvent, event@%08X", pActualEvent));
 					status = itsSlaveTask.doEvent(*pActualEvent, *this);
+					if (status == GCFEvent::NEXT_STATE) {
+						LOG_TRACE_STAT_STR("GCFITCPort::dispatch:Task returned NEXT_STATE, queing " << eventName(*pActualEvent));
+						itsSlaveTask.queueTaskEvent(*pActualEvent, *this);
+					}
 					// extra check to see if it still exists:
 					clientIt = itsToSlaveTimerId.find(timerEvent.id);
 					if (clientIt != itsToSlaveTimerId.end()) {
@@ -155,21 +162,26 @@ GCFEvent::TResult GCFITCPort::dispatch(GCFEvent& event)
 				}
 				// server timer expired? dispatch to server
 				else if (serverIt != itsToContainerTimerId.end()) {
-					LOG_TRACE_CALC(formatString("GCFITCPort::dispatch calling serverTask.doEvent, event@%08X", pActualEvent));
+					LOG_TRACE_CALC(formatString("GCFITCPort::dispatch:Calling serverTask.doEvent, event@%08X", pActualEvent));
 					LOG_TRACE_CALC_STR("event = " << *pActualEvent);
 					status = _pTask->doEvent(*pActualEvent, *this);
+					if (status == GCFEvent::NEXT_STATE) {
+						LOG_TRACE_STAT_STR("GCFITCPort::dispatch:Task returned NEXT_STATE, queing " << eventName(*pActualEvent));
+						_pTask->queueTaskEvent(*pActualEvent, *this);
+					}
 					// extra check to see if it still exists:
 					serverIt = itsToContainerTimerId.find(timerEvent.id);
 					if (serverIt != itsToContainerTimerId.end()) {
 						itsToContainerTimerId.erase(serverIt);
 					}
 				}        
-				LOG_TRACE_CALC(formatString("GCFITCPort::dispatch deleting event attached to timer (%08X)", pActualEvent));
+				LOG_TRACE_CALC(formatString("GCFITCPort::dispatch:Deleting event attached to timer (%08X)", pActualEvent));
 				delete pActualEvent;	// delete the buffer tied to the timer.
-				LOG_TRACE_CALC("GCFITCPort::dispatch event deleted");
-			}
-		}
-	}
+				LOG_TRACE_CALC("GCFITCPort::dispatch attached event deleted");
+			} // with attached event
+			return (GCFEvent::HANDLED);
+		} // my timer
+	} // signal == F_TIMER
 
 	if (status == GCFEvent::NOT_HANDLED) {
 		status = GCFRawPort::dispatch(event);

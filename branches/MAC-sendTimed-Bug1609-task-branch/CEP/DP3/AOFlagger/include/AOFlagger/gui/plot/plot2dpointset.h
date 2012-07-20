@@ -32,65 +32,82 @@
 */
 class Plot2DPointSet{
 	public:
-		Plot2DPointSet() { }
+		Plot2DPointSet() :
+			_rotateUnits(false)
+		{ }
 		~Plot2DPointSet() { }
+		
+		enum DrawingStyle { DrawLines, DrawPoints, DrawColumns };
 
 		void SetLabel(const std::string &label) { _label = label; }
 		const std::string &Label() const { return _label; }
+		
+		void SetXIsTime(const bool xIsTime) { _xIsTime = xIsTime; }
+		bool XIsTime() const { return _xIsTime; }
+		
+		const std::string XUnits() const { return _xDesc; }
+		const std::string YUnits() const { return _yDesc; }
 
-		const std::string &YUnits() const { return _yUnits; }
-		void SetYUnits(std::string yUnits) { _yUnits = yUnits; }
+		const std::string &XDesc() const { return _xDesc; }
+		void SetXDesc(std::string xDesc) { _xDesc = xDesc; }
 
-		void PushDataPoint(num_t x, num_t y)
+		const std::string &YDesc() const { return _yDesc; }
+		void SetYDesc(std::string yDesc) { _yDesc = yDesc; }
+
+		enum DrawingStyle DrawingStyle() const { return _drawingStyle; }
+		void SetDrawingStyle(enum DrawingStyle drawingStyle) { _drawingStyle = drawingStyle; }
+
+		void Clear()
+		{
+			_points.clear();
+		}
+
+		void PushDataPoint(double x, double y)
 		{
 			_points.push_back(Point2D(x,y));
 		}
-		num_t GetX(size_t index) const { return _points[index].x; }
-		num_t GetY(size_t index) const { return _points[index].y; }
+		double GetX(size_t index) const { return _points[index].x; }
+		double GetY(size_t index) const { return _points[index].y; }
 		size_t Size() const { return _points.size(); }
 
-		num_t MaxX() const
+		double MaxX() const
 		{
 			if(_points.empty())
-				return std::numeric_limits<num_t>::quiet_NaN();
-			std::vector<Point2D>::const_iterator i = _points.begin();
-			num_t max = std::numeric_limits<num_t>::quiet_NaN();
+				return std::numeric_limits<double>::quiet_NaN();
+			double max = std::numeric_limits<double>::quiet_NaN();
 			for(std::vector<Point2D>::const_iterator i = _points.begin();i!=_points.end();++i)
 			{
 				if((i->x > max || (!std::isfinite(max))) && std::isfinite(i->x) ) max = i->x;
 			}
 			return max;
 		}
-		num_t MinX() const
+		double MinX() const
 		{
 			if(_points.empty())
-				return std::numeric_limits<num_t>::quiet_NaN();
-			std::vector<Point2D>::const_iterator i = _points.begin();
-			num_t min = std::numeric_limits<num_t>::quiet_NaN();
+				return std::numeric_limits<double>::quiet_NaN();
+			double min = std::numeric_limits<double>::quiet_NaN();
 			for(std::vector<Point2D>::const_iterator i = _points.begin();i!=_points.end();++i)
 			{
 				if((i->x < min || (!std::isfinite(min))) && std::isfinite(i->x) ) min = i->x;
 			}
 			return min;
 		}
-		num_t MaxY() const
+		double MaxY() const
 		{
 			if(_points.empty())
-				return std::numeric_limits<num_t>::quiet_NaN();
-			std::vector<Point2D>::const_iterator i = _points.begin();
-			num_t max = std::numeric_limits<num_t>::quiet_NaN();
+				return std::numeric_limits<double>::quiet_NaN();
+			double max = std::numeric_limits<double>::quiet_NaN();
 			for(std::vector<Point2D>::const_iterator i = _points.begin();i!=_points.end();++i)
 			{
 				if((i->y > max || (!std::isfinite(max))) && std::isfinite(i->y) ) max = i->y;
 			}
 			return max;
 		}
-		num_t MinY() const
+		double MinY() const
 		{
 			if(_points.empty())
-				return std::numeric_limits<num_t>::quiet_NaN();
-			std::vector<Point2D>::const_iterator i = _points.begin();
-			num_t min = std::numeric_limits<num_t>::quiet_NaN();
+				return std::numeric_limits<double>::quiet_NaN();
+			double min = std::numeric_limits<double>::quiet_NaN();
 			for(std::vector<Point2D>::const_iterator i = _points.begin();i!=_points.end();++i)
 			{
 				if((i->y < min || (!std::isfinite(min))) && std::isfinite(i->y) ) min = i->y;
@@ -101,16 +118,60 @@ class Plot2DPointSet{
 		{
 			std::sort(_points.begin(), _points.end());
 		}
-		num_t XRangeMin() const { return _points.begin()->x; }
-		num_t XRangeMax() const { return _points.rbegin()->x; }
-		num_t YRangeMin() const { return MinY(); }
-		num_t YRangeMax() const { return MaxY(); }
-
+		double XRangeMin() const
+		{
+			if(_points.empty())
+				return 0.0;
+			else
+				return _points.begin()->x;
+		}
+		double XRangeMax() const
+		{
+			if(_points.empty())
+				return 1.0;
+			else
+				return _points.rbegin()->x;
+		}
+		double YRangeMin() const
+		{
+			return MinY();
+		}
+		double YRangeMax() const
+		{
+			return MaxY();
+		}
+		void SetTickLabels(const std::vector<std::string> &tickLabels)
+		{
+			_tickLabels = tickLabels;
+		}
+		bool HasTickLabels() const
+		{
+			return !_tickLabels.empty();
+		}
+		const std::vector<std::string> &TickLabels() const
+		{
+			return _tickLabels;
+		}
+		void SetRotateUnits(bool rotateUnits)
+		{
+			_rotateUnits = rotateUnits;
+		}
+		bool RotateUnits() const
+		{
+			return _rotateUnits;
+		}
+		/**
+		 * Set the range that this point set minimally wants to have visualized. Other point sets might
+		 * request a larger range, which might enlarge this request.
+		 */
+		void SetYRange(double yMin, double yMax)
+		{
+		}
 	private:
 		struct Point2D
 		{
-			Point2D(num_t _x, num_t _y) : x(_x), y(_y) { }
-			num_t x, y;
+			Point2D(double _x, double _y) : x(_x), y(_y) { }
+			double x, y;
 			bool operator<(const Point2D &other) const
 			{
 				return x < other.x;
@@ -119,7 +180,12 @@ class Plot2DPointSet{
 
 		std::vector<Point2D> _points;
 		std::string _label;
-		std::string _yUnits;
+		std::string _xDesc;
+		std::string _yDesc;
+		bool _xIsTime;
+		std::vector<std::string> _tickLabels;
+		bool _rotateUnits;
+		enum DrawingStyle _drawingStyle;
 };
 
 #endif

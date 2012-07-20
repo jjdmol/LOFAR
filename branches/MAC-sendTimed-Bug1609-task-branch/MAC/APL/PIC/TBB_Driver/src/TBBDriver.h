@@ -23,14 +23,15 @@
 #ifndef LOFAR_TBBDRIVER_TBBDRIVER_H
 #define LOFAR_TBBDRIVER_TBBDRIVER_H
 
-#include <APL/TBB_Protocol/TBB_Protocol.ph>
-#include "TP_Protocol.ph"
-
 #include <GCF/TM/GCF_Control.h>
 #include <GCF/TM/GCF_ETHRawPort.h>
 #include <GCF/TM/GCF_TimerPort.h>
 
 #include <Common/lofar_deque.h>
+
+#include <APL/RSP_Protocol/RSP_Protocol.ph>
+#include <APL/TBB_Protocol/TBB_Protocol.ph>
+#include "TP_Protocol.ph"
 
 #include "BoardCmdHandler.h"
 #include "MsgHandler.h"
@@ -98,14 +99,18 @@ private:
 	TBBDriver (const TBBDriver& that);
 	TBBDriver& operator= (const TBBDriver& that);
 	
+	
 	void sendMessage(GCFEvent& event);
 	bool CheckAlive(GCFEvent& event, GCFPortInterface& port);
 	bool CheckSize(GCFEvent& event, GCFPortInterface& port);
+	void setClockState(GCFEvent& event);
 	bool sendInfo(GCFEvent& event, GCFPortInterface& port);
 	bool addTbbCommandToQueue(GCFEvent& event, GCFPortInterface& port);
 	bool handleTbbCommandFromQueue();
 	bool SetTbbCommand(unsigned short signal);
-	
+	void requestClockSubscription();
+	void cancelClockSubscription();
+	    
 	TbbSettings *TS;
 	
 	// define some variables
@@ -117,6 +122,7 @@ private:
 	uint32          itsNewBoards;
 	bool            itsActiveBoardsChange;
 	int32           *itsResetCount;
+	void*           itsClockSubscription;
 	
 	struct TbbEvent{
 		GCFPortInterface *port;
@@ -127,10 +133,12 @@ private:
 	
 	GCFTCPPort     itsAcceptor;    // listen for clients on this port
 	GCFETHRawPort* itsBoard;       // array of ports, one for each TBB board
+    GCFTCPPort*    itsRSPDriver;   // port for clock subscription
 	GCFTimerPort*  itsAliveTimer;  // used to check precence and reset of the boards
 	GCFTimerPort*  itsSetupTimer;  // used in the setup state
 	GCFTimerPort*  itsCmdTimer;    // used by CommandHandler
 	GCFTimerPort*  itsQueueTimer;  // used to handle events in queue
+	GCFTimerPort*  itsTriggerTimer;// used to maximize triggers
 	std::list<GCFPortInterface*> itsClientList;  // list of clients
 };
 

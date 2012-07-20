@@ -1,6 +1,7 @@
 # $Id$
 
 include(LofarPackageVersion)
+include(PythonInstall)
 
 # Add current build directory to the include path. This is needed, because
 # pyparameterset.cc #include's Package__Version.cc (yucky!).
@@ -24,5 +25,4 @@ lofar_add_library(lofar_pyparameterset Package__Version.cc)
 lofar_add_bin_program(versionpyparameterset versionpyparameterset.cc)
 
 # Install Python modules
-include(PythonInstall)
 python_install(__init__.py DESTINATION lofar/parameterset)

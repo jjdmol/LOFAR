@@ -28,9 +28,9 @@
 #include <gtkmm/radiobutton.h>
 #include <gtkmm/scale.h>
 
-#include "../../rfi/strategy/foreachbaselineaction.h"
+#include <AOFlagger/strategy/actions/foreachbaselineaction.h>
 
-#include "../editstrategywindow.h"
+#include <AOFlagger/gui/editstrategywindow.h>
 
 class ForEachBaselineFrame : public Gtk::Frame {
 	public:

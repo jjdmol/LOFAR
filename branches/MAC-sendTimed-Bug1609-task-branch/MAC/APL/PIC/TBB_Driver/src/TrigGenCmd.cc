@@ -88,6 +88,7 @@ void TrigGenCmd::sendTpEvent()
 			}
 			LOG_DEBUG_STR(formatString("Sending TrigRelease(clear) to boardnr[%d]",getBoardNr()));
 			TS->boardPort(getBoardNr()).send(tp_event);
+			TS->setBoardUsed(getBoardNr());
 		} break;
 		
 		case 1: {
@@ -107,6 +108,7 @@ void TrigGenCmd::sendTpEvent()
 			}
 			LOG_DEBUG_STR(formatString("Sending TrigGenerate to boardnr[%d]",getBoardNr()));
 			TS->boardPort(getBoardNr()).send(tp_event);
+			TS->setBoardUsed(getBoardNr());
 		} break;
 		
 		default: {

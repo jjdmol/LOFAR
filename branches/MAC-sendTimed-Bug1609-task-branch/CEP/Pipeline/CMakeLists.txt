@@ -1,9 +1,7 @@
 # $Id$
 
-lofar_package(Pipeline 0.1 DEPENDS pytools)
+lofar_add_package(Pipeline-Framework framework)
+lofar_add_package(Pipeline-Recipes recipes)
+#lofar_add_package(Pipeline-MAC mac)
 
-include(LofarFindPackage)
-lofar_find_package(Python REQUIRED)
-
-add_subdirectory(Core)
-add_subdirectory(library)
+add_subdirectory(test)

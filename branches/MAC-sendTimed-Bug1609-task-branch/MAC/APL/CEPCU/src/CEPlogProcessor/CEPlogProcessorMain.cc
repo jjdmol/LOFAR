@@ -1,4 +1,4 @@
-//#  CEPlogProcessorMain.cc: daemon for launching application controllers.
+//#  CEPlogProcessorMain.cc: Deamon to dispatch the BG/P logging to PVSS
 //#
 //#  Copyright (C) 2009
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,62 +24,31 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <sys/stat.h>			// umask
-#include <unistd.h>                     // fork, basename
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
+#include <Common/Exception.h>
+#include <GCF/TM/GCF_Scheduler.h>
 #include "CEPlogProcessor.h"
 
 using namespace LOFAR;
+using namespace GCF::TM;
 using namespace LOFAR::APL;
+
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 //
 // MAIN (parameterfile)
 //
-int main (int /*argc*/, char* argv[]) {
-
-	// Always bring up the logger first
-	ConfigLocator	aCL;
-	string		progName = basename(argv[0]);
-#ifdef HAVE_LOG4CPLUS
-	string		logPropFile(progName + ".log_prop");
-#else
-	string		logPropFile(progName + ".debug");
-#endif
-#ifdef HAVE_LOG4CPLUS
-	INIT_VAR_LOGGER (aCL.locate(logPropFile).c_str(), progName);
-#else
-        INIT_LOGGER (aCL.locate(logPropFile).c_str());	
-	
-#endif	
-	LOG_DEBUG_STR("Initialized logsystem with: " << aCL.locate(logPropFile));
-
-	// Tell operator we are trying to start up.
-	LOG_INFO_STR("Starting up: " << argv[0]);
-
+int main (int argc, char* argv[]) 
+{
 	try {
-#if REAL_DAEMON
-		pid_t pid = fork();
-		switch (pid) {
-		case -1:	// error
-			LOG_FATAL("Unable to fork daemon process, exiting.");
-			return (-1);
-		case 0:		// child (the real daemon)
-			// do nothing;
-			break;
-		default:	// parent
-			LOG_INFO_STR("Daemon succesfully started, pid = " << pid);
-			return (0);
-		}
-#endif		
-		// TODO: active the next two calls.
-//		setsid();		// disconnect from terminalsession
-//		chdir("/");		// might be on a mounted file system
-		umask(0);		// no limits
+		GCFScheduler::instance()->init(argc, argv, "CEPlogProcessor");
 
-		CEPlogProcessor	theDaemon(progName);
+		CEPlogProcessor		loggerTask("CEPlogger");
+		loggerTask.start(); // make initial transition
 
-		theDaemon.doWork();
+		GCFScheduler::instance()->run();
 
 		LOG_INFO_STR("Shutting down: " << argv[0]);
 	}
@@ -91,5 +60,4 @@ int main (int /*argc*/, char* argv[]) {
 
 	LOG_INFO("Terminated normally");
 	return (0);
-
 }

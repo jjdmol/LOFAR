@@ -26,22 +26,28 @@
 
 #include <InputSection.h>
 #include <Interface/Parset.h>
+#include <Interface/SmartPtr.h>
+#include <Interface/MultiDimArray.h>
 #include <JobQueue.h>
 #include <Stream/Stream.h>
 #include <WallClockTime.h>
-#include <Thread/Mutex.h>
-#include <Thread/Thread.h>
+#include <Common/Thread/Mutex.h>
+#include <Common/Thread/Queue.h>
+#include <Common/Thread/Thread.h>
+#include <PLCClient.h>
+#include <SSH.h>
 
 #include <sys/time.h>
 
 #include <vector>
+#include <string>
 
 
 namespace LOFAR {
 namespace RTCP {
 
 
-class Job
+class Job : public PLCRunnable
 {
   public:
 					 Job(const char *parsetName);
@@ -53,19 +59,28 @@ class Job
     const Parset			 itsParset;
     const unsigned			 itsJobID, itsObservationID;
 
+    // implement PLCRunnable
+    virtual bool			 define();
+    virtual bool			 init();
+    virtual bool			 run();
+    virtual bool			 pause(const double &when);
+    virtual bool			 quit();
+    virtual bool			 observationRunning();
+
   private:
-    void				 checkParset() const;
+    bool				 checkParset() const;
     void				 createCNstreams();
     bool				 configureCNs();
     void				 unconfigureCNs();
 
-    void				 createIONstreams(), deleteIONstreams();
+    void				 createIONstreams();
     void				 barrier();
+    bool                                 agree(bool iAgree);
     template <typename T> void		 broadcast(T &);
 
     void				 claimResources();
 
-    bool				 isCancelled();
+    bool				 anotherRun();
 
     void				 jobThread();
     template <typename SAMPLE_TYPE> void doObservation();
@@ -73,27 +88,52 @@ class Job
     template <typename SAMPLE_TYPE> void attachToInputSection();
     template <typename SAMPLE_TYPE> void detachFromInputSection();
 
-    static void				 execSSH(const char *sshKey, const char *userName, const char *hostName, const char *executable, const char *rank, const char *parset, const char *isBigEndian);
-    static void				 forkSSH(const char *sshKey, const char *userName, const char *hostName, const char *executable, const char *rank, const char *parset, const char *isBigEndian, int &storagePID);
-    void				 joinSSH(int childPID, const std::string &hostName, unsigned &timeout);
-
     void				 startStorageProcesses();
     void				 stopStorageProcesses();
 
+    class StorageProcess {
+    public:
+      StorageProcess( const Parset &parset, const string &logPrefix, int rank, const string &hostname );
+      ~StorageProcess();
+
+      void start();
+      void stop( struct timespec deadline );
+    private:
+      void                               controlThread();
+
+#ifdef HAVE_LIBSSH2
+      SmartPtr<SSHconnection>            itsSSHconnection;
+#else      
+      int itsPID;
+#endif
+
+      const Parset &itsParset;
+      const std::string itsLogPrefix;
+
+      const int itsRank;
+      const std::string itsHostname;
+
+      SmartPtr<Thread> itsThread;
+    };
+
     void				 waitUntilCloseToStartOfObservation(time_t secondsPriorToStart);
+
+    SmartPtr<Stream>			 itsPLCStream;
+    SmartPtr<PLCClient>			 itsPLCClient;
 
     std::string                          itsLogPrefix;
 
-    std::vector<std::string>		 itsStorageHostNames;
-    std::vector<int>			 itsStoragePIDs;
+    std::vector<SmartPtr<StorageProcess> > itsStorageProcesses;
 
-    std::vector<Stream *>		 itsCNstreams, itsPhaseOneTwoCNstreams, itsPhaseThreeCNstreams, itsIONstreams;
-    unsigned				 itsNrRuns;
-    Thread				 *itsJobThread;
+    std::vector<Stream *>		 itsCNstreams, itsPhaseThreeCNstreams;
+    Matrix<Stream *>			 itsPhaseOneTwoCNstreams;
+    std::vector<SmartPtr<Stream> >	 itsIONstreams;
     bool				 itsHasPhaseOne, itsHasPhaseTwo, itsHasPhaseThree;
     bool				 itsIsRunning, itsDoCancel;
 
-    unsigned				 itsNrRunTokens, itsNrRunTokensPerBroadcast;
+    unsigned                             itsBlockNumber;
+    double                               itsRequestedStopTime, itsStopTime;
+    unsigned				 itsNrBlockTokens, itsNrBlockTokensPerBroadcast;
 
     static unsigned			 nextJobID;
 
@@ -102,7 +142,12 @@ class Job
     static void				 *theInputSection;
     static Mutex			 theInputSectionMutex;
     static unsigned			 theInputSectionRefCount;
+
+    SmartPtr<Thread>			 itsJobThread;
 };
+
+
+extern Queue<Job *> finishedJobs;
 
 
 } // namespace RTCP

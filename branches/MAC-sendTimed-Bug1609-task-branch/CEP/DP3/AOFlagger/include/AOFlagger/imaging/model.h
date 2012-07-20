@@ -34,7 +34,7 @@ struct OutputReceiver
 	void SetY(size_t) { }
 };
 template<>
-struct OutputReceiver<class UVImager>
+struct OutputReceiver<UVImager>
 {
 	UVImager *_imager;
 	void SetUVValue(size_t, double u, double v, double r, double i, double w)
@@ -45,7 +45,7 @@ struct OutputReceiver<class UVImager>
 	void SetY(size_t) { }
 };
 template<>
-struct OutputReceiver<class TimeFrequencyData>
+struct OutputReceiver<TimeFrequencyData>
 {
 	Image2DPtr _real, _imaginary;
 	size_t _y;
@@ -86,14 +86,13 @@ class Model {
 		{
 			numl_t mu = fmodnl(fabsnl(t-peakTime), 1.0);
 			if(mu > 0.5) mu = 1.0 - mu;
-			return fluxIntensity * expnl(mu*mu*oneOverSigmaSq);
+			return fluxIntensity * (1.0+expnl(mu*mu*oneOverSigmaSq)) * (1.0 + fmod(t*1007.0, 13.0) / 26.0);
 		}
 	};
 	
 	public:
 		Model();
 		~Model();
-		void SimulateBaseline(long double delayDirectionDEC, long double delayDirectionRA, long double dx, long double dy, long double dz, long double frequencyStart, long double frequencyEnd, long double seconds, class Image2D &destR, class Image2D &destI);
 		void AddSource(long double dec, long double ra, long double fluxIntensity)
 		{
 			StablePointSource *source = new StablePointSource();
@@ -117,33 +116,38 @@ class Model {
 		void SimulateUncoherentAntenna(double time, num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t frequency, num_t earthLattitude, num_t &r, num_t &i, size_t index);
 
 		template<typename T>
-		void SimulateCorrelation(struct OutputReceiver<T> &receiver, num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t dz, num_t frequency, double totalTime, double integrationTime);
+		void SimulateCorrelation(struct OutputReceiver<T> &receiver, num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t dz, num_t frequency, num_t channelWidth, double totalTime, double integrationTime);
 
-		void SimulateObservation(class UVImager &imager, class Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA, num_t frequency)
+		void SimulateObservation(class UVImager &imager, class Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA)
 		{
+			srand(1);
 			OutputReceiver<UVImager> imagerOutputter;
 			imagerOutputter._imager = &imager;
-			SimulateObservation(imagerOutputter, observatorium, delayDirectionDEC, delayDirectionRA, frequency);
+			SimulateObservation(imagerOutputter, observatorium, delayDirectionDEC, delayDirectionRA);
 		}
 
-		std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> SimulateObservation(class Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA, num_t frequency, size_t a1, size_t a2);
+		std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> SimulateObservation(class Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA, size_t a1, size_t a2);
 
 		template<typename T>
-		void SimulateObservation(struct OutputReceiver<T> &receiver, class Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA, num_t frequency);
+		void SimulateObservation(struct OutputReceiver<T> &receiver, class Observatorium &observatorium, num_t delayDirectionDEC, num_t delayDirectionRA);
 
 		static void GetUVPosition(num_t &u, num_t &v, num_t earthLattitudeAngle, num_t delayDirectionDEC, num_t delayDirectionRA, num_t dx, num_t dy, num_t dz, num_t waveLength);
-		static num_t GetWPosition(num_t delayDirectionDec, num_t delayDirectionRA, num_t frequency, num_t earthLattitudeAngle, num_t dx, num_t dy);
+		static num_t GetWPosition(num_t delayDirectionDec, num_t delayDirectionRA, num_t frequency, num_t earthLattitudeAngle, num_t dx, num_t dy)
+		{
+			return UVImager::GetWPosition(delayDirectionDec, delayDirectionRA, frequency, earthLattitudeAngle, dx, dy);
+		}
 
-		void loadUrsaMajor();
-		void loadUrsaMajorDistortingSource();
-		void loadUrsaMajorDistortingVariableSource(bool weak=false, bool slightlyMiss=false);
+		void loadUrsaMajor(double ra, double dec, double factor);
+		void loadUrsaMajorDistortingSource(double ra, double dec, double factor, bool slightlyMiss = false);
+		void loadUrsaMajorDistortingVariableSource(double ra, double dec, double factor, bool weak=false, bool slightlyMiss=false);
+		void loadOnAxisSource(double ra, double dec, double factor);
+		
+		double NoiseSigma() const { return _noiseSigma; }
+		void SetNoiseSigma(double noiseSigma) { _noiseSigma = noiseSigma; }
 	private:
 		std::vector<Source *> _sources;
 		double _noiseSigma, _sourceSigma;
 		double _integrationTime;
-		
-		void AddFTOfSources(num_t u, num_t v, num_t &r, num_t &i);
-		void AddFTOfSource(num_t u, num_t v, num_t &r, num_t &i, const Source *source);
 };
 
 #endif

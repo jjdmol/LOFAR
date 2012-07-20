@@ -27,9 +27,9 @@
 #include <gtkmm/label.h>
 #include <gtkmm/scale.h>
 
-#include "../../rfi/strategy/statisticalflagaction.h"
+#include <AOFlagger/strategy/actions/statisticalflagaction.h>
 
-#include "../editstrategywindow.h"
+#include <AOFlagger/gui/editstrategywindow.h>
 
 class StatisticalFlaggingFrame : public Gtk::Frame {
 	public:
@@ -40,31 +40,39 @@ class StatisticalFlaggingFrame : public Gtk::Frame {
 		_dilluteTimeSizeScale(0, 100, 1),
 		_dilluteFrequencySizeLabel("Dillution frequency size:"),
 		_dilluteFrequencySizeScale(0, 100, 1),
+		_minTimeRatioLabel("Minimum time ratio:"),
+		_minTimeRatioScale(0, 100, 1),
+		_minFreqRatioLabel("Minimum frequency ratio:"),
+		_minFreqRatioScale(0, 100, 1),
 		_applyButton(Gtk::Stock::APPLY)
 		{
 			_box.pack_start(_dilluteTimeSizeLabel);
-			_dilluteTimeSizeLabel.show();
 
 			_dilluteTimeSizeScale.set_value(_action.EnlargeTimeSize());
 			_box.pack_start(_dilluteTimeSizeScale);
-			_dilluteTimeSizeScale.show();
 
 			_box.pack_start(_dilluteFrequencySizeLabel);
-			_dilluteFrequencySizeLabel.show();
 
 			_dilluteFrequencySizeScale.set_value(_action.EnlargeFrequencySize());
 			_box.pack_start(_dilluteFrequencySizeScale);
-			_dilluteFrequencySizeScale.show();
+
+			_box.pack_start(_minTimeRatioLabel);
+
+			_minTimeRatioScale.set_value(_action.MinimumGoodTimeRatio()*100.0);
+			_box.pack_start(_minTimeRatioScale);
+
+			_box.pack_start(_minFreqRatioLabel);
+
+			_minFreqRatioScale.set_value(_action.MinimumGoodFrequencyRatio()*100.0);
+			_box.pack_start(_minFreqRatioScale);
 
 			_buttonBox.pack_start(_applyButton);
 			_applyButton.signal_clicked().connect(sigc::mem_fun(*this, &StatisticalFlaggingFrame::onApplyClicked));
-			_applyButton.show();
 
 			_box.pack_start(_buttonBox);
-			_buttonBox.show();
 
 			add(_box);
-			_box.show();
+			_box.show_all();
 		}
 	private:
 		EditStrategyWindow &_editStrategyWindow;
@@ -76,13 +84,20 @@ class StatisticalFlaggingFrame : public Gtk::Frame {
 		Gtk::HScale _dilluteTimeSizeScale;
 		Gtk::Label _dilluteFrequencySizeLabel;
 		Gtk::HScale _dilluteFrequencySizeScale;
+		
+		Gtk::Label _minTimeRatioLabel;
+		Gtk::HScale _minTimeRatioScale;
+		Gtk::Label _minFreqRatioLabel;
+		Gtk::HScale _minFreqRatioScale;
+		
 		Gtk::Button _applyButton;
 
 		void onApplyClicked()
 		{
 			_action.SetEnlargeTimeSize((size_t) _dilluteTimeSizeScale.get_value());
 			_action.SetEnlargeFrequencySize((size_t) _dilluteFrequencySizeScale.get_value());
-			
+			_action.SetMinimumGoodTimeRatio(_minTimeRatioScale.get_value()/100.0);
+			_action.SetMinimumGoodFrequencyRatio(_minFreqRatioScale.get_value()/100.0);
 			_editStrategyWindow.UpdateAction(&_action);
 		}
 };

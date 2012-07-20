@@ -9,6 +9,7 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 install(FILES 
   Allocator.h
   Backtrace.h
+  CasaLogSink.h
   CheckConfig.h
   ComplexBuiltinFP.h
   ComplexBuiltinInt.h
@@ -21,6 +22,7 @@ install(FILES
   Exceptions.h
   FileLocator.h
   hexdump.h
+  InputParSet.h
   i4complex.h
   KVpair.h
   lofar_algorithm.h
@@ -55,9 +57,11 @@ install(FILES
   lofar_vector.h
   Numeric.h
   ObjectFactory.h
-  ParameterValue.h
+  OpenMP.h
+  ParameterRecord.h
   ParameterSet.h
   ParameterSetImpl.h
+  ParameterValue.h
   PrettyUnits.h
   Process.h
   ReadLine.h
@@ -84,3 +88,12 @@ install(FILES
   shmem/dlmalloc.h
   shmem/shmem_alloc.h
   DESTINATION include/${PACKAGE_NAME}/shmem)
+
+install(FILES
+  Thread/Cancellation.h
+  Thread/Condition.h
+  Thread/Mutex.h
+  Thread/Queue.h
+  Thread/Semaphore.h
+  Thread/Thread.h
+  DESTINATION include/${PACKAGE_NAME}/Thread)

@@ -37,37 +37,38 @@ namespace LOFAR
 namespace BBS
 {
 
-StationUVW::StationUVW(const casa::MPosition &position,
-    const casa::MPosition &array, const casa::MDirection &reference)
-    :   itsPosition(casa::MPosition::Convert(position,
+StationUVW::StationUVW(const casa::MPosition &arrayPosition,
+    const casa::MPosition &stationPosition,
+    const casa::MDirection &direction)
+    :   itsArrayPosition(casa::MPosition::Convert(arrayPosition,
             casa::MPosition::ITRF)()),
-        itsArrayPosition(casa::MPosition::Convert(array,
+        itsStationPosition(casa::MPosition::Convert(stationPosition,
             casa::MPosition::ITRF)()),
-        itsPhaseReference(casa::MDirection::Convert(reference,
+        itsDirection(casa::MDirection::Convert(direction,
             casa::MDirection::J2000)())
 {
 }
 
-const Vector<3> StationUVW::evaluateExpr(const Request &request, Cache &cache,
+const Vector<3> StationUVW::evaluateExpr(const Request &request, Cache&,
     unsigned int grid) const
 {
-    // Get the station position relative to the array reference position
-    // (to keep values small).
-    const casa::MPosition mDeltaPos(itsPosition.getValue()
-        - itsArrayPosition.getValue(), casa::MPosition::ITRF);
+    EXPR_TIMER_START();
 
-    // Setup coordinate transformation engine.
+    // Initialize reference frame.
     casa::Quantum<casa::Double> qEpoch(0.0, "s");
     casa::MEpoch mEpoch(qEpoch, casa::MEpoch::UTC);
+    casa::MeasFrame mFrame(mEpoch, itsArrayPosition, itsDirection);
 
-    casa::MeasFrame frame(itsArrayPosition);
-    frame.set(itsPhaseReference);
-    frame.set(mEpoch);
+    // Use baseline coordinates relative to the array reference position (to
+    // keep values small). The array reference position will drop out when
+    // computing baseline UVW coordinates from a pair of "station" UVW
+    // coordinates.
+    casa::MVBaseline mvBaseline(itsStationPosition.getValue(),
+        itsArrayPosition.getValue());
+    casa::MBaseline mBaseline(mvBaseline,
+        casa::MBaseline::Ref(casa::MBaseline::ITRF, mFrame));
 
-    casa::MVBaseline mvBaseline(mDeltaPos.getValue());
-    casa::MBaseline mBaseline(mvBaseline, casa::MBaseline::ITRF);
-    mBaseline.getRefPtr()->set(frame);
-
+    // Setup coordinate transformation engine.
     casa::MBaseline::Convert convertor(mBaseline, casa::MBaseline::J2000);
 
     // Allocate space for the result.
@@ -84,25 +85,26 @@ const Vector<3> StationUVW::evaluateExpr(const Request &request, Cache &cache,
     // Compute UVW coordinates.
     for(size_t i = 0; i < nTime; ++i)
     {
-        const double time = timeAxis->center(i);
-
-        qEpoch.setValue(time);
+        // Update reference frame.
+        qEpoch.setValue(timeAxis->center(i));
         mEpoch.set(qEpoch);
-        frame.set(mEpoch);
+        mFrame.set(mEpoch);
 
-        casa::MVuvw uvw2000(convertor().getValue(),
-            itsPhaseReference.getValue());
-        const casa::Vector<casa::Double> &xyz = uvw2000.getValue();
+        // Compute UVW coordinates (J2000).
+        casa::MBaseline mBaselineJ2000(convertor());
+        casa::MVuvw mvUVW(mBaselineJ2000.getValue(), itsDirection.getValue());
 
-        *u++ = xyz(0);
-        *v++ = xyz(1);
-        *w++ = xyz(2);
+        *u++ = mvUVW(0);
+        *v++ = mvUVW(1);
+        *w++ = mvUVW(2);
     }
 
     Vector<3> result;
     result.assign(0, U);
     result.assign(1, V);
     result.assign(2, W);
+
+    EXPR_TIMER_STOP();
 
     return result;
 }

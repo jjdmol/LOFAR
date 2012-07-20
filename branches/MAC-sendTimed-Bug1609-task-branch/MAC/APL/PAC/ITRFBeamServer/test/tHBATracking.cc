@@ -25,8 +25,9 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
 #include <Common/lofar_complex.h>
+#include <Common/StringUtil.h>
+#include <ApplCommon/AntennaSets.h>
 #include <APL/APLCommon/AntennaField.h>
-#include <APL/APLCommon/AntennaSets.h>
 #include <APL/CAL_Protocol/SpectralWindow.h>
 
 #include <blitz/array.h>
@@ -35,14 +36,13 @@
 using namespace casa;
 using namespace blitz;
 using namespace LOFAR;
-using namespace APLCommon;
 using namespace RTC;
 using namespace CASATools;
 using namespace CAL;
 
 int	gBeamformerGain = 8000;
 blitz::Array<double, 2> itsTileRelPos;	// [N_HBA_ELEMENTS,x|y|z dipole] = [16,3]
-blitz::Array<double, 1>	itsDelaySteps; 	// [N_HBA_DELAYS] = [32]
+blitz::Array<double, 1>	itsDelaySteps; 	// [32]
 blitz::Array<uint16, 2>	itsHBAdelays;   // [rcus, N_HBA_ELEM_PER_TILE]
 double					itsMeanElementDelay;
 

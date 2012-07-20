@@ -49,29 +49,35 @@ GetWeightsCmd::~GetWeightsCmd()
 
 void GetWeightsCmd::ack(CacheBuffer& cache)
 {
-  RSPGetweightsackEvent ack;
+	RSPGetweightsackEvent ack;
 
-  ack.timestamp = getTimestamp();
-  ack.status = RSP_SUCCESS;
+	ack.timestamp = getTimestamp();
+	ack.status    = RSP_SUCCESS;
+	ack.weights().resize(BeamletWeights::SINGLE_TIMESTEP, m_event->rcumask.count(), MAX_BEAMLETS);	// 4 x 61
 
-  ack.weights().resize(BeamletWeights::SINGLE_TIMESTEP,
-		       m_event->rcumask.count(),
-		       MEPHeader::N_BEAMLETS);
+	int result_rcu = 0;
+	for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++) {
+		if (m_event->rcumask[cache_rcu]) {
+			// NOTE: MEPHeader::N_BEAMLETS = 4x62 but userside MAX_BEAMLETS may be different
+			//       In other words: getBeamletWeights can contain more data than ack.weights
+			if (MEPHeader::N_BEAMLETS == MAX_BEAMLETS) {
+				ack.weights()(0, result_rcu, Range::all()) = cache.getBeamletWeights()()(0, cache_rcu, Range::all());
+			}
+			else {
+				for (int rsp = 0; rsp < 4; rsp++) {
+					int	swstart(rsp*MAX_BEAMLETS_PER_RSP);
+					int hwstart(rsp*MEPHeader::N_BEAMLETS/4);
+					ack.weights()(0, result_rcu, Range(swstart,swstart+MAX_BEAMLETS_PER_RSP-1)) = cache.getBeamletWeights()()(0, cache_rcu, Range(hwstart, hwstart+MAX_BEAMLETS_PER_RSP-1));
+				}
+			}
+			result_rcu++;
+			if (cache_rcu ==0) {
+				LOG_DEBUG_STR("GetWeights(ack[0]): " << ack.weights()(0,0,Range::all()));
+			}
+		}
+	}
 
-  int result_rcu = 0;
-  for (int cache_rcu = 0;
-       cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++)
-  {
-    if (m_event->rcumask[cache_rcu])
-    {
-      ack.weights()(0, result_rcu, Range::all()) =
-	cache.getBeamletWeights()()(0, cache_rcu, Range::all());
-      
-      result_rcu++;
-    }
-  }
-  
-  getPort()->send(ack);
+	getPort()->send(ack);
 }
 
 void GetWeightsCmd::apply(CacheBuffer& /*cache*/, bool /*setModFlag*/)

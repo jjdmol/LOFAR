@@ -42,6 +42,7 @@ BoardCmdHandler::BoardCmdHandler(GCFTimerPort* port):
 	itsRetries = 0;
 	itsClientPort	= 0;
 	itsCmd = 0;
+	itsCmdDone = true;
 }
 
 BoardCmdHandler::~BoardCmdHandler()
@@ -59,6 +60,10 @@ GCFEvent::TResult BoardCmdHandler::idle_state(GCFEvent& event, GCFPortInterface&
 		} break;
 
 		case F_ENTRY: {
+		    // set timer for TBBDriver, to return to idle state
+			itsCmdDone = true;
+			itsSleepTimer->setTimer(0.0);
+			
 			if (itsCmd) delete itsCmd;
 			itsCmd = 0;
 		} break;			
@@ -72,6 +77,7 @@ GCFEvent::TResult BoardCmdHandler::idle_state(GCFEvent& event, GCFPortInterface&
 		default: {
 			if (itsCmd && itsCmd->isValid(event)) { // isValid returns true if event is a valid cmd
 				LOG_DEBUG_STR("==== NEW CMD ==================================================");
+				itsCmdDone = false;
 				itsClientPort = &port;
 				itsCmd->reset();
 				itsCmd->saveTbbEvent(event);
@@ -95,8 +101,6 @@ GCFEvent::TResult BoardCmdHandler::send_state(GCFEvent& event, GCFPortInterface&
 			if (itsCmd->isDone()) {
 				LOG_DEBUG_STR("entering send state, cmd is done");
 				itsCmd->sendTbbAckEvent(itsClientPort);
-				// set timer for TBBDriver, to return to idle state
-				itsSleepTimer->setTimer(0.0);
 				TRAN(BoardCmdHandler::idle_state);
 			} else {
 				LOG_DEBUG_STR("entering send state, next cmd");
@@ -190,6 +194,5 @@ void BoardCmdHandler::setTpCmd(Command *cmd)
 
 bool BoardCmdHandler::tpCmdDone()
 {
-	if (itsCmd) { return(itsCmd->isDone()); }
-	return (true);
+	return(itsCmdDone);
 }

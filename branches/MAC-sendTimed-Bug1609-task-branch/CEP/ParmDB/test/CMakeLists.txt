@@ -12,10 +12,10 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
   ${_loc}
   ${CMAKE_CURRENT_BINARY_DIR}/finddproc)
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
-  ${MWCommon_SOURCE_DIR}/src/startdistproc
+  ${LMWCommon_SOURCE_DIR}/src/startdistproc
   ${CMAKE_CURRENT_BINARY_DIR}/startdistproc)
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
-  ${MWCommon_SOURCE_DIR}/src/socketrun
+  ${LMWCommon_SOURCE_DIR}/src/socketrun
   ${CMAKE_CURRENT_BINARY_DIR}/socketrun)
 
 lofar_add_test(tAxis tAxis.cc)
@@ -33,7 +33,9 @@ lofar_add_test(tSourceDBCasa tSourceDBCasa.cc)
 lofar_add_test(tTimeAxis tTimeAxis.cc)
 #lofar_add_test(tParmFacadeDistr DEPENDS parmdbm)
 lofar_add_test(tparmdb DEPENDS parmdbm)
+lofar_add_test(tparmexportcal DEPENDS parmexportcal)
 lofar_add_test(tmakesourcedb DEPENDS makesourcedb parmdbm)
+lofar_add_test(tSourceDBBlob tSourceDBBlob.cc)
 lofar_add_test(tsetupparmdb)
 lofar_add_test(tsetupsourcedb)
 

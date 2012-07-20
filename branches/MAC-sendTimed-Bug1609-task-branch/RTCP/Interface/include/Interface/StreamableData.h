@@ -11,6 +11,7 @@
 #include <Interface/Align.h>
 #include <Common/DataConvert.h>
 
+#include <cstring>
 
 namespace LOFAR {
 namespace RTCP {
@@ -21,200 +22,157 @@ namespace RTCP {
 // an integration operator += can be defined to reduce the data.
 
 // Endianness:
-//  * CN/ION are big endian (ppc)
-//  * Storage is little endian (intel)
-//  * Stations are little endian
+// * Endianness is defined by the correlator. 
+// * Both Data and sequence number will have endianness of the
+//   correlator
 //
-// Endianness is swapped by:
-//  * Data received by the CN from the stations (transported via the ION)
-//  * Data received by Storage from the ION
-//
-// WARNING: We consider all data streams to be big endian, and will also write
-// them as such. sequenceNumber is the only field converted from and to big endian.
+// WARNING: We consider all data streams to have the endianness of the
+// correlator. No conversion is done here.
 
-class StreamableData {
+class IntegratableData
+{
   public:
-    // A stream is integratable if it supports the += operator to combine
-    // several objects into one.
-    StreamableData(bool isIntegratable): integratable(isIntegratable) {}
+    virtual ~IntegratableData() {}
 
-    // suppress warning by defining a virtual destructor
+    virtual IntegratableData &operator += (const IntegratableData &) = 0;
+};
+
+    
+class StreamableData
+{
+  public:
+    static const uint32_t magic  = 0xda7a;
+#ifdef HAVE_BGP
+    static const size_t alignment = 32;
+#else
+    static const size_t alignment = 512;
+#endif
+
+    // the CPU which fills the datastructure sets the peerMagicNumber,
+    // because other CPUs will overwrite it with a read(s,true) call from
+    // either disk or network.
+    StreamableData(): peerMagicNumber(magic), rawSequenceNumber(0) {}
     virtual ~StreamableData() {}
 
-    // return a copy of the object
-    virtual StreamableData *clone() const = 0;
+    void read(Stream *, bool withSequenceNumber, unsigned align = 0);
+    void write(Stream *, bool withSequenceNumber, unsigned align = 0);
 
-    virtual size_t requiredSize() const = 0;
-    virtual void allocate(Allocator &allocator = heapAllocator) = 0;
+    bool shouldByteSwap() const
+    { return peerMagicNumber != magic; }
 
-    virtual void read(Stream*, bool withSequenceNumber);
-    virtual void write(Stream*, bool withSequenceNumber, unsigned align = 0);
+    uint32_t sequenceNumber(bool raw=false) const {
+      if (shouldByteSwap() && !raw) {
+        uint32_t seqno = rawSequenceNumber;
 
-    bool isIntegratable() const
-    { return integratable; }
+        byteSwap32(&seqno);
 
-    virtual StreamableData &operator+= (const StreamableData &) 
-    { LOG_WARN("Integration not implemented."); return *this; }
+        return seqno;
+      } else {
+        return rawSequenceNumber;
+      }
+    }
 
-    uint32_t sequenceNumber;
+    void setSequenceNumber(uint32_t seqno) {
+      if (shouldByteSwap())
+        byteSwap32(&seqno);
+
+      rawSequenceNumber = seqno;
+    }
+
+    virtual void setDimensions(unsigned, unsigned, unsigned) { }
+
+    uint32_t peerMagicNumber;    /// magic number received from peer
 
   protected:
-    const bool integratable;
-
     // a subclass should override these to marshall its data
     virtual void readData(Stream *) = 0;
     virtual void writeData(Stream *) = 0;
+
+  private:  
+    uint32_t rawSequenceNumber;  /// possibly needs byte swapping
 };
 
+
 // A typical data set contains a MultiDimArray of tuples and a set of flags.
-template <typename T = fcomplex, unsigned DIM = 4> class SampleData : public StreamableData
+template <typename T = fcomplex, unsigned DIM = 4, unsigned FLAGS_DIM = 2> class SampleData : public StreamableData
 {
   public:
     typedef typename MultiDimArray<T,DIM>::ExtentList ExtentList;
+    typedef typename MultiDimArray<SparseSet<unsigned>,FLAGS_DIM>::ExtentList FlagsExtentList;
 
-    SampleData(bool isIntegratable, const ExtentList &extents, unsigned nrFlags);
+    SampleData(const ExtentList &extents, const FlagsExtentList &flagsExtents, Allocator & = heapAllocator);
 
-    virtual SampleData *clone() const { return new SampleData(*this); }
-
-    virtual size_t requiredSize() const;
-    virtual void allocate(Allocator &allocator = heapAllocator);
-
-    MultiDimArray<T,DIM> samples;
-    std::vector<SparseSet<unsigned> >  flags;
+    MultiDimArray<T,DIM>	      samples;
+    MultiDimArray<SparseSet<unsigned>,FLAGS_DIM>   flags;
 
   protected:
-    virtual void checkEndianness();
-
-    virtual void readData(Stream*);
-    virtual void writeData(Stream*);
+    virtual void readData(Stream *);
+    virtual void writeData(Stream *);
 
   private:
-    // copy the ExtentList instead of using a reference, as boost by default uses a global one (boost::extents)
-    const ExtentList     extents;
-    const unsigned       nrFlags;
-
-    bool                 itsHaveWarnedLittleEndian;
+    //bool	 itsHaveWarnedLittleEndian;
 };
 
-inline void StreamableData::read(Stream *str, bool withSequenceNumber)
+
+inline void StreamableData::read(Stream *str, bool withSequenceNumber, unsigned alignment)
 {
   if (withSequenceNumber) {
-    str->read(&sequenceNumber, sizeof sequenceNumber);
+    std::vector<char> header(alignment > 2*sizeof(uint32_t) ? alignment : 2*sizeof(uint32_t));
+    uint32_t          &magicValue = * reinterpret_cast<uint32_t *>(&header[0]);
+    uint32_t	      &seqNo      = * reinterpret_cast<uint32_t *>(&header[sizeof(uint32_t)]);
 
-#if !defined WORDS_BIGENDIAN
-    dataConvert(LittleEndian, &sequenceNumber, 1);
-#endif
+    str->read(&header[0], header.size());
+
+    peerMagicNumber = magicValue;
+    rawSequenceNumber = seqNo;
   }
 
   readData(str);
 }
 
-inline void StreamableData::write(Stream *str, bool withSequenceNumber, unsigned align)
+
+inline void StreamableData::write(Stream *str, bool withSequenceNumber, unsigned alignment)
 {
+  
   if (withSequenceNumber) {
-#if !defined WORDS_BIGENDIAN
-    if (align > 1) {
-      if (align < sizeof(uint32_t))
-	THROW(AssertError, "Sizeof alignment < sizeof sequencenumber");
+/*     std::vector<char> header(alignment > sizeof(uint32_t) ? alignment : sizeof(uint32_t)); */
+    std::vector<char> header(alignment > 2*sizeof(uint32_t) ? alignment : 2*sizeof(uint32_t));
+    uint32_t          &magicValue = * reinterpret_cast<uint32_t *>(&header[0]);
+    uint32_t	      &seqNo      = * reinterpret_cast<uint32_t *>(&header[sizeof(uint32_t)]);
 
-      void *sn_buf;
-      uint32_t sn = sequenceNumber;
-
-      if (posix_memalign(&sn_buf, align, align) != 0) {
-	THROW(InterfaceException,"could not allocate data");
-      }
-
-      try {
-        dataConvert(BigEndian, &sn, 1);
-        memcpy(sn_buf, &sn, sizeof sn);
-
-        str->write(sn_buf, align);
-      } catch (...) {
-        free(sn_buf);
-        throw;
-      }
-
-      free(sn_buf);
-    } else {
-      uint32_t sn = sequenceNumber;
-
-      dataConvert(LittleEndian, &sn, 1);
-      str->write(&sn, sizeof sn);
-    }
-#else
-    if (align > 1) {
-      if (align < sizeof(uint32_t)) THROW(AssertError, "Sizeof alignment < sizeof sequencenumber");
-
-      void *sn_buf;
-      if (posix_memalign(&sn_buf, align, align) != 0) {
-	THROW(InterfaceException,"could not allocate data");
-      }
-
-      try {
-        memcpy(sn_buf, &sequenceNumber, sizeof sequenceNumber);
-
-        str->write(sn_buf, align);
-      } catch(...) {
-        free(sn_buf);
-        throw;
-      }
-
-      free(sn_buf);
-    } else {
-      str->write(&sequenceNumber, sizeof sequenceNumber);
-    }
-
+#if defined USE_VALGRIND
+    memset(&header[0], 0, header.size());
 #endif
+
+    magicValue = peerMagicNumber;
+    seqNo = rawSequenceNumber;
+
+    str->write(&header[0], header.size());
   }
+  
   writeData(str);
 }
 
-template <typename T, unsigned DIM> inline SampleData<T,DIM>::SampleData(bool isIntegratable, const ExtentList &extents, unsigned nrFlags):
-  StreamableData(isIntegratable),
-  flags(0),
-  extents(extents),
-  nrFlags(nrFlags),
-  itsHaveWarnedLittleEndian(false)
-{
+
+template <typename T, unsigned DIM, unsigned FLAGS_DIM> inline SampleData<T,DIM,FLAGS_DIM>::SampleData(const ExtentList &extents, const FlagsExtentList &flagsExtents, Allocator &allocator)
+:
+  samples(extents, alignment, allocator),
+  flags(flagsExtents) // e.g., for FilteredData [nrChannels][nrStations], sparse dimension [nrSamplesPerIntegration]
+
+  //itsHaveWarnedLittleEndian(false)
+{ 
 }
 
-template <typename T, unsigned DIM> inline size_t SampleData<T,DIM>::requiredSize() const
+
+template <typename T, unsigned DIM, unsigned FLAGS_DIM> inline void SampleData<T,DIM,FLAGS_DIM>::readData(Stream *str)
 {
-  return align(MultiDimArray<T,DIM>::nrElements(extents) * sizeof(T),32);
+  str->read(samples.origin(), samples.num_elements() * sizeof(T));
 }
 
-template <typename T, unsigned DIM> inline void SampleData<T,DIM>::allocate(Allocator &allocator)
+
+template <typename T, unsigned DIM, unsigned FLAGS_DIM> inline void SampleData<T,DIM,FLAGS_DIM>::writeData(Stream *str)
 {
-  samples.resize(extents, 32, allocator);
-  flags.resize( nrFlags );
-}
-
-template <typename T, unsigned DIM> inline void SampleData<T,DIM>::checkEndianness()
-{
-#if 0 && !defined WORDS_BIGENDIAN
-  dataConvert(LittleEndian, samples.origin(), samples.num_elements());
-#endif
-}
-
-template <typename T, unsigned DIM> inline void SampleData<T,DIM>::readData(Stream *str)
-{
-  str->read(samples.origin(), samples.num_elements() * sizeof (T));
-
-  checkEndianness();
-}
-
-template <typename T, unsigned DIM> inline void SampleData<T,DIM>::writeData(Stream *str)
-{
-#if 0 && !defined WORDS_BIGENDIAN
-  if (!itsHaveWarnedLittleEndian) {
-    itsHaveWarnedLittleEndian = true;
-
-     LOG_WARN("writing data in little endian.");
-  }
-  //THROW(AssertError, "not implemented: think about endianness");
-#endif
-
-  str->write(samples.origin(), samples.num_elements() * sizeof (T));
+  str->write(samples.origin(), samples.num_elements() * sizeof(T));
 }
 
 } // namespace RTCP

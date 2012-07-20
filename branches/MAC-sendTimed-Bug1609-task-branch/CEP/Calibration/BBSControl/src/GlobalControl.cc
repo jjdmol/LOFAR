@@ -1,4 +1,4 @@
-//# GlobalControl.cc: 
+//# GlobalControl.cc:
 //#
 //# Copyright (C) 2002-2007
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -25,10 +25,14 @@
 #include <BBSControl/GlobalProcessControl.h>
 #include <BBSControl/Package__Version.h>
 #include <PLC/ACCmain.h>
+#include <Common/Exception.h>
 
 using namespace LOFAR;
 using namespace LOFAR::BBS;
 using namespace LOFAR::ACC::PLC;
+
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 int main(int argc, char *argv[])
 {
@@ -43,7 +47,7 @@ int main(int argc, char *argv[])
       LOG_ERROR_STR("ACCmain returned with error status: " << result);
       return 1;
     }
-  } 
+  }
   catch(Exception& e) {
     LOG_FATAL_STR(progName << " terminated due to fatal exception!\n" << e);
     return 1;

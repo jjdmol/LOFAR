@@ -24,6 +24,7 @@
 #include <gtkmm/button.h>
 #include <gtkmm/buttonbox.h>
 #include <gtkmm/frame.h>
+#include <gtkmm/menutoolbutton.h>
 #include <gtkmm/paned.h>
 #include <gtkmm/scrolledwindow.h>
 #include <gtkmm/treemodel.h>
@@ -31,7 +32,7 @@
 #include <gtkmm/treestore.h>
 #include <gtkmm/window.h>
 
-#include "../rfi/strategy/types.h"
+#include <AOFlagger/strategy/control/types.h>
 
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
@@ -52,7 +53,6 @@ class EditStrategyWindow : public Gtk::Window
 		void fillStore();
 		void fillStore(Gtk::TreeModel::Row &row, rfiStrategy::Action &action, size_t childIndex);
 
-		void onAddActionClicked();
 		void onRemoveActionClicked();
 		void onMoveUpClicked();
 		void onMoveDownClicked();
@@ -99,14 +99,16 @@ class EditStrategyWindow : public Gtk::Window
 		Gtk::HPaned _paned;
 		Gtk::VBox _strategyBox;
 		rfiStrategy::Strategy *_strategy;
-		Gtk::HButtonBox _strategyEditButtonBox, _strategyLoadDefaultsButtonBox;
-		Gtk::Button _addActionButton, _removeActionButton, _moveUpButton, _moveDownButton;
+		Gtk::HButtonBox _strategyEditButtonBox, _strategyFileButtonBox, _strategyLoadDefaultsButtonBox;
+		Gtk::MenuToolButton _addActionButton;
+		Gtk::Button _removeActionButton, _moveUpButton, _moveDownButton;
 		Gtk::Button _addFOBButton, _addFOMSButton;
-		Gtk::Button _loadEmptyButton, _loadDefaultButton, _loadOldButton, _load1Button, _load2Button, _load3Button, _saveButton, _openButton;
+		Gtk::Button _loadEmptyButton, _loadDefaultButton, _load1Button, _load2Button, _load3Button, _saveButton, _openButton;
 		ModelColumns _columns;
 		Gtk::ScrolledWindow _viewScrollWindow;
 		Gtk::TreeView _view;
 		Glib::RefPtr<Gtk::TreeStore> _store;
+		Gtk::Menu *_addMenu;
 
 		Gtk::Frame *_rightFrame;
 };

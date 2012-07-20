@@ -81,14 +81,5 @@ void JobQueue::listJobs() const
 }
 
 
-void JobQueue::waitUntilAllJobsAreFinished()
-{
-  ScopedLock scopedLock(itsMutex);
-
-  while (!itsJobs.empty())
-    itsReevaluate.wait(itsMutex);
-}
-
-
 } // namespace RTCP
 } // namespace LOFAR

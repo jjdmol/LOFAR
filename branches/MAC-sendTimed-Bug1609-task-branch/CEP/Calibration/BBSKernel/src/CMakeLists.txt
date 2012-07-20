@@ -2,37 +2,45 @@
 
 include(LofarPackageVersion)
 
-add_subdirectory(Contrib)
+#add_subdirectory(Contrib)
 
 lofar_add_library(bbskernel
   Package__Version.cc
+  Apply.cc
   BaselineMask.cc
   Correlation.cc
   CorrelationMask.cc
-  ElementBeamExpr.cc
+  Estimate.cc
+  EstimateUtil.cc
   Evaluator.cc
   Instrument.cc
   IonosphereExpr.cc
   MeasurementAIPS.cc
   MeasurementExprLOFAR.cc
+  MeasurementExprLOFARUtil.cc
   ModelConfig.cc
   ParmManager.cc
   ParmProxy.cc
+  PatchExpr.cc
   Solver.cc
   SolverInterfaceTypes.cc
   StationResponse.cc
+  StationExprLOFAR.cc
   UVWFlagger.cc
   VisBuffer.cc
   VisDimensions.cc
   VisEquator.cc
   VisSelection.cc
-  Expr/ArrayFactor.cc
+  Expr/AntennaElementLBA.cc
+  Expr/AntennaElementHBA.cc
+  Expr/AntennaFieldThetaPhi.cc
   Expr/AzEl.cc
   Expr/CachePolicy.cc
   Expr/Cache.cc
   Expr/ConditionNumber.cc
   Expr/Delay.cc
   Expr/Element.cc
+  Expr/ElevationCut.cc
   Expr/EquatorialCentroid.cc
   Expr/Expr.cc
   Expr/ExprAdaptors.cc
@@ -46,8 +54,8 @@ lofar_add_library(bbskernel
   Expr/FlagArray.cc
   Expr/GaussianCoherence.cc
   Expr/GaussianSource.cc
-  Expr/HamakerDipole.cc
   Expr/IonPhaseShift.cc
+  Expr/ITRFDirection.cc
   Expr/LinearToCircularRL.cc
   Expr/Literal.cc
   Expr/LMN.cc
@@ -55,6 +63,7 @@ lofar_add_library(bbskernel
   Expr/MatrixComplexArr.cc
   Expr/MatrixComplexSca.cc
   Expr/MatrixInverse.cc
+  Expr/MatrixInverseMMSE.cc
   Expr/MatrixMul2.cc
   Expr/MatrixMul3.cc
   Expr/MatrixRealArr.cc
@@ -62,6 +71,7 @@ lofar_add_library(bbskernel
   Expr/MatrixRep.cc
   Expr/MatrixSum.cc
   Expr/MatrixTmp.cc
+  Expr/ParallacticRotation.cc
   Expr/PhaseShift.cc
   Expr/PiercePoint.cc
   Expr/PointCoherence.cc
@@ -71,12 +81,17 @@ lofar_add_library(bbskernel
   Expr/Resampler.cc
   Expr/ScalarMatrixMul.cc
   Expr/Scope.cc
+  Expr/ShapeletCoherence.cc
+  Expr/ShapeletSource.cc
   Expr/Source.cc
   Expr/SpectralIndex.cc
+  Expr/StationBeamFormer.cc
   Expr/StationShift.cc
   Expr/StationUVW.cc
+  Expr/StokesRM.cc
+  Expr/TECU2Phase.cc
   Expr/TileArrayFactor.cc
-  Expr/YatawattaDipole.cc)
+  Expr/Timer.cc)
 
 # Because we're using dlopen()
-target_link_libraries(bbskernel ${CMAKE_DL_LIBS})
+#target_link_libraries(bbskernel ${CMAKE_DL_LIBS})

@@ -24,8 +24,7 @@
 #ifndef GTM_SERVICEBROKER_H
 #define GTM_SERVICEBROKER_H
 
-#include <Common/lofar_map.h>
-#include <Common/lofar_list.h>
+#include <queue>
 #include <MACIO/GCF_Event.h>
 #include <GCF/TM/GCF_Control.h>
 #include <GCF/RTDB/RTDB_PropertySet.h>
@@ -52,7 +51,7 @@ public:
     static ClaimMgrTask* instance(bool temporary = false);
     static void release();
 
-	// Ask the claimManager the claim an object. An ClaimReply event is send to the given port.
+	// Ask the claimManager to claim an object. An ClaimReply event is send to the given port.
     void claimObject(const string&		objectType,
 					 const string&		nameInAppl,
 					 GCFPortInterface&	replyPort);
@@ -71,17 +70,26 @@ private:
 
 	// state methods
     GCFEvent::TResult operational (GCFEvent& e, GCFPortInterface& p);
+
+	typedef struct cmRequest {
+		string				objectType;
+		string				objectName;
+		GCFPortInterface*	replyPort;
+		cmRequest(const string& oType, const string& oName, GCFPortInterface* rPort) : 
+					objectType(oType), objectName(oName), replyPort(rPort) {};
+	} cmRequest_t;
         
 	// data members        
-	GCFPortInterface*	itsReplyPort;		// Port to send the result to
-	GCFTimerPort*		itsTimerPort;		// for reconnecting to brokers
-	RTDBPropertySet*	itsClaimMgrPS;		// for accessing the ClaimManager
-	string				itsObjectType;		// Objecttype of object in claim
-	string				itsNameInAppl;		// Name user likes to use
-	uint32				itsResolveState;	// Where we are in claiming the object.
+	std::queue<cmRequest_t>	itsRequestPool;		// pool with waiting requests
+	GCFPortInterface*		itsReplyPort;		// Port to send the result to
+	GCFTimerPort*			itsTimerPort;		// for reconnecting to brokers
+	RTDBPropertySet*		itsClaimMgrPS;		// for accessing the ClaimManager
+	string					itsObjectType;		// Objecttype of object in claim
+	string					itsNameInAppl;		// Name user likes to use
+	uint32					itsResolveState;	// Where we are in claiming the object.
 	// result fields
-	uint32				itsFieldsReceived;
-	string				itsResultDPname;
+	uint32					itsFieldsReceived;
+	string					itsResultDPname;
 };
 
 class CMHandler : public GCFHandler

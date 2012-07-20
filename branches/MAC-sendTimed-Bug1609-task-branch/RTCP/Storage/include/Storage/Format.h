@@ -20,7 +20,6 @@ class Format
     virtual ~Format();
     
     virtual void addSubband(const std::string MSname, unsigned subband, bool isBigEndian) = 0;
-
 };
 
 } // namespace RTCP

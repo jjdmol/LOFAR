@@ -33,6 +33,8 @@
 
 namespace LOFAR
 {
+   class ParameterSet;
+
 namespace BBS
 {
 
@@ -47,15 +49,21 @@ public:
 
     virtual ~Measurement();
 
-    virtual VisDimensions dimensions(const VisSelection &selection) const = 0;
+    virtual VisDimensions dims(const VisSelection &selection) const = 0;
 
     virtual VisBuffer::Ptr read(const VisSelection &selection = VisSelection(),
-        const string &column = "DATA") const = 0;
+        const string &column = "DATA",
+        bool readCovariance = true,
+        bool readFlags = true) const = 0;
 
     virtual void write(VisBuffer::Ptr buffer,
         const VisSelection &selection = VisSelection(),
         const string &column = "CORRECTED_DATA",
-        bool writeFlags = true, flag_t flagMask = ~flag_t(0)) = 0;
+        bool writeCovariance = false,
+        bool writeFlags = true,
+        flag_t flagMask = ~flag_t(0)) = 0;
+
+    virtual void writeHistory(const ParameterSet &parset) const = 0;
 
     // Apply the given filter to the baselines contained in the Measurement and
     // return the result as a (boolean) baseline mask.
@@ -63,9 +71,11 @@ public:
 
     double getReferenceFreq() const;
     const casa::MDirection &getPhaseReference() const;
+    const casa::MDirection &getDelayReference() const;
+    const casa::MDirection &getTileReference() const;
 
-    const Instrument &instrument() const;
-    const VisDimensions &dimensions() const;
+    Instrument::ConstPtr instrument() const;
+    const VisDimensions &dims() const;
 
     // Convenience functions that delegate to VisDimensions (refer to the
     // documentation of VisDimensions for their documentation).
@@ -84,7 +94,9 @@ public:
 protected:
     double                  itsReferenceFreq;
     casa::MDirection        itsPhaseReference;
-    Instrument              itsInstrument;
+    casa::MDirection        itsDelayReference;
+    casa::MDirection        itsTileReference;
+    Instrument::Ptr         itsInstrument;
     VisDimensions           itsDims;
 };
 
@@ -98,9 +110,14 @@ inline Measurement::~Measurement()
 {
 }
 
-inline const Instrument &Measurement::instrument() const
+inline Instrument::ConstPtr Measurement::instrument() const
 {
     return itsInstrument;
+}
+
+inline double Measurement::getReferenceFreq() const
+{
+    return itsReferenceFreq;
 }
 
 inline const casa::MDirection &Measurement::getPhaseReference() const
@@ -108,9 +125,14 @@ inline const casa::MDirection &Measurement::getPhaseReference() const
     return itsPhaseReference;
 }
 
-inline double Measurement::getReferenceFreq() const
+inline const casa::MDirection &Measurement::getDelayReference() const
 {
-    return itsReferenceFreq;
+    return itsDelayReference;
+}
+
+inline const casa::MDirection &Measurement::getTileReference() const
+{
+    return itsTileReference;
 }
 
 inline size_t Measurement::nFreq() const
@@ -153,7 +175,7 @@ inline const CorrelationSeq &Measurement::correlations() const
     return itsDims.correlations();
 }
 
-inline const VisDimensions &Measurement::dimensions() const
+inline const VisDimensions &Measurement::dims() const
 {
     return itsDims;
 }

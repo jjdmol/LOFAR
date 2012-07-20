@@ -23,7 +23,10 @@
 #include <lofar_config.h>
 
 #include <StreamMultiplexer.h>
+#include <Common/Thread/Cancellation.h>
+#include <Common/LofarLogger.h>
 
+#include <cstring>
 
 
 namespace LOFAR {
@@ -32,16 +35,17 @@ namespace RTCP {
 
 template <typename K, typename V> void StreamMultiplexer::Map<K, V>::insert(K key, V value)
 {
-  itsMutex.lock();
+  ScopedLock sl(itsMutex);
+
   itsMap[key] = value;
   itsReevaluate.broadcast();
-  itsMutex.unlock();
 }
 
 
 template <typename K, typename V> V StreamMultiplexer::Map<K, V>::remove(K key)
 {
-  itsMutex.lock();
+  ScopedLock sl(itsMutex);
+
   std::map<unsigned, Request *>::iterator it;
   
   while ((it = itsMap.find(key)) == itsMap.end())
@@ -49,7 +53,6 @@ template <typename K, typename V> V StreamMultiplexer::Map<K, V>::remove(K key)
   
   V v = it->second;
   itsMap.erase(it);
-  itsMutex.unlock();
 
   return v;
 }
@@ -57,20 +60,33 @@ template <typename K, typename V> V StreamMultiplexer::Map<K, V>::remove(K key)
 
 StreamMultiplexer::StreamMultiplexer(Stream &stream)
 :
-  itsStream(stream),
-  itsReceiveThread(this, &StreamMultiplexer::receiveThread, "[StreamMultiplexer] ", 16384)
+  itsStream(stream)
 {
+}
+
+
+void StreamMultiplexer::start()
+{
+  itsReceiveThread = new Thread(this, &StreamMultiplexer::receiveThread, "[StreamMultiplexer] ", 65536);
 }
 
 
 StreamMultiplexer::~StreamMultiplexer()
 {
   RequestMsg msg;
+
+#if defined USE_VALGRIND
+  memset(&msg, 0, sizeof msg);
+#endif
+
   msg.type = RequestMsg::STOP_REQ;
 
-  itsSendMutex.lock();
-  itsStream.write(&msg, sizeof msg);
-  itsSendMutex.unlock();
+  {
+    ScopedLock sl(itsSendMutex);
+    ScopedDelayCancellation dc;
+
+    itsStream.write(&msg, sizeof msg);
+  }
 }
 
 
@@ -78,13 +94,18 @@ void StreamMultiplexer::registerChannel(MultiplexedStream *stream, unsigned chan
 {
   RequestMsg msg;
 
+#if defined USE_VALGRIND
+  memset(&msg, 0, sizeof msg);
+#endif
+
   msg.type	= RequestMsg::REGISTER;
   msg.reqPtr	= &stream->itsRequest;
   msg.size	= channel; // FIXME: abuse size field
 
-  itsSendMutex.lock();
-  itsStream.write(&msg, sizeof msg);
-  itsSendMutex.unlock();
+  {
+    ScopedLock sl(itsSendMutex);
+    itsStream.write(&msg, sizeof msg);
+  }
 
   stream->itsPeerRequestAddr = itsOutstandingRegistrations.remove(channel);
 }
@@ -94,7 +115,13 @@ void StreamMultiplexer::receiveThread()
 {
   while (1) {
     RequestMsg msg;
-    itsStream.read(&msg, sizeof msg);
+
+    try {
+      itsStream.read(&msg, sizeof msg);
+    } catch(Stream::EndOfStreamException &) {
+      LOG_FATAL("[StreamMultiplexer] Connection reset by peer");
+      return;
+    }
 
     switch (msg.type) {
       case RequestMsg::RECV_REQ : msg.reqPtr->msg = msg;
@@ -120,6 +147,10 @@ size_t StreamMultiplexer::tryRead(MultiplexedStream *stream, void *ptr, size_t s
   Semaphore  recvFinished;
   RequestMsg msg;
 
+#if defined USE_VALGRIND
+  memset(&msg, 0, sizeof msg);
+#endif
+
   msg.type	   = RequestMsg::RECV_REQ;
   msg.size	   = size;
   msg.reqPtr       = stream->itsPeerRequestAddr;
@@ -127,9 +158,10 @@ size_t StreamMultiplexer::tryRead(MultiplexedStream *stream, void *ptr, size_t s
   msg.recvPtr	   = ptr;
   msg.recvFinished = &recvFinished;
 
-  itsSendMutex.lock();
-  itsStream.write(&msg, sizeof msg);
-  itsSendMutex.unlock();
+  {
+    ScopedLock sl(itsSendMutex);
+    itsStream.write(&msg, sizeof msg);
+  }
 
   recvFinished.down();
 
@@ -146,10 +178,11 @@ size_t StreamMultiplexer::tryWrite(MultiplexedStream *stream, const void *ptr, s
   ack.type = RequestMsg::RECV_ACK;
   ack.size = std::min(size, ack.size);
 
-  itsSendMutex.lock();
-  itsStream.write(&ack, sizeof ack);
-  itsStream.write(ptr, ack.size);
-  itsSendMutex.unlock();
+  {
+    ScopedLock sl(itsSendMutex);
+    itsStream.write(&ack, sizeof ack);
+    itsStream.write(ptr, ack.size);
+  }  
 
   return ack.size;
 }

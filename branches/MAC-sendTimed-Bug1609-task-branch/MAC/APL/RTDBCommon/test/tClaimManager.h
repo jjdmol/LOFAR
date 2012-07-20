@@ -36,12 +36,14 @@ public:
 	MgrTest (const string& name);
 	virtual ~MgrTest();
 
-	GCFEvent::TResult doTest	(GCFEvent& e, GCFPortInterface& p);
+	GCFEvent::TResult doSingleTest	(GCFEvent& e, GCFPortInterface& p);
+	GCFEvent::TResult doMultipleTest(GCFEvent& e, GCFPortInterface& p);
 
 private:
 	GCF::TM::GCFTimerPort*		itsTimerPort;
 	GCF::TM::GCFITCPort*		itsMsgPort;
 	ClaimMgrTask*				itsClaimMgrTask;
+	int							itsAnswers2Xpect;
 };
 
   } // namespace RTDBCommon

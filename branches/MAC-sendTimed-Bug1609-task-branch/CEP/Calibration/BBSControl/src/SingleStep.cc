@@ -52,6 +52,7 @@ namespace LOFAR
       os << endl << indent << "Output column: " << itsOutputColumn
         << boolalpha
         << endl << indent << "Write flags: " << itsWriteFlags
+        << endl << indent << "Write covariance: " << itsWriteCov
 	    << noboolalpha;
     }
 
@@ -79,6 +80,7 @@ namespace LOFAR
       const string prefix("Step." + name() + ".");
       ps.replace(prefix + "Output.Column", itsOutputColumn);
       ps.replace(prefix + "Output.WriteFlags", toString(itsWriteFlags));
+      ps.replace(prefix + "Output.WriteCovariance", toString(itsWriteCov));
       ps.replace(prefix + "Operation",  toUpper(operation()));
       LOG_TRACE_VAR_STR("\nContents of ParameterSet ps:\n" << ps);
     }
@@ -89,7 +91,8 @@ namespace LOFAR
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       Step::read(ps);
       itsOutputColumn = ps.getString("Output.Column", "");
-      itsWriteFlags = ps.getBool("Output.WriteFlags", false);
+      itsWriteFlags = ps.getBool("Output.WriteFlags", true);
+      itsWriteCov = ps.getBool("Output.WriteCovariance", false);
     }
 
   } // namespace BBS

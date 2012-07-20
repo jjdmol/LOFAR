@@ -54,7 +54,8 @@ CalTest::CalTest(string name, string arrayname, string parentname, int nantennas
 {
   registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_STRINGS);
 
-  m_server.init(*this, MAC_SVCMASK_CALSERVER, GCFPortInterface::SAP, CAL_PROTOCOL);
+  m_server = new GCFTCPPort(*this, MAC_SVCMASK_CALSERVER, GCFPortInterface::SAP, CAL_PROTOCOL);
+  ASSERTSTR(m_server, "Could not allocate the server port");
 }
 
 CalTest::~CalTest()
@@ -73,7 +74,7 @@ GCFEvent::TResult CalTest::initial(GCFEvent& e, GCFPortInterface& port)
 
     case F_ENTRY:
     {
-      m_server.open();
+      m_server->open();
     }
     break;
 
@@ -93,7 +94,7 @@ GCFEvent::TResult CalTest::initial(GCFEvent& e, GCFPortInterface& port)
     case F_TIMER:
     {
       // try again
-      m_server.open();
+      m_server->open();
     }
     break;
 
@@ -164,7 +165,7 @@ GCFEvent::TResult CalTest::test001(GCFEvent& e, GCFPortInterface& port)
 	start.rcumode().resize(1);
 	start.rcumode()(0).setRaw(m_rcucontrol);
 
-	TESTC_ABORT(m_server.send(start), CalTest::final);
+	TESTC_ABORT(m_server->send(start), CalTest::final);
       }
       break;
 
@@ -182,7 +183,7 @@ GCFEvent::TResult CalTest::test001(GCFEvent& e, GCFPortInterface& port)
 	subscribe.subbandset.reset();
 	subscribe.subbandset.set(100);
 
-	TESTC_ABORT(m_server.send(subscribe), CalTest::final);
+	TESTC_ABORT(m_server->send(subscribe), CalTest::final);
       }
       break;
 
@@ -214,7 +215,7 @@ GCFEvent::TResult CalTest::test001(GCFEvent& e, GCFPortInterface& port)
 	unsubscribe.name = m_arrayname;
 	unsubscribe.handle = m_handle;
 	
-	TESTC_ABORT(m_server.send(unsubscribe), CalTest::final);
+	TESTC_ABORT(m_server->send(unsubscribe), CalTest::final);
 #endif
       }
       break;
@@ -230,7 +231,7 @@ GCFEvent::TResult CalTest::test001(GCFEvent& e, GCFPortInterface& port)
 
 	CALStopEvent stop;
 	stop.name = m_arrayname;
-	TESTC_ABORT(m_server.send(stop), CalTest::final);
+	TESTC_ABORT(m_server->send(stop), CalTest::final);
       }
       break;
 

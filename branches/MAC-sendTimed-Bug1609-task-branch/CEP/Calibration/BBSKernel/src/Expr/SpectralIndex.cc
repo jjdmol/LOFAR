@@ -36,12 +36,11 @@ SpectralIndex::~SpectralIndex()
         disconnect(*it);
     }
     disconnect(itsRefStokes);
-    disconnect(itsRefFreq);
 }
 
 unsigned int SpectralIndex::nArguments() const
 {
-    return itsCoeff.size() + 2;
+    return itsCoeff.size() + 1;
 }
 
 ExprBase::ConstPtr SpectralIndex::argument(unsigned int i) const
@@ -50,11 +49,9 @@ ExprBase::ConstPtr SpectralIndex::argument(unsigned int i) const
     switch(i)
     {
     case 0:
-        return itsRefFreq;
-    case 1:
         return itsRefStokes;
     default:
-        return itsCoeff[i - 2];
+        return itsCoeff[i - 1];
     }
 }
 
@@ -69,41 +66,38 @@ const Scalar SpectralIndex::evaluateExpr(const Request &request, Cache &cache,
     vector<FlagArray> flags;
     flags.reserve(nArg);
 
-    const Scalar refFreq = itsRefFreq->evaluate(request, cache, grid);
-    flags.push_back(refFreq.flags());
-
     const Scalar refStokes = itsRefStokes->evaluate(request, cache, grid);
-    flags.push_back(refFreq.flags());
+    flags.push_back(refStokes.flags());
 
     vector<Scalar> coeff;
-    coeff.reserve(nArg - 2);
-    for(unsigned int i = 0; i < nArg - 2; ++i)
+    coeff.reserve(nArg - 1);
+    for(unsigned int i = 0; i < nArg - 1; ++i)
     {
         coeff.push_back(itsCoeff[i]->evaluate(request, cache, grid));
         flags.push_back(coeff[i].flags());
     }
+
+    EXPR_TIMER_START();
 
     // Evaluate flags.
     result.setFlags(mergeFlags(flags.begin(), flags.end()));
 
     // Compute main value.
     vector<Scalar::View> coeffValue;
-    coeffValue.reserve(nArg - 2);
-    for(unsigned int i = 0; i < nArg - 2; ++i)
+    coeffValue.reserve(nArg - 1);
+    for(unsigned int i = 0; i < nArg - 1; ++i)
     {
         coeffValue.push_back(coeff[i].view());
     }
-    result.assign(evaluateImpl(request[grid], refFreq.view(), refStokes.view(),
-        coeffValue));
+    result.assign(evaluateImpl(request[grid], refStokes.view(), coeffValue));
 
     // Compute perturbed values.
-    Scalar::Iterator refFreqIt(refFreq);
     Scalar::Iterator refStokesIt(refStokes);
-    bool atEnd = refFreqIt.atEnd() && refStokesIt.atEnd();
+    bool atEnd = refStokesIt.atEnd();
 
     vector<Scalar::Iterator> coeffIt;
-    coeffIt.reserve(nArg - 2);
-    for(unsigned int i = 0; i < nArg - 2; ++i)
+    coeffIt.reserve(nArg - 1);
+    for(unsigned int i = 0; i < nArg - 1; ++i)
     {
         coeffIt.push_back(Scalar::Iterator(coeff[i]));
         atEnd = atEnd && coeffIt.back().atEnd();
@@ -112,36 +106,36 @@ const Scalar SpectralIndex::evaluateExpr(const Request &request, Cache &cache,
     PValueKey key;
     while(!atEnd)
     {
-        key = std::min(refFreqIt.key(), refStokesIt.key());
-        for(unsigned int i = 0; i < nArg - 2; ++i)
+        key = refStokesIt.key();
+        for(unsigned int i = 0; i < nArg - 1; ++i)
         {
             key = std::min(key, coeffIt[i].key());
         }
 
-        for(unsigned int i = 0; i < nArg - 2; ++i)
+        for(unsigned int i = 0; i < nArg - 1; ++i)
         {
             coeffValue[i] = coeffIt[i].value(key);
         }
 
-        result.assign(key, evaluateImpl(request[grid], refFreqIt.value(key),
-            refStokesIt.value(key), coeffValue));
+        result.assign(key, evaluateImpl(request[grid], refStokesIt.value(key),
+            coeffValue));
 
-        refFreqIt.advance(key);
         refStokesIt.advance(key);
-        atEnd = refFreqIt.atEnd() && refStokesIt.atEnd();
-        for(unsigned int i = 0; i < nArg - 2; ++i)
+        atEnd = refStokesIt.atEnd();
+        for(unsigned int i = 0; i < nArg - 1; ++i)
         {
             coeffIt[i].advance(key);
             atEnd = atEnd && coeffIt[i].atEnd();
         }
     }
 
+    EXPR_TIMER_STOP();
+
     return result;
 }
 
 const Scalar::View SpectralIndex::evaluateImpl(const Grid &grid,
-    const Scalar::View &refFreq, const Scalar::View &refStokes,
-    const vector<Scalar::View> &coeff) const
+    const Scalar::View &refStokes, const vector<Scalar::View> &coeff) const
 {
     Scalar::View result;
 
@@ -174,7 +168,7 @@ const Scalar::View SpectralIndex::evaluateImpl(const Grid &grid,
     // Where v is the frequency and v0 is the reference frequency.
 
     // Compute log10(v / v0).
-    Matrix base = log10(freq) - log10(refFreq());
+    Matrix base = log10(freq) - LOFAR::log10(itsRefFreq);
 
     // Compute c0 + log10(v / v0) * c1 + log10(v / v0)^2 * c2 + ... using
     // Horner's rule.

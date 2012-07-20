@@ -24,6 +24,9 @@ package nl.astron.lofar.lofarutils;
 
 
 import java.awt.Component;
+import java.awt.KeyboardFocusManager;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.text.Collator;
 import java.util.BitSet;
 import java.util.regex.Pattern;
@@ -32,6 +35,7 @@ import javax.swing.Icon;
 import javax.swing.JComboBox;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
+import javax.swing.text.JTextComponent;
 
 /**
  * This panel contains a TreePanel and some textfields that display information
@@ -98,34 +102,29 @@ public abstract class LofarUtils {
         }
     }
 
-    /** converts string to boolean 
-     * t, true returns true
-     * f, false returns false
-     */
-    static public boolean StringToBoolean(String aS) {
-        boolean aB = false;
-        if (aS.equalsIgnoreCase("t") || aS.equalsIgnoreCase("true")) {
-            aB = true;
-        } else if (aS.equalsIgnoreCase("f") || aS.equalsIgnoreCase("false")) {
-            aB = false;
-        } else {
-            System.out.println("getBoolean ERROR: no boolean: " + aS);
-        }
-        return aB;
-    }
-
     /** converts boolean to string
      * false - f
      * true  - t
      */
     static public String BooleanToString(boolean aB) {
         if (aB) {
-            return "t";
+            return "true";
         } else {
-            return "f";
+            return "false";
         }
     }
 
+    /** converts string to boolean
+     * false - f,F,0,false,FALSE,False
+     * true  - t,T,1,true,TRUE,True
+     */
+    static public boolean StringToBoolean(String aS) {
+        if (aS.toLowerCase().startsWith("t") ||aS.toLowerCase().startsWith("1") ) {
+            return true;
+        } else {
+            return false;
+        }
+    }
     /**
      * Creates a String representation of the contents of a JList component<br><br>
      * Example of output with createQuotes : ["123","456","789"]<br>
@@ -380,6 +379,25 @@ public abstract class LofarUtils {
         return aV;
     }
 
+    /** Function to return nr of elements in an stringArray
+     *
+     */
+    static public int nrArrayStringElements(String orgStr) {
+        int nr = -1;
+  	// destroyable copy, containing expanded String to avoid allready available x..y constructions
+  	String baseStr=LofarUtils.expandedArrayString(orgStr);
+
+  	// strip the brackets, space and tab
+  	baseStr =LofarUtils.ltrim(baseStr," 	\\[");
+  	baseStr =LofarUtils.rtrim(baseStr," 	\\]");
+
+
+        //split the baseString into individual numbers
+        String[] splitted = baseStr.split("[,]");
+
+        return splitted.length;
+    }
+
     /**  Function compactedArrayString(string)
      * 
      *
@@ -402,12 +420,13 @@ public abstract class LofarUtils {
 
     static public String compactedArrayString(String orgStr) {
         
-  	// destroyable copy
-  	String baseStr=orgStr;
+  	// destroyable copy, containing expanded String to avoid allready available x..y constructions
+  	String baseStr=LofarUtils.expandedArrayString(orgStr);
 
   	// strip the brackets, space and tab
   	baseStr =LofarUtils.ltrim(baseStr," 	\\[");
   	baseStr =LofarUtils.rtrim(baseStr," 	\\]");
+
         
         //split the baseString into individual numbers
         String[] splitted = baseStr.split("[,]");
@@ -416,40 +435,54 @@ public abstract class LofarUtils {
         int sum=0;
         int oldnum=-1;
         int anI=-1;
-        
+        int len = splitted.length;
+
+        //if len <= 2 return, since only 2 nrs max are available
+        if (len <= 2 ) return orgStr;
+
         try {
             for (String aS:splitted) {
+                // return if non digits are found
+                if (!aS.matches("-?\\d+" )) return orgStr;
+
                 anI = Integer.valueOf(aS).intValue();
-                sum++;
                 if (oldnum == -1) {
                     oldnum=anI;
                     result+= anI;
+                    sum++;
                 } else {
                     // check if sequence
                     if (anI != oldnum+1) {
                         // not in sequence anymore, close last sequence
                         // and reset counters
-                        if (sum > 1) {
+                        if (sum == 2) {
+                            // don't compact 13,14 into 13..14
+                            result += ","+oldnum;
+                        } else if (sum >2) {
                             result += ".."+oldnum;
-                        } else {
-                            result += ","+anI;
                         }
+                        // write new startSequence
+                        result += ","+anI;
                         //reset sequence counter
-                        sum=0;                        
-                    } 
+                        sum=1;
+                    } else {
+                        sum++;
+                    }
                     oldnum=anI;
                 }
             }
             // add last found number and close
             // and reset counters
-            if (sum > 1) {
+            if (sum > 2) {
                 result += ".."+oldnum;
-            } else {
+            } else if ( sum == 2) {
+                result += ","+oldnum;
+            } else if (oldnum != anI) {
                 result += ","+anI;
             }
+
         } catch (Exception ex) {
             System.out.println("Error in CompactedArrayString: " + ex.getMessage());
-            ex.printStackTrace();
             return orgStr;
         }
 
@@ -461,6 +494,9 @@ public abstract class LofarUtils {
         
   	// destroyable copy
   	String baseStr=orgStr;
+
+        //no use expand strings thyat don't have .. sequence'
+        if (!orgStr.contains("..")) return orgStr;
 
   	// strip the brackets, space and tab
   	baseStr =LofarUtils.ltrim(baseStr," 	\\[");
@@ -474,6 +510,7 @@ public abstract class LofarUtils {
          
         try {
             for (String aS:splitted) {
+
                 // check if a .. is found in the string
                 if (aS.contains("..")) {
                     String [] split = aS.split("[.]+");
@@ -499,7 +536,6 @@ public abstract class LofarUtils {
             }
         } catch (Exception ex) {
             System.out.println("Error in CompactedArrayString: " + ex.getMessage());
-            ex.printStackTrace();
             return orgStr;
         }
 
@@ -563,8 +599,6 @@ public abstract class LofarUtils {
     static public double rad2deg(double rad) {
         double deg=0;
 
-        if (rad < 0) return deg;
-
         deg=rad*(360/(2*Math.PI));
         return deg;
     }
@@ -578,8 +612,6 @@ public abstract class LofarUtils {
     static public double deg2rad(double deg) {
         double rad=0;
 
-        if (deg < 0) return rad;
-
         rad=deg/360*2*Math.PI;
         return rad;
     }
@@ -592,6 +624,7 @@ public abstract class LofarUtils {
      */
     static public String rad2hms(double rad) {
 
+        if (rad < 0) rad += 2*Math.PI;
         return(LofarUtils.deg2hms(LofarUtils.rad2deg(rad)));
     }
 
@@ -639,7 +672,7 @@ public abstract class LofarUtils {
     static public String deg2hms(double deg) {
         String hms="";
 
-        if (deg < 0) return hms;
+        if (deg < 0) deg += 360;
 
         int    h = (int) deg/15;
         int    m = (int) ((deg-h*15)/15*60);
@@ -681,11 +714,12 @@ public abstract class LofarUtils {
     static public String deg2dms(double deg) {
         String hms="";
 
-        if (deg < 0) return hms;
-
         int    d = (int) deg;
         int    m = (int) ((deg-d)*60);
         double s =  (deg-d-(m/60.))*3600.;
+
+        if (m<0) m*=-1;
+        if (s<0) s*=-1;
 
         hms=Integer.toString(d)+":"+Integer.toString(m)+":"+Double.toString(s);
         return hms;
@@ -707,6 +741,10 @@ public abstract class LofarUtils {
         int m = Integer.valueOf(v1[1]);
         double s = Double.valueOf(v1[2]);
 
+        if (d < 0) {
+            if (m>0) m*=-1;
+            if (s>0) s*=-1;
+        }
         deg= d+(m/60.)+(s/3600.);
 
         return deg;
@@ -786,5 +824,109 @@ public abstract class LofarUtils {
         return coordinate;
     }
 
+    /** Function directionTypeToAngle1(String coordType,int angle)
+     *  returns angle name for a give coordType
+     *
+     * @param  directionType   Name of the direction Type
+     * @param  angle       Angle1 or Angle2
+     * @return name to use for angle
+     */
+    static public String directionTypeToAngle(String directionType,int angle){
+        String Angle1="Angle1";
+        String Angle2="Angle2";
 
-}
+        if (directionType.equalsIgnoreCase("J2000")) {
+            Angle1="Right Ascension";
+            Angle2="Declination";
+        } else if (directionType.equalsIgnoreCase("ITRF")) {
+        } else if (directionType.equalsIgnoreCase("B1950")) {
+            Angle1="Right Ascension";
+            Angle2="Declination";
+        } else if (directionType.equalsIgnoreCase("HADEC")) {
+            Angle1="Hour Angle";
+            Angle2="Declination";
+        } else if (directionType.equalsIgnoreCase("AZELGEO")) {
+            Angle1="Azimuth";
+            Angle2="Elevation";
+        } else if (directionType.equalsIgnoreCase("TOPO")) {
+        } else if (directionType.equalsIgnoreCase("ICRS")) {
+        } else if (directionType.equalsIgnoreCase("APP")) {
+            Angle1="Right Ascension";
+            Angle2="Declination";
+        } else if (directionType.equalsIgnoreCase("GALACTIC")) {
+            Angle1="Longitude";
+            Angle2="Latitude";
+        } else if (directionType.equalsIgnoreCase("COMET")) {
+            Angle1="Longitude";
+            Angle2="Latitude";
+        } else if (directionType.equalsIgnoreCase("MERCURY")) {
+        } else if (directionType.equalsIgnoreCase("VENUS")) {
+        } else if (directionType.equalsIgnoreCase("MARS")) {
+        } else if (directionType.equalsIgnoreCase("JUPITER")) {
+        } else if (directionType.equalsIgnoreCase("SATURN")) {
+        } else if (directionType.equalsIgnoreCase("URANUS")) {
+        } else if (directionType.equalsIgnoreCase("NEPTUNE")) {
+        } else if (directionType.equalsIgnoreCase("PLUTO")) {
+        } else if (directionType.equalsIgnoreCase("SUN")) {
+        } else if (directionType.equalsIgnoreCase("MOON")) {
+        }
+
+        if (angle==1) {
+            return Angle1;
+        } else if (angle==2) {
+            return Angle2;
+        } else {
+            return "";
+        }
+    }
+    
+        static public class TextSelector {
+
+            private static FocusHandler installedInstance;
+
+            /**
+             * Install an PropertyChangeList listener to the default focus manager
+             * and selects text when a text component is focused.       
+             */
+            public static void install() {
+                //already installed
+                if (installedInstance != null) {
+                    return;
+                }
+
+                installedInstance = new FocusHandler();
+
+                KeyboardFocusManager kfm = KeyboardFocusManager.getCurrentKeyboardFocusManager();
+
+
+
+                kfm.addPropertyChangeListener("focusOwner", installedInstance);
+            }
+
+            public static void uninstall() {
+                if (installedInstance != null) {
+                    KeyboardFocusManager kfm = KeyboardFocusManager.getCurrentKeyboardFocusManager();
+                    kfm.removePropertyChangeListener("focusOwner", installedInstance);
+                }
+            }
+
+            private static class FocusHandler implements PropertyChangeListener {
+
+            @Override
+                public void propertyChange(PropertyChangeEvent evt) {
+                    if (evt.getNewValue() instanceof JTextComponent) {
+                        JTextComponent text = (JTextComponent) evt.getNewValue();
+                       //select text if the component is editable
+                        //and the caret is at the end of the text
+                        if (text.isEditable()) {
+//                                && text.getDocument().getLength() == text.getCaretPosition()) {
+
+                            text.select(0,text.getDocument().getLength());
+                        }
+                    }
+                }
+            }
+        }
+
+
+}   

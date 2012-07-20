@@ -36,4 +36,4 @@ option(USE_SOCKETS              "Use Sockets"                 ON)
 option(USE_THREADS              "Use threads"                 ON)
 
 # Override defaults for some of the settings for CTest/CDash.
-set_if_not_set(CTEST_CUSTOM_MAXIMUM_NUMBER_OF_WARNINGS 200)
+set_if_not_set(CTEST_CUSTOM_MAXIMUM_NUMBER_OF_WARNINGS 500)

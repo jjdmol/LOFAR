@@ -99,7 +99,7 @@ LANG:1 2 dB
 14 229
 "txt_attValue"
 ""
-1 102 40 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
+1 102 40 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 6 0 0 0 0 0
 E E E

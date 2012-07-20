@@ -49,6 +49,10 @@ error = {
 	msg = "No connection with the ClaimManager in PVSS";
 };
 error = {
+	id = INVALID_SPEC;
+	msg = "Invalid specification of the observation";
+};
+error = {
 	id = UNKNOWN_TYPE;
 	msg = "ObjectType unknown";
 };

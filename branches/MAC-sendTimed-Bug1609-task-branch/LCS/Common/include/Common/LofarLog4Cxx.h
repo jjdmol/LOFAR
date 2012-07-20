@@ -27,6 +27,7 @@
 // Interface to the log4cxx logging package.
 
 //# Includes
+#include <Common/CasaLogSink.h>
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_sstream.h>
 #include <Common/lofar_string.h>
@@ -64,11 +65,13 @@ namespace LOFAR {
 #define INIT_LOGGER(filename)                   \
   do {                                          \
     ::LOFAR::initLog4Cxx(filename);             \
+    ::LOFAR::CasaLogSink::attach();             \
   } while(0)
 
 #define INIT_VAR_LOGGER(filename,logfile)       \
   do {                                          \
     ::LOFAR::initLog4Cxx(filename, logfile);    \
+    ::LOFAR::CasaLogSink::attach();             \
   } while(0)
 
 // After initialisation a thread is started to monitor any changes in the
@@ -77,10 +80,15 @@ namespace LOFAR {
 # define INIT_LOGGER_AND_WATCH(filename,watchinterval)      \
   do {                                                      \
     ::LOFAR::initLog4CxxAndWatch(filename, watchinterval);  \
+    ::LOFAR::CasaLogSink::attach();                         \
   } while(0)
 #else
 # define INIT_LOGGER_AND_WATCH(filename,watchinterval) INIT_LOGGER(filename)
 #endif
+
+// Each new thread might need a partial reinitialisation and destruction in the logger
+#define LOGGER_ENTER_THREAD()
+#define LOGGER_EXIT_THREAD()
 
   //@}
 
@@ -228,6 +236,7 @@ namespace LOFAR {
 #define LofarLogTrace(level,message) \
  do { \
   if (getTraceLogger()->isTraceEnabled()) { \
+    ::LOFAR::ScopedDelayCancellation dc; \
     getTraceLogger()->forcedLog (log4cxx::Level::getTrace(), \
                                  message, \
                                  LOG4CXX_LOCATION); \
@@ -239,6 +248,7 @@ namespace LOFAR {
 #define LofarLogTraceStr(level,stream) \
  do { \
   if (getTraceLogger()->isTraceEnabled()) { \
+    ::LOFAR::ScopedDelayCancellation dc; \
     std::ostringstream	lfr_log_oss; \
     lfr_log_oss << stream; \
     getTraceLogger()->forcedLog (log4cxx::Level::getTrace(), \
@@ -328,6 +338,7 @@ namespace LOFAR {
 #undef THROW
 #define THROW(exc,stream) \
  do { \
+  ::LOFAR::ScopedDelayCancellation dc; \
   std::ostringstream lfr_log_oss;	\
   lfr_log_oss << stream;          \
   log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger(LOFARLOGGER_FULLPACKAGE ".EXCEPTION"); \
@@ -345,12 +356,18 @@ namespace LOFAR {
   // @{
 #define LofarLog(level,message)                                 \
   do {                                                          \
+    ::LOFAR::ScopedDelayCancellation dc;                        \
     log4cxx::LoggerPtr _logger =                                \
       log4cxx::Logger::getLogger(LOFARLOGGER_FULLPACKAGE);      \
     LOG4CXX_##level(_logger, message);                          \
   } while(0)
 
-#define LofarLogStr(level,stream) LofarLog(level,stream)
+#define LofarLogStr(level,stream)      \
+  do {                                 \
+    std::ostringstream lfr_log_oss;    \
+    lfr_log_oss << stream;             \
+    LofarLog(level, lfr_log_oss.str()); \
+  } while(0)
   // @}
 #endif // DOXYGEN_SHOULD_SKIP_THIS
 
@@ -423,5 +440,7 @@ inline log4cxx::LoggerPtr& getTraceLogger() { return theirTraceLoggerRef; }
 
 
 } // namespace LOFAR
+
+#include <Common/Thread/Cancellation.h>
 
 #endif // file read before

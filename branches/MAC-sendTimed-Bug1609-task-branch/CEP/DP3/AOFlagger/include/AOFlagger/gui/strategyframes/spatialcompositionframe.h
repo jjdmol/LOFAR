@@ -27,9 +27,9 @@
 #include <gtkmm/label.h>
 #include <gtkmm/radiobutton.h>
 
-#include "../../rfi/strategy/spatialcompositionaction.h"
+#include <AOFlagger/strategy/actions/spatialcompositionaction.h>
 
-#include "../editstrategywindow.h"
+#include <AOFlagger/gui/editstrategywindow.h>
 
 class SpatialCompositionFrame : public Gtk::Frame {
 	public:

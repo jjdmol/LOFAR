@@ -21,8 +21,11 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <Common/LofarLogger.h>			// needed to write log messages
 #include <ParmDB/ParmDBLog.h>
+#include <ParmDB/ParmDBLogLevel.h>
+#include <Common/StringUtil.h>         // contains toString() functions for LofarTypes.h
+#include <Common/LofarLogger.h>        // needed to write log messages
+#include <Common/lofar_vector.h>
 
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/SetupNewTab.h>
@@ -34,14 +37,16 @@
 using namespace casa;
 using namespace std;
 
-namespace LOFAR {
-namespace BBS {
+namespace LOFAR
+{
+namespace BBS
+{
 
-  ParmDBLog::ParmDBLog (const string& tableName, enum LoggingLevel LogLevel, bool forceNew, bool wlock)
+  ParmDBLog::ParmDBLog (const string& tableName, ParmDBLoglevel::LoggingLevel LogLevel, bool forceNew, bool wlock)
   {
-  	 setLoggingLevel(LogLevel);
-  	 
-  	 // Create the table if needed or if it does not exist yet.
+    setLoggingLevel(LogLevel);
+
+    // Create the table if needed or if it does not exist yet.
     if (forceNew  ||  !Table::isReadable (tableName)) {
       createTables (tableName);
     }
@@ -57,7 +62,6 @@ namespace BBS {
     itsStartTime.attach (itsTable, "STARTTIME");
     itsEndTime.attach (itsTable, "ENDTIME");
     itsIter.attach (itsTable, "ITER");
-    itsMaxIter.attach (itsTable, "MAXITER");
     itsLastIter.attach (itsTable, "LASTITER");
     itsRank.attach (itsTable, "RANK");
     itsRankDef.attach (itsTable, "RANKDEF");
@@ -67,9 +71,6 @@ namespace BBS {
     itsSolution.attach (itsTable, "SOLUTION");
     itsCorrMat.attach (itsTable, "CORRMATRIX");
   }
-
-  ParmDBLog::~ParmDBLog()
-  {}
 
   void ParmDBLog::lock (bool lockForWrite)
   {
@@ -90,7 +91,6 @@ namespace BBS {
     td.addColumn (ScalarColumnDesc<Double>("STARTTIME"));
     td.addColumn (ScalarColumnDesc<Double>("ENDTIME"));
     td.addColumn (ScalarColumnDesc<uInt>  ("ITER"));
-    td.addColumn (ScalarColumnDesc<uInt>  ("MAXITER"));
     td.addColumn (ScalarColumnDesc<Bool>  ("LASTITER"));
     td.addColumn (ScalarColumnDesc<uInt>  ("RANK"));
     td.addColumn (ScalarColumnDesc<uInt>  ("RANKDEF"));
@@ -103,25 +103,68 @@ namespace BBS {
     SetupNewTable newtab(tableName, td, Table::New);
     Table tab(newtab);
     tab.tableInfo().setType ("BBSLog");
-    tab.tableInfo().readmeAddLine ("BBS Solve logging");
+    tab.tableInfo().readmeAddLine ("BBS Solver logging");
+  }
+
+  void ParmDBLog::setCoeffIndex (const string &parm, unsigned int start,
+                                 unsigned int end)
+  {
+    TableLocker locker(itsTable, FileLocker::Write);
+
+    // Get rw-keywordset from table
+    TableRecord &keywords = itsTable.rwKeywordSet();
+
+    casa::Vector<uInt> range(2);
+    range[0] = start;
+    range[1] = end;
+
+    keywords.define(parm, range);
+  }
+
+  // Public function to set the initial LSQ solver configuration.
+  void ParmDBLog::setSolverKeywords (double epsValue, double epsDerivative,
+                                     unsigned int maxIter, double colFactor,
+                                     double lmFactor)
+  {
+     TableLocker locker(itsTable, FileLocker::Write);
+
+     // Get rw-keywordset from table
+     TableRecord &keywords = itsTable.rwKeywordSet();
+
+     // Write logging level to table
+     if (getLoggingLevel() == ParmDBLoglevel::PERSOLUTION)
+        keywords.define("Logginglevel", "PERSOLUTION");
+     else if (getLoggingLevel() == ParmDBLoglevel::PERITERATION)
+        keywords.define("Logginglevel", "PERITERATION");
+     else if (getLoggingLevel() == ParmDBLoglevel::PERSOLUTION_CORRMATRIX)
+        keywords.define("Logginglevel", "PERSOLUTION_CORRMATRIX");
+     else if (getLoggingLevel() == ParmDBLoglevel::PERITERATION_CORRMATRIX)
+        keywords.define("Logginglevel", "PERITERATION_CORRMATRIX");
+
+     keywords.define("EpsValue", epsValue);
+     keywords.define("EpsDerivative", epsDerivative);
+     keywords.define("MaxIter", maxIter);
+     keywords.define("EpsValue", epsValue);
+     keywords.define("ColFactor", colFactor);
+     keywords.define("LMFactor", lmFactor);
   }
 
   void ParmDBLog::add (double startFreq, double endFreq,
                        double startTime, double endTime,
-                       uint iter, uint maxIter, Bool lastIter,
+                       uint iter, Bool lastIter,
                        uint rank, uint rankDeficiency,
                        double chiSquare, double lmFactor,
                        const vector<double>& solution, const string& message)
   {
     TableLocker locker(itsTable, FileLocker::Write);
     doAdd (startFreq, endFreq, startTime, endTime,
-           iter, maxIter, lastIter, rank, rankDeficiency,
+           iter, lastIter, rank, rankDeficiency,
            chiSquare, lmFactor, solution, message);
   }
 
   void ParmDBLog::add (double startFreq, double endFreq,
                        double startTime, double endTime,
-                       uint iter, uint maxIter, Bool lastIter,
+                       uint iter, Bool lastIter,
                        uint rank, uint rankDeficiency,
                        double chiSquare, double lmFactor,
                        const vector<double>& solution, const string& message,
@@ -129,14 +172,14 @@ namespace BBS {
   {
     TableLocker locker(itsTable, FileLocker::Write);
     doAdd (startFreq, endFreq, startTime, endTime,
-           iter, maxIter, lastIter, rank, rankDeficiency,
+           iter, lastIter, rank, rankDeficiency,
            chiSquare, lmFactor, solution, message);
     itsCorrMat.put (itsTable.nrow()-1, correlationMatrix);
   }
 
   void ParmDBLog::doAdd (double startFreq, double endFreq,
                          double startTime, double endTime,
-                         uint iter, uint maxIter, bool lastIter,
+                         uint iter, bool lastIter,
                          uint rank, uint rankDeficiency,
                          double chiSquare, double lmFactor,
                          const vector<double>& solution, const string& message)
@@ -148,7 +191,6 @@ namespace BBS {
     itsStartTime.put (rownr, startTime);
     itsEndTime.put (rownr, endTime);
     itsIter.put (rownr, iter);
-    itsMaxIter.put (rownr, maxIter);
     itsLastIter.put (rownr, lastIter);
     itsRank.put (rownr, rank);
     itsRankDef.put (rownr, rankDeficiency);
@@ -157,7 +199,6 @@ namespace BBS {
     itsMessage.put (rownr, message);
     itsSolution.put (rownr, Vector<double>(solution));
   }
-
 
 } // namespace BBS
 } // namespace LOFAR

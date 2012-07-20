@@ -27,13 +27,15 @@
 #ifndef LOFAR_PARMDB_PARMDBLOG_H
 #define LOFAR_PARMDB_PARMDBLOG_H
 
-
 //# Includes
+#include <casa/Containers/Map.h>
 #include <casa/Arrays/Array.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/ArrayColumn.h>
 
+#include <Common/lofar_map.h>
+#include <ParmDB/ParmDBLogLevel.h>
 
 namespace LOFAR {
 namespace BBS {
@@ -45,14 +47,16 @@ namespace BBS {
   class ParmDBLog
   {
   public:
-	// Setting which logging level is used
- 	enum LoggingLevel {
-			NONE, 
-			PERSOLUTION, 
-			PERITERATION,
-			PERSOLUTION_CORRMATRIX, 
-			PERITERATION_CORRMATRIX	
-			}; 
+   // Setting which logging level is used
+   /*
+   enum LoggingLevel {
+         NONE,
+         PERSOLUTION,
+         PERITERATION,
+         PERSOLUTION_CORRMATRIX,
+         PERITERATION_CORRMATRIX
+         };
+    */
 
     // Create the object.
     // The table is created if <src>forceNew=true</src> or if the table does
@@ -60,10 +64,7 @@ namespace BBS {
     // If <src>lock=true</src> a write lock is acquired. In this way no
     // implcit locks have to be acquired on each access.
     // The default logging level is PERSOLUTION
-    explicit ParmDBLog (const std::string& tableName, enum LoggingLevel LogLevel=PERSOLUTION, bool forceNew=true,
-                        bool lock=true);
-
-    ~ParmDBLog();
+    explicit ParmDBLog (const string &tableName, ParmDBLoglevel::LoggingLevel LogLevel=ParmDBLoglevel::PERSOLUTION, bool forceNew=true, bool lock=true);
 
     // Writelock and unlock the table.
     // It is not necessary to do this, but it can be useful if many
@@ -76,7 +77,7 @@ namespace BBS {
     // Add a solve entry (without correlation matrix).
     void add (double startFreq, double endFreq,
               double startTime, double endTime,
-              uint iter, uint maxIter, bool lastIter,
+              uint iter, bool lastIter,
               uint rank, uint rankDeficiency,
               double chiSquare, double lmFactor,
               const vector<double>& solution, const string& message);
@@ -84,7 +85,7 @@ namespace BBS {
     // Add a solve entry (with correlation matrix).
     void add (double startFreq, double endFreq,
               double startTime, double endTime,
-              uint iter, uint maxIter, bool lastIter,
+              uint iter, bool lastIter,
               uint rank, uint rankDeficiency,
               double chiSquare, double lmFactor,
               const vector<double>& solution, const string& message,
@@ -92,11 +93,20 @@ namespace BBS {
 
     // Get or set the logging level of solver parameters
     // <group>
-    LoggingLevel getLoggingLevel() const
+    ParmDBLoglevel::LoggingLevel getLoggingLevel() const
       { return itsLoggingLevel; }
-    void setLoggingLevel (LoggingLevel level)
+    void setLoggingLevel (ParmDBLoglevel::LoggingLevel level)
       { itsLoggingLevel = level; }
     // </group>
+
+    // Set the index range corresponding to the specified parameter.
+    void setCoeffIndex (const string &parm, unsigned int start,
+                        unsigned int end);
+
+    // Set the initial LSQ solver configuration.
+    void setSolverKeywords (double epsValue, double epsDerivative,
+                            unsigned int maxIter, double colFactor,
+                            double lmFactor);
 
   private:
     // Create the tables.
@@ -105,20 +115,19 @@ namespace BBS {
     // Add a row and write the values.
     void doAdd (double startFreq, double endFreq,
                 double startTime, double endTime,
-                uint iter, uint maxIter, bool lastIter,
+                uint iter, bool lastIter,
                 uint rank, uint rankDeficiency,
                 double chiSquare, double lmFactor,
                 const vector<double>& solution, const string& message);
 
     //# Data members
-    LoggingLevel itsLoggingLevel;
+    ParmDBLoglevel::LoggingLevel itsLoggingLevel;
     casa::Table itsTable;
     casa::ScalarColumn<casa::Double> itsStartFreq;
     casa::ScalarColumn<casa::Double> itsEndFreq;
     casa::ScalarColumn<casa::Double> itsStartTime;
     casa::ScalarColumn<casa::Double> itsEndTime;
     casa::ScalarColumn<casa::uInt>   itsIter;
-    casa::ScalarColumn<casa::uInt>   itsMaxIter;
     casa::ScalarColumn<casa::Bool>   itsLastIter;
     casa::ScalarColumn<casa::uInt>   itsRank;
     casa::ScalarColumn<casa::uInt>   itsRankDef;

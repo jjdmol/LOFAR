@@ -37,7 +37,7 @@
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION deleteTree(INT4, INT4)
-  RETURNS VOID AS '
+  RETURNS VOID AS $$
 	DECLARE
 		vFunction		INT2 := 1;
 		TThardware 		CONSTANT INT2 := 10;
@@ -53,7 +53,7 @@ CREATE OR REPLACE FUNCTION deleteTree(INT4, INT4)
 		SELECT isAuthorized(vAuthToken, $2, vFunction, 0) 
 		INTO   vIsAuth;
 		IF NOT vIsAuth THEN
-			RAISE EXCEPTION \'Not authorized\';
+			RAISE EXCEPTION 'Not authorized';
 		END IF;
 
 		-- Get info from old tree and check type
@@ -62,12 +62,16 @@ CREATE OR REPLACE FUNCTION deleteTree(INT4, INT4)
 		FROM	OTDBtree
 		WHERE	treeID = $2;
 		IF vOldTree.state = TSactive THEN
-		  RAISE EXCEPTION \'Active trees may not be deleted\';
+		  RAISE EXCEPTION 'Active trees may not be deleted';
 		END IF;
 
 		-- delete state history
 		DELETE FROM StateHistory
 		WHERE  treeID = $2;
+
+		-- make sure that there are not kvt's left that refer to this tree
+		DELETE FROM VICkvt
+		WHERE treeID = $2;
 
 		-- delete tree		
 		IF vOldTree.treetype = TThardware THEN
@@ -77,7 +81,6 @@ CREATE OR REPLACE FUNCTION deleteTree(INT4, INT4)
 		  DELETE FROM VICtemplate
 		  WHERE	 treeID = $2;
 		ELSE
-		  -- TODO: DELETE KVTs ALSO
 		  DELETE FROM VIChierarchy
 		  WHERE	 treeID = $2;
 		END IF;
@@ -88,4 +91,4 @@ CREATE OR REPLACE FUNCTION deleteTree(INT4, INT4)
 
 		RETURN;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;

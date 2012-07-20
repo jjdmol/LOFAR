@@ -106,13 +106,11 @@ void distSystemChanged(string dp, dyn_int newDistSysList) {
   }
 
   // write configuration to datapoint
- 	for (int i = 1; i <= dynlen(g_connections["SYSTEM"]); i++) {
-          		fillWatchDog(g_connections[ "SYSTEM"],
-                                     g_connections[ "NAME"],
-                                     g_connections[ "UP" ], 
-                                     g_connections[ "DOWNTIME"], 
-                                     g_connections[ "UPTIME"]);
-  }
+  fillWatchDog(g_connections[ "SYSTEM"],
+               g_connections[ "NAME"],
+               g_connections[ "UP" ], 
+               g_connections[ "DOWNTIME"], 
+               g_connections[ "UPTIME"]);
 }
 
 void fillWatchDog(

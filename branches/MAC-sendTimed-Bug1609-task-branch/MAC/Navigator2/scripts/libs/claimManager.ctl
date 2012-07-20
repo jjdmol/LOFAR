@@ -30,7 +30,7 @@
 // claimManager_queryConnectClaims         : Establish a query connect to get all claimed datapoints
 // claimManager_queryConnectClaim_Callback : Callback for the above query connect
 
-
+#uses "GCFCommon.ctl"
 
 // the name of the datapoints plus the actual name
 // This is used to quickly determine the name of the real datapoint
@@ -119,23 +119,27 @@ string claimManager_realNameToName( string strName )
 void claimManager_queryConnectClaims()
 {
   // Local data
-  string strQuery = "SELECT '.claim.name:_original.._value, .claim.claimDate:_original.._value' FROM 'LOFAR_ObsSW_*' WHERE _DPT = \"Observation\"";
+  string DPT = "Observation";
+  if (g_standAlone) {
+    DPT = "StnObservation";
+  }    
+  string strQuery = "SELECT '.claim.name:_original.._value, .claim.claimDate:_original.._value' FROM 'LOFAR_ObsSW_*' WHERE _DPT = \""+DPT+"\"";
 
   LOG_DEBUG( "claimManager.ctl:claimManager_queryConnectClaims|*** Doing a query for : claimManager_QueryConnectClaims() " );
  
   // Trigger a single query that gets an update when one 
   // claim changes
-  if (dpQueryConnectSingle( "claimManager_queryConnectClaim_Callback", 1, "ident_claim", strQuery, 50 ) == -1) {
+  if (dpQueryConnectSingle( "claimManager_queryConnectClaim_Callback", 1, "ident_claim", strQuery ) == -1) {
     LOG_ERROR( "claimManager.ctl:claimManager_queryConnectClaims|dpQueryConnectSingle failed" );
+    if ( g_initializing ) {
+      writeInitProcess("connectClaimsFinished"); 
+    }
   }
 }
 
-void claimManager_queryConnectClaim_Callback(
-  string strIdent,
-  dyn_dyn_anytype aResult    
-)
+void claimManager_queryConnectClaim_Callback(string strIdent,  dyn_dyn_anytype aResult) 
 {
-  // Locla data
+  // Local data
   int iPos;
   string aDP;
   string strDP;
@@ -145,9 +149,11 @@ void claimManager_queryConnectClaim_Callback(
   
   LOG_DEBUG( "claimManager.ctl:claimManager_queryConnectClaim_Callback| has " + dynlen( aResult ) + " results" );
   LOG_DEBUG( "claimManager.ctl:claimManager_queryConnectClaim_Callback| "+aResult);
-  if( dynlen( aResult ) < 2 )
+  if( dynlen( aResult ) < 2 ) {
+      writeInitProcess("connectClaimsFinished");
       return;
-  
+    }
+
   // Iterate through the results
   for( int t = 2; t <= dynlen( aResult ); t++)
   {
@@ -167,7 +173,7 @@ void claimManager_queryConnectClaim_Callback(
     // Do we already have this name 
     iPos = dynContains( strClaimDPName, strDP );  
     
-    LOG_DEBUG("claimManager.ctl:claimManager_queryConnectClaim_Callback| found old claim at postion: "+ iPos);
+    LOG_TRACE("claimManager.ctl:claimManager_queryConnectClaim_Callback| found old claim at postion: "+ iPos);
 
     
     // When we have the claim, and the datapoint is now 'not claimed'
@@ -189,5 +195,9 @@ void claimManager_queryConnectClaim_Callback(
       // then we have to alter the 
       strClaimObjectName[iPos] = strName;
     }
-  }  
+  }
+  LOG_DEBUG("writing connectClaimsFinished");
+  if ( g_initializing ) {
+    writeInitProcess("connectClaimsFinished"); 
+  }
 }

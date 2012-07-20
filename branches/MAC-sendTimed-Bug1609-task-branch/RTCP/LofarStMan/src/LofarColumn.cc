@@ -158,15 +158,13 @@ namespace LOFAR {
         itsAntMB.push_back (MBaseline (MVBaseline(mvpos), MBaseline::ITRF));
       }
       // Read the phase reference position from the FIELD subtable.
-      // Only use the first value from the PHASE_DIR array in J2000.
+      // Only use the first value from the PHASE_DIR array.
       Table fldtab (itsParent->table().keywordSet().asTable ("FIELD"));
       AlwaysAssert (fldtab.nrow() == 1, AipsError);
       ROArrayMeasColumn<MDirection> fldcol (fldtab, "PHASE_DIR");
-      itsPhaseDir = MDirection::Convert (*(fldcol(0).data()),
-                                         MDirection::J2000)();
+      itsPhaseDir = fldcol(0).data()[0];
       // Create a reference frame. Use the middle antenna as array position.
       itsFrame.set (arrayPos);
-      itsFrame.set (itsPhaseDir);
       // Initialize the rest which is used to cache the UVW per antenna.
       // The cache is only useful if the MS is accessed in time order, but that
       // is normally the case.
@@ -196,6 +194,10 @@ namespace LOFAR {
         itsLastBlNr  = blnr;
         Quantum<Double> tm(itsParent->time(blnr), "s");
         itsFrame.set (MEpoch(MVEpoch(tm.get("d").getValue()), MEpoch::UTC));
+        itsJ2000Dir = MDirection::Convert (itsPhaseDir,
+                                           MDirection::Ref(MDirection::J2000,
+                                                           itsFrame))();
+        itsFrame.set (itsJ2000Dir);
         itsUvwFilled = false;
       }
       // Calculate the UVWs for this timestamp if not done yet.
@@ -206,7 +208,7 @@ namespace LOFAR {
           mbl.getRefPtr()->set(itsFrame);       // attach frame
           MBaseline::Convert mcvt(mbl, MBaseline::J2000);
           MVBaseline bas = mcvt().getValue();
-          MVuvw jvguvw(bas, itsPhaseDir.getValue());
+          MVuvw jvguvw(bas, itsJ2000Dir.getValue());
           itsAntUvw[ant] = Muvw(jvguvw, Muvw::J2000).getValue().getVector();
           itsUvwFilled[ant] = true;
         }
@@ -254,13 +256,12 @@ namespace LOFAR {
     
     switch(itsParent->getLofarStManVersion()) {
     case 1:
-    case 2:
     {
-      const uShort* data = itsParent->getNSample (rownr, False);
+      const uShort* data = itsParent->getNSample2 (rownr, False);
       const uShort* dataEnd = data + itsParent->nchan();
+
       if (dataPtr->contiguousStorage()) {
-	for (Array<Bool>::contiter iter=dataPtr->cbegin();
-	     data<dataEnd; ++data) {
+	for (Array<Bool>::contiter iter=dataPtr->cbegin(); data<dataEnd; ++data) {
 	  Bool flagged = (*data == 0);
 	  for (uInt i=0; i<npol; ++i, ++iter) {
 	    *iter = flagged;
@@ -276,25 +277,82 @@ namespace LOFAR {
 	}
       }
     } break;
-    case 3: {
-      const uInt* data = itsParent->getNSampleV2 (rownr, False);
+    case 2:
+    case 3:
+    {
+      switch (itsParent->getNrBytesPerNrValidSamples()) {
 
-      uInt channel = 0;
-      if (dataPtr->contiguousStorage()) {
-	for (Array<Bool>::contiter iter=dataPtr->cbegin(); channel < itsParent->nchan() ; ++channel) {
-	 
-	  Bool flagged = (*data == 0 || channel == 0);
-	  for (uInt i=0; i<npol; ++i, ++iter) {
-	    *iter = flagged;
+      case 1:
+      {
+	const uChar* data    = itsParent->getNSample1 (rownr, False);
+	const uChar* dataEnd = data + itsParent->nchan();
+	
+	if (dataPtr->contiguousStorage()) {
+	  for (Array<Bool>::contiter iter=dataPtr->cbegin(); data<dataEnd; ++data) {
+	    Bool flagged = (*data == 0);
+	    for (uInt i=0; i<npol; ++i, ++iter) {
+	      *iter = flagged;
+	    }
+	  }
+	} else {
+	  for (Array<Bool>::iterator iter=dataPtr->begin();
+	       data<dataEnd; ++data, ++iter) {
+	    Bool flagged = (*data == 0);
+	    for (uInt i=0; i<npol; ++i, ++iter) {
+	      *iter = flagged;
+	    }
 	  }
 	}
-      } else {
-	for (Array<Bool>::iterator iter=dataPtr->begin(); channel < itsParent->nchan() ; ++iter, ++channel) {
-	  Bool flagged = (*data == 0 || channel == 0);
-	  for (uInt i=0; i<npol; ++i, ++iter) {
-	    *iter = flagged;
+      } break;
+
+      case 2:
+      {
+	const uShort* data = itsParent->getNSample2 (rownr, False);
+	const uShort* dataEnd = data + itsParent->nchan();
+	
+	if (dataPtr->contiguousStorage()) {
+	  for (Array<Bool>::contiter iter=dataPtr->cbegin(); data<dataEnd; ++data) {
+	    Bool flagged = (*data == 0);
+	    for (uInt i=0; i<npol; ++i, ++iter) {
+	      *iter = flagged;
+	    }
+	  }
+	} else {
+	  for (Array<Bool>::iterator iter=dataPtr->begin();
+	       data<dataEnd; ++data, ++iter) {
+	    Bool flagged = (*data == 0);
+	    for (uInt i=0; i<npol; ++i, ++iter) {
+	      *iter = flagged;
+	    }
 	  }
 	}
+      } break;
+	
+      case 4:
+      {
+	const uInt* data = itsParent->getNSample4 (rownr, False);
+	const uInt* dataEnd = data + itsParent->nchan();
+
+	if (dataPtr->contiguousStorage()) {
+	  for (Array<Bool>::contiter iter=dataPtr->cbegin(); data<dataEnd; ++data) {
+	    Bool flagged = (*data == 0);
+	    for (uInt i=0; i<npol; ++i, ++iter) {
+	      *iter = flagged;
+	    }
+	  }
+	} else {
+	  for (Array<Bool>::iterator iter=dataPtr->begin();
+	       data<dataEnd; ++data, ++iter) {
+	    Bool flagged = (*data == 0);
+	    for (uInt i=0; i<npol; ++i, ++iter) {
+	      *iter = flagged;
+	    }
+	  }
+	}
+      } break;
+
+      default:
+	throw;
       }
     } break;
     default:
@@ -338,10 +396,10 @@ namespace LOFAR {
 
     switch (itsParent->getLofarStManVersion()) {
     case 1:
-    case 2:
     {
-      const uShort* data = itsParent->getNSample (rownr, True);
+      const uShort* data    = itsParent->getNSample2 (rownr, True);
       const uShort* dataEnd = data + itsParent->nchan();
+
       if (dataPtr->contiguousStorage()) {
 	for (Array<Float>::contiter iter=dataPtr->cbegin();
 	     data<dataEnd; ++data) {
@@ -360,26 +418,82 @@ namespace LOFAR {
 	}
       }
     } break;
-    case 3: {
-      const uInt* data = itsParent->getNSampleV2 (rownr, True);
+    case 2:
+    case 3:
+    {
+      switch (itsParent->getNrBytesPerNrValidSamples()) {
+      case 1:
+      {
+	const uChar* data    = itsParent->getNSample1(rownr, True);
+	const uChar* dataEnd = data + itsParent->nchan();
+	
+	if (dataPtr->contiguousStorage()) {
+	  for (Array<Float>::contiter iter=dataPtr->cbegin();
+	       data<dataEnd; ++data) {
+	    Float weight = *data / maxn;
+	    for (uInt i=0; i<npol; ++i, ++iter) {
+	      *iter = weight;
+	    }
+	  }
+	} else {
+	  for (Array<Float>::iterator iter=dataPtr->begin();
+	       data<dataEnd; ++data, ++iter) {
+	    Float weight = *data / maxn;
+	    for (uInt i=0; i<npol; ++i, ++iter) {
+	      *iter = weight;
+	    }
+	  }
+	}
+      } break;
+      case 2:
+      {
+	const uShort* data    = itsParent->getNSample2(rownr, True);
+	const uShort* dataEnd = data + itsParent->nchan();
+	
+	if (dataPtr->contiguousStorage()) {
+	  for (Array<Float>::contiter iter=dataPtr->cbegin();
+	       data<dataEnd; ++data) {
+	    Float weight = *data / maxn;
+	    for (uInt i=0; i<npol; ++i, ++iter) {
+	      *iter = weight;
+	    }
+	  }
+	} else {
+	  for (Array<Float>::iterator iter=dataPtr->begin();
+	       data<dataEnd; ++data, ++iter) {
+	    Float weight = *data / maxn;
+	    for (uInt i=0; i<npol; ++i, ++iter) {
+	      *iter = weight;
+	    }
+	  }
+	}
+      } break;
 
-      uInt channel = 0;
-      if (dataPtr->contiguousStorage()) {
-	for (Array<Float>::contiter iter=dataPtr->cbegin(); channel < itsParent->nchan(); ++channel) {
-	  Float weight = 0;
-	  if (channel != 0) weight = *data / maxn;
-	  for (uInt i=0; i<npol; ++i, ++iter) {
-	    *iter = weight;
+      case 4:
+      {
+	const uInt* data    = itsParent->getNSample4(rownr, True);
+	const uInt* dataEnd = data + itsParent->nchan();
+	
+	if (dataPtr->contiguousStorage()) {
+	  for (Array<Float>::contiter iter=dataPtr->cbegin();
+	       data<dataEnd; ++data) {
+	    Float weight = *data / maxn;
+	    for (uInt i=0; i<npol; ++i, ++iter) {
+	      *iter = weight;
+	    }
+	  }
+	} else {
+	  for (Array<Float>::iterator iter=dataPtr->begin();
+	       data<dataEnd; ++data, ++iter) {
+	    Float weight = *data / maxn;
+	    for (uInt i=0; i<npol; ++i, ++iter) {
+	      *iter = weight;
+	    }
 	  }
 	}
-      } else {
-	for (Array<Float>::iterator iter=dataPtr->begin(); channel < itsParent->nchan(); ++channel, ++iter) {
-	  Float weight = 0;
-	  if (channel !=0) weight = *data / maxn;
-	  for (uInt i=0; i<npol; ++i, ++iter) {
-	    *iter = weight;
-	  }
-	}
+      } break;
+      default:
+      	throw;
       }
     } break;
     default:

@@ -35,21 +35,24 @@ template <typename SAMPLE_TYPE> class PPF: boost::noncopyable
     PPF(unsigned nrStations, unsigned nrChannels, unsigned nrSamplesPerIntegration, double channelBandwidth, bool delayCompensation, bool correctBandPass, bool verbose);
     ~PPF();
 
-    void computeFlags(unsigned stat, const SubbandMetaData *metaData, FilteredData *);
-    void filter(unsigned stat, double centerFrequency, const SubbandMetaData *metaData, const TransposedData<SAMPLE_TYPE> *, FilteredData *);
+    void doWork(unsigned stat, double centerFrequency, const SubbandMetaData *, const TransposedData<SAMPLE_TYPE> *, FilteredData *);
+
+#if !defined PPF_C_IMPLEMENTATION
+    static void initConstantTable();
+#endif
 
   private:
     void init_fft(), destroy_fft();
-
-#if !defined PPF_C_IMPLEMENTATION
-    void initConstantTable();
-#endif
 
 #if defined PPF_C_IMPLEMENTATION
     fcomplex phaseShift(unsigned time, unsigned chan, double baseFrequency, double delayAtBegin, double delayAfterEnd) const;
 #else
     void     computePhaseShifts(struct phase_shift phaseShifts[/*itsNrSamplesPerIntegration*/], double delayAtBegin, double delayAfterEnd, double baseFrequency) const;
 #endif
+
+    void computeFlags(unsigned stat, const SubbandMetaData *metaData, FilteredData *);
+    void filter(unsigned stat, double centerFrequency, const SubbandMetaData *, const TransposedData<SAMPLE_TYPE> *, FilteredData *);
+    void bypass(unsigned stat, double centerFrequency, const SubbandMetaData *, const TransposedData<SAMPLE_TYPE> *, FilteredData *);
 
     const unsigned itsNrStations, itsNrSamplesPerIntegration;
     const unsigned itsNrChannels;

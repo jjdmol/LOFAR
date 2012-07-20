@@ -14,6 +14,8 @@ def isinteger( x ):
     return False
   except TypeError:
     return False
+  except AttributeError: # for example, when x == AssertionError()
+    return False
 
   return True
 
@@ -24,6 +26,8 @@ def isnumeric( x ):
   except ValueError:
     return False
   except TypeError:
+    return False
+  except AttributeError: # for example, when x == AssertionError()
     return False
 
   return True
@@ -268,7 +272,9 @@ class Parset(dict):
       # avoid KeyErrors
       if key in self: dict.__delitem__(self,key)
 
-    def getBool(self, key):
+    def getBool(self, key, default = False):
+      if key not in self: return default
+
       return self[key] in TRUE_VALUES
 
     def getString(self, key):

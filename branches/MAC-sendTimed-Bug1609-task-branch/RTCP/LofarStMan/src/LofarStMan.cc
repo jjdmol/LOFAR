@@ -41,7 +41,6 @@ LofarStMan::LofarStMan (const String& dataManName)
 : DataManager    (),
   itsDataManName (dataManName),
   itsRegFile     (0),
-  itsMapFile     (0), 
   itsSeqFile     (0)
 {}
 
@@ -50,7 +49,6 @@ LofarStMan::LofarStMan (const String& dataManName,
 : DataManager    (),
   itsDataManName (dataManName),
   itsRegFile     (0),
-  itsMapFile     (0),
   itsSeqFile     (0)
 {}
 
@@ -58,7 +56,6 @@ LofarStMan::LofarStMan (const LofarStMan& that)
 : DataManager    (),
   itsDataManName (that.itsDataManName),
   itsRegFile     (0),
-  itsMapFile     (0),
   itsSeqFile     (0)
 {}
 
@@ -68,7 +65,6 @@ LofarStMan::~LofarStMan()
     delete itsColumns[i];
   }
   delete itsRegFile;
-  delete itsMapFile;
   delete itsSeqFile;
 }
 
@@ -89,7 +85,7 @@ String LofarStMan::dataManagerName() const
 
 Record LofarStMan::dataManagerSpec() const
 {
-  return Record();
+  return itsSpec;
 }
 
 
@@ -220,11 +216,6 @@ void LofarStMan::prepare()
 
 void LofarStMan::openFile (bool writable)
 {
-  // Use mmap-ed IO non 64-bit systems.
-  if (sizeof(void*) == 8) {
-    mapFile (writable);
-    return;
-  }
   // Open the data file using unbuffered IO.
   delete itsRegFile;
   itsRegFile = 0;
@@ -241,23 +232,7 @@ void LofarStMan::openFile (bool writable)
   }
 }
 
-void LofarStMan::mapFile (bool writable)
-{
-  // Memory-map the data file.
-  delete itsMapFile;
-  itsMapFile = 0;
-  if (writable) {
-    itsMapFile = new MMapIO (fileName() + "data", ByteIO::Update);
-  } else {
-    itsMapFile = new MMapIO (fileName() + "data");
-  }
-  // Set correct number of rows.
-  itsNrRows = itsMapFile->getFileSize() / itsBlockSize * itsAnt1.size();
-  // Map the file with seqnrs.
-  mapSeqFile();
-}
-
-  void LofarStMan::mapSeqFile()
+void LofarStMan::mapSeqFile()
 {
   delete itsSeqFile;
   itsSeqFile = 0;
@@ -280,12 +255,7 @@ void LofarStMan::resync (uInt)
 }
 uInt LofarStMan::resync1 (uInt)
 {
-  uInt nrows;
-  if (sizeof(void*) == 8) {
-    nrows = itsMapFile->getFileSize() / itsBlockSize * itsAnt1.size();
-  } else {
-    nrows = itsRegFile->length() / itsBlockSize * itsAnt1.size();
-  }
+  uInt nrows = itsRegFile->length() / itsBlockSize * itsAnt1.size();
   // Reopen file if different nr of rows.
   if (nrows != itsNrRows) {
     openFile (table().isWritable());
@@ -302,8 +272,6 @@ void LofarStMan::deleteManager()
 {
   delete itsRegFile;
   itsRegFile = 0;
-  delete itsMapFile;
-  itsMapFile = 0;
   delete itsSeqFile;
   itsSeqFile = 0;
   DOos::remove (fileName()+"meta", False, False);
@@ -320,8 +288,19 @@ void LofarStMan::init()
   }
   Bool asBigEndian;
   uInt alignment;
-  aio >> itsAnt1 >> itsAnt2 >> itsStartTime >> itsTimeIntv >> itsNChan
+  if (itsVersion == 2) {
+    // In version 2 antenna1 and antenna2 were swapped.
+    aio >> itsAnt2 >> itsAnt1;
+  } else {
+    aio >> itsAnt1 >> itsAnt2;
+  }
+  aio >> itsStartTime >> itsTimeIntv >> itsNChan
       >> itsNPol >> itsMaxNrSample >> alignment >> asBigEndian;
+  if (itsVersion > 1) {
+    aio >> itsNrBytesPerNrValidSamples;
+  } else {
+    itsNrBytesPerNrValidSamples = 2;
+  }
   aio.getend();
   // Set start time to middle of first time slot.
   itsStartTime += itsTimeIntv*0.5;
@@ -337,10 +316,8 @@ void LofarStMan::init()
     switch (itsVersion) {
     case 1:
     case 2:
-      itsBlockSize = itsSampStart + nrant*itsNChan*2;
-      break;
     case 3:
-      itsBlockSize = itsSampStart + nrant*4;
+      itsBlockSize = itsSampStart + nrant*itsNChan*2;
       break;
     default:
       throw DataManError("LofarStMan can only handle up to version 3");
@@ -352,11 +329,8 @@ void LofarStMan::init()
     switch (itsVersion) {
     case 1:
     case 2:
-      itsBlockSize = itsSampStart + (nrant*itsNChan*2 + alignment-1)
-	/ alignment * alignment;
-      break;
     case 3:
-      itsBlockSize = itsSampStart + (nrant*4 + alignment-1)
+      itsBlockSize = itsSampStart + (nrant*itsNChan*2 + alignment-1)
 	/ alignment * alignment;
       break;
     default:
@@ -366,21 +340,37 @@ void LofarStMan::init()
   if (itsDoSwap) {
     switch (itsVersion) {
     case 1:
+      itsNSampleBuf2.resize(itsNChan * 2);
+      break;
     case 2:
-      itsNSampleBuf.resize (itsNChan * 2);
-      break;
     case 3:
-      itsNSampleBufV2.resize(4);
-      break;
+    {
+      switch (itsNrBytesPerNrValidSamples) {
+      case 1:
+	break;
+      case 2:
+	itsNSampleBuf2.resize (itsNChan * 2);
+	break;
+      case 4:
+	itsNSampleBuf4.resize (itsNChan * 2);
+	break;
+      }
+    } break;
     default:
       throw;
     }
   }
+  // Fill the specification record (only used for reporting purposes).
+  itsSpec.define ("version", itsVersion);
+  itsSpec.define ("alignment", alignment);
+  itsSpec.define ("bigEndian", asBigEndian);
+  itsSpec.define ("maxNrSample", itsMaxNrSample);
+  itsSpec.define ("nrBytesPerNrValidSamples", itsNrBytesPerNrValidSamples);
 }
 
 Double LofarStMan::time (uInt blocknr)
 {
-  Int seqnr;
+  uInt seqnr;
   const void* ptr;
   if (itsSeqFile) {
     ptr = itsSeqFile->getReadPointer(blocknr * sizeof(uInt));
@@ -390,7 +380,7 @@ Double LofarStMan::time (uInt blocknr)
   if (itsDoSwap) {
     CanonicalConversion::reverse4 (&seqnr, ptr);
   } else {
-    seqnr = *static_cast<const Int*>(ptr);
+    seqnr = *static_cast<const uInt*>(ptr);
   }
   return itsStartTime + seqnr*itsTimeIntv;
 }
@@ -413,8 +403,8 @@ void LofarStMan::getData (uInt rownr, Complex* buf)
   } else {
     memcpy (buf, ptr, itsBLDataSize);
   }
-  if (itsVersion == 1) {
-    // The first RTCP version generated conjugate data.
+  if (itsVersion < 3) {
+    // The first RTCP versions generated conjugate data.
     for (uint i=0; i<itsBLDataSize/sizeof(Complex); ++i) {
       buf[i] = conj(buf[i]);
     }
@@ -427,8 +417,8 @@ void LofarStMan::putData (uInt rownr, const Complex* buf)
   uInt baseline = rownr - blocknr*itsAnt1.size();
   uInt offset  = itsDataStart + baseline * itsBLDataSize;
   void* ptr = getWritePointer (blocknr, offset, itsBLDataSize);
-  // The first RTCP version generated conjugate data.
-  if (itsVersion == 1) {
+  // The first RTCP versions generated conjugate data.
+  if (itsVersion < 3) {
     Complex val;
     const Complex* from = buf;
     char* to = (char*)ptr;
@@ -460,42 +450,57 @@ void LofarStMan::putData (uInt rownr, const Complex* buf)
   writeData (blocknr, offset, itsBLDataSize);
 }
 
-const uShort* LofarStMan::getNSample (uInt rownr, Bool swapIfNeeded)
+const uChar* LofarStMan::getNSample1 (uInt rownr, Bool)
 {
   uInt blocknr = rownr / itsAnt1.size();
   uInt baseline = rownr - blocknr*itsAnt1.size();
-  uInt offset  = itsSampStart + baseline * itsNChan*2;
-  const void* ptr = getReadPointer (blocknr, offset, itsNChan*sizeof(uShort));
+  uInt offset  = itsSampStart + baseline * itsNChan*itsNrBytesPerNrValidSamples;
+  const void* ptr = getReadPointer (blocknr, offset, itsNChan*itsNrBytesPerNrValidSamples);
+
+  const uChar* from = (const uChar*)ptr;
+  return from;
+}
+
+const uShort* LofarStMan::getNSample2 (uInt rownr, Bool swapIfNeeded)
+{
+  uInt blocknr = rownr / itsAnt1.size();
+  uInt baseline = rownr - blocknr*itsAnt1.size();
+  uInt offset  = itsSampStart + baseline * itsNChan*itsNrBytesPerNrValidSamples;
+  const void* ptr = getReadPointer (blocknr, offset, itsNChan*itsNrBytesPerNrValidSamples);
+
   const uShort* from = (const uShort*)ptr;
+
   if (!swapIfNeeded || !itsDoSwap) {
     return from;
   }
-  uShort* to = itsNSampleBuf.storage();
+
+  uShort* to = itsNSampleBuf2.storage();
   for (uInt i=0; i<itsNChan; ++i) {
     CanonicalConversion::reverse2 (to+i, from+i);
   }
   return to;
 }
 
-const uInt* LofarStMan::getNSampleV2 (uInt rownr, Bool swapIfNeeded)
+const uInt* LofarStMan::getNSample4 (uInt rownr, Bool swapIfNeeded)
 {
   uInt blocknr = rownr / itsAnt1.size();
   uInt baseline = rownr - blocknr*itsAnt1.size();
+  uInt offset  = itsSampStart + baseline * itsNChan*itsNrBytesPerNrValidSamples;
+  const void* ptr = getReadPointer (blocknr, offset, itsNChan*itsNrBytesPerNrValidSamples);
 
-  uInt offset  = itsSampStart + baseline * 4; 
-  
-  const void* ptr = getReadPointer (blocknr, offset, sizeof(uInt));
   const uInt* from = (const uInt*)ptr;
 
   if (!swapIfNeeded || !itsDoSwap) {
     return from;
   }
 
-  uInt* to = itsNSampleBufV2.storage();
-  CanonicalConversion::reverse4 (to, from);
-
+  uInt* to = itsNSampleBuf4.storage();
+  for (uInt i=0; i<itsNChan; ++i) {
+    CanonicalConversion::reverse4 (to+i, from+i);
+  }
   return to;
 }
+
 
 void* LofarStMan::readFile (uInt blocknr, uInt offset, uInt size)
 {

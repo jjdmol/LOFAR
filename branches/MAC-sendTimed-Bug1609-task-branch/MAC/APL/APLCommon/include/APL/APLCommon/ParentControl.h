@@ -69,7 +69,7 @@ public:
 
 	// Main controller task should identify itself at ParentControlTask.
 	// Its gets an ITCport pointer in return.
-	GCFITCPort* registerTask (GCFTask*			mainTask);
+	GCFITCPort* registerTask (GCFTask*	mainTask, bool standAlone = false);
 
 	// Let ParentControlTask watch for start- and stop-time of observation.
 	// When the given time is reached the ParentControlTask generates a 
@@ -104,6 +104,7 @@ private:
 		GCFPortInterface*	port;			// connection with the parent
 		string				hostname;		// host the controller runs on
 		string				servicename;	// servicename to connect to
+		bool				firstConnection;// connection is first conn and not a reconnect
 		CTState::CTstateNr	requestedState;	// the state the controller requested
 		time_t				requestTime;	// time of requested state
 		CTState::CTstateNr	currentState;	// the state we reached for that parent
@@ -119,11 +120,11 @@ private:
 
 	// internal routines for managing the ParentInfo pool.
 	PIiter	findParentOnPort	(GCFPortInterface*	port);
-	PIiter	findParentOnTimerID	(uint32				timerID);
+	PIiter	findParentOnTimerID	(uint32				timerID, uint32* pTimerType);
 	PIiter	findParentOnName	(const string&		name);
-	bool	isParent  (PIiter				parentPtr) 
-	{	return (parentPtr != itsParentList.end());	}
-	bool 				isLegalSignal (uint16	aSignal, PIiter	aParent);
+	void	removeParent		(PIiter				parentPtr);
+	bool	isParent  (PIiter	parentPtr) { return (parentPtr != itsParentList.end());	}
+	bool 	isLegalSignal (uint16	aSignal, PIiter	aParent);
 	CTState::CTstateNr	requestedState(uint16	aSignal);
 	CTState::CTstateNr	getNextState  (PIiter	parent);
 
@@ -139,6 +140,8 @@ private:
 	GCFITCPort*					itsMainTaskPort;	// gateway to main task
 
 	GCFTimerPort				itsTimerPort;		// for internal timers
+
+	uint32						itsFirstConnectTimerID;	// ID of timer used to guard the first connect
 
 	string						itsServiceName;		// serviceinfo of program
 	uint32						itsInstanceNr;

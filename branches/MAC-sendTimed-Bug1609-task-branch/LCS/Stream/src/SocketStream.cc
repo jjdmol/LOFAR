@@ -23,20 +23,28 @@
 #include <lofar_config.h>
 
 #include <Common/LofarLogger.h>
+#include <Common/Thread/Cancellation.h>
 #include <Stream/SocketStream.h>
 
 #include <cstring>
 #include <cstdio>
 
+#include <dirent.h>
 #include <errno.h>
 #include <netdb.h>
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <time.h>
 #include <unistd.h>
 #include <cstdlib>
 
 #include <boost/lexical_cast.hpp>
+
+//# AI_NUMERICSERV is not defined on OS-X
+#ifndef AI_NUMERICSERV
+# define AI_NUMERICSERV 0
+#endif
 
 
 namespace LOFAR {
@@ -45,12 +53,24 @@ namespace LOFAR {
 const int MINPORT = 10000;
 const int MAXPORT = 30000;
 
-SocketStream::SocketStream(const char *hostname, uint16 _port, Protocol protocol, Mode mode, time_t timeout, const char *nfskey )
+
+static struct RandomState {
+  RandomState() { 
+    xsubi[0] = getpid();
+    xsubi[1] = time(0);
+    xsubi[2] = time(0) >> 16;
+  }
+
+  unsigned short xsubi[3];
+} randomState;
+
+
+SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol protocol, Mode mode, time_t timeout, const std::string &nfskey, bool doAccept)
 :
-  hostname(hostname),
-  port(_port),
   protocol(protocol),
   mode(mode),
+  hostname(hostname),
+  port(_port),
   nfskey(nfskey),
   listen_sk(-1)
 {  
@@ -77,15 +97,15 @@ SocketStream::SocketStream(const char *hostname, uint16 _port, Protocol protocol
         int  retval;
         struct addrinfo *result;
 
-        if (mode == Client && nfskey)
+        if (mode == Client && nfskey != "")
           port = boost::lexical_cast<uint16>(readkey(nfskey, timeout));
 
-        if (mode == Server && autoPort && port == 0)
-          port = MINPORT;
+        if (mode == Server && autoPort)
+          port = MINPORT + static_cast<unsigned short>((MAXPORT - MINPORT) * erand48(randomState.xsubi)); // erand48() not thread safe, but not a problem.
 
         snprintf(portStr, sizeof portStr, "%hu", port);
 
-        if ((retval = getaddrinfo(hostname, portStr, &hints, &result)) != 0)
+        if ((retval = getaddrinfo(hostname.c_str(), portStr, &hints, &result)) != 0)
           throw SystemCallException("getaddrinfo", retval, THROW_ARGS);
 
         // make sure result will be freed
@@ -96,7 +116,7 @@ SocketStream::SocketStream(const char *hostname, uint16 _port, Protocol protocol
 
           struct addrinfo *result;
         } onDestruct = { result };
-        (void)onDestruct;
+        (void) onDestruct;
 
         // result is a linked list of resolved addresses, we only use the first
 
@@ -111,7 +131,7 @@ SocketStream::SocketStream(const char *hostname, uint16 _port, Protocol protocol
               if (timeout > 0 && time(0) >= latestTime)
                 throw TimeOutException("client socket", THROW_ARGS);
 
-              if (usleep(999999) > 0) {
+              if (usleep(999999) < 0) {
                 // interrupted by a signal handler -- abort to allow this thread to
                 // be forced to continue after receiving a SIGINT, as with any other
                 // system call in this constructor 
@@ -135,7 +155,10 @@ SocketStream::SocketStream(const char *hostname, uint16 _port, Protocol protocol
             if (listen(listen_sk, 5) < 0)
               throw BindException("listen", errno, THROW_ARGS);
 
-            accept( timeout );  
+            if (doAccept)
+              accept(timeout);
+            else
+              break;
           }
         }
 
@@ -147,11 +170,12 @@ SocketStream::SocketStream(const char *hostname, uint16 _port, Protocol protocol
 
         throw;
       }
-    } catch (BindException &e) {
-      if (mode == Server && autoPort && ++port < MAXPORT)
+    } catch (BindException &) {
+      if (mode == Server && autoPort) {
         continue;
-      else
+      } else {
         throw;
+      }
     }
   }
 }
@@ -159,8 +183,32 @@ SocketStream::SocketStream(const char *hostname, uint16 _port, Protocol protocol
 
 SocketStream::~SocketStream()
 {
-  if (listen_sk >= 0 && close(listen_sk) < 0)
-    throw SystemCallException("close listen_sk", errno, THROW_ARGS);
+  ScopedDelayCancellation dc; // close() can throw as it is a cancellation point
+
+  if (listen_sk >= 0 && close(listen_sk) < 0) {
+    // try/throw/catch to match patterns elsewhere. 
+    //
+    // This ensures a proper string for errno, a
+    // backtrace if available, and the proper representation
+    // of exceptions in general.
+    try {
+      throw SystemCallException("close listen_sk", errno, THROW_ARGS);
+    } catch (Exception &ex) {
+      LOG_ERROR_STR("Exception in destructor: " << ex);
+    }
+  }
+}
+
+
+FileDescriptorBasedStream *SocketStream::detach()
+{
+  ASSERT( mode == Server );
+
+  FileDescriptorBasedStream *client = new FileDescriptorBasedStream(fd);
+
+  fd = -1;
+
+  return client;
 }
 
 
@@ -177,17 +225,24 @@ void SocketStream::reaccept( time_t timeout )
 
 void SocketStream::accept( time_t timeout )
 {
-  if (nfskey)
+  if (nfskey != "")
     writekey(nfskey, port);
 
   // make sure the key will be deleted
   struct D {
     ~D() {
-      if (nfskey)
-        deletekey(nfskey);
+      if (nfskey != "") {
+        ScopedDelayCancellation dc; // unlink is a cancellation point
+
+        try {
+          deletekey(nfskey);
+        } catch (Exception &ex) {
+          LOG_ERROR_STR("Exception in destructor: " << ex);
+        }
+      }  
     }
 
-    const char *nfskey;
+    const std::string &nfskey;
   } onDestruct = { nfskey };
   (void)onDestruct;
 
@@ -221,13 +276,31 @@ void SocketStream::setReadBufferSize(size_t size)
 }
 
 
-std::string SocketStream::readkey(const char *nfskey, time_t &timeout)
+void SocketStream::syncNFS()
+{
+  // sync NFS
+  DIR *dir = opendir(".");
+
+  if (!dir)
+    throw SystemCallException("opendir", errno, THROW_ARGS);
+
+  if (!readdir(dir))
+    throw SystemCallException("readdir", errno, THROW_ARGS);
+
+  if (closedir(dir) != 0)
+    throw SystemCallException("closedir", errno, THROW_ARGS);
+}
+
+
+std::string SocketStream::readkey(const std::string &nfskey, time_t &timeout)
 {
   for(;;) {
     char portStr[16];
     ssize_t len;
 
-    len = readlink(nfskey, portStr, sizeof portStr);
+    syncNFS();
+
+    len = readlink(nfskey.c_str(), portStr, sizeof portStr - 1); // reserve 1 character to insert \0 below
 
     if (len >= 0) {
       portStr[len] = 0;
@@ -248,20 +321,22 @@ std::string SocketStream::readkey(const char *nfskey, time_t &timeout)
   }
 }
 
-void SocketStream::writekey(const char *nfskey, uint16 port)
+void SocketStream::writekey(const std::string &nfskey, uint16 port)
 {
   char portStr[16];
 
   snprintf(portStr, sizeof portStr, "%hu", port);
 
   // Symlinks can be atomically created over NFS
-  if (symlink(portStr, nfskey) < 0)
+  if (symlink(portStr, nfskey.c_str()) < 0)
     throw SystemCallException("symlink", errno, THROW_ARGS);
 }
 
-void SocketStream::deletekey(const char *nfskey)
+void SocketStream::deletekey(const std::string &nfskey)
 {
-  if (unlink(nfskey) < 0)
+  syncNFS();
+
+  if (unlink(nfskey.c_str()) < 0)
     throw SystemCallException("unlink", errno, THROW_ARGS);
 }
 

@@ -102,9 +102,9 @@ inline void BaselineMask::set(size_t i, size_t j)
     const size_t index = this->index(i, j);
 
     // If required, resize the mask.
-    if(index >= itsMask.size() && itsDefaultMask == false)
+    if(index >= itsMask.size() && !itsDefaultMask)
     {
-        itsMask.resize(index + 1);
+        itsMask.resize(index + 1, itsDefaultMask);
     }
 
     // If required, mask baseline.
@@ -119,9 +119,9 @@ inline void BaselineMask::clear(size_t i, size_t j)
     const size_t index = this->index(i, j);
 
     // If required, resize the mask.
-    if(index >= itsMask.size() && itsDefaultMask == true)
+    if(index >= itsMask.size() && itsDefaultMask)
     {
-        itsMask.resize(index + 1);
+        itsMask.resize(index + 1, itsDefaultMask);
     }
 
     // If required, mask baseline.

@@ -60,15 +60,20 @@ void main()
   
   
   if (bDebug){
-    DebugN("SystemID: "+ getSystemId() + " MainDBName: " + MainDBName );
-    DebugN("SystemID(MainDBName) : " + MainDBID + "GetSystemName: "+getSystemName());
+    DebugN("SystemID: "+ getSystemId() + " GetSystemName: "+getSystemName() );
+    DebugN("SystemID(MainDBName) : " + MainDBID +" MainDBName: " + MainDBName );
+    DebugN("Distributed: "+isDistributed());
   }
   // Find out if we are a client or a master system
   if (getSystemId() == MainDBID) {
-    if (bDebug) DebugN("Running on Master System");
+    DebugTN("Claim.ctl Running on Master System");
     isClient=false;
   } else {
-      if (bDebug) DebugN("Running on Client System");
+    string txt="Claim.ctl Running on Client System";
+    if (!isDistributed() ){
+      txt="Claim.ctl Running on Standalone System";
+    }
+    DebugTN(txt);
   }
   
   // check if datapoints for all types are available, if not, then create them
@@ -78,12 +83,13 @@ void main()
   	// Routine to connect to _DistConnections.ManNums.
   	// This point keeps a dyn_int array with all active distributed connections
   	// and will generate a callback everytime a station goes off-, or on- line
-
+    if (isDistributed() ) {
   	if (dpExists("_DistConnections.Dist.ManNums")) {
-    	dpConnect("distSystemTriggered",true,"_DistConnections.Dist.ManNums");
+    	  dpConnect("distSystemTriggered",true,"_DistConnections.Dist.ManNums");
   	} else {
-    	DebugN("_DistConnections point not found, no trigger available for dist System updates.");  
-  	}    
+    	  DebugN("_DistConnections point not found, no trigger available for dist System updates.");  
+  	}
+      }    
   } else {
     startLocalClaim();
   }  
@@ -724,7 +730,6 @@ void checkAndCreateDPs() {
     //    OnlineControl:  LOFAR_ObsSW_TempObs0001-0100_OnlineControl
     //    BGLAppl:        LOFAR_ObsSW_TempObs0001-0100_OnlineControl_BGLAppl
     //    BGLProc:        LOFAR_ObsSW_TempObs0001-0100_OnlineControl_BGLAppl_BGLProc
-    //    StorageAppl:    LOFAR_ObsSW_TempObs0001-0100_OnlineControl_StorageAppl
     
 
     
@@ -757,10 +762,6 @@ void checkAndCreateDPs() {
             //BGPProc
             if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl_BGPAppl_BGPProc")) {
               dpCreate("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl_BGPAppl_BGPProc","BGPProc");
-            }
-            //StorageAppl
-            if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl_StorageAppl")) {
-              dpCreate("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl_StorageAppl","StorageAppl");
             }
           } else {
             //StnObservation

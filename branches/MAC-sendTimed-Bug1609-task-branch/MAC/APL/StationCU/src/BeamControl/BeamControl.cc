@@ -29,12 +29,12 @@
 
 #include <Common/ParameterSet.h>
 #include <Common/SystemUtil.h>
+#include <ApplCommon/AntennaSets.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/RTDB/DP_Protocol.ph>
 #include <MACIO/MACServiceInfo.h>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
-#include <APL/APLCommon/AntennaSets.h>
 #include <APL/IBS_Protocol/IBS_Protocol.ph>
 #include <APL/RTDBCommon/RTDButilities.h>
 #include <signal.h>
@@ -85,10 +85,6 @@ BeamControl::BeamControl(const string&	cntlrName) :
 
 	// attach to parent control task
 	itsParentControl = ParentControl::instance();
-	itsParentPort = new GCFITCPort (*this, *itsParentControl, "ParentITCport", 
-									GCFPortInterface::SAP, CONTROLLER_PROTOCOL);
-	ASSERTSTR(itsParentPort, "Cannot allocate ITCport for Parentcontrol");
-	itsParentPort->open();		// will result in F_CONNECTED
 
 	// need port for timers.
 	itsTimerPort = new GCFTimerPort(*this, "TimerPort");
@@ -154,19 +150,6 @@ void    BeamControl::setState(CTState::CTstateNr     newState)
 	}
 }   
 
-
-//
-// convertDirection(string) : int32
-//
-int32 BeamControl::convertDirection(const string&	typeName)
-{
-  LOG_INFO_STR ("Receiving DirectionType: " << typeName );	
-  if (typeName == "J2000") 	{ return (1); }
-  if (typeName == "AZEL") 	{ return (2); }
-  if (typeName == "LMN")	{ return (3); }
-  LOG_WARN_STR ("Unknown DirectionType : " << typeName << " Will use J2000");
-  return (1);
-}
 
 //
 // initial_state(event, port)
@@ -457,7 +440,12 @@ GCFEvent::TResult BeamControl::allocBeams_state(GCFEvent& event, GCFPortInterfac
 	// Create a new subarray
 	//
 	switch (event.signal) {
-	case F_ENTRY: {
+	case F_ENTRY: 
+		itsTimerPort->cancelAllTimers();
+		itsTimerPort->setTimer(0.01);		// give CalControl + CalServer some time to allocated the beams.
+		break;
+
+	case F_TIMER: {
 		if (!allocatingDigitalBeams) {
 			LOG_DEBUG_STR("NO DIGITAL BEAMS DECLARED, skipping allocation, moving forwards to sending Pointings");
 			TRAN(BeamControl::sendPointings_state);
@@ -477,23 +465,24 @@ GCFEvent::TResult BeamControl::allocBeams_state(GCFEvent& event, GCFPortInterfac
 		// digital part
 		if (!itsObs->beams.empty()) {			// fill digital part if any
 			StationConfig		sc;
-			beamAllocEvent.ringNr = ((sc.hasSplitters && (beamAllocEvent.antennaSet == "HBA_ONE")) ? 1 : 0);
+			beamAllocEvent.ringNr = ((sc.hasSplitters && (beamAllocEvent.antennaSet.substr(0,7) == "HBA_ONE")) ? 1 : 0);
 
-			if (itsObs->beams[beamIdx].subbands.size() != itsObs->beams[beamIdx].beamlets.size()) {
+			vector<int> beamBeamlets = itsObs->getBeamlets(beamIdx);
+			if (itsObs->beams[beamIdx].subbands.size() != beamBeamlets.size()) {
 				LOG_FATAL_STR("size of subbandList (" << itsObs->beams[beamIdx].subbands.size() << ") != " <<
-								"size of beamletList (" << itsObs->beams[beamIdx].beamlets.size() << ")");
+								"size of beamletList (" << beamBeamlets.size() << ")");
 				setState(CTState::CLAIMED);
 				sendControlResult(*itsParentPort, CONTROL_PREPARED, getName(), CT_RESULT_BEAMALLOC_FAILED);
 				TRAN(BeamControl::claimed_state);
 				return (GCFEvent::HANDLED);
 			}
 			LOG_DEBUG_STR("nr Subbands:" << itsObs->beams[beamIdx].subbands.size());
-			LOG_DEBUG_STR("nr Beamlets:" << itsObs->beams[beamIdx].beamlets.size());
+			LOG_DEBUG_STR("nr Beamlets:" << beamBeamlets.size());
 
 			// construct subband to beamlet map
-			vector<int32>::iterator beamletIt = itsObs->beams[beamIdx].beamlets.begin();
+			vector<int32>::iterator beamletIt = beamBeamlets.begin();
 			vector<int32>::iterator subbandIt = itsObs->beams[beamIdx].subbands.begin();
-			while (beamletIt != itsObs->beams[beamIdx].beamlets.end() && subbandIt != itsObs->beams[beamIdx].subbands.end()) {
+			while (beamletIt != beamBeamlets.end() && subbandIt != itsObs->beams[beamIdx].subbands.end()) {
 				LOG_DEBUG_STR("alloc[" << *beamletIt << "]=" << *subbandIt);
 				beamAllocEvent.allocation()[*beamletIt++] = *subbandIt++;
 			}
@@ -688,8 +677,7 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 
 	case F_DISCONNECTED: {
 		port.close();
-		ASSERTSTR (&port == itsBeamServer, 
-								"F_DISCONNECTED event from port " << port.getName());
+		ASSERTSTR (&port == itsBeamServer, "F_DISCONNECTED event from port " << port.getName());
 		LOG_WARN("Connection with BeamServer lost");
 		setObjectState("Connection with BeamServer lost!", itsPropertySet->getFullScope(), RTDB_OBJ_STATE_BROKEN);
 		finish();
@@ -726,13 +714,12 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 
 	case CONTROL_RELEASE: {
 		CONTROLReleaseEvent		msg(event);
-		LOG_INFO_STR("Received RELEASED(" << msg.cntlrName << ")");
+		LOG_INFO_STR("Received RELEASE(" << msg.cntlrName << ")");
 		setState(CTState::RELEASE);
 		if (!doRelease()) {
 			LOG_WARN_STR("Cannot release a beam that was not allocated, continuing");
 			setState(CTState::RELEASED);
-			sendControlResult(*itsParentPort, CONTROL_RELEASED, getName(), 
-															CT_RESULT_NO_ERROR);
+			sendControlResult(*itsParentPort, CONTROL_RELEASED, getName(), CT_RESULT_NO_ERROR);
 			TRAN(BeamControl::claimed_state);
 		}
 		// else a BS_BEAMFREEACK event will be sent
@@ -746,13 +733,13 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 	// -------------------- EVENTS RECEIVED FROM BEAMSERVER --------------------
 	case IBS_BEAMFREEACK: {
 		if (!handleBeamFreeAck(event)) {
-			LOG_WARN("Error in freeing beam, trusting on disconnect.");
+			LOG_WARN("Error in freeing beam, jump to quit state.");
+			TRAN(BeamControl::quiting_state);
 		}
 		if (itsBeamIDs.empty()) {	// answer on all beams received?
 			LOG_INFO("Released beam(s) going back to 'claimed' mode");
 			setState(CTState::RELEASED);
-			sendControlResult(*itsParentPort, CONTROL_RELEASED, getName(), 
-															CT_RESULT_NO_ERROR);
+			sendControlResult(*itsParentPort, CONTROL_RELEASED, getName(), CT_RESULT_NO_ERROR);
 			TRAN(BeamControl::claimed_state);
 		}
 	}
@@ -784,7 +771,6 @@ GCFEvent::TResult BeamControl::quiting_state(GCFEvent& event, GCFPortInterface& 
 		// tell Parent task we like to go down.
 		itsParentControl->nowInState(getName(), CTState::QUIT);
 
-//		itsPropertySet->setValue(string(PN_FSM_CURRENT_ACTION),GCFPVString("quiting"));
 		itsPropertySet->setValue(PN_FSM_ERROR, GCFPVString(""));
 		// disconnect from BeamServer
 		itsBeamServer->close();
@@ -832,7 +818,7 @@ void BeamControl::beamsToPVSS()
 		writeVector(os, itsObs->beams[i].subbands);
 		subbandArr.push_back   (new GCFPVString  (os.str()));
 		os.clear();
-		writeVector(os, itsObs->beams[i].beamlets);
+		writeVector(os, itsObs->getBeamlets(i));
 		beamletArr.push_back   (new GCFPVString  (os.str()));
 		angle1Arr.push_back	   (new GCFPVDouble  (itsObs->beams[i].pointings[0].angle1));
 		angle2Arr.push_back	   (new GCFPVDouble  (itsObs->beams[i].pointings[0].angle2));
@@ -862,6 +848,7 @@ bool BeamControl::doRelease()
 	set<string>::iterator	end  = itsBeamIDs.end();
 	while (iter != end) {
 		beamFreeEvent.beamName = *iter;
+		LOG_INFO_STR("Asking BeamServer to release beam " << beamFreeEvent.beamName);
 		itsBeamServer->send(beamFreeEvent);	// will result in BS_BEAMFREEACK event
 		iter++;
 	}
@@ -923,12 +910,15 @@ GCFEvent::TResult BeamControl::_defaultEventHandler(GCFEvent&			event,
 		case CONTROL_RESUME:
 		case CONTROL_SUSPEND:
 		case CONTROL_RELEASE:
-		case CONTROL_QUIT:
 			 if (sendControlResult(port, event.signal, getName(), CT_RESULT_NO_ERROR)) {
 				result = GCFEvent::HANDLED;
 			}
 			break;
 		
+		case CONTROL_QUIT:
+			TRAN(BeamControl::quiting_state);
+			break;
+		break;
 		case CONTROL_CONNECTED:
 		case CONTROL_RESYNCED:
 		case CONTROL_SCHEDULED:
@@ -948,6 +938,7 @@ GCFEvent::TResult BeamControl::_defaultEventHandler(GCFEvent&			event,
 		break;
 
 		case DP_SET:
+			result = GCFEvent::HANDLED;
 		break;
 	}
 

@@ -15,7 +15,7 @@ using namespace LOFAR::TYPES;
 int main()
 {
 #if defined HAVE_BGP
-  fcomplex samples[16][2] = {0};
+  fcomplex samples[16][2] = {{0}};
 
   for (int i = 0; i < 16; i ++)
     if (i != 7) {

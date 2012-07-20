@@ -1,4 +1,4 @@
-//#  tDelayCompensation.cc: stand-alone test program for WH_DelayCompensation
+//#  tDelayCompensation.cc: stand-alone test program for Delays
 //#
 //#  Copyright (C) 2009
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,16 +21,26 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <WH_DelayCompensation.h>
+#include <Delays.h>
 #include <Interface/Parset.h>
-#include <AMCBase/Direction.h>
 #include <Common/Exception.h>
 #include <Interface/RSPTimeStamp.h>
+#include <Common/lofar_math.h>
 
 #include <cassert>
 
 using namespace LOFAR;
 using namespace LOFAR::RTCP;
+
+double lat( casa::MVDirection &d )
+{
+  return d.get()[1];
+}
+
+double lng( casa::MVDirection &d )
+{
+  return d.get()[0];
+}
 
 void doTest()
 {
@@ -48,24 +58,25 @@ void doTest()
 
   TimeStamp ts = TimeStamp(seconds, samples, parset.clockSpeed());
 
-  WH_DelayCompensation w(&parset, inputs[0].station, ts);
+  Delays w(parset, inputs[0].station, ts);
+  w.start();
 
-  unsigned nrPencilBeams = 1;
-  Matrix<double> delays(nrBeams, nrPencilBeams);
-  Matrix<AMC::Direction> prev_directions(nrBeams, nrPencilBeams), directions(nrBeams, nrPencilBeams);
+  unsigned nrPencilBeams = 0;
+  Matrix<double> delays(nrBeams, nrPencilBeams + 1);
+  Matrix<casa::MVDirection> prev_directions(nrBeams, nrPencilBeams + 1), directions(nrBeams, nrPencilBeams + 1);
  
   for (unsigned i = 0; i < 256; i ++) {
     prev_directions = directions;
 
     w.getNextDelays(directions, delays);
-    cout << "Directions & Delay: " << directions[0][0] << ", " << delays[0][0] << endl;
+    cout << "Directions & Delay: (" << lng(directions[0][0]) << ", " << lat(directions[0][0]) << "), " << delays[0][0] << endl;
 
     assert(!isnan(delays[0][0]));
 
     // source (NCP) should traverse with decreasing longitude and latitude
     if (i > 0) {
-      assert(directions[0][0].longitude() < prev_directions[0][0].longitude());
-      assert(directions[0][0].latitude() < prev_directions[0][0].latitude());
+      assert(lng(directions[0][0]) < lng(prev_directions[0][0]));
+      assert(lat(directions[0][0]) < lat(prev_directions[0][0]));
     }
   }
 }

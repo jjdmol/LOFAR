@@ -1,4 +1,4 @@
-//#  CEPlogProcessor.h: Daemon for catching CEP cout log streams
+//#  CEPlogProcessor.cc: Moves the operator info from the logfiles to PVSS
 //#
 //#  Copyright (C) 2009
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -18,10 +18,7 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  Note: This source is read best with tabstop 4.
-//#
 //#  $Id$
-
 #ifndef LOFAR_APL_CEPLOGPROCESSOR_H
 #define LOFAR_APL_CEPLOGPROCESSOR_H
 
@@ -30,63 +27,175 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
-#include <Common/Exception.h>
-#include <Common/Net/Socket.h>
-#include <Common/Net/FdSet.h>
-#include <Common/ParameterSet.h>
+#include <GCF/TM/GCF_Control.h>
+#include <GCF/RTDB/RTDB_PropertySet.h>
 
+#include "CircularBuffer.h"
+
+#include <time.h>
+#include <vector>
+#include <string>
+#include <map>
 
 namespace LOFAR {
-  namespace APL {
+    using MACIO::GCFEvent;
+    using GCF::TM::GCFTask;
+    using GCF::TM::GCFTCPPort;
+    using GCF::TM::GCFTimerPort;
+    using GCF::TM::GCFPortInterface;
+    using GCF::RTDB::RTDBPropertySet;
+    namespace APL {
+
 // \addtogroup CEPCU
 // @{
 
 
 // The CEPlogProcessor class implements a small daemon that ...
-class CEPlogProcessor
+class CEPlogProcessor : public GCFTask
 {
 public:
-	// Creates an CEPlogProcessor object that start listening on the port mentioned
-	// in the ParameterSet.
-	explicit CEPlogProcessor(const string&	progName);
+    explicit CEPlogProcessor(const std::string&  cntlrName);
+    ~CEPlogProcessor();
 
-	// Destructor.
-	~CEPlogProcessor();
+    // its processing states
+    GCFEvent::TResult initial_state     (GCFEvent& event, GCFPortInterface& port);
+    GCFEvent::TResult createPropertySets(GCFEvent& event, GCFPortInterface& port);
+    GCFEvent::TResult startListener     (GCFEvent& event, GCFPortInterface& port);
+    GCFEvent::TResult startControlPort  (GCFEvent& event, GCFPortInterface& port);
+    GCFEvent::TResult operational       (GCFEvent& event, GCFPortInterface& port);
+    GCFEvent::TResult finish_state      (GCFEvent& event, GCFPortInterface& port);
 
-	// Its normal (never ending) loop.
-	void doWork() throw (Exception);
-
+    // Interrupthandler for switching to the finish state when exiting the program
+    static void signalHandler (int signum);
+    void        finish();
+    
 private:
-	// Copying is not allowed
-	CEPlogProcessor(const CEPlogProcessor&	that);
-	CEPlogProcessor& operator=(const CEPlogProcessor& that);
+    // Copying is not allowed
+    CEPlogProcessor();
+    CEPlogProcessor(const CEPlogProcessor&  that);
+    CEPlogProcessor& operator=(const CEPlogProcessor& that);
 
-	void handleConnectionRequest();
-	void handleDataStream(int	sid);
+    // Admin functions
+    void     _deleteStream    (GCFPortInterface&    port);
+    void     _handleConnectionRequest();
 
-	//# --- Datamembers --- 
-	// The listener socket to receive the requests on.
-	Socket*			itsListener;
+    // Routines for processing the loglines.
+    void     _handleDataStream  (GCFPortInterface*  port);
+    time_t   _parseDateTime     (const char *datestr, const char *timestr) const;
+    void     _processLogLine    (const char *cString);
 
-	// The parameterSet that was received during start up.
-	ParameterSet*	itsParamSet;
+    void     processParset      (const std::string &observationID);
 
-	// File descriptor set of connected sockets
-	FdSet			itsConnSet;
+    struct logline {
+      // original log line
+      const char *fullmsg;
 
-	// internal structure for admin for 1 stream
-	typedef struct {
-		Socket*		socket;
-		char*		buffer;
-		int			inPtr;
-		int			outPtr;
-	} streamBuffer_t;
+      // info straight from splitting log line
+      const char *process;
+      const char *host;
+      const char *date;
+      const char *time;
+      const char *loglevel;
+      const char *target;
+      const char *msg;
 
-	// Map containing all the streambuffers.
-	map<int, streamBuffer_t>	itsLogStreams;
+      // info parsed straight from log line
+      time_t timestamp;
+      int obsID; // or -1 if unknown
 
-	// buffersize of the streambuffers.
-	int		itsBufferSize;
+      // info calculated from log line
+      const char *tempobsname;
+    };
+      
+    void collectGarbage();
+
+    // Return the observation ID, or -1 if none can be found
+    int _getParam(const char *msg,const char *param) const;
+
+    bool _recordLogMsg(const struct logline &logline) const;
+
+    // Return the temporary obs name to use in PVSS. Also registers the temporary obs name
+    // if the provided log line announces it.
+    string getTempObsName(int obsID, const char *msg);
+
+    void _processIONProcLine(const struct logline &);
+    void _processCNProcLine(const struct logline &);
+    void _processStorageLine(const struct logline &);
+
+    //# --- Datamembers --- 
+    // The listener socket to receive the requests on.
+    GCFTCPPort*     itsListener;
+    GCFTCPPort*     itsControlPort;
+
+    RTDBPropertySet*    itsOwnPropertySet;
+    GCFTimerPort*       itsTimerPort;
+
+    // internal structure for admin for 1 stream
+    typedef struct {
+        GCFTCPPort* socket;
+        CircularBuffer* buffer;
+    } streamBuffer_t;
+
+    // Map containing all the streambuffers.
+    map<GCFPortInterface*, streamBuffer_t>  itsLogStreams;
+    vector<GCFPortInterface*>               itsLogStreamsGarbage;
+
+    vector<RTDBPropertySet*>    itsInputBuffers;
+    vector<RTDBPropertySet*>    itsAdders;
+    vector<RTDBPropertySet*>    itsWriters;
+
+    // values read from the conf file.
+    unsigned        itsNrInputBuffers;
+    unsigned        itsNrIONodes;
+    unsigned        itsNrAdders;
+    unsigned        itsNrStorage;
+    unsigned        itsNrWriters;
+    unsigned        itsBufferSize;
+
+    unsigned        itsNrPsets;
+
+    template<typename T, typename U> class BiMap {
+    public:
+      void set( const T &t, const U &u ) {
+        // erase old entries across both maps
+        if (exists(t))
+          backward.erase(forward[t]);
+        if (exists(u))
+          forward.erase(backward[u]);
+
+        forward[t] = u;
+        backward[u] = t;
+      }
+
+      void erase( const T &t ) {
+        backward.erase( forward[t] );
+        forward.erase( t );
+      }
+
+      bool exists( const T &t ) const {
+        return forward.find(t) != forward.end();
+      }
+
+      bool exists( const U &u ) const {
+        return backward.find(u) != backward.end();
+      }
+
+      T &lookup( const U &u ) {
+        return backward[u];
+      }
+
+      U &lookup( const T &t ) {
+        return forward[t];
+      }
+
+    private:
+      map<T,U> forward;
+      map<U,T> backward;
+    };
+
+    // a BiMap is needed to automatically remove obsIDs that point to
+    // reused tempObsNames.
+    BiMap<int, std::string> itsTempObsMapping;
 };
 
 // @} addgroup

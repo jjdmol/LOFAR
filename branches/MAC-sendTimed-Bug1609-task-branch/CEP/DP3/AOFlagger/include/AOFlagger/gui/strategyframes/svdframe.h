@@ -27,9 +27,9 @@
 #include <gtkmm/label.h>
 #include <gtkmm/scale.h>
 
-#include "../../rfi/strategy/svdaction.h"
+#include <AOFlagger/strategy/actions/svdaction.h>
 
-#include "../editstrategywindow.h"
+#include <AOFlagger/gui/editstrategywindow.h>
 
 class SVDFrame : public Gtk::Frame {
 	public:

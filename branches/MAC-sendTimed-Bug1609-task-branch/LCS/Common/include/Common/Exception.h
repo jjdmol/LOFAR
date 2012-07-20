@@ -43,6 +43,8 @@
 namespace LOFAR { class Backtrace {}; }
 #endif
 
+#include <Common/Thread/Cancellation.h>
+
 //# This might be undefined if used by an external package like ASKAP.
 #ifndef AUTO_FUNCTION_NAME
 # define AUTO_FUNCTION_NAME __FUNCTION__
@@ -87,7 +89,12 @@ namespace LOFAR
  	      int line=0, const std::string& func="", Backtrace* bt=0) :
       itsText(text), itsFile(file), itsLine(line), itsFunction(func), 
       itsBacktrace(bt)
-    {}
+    {
+      // Don't allow cancellation points when an exception is being thrown.
+      // This assumes that Exception objects are only created for the purpose
+      // of throwing them, and will be destroyed at the end of a catch block.
+      Cancellation::push_disable();
+    }
 
     // Terminate handler. This terminate handler provides more feedback than
     // the default terminate handler. When terminate is called due to an
@@ -95,7 +102,9 @@ namespace LOFAR
     // filename, line number, function name, and backtrace (if available).
     static void terminate();
 
-    virtual ~Exception() throw() {}
+    virtual ~Exception() throw() {
+      Cancellation::pop_disable();
+    }
 
     // Implementation of std::exception::what().
     // Returns the user-supplied text as C-style char array.
@@ -144,7 +153,6 @@ namespace LOFAR
     int         itsLine;
     std::string itsFunction;
     boost::shared_ptr<Backtrace> itsBacktrace;
-
   };
 
   // Print the exception \a ex into the output stream \a os.

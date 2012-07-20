@@ -24,6 +24,9 @@
 #if defined HAVE_BGP
 #include <Interface/Config.h>
 
+#include <stdint.h>
+
+
 namespace LOFAR {
 namespace RTCP {
 
@@ -78,15 +81,24 @@ extern "C" {
 
   void _clear_correlation(CorrelatedOutputType *S0_S0);
 
-  void _weigh_visibilities(
+  void _weigh_visibilities_1(
 	fcomplex *visibilities,
-#ifdef LOFAR_STMAN_V2	
-	unsigned *nrValidSamplesCounted,
-#else
-	unsigned short *nrValidSamplesCounted,
-#endif
+	uint8_t *nrValidSamplesCounted,
 	const float correlationWeights[/*nrSamplesToIntegrate + 1*/],
-	const float bandPassCorrectionFactors[/*nrChannels*/],
+	unsigned nrBaselines,
+	unsigned NrChannels);
+
+  void _weigh_visibilities_2(
+	fcomplex *visibilities,
+	uint16_t *nrValidSamplesCounted,
+	const float correlationWeights[/*nrSamplesToIntegrate + 1*/],
+	unsigned nrBaselines,
+	unsigned NrChannels);
+
+  void _weigh_visibilities_4(
+	fcomplex *visibilities,
+	uint32_t *nrValidSamplesCounted,
+	const float correlationWeights[/*nrSamplesToIntegrate + 1*/],
 	unsigned nrBaselines,
 	unsigned NrChannels);
 };

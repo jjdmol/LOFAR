@@ -31,13 +31,14 @@
 #include <Common/Timer.h>
 #include <Interface/AlignedStdAllocator.h>
 #include <Interface/Exceptions.h>
+#include <Interface/SmartPtr.h>
 #include <Stream/NullStream.h>
+#include <Stream/SocketStream.h>
 #include <BeamletBuffer.h>
 #include <InputThread.h>
 #include <RSP.h>
 #include <Scheduling.h>
-
-#include <signal.h>
+#include <Common/Thread/Cancellation.h>
 
 #include <cstddef>
 
@@ -50,11 +51,15 @@ namespace RTCP {
 
 template <typename SAMPLE_TYPE> InputThread<SAMPLE_TYPE>::InputThread(ThreadArgs args /* call by value! */)
 :
-  itsShouldStop(false),
-  itsArgs(args),
-  itsThread(this, &InputThread<SAMPLE_TYPE>::mainLoop, itsArgs.logPrefix + "[InputThread] ", 65536)
+  itsArgs(args)
 {
   LOG_DEBUG_STR(itsArgs.logPrefix << "InputThread::InputThread(...)");
+}
+
+
+template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::start()
+{
+  itsThread = new Thread(this, &InputThread<SAMPLE_TYPE>::mainLoop, itsArgs.logPrefix + "[InputThread] ", 65536);
 }
 
 
@@ -62,8 +67,8 @@ template <typename SAMPLE_TYPE> InputThread<SAMPLE_TYPE>::~InputThread()
 {
   LOG_DEBUG_STR(itsArgs.logPrefix << "InputThread::~InputThread()");
 
-  itsShouldStop = true;
-  itsThread.abort();
+  if (itsThread)
+    itsThread->cancel();
 }
 
 
@@ -91,18 +96,26 @@ template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
   bool		previousSeqidIsAccepted	    = false;
   
   bool		dataShouldContainValidStamp = dynamic_cast<NullStream *>(itsArgs.stream) == 0;
+  bool		isUDPstream		    = dynamic_cast<SocketStream *>(itsArgs.stream) != 0 && dynamic_cast<SocketStream *>(itsArgs.stream)->protocol == SocketStream::UDP;
   WallClockTime wallClockTime;
 
   LOG_DEBUG_STR(itsArgs.logPrefix << " input thread " << itsArgs.threadID << " entering loop");
 
-  while (!itsShouldStop) {
-    size_t size;
-
+  while (true) {
     try {
-      // interruptible read, to allow stopping this thread even if the station
+      // cancelable read, to allow stopping this thread even if the station
       // does not send data
 
-      size = itsArgs.stream->tryRead(currentPacketPtr, packetSize);
+      if (isUDPstream) {
+	if (itsArgs.stream->tryRead(currentPacketPtr, packetSize) != packetSize) {
+	  ++ itsArgs.packetCounters->received;
+	  ++ itsArgs.packetCounters->badSize;
+	  continue;
+	}
+      } else {
+	Cancellation::point(); // allow cancellation from null:
+	itsArgs.stream->read(currentPacketPtr, packetSize);
+      }
     } catch (Stream::EndOfStreamException &) {
       break;
     } catch (SystemCallException &ex) {
@@ -113,11 +126,6 @@ template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
     }
 
     ++ itsArgs.packetCounters->received;
-
-    if (size != packetSize) {
-      ++ itsArgs.packetCounters->badSize;
-      continue;
-    }
 
     if (dataShouldContainValidStamp) {
 #if defined __PPC__
@@ -160,9 +168,8 @@ template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
     } else {
       actualstamp += itsArgs.nrTimesPerPacket; 
 
-      if (itsArgs.isRealTime) {
+      if (itsArgs.isRealTime)
 	wallClockTime.waitUntil(actualstamp);
-      }
     }
 
     // expected packet received so write data into corresponding buffer
@@ -179,7 +186,11 @@ template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
     }
   }
 
-  LOG_DEBUG_STR(itsArgs.logPrefix << "InputThread::threadFunction() exiting loop");
+  timeStamps.resize(currentPacket);
+  itsArgs.BBuffer->writeMultiplePackets(packets.origin(), timeStamps);
+  itsArgs.BBuffer->noMoreWriting();
+
+  LOG_DEBUG_STR(itsArgs.logPrefix << "InputThread::mainLoop() exiting");
 }
 
 

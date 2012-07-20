@@ -144,6 +144,7 @@ private:
 	int						itsAutoRetries;
 	double					itsAutoRetryItv;
 	uint16					itsSeqnr;
+	unsigned int			itsConnectTimer;
     SB::ServiceBrokerTask*	_broker;
 };
 

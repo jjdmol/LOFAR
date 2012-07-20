@@ -30,7 +30,21 @@ namespace LOFAR {
     DPStep::~DPStep()
     {}
 
-    void DPStep::updateInfo (DPInfo&)
+    const DPInfo& DPStep::setInfo (const DPInfo& info)
+    {
+      // Update the info of this step using the given info.
+      updateInfo (info);
+      // If there is a next step, set its info using the info of this step.
+      if (getNextStep()) {
+        return getNextStep()->setInfo (getInfo());
+      }
+      return getInfo();
+    }
+
+    void DPStep::updateInfo (const DPInfo& infoIn)
+      { info() = infoIn; }
+
+    void DPStep::addToMS (const string&)
     {}
 
     void DPStep::showCounts (std::ostream&) const
@@ -38,6 +52,7 @@ namespace LOFAR {
 
     void DPStep::showTimings (std::ostream&, double) const
     {}
+
 
     NullStep::~NullStep()
     {}
@@ -49,6 +64,49 @@ namespace LOFAR {
     {}
 
     void NullStep::show (std::ostream&) const
+    {}
+
+
+    ResultStep::ResultStep()
+    {
+      setNextStep (DPStep::ShPtr (new NullStep()));
+    }
+
+    ResultStep::~ResultStep()
+    {}
+
+    bool ResultStep::process (const DPBuffer& buf)
+    {
+      itsBuffer = buf;
+      return true;
+    }
+
+    void ResultStep::finish()
+    {}
+
+    void ResultStep::show (std::ostream&) const
+    {}
+
+
+    MultiResultStep::MultiResultStep (uint reserveSize)
+    {
+      setNextStep (DPStep::ShPtr (new NullStep()));
+      itsBuffers.reserve (reserveSize);
+    }
+
+    MultiResultStep::~MultiResultStep()
+    {}
+
+    bool MultiResultStep::process (const DPBuffer& buf)
+    {
+      itsBuffers.push_back (buf);
+      return true;
+    }
+
+    void MultiResultStep::finish()
+    {}
+
+    void MultiResultStep::show (std::ostream&) const
     {}
 
   } //# end namespace

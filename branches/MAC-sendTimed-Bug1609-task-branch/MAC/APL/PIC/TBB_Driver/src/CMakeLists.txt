@@ -20,11 +20,13 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 lofar_add_library(tp_protocol
   TP_Protocol.cc
   RawEvent.cc)
+  
+add_dependencies(tp_protocol TBB_Driver-TP_Protocol)
 
 lofar_add_library(tbbdriver
   Package__Version.cc
-  TP_Protocol.ph
   DriverSettings.cc
+  TP_Protocol.ph
   Command.cc
   AllocCmd.cc
   BoardCmdHandler.cc

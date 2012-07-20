@@ -32,7 +32,7 @@
 
 namespace LOFAR {
   using GCF::TM::GCFTask;
-  using GCF::TM::GCFPort;
+  using GCF::TM::GCFTCPPort;
   using GCF::TM::GCFPortInterface;
   typedef		void*		memptr_t;
   namespace CAL {
@@ -78,8 +78,8 @@ namespace LOFAR {
       /**
        * Port to the RSPDriver.
        */
-      GCFPort 	m_rspdriver;	// connection to the RSPDriver
-      memptr_t	m_handle; 		// handle for the UPDXCSTATS events
+      GCFTCPPort* 	m_rspdriver;	// connection to the RSPDriver
+      memptr_t		m_handle; 		// handle for the UPDXCSTATS events
 
       RTC::Timestamp m_starttime; // first ACM will be received at this time
       int     m_request_subband;  // current index for request subband

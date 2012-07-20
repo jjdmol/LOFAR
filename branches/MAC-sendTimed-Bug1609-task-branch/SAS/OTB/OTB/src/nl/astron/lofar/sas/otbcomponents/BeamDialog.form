@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.1" encoding="UTF-8" ?>
 
 <Form version="1.3" maxVersion="1.3" type="org.netbeans.modules.form.forminfo.JDialogFormInfo">
   <Properties>
@@ -27,14 +27,14 @@
     <DimensionLayout dim="0">
       <Group type="103" groupAlignment="0" attributes="0">
           <Group type="102" alignment="0" attributes="0">
-              <Component id="jScrollPane1" pref="875" max="32767" attributes="0"/>
+              <Component id="jScrollPane1" pref="1253" max="32767" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>
     <DimensionLayout dim="1">
       <Group type="103" groupAlignment="0" attributes="0">
-          <Component id="jScrollPane1" alignment="0" pref="294" max="32767" attributes="0"/>
+          <Component id="jScrollPane1" alignment="0" pref="671" max="32767" attributes="0"/>
       </Group>
     </DimensionLayout>
   </Layout>
@@ -60,68 +60,121 @@
           <Layout>
             <DimensionLayout dim="0">
               <Group type="103" groupAlignment="0" attributes="0">
-                  <Group type="102" alignment="0" attributes="0">
+                  <Group type="102" attributes="0">
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Group type="102" alignment="0" attributes="0">
-                              <Component id="cancelButton" min="-2" pref="110" max="-2" attributes="0"/>
+                          <Group type="102" attributes="0">
+                              <Group type="103" groupAlignment="1" attributes="0">
+                                  <Group type="102" alignment="0" attributes="0">
+                                      <Component id="cancelButton" min="-2" pref="110" max="-2" attributes="0"/>
+                                      <EmptySpace max="-2" attributes="0"/>
+                                      <Component id="saveButton" min="-2" pref="90" max="-2" attributes="0"/>
+                                  </Group>
+                                  <Group type="102" alignment="0" attributes="0">
+                                      <Group type="103" groupAlignment="0" attributes="0">
+                                          <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                                              <Component id="labelTabRingSize" max="32767" attributes="1"/>
+                                              <Component id="labelDirectionTypes" max="32767" attributes="1"/>
+                                              <Component id="labelAngle2" alignment="0" max="32767" attributes="1"/>
+                                              <Component id="labelAngle1" alignment="0" pref="77" max="32767" attributes="1"/>
+                                          </Group>
+                                          <Component id="labelDuration" alignment="0" min="-2" pref="77" max="-2" attributes="0"/>
+                                      </Group>
+                                      <EmptySpace type="separate" max="-2" attributes="0"/>
+                                      <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                                          <Component id="inputDuration" max="32767" attributes="1"/>
+                                          <Component id="inputTabRingSize" max="32767" attributes="1"/>
+                                          <Component id="inputAngle2" alignment="0" max="32767" attributes="1"/>
+                                          <Component id="inputAngle1" alignment="0" max="32767" attributes="1"/>
+                                          <Component id="inputDirectionTypes" alignment="0" pref="126" max="32767" attributes="1"/>
+                                          <Component id="inputNrTabRings" alignment="0" max="32767" attributes="1"/>
+                                      </Group>
+                                      <EmptySpace min="-2" pref="38" max="-2" attributes="0"/>
+                                      <Group type="103" groupAlignment="0" attributes="0">
+                                          <Group type="102" attributes="0">
+                                              <Component id="coordTypeChange" min="-2" pref="81" max="-2" attributes="0"/>
+                                              <EmptySpace min="-2" pref="121" max="-2" attributes="0"/>
+                                              <Group type="103" groupAlignment="1" max="-2" attributes="0">
+                                                  <Component id="labelStartTime" alignment="0" max="32767" attributes="1"/>
+                                                  <Component id="labelTarget" alignment="0" pref="96" max="32767" attributes="1"/>
+                                              </Group>
+                                              <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                                              <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                                                  <Component id="inputTarget" max="32767" attributes="1"/>
+                                                  <Component id="inputStartTime" alignment="0" pref="196" max="32767" attributes="1"/>
+                                              </Group>
+                                          </Group>
+                                          <Component id="inputMaxDur" min="-2" max="-2" attributes="0"/>
+                                      </Group>
+                                  </Group>
+                                  <Component id="labelNrTabRings" alignment="0" min="-2" pref="86" max="-2" attributes="0"/>
+                              </Group>
                               <EmptySpace max="-2" attributes="0"/>
-                              <Component id="saveButton" min="-2" pref="90" max="-2" attributes="0"/>
+                          </Group>
+                          <Group type="102" alignment="1" attributes="0">
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Group type="102" alignment="0" attributes="0">
+                                      <Component id="labelSubbandList" pref="87" max="32767" attributes="1"/>
+                                      <EmptySpace type="separate" max="-2" attributes="0"/>
+                                  </Group>
+                                  <Group type="102" alignment="0" attributes="0">
+                                      <Component id="labelBeamletList" min="-2" max="-2" attributes="1"/>
+                                      <EmptySpace min="-2" pref="45" max="-2" attributes="0"/>
+                                  </Group>
+                              </Group>
+                              <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                                  <Component id="inputBeamletList" max="32767" attributes="1"/>
+                                  <Component id="inputSubbandList" alignment="0" pref="1077" max="32767" attributes="1"/>
+                              </Group>
+                              <EmptySpace min="-2" pref="665" max="-2" attributes="0"/>
                           </Group>
                           <Group type="102" alignment="0" attributes="0">
-                              <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                                  <Component id="labelAngle2" alignment="0" max="32767" attributes="1"/>
-                                  <Component id="labelAngle1" alignment="0" max="32767" attributes="1"/>
-                                  <Component id="labelDirectionTypes" alignment="0" pref="133" max="32767" attributes="1"/>
-                                  <Component id="labelSubbandList" max="32767" attributes="1"/>
-                                  <Component id="labelBeamletList" max="32767" attributes="1"/>
-                              </Group>
-                              <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                              <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                                  <Group type="102" attributes="0">
-                                      <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                                          <Component id="inputAngle1" alignment="0" pref="185" max="32767" attributes="1"/>
-                                          <Component id="inputDirectionTypes" alignment="0" min="-2" pref="117" max="-2" attributes="0"/>
-                                          <Component id="inputAngle2" alignment="0" max="32767" attributes="1"/>
-                                      </Group>
-                                      <EmptySpace min="-2" pref="28" max="-2" attributes="0"/>
-                                      <Component id="coordTypeChange" min="-2" max="-2" attributes="0"/>
-                                  </Group>
-                                  <Component id="inputSubbandList" alignment="0" pref="676" max="32767" attributes="1"/>
-                                  <Component id="inputBeamletList" alignment="0" min="-2" pref="676" max="-2" attributes="1"/>
-                              </Group>
+                              <Component id="jPanel3" min="-2" pref="1201" max="-2" attributes="1"/>
+                              <EmptySpace pref="646" max="32767" attributes="0"/>
                           </Group>
                       </Group>
-                      <EmptySpace pref="62" max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
             <DimensionLayout dim="1">
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" attributes="0">
-                      <Group type="103" groupAlignment="0" attributes="0">
-                          <Group type="102" alignment="0" attributes="0">
-                              <Group type="103" groupAlignment="3" attributes="0">
-                                  <Component id="labelDirectionTypes" alignment="3" min="-2" max="-2" attributes="0"/>
-                                  <Component id="inputDirectionTypes" alignment="3" min="-2" max="-2" attributes="0"/>
-                              </Group>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Group type="103" groupAlignment="3" attributes="0">
-                                  <Component id="labelAngle1" alignment="3" min="-2" pref="14" max="-2" attributes="0"/>
-                                  <Component id="inputAngle1" alignment="3" min="-2" max="-2" attributes="0"/>
-                              </Group>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Group type="103" groupAlignment="3" attributes="0">
-                                  <Component id="labelAngle2" alignment="3" min="-2" max="-2" attributes="0"/>
-                                  <Component id="inputAngle2" alignment="3" min="-2" max="-2" attributes="0"/>
-                              </Group>
-                          </Group>
-                          <Group type="102" alignment="0" attributes="0">
-                              <EmptySpace min="-2" pref="37" max="-2" attributes="0"/>
-                              <Component id="coordTypeChange" min="-2" max="-2" attributes="0"/>
-                          </Group>
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="labelDirectionTypes" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="inputDirectionTypes" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
-                      <EmptySpace min="-2" pref="10" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="labelAngle1" alignment="3" min="-2" pref="14" max="-2" attributes="0"/>
+                          <Component id="inputAngle1" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="labelAngle2" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="inputAngle2" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="coordTypeChange" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="labelTarget" alignment="3" min="-2" pref="17" max="-2" attributes="0"/>
+                          <Component id="inputTarget" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="labelTabRingSize" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="inputTabRingSize" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="labelStartTime" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="inputStartTime" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="labelNrTabRings" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="inputNrTabRings" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="labelDuration" alignment="3" min="-2" pref="23" max="-2" attributes="0"/>
+                          <Component id="inputDuration" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="inputMaxDur" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace type="unrelated" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
                           <Component id="labelSubbandList" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="inputSubbandList" alignment="3" min="-2" max="-2" attributes="0"/>
@@ -131,12 +184,14 @@
                           <Component id="labelBeamletList" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="inputBeamletList" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
-                      <EmptySpace min="-2" pref="33" max="-2" attributes="0"/>
+                      <EmptySpace type="separate" max="-2" attributes="0"/>
+                      <Component id="jPanel3" min="-2" pref="267" max="-2" attributes="1"/>
+                      <EmptySpace min="-2" pref="94" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
                           <Component id="cancelButton" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="saveButton" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
-                      <EmptySpace min="-2" pref="57" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -150,6 +205,9 @@
                   </StringArray>
                 </Property>
               </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="inputDirectionTypesActionPerformed"/>
+              </Events>
             </Component>
             <Component class="javax.swing.JLabel" name="labelAngle1">
               <Properties>
@@ -221,6 +279,137 @@
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="coordTypeChangeActionPerformed"/>
               </Events>
+            </Component>
+            <Component class="javax.swing.JCheckBox" name="inputMaxDur">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Maximize Duration"/>
+              </Properties>
+            </Component>
+            <Container class="javax.swing.JPanel" name="jPanel3">
+              <Properties>
+                <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
+                  <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
+                    <TitledBorder title="TiedArrayBeam Configuration">
+                      <Font PropertyName="font" name="Tahoma" size="11" style="1"/>
+                    </TitledBorder>
+                  </Border>
+                </Property>
+                <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+                  <Dimension value="[200, 125]"/>
+                </Property>
+                <Property name="requestFocusEnabled" type="boolean" value="false"/>
+                <Property name="verifyInputWhenFocusTarget" type="boolean" value="false"/>
+              </Properties>
+
+              <Layout>
+                <DimensionLayout dim="0">
+                  <Group type="103" groupAlignment="0" attributes="0">
+                      <Group type="102" attributes="0">
+                          <Group type="103" groupAlignment="0" attributes="0">
+                              <Group type="102" attributes="0">
+                                  <Component id="addTiedArrayBeamButton" min="-2" max="-2" attributes="0"/>
+                                  <EmptySpace max="-2" attributes="0"/>
+                                  <Component id="editTiedArrayBeamButton" min="-2" max="-2" attributes="0"/>
+                                  <EmptySpace max="-2" attributes="0"/>
+                                  <Component id="deleteTiedArrayBeamButton" min="-2" max="-2" attributes="0"/>
+                              </Group>
+                              <Component id="TABConfigurationPanel" alignment="0" pref="1179" max="32767" attributes="0"/>
+                          </Group>
+                          <EmptySpace max="-2" attributes="0"/>
+                      </Group>
+                  </Group>
+                </DimensionLayout>
+                <DimensionLayout dim="1">
+                  <Group type="103" groupAlignment="0" attributes="0">
+                      <Group type="102" alignment="1" attributes="0">
+                          <Component id="TABConfigurationPanel" pref="201" max="32767" attributes="0"/>
+                          <EmptySpace type="separate" max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="3" attributes="0">
+                              <Component id="addTiedArrayBeamButton" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="editTiedArrayBeamButton" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="deleteTiedArrayBeamButton" alignment="3" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                      </Group>
+                  </Group>
+                </DimensionLayout>
+              </Layout>
+              <SubComponents>
+                <Component class="nl.astron.lofar.sas.otbcomponents.TablePanel" name="TABConfigurationPanel">
+                  <Events>
+                    <EventHandler event="mouseClicked" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="TABConfigurationPanelMouseClicked"/>
+                  </Events>
+                </Component>
+                <Component class="javax.swing.JButton" name="addTiedArrayBeamButton">
+                  <Properties>
+                    <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+                      <Image iconType="3" name="/nl/astron/lofar/sas/otb/icons/16_add.gif"/>
+                    </Property>
+                    <Property name="text" type="java.lang.String" value="add tiedArrayBeam"/>
+                  </Properties>
+                  <Events>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="addTiedArrayBeamButtonActionPerformed"/>
+                  </Events>
+                </Component>
+                <Component class="javax.swing.JButton" name="editTiedArrayBeamButton">
+                  <Properties>
+                    <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+                      <Image iconType="3" name="/nl/astron/lofar/sas/otb/icons/16_edit.gif"/>
+                    </Property>
+                    <Property name="text" type="java.lang.String" value="edit tiedArrayBeam"/>
+                    <Property name="enabled" type="boolean" value="false"/>
+                  </Properties>
+                  <Events>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="editTiedArrayBeamButtonActionPerformed"/>
+                  </Events>
+                </Component>
+                <Component class="javax.swing.JButton" name="deleteTiedArrayBeamButton">
+                  <Properties>
+                    <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+                      <Image iconType="3" name="/nl/astron/lofar/sas/otb/icons/16_delete.png"/>
+                    </Property>
+                    <Property name="text" type="java.lang.String" value="delete tiedArrayBeam"/>
+                    <Property name="enabled" type="boolean" value="false"/>
+                  </Properties>
+                  <Events>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="deleteTiedArrayBeamButtonActionPerformed"/>
+                  </Events>
+                </Component>
+              </SubComponents>
+            </Container>
+            <Component class="javax.swing.JLabel" name="labelTabRingSize">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="TAB ring size:"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JTextField" name="inputTabRingSize">
+            </Component>
+            <Component class="javax.swing.JLabel" name="labelTarget">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Target: "/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JTextField" name="inputTarget">
+            </Component>
+            <Component class="javax.swing.JLabel" name="labelNrTabRings">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="# TAB rings:"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JTextField" name="inputNrTabRings">
+            </Component>
+            <Component class="javax.swing.JLabel" name="labelStartTime">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="startTime:"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JTextField" name="inputStartTime">
+            </Component>
+            <Component class="javax.swing.JLabel" name="labelDuration">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Duration:"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JTextField" name="inputDuration">
             </Component>
           </SubComponents>
         </Container>

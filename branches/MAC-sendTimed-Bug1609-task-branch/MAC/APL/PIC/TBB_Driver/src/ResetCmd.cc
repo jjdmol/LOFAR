@@ -75,30 +75,25 @@ void ResetCmd::saveTbbEvent(GCFEvent& event)
 	while ((itsBoardMask & (1 << itsBoardNr)) == 0) {
 		itsBoardNr++;
 		if (itsBoardNr >= TS->maxBoards()) { 
+			setDone(true);
 			break;	
 		}
-	}
-	
-	if (itsBoardNr < TS->maxBoards()) {
-		setBoardNr(itsBoardNr);
-	} else {
-		setDone(true);
 	}
 }
 
 // ----------------------------------------------------------------------------
 void ResetCmd::sendTpEvent()
 {
-	
 	TPResetEvent tp_event;
 	tp_event.opcode = oc_RESET;
 	tp_event.status = 0;
 
-	if (TS->boardPort(getBoardNr()).isConnected()) {
-		TS->boardPort(getBoardNr()).send(tp_event);
-		TS->boardPort(getBoardNr()).setTimer(5.0);
+	if (TS->boardPort(itsBoardNr).isConnected()) {
+		TS->boardPort(itsBoardNr).send(tp_event);
+		TS->setBoardUsed(itsBoardNr);
+		TS->boardPort(itsBoardNr).setTimer(5.0);
 	}
-	LOG_DEBUG_STR("Reset is send to boardnr " << getBoardNr());
+	LOG_DEBUG_STR("Reset is send to boardnr " << itsBoardNr);
 }
 
 // ----------------------------------------------------------------------------
@@ -106,13 +101,13 @@ void ResetCmd::saveTpAckEvent(GCFEvent& event)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		TS->setBoardState(getBoardNr(),noBoard);
+		TS->setBoardState(itsBoardNr,noBoard);
 	}	else {
 		TPResetAckEvent tp_ack(event);
-		TS->setImageNr(getBoardNr(), 0);
-		itsStatus[getBoardNr()] = tp_ack.status;
+		TS->setImageNr(itsBoardNr, 0);
+		itsStatus[itsBoardNr] = tp_ack.status;
 		if (tp_ack.status != 0) {
-			TS->setBoardState(getBoardNr(),boardError);
+			TS->setBoardState(itsBoardNr,boardError);
 		}
 	}
 	
@@ -121,14 +116,10 @@ void ResetCmd::saveTpAckEvent(GCFEvent& event)
 	while ((itsBoardMask & (1 << itsBoardNr)) == 0) {
 		itsBoardNr++;
 		if (itsBoardNr >= TS->maxBoards()) { 
+			setSleepTime(10.0);
+		    setDone(true);
 			break;
 		}	
-	}
-	if (itsBoardNr < TS->maxBoards()) {
-		setBoardNr(itsBoardNr);
-	} else {
-		setSleepTime(10.0);
-		setDone(true);
 	}
 }
 
@@ -146,4 +137,6 @@ void ResetCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 	}
 	
 	if (clientport->isConnected()) { clientport->send(tbb_ack); }
+	TS->resetBoardUsed();
+	TS->setSetupNeeded(true);
 }

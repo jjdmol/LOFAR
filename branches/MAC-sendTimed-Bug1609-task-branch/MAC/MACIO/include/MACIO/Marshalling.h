@@ -206,4 +206,39 @@ do {	\
 	}	\
 } while (0)
 
+// SIZE vector<double>>
+#define MSH_SIZE_VECTOR_DOUBLE(sizevar, thevector)	\
+do {	\
+	sizevar = sizeof(int32) + thevector.size() * sizeof(double);	\
+} while (0)
+	
+
+// PACK vector<double>
+#define MSH_PACK_VECTOR_DOUBLE(bufptr, offset, thevector)	\
+do {	\
+	int32	nrElem = thevector.size();	\
+	memcpy(((char*)(bufptr)) + (offset), &nrElem, sizeof(int32));	\
+	offset += sizeof(int32);	\
+	\
+	for (int idx=0; idx < nrElem; idx++) { \
+		memcpy(((char*)(bufptr)) + (offset), &(thevector[idx]), sizeof(double)); \
+		offset += sizeof(double); \
+	} \
+} while (0)
+
+// UNPACK vector<double>
+#define MSH_UNPACK_VECTOR_DOUBLE(bufptr, offset, thevector)	\
+do {	\
+	int32	nrElem = 0;	\
+	memcpy(&nrElem, ((char*)(bufptr)) + (offset), sizeof(nrElem));	\
+	offset += sizeof(nrElem);	\
+	\
+	for (int elem = 0; elem < nrElem; elem++) {	\
+		double	elem1; \
+		memcpy(&elem1, ((char*)(bufptr)) + (offset), sizeof(elem1)); \
+		thevector.push_back(elem1); \
+		offset += sizeof(double); \
+	}	\
+} while (0)
+
 #endif /* MARSHALLING_H_ */

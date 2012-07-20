@@ -59,8 +59,7 @@ public:
     void setName (string& name) {_name = name;}
 
 protected:
-    explicit GCFTask (State initial, const string& name) :
-		GCFFsm(initial), _name(name) { }
+    GCFTask (State initial, const string& name) : GCFFsm(initial), _name(name) { }
 
 private:
     // Is private to avoid initialising a task without giving an inital state and the task name

@@ -36,14 +36,15 @@ namespace LOFAR {
 
 SyncAction::SyncAction(GCFPortInterface& board_port, int board_id, int n_indices)
   : GCFFsm((State)&SyncAction::idle_state),
-    m_board_port(board_port),
-    m_board_id(board_id),
-    m_completed(false),
-    m_continue(false),
-    m_n_indices(n_indices),
-    m_current_index(0),
-    m_retries(0),
-    m_atinit(false)
+    m_board_port	(board_port),
+    m_board_id		(board_id),
+    m_completed		(false),
+    m_continue		(false),
+	itsHasError		(false),
+    m_n_indices		(n_indices),
+    m_current_index	(0),
+    m_retries		(0),
+    m_atinit		(false)
 {
 }
 
@@ -150,82 +151,54 @@ GCFEvent::TResult SyncAction::waitack_state(GCFEvent& event, GCFPortInterface& p
 
     case F_EXIT:
       break;
-
+/*
     case EPA_READACK_ERROR:
     case EPA_WRITEACK_ERROR:
       LOG_ERROR("Read/write error during SyncAction. Aborting sync action.");
 
+	  itsHasError = true;
       setCompleted(true); // done with this statemachine
       TRAN(SyncAction::idle_state);
       break;
-      
+*/      
     default:
       status = handleack(event, port);
       
       // check status of previous write
       if (status == GCFEvent::HANDLED) {
-	// OK, move on to the next index
-	m_current_index++;
-	m_retries = 0;
-	if (m_current_index < m_n_indices) {
-	  // send next bit of data
-	  TRAN(SyncAction::sendrequest_state);
-	}
-	else {
-	  // we've completed the update
-	  setCompleted(true); // done with this statemachine
-	  TRAN(SyncAction::idle_state);
-	}
+		// OK, move on to the next index
+		m_current_index++;
+		m_retries = 0;
+		if (m_current_index < m_n_indices) {
+		  // send next bit of data
+		  TRAN(SyncAction::sendrequest_state);
+		}
+		else {
+		  // we've completed the update
+		  setCompleted(true); // done with this statemachine
+		  TRAN(SyncAction::idle_state);
+		}
       }
       else {
-	//
-	// didn't receive what we expected, simply wait
-	// for another (hopefully correct) event,
-	// but only allow m_retries of these situations.
-	//
-	if (m_retries++ > N_RETRIES) {
-	  // abort
-	  LOG_WARN("maximum retries reached, protocol probably out of sync, trying to continue anyway");
+		//
+		// didn't receive what we expected, simply wait
+		// for another (hopefully correct) event,
+		// but only allow m_retries of these situations.
+		//
+		if (m_retries++ > N_RETRIES) {
+		  // abort
+		  LOG_WARN("maximum retries reached, protocol probably out of sync, trying to continue anyway");
 
-	  // pretend we've completed the update
-	  setCompleted(true);
-	  TRAN(SyncAction::idle_state);
-	}
+		  // pretend we've completed the update
+		  itsHasError = true;
+		  setCompleted(true);
+		  TRAN(SyncAction::idle_state);
+		}
       }
     break;
   }
 
   return GCFEvent::HANDLED;
-}
-
-int SyncAction::getBoardId()
-{
-  return m_board_id;
-}
-
-GCFPortInterface& SyncAction::getBoardPort()
-{
-  return m_board_port;
-}
-
-void SyncAction::setContinue(bool cont)
-{
-  m_continue = cont;
-}
-
-bool SyncAction::doContinue() const
-{
-  return m_continue;
-}
-
-void SyncAction::setCompleted(bool completed)
-{
-  m_completed = completed;
-}
-
-bool SyncAction::hasCompleted() const
-{
-  return m_completed;
 }
 
 /**
@@ -236,6 +209,7 @@ void SyncAction::reset()
 {
   setCompleted(false);
   setContinue(false);
+  itsHasError = false;
   TRAN(SyncAction::idle_state);
 }
 

@@ -85,7 +85,7 @@ RTDBPropertySet::RTDBPropertySet (const string& 	name,
 //
 RTDBPropertySet::~RTDBPropertySet()
 {
-	LOG_TRACE_FLOW_STR("~RTDBPropertySet(" << "?" << ")");
+	LOG_TRACE_FLOW_STR("~RTDBPropertySet(" << itsScope << ")");
 
 	_deleteAllProperties();// cleanup propMap
 
@@ -101,6 +101,7 @@ RTDBPropertySet::~RTDBPropertySet()
 	delete itsService;
 	delete itsOwnResponse;
 	delete itsExtResponse;
+
 }
 
 //
@@ -237,7 +238,9 @@ PVSSresult	RTDBPropertySet::flush()
 	}
 
 	// write to database
-	LOG_DEBUG_STR("Updating: " << dpeNames);
+	stringstream		os;
+	writeVector(os, dpeNames, ",", "[", "]");
+	LOG_DEBUG_STR("Updating: " << os.str());
 	return (itsService->dpeSetMultiple(itsScope, dpeNames, dpeValues));
 }
 
@@ -374,7 +377,7 @@ RTDBPropertySet::Property* RTDBPropertySet::_getProperty (const string& propName
 		return (PMiter->second);
 	}
 
-	ASSERTSTR(false, "Property " << propName << " not in the PropertySet"); //REO
+	ASSERTSTR(false, "Property " << propName << " not in the PropertySet " << itsScope); //REO
 
 	return (0);
 }

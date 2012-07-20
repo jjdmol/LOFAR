@@ -45,15 +45,13 @@ class MyProcess : public Process
 
   virtual void child() 
   {
-    pid_t pid = getpid();
-    pid_t ppid = getppid();
-    LOG_TRACE_FLOW_STR(AUTO_FUNCTION_NAME << ": pid = " << pid
-                       << "; ppid = " << ppid);
+    LOG_TRACE_FLOW_STR(AUTO_FUNCTION_NAME << ": pid = " << getpid()
+                       << "; ppid = " << getppid());
     LOG_TRACE_STAT_STR(AUTO_FUNCTION_NAME
                        << ": going to sleep for 2 seconds ...");
     sleep(2);
     LOG_TRACE_STAT_STR(AUTO_FUNCTION_NAME
-                       << ": pid #" << pid << " exiting ...");
+                       << ": pid #" << getpid() << " exiting ...");
     exit(0); 
   }
 };

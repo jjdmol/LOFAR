@@ -12,13 +12,16 @@ lofar_add_library(aplcommon
   StartDaemon_Protocol.cc
   Controller_Protocol.cc
   AntennaField.cc
-  AntennaSets.cc
   APLUtilities.cc
   ControllerDefines.cc
   CTState.cc
   ControllerAdmin.cc
   ChildControl.cc
   ParentControl.cc)
+
+add_dependencies(aplcommon 
+  APLCommon-Controller_Protocol
+  APLCommon-StartDaemon_Protocol)
 
 lofar_add_bin_program(versionaplcommon versionaplcommon.cc)
 

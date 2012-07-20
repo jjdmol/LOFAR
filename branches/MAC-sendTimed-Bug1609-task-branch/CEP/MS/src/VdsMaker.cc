@@ -22,8 +22,8 @@
 
 #include <lofar_config.h>
 #include <MS/VdsMaker.h>
-#include <MWCommon/VdsDesc.h>
-#include <MWCommon/ClusterDesc.h>
+#include <LMWCommon/VdsDesc.h>
+#include <LMWCommon/ClusterDesc.h>
 #include <Common/StreamUtil.h>
 #include <Common/LofarLogger.h>
 
@@ -48,7 +48,7 @@
 #include <casa/Containers/Record.h>
 #include <casa/Utilities/LinearSearch.h>
 #include <casa/OS/Path.h>
-#include <casa/OS/RegularFile.h>
+#include <casa/OS/File.h>
 #include <casa/OS/HostInfo.h>
 #include <casa/Exceptions/Error.h>
 #include <iostream>
@@ -81,18 +81,20 @@ void VdsMaker::getFreqInfo (MS& ms, vector<int>& nrchan,
   }
 }
 
-void VdsMaker::getFields (MS& ms, vector<double>& ra, vector<double>& dec)
+void VdsMaker::getFields (MS& ms, vector<double>& ra, vector<double>& dec,
+                          vector<string>& refType)
 {
   MSField mssub(ms.field());
   ROMSFieldColumns mssubc(mssub);
   int nrf = mssub.nrow();
   ra.resize  (nrf);
   dec.resize (nrf);
+  refType.resize (nrf);
   for (int i=0; i<nrf; ++i) {
-    Array<MDirection> mds = mssubc.delayDirMeasCol().convert
-      (i, MDirection::J2000);
-    ra[i]  = mds.data()->getValue().get()[0];
-    dec[i] = mds.data()->getValue().get()[1];
+    Array<MDirection> mds = mssubc.referenceDirMeasCol()(i);
+    ra[i]  = mds.data()[i].getValue().get()[0];
+    dec[i] = mds.data()[i].getValue().get()[1];
+    refType[i] = mds.data()[i].getRefString();
   }
 }
 
@@ -110,13 +112,14 @@ void VdsMaker::getAntNames (MS& ms, vector<string>& antNames)
 void VdsMaker::getCorrInfo (MS& ms, vector<string>& corrTypes)
 {
   MSPolarization mssub(ms.polarization());
-  ASSERT (mssub.nrow() > 0);
-  ROMSPolarizationColumns mssubc(mssub);
-  Vector<Int> ctvec = mssubc.corrType()(0);
-  int nrp = ctvec.nelements();
-  corrTypes.resize (nrp);
-  for (int i=0; i<nrp; ++i) {
-    corrTypes[i] = Stokes::name (Stokes::type(ctvec(i)));
+  if (mssub.nrow() > 0) {
+    ROMSPolarizationColumns mssubc(mssub);
+    Vector<Int> ctvec = mssubc.corrType()(0);
+    int nrp = ctvec.nelements();
+    corrTypes.resize (nrp);
+    for (int i=0; i<nrp; ++i) {
+      corrTypes[i] = Stokes::name (Stokes::type(ctvec(i)));
+    }
   }
 }
 
@@ -148,9 +151,9 @@ void VdsMaker::getDataFileInfo (MS& ms, string& name, bool& regular,
 	  ostringstream str;
 	  str << specrec.asInt ("SEQNR");
 	  name = string(ms.tableName()) + "/table.f" + str.str() + "_TSM1";
-	  if (! RegularFile(name).exists()) {
+	  if (! File(name).exists()) {
 	    name = string(ms.tableName()) + "/table.f" + str.str() + "_TSM0";
-	    if (! RegularFile(name).exists()) {
+	    if (! File(name).exists()) {
 	      regular = false;
 	    }
 	  }
@@ -235,26 +238,31 @@ void VdsMaker::create (const string& msName, const string& outName,
   }
   // Write the field directions (in J2000).
   vector<double> ra, dec;
-  getFields (ms, ra, dec);
+  vector<string> refType;
+  getFields (ms, ra, dec, refType);
   int nrfield = ra.size();
-  ostringstream oss2a, oss2b;
+  ostringstream oss2a, oss2b, oss2c;
   oss2a << '[';
   oss2b << '[';
+  oss2c << '[';
   for (int i=0; i<nrfield; ++i) {
     if (i > 0) {
       oss2a << ',';
       oss2b << ',';
+      oss2c << ',';
     }
     oss2a << MVAngle::Format(MVAngle::TIME, 12)
 	  << MVAngle(Quantity(ra[i], "rad"));
     oss2b << MVAngle::Format(MVAngle::ANGLE, 12)
 	  << MVAngle(Quantity(dec[i], "rad"));
+    oss2c << refType[i];
   }
   oss2a << ']';
   oss2b << ']';
+  oss2c << ']';
   msd.addParm ("FieldDirectionRa",  oss2a.str());
   msd.addParm ("FieldDirectionDec", oss2b.str());
-  msd.addParm ("FieldDirectionType", "J2000");
+  msd.addParm ("FieldDirectionType", oss2c.str());
   // Fill in station names.
   vector<string> antNames;
   getAntNames (ms, antNames);
@@ -280,25 +288,29 @@ void VdsMaker::create (const string& msName, const string& outName,
   // Fill in times.
   ROMSMainColumns mscol(ms);
   uInt nrow = ms.nrow();
-  // Get start and end time. Get the step time from the middle one.
-  double stepTime = mscol.exposure()(nrow/2);
-  double startTime = mscol.time()(0) - mscol.exposure()(0)/2;
-  double endTime = mscol.time()(nrow-1) + mscol.exposure()(nrow-1)/2;
-  if (fillTimes) {
-    // Get all unique times.
-    Table msuniq = ms.sort ("TIME", Sort::Ascending,
-                            Sort::QuickSort + Sort::NoDuplicates);
-    Vector<double> tims = ROScalarColumn<double>(msuniq,"TIME").getColumn();
-    Vector<double> intv = ROScalarColumn<double>(msuniq,"INTERVAL").getColumn();
-    vector<double> stimes(tims.size());
-    vector<double> etimes(tims.size());
-    for (uint i=0; i<tims.size(); ++i) {
-      stimes[i] = tims[i] - intv[i]*0.5;
-      etimes[i] = tims[i] + intv[i]*0.5;
-    }
-    msd.setTimes (startTime, endTime, stepTime, stimes, etimes);
+  if (nrow <= 0) {
+    LOG_WARN ("MeasurementSet " + absName + " is empty");
   } else {
-    msd.setTimes (startTime, endTime, stepTime);
+    // Get start and end time. Get the step time from the middle one.
+    double stepTime  = mscol.exposure()(nrow/2);
+    double startTime = mscol.time()(0) - mscol.exposure()(0)/2;
+    double endTime   = mscol.time()(nrow-1) + mscol.exposure()(nrow-1)/2;
+    if (fillTimes) {
+      // Get all unique times.
+      Table msuniq = ms.sort ("TIME", Sort::Ascending,
+                              Sort::QuickSort + Sort::NoDuplicates);
+      Vector<double> tims = ROScalarColumn<double>(msuniq,"TIME").getColumn();
+      Vector<double> intv = ROScalarColumn<double>(msuniq,"INTERVAL").getColumn();
+      vector<double> stimes(tims.size());
+      vector<double> etimes(tims.size());
+      for (uint i=0; i<tims.size(); ++i) {
+        stimes[i] = tims[i] - intv[i]*0.5;
+        etimes[i] = tims[i] + intv[i]*0.5;
+      }
+      msd.setTimes (startTime, endTime, stepTime, stimes, etimes);
+    } else {
+      msd.setTimes (startTime, endTime, stepTime);
+    }
   }
   // Write into the vds file.
   ofstream ostr(outName.c_str());
@@ -322,9 +334,10 @@ void VdsMaker::combine (const string& gdsName,
   double endTime = 0;
   vector<VdsPartDesc*> vpds;
   vpds.reserve (vdsNames.size());
-  for (uint i=0; i<vdsNames.size(); ++i) {
-    VdsPartDesc* vpd = new VdsPartDesc(ParameterSet(vdsNames[i]));
-    casa::Path path(vdsNames[i]);
+  for (uint j=0; j<vdsNames.size(); ++j) {
+    VdsPartDesc* vpd = new VdsPartDesc(ParameterSet(vdsNames[j]));
+    // Skip a VDS with an empty time (it has no data).
+    casa::Path path(vdsNames[j]);
     // File name gets the original MS name.
     // Name gets the name of the VDS file.
     vpd->setFileName (vpd->getName());
@@ -347,9 +360,16 @@ void VdsMaker::combine (const string& gdsName,
       globalvpd.addBand (nchan, sfreq, efreq);
     }
     // Get minimum/maximum time.
-    startTime = std::min (startTime, vpd->getStartTime());
-    endTime   = std::max (endTime, vpd->getEndTime());
+    if (vpd->getStartTime() == 0) {
+      LOG_INFO_STR ("Dataset " << vdsNames[j] << " is completely empty");
+    } else {
+      startTime = std::min (startTime, vpd->getStartTime());
+      endTime   = std::max (endTime, vpd->getEndTime());
+    }
   }
+  // Exit if no valid VDS files.
+  ASSERTSTR (!vpds.empty(), "No VDS files are given");
+  ASSERTSTR (startTime != 0, "All datasets seems to be empty");
 
   // Set the times in the global desc (using the first part).
   // Set the clusterdesc name.
@@ -382,7 +402,7 @@ void VdsMaker::combine (const string& gdsName,
         vpds[i]->getEndTime()   != globalvpd.getEndTime()    ||
         vpds[i]->getStepTime( ) != globalvpd.getStepTime()) {
       cerr << "The times of part " << i << " (" << vpds[i]->getName()
-           << " are different" << endl;
+           << ") are different" << endl;
     }
     delete vpds[i];
     vpds[i] = 0;

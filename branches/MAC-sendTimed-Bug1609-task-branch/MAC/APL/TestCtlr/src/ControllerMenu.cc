@@ -183,6 +183,13 @@ GCFEvent::TResult ControllerMenu::startup_state(GCFEvent& event, GCFPortInterfac
 		}
 		break;
 
+	case CONTROL_QUITED: {
+			CONTROLQuitedEvent msg(event);
+			cout << endl << "Connection failed with result = " << msg.result << endl;
+			GCFScheduler::instance()->stop ();
+		}
+		break;
+
 	default:
 		LOG_DEBUG ("ControllerMenu::startup, default");
 		status = GCFEvent::NOT_HANDLED;

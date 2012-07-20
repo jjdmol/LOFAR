@@ -5,3 +5,4 @@ include(MACAddProtocol)
 mac_add_protocol(Clock_Protocol "${MACIO_SOURCE_DIR}/autogen")
 
 lofar_add_library(clock_protocol Clock_Protocol.cc)
+add_dependencies(clock_protocol StationCU-Clock_Protocol)

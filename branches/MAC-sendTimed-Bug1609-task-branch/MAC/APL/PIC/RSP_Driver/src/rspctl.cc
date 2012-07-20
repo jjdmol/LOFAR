@@ -26,6 +26,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/lofar_bitset.h>
 #include <Common/hexdump.h>
+#include <Common/Exception.h>
 
 #include <MACIO/MACServiceInfo.h>
 #include <GCF/TM/GCF_Scheduler.h>
@@ -68,6 +69,9 @@ namespace LOFAR {
 //	using namespace RSP;
 	using namespace RTC;
 
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
+
 // declare class constants
 double WGCommand::AMPLITUDE_SCALE = (1.0 * ((uint32)(1 << 11)-1) / (uint32)(1 << 11)) * (uint32)(1 << 31);
 
@@ -100,7 +104,8 @@ do { \
 #define DEFAULT_SAMPLE_FREQUENCY 160.0e6
 double  gSampleFrequency = DEFAULT_SAMPLE_FREQUENCY;
 bool    g_getclock       = false;
-bool    gSplitter        = false;
+bool    gSplitterOn        = false;
+bool    gHasSplitter     = false;
 bool    gClockChanged    = false;
 
 #define PAIR 2
@@ -617,7 +622,7 @@ void HBACommand::send()
 		sethba.timestamp = Timestamp(0,0);
 		sethba.rcumask   = getRCUMask();
 
-		sethba.settings().resize(sethba.rcumask.count(), MEPHeader::N_HBA_DELAYS);
+		sethba.settings().resize(sethba.rcumask.count(), N_HBA_ELEM_PER_TILE);
 
 		if (1 == m_delaylist.size()) {
 			std::list<int>::iterator it = m_delaylist.begin();
@@ -630,7 +635,7 @@ void HBACommand::send()
 			int i = 0;
 			std::list<int>::iterator it;
 			for (it = m_delaylist.begin(); it != m_delaylist.end(); it++, i++) {
-				if (i >= MEPHeader::N_HBA_DELAYS)
+				if (i >= N_HBA_ELEM_PER_TILE)
 					break;
 				sethba.settings()(Range::all(), i) = (*it);
 			}
@@ -659,7 +664,7 @@ GCFEvent::TResult HBACommand::ack(GCFEvent& e)
 			for (int hbaout = 0; hbaout < get_ndevices(); hbaout++) {
 				if (mask[hbaout]) {
 					cout << formatString("HBA[%2d].delays=", hbaout);
-					for (int i = 0; i < MEPHeader::N_HBA_DELAYS; i++) {
+					for (int i = 0; i < N_HBA_ELEM_PER_TILE; i++) {
 						cout << formatString(" %3d", (int)(ack.settings()(hbain, i)));
 					}
 					cout << endl;
@@ -684,7 +689,7 @@ GCFEvent::TResult HBACommand::ack(GCFEvent& e)
 			for (int hbaout = 0; hbaout < get_ndevices(); hbaout++) {
 				if (mask[hbaout]) {
 					cout << formatString("HBA[%2d].real delays=", hbaout);
-					for (int i = 0; i < MEPHeader::N_HBA_DELAYS; i++) {
+					for (int i = 0; i < N_HBA_ELEM_PER_TILE; i++) {
 						if ((int)(ack.settings()(hbain, i)) == 255) {
 							cout << " ???";
 						}
@@ -1223,7 +1228,7 @@ GCFEvent::TResult SICommand::ack(GCFEvent& e)
 //
 // DataStreamCommand
 //
-DataStreamCommand::DataStreamCommand(GCFPortInterface& port) : Command(port), itsStreamOn(true)
+DataStreamCommand::DataStreamCommand(GCFPortInterface& port) : Command(port), itsStream0On(true), itsStream1On(true)
 {
 }
 
@@ -1245,9 +1250,18 @@ void DataStreamCommand::send()
 
 		request.timestamp = Timestamp(0,0);
 		//request.rcumask   = getRSPMask();
-		request.switch_on = itsStreamOn;
+		request.switch_on0 = itsStream0On;
+		request.switch_on1 = gSplitterOn ? itsStream1On : false;
 
-		logMessage(cout,formatString("set datastream %s", request.switch_on?"on":"off"));
+		if (itsStream1On && !gSplitterOn) {
+			logMessage(cout,"Splitter is off, second datastream cannot be turned on!");
+		}
+		if (gHasSplitter) {
+			logMessage(cout,formatString("set datastream 0:%s 1:%s", request.switch_on0?"on":"off", request.switch_on1?"on":"off"));
+		}
+		else {
+			logMessage(cout,formatString("set datastream %s", request.switch_on0?"on":"off"));
+		}
 
 		m_rspport.send(request);
 	}
@@ -1261,26 +1275,21 @@ GCFEvent::TResult DataStreamCommand::ack(GCFEvent& e)
 	case RSP_GETDATASTREAMACK: {
 		RSPGetdatastreamackEvent ack(e);
 
-		std::ostringstream msg;
-		msg << "getdatastreamack.timestamp=" << ack.timestamp;
-		logMessage(cout, msg.str());
-		msg.seekp(0);
-
 		if (ack.status != RSP_SUCCESS) {
 			logMessage(cerr, "Error: RSP_GETDATASTREAM command failed.");
 			break;
 		}
-		cout << formatString("DataStream to CEP switched %s\n", ack.switch_on?"on":"off");
-		cout << endl;
+		if (gHasSplitter) {
+			cout << formatString("Datastream to CEP switched 0:%s 1:%s\n", ack.switch_on0?"on":"off", ack.switch_on1?"on":"off");
+		}
+		else {
+			cout << formatString("Datastream to CEP switched %s\n", ack.switch_on0?"on":"off");
+		}
 	}
 	break;
 
 	case RSP_SETDATASTREAMACK: {
 		RSPSetdatastreamackEvent ack(e);
-
-		std::ostringstream msg;
-		msg << "Setdatastreamack.timestamp=" << ack.timestamp;
-		logMessage(cout, msg.str());
 
 		if (ack.status != RSP_SUCCESS) {
 			logMessage(cerr, "Error: RSP_SETDATASTREAM command failed.");
@@ -1631,10 +1640,6 @@ void WGCommand::send()
 		wgset.timestamp = Timestamp(0,0);
 		wgset.rcumask   = getRCUMask();
 		wgset.settings().resize(1);
-
-		//wgset.settings()(0).freq = (uint32)((m_frequency * ((uint32)-1) / gSampleFrequency) + 0.5);
-		//wgset.settings()(0).freq = (uint32)round(m_frequency * ((uint64)1 << 32) / gSampleFrequency);
-		//wgset.settings()(0).freq    = m_frequency;
 
 		wgset.settings()(0).freq        = (uint32)round(itsFrequency * ((uint64)1 << 32) / gSampleFrequency);
 		wgset.settings()(0).phase       = m_phase;
@@ -2053,7 +2058,7 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 
 
 	time_t seconds = timestamp.sec();
-	if (gSplitter) {
+	if (gSplitterOn) {
 		strftime(plotcmd, 255, "set title \"Ring 0 %s - %a, %d %b %Y %H:%M:%S  %z\"\n", gmtime(&seconds));
 	}
 	else {
@@ -2072,7 +2077,7 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 	int count = 0;
 
 	startrcu = 0;
-	if (gSplitter) {
+	if (gSplitterOn) {
 		stoprcu = get_ndevices() / 2;
 	}
 	else {
@@ -2103,7 +2108,7 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 	}
 	gnuplot_cmd(handle, "\n");
 
-	if (gSplitter) {
+	if (gSplitterOn) {
 		gnuplot_write_matrix(handle, stats(Range(0,(n_firstIndex/2)-1), Range::all()));
 	}
 	else {
@@ -2111,13 +2116,13 @@ void StatisticsCommand::plot_statistics(Array<double, 2>& stats, const Timestamp
 	}
 
 	// if splitter is now OFF but the second screen is still shown, remove this window
-	if (handle2 && !gSplitter) {
+	if (handle2 && !gSplitterOn) {
 		gnuplot_close(handle2);
 		handle2=0;
 	}
 
 	// if Splitter is active plot another graphics
-	if (gSplitter) {
+	if (gSplitterOn) {
 		if (!handle2) {
 			handle2 = gnuplot_init();
 			if (!handle2) return;
@@ -2385,10 +2390,11 @@ void XCStatisticsCommand::plot_xcstatistics(Array<complex<double>, 4>& xcstats, 
 	gnuplot_cmd(handle, plotcmd);
 
 	gnuplot_cmd(handle, "plot \"-\" binary array=%dx%d format='%%double' with image\n", n_ant, n_ant);
-
-	if (!m_xcangle) {
-		thestats = 10.0*log(thestats)/log(10.0);
-	}
+    
+    // already log taken in convert_to_amplphase function
+	//if (!m_xcangle) {
+	//	thestats = 10.0*log(thestats)/log(10.0);
+	//}
 
 	if ((size_t)thestats.size() != fwrite(thestats.data(), sizeof(double), (size_t)thestats.size(), handle->gnucmd)) {
 		logMessage(cerr, "Failed to write to gnuplot.");
@@ -2614,6 +2620,7 @@ GCFEvent::TResult RSPCtl::initial(GCFEvent& e, GCFPortInterface& port)
 		itsNantennas   = ack.n_rcus / N_POL;
 		m_nrspboards   = ack.n_rspboards;
 		m_maxrspboards = ack.max_rspboards;
+		gHasSplitter   = ack.hasSplitter;
 		LOG_DEBUG_STR(formatString("n_rcus    =%d",m_nrcus));
 		LOG_DEBUG_STR(formatString("n_rspboards=%d of %d",  m_nrspboards, m_maxrspboards));
 
@@ -2786,8 +2793,8 @@ GCFEvent::TResult RSPCtl::sub2Splitter(GCFEvent& e, GCFPortInterface& port)
 
 	case RSP_UPDSPLITTER: {
 		RSPUpdsplitterEvent  updateEvent(e);
-		gSplitter = updateEvent.splitter[0];
-		logMessage(cerr, formatString("The splitter is currently %s", gSplitter ? "ON" : "OFF"));
+		gSplitterOn = updateEvent.splitter[0];
+		logMessage(cerr, formatString("The splitter is currently %s", gSplitterOn ? "ON" : "OFF"));
 		TRAN(RSPCtl::doCommand);
 	}
 	break;
@@ -2882,8 +2889,8 @@ GCFEvent::TResult RSPCtl::doCommand(GCFEvent& e, GCFPortInterface& port)
 
 	case RSP_UPDSPLITTER: {
 		RSPUpdsplitterEvent  updateEvent(e);
-		gSplitter = updateEvent.splitter[0];
-		logMessage(cerr, formatString("NOTE: The splitter switched to %s", gSplitter ? "ON" : "OFF"));
+		gSplitterOn = updateEvent.splitter[0];
+		logMessage(cerr, formatString("NOTE: The splitter switched to %s", gSplitterOn ? "ON" : "OFF"));
 	}
 	break;
 
@@ -3006,7 +3013,7 @@ static void usage(bool exportMode)
 	cout << "rspctl --hbadelays[=<list>] [--select=<set>]   # set or get the 16 delays of one or more HBA's" << endl;
 	cout << "rspctl --tbbmode[=transient | =subbands,<set>] # set or get TBB mode, 'transient' or 'subbands', if subbands then specify subband set" << endl;
 	cout << "rspctl --splitter[=0|1]                        # set or get the status of the Serdes splitter" << endl;
-	cout << "rspctl --datastream[=0|1]                      # set or get the status of data stream to cep" << endl;
+	cout << "rspctl --datastream[=0|1|2|3]                  # set or get the status of data stream to cep" << endl;
 	cout << "rspctl --swapxy[=0|1] [--select=<set>]         # set or get the status of xy swap, 0=normal, 1=swapped" << endl;
 	if (exportMode) {
 	cout << endl;
@@ -3685,7 +3692,9 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
 			if (optarg) {
 				datastreamCmd->setMode(false);
-				datastreamCmd->setStream(strncmp(optarg, "0", 1));
+				datastreamCmd->setStream(0,atoi(optarg)%2);
+				datastreamCmd->setStream(1,atoi(optarg)/2);
+				itsNeedSplitter = true;
 			}
 		}
 		break;

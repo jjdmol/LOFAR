@@ -24,11 +24,10 @@
 #include <Common/Exceptions.h>
 #include <Common/LofarLogger.h>
 #include <Common/SystemCallException.h>
-#include <ION_main.h>
+#include <GlobalVars.h>
 #include <Job.h>
 #include <JobQueue.h>
 #include <Stream/SocketStream.h>
-#include <StreamMultiplexer.h>
 
 #include <string>
 
@@ -41,10 +40,7 @@ namespace LOFAR {
 namespace RTCP {
 
 
-static bool quit = false;
-
-
-static void handleCommand(const std::string &command)
+void CommandServer::handleCommand(const std::string &command)
 {
   //LOG_DEBUG_STR("command \"" << command << "\" received");
 
@@ -59,12 +55,18 @@ static void handleCommand(const std::string &command)
     if (myPsetNumber == 0)
       jobQueue.listJobs();
   } else if (command.compare(0, 7, "parset ") == 0) {
-    try {
-      jobQueue.insert(new Job(command.substr(7).c_str()));
-    } catch (APSException &) { // if file could not be found
-    }
+    jobQueue.insert(new Job(command.substr(7).c_str()));
+    itsNrJobsCreated.up();
   } else if (command == "quit") {
-    quit = true;
+    itsQuit = true;
+  } else if (command == "threads") {
+    ThreadMap::instance().report();
+#if defined HAVE_BGP    
+  } else if (command == "debug") {
+    LOGCOUT_SETLEVEL(8);
+  } else if (command == "nodebug") {
+    LOGCOUT_SETLEVEL(4);
+#endif    
   } else if (command == "") {
     // quietly drop empty commands
   } else if (myPsetNumber == 0) {
@@ -73,21 +75,27 @@ static void handleCommand(const std::string &command)
 }
 
 
-static void commandMaster()
+void CommandServer::commandMaster()
 {
-  std::vector<MultiplexedStream *> ionStreams(nrPsets);
+  std::vector<SmartPtr<MultiplexedStream> > ionStreams(nrPsets);
 
   for (unsigned ion = 1; ion < nrPsets; ion ++)
     ionStreams[ion] = new MultiplexedStream(*allIONstreamMultiplexers[ion], 0);
 
+#if defined HAVE_BGP
   SocketStream sk("0.0.0.0", 4000, SocketStream::TCP, SocketStream::Server);
+#else
+  SocketStream sk("0.0.0.0", 3999, SocketStream::TCP, SocketStream::Server);
+#endif
 
-  while (!quit) {
+  LOG_INFO("Command server ready");
+
+  while (!itsQuit) {
     std::string command;
 
     try {
       command = sk.readLine();
-      LOG_DEBUG_STR("read command: " << command);
+      LOG_INFO_STR("read command: " << command);
     } catch (Stream::EndOfStreamException &) {
       sk.reaccept();
       continue;
@@ -110,39 +118,71 @@ static void commandMaster()
       LOG_ERROR_STR("handleCommand caught std::exception: " << ex.what());
     } catch (...) {
       LOG_ERROR("handleCommand caught non-std::exception: ");
+      throw;
     }
   }
-
-  for (unsigned ion = 1; ion < nrPsets; ion ++)
-    delete ionStreams[ion];
 }
 
 
-static void commandSlave()
+void CommandServer::commandSlave()
 {
   MultiplexedStream streamFromMaster(*allIONstreamMultiplexers[0], 0);
 
-  while (!quit) {
+  while (!itsQuit) {
     unsigned size;
 
     //MPI_Bcast(&size, sizeof size, MPI_INT, 0, MPI_COMM_WORLD);
     streamFromMaster.read(&size, sizeof size);
 
-    char *command = new char[size];
+    std::vector<char> command(size);
     //MPI_Bcast(command, size, MPI_CHAR, 0, MPI_COMM_WORLD);
-    streamFromMaster.read(command, size);
-    handleCommand(command);
-    delete [] command;
+    streamFromMaster.read(&command[0], size);
+
+    try {
+      handleCommand(&command[0]);
+    } catch (Exception &ex) {
+      LOG_ERROR_STR("handleCommand caught Exception: " << ex);
+    } catch (std::exception &ex) {
+      LOG_ERROR_STR("handleCommand caught std::exception: " << ex.what());
+    } catch (...) {
+      LOG_ERROR("handleCommand caught non-std::exception: ");
+      throw;
+    }
   }
 }
 
 
-void commandServer()
+void CommandServer::jobCleanUpThread()
 {
+  while (itsNrJobsCreated.down()) {
+    Job *job = finishedJobs.remove();
+    jobQueue.remove(job);
+    delete job;
+  }
+}
+
+
+CommandServer::CommandServer()
+:
+  itsQuit(false)
+{
+}
+
+
+void CommandServer::start()
+{
+  itsJobCleanUpThread = new Thread(this, &CommandServer::jobCleanUpThread, "JobCleanUpThread", 65536);
+
   if (myPsetNumber == 0)
     commandMaster();
   else
     commandSlave();
+}
+
+
+CommandServer::~CommandServer()
+{
+  itsNrJobsCreated.noMore();
 }
 
 

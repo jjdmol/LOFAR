@@ -36,6 +36,7 @@
 #include <Common/lofar_smartptr.h>
 #include <Common/lofar_vector.h>
 
+#include <ms/MeasurementSets/MeasurementSet.h>
 #include <measures/Measures/MDirection.h>
 
 namespace LOFAR
@@ -77,7 +78,7 @@ protected:
 
     virtual ExprBase::ConstPtr argument(unsigned int) const
     {
-        assert(false);
+        ASSERT(false);
     }
 
     virtual const T_EXPR evaluateExpr(const Request&, Cache&, unsigned int)
@@ -96,11 +97,15 @@ public:
     typedef shared_ptr<StationResponse>         Ptr;
     typedef shared_ptr<const StationResponse>   ConstPtr;
 
-    StationResponse(Instrument instrument, const string &config,
-        const casa::Path &configPath, double referenceFreq);
+    StationResponse(const casa::MeasurementSet &ms, bool inverse = false,
+        bool useElementBeam = true, bool useArrayFactor = true,
+        bool useChannelFreq = false, bool conjugateAF = false);
 
-    // Set the pointing direction (for beamforming).
-    void setPointing(const casa::MDirection &pointing);
+    // Set the delay reference direction (used by the station beamformer).
+    void setRefDelay(const casa::MDirection &reference);
+
+    // Set the tile delay reference direction (used by the tile beamformer).
+    void setRefTile(const casa::MDirection &reference);
 
     // Set the direction of interest.
     void setDirection(const casa::MDirection &direction);
@@ -116,12 +121,13 @@ public:
     const JonesMatrix::View evaluate(unsigned int i);
 
 private:
-    // Helper function that _left_ multiplies accumulator by effect, or returns
-    // effect if accumulator is empty.
-    Expr<JonesMatrix>::Ptr compose(const Expr<JonesMatrix>::Ptr &accumulator,
-        const Expr<JonesMatrix>::Ptr &effect) const;
+    // Right multiply \p lhs by \p rhs. Return \p rhs if \p lhs is
+    // uninitialized.
+    Expr<JonesMatrix>::Ptr compose(const Expr<JonesMatrix>::Ptr &lhs,
+        const Expr<JonesMatrix>::Ptr &rhs) const;
 
-    Dummy<Vector<2> >::Ptr          itsPointing;
+    Dummy<Vector<2> >::Ptr          itsRefDelay;
+    Dummy<Vector<2> >::Ptr          itsRefTile;
     Dummy<Vector<2> >::Ptr          itsDirection;
     vector<Expr<JonesMatrix>::Ptr>  itsExpr;
     Request                         itsRequest;

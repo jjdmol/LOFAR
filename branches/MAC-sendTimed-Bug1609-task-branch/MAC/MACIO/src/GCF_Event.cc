@@ -26,6 +26,7 @@
 #include <Common/hexdump.h>
 #include <Common/StringUtil.h>
 #include <MACIO/GCF_Event.h>
+#include <cstring>
 
 using namespace std;
 

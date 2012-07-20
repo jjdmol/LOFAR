@@ -1,4 +1,4 @@
-//#  OutputSection.h: Collects data from CNs and sends data to Storage
+//#  OldOutputSection.h: Collects data from CNs and sends data to Storage
 //#
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -21,15 +21,17 @@
 #ifndef LOFAR_IONPROC_OUTPUT_SECTION_H
 #define LOFAR_IONPROC_OUTPUT_SECTION_H
 
+#include <Interface/OutputTypes.h>
 #include <Interface/Parset.h>
-#include <Interface/ProcessingPlan.h>
+#include <Interface/SmartPtr.h>
 #include <IONProc/OutputThread.h>
 #include <Stream/Stream.h>
-#include <Thread/Semaphore.h>
-#include <Thread/Thread.h>
+#include <Common/Thread/Semaphore.h>
+#include <Common/Thread/Thread.h>
 
 #include <vector>
 #include <string>
+
 
 namespace LOFAR {
 namespace RTCP {
@@ -37,41 +39,88 @@ namespace RTCP {
 class OutputSection
 {
   public:
-    OutputSection(const Parset &, std::vector<unsigned> &coreList, std::vector<std::pair<unsigned,std::string> > &itemList, unsigned nrUsedCores, const ProcessingPlan::planlet &outputConfig, Stream * (*createStream)(unsigned, unsigned));
-    ~OutputSection();
+                                           ~OutputSection();
 
-    void                        addIterations(unsigned count);
-    void                        noMoreIterations();
+    void                                   start();
+
+    void				   addIterations(unsigned count);
+    void				   noMoreIterations();
+
+  protected:
+					   OutputSection(const Parset &, OutputType, unsigned firstBlockNumber, const std::vector<unsigned> &cores, int psetIndex, bool integratable, bool variableNrSubbands);
 
   private:
-    void			mainLoop();
 
-    void			droppingData(unsigned subband);
-    void			notDroppingData(unsigned subband);
+    void                                   readData(Stream *, StreamableData *, unsigned steamNr);
 
-    std::string                 itsLogPrefix;
+    void				   mainLoop();
 
-    std::vector<unsigned>	itsDroppedCount; // [subband]
-    std::vector<OutputThread *> itsOutputThreads; // [subband]
+    void				   droppingData(unsigned subband);
+    void				   notDroppingData(unsigned subband);
 
-    std::vector<StreamableData *> itsSums;
-    StreamableData *itsTmpSum;
+    const std::string              	   itsLogPrefix;
+    const bool                             itsVariableDataSize;
+    const Transpose2                       &itsTranspose2Logic;
 
-    unsigned itsNrIntegrationSteps;
-    unsigned itsCurrentIntegrationStep;
+    const unsigned			   itsNrComputeCores;
+    const unsigned			   itsNrCoresPerIteration, itsNrCoresSkippedPerIteration, itsFirstStreamNr, itsNrStreams;
+    unsigned				   itsCurrentComputeCore;
 
-    unsigned itsSequenceNumber;
+    const unsigned			   itsNrIntegrationSteps;
+    unsigned				   itsCurrentIntegrationStep;
+    const unsigned			   itsNrSamplesPerIntegration;
+    unsigned				   itsSequenceNumber;
 
-    Semaphore			itsNrIterationsToDo;
-    std::vector<std::pair<unsigned,std::string> >    itsItemList; // list of (index,filename)s
-    const unsigned              itsOutputNr;
-    const unsigned		itsNrComputeCores;
-    unsigned                    itsCurrentComputeCore, itsNrUsedCores;
-    const bool                  itsRealTime;
+    const bool                		   itsIsRealTime;
+    std::vector<unsigned>		   itsDroppedCount; // [subband]
+    std::vector<unsigned>		   itsTotalDroppedCount; // [subband]
+    std::vector<SmartPtr<OutputThread> >   itsOutputThreads; // [subband]
 
-    std::vector<Stream *>       itsStreamsFromCNs;
+    std::vector<SmartPtr<Stream> >	   itsStreamsFromCNs;
 
-    Thread                      *itsThread;
+    std::vector<SmartPtr<StreamableData> > itsSums;
+    SmartPtr<StreamableData>		   itsTmpSum;
+
+    Semaphore				   itsNrIterationsToDo;
+
+    SmartPtr<Thread>			   itsThread;
+
+    std::vector<unsigned>		   itsAdders; // [subband]
+};
+
+
+class PhaseTwoOutputSection : public OutputSection
+{
+  protected:
+    PhaseTwoOutputSection(const Parset &, OutputType, unsigned firstBlockNumber, bool integratable);
+};
+
+
+class PhaseThreeOutputSection : public OutputSection
+{
+  protected:
+    PhaseThreeOutputSection(const Parset &, OutputType, unsigned firstBlockNumber);
+};
+
+
+class CorrelatedDataOutputSection : public PhaseTwoOutputSection
+{
+  public:
+    CorrelatedDataOutputSection(const Parset &, unsigned firstBlockNumber);
+};
+
+
+class BeamFormedDataOutputSection : public PhaseThreeOutputSection
+{
+  public:
+    BeamFormedDataOutputSection(const Parset &, unsigned firstBlockNumber);
+};
+
+
+class TriggerDataOutputSection : public PhaseThreeOutputSection
+{
+  public:
+    TriggerDataOutputSection(const Parset &, unsigned firstBlockNumber);
 };
 
 

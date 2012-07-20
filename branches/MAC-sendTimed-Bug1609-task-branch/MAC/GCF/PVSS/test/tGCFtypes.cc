@@ -23,9 +23,10 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/Exception.h>
-#include <GCF/GCF_PVTypes.h>
+#include <GCF/PVSS/GCF_PVTypes.h>
 
 using namespace LOFAR;
+using namespace GCF::PVSS;
 
 int main(int argc, char* argv[]) {
 	INIT_LOGGER(argv[0]);
@@ -38,11 +39,31 @@ int main(int argc, char* argv[]) {
 	GCFPVBlob		myBlob1(blob, sizeof(*blob), true);
 	GCFPVChar		myChar1('A');
 	GCFPVDouble		myDouble1(3.14);
-//	GCFPVDynArr		myDynArr("");
 	GCFPVInteger	myInt1(-34567);
 	GCFPVString		myString1("Some test string");
 	GCFPVUnsigned	myUnsigned1(76543);
 
+	GCFPValueArray	testArr;
+	testArr.push_back(new GCFPVString("aap"));
+	testArr.push_back(new GCFPVString("noot"));
+	testArr.push_back(new GCFPVString("mies"));
+	testArr.push_back(new GCFPVString("wim"));
+	testArr.push_back(new GCFPVString("zus"));
 
+	GCFPVDynArr		originalArr(LPT_STRING, testArr);
+	GCFPVDynArr		indenticalArr(LPT_STRING, testArr);
+	ASSERTSTR (originalArr == indenticalArr, "originalArr and indenticalArr are NOT identical");
+	cout << "originalArr and indenticalArr are identical" << endl;
+
+	GCFPVDynArr		copiedArr(LPT_STRING);
+	copiedArr.copy(originalArr);
+	ASSERTSTR (originalArr == copiedArr, "originalArr and copiedArr are NOT identical");
+	cout << "originalArr and copiedArr are identical" << endl;
+
+	testArr.push_back(new GCFPVString("teun"));
+	GCFPVDynArr		differentArr(LPT_STRING, testArr);
+	ASSERTSTR (originalArr != differentArr, "originalArr and differentArr ARE identical");
+	cout << "originalArr and differentArr are not identical" << endl;
+	
 	return (0);
 }

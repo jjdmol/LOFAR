@@ -61,22 +61,24 @@ namespace LOFAR
     double ut = user(), st = sys(), rt = real();
     if( opts&USER )
     {
-      sprintf(str,format,ut); out1 += str;
-      if( nops )
-      { sprintf(str,"%12lld",(long long)(nops/(ut+st)+0.5)); out2 += str; }
+      snprintf(str,sizeof str,format,ut); out1 += str;
+      if( nops ) {
+        snprintf(str,sizeof str,"%12lld",(long long)(nops/(ut+st)+0.5)); out2 += str;
+      }
     }
     if( opts&SYSTEM )
     {
-      sprintf(str,format,st); out1 += str;
+      snprintf(str,sizeof str,format,st); out1 += str;
     }
     if( opts&REAL )
     {
-      sprintf(str,format,rt); out1 += str;
-      if( nops )
-      { sprintf(str,"%12lld",(long long)(nops/rt+0.5)); out2 += str; }
+      snprintf(str,sizeof str,format,rt); out1 += str;
+      if( nops ) {
+        snprintf(str,sizeof str,"%12lld",(long long)(nops/rt+0.5)); out2 += str;
+      }
     }
     if( nops )
-    { sprintf(str,"%12lld",nops); out2 += str; }
+    { snprintf(str,sizeof str,"%12lld",nops); out2 += str; }
     return out1+out2;
   }
 
@@ -84,7 +86,7 @@ namespace LOFAR
   string Stopwatch::dump (const string &name,long long nops,bool do_reset,int opts) 
   {
     char* str = new char[namewidth+32];
-    sprintf(str,"%-*.*s:",namewidth,namewidth,name.c_str());
+    snprintf(str,namewidth+32,"%-*.*s:",namewidth,namewidth,name.c_str());
     string sstr(str);
     delete [] str;
     return sstr + sdelta(nops,do_reset,opts);
@@ -94,8 +96,8 @@ namespace LOFAR
   string Stopwatch::header (long long nops)
   {
     static char hdr[2][80];
-    sprintf(hdr[0],"%10s%10s%10s","user","sys","real");
-    sprintf(hdr[1],"%10s%10s%10s%12s%12s%12s","t/user","t/sys","t/real","p/cpusec","p/sec","count");
+    snprintf(hdr[0],sizeof hdr[0],"%10s%10s%10s","user","sys","real");
+    snprintf(hdr[1],sizeof hdr[1],"%10s%10s%10s%12s%12s%12s","t/user","t/sys","t/real","p/cpusec","p/sec","count");
   
     if( nops )
       return hdr[1];

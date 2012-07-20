@@ -77,6 +77,8 @@ const Vector<2> EquatorialCentroid::evaluateExpr(const Request &request,
         flags.push_back(args[i].flags());
     }
 
+    EXPR_TIMER_START();
+
     // Evaluate flags.
     result.setFlags(mergeFlags(flags.begin(), flags.end()));
 
@@ -125,10 +127,12 @@ const Vector<2> EquatorialCentroid::evaluateExpr(const Request &request,
         }
     }
 
+    EXPR_TIMER_STOP();
+
     return result;
 }
 
-const Vector<2>::View EquatorialCentroid::evaluateImpl(const Grid &grid,
+const Vector<2>::View EquatorialCentroid::evaluateImpl(const Grid&,
     const vector<Vector<2>::View> &args) const
 {
     Matrix cosDec = cos(args[0](1));

@@ -25,23 +25,15 @@
 
 #include <gtkmm/drawingarea.h>
 
+#include <AOFlagger/gui/plot/tickset.h>
+
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
 */
 class VerticalPlotScale {
 	public:
-		VerticalPlotScale(Glib::RefPtr<Gdk::Drawable> drawable);
+		VerticalPlotScale();
 		virtual ~VerticalPlotScale();
-		void AddLargeTick(double normValue, std::string caption)
-		{
-			_largeTicks.push_back(Tick(normValue, caption));
-			_metricsAreInitialized = false;
-		}
-		void AddSmallTick(double normValue, std::string caption)
-		{
-			_smallTicks.push_back(Tick(normValue, caption));
-			_metricsAreInitialized = false;
-		}
 		void SetPlotDimensions(double plotWidth, double plotHeight, double topMargin)
 		{
 			_plotWidth = plotWidth;
@@ -49,35 +41,54 @@ class VerticalPlotScale {
 			_topMargin = topMargin;
 			_metricsAreInitialized = false;
 		}
-		double GetWidth();
-		void Draw(Cairo::RefPtr<Cairo::Context> cairo);
+		
+		double GetWidth(Cairo::RefPtr<Cairo::Context> cairo)
+		{
+			initializeMetrics(cairo);
+			return _width;
+		}
+		
+		double GetTextHeight(Cairo::RefPtr<Cairo::Context> cairo);
+		
+		void SetDrawWithDescription(bool drawWithDescription)
+		{
+			_drawWithDescription = drawWithDescription;
+			_metricsAreInitialized = false;
+		}
+		void SetUnitsCaption(const std::string &caption)
+		{
+			_unitsCaption = caption;
+			_metricsAreInitialized = false;
+		}
+		void SetDescriptionFontSize(double fontSize)
+		{
+			_tickValuesFontSize = fontSize;
+			_metricsAreInitialized = false;
+		}
+		void SetTickValuesFontSize(double fontSize)
+		{
+			_tickValuesFontSize = fontSize;
+			_metricsAreInitialized = false;
+		}
+		
+		void Draw(Cairo::RefPtr<Cairo::Context> cairo, double offsetX=0.0, double offsetY=0.0);
+		void InitializeNumericTicks(double min, double max);
+		void InitializeLogarithmicTicks(double min, double max);
 	private:
-		struct Tick {
-			Tick(double _normValue, std::string _caption) :
-				normValue(_normValue), caption(_caption)
-			{ }
-			Tick(const Tick &source) :
-				normValue(source.normValue), caption(source.caption)
-			{ }
-			Tick &operator=(const Tick &rhs)
-			{
-				normValue = rhs.normValue; caption = rhs.caption;
-				return *this;
-			}
-			double normValue;
-			std::string caption;
-		};
-		void setVisibleTicks();
-		bool ticksFit(std::map<double, Tick> &ticks);
-		void initializeMetrics(); 
+		void drawUnits(Cairo::RefPtr<Cairo::Context> cairo, double offsetX, double offsetY);
+		bool ticksFit(Cairo::RefPtr<Cairo::Context> cairo);
+		void initializeMetrics(Cairo::RefPtr<Cairo::Context> cairo); 
+		double getTickYPosition(const Tick &tick);
 
 		double _plotWidth, _plotHeight, _topMargin;
-		std::vector<Tick> _largeTicks, _smallTicks;
-		std::vector<Tick> _visibleLargeTicks;
 		bool _metricsAreInitialized;
 		double _width;
-		Glib::RefPtr<Gdk::Drawable> _drawable;
-		Cairo::RefPtr<Cairo::Context> _cairo;
+		class TickSet *_tickSet;
+		bool _isLogarithmic;
+		bool _drawWithDescription;
+		std::string _unitsCaption;
+		double _descriptionFontSize;
+		double _tickValuesFontSize;
 };
 
 #endif

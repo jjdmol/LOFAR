@@ -30,8 +30,8 @@ import javax.swing.JFrame;
 /**
  * JYearChooser is a bean for choosing a year.
  *
- * @version $LastChangedRevision: 85 $
- * @version $LastChangedDate: 2006-04-28 13:50:52 +0200 (Fr, 28 Apr 2006) $
+ * @version $LastChangedRevision$
+ * @version $LastChangedDate$
  */
 public class JYearChooser extends JSpinField {
 	private static final long serialVersionUID = 2648810220491090064L;

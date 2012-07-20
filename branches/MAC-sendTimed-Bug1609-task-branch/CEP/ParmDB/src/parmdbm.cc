@@ -34,8 +34,10 @@
 #include <Blob/KeyParser.h>
 #include <Common/StreamUtil.h>
 #include <Common/StringUtil.h>
+#include <Common/SystemUtil.h>
 #include <Common/ReadLine.h>
 #include <Common/LofarLogger.h>
+#include <Common/Exception.h>
 
 #include <casa/Quanta/MVTime.h>
 #include <casa/Utilities/MUString.h>
@@ -45,12 +47,13 @@
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_fstream.h>
 #include <pwd.h>
-#include <unistd.h>
-#include <libgen.h>
 
 using namespace casa;
 using namespace LOFAR;
 using namespace BBS;
+
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 ParmDB* parmtab;
 
@@ -72,6 +75,7 @@ enum PTCommand {
   UPDDEF,
   DELDEF,
   EXPORT,
+  HELP,
   QUIT
 };
 
@@ -142,41 +146,43 @@ void showHelp()
 {
   cerr << endl;
   cerr << "Show and update contents of parameter tables containing the" << endl;
-  cerr << "ME parameters and their defaults." << endl;
+  cerr << "BBS parameters and their defaults." << endl;
+  cerr << "Frequency is the x-axis and time is the y-axis." << endl;
+  cerr << endl;
   cerr << " create db='username' dbtype='casa' table[name]=" << endl;
   cerr << " open   db='username' dbtype='casa' table[name]=" << endl;
-  cerr << " set    stepx=defaultstepsize stepy=defaultstepsize" << endl;
+  cerr << " set    stepx=defaultstepsize, stepy=defaultstepsize" << endl;
   cerr << " quit  (or exit or stop)" << endl;
   cerr << endl;
-  cerr << " showdef [parmname_pattern]" << endl;
+  cerr << " showdef  [parmname_pattern]" << endl;
   cerr << " namesdef [parmname_pattern]" << endl;
-  cerr << " adddef parmname valuespec" << endl;
+  cerr << " adddef    parmname         valuespec" << endl;
   cerr << " updatedef parmname_pattern valuespec" << endl;
   cerr << " removedef parmname_pattern" << endl;
-  cerr << " export parmname_pattern dbtype='casa' table[name]= append=0" << endl;
+  cerr << " export    parmname_pattern tablename= append=0 dbtype='casa'" << endl;
   cerr << endl;
   cerr << " range [parmname_pattern]       (show the total domain range)" << endl;
-  cerr << " show [parmname_pattern] [domain=...]" << endl;
+  cerr << " show  [parmname_pattern] [domain=...]" << endl;
   cerr << " names [parmname_pattern]" << endl;
-  cerr << " add parmname domain= valuespec" << endl;
+  cerr << " add    parmname          domain=  valuespec" << endl;
   cerr << " remove parmname_pattern [domain=]" << endl;
   cerr << endl;
-  cerr << "  domain gives an N-dim domain (usually n is 2) as:" << endl;
-  cerr << "      domain=[stx,endx,sty,endy,...]" << endl;
-  cerr << "   or domain=[st=[stx,sty,...],end=[endx,...] or size=[sizex,...]]" << endl;
+  cerr << "  domain gives an N-dim domain (usually N is 2) as:" << endl;
+  cerr << "       domain=[stx,endx,sty,endy,...]" << endl;
+  cerr << "    or domain=[st=[stx,sty,...],end=[endx,...] or size=[sizex,...]]" << endl;
   cerr << "  valuespec gives the values of the parameter attributes as" << endl;
-  cerr << "   key=value pairs separated by commas." << endl;
+  cerr << "    key=value pairs separated by commas." << endl;
   cerr << "  Attributes not given are not changed. Values shown are defaults when adding." << endl;
-  cerr << "   values=1              (coefficients)" << endl;
-  cerr << "    if multiple coefficients, specify as vector and specify shape" << endl;
-  cerr << "    For example:   values=[1,2,3,4], shape=[1,1,2,2]" << endl;
-  cerr << "   mask=                 (mask telling which coefficients are solvable" << endl;
-  cerr << "    default is that c[i,j] with i+j>max(shape) are not solvable" << endl;
-  cerr << "   errors=               (optional error for each coefficient)" << endl;
-  cerr << "    For example:   values=[0,0,3], mask=[F,F,T], nx=3" << endl;
-  cerr << "   pert=1e-6             (perturbation for numerical differentation)" << endl;
-  cerr << "   pertrel=T             (perturbation is relative? Use F for angles)" << endl;
-  cerr << "   type='polc'           (funklet type; default is polynomial)" << endl;
+  cerr << "    values=1              (coefficients)" << endl;
+  cerr << "      if multiple coefficients, specify as vector and specify shape" << endl;
+  cerr << "      For example:   values=[1,2,3,4], shape=[2,2]" << endl;
+  cerr << "    mask=                 (mask telling which coefficients are solvable" << endl;
+  cerr << "      default is that c[i,j] with i+j>max(shape) are not solvable" << endl;
+  cerr << "      For example:   values=[0,0,3], mask=[F,F,T], nx=3" << endl;
+  cerr << "    errors=               (optional error for each coefficient)" << endl;
+  cerr << "    pert=1e-6             (perturbation for numerical differentation)" << endl;
+  cerr << "    pertrel=T             (perturbation is relative? Use F for angles)" << endl;
+  cerr << "    type='polc'           (funklet type; default is polc (polynomial))" << endl;
   cerr << endl;
 }
 
@@ -222,6 +228,8 @@ PTCommand getCommand (string& line)
     cmd = CREATE;
   } else if (sc == "set") {
     cmd = SET;
+  } else if (sc == "help") {
+    cmd = HELP;
   } else if (sc == "stop"  ||  sc == "quit"  || sc == "exit") {
     cmd = QUIT;
   } 
@@ -474,6 +482,10 @@ void showParm (const string& parmName, const ParmValue& parm, const Box& domain,
     ostr << "    domain: ";
     showDomain (domain, ostr);
     ostr << endl;
+  } else if (! pvset.getScaleDomain().empty()) {
+    ostr << "    scale domain: ";
+    showDomain (pvset.getScaleDomain(), ostr);
+    ostr << endl;
   }
   ostr << "    values:  ";
   Array<double> errors;
@@ -510,7 +522,9 @@ void showParms (ParmMap& parmSet, bool showAll, ostream& ostr)
     }
   }
   if (nr != 1) {
-    ostr << parmSet.size() << " parms and " << nr << " values found" << endl;
+    ostr << parmSet.size();
+    if (!showAll) ostr << " default";
+    ostr << " parms and " << nr << " values found" << endl;
   }
 }
 
@@ -629,7 +643,7 @@ void newDefParm (const string& parmName, KeyValueMap& kvmap, ostream& ostr)
   if (mask.size() > 0) {
     pvset.setSolvableMask (Array<Bool>(shape, mask.storage(), SHARE));
   }
-  showParm (parmName, pval, Box(), pvset, false, ostr);
+  showParm (parmName, pval, pvset.getScaleDomain(), pvset, false, ostr);
   parmtab->putDefValue (parmName, pvset);
   ostr << "Wrote new defaultvalue record for parameter " << parmName << endl;
 }
@@ -669,7 +683,7 @@ void updateDefParm (const string& parmName, const ParmValueSet& pvset,
   }
   ParmValueSet newset(newval, ParmValue::FunkletType(type), pert, pertrel);
   newset.setSolvableMask (mask);
-  showParm (parmName, newval, Box(), newset, false, ostr);
+  showParm (parmName, newval, pvset.getScaleDomain(), newset, false, ostr);
   parmtab->putDefValue (parmName, newset);
 }
 
@@ -721,6 +735,7 @@ int exportNewParm (const string& name, int fixedAxis,
 }
 
 // Copy constant scalar values to default values in the new table.
+// Also polynomial values can be exported as default values.
 // Copy other values with a constant axis to the new table, but set the
 // domain for that axis to infinite.
 // In this way one can have a freq-dependent, time-constant calibration
@@ -735,9 +750,18 @@ int exportParms (const ParmMap& parmset, ParmDB& newtab, ostream& ostr)
     if (pset.size() > 0) {
       if (pset.size() == 1) {
         const ParmValue& pval = pset.getParmValue(0);
-        if (pval.nx() == 1  &  pval.ny() == 1) {
+        if (pval.nx() == 1  &&  pval.ny() == 1) {
           newtab.putDefValue (name, pset);
-          ostr << "Exported default record for parameter " << name << endl;
+          ostr << "Exported default scalar record for parameter "
+               << name << endl;
+          ncopy++;
+        } else if (pset.getType() == ParmValue::Polc) {
+          ParmValueSet pset1 (pval, ParmValue::Polc,
+                              pset.getPerturbation(), pset.getPertRel(),
+                              pset.getGrid().getBoundingBox());
+          newtab.putDefValue (name, pset1);
+          ostr << "Exported default polc record for parameter "
+               << name << endl;
           ncopy++;
         } else if (pval.nx() == 1) {
           // Constant in x.
@@ -798,7 +822,9 @@ void doIt (bool noPrompt, ostream& ostr)
           break;
         }
         string parmName;
-        if (cmd == OPEN) {
+        if (cmd == HELP) {
+          showHelp();
+        } else if (cmd == OPEN) {
           ASSERTSTR(parmtab==0, "OPEN or CREATE already done");
           // Connect to database.
           KeyValueMap kvmap = KeyParser::parse (line);
@@ -822,7 +848,10 @@ void doIt (bool noPrompt, ostream& ostr)
           string dbHost = kvmap.getString ("host", "dop50.astron.nl");
           string dbName = kvmap.getString ("db", dbUser);
           string dbType = kvmap.getString ("dbtype", "casa");
-          string tableName = kvmap.getString ("tablename", "MeqParm");
+          string tableName = kvmap.getString ("table", "");
+          if (tableName.empty()) {
+            tableName = kvmap.getString ("tablename", "MeqParm");
+          }
           ParmDBMeta meta (dbType, tableName);
           meta.setSQLMeta (dbName, dbUser, "", dbHost);
           parmtab = new ParmDB (meta, true);
@@ -838,7 +867,7 @@ void doIt (bool noPrompt, ostream& ostr)
             KeyValueMap kvmap = KeyParser::parse (line);
             vector<double> defSteps = parmtab->getDefaultSteps();
             defSteps[0] = kvmap.getDouble ("stepx", defSteps[0]);
-            defSteps[0] = kvmap.getDouble ("stepy", defSteps[1]);
+            defSteps[1] = kvmap.getDouble ("stepy", defSteps[1]);
             parmtab->setDefaultSteps (defSteps);
           } else {
             // Other commands expect a possible parmname and keywords
@@ -927,8 +956,8 @@ void doIt (bool noPrompt, ostream& ostr)
           }
         }
       }
-    } catch (std::exception& x) {
-      cerr << "Exception: " << x.what() << endl;
+    } catch (Exception& ex) {
+      cerr << "Exception: " << ex << endl;
     }
   }
   delete parmtab;
@@ -937,9 +966,8 @@ void doIt (bool noPrompt, ostream& ostr)
 
 int main (int argc, char *argv[])
 {
-  const char* progName = basename(argv[0]);
   TEST_SHOW_VERSION (argc, argv, ParmDB);
-  INIT_LOGGER(progName);
+  INIT_LOGGER(basename(string(argv[0])));
   
   try {
     if (argc > 1) {
@@ -950,8 +978,8 @@ int main (int argc, char *argv[])
     }
     // Print an extra line to be sure the shell prompt is at a new line.
     cout << endl;
-  } catch (std::exception& x) {
-    cerr << "Caught exception: " << x.what() << endl;
+  } catch (Exception& ex) {
+    cerr << "Caught exception: " << ex << endl;
     return 1;
   }
   

@@ -23,8 +23,6 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#if defined HAVE_BOOST_REGEX
-
 #include <Common/lofar_string.h>
 #include <Common/LofarTypes.h>
 #include <Common/StringUtil.h>
@@ -33,7 +31,11 @@
 
 #include <boost/config.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/regex.hpp>
+
+#if defined HAVE_BOOST_REGEX
+# include <boost/regex.hpp>
+#endif
+
 using namespace boost;
 
 namespace LOFAR {
@@ -45,11 +47,17 @@ static	const char*	ringTypeTable[]    = { "Core", "Remote", "Europe" };
 // stationTypeValue()
 //
 // Returns the stationType (0..2) of the current machine.
-// The the returned value is an index in the stationTypeTable or ringTypeTable.
+// The returned value is an index in the stationTypeTable or ringTypeTable.
 //
-int	stationTypeValue()
+int	stationTypeValue ()
 {
-	string	stsType(toUpper(myHostname(false).substr(0,2)));	// RS, CS, xx
+        return stationTypeValue (myHostname(false));
+}
+
+// Convert a station or host name to station type.
+int	stationTypeValue (const string& name)
+{
+	string	stsType(toUpper(name.substr(0,2)));	// RS, CS, xx
 	if (stsType == "CS") {
 		return (0);
 	}
@@ -129,6 +137,8 @@ string	realHostname(const string&	someName)
 	}
 	return (someName+'C');
 }
+
+#if defined HAVE_BOOST_REGEX
 
 //
 // PVSS2SASname(PVSSname)
@@ -219,6 +229,7 @@ string SAS2PVSSname(const string&	SASname)
 			sepexp, separator_repl, boost::match_default | boost::format_all));
 	}
 
+#endif /* HAVE_BOOST_REGEX */
+
 } // namespace LOFAR
 
-#endif

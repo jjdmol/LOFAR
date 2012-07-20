@@ -113,6 +113,7 @@ void TrigReleaseCmd::sendTpEvent()
 	LOG_DEBUG_STR(formatString("Sending TrigReleaseCmd to board %d, mp %d, ",
 										getBoardNr(), TS->getChMpNr(getChannelNr())));
 	TS->boardPort(getBoardNr()).send(tp_event);
+	TS->setBoardUsed(getBoardNr());
 	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 }
 

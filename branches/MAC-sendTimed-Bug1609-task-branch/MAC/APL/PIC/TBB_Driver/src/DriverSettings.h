@@ -24,24 +24,28 @@
 #define LOFAR_RSP_STATIONSETTINGS_H
 
 #include <APL/TBB_Protocol/TBB_Protocol.ph>
-#include "TP_Protocol.ph"
 #include <GCF/TM/GCF_Control.h>
+#include <Common/LofarLogger.h>
 #include <Common/LofarTypes.h>
+#include <Common/StringUtil.h>
 #include <time.h>
+#include <APL/RTCCommon/NsTimestamp.h>
 
-
+#include "TP_Protocol.ph"
 
 namespace LOFAR {
 	using GCF::TM::GCFPortInterface;
 	namespace TBB {
 
-static const int DRIVER_VERSION = 231;
+static const int DRIVER_VERSION = 251;
 
 enum BoardStateT {noBoard,
 				  setImage1, image1Set,
+				  checkAlive, boardAlive,
+				  checkStatus, statusChecked,
 				  clearBoard, boardCleared,
-				  enableWatchdog, watchdogEnabled,
-				  enableArp, arpEnabled,
+				  setWatchdog, watchdogSet,
+				  setArp, arpSet,
 				  freeBoard, boardFreed,
 				  boardReady,
 				  boardError};
@@ -55,6 +59,7 @@ struct ChannelInfo
 	int32  BoardNr;
 	int32  InputNr;
 	int32  MpNr;
+	int32  MemWriter;
 	uint32 StartAddr;
 	uint32 PageSize;
 	// settings for the trigger system
@@ -82,12 +87,32 @@ struct BoardInfo
 	bool   setupCmdDone;
 	uint32 memorySize;
 	uint32 imageNr;
+	uint32 configState;
 	bool   freeToReset;
 	string dstMac;
 	string srcIpCep;
 	string srcMacCep;
 	string dstIpCep;  // base can be overuled by channel settings
 	string dstMacCep;  // base can be overuled by channel settings
+	int triggersLeft; // number of triggers left to send in this 10 mSec
+};
+
+struct TriggerInfo {
+   uint32 status;
+	uint32 channel;
+	uint32 sequence_nr;
+	uint32 time;
+	uint32 sample_nr;
+	uint32 trigger_sum;
+	uint32 trigger_samples;
+	uint32 peak_value;
+	uint16 power_before;
+	uint16 power_after;
+	uint32 missed;
+	
+	int32  boardnr;
+	int32  rcu;
+	RTC::NsTimestamp ns_timestamp;
 };
 
 // forward declaration
@@ -127,6 +152,7 @@ public:
 	int32 getChBoardNr(int32 channelnr);
 	int32 getChInputNr(int32 channelnr);
 	int32 getChMpNr(int32 channelnr);
+	int32 getChMemWriter(int32 channelnr);
 	int32 getFirstChannelNr(int32 board, int32 mp);
 	uint32 getChStartAddr(int32 channelnr);
 	uint32 getChPageSize(int32 channelnr);
@@ -150,6 +176,11 @@ public:
 	string getDstMacCep(int32 channelnr);
 	
 	int32  saveTriggersToFile();
+	void   resetTriggersLeft();           // set triggers left to max
+	bool   isTriggersLeft(int32 boardnr); // look if triggers left, call this function from one place
+	bool   isNewTrigger(); // look if there is a new trigger message waiting to be send
+	void   setTriggerInfo(int32 boardnr, uint8 *info);
+	TriggerInfo *getTriggerInfo();
 	bool   isRecording();
 	
 	BoardStateT getBoardState(int32 boardnr);
@@ -165,8 +196,8 @@ public:
 	bool isSetupCmdDone(int32 boardnr);
 	void setSetupCmdDone(int32 boardnr, bool state);
 	
-	bool boardSetupNeeded();
-	void clearBoardSetup();
+	//bool boardSetupNeeded();
+	//void clearBoardSetup();
 	void setActiveBoardsMask (uint32 activeboardsmask);
 	void setActiveBoard (int32 boardnr);
 	void resetActiveBoard (int32 boardnr);
@@ -192,6 +223,10 @@ public:
 	void setDstMacCep(int32 channelnr, string mac);
 	void setDestination(int32 channelnr, char *storage);
 	
+	void setClockFreq(int32 clock);
+	int32 getClockFreq();
+	bool isClockFreqChanged();
+	double getSampleTime();
 	
 	void clearRcuSettings(int32 boardnr);
 	
@@ -203,14 +238,23 @@ public:
 	bool isBoardActive(int32 boardnr);
 	bool isBoardReady(int32 boardnr);
 	bool isBoardUsed(int32 boardnr);
+	void setBoardUsed(int32 boardnr);
 	void resetBoardUsed();
 	void logChannelInfo(int32 channel);
-		
+	
+	void setSetupNeeded(bool state);
+	bool isSetupNeeded();
+	
 	uint32 getMemorySize(int32 boardnr);
 	void setMemorySize(int32 boardnr,uint32 pages);
 	
 	uint32 getImageNr(int32 boardnr);
 	void setImageNr(int32 boardnr, uint32 image);
+	
+	uint32 getImageState(int32 boardnr);
+	uint32 getConfigState(int32 boardnr);
+	void setFlashState(int32 boardnr, uint32 state);
+	
 	bool getFreeToReset(int32 boardnr);
 	void setFreeToReset(int32 boardnr, bool reset);
 	
@@ -244,16 +288,23 @@ private:
 	int32  itsMaxRetries;
 	double itsTimeOut;
 	int32  itsSaveTriggersToFile;
+	int32  itsMaxTriggersPerInterval;
 	int32  itsRecording;
+	bool   itsNewTriggerInfo;
 	
 	// mask with active boards
 	uint32 itsActiveBoardsMask;
 	
 	BoardInfo   *itsBoardInfo;
 	ChannelInfo *itsChannelInfo;
-	bool        itsBoardSetup;
-	string      itsIfName;
 	
+	uint32 itsClockFreq; // freq in MHz
+	bool   itsClockChanged;
+	double itsSampleTime; // sample time in nsec
+	
+	string      itsIfName;
+	bool        itsSetupNeeded;
+	TriggerInfo *itsTriggerInfo;
 	static TbbSettings *theirTbbSettings;
 };
 	
@@ -273,14 +324,8 @@ inline	int32 TbbSettings::flashBlockSize() { return (itsFlashBlockSize); }
 inline	uint32 TbbSettings::activeBoardsMask()	{ return (itsActiveBoardsMask);   }
 inline	int32 TbbSettings::maxRetries()	{ return (itsMaxRetries);   }
 inline	double TbbSettings::timeout()	{ return (itsTimeOut);   }
-inline	GCFPortInterface& TbbSettings::boardPort(int32 boardnr)	{ 
-            itsBoardInfo[boardnr].used = true;
-            return (*itsBoardInfo[boardnr].port);
-        }
-
+inline	GCFPortInterface& TbbSettings::boardPort(int32 boardnr)	{ return (*itsBoardInfo[boardnr].port); }
 inline	BoardStateT TbbSettings::getBoardState(int32 boardnr) { return (itsBoardInfo[boardnr].boardState); }
-inline  bool TbbSettings::boardSetupNeeded() { return (itsBoardSetup); }
-inline  void TbbSettings::clearBoardSetup() { itsBoardSetup = false; }
 
 inline  int32 TbbSettings::getSetupWaitTime(int32 boardnr) { 
 			if (time(NULL) >= itsBoardInfo[boardnr].setupWaitTime) { return(0); }
@@ -292,7 +337,7 @@ inline  void TbbSettings::setSetupWaitTime(int32 boardnr, int32 waittime) {
 	
 inline  int32 TbbSettings::getSetupRetries(int32 boardnr) { return(itsBoardInfo[boardnr].setupRetries); }
 inline  void TbbSettings::resetSetupRetries(int32 boardnr) { itsBoardInfo[boardnr].setupRetries = 0; }
-inline  void TbbSettings::incSetupRetries(int32 boardnr) { ++itsBoardInfo[boardnr].setupRetries; }
+inline  void TbbSettings::incSetupRetries(int32 boardnr) { (itsBoardInfo[boardnr].setupRetries)++; }
 
 inline  bool TbbSettings::isSetupCmdDone(int32 boardnr) { 
             if (boardnr == -1) {
@@ -314,6 +359,7 @@ inline	int32 TbbSettings::getChRcuNr(int32 channelnr) { return (itsChannelInfo[c
 inline	int32 TbbSettings::getChBoardNr(int32 channelnr) { return (itsChannelInfo[channelnr].BoardNr); }
 inline	int32 TbbSettings::getChInputNr(int32 channelnr) { return (itsChannelInfo[channelnr].InputNr); }
 inline	int32 TbbSettings::getChMpNr(int32 channelnr) { return (itsChannelInfo[channelnr].MpNr); }
+inline	int32 TbbSettings::getChMemWriter(int32 channelnr) { return (itsChannelInfo[channelnr].MemWriter); }
 inline	uint32 TbbSettings::getChStartAddr(int32 channelnr) { return (itsChannelInfo[channelnr].StartAddr); }
 inline	uint32 TbbSettings::getChPageSize(int32 channelnr) { return (itsChannelInfo[channelnr].PageSize); }
 inline	bool TbbSettings::isChTriggered(int32 channelnr) { return (itsChannelInfo[channelnr].Triggered); }	
@@ -339,6 +385,66 @@ inline	string TbbSettings::getDstMacCep(int32 channelnr) {
             else { return(itsChannelInfo[channelnr].dstMacCep); }
         }
 inline  int32 TbbSettings::saveTriggersToFile() { return(itsSaveTriggersToFile); }
+
+inline  void TbbSettings::resetTriggersLeft() {
+            int missed = 0;
+            for (int bnr = 0; bnr < itsMaxBoards; bnr++) {
+                if (itsBoardInfo[bnr].triggersLeft < 0) {  
+                    missed += (itsBoardInfo[bnr].triggersLeft * -1);
+                    LOG_DEBUG_STR(formatString("missed %d triggers on board %d last 100mSec",
+                                 (itsBoardInfo[bnr].triggersLeft*-1), bnr));
+                }
+                itsBoardInfo[bnr].triggersLeft = itsMaxTriggersPerInterval;
+            }
+            if (missed != 0) {
+                LOG_INFO_STR(formatString("missed %d triggers last 100mSec", (missed)));
+            }
+        }
+inline  bool TbbSettings::isTriggersLeft(int32 boardnr) { 
+            itsBoardInfo[boardnr].triggersLeft--;
+            if (itsBoardInfo[boardnr].triggersLeft < 0) return(false);
+            return(true);
+        }
+        
+inline  bool TbbSettings::isNewTrigger() { return(itsNewTriggerInfo); }
+inline  void TbbSettings::setTriggerInfo(int32 boardnr, uint8 *info) {
+				memcpy(itsTriggerInfo, info, 40);
+	
+				itsTriggerInfo->boardnr = boardnr;
+				
+				int32 channel = (int32)itsTriggerInfo->channel + (boardnr * itsChannelsOnBoard);
+				itsChannelInfo[channel].Triggered = true;
+				
+				convertCh2Rcu(channel, &itsTriggerInfo->rcu);
+				
+				uint32 sec  = itsTriggerInfo->time;
+				uint32 nsec = (uint32)((double)itsTriggerInfo->sample_nr * itsSampleTime);
+				
+				RTC::NsTimestamp ns_timestamp(sec, nsec);
+				itsTriggerInfo->ns_timestamp = ns_timestamp;
+            
+				itsNewTriggerInfo = true;
+
+#if 0
+				LOG_INFO_STR("channel     = " << itsTriggerInfo->channel);
+				LOG_INFO_STR("rcu         = " << itsTriggerInfo->rcu);
+				LOG_INFO_STR("time        = " << itsTriggerInfo->time);
+				LOG_INFO_STR("sample nr   = " << itsTriggerInfo->sample_nr);
+            LOG_INFO_STR("nsec        = " << itsTriggerInfo->ns_timestamp.nsec());
+				LOG_INFO_STR("sum         = " << itsTriggerInfo->trigger_sum);
+				LOG_INFO_STR("samples     = " << itsTriggerInfo->trigger_samples);
+				LOG_INFO_STR("peak value  = " << itsTriggerInfo->peak_value);
+				LOG_INFO_STR("power before= " << itsTriggerInfo->power_before);
+				LOG_INFO_STR("power after = " << itsTriggerInfo->power_after);
+				LOG_INFO_STR("missed      = " << itsTriggerInfo->missed);
+#endif
+
+        }
+inline  TriggerInfo *TbbSettings::getTriggerInfo() { 
+            itsNewTriggerInfo = false;
+            return(itsTriggerInfo);
+        }
+                    
 inline  bool TbbSettings::isRecording() { return(static_cast<bool>(itsRecording)); }
 
 inline	void TbbSettings::setChStatus(int32 channelnr, uint32 status){ itsChannelInfo[channelnr].Status = status; }
@@ -369,16 +475,36 @@ inline	uint32 TbbSettings::getMemorySize(int32 boardnr) { return (itsBoardInfo[b
 inline	void TbbSettings::setMemorySize(int32 boardnr,uint32 pages) { itsBoardInfo[boardnr].memorySize = pages; }
 inline	uint32 TbbSettings::getImageNr(int32 boardnr) { return (itsBoardInfo[boardnr].imageNr); }
 inline	void TbbSettings::setImageNr(int32 boardnr,uint32 image) { itsBoardInfo[boardnr].imageNr = image; }
+inline	uint32 TbbSettings::getImageState(int32 boardnr) { return (itsBoardInfo[boardnr].configState & 0x1); }
+inline	uint32 TbbSettings::getConfigState(int32 boardnr) { return ((itsBoardInfo[boardnr].configState >> 1) & 0x3); }
+inline	void TbbSettings::setFlashState(int32 boardnr,uint32 state) { itsBoardInfo[boardnr].configState = state; }
 inline	bool TbbSettings::getFreeToReset(int32 boardnr) { return (itsBoardInfo[boardnr].freeToReset); }
 inline	void TbbSettings::setFreeToReset(int32 boardnr, bool reset) { itsBoardInfo[boardnr].freeToReset = reset; }
 inline	bool TbbSettings::isBoardReady(int32 boardnr) { return(itsBoardInfo[boardnr].boardState == boardReady); }
 inline  bool TbbSettings::isBoardUsed(int32 boardnr) { return(itsBoardInfo[boardnr].used); }
-inline  void TbbSettings::resetBoardUsed() {
+inline  void TbbSettings::setBoardUsed(int32 boardnr) { itsBoardInfo[boardnr].used = true; }
+inline  void TbbSettings::resetBoardUsed() { 
             for (int boardnr = 0; boardnr < itsMaxBoards; boardnr++) {
                 itsBoardInfo[boardnr].used = false;
             }
         }
-	 
+inline  void TbbSettings::setSetupNeeded(bool state) { itsSetupNeeded = state; }
+inline  bool TbbSettings::isSetupNeeded() { return(itsSetupNeeded); }
+inline  void TbbSettings::setClockFreq(int32 clock) {
+            itsClockChanged = true;
+            itsClockFreq = clock; // sample clock freq in Mhz
+            itsSampleTime = 1000./clock; // sample time = 1/clock in nsec
+        }
+inline  int32 TbbSettings::getClockFreq() { return(itsClockFreq); }
+inline  bool TbbSettings::isClockFreqChanged() { 
+            if (itsClockChanged) {
+                itsClockChanged = false;
+                return(true);
+            }
+            return(false);
+        }
+inline  double TbbSettings::getSampleTime() { return(itsSampleTime); }
+    
 	} // namespace TBB
 } // namespace LOFAR
 

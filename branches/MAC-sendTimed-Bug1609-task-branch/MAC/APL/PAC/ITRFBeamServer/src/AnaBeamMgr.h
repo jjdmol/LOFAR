@@ -114,7 +114,7 @@ private:
 	blitz::Array<double, 2>		itsTileRelPos;	// [N_HBA_ELEMENTS,x|y|z dipole] = [16,3]
 	bool						itsDiffHBArotations;	// true when itsTileRelPos == [32,3]
 	// Delay steps [0..31] of an element
-	blitz::Array<double, 1>		itsDelaySteps;	// [N_HBA_DELAYS] = [32] 	
+	blitz::Array<double, 1>		itsDelaySteps;	// [32] 	
 
 	// Processing information
 

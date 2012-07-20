@@ -30,6 +30,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/lofar_fstream.h>
 #include <Common/SystemUtil.h>
+#include <cstring>
 #include "ACRequestPool.h"
 
 namespace LOFAR {
@@ -179,7 +180,7 @@ bool ACRequestPool::assignNewPort(ACRequest*	anACR)
 	anACR->itsAddr = myIPV4Address();	// network byte order
 
 	uint16	startingPort = itsNextPort;
-	uint16	freePort;
+	uint16	freePort         = 0; // initialise, purely to avoid compiler warning
 	bool	found		 = false;
 	do {
 		// scan pool to see if number is (still) in use.

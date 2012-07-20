@@ -28,7 +28,8 @@
 #define LOFAR_PARMDB_SOURCEDB_H
 
 //# Includes
-#include <ParmDB/SourceInfo.h>
+#include <ParmDB/SourceData.h>
+#include <ParmDB/PatchInfo.h>
 #include <ParmDB/ParmDBMeta.h>
 #include <ParmDB/ParmDB.h>
 #include <Common/lofar_vector.h>
@@ -106,17 +107,17 @@ namespace BBS {
     // The map should contain the parameters belonging to the source type.
     // Missing parameters will default to 0.
     // <br>Optionally it is checked if the source already exists.
-    virtual void addSource (const string& patchName, const string& sourceName,
-                            SourceInfo::Type sourceType,
+    virtual void addSource (const SourceInfo& sourceInfo,
+                            const string& patchName,
                             const ParmMap& defaultParameters,
                             double ra, double dec,
                             bool check) = 0;
 
     // Add a source which forms a patch in itself (with the same name).
     // <br>Optionally it is checked if the patch or source already exists.
-    virtual void addSource (const string& sourceName, int catType,
+    virtual void addSource (const SourceInfo& sourceInfo,
+                            int catType,
                             double apparentBrightness,
-                            SourceInfo::Type sourceType,
                             const ParmMap& defaultParameters,
                             double ra, double dec,
                             bool check) = 0;
@@ -127,6 +128,12 @@ namespace BBS {
     virtual vector<string> getPatches (int category, const string& pattern,
                                        double minBrightness,
                                        double maxBrightness) = 0;
+
+    // Get the info of selected patches (default all patches).
+    virtual vector<PatchInfo> getPatchInfo (int category,
+                                            const string& pattern,
+                                            double minBrightness,
+                                            double maxBrightness) = 0;
 
     // Get the sources belonging to the given patch.
     virtual vector<SourceInfo> getPatchSources (const string& patchName) = 0;
@@ -146,6 +153,16 @@ namespace BBS {
 
     const ParmDBMeta& getParmDBMeta() const
       { return itsParmDB.getParmDBMeta(); }
+
+    // Get the next source from the table.
+    // An exception is thrown if there are no more sources.
+    virtual void getNextSource (SourceData& src) = 0;
+
+    // Tell if we are the end of the file.
+    virtual bool atEnd() = 0;
+
+    // Reset to the beginning of the file.
+    virtual void rewind() = 0;
 
   private:
     int    itsCount;
@@ -223,42 +240,52 @@ namespace BBS {
     // The map should contain the parameters belonging to the source type.
     // Not all parameters need to be present. The ParmDB classes will
     // use a default of 0 for missing ones.
-    void addSource (const string& patchName, const string& sourceName,
-                    SourceInfo::Type sourceType,
+    void addSource (const SourceInfo& sourceInfo,
+                    const string& patchName,
                     const ParmMap& defaultParameters,
                     double ra=-1e9, double dec=-1e9,
                     bool check = true)
-      { itsRep->addSource (patchName, sourceName, sourceType,
+      { itsRep->addSource (sourceInfo, patchName,
                            defaultParameters, ra, dec, check); }
 
     // Add a source which forms a patch in itself (with the same name).
-    void addSource (const string& sourceName, int catType,
+    void addSource (const SourceInfo& sourceInfo,
+                    int catType,
                     double apparentBrightness,
-                    SourceInfo::Type sourceType,
                     const ParmMap& defaultParameters,
                     double ra=-1e9, double dec=-1e9,
                     bool check = true)
-      { itsRep->addSource (sourceName, catType, apparentBrightness, sourceType,
+      { itsRep->addSource (sourceInfo, catType, apparentBrightness,
                            defaultParameters, ra, dec, check); }
 
     // Get patch names in order of category and decreasing apparent flux.
     // category < 0 means all categories.
     // A brightness < 0 means no test on brightness.
-    vector<string> getPatches (int category=-1, const string& pattern="",
-                               double minBrightness=-1, double maxBrightness=-1)
-     { return itsRep->getPatches (category, pattern,
-                                  minBrightness, maxBrightness); }
+    vector<string> getPatches (int category = -1,
+                               const string& pattern = string(),
+                               double minBrightness = -1,
+                               double maxBrightness = -1) const
+      { return itsRep->getPatches (category, pattern,
+                                   minBrightness, maxBrightness); }
+
+    // Get the info of all patches (name, ra, dec).
+    vector<PatchInfo> getPatchInfo (int category = -1,
+                                    const string& pattern = string(),
+                                    double minBrightness = -1,
+                                    double maxBrightness = -1) const
+      { return itsRep->getPatchInfo (category, pattern,
+                                     minBrightness, maxBrightness); }
 
     // Get the info of the sources belonging to the given patch.
-    vector<SourceInfo> getPatchSources (const string& patchName)
+    vector<SourceInfo> getPatchSources (const string& patchName) const
       { return itsRep->getPatchSources (patchName); }
 
     // Get the source info of the given source.
-    SourceInfo getSource (const string& sourceName)
+    SourceInfo getSource (const string& sourceName) const
       { return itsRep->getSource (sourceName); }
 
     // Get the info of all sources matching the given (filename like) pattern.
-    vector<SourceInfo> getSources (const string& sourceNamePattern)
+    vector<SourceInfo> getSources (const string& sourceNamePattern) const
       { return itsRep->getSources (sourceNamePattern); }
 
     // Delete the sources records matching the given (filename like) pattern.
@@ -272,6 +299,19 @@ namespace BBS {
     // Get the name and type of the SourceDB.
     const ParmDBMeta& getParmDBMeta() const
       { return itsRep->getParmDBMeta(); }
+
+    // Get the next source from the table.
+    // An exception is thrown if there are no more sources.
+    void getNextSource (SourceData& src)
+      { itsRep->getNextSource (src); }
+
+    // Tell if we are the end of the file.
+    bool atEnd()
+      { return itsRep->atEnd(); }
+
+    // Reset to the beginning of the file.
+    void rewind()
+      { itsRep->rewind(); }
 
   private:
     // Create a SourceDB object for an existing SourceDBRep.

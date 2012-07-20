@@ -25,17 +25,21 @@
 #include <BBSControl/KernelProcessControl.h>
 #include <BBSControl/Package__Version.h>
 #include <PLC/ACCmain.h>
+#include <Common/Exception.h>
 
 using namespace LOFAR;
 using namespace LOFAR::BBS;
 using namespace LOFAR::ACC::PLC;
+
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 int main(int argc, char *argv[])
 {
   const char* progName = basename(argv[0]);
 
   INIT_LOGGER(progName);
-        
+
   LOG_INFO_STR(Version::getInfo<BBSControlVersion>(progName, "other"));
   try {
     KernelProcessControl myProcess;

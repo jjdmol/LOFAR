@@ -29,6 +29,7 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
 #include <Transport/CSConnection.h>
+#include <Transport/TH_Socket.h>
 #include <PLC/DH_ProcControl.h>
 
 namespace LOFAR {
@@ -109,6 +110,7 @@ private:
 	// Synchrone or asynchrone communication.
 	bool				itsSyncComm;
 
+    TH_Socket*          itsTHSocket;
 };
 
 //#

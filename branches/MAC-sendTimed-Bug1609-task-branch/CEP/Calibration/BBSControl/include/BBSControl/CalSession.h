@@ -29,25 +29,16 @@
 
 #include <BBSControl/Command.h>
 #include <BBSControl/CommandResult.h>
+#include <BBSControl/Exceptions.h>
 #include <BBSControl/Types.h>
-
-#include <Common/LofarTypes.h>
-#include <Common/LofarLogger.h>
+#include <BBSKernel/Types.h>
+#include <BBSControl/ProcessId.h>
 #include <Common/lofar_smartptr.h>
 #include <Common/lofar_string.h>
-
-#include <ParmDB/Grid.h>
-
-//# TODO: Create lofar_functional.h in Common.
+#include <ParmDB/Axis.h>
+#include <pqxx/connection>
+#include <pqxx/trigger>
 #include <functional>
-
-#if defined(HAVE_PQXX)
-# include <pqxx/connection>
-# include <pqxx/trigger>
-#else
-# error libpqxx, the C++ API to PostgreSQL, is required
-#endif
-
 
 namespace LOFAR
 {
@@ -65,48 +56,6 @@ class PQGetWorkerRegister;
 // \addtogroup BBSControl
 // @{
 
-// ProcessId is an id that can be used to uniquely identify processes running on
-// different hosts.
-struct ProcessId
-{
-    ProcessId()
-        :   pid(-1)
-    {
-    }
-
-    ProcessId(const string &hostname, int64 pid)
-        :   hostname(hostname),
-            pid(pid)
-    {
-    }
-
-    // ProcessIds are sorted on pid first as this is a faster comparison.
-    bool operator<(const ProcessId &rhs) const
-    {
-        return pid < rhs.pid || (pid == rhs.pid && hostname < rhs.hostname);
-    }
-
-    bool operator==(const ProcessId &rhs) const
-    {
-        return pid == rhs.pid && hostname == rhs.hostname;
-    }
-
-    string  hostname;
-    int64   pid;
-};
-
-// Output ProcessId in human-readable form.
-ostream& operator<<(ostream& os, const ProcessId &obj);
-
-// Status of a Command.
-struct CommandStatus
-{
-    // Number of workers that finished the command.
-    unsigned int    finished;
-    // Number of workers that reported failure.
-    unsigned int    failed;
-};
-
 class CalSession
 {
 public:
@@ -115,7 +64,7 @@ public:
         FAILED = -1,
         WAITING_FOR_CONTROL,
         WAITING_FOR_WORKERS,
-        COMPUTING_WORKER_INDEX,
+        INITIALIZING,
         PROCESSING,
         DONE,
         N_State
@@ -128,6 +77,15 @@ public:
         N_WorkerType
     };
 
+    // Status of a Command.
+    struct CommandStatus
+    {
+        // Number of workers that finished the command.
+        unsigned int    finished;
+        // Number of workers that reported failure.
+        unsigned int    failed;
+    };
+
     CalSession(const string &key, const string &db, const string &user,
         const string &password = "", const string &host = "localhost",
         const string &port = "");
@@ -137,11 +95,26 @@ public:
 
     bool registerAsControl();
     bool registerAsKernel(const string &filesys, const string &path,
-        const Grid &grid);
+        const Axis::ShPtr &freqAxis, const Axis::ShPtr &timeAxis);
     bool registerAsSolver(size_t port);
 
+    // Manipulate the session state.
+    // @{
     void setState(State state);
     State getState() const;
+    // @}
+
+    // Manipulate the session time axis.
+    // @{
+    void setTimeAxis(const Axis::ShPtr &axis);
+    Axis::ShPtr getTimeAxis();
+    // @}
+
+    // Manipulate the session parameter set.
+    // @{
+    void setParset(const ParameterSet &parset) const;
+    ParameterSet getParset() const;
+    // @}
 
     void initWorkerRegister(const CEP::VdsDesc &vds, bool useSolver);
     void setWorkerIndex(const ProcessId &worker, size_t index);
@@ -188,7 +161,10 @@ public:
     size_t getPort(const ProcessId &id) const;
     string getFilesys(const ProcessId &id) const;
     string getPath(const ProcessId &id) const;
-    Grid getGrid(const ProcessId &id) const;
+    Interval<double> getFreqRange(const ProcessId &id) const;
+    Interval<double> getTimeRange(const ProcessId &id) const;
+    Axis::ShPtr getFreqAxis(const ProcessId &id) const;
+    Axis::ShPtr getTimeAxis(const ProcessId &id) const;
 
     vector<ProcessId> getWorkersByType(WorkerType type) const;
     ProcessId getWorkerByIndex(WorkerType type, size_t index) const;
@@ -273,13 +249,14 @@ private:
     // Struct that contains all information about a Worker.
     struct Worker
     {
-        ProcessId   id;
-        WorkerType  type;
-        int32       index;
-        size_t      port;
-        string      filesys;
-        string      path;
-        Grid        grid;
+        ProcessId           id;
+        WorkerType          type;
+        int32               index;
+        size_t              port;
+        string              filesys;
+        string              path;
+        Interval<double>    freqRange;
+        Interval<double>    timeRange;
     };
 
     // Trigger administration and waiting.

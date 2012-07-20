@@ -24,7 +24,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
 #include <Common/LofarConstants.h>
-#include <APL/APLCommon/AntennaSets.h>
+#include <ApplCommon/AntennaSets.h>
 #include <APL/APLCommon/AntennaField.h>
 #include <APL/RTCCommon/PSAccess.h>		// ParameterSet macros
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
@@ -47,7 +47,6 @@ using namespace BS;
 using namespace IBS_Protocol;
 using namespace std;
 using namespace RTC;
-using namespace APLCommon;
 using namespace CASATools;
 
 //
@@ -124,7 +123,7 @@ void AnaBeamMgr::deleteBeam(const string& beamName)
 {
 	map<string, AnalogueBeam>::const_iterator	iter = itsBeams.find(beamName);
 	if (iter == itsBeams.end()) {
-		LOG_ERROR_STR("Beam " << beamName << " is not in my admistration, it cannot be deleted");
+		LOG_ERROR_STR("Beam " << beamName << " is not in my administration, it cannot be deleted");
 		return;
 	}	
 	itsBeams.erase(beamName);

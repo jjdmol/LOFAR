@@ -24,11 +24,34 @@
 #if !defined LOFAR_RTCP_COMMAND_SERVER_H
 #define LOFAR_RTCP_COMMAND_SERVER_H
 
+#include <string>
+
+#include <Common/Thread/Semaphore.h>
+#include <Common/Thread/Thread.h>
+#include <Interface/SmartPtr.h>
+
 
 namespace LOFAR {
 namespace RTCP {
 
-void commandServer();
+class CommandServer
+{
+  public:
+	      CommandServer();
+	      ~CommandServer();
+
+    void      start();
+
+  private:
+    void      commandMaster(), commandSlave();
+    void      handleCommand(const std::string &);
+
+    void      jobCleanUpThread();
+
+    bool      itsQuit;
+    Semaphore itsNrJobsCreated;
+    SmartPtr<Thread> itsJobCleanUpThread;
+};
 
 } // namespace RTCP
 } // namespace LOFAR

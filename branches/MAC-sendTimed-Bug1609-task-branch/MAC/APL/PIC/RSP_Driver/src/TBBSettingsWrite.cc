@@ -38,7 +38,7 @@ using namespace RSP;
 using namespace RTC;
 
 TBBSettingsWrite::TBBSettingsWrite(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, StationSettings::instance()->nrRcusPerBoard())
+  : SyncAction(board_port, board_id, NR_RCUS_PER_RSPBOARD)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -50,7 +50,7 @@ TBBSettingsWrite::~TBBSettingsWrite()
 
 void TBBSettingsWrite::sendrequest()
 {
-  uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrRcusPerBoard()) + getCurrentIndex();
+  uint8 global_rcu = (getBoardId() * NR_RCUS_PER_RSPBOARD) + getCurrentIndex();
 
   // skip update if not modified
   if (RTC::RegisterState::WRITE != Cache::getInstance().getState().tbbsettings().get(global_rcu)) {
@@ -66,9 +66,9 @@ void TBBSettingsWrite::sendrequest()
   // send TBB settings
   EPATbbSettingsEvent tbbsettings;
   tbbsettings.hdr.set(MEPHeader::WRITE,
-		      1 << (getCurrentIndex() / MEPHeader::N_POL),
+		      1 << (getCurrentIndex() / N_POL),
 		      MEPHeader::TBB,
-		      MEPHeader::TBB_SETTINGSX + (getCurrentIndex() % MEPHeader::N_POL),
+		      MEPHeader::TBB_SETTINGSX + (getCurrentIndex() % N_POL),
 		      MEPHeader::TBB_SETTINGS_SIZE);
 		      
   tbbsettings.stationid = GET_CONFIG("RS.STATION_ID", i);
@@ -106,7 +106,7 @@ GCFEvent::TResult TBBSettingsWrite::handleack(GCFEvent& event, GCFPortInterface&
 
   EPAWriteackEvent ack(event);
 
-  uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrRcusPerBoard()) + getCurrentIndex();
+  uint8 global_rcu = (getBoardId() * NR_RCUS_PER_RSPBOARD) + getCurrentIndex();
 
   if (!ack.hdr.isValidAck(m_hdr))
   {

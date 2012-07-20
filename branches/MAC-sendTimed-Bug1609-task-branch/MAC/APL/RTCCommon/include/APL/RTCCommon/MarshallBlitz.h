@@ -27,6 +27,7 @@
 
 #include <Common/LofarTypes.h>
 #include <blitz/array.h>
+#include <cstring>
 
 // SIZE blitz::array<...>
 #define MSH_ARRAY_SIZE(array, datatype)	\

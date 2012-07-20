@@ -71,6 +71,7 @@ void ClearCmd::sendTpEvent()
 	tp_event.status = 0;
 	
 	TS->boardPort(getBoardNr()).send(tp_event);
+	TS->setBoardUsed(getBoardNr());
 	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 }
 
@@ -88,7 +89,7 @@ void ClearCmd::saveTpAckEvent(GCFEvent& event)
 		} else {
 			// reset channel-information for selected board	
 			TS->clearRcuSettings(getBoardNr());
-			TS->setBoardState(getBoardNr(),boardCleared);	
+			TS->setBoardState(getBoardNr(), boardCleared);	
 		}
 	}
 	nextBoardNr();
@@ -107,4 +108,6 @@ void ClearCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 	}
 	
 	if (clientport->isConnected()) { clientport->send(tbb_ack); }
+	TS->resetBoardUsed();
+	TS->setSetupNeeded(true);
 }

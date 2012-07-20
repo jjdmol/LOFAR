@@ -12,5 +12,3 @@ par  IPAddress               I    text   -      10    0    '@IPaddress@'        
 par  RAM                     I    int    RAM    10    0    1024                    -        'RAM space on this node'
 par  Storage                 I    int    DISK   10    0    2048                    -        'Storage space on this node'
 
-
-

@@ -22,28 +22,30 @@
 #include <set>
 #include <stdexcept>
 
+#include <ms/MeasurementSets/MeasurementSet.h>
+
 #include <tables/Tables/ExprNode.h>
-#include <tables/Tables/TableIter.h>
-#include <tables/Tables/TiledStManAccessor.h>
 #include <tables/Tables/IncrStManAccessor.h>
 #include <tables/Tables/StandardStManAccessor.h>
+#include <tables/Tables/TableIter.h>
+#include <tables/Tables/TiledStManAccessor.h>
 
 #include <AOFlagger/msio/timefrequencydata.h>
 
 #include <AOFlagger/util/aologger.h>
 
 BaselineReader::BaselineReader(const std::string &msFile)
-	: _measurementSet(msFile), _dataKind(ObservedData), _readData(true), _readFlags(true),
+	: _measurementSet(msFile), _dataColumnName("DATA"), _subtractModel(false), _readData(true), _readFlags(true),
 	_polarizationCount(0)
 {
 	AOLogger::Debug << "Baselinereader constructed.\n";
 	_frequencyCount = _measurementSet.FrequencyCount();
 	try {
-		_table = _measurementSet.OpenTable(MeasurementSet::MainTable, true);
+		_table = _measurementSet.OpenTable(true);
 	} catch(std::exception &e)
 	{
 		AOLogger::Warn << "Read-write opening of file " << msFile << " failed, trying read-only...\n";
-		_table = _measurementSet.OpenTable(MeasurementSet::MainTable, false);
+		_table = _measurementSet.OpenTable(false);
 		AOLogger::Warn << "Table opened in read-only: writing not possible.\n";
 	}
 }
@@ -63,7 +65,8 @@ void BaselineReader::initObservationTimes()
 		for(std::set<double>::const_iterator i=times.begin();i!=times.end();++i)
 		{
 			_observationTimes.insert(std::pair<double,size_t>(*i, index));
-			++index; 
+			_observationTimesVector.push_back(*i);
+			++index;
 		}
 	}
 }
@@ -132,8 +135,9 @@ void BaselineReader::initializePolarizations()
 {
 	if(_polarizationCount == 0)
 	{
-		casa::Table *polTable = _measurementSet.OpenTable(MeasurementSet::PolarizationTable, false);
-		casa::ROArrayColumn<int> corTypeColumn(*polTable, "CORR_TYPE"); 
+		casa::MeasurementSet ms(_measurementSet.Location());
+		casa::Table polTable = ms.polarization();
+		casa::ROArrayColumn<int> corTypeColumn(polTable, "CORR_TYPE"); 
 		casa::Array<int> corType = corTypeColumn(0);
 		casa::Array<int>::iterator iterend(corType.end());
 		int polarizationCount = 0;
@@ -160,40 +164,12 @@ void BaselineReader::initializePolarizations()
 			++polarizationCount;
 		}
 		_polarizationCount = polarizationCount;
-		delete polTable;
-	}
-}
-
-casa::ROArrayColumn<casa::Complex> *BaselineReader::CreateDataColumn(enum DataKind kind, casa::Table &table)
-{
-	switch(kind) {
-		case ObservedData:
-		default:
-		return new casa::ROArrayColumn<casa::Complex>(table, "DATA");
-		case CorrectedData:
-		case ResidualData:
-		return new casa::ROArrayColumn<casa::Complex>(table, "CORRECTED_DATA");
-		case ModelData:
-		return new casa::ROArrayColumn<casa::Complex>(table, "MODEL_DATA");
-	}
-}
-
-casa::ArrayColumn<casa::Complex> *BaselineReader::CreateDataColumnRW(enum DataKind kind, casa::Table &table)
-{
-	switch(kind) {
-		case ObservedData:
-		default:
-		return new casa::ArrayColumn<casa::Complex>(table, "DATA");
-		case CorrectedData:
-		case ResidualData:
-		return new casa::ArrayColumn<casa::Complex>(table, "CORRECTED_DATA");
-		case ModelData:
-		return new casa::ArrayColumn<casa::Complex>(table, "MODEL_DATA");
 	}
 }
 
 void BaselineReader::clearTableCaches()
 {
+	/*
 	try {
 		casa::ROTiledStManAccessor accessor(*Table(), "LofarStMan");
 		accessor.clearCaches();
@@ -218,5 +194,5 @@ void BaselineReader::clearTableCaches()
 				AOLogger::Debug << "Could not clear LofarStMan caches; don't know how to access it.\n";
 			}
 		}
-	}
+	}*/
 }

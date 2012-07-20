@@ -9,6 +9,7 @@ set(inst_HEADERS
   Marshalling.h
   ProtocolDefs.h
   StringVector.h
+  DoubleVector.h
 )
 
 # Create symbolic link to include directory.

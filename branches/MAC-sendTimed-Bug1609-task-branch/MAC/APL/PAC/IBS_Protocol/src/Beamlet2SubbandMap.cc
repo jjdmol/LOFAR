@@ -23,6 +23,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/LofarConstants.h>
+#include <Common/StringUtil.h>
 
 #include <APL/IBS_Protocol/Beamlet2SubbandMap.h>
 #include <APL/RTCCommon/MarshallBlitz.h>
@@ -127,7 +128,7 @@ ostream& Beamlet2SubbandMap::print (ostream&	os) const
 	return (os);
 	map<uint16,uint16>::const_iterator	iter;
 	map<uint16,uint16>::const_iterator	end = m_beamlet2subband.end();
-	while (idx < elements && idx < 248) {
+	while (idx < elements && idx < MAX_BEAMLETS) {
 		if (idx % MAX_ELEMENTS_PER_LINE == 0) {
 			if (idx % (2*MAX_ELEMENTS_PER_LINE) == 0) {
 				os << endl << formatString("[%d]: ", idx / (2*MAX_ELEMENTS_PER_LINE));

@@ -27,11 +27,13 @@
 // Macro interface to the cout/cerr logging implementation.
 
 
+#include <Common/CasaLogSink.h>
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_sstream.h>
 #include <Common/lofar_iomanip.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_map.h>
+
 
 #include <time.h>
 #include <sys/time.h>
@@ -52,7 +54,10 @@
 //	- INIT_LOGGER_AND_WATCH
 //
 #define INIT_LOGGER(filename) \
-	::LOFAR::LFDebug::initLevels (::LOFAR::string(filename) + ".debug")
+  do {                                          \
+    ::LOFAR::LFDebug::initLevels (::LOFAR::string(filename) + ".debug"); \
+    ::LOFAR::CasaLogSink::attach();             \
+  } while(0)
 
 //# Note: 'var' logger functionality not available
 #define INIT_VAR_LOGGER(filename,logfile) \
@@ -67,6 +72,12 @@
 	::LOFAR::LFDebug::setLevel("Global",8); \
 	::LOFAR::LFDebug::sysInfo = sinfo;
 
+#define LOGCOUT_SETLEVEL(level) \
+	::LOFAR::LFDebug::setLevel("Global",level);
+
+// Each new thread might need a partial reinitialisation and destruction in the logger
+#define LOGGER_ENTER_THREAD()
+#define LOGGER_EXIT_THREAD()
 
 //# -------------------- Log Levels for the Operator messages -----------------
 //#
@@ -218,7 +229,6 @@ public: \
 #define THROW(exc,msg) do { \
 	  std::ostringstream lfr_log_oss; \
 	  lfr_log_oss << msg; \
-	  cLog(1, "EXCEPTION ", lfr_log_oss.str()); \
 	  throw(exc(lfr_log_oss.str(), THROW_ARGS)); \
 	} while(0)
 
@@ -226,58 +236,77 @@ public: \
 
 #define LFDebugCheck(level)	getLFDebugContext().check(level)
 
-#define	thread_unsafe_cLog(level,levelname,message) \
-	do { \
-	  if (::LOFAR::LFDebug::LFDebugCheck(level)) \
-	      ::LOFAR::LFDebug::getDebugStream() << ::LOFAR::LFDebug::sysInfo << ::LOFAR::LFDebug::spaced_time_string << levelname \
-			<< message << std::endl; \
-	} while (0)
+// make sure that the logging is 
+//   a) thread safe, using a mutex, which is unlocked even if cLog throws
+//   b) does not trigger on a pthread_cancel, because stl will cause an abort() due to
+//      not rethrowing after a catch(...) in ostream::put(char) (fixed in GCC 4.4+, maybe in 4.3 as well).
+//   c) will not cancel halfway through printing a log line when using pthread_cancel in GCC 4.4+,
+//      as that would absorb the next log line since both will be put on the same line.
 
-#if defined USE_THREADS
+// an example crash test will reveal the problem (GCC <=4.2):
+/*
+#include <iostream>
+#include <pthread.h>
+
+void *thread(void*)
+{
+  // ostream::put(char) will do a catch(...), discarding the pthread cancel
+  // "exception", which is fatal.
+  for(;;) std::cout << "crash" << std::endl;
+  return 0;
+}
+
+int main() {
+  pthread_t t;
+  pthread_create( &t, 0, &thread, 0 );
+
+  pthread_cancel( t );
+  pthread_join( t, 0 );
+}
+
+- Make sure to grab locks AFTER the message has been evaluated, because doing so might trigger other log messages
+*/
 #define	cLog(level,levelname,message) \
 	do { \
-		pthread_mutex_lock(&::LOFAR::LFDebug::mutex); \
-		thread_unsafe_cLog(level,levelname,message); \
-		pthread_mutex_unlock(&::LOFAR::LFDebug::mutex); \
+	  if (::LOFAR::LFDebug::LFDebugCheck(level)) { \
+	      std::ostringstream ss_message; \
+              ss_message << message; \
+              { \
+                ::LOFAR::ScopedLock sl(::LOFAR::LFDebug::mutex); \
+                ::LOFAR::ScopedDelayCancellation dc; \
+	        ::LOFAR::LFDebug::getDebugStream() << ::LOFAR::LFDebug::sysInfo << ::LOFAR::LFDebug::spaced_time_string << levelname \
+			<< ss_message.str() << std::endl; \
+              } \
+          } \
 	} while(0)
-#else
-#define	cLog(level,levelname,message) \
-	do { \
-		thread_unsafe_cLog(level,levelname,message); \
-	} while(0)
-#endif
 
-// thread_unsafe_cLog can handle both strings and streams
+// cLog can handle both strings and streams
 #define cLogstr cLog
 
 #define	cDebug cLog
 #define	cDebugstr cDebug
 
-#define thread_unsafe_cTrace(level,message) \
-	do { \
-	  if (::LOFAR::LFDebug::LFDebugCheck(level)) \
-	      ::LOFAR::LFDebug::getDebugStream() << ::LOFAR::LFDebug::sysInfo << ::LOFAR::LFDebug::spaced_time_string << "TRACE" << LOG4CPLUS_LEVEL(level) \
-			<< " TRC." << getLFDebugContext().name() << " " \
-			<< message << std::endl; \
-	} while(0)
-
-#if defined USE_THREADS
 #define cTrace(level,message) \
 	do { \
-		pthread_mutex_lock(&::LOFAR::LFDebug::mutex); \
-		thread_unsafe_cTrace(level,message); \
-		pthread_mutex_unlock(&::LOFAR::LFDebug::mutex); \
+	  if (::LOFAR::LFDebug::LFDebugCheck(level)) { \
+	      std::ostringstream ss_message; \
+              ss_message << message; \
+              { \
+                ::LOFAR::ScopedLock sl(::LOFAR::LFDebug::mutex); \
+                ::LOFAR::ScopedDelayCancellation dc; \
+                ::LOFAR::LFDebug::getDebugStream() << ::LOFAR::LFDebug::sysInfo << ::LOFAR::LFDebug::spaced_time_string << "TRACE" << LOG4CPLUS_LEVEL(level) \
+                          << " TRC." << getLFDebugContext().name() << " " \
+                          << ss_message.str() << std::endl; \
+              } \
+          } \
 	} while(0)
-#else
-#define cTrace(level,message) \
-	do { \
-		thread_unsafe_cTrace(level,message); \
-	} while(0)
-#endif
 
 #define cTracestr cTrace
 
 //#-------------------- END OF MACRO DEFINITIONS --------------------#//
+
+#include <Common/Thread/Mutex.h>
+#include <Common/Thread/Cancellation.h>
 
 namespace LOFAR
 {
@@ -285,9 +314,7 @@ namespace LOFAR
   {
     extern string sysInfo;
 
-#if defined USE_THREADS
-    extern pthread_mutex_t mutex;
-#endif
+    extern Mutex mutex;
 
     extern std::ostream * dbg_stream_p;
   
@@ -381,22 +408,7 @@ namespace LOFAR
     };
 #endif
 
-    // append the current time (including milliseconds) to the provided stream
-    inline std::ostream& spaced_time_string (std::ostream &str)
-    {
-      struct timeval tv;
-      struct tm timeinfo;
-      char timestr[40];
-      const unsigned len = 18; // 18 == strlen( " 01-01-10 10:00:00" )
-
-      gettimeofday(&tv,0);
-      localtime_r(&tv.tv_sec,&timeinfo);
-      strftime( timestr, sizeof timestr, " %d-%m-%y %T", &timeinfo );
-      snprintf( timestr + len, sizeof timestr - len, ".%03d ", static_cast<int>(tv.tv_usec/1000) );
-
-      str << timestr;
-      return str;
-    }
+    std::ostream& spaced_time_string (std::ostream &str);
 
     extern Context DebugContext;
     inline Context & getLFDebugContext ()  { return DebugContext; }

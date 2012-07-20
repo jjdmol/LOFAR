@@ -1,4 +1,3 @@
-//#  Job.cc:
 //#
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -23,24 +22,28 @@
 #include <BeamletBufferToComputeNode.h>
 #include <ControlPhase3Cores.h>
 #include <Common/LofarLogger.h>
+#include <Stream/PortBroker.h>
+#include <Interface/Stream.h>
 #include <Interface/CN_Command.h>
-#include <Interface/CN_Configuration.h>
-#include <Interface/CN_ProcessingPlan.h>
 #include <Interface/Exceptions.h>
 #include <Interface/PrintVector.h>
 #include <Interface/RSPTimeStamp.h>
 #include <InputSection.h>
-#include <ION_main.h>
+#include <ION_Allocator.h>
+#include <GlobalVars.h>
 #include <Job.h>
 #include <OutputSection.h>
 #include <StreamMultiplexer.h>
+#include <Stream/SocketStream.h>
+#include <Stream/PortBroker.h>
 
-#include <sys/types.h>
-#include <sys/wait.h>
 #include <unistd.h>
+#include <time.h>
 
 #include <boost/format.hpp>
-using boost::format;
+
+
+#define LOG_CONDITION (myPsetNumber == 0)
 
 namespace LOFAR {
 namespace RTCP {
@@ -50,6 +53,8 @@ void	 *Job::theInputSection;
 Mutex	 Job::theInputSectionMutex;
 unsigned Job::theInputSectionRefCount = 0;
 
+Queue<Job *> finishedJobs;
+
 
 Job::Job(const char *parsetName)
 :
@@ -57,21 +62,54 @@ Job::Job(const char *parsetName)
   itsJobID(nextJobID ++), // no need to make thread safe
   itsObservationID(itsParset.observationID()),
   itsIsRunning(false),
-  itsDoCancel(false)
+  itsDoCancel(false),
+  itsBlockNumber(0),
+  itsRequestedStopTime(0.0),
+  itsStopTime(0.0)
 {
-  itsLogPrefix = str(format("[obs %d] ") % itsParset.observationID());
+  itsLogPrefix = str(boost::format("[obs %d] ") % itsParset.observationID());
 
-  checkParset();
+  // fill the cache to avoid regenerating it many times over
+  itsParset.write(NULL);
 
-  LOG_INFO_STR(itsLogPrefix << "----- Creating new observation");
-  LOG_DEBUG_STR(itsLogPrefix << "usedCoresInPset = " << itsParset.usedCoresInPset());
+  if (LOG_CONDITION) {
+    // Handle PVSS (CEPlogProcessor) communication -- report PVSS name in the first log line to allow CEPlogProcessor to resolve obsIDs
+    if (itsParset.PVSS_TempObsName() != "")
+      LOG_INFO_STR(itsLogPrefix << "PVSS name: " << itsParset.PVSS_TempObsName());
 
-  itsNrRuns = static_cast<unsigned>(ceil((itsParset.stopTime() - itsParset.startTime()) / itsParset.CNintegrationTime()));
-  LOG_DEBUG_STR(itsLogPrefix << "itsNrRuns = " << itsNrRuns);
+    LOG_INFO_STR(itsLogPrefix << "----- Creating new job");
+    LOG_DEBUG_STR(itsLogPrefix << "usedCoresInPset = " << itsParset.usedCoresInPset());
+  }
+
+  // Handle PLC communication
+  if (myPsetNumber == 0) {
+    if (itsParset.PLC_controlled()) {
+      // let the ApplController decide what we should do
+      try {
+        itsPLCStream = new SocketStream(itsParset.PLC_Host(), itsParset.PLC_Port(), SocketStream::TCP, SocketStream::Client, 60);
+
+        itsPLCClient = new PLCClient(*itsPLCStream, *this, itsParset.PLC_ProcID(), itsObservationID);
+        itsPLCClient->start();
+      } catch (Exception &ex) {
+        LOG_WARN_STR(itsLogPrefix << "Could not connect to ApplController on " << itsParset.PLC_Host() << ":" << itsParset.PLC_Port() << " as " << itsParset.PLC_ProcID() << " -- continuing on autopilot: " << ex);
+      }
+    }
+
+    if (!itsPLCClient) {
+      // we are either not PLC controlled, or we're supposed to be but can't connect to
+      // the ApplController
+      LOG_INFO_STR(itsLogPrefix << "Not controlled by ApplController");
+    }  
+
+  }
+
+  // check enough parset settings just to get to the coordinated check in jobThread safely
+  if (itsParset.CNintegrationTime() <= 0)
+    THROW(IONProcException,"CNintegrationTime must be bigger than 0");
 
   // synchronize roughly every 5 seconds to see if the job is cancelled
-  itsNrRunTokensPerBroadcast = static_cast<unsigned>(ceil(5.0 / itsParset.CNintegrationTime()));
-  itsNrRunTokens	     = itsNrRunTokensPerBroadcast;
+  itsNrBlockTokensPerBroadcast = static_cast<unsigned>(ceil(5.0 / itsParset.CNintegrationTime()));
+  itsNrBlockTokens	       = 1; // trigger a rendez-vous immediately to sync latest stoptime info
 
   itsHasPhaseOne   = itsParset.phaseOnePsetIndex(myPsetNumber) >= 0;
   itsHasPhaseTwo   = itsParset.phaseTwoPsetIndex(myPsetNumber) >= 0;
@@ -83,10 +121,12 @@ Job::Job(const char *parsetName)
 
 Job::~Job()
 {
-  delete itsJobThread;
-  jobQueue.remove(this);
+  // explicitly free PLCClient first, because it refers to us and needs             
+  // a valid Job object to work on                                                  
+  delete itsPLCClient.release();                                                    
 
-  LOG_INFO_STR(itsLogPrefix << "----- Observation " << (itsIsRunning ? "ended" : "cancelled") << " successfully");
+  if (LOG_CONDITION)
+    LOG_INFO_STR(itsLogPrefix << "----- Job " << (itsIsRunning ? "finished" : "cancelled") << " successfully");
 }
 
 
@@ -96,7 +136,7 @@ void Job::createIONstreams()
     std::vector<unsigned> involvedPsets = itsParset.usedPsets();
 
     for (unsigned i = 0; i < involvedPsets.size(); i ++) {
-      ASSERT( involvedPsets[i] < allIONstreamMultiplexers.size() );
+      ASSERT(involvedPsets[i] < allIONstreamMultiplexers.size());
 
       if (involvedPsets[i] != 0) // do not send to itself
 	itsIONstreams.push_back(new MultiplexedStream(*allIONstreamMultiplexers[involvedPsets[i]], itsJobID));
@@ -104,18 +144,6 @@ void Job::createIONstreams()
   } else {
     itsIONstreams.push_back(new MultiplexedStream(*allIONstreamMultiplexers[0], itsJobID));
   }
-}
-
-
-void Job::deleteIONstreams()
-{
-  if (myPsetNumber == 0)
-    for (unsigned i = 0; i < itsIONstreams.size(); i ++)
-      delete itsIONstreams[i];
-  else
-    delete itsIONstreams[0];
-
-  itsIONstreams.clear();
 }
 
 
@@ -135,6 +163,27 @@ void Job::barrier()
 }
 
 
+// returns true iff all psets supply true
+bool Job::agree(bool iAgree)
+{
+  bool allAgree = iAgree; // pset 0 needs to start with its own decision, for other psets this value is ignored
+
+  if (myPsetNumber == 0)
+    for (unsigned i = 0; i < itsIONstreams.size(); i ++) {
+      bool youAgree;
+      itsIONstreams[i]->read(&youAgree, sizeof youAgree);
+
+      allAgree = allAgree && youAgree;
+    }
+  else
+    itsIONstreams[0]->write(&iAgree, sizeof iAgree);
+
+  broadcast(allAgree);  
+
+  return allAgree;
+}
+
+
 template <typename T> void Job::broadcast(T &value)
 {
   if (myPsetNumber == 0)
@@ -145,164 +194,134 @@ template <typename T> void Job::broadcast(T &value)
 }
 
 
-void Job::execSSH(const char *sshKey, const char *userName, const char *hostName, const char *executable, const char *rank, const char *parset, const char *isBigEndian)
+Job::StorageProcess::StorageProcess( const Parset &parset, const string &logPrefix, int rank, const string &hostname )
+:
+  itsParset(parset),
+  itsLogPrefix(str(boost::format("%s [StorageWriter rank %2d host %s] ") % logPrefix % rank % hostname)),
+  itsRank(rank),
+  itsHostname(hostname)
 {
-  // DO NOT DO ANY CALL THAT GRABS A LOCK, since the lock may be held by a
-  // thread that is no longer part of our address space
+}
 
-  // create a blocking stdin pipe
-  // rationale: this forked process inherits stdin from the parent process, which is unusable because IONProc is started in the background
-  // and routed through mpirun as well. Also, it is shared by all forked processes. Nevertheless, we want Storage to be able to determine
-  // when to shut down based on whether stdin is open. So we create a new stdin. Even though the pipe we create below will block since there
-  // will never be anything to read, closing it will propagate to Storage and that's enough.
-  int pipefd[2];
-  int ignoreResult = pipe(pipefd);
+Job::StorageProcess::~StorageProcess()
+{
+  // cancel the control thread in case it is still active
+  itsThread->cancel();
+}
 
-  ignoreResult = close(0);
-  ignoreResult = dup(pipefd[0]);
+
+void Job::StorageProcess::start()
+{
+  // fork (child process will exec)
+  std::string userName   = itsParset.getString("OLAP.Storage.userName");
+  std::string sshKey     = itsParset.getString("OLAP.Storage.sshIdentityFile");
+  std::string executable = itsParset.getString("OLAP.Storage.msWriter");
 
   char cwd[1024];
-  getcwd( cwd, sizeof cwd );
 
-  execl("/usr/bin/ssh",
-    "ssh",
-    "-i", sshKey,
-    "-c", "blowfish",
-    "-o", "StrictHostKeyChecking=no",
-    "-o", "UserKnownHostsFile=/dev/null",
-    "-o", "ServerAliveInterval=30",
-    "-l", userName,
-    hostName,
+  if (getcwd(cwd, sizeof cwd) == 0)
+    throw SystemCallException("getcwd", errno, THROW_ARGS);
 
-    "cd", cwd, "&&",
-
-    executable, rank, parset, isBigEndian,
-
-    static_cast<char *>(0)
+#ifdef HAVE_LIBSSH2
+  std::string commandLine = str(boost::format("cd %s && %s%s %u %d %u")
+    % cwd
+#if defined USE_VALGRIND
+    % "valgrind --leak-check=full "
+#else
+    % ""
+#endif
+    % executable
+    % itsParset.observationID()
+    % itsRank
+#if defined WORDS_BIGENDIAN
+    % 1
+#else
+    % 0
+#endif
   );
 
-  ignoreResult = write(2, "exec failed\n", 12); // Logger uses mutex, hence write directly
-  exit(1);
+  itsSSHconnection = new SSHconnection(itsLogPrefix, itsHostname, commandLine, userName, sshKey);
+  itsSSHconnection->start();
+#else
+
+#warning Using fork/exec for SSH processes to Storage
+  const std::string obsID = boost::lexical_cast<std::string>(itsParset.observationID());
+  const std::string rank = boost::lexical_cast<std::string>(itsRank);
+
+  const char * const commandLine[] = {
+    "cd ", cwd, " && ",
+#if defined USE_VALGRIND
+    "valgrind " "--leak-check=full "
+#endif
+    executable.c_str(),
+    obsID.c_str(),
+    rank.c_str(),
+#if defined WORDS_BIGENDIAN
+    "1",
+#else
+    "0",
+#endif
+    0
+  };
+  itsPID = forkSSH(itsLogPrefix, itsHostname.c_str(), commandLine, userName.c_str(), sshKey.c_str());
+
+  // client process won't reach this point
+#endif
+
+  itsThread = new Thread(this, &Job::StorageProcess::controlThread, itsLogPrefix + "[ControlThread] ", 65535);
 }
 
 
-void Job::forkSSH(const char *sshKey, const char *userName, const char *hostName, const char *executable, const char *rank, const char *parset, const char *isBigEndian, int &storagePID)
+void Job::StorageProcess::stop(struct timespec deadline)
 {
-  LOG_INFO_STR("child will exec("
-    "\"/usr/bin/ssh\", "
-    "\"ssh\", "
-    "\"-i\", \"" << sshKey << "\", "
-    "\"-c\", \"blowfish\", "
-    "\"-o\", \"StrictHostKeyChecking=no\", "
-    "\"-o\", \"UserKnownHostsFile=/dev/null\", "
-    "\"-o\", \"ServerAliveInterval=30\", "
-    "\"-l\", \"" << userName << "\", "
-    "\"" << hostName << "\", "
-    "\"cd\", (cwd), \"&&\", " 
-    "\"" << executable << "\", "
-    "\"" << rank << "\", "
-    "\"" << parset << "\", "
-    "\"" << isBigEndian << "\", "
-    "0)"
-  );
+#ifdef HAVE_LIBSSH2
+  itsSSHconnection->stop(deadline);
+#else
+  // TODO: update timeout
+  time_t now = time(0);
 
-  switch (storagePID = fork()) {
-    case -1 : throw SystemCallException("fork", errno, THROW_ARGS);
+  unsigned timeout = 1 + (now < deadline.tv_sec ? deadline.tv_sec - now : 0);
 
-    case  0 : execSSH(sshKey, userName, hostName, executable, rank, parset, isBigEndian);
-  }
+  joinSSH(itsLogPrefix, itsPID, timeout);
+#endif  
 }
 
 
-void Job::joinSSH(int childPID, const std::string &hostName, unsigned &timeout)
+void Job::StorageProcess::controlThread()
 {
-  if (childPID != 0) {
-    int status;
+  LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] connecting...");
+  std::string resource = getStorageControlDescription(itsParset.observationID(), itsRank);
+  PortBroker::ClientStream stream(itsHostname, storageBrokerPort(itsParset.observationID()), resource);
 
-    // always try at least one waitpid(). if child has not exited, optionally
-    // sleep and try again.
-    for (;;) {
-      pid_t ret;
-
-      if ((ret = waitpid(childPID, &status, WNOHANG)) == (pid_t)-1) {
-        int error = errno;
-
-        if (error == EINTR) {
-          LOG_DEBUG_STR(itsLogPrefix << "Storage writer on " << hostName << " : waitpid() was interrupted -- retrying");
-          continue;
-        }
-
-        // error
-        LOG_WARN_STR(itsLogPrefix << "Storage writer on " << hostName << " : waitpid() failed with errno " << error);
-        return;
-      } else if (ret == 0) {
-        // child still running
-        if (timeout == 0) {
-          break;
-        }
-
-        timeout--;
-        sleep(1);
-      } else {
-        // child exited
-        if (WIFSIGNALED(status) != 0)
-          LOG_WARN_STR(itsLogPrefix << "Storage writer on " << hostName << " was killed by signal " << WTERMSIG(status));
-        else if (WEXITSTATUS(status) != 0)
-          LOG_WARN_STR(itsLogPrefix << "Storage writer on " << hostName << " exited with exit code " << WEXITSTATUS(status));
-        else
-          LOG_INFO_STR(itsLogPrefix << "Storage writer on " << hostName << " terminated normally");
-
-        return;  
-      }
-    }
-
-    // child did not exit within the given timeout
-
-    LOG_WARN_STR(itsLogPrefix << "Storage writer on " << hostName << " : sending SIGTERM");
-    kill(childPID, SIGTERM);
-
-    if (waitpid(childPID, &status, 0) == -1) {
-      LOG_WARN_STR(itsLogPrefix << "Storage writer on " << hostName << " : waitpid() failed");
-    }
-
-    LOG_WARN_STR(itsLogPrefix << "Storage writer on " << hostName << " terminated after sending SIGTERM");
-  }
+  // for now, we just send the parset and call it a day
+  LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] connected -- sending parset");
+  itsParset.write(&stream);
+  LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] sent parset");
 }
 
 
 void Job::startStorageProcesses()
 {
-  itsStorageHostNames = itsParset.getStringVector("OLAP.Storage.hosts");
+  vector<string> hostnames = itsParset.getStringVector("OLAP.Storage.hosts");
 
-  std::string userName   = itsParset.getString("OLAP.Storage.userName");
-  std::string sshKey     = itsParset.getString("OLAP.Storage.sshIdentityFile");
-  std::string executable = itsParset.getString("OLAP.Storage.msWriter");
-  std::string parset     = itsParset.name();
+  itsStorageProcesses.resize(hostnames.size());
 
-  itsStoragePIDs.resize(itsStorageHostNames.size());
-
-  for (unsigned rank = 0; rank < itsStorageHostNames.size(); rank ++)
-    forkSSH(sshKey.c_str(),
-	    userName.c_str(),
-	    itsStorageHostNames[rank].c_str(),
-	    executable.c_str(),
-	    boost::lexical_cast<std::string>(rank).c_str(),
-	    parset.c_str(),
-#if defined WORDS_BIGENDIAN
-	    "1",
-#else
-	    "0",
-#endif
-	    itsStoragePIDs[rank]);
+  for (unsigned rank = 0; rank < itsStorageProcesses.size(); rank ++) {
+    itsStorageProcesses[rank] = new StorageProcess(itsParset, itsLogPrefix, rank, hostnames[rank]);
+    itsStorageProcesses[rank]->start();
+  }  
 }
 
 
 void Job::stopStorageProcesses()
 {
-  unsigned timeleft = 10;
+  struct timespec deadline;
 
-  for (unsigned rank = 0; rank < itsStorageHostNames.size(); rank ++)
-    joinSSH(itsStoragePIDs[rank], itsStorageHostNames[rank], timeleft);
+  deadline.tv_sec  = time(0) + 10;
+  deadline.tv_nsec = 0;
+
+  for (unsigned rank = 0; rank < itsStorageProcesses.size(); rank ++)
+    itsStorageProcesses[rank]->stop(deadline);
 }
 
 
@@ -314,7 +333,7 @@ void Job::waitUntilCloseToStartOfObservation(time_t secondsPriorToStart)
   ctime_r(&closeToStart, buf);
   buf[24] = '\0';
   
-  LOG_DEBUG_STR(itsLogPrefix << "Waiting for job to start: sleeping until " << buf);
+  LOG_INFO_STR(itsLogPrefix << "Waiting for job to start: sleeping until " << buf);
 
   itsWallClockTime.waitUntil(closeToStart);
 }
@@ -328,7 +347,7 @@ void Job::cancel()
     LOG_WARN_STR(itsLogPrefix << "Observation already cancelled");
   } else {
     itsDoCancel = true;
-    jobQueue.itsReevaluate.broadcast();
+    //jobQueue.itsReevaluate.broadcast();
 
     if (itsParset.realTime())
       itsWallClockTime.cancelWait();
@@ -368,24 +387,72 @@ void Job::jobThread()
     createCNstreams();
     createIONstreams();
 
-    bool storageStarted = false;
-
     if (myPsetNumber == 0) {
-      if (itsParset.realTime())
-	waitUntilCloseToStartOfObservation(10);
+      // PLC: DEFINE phase
+      bool canStart = true;
 
-      claimResources();
-
-      if (itsIsRunning && itsParset.hasStorage()) {
-	startStorageProcesses();
-	storageStarted = true;
+      if (!checkParset()) {
+        canStart = false;
       }
+
+      // obey the stop time in the parset -- the first anotherRun() will broadcast it
+      if (!pause(itsParset.stopTime())) {
+        LOG_ERROR_STR(itsLogPrefix << "Could not set observation stop time");
+        canStart = false;
+      }
+
+      if (canStart) {
+        // PLC: INIT phase
+        if (itsParset.realTime())
+          waitUntilCloseToStartOfObservation(20);
+
+        // PLC: in practice, RUN must start here, because resources
+        // can become available just before the observation starts.
+        // This means we will miss the beginning of the observation
+        // for now, because we need to calculate the delays still,
+        // which can only be done if we know the start time.
+        // That means we forgo full PLC control for now and ignore
+        // the init/run commands. In practice, the define command
+        // won't be useful either since we'll likely disconnect
+        // due to an invalid parset before PLC can ask.
+
+        claimResources();
+
+        // we could start Storage before claiming resources
+        if (itsIsRunning && itsParset.hasStorage())
+          startStorageProcesses();
+      } 
     }
 
     broadcast(itsIsRunning);
 
     if (itsIsRunning) {
-      if (itsHasPhaseOne || itsHasPhaseTwo || itsHasPhaseThree)
+      // PLC: RUN phase
+
+      if (itsParset.realTime()) {
+        // if we started after itsParset.startTime(), we want to skip ahead to
+        // avoid data loss caused by having to catch up.
+        if (myPsetNumber == 0) {
+          time_t earliest_start = time(0L) + 5;
+
+          if (earliest_start > itsParset.startTime()) {
+            itsBlockNumber = static_cast<unsigned>((earliest_start - itsParset.startTime()) / itsParset.CNintegrationTime());
+
+            LOG_WARN_STR(itsLogPrefix << "Skipping the first " << itsBlockNumber << " blocks to catch up"); 
+          } else {
+            itsBlockNumber = 0;
+          }  
+        }
+
+        broadcast(itsBlockNumber);
+      }
+
+      // each node is expected to:
+      // 1. agree() on starting, to allow the compute nodes to complain in preprocess()
+      // 2. call anotherRun() until the end of the observation to synchronise the
+      //    stop time.
+
+      if (itsHasPhaseOne || itsHasPhaseTwo || itsHasPhaseThree) {
 	switch (itsParset.nrBitsPerSample()) {
 	  case  4 : doObservation<i4complex>();
 		    break;
@@ -396,23 +463,27 @@ void Job::jobThread()
 	  case 16 : doObservation<i16complex>();
 		    break;
 	}
-      else // force pset 0 to broadcast itsIsRunning periodically
-	for (unsigned i = 0; i < itsNrRuns && !isCancelled(); i ++)
-	  ;
+      } else {
+        if (agree(true)) { // we always agree on the fact that we can start
+          // force pset 0 to broadcast itsIsRunning periodically
+	  while (anotherRun())
+	    ;
+        }    
+      }    
 
+      // PLC: PAUSE phase
       barrier();
+
+      // PLC: RELEASE phase
 
       // all InputSections and OutputSections have finished their processing, so
       // Storage should be done any second now.
 
-      if (storageStarted)
-	stopStorageProcesses();
+      stopStorageProcesses();
     }
-
-    deleteIONstreams();
   }
 
-  delete this;
+  finishedJobs.append(this);
 }
 
 
@@ -422,16 +493,27 @@ void Job::createCNstreams()
 
   itsCNstreams.resize(usedCoresInPset.size());
 
-  for (unsigned core = 0; core < usedCoresInPset.size(); core ++)
-    itsCNstreams[core] = allCNstreams[usedCoresInPset[core]];
+  for (unsigned core = 0; core < usedCoresInPset.size(); core ++) {
+    ASSERT(usedCoresInPset[core] < nrCNcoresInPset);
+    itsCNstreams[core] = allCNstreams[myPsetNumber][usedCoresInPset[core]];
+  }
 
   if (itsHasPhaseOne || itsHasPhaseTwo) {
     std::vector<unsigned> phaseOneTwoCores = itsParset.phaseOneTwoCores();
 
-    itsPhaseOneTwoCNstreams.resize(phaseOneTwoCores.size());
+    itsPhaseOneTwoCNstreams.resize(nrPsets, phaseOneTwoCores.size());
 
-    for (unsigned core = 0; core < phaseOneTwoCores.size(); core ++)
-      itsPhaseOneTwoCNstreams[core] = allCNstreams[phaseOneTwoCores[core]];
+#ifdef CLUSTER_SCHEDULING
+    for (unsigned pset = 0; pset < nrPsets; pset ++)
+#else
+    unsigned pset = myPsetNumber;
+#endif
+    {
+      for (unsigned core = 0; core < phaseOneTwoCores.size(); core ++) {
+        ASSERT(phaseOneTwoCores[core] < nrCNcoresInPset);
+        itsPhaseOneTwoCNstreams[pset][core] = allCNstreams[pset][phaseOneTwoCores[core]];
+      }
+    }
   }
 
   if (itsHasPhaseThree) {
@@ -439,8 +521,10 @@ void Job::createCNstreams()
 
     itsPhaseThreeCNstreams.resize(phaseThreeCores.size());
 
-    for (unsigned core = 0; core < phaseThreeCores.size(); core ++)
-      itsPhaseThreeCNstreams[core] = allCNstreams[phaseThreeCores[core]];
+    for (unsigned core = 0; core < phaseThreeCores.size(); core ++) {
+      ASSERT(phaseThreeCores[core] < nrCNcoresInPset);
+      itsPhaseThreeCNstreams[core] = allCNstreams[myPsetNumber][phaseThreeCores[core]];
+    }
   }
 }
 
@@ -469,16 +553,16 @@ bool Job::configureCNs()
 {
   bool success = true;
 
-  CN_Command	   command(CN_Command::PREPROCESS);
-  CN_Configuration configuration(itsParset);
+  CN_Command command(CN_Command::PREPROCESS, itsBlockNumber);
   
   LOG_DEBUG_STR(itsLogPrefix << "Configuring cores " << itsParset.usedCoresInPset() << " ...");
 
   for (unsigned core = 0; core < itsCNstreams.size(); core ++) {
     command.write(itsCNstreams[core]);
-    configuration.write(itsCNstreams[core]);
+    itsParset.write(itsCNstreams[core]);
   }
 
+#if 0 // FIXME: leads to deadlock when using TCP
   for (unsigned core = 0; core < itsCNstreams.size(); core ++) {
     char failed;
     itsCNstreams[core]->read(&failed, sizeof failed);
@@ -488,6 +572,7 @@ bool Job::configureCNs()
       success = false;
     }
   }
+#endif
   
   LOG_DEBUG_STR(itsLogPrefix << "Configuring cores " << itsParset.usedCoresInPset() << " done");
 
@@ -498,7 +583,7 @@ bool Job::configureCNs()
 void Job::unconfigureCNs()
 {
   CN_Command command(CN_Command::POSTPROCESS);
-
+ 
   LOG_DEBUG_STR(itsLogPrefix << "Unconfiguring cores " << itsParset.usedCoresInPset() << " ...");
 
   for (unsigned core = 0; core < itsCNstreams.size(); core ++)
@@ -508,146 +593,90 @@ void Job::unconfigureCNs()
 }
 
 
-bool Job::isCancelled()
+bool Job::anotherRun()
 {
-  if (-- itsNrRunTokens == 0) {
-    itsNrRunTokens = itsNrRunTokensPerBroadcast;
-    itsIsRunning   = !itsDoCancel;
+  if (-- itsNrBlockTokens == 0) {
+    itsNrBlockTokens = itsNrBlockTokensPerBroadcast;
+
+    // only consider cancelling at itsNrBlockTokensPerBroadcast boundaries
+    itsIsRunning = !itsDoCancel;
+
+    // only allow pset 0 to actually decide whether or not to stop
     broadcast(itsIsRunning);
+
+    // sync updated stop times -- abuse atomicity of copying itsRequestedStopTime
+    itsStopTime = itsRequestedStopTime;
+    broadcast(itsStopTime);
   }
 
-  return !itsIsRunning;
+  // move on to the next block
+  itsBlockNumber ++;
+
+  bool done = !itsIsRunning;
+
+  if (itsStopTime > 0.0) {
+    // the end time of this block must still be within the observation
+    double currentTime = itsParset.startTime() + (itsBlockNumber + 1) * itsParset.CNintegrationTime();
+
+    done = done || currentTime >= itsStopTime;
+  }
+
+  return !done;
 }
 
 
 template <typename SAMPLE_TYPE> void Job::doObservation()
 {
-  CN_Configuration configuration(itsParset);
-  CN_ProcessingPlan<> plan(configuration);
-  plan.removeNonOutputs();
-  unsigned nrOutputTypes = plan.nrOutputTypes();
-  std::vector<OutputSection *> outputSections(nrOutputTypes, 0);
-  unsigned nrparts = itsParset.nrPartsPerStokes();
-  unsigned nrbeams = itsParset.flysEye() ? itsParset.nrMergedStations() : itsParset.nrPencilBeams();
+  std::vector<OutputSection *> outputSections;
 
-
-  LOG_INFO_STR(itsLogPrefix << "----- Observation start");
+  if (LOG_CONDITION)
+    LOG_INFO_STR(itsLogPrefix << "----- Observation start");
 
   // first: send configuration to compute nodes so they know what to expect
-  if (!configureCNs()) {
+  if (!agree(configureCNs())) {
     unconfigureCNs();
 
-    LOG_INFO_STR(itsLogPrefix << "----- Observation finished");
+    if (LOG_CONDITION)
+      LOG_INFO_STR(itsLogPrefix << "----- Observation finished");
+
     return;
   }
 
   if (itsHasPhaseOne)
     attachToInputSection<SAMPLE_TYPE>();
 
-  // start output process threads
-  for (unsigned output = 0; output < nrOutputTypes; output ++) {
-    ProcessingPlan::planlet &p = plan.plan[output];
-
-    unsigned phase, maxlistsize;
-    int psetIndex;
-    std::vector<std::pair<unsigned,std::string> > list; // list of filenames
-    std::vector<unsigned> cores;
-
-    std::string mask = itsParset.fileNameMask( p.info.storageParsetPrefix );
-
-    switch (p.info.distribution) {
-      case ProcessingPlan::DIST_SUBBAND:
-        phase = 2;
-        cores = itsParset.phaseOneTwoCores();
-        psetIndex = itsParset.phaseTwoPsetIndex(myPsetNumber);
-
-        if (psetIndex < 0) {
-          // this pset does not participate for this output
-          continue;
-        }
-
-        maxlistsize = itsParset.nrSubbandsPerPset();
-
-
-        for (unsigned sb = 0; sb < itsParset.nrSubbandsPerPset(); sb ++) {
-          unsigned s = psetIndex * itsParset.nrSubbandsPerPset() + sb;
-
-          if (s < itsParset.nrSubbands()) {
-            std::string filename = itsParset.constructSubbandFilename( mask, s );
-            list.push_back(std::pair<unsigned,std::string>(s,filename));
-          }
-        }
-
-        break;
-
-      case ProcessingPlan::DIST_BEAM:
-        phase = 3;
-        cores = itsParset.phaseThreeCores();
-        psetIndex = itsParset.phaseThreePsetIndex(myPsetNumber);
-
-        if (psetIndex < 0) {
-          // this pset does not participate for this outputlist
-          continue;
-        }
-
-        if (itsParset.phaseThreeDisjunct()) {
-          // simplification: each core produces at most 1 beam
-          assert( itsParset.nrBeamsPerPset() <= itsParset.phaseThreeCores().size() );
-
-          maxlistsize = itsParset.nrBeamsPerPset();
-        } else {
-          // simplification: each core produces at most 1 beam
-          assert( itsParset.nrBeamsPerPset() <= itsParset.nrSubbandsPerPset() );
-
-          // simplification: also each core which processes a beam also processes a subband
-          assert( nrbeams <= itsParset.nrSubbands() );
-
-          maxlistsize = itsParset.nrSubbandsPerPset();
-        }
-
-        for (unsigned beam = 0;  beam < itsParset.nrBeamsPerPset(); beam ++) {
-          unsigned nrstokes = p.info.nrStokes;
-
-          unsigned beamNumber = psetIndex * itsParset.nrBeamsPerPset() + beam;
-
-          unsigned b = beamNumber / nrparts / nrstokes;
-          unsigned s = beamNumber / nrparts % nrstokes;
-          unsigned q = beamNumber % nrparts;
-
-          if (b < nrbeams) {
-            std::string filename = itsParset.constructBeamFormedFilename( mask, b, s, q );
-            list.push_back(std::pair<unsigned,std::string>(beamNumber,filename));
-          }
-        }
-
-        break;
-
-      default:
-        continue;
-    }
-
-    LOG_DEBUG_STR(itsLogPrefix << "Setting up output " << p.outputNr << " (" << p.name << ")");
-
-    outputSections[output] = new OutputSection(itsParset, cores, list, maxlistsize, p, &createCNstream);
+  if (itsHasPhaseTwo) {
+    if (itsParset.outputCorrelatedData())
+      outputSections.push_back(new CorrelatedDataOutputSection(itsParset, itsBlockNumber));
   }
+
+  if (itsHasPhaseThree) {
+    if (itsParset.outputBeamFormedData())
+      outputSections.push_back(new BeamFormedDataOutputSection(itsParset, itsBlockNumber));
+
+    if (itsParset.outputTrigger())
+      outputSections.push_back(new TriggerDataOutputSection(itsParset, itsBlockNumber));
+  }
+
+  // start the threads
+  for (unsigned i = 0; i < outputSections.size(); i ++)
+    outputSections[i]->start();
 
   LOG_DEBUG_STR(itsLogPrefix << "doObservation processing input start");
 
   { // separate scope to ensure that the beamletbuffertocomputenode objects
     // only exist if the beamletbuffers exist in the inputsection
-    unsigned				    run;
-    std::vector<BeamletBuffer<SAMPLE_TYPE> *> noInputs;
-    BeamletBufferToComputeNode<SAMPLE_TYPE>   beamletBufferToComputeNode(&itsParset, itsPhaseOneTwoCNstreams, itsHasPhaseOne ? static_cast<InputSection<SAMPLE_TYPE> *>(theInputSection)->itsBeamletBuffers : noInputs, myPsetNumber);
+    std::vector<SmartPtr<BeamletBuffer<SAMPLE_TYPE> > > noInputs;
+    BeamletBufferToComputeNode<SAMPLE_TYPE>   beamletBufferToComputeNode(itsParset, itsPhaseOneTwoCNstreams, itsHasPhaseOne ? static_cast<InputSection<SAMPLE_TYPE> *>(theInputSection)->itsBeamletBuffers : noInputs, myPsetNumber, itsBlockNumber);
 
-    ControlPhase3Cores controlPhase3Cores(&itsParset, itsPhaseThreeCNstreams);
+    ControlPhase3Cores controlPhase3Cores(itsParset, itsPhaseThreeCNstreams, itsBlockNumber);
+    controlPhase3Cores.start(); // start the thread
 
-    for (run = 0; run < itsNrRuns && !isCancelled(); run ++) {
-      for (unsigned output = 0; output < nrOutputTypes; output ++) {
-        if (outputSections[output])
-          outputSections[output]->addIterations( 1 );
-      }
+    while (anotherRun()) {
+      for (unsigned i = 0; i < outputSections.size(); i ++)
+	outputSections[i]->addIterations(1);
 
-      controlPhase3Cores.addIterations( 1 );
+      controlPhase3Cores.addIterations(1);
 
       beamletBufferToComputeNode.process();
     }
@@ -655,28 +684,45 @@ template <typename SAMPLE_TYPE> void Job::doObservation()
     LOG_DEBUG_STR(itsLogPrefix << "doObservation processing input done");
   }
 
-  for (unsigned output = 0; output < nrOutputTypes; output ++)
-    if (outputSections[output])
-      outputSections[output]->noMoreIterations();
+  for (unsigned i = 0; i < outputSections.size(); i ++)
+    outputSections[i]->noMoreIterations();
 
-  for (unsigned output = 0; output < nrOutputTypes; output ++)
-    delete outputSections[output];
+  for (unsigned i = 0; i < outputSections.size(); i ++)
+    delete outputSections[i];
 
   if (itsHasPhaseOne)
     detachFromInputSection<SAMPLE_TYPE>();
 
   unconfigureCNs();
-
-  LOG_INFO_STR(itsLogPrefix << "----- Observation finished");
+ 
+  if (LOG_CONDITION)
+    LOG_INFO_STR(itsLogPrefix << "----- Observation finished");
 }
 
 
-void Job::checkParset() const
+bool Job::checkParset() const
 {
+  // any error detected by the python environment, invalidating this parset
+  string pythonParsetError = itsParset.getString("OLAP.IONProc.parsetError","");
+
+  if (pythonParsetError != "" ) {
+    LOG_ERROR_STR(itsLogPrefix << "Early detected parset error: " << pythonParsetError );
+    return false;
+  }
+
+  try {
+    itsParset.check();
+  } catch( InterfaceException &ex ) {
+    LOG_ERROR_STR(itsLogPrefix << "Parset check failed on " << ex.what() );
+    return false;
+  }
+
   if (itsParset.nrCoresPerPset() > nrCNcoresInPset) {
     LOG_ERROR_STR(itsLogPrefix << "nrCoresPerPset (" << itsParset.nrCoresPerPset() << ") cannot exceed " << nrCNcoresInPset);
-    exit(1);
+    return false;
   }
+
+  return true;
 }
 
 
@@ -685,6 +731,82 @@ void Job::printInfo() const
   LOG_INFO_STR(itsLogPrefix << "JobID = " << itsJobID << ", " << (itsIsRunning ? "running" : "not running"));
 }
 
+
+// expected sequence: define -> init -> run -> pause -> release -> quit
+
+bool Job::define()
+{
+  LOG_DEBUG_STR(itsLogPrefix << "Job: define(): check parset");
+
+  return checkParset();
+}
+
+
+bool Job::init()
+{
+  LOG_DEBUG_STR(itsLogPrefix << "Job: init(): allocate buffers / make connections");
+
+  return true;
+}
+
+
+bool Job::run()
+{
+  LOG_DEBUG_STR(itsLogPrefix << "Job: run(): run observation");
+
+  // we ignore this, since 'now' is both ill-defined and we need time
+  // to communicate changes to other psets
+
+  return true;
+}
+
+
+bool Job::pause(const double &when)
+{
+  char   buf[26];
+  time_t whenRounded = static_cast<time_t>(when);
+
+  ctime_r(&whenRounded, buf);
+  buf[24] = '\0';
+  
+  LOG_DEBUG_STR(itsLogPrefix << "Job: pause(): pause observation at " << buf);
+
+  // make sure we don't interfere with queue dynamics
+  ScopedLock scopedLock(jobQueue.itsMutex);
+
+  if (itsParset.realTime() && (when == 0 || when <= itsParset.startTime())) { // yes we can compare a double to 0
+    // make sure we also stop waiting for the job to start
+
+    if (!itsDoCancel)
+      cancel();
+  } else {
+    itsRequestedStopTime = when;
+  }
+
+  return true;
+}
+
+
+bool Job::quit()
+{
+  LOG_DEBUG_STR(itsLogPrefix << "Job: quit(): end observation");
+  // stop now
+
+  if (!itsDoCancel) {
+    ScopedLock scopedLock(jobQueue.itsMutex);
+
+    cancel();
+  }
+
+  return true;
+}
+
+
+bool Job::observationRunning()
+{
+  LOG_DEBUG_STR(itsLogPrefix << "Job: observationRunning()");
+  return itsIsRunning;
+}
 
 } // namespace RTCP
 } // namespace LOFAR

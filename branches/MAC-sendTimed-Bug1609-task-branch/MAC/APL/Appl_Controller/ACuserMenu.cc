@@ -25,6 +25,7 @@
 
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
+#include <Common/Exception.h>
 #include <Common/hexdump.h>
 #include <Common/StringUtil.h>
 #include <ALC/ACSyncClient.h>
@@ -34,6 +35,9 @@
 using namespace LOFAR;
 using namespace LOFAR::ACC;
 using namespace LOFAR::ACC::ALC;
+
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 myACClientFunctions		myACF;
 ApplControlClient*		ACClient    = 0;
@@ -313,7 +317,7 @@ void showMenu()
 	cout << "Enter letter of your choice: ";
 }
 
-int main (int argc, char *argv[]) {
+int main (int /*argc*/, char *argv[]) {
 	ConfigLocator	aCL;
 	string			progName(basename(argv[0]));
 #ifdef HAVE_LOG4CPLUS

@@ -30,6 +30,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Enumeration;
 import java.util.Vector;
@@ -111,17 +112,11 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         try {
             
             //we need to get all the childs from this node.
-            Vector childs = OtdbRmi.getRemoteMaintenance().getItemList(itsNode.treeID(), itsNode.nodeID(), 1);
+            ArrayList<jOTDBnode> childs = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(itsNode.treeID(), itsNode.nodeID(), 1));
             
-            // first element is the default Node we should keep it.
-            itsDefaultNode = (jOTDBnode)childs.elementAt(0);
-            
-            // get all the params per child
-            Enumeration e = childs.elements();
-            while( e.hasMoreElements()  ) {
+            for (jOTDBnode aNode: childs) {
                 aParam=null;
                 
-                jOTDBnode aNode = (jOTDBnode)e.nextElement();
                 String parentName=LofarUtils.keyName(aNode.name);
                 
                 // We need to keep all the nodes needed by this panel
@@ -178,7 +173,8 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         
         aPopupMenu= new JPopupMenu();
         // For VIC trees
-        if (itsTreeType.equals("VHtree")) {
+        switch (itsTreeType) {
+            case "VHtree":
             //  Fill in menu as in the example above
             aMenuItem=new JMenuItem("Create ParSet File");
             aMenuItem.addActionListener(new java.awt.event.ActionListener() {
@@ -189,9 +185,18 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             aMenuItem.setActionCommand("Create ParSet File");
             aPopupMenu.add(aMenuItem);
             
+                aMenuItem=new JMenuItem("Create ParSetMeta File");
+                aMenuItem.addActionListener(new java.awt.event.ActionListener() {
+                    public void actionPerformed(java.awt.event.ActionEvent evt) {
+                        popupMenuHandler(evt);
+                    }
+                });
+                aMenuItem.setActionCommand("Create ParSetMeta File");
+                aPopupMenu.add(aMenuItem);
             // For template trees
-        } else if (itsTreeType.equals("VItemplate")) {
-            
+                break;
+            case "VItemplate":
+                break;
         }
         
         aPopupMenu.setOpaque(true);
@@ -207,7 +212,9 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
      *      }
      */
     public void popupMenuHandler(java.awt.event.ActionEvent evt) {
-        if (evt.getActionCommand().equals("Create ParSet File")) {
+        switch (evt.getActionCommand()) {
+            case "Create ParSet File":
+                {
             logger.trace("Create ParSet File");
             int aTreeID=itsMainFrame.getSharedVars().getTreeID();
             if (fc == null) {
@@ -223,15 +230,14 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                     String aRemoteFileName="/tmp/"+aTreeID+"-"+itsNode.name+"_"+itsMainFrame.getUserAccount().getUserName()+".ParSet";
                     
                     // write the parset
-                    OtdbRmi.getRemoteMaintenance().exportTree(aTreeID,itsNode.nodeID(),aRemoteFileName,2,false);
+                            OtdbRmi.getRemoteMaintenance().exportTree(aTreeID,itsNode.nodeID(),aRemoteFileName);
                     
                     //obtain the remote file
                     byte[] dldata = OtdbRmi.getRemoteFileTrans().downloadFile(aRemoteFileName);
-                    
-                    BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(aFile));
+                            try (BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(aFile))) {
                     output.write(dldata,0,dldata.length);
                     output.flush();
-                    output.close();
+                            }
                     logger.trace("File written to: " + aFile.getPath());
                 } catch (RemoteException ex) {
                     String aS="exportTree failed : " + ex;
@@ -247,6 +253,50 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                     LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 }
             }
+                    break;
+        }
+            case "Create ParSetMeta File":
+                {
+                    logger.trace("Create ParSetMeta File");
+                    int aTreeID=itsMainFrame.getSharedVars().getTreeID();
+                    if (fc == null) {
+                        fc = new JFileChooser();
+                        fc.setApproveButtonText("Apply");
+    }
+                    // try to get a new filename to write the parsetfile to
+                    if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+                        try {
+                            File aFile = fc.getSelectedFile();
+    
+                            // create filename that can be used at the remote site
+                            String aRemoteFileName="/tmp/"+aTreeID+"-"+itsNode.name+"_"+itsMainFrame.getUserAccount().getUserName()+".ParSetMeta";
+                            
+                            // write the parset
+                            OtdbRmi.getRemoteMaintenance().exportResultTree(aTreeID,itsNode.nodeID(),aRemoteFileName);
+                            
+                            //obtain the remote file
+                            byte[] dldata = OtdbRmi.getRemoteFileTrans().downloadFile(aRemoteFileName);
+                    try (BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(aFile))) {
+                        output.write(dldata,0,dldata.length);
+                        output.flush();
+                    }
+                            logger.trace("File written to: " + aFile.getPath());
+                        } catch (RemoteException ex) {
+                            String aS="exportResultTree failed : " + ex;
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                        } catch (FileNotFoundException ex) {
+                            String aS="Error during newPICTree creation: "+ ex;
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                        } catch (IOException ex) {
+                            String aS="Error during newPICTree creation: "+ ex;
+                            logger.error(aS);
+                            LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
+                        }
+                    }
+                    break;
+                }
         }
     }
     
@@ -383,12 +433,10 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             jOTDBparam aParam=null;
             // add original top node to list to be able to delete/change it later
             itsTBBsettings.add(aNode);
-            Vector HWchilds = OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
+            ArrayList<jOTDBnode> HWchilds = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1));
             // get all the params per child
-            Enumeration e1 = HWchilds.elements();
-            while( e1.hasMoreElements()  ) {
-                
-                jOTDBnode aHWNode = (jOTDBnode)e1.nextElement();
+
+            for (jOTDBnode aHWNode: HWchilds) {
                 aParam=null;
                 // We need to keep all the params needed by this panel
                 if (aHWNode.leaf) {
@@ -432,23 +480,24 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             logger.error(aS);
             LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
         }
-        
-        if (aKeyName.equals("operatingMode")) {
+        switch (aKeyName) {
+            case "operatingMode":
             // OperatingMode
             if (!isInitialized) {
                inputOperatingMode.setToolTipText(aParam.description);
                LofarUtils.setPopupComboChoices(inputOperatingMode,aParam.limits);
             }
             itsOperatingModes.add(aNode.limits);
-            
-        } else if (aKeyName.equals("triggerMode")) {
+                break;
+            case "triggerMode":
             // TriggerMode
             if (!isInitialized) {
                inputTriggerMode.setToolTipText(aParam.description);
                LofarUtils.setPopupComboChoices(inputTriggerMode,aParam.limits);
             }
             itsTriggerModes.add(aNode.limits);
-        } else if (aKeyName.equals("baselevel")) {
+                break;
+            case "baselevel":
             // Baselevel
             if (!isInitialized) {
                inputBaselevel.setToolTipText(aParam.description);
@@ -458,8 +507,8 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             } else {
                 itsBaselevels.add(aNode.limits);
             }
-            
-        } else if (aKeyName.equals("startlevel")) {
+                break;
+            case "startlevel":
             // startlevel
             if (!isInitialized) {
                inputStartlevel.setToolTipText(aParam.description);
@@ -469,8 +518,8 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             } else {
                 itsStartlevels.add(aNode.limits);
             }
-
-         } else if (aKeyName.equals("stoplevel")) {
+                break;
+            case "stoplevel":
             // stoplevel
             if (!isInitialized) {
                inputStoplevel.setToolTipText(aParam.description);
@@ -480,24 +529,24 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             } else {
                 itsStoplevels.add(aNode.limits);
             }
-
-        } else if (aKeyName.equals("filter")) {
+                break;
+            case "filter":
             // filter
             if (!isInitialized) {
                inputFilter.setToolTipText(aParam.description);
                LofarUtils.setPopupComboChoices(inputFilter,aParam.limits);
             }
             itsFilters.add(aNode.limits);
-            
-        } else if (aKeyName.equals("window")) {
+                break;
+            case "window":
             // window
             if (!isInitialized) {
                inputWindow.setToolTipText(aParam.description);
                LofarUtils.setPopupComboChoices(inputWindow,aParam.limits);
             }
             itsWindows.add(aNode.limits);
-
-        } else if (aKeyName.equals("filter0_coeff0")) {
+                break;
+            case "filter0_coeff0":
             // Coeff0
             if (!isInitialized) {
                inputFilter0Coeff0.setToolTipText(aParam.description);
@@ -507,8 +556,8 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             } else {
                 itsFilter0Coeff0s.add(aNode.limits);
             }
-            
-        } else if (aKeyName.equals("filter0_coeff1")) {
+                break;
+            case "filter0_coeff1":
             // Coeff1
             if (!isInitialized) {
                inputFilter0Coeff1.setToolTipText(aParam.description);
@@ -518,8 +567,8 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             } else {
                 itsFilter0Coeff1s.add(aNode.limits);
             }
-            
-        } else if (aKeyName.equals("filter0_coeff2")) {
+                break;
+            case "filter0_coeff2":
             // Coeff2
             if (!isInitialized) {
                inputFilter0Coeff2.setToolTipText(aParam.description);
@@ -529,8 +578,8 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             } else {
                 itsFilter0Coeff2s.add(aNode.limits);
             }
-            
-        } else if (aKeyName.equals("filter0_coeff3")) {
+                break;
+            case "filter0_coeff3":
             // Coeff3
             if (!isInitialized) {
                inputFilter0Coeff3.setToolTipText(aParam.description);
@@ -540,8 +589,8 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             } else {
                 itsFilter0Coeff3s.add(aNode.limits);
             }
-
-         } else if (aKeyName.equals("filter1_coeff0")) {
+                break;
+            case "filter1_coeff0":
             // Coeff0
             if (!isInitialized) {
                inputFilter1Coeff0.setToolTipText(aParam.description);
@@ -551,8 +600,8 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             } else {
                 itsFilter1Coeff0s.add(aNode.limits);
             }
-
-        } else if (aKeyName.equals("filter1_coeff1")) {
+                break;
+            case "filter1_coeff1":
             // Coeff1
             if (!isInitialized) {
                inputFilter1Coeff1.setToolTipText(aParam.description);
@@ -562,8 +611,8 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             } else {
                 itsFilter1Coeff1s.add(aNode.limits);
             }
-
-        } else if (aKeyName.equals("filter1_coeff2")) {
+                break;
+            case "filter1_coeff2":
             // Coeff2
             if (!isInitialized) {
                inputFilter1Coeff2.setToolTipText(aParam.description);
@@ -573,8 +622,8 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             } else {
                 itsFilter1Coeff2s.add(aNode.limits);
             }
-
-        } else if (aKeyName.equals("filter1_coeff3")) {
+                break;
+            case "filter1_coeff3":
             // Coeff3
             if (!isInitialized) {
                inputFilter1Coeff3.setToolTipText(aParam.description);
@@ -584,8 +633,8 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             } else {
                 itsFilter1Coeff3s.add(aNode.limits);
             }
-           
-        } else if (aKeyName.equals("RCUs")) {
+                break;
+            case "RCUs":
             // RCUs
             if (!isInitialized) {
                inputRCUs.setToolTipText(aParam.description);
@@ -595,7 +644,8 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             } else {
                 itsRCUs.add(aNode.limits);
             }
-        } else if (aKeyName.equals("subbandList")) {
+                break;
+            case "subbandList":
             // SubbandList
             if (!isInitialized) {
                inputSubbandList.setToolTipText(aParam.description);
@@ -605,6 +655,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             } else {
                 itsSubbandList.add(aNode.limits);
             }
+                break;
         }
     }
     
@@ -630,8 +681,9 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
     private void setDefaultInput() {
         
         // if no entries in lists we can exit again
-        if (itsOperatingModes.size() == 0) {
+        if (itsOperatingModes.isEmpty()) {
             logger.error("ERROR setInputDefaults,  null entry found");
+            return;
         }
         
         // defaultSettings Index
@@ -748,6 +800,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
     /** checks the given input
      */
     private boolean checkInput() {
+        itsSavedRCUList =(BitSet)itsUsedRCUList.clone();
         boolean error=false;
         String errorMsg = "The following inputs are wrong: \n";
         
@@ -794,7 +847,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             errorMsg += "Coeff3 \n";
         }
         
-        // RCUs
+        
         if (!checkRCUs() ) {
             error=true;
             errorMsg += "(some) RCUs allready used earlier or invalid RCU inputString\n";
@@ -807,6 +860,8 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         }
 
         if (error) {
+            // set back old daved RCUs
+            itsUsedRCUList=(BitSet)itsSavedRCUList.clone();
             JOptionPane.showMessageDialog(this,errorMsg,"InputError",JOptionPane.ERROR_MESSAGE);
             return false;
         }
@@ -949,46 +1004,62 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                         // store new duplicate in itsTBBsettings.
                         itsTBBsettings.add(aNode);
 
-                        Vector HWchilds = OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
+                        ArrayList<jOTDBnode> HWchilds = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1));
                         // get all the params per child
-                        Enumeration e1 = HWchilds.elements();
-                        while( e1.hasMoreElements()  ) {
-                            jOTDBnode aHWNode = (jOTDBnode)e1.nextElement();
+                        for (jOTDBnode aHWNode: HWchilds) {
                             String aKeyName = LofarUtils.keyName(aHWNode.name);
-                            if (aKeyName.equals("operatingMode")) {
+                            switch (aKeyName) {
+                                case "operatingMode":
                                 aHWNode.limits=itsOperatingModes.elementAt(i);
-                            } else if (aKeyName.equals("triggerMode")) {
+                                    break;
+                                case "triggerMode":
                                 aHWNode.limits=itsTriggerModes.elementAt(i);
-                            } else if (aKeyName.equals("baselevel")) {
+                                    break;
+                                case "baselevel":
                                 aHWNode.limits=itsBaselevels.elementAt(i);
-                            } else if (aKeyName.equals("startlevel")) {
+                                    break;
+                                case "startlevel":
                                 aHWNode.limits=itsStartlevels.elementAt(i);
-                            } else if (aKeyName.equals("stoplevel")) {
+                                    break;
+                                case "stoplevel":
                                 aHWNode.limits=itsStoplevels.elementAt(i);
-                            } else if (aKeyName.equals("filter")) {
+                                    break;
+                                case "filter":
                                 aHWNode.limits=itsFilters.elementAt(i);
-                            } else if (aKeyName.equals("window")) {
+                                    break;
+                                case "window":
                                 aHWNode.limits=itsWindows.elementAt(i);
-                            } else if (aKeyName.equals("filter0_coeff0")) {
+                                    break;
+                                case "filter0_coeff0":
                                 aHWNode.limits=itsFilter0Coeff0s.elementAt(i);
-                            } else if (aKeyName.equals("filter0_coeff1")) {
+                                    break;
+                                case "filter0_coeff1":
                                 aHWNode.limits=itsFilter0Coeff1s.elementAt(i);
-                            } else if (aKeyName.equals("filter0_coeff2")) {
+                                    break;
+                                case "filter0_coeff2":
                                 aHWNode.limits=itsFilter0Coeff2s.elementAt(i);
-                            } else if (aKeyName.equals("filter0_coeff3")) {
+                                    break;
+                                case "filter0_coeff3":
                                 aHWNode.limits=itsFilter0Coeff3s.elementAt(i);
-                            } else if (aKeyName.equals("filter1_coeff0")) {
+                                    break;
+                                case "filter1_coeff0":
                                 aHWNode.limits=itsFilter1Coeff0s.elementAt(i);
-                            } else if (aKeyName.equals("filter1_coeff1")) {
+                                    break;
+                                case "filter1_coeff1":
                                 aHWNode.limits=itsFilter1Coeff1s.elementAt(i);
-                            } else if (aKeyName.equals("filter1_coeff2")) {
+                                    break;
+                                case "filter1_coeff2":
                                 aHWNode.limits=itsFilter1Coeff2s.elementAt(i);
-                            } else if (aKeyName.equals("filter1_coeff3")) {
+                                    break;
+                                case "filter1_coeff3":
                                 aHWNode.limits=itsFilter1Coeff3s.elementAt(i);
-                            } else if (aKeyName.equals("RCUs")) {
+                                    break;
+                                case "RCUs":
                                 aHWNode.limits=itsRCUs.elementAt(i);
-                            } else if (aKeyName.equals("subbandList")) {
+                                    break;
+                                case "subbandList":
                                 aHWNode.limits=itsSubbandList.elementAt(i);
+                                    break;
                             }
                             saveNode(aHWNode);
                         }
@@ -1490,7 +1561,8 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
-        if(evt.getActionCommand().equals("Apply")) {
+        switch (evt.getActionCommand()) {
+            case "Apply":
             itsMainFrame.setHourglassCursor();
                 save();
             // save the input from the AntennaConfig Panel
@@ -1498,10 +1570,13 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             // reset all buttons, flags and tables to initial start position. So the panel now reflects the new, saved situation
             initPanel();
             itsMainFrame.setNormalCursor();
-        } else if(evt.getActionCommand().equals("Restore")) {
+                break;
+            case "Restore":
             itsMainFrame.setHourglassCursor();
             restore();
-            itsMainFrame.setNormalCursor();        }
+                itsMainFrame.setNormalCursor();
+                break;
+        }
     }//GEN-LAST:event_buttonPanel1ActionPerformed
     
     private void cancelEditButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelEditButtonActionPerformed
@@ -1572,6 +1647,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
     
     // each rcu has its bit in the bitset
     private BitSet   itsUsedRCUList = new BitSet(192);
+    private BitSet   itsSavedRCUList = new BitSet(192);
     private boolean  editting = false;
     private boolean  isInitialized=false;
     private int      itsSelectedRow = -1;
@@ -1580,25 +1656,25 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
 
     
     // TBBsettings
-    private Vector<jOTDBnode> itsTBBsettings = new Vector<jOTDBnode>();
+    private Vector<jOTDBnode> itsTBBsettings = new Vector<>();
     // All TBBsetting nodes
-    private Vector<String>    itsOperatingModes = new Vector<String>();
-    private Vector<String>    itsTriggerModes = new Vector<String>();
-    private Vector<String>    itsBaselevels= new Vector<String>();
-    private Vector<String>    itsStartlevels= new Vector<String>();
-    private Vector<String>    itsStoplevels= new Vector<String>();
-    private Vector<String>    itsFilters= new Vector<String>();
-    private Vector<String>    itsWindows= new Vector<String>();
-    private Vector<String>    itsFilter0Coeff0s= new Vector<String>();
-    private Vector<String>    itsFilter0Coeff1s= new Vector<String>();
-    private Vector<String>    itsFilter0Coeff2s= new Vector<String>();
-    private Vector<String>    itsFilter0Coeff3s= new Vector<String>();
-    private Vector<String>    itsFilter1Coeff0s= new Vector<String>();
-    private Vector<String>    itsFilter1Coeff1s= new Vector<String>();
-    private Vector<String>    itsFilter1Coeff2s= new Vector<String>();
-    private Vector<String>    itsFilter1Coeff3s= new Vector<String>();
-    private Vector<String>    itsRCUs= new Vector<String>();
-    private Vector<String>    itsSubbandList= new Vector<String>();
+    private Vector<String>    itsOperatingModes = new Vector<>();
+    private Vector<String>    itsTriggerModes = new Vector<>();
+    private Vector<String>    itsBaselevels= new Vector<>();
+    private Vector<String>    itsStartlevels= new Vector<>();
+    private Vector<String>    itsStoplevels= new Vector<>();
+    private Vector<String>    itsFilters= new Vector<>();
+    private Vector<String>    itsWindows= new Vector<>();
+    private Vector<String>    itsFilter0Coeff0s= new Vector<>();
+    private Vector<String>    itsFilter0Coeff1s= new Vector<>();
+    private Vector<String>    itsFilter0Coeff2s= new Vector<>();
+    private Vector<String>    itsFilter0Coeff3s= new Vector<>();
+    private Vector<String>    itsFilter1Coeff0s= new Vector<>();
+    private Vector<String>    itsFilter1Coeff1s= new Vector<>();
+    private Vector<String>    itsFilter1Coeff2s= new Vector<>();
+    private Vector<String>    itsFilter1Coeff3s= new Vector<>();
+    private Vector<String>    itsRCUs= new Vector<>();
+    private Vector<String>    itsSubbandList= new Vector<>();
     
     
     // Variables declaration - do not modify//GEN-BEGIN:variables

@@ -24,65 +24,83 @@
 #include <gtkmm/filechooserdialog.h>
 #include <gtkmm/messagedialog.h>
 #include <gtkmm/inputdialog.h>
+#include <gtkmm/toolbar.h>
 
 #include <AOFlagger/msio/baselinematrixloader.h>
 #include <AOFlagger/msio/measurementset.h>
 #include <AOFlagger/msio/image2d.h>
 #include <AOFlagger/msio/timefrequencydata.h>
+#include <AOFlagger/msio/timefrequencymetadata.h>
 #include <AOFlagger/msio/segmentedimage.h>
 #include <AOFlagger/msio/spatialmatrixmetadata.h>
 
-#include <AOFlagger/rfi/strategy/artifactset.h>
-#include <AOFlagger/rfi/strategy/baselineselectionaction.h>
-#include <AOFlagger/rfi/strategy/msimageset.h>
-#include <AOFlagger/rfi/strategy/bandcombinedset.h>
-#include <AOFlagger/rfi/strategy/spatialmsimageset.h>
-#include <AOFlagger/rfi/strategy/strategy.h>
+#include <AOFlagger/strategy/actions/strategyaction.h>
 
-#include <AOFlagger/rfi/antennaflagcountplot.h>
-#include <AOFlagger/rfi/mitigationtester.h>
-#include <AOFlagger/rfi/morphology.h>
-#include <AOFlagger/rfi/frequencyflagcountplot.h>
-#include <AOFlagger/rfi/frequencypowerplot.h>
-#include <AOFlagger/rfi/fringetestcreater.h>
-#include <AOFlagger/rfi/fringestoppingfitter.h>
-#include <AOFlagger/rfi/rfiplots.h>
-#include <AOFlagger/rfi/rfistatistics.h>
-#include <AOFlagger/rfi/svdmitigater.h>
-#include <AOFlagger/rfi/thresholdtools.h>
-#include <AOFlagger/rfi/timeflagcountplot.h>
-#include <AOFlagger/rfi/timefrequencystatistics.h>
+#include <AOFlagger/strategy/control/artifactset.h>
 
-#include <AOFlagger/util/plot.h>
+#include <AOFlagger/strategy/imagesets/msimageset.h>
+#include <AOFlagger/strategy/imagesets/noisestatimageset.h>
+#include <AOFlagger/strategy/imagesets/bandcombinedset.h>
+#include <AOFlagger/strategy/imagesets/spatialmsimageset.h>
+#include <AOFlagger/strategy/imagesets/spatialtimeimageset.h>
+
+#include <AOFlagger/strategy/algorithms/baselineselector.h>
+#include <AOFlagger/strategy/algorithms/mitigationtester.h>
+#include <AOFlagger/strategy/algorithms/morphology.h>
+#include <AOFlagger/strategy/algorithms/fringetestcreater.h>
+#include <AOFlagger/strategy/algorithms/fringestoppingfitter.h>
+#include <AOFlagger/strategy/algorithms/polarizationstatistics.h>
+#include <AOFlagger/strategy/algorithms/rfistatistics.h>
+#include <AOFlagger/strategy/algorithms/svdmitigater.h>
+#include <AOFlagger/strategy/algorithms/thresholdtools.h>
+#include <AOFlagger/strategy/algorithms/timefrequencystatistics.h>
+#include <AOFlagger/strategy/algorithms/vertevd.h>
+
+#include <AOFlagger/strategy/plots/antennaflagcountplot.h>
+#include <AOFlagger/strategy/plots/frequencyflagcountplot.h>
+#include <AOFlagger/strategy/plots/frequencypowerplot.h>
+#include <AOFlagger/strategy/plots/iterationsplot.h>
+#include <AOFlagger/strategy/plots/rfiplots.h>
+#include <AOFlagger/strategy/plots/timeflagcountplot.h>
+
+#include <AOFlagger/util/compress.h>
 #include <AOFlagger/util/multiplot.h>
 
 #include <AOFlagger/gui/plot/plot2d.h>
 
+#include <AOFlagger/gui/antennamapwindow.h>
 #include <AOFlagger/gui/complexplaneplotwindow.h>
 #include <AOFlagger/gui/editstrategywindow.h>
 #include <AOFlagger/gui/gotowindow.h>
 #include <AOFlagger/gui/highlightwindow.h>
+#include <AOFlagger/gui/histogramwindow.h>
 #include <AOFlagger/gui/imageplanewindow.h>
+#include <AOFlagger/gui/imagepropertieswindow.h>
 #include <AOFlagger/gui/msoptionwindow.h>
+#include <AOFlagger/gui/noisestatoptionwindow.h>
+#include <AOFlagger/gui/numinputdialog.h>
 #include <AOFlagger/gui/progresswindow.h>
 #include <AOFlagger/gui/rawoptionwindow.h>
-#include <AOFlagger/gui/zoomwindow.h>
+#include <AOFlagger/gui/tfstatoptionwindow.h>
 
 #include <AOFlagger/imaging/model.h>
 #include <AOFlagger/imaging/observatorium.h>
-#include <AOFlagger/imaging/fourproductcorrelatortester.h>
+
+#include <AOFlagger/quality/histogramcollection.h>
 
 #include <iostream>
-#include <AOFlagger/util/compress.h>
 
-MSWindow::MSWindow() : _imagePlaneWindow(0), _statistics(new RFIStatistics()),  _imageSet(0), _imageSetIndex(0), _gaussianTestSets(true), _spatialMetaData(0)
+MSWindow::MSWindow() : _imagePlaneWindow(0), _histogramWindow(0), _optionWindow(0), _editStrategyWindow(0), _gotoWindow(0), _progressWindow(0), _highlightWindow(0), _plotComplexPlaneWindow(0), _imagePropertiesWindow(0), _antennaMapWindow(0), _statistics(new RFIStatistics()),  _imageSet(0), _imageSetIndex(0), _gaussianTestSets(true), _spatialMetaData(0), _plotWindow(_plotManager)
 {
 	createToolbar();
 
 	_mainVBox.pack_start(_timeFrequencyWidget);
 	_timeFrequencyWidget.OnMouseMovedEvent().connect(sigc::mem_fun(*this, &MSWindow::onTFWidgetMouseMoved));
+	_timeFrequencyWidget.OnMouseLeaveEvent().connect(sigc::mem_fun(*this, &MSWindow::setSetNameInStatusBar));
 	_timeFrequencyWidget.OnButtonReleasedEvent().connect(sigc::mem_fun(*this, &MSWindow::onTFWidgetButtonReleased));
-	_timeFrequencyWidget.Init();
+	_timeFrequencyWidget.SetShowXAxisDescription(false);
+	_timeFrequencyWidget.SetShowYAxisDescription(false);
+	_timeFrequencyWidget.SetShowZAxisDescription(false);
 	_timeFrequencyWidget.show();
 
 	_mainVBox.pack_end(_statusbar, Gtk::PACK_SHRINK);
@@ -100,12 +118,26 @@ MSWindow::MSWindow() : _imagePlaneWindow(0), _statistics(new RFIStatistics()),  
 
 MSWindow::~MSWindow()
 {
-	for(std::vector<Gtk::Window*>::iterator i=_subWindows.begin();
-	    i!=_subWindows.end(); ++i)
-	{
-		delete *i;
-	}
+	while(!_actionGroup->get_actions().empty())
+		_actionGroup->remove(*_actionGroup->get_actions().begin());
+	
 	delete _imagePlaneWindow;
+	if(_histogramWindow != 0)
+		delete _histogramWindow;
+	if(_optionWindow != 0)
+		delete _optionWindow;
+	if(_editStrategyWindow != 0)
+		delete _editStrategyWindow;
+	if(_gotoWindow != 0)
+		delete _gotoWindow;
+	if(_progressWindow != 0)
+		delete _progressWindow;
+	if(_highlightWindow != 0)
+		delete _highlightWindow;
+	if(_imagePropertiesWindow != 0)
+		delete _imagePropertiesWindow;
+	if(_antennaMapWindow != 0)
+		delete _antennaMapWindow;
 	
 	delete _statistics;
 	delete _strategy;
@@ -132,13 +164,7 @@ void MSWindow::onActionDirectoryOpen()
 
   if(result == Gtk::RESPONSE_OK)
 	{
-		Gtk::Window *window;
-		if(rfiStrategy::ImageSet::IsRaw(dialog.get_filename()))
-			window = new RawOptionWindow(*this, dialog.get_filename());
-		else
-			window = new MSOptionWindow(*this, dialog.get_filename());
-		window->show();
-		_subWindows.push_back(window);
+		OpenPath(dialog.get_filename());
 	}
 }
 
@@ -157,6 +183,26 @@ void MSWindow::onActionDirectoryOpenForSpatial()
   if(result == Gtk::RESPONSE_OK)
 	{
 		rfiStrategy::SpatialMSImageSet *imageSet = new rfiStrategy::SpatialMSImageSet(dialog.get_filename());
+		imageSet->Initialize();
+		SetImageSet(imageSet);
+	}
+}
+
+void MSWindow::onActionDirectoryOpenForST()
+{
+  Gtk::FileChooserDialog dialog("Select a measurement set",
+          Gtk::FILE_CHOOSER_ACTION_SELECT_FOLDER);
+  dialog.set_transient_for(*this);
+
+  //Add response buttons the the dialog:
+  dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+  dialog.add_button("Open", Gtk::RESPONSE_OK);
+
+  int result = dialog.run();
+
+  if(result == Gtk::RESPONSE_OK)
+	{
+		rfiStrategy::SpatialTimeImageSet *imageSet = new rfiStrategy::SpatialTimeImageSet(dialog.get_filename());
 		imageSet->Initialize();
 		SetImageSet(imageSet);
 	}
@@ -191,7 +237,6 @@ void MSWindow::onOpenBandCombined()
 
 void MSWindow::onActionFileOpen()
 {
-
   Gtk::FileChooserDialog dialog("Select a measurement set");
   dialog.set_transient_for(*this);
 
@@ -203,31 +248,46 @@ void MSWindow::onActionFileOpen()
 
   if(result == Gtk::RESPONSE_OK)
 	{
-		Gtk::Window *window;
-		if(rfiStrategy::ImageSet::IsRaw(dialog.get_filename()))
-			window = new RawOptionWindow(*this, dialog.get_filename());
-		else
-			window = new MSOptionWindow(*this, dialog.get_filename());
-		window->show();
-		_subWindows.push_back(window);
+		OpenPath(dialog.get_filename());
+	}
+}
+
+void MSWindow::OpenPath(const std::string &path)
+{
+	if(_optionWindow != 0)
+		delete _optionWindow;
+	if(rfiStrategy::ImageSet::IsRCPRawFile(path))
+	{
+		_optionWindow = new RawOptionWindow(*this, path);
+		_optionWindow->show();
+	}
+	else if(rfiStrategy::ImageSet::IsMSFile(path))
+	{
+		_optionWindow = new MSOptionWindow(*this, path);
+		_optionWindow->show();
+	}
+	else if(rfiStrategy::ImageSet::IsTimeFrequencyStatFile(path))
+	{
+		_optionWindow = new TFStatOptionWindow(*this, path);
+		_optionWindow->show();
+	}
+	else if(rfiStrategy::ImageSet::IsNoiseStatFile(path))
+	{
+		_optionWindow = new NoiseStatOptionWindow(*this, path);
+		_optionWindow->show();
+	}
+	else
+	{
+		rfiStrategy::ImageSet *imageSet = rfiStrategy::ImageSet::Create(path);
+		imageSet->Initialize();
+		SetImageSet(imageSet);
 	}
 }
 
 void MSWindow::onToggleFlags()
 {
-	_timeFrequencyWidget.SetShowOriginalFlagging(_originalFlagsButton->get_active());
-	_timeFrequencyWidget.SetShowAlternativeFlagging(_altFlagsButton->get_active());
-	_timeFrequencyWidget.Update();
-}
-
-void MSWindow::onToggleMap()
-{
-	TimeFrequencyWidget::TFMap colorMap = TimeFrequencyWidget::TFBWMap;
-	if(_mapLogButton->get_active())
-		colorMap = TimeFrequencyWidget::TFLogMap;
-	else if(_mapColorButton->get_active())
-		colorMap = TimeFrequencyWidget::TFColorMap;
-	_timeFrequencyWidget.SetColorMap(colorMap);
+	_timeFrequencyWidget.SetShowOriginalMask(_originalFlagsButton->get_active());
+	_timeFrequencyWidget.SetShowAlternativeMask(_altFlagsButton->get_active());
 	_timeFrequencyWidget.Update();
 }
 
@@ -250,15 +310,23 @@ void MSWindow::loadCurrentTFData()
 				_spatialMetaData = new SpatialMatrixMetaData(static_cast<rfiStrategy::SpatialMSImageSet*>(_imageSet)->SpatialMetaData(*_imageSetIndex));
 			}
 			_timeFrequencyWidget.Update();
-			_statusbar.pop();
-			_statusbar.push(std::string() + _imageSet->Name() + ": " + _imageSetIndex->Description());
+			setSetNameInStatusBar();
 		} catch(std::exception &e)
 		{
+			AOLogger::Error << e.what() << '\n';
 			showError(e.what());
 		}
 	}
 }
 
+void MSWindow::setSetNameInStatusBar()
+{
+  if(HasImageSet()) {
+	_statusbar.pop();
+	_statusbar.push(std::string() + _imageSet->Name() + ": " + _imageSetIndex->Description());
+  }
+}
+		
 void MSWindow::onLoadPrevious()
 {
 	if(_imageSet != 0) {
@@ -293,16 +361,20 @@ void MSWindow::onLoadLargeStepNext()
 
 void MSWindow::onEditStrategyPressed()
 {
-	Gtk::Window *editStrategy = new EditStrategyWindow(*this);
-	editStrategy->show();
-	_subWindows.push_back(editStrategy);
+	if(_editStrategyWindow != 0)
+		delete _editStrategyWindow;
+	_editStrategyWindow = new EditStrategyWindow(*this);
+	_editStrategyWindow->show();
 }
 
 void MSWindow::onExecuteStrategyPressed()
 {
-	ProgressWindow *progressWindow = new ProgressWindow(*this);
-	progressWindow->show();
-	_subWindows.push_back(progressWindow);
+	if(_progressWindow != 0)
+		delete _progressWindow;
+
+	ProgressWindow *window = new ProgressWindow(*this);
+	_progressWindow = window;
+	_progressWindow->show();
 
 	rfiStrategy::ArtifactSet artifacts(&_ioMutex);
 
@@ -310,7 +382,10 @@ void MSWindow::onExecuteStrategyPressed()
 	artifacts.SetFrequencyFlagCountPlot(new FrequencyFlagCountPlot());
 	artifacts.SetFrequencyPowerPlot(new FrequencyPowerPlot());
 	artifacts.SetTimeFlagCountPlot(new TimeFlagCountPlot());
-	artifacts.SetBaselineSelectionInfo(new rfiStrategy::BaselineSelectionInfo());
+	artifacts.SetIterationsPlot(new IterationsPlot());
+	
+	artifacts.SetPolarizationStatistics(new PolarizationStatistics());
+	artifacts.SetBaselineSelectionInfo(new rfiStrategy::BaselineSelector());
 	artifacts.SetImager(_imagePlaneWindow->GetImager());
 
 	if(HasImage())
@@ -326,15 +401,13 @@ void MSWindow::onExecuteStrategyPressed()
 			artifacts.SetMetaData(_timeFrequencyWidget.GetMetaData());
 	if(HasImageSet())
 	{
-		if(dynamic_cast<rfiStrategy::MSImageSet*>(_imageSet) != 0)
-		{
-			artifacts.SetImageSet(_imageSet);
-			artifacts.SetImageSetIndex(_imageSetIndex);
-		}
+		artifacts.SetImageSet(_imageSet);
+		artifacts.SetImageSetIndex(_imageSetIndex);
 	}
 	rfiStrategy::Strategy::DisableOptimizations(*_strategy);
+	_strategy->InitializeAll();
 	try {
-		_strategy->StartPerformThread(artifacts, *progressWindow);
+		_strategy->StartPerformThread(artifacts, *window);
 	}  catch(std::exception &e)
 	{
 		showError(e.what());
@@ -374,23 +447,29 @@ void MSWindow::onExecuteStrategyFinished()
 			artifacts->FrequencyPowerPlot()->MakePlot();
 		if(artifacts->TimeFlagCountPlot()->HasData())
 			artifacts->TimeFlagCountPlot()->MakePlot();
+		if(artifacts->PolarizationStatistics()->HasData())
+			artifacts->PolarizationStatistics()->Report();
+		if(artifacts->IterationsPlot()->HasData())
+			artifacts->IterationsPlot()->MakePlot();
 
 		delete artifacts->AntennaFlagCountPlot();
 		delete artifacts->FrequencyFlagCountPlot();
 		delete artifacts->FrequencyPowerPlot();
 		delete artifacts->TimeFlagCountPlot();
+		delete artifacts->PolarizationStatistics();
 		delete artifacts->BaselineSelectionInfo();
+		delete artifacts->IterationsPlot();
 		delete artifacts;
 	}
 }
 
 void MSWindow::onToggleImage()
 {
-	TimeFrequencyWidget::TFImage image = TimeFrequencyWidget::TFOriginalImage;
+	ImageComparisonWidget::TFImage image = ImageComparisonWidget::TFOriginalImage;
 	if(_backgroundImageButton->get_active())
-		image = TimeFrequencyWidget::TFRevisedImage;
+		image = ImageComparisonWidget::TFRevisedImage;
 	else if(_diffImageButton->get_active())
-		image = TimeFrequencyWidget::TFContaminatedImage;
+		image = ImageComparisonWidget::TFContaminatedImage;
 	_timeFrequencyWidget.SetVisualizedImage(image);
 	_timeFrequencyWidget.Update();
 }
@@ -404,7 +483,12 @@ void MSWindow::SetImageSet(rfiStrategy::ImageSet *newImageSet)
 	_imageSet = newImageSet;
 	_imageSetIndex = _imageSet->StartIndex();
 	
-	loadCurrentTFData();
+	if(dynamic_cast<rfiStrategy::MSImageSet*>(newImageSet) != 0)
+	{
+		onGoToPressed();
+	} else {
+		loadCurrentTFData();
+	}
 }
 
 void MSWindow::SetImageSetIndex(rfiStrategy::ImageSetIndex *newImageSetIndex)
@@ -429,7 +513,7 @@ void MSWindow::openTestSet(unsigned index)
 	}
 	Mask2DPtr rfi = Mask2D::CreateSetMaskPtr<false>(width, height);
 	Image2DPtr testSetReal(MitigationTester::CreateTestSet(index, rfi, width, height, _gaussianTestSets));
-	Image2DPtr testSetImaginary(MitigationTester::CreateTestSet(index, rfi, width, height, _gaussianTestSets));
+	Image2DPtr testSetImaginary(MitigationTester::CreateTestSet(2, rfi, width, height, _gaussianTestSets));
 	TimeFrequencyData data(SinglePolarisation, testSetReal, testSetImaginary);
 	data.SetGlobalMask(rfi);
 	
@@ -444,13 +528,18 @@ void MSWindow::createToolbar()
 	_actionGroup->add( Gtk::Action::create("MenuGo", "_Go") );
 	_actionGroup->add( Gtk::Action::create("MenuView", "_View") );
 	_actionGroup->add( Gtk::Action::create("MenuPlot", "_Plot") );
+	_actionGroup->add( Gtk::Action::create("MenuSimulate", "_Simulate") );
+	_actionGroup->add( Gtk::Action::create("MenuPlotFlagComparison", "_Compare flags") );
 	_actionGroup->add( Gtk::Action::create("MenuActions", "_Actions") );
+	_actionGroup->add( Gtk::Action::create("MenuData", "_Data") );
 	_actionGroup->add( Gtk::Action::create("OpenFile", Gtk::Stock::OPEN, "Open _file"),
   sigc::mem_fun(*this, &MSWindow::onActionFileOpen) );
 	_actionGroup->add( Gtk::Action::create("OpenDirectory", Gtk::Stock::OPEN, "Open _directory"),
   sigc::mem_fun(*this, &MSWindow::onActionDirectoryOpen) );
 	_actionGroup->add( Gtk::Action::create("OpenDirectorySpatial", Gtk::Stock::OPEN, "Open _directory as spatial"),
   sigc::mem_fun(*this, &MSWindow::onActionDirectoryOpenForSpatial) );
+	_actionGroup->add( Gtk::Action::create("OpenDirectoryST", Gtk::Stock::OPEN, "Open _directory as spatial/time"),
+  sigc::mem_fun(*this, &MSWindow::onActionDirectoryOpenForST) );
 	_actionGroup->add( Gtk::Action::create("OpenBandCombined", Gtk::Stock::OPEN, "Open/combine bands"),
   sigc::mem_fun(*this, &MSWindow::onOpenBandCombined) );
 	_actionGroup->add( Gtk::Action::create("OpenTestSet", "Open _testset") );
@@ -459,8 +548,10 @@ void MSWindow::createToolbar()
 	_gaussianTestSetsButton = Gtk::RadioAction::create(testSetGroup, "GaussianTestSets", "Gaussian");
 	_gaussianTestSetsButton->set_active(true);
 	_rayleighTestSetsButton = Gtk::RadioAction::create(testSetGroup, "RayleighTestSets", "Rayleigh");
+	_zeroTestSetsButton = Gtk::RadioAction::create(testSetGroup, "ZeroTestSets", "Zero");
 	_actionGroup->add(_gaussianTestSetsButton, sigc::mem_fun(*this, &MSWindow::onGaussianTestSets) );
 	_actionGroup->add(_rayleighTestSetsButton, sigc::mem_fun(*this, &MSWindow::onRayleighTestSets) );
+	_actionGroup->add(_zeroTestSetsButton, sigc::mem_fun(*this, &MSWindow::onZeroTestSets) );
 	
 	_actionGroup->add( Gtk::Action::create("OpenTestSetA", "Test set A"),
 	sigc::mem_fun(*this, &MSWindow::onOpenTestSetA) );
@@ -488,12 +579,37 @@ void MSWindow::createToolbar()
 	sigc::mem_fun(*this, &MSWindow::onOpenTestSetNoise3Model));
 	_actionGroup->add( Gtk::Action::create("OpenTestSetNoiseModel5", "5-stars model with noise"),
 	sigc::mem_fun(*this, &MSWindow::onOpenTestSetNoise5Model));
-	
+	_actionGroup->add( Gtk::Action::create("OpenTestSetBStrong", "Test set B (strong RFI)"),
+	sigc::mem_fun(*this, &MSWindow::onOpenTestSetBStrong));
+	_actionGroup->add( Gtk::Action::create("OpenTestSetBWeak", "Test set B (weak RFI)"),
+	sigc::mem_fun(*this, &MSWindow::onOpenTestSetBWeak));
+	_actionGroup->add( Gtk::Action::create("OpenTestSetBAligned", "Test set B (aligned)"),
+	sigc::mem_fun(*this, &MSWindow::onOpenTestSetBAligned));
+	_actionGroup->add( Gtk::Action::create("OpenTestSetGaussianBroadband", "Gaussian broadband"),
+	sigc::mem_fun(*this, &MSWindow::onOpenTestSetGaussianBroadband));
+	_actionGroup->add( Gtk::Action::create("OpenTestSetSinusoidalBroadband", "Sinusoidal broadband"),
+	sigc::mem_fun(*this, &MSWindow::onOpenTestSetSinusoidalBroadband));
+	_actionGroup->add( Gtk::Action::create("OpenTestSetSlewedGaussianBroadband", "Slewed Gaussian"),
+	sigc::mem_fun(*this, &MSWindow::onOpenTestSetSlewedGaussianBroadband));
+	_actionGroup->add( Gtk::Action::create("OpenTestSetBurstBroadband", "Burst"),
+	sigc::mem_fun(*this, &MSWindow::onOpenTestSetBurstBroadband));
+	_actionGroup->add( Gtk::Action::create("OpenTestSetRFIDistributionLow", "Slope -2 dist low"),
+	sigc::mem_fun(*this, &MSWindow::onOpenTestSetRFIDistributionLow));
+	_actionGroup->add( Gtk::Action::create("OpenTestSetRFIDistributionMid", "Slope -2 dist mid"),
+	sigc::mem_fun(*this, &MSWindow::onOpenTestSetRFIDistributionMid));
+	_actionGroup->add( Gtk::Action::create("OpenTestSetRFIDistributionHigh", "Slope -2 dist high"),
+	sigc::mem_fun(*this, &MSWindow::onOpenTestSetRFIDistributionHigh));
 	_actionGroup->add( Gtk::Action::create("AddTestModification", "Test modify") );
 	_actionGroup->add( Gtk::Action::create("AddStaticFringe", "Static fringe"),
 	sigc::mem_fun(*this, &MSWindow::onAddStaticFringe) );
 	_actionGroup->add( Gtk::Action::create("Add1SigmaStaticFringe", "Static 1 sigma fringe"),
 	sigc::mem_fun(*this, &MSWindow::onAdd1SigmaFringe) );
+	_actionGroup->add( Gtk::Action::create("SetToOne", "Set to 1"),
+	sigc::mem_fun(*this, &MSWindow::onSetToOne) );
+	_actionGroup->add( Gtk::Action::create("SetToI", "Set to i"),
+	sigc::mem_fun(*this, &MSWindow::onSetToI) );
+	_actionGroup->add( Gtk::Action::create("SetToOnePlusI", "Set to 1+i"),
+	sigc::mem_fun(*this, &MSWindow::onSetToOnePlusI) );
 	_actionGroup->add( Gtk::Action::create("MultiplyData", "Multiply data..."),
 	sigc::mem_fun(*this, &MSWindow::onMultiplyData) );
 	_actionGroup->add( Gtk::Action::create("Compress", "Compress"),
@@ -501,34 +617,35 @@ void MSWindow::createToolbar()
 	_actionGroup->add( Gtk::Action::create("Quit", Gtk::Stock::QUIT),
 	sigc::mem_fun(*this, &MSWindow::onQuit) );
 
-	_actionGroup->add( Gtk::Action::create("Zoom", "Zoom"),
-  	sigc::mem_fun(*this, &MSWindow::onZoomPressed) );
-	Gtk::RadioButtonGroup mapGroup;
-	_mapBWButton = Gtk::RadioAction::create(mapGroup, "MapBW", "BW map");
-	_mapBWButton->set_active(true);
-	_mapLogButton = Gtk::RadioAction::create(mapGroup, "MapLog", "Log map");
-	_mapColorButton = Gtk::RadioAction::create(mapGroup, "MapColor", "Color map");
-	_actionGroup->add(_mapLogButton, sigc::mem_fun(*this, &MSWindow::onToggleMap) );
-	_actionGroup->add(_mapBWButton, sigc::mem_fun(*this, &MSWindow::onToggleMap) );
-	_actionGroup->add(_mapColorButton, sigc::mem_fun(*this, &MSWindow::onToggleMap) );
+	_actionGroup->add( Gtk::Action::create("ImageProperties", "Plot properties..."),
+  	sigc::mem_fun(*this, &MSWindow::onImagePropertiesPressed) );
 	_timeGraphButton = Gtk::ToggleAction::create("TimeGraph", "Time graph");
 	_timeGraphButton->set_active(false); 
 	_actionGroup->add(_timeGraphButton, sigc::mem_fun(*this, &MSWindow::onTimeGraphButtonPressed) );
-
+	_actionGroup->add( Gtk::Action::create("ShowAntennaMapWindow", "Show antenna map"), sigc::mem_fun(*this, &MSWindow::onShowAntennaMapWindow) );
+	
 	_actionGroup->add( Gtk::Action::create("PlotDist", "Plot _distribution"),
   sigc::mem_fun(*this, &MSWindow::onPlotDistPressed) );
+	_actionGroup->add( Gtk::Action::create("PlotLogLogDist", "Plot _log-log dist"),
+  sigc::mem_fun(*this, &MSWindow::onPlotLogLogDistPressed) );
 	_actionGroup->add( Gtk::Action::create("PlotComplexPlane", "Plot _complex plane"),
   sigc::mem_fun(*this, &MSWindow::onPlotComplexPlanePressed) );
 	_actionGroup->add( Gtk::Action::create("PlotPowerSpectrum", "Plot _power spectrum"),
   sigc::mem_fun(*this, &MSWindow::onPlotPowerSpectrumPressed) );
+	_actionGroup->add( Gtk::Action::create("PlotPowerSpectrumComparison", "Power _spectrum"),
+  sigc::mem_fun(*this, &MSWindow::onPlotPowerSpectrumComparisonPressed) );
 	_actionGroup->add( Gtk::Action::create("PlotRMSSpectrum", "Plot _rms spectrum"),
   sigc::mem_fun(*this, &MSWindow::onPlotPowerRMSPressed) );
 	_actionGroup->add( Gtk::Action::create("PlotSNRSpectrum", "Plot spectrum snr"),
   sigc::mem_fun(*this, &MSWindow::onPlotPowerSNRPressed) );
 	_actionGroup->add( Gtk::Action::create("PlotPowerTime", "Plot power vs _time"),
   sigc::mem_fun(*this, &MSWindow::onPlotPowerTimePressed) );
-	_actionGroup->add( Gtk::Action::create("PlotScatter", "Plot power scatter"),
-  sigc::mem_fun(*this, &MSWindow::onPlotScatterPressed) );
+	_actionGroup->add( Gtk::Action::create("PlotPowerTimeComparison", "Po_wer vs time"),
+  sigc::mem_fun(*this, &MSWindow::onPlotPowerTimeComparisonPressed) );
+	_actionGroup->add( Gtk::Action::create("PlotTimeScatter", "Plot time s_catter"),
+  sigc::mem_fun(*this, &MSWindow::onPlotTimeScatterPressed) );
+	_actionGroup->add( Gtk::Action::create("PlotTimeScatterComparison", "Time _scatter"),
+  sigc::mem_fun(*this, &MSWindow::onPlotTimeScatterComparisonPressed) );
 	_actionGroup->add( Gtk::Action::create("PlotSingularValues", "Plot _singular values"),
   sigc::mem_fun(*this, &MSWindow::onPlotSingularValuesPressed) );
 	_actionGroup->add( Gtk::Action::create("PlotSNRToFitVariance", "Plot SNR to fit variance"),
@@ -539,8 +656,33 @@ void MSWindow::createToolbar()
   sigc::mem_fun(*this, &MSWindow::onPlotQualityAllPressed) );
 	_actionGroup->add( Gtk::Action::create("ShowImagePlane", "_Show image plane"),
   sigc::mem_fun(*this, &MSWindow::onShowImagePlane) );
+	_actionGroup->add( Gtk::Action::create("SetAndShowImagePlane", "S_et and show image plane"),
+  sigc::mem_fun(*this, &MSWindow::onSetAndShowImagePlane) );
 	_actionGroup->add( Gtk::Action::create("AddToImagePlane", "Add to _image plane"),
   sigc::mem_fun(*this, &MSWindow::onAddToImagePlane) );
+	
+	Gtk::RadioButtonGroup setGroup;
+	_ncpSetButton = Gtk::RadioAction::create(setGroup, "NCPSet", "Use NCP set");
+	_b1834SetButton = Gtk::RadioAction::create(setGroup, "B1834Set", "Use B1834 set");
+	_emptySetButton = Gtk::RadioAction::create(setGroup, "EmptySet", "Use empty set");
+	_ncpSetButton->set_active(true); 
+	_actionGroup->add(_ncpSetButton);
+	_actionGroup->add(_b1834SetButton);
+	_actionGroup->add(_emptySetButton);
+	
+	Gtk::RadioButtonGroup chGroup;
+	_sim16ChannelsButton = Gtk::RadioAction::create(chGroup, "Sim16Channels", "16 channels");
+	_sim64ChannelsButton = Gtk::RadioAction::create(chGroup, "Sim64Channels", "64 channels");
+	_sim256ChannelsButton = Gtk::RadioAction::create(chGroup, "Sim256Channels", "256 channels");
+	_sim64ChannelsButton->set_active(true); 
+	_actionGroup->add(_sim16ChannelsButton);
+	_actionGroup->add(_sim64ChannelsButton);
+	_actionGroup->add(_sim256ChannelsButton);
+	
+	_simFixBandwidthButton = Gtk::ToggleAction::create("SimFixBandwidth", "Fix bandwidth");
+	_simFixBandwidthButton->set_active(false); 
+	_actionGroup->add(_simFixBandwidthButton);
+	
 	_actionGroup->add( Gtk::Action::create("SimulateCorrelation", "Simulate correlation"),
   sigc::mem_fun(*this, &MSWindow::onSimulateCorrelation) );
 	_actionGroup->add( Gtk::Action::create("SimulateSourceSetA", "Simulate source set A"),
@@ -551,8 +693,10 @@ void MSWindow::createToolbar()
   sigc::mem_fun(*this, &MSWindow::onSimulateSourceSetC) );
 	_actionGroup->add( Gtk::Action::create("SimulateSourceSetD", "Simulate source set D"),
   sigc::mem_fun(*this, &MSWindow::onSimulateSourceSetD) );
-	_actionGroup->add( Gtk::Action::create("SimulateFourProductCorrelation", "Simulate 4-p correlation"),
-  sigc::mem_fun(*this, &MSWindow::onSimulateFourProductCorrelation) );
+	_actionGroup->add( Gtk::Action::create("SimulateOffAxisSource", "Simulate off-axis source"),
+  sigc::mem_fun(*this, &MSWindow::onSimulateOffAxisSource) );
+	_actionGroup->add( Gtk::Action::create("SimulateOnAxisSource", "Simulate on-axis source"),
+  sigc::mem_fun(*this, &MSWindow::onSimulateOnAxisSource) );
 
 	_actionGroup->add( Gtk::Action::create("EditStrategy", "_Edit strategy"),
   sigc::mem_fun(*this, &MSWindow::onEditStrategyPressed) );
@@ -592,17 +736,6 @@ void MSWindow::createToolbar()
   sigc::mem_fun(*this, &MSWindow::onDifferenceToOriginalPressed) );
 	_actionGroup->add( Gtk::Action::create("BackToOriginal", "Background->Original"),
   sigc::mem_fun(*this, &MSWindow::onBackgroundToOriginalPressed) );
-	_actionGroup->add( Gtk::Action::create("Segment", "Segment"),
-  sigc::mem_fun(*this, &MSWindow::onSegment) );
-	_actionGroup->add( Gtk::Action::create("Cluster", "Cluster"),
-  sigc::mem_fun(*this, &MSWindow::onCluster) );
-	_actionGroup->add( Gtk::Action::create("Classify", "Classify"),
-  sigc::mem_fun(*this, &MSWindow::onClassify) );
-	_actionGroup->add( Gtk::Action::create("RemoveSmallSegments", "Remove small segments"),
-  sigc::mem_fun(*this, &MSWindow::onRemoveSmallSegments) );
-
-	_actionGroup->add( Gtk::Action::create("Highlight", "Highlight"),
-  sigc::mem_fun(*this, &MSWindow::onHightlightPressed) );
 
 	_actionGroup->add( Gtk::Action::create("ShowReal", "Keep _real part"),
   sigc::mem_fun(*this, &MSWindow::onShowRealPressed) );
@@ -631,7 +764,41 @@ void MSWindow::createToolbar()
 	_actionGroup->add( Gtk::Action::create("ShowYY", "Keep _yy part"),
   sigc::mem_fun(*this, &MSWindow::onShowYYPressed) );
 	_actionGroup->add( Gtk::Action::create("UnrollPhase", "_Unroll phase"),
-  sigc::mem_fun(*this, &MSWindow::onUnrollPhaseButtonPressed) );
+	sigc::mem_fun(*this, &MSWindow::onUnrollPhaseButtonPressed) );
+
+	_actionGroup->add( Gtk::Action::create("Segment", "Segment"),
+  sigc::mem_fun(*this, &MSWindow::onSegment) );
+	_actionGroup->add( Gtk::Action::create("Cluster", "Cluster"),
+  sigc::mem_fun(*this, &MSWindow::onCluster) );
+	_actionGroup->add( Gtk::Action::create("Classify", "Classify"),
+  sigc::mem_fun(*this, &MSWindow::onClassify) );
+	_actionGroup->add( Gtk::Action::create("RemoveSmallSegments", "Remove small segments"),
+  sigc::mem_fun(*this, &MSWindow::onRemoveSmallSegments) );
+	_actionGroup->add( Gtk::Action::create("StoreData", "Store"),
+  sigc::mem_fun(*this, &MSWindow::onStoreData) );
+	_actionGroup->add( Gtk::Action::create("RecallData", "Recall"),
+  sigc::mem_fun(*this, &MSWindow::onRecallData) );
+	_actionGroup->add( Gtk::Action::create("SubtractDataFromMem", "Subtract from mem"),
+  sigc::mem_fun(*this, &MSWindow::onSubtractDataFromMem) );
+
+	_actionGroup->add( Gtk::Action::create("Highlight", "Highlight"),
+  sigc::mem_fun(*this, &MSWindow::onHightlightPressed) );
+	_actionGroup->add( Gtk::Action::create("TimeMergeUnsetValues", "Merge unset values in time"),
+  sigc::mem_fun(*this, &MSWindow::onTimeMergeUnsetValues) );
+	_actionGroup->add( Gtk::Action::create("VertEVD", "Vert EVD"),
+  sigc::mem_fun(*this, &MSWindow::onVertEVD) );
+	_actionGroup->add( Gtk::Action::create("ApplyTimeProfile", "Apply time profile"),
+  sigc::mem_fun(*this, &MSWindow::onApplyTimeProfile) );
+	_actionGroup->add( Gtk::Action::create("ApplyVertProfile", "Apply vert profile"),
+  sigc::mem_fun(*this, &MSWindow::onApplyVertProfile) );
+	_actionGroup->add( Gtk::Action::create("RestoreTimeProfile", "Restore time profile"),
+  sigc::mem_fun(*this, &MSWindow::onRestoreTimeProfile) );
+	_actionGroup->add( Gtk::Action::create("RestoreVertProfile", "Restore vert profile"),
+  sigc::mem_fun(*this, &MSWindow::onRestoreVertProfile) );
+	_actionGroup->add( Gtk::Action::create("ReapplyTimeProfile", "Reapply time profile"),
+  sigc::mem_fun(*this, &MSWindow::onReapplyTimeProfile) );
+	_actionGroup->add( Gtk::Action::create("ReapplyVertProfile", "Reapply vert profile"),
+  sigc::mem_fun(*this, &MSWindow::onReapplyVertProfile) );
 
 	Glib::RefPtr<Gtk::UIManager> uiManager =
 		Gtk::UIManager::create();
@@ -645,10 +812,12 @@ void MSWindow::createToolbar()
     "      <menuitem action='OpenFile'/>"
     "      <menuitem action='OpenDirectory'/>"
     "      <menuitem action='OpenDirectorySpatial'/>"
+    "      <menuitem action='OpenDirectoryST'/>"
     "      <menuitem action='OpenBandCombined'/>"
     "      <menu action='OpenTestSet'>"
 		"        <menuitem action='GaussianTestSets'/>"
 		"        <menuitem action='RayleighTestSets'/>"
+		"        <menuitem action='ZeroTestSets'/>"
     "        <separator/>"
 		"        <menuitem action='OpenTestSetA'/>"
 		"        <menuitem action='OpenTestSetB'/>"
@@ -663,46 +832,56 @@ void MSWindow::createToolbar()
 		"        <menuitem action='OpenTestSetModel5'/>"
 		"        <menuitem action='OpenTestSetNoiseModel3'/>"
 		"        <menuitem action='OpenTestSetNoiseModel5'/>"
+		"        <menuitem action='OpenTestSetBStrong'/>"
+		"        <menuitem action='OpenTestSetBWeak'/>"
+		"        <menuitem action='OpenTestSetBAligned'/>"
+		"        <menuitem action='OpenTestSetGaussianBroadband'/>"
+		"        <menuitem action='OpenTestSetSinusoidalBroadband'/>"
+		"        <menuitem action='OpenTestSetSlewedGaussianBroadband'/>"
+		"        <menuitem action='OpenTestSetBurstBroadband'/>"
+		"        <menuitem action='OpenTestSetRFIDistributionLow'/>"
+		"        <menuitem action='OpenTestSetRFIDistributionMid'/>"
+		"        <menuitem action='OpenTestSetRFIDistributionHigh'/>"
 		"      </menu>"
 		"      <menu action='AddTestModification'>"
 		"        <menuitem action='AddStaticFringe'/>"
 		"        <menuitem action='Add1SigmaStaticFringe'/>"
+		"        <menuitem action='SetToOne'/>"
+		"        <menuitem action='SetToI'/>"
+		"        <menuitem action='SetToOnePlusI'/>"
 		"        <menuitem action='MultiplyData'/>"
 		"      </menu>"
     "      <menuitem action='Compress'/>"
     "      <menuitem action='Quit'/>"
     "    </menu>"
 	  "    <menu action='MenuView'>"
-    "      <menuitem action='Zoom'/>"
-    "      <separator/>"
-    "      <menuitem action='MapBW'/>"
-    "      <menuitem action='MapLog'/>"
-    "      <menuitem action='MapColor'/>"
-    "      <separator/>"
+    "      <menuitem action='ImageProperties'/>"
+    "      <menuitem action='ShowAntennaMapWindow'/>"
     "      <menuitem action='TimeGraph'/>"
+    "      <separator/>"
+    "      <menuitem action='ShowImagePlane'/>"
+    "      <menuitem action='SetAndShowImagePlane'/>"
+    "      <menuitem action='AddToImagePlane'/>"
 	  "    </menu>"
 	  "    <menu action='MenuPlot'>"
+    "      <menu action='MenuPlotFlagComparison'>"
+    "        <menuitem action='PlotPowerSpectrumComparison'/>"
+    "        <menuitem action='PlotPowerTimeComparison'/>"
+    "        <menuitem action='PlotTimeScatterComparison'/>"
+		"      </menu>"
+    "      <separator/>"
     "      <menuitem action='PlotDist'/>"
+    "      <menuitem action='PlotLogLogDist'/>"
     "      <menuitem action='PlotComplexPlane'/>"
     "      <menuitem action='PlotPowerSpectrum'/>"
     "      <menuitem action='PlotRMSSpectrum'/>"
     "      <menuitem action='PlotSNRSpectrum'/>"
     "      <menuitem action='PlotPowerTime'/>"
-    "      <menuitem action='PlotScatter'/>"
+    "      <menuitem action='PlotTimeScatter'/>"
     "      <menuitem action='PlotSingularValues'/>"
     "      <menuitem action='PlotSNRToFitVariance'/>"
     "      <menuitem action='PlotQuality25'/>"
     "      <menuitem action='PlotQualityAll'/>"
-    "      <separator/>"
-    "      <menuitem action='ShowImagePlane'/>"
-    "      <menuitem action='AddToImagePlane'/>"
-    "      <separator/>"
-    "      <menuitem action='SimulateCorrelation'/>"
-    "      <menuitem action='SimulateSourceSetA'/>"
-    "      <menuitem action='SimulateSourceSetB'/>"
-    "      <menuitem action='SimulateSourceSetC'/>"
-    "      <menuitem action='SimulateSourceSetD'/>"
-    "      <menuitem action='SimulateFourProductCorrelation'/>"
 	  "    </menu>"
     "    <menu action='MenuGo'>"
     "      <menuitem action='LargeStepPrevious'/>"
@@ -712,16 +891,27 @@ void MSWindow::createToolbar()
     "      <separator/>"
     "      <menuitem action='GoTo'/>"
     "    </menu>"
-	  "    <menu action='MenuActions'>"
+	  "    <menu action='MenuSimulate'>"
+    "      <menuitem action='NCPSet'/>"
+    "      <menuitem action='B1834Set'/>"
+    "      <menuitem action='EmptySet'/>"
+    "      <separator/>"
+    "      <menuitem action='Sim16Channels'/>"
+    "      <menuitem action='Sim64Channels'/>"
+    "      <menuitem action='Sim256Channels'/>"
+    "      <menuitem action='SimFixBandwidth'/>"
+    "      <separator/>"
+    "      <menuitem action='SimulateCorrelation'/>"
+    "      <menuitem action='SimulateSourceSetA'/>"
+    "      <menuitem action='SimulateSourceSetB'/>"
+    "      <menuitem action='SimulateSourceSetC'/>"
+    "      <menuitem action='SimulateSourceSetD'/>"
+    "      <menuitem action='SimulateOffAxisSource'/>"
+    "      <menuitem action='SimulateOnAxisSource'/>"
+	  "    </menu>"
+	  "    <menu action='MenuData'>"
     "      <menuitem action='DiffToOriginal'/>"
     "      <menuitem action='BackToOriginal'/>"
-    "      <menuitem action='Segment'/>"
-    "      <menuitem action='Cluster'/>"
-    "      <menuitem action='Classify'/>"
-    "      <menuitem action='RemoveSmallSegments'/>"
-    "      <separator/>"
-    "      <menuitem action='EditStrategy'/>"
-    "      <menuitem action='ExecuteStrategy'/>"
     "      <separator/>"
     "      <menuitem action='ShowReal'/>"
     "      <menuitem action='ShowImaginary'/>"
@@ -738,8 +928,29 @@ void MSWindow::createToolbar()
     "      <menuitem action='ShowYY'/>"
     "      <menuitem action='ShowAutoPol'/>"
     "      <menuitem action='ShowCrossPol'/>"
-    "      <separator/>"
     "      <menuitem action='UnrollPhase'/>"
+    "      <separator/>"
+    "      <menuitem action='StoreData'/>"
+    "      <menuitem action='RecallData'/>"
+    "      <menuitem action='SubtractDataFromMem'/>"
+	  "    </menu>"
+	  "    <menu action='MenuActions'>"
+    "      <menuitem action='EditStrategy'/>"
+    "      <menuitem action='ExecuteStrategy'/>"
+    "      <separator/>"
+    "      <menuitem action='Segment'/>"
+    "      <menuitem action='Cluster'/>"
+    "      <menuitem action='Classify'/>"
+    "      <menuitem action='RemoveSmallSegments'/>"
+    "      <separator/>"
+    "      <menuitem action='TimeMergeUnsetValues'/>"
+    "      <menuitem action='VertEVD'/>"
+    "      <menuitem action='ApplyTimeProfile'/>"
+    "      <menuitem action='ApplyVertProfile'/>"
+    "      <menuitem action='RestoreTimeProfile'/>"
+    "      <menuitem action='RestoreVertProfile'/>"
+    "      <menuitem action='ReapplyTimeProfile'/>"
+    "      <menuitem action='ReapplyVertProfile'/>"
 	  "    </menu>"
     "  </menubar>"
     "  <toolbar  name='ToolBar'>"
@@ -764,6 +975,7 @@ void MSWindow::createToolbar()
 	Gtk::Widget* pMenubar = uiManager->get_widget("/MenuBar");
 	_mainVBox.pack_start(*pMenubar, Gtk::PACK_SHRINK);
 	Gtk::Widget* pToolbar = uiManager->get_widget("/ToolBar");
+	static_cast<Gtk::Toolbar *>(pToolbar)->set_toolbar_style(Gtk::TOOLBAR_BOTH);
 	_mainVBox.pack_start(*pToolbar, Gtk::PACK_SHRINK);
 	pMenubar->show();
 }
@@ -802,9 +1014,10 @@ void MSWindow::onBackgroundToOriginalPressed()
 
 void MSWindow::onHightlightPressed()
 {
-	Gtk::Window *window = new HighlightWindow(*this);
-	window->show();
-	_subWindows.push_back(window);
+	if(_highlightWindow != 0)
+		delete _highlightWindow;
+	_highlightWindow = new HighlightWindow(*this);
+	_highlightWindow->show();
 }
 
 void MSWindow::onAddStaticFringe()
@@ -843,6 +1056,66 @@ void MSWindow::onAdd1SigmaFringe()
 	}
 }
 
+void MSWindow::onSetToOne()
+{
+	try {
+		TimeFrequencyData data(GetActiveData());
+		std::pair<Image2DCPtr, Image2DCPtr> images = data.GetSingleComplexImage();
+		Image2DPtr
+			real = Image2D::CreateCopy(images.first),
+			imaginary = Image2D::CreateCopy(images.first);
+		real->SetAll(1.0);
+		imaginary->SetAll(0.0);
+		TimeFrequencyData newData(data.Polarisation(), real, imaginary);
+		newData.SetMask(data);
+		_timeFrequencyWidget.SetNewData(newData, _timeFrequencyWidget.GetMetaData());
+		_timeFrequencyWidget.Update();
+	} catch(std::exception &e)
+	{
+		showError(e.what());
+	}
+}
+
+void MSWindow::onSetToI()
+{
+	try {
+		TimeFrequencyData data(GetActiveData());
+		std::pair<Image2DCPtr, Image2DCPtr> images = data.GetSingleComplexImage();
+		Image2DPtr
+			real = Image2D::CreateCopy(images.first),
+			imaginary = Image2D::CreateCopy(images.first);
+		real->SetAll(0.0);
+		imaginary->SetAll(1.0);
+		TimeFrequencyData newData(data.Polarisation(), real, imaginary);
+		newData.SetMask(data);
+		_timeFrequencyWidget.SetNewData(newData, _timeFrequencyWidget.GetMetaData());
+		_timeFrequencyWidget.Update();
+	} catch(std::exception &e)
+	{
+		showError(e.what());
+	}
+}
+
+void MSWindow::onSetToOnePlusI()
+{
+	try {
+		TimeFrequencyData data(GetActiveData());
+		std::pair<Image2DCPtr, Image2DCPtr> images = data.GetSingleComplexImage();
+		Image2DPtr
+			real = Image2D::CreateCopy(images.first),
+			imaginary = Image2D::CreateCopy(images.first);
+		real->SetAll(1.0);
+		imaginary->SetAll(1.0);
+		TimeFrequencyData newData(data.Polarisation(), real, imaginary);
+		newData.SetMask(data);
+		_timeFrequencyWidget.SetNewData(newData, _timeFrequencyWidget.GetMetaData());
+		_timeFrequencyWidget.Update();
+	} catch(std::exception &e)
+	{
+		showError(e.what());
+	}
+}
+
 void MSWindow::onShowStats()
 {
 	if(_timeFrequencyWidget.HasImage())
@@ -850,9 +1123,44 @@ void MSWindow::onShowStats()
 		TimeFrequencyData activeData = GetActiveData();
 		TimeFrequencyStatistics statistics(activeData);
 		std::stringstream s;
-		s
-			<< "Percentage flagged: " << TimeFrequencyStatistics::FormatRatio(statistics.GetFlaggedRatio()) << "\n";
-
+		s << "Percentage flagged: " << TimeFrequencyStatistics::FormatRatio(statistics.GetFlaggedRatio()) << "\n";
+			
+		Mask2DCPtr
+			original = _timeFrequencyWidget.OriginalMask(),
+			alternative = _timeFrequencyWidget.AlternativeMask();
+		Mask2DPtr
+			intersect;
+		if(original != 0 && alternative != 0)
+		{
+			intersect = Mask2D::CreateCopy(original);
+			intersect->Intersect(alternative);
+			
+			unsigned intCount = intersect->GetCount<true>();
+			if(intCount != 0)
+			{
+				if(!original->Equals(alternative))
+				{
+					s << "Overlap between original and alternative: " << TimeFrequencyStatistics::FormatRatio((double) intCount / ((double) (original->Width() * original->Height()))) << "\n"
+					<< "(relative to alternative flags: " << TimeFrequencyStatistics::FormatRatio((double) intCount / ((double) (alternative->GetCount<true>()))) << ")\n";
+					
+				}
+			}
+		}
+		
+		Image2DCPtr powerImg = activeData.GetSingleImage();
+		Mask2DCPtr mask = activeData.GetSingleMask();
+		double power = 0.0;
+		for(unsigned y=0;y<powerImg->Height();++y)
+		{
+			for(unsigned x=0;x<powerImg->Width();++x)
+			{
+				if(!mask->Value(x, y) && std::isfinite(powerImg->Value(x, y)))
+				{
+					power += powerImg->Value(x, y);
+				}
+			}
+		}
+		s << "Total unflagged power: " << power << "\n";
 		Gtk::MessageDialog dialog(*this, s.str(), false, Gtk::MESSAGE_INFO);
 		dialog.run();
 	}
@@ -862,34 +1170,55 @@ void MSWindow::onPlotDistPressed()
 {
 	if(_timeFrequencyWidget.HasImage())
 	{
-		Plot plot("dist.pdf");
+		Plot2D &plot = _plotManager.NewPlot2D("Distribution");
 
 		TimeFrequencyData activeData = GetActiveData();
 		Image2DCPtr image = activeData.GetSingleImage();
 		Mask2DPtr mask =
 			Mask2D::CreateSetMaskPtr<false>(image->Width(), image->Height());
-		plot.StartLine("Total");
-		RFIPlots::MakeDistPlot(plot, image, mask);
+		Plot2DPointSet &totalSet = plot.StartLine("Total");
+		RFIPlots::MakeDistPlot(totalSet, image, mask);
 
-		plot.StartLine("Uncontaminated");
+		Plot2DPointSet &uncontaminatedSet = plot.StartLine("Uncontaminated");
 		mask = Mask2D::CreateCopy(activeData.GetSingleMask());
-		RFIPlots::MakeDistPlot(plot, image, mask);
+		RFIPlots::MakeDistPlot(uncontaminatedSet, image, mask);
 
 		mask->Invert();
-		plot.StartLine("RFI");
-		RFIPlots::MakeDistPlot(plot, image, mask);
+		Plot2DPointSet &rfiSet = plot.StartLine("RFI");
+		RFIPlots::MakeDistPlot(rfiSet, image, mask);
 
-		plot.Close();
-		plot.Show();
+		_plotManager.Update();
+	}
+}
+
+void MSWindow::onPlotLogLogDistPressed()
+{
+	if(_timeFrequencyWidget.HasImage())
+	{
+		TimeFrequencyData activeData = GetActiveData();
+		HistogramCollection histograms(activeData.PolarisationCount());
+		for(unsigned p=0;p!=activeData.PolarisationCount();++p)
+		{
+			TimeFrequencyData *polData = activeData.CreateTFDataFromPolarisationIndex(p);
+			Image2DCPtr image = polData->GetSingleImage();
+			Mask2DCPtr mask = Mask2D::CreateCopy(polData->GetSingleMask());
+			histograms.Add(0, 1, p, image, mask);
+		}
+		if(_histogramWindow == 0)
+			_histogramWindow = new HistogramWindow(histograms);
+		else
+			_histogramWindow->SetStatistics(histograms);
+		_histogramWindow->show();
 	}
 }
 
 void MSWindow::onPlotComplexPlanePressed()
 {
 	if(HasImage()) {
-		Gtk::Window *window = new ComplexPlanePlotWindow(*this);
-		window->show();
-		_subWindows.push_back(window);
+		if(_plotComplexPlaneWindow != 0)
+			delete _plotComplexPlaneWindow;
+		_plotComplexPlaneWindow = new ComplexPlanePlotWindow(*this, _plotManager);
+		_plotComplexPlaneWindow->show();
 	}
 }
 
@@ -897,28 +1226,46 @@ void MSWindow::onPlotPowerSpectrumPressed()
 {
 	if(_timeFrequencyWidget.HasImage())
 	{
-		Plot plot("power-spectrum.pdf");
+		Plot2D &plot = _plotManager.NewPlot2D("Power spectrum");
+		plot.SetLogarithmicYAxis(true);
 
 		TimeFrequencyData data = _timeFrequencyWidget.GetActiveData();
 		Image2DCPtr image = data.GetSingleImage();
 		Mask2DPtr mask =
 			Mask2D::CreateSetMaskPtr<false>(image->Width(), image->Height());
-		plot.StartLine("Before");
-		RFIPlots::MakePowerSpectrumPlot(plot, image, mask, *_timeFrequencyWidget.GetMetaData());
+		Plot2DPointSet &beforeSet = plot.StartLine("Before");
+		RFIPlots::MakePowerSpectrumPlot(beforeSet, image, mask, _timeFrequencyWidget.GetMetaData());
 
 		mask = Mask2D::CreateCopy(data.GetSingleMask());
 		if(!mask->AllFalse())
 		{
-			plot.StartLine("After");
-			RFIPlots::MakePowerSpectrumPlot(plot, image, mask, *_timeFrequencyWidget.GetMetaData());
-	
-			//mask->Invert();
-			//plot.StartLine("RFI");
-			//RFIPlots::MakePowerSpectrumPlot(plot, _timeFrequencyWidget.Image(), mask);
+			Plot2DPointSet &afterSet = plot.StartLine("After");
+			RFIPlots::MakePowerSpectrumPlot(afterSet, image, mask, _timeFrequencyWidget.GetMetaData());
 		}
+		
+		_plotManager.Update();
+	}
+}
 
-		plot.Close();
-		plot.Show();
+void MSWindow::onPlotPowerSpectrumComparisonPressed()
+{
+	if(_timeFrequencyWidget.HasImage())
+	{
+		Plot2D &plot = _plotManager.NewPlot2D("Power spectrum comparison");
+
+		TimeFrequencyData data = _timeFrequencyWidget.OriginalData();
+		Image2DCPtr image = data.GetSingleImage();
+		Mask2DCPtr mask = data.GetSingleMask();
+		Plot2DPointSet &originalSet = plot.StartLine("Original");
+		RFIPlots::MakePowerSpectrumPlot(originalSet, image, mask, _timeFrequencyWidget.GetMetaData());
+
+		data = _timeFrequencyWidget.ContaminatedData();
+		image = data.GetSingleImage();
+		mask = data.GetSingleMask();
+		Plot2DPointSet &alternativeSet = plot.StartLine("Alternative");
+		RFIPlots::MakePowerSpectrumPlot(alternativeSet, image, mask, _timeFrequencyWidget.GetMetaData());
+	
+		_plotManager.Update();
 	}
 }
 
@@ -926,26 +1273,26 @@ void MSWindow::onPlotPowerRMSPressed()
 {
 	if(_timeFrequencyWidget.HasImage())
 	{
-		Plot plot("spectrum-rms.pdf");
+		Plot2D &plot = _plotManager.NewPlot2D("Spectrum RMS");
+		plot.SetLogarithmicYAxis(true);
 
 		Mask2DPtr mask =
 			Mask2D::CreateSetMaskPtr<false>(_timeFrequencyWidget.Image()->Width(), _timeFrequencyWidget.Image()->Height());
-		plot.StartLine("Before");		
-		RFIPlots::MakeRMSSpectrumPlot(plot, _timeFrequencyWidget.Image(), mask);
+		Plot2DPointSet &beforeSet = plot.StartLine("Before");
+		RFIPlots::MakeRMSSpectrumPlot(beforeSet, _timeFrequencyWidget.Image(), mask);
 
 		mask = Mask2D::CreateCopy(_timeFrequencyWidget.GetActiveData().GetSingleMask());
 		if(!mask->AllFalse())
 		{
-			plot.StartLine("After");
-			RFIPlots::MakeRMSSpectrumPlot(plot, _timeFrequencyWidget.Image(), mask);
+			Plot2DPointSet &afterSet = plot.StartLine("After");
+			RFIPlots::MakeRMSSpectrumPlot(afterSet, _timeFrequencyWidget.Image(), mask);
 	
 			//mask->Invert();
-			//plot.StartLine("RFI");
-			//RFIPlots::MakeRMSSpectrumPlot(plot, _timeFrequencyWidget.Image(), mask);
+			//Plot2DPointSet &rfiSet = plot.StartLine("RFI");
+			//RFIPlots::MakeRMSSpectrumPlot(rfiSet, _timeFrequencyWidget.Image(), mask);
 		}
 
-		plot.Close();
-		plot.Show();
+		_plotManager.Update();
 	}
 }
 
@@ -956,26 +1303,26 @@ void MSWindow::onPlotPowerSNRPressed()
 		model = _timeFrequencyWidget.RevisedData().GetSingleImage();
 	if(_timeFrequencyWidget.HasImage())
 	{
-		Plot plot("spectrum-snr.pdf");
+		Plot2D &plot = _plotManager.NewPlot2D("SNR spectrum");
+		plot.SetLogarithmicYAxis(true);
 
 		Mask2DPtr mask =
 			Mask2D::CreateSetMaskPtr<false>(image->Width(), image->Height());
-		plot.StartLine("Total");		
-		RFIPlots::MakeSNRSpectrumPlot(plot, image, model, mask);
+		Plot2DPointSet &totalPlot = plot.StartLine("Total");
+		RFIPlots::MakeSNRSpectrumPlot(totalPlot, image, model, mask);
 
 		mask = Mask2D::CreateCopy(_timeFrequencyWidget.GetActiveData().GetSingleMask());
 		if(!mask->AllFalse())
 		{
-			plot.StartLine("Uncontaminated");
-			RFIPlots::MakeSNRSpectrumPlot(plot, image, model, mask);
+			Plot2DPointSet &uncontaminatedPlot = plot.StartLine("Uncontaminated");
+			RFIPlots::MakeSNRSpectrumPlot(uncontaminatedPlot, image, model, mask);
 	
 			mask->Invert();
-			plot.StartLine("RFI");
-			RFIPlots::MakeSNRSpectrumPlot(plot, image, model, mask);
+			Plot2DPointSet &rfiPlot = plot.StartLine("RFI");
+			RFIPlots::MakeSNRSpectrumPlot(rfiPlot, image, model, mask);
 		}
 
-		plot.Close();
-		plot.Show();
+		_plotManager.Update();
 	}
 }
 
@@ -983,37 +1330,72 @@ void MSWindow::onPlotPowerTimePressed()
 {
 	if(_timeFrequencyWidget.HasImage())
 	{
-		Plot plot("dist.pdf");
+		Plot2D &plot = _plotManager.NewPlot2D("Power over time");
+		plot.SetLogarithmicYAxis(true);
 
 		Mask2DPtr mask =
 			Mask2D::CreateSetMaskPtr<false>(_timeFrequencyWidget.Image()->Width(), _timeFrequencyWidget.Image()->Height());
-		plot.StartLine("Total");		
-		RFIPlots::MakePowerTimePlot(plot, _timeFrequencyWidget.Image(), mask);
+		Plot2DPointSet &totalPlot = plot.StartLine("Total");
+		RFIPlots::MakePowerTimePlot(totalPlot, _timeFrequencyWidget.Image(), mask, _timeFrequencyWidget.GetMetaData());
 
 		mask = Mask2D::CreateCopy(_timeFrequencyWidget.GetActiveData().GetSingleMask());
 		if(!mask->AllFalse())
 		{
-			plot.StartLine("Uncontaminated");
-			RFIPlots::MakePowerTimePlot(plot, _timeFrequencyWidget.Image(), mask);
+			Plot2DPointSet &uncontaminatedPlot = plot.StartLine("Uncontaminated");
+			RFIPlots::MakePowerTimePlot(uncontaminatedPlot, _timeFrequencyWidget.Image(), mask, _timeFrequencyWidget.GetMetaData());
 	
 			mask->Invert();
-			plot.StartLine("RFI");
-			RFIPlots::MakePowerTimePlot(plot, _timeFrequencyWidget.Image(), mask);
+			Plot2DPointSet &rfiPlot = plot.StartLine("RFI");
+			RFIPlots::MakePowerTimePlot(rfiPlot, _timeFrequencyWidget.Image(), mask, _timeFrequencyWidget.GetMetaData());
 		}
 
-		plot.Close();
-		plot.Show();
+		_plotManager.Update();
 	}
 }
 
-void MSWindow::onPlotScatterPressed()
+void MSWindow::onPlotPowerTimeComparisonPressed()
 {
 	if(_timeFrequencyWidget.HasImage())
 	{
-		MultiPlot plot("scatter.pdf", 4);
-		RFIPlots::MakeScatterPlot(plot, GetActiveData());
+		Plot2D &plot = _plotManager.NewPlot2D("Time comparison");
+
+		TimeFrequencyData data = _timeFrequencyWidget.OriginalData();
+		Mask2DCPtr mask = data.GetSingleMask();
+		Image2DCPtr image = data.GetSingleImage();
+		Plot2DPointSet &originalPlot = plot.StartLine("Original");
+		RFIPlots::MakePowerTimePlot(originalPlot, image, mask, _timeFrequencyWidget.GetMetaData());
+
+		data = _timeFrequencyWidget.ContaminatedData();
+		mask = data.GetSingleMask();
+		image = data.GetSingleImage();
+		Plot2DPointSet &alternativePlot = plot.StartLine("Original");
+		plot.StartLine("Alternative");
+		RFIPlots::MakePowerTimePlot(alternativePlot, image, mask, _timeFrequencyWidget.GetMetaData());
+
+		_plotManager.Update();
+	}
+}
+
+void MSWindow::onPlotTimeScatterPressed()
+{
+	if(_timeFrequencyWidget.HasImage())
+	{
+		MultiPlot plot(_plotManager.NewPlot2D("Time scatter"), 4);
+		RFIPlots::MakeScatterPlot(plot, GetActiveData(), _timeFrequencyWidget.GetMetaData());
 		plot.Finish();
-		plot.Show();
+		_plotManager.Update();
+	}
+}
+
+void MSWindow::onPlotTimeScatterComparisonPressed()
+{
+	if(_timeFrequencyWidget.HasImage())
+	{
+		MultiPlot plot(_plotManager.NewPlot2D("Time scatter comparison"), 8);
+		RFIPlots::MakeScatterPlot(plot, GetOriginalData(), _timeFrequencyWidget.GetMetaData(), 0);
+		RFIPlots::MakeScatterPlot(plot, GetContaminatedData(), _timeFrequencyWidget.GetMetaData(), 4);
+		plot.Finish();
+		_plotManager.Update();
 	}
 }
 
@@ -1021,11 +1403,10 @@ void MSWindow::onPlotSingularValuesPressed()
 {
 	if(HasImage())
 	{
-		Plot plot("singularvalues.pdf");
+		Plot2D &plot = _plotManager.NewPlot2D("Singular values");
 
 		SVDMitigater::CreateSingularValueGraph(GetActiveData(), plot);
-		plot.Close();
-		plot.Show();
+		_plotManager.Update();
 	}
 }
 
@@ -1033,10 +1414,9 @@ void MSWindow::onPlotQuality25Pressed()
 {
 	if(HasImage())
 	{
-		Plot plot("quality.pdf");
-		RFIPlots::MakeQualityPlot(plot, GetActiveData(), _timeFrequencyWidget.RevisedData(), 25);
-		plot.Close();
-		plot.Show();
+		Plot2D &plot = _plotManager.NewPlot2D("Quality over 25");
+		RFIPlots::MakeQualityPlot(plot.StartLine(), GetActiveData(), _timeFrequencyWidget.RevisedData(), 25);
+		_plotManager.Update();
 	}
 }
 
@@ -1044,10 +1424,9 @@ void MSWindow::onPlotQualityAllPressed()
 {
 	if(HasImage())
 	{
-		Plot plot("quality.pdf");
-		RFIPlots::MakeQualityPlot(plot, GetActiveData(), _timeFrequencyWidget.RevisedData(), _timeFrequencyWidget.RevisedData().ImageWidth());
-		plot.Close();
-		plot.Show();
+		Plot2D &plot = _plotManager.NewPlot2D("Quality over all");
+		RFIPlots::MakeQualityPlot(plot.StartLine(), GetActiveData(), _timeFrequencyWidget.RevisedData(), _timeFrequencyWidget.RevisedData().ImageWidth());
+		_plotManager.Update();
 	}
 }
 
@@ -1058,19 +1437,15 @@ void MSWindow::onPlotSNRToFitVariance()
 	FringeStoppingFitter fitter;
 	fitter.SetMetaData(_timeFrequencyWidget.GetMetaData());
 	
-	Plot
-		plotA("/tmp/snrplot-a.pdf"),
-		plotB("/tmp/snrplot-b.pdf");
-	plotA.StartLine("Stddev");
+	Plot2D
+		&plotA = _plotManager.NewPlot2D("/tmp/snrplot-a.pdf"),
+		&plotB = _plotManager.NewPlot2D("/tmp/snrplot-b.pdf");
+	plotA.StartLine("Stddev", "SNR (dB)", "Error (sigma-epsilon)");
 	plotA.SetTitle("Fit errors");
-	plotA.SetXAxisText("SNR (dB)");
-	plotA.SetYAxisText("Error (sigma-epsilon)");
-	plotA.SetLogScale(false, false, false);
-	plotB.StartLine("Stddev");
+	plotA.SetLogarithmicYAxis(false);
+	plotB.StartLine("Stddev", "SNR (ratio, non-logarithmic)", "Error (sigma-epsilon)");
 	plotB.SetTitle("Fit errors");
-	plotB.SetXAxisText("SNR (ratio, non-logarithmic)");
-	plotB.SetYAxisText("Error (sigma-epsilon)");
-	plotB.SetLogScale(false, false, false);
+	plotB.SetLogarithmicYAxis(false);
 
 	const unsigned iterations = 2500;
 	std::vector<long double> medians, means, maxs, snrDbs, snrRatios;
@@ -1080,8 +1455,6 @@ void MSWindow::onPlotSNRToFitVariance()
 	if(relative)
 		stop = 0.01;
 
-	plotA.SetXRange(10.0 * logl(stop) / logl(10.0L), 10.0 * logl(start) / logl(10.0L));
-	plotB.SetXRange(stop, start);
 	for(long double snr = start;snr>stop;snr *= 0.9) {
 		long double amplitudes[iterations], mean = 0, stddev = 0;
 		long double db = 10.0 * logl(snr) / logl(10.0L);
@@ -1190,20 +1563,15 @@ void MSWindow::onPlotSNRToFitVariance()
 			plotB.PushDataPoint(snrRatios[i], snrRatios[i]);
 		}
 	}
-	plotA.Close();
-	plotA.Show();
-	plotB.Close();
-	plotB.Show();
+	_plotManager.Update();
 }
 
-void MSWindow::onZoomPressed()
+void MSWindow::onImagePropertiesPressed()
 {
-	if(HasImageSet())
-	{
-		Gtk::Window *zoomWindow = new ZoomWindow(*this);
-		zoomWindow->show();
-		_subWindows.push_back(zoomWindow);
-	}
+	if(_imagePropertiesWindow != 0)
+		delete _imagePropertiesWindow;
+	_imagePropertiesWindow = new ImagePropertiesWindow(_timeFrequencyWidget, "Time-frequency plotting options");
+	_imagePropertiesWindow->show();
 }
 
 void MSWindow::showPhasePart(enum TimeFrequencyData::PhaseRepresentation phaseRepresentation)
@@ -1217,7 +1585,18 @@ void MSWindow::showPhasePart(enum TimeFrequencyData::PhaseRepresentation phaseRe
 			_timeFrequencyWidget.Update();
 		} catch(std::exception &e)
 		{
-			showError(e.what());
+			std::stringstream errstr;
+			errstr
+				<< "The data that was currently in memory could not be converted to the requested "
+				   "type. The error given by the converter was:\n"
+				<< e.what()
+				<< "\n\n"
+				<< "Note that if the original data should be convertable to this type, but "
+				   "you have already used one of the 'Keep ..' buttons, you first need to reload "
+					 "the full data with Goto -> Load.\n\n"
+					 "(alternatively, if loading takes a lot of time, you can use the Store and Recall"
+					 " options in the Data menu)";
+			showError(errstr.str());
 		}
 	}
 }
@@ -1234,7 +1613,18 @@ void MSWindow::showPolarisation(enum PolarisationType polarisation)
 			_timeFrequencyWidget.Update();
 		} catch(std::exception &e)
 		{
-			showError(e.what());
+			std::stringstream errstr;
+			errstr
+				<< "The data that was currently in memory could not be converted to the requested "
+				   "polarization. The error given by the converter was:\n"
+				<< e.what()
+				<< "\n\n"
+				<< "Note that if the original data should be convertable to this polarization, but "
+				   "you have already used one of the 'Keep ..' buttons, you first need to reload "
+					 "the full data with Goto -> Load.\n\n"
+					 "(alternatively, if loading takes a lot of time, you can use the Store and Recall"
+					 " options in the Data menu)";
+			showError(errstr.str());
 		}
 	}
 }
@@ -1246,10 +1636,11 @@ void MSWindow::onGoToPressed()
 		rfiStrategy::MSImageSet *msSet = dynamic_cast<rfiStrategy::MSImageSet*>(_imageSet);
 		if(msSet != 0)
 		{
-			Gtk::Window *goToWindow = new GoToWindow(*this);
-			goToWindow->show();
-			_subWindows.push_back(goToWindow);
-		} else {
+			if(_gotoWindow != 0)
+				delete _gotoWindow;
+			_gotoWindow = new GoToWindow(*this);
+			_gotoWindow->show();
+			} else {
 			showError("Can not goto in this image set; format does not support goto");
 		}
 	}
@@ -1257,29 +1648,43 @@ void MSWindow::onGoToPressed()
 
 void MSWindow::onTFWidgetMouseMoved(size_t x, size_t y)
 {
-	if(_timeFrequencyWidget.GetMetaData() != 0)
+	Image2DCPtr image = _timeFrequencyWidget.Image();
+	num_t v = image->Value(x, y);
+	_statusbar.pop();
+	std::stringstream s;
+		s << "x=" << x << ",y=" << y << ",value=" << v;
+	TimeFrequencyMetaDataCPtr metaData =_timeFrequencyWidget.GetMetaData();
+	if(metaData != 0)
 	{
-		Image2DCPtr image = _timeFrequencyWidget.Image();
-		num_t v = image->Value(x, y);
-		_statusbar.pop();
-		std::stringstream s;
-			s << "x=" << x << ",y=" << y << ",value=" << v;
+		if(metaData->HasObservationTimes() && metaData->HasBand())
+		{
 			const std::vector<double> &times = _timeFrequencyWidget.GetMetaData()->ObservationTimes();
 			s << " (t=" << Date::AipsMJDToString(times[x]) <<
 			", f=" << Frequency::ToString(_timeFrequencyWidget.GetMetaData()->Band().channels[y].frequencyHz);
-		if(_timeFrequencyWidget.GetMetaData()->HasUVW())
+		}
+		
+		if(metaData->HasUVW())
 		{
-			UVW uvw = _timeFrequencyWidget.GetMetaData()->UVW()[x];
+			UVW uvw = metaData->UVW()[x];
 			s << ", uvw=" << uvw.u << "," << uvw.v << "," << uvw.w;
 		}
 		s << ')';
-		_statusbar.push(s.str(), 0);
 	}
+	_statusbar.push(s.str(), 0);
 }
 
 void MSWindow::onShowImagePlane()
 {
 	_imagePlaneWindow->show();
+}
+
+void MSWindow::onSetAndShowImagePlane()
+{
+	_imagePlaneWindow->GetImager()->Empty();
+	onAddToImagePlane();
+	_imagePlaneWindow->show();
+	_imagePlaneWindow->GetImager()->ApplyWeightsToUV();
+	_imagePlaneWindow->Update();
 }
 
 void MSWindow::onAddToImagePlane()
@@ -1416,86 +1821,38 @@ void MSWindow::showError(const std::string &description)
 	dialog.run();
 }
 
-void MSWindow::onSimulateCorrelation()
+DefaultModels::SetLocation MSWindow::getSetLocation(bool empty)
 {
-	Model model;
-	model.loadUrsaMajor();
-	model.loadUrsaMajorDistortingSource();
-
-	WSRTObservatorium wsrtObservatorium;
-	model.SimulateObservation(*_imagePlaneWindow->GetImager(), wsrtObservatorium, -M_PIn-0.05, 0.05, 147000000.0);
-	_imagePlaneWindow->Update();
+	if(empty)
+		return DefaultModels::EmptySet;
+	if(_ncpSetButton->get_active())
+		return DefaultModels::NCPSet;
+	else if(_b1834SetButton->get_active())
+		return DefaultModels::B1834Set;
+	else
+		return DefaultModels::EmptySet;
 }
 
-void MSWindow::onSimulateSourceSetA()
+void MSWindow::loadDefaultModel(DefaultModels::Distortion distortion, bool withNoise, bool empty)
 {
-	Model model;
-	model.loadUrsaMajor();
-	model.loadUrsaMajorDistortingSource();
-
-	WSRTObservatorium wsrtObservatorium;
-	std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> pair = model.SimulateObservation(wsrtObservatorium, M_PI + 0.12800, -0.03000, 147000000.0, 0, 5);
+	unsigned channelCount;
+	if(_sim16ChannelsButton->get_active())
+		channelCount = 16;
+	else if(_sim64ChannelsButton->get_active())
+		channelCount = 64;
+	else
+		channelCount = 256;
+	double bandwidth;
+	if(_simFixBandwidthButton->get_active())
+		bandwidth = 16.0 * 2500000.0;
+	else
+		bandwidth = (double) channelCount / 16.0 * 2500000.0;
+	std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> pair = DefaultModels::LoadSet(getSetLocation(empty), distortion, withNoise ? 1.0 : 0.0, channelCount, bandwidth);
 	TimeFrequencyData data = pair.first;
 	TimeFrequencyMetaDataCPtr metaData = pair.second;
 	
 	_timeFrequencyWidget.SetNewData(data, metaData);
 	_timeFrequencyWidget.Update();
-}
-
-void MSWindow::onSimulateSourceSetB()
-{
-	Model model;
-	model.loadUrsaMajor();
-	model.loadUrsaMajorDistortingVariableSource(false, false);
-
-	WSRTObservatorium wsrtObservatorium;
-	std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> pair = model.SimulateObservation(wsrtObservatorium, M_PI + 0.12800, -0.03000, 147000000.0, 0, 5);
-	TimeFrequencyData data = pair.first;
-	TimeFrequencyMetaDataCPtr metaData = pair.second;
-	
-	_timeFrequencyWidget.SetNewData(data, metaData);
-	_timeFrequencyWidget.Update();
-}
-
-void MSWindow::onSimulateSourceSetC()
-{
-	Model model;
-	model.loadUrsaMajor();
-	model.loadUrsaMajorDistortingVariableSource(true, false);
-
-	WSRTObservatorium wsrtObservatorium;
-	std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> pair = model.SimulateObservation(wsrtObservatorium, M_PI + 0.12800, -0.03000, 147000000.0, 0, 5);
-	TimeFrequencyData data = pair.first;
-	TimeFrequencyMetaDataCPtr metaData = pair.second;
-	
-	_timeFrequencyWidget.SetNewData(data, metaData);
-	_timeFrequencyWidget.Update();
-}
-
-void MSWindow::onSimulateSourceSetD()
-{
-	Model model;
-	model.loadUrsaMajor();
-	model.loadUrsaMajorDistortingVariableSource(false, true);
-
-	WSRTObservatorium wsrtObservatorium;
-	std::pair<TimeFrequencyData, TimeFrequencyMetaDataPtr> pair = model.SimulateObservation(wsrtObservatorium, M_PI + 0.12800, -0.03000, 147000000.0, 0, 5);
-	TimeFrequencyData data = pair.first;
-	TimeFrequencyMetaDataCPtr metaData = pair.second;
-	
-	_timeFrequencyWidget.SetNewData(data, metaData);
-	_timeFrequencyWidget.Update();
-}
-
-void MSWindow::onSimulateFourProductCorrelation()
-{
-	Model model;
-	model.loadUrsaMajor();
-
-	WSRTObservatorium wsrtObservatorium;
-	FourProductCorrelatorTester fpcTester(model, *_imagePlaneWindow->GetImager(), wsrtObservatorium);
-	fpcTester.SimulateObservation(M_PI + 0.12800, -0.03000, 147000000.0);
-	_imagePlaneWindow->Update();
 }
 
 void MSWindow::onCompress()
@@ -1504,3 +1861,217 @@ void MSWindow::onCompress()
 	compress.AllToStdOut();
 }
 
+void MSWindow::onShowAntennaMapWindow()
+{
+	if(_antennaMapWindow != 0)
+		delete _antennaMapWindow;
+	AntennaMapWindow *newWindow = new AntennaMapWindow();
+	_antennaMapWindow = newWindow;
+	rfiStrategy::MSImageSet *msImageSet = dynamic_cast<rfiStrategy::MSImageSet*>(_imageSet);
+	if(msImageSet != 0)
+	{
+		MeasurementSet &set = msImageSet->Reader()->Set();
+		newWindow->SetMeasurementSet(set);
+	}
+	newWindow->show();
+}
+
+void MSWindow::onVertEVD()
+{
+	if(HasImage())
+	{
+		TimeFrequencyData data = GetActiveData();
+		TimeFrequencyData old(data);
+		VertEVD::Perform(data, true);
+		TimeFrequencyData *diff = TimeFrequencyData::CreateTFDataFromDiff(old, data);
+		_timeFrequencyWidget.SetNewData(data, _timeFrequencyWidget.GetMetaData());
+		_timeFrequencyWidget.SetRevisedData(*diff);
+		delete diff;
+		_timeFrequencyWidget.Update();
+	}
+}
+
+void MSWindow::onApplyTimeProfile()
+{
+	if(HasImage())
+	{
+		TimeFrequencyData data = GetActiveData();
+		if(_horProfile.size() != data.ImageWidth())
+		{
+			_horProfile.clear();
+			for(unsigned i=0;i<data.ImageWidth();++i)
+				_horProfile.push_back(1.0);
+		}
+		
+		Image2DCPtr weights = data.GetSingleImage();
+		for(unsigned i=0;i<data.ImageCount();++i)
+		{
+			Image2DCPtr input = data.GetImage(i);
+			Image2DPtr output = Image2D::CreateUnsetImagePtr(input->Width(), input->Height());
+			for(unsigned x=0;x<weights->Width();++x)
+			{
+				num_t timeAvg = 0.0;
+				for(unsigned y=0;y<weights->Height();++y)
+				{
+					if(std::isfinite(weights->Value(x, y)))
+						timeAvg += weights->Value(x, y);
+				}
+				timeAvg /= (num_t) weights->Height();
+				_horProfile[x] = timeAvg;
+				for(unsigned y=0;y<input->Height();++y)
+				{
+					output->SetValue(x, y, input->Value(x, y) * timeAvg);
+				}
+			}
+			data.SetImage(i, output);
+		}
+		_timeFrequencyWidget.SetNewData(data, _timeFrequencyWidget.GetMetaData());
+		_timeFrequencyWidget.Update();
+	}
+}
+
+void MSWindow::onApplyVertProfile()
+{
+	if(HasImage())
+	{
+		TimeFrequencyData data = GetActiveData();
+		if(_vertProfile.size() != data.ImageHeight())
+		{
+			_vertProfile.clear();
+			for(unsigned i=0;i<data.ImageHeight();++i)
+				_vertProfile.push_back(1.0);
+		}
+
+		Image2DCPtr weights = data.GetSingleImage();
+		for(unsigned i=0;i<data.ImageCount();++i)
+		{
+			Image2DCPtr input = data.GetImage(i);
+			Image2DPtr output = Image2D::CreateUnsetImagePtr(input->Width(), input->Height());
+			for(unsigned y=0;y<weights->Height();++y)
+			{
+				num_t vertAvg = 0.0;
+				for(unsigned x=0;x<weights->Width();++x)
+				{
+					if(std::isfinite(weights->Value(x, y)))
+						vertAvg += weights->Value(x, y);
+				}
+				vertAvg /= (num_t) weights->Width();
+				_vertProfile[y] = vertAvg;
+				for(unsigned x=0;x<input->Width();++x)
+				{
+					output->SetValue(x, y, input->Value(x, y) * vertAvg);
+				}
+			}
+			data.SetImage(i, output);
+		}
+		_timeFrequencyWidget.SetNewData(data, _timeFrequencyWidget.GetMetaData());
+		_timeFrequencyWidget.Update();
+	}
+}
+
+void MSWindow::onUseTimeProfile(bool inverse)
+{
+	if(HasImage())
+	{
+		TimeFrequencyData data = GetActiveData();
+		if(_horProfile.size()==data.ImageWidth())
+		{
+			for(unsigned i=0;i<data.ImageCount();++i)
+			{
+				Image2DCPtr input = data.GetImage(i);
+				Image2DPtr output = Image2D::CreateUnsetImagePtr(input->Width(), input->Height());
+				for(unsigned x=0;x<input->Width();++x)
+				{
+					for(unsigned y=0;y<input->Height();++y)
+					{
+						if(inverse)
+						{
+							if(_horProfile[x] != 0.0)
+								output->SetValue(x, y, input->Value(x, y) / _horProfile[x]);
+							else
+								output->SetValue(x, y, 0.0);
+						} else {
+								output->SetValue(x, y, input->Value(x, y) * _horProfile[x]);
+						}
+					}
+				}
+				data.SetImage(i, output);
+			}
+			_timeFrequencyWidget.SetNewData(data, _timeFrequencyWidget.GetMetaData());
+			_timeFrequencyWidget.Update();
+		}
+	}
+}
+
+void MSWindow::onUseVertProfile(bool inverse)
+{
+	if(HasImage())
+	{
+		TimeFrequencyData data = GetActiveData();
+		if(_vertProfile.size()==data.ImageHeight())
+		{
+			TimeFrequencyData data = GetActiveData();
+			for(unsigned i=0;i<data.ImageCount();++i)
+			{
+				Image2DCPtr input = data.GetImage(i);
+				Image2DPtr output = Image2D::CreateUnsetImagePtr(input->Width(), input->Height());
+				for(unsigned x=0;x<input->Width();++x)
+				{
+					for(unsigned y=0;y<input->Height();++y)
+					{
+						if(inverse)
+						{
+							if(_vertProfile[y] != 0.0)
+								output->SetValue(x, y, input->Value(x, y) / _vertProfile[y]);
+							else
+								output->SetValue(x, y, 0.0);
+						} else {
+								output->SetValue(x, y, input->Value(x, y) * _vertProfile[y]);
+						}
+					}
+				}
+				data.SetImage(i, output);
+			}
+			_timeFrequencyWidget.SetNewData(data, _timeFrequencyWidget.GetMetaData());
+			_timeFrequencyWidget.Update();
+		}
+	}
+}
+
+void MSWindow::onStoreData()
+{
+	if(HasImage())
+	{
+		_storedData = _timeFrequencyWidget.GetActiveData();
+	}
+}
+
+void MSWindow::onRecallData()
+{
+	_timeFrequencyWidget.SetNewData(_storedData, _timeFrequencyWidget.GetMetaData());
+	_timeFrequencyWidget.Update();
+}
+
+void MSWindow::onSubtractDataFromMem()
+{
+	if(HasImage())
+	{
+		TimeFrequencyData activeData = _timeFrequencyWidget.GetActiveData();
+		TimeFrequencyData *diffData = TimeFrequencyData::CreateTFDataFromDiff(_storedData, activeData);
+		_timeFrequencyWidget.SetNewData(*diffData, _timeFrequencyWidget.GetMetaData());
+		delete diffData;
+		_timeFrequencyWidget.Update();
+	}
+}
+
+void MSWindow::onTimeMergeUnsetValues()
+{
+	if(HasImage())
+	{
+		TimeFrequencyData activeData = _timeFrequencyWidget.GetActiveData();
+		TimeFrequencyMetaDataPtr metaData(new class TimeFrequencyMetaData(*_timeFrequencyWidget.GetMetaData()));
+		rfiStrategy::NoiseStatImageSet::MergeInTime(activeData, metaData);
+		_timeFrequencyWidget.SetNewData(activeData, metaData);
+		_timeFrequencyWidget.Update();
+	}
+}

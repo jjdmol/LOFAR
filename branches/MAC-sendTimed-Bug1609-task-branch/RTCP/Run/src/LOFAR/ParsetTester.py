@@ -8,6 +8,7 @@ from LogValidators import ValidationError
 from Locations import Locations
 from Partitions import PartitionPsets
 from util.Commands import SyncCommand
+from util.Hosts import runlink
 from threading import Thread
 from time import sleep
 import os
@@ -61,8 +62,8 @@ class ParsetTester:
 
     subbands =  [i     for i in xrange(nrSubbands)]
     beams =     [0     for i in xrange(nrSubbands)]
-    rspboards = [i//62 for i in xrange(nrSubbands)]
-    rspslots  = [i%62  for i in xrange(nrSubbands)]
+    rspboards = [i//61 for i in xrange(nrSubbands)]
+    rspslots  = [i%61  for i in xrange(nrSubbands)]
 
     override_keys = {
            "Observation.subbandList":    subbands,
@@ -81,16 +82,18 @@ class ParsetTester:
     ipsuffixes = [ip.split(".")[3] for ip in psets]
     stations = ["S%s" % (s,) for s in ipsuffixes]
 
+    del self.parset["OLAP.CNProc.phaseOnePsets"]
+
     self.parset.forceStations( stations )
 
 
-  def setNrPencilBeams( self, nrBeams ):
+  def setNrPencilBeams( self, nrBeams, sap = 0 ):
     """ Use nrBeams fake beams. """
 
-    self.parset["OLAP.nrPencils"] = nrBeams
+    self.parset["Observation.Beam[%d].nrTiedArrayBeams" % (sap,)] = nrBeams
     for n in xrange(nrBeams):
-      self.parset["OLAP.Pencil[%d].angle1" % (n,)] = 0
-      self.parset["OLAP.Pencil[%d].angle2" % (n,)] = 0
+      self.parset["Observation.Beam[%d].TiedArrayBeam[%d].angle1" % (sap,n)] = 0
+      self.parset["Observation.Beam[%d].TiedArrayBeam[%d].angle2" % (sap,n)] = n
 
   def runParset( self, starttimeout = 30, runtime = 60, stoptimeout = 120, parsetstartdelay = 30 ):
     # finalise and check parset BEFORE we start doing anything fancy
@@ -199,15 +202,16 @@ class ParsetTester:
          valid = False
        else:
          for linenr,l in enumerate(fd):
-           try:
-             v.parse(l)
-           except ValidationError,e:
-             error( "Validation error in %s:%s: %s" % (fname,linenr,e) )
-             error( "Offending line: %s" % (l,) )
-             valid = False
+           for v in validators:
+             try:
+               v.parse(l)
+             except ValidationError,e:
+               error( "Validation error in %s:%s: %s" % (fname,linenr,e) )
+               error( "Offending line: %s" % (l,) )
+               valid = False
 
-             if not continue_on_error:
-               return
+               if not continue_on_error:
+                 return
 
      for v in validators:
        try:
@@ -238,13 +242,17 @@ class ParsetTester:
     SyncCommand("rmdir %s" % (self.logdir,))
 
     # clean up data products
-    dataMask = self.parset.parseMask()
-    dataMaskParts = dataMask.split("/")
-    dataDir = "/".join(dataMaskParts[0:-1])
+    info( "Removing data" )
+    for p in self.parset.outputPrefixes():
+      if not self.parset.getBool("%s.enabled" % (p,)):
+        continue
 
-    if len(dataMaskParts) >= 4: # safety
-      for storageNode in self.parset["OLAP.OLAP_Conn.IONProc_Storage_ServerHosts"]:
-        info( "Removing data in %s:%s" % (storageNode,dataDir) )
-        SyncCommand("ssh %s rm -rf %s" % (storageNode,dataDir))
-    else:    
-      warning( "Not removing data in %s:%s" % (storageNode,dataDir) )
+      files     = self.parset.getStringVector( "%s.filenames" % (p,) )
+      locations = self.parset.getStringVector( "%s.locations" % (p,) )
+      fullpaths = ["%s%s" % (path,file) for (path,file) in zip( locations, files )]
+
+      # TODO: remove created parent directories instead of just the files
+
+      for f in fullpaths:
+        runlink( f, recursive = True )
+

@@ -1,6 +1,6 @@
 //#  MACScheduler.cc: Implementation of the MAC Scheduler task
 //#
-//#  Copyright (C) 2004-2008
+//#  Copyright (C) 2004-2012
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -51,6 +51,9 @@ namespace LOFAR {
 	using namespace APLCommon;
 	namespace MainCU {
 
+#define	MAX_CONCURRENT_OBSERVATIONS		100
+#define MIN2(a,b) (((a) < (b)) ? (a) : (b))
+
 // static (this) pointer used for signal handling
 static MACScheduler* pMacScheduler = 0;
 	
@@ -69,6 +72,8 @@ MACScheduler::MACScheduler() :
 	itsNextPlannedTime	(0),
 	itsNextActiveTime	(0),
 	itsNextFinishedTime	(0),
+	itsNrPlanned		(0),
+	itsNrActive			(0),
 	itsOTDBconnection	(0)
 {
 	LOG_TRACE_OBJ ("MACscheduler construction");
@@ -82,10 +87,14 @@ MACScheduler::MACScheduler() :
 	itsFinishedItv	 = globalParameterSet()->getTime("pollIntervalFinished", 60);
 	itsPlannedPeriod = globalParameterSet()->getTime("plannedPeriod",  86400) / 60;	// in minutes
 	itsFinishedPeriod= globalParameterSet()->getTime("finishedPeriod", 86400) / 60; // in minutes
+	itsMaxPlanned    = globalParameterSet()->getTime("maxPlannedList",  30);
+	itsMaxFinished   = globalParameterSet()->getTime("maxFinishedList", 40);
+
+	ASSERTSTR(itsMaxPlanned + itsMaxFinished < MAX_CONCURRENT_OBSERVATIONS, "maxPlannedList + maxFinishedList should be less than " << MAX_CONCURRENT_OBSERVATIONS);
 
 	// Read the schedule periods for starting observations.
 	itsQueuePeriod 		= globalParameterSet()->getTime("QueuePeriod");
-	itsClaimPeriod 		= globalParameterSet()->getTime("ClaimPeriod");
+	LOG_INFO_STR("Queueperiod = " << itsQueuePeriod);
 
 	// attach to child control task
 	itsChildControl = ChildControl::instance();
@@ -156,11 +165,6 @@ void MACScheduler::_databaseEventHandler(GCFEvent& event)
 			LOG_INFO_STR ("Changing QueuePeriod from " << itsQueuePeriod << " to " << newVal);
 			itsQueuePeriod = newVal;
 		}
-		if (strstr(dpEvent.DPname.c_str(), PVSSNAME_MS_CLAIMPERIOD) != 0) {
-			uint32	newVal = ((GCFPVUnsigned*) (dpEvent.value._pValue))->getValue();
-			LOG_INFO_STR ("Changing ClaimPeriod from " << itsClaimPeriod << " to " << newVal);
-			itsClaimPeriod = newVal;
-		}
 #endif
 	}  
 	break;
@@ -188,10 +192,10 @@ GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface&
 
 	case F_ENTRY: {
 		// Get access to my own propertyset.
-		LOG_DEBUG ("Activating PropertySet");
+		LOG_DEBUG_STR ("Activating my propertySet(" << PSN_MAC_SCHEDULER << ")");
 		itsPropertySet = new RTDBPropertySet(PSN_MAC_SCHEDULER,
 											 PST_MAC_SCHEDULER,
-											 PSAT_RW,
+											 PSAT_CW,
 											 this);
 		}
 		break;
@@ -356,9 +360,18 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 	case CM_CLAIM_RESULT: {
 			// some observation was claimed by the claimMgr. Update our prepare_list.
 			CMClaimResultEvent	cmEvent(event);
-			LOG_INFO_STR(cmEvent.nameInAppl << " is mapped to " << cmEvent.DPname);
 			ltrim(cmEvent.nameInAppl, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_");
 			int		obsID = atoi(cmEvent.nameInAppl.c_str());
+			if (cmEvent.result != CM_NO_ERR) {
+				LOG_ERROR_STR("Error during checking observation " << obsID);
+				OTDB::TreeMaintenance	tm(itsOTDBconnection);
+				TreeStateConv			tsc(itsOTDBconnection);
+				tm.setTreeState(obsID, tsc.get("aborted"));
+				itsPreparedObs.erase(obsID);
+				break;
+			}
+			// claim was successful, update admin
+			LOG_INFO_STR("Observation " << obsID << " is mapped to " << cmEvent.DPname);
 			LOG_DEBUG_STR("PVSS preparation of observation " << obsID << " ready.");
 			itsPreparedObs[obsID] = true;
 		}
@@ -447,6 +460,7 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 		}
 		OTDB::TreeMaintenance	tm(itsOTDBconnection);
 		TreeStateConv			tsc(itsOTDBconnection);
+		// CT_RESULT_: MANUAL_REMOVED, MANUAL_ABORT, LOST_CONNECTION, NO_ERROR
 		if (quitedEvent.result == CT_RESULT_NO_ERROR) {
 			tm.setTreeState(theObs->second, tsc.get("finished"));
 		}
@@ -455,9 +469,8 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 		}
 
 		// update our administration
-		LOG_DEBUG_STR("Removing observation " << quitedEvent.cntlrName << 
-						" from activeList");
-//		_removeActiveObservation(quitedEvent.cntlrName);
+		LOG_DEBUG_STR("Removing observation " << quitedEvent.cntlrName << " from activeList");
+		itsControllerMap.erase(quitedEvent.cntlrName);
 		break;
 	}
 
@@ -575,27 +588,44 @@ void MACScheduler::_updatePlannedList()
 {
 	LOG_DEBUG("_updatePlannedList()");
 
+	// get time info
+	time_t	now = time(0);
+	ptime	currentTime = from_time_t(now);
+	ASSERTSTR (currentTime != not_a_date_time, "Can't determine systemtime, bailing out");
+
 	// get new list (list is ordered on starttime)
 	vector<OTDBtree> plannedDBlist = itsOTDBconnection->getTreeGroup(1, itsPlannedPeriod);	// planned observations
 
 	if (!plannedDBlist.empty()) {
-		LOG_DEBUG(formatString("OTDBCheck:First planned observation is at %s (tree=%d)", 
-				to_simple_string(plannedDBlist[0].starttime).c_str(), plannedDBlist[0].treeID()));
+		LOG_DEBUG(formatString("OTDBCheck:First planned observation (%d) is at %s (active over %d seconds)", 
+				plannedDBlist[0].treeID(), to_simple_string(plannedDBlist[0].starttime).c_str(), 
+				time_duration(plannedDBlist[0].starttime - currentTime).total_seconds()));
 	}
 	// NOTE: do not exit routine on emptylist: we need to write an empty list to clear the DB
 
+	// make a copy of the current prepared observations (= observations shown in the navigator in the 'future'
+	// list). By eliminating the observations that are in the current SAS list we end up (at the end of this function) 
+	// with a list of observations that were in the SASlist the last time but now not anymore. Normally those observations
+	// will appear in the active-list and will be removed there from the prepared list but WHEN AN OPERATOR CHANGES
+	// THE STATUS MANUALLY into something different (e.g. ON-HOLD) the observation stays in the preparedlist.
+	// EVEN WORSE: when the observation re-enters the system with different settings (again as scheduled) the system
+	// still knows the observation and will use the OLD information of the observation.
+	ObsList		backupObsList = itsPreparedObs;
+
 	// walk through the list, prepare PVSS for the new obs, update own admin lists.
 	GCFPValueArray	plannedArr;
-	uint32			listSize = plannedDBlist.size();
-	uint32			idx = 0;
-	time_t			now = time(0);
-	ptime			currentTime = from_time_t(now);
-	ASSERTSTR (currentTime != not_a_date_time, "Can't determine systemtime, bailing out");
+	int32			idx = MIN2(plannedDBlist.size(), itsMaxPlanned) - 1;
 
-	while (idx < listSize)  {
+	while (idx >= 0)  {
 		// construct name and timings info for observation
 		treeIDType		obsID = plannedDBlist[idx].treeID();
 		string			obsName(observationName(obsID));
+
+		// remove obs from backup of the planned-list (it is in the list again)
+		OLiter	oldObsIter = backupObsList.find(obsID);
+		if (oldObsIter != backupObsList.end()) {
+			backupObsList.erase(oldObsIter);
+		}
 
 		// must we claim this observation at the claimMgr?
 		OLiter	prepIter = itsPreparedObs.find(obsID);
@@ -622,9 +652,9 @@ void MACScheduler::_updatePlannedList()
 		}
 	
 		// should this observation (have) be(en) started?
-		time_duration	timeBeforeStart(plannedDBlist[idx].starttime - currentTime);
-//		LOG_TRACE_VAR_STR(obsName << " starts over " << timeBeforeStart << " seconds");
-		if (timeBeforeStart > seconds(0) && timeBeforeStart <= seconds(itsQueuePeriod)) {
+		int		timeBeforeStart = time_duration(plannedDBlist[idx].starttime - currentTime).total_seconds();
+//		LOG_DEBUG_STR(obsName << " starts over " << timeBeforeStart << " seconds");
+		if (timeBeforeStart > 0 && timeBeforeStart <= (int)itsQueuePeriod) {
 			if (itsPreparedObs[obsID] == false) {
 				LOG_ERROR_STR("Observation " << obsID << " must be started but is not claimed yet.");
 			}
@@ -634,24 +664,47 @@ void MACScheduler::_updatePlannedList()
 				// Note: as soon as the ObservationController has reported itself to the MACScheduler
 				//		 the observation will not be returned in the 'plannedDBlist' anymore.
 				string	cntlrName(controllerName(CNTLRTYPE_OBSERVATIONCTRL, 0, obsID));
-				LOG_DEBUG_STR("Requesting start of " << cntlrName);
-				itsChildControl->startChild(CNTLRTYPE_OBSERVATIONCTRL, 
-											obsID, 
-											0,		// instanceNr
-											myHostname(true));
-				// Note: controller is now in state NO_STATE/CONNECTED (C/R)
+				if (itsControllerMap.find(cntlrName) == itsControllerMap.end()) {
+					LOG_DEBUG_STR("Requesting start of " << cntlrName);
+					itsChildControl->startChild(CNTLRTYPE_OBSERVATIONCTRL, 
+												obsID, 
+												0,		// instanceNr
+												myHostname(true));
+					// Note: controller is now in state NO_STATE/CONNECTED (C/R)
 
-				// add controller to our 'monitor' administration
-				itsControllerMap[cntlrName] =  obsID;
-				LOG_DEBUG_STR("itsControllerMap[" << cntlrName << "]=" <<  obsID);
+					// add controller to our 'monitor' administration
+					itsControllerMap[cntlrName] =  obsID;
+					LOG_DEBUG_STR("itsControllerMap[" << cntlrName << "]=" <<  obsID);
+				}
+				else {
+					LOG_DEBUG_STR("Observation " << obsID << " is already (being) started");
+				}
 			}
 		}
-		idx++;
+		idx--;
 	} // while processing all planned obs'
 
 	// Finally we can pass the list with planned observations to PVSS.
 	itsPropertySet->setValue(PN_MS_PLANNED_OBSERVATIONS, GCFPVDynArr(LPT_DYNSTRING, plannedArr));
+	itsNrPlanned = plannedArr.size();
 
+	// free used memory
+	for (int i = plannedArr.size()-1; i>=0; --i) {
+		delete plannedArr[i];
+	}
+
+	// the backupObsList now contains the observations that were are in the preparedObs list but are not in
+	// the SAS list anymore. Remove them here from the preparedObs list.
+	OLiter	oldObsIter = backupObsList.begin();
+	OLiter	prepIter;
+	while (oldObsIter != backupObsList.end()) {
+		prepIter = itsPreparedObs.find(oldObsIter->first);
+		if (prepIter != itsPreparedObs.end()) {
+			LOG_INFO_STR("Removing " << oldObsIter->first << " from the 'preparing' list.");
+			itsPreparedObs.erase(prepIter);
+		}
+		oldObsIter++;
+	}
 }
 
 //
@@ -670,9 +723,8 @@ void MACScheduler::_updateActiveList()
 
 	// walk through the list, prepare PVSS for the new obs, update own admin lists.
 	GCFPValueArray	activeArr;
-	uint32			listSize = activeDBlist.size();
-	uint32			idx = 0;
-	while (idx < listSize)  {
+	int32			idx = activeDBlist.size() - 1;
+	while (idx >= 0)  {
 		// construct name and timings info for observation
 		string		obsName(observationName(activeDBlist[idx].treeID()));
 		activeArr.push_back(new GCFPVString(obsName));
@@ -683,11 +735,17 @@ void MACScheduler::_updateActiveList()
 			itsPreparedObs.erase(prepIter);
 		}
 
-		idx++;
+		idx--;
 	} // while
 
 	// Finally we can pass the list with active observations to PVSS.
 	itsPropertySet->setValue(PN_MS_ACTIVE_OBSERVATIONS,	GCFPVDynArr(LPT_DYNSTRING, activeArr));
+	itsNrActive = activeArr.size();
+
+	// free used memory
+	for (int i = activeArr.size()-1; i>=0; --i) {
+		delete activeArr[i];
+	}
 }
 
 //
@@ -705,19 +763,25 @@ void MACScheduler::_updateFinishedList()
 	}
 
 	// walk through the list, prepare PVSS for the new obs, update own admin lists.
+	// We must show the last part of the (optional) limited list.
 	GCFPValueArray	finishedArr;
-	uint32			listSize = finishedDBlist.size();
-	uint32			idx = 0;
-	while (idx < listSize)  {
+	int32	freeSpace = MAX_CONCURRENT_OBSERVATIONS - itsNrPlanned - itsNrActive;
+	int32	idx       = finishedDBlist.size() - 1;
+	int32	limit     = idx - (MIN2(MIN2(finishedDBlist.size(), itsMaxFinished), (uint32)freeSpace) - 1);
+	while (idx >= limit)  {
 		// construct name and timings info for observation
 		string		obsName(observationName(finishedDBlist[idx].treeID()));
 		finishedArr.push_back(new GCFPVString(obsName));
-		idx++;
+		idx--;
 	} // while
 
 	// Finally we can pass the list with finished observations to PVSS.
-	itsPropertySet->setValue(PN_MS_FINISHED_OBSERVATIONS,
-								GCFPVDynArr(LPT_DYNSTRING, finishedArr));
+	itsPropertySet->setValue(PN_MS_FINISHED_OBSERVATIONS, GCFPVDynArr(LPT_DYNSTRING, finishedArr));
+
+	// free used memory
+	for (int i = finishedArr.size()-1; i>=0; --i) {
+		delete finishedArr[i];
+	}
 }
 
 

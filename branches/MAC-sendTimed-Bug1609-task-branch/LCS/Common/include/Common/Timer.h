@@ -240,6 +240,8 @@ namespace LOFAR {
 	"=r" (total_time_low), "=r" (total_time_high)
     :
 	"3" (total_time_low), "4" (total_time_high)
+    :
+	"cc"
     );
 #endif
   }
@@ -313,6 +315,8 @@ namespace LOFAR {
 	"=r" (total_time_low), "=r" (total_time_high)
     :
 	"3" (total_time_low), "4" (total_time_high)
+    :
+	"cc"
     );
 #endif
 

@@ -81,12 +81,23 @@ bool setObjectState(const string&	who,
 	values.push_back(new GCFPVString(who));
 	values.push_back(new GCFPVBool(force));
 
-	LOG_DEBUG_STR(who << " is setting " << objectName << " to " << objStateTable[newStateIndex].name);
+	if (objStateTable[newStateIndex].RTDBvalue > 10) {
+		LOG_INFO_STR(who << " is setting " << objectName << " to " << objStateTable[newStateIndex].name);
+	}
+	else {
+		LOG_DEBUG_STR(who << " is setting " << objectName << " to " << objStateTable[newStateIndex].name);
+	}
 
 	PVSSresult	result = aDPservice.setValue("__navObjectState", fields, values, 0.0, false);
 	if (result != SA_NO_ERROR) {
 		LOG_WARN_STR("Call to PVSS for setObjectState returned: " << result);
 	}
+
+	// free allocated GCFValues.
+	for (int i = values.size()-1 ; i >= 0; i--) {
+		delete values[i];
+	}
+
 	return (result == SA_NO_ERROR);
 }
 

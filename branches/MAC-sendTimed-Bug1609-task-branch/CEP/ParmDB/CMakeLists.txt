@@ -1,6 +1,6 @@
 # $Id$
 
-lofar_package(ParmDB 1.0 DEPENDS Common Blob MWCommon)
+lofar_package(ParmDB 1.0 DEPENDS Common Blob LMWCommon)
 
 include(LofarFindPackage)
 lofar_find_package(Casacore COMPONENTS casa tables REQUIRED)

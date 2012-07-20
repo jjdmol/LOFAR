@@ -33,15 +33,20 @@
 #include <gtkmm/toggleaction.h>
 #include <gtkmm/window.h>
 
-#include "../msio/timefrequencydata.h"
-#include "../msio/timefrequencymetadata.h"
+#include <AOFlagger/msio/timefrequencydata.h>
+#include <AOFlagger/msio/timefrequencymetadata.h>
 
-#include "../rfi/strategy/types.h"
+#include <AOFlagger/strategy/control/types.h>
 
-#include "plot/plotwidget.h"
+#include <AOFlagger/gui/plot/plotwidget.h>
+#include <AOFlagger/gui/plot/plotmanager.h>
 
-#include "plotframe.h"
-#include "timefrequencywidget.h"
+#include <AOFlagger/gui/plotwindow.h>
+
+#include <AOFlagger/gui/plotframe.h>
+#include <AOFlagger/gui/imagecomparisonwidget.h>
+
+#include <AOFlagger/imaging/defaultmodels.h>
 
 /**
 	@author A.R. Offringa <offringa@astro.rug.nl>
@@ -54,10 +59,7 @@ class MSWindow : public Gtk::Window {
 		void SetImageSet(rfiStrategy::ImageSet *newImageSet);
 		void SetImageSetIndex(rfiStrategy::ImageSetIndex *newImageSetIndex);
 		rfiStrategy::ImageSet &GetImageSet() const { return *_imageSet; }
-		void AddAlternativeFlagging(Mask2DCPtr mask)
-		{
-			_timeFrequencyWidget.AddAlternativeFlagging(mask);
-		}
+		rfiStrategy::ImageSetIndex &GetImageSetIndex() const { return *_imageSetIndex; }
 		void SetRevisedData(const TimeFrequencyData &data)
 		{
 			_timeFrequencyWidget.SetRevisedData(data);
@@ -84,7 +86,7 @@ class MSWindow : public Gtk::Window {
 			return _timeFrequencyWidget.ContaminatedData();
 		}
 
-		class TimeFrequencyWidget &GetTimeFrequencyWidget()
+		class ImageComparisonWidget &GetTimeFrequencyWidget()
 		{
 			return _timeFrequencyWidget;
 		}
@@ -105,23 +107,26 @@ class MSWindow : public Gtk::Window {
 		void SetStrategy(rfiStrategy::Strategy *newStrategy) { _strategy = newStrategy; }
 
 		void onExecuteStrategyFinished();
+		void OpenPath(const std::string &path);
 	private:
 		void createToolbar();
 		void loadCurrentTFData();
+		
 		void onLoadPrevious();
 		void onLoadNext();
 		void onLoadLargeStepPrevious();
 		void onLoadLargeStepNext();
 		void onToggleFlags();
-		void onToggleMap();
 		void onToggleImage();
 		void onCompress();
 		void onQuit() { hide(); }
 		void onActionFileOpen();
 		void onActionDirectoryOpen();
 		void onActionDirectoryOpenForSpatial();
+		void onActionDirectoryOpenForST();
 		void onOpenBandCombined();
 		void onShowImagePlane();
+		void onSetAndShowImagePlane();
 		void onAddToImagePlane();
 		void onClearAltFlagsPressed();
 		void onDifferenceToOriginalPressed();
@@ -142,7 +147,7 @@ class MSWindow : public Gtk::Window {
 		void onShowXYPressed() { showPolarisation(XYPolarisation); }
 		void onShowYXPressed() { showPolarisation(YXPolarisation); }
 		void onShowYYPressed() { showPolarisation(YYPolarisation); }
-		void onZoomPressed();
+		void onImagePropertiesPressed();
 		void onOpenTestSetNoise() { openTestSet(2); }
 		void onOpenTestSetA() { openTestSet(3); }
 		void onOpenTestSetB() { openTestSet(4); }
@@ -156,18 +161,36 @@ class MSWindow : public Gtk::Window {
 		void onOpenTestSetNoise5Model() { openTestSet(20); }
 		void onOpenTestSet3Model() { openTestSet(21); }
 		void onOpenTestSet5Model() { openTestSet(22); }
-		void onGaussianTestSets() { _gaussianTestSets = true; }
-		void onRayleighTestSets() { _gaussianTestSets = false; }
+		void onOpenTestSetBStrong() { openTestSet(24); }
+		void onOpenTestSetBWeak() { openTestSet(23); }
+		void onOpenTestSetBAligned() { openTestSet(25); }
+		void onOpenTestSetGaussianBroadband() { openTestSet(26); }
+		void onOpenTestSetSinusoidalBroadband() { openTestSet(27); }
+		void onOpenTestSetSlewedGaussianBroadband() { openTestSet(28); }
+		void onOpenTestSetBurstBroadband() { openTestSet(29); }
+		void onOpenTestSetRFIDistributionLow() { openTestSet(32); }
+		void onOpenTestSetRFIDistributionMid() { openTestSet(31); }
+		void onOpenTestSetRFIDistributionHigh() { openTestSet(30); }
+		void onGaussianTestSets() { _gaussianTestSets = 1; }
+		void onRayleighTestSets() { _gaussianTestSets = 0; }
+		void onZeroTestSets() { _gaussianTestSets = 2; }
 		void onAddStaticFringe();
 		void onAdd1SigmaFringe();
+		void onSetToOne();
+		void onSetToI();
+		void onSetToOnePlusI();
 		void onShowStats();
 		void onPlotDistPressed();
+		void onPlotLogLogDistPressed();
 		void onPlotComplexPlanePressed();
 		void onPlotPowerSpectrumPressed();
+		void onPlotPowerSpectrumComparisonPressed();
 		void onPlotPowerRMSPressed();
 		void onPlotPowerSNRPressed();
 		void onPlotPowerTimePressed();
-		void onPlotScatterPressed();
+		void onPlotPowerTimeComparisonPressed();
+		void onPlotTimeScatterPressed();
+		void onPlotTimeScatterComparisonPressed();
 		void onPlotSingularValuesPressed();
 		void onPlotSNRToFitVariance();
 		void onPlotQuality25Pressed();
@@ -185,19 +208,39 @@ class MSWindow : public Gtk::Window {
 		void onTimeGraphButtonPressed();
 		void onFrequencyGraphButtonPressed();
 		void onUnrollPhaseButtonPressed();
+		void onVertEVD();
+		void onApplyTimeProfile();
+		void onApplyVertProfile();
+		void onRestoreTimeProfile() { onUseTimeProfile(true); }
+		void onRestoreVertProfile() { onUseVertProfile(true); }
+		void onReapplyTimeProfile() { onUseTimeProfile(false); }
+		void onReapplyVertProfile() { onUseVertProfile(false); }
+		void onUseTimeProfile(bool inverse);
+		void onUseVertProfile(bool inverse);
+		void onStoreData();
+		void onRecallData();
+		void onSubtractDataFromMem();
+		void onTimeMergeUnsetValues();
+		
 		void showError(const std::string &description);
-		void onSimulateCorrelation();
-		void onSimulateSourceSetA();
-		void onSimulateSourceSetB();
-		void onSimulateSourceSetC();
-		void onSimulateSourceSetD();
-		void onSimulateFourProductCorrelation();
-
+		void setSetNameInStatusBar();
+		
+		DefaultModels::SetLocation getSetLocation(bool empty = false);
+		void loadDefaultModel(DefaultModels::Distortion distortion, bool withNoise, bool empty = false);
+		void onSimulateCorrelation() { loadDefaultModel(DefaultModels::ConstantDistortion, false); }
+		void onSimulateSourceSetA() { loadDefaultModel(DefaultModels::ConstantDistortion, true); }
+		void onSimulateSourceSetB() { loadDefaultModel(DefaultModels::VariableDistortion, true); }
+		void onSimulateSourceSetC() { loadDefaultModel(DefaultModels::FaintDistortion, true); }
+		void onSimulateSourceSetD() { loadDefaultModel(DefaultModels::MislocatedDistortion, true); }
+		void onSimulateOffAxisSource() { loadDefaultModel(DefaultModels::ConstantDistortion, false, true); }
+		void onSimulateOnAxisSource() { loadDefaultModel(DefaultModels::OnAxisSource, false, true); }
+		
+		void onShowAntennaMapWindow();
 		void openTestSet(unsigned index);
 		
 		Gtk::VBox _mainVBox;
 		Gtk::VPaned _panedArea;
-		TimeFrequencyWidget _timeFrequencyWidget;
+		ImageComparisonWidget _timeFrequencyWidget;
 		Glib::RefPtr<Gtk::ActionGroup> _actionGroup;
 		Gtk::Statusbar _statusbar;
 		PlotFrame _plotFrame;
@@ -205,22 +248,33 @@ class MSWindow : public Gtk::Window {
 		Glib::RefPtr<Gtk::ToggleAction>
 			_originalFlagsButton, _altFlagsButton,
 			_originalImageButton, _backgroundImageButton, _diffImageButton,
-			_timeGraphButton;
+			_timeGraphButton, _simFixBandwidthButton;
 		Glib::RefPtr<Gtk::RadioAction>
-			_mapLogButton, _mapBWButton, _mapColorButton,
-			_gaussianTestSetsButton, _rayleighTestSetsButton;
-		std::vector<Gtk::Window*> _subWindows;
+			_gaussianTestSetsButton, _rayleighTestSetsButton, _zeroTestSetsButton,
+			_ncpSetButton, _b1834SetButton, _emptySetButton,
+			_sim16ChannelsButton, _sim64ChannelsButton, _sim256ChannelsButton;
 		class ImagePlaneWindow *_imagePlaneWindow;
+		class HistogramWindow *_histogramWindow;
+		Gtk::Window
+			*_optionWindow, *_editStrategyWindow,
+			*_gotoWindow,
+			*_progressWindow, *_highlightWindow,
+			*_plotComplexPlaneWindow, *_imagePropertiesWindow,
+			*_antennaMapWindow;
 
 		class RFIStatistics *_statistics;
 		
 		rfiStrategy::ImageSet *_imageSet;
 		rfiStrategy::ImageSetIndex *_imageSetIndex;
 		rfiStrategy::Strategy *_strategy;
-		bool _gaussianTestSets;
+		int _gaussianTestSets;
 		boost::mutex _ioMutex;
 		SegmentedImagePtr _segmentedImage;
 		class SpatialMatrixMetaData *_spatialMetaData;
+		std::vector<double> _horProfile, _vertProfile;
+		TimeFrequencyData _storedData;
+		PlotManager _plotManager;
+		PlotWindow _plotWindow;
 };
 
 #endif

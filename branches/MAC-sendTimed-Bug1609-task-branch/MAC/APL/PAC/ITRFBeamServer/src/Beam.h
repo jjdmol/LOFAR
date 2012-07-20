@@ -24,6 +24,7 @@
 #define BEAM_H_
 
 #include <lofar_config.h>
+#include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_bitset.h>
 #include <Common/lofar_list.h>

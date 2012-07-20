@@ -1,6 +1,6 @@
 //# Backtrace.h: Store stack frame return addresses for self-debugging.
 //#
-//# Copyright (C) 2002-2008
+//# Copyright (C) 2002-2011
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -30,7 +30,7 @@
 # error Backtrace is not supported.
 #endif
 
-// \def BACKTRACE_MAX_RETURN_ADDRESSES Maximum number of stack frame return
+// Maximum number of stack frame return
 // addresses that will be stored by the Backtrace class (default=50).
 #ifndef BACKTRACE_MAX_RETURN_ADDRESSES
 # define BACKTRACE_MAX_RETURN_ADDRESSES 50

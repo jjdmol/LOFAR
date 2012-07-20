@@ -4,6 +4,7 @@
 #include <Common/lofar_complex.h>
 #include <Common/DataConvert.h>
 #include <Interface/Align.h>
+#include <Interface/Allocator.h>
 #include <Interface/MultiDimArray.h>
 #include <Interface/Config.h>
 #include <Interface/StreamableData.h>
@@ -17,30 +18,24 @@
 namespace LOFAR {
 namespace RTCP {
 
-template <typename SAMPLE_TYPE> class InputData: public SampleData<SAMPLE_TYPE,3>
+template <typename SAMPLE_TYPE> class InputData: public SampleData<SAMPLE_TYPE,3,1>
 {
   public:
-    typedef SampleData<SAMPLE_TYPE,3> SuperType;
+    typedef SampleData<SAMPLE_TYPE,3,1> SuperType;
 
-    InputData(const unsigned nrSubbands, const unsigned nrSamplesToCNProc);
-
-    virtual InputData *clone() const { return new InputData(*this); }
+    InputData(unsigned nrSubbands, unsigned nrSamplesToCNProc, Allocator &allocator = heapAllocator);
 
     // used for asynchronous transpose
     void readOne(Stream *str, unsigned subbandPosition);
 
   protected:
     virtual void checkEndianness();
-
-  private:
-    const unsigned	    itsNrSubbands;
 };
 
 
-template <typename SAMPLE_TYPE> inline InputData<SAMPLE_TYPE>::InputData(const unsigned nrSubbands, const unsigned nrSamplesToCNProc)
+template <typename SAMPLE_TYPE> inline InputData<SAMPLE_TYPE>::InputData(unsigned nrSubbands, unsigned nrSamplesToCNProc, Allocator &allocator)
 :
-  SuperType( false, boost::extents[nrSubbands][nrSamplesToCNProc][NR_POLARIZATIONS], 0 ),
-  itsNrSubbands(nrSubbands)
+  SuperType(boost::extents[nrSubbands][nrSamplesToCNProc][NR_POLARIZATIONS], boost::extents[0], allocator)
 {
 }
 

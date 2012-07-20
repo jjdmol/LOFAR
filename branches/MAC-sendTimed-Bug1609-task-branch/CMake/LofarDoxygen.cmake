@@ -49,6 +49,18 @@ if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
     endif(NOT DOXYGEN_HTML_OUTPUT)
     file(MAKE_DIRECTORY "${DOXYGEN_HTML_OUTPUT}")
 
+    # Set system- and build-dependent predefinitions for Doxygen, in order to
+    # make sure that the generated documentation will match with the code.
+    get_directory_property(_defs COMPILE_DEFINITIONS)
+    set(DOXYGEN_PREDEFINED ${_defs})
+    get_directory_property(_cache_vars CACHE_VARIABLES)
+    foreach(_cv ${_cache_vars})
+      if(_cv MATCHES "^HAVE_")
+        list(APPEND DOXYGEN_PREDEFINED ${_cv})
+      endif(_cv MATCHES "^HAVE_")
+    endforeach(_cv ${_cache_vars})
+    lofar_join_arguments(DOXYGEN_PREDEFINED)
+
     # Generate the Doxygen configuration file, used by Doxygen.
     configure_file(
       "${CMAKE_SOURCE_DIR}/CMake/docscripts/doxygen.cfg.in"

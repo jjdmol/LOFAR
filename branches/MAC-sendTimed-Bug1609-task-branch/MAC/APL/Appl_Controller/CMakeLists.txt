@@ -1,4 +1,4 @@
-# $Id: CMakeLists.txt 13516 2009-06-30 10:05:44Z loose $
+# $Id$
 
 lofar_package(Appl_Controller 2.0 DEPENDS Common MACIO ALC PLC)
 
@@ -31,10 +31,8 @@ lofar_add_bin_program(ACuserMenu ACuserMenu.cc)
 
 install(PROGRAMS 
   startAP.sh
-  startBGL.sh
   startMPI.sh
   stopAP.sh
-  stopBGL.sh 
   stopMPI.sh
   DESTINATION bin)
   

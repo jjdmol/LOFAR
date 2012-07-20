@@ -44,25 +44,42 @@ class Image2D {
 	public:
 		
 		/**
-		 * Creates an image containing unset zeros.
+		 * Creates an image containing unset values.
 		 * @param width Width of the new image.
 		 * @param height Height of the new image.
-		 * @return The new created image. Should be deleted by the caller.
+		 * @return The new image. Should be deleted by the caller.
 		 */
-		static Image2D *CreateEmptyImage(long width, long height);
-		static Image2DPtr CreateEmptyImagePtr(long width, long height)
+		static Image2D *CreateUnsetImage(size_t width, size_t height)
 		{
-			return Image2DPtr(CreateEmptyImage(width, height));
+			return new Image2D(width, height);
 		}
 		
 		/**
-		 * Creates an image containing zeros that are "set".
+		 * As CreateUnsetImage(), but returns a smart pointer instead.
+		 * @param width Width of the new image.
+		 * @param height Height of the new image.
+		 * @return A (unique) smart pointer to the new image.
+		 */
+		static Image2DPtr CreateUnsetImagePtr(size_t width, size_t height)
+		{
+			return Image2DPtr(CreateUnsetImage(width, height));
+		}
+		
+		/**
+		 * Creates an image containing zeros.
 		 * @param width Width of the new image.
 		 * @param height Height of the new image.
 		 * @return The new created image. Should be deleted by the caller.
 		 */
-		static Image2D *CreateZeroImage(long width, long height);
-		static Image2DPtr CreateZeroImagePtr(long width, long height)
+		static Image2D *CreateZeroImage(size_t width, size_t height);
+		
+		/**
+		 * As CreateZeroImage(), but returns a smart pointer instead.
+		 * @param width Width of the new image.
+		 * @param height Height of the new image.
+		 * @return The (unique) smart pointer to the new image.
+		 */
+		static Image2DPtr CreateZeroImagePtr(size_t width, size_t height)
 		{
 			return Image2DPtr(CreateZeroImage(width, height));
 		}
@@ -123,7 +140,7 @@ class Image2D {
 		 * Returns the maximum value in the specified range.
 		 * @return The maximimum value.
 		 */
-		num_t GetMaximum(unsigned xOffset, unsigned yOffset, unsigned width, unsigned height) const;
+		num_t GetMaximum(size_t xOffset, size_t yOffset, size_t width, size_t height) const;
 
 		/**
 		 * Returns the minimum value in the image.
@@ -135,25 +152,19 @@ class Image2D {
 		 * Returns the minimum value in the specified range.
 		 * @return The minimum value.
 		 */
-		num_t GetMinimum(unsigned xOffset, unsigned yOffset, unsigned width, unsigned height) const;
+		num_t GetMinimum(size_t xOffset, size_t yOffset, size_t width, size_t height) const;
 
 		/**
-		 * Returns the maximum value in the image.
+		 * Returns the maximum finite value in the image.
 		 * @return The maximimum value.
 		 */
 		num_t GetMaximumFinite() const;
 		
 		/**
-		 * Returns the minimum value in the image.
+		 * Returns the minimum finite value in the image.
 		 * @return The minimum value.
 		 */
 		num_t GetMinimumFinite() const;
-		
-		/**
-		 * Retrieves the number of unset values in the image.
-		 * @return The number of unset values.
-		 */
-		unsigned long GetUnsetValueCount() const;
 		
 		/**
 		 * Retrieves the value at a specific position.
@@ -161,26 +172,19 @@ class Image2D {
 		 * @param y y-coordinate
 		 * @return The value.
 		 */
-		inline num_t Value(long x, long y) const { return _data[y*_width+x]; }
+		inline num_t Value(size_t x, size_t y) const { return _dataPtr[y][x]; }
 		
 		/**
-		 * Retrieves the value at a specific offset (y * width + x)
-		 * @param ptr The pointer to the position.
-		 * @return The value.
-		 */
-		inline num_t Value(long ptr) const { return _data[ptr]; }
-		
-		/**
-		 * Retrieve the width of the image.
+		 * Get the width of the image.
 		 * @return Width of the image.
 		 */
-		inline unsigned long Width() const { return _width; }
+		inline size_t Width() const { return _width; }
 		
 		/**
-		 * Retrieve the height of the image.
+		 * Get the height of the image.
 		 * @return Height of the image.
 		 */
-		inline unsigned long Height() const { return _height; }
+		inline size_t Height() const { return _height; }
 		
 		/**
 		 * Change a value at a specific position.
@@ -188,20 +192,28 @@ class Image2D {
 		 * @param y y-coordinate of value to change.
 		 * @param newValue New value.
 		 */
-		inline void SetValue(long x, long y, num_t newValue)
+		inline void SetValue(size_t x, size_t y, num_t newValue)
 		{
-			long i = y*_width+x;
-			_data[i] = newValue;
+			_dataPtr[y][x] = newValue;
 		}
 
 		void SetValues(const Image2D &source);
-
-		void SetZero();
-		
-		inline void AddValue(long x, long y, num_t addValue)
+		void SetValues(Image2DCPtr source)
 		{
-			long i = y*_width+x;
-			_data[i] += addValue;
+			SetValues(*source);
+		}
+
+		void SetAll(num_t value)
+		{
+			const size_t size = _stride * _height;
+			for(size_t i=0;i<size;i++) {
+				_dataConsecutive[i] = value;
+			}
+		}
+		
+		inline void AddValue(size_t x, size_t y, num_t addValue)
+		{
+			_dataPtr[y][x] += addValue;
 		}
 		
 		/**
@@ -209,6 +221,29 @@ class Image2D {
 		 * @return @c true if the value only contains zeros or unset values.
 		 */
 		bool ContainsOnlyZeros() const;
+		
+		/**
+		 * Compute the sum of all values
+		 */
+		num_t Sum() const
+		{
+			num_t sum = 0.0;
+			for(size_t y=0;y<_height;++y)
+			{
+				for(size_t x=0;x<_width;++x)
+					sum += Value(x, y);
+			}
+			return sum;
+		}
+		
+		void SetToAbs()
+		{
+			for(size_t y=0;y<_height;++y)
+			{
+				for(size_t x=0;x<_width;++x)
+					SetValue(x, y,  fabsn(Value(x, y)));
+			}
+		}
 		
 		/**
 		 * Retrieve a factor to multiply the values with to normalise them.
@@ -223,7 +258,9 @@ class Image2D {
 			return GetRMS(0, 0, _width, _height);
 		}
 
-		num_t GetRMS(unsigned xOffset, unsigned yOffset, unsigned width, unsigned height) const;
+		num_t GetMode() const;
+		
+		num_t GetRMS(size_t xOffset, size_t yOffset, size_t width, size_t height) const;
 
 		/**
 		 * Normalize the data so that the variance is 1.
@@ -264,7 +301,7 @@ class Image2D {
 		}
 
 		/**
-		 * Returns a threshold for which #count values are above the
+		 * Returns a threshold for which @c count values are above the
 		 * the threshold. That is, GetCountAbove(GetTresholdForCountAbove(x)) = x.
 		 */
 		num_t GetTresholdForCountAbove(size_t count) const;
@@ -280,31 +317,74 @@ class Image2D {
 		void MultiplyValues(num_t factor);
 
 		/**
+		 * Flips the image round the diagonal, i.e., x becomes y and y becomes x.
+		 */
+		Image2DPtr CreateXYFlipped() const
+		{
+			Image2D *image = new Image2D(_height, _width);
+			for(unsigned y=0;y<_height;++y)
+			{
+				for(unsigned x=0;x<_width;++x)
+					image->_dataPtr[x][y] = _dataPtr[y][x];
+			}
+			return Image2DPtr(image);
+		}
+		
+		void SwapXY()
+		{
+			Image2DPtr swapped = CreateXYFlipped();
+			Swap(swapped);
+		}
+		
+		/**
+		 * Swaps the contents of the two masks. This can be used as a move assignment operator, as it
+		 * only swaps pointers; hence it is fast.
+		 */
+		void Swap(Image2D &source)
+		{
+			std::swap(source._width, _width);
+			std::swap(source._stride, _stride);
+			std::swap(source._height, _height);
+			std::swap(source._dataPtr, _dataPtr);
+			std::swap(source._dataConsecutive, _dataConsecutive);
+		}
+		
+		/**
+		 * Swaps the contents of the two masks. This can be used as a move assignment operator, as it
+		 * only swaps pointers; hence it is fast.
+		 */
+		void Swap(Image2DPtr source)
+		{
+			Swap(*source);
+		}
+		
+		/**
 		 * Resample the image horizontally by decreasing the width
 		 * with an integer factor.
 		 */
-		Image2DPtr ShrinkHorizontally(int factor) const;
+		Image2DPtr ShrinkHorizontally(size_t factor) const;
 
 		/**
 		 * Resample the image vertically by decreasing the height
 		 * with an integer factor.
 		 */
-		Image2DPtr ShrinkVertically(int factor) const;
+		Image2DPtr ShrinkVertically(size_t factor) const;
 
 		/**
 		 * Resample the image horizontally by increasing the width
 		 * with an integer factor.
 		 */
-		Image2DPtr EnlargeHorizontally(int factor, size_t newWidth) const;
+		Image2DPtr EnlargeHorizontally(size_t factor, size_t newWidth) const;
 
 		/**
 		 * Resample the image vertically by increasing the width
 		 * with an integer factor.
 		 */
-		Image2DPtr EnlargeVertically(int factor, size_t newHeight) const;
+		Image2DPtr EnlargeVertically(size_t factor, size_t newHeight) const;
 
-		Image2DPtr Trim(unsigned long startX, unsigned long startY, unsigned long endX, unsigned long endY) const;
-		void SetTrim(unsigned long startX, unsigned long startY, unsigned long endX, unsigned long endY);
+		Image2DPtr Trim(size_t startX, size_t startY, size_t endX, size_t endY) const;
+		
+		void SetTrim(size_t startX, size_t startY, size_t endX, size_t endY);
 		
 		void CopyFrom(Image2DCPtr source, size_t destX, size_t destY)
 		{
@@ -319,13 +399,59 @@ class Image2D {
 					SetValue(x, y, source->Value(x-destX, y-destY));
 			}
 		}
+		
+		/**
+		 * Returns a pointer to one row of data. This can be used to step
+		 * quickly over the data in x direction. Note that the next row
+		 * is not exactly at "one times width", because the number of
+		 * samples in a row is made divisable by four. This makes it
+		 * possible to execute SSE instruction easily.
+		 * 
+		 * If you want to skip over a whole row, use the Stride() method
+		 * to determine the intrinsicly used width of one row.
+		 * 
+		 * @see Stride()
+		 */
+		inline num_t *ValuePtr(unsigned x, unsigned y)
+		{
+			return &_dataPtr[y][x];
+		}
+		
+		/**
+		 * Returns a constant pointer to one row of data. This can be used to
+		 * step quickly over the data in x direction. Note that the next row
+		 * is not exactly at "one times width", because the number of
+		 * samples in a row is made divisable by four. This makes it
+		 * possible to execute SSE instruction easily.
+		 * 
+		 * If you want to skip over a whole row, use the Stride() method
+		 * to determine the intrinsicly used width of one row.
+		 * 
+		 * @see Stride()
+		 */
+		inline const num_t *ValuePtr(unsigned x, unsigned y) const
+		{
+			return &_dataPtr[y][x];
+		}
+		
+		/**
+		 * This value specifies the intrinsic width of one row. It is
+		 * normally the first number that is >= Width() and divisable by
+		 * four. When using the ValuePtr(unsigned, unsigned) method,
+		 * this value can be used to step over one row.
+		 * 
+		 * @see ValuePtr(unsigned, unsigned)
+		 */
+		inline size_t Stride() const
+		{
+			return _stride;
+		}
+		
 	private:
-		Image2D(long width, long height);
-		unsigned long _width, _height;
-		num_t *_data;
-
-		//static long _imageCount;
-		//long _thisImage;
+		Image2D(size_t width, size_t height);
+		size_t _width, _height;
+		size_t _stride;
+		num_t **_dataPtr, *_dataConsecutive;
 };
 
 #endif

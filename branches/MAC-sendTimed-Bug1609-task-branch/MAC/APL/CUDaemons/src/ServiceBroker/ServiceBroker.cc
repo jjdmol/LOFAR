@@ -485,9 +485,11 @@ void ServiceBroker::saveAdministration(const string&	aFileName)
 			// note: the TCPport is not saved because it can not be restored.
 			outFile.write((char*)&itsServiceList[idx].portNumber, 
 						   sizeof(itsServiceList[idx].portNumber));
-			uint16	size = itsServiceList[idx].serviceName.length() + 1;	// save 0 also
 			char	srvName[256];
-			strcpy (srvName, itsServiceList[idx].serviceName.c_str());
+			strncpy (srvName, itsServiceList[idx].serviceName.c_str(), sizeof srvName);
+                        srvName[sizeof srvName - 1] = 0;
+                        uint16  size = strlen( srvName ) + 1; // use this length as the string might have been truncated. Also, include the trailing 0.
+
 			outFile.write((char*)&size, sizeof(size));
 			outFile.write(srvName, size);
 			count--;

@@ -171,6 +171,8 @@ string	ApplControlClient::askInfo(const string&	keyList) const
 
 string	ApplControlClient::supplyInfo(const string&	keyList) const 
 {
+    (void)keyList;
+
 	return ("ERROR: The supplyInfo function is not implemented");
 }
 
@@ -184,6 +186,8 @@ void	ApplControlClient::handleAckMessage(ACCmd 			cmd,
 
 void	ApplControlClient::handleAnswerMessage(const string&	answer) const
 {
+    (void)answer;
+
 	LOG_DEBUG("ApplControlClient:handleAnswerMessage()");
 	LOG_DEBUG_STR("Answer=" << itsCommChan->getDataHolder()->getOptions());
 }

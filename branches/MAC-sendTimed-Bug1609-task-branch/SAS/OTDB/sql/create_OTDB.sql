@@ -19,6 +19,7 @@
 -- OTDBConnection
 \i getTreeList_func.sql
 \i getTreeInfo_func.sql
+\i assignProcessType_func.sql
 \i newTree_func.sql
 \i getExecutableTrees_func.sql
 \i getTreeGroup_func.sql
@@ -30,6 +31,7 @@
 \i getPICparamDef_func.sql
 \i getPICitemList_func.sql
 \i searchPICinPeriod_func.sql
+\i getBrokenHardware_func.sql
 
 -- Events and Actions
 \i create_event_action.sql
@@ -53,6 +55,7 @@
 \i updateVTnode_func.sql
 \i deleteVTnode_func.sql
 \i getVTitemList_func.sql
+\i getVTitem_func.sql
 \i getVTchildren_func.sql
 \i instanciateTree_func.sql
 
@@ -73,12 +76,13 @@
 \i classify_func.sql
 \i setMomInfo_func.sql
 \i setDescription_func.sql
+\i getMomID2treeID_func.sql
 
 -- campaign
 \i campaignAPI.sql
 
 -- SchedulerInfo
-\i getSchedulerInfo.sql
+\i getSchedulerInfo_func.sql
 \i saveSchedulerInfo_func.sql
 \i getAllTaskID_func.sql
 

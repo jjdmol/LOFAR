@@ -73,6 +73,16 @@ static	stateFlow	stateFlowTable[] = {
 	{	0x00,					CTState::NOSTATE,		CTState::NOSTATE	}
 };
 
+enum {
+	TT_NO_TIMER = 0,
+	TT_STATE_TIMER,
+	TT_START_TIMER,
+	TT_STOP_TIMER
+};
+
+// define delay between real start/stop time of observation and the emergency timers.
+const int EMERGENCY_DELAY = 1;
+
 //-------------------------- creation and destroy ---------------------------
 
 ParentControl* ParentControl::instance()
@@ -90,12 +100,13 @@ ParentControl* ParentControl::instance()
 // ParentControl(name, parenthost, parentService))
 //
 ParentControl::ParentControl() :
-	GCFTask			 ((State)&ParentControl::initial, "ParentControl"),
-	itsParentList	 (),
-	itsSDPort		 (0),
-	itsMainTaskPort  (0),
-	itsTimerPort	 (*this, "parentControlTimer"),
-	itsControllerName()
+	GCFTask			 	  ((State)&ParentControl::initial, "ParentControl"),
+	itsParentList	 	  (),
+	itsSDPort		 	  (0),
+	itsMainTaskPort  	  (0),
+	itsTimerPort	 	  (*this, "parentControlTimer"),
+	itsFirstConnectTimerID(0),
+	itsControllerName	  ()
 {
 	// Log the protocols I use.
 	registerProtocol(CONTROLLER_PROTOCOL,  CONTROLLER_PROTOCOL_STRINGS);
@@ -121,9 +132,9 @@ ParentControl::~ParentControl()
 }
 
 //
-// registerTask(mainTask) : ITCPort
+// registerTask(mainTask, standAlone) : ITCPort
 //
-GCFITCPort*	ParentControl::registerTask(GCFTask*		mainTask)
+GCFITCPort*	ParentControl::registerTask(GCFTask*		mainTask, bool standAlone)
 {
 	if (!itsMainTaskPort) {
 		itsMainTaskPort = new GCFITCPort(*mainTask, *this, mainTask->getName(), 
@@ -137,6 +148,13 @@ GCFITCPort*	ParentControl::registerTask(GCFTask*		mainTask)
 		itsSDPort->open();				// will result in F_CONN or F_DISCONN signal
 
 		itsControllerName = mainTask->getName();		// remember for later
+
+	}
+
+	if (standAlone) {
+		LOG_INFO_STR("Going to stand alone mode");
+		itsTimerPort.cancelTimer(itsFirstConnectTimerID);
+		itsFirstConnectTimerID = -1;
 	}
 
 	return (itsMainTaskPort);
@@ -178,12 +196,12 @@ bool ParentControl::activateObservationTimers(const string&		cntlrName,
 	time_duration	stopDiff (seconds(0));			// calc when to stop
 	if (legalStartTime) {
 		startDiff = startTime - now;				// calc when to start
-		LOG_INFO_STR("Start is over " << to_simple_string(startDiff) << " hours at " 
+		LOG_INFO_STR("Start is over " << to_simple_string(startDiff) << " (h:m:s) at " 
 					<< to_simple_string(startTime));
 	}
 	if (legalStopTime) {
 		stopDiff = stopTime - now;
-		LOG_INFO_STR("Stop is over  " << to_simple_string(stopDiff) << " hours at " 
+		LOG_INFO_STR("Stop is over  " << to_simple_string(stopDiff) << " (h:m:s) at " 
 					<< to_simple_string(stopTime));
 	}
 
@@ -192,7 +210,7 @@ bool ParentControl::activateObservationTimers(const string&		cntlrName,
 	//		>0			<0		stopTime < startTime, captured above
 	//		<0			>0		obs should be running by now!!
 	//		<0			<0		obs is over!
-	if (stopDiff.seconds() < 0) {
+	if (stopDiff.total_seconds() < 0) {
 		LOG_ERROR("Stoptime is already past! Shutting down controller.");
 		parent->requestedState = CTState::QUITED;
 		parent->requestTime	   = time(0);
@@ -200,7 +218,7 @@ bool ParentControl::activateObservationTimers(const string&		cntlrName,
 		return (false);
 	}
 
-	if (startDiff.seconds() < 0) {
+	if (startDiff.total_seconds() < 0) {
 		LOG_WARN("Observation should have been started, going to start-state a.s.a.p.");
 		parent->requestedState = CTState::RESUMED;
 		parent->requestTime	   = time(0);
@@ -209,16 +227,20 @@ bool ParentControl::activateObservationTimers(const string&		cntlrName,
 
 	// set or reset the real timers.
 	itsTimerPort.cancelTimer(parent->startTimer);
-	if (startDiff.seconds() > 0) {
-		parent->startTimer = itsTimerPort.setTimer((double)startDiff.seconds());
+	if (startDiff.total_seconds() > 0) {
+		parent->startTimer = itsTimerPort.setTimer((double)startDiff.total_seconds()+EMERGENCY_DELAY);
+		LOG_INFO_STR("Emergency startTimer for " << parent->name << " set to " << 
+						to_simple_string(startTime+seconds(EMERGENCY_DELAY)));
 	}
 	else {
 		parent->startTimer = 0;
 	}
 
 	itsTimerPort.cancelTimer(parent->stopTimer);
-	if (stopDiff.seconds() > 0) {
-		parent->stopTimer = itsTimerPort.setTimer((double)stopDiff.seconds());
+	if (stopDiff.total_seconds() > 0) {
+		parent->stopTimer = itsTimerPort.setTimer((double)stopDiff.total_seconds()+EMERGENCY_DELAY);
+		LOG_INFO_STR("Emergency stopTimer for " << parent->name << " set to " << 
+						to_simple_string(stopTime+seconds(EMERGENCY_DELAY)));
 	}
 	else {
 		parent->stopTimer = 0;
@@ -245,7 +267,7 @@ bool ParentControl::nowInState(const string&		cntlrName,
 
 	PIiter		parent = findParentOnName(cntlrName);
 	if (!isParent(parent)) {
-		LOG_ERROR_STR("Unknown controllername " << cntlrName << 
+		LOG_WARN_STR("Unknown controllername " << cntlrName << 
 					  ", can not register new state: " << cts.name(newState));
 		return (false);
 	}
@@ -306,6 +328,13 @@ CTState::CTstateNr ParentControl::getNextState(PIiter		parent)
 {
 	if (parent->currentState == parent->requestedState) {
 		return (parent->requestedState);
+	}
+
+	// make sure there is no way back once we are shutting down.
+	if (parent->currentState >= CTState::QUIT) {
+		CTState		cts;
+		LOG_INFO_STR("Ignoring state-change to " << cts.name(parent->requestedState) << " because we are in Quit-state already");
+		return (CTState::QUITED);
 	}
 
 	// look if signal is inband
@@ -370,12 +399,25 @@ void ParentControl::_doRequestedAction(PIiter	parent)
 	CTState	cts;
 	LOG_DEBUG_STR("_doRequestedAction:" << parent->name << " : " << 
 			cts.name(parent->currentState) << "-->" << cts.name(parent->requestedState));
+	LOG_DEBUG_STR("_doRequestedAction:" << parent->name << " : nextState = " << cts.name(getNextState(parent)));
 
+	// stop emergency timers when they are not neccesary anymore
+	if (parent->requestedState >= CONTROL_RESUMED && parent->startTimer) {
+		LOG_DEBUG_STR("Canceling startTimer for " << parent->name);
+		itsTimerPort.cancelTimer(parent->startTimer);
+		parent->startTimer = 0;
+	}
+	if (parent->requestedState >= CONTROL_SUSPEND && parent->stopTimer) {
+		LOG_DEBUG_STR("Canceling stopTimer for " << parent->name);
+		itsTimerPort.cancelTimer(parent->stopTimer);
+		parent->stopTimer = 0;
+	}
 	// state already reached? make sure the timer is off.
 	if (parent->requestedState == parent->currentState) {
 		parent->nrRetries = -1;
 		itsTimerPort.cancelTimer(parent->timerID);
 		parent->timerID = 0;
+		return;
 	}
 
 //	switch (parent->requestedState) {
@@ -398,13 +440,12 @@ void ParentControl::_doRequestedAction(PIiter	parent)
 				parent->currentState == CTState::CONNECTED) {
 				return;
 			}
-
-			ASSERTSTR(parent->currentState == CTState::CONNECT, 
-								"Unexpected state:" << parent->currentState);
+			ASSERTSTR(parent->currentState == CTState::CONNECT, "Unexpected state:" << parent->currentState);
 
 			// construct and send message
 			CONTROLConnectEvent		hello;
 			hello.cntlrName = parent->name;
+			hello.result    = CT_RESULT_NO_ERROR;
 			parent->port->send(hello);
 
 			// (re)set the parameters of this connection
@@ -484,21 +525,21 @@ bool ParentControl::_confirmState(uint16			signal,
 //					  cts.name(parent->requestedState));
 //	}
 
-	if (result != CT_RESULT_NO_ERROR) {		// error reaching a state?
+	// QUITED is a special case!
+	if (signal == CONTROL_QUITED) {
+		LOG_INFO_STR(cntlrName << " reached the Quited state, error=" << result);
+		nowInState(cntlrName, cts.signal2stateNr(signal));
+		return (true);
+	}
+
+	if (F_ERR_NR(result) != 0) {			// error reaching a state?
 		parent->failed = true;				// report problem
-		LOG_ERROR_STR(cntlrName << " DID NOT reach the " << 
-			cts.name(requestedState(signal)) << " state, error=" << result);
-		// if we are NOT trying to quit, don't continue with the state-sequence.
-		// when we ARE trying to reach the QUIT state continue otherwise we will 
-		// be running forever.
-		if (parent->requestedState != CTState::QUITED) {
-			return (false);
-		}
+		LOG_INFO_STR(cntlrName << " DID NOT reach the " << cts.name(requestedState(signal)) << " state, error=" << result);
+		return (false);
 	}
-	else {		// no error while reaching the new state
-		LOG_DEBUG_STR(cntlrName << " reached " << cts.name(cts.signal2stateNr(signal)) << 
-							" state succesfully");
-	}
+
+	// state reached succesfully, try if there is a next state to go to.
+	LOG_INFO_STR(cntlrName << " reached " << cts.name(cts.signal2stateNr(signal)) << " state succesfully");
 	parent->currentState = requestedState(signal);			// store new state
 
 	if (parent->currentState != parent->requestedState) {	// chain of states?
@@ -554,8 +595,16 @@ GCFEvent::TResult	ParentControl::initial(GCFEvent&			event,
 		itsSDPort->open();
 		break;
 
+	case F_EXIT:
+		// CTStartDaemon should send response within a reasonable time.
+		if (!itsFirstConnectTimerID) {
+			LOG_DEBUG_STR("Starting timer to guard communication with CTstartDaemon");
+			itsFirstConnectTimerID = itsTimerPort.setTimer(10.0);
+		}
+		break;
+
 	default:
-		LOG_DEBUG ("initial, default");
+		LOG_WARN_STR ("initial: " << eventName(event) << "@" << port.getName() << " not handled");
 		status = GCFEvent::NOT_HANDLED;
 		break;
 	}
@@ -584,9 +633,8 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 
 	switch (event.signal) {
 	case F_INIT:
-		break;
-
 	case F_ENTRY:
+	case F_EXIT:
 		break;
 
 	case F_ACCEPT_REQ:	// will not occur, using SPP port for startDaemon
@@ -601,8 +649,8 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 			}
 
 			// first connection every made with this controller?
-			if (parent->requestedState == CTState::CONNECTED && 
-							parent->currentState < CTState::CONNECTED) {
+			if (parent->firstConnection) {
+				parent->firstConnection = false; // there is only one first time!
 				_doRequestedAction(parent);	// do queued action if any.
 				break;
 			}
@@ -630,8 +678,7 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 			PIiter	parent = findParentOnPort(&port);
 			if (isParent(parent)) {
 				// trying to make first contact?
-				if (parent->requestedState == CTState::CONNECTED &&
-									parent->currentState < CTState::CONNECTED) {
+				if (parent->firstConnection) {
 					// try again in one second.
 					parent->port->close();
 					parent->timerID = itsTimerPort.setTimer(1.0);
@@ -647,9 +694,7 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 				
 				// lost connection during shutdown phase? ok, update admin.
 				if (parent->requestedState >= CTState::RELEASED) {
-					LOG_DEBUG_STR("Removing " << parent->name << " from administration");
-					parent->port->close();
-					itsParentList.erase(parent);
+					removeParent(parent);
 					break;
 				}
 
@@ -673,11 +718,38 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 		break;
 
 	case F_TIMER: {
+			uint32				timerType;
 			GCFTimerEvent&		timerEvent = static_cast<GCFTimerEvent&>(event);
 			LOG_TRACE_VAR_STR("timerID:" << timerEvent.id);
-			PIiter				parent = findParentOnTimerID(timerEvent.id);
+			if (timerEvent.id == itsFirstConnectTimerID) {
+				LOG_FATAL("CTStartdeamon did not send startup info in time, aborting program!");
+				// No connection have been made to parents yet because we are starting up. Just quit program.
+				GCFScheduler::instance()->stop();
+				break;
+			}
+
+			PIiter				parent = findParentOnTimerID(timerEvent.id, &timerType);
 			if (!isParent(parent)) {
-				LOG_DEBUG ("timerevent is not of a known parent, ignore");
+				LOG_WARN ("Timerevent is not of a known parent, ignore");
+				break;
+			}
+
+			// timer belongs to a parent, which timer expired? Change requested action accordingly.
+			switch (timerType) {
+			case TT_STATE_TIMER:
+				break;
+			case TT_STOP_TIMER:
+				nowInState(parent->name, CTState::QUIT);	// force to QUIT state, disable oob mechanism
+				parent->stopTimer = 0;
+				_doRequestedAction(parent);
+				return (GCFEvent::HANDLED);
+			case TT_START_TIMER:
+				parent->requestedState = CTState::RESUMED;
+				parent->requestTime	   = time(0);
+				parent->startTimer 	   = 0;
+				_doRequestedAction(parent);
+				return (GCFEvent::HANDLED);
+			default:
 				break;
 			}
 
@@ -695,15 +767,23 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 				}
 			}
 			else {
-				LOG_WARN_STR ("Could not reconnect to parent " << 
-							parent->name << ", deleting entry");
-//					concrete_release(parent);
-				itsParentList.erase(parent);
+				LOG_WARN_STR ("Could not reconnect to parent " << parent->name << ", deleting entry");
+				if (parent->stopTimer) {
+					itsTimerPort.cancelTimer(parent->stopTimer);
+					parent->stopTimer = itsTimerPort.setTimer(0.0);
+				}
+				else {
+					removeParent(parent);
+				}
 			}
 		}
 		break;
 
 	case STARTDAEMON_NEWPARENT: {
+		// stop timer if it still running.
+		itsTimerPort.cancelTimer(itsFirstConnectTimerID);
+		itsFirstConnectTimerID = 0;
+
 		// a new parent wants us to connect to it,
 		STARTDAEMONNewparentEvent	NPevent(event);
 
@@ -727,6 +807,7 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 									GCFPortInterface::SAP, CONTROLLER_PROTOCOL);
 		parent.hostname 	  = NPevent.parentHost;
 		parent.servicename 	  = NPevent.parentService;
+		parent.firstConnection= true;
 		parent.requestedState = CTState::CONNECTED;
 		parent.requestTime 	  = time(0);
 		parent.currentState   = CTState::NOSTATE;
@@ -748,6 +829,7 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 		LOG_DEBUG_STR("Sending CONNECT(" << parent.name << ") event to maintask");
 		CONTROLConnectEvent		request;
 		request.cntlrName = parent.name;
+		request.result	  = CT_RESULT_NO_ERROR;
 		itsMainTaskPort->sendBack(request);
 		}
 		break;
@@ -764,8 +846,10 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 			}
 			CONTROLConnectEvent	outMsg;
 			outMsg.cntlrName = inMsg.cntlrName;
+			outMsg.result    = inMsg.result;
 			parent->port->send(outMsg);
 			parent->currentState = CTState::CONNECT;
+			LOG_DEBUG_STR("Forwarding CONTROL_CONNECT to parent " << inMsg.cntlrName);
 			break;
 		}
 				
@@ -780,8 +864,9 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 
 		// warn operator when we are out of sync with our parent.
 		if (parent->requestedState != CTState::CONNECTED) {
-			LOG_WARN_STR ("Received 'CONNECTED' event while requested state is " <<
-						cts.name(parent->requestedState));
+			CONTROLConnectedEvent   inMsg(event);
+			LOG_WARN_STR ("Received 'CONNECTED' event from '" << inMsg.cntlrName << 
+					"' while requested state is " << cts.name(parent->requestedState));
 		}
 		// always accept new state because parent thinks we are in this state.
 		// TODO: when we are already beyond the claiming state should we release
@@ -966,21 +1051,19 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 				break;
 			}
 
-			// Known parent, update admin and pass message to main task
 			_confirmState(event.signal, msg.cntlrName, msg.result);
 			parent->port->send(msg);
 
 			// when message is of a non-shared controller close the port.
 			if (!isSharedController(getControllerType(msg.cntlrName))) {
-				LOG_DEBUG_STR("Not a shared controller, closing port");
-				parent->port->close();
-				itsParentList.erase(parent);
+				LOG_DEBUG_STR("Not a shared controller, removing parent");
+				removeParent(parent);
 			}
 		}
 		break;
 
 	default:
-		LOG_DEBUG ("operational, default");
+		LOG_WARN_STR ("operational: " << eventName(event) << "@" << port.getName() << " not handled");
 		status = GCFEvent::NOT_HANDLED;
 		break;
 	}
@@ -1003,14 +1086,18 @@ ParentControl::PIiter	ParentControl::findParentOnPort(GCFPortInterface*	aPort)
 }
 
 //
-// findParentOnTimerID(timerID)
+// findParentOnTimerID(timerID, &timerType)
 //
-ParentControl::PIiter	ParentControl::findParentOnTimerID(uint32	aTimerID)
+ParentControl::PIiter	ParentControl::findParentOnTimerID(uint32	aTimerID, uint32*	pTimerType)
 {
 	LOG_TRACE_COND_STR("findParentOnTimerID: " << aTimerID);
 	const_PIiter	end  = itsParentList.end();
 	PIiter			iter = itsParentList.begin();
-	while (iter != end && iter->timerID != aTimerID) {
+	*pTimerType = TT_NO_TIMER;
+	while (iter != end ) {
+		if (iter->timerID    == aTimerID) {  *pTimerType = TT_STATE_TIMER; return (iter); }
+		if (iter->startTimer == aTimerID) {  *pTimerType = TT_START_TIMER; return (iter); }
+		if (iter->stopTimer  == aTimerID) {  *pTimerType = TT_STOP_TIMER;  return (iter); }
 		iter++;	
 	}
 	return (iter);
@@ -1029,6 +1116,20 @@ ParentControl::PIiter	ParentControl::findParentOnName(const string&		aName)
 	}
 	return (iter);
 }
+
+//
+// removeParent(iter)
+//
+void ParentControl::removeParent(ParentControl::PIiter	parent)
+{
+	LOG_DEBUG_STR("Removing " << parent->name << " from administration");
+	parent->port->close();
+	itsTimerPort.cancelTimer(parent->startTimer);
+	itsTimerPort.cancelTimer(parent->stopTimer);
+	itsTimerPort.cancelTimer(parent->timerID);
+	itsParentList.erase(parent);
+}
+
 
   } // namespace APLCommon
 } // namespace LOFAR

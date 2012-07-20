@@ -22,6 +22,46 @@
 --  $Id$
 --
 
+--
+-- helper function
+-- getTemplateOrigin(TreeID)
+-- 
+-- Returns the oroginID of a template tree. When the templatetree is a
+-- default template it returns the treeID of the default template.
+--
+-- Authorisation: none
+--
+-- Tables: 	VICtemplate		read
+--
+-- Types:	none
+--
+CREATE OR REPLACE FUNCTION getTemplateOrigin(INT4)
+  RETURNS INT4 AS '
+	DECLARE
+		vTemplateID		INT4;
+		vName			OTDBtree.name%TYPE;
+
+	BEGIN
+		-- get template tree
+		SELECT	originID
+		INTO	vTemplateID
+		FROM 	OTDBtree
+		WHERE	treeID = $1;
+
+		-- get info from origin of template
+		SELECT	name
+		INTO	vName
+		FROM	OTDBtree
+		WHERE	treeID = vTemplateID;
+	  
+		-- if origin is a default template returns that treeID
+		IF vName IS NOT NULL THEN
+		  RETURN vTemplateID;
+		END IF;
+		RETURN $1;
+	END;
+' LANGUAGE plpgsql;
+
 
 --
 -- helper function
@@ -325,7 +365,7 @@ CREATE OR REPLACE FUNCTION instanciateVHsubTree(INT4, INT4, INT4, TEXT)
 -- Types:	none
 --
 CREATE OR REPLACE FUNCTION instanciateVHtree(INT4, INT4)
-  RETURNS INT4 AS '
+  RETURNS INT4 AS $$
 	DECLARE
 		vFunction  CONSTANT		INT2 := 1;
 		TTVHtree   CONSTANT		INT2 := 30;
@@ -340,6 +380,8 @@ CREATE OR REPLACE FUNCTION instanciateVHtree(INT4, INT4)
 	  	vOrgNodeID				VICtemplate.nodeID%TYPE;
 	  	vNewNodeID				VICtemplate.nodeID%TYPE;
 		vNewTreeID				OTDBtree.treeID%TYPE;
+		vOriginID				OTDBtree.treeID%TYPE;
+		vGroupID				OTDBtree.groupID%TYPE;
 		vAuthToken				ALIAS FOR $1;
 
 	BEGIN
@@ -348,26 +390,34 @@ CREATE OR REPLACE FUNCTION instanciateVHtree(INT4, INT4)
 	  SELECT isAuthorized(vAuthToken, $2, vFunction, 0)
 	  INTO	 vIsAuth;
 	  IF NOT vIsAuth THEN
-		RAISE EXCEPTION \'Not authorized\';
+		RAISE EXCEPTION 'Not authorized';
 	  END IF;
 
 	  -- get some info about the original tree
-	  SELECT momId, classif, campaign, state, description
-	  INTO	 vMomID, vClassif, vCampaign, vState, vDesc
+	  SELECT momId, classif, campaign, state, description, groupID
+	  INTO	 vMomID, vClassif, vCampaign, vState, vDesc, vGroupID
 	  FROM	 OTDBtree
 	  WHERE	 treeID = $2;
 	  -- note: tree exists, checked in authorisation check
 
+	  -- get ID of template tree if it exists
+	  SELECT getTemplateOrigin($2)
+	  INTO	 vOriginID;
+
 	  -- create a new tree
-	  SELECT newTree($1, $2, vMomID, vClassif, TTVHtree, vState, vCampaign)
+--	  SELECT newTree($1, $2, vMomID, vClassif, TTVHtree, vState, vCampaign)
+	  SELECT newTree($1, vOriginID, vMomID, vClassif, TTVHtree, vState, vCampaign)
 	  INTO	 vNewTreeID;
 	  IF vNewTreeID = 0 THEN
-		RAISE EXCEPTION \'Tree can not be created\';
+		RAISE EXCEPTION 'Tree can not be created';
 	  END IF;
 
 	  SELECT setDescription($1, vNewTreeID, vDesc)
 	  INTO	 vResult;
 	  -- ignore result, not important.
+
+	  -- copy groupid.
+	  UPDATE OTDBtree set groupid = vGroupID where treeID = vNewTreeID;
 
 	  -- get topNode
 	  SELECT nodeID
@@ -376,13 +426,17 @@ CREATE OR REPLACE FUNCTION instanciateVHtree(INT4, INT4)
 	  WHERE	 treeID = $2
 	  AND 	 parentID = 0;
 	  IF NOT FOUND THEN
-		RAISE EXCEPTION \'Topnode of tree % unknown; tree empty?\', $2;
+		RAISE EXCEPTION 'Topnode of tree % unknown; tree empty?', $2;
 	  END IF;
 
 	  -- recursively instanciate the tree
-	  vNewNodeID := instanciateVHsubTree(vOrgNodeID, vNewTreeID, 0, \'\'::text);	
+	  vNewNodeID := instanciateVHsubTree(vOrgNodeID, vNewTreeID, 0, ''::text);	
+
+	  SELECT copyProcessType($2, vNewTreeID)
+	  INTO	 vResult;
+	  -- ignore result, not important.
 
 	  RETURN vNewTreeID;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 

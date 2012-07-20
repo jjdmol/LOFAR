@@ -101,7 +101,7 @@ SubArray::SubArray (string					name,
 				if (m_antenna_selection(ant, pol)) {
 					newpos(sel, pol, Range::all()) = m_pos(ant, pol, Range::all());
 					m_rcuindex(sel, pol) = ant * m_pos.extent(secondDim) + pol;
-					itsRCUmask.set(ant * MEPHeader::N_POL + pol);
+					itsRCUmask.set(ant * N_POL + pol);
 				}
 			} // for each pol
 			sel++;

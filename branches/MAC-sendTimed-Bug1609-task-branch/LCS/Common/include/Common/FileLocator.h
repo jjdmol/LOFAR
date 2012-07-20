@@ -32,8 +32,6 @@
 #include <Common/lofar_list.h>
 #include <sys/stat.h>
 
-// Avoid 'using namespace' in headerfiles
-
 namespace LOFAR {
 
 //# --- Forward Declarations ---
@@ -83,11 +81,12 @@ public:
 	inline string	getSubdir();
 
 	//# Finally where it is all about.
-	// Tries to locate \a aFile in the search path.
-	// If \a aFile is found, then the full path name is returned; else an
-	// empty string is returned.
-	// If \a aFile contains an absolute path (i.e., it starts with a '/'),
-	// or equals is an empty string, then the input argument is returned.
+	// Try to locate \a aFile.
+	// If \a aFile is an absolute path, then simply check for its presence. 
+	// If \a aFile is a relative path, then use the current search path to
+	// locate \a aFile.
+	// If \a aFile is found, return its full pathname, otherwise an return
+	// an empty string.
 	string	locate		   (const string& aFile);
 
 private:

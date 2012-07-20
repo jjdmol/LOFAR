@@ -20,12 +20,17 @@ set(cnproc_LIB_SRCS
   BeamFormer.cc
   CN_Processing.cc
   Correlator.cc
+  Dedispersion.cc
   FCNP_ClientStream.cc
   FIR.cc
-  InversePPF.cc
   FilterBank.cc
+  InversePPF.cc
   LocationInfo.cc
   PPF.cc
+  Flagger.cc
+  PreCorrelationFlagger.cc
+  PreCorrelationNoChannelsFlagger.cc
+  PostCorrelationFlagger.cc
   Stokes.cc)
 
 # Maybe we shoud use LOFAR_COMPILER_SUITE, because ASM-BGP_COMPILER_WORKS
@@ -34,7 +39,9 @@ set(cnproc_LIB_SRCS
 if(CMAKE_ASM-BGP_COMPILER_WORKS)
   list(APPEND cnproc_LIB_SRCS
     BeamFormerAsm.S
+    ContainsOnlyZerosAsm.S
     CorrelatorAsm.S
+    DedispersionAsm.S
     FIR_Asm.S
     FFT_Asm.S
     StokesAsm.S)

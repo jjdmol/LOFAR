@@ -24,15 +24,11 @@
 #define LOFAR_INTERFACE_EXCEPTIONS_H
 
 #include <Common/Exception.h>
+#include <Common/Exceptions.h>
 
 
 namespace LOFAR {
 namespace RTCP {
-  //
-  // This exception will be thrown when an assertion fails.
-  //
-  EXCEPTION_CLASS(AssertError,LOFAR::Exception);
-
   //
   // This exception will be thrown when an rtcp fails.
   //

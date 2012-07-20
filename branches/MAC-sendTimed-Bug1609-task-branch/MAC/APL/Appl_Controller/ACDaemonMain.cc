@@ -28,10 +28,14 @@
 #include <unistd.h>                     // fork, basename
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
+#include <Common/Exception.h>
 #include "ACDaemon.h"
 
 using namespace LOFAR;
 using namespace LOFAR::ACC;
+
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 //
 // MAIN (parameterfile)

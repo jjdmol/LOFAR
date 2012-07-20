@@ -23,19 +23,25 @@
 
 #include <lofar_config.h>
 #include <DPPP/DPRun.h>
+#include <DPPP/Package__Version.h>
 #include <Common/LofarLogger.h>
+#include <Common/SystemUtil.h>
+#include <Common/Exception.h>
 #include <iostream>
 #include <stdexcept>
-#include <libgen.h>
 
 using namespace LOFAR::DPPP;
 using namespace LOFAR;
+
+// Define handler that tries to print a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 int main(int argc, char *argv[])
 {
   try
   {
-    INIT_LOGGER(basename(argv[0]));
+    TEST_SHOW_VERSION (argc, argv, DPPP);
+    INIT_LOGGER(basename(string(argv[0])));
     // Get the name of the parset file.
     string parsetName("NDPPP.parset");
     if (argc > 1) {
@@ -43,11 +49,9 @@ int main(int argc, char *argv[])
     }
     // Execute the parset file.
     DPRun::execute (parsetName);
-  } catch (std::exception& err) {
-    std::cerr << "Error detected: " << err.what() << std::endl;
+  } catch (LOFAR::Exception& err) {
+    std::cerr << "LOFAR Exception detected: " << err << std::endl;
     return 1;
-  } catch (...) {
-    std::cerr << "** PROBLEM **: Unhandled exception caught." << std::endl;
-    return 2;
   }
+  return 0;
 }

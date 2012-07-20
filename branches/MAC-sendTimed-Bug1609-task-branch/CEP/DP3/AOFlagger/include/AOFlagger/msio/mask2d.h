@@ -20,6 +20,8 @@
 #ifndef MASK2D_H
 #define MASK2D_H
 
+#include <string.h>
+
 #include <boost/shared_ptr.hpp>
 
 #include "image2d.h"
@@ -34,6 +36,40 @@ class Mask2D {
 	public:
 		~Mask2D();
 
+		// This method assumes equal height and width.
+		void operator=(Mask2DCPtr source)
+		{
+			memcpy(_valuesConsecutive, source->_valuesConsecutive, _stride * _height * sizeof(bool));
+		}
+
+		// This method assumes equal height and width.
+		void operator=(const Mask2D &source)
+		{
+			memcpy(_valuesConsecutive, source._valuesConsecutive, _stride * _height * sizeof(bool));
+		}
+		
+		/**
+		 * Swaps the contents of the two masks. This can be used as a move assignment operator, as it
+		 * only swaps pointers; hence it is fast.
+		 */
+		void Swap(Mask2D &source)
+		{
+			std::swap(source._width, _width);
+			std::swap(source._stride, _stride);
+			std::swap(source._height, _height);
+			std::swap(source._values, _values);
+			std::swap(source._valuesConsecutive, _valuesConsecutive);
+		}
+
+		/**
+		 * Swaps the contents of the two masks. This can be used as a move assignment operator, as it
+		 * only swaps pointers; hence it is fast.
+		 */
+		void Swap(Mask2DPtr source)
+		{
+			Swap(*source);
+		}
+		
 		static Mask2D *CreateUnsetMask(size_t width, size_t height)
 		{
 			return new Mask2D(width, height);
@@ -62,11 +98,7 @@ class Mask2D {
 		static Mask2D *CreateSetMask(size_t width, size_t height)
 		{
 			Mask2D *newMask = new Mask2D(width, height);
-			for(size_t y=0;y<height;++y)
-			{
-				for(size_t x=0;x<width;++x)
-					newMask->_values[y][x] = InitValue;
-			}
+			memset(newMask->_valuesConsecutive, InitValue, newMask->_stride * height * sizeof(bool));
 			return newMask;
 		}
 
@@ -86,11 +118,19 @@ class Mask2D {
 		{
 			return _values[y][x];
 		}
-		inline void SetValue(size_t x, size_t y, bool newValue) const
+		
+		inline void SetValue(size_t x, size_t y, bool newValue)
 		{
 			_values[y][x] = newValue;
 		}
+		
+		inline void SetHorizontalValues(size_t x, size_t y, bool newValue, size_t count)
+		{
+			memset(&_values[y][x], newValue, count * sizeof(bool));
+		}
+		
 		inline size_t Width() const { return _width; }
+		
 		inline size_t Height() const { return _height; }
 
 		bool AllFalse() const
@@ -106,58 +146,86 @@ class Mask2D {
 			return true;
 		}
 
-		template<bool BoolValue>
+		/**
+		 * Returns a pointer to one row of data. This can be used to step
+		 * quickly over the data in x direction. Note that the next row
+		 * is not exactly at "one times width", because the number of
+		 * samples in a row is made divisable by four. This makes it
+		 * possible to execute SSE instruction easily.
+		 * 
+		 * If you want to skip over a whole row, use the Stride() method
+		 * to determine the intrinsicly used width of one row.
+		 * 
+		 * @see Stride()
+		 */
+		inline bool *ValuePtr(size_t x, size_t y)
+		{
+			return &_values[y][x];
+		}
+		
+		/**
+		 * Returns a constant pointer to one row of data. This can be used to
+		 * step quickly over the data in x direction. Note that the next row
+		 * is not exactly at "one times width", because the number of
+		 * samples in a row is made divisable by four. This makes it
+		 * possible to execute SSE instruction easily.
+		 * 
+		 * If you want to skip over a whole row, use the Stride() method
+		 * to determine the intrinsicly used width of one row.
+		 * 
+		 * @see Stride()
+		 */
+		inline const bool *ValuePtr(size_t x, size_t y) const
+		{
+			return &_values[y][x];
+		}
+		
+		/**
+		 * This value specifies the intrinsic width of one row. It is
+		 * normally the first number that is >= Width() and divisable by
+		 * four. When using the ValuePtr(unsigned, unsigned) method,
+		 * this value can be used to step over one row.
+		 * 
+		 * @see ValuePtr(unsigned, unsigned)
+		 */
+		inline size_t Stride() const
+		{
+			return _stride;
+		}
+		
+		template<bool NewValue>
 		void SetAll()
 		{
-			for(size_t y=0;y<_height;++y)
-			{
-				for(size_t x=0;x<_width;++x)
-					_values[y][x] = BoolValue;
-			}
+			memset(_valuesConsecutive, NewValue, _stride  * _height * sizeof(bool));
 		}
 
-		template<bool BoolValue>
+		template<bool NewValue>
 		void SetAllVertically(size_t x)
 		{
 			for(size_t y=0;y<_height;++y)
-				_values[y][x] = BoolValue;
+				_values[y][x] = NewValue;
 		}
 
-		template<bool BoolValue>
+		template<bool NewValue>
 		void SetAllVertically(size_t startX, size_t endX)
 		{
 			for(size_t x=startX;x<endX;++x)
 			{
 				for(size_t y=0;y<_height;++y)
-					_values[y][x] = BoolValue;
+					_values[y][x] = NewValue;
 			}
 		}
 
-		template<bool BoolValue>
+		template<bool NewValue>
 		void SetAllHorizontally(size_t y)
 		{
-			for(size_t x=0;x<_width;++x)
-				_values[y][x] = BoolValue;
+			memset(_values[y], NewValue, _width * sizeof(bool));
 		}
 
 		template<bool BoolValue>
 		void SetAllHorizontally(size_t startY, size_t endY)
 		{
-			for(size_t y=startY;y<endY;++y)
-			{
-				for(size_t x=0;x<_width;++x)
-					_values[y][x] = BoolValue;
-			}
-		}
-
-		// This method assumes equal height and width.
-		void operator=(Mask2DCPtr source)
-		{
-			for(size_t y=0;y<_height;++y)
-			{
-				for(size_t x=0;x<_width;++x)
-					_values[y][x] = source->_values[y][x];
-			}
+			memset(_values[startY], BoolValue, _width * sizeof(bool) * (endY - startY));
 		}
 
 		void Invert()
@@ -167,6 +235,20 @@ class Mask2D {
 				for(size_t x=0;x<_width;++x)
 					_values[y][x] = !_values[y][x];
 			}
+		}
+		
+		/**
+		 * Flips the image round the diagonal, i.e., x becomes y and y becomes x.
+		 */
+		Mask2DPtr CreateXYFlipped() const
+		{
+			Mask2D *mask = new Mask2D(_height, _width);
+			for(size_t y=0;y<_height;++y)
+			{
+				for(size_t x=0;x<_width;++x)
+					mask->_values[x][y] = _values[y][x];
+			}
+			return Mask2DPtr(mask);
 		}
 
 		template<bool BoolValue>
@@ -181,8 +263,21 @@ class Mask2D {
 			}
 			return count;
 		}
+		
+		bool Equals(Mask2DCPtr other) const
+		{
+			for(size_t y=0;y<_height;++y)
+			{
+				for(size_t x=0;x<_width;++x)
+					if(_values[y][x] != other->_values[y][x])
+						return false;
+			}
+			return true;
+		}
 
 		Mask2DPtr ShrinkHorizontally(int factor) const;
+		Mask2DPtr ShrinkHorizontallyForAveraging(int factor) const;
+		
 		Mask2DPtr ShrinkVertically(int factor) const;
 
 		void EnlargeHorizontallyAndSet(Mask2DCPtr smallMask, int factor);
@@ -190,20 +285,29 @@ class Mask2D {
 
 		void Join(Mask2DCPtr other)
 		{
-			for(unsigned y=0;y<_height;++y) {
-				for(unsigned x=0;x<_width;++x)
+			for(size_t y=0;y<_height;++y) {
+				for(size_t x=0;x<_width;++x)
 					SetValue(x, y, other->Value(x, y) || Value(x, y));
 			}
 		}
-		Mask2DPtr Trim(unsigned long startX, unsigned long startY, unsigned long endX, unsigned long endY) const
+		
+		void Intersect(Mask2DCPtr other)
 		{
-			unsigned
+			for(size_t y=0;y<_height;++y) {
+				for(size_t x=0;x<_width;++x)
+					SetValue(x, y, other->Value(x, y) && Value(x, y));
+			}
+		}
+		
+		Mask2DPtr Trim(size_t startX, size_t startY, size_t endX, size_t endY) const
+		{
+			size_t
 				width = endX - startX,
 				height = endY - startY;
 			Mask2D *mask = new Mask2D(width, height);
-			for(unsigned y=startY;y<endY;++y)
+			for(size_t y=startY;y<endY;++y)
 			{
-				for(unsigned x=startX;x<endX;++x)
+				for(size_t x=startX;x<endX;++x)
 					mask->SetValue(x-startX, y-startY, Value(x, y));
 			}
 			return Mask2DPtr(mask);
@@ -222,11 +326,28 @@ class Mask2D {
 					SetValue(x, y, source->Value(x-destX, y-destY));
 			}
 		}
+		
+		void SwapXY()
+		{
+			Mask2D *tempMask = new Mask2D(_height, _width);
+			for(size_t y=0;y<_height;++y)
+			{
+				for(size_t x=0;x<_width;++x)
+				{
+					tempMask->SetValue(y, x, Value(x, y));
+				}
+			}
+			Swap(*tempMask);
+			delete tempMask;
+		}
 	private:
 		Mask2D(size_t width, size_t height);
 
 		size_t _width, _height;
+		size_t _stride;
+		
 		bool **_values;
+		bool *_valuesConsecutive;
 };
 
 #endif

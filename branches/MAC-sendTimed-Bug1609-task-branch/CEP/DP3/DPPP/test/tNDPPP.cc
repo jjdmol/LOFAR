@@ -38,25 +38,12 @@ using namespace casa;
 // The MS contains 4 corr, 16 freq, 6 baselines, 18 time slots of 30 sec.
 // Two time slots are missing between time slot 2 and 3.
 
-void testCopy()
+void checkCopy (const String& in, const String& out, int nms)
 {
-  cout << endl << "** testCopy **" << endl;
-  {
-    ofstream ostr("tNDPPP_tmp.parset");
-    ostr << "msin=tNDPPP_tmp.MS" << endl;
-    // Give starttime 35 sec before actual, hence 1 missing timeslot.
-    ostr << "msin.starttime=03-Aug-2000/13:21:45" << endl;
-    // Give endtime 90 sec after actual, hence 3 missing timeslots.
-    ostr << "msin.endtime=03-Aug-2000/13:33:15" << endl;
-    ostr << "msout=tNDPPP_tmp.MS1" << endl;
-    ostr << "msout.overwrite=true" << endl;
-    ostr << "steps=[]" << endl;
-  }
-  DPRun::execute ("tNDPPP_tmp.parset");
-  Table tin("tNDPPP_tmp.MS");
-  Table tout("tNDPPP_tmp.MS1");
+  Table tin(in);
+  Table tout(out);
   ASSERT (tout.nrow() == 6*24);
-  {
+  for (int j=0; j<nms; ++j) {
     // A few dummy time slots were inserted, so ignore those.
     Table t1 = tableCommand
       ("using style python "
@@ -65,10 +52,13 @@ void testCopy()
     ROArrayColumn<Complex> data(t1, "DATA");
     ROArrayColumn<Bool> flag(t1, "FLAG");
     ROArrayColumn<uChar> oflag(t1, "LOFAR_FULL_RES_FLAG");
-    ASSERT (data(0).shape() == IPosition(2,4,16));
-    ASSERT (flag(0).shape() == IPosition(2,4,16));
-    ASSERT (oflag(0).shape() == IPosition(2,16/8,1));
-    ASSERT (allEQ(data.getColumn(),
+    IPosition dshape (2, 4, 16);
+    IPosition dst (2, 0, j*16);
+    Slicer dslicer (dst, dshape);
+    ASSERT (data(0).shape() == IPosition(2,4,16*nms));
+    ASSERT (flag(0).shape() == IPosition(2,4,16*nms));
+    ASSERT (oflag(0).shape() == IPosition(2,16*nms/8,1));
+    ASSERT (allEQ(data.getColumn(dslicer),
                   ROArrayColumn<Complex>(tin,"DATA").getColumn()));
     ASSERT (allEQ(flag.getColumn(), false));
     ASSERT (allEQ(oflag.getColumn(), uChar(0)));
@@ -95,9 +85,9 @@ void testCopy()
     ROArrayColumn<Complex> data(t1, "DATA");
     ROArrayColumn<Bool> flag(t1, "FLAG");
     ROArrayColumn<uChar> oflag(t1, "LOFAR_FULL_RES_FLAG");
-    ASSERT (data(0).shape() == IPosition(2,4,16));
-    ASSERT (flag(0).shape() == IPosition(2,4,16));
-    ASSERT (oflag(0).shape() == IPosition(2,16/8,1));
+    ASSERT (data(0).shape() == IPosition(2,4,16*nms));
+    ASSERT (flag(0).shape() == IPosition(2,4,16*nms));
+    ASSERT (oflag(0).shape() == IPosition(2,16*nms/8,1));
     ASSERT (allEQ(data.getColumn(), Complex()));
     ASSERT (allEQ(flag.getColumn(), true));
     ASSERT (allEQ(oflag.getColumn(), uChar(0xff)));
@@ -127,24 +117,96 @@ void testCopy()
   // Now check if the SPECTRAL_WINDOW table is fine.
   Table spwin(tin.keywordSet().asTable("SPECTRAL_WINDOW"));
   Table spwout(tout.keywordSet().asTable("SPECTRAL_WINDOW"));
-  ASSERT (allEQ (ROArrayColumn<double>(spwin, "CHAN_FREQ").getColumn(),
-                 ROArrayColumn<double>(spwout,"CHAN_FREQ").getColumn()));
-  ASSERT (allEQ (ROArrayColumn<double>(spwin, "CHAN_WIDTH").getColumn(),
-                 ROArrayColumn<double>(spwout,"CHAN_WIDTH").getColumn()));
-  ASSERT (allEQ (ROArrayColumn<double>(spwin, "EFFECTIVE_BW").getColumn(),
-                 ROArrayColumn<double>(spwout,"EFFECTIVE_BW").getColumn()));
-  ASSERT (allEQ (ROArrayColumn<double>(spwin, "RESOLUTION").getColumn(),
-                 ROArrayColumn<double>(spwout,"RESOLUTION").getColumn()));
-  ASSERT (allEQ (ROScalarColumn<double>(spwin, "TOTAL_BANDWIDTH").getColumn(),
+  for (int j=0; j<nms; ++j) {
+    IPosition dshape (1, 16);
+    IPosition dst (1, j*16);
+    Slicer dslicer (dst, dshape);
+    ASSERT (allEQ (ROArrayColumn<double>(spwin, "CHAN_FREQ").getColumn(),
+                   ROArrayColumn<double>(spwout,"CHAN_FREQ").getColumn(dslicer)));
+    ASSERT (allEQ (ROArrayColumn<double>(spwin, "CHAN_WIDTH").getColumn(),
+                   ROArrayColumn<double>(spwout,"CHAN_WIDTH").getColumn(dslicer)));
+    ASSERT (allEQ (ROArrayColumn<double>(spwin, "EFFECTIVE_BW").getColumn(),
+                   ROArrayColumn<double>(spwout,"EFFECTIVE_BW").getColumn(dslicer)));
+    ASSERT (allEQ (ROArrayColumn<double>(spwin, "RESOLUTION").getColumn(),
+                   ROArrayColumn<double>(spwout,"RESOLUTION").getColumn(dslicer)));
+  }
+  ASSERT (allEQ (double(nms)*ROScalarColumn<double>(spwin, "TOTAL_BANDWIDTH").getColumn(),
                  ROScalarColumn<double>(spwout,"TOTAL_BANDWIDTH").getColumn()));
-  ASSERT (allEQ (ROScalarColumn<double>(spwin, "REF_FREQUENCY").getColumn(),
-                 ROScalarColumn<double>(spwout,"REF_FREQUENCY").getColumn()));
+  if (nms == 1) {
+    ASSERT (allEQ (ROScalarColumn<double>(spwin, "REF_FREQUENCY").getColumn(),
+                   ROScalarColumn<double>(spwout,"REF_FREQUENCY").getColumn()));
+  }
   // Check the TIME_RANGE in the OBSERVATION table.
   Table obsout(tout.keywordSet().asTable("OBSERVATION"));
   Vector<double> timeRange
     (ROArrayColumn<double>(obsout, "TIME_RANGE").getColumn());
   ASSERT (near(timeRange(0), ROScalarColumn<double>(tout,"TIME")(0) - 15));
   ASSERT (near(timeRange(1), ROScalarColumn<double>(tout,"TIME")(143) + 15));
+}
+
+void testCopy()
+{
+  cout << endl << "** testCopy **" << endl;
+  {
+    ofstream ostr("tNDPPP_tmp.parset");
+    ostr << "msin=tNDPPP_tmp.MS" << endl;
+    // Give starttime 35 sec before actual, hence 1 missing timeslot.
+    ostr << "msin.starttime=03-Aug-2000/13:21:45" << endl;
+    // Give endtime 90 sec after actual, hence 3 missing timeslots.
+    ostr << "msin.endtime=03-Aug-2000/13:33:15" << endl;
+    ostr << "msout=tNDPPP_tmp.MS1" << endl;
+    ostr << "msout.overwrite=true" << endl;
+    ostr << "steps=[]" << endl;
+  }
+  DPRun::execute ("tNDPPP_tmp.parset");
+  checkCopy ("tNDPPP_tmp.MS", "tNDPPP_tmp.MS1", 1);
+}
+
+void testMulti()
+{
+  cout << endl << "** testMulti **" << endl;
+  {
+    ofstream ostr("tNDPPP_tmp.parset");
+    ostr << "msin=[tNDPPP_tmp.MS1, tNDPPP_tmp.MS1]" << endl;
+    ostr << "msout=tNDPPP_tmp.MS1a" << endl;
+    ostr << "msout.overwrite=true" << endl;
+    ostr << "steps=[]" << endl;
+  }
+  DPRun::execute ("tNDPPP_tmp.parset");
+  checkCopy ("tNDPPP_tmp.MS", "tNDPPP_tmp.MS1a", 2);
+  {
+    ofstream ostr("tNDPPP_tmp.parset");
+    ostr << "msin=[tNDPPP_tmp.MS1, tNDPPP_tmp.MS1]" << endl;
+    ostr << "msin.datacolumn=CORRECTED_DATA" << endl;
+    ostr << "msin.missingdata=true" << endl;
+    ostr << "msin.baseline=0,2&6" << endl;
+    ostr << "msout=tNDPPP_tmp.MS1a" << endl;
+    ostr << "msout.overwrite=true" << endl;
+    ostr << "steps=[]" << endl;
+  }
+  DPRun::execute ("tNDPPP_tmp.parset");
+  Table tab("tNDPPP_tmp.MS1a");
+  ASSERT (tab.nrow() == 48);
+  ASSERT (allEQ (ROArrayColumn<Complex>(tab,"DATA").getColumn(), Complex()));
+  ASSERT (allEQ (ROArrayColumn<Bool>(tab,"FLAG").getColumn(), True));
+  ASSERT (allEQ (ROScalarColumn<Int>(tab,"ANTENNA2").getColumn(), 6));
+  {
+    ofstream ostr("tNDPPP_tmp.parset");
+    ostr << "msin=[notexist, tNDPPP_tmp.MS1, notexist, notexist]" << endl;
+    ostr << "msin.datacolumn=CORRECTED_DATA" << endl;
+    ostr << "msin.missingdata=true" << endl;
+    ostr << "msin.orderms=false" << endl;
+    ostr << "msin.baseline=0,2&6" << endl;
+    ostr << "msout=tNDPPP_tmp.MS1b" << endl;
+    ostr << "msout.overwrite=true" << endl;
+    ostr << "steps=[]" << endl;
+  }
+  DPRun::execute ("tNDPPP_tmp.parset");
+  tab = Table("tNDPPP_tmp.MS1b");
+  ASSERT (tab.nrow() == 48);
+  ASSERT (allEQ (ROArrayColumn<Complex>(tab,"DATA").getColumn(), Complex()));
+  ASSERT (allEQ (ROArrayColumn<Bool>(tab,"FLAG").getColumn(), True));
+  ASSERT (allEQ (ROScalarColumn<Int>(tab,"ANTENNA2").getColumn(), 6));
 }
 
 void checkAvg (const String& outName)
@@ -224,11 +286,11 @@ void testAvg1()
   {
     // Average in a single step.
     ofstream ostr("tNDPPP_tmp.parset");
-    ostr << "msin=tNDPPP_tmp.MS" << endl;
+    ostr << "msin.name=tNDPPP_tmp.MS" << endl;
     // Give start and end time as actual, hence no missing timeslots.
     ostr << "msin.starttime=03-Aug-2000/13:22:20" << endl;
     ostr << "msin.endtime=03-Aug-2000/13:31:45" << endl;
-    ostr << "msout=tNDPPP_tmp.MS2" << endl;
+    ostr << "msout.name=tNDPPP_tmp.MS2" << endl;
     ostr << "msout.overwrite=true" << endl;
     ostr << "steps=[avg,count]" << endl;
     ostr << "avg.type=average" << endl;
@@ -402,7 +464,6 @@ void checkFlags (const string& outName)
     ROArrayColumn<uChar> oflag(t1, "LOFAR_FULL_RES_FLAG");
     ASSERT (oflag(0).shape() == IPosition(2,2,6));
     Array<uChar> flags = oflag.getColumn();
-    cout << flags<<endl;
     ASSERT (allEQ(flags(IPosition(3,0,0,0), IPosition(3,0,3,5)), uChar(0xc5)));
     ASSERT (allEQ(flags(IPosition(3,1,0,0), IPosition(3,1,3,5)), uChar(0x01)));
     ASSERT (allEQ(flags(IPosition(3,0,4,0), IPosition(3,0,5,5)), uChar(0xff)));
@@ -477,8 +538,8 @@ void testFlags2()
     ostr1 << "average.timestep=2" << endl;
     ofstream ostr2("tNDPPP_tmp.parset2");
     ostr2 << "msin=tNDPPP_tmp.MS6a" << endl;
-    ostr2 << "msin.startchan=2" << endl;    // output chan 0,2 are now flagged
-    ostr2 << "msin.nchan=12" << endl;
+    ostr2 << "msin.startchan=2*1" << endl;    // output chan 0,2 are now flagged
+    ostr2 << "msin.nchan=nchan-3" << endl;
     ostr2 << "msout=tNDPPP_tmp.MS6b" << endl;
     ostr2 << "msout.overwrite=true" << endl;
     ostr2 << "steps=[preflag,average]" << endl;
@@ -525,6 +586,28 @@ void testFlags3()
   checkFlags ("tNDPPP_tmp.MS7b");
 }
 
+void testStationAdd()
+{
+  cout << endl << "** testStationAdd **" << endl;
+  // Add station RT0, 1 and 2.
+  {
+    ofstream ostr("tNDPPP_tmp.parset");
+    ostr << "msin=tNDPPP_tmp.MS" << endl;
+    ostr << "msout=tNDPPP_tmp.MSa" << endl;
+    ostr << "msout.overwrite=true" << endl;
+    ostr << "steps=[stationadd]" << endl;
+    ostr << "stationadd.stations={RTnew:[RT0..2]}" << endl;
+  }
+  DPRun::execute ("tNDPPP_tmp.parset");
+  Table t1("tNDPPP_tmp.MS/ANTENNA");
+  Table t2("tNDPPP_tmp.MSa/ANTENNA");
+  ASSERT (t2.nrow() == t1.nrow()+1);     // 1 antenna has been added
+  ASSERT (ROScalarColumn<String>(t2,"NAME")(t2.nrow()-1) == "RTnew");
+  t1 = Table("tNDPPP_tmp.MS");
+  t2 = Table("tNDPPP_tmp.MSa");
+  ASSERT (t2.nrow() == t1.nrow()+40+12); // 2 baselines and 2 time slots added
+}
+
 void testClear()
 {
   cout << endl << "** testClear **" << endl;
@@ -565,7 +648,7 @@ void testClear()
   checkFlags ("tNDPPP_tmp.MS5b");
   {
     Table tab("tNDPPP_tmp.MS5b");
-    ASSERT (allEQ(ROArrayColumn<bool>(tab, "FLAG").getColumn(), flags));
+    ASSERT (allEQ(ROArrayColumn<bool>(tab, "FLAG").getColumn(), false));
   }
 }
 
@@ -575,6 +658,7 @@ int main()
   try
   {
     testCopy();
+    testMulti();
     testAvg1();
     testAvg2();
     testAvg3();
@@ -583,6 +667,7 @@ int main()
     testFlags1();
     testFlags2();
     testFlags3();
+    testStationAdd();
     testClear();
   } catch (std::exception& err) {
     std::cerr << "Error detected: " << err.what() << std::endl;

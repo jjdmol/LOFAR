@@ -129,6 +129,8 @@ private:
 
 	GCFTimerPort*			itsTimerPort;
 
+	GCFTCPPort*				itsLogControlPort;
+
 	CAMmap					itsCEPapplications;
     ParameterSet  itsResultParams;
 
@@ -150,6 +152,7 @@ private:
 	ptime					itsStopTime;
 	uint16					itsStopTimerID;
 	uint16					itsFinishTimerID;
+	bool					itsInFinishState;
 };
 
   };//CEPCU

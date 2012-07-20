@@ -56,8 +56,7 @@ void SetWeightsCmd::setWeights(Array<complex<int16>, BeamletWeights::NDIM> weigh
 {
   RSPSetweightsEvent* event = static_cast<RSPSetweightsEvent*>(m_event);
   
-  event->weights().resize(BeamletWeights::SINGLE_TIMESTEP,
-			  event->rcumask.count(), weights.extent(thirdDim));
+  event->weights().resize(BeamletWeights::SINGLE_TIMESTEP, event->rcumask.count(), weights.extent(thirdDim));
   event->weights() = weights;
 }
 
@@ -73,23 +72,34 @@ void SetWeightsCmd::ack(CacheBuffer& /*cache*/)
 
 void SetWeightsCmd::apply(CacheBuffer& cache, bool setModFlag)
 {
-  int input_rcu = 0;
-  for (int cache_rcu = 0;
-       cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++)
-  {
-    if (m_event->rcumask[cache_rcu])
-    {
-      cache.getBeamletWeights()()(0, cache_rcu, Range::all()) =
-	m_event->weights()(0, input_rcu, Range::all());
+	int input_rcu = 0;
+	for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++) {
+		if (m_event->rcumask[cache_rcu]) {
+			// NOTE: MEPHeader::N_BEAMLETS = 4x62 but userside MAX_BEAMLETS may be different
+			//       In other words: getBeamletWeights can contain more data than ack.weights
+			if (MEPHeader::N_BEAMLETS == MAX_BEAMLETS) {
+				cache.getBeamletWeights()()(0, cache_rcu, Range::all()) = m_event->weights()(0, input_rcu, Range::all());
+			}
+			else {
+				for (int rsp = 0; rsp < 4; rsp++) {
+					int	swstart(rsp*MAX_BEAMLETS_PER_RSP);
+					int hwstart(rsp*MEPHeader::N_BEAMLETS/4);
+					cache.getBeamletWeights()()(0, cache_rcu, Range(hwstart, hwstart+MAX_BEAMLETS_PER_RSP-1)) = 
+									m_event->weights()(0, input_rcu, Range(swstart,swstart+MAX_BEAMLETS_PER_RSP-1));
+				}
+			}
 
-      if (setModFlag) {
-	cache.getCache().getState().bf().write(cache_rcu * MEPHeader::N_PHASE);
-	cache.getCache().getState().bf().write(cache_rcu * MEPHeader::N_PHASE + 1);
-      }
+			if (setModFlag) {
+				cache.getCache().getState().bf().write(cache_rcu * MEPHeader::N_PHASE);
+				cache.getCache().getState().bf().write(cache_rcu * MEPHeader::N_PHASE + 1);
+				if (cache_rcu == 0) {
+					LOG_DEBUG_STR("SetWeights(cache[0]): " << cache.getBeamletWeights()()(0,0,Range::all()));
+				}
+			}
 
-      input_rcu++;
-    }
-  }
+			input_rcu++;
+		}
+	}
 }
 
 void SetWeightsCmd::complete(CacheBuffer& /*cache*/)

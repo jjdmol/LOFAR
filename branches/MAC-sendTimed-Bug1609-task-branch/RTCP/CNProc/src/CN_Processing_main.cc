@@ -20,17 +20,28 @@
 
 #include <lofar_config.h>
 
-#include <Common/Exception.h>
-#include <Interface/CN_Command.h>
-#include <Interface/CN_Configuration.h>
-#include <Interface/Exceptions.h>
-#include <Interface/Stream.h>
 #include <CNProc/LocationInfo.h>
 #include <CNProc/CN_Processing.h>
-#include <Common/LofarLogger.h>
 #include <CNProc/Package__Version.h>
+#include <Common/Exception.h>
+#include <Common/LofarLogger.h>
+#include <Common/NewHandler.h>
+#include <Interface/Allocator.h>
+#include <Interface/CN_Command.h>
+#include <Interface/Exceptions.h>
+#include <Interface/Parset.h>
+#include <Interface/SmartPtr.h>
+#include <Interface/Stream.h>
+
+#include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <execinfo.h>
+
+#if defined CLUSTER_SCHEDULING
+#define LOG_CONDITION 1
+#else
+#define LOG_CONDITION (locationInfo.rankInPset() == 0)
+#endif
 
 #if defined HAVE_MPI
 #define MPICH_IGNORE_CXX_SEEK
@@ -45,35 +56,28 @@
 #include <cstdio>
 #include <cstring>
 
-#include <boost/format.hpp>
-using boost::format;
+#if defined HAVE_BGP && defined HAVE_FFTW2
+// use our own memory managment to both use new/delete and
+// to avoid fftw from calling exit() when there is not
+// enough memory.
 
-// if exceptions are not caught, an attempt is made to create a backtrace
-// from the place where the exception is thrown.
-#define CATCH_EXCEPTIONS
+// We can't redirect the malloc()s done by fftw3 yet as they are hard-coded.
+// Be warned that fftw also abort()s or exit()s when malloc fails.
+#define REROUTE_FFTW2_MALLOC
+#endif
 
+#if defined REROUTE_FFTW2_MALLOC
+#include <fftw.h>
+#endif
+
+// install a new handler to produce backtraces for std::bad_alloc
+LOFAR::NewHandler h(LOFAR::BadAllocException::newHandler);
 
 using namespace LOFAR;
 using namespace LOFAR::RTCP;
 
-#if !defined CATCH_EXCEPTIONS
-
-void terminate_with_backtrace()
-{
-  LOG_FATAL("terminate_with_backtrace()");
-
-  void *buffer[100];
-  int  nptrs	 = backtrace(buffer, 100);
-  char **strings = backtrace_symbols(buffer, nptrs);
-
-  for (int i = 0; i < nptrs; i ++)
-    LOG_FATAL_STR(i << ": " << strings[i]);
-
-  free(strings);
-  abort();
-}
-
-#endif
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 static const char *ionStreamType;
 
@@ -108,29 +112,41 @@ static Stream *createIONstream(unsigned channel, const LocationInfo &locationInf
   unsigned psetNumber = locationInfo.psetNumber();
   unsigned rankInPset = locationInfo.rankInPset();
 
-  string descriptor = getStreamDescriptorBetweenIONandCN( ionStreamType, psetNumber, rankInPset, nrPsets, psetSize, channel );
+  std::string descriptor = getStreamDescriptorBetweenIONandCN(ionStreamType, psetNumber, psetNumber, rankInPset, nrPsets, psetSize, channel);
 
   return createStream(descriptor, false);
 }
+
+#if defined REROUTE_FFTW2_MALLOC
+void *my_fftw_malloc(size_t n) {
+  // don't use malloc() as it throws a bad_alloc on the BGP CNK.
+  return new char[n];
+}
+
+void my_fftw_free(void *p) {
+  delete[] static_cast<char*>(p);
+}
+#endif
 
 int main(int argc, char **argv)
 {
   std::clog.rdbuf(std::cout.rdbuf());
   
-#if !defined CATCH_EXCEPTIONS
-  std::set_terminate(terminate_with_backtrace);
+#if defined REROUTE_FFTW2_MALLOC
+  fftw_malloc_hook = my_fftw_malloc;
+  fftw_free_hook   = my_fftw_free;
 #endif
 
-#if defined CATCH_EXCEPTIONS
   try {
-#endif
 
 #if defined HAVE_MPI
     MPI_Init(&argc, &argv);
 #else
-    (void)argc;
-    (void)argv;
+    (void) argc;
+    (void) argv;
 #endif
+
+    LocationInfo locationInfo;
 
 #if defined HAVE_LOG4CPLUS
     INIT_LOGGER( "CNProc" );
@@ -139,8 +155,7 @@ int main(int argc, char **argv)
     Context::initialize();
     setLevel("Global",8);
 #else
-    LocationInfo locationInfo;
-    INIT_LOGGER_WITH_SYSINFO(str(format("CNProc@%04d") % locationInfo.rank()));
+    INIT_LOGGER_WITH_SYSINFO(str(boost::format("CNProc@%04d") % locationInfo.rank()));
 #endif
 
     if (locationInfo.rank() == 0) {
@@ -154,75 +169,96 @@ int main(int argc, char **argv)
 
     LOG_INFO_STR("Core " << locationInfo.rank() << " is core " << locationInfo.rankInPset() << " in pset " << locationInfo.psetNumber());
 
-    if (locationInfo.rankInPset() == 0)
-      LOG_DEBUG("Creating connection to ION ...");
-    
     getIONstreamType();
-    Stream *ionStream = createIONstream(0, locationInfo);
 
-    if (locationInfo.rankInPset() == 0)
+    if (LOG_CONDITION)
+      LOG_DEBUG("Creating connection to ION ...");
+
+    std::vector<SmartPtr<Stream> > ionStreams;
+
+#if defined CLUSTER_SCHEDULING
+    ionStreams.resize(locationInfo.nrPsets());
+
+    for (unsigned ionode = 0; ionode < locationInfo.nrPsets(); ionode ++) {
+      std::string descriptor = getStreamDescriptorBetweenIONandCN(ionStreamType, ionode, locationInfo.psetNumber(), locationInfo.rankInPset(), locationInfo.nrPsets(), locationInfo.psetSize(), 0);
+      ionStreams[ionode] = createStream(descriptor, false);
+    }
+
+    Stream *controlStream = ionStreams[locationInfo.psetNumber()].get();
+#else
+    ionStreams.resize(1);
+    ionStreams[0] = createIONstream(0, locationInfo);
+
+    Stream *controlStream = ionStreams[0].get();
+#endif
+
+    if (LOG_CONDITION)
       LOG_DEBUG("Creating connection to ION: done");
 
-    CN_Configuration	configuration;
-    CN_Processing_Base	*proc = 0;
-    CN_Command		command;
+
+    // an allocator for our big memory structures
+#if defined HAVE_BGP    
+    // The BG/P compute nodes have a flat memory space (no virtual memory), so memory can fragment, preventing us
+    // from allocating big blocks. We thus put the big blocks in a separate arena.
+    MallocedArena                bigArena(400*1024*1024, 32);
+    SparseSetAllocator           bigAllocator(bigArena);
+#else
+    // assume memory is freely available
+    HeapAllocator                bigAllocator;
+#endif    
+
+    SmartPtr<Parset>		 parset;
+    SmartPtr<CN_Processing_Base> proc;
+    CN_Command			 command;
 
     do {
-      char failed = 0;
-
-      //LOG_DEBUG("Wait for command");
-      command.read(ionStream);
-      //LOG_DEBUG("Received command");
+      command.read(controlStream);
+      //LOG_DEBUG_STR("Received command " << command.value() << " = " << command.name());
 
       switch (command.value()) {
-	case CN_Command::PREPROCESS :	configuration.read(ionStream);
+	case CN_Command::PREPROCESS :	try {
+                                          unsigned firstBlock = command.param();
 
-                                        failed = 0;
+					  parset = new Parset(controlStream);
 
-                                        try {
-
-                                          switch (configuration.nrBitsPerSample()) {
-                                            case 4:  proc = new CN_Processing<i4complex>(ionStream, &createIONstream, locationInfo);
+				          switch (parset->nrBitsPerSample()) {
+                                            case 4:  proc = new CN_Processing<i4complex>(*parset, ionStreams, &createIONstream, locationInfo, bigAllocator, firstBlock);
                                                      break;
 
-                                            case 8:  proc = new CN_Processing<i8complex>(ionStream, &createIONstream, locationInfo);
+                                            case 8:  proc = new CN_Processing<i8complex>(*parset, ionStreams, &createIONstream, locationInfo, bigAllocator, firstBlock);
                                                      break;
 
-                                            case 16: proc = new CN_Processing<i16complex>(ionStream, &createIONstream, locationInfo);
+                                            case 16: proc = new CN_Processing<i16complex>(*parset, ionStreams, &createIONstream, locationInfo, bigAllocator, firstBlock);
                                                      break;
                                           }
-
-                                          proc->preprocess(configuration);
                                         } catch (Exception &ex) {
                                           LOG_ERROR_STR("Caught Exception: " << ex);
-                                          failed = 1;
                                         } catch (std::exception &ex) {
                                           LOG_ERROR_STR("Caught Exception: " << ex.what());
-                                          failed = 1;
                                         } catch (...) {
                                           LOG_ERROR_STR("Caught Exception: unknown");
-                                          failed = 1;
                                         }
 
-                                        ionStream->write(&failed, sizeof failed);
+#if 0 // FIXME: leads to deadlock when using TCP
+					{
+					  char failed = proc == 0;
+					  ionStream->write(&failed, sizeof failed);
+					}
+#endif
 
-                                        if (failed) {
-                                          if (proc) {
-                                            delete proc;
-                                            proc = 0;
-                                          }
-                                        }
 					break;
 
 	case CN_Command::PROCESS :	proc->process(command.param());
 					break;
 
-	case CN_Command::POSTPROCESS :	if (proc) {
-                                          // proc == 0 if PREPROCESS threw an exception, after which all cores receive a POSTPROCESS message
-                                          proc->postprocess();
-					  delete proc;
-					  proc = 0;
-                                        }  
+	case CN_Command::POSTPROCESS :	// proc == 0 if PREPROCESS threw an exception, after which all cores receive a POSTPROCESS message
+					delete proc.release();
+					delete parset.release();
+
+#if defined HAVE_BGP // only SparseAllocator keeps track of its allocations
+                                        if (!bigAllocator.empty())
+                                          LOG_ERROR("Memory leak detected in bigAllocator");
+#endif
 					break;
 
 	case CN_Command::STOP :		break;
@@ -232,21 +268,14 @@ int main(int argc, char **argv)
       }
     } while (command.value() != CN_Command::STOP);
 
-    delete ionStream;
-    
 #if defined HAVE_MPI
     MPI_Finalize();
     usleep(500 * locationInfo.rank()); // do not dump stats all at the same time
 #endif
     
     return 0;
-#if defined CATCH_EXCEPTIONS
   } catch (Exception &ex) {
     LOG_FATAL_STR("Uncaught Exception: " << ex);
     return 1;
-  } catch (std::exception &ex) {
-    LOG_FATAL_STR("Uncaught Exception: " << ex.what());
-    return 1;
   }
-#endif
 }

@@ -56,7 +56,7 @@ ACMProxy::ACMProxy(string name, ACCs& accs)
 {
 	registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_STRINGS);
 
-	m_rspdriver.init(*this, MAC_SVCMASK_RSPDRIVER, GCFPortInterface::SAP, RSP_PROTOCOL);
+	m_rspdriver = new GCFTCPPort(*this, MAC_SVCMASK_RSPDRIVER, GCFPortInterface::SAP, RSP_PROTOCOL);
 }
 
 ACMProxy::~ACMProxy()
@@ -75,7 +75,7 @@ GCFEvent::TResult ACMProxy::initial(GCFEvent& e, GCFPortInterface& port)
 		m_update_subband = 0;
 
 		LOG_DEBUG("opening port: m_rspdriver");
-		m_rspdriver.open();
+		m_rspdriver->open();
 
 		//
 		// When TRAN(CalServer::initial) is done when handling F_DISCONNECTED
@@ -83,7 +83,7 @@ GCFEvent::TResult ACMProxy::initial(GCFEvent& e, GCFPortInterface& port)
 		// by a port.close() in the GCF framework which cancels the open on the previous line.
 		// Setting this timer will make sure the port is opened again.
 		//
-		m_rspdriver.setTimer(0.0);
+		m_rspdriver->setTimer(0.0);
 	}
 	break;
 
@@ -91,9 +91,9 @@ GCFEvent::TResult ACMProxy::initial(GCFEvent& e, GCFPortInterface& port)
 	break;
 
 	case F_CONNECTED: {
-		if (m_rspdriver.isConnected()) {
+		if (m_rspdriver->isConnected()) {
 			RSPGetconfigEvent getconfig;
-			m_rspdriver.send(getconfig);
+			m_rspdriver->send(getconfig);
 		}
 	}
 	break;
@@ -133,7 +133,7 @@ GCFEvent::TResult ACMProxy::initial(GCFEvent& e, GCFPortInterface& port)
 
 	case F_EXIT:
 		// stop timer, we're connected
-		m_rspdriver.cancelAllTimers();
+		m_rspdriver->cancelAllTimers();
 	break;
 
 	default:
@@ -151,7 +151,7 @@ GCFEvent::TResult ACMProxy::idle(GCFEvent& e, GCFPortInterface& port)
 
 	switch (e.signal) {
 	case F_ENTRY: {
-		m_rspdriver.setTimer(2.0, 2.0); // check every two second
+		m_rspdriver->setTimer(2.0, 2.0); // check every two second
 	}
 	break;
 
@@ -216,7 +216,7 @@ GCFEvent::TResult ACMProxy::idle(GCFEvent& e, GCFPortInterface& port)
 
 	case F_EXIT: {
 		// stop timer, it is not needed in the next state
-		m_rspdriver.cancelAllTimers();
+		m_rspdriver->cancelAllTimers();
 	}
 	break;
 
@@ -260,7 +260,7 @@ GCFEvent::TResult ACMProxy::initializing(GCFEvent& e, GCFPortInterface& port)
 		ss.subbands() = m_request_subband;
 
 		LOG_DEBUG_STR("REQ: XC subband " << m_request_subband << " @ " << ss.timestamp);
-		m_rspdriver.send(ss);
+		m_rspdriver->send(ss);
 
 		m_request_subband++;
       }
@@ -323,7 +323,7 @@ GCFEvent::TResult ACMProxy::receiving(GCFEvent& e, GCFPortInterface& port)
 		subxc.timestamp = m_starttime + (long)1; // wait 1 second to get result
 		subxc.period = 1;
 
-		m_rspdriver.send(subxc);
+		m_rspdriver->send(subxc);
       }
       break;
 
@@ -424,7 +424,7 @@ GCFEvent::TResult ACMProxy::unsubscribing(GCFEvent& e, GCFPortInterface& port)
     case F_ENTRY: {
 		  RSPUnsubxcstatsEvent unsub;
 		  unsub.handle = m_handle;
-		  m_rspdriver.send(unsub);
+		  m_rspdriver->send(unsub);
       }
       break;
 

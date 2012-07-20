@@ -20,16 +20,21 @@
 #ifndef MSIOSYSTEM_H
 #define MSIOSYSTEM_H
 
-#include <unistd.h>
+#include <casa/OS/HostInfo.h>
 
 class System
 {
 	public:
 		static long TotalMemory()
 		{
-			long pages = sysconf(_SC_PHYS_PAGES);
-			long page_size = sysconf(_SC_PAGE_SIZE);
-			return pages * page_size;
+			return casa::HostInfo::memoryTotal()*1024;
+		}
+		
+		static unsigned ProcessorCount()
+		{
+			unsigned cpus = casa::HostInfo::numCPUs();
+			if(cpus == 0) cpus = 1;
+			return cpus;
 		}
 };
 

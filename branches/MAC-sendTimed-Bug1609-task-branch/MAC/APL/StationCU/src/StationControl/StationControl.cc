@@ -103,10 +103,6 @@ StationControl::StationControl(const string&	cntlrName) :
 
 	// attach to parent control task
 	itsParentControl = ParentControl::instance();
-	itsParentPort = new GCFITCPort (*this, *itsParentControl, "ParentITCport", 
-									GCFPortInterface::SAP, CONTROLLER_PROTOCOL);
-	ASSERTSTR(itsParentPort, "Cannot allocate ITCport for Parentcontrol");
-	itsParentPort->open();		// will result in F_CONNECTED
 
 	// need port for timers.
 	itsTimerPort = new GCFTimerPort(*this, "TimerPort");
@@ -528,7 +524,7 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 		// update PVSS
 		if (!itsParentInitialized) {
 			LOG_DEBUG ("All initialisation done, enabling ParentControl task");
-			itsParentPort = itsParentControl->registerTask(this);
+			itsParentPort = itsParentControl->registerTask(this, true);
 
 			itsOwnPropSet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("Active"));
 			itsOwnPropSet->setValue(PN_FSM_ERROR,GCFPVString(""));
@@ -591,8 +587,11 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 		answer.result = _addObservation(msg.cntlrName);
 		if ((answer.result != CT_RESULT_NO_ERROR) && 
 			(answer.result != CT_RESULT_ALREADY_REGISTERED)) {	// problem?
-			answer.result = CT_RESULT_NO_ERROR;
+//			answer.result = CT_RESULT_NO_ERROR;
 			port.send(answer);						// tell parent we didn't start the obs.
+			// and stop handling this observation
+			itsParentControl->nowInState(msg.cntlrName, CTState::QUIT);
+			sendControlResult(*itsParentPort, CONTROL_QUITED, msg.cntlrName, answer.result);
 		}
 	}
 	break;
@@ -627,11 +626,14 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 		OTDBtreeIDType	 treeID	    = getObservationNr(ObsEvent.cntlrName);
 		string			 cntlrName  = controllerName(CNTLRTYPE_STATIONCTRL, 
 															instanceNr, treeID);
+		CTState			CTS;
 		ObsIter			 theObs     = itsObsMap.find(cntlrName);
 		if (theObs == itsObsMap.end()) {
-			LOG_WARN_STR("Event for unknown observation: " << ObsEvent.cntlrName);
+			LOG_ERROR_STR(eventName(event.signal) << " for unknown observation: " << ObsEvent.cntlrName);
+			sendControlResult(*itsParentPort, event.signal, cntlrName, CT_RESULT_UNKNOWN_OBSERVATION);
 			break;
 		}
+		LOG_INFO_STR("State-change to " << CTS.name((CTS.signal2stateNr(event.signal))) << " for " << ObsEvent.cntlrName);
 
 		// In the claim state station-wide changes are activated.
 		if (event.signal == CONTROL_CLAIM) {
@@ -642,55 +644,33 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 //			return (GCFEvent::NEXT_STATE);
 		}
 
-		// TODO: CLEAN UP THE CODE BELOW
-
-#if 0
-		// before passing a new state request from the ObsController to the 
-		// activeObs, make sure the last state is reached.
-LOG_DEBUG_STR(formatString("event.signal = %04X", event.signal));
-LOG_DEBUG_STR("F_INDIR = " << F_INDIR(event.signal));
-LOG_DEBUG_STR("F_OUTDIR = " << F_OUTDIR(event.signal));
-LOG_DEBUG_STR("inSync = " << (theObs->second->inSync() ? "true" : "false"));
-		if (F_OUTDIR(event.signal) && !theObs->second->inSync()) {
-			// TODO
-			CTState		cts;
-			LOG_FATAL_STR("Ignoring change to state " << cts.name(cts.signal2stateNr(event.signal)) << 
-						" for observation " << treeID << " because obs is still in state " << 
-						cts.name(theObs->second->curState()));
-			sendControlResult(*itsParentPort, event.signal, cntlrName, 
-																CT_RESULT_OUT_OF_SYNC);
-			break;
-			
-		}
-#endif
 		// pass event to observation FSM
 		LOG_TRACE_FLOW("Dispatch to observation FSM's");
 		theObs->second->doEvent(event, port);
 
 		// end of FSM?
 		if (event.signal == CONTROL_QUITED && theObs->second->isReady()) {
+			sendControlResult(*itsParentPort, event.signal, cntlrName, CT_RESULT_NO_ERROR);
 			LOG_DEBUG_STR("Removing " <<ObsEvent.cntlrName<< " from the administration");
-			itsTimerPort->cancelTimer(theObs->second->itsStopTimerID);
+//			itsTimerPort->cancelTimer(theObs->second->itsStopTimerID);
 			delete theObs->second;
 			itsObsMap.erase(theObs);
 		}
 
 		// check if all actions for this event are finished.
-		vector<ChildControl::StateInfo>	cntlrStates = 
-									itsChildControl->getPendingRequest("", treeID);
+		vector<ChildControl::StateInfo>	cntlrStates = itsChildControl->getPendingRequest("", treeID);
 LOG_TRACE_FLOW_STR("There are " << cntlrStates.size() << " busy controllers");
 		if (cntlrStates.empty()) {	// no pending requests? Ready.
 			if (event.signal != CONTROL_QUITED) {
-				sendControlResult(*itsParentPort, event.signal, cntlrName, 
-																CT_RESULT_NO_ERROR);
+				sendControlResult(*itsParentPort, event.signal, cntlrName, CT_RESULT_NO_ERROR);
 			}
-			else {
-				// we are done, pass finish request to parent
-				CONTROLQuitedEvent		request;
-				request.cntlrName = cntlrName;
-				request.result	  = CT_RESULT_NO_ERROR;
-				itsParentPort->send(request);
-			}
+//			else {
+//				// we are done, pass finish request to parent
+//				CONTROLQuitedEvent		request;
+//				request.cntlrName = cntlrName;
+//				request.result	  = CT_RESULT_NO_ERROR;
+//				itsParentPort->send(request);
+//			}
 			break;
 		}
 		// Show where we are waiting for. When error occured, report it back and stop
@@ -700,6 +680,10 @@ LOG_TRACE_FLOW_STR("There are " << cntlrStates.size() << " busy controllers");
 							  " failed with error " << cntlrStates[i].result);
 				sendControlResult(*itsParentPort, event.signal, cntlrName, 
 														cntlrStates[i].result);
+				LOG_ERROR_STR("Initiating QUIT sequence for observation " << theObs->second->getName());
+				CONTROLQuitEvent    quitevent;
+				quitevent.cntlrName = theObs->second->getName();
+				theObs->second->doEvent(quitevent, port);
 				break;
 			}
 			LOG_TRACE_COND_STR ("Still waiting for " << cntlrStates[i].name);
@@ -1071,11 +1055,18 @@ uint16 StationControl::_addObservation(const string&	name)
 
 	// find and read parameterset of this observation
 	ParameterSet	theObsPS;
+	Observation		theObs;
 	string			filename(string(LOFAR_SHARE_LOCATION) + "/" + name);
 	LOG_DEBUG_STR("Trying to readfile " << filename);
-	theObsPS.adoptFile(filename);
-	Observation		theObs(&theObsPS);
-LOG_DEBUG_STR("theOBS=" << theObs);
+	try {
+		theObsPS.adoptFile(filename);
+		theObs = Observation(&theObsPS, itsHasSplitters);
+		LOG_DEBUG_STR("theOBS=" << theObs);
+	}
+	catch (Exception&	ex) {
+		LOG_ERROR_STR("Error occured while reading the parameterset: " << ex.what());
+		return (CT_RESULT_NO_PARSET);
+	}
 
 	// check if there will be a conflict.
 	ObsIter		iter = itsObsMap.begin();
@@ -1118,7 +1109,7 @@ LOG_DEBUG_STR("def&userReceivers=" << realReceivers);
 
 
 	// create an activeObservation object that will manage the child controllers.
-	ActiveObs*	theNewObs = new ActiveObs(name, (State)&ActiveObs::initial, &theObsPS, *this);
+	ActiveObs*	theNewObs = new ActiveObs(name, (State)&ActiveObs::initial, &theObsPS, itsHasSplitters, *this);
 	if (!theNewObs) {
 		LOG_FATAL_STR("Unable to create the Observation '" << name << "'");
 		return (CT_RESULT_UNSPECIFIED);
@@ -1130,9 +1121,11 @@ LOG_DEBUG_STR("def&userReceivers=" << realReceivers);
 	theNewObs->start();				// call initial state.
 
 	// Start a timer that while expire 5 seconds after stoptime.
-	time_t	stopTime = to_time_t(time_from_string(theObsPS.getString("Observation.stopTime")));
-	time_t	now		 = to_time_t(second_clock::universal_time());
-	theNewObs->itsStopTimerID = itsTimerPort->setTimer(now-stopTime+5);
+	ptime	stopTime  = time_from_string(theObsPS.getString("Observation.stopTime"));
+	ptime	startTime = time_from_string(theObsPS.getString("Observation.startTime"));
+	itsParentControl->activateObservationTimers(name, startTime, stopTime);
+//	time_t	now		 = to_time_t(second_clock::universal_time());
+//	theNewObs->itsStopTimerID = itsTimerPort->setTimer(now-stopTime+5);
 	
 	return (CT_RESULT_NO_ERROR);
 }

@@ -30,22 +30,21 @@ class AsyncTransposeBeams
 {
   public:
 
-  AsyncTransposeBeams(const bool isTransposeInput, const bool isTransposeOutput, unsigned nrSubbands, unsigned nrSubbeams,
+  AsyncTransposeBeams(bool isTransposeInput, bool isTransposeOutput, unsigned nrSubbands,
 	   	      const LocationInfo &, 
 		      const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &inputCores, const std::vector<unsigned> &outputPsets, const std::vector<unsigned> &outputCores);
   
   // Post all async receives for the transpose.
   // localSubband is the subband index for local data structures,
   // globalSubband is the subband index used globally in the system (0..247)
-  template <typename T, unsigned DIM> void postReceive( SampleData<T,DIM> *transposedData, unsigned localSubband, unsigned globalSubband, unsigned beam, unsigned psetIndex, unsigned coreIndex);
+  template <typename T, unsigned DIM, unsigned FLAGS_DIM> void postReceive( SampleData<T,DIM,FLAGS_DIM> *transposedData, unsigned localSubband, unsigned globalSubband, unsigned beam, unsigned psetIndex, unsigned coreIndex);
   
   // Wait for a data message. Returns the station number where the message originates.
   unsigned waitForAnyReceive();
   
   // Asynchronously send a subband.
-  // localBeam is the beam index used locally (=0..nrBeams), in conjunction with subbeam (=polarisation or stokes)
   // globalBeam is the beam index for the output backend, which does not differentiate between beams, subbeams, filesperstokes, etc.
-  template <typename T, unsigned DIM> void asyncSend(unsigned outputPsetIndex, unsigned coreIndex, unsigned subband, unsigned localBeam, unsigned subbeam, unsigned globalBeam, const SampleData<T,DIM> *inputData);
+  template <typename T, unsigned DIM, unsigned FLAGS_DIM> void asyncSend(unsigned outputPsetIndex, unsigned coreIndex, unsigned subband, unsigned stokes, unsigned globalBeam, const SampleData<T,DIM,FLAGS_DIM> *inputData);
   
   // Make sure all async sends have finished.
   void waitForAllSends();
@@ -67,8 +66,6 @@ class AsyncTransposeBeams
   Matrix<int> itsCommHandles; // [itsNrCommunications][itsNrInputPsets]
 
   Vector<int> itsLocalSubbands;
-
-  const unsigned itsNrSubbeams;
 };
 
 #endif // defined HAVE_MPI

@@ -20,8 +20,10 @@
 //#
 //# $Id$
 
-#include <BBSKernel/Expr/JonesExpr.h>
-#include <BBSKernel/Expr/MatrixTmp.h>
+#ifndef LOFAR_BBSKERNEL_TEST_UTILS_H
+#define LOFAR_BBSKERNEL_TEST_UTILS_H
+
+#include <BBSKernel/Expr/Expr.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_complex.h>
 #include <Common/lofar_string.h>
@@ -40,30 +42,57 @@ bool near(const T &x, const T &y, double tol = 10-8)
     if(abs(x) > abs(y)) return (abs((x - y) / x) <= tol);
     else return (abs((x - y) / y) <= tol);
 }
-    
+
 bool compare(const Matrix &lhs, const dcomplex &rhs, double tol);
 bool compare(const Matrix &lhs, const Matrix &rhs, double tol);
 
 // Log the outcome of a named test.
 void log(const string &name, bool result);
 
-// Stub class used for testing any node that takes a JonesExpr as input.
-class JNodeStub: public JonesExprRep
+// Dummy class.
+template <typename T_EXPR>
+class Dummy: public Expr<T_EXPR>
 {
 public:
-    JNodeStub(const Matrix &v11, const Matrix &v12, const Matrix &v21,
-        const Matrix &v22, dcomplex perturbation = dcomplex(1e-6, 1e-6),
-        PValueKey key = PValueKey(1, 0));
-    ~JNodeStub();
+    typedef shared_ptr<Dummy>       Ptr;
+    typedef shared_ptr<const Dummy> ConstPtr;
 
-    virtual JonesResult getJResult(const Request &request);
+    Dummy()
+    {
+    }
+
+    explicit Dummy(const T_EXPR &value)
+        :   itsValue(value)
+    {
+    }
+
+    void setValue(const T_EXPR &value)
+    {
+        itsValue = value;
+    }
+
+protected:
+    virtual unsigned int nArguments() const
+    {
+        return 0;
+    }
+
+    virtual ExprBase::ConstPtr argument(unsigned int) const
+    {
+        ASSERT(false);
+    }
+
+    virtual const T_EXPR evaluateExpr(const Request&, Cache&, unsigned int)
+        const
+    {
+        return itsValue;
+    }
 
 private:
-    Matrix      itsV11, itsV12, itsV21, itsV22;
-    dcomplex    itsPerturbation;        
-    PValueKey   itsKey;
+    T_EXPR  itsValue;
 };
 
 } //# namespace LOFAR
 } //# namespace BBS
 
+#endif

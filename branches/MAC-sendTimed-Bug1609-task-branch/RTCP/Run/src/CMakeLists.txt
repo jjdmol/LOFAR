@@ -1,14 +1,22 @@
 # $Id: CMakeLists.txt 14273 2009-10-16 10:08:29Z loose $
 
-lofar_add_bin_program(packetanalysis packetanalysis.c)
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/locations.sh.in
+  ${CMAKE_CURRENT_BINARY_DIR}/locations.sh
+  @ONLY)
 
 install(PROGRAMS 
-  killOLAP
-  BlueGeneControl.sh
+  startBGL.sh
+  stopBGL.sh
+  BGPPartition.sh
+  CNProcessing.sh
+  IONProcessing.sh
+  LogArchiver.sh
+  controller.sh
+  gracefullyStopBGProcessing.sh
+  ${CMAKE_CURRENT_BINARY_DIR}/locations.sh
   watchlogs.sh
-  startOLAP.py
   commandOLAP.py
-  runParset.py
   DESTINATION bin)
 
 install(FILES
@@ -23,5 +31,8 @@ install(FILES
   multitail-olap.conf
   DESTINATION etc)
 
+lofar_add_bin_program(CEPlogProcessorSettings CEPlogProcessorSettings.cc)
+
 add_subdirectory(LOFAR)
 add_subdirectory(util)
+add_subdirectory(tools)

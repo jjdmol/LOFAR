@@ -60,7 +60,7 @@ namespace LOFAR {
       virtual void finish();
 
       // Update the general info.
-      virtual void updateInfo (DPInfo&);
+      virtual void updateInfo (const DPInfo&);
 
       // Show the step parameters.
       virtual void show (std::ostream&) const;
@@ -70,10 +70,9 @@ namespace LOFAR {
 
     private:
       //# Data members.
-      DPInput*    itsInput;
       string      itsName;
+      bool        itsFlagData;
       uint        itsCount;
-      bool        itsShowFF;         //# show fully flagged baselines?
       FlagCounter itsFlagCounter;
     };
 

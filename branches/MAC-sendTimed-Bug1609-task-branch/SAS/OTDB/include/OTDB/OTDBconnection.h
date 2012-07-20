@@ -32,6 +32,7 @@
 #include <OTDB/TreeState.h>
 #include <OTDB/DefaultTemplate.h>
 #include <Common/lofar_vector.h>
+#include <Common/lofar_map.h>
 
 using namespace pqxx;
 
@@ -55,7 +56,8 @@ public:
 	OTDBconnection (const string&	username,
 					const string&	passwd,
 					const string&	database,
-					const string&	hostname);
+					const string&	hostname,
+					const string &  port="5432");
 
 	virtual ~OTDBconnection ();
 
@@ -71,8 +73,12 @@ public:
 							 const bool		isMomID = false);
 
 	// To get a list of all OTDB trees available in the database.
-	vector<OTDBtree> getTreeList(treeType	  aTreeType,
-								 classifType aClassification=TCoperational);
+	vector<OTDBtree> getTreeList(treeType		aTreeType,
+								 classifType 	aClassification = TCoperational,
+								 uint32			aGroupID = 0,
+								 const string&	aProcessType = "",
+								 const string&	aProcessSubtype = "",
+								 const string&	aStrategy = "");
 
 	// Get a list of all state changes after a certain time.
 	// When aTreeID is 0 all state changes of all trees are returned.
@@ -99,6 +105,13 @@ public:
 									   const ptime& beginDate = ptime(min_date_time),
 									   const ptime& endDate   = ptime(max_date_time));
 
+
+	// Get a map to translate MoMIds to treeID's
+    map<uint, uint> getMomID2treeIDMap();
+
+	// Get a new unique groupID
+	uint32	newGroupID();
+
 	// Show connection characteristics.
 	ostream& print (ostream& os) const;
 
@@ -118,6 +131,7 @@ private:
 	string		itsPassword;
 	string		itsDatabase;
 	string		itsHost;
+	string		itsPort;
 	bool		itsIsConnected;
 	connection*	itsConnection;
 	uint32		itsAuthToken;

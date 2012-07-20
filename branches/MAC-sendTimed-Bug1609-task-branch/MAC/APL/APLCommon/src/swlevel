@@ -24,11 +24,22 @@
 #
 # $Id$
 #
-VERSION="v2.1 20100517"		# loading image 1 before starting RSPdriver
-BINDIR=/opt/lofar/bin
-LOGDIR=/opt/lofar/log
-ETCDIR=/opt/lofar/etc
+VERSION="v2.2 20120710"		# waiting for initialize before going to level 3 and up
+
+if [ "$LOFARROOT" == "" ]; then
+  # default value until all MAC controlled systems provide $LOFARROOT
+  LOFARROOT=/opt/lofar
+fi
+
+BINDIR=$LOFARROOT/bin
+LOGDIR=$LOFARROOT/log
+ETCDIR=$LOFARROOT/etc
 LEVELTABLE=${ETCDIR}/swlevel.conf
+
+# Make sure all files are user/group writeable (needed for Int. 
+# Stations)
+
+umask 002
 
 #
 # SyntaxError msg
@@ -39,12 +50,12 @@ SyntaxError()
 
 	[ -z "${Msg}" ] || echo "ERROR: ${Msg}"
 	echo ""
-	echo "Syntax: $(basename $0) [-s/S/v/V] [-i x] [-k/r processname] [-l][ 0 |1 |2 |3 |4 |5 |6 ]"
+	echo "Syntax: $(basename $0) [-s/S/v/V] [-i x] [-r/q processname] [-l][ 0 |1 |2 |3 |4 |5 |6 ]"
 	echo "-s: Show current level, exit (-S: only print number)"
 	echo "-v: Show running LOFAR version, exit (-V: only print version)"
 	echo "-i: Load RSP firmware from image [x] (default image is 1)"
         echo "-l: Set to level as provided (optional)"
-        echo "-k: Kill process with name processname"
+        echo "-q: Quit process with name processname"
         echo "-r: Run process with name processname"        
         echo
 	echo "Levels:"
@@ -68,19 +79,21 @@ selectImage()
 	let board=0
 	while [ $board -lt $nrRSPs ]
 	do
-		# get version of RSPboard
+		# get version number of RSPboard in var. rsu
 		boardHex=`echo $board | awk '{ printf "%02x", $1 }'`
 		rsu=`sudo ${BINDIR}/../sbin/rsuctl3 -m 10:fa:00:00:$boardHex:00 -qV 2>&1 | grep BP | cut -d':' -f2 | sed 's/ //g' | cut -d'.' -f1`
-		if [ ${#rsu} -eq 1 ]; then
+		if [ ${rsu} -eq 1 ]; then
   		  let version=$rsu
  		  # if board has reset itself to image 0, load image 1 again
-		  #if [ $version -le 4 ]; then
-		  # AS-20100517: Always load new image!
-		     echo "Loading image $image on RSPboard $board ..."
-		     sudo ${BINDIR}/../sbin/rsuctl3_reset -m 10:fa:00:00:$boardHex:00 -q -x -p $image 1>/dev/null 2>&1
+		  echo "Loading image $image on RSPboard $board ..."
+		  sudo ${BINDIR}/../sbin/rsuctl3_reset -m 10:fa:00:00:$boardHex:00 -q -x -p $image 1>/dev/null 2>&1
 		  #fi
+                elif [ ${rsu} -eq 6 ]; then
+		  echo "No need to reload image for RSPboard $board"
+		elif [ ${#rsu} -ne 1 ]; then 
+                  echo "No RSPboard $board found"
                 else
-                  echo "No RSP board $board found"
+                  echo "Not a valid image found for RSPboard $board; perhaps an image is being loaded"
 		fi
 		let board+=1
 	done
@@ -111,25 +124,25 @@ start_prog()
 	# Check if program is already running
 	/sbin/pidof ${prog} 1>/dev/null 2>&1
 	if [ $? -ne 0 ]; then
-		echo Starting $prog
-		# PVSS needs special treatment; only start as lofarsys
-		# This is to prevent foreign stations not under central
-		# control to start their PVSS and thus connect to PVSS
+		# PVSS needs special treatment
 		if [ "$prog" = "PVSS00pmon" ]; then 
-		    if [ "$user" = "lofarsys" ]; then
-			start_pvss2 1>/dev/null 2>&1 &
-			sleep 3
-                    fi
+		    echo Starting $prog
+		    start_pvss2 1>/dev/null 2>&1 &
+		    sleep 3
 		elif [ "$prog" = "SASGateway" ]; then  
 		    # Foreign stations not under central control should not
 		    # connect to the SAS database; this prevents SAS main-
 		    # tenance etc.
 		    if [ "$user" = "lofarsys" ]; then
+			echo Starting $prog
 			rm -f $LOGDIR/$prog.log*.? 1>/dev/null 2>&1
 			$BINDIR/$prog 1>>$LOGDIR//$prog.stdout 2>&1 &
-		    fi
+                    else
+                        echo "Local use, not starting $prog"
+                    fi		    
   		else
 		    if [ -n "$asroot" ]; then
+		       echo Starting $prog
 		       sudo rm -f $LOGDIR/$prog.log.? 1>/dev/null 2>&1
 		       if [ "$prog" = "RSPDriver" ]; then
 			   selectImage
@@ -138,6 +151,7 @@ start_prog()
 		           sudo -b $BINDIR/$prog 1>>$LOGDIR/$prog.stdout 2>&1
 		       fi
 		    else
+			echo Starting $prog
 			rm -f $LOGDIR/$prog.log*.? 1>/dev/null 2>&1
 			$BINDIR/$prog 1>>$LOGDIR/$prog.stdout 2>&1 &
 		    fi
@@ -194,13 +208,12 @@ stop_prog()
 	do 
 		echo "Softly killing ${prog}(${pid})"
 		$asroot kill $pid
-		sleep 1
+		usleep 500000
 	done
 
 	# when normal kill did not work, kill is with -9
 	for pid in `/sbin/pidof ${prog}`
 	do 
-		#sleep 2
 		echo "Hard killing ${prog}(${pid})"
 		$asroot kill -9 $pid 1>/dev/null 2>&1
 	done
@@ -237,14 +250,25 @@ status_prog()
 			$BINDIR/${prog}.sh status $levelnr
 			continue
 		fi
-
+		obsid=()
 		/sbin/pidof ${prog} 1>/dev/null 2>&1
 		if [ $? -eq 0 ]; then
 			pid=( `/sbin/pidof ${prog}` )
+			i=0
+			for apid in ${pid[@]}
+			do
+			  obsid[i]=`ps -p $apid --no-heading -o command | awk -F{ '{print $2}' | awk -F} '{print $1}'`
+			  i=$i+1
+			done
 		else
 			pid="DOWN"
 		fi
-		echo ${levelnr}:${prog}:${pid[*]} | awk -F: '{ printf "%s : %-25s %s\n", $1, $2, $3 }'
+
+		if [ "$pid" != "DOWN" ] && [ ${#obsid[0]} != 0 ]; then 
+    		  echo ${levelnr}:${prog}:${pid[*]}:${obsid[*]} | awk -F: '{ printf "%s : %-25s %s [ObsID: %s]\n", $1, $2, $3, $4 }'
+		else
+                  echo ${levelnr}:${prog}:${pid[*]} | awk -F: '{ printf "%s : %-25s %s\n", $1, $2, $3 }'
+		fi
 		# Some Checks
 		# Controllers must have one instance, only
 		if [ ${#pid[@]} -ge 2 ]; then 
@@ -297,8 +321,8 @@ goto_level()
           if [ ${curlevel} -ge 2 ]; then 
 	    /sbin/pidof RSPDriver 1>/dev/null 2>&1
 	    if [ $? -eq 0 ]; then
-	      status=`( rspctl --status | grep ERROR ) >& /dev/null; echo $?`
-              if [ $status -eq 1 ]; then 
+	      status=`( rspctl --version | grep "0.0" ) >& /dev/null; echo $?`
+              if [ $status == 1 ]; then 
        	        echo "set rcumode to 0 (power save)"
 	        rspctl --rcumode=0 1>/dev/null 2>&1
 	      else
@@ -313,24 +337,49 @@ goto_level()
 		tac $LEVELTABLE | cut -d"#" -f1 | awk '{ if (NF>0) print $0 }' | \
 		grep "^${l}:" | grep ":d:" |  while read line
 		do
+                        (
 			asroot=`echo $line | cut -d":" -f4`
 			withmpi=`echo $line | cut -d":" -f5`
 			program=`echo $line | cut -d":" -f6`
 			stop_prog $program x$asroot x$withmpi
+                        ) <&- # cant have programs reading from stdin
+                              # as that would mess up 'while read line'
 		done
 	done
 
 	# then power up to new level
 	for (( l=1 ; l<=newlevel ; l++ ))
 	do
-		cat $LEVELTABLE | cut -d"#" -f1 | awk '{ if (NF>0) print $0 }' | \
-		grep "^${l}:" | grep ":u:" |  while read line
+	  if [ $l == 3 ]; then 
+	     # First make sure RSP images are properly loaded
+             # Introduce a timeout of 60 sec for images to initialize
+	     echo "Waiting for images to be initialized"
+	     timeout=59
+	     sleep 1
+             for (( s=0 ; s<timeout; s++ ))
+	     do 
+	       rsu_ready=`( rspctl --version | grep "0.0" ) >& /dev/null; echo $?`
+	       if [ $rsu_ready == 1 ]; then
+		   echo "Images are loaded"
+		   break
+	       fi
+               sleep 1
+             done
+             if [ $s == $timeout ]; then 
+               echo "Could not load RSP images in time; Reset RSP boards"
+               exit 1
+             fi 
+          fi
+	  cat $LEVELTABLE | cut -d"#" -f1 | awk '{ if (NF>0) print $0 }' | grep "^${l}:" | grep ":u:" |  while read line
 		do
+                        (
 			asroot=`echo $line | cut -d":" -f4`
 			withmpi=`echo $line | cut -d":" -f5`
 			program=`echo $line | cut -d":" -f6`
 			start_prog $program x$asroot x$withmpi
-		done
+                        ) <&- # cant have programs reading from stdin
+                              # as that would mess up 'while read line'
+	       done
 	done
 }
 
@@ -342,6 +391,9 @@ show_level()
 	     echo -n "Currently set level is "
 	  fi
 	  echo $level
+          if [ "$1" = "S" -o "$1" = "s" ]; then
+            exit
+          fi
         else
           level=-1
           if [ "$1" != "S" ]; then
@@ -352,11 +404,7 @@ show_level()
         if [ -z "$1" ]; then
             status_prog
         fi
-        if [ $level -ne -1 ]; then 
-          exit 0
-        else
-          exit $level
-        fi
+        exit $level
 }
 
 show_lofar_version()
@@ -384,7 +432,7 @@ handle_args()
 {
 
   # Handle arguments
-  while getopts  "hSsVvi:l:k:r:" flag
+  while getopts  "hSsVvi:l:q:r:" flag
   do
     case "$flag" in
     [sS])
@@ -399,7 +447,7 @@ handle_args()
     # when it is not provided with option -l
     shift $((OPTIND-1)); OPTIND=1
     ;;
-    k)
+    q)
     procesname=$OPTARG
     stop_prog $procesname
     exit
@@ -430,7 +478,7 @@ handle_args()
 
   if [ "$user" != "lofarsys" -a $level -gt 3 ]; then
       echo "Will only start up to level 3 as this appears to be local use"
-      $level=3
+      level=3
   fi
 
   # default image is 1
@@ -469,11 +517,9 @@ handle_args $*
 
 # All other options that act on the station status are for lofarsys only
 # Don't allow root to run swlevel because all logfile get root access.
-if [ "$user" != "lofarsys" ]; then
-    if [ "$group" != "local" ]; then 
-	echo "swlevel must be run by user lofarsys or group local members!"
-	exit
-    fi
+if [ "$LOFARROOT" == "/opt/lofar" -a "$user" != "lofarsys" -a "$group" != "local" ]; then 
+  echo "swlevel must be run by user lofarsys or group local members!"
+  exit
 fi
 
 # first power down to this level
@@ -491,7 +537,6 @@ status_prog
 
 # save for later
 echo $level > /tmp/level.admin
-chmod ug+rw /tmp/level.admin
 date=`date +%Y-%m-%d\ %H:%M:%S`
 echo [${date}]:$0 $* >> /log/swlevel.log
 exit $level

@@ -22,8 +22,6 @@
 #
 # $Id$
 
-# Set robustness for shell script
-
 
 #
 #  FUNCTIONS
@@ -40,22 +38,16 @@ error()
 # MAIN
 #
 
-for i in $*			# DEBUG
-do
-	echo "$i\n"
-done
-
-
 # Identify ourselves.
 echo "calibrate-part (script to calibrate a single MS)"
 echo
 
-# Check argument count.	was != 19
-if test $# != 21; then			
+# Check argument count.
+if test $# != 20; then
   echo "usage:"
   echo "    calibrate-part <ignored> <ignored> <ignored> <ignored> rank"
   echo "        part filesystem partvds envfile lofarroot wd key db-host"
-  echo "        db-port db-name db-user parmdb sourcedb parmlog parmloglevel dry"
+  echo "        db-port db-name db-user parmdb sourcedb imcolumns dry"
   exit 1
 fi
 
@@ -77,9 +69,9 @@ db_name=${10}
 db_user=${11}
 parmdb=${12}
 sourcedb=${13}
-parm_log=${14}
-parm_loglevel=${15}
-dry=${16}
+imcolumns=${14}
+dry=${15}
+
 
 echo "arguments:"
 echo "    part: ${part}"
@@ -101,9 +93,8 @@ echo "    db name: ${db_name}"
 echo "    db user: ${db_user}"
 echo "    parmdb: ${parmdb}"
 echo "    sourcedb: ${sourcedb}"
+echo "    imcolumns: ${imcolumns}"        # flag to add imaging columns to part-MS
 echo "    dry: ${dry}"
-echo "    parmlog: ${parm_log}"
-echo "	 loglevel: ${parm_loglevel}"
 echo
 
 # Initialize environment.
@@ -150,9 +141,22 @@ BBDB.Port = "${db_port}"
 
 ParmDB.Sky = "${part}/${sourcedb}"
 ParmDB.Instrument = "${part}/${parmdb}"
-ParmLog = "${part}/${parm_log}"
-ParmLoglevel = "${parm_loglevel}"
 EOF
+fi
+
+
+#
+# Add "imaging columns" (MODEL_DATA, CORRECTED_DATA, IMAGE_WEIGHTS) to part-MS
+#
+if test ${imcolumns} -eq 1; then
+   echo "adding imaging columns to MS: addImagingColumns.py ${part}"
+   if test "${dry}" != "dry"; then
+      addImagingColumns.py ${part}           # use wrapper python script that adds imaging columns to that MS part
+      if test $? -ne 0 ; then
+        echo "addImagingColumns.py ${part} failed"
+        exit 1
+      fi 
+  fi
 fi
 
 echo "execute KernelControl ${key}_kernel_$$.parset 0 > ${key}_kernel_$$.log 2>&1"

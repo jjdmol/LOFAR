@@ -24,6 +24,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/Version.h>
 #include <Common/ParameterSet.h>
+#include <Common/Exception.h>
 
 #include <GCF/RTDB/DP_Protocol.ph>
 #include "SoftwareMonitor.h"
@@ -33,6 +34,9 @@ using namespace LOFAR;
 using namespace LOFAR::GCF;
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::RTDBDaemons;
+
+// Use a terminate handler that can produce a backtrace.
+Exception::TerminateHandler t(Exception::terminate);
 
 int main(int argc, char* argv[])
 {

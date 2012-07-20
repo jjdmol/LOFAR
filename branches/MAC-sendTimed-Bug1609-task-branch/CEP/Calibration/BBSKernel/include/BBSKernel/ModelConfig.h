@@ -31,8 +31,6 @@
 #include <Common/lofar_vector.h>
 #include <Common/lofar_iosfwd.h>
 
-#include <casa/OS/Path.h>
-
 namespace LOFAR
 {
 namespace BBS
@@ -45,33 +43,29 @@ namespace BBS
 class BeamConfig
 {
 public:
-    enum ElementType
+    enum Mode
     {
-        HAMAKER_LBA,
-        HAMAKER_HBA,
-        YATAWATTA_LBA,
-        YATAWATTA_HBA,
-        N_ElementType
+        DEFAULT,
+        ELEMENT,
+        ARRAY_FACTOR,
+        N_Mode
     };
 
     BeamConfig();
-    BeamConfig(const string &configName, const casa::Path &configPath,
-        ElementType elementType, const casa::Path &elementPath);
+    BeamConfig(Mode mode, bool useChannelFreq, bool conjugateAF);
 
-    const string &getConfigName() const;
-    const casa::Path &getConfigPath() const;
-    ElementType getElementType() const;
-    const casa::Path &getElementPath() const;
+    Mode mode() const;
+    bool useChannelFreq() const;
+    bool conjugateAF() const;
 
-    static bool isDefined(ElementType in);
-    static ElementType asElementType(const string &in);
-    static const string &asString(ElementType in);
+    static bool isDefined(Mode in);
+    static Mode asMode(const string &in);
+    static const string &asString(Mode in);
 
 private:
-    string          itsConfigName;
-    casa::Path      itsConfigPath;
-    ElementType     itsElementType;
-    casa::Path      itsElementPath;
+    Mode            itsMode;
+    bool            itsUseChannelFreq;
+    bool            itsConjugateAF;
 };
 
 // Configuration options specific to the ionospheric model.
@@ -100,6 +94,19 @@ private:
     unsigned int    itsDegree;
 };
 
+// Configuration options specific to the elevation cut-off.
+class ElevationCutConfig
+{
+public:
+    ElevationCutConfig();
+    ElevationCutConfig(double threshold);
+
+    double threshold() const;
+
+private:
+    double itsThreshold;
+};
+
 // Configuration options specific to the condition number flagger.
 class FlaggerConfig
 {
@@ -107,7 +114,7 @@ public:
     FlaggerConfig();
     FlaggerConfig(double threshold);
 
-    double getThreshold() const;
+    double threshold() const;
 
 private:
     double itsThreshold;
@@ -131,16 +138,27 @@ public:
     bool useGain() const;
     void setGain(bool value = true);
 
+    bool useTEC() const;
+    void setTEC(bool value = true);
+
     bool useDirectionalGain() const;
     void setDirectionalGain(bool value = true);
 
-    bool useFaradayRotation() const;
-    void setFaradayRotation(bool value = true);
+    bool useElevationCut() const;
+    void setElevationCutConfig(const ElevationCutConfig &config);
+    const ElevationCutConfig &getElevationCutConfig() const;
+    void clearElevationCutConfig();
 
     bool useBeam() const;
     void setBeamConfig(const BeamConfig &config);
     const BeamConfig &getBeamConfig() const;
     void clearBeamConfig();
+
+    bool useDirectionalTEC() const;
+    void setDirectionalTEC(bool value = true);
+
+    bool useFaradayRotation() const;
+    void setFaradayRotation(bool value = true);
 
     bool useIonosphere() const;
     void setIonosphereConfig(const IonosphereConfig &config);
@@ -156,7 +174,7 @@ public:
     void setCache(bool value = true);
 
     void setSources(const vector<string> &sources);
-    const vector<string> &getSources() const;
+    const vector<string> &sources() const;
 
 private:
     enum ModelOptions
@@ -165,9 +183,12 @@ private:
         BANDPASS,
         CLOCK,
         GAIN,
+        TEC,
         DIRECTIONAL_GAIN,
-        FARADAY_ROTATION,
+        ELEVATION_CUT,
         BEAM,
+        DIRECTIONAL_TEC,
+        FARADAY_ROTATION,
         IONOSPHERE,
         FLAGGER,
         CACHE,
@@ -176,6 +197,7 @@ private:
 
     bool                itsModelOptions[N_ModelOptions];
 
+    ElevationCutConfig  itsConfigElevationCut;
     BeamConfig          itsConfigBeam;
     IonosphereConfig    itsConfigIonosphere;
     FlaggerConfig       itsConfigFlagger;
@@ -186,6 +208,7 @@ private:
 ostream &operator<<(ostream &out, const FlaggerConfig &obj);
 ostream &operator<<(ostream &out, const IonosphereConfig &obj);
 ostream &operator<<(ostream &out, const BeamConfig &obj);
+ostream &operator<<(ostream &out, const ElevationCutConfig &obj);
 ostream &operator<<(ostream &out, const ModelConfig &obj);
 
 // @}

@@ -30,6 +30,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarConstants.h>
 #include <ApplCommon/Observation.h>
+#include <ApplCommon/AntennaSets.h>
 
 //# ACC Includes
 #include <Common/ParameterSet.h>
@@ -45,7 +46,6 @@
 #include <APL/APLCommon/ChildControl.h>
 #include <APL/APLCommon/ParentControl.h>
 #include <APL/APLCommon/CTState.h>
-#include <APL/APLCommon/AntennaSets.h>
 
 //# local includes
 #include "ActiveObs.h"
@@ -55,7 +55,6 @@
 namespace LOFAR {
 	using APLCommon::ChildControl;
 	using APLCommon::ParentControl;
-	using APLCommon::AntennaSets;
 
 	namespace StationCU {
 	using	MACIO::GCFEvent;

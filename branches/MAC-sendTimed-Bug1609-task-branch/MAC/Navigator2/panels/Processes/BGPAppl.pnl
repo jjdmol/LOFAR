@@ -1,4 +1,4 @@
-V 10
+V 11
 1
 LANG:1 0 
 PANEL,-1 -1 1013 750 N "_3DFace" 0
@@ -14,81 +14,68 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
   
     // determine if we have an observation name in the DP, if so strip it and  get the real name to be included in the toplabel
   string bareDP=dpSubStr(baseDP,DPSUB_DP);
-  int pos = strpos(bareDP,\"_TempObs\"  );
-
-  
-  if (pos > -1) {
-    string obsDP=substr(bareDP,0,pos+12);
-    dpGet(MainDBName+obsDP+\".claim.name\",observationName);
-    observation=navFunct_dpGetLastElement(observationName);
-  }
-  
-  // get involved stations.
-  // look if that name is available in the Observation List
-  int j = dynContains(g_observations[\"NAME\"],observationName);
-  if ( j > 0) {
-    // get the Stationlist from that observation
-    string sts=g_observations[\"STATIONLIST\"][j];
-    // add stations if not allready there
-    stationList = navFunct_listToDynString(sts);
-  }
-
-  // set the observation selectable items
-  prepareProcesses();
+ 
 
 
   // check if the requiered datapoint for this view are enabled and accessible
-  if (dpExists(baseDP + \".KSPType\")) {
-    if (dpConnect(\"updateBGPAppl\", baseDP + \".KSPType\",
-	 	                   baseDP + \".inputBufferList\",
+  if (dpExists(baseDP + \".ioNodeList\")) {
+    if (dpConnect(\"updateBGPAppl\", baseDP + \".ioNodeList\",
+                                   baseDP + \".locusNodeList\",
                                    baseDP + \".adderList\",
-                                   baseDP + \".KSPType:_online.._invalid\") == -1) {
+                                   baseDP + \".writerList\",
+                                   baseDP + \".dataProductList\",
+                                   baseDP + \".dataProductTypeList\",
+                                   baseDP + \".ioNodeList:_online.._invalid\") == -1) {
       LOG_ERROR(\"BGPAppl.pnl:main|Couldn'tconnect to: \"+baseDP);
     }
     if (!navFunct_dpReachable(baseDP)) {
-      updateBGPAppl(\"\",\"\",\"\",true);
+      updateBGPAppl(\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",true);
     }
   } else {
     LOG_ERROR(\"BGPAppl.pnl:main|Couldn't find DP to connect to: \"+baseDP);
-    setValue(\"ksp_txt\", \"backCol\", \"Lofar_dpdoesnotexist\");
-    setValue(\"inputBuffer_txt\", \"backCol\", \"Lofar_dpdoesnotexist\");
-    setValue(\"adder_txt\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"stationTable\", \"backCol\", \"Lofar_dpdoesnotexist\");
   } 
   
   reload();   
 }
 
-updateBGPAppl(string dp1, string KSPType,
-               string dp2,string inputBufferList,
-               string dp3,string adderList,
-               string dp4, bool invalid)
+updateBGPAppl(string dp1,dyn_int ionodeList,
+              string dp2,dyn_string locusNodeList,
+              string dp3,dyn_string adderList,              
+              string dp4,dyn_string writerList,              
+              string dp5,dyn_string dataProductList,              
+              string dp6,dyn_string dataProductTypeList,              
+              string dp7, bool invalid)
 {
   LOG_TRACE(\"BGPAppl.pnl:updateBGPAppl|entered\");
   string SymbolCol=\"_Window\";
-  if (!invalid) {
-    setValue(\"ksp_txt\", \"text\", KSPType);
-  } else {
+  if (invalid) {
     SymbolCol=\"Lofar_invalid\";
     if (dp1 == \"\") {
       SymbolCol=\"Lofar_dpOffline\";
     }
   }  
-  setValue(\"ksp_txt\", \"backCol\",SymbolCol );
   
-  dyn_string adders = navFunct_listToDynString(adderList);
-  dyn_string inputBuffers = navFunct_listToDynString(inputBufferList);
-  //determine nr of adders (for now we assume only 1 inputbuffer per station)
-  int skipFactor=0;
-  if (dynlen(adders) > 0 && dynlen(inputBuffers) >0 ) {
-    skipFactor == dynlen(adders)/dynlen(inputBuffers);
-  }
-  
-  // update stations based inputbuffers and adders
+
   // clear stationtable
   stationTable.deleteAllLines();
-  for (int i=1; i <= dynlen(stationList); i++) {
-    stationTable.appendLine(\"Station\",stationList[i],\"InputBuffers\",inputBuffers[i],\"Adders\",adders[i]);
+  dynClear(stationList);
+  
+  
+  // loop over nr of stations to fill table
+  for (int i = 1; i <= dynlen(ionodeList); i++) {
+  
+    // update stations based inputbuffers and adders
+    stationTable.appendLine(\"ioNode\",ionodeList[i],
+                            \"adders\",adderList[i],
+                            \"writers\",writerList[i],
+                            \"locusNodes\",locusNodeList[i],
+                            \"dataProducts\",dataProductList[i],
+                            \"type\",dataProductTypeList[i]);
   }
+  
+  // set the observation selectable items
+  prepareProcesses();
 
 }
 
@@ -130,6 +117,20 @@ void doAction(string aDP, string anAction) {
   if (actionString[1] == \"Reload\") {
     
     reload();
+  } else if (actionString[1] == \"DistChanged\") {
+    // for dist system bound hardware only, if the distsystem went offline we need to replace 
+    // the screen with a broken connection screen.
+    if (!g_initializing) {
+    
+      // check if this syst is in the connectionlist and down
+      int iPos=dynContains(g_connections[\"NAME\"],sysName);
+      if (iPos > 0) {
+        if (!g_connections[\"UP\"][iPos]) {
+          navPanel_setEvent(\"invalid DP\",\"ChangePanel\");
+        }
+      }
+    }
+    return;
   }
 }
 
@@ -152,7 +153,8 @@ string baseDP=\"\";
 string database=\"\";
 string observation=\"\";
 string observationName = \"\";
-dyn_string stationList=\"\";" 0
+dyn_string stationList;
+" 0
  2
 "CBRef" "1"
 "EClose" E
@@ -195,47 +197,10 @@ LANG:1 0
 0
 1 59 0 "" 20
 0
-2 18
-"PRIMITIVE_TEXT10"
-""
-1 28 360 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-0 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 28 360 143 374
-0 2 2 "0s" 0 0 0 192 0 0  28 360 1
-1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
-LANG:1 19 Key Science Project
-14 21
-"ksp_txt"
-""
-1 180 356 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-5 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-0
-1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 178 354 402 375
-2 "0s" 0 0 0 0 0 -1  E E E
 25 42
 "stationTable"
 ""
-1 180 390 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 20 320 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 12 0 0 0 0 0
 E E E
@@ -245,33 +210,49 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 178 388 762 562
-EE 1 0 1 3 0 "Station" 8 1 0 "s" 1
-LANG:1 7 Station
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  18 318 1002 622
+EE 1 0 1 6 0 "ioNode" 4 1 0 "s" 1
+LANG:1 6 ioNode
 E
 1
 LANG:1 0 
 
-80 "InputBuffers" 26 1 0 "s" 1
-LANG:1 12 InputBuffers
+45 "adders" 10 1 0 "s" 1
+LANG:1 6 adders
 E
 1
 LANG:1 0 
 
-250 "Adders" 26 1 0 "s" 1
-LANG:1 6 Adders
+100 "writers" 10 1 0 "s" 1
+LANG:1 7 writers
 E
 1
 LANG:1 0 
 
-250 
+100 "locusNodes" 27 1 0 "s" 1
+LANG:1 10 locusNodes
+E
+1
+LANG:1 0 
+
+255 "dataProducts" 33 1 0 "s" 1
+LANG:1 12 dataProducts
+E
+1
+LANG:1 0 
+
+305 "type" 10 1 0 "s" 1
+LANG:1 4 type
+E
+1
+LANG:1 0 
+
+98 
 14 14 10 10
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-0 1 0 1 7
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0 0 1 1 1 7
 1 0
 0
 LAYER, 1 
@@ -302,7 +283,7 @@ LAYER, 7
 1
 LANG:1 0 
 0
-3 0 "PANEL_REF1"
+3 0 "PANEL_REF1" -1
 "objects\\Processes\\controller_top.pnl" 49 92 T 0 1 0 1 1.4432899320127e-014 -40
 1
 "$ctrlName""BGPAppl"

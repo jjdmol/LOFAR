@@ -64,7 +64,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include <BBSControl/LocalSolveController.h>
 #include <BBSControl/GlobalSolveController.h>
 #include <BBSKernel/MeasurementAIPS.h>
 #include <BBSKernel/MeasurementExprLOFAR.h>
@@ -74,6 +73,8 @@
 #include <BBSKernel/Solver.h>
 #include <BBSKernel/UVWFlagger.h>
 #include <BBSKernel/Exceptions.h>
+#include <BBSKernel/Apply.h>
+#include <BBSKernel/Estimate.h>
 
 namespace LOFAR
 {
@@ -118,7 +119,7 @@ namespace LOFAR
     tribool KernelProcessControl::init()
     {
       LOG_DEBUG("KernelProcessControl::init()");
-       
+
       try {
         ParameterSet *ps = globalParameterSet();
         ASSERT(ps);
@@ -131,14 +132,13 @@ namespace LOFAR
         }
 
         string path = ps->getString("ObservationPart.Path");
-        string skyDb = ps->getString("ParmDB.Sky");
-        string instrumentDb = ps->getString("ParmDB.Instrument");
-        string solverDb=ps->getString("ParmLog", "solver");
-        string loggingLevel=ps->getString("ParmLoglevel", "NONE");
-        
+        string skyDB = ps->getString("ParmDB.Sky");
+        string instrumentDB = ps->getString("ParmDB.Instrument");
+
         try {
           // Open observation part.
           LOG_INFO_STR("Observation part: " << filesys << " : " << path);
+          itsPath = path;
           itsMeasurement.reset(new MeasurementAIPS(path));
         }
         catch(Exception &e) {
@@ -148,58 +148,32 @@ namespace LOFAR
 
         try {
           // Open sky model parameter database.
-          LOG_INFO_STR("Sky model: " << skyDb);
-          itsSourceDb.reset(new SourceDB(ParmDBMeta("casa", skyDb)));
-          ParmManager::instance().initCategory(SKY, itsSourceDb->getParmDB());
+          LOG_INFO_STR("Sky model: " << skyDB);
+          itsSourceDB.reset(new SourceDB(ParmDBMeta("casa", skyDB)));
+          ParmManager::instance().initCategory(SKY, itsSourceDB->getParmDB());
         }
         catch(Exception &e) {
           LOG_ERROR_STR("Failed to open sky model parameter database: "
-            << skyDb);
+            << skyDB);
           return false;
         }
 
         try {
           // Open instrument model parameter database.
-          LOG_INFO_STR("Instrument model: " << instrumentDb);
+          LOG_INFO_STR("Instrument model: " << instrumentDB);
           ParmManager::instance().initCategory(INSTRUMENT,
-            ParmDB(ParmDBMeta("casa", instrumentDb)));
+            ParmDB(ParmDBMeta("casa", instrumentDB)));
         }
         catch(Exception &e) {
           LOG_ERROR_STR("Failed to open instrument model parameter database: "
-            << instrumentDb);
+            << instrumentDB);
           return false;
         }
-		  
-       if(loggingLevel!="NONE")	// If no parmDBLogging is set, skip the initialization
-       {	
-			try {
-				// Open ParmDBLog ParmDB for solver logging
-				LOG_INFO_STR("Solver log table: " << solverDb);
-				LOG_INFO_STR("Solver logging level: " << loggingLevel);
-				
-				// Depending on value read from parset file for logging level call constructor
-				// with the corresponding enum value
-				//
-				if(loggingLevel=="PERSOLUTION")
-					itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERSOLUTION));
-				if(loggingLevel=="PERSOLUTION_CORRMATRIX")
-					itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERSOLUTION_CORRMATRIX));
-				if(loggingLevel=="PERITERATION")
-					itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERITERATION));			
-				if(loggingLevel=="PERITERATION_CORRMATRIX")
-					itsParmLogger.reset(new ParmDBLog(solverDb, ParmDBLog::PERITERATION_CORRMATRIX));
-			}
-			  catch(Exception &e) {
-				 LOG_ERROR_STR("Failed to open instrument model parameter database: "
-					<< instrumentDb);
-				 return false;
-			  }
-		  }
 
         string key = ps->getString("BBDB.Key", "default");
         itsCalSession.reset(new CalSession(key,
-          ps->getString("BBDB.Name"),
-          ps->getString("BBDB.User"),
+          ps->getString("BBDB.Name", (getenv("USER") ? : "")),
+          ps->getString("BBDB.User", "postgres"),
           ps->getString("BBDB.Password", ""),
           ps->getString("BBDB.Host", "localhost"),
           ps->getString("BBDB.Port", "")));
@@ -211,12 +185,16 @@ namespace LOFAR
 
         // Try to register as kernel.
         if(!itsCalSession->registerAsKernel(filesys, path,
-          itsMeasurement->grid())) {
-          LOG_ERROR("Registration denied.");
+          itsMeasurement->grid()[FREQ], itsMeasurement->grid()[TIME])) {
+          LOG_ERROR_STR("Could not register as kernel. There may be stale state"
+            " in the database for key: " << key);
           return false;
         }
-
         LOG_INFO_STR("Registration OK.");
+
+        // Get the global ParameterSet and write it into the HISTORY table.
+        itsMeasurement->writeHistory(itsCalSession->getParset());
+
         setState(RUN);
       }
       catch(Exception& e) {
@@ -439,15 +417,15 @@ namespace LOFAR
       itsChunkSelection.clear(VisSelection::TIME_END);
       itsChunkSelection.setTimeRange(timeRangeCmd.first, timeRangeCmd.second);
 
-      // Deallocate chunk.
-      ASSERTSTR(itsChunk.use_count() == 0 || itsChunk.use_count() == 1,
-        "Chunk shoud be unique (or uninitialized) by now.");
-      itsChunk.reset();
+      // Deallocate buffers.
+      itsBuffers.clear();
 
-      LOG_DEBUG("Reading chunk...");
+      // Read chunk.
+      LOG_DEBUG_STR("Reading chunk from column: " << itsInputColumn);
       try
       {
-        itsChunk = itsMeasurement->read(itsChunkSelection, itsInputColumn);
+        itsBuffers["DATA"] = itsMeasurement->read(itsChunkSelection,
+            itsInputColumn);
       }
       catch(Exception &ex)
       {
@@ -456,7 +434,7 @@ namespace LOFAR
       }
 
       // Display information about chunk.
-      LOG_INFO_STR("Chunk dimensions: " << endl << itsChunk->dimensions());
+      LOG_INFO_STR("Chunk dimensions: " << endl << itsBuffers["DATA"]->dims());
 
       // Update counters.
       ++itsChunkCount;
@@ -492,17 +470,22 @@ namespace LOFAR
         << " type " << command.type() << " name " << command.fullName());
       ++itsStepCount;
 
+      // Buffer to operate on.
+      VisBuffer::Ptr chunk(itsBuffers["DATA"]);
+
+      // Load precomputed visibilities if required.
+      loadPrecomputedVis(command.modelConfig().sources());
+
       // Determine selected baselines and correlations.
       BaselineMask blMask = itsMeasurement->asMask(command.baselines());
       CorrelationMask crMask = createCorrelationMask(command.correlations());
 
       // Construct model expression.
       MeasurementExprLOFAR::Ptr model;
-
       try
       {
-        model.reset(new MeasurementExprLOFAR(command.modelConfig(),
-            *itsSourceDb, itsChunk, blMask));
+        model.reset(new MeasurementExprLOFAR(*itsSourceDB, itsBuffers,
+          command.modelConfig(), chunk, blMask));
       }
       catch(Exception &ex)
       {
@@ -511,7 +494,7 @@ namespace LOFAR
       }
 
       // Compute simulated visibilities.
-      Evaluator evaluator(itsChunk, model);
+      Evaluator evaluator(chunk, model);
       evaluator.setBaselineMask(blMask);
       evaluator.setCorrelationMask(crMask);
 
@@ -527,11 +510,14 @@ namespace LOFAR
       evaluator.dumpStats(oss);
       LOG_DEBUG(oss.str());
 
-      // Optionally write the simulated visibilities.
+      // Flag NaN's introduced in the output (if any).
+      chunk->flagsNaN();
+
+      // Write output if required.
       if(!command.outputColumn().empty())
       {
-        itsMeasurement->write(itsChunk, itsChunkSelection,
-            command.outputColumn(), command.writeFlags(), 1);
+        itsMeasurement->write(chunk, itsChunkSelection, command.outputColumn(),
+          command.writeCovariance(), command.writeFlags(), 1);
       }
 
       return CommandResult(CommandResult::OK, "Ok.");
@@ -546,17 +532,22 @@ namespace LOFAR
         << " type " << command.type() << " name " << command.fullName());
       ++itsStepCount;
 
+      // Buffer to operate on.
+      VisBuffer::Ptr chunk(itsBuffers["DATA"]);
+
+      // Load precomputed visibilities if required.
+      loadPrecomputedVis(command.modelConfig().sources());
+
       // Determine selected baselines and correlations.
       BaselineMask blMask = itsMeasurement->asMask(command.baselines());
       CorrelationMask crMask = createCorrelationMask(command.correlations());
 
       // Construct model expression.
       MeasurementExprLOFAR::Ptr model;
-
       try
       {
-        model.reset(new MeasurementExprLOFAR(command.modelConfig(),
-            *itsSourceDb, itsChunk, blMask));
+        model.reset(new MeasurementExprLOFAR(*itsSourceDB, itsBuffers,
+          command.modelConfig(), chunk, blMask));
       }
       catch(Exception &ex)
       {
@@ -565,7 +556,7 @@ namespace LOFAR
       }
 
       // Compute simulated visibilities.
-      Evaluator evaluator(itsChunk, model);
+      Evaluator evaluator(chunk, model);
       evaluator.setBaselineMask(blMask);
       evaluator.setCorrelationMask(crMask);
       evaluator.setMode(Evaluator::SUBTRACT);
@@ -582,11 +573,14 @@ namespace LOFAR
       evaluator.dumpStats(oss);
       LOG_DEBUG(oss.str());
 
-      // Optionally write the simulated visibilities.
+      // Flag NaN's introduced in the output (if any).
+      chunk->flagsNaN();
+
+      // Write output if required.
       if(!command.outputColumn().empty())
       {
-        itsMeasurement->write(itsChunk, itsChunkSelection,
-          command.outputColumn(), command.writeFlags(), 1);
+        itsMeasurement->write(chunk, itsChunkSelection, command.outputColumn(),
+          command.writeCovariance(), command.writeFlags(), 1);
       }
 
       return CommandResult(CommandResult::OK, "Ok.");
@@ -601,17 +595,22 @@ namespace LOFAR
         << " type " << command.type() << " name " << command.fullName());
       ++itsStepCount;
 
+      // Buffer to operate on.
+      VisBuffer::Ptr chunk(itsBuffers["DATA"]);
+
+      // Load precomputed visibilities if required.
+      loadPrecomputedVis(command.modelConfig().sources());
+
       // Determine selected baselines and correlations.
       BaselineMask blMask = itsMeasurement->asMask(command.baselines());
       CorrelationMask crMask = createCorrelationMask(command.correlations());
 
       // Construct model expression.
       MeasurementExprLOFAR::Ptr model;
-
       try
       {
-        model.reset(new MeasurementExprLOFAR(command.modelConfig(),
-            *itsSourceDb, itsChunk, blMask));
+        model.reset(new MeasurementExprLOFAR(*itsSourceDB, itsBuffers,
+          command.modelConfig(), chunk, blMask));
       }
       catch(Exception &ex)
       {
@@ -620,7 +619,7 @@ namespace LOFAR
       }
 
       // Compute simulated visibilities.
-      Evaluator evaluator(itsChunk, model);
+      Evaluator evaluator(chunk, model);
       evaluator.setBaselineMask(blMask);
       evaluator.setCorrelationMask(crMask);
       evaluator.setMode(Evaluator::ADD);
@@ -637,11 +636,14 @@ namespace LOFAR
       evaluator.dumpStats(oss);
       LOG_DEBUG(oss.str());
 
-      // Optionally write the simulated visibilities.
+      // Flag NaN's introduced in the output (if any).
+      chunk->flagsNaN();
+
+      // Write output if required.
       if(!command.outputColumn().empty())
       {
-        itsMeasurement->write(itsChunk, itsChunkSelection,
-          command.outputColumn(), command.writeFlags(), 1);
+        itsMeasurement->write(chunk, itsChunkSelection, command.outputColumn(),
+          command.writeCovariance(), command.writeFlags(), 1);
       }
 
       return CommandResult(CommandResult::OK, "Ok.");
@@ -656,46 +658,79 @@ namespace LOFAR
         << " type " << command.type() << " name " << command.fullName());
       ++itsStepCount;
 
+      // Buffer to operate on.
+      VisBuffer::Ptr chunk(itsBuffers["DATA"]);
+
+      // Load precomputed visibilities if required.
+      loadPrecomputedVis(command.modelConfig().sources());
+
       // Determine selected baselines and correlations.
       BaselineMask blMask = itsMeasurement->asMask(command.baselines());
       CorrelationMask crMask = createCorrelationMask(command.correlations());
 
-      // Construct model expression.
-      MeasurementExprLOFAR::Ptr model;
-
-      try
+      // Use the new algorithm that also updates the covariance matrix if
+      // possible.
+      if(chunk->nCorrelations() == 4
+        && chunk->correlations()[0] == Correlation::XX
+        && chunk->correlations()[1] == Correlation::XY
+        && chunk->correlations()[2] == Correlation::YX
+        && chunk->correlations()[3] == Correlation::YY)
       {
-        model.reset(new MeasurementExprLOFAR(command.modelConfig(),
-            *itsSourceDb, itsChunk, blMask, false));
+        try
+        {
+          StationExprLOFAR::Ptr expr(new StationExprLOFAR(*itsSourceDB,
+            itsBuffers, command.modelConfig(), chunk, true, command.useMMSE(),
+            command.sigmaMMSE()));
+          apply(expr, chunk, blMask);
+        }
+        catch(Exception &ex)
+        {
+          return CommandResult(CommandResult::ERROR, "Unable to construct the"
+            " model expression [" + ex.message() + "]");
+        }
       }
-      catch(Exception &ex)
+      else
       {
-        return CommandResult(CommandResult::ERROR, "Unable to construct the"
-          " model expression [" + ex.message() + "]");
+        // Construct model expression.
+        MeasurementExprLOFAR::Ptr model;
+        try
+        {
+          model.reset(new MeasurementExprLOFAR(*itsSourceDB, itsBuffers,
+            command.modelConfig(), chunk, blMask, true, command.useMMSE(),
+            command.sigmaMMSE()));
+        }
+        catch(Exception &ex)
+        {
+          return CommandResult(CommandResult::ERROR, "Unable to construct the"
+            " model expression [" + ex.message() + "]");
+        }
+
+        // Compute simulated visibilities.
+        Evaluator evaluator(chunk, model);
+        evaluator.setBaselineMask(blMask);
+        evaluator.setCorrelationMask(crMask);
+
+        if(evaluator.isSelectionEmpty())
+        {
+          LOG_WARN_STR("No visibility data selected for processing.");
+        }
+
+        evaluator.process();
+
+        // Dump processing statistics to the log.
+        ostringstream oss;
+        evaluator.dumpStats(oss);
+        LOG_DEBUG(oss.str());
       }
 
-      // Compute simulated visibilities.
-      Evaluator evaluator(itsChunk, model);
-      evaluator.setBaselineMask(blMask);
-      evaluator.setCorrelationMask(crMask);
+      // Flag NaN's introduced in the output (if any).
+      chunk->flagsNaN();
 
-      if(evaluator.isSelectionEmpty())
-      {
-        LOG_WARN_STR("No visibility data selected for processing.");
-      }
-
-      evaluator.process();
-
-      // Dump processing statistics to the log.
-      ostringstream oss;
-      evaluator.dumpStats(oss);
-      LOG_DEBUG(oss.str());
-
-      // Optionally write the simulated visibilities.
+      // Write output if required.
       if(!command.outputColumn().empty())
       {
-        itsMeasurement->write(itsChunk, itsChunkSelection,
-          command.outputColumn(), command.writeFlags(), 1);
+        itsMeasurement->write(chunk, itsChunkSelection, command.outputColumn(),
+          command.writeCovariance(), command.writeFlags(), 1);
       }
 
       return CommandResult(CommandResult::OK, "Ok.");
@@ -721,7 +756,13 @@ namespace LOFAR
         LOG_WARN("Phase shift support is unavailable in the current"
           " implementation; phase shift will NOT be performed!");
       }
-     
+
+      // Buffer to operate on.
+      VisBuffer::Ptr chunk(itsBuffers["DATA"]);
+
+      // Load precomputed visibilities if required.
+      loadPrecomputedVis(command.modelConfig().sources());
+
       // Determine selected baselines and correlations.
       BaselineMask blMask = itsMeasurement->asMask(command.baselines());
       CorrelationMask crMask = createCorrelationMask(command.correlations());
@@ -730,9 +771,9 @@ namespace LOFAR
       // of this interval.
       if(command.uvFlag())
       {
-        UVWFlagger flagger(itsChunk);
+        UVWFlagger flagger(chunk);
         flagger.setBaselineMask(blMask);
-        flagger.setFlagMask(2);
+        flagger.setFlagMask(flag_t(2));
         flagger.setUVRange(command.uvRange().first, command.uvRange().second);
         flagger.process();
 
@@ -744,11 +785,10 @@ namespace LOFAR
 
       // Construct model expression.
       MeasurementExprLOFAR::Ptr model;
-
       try
       {
-        model.reset(new MeasurementExprLOFAR(command.modelConfig(),
-            *itsSourceDb, itsChunk, blMask));
+        model.reset(new MeasurementExprLOFAR(*itsSourceDB, itsBuffers,
+            command.modelConfig(), chunk, blMask));
       }
       catch(Exception &ex)
       {
@@ -757,8 +797,8 @@ namespace LOFAR
       }
 
       // Determine evaluation grid.
-      Axis::ShPtr freqAxis(itsChunk->grid()[FREQ]);
-      Axis::ShPtr timeAxis(itsChunk->grid()[TIME]);
+      Axis::ShPtr freqAxis(chunk->grid()[FREQ]);
+      Axis::ShPtr timeAxis(chunk->grid()[TIME]);
       Grid evalGrid(freqAxis, timeAxis);
 
       // Determine solution grid.
@@ -797,20 +837,26 @@ namespace LOFAR
       unsigned int cellChunkSize = (command.cellChunkSize() == 0 ?
         solGrid[TIME]->size() : command.cellChunkSize());
 
-      // Initialize equator.
-      VisEquator::Ptr equator(new VisEquator(itsChunk, model));
-      equator->setBaselineMask(blMask);
-      equator->setCorrelationMask(crMask);
-
-      if(equator->isSelectionEmpty())
+      if(command.globalSolution())
       {
-        LOG_WARN_STR("No measured visibility data available in the current"
-          " data selection; solving will proceed without data.");
-      }
+        ASSERTSTR(command.algorithm() == "L2"
+            && command.mode() == "COMPLEX"
+            && !command.reject(), "Global calibration only supports Solve.Mode"
+            " = COMPLEX, Solve.Algorithm = L2, and Solve.OutlierRejection ="
+            " F.");
 
-      try
-      {
-        if(command.globalSolution())
+        // Initialize equator.
+        VisEquator::Ptr equator(new VisEquator(chunk, model));
+        equator->setBaselineMask(blMask);
+        equator->setCorrelationMask(crMask);
+
+        if(equator->isSelectionEmpty())
+        {
+          LOG_WARN_STR("No measured visibility data available in the current"
+            " data selection; solving will proceed without data.");
+        }
+
+        try
         {
           // Initialize controller.
           GlobalSolveController controller(itsKernelIndex, equator, itsSolver);
@@ -822,38 +868,68 @@ namespace LOFAR
           // Compute a solution of each cell in the solution grid.
           controller.run();
         }
-        else
+        catch(Exception &ex)
         {
-          // Initialize local solver.
-          Solver::Ptr solver(new Solver(command.solverOptions()));
-
-          // Initialize controller.
-          LocalSolveController controller(equator, solver);
-          controller.setSolutionGrid(solGrid);
-          controller.setSolvables(command.parms(), command.exclParms());
-          controller.setPropagateSolutions(command.propagate());
-          controller.setCellChunkSize(cellChunkSize);
-
-			 // Compute a solution of each cell in the solution grid.
-          if(itsParmLogger != NULL)
-          {
-          	 LOG_DEBUG_STR("controller.run(*itsParmLogger)");
-          	 controller.run(*itsParmLogger);		// run with solver criteria logging into ParmDB
-          }
-          else
-          	 controller.run();						// run without ParmDB logging
+          return CommandResult(CommandResult::ERROR, "Unable to initialize or"
+            " run solve step controller [" + ex.message() + "]");
         }
-      }
-      catch(Exception &ex)
-      {
-        return CommandResult(CommandResult::ERROR, "Unable to initialize or run"
-          " solve step controller [" + ex.message() + "]");
-      }
 
-      // Dump processing statistics to the log.
-      ostringstream oss;
-      equator->dumpStats(oss);
-      LOG_DEBUG(oss.str());
+        // Dump processing statistics to the log.
+        ostringstream oss;
+        equator->dumpStats(oss);
+        LOG_DEBUG(oss.str());
+      }
+      else
+      {
+        EstimateOptions::Mode mode = EstimateOptions::asMode(command.mode());
+        if(!EstimateOptions::isDefined(mode)) {
+          return CommandResult(CommandResult::ERROR, "Unsupported mode: "
+            + command.mode());
+        }
+
+        EstimateOptions::Algorithm algorithm =
+          EstimateOptions::asAlgorithm(command.algorithm());
+        if(!EstimateOptions::isDefined(algorithm)) {
+          return CommandResult(CommandResult::ERROR, "Unsupported algorithm: "
+            + command.algorithm());
+        }
+
+        if(algorithm == EstimateOptions::L1 && command.epsilon().empty()) {
+          return CommandResult(CommandResult::ERROR, "L1 epsilon vector should"
+            " not be empty.");
+        }
+
+        if(command.reject() && command.rmsThreshold().empty()) {
+          return CommandResult(CommandResult::ERROR, "Threshold vector should"
+            " not be empty.");
+        }
+
+        SolverOptions lsqOptions;
+        lsqOptions.maxIter = command.maxIter();
+        lsqOptions.epsValue = command.epsValue();
+        lsqOptions.epsDerivative = command.epsDerivative();
+        lsqOptions.colFactor = command.colFactor();
+        lsqOptions.lmFactor = command.lmFactor();
+        lsqOptions.balancedEq = command.balancedEq();
+        lsqOptions.useSVD = command.useSVD();
+
+        EstimateOptions options(mode, algorithm, command.reject(),
+          cellChunkSize, command.propagate(), ~flag_t(0), flag_t(4),
+          lsqOptions);
+        options.setThreshold(command.rmsThreshold().begin(),
+          command.rmsThreshold().end());
+        options.setEpsilon(command.epsilon().begin(), command.epsilon().end());
+
+        // Open solution log.
+        casa::Path path(itsPath);
+        path.append(command.logName());
+        ParmDBLog log(path.absoluteName(),
+          ParmDBLoglevel(command.logLevel()).get(), itsChunkCount == 0);
+
+        estimate(log, chunk, blMask, crMask, model, solGrid,
+          ParmManager::instance().makeSubset(command.parms(),
+          command.exclParms(), model->parms()), options);
+      }
 
       // Flush solutions to disk.
       ParmManager::instance().flush();
@@ -862,7 +938,7 @@ namespace LOFAR
       // interval.
       if(command.uvFlag())
       {
-        itsChunk->flagsAndWithMask(~flag_t(2));
+        chunk->flagsAndWithMask(~flag_t(2));
       }
 
       return CommandResult(CommandResult::OK, "Ok.");
@@ -935,8 +1011,8 @@ namespace LOFAR
       ProcessId last = itsCalSession->getWorkerByIndex(CalSession::KERNEL,
         count - 1);
 
-      double freqStart = itsCalSession->getGrid(first)[0]->start();
-      double freqEnd = itsCalSession->getGrid(last)[0]->end();
+      double freqStart = itsCalSession->getFreqRange(first).start;
+      double freqEnd = itsCalSession->getFreqRange(last).end;
 
       LOG_DEBUG_STR("Calibration group frequency range: [" << setprecision(15)
         << freqStart / 1e6 << "," << freqEnd / 1e6 << "] MHz");
@@ -967,6 +1043,25 @@ namespace LOFAR
 
       // If no valid correlations specified, select all correlations (default).
       return (mask.empty() ? CorrelationMask(true) : mask);
+    }
+
+    void KernelProcessControl::loadPrecomputedVis(const vector<string> &patches)
+    {
+      for(vector<string>::const_iterator it = patches.begin(),
+          end = patches.end(); it != end; ++it)
+      {
+        if(it->empty() || (*it)[0] != '@')
+        {
+          continue;
+        }
+
+        BufferMap::const_iterator bufIt = itsBuffers.find(*it);
+        if(bufIt == itsBuffers.end())
+        {
+          itsBuffers[*it] = itsMeasurement->read(itsChunkSelection,
+            it->substr(1), false, false);
+        }
+      }
     }
 
 } // namespace BBS

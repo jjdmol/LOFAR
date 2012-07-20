@@ -117,6 +117,9 @@ public:
 	vector<StateInfo> getPendingRequest (const string&	  aName, 
 								 		 OTDBtreeIDType   anObsID = 0, 
 								 		 uint16			  aCntlrType = CNTLRTYPE_NO_TYPE);
+	vector<StateInfo> getChildInfo      (const string&	  aName, 
+								 		 OTDBtreeIDType   anObsID = 0, 
+								 		 uint16			  aCntlrType = CNTLRTYPE_NO_TYPE);
 
 	// The 'parent' task that uses this ChildControl class has three way of getting
 	// informed about the completed actions:
@@ -142,12 +145,14 @@ private:
 	// Internal routines
 	void _processActionList();
 	void _doGarbageCollection();
+	void _startDaemonOffline(const string&	hostname);
 	void _setEstablishedState (const string&		aName, 
 							   CTState::CTstateNr	newState,
 							   time_t				atTime,
 							   uint16				result);
 	void _removeAction		  (const string&		aName,
 							   CTState::CTstateNr	requestedState);
+	void _printStartDaemonMap(const string& actionname);
 
 	#define	findController(cntlrName)	\
 			ControllerAdmin::instance()->findController(cntlrName)
@@ -163,8 +168,8 @@ private:
 	map <string, GCFTCPPort*>	itsStartDaemonMap;	// map<hostname,sdconnection>
 	typedef map<string, GCFTCPPort*>::iterator			SDiter;
 	typedef map<string, GCFTCPPort*>::const_iterator	const_SDiter;
-	uint32						itsStartupRetryInterval;
-	uint32						itsMaxStartupRetries;
+	int32						itsStartupRetryInterval;
+	int32						itsMaxStartupRetries;
 
 	list<ControllerInfo>*		itsCntlrList;		// admin. of child controllers
 
@@ -174,7 +179,7 @@ private:
 	uint32						itsActionTimer;		// ID of actiontimer.
 
 	uint32						itsGarbageTimer;	// for garbage collection
-	uint16						itsGarbageInterval;	// seconds between garbage coll.
+	uint32						itsGarbageInterval;	// seconds between garbage coll.
 
 	GCFTimerPort*				itsCompletionTimer;	// to signal parent in situation B
 	GCFITCPort*					itsCompletionPort;	// to signal parent in situation C
