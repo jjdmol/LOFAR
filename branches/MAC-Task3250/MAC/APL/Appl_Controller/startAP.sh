@@ -21,4 +21,4 @@ $3 ACC $4 $2 &
 pid=`echo $!`
 
 # construct pid file for stop shell
-echo "$pid" > /opt/lofar/share/$2.pid
+echo "$pid" > /opt/lofar/var/run/$2.pid

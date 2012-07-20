@@ -412,8 +412,8 @@ void CEPlogProcessor::processParset( const std::string &observationID )
       return;
     }
 
-    // parsets are in /opt/lofar/share
-    string filename(formatString("/opt/lofar/share/Observation%s", observationID.c_str()));
+    // parsets are in /opt/lofar/var/run
+    string filename(formatString("/opt/lofar/var/run/Observation%s", observationID.c_str()));
 
     ParameterSet parset(filename);
 

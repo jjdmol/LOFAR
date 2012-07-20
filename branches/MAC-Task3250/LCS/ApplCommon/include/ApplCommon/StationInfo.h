@@ -39,8 +39,8 @@ namespace LOFAR {
 #define LOFAR_BASE_LOCATION		"/opt/lofar"
 #define LOFAR_BIN_LOCATION		"/opt/lofar/bin"
 #define LOFAR_CONFIG_LOCATION	"/opt/lofar/etc"
-#define LOFAR_SHARE_LOCATION	"/opt/lofar/share"
-#define LOFAR_LOG_LOCATION		"/opt/lofar/log"
+#define LOFAR_SHARE_LOCATION	"/opt/lofar/var/run"
+#define LOFAR_LOG_LOCATION		"/opt/lofar/var/log"
 
 //
 // Nameconventions dictate that the hostname has the following syntax:

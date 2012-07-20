@@ -145,8 +145,8 @@ int main (int argc, char* argv[])
     string password    = parset.getString("password", "boskabouter");
     string port        = parset.getString("port", "5432");
     // Locations to save SAS hardware strings of broken and failed tiles to
-    string brokenfilename = parset.getString("brokenTilesFile", "/opt/lofar/share/brokenTiles.txt");
-    string failedfilename = parset.getString("failedTilesFile", "/opt/lofar/share/failedTiles.txt");
+    string brokenfilename = parset.getString("brokenTilesFile", "/opt/lofar/var/run/brokenTiles.txt");
+    string failedfilename = parset.getString("failedTilesFile", "/opt/lofar/var/run/failedTiles.txt");
 
     //---------------------------------------------------------------------
     // Handle observation starttime and endtime

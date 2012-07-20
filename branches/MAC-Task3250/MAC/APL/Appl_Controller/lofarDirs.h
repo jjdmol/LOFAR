@@ -23,6 +23,6 @@
 #ifndef ACCBIN_LOFARDIRS_H
 #define ACCBIN_LOFARDIRS_H
 
-#define	LOFAR_SHARE_LOCATION		"/opt/lofar/share"
+#define	LOFAR_SHARE_LOCATION		"/opt/lofar/var/run"
 
 #endif
