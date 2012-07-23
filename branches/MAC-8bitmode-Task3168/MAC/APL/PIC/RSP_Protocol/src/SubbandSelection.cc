@@ -35,6 +35,9 @@ using namespace RSP_Protocol;
 
 size_t SubbandSelection::getSize() const
 {
+  cout << itsCrosslets.dimensions() << "; " << itsCrosslets.size() << endl;
+  cout << itsBeamlets.dimensions() << "; " << itsBeamlets.size() << endl;
+  
   return MSH_size(itsCrosslets)
        + MSH_size(itsBeamlets)
        + sizeof(uint16);

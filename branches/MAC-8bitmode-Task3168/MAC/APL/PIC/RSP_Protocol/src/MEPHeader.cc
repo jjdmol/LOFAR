@@ -52,7 +52,7 @@ const MEPHeader::FieldsType MEPHeader::DIAG_BYPASS_HDR       = { WRITE, 0, 0, { 
 const MEPHeader::FieldsType MEPHeader::DIAG_RESULTS_HDR      = { READ,  0, 0, { DST_BLP0, DIAG, DIAG_RESULTS  }, 0, DIAG_RESULTS_SIZE,  0, 0 };
 const MEPHeader::FieldsType MEPHeader::DIAG_SELFTEST_HDR     = { WRITE, 0, 0, { DST_RSP , DIAG, DIAG_SELFTEST }, 0, DIAG_SELFTEST_SIZE, 0, 0 };
 
-const MEPHeader::FieldsType MEPHeader::SS_SELECT_HDR         = { WRITE, 0, 0, { DST_BLP0, SS, SS_SELECT }  , 0, SS_SELECT_SIZE, 0, 0 };
+//const MEPHeader::FieldsType MEPHeader::SS_SELECT_HDR         = { WRITE, 0, 0, { DST_BLP0, SS, SS_SELECT }  , 0, SS_SELECT_SIZE, 0, 0 };
 const MEPHeader::FieldsType MEPHeader::SS_SELECT_HDR_0       = { WRITE, 0, 0, { DST_BLP0, SS, SS_SELECT_0 }, 0, SS_SELECT_SIZE, 0, 0 };
 const MEPHeader::FieldsType MEPHeader::SS_SELECT_HDR_1       = { WRITE, 0, 0, { DST_BLP0, SS, SS_SELECT_1 }, 0, SS_SELECT_SIZE, 0, 0 };
 const MEPHeader::FieldsType MEPHeader::SS_SELECT_HDR_2       = { WRITE, 0, 0, { DST_BLP0, SS, SS_SELECT_2 }, 0, SS_SELECT_SIZE, 0, 0 };

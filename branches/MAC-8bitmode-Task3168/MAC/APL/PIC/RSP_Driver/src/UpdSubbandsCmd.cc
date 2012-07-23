@@ -91,6 +91,8 @@ void UpdSubbandsCmd::complete(CacheBuffer& cache)
 	// area. The beamlets are located behind it.
 	Range src_range;
 	int result_rcu;
+	int nPlanes = (MAX_BITS_PER_SAMPLE / cache.getBitsPerSample());
+	
 	switch (m_event->type) {
 	case SubbandSelection::BEAMLET:
 	    ack.subbands.crosslets().resize(1,1);
@@ -105,19 +107,21 @@ void UpdSubbandsCmd::complete(CacheBuffer& cache)
     			// NOTE: MEPHeader::N_BEAMLETS = 4x62 but userside MAX_BEAMLETS may be different
     			//       In other words: getSubbandSelection can contain more data than ack.weights
     			if (MEPHeader::N_BEAMLETS == LOFAR::maxBeamlets(cache.getBitsPerSample())) {
-    				ack.subbands.beamlets()(result_rcu, Range::all()) = cache.getSubbandSelection().beamlets()(cache_rcu, src_range);
+    				ack.subbands.beamlets()(result_rcu, 0, Range::all()) = cache.getSubbandSelection().beamlets()(cache_rcu, 0, src_range);
     			}
     			else {
-    				for (int rsp = 0; rsp < 4; rsp++) {
-    					int	swstart(rsp*LOFAR::maxBeamletsPerRSP(cache.getBitsPerSample()));
-    					int hwstart(rsp * (MEPHeader::N_BEAMLETS/4));
-    					ack.subbands.beamlets()(result_rcu, Range(swstart,swstart+LOFAR::maxBeamletsPerRSP(cache.getBitsPerSample())-1)) = 
-    							cache.getSubbandSelection().beamlets()(cache_rcu, Range(hwstart, hwstart+LOFAR::maxBeamletsPerRSP(cache.getBitsPerSample())-1));
-    					if (cache_rcu == 0) {
-    						LOG_DEBUG_STR("UpdSubbands:beamlet:move(" << hwstart << ".." << hwstart+LOFAR::maxBeamletsPerRSP(cache.getBitsPerSample()) << ") to (" 
-    														          << swstart << ".." << swstart+LOFAR::maxBeamletsPerRSP(cache.getBitsPerSample()) << ")");
-    					}
-    				}
+    			    for (int plane = 0; plane < nPlanes; plane++) {
+        				for (int rsp = 0; rsp < MEPHeader::N_SERDES_LANES; rsp++) {
+        					int	swstart(rsp * LOFAR::maxDataslotsPerRSP(cache.getBitsPerSample()));
+        					int hwstart(rsp * (MEPHeader::N_BEAMLETS/MEPHeader::N_SERDES_LANES));
+        					ack.subbands.beamlets()(result_rcu, plane, Range(swstart,swstart+LOFAR::maxDataslotsPerRSP(cache.getBitsPerSample())-1)) = 
+        							cache.getSubbandSelection().beamlets()(cache_rcu, plane, Range(hwstart, hwstart+LOFAR::maxDataslotsPerRSP(cache.getBitsPerSample())-1));
+        					if (cache_rcu == 0) {
+        						LOG_DEBUG_STR("UpdSubbands:beamlet:move(" << hwstart << ".." << hwstart+LOFAR::maxDataslotsPerRSP(cache.getBitsPerSample()) << ") to (" 
+        														          << swstart << ".." << swstart+LOFAR::maxDataslotsPerRSP(cache.getBitsPerSample()) << ")");
+        					}
+        				}
+        			}
     			}
     			result_rcu++;
     

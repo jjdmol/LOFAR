@@ -57,47 +57,53 @@ void GetSubbandsCmd::ack(CacheBuffer& cache)
 
 	Range src_range;
 	int result_rcu;
+	int nPlanes = (MAX_BITS_PER_SAMPLE / cache.getBitsPerSample());
 	
 	switch (m_event->type) {
 	case SubbandSelection::BEAMLET:
-		ack.subbands.beamlets().resize(m_event->rcumask.count(), maxBeamlets(cache.getBitsPerSample()));
-		src_range = Range(0, maxBeamlets(cache.getBitsPerSample()) - 1);
+		ack.subbands.beamlets().resize(m_event->rcumask.count(), nPlanes, maxBeamletsPerPlane(cache.getBitsPerSample()));
+		
     	result_rcu = 0;
     	for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++) {
     		if (m_event->rcumask[cache_rcu]) {
     			// NOTE: MEPHeader::N_BEAMLETS = 4x62 but userside MAX_BEAMLETS may be different
     			//       In other words: getSubbandSelection can contain more data than ack.weights
     			if (MEPHeader::N_BEAMLETS == maxBeamlets(cache.getBitsPerSample())) {
-    				ack.subbands.beamlets()(result_rcu, Range::all()) = cache.getSubbandSelection().beamlets()(cache_rcu, src_range);
+    				src_range = Range(0, maxBeamlets(cache.getBitsPerSample()) - 1);
+    				ack.subbands.beamlets()(result_rcu, 0, Range::all()) = cache.getSubbandSelection().beamlets()(cache_rcu, 0, src_range);
     			}
     			else {
-    				for (int rsp = 0; rsp < 4; rsp++) {
-    					int	swstart(rsp*maxBeamletsPerRSP(cache.getBitsPerSample()));
-    					int hwstart(rsp * (MEPHeader::N_BEAMLETS/4));
-    					ack.subbands.beamlets()(result_rcu, Range(swstart,swstart+maxBeamletsPerRSP(cache.getBitsPerSample())-1)) = 
-    							cache.getSubbandSelection().beamlets()(cache_rcu, Range(hwstart, hwstart+maxBeamletsPerRSP(cache.getBitsPerSample())-1));
-    					if (cache_rcu == 0) {
-    						LOG_DEBUG_STR("GetSubbands:beamlet:move(" << hwstart << ".." << hwstart+maxBeamletsPerRSP(cache.getBitsPerSample()) << ") to (" 
-    														          << swstart << ".." << swstart+maxBeamletsPerRSP(cache.getBitsPerSample()) << ")");
-    					}
-    				}
+    				for (int plane = 0; plane < nPlanes; plane++) {
+        				for (int rsp = 0; rsp < MEPHeader::N_SERDES_LANES; rsp++) {
+        					int	swstart(rsp * maxDataslotsPerRSP(cache.getBitsPerSample()));
+        					int hwstart(rsp * (MEPHeader::N_BEAMLETS/MEPHeader::N_SERDES_LANES));
+        					ack.subbands.beamlets()(result_rcu, plane, Range(swstart, swstart+maxDataslotsPerRSP(cache.getBitsPerSample())-1)) = 
+        							cache.getSubbandSelection().beamlets()(cache_rcu, plane, Range(hwstart, hwstart+maxDataslotsPerRSP(cache.getBitsPerSample())-1));
+        					if (cache_rcu == 0) {
+        						LOG_DEBUG_STR("GetSubbands:beamlet:move(" << hwstart << ".." << hwstart+maxDataslotsPerRSP(cache.getBitsPerSample()) << ") to (" 
+        														          << swstart << ".." << swstart+maxDataslotsPerRSP(cache.getBitsPerSample()) << ")");
+        					}
+        				}
+        			}
     			}
-    			LOG_DEBUG_STR("GetSubbands:beamlet(cache[0]): " << cache.getSubbandSelection().beamlets()(0,Range::all()));
+    			LOG_DEBUG_STR("GetSubbands:beamlet(cache[0]): " << cache.getSubbandSelection().beamlets()(0, Range::all(), Range::all()));
     			result_rcu++;
     		} // if rcu selected
     	} // for each rcu
 		break;
 
 	case SubbandSelection::XLET:
-		ack.subbands.crosslets().resize(m_event->rcumask.count(), MEPHeader::N_LOCAL_XLETS);
-		src_range = Range(0, MEPHeader::N_LOCAL_XLETS - 1);
+		ack.subbands.crosslets().resize(m_event->rcumask.count(), nPlanes, MEPHeader::N_LOCAL_XLETS);
+		
 		result_rcu = 0;
     	for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++) {
     		if (m_event->rcumask[cache_rcu]) {
     			if (m_event->type == SubbandSelection::XLET) {
-    				ack.subbands.crosslets()(result_rcu, Range::all()) = cache.getSubbandSelection().crosslets()(cache_rcu, src_range);
+    			    for (int plane = 0; plane < nPlanes; plane++) {
+        				ack.subbands.crosslets()(result_rcu, plane, Range::all()) = cache.getSubbandSelection().crosslets()(cache_rcu, plane, Range::all());
+        			}
     			}
-    			LOG_DEBUG_STR("GetSubbands:crosslets(cache[0]): " << cache.getSubbandSelection().crosslets()(0,Range::all()));
+    			LOG_DEBUG_STR("GetSubbands:crosslets(cache[0]): " << cache.getSubbandSelection().crosslets()(0, Range::all(), Range::all()));
     			result_rcu++;
     		} // if rcu selected
     	} // for each rcu
@@ -108,32 +114,6 @@ void GetSubbandsCmd::ack(CacheBuffer& cache)
 		exit(EXIT_FAILURE);
 		break;
 	}
-/*
-	int result_rcu = 0;
-	for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++) {
-		if (m_event->rcumask[cache_rcu]) {
-			// NOTE: MEPHeader::N_BEAMLETS = 4x62 but userside MAX_BEAMLETS may be different
-			//       In other words: getSubbandSelection can contain more data than ack.weights
-			if (MEPHeader::N_BEAMLETS == maxBeamlets(cache.getBitsPerSample()) || m_event->type == SubbandSelection::XLET) {
-				ack.subbands()(result_rcu, Range::all()) = cache.getSubbandSelection()()(cache_rcu, src_range);
-			}
-			else {
-				for (int rsp = 0; rsp < 4; rsp++) {
-					int	swstart(rsp*maxBeamletsPerRSP(cache.getBitsPerSample()));
-					int hwstart(MEPHeader::N_LOCAL_XLETS + rsp * (MEPHeader::N_BEAMLETS/4));
-					ack.subbands()(result_rcu, Range(swstart,swstart+maxBeamletsPerRSP(cache.getBitsPerSample())-1)) = 
-							cache.getSubbandSelection()()(cache_rcu, Range(hwstart, hwstart+maxBeamletsPerRSP(cache.getBitsPerSample())-1));
-					if (cache_rcu == 0) {
-						LOG_DEBUG_STR("GetSubbands:move(" << hwstart << ".." << hwstart+maxBeamletsPerRSP(cache.getBitsPerSample()) << ") to (" 
-														  << swstart << ".." << swstart+maxBeamletsPerRSP(cache.getBitsPerSample()) << ")");
-					}
-				}
-			}
-			LOG_DEBUG_STR("GetSubbands(cache[0]): " << cache.getSubbandSelection()()(0,Range::all()));
-			result_rcu++;
-		} // if rcu selected
-	} // for each rcu
-*/
 	getPort()->send(ack);
 }
 

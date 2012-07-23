@@ -86,9 +86,10 @@ namespace LOFAR {
       /*@}*/
 
       /**
-       * Get index of current local index
+       * Set/Get index of current local index
        */
       int getCurrentIndex() const { return m_current_index; }
+      void setNumIndices(int n_indices) { m_n_indices = n_indices; } 
       int getNumIndices() const { return m_n_indices; }
 
       /**

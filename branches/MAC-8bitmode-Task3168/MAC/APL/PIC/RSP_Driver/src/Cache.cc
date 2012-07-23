@@ -148,9 +148,9 @@ void CacheBuffer::reset(void)
 	m_beamletweights().resize(BeamletWeights::SINGLE_TIMESTEP, StationSettings::instance()->nrRcus(), MEPHeader::N_BEAMLETS * (MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE));
 	m_beamletweights() = complex<int16>(0,0);
 
-	m_subbandselection.crosslets().resize(StationSettings::instance()->nrRcus(), MEPHeader::N_LOCAL_XLETS * (MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE) );
+	m_subbandselection.crosslets().resize(StationSettings::instance()->nrRcus(), (MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE), MEPHeader::N_LOCAL_XLETS );
 	m_subbandselection.crosslets() = 0;
-    m_subbandselection.beamlets().resize(StationSettings::instance()->nrRcus(), MEPHeader::N_BEAMLETS * (MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE) );
+    m_subbandselection.beamlets().resize(StationSettings::instance()->nrRcus(), (MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE), MEPHeader::N_BEAMLETS );
 	m_subbandselection.beamlets() = 0;
 	
 	if (GET_CONFIG("RSPDriver.IDENTITY_WEIGHTS", i)) {
@@ -163,16 +163,18 @@ void CacheBuffer::reset(void)
 		//
 		int		firstSubband = GET_CONFIG("RSPDriver.FIRST_SUBBAND", i);
 		for (int rcu = 0; rcu < m_subbandselection.beamlets().extent(firstDim); rcu++) {
-			for (int rsp = 0; rsp < 4; rsp++) {
-				int	start(rsp*(MEPHeader::N_BEAMLETS/4));
-				int stop (start + maxBeamletsPerRSP(itsBitsPerSample));
-				if (rcu==0) LOG_DEBUG_STR("start=" << start << ", stop=" << stop);
-				for (int sb = start; sb < stop; sb++) {
-					m_subbandselection.beamlets()(rcu, sb) = (rcu%N_POL) + (sb*N_POL) + (firstSubband*2);
-				} // for sb
-			} // for rsp
+    		for (int plane = 0; plane < (MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE); plane++) {	
+    			for (int rsp = 0; rsp < MEPHeader::N_SERDES_LANES; rsp++) {
+    				int	start(rsp*(MEPHeader::N_BEAMLETS/MEPHeader::N_SERDES_LANES));
+    				int stop (start + maxBeamletsPerRSP(itsBitsPerSample));
+    				if (rcu==0) LOG_DEBUG_STR("start=" << start << ", stop=" << stop);
+    				for (int sb = start; sb < stop; sb++) {
+    					m_subbandselection.beamlets()(rcu, plane, sb) = (rcu%N_POL) + (sb*N_POL) + (firstSubband*2);
+    				} // for sb
+    			} // for rsp
+    		} // for plane
 		} // for rcu
-		LOG_DEBUG_STR("m_subbandsel(0): " << m_subbandselection.beamlets()(0, Range::all()));
+		LOG_DEBUG_STR("m_subbandsel(0): " << m_subbandselection.beamlets()(0, Range::all(), Range::all()));
 	} // if identity_weights
 
 	// initialize RCU settings

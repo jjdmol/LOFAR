@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/LofarBitModeInfo.h>
 
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
@@ -41,6 +42,8 @@ SSRead::SSRead(GCFPortInterface& board_port, int board_id)
   : SyncAction(board_port, board_id, NR_BLPS_PER_RSPBOARD)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
+  itsActivePlanes = (MAX_BITS_PER_SAMPLE / Cache::getInstance().getBack().getBitsPerSample());
+  setNumIndices(itsActivePlanes * NR_BLPS_PER_RSPBOARD);
 }
 
 SSRead::~SSRead()
@@ -50,9 +53,29 @@ SSRead::~SSRead()
 void SSRead::sendrequest()
 {
   EPAReadEvent ssread;
-  ssread.hdr.set(MEPHeader::SS_SELECT_HDR, 1 << getCurrentIndex(),
-		 MEPHeader::READ);
-
+  switch (getCurrentIndex()%itsActivePlanes) {
+    case 0:
+      ssread.hdr.set( MEPHeader::SS_SELECT_HDR_0,
+                      1 << (getCurrentIndex()/itsActivePlanes),
+                      MEPHeader::READ);
+      break;
+    case 1:
+      ssread.hdr.set( MEPHeader::SS_SELECT_HDR_1,
+                      1 << (getCurrentIndex()/itsActivePlanes),
+                      MEPHeader::READ);
+      break;
+    case 2:
+      ssread.hdr.set( MEPHeader::SS_SELECT_HDR_2,
+                      1 << (getCurrentIndex()/itsActivePlanes),
+                      MEPHeader::READ);
+      break;
+    case 3:
+      ssread.hdr.set( MEPHeader::SS_SELECT_HDR_3,
+                      1 << (getCurrentIndex()/itsActivePlanes),
+                      MEPHeader::READ);
+      break;
+    default: break;
+  }    
   m_hdr = ssread.hdr;
   getBoardPort().send(ssread);
 }
@@ -73,7 +96,7 @@ GCFEvent::TResult SSRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
   // unpack ss message
   EPASsSelectEvent ss(event);
 
-  uint8 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) + getCurrentIndex();
+  uint8 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) + (getCurrentIndex()/itsActivePlanes);
   if (!ss.hdr.isValidAck(m_hdr))
   {
     Cache::getInstance().getState().ss().read_error(global_blp);
@@ -86,23 +109,24 @@ GCFEvent::TResult SSRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
   LOG_DEBUG(formatString(">>>> SSRead(%s) global_blp=%d",
 			 getBoardPort().getName().c_str(), global_blp));
   
-  // create array point to data in the response event
+  // create array point to data in the response event (format in 2 dims)
   Array<uint16, 2> subbands((uint16*)&ss.subbands,
 			    shape(MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS, N_POL),
 			    neverDeleteData);
 
   Range hw_range;
-  
+  // used plane 
+  int plane = getCurrentIndex()%itsActivePlanes;
   if (0 == GET_CONFIG("RSPDriver.LOOPBACK_MODE", i))
   {
     
     hw_range = Range(0, MEPHeader::N_LOCAL_XLETS - 1);
-    subbands(hw_range, 0) -= Cache::getInstance().getBack().getSubbandSelection().crosslets()(global_blp * 2,     Range::all());
-    subbands(hw_range, 1) -= Cache::getInstance().getBack().getSubbandSelection().crosslets()(global_blp * 2 + 1, Range::all());
+    subbands(hw_range, 0) -= Cache::getInstance().getBack().getSubbandSelection().crosslets()(global_blp * 2,     plane, Range::all());
+    subbands(hw_range, 1) -= Cache::getInstance().getBack().getSubbandSelection().crosslets()(global_blp * 2 + 1, plane, Range::all());
     
     hw_range = Range(MEPHeader::N_LOCAL_XLETS, MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS);
-    subbands(hw_range, 0) -= Cache::getInstance().getBack().getSubbandSelection().beamlets()(global_blp * 2,     Range::all());
-    subbands(hw_range, 1) -= Cache::getInstance().getBack().getSubbandSelection().beamlets()(global_blp * 2 + 1, Range::all());
+    subbands(hw_range, 0) -= Cache::getInstance().getBack().getSubbandSelection().beamlets()(global_blp * 2,     plane, Range::all());
+    subbands(hw_range, 1) -= Cache::getInstance().getBack().getSubbandSelection().beamlets()(global_blp * 2 + 1, plane, Range::all());
     
     uint16 ssum = sum(subbands);
 
@@ -116,15 +140,15 @@ GCFEvent::TResult SSRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
   {
     // copy into the cache
     hw_range = Range(0, MEPHeader::N_LOCAL_XLETS - 1);
-    Cache::getInstance().getBack().getSubbandSelection().crosslets()(global_blp * 2, Range::all())
+    Cache::getInstance().getBack().getSubbandSelection().crosslets()(global_blp * 2, plane, Range::all())
       = subbands(hw_range, 0); // x
-    Cache::getInstance().getBack().getSubbandSelection().crosslets()(global_blp * 2 + 1, Range::all())
+    Cache::getInstance().getBack().getSubbandSelection().crosslets()(global_blp * 2 + 1, plane, Range::all())
       = subbands(hw_range, 1); // y
     
     hw_range = Range(MEPHeader::N_LOCAL_XLETS, MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS);
-    Cache::getInstance().getBack().getSubbandSelection().beamlets()(global_blp * 2, Range::all())
+    Cache::getInstance().getBack().getSubbandSelection().beamlets()(global_blp * 2, plane, Range::all())
       = subbands(hw_range, 0); // x
-    Cache::getInstance().getBack().getSubbandSelection().beamlets()(global_blp * 2 + 1, Range::all())
+    Cache::getInstance().getBack().getSubbandSelection().beamlets()(global_blp * 2 + 1, plane, Range::all())
       = subbands(hw_range, 1); // y  
   }
 

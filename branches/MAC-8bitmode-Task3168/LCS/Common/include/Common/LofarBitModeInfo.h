@@ -53,6 +53,11 @@ namespace LOFAR {
 		}
     }
     
+    inline static int maxBeamletsPerPlane(int bitsPerSample) {
+        // 4 output lanes on one station
+        return(4 * maxDataslotsPerRSP(bitsPerSample));
+    }
+    
     inline static int maxBeamlets(int bitsPerSample) {
         // 4 output lanes on one station
         return(4 * maxBeamletsPerRSP(bitsPerSample));

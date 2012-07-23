@@ -400,7 +400,7 @@ public:
 	static const FieldsType DIAG_RESULTS_HDR;
 	static const FieldsType DIAG_SELFTEST_HDR;
 
-	static const FieldsType SS_SELECT_HDR;
+	//static const FieldsType SS_SELECT_HDR;
 	static const FieldsType SS_SELECT_HDR_0;
 	static const FieldsType SS_SELECT_HDR_1;
 	static const FieldsType SS_SELECT_HDR_2;

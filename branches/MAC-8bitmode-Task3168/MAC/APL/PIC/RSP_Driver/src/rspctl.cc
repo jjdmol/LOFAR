@@ -311,6 +311,7 @@ SubbandsCommand::SubbandsCommand(GCFPortInterface& port, const int bitsPerSample
 
 void SubbandsCommand::send()
 {
+	cout << "Mode: " << getMode() << " Type: " << m_type << endl;
 	if (getMode()) {
 		// GET
 		RSPGetsubbandsEvent getsubbands;
@@ -329,18 +330,27 @@ void SubbandsCommand::send()
 		setsubbands.rcumask   = getRCUMask();
 		setsubbands.subbands.setType(m_type);
 
-		logMessage(cerr,formatString("rcumask.count()=%d",setsubbands.rcumask.count()));
-
+	    logMessage(cerr,formatString("rcumask.count()=%d",setsubbands.rcumask.count()));
+        
+        if (m_subbandlist.size() > maxBeamlets(itsBitsPerSample)) {
+            logMessage(cerr,"Error: too many subbands selected");
+			exit(EXIT_FAILURE);
+		}
+		
+        int nPlanes;
+        nPlanes = (MAX_BITS_PER_SAMPLE / itsBitsPerSample);
+		cout << MAX_BITS_PER_SAMPLE << "; " << itsBitsPerSample << "; " << maxBeamletsPerPlane(itsBitsPerSample) << endl;
+		
 		// if only 1 subband selected, apply selection to all
 		switch (m_type) {
 			case SubbandSelection::BEAMLET: {
 				if (1 == m_subbandlist.size()) {
-					setsubbands.subbands.beamlets().resize(1, maxBeamlets(itsBitsPerSample));
+					setsubbands.subbands.beamlets().resize(1, nPlanes, maxBeamletsPerPlane(itsBitsPerSample));
 					std::list<int>::iterator it = m_subbandlist.begin();
 					setsubbands.subbands.beamlets() = (*it);
 				} else {
-					setsubbands.subbands.beamlets().resize(1, m_subbandlist.size());
-
+					setsubbands.subbands.beamlets().resize(1, nPlanes, maxBeamletsPerPlane(itsBitsPerSample));
+                    setsubbands.subbands.beamlets() = 0;
 					int i = 0;
 					int max_beamlets = maxBeamlets(itsBitsPerSample);
 					std::list<int>::iterator it;
@@ -348,11 +358,13 @@ void SubbandsCommand::send()
 						if (i >= max_beamlets) {
 							break;
 						}
-						setsubbands.subbands.beamlets()(0, i) = (*it);
+						int plane = i / maxBeamletsPerPlane(itsBitsPerSample);
+						int subbandnr = i % maxBeamletsPerPlane(itsBitsPerSample);
+						setsubbands.subbands.beamlets()(0, plane, subbandnr) = (*it);
 					}
 #if 0
 		for (; i < maxBeamlets(bitsPerSample); i++) {
-			setsubbands.subbands.beamlets()(0, i) = 0;
+			setsubbands.subbands.beamlets()(0, Range::all(), i) = 0;
 		}
 #endif
 				}
@@ -360,7 +372,7 @@ void SubbandsCommand::send()
 			break;
 
     		case SubbandSelection::XLET: {
-    			setsubbands.subbands.crosslets().resize(1,1);
+    			setsubbands.subbands.crosslets().resize(1, 1, 1);
     			std::list<int>::iterator it = m_subbandlist.begin();
     			setsubbands.subbands.crosslets() = (*it);
 			}
@@ -395,10 +407,10 @@ GCFEvent::TResult SubbandsCommand::ack(GCFEvent& e)
 					if (mask[rcuout]) {
 						std::ostringstream logStream;
 						if (SubbandSelection::BEAMLET == m_type) {
-							logStream << ack.subbands.beamlets()(rcuin++, Range::all());
+							logStream << ack.subbands.beamlets()(rcuin++, Range::all(), Range::all());
 							logMessage(cout,formatString("RCU[%2d].subbands=%s", rcuout,logStream.str().c_str()));
 						} else {
-						    logStream << ack.subbands.crosslets()(rcuin++, Range::all());
+						    logStream << ack.subbands.crosslets()(rcuin++, Range::all(), Range::all());
 							logMessage(cout,formatString("RCU[%2d].xcsubbands=%s", rcuout,logStream.str().c_str()));
 						}
 					}
@@ -3423,9 +3435,9 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 			if (command)
 				delete command;
 			SubbandsCommand* subbandscommand = new SubbandsCommand(*itsRSPDriver, itsNbitsPerSample);
+			subbandscommand->setType(SubbandSelection::BEAMLET);
 			command = subbandscommand;
 			
-			subbandscommand->setType(SubbandSelection::BEAMLET);
 			command->set_ndevices(m_nrcus);
 
 			if (optarg) {
