@@ -32,7 +32,7 @@ CREATE TYPE schedulerInfo AS (
 	lastPossibleDay        INT4,
 	late                   BOOLEAN,
 	nightTimeWeightFactor  INT4,
-	predecessors           INT4,
+	predecessors           TEXT,
 	predMaxTimeDif         VARCHAR(10),
 	predMinTimeDif         VARCHAR(10),
 	priority               FLOAT,
