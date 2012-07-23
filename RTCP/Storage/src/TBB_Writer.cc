@@ -155,8 +155,12 @@ void TBB_Dipole::processFrameData(const TBB_Frame& frame, Mutex& h5Mutex) {
 	off_t offset = (frame.header.time - itsTime0) * itsSampleFreq + frame.header.sampleNr - itsSampleNr0;
 
 	if (frame.header.nOfFreqBands == 0) { // transient mode
+#ifdef DISABLE_CRCS
+		uint32_t csum = 0;
+#else
 		// Verify data checksum.
 		uint32_t csum = crc32tbb(reinterpret_cast<const uint16_t*>(frame.payload.data), frame.header.nOfSamplesPerFrame + 2/*=crc32*/);
+#endif
 		if (csum != 0) {
 			/*
 			 * On a data checksum error 'flag' this offset, but still store the data.
@@ -766,8 +770,12 @@ uint32_t TBB_Dipole::crc32tbb(const uint16_t* buf, size_t len) const {
 void TBB_StreamWriter::processHeader(TBB_Header& header, size_t recvPayloadSize) const {
 	frameHeaderLittleNativeBSwap(header); // no-op on little endian
 
+#ifdef DISABLE_CRCS
+	uint16_t csum = 0;
+#else
 	header.seqNr = 0; // for the crc; don't save/restore it as we don't need this field
 	uint16_t csum = crc16tbb(reinterpret_cast<uint16_t*>(&header), sizeof(header) / sizeof(uint16_t));
+#endif
 	if (csum != 0) {
 		/*
 		 * Spec says each frame has the same fixed length, so the previous values are a good base guess if the header crc fails.
