@@ -1780,8 +1780,10 @@ void BeamServer::send_sbselection()
 		// beam 1, then beam 0 is deallocated, thus there is a hole
 		// of 64 beamlets before the beamlets of beam 1.
 		//
+		int	beamletsPerPlane = maxBeamletsPerPlane(itsCurrentBitsPerSample);
 		ss.subbands.setType(SubbandSelection::BEAMLET);
-		ss.subbands.beamlets().resize(1, itsCurrentMaxBeamlets);
+		ss.subbands.beamlets().resize(1, MAX_BITS_PER_SAMPLE/itsCurrentBitsPerSample, beamletsPerPlane);
+//		ss.subbands.beamlets().resize(1, itsCurrentMaxBeamlets);
 		ss.subbands.beamlets() = 0;
 
 		// reconstruct the selection
@@ -1814,7 +1816,7 @@ void BeamServer::send_sbselection()
 			}
 
 			// same selection for x and y polarization
-			ss.subbands.beamlets()(0, (int)iter->first) = iter->second;
+			ss.subbands.beamlets()(0, iter->first/beamletsPerPlane, iter->first%beamletsPerPlane) = iter->second;
 		}
 
 		if (selection().size()) {
