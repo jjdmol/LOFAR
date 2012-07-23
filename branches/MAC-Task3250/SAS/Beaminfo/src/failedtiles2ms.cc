@@ -35,7 +35,7 @@ int main (int argc, char* argv[])
 {
   try {
     // Init logger.
-    INIT_LOGGER (basename(argv[0]));
+    INIT_LOGGER (LOFAR::basename(argv[0]));
     // Define the input parameters.
     InputParSet inputs;
     inputs.setVersion ("24-Jan-2012 SD/GvD");

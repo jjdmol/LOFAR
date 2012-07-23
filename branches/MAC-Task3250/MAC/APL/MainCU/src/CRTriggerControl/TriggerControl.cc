@@ -33,6 +33,7 @@
 #include <Common/lofar_string.h>
 #include <ApplCommon/LofarDirs.h>
 #include <ApplCommon/StationInfo.h>
+#include <ApplCommon/Observation.h>
 
 #include <MACIO/MACServiceInfo.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
