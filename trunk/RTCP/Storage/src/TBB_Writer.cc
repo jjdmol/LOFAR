@@ -25,19 +25,18 @@
 
 #include <Storage/TBB_Writer.h>
 
-#include <cstddef>
 #include <unistd.h>
 
 #include <iostream>
 
 #include <Common/LofarConstants.h>
-#include <Common/LofarLogger.h>
+#include <Common/SystemUtil.h>
 #include <Common/SystemCallException.h>
 #include <Common/StringUtil.h>
+#include <ApplCommon/AntField.h>
 #include <Stream/SocketStream.h>
-//#include <ApplCommon/AntField.h>
-
 #include <Interface/Stream.h>
+#include <Interface/SmartPtr.h>
 
 #include <dal/lofar/Station.h>
 
@@ -58,10 +57,10 @@ static string formatFilenameTimestamp(const struct timeval& tv, const char* outp
 	gmtime_r(&tv.tv_sec, &tm);
 	double secs = tm.tm_sec + tv.tv_usec / 1000000.0;
 
-	SmartPtr<char, SmartPtrDeleteArray<char> > date_str = new char[output_size];
+	SmartPtr<char, SmartPtrDeleteArray<char> > date_str(new char[output_size]);
 	size_t nwritten = strftime(date_str, output_size, output_format, &tm);
 	if (nwritten == 0) {
-		data_str[0] = '\0';
+		date_str[0] = '\0';
 	}
 	/*int nprinted = */snprintf(date_str + nwritten, sizeof(output_format) - nwritten, output_format_secs, secs);
 
@@ -71,34 +70,55 @@ static string formatFilenameTimestamp(const struct timeval& tv, const char* outp
 
 //////////////////////////////////////////////////////////////////////////////
 
-TBB_Dipole::TBB_Dipole() : itsDataset(NULL), itsDatasetLen(0) {
+TBB_Dipole::TBB_Dipole()
+: itsDataset(NULL) // needed, setting the others is superfluous
+, itsDatasetLen(0)
+, itsSampleFreq(0)
+, itsTime0(0)
+, itsSampleNr0(0)
+{
+}
+
+// Do not use; only needed for vector<TBB_Dipole>(N)
+TBB_Dipole::TBB_Dipole(const TBB_Dipole& rhs)
+: itsDataset(rhs.itsDataset) // needed, setting the others is superfluous
+//, itsRawOut(rhs.itsRawOut) // ofstream has no copy constr and unnecessary (this whole func), so disabled
+, itsFlagOffsets(rhs.itsFlagOffsets)
+, itsDatasetLen(rhs.itsDatasetLen)
+, itsSampleFreq(rhs.itsSampleFreq)
+, itsTime0(rhs.itsTime0)
+, itsSampleNr0(rhs.itsSampleNr0)
+{
 }
 
 TBB_Dipole::~TBB_Dipole() {
 	/*
 	 * Set dataset len (if ext raw) and DATA_LENGTH and FLAG_OFFSETS attributes at the end.
-	 * Don't lock the station file: this is done by the main thread after joining with all workers.
+	 * Executed by the main thread after joined with all workers, so no need to lock or delay cancellation.
+	 * Skip on uninitialized (default constructed) objects.
 	 */
-	if (usesExternalDataFile()) {
-		try {
-			vector<ssize_t> dims(1, itsDatasetLen); // TODO: get rid of this in DAL
-			itsDataset->resize(dims);
-		} catch (DAL::DALException& exc) {
-			LOG_WARN("TBB: failed to resize HDF5 dipole dataset to external data size");
+	if (itsDataset != NULL) {
+		if (usesExternalDataFile()) {
+			try {
+				vector<ssize_t> dims(1, itsDatasetLen); // TODO: get rid of this in DAL
+				itsDataset->resize(dims);
+			} catch (DAL::DALException& exc) {
+				LOG_WARN_STR("TBB: failed to resize HDF5 dipole dataset to external data size: " << exc.what());
+			}
 		}
-	}
-	try {
-		itsDataset->dataLength().value = itsDatasetLen; //TODO: -> unsigned long?
-	} catch (DAL::DALException& exc) {
-		LOG_WARN("TBB: failed to set dipole DATA_LENGTH attribute");
-	}
-	try {
-		itsDataset->flagOffsets().value = itsFlagOffsets;
-	} catch (DAL::DALException& exc) {
-		LOG_WARN("TBB: failed to set dipole FLAG_OFFSETS attribute");
-	}
+		try {
+			itsDataset->dataLength().value = itsDatasetLen; //TODO: -> unsigned long?
+		} catch (DAL::DALException& exc) {
+			LOG_WARN_STR("TBB: failed to set dipole DATA_LENGTH attribute: " << exc.what());
+		}
+		try {
+			itsDataset->flagOffsets().value = itsFlagOffsets;
+		} catch (DAL::DALException& exc) {
+			LOG_WARN_STR("TBB: failed to set dipole FLAG_OFFSETS attribute: " << exc.what());
+		}
 
-	delete itsDataset;
+		delete itsDataset;
+	}
 }
 
 void TBB_Dipole::initDipole(const TBB_Header& header, const Parset& parset, const string& rawFilename,
@@ -131,8 +151,28 @@ bool TBB_Dipole::usesExternalDataFile() {
 	return itsRawOut.is_open();
 }
 
-void TBB_Dipole::writeFrameData(const TBB_Frame& frame, Mutex& h5Mutex) {
+void TBB_Dipole::processFrameData(const TBB_Frame& frame, Mutex& h5Mutex) {
 	off_t offset = (frame.header.time - itsTime0) * itsSampleFreq + frame.header.sampleNr - itsSampleNr0;
+
+	if (frame.header.nOfFreqBands == 0) { // transient mode
+		// Verify data checksum.
+		uint32_t csum = crc32tbb(reinterpret_cast<const uint16_t*>(frame.payload.data), frame.header.nOfSamplesPerFrame + 2/*=crc32*/);
+		if (csum != 0) {
+			/*
+			 * On a data checksum error 'flag' this offset, but still store the data.
+			 * Lost frame vs crc error can be seen from the data: a block of zeros indicates lost.
+			 */
+			itsFlagOffsets.push_back(offset);
+
+			uint32_t crc32 = *reinterpret_cast<const uint32_t*>(&frame.payload.data[frame.header.nOfSamplesPerFrame]);
+			LOG_INFO_STR("TBB: crc32: " << frame.header.toString() << " " << crc32);
+		}
+	} else { // spectral mode
+		//uint32_t bandNr  = frame.header.bandsliceNr & TBB_BAND_NR_MASK;
+		//uint32_t sliceNr = frame.header.bandsliceNr >> TBB_SLICE_NR_SHIFT;
+		// TODO: prepare to store, but spectral output format unclear.
+	}
+
 	if (offset >= itsDatasetLen) {
 		/*
 		 * If writing around HDF5, there is no need to lock. Set the HDF5 dataset size at the end (destr).
@@ -140,21 +180,21 @@ void TBB_Dipole::writeFrameData(const TBB_Frame& frame, Mutex& h5Mutex) {
 		 */
 		if (usesExternalDataFile()) {
 			if (offset > itsDatasetLen) {
-				rawOut.seekp(offset * sizeof(data[0])); // skip space of lost frame
+				itsRawOut.seekp(offset * sizeof(frame.payload.data[0])); // skip space of lost frame
 			}
-			rawOut.write(reinterpret_cast<const char*>(data), static_cast<size_t>(frame.header.nOfSamplesPerFrame) * sizeof(data[0]));
+			itsRawOut.write(reinterpret_cast<const char*>(frame.payload.data), static_cast<size_t>(frame.header.nOfSamplesPerFrame) * sizeof(frame.payload.data[0]));
 		} else {
 			vector<size_t> pos(1, offset); // TODO: get rid of this vector stuff in DAL
 			vector<ssize_t> dsNewDims(1, offset + frame.header.nOfSamplesPerFrame);
 
 			ScopedLock h5Lock(h5Mutex);
-			itsDataset.resize(dsNewDims);
-			itsDataset.set1D(pos, frame.header.nOfSamplesPerFrame, data);
+			itsDataset->resize(dsNewDims);
+			itsDataset->set1D(pos, frame.header.nOfSamplesPerFrame, frame.payload.data);
 		}
 
 		/*
 		 * Flag lost frame(s) (assume no out-of-order, see below). Assumes all frames have the same nr of samples.
-		 * Note: this cannot detect lost frames at the end of a dataset.
+		 * Note: this cannot detect lost frames at the end of a dataset. Also, this cannot re-flag a crc32 error.
 		 */
 		for (unsigned lostOffset = itsDatasetLen; lostOffset < offset; lostOffset += frame.header.nOfSamplesPerFrame) {
 			itsFlagOffsets.push_back(static_cast<unsigned>(lostOffset));
@@ -163,106 +203,185 @@ void TBB_Dipole::writeFrameData(const TBB_Frame& frame, Mutex& h5Mutex) {
 		itsDatasetLen = offset + frame.header.nOfSamplesPerFrame;
 	} else { // Out-of-order or duplicate frames are very unlikely in the LOFAR TBB setup.
 		// Let us know if it ever happens, then we will do something.
-		LOG_WARN_STR("TBB: Dropped out-of-order or duplicate TBB frame at " << header.stationID <<
-				" " << header.rspID << " " << header.rcuID << " " << offset);
+		LOG_WARN_STR("TBB: Dropped out-of-order or duplicate TBB frame at " << frame.header.stationID <<
+				" " << frame.header.rspID << " " << frame.header.rcuID << " " << offset);
 	}
 }
 
-// TODO: cross-check units for StationGroup and DipoleDataset with casacore (see Ger's e-mail)
 void TBB_Dipole::initTBB_DipoleDataset(const TBB_Header& header, const Parset& parset, const string& rawFilename,
 			DAL::TBB_Station& station, Mutex& h5Mutex) {
 	itsDataset = new DAL::TBB_DipoleDataset(station.dipole(header.stationID, header.rspID, header.rcuID));
 
 	ScopedLock h5OutLock(h5Mutex);
 
+	// Create 1-dim, unbounded (-1) dataset. 
+	// Override endianess. TBB data is always stored little endian and also received as such, so written as-is on any platform.
+	vector<ssize_t> dsDims(1, 0);
+	vector<ssize_t> dsMaxDims(1, -1);
+	itsDataset->create(dsDims, dsMaxDims, LOFAR::basename(rawFilename), itsDataset->LITTLE);
+
 	itsDataset->groupType().value = "DipoleDataset";
 	itsDataset->stationID().value = header.stationID;
 	itsDataset->rspID().value = header.rspID;
 	itsDataset->rcuID().value = header.rcuID;
 
-	itsDataset->sampleFrequencyValue().value = itsSampleFreq;
+	itsDataset->sampleFrequency().value = itsSampleFreq;
 	itsDataset->sampleFrequencyUnit().value = "MHz";
 
-	itsDataset->time().value = header.time; // in seconds. Note: may have been corrected earlier
-	itsDataset->sampleNumber().value = header.sampleNr; // only relevant for transient mode
+	itsDataset->time().value = header.time; // in seconds. Note: may have been corrected in correctTransientSampleNr()
+	if (header.nOfFreqBands == 0) { // transient mode
+		itsDataset->sampleNumber().value = header.sampleNr;
+	}
 	itsDataset->samplesPerFrame().value = header.nOfSamplesPerFrame;
-	//itsDataset->dataLength().value is set at the end
-	//itsDataset->flagOffsets().value is set at the end
-	itsDataset->nyquistZone().value = parset.nyquistZone(); // unsigned nr indicating filter band
-	//itsDataset->ADC2Voltage().value = ???; // optional; TODO???
+	//itsDataset->dataLength().value is set at the end (destr)
+	//itsDataset->flagOffsets().value is set at the end (destr)
+	itsDataset->nyquistZone().value = parset.nyquistZone();
 
-	// Cable delays (optional) can be implemented from StaticMetaData, but there is no parsing code yet. TODO
-	//itsDataset->cableDelay().value = ???;
-	//itsDataset->cableDelayUnit().value = 's';
+//#include "MAC/APL/PIC/RSP_Driver/src/CableSettings.h" or "RCUCables.h"
+	// Cable delays (optional) from static meta data.
+	//itsDataset->cableDelay().value = ???; // TODO
+	itsDataset->cableDelayUnit().value = "ns";
 
-	//itsDataset->dipoleCalibrationDelayValue().value = ???; // TODO: Pim can compute this from the GainCurve below
+	//itsDataset->dipoleCalibrationDelay().value = ???; // TODO: Pim can compute this from the GainCurve below
+/*
+> No DIPOLE_CALIBRATION_DELAY_VALUE
+> No DIPOLE_CALIBRATION_DELAY_UNIT
+These can be calculated from the values in the LOFAR calibration
+tables, but we can do that ourselves as long as the calibration table
+values for each dipole are written to the new keyword
+DIPOLE_CALIBRATION_GAIN_CURVE.
+*/
 	//itsDataset->dipoleCalibrationDelayUnit().value = 's';
 	//itsDataset->dipoleCalibrationGainCurve().value = ???; // TODO: where to get this?
 
-	//itsDataset->feed().value(); // optional string
+#if 0 // tmp
+int antSetName2AntFieldIndex(const string& antSetName) {
+	int idx;
 
-/*	//for antenna, see MeasurementSetFormat.cc. Last resort, look at LCS/Common/ApplCommon/AntField.h , but be careful with HBA/LBA modes etc.
-	// must be in absolute ITRF (not relative to station)
-	itsDataset->antennaPositionValue().value = ???;
-	itsDataset->antennaPositionUnit().value = ???; // TODO: ???
-	itsDataset->antennaPositionFrame().value = parset.positionType(); // returns "ITRF" (currently)
-	itsDataset->antennaNormalVector().value = ???;
-	itsDataset->antennaRotationMatrix().value = ???; // store 9 vals, per row. (row-minor)
+	if (strcmp(antSetName.c_str(), "LBA") == 0) {
+		idx = LOFAR::LBA_IDX;
+	} else if (strcmp(antSetName.c_str(), "HBA_ZERO") == 0) {
+		idx = LOFAR::HBA0_IDX;
+	} else if (strcmp(antSetName.c_str(), "HBA_ONE") == 0) {
+		idx = LOFAR::HBA1_IDX;
+	} else if (strcmp(antSetName.c_str(), "HBA") == 0) {
+		idx = LOFAR::HBA_IDX;
+	} else {
+		idx = -1;
+	}
+
+	return idx;
+}
+#endif
+#if 0
+	// e.g. LOFAR/MAC/Deployment/data/StaticMetaData/AntennaFields/CS001-AntennaField.conf
+	string antFieldFilename(antFieldPath + stationName + "-AntennaField.conf");
+	AntField antField(antFieldFilename); // will locate the filename if no abs path is given
+	/*} catch (::LOFAR::AssertError& exc) {
+		// A message has already been sent to the logger.
+	}*/
+	int fieldIdx = antSetName2AntFieldIndex(parset.antennaSet());
+
+	// See AntField.h in ApplCommon for the AFArray typedef and contents.
+	// Relative position wrt to field center. (TODO: but Pim's mail says absolute ITRF)
+	AFArray& antPos(antField.AntPos(fieldIdx));
+	itsDataset->antennaPosition().value = AntField::getData(antPos); // TODO: select dipole pos
+	itsDataset->antennaPositionUnit().value = "m";
+	itsDataset->antennaPositionFrame().value = parset.positionType(); // "ITRF"
+
+// Rot matrix and normal vector are per field (3 avail), not per dipole
+/*
+These specify one rotation matrix and normal vector per station (one
+for LBA, HBA ear 0 and ear 1 each) but because the one to use depends
+on the antenna set (for instance for HBA one would need to store two
+or figure out a common one which is complicated) we chose to just
+store it per antenna which adds some overhead but is more flexible.
+The antenna positions should be in absolute ITRF (e.g. not relative to
+the station, whose absolute position is stored in the same frame in
+the StationGroup) and the frame should reflect the target date but you
+are free to pick the format or just use "ITRF".
 */
-/* optional; but maybe fill these in anyway; tiles/HBA
-	itsDataset->tileBeamValue().value = ???;
-	itsDataset->tileBeamUnit().value = ???;
-	itsDataset->tileBeamFrame().value = ???;
-	itsDataset->tileBeamDipoles().value = ???;
+	AFArray& normVec(antField.normVector(fieldIdx));
+	itsDataset->antennaNormalVector().value = AntField::getData(normVec); // 3 doubles
 
-	itsDataset->tileCoefUnit().value = ???;
-	itsDataset->tileBeamCoefs().value = ???;
+	AFArray& rotMat(antField.rotationMatrix(fieldIdx));
+	itsDataset->antennaRotationMatrix().value = AntField::getData(rotMat); // 9 doubles, 3x3, row-minor
+#endif
 
-	itsDataset->tileDipolePositionValue().value = ???;
-	itsDataset->tileDipolePositionUnit().value = ???;
-	itsDataset->tileDipolePositionFrame().value = ???;
+	// Tile beam is the analog beam. HBA can have 1 analog beam, thus optional.
+	if (parset.haveAnaBeam()) {
+		itsDataset->tileBeam().value = parset.getAnaBeamDirection(); // always for beam 0
+		itsDataset->tileBeamUnit().value = "m";
+		itsDataset->tileBeamFrame().value = parset.getAnaBeamDirectionType(); // idem
+		//itsDataset->tileBeamDipoles().value = ???;
 
-	itsDataset->dispersionMeasureValue().value = parset.dispersionMeasure(); // passes default parms unsigned beam=0, unsigned pencil=0
-	itsDataset->dispersionMeasureUnit().value = "s"; // TODO: check if unit is seconds before enabling
-*/
+		//itsDataset->tileCoefUnit().value = ???;
+		//itsDataset->tileBeamCoefs().value = ???;
 
-	// Create 1-dim, unbounded (-1) dataset. 
-	// Override endianess. TBB data is always stored little endian and also received as such, so written as-is on any platform.
-	vector<ssize_t> dsDims(1, 0);
-	vector<ssize_t> dsMaxDims(1, -1);
-	itsDataset->create(dsDims, dsMaxDims, outFilenameRaw, ds->LITTLE);
+		// Relative position within the tile.
+		//itsDataset->tileDipolePosition().value = ???;
+		//itsDataset->tileDipolePositionUnit().value = ???;
+		//itsDataset->tileDipolePositionFrame().value = ???;
+	}
+
+
+	itsDataset->dispersionMeasure().value = parset.dispersionMeasure(0, 0); // 0.0 if no dedispersion was done
+	itsDataset->dispersionMeasureUnit().value = "pc/cm^3";
 }
 
 //////////////////////////////////////////////////////////////////////////////
 
-TBB_Station::TBB_Station(const string& stationName, const Parset& parset, const string& h5Filename)
+TBB_Station::TBB_Station(const string& stationName, const Parset& parset, const string& h5Filename, bool dumpRaw)
 : itsH5File(DAL::TBB_File(h5Filename, DAL::TBB_File::CREATE))
-, itsStation(itsH5File, itsH5File.station(stationName))
-, itsDipoles(vector<TBB_Station>(MAX_RSPBOARDS/* = per station*/ * NR_RCUS_PER_RSPBOARD)) // = 192 for int'l stations
+, itsStation(itsH5File.station(stationName))
+, itsDipoles(MAX_RSPBOARDS/* = per station*/ * NR_RCUS_PER_RSPBOARD) // = 192 for int'l stations
 , itsParset(parset)
 , itsH5Filename(h5Filename)
+, itsDumpRaw(dumpRaw)
 {
 	initCommonLofarAttributes(h5Filename);
-	initTBB_RootAttributesAndGroups();
+	initTBB_RootAttributesAndGroups(stationName);
 }
 
 TBB_Station::~TBB_Station() {
-	// Executed by the main thread after joined with all workers, so no need to lock.
+	// Executed by the main thread after joined with all workers, so no need to lock or delay cancellation.
 	try {
-		itsStation.nofDipoles.value = itsStation.dipoles.size();
+		itsStation.nofDipoles().value = itsStation.dipoles().size();
 	} catch (DAL::DALException& exc) {
-		LOG_WARN("TBB: failed to set station NOF_DIPOLES attribute");
+		LOG_WARN_STR("TBB: failed to set station NOF_DIPOLES attribute: " << exc.what());
 	}
 }
 
-TBB_Dipole& TBB_Station::getDipole(const TBB_Header& header) {
+string TBB_Station::getRawFilename(unsigned rspID, unsigned rcuID) {
+	string rawFilename = itsH5Filename;
+	string rsprcuStr(formatString("_%03u%03u", rspID, rcuID));
+	size_t pos = rawFilename.find('_', rawFilename.find('_'));
+	rawFilename.insert(pos, rsprcuStr); // insert _rsp/rcu IDs after station name (2nd '_')
+	rawFilename.resize(rawFilename.size() - (sizeof(".h5") - 1));
+	rawFilename.append(".raw");
+	return rawFilename;
+}
+
+void TBB_Station::processPayload(const TBB_Frame& frame) {
 	// Guard against bogus incoming rsp/rcu IDs with at().
-	return itsDipoles.at(header.rspID * NR_RCUS_PER_RSPBOARD + header.rcuID);
+	TBB_Dipole& dipole(itsDipoles.at(frame.header.rspID * NR_RCUS_PER_RSPBOARD + frame.header.rcuID));
+
+	// Each dipole stream is sent to a single port (thread), so no need to grab a mutex here to avoid double init.
+	// Do pass a ref to the h5 mutex for when writing into the HDF5 file.
+	if (!dipole.isInitialized()) {
+		string rawFilename("");
+		if (itsDumpRaw) {
+			rawFilename = getRawFilename(frame.header.rspID, frame.header.rcuID);
+		}
+		dipole.initDipole(frame.header, itsParset, rawFilename, itsStation, itsH5Mutex);
+	}
+
+	dipole.processFrameData(frame, itsH5Mutex);
 }
 
 /*
- * Returns last mod date/time of filename or current time of day if stat()ing
- * filename fails, in "YYYY-MM-DDThh:mm:ss.s" UTC format.
+ * Returns last mod date/time of filename, or current time of day if stat()ing fails,
+ * in "YYYY-MM-DDThh:mm:ss.s" UTC format.
  * For FILEDATE attribute.
  */
 string TBB_Station::getFileModDate(const string& filename) {
@@ -270,8 +389,7 @@ string TBB_Station::getFileModDate(const string& filename) {
 	struct stat st;
 	int err;
 
-	err = stat(filename.c_str(), &st);
-	if (err != 0) {
+	if ((err = stat(filename.c_str(), &st)) != 0) {
 		gettimeofday(&tv, NULL); // If stat() fails, this is close enough to file mod date.
 	} else {
 		tv.tv_sec = st.st_mtime;
@@ -292,7 +410,7 @@ string TBB_Station::utcTimeStr(double time) {
 	char utc_str[50];
 	struct tm tm = {0};
 	gmtime_r(&timeSec, &tm);
-	if (strftime( utc_str, sizeof(utc_str), "%Y-%m-%dT%H:%M:%S", &tm ) == 0) {
+	if (strftime(utc_str, sizeof(utc_str), "%Y-%m-%dT%H:%M:%S", &tm) == 0) {
 		return "";
 	}
 
@@ -305,115 +423,102 @@ double TBB_Station::toMJD(double time) {
 }
 
 void TBB_Station::initCommonLofarAttributes(const string& filename) {
-	DAL::TBB_File& file = itsH5File;
-	Parset& parset = itsParset;
+	itsH5File.groupType().value = "Root"; // TODO: set basic group fields that DAL checks automatically in DAL
+	const string baseFilename(LOFAR::basename(filename));
+	itsH5File.fileName() .value = baseFilename;
+	itsH5File.fileDate() .value = getFileModDate(baseFilename);
 
-	file.groupType().value = "Root";
-	const string baseFilename(basename(filename));
-	file.fileName().value = baseFilename;
-	file.fileDate().value = getFileModDate(baseFilename);
-	file.fileType().value = "tbb"; // TODO: this is obviously tbb specific; the rest of this function is not. -> DAL; also the next one
+	itsH5File.fileType() .value = "tbb";
+	itsH5File.telescope().value = "LOFAR";
 
-	file.telescope().value = "LOFAR";
-	file.observer() .value = "unknown"; // TODO: name(s) of the observer(s); check new bf writer
-
-	file.projectID()     .value = parset.getString("Observation.Campaign.name");
-	file.projectTitle()  .value = parset.getString("Observation.Campaign.title");
-	file.projectPI()     .value = parset.getString("Observation.Campaign.PI");
+	itsH5File.projectID()   .value = itsParset.getString("Observation.Campaign.name");
+	itsH5File.projectTitle().value = itsParset.getString("Observation.Campaign.title");
+	itsH5File.projectPI()   .value = itsParset.getString("Observation.Campaign.PI");
 	ostringstream oss;
 	// Use ';' instead of ',' to pretty print, because ',' already occurs in names (e.g. Smith, J.).
-	writeVector(oss, parset.getStringVector("Observation.Campaign.CO_I"), "; ", "", "");
-	file.projectCOI()    .value = oss.str();
-	file.projectContact().value = parset.getString("Observation.Campaign.contact");
+	writeVector(oss, itsParset.getStringVector("Observation.Campaign.CO_I"), "; ", "", "");
+	itsH5File.projectCOI()    .value = oss.str();
+	itsH5File.projectContact().value = itsParset.getString("Observation.Campaign.contact");
 
-/*	// TODO: add getString() and getStringVector() routines to RTCP Parset (sub)class
-	file.projectID()     .value = parset.observationName(); // TODO: check if Name -> ID
-	file.projectTitle()  .value = parset.observationTitle();
-	file.projectPI()     .value = parset.observationPI();
-	file.projectCOI()    .value = parset.observationCOI(); // TODO: see above
-	file.projectContact().value = parset.observationContact();
-*/
-	//file.observationID() .value = str(format("%s") % parset.observationID());
-	file.observationID() .value = formatString("%u", parset.observationID());
+	itsH5File.observationID() .value = formatString("%u", itsParset.observationID());
 
-	file.observationStartUTC().value = utcTimeStr(parset.startTime());
-	file.observationStartMJD().value = toMJD(parset.startTime());
+	itsH5File.observationStartUTC().value = utcTimeStr(itsParset.startTime());
+	itsH5File.observationStartMJD().value = toMJD(itsParset.startTime());
 
-	// The stop time can be a bit further than the one actually specified, because we process in blocks. TODO: check bf writer
-	const size_t nBlocks = ceil((parset.stopTime() - parset.startTime()) / parset.CNintegrationTime());
-	const double stopTime = parset.startTime() + nBlocks * parset.CNintegrationTime();
-	file.observationEndUTC().value = timeStr(stopTime);
-	file.observationEndMJD().value = toMJD(stopTime);
+	// The stop time can be a bit further than the one actually specified, because we process in blocks.
+	unsigned nrBlocks = floor((itsParset.stopTime() - itsParset.startTime()) / itsParset.CNintegrationTime());
+	double stopTime = itsParset.startTime() + nrBlocks * itsParset.CNintegrationTime();
 
-	file.observationNofStations().value = parset.nrStations(); // TODO: SS beamformer?
+	itsH5File.observationEndUTC().value = utcTimeStr(stopTime);
+	itsH5File.observationEndMJD().value = toMJD(stopTime);
 
+	itsH5File.observationNofStations().value = itsParset.nrStations(); // TODO: SS beamformer?
 	// For the observation attribs, dump all stations participating in the observation (i.e. allStationNames(), not mergedStatioNames()).
 	// This may not correspond to which station HDF5 groups will be written, but that is true anyway, regardless of any merging (e.g. w/ piggy-backed TBB).
-	file.observationStationsList().value = parset.allStationNames(); // TODO: SS beamformer?
+	itsH5File.observationStationsList().value = itsParset.allStationNames(); // TODO: SS beamformer?
 
-	const vector<double> subbandCenterFrequencies(parset.subbandToFrequencyMapping());
-	double min_centerfrequency = *min_element(subbandCenterFrequencies.begin(), subbandCenterFrequencies.end());
-	double max_centerfrequency = *max_element(subbandCenterFrequencies.begin(), subbandCenterFrequencies.end());
-	double sum_centerfrequencies = accumulate(subbandCenterFrequencies.begin(), subbandCenterFrequencies.end(), 0.0);
-	double subbandBandwidth = parset.sampleRate();
+	const vector<double> subbandCenterFrequencies(itsParset.subbandToFrequencyMapping());
+	double min_centerfrequency = *min_element( subbandCenterFrequencies.begin(), subbandCenterFrequencies.end() );
+	double max_centerfrequency = *max_element( subbandCenterFrequencies.begin(), subbandCenterFrequencies.end() );
+	double sum_centerfrequencies = accumulate( subbandCenterFrequencies.begin(), subbandCenterFrequencies.end(), 0.0 );
 
-	file.observationFrequencyMin()   .value = (min_centerfrequency - subbandBandwidth / 2) / 1e6;
-	file.observationFrequencyCenter().value = sum_centerfrequencies / subbandCenterFrequencies.size();
-	file.observationFrequencyMax()   .value = (max_centerfrequency + subbandBandwidth / 2) / 1e6;
-	file.observationFrequencyUnit()  .value = "MHz";
+	double subbandBandwidth = itsParset.sampleRate();
 
-	file.observationNofBitsPerSample().value = parset.nrBitsPerSample();
+	itsH5File.observationFrequencyMax()   .value = (max_centerfrequency + subbandBandwidth / 2) / 1e6;
+	itsH5File.observationFrequencyMin()   .value = (min_centerfrequency - subbandBandwidth / 2) / 1e6;
+	itsH5File.observationFrequencyCenter().value = sum_centerfrequencies / subbandCenterFrequencies.size();
+	itsH5File.observationFrequencyUnit()  .value = "MHz";
 
-	file.clockFrequency()    .value = parset.clockSpeed() / 1e6;
-	file.clockFrequencyUnit().value = "MHz";
+	itsH5File.observationNofBitsPerSample().value = itsParset.nrBitsPerSample();
+	itsH5File.clockFrequency()    .value = itsParset.clockSpeed() / 1e6;
+	itsH5File.clockFrequencyUnit().value = "MHz";
 
-	file.antennaSet().value = parset.antennaSet(); // TODO: does this provide the strings from the ICD const tables?!?
+	itsH5File.antennaSet().value = itsParset.antennaSet();
+	itsH5File.filterSelection().value = itsParset.getString("Observation.bandFilter");
 
-	file.filterSelection().value = parset.getString("Observation.bandFilter");
+	unsigned nrSAPs = itsParset.nrBeams();
+	vector<string> targets(nrSAPs);
 
-	//file.target().value = ???; // TODO: not in bf h5 writer; as array of strings?
-	// Code from bf MS Writer:
-	//vector<string> targets(parset.getStringVector("Observation.Beam[" + toString(subarray) + "].target"));
+	for (unsigned sap = 0; sap < nrSAPs; sap++) {
+		targets[sap] = itsParset.beamTarget(sap);
+	}
 
-	/*unexp
-	 * Set release string, e.g. "LOFAR-Release-1.0".
-	 * Only works if writer is rebuilt and reinstalled on every release, so force cmake deps. (Means on build failure, everyone will know soon!)
-	 */
-/*
-#if defined HAVE_PKVERSION
-	const string releaseStr(TBB_WriterVersion::getVersion());
-#else // TODO: test both cases
-	ostringstream vss;
-	string type("brief");
-	Version::show<TBB_WriterVersion>(vss, "TBB_Writer",  type);
-	const string releaseStr(vss.str());
+	itsH5File.targets().value = targets;
+
+#ifdef HAVE_PKVERSION
+	itsH5File.systemVersion().value = StorageVersion::getVersion();
+#else
+#warning SYSTEM_VERSION attribute cannot be written correctly into HDF5 output file
+	itsH5File.systemVersion().value = "0.909";
 #endif
-	file.systemVersion().value = versionStr;
-*/
-	//file.pipelineName().value = ???; // TODO: remove from DAL; for offline/LTA only
-	//file.pipelineVersion().value = ???; // idem
 
-	//file.ICDNumber().value = "1"; //TODO: this is wrong if we provide a spec doc, and redundant if we already have 'tbb'; LOFAR-USG-ICD-001: TBB Time-Series Data"); // make it 1 or 001, or drop this, it's in file type (data product type)
-	//file.ICDVersion().value = "2.02.15"; // patch number is useless; and this is wrong if we provide a spec doc
-	//file.notes().value = ""; // TODO: needed?
-	// TODO: No TBB_SysLog group anymore, add it back to CommonLofarAttributes instead of Notes?
-	/*if (parset.fakeInputData()) { // ignore checkFakeInputData(), always annotate the data product if data is fake
-		syslog.append("input data is fake!");
-	}*/
+	itsH5File.docName()   .value = "ICD 1: TBB Time-Series Data";
+	itsH5File.docVersion().value = "2.02.25";
+
+	itsH5File.notes().value = "";
 }
 
-void TBB_Station::initTBB_RootAttributesAndGroups() {
-	// The writer creates one HDF5 file per station, so create only one Station Group here.
-	//itsH5File.operatingMode().value = "transient"; // TODO: add string mode field: "transient" or "spectral". Maybe it's Observation.TBB.TBBsetting.operatingMode = 1
-	itsH5File.nofStations.value = 1;
+// The writer creates one HDF5 file per station, so create only one Station Group here.
+void TBB_Station::initTBB_RootAttributesAndGroups(const string& stName) {
+	int operatingMode = itsParset.getInt("Observation.TBB.TBBsetting.operatingMode");
+	if (operatingMode == 1) {
+		itsH5File.operatingMode().value = "transient";
+	} else if (operatingMode == 2) {
+		itsH5File.operatingMode().value = "spectral";
+	} else {
+		itsH5File.operatingMode().value = "unknown"; // should not happen, parset assumed to be ok
+	}
 
-	// Find the station name we're looking for ("CS001" == "CS001HBA0") and retrieve it's pos using the found idx.
+	itsH5File.nofStations().value = 1u;
+
+	// Find the station name we are looking for ("CS001" == "CS001HBA0") and retrieve its pos using the found idx.
+// TODO: maybe this is wrong: we need the position of CS001HBA0, not of CS001. Also for the dipole pos which is wrt this pos.
 	vector<double> stPos;
 
-	vector<string> obsStationNames(parset.allStationNames()); // can also contain "CS001HBA0"
+	vector<string> obsStationNames(itsParset.allStationNames()); // can also contain "CS001HBA0"
 	vector<string>::const_iterator nameIt(obsStationNames.begin());
 
-	vector<double> stationPositions(parset.positions()); // len must be (is generated as) 3x #stations
+	vector<double> stationPositions(itsParset.positions()); // len must be (is generated as) 3x #stations
 	vector<double>::const_iterator posIt(stationPositions.begin());
 
 	const size_t stNameLen = 5;
@@ -428,99 +533,93 @@ void TBB_Station::initTBB_RootAttributesAndGroups() {
 	} else { // not found or something wrong; create anyway or we lose data
 		stPos.assign(3, 0.0);
 	}
-	station.create();
-	setStationGroup(station, stPos);
+	itsStation.create();
+	initStationGroup(itsStation, stName, stPos);
 
 	// Trigger Group
-	DAL::TBB_Trigger tg(file.triggerData()); // TODO: triggerData() -> trigger()
+	DAL::TBB_Trigger tg(itsH5File.trigger());
 	tg.create();
-	setTriggerGroup(tg);
+	initTriggerGroup(tg);
 }
 
-// Populates the Station group. Note: Does _not_ set the dipole datasets.
-void TBB_Station::setStationGroup(DAL::TBB_Station& st, const vector<double>& stPosition) {
-	//st.groupType().value = "StationGroup"; // TODO: should have been set by DAL class
-	//st.stationName().value = stName; // TODO: should have been set by DAL class
+void TBB_Station::initStationGroup(DAL::TBB_Station& st, const string& stName, const vector<double>& stPosition) {
+	st.groupType().value = "StationGroup";
+	st.stationName().value = stName;
 
-	st.stationPositionValue().value = stPosition;
-	//st.stationPositionUnit().value = ???; // TODO: ??? array of strings? (also at beamDirection, but not at antennaPosition)
-	st.stationPositionFrame().value = parset.positionType(); // returns "ITRF"
+	st.stationPosition().value = stPosition;
+	st.stationPositionUnit().value = "m";
+	st.stationPositionFrame().value = itsParset.positionType(); // "ITRF"
 
-	// TODO: Also see bf writer MS makeBeamTable() kind of function. In the future, also indicates broken tiles/dipoles w/ timestamp.
-	// TODO: ITRF -> ITRF2008...?
-	if (parset.haveAnaBeam()) { // HBA // TODO: AnaBeam vs Beam?
-		st.beamDirectionValue().value = parset.getAnaBeamDirection(); // always for beam 0
-		st.beamDirectionFrame().value = parset.getAnaBeamDirectionType(); // idem
-	} else {
-		unsigned nBeams = parset.nrBeams(); // TODO: What if >1 station beams? Now, only write beam0. Probably irrel for now, because of AnaBeam (HBA).
-		if (nBeams > 0) {
-			st.beamDirectionValue().value = parset.getBeamDirection(0);
-			st.beamDirectionFrame().value = parset.getBeamDirectionType(0); // TODO: fix getBeamDirectionType() sprintf -> snprintf (check all parset funcs)
-		} else { // No beam (known or at all), so set null vector
-			vector<double> noBeamDirVal(2, 0.0);
-			st.beamDirectionValue().value = noBeamDirVal;
-			st.beamDirectionFrame().value = "ITRF";
-		}
+	// digital beam(s)
+	unsigned nBeams = itsParset.nrBeams();
+	if (nBeams > 0) { // What if >1 station beams? For now, only write beam 0.
+		st.beamDirection().value = itsParset.getBeamDirection(0);
+		st.beamDirectionFrame().value = itsParset.getBeamDirectionType(0);
+	} else { // No beam (known or at all), so set null vector
+		st.beamDirection().value = vector<double>(2, 0.0);
+		st.beamDirectionFrame().value = "ITRF";
 	}
-	//st.beamDirectionUnit().value = ???; // TODO: ??? beam dir = 2 angles. array of string??? "radians"
 
-	st.clockOffsetValue().value = parset.clockCorrectionTime(stName); // TODO: check if stName is as expected; returns 0.0 if not avail
+	st.beamDirectionUnit().value = "m";
+
+	st.clockOffset().value = itsParset.clockCorrectionTime(stName); // TODO: check if stName is as expected (it must be incl HBA0, HBA1, LBA etc, e.g. "CS002HBA0"); returns 0.0 if not avail
 	st.clockOffsetUnit().value = "s";
-	//st.triggerOffset().value = ???; // TODO: remove from DAL
-	//st.nofDipoles.value is set at the end (destr)
 
-	// Create dipole datasets when the first datagram for that dipole has been received.
+	//st.nofDipoles.value is set at the end (destr)
 }
 
-void TBB_Station::setTriggerGroup(DAL::TBB_Trigger& tg) {
+void TBB_Station::initTriggerGroup(DAL::TBB_Trigger& tg) {
 	tg.groupType().value = "TriggerGroup";
-//	tg.triggerType().value = "Unknown"; // We don't get this or any other trigger data yet, so do the minimum.
-//	tg.triggerVersion().value = 0; // There is no trigger alg impl yet.
+	tg.triggerType().value = "Unknown";
+	tg.triggerVersion().value = 0; // There is no trigger algorithm info available to us yet.
 
-	// TODO: put these into DAL, because we can set them
-	// Trigger parameters (how to decide if there is a trigger) (per obs)
-//	tg.paramCoincidenceChannels().value = parset.tbbNumberOfCoincidenceChannels();	// int(->unsigned); from Observation.ObservationControl.StationControl.TBBControl.NoCoincChann
-//	tg.paramCoincidenceTime()    .value = parset.tbbCoincidenceTime();				// double; from Observation.ObservationControl.StationControl.TBBControl.CoincidenceTime
-//	tg.paramDirectionFit()       .value = parset.tbbDoDirectionFit();				// string; from Observation.ObservationControl.StationControl.TBBControl.DoDirectionFit
-//	tg.paramElevationMin()       .value = parset.tbbMinElevation();					// double; from Observation.ObservationControl.StationControl.TBBControl.MinElevation
-//	tg.paramFitVarianceMax()     .value = parset.tbbMaxFitVariance();				// double; Observation.ObservationControl.StationControl.TBBControl.MaxFitVariance
-	// unused: Observation.ObservationControl.StationControl.TBBControl.ParamExtension = []
+	// Trigger parameters (how to decide if there is a trigger; per obs)
+// TODO: if the parset doesn't have these, it'll throw APSException and we will not create the station group and not process the data
+	tg.paramCoincidenceChannels().value = itsParset.getInt   ("Observation.ObservationControl.StationControl.TBBControl.NoCoincChann");
+	tg.paramCoincidenceTime()    .value = itsParset.getDouble("Observation.ObservationControl.StationControl.TBBControl.CoincidenceTime");
+	tg.paramDirectionFit()       .value = itsParset.getString("Observation.ObservationControl.StationControl.TBBControl.DoDirectionFit");
+	tg.paramElevationMin()       .value = itsParset.getDouble("Observation.ObservationControl.StationControl.TBBControl.MinElevation");
+	tg.paramFitVarianceMax()     .value = itsParset.getDouble("Observation.ObservationControl.StationControl.TBBControl.MaxFitVariance");
 
 	// Trigger data (per trigger)
 	// N/A atm
 
-	// TODO: (this is already done for any attribute in any group?)
-	/* From an e-mail by Pim Schellart:
-	 * To actually implement this, given the likely need for many
-	 * changes, it is probably easiest to provide only one method for the
-	 * TriggerGroup that allows setting (keyword, value) pairs and one to
-	 * retrieve an attribute. That way we can just get/set whatever we need
-	 * in that group without having to bother you with it.
+	/*
+	 * It is very likely that the remaining (optional) attributes and the trigger alg
+	 * will undergo many changes. TBB user/science applications will have to retrieve and
+	 * set the remaining fields "by hand" for a while using e.g. DAL by checking and
+	 * specifying each attribute name presumed available.
+	 * Until it is clear what is needed and available, this cannot be standardized.
 	 */
 }
 
 //////////////////////////////////////////////////////////////////////////////
 
-TBB_Writer::TBB_StreamWriter::TBB_StreamWriter(const string& inputStreamName,
-		const string& logPrefix)
-: itsInputStreamName(inputStreamName)
+TBB_StreamWriter::TBB_StreamWriter(TBB_Writer& writer, const string& inputStreamName, const string& logPrefix)
+: itsWriter(writer)
+, itsInputStreamName(inputStreamName)
 , itsLogPrefix(logPrefix)
 {
 	itsFrameBuffers = new TBB_Frame[nrFrameBuffers];
-	itsReceiveQueue.reserve(nrFrameBuffers);
+	//itsReceiveQueue.reserve(nrFrameBuffers); // Queue does not support this...
 	for (unsigned i = nrFrameBuffers; i > 0; ) {
 		itsFreeQueue.append(&itsFrameBuffers[--i]);
 	}
 
-	gettimeofday(&itsTimeoutStamp.tv, NULL);
+	itsTimeoutStamp.tv_sec = 0;
+	itsTimeoutStamp.tv_usec = 0;
 
 	itsOutputThread = NULL;
 	try {
-		itsOutputThread = new Thread(this, /*&TBB_StreamWriter::*/mainOutputLoop, logPrefix + "OutputThread: ");
-		itsInputThread  = new Thread(this, /*&TBB_StreamWriter::*/mainInputLoop,  logPrefix + "InputThread: ");
-	} catch (...) {
+		itsOutputThread = new Thread(this, &TBB_StreamWriter::mainOutputLoop, logPrefix + "OutputThread: ");
+		itsInputThread  = new Thread(this, &TBB_StreamWriter::mainInputLoop,  logPrefix + "InputThread: ");
+	} catch (exception& exc) {
 		if (itsOutputThread != NULL) {
-			itsReceiveQueue.append(NULL); // tell output thread to stop
+			try {
+				itsReceiveQueue.append(NULL); // tell output thread to stop
+			} catch (exception& exc) {
+				LOG_WARN_STR("TBB: failed to notify output thread to terminate: " << exc.what());
+			}
 			delete itsOutputThread;
 		}
 		delete[] itsFrameBuffers;
@@ -528,8 +627,8 @@ TBB_Writer::TBB_StreamWriter::TBB_StreamWriter(const string& inputStreamName,
 	}
 }
 
-TBB_Writer::TBB_StreamWriter::~TBB_StreamWriter() {
-	// Only cancel input thread. It will tell the output thread.
+TBB_StreamWriter::~TBB_StreamWriter() {
+	// Only cancel input thread. It will notify the output thread.
 	itsInputThread->cancel();
 
 	delete itsInputThread;
@@ -537,28 +636,28 @@ TBB_Writer::TBB_StreamWriter::~TBB_StreamWriter() {
 	delete[] itsFrameBuffers;
 }
 
-time_t TBB_StreamWriter::getTimeoutStampSec() {
+time_t TBB_StreamWriter::getTimeoutStampSec() const {
 	return itsTimeoutStamp.tv_sec; // racy read (and no access once guarantee)
 }
 
 #if __BYTE_ORDER == __BIG_ENDIAN
 // hton[ls],ntoh[ls] on big endian are no-ops, so we have to provide the byte swaps.
-uint16_t TBB_StreamWriter::littleNativeBSwap(uint16_t val) {
+uint16_t TBB_StreamWriter::littleNativeBSwap(uint16_t val) const {
 	return __bswap_16(val); // GNU ext
 }
-uint32_t TBB_StreamWriter::littleNativeBSwap(uint32_t val) {
+uint32_t TBB_StreamWriter::littleNativeBSwap(uint32_t val) const {
 	return __bswap_32(val); // GNU ext
 }
 #elif __BYTE_ORDER == __LITTLE_ENDIAN
-uint16_t TBB_StreamWriter::littleNativeBSwap(uint16_t val) {
+uint16_t TBB_StreamWriter::littleNativeBSwap(uint16_t val) const {
 	return val;
 }
-uint32_t TBB_StreamWriter::littleNativeBSwap(uint32_t val) {
+uint32_t TBB_StreamWriter::littleNativeBSwap(uint32_t val) const {
 	return val;
 }
 #endif
 
-void TBB_StreamWriter::frameHeaderLittleNativeBSwap(TBB_Header& header) {
+void TBB_StreamWriter::frameHeaderLittleNativeBSwap(TBB_Header& header) const {
 	//header.seqNr              = littleNativeBSwap(header.seqNr); // neither intended nor useful for us
 	header.time               = littleNativeBSwap(header.time);
 	header.sampleNr           = littleNativeBSwap(header.sampleNr); // also swaps header.bandsliceNr
@@ -568,7 +667,7 @@ void TBB_StreamWriter::frameHeaderLittleNativeBSwap(TBB_Header& header) {
 	header.crc16              = littleNativeBSwap(header.crc16);
 }
 
-void TBB_StreamWriter::correctTransientSampleNr(TBB_Header& header) {
+void TBB_StreamWriter::correctTransientSampleNr(TBB_Header& header) const {
 	/*
 	 * We assume header.sampleFreq is either 200 or 160 MHz (another multiple of #samples per frame is also fine).
 	 * 
@@ -589,7 +688,7 @@ void TBB_StreamWriter::correctTransientSampleNr(TBB_Header& header) {
  * It assumes that the seqNr field, ((uint32_t*)buf)[1], has been zeroed.
  * Do not call this function with len < 1; reject the frame earlier.
  */
-uint16_t TBB_StreamWriter::crc16tbb(const uint16_t* buf, size_t len) {
+uint16_t TBB_StreamWriter::crc16tbb(const uint16_t* buf, size_t len) const {
 	uint16_t CRC            = 0;
 	const uint32_t CRC_poly = 0x18005;
 	const uint16_t bits     = 16;
@@ -616,7 +715,7 @@ uint16_t TBB_StreamWriter::crc16tbb(const uint16_t* buf, size_t len) {
  * It computes a 32 bit result, but the buf arg is of uint16_t*.
  * Do not call this function with len < 2; reject the frame earlier.
  */
-uint32_t TBB_StreamWriter::crc32tbb(const uint16_t* buf, size_t len) {
+uint32_t TBB_Dipole::crc32tbb(const uint16_t* buf, size_t len) const {
 	uint32_t CRC            = 0;
 	const uint64_t CRC_poly = 0x104C11DB7ULL;
 	const uint16_t bits     = 16;
@@ -664,7 +763,7 @@ uint32_t TBB_StreamWriter::crc32tbb(const uint16_t* buf, size_t len) {
  * Process the incoming TBB header.
  * Note that this function may update the header, but not its crc, so you cannot re-verify it.
  */
-void TBB_StreamWriter::processHeader(TBB_Header& header, size_t recvPayloadSize) {
+void TBB_StreamWriter::processHeader(TBB_Header& header, size_t recvPayloadSize) const {
 	frameHeaderLittleNativeBSwap(header); // no-op on little endian
 
 	header.seqNr = 0; // for the crc; don't save/restore it as we don't need this field
@@ -698,37 +797,23 @@ void TBB_StreamWriter::processHeader(TBB_Header& header, size_t recvPayloadSize)
 
 void TBB_StreamWriter::mainInputLoop() {
 	LOG_INFO_STR(itsLogPrefix << "Waiting for incoming data at " << itsInputStreamName);
-
-	struct TbbInStream { // mainly for the destructor
-		Stream* itsStream;
-		TbbInStream() :
-			inStream(createStream(itsInputStreamName, true)) {
-		}
-		~TbbInStream() {
-			delete inStream;
-			try {
-				itsReceiveQueue.append(NULL); // always notify output thread at exit of no more data
-			} catch (...) {
-			}
-		}
-	} stream;
+	Stream* stream = createStream(itsInputStreamName, true); // allocates, but wrapped in an obj proved a hassle
 
 	while (1) {
-		bool droppedSmall = false;
 		TBB_Frame* frame;
 
 		try {
 			frame = itsFreeQueue.remove();
 
-			size_t datagramSize = stream.itsStream->tryRead(frame, sizeof(*frame));
+			size_t datagramSize = stream->tryRead(frame, sizeof(*frame));
 
 			// Notify master that we are still busy. (Racy, see TS decl)
-			gettimeofday(&itsTimeoutStamp.tv, NULL);
+			gettimeofday(&itsTimeoutStamp, NULL);
 
 			if (datagramSize < sizeof(TBB_Header)) {
 				throw TBB_MalformedFrameException("dropping too small TBB frame");
 			}
-			processHeader(frame.header, datagramSize - sizeof(TBB_Header));
+			processHeader(frame->header, datagramSize - sizeof(TBB_Header));
 
 			itsReceiveQueue.append(frame);
 		} catch (TBB_MalformedFrameException& mffExc) {
@@ -740,51 +825,19 @@ void TBB_StreamWriter::mainInputLoop() {
 		} catch (exception& exc) {
 			LOG_FATAL_STR(itsLogPrefix << exc.what());
 			break;
-		}/* catch (...) { // Cancellation exc happens at exit. Nothing to do, so disabled. Otherwise, must rethrow.
+		} catch (...) { // Cancellation exc happens at exit. Nothing to do, so disabled. Otherwise, must rethrow.
+			try {
+				itsReceiveQueue.append(NULL); // always notify output thread at exit of no more data
+			} catch (exception& exc) {
+				LOG_WARN_STR(itsLogPrefix << "may have failed to notify output thread to terminate: " << exc.what());
+			}
+			delete stream;
 			throw;
-		}*/
-	}
-}
-
-void TBB_StreamWriter::processPayload(const TBB_Frame& frame) {
-	SmartPtr<TBB_Station> station(getStation(frame.stationID, frame.header));
-
-	// Each dipole stream is sent to a single port (thread), so no need to grab a mutex here to avoid double init.
-	// Do pass a ref to the h5 mutex for when writing into the HDF5 file.
-	TBB_Dipole& dipole(station.getDipole(header));
-	if (!dipole.isInitialized()) {
-		string rawFilename("");
-		if (itsDumpRaw) {
-			rawFilename = itsH5Filename;
-			string rsprcuStr(formatString("_%03u%03u", frame.header.rspID, frame.header.rcuID));
-			size_t pos = rawFilename.find('_', rawFilename.find('_'));
-			rawFilename.insert(pos, rsprcuStr); // insert _rsp/rcu IDs after station name (2nd '_')
-			rawFilename.resize(rawFilename.size() - (sizeof(".h5") - 1);
-			rawFilename.append(".raw");
 		}
-		dipole.initDipole(frame.header, itsParset, rawFilename, itsStation, itsH5Mutex);
 	}
 
-	// Verify data checksum.
-	if (frame.header.nOfFreqBands == 0) { // transient mode
-		uint32_t csum = crc32tbb(reinterpret_cast<const uint16_t*>(frame.payload.data), frame.header.nOfSamplesPerFrame + 2/*=crc32*/);
-		if (csum != 0) {
-			/*
-			 * On a data checksum error 'flag' this offset, but still store the data.
-			 * Lost frame vs crc error can be seen from the data: lost means a zero block.
-			 */
-			dipole.itsFlagOffsets.push_back(offset);
-
-			uint32_t crc32 = *reinterpret_cast<const uint32_t*>(&frame.payload.data[frame.header.nOfSamplesPerFrame]); // TODO: 2 lines tmp
-			LOG_INFO_STR(itsLogPrefix << "crc32: " << frame.header.toString() << " " << crc32);
-		}
-	} else { // spectral mode
-		//uint32_t bandNr  = frame.header.bandsliceNr & TBB_BAND_NR_MASK;
-		//uint32_t sliceNr = frame.header.bandsliceNr >> TBB_SLICE_NR_SHIFT;
-		// TODO: prepare to store, but spectral output format unclear.
-	}
-
-	dipole.writeFrameData(frame, itsH5Mutex);
+	itsReceiveQueue.append(NULL);
+	delete stream;
 }
 
 void TBB_StreamWriter::mainOutputLoop() {
@@ -794,7 +847,7 @@ void TBB_StreamWriter::mainOutputLoop() {
 	while (1) {
 		TBB_Frame* frame;
 		try {
-			frame = itsReceived.remove()
+			frame = itsReceiveQueue.remove();
 			if (frame == NULL) {
 				break;
 			}
@@ -803,10 +856,11 @@ void TBB_StreamWriter::mainOutputLoop() {
 			LOG_INFO_STR(itsLogPrefix << "recvqsz=" << itsReceiveQueue.size());
 #endif
 
-			processPayload(*frame);
+			TBB_Station* station = itsWriter.getStation(frame->header);
+			station->processPayload(*frame);
 		} catch (exception& exc) {
 			// e.g. std::out_of_range for at() on bad rsp/rcu ID,
-			// DALException, or SystemCallException on failed to open file.
+			// DALException, or StorageException/SystemCallException on failed to create file.
 			nrErrors += 1;
 			if (nrErrors < maxErrors) {
 				LOG_WARN_STR(itsLogPrefix << exc.what());
@@ -829,36 +883,61 @@ TBB_Writer::TBB_Writer(const vector<string>& inputStreamNames, const Parset& par
 , itsDumpRaw(dumpRaw)
 , itsRunNr(0)
 {
+	// Mask all signals to inherit for workers. This forces signals to be delivered to the main thread.
+	// Wrap to make sure we always (try to) restore the signal mask.
+	struct SigMask {
+		sigset_t sigset_old;
+
+		SigMask() {
+			sigset_t sigset_all_masked;
+			sigfillset(&sigset_all_masked);
+			if (pthread_sigmask(SIG_SETMASK, &sigset_all_masked, &sigset_old) != 0) {
+				// The LOFAR sys uses another way to control us, so do not make this fatal.
+				LOG_WARN_STR("TBB: pthread_sigmask() failed to mask signals to inherit for worker threads.");
+			}
+		}
+
+		~SigMask() {
+			if (pthread_sigmask(SIG_SETMASK, &sigset_old, NULL) != 0) {
+				// No exc in destr. If restoring fails and --keeprunning, we remain deaf.
+				LOG_WARN_STR("TBB: pthread_sigmask() failed to restore signals. We may be deaf to signals.");
+			}
+		}
+	} sigm;
+
 	for (unsigned i = 0; i < inputStreamNames.size(); i++) {
-		string streamLogPrefix(logPrefix + "stream " + inputStreamNames[i].c_str() + ": ");
-		itsStreamWriters.push_back(new StreamWriter(inputStreamNames[i], streamLogPrefix);
+		itsStreamWriters.push_back(new TBB_StreamWriter(*this, inputStreamNames[i], logPrefix));
 	}
 }
 
 TBB_Writer::~TBB_Writer() {
+	map<unsigned, TBB_Station* >::iterator it(itsStations.begin());
+	for ( ; it != itsStations.end(); ++it) {
+		delete it->second;
+	}
+
+	for (unsigned i = itsStreamWriters.size(); i > 0; ) {
+		delete itsStreamWriters[--i];
+	}
 }
 
-time_t TBB_Writer::getTimeoutStampSec(unsigned streamWriterNr) {
-	return itsStreamWriters[streamWriterNr].getTimeoutStampSec();
-}
-
-SmartPtr<TBB_Station> TBB_Writer::getStation(unsigned stationID, const TBB_header& header) {
-	ScopedLock sc(itsStationsMutex);
-	map<unsigned, SmartPtr<TBB_Station> >::iterator stIt(itsStations.find(stationID));
+TBB_Station* TBB_Writer::getStation(const TBB_Header& header) {
+	ScopedLock sl(itsStationsMutex);
+	map<unsigned, TBB_Station* >::iterator stIt(itsStations.find(header.stationID));
 	if (stIt == itsStations.end()) {
 		// Create new station with HDF5 file and station HDF5 group.
-		string h5Filename(createNewTBB_H5Filename(header));
-		TBB_Station* station = new TBB_Station(stationName, itsParset, h5Filename); // TODO: leaks
-		stIt = itsStations.insert(make_pair(stationID, station)).first;
+		string stationName(DAL::stationIDToName(header.stationID));
+		string h5Filename(createNewTBB_H5Filename(header, stationName));
+		TBB_Station* station = new TBB_Station(stationName, itsParset, h5Filename, itsDumpRaw);
+		return itsStations.insert(make_pair(header.stationID, station)).first->second;
 	}
 
 	return stIt->second;
 }
 
-string TBB_Writer::createNewTBB_H5Filename(const TBB_header& header) {
+string TBB_Writer::createNewTBB_H5Filename(const TBB_Header& header, const string& stationName) {
 	const string typeExt("tbb.h5");
 	string obsIDStr(formatString("%u", itsParset.observationID()));
-	string stationName(DAL::stationIDToName(stationID));		
 
 	// Use the recording time of the first (received) frame as timestamp.
 	struct timeval tv;
@@ -866,7 +945,7 @@ string TBB_Writer::createNewTBB_H5Filename(const TBB_header& header) {
 	if (header.nOfFreqBands == 0) { // transient mode
 		tv.tv_usec = static_cast<unsigned long>(round( static_cast<double>(header.sampleNr) / header.sampleFreq ));
 	} else { // spectral mode
-		tv.tv_usec = (header.bandsliceNr & TBB_BAND_NR_MASK) * 1000;
+		tv.tv_usec = 0;
 	}
 
 	// Generate the output filename, because for TBB it is not in the parset.
@@ -879,20 +958,34 @@ string TBB_Writer::createNewTBB_H5Filename(const TBB_header& header) {
 
 	// If the file already exists, add a run nr and retry. (seq race with DAL's open and doesn't check .raw, but good enough)
 	// If >1 stations per node, start at the prev run nr if any (hence itsRunNr).
-	string runNrStr("");
-	if (itsRunNr > 0) {
-		runNrStr.append(formatString("R%03u_", itsRunNr));
+	if (itsRunNr == 0) {
+		if (access(h5Filename.c_str(), F_OK) != 0 && errno == ENOENT) {
+			// Does not exist (or broken dir after all, or dangling sym link...). Try this one.
+			return h5Filename;
+		} else { // Exists, inc run number. 
+			itsRunNr = 1;
+		}
 	}
+
 	size_t pos = h5Filename.size() - typeExt.size();
-	while (access(h5Filename.c_str(), F_OK) == 0) {
-		size_t replacedLen = runNrStr.size();
+	string runNrStr(formatString("R%03u_", itsRunNr));
+	h5Filename.insert(pos, runNrStr);
+	while ((access(h5Filename.c_str(), F_OK) == 0 || errno != ENOENT) && itsRunNr < 1000) {
 		itsRunNr += 1;
-		string runNrStr(formatString("R%03u_", itsRunNr));
-		h5Filename.replace(pos, replacedLen, runNrStr);
+		runNrStr = formatString("R%03u_", itsRunNr);
+		h5Filename.replace(pos, runNrStr.size(), runNrStr);
+	}
+	if (itsRunNr == 1000) { // run number is supposed to fit in 3 digits
+		throw StorageException("failed to generate new .h5 filename after 1000 filenames tried.");
 	}
 
 	return h5Filename;
 }
 
+time_t TBB_Writer::getTimeoutStampSec(unsigned streamWriterNr) {
+	return itsStreamWriters[streamWriterNr]->getTimeoutStampSec();
+}
+
 } // namespace RTCP
 } // namespace LOFAR
+
