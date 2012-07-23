@@ -311,7 +311,6 @@ SubbandsCommand::SubbandsCommand(GCFPortInterface& port, const int bitsPerSample
 
 void SubbandsCommand::send()
 {
-	cout << "Mode: " << getMode() << " Type: " << m_type << endl;
 	if (getMode()) {
 		// GET
 		RSPGetsubbandsEvent getsubbands;
@@ -337,9 +336,7 @@ void SubbandsCommand::send()
 			exit(EXIT_FAILURE);
 		}
 		
-        int nPlanes;
-        nPlanes = (MAX_BITS_PER_SAMPLE / itsBitsPerSample);
-		cout << MAX_BITS_PER_SAMPLE << "; " << itsBitsPerSample << "; " << maxBeamletsPerPlane(itsBitsPerSample) << endl;
+        int nPlanes = (MAX_BITS_PER_SAMPLE / itsBitsPerSample);
 		
 		// if only 1 subband selected, apply selection to all
 		switch (m_type) {
