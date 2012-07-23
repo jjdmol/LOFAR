@@ -803,6 +803,7 @@ void TBB_StreamWriter::mainInputLoop() {
 		TBB_Frame* frame;
 
 		try {
+			frame = NULL;
 			frame = itsFreeQueue.remove();
 
 			size_t datagramSize = stream->tryRead(frame, sizeof(*frame));
@@ -818,7 +819,9 @@ void TBB_StreamWriter::mainInputLoop() {
 			itsReceiveQueue.append(frame);
 		} catch (TBB_MalformedFrameException& mffExc) {
 			LOG_WARN_STR(itsLogPrefix << mffExc.what());
-			itsFreeQueue.append(frame);
+			if (frame != NULL) {
+				itsFreeQueue.append(frame);
+			}
 		} catch (Stream::EndOfStreamException& ) { // we use thread cancellation, but just in case
 			LOG_INFO_STR(itsLogPrefix << "EndOfStreamException");
 			break;
@@ -847,6 +850,7 @@ void TBB_StreamWriter::mainOutputLoop() {
 	while (1) {
 		TBB_Frame* frame;
 		try {
+			frame = NULL;
 			frame = itsReceiveQueue.remove();
 			if (frame == NULL) {
 				break;
@@ -870,7 +874,9 @@ void TBB_StreamWriter::mainOutputLoop() {
 			}
 		}
 
-		itsFreeQueue.append(frame);
+		if (frame != NULL) {
+			itsFreeQueue.append(frame);
+		}
 	}
 }
 
