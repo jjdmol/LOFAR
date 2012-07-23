@@ -1,6 +1,6 @@
 # $Id$
 
-lofar_package(VHECR 1.0 DEPENDS Common APLCommon)
+lofar_package(VHECR 1.0 DEPENDS Common ApplCommon APLCommon)
 
 include(LofarFindPackage)
 lofar_find_package(Boost REQUIRED COMPONENTS date_time program_options)
