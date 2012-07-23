@@ -32,13 +32,13 @@ CREATE TYPE schedulerInfo AS (
 	lastPossibleDay        INT4,
 	late                   BOOLEAN,
 	nightTimeWeightFactor  INT4,
-	predecessor            INT4,
+	predecessors           INT4,
 	predMaxTimeDif         VARCHAR(10),
 	predMinTimeDif         VARCHAR(10),
 	priority               FLOAT,
 	reason                 VARCHAR(40),
 	referenceFrame         INT4,
-        reservation            INT4,
+	reservation            INT4,
 	storageSelectionMode   INT4,
 	taskDuration           INT4,
 	taskID                 INT4,
@@ -65,14 +65,14 @@ CREATE OR REPLACE FUNCTION getSchedulerInfo(INT4)
 	FETCH fieldList INTO vRecord.lastPossibleDay;
 	FETCH fieldList INTO vRecord.late;
 	FETCH fieldList INTO vRecord.nightTimeWeightFactor;
-	FETCH fieldList INTO vRecord.predecessor;
+	FETCH fieldList INTO vRecord.predecessors;
 	FETCH fieldList INTO vRecord.predMaxTimeDif;
 	FETCH fieldList INTO vRecord.predMinTimeDif;
 	FETCH fieldList INTO vRecord.priority;
 	FETCH fieldList INTO vRecord.reason;
-        FETCH fieldList INTO vRecord.referenceFrame;
-        FETCH fieldList INTO vRecord.reservation;
-        FETCH fieldList INTO vRecord.storageSelectionMode;
+	FETCH fieldList INTO vRecord.referenceFrame;
+	FETCH fieldList INTO vRecord.reservation;
+	FETCH fieldList INTO vRecord.storageSelectionMode;
 	FETCH fieldList INTO vRecord.taskDuration;
 	FETCH fieldList INTO vRecord.taskID;
 	FETCH fieldList INTO vRecord.taskName;
