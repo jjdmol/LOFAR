@@ -26,6 +26,7 @@
 #include <Common/SystemUtil.h>
 
 #include <Common/ParameterSet.h>
+#include <ApplCommon/LofarDirs.h>
 #include <ApplCommon/StationInfo.h>
 #include <MACIO/MACServiceInfo.h>
 #include <APL/APLCommon/APL_Defines.h>

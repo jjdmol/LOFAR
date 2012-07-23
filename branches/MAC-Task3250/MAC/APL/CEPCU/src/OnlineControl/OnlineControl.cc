@@ -31,6 +31,7 @@
 #include <ApplCommon/StationInfo.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <Common/SystemUtil.h>
+#include <ApplCommon/LofarDirs.h>
 #include <MACIO/MACServiceInfo.h>
 #include <GCF/TM/GCF_Protocols.h>
 #include <APL/APLCommon/APL_Defines.h>

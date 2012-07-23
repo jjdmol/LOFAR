@@ -25,6 +25,7 @@
 #include <Common/LofarLocators.h>
 #include <Common/StringUtil.h>
 #include <Common/ParameterSet.h>
+#include <ApplCommon/LofarDirs.h>
 #include <ApplCommon/Observation.h>
 #include <ApplCommon/StationInfo.h>
 
@@ -33,8 +34,6 @@
 #include <MACIO/MACServiceInfo.h>
 #include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
-//#include <APL/RTDBCommon/RTDButilities.h>
-//#include <APL/APLCommon/StationInfo.h>
 #include <GCF/RTDB/DP_Protocol.ph>
 #include <signal.h>
 #include <stdlib.h>

@@ -29,6 +29,7 @@
 #include <Common/SystemUtil.h>
 #include <Common/ParameterSet.h>					// indexValue
 #include <APL/APLCommon/ControllerDefines.h>
+#include <ApplCommon/LofarDirs.h>
 #include <ApplCommon/StationInfo.h>
 #include "Controller_Protocol.ph"
 

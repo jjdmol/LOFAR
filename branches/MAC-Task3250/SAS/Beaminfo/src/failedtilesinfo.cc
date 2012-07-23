@@ -28,7 +28,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/SystemUtil.h>    // needed for basename
 #include <Common/Exception.h>     // THROW macro for exceptions
-#include <ApplCommon/StationInfo.h>
+#include <ApplCommon/LofarDirs.h>
 
 // SAS
 #include <OTDB/OTDBconstants.h>
