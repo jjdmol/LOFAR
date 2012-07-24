@@ -59,7 +59,8 @@ void OutputThread::mainLoop()
 {
 #if defined HAVE_BGP_ION
   doNotRunOnCore0();
-  nice(19);
+  //nice(19);
+  //runOnCore0();
 #endif
 
   try {

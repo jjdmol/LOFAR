@@ -26,6 +26,7 @@
 //# Includes
 #include <ControlPhase3Cores.h>
 #include <Interface/CN_Command.h>
+#include <Scheduling.h>
 
 #include <boost/format.hpp>
 using boost::format;
@@ -84,6 +85,11 @@ void ControlPhase3Cores::addIterations(unsigned count)
 
 void ControlPhase3Cores::mainLoop()
 {
+#if defined HAVE_BGP_ION
+  //doNotRunOnCore0();
+  runOnCore0();
+#endif
+
   unsigned block			= itsFirstBlock;
   unsigned nrPhaseThreeComputeCores	= itsPhaseThreeStreams.size();
   unsigned currentPhaseThreeComputeCore = block % nrPhaseThreeComputeCores;

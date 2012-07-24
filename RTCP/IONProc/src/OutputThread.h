@@ -46,7 +46,7 @@ class OutputThread
 
     void                    start();
 
-    static const unsigned   maxSendQueueSize = 3; // use 2 if you run out of memory, but test carefully to avoid data loss
+    static const unsigned   maxSendQueueSize = 5; // use 2 if you run out of memory, but test carefully to avoid data loss
 
     Queue<SmartPtr<StreamableData> > itsFreeQueue, itsSendQueue;
 
