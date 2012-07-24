@@ -137,6 +137,7 @@ void LogThread::writeCPUstats(std::stringstream &str)
 void LogThread::mainLoop()
 {
 #if defined HAVE_BGP_ION
+  //doNotRunOnCore0();
   runOnCore0();
   readCPUstats(previousLoad);
   gettimeofday(&previousTimeval,0);
