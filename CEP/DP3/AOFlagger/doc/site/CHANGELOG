@@ -1,3 +1,12 @@
+Version 2.0.1
+2012-03-16	André Offringa <of...nga@astro.rug.nl>
+  * This release is a quick fix for a bug that caused a strategy read failure on machines with non-standard locales
+  * Bug fix: fixing bug causing strategy reader to malfunction with different locales (reported by Arpad Miskolczi)
+  * Bug fix: show an error box when a strategy fails to load instead of crashing
+  * Bug fix: complex plane plot was still using gnuplot -- now uses the internal plotter.
+  * Bug fix: fixed a bug that sometimes caused a crash after having resized the time-frequency diagram.
+  * Bug fix: building without gtkmm was not possible, patched by Marcel Loose.
+
 Version 2.0.0
 2012-03-08	André Offringa <of...nga@astro.rug.nl>
   * Main points of this release: no longer depence on pdfviewer & gnuplot for drawing plots and new tools for quality analysis. Strategy file format did not change, thus .rfis files from 1.5.0 can be opened without a problem in 2.0.0.
@@ -8,6 +17,7 @@ Version 2.0.0
   * New feature: Text along x,y,z axes of time-frequency plot can be manually set.
   * New feature: log-log distribution plot in rfigui, with various analysis possible (slope calculation, rayleigh fitter).
   * New feature: rfigui will now immediately ask which baseline to load, instead of loading the first baseline (requested by Raymond Oonk).
+  * New feature: you can now specify a MS on the commandline with the rfigui: "rfigui <ms>"
   * Bug fix: Baseline name disappeared in bottom status bar when moving mouse over time-frequency plot. Baseline name is now reported when mouse is moved outside time-frequency plot (requested by Raymond Oonk).
   * Bug fix: very large sets were not displayed correctly in the rfigui due to cairo limitations.
   * Bug fix: clicking on statistics button sometimes crashed the gui.
