@@ -30,6 +30,7 @@
 #include <Interface/RSPTimeStamp.h>
 #include <InputSection.h>
 #include <ION_Allocator.h>
+#include <Scheduling.h>
 #include <GlobalVars.h>
 #include <Job.h>
 #include <OutputSection.h>
@@ -378,6 +379,10 @@ void Job::claimResources()
 
 void Job::jobThread()
 {
+#if defined HAVE_BGP_ION
+  doNotRunOnCore0();
+#endif
+
   if (myPsetNumber == 0 || itsHasPhaseOne || itsHasPhaseTwo || itsHasPhaseThree) {
     createCNstreams();
     createIONstreams();

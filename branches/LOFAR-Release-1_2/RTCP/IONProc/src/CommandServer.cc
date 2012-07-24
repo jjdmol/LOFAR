@@ -27,6 +27,7 @@
 #include <GlobalVars.h>
 #include <Job.h>
 #include <JobQueue.h>
+#include <Scheduling.h>
 #include <Stream/SocketStream.h>
 
 #include <string>
@@ -77,6 +78,11 @@ void CommandServer::handleCommand(const std::string &command)
 
 void CommandServer::commandMaster()
 {
+#if defined HAVE_BGP_ION
+  //doNotRunOnCore0();
+  runOnCore0();
+#endif
+
   std::vector<SmartPtr<MultiplexedStream> > ionStreams(nrPsets);
 
   for (unsigned ion = 1; ion < nrPsets; ion ++)
