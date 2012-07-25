@@ -33,8 +33,7 @@ using namespace RSP_Protocol;
 
 size_t BitmodeInfo::getSize() const
 {
-  return
-      MSH_size(itsBitmodeInfo);
+  return MSH_size(itsBitmodeInfo);
 }
 
 size_t BitmodeInfo::pack  (char* buffer) const

@@ -467,7 +467,18 @@ public:
 	static const FieldsType RSP_RAWDATA_READ;
 
 	/*@}*/
+	// Output function for operator <<
+	ostream& print (ostream& os) const;
+
 };
+
+//
+// operator <<
+//
+inline ostream& operator<< (ostream& os, const MEPHeader& hdr)
+{
+	return (hdr.print(os));
+}
 
   }; // namespace EPA_PROTOCOL
 }; // namespace LOFAR

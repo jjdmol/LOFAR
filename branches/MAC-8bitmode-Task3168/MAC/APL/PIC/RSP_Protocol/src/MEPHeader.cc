@@ -204,7 +204,7 @@ bool MEPHeader::isValidAck(const MEPHeader& reqhdr)
    * if it is a WRITEACK, or SIZE + payload_length if it is a
    * READACK.
    */
-  return (
+  if (
     ( (READACK == this->m_fields.type && reqhdr.m_fields.type == READ) ||
       (WRITEACK == this->m_fields.type && reqhdr.m_fields.type == WRITE) ) &&
     (0 == this->m_fields.status) &&
@@ -216,6 +216,20 @@ bool MEPHeader::isValidAck(const MEPHeader& reqhdr)
     (this->m_fields.addr.regid     == reqhdr.m_fields.addr.regid) &&
     (this->m_fields.offset         == reqhdr.m_fields.offset)     &&
     (this->m_fields.payload_length == reqhdr.m_fields.payload_length)
-    );
+    ) {
+		return (true);
+	}
+	LOG_DEBUG_STR("this:" << *this << "\nthat:" << reqhdr);
+	return (false);
 }
 
+//
+// print (os)
+//
+ostream& MEPHeader::print(ostream& os) const
+{
+	os << "hdr[type=" << m_fields.type << ",status=" << m_fields.status << ",framelen=" << m_fields.frame_length;
+	os << ",dstid=" << m_fields.addr.dstid << ",pid=" << m_fields.addr.pid << ",regid=" << m_fields.addr.regid;
+	os << ",offset=" << m_fields.offset << ",payloadlen=" << m_fields.payload_length << ",seqnr=" << m_fields.seqnr << "]";
+	return (os);
+}
