@@ -222,7 +222,7 @@ private:
 	std::complex<double>                    m_value;
 	int                                     m_type;
 	int                                     itsStage;
-	blitz::Array<std::complex<int16>, 3>    itsWeights;
+	blitz::Array<std::complex<int16>, 4>    itsWeights;
 	int										itsBitsPerSample;
 };
 

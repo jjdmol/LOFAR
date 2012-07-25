@@ -37,7 +37,7 @@ namespace LOFAR {
           case 8: 
               return(59);
           default: 
-              return(61);
+              return(59);
 		}
 	}
 

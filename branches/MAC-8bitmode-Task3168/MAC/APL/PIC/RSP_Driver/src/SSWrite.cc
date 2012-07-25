@@ -43,8 +43,6 @@ SSWrite::SSWrite(GCFPortInterface& board_port, int board_id)
   : SyncAction(board_port, board_id, NR_BLPS_PER_RSPBOARD)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
-  itsActivePlanes = (MAX_BITS_PER_SAMPLE / Cache::getInstance().getBack().getBitsPerSample());
-  setNumIndices(itsActivePlanes * NR_BLPS_PER_RSPBOARD);
 }
 
 SSWrite::~SSWrite()
@@ -54,6 +52,10 @@ SSWrite::~SSWrite()
 
 void SSWrite::sendrequest()
 {
+  itsActivePlanes = (MAX_BITS_PER_SAMPLE / Cache::getInstance().getBack().getBitsPerSample());
+  if (getCurrentIndex() >= (itsActivePlanes*NR_BLPS_PER_RSPBOARD)) {
+    setContinue(true);
+  }
   uint8 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) + (getCurrentIndex()/itsActivePlanes);
   LOG_DEBUG(formatString(">>>> SSWrite(%s) global_blp=%d",
 			 getBoardPort().getName().c_str(),
@@ -64,26 +66,18 @@ void SSWrite::sendrequest()
     
   // send subband select message
   EPASsSelectEvent ss;
-  switch (getCurrentIndex()%itsActivePlanes) {
-    case 0:
-      ss.hdr.set( MEPHeader::SS_SELECT_HDR_0,
-                      1 << (getCurrentIndex()/itsActivePlanes));
-      break;
-    case 1:
-      ss.hdr.set( MEPHeader::SS_SELECT_HDR_1,
-                      1 << (getCurrentIndex()/itsActivePlanes));
-      break;
-    case 2:
-      ss.hdr.set( MEPHeader::SS_SELECT_HDR_2,
-                      1 << (getCurrentIndex()/itsActivePlanes));
-      break;
-    case 3:
-      ss.hdr.set( MEPHeader::SS_SELECT_HDR_3,
-                      1 << (getCurrentIndex()/itsActivePlanes));
-      break;
-    default: break;
-  }    
+  
+  int dstid = 1 << (getCurrentIndex() / itsActivePlanes);
+  // used plane 
+  int plane = getCurrentIndex() % itsActivePlanes;
+  LOG_DEBUG_STR("plane=" << plane);
     
+  ss.hdr.set( MEPHeader::WRITE, 
+              dstid,
+              MEPHeader::SS,
+              MEPHeader::SS_SELECT+plane,
+              MEPHeader::SS_SELECT_SIZE);
+  
   // create array to contain the subband selection
   Array<uint16, 2> subbands((uint16*)&ss.subbands,
 			    shape(MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS, N_POL),
@@ -101,9 +95,7 @@ void SSWrite::sendrequest()
   mapped_index = 0;
 #endif
   
-  // used plane 
-  int plane = getCurrentIndex()%itsActivePlanes;
-  LOG_DEBUG_STR("plane=" << plane);
+
   
   // copy crosslet selection
   Range xlet_range(0, MEPHeader::N_LOCAL_XLETS-1);

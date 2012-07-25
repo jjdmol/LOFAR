@@ -195,9 +195,10 @@ void WeightsCommand::send()
 		RSPSetweightsEvent   setweights;
 		setweights.timestamp = Timestamp(0,0);
 		setweights.rcumask   = getRCUMask();
-
 		logMessage(cerr,formatString("rcumask.count()=%d",setweights.rcumask.count()));
-		setweights.weights().resize(1, setweights.rcumask.count(), maxBeamlets(itsBitsPerSample));
+        
+        int nPlanes = (MAX_BITS_PER_SAMPLE / itsBitsPerSample);
+		setweights.weights().resize(1, setweights.rcumask.count(), nPlanes, maxBeamletsPerPlane(itsBitsPerSample));
 
 		//bitset<maxBeamlets(bitsPerSample)> beamlet_mask = getBEAMLETSMask();
 		boost::dynamic_bitset<> beamlet_mask = getBEAMLETSMask(itsBitsPerSample);
@@ -212,7 +213,9 @@ void WeightsCommand::send()
 			if (setweights.rcumask.test(rcu)) {
 				for (int beamlet = 0; beamlet < max_beamlets; beamlet++) {
 					if (beamlet_mask.test(beamlet)) {
-						setweights.weights()(0,rcunr,beamlet) = complex<int16>((int16)value.real(), (int16)value.imag()); // complex<int16>((int16)value,0);
+					    int plane = beamlet / maxBeamletsPerPlane(itsBitsPerSample);
+						int beamletnr = beamlet % maxBeamletsPerPlane(itsBitsPerSample);
+						setweights.weights()(0,rcunr,plane,beamletnr) = complex<int16>((int16)value.real(), (int16)value.imag()); // complex<int16>((int16)value,0);
 					}
 				}
 				rcunr++;
@@ -235,7 +238,8 @@ GCFEvent::TResult WeightsCommand::ack(GCFEvent& e)
 		case RSP_GETWEIGHTSACK: {
 			RSPGetweightsackEvent ack(e);
 			bitset<MAX_RCUS> mask = getRCUMask();
-			itsWeights.resize(1, mask.count(), maxBeamlets(itsBitsPerSample));
+			int nPlanes = (MAX_BITS_PER_SAMPLE / itsBitsPerSample);
+			itsWeights.resize(1, mask.count(), nPlanes, maxBeamletsPerPlane(itsBitsPerSample));
 			itsWeights = complex<int16>(0,0);
 			itsWeights = ack.weights();
 
@@ -252,12 +256,12 @@ GCFEvent::TResult WeightsCommand::ack(GCFEvent& e)
 					for (int rcuout = 0; rcuout < get_ndevices(); rcuout++) {
 						if (mask[rcuout]) {
 							std::ostringstream logStream;
-							logStream << ack.weights()(0, rcuin++, Range::all());
+							logStream << ack.weights()(0, rcuin++, Range::all(), Range::all());
 							logMessage(cout,formatString("RCU[%2d].weights=%s", rcuout,logStream.str().c_str()));
 						}
 					}
 				} else {
-					blitz::Array<complex<double>, 3> ackweights;
+					blitz::Array<complex<double>, 4> ackweights;
 					ackweights.resize(ack.weights().shape());
 
 					// convert to amplitude and angle
@@ -267,7 +271,7 @@ GCFEvent::TResult WeightsCommand::ack(GCFEvent& e)
 					for (int rcuout = 0; rcuout < get_ndevices(); rcuout++) {
 						if (mask[rcuout]) {
 							std::ostringstream logStream;
-							logStream << ackweights(0, rcuin++, Range::all());
+							logStream << ackweights(0, rcuin++, Range::all(), Range::all());
 							logMessage(cout,formatString("RCU[%2d].weights=%s", rcuout,logStream.str().c_str()));
 						}
 					}

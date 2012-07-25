@@ -145,18 +145,25 @@ void CacheBuffer::reset(void)
 
     itsBitsPerSample = MAX_BITS_PER_SAMPLE;
 	
-	m_beamletweights().resize(BeamletWeights::SINGLE_TIMESTEP, StationSettings::instance()->nrRcus(), MEPHeader::N_BEAMLETS * (MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE));
+	m_beamletweights().resize( BeamletWeights::SINGLE_TIMESTEP, 
+	                           StationSettings::instance()->nrRcus(),
+	                           (MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE), 
+	                           MEPHeader::N_BEAMLETS);
 	m_beamletweights() = complex<int16>(0,0);
 
-	m_subbandselection.crosslets().resize(StationSettings::instance()->nrRcus(), (MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE), MEPHeader::N_LOCAL_XLETS );
+	m_subbandselection.crosslets().resize(StationSettings::instance()->nrRcus(),
+	                                      (MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE),
+	                                      MEPHeader::N_LOCAL_XLETS );
 	m_subbandselection.crosslets() = 0;
-    m_subbandselection.beamlets().resize(StationSettings::instance()->nrRcus(), (MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE), MEPHeader::N_BEAMLETS );
+    m_subbandselection.beamlets().resize(StationSettings::instance()->nrRcus(),
+                                         (MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE),
+                                         MEPHeader::N_BEAMLETS );
 	m_subbandselection.beamlets() = 0;
 	
 	if (GET_CONFIG("RSPDriver.IDENTITY_WEIGHTS", i)) {
 		// these weights ensure that the beamlet statistics
 		// exactly match the subband statistics
-		m_beamletweights()(Range::all(), Range::all(), Range::all()) = complex<int16>(GET_CONFIG("RSPDriver.BF_GAIN", i), 0);
+		m_beamletweights() = complex<int16>(GET_CONFIG("RSPDriver.BF_GAIN", i), 0);
 
 		//
 		// Set default subband selection starting at RSPDriver.FIRST_SUBBAND

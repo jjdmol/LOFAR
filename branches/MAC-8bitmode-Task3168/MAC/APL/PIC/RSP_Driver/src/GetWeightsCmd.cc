@@ -51,33 +51,38 @@ GetWeightsCmd::~GetWeightsCmd()
 void GetWeightsCmd::ack(CacheBuffer& cache)
 {
 	RSPGetweightsackEvent ack;
-
+    int nPlanes = (MAX_BITS_PER_SAMPLE / cache.getBitsPerSample());
+	
 	ack.timestamp = getTimestamp();
 	ack.status    = RSP_SUCCESS;
-	ack.weights().resize(BeamletWeights::SINGLE_TIMESTEP, m_event->rcumask.count(), maxBeamlets(cache.getBitsPerSample()));	// 4 x 61
+	ack.weights().resize(BeamletWeights::SINGLE_TIMESTEP, m_event->rcumask.count(), nPlanes, maxBeamletsPerPlane(cache.getBitsPerSample()));	// 4 x 61
 
 	int result_rcu = 0;
+	
 	for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++) {
 		if (m_event->rcumask[cache_rcu]) {
 			// NOTE: MEPHeader::N_BEAMLETS = 4x62 but userside MAX_BEAMLETS may be different
 			//       In other words: getBeamletWeights can contain more data than ack.weights
 			if (MEPHeader::N_BEAMLETS == maxBeamlets(cache.getBitsPerSample())) {
-				ack.weights()(0, result_rcu, Range::all()) = cache.getBeamletWeights()()(0, cache_rcu, Range::all());
+				ack.weights()(0, result_rcu, Range::all(), Range::all()) = cache.getBeamletWeights()()(0, cache_rcu, Range::all(), Range::all());
 			}
 			else {
-				for (int rsp = 0; rsp < 4; rsp++) {
-					int	swstart(rsp*maxBeamletsPerRSP(cache.getBitsPerSample()));
-					int hwstart(rsp*MEPHeader::N_BEAMLETS/4);
-					ack.weights()(0, result_rcu, Range(swstart,swstart+maxBeamletsPerRSP(cache.getBitsPerSample())-1)) = cache.getBeamletWeights()()(0, cache_rcu, Range(hwstart, hwstart+maxBeamletsPerRSP(cache.getBitsPerSample())-1));
-				}
+			    for (int plane = 0; plane < nPlanes; plane++) {
+    				for (int rsp = 0; rsp < MEPHeader::N_SERDES_LANES; rsp++) {
+    					int	swstart(rsp*maxDataslotsPerRSP(cache.getBitsPerSample()));
+    					int hwstart(rsp*MEPHeader::N_BEAMLETS/MEPHeader::N_SERDES_LANES);
+    					ack.weights()(0, result_rcu, plane, Range(swstart,swstart+maxDataslotsPerRSP(cache.getBitsPerSample())-1))
+    					    = cache.getBeamletWeights()()(0, cache_rcu, plane, Range(hwstart, hwstart+maxDataslotsPerRSP(cache.getBitsPerSample())-1));
+    				}
+    			}
 			}
 			result_rcu++;
 			if (cache_rcu ==0) {
-				LOG_DEBUG_STR("GetWeights(ack[0]): " << ack.weights()(0,0,Range::all()));
+				LOG_DEBUG_STR("GetWeights(ack[0]): " << ack.weights()(0,0,Range::all(),Range::all()));
 			}
 		}
 	}
-
+    cout << 
 	getPort()->send(ack);
 }
 

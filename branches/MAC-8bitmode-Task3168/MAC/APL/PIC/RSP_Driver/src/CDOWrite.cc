@@ -80,7 +80,7 @@ void CDOWrite::setup_udpip_header(uint32 l_srcip, uint32 l_dstip)
 {
 	uint32 payload_size = EPA_CEP_OUTPUT_HEADER_SIZE
 		+ (GET_CONFIG("RSPDriver.CDO_N_BLOCKS", i) 
-			 * (MEPHeader::N_PHASEPOL * GET_CONFIG("RSPDriver.CDO_N_BEAMLETS", i)) 
+			 * (MEPHeader::N_PHASEPOL * maxDataslotsPerRSP(Cache::getInstance().getBack().getBitsPerSample())) 
 			 * EPA_CEP_BEAMLET_SIZE);
 
   //

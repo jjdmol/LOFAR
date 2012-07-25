@@ -45,8 +45,8 @@ using namespace RSP;
 using namespace EPA_Protocol;
 
 BWWrite::BWWrite(GCFPortInterface& board_port, int board_id, int blp, int regid)
-	: SyncAction(board_port, board_id, MEPHeader::BF_N_FRAGMENTS),
-	  m_blp(blp), m_regid(regid), m_remaining(0), m_offset(0)
+	: SyncAction(board_port, board_id, MEPHeader::BF_N_FRAGMENTS*(MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE)),
+	  m_blp(blp), m_regid(regid), itsPlane(0), m_remaining(0), m_offset(0)
 {
 	memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -57,8 +57,14 @@ BWWrite::~BWWrite()
 
 void BWWrite::sendrequest()
 {
-	uint8 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) + m_blp;
-
+    int activePlanes = (MAX_BITS_PER_SAMPLE / Cache::getInstance().getBack().getBitsPerSample());
+    if (getCurrentIndex() >= (activePlanes*MEPHeader::BF_N_FRAGMENTS)) {
+        setContinue(true);
+    }
+    
+    uint8 global_blp = (getBoardId() * NR_BLPS_PER_RSPBOARD) + m_blp;
+    itsPlane = getCurrentIndex() / MEPHeader::BF_N_FRAGMENTS;
+        
 	// no conditional, update every second
 
 	// reset m_offset and m_remaining for each register
@@ -72,8 +78,8 @@ void BWWrite::sendrequest()
 		exit(EXIT_FAILURE);
 	}
 
-	LOG_DEBUG(formatString(">>>> BWWrite(%s) global_blp=%d, blp=%d, regid=%d, m_offset=%d, m_remaining=%d",
-					getBoardPort().getName().c_str(), global_blp, m_blp, m_regid, m_offset, m_remaining));
+	LOG_DEBUG(formatString(">>>> BWWrite(%s) global_blp=%d, blp=%d, regid=%d, plane=%d, m_offset=%d, m_remaining=%d",
+					getBoardPort().getName().c_str(), global_blp, m_blp, m_regid, itsPlane, m_offset, m_remaining));
 
 	// send next BF configure message
 	EPABfCoefsWriteEvent bfcoefs;
@@ -86,16 +92,36 @@ void BWWrite::sendrequest()
 	
 	switch (m_regid) {
 	case MEPHeader::BF_XROUT:
-		bfcoefs.hdr.set(MEPHeader::BF_XROUT_HDR, 1 << m_blp, MEPHeader::WRITE, size, m_offset);
+		bfcoefs.hdr.set( MEPHeader::WRITE, 
+                         1 << m_blp,
+                         MEPHeader::BF,
+                         MEPHeader::BF_XROUT+(itsPlane*NR_BLPS_PER_RSPBOARD),
+                         size,
+                         m_offset);
 		break;
 	case MEPHeader::BF_XIOUT:
-		bfcoefs.hdr.set(MEPHeader::BF_XIOUT_HDR, 1 << m_blp, MEPHeader::WRITE, size, m_offset);
+	    bfcoefs.hdr.set( MEPHeader::WRITE, 
+                         1 << m_blp,
+                         MEPHeader::BF,
+                         MEPHeader::BF_XIOUT+(itsPlane*NR_BLPS_PER_RSPBOARD),
+                         size,
+                         m_offset);
 		break;
 	case MEPHeader::BF_YROUT:
-		bfcoefs.hdr.set(MEPHeader::BF_YROUT_HDR, 1 << m_blp, MEPHeader::WRITE, size, m_offset);
+	    bfcoefs.hdr.set( MEPHeader::WRITE, 
+                         1 << m_blp,
+                         MEPHeader::BF,
+                         MEPHeader::BF_YROUT+(itsPlane*NR_BLPS_PER_RSPBOARD),
+                         size,
+                         m_offset);
 		break;
 	case MEPHeader::BF_YIOUT:
-		bfcoefs.hdr.set(MEPHeader::BF_YIOUT_HDR, 1 << m_blp, MEPHeader::WRITE, size, m_offset);
+	    bfcoefs.hdr.set( MEPHeader::WRITE, 
+                         1 << m_blp,
+                         MEPHeader::BF,
+                         MEPHeader::BF_YIOUT+(itsPlane*NR_BLPS_PER_RSPBOARD),
+                         size,
+                         m_offset);
 		break;
 	}
 	
@@ -132,10 +158,10 @@ void BWWrite::sendrequest()
 		LOG_DEBUG_STR("cache_range=" << cache_range);
 
 		// X = normal 0
-		weights(hw_range, 0) = Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp * 2, cache_range);
+		weights(hw_range, 0) = Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp * 2, itsPlane, cache_range);
 
 		// Y = normal 1
-		weights(hw_range, 1) = Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp * 2 + 1, cache_range);
+		weights(hw_range, 1) = Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp * 2 + 1, itsPlane, cache_range);
 
 #if 0
 			mapped_index(hw_range, 0) = index(cache_range, 0);

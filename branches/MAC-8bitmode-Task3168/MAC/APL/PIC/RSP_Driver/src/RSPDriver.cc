@@ -1239,11 +1239,13 @@ void RSPDriver::rsp_setweights(GCFEvent& event, GCFPortInterface& port)
 	if ((sw_event->weights().dimensions() != BeamletWeights::NDIM)
 		|| (sw_event->weights().extent(firstDim) < 1)
 		|| (sw_event->weights().extent(secondDim) > StationSettings::instance()->nrRcus())
-		|| (sw_event->weights().extent(thirdDim) != maxBeamlets(Cache::getInstance().getBack().getBitsPerSample()))) {
-		LOG_ERROR(formatString("SETWEIGHTS: invalid parameter,weighs-size=(%d,%d,%d)", 
+		|| (sw_event->weights().extent(thirdDim) > (MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE))
+		|| (sw_event->weights().extent(fourthDim) != maxBeamletsPerPlane(Cache::getInstance().getBack().getBitsPerSample()))) {
+		LOG_ERROR(formatString("SETWEIGHTS: invalid parameter,weighs-size=(%d,%d,%d,%d)", 
 			sw_event->weights().extent(firstDim), 
 			sw_event->weights().extent(secondDim), 
-			sw_event->weights().extent(thirdDim)));
+			sw_event->weights().extent(thirdDim),
+			sw_event->weights().extent(fourthDim)));
 
 		delete sw_event;
 
@@ -1258,7 +1260,7 @@ void RSPDriver::rsp_setweights(GCFEvent& event, GCFPortInterface& port)
 		Ptr<SetWeightsCmd> command = new SetWeightsCmd(*sw_event, port, Command::WRITE, timestep);
 
 		//PD add base correction here
-		command->setWeights(sw_event->weights()(Range(timestep, timestep), Range::all(), Range::all()));
+		command->setWeights(sw_event->weights()(Range(timestep, timestep), Range::all(), Range::all(), Range::all()));
 
 		// if weights for only one timestep are given (and the timestamp == Timestamp(0,0))
 		 // then the weights may be applied immediately

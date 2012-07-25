@@ -39,11 +39,9 @@ using namespace RSP;
 using namespace RTC;
 
 SSRead::SSRead(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, NR_BLPS_PER_RSPBOARD)
+  : SyncAction(board_port, board_id, NR_BLPS_PER_RSPBOARD*(MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE))
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
-  itsActivePlanes = (MAX_BITS_PER_SAMPLE / Cache::getInstance().getBack().getBitsPerSample());
-  setNumIndices(itsActivePlanes * NR_BLPS_PER_RSPBOARD);
 }
 
 SSRead::~SSRead()
@@ -53,29 +51,20 @@ SSRead::~SSRead()
 void SSRead::sendrequest()
 {
   EPAReadEvent ssread;
-  switch (getCurrentIndex()%itsActivePlanes) {
-    case 0:
-      ssread.hdr.set( MEPHeader::SS_SELECT_HDR_0,
-                      1 << (getCurrentIndex()/itsActivePlanes),
-                      MEPHeader::READ);
-      break;
-    case 1:
-      ssread.hdr.set( MEPHeader::SS_SELECT_HDR_1,
-                      1 << (getCurrentIndex()/itsActivePlanes),
-                      MEPHeader::READ);
-      break;
-    case 2:
-      ssread.hdr.set( MEPHeader::SS_SELECT_HDR_2,
-                      1 << (getCurrentIndex()/itsActivePlanes),
-                      MEPHeader::READ);
-      break;
-    case 3:
-      ssread.hdr.set( MEPHeader::SS_SELECT_HDR_3,
-                      1 << (getCurrentIndex()/itsActivePlanes),
-                      MEPHeader::READ);
-      break;
-    default: break;
-  }    
+  itsActivePlanes = (MAX_BITS_PER_SAMPLE / Cache::getInstance().getBack().getBitsPerSample());
+  if (getCurrentIndex() >= (itsActivePlanes*NR_BLPS_PER_RSPBOARD)) {
+    setContinue(true);
+  }
+  
+  int dstid = 1 << (getCurrentIndex() / itsActivePlanes);
+  int plane = getCurrentIndex() % itsActivePlanes;
+  
+  ssread.hdr.set( MEPHeader::READ, 
+                  dstid,
+                  MEPHeader::SS,
+                  MEPHeader::SS_SELECT+plane,
+                  MEPHeader::SS_SELECT_SIZE);
+      
   m_hdr = ssread.hdr;
   getBoardPort().send(ssread);
 }

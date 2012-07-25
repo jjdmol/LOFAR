@@ -57,7 +57,7 @@ void SetWeightsCmd::setWeights(Array<complex<int16>, BeamletWeights::NDIM> weigh
 {
   RSPSetweightsEvent* event = static_cast<RSPSetweightsEvent*>(m_event);
   
-  event->weights().resize(BeamletWeights::SINGLE_TIMESTEP, event->rcumask.count(), weights.extent(thirdDim));
+  event->weights().resize(BeamletWeights::SINGLE_TIMESTEP, event->rcumask.count(), weights.extent(thirdDim) ,weights.extent(fourthDim));
   event->weights() = weights;
 }
 
@@ -74,27 +74,31 @@ void SetWeightsCmd::ack(CacheBuffer& /*cache*/)
 void SetWeightsCmd::apply(CacheBuffer& cache, bool setModFlag)
 {
 	int input_rcu = 0;
+	int nPlanes = (MAX_BITS_PER_SAMPLE / cache.getBitsPerSample());
+	
 	for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++) {
 		if (m_event->rcumask[cache_rcu]) {
 			// NOTE: MEPHeader::N_BEAMLETS = 4x62 but userside MAX_BEAMLETS may be different
 			//       In other words: getBeamletWeights can contain more data than ack.weights
 			if (MEPHeader::N_BEAMLETS == maxBeamlets(cache.getBitsPerSample())) {
-				cache.getBeamletWeights()()(0, cache_rcu, Range::all()) = m_event->weights()(0, input_rcu, Range::all());
+				cache.getBeamletWeights()()(0, cache_rcu, Range::all(), Range::all()) = m_event->weights()(0, input_rcu, Range::all(), Range::all());
 			}
 			else {
-				for (int rsp = 0; rsp < 4; rsp++) {
-					int	swstart(rsp * maxBeamletsPerRSP(cache.getBitsPerSample()));
-					int hwstart(rsp*MEPHeader::N_BEAMLETS/4);
-					cache.getBeamletWeights()()(0, cache_rcu, Range(hwstart, hwstart+maxBeamletsPerRSP(cache.getBitsPerSample())-1)) = 
-									m_event->weights()(0, input_rcu, Range(swstart,swstart+maxBeamletsPerRSP(cache.getBitsPerSample())-1));
-				}
+			    for (int plane = 0; plane < nPlanes; plane++) {
+    				for (int rsp = 0; rsp < MEPHeader::N_SERDES_LANES; rsp++) {
+    					int	swstart(rsp * maxDataslotsPerRSP(cache.getBitsPerSample()));
+    					int hwstart(rsp*MEPHeader::N_BEAMLETS/MEPHeader::N_SERDES_LANES);
+    					cache.getBeamletWeights()()(0, cache_rcu, plane, Range(hwstart, hwstart+maxDataslotsPerRSP(cache.getBitsPerSample())-1)) = 
+    									m_event->weights()(0, input_rcu, plane, Range(swstart,swstart+maxDataslotsPerRSP(cache.getBitsPerSample())-1));
+    				}
+    			}
 			}
 
 			if (setModFlag) {
 				cache.getCache().getState().bf().write(cache_rcu * MEPHeader::N_PHASE);
 				cache.getCache().getState().bf().write(cache_rcu * MEPHeader::N_PHASE + 1);
 				if (cache_rcu == 0) {
-					LOG_DEBUG_STR("SetWeights(cache[0]): " << cache.getBeamletWeights()()(0,0,Range::all()));
+					LOG_DEBUG_STR("SetWeights(cache[0]): " << cache.getBeamletWeights()()(0,0,Range::all(),Range::all()));
 				}
 			}
 

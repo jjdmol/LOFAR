@@ -49,7 +49,7 @@ namespace LOFAR {
       /* Destructor for BeamletWeights. */
       virtual ~BeamletWeights() {}
 
-      static const int NDIM = 3; // dimension (N_POL) REMOVED, now using rcumask
+      static const int NDIM = 4; // dimension (N_POL) REMOVED, now using rcumask
 
       /* get reference to the weights array */
       blitz::Array<std::complex<int16>, NDIM>& operator()();
@@ -69,8 +69,8 @@ namespace LOFAR {
        * The beamlet weights.
        * Dimension 1: nr_timesteps (>1)
        * Dimension 2: count(rcumask)
-       * Dimension 3: N_BEAMLETS
-       * REMOVED Dimension 4, now using rcumask...
+       * Dimension 3: number of planes
+       * Dimension 4: N_BEAMLETS
        */
       blitz::Array<std::complex<int16>, NDIM> m_weights;
     };
