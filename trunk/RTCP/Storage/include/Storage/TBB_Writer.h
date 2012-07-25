@@ -37,6 +37,8 @@
 #include <map>
 #include <fstream>
 
+#include <boost/crc.hpp>
+
 #include <Common/LofarTypes.h>
 #include <Common/LofarLogger.h>
 #ifndef USE_THREADS
@@ -120,7 +122,7 @@ struct TBB_Payload {
 
 	// Unpacked, sign-extended (for transient) samples without padding, i.e. as received.
 	// Frames might not be full; the crc32 is always sent right after (no padding unlike as stored by TBB),
-	// so we include it in 'data', but note that the crc32 is an uint32_t (hence '+ 2'). The crc32 is computed for transient data only.
+	// so we include it in 'data', but note that the crc32 is a little endian uint32_t, hence + 2. The crc32 is computed for transient data only.
 	int16_t data[MAX_TBB_TRANSIENT_NSAMPLES + 2];				// 1300*2 bytes; Because only transient data is unpacked, use its max.
 
 #define DEFAULT_TRANSIENT_NSAMPLES	1024						// From the spec and from real data.
@@ -144,6 +146,16 @@ private:
 	uint32_t itsTime0; // seconds
 	uint32_t itsSampleNr0; // for transient data only
 
+	// Same truncated polynomials, but with initial_remainder=0, final_xor_value=0, reflected_input=false, reflected_remainder_output=false.
+	// The boost::crc_optimal<> declarations precompute lookup tables, so do not redeclare for every incoming frame.
+	typedef boost::crc_optimal<16, 0x8005/*, 0, 0, false, false*/> crc_16tbb_type; // instead of crc_16_type
+	crc_16tbb_type itsCrc16gen;
+	//boost::crc_basic<16> crc16gen(0x04C11DB7/*, 0, 0, false, false*/); // non-opt variant
+
+	typedef boost::crc_optimal<32, 0x04C11DB7/*, 0, 0, false, false*/> crc_32tbb_type; // instead of crc_32_type
+	crc_32tbb_type itsCrc32gen;
+	//boost::crc_basic<32> crc32gen(0x04C11DB7/*, 0, 0, false, false*/); // non-opt variant
+
 	// do not use:
 	TBB_Dipole& operator=(const TBB_Dipole& rhs);
 
@@ -164,7 +176,8 @@ public:
 private:
 	void initTBB_DipoleDataset(const TBB_Header& header, const Parset& parset, const std::string& rawFilename,
 			DAL::TBB_Station& station, Mutex& h5Mutex);
-	uint32_t crc32tbb(const uint16_t* buf, size_t len) const;
+	uint32_t crc32tbb_old(const uint16_t* buf, size_t len) const;
+	bool crc32tbb(const TBB_Payload* payload, size_t nsamples);
 };
 
 class TBB_Station {

@@ -26,6 +26,10 @@
 #include <Storage/TBB_Writer.h>
 
 #include <unistd.h>
+#include <endian.h>
+#if __BYTE_ORDER != __BIG_ENDIAN && __BYTE_ORDER != __LITTLE_ENDIAN
+#error Byte order is neither big endian nor little endian: not supported
+#endif
 
 #include <iostream>
 
@@ -159,9 +163,10 @@ void TBB_Dipole::processFrameData(const TBB_Frame& frame, Mutex& h5Mutex) {
 		uint32_t csum = 0;
 #else
 		// Verify data checksum.
-		uint32_t csum = crc32tbb(reinterpret_cast<const uint16_t*>(frame.payload.data), frame.header.nOfSamplesPerFrame + 2/*=crc32*/);
+		//uint32_t csum = crc32tbb_old(reinterpret_cast<const uint16_t*>(frame.payload.data), frame.header.nOfSamplesPerFrame + 2/*=crc32*/);
+		//if (csum != 0) {
+		if (!crc32tbb(&frame.payload, frame.header.nOfSamplesPerFrame)) {
 #endif
-		if (csum != 0) {
 			/*
 			 * On a data checksum error 'flag' this offset, but still store the data.
 			 * Lost frame vs crc error can be seen from the data: a block of zeros indicates lost.
@@ -252,8 +257,20 @@ void TBB_Dipole::initTBB_DipoleDataset(const TBB_Header& header, const Parset& p
 > No DIPOLE_CALIBRATION_DELAY_UNIT
 These can be calculated from the values in the LOFAR calibration
 tables, but we can do that ourselves as long as the calibration table
-values for each dipole are written to the new keyword
+values for each dipole are written to the new keyword. Sander: please put them in; see the code ref below.
 DIPOLE_CALIBRATION_GAIN_CURVE.
+
+// Use StaticMetaData/CalTables
+
+calibration delay value en unit zijn nuttiger
+en is het beste om die er gelijk in te schrijven
+momenteel
+In /opt/cep/lus/daily/Mon/src/code/src/PyCRTools/modules/metadata.py
+heb ik code om de calibratie tabellen uit te lezen
+De functie: getStationPhaseCalibration
+elke .dat file bevat 96*512*2 doubles
+voor 96 rcus, 512 frequenties, een complexe waarde
+maar nu vraag ik me wel weer af of de frequenties of de rcus eerst komen
 */
 	//itsDataset->dipoleCalibrationDelayUnit().value = 's';
 	//itsDataset->dipoleCalibrationGainCurve().value = ???; // TODO: where to get this?
@@ -287,7 +304,7 @@ int antSetName2AntFieldIndex(const string& antSetName) {
 	int fieldIdx = antSetName2AntFieldIndex(parset.antennaSet());
 
 	// See AntField.h in ApplCommon for the AFArray typedef and contents.
-	// Relative position wrt to field center. (TODO: but Pim's mail says absolute ITRF)
+	// Absolute position (Pim's mail, Sander). (not wrt to field center, ICD is wrong (July 2012)).
 	AFArray& antPos(antField.AntPos(fieldIdx));
 	itsDataset->antennaPosition().value = AntField::getData(antPos); // TODO: select dipole pos
 	itsDataset->antennaPositionUnit().value = "m";
@@ -719,7 +736,7 @@ uint16_t TBB_StreamWriter::crc16tbb(const uint16_t* buf, size_t len) const {
  * It computes a 32 bit result, but the buf arg is of uint16_t*.
  * Do not call this function with len < 2; reject the frame earlier.
  */
-uint32_t TBB_Dipole::crc32tbb(const uint16_t* buf, size_t len) const {
+uint32_t TBB_Dipole::crc32tbb_old(const uint16_t* buf, size_t len) const {
 	uint32_t CRC            = 0;
 	const uint64_t CRC_poly = 0x104C11DB7ULL;
 	const uint16_t bits     = 16;
@@ -761,6 +778,29 @@ uint32_t TBB_Dipole::crc32tbb(const uint16_t* buf, size_t len) const {
 
 	CRC = (uint32_t)(data >> 16);
 	return CRC;
+}
+
+/*
+ * The nsamples arg is without the space taken by the crc32 in payload.
+ * Do not call this function with nsamples_cksum < 2; reject too small payloads earlier.
+ */
+bool TBB_Dipole::crc32tbb(const TBB_Payload* payload, size_t nsamples) {
+	itsCrc32gen.reset();
+
+	const int16_t* ptr = reinterpret_cast<const int16_t*>(payload->data);
+#if __BYTE_ORDER == __BIG_ENDIAN
+	itsCrc32gen.process_bytes(ptr, nsamples * sizeof(int16_t));
+#elif __BYTE_ORDER == __LITTLE_ENDIAN
+	size_t i;
+	for (i = 0; i < nsamples; i++) {
+		int16_t val = htobe16(ptr[i]);
+		itsCrc32gen.process_bytes(&val, sizeof(int16_t));
+	}
+#endif
+
+	// It is also possible to process crc32val and see if checksum() equals 0.
+	uint32_t crc32val = le32toh( *reinterpret_cast<const uint32_t*>(&ptr[nsamples]) );
+	return itsCrc32gen.checksum() == crc32val;
 }
 
 /*
