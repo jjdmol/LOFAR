@@ -31,8 +31,8 @@
 --
 -- Types:	none
 --
-CREATE OR REPLACE FUNCTION setSchedule(INT4, INT4, TIMESTAMP, TIMESTAMP)
-  RETURNS BOOLEAN AS '
+CREATE OR REPLACE FUNCTION setSchedule(INT4, INT4, VARCHAR(20), VARCHAR(20))
+  RETURNS BOOLEAN AS $$
 	DECLARE
 		vFunction				INT2 := 1;
 		TSactive				CONSTANT INT2 := 600;
@@ -42,14 +42,27 @@ CREATE OR REPLACE FUNCTION setSchedule(INT4, INT4, TIMESTAMP, TIMESTAMP)
 		vCampaignID				campaign.id%TYPE;
 		vTreeType				OTDBtree.treetype%TYPE;
 		vState					OTDBtree.state%TYPE;
+		vStartTime				timestamp;
+		vStopTime				timestamp;
 
 	BEGIN
+		-- check Timestamps
+		IF $3 = '' THEN
+			vStartTime := NULL;
+		ELSE
+			vStartTime := $3;
+		END IF;
+		IF $4 = '' THEN
+			vStopTime := NULL;
+		ELSE
+			vStopTime := $4;
+		END IF;
 		-- check authorisation(authToken, treeID, func, none)
 		vIsAuth := FALSE;
 		SELECT isAuthorized(vAuthToken, $2, vFunction, 0) 
 		INTO   vIsAuth;
 		IF NOT vIsAuth THEN
-			RAISE EXCEPTION \'Not authorized.\';
+			RAISE EXCEPTION 'Not authorized.';
 			RETURN FALSE;
 		END IF;
 		
@@ -60,30 +73,30 @@ CREATE OR REPLACE FUNCTION setSchedule(INT4, INT4, TIMESTAMP, TIMESTAMP)
 		WHERE	treeID = $2;
 
         IF vTreeType <> TThierarchy  THEN
-		  RAISE EXCEPTION \'Only VH trees can be scheduled.\';
+		  RAISE EXCEPTION 'Only VH trees can be scheduled.';
 		END IF;
 
 		IF vState = TSactive THEN
-		  RAISE EXCEPTION \'Tree may not be active\';
+		  RAISE EXCEPTION 'Tree may not be active';
 		END IF;
 
 		-- Finally update tree
 		UPDATE	OTDBtree
-		SET		starttime = $3,
-				stoptime  = $4
+		SET		starttime = vStartTime,
+				stoptime  = vStopTime
 		WHERE	treeID = $2;
 
 		UPDATE	vicHierarchy
-		SET		value = $3
+		SET		value = vStartTime
 		WHERE	treeID = $2
-		AND		name LIKE \'%.Observation.startTime\';
+		AND		name LIKE '%.Observation.startTime';
 
 		UPDATE	vicHierarchy
-		SET		value = $4
+		SET		value = vStopTime
 		WHERE	treeID = $2
-		AND		name LIKE \'%.Observation.stopTime\';
+		AND		name LIKE '%.Observation.stopTime';
 
 		RETURN TRUE;
 	END;
-' LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 

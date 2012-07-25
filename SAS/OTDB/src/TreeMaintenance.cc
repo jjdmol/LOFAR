@@ -1283,8 +1283,8 @@ bool	TreeMaintenance::setDescription(treeIDType	aTreeID,
 //
 // Set the Executiontime of a tree
 bool	TreeMaintenance::setSchedule(treeIDType		aTreeID,
-								     const ptime&	aStartTime,
-									 const ptime&	aStopTime)
+								     const string&	aStartTime,
+									 const string&	aStopTime)
 {
 	// Check connection
 	if (!itsConn->connect()) {
@@ -1292,9 +1292,7 @@ bool	TreeMaintenance::setSchedule(treeIDType		aTreeID,
 		return (false);
 	}
 
-	LOG_TRACE_FLOW_STR("TM:setSchedule(" << aTreeID << ","
-										 << to_simple_string(aStartTime) << ","
-										 << to_simple_string(aStopTime) << ")");
+	LOG_TRACE_FLOW_STR("TM:setSchedule(" << aTreeID << "," << aStartTime << "," << aStopTime << ")");
 
 	work 	xAction(*(itsConn->getConn()), "setSchedule");
 	try {
@@ -1303,8 +1301,8 @@ bool	TreeMaintenance::setSchedule(treeIDType		aTreeID,
 			formatString("SELECT setSchedule(%d,%d,'%s','%s')",
 				itsConn->getAuthToken(),
 				aTreeID,
-				to_simple_string(aStartTime).c_str(),
-				to_simple_string(aStopTime).c_str()));
+				aStartTime.c_str(),
+				aStopTime.c_str()));
 							
 		// Analyse result.
 		bool		succes;
@@ -1321,19 +1319,6 @@ bool	TreeMaintenance::setSchedule(treeIDType		aTreeID,
 		LOG_FATAL(itsError);
 		return (false);
 	}
-#if 0
-	// update Observation.startTime field
-	vector<OTDBnode>	fieldList = getItemList(aTreeID, "%.Observation.startTime");
-	ASSERTSTR (fieldList.size() == 1, "No uniq Observation.startTime field in tree " << aTreeID);
-	fieldList[0].limits = to_simple_string(aStartTime);
-	saveNode(fieldList[0]);
-
-	// update Observation.stopTime field
-	fieldList = getItemList(aTreeID, "%.Observation.stopTime");
-	ASSERTSTR (fieldList.size() == 1, "No uniq Observation.stopTime field in tree " << aTreeID);
-	fieldList[0].limits = to_simple_string(aStopTime);
-	saveNode(fieldList[0]);
-#endif
 	return (true);
 }
 
