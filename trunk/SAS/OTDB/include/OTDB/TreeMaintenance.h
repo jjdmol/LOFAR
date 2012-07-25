@@ -219,8 +219,8 @@ public:
 
 	// Set the scheduling times of the tree
 	bool	setSchedule(treeIDType		aTreeID,
-				        const ptime&	aStartTime,
-				        const ptime& 	aStopTime);
+				        const string&	aStartTime,
+				        const string& 	aStopTime);
 
 	// Whenever an error occurs in one the OTDB functions the message can
 	// be retrieved with this function.
