@@ -1,7 +1,7 @@
 ApplCtrl.application = CorrAppl
 ApplCtrl.procesOrder = []
 ApplCtrl.processes = [CNProc]
-ApplCtrl.resultfile = '/opt/lofar/share/ACC_CCU001:OnlineControl[0]{24523}_CorrAppl_result.param'
+ApplCtrl.resultfile = '/opt/lofar/var/run/ACC_CCU001:OnlineControl[0]{24523}_CorrAppl_result.param'
 ApplCtrl.timeout_createsubsets = 3m
 ApplCtrl.timeout_define = 40
 ApplCtrl.timeout_info = 30

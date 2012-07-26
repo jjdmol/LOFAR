@@ -25,7 +25,8 @@
 #include <Common/lofar_fstream.h>
 #include <Common/Version.h>
 #include <Common/ParameterSet.h>
-#include <ApplCommon/StationInfo.h>		// LOFAR_SHARE_LOCATION
+#include <ApplCommon/LofarDirs.h>
+#include <ApplCommon/StationInfo.h>
 //#include <GCF/PVSS/GCF_PVTypes.h>
 #include <MACIO/MACServiceInfo.h>
 #include <MACIO/LOG_Protocol.ph>

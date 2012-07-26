@@ -31,6 +31,7 @@
 #include <Common/Version.h>
 #include <Common/StringUtil.h>
 #include <Common/lofar_string.h>
+#include <ApplCommon/LofarDirs.h>
 #include <ApplCommon/StationInfo.h>
 #include <ApplCommon/Observation.h>
 

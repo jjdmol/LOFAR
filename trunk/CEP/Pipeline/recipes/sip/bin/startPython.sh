@@ -7,7 +7,7 @@
 #
 # For example:
 #
-#   startPython.sh ./pythonProgram /opt/lofar/share/Observation6118 \
+#   startPython.sh ./pythonProgram /opt/lofar/var/run/Observation6118 \
 #                  MCU001T MCU001T:PythonControl[0]{6118}:listener  \
 #                  PythonServer{6118}@MCU001T 
 #
@@ -23,7 +23,7 @@ shopt -s expand_aliases
 debug=on
 
 # Log-file used for logging output of this script
-logFile=/opt/lofar/log/startPython.log
+logFile=/opt/lofar/var/log/startPython.log
 
 usage()
 {
@@ -45,7 +45,7 @@ programOptions=" \
  -d \
  -c ${LOFARROOT}/share/pipeline/pipeline.cfg \
  -t ${LOFARROOT}/share/pipeline/tasks.cfg \
- -r ${LOFARROOT}/share/pipeline \
+ -r ${LOFARROOT}/var/run/pipeline \
  -w /data/scratch/${USER}"
   
 # Print some debugging information if debugging is enabled.

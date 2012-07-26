@@ -29,6 +29,7 @@
 #include <Common/LofarConstants.h>
 #include <Common/SystemUtil.h>
 #include <Common/Version.h>
+#include <ApplCommon/LofarDirs.h>
 #include <ApplCommon/StationConfig.h>
 #include <ApplCommon/StationInfo.h>
 

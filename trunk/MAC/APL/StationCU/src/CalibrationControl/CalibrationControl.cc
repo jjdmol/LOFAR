@@ -23,6 +23,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/lofar_datetime.h>
 #include <Common/Version.h>
+#include <ApplCommon/LofarDirs.h>
 #include <ApplCommon/StationConfig.h>
 #include <ApplCommon/StationInfo.h>
 #include <ApplCommon/AntennaSets.h>

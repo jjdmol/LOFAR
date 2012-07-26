@@ -31,6 +31,8 @@
 #include <Common/ParameterSet.h>
 #include <Common/Version.h>
 
+#include <ApplCommon/LofarDirs.h>
+
 #include <APL/APLCommon/AntennaField.h>
 #include <APL/APLCommon/AntennaSets.h>
 #include <APL/ICAL_Protocol/ICAL_Protocol.ph>
@@ -154,9 +156,9 @@ GCFEvent::TResult CalServer::initial(GCFEvent& event, GCFPortInterface& port)
 			LOG_INFO_STR("Calibration subbandrange: " << itsLowestSubband << ".." << itsHighestSubband);
 
 			// Setup datapath
-			itsDataDir = globalParameterSet()->getString("CalServer.DataDirectory", "/opt/lofar/log");
+			itsDataDir = globalParameterSet()->getString("CalServer.DataDirectory", LOFAR_LOG_LOCATION);
 			if (itsDataDir.empty()) {
-				itsDataDir="/opt/lofar/log";
+				itsDataDir = LOFAR_LOG_LOCATION;
 			}
 			else if ((*itsDataDir.rbegin()) == '/') {       // strip off last /
 				itsDataDir.erase(itsDataDir.length()-1);
