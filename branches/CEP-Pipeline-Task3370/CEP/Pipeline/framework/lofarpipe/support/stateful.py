@@ -12,8 +12,9 @@ import cPickle
 
 from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.lofarexceptions import PipelineException
-from lofarpipe.support.xmllogging import _enter_active_stack_node, _exit_active_stack_node
-from xml.dom.minidom import parseString
+from lofarpipe.support.xmllogging import _enter_active_stack_node, \
+    _exit_active_stack_node, add_child
+from xml.dom.minidom import parseString, Document
 
 def stateful(run_task):
     @wraps(run_task)
@@ -37,24 +38,43 @@ def stateful(run_task):
                                     "definition")
         else:
             # We need to run this task now.
+
+            # Create an xml node with all input information for 
+            # the master node
+            # first the full parset (TODO: maybee only partial parset?)
+            local_document = Document()
+            local_node = local_document.createElement('input_xml')
+            local_node.appendChild(self.xml_parset)
+
+            # Add a node with inputs
+            argument_node = add_child(local_node, "recipe_arguments")
+            for (key, value) in kwargs.items():
+                argument_node.setAttribute(key, str(value))
+
+            #raise Exception(local_node)
+            # send xml to the master recipe: Use the inputs
+            kwargs['input_xml'] = local_node.toxml(encoding='ascii')
+
+            # Run the actual recipe
             outputs = run_task(self, configblock, datafiles, **kwargs)
+
+
+            #save the outputs
             self.state.append((configblock, outputs))
             self._save_state()
 
             # Allow transfer of timing info from recipes to toplevel
             # location of new toplevel to master interface
             if "return_xml" in outputs:
-                recipe_node = _enter_active_stack_node(
-                    self, 'timing_info', "recipe")
-                recipe_node.setAttribute("task", configblock)
+                #raise Exception(outputs['return_xml'])
+                recipe_node_timing = _enter_active_stack_node(
+                    self, 'active_xml', "recipe")
+                recipe_node_timing.setAttribute("task", configblock)
 
-                #dom3 = parseString(outputs['return_xml'])
-                #recipe_node.appendChild(dom3.documentElement)
-                recipe_node.appendChild(parseString(outputs['return_xml']).documentElement)
+                recipe_node_timing.appendChild(
+                    parseString(outputs['return_xml']).documentElement)#.documentElement)
 
-
-                _exit_active_stack_node(self, 'timing_info')
-
+                _exit_active_stack_node(self, 'active_xml')
 
             return outputs
     return wrapper

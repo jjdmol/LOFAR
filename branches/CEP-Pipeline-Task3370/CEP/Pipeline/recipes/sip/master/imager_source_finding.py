@@ -81,7 +81,8 @@ class imager_source_finding(BaseRecipe, RemoteCommandRecipeMixIn):
         image_output_path = os.path.join(
             self.inputs["working_directory"], "bdsm_output.img"
         )
-        node_command = " python %s" % (self.__file__.replace("master", "nodes"))
+        node_command = "python %s" % (self.__file__.replace("master", "nodes"))
+
         jobs = []
         self.jobs = jobs
         created_sourcelists = []

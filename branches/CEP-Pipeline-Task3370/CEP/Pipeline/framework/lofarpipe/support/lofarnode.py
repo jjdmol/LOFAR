@@ -55,7 +55,24 @@ class LOFARnode(object):
             my_tcp_handler = logging.handlers.SocketHandler(self.loghost, self.logport)
             self.logger.addHandler(my_tcp_handler)
         try:
-            return self.run(*args)
+            # ********* xml_handling ****************
+            # WARNING: HERE BE DRAGONS!!
+            # If the run function has an xml_decorator
+            if self.run.__name__ == "wrapper":
+                # Prepend self (node recipe object) to the *args. 
+                # Because of the wrapping self.run actually returns a unbound 
+                # function! By inserting self it behaves as if unbounded
+                # With this *hack* the default run behaviour is restored
+                # off course the stack trace will be different
+                args_new = [self]
+                for item in args:
+                    args_new.append(item)
+                return self.run(*args_new)
+            else:
+            # ********* xml_handling ****************
+                # default behaviour
+                return self.run(*args)
+
         finally:
             if self.loghost:
                 my_tcp_handler.close()
@@ -103,7 +120,7 @@ class LOFARnodeTCP(LOFARnode):
                 if tries > 0:
                     timeout = random.uniform(min_timeout, max_timeout)
                     print("Retrying in %f seconds (%d more %s)." %
-                          (timeout, tries, "try" if tries==1 else "tries"))
+                          (timeout, tries, "try" if tries == 1 else "tries"))
                     time.sleep(timeout)
                 else:
                     raise

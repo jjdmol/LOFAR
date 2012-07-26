@@ -14,6 +14,8 @@ from lofarpipe.support.utilities import log_time, create_directory
 import lofar.addImagingInfo as addimg #@UnresolvedImport
 import pyrap.images as pim #@UnresolvedImport
 from lofarpipe.support.group_data import load_data_map
+from lofarpipe.support.xmllogging import node_xml_decorator
+
 
 class imager_finalize(LOFARnodeTCP):
     """
@@ -27,6 +29,16 @@ class imager_finalize(LOFARnodeTCP):
     2. Convert the image to hdf5 image format:
     3. Filling of the HDF5 root group
     """
+    @node_xml_decorator(input_data=["awimager_output",
+                                    "raw_ms_per_image",
+                                    "sourcelist",
+                                    "processed_ms_dir"],
+                        output_data=["target",
+                                     "output_image"],
+                        config_files=[],
+                        parameters=["minbaseline",
+                                    "maxbaseline",
+                                    "fillRootImageGroup_exec"])
     def run(self, awimager_output, raw_ms_per_image, sourcelist, target,
             output_image, minbaseline, maxbaseline, processed_ms_dir,
             fillRootImageGroup_exec):
@@ -71,7 +83,7 @@ class imager_finalize(LOFARnodeTCP):
                 # Create the output directory
                 create_directory(os.path.split(output_image)[0])
                 # save the image
-                im.saveas(output_image, hdf5 = True)
+                im.saveas(output_image, hdf5=True)
                 # TODO: HDF5 version of PIM is different to the system version
                 # dunno the solution: the script breaks.
             except Exception, error:
@@ -86,9 +98,9 @@ class imager_finalize(LOFARnodeTCP):
             #Spawn a subprocess and connect the pipes
             proc = subprocess.Popen(
                         command,
-                        stdin = subprocess.PIPE,
-                        stdout = subprocess.PIPE,
-                        stderr = subprocess.PIPE)
+                        stdin=subprocess.PIPE,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE)
 
             (stdoutdata, stderrdata) = proc.communicate()
 

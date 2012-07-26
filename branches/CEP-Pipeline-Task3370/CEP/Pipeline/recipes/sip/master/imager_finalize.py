@@ -9,6 +9,7 @@ from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
 from lofarpipe.support.group_data import load_data_map, validate_data_maps, store_data_map
 from lofarpipe.support.pipelinelogging import log_process_output
+from lofarpipe.support.xmllogging import master_xml_decorator
 
 class imager_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
     """
@@ -17,53 +18,53 @@ class imager_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
     inputs = {
         'initscript': ingredient.FileField(
             '--initscript',
-            help = '''The full path to an (Bourne) shell script which will\
+            help='''The full path to an (Bourne) shell script which will\
              intialise the environment (ie, ``lofarinit.sh``)'''
         ),
         'awimager_output_map': ingredient.FileField(
             '--awimager-output-mapfile',
-            help = """"Mapfile containing (host, path) pairs of created sky
+            help=""""Mapfile containing (host, path) pairs of created sky
                    images """
         ),
         'raw_ms_per_image_map': ingredient.FileField(
             '--raw-ms-per-image-map',
-            help = '''Mapfile containing (host, path) pairs of mapfiles used
+            help='''Mapfile containing (host, path) pairs of mapfiles used
             to create image on that node'''
         ),
         'sourcelist_map': ingredient.FileField(
             '--sourcelist-map',
-            help = '''mapfile containing (host, path) pairs to a list of sources
+            help='''mapfile containing (host, path) pairs to a list of sources
             found in the image'''
         ),
         'target_mapfile': ingredient.FileField(
             '--target-mapfile',
-            help = '''Mapfile containing (host, path) pairs to the concatenated and
+            help='''Mapfile containing (host, path) pairs to the concatenated and
             combined measurement set, the source for the actual sky image'''
         ),
         'minbaseline': ingredient.FloatField(
             '--minbaseline',
-            help = '''Minimum length of the baseline used for the images'''
+            help='''Minimum length of the baseline used for the images'''
         ),
         'maxbaseline': ingredient.FloatField(
             '--maxbaseline',
-            help = '''Maximum length of the baseline used for the images'''
+            help='''Maximum length of the baseline used for the images'''
         ),
         'output_image_mapfile': ingredient.FileField(
             '--output-image-mapfile',
-            help = '''mapfile containing (host, path) pairs with the final
+            help='''mapfile containing (host, path) pairs with the final
             output image (hdf5) location'''
         ),
         'processed_ms_dir': ingredient.StringField(
             '--processed-ms-dir',
-            help = '''Path to directory for processed measurment sets'''
+            help='''Path to directory for processed measurment sets'''
         ),
         'fillrootimagegroup_exec': ingredient.ExecField(
             '--fillrootimagegroup_exec',
-            help = '''Full path to the fillRootImageGroup executable'''
+            help='''Full path to the fillRootImageGroup executable'''
         ),
         'placed_image_mapfile': ingredient.FileField(
             '--placed-image-mapfile',
-            help = '''location of mapfile with proced and correctly placed, hdf5 images'''
+            help='''location of mapfile with proced and correctly placed, hdf5 images'''
         )
     }
 
@@ -71,6 +72,7 @@ class imager_finalize(BaseRecipe, RemoteCommandRecipeMixIn):
         'placed_image_mapfile': ingredient.StringField()
     }
 
+    @master_xml_decorator
     def go(self):
         super(imager_finalize, self).go()
 

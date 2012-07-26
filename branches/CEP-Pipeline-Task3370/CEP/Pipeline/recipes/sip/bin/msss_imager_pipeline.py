@@ -17,7 +17,7 @@ from lofarpipe.support.lofarexceptions import PipelineException
 from lofarpipe.support.group_data import load_data_map, store_data_map
 from lofarpipe.support.group_data import validate_data_maps
 from lofarpipe.support.utilities import patch_parset
-from lofarpipe.support.xmllogging import timing_logger
+from lofarpipe.support.xmllogging import xml_node
 from lofarpipe.support.pipelinexml import open_parset_as_xml_node, \
     add_child
 import xml.dom.minidom as xml
@@ -90,8 +90,9 @@ class msss_imager_pipeline(control):
             self.inputs['job_name'] = (
                 os.path.splitext(os.path.basename(parset_file))[0]
             )
-        super(msss_imager_pipeline, self).go()
+        return super(msss_imager_pipeline, self).go()
 
+    @xml_node
     def pipeline_logic(self):
         """
         Define the individual tasks that comprise the current pipeline.
@@ -140,10 +141,11 @@ class msss_imager_pipeline(control):
         pipeline_document = xml.Document()
         pipeline_node = add_child(pipeline_document, "pipeline")
         xml_parset = add_child(pipeline_node, "parset")
-        #self.timing_info = add_child(pipeline_node, "timing_info")
+        #self.active_xml = add_child(pipeline_node, "active_xml")
 
         xml_parset.appendChild(open_parset_as_xml_node(
                             os.path.abspath(self.inputs['args'][0])))
+        self.xml_parset = xml_parset
 
         self.logger.info(pipeline_document.toprettyxml())
         # *************** Pipeline XML **************************************
@@ -188,12 +190,11 @@ class msss_imager_pipeline(control):
                         idx_loop, sourcedb_map_path,
                         skip=False)
 
-            self.logger.info(self.timing_info.toprettyxml())
-
             # *****************************************************************
             # (5) Source finding
             sourcelist_map, found_sourcedb_path = self._source_finding(aw_image_mapfile,
                                     idx_loop, skip=False)
+
             #should the output be a sourcedb? instead of a sourcelist
 
         # TODO: Minbaseline is currently not implemented in the parset
@@ -212,11 +213,11 @@ class msss_imager_pipeline(control):
         # Create a parset-file containing the metadata for MAC/SAS
         self._get_metadata(aw_image_mapfile)
 
-        self.logger.info(self.timing_info.toprettyxml())
+        self.logger.info(self.active_xml.toprettyxml())
 
         return 0
 
-    @timing_logger
+    @xml_node
     def _get_metadata(self, aw_image_mapfile):
         """
         """
@@ -265,7 +266,7 @@ class msss_imager_pipeline(control):
                 (host, os.path.join(self.scratch_directory, 'concat.ms'))
             )
 
-    @timing_logger
+    @xml_node
     def _finalize(self, awimager_output_map, processed_ms_dir,
                   raw_ms_per_image_map, sourcelist_map, minbaseline,
                   maxbaseline, target_mapfile,
@@ -295,7 +296,7 @@ class msss_imager_pipeline(control):
 
         return placed_image_mapfile
 
-    @timing_logger
+    @xml_node
     def _source_finding(self, image_map_path, major_cycle, skip=True):
         bdsm_parset_pass_1 = self.parset.makeSubset("BDSM[0].")
         parset_path_pass_1 = self._write_parset_to_file(bdsm_parset_pass_1,
@@ -344,7 +345,7 @@ class msss_imager_pipeline(control):
 
             return source_list_map, sourcedb_map_path
 
-    @timing_logger
+    @xml_node
     def _bbs(self, timeslice_map_path, parmdbs_map_path, sourcedb_map_path,
              skip=False):
         """
@@ -402,7 +403,7 @@ class msss_imager_pipeline(control):
 
         return output_mapfile
 
-    @timing_logger
+    @xml_node
     def _aw_imager(self, prepare_phase_output, major_cycle, sky_path,
                    skip=False):
         """
@@ -444,7 +445,7 @@ class msss_imager_pipeline(control):
 
         return output_mapfile, self.parset.getInt("Imaging.maxbaseline")
 
-    @timing_logger
+    @xml_node
     def _prepare_phase(self, input_ms_map_path, target_mapfile,
                        processed_ms_dir, skip=False):
         """
@@ -508,7 +509,7 @@ class msss_imager_pipeline(control):
         # Return the mapfiles paths with processed data
         return output_mapfile, time_slices_mapfile, raw_ms_per_image_mapfile
 
-    @timing_logger
+    @xml_node
     def _create_dbs(self, input_map_path, timeslice_map_path, source_list="",
                     skip_create_dbs=False):
         """

@@ -19,6 +19,7 @@ from lofarpipe.support.utilities import read_initscript
 from lofarpipe.support.utilities import catch_segfaults
 import monetdb.sql as db
 import lofar.gsm.gsmutils as gsm                                                #@UnresolvedImport
+from lofarpipe.support.xmllogging import node_xml_decorator
 
 #TODO: A better place for this template
 template_parmdb = """
@@ -52,6 +53,23 @@ class imager_create_dbs(LOFARnodeTCP):
       Each individual timeslice needs a place to collect parameters: This is
       done in the paramdb. 
     """
+    @node_xml_decorator(input_data=["concatenated_measurement_set"],
+                        output_data=[],
+                        config_files=[],
+                        parameters=["sourcedb_target_path",
+                                     "monet_db_hostname",
+                                    "monet_db_port",
+                                    "monet_db_name",
+                                    "monet_db_user",
+                                    "monet_db_password",
+                                    "assoc_theta",
+                                    "parmdb_executable",
+                                    "slice_paths",
+                                    "parmdb_suffix",
+                                    "init_script",
+                                    "working_directory",
+                                    "makesourcedb_path",
+                                    "source_list_path_extern"])
     def run(self, concatenated_measurement_set, sourcedb_target_path,
             monet_db_hostname, monet_db_port, monet_db_name, monet_db_user,
             monet_db_password, assoc_theta, parmdb_executable, slice_paths,
@@ -94,7 +112,7 @@ class imager_create_dbs(LOFARnodeTCP):
         return 0
 
     def _create_source_db(self, source_list, sourcedb_target_path, init_script,
-                          working_directory, executable, append = False):
+                          working_directory, executable, append=False):
         """
         _create_source_db consumes a skymap text file and produces a source db
         (pyraptable) 
@@ -118,7 +136,7 @@ class imager_create_dbs(LOFARnodeTCP):
                  os.path.basename(executable)
             ) as logger:
                     catch_segfaults(cmd, working_directory, environment,
-                                            logger, cleanup = None)
+                                            logger, cleanup=None)
 
         except Exception, e:
             self.logger.error("Execution of external failed:")
@@ -130,7 +148,7 @@ class imager_create_dbs(LOFARnodeTCP):
         return 0
 
 
-    def _field_of_view(self, measurement_set, alpha_one = None):
+    def _field_of_view(self, measurement_set, alpha_one=None):
         """
         _field_of_view calculates the fov, which is dependend on the
         station type, location and mode:
@@ -212,9 +230,9 @@ class imager_create_dbs(LOFARnodeTCP):
             # Spawn a subprocess and connect the pipelines
             parmdbm_process = subprocess.Popen(
                 parmdb_executable,
-                stdin = subprocess.PIPE,
-                stdout = subprocess.PIPE,
-                stderr = subprocess.PIPE
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
             )
             # Send formatted template on stdin
             sout, serr = parmdbm_process.communicate(formatted_template)
@@ -254,9 +272,9 @@ class imager_create_dbs(LOFARnodeTCP):
         failed and log the error. Returns the connection if succeed.
         """
         try:
-            conn = db.connect(hostname = hostname, database = database,
-                                       username = username, password = password,
-                                       port = port)
+            conn = db.connect(hostname=hostname, database=database,
+                                       username=username, password=password,
+                                       port=port)
         except db.Error, e:
             self.logger.error("Failed to create a monetDB connection: "
                               "{0}".format(str(e)))
@@ -301,7 +319,7 @@ class imager_create_dbs(LOFARnodeTCP):
     def _fill_soucelist_based_on_gsm_sky_model(self, measurement_set, sourcelist,
                               monet_db_host, monet_db_port, monet_db_name,
                               monet_db_user, monet_db_password,
-                              assoc_theta = None):
+                              assoc_theta=None):
         """
         Create a bbs sky model. Based on the measurement (set) suplied
         The skymap is created at the sourcelist
@@ -336,7 +354,7 @@ class imager_create_dbs(LOFARnodeTCP):
             gsm.expected_fluxes_in_fov(conn, ra_c ,
                         decl_c, float(fov_radius),
                         float(assoc_theta), sourcelist,
-                        storespectraplots = False)
+                        storespectraplots=False)
         except Exception, e:
             self.logger.error("expected_fluxes_in_fov raise exception: " +
                               str(e))

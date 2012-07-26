@@ -39,7 +39,16 @@ class control(StatefulRecipe):
         try:
             self.pipeline_logic()
         except PipelineException, message:
+            if hasattr(self, "active_xml"):
+                self.logger.error(self.active_xml.toprettyxml())
+            # to allow displaying of the error message after the 
+            # activel xml stack we can not use the finally clause
             self.logger.error(message)
             return 1
+        except Exception, e:
+            if hasattr(self, "active_xml"):
+                self.logger.error(self.active_xml.toprettyxml())
+            raise e
+
 
         return 0

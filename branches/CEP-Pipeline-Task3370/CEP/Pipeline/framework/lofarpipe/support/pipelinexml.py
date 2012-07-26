@@ -9,6 +9,7 @@ from lofarpipe.support.utilities import create_directory
 _node_factory_document = None
 
 
+
 def open_parset_as_xml_node(parset):
     """
     Open the parset supplied at path and convert it to a full xml_document

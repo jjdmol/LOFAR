@@ -344,6 +344,12 @@ class RecipeIngredients(object):
         ),
         'args': ListField(
             '--args', help="Args", default=[]
+        ),
+        'input_xml': StringField(
+        '-x', '--input-xml',
+        help="[Expert use] pipeline xml input: "
+        "communication between top level and master recipes.",
+        default=""
         )
     }
 

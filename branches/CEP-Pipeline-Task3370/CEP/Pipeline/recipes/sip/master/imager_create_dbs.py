@@ -12,6 +12,7 @@ from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
 from lofarpipe.support.group_data import load_data_map, store_data_map, validate_data_maps
 from lofarpipe.support.lofarexceptions import PipelineException
+from lofarpipe.support.xmllogging import master_xml_decorator
 
 class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
     """
@@ -32,86 +33,87 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
     inputs = {
         'working_directory': ingredient.StringField(
             '-w', '--working-directory',
-            help = "Working directory used on nodes. Results location"
+            help="Working directory used on nodes. Results location"
         ),
          'initscript': ingredient.FileField(
             '--initscript',
-            help = '''The full path to an (Bourne) shell script which will\
+            help='''The full path to an (Bourne) shell script which will\
              initialise the environment (ie, ``lofarinit.sh``)'''
         ),
         'sourcedb_suffix': ingredient.StringField(
             '--sourcedb-suffix',
-            default = ".sky",
-            help = "suffix for created sourcedbs"
+            default=".sky",
+            help="suffix for created sourcedbs"
         ),
         'monetdb_hostname': ingredient.StringField(
             '--monetdb-hostname',
-            help = "Hostname of monet database"
+            help="Hostname of monet database"
         ),
         'monetdb_port': ingredient.IntField(
             '--monetdb-port',
-            help = "port for monet database"
+            help="port for monet database"
         ),
         'monetdb_name': ingredient.StringField(
             '--monetdb-name',
-            help = "db name of monet database"
+            help="db name of monet database"
         ),
         'monetdb_user': ingredient.StringField(
             '--monetdb-user',
-            help = "user on the monet database"
+            help="user on the monet database"
         ),
         'monetdb_password': ingredient.StringField(
             '--monetdb-password',
-            help = "password on monet database"
+            help="password on monet database"
         ),
         'assoc_theta': ingredient.StringField(
             '--assoc-theta',
-            default = "",
-            help = "assoc_theta is used in creating the skymodel, default == None"
+            default="",
+            help="assoc_theta is used in creating the skymodel, default == None"
         ),
         'parmdb_executable': ingredient.ExecField(
             '--parmdbm-executable',
-            help = "Location of the parmdb executable"
+            help="Location of the parmdb executable"
         ),
         'slice_paths_mapfile': ingredient.FileField(
             '--slice-paths-mapfile',
-            help = "Location of the mapfile containing the slice paths"
+            help="Location of the mapfile containing the slice paths"
         ),
         'parmdb_suffix': ingredient.StringField(
             '--parmdb-suffix',
-            help = "suffix of the to be created paramdbs"
+            help="suffix of the to be created paramdbs"
         ),
         'makesourcedb_path': ingredient.ExecField(
              '--makesourcedb-path',
-             help = "Path to makesourcedb executable."
+             help="Path to makesourcedb executable."
         ),
         'source_list_path': ingredient.StringField(
              '--source-list-path',
-             help = "Path to sourcelist from external source (eg. bdsm) "\
+             help="Path to sourcelist from external source (eg. bdsm) "\
              "use an empty string for gsm generated data"
         ),
         'parmdbs_map_path': ingredient.StringField(
             '--parmdbs-map-path',
-            help = "path to mapfile containing produced parmdb files"
+            help="path to mapfile containing produced parmdb files"
         ),
         'sourcedb_map_path': ingredient.StringField(
             '--sourcedb-map-path',
-            help = "path to mapfile containing produced sourcedb files"
+            help="path to mapfile containing produced sourcedb files"
         ),
     }
 
     outputs = {
         'sourcedb_map_path': ingredient.FileField(
-            help = "On succes contains path to mapfile containing produced "
+            help="On succes contains path to mapfile containing produced "
             "sourcedb files"),
         'parmdbs_map_path': ingredient.FileField(
-            help = "On succes contains path to mapfile containing produced"
+            help="On succes contains path to mapfile containing produced"
             "parmdb files")
     }
 
     def __init__(self):
         super(imager_create_dbs, self).__init__()
 
+    @master_xml_decorator
     def go(self):
         super(imager_create_dbs, self).go()
 

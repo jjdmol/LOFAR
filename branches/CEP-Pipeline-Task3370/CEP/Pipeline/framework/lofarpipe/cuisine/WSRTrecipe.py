@@ -41,21 +41,21 @@ class WSRTrecipe(object):
 
         ## Try using the standard Python system for handling options
         self.optionparser = OptionParser(
-            usage = "usage: %prog [options]"
+            usage="usage: %prog [options]"
         )
         self.optionparser.remove_option('-h')
         self.optionparser.add_option(
-            '-h', '--help', action = "store_true"
+            '-h', '--help', action="store_true"
         )
         self.optionparser.add_option(
             '-v', '--verbose',
-            action = "callback", callback = self.__setloglevel,
-            help = "verbose [Default: %default]"
+            action="callback", callback=self.__setloglevel,
+            help="verbose [Default: %default]"
         )
         self.optionparser.add_option(
             '-d', '--debug',
-            action = "callback", callback = self.__setloglevel,
-            help = "debug [Default: %default]"
+            action="callback", callback=self.__setloglevel,
+            help="debug [Default: %default]"
         )
 
         self.helptext = """LOFAR/WSRT pipeline framework"""
@@ -122,10 +122,27 @@ class WSRTrecipe(object):
         logging.shutdown()
         return status
 
+    def _try_add_debug_xml_to_log(self):
+        """
+        Try to collect output from output dict.
+        If it is found display the data on the log screen
+        """
+        # TODO: Add the information to the active_xml tree: allows
+        # for better debugging
+        import xml.dom.minidom as _xml
+        if "return_xml" in self.outputs:
+            full_xml = _xml.parseString(
+                self.outputs["return_xml"]).documentElement
+
+            self.logger.error(full_xml.toprettyxml().replace(
+                                "&lt;", "<").replace("&gt;", ">"))
+
     def run(self, name):
         """This code will run if all inputs are valid, and wraps the actual
         functionality in self.go() with some exception handling, might need
         another name, like try_execute, because it's to similar to go()."""
+        # after this step all outputs of recipes is LOST.
+        # if we want date from the output (eg: xml) we need to do work here
         self.name = name
         self.logger.info('recipe ' + name + ' started')
         try:
@@ -133,12 +150,14 @@ class WSRTrecipe(object):
             if not self.outputs.complete():
                 self.logger.warn("Note: recipe outputs are not complete")
         except Exception, e:
+            self._try_add_debug_xml_to_log()
             self._log_error(e)
             self.outputs = None ## We're not generating any results we have
                                 ## confidence in
             return 1
         else:
-            self.logger.info('recipe ' + name + ' completed')
+            if not status == 0:
+                self._try_add_debug_xml_to_log()
             return status
 
     def get_run_info(self, filepath):

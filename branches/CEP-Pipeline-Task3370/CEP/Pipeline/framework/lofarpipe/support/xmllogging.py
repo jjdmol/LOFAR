@@ -1,13 +1,20 @@
+import time   # allows stand alone usage
 import xml.dom.minidom as _xml
 from pipelinexml import add_child, get_child
 import lofaringredient as ingredient
 from lofarexceptions import PipelineException
+from utilities import create_directory
+import traceback
+import sys
+import inspect
+import types
+import os
 
-def _enter_active_stack_node(calling_object, active_stack_node_name,
-                             child_name):
+
+def _enter_active_stack_node(calling_object,
+            active_stack_node_name, child):
     """
     """
-
     stack_name = "active_stack"
     active_stack_node = None
     stack_node = None
@@ -37,8 +44,15 @@ def _enter_active_stack_node(calling_object, active_stack_node_name,
         if active_stack_node == None:
             active_stack_node = add_child(stack_node, stack_name)
 
-    named_stacked_child = add_child(active_stack_node, child_name)
-    return named_stacked_child
+    # if child is a string add a xml node with this name
+    stacked_child = None
+    if isinstance(child, basestring):
+        stacked_child = add_child(active_stack_node, child)
+    # else try adding it as a node
+    elif isinstance(child, _xml.Node):
+        active_stack_node.appendChild(child)
+        stacked_child = child
+    return stacked_child
 
 
 def _exit_active_stack_node(calling_object, active_stack_node_name):
@@ -67,11 +81,11 @@ def _exit_active_stack_node(calling_object, active_stack_node_name):
         # add to the calling node info
         active_stack.lastChild.appendChild(last_child)
 
-def timing_logger(target):
+def xml_node(target):
     """
     function decorator to be used on member functions of the pipeline
-    classes: It adds info  to the (xml node) class attribute timing_info.
-    Creating thos attribute if it not exist, allowing fire and forget
+    classes: It adds info  to the (xml node) class attribute active_xml.
+    Creating this attribute if it not exist, allowing fire and forget
     usage.
     Subsequent usage of this logger decorator in nested function will result
     in a nested xml structure.
@@ -79,70 +93,334 @@ def timing_logger(target):
     displaying is not part of this logger
     """
     def wrapper(*args, **argsw):
-        import time  #allows stand alone usage
         calling_object = args[0]
 
-        time_info_current_node = _enter_active_stack_node(
-                    calling_object, 'timing_info', target.__name__)
+        xml_current_node = _enter_active_stack_node(
+                    calling_object, 'active_xml', target.__name__)
 
         t1 = time.time()
         # call the actual function
+
         return_value = target(*args, **argsw)
         # end time
         t2 = time.time()
         # add the duration
-        time_info_current_node.setAttribute("duration", str(t2 - t1))
+        xml_current_node.setAttribute("duration", str(t2 - t1))
 
-        _exit_active_stack_node(calling_object, 'timing_info')
+        _exit_active_stack_node(calling_object, 'active_xml')
 
         return return_value
 
     return wrapper
 
-def add_node_to_current_active_stack_node(calling_object, name_of_stack, xml_node):
-    time_info_current_node = _enter_active_stack_node(
-                    calling_object, name_of_stack, "External_source")
 
-    time_info_current_node.appendChild(xml_node)
+def add_node_to_current_active_stack_node(calling_object,
+                             name_of_stack, xml_node):
+    _enter_active_stack_node(
+                    calling_object, name_of_stack, xml_node)
 
     _exit_active_stack_node(calling_object, name_of_stack)
 
 
-### EXPERIMENTAL CODE!!!
-def node_xml_decorator(target):
+
+def _add_error_info_to_node(node, locals=None, exception_string=None):
+    local_document = _xml.Document()
+    error_node = add_child(node, "Debug_info")
+
+    #add local variables
+    if exception_string:
+        except_node = local_document.createElement("Traceback")
+        #raise Exception(' '.join(exception_string))
+        except_textnode = local_document.createTextNode(
+            ' '.join(exception_string))
+        except_node.appendChild(except_textnode)
+        error_node.appendChild(except_node)
+
+    #add local variables
+    if locals:
+        local_node = local_document.createElement("locals")
+        locals_textnode = local_document.createTextNode(str(locals))
+        local_node.appendChild(locals_textnode)
+        error_node.appendChild(local_node)
+
+    #add global variables
+    global_node = local_document.createElement("globals")
+    globals_textnode = local_document.createTextNode(str(globals()))
+    global_node.appendChild(globals_textnode)
+
+    error_node.appendChild(global_node)
+
+
+def node_xml_decorator(*args_decorator, **argsw_decorator):
     """
-    Decorator for a single function (run) in the node recipe:
-    It adds xml logging capability without influencing the current
-    recipe structure
-    TODO: This decorator needs to be more general: There is more information
-    passing here: detailed parset info, AND, maybee the actual parameters
+    The node_xml_decorator enables the xml mechanism for the pipeline
+    frame work. 
+    It adds timeing logging.
+    Parsing of log files for time logging
+    Arguments are passed using xml
+    optional decorator arguments allow the streaming if parameterset files 
+    """
+    class internal_class(object):
+        """
+        ***Gory Implementation details***
+        This decorator class allows the retention of decorator arguments.
+        On initialization it gets the decorator arguments and retains these
+
+        This class contains two important functions:
+        1. internal_node_xml_decorator is the "actual" runtime decorator that
+        is assigned to run() explanation:
+        node_xml_decorator is a decorator with arguments:
+        it is a function that creates a class based on the retrieved arguments
+        and it returns the actual runtime decorator function.
+        internal_node_xml_decorator has as argument function (run for nodes)
+        It saves the function and return the internal_class member function
+        wrapper
+
+        2. The actual runtime decorator function is wrapper.
+        wrapper is a member function and  self == internal_class
+        This is problematic because this means that we do not have
+        access to the actual node recipe object. But we need this if we
+        want to call run as a member function of the node recipe.
+        This problem is solved in LOFARnode.run_with_logging
+        It is at this place that either run() is called -or- the 
+        decorated run function.
+        If run is not decorated the normal functionality is used.
+        If we know that it is decorate: the name of 'run' is than
+        actually 'wrapper'. We add the node_recipe object as args[0]
+        Now it is possible to call the saved run function on wrapper
+        with self as first argument: mimiking member functionality:
+        The run function does not know that run was decorated while
+        ***Gory Implementation details*** 
+        """
+        def __init__(self, *args_decorator, **argsw_decorator):
+            # save the decorator arguments
+            self.args_decorator = args_decorator
+            self.argsw_decorator = argsw_decorator
+
+        def internal_node_xml_decorator(self, function):
+            # Save the decorated function
+            self.function = function
+            return self.wrapper
+
+        def wrapper(self, *args, **argsw):
+            input_xml_string = args[-1]
+            input_node = _xml.parseString(input_xml_string).documentElement
+            args = args[:-1]
+            calling_object = args[0]
+
+            # Add the input_node to the node recipe object
+            calling_object.input_xml = input_node
+
+            # ***************************************************
+            # convert the parameter node to an argument dict
+            # if it is a streamed (config) file: write the
+            # the config file and insert the new location
+            argument_node = get_child(input_node, "run_arguments")
+            arg_dict = {}
+            arg_files = []
+            for child in argument_node.childNodes:
+                config_file_node = get_child(
+                    get_child(input_node, "config_files"), str(child.nodeName))
+                # Try casting to python value: Used for internal defaults: 
+                # int, float, etc.
+                try:
+                    value_at_master_script = eval(str(
+                                     child.getAttribute("value")))
+                except:
+                    value_at_master_script = str(
+                                     child.getAttribute("value"))
+
+                # If the argument is not in the streamed list
+                if config_file_node == None:
+                    # cast the unicode strings to strings
+                    arg_dict[str(child.nodeName)] = value_at_master_script
+                else:
+                    # open new file to write the config data to
+                    config_file_as_string = config_file_node.firstChild.data
+                    # TODO fixme: We need the working directory on all recipe
+                    # scripts
+                    working_dir = "/data/scratch/klijn"
+                    recipe_name = calling_object.__class__.__name__
+                    new_path_for_config_file = os.path.join(working_dir,
+                            recipe_name,
+                            os.path.basename(value_at_master_script))
+                    # Check for possible duplicate parset names,
+                    # if found use the whole original filename
+                    if new_path_for_config_file in arg_files:
+                        new_path_for_config_file = os.path.join(
+                            working_dir, recipe_name,
+                            value_at_master_script.replace('/', "_") #.replace('\',"_")  # Allow windows usage!!
+                            )
+                    arg_files.append(new_path_for_config_file)
+
+                    # assure existence of the directory to write the files
+                    create_directory(os.path.join(working_dir,
+                            recipe_name))
+
+                    # open the file and write the parset file
+                    fp = open(new_path_for_config_file, "w")
+                    fp.write(config_file_as_string)
+                    fp.close()
+                    config_file_node.setAttribute("path",
+                                                   new_path_for_config_file)
+
+                    # procide this new file to the run function
+                    arg_dict[str(child.nodeName)] = new_path_for_config_file
+            # ***************************************************
+
+
+
+            # Create an output node and enter stacked timing logging
+            local_document = _xml.Document()
+            output_xml = local_document.createElement("output")
+            xml_current_node = _enter_active_stack_node(
+                        args[0], 'active_xml', self.function.__name__)
+            output_xml.appendChild(calling_object.active_xml)
+            t1 = time.time()
+
+            return_value = None
+            exception = False
+            try:
+                # call the actual function: PYTHON FOO
+                # function is a ref to run on the node script.
+                # calling_object is the instantiated object: provide as the
+                # first argument: we now have normal member behaviour
+                return_value = self.function(calling_object, **arg_dict)
+
+            except PipelineException, e:
+                # if we have an exception: collect stack trace information,
+                type_, value_, traceback_ = sys.exc_info()
+                trace_back = traceback.format_exception(type_, value_, traceback_)
+
+                _add_error_info_to_node(output_xml, e._locals, trace_back)
+                exception = True
+                return_value = 1
+
+            # finalize the duration
+            t2 = time.time()
+            xml_current_node.setAttribute("duration", str(t2 - t1))
+            xml_current_node.appendChild(input_node)
+            _exit_active_stack_node(args[0], 'active_xml')
+
+            # on error add additional debugging info, exception already does this
+            if return_value == 1 and not exception:
+                _add_error_info_to_node(output_xml)
+
+            # return the full output as xml in return argument
+            calling_object.outputs['xml'] = output_xml.toxml(
+                                            encoding='ascii')
+            return return_value
+
+    local_wrapper = internal_class(*args_decorator, **argsw_decorator)
+    # else return the actual decorator ( which will receive function)
+    return local_wrapper.internal_node_xml_decorator
+
+
+def _import_path(path_filename):
+    """
+    Import a file with full path specification. Allows one to
+    import from anywhere, something __import__ does not do.
+
+    !!!DANGER: HERE BE DRAGONS!!!
+    """
+    path, filename = os.path.split(path_filename)
+    filename_noext, ext = os.path.splitext(filename)
+    sys.path.append(path)
+    module = __import__(filename_noext)
+    reload(module)  # Might be out of date
+    del sys.path[-1]
+    return module, filename_noext
+
+
+def master_node_xml_decorator(target):
+    """
+    This class is used to decorate RemoteCommandRecipeMixIn._schedule_jobs
+    It does a 'look ahead' in the sourcecode of the called node recipe and
+    scans for a node_xml_decorator.
+    If this is found:
+    1. The argument names of the run function in the node recipe
+    are collected and used to transfer the arguments as xml data.
+    If the wrapper is not found the compute job is left as is.
+    2. 
     """
     def wrapper(*args, **argsw):
-        import time   #allows stand alone usage
-        calling_object = args[0]
+        # Runtime add the jobs for this recipe to the master object
+        # Noded for later parsing of the output data
+        calling_master_recipe_object = args[0]
+        calling_master_recipe_object._jobs_for_xml = args[1]
 
-        time_info_current_node = _enter_active_stack_node(
-                    calling_object, 'timing_info', target.__name__)
+        # WARNING MAJOR PYTHON FOO AHEAD:
+        for compute_job in args[1]:
+            command = compute_job.command
+            # Get the node recipe and the filename
+            node_recipe_as_module, filename_noext = _import_path(
+                            command.strip().split(" ")[1])  # python <node.py>
 
-        t1 = time.time()
-        # call the actual function
+            # Get the class description ( this is still 'source code')
+            node_recipe_class = getattr(node_recipe_as_module, filename_noext)
+
+            # PYTHON FOO: node_recipe_class.run returns the run function
+            # If this is None, we got a source code object which means
+            # it is a non decorated function. In this case do nothing
+            node_recipe_wrap_object = node_recipe_class.run.im_self
+            if node_recipe_wrap_object != None:
+                #raise Exception(dir(node_recipe_wrap_object))
+                master_recipe_object = args[0]
+                # We are in the wrapper object: the attribute function
+                # now contains the run function 
+                # Get the arguments for the run function
+                function_argspec = inspect.getargspec(
+                                node_recipe_wrap_object.function)
+                # the argument names are on the first array index
+                # skip the self argument (it is a member function)
+                function_argument_names = function_argspec[0][1:]
+
+                # xml_node: will be send to the node recipe
+                xml_document = _xml.Document()
+                input_xml = xml_document.createElement("input_xml")
+
+                # ********************************************************
+                # Now create a node with all the arguments as value: string
+                run_arguments_node = add_child(input_xml, "run_arguments")
+                for name, value in zip(function_argument_names,
+                            compute_job.arguments):
+                    argument_node = add_child(run_arguments_node, name)
+                    argument_node.setAttribute("type", str(type(value)))
+                    argument_node.setAttribute("value", str(value))
+                # ********************************************************
+
+                # ********************************************************
+                # Create xml versions of the stream-able parameters:
+                # config files, these are streamed and recreated at the
+                # node side
+                decorator_arguments = node_recipe_wrap_object.argsw_decorator
+                streamed_node = add_child(input_xml, "config_files")
+                for config_file_argument in decorator_arguments['config_files']:
+                    # open the file: value is part of run_arguments_node
+                    config_file_path = get_child(run_arguments_node,
+                             config_file_argument).getAttribute("value")
+                    fp = open(config_file_path)
+                    file_as_string = fp.read()
+                    # convert to xml text node
+                    file_as_text_node = xml_document.createTextNode(
+                                                file_as_string)
+                    # add the text node
+                    add_child(streamed_node, config_file_argument).appendChild(
+                                        file_as_text_node)
+                # *************************************************
+
+
+                # add the now created argument xml as variable to the
+                # compute job
+                compute_job.arguments.append(
+                            input_xml.toxml(encoding="ascii"))
+
+        # call the actual function. the jobs in args are unchanged
+        # if no decorator is found. And the decorator does nothing
         return_value = target(*args, **argsw)
-        # end time
-        t2 = time.time()
-        # add the duration
-        time_info_current_node.setAttribute("duration", str(t2 - t1))
-
-        _exit_active_stack_node(calling_object, 'timing_info')
-
-        # Write away the complete 'xml stack'
-        local_document = _xml.Document()
-        created_node = local_document.createElement("output")
-        created_node.appendChild(calling_object.timing_info)
-        calling_object.outputs['xml'] = created_node.toxml(encoding='ascii')
-
-
         return return_value
 
+    # return the wrapped function
     return wrapper
 
 
@@ -159,37 +437,48 @@ def master_xml_decorator(target):
     """
     def wrapper(*args, **argsw):
         calling_object = args[0]
-
         # call the actual function and save the return argument
         return_value = target(*args, **argsw)
 
-        # Create containing doc to store node xml data
+        # Create containing document to store node xml data
         xml_document = _xml.Document()
         root_node = xml_document.createElement("Nodes")
 
-        # Get the actual information from the nodes
-        for job in calling_object.jobs:
+        # Collect and add timing info information from the nodes
+        for job in calling_object._jobs_for_xml:
+
             if "xml" in job.results:
+
+                full_xml = _xml.parseString(job.results['xml']).documentElement
                 #raise Exception(job.results['xml'])
-                node_xml = get_child(_xml.parseString(
-                        job.results['xml']).documentElement,
-                        'timing_info')
-                node_timeinfo = add_child(root_node, job.host)
+                node_xml = get_child(full_xml,
+                        'active_xml')
+                node_job_info = add_child(root_node, job.host)
                 run_xml = get_child(node_xml, 'run')
 
-                # remove 'noise': active stack and 'expected' info
-                node_timeinfo.setAttribute("duration",
+                # remove 'noise': active stack and 'expected' info:
+                # parse specific data objects
+                node_job_info.setAttribute("duration",
                                     run_xml.getAttribute('duration'))
 
+                node_job_info.appendChild(
+                        get_child(
+                            get_child(node_xml, 'run')
+                            , 'input_xml'))
+
                 for child_node in run_xml.childNodes:
-                    node_timeinfo.appendChild(
+                    node_job_info.appendChild(
                                     child_node.cloneNode(deep=True))
+
+                if (not return_value == 0):
+                    debug_info = get_child(full_xml, 'Debug_info')
+                    node_job_info.appendChild(debug_info.cloneNode(deep=True))
+                    #raise Exception(debug_info.toprettyxml())
 
         # DANGER!! HERE BE DRAGONS:
         # directly update the output internal dict with return_xml entry
         calling_object.outputs._fields["return_xml"] = ingredient.StringField(
-        help="Full path of mapfile; containing the succesfull generated"
-            )
+        help="XML return data.")
 
         # now assign the actual return xml
         calling_object.outputs["return_xml"] = root_node.toxml(
@@ -198,6 +487,8 @@ def master_xml_decorator(target):
         return return_value
 
     return wrapper
+
+
 
 
 def _process_time_log(timer_output):
@@ -311,4 +602,5 @@ def scan_file_for_timing_info(in_file):
     # raise exception if eof while still in timelog block
     if in_timer_output:
         raise PipelineException("Found the start of an timer output blok, but no end")
+
 

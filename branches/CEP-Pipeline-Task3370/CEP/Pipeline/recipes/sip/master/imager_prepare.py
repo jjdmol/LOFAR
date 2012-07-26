@@ -19,6 +19,7 @@ from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
 from lofarpipe.support.group_data import store_data_map, load_data_map
 from lofarpipe.support.utilities import create_directory
+from lofarpipe.support.xmllogging import master_xml_decorator
 
 class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
     """
@@ -43,83 +44,84 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
     inputs = {
         'ndppp_exec': ingredient.ExecField(
             '--ndppp-exec',
-            help = "The full path to the ndppp executable"
+            help="The full path to the ndppp executable"
         ),
         'initscript': ingredient.FileField(
             '--initscript',
-            help = '''The full path to an (Bourne) shell script which will\
+            help='''The full path to an (Bourne) shell script which will\
              intialise the environment (ie, ``lofarinit.sh``)'''
         ),
         'parset': ingredient.FileField(
             '-p', '--parset',
-            help = "The full path to a prepare parset (mainly ndppp)"
+            help="The full path to a prepare parset (mainly ndppp)"
         ),
         'working_directory': ingredient.StringField(
             '-w', '--working-directory',
-            help = "Working directory used by the nodes: local data"
+            help="Working directory used by the nodes: local data"
         ),
         'target_mapfile': ingredient.StringField(
             '--target-mapfile',
-            help = "Contains the node and path to target product files, defines the"
+            help="Contains the node and path to target product files, defines the"
                " number of nodes the script will start on."
         ),
         'slices_per_image': ingredient.IntField(
             '--slices-per-image',
-            help = "The number of (time) slices for each output image"
+            help="The number of (time) slices for each output image"
         ),
         'subbands_per_image': ingredient.IntField(
             '--subbands-per-image',
-            help = "The number of subbands to be collected in each output image"
+            help="The number of subbands to be collected in each output image"
         ),
         'asciistat_executable': ingredient.ExecField(
             '--asciistat-executable',
-            help = "full path to the ascii stat executable"
+            help="full path to the ascii stat executable"
         ),
         'statplot_executable': ingredient.ExecField(
             '--statplot-executable',
-            help = "full path to the statplot executable"
+            help="full path to the statplot executable"
         ),
         'msselect_executable': ingredient.ExecField(
             '--msselect-executable',
-            help = "full path to the msselect executable "
+            help="full path to the msselect executable "
         ),
         'rficonsole_executable': ingredient.ExecField(
             '--rficonsole-executable',
-            help = "full path to the rficonsole executable "
+            help="full path to the rficonsole executable "
         ),
         'mapfile': ingredient.StringField(
             '--mapfile',
-            help = "Full path of mapfile; contains a list of the"
+            help="Full path of mapfile; contains a list of the"
                  "successfully generated and concatenated sub-band groups:"
         ),
         'slices_mapfile': ingredient.StringField(
             '--slices-mapfile',
-            help = "Path to mapfile containing the produced subband groups"
+            help="Path to mapfile containing the produced subband groups"
         ),
         'raw_ms_per_image_mapfile': ingredient.StringField(
             '--raw-ms-per-image-mapfile',
-            help = "Path to mapfile containing the raw ms for each produced"
+            help="Path to mapfile containing the raw ms for each produced"
                 "image"
         ),
         'processed_ms_dir': ingredient.StringField(
             '--processed-ms-dir',
-            help = "Path to directory for processed measurment sets"
+            help="Path to directory for processed measurment sets"
         )
     }
 
     outputs = {
         'mapfile': ingredient.FileField(
-            help = "path to a mapfile Which contains a list of the"
+            help="path to a mapfile Which contains a list of the"
                  "successfully generated and concatenated measurement set"
             ),
         'slices_mapfile': ingredient.FileField(
-            help = "Path to mapfile containing the produced subband groups"),
+            help="Path to mapfile containing the produced subband groups"),
 
         'raw_ms_per_image_mapfile': ingredient.FileField(
-            help = "Path to mapfile containing the raw ms for each produced"
+            help="Path to mapfile containing the raw ms for each produced"
                 "image")
     }
 
+    @master_xml_decorator
     def go(self):
         """
         Main function for recipe: Called by the pipeline framework

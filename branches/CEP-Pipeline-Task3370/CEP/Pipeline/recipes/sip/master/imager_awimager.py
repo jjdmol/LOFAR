@@ -15,6 +15,7 @@ from lofarpipe.support.baserecipe import BaseRecipe
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.remotecommand import ComputeJob
 from lofarpipe.support.group_data import load_data_map, store_data_map, validate_data_maps
+from lofarpipe.support.xmllogging import master_xml_decorator
 
 class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
     """
@@ -64,7 +65,7 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
         'mapfile': ingredient.StringField(),
         'return_xml': ingredient.StringField()
     }
-
+    @master_xml_decorator
     def go(self):
         super(imager_awimager, self).go()
         self.logger.info("Starting imager_awimager run")

@@ -24,6 +24,7 @@ from lofarpipe.support.utilities import create_directory
 from lofarpipe.support.group_data import load_data_map
 from argparse import ArgumentError
 from lofarpipe.support.lofarexceptions import PipelineException
+from lofarpipe.support.xmllogging import node_xml_decorator
 
 # Some constant settings for the recipe
 time_slice_dir_name = "time_slices"
@@ -34,12 +35,12 @@ class SubProcessGroup(object):
         A wrapper class for the subprocess module: allows fire and forget
         insertion of commands with a an optional sync/ barrier/ return
         """
-        def __init__(self, logger = None):
+        def __init__(self, logger=None):
             self.process_group = []
             self.logger = logger
 
 
-        def run(self, cmd_in, unsave = False):
+        def run(self, cmd_in, unsave=False):
             """
             Add the cmd as a subprocess to the current group: The process is
             started!
@@ -58,9 +59,9 @@ class SubProcessGroup(object):
             # Run subprocess
             process = subprocess.Popen(
                         cmd,
-                        stdin = subprocess.PIPE,
-                        stdout = subprocess.PIPE,
-                        stderr = subprocess.PIPE)
+                        stdin=subprocess.PIPE,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE)
             # save the process
             self.process_group.append((cmd, process))
 
@@ -128,6 +129,23 @@ class imager_prepare(LOFARnodeTCP):
        remove these completely from the dataset
     6. Concatenate the time slice measurment sets, to a virtual ms 
     """
+
+    @node_xml_decorator(input_data=["raw_ms_mapfile"],
+                        output_data=["",
+                                      "",
+                                      ""],
+                        config_files=["parset"],
+                        parameters=["init_script",
+                                     "working_dir",
+                                    "processed_ms_dir",
+                                    "ndppp_executable",
+                                    "output_measurement_set",
+                                    "time_slices_per_image",
+                                    "subbands_per_group",
+                                    "asciistat_executable",
+                                    "statplot_executable",
+                                    "msselect_executable",
+                                    "rficonsole_executable"])
     def run(self, init_script, parset, working_dir, processed_ms_dir,
              ndppp_executable, output_measurement_set,
             time_slices_per_image, subbands_per_group, raw_ms_mapfile,
@@ -155,7 +173,7 @@ class imager_prepare(LOFARnodeTCP):
             #Copy the input files (caching included for testing purpose)
             missing_files = self._cached_copy_input_files(
                             processed_ms_dir, input_map,
-                            skip_copy = False)
+                            skip_copy=False)
             if len(missing_files) != 0:
                 self.logger.warn("A number of measurement sets could not be"
                                  "copied: {0}".format(missing_files))
@@ -198,7 +216,7 @@ class imager_prepare(LOFARnodeTCP):
         return 0
 
     def _cached_copy_input_files(self, processed_ms_dir,
-                                 input_map, skip_copy = False):
+                                 input_map, skip_copy=False):
         """
         Perform a optionally skip_copy copy of the input ms:
         For testing purpose the output, the missing_files can be saved
@@ -245,9 +263,9 @@ class imager_prepare(LOFARnodeTCP):
             #Spawn a subprocess and connect the pipes
             copy_process = subprocess.Popen(
                         command,
-                        stdin = subprocess.PIPE,
-                        stdout = subprocess.PIPE,
-                        stderr = subprocess.PIPE)
+                        stdin=subprocess.PIPE,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE)
 
             (stdoutdata, stderrdata) = copy_process.communicate()
 
@@ -325,7 +343,7 @@ class imager_prepare(LOFARnodeTCP):
                                     "." + os.path.basename("imager_prepare_ndppp"),
                                     os.path.basename(ndppp)) as logger:
                         catch_segfaults(cmd, working_dir, environment,
-                                        logger, cleanup = None)
+                                        logger, cleanup=None)
 
             except CalledProcessError, e:
                 self.logger.error(str(e))
@@ -344,7 +362,7 @@ class imager_prepare(LOFARnodeTCP):
         It is a virtual ms, a ms with symbolic links to actual data is created!                 
         """
         pt.msconcat(group_measurements_collected, #@UndefinedVariable
-                               output_file_path, concatTime = True)
+                               output_file_path, concatTime=True)
         self.logger.debug("Concatenated the files: {0} into the single measure"
             "mentset: {1}".format(
                 ", ".join(group_measurements_collected), output_file_path))
@@ -371,10 +389,10 @@ class imager_prepare(LOFARnodeTCP):
                 #Spawn a subprocess and connect the pipes
                 copy_process = subprocess.Popen(
                             command,
-                            cwd = temp_dir_path,
-                            stdin = subprocess.PIPE,
-                            stdout = subprocess.PIPE,
-                            stderr = subprocess.PIPE) #working dir == temp
+                            cwd=temp_dir_path,
+                            stdin=subprocess.PIPE,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE) #working dir == temp
                 processes.append(copy_process)
 
             # wait for the processes to finish. We need to wait for all

@@ -4,19 +4,21 @@
 #                                                             Marcel Loose: 2012
 #                                                                loose@astron.nl
 # ------------------------------------------------------------------------------
+import os
+import sys
 
 from lofarpipe.support.lofarnode import LOFARnodeTCP
 from lofarpipe.support.utilities import log_time
 from lofarpipe.recipes.helpers import metadata
+from lofarpipe.support.xmllogging import node_xml_decorator
 
-import os
-import sys
 
 class get_metadata(LOFARnodeTCP):
     """
     Get the metadata from the given data product and return it to the master
     using self.outputs.
     """
+    @node_xml_decorator()
     def run(self, infile, product_type):
         with log_time(self.logger):
             if os.path.exists(infile):

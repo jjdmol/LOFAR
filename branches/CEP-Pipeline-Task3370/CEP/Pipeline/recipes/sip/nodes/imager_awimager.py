@@ -36,8 +36,24 @@ import pyrap.images as pim                   #@UnresolvedImport
 from lofarpipe.support.parset import Parset
 import lofar.parmdb                          #@UnresolvedImport
 import numpy as np
+from lofarpipe.support.xmllogging import node_xml_decorator
+
+# TODO: Code to use for import logging information from logging files
+# from lofarpipe.support.xmllogging import xml_node,, scan_file_for_timing_info, add_node_to_current_active_stack_node
+#        fp = open("/data/scratch/klijn/pipeline/test/logfile_test.log")
+#        xml_node = scan_file_for_timing_info(fp)
+#
+#        add_node_to_current_active_stack_node(self, "timing_info", xml_node)
 
 class imager_awimager(LOFARnodeTCP):
+    @node_xml_decorator(input_data=["concatenated_measurement_set",
+                                    "sourcedb_path"],
+                        output_data=["output_image"],
+                        config_files=["parset"],
+                        parameters=["executable",
+                                    "init_script",
+                                    "working_directory",
+                                    "mask_patch_size"])
     def run(self, executable, init_script, parset, working_directory,
             output_image, concatenated_measurement_set, sourcedb_path, mask_patch_size):
         self.logger.info("Start imager_awimager  run: client")

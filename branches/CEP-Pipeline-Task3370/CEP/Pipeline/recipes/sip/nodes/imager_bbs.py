@@ -11,6 +11,7 @@ import subprocess
 from lofarpipe.support.lofarnode import LOFARnodeTCP
 from lofarpipe.support.pipelinelogging import log_process_output
 from lofarpipe.support.group_data import load_data_map
+from lofarpipe.support.xmllogging import node_xml_decorator
 
 class imager_bbs(LOFARnodeTCP):
     """
@@ -18,6 +19,13 @@ class imager_bbs(LOFARnodeTCP):
     wrapper around bbs
     It starts bbs on a new subprocess and logs the output aborting on failure   
     """
+    @node_xml_decorator(input_data=[],
+                        output_data=[],
+                        config_files=["parset",
+                                      "ms_list_path",
+                                      "parmdb_list_path",
+                                      "sky_list_path"],
+                        parameters=["bbs_executable"])
     def run(self, bbs_executable, parset, ms_list_path, parmdb_list_path,
              sky_list_path):
         # read in the mapfiles to data maps: The master recipe added the single
@@ -42,9 +50,9 @@ class imager_bbs(LOFARnodeTCP):
                 # Spawn a subprocess and connect the pipelines
                 bbs_process = subprocess.Popen(
                         command,
-                        stdin = subprocess.PIPE,
-                        stdout = subprocess.PIPE,
-                        stderr = subprocess.PIPE)
+                        stdin=subprocess.PIPE,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE)
 
                 process_list.append(bbs_process)
 
