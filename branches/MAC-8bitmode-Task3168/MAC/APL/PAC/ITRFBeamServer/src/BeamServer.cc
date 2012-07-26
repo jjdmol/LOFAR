@@ -1174,8 +1174,11 @@ void BeamServer::_createBeamPool()
 	ASSERTSTR(itsAnaBeamMgr, "Failed to create an Manager for the analogue beams.");
 
 	// initialize matrices
-	itsWeights.resize   (itsMaxRCUs, itsCurrentMaxBeamlets);
-	itsWeights16.resize (itsMaxRCUs, itsCurrentMaxBeamlets);
+	int	nPlanes          = MAX_BITS_PER_SAMPLE / itsCurrentBitsPerSample;
+	int	beamletsPerPlane = maxBeamletsPerPlane(itsCurrentBitsPerSample);
+	LOG_DEBUG(formatString("Size weights arrays set to %d x %d x %d", itsMaxRCUs, nPlanes, beamletsPerPlane));
+	itsWeights.resize   (itsMaxRCUs, nPlanes, beamletsPerPlane);
+	itsWeights16.resize (itsMaxRCUs, nPlanes, beamletsPerPlane);
 	itsWeights   = complex<double>(0,0);
 	itsWeights16 = complex<int16_t>(0,0);
 }
@@ -1264,6 +1267,13 @@ DigitalBeam* BeamServer::checkBeam(GCFPortInterface* 				port,
 	else if (ringNr != 0) {		// splitter is off so ringNr must be 0
 		LOG_ERROR_STR("Splitter is off, ring segment 1 does not exist at this moment.");
 		*beamError = IBS_SPLITTER_OFF_ERR;
+		return (0);
+	}
+
+	// nr of subbands should fit in the beamlet space.
+	if (allocation.getSubbandBitset().count() > itsCurrentMaxBeamlets) {
+		LOG_ERROR_STR("Too many subbands specified (" << allocation.getSubbandBitset().count() << ") only " 
+					<< itsCurrentMaxBeamlets << " allowed");
 		return (0);
 	}
 
@@ -1594,12 +1604,14 @@ void BeamServer::compute_weights(Timestamp weightTime)
 	LOG_INFO_STR("Calculating weights for time " << weightTime);
 
 	// reset all weights
-	LOG_DEBUG_STR("Weights array has size: " << itsWeights.extent(firstDim) << "x" << itsWeights.extent(secondDim));
-	itsWeights(Range::all(), Range::all()) = 0.0;
+	LOG_DEBUG_STR("Weights array has size: " << itsWeights.extent(firstDim) << "x" << 
+								itsWeights.extent(secondDim) << "x" << itsWeights.extent(thirdDim));
+	itsWeights = 0.0;
 
 	// get ptr to antennafield information
 	AntennaField *gAntField = globalAntennaField();
 
+	int beamletsPerPlane = maxBeamletsPerPlane(itsCurrentBitsPerSample);
 	// Check both LBA and HBA antennas
 	for (uint	fieldNr = 0; fieldNr < 4; fieldNr++) {
 		string	fieldName;
@@ -1696,14 +1708,17 @@ void BeamServer::compute_weights(Timestamp weightTime)
 
 					complex<double>	CalFactor = _getCalFactor(beamIter->second->rcuMode(), rcu, 
 																itsBeamletAllocation[beamlet+firstBeamlet].subbandNr);
-					itsWeights(rcu, beamlet) = CalFactor * exp(itsBeamletAllocation[beamlet+firstBeamlet].scaling * 
-							(rcuJ2000Pos((int)posIndex[rcu], 0) * sourceJ2000xyz(0,0) +
-							 rcuJ2000Pos((int)posIndex[rcu], 1) * sourceJ2000xyz(0,1) +
-							 rcuJ2000Pos((int)posIndex[rcu], 2) * sourceJ2000xyz(0,2)));
+					int	bitPlane = beamlet / beamletsPerPlane;
+					itsWeights(rcu, bitPlane, beamlet % beamletsPerPlane) = 
+						CalFactor * exp(itsBeamletAllocation[beamlet+firstBeamlet].scaling * 
+								(rcuJ2000Pos((int)posIndex[rcu], 0) * sourceJ2000xyz(0,0) +
+								 rcuJ2000Pos((int)posIndex[rcu], 1) * sourceJ2000xyz(0,1) +
+								 rcuJ2000Pos((int)posIndex[rcu], 2) * sourceJ2000xyz(0,2)));
 
 					// some debugging
 					if (beamlet%100==0) {
-						LOG_DEBUG_STR("itsWeights(" << rcu << "," << beamlet << ")=" << itsWeights(rcu, beamlet)
+						LOG_DEBUG_STR("itsWeights(" << rcu << "," << bitPlane << "," << beamlet << ")="
+										<< itsWeights(rcu, bitPlane, beamlet)
 										<< " : rcuPos[" << posIndex[rcu] << "]=" << rcuJ2000Pos((int)posIndex[rcu],0)
 										<< " : CalFactor=" << CalFactor);
 					}
@@ -1737,8 +1752,9 @@ void BeamServer::send_weights(Timestamp time)
 		sw.rcumask.set(i);
 	}
   
-	sw.weights().resize(1, itsMaxRCUs, itsCurrentMaxBeamlets);
-	sw.weights()(0, Range::all(), Range::all()) = itsWeights16;
+	int	nPlanes = MAX_BITS_PER_SAMPLE / itsCurrentBitsPerSample;
+	sw.weights().resize(1, itsMaxRCUs, nPlanes, itsCurrentMaxBeamlets / nPlanes);
+	sw.weights()(0, Range::all(), Range::all(), Range::all()) = itsWeights16;
   
 	LOG_INFO_STR("sending weights for interval " << time << " : " << time + (long)(itsComputeInterval-1));
 
@@ -1783,7 +1799,6 @@ void BeamServer::send_sbselection()
 		int	beamletsPerPlane = maxBeamletsPerPlane(itsCurrentBitsPerSample);
 		ss.subbands.setType(SubbandSelection::BEAMLET);
 		ss.subbands.beamlets().resize(1, MAX_BITS_PER_SAMPLE/itsCurrentBitsPerSample, beamletsPerPlane);
-//		ss.subbands.beamlets().resize(1, itsCurrentMaxBeamlets);
 		ss.subbands.beamlets() = 0;
 
 		// reconstruct the selection

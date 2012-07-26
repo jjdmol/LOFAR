@@ -92,7 +92,12 @@ bitset<MAX_SUBBANDS> Beamlet2SubbandMap::getSubbandBitset() const
 	map<uint16, uint16>::const_iterator iter = m_beamlet2subband.begin();
 	map<uint16, uint16>::const_iterator end  = m_beamlet2subband.end();
 	while (iter != end) {
-		result.set(iter->second);
+		if (iter->second >= MAX_SUBBANDS) {
+			LOG_FATAL_STR("Subband " << iter->second << " is not allowed, returning incomplete bitset!");
+		}
+		else {
+			result.set(iter->second);
+		}
 		++iter;
 	}
 
@@ -110,7 +115,12 @@ boost::dynamic_bitset<> Beamlet2SubbandMap::getBeamletBitset(const int	maxBeamle
 	map<uint16, uint16>::const_iterator iter = m_beamlet2subband.begin();
 	map<uint16, uint16>::const_iterator end  = m_beamlet2subband.end();
 	while (iter != end) {
-		result.set(iter->first);
+		if (iter->first >= maxBeamlets) {
+			LOG_FATAL_STR("Beamlet " << iter->first << " is not allowed, returning incomplete bitset!");
+		}
+		else {
+			result.set(iter->first);
+		}
 		++iter;
 	}
 

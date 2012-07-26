@@ -199,8 +199,8 @@ private:
 	vector<BeamletAlloc_t>		itsBeamletAllocation;
 
 	// Weights array [MAX_RCUS, MAX_BEAMLETS]
-	blitz::Array<std::complex<double>,  2> itsWeights;
-	blitz::Array<std::complex<int16_t>, 2> itsWeights16;
+	blitz::Array<std::complex<double>,  3> itsWeights;
+	blitz::Array<std::complex<int16_t>, 3> itsWeights16;
 
 	// RCU Allocations in the AntennaArrays. Remember that each RCU can participate 
 	// in more than one beam.
