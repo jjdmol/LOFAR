@@ -24,12 +24,20 @@
 #ifndef LOFAR_STORAGE_TBB_WRITER_H
 #define LOFAR_STORAGE_TBB_WRITER_H 1
 
+#include <cstddef>
+#include <csignal>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <sys/time.h>
+#include <cerrno>
 
 #include <string>
 #include <vector>
 #include <map>
 #include <fstream>
+
+#include <boost/crc.hpp>
 
 #include <Common/LofarTypes.h>
 #include <Common/LofarLogger.h>
@@ -38,9 +46,13 @@
 #endif
 #include <Common/Thread/Thread.h>
 #include <Common/Thread/Queue.h>
-
-#include <Interface/SmartPtr.h>
-#include <Interface/Parset.h>		// Writers use a specialized Parset class.
+#include <Interface/Exceptions.h>
+#include <Interface/Parset.h>
+#if defined HAVE_PKVERSION
+#include <Storage/Package__Version.h>
+#else
+#include <Common/Version.h>
+#endif
 
 #include <dal/lofar/TBB_File.h>
 
@@ -87,9 +99,12 @@ struct TBB_Header {
 	uint16_t spare;		// For future use. Set to 0.
 	uint16_t crc16;		// CRC16 over frame header, with seqNr set to 0.
 
-	inline std::string toString() {
-		return std::string(stationID) << " " << rspID << " " << rcuID << " " << sampleFreq << " " << seqNr << " " << time << " " <<
-				sampleNr << " " << nOfSamplesPerFrame << " " << nOfFreqBands << " " /*<< bandSel << " "*/ << spare << " " << crc16;
+	inline std::string toString() const {
+		std::ostringstream oss;
+		oss << (uint32_t)stationID << " " << (uint32_t)rspID << " " << (uint32_t)rcuID << " " << (uint32_t)sampleFreq <<
+				" " << seqNr << " " << time << " " << sampleNr << " " << nOfSamplesPerFrame << " " << nOfFreqBands <<
+				" " /*<< bandSel << " "*/ << spare << " " << crc16;
+		return oss.str();
 	}
 };
 
@@ -107,7 +122,7 @@ struct TBB_Payload {
 
 	// Unpacked, sign-extended (for transient) samples without padding, i.e. as received.
 	// Frames might not be full; the crc32 is always sent right after (no padding unlike as stored by TBB),
-	// so we include it in 'data', but note that the crc32 is an uint32_t (hence '+ 2'). The crc32 is computed for transient data only.
+	// so we include it in 'data', but note that the crc32 is a little endian uint32_t, hence + 2. The crc32 is computed for transient data only.
 	int16_t data[MAX_TBB_TRANSIENT_NSAMPLES + 2];				// 1300*2 bytes; Because only transient data is unpacked, use its max.
 
 #define DEFAULT_TRANSIENT_NSAMPLES	1024						// From the spec and from real data.
@@ -131,26 +146,38 @@ private:
 	uint32_t itsTime0; // seconds
 	uint32_t itsSampleNr0; // for transient data only
 
+	// Same truncated polynomials, but with initial_remainder=0, final_xor_value=0, reflected_input=false, reflected_remainder_output=false.
+	// The boost::crc_optimal<> declarations precompute lookup tables, so do not redeclare for every incoming frame.
+	typedef boost::crc_optimal<16, 0x8005/*, 0, 0, false, false*/> crc_16tbb_type; // instead of crc_16_type
+	crc_16tbb_type itsCrc16gen;
+	//boost::crc_basic<16> crc16gen(0x04C11DB7/*, 0, 0, false, false*/); // non-opt variant
+
+	typedef boost::crc_optimal<32, 0x04C11DB7/*, 0, 0, false, false*/> crc_32tbb_type; // instead of crc_32_type
+	crc_32tbb_type itsCrc32gen;
+	//boost::crc_basic<32> crc32gen(0x04C11DB7/*, 0, 0, false, false*/); // non-opt variant
+
 	// do not use:
-	TBB_Dipole(const TBB_Dipole& rhs);
 	TBB_Dipole& operator=(const TBB_Dipole& rhs);
 
 public:
 	TBB_Dipole();
+	TBB_Dipole(const TBB_Dipole& rhs); // do not use; only for TBB_Station vector<TBB_Dipole>(N) constr
 	~TBB_Dipole();
 
 	bool isInitialized();
 	bool usesExternalDataFile();
 
 	// All TBB_Dipole objects are default constructed in a vector, so provide init().
-	void initDipole(const TBB_Header& header, const std::string& rawFilename,
+	void initDipole(const TBB_Header& header, const Parset& parset, const std::string& rawFilename,
 			DAL::TBB_Station& station, Mutex& h5Mutex);
 
-	void writeFrameData(const TBB_Frame& frame, Mutex& h5Mutex);
+	void processFrameData(const TBB_Frame& frame, Mutex& h5Mutex);
 
 private:
-	void initTBB_DipoleDataset(const TBB_Header& header, const std::string& rawFilename,
+	void initTBB_DipoleDataset(const TBB_Header& header, const Parset& parset, const std::string& rawFilename,
 			DAL::TBB_Station& station, Mutex& h5Mutex);
+	uint32_t crc32tbb_old(const uint16_t* buf, size_t len) const;
+	bool crc32tbb(const TBB_Payload* payload, size_t nsamples);
 };
 
 class TBB_Station {
@@ -159,7 +186,10 @@ class TBB_Station {
 	DAL::TBB_Station itsStation;
 	std::vector<TBB_Dipole> itsDipoles;
 	const Parset& itsParset;
-	const std::string& h5Filename;
+	const std::string itsH5Filename;
+	const bool itsDumpRaw;
+
+	std::string getRawFilename(unsigned rspID, unsigned rcuID);
 
 	// do not use:
 	TBB_Station();
@@ -167,27 +197,85 @@ class TBB_Station {
 	TBB_Station& operator=(const TBB_Station& rhs);
 
 public:
-	TBB_Station(unsigned stationID, const Parset& parset, const std::string& h5Filename);
+	TBB_Station(const string& stationName, const Parset& parset, const std::string& h5Filename, bool dumpRaw);
 	~TBB_Station();
 
-	// Returns a writable dipole reference. If not found, insert a new TBB_Dipole (creates a Dipole dataset in the HDF5 file).
-	TBB_Dipole& getDipole(const TBB_Header& header);
+	void processPayload(const TBB_Frame& frame);
 
 private:
 	std::string getFileModDate(const std::string& filename);
-	std::string timeStr(double time);
+	std::string utcTimeStr(double time);
 	double toMJD(double time);
 
 	void initCommonLofarAttributes(const std::string& filename);
-	void initTBB_RootAttributesAndGroups();
-	void initStationGroup();
-	void initTriggerGroup();
+	void initTBB_RootAttributesAndGroups(const std::string& stName);
+	void initStationGroup(DAL::TBB_Station& st, const std::string& stName,
+			const std::vector<double>& stPosition);
+	void initTriggerGroup(DAL::TBB_Trigger& tg);
+};
+
+class TBB_Writer;
+
+class TBB_StreamWriter {
+	/*
+	 * - The input thread receives incoming TBB frame headers, checks the header CRC, and puts them in a frameQueue.
+	 * - The output thread checks the data CRC, creates an HDF5 file per station, creates groups and datasets,
+	 *   writes the data, and returns empty frame pointers through the emptyQueue back to the input thread.
+	 *
+	 * On timeouts for all input threads, the main thread sends C++ thread cancellations. Input appends a NULL msg to notify output.
+	 * This isolates (soft) real-time input from HDF5/disk latencies, and the HDF5 C library from C++ cancellation exceptions.
+	 */
+
+	// Two times max receive queue length (PRINT_QUEUE_LEN defined) as observed on locus node (July 2012).
+	static const unsigned nrFrameBuffers = 1024;
+
+	TBB_Frame* itsFrameBuffers;
+
+	// Queue pointers point into itsFrameBuffers.
+	Queue<TBB_Frame*> itsReceiveQueue; // input  thread -> output thread
+	Queue<TBB_Frame*> itsFreeQueue;    // output thread -> input  thread
+
+	TBB_Writer& itsWriter;
+	const std::string& itsInputStreamName;
+	const std::string& itsLogPrefix;
+
+	// See TBB_Writer_main.cc::doTBB_Run() why this is used racily and thus tmp.
+	// Inflate struct timeval to 64 bytes (typical LEVEL1_DCACHE_LINESIZE).
+	struct timeval itsTimeoutStamp __attribute__((aligned(64)));
+
+	Thread* itsOutputThread;
+	Thread* itsInputThread; // last in TBB_StreamWriter
+
+	// do not use:
+	TBB_StreamWriter();
+	TBB_StreamWriter(const TBB_StreamWriter& rhs);
+	TBB_StreamWriter& operator=(const TBB_StreamWriter& rhs);
+
+public:
+	TBB_StreamWriter(TBB_Writer& writer, const std::string& inputStreamName, const std::string& logPrefix);
+	~TBB_StreamWriter();
+
+	// for the main thread
+	time_t getTimeoutStampSec() const;
+
+private:
+	// Input threads
+	uint16_t littleNativeBSwap(uint16_t val) const;
+	uint32_t littleNativeBSwap(uint32_t val) const;
+	void frameHeaderLittleNativeBSwap(TBB_Header& fh) const;
+	void correctTransientSampleNr(TBB_Header& header) const;
+	uint16_t crc16tbb(const uint16_t* buf, size_t len) const;
+	void processHeader(TBB_Header& header, size_t recvPayloadSize) const;
+	void mainInputLoop();
+
+	// Output threads
+	void mainOutputLoop();
 };
 
 class TBB_Writer {
 	// Usually, we handle only 1 station, but we can handle multiple at a time.
-	// map from stationID to SmartPtr-ed TBB_Station
-	std::map<unsigned, SmartPtr<TBB_Station> > itsStations;
+	// map from stationID to a TBB_Station*
+	std::map<unsigned, TBB_Station* > itsStations;
 	Mutex itsStationsMutex;
 
 	const Parset& itsParset;
@@ -196,63 +284,7 @@ class TBB_Writer {
 
 	unsigned itsRunNr;
 
-
-	class TBB_StreamWriter {
-		/*
-		 * - The input thread receives incoming TBB frame headers, checks the header CRC, and puts them in a frameQueue.
-		 * - The output thread checks the data CRC, creates an HDF5 file per station, creates groups and datasets,
-		 *   writes the data, and returns an empty frame through the emptyQueue to the input thread.
-		 */
-
-		// Two times max receive queue length (PRINT_QUEUE_LEN defined) as observed on locus node (July 2012).
-		static const unsigned nrFrameBuffers = 1024;
-
-		TBB_Frame* itsFrameBuffers;
-
-		// Queue pointers point into itsFrameBuffers.
-		Queue<TBB_Frame*> itsReceiveQueue; // input  thread -> output thread
-		Queue<TBB_Frame*> itsFreeQueue;    // output thread -> input  thread
-
-		const std::string& itsInputStreamName;
-		const std::string& itsLogPrefix;
-
-		// See TBB_Writer_main.cc::doTBB_Run() why this is used racily and thus tmp.
-		// Inflate struct timeval to 64 bytes (typical LEVEL1_DCACHE_LINESIZE).
-		struct timeval itsTimeoutStamp __attribute__((aligned(64)));
-
-		Thread* itsOutputThread;
-		Thread* itsInputThread; // last in TBB_StreamWriter and thus in TBB_Writer
-
-		// do not use:
-		TBB_StreamWriter();
-		TBB_StreamWriter(const TBB_StreamWriter& rhs);
-		TBB_StreamWriter& operator=(const TBB_StreamWriter& rhs);
-
-	public:
-		TBB_StreamWriter(const std::string& inputStreamName, const std::string& logPrefix);
-		~TBB_StreamWriter();
-
-		time_t getTimeoutStampSec();
-
-	private:
-		// Input thread
-		uint16_t littleNativeBSwap(uint16_t val);
-		uint32_t littleNativeBSwap(uint32_t val);
-		void frameHeaderLittleNativeBSwap(TBB_Header& fh);
-		void correctTransientSampleNr(TBB_Header& header);
-		uint16_t crc16tbb(const uint16_t* buf, size_t len);
-		void processHeader(TBB_Header& header, size_t recvPayloadSize);
-		void mainInputLoop();
-
-		// Output thread
-		uint32_t crc32tbb(const uint16_t* buf, size_t len);
-		std::string createNewTBB_H5Filename(const TBB_header& header);
-		SmartPtr<TBB_Station> getStation(unsigned stationID, const TBB_header& header);
-		void processPayload(const TBB_Frame& frame);
-		void mainOutputLoop();
-	};
-	std::vector<SmartPtr<TBB_StreamWriter> > itsStreamWriters; // last in TBB_Writer
-
+	std::vector<TBB_StreamWriter* > itsStreamWriters; // last in TBB_Writer
 
 	// do not use:
 	TBB_Writer();
@@ -264,6 +296,11 @@ public:
 			const std::string& outDir, bool dumpRaw, const std::string& logPrefix);
 	~TBB_Writer();
 
+	// Output threads
+	TBB_Station* getStation(const TBB_Header& header);
+	std::string createNewTBB_H5Filename(const TBB_Header& header, const std::string& stationName);
+
+	// main thread
 	time_t getTimeoutStampSec(unsigned streamWriterNr);
 };
 
@@ -271,3 +308,4 @@ public:
 } // namespace LOFAR
 
 #endif // LOFAR_STORAGE_TBB_WRITER_H
+

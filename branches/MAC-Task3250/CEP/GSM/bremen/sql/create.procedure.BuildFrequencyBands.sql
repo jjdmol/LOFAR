@@ -13,8 +13,8 @@ BEGIN
     ,freq_central
     ,freq_low
     ,freq_high
-    ) 
-  VALUES 
+    )
+  VALUES
     (0
     ,NULL
     ,NULL
@@ -22,12 +22,25 @@ BEGIN
     )
   ;
 
+  insert into frequencybands (freq_central, freq_low, freq_high)
+  values
+  (33000000, 31000000, 34000000),
+  (39000000, 38000000, 40000000),
+  (45000000, 44000000, 46000000),
+  (51000000, 50000000, 52000000),
+  (57000000, 56000000, 58000000),
+  (63000000, 62000000, 64000000),
+  (69000000, 68000000, 70000000),
+  (75000000, 74000000, 76000000);
+
+
+
   INSERT INTO frequencybands
     (freq_central
     ,freq_low
     ,freq_high
-    ) 
-  VALUES 
+    )
+  VALUES
     (30000000
     ,30000000 - 900000 / 2
     ,30000000 + 900000 / 2

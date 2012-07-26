@@ -956,8 +956,8 @@ void doIt (bool noPrompt, ostream& ostr)
           }
         }
       }
-    } catch (Exception& ex) {
-      cerr << "Exception: " << ex << endl;
+    } catch (std::exception& ex) {
+      cerr << "Exception: " << ex.what() << endl;
     }
   }
   delete parmtab;

@@ -220,14 +220,15 @@ void ServerConnection::WriteDataRows(const std::string &msFilename, size_t rowSt
 	
 	requestBlock.blockIdentifier = RequestId;
 	requestBlock.blockSize = sizeof(requestBlock);
-	requestBlock.dataSize = sizeof(options.flags) + msFilename.size() + sizeof(options.startRow) + sizeof(options.rowCount);
+	requestBlock.dataSize = sizeof(options.flags) + msFilename.size() + sizeof(options.startRow) + sizeof(options.rowCount) + sizeof(options.dataSize);
 	requestBlock.request = WriteDataRowsRequest;
 	reqBuffer.write(reinterpret_cast<char *>(&requestBlock), sizeof(requestBlock));
 	
 	std::ostringstream dataBuffer;
 	// Serialize the rows
-	for(size_t rowIndex=0; rowIndex != rowCount; ++rowIndex)
+	for(size_t rowIndex=0; rowIndex != rowCount; ++rowIndex) {
 		rowArray[rowIndex].Serialize(dataBuffer);
+	}
 	std::string dataBufferStr = dataBuffer.str();
 
 	options.flags = 0;
@@ -416,7 +417,7 @@ void ServerConnection::onReceiveWriteDataRowsResponseHeader()
 	GenericReadResponseHeader responseHeader = *reinterpret_cast<GenericReadResponseHeader*>(_buffer);
 	if(responseHeader.blockIdentifier != GenericReadResponseHeaderId || responseHeader.blockSize != sizeof(responseHeader))
 	{
-		_onError(shared_from_this(), "Bad response from client upon read data rows request");
+		_onError(shared_from_this(), "Bad response from client upon write data rows request");
 		StopClient();
 	}
 	else if(responseHeader.errorCode != NoError)
@@ -426,7 +427,7 @@ void ServerConnection::onReceiveWriteDataRowsResponseHeader()
 	}
 	else if(responseHeader.dataSize != 0) {
 		_onError(shared_from_this(), "Client sent unexpected data during write rows action");
-		_onAwaitingCommand(shared_from_this());
+		StopClient();
 	} else {
 		_onAwaitingCommand(shared_from_this());
 	}

@@ -37,12 +37,14 @@ namespace aoRemote {
 class ObservationTimerange
 {
 	public:
-		ObservationTimerange(ClusteredObservation &observation) :
+		ObservationTimerange(const ClusteredObservation &observation) :
 			_observation(observation),
 			_bands(observation.Size()),
 			_bandStartLookup(observation.Size()),
+			_gridIndexLookup(),
 			_polarizationCount(0),
 			_timestepCount(0),
+			_timeOffsetIndex(0),
 			_gridFrequencySize(0),
 			_startFrequency(0.0),
 			_frequencyWidth(0.0),
@@ -56,8 +58,10 @@ class ObservationTimerange
 			_observation(source._observation),
 			_bands(source._bands),
 			_bandStartLookup(source._bandStartLookup),
+			_gridIndexLookup(source._gridIndexLookup),
 			_polarizationCount(source._polarizationCount),
 			_timestepCount(source._timestepCount),
+			_timeOffsetIndex(source._timeOffsetIndex),
 			_gridFrequencySize(source._gridFrequencySize),
 			_startFrequency(source._startFrequency),
 			_frequencyWidth(source._frequencyWidth)
@@ -186,7 +190,6 @@ class ObservationTimerange
 		void SetTimestepData(size_t nodeIndex, const MSRowDataExt *rows, size_t rowCount)
 		{
 			size_t bandStart = _bandStartLookup[nodeIndex];
-			//const MSRowData &firstRowData = rows[0].Data();
 			const unsigned pCount = _polarizationCount;
 			for(size_t r=0;r<rowCount;++r)
 			{
@@ -216,10 +219,50 @@ class ObservationTimerange
 				_antenna1[r] = rowExt.Antenna1();
 				_antenna2[r] = rowExt.Antenna2();
 			}
+			_timestepCount = rowCount;
+		}
+		
+		void GetTimestepData(size_t nodeIndex, MSRowDataExt *rows)
+		{
+			size_t bandStart = _bandStartLookup[nodeIndex];
+			const unsigned pCount = _polarizationCount;
+			for(size_t r=0;r<_timestepCount;++r)
+			{
+				MSRowDataExt &rowExt = rows[r];
+				MSRowData &row = rowExt.Data();
+				size_t thisChannelCount = _bands[nodeIndex].channels.size();
+				if(row.ChannelCount() != thisChannelCount)
+					throw std::runtime_error("Given rows do not match in channel count with the bands");
+				num_t *realPtr = row.RealPtr();
+				num_t *imagPtr = row.ImagPtr();
+				std::vector<size_t>::const_iterator gridPtr = _gridIndexLookup.begin()+bandStart;
+				for(size_t c=0;c<row.ChannelCount();++c)
+				{
+					const size_t gridIndex = *gridPtr;
+					size_t fullIndex = (r * _gridFrequencySize + gridIndex) * pCount;
+					
+					for(unsigned p=0;p<pCount;++p)
+					{
+						*realPtr = _realData[fullIndex];
+						*imagPtr = _imagData[fullIndex];
+						++fullIndex;
+						++realPtr;
+						++imagPtr;
+					}
+					++gridPtr;
+				}
+				
+				rowExt.SetU(_u[r]);
+				rowExt.SetV(_v[r]);
+				rowExt.SetW(_w[r]);
+				rowExt.SetAntenna1(_antenna1[r]);
+				rowExt.SetAntenna2(_antenna2[r]);
+			}
 		}
 		
 		size_t PolarizationCount() const { return _polarizationCount; }
 		size_t TimestepCount() const { return _timestepCount; }
+		size_t TimeOffsetIndex() const { return _timeOffsetIndex; }
 		size_t ChannelCount() const { return _gridFrequencySize; }
 		num_t *RealData(size_t timestep) { return &_realData[timestep * _polarizationCount * _gridFrequencySize]; }
 		num_t *ImagData(size_t timestep) { return &_imagData[timestep * _polarizationCount * _gridFrequencySize]; }
@@ -230,14 +273,18 @@ class ObservationTimerange
 		double W(size_t timestep) const { return _u[timestep]; }
 		unsigned Antenna1(size_t timestep) const { return _antenna1[timestep]; }
 		unsigned Antenna2(size_t timestep) const { return _antenna2[timestep]; }
+		
+		void SetTimeOffsetIndex(size_t timeOffsetIndex) { _timeOffsetIndex = timeOffsetIndex; }
+		const BandInfo &Band(size_t nodeIndex) { return _bands[nodeIndex]; }
 	private:
 		struct BandRangeInfo { double endFrequency; size_t nodeIndex; };
-		ClusteredObservation &_observation;
+		const ClusteredObservation &_observation;
 		std::vector<BandInfo> _bands;
 		std::vector<size_t> _bandStartLookup;
 		std::vector<size_t> _gridIndexLookup;
 		size_t _polarizationCount;
 		size_t _timestepCount;
+		size_t _timeOffsetIndex;
 		size_t _gridFrequencySize;
 		double _startFrequency, _frequencyWidth;
 		
@@ -246,6 +293,8 @@ class ObservationTimerange
 		num_t *_imagData;
 		double *_u, *_v, *_w;
 		unsigned *_antenna1, *_antenna2;
+		
+		void operator=(const ObservationTimerange &source) { }
 		
 		void allocate()
 		{

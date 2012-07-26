@@ -25,10 +25,10 @@
 <li>I still have questions / contact info</li>
 </ul>
 <h3>Where should I start with reading documentation about the tools?</h3>
-<p>At present, there is not so much information on the RFI tools. If you
-are reducing LOFAR data, you should at least read the
+<p>If you are reducing LOFAR data, you should at least read the
 <a href="http://www.astron.nl/radio-observatory/lofar/lofar-imaging-cookbook">LOFAR imaging cookbook</a>.
-A first tutorial on the GUI can be found here:
+The NDPPP chapter contains also information about the "quality" tools that are included in the AOFlagger
+package. A first tutorial on the GUI can be found here:
 <a href="gui-tutorial.html">RFI gui tutorial</a>, and an example to
 optimize the default strategy here:
 <a href="strategy-example-a.html">Strategy optimization example</a>.
@@ -80,7 +80,7 @@ This depends on the channel resolution and frequency behaviour. Should be fine i
 <p><code>makeFLAGwritable &lt;MyObservation.MS&gt;</code></p>
 <p>This will take a few seconds to rewrite the flag column, after which you can run rficonsole.</p>
 <h3>Plotting does not work in the GUI</h3>
-<p>Plotting requires several programs:</p>
+<p>[update 2012-03: the GUI now uses an internal plotter, and this answer is probably no longer relevant]. Plotting requires several programs:</p>
 <ul>
 <li><a href="http://www.gnuplot.info/">Gnuplot</a>, version 4.2 or higher</li>
 <li>ps2pdf, which is part of the <a href="http://ghostscript.com/">Ghostscript</a> software</li>
@@ -102,10 +102,13 @@ part of the strategy with a newer strategy, you might be able to solve the probl
 <h3>Does rficonsole store e.g. the statistics in a log?</h3>
 <p>Since October 2010, RFI console uses the LOFAR logger, which in turn uses LogCplus. Standard logging configuration can be set up in a configuration file. The parameters <code>-nolog</code> and <code>-v</code> can be used to alter logging strategy. The standard unix program <code>tee</code> can be used to save the output to file while at the same time monitoring the standard output.</p>
 <h3>How does RFI console recognise RFI?</h3>
-<p>It estimates the astronomical signal and searches for statistical abnormalities that look like lines in the time/frequency plots. It has several tricks to enhance the speed. The following papers describe parts of the detection technique in detail:</p>
+<p>It estimates the astronomical signal and searches for statistical abnormalities that look like lines in the time/frequency plots.
+After initial detection, it applies a morphological algorithm to find likely contaminated samples.
+It has several tricks to enhance the speed. The following refereed papers describe parts of the detection technique in detail:</p>
 <ul>
-  <li><a href="http://adsabs.harvard.edu/doi/10.1111/j.1365-2966.2010.16471.x">Post-correlation radio frequency interference classification methods</a>, <em>MNRAS</em>, Volume 405, Issue 1, June 2010, pp. 155-167</li>
-  <li><a href="http://adsabs.harvard.edu/abs/2010arXiv1007.2089O">A LOFAR RFI detection pipeline  and its first results</a></li>
+  <li><a href="http://adsabs.harvard.edu/doi/10.1111/j.1365-2966.2010.16471.x">Post-correlation radio frequency interference classification methods</a>, <span class="journal">MNRAS</span>, Vol. 405, 1, June 2010, pp. 155-167</li>
+  <li><a href="http://adsabs.harvard.edu/abs/2010arXiv1007.2089O">A LOFAR RFI detection pipeline  and its first results</a>, <span class="journal">PoS, RFI2010</span>, March 2010.</li>
+	<li><a href="http://adsabs.harvard.edu/abs/2012A%26A...539A..95O">A morphological algorithm for improving radio-frequency interference detection</a>, <span class="journal">A&amp;A</span>, Vol. 539, A95, March 2012.</li>
 </ul>
 <h3>I still have questions / contact info</h3>
 <p>I love to have feedback in order to update this FAQ and get a grib on common problems. You can reach me on my e-mail address, <code>&lt;my-last-name&gt;@astro.rug.nl</code>, and my last name is offringa.</p>

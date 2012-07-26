@@ -57,7 +57,7 @@ class GSMAPI(object):
         """
         List basic image properties.
         """
-        return {'header': ['Name', 'Sources', 'MinFlux'],
+        return {'header': ['Name', 'Sources', 'MinFlux', 'NewSources'],
                 'data': self.connection.get_cursor(
                                          get_sql("APIimage", image_id)
                                          ).fetchall()}
@@ -68,7 +68,8 @@ class GSMAPI(object):
         """
         return {'header': ['ra', 'decl', 'f_peak'],
                 'data': self.connection.get_cursor(
-                               get_field_sql(ra, decl, radius, band, min_flux)
+                               get_field_sql(ra, decl, radius, band,
+                                             min_flux=min_flux)
                                          ).fetchall()}
 
 if __name__ == '__main__':
@@ -82,6 +83,7 @@ if __name__ == '__main__':
     parser.add_argument('--decl', default=0, type=float)
     parser.add_argument('--radius', default=5.0, type=float)
     parser.add_argument('-B', '--band', default=8, type=int)
+    parser.add_argument('--stokes', default='I', type=str)
     parser.add_argument('--f_peak', default=None, type=float)
 
     args = parser.parse_args()

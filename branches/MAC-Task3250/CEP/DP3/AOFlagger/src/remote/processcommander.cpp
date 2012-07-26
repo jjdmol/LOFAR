@@ -121,12 +121,13 @@ void ProcessCommander::continueReadQualityTablesTask(ServerConnectionPtr serverC
 void ProcessCommander::continueReadAntennaTablesTask(ServerConnectionPtr serverConnection)
 {
 	boost::mutex::scoped_lock lock(_mutex);
-	onCurrentTaskFinished();
 	
 	const std::string &hostname = serverConnection->Hostname();
 	std::vector<AntennaInfo> *antennas = new std::vector<AntennaInfo>();
 	serverConnection->ReadAntennaTables(_nodeCommands.Top(hostname).LocalPath(),
 																			boost::shared_ptr<std::vector<AntennaInfo> >(antennas));
+	
+	onCurrentTaskFinished();
 }
 
 void ProcessCommander::continueReadBandTablesTask(ServerConnectionPtr serverConnection)
@@ -156,7 +157,30 @@ void ProcessCommander::continueReadDataRowsTask(ServerConnectionPtr serverConnec
 	if(_nodeCommands.Pop(hostname, item))
 	{
 		const std::string &msFilename = item.LocalPath();
-		serverConnection->ReadDataRows(msFilename, _rowStart, _rowCount, _rowBuffer[item.Index()]);
+		if(_rowCount != 0)
+			serverConnection->ReadDataRows(msFilename, _rowStart, _rowCount, _readRowBuffer[item.Index()]);
+		else
+			serverConnection->ReadDataRows(msFilename, _rowStart, _rowCount, 0);
+	} else {
+		handleIdleConnection(serverConnection);
+		
+		if(_nodeCommands.Empty())
+			onCurrentTaskFinished();
+	}
+}
+
+void ProcessCommander::continueWriteDataRowsTask(ServerConnectionPtr serverConnection)
+{
+	const std::string &hostname = serverConnection->Hostname();
+	
+	boost::mutex::scoped_lock lock(_mutex);
+	ClusteredObservationItem item;
+	if(_nodeCommands.Pop(hostname, item))
+	{
+		const std::string &msFilename = item.LocalPath();
+		_observationTimerange->GetTimestepData(item.Index(), _writeRowBuffer[item.Index()]);
+
+		serverConnection->WriteDataRows(msFilename, _observationTimerange->TimeOffsetIndex(), _observationTimerange->TimestepCount(), _writeRowBuffer[item.Index()]);
 	} else {
 		handleIdleConnection(serverConnection);
 		
@@ -202,6 +226,9 @@ void ProcessCommander::onConnectionAwaitingCommand(ServerConnectionPtr serverCon
 			break;
 		case ReadDataRowsTask:
 			continueReadDataRowsTask(serverConnection);
+			break;
+		case WriteDataRowsTask:
+			continueWriteDataRowsTask(serverConnection);
 			break;
 		case NoTask:
 			handleIdleConnection(serverConnection);
@@ -264,6 +291,7 @@ void ProcessCommander::onConnectionFinishReadDataRows(ServerConnectionPtr server
 	ClusteredObservationItem item;
 	_nodeCommands.Current(hostname, item);
 	_observationTimerange->SetTimestepData(item.Index(), rowData, _rowCount);
+	_observationTimerange->SetTimeOffsetIndex(_rowStart);
 	if(_rowsTotal < totalRows)
 		_rowsTotal = totalRows;
 }

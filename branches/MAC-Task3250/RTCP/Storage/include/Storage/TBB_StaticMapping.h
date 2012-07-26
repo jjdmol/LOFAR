@@ -51,8 +51,6 @@ private:
 
 	// Maps from node name to (station name, board name).
 	std::multimap<std::string, std::pair<std::string, std::string> > itsMapping;
-
-	std::vector<std::string> tokenizeString(const std::string& str, const std::string& delim);
 };
 
 

@@ -76,23 +76,41 @@ class ProcessCommander
 		
 		/**
 		 * @param rowBuffer should have #NODES elements, each which is an array of #ROWCOUNT rows.
+		 * It is not expected to hold the data yet; it is a parameter so that repeated calls do not have
+		 * to allocate that memory over and over.
 		 */
 		void PushReadDataRowsTask(class ObservationTimerange &timerange, size_t rowStart, size_t rowCount, MSRowDataExt **rowBuffer)
 		{
 			_tasks.push_back(ReadDataRowsTask);
 			_observationTimerange = &timerange;
-			_rowBuffer = rowBuffer;
+			_readRowBuffer = rowBuffer;
 			_rowStart = rowStart;
 			_rowCount = rowCount;
 			_rowsTotal = 0;
 		}
+		
+		/**
+		 * @param rowBuffer should have #NODES elements, each which is an array of timerange.#ROW rows.
+		 * It is not expected to hold the data yet; it is a parameter so that repeated calls do not have
+		 * to allocate that memory over and over.
+		 */
+		void PushWriteDataRowsTask(class ObservationTimerange &timerange, MSRowDataExt **rowBuffer)
+		{
+			_tasks.push_back(WriteDataRowsTask);
+			_observationTimerange = &timerange;
+			_writeRowBuffer = rowBuffer;
+			_rowsTotal = 0;
+		}
+		
+		const ClusteredObservation &Observation() const { return _observation; }
 	private:
 		enum Task {
 			NoTask,
 			ReadQualityTablesTask,
 			ReadAntennaTablesTask,
 			ReadBandTablesTask,
-			ReadDataRowsTask
+			ReadDataRowsTask,
+			WriteDataRowsTask
 		};
 		
 		void endIdleConnections();
@@ -100,6 +118,7 @@ class ProcessCommander
 		void continueReadAntennaTablesTask(ServerConnectionPtr serverConnection);
 		void continueReadBandTablesTask(ServerConnectionPtr serverConnection);
 		void continueReadDataRowsTask(ServerConnectionPtr serverConnection);
+		void continueWriteDataRowsTask(ServerConnectionPtr serverConnection);
 		
 		void onConnectionCreated(ServerConnectionPtr serverConnection, bool &acceptConnection);
 		void onConnectionAwaitingCommand(ServerConnectionPtr serverConnection);
@@ -107,6 +126,7 @@ class ProcessCommander
 		void onConnectionFinishReadAntennaTables(ServerConnectionPtr serverConnection, boost::shared_ptr<std::vector<AntennaInfo> > antennas, size_t polarizationCount);
 		void onConnectionFinishReadBandTable(ServerConnectionPtr serverConnection, BandInfo &band);
 		void onConnectionFinishReadDataRows(ServerConnectionPtr serverConnection, MSRowDataExt *rowData, size_t rowCount);
+		void onConnectionFinishWriteDataRows(ServerConnectionPtr serverConnection);
 		void onError(ServerConnectionPtr connection, const std::string &error);
 		void onProcessFinished(RemoteProcess &process, bool error, int status);
 		
@@ -122,10 +142,11 @@ class ProcessCommander
 		std::vector<AntennaInfo> _antennas;
 		std::vector<BandInfo> _bands;
 		class ObservationTimerange *_observationTimerange;
-		MSRowDataExt **_rowBuffer;
+		MSRowDataExt **_readRowBuffer;
+		MSRowDataExt **_writeRowBuffer;
 		size_t _rowStart, _rowCount, _rowsTotal;
 		
-		const ClusteredObservation _observation;
+		const ClusteredObservation &_observation;
 		NodeCommandMap _nodeCommands;
 		bool _finishConnections;
 		

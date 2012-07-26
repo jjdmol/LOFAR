@@ -40,7 +40,7 @@ CREATE TABLE images
   --,z double NOT NULL
   ,url VARCHAR(120) NULL
   ,reprocessing INT NOT NULL DEFAULT 0
-  ,status int not null -- 0-created, 1-Ok, 2-removed from runningcatalog
+  ,status int not null -- 0-created, 1-Ok, 2-removed from runningcatalog, 3-removed completely
   ,process_date timestamp not null default current_timestamp
   ,svn_version int null
   ,PRIMARY KEY (imageid)

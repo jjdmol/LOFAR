@@ -52,6 +52,7 @@ class Client
 		void handleReadAntennaTables(unsigned dataSize);
 		void handleReadBandTable(unsigned dataSize);
 		void handleReadDataRows(unsigned dataSize);
+		void handleWriteDataRows(unsigned dataSize);
 };
 	
 }

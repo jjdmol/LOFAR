@@ -75,7 +75,7 @@ template <typename SAMPLE_TYPE> InputThread<SAMPLE_TYPE>::~InputThread()
 template <typename SAMPLE_TYPE> void InputThread<SAMPLE_TYPE>::mainLoop()
 {
 #if 1 && defined HAVE_BGP_ION
-  if (itsArgs.threadID == 0)
+  if (0 && itsArgs.threadID == 0)
     runOnCore0();
   else
     doNotRunOnCore0();

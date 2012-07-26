@@ -30,6 +30,7 @@
 #include <Interface/RSPTimeStamp.h>
 #include <InputSection.h>
 #include <ION_Allocator.h>
+#include <Scheduling.h>
 #include <GlobalVars.h>
 #include <Job.h>
 #include <OutputSection.h>
@@ -245,13 +246,17 @@ void Job::StorageProcess::start()
 #else
 
 #warning Using fork/exec for SSH processes to Storage
+  const std::string obsID = boost::lexical_cast<std::string>(itsParset.observationID());
+  const std::string rank = boost::lexical_cast<std::string>(itsRank);
+
   const char * const commandLine[] = {
     "cd ", cwd, " && ",
 #if defined USE_VALGRIND
     "valgrind " "--leak-check=full "
 #endif
     executable.c_str(),
-    boost::lexical_cast<std::string>(itsRank).c_str(),
+    obsID.c_str(),
+    rank.c_str(),
 #if defined WORDS_BIGENDIAN
     "1",
 #else
@@ -379,6 +384,10 @@ void Job::claimResources()
 
 void Job::jobThread()
 {
+#if defined HAVE_BGP_ION
+  doNotRunOnCore0();
+#endif
+
   if (myPsetNumber == 0 || itsHasPhaseOne || itsHasPhaseTwo || itsHasPhaseThree) {
     createCNstreams();
     createIONstreams();

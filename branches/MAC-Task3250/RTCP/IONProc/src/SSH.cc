@@ -37,6 +37,7 @@
 #include <vector>
 
 #ifdef HAVE_LIBSSH2
+#include <Scheduling.h>
 #include <sstream>
 #include <sys/select.h>
 #include <Common/lofar_string.h>
@@ -206,6 +207,12 @@ bool SSHconnection::waitsocket( FileDescriptorBasedStream &sock )
 
 void SSHconnection::commThread()
 {
+#if defined HAVE_BGP_ION
+  //doNotRunOnCore0();
+  runOnCore0();
+  //nice(19);
+#endif
+
   SocketStream sock( itsHostName, 22, SocketStream::TCP, SocketStream::Client );
 
   LOG_DEBUG_STR( itsLogPrefix << "Connected" );
