@@ -8,10 +8,10 @@ ps -ef | grep -v grep | grep server | grep java | grep 11500 2>&1 1>/dev/null
 if [ $? -ne 0 ]; then
 	echo "starting server first"
 	curdate=`date +%Y%m%dT%H%M%S`
-        $JAVAHOME/bin/java -jar $serverDir/jOTDB3.jar sas001.control.lofar sas001.control.lofar 11500 11501 2>&1 1>/opt/lofar/log/OTBServer.$curdate &
+        $JAVAHOME/bin/java -jar $serverDir/jOTDB3.jar sas001.control.lofar sas001.control.lofar 11500 11501 2>&1 1>/opt/lofar/var/log/OTBServer.$curdate &
     serverpid=$!
 fi
 
 curdate=`date +%Y%m%dT%H%M%S`
-$JAVAHOME/bin/java -jar $clientDir/OTB.jar -p 11500 2>&1 1>/opt/lofar/log/OTB.$curdate &
+$JAVAHOME/bin/java -jar $clientDir/OTB.jar -p 11500 2>&1 1>/opt/lofar/var/log/OTB.$curdate &
 

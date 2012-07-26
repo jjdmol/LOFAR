@@ -9,6 +9,6 @@
 # DISABLED this script: startBGL.sh starts all CEP processes
 exit
 
-echo -n "Killing process "; cat /opt/lofar/share/$2.pid
-kill -9 `cat /opt/lofar/share/$2.pid`
-rm -f /opt/lofar/share/$2.pid /opt/lofar/share/$2.parset
+echo -n "Killing process "; cat /opt/lofar/var/run/$2.pid
+kill -9 `cat /opt/lofar/var/run/$2.pid`
+rm -f /opt/lofar/var/run/$2.pid /opt/lofar/var/run/$2.parset

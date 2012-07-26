@@ -25,15 +25,15 @@
 #include <Common/LofarLocators.h>
 #include <Common/StringUtil.h>
 #include <Common/ParameterSet.h>
+#include <ApplCommon/LofarDirs.h>
 #include <ApplCommon/Observation.h>
+#include <ApplCommon/StationInfo.h>
 
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/PVSS/PVSSinfo.h>
 #include <MACIO/MACServiceInfo.h>
 #include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
-//#include <APL/RTDBCommon/RTDButilities.h>
-//#include <APL/APLCommon/StationInfo.h>
 #include <GCF/RTDB/DP_Protocol.ph>
 #include <signal.h>
 #include <stdlib.h>
@@ -412,8 +412,9 @@ void CEPlogProcessor::processParset( const std::string &observationID )
       return;
     }
 
-    // parsets are in /opt/lofar/share
-    string filename(formatString("/opt/lofar/share/Observation%s", observationID.c_str()));
+    // parsets are in LOFAR_SHARE_LOCATION
+    string filename(formatString("%s/Observation%s", 
+                                 LOFAR_SHARE_LOCATION, observationID.c_str()));
 
     ParameterSet parset(filename);
 

@@ -1,4 +1,4 @@
-//#  lofarDirs.h: Definitions of some directories of LOFAR.
+//#  LofarDirs.h: Definitions of some directories of LOFAR.
 //#
 //#  Copyright (C) 2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,9 +20,13 @@
 //#
 //#  $Id$
 
-#ifndef ACCBIN_LOFARDIRS_H
-#define ACCBIN_LOFARDIRS_H
+#ifndef APPLCOMMON_LOFARDIRS_H
+#define APPLCOMMON_LOFARDIRS_H
 
-#define	LOFAR_SHARE_LOCATION		"/opt/lofar/share"
+#define LOFAR_BASE_LOCATION		"/opt/lofar"
+#define LOFAR_BIN_LOCATION		"/opt/lofar/bin"
+#define LOFAR_CONFIG_LOCATION	"/opt/lofar/etc"
+#define LOFAR_SHARE_LOCATION	"/opt/lofar/var/run"
+#define LOFAR_LOG_LOCATION		"/opt/lofar/var/log"
 
 #endif

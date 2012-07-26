@@ -27,6 +27,7 @@
 #include <Common/LofarLocators.h>
 #include <Common/Version.h>
 #include <Common/ParameterSet.h>
+#include <ApplCommon/LofarDirs.h>
 #include <ApplCommon/StationInfo.h>
 #include <ApplCommon/StationConfig.h>
 

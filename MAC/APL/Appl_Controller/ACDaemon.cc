@@ -27,10 +27,10 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
 #include <Common/SystemUtil.h>
+#include <ApplCommon/LofarDirs.h>
 #include <ALC/ACRequest.h>
 #include "ACDaemon.h"
 #include "ACDaemonComm.h"
-#include "lofarDirs.h"
 #include "forkexec.h"
 
 namespace LOFAR {
