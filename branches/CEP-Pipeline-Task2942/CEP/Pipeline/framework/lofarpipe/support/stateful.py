@@ -67,7 +67,7 @@ class StatefulRecipe(BaseRecipe):
                 'statefile'
             ),
         'w')
-        state = [self.inputs, self.state]
+        state = [self.inputs, self.outputs, self.state]
         cPickle.dump(state, statefile)
 
     def go(self):
@@ -78,7 +78,7 @@ class StatefulRecipe(BaseRecipe):
         )
         try:
             statefile = open(statefile, 'r')
-            inputs, self.state = cPickle.load(statefile)
+            inputs, self.outputs, self.state = cPickle.load(statefile)
             statefile.close()
 
             # What's the correct thing to do if inputs differ from the saved
