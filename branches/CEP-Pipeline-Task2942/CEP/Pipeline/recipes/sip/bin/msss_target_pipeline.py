@@ -170,7 +170,7 @@ class msss_target_pipeline(control):
                       mapfile_target=target_path,
                       mapfiles_dir=copier_map_path,
                       mapfile=copied_files_path,
-                      target_dir="instrument_models")['mapfile']
+                      target_dir="instument_models")['mapfile']
 
         return new_instrument_map
 
@@ -256,11 +256,7 @@ class msss_target_pipeline(control):
         vdsinfo = self.run_task("vdsreader", gvds=gvds_file)
 
         # Create an empty parmdb for DPPP
-        parmdb_mapfile = self.run_task(
-            "setupparmdb", data_mapfile,
-            mapfile=os.path.join(mapfile_dir, 'dppp.parmdb.mapfile'),
-            suffix='.dppp.parmdb'
-        )['mapfile']
+        parmdb_mapfile = self.run_task("setupparmdb", data_mapfile)['mapfile']
 
         # Create a sourcedb to be used by the demixing phase of DPPP
         # The path to the A-team sky model is currently hard-coded.
@@ -269,9 +265,7 @@ class msss_target_pipeline(control):
             skymodel=os.path.join(
                 self.config.get('DEFAULT', 'lofarroot'),
                 'share', 'pipeline', 'skymodels', 'Ateam_LBA_CC.skymodel'
-            ),
-            mapfile=os.path.join(mapfile_dir, 'dppp.sourcedb.mapfile'),
-            suffix='.dppp.sourcedb'
+            )
         )['mapfile']
 
         # Create a parameter-subset for DPPP and write it to file.
@@ -296,9 +290,7 @@ class msss_target_pipeline(control):
 
         # Create an empty sourcedb for BBS
         sourcedb_mapfile = self.run_task(
-            "setupsourcedb", data_mapfile,
-            mapfile=os.path.join(mapfile_dir, 'bbs.sourcedb.mapfile'),
-            suffix='.bbs.sourcedb'
+            "setupsourcedb", data_mapfile
         )['mapfile']
 
         # Create a parameter-subset for BBS and write it to file.
@@ -323,7 +315,7 @@ class msss_target_pipeline(control):
         # CORRECTED_DATA column of the original MS.
         self.run_task("ndppp",
             (bbs_mapfile, corrected_mapfile),
-            clobber=True, #False,
+            clobber=False,
             suffix='',
             parset=ndppp_parset,
             mapfile=os.path.join(mapfile_dir, 'dppp[1].mapfile')
