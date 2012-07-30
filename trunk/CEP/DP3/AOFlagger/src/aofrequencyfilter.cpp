@@ -29,6 +29,12 @@ const size_t rowCountPerRequest = 128;
 // fringe size is given in units of wavelength / fringe. Fringes smaller than that will be filtered.
 double filterFringeSize;
 
+bool isFilterSizeInChannels;
+
+/**
+ * This function returns the distance between the u,v points of the highest and lowest frequencies.
+ * The returned distance is in wavelengths.
+ */
 double uvDist(double u, double v, double frequencyWidth)
 {
 	const double
@@ -59,9 +65,11 @@ void workThread()
 				{
 					// Calculate the frequencies to filter
 					double u = timerange->U(t), v = timerange->V(t);
-					double limitFrequency = uvDist(u, v, timerange->FrequencyWidth()) / filterFringeSize;
+					double limitFrequency = isFilterSizeInChannels ?
+						(channelCount / filterFringeSize) :
+						(uvDist(u, v, timerange->FrequencyWidth()) / filterFringeSize);
 					
-					if(limitFrequency < channelCount) // otherwise no frequencies had to be removed
+					if(limitFrequency*2 <= channelCount) // otherwise no frequencies had to be removed
 					{
 						if(limitFrequency > maxFilterSizeInChannels) maxFilterSizeInChannels = limitFrequency;
 						if(limitFrequency < minFilterSizeInChannels) minFilterSizeInChannels = limitFrequency;
@@ -80,8 +88,8 @@ void workThread()
 							}
 							
 							fftw_execute_dft(fftPlanForward, fftIn, fftOut);
-							// Remove the high frequencies [n/2-filterIndexSize : n/2+filterIndexSize]
-							size_t filterIndexSize = (limitFrequency > 1.0) ? (size_t) ceil(limitFrequency) : 1;
+							size_t filterIndexSize = (limitFrequency > 1.0) ? (size_t) ceil(limitFrequency/2.0) : 1;
+							// Remove the high frequencies [filterIndexSize : n-filterIndexSize]
 							for(size_t f=filterIndexSize;f<channelCount - filterIndexSize;++f)
 							{
 								fftOut[f][0] = 0.0;
@@ -193,12 +201,20 @@ void deinitializeFFTW()
 
 int main(int argc, char *argv[])
 {
-	if(argc == 1)
+	if(argc != 4)
 	{
-		cerr << "Usage: aofrequencyfilter <reffile> <filterfringesize>\n";
+		cerr << "Usage: aofrequencyfilter <reffile> <mode> <filterfringesize>\n"
+		"\tmode can be 'inChannels' (CH) or in uv wavelengths (UV)\n";
 	}
 	else {
-		filterFringeSize = atof(argv[2]);
+		string modeStr(argv[2]);
+		if(modeStr == "CH")
+			isFilterSizeInChannels = true;
+		else if(modeStr == "UV")
+			isFilterSizeInChannels = false;
+		else throw std::runtime_error("Bad mode");
+		
+		filterFringeSize = atof(argv[3]);
 		ClusteredObservation *obs = ClusteredObservation::Load(argv[1]);
 		commander = new ProcessCommander(*obs);
 		commander->PushReadAntennaTablesTask();
