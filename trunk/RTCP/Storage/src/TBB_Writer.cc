@@ -155,11 +155,11 @@ void TBB_Dipole::initDipole(const TBB_Header& header, const Parset& parset, cons
 	itsSampleNr0 = header.sampleNr;
 }
 
-bool TBB_Dipole::isInitialized() {
+bool TBB_Dipole::isInitialized() const {
 	return itsDataset != NULL;
 }
 
-bool TBB_Dipole::usesExternalDataFile() {
+bool TBB_Dipole::usesExternalDataFile() const {
 	return itsRawOut.is_open();
 }
 
@@ -364,7 +364,7 @@ are free to pick the format or just use "ITRF".
 	itsDataset->dispersionMeasureUnit().value = "pc/cm^3";
 }
 
-bool TBB_Dipole::hasAllZeroDataSamples(const TBB_Frame& frame) {
+bool TBB_Dipole::hasAllZeroDataSamples(const TBB_Frame& frame) const {
 	for (size_t i = 0; i < frame.header.nOfSamplesPerFrame; i++) {
 		if (frame.payload.data[i] != 0) {
 			return false;
@@ -429,7 +429,7 @@ void TBB_Station::processPayload(const TBB_Frame& frame) {
  * in "YYYY-MM-DDThh:mm:ss.s" UTC format.
  * For FILEDATE attribute.
  */
-string TBB_Station::getFileModDate(const string& filename) {
+string TBB_Station::getFileModDate(const string& filename) const {
 	struct timeval tv;
 	struct stat st;
 	int err;
@@ -448,7 +448,7 @@ string TBB_Station::getFileModDate(const string& filename) {
 }
 
 // For timestamp attributes in UTC.
-string TBB_Station::utcTimeStr(double time) {
+string TBB_Station::utcTimeStr(double time) const {
 	time_t timeSec = static_cast<time_t>(floor(time));
 	unsigned long timeNSec = static_cast<unsigned long>(round( (time-floor(time))*1e9 ));
 
@@ -462,7 +462,7 @@ string TBB_Station::utcTimeStr(double time) {
 	return formatString("%s.%09luZ", utc_str, timeNSec);
 }
 
-double TBB_Station::toMJD(double time) {
+double TBB_Station::toMJD(double time) const {
 	// January 1st, 1970, 00:00:00 (GMT) equals 40587.0 Modify Julian Day number
 	return 40587.0 + time / (24*60*60);
 }
@@ -994,7 +994,7 @@ string TBB_Writer::createNewTBB_H5Filename(const TBB_Header& header, const strin
 	return h5Filename;
 }
 
-time_t TBB_Writer::getTimeoutStampSec(unsigned streamWriterNr) {
+time_t TBB_Writer::getTimeoutStampSec(unsigned streamWriterNr) const {
 	return itsStreamWriters[streamWriterNr]->getTimeoutStampSec();
 }
 
