@@ -373,8 +373,8 @@ namespace LOFAR
       beam.foldPeriodUnit()         .value = "s";
 
       beam.dedispersion()           .value = DM == 0.0 ? "NONE" : "COHERENT";
-      beam.dedispersionMeasure()    .value = DM;
-      beam.dedispersionMeasureUnit().value = "pc/cm^3";
+      beam.dispersionMeasure()      .value = DM;
+      beam.dispersionMeasureUnit()  .value = "pc/cm^3";
 
       beam.barycentered()           .value = false;
 
