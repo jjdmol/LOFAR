@@ -80,6 +80,7 @@ class dppp(LOFARnodeTCP):
                 self.logger.info(
                     "Output file %s already exists. We're done." % outfile
                 )
+                self.outputs['ok'] = True
                 return 0
 
             # Create a working copy if input and output are identical, to
