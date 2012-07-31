@@ -29,21 +29,6 @@ class dppp(LOFARnodeTCP):
         parsetfile, executable, initscript, demix_sources,
         start_time, end_time, nthreads, clobber
     ):
-        # Put arguments that we need to pass to some private methods in a dict
-        kwargs = {
-            'infile' : infile,
-            'outfile' : outfile,
-            'parmdb' : parmdb,
-            'sourcedb' : sourcedb,
-            'parsetfile' : parsetfile,
-            'demix_sources' : demix_sources,
-            'start_time' : start_time,
-            'end_time' : end_time
-        }
-
-        if not nthreads:
-            nthreads = 1
-
         # Debugging info
         self.logger.debug("infile        = %s" % infile)
         self.logger.debug("outfile       = %s" % outfile)
@@ -58,6 +43,12 @@ class dppp(LOFARnodeTCP):
         self.logger.debug("nthreads      = %s" % nthreads)
         self.logger.debug("clobber       = %s" % clobber)
 
+        if not nthreads:
+            nthreads = 1
+        if not outfile:
+            outfile = infile
+        tmpfile = outfile + '.tmp'
+
         # Time execution of this job
         with log_time(self.logger):
             if os.path.exists(infile):
@@ -71,14 +62,51 @@ class dppp(LOFARnodeTCP):
                 self.logger.error("Executable %s not found" % executable)
                 return 1
 
+            # Make sure that we start with a clean slate
+            shutil.rmtree(tmpfile, ignore_errors=True)
             if clobber:
-                self.logger.info("Removing previous output %s" % outfile)
-                shutil.rmtree(outfile, ignore_errors=True)
+                if outfile == infile:
+                    self.logger.warn(
+                        "Input and output are identical, not clobbering %s" %
+                        outfile
+                    )
+                else:        
+                    self.logger.info("Removing previous output %s" % outfile)
+                    shutil.rmtree(outfile, ignore_errors=True)
+
+            # If input and output files are different, and if output file
+            # already exists, then we're done.
+            if outfile != infile and os.path.exists(outfile):
+                self.logger.info(
+                    "Output file %s already exists. We're done." % outfile
+                )
+                self.outputs['ok'] = True
+                return 0
+
+            # Create a working copy if input and output are identical, to
+            # avoid corrupting the original file if things go awry.
+            if outfile == infile:
+                self.logger.info(
+                    "Creating working copy: %s --> %s" % (infile, tmpfile)
+                )
+                shutil.copytree(infile, tmpfile)
 
             # Initialise environment. Limit number of threads used.
             env = read_initscript(self.logger, initscript)
             env['OMP_NUM_THREADS'] = str(nthreads)
             self.logger.debug("Using %s threads for NDPPP" % nthreads)
+
+            # Put arguments we need to pass to some private methods in a dict
+            kwargs = {
+                'infile' : infile,
+                'tmpfile' : tmpfile,
+                'parmdb' : parmdb,
+                'sourcedb' : sourcedb,
+                'parsetfile' : parsetfile,
+                'demix_sources' : demix_sources,
+                'start_time' : start_time,
+                'end_time' : end_time
+            }
 
             # Prepare for the actual DPPP run.
             with patched_parset(
@@ -98,13 +126,13 @@ class dppp(LOFARnodeTCP):
                         os.path.basename(executable),
                     ) as logger:
                         # Catch NDPPP segfaults (a regular occurance), and retry
-                        if outfile != infile:
-                            cleanup_fn = lambda : shutil.rmtree(outfile, ignore_errors=True)
-                        else:
-                            cleanup_fn = lambda : None
                         catch_segfaults(
-                            cmd, working_dir, env, logger, cleanup=cleanup_fn
+                            cmd, working_dir, env, logger, 
+                            cleanup = lambda : shutil.rmtree(tmpfile, ignore_errors=True)
                         )
+                        # Replace outfile with the updated working copy
+                        shutil.rmtree(outfile, ignore_errors=True)
+                        os.rename(tmpfile, outfile)
                 except CalledProcessError, err:
                     # CalledProcessError isn't properly propagated by IPython
                     self.logger.error(str(err))
@@ -133,11 +161,11 @@ class dppp(LOFARnodeTCP):
             "Time interval: %s %s" % (kwargs['start_time'], kwargs['end_time'])
         )
         # Create output directory for output MS.
-        create_directory(os.path.dirname(kwargs['outfile']))
+        create_directory(os.path.dirname(kwargs['tmpfile']))
 
         patch_dictionary = {
             'msin': kwargs['infile'],
-            'msout': kwargs['outfile'],
+            'msout': kwargs['tmpfile'],
             'uselogger': 'True'
         }
         if kwargs['start_time']:

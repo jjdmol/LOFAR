@@ -183,7 +183,8 @@ class msss_calibrator_pipeline(control):
         # Create an empty parmdb for DPPP
         parmdb_mapfile = self.run_task(
             "setupparmdb", data_mapfile,
-            suffix='.demix.parmdb'
+            mapfile=os.path.join(mapfile_dir, 'dppp.parmdb.mapfile'),
+            suffix='.dppp.parmdb'
         )['mapfile']
 
         # Create a sourcedb to be used by the demixing phase of DPPP
@@ -193,7 +194,9 @@ class msss_calibrator_pipeline(control):
             skymodel=os.path.join(
                 self.config.get('DEFAULT', 'lofarroot'),
                 'share', 'pipeline', 'skymodels', 'Ateam_LBA_CC.skymodel'
-            )
+            ),
+            mapfile=os.path.join(mapfile_dir, 'dppp.sourcedb.mapfile'),
+            suffix='.dppp.sourcedb'
         )['mapfile']
 
         # Create a parameter-subset for DPPP and write it to file.
@@ -219,7 +222,11 @@ class msss_calibrator_pipeline(control):
 #        self.run_task("rficonsole", demix_mapfile, indirect_read=True)
 
         # Create an empty parmdb for BBS
-        parmdb_mapfile = self.run_task("setupparmdb", data_mapfile)['mapfile']
+        parmdb_mapfile = self.run_task(
+            "setupparmdb", data_mapfile,
+            mapfile=os.path.join(mapfile_dir, 'bbs.parmdb.mapfile'),
+            suffix='.bbs.parmdb'
+        )['mapfile']
 
         # Create a sourcedb based on sourcedb's input argument "skymodel"
         sourcedb_mapfile = self.run_task(
@@ -229,7 +236,9 @@ class msss_calibrator_pipeline(control):
                 'share', 'pipeline', 'skymodels',
                 py_parset.getString('Calibration.CalibratorSource') +
                     '.skymodel'
-            )
+            ),
+            mapfile=os.path.join(mapfile_dir, 'bbs.sourcedb.mapfile'),
+            suffix='.bbs.sourcedb'
         )['mapfile']
 
         # Create a parameter-subset for BBS and write it to file.
