@@ -42,6 +42,7 @@ class TimeConvolutionFrame : public Gtk::Frame {
 		_projectedFourierOperationButton("Projected FT"),
 		_extrapolatedSincOperationButton("Extrapolated sinc"),
 		_iterativeExtrapolatedSincOperationButton("Iterative extr. sinc"),
+		_fftSincOperationButton("FFT sinc"),
 		_sincSizeLabel("Sinc size: (relative to uv track diameter)"),
 		_sincSizeScale(0, 10000, 1),
 		_angleLabel("Angle: (degrees)"),
@@ -83,6 +84,10 @@ class TimeConvolutionFrame : public Gtk::Frame {
 			_box.pack_start(_iterativeExtrapolatedSincOperationButton);
 			_iterativeExtrapolatedSincOperationButton.set_group(group);
 			_iterativeExtrapolatedSincOperationButton.show();
+			
+			_box.pack_start(_fftSincOperationButton);
+			_fftSincOperationButton.set_group(group);
+			_fftSincOperationButton.show();
 
 			switch(action.Operation())
 			{
@@ -103,6 +108,9 @@ class TimeConvolutionFrame : public Gtk::Frame {
 					break;
 				case rfiStrategy::TimeConvolutionAction::IterativeExtrapolatedSincOperation:
 					_iterativeExtrapolatedSincOperationButton.set_active(true);
+					break;
+				case rfiStrategy::TimeConvolutionAction::FFTSincOperation:
+					_fftSincOperationButton.set_active(true);
 					break;
 			}
 
@@ -157,7 +165,7 @@ class TimeConvolutionFrame : public Gtk::Frame {
 
 		Gtk::VBox _box;
 		Gtk::HButtonBox _buttonBox;
-		Gtk::RadioButton _singleSincOperationButton, _sincOperationButton, _projectedSincOperationButton, _projectedFourierOperationButton, _extrapolatedSincOperationButton, _iterativeExtrapolatedSincOperationButton;
+		Gtk::RadioButton _singleSincOperationButton, _sincOperationButton, _projectedSincOperationButton, _projectedFourierOperationButton, _extrapolatedSincOperationButton, _iterativeExtrapolatedSincOperationButton, _fftSincOperationButton;
 		Gtk::Label _sincSizeLabel;
 		Gtk::HScale _sincSizeScale;
 		Gtk::Label _angleLabel;
@@ -192,8 +200,10 @@ class TimeConvolutionFrame : public Gtk::Frame {
 				_action.SetOperation(rfiStrategy::TimeConvolutionAction::ProjectedFTOperation);
 			else if(_extrapolatedSincOperationButton.get_active())
 				_action.SetOperation(rfiStrategy::TimeConvolutionAction::ExtrapolatedSincOperation);
-			else
+			else if(_iterativeExtrapolatedSincOperationButton.get_active())
 				_action.SetOperation(rfiStrategy::TimeConvolutionAction::IterativeExtrapolatedSincOperation);
+			else // if(_fftSincOperationButton
+				_action.SetOperation(rfiStrategy::TimeConvolutionAction::FFTSincOperation);
 			_editStrategyWindow.UpdateAction(&_action);
 		}
 };
