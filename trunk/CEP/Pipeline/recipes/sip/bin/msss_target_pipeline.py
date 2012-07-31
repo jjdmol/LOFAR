@@ -271,7 +271,8 @@ class msss_target_pipeline(control):
                 'share', 'pipeline', 'skymodels', 'Ateam_LBA_CC.skymodel'
             ),
             mapfile=os.path.join(mapfile_dir, 'dppp.sourcedb.mapfile'),
-            suffix='.dppp.sourcedb'
+            suffix='.dppp.sourcedb',
+            type='blob'
         )['mapfile']
 
         # Create a parameter-subset for DPPP and write it to file.

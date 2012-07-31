@@ -5,7 +5,7 @@
 #                                                                loose@astron.nl
 # ------------------------------------------------------------------------------
 
-from subprocess import Popen, CalledProcessError, PIPE, STDOUT
+from subprocess import CalledProcessError
 import errno
 import os
 import tempfile
@@ -19,7 +19,7 @@ from lofarpipe.support.utilities import catch_segfaults
 
 
 class setupsourcedb(LOFARnodeTCP):
-    def run(self, executable, catalogue, skydb):
+    def run(self, executable, catalogue, skydb, dbtype):
         with log_time(self.logger):
             # Create output directory if it does not yet exist.
             skydb_dir = os.path.dirname(skydb)
@@ -38,9 +38,10 @@ class setupsourcedb(LOFARnodeTCP):
             scratch_dir = tempfile.mkdtemp()
             try:
                 cmd = [executable,
+                       "in=%s" % catalogue,
+                       "out=%s" % skydb,
+                       "outtype=%s" % dbtype,
                        "format=<",
-                       "in=%s" % (catalogue),
-                       "out=%s" % (skydb),
                        "append=false"
                       ]
                 with CatchLog4CPlus(
@@ -49,10 +50,10 @@ class setupsourcedb(LOFARnodeTCP):
                     os.path.basename(executable)
                 ) as logger:
                     catch_segfaults(cmd, scratch_dir, None, logger)
-            except CalledProcessError, e:
+            except CalledProcessError, err:
                 # For CalledProcessError isn't properly propagated by IPython
                 # Temporary workaround...
-                self.logger.error(str(e))
+                self.logger.error(str(err))
                 return 1
             finally:
                 shutil.rmtree(scratch_dir)

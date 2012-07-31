@@ -37,6 +37,11 @@ class setupsourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
             help="Input sky catalogue",
             default=''
         ),
+        'type': ingredient.StringField(
+            '--type',
+            help="Output type (casa or blob)",
+            default="casa"
+        ),
         'mapfile': ingredient.StringField(
             '--mapfile',
             help="Full path of mapfile to produce; it will contain "
@@ -109,7 +114,8 @@ class setupsourcedb(BaseRecipe, RemoteCommandRecipeMixIn):
                     arguments=[
                         self.inputs['executable'],
                         self.inputs['skymodel'],
-                        outfile
+                        outfile,
+                        self.inputs['type']
                     ]
                 )
             )
