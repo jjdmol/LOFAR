@@ -1420,11 +1420,10 @@ Station::Ptr readStation(const Table &table, unsigned int id,
     tab_field = tab_field(tab_field.col("ANTENNA_ID") == static_cast<Int>(id));
 
     const size_t nFields = tab_field.nrow();
-    if(nFields < 1 || nFields > 2)
+    if(nFields == 0)
     {
-        LOG_WARN_STR("Antenna " << name << " consists of an incompatible number"
-            " of antenna fields. Beam model simulation will not work for this"
-            " antenna.");
+        LOG_WARN_STR("Antenna " << name << " has no associated antenna fields."
+          " Beamforming simulation will be switched off for this antenna.");
         return Station::Ptr(new Station(name, position));
     }
 
@@ -1436,7 +1435,7 @@ Station::Ptr readStation(const Table &table, unsigned int id,
     ROArrayQuantColumn<Double> c_offset(tab_field, "ELEMENT_OFFSET", "m");
     ROArrayColumn<Bool> c_flag(tab_field, "ELEMENT_FLAG");
 
-    AntennaField::Ptr field[2];
+    Station::Ptr station(new Station(name, position));
     for(size_t i = 0; i < nFields; ++i)
     {
         // Read antenna field center (ITRF).
@@ -1457,8 +1456,8 @@ Station::Ptr readStation(const Table &table, unsigned int id,
         Vector3 R = {{aips_axes(0, 2).getValue(), aips_axes(1, 2).getValue(),
             aips_axes(2, 2).getValue()}};
 
-        // Store information as AntennaField.
-        field[i] = AntennaField::Ptr(new AntennaField(c_name(i), position, P,
+        // Construct AntennaField instance from available information.
+        AntennaField::Ptr field(new AntennaField(c_name(i), position, P,
             Q, R));
 
         // Read offsets (ITRF) of the dipoles within a tile for HBA antenna
@@ -1470,13 +1469,16 @@ Station::Ptr readStation(const Table &table, unsigned int id,
             ASSERT(aips_offset.nrow() == 3);
 
             const size_t nElement = aips_offset.ncolumn();
+            ASSERTSTR(nElement > 0, "Antenna field #" << i << " of antenna "
+                << name << " is reported to be an HBA field, but no HBA tile"
+                " layout information is available for it.");
             for(size_t j = 0; j < nElement; ++j)
             {
                 Vector3 offset = {{aips_offset(0, j).getValue(),
                     aips_offset(1, j).getValue(),
                     aips_offset(2, j).getValue()}};
 
-                field[i]->appendTileElement(offset);
+                field->appendTileElement(offset);
             }
         }
 
@@ -1485,6 +1487,8 @@ Station::Ptr readStation(const Table &table, unsigned int id,
         Matrix<Bool> aips_flag = c_flag(i);
 
         const size_t nElement = aips_offset.ncolumn();
+        ASSERTSTR(nElement > 0, "Antenna field #" << i << " of antenna " << name
+            << " contains no antenna elements.");
         ASSERT(aips_offset.shape().isEqual(IPosition(2, 3, nElement)));
         ASSERT(aips_flag.shape().isEqual(IPosition(2, 2, nElement)));
 
@@ -1497,12 +1501,13 @@ Station::Ptr readStation(const Table &table, unsigned int id,
             element.flag[0] = aips_flag(0, j);
             element.flag[1] = aips_flag(1, j);
 
-            field[i]->appendElement(element);
+            field->appendElement(element);
         }
+
+        station->append(field);
     }
 
-    return (nFields == 1 ? Station::Ptr(new Station(name, position, field[0]))
-        : Station::Ptr(new Station(name, position, field[0], field[1])));
+    return station;
 }
 
 } //# namespace unnamed

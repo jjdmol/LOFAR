@@ -100,8 +100,7 @@ makeElevationCutExpr(const Expr<Vector<2> >::Ptr &exprAzEl,
     const ElevationCutConfig &config);
 
 Expr<JonesMatrix>::Ptr
-makeBeamExpr(Scope &scope,
-    const Station::ConstPtr &station,
+makeBeamExpr(const Station::ConstPtr &station,
     double refFreq,
     const Expr<Vector<3> >::Ptr &exprITRF,
     const Expr<Vector<3> >::Ptr &exprRefDelayITRF,
@@ -119,8 +118,7 @@ makeFaradayRotationExpr(Scope &scope,
     const string &patch);
 
 Expr<JonesMatrix>::Ptr
-makeIonosphereExpr(Scope &scope,
-    const Station::ConstPtr &station,
+makeIonosphereExpr(const Station::ConstPtr &station,
     const casa::MPosition &refPosition,
     const Expr<Vector<2> >::Ptr &exprAzEl,
     const IonosphereExpr::Ptr &exprIonosphere);
