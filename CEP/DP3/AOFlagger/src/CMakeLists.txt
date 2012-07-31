@@ -120,6 +120,7 @@ set(STRATEGY_ACTION_FILES
   strategy/actions/statisticalflagaction.cpp
   strategy/actions/strategyaction.cpp
   strategy/actions/svdaction.cpp
+  strategy/actions/timeconvolutionaction.cpp
   strategy/actions/timeselectionaction.cpp
   strategy/actions/writeflagsaction.cpp)
 

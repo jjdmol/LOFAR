@@ -91,9 +91,9 @@ size_t MeasurementSet::FrequencyCount()
 	return _maxFrequencyIndex;
 }
 
-size_t MeasurementSet::BandCount()
+size_t MeasurementSet::BandCount(const std::string &location)
 {
-	casa::MeasurementSet ms(_location);
+	casa::MeasurementSet ms(location);
 	casa::Table spwTable = ms.spectralWindow();
 	size_t count = spwTable.nrow();
 	return count;
