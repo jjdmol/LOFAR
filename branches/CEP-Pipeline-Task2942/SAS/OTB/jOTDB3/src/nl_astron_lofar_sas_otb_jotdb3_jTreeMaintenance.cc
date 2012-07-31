@@ -1060,15 +1060,13 @@ JNIEXPORT jboolean JNICALL Java_nl_astron_lofar_sas_otb_jotdb3_jTreeMaintenance_
   const char* ed = env->GetStringUTFChars (anEndTime, 0);
   const string startTime (bd);
   const string endTime (ed);
-  const ptime ts (time_from_string (startTime));
-  const ptime te (time_from_string (endTime));
   jboolean succes;
   try {
-    succes= ((TreeMaintenance*)getCObjectPtr(env,jTreeMaintenance,"_TreeMaintenance"))->setSchedule(treeID,ts,te);
+    succes= ((TreeMaintenance*)getCObjectPtr(env,jTreeMaintenance,"_TreeMaintenance"))->setSchedule(treeID,bd,ed);
     env->ReleaseStringUTFChars (aStartTime, bd);
     env->ReleaseStringUTFChars (anEndTime, ed);
   } catch (exception &ex) {
-    cout << "Exception during TreeMaintenance::setSchedule(" << treeID << "," << ts << "," << te <<  ") " << ex.what() << endl; 
+    cout << "Exception during TreeMaintenance::setSchedule(" << treeID << "," << bd << "," << ed <<  ") " << ex.what() << endl; 
     env->ReleaseStringUTFChars (aStartTime, bd);
     env->ReleaseStringUTFChars (anEndTime, ed);
     env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());

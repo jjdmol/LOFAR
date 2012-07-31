@@ -22,6 +22,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
+#include <ApplCommon/LofarDirs.h>
 // #include <APS/ParameterSet.h>
 #include <time.h>
 #include <fstream>
@@ -89,9 +90,9 @@ namespace LOFAR {
     itsParameterSet = new ParameterSet(cl.locate(cntlrName));
     itsSettings = new VHECRsettings(itsParameterSet);  // does all nasty conversions
 
-    itsConfigurationFile = "/opt/lofar/etc/VHECRtask.conf"; // /opt/lofar/etc/
-    itsOutputFilename = "/opt/lofar/log/VHECRtaskLogTest.dat";
-    itsAntennaPositionsFile = "/opt/lofar/etc/AntennaArrays.conf"; // hardcoded but can be overridden by VHECRtask.conf config file
+    itsConfigurationFile = LOFAR_CONFIG_LOCATION "/VHECRtask.conf"; // /opt/lofar/etc/
+    itsOutputFilename = LOFAR_LOG_LOCATION "/VHECRtaskLogTest.dat";
+    itsAntennaPositionsFile = LOFAR_CONFIG_LOCATION "/AntennaArrays.conf"; // hardcoded but can be overridden by VHECRtask.conf config file
     // which is read in only now:
     readConfigFile(itsConfigurationFile.c_str());
     setup();

@@ -23,6 +23,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/StreamUtil.h>
 #include <Common/Version.h>
+#include <ApplCommon/LofarDirs.h>
 #include <ApplCommon/Observation.h>
 #include <ApplCommon/StationConfig.h>
 #include <ApplCommon/StationInfo.h>

@@ -35,8 +35,11 @@
 #include <string.h>
 #include <errno.h>
 #include <vector>
+#include <string>
+#include <sstream>
 
 #ifdef HAVE_LIBSSH2
+#include <Scheduling.h>
 #include <sstream>
 #include <sys/select.h>
 #include <Common/lofar_string.h>
@@ -206,11 +209,16 @@ bool SSHconnection::waitsocket( FileDescriptorBasedStream &sock )
 
 void SSHconnection::commThread()
 {
+#if defined HAVE_BGP_ION
+  //doNotRunOnCore0();
+  runOnCore0();
+  //nice(19);
+#endif
+
   SocketStream sock( itsHostName, 22, SocketStream::TCP, SocketStream::Client );
 
   LOG_DEBUG_STR( itsLogPrefix << "Connected" );
 
-  stringstream buffer;
   int rc;
   int exitcode;
   char *exitsignal=(char *)"none";
@@ -240,16 +248,24 @@ void SSHconnection::commThread()
 
   LOG_DEBUG_STR( itsLogPrefix << "Remote command started, waiting for output" );
 
+  // raw input buffer
+  char data[0x1000];
+
+  // the current line (or line remnant)
+  string line("");
+
   /* Session I/O */
   for( ;; )
   {
     /* loop until we block */
     do {
-      char data[0x4000];
-
       rc = libssh2_channel_read( channel, data, sizeof data );
       if( rc > 0 )
       {
+        // create a buffer for line + data
+        stringstream buffer;
+
+        buffer << line;
         buffer.write( data, rc );
 
         /* extract and log lines */
@@ -257,16 +273,15 @@ void SSHconnection::commThread()
         {
           Cancellation::point();
 
-          buffer.getline( data, sizeof data );
+          std::getline( buffer, line );
 
-          if (buffer.fail()) {
-            // no line found
-            buffer.clear();
+          if (!buffer.good()) {
+            // 'line' now holds the remnant
             break;
           }
 
           // TODO: Use logger somehow (we'd duplicate the prefix if we just use LOG_* macros..)
-          cout << data << endl;
+          cout << line << endl;
         }
       } else {
         if( rc < 0 && rc != LIBSSH2_ERROR_EAGAIN ) {

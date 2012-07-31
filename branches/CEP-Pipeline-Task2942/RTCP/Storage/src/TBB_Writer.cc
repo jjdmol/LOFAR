@@ -26,6 +26,10 @@
 #include <Storage/TBB_Writer.h>
 
 #include <unistd.h>
+#include <endian.h>
+#if __BYTE_ORDER != __BIG_ENDIAN && __BYTE_ORDER != __LITTLE_ENDIAN
+#error Byte order is neither big endian nor little endian: not supported
+#endif
 
 #include <iostream>
 
@@ -45,7 +49,7 @@ namespace RTCP {
 
 using namespace std;
 
-EXCEPTION_CLASS(TBB_MalformedFrameException, Exception);
+EXCEPTION_CLASS(TBB_MalformedFrameException, StorageException);
 
 /*
  * The output_format is without seconds; the output_size is incl the '\0'.
@@ -68,6 +72,14 @@ static string formatFilenameTimestamp(const struct timeval& tv, const char* outp
 	return date;
 }
 
+string TBB_Header::toString() const {
+	std::ostringstream oss;
+	oss << (uint32_t)stationID << " " << (uint32_t)rspID << " " << (uint32_t)rcuID << " " << (uint32_t)sampleFreq <<
+			" " << seqNr << " " << time << " " << sampleNr << " " << nOfSamplesPerFrame << " " << nOfFreqBands <<
+			" " /*<< bandSel << " "*/ << spare << " " << crc16;
+	return oss.str();
+}
+
 //////////////////////////////////////////////////////////////////////////////
 
 TBB_Dipole::TBB_Dipole()
@@ -79,10 +91,10 @@ TBB_Dipole::TBB_Dipole()
 {
 }
 
-// Do not use; only needed for vector<TBB_Dipole>(N)
+// Do not use. Only needed for vector<TBB_Dipole>(N).
 TBB_Dipole::TBB_Dipole(const TBB_Dipole& rhs)
 : itsDataset(rhs.itsDataset) // needed, setting the others is superfluous
-//, itsRawOut(rhs.itsRawOut) // ofstream has no copy constr and unnecessary (this whole func), so disabled
+//, itsRawOut(rhs.itsRawOut) // ofstream has no copy constr and is unnecessary (this whole func), so disabled
 , itsFlagOffsets(rhs.itsFlagOffsets)
 , itsDatasetLen(rhs.itsDatasetLen)
 , itsSampleFreq(rhs.itsSampleFreq)
@@ -143,11 +155,11 @@ void TBB_Dipole::initDipole(const TBB_Header& header, const Parset& parset, cons
 	itsSampleNr0 = header.sampleNr;
 }
 
-bool TBB_Dipole::isInitialized() {
+bool TBB_Dipole::isInitialized() const {
 	return itsDataset != NULL;
 }
 
-bool TBB_Dipole::usesExternalDataFile() {
+bool TBB_Dipole::usesExternalDataFile() const {
 	return itsRawOut.is_open();
 }
 
@@ -155,13 +167,10 @@ void TBB_Dipole::processFrameData(const TBB_Frame& frame, Mutex& h5Mutex) {
 	off_t offset = (frame.header.time - itsTime0) * itsSampleFreq + frame.header.sampleNr - itsSampleNr0;
 
 	if (frame.header.nOfFreqBands == 0) { // transient mode
-#ifdef DISABLE_CRCS
-		uint32_t csum = 0;
-#else
+
+#ifndef DISABLE_CRCS
 		// Verify data checksum.
-		uint32_t csum = crc32tbb(reinterpret_cast<const uint16_t*>(frame.payload.data), frame.header.nOfSamplesPerFrame + 2/*=crc32*/);
-#endif
-		if (csum != 0) {
+		if (!crc32tbb(&frame.payload, frame.header.nOfSamplesPerFrame)) {
 			/*
 			 * On a data checksum error 'flag' this offset, but still store the data.
 			 * Lost frame vs crc error can be seen from the data: a block of zeros indicates lost.
@@ -170,7 +179,17 @@ void TBB_Dipole::processFrameData(const TBB_Frame& frame, Mutex& h5Mutex) {
 
 			uint32_t crc32 = *reinterpret_cast<const uint32_t*>(&frame.payload.data[frame.header.nOfSamplesPerFrame]);
 			LOG_INFO_STR("TBB: crc32: " << frame.header.toString() << " " << crc32);
+		} else
+#endif
+		if (hasAllZeroDataSamples(frame)) {
+			/* Because of the crc32tbb variant, payloads with only zeros validate as correct.
+			 * Given the used frame size (1024 samples for transient), this is extremenly unlikely
+			 * to be real data. Rather, such zero blocks are from RCUs that are disabled or broken.
+			 * Still store the zeros to distinguish from lost frames.
+			 */
+			itsFlagOffsets.push_back(offset);
 		}
+
 	} else { // spectral mode
 		//uint32_t bandNr  = frame.header.bandsliceNr & TBB_BAND_NR_MASK;
 		//uint32_t sliceNr = frame.header.bandsliceNr >> TBB_SLICE_NR_SHIFT;
@@ -252,8 +271,20 @@ void TBB_Dipole::initTBB_DipoleDataset(const TBB_Header& header, const Parset& p
 > No DIPOLE_CALIBRATION_DELAY_UNIT
 These can be calculated from the values in the LOFAR calibration
 tables, but we can do that ourselves as long as the calibration table
-values for each dipole are written to the new keyword
+values for each dipole are written to the new keyword. Sander: please put them in; see the code ref below.
 DIPOLE_CALIBRATION_GAIN_CURVE.
+
+// Use StaticMetaData/CalTables
+
+calibration delay value en unit zijn nuttiger
+en is het beste om die er gelijk in te schrijven
+momenteel
+In /opt/cep/lus/daily/Mon/src/code/src/PyCRTools/modules/metadata.py
+heb ik code om de calibratie tabellen uit te lezen
+De functie: getStationPhaseCalibration
+elke .dat file bevat 96*512*2 doubles
+voor 96 rcus, 512 frequenties, een complexe waarde
+maar nu vraag ik me wel weer af of de frequenties of de rcus eerst komen
 */
 	//itsDataset->dipoleCalibrationDelayUnit().value = 's';
 	//itsDataset->dipoleCalibrationGainCurve().value = ???; // TODO: where to get this?
@@ -287,7 +318,7 @@ int antSetName2AntFieldIndex(const string& antSetName) {
 	int fieldIdx = antSetName2AntFieldIndex(parset.antennaSet());
 
 	// See AntField.h in ApplCommon for the AFArray typedef and contents.
-	// Relative position wrt to field center. (TODO: but Pim's mail says absolute ITRF)
+	// Absolute position (Pim's mail, Sander). (not wrt to field center, ICD is wrong (July 2012)).
 	AFArray& antPos(antField.AntPos(fieldIdx));
 	itsDataset->antennaPosition().value = AntField::getData(antPos); // TODO: select dipole pos
 	itsDataset->antennaPositionUnit().value = "m";
@@ -333,6 +364,16 @@ are free to pick the format or just use "ITRF".
 	itsDataset->dispersionMeasureUnit().value = "pc/cm^3";
 }
 
+bool TBB_Dipole::hasAllZeroDataSamples(const TBB_Frame& frame) const {
+	for (size_t i = 0; i < frame.header.nOfSamplesPerFrame; i++) {
+		if (frame.payload.data[i] != 0) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
 //////////////////////////////////////////////////////////////////////////////
 
 TBB_Station::TBB_Station(const string& stationName, const Parset& parset, const string& h5Filename, bool dumpRaw)
@@ -359,7 +400,7 @@ TBB_Station::~TBB_Station() {
 string TBB_Station::getRawFilename(unsigned rspID, unsigned rcuID) {
 	string rawFilename = itsH5Filename;
 	string rsprcuStr(formatString("_%03u%03u", rspID, rcuID));
-	size_t pos = rawFilename.find('_', rawFilename.find('_'));
+	size_t pos = rawFilename.find('_', rawFilename.find('_') + 1);
 	rawFilename.insert(pos, rsprcuStr); // insert _rsp/rcu IDs after station name (2nd '_')
 	rawFilename.resize(rawFilename.size() - (sizeof(".h5") - 1));
 	rawFilename.append(".raw");
@@ -388,7 +429,7 @@ void TBB_Station::processPayload(const TBB_Frame& frame) {
  * in "YYYY-MM-DDThh:mm:ss.s" UTC format.
  * For FILEDATE attribute.
  */
-string TBB_Station::getFileModDate(const string& filename) {
+string TBB_Station::getFileModDate(const string& filename) const {
 	struct timeval tv;
 	struct stat st;
 	int err;
@@ -407,7 +448,7 @@ string TBB_Station::getFileModDate(const string& filename) {
 }
 
 // For timestamp attributes in UTC.
-string TBB_Station::utcTimeStr(double time) {
+string TBB_Station::utcTimeStr(double time) const {
 	time_t timeSec = static_cast<time_t>(floor(time));
 	unsigned long timeNSec = static_cast<unsigned long>(round( (time-floor(time))*1e9 ));
 
@@ -421,7 +462,7 @@ string TBB_Station::utcTimeStr(double time) {
 	return formatString("%s.%09luZ", utc_str, timeNSec);
 }
 
-double TBB_Station::toMJD(double time) {
+double TBB_Station::toMJD(double time) const {
 	// January 1st, 1970, 00:00:00 (GMT) equals 40587.0 Modify Julian Day number
 	return 40587.0 + time / (24*60*60);
 }
@@ -644,31 +685,14 @@ time_t TBB_StreamWriter::getTimeoutStampSec() const {
 	return itsTimeoutStamp.tv_sec; // racy read (and no access once guarantee)
 }
 
-#if __BYTE_ORDER == __BIG_ENDIAN
-// hton[ls],ntoh[ls] on big endian are no-ops, so we have to provide the byte swaps.
-uint16_t TBB_StreamWriter::littleNativeBSwap(uint16_t val) const {
-	return __bswap_16(val); // GNU ext
-}
-uint32_t TBB_StreamWriter::littleNativeBSwap(uint32_t val) const {
-	return __bswap_32(val); // GNU ext
-}
-#elif __BYTE_ORDER == __LITTLE_ENDIAN
-uint16_t TBB_StreamWriter::littleNativeBSwap(uint16_t val) const {
-	return val;
-}
-uint32_t TBB_StreamWriter::littleNativeBSwap(uint32_t val) const {
-	return val;
-}
-#endif
-
-void TBB_StreamWriter::frameHeaderLittleNativeBSwap(TBB_Header& header) const {
-	//header.seqNr              = littleNativeBSwap(header.seqNr); // neither intended nor useful for us
-	header.time               = littleNativeBSwap(header.time);
-	header.sampleNr           = littleNativeBSwap(header.sampleNr); // also swaps header.bandsliceNr
-	header.nOfSamplesPerFrame = littleNativeBSwap(header.nOfSamplesPerFrame);
-	header.nOfFreqBands       = littleNativeBSwap(header.nOfFreqBands);
-	//header.spare              = littleNativeBSwap(header.spare); // unused
-	header.crc16              = littleNativeBSwap(header.crc16);
+void TBB_StreamWriter::frameHeaderLittleToHost(TBB_Header& header) const {
+	//header.seqNr              = le32toh(header.seqNr); // (must be) zeroed, but otherwise not useful for us
+	header.time               = le32toh(header.time);
+	header.sampleNr           = le32toh(header.sampleNr); // also swaps header.bandsliceNr
+	header.nOfSamplesPerFrame = le16toh(header.nOfSamplesPerFrame);
+	header.nOfFreqBands       = le16toh(header.nOfFreqBands);
+	//header.spare              = le16toh(header.spare); // unused
+	header.crc16              = le16toh(header.crc16);
 }
 
 void TBB_StreamWriter::correctTransientSampleNr(TBB_Header& header) const {
@@ -688,101 +712,75 @@ void TBB_StreamWriter::correctTransientSampleNr(TBB_Header& header) const {
 }
 
 /*
- * This code is based on the Python ref/test code from Gijs Schoonderbeek. It does not do a std crc16 (AFAICS). (VHDL hw code from generator at www.easics.com)
- * It assumes that the seqNr field, ((uint32_t*)buf)[1], has been zeroed.
- * Do not call this function with len < 1; reject the frame earlier.
+ * Assumes that the seqNr field in the TBB_Frame at buf has been zeroed.
+ * Takes a ptr to a complete header. (Drop too small frames earlier.)
  */
-uint16_t TBB_StreamWriter::crc16tbb(const uint16_t* buf, size_t len) const {
-	uint16_t CRC            = 0;
-	const uint32_t CRC_poly = 0x18005;
-	const uint16_t bits     = 16;
-	uint32_t data           = 0;
-	const uint32_t CRCDIV   = (CRC_poly & 0x7fffffff) << 15;
+bool TBB_StreamWriter::crc16tbb(const TBB_Header* header) {
+	itsCrc16gen.reset();
 
-	data = (buf[0] & 0x7fffffff) << 16;
-	for (uint32_t i = 1; i < len; i++) {
-		data += buf[i];
-		for (uint16_t j = 0; j < bits; j++) {
-			if ((data & 0x80000000) != 0) {
-				data = data ^ CRCDIV;
-			}
-			data = data & 0x7fffffff;
-			data = data << 1;
-		}
+	/*
+	 * The header checksum is done like the data, i.e. on 16 bit little endian blocks at a time.
+	 * As with the data, both big and little endian CPUs need to byte swap.
+	 */
+	const int16_t* ptr = reinterpret_cast<const int16_t*>(header);
+	size_t i;
+	for (i = 0; i < (sizeof(*header) - sizeof(header->crc16)) / sizeof(int16_t); i++) {
+		int16_t val = __bswap_16(ptr[i]);
+		itsCrc16gen.process_bytes(&val, sizeof(int16_t));
 	}
-	CRC = data >> 16;
-	return CRC;
+
+	// Byte swap the little endian checksum on big endian only.
+	// It is also possible to process header->crc16 and see if checksum() equals 0.
+	uint16_t crc16val = header->crc16;
+#if __BYTE_ORDER == __BIG_ENDIAN
+	crc16val = __bswap_16(crc16val);
+#endif
+	return itsCrc16gen.checksum() == crc16val;
 }
 
 /*
- * This code is based on the Python ref/test code from Gijs Schoonderbeek. It does not do a std crc32 (AFAICS). (VHDL hw code from generator at www.easics.com)
- * It computes a 32 bit result, but the buf arg is of uint16_t*.
- * Do not call this function with len < 2; reject the frame earlier.
+ * Note: The nsamples arg is without the space taken by the crc32 in payload. (Drop too small frames earlier.)
  */
-uint32_t TBB_Dipole::crc32tbb(const uint16_t* buf, size_t len) const {
-	uint32_t CRC            = 0;
-	const uint64_t CRC_poly = 0x104C11DB7ULL;
-	const uint16_t bits     = 16;
-	uint64_t data           = 0;
-	const uint64_t CRCDIV   = (CRC_poly & 0x7fffffffffffULL) << 15;
-
-	data = buf[0];
-	data = data & 0x7fffffffffffULL;
-	data = data << 16;
-	data = data + buf[1];
-	data = data & 0x7fffffffffffULL;
-	data = data << 16;
-	uint32_t i = 2;
-	for ( ; i < len-2; i++) {
-		data = data + buf[i];
-		for (uint32_t j = 0; j < bits; j++) {
-			if (data & 0x800000000000ULL) {
-				data = data ^ CRCDIV;
-			}
-			data = data & 0x7fffffffffffULL;
-			data = data << 1;
-		}
-	}
+bool TBB_Dipole::crc32tbb(const TBB_Payload* payload, size_t nsamples) {
+	itsCrc32gen.reset();
 
 	/*
-	 * Do the 32 bit checksum separately, without the '& 0xfff' masking.
-	 * Process the two 16 bit halves in reverse order (no endian swap!), but keep the i < len cond.
+	 * Both little and big endian CPUs need to byte swap, because the data always arrives
+	 * in little and the boost routines treat it as uint8_t[] (big).
 	 */
-	for (buf += 1; i < len; i++, buf -= 2) {
-		data = data + buf[i];
-		for (uint32_t j = 0; j < bits; j++) {
-			if (data & 0x800000000000ULL) {
-				data = data ^ CRCDIV;
-			}
-			data = data & 0x7fffffffffffULL;
-			data = data << 1;
-		}
+	const int16_t* ptr = reinterpret_cast<const int16_t*>(payload->data);
+	size_t i;
+	for (i = 0; i < nsamples; i++) {
+		int16_t val = __bswap_16(ptr[i]);
+		itsCrc32gen.process_bytes(&val, sizeof(int16_t));
 	}
 
-	CRC = (uint32_t)(data >> 16);
-	return CRC;
+	// Byte swap the little endian checksum on big endian only.
+	// It is also possible to process crc32val and see if checksum() equals 0.
+	uint32_t crc32val = *reinterpret_cast<const uint32_t*>(&ptr[nsamples]);
+#if __BYTE_ORDER == __BIG_ENDIAN
+	crc32val = __bswap_32(crc32val);
+#endif
+	return itsCrc32gen.checksum() == crc32val;
 }
 
 /*
  * Process the incoming TBB header.
  * Note that this function may update the header, but not its crc, so you cannot re-verify it.
  */
-void TBB_StreamWriter::processHeader(TBB_Header& header, size_t recvPayloadSize) const {
-	frameHeaderLittleNativeBSwap(header); // no-op on little endian
-
-#ifdef DISABLE_CRCS
-	uint16_t csum = 0;
-#else
-	header.seqNr = 0; // for the crc; don't save/restore it as we don't need this field
-	uint16_t csum = crc16tbb(reinterpret_cast<uint16_t*>(&header), sizeof(header) / sizeof(uint16_t));
-#endif
-	if (csum != 0) {
+void TBB_StreamWriter::processHeader(TBB_Header& header, size_t recvPayloadSize) {
+#ifndef DISABLE_CRCS
+	header.seqNr = 0; // For the header crc. Don't save/restore it as we don't need this field.
+	if (!crc16tbb(&header)) {
 		/*
 		 * Spec says each frame has the same fixed length, so the previous values are a good base guess if the header crc fails.
 		 * But it is not clear if it is worth the effort. For now, drop the frame.
 		 */
 		throw TBB_MalformedFrameException("crc16: " + header.toString());
 	}
+#endif
+
+	frameHeaderLittleToHost(header); // no-op on little endian
 
 	if (header.nOfFreqBands == 0) { // transient mode
 		// Use received size instead of received nOfSamplesPerFrame header field to access data.
@@ -996,7 +994,7 @@ string TBB_Writer::createNewTBB_H5Filename(const TBB_Header& header, const strin
 	return h5Filename;
 }
 
-time_t TBB_Writer::getTimeoutStampSec(unsigned streamWriterNr) {
+time_t TBB_Writer::getTimeoutStampSec(unsigned streamWriterNr) const {
 	return itsStreamWriters[streamWriterNr]->getTimeoutStampSec();
 }
 

@@ -217,7 +217,7 @@ void IndirectBaselineReader::reorderMS()
 		prevTimeIndex = (size_t) (-1),
 		timeIndex = 0,
 		currentBufferBlockPtr = (size_t) (-1);
-	double prevTime = 0.0;
+	double prevTime = -1.0;
 
 	AOLogger::Debug << 'R';
 	AOLogger::Debug.Flush();
@@ -534,7 +534,7 @@ void IndirectBaselineReader::updateOriginalMS()
 		prevTimeIndex = (size_t) (-1),
 		timeIndex = 0,
 		currentBufferBlockPtr = (size_t) (-1);
-	double prevTime = 0.0;
+	double prevTime = -1.0;
 	
 	// This loop writes the chunks back to the MS and then reads the next chunks from the reordered file.
 	for(int rowIndex = 0;rowIndex < rowCount;++rowIndex)

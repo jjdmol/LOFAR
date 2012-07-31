@@ -25,7 +25,7 @@ date
 echo starting obs $OBSID
 echo "---------------"
 
-STORAGE_PARSET=/opt/lofar/log/L$OBSID.parset
+STORAGE_PARSET=/opt/lofar/var/log/L$OBSID.parset
 
 # Convert keys where needed
 /opt/lofar/bin/LOFAR/Parset.py -P $PARTITION $PARSET /opt/lofar/etc/OLAP.parset <(echo "$EXTRA_KEYS") > $IONPROC_PARSET &&
@@ -33,11 +33,11 @@ STORAGE_PARSET=/opt/lofar/log/L$OBSID.parset
 # Copy the parset to NFS for post processing
 (cp $IONPROC_PARSET $STORAGE_PARSET || true) &&
 
-# Make the /opt/lofar/log/latest symlink
-(ln -sfT `dirname $STORAGE_PARSET` /opt/lofar/log/latest || true) &&
+# Make the /opt/lofar/var/log/latest symlink
+(ln -sfT `dirname $STORAGE_PARSET` /opt/lofar/var/log/latest || true) &&
 
-# Make the /opt/lofar/log/latest.parset symlink
-(ln -sfT $STORAGE_PARSET /opt/lofar/log/latest.parset || true) &&
+# Make the /opt/lofar/var/log/latest.parset symlink
+(ln -sfT $STORAGE_PARSET /opt/lofar/var/log/latest.parset || true) &&
 
 # Inject the parset into the correlator
 /opt/lofar/bin/commandOLAP.py -P $PARTITION parset $IONPROC_PARSET

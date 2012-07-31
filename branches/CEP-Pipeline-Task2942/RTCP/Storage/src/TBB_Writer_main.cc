@@ -235,7 +235,7 @@ static int ensureOutDirExists(string outputDir) {
 }
 
 static void printUsage(const char* progname) {
-	cout << "Usage: " << progname << " [--help] [--version] [--outputdir=/data/tbbout/xxx] [--parsetfile=/home/user/tbb/obsxxx.parset]"
+	cout << "Usage: " << progname << " [--help] [--version] [--outputdir=/data/tbboutdir] [--parsetfile=/home/user/tbb/obsxxx.parset]"
 		" [--proto=udp] [--portbase=0x7bb0] [--timeout=10] [--rawdata=1] [--keeprunning=1]" << endl;
 }
 

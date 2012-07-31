@@ -37,6 +37,8 @@
 #include <map>
 #include <fstream>
 
+#include <boost/crc.hpp>
+
 #include <Common/LofarTypes.h>
 #include <Common/LofarLogger.h>
 #ifndef USE_THREADS
@@ -97,13 +99,8 @@ struct TBB_Header {
 	uint16_t spare;		// For future use. Set to 0.
 	uint16_t crc16;		// CRC16 over frame header, with seqNr set to 0.
 
-	inline std::string toString() const {
-		std::ostringstream oss;
-		oss << (uint32_t)stationID << " " << (uint32_t)rspID << " " << (uint32_t)rcuID << " " << (uint32_t)sampleFreq <<
-				" " << seqNr << " " << time << " " << sampleNr << " " << nOfSamplesPerFrame << " " << nOfFreqBands <<
-				" " /*<< bandSel << " "*/ << spare << " " << crc16;
-		return oss.str();
-	}
+
+	std::string toString() const;
 };
 
 struct TBB_Payload {
@@ -120,7 +117,7 @@ struct TBB_Payload {
 
 	// Unpacked, sign-extended (for transient) samples without padding, i.e. as received.
 	// Frames might not be full; the crc32 is always sent right after (no padding unlike as stored by TBB),
-	// so we include it in 'data', but note that the crc32 is an uint32_t (hence '+ 2'). The crc32 is computed for transient data only.
+	// so we include it in 'data', but note that the crc32 is a little endian uint32_t, hence + 2. The crc32 is computed for transient data only.
 	int16_t data[MAX_TBB_TRANSIENT_NSAMPLES + 2];				// 1300*2 bytes; Because only transient data is unpacked, use its max.
 
 #define DEFAULT_TRANSIENT_NSAMPLES	1024						// From the spec and from real data.
@@ -144,7 +141,11 @@ private:
 	uint32_t itsTime0; // seconds
 	uint32_t itsSampleNr0; // for transient data only
 
-	// do not use:
+	// Same truncated polynomials as standard crc32, but with initial_remainder=0, final_xor_value=0, reflected_input=false, reflected_remainder_output=false.
+	// The boost::crc_optimal<> declarations precompute lookup tables, so do not declare inside the checking routine.
+	boost::crc_optimal<32, 0x04C11DB7/*, 0, 0, false, false*/> itsCrc32gen; // instead of crc_32_type
+
+	// do not use
 	TBB_Dipole& operator=(const TBB_Dipole& rhs);
 
 public:
@@ -152,10 +153,11 @@ public:
 	TBB_Dipole(const TBB_Dipole& rhs); // do not use; only for TBB_Station vector<TBB_Dipole>(N) constr
 	~TBB_Dipole();
 
-	bool isInitialized();
-	bool usesExternalDataFile();
+	// Output threads
+	bool isInitialized() const;
+	bool usesExternalDataFile() const;
 
-	// All TBB_Dipole objects are default constructed in a vector, so provide init().
+	// All TBB_Dipole objects are default constructed in a vector, so provide an init procedure.
 	void initDipole(const TBB_Header& header, const Parset& parset, const std::string& rawFilename,
 			DAL::TBB_Station& station, Mutex& h5Mutex);
 
@@ -164,7 +166,8 @@ public:
 private:
 	void initTBB_DipoleDataset(const TBB_Header& header, const Parset& parset, const std::string& rawFilename,
 			DAL::TBB_Station& station, Mutex& h5Mutex);
-	uint32_t crc32tbb(const uint16_t* buf, size_t len) const;
+	bool hasAllZeroDataSamples(const TBB_Frame& frame) const;
+	bool crc32tbb(const TBB_Payload* payload, size_t nsamples);
 };
 
 class TBB_Station {
@@ -178,7 +181,7 @@ class TBB_Station {
 
 	std::string getRawFilename(unsigned rspID, unsigned rcuID);
 
-	// do not use:
+	// do not use
 	TBB_Station();
 	TBB_Station(const TBB_Station& station);
 	TBB_Station& operator=(const TBB_Station& rhs);
@@ -187,12 +190,13 @@ public:
 	TBB_Station(const string& stationName, const Parset& parset, const std::string& h5Filename, bool dumpRaw);
 	~TBB_Station();
 
+	// Output threads
 	void processPayload(const TBB_Frame& frame);
 
 private:
-	std::string getFileModDate(const std::string& filename);
-	std::string utcTimeStr(double time);
-	double toMJD(double time);
+	std::string getFileModDate(const std::string& filename) const;
+	std::string utcTimeStr(double time) const;
+	double toMJD(double time) const;
 
 	void initCommonLofarAttributes(const std::string& filename);
 	void initTBB_RootAttributesAndGroups(const std::string& stName);
@@ -230,10 +234,12 @@ class TBB_StreamWriter {
 	// Inflate struct timeval to 64 bytes (typical LEVEL1_DCACHE_LINESIZE).
 	struct timeval itsTimeoutStamp __attribute__((aligned(64)));
 
+	boost::crc_optimal<16, 0x8005    /*, 0, 0, false, false*/> itsCrc16gen; // instead of crc_16_type
+
 	Thread* itsOutputThread;
 	Thread* itsInputThread; // last in TBB_StreamWriter
 
-	// do not use:
+	// do not use
 	TBB_StreamWriter();
 	TBB_StreamWriter(const TBB_StreamWriter& rhs);
 	TBB_StreamWriter& operator=(const TBB_StreamWriter& rhs);
@@ -242,17 +248,15 @@ public:
 	TBB_StreamWriter(TBB_Writer& writer, const std::string& inputStreamName, const std::string& logPrefix);
 	~TBB_StreamWriter();
 
-	// for the main thread
+	// Main thread
 	time_t getTimeoutStampSec() const;
 
 private:
 	// Input threads
-	uint16_t littleNativeBSwap(uint16_t val) const;
-	uint32_t littleNativeBSwap(uint32_t val) const;
-	void frameHeaderLittleNativeBSwap(TBB_Header& fh) const;
+	void frameHeaderLittleToHost(TBB_Header& fh) const;
 	void correctTransientSampleNr(TBB_Header& header) const;
-	uint16_t crc16tbb(const uint16_t* buf, size_t len) const;
-	void processHeader(TBB_Header& header, size_t recvPayloadSize) const;
+	bool crc16tbb(const TBB_Header* header);
+	void processHeader(TBB_Header& header, size_t recvPayloadSize);
 	void mainInputLoop();
 
 	// Output threads
@@ -273,7 +277,7 @@ class TBB_Writer {
 
 	std::vector<TBB_StreamWriter* > itsStreamWriters; // last in TBB_Writer
 
-	// do not use:
+	// do not use
 	TBB_Writer();
 	TBB_Writer(const TBB_Writer& writer);
 	TBB_Writer& operator=(const TBB_Writer& rhs);
@@ -287,8 +291,8 @@ public:
 	TBB_Station* getStation(const TBB_Header& header);
 	std::string createNewTBB_H5Filename(const TBB_Header& header, const std::string& stationName);
 
-	// main thread
-	time_t getTimeoutStampSec(unsigned streamWriterNr);
+	// Main thread
+	time_t getTimeoutStampSec(unsigned streamWriterNr) const;
 };
 
 } // namespace RTCP

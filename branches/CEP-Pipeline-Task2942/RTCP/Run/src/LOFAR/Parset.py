@@ -562,10 +562,10 @@ class Parset(util.Parset.Parset):
         # integration times of CNProc and IONProc, based on self.integrationtime
         # maximum amount of time CNProc can integrate due to memory constraints
         if self.phaseThreeExists():
-          maxCnIntegrationTime = 0.33
-          defaultCnIntegrationTime = 0.33
+          maxCnIntegrationTime = 0.25
+          defaultCnIntegrationTime = 0.25
         else:
-          maxCnIntegrationTime = 1.2
+          maxCnIntegrationTime = 1.0
           defaultCnIntegrationTime = 1.0
 
         # (minimal) number of times the IONProc will have to integrate
