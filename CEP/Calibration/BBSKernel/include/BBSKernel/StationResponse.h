@@ -121,11 +121,6 @@ public:
     const JonesMatrix::View evaluate(unsigned int i);
 
 private:
-    // Right multiply \p lhs by \p rhs. Return \p rhs if \p lhs is
-    // uninitialized.
-    Expr<JonesMatrix>::Ptr compose(const Expr<JonesMatrix>::Ptr &lhs,
-        const Expr<JonesMatrix>::Ptr &rhs) const;
-
     Dummy<Vector<2> >::Ptr          itsRefDelay;
     Dummy<Vector<2> >::Ptr          itsRefTile;
     Dummy<Vector<2> >::Ptr          itsDirection;

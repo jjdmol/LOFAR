@@ -25,19 +25,13 @@
 #include <BBSKernel/StationResponse.h>
 #include <BBSKernel/Exceptions.h>
 #include <BBSKernel/MeasurementAIPS.h>
-#include <BBSKernel/Expr/AntennaElementLBA.h>
-#include <BBSKernel/Expr/AntennaElementHBA.h>
-#include <BBSKernel/Expr/AntennaFieldThetaPhi.h>
+#include <BBSKernel/MeasurementExprLOFARUtil.h>
+#include <BBSKernel/ModelConfig.h>
 #include <BBSKernel/Expr/CachePolicy.h>
 #include <BBSKernel/Expr/ExprAdaptors.h>
 #include <BBSKernel/Expr/ITRFDirection.h>
 #include <BBSKernel/Expr/Literal.h>
 #include <BBSKernel/Expr/MatrixInverse.h>
-#include <BBSKernel/Expr/MatrixMul2.h>
-#include <BBSKernel/Expr/ParallacticRotation.h>
-#include <BBSKernel/Expr/ScalarMatrixMul.h>
-#include <BBSKernel/Expr/StationBeamFormer.h>
-#include <BBSKernel/Expr/TileArrayFactor.h>
 #include <Common/LofarLogger.h>
 #include <measures/Measures/MeasConvert.h>
 #include <measures/Measures/MCDirection.h>
@@ -75,130 +69,39 @@ StationResponse::StationResponse(const casa::MeasurementSet &ms,
         Expr<Vector<3> >::Ptr(new ITRFDirection(instrument->position(),
         itsRefTile));
 
-    itsExpr.reserve(instrument->nStations());
-    for(size_t i = 0; i < instrument->nStations(); ++i)
+    Expr<Scalar>::Ptr exprOne(new Literal(1.0));
+    Expr<JonesMatrix>::Ptr exprIdentity(new AsDiagonalMatrix(exprOne, exprOne));
+
+    itsExpr.resize(instrument->nStations(), exprIdentity);
+    if(useElementBeam || useArrayFactor)
     {
-        Station::ConstPtr station = instrument->station(i);
+        BeamConfig::Mode mode = (!useElementBeam ? BeamConfig::ARRAY_FACTOR
+          : (!useArrayFactor ? BeamConfig::ELEMENT : BeamConfig::DEFAULT));
+        BeamConfig beamConfig(mode, useChannelFreq, conjugateAF);
 
-        // Check preconditions.
-        if(!station->isPhasedArray())
+        for(size_t i = 0; i < instrument->nStations(); ++i)
         {
-            LOG_WARN_STR("Station " << station->name() << " is not a LOFAR"
-                " station or the additional information needed to compute the"
-                " station beam is missing. The station beam model will NOT be"
-                " applied.");
+            Station::ConstPtr station = instrument->station(i);
 
-            Expr<Scalar>::Ptr exprOne(new Literal(1.0));
-            Expr<JonesMatrix>::Ptr exprIdentity(new AsDiagonalMatrix(exprOne,
-                exprOne));
-            itsExpr.push_back(exprIdentity);
-            continue;
-        }
-
-        // Build expressions for the dual-dipole or tile beam of each antenna
-        // field.
-        Expr<JonesMatrix>::Ptr exprElementBeam[2];
-        for(size_t j = 0; j < station->nField(); ++j)
-        {
-            AntennaField::ConstPtr field = station->field(j);
-
-            // Element (dual-dipole) beam expression.
-            if(useElementBeam)
+            // Check preconditions.
+            if(!station->isPhasedArray())
             {
-                Expr<Vector<2> >::Ptr exprThetaPhi =
-                    Expr<Vector<2> >::Ptr(new AntennaFieldThetaPhi(exprDirITRF,
-                    field));
-
-                if(field->isHBA())
-                {
-                    exprElementBeam[j] =
-                        Expr<JonesMatrix>::Ptr(new AntennaElementHBA(exprThetaPhi));
-                }
-                else
-                {
-                    exprElementBeam[j] =
-                        Expr<JonesMatrix>::Ptr(new AntennaElementLBA(exprThetaPhi));
-                }
-
-                Expr<JonesMatrix>::Ptr exprRotation =
-                    Expr<JonesMatrix>::Ptr(new ParallacticRotation(exprDirITRF,
-                    field));
-
-                exprElementBeam[j] =
-                    Expr<JonesMatrix>::Ptr(new MatrixMul2(exprElementBeam[j],
-                    exprRotation));
-            }
-            else
-            {
-                Expr<Scalar>::Ptr exprOne(new Literal(1.0));
-                Expr<JonesMatrix>::Ptr exprIdentity =
-                    Expr<JonesMatrix>::Ptr(new AsDiagonalMatrix(exprOne,
-                    exprOne));
-                exprElementBeam[j] = exprIdentity;
+                LOG_WARN_STR("Station " << station->name() << " is not a LOFAR"
+                    " station or the additional information needed to compute"
+                    " the station beam is missing. The station beam model will"
+                    " NOT be applied.");
+                continue;
             }
 
-            // Tile array factor.
-            if(field->isHBA() && useArrayFactor)
+            itsExpr[i] = makeBeamExpr(station, refFreq, exprDirITRF,
+                exprRefDelayITRF, exprRefTileITRF, beamConfig);
+
+            if(inverse)
             {
-                Expr<Scalar>::Ptr exprTileFactor =
-                    Expr<Scalar>::Ptr(new TileArrayFactor(exprDirITRF,
-                        exprRefTileITRF, field, conjugateAF));
-                exprElementBeam[j] =
-                    Expr<JonesMatrix>::Ptr(new ScalarMatrixMul(exprTileFactor,
-                    exprElementBeam[j]));
+                itsExpr[i] =
+                    Expr<JonesMatrix>::Ptr(new MatrixInverse(itsExpr[i]));
             }
         }
-
-        Expr<JonesMatrix>::Ptr exprBeam;
-        if(!useArrayFactor)
-        {
-            // If the station consists of multiple antenna fields, but beam
-            // forming is disabled, then we have to decide which antenna field
-            // to use. By default the first antenna field will be used. The
-            // differences between the dipole beam response of the antenna
-            // fields of a station should only vary as a result of differences
-            // in the field coordinate systems (because all dipoles are oriented
-            // the same way).
-
-            exprBeam = exprElementBeam[0];
-        }
-        else if(station->nField() == 1)
-        {
-            if(useChannelFreq)
-            {
-                exprBeam = Expr<JonesMatrix>::Ptr(new StationBeamFormer
-                    (exprDirITRF, exprRefDelayITRF, exprElementBeam[0], station,
-                    conjugateAF));
-            }
-            else
-            {
-                exprBeam = Expr<JonesMatrix>::Ptr(new StationBeamFormer
-                    (exprDirITRF, exprRefDelayITRF, exprElementBeam[0], station,
-                    refFreq, conjugateAF));
-            }
-        }
-        else
-        {
-            if(useChannelFreq)
-            {
-                exprBeam = Expr<JonesMatrix>::Ptr(new StationBeamFormer
-                    (exprDirITRF, exprRefDelayITRF, exprElementBeam[0],
-                    exprElementBeam[1], station, conjugateAF));
-            }
-            else
-            {
-                exprBeam = Expr<JonesMatrix>::Ptr(new StationBeamFormer
-                    (exprDirITRF, exprRefDelayITRF, exprElementBeam[0],
-                    exprElementBeam[1], station, refFreq, conjugateAF));
-            }
-        }
-
-        if(inverse)
-        {
-            exprBeam = Expr<JonesMatrix>::Ptr(new MatrixInverse(exprBeam));
-        }
-
-        itsExpr.push_back(exprBeam);
     }
 
     // Apply default cache policy (caches the results of all shared nodes).
@@ -283,18 +186,6 @@ const JonesMatrix::View StationResponse::evaluate(unsigned int i)
     const JonesMatrix result = itsExpr[i]->evaluate(itsRequest, itsCache, 0);
 
     return result.view();
-}
-
-Expr<JonesMatrix>::Ptr
-StationResponse::compose(const Expr<JonesMatrix>::Ptr &lhs,
-    const Expr<JonesMatrix>::Ptr &rhs) const
-{
-    if(lhs)
-    {
-        return Expr<JonesMatrix>::Ptr(new MatrixMul2(lhs, rhs));
-    }
-
-    return rhs;
 }
 
 } //# namespace BBS

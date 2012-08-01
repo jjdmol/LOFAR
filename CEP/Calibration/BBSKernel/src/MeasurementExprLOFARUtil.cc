@@ -236,8 +236,7 @@ makeElevationCutExpr(const Expr<Vector<2> >::Ptr &exprAzEl,
 }
 
 Expr<JonesMatrix>::Ptr
-makeBeamExpr(Scope&,
-    const Station::ConstPtr &station,
+makeBeamExpr(const Station::ConstPtr &station,
     double refFreq,
     const Expr<Vector<3> >::Ptr &exprITRF,
     const Expr<Vector<3> >::Ptr &exprRefDelayITRF,
@@ -253,7 +252,7 @@ makeBeamExpr(Scope&,
     }
 
     // Build expressions for the dual-dipole or tile beam of each antenna field.
-    Expr<JonesMatrix>::Ptr exprElementBeam[2];
+    vector<Expr<JonesMatrix>::Ptr> exprElementBeam(station->nField());
     for(size_t i = 0; i < station->nField(); ++i)
     {
         AntennaField::ConstPtr field = station->field(i);
@@ -315,30 +314,16 @@ makeBeamExpr(Scope&,
         return exprElementBeam[0];
     }
 
-    if(station->nField() == 1)
-    {
-        if(config.useChannelFreq())
-        {
-            return Expr<JonesMatrix>::Ptr(new StationBeamFormer(exprITRF,
-                exprRefDelayITRF, exprElementBeam[0], station,
-                config.conjugateAF()));
-        }
-
-        return Expr<JonesMatrix>::Ptr(new StationBeamFormer(exprITRF,
-            exprRefDelayITRF, exprElementBeam[0], station, refFreq,
-            config.conjugateAF()));
-    }
-
     if(config.useChannelFreq())
     {
         return Expr<JonesMatrix>::Ptr(new StationBeamFormer(exprITRF,
-            exprRefDelayITRF, exprElementBeam[0], exprElementBeam[1], station,
-            config.conjugateAF()));
+            exprRefDelayITRF, station, exprElementBeam.begin(),
+            exprElementBeam.end(), config.conjugateAF()));
     }
 
     return Expr<JonesMatrix>::Ptr(new StationBeamFormer(exprITRF,
-        exprRefDelayITRF, exprElementBeam[0], exprElementBeam[1], station,
-        refFreq, config.conjugateAF()));
+        exprRefDelayITRF, station, exprElementBeam.begin(),
+        exprElementBeam.end(), refFreq, config.conjugateAF()));
 }
 
 Expr<JonesMatrix>::Ptr
@@ -365,8 +350,7 @@ makeFaradayRotationExpr(Scope &scope,
 }
 
 Expr<JonesMatrix>::Ptr
-makeIonosphereExpr(Scope&,
-    const Station::ConstPtr &station,
+makeIonosphereExpr(const Station::ConstPtr &station,
     const casa::MPosition &refPosition,
     const Expr<Vector<2> >::Ptr &exprAzEl,
     const IonosphereExpr::Ptr &exprIonosphere)

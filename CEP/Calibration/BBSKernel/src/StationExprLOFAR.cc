@@ -162,9 +162,9 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
                 if(config.useBeam())
                 {
                     itsExpr[i] = compose(itsExpr[i],
-                        makeBeamExpr(itsScope, instrument->station(i),
-                        refFreq, exprRefPhaseITRF, exprRefDelayITRF,
-                        exprRefTileITRF, config.getBeamConfig()));
+                        makeBeamExpr(instrument->station(i), refFreq,
+                        exprRefPhaseITRF, exprRefDelayITRF, exprRefTileITRF,
+                        config.getBeamConfig()));
                 }
 
                 // Ionosphere.
@@ -177,7 +177,7 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
                         exprRefPhase);
 
                     itsExpr[i] = compose(itsExpr[i],
-                        makeIonosphereExpr(itsScope, instrument->station(i),
+                        makeIonosphereExpr(instrument->station(i),
                         instrument->position(), exprAzEl, exprIonosphere));
                 }
             }
@@ -209,7 +209,7 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
                 if(config.useBeam())
                 {
                     itsExpr[i] = compose(itsExpr[i],
-                        makeBeamExpr(itsScope, instrument->station(i), refFreq,
+                        makeBeamExpr(instrument->station(i), refFreq,
                         exprPatchPositionITRF, exprRefDelayITRF,
                         exprRefTileITRF, config.getBeamConfig()));
                 }
@@ -240,7 +240,7 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
                         exprPatch->position());
 
                     itsExpr[i] = compose(itsExpr[i],
-                        makeIonosphereExpr(itsScope, instrument->station(i),
+                        makeIonosphereExpr(instrument->station(i),
                         instrument->position(), exprAzEl, exprIonosphere));
                 }
             }

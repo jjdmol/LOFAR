@@ -101,20 +101,22 @@ public:
     typedef shared_ptr<const Station> ConstPtr;
 
     Station(const string &name, const casa::MPosition &position);
-    Station(const string &name, const casa::MPosition &position,
-        const AntennaField::Ptr &field0);
-    Station(const string &name, const casa::MPosition &position,
-        const AntennaField::Ptr &field0, const AntennaField::Ptr &field1);
+
+    template <typename T>
+    Station(const string &name, const casa::MPosition &position, T first,
+        T last);
 
     const string &name() const;
     const casa::MPosition &position() const;
 
     bool isPhasedArray() const;
-    unsigned int nField() const;
     size_t nElement() const;
     size_t nActiveElement() const;
 
+    unsigned int nField() const;
     AntennaField::ConstPtr field(unsigned int i) const;
+
+    void append(const AntennaField::Ptr &field);
 
 private:
     string                      itsName;
@@ -153,7 +155,7 @@ private:
 // @}
 
 // -------------------------------------------------------------------------- //
-// - Implementation: Instrument                                             - //
+// - Implementation: AntennaField                                           - //
 // -------------------------------------------------------------------------- //
 
 inline size_t AntennaField::nTileElement() const
@@ -180,6 +182,23 @@ inline const AntennaField::Element &AntennaField::element(size_t i) const
 {
     return itsElements[i];
 }
+
+// -------------------------------------------------------------------------- //
+// - Implementation: Station                                                - //
+// -------------------------------------------------------------------------- //
+
+template <typename T>
+Station::Station(const string &name, const casa::MPosition &position, T first,
+    T last)
+    :   itsName(name),
+        itsPosition(position),
+        itsFields(first, last)
+{
+}
+
+// -------------------------------------------------------------------------- //
+// - Implementation: Instrument                                             - //
+// -------------------------------------------------------------------------- //
 
 template <typename T>
 Instrument::Instrument(const string &name, const casa::MPosition &position,
