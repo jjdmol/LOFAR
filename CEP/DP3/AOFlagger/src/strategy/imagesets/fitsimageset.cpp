@@ -30,7 +30,7 @@
 namespace rfiStrategy {
 	
 	FitsImageSet::FitsImageSet(const std::string &file)
-	: ImageSet(), _data(0), _currentBaselineIndex(0), _frequencyOffset(0.0)
+	: ImageSet(), _currentBaselineIndex(0), _frequencyOffset(0.0)
 	{
 		_file = new FitsFile(file);
 		_file->Open(FitsFile::ReadOnlyMode);
@@ -39,17 +39,13 @@ namespace rfiStrategy {
 	FitsImageSet::~FitsImageSet()
 	{
 		delete _file;
-		if(_data != 0)
-			delete _data;
 	}
 	
 	FitsImageSet *FitsImageSet::Copy()
 	{
 		FitsImageSet *newSet = new FitsImageSet(_file->Filename());
-		newSet->_data = new TimeFrequencyData(*_data);
 		newSet->_baselines = _baselines;
 		newSet->_bandCount = _bandCount;
-		newSet->_observationTimes = _observationTimes;
 		newSet->_antennaInfos = _antennaInfos;
 		return newSet;
 	}
@@ -80,21 +76,14 @@ namespace rfiStrategy {
 		_bandCount = _file->GetCurrentImageSize(5);
 	}
 
-	TimeFrequencyData *FitsImageSet::LoadData(const ImageSetIndex &index)
+	BaselineData FitsImageSet::loadData(const ImageSetIndex &index)
 	{
 		const FitsImageSetIndex &fitsIndex = static_cast<const FitsImageSetIndex&>(index);
-		if(_data != 0 && _currentBaselineIndex == fitsIndex._baselineIndex && _currentBandIndex == fitsIndex._band)
-			return new TimeFrequencyData(*_data);
-
-		if(_data != 0)
-		{
-			delete _data;
-			_data = 0;
-		}
 		_frequencyOffset = 0.0;
 
 		_file->MoveToHDU(1);
-		ReadPrimaryTable(fitsIndex._baselineIndex, fitsIndex._band, 0);
+		TimeFrequencyMetaDataPtr metaData(new TimeFrequencyMetaData());
+		TimeFrequencyData data = ReadPrimaryTable(fitsIndex._baselineIndex, fitsIndex._band, 0, *metaData);
 		for(int hduIndex=2;hduIndex <= _file->GetHDUCount();hduIndex++)
 		{
 			_file->MoveToHDU(hduIndex);
@@ -102,11 +91,11 @@ namespace rfiStrategy {
 			{
 				case FitsFile::BinaryTableHDUType:
 					std::cout << "Binary table found." << std::endl;
-					ReadTable();
+					ReadTable(data, *metaData);
 					break;
 				case FitsFile::ASCIITableHDUType:
 					std::cout << "ASCII table found." << std::endl;
-					ReadTable();
+					ReadTable(data, *metaData);
 					break;
 				case FitsFile::ImageHDUType:
 					std::cout << "Image found." << std::endl;
@@ -116,22 +105,25 @@ namespace rfiStrategy {
 		_currentBaselineIndex = fitsIndex._baselineIndex;
 		_currentBandIndex = fitsIndex._band;
 
-		return new TimeFrequencyData(*_data);
+		metaData->SetBand(_bandInfos[fitsIndex._band]);
+		std::cout << "Loaded metadata for: " << Date::AipsMJDToString(metaData->ObservationTimes()[0]) << ", band " << fitsIndex._band << " (" << Frequency::ToString(_bandInfos[fitsIndex._band].channels[0].frequencyHz) << " - " << Frequency::ToString(_bandInfos[fitsIndex._band].channels.rbegin()->frequencyHz) << ")" << std::endl;
+
+		return BaselineData(data, metaData, index);
 	}
 
-	void FitsImageSet::ReadPrimaryTable(size_t baselineIndex, int band, int stokes)
+	TimeFrequencyData FitsImageSet::ReadPrimaryTable(size_t baselineIndex, int band, int stokes, TimeFrequencyMetaData &metaData)
 	{
 		if(!_file->HasGroups() || _file->GetCurrentHDUType() != FitsFile::ImageHDUType)
 			throw FitsIOException("Primary table is not a grouped image");
 
-		_observationTimes.clear();
-		_uvw.clear();
+		std::vector<double> observationTimes;
+		std::vector<UVW> uvws;
 
 		int keywordCount = _file->GetKeywordCount();
 		for(int i=1;i<=keywordCount;++i)
 			std::cout << "Keyword " << i << ": " << _file->GetKeyword(i) << "=" << _file->GetKeywordValue(i) << " ("  << _file->GetKeywordComment(i) << ")" << std::endl;
 
-		long double *parameters = new long double[_file->GetParameterCount()];
+		std::vector<long double> parameters(_file->GetParameterCount());
 		int baseline = _baselines[baselineIndex].first + (_baselines[baselineIndex].second<<8);
 		int baselineColumn = _file->GetGroupParameterIndex("BASELINE");
 		size_t
@@ -143,7 +135,7 @@ namespace rfiStrategy {
 			bandStep = frequencyStep*frequencyCount;
 		std::vector<long double> valuesR[frequencyCount];
 		std::vector<long double> valuesI[frequencyCount];
-		long double *data = new long double[_file->GetImageSize()];
+		std::vector<long double> data(_file->GetImageSize());
 		size_t groupCount = _file->GetGroupCount();
 		int date1Index = _file->GetGroupParameterIndex("DATE");
 		int date2Index = _file->GetGroupParameterIndex("DATE", 2);
@@ -164,7 +156,7 @@ namespace rfiStrategy {
 			frequencyFactor = _frequencyOffset;
 		for(size_t g=0;g<groupCount;++g)
 		{
-			_file->ReadGroupParameters(g, parameters);
+			_file->ReadGroupParameters(g, &parameters[0]);
 			if(parameters[baselineColumn] == baseline)
 			{
 				double date = parameters[date1Index] + parameters[date2Index];
@@ -173,7 +165,7 @@ namespace rfiStrategy {
 				uvw.v = parameters[vvIndex] * frequencyFactor;
 				uvw.w = parameters[wwIndex] * frequencyFactor;
 
-				_file->ReadGroupData(g, data);
+				_file->ReadGroupData(g, &data[0]);
 				for(size_t f=0;f<frequencyCount;++f)
 				{
 					size_t index = stokes*stokesStep + frequencyStep*f + bandStep*band;
@@ -182,14 +174,14 @@ namespace rfiStrategy {
 					valuesR[f].push_back(r);
 					valuesI[f].push_back(i);
 				}
-				_observationTimes.push_back(Date::JDToAipsMJD(date));
-				_uvw.push_back(uvw);
+				observationTimes.push_back(Date::JDToAipsMJD(date));
+				uvws.push_back(uvw);
 				++match;
 			}
 		}
 		std::cout << match << " rows in table matched baseline." << std::endl;
-		delete[] data;
-		delete[] parameters;
+		data.clear();
+		parameters.clear();
 
 		std::cout << "Image is " << valuesR[0].size() << " x " << frequencyCount << std::endl;
 		if(valuesR[0].size() == 0)
@@ -205,10 +197,13 @@ namespace rfiStrategy {
 				imaginary->SetValue(i, f, valuesI[f][i]);
 			}
 		}
-		_data = new TimeFrequencyData(StokesIPolarisation, real, imaginary);
+		
+		metaData.SetUVW(uvws);
+		metaData.SetObservationTimes(observationTimes);
+		return TimeFrequencyData(StokesIPolarisation, real, imaginary);
 	}
 
-	void FitsImageSet::ReadTable()
+	void FitsImageSet::ReadTable(TimeFrequencyData &data, TimeFrequencyMetaData &metaData)
 	{
 		std::cout << "Row count: " << _file->GetRowCount() << std::endl;
 		std::cout << "Column count: " << _file->GetColumnCount() << std::endl;
@@ -220,14 +215,14 @@ namespace rfiStrategy {
 		for(int i=1;i<=_file->GetKeywordCount();++i)
 			std::cout << "Keyword " << i << ": " << _file->GetKeyword(i) << "=" << _file->GetKeywordValue(i) << " ("  << _file->GetKeywordComment(i) << ")" << std::endl;
 		if(extName == "AIPS AN")
-			ReadAntennaTable();
+			ReadAntennaTable(metaData);
 		else if(extName == "AIPS FQ")
-			ReadFrequencyTable();
+			ReadFrequencyTable(data, metaData);
 		else if(extName == "AIPS CL")
 			ReadCalibrationTable();
 	}
 	
-	void FitsImageSet::ReadAntennaTable()
+	void FitsImageSet::ReadAntennaTable(TimeFrequencyMetaData &metaData)
 	{
 		std::cout << "Found antenna table" << std::endl;
 		_frequencyOffset = _file->GetDoubleKeywordValue("FREQ");
@@ -237,12 +232,14 @@ namespace rfiStrategy {
 				j->frequencyHz += _frequencyOffset;
 			}
 		}
-		for(std::vector<UVW>::iterator i=_uvw.begin();i!=_uvw.end();++i)
+		std::vector<UVW> uvws(metaData.UVW());
+		for(std::vector<UVW>::iterator i=uvws.begin();i!=uvws.end();++i)
 		{
 			i->u = i->u * _frequencyOffset;
 			i->v = i->v * _frequencyOffset;
 			i->w = i->w * _frequencyOffset;
 		}
+		metaData.SetUVW(uvws);
 		_antennaInfos.clear();
 		for(int i=1;i<=_file->GetRowCount();++i)
 		{
@@ -256,11 +253,10 @@ namespace rfiStrategy {
 			info.position.y = pos[1];
 			info.position.z = pos[2];
 			_antennaInfos.push_back(info);
-			//std::cout << info.position.x << " " << info.position.y << " " << info.position.z << std::endl;
 		}
 	}
 
-	void FitsImageSet::ReadFrequencyTable()
+	void FitsImageSet::ReadFrequencyTable(TimeFrequencyData &data, TimeFrequencyMetaData &metaData)
 	{
 		std::cout << "Found frequency table" << std::endl;
 		const size_t numberIfs = _file->GetIntKeywordValue("NO_IF");
@@ -277,7 +273,7 @@ namespace rfiStrategy {
 			_file->ReadTableCell(i, 5, sideband, numberIfs);
 			for(size_t b=0;b<numberIfs;++b)
 			{
-				for(size_t channel=0;channel<_data->ImageHeight();++channel)
+				for(size_t channel=0;channel<data.ImageHeight();++channel)
 				{
 					ChannelInfo channelInfo;
 					channelInfo.channelWidthHz = chWidth[b];
@@ -353,18 +349,6 @@ namespace rfiStrategy {
 		std::stringstream s;
 		s << "fits correlation " << info1.name << " x " << info2.name << ", band " << _band;
 		return s.str();
-	}
-
-	TimeFrequencyMetaDataCPtr FitsImageSet::LoadMetaData(ImageSetIndex &index)
-	{
-		FitsImageSetIndex &fitsIndex = static_cast<FitsImageSetIndex&>(index);
-		LoadData(fitsIndex);
-		TimeFrequencyMetaData *metaData = new TimeFrequencyMetaData();
-		metaData->SetObservationTimes(_observationTimes);
-		metaData->SetUVW(_uvw);
-		metaData->SetBand(_bandInfos[fitsIndex._band]);
-		std::cout << "Loaded metadata for: " << Date::AipsMJDToString(_observationTimes[0]) << ", band " << fitsIndex._band << " (" << Frequency::ToString(_bandInfos[fitsIndex._band].channels[0].frequencyHz) << " - " << Frequency::ToString(_bandInfos[fitsIndex._band].channels.rbegin()->frequencyHz) << ")" << std::endl;
-		return TimeFrequencyMetaDataCPtr(metaData);
 	}
 
 	std::string FitsImageSet::File()
