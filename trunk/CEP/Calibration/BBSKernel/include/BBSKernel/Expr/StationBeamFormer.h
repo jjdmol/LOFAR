@@ -45,31 +45,16 @@ public:
     typedef shared_ptr<StationBeamFormer>       Ptr;
     typedef shared_ptr<const StationBeamFormer> ConstPtr;
 
+    template <typename T>
     StationBeamFormer(const Expr<Vector<3> >::ConstPtr &direction,
         const Expr<Vector<3> >::ConstPtr &reference,
-        const Expr<JonesMatrix>::ConstPtr &beam0,
-        const Station::ConstPtr &station,
+        const Station::ConstPtr &station, T first, T last,
         bool conjugate = false);
 
+    template <typename T>
     StationBeamFormer(const Expr<Vector<3> >::ConstPtr &direction,
         const Expr<Vector<3> >::ConstPtr &reference,
-        const Expr<JonesMatrix>::ConstPtr &beam0,
-        const Station::ConstPtr &station,
-        double refFrequency,
-        bool conjugate = false);
-
-    StationBeamFormer(const Expr<Vector<3> >::ConstPtr &direction,
-        const Expr<Vector<3> >::ConstPtr &reference,
-        const Expr<JonesMatrix>::ConstPtr &beam0,
-        const Expr<JonesMatrix>::ConstPtr &beam1,
-        const Station::ConstPtr &station,
-        bool conjugate = false);
-
-    StationBeamFormer(const Expr<Vector<3> >::ConstPtr &direction,
-        const Expr<Vector<3> >::ConstPtr &reference,
-        const Expr<JonesMatrix>::ConstPtr &beam0,
-        const Expr<JonesMatrix>::ConstPtr &beam1,
-        const Station::ConstPtr &station,
+        const Station::ConstPtr &station, T first, T last,
         double refFrequency,
         bool conjugate = false);
 
@@ -98,6 +83,56 @@ private:
 };
 
 // @}
+
+// -------------------------------------------------------------------------- //
+// - Implementation: StationBeamFormer                                      - //
+// -------------------------------------------------------------------------- //
+template <typename T>
+StationBeamFormer::StationBeamFormer
+    (const Expr<Vector<3> >::ConstPtr &direction,
+    const Expr<Vector<3> >::ConstPtr &reference,
+    const Station::ConstPtr &station, T first, T last, bool conjugate)
+    :   itsDirection(direction),
+        itsReference(reference),
+        itsStation(station),
+        itsUseChannelFreq(true),
+        itsRefFrequency(0.0),
+        itsConjugateFlag(conjugate)
+{
+    connect(itsDirection);
+    connect(itsReference);
+
+    ASSERT(distance(first, last) == itsStation->nField());
+    for(; first != last; ++first)
+    {
+      connect(*first);
+      itsElementBeam.push_back(*first);
+    }
+}
+
+template <typename T>
+StationBeamFormer::StationBeamFormer
+    (const Expr<Vector<3> >::ConstPtr &direction,
+    const Expr<Vector<3> >::ConstPtr &reference,
+    const Station::ConstPtr &station, T first, T last, double refFrequency,
+    bool conjugate)
+    :   itsDirection(direction),
+        itsReference(reference),
+        itsStation(station),
+        itsUseChannelFreq(false),
+        itsRefFrequency(refFrequency),
+        itsConjugateFlag(conjugate)
+{
+    connect(itsDirection);
+    connect(itsReference);
+
+    ASSERT(distance(first, last) == itsStation->nField());
+    for(; first != last; ++first)
+    {
+      connect(*first);
+      itsElementBeam.push_back(*first);
+    }
+}
 
 } //# namespace BBS
 } //# namespace LOFAR
