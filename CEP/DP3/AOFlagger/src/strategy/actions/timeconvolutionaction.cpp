@@ -29,9 +29,14 @@ void TimeConvolutionAction::PerformFFTSincOperation(ArtifactSet &artifacts, Imag
 	fftw_complex
 		*fftIn = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * real->Width()),
 		*fftOut = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * real->Width());
+	
+	// FFTW plan routines are not thread safe, so lock.
+	boost::mutex::scoped_lock lock(artifacts.IOMutex());
 	fftw_plan
 		fftPlanForward = fftw_plan_dft_1d(real->Width(), fftIn, fftOut, FFTW_FORWARD, FFTW_MEASURE),
 		fftPlanBackward = fftw_plan_dft_1d(real->Width(), fftIn, fftOut, FFTW_BACKWARD, FFTW_MEASURE);
+	lock.unlock();
+	
 	const size_t width = real->Width();
 
 	const BandInfo band = artifacts.MetaData()->Band();
