@@ -25,7 +25,6 @@
 #include <BBSKernel/MeasurementAIPS.h>
 #include <BBSKernel/Exceptions.h>
 
-//#include <cstring>
 #include <Common/Timer.h>
 #include <Common/lofar_algorithm.h>
 #include <Common/LofarLogger.h>
