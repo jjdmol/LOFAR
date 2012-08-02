@@ -84,6 +84,13 @@ namespace LOFAR {
     const AFArray& rotationMatrix(const string& fieldName) const
       { return (itsRotationMatrix[name2Index(fieldName)]); }
 
+
+    static const int LBA_IDX    = 0;
+    static const int HBA_IDX    = 1;
+    static const int HBA0_IDX   = 2;
+    static const int HBA1_IDX   = 3;
+    static const int MAX_FIELDS = 4;
+
     AFArray& AntPos(int fieldIndex)
       { return (itsAntPos[fieldIndex]); }
     AFArray& Centre(int fieldIndex)
