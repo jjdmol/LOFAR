@@ -122,11 +122,13 @@ namespace rfiStrategy {
 				return _baselines[static_cast<const FitsImageSetIndex&>(index)._baselineIndex].second;
 			}
 			
+			void ReadPrimarySingleTable(TimeFrequencyData &data, TimeFrequencyMetaData &metaData);
 			void ReadTable(TimeFrequencyData &data, TimeFrequencyMetaData &metaData);
 			void ReadAntennaTable(TimeFrequencyMetaData &metaData);
 			void ReadFrequencyTable(TimeFrequencyData &data, TimeFrequencyMetaData &metaData);
 			void ReadCalibrationTable();
-			TimeFrequencyData ReadPrimaryTable(size_t baselineIndex, int band, int stokes, TimeFrequencyMetaData &metaData);
+			void ReadSingleDishTable(TimeFrequencyData &data, TimeFrequencyMetaData &metaData);
+			TimeFrequencyData ReadPrimaryGroupTable(size_t baselineIndex, int band, int stokes, TimeFrequencyMetaData &metaData);
 			
 			class FitsFile *_file;
 			std::vector<std::pair<size_t,size_t> > _baselines;

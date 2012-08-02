@@ -494,6 +494,40 @@ bool FitsFile::HasGroupParameter(const std::string &parameterName)
 	return false;
 }
 
+int FitsFile::GetTableColumnIndex(const std::string &columnName)
+{
+	int colCount = GetColumnCount();
+	for(int i=1;i<=colCount;++i)
+	{
+		std::stringstream s;
+		s << "TTYPE" << i;
+		if(GetKeywordValue(s.str()) == columnName)
+			return i;
+	}
+	throw FitsIOException(std::string("Can not find column with name ") + columnName);
+}
+
+int FitsFile::GetTableColumnArraySize(int columnIndex)
+{
+	CheckOpen();
+	int typecode = 0, status = 0;
+	long repeat = 0, width = 0;
+	fits_get_coltype(_fptr, columnIndex, &typecode, &repeat, &width, &status);
+	CheckStatus(status);
+	return repeat;
+}
+
+long FitsFile::GetTableDimensionSize(int columnIndex, int dimension)
+{
+	CheckOpen();
+	int naxis = 0, status = 0, maxdim = 10;
+	long naxes[10];
+	for(size_t i=0;i!=10;++i) naxes[i] = 0;
+	fits_read_tdim(_fptr, columnIndex, maxdim, &naxis, naxes, &status);
+	CheckStatus(status);
+	return naxes[dimension];
+}
+
 void FitsFile::ReadTableCell(int row, int col, long double *output, size_t size)
 {
 	double *data = new double[size];
@@ -503,6 +537,18 @@ void FitsFile::ReadTableCell(int row, int col, long double *output, size_t size)
 	fits_read_col(_fptr, TDOUBLE, col, row, 1, size, &nulValue, data, &anynul, &status);
 	for(size_t i = 0;i<size;++i)
 		output[i] = data[i];
+	delete[] data;
+}
+
+void FitsFile::ReadTableCell(int row, int col, bool *output, size_t size)
+{
+	char *data = new char[size];
+	int status = 0;
+	char nulValue = 0;
+	int anynul = 0;
+	fits_read_col(_fptr, TBIT, col, row, 1, size, &nulValue, data, &anynul, &status);
+	for(size_t i = 0;i<size;++i)
+		output[i] = data[i]!=0;
 	delete[] data;
 }
 
