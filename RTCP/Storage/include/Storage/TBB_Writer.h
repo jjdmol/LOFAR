@@ -24,13 +24,7 @@
 #ifndef LOFAR_STORAGE_TBB_WRITER_H
 #define LOFAR_STORAGE_TBB_WRITER_H 1
 
-#include <cstddef>
-#include <csignal>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <sys/time.h>
-#include <cerrno>
+#include <stdint.h>
 
 #include <string>
 #include <vector>
@@ -40,19 +34,12 @@
 #include <boost/crc.hpp>
 
 #include <Common/LofarTypes.h>
-#include <Common/LofarLogger.h>
 #ifndef USE_THREADS
-#error The TBB writer needs USE_THREADS to operate.
+#error The TBB writer needs USE_THREADS to operate. You can also define it by hand and link to the right LOFAR lib(s).
 #endif
 #include <Common/Thread/Thread.h>
 #include <Common/Thread/Queue.h>
-#include <Interface/Exceptions.h>
 #include <Interface/Parset.h>
-#if defined HAVE_PKVERSION
-#include <Storage/Package__Version.h>
-#else
-#include <Common/Version.h>
-#endif
 
 #include <dal/lofar/TBB_File.h>
 
@@ -129,8 +116,26 @@ struct TBB_Frame {
 	TBB_Payload payload;
 };
 
+
+// Station metadata from other sources than the parset.
+struct StationMetadata {
+	// If we receive data from a station not in the obs, we won't have all the metadata.
+	bool available;
+
+	// from the antenna field files
+	std::vector<double> antPositions;
+	std::vector<double> normalVector;   // [3]
+	std::vector<double> rotationMatrix; // [3, 3] row-minor order
+
+	// from the station calibration table files
+	//...
+};
+
+// From station ID to a vector of antenna position coordinate components.
+typedef std::map<unsigned, StationMetadata> StationMetadataMap;
+
+
 class TBB_Dipole {
-private:
 	DAL::TBB_DipoleDataset* itsDataset;
 	std::ofstream itsRawOut; // if raw out requested
 	std::vector<unsigned> itsFlagOffsets;
@@ -141,9 +146,9 @@ private:
 	uint32_t itsTime0; // seconds
 	uint32_t itsSampleNr0; // for transient data only
 
-	// Same truncated polynomials as standard crc32, but with initial_remainder=0, final_xor_value=0, reflected_input=false, reflected_remainder_output=false.
+	// Same truncated polynomial as standard crc32, but with initial_remainder=0, final_xor_value=0, reflected_input=false, reflected_remainder_output=false.
 	// The boost::crc_optimal<> declarations precompute lookup tables, so do not declare inside the checking routine.
-	boost::crc_optimal<32, 0x04C11DB7/*, 0, 0, false, false*/> itsCrc32gen; // instead of crc_32_type
+	boost::crc_optimal<32, 0x04C11DB7/*, 0, 0, false, false*/> itsCrc32gen; // instead of boost::crc_32_type
 
 	// do not use
 	TBB_Dipole& operator=(const TBB_Dipole& rhs);
@@ -158,14 +163,14 @@ public:
 	bool usesExternalDataFile() const;
 
 	// All TBB_Dipole objects are default constructed in a vector, so provide an init procedure.
-	void initDipole(const TBB_Header& header, const Parset& parset, const std::string& rawFilename,
-			DAL::TBB_Station& station, Mutex& h5Mutex);
+	void initDipole(const TBB_Header& header, const Parset& parset, const StationMetadata& stationMetaData,
+                        const std::string& rawFilename, DAL::TBB_Station& station, Mutex& h5Mutex);
 
 	void processFrameData(const TBB_Frame& frame, Mutex& h5Mutex);
 
 private:
-	void initTBB_DipoleDataset(const TBB_Header& header, const Parset& parset, const std::string& rawFilename,
-			DAL::TBB_Station& station, Mutex& h5Mutex);
+	void initTBB_DipoleDataset(const TBB_Header& header, const Parset& parset, const StationMetadata& stationMetaData,
+                                   const std::string& rawFilename, DAL::TBB_Station& station, Mutex& h5Mutex);
 	bool hasAllZeroDataSamples(const TBB_Frame& frame) const;
 	bool crc32tbb(const TBB_Payload* payload, size_t nsamples);
 };
@@ -176,6 +181,7 @@ class TBB_Station {
 	DAL::TBB_Station itsStation;
 	std::vector<TBB_Dipole> itsDipoles;
 	const Parset& itsParset;
+	const StationMetadata& itsStationMetaData;
 	const std::string itsH5Filename;
 	const bool itsDumpRaw;
 
@@ -187,7 +193,8 @@ class TBB_Station {
 	TBB_Station& operator=(const TBB_Station& rhs);
 
 public:
-	TBB_Station(const string& stationName, const Parset& parset, const std::string& h5Filename, bool dumpRaw);
+	TBB_Station(const string& stationName, const Parset& parset, const StationMetadata& stationMetaData,
+                    const std::string& h5Filename, bool dumpRaw);
 	~TBB_Station();
 
 	// Output threads
@@ -201,7 +208,7 @@ private:
 	void initCommonLofarAttributes(const std::string& filename);
 	void initTBB_RootAttributesAndGroups(const std::string& stName);
 	void initStationGroup(DAL::TBB_Station& st, const std::string& stName,
-			const std::vector<double>& stPosition);
+                              const std::vector<double>& stPosition);
 	void initTriggerGroup(DAL::TBB_Trigger& tg);
 };
 
@@ -217,7 +224,10 @@ class TBB_StreamWriter {
 	 * This isolates (soft) real-time input from HDF5/disk latencies, and the HDF5 C library from C++ cancellation exceptions.
 	 */
 
-	// Two times max receive queue length (PRINT_QUEUE_LEN defined) as observed on locus node (July 2012).
+	/*
+	 * Queue size: With PRINT_QUEUE_LEN defined, the max used buffer size observed was 343.
+	 * This was for 1 udp stream (instead of 6 or 12) from 1 station. Having 1024 buffers per thread seems reasonable.
+	 */
 	static const unsigned nrFrameBuffers = 1024;
 
 	TBB_Frame* itsFrameBuffers;
@@ -234,7 +244,7 @@ class TBB_StreamWriter {
 	// Inflate struct timeval to 64 bytes (typical LEVEL1_DCACHE_LINESIZE).
 	struct timeval itsTimeoutStamp __attribute__((aligned(64)));
 
-	boost::crc_optimal<16, 0x8005    /*, 0, 0, false, false*/> itsCrc16gen; // instead of crc_16_type
+	boost::crc_optimal<16, 0x8005/*, 0, 0, false, false*/> itsCrc16gen; // instead of boost::crc_16_type
 
 	Thread* itsOutputThread;
 	Thread* itsInputThread; // last in TBB_StreamWriter
@@ -270,6 +280,8 @@ class TBB_Writer {
 	Mutex itsStationsMutex;
 
 	const Parset& itsParset;
+	const StationMetadataMap& itsStationMetaDataMap;
+	StationMetadata itsUnknownStationMetaData; // referred to for data from unknown stations
 	const std::string& itsOutDir;
 	const bool itsDumpRaw;
 
@@ -284,7 +296,8 @@ class TBB_Writer {
 
 public:
 	TBB_Writer(const std::vector<std::string>& inputStreamNames, const Parset& parset,
-			const std::string& outDir, bool dumpRaw, const std::string& logPrefix);
+                   const StationMetadataMap& stationMetaDataMap, const std::string& outDir,
+                   bool dumpRaw, const std::string& logPrefix);
 	~TBB_Writer();
 
 	// Output threads
