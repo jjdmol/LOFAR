@@ -221,7 +221,11 @@ class SkyImage(DataProduct):
             'nrOfPolarizationCoordinates' : 0,
             'coordinateTypes' : [],
             'locationFrame' : "GEOCENTER",
-            'timeFrame' : ""
+            'timeFrame' : "",
+            'restoringBeamMajorUnit' : "arcsec",
+            'restoringBeamMajorValue' : 0,
+            'restoringBeamMinorUnit' : "arcsec",
+            'restoringBeamMinorValue' : 0
         })
         if filename: 
             self.collect(filename)
@@ -235,10 +239,15 @@ class SkyImage(DataProduct):
         try:
             image = pyrap.images.image(filename)
             coord = image.coordinates()
+            beaminfo = image.imageinfo()['restoringbeam']
             self._data.update({
                 'numberOfAxes' : image.ndim(),
                 'coordinateTypes' : coord._names,
                 'timeFrame' : coord.get_obsdate()['refer'],
+                'restoringBeamMajorUnit' : beaminfo['major']['unit'],
+                'restoringBeamMajorValue' : beaminfo['major']['value'],
+                'restoringBeamMinorUnit' : beaminfo['minor']['unit'],
+                'restoringBeamMinorValue' : beaminfo['minor']['value']
             })
             if 'direction' in coord._names:
                 direction = coord.get_coordinate('direction')
