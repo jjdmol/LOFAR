@@ -630,6 +630,10 @@ void MSWindow::createToolbar()
   sigc::mem_fun(*this, &MSWindow::onPlotLogLogDistPressed) );
 	_actionGroup->add( Gtk::Action::create("PlotComplexPlane", "Plot _complex plane"),
   sigc::mem_fun(*this, &MSWindow::onPlotComplexPlanePressed) );
+	_actionGroup->add( Gtk::Action::create("PlotMeanSpectrum", "Plot _mean spectrum"),
+  sigc::mem_fun(*this, &MSWindow::onPlotMeanSpectrumPressed) );
+	_actionGroup->add( Gtk::Action::create("PlotSumSpectrum", "Plot s_um spectrum"),
+  sigc::mem_fun(*this, &MSWindow::onPlotSumSpectrumPressed) );
 	_actionGroup->add( Gtk::Action::create("PlotPowerSpectrum", "Plot _power spectrum"),
   sigc::mem_fun(*this, &MSWindow::onPlotPowerSpectrumPressed) );
 	_actionGroup->add( Gtk::Action::create("PlotPowerSpectrumComparison", "Power _spectrum"),
@@ -873,6 +877,8 @@ void MSWindow::createToolbar()
     "      <menuitem action='PlotDist'/>"
     "      <menuitem action='PlotLogLogDist'/>"
     "      <menuitem action='PlotComplexPlane'/>"
+    "      <menuitem action='PlotMeanSpectrum'/>"
+    "      <menuitem action='PlotSumSpectrum'/>"
     "      <menuitem action='PlotPowerSpectrum'/>"
     "      <menuitem action='PlotRMSSpectrum'/>"
     "      <menuitem action='PlotSNRSpectrum'/>"
@@ -1219,6 +1225,30 @@ void MSWindow::onPlotComplexPlanePressed()
 			delete _plotComplexPlaneWindow;
 		_plotComplexPlaneWindow = new ComplexPlanePlotWindow(*this, _plotManager);
 		_plotComplexPlaneWindow->show();
+	}
+}
+
+template<bool Weight>
+void MSWindow::plotMeanSpectrumPressed()
+{
+	if(_timeFrequencyWidget.HasImage())
+	{
+		Plot2D &plot = _plotManager.NewPlot2D("Mean spectrum");
+
+		TimeFrequencyData data = _timeFrequencyWidget.GetActiveData();
+		Mask2DCPtr mask =
+			Mask2D::CreateSetMaskPtr<false>(data.ImageWidth(), data.ImageHeight());
+		Plot2DPointSet &beforeSet = plot.StartLine("Without flagging");
+		RFIPlots::MakeMeanSpectrumPlot<Weight>(beforeSet, data, mask, _timeFrequencyWidget.GetMetaData());
+
+		mask = Mask2D::CreateCopy(data.GetSingleMask());
+		if(!mask->AllFalse())
+		{
+			Plot2DPointSet &afterSet = plot.StartLine("Flagged");
+			RFIPlots::MakeMeanSpectrumPlot<Weight>(afterSet, data, mask, _timeFrequencyWidget.GetMetaData());
+		}
+		
+		_plotManager.Update();
 	}
 }
 
