@@ -25,7 +25,7 @@
 
 #include <cstddef>
 #include <csignal>
-#include <ctime>						// strftime()
+#include <ctime>
 #include <cerrno>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -49,7 +49,6 @@
 #include <Stream/SocketStream.h>
 #include <Interface/Exceptions.h>
 #include <Interface/Stream.h>
-#include <Interface/SmartPtr.h>
 #if defined HAVE_PKVERSION
 #include <Storage/Package__Version.h>
 #else
@@ -66,7 +65,7 @@ using namespace std;
 EXCEPTION_CLASS(TBB_MalformedFrameException, StorageException);
 
 /*
- * The output_format is without seconds; the output_size is incl the '\0'.
+ * The output_format is without seconds. The output_size is including the '\0'.
  * Helper for in filenames and for the FILEDATE attribute.
  */
 static string formatFilenameTimestamp(const struct timeval& tv, const char* output_format,
@@ -75,14 +74,19 @@ static string formatFilenameTimestamp(const struct timeval& tv, const char* outp
 	gmtime_r(&tv.tv_sec, &tm);
 	double secs = tm.tm_sec + tv.tv_usec / 1000000.0;
 
-	SmartPtr<char, SmartPtrDeleteArray<char> > date_str(new char[output_size]);
+	string date(output_size, '\0'); // reserve enough before new char[]
+	char* date_str = new char[output_size];
 	size_t nwritten = strftime(date_str, output_size, output_format, &tm);
 	if (nwritten == 0) {
 		date_str[0] = '\0';
 	}
-	/*int nprinted = */snprintf(date_str + nwritten, sizeof(output_format) - nwritten, output_format_secs, secs);
+	int nprinted = snprintf(date_str + nwritten, sizeof(output_format) - nwritten, output_format_secs, secs);
 
-	string date(date_str);
+	// Copy by hand to avoid skipping delete[] below if an operator=() instead would throw.
+	for (int i = 0; i < nprinted; i++) {
+		date[i] = date_str[i];
+	}
+	delete[] date_str;
 	return date;
 }
 
