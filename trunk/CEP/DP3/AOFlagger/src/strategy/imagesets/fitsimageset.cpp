@@ -356,7 +356,7 @@ namespace rfiStrategy {
 		}
 		std::vector<double> observationTimes(rowCount);
 		bool hasBand = false;
-		for(int row=0;row!=rowCount;++row)
+		for(int row=1;row<=rowCount;++row)
 		{
 			if(!hasBand)
 			{
@@ -392,7 +392,7 @@ namespace rfiStrategy {
 			_file->ReadTableCell(row, dataColumn, cellData, totalSize);
 			_file->ReadTableCell(row, flagColumn, flagData, totalSize);
 			
-			observationTimes[row] = time;
+			observationTimes[row-1] = time;
 			
 			long double *dataPtr = cellData;
 			bool *flagPtr = flagData;
@@ -400,8 +400,8 @@ namespace rfiStrategy {
 			{
 				for(int p=0;p<polarizationCount;++p)
 				{
-					images[p]->SetValue(row, f, *dataPtr);
-					masks[p]->SetValue(row, f, *flagPtr);
+					images[p]->SetValue(row-1, f, *dataPtr);
+					masks[p]->SetValue(row-1, f, *flagPtr);
 					++dataPtr;
 					++flagPtr;
 				}
