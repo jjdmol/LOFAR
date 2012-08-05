@@ -157,8 +157,8 @@ static int antSetName2AntFieldIndex(const string& antSetName) {
 	return idx;
 }
 
-static LOFAR::RTCP::StationMetadataMap getExternalStationMetadata(const LOFAR::RTCP::Parset& parset, const string& antFieldDir) {
-	LOFAR::RTCP::StationMetadataMap stMdMap;
+static LOFAR::RTCP::StationMetaDataMap getExternalStationMetaData(const LOFAR::RTCP::Parset& parset, const string& antFieldDir) {
+	LOFAR::RTCP::StationMetaDataMap stMdMap;
 
 	try {
 		// Find path to antenna field files. If not a prog arg, try via $LOFARROOT, else via parset.
@@ -191,19 +191,19 @@ static LOFAR::RTCP::StationMetadataMap getExternalStationMetadata(const LOFAR::R
 
 			// Compute absolute antenna positions from centre + relative.
 			// See AntField.h in ApplCommon for the AFArray typedef and contents (first is shape, second is values).
-			LOFAR::RTCP::StationMetadata stMetadata;
-			stMetadata.available = true;
-			stMetadata.antPositions = antField.AntPos(fieldIdx).second;
-			for (size_t i = 0; i < stMetadata.antPositions.size(); i += 3) {
-				stMetadata.antPositions.at(i+2) += antField.Centre(fieldIdx).second.at(2);
-				stMetadata.antPositions[i+1]    += antField.Centre(fieldIdx).second[1];
-				stMetadata.antPositions[i]      += antField.Centre(fieldIdx).second[0];
+			LOFAR::RTCP::StationMetaData stMetaData;
+			stMetaData.available = true;
+			stMetaData.antPositions = antField.AntPos(fieldIdx).second;
+			for (size_t i = 0; i < stMetaData.antPositions.size(); i += 3) {
+				stMetaData.antPositions.at(i+2) += antField.Centre(fieldIdx).second.at(2);
+				stMetaData.antPositions[i+1]    += antField.Centre(fieldIdx).second[1];
+				stMetaData.antPositions[i]      += antField.Centre(fieldIdx).second[0];
 			}
 
-			stMetadata.normalVector   = antField.normVector(fieldIdx).second;
-			stMetadata.rotationMatrix = antField.rotationMatrix(fieldIdx).second;
+			stMetaData.normalVector   = antField.normVector(fieldIdx).second;
+			stMetaData.rotationMatrix = antField.rotationMatrix(fieldIdx).second;
 
-			stMdMap.insert(make_pair(DAL::stationNameToID(stName), stMetadata));
+			stMdMap.insert(make_pair(DAL::stationNameToID(stName), stMetaData));
 		}
 	} catch (exception& exc) { // LOFAR::AssertError or DAL::DALValueError (rare)
 		// AssertError already sends a message to the logger.
@@ -214,7 +214,7 @@ static LOFAR::RTCP::StationMetadataMap getExternalStationMetadata(const LOFAR::R
 }
 
 static int doTBB_Run(const vector<string>& inputStreamNames, const LOFAR::RTCP::Parset& parset,
-                     const LOFAR::RTCP::StationMetadataMap& stMdMap, struct progArgs& args) {
+                     const LOFAR::RTCP::StationMetaDataMap& stMdMap, struct progArgs& args) {
 	string logPrefix("TBB obs " + LOFAR::formatString("%u", parset.observationID()) + ": ");
 
 	int err = 1;
@@ -487,7 +487,7 @@ int main(int argc, char* argv[]) {
 	err = 1;
 	try {
 		LOFAR::RTCP::Parset parset(args.parsetFilename);
-		LOFAR::RTCP::StationMetadataMap stMdMap(getExternalStationMetadata(parset, args.antFieldDir));
+		LOFAR::RTCP::StationMetaDataMap stMdMap(getExternalStationMetaData(parset, args.antFieldDir));
 
 		err = 0;
 		do {

@@ -74,20 +74,23 @@ static string formatFilenameTimestamp(const struct timeval& tv, const char* outp
 	gmtime_r(&tv.tv_sec, &tm);
 	double secs = tm.tm_sec + tv.tv_usec / 1000000.0;
 
-	string date(output_size, '\0'); // reserve enough before new char[]
-	char* date_str = new char[output_size];
-	size_t nwritten = strftime(date_str, output_size, output_format, &tm);
-	if (nwritten == 0) {
-		date_str[0] = '\0';
-	}
-	int nprinted = snprintf(date_str + nwritten, sizeof(output_format) - nwritten, output_format_secs, secs);
+	struct Date {
+		char* date;
+		Date(size_t size) : date(new char[size]) {
+		}
+		~Date() {
+			delete[] date;
+		}
+	} d(output_size); // ensure C string for strftime() is always deleted
 
-	// Copy by hand to avoid skipping delete[] below if an operator=() instead would throw.
-	for (int i = 0; i < nprinted; i++) {
-		date[i] = date_str[i];
+	size_t nwritten = strftime(d.date, output_size, output_format, &tm);
+	if (nwritten == 0) {
+		d.date[0] = '\0';
 	}
-	delete[] date_str;
-	return date;
+	/*int nprinted = */snprintf(d.date + nwritten, output_size - nwritten, output_format_secs, secs);
+
+	string dateStr(d.date);
+	return dateStr;
 }
 
 string TBB_Header::toString() const {
@@ -151,7 +154,7 @@ TBB_Dipole::~TBB_Dipole() {
 	}
 }
 
-void TBB_Dipole::initDipole(const TBB_Header& header, const Parset& parset, const StationMetadata& stationMetaData,
+void TBB_Dipole::initDipole(const TBB_Header& header, const Parset& parset, const StationMetaData& stationMetaData,
 		const string& rawFilename, DAL::TBB_Station& station, Mutex& h5Mutex) {
 	if (header.sampleFreq == 200 || header.sampleFreq == 160) {
 		itsSampleFreq = static_cast<uint32_t>(header.sampleFreq) * 1000000;
@@ -249,7 +252,7 @@ void TBB_Dipole::processFrameData(const TBB_Frame& frame, Mutex& h5Mutex) {
 	}
 }
 
-void TBB_Dipole::initTBB_DipoleDataset(const TBB_Header& header, const Parset& parset, const StationMetadata& stationMetaData,
+void TBB_Dipole::initTBB_DipoleDataset(const TBB_Header& header, const Parset& parset, const StationMetaData& stationMetaData,
                                        const string& rawFilename, DAL::TBB_Station& station, Mutex& h5Mutex) {
 	itsDataset = new DAL::TBB_DipoleDataset(station.dipole(header.stationID, header.rspID, header.rcuID));
 
@@ -369,7 +372,7 @@ bool TBB_Dipole::hasAllZeroDataSamples(const TBB_Frame& frame) const {
 
 //////////////////////////////////////////////////////////////////////////////
 
-TBB_Station::TBB_Station(const string& stationName, const Parset& parset, const StationMetadata& stationMetaData,
+TBB_Station::TBB_Station(const string& stationName, const Parset& parset, const StationMetaData& stationMetaData,
                          const string& h5Filename, bool dumpRaw)
 : itsH5File(DAL::TBB_File(h5Filename, DAL::TBB_File::CREATE))
 , itsStation(itsH5File.station(stationName))
@@ -881,7 +884,7 @@ void TBB_StreamWriter::mainOutputLoop() {
 //////////////////////////////////////////////////////////////////////////////
 
 TBB_Writer::TBB_Writer(const vector<string>& inputStreamNames, const Parset& parset,
-                       const StationMetadataMap& stationMetaDataMap, const string& outDir, bool dumpRaw,
+                       const StationMetaDataMap& stationMetaDataMap, const string& outDir, bool dumpRaw,
                        const string& logPrefix)
 : itsParset(parset)
 , itsStationMetaDataMap(stationMetaDataMap)
@@ -939,13 +942,14 @@ TBB_Station* TBB_Writer::getStation(const TBB_Header& header) {
 	// Create new station with HDF5 file and station HDF5 group.
 	string stationName(DAL::stationIDToName(header.stationID));
 	string h5Filename(createNewTBB_H5Filename(header, stationName));
-	StationMetadataMap::const_iterator stMdIt(itsStationMetaDataMap.find(header.stationID));
+	StationMetaDataMap::const_iterator stMdIt(itsStationMetaDataMap.find(header.stationID));
 	// If not found, station is not participating in the observation. Should not happen, but don't panic.
-	const StationMetadata& stMetadata = stMdIt == itsStationMetaDataMap.end() ? itsUnknownStationMetaData : stMdIt->second;
-	TBB_Station* station = new TBB_Station(stationName, itsParset, stMetadata, h5Filename, itsDumpRaw);
+	const StationMetaData& stMetaData = stMdIt == itsStationMetaDataMap.end() ? itsUnknownStationMetaData : stMdIt->second;
+	TBB_Station* station = new TBB_Station(stationName, itsParset, stMetaData, h5Filename, itsDumpRaw);
 	return itsStations.insert(make_pair(header.stationID, station)).first->second;
 }
 
+// Must be called holding itsStationsMutex.
 string TBB_Writer::createNewTBB_H5Filename(const TBB_Header& header, const string& stationName) {
 	const string typeExt("tbb.h5");
 	string obsIDStr(formatString("%u", itsParset.observationID()));
@@ -981,13 +985,13 @@ string TBB_Writer::createNewTBB_H5Filename(const TBB_Header& header, const strin
 	size_t pos = h5Filename.size() - typeExt.size();
 	string runNrStr(formatString("R%03u_", itsRunNr));
 	h5Filename.insert(pos, runNrStr);
-	while ((access(h5Filename.c_str(), F_OK) == 0 || errno != ENOENT) && itsRunNr < 1000) {
+	while (itsRunNr < 1000 && ( access(h5Filename.c_str(), F_OK) == 0 || errno != ENOENT )) {
 		itsRunNr += 1;
 		runNrStr = formatString("R%03u_", itsRunNr);
 		h5Filename.replace(pos, runNrStr.size(), runNrStr);
 	}
 	if (itsRunNr == 1000) { // run number is supposed to fit in 3 digits
-		throw StorageException("failed to generate new .h5 filename after 1000 filenames tried.");
+		throw StorageException("failed to generate new .h5 filename after trying 1000 filenames.");
 	}
 
 	return h5Filename;

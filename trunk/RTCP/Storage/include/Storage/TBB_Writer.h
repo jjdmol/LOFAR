@@ -117,9 +117,9 @@ struct TBB_Frame {
 };
 
 
-// Station metadata from other sources than the parset.
-struct StationMetadata {
-	// If we receive data from a station not in the obs, we won't have all the metadata.
+// Station meta data from other sources than the parset.
+struct StationMetaData {
+	// If we receive data from a station not in the obs, we won't have all the meta data.
 	bool available;
 
 	// from the antenna field files
@@ -132,7 +132,7 @@ struct StationMetadata {
 };
 
 // From station ID to a vector of antenna position coordinate components.
-typedef std::map<unsigned, StationMetadata> StationMetadataMap;
+typedef std::map<unsigned, StationMetaData> StationMetaDataMap;
 
 
 class TBB_Dipole {
@@ -163,13 +163,13 @@ public:
 	bool usesExternalDataFile() const;
 
 	// All TBB_Dipole objects are default constructed in a vector, so provide an init procedure.
-	void initDipole(const TBB_Header& header, const Parset& parset, const StationMetadata& stationMetaData,
+	void initDipole(const TBB_Header& header, const Parset& parset, const StationMetaData& stationMetaData,
                         const std::string& rawFilename, DAL::TBB_Station& station, Mutex& h5Mutex);
 
 	void processFrameData(const TBB_Frame& frame, Mutex& h5Mutex);
 
 private:
-	void initTBB_DipoleDataset(const TBB_Header& header, const Parset& parset, const StationMetadata& stationMetaData,
+	void initTBB_DipoleDataset(const TBB_Header& header, const Parset& parset, const StationMetaData& stationMetaData,
                                    const std::string& rawFilename, DAL::TBB_Station& station, Mutex& h5Mutex);
 	bool hasAllZeroDataSamples(const TBB_Frame& frame) const;
 	bool crc32tbb(const TBB_Payload* payload, size_t nsamples);
@@ -181,7 +181,7 @@ class TBB_Station {
 	DAL::TBB_Station itsStation;
 	std::vector<TBB_Dipole> itsDipoles;
 	const Parset& itsParset;
-	const StationMetadata& itsStationMetaData;
+	const StationMetaData& itsStationMetaData;
 	const std::string itsH5Filename;
 	const bool itsDumpRaw;
 
@@ -193,7 +193,7 @@ class TBB_Station {
 	TBB_Station& operator=(const TBB_Station& rhs);
 
 public:
-	TBB_Station(const string& stationName, const Parset& parset, const StationMetadata& stationMetaData,
+	TBB_Station(const string& stationName, const Parset& parset, const StationMetaData& stationMetaData,
                     const std::string& h5Filename, bool dumpRaw);
 	~TBB_Station();
 
@@ -280,8 +280,8 @@ class TBB_Writer {
 	Mutex itsStationsMutex;
 
 	const Parset& itsParset;
-	const StationMetadataMap& itsStationMetaDataMap;
-	StationMetadata itsUnknownStationMetaData; // referred to for data from unknown stations
+	const StationMetaDataMap& itsStationMetaDataMap;
+	StationMetaData itsUnknownStationMetaData; // referred to for data from unknown stations
 	const std::string& itsOutDir;
 	const bool itsDumpRaw;
 
@@ -296,7 +296,7 @@ class TBB_Writer {
 
 public:
 	TBB_Writer(const std::vector<std::string>& inputStreamNames, const Parset& parset,
-                   const StationMetadataMap& stationMetaDataMap, const std::string& outDir,
+                   const StationMetaDataMap& stationMetaDataMap, const std::string& outDir,
                    bool dumpRaw, const std::string& logPrefix);
 	~TBB_Writer();
 
