@@ -49,7 +49,9 @@ class msss_target_pipeline(control):
         Get input- and output-data product specifications from the
         parset-file, and do some sanity checks.
         """
-        odp = self.parset.makeSubset('ObsSW.Observation.DataProducts.')
+        odp = self.parset.makeSubset(
+            self.parset.fullModuleName('DataProducts') + '.'
+        )
         self.input_data['data'] = [
             tuple(os.path.join(location, filename).split(':'))
                 for location, filename, skip in zip(
@@ -202,8 +204,8 @@ class msss_target_pipeline(control):
 
         # Create a parameter-subset containing only python-control stuff.
         py_parset = self.parset.makeSubset(
-            'ObsSW.Observation.ObservationControl.PythonControl.')
-
+            self.parset.fullModuleName('PythonControl') + '.'
+        )
         # Get input/output-data products specifications.
         self._get_io_product_specs()
 
