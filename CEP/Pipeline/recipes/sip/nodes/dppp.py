@@ -26,22 +26,23 @@ class dppp(LOFARnodeTCP):
 
     def run(
         self, infile, outfile, parmdb, sourcedb,
-        parsetfile, executable, initscript, demix_sources,
+        parsetfile, executable, initscript, demix_always, demix_if_needed,
         start_time, end_time, nthreads, clobber
     ):
         # Debugging info
-        self.logger.debug("infile        = %s" % infile)
-        self.logger.debug("outfile       = %s" % outfile)
-        self.logger.debug("parmdb        = %s" % parmdb)
-        self.logger.debug("sourcedb      = %s" % sourcedb)
-        self.logger.debug("parsetfile    = %s" % parsetfile)
-        self.logger.debug("executable    = %s" % executable)
-        self.logger.debug("initscript    = %s" % initscript)
-        self.logger.debug("demix_sources = %s" % demix_sources)
-        self.logger.debug("start_time    = %s" % start_time)
-        self.logger.debug("end_time      = %s" % end_time)
-        self.logger.debug("nthreads      = %s" % nthreads)
-        self.logger.debug("clobber       = %s" % clobber)
+        self.logger.debug("infile          = %s" % infile)
+        self.logger.debug("outfile         = %s" % outfile)
+        self.logger.debug("parmdb          = %s" % parmdb)
+        self.logger.debug("sourcedb        = %s" % sourcedb)
+        self.logger.debug("parsetfile      = %s" % parsetfile)
+        self.logger.debug("executable      = %s" % executable)
+        self.logger.debug("initscript      = %s" % initscript)
+        self.logger.debug("demix_always    = %s" % demix_always)
+        self.logger.debug("demix_if_needed = %s" % demix_if_needed)
+        self.logger.debug("start_time      = %s" % start_time)
+        self.logger.debug("end_time        = %s" % end_time)
+        self.logger.debug("nthreads        = %s" % nthreads)
+        self.logger.debug("clobber         = %s" % clobber)
 
         if not nthreads:
             nthreads = 1
@@ -103,7 +104,8 @@ class dppp(LOFARnodeTCP):
                 'parmdb' : parmdb,
                 'sourcedb' : sourcedb,
                 'parsetfile' : parsetfile,
-                'demix_sources' : demix_sources,
+                'demix_always' : demix_always,
+                'demix_if_needed' : demix_if_needed,
                 'start_time' : start_time,
                 'end_time' : end_time
             }
@@ -217,15 +219,18 @@ class dppp(LOFARnodeTCP):
         self.logger.debug("getAteamList returned: %s" % ateam_list)
         # If the user specified a list of candidate A-team sources to remove,
         # then determine the intersection of both lists.
-        if kwargs['demix_sources']:
+        if kwargs['demix_if_needed']:
             ateam_list = list(
-                set(kwargs['demix_sources']).intersection(ateam_list)
+                set(kwargs['demix_if_needed']).intersection(ateam_list)
             )
+
+        # Determine the complete set of sources to be demixed.
+        demix_sources = list(set(kwargs['demix_always']).union(ateam_list))
         self.logger.info("Removing %d target(s) from %s: %s" % (
-                len(ateam_list), kwargs['infile'], ', '.join(ateam_list)
+                len(demix_sources), kwargs['infile'], ', '.join(demix_sources)
             )
         )
-        patch_dictionary[stepname + '.subtractsources'] = ateam_list
+        patch_dictionary[stepname + '.subtractsources'] = demix_sources
         
         # Return the patch dictionary.
         return patch_dictionary

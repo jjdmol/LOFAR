@@ -70,10 +70,16 @@ class dppp(BaseRecipe, RemoteCommandRecipeMixIn):
             help="Path to mapfile containing the sourcedb files "
                  "(used by demixing step only)"
         ),
-        'demix_sources': ingredient.ListField(
-            '--demix-sources',
-            help="List of sources to remove e.g. 'CygA, CasA'; "
-                 "will be determined automatically if not specified.",
+        'demix_always': ingredient.ListField(
+            '--demix-always',
+            help="List of sources that must always be demixed "
+                 "(used by demixing step only)",
+            default=[]
+        ),
+        'demix_if_needed': ingredient.ListField(
+            '--demix-if-needed',
+            help="List of sources that will only be demixed if needed, "
+                 "based on some heuristics (used by demixing step only)",
             default=[]
         ),
         # NB times are read from vds file as string
@@ -205,7 +211,8 @@ class dppp(BaseRecipe, RemoteCommandRecipeMixIn):
                         self.inputs['parset'],
                         self.inputs['executable'],
                         self.inputs['initscript'],
-                        self.inputs['demix_sources'],
+                        self.inputs['demix_always'],
+                        self.inputs['demix_if_needed'],
                         self.inputs['data_start_time'],
                         self.inputs['data_end_time'],
                         self.inputs['nthreads'],
