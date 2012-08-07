@@ -18,7 +18,11 @@ class get_metadata(LOFARnodeTCP):
     Get the metadata from the given data product and return it to the master
     using self.outputs.
     """
-    @node_xml_decorator()
+    @node_xml_decorator(input_data=[],
+                        output_data=[],
+                        config_files=[],
+                        parameters=["infile",
+                                     "product_type"])
     def run(self, infile, product_type):
         with log_time(self.logger):
             if os.path.exists(infile):
