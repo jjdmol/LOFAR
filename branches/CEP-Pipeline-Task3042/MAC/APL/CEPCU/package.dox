@@ -1,0 +1,6 @@
+// \ingroup APL
+// \defgroup CEPCU CEP-related MAC controllers.
+//
+// The CEPCU package contains the executables that control the software
+// that runs on CEP.
+
