@@ -263,9 +263,9 @@ class new_bbs(BaseRecipe):
             # --------------------------------------------------------------
             command = "python %s" % (self.__file__.replace('master', 'nodes'))
             env = {
-                "LOFARROOT": utilities.read_initscript(self.logger, self.inputs['initscript'])["LOFARROOT"],
-                "PYTHONPATH": self.config.get('deploy', 'engine_ppath'),
-                "LD_LIBRARY_PATH": self.config.get('deploy', 'engine_lpath')
+                "LOFARROOT": os.environ.get("LOFARROOT"),
+                "PYTHONPATH": os.environ.get("PYTHONPATH"),
+                "LD_LIBRARY_PATH": os.environ.get("LD_LIBRARY_PATH")
             }
             jobpool = {}
             bbs_kernels = []
