@@ -70,7 +70,7 @@ EXCEPTION_CLASS(TBB_MalformedFrameException, StorageException);
  */
 static string formatFilenameTimestamp(const struct timeval& tv, const char* output_format,
                                       const char* output_format_secs, size_t output_size) {
-	struct tm tm = {0};
+	struct tm tm;
 	gmtime_r(&tv.tv_sec, &tm);
 	double secs = tm.tm_sec + tv.tv_usec / 1000000.0;
 
@@ -435,7 +435,11 @@ string TBB_Station::getFileModDate(const string& filename) const {
 		gettimeofday(&tv, NULL); // If stat() fails, this is close enough to file mod date.
 	} else {
 		tv.tv_sec = st.st_mtime;
+#ifdef __APPLE__
+		tv.tv_usec = st.st_mtimespec.tv_nsec / 1000;
+#else
 		tv.tv_usec = st.st_mtim.tv_nsec / 1000;
+#endif
 	}
 
 	const char output_format[] = "%Y-%m-%dT%H:%M:";
