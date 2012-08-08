@@ -33,7 +33,7 @@ namespace rfiStrategy {
 	: ImageSet(), _currentBaselineIndex(0), _frequencyOffset(0.0)
 	{
 		_file = new FitsFile(file);
-		_file->Open(FitsFile::ReadOnlyMode);
+		_file->Open(FitsFile::ReadWriteMode);
 	}
 	
 	FitsImageSet::~FitsImageSet()
@@ -419,7 +419,87 @@ namespace rfiStrategy {
 		}
 		else throw std::runtime_error("Don't know how to convert polarizations in file");
 	}
+	
+	void FitsImageSet::AddWriteFlagsTask(const ImageSetIndex &index, std::vector<Mask2DCPtr> &flags)
+	{
+		if(_file->HasGroups())
+			throw BadUsageException("Not implemented for grouped fits files");
+		else
+			saveSingleDishFlags(flags);
+	}
 
+	void FitsImageSet::PerformWriteFlagsTask()
+	{
+		if(_file->HasGroups())
+			throw BadUsageException("Not implemented for grouped fits files");
+		else {
+			// Nothing to be done; Add..Task already wrote the flags.
+		}
+	}
+	
+	void FitsImageSet::saveSingleDishFlags(std::vector<Mask2DCPtr> &flags)
+	{
+		_file->Close();
+		_file->Open(FitsFile::ReadWriteMode);
+		_file->MoveToHDU(2);
+		std::cout << "Writing single dish table with " << _file->GetRowCount() << " rows." << std::endl;
+		const int
+			dataColumn = _file->GetTableColumnIndex("DATA"),
+			flagColumn = _file->GetTableColumnIndex("FLAGGED");
+		const int
+			freqCount = _file->GetTableDimensionSize(dataColumn, 0),
+			polarizationCount = _file->GetTableDimensionSize(dataColumn, 1);
+			
+		const int totalSize = _file->GetTableColumnArraySize(dataColumn);
+		const int rowCount = _file->GetRowCount();
+		double cellData[totalSize];
+		bool flagData[totalSize];
+		std::vector<Mask2DCPtr> storedFlags = flags;
+		if(flags.size()==1)
+		{
+			while(storedFlags.size() < (unsigned) polarizationCount) storedFlags.push_back(flags[0]);
+		}
+		if(storedFlags.size() != (unsigned) polarizationCount)
+		{
+			std::stringstream s;
+			s << "saveSingleDishFlags() : mismatch in polarization count: the given vector contains " << flags.size() << " polarizations, the number of polarizations in the file is " << polarizationCount;
+			throw std::runtime_error(s.str());
+		}
+		for(std::vector<Mask2DCPtr>::const_iterator i=storedFlags.begin();i!=storedFlags.end();++i)
+		{
+			if((*i)->Height() != (unsigned) freqCount)
+				throw std::runtime_error("Frequency count in given mask does not match with the file");
+			if((*i)->Width() != (unsigned) rowCount)
+				throw std::runtime_error("Time step count in given mask does not match with the file");
+		}
+		for(int row=1;row<=rowCount;++row)
+		{
+			std::cout << row << "\n";
+			_file->ReadTableCell(row, dataColumn, cellData, totalSize);
+			double *dataPtr = cellData;
+			bool *flagPtr = flagData;
+			
+			for(int f=0;f<freqCount;++f)
+			{
+				for(int p=0;p<polarizationCount;++p)
+				{
+					if(storedFlags[p]->Value(row-1, f))
+					{
+						*flagPtr = true;
+						*dataPtr = 1e20;
+					} else {
+						*flagPtr = false;
+					}
+					++dataPtr;
+					++flagPtr;
+				}
+			}
+			
+			_file->WriteTableCell(row, dataColumn, cellData, totalSize);
+			_file->WriteTableCell(row, flagColumn, flagData, totalSize);
+		}
+	}
+	
 	void FitsImageSetIndex::Previous()
 	{
 		if(_baselineIndex > 0)

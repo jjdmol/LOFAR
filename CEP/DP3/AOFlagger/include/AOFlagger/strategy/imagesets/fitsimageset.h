@@ -99,14 +99,8 @@ namespace rfiStrategy {
 				_baselineData.pop();
 				return data;
 			}
-			virtual void AddWriteFlagsTask(const ImageSetIndex &, std::vector<Mask2DCPtr> &)
-			{
-				throw BadUsageException("Not implemented");
-			}
-			virtual void PerformWriteFlagsTask()
-			{
-				throw BadUsageException("Not implemented");
-			}
+			virtual void AddWriteFlagsTask(const ImageSetIndex &index, std::vector<Mask2DCPtr> &flags);
+			virtual void PerformWriteFlagsTask();
 			virtual void PerformWriteDataTask(const ImageSetIndex &, std::vector<Image2DCPtr>, std::vector<Image2DCPtr>)
 			{
 				throw BadUsageException("Not implemented");
@@ -129,6 +123,8 @@ namespace rfiStrategy {
 			void ReadCalibrationTable();
 			void ReadSingleDishTable(TimeFrequencyData &data, TimeFrequencyMetaData &metaData);
 			TimeFrequencyData ReadPrimaryGroupTable(size_t baselineIndex, int band, int stokes, TimeFrequencyMetaData &metaData);
+			
+			void saveSingleDishFlags(std::vector<Mask2DCPtr> &flags);
 			
 			class FitsFile *_file;
 			std::vector<std::pair<size_t,size_t> > _baselines;
