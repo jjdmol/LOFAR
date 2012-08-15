@@ -206,6 +206,7 @@ int create_stdio(int is_output, enum proto proto)
 		  }
 
 		  return dup(2);
+    default     : fprintf(stderr, "Cannot create stdio with proto %d\n", proto), exit(1);
   }
 }
 
@@ -389,6 +390,7 @@ int create_fd(const char *arg, int is_output, enum proto *proto, char *name, siz
     case StdIn	:
     case StdOut:
     case StdErr	: return create_stdio(is_output, *proto);
+    default     : fprintf(stderr, "Cannot create fd for unknown proto %d\n", *proto), exit(1);
   }
 }
 
