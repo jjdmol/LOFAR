@@ -161,7 +161,7 @@ class msss_target_pipeline(control):
             host_data, path_data = data_pair
             # target location == working dir instrument file name
             target_path = os.path.join(scratch_dir, os.path.basename(path_instr))
-            target_location.append((host_data, target_path))
+            target_locations.append((host_data, target_path))
 
         return target_locations
 
