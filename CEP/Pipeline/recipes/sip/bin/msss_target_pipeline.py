@@ -147,6 +147,27 @@ class msss_target_pipeline(control):
         self.io_data_mask = [x and y for (x, y) in zip(data_mask, inst_mask)]
 
 
+    def _create_target_map_for_instruments(self, instrument_map,
+                                           input_data_map):
+        """
+        Create a mapfile with target locations: based on the host found in the 
+        input_data_map, the name of the instrument file and the working \
+        directory + job name
+        """
+        scratch_dir = os.path.join(
+            self.inputs['working_directory'], self.inputs['job_name'])
+
+        target_locations = []
+        for instrument_pair, data_pair in zip(instrument_map, input_data_map):
+            host_instr, path_instr = instrument_pair
+            host_data, path_data = data_pair
+            # target location == working dir instrument file name
+            target_path = os.path.join(scratch_dir, os.path.basename(path_instr))
+            target_location.append((host_data, target_path))
+
+        return target_locations
+
+
     def _copy_instrument_files(self, instrument_map, input_data_map,
                                 mapfile_dir):
         # For the copy recipe a target mapfile is needed
@@ -154,18 +175,19 @@ class msss_target_pipeline(control):
         # with the filename based on the
         copier_map_path = os.path.join(mapfile_dir, "copier")
         create_directory(copier_map_path)
-#        source_map, target_map, new_instrument_map = \
-#            self._create_target_map_for_instruments(instrument_map,
-#                                                     input_data_map)
+        target_map = self._create_target_map_for_instruments(instrument_map,
+                                                     input_data_map)
+
+
         #Write the two needed maps to file
         source_path = os.path.join(copier_map_path, "source_instruments.map")
         store_data_map(source_path, instrument_map)
 
         target_path = os.path.join(copier_map_path, "target_instruments.map")
-        store_data_map(target_path, input_data_map)
+        store_data_map(target_path, target_map)
 
+        raise Exception(target_path)
         copied_files_path = os.path.join(copier_map_path, "copied_instruments.map")
-        store_data_map(target_path, input_data_map)
 
         new_instrument_map = self.run_task("copier",
                       mapfile_source=source_path,
@@ -284,16 +306,16 @@ class msss_target_pipeline(control):
         # Run the Default Pre-Processing Pipeline (DPPP);
         dppp_mapfile = self.run_task("ndppp",
             data_mapfile,
-            data_start_time = vdsinfo['start_time'],
-            data_end_time = vdsinfo['end_time'],
-            parset = ndppp_parset,
+            data_start_time=vdsinfo['start_time'],
+            data_end_time=vdsinfo['end_time'],
+            parset=ndppp_parset,
             parmdb_mapfile=parmdb_mapfile,
             sourcedb_mapfile=sourcedb_mapfile,
-            mapfile = os.path.join(mapfile_dir, 'dppp[0].mapfile')
+            mapfile=os.path.join(mapfile_dir, 'dppp[0].mapfile')
         )['mapfile']
 
         demix_mapfile = dppp_mapfile
-        
+
 #        # Demix the relevant A-team sources
 #        demix_mapfile = self.run_task("demixing", dppp_mapfile)['mapfile']
 
