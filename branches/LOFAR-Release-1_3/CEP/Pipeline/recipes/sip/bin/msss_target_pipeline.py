@@ -184,7 +184,6 @@ class msss_target_pipeline(control):
         target_path = os.path.join(copier_map_path, "target_instruments.map")
         store_data_map(target_path, target_map)
 
-        raise Exception(str(instrument_map) + "\n" + str(target_map) + "\n" + str(input_data_map))
         copied_files_path = os.path.join(copier_map_path, "copied_instruments.map")
 
         new_instrument_map = self.run_task("copier",
