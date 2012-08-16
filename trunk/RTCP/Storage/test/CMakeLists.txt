@@ -8,3 +8,5 @@ lofar_add_test(tDAL tDAL.cc)
 lofar_add_test(tFastFileStream tFastFileStream.cc)
 #lofar_add_test(tAH_TestStorage tAH_TestStorage.cc)
 #lofar_add_test(tTBB_StaticMapping tTBB_StaticMapping.cc)
+#lofar_add_test(tTBB_Writer)
+
