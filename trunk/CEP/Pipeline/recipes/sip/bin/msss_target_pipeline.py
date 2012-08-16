@@ -49,9 +49,7 @@ class msss_target_pipeline(control):
         Get input- and output-data product specifications from the
         parset-file, and do some sanity checks.
         """
-        odp = self.parset.makeSubset(
-            self.parset.fullModuleName('DataProducts') + '.'
-        )
+        odp = self.parset.makeSubset('ObsSW.Observation.DataProducts.')
         self.input_data['data'] = [
             tuple(os.path.join(location, filename).split(':'))
                 for location, filename, skip in zip(
@@ -163,7 +161,7 @@ class msss_target_pipeline(control):
             host_data, path_data = data_pair
             # target location == working dir instrument file name
             target_path = os.path.join(scratch_dir, os.path.basename(path_instr))
-            target_location.append((host_data, target_path))
+            target_locations.append((host_data, target_path))
 
         return target_locations
 
@@ -186,7 +184,6 @@ class msss_target_pipeline(control):
         target_path = os.path.join(copier_map_path, "target_instruments.map")
         store_data_map(target_path, target_map)
 
-        raise Exception(target_path)
         copied_files_path = os.path.join(copier_map_path, "copied_instruments.map")
 
         new_instrument_map = self.run_task("copier",
@@ -197,7 +194,6 @@ class msss_target_pipeline(control):
                       target_dir="instrument_models")['mapfile']
 
         return new_instrument_map
-
     def go(self):
         """
         Read the parset-file that was given as input argument, and set the
@@ -226,8 +222,8 @@ class msss_target_pipeline(control):
 
         # Create a parameter-subset containing only python-control stuff.
         py_parset = self.parset.makeSubset(
-            self.parset.fullModuleName('PythonControl') + '.'
-        )
+            'ObsSW.Observation.ObservationControl.PythonControl.')
+
         # Get input/output-data products specifications.
         self._get_io_product_specs()
 
@@ -280,11 +276,7 @@ class msss_target_pipeline(control):
         vdsinfo = self.run_task("vdsreader", gvds=gvds_file)
 
         # Create an empty parmdb for DPPP
-        parmdb_mapfile = self.run_task(
-            "setupparmdb", data_mapfile,
-            mapfile=os.path.join(mapfile_dir, 'dppp.parmdb.mapfile'),
-            suffix='.dppp.parmdb'
-        )['mapfile']
+        parmdb_mapfile = self.run_task("setupparmdb", data_mapfile)['mapfile']
 
         # Create a sourcedb to be used by the demixing phase of DPPP
         # The path to the A-team sky model is currently hard-coded.
@@ -293,10 +285,7 @@ class msss_target_pipeline(control):
             skymodel=os.path.join(
                 self.config.get('DEFAULT', 'lofarroot'),
                 'share', 'pipeline', 'skymodels', 'Ateam_LBA_CC.skymodel'
-            ),
-            mapfile=os.path.join(mapfile_dir, 'dppp.sourcedb.mapfile'),
-            suffix='.dppp.sourcedb',
-            type='blob'
+            )
         )['mapfile']
 
         # Create a parameter-subset for DPPP and write it to file.
@@ -321,9 +310,7 @@ class msss_target_pipeline(control):
 
         # Create an empty sourcedb for BBS
         sourcedb_mapfile = self.run_task(
-            "setupsourcedb", data_mapfile,
-            mapfile=os.path.join(mapfile_dir, 'bbs.sourcedb.mapfile'),
-            suffix='.bbs.sourcedb'
+            "setupsourcedb", data_mapfile
         )['mapfile']
 
         # Create a parameter-subset for BBS and write it to file.
