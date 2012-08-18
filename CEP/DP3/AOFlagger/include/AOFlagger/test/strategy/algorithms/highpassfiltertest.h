@@ -46,9 +46,6 @@ class HighPassFilterTest : public UnitTest {
 
 inline void HighPassFilterTest::TestFilter::operator()()
 {
-	LocalFitMethod fitMethod;
-	HighPassFilter filter;
-	
 	const size_t width = 100, height = 100;
 	Image2DPtr testImage = Image2D::CreateZeroImagePtr(width, height);
 	testImage->SetValue(10,10,1.0);
@@ -56,6 +53,7 @@ inline void HighPassFilterTest::TestFilter::operator()()
 	testImage->SetValue(20,20,0.5);
 	
 	// Fitting
+	LocalFitMethod fitMethod;
 	TimeFrequencyData data(TimeFrequencyData::AmplitudePart, StokesIPolarisation, Image2D::CreateCopy(testImage));
 	fitMethod.SetToWeightedAverage(10, 20, 2.5, 5.0);
 	fitMethod.Initialize(data);
@@ -64,8 +62,13 @@ inline void HighPassFilterTest::TestFilter::operator()()
 	Image2DCPtr fitResult = Image2D::CreateFromDiff(testImage, fitMethod.Background().GetSingleImage());
 	
 	// High-pass filter
+	HighPassFilter filter;
 	Image2DPtr filterResult = Image2D::CreateCopy(testImage);
-	filter.Apply(filterResult);
+	filter.SetHWindowSize(21);
+	filter.SetVWindowSize(41);
+	filter.SetHKernelSigma(2.5);
+	filter.SetVKernelSigma(5.0);
+	filterResult = filter.Apply(filterResult, Mask2D::CreateSetMaskPtr<false>(width, height));
 	
 	ImageAsserter::AssertEqual(filterResult, fitResult, "Simple convolution with three high values");
 }

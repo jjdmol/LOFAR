@@ -20,6 +20,8 @@ CHECK_CXX_COMPILER_FLAG("-march=native" COMPILER_SUPPORTS_MARCH_NATIVE)
 #  message(STATUS " This probably means your gcc is old ( < 4.2).")
 #endif(COMPILER_SUPPORTS_MARCH_NATIVE)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse2")
+
 include(CheckIncludeFileCXX)
 
 FIND_PATH(BOOST_ASIO_H_FOUND "boost/asio.hpp")

@@ -8,7 +8,7 @@ HighPassFilter::~HighPassFilter()
 	delete[] _vKernel;
 }
 
-void HighPassFilter::apply(const Image2DPtr &image)
+void HighPassFilter::applyLowPass(const Image2DPtr &image)
 {
 	// Guassian convolution can be separated in two 1D convolution
 	// because of properties of the 2D Gaussian function.
@@ -19,23 +19,22 @@ void HighPassFilter::apply(const Image2DPtr &image)
 		for(unsigned y=0;y<image->Height();++y) {
 			const size_t
 				xStart = (i >= hKernelMid) ? 0 : (hKernelMid-i),
-				xEnd = (i <= hKernelMid) ? image->Width() : image->Width()-i;
+				xEnd = (i <= hKernelMid) ? image->Width() : image->Width()-i+hKernelMid;
 			for(unsigned x=xStart;x<xEnd;++x)	
 				temp->AddValue(x, y, image->Value(x+i-hKernelMid, y)*kernelValue);
 		}
 	}
-
-	// We will now immediately subtract the values from the image
-	// (Note the minus sign in the AddValue call)
+	
+	image->SetAll(0.0);
 	size_t vKernelMid = _vWindowSize/2;
 	for(size_t i=0; i<=_vWindowSize; ++i) {
 		const num_t kernelValue = _vKernel[i];
 		for(unsigned x=0;x<image->Width();++x) {
 			const size_t
 				yStart = (i >= vKernelMid) ? 0 : (vKernelMid-i),
-				yEnd = (i <= vKernelMid) ? image->Width() : image->Width()-i;
-			for(unsigned y=yStart;y<yEnd;++y)	
-				image->AddValue(x, y, -temp->Value(x, y+i-vKernelMid)*kernelValue);
+				yEnd = (i <= vKernelMid) ? image->Height() : image->Height()-i+vKernelMid;
+			for(unsigned y=yStart;y<yEnd;++y)
+				image->AddValue(x, y, temp->Value(x, y+i-vKernelMid)*kernelValue);
 		}
 	}
 }
@@ -47,17 +46,18 @@ Image2DPtr HighPassFilter::Apply(const Image2DCPtr &image, const Mask2DCPtr &mas
 		outputImage = Image2D::CreateUnsetImagePtr(image->Width(), image->Height()),
 		weights = Image2D::CreateUnsetImagePtr(image->Width(), image->Height());
 	setFlaggedValuesToZeroAndMakeWeights(image, outputImage, mask, weights);
-	apply(outputImage);
-	apply(weights);
+	applyLowPass(outputImage);
+	applyLowPass(weights);
 	elementWiseDivide(outputImage, weights);
-	return outputImage;
+	weights.reset();
+	return Image2D::CreateFromDiff(image, outputImage);
 }
 
 void HighPassFilter::initializeKernel()
 {
 	if(_hKernel == 0)
 	{
-		_hKernel = new num_t[_vWindowSize];
+		_hKernel = new num_t[_hWindowSize];
 		const int midPointX = _hWindowSize/2;
 		for(int x = 0 ; x < (int) _hWindowSize ; ++x)
 			_hKernel[x] = RNG::EvaluateGaussian(x-midPointX, _hKernelSigma);
