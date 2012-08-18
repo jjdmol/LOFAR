@@ -129,6 +129,7 @@ set(STRATEGY_ALGORITHMS_FILES
   strategy/algorithms/eigenvalue.cpp
   strategy/algorithms/fringestoppingfitter.cpp
   strategy/algorithms/fringetestcreater.cpp
+	strategy/algorithms/highpassfilter.cpp
   strategy/algorithms/localfitmethod.cpp
   strategy/algorithms/methoditerator.cpp
   strategy/algorithms/mitigationtester.cpp

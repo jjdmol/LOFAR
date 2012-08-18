@@ -17,23 +17,55 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
+#ifndef AOFLAGGER_IMAGE_ASSERTER_H
+#define AOFLAGGER_IMAGE_ASSERTER_H
 
-#ifndef IMAGE_H
-#define IMAGE_H
+#include <string>
+#include <stdexcept>
+#include <sstream>
 
 #include <AOFlagger/msio/image2d.h>
-#include <AOFlagger/msio/timefrequencydata.h>
+#include "equalsasserter.h"
 
-#include <AOFlagger/util/ffttools.h>
-
-class SurfaceFitMethod {
+class ImageAsserter {
 	public:
-		virtual void Initialize(const TimeFrequencyData &input) = 0;
-		virtual unsigned TaskCount() = 0;
-		virtual void PerformFit(unsigned taskNumber) = 0;
-		virtual ~SurfaceFitMethod() { }
-		virtual TimeFrequencyData Background() = 0;
-		virtual enum TimeFrequencyData::PhaseRepresentation PhaseRepresentation() const = 0;
+		static void AssertEqual(const Image2DCPtr &actual, const Image2DCPtr &expected, const std::string &str)
+		{
+			if(actual->Width() != expected->Width())
+				throw std::runtime_error("Width of images do not match");
+			if(actual->Height() != expected->Height())
+				throw std::runtime_error("Height of images do not match");
+			
+			std::stringstream s;
+			s << "ImageAsserter::AssertEqual failed for test '" << str << "': ";
+			
+			size_t errCount = 0;
+			for(size_t y=0;y<actual->Height();++y)
+			{
+				for(size_t x=0;x<actual->Width();++x)
+				{
+					if(!EqualsAsserter::IsAlmostEqual(actual->Value(x, y), expected->Value(x, y)))
+					{
+						if(errCount < 25)
+						{
+							if(errCount != 0) s << ", ";
+							s
+							<< "sample (" << x << ',' << y << "), expected " << expected->Value(x,y)
+							<< ", actual " << actual->Value(x,y);
+						} else if(errCount == 25)
+						{
+							s << ", ...";
+						}
+						++errCount;
+					}
+				}
+			}
+			if(errCount != 0)
+			{
+				s << ". " << errCount << " errors.";
+				throw std::runtime_error(s.str());
+			}
+		}
 };
 
 #endif
