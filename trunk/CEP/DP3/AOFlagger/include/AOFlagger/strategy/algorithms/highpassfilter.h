@@ -29,10 +29,11 @@ class HighPassFilter
 		/**
 		 * Apply a Gaussian high pass filter on the given image.
 		 */
-		void Apply(const Image2DPtr &image)
+		Image2DPtr Apply(const Image2DCPtr &image)
 		{
 			initializeKernel();
-			apply(image);
+			Image2DPtr temp = Image2D::CreateCopy(image);
+			return Image2D::CreateFromDiff(image, temp);
 		}
 		
 		/**
@@ -87,11 +88,55 @@ class HighPassFilter
 			return _vWindowSize;
 		}
 		
+		/**
+		 * Gaussian sigma parameter defining the horizontal shape of the convolution.
+		 * Given in units of samples. Note that the window has limited size as defined by
+		 * @ref HSquareSize and @ref VSquareSize. Byond those values, the kernel is
+		 * truncated.
+		 */
+		double HKernelSigma() const
+		{
+			return _hKernelSigma;
+		}
+		
+		/**
+		 * Set the horizontal sigma parameter of the kernel.
+		 * @see HKernelSigma()
+		 */
+		void SetHKernelSigma(double newSigma)
+		{
+			delete[] _hKernel;
+			_hKernel = 0;
+		_hKernelSigma = newSigma;
+		}
+		
+		/**
+		 * Gaussian sigma parameter defining the horizontal shape of the convolution.
+		 * Given in units of samples. Note that the window has limited size as defined by
+		 * @ref HSquareSize and @ref VSquareSize. Byond those values, the kernel is
+		 * truncated.
+		 */
+		double VKernelSigma() const
+		{
+			return _vKernelSigma;
+		}
+		
+		/**
+		 * Set the horizontal sigma parameter of the kernel.
+		 * @see VKernelSigma()
+		 */
+		void SetVKernelSigma(double newSigma)
+		{
+			delete[] _vKernel;
+			_vKernel = 0;
+			_vKernelSigma = newSigma;
+		}
 	private:
 		/**
-		 * Applies the convolution. Kernel has to be initialized before calling.
+		 * Applies the low-pass convolution. Kernel has to be initialized
+		 * before calling.
 		 */
-		void apply(const Image2DPtr &image);
+		void applyLowPass(const Image2DPtr &image);
 		
 		void initializeKernel();
 		void setFlaggedValuesToZeroAndMakeWeights(const Image2DCPtr &inputImage, const Image2DPtr &outputImage, const Mask2DCPtr &inputMask, const Image2DPtr &weightsOutput);
