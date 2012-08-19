@@ -42,6 +42,7 @@ void HighPassFilter::applyLowPass(const Image2DPtr &image)
 	}
 }
 
+/*
 void HighPassFilter::applyLowPassSSE(const Image2DPtr &image)
 {
 	Image2DPtr temp = Image2D::CreateZeroImagePtr(image->Width(), image->Height());
@@ -88,7 +89,7 @@ void HighPassFilter::applyLowPassSSE(const Image2DPtr &image)
 			}
 		}
 	}
-}
+}*/
 
 Image2DPtr HighPassFilter::Apply(const Image2DCPtr &image, const Mask2DCPtr &mask)
 {
