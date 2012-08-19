@@ -1,4 +1,7 @@
 
+#include <xmmintrin.h>
+#include <emmintrin.h>
+
 #include <AOFlagger/strategy/algorithms/highpassfilter.h>
 #include <AOFlagger/util/rng.h>
 
@@ -16,10 +19,10 @@ void HighPassFilter::applyLowPass(const Image2DPtr &image)
 	size_t hKernelMid = _hWindowSize/2;
 	for(size_t i=0; i<=_hWindowSize; ++i) {
 		const num_t kernelValue = _hKernel[i];
+		const size_t
+			xStart = (i >= hKernelMid) ? 0 : (hKernelMid-i),
+			xEnd = (i <= hKernelMid) ? image->Width() : image->Width()-i+hKernelMid;
 		for(unsigned y=0;y<image->Height();++y) {
-			const size_t
-				xStart = (i >= hKernelMid) ? 0 : (hKernelMid-i),
-				xEnd = (i <= hKernelMid) ? image->Width() : image->Width()-i+hKernelMid;
 			for(unsigned x=xStart;x<xEnd;++x)	
 				temp->AddValue(x, y, image->Value(x+i-hKernelMid, y)*kernelValue);
 		}
@@ -29,12 +32,60 @@ void HighPassFilter::applyLowPass(const Image2DPtr &image)
 	size_t vKernelMid = _vWindowSize/2;
 	for(size_t i=0; i<=_vWindowSize; ++i) {
 		const num_t kernelValue = _vKernel[i];
+		const size_t
+			yStart = (i >= vKernelMid) ? 0 : (vKernelMid-i),
+			yEnd = (i <= vKernelMid) ? image->Height() : image->Height()-i+vKernelMid;
 		for(unsigned x=0;x<image->Width();++x) {
-			const size_t
-				yStart = (i >= vKernelMid) ? 0 : (vKernelMid-i),
-				yEnd = (i <= vKernelMid) ? image->Height() : image->Height()-i+vKernelMid;
 			for(unsigned y=yStart;y<yEnd;++y)
 				image->AddValue(x, y, temp->Value(x, y+i-vKernelMid)*kernelValue);
+		}
+	}
+}
+
+void HighPassFilter::applyLowPassSSE(const Image2DPtr &image)
+{
+	Image2DPtr temp = Image2D::CreateZeroImagePtr(image->Width(), image->Height());
+	size_t hKernelMid = _hWindowSize/2;
+	for(size_t i=0; i<=_hWindowSize; ++i) {
+		const num_t k = _hKernel[i];
+		const __m128 k4 = _mm_set_ps(k, k, k, k);
+		const size_t
+			xStart = (i >= hKernelMid) ? 0 : (hKernelMid-i),
+			xEnd = (i <= hKernelMid) ? image->Width() : image->Width()-i+hKernelMid;
+			
+		for(unsigned y=0;y<image->Height();++y) {
+			
+			float *tempPtr = temp->ValuePtr(0, y);
+			const float *imagePtr = image->ValuePtr(xStart+i-hKernelMid, y);
+			
+			for(unsigned x=xStart;x<xEnd;x+=4) {
+				__m128
+					imageVal = _mm_loadu_ps(imagePtr),
+					tempVal = _mm_load_ps(tempPtr);
+				_mm_store_ps(tempPtr, _mm_add_ps(tempVal, _mm_mul_ps(imageVal, k4)));
+				
+				tempPtr += 4;
+				imagePtr += 4;
+			}
+		}
+	}
+	
+	image->SetAll(0.0);
+	size_t vKernelMid = _vWindowSize/2;
+	for(size_t i=0; i<=_vWindowSize; ++i) {
+		const num_t kernelValue = _vKernel[i];
+		const size_t
+			yStart = (i >= vKernelMid) ? 0 : (vKernelMid-i),
+			yEnd = (i <= vKernelMid) ? image->Height() : image->Height()-i+vKernelMid;
+		for(unsigned x=0;x<image->Width();x += 4) {
+			for(unsigned y=yStart;y<yEnd;++y) {
+				
+				const float *tempPtr = temp->ValuePtr(x, y+i-vKernelMid);
+				float *imagePtr = image->ValuePtr(x, y);
+				
+				_mm_store_ps(imagePtr, _mm_add_ps(tempVal, 
+				image->AddValue(x, y, temp->Value(x, y+i-vKernelMid)*kernelValue);
+			}
 		}
 	}
 }
@@ -48,7 +99,7 @@ Image2DPtr HighPassFilter::Apply(const Image2DCPtr &image, const Mask2DCPtr &mas
 	setFlaggedValuesToZeroAndMakeWeights(image, outputImage, mask, weights);
 	applyLowPass(outputImage);
 	applyLowPass(weights);
-	elementWiseDivide(outputImage, weights);
+	elementWiseDivideSSE(outputImage, weights);
 	weights.reset();
 	return Image2D::CreateFromDiff(image, outputImage);
 }
@@ -99,6 +150,27 @@ void HighPassFilter::elementWiseDivide(const Image2DPtr &leftHand, const Image2D
 				leftHand->SetValue(x, y, 0.0);
 			else
 				leftHand->SetValue(x, y, leftHand->Value(x, y) / rightHand->Value(x, y));
+		}
+	}
+}
+
+void HighPassFilter::elementWiseDivideSSE(const Image2DPtr &leftHand, const Image2DCPtr &rightHand)
+{
+	for(unsigned y=0;y<leftHand->Height();++y) {
+		float *leftHandPtr = leftHand->ValuePtr(0, y);
+		const float *rightHandPtr = rightHand->ValuePtr(0, y);
+		
+		for(unsigned x=0;x<leftHand->Width();x+=4) {
+			const __m128 zero4 = _mm_set_ps(0.0, 0.0, 0.0, 0.0);
+			__m128
+				l = _mm_load_ps(leftHandPtr),
+				r = _mm_load_ps(rightHandPtr);
+			__m128 conditionMask = _mm_cmpeq_ps(r, zero4);
+			__m128 result = _mm_or_ps(_mm_and_ps(conditionMask, _mm_div_ps(l, r)),
+										_mm_andnot_ps(conditionMask, zero4));
+			_mm_store_ps(leftHandPtr, result);
+			leftHandPtr += 4;
+			rightHandPtr += 4;
 		}
 	}
 }
