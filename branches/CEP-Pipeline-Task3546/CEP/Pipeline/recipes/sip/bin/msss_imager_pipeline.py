@@ -37,22 +37,25 @@ class msss_imager_pipeline(control):
     by the scheduler and specified in the parset-file.
 
     This pipeline will perform the following operations:
-    - Copy the preprocessed MS's from the different compute nodes to the nodes
-      where the images will be compiled (the prepare phase).
-    - Flag the long baselines using DPPP
-    - Concatenate the MS's of the different slices as one virtual MS for
-      imaging.
-    - Generate a local sky model (LSM) from the global sky model (GSM) for the
-      sources that are in the field-of-view (FoV).
-    - Repeat until convergence (3 times for the time being):
-      - Per slice: solve and correct for phases using BBS with TEC enabled
-      - Run the awimager.
-      - Run the source finder (PyBDSM) and update the local sky model (LSM).
+    
+    1. Copy the preprocessed MS's from the different compute nodes to the nodes
+       where the images will be compiled (the prepare phase).
+    2. Flag the long baselines using DPPP
+       Concatenate the MS's of the different slices as one virtual MS for
+       imaging.
+    3. Generate a local sky model (LSM) from the global sky model (GSM) for the
+       sources that are in the field-of-view (FoV).
+    4. Repeat until convergence (3 times for the time being):
+       Per slice: solve and correct for phases using BBS with TEC enabled
+       Run the awimager.
+       Run the source finder (PyBDSM) and update the local sky model (LSM).
       
     Per subband-group, the following output products will be delivered:
-    - Calibration solutions and corrected visibilities
-    - An image
-    - A source list
+    
+    a. Calibration solutions and corrected visibilities
+    b. An image
+    c. A source list
+
     """
 
     def __init__(self):
