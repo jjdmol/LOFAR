@@ -520,10 +520,12 @@ class TimeFrequencyData
 					case YYPolarisation:
 						data = new TimeFrequencyData(_phaseRepresentation, YYPolarisation, _images[1]);
 						break;
+					case StokesQPolarisation:
+						data = new TimeFrequencyData(_phaseRepresentation, StokesQPolarisation, GetStokesQFromDipole(0, 1));
+						break;
 					case XYPolarisation:
 					case YXPolarisation:
 					case StokesIPolarisation:
-					case StokesQPolarisation:
 					case StokesUPolarisation:
 					case StokesVPolarisation:
 					case AutoDipolePolarisation:
