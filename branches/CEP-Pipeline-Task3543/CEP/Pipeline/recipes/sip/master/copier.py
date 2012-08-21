@@ -200,8 +200,8 @@ class copier(MasterNodeInterface):
         # Scan the job outputs for success full runs
         successfull_copies = []
         for job in self._jobs:
-            if 'target' in job.outputs:
-                successfull_copies.append((job.host, job.outputs['target' ]))
+            if 'target' in job.results:
+                successfull_copies.append((job.host, job.results['target' ]))
 
         if len(successfull_copies) == 0:
             self.logger.error("None of the copy action succeeded!")
