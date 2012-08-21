@@ -201,8 +201,8 @@ class msss_target_pipeline(control):
         new_input_data_map = []
         for instrument_pair, input_data_pair in zip(target_map, input_data_map):
             if instrument_pair in copied_instruments_map:
-                new_instrument_map = append(instrument_pair)
-                new_input_data_map = append(input_data_pair)
+                new_instrument_map.append(instrument_pair)
+                new_input_data_map.append(input_data_pair)
             # else: Do not process further in the recipe
 
         return new_instrument_map, new_input_data_map
