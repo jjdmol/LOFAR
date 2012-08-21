@@ -209,8 +209,9 @@ class copier(MasterNodeInterface):
             return 1
 
 
-        store_data_map(self.inputs['mapfile'], self.successfull_copies)
-        self.logger.warn("Not all instrument ")
+        store_data_map(self.inputs['mapfile'], successfull_copies)
+
+        self.logger.warn("Not all files were copied correctly")
         self.logger.warn(
                 "wrote mapfile with successful copied files: {0}".format(
                         self.inputs['mapfile']))
