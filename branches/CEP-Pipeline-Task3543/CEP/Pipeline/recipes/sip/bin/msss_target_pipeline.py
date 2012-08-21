@@ -192,8 +192,7 @@ class msss_target_pipeline(control):
                       mapfile_source=source_path,
                       mapfile_target=target_path,
                       mapfiles_dir=copier_map_path,
-                      mapfile=copied_files_path,
-                      target_dir="")['mapfile_target_copied']
+                      mapfile=copied_files_path)['mapfile_target_copied']
 
         # Some copy action might fail, these files need to be removed from
         # both the data and the instrument file!!
