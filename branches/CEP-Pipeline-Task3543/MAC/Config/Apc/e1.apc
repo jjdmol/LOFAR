@@ -1,0 +1,10 @@
+# ascii dump of database
+
+# DpValue
+ElementName	TypeName	_original.._value	_original.._status	_original.._stime
+__default_e_1.P1	TTypeE	\100	0x101	04.06.2004 07:31:03.308
+__default_e_1.P2	TTypeE	200.12	0x101	04.06.2004 07:31:17.375
+__default_e_1.P3	TTypeE	"koe"	0x101	04.06.2004 07:31:25.722
+__default_e_1.P4	TTypeE	100.05	0x101	04.06.2004 07:31:36.324
+__default_e_1.P5	TTypeE	-200	0x101	04.06.2004 07:31:47.037
+__default_e_1.P6	TTypeE	100	0x101	04.06.2004 07:31:57.148
