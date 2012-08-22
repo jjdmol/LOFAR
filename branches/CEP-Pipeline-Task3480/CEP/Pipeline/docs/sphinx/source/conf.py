@@ -42,6 +42,10 @@ def add_recipe_inputs(app, what_, name, obj, options, lines):
                 lines.append("    %s" % field.help)
             lines.append("")
     if what_ == "class" and issubclass(obj, RecipeIngredients):
+        # Skip printing of input and output of both are not present
+        # This is normaly the toplevel recipe
+        if (not obj.inputs) and (not obj.outputs):
+            return
         lines.append("**Recipe inputs**")
         lines.append("")
         if obj.inputs:
