@@ -44,12 +44,14 @@ Imager Pipeline
 ------------------------------------
 
 .. autoclass:: msss_imager_pipeline.msss_imager_pipeline
-    :members:
-	
+    
+**Recipes of the Imager Pipeline**
+
 .. toctree::
     :maxdepth: 1
 
-    imager_prepare
-    imager_create_dbs
-
+    1. imager_prepare <imager_prepare>
+    2. imager_create_dbs <imager_create_dbs>
+	3. imager_bbs <imager_bbs>
+	
 	
