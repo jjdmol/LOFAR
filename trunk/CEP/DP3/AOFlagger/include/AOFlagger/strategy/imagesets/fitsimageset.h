@@ -117,11 +117,11 @@ namespace rfiStrategy {
 			}
 			
 			void ReadPrimarySingleTable(TimeFrequencyData &data, TimeFrequencyMetaData &metaData);
-			void ReadTable(TimeFrequencyData &data, TimeFrequencyMetaData &metaData);
+			void ReadTable(TimeFrequencyData &data, TimeFrequencyMetaData &metaData, size_t bandIndex);
 			void ReadAntennaTable(TimeFrequencyMetaData &metaData);
 			void ReadFrequencyTable(TimeFrequencyData &data, TimeFrequencyMetaData &metaData);
 			void ReadCalibrationTable();
-			void ReadSingleDishTable(TimeFrequencyData &data, TimeFrequencyMetaData &metaData);
+			void ReadSingleDishTable(TimeFrequencyData &data, TimeFrequencyMetaData &metaData, size_t ifIndex);
 			TimeFrequencyData ReadPrimaryGroupTable(size_t baselineIndex, int band, int stokes, TimeFrequencyMetaData &metaData);
 			
 			void saveSingleDishFlags(std::vector<Mask2DCPtr> &flags);

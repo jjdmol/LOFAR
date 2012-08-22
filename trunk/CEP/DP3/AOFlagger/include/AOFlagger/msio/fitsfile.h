@@ -265,6 +265,7 @@ class FitsFile {
 		void ReadTableCell(int row, int col, char *output);
 		void WriteTableCell(int row, int col, double *data, size_t size);
 		void WriteTableCell(int row, int col, const bool *data, size_t size);
+		bool HasTableColumn(const std::string &columnName, int columnIndex);
 		int GetTableColumnIndex(const std::string &columnName);
 		int GetTableColumnArraySize(int columnIndex);
 		long GetTableDimensionSize(int columnIndex, int dimension);

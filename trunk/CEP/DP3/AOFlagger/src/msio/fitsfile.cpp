@@ -501,6 +501,22 @@ bool FitsFile::HasGroupParameter(const std::string &parameterName)
 	return false;
 }
 
+bool FitsFile::HasTableColumn(const std::string &columnName, int columnIndex)
+{
+	int colCount = GetColumnCount();
+	for(int i=1;i<=colCount;++i)
+	{
+		std::stringstream s;
+		s << "TTYPE" << i;
+		if(GetKeywordValue(s.str()) == columnName)
+		{
+			columnIndex = i;
+			return true;
+		}
+	}
+	return false;
+}
+
 int FitsFile::GetTableColumnIndex(const std::string &columnName)
 {
 	int colCount = GetColumnCount();
