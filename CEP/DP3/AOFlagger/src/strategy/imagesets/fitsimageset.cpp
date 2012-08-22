@@ -103,11 +103,11 @@ namespace rfiStrategy {
 			{
 				case FitsFile::BinaryTableHDUType:
 					std::cout << "Binary table found." << std::endl;
-					ReadTable(data, *metaData);
+					ReadTable(data, *metaData, fitsIndex._band);
 					break;
 				case FitsFile::ASCIITableHDUType:
 					std::cout << "ASCII table found." << std::endl;
-					ReadTable(data, *metaData);
+					ReadTable(data, *metaData, fitsIndex._band);
 					break;
 				case FitsFile::ImageHDUType:
 					std::cout << "Image found." << std::endl;
@@ -226,7 +226,7 @@ namespace rfiStrategy {
 			std::cout << "Keyword " << i << ": " << _file->GetKeyword(i) << "=" << _file->GetKeywordValue(i) << " ("  << _file->GetKeywordComment(i) << ")" << std::endl;
 	}
 	
-	void FitsImageSet::ReadTable(TimeFrequencyData &data, TimeFrequencyMetaData &metaData)
+	void FitsImageSet::ReadTable(TimeFrequencyData &data, TimeFrequencyMetaData &metaData, size_t bandIndex)
 	{
 		std::cout << "Row count: " << _file->GetRowCount() << std::endl;
 		std::cout << "Column count: " << _file->GetColumnCount() << std::endl;
@@ -244,7 +244,7 @@ namespace rfiStrategy {
 		else if(extName == "AIPS CL")
 			ReadCalibrationTable();
 		else if(extName == "SINGLE DISH")
-			ReadSingleDishTable(data, metaData);
+			ReadSingleDishTable(data, metaData, bandIndex);
 	}
 	
 	void FitsImageSet::ReadAntennaTable(TimeFrequencyMetaData &metaData)
@@ -320,7 +320,7 @@ namespace rfiStrategy {
 		std::cout << "Found calibration table with " << _file->GetRowCount() << " rows." << std::endl;
 	}
 	
-	void FitsImageSet::ReadSingleDishTable(TimeFrequencyData &data, TimeFrequencyMetaData &metaData)
+	void FitsImageSet::ReadSingleDishTable(TimeFrequencyData &data, TimeFrequencyMetaData &metaData, size_t ifIndex)
 	{
 		std::cout << "Found single dish table with " << _file->GetRowCount() << " rows." << std::endl;
 		const int
@@ -332,7 +332,11 @@ namespace rfiStrategy {
 			freqRefPixColumn = _file->GetTableColumnIndex("CRPIX1"),
 			freqDeltaColumn = _file->GetTableColumnIndex("CDELT1"),
 			freqResColumn = _file->GetTableColumnIndex("FREQRES"),
-			freqBandwidthColumn = _file->GetTableColumnIndex("BANDWID");
+			freqBandwidthColumn = _file->GetTableColumnIndex("BANDWID"),
+			ifColumn = _file->GetTableColumnIndex("IF");
+		//int
+		//	beamColumn = 0;
+		//const bool hasBeamColumn = _file->HasTableColumn("BEAM", beamColumn);
 		const int
 			freqCount = _file->GetTableDimensionSize(dataColumn, 0),
 			polarizationCount = _file->GetTableDimensionSize(dataColumn, 1),
@@ -344,7 +348,7 @@ namespace rfiStrategy {
 			
 		const int totalSize = _file->GetTableColumnArraySize(dataColumn);
 		const int rowCount = _file->GetRowCount();
-		std::cout << "Shape of data cells: " << freqCount << " channels x " << polarizationCount << " pols x " << raCount << " RAs x " << decCount << " decs\n";
+		std::cout << "Shape of data cells: " << freqCount << " channels x " << polarizationCount << " pols x " << raCount << " RAs x " << decCount << " decs" << "=" << totalSize << '\n';
 		long double cellData[totalSize];
 		bool flagData[totalSize];
 		Image2DPtr images[polarizationCount];
@@ -356,57 +360,71 @@ namespace rfiStrategy {
 		}
 		std::vector<double> observationTimes(rowCount);
 		bool hasBand = false;
+		size_t timeIndex = 0;
 		for(int row=1;row<=rowCount;++row)
 		{
-			if(!hasBand)
+			long double time, date, ifNumber;
+			_file->ReadTableCell(row, ifColumn, &ifNumber, 1);
+			
+			if(ifNumber == ifIndex+1)
 			{
-				long double freqVal = 0.0, freqRefPix = 0.0, freqDelta = 0.0, freqRes = 0.0, freqBandwidth = 0.0;
-				_file->ReadTableCell(row, freqValColumn, &freqVal, 1);
-				_file->ReadTableCell(row, freqRefPixColumn, &freqRefPix, 1);
-				_file->ReadTableCell(row, freqDeltaColumn, &freqDelta, 1);
-				_file->ReadTableCell(row, freqResColumn, &freqRes, 1);
-				_file->ReadTableCell(row, freqBandwidthColumn, &freqBandwidth, 1);
-				if(freqBandwidth > 0.0)
+				_file->ReadTableCell(row, timeColumn, &time, 1);
+				_file->ReadTableCell(row, dateObsColumn, &date, 1);
+				_file->ReadTableCell(row, dataColumn, cellData, totalSize);
+				_file->ReadTableCell(row, flagColumn, flagData, totalSize);
+			
+				observationTimes[timeIndex] = time;
+				
+				if(!hasBand)
 				{
-					std::cout << "Frequency info: " <<freqVal << " Hz at index " << freqRefPix << ", delta " << freqDelta << "\n";
-					std::cout << "Frequency res: " <<freqRes << " with bandwidth " << freqBandwidth << " Hz\n";
-					BandInfo bandInfo;
-					bandInfo.channelCount = freqCount;
-					bandInfo.windowIndex = 0;
-					for(int i=0;i<freqCount;++i)
+					long double freqVal = 0.0, freqRefPix = 0.0, freqDelta = 0.0, freqRes = 0.0, freqBandwidth = 0.0;
+					_file->ReadTableCell(row, freqValColumn, &freqVal, 1);
+					_file->ReadTableCell(row, freqRefPixColumn, &freqRefPix, 1);
+					_file->ReadTableCell(row, freqDeltaColumn, &freqDelta, 1);
+					_file->ReadTableCell(row, freqResColumn, &freqRes, 1);
+					_file->ReadTableCell(row, freqBandwidthColumn, &freqBandwidth, 1);
+					if(freqBandwidth > 0.0)
 					{
-						ChannelInfo c;
-						c.frequencyIndex = i;
-						c.frequencyHz = ((double) i-freqRefPix)*freqDelta + freqVal;
-						bandInfo.channels.push_back(c);
+						std::cout << "Frequency info: " <<freqVal << " Hz at index " << freqRefPix << ", delta " << freqDelta << "\n";
+						std::cout << "Frequency res: " <<freqRes << " with bandwidth " << freqBandwidth << " Hz\n";
+						BandInfo bandInfo;
+						bandInfo.channelCount = freqCount;
+						bandInfo.windowIndex = 0;
+						for(int i=0;i<freqCount;++i)
+						{
+							ChannelInfo c;
+							c.frequencyIndex = i;
+							c.frequencyHz = ((double) i-freqRefPix)*freqDelta + freqVal;
+							bandInfo.channels.push_back(c);
+						}
+						_bandInfos[0] = bandInfo;
+						metaData.SetBand(bandInfo);
+						hasBand = true;
 					}
-					_bandInfos[0] = bandInfo;
-					metaData.SetBand(bandInfo);
-					hasBand = true;
 				}
-			}
-		
-			long double time, date;
-			_file->ReadTableCell(row, timeColumn, &time, 1);
-			_file->ReadTableCell(row, dateObsColumn, &date, 1);
-			_file->ReadTableCell(row, dataColumn, cellData, totalSize);
-			_file->ReadTableCell(row, flagColumn, flagData, totalSize);
-			
-			observationTimes[row-1] = time;
-			
-			long double *dataPtr = cellData;
-			bool *flagPtr = flagData;
-			for(int f=0;f<freqCount;++f)
-			{
+
+				long double *dataPtr = cellData;
+				bool *flagPtr = flagData;
 				for(int p=0;p<polarizationCount;++p)
 				{
-					images[p]->SetValue(row-1, f, *dataPtr);
-					masks[p]->SetValue(row-1, f, *flagPtr);
-					++dataPtr;
-					++flagPtr;
+					for(int f=0;f<freqCount;++f)
+					{
+						images[p]->SetValue(timeIndex, f, *dataPtr);
+						masks[p]->SetValue(timeIndex, f, *flagPtr);
+						++dataPtr;
+						++flagPtr;
+					}
 				}
+				++timeIndex;
 			}
+			if(ifNumber > _bandCount) _bandCount = ifNumber;
 		}
+		for(int p=0;p<polarizationCount;++p)
+		{
+			images[p]->SetTrim(0, 0, timeIndex, images[p]->Height());
+			masks[p] = masks[p]->Trim(0, 0, timeIndex, images[p]->Height());
+		}
+		observationTimes.resize(timeIndex);
 		metaData.SetObservationTimes(observationTimes);
 		if(polarizationCount == 1)
 		{
