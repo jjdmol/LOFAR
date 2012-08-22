@@ -201,8 +201,8 @@ class ImagerCreateDBsTest(unittest.TestCase):
 
 
         self.assertTrue(
-            1 == self.imager_create_dbs._create_parmdb_for_timeslices(parmdb_executable,
-                 ms_paths, ".parmdb"),
+            self.imager_create_dbs._create_parmdb_for_timeslices(parmdb_executable,
+                 ms_paths, ".parmdb") == None,
             self.imager_create_dbs.logger.last())
         final_ms_path = os.path.join(parmdb_ms_output, "time_slice_8.dppp.ms.parmdb")
         self.assertFalse(os.path.exists(final_ms_path))

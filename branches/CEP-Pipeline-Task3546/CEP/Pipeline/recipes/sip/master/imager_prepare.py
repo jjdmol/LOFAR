@@ -244,14 +244,6 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
             self.inputs["raw_ms_per_image_mapfile"]
         return 0
 
-    def _store_data_map(self, path, mapfile, message=""):
-        """
-        Write mapfile to path, display debug error message on the logger       
-        """
-        store_data_map(path, mapfile)
-        self.logger.debug("Wrote mapfile <{0}>: {1}".format(
-                path, message))
-
     def _create_input_map_for_sbgroup(self, slices_per_image,
             n_subband_groups, subbands_per_image, idx_sb_group, input_mapfile):
         """

@@ -169,9 +169,7 @@ class imager_create_dbs(LOFARnodeTCP):
         _field_of_view calculates the fov, which is dependend on the
         station type, location and mode:
         For details see:        
-        http://www.astron.nl/radio-observatory/astronomers/ ...
-        lofar-imaging-capabilities-sensitivity/ ...
-        lofar-imaging-capabilities/lofar
+        http://www.astron.nl/radio-observatory/astronomers/lofar-imaging-capabilities-sensitivity/lofar-imaging-capabilities/lofar
         
         """
         # Open the ms
