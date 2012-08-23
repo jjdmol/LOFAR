@@ -71,7 +71,7 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
 
     def go(self):
         """
-        This member contains all the functionality of the iamger_awimager.
+        This member contains all the functionality of the imager_awimager.
         Functionality is all located at the node side of the script.
         """
         super(imager_awimager, self).go()
