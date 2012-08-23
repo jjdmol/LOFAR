@@ -33,10 +33,7 @@ Target Pipeline
 .. toctree::
     :maxdepth: 1
 	
-    imager_bbs
-    imager_awimager
-    imager_sourcefinding
-    imager_finalize
+    missing recipe<imager_bbs>
 
 
 
@@ -53,5 +50,6 @@ Imager Pipeline
     1. imager_prepare <imager_prepare>
     2. imager_create_dbs <imager_create_dbs>
 	3. imager_bbs <imager_bbs>
+	3. imager_awimager <imager_awimager>
 	
 	
