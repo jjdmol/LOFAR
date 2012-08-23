@@ -78,9 +78,23 @@ namespace rfiStrategy {
 			_bandCount = _file->GetCurrentImageSize(5);
 		} else {
 			_baselines.push_back(std::pair<size_t,size_t>(0, 0));
-			_bandCount = 1;
-			_bandInfos.push_back(BandInfo());
 			_antennaInfos.push_back(AntennaInfo());
+			
+			// find number of bands
+			_file->MoveToHDU(2);
+			int ifColumn = _file->GetTableColumnIndex("IF");
+			int rowCount = _file->GetRowCount();
+			int ifIndex = 0;
+			for(int i=1;i<=rowCount;++i)
+			{
+				double thisIndex;
+				_file->ReadTableCell(i, ifColumn, &thisIndex, 1);
+				if((int) thisIndex > ifIndex)
+					ifIndex = (int) thisIndex;
+				else break;
+			}
+			_bandCount = ifIndex;
+			_bandInfos.resize(_bandCount);
 		}
 	}
 
@@ -388,7 +402,6 @@ namespace rfiStrategy {
 						std::cout << "Frequency info: " <<freqVal << " Hz at index " << freqRefPix << ", delta " << freqDelta << "\n";
 						std::cout << "Frequency res: " <<freqRes << " with bandwidth " << freqBandwidth << " Hz\n";
 						BandInfo bandInfo;
-						bandInfo.channelCount = freqCount;
 						bandInfo.windowIndex = 0;
 						for(int i=0;i<freqCount;++i)
 						{

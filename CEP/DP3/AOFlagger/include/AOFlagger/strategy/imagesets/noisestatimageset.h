@@ -161,7 +161,6 @@ namespace rfiStrategy {
 					bandInfo.channels.push_back(channel);
 					++index;
 				}
-				bandInfo.channelCount = bandInfo.channels.size();
 				bandInfo.windowIndex = 0;
 				
 				// Rescan map and fill image

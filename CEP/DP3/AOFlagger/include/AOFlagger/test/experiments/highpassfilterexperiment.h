@@ -70,13 +70,13 @@ inline void HighPassFilterExperiment::TimeFitting::operator()()
 	Mask2DPtr mask;
 	Initialize(image, mask);
 	
-	HighPassFilter filter;
-	filter.SetHWindowSize(21);
-	filter.SetVWindowSize(41);
-	filter.SetHKernelSigma(2.5);
-	filter.SetVKernelSigma(5.0);
+	LocalFitMethod fitMethod;
+	TimeFrequencyData data(TimeFrequencyData::AmplitudePart, StokesIPolarisation, image);
+	fitMethod.SetToWeightedAverage(10, 20, 2.5, 5.0);
+	fitMethod.Initialize(data);
 	Stopwatch watch(true);
-	filter.Apply(image, mask);
+	for(size_t i=0;i<fitMethod.TaskCount();++i)
+		fitMethod.PerformFit(i);
 	std::cout << " time token: " << watch.ToString() << ' ';
 }
 
@@ -86,13 +86,13 @@ inline void HighPassFilterExperiment::TimeHighPassFilter::operator()()
 	Mask2DPtr mask;
 	Initialize(image, mask);
 	
-	LocalFitMethod fitMethod;
-	TimeFrequencyData data(TimeFrequencyData::AmplitudePart, StokesIPolarisation, image);
-	fitMethod.SetToWeightedAverage(10, 20, 2.5, 5.0);
-	fitMethod.Initialize(data);
+	HighPassFilter filter;
+	filter.SetHWindowSize(21);
+	filter.SetVWindowSize(41);
+	filter.SetHKernelSigma(2.5);
+	filter.SetVKernelSigma(5.0);
 	Stopwatch watch(true);
-	for(size_t i=0;i<fitMethod.TaskCount();++i)
-		fitMethod.PerformFit(i);
+	filter.Apply(image, mask);
 	std::cout << " time token: " << watch.ToString() << ' ';
 }
 
