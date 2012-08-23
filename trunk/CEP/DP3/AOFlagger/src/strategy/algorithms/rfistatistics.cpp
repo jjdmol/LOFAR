@@ -78,7 +78,8 @@ void RFIStatistics::addSingleBaseline(const TimeFrequencyData &data, TimeFrequen
 	saveBaselineFrequencyInfo(_filePrefix + "counts-baselfreq.txt");
 	afLock.unlock();
 	
-	if(metaData->Antenna1().id == metaData->Antenna2().id)
+	bool isCross = (!metaData->HasAntenna1()) || (!metaData->HasAntenna2()) || metaData->Antenna1().id == metaData->Antenna2().id;
+	if(isCross)
 	{
 		boost::mutex::scoped_lock genLock(_genericMutex);
 		addFeatures(_autoAmplitudes, image, mask, metaData, segmentedMask);
@@ -623,22 +624,32 @@ void RFIStatistics::addBaselines(const TimeFrequencyData &data, TimeFrequencyMet
 			}
 		}
 	}
-	int
-		a1 = metaData->Antenna1().id,
+	int a1, a2;
+	if(metaData->HasAntenna1())
+		a1 = metaData->Antenna1().id;
+	else
+		a1 = 0;
+	if(metaData->HasAntenna2())
 		a2 = metaData->Antenna2().id;
+	else
+		a2 = 0;
 	if(_baselines.count(a1) == 0)
 		_baselines.insert(BaselineMatrix::value_type(a1, std::map<int, BaselineInfo>() ));
 	BaselineMatrix::mapped_type &row = _baselines.find(a1)->second;
 	
-	Baseline baselineMSData(metaData->Antenna1(), metaData->Antenna2());
+	Baseline baselineMSData;
+	if(metaData->HasAntenna1() && metaData->HasAntenna2())
+		baselineMSData = Baseline(metaData->Antenna1(), metaData->Antenna2());
 
 	if(row.count(a2) == 0)
 	{
 		BaselineInfo baseline;
 		baseline.antenna1 = a1;
 		baseline.antenna2 = a2;
-		baseline.antenna1Name = metaData->Antenna1().name;
-		baseline.antenna2Name = metaData->Antenna2().name;
+		if(metaData->HasAntenna1())
+			baseline.antenna1Name = metaData->Antenna1().name;
+		if(metaData->HasAntenna2())
+			baseline.antenna2Name = metaData->Antenna2().name;
 		baseline.baselineLength = baselineMSData.Distance();
 		baseline.baselineAngle = baselineMSData.Angle();
 
@@ -822,8 +833,14 @@ void RFIStatistics::addAmplitudeComparison(std::map<double, AmplitudeBin> &ampli
 void RFIStatistics::addBaselineFrequencyInfo(TimeFrequencyMetaDataCPtr metaData, Image2DCPtr image, Mask2DCPtr mask)
 {
 	IndexTriple index;
-	index.antenna1Index = metaData->Antenna1().id;
-	index.antenna2Index = metaData->Antenna2().id;
+	if(metaData->HasAntenna1())
+		index.antenna1Index = metaData->Antenna1().id;
+	else
+		index.antenna1Index = 0;
+	if(metaData->HasAntenna2())
+		index.antenna2Index = metaData->Antenna2().id;
+	else
+		index.antenna2Index = 0;
 	index.thirdIndex = (metaData->Band().channels.begin()->frequencyHz + metaData->Band().channels.rbegin()->frequencyHz) / 2.0;
 	std::map<IndexTriple, BaselineFrequencyInfo>::iterator element = _baselineFrequencyInfo.find(index);
 	if(element == _baselineFrequencyInfo.end())
@@ -851,8 +868,14 @@ void RFIStatistics::addBaselineFrequencyInfo(TimeFrequencyMetaDataCPtr metaData,
 void RFIStatistics::addBaselineTimeInfo(TimeFrequencyMetaDataCPtr metaData, Image2DCPtr image, Mask2DCPtr mask)
 {
 	IndexTriple index;
-	index.antenna1Index = metaData->Antenna1().id;
-	index.antenna2Index = metaData->Antenna2().id;
+	if(metaData->HasAntenna1())
+		index.antenna1Index = metaData->Antenna1().id;
+	else
+		index.antenna1Index = 0;
+	if(metaData->HasAntenna2())
+		index.antenna2Index = metaData->Antenna2().id;
+	else
+		index.antenna2Index = 0;
 	//double timeStart = metaData->ObservationTimes()[0];
 	//double duration = metaData->ObservationTimes()[image->Width()-1] - timeStart;
 	for(size_t x=0;x<image->Width();++x)

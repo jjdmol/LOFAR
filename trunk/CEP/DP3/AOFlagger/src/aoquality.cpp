@@ -73,9 +73,9 @@ void actionCollect(const std::string &filename, enum CollectingMode mode, Statis
 	for(unsigned b=0;b<bandCount;++b)
 	{
 		bands[b] = ms->GetBandInfo(b);
-		frequencies[b] = new double[bands[b].channelCount];
-		totalChannels += bands[b].channelCount;
-		for(unsigned c=0;c<bands[b].channelCount;++c)
+		frequencies[b] = new double[bands[b].channels.size()];
+		totalChannels += bands[b].channels.size();
+		for(unsigned c=0;c<bands[b].channels.size();++c)
 		{
 			frequencies[b][c] = bands[b].channels[c].frequencyHz;
 		}
@@ -99,9 +99,9 @@ void actionCollect(const std::string &filename, enum CollectingMode mode, Statis
 		for(unsigned b=0;b<bandCount;++b)
 		{
 			if(ignoreChannelZero)
-				statisticsCollection.InitializeBand(b, (frequencies[b]+1), bands[b].channelCount-1);
+				statisticsCollection.InitializeBand(b, (frequencies[b]+1), bands[b].channels.size()-1);
 			else
-				statisticsCollection.InitializeBand(b, frequencies[b], bands[b].channelCount);
+				statisticsCollection.InitializeBand(b, frequencies[b], bands[b].channels.size());
 		}
 	}
 	// Initialize Histograms collection
@@ -136,8 +136,8 @@ void actionCollect(const std::string &filename, enum CollectingMode mode, Statis
 		bool *isRFI[polarizationCount];
 		for(unsigned p = 0; p < polarizationCount; ++p)
 		{
-			isRFI[p] = new bool[band.channelCount];
-			samples[p] = new std::complex<float>[band.channelCount];
+			isRFI[p] = new bool[band.channels.size()];
+			samples[p] = new std::complex<float>[band.channels.size()];
 		}
 		
 		casa::Array<casa::Complex>::const_iterator dataIter = dataArray.begin();
@@ -151,7 +151,7 @@ void actionCollect(const std::string &filename, enum CollectingMode mode, Statis
 				++flagIter;
 			}
 		}
-		for(unsigned channel = startChannel ; channel<band.channelCount; ++channel)
+		for(unsigned channel = startChannel ; channel<band.channels.size(); ++channel)
 		{
 			for(unsigned p = 0; p < polarizationCount; ++p)
 			{
@@ -170,11 +170,11 @@ void actionCollect(const std::string &filename, enum CollectingMode mode, Statis
 				case CollectDefault:
 					{
 						const bool origFlags = false;
-						statisticsCollection.Add(antenna1Index, antenna2Index, time, bandIndex, p, &samples[p]->real(), &samples[p]->imag(), isRFI[p], &origFlags, band.channelCount - startChannel, 2, 1, 0);
+						statisticsCollection.Add(antenna1Index, antenna2Index, time, bandIndex, p, &samples[p]->real(), &samples[p]->imag(), isRFI[p], &origFlags, band.channels.size() - startChannel, 2, 1, 0);
 					}
 					break;
 				case CollectHistograms:
-					histogramCollection.Add(antenna1Index, antenna2Index, p, samples[p], isRFI[p], band.channelCount - startChannel);
+					histogramCollection.Add(antenna1Index, antenna2Index, p, samples[p], isRFI[p], band.channels.size() - startChannel);
 					break;
 			}
 		}
