@@ -50,6 +50,7 @@ namespace rfiStrategy {
 		FrequencyConvolutionActionType,
 		FrequencySelectionActionType,
 		FringeStopActionType,
+		HighPassFilterActionType,
 		ImagerActionType,
 		IterationBlockType,
 		NormalizeVarianceActionType,
