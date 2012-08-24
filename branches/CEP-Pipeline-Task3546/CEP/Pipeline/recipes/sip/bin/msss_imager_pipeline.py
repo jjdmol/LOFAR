@@ -459,18 +459,18 @@ class msss_imager_pipeline(control):
             output_keys = outputs.keys()
             if not ('mapfile' in output_keys):
                 error_msg = "The imager_prepare master script did not"\
-                        "return correct data missing: {0}".format('mapfile')
+                        "return correct data. missing: {0}".format('mapfile')
                 self.logger.error(error_msg)
                 raise PipelineException(error_msg)
             if not ('slices_mapfile' in output_keys):
                 error_msg = "The imager_prepare master script did not"\
-                        "return correct data missing: {0}".format(
+                        "return correct data. missing: {0}".format(
                                                             'slices_mapfile')
                 self.logger.error(error_msg)
                 raise PipelineException(error_msg)
             if not ('raw_ms_per_image_mapfile' in output_keys):
                 error_msg = "The imager_prepare master script did not"\
-                        "return correct data missing: {0}".format(
+                        "return correct data. missing: {0}".format(
                                                     'raw_ms_per_image_mapfile')
                 self.logger.error(error_msg)
                 raise PipelineException(error_msg)
