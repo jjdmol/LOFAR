@@ -23,7 +23,6 @@
 #include <lofar_config.h>
 
 #include <Common/LofarLogger.h>
-#include <Common/SystemUtil.h>
 
 #include <Storage/MSWriter.h>
 #include <Storage/MSWriterDAL.h>
@@ -38,16 +37,20 @@ using namespace std;
 #include <Common/Thread/Mutex.h>
 #include <Interface/StreamableData.h>
 #include <iostream>
+#include <sstream>
 #include <ctime>
 #include <cmath>
 #include <algorithm>
 #include <numeric>
-#include <measures/Measures.h>
-#include <measures/Measures/MCEpoch.h>
-#include <measures/Measures/MEpoch.h>
 
 #include <boost/format.hpp>
 using boost::format;
+
+#ifdef basename // some glibc have this as a macro
+#undef basename
+#endif
+#include <Common/SystemUtil.h>
+#include <Common/StreamUtil.h>
 
 static string timeStr( double time )
 {
@@ -70,23 +73,6 @@ static double toMJD( double time )
 {
   // 40587 modify Julian day number = 00:00:00 January 1, 1970, GMT
   return 40587.0 + time / (24*60*60);
-}
-
-static double fromMJD( double time )
-{
-  // 40587 modify Julian day number = 00:00:00 January 1, 1970, GMT
-  return (time - 40587.0) * (24*60*60);
-}
-
-static string toTAI( double time )
-{
-  using namespace casa;
-
-  double UTC_MJD  = toMJD(time);
-  double TAI_MJD  = MEpoch::Convert(MEpoch(MVEpoch(Quantity(UTC_MJD, "d")), MEpoch::Ref(MEpoch::UTC)), MEpoch::Ref(MEpoch::TAI))().getValue().get();
-  double TAI_UNIX = fromMJD(TAI_MJD);
-
-  return timeStr(TAI_UNIX);
 }
 
 static string stripextension( const string filename )
@@ -175,36 +161,31 @@ namespace LOFAR
 
       // Common Attributes
       file.groupType().value = "Root";
-      file.fileName() .value = LOFAR::basename(h5filename);
+      //file.fileName() is set by DAL
+      //file.fileDate() is set by DAL
 
-      char now_str[50];
-      time_t now = time(NULL);
-      if (strftime( now_str, sizeof now_str, "%Y-%m-%dT%H:%M:%S.0", gmtime(&now) ) > 0 )
-        file.fileDate().value = now_str;
-
-      file.fileType() .value = "bf";
-      file.telescope().value = "LOFAR";
-      file.observer() .value = "unknown";
+      //file.fileType() is set by DAL
+      //file.telescope() is set by DAL
 
       file.projectID()     .value = parset.getString("Observation.Campaign.name", "");
       file.projectTitle()  .value = parset.getString("Observation.Scheduler.taskName", "");
       file.projectPI()     .value = parset.getString("Observation.Campaign.PI", "");
-      file.projectCOI()    .value = parset.getString("Observation.Campaign.CO_I", "");
+      ostringstream oss;
+      // Use ';' instead of ',' to pretty print, because ',' already occurs in names (e.g. Smith, J.).
+      writeVector(oss, parset.getStringVector("Observation.Campaign.CO_I", ""), "; ", "", "");
+      file.projectCOI()    .value = oss.str();
       file.projectContact().value = parset.getString("Observation.Campaign.contact", "");
 
       file.observationID() .value = str(format("%u") % parset.observationID());
 
       file.observationStartUTC().value = toUTC(parset.startTime());
       file.observationStartMJD().value = toMJD(parset.startTime());
-      file.observationStartTAI().value = toTAI(parset.startTime());
 
-      // because we process in blocks, the stop time can be a bit further than the one
-      // actually specified.
+      // The stop time can be a bit further than the one actually specified, because we process in blocks.
       double stopTime = parset.startTime() + nrBlocks * parset.CNintegrationTime();
 
       file.observationEndUTC().value = toUTC(stopTime);
       file.observationEndMJD().value = toMJD(stopTime);
-      file.observationEndTAI().value = toTAI(stopTime);
 
       file.observationNofStations().value = parset.nrStations(); // TODO: SS beamformer?
       file.observationStationsList().value = parset.allStationNames(); // TODO: SS beamformer?
@@ -227,7 +208,7 @@ namespace LOFAR
       file.clockFrequencyUnit()         .value = "MHz";
 
       file.antennaSet()     .value = parset.antennaSet();
-      file.filterSelection().value = parset.getString("Observation.bandFilter");
+      file.filterSelection().value = parset.getString("Observation.bandFilter", "");
 
       unsigned nrSAPs = parset.nrBeams();
       vector<string> targets(nrSAPs);
@@ -238,11 +219,9 @@ namespace LOFAR
       file.targets().value = targets;
 
       file.systemVersion().value   = StorageVersion::getVersion(); // LOFAR version
-      file.pipelineName().value    = "";
-      file.pipelineVersion().value = "";
 
-      file.docName() .value   = "ICD 3: Beam-Formed Data";
-      file.docVersion().value = "2.04.27";
+      //file.docName() is set by DAL
+      //file.docVersion() is set by DAL
 
       file.notes().value      = "";
 
@@ -276,11 +255,9 @@ namespace LOFAR
 
       sap.expTimeStartUTC().value = toUTC(parset.startTime());
       sap.expTimeStartMJD().value = toMJD(parset.startTime());
-      sap.expTimeStartTAI().value = toTAI(parset.startTime());
 
       sap.expTimeEndUTC().value = toUTC(stopTime);
       sap.expTimeEndMJD().value = toMJD(stopTime);
-      sap.expTimeEndTAI().value = toTAI(stopTime);
 
       sap.totalIntegrationTime().value = parset.beamDuration(sapNr);
       sap.totalIntegrationTimeUnit().value = "s";
