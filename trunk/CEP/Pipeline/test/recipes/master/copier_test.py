@@ -45,96 +45,50 @@ class copierTest(unittest.TestCase):
         sut = copierWrapper()
         self.assertTrue(sut._validate_source_target_mapfile(source_map, target_map))
 
-    def test_create_target_node_keyed_dict(self):
-        source_map = [("node1", "/path1/path1"), ("node2", "/path2/path2"), ("node2", "/path3/path3/")]
-        target_map = [("node3", "/path1/path1"), ("node4", "/path2/path2"), ("node4", "/path3/path3")]
-
-
-        sut = copierWrapper()
-        output, copied_files = sut._create_target_node_keyed_dict(source_map, target_map, "")
-        expected_output = {'node3': [(('node1', "/path1/path1"), ('node3', '/path1'))],
-                           'node4': [
-                                     (('node2', "/path2/path2"), ('node4', '/path2')),
-                                     (('node2', "/path3/path3/"), ('node4', '/path3'))
-                                    ]
-                           }
-        self.assertTrue(output == expected_output, "incorrect output"
-                        " expected, received:\n {0}, \n {1}".format(
-                                            expected_output, output))
-
-    def test_create_target_node_keyed_dict_new_path(self):
-        source_map = [("node1", "/path1/path1"), ("node2", "/path2/path2"), ("node2", "/path3/path3/")]
-        target_map = [("node3", "/path1/path1"), ("node4", "/path2/path2"), ("node4", "/path3/path3")]
-        target_path = "/new"
-
-        sut = copierWrapper()
-        output, copied_files = sut._create_target_node_keyed_dict(source_map, target_map, target_path)
-        expected_output = {'node3': [(('node1', "/path1/path1"), ('node3', target_path))],
-                           'node4': [
-                                     (('node2', "/path2/path2"), ('node4', target_path)),
-                                     (('node2', "/path3/path3/"), ('node4', target_path))
-                                    ]
-                           }
-        self.assertTrue(output == expected_output, "incorrect output"
-                        " expected, received:\n {0}, \n {1}".format(
-                                            expected_output, output))
-
-
-
-    def test_construct_node_specific_mapfiles(self):
-        temp_path = self.test_path
-
-        source_target_dict = {
-                           'node1': [
-                                     [('node2', 'path2'), ('node1', 'path2')],
-                                     [('node2', 'path3'), ('node1', 'path3')]
-                                    ]
-                           }
-        mapfile1 = os.path.join(temp_path, "copier_source_node1.map")
-        mapfile2 = os.path.join(temp_path, "copier_target_node1.map")
-        sut = copierWrapper()
-        mapfile_dict = sut._construct_node_specific_mapfiles(source_target_dict,
-                                               temp_path)
-
-        expected_output = {'node1':(mapfile1, mapfile2)}
-
-        self.assertTrue(repr(expected_output) == repr(mapfile_dict),
-                        "Output of function incorrect. dict with mapfile pairs"
-                        "expected received-expected: {0} - {1}".format(
-                                repr(mapfile_dict), repr(expected_output)))
-
-        # validation
-        #files exist
-        self.assertTrue(os.path.exists(mapfile1),
-                        "mapfile for first node not created properly")
-        # content 
-        fp = open(mapfile1)
-        content = fp.read()
-        fp.close()
-        expected_content = "[('node2', 'path2'), ('node2', 'path3')]"
-        self.assertTrue(content == expected_content, "source mapfile content incorrect")
-        #now for the target mapfile
-        self.assertTrue(os.path.exists(mapfile2),
-                        "mapfile for second node not created properly")
-
-        fp = open(mapfile2)
-        content = fp.read()
-        fp.close()
-        expected_content = "[('node1', 'path2'), ('node1', 'path3')]"
-        self.assertTrue(content == expected_content, "target mapfile content incorrect")
-
-        # check if the writing of the log is performed
-        log_message = "Wrote mapfile with node specific target"\
-                              " paths: {0}"
-        self.assertTrue(sut.logger._log[-2][1] == log_message.format(mapfile2),
-                        "incorrect logging for first write action of"
-                        " mapfile: {0}".format(sut.logger._log[-2]))
-        log_message = "Wrote mapfile with node specific source"\
-                              " paths: {0}"
-        self.assertTrue(sut.logger._log[-1][1] == log_message.format(mapfile1),
-                        "incorrect logging for second write action of "
-                        "mapfile: {0}".format(sut.logger._log[-1]))
-
+#    def test_construct_node_specific_mapfiles(self):
+#        temp_path = self.test_path
+#
+#        source_map = [('node1', 'path1'), ('node2', 'path2')]
+#        target_map = [('node3', 'path3'), ('node4', 'path4')]
+#
+#        # Targets on node 3 and 4: mapfiles named after them
+#        mapfile1 = os.path.join(temp_path, "copier_source_node3.map")
+#        mapfile2 = os.path.join(temp_path, "copier_target_node3.map")
+#        mapfile3 = os.path.join(temp_path, "copier_source_node4.map")
+#        mapfile4 = os.path.join(temp_path, "copier_target_node4.map")
+#        sut = copierWrapper()
+#        mapfile_dict = sut._construct_node_specific_mapfiles(source_map,
+#                                               target_map, temp_path)
+#
+#        expected_output = {'node3':(mapfile1, mapfile2),
+#                           'node4':(mapfile3, mapfile4)}
+#
+#        self.assertTrue(repr(expected_output) == repr(mapfile_dict),
+#                        "Output of function incorrect. dict with mapfile pairs"
+#                        "output: \n{0} \n expected: \n{1}".format(
+#                                repr(mapfile_dict), repr(expected_output)))
+#
+#        # validation
+#        #files exist
+#        self.assertTrue(os.path.exists(mapfile1),
+#                        "mapfile for first node not created properly")
+#        # content 
+#        fp = open(mapfile1)
+#        content = fp.read()
+#        fp.close()
+#        expected_content = "[('node1', 'path1')]"
+#        self.assertTrue(content == expected_content, "source mapfile content incorrect")
+#        #now for the target mapfile
+#        self.assertTrue(os.path.exists(mapfile2),
+#                        "mapfile for second node not created properly")
+#
+#        fp = open(mapfile2)
+#        content = fp.read()
+#        fp.close()
+#        expected_content = "[('node3', 'path3')]"
+#        self.assertTrue(content == expected_content,
+#            "target mapfile content incorrect, expected, output \n{0}\n{1}".format(
+#                expected_content, content))
 
 
 #    def test_copier_create_correct_mapfile(self):
