@@ -162,7 +162,6 @@ class copier(MasterNodeInterface):
         """
         Constructor sets the python command used to call node scripts
         """
-        self.new_instrument_mapfile = None
         super(copier, self).__init__(
             "python {0}".format(self.__file__.replace('master', 'nodes')))
 
@@ -211,7 +210,7 @@ class copier(MasterNodeInterface):
 
         store_data_map(self.inputs['mapfile'], successfull_copies)
 
-        self.logger.warn("Not all files were copied correctly")
+        self.logger.warn("Not all instrument we copied")
         self.logger.warn(
                 "wrote mapfile with successful copied files: {0}".format(
                         self.inputs['mapfile']))
@@ -227,7 +226,12 @@ class copier(MasterNodeInterface):
         It constructs the output to be generated from this recipe based on
         results from the node script
         """
-        store_data_map(self.inputs['mapfile'], self.new_instrument_mapfile)
+        successfull_copies = []
+        for job in self._jobs:
+            if 'target' in job.results:
+                successfull_copies.append((job.host, job.results['target' ]))
+
+        store_data_map(self.inputs['mapfile'], successfull_copies)
         self.logger.debug(
                 "wrote mapfile with (to be copied) files: {0}".format(
                         self.inputs['mapfile']))

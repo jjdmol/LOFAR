@@ -261,10 +261,12 @@ class msss_target_pipeline(control):
         # Write input- and output data map-files.
         data_mapfile = os.path.join(mapfile_dir, "data.mapfile")
         store_data_map(data_mapfile, self.input_data['data'])
+        copied_instrument_mapfile = os.path.join(mapfile_dir, "copied_instrument.mapfile")
+        store_data_map(copied_instrument_mapfile,
+                       self.input_data['instrument'])
         self.logger.debug(
             "Wrote input data mapfile: %s" % data_mapfile
         )
-        instrument_mapfile = self.input_data['instrument']
 
         corrected_mapfile = os.path.join(mapfile_dir, "corrected_data.mapfile")
         store_data_map(corrected_mapfile, self.output_data['data'])
@@ -332,7 +334,7 @@ class msss_target_pipeline(control):
         bbs_mapfile = self.run_task("new_bbs",
             demix_mapfile,
             parset=bbs_parset,
-            instrument_mapfile=instrument_mapfile,
+            instrument_mapfile=copied_instrument_mapfile,
             sky_mapfile=sourcedb_mapfile
         )['mapfile']
 
