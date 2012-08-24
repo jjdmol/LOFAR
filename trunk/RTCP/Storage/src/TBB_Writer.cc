@@ -435,7 +435,7 @@ string TBB_Station::utcTimeStr(double time) const {
 	unsigned long timeNSec = static_cast<unsigned long>(round( (time-floor(time))*1e9 ));
 
 	char utc_str[50];
-	struct tm tm = {0};
+	struct tm tm;
 	gmtime_r(&timeSec, &tm);
 	if (strftime(utc_str, sizeof(utc_str), "%Y-%m-%dT%H:%M:%S", &tm) == 0) {
 		return "";
