@@ -138,7 +138,8 @@ typedef std::map<unsigned, StationMetaData> StationMetaDataMap;
 class TBB_Dipole {
 	DAL::TBB_DipoleDataset* itsDataset;
 	std::ofstream itsRawOut; // if raw out requested
-	std::vector<unsigned> itsFlagOffsets;
+
+	std::vector<DAL::Range> itsFlagOffsets;
 
 	ssize_t itsDatasetLen;
 
@@ -169,6 +170,7 @@ public:
 	void processFrameData(const TBB_Frame& frame, Mutex& h5Mutex);
 
 private:
+	void addFlags(size_t offset, size_t len);
 	void initTBB_DipoleDataset(const TBB_Header& header, const Parset& parset, const StationMetaData& stationMetaData,
                                    const std::string& rawFilename, DAL::TBB_Station& station, Mutex& h5Mutex);
 	bool hasAllZeroDataSamples(const TBB_Frame& frame) const;
@@ -201,11 +203,10 @@ public:
 	void processPayload(const TBB_Frame& frame);
 
 private:
-	std::string getFileModDate(const std::string& filename) const;
 	std::string utcTimeStr(double time) const;
 	double toMJD(double time) const;
 
-	void initCommonLofarAttributes(const std::string& filename);
+	void initCommonLofarAttributes();
 	void initTBB_RootAttributesAndGroups(const std::string& stName);
 	void initStationGroup(DAL::TBB_Station& st, const std::string& stName,
                               const std::vector<double>& stPosition);
