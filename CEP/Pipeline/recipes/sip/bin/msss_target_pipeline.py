@@ -11,7 +11,8 @@ import sys
 
 from lofarpipe.support.control import control
 from lofarpipe.support.lofarexceptions import PipelineException
-from lofarpipe.support.group_data import store_data_map, validate_data_maps
+from lofarpipe.support.group_data import store_data_map, validate_data_maps, \
+        load_data_map
 from lofarpipe.support.group_data import tally_data_map
 from lofarpipe.support.utilities import create_directory
 from lofar.parameterset import parameterset
@@ -176,7 +177,6 @@ class msss_target_pipeline(control):
         target_map = self._create_target_map_for_instruments(instrument_map,
                                                      input_data_map)
 
-
         #Write the two needed maps to file
         source_path = os.path.join(copier_map_path, "source_instruments.map")
         store_data_map(source_path, instrument_map)
@@ -186,14 +186,27 @@ class msss_target_pipeline(control):
 
         copied_files_path = os.path.join(copier_map_path, "copied_instruments.map")
 
-        new_instrument_map = self.run_task("copier",
+        # The output of the copier is a mapfile containing all the host, path
+        # of succesfull copied files.
+        copied_instruments_mapfile = self.run_task("copier",
                       mapfile_source=source_path,
                       mapfile_target=target_path,
                       mapfiles_dir=copier_map_path,
-                      mapfile=copied_files_path,
-                      target_dir="instrument_models")['mapfile']
+                      mapfile=copied_files_path)['mapfile_target_copied']
 
-        return new_instrument_map
+        # Some copy action might fail, these files need to be removed from
+        # both the data and the instrument file!!
+        copied_instruments_map = load_data_map(copied_instruments_mapfile)
+        new_instrument_map = []
+        new_input_data_map = []
+        for instrument_pair, input_data_pair in zip(target_map, input_data_map):
+            if instrument_pair in copied_instruments_map:
+                new_instrument_map.append(instrument_pair)
+                new_input_data_map.append(input_data_pair)
+            # else: Do not process further in the recipe
+
+        return new_instrument_map, new_input_data_map
+
     def go(self):
         """
         Read the parset-file that was given as input argument, and set the
@@ -233,27 +246,27 @@ class msss_target_pipeline(control):
         job_dir = self.config.get("layout", "job_directory")
         mapfile_dir = os.path.join(job_dir, "mapfiles")
         create_directory(mapfile_dir)
+        parset_dir = os.path.join(job_dir, "parsets")
+        create_directory(parset_dir)
 
-        self.input_data['instrument'] = self._copy_instrument_files(
-                                    self.input_data['instrument'],
+        # Copy the instrument files to the corrent nodes: failures might happen
+        # update both intrument and datamap to contain only successes!
+        self.input_data['instrument'], self.input_data['data'] = \
+            self._copy_instrument_files(self.input_data['instrument'],
                                     self.input_data['data'], mapfile_dir)
 
         # File locations are not on the same node: skip check for same node
         #self._validate_io_product_specs()
 
-        parset_dir = os.path.join(job_dir, "parsets")
-
-
         # Write input- and output data map-files.
-        create_directory(parset_dir)
-
-
         data_mapfile = os.path.join(mapfile_dir, "data.mapfile")
         store_data_map(data_mapfile, self.input_data['data'])
+        copied_instrument_mapfile = os.path.join(mapfile_dir, "copied_instrument.mapfile")
+        store_data_map(copied_instrument_mapfile,
+                       self.input_data['instrument'])
         self.logger.debug(
             "Wrote input data mapfile: %s" % data_mapfile
         )
-        instrument_mapfile = self.input_data['instrument']
 
         corrected_mapfile = os.path.join(mapfile_dir, "corrected_data.mapfile")
         store_data_map(corrected_mapfile, self.output_data['data'])
@@ -321,7 +334,7 @@ class msss_target_pipeline(control):
         bbs_mapfile = self.run_task("new_bbs",
             demix_mapfile,
             parset=bbs_parset,
-            instrument_mapfile=instrument_mapfile,
+            instrument_mapfile=copied_instrument_mapfile,
             sky_mapfile=sourcedb_mapfile
         )['mapfile']
 
