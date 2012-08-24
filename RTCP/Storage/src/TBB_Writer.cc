@@ -48,15 +48,11 @@
 #include <Common/SystemUtil.h>
 #include <Common/SystemCallException.h>
 #include <Common/StringUtil.h>
+#include <Common/StreamUtil.h>
 #include <ApplCommon/AntField.h>
 #include <Stream/SocketStream.h>
 #include <Interface/Exceptions.h>
 #include <Interface/Stream.h>
-#if defined HAVE_PKVERSION
-#include <Storage/Package__Version.h>
-#else
-#include <Common/Version.h>
-#endif
 
 #include <dal/lofar/Station.h>
 
@@ -511,11 +507,10 @@ void TBB_Station::initCommonLofarAttributes() {
 
 	itsH5File.targets().value = targets;
 
-#ifdef HAVE_PKVERSION // TODO: doesn't appear to work, FIXME
-	itsH5File.systemVersion().value = StorageVersion::getVersion();
+#ifndef TBB_WRITER_VERSION
+	itsH5File.systemVersion().value = LOFAR::StorageVersion::getVersion();
 #else
-#warning SYSTEM_VERSION attribute cannot be written correctly into HDF5 output file
-	itsH5File.systemVersion().value = "0.909";
+	itsH5File.systemVersion().value = TBB_WRITER_VERSION;
 #endif
 
 	//itsH5File.docName() is set by DAL
