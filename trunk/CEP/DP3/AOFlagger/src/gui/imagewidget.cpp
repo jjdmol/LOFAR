@@ -603,7 +603,7 @@ TimeFrequencyMetaDataCPtr ImageWidget::GetMetaData()
 {
 	TimeFrequencyMetaDataCPtr metaData = _metaData;
 
-	if(_startVertical != 0)
+	if(_startVertical != 0 && metaData != 0)
 	{
 		size_t startChannel = round(StartVertical() * _image->Height());
 		TimeFrequencyMetaData *newData = new TimeFrequencyMetaData(*metaData);
@@ -612,7 +612,7 @@ TimeFrequencyMetaDataCPtr ImageWidget::GetMetaData()
 		band.channels.erase(band.channels.begin(), band.channels.begin()+startChannel );
 		newData->SetBand(band);
 	}
-	if(_startHorizontal != 0)
+	if(_startHorizontal != 0 && metaData != 0)
 	{
 		size_t startTime = round(StartHorizontal() * _image->Width());
 		TimeFrequencyMetaData *newData = new TimeFrequencyMetaData(*metaData);

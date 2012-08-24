@@ -114,6 +114,7 @@ set(STRATEGY_ACTION_FILES
   strategy/actions/foreachmsaction.cpp
   strategy/actions/frequencyselectionaction.cpp
   strategy/actions/fringestopaction.cpp
+	strategy/actions/highpassfilteraction.cpp
   strategy/actions/imageraction.cpp
   strategy/actions/normalizevarianceaction.cpp
   strategy/actions/plotaction.cpp
