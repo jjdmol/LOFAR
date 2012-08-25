@@ -140,7 +140,10 @@ class HighPassFilter
 		void applyLowPassSSE(const Image2DPtr &image);
 		
 		void initializeKernel();
+		
 		void setFlaggedValuesToZeroAndMakeWeights(const Image2DCPtr &inputImage, const Image2DPtr &outputImage, const Mask2DCPtr &inputMask, const Image2DPtr &weightsOutput);
+		void setFlaggedValuesToZeroAndMakeWeightsSSE(const Image2DCPtr &inputImage, const Image2DPtr &outputImage, const Mask2DCPtr &inputMask, const Image2DPtr &weightsOutput);
+		
 		void elementWiseDivide(const Image2DPtr &leftHand, const Image2DCPtr &rightHand);
 		void elementWiseDivideSSE(const Image2DPtr &leftHand, const Image2DCPtr &rightHand);
 		

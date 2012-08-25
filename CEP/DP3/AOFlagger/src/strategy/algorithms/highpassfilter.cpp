@@ -1,6 +1,5 @@
 
 #include <xmmintrin.h>
-#include <emmintrin.h>
 
 #include <AOFlagger/strategy/algorithms/highpassfilter.h>
 #include <AOFlagger/util/rng.h>
@@ -121,7 +120,7 @@ Image2DPtr HighPassFilter::Apply(const Image2DCPtr &image, const Mask2DCPtr &mas
 	Image2DPtr
 		outputImage = Image2D::CreateUnsetImagePtr(image->Width(), image->Height()),
 		weights = Image2D::CreateUnsetImagePtr(image->Width(), image->Height());
-	setFlaggedValuesToZeroAndMakeWeights(image, outputImage, mask, weights);
+	setFlaggedValuesToZeroAndMakeWeightsSSE(image, outputImage, mask, weights);
 	applyLowPassSSE(outputImage);
 	applyLowPassSSE(weights);
 	elementWiseDivideSSE(outputImage, weights);
@@ -168,6 +167,45 @@ void HighPassFilter::setFlaggedValuesToZeroAndMakeWeights(const Image2DCPtr &inp
 	}
 }
 
+void HighPassFilter::setFlaggedValuesToZeroAndMakeWeightsSSE(const Image2DCPtr &inputImage, const Image2DPtr &outputImage, const Mask2DCPtr &inputMask, const Image2DPtr &weightsOutput)
+{
+	const size_t width = inputImage->Width();
+	const __m128i zero4i = _mm_set_epi32(0, 0, 0, 0);
+	const __m128 zero4 = _mm_set_ps(0.0, 0.0, 0.0, 0.0);
+	const __m128 one4 = _mm_set_ps(1.0, 1.0, 1.0, 1.0);
+	for(size_t y=0;y<inputImage->Height();++y)
+	{
+		const bool *rowPtr = inputMask->ValuePtr(0, y);
+		const float *inputPtr = inputImage->ValuePtr(0, y);
+		float *outputPtr = outputImage->ValuePtr(0, y);
+		float *weightsPtr = weightsOutput->ValuePtr(0, y);
+		const float *end = inputPtr + width;
+		while(inputPtr < end)
+		{
+			
+			// Assign each integer to one bool in the mask
+			// Convert false to 0xFFFFFFFF and true to 0
+			__m128 conditionMask = _mm_castsi128_ps(
+				_mm_cmpeq_epi32(_mm_set_epi32(rowPtr[3], rowPtr[2], rowPtr[1], rowPtr[0]),
+												zero4i));
+			
+			_mm_store_ps(weightsPtr, _mm_or_ps(
+				_mm_and_ps(conditionMask, one4),
+				_mm_andnot_ps(conditionMask, zero4)
+			));
+			_mm_store_ps(outputPtr, _mm_or_ps(
+				_mm_and_ps(conditionMask, _mm_load_ps(inputPtr)),
+				_mm_andnot_ps(conditionMask, zero4)
+			));
+			
+			rowPtr += 4;
+			outputPtr += 4;
+			inputPtr += 4;
+			weightsPtr += 4;
+		}
+	}
+}
+
 void HighPassFilter::elementWiseDivide(const Image2DPtr &leftHand, const Image2DCPtr &rightHand)
 {
 	for(unsigned y=0;y<leftHand->Height();++y) {
@@ -187,15 +225,17 @@ void HighPassFilter::elementWiseDivideSSE(const Image2DPtr &leftHand, const Imag
 	for(unsigned y=0;y<leftHand->Height();++y) {
 		float *leftHandPtr = leftHand->ValuePtr(0, y);
 		const float *rightHandPtr = rightHand->ValuePtr(0, y);
-		
-		for(unsigned x=0;x<leftHand->Width();x+=4) {
+		float *end = leftHandPtr + leftHand->Width();
+		while(leftHandPtr < end)
+		{
 			__m128
 				l = _mm_load_ps(leftHandPtr),
 				r = _mm_load_ps(rightHandPtr);
 			__m128 conditionMask = _mm_cmpeq_ps(r, zero4);
-			__m128 result = _mm_or_ps(_mm_and_ps(conditionMask, zero4),
-										_mm_andnot_ps(conditionMask, _mm_div_ps(l, r)));
-			_mm_store_ps(leftHandPtr, result);
+			_mm_store_ps(leftHandPtr, _mm_or_ps(
+				_mm_and_ps(conditionMask, zero4),
+				_mm_andnot_ps(conditionMask, _mm_div_ps(l, r))
+			));
 			leftHandPtr += 4;
 			rightHandPtr += 4;
 		}
