@@ -26,6 +26,8 @@
 
 #include <iostream>
 
+#include <xmmintrin.h>
+
 Image2D::Image2D(size_t width, size_t height) :
 	_width(width),
 	_height(height),
@@ -376,6 +378,20 @@ void Image2D::MultiplyValues(num_t factor)
 	for(size_t i=0;i<size;++i)
 	{
 		_dataConsecutive[i] *= factor;
+	}
+}
+
+void Image2D::SubtractAsRHS(Image2DCPtr lhs)
+{
+	float *thisPtr = &_dataConsecutive[0];
+	const float *otherPtr = &(lhs->_dataConsecutive[0]);
+	float *end = thisPtr + ((_stride * _height + 3) / 4);
+	while(thisPtr < end)
+	{
+		// (*thisPtr) = (*otherPtr) - (*thisPtr);
+		_mm_store_ps(thisPtr, _mm_sub_ps(_mm_load_ps(otherPtr), _mm_load_ps(thisPtr)));
+		thisPtr += 4;
+		otherPtr += 4;
 	}
 }
 

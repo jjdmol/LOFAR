@@ -315,6 +315,11 @@ class Image2D {
 		 * Multiply all values with a factor.
 		 */
 		void MultiplyValues(num_t factor);
+		
+		/**
+		 * Will set all values to lhs - this.
+		 */
+		void SubtractAsRHS(Image2DCPtr lhs);
 
 		/**
 		 * Flips the image round the diagonal, i.e., x becomes y and y becomes x.
