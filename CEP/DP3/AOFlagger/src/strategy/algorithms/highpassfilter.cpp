@@ -17,7 +17,7 @@ void HighPassFilter::applyLowPass(const Image2DPtr &image)
 	// because of properties of the 2D Gaussian function.
 	Image2DPtr temp = Image2D::CreateZeroImagePtr(image->Width(), image->Height());
 	size_t hKernelMid = _hWindowSize/2;
-	for(size_t i=0; i<=_hWindowSize; ++i) {
+	for(size_t i=0; i<_hWindowSize; ++i) {
 		const num_t kernelValue = _hKernel[i];
 		const size_t
 			xStart = (i >= hKernelMid) ? 0 : (hKernelMid-i),
@@ -30,7 +30,7 @@ void HighPassFilter::applyLowPass(const Image2DPtr &image)
 	
 	image->SetAll(0.0);
 	size_t vKernelMid = _vWindowSize/2;
-	for(size_t i=0; i<=_vWindowSize; ++i) {
+	for(size_t i=0; i<_vWindowSize; ++i) {
 		const num_t kernelValue = _vKernel[i];
 		const size_t
 			yStart = (i >= vKernelMid) ? 0 : (vKernelMid-i),
@@ -46,36 +46,43 @@ void HighPassFilter::applyLowPassSSE(const Image2DPtr &image)
 {
 	Image2DPtr temp = Image2D::CreateZeroImagePtr(image->Width(), image->Height());
 	size_t hKernelMid = _hWindowSize/2;
-	for(size_t i=0; i<=_hWindowSize; ++i) {
+	for(size_t i=0; i<_hWindowSize; ++i) {
 		
 		const num_t k = _hKernel[i];
 		const __m128 k4 = _mm_set_ps(k, k, k, k);
-		const size_t
+		size_t
 			xStart = (i >= hKernelMid) ? 0 : (hKernelMid-i),
 			xEnd = (i <= hKernelMid) ? image->Width() : image->Width()-i+hKernelMid;
+		
 			
 		for(unsigned y=0;y<image->Height();++y) {
 			
-			float *tempPtr = temp->ValuePtr(0, y);
+			float *tempPtr = temp->ValuePtr(xStart, y);
 			const float *imagePtr = image->ValuePtr(xStart+i-hKernelMid, y);
 			
-			for(unsigned x=xStart;x<xEnd;x+=4) {
+			unsigned x = xStart;
+			for(;x+4<xEnd;x+=4) {
 				const __m128
 					imageVal = _mm_loadu_ps(imagePtr),
-					tempVal = _mm_load_ps(tempPtr);
+					tempVal = _mm_loadu_ps(tempPtr);
 
-				// temp->AddValue(x, y, image->Value(x+i-hKernelMid, y)*kernelValue);
-				_mm_store_ps(tempPtr, _mm_add_ps(tempVal, _mm_mul_ps(imageVal, k4)));
+				// *tempPtr += k * (*imagePtr);
+				_mm_storeu_ps(tempPtr, _mm_add_ps(tempVal, _mm_mul_ps(imageVal, k4)));
 				
 				tempPtr += 4;
 				imagePtr += 4;
+			}
+			for(;x<xEnd;++x) {
+				*tempPtr += k * (*imagePtr);
+				++tempPtr;
+				++imagePtr;
 			}
 		}
 	}
 	
 	image->SetAll(0.0);
 	size_t vKernelMid = _vWindowSize/2;
-	for(size_t i=0; i<=_vWindowSize; ++i) {
+	for(size_t i=0; i<_vWindowSize; ++i) {
 		const num_t k = _vKernel[i];
 		const __m128 k4 = _mm_set_ps(k, k, k, k);
 		const size_t
@@ -86,17 +93,23 @@ void HighPassFilter::applyLowPassSSE(const Image2DPtr &image)
 			const float *tempPtr = temp->ValuePtr(0, y+i-vKernelMid);
 			float *imagePtr = image->ValuePtr(0, y);
 			
-			for(unsigned x=0;x<image->Width();x += 4) {
+			unsigned x=0;
+			for(;x+4<image->Width();x += 4) {
 				
 				const __m128
 					imageVal = _mm_load_ps(imagePtr),
 					tempVal = _mm_load_ps(tempPtr);
 				
-				//image->AddValue(x, y, temp->Value(x, y+i-vKernelMid)*kernelValue);
+				// *imagePtr += k * (*tempPtr);
 				_mm_store_ps(imagePtr, _mm_add_ps(imageVal, _mm_mul_ps(tempVal, k4)));
 				
 				tempPtr += 4;
 				imagePtr += 4;
+			}
+			for(;x<image->Width();++x) {
+				*imagePtr += k * (*tempPtr);
+				++tempPtr;
+				++imagePtr;
 			}
 		}
 	}
@@ -109,8 +122,8 @@ Image2DPtr HighPassFilter::Apply(const Image2DCPtr &image, const Mask2DCPtr &mas
 		outputImage = Image2D::CreateUnsetImagePtr(image->Width(), image->Height()),
 		weights = Image2D::CreateUnsetImagePtr(image->Width(), image->Height());
 	setFlaggedValuesToZeroAndMakeWeights(image, outputImage, mask, weights);
-	applyLowPass(outputImage);
-	applyLowPass(weights);
+	applyLowPassSSE(outputImage);
+	applyLowPassSSE(weights);
 	elementWiseDivideSSE(outputImage, weights);
 	weights.reset();
 	return Image2D::CreateFromDiff(image, outputImage);
