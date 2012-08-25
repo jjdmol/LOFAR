@@ -385,7 +385,7 @@ void Image2D::SubtractAsRHS(Image2DCPtr lhs)
 {
 	float *thisPtr = &_dataConsecutive[0];
 	const float *otherPtr = &(lhs->_dataConsecutive[0]);
-	float *end = thisPtr + ((_stride * _height + 3) / 4);
+	float *end = thisPtr + _stride * _height;
 	while(thisPtr < end)
 	{
 		// (*thisPtr) = (*otherPtr) - (*thisPtr);
