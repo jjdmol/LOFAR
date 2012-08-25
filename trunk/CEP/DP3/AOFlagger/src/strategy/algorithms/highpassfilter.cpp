@@ -126,7 +126,8 @@ Image2DPtr HighPassFilter::Apply(const Image2DCPtr &image, const Mask2DCPtr &mas
 	applyLowPassSSE(weights);
 	elementWiseDivideSSE(outputImage, weights);
 	weights.reset();
-	return Image2D::CreateFromDiff(image, outputImage);
+	outputImage->SubtractAsRHS(image);
+	return outputImage;
 }
 
 void HighPassFilter::initializeKernel()
