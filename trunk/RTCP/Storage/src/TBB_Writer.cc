@@ -132,7 +132,7 @@ TBB_Dipole::~TBB_Dipole() {
 	if (itsDataset != NULL) {
 		if (usesExternalDataFile()) {
 			try {
-				itsDataset->resize(itsDatasetLen);
+				itsDataset->resize1D(itsDatasetLen);
 			} catch (DAL::DALException& exc) {
 				LOG_WARN_STR("TBB: failed to resize HDF5 dipole dataset to external data size: " << exc.what());
 			}
@@ -236,8 +236,8 @@ void TBB_Dipole::processFrameData(const TBB_Frame& frame, Mutex& h5Mutex) {
 			itsRawOut.write(reinterpret_cast<const char*>(frame.payload.data), static_cast<size_t>(frame.header.nOfSamplesPerFrame) * sizeof(frame.payload.data[0]));
 		} else {
 			ScopedLock h5Lock(h5Mutex);
-			itsDataset->resize(offset + frame.header.nOfSamplesPerFrame);
-			itsDataset->set(offset, frame.header.nOfSamplesPerFrame, frame.payload.data);
+			itsDataset->resize1D(offset + frame.header.nOfSamplesPerFrame);
+			itsDataset->set1D(offset, frame.payload.data, frame.header.nOfSamplesPerFrame);
 		}
 
 		/*
@@ -265,7 +265,7 @@ void TBB_Dipole::initTBB_DipoleDataset(const TBB_Header& header, const Parset& p
 
 	// Create 1-dim, unbounded (-1) dataset. 
 	// Override endianess. TBB data is always stored little endian and also received as such, so written as-is on any platform.
-	itsDataset->create(0, -1, LOFAR::basename(rawFilename), itsDataset->LITTLE);
+	itsDataset->create1D(0, -1, LOFAR::basename(rawFilename), itsDataset->LITTLE);
 
 	itsDataset->groupType().value = "DipoleDataset";
 	itsDataset->stationID().value = header.stationID;
